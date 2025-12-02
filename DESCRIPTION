@@ -1,0 +1,36 @@
+Package: medfit
+Type: Package
+Title: Infrastructure for Mediation Model Fitting and Extraction
+Version: 0.1.0
+Date: 2025-12-02
+Authors@R: person("Davood", "Tofighi",
+    email = "dtofighi@gmail.com",
+    role = c("aut", "cre"),
+    comment = c(ORCID = "0000-0001-8523-7776"))
+Maintainer: Davood Tofighi <dtofighi@gmail.com>
+Description: Provides S7-based infrastructure for fitting mediation models,
+    extracting path coefficients, and performing bootstrap inference. Designed
+    as a foundation package for the mediation analysis ecosystem, supporting
+    probmed, RMediation, and medrobust packages. Implements unified interfaces
+    for model fitting across different engines (GLM, with future support for
+    mixed models and Bayesian methods), standardized extraction of mediation
+    paths from various model types, and robust bootstrap inference methods.
+License: GPL (>= 3)
+URL: https://github.com/data-wise/medfit
+BugReports: https://github.com/data-wise/medfit/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    S7 (>= 0.1.0),
+    stats,
+    methods
+Suggests:
+    MASS,
+    lavaan (>= 0.6-0),
+    OpenMx (>= 2.13),
+    testthat (>= 3.0.0)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))
+RoxygenNote: 7.3.3
+Config/testthat/edition: 3

@@ -1,0 +1,16 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.github$
+^\.git$
+^\.DS_Store$
+^planning$
+^CLAUDE\.md$
+^README\.Rmd$
+^README\.md$
+^NEWS\.md$
+^\.lintr$
+^codecov\.yml$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^medfit.code-workspace$
