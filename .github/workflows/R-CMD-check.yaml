@@ -32,7 +32,7 @@ jobs:
       _R_CHECK_CODOC_S4_METHODS_: false
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: quarto-dev/quarto-actions/setup@v2
 
