@@ -852,6 +852,53 @@ effects = controlled_effects(m = 5)           # CDE at m=5
 - **Easy to extend**: Adding new classes doesn't break existing ones
 - **Type safety**: S7 validators ensure each class is used correctly
 
+### Engine Adapter Architecture (Planned)
+
+medfit uses an **adapter pattern** to integrate with external packages for advanced estimation methods.
+
+**Design principles**:
+- Wrap validated implementations (CMAverse, tmle3) instead of reimplementing
+- All engines return standardized `MediationData` objects
+- External packages in `Suggests` (load on demand)
+- Engine-specific options via `engine_args = list(...)`
+
+**Engine priority**:
+
+| Engine | Package | Method | Status |
+|--------|---------|--------|--------|
+| `"regression"` | (internal) | VanderWeele closed-form | MVP (default) |
+| `"gformula"` | CMAverse | G-computation | Planned |
+| `"ipw"` | CMAverse | Inverse probability weighting | Planned |
+| `"tmle"` | tmle3 | Targeted learning | Future |
+| `"dml"` | DoubleML | Double machine learning | Future |
+
+**Usage example**:
+
+```r
+# Default regression engine
+estimate_mediation(
+  formula_y = Y ~ X + M + C,
+  formula_m = M ~ X + C,
+  data = df,
+  treatment = "X",
+  mediator = "M",
+  effects = "natural",     # NDE + NIE
+  engine = "regression"    # Default
+)
+
+# CMAverse g-formula engine
+estimate_mediation(
+  ...,
+  engine = "gformula",
+  engine_args = list(
+    EMint = TRUE,          # Exposure-mediator interaction
+    nboot = 500            # CMAverse-specific bootstrap
+  )
+)
+```
+
+See `planning/medfit-roadmap.md` Phase 7c for detailed adapter implementation.
+
 ### Model Extraction Pattern
 
 All `extract_mediation()` methods follow this pattern:

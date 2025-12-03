@@ -1279,6 +1279,417 @@ plot(result, type = "bootstrap")      # Bootstrap distribution
 
 ---
 
+## Phase 7c: Engine Adapter Architecture (Future)
+
+**Goal**: Standardize integration with external packages for advanced estimation methods
+
+**Status**: Design phase - architecture documented
+
+### 7c.1 Motivation
+
+Rather than reimplementing complex estimation methods (g-formula, IPW, TMLE), medfit will wrap existing validated packages through a standardized adapter pattern. This provides:
+
+- **Reliability**: Leverage battle-tested implementations
+- **Reduced maintenance**: No need to maintain complex statistical code
+- **Flexibility**: Users can choose their preferred backend
+- **Consistency**: All engines return the same MediationData structure
+
+### 7c.2 Adapter Pattern Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      User Interface                          │
+│  estimate_mediation(..., engine = "gformula", ...)          │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+┌─────────────────────────▼───────────────────────────────────┐
+│                    Engine Dispatcher                         │
+│  .dispatch_engine(engine, formula_y, formula_m, data, ...)  │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+          ┌───────────────┼───────────────┐
+          ▼               ▼               ▼
+    ┌──────────┐    ┌──────────┐    ┌──────────┐
+    │ Internal │    │ CMAverse │    │  tmle3   │
+    │ Engines  │    │ Adapter  │    │ Adapter  │
+    └────┬─────┘    └────┬─────┘    └────┬─────┘
+         │               │               │
+         ▼               ▼               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 Standardized MediationData                   │
+│   (Same output structure regardless of estimation method)    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 7c.3 Adapter Interface Contract
+
+Each external engine adapter must implement:
+
+```r
+#' Engine Adapter Interface (Internal)
+#'
+#' All adapters must accept these standard arguments and return MediationData.
+#'
+#' @param formula_y Formula for outcome model
+#' @param formula_m Formula for mediator model (or list for multiple)
+#' @param data Data frame
+#' @param treatment Character: treatment variable name
+#' @param mediator Character: mediator variable name (or vector)
+#' @param outcome Character: outcome variable name
+#' @param effects Character: estimand type ("natural", "controlled", etc.)
+#' @param engine_args List: engine-specific options passed through
+#' @param ... Additional arguments
+#'
+#' @return MediationData object with standardized structure
+.adapter_template <- function(formula_y, formula_m, data,
+                              treatment, mediator, outcome,
+                              effects, engine_args, ...) {
+  # 1. Validate engine-specific requirements
+  # 2. Transform medfit inputs → external package format
+  # 3. Call external package function
+  # 4. Transform results → MediationData
+  # 5. Return standardized output
+}
+```
+
+### 7c.4 CMAverse Adapter (First Priority)
+
+**Package**: [CMAverse](https://bs1125.github.io/CMAverse/) (Shi et al., 2021)
+
+**Why CMAverse first**:
+- Comprehensive: g-formula, IPW, TMLE, MSM, and more
+- Well-documented with active maintenance
+- Supports binary/continuous treatments, mediators, outcomes
+- Handles interactions and multiple mediators
+
+**Dependency strategy**: Add to Suggests (load on demand)
+
+```r
+# In DESCRIPTION
+Suggests:
+    CMAverse (>= 0.1.0)
+```
+
+**Adapter implementation**:
+
+```r
+#' CMAverse Adapter
+#'
+#' @keywords internal
+.adapter_cmaverse <- function(formula_y, formula_m, data,
+                               treatment, mediator, outcome,
+                               effects, engine_args, ...) {
+  # Check dependency
+
+if (!requireNamespace("CMAverse", quietly = TRUE)) {
+    stop("CMAverse package required for engine = 'gformula'/'ipw'/'tmle'.\n",
+         "Install with: install.packages('CMAverse')",
+         call. = FALSE)
+  }
+
+  # Map medfit effects to CMAverse
+  cmaverse_effect <- switch(effects,
+    "natural" = "NDE_NIE",
+    "controlled" = "CDE",
+    "interventional" = "interventional",
+    stop("Effect type '", effects, "' not supported by CMAverse adapter")
+  )
+
+  # Build CMAverse arguments
+  cma_args <- list(
+    data = data,
+    exposure = treatment,
+    mediator = mediator,
+    outcome = outcome,
+    EMint = engine_args$interaction %||% FALSE,
+    model = engine_args$model %||% "rb",     # regression-based
+    inference = engine_args$inference %||% "bootstrap"
+  )
+
+  # Merge user-provided engine_args (engine-specific options)
+  cma_args <- utils::modifyList(cma_args, engine_args)
+
+  # Call CMAverse
+  cma_result <- do.call(CMAverse::cmest, cma_args)
+
+  # Transform to MediationData
+  .cmaverse_to_mediation_data(cma_result, effects = effects)
+}
+
+#' Transform CMAverse result to MediationData
+#' @keywords internal
+.cmaverse_to_mediation_data <- function(cma_result, effects) {
+  # Extract estimates based on effect type
+  estimates <- switch(effects,
+    "natural" = c(
+      nde = cma_result$effect.pe["pnde"],
+      nie = cma_result$effect.pe["tnie"]
+    ),
+    "controlled" = c(
+      cde = cma_result$effect.pe["cde"]
+    )
+  )
+
+  # Build MediationData
+  MediationData(
+    a_path = cma_result$reg.output$mreg$coefficients[treatment],
+    b_path = cma_result$reg.output$yreg$coefficients[mediator],
+    c_prime = cma_result$reg.output$yreg$coefficients[treatment],
+    estimates = as.numeric(estimates),
+    vcov = .extract_cmaverse_vcov(cma_result),
+    # ... additional properties
+    source_package = "CMAverse"
+  )
+}
+```
+
+**Supported CMAverse methods via `engine_args`**:
+
+| `engine_args$model` | CMAverse Method | Description |
+|---------------------|-----------------|-------------|
+| `"rb"` | Regression-based | Default, VanderWeele formulas |
+| `"wb"` | Weighting-based | IPW approach |
+| `"iorw"` | IORW | Inverse odds ratio weighting |
+| `"msm"` | MSM | Marginal structural models |
+| `"gformula"` | G-formula | Parametric g-computation |
+| `"ne"` | Natural effect | Natural effect models |
+
+### 7c.5 Engine-Specific Options via engine_args
+
+**Design decision**: Use `engine_args = list(...)` for engine-specific options (Option A).
+
+**Rationale**:
+- Clean separation: standard arguments vs engine-specific
+- Self-documenting: users see what's engine-specific
+- Flexible: each adapter defines its own options
+- No namespace pollution in main function signature
+
+**Usage examples**:
+
+```r
+# CMAverse with g-formula and bootstrap
+estimate_mediation(
+  formula_y = Y ~ X + M + C,
+  formula_m = M ~ X + C,
+  data = df,
+  treatment = "X",
+  mediator = "M",
+  effects = "natural",
+  engine = "gformula",
+  engine_args = list(
+    model = "gformula",           # CMAverse-specific
+    EMint = TRUE,                 # Exposure-mediator interaction
+    mreg = list(family = "binomial"),  # Binary mediator
+    yreg = list(family = "gaussian"),  # Continuous outcome
+    astar = 0,                    # Reference exposure level
+    a = 1,                        # Active exposure level
+    nboot = 500                   # CMAverse bootstrap samples
+  )
+)
+
+# tmle3 adapter (future)
+estimate_mediation(
+  ...,
+  engine = "tmle",
+  engine_args = list(
+    learner_list = list(          # tmle3-specific
+      A = sl3::Lrnr_glm$new(),
+      M = sl3::Lrnr_ranger$new()
+    ),
+    max_iter = 100
+  )
+)
+```
+
+### 7c.6 Engine Registration System
+
+```r
+# Internal registry of available engines
+.engine_registry <- new.env(parent = emptyenv())
+
+#' Register an estimation engine
+#' @keywords internal
+.register_engine <- function(name, adapter_fn, package = NULL, methods = NULL) {
+  .engine_registry[[name]] <- list(
+    adapter = adapter_fn,
+    package = package,
+    methods = methods,
+    available = is.null(package) || requireNamespace(package, quietly = TRUE)
+  )
+}
+
+#' Initialize built-in engines
+#' @keywords internal
+.init_engines <- function() {
+  # Internal engines (always available)
+  .register_engine("regression", .adapter_regression, package = NULL,
+                   methods = c("natural", "controlled"))
+
+  # External engine adapters (available if package installed)
+  .register_engine("gformula", .adapter_cmaverse, package = "CMAverse",
+                   methods = c("natural", "controlled", "interventional"))
+  .register_engine("ipw", .adapter_cmaverse, package = "CMAverse",
+                   methods = c("natural"))
+
+  # Future adapters
+  # .register_engine("tmle", .adapter_tmle3, package = "tmle3", ...)
+  # .register_engine("dml", .adapter_doubleml, package = "DoubleML", ...)
+}
+
+#' Dispatch to appropriate engine
+#' @keywords internal
+.dispatch_engine <- function(engine, ...) {
+  if (!exists(engine, envir = .engine_registry)) {
+    stop("Unknown engine: '", engine, "'. ",
+         "Available: ", paste(ls(.engine_registry), collapse = ", "))
+  }
+
+  reg <- .engine_registry[[engine]]
+
+  if (!reg$available) {
+    stop("Engine '", engine, "' requires package '", reg$package, "'.\n",
+         "Install with: install.packages('", reg$package, "')")
+  }
+
+  reg$adapter(...)
+}
+```
+
+### 7c.7 Future Engine Adapters
+
+| Priority | Engine | Package | Methods | Complexity |
+|----------|--------|---------|---------|------------|
+| **High** | gformula | CMAverse | G-computation | Medium |
+| **High** | ipw | CMAverse | Weighting | Medium |
+| Medium | tmle | tmle3/AIPW | Targeted ML | High |
+| Medium | dml | DoubleML | Double ML | High |
+| Low | bart | bartCause | Bayesian trees | High |
+| Low | msm | CMAverse | Marginal structural | Medium |
+
+### 7c.8 Error Handling and Validation
+
+```r
+#' Validate engine compatibility
+#' @keywords internal
+.validate_engine_request <- function(engine, effects, formula_y, ...) {
+  reg <- .engine_registry[[engine]]
+
+  # Check effect type supported
+  if (!effects %in% reg$methods)
+
+    stop("Engine '", engine, "' does not support effects = '", effects, "'.\n",
+         "Supported: ", paste(reg$methods, collapse = ", "))
+  }
+
+  # Check for interaction if required
+  has_interaction <- .formula_has_interaction(formula_y)
+  if (effects == "four_way" && !has_interaction) {
+    stop("Four-way decomposition requires X:M interaction in formula_y")
+  }
+
+  # Engine-specific validation
+  if (engine == "gformula" && has_interaction) {
+    message("Note: G-formula with interaction uses simulation-based estimation")
+  }
+}
+```
+
+### 7c.9 Testing Strategy for Adapters
+
+```r
+# tests/testthat/test-adapter-cmaverse.R
+
+test_that("CMAverse adapter returns valid MediationData", {
+  skip_if_not_installed("CMAverse")
+
+  result <- estimate_mediation(
+    formula_y = Y ~ X + M,
+    formula_m = M ~ X,
+    data = test_data,
+    treatment = "X",
+    mediator = "M",
+    engine = "gformula"
+  )
+
+  expect_s7_class(result, MediationData)
+  expect_equal(result@source_package, "CMAverse")
+})
+
+test_that("CMAverse adapter matches direct CMAverse output", {
+  skip_if_not_installed("CMAverse")
+
+  # Direct CMAverse call
+  cma_direct <- CMAverse::cmest(...)
+
+  # Via adapter
+  result <- estimate_mediation(..., engine = "gformula")
+
+  # Compare estimates
+  expect_equal(result@nde, cma_direct$effect.pe["pnde"], tolerance = 1e-6)
+})
+```
+
+### 7c.10 Documentation for Users
+
+```r
+#' Estimation Engines
+#'
+#' @description
+#' medfit supports multiple estimation engines for causal mediation analysis.
+#'
+#' @section Built-in Engines:
+#' \describe{
+#'   \item{regression}{VanderWeele closed-form formulas. Fast, parametric.
+#'     Default engine, always available.}
+#' }
+#'
+#' @section External Engines (require additional packages):
+#' \describe{
+#'   \item{gformula}{G-computation via CMAverse. Handles complex confounding.}
+#'   \item{ipw}{Inverse probability weighting via CMAverse.}
+#'   \item{tmle}{Targeted learning via tmle3 (future).}
+#' }
+#'
+#' @section Engine-Specific Options:
+#' Pass engine-specific options via \code{engine_args}:
+#' \preformatted{
+#' estimate_mediation(
+#'   ...,
+#'   engine = "gformula",
+#'   engine_args = list(
+#'     model = "gformula",
+#'     EMint = TRUE,
+#'     nboot = 500
+#'   )
+#' )
+#' }
+#'
+#' @name engines
+#' @seealso \code{\link{estimate_mediation}}
+NULL
+```
+
+### 7c.11 Key References
+
+- **Shi B et al. (2021)**. CMAverse: A suite of functions for reproducible causal mediation analyses. *Epidemiology*, 32(5):e20-e22.
+- **van der Laan MJ, Rose S (2011)**. *Targeted Learning*. Springer.
+- **Chernozhukov V et al. (2018)**. Double/debiased machine learning. *Econometrics J*, 21(1):C1-C68.
+- **Hill JL (2011)**. Bayesian nonparametric modeling for causal inference. *J Comp Graph Stat*, 20(1):217-240.
+
+### 7c.12 Deliverables
+
+- [ ] Engine registry system
+- [ ] Adapter interface specification
+- [ ] CMAverse adapter implementation
+- [ ] Engine-specific option documentation
+- [ ] Validation and error handling
+- [ ] Tests for adapter correctness
+- [ ] User documentation
+
+**Time**: 1-2 weeks (after MVP + Phase 7b)
+
+---
+
 ## Phase 8: Polish & Release (Week 5)
 
 **Goal**: Finalize for release and integration
@@ -1391,6 +1802,8 @@ Integration is successful when:
 | 5. Bootstrap | 3-4 days | Day 13 | Day 17 | bootstrap_mediation() |
 | 6. Testing & Docs | 3-4 days | Day 17 | Day 21 | Complete documentation |
 | 7. **Interaction Support** | 1-2 weeks | Post-MVP | - | VanderWeele 4-way decomposition |
+| 7b. **Estimation Engine** | 1 week | Post-MVP | - | User interface, Decomposition class |
+| 7c. **Engine Adapters** | 1-2 weeks | Post-MVP | - | CMAverse integration |
 | 8. Polish | 2-3 days | Day 21 | Day 24 | Production ready |
 
 **MVP Total**: 17-24 days (3.5-5 weeks) - Phases 1-6 + 8
@@ -1480,6 +1893,8 @@ Integration is successful when:
 
 **Post-MVP**:
 - Phase 7: Interaction Support (VanderWeele four-way decomposition)
+- Phase 7b: Estimation Engine Architecture (user interface, Decomposition class)
+- Phase 7c: Engine Adapters (CMAverse, tmle3, etc.)
 
 **Next Review**: After Phase 4 completion
 **Last Updated**: 2025-12-03
