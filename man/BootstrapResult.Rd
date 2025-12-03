@@ -2,7 +2,7 @@
 % Please edit documentation in R/classes.R
 \name{BootstrapResult}
 \alias{BootstrapResult}
-\title{BootstrapResult Class}
+\title{BootstrapResult S7 Class}
 \usage{
 BootstrapResult(
   estimate = integer(0),
@@ -16,6 +16,27 @@ BootstrapResult(
  })
 )
 }
+\arguments{
+\item{estimate}{Numeric scalar: point estimate of the statistic}
+
+\item{ci_lower}{Numeric scalar: lower bound of confidence interval}
+
+\item{ci_upper}{Numeric scalar: upper bound of confidence interval}
+
+\item{ci_level}{Numeric scalar: confidence level (e.g., 0.95 for 95\% CI)}
+
+\item{boot_estimates}{Numeric vector: bootstrap distribution of estimates}
+
+\item{n_boot}{Integer scalar: number of bootstrap samples}
+
+\item{method}{Character scalar: bootstrap method
+("parametric", "nonparametric", or "plugin")}
+
+\item{call}{Call object or NULL: original function call}
+}
+\value{
+A BootstrapResult S7 object
+}
 \description{
 S7 class containing results from bootstrap inference, including
 point estimates, confidence intervals, and bootstrap distribution.
@@ -23,34 +44,23 @@ point estimates, confidence intervals, and bootstrap distribution.
 \details{
 This class standardizes bootstrap inference results across different
 bootstrap methods (parametric, nonparametric, plugin).
-\subsection{Properties}{
 
-\strong{Point estimates}:
-\itemize{
-\item \code{estimate}: Point estimate of the statistic
+The class includes validation to ensure consistency between
+method type and required fields.
 }
-
-\strong{Confidence intervals}:
-\itemize{
-\item \code{ci_lower}: Lower bound of confidence interval
-\item \code{ci_upper}: Upper bound of confidence interval
-\item \code{ci_level}: Confidence level (e.g., 0.95 for 95\% CI)
-}
-
-\strong{Bootstrap distribution}:
-\itemize{
-\item \code{boot_estimates}: Vector of bootstrap estimates
-\item \code{n_boot}: Number of bootstrap samples
-}
-
-\strong{Method}:
-\itemize{
-\item \code{method}: Bootstrap method ("parametric", "nonparametric", or "plugin")
+\examples{
+\dontrun{
+# Parametric bootstrap result
+result <- BootstrapResult(
+  estimate = 0.15,
+  ci_lower = 0.10,
+  ci_upper = 0.20,
+  ci_level = 0.95,
+  boot_estimates = rnorm(1000, 0.15, 0.02),
+  n_boot = 1000L,
+  method = "parametric",
+  call = NULL
+)
 }
 
-\strong{Metadata}:
-\itemize{
-\item \code{call}: Original function call (optional)
-}
-}
 }

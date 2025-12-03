@@ -14,9 +14,10 @@
 #' model types (lm, glm, lavaan, OpenMx, lmer, brms, etc.).
 #'
 #' @param object Fitted model object (lm, glm, lavaan, OpenMx, etc.)
-#' @param treatment Character string: name of treatment variable
-#' @param mediator Character string: name of mediator variable
-#' @param ... Additional arguments passed to methods
+#' @param ... Additional arguments passed to methods. Common arguments include:
+#'   - `treatment`: Character string specifying treatment variable name
+#'   - `mediator`: Character string specifying mediator variable name
+#'   - Method-specific arguments (see individual method documentation)
 #'
 #' @return A [MediationData] object containing:
 #'   - Path coefficients (a, b, c')

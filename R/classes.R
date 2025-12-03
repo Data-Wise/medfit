@@ -4,45 +4,61 @@
 # - MediationData: Container for mediation model structure
 # - BootstrapResult: Container for bootstrap inference results
 
-#' MediationData Class
+#' MediationData S7 Class
 #'
 #' @description
 #' S7 class containing standardized mediation model structure, including
 #' path coefficients, parameter estimates, variance-covariance matrix,
 #' and metadata.
 #'
+#' @param a_path Numeric scalar: effect of treatment on mediator (a path)
+#' @param b_path Numeric scalar: effect of mediator on outcome (b path)
+#' @param c_prime Numeric scalar: direct effect of treatment on outcome (c' path)
+#' @param estimates Numeric vector: all parameter estimates
+#' @param vcov Numeric matrix: variance-covariance matrix of estimates
+#' @param sigma_m Numeric scalar or NULL: residual SD for mediator model
+#' @param sigma_y Numeric scalar or NULL: residual SD for outcome model
+#' @param treatment Character scalar: name of treatment variable
+#' @param mediator Character scalar: name of mediator variable
+#' @param outcome Character scalar: name of outcome variable
+#' @param mediator_predictors Character vector: predictor names in mediator model
+#' @param outcome_predictors Character vector: predictor names in outcome model
+#' @param data Data frame or NULL: original data
+#' @param n_obs Integer scalar: number of observations
+#' @param converged Logical scalar: whether models converged
+#' @param source_package Character scalar: package/engine used for fitting
+#'
+#' @return A MediationData S7 object
+#'
 #' @details
 #' This class provides a unified container for mediation model information
 #' extracted from various model types (lm, glm, lavaan, OpenMx, etc.).
 #' It ensures consistency across the mediation analysis ecosystem.
 #'
-#' ## Properties
+#' The class includes comprehensive validation to ensure data integrity.
 #'
-#' **Core paths**:
-#' - `a_path`: Effect of treatment on mediator (X → M)
-#' - `b_path`: Effect of mediator on outcome controlling for treatment (M → Y|X)
-#' - `c_prime`: Direct effect of treatment on outcome (X → Y|M)
-#'
-#' **Parameters**:
-#' - `estimates`: Vector of all parameter estimates
-#' - `vcov`: Variance-covariance matrix of estimates
-#'
-#' **Residual variances** (for Gaussian models):
-#' - `sigma_m`: Residual standard deviation for mediator model
-#' - `sigma_y`: Residual standard deviation for outcome model
-#'
-#' **Variable names**:
-#' - `treatment`: Name of treatment variable
-#' - `mediator`: Name of mediator variable
-#' - `outcome`: Name of outcome variable
-#' - `mediator_predictors`: Character vector of predictors in mediator model
-#' - `outcome_predictors`: Character vector of predictors in outcome model
-#'
-#' **Data and metadata**:
-#' - `data`: Original data frame (optional)
-#' - `n_obs`: Number of observations
-#' - `converged`: Logical indicating model convergence
-#' - `source_package`: Name of package/engine used for fitting
+#' @examples
+#' \dontrun{
+#' # Create a MediationData object
+#' med_data <- MediationData(
+#'   a_path = 0.5,
+#'   b_path = 0.3,
+#'   c_prime = 0.2,
+#'   estimates = c(0.5, 0.3, 0.2),
+#'   vcov = diag(3) * 0.01,
+#'   sigma_m = 1.0,
+#'   sigma_y = 1.2,
+#'   treatment = "X",
+#'   mediator = "M",
+#'   outcome = "Y",
+#'   mediator_predictors = "X",
+#'   outcome_predictors = c("X", "M"),
+#'   data = NULL,
+#'   n_obs = 100L,
+#'   converged = TRUE,
+#'   source_package = "stats"
+#' )
+#' }
 #'
 #' @export
 MediationData <- S7::new_class(
@@ -147,35 +163,45 @@ MediationData <- S7::new_class(
 S7::S4_register(MediationData)
 
 
-#' BootstrapResult Class
+#' BootstrapResult S7 Class
 #'
 #' @description
 #' S7 class containing results from bootstrap inference, including
 #' point estimates, confidence intervals, and bootstrap distribution.
 #'
+#' @param estimate Numeric scalar: point estimate of the statistic
+#' @param ci_lower Numeric scalar: lower bound of confidence interval
+#' @param ci_upper Numeric scalar: upper bound of confidence interval
+#' @param ci_level Numeric scalar: confidence level (e.g., 0.95 for 95% CI)
+#' @param boot_estimates Numeric vector: bootstrap distribution of estimates
+#' @param n_boot Integer scalar: number of bootstrap samples
+#' @param method Character scalar: bootstrap method
+#'   ("parametric", "nonparametric", or "plugin")
+#' @param call Call object or NULL: original function call
+#'
+#' @return A BootstrapResult S7 object
+#'
 #' @details
 #' This class standardizes bootstrap inference results across different
 #' bootstrap methods (parametric, nonparametric, plugin).
 #'
-#' ## Properties
+#' The class includes validation to ensure consistency between
+#' method type and required fields.
 #'
-#' **Point estimates**:
-#' - `estimate`: Point estimate of the statistic
-#'
-#' **Confidence intervals**:
-#' - `ci_lower`: Lower bound of confidence interval
-#' - `ci_upper`: Upper bound of confidence interval
-#' - `ci_level`: Confidence level (e.g., 0.95 for 95% CI)
-#'
-#' **Bootstrap distribution**:
-#' - `boot_estimates`: Vector of bootstrap estimates
-#' - `n_boot`: Number of bootstrap samples
-#'
-#' **Method**:
-#' - `method`: Bootstrap method ("parametric", "nonparametric", or "plugin")
-#'
-#' **Metadata**:
-#' - `call`: Original function call (optional)
+#' @examples
+#' \dontrun{
+#' # Parametric bootstrap result
+#' result <- BootstrapResult(
+#'   estimate = 0.15,
+#'   ci_lower = 0.10,
+#'   ci_upper = 0.20,
+#'   ci_level = 0.95,
+#'   boot_estimates = rnorm(1000, 0.15, 0.02),
+#'   n_boot = 1000L,
+#'   method = "parametric",
+#'   call = NULL
+#' )
+#' }
 #'
 #' @export
 BootstrapResult <- S7::new_class(
@@ -272,7 +298,7 @@ S7::S4_register(BootstrapResult)
 #'
 #' @param x A MediationData object
 #' @param ... Additional arguments (ignored)
-#' @export
+#' @noRd
 S7::method(print, MediationData) <- function(x, ...) {
   cat("MediationData object\n")
   cat("====================\n\n")
@@ -314,7 +340,7 @@ S7::method(print, MediationData) <- function(x, ...) {
 #'
 #' @param x A BootstrapResult object
 #' @param ... Additional arguments (ignored)
-#' @export
+#' @noRd
 S7::method(print, BootstrapResult) <- function(x, ...) {
   cat("BootstrapResult object\n")
   cat("======================\n\n")
@@ -341,7 +367,7 @@ S7::method(print, BootstrapResult) <- function(x, ...) {
 #'
 #' @param object A MediationData object
 #' @param ... Additional arguments (ignored)
-#' @export
+#' @noRd
 S7::method(summary, MediationData) <- function(object, ...) {
   structure(
     list(
@@ -414,7 +440,7 @@ print.summary.MediationData <- function(x, ...) {
 #'
 #' @param object A BootstrapResult object
 #' @param ... Additional arguments (ignored)
-#' @export
+#' @noRd
 S7::method(summary, BootstrapResult) <- function(object, ...) {
   boot_summary <- list(
     method = object@method,
@@ -467,7 +493,7 @@ print.summary.BootstrapResult <- function(x, ...) {
 #' Show Method for MediationData
 #'
 #' @param object A MediationData object
-#' @export
+#' @noRd
 S7::method(show, MediationData) <- function(object) {
   print(object)
 }
@@ -476,7 +502,7 @@ S7::method(show, MediationData) <- function(object) {
 #' Show Method for BootstrapResult
 #'
 #' @param object A BootstrapResult object
-#' @export
+#' @noRd
 S7::method(show, BootstrapResult) <- function(object) {
   print(object)
 }

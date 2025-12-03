@@ -2,7 +2,7 @@
 % Please edit documentation in R/classes.R
 \name{MediationData}
 \alias{MediationData}
-\title{MediationData Class}
+\title{MediationData S7 Class}
 \usage{
 MediationData(
   a_path = integer(0),
@@ -41,6 +41,42 @@ MediationData(
   source_package = character(0)
 )
 }
+\arguments{
+\item{a_path}{Numeric scalar: effect of treatment on mediator (a path)}
+
+\item{b_path}{Numeric scalar: effect of mediator on outcome (b path)}
+
+\item{c_prime}{Numeric scalar: direct effect of treatment on outcome (c' path)}
+
+\item{estimates}{Numeric vector: all parameter estimates}
+
+\item{vcov}{Numeric matrix: variance-covariance matrix of estimates}
+
+\item{sigma_m}{Numeric scalar or NULL: residual SD for mediator model}
+
+\item{sigma_y}{Numeric scalar or NULL: residual SD for outcome model}
+
+\item{treatment}{Character scalar: name of treatment variable}
+
+\item{mediator}{Character scalar: name of mediator variable}
+
+\item{outcome}{Character scalar: name of outcome variable}
+
+\item{mediator_predictors}{Character vector: predictor names in mediator model}
+
+\item{outcome_predictors}{Character vector: predictor names in outcome model}
+
+\item{data}{Data frame or NULL: original data}
+
+\item{n_obs}{Integer scalar: number of observations}
+
+\item{converged}{Logical scalar: whether models converged}
+
+\item{source_package}{Character scalar: package/engine used for fitting}
+}
+\value{
+A MediationData S7 object
+}
 \description{
 S7 class containing standardized mediation model structure, including
 path coefficients, parameter estimates, variance-covariance matrix,
@@ -50,42 +86,30 @@ and metadata.
 This class provides a unified container for mediation model information
 extracted from various model types (lm, glm, lavaan, OpenMx, etc.).
 It ensures consistency across the mediation analysis ecosystem.
-\subsection{Properties}{
 
-\strong{Core paths}:
-\itemize{
-\item \code{a_path}: Effect of treatment on mediator (X → M)
-\item \code{b_path}: Effect of mediator on outcome controlling for treatment (M → Y|X)
-\item \code{c_prime}: Direct effect of treatment on outcome (X → Y|M)
+The class includes comprehensive validation to ensure data integrity.
 }
-
-\strong{Parameters}:
-\itemize{
-\item \code{estimates}: Vector of all parameter estimates
-\item \code{vcov}: Variance-covariance matrix of estimates
-}
-
-\strong{Residual variances} (for Gaussian models):
-\itemize{
-\item \code{sigma_m}: Residual standard deviation for mediator model
-\item \code{sigma_y}: Residual standard deviation for outcome model
-}
-
-\strong{Variable names}:
-\itemize{
-\item \code{treatment}: Name of treatment variable
-\item \code{mediator}: Name of mediator variable
-\item \code{outcome}: Name of outcome variable
-\item \code{mediator_predictors}: Character vector of predictors in mediator model
-\item \code{outcome_predictors}: Character vector of predictors in outcome model
+\examples{
+\dontrun{
+# Create a MediationData object
+med_data <- MediationData(
+  a_path = 0.5,
+  b_path = 0.3,
+  c_prime = 0.2,
+  estimates = c(0.5, 0.3, 0.2),
+  vcov = diag(3) * 0.01,
+  sigma_m = 1.0,
+  sigma_y = 1.2,
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y",
+  mediator_predictors = "X",
+  outcome_predictors = c("X", "M"),
+  data = NULL,
+  n_obs = 100L,
+  converged = TRUE,
+  source_package = "stats"
+)
 }
 
-\strong{Data and metadata}:
-\itemize{
-\item \code{data}: Original data frame (optional)
-\item \code{n_obs}: Number of observations
-\item \code{converged}: Logical indicating model convergence
-\item \code{source_package}: Name of package/engine used for fitting
-}
-}
 }

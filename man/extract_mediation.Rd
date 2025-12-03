@@ -9,11 +9,12 @@ extract_mediation(object, ...)
 \arguments{
 \item{object}{Fitted model object (lm, glm, lavaan, OpenMx, etc.)}
 
-\item{...}{Additional arguments passed to methods}
-
-\item{treatment}{Character string: name of treatment variable}
-
-\item{mediator}{Character string: name of mediator variable}
+\item{...}{Additional arguments passed to methods. Common arguments include:
+\itemize{
+\item \code{treatment}: Character string specifying treatment variable name
+\item \code{mediator}: Character string specifying mediator variable name
+\item Method-specific arguments (see individual method documentation)
+}}
 }
 \value{
 A \link{MediationData} object containing:
