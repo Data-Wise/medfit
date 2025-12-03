@@ -1184,10 +1184,10 @@ print(result)
 
 | Engine | Method | Key Reference |
 |--------|--------|---------------|
-| `"regression"` | VanderWeele closed-form | Valeri & VanderWeele (2013) |
-| `"simulation"` | Monte Carlo integration | Imai et al. (2010) |
+| `"regression"` | VanderWeele closed-form (MVP) | Valeri & VanderWeele (2013) |
+| `"simulation"` | Monte Carlo / quasi-Bayesian | Imai et al. (2010) |
 | `"gformula"` | G-computation | Robins (1986) |
-| `"weighting"` | IPW-based | VanderWeele (2009) |
+| `"ipw"` | Inverse probability weighting | VanderWeele (2009) |
 | `"tmle"` | Targeted learning | Zheng & van der Laan (2012) |
 | `"dml"` | Double machine learning | Chernozhukov et al. (2018) |
 
@@ -1195,22 +1195,82 @@ print(result)
 # Engine specification
 estimate_mediation(
   ...,
-  engine = "regression",          # Default: closed-form
-  engine = "gformula",            # G-computation
-  engine = "tmle",                # Targeted learning
+  engine = "regression",          # Default (MVP)
   engine_args = list(...)         # Engine-specific options
 )
 ```
 
-### 7b.6 Design Principles
+### 7b.6 Inference Options
 
-1. **Sensible defaults**: `effects = "natural"`, `engine = "regression"`
+**Design Decision**: Single `inference` argument with bootstrap as default.
+
+```r
+estimate_mediation(
+  ...,
+  # Inference method
+  inference = "bootstrap",        # Default
+  # inference = "delta",          # Delta method (analytical)
+  # inference = "none",           # Point estimates only
+
+  # Bootstrap options (when inference = "bootstrap")
+  n_boot = 1000,
+  ci_level = 0.95,
+  ci_type = "percentile",         # or "bca", "normal"
+  parallel = FALSE,
+  seed = NULL
+)
+```
+
+| `inference =` | Description | Use Case |
+|---------------|-------------|----------|
+| `"bootstrap"` (default) | Nonparametric bootstrap | General use, robust |
+| `"delta"` | Delta method (analytical SEs) | Fast, large samples |
+| `"none"` | Point estimates only | Quick exploration |
+
+### 7b.7 Output and Reporting
+
+**Summary tables:**
+```r
+summary(result)
+#                  Estimate    SE   95% CI         p
+# Total Effect        0.50  0.08  [0.34, 0.66]  <.001
+# Natural Direct      0.30  0.06  [0.18, 0.42]  <.001
+# Natural Indirect    0.20  0.04  [0.12, 0.28]  <.001
+# Prop. Mediated      0.40  0.10  [0.21, 0.59]  <.001
+
+# Tidy export
+as.data.frame(result)            # Data frame
+```
+**Plotting** (ggplot2 in Suggests with base R fallback):
+```r
+plot(result)                     # Default: effect comparison
+plot(result, type = "decomposition")  # Stacked bar (4-way)
+plot(result, type = "bootstrap")      # Bootstrap distribution
+```
+
+### 7b.8 Variable Types
+
+**MVP scope**: Continuous and binary variables only.
+
+| Variable | Type | Model |
+|----------|------|-------|
+| Outcome (Y) | Continuous | `gaussian()` |
+| Outcome (Y) | Binary | `binomial()` |
+| Mediator (M) | Continuous | `gaussian()` |
+| Mediator (M) | Binary | `binomial()` |
+
+**Future**: Count (Poisson), survival (Cox, AFT).
+
+### 7b.9 Design Principles
+
+1. **Sensible defaults**: `effects = "natural"`, `engine = "regression"`, `inference = "bootstrap"`
 2. **Progressive disclosure**: Simple for beginners, powerful for experts
 3. **Future-proof**: Decomposition class allows custom decompositions
 4. **Consistent output**: All engines return same MediationData structure
 5. **Multiple decompositions**: One result can hold two-way AND four-way
+6. **ggplot2 optional**: Suggests dependency with base R fallback
 
-### 7b.7 Key References (Estimation Methods)
+### 7b.10 Key References (Estimation Methods)
 
 - **Imai K et al. (2010)**. A general approach to causal mediation analysis. *Psych Methods*.
 - **Valeri L, VanderWeele TJ (2013)**. Mediation analysis allowing for exposure-mediator interactions. *Psych Methods*.
