@@ -96,6 +96,35 @@ The package uses pkgdown to generate a website from package documentation. Confi
 - Use `starts_with()` patterns for methods (print*, summary*, etc.)
 - Website builds to `docs/` directory
 
+**Badge Display in README.md:**
+
+**Important**: Do NOT use `<!-- badges: start -->` and `<!-- badges: end -->` comment markers in README.md. These markers cause pkgdown to extract badges to the sidebar instead of displaying them inline in the main content.
+
+**Correct format** (badges display inline below title):
+```markdown
+# Package Title
+
+[![R-CMD-check](https://...)](https://...)
+[![Codecov](https://...)](https://...)
+
+## Overview
+...
+```
+
+**Incorrect format** (badges moved to sidebar):
+```markdown
+# Package Title
+
+<!-- badges: start -->
+[![R-CMD-check](https://...)](https://...)
+<!-- badges: end -->
+```
+
+**Additional notes:**
+- Keep badge markdown on single lines (no line breaks within badge syntax)
+- Don't include `dev` in `home.sidebar.structure` in `_pkgdown.yml` if you want badges in main content
+- Current sidebar structure: `[links, license, citation, authors]`
+
 **MathJax and LaTeX Equations:**
 
 Equation syntax differs by context. Use the correct format for each file type:
