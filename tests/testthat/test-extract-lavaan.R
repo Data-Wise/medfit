@@ -309,7 +309,7 @@ test_that("extract_mediation errors for invalid treatment argument", {
       treatment = 1,  # Not a character
       mediator = "M"
     ),
-    "treatment must be a single character string"
+    "treatment.*string"  # checkmate: Must be of type 'string'
   )
 })
 
@@ -331,7 +331,7 @@ test_that("extract_mediation errors for invalid mediator argument", {
       treatment = "X",
       mediator = c("M1", "M2")  # Multiple values
     ),
-    "mediator must be a single character string"
+    "mediator.*length 1"  # checkmate: Must have length 1
   )
 })
 

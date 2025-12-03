@@ -398,9 +398,9 @@ Prefer BOTH concise `@description` AND detailed `@details`:
 ```
 R/
 ├── aaa-imports.R           # Package imports and setup
+├── aab-generics.R          # S7 generic functions (must load before methods)
 ├── medfit-package.R        # Package documentation
 ├── classes.R               # S7 class definitions
-├── generics.R              # S7 generic functions
 ├── fit-glm.R              # GLM engine implementation
 ├── extract-lm.R           # lm/glm extraction
 ├── extract-lavaan.R       # lavaan extraction
@@ -408,6 +408,284 @@ R/
 ├── utils.R                # Utility functions
 └── zzz.R                  # .onLoad() for dynamic dispatch
 ```
+
+---
+
+## Defensive Programming
+
+Defensive programming employs a multi-layered approach: strict input validation, formal object definitions, automated testing, and continuous integration.
+
+### 1. Input Validation with checkmate
+
+**ALWAYS use checkmate** for function argument validation. It provides fast (C-based), memory-efficient assertions with informative error messages.
+
+**Required import** in `R/aaa-imports.R`:
+```r
+#' @import checkmate
+```
+
+**Common assertion patterns:**
+
+```r
+my_function <- function(x, n, method, data, optional_arg = NULL) {
+  # --- Input Validation (using checkmate for fail-fast defensive programming) ---
+
+  # Type assertions
+  checkmate::assert_numeric(x, .var.name = "x")
+  checkmate::assert_count(n, positive = TRUE, .var.name = "n")
+  checkmate::assert_string(method, .var.name = "method")
+  checkmate::assert_data_frame(data, .var.name = "data")
+
+  # Optional arguments (allow NULL)
+  checkmate::assert_string(optional_arg, null.ok = TRUE, .var.name = "optional_arg")
+
+  # Choice from options
+  checkmate::assert_choice(method, choices = c("parametric", "nonparametric", "plugin"),
+                           .var.name = "method")
+
+  # Class checks (multiple allowed classes)
+  checkmate::assert_multi_class(model, classes = c("lm", "glm"), .var.name = "model")
+
+  # Logical flags
+
+  checkmate::assert_flag(verbose, .var.name = "verbose")
+
+  # Variable exists in data
+  checkmate::assert_choice(treatment, choices = names(data),
+                           .var.name = "treatment in data")
+
+  # ... rest of function
+}
+```
+
+**Key checkmate functions:**
+
+| Function | Purpose | Example |
+|----------|---------|---------|
+| `assert_string()` | Single character string | `assert_string(x)` |
+| `assert_character()` | Character vector | `assert_character(x, min.len = 1)` |
+| `assert_numeric()` | Numeric vector | `assert_numeric(x, lower = 0)` |
+| `assert_count()` | Single positive integer | `assert_count(n, positive = TRUE)` |
+| `assert_int()` | Single integer | `assert_int(n, lower = 1)` |
+| `assert_flag()` | Single logical | `assert_flag(verbose)` |
+| `assert_choice()` | Value from set | `assert_choice(x, c("a", "b"))` |
+| `assert_subset()` | Subset of set | `assert_subset(x, c("a", "b", "c"))` |
+| `assert_data_frame()` | Data frame | `assert_data_frame(df, min.rows = 1)` |
+| `assert_matrix()` | Matrix | `assert_matrix(m, nrows = 3)` |
+| `assert_list()` | List | `assert_list(x, types = "numeric")` |
+| `assert_class()` | Single class | `assert_class(obj, "lm")` |
+| `assert_multi_class()` | Any of classes | `assert_multi_class(obj, c("lm", "glm"))` |
+| `assert_function()` | Function | `assert_function(f, nargs = 2)` |
+
+**Options for all assertions:**
+- `.var.name = "name"`: Custom variable name in error message
+- `null.ok = TRUE`: Allow NULL values
+- `add = collection`: Add to assertion collection for batch checking
+
+**Quick assertions with qassert:**
+
+```r
+# Compact type checking
+checkmate::qassert(x, "N1")   # Numeric, length 1
+checkmate::qassert(x, "S1")   # String, length 1
+checkmate::qassert(x, "B1")   # Boolean/logical, length 1
+checkmate::qassert(x, "X")    # NULL
+checkmate::qassert(x, "N+")   # Numeric, length >= 1
+```
+
+### 2. Handling Ellipsis (`...`)
+
+When using `...` in function arguments, validate that passed arguments are actually used:
+
+```r
+my_function <- function(x, ...) {
+  # Check that all ... arguments are used
+  rlang::check_dots_used()
+
+  # Or for stricter checking (error on unused dots)
+  rlang::check_dots_empty()
+
+  # ... rest of function
+}
+```
+
+**Why this matters**: Without checking, misspelled arguments are silently ignored:
+```r
+# User typo: "treamtent" instead of "treatment"
+extract_mediation(fit, treamtent = "X")  # Silently ignored without check!
+```
+
+### 3. S7 Class Validation (Already in Use)
+
+S7 provides automatic type validation through property declarations and custom validators:
+
+```r
+MyClass <- S7::new_class(
+  "MyClass",
+  properties = list(
+    # Automatic type checking
+    x = S7::class_numeric,
+    name = S7::class_character
+  ),
+  validator = function(self) {
+    # Custom validation for cross-property constraints
+    if (length(self@x) != 1) {
+      return("x must be scalar")
+    }
+    if (any(self@x < 0)) {
+      return("x must be non-negative")
+    }
+    NULL  # Return NULL if valid
+  }
+)
+```
+
+**S7 + checkmate complement each other:**
+- S7 validators: Class-level constraints, cross-property validation
+- checkmate: Function argument validation (fail-fast at entry point)
+
+### 4. Testing Strategy
+
+**Four-layer testing approach:**
+
+1. **Unit Testing** (testthat)
+   ```r
+   test_that("function handles edge cases", {
+     expect_error(my_func(NULL), "must not be NULL")
+     expect_equal(my_func(0), expected_value)
+   })
+   ```
+
+2. **Acceptance Testing**: Validate user workflows end-to-end
+
+3. **Code Coverage** (covr)
+   ```r
+   # Target: >80% coverage, 100% for critical paths
+   covr::package_coverage()
+   ```
+
+4. **Snapshot Testing**: For complex outputs
+   ```r
+   test_that("print output is stable", {
+     expect_snapshot(print(my_object))
+   })
+   ```
+
+### 5. Dependency Management
+
+**CRITICAL rules:**
+
+1. **Never use `library()` or `require()` inside package functions**
+   - These alter the global search path
+   - Use explicit namespacing: `package::function()`
+
+2. **Imports vs Suggests:**
+   - **Imports**: Required packages (always available)
+   - **Suggests**: Optional packages (check availability)
+
+   ```r
+   # For Suggested packages, check availability
+   if (!requireNamespace("lavaan", quietly = TRUE)) {
+     stop("Package 'lavaan' is required but not installed.", call. = FALSE)
+   }
+   lavaan::sem(model, data = data)
+   ```
+
+3. **Version pinning** in DESCRIPTION:
+   ```
+   Imports:
+       S7 (>= 0.1.0),
+       checkmate
+   Suggests:
+       lavaan (>= 0.6-0)
+   ```
+
+### 6. Managing State and Side Effects
+
+**Clean up side effects with `on.exit()`:**
+
+```r
+my_function <- function(...) {
+  # Save current state
+  old_opts <- options(warn = 2)
+  old_wd <- getwd()
+
+  # Ensure cleanup even if function errors
+  on.exit({
+    options(old_opts)
+    setwd(old_wd)
+  }, add = TRUE)
+
+  # ... function body
+}
+```
+
+**File system hygiene:**
+- Never write to user's home directory
+- Use `tempdir()` for temporary files
+- Use `tools::R_user_dir("medfit", "cache")` for persistent cache
+
+**Prefer pure functions:**
+- Return values instead of modifying in place
+- Avoid global state modifications
+
+### 7. Continuous Integration (CI)
+
+**GitHub Actions workflow** (`.github/workflows/R-CMD-check.yaml`):
+
+```yaml
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+name: R-CMD-check
+
+jobs:
+  R-CMD-check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        r-version: ['release']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r-version }}
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+
+      - uses: r-lib/actions/check-r-package@v2
+```
+
+**Static code analysis** with lintr:
+
+```r
+# .lintr file in package root
+linters: linters_with_defaults(
+  line_length_linter(120),
+  object_name_linter(styles = c("snake_case", "CamelCase"))
+)
+```
+
+### 8. Defensive Programming Checklist
+
+For every new function:
+
+- [ ] Add checkmate assertions for all arguments at function entry
+- [ ] Use `.var.name` parameter for clear error messages
+- [ ] Allow NULL where appropriate with `null.ok = TRUE`
+- [ ] Check `...` arguments with `rlang::check_dots_used()` if applicable
+- [ ] Use explicit namespacing for all non-base functions
+- [ ] Clean up side effects with `on.exit()`
+- [ ] Write tests for error conditions
+- [ ] Verify function works with edge cases (NULL, empty, NA)
 
 ---
 
@@ -1342,3 +1620,4 @@ During `devtools::load_all()`, you may see "Overwriting method" messages:
 
 **Last Updated**: 2025-12-03
 **Maintained by**: medfit development team
+- doc use this keyword to update the planning documentation, README, and NEWS

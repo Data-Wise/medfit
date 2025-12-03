@@ -124,51 +124,49 @@ S7::method(extract_mediation, glm_class) <- function(object,
                                         data = NULL) {
 
 
-  # --- Input Validation ---
+  # --- Input Validation (using checkmate for fail-fast defensive programming) ---
 
-  # Check model_y is provided
-  if (missing(model_y) || is.null(model_y)) {
-    stop("model_y (outcome model) must be provided", call. = FALSE)
-  }
+  # Validate model_y is provided and is correct type
+  checkmate::assert_multi_class(
+    model_y,
+    classes = c("lm", "glm"),
+    .var.name = "model_y"
+  )
 
-  # Check treatment and mediator are character strings
- if (!is.character(treatment) || length(treatment) != 1) {
-    stop("treatment must be a single character string", call. = FALSE)
-  }
-  if (!is.character(mediator) || length(mediator) != 1) {
-    stop("mediator must be a single character string", call. = FALSE)
-  }
+  # Validate treatment and mediator are single character strings
+  checkmate::assert_string(treatment, .var.name = "treatment")
+  checkmate::assert_string(mediator, .var.name = "mediator")
+
+  # Validate outcome if provided
+  checkmate::assert_string(outcome, null.ok = TRUE, .var.name = "outcome")
+
+  # Validate data if provided
+  checkmate::assert_data_frame(data, null.ok = TRUE, .var.name = "data")
 
   # Get coefficient names from models
   coef_m <- stats::coef(model_m)
   coef_y <- stats::coef(model_y)
 
   # Check treatment exists in mediator model
-  if (!(treatment %in% names(coef_m))) {
-    stop(
-      sprintf("Treatment variable '%s' not found in mediator model. Available: %s",
-              treatment, paste(names(coef_m), collapse = ", ")),
-      call. = FALSE
-    )
-  }
+  checkmate::assert_choice(
+    treatment,
+    choices = names(coef_m),
+    .var.name = "treatment in mediator model"
+  )
 
   # Check treatment exists in outcome model
-  if (!(treatment %in% names(coef_y))) {
-    stop(
-      sprintf("Treatment variable '%s' not found in outcome model. Available: %s",
-              treatment, paste(names(coef_y), collapse = ", ")),
-      call. = FALSE
-    )
-  }
+  checkmate::assert_choice(
+    treatment,
+    choices = names(coef_y),
+    .var.name = "treatment in outcome model"
+  )
 
   # Check mediator exists in outcome model
-  if (!(mediator %in% names(coef_y))) {
-    stop(
-      sprintf("Mediator variable '%s' not found in outcome model. Available: %s",
-              mediator, paste(names(coef_y), collapse = ", ")),
-      call. = FALSE
-    )
-  }
+  checkmate::assert_choice(
+    mediator,
+    choices = names(coef_y),
+    .var.name = "mediator in outcome model"
+  )
 
   # --- Extract Path Coefficients ---
 

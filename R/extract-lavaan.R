@@ -103,17 +103,15 @@ extract_mediation_lavaan <- function(object,
          call. = FALSE)
   }
 
-  # --- Input Validation ---
+  # --- Input Validation (using checkmate for fail-fast defensive programming) ---
 
-  if (!is.character(treatment) || length(treatment) != 1) {
-    stop("treatment must be a single character string", call. = FALSE)
-  }
-  if (!is.character(mediator) || length(mediator) != 1) {
-    stop("mediator must be a single character string", call. = FALSE)
-  }
-  if (!is.null(outcome) && (!is.character(outcome) || length(outcome) != 1)) {
-    stop("outcome must be a single character string or NULL", call. = FALSE)
-  }
+  checkmate::assert_string(treatment, .var.name = "treatment")
+  checkmate::assert_string(mediator, .var.name = "mediator")
+  checkmate::assert_string(outcome, null.ok = TRUE, .var.name = "outcome")
+  checkmate::assert_string(a_label, .var.name = "a_label")
+  checkmate::assert_string(b_label, .var.name = "b_label")
+  checkmate::assert_string(cp_label, .var.name = "cp_label")
+  checkmate::assert_flag(standardized, .var.name = "standardized")
 
   # --- Extract Parameter Estimates ---
 

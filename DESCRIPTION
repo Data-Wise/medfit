@@ -23,7 +23,8 @@ Depends:
 Imports:
     S7 (>= 0.1.0),
     stats,
-    methods
+    methods,
+    checkmate
 Suggests:
     MASS,
     lavaan (>= 0.6-0),

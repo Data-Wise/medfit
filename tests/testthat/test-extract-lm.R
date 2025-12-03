@@ -322,7 +322,7 @@ test_that("extract_mediation errors when treatment not in mediator model", {
       treatment = "NonExistent",
       mediator = "M"
     ),
-    "Treatment variable 'NonExistent' not found in mediator model"
+    "treatment in mediator model"  # checkmate: Must be element of set
   )
 })
 
@@ -339,7 +339,7 @@ test_that("extract_mediation errors when treatment not in outcome model", {
       treatment = "X",
       mediator = "M"
     ),
-    "Treatment variable 'X' not found in outcome model"
+    "treatment in outcome model"  # checkmate: Must be element of set
   )
 })
 
@@ -356,7 +356,7 @@ test_that("extract_mediation errors when mediator not in outcome model", {
       treatment = "X",
       mediator = "M"
     ),
-    "Mediator variable 'M' not found in outcome model"
+    "mediator in outcome model"  # checkmate: Must be element of set
   )
 })
 
@@ -370,7 +370,7 @@ test_that("extract_mediation errors when model_y is missing", {
       treatment = "X",
       mediator = "M"
     ),
-    "model_y.*must be provided"
+    "model_y"  # checkmate: Must inherit from class 'lm'/'glm'
   )
 })
 
@@ -387,7 +387,7 @@ test_that("extract_mediation errors when treatment is not character", {
       treatment = 1,
       mediator = "M"
     ),
-    "treatment must be a single character string"
+    "treatment.*string"  # checkmate: Must be of type 'string'
   )
 })
 
@@ -404,7 +404,7 @@ test_that("extract_mediation errors when mediator is not character", {
       treatment = "X",
       mediator = c("M", "M2")
     ),
-    "mediator must be a single character string"
+    "mediator.*length 1"  # checkmate: Must have length 1
   )
 })
 

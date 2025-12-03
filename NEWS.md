@@ -6,6 +6,18 @@
 
 ### Major Features
 
+* **Defensive Programming Infrastructure** (NEW)
+  - Added `checkmate` package for fail-fast input validation
+  - All extraction functions now use `checkmate::assert_*` for argument validation
+  - Provides fast (C-based), memory-efficient assertions with informative error messages
+  - Complements S7 validators: checkmate for function entry, S7 for class integrity
+
+* **Code Quality Tools** (NEW)
+  - Added `.lintr` configuration for static code analysis
+  - Added `lint.yaml` GitHub Action for automated linting on PRs
+  - Comprehensive CLAUDE.md section on defensive programming best practices
+  - 167+ tests passing with 0 errors, 0 warnings, 0 notes
+
 * **S7 Class Architecture** (Phase 2 Complete + Extended)
   - `MediationData` class for simple mediation (X -> M -> Y)
   - **`SerialMediationData` class for serial mediation** (X -> M1 -> M2 -> ... -> Y) **NEW**
@@ -58,14 +70,14 @@
 
 ### Development Status
 
-**Current Phase**: Phase 2 Complete + Documentation
-**Next**: Phase 3 (Model Extraction)
+**Current Phase**: Phase 3 Complete
+**Next**: Phase 4 (Model Fitting)
 
 * [x] Phase 1: Package setup
 * [x] Phase 2: S7 class architecture (simple + serial mediation)
 * [x] Phase 2.5: Comprehensive Quarto documentation
-* [ ] Phase 3: Model extraction (in progress)
-* [ ] Phase 4: Model fitting
+* [x] Phase 3: Model extraction (lm/glm, lavaan)
+* [ ] Phase 4: Model fitting (in progress)
 * [ ] Phase 5: Bootstrap infrastructure
 * [ ] Phase 6: Extended testing
 * [ ] Phase 7: Polish & release
