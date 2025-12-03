@@ -343,6 +343,118 @@ When working with S3 classes in S7 packages, follow this guide:
     - Existing S3 code continues to work because S7 objects retain S3
       class attribute
 
+**S7 and S4 Class Integration:**
+
+While S7 and S3 are fully compatible, S7 and S4 have specific
+interoperability features and limitations:
+
+1.  **Registration with `S4_register()`**: CRITICAL for S4 compatibility
+
+    ``` r
+    # Define S7 class
+    Foo <- new_class("Foo", package = "mypackage")
+
+    # REQUIRED: Register with S4 system
+    S4_register(Foo)
+
+    # Now can use with S4 generics
+    method(S4_generic, Foo) <- function(x) "Hello"
+    ```
+
+    **Why required**:
+
+    - S7 classes are created at runtime, not visible to S4 by default
+    - Without registration, S4 dispatch won’t recognize the class
+    - **In medfit**: We call
+      [`S7::S4_register()`](https://rconsortium.github.io/S7/reference/S4_register.html)
+      immediately after each class definition
+
+2.  **Bidirectional Method Dispatch**: S7 supports multiple combinations
+
+    ``` r
+    # S7 method on S4 generic (requires S4_register)
+    method(S4_generic, S7_class) <- function(x) {...}
+
+    # S4 class on S7 generic
+    method(S7_generic, S4_class) <- function(x) {...}
+
+    # Mixed signatures work
+    method(my_generic, list(S7_class, S4_class)) <- function(x, y) {...}
+    ```
+
+3.  **Inheritance Limitations - The “Firewall”**:
+
+    **CRITICAL RESTRICTION**: S7 cannot extend S4 classes
+
+    ``` r
+    # INVALID - Will fail
+    MyClass <- new_class("MyClass", parent = SomeS4Class)
+    ```
+
+    **Why this matters**:
+
+    - S7 cannot inherit from S4 (opposite direction may work)
+    - Major barrier for Bioconductor ecosystem (S4-based)
+    - Cannot subclass core S4 structures like `SummarizedExperiment`
+    - Must use composition instead of inheritance
+
+    **Workaround**: Use composition
+
+    ``` r
+    # Instead of inheriting, wrap
+    MyClass <- new_class("MyClass",
+      properties = list(
+        s4_object = S4_class  # Contain, don't extend
+      )
+    )
+    ```
+
+4.  **Properties and Slots**: Equivalent concepts
+
+    - S7 properties ≈ S4 slots (with added dynamics)
+    - Can use S4 class as property type
+    - S4 class unions auto-convert to `new_union()`
+    - Union handling differs: S4 at dispatch time, S7 at registration
+      time
+
+5.  **Migration Strategy - Bottom-Up Approach**:
+
+    Because S7 cannot inherit from S4, migration requires careful
+    planning:
+
+    **Step-by-step process**:
+
+    1.  Identify S4 classes at bottom of hierarchy (no children)
+    2.  Re-implement using `new_class()`
+    3.  Convert S4 slots → S7 properties
+    4.  Convert S4 validity methods → S7 validator functions
+    5.  Call `S4_register()` for backward compatibility
+    6.  Move up hierarchy, replacing parents only after children
+        converted
+
+    **Example**:
+
+    ``` r
+    # Old S4 class
+    setClass("Foo", slots = list(x = "numeric"))
+    setValidity("Foo", function(object) {
+      if (length(object@x) == 0) "x must have length > 0"
+    })
+
+    # New S7 equivalent
+    Foo <- new_class("Foo",
+      properties = list(
+        x = class_numeric
+      ),
+      validator = function(self) {
+        if (length(self@x) == 0) {
+          "x must have length > 0"
+        }
+      }
+    )
+    S4_register(Foo)  # Maintain S4 compatibility
+    ```
+
 ### Core Function Hierarchy
 
 **User-Facing Functions:**
