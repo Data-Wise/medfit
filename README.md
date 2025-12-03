@@ -92,11 +92,16 @@ print(result)
 
 ### S7 Classes
 
-- **`MediationData`**: Standardized container for mediation model structure
+- **`MediationData`**: Standardized container for simple mediation (X -> M -> Y)
   - Path coefficients (a, b, c')
   - Parameter estimates and variance-covariance matrix
   - Residual variances (for Gaussian models)
   - Variable names and metadata
+
+- **`SerialMediationData`**: Container for serial mediation (X -> M1 -> M2 -> ... -> Y)
+  - Supports product-of-three (2 mediators) and product-of-k (3+ mediators)
+  - Flexible design compatible with lavaan extraction patterns
+  - Extensible to complex mediation structures
 
 - **`BootstrapResult`**: Container for bootstrap inference results
   - Point estimates and confidence intervals
@@ -137,16 +142,26 @@ medfit is the foundation for three specialized mediation packages:
 - **[RMediation](https://github.com/data-wise/rmediation)**: Confidence intervals via Distribution of Product
 - **[medrobust](https://github.com/data-wise/medrobust)**: Sensitivity analysis for unmeasured confounding
 
+## Documentation
+
+Comprehensive Quarto vignettes are available:
+
+- **[Get Started](https://data-wise.github.io/medfit/articles/medfit.html)**: Quick introduction to medfit
+- **[Introduction](https://data-wise.github.io/medfit/articles/introduction.html)**: Detailed S7 class documentation
+- **[Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html)**: Extract from lm/glm/lavaan models
+- **[Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html)**: Parametric and nonparametric bootstrap methods
+
 ## Development Status
 
-**Current Phase**: MVP Development (Phase 2 Complete)
+**Current Phase**: MVP Development (Phase 2 Complete + Documentation)
 
 - [x] Phase 1: Package setup
-- [x] Phase 2: S7 class architecture
+- [x] Phase 2: S7 class architecture (with SerialMediationData)
+- [x] Phase 2.5: Comprehensive Quarto documentation
 - [ ] Phase 3: Model extraction (in progress)
 - [ ] Phase 4: Model fitting
 - [ ] Phase 5: Bootstrap infrastructure
-- [ ] Phase 6: Testing & documentation
+- [ ] Phase 6: Extended testing
 - [ ] Phase 7: Polish & release
 
 See [planning/medfit-roadmap.md](planning/medfit-roadmap.md) for detailed development plan.
