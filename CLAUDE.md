@@ -242,6 +242,66 @@ When documenting S7 classes and methods with roxygen2:
    - S7 method dispatch works automatically after `S7::S4_register()` calls
    - Always call `S7::S4_register(ClassName)` immediately after each class definition
 
+**S7 and S3 Class Integration:**
+
+When working with S3 classes in S7 packages, follow this guide:
+
+1. **Mandatory Package Setup**: Call `S7::methods_register()` in `.onLoad()`
+   - Required for dynamic method registration
+   - Especially important for methods on generics from other packages
+   - **Note**: In medfit, this causes errors during package load because classes aren't defined yet
+   - Our approach: rely on `S7::S4_register()` immediately after class definitions
+
+2. **Formalizing S3 Classes**: Use `new_S3_class()` to wrap S3 classes
+   ```r
+   # Register method for S3 class
+   method(my_generic, new_S3_class("data.frame")) <- function(x) {...}
+
+   # Use in property definitions
+   MyClass <- new_class("MyClass",
+     properties = list(
+       data = new_S3_class("data.frame")
+     )
+   )
+
+   # Use in unions
+   my_union <- new_union(class_numeric, new_S3_class("Date"))
+   ```
+
+   **Built-in S3 wrappers**: S7 provides `class_data.frame`, `class_Date`, `class_factor`, etc.
+
+3. **Inheriting from S3 Classes**: Requires custom constructor
+   ```r
+   # When inheriting from S3 via parent argument
+   MyS7Class <- new_class("MyS7Class",
+     parent = new_S3_class("integer",
+       constructor = function(.data, ...) {
+         # .data must be first argument
+         # Add S3 class attributes
+       }
+     )
+   )
+   ```
+
+4. **Calling Parent S3 Methods**: Use `S7_data()`, not `super()`
+   ```r
+   # INCORRECT - S3 generics don't understand super()
+   method(print, MyClass) <- function(x) {
+     super(x, print)  # FAILS
+   }
+
+   # CORRECT - Extract underlying S3 object
+   method(print, MyClass) <- function(x) {
+     print(S7_data(x))  # Dispatches to S3 print method
+   }
+   ```
+
+5. **Migrating S3 Packages to S7**: Incremental approach
+   - Add `S7::methods_register()` to `.onLoad()`
+   - Wrap existing S3 classes with `new_S3_class()`
+   - Gradually replace informal S3 with formal `new_class()` definitions
+   - Existing S3 code continues to work because S7 objects retain S3 class attribute
+
 ### Core Function Hierarchy
 
 **User-Facing Functions:**
