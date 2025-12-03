@@ -36,7 +36,8 @@ All extraction methods follow this pattern:
 
 For simple mediation (X -> M -> Y), fit two models:
 
-```{r lm-simple, eval=FALSE}
+```{r}
+#| label: lm-simple
 # Generate example data
 set.seed(123)
 n <- 200
@@ -86,7 +87,8 @@ The extraction captures:
 
 Works with any GLM family:
 
-```{r glm-binary, eval=FALSE}
+```{r}
+#| label: glm-binary
 # Binary outcome
 Y_binary <- rbinom(n, 1, prob = plogis(0.3 * M + 0.2 * X))
 data$Y_binary <- Y_binary
@@ -109,7 +111,8 @@ print(med)
 
 Include covariates in both models:
 
-```{r covariates, eval=FALSE}
+```{r}
+#| label: covariates
 # Add covariates
 data$Z1 <- rnorm(n)
 data$Z2 <- rnorm(n)
@@ -132,7 +135,8 @@ print(med)
 
 ### Simple Mediation in SEM
 
-```{r lavaan-simple, eval=FALSE}
+```{r}
+#| label: lavaan-simple
 library(lavaan)
 
 # Define SEM model
@@ -168,7 +172,8 @@ print(med)
 
 For serial mediation (X -> M1 -> M2 -> Y):
 
-```{r lavaan-serial, eval=FALSE}
+```{r}
+#| label: lavaan-serial
 # Generate serial mediation data
 M1 <- 0.4 * X + rnorm(n, sd = 0.8)
 M2 <- 0.5 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
@@ -210,7 +215,8 @@ med_serial@a_path * med_serial@d_path * med_serial@b_path
 
 The extraction design is compatible with RMediation's lavaan extractor:
 
-```{r rmediation-compat, eval=FALSE}
+```{r}
+#| label: rmediation-compat
 # RMediation extracts parameters for Distribution of Product method
 # medfit extracts the same structure but as S7 classes
 
@@ -222,7 +228,8 @@ The extraction design is compatible with RMediation's lavaan extractor:
 
 The extraction validates inputs:
 
-```{r error-handling, eval=FALSE}
+```{r}
+#| label: error-handling
 # Variable not in model
 extract_mediation(
   model_m,
@@ -249,7 +256,8 @@ extract_mediation(
 
 The `estimates` property contains all parameters from both models:
 
-```{r full-params, eval=FALSE}
+```{r}
+#| label: full-params
 med <- extract_mediation(model_m, model_y, treatment = "X", mediator = "M")
 
 # All parameters (intercepts + coefficients)
@@ -264,12 +272,13 @@ med@estimates["b"]  # b_path
 
 Use the covariance matrix for computing standard errors:
 
-```{r vcov, eval=FALSE}
+```{r}
+#| label: vcov
 # Covariance matrix of all parameters
 vcov_mat <- med@vcov
 
 # For delta method SE of indirect effect (a*b):
-# Var(a*b) ≈ b^2 * Var(a) + a^2 * Var(b) + 2*a*b*Cov(a,b)
+# Var(ab) = b^2 * Var(a) + a^2 * Var(b) + 2ab*Cov(a,b)
 
 a <- med@a_path
 b <- med@b_path

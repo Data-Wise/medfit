@@ -188,7 +188,7 @@ fit_mediation <- function(formula_y,
 #' ## Bootstrap Methods
 #'
 #' **Parametric Bootstrap** (`method = "parametric"`):
-#' - Samples parameter vectors from \eqn{N(\hat{\theta}, \hat{\Sigma})}
+#' - Samples parameter vectors from \eqn{N(\hat{\theta}, \hat{\Sigma})}{N(theta-hat, Sigma-hat)}
 #' - Fast and efficient
 #' - Assumes asymptotic normality of parameters
 #' - Recommended for most applications with n > 50

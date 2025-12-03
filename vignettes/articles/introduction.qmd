@@ -25,7 +25,8 @@ medfit defines three main S7 classes to represent mediation structures:
 
 Stores simple mediation models (X -> M -> Y):
 
-```{r mediation-data}
+```{r}
+#| label: mediation-data
 # Example: Create a MediationData object
 med_data <- MediationData(
   a_path = 0.5,           # X -> M effect
@@ -50,7 +51,8 @@ summary(med_data)
 
 The indirect effect is computed as `a * b`:
 
-```{r indirect-effect}
+```{r}
+#| label: indirect-effect
 # Access path coefficients
 med_data@a_path
 med_data@b_path
@@ -63,7 +65,8 @@ med_data@a_path * med_data@b_path
 
 Stores serial mediation models (X -> M1 -> M2 -> ... -> Y):
 
-```{r serial-mediation}
+```{r}
+#| label: serial-mediation
 # Example: Two-mediator serial mediation (X -> M1 -> M2 -> Y)
 serial_data <- SerialMediationData(
   a_path = 0.4,           # X -> M1
@@ -87,7 +90,8 @@ print(serial_data)
 
 For two mediators, the serial indirect effect is `a * d * b`:
 
-```{r serial-indirect}
+```{r}
+#| label: serial-indirect
 # Serial indirect effect (product-of-three)
 serial_data@a_path * serial_data@d_path * serial_data@b_path
 ```
@@ -100,7 +104,8 @@ serial_data@a_path * serial_data@d_path * serial_data@b_path
 
 Stores bootstrap inference results:
 
-```{r bootstrap-result}
+```{r}
+#| label: bootstrap-result
 # Example: Bootstrap result for indirect effect
 boot_result <- BootstrapResult(
   estimate = 0.15,        # Point estimate (a * b)
@@ -125,7 +130,8 @@ medfit provides three generic functions that work across different model types:
 
 Extract mediation structure from fitted models:
 
-```{r extract-generic, eval=FALSE}
+```{r}
+#| label: extract-generic
 # From lm/glm models
 med <- extract_mediation(
   model_m,           # Mediator model (M ~ X)
@@ -149,7 +155,8 @@ See `vignette("extraction")` for details.
 
 Fit mediation models directly:
 
-```{r fit-generic, eval=FALSE}
+```{r}
+#| label: fit-generic
 # Fit using GLM engine
 med <- fit_mediation(
   data = mydata,
@@ -166,7 +173,8 @@ med <- fit_mediation(
 
 Perform bootstrap inference on indirect effects:
 
-```{r bootstrap-generic, eval=FALSE}
+```{r}
+#| label: bootstrap-generic
 # Parametric bootstrap
 boot_result <- bootstrap_mediation(
   med_data,
