@@ -1621,3 +1621,5 @@ During `devtools::load_all()`, you may see "Overwriting method" messages:
 **Last Updated**: 2025-12-03
 **Maintained by**: medfit development team
 - doc use this keyword to update the planning documentation, README, and NEWS
+- check check the model using R CMD check --as-cran and build and preview the website
+- doc update the doc to add update the vignettes if necessary
