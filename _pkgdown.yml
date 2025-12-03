@@ -3,6 +3,7 @@ url: https://data-wise.github.io/medfit/
 template:
   bootstrap: 5
   bootswatch: litera
+  math-rendering: mathjax
   bslib:
     # A deeper, more "academic" blue for primary actions
     primary: "#0054AD"
@@ -55,7 +56,7 @@ navbar:
       text: Articles
       menu:
       - text: "Getting Started"
-        href: articles/medfit.html
+        href: articles/getting-started.html
       - text: "─────────────"
       - text: "Detailed Guides"
       - text: "Introduction to medfit"
