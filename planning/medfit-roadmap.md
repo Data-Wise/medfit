@@ -1,9 +1,9 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: Planning → Implementation
-**Timeline**: 4-6 weeks for MVP
-**Start Date**: TBD
+**Status**: Phase 2 Complete + Documentation → Phase 3 (Model Extraction)
+**Timeline**: 4-6 weeks for MVP (Started December 2024)
+**Last Updated**: December 2, 2025
 
 ---
 
@@ -44,35 +44,38 @@
 
 ---
 
-## Phase 1: Package Setup (Week 1)
+## Phase 1: Package Setup (Week 1) ✅ COMPLETE
 
 **Goal**: Create package skeleton with basic infrastructure
 
 ### 1.1 Repository & Structure
 
-- [ ] Create GitHub repository: `data-wise/medfit`
-- [ ] Initialize R package structure
-- [ ] Set up `.Rbuildignore`, `.gitignore`
-- [ ] Create DESCRIPTION file
-- [ ] Create LICENSE file (GPL-3)
-- [ ] Set up GitHub Actions CI/CD
-  - [ ] R-CMD-check.yaml (multi-platform)
-  - [ ] test-coverage.yaml
-  - [ ] pkgdown.yaml
+- [x] Create GitHub repository: `data-wise/medfit`
+- [x] Initialize R package structure
+- [x] Set up `.Rbuildignore`, `.gitignore`
+- [x] Create DESCRIPTION file
+- [x] Create LICENSE file (GPL-3)
+- [x] Set up GitHub Actions CI/CD
+  - [x] R-CMD-check.yaml (multi-platform with Quarto support)
+  - [x] test-coverage.yaml
+  - [x] pkgdown.yaml (with Quarto rendering)
 
 ### 1.2 Documentation Setup
 
-- [ ] Create README.md with:
+- [x] Create README.md with:
   - Package overview
   - Installation instructions
   - Quick start examples
   - Links to documentation
-- [ ] Create CLAUDE.md with:
+  - Ecosystem diagram
+- [x] Create CLAUDE.md with:
   - Package architecture
   - Coding standards
   - Development workflow
-- [ ] Create NEWS.md
-- [ ] Set up pkgdown configuration
+  - S7 documentation patterns
+  - Quarto vignette workflow
+- [x] Create NEWS.md
+- [x] Set up pkgdown configuration (_pkgdown.yml)
 
 ### 1.3 Package Files
 
@@ -101,9 +104,11 @@ R/
 
 ---
 
-## Phase 2: S7 Class Architecture (Week 1-2)
+## Phase 2: S7 Class Architecture (Week 1-2) ✅ COMPLETE
 
 **Goal**: Define and implement core S7 classes
+
+**Status**: Extended beyond original scope to include SerialMediationData for complex mediation structures.
 
 ### 2.1 MediationData Class
 
@@ -220,16 +225,82 @@ S7::method(show, BootstrapResult) <- function(object) print(object)
 ```
 
 **Deliverables**:
-- S7 classes defined and validated
-- Basic methods (print, summary, show)
-- Unit tests for class validation
-- Documentation for classes
+- [x] S7 classes defined and validated (MediationData, SerialMediationData, BootstrapResult)
+- [x] Basic methods (print, summary, show) for all classes
+- [x] Unit tests for class validation (87 tests total)
+- [x] Documentation for classes (roxygen2 + man pages)
+- [x] S7 method registration via .onAttach() for installed package context
 
-**Time**: 2-3 days
+**Time**: 2-3 days (completed)
 
 ---
 
-## Phase 3: Model Extraction API (Week 2)
+## Phase 2.5: Comprehensive Documentation (Added) ✅ COMPLETE
+
+**Goal**: Create comprehensive Quarto vignettes and documentation infrastructure
+
+**Status**: Added comprehensive documentation beyond original scope to provide clear usage examples and architectural guidance.
+
+### 2.5.1 Quarto Vignettes Created
+
+- [x] **Get Started** (`vignettes/medfit.qmd`)
+  - Quick introduction to medfit
+  - Basic S7 class usage examples
+  - Simple and serial mediation examples
+
+- [x] **Introduction** (`vignettes/articles/introduction.qmd`)
+  - Detailed S7 class architecture
+  - All three S7 classes (MediationData, SerialMediationData, BootstrapResult)
+  - Design principles and extensibility
+  - Package ecosystem context
+
+- [x] **Model Extraction** (`vignettes/articles/extraction.qmd`)
+  - Extraction patterns from lm/glm models
+  - Planned lavaan extraction patterns
+  - Compatibility with RMediation
+  - Error handling and validation
+
+- [x] **Bootstrap Inference** (`vignettes/articles/bootstrap.qmd`)
+  - Three bootstrap methods (parametric, nonparametric, plugin)
+  - Parallel processing guidance
+  - Reproducibility with seeds
+  - Best practices and diagnostics
+
+### 2.5.2 Documentation Infrastructure
+
+- [x] All vignettes use native Quarto format
+  - `format: html` in YAML frontmatter
+  - `execute:` options for chunk behavior
+  - No knitr setup chunks needed
+
+- [x] GitHub Actions Quarto support
+  - `quarto-dev/quarto-actions/setup@v2` in workflows
+  - Automatic Quarto installation for .qmd files
+  - Both R-CMD-check and pkgdown workflows updated
+
+- [x] pkgdown website configuration
+  - Bootstrap 5 with Flatly theme
+  - All vignettes in reference index
+  - Website URL in DESCRIPTION
+  - Auto-deployment to https://data-wise.github.io/medfit/
+
+- [x] CLAUDE.md documentation
+  - Quarto vignettes workflow best practices
+  - pkgdown configuration patterns
+  - Articles vs vignettes guidance
+
+**Deliverables**:
+- [x] Four comprehensive Quarto vignettes (>1000 lines total)
+- [x] Native Quarto format throughout
+- [x] Quarto support in CI/CD workflows
+- [x] Published pkgdown website with all documentation
+- [x] Development workflow documentation in CLAUDE.md
+
+**Time**: 1 day (completed December 2, 2025)
+
+---
+
+## Phase 3: Model Extraction API (Week 2) 🚧 IN PROGRESS
 
 **Goal**: Implement `extract_mediation()` generic and core methods
 
@@ -890,6 +961,20 @@ Integration is successful when:
 
 ---
 
-**Status**: 📋 Planning Complete, Ready to Begin Implementation
+**Status**: ✅ Phase 2 Complete + Documentation → 🚧 Phase 3 (Model Extraction) In Progress
+
+**Completed**:
+- ✅ Phase 1: Package Setup
+- ✅ Phase 2: S7 Class Architecture (extended with SerialMediationData)
+- ✅ Phase 2.5: Comprehensive Quarto Documentation (4 vignettes, pkgdown website)
+
+**Current**:
+- 🚧 Phase 3: Model Extraction (generic defined, methods in progress)
+
+**Next**:
+- Phase 4: Model Fitting
+- Phase 5: Bootstrap Infrastructure
+- Phase 6: Extended Testing
+- Phase 7: Polish & Release
 **Next Review**: After Phase 2 completion (S7 classes)
 **Last Updated**: 2025-12-02
