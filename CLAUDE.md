@@ -700,6 +700,97 @@ For complex mediation (combinations of serial and parallel):
 - Could use graph representation or nested structure
 - Keep it simple: start with separate classes, add complexity only when needed
 
+### Treatment-Mediator Interaction (VanderWeele Four-Way Decomposition)
+
+**Planned for post-MVP release** based on [VanderWeele (2014)](https://pubmed.ncbi.nlm.nih.gov/25000145/).
+
+**Theoretical Foundation**:
+
+When treatment (X) and mediator (M) interact in their effect on outcome (Y), the total effect decomposes into four components:
+
+| Component | Meaning | Due to |
+|-----------|---------|--------|
+| **CDE** | Controlled Direct Effect | Neither mediation nor interaction |
+| **INTref** | Reference Interaction | Interaction only |
+| **INTmed** | Mediated Interaction | Both mediation and interaction |
+| **PIE** | Pure Indirect Effect | Mediation only |
+
+**Decomposition**: TE = CDE + INTref + INTmed + PIE
+
+**Relationships**:
+- NDE (Natural Direct Effect) = CDE + INTref
+- NIE (Natural Indirect Effect) = INTmed + PIE
+
+**Regression Models**:
+
+```
+Mediator:  M = β₀ + β₁X + β₂'C + εₘ
+Outcome:   Y = θ₀ + θ₁X + θ₂M + θ₃(X×M) + θ₄'C + εᵧ
+```
+
+**Formulas (continuous Y/M, binary X: 0→1, m*=0)**:
+- CDE = θ₁ (effect of X when M=0)
+- INTref = θ₃(β₀ + β₂'c) (interaction at reference)
+- INTmed = θ₃β₁ (mediated interaction)
+- PIE = θ₂β₁ (pure indirect effect)
+
+**When θ₃=0** (no interaction): reduces to standard mediation where CDE=NDE=θ₁ and NIE=PIE=θ₂β₁.
+
+**InteractionMediationData Class** (planned):
+
+```r
+InteractionMediationData <- S7::new_class(
+  "InteractionMediationData",
+  package = "medfit",
+  properties = list(
+    # Core paths
+    a_path = S7::class_numeric,           # β₁: X → M
+    b_path = S7::class_numeric,           # θ₂: M → Y (main effect)
+    c_prime = S7::class_numeric,          # θ₁: X → Y (main effect)
+    interaction = S7::class_numeric,      # θ₃: X×M interaction
+
+    # Four-way components
+    cde = S7::class_numeric,              # Controlled Direct Effect
+    int_ref = S7::class_numeric,          # Reference Interaction
+    int_med = S7::class_numeric,          # Mediated Interaction
+    pie = S7::class_numeric,              # Pure Indirect Effect
+
+    # Derived effects
+    nde = S7::class_numeric,              # Natural Direct Effect
+    nie = S7::class_numeric,              # Natural Indirect Effect
+    total_effect = S7::class_numeric,
+
+    # Reference value
+    m_star = S7::class_numeric,           # Reference mediator level
+
+    # Standard properties (estimates, vcov, metadata, etc.)
+    ...
+  )
+)
+```
+
+**Usage Pattern** (planned):
+
+```r
+# Model with interaction
+fit_m <- lm(M ~ X + C, data = data)
+fit_y <- lm(Y ~ X + M + X:M + C, data = data)
+
+# Extraction detects interaction, returns InteractionMediationData
+med_int <- extract_mediation(
+  fit_m, model_y = fit_y,
+  treatment = "X", mediator = "M",
+  m_star = 0  # Reference mediator level
+)
+
+# Access four-way components
+med_int@cde; med_int@int_ref; med_int@int_med; med_int@pie
+```
+
+**Key References**:
+- VanderWeele TJ (2014). A unification of mediation and interaction. *Epidemiology*, 25(5):749-61.
+- Valeri L, VanderWeele TJ (2013). Mediation analysis allowing for exposure-mediator interactions. *Psychological Methods*, 18(2):137-150.
+
 **Why this design?**
 - **Clean separation**: Each class handles one mediation type well
 - **No over-engineering**: Don't add complexity for hypothetical future needs

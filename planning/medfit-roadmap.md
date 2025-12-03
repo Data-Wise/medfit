@@ -788,11 +788,237 @@ tests/testthat/
 
 ---
 
-## Phase 7: Polish & Release (Week 5)
+## Phase 7: Interaction Support - VanderWeele Four-Way Decomposition (Future)
+
+**Goal**: Support treatment-mediator interactions using VanderWeele's potential outcomes framework
+
+**Status**: Planned for future release (after MVP)
+
+### 7.1 Theoretical Foundation
+
+Based on [VanderWeele (2014)](https://pubmed.ncbi.nlm.nih.gov/25000145/) "A unification of mediation and interaction: a 4-way decomposition" (*Epidemiology*, 25(5):749-61).
+
+**Key Insight**: When treatment and mediator interact, the total effect decomposes into four components:
+
+| Component | Interpretation | Due to |
+|-----------|----------------|--------|
+| **CDE** (Controlled Direct Effect) | Effect of X when M held constant | Neither mediation nor interaction |
+| **INTref** (Reference Interaction) | Interaction at reference mediator level | Interaction only |
+| **INTmed** (Mediated Interaction) | Interaction operating through mediator change | Both mediation and interaction |
+| **PIE** (Pure Indirect Effect) | Mediated effect without interaction | Mediation only |
+
+**Decomposition**: Total Effect = CDE + INTref + INTmed + PIE
+
+**Relationships to traditional effects**:
+- Natural Direct Effect (NDE) = CDE + INTref
+- Natural Indirect Effect (NIE) = INTmed + PIE
+
+### 7.2 Regression Model Specifications
+
+**Mediator Model** (same as simple mediation):
+```
+M = β₀ + β₁X + β₂'C + εₘ
+```
+
+**Outcome Model with Interaction**:
+```
+Y = θ₀ + θ₁X + θ₂M + θ₃(X×M) + θ₄'C + εᵧ
+```
+
+Where:
+- `θ₁` = main effect of treatment on outcome
+- `θ₂` = main effect of mediator on outcome
+- `θ₃` = treatment × mediator interaction coefficient
+- `β₁` = effect of treatment on mediator (a path)
+
+### 7.3 Four-Way Decomposition Formulas (Continuous Y and M)
+
+For binary exposure (X: 0 → 1) and reference mediator level m*:
+
+| Effect | Formula |
+|--------|---------|
+| **CDE(m*)** | θ₁ + θ₃m* |
+| **INTref** | θ₃(β₀ + β₂'c - m*) |
+| **INTmed** | θ₃β₁ |
+| **PIE** | θ₂β₁ |
+
+**Special case (m* = 0)**:
+- CDE = θ₁
+- INTref = θ₃(β₀ + β₂'c)
+- INTmed = θ₃β₁
+- PIE = θ₂β₁
+
+**Note**: When θ₃ = 0 (no interaction):
+- CDE = NDE = θ₁
+- INTref = INTmed = 0
+- NIE = PIE = θ₂β₁ (standard indirect effect)
+
+### 7.4 InteractionMediationData Class Design
+
+```r
+#' @title InteractionMediationData
+#' @description S7 class for mediation with treatment-mediator interaction
+InteractionMediationData <- S7::new_class(
+ "InteractionMediationData",
+ package = "medfit",
+ properties = list(
+   # Path coefficients (extended)
+   a_path = S7::class_numeric,           # β₁: X → M
+   b_path = S7::class_numeric,           # θ₂: M → Y (main effect)
+   c_prime = S7::class_numeric,          # θ₁: X → Y (main effect)
+   interaction = S7::class_numeric,      # θ₃: X×M interaction
+
+   # Four-way decomposition components
+   cde = S7::class_numeric,              # Controlled Direct Effect
+   int_ref = S7::class_numeric,          # Reference Interaction
+   int_med = S7::class_numeric,          # Mediated Interaction
+   pie = S7::class_numeric,              # Pure Indirect Effect
+
+   # Derived effects
+   nde = S7::class_numeric,              # Natural Direct Effect
+   nie = S7::class_numeric,              # Natural Indirect Effect
+   total_effect = S7::class_numeric,     # Total Effect
+
+   # Reference values for decomposition
+   m_star = S7::class_numeric,           # Reference mediator value
+
+   # Standard MediationData properties
+   estimates = S7::class_numeric,
+   vcov = S7::class_matrix,
+   sigma_m = S7::class_numeric | NULL,
+   sigma_y = S7::class_numeric | NULL,
+   treatment = S7::class_character,
+   mediator = S7::class_character,
+   outcome = S7::class_character,
+   mediator_predictors = S7::class_character,
+   outcome_predictors = S7::class_character,
+   data = S7::class_data.frame | NULL,
+   n_obs = S7::class_integer,
+   converged = S7::class_logical,
+   source_package = S7::class_character
+ ),
+
+ validator = function(self) {
+   # Validate interaction is scalar
+   if (length(self@interaction) != 1) "interaction must be scalar"
+   # Validate four-way components sum to total
+   else if (abs((self@cde + self@int_ref + self@int_med + self@pie) -
+                self@total_effect) > 1e-10) {
+     "Four-way components must sum to total effect"
+   }
+   # Validate NDE = CDE + INTref
+   else if (abs((self@cde + self@int_ref) - self@nde) > 1e-10) {
+     "NDE must equal CDE + INTref"
+   }
+   # Validate NIE = INTmed + PIE
+   else if (abs((self@int_med + self@pie) - self@nie) > 1e-10) {
+     "NIE must equal INTmed + PIE"
+   }
+ }
+)
+```
+
+### 7.5 Formula Interface Extension
+
+```r
+# Extended fit_mediation() for interactions
+fit_mediation(
+ formula_y = Y ~ X + M + X:M + C,    # Includes X:M interaction
+ formula_m = M ~ X + C,
+ data = data,
+ treatment = "X",
+ mediator = "M",
+ m_star = 0,                          # Reference mediator value
+ decomposition = "four_way",          # "two_way" | "four_way"
+ engine = "glm"
+)
+```
+
+### 7.6 Extraction from Models with Interaction
+
+The `extract_mediation()` function will detect interaction terms:
+
+```r
+# Automatic detection of X:M interaction in outcome model
+fit_m <- lm(M ~ X + C, data = data)
+fit_y <- lm(Y ~ X + M + X:M + C, data = data)
+
+# Returns InteractionMediationData when interaction detected
+med_int <- extract_mediation(
+ fit_m,
+ model_y = fit_y,
+ treatment = "X",
+ mediator = "M",
+ m_star = 0                           # Reference for decomposition
+)
+
+# Access four-way components
+med_int@cde       # Controlled Direct Effect
+med_int@int_ref   # Reference Interaction
+med_int@int_med   # Mediated Interaction
+med_int@pie       # Pure Indirect Effect
+```
+
+### 7.7 Standard Error Computation
+
+Use delta method for variance of decomposition components:
+
+```r
+# Variance formulas (simplified for continuous Y, M)
+# Var(PIE) = β₁²Var(θ₂) + θ₂²Var(β₁) + 2β₁θ₂Cov(θ₂,β₁)
+# Var(INTmed) = β₁²Var(θ₃) + θ₃²Var(β₁) + 2β₁θ₃Cov(θ₃,β₁)
+# etc.
+```
+
+Alternative: Bootstrap inference (already implemented).
+
+### 7.8 Identification Assumptions
+
+Per VanderWeele (2014), causal interpretation requires:
+1. No unmeasured exposure-outcome confounding given C
+2. No unmeasured mediator-outcome confounding given C
+3. No unmeasured exposure-mediator confounding given C
+4. No mediator-outcome confounder affected by exposure
+
+**Note**: medfit computes the decomposition; causal interpretation is user's responsibility.
+
+### 7.9 Implementation Priority
+
+| Priority | Feature | Complexity |
+|----------|---------|------------|
+| High | InteractionMediationData class | Medium |
+| High | Detection of X:M interaction in extraction | Low |
+| High | Four-way decomposition formulas (continuous) | Medium |
+| Medium | Delta method SEs for decomposition | High |
+| Medium | Binary outcome formulas | High |
+| Low | Binary mediator formulas | High |
+| Low | Survival outcome formulas | High |
+
+### 7.10 Key References
+
+- **VanderWeele TJ (2014)**. A unification of mediation and interaction: a 4-way decomposition. *Epidemiology*, 25(5):749-61. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25000145/)
+- **Valeri L, VanderWeele TJ (2013)**. Mediation analysis allowing for exposure–mediator interactions and causal interpretation. *Psychological Methods*, 18(2):137-150.
+- **VanderWeele TJ (2015)**. *Explanation in Causal Inference: Methods for Mediation and Interaction*. Oxford University Press.
+- **Discacciati A et al. (2019)**. Med4way: A Stata command to investigate mediating and interactive mechanisms. *Int J Epidemiol*, 48(1):15-20.
+
+### 7.11 Deliverables
+
+- [ ] InteractionMediationData S7 class
+- [ ] Interaction detection in extract_mediation()
+- [ ] Four-way decomposition computation
+- [ ] Delta method or bootstrap SEs
+- [ ] Documentation with examples
+- [ ] Tests comparing to med4way/regmedint
+
+**Time**: 1-2 weeks (after MVP)
+
+---
+
+## Phase 8: Polish & Release (Week 5)
 
 **Goal**: Finalize for release and integration
 
-### 7.1 R CMD check
+### 8.1 R CMD check
 
 - [ ] R CMD check passes on all platforms
   - [ ] macOS (latest R)
@@ -800,7 +1026,7 @@ tests/testthat/
   - [ ] Ubuntu (latest R and R-devel)
 - [ ] 0 errors, 0 warnings, 0 notes
 
-### 7.2 CI/CD
+### 8.2 CI/CD
 
 - [ ] GitHub Actions passing
   - [ ] R-CMD-check on multi-platform
@@ -809,7 +1035,7 @@ tests/testthat/
 - [ ] Coverage badges in README
 - [ ] Build status badges
 
-### 7.3 Documentation Website
+### 8.3 Documentation Website
 
 - [ ] pkgdown site deployed to GitHub Pages
 - [ ] All vignettes render correctly
@@ -817,7 +1043,7 @@ tests/testthat/
 - [ ] NEWS.md formatted properly
 - [ ] Search functionality works
 
-### 7.4 Prepare for CRAN (Optional)
+### 8.4 Prepare for CRAN (Optional)
 
 **If submitting to CRAN**:
 - [ ] CRAN comments file prepared
@@ -899,13 +1125,16 @@ Integration is successful when:
 | 4. Fitting | 2-3 days | Day 10 | Day 13 | fit_mediation() |
 | 5. Bootstrap | 3-4 days | Day 13 | Day 17 | bootstrap_mediation() |
 | 6. Testing & Docs | 3-4 days | Day 17 | Day 21 | Complete documentation |
-| 7. Polish | 2-3 days | Day 21 | Day 24 | Production ready |
+| 7. **Interaction Support** | 1-2 weeks | Post-MVP | - | VanderWeele 4-way decomposition |
+| 8. Polish | 2-3 days | Day 21 | Day 24 | Production ready |
 
-**Total**: 17-24 days (3.5-5 weeks) for MVP
+**MVP Total**: 17-24 days (3.5-5 weeks) - Phases 1-6 + 8
+
+**Post-MVP**: Phase 7 (Interaction support) - 1-2 weeks
 
 **Buffer**: +1 week for unforeseen issues
 
-**Total with buffer**: 4-6 weeks
+**Total with buffer**: 4-6 weeks (MVP), +2 weeks (with interactions)
 
 ---
 
@@ -968,20 +1197,24 @@ Integration is successful when:
 
 ---
 
-**Status**: ✅ Phase 2 Complete + Documentation → 🚧 Phase 3 (Model Extraction) In Progress
+**Status**: ✅ Phase 3 Complete → Phase 4 (Model Fitting) Next
 
 **Completed**:
 - ✅ Phase 1: Package Setup
 - ✅ Phase 2: S7 Class Architecture (extended with SerialMediationData)
 - ✅ Phase 2.5: Comprehensive Quarto Documentation (4 vignettes, pkgdown website)
+- ✅ Phase 3: Model Extraction (lm/glm and lavaan methods implemented)
 
 **Current**:
-- 🚧 Phase 3: Model Extraction (generic defined, methods in progress)
+- ⏳ Phase 4: Model Fitting (fit_mediation with GLM engine)
 
-**Next**:
-- Phase 4: Model Fitting
+**Next (MVP)**:
 - Phase 5: Bootstrap Infrastructure
 - Phase 6: Extended Testing
-- Phase 7: Polish & Release
-**Next Review**: After Phase 2 completion (S7 classes)
+- Phase 8: Polish & Release
+
+**Post-MVP**:
+- Phase 7: Interaction Support (VanderWeele four-way decomposition)
+
+**Next Review**: After Phase 4 completion
 **Last Updated**: 2025-12-03
