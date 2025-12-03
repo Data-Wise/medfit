@@ -5,10 +5,6 @@ execute:
   collapse: true
   comment: "#>"
   eval: false
-vignette: >
-  %\VignetteIndexEntry{Getting Started with medfit}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 ---
 
 ## What is medfit?

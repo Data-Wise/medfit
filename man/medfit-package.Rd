@@ -27,6 +27,7 @@ Key classes:
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://data-wise.github.io/medfit/}
   \item \url{https://github.com/data-wise/medfit}
   \item Report bugs at \url{https://github.com/data-wise/medfit/issues}
 }

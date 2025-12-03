@@ -36,6 +36,7 @@
 #' @param source_package Character scalar: package/engine used for fitting
 #'
 #' @return A MediationData S7 object
+#' @usage NULL
 #'
 #' @details
 #' This class provides a unified container for mediation model information
@@ -207,6 +208,7 @@ S7::S4_register(MediationData)
 #' @param source_package Character scalar: package/engine used for fitting
 #'
 #' @return A SerialMediationData S7 object
+#' @usage NULL
 #'
 #' @details
 #' ## Serial Mediation Structure

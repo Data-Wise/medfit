@@ -32,6 +32,13 @@ home:
   - text: "Request Feature"
     href: https://github.com/data-wise/medfit/issues/new
 
+# LOGO CONFIGURATION
+# best practice: keep your logo at man/figures/logo.png
+logo:
+  image: man/figures/logo.png
+  align: right
+  width: 350px
+
 navbar:
   structure:
     left:  [home, reference, articles, news]

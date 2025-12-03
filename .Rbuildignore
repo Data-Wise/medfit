@@ -16,3 +16,6 @@
 ^medfit.code-workspace$
 ^\.claude$
 ^vignettes/articles$
+^vignettes/\.quarto$
+^START-HERE\.md$
+^hex-logo-prompt\.md$
