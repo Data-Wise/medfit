@@ -222,6 +222,26 @@ When documenting S7 classes and methods with roxygen2:
    })
    ```
 
+5. **S7 Method Registration in .onLoad()**: Do NOT use `S7::methods_register()`
+   ```r
+   # INCORRECT - causes load-time errors
+   .onLoad <- function(libname, pkgname) {
+     S7::methods_register()  # DON'T DO THIS
+   }
+
+   # CORRECT - rely on S4 registration
+   .onLoad <- function(libname, pkgname) {
+     # S7 methods work automatically after S7::S4_register() in class definitions
+     # No additional registration needed
+   }
+   ```
+
+   **Why**:
+   - `S7::methods_register()` in `.onLoad()` tries to register methods before classes are defined
+   - S7 methods are defined at package build time, not load time
+   - S7 method dispatch works automatically after `S7::S4_register()` calls
+   - Always call `S7::S4_register(ClassName)` immediately after each class definition
+
 ### Core Function Hierarchy
 
 **User-Facing Functions:**
