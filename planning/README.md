@@ -7,22 +7,27 @@ This directory contains implementation planning for the medfit package.
 ## 📋 Active Documents
 
 ### **medfit-roadmap.md** ⭐ Implementation Plan
-Detailed 7-phase implementation plan for creating medfit MVP.
+Detailed multi-phase implementation plan for creating medfit MVP and post-MVP features.
 
-**Phases**:
-1. Package Setup (Week 1)
-2. S7 Classes (Week 1-2)
-3. Extraction API (Week 2)
-4. Fitting API (Week 2-3)
-5. Bootstrap (Week 3-4)
-6. Testing & Docs (Week 4)
-7. Polish (Week 5)
+**MVP Phases** (Weeks 1-5):
+1. Package Setup ✅
+2. S7 Classes ✅
+3. Extraction API ✅
+4. Fitting API (in progress)
+5. Bootstrap
+6. Testing & Docs
+8. Polish & Release
+
+**Post-MVP Phases**:
+7. Interaction Support - VanderWeele four-way decomposition
+7b. Estimation Engine - User interface, Decomposition class
+7c. Engine Adapters - CMAverse integration, external package wrapping
 
 **Use this to**:
 - Track implementation progress
 - See specific tasks for each phase
 - Check success criteria
-- Understand timeline
+- Understand architecture decisions
 
 ---
 
@@ -62,4 +67,4 @@ These are in the **probmed/planning/** directory (parent ecosystem):
 
 ---
 
-**Last Updated**: 2025-12-02
+**Last Updated**: 2025-12-03
