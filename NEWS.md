@@ -36,9 +36,19 @@
 * [ ] Phase 6: Testing & documentation
 * [ ] Phase 7: Polish & release
 
+### Documentation Improvements
+
+* **S7 Class Documentation**: Added explicit `@param` tags for all class properties
+* **S7 Method Documentation**: Updated to use `@noRd` to prevent namespace export issues
+* **Generic Documentation**: Fixed `extract_mediation()` to only document generic parameters
+* **CLAUDE.md**: Added comprehensive S7 documentation patterns section for future reference
+
 ### Known Issues
 
-* S7 method dispatch in installed package context (R CMD check) needs investigation
+* **S7 Method Dispatch**: Print/summary methods don't work properly in installed package context
+  - Tests skip in non-interactive mode (5 tests affected)
+  - Methods work correctly when using `devtools::load_all()`
+  - Related to S7 method registration in installed packages
 * `fit_mediation()` and `bootstrap_mediation()` are stubs awaiting implementation
 * `extract_mediation()` methods need implementation for lm/glm, lavaan
 
