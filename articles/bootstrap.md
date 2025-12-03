@@ -15,7 +15,8 @@ All methods return a `BootstrapResult` object with consistent structure.
 
 ## Why Bootstrap for Mediation?
 
-The sampling distribution of indirect effects (a × b) is typically:
+The sampling distribution of indirect effects (\\a \times b\\) is
+typically:
 
 - **Non-normal**: Even when a and b are normal, their product is not
 - **Skewed**: Often right-skewed
@@ -48,11 +49,12 @@ summary(boot_result)
 
 ### How It Works
 
-1.  Extract parameter estimates: θ̂ = (â, b̂, …)
-2.  Extract covariance matrix: Σ̂
-3.  For each bootstrap iteration i = 1, …, B:
-    - Sample θ\*\_i ~ N(θ̂, Σ̂)
-    - Compute indirect effect: IE\*\_i = a\*\_i × b\*\_i
+1.  Extract parameter estimates: \\\hat{\theta} = (\hat{a}, \hat{b},
+    ...)\\
+2.  Extract covariance matrix: \\\hat{\Sigma}\\
+3.  For each bootstrap iteration \\i = 1, ..., B\\:
+    - Sample \\\theta^\*\_i \sim N(\hat{\theta}, \hat{\Sigma})\\
+    - Compute indirect effect: \\IE^\*\_i = a^\*\_i \times b^\*\_i\\
 4.  Compute percentile CI from bootstrap distribution
 
 ### When to Use
@@ -84,7 +86,7 @@ boot_result <- bootstrap_mediation(
   n_boot = 1000,
   ci_level = 0.95,
   seed = 123,
-  parallel = TRUE,  # Use parallel processing
+  parallel = TRUE, # Use parallel processing
   n_cores = 4
 )
 
@@ -93,12 +95,12 @@ print(boot_result)
 
 ### How It Works
 
-1.  For each bootstrap iteration i = 1, …, B:
-    - Resample data with replacement: D\*\_i
-    - Refit mediator model on D\*\_i
-    - Refit outcome model on D\*\_i
-    - Extract paths: a\*\_i, b\*\_i
-    - Compute indirect effect: IE\*\_i = a\*\_i × b\*\_i
+1.  For each bootstrap iteration \\i = 1, ..., B\\:
+    - Resample data with replacement: \\D^\*\_i\\
+    - Refit mediator model on \\D^\*\_i\\
+    - Refit outcome model on \\D^\*\_i\\
+    - Extract paths: \\a^\*\_i\\, \\b^\*\_i\\
+    - Compute indirect effect: \\IE^\*\_i = a^\*\_i \times b^\*\_i\\
 2.  Compute percentile CI from bootstrap distribution
 
 ### When to Use
@@ -146,7 +148,7 @@ Point estimate only, no confidence interval:
 plugin_result <- bootstrap_mediation(
   med,
   method = "plugin",
-  n_boot = 0  # Not used for plugin
+  n_boot = 0 # Not used for plugin
 )
 
 print(plugin_result)
@@ -160,7 +162,8 @@ print(plugin_result)
 
 ### How It Works
 
-Simply computes â × b̂ from the fitted model. No resampling.
+Simply computes \\\hat{a} \times \hat{b}\\ from the fitted model. No
+resampling.
 
 ## Interpreting Results
 
@@ -173,10 +176,12 @@ The bootstrap distribution shows the sampling variability:
 boot_estimates <- boot_result@boot_estimates
 
 # Histogram
-hist(boot_estimates,
-     breaks = 50,
-     main = "Bootstrap Distribution of Indirect Effect",
-     xlab = "Indirect Effect (a * b)")
+hist(
+  boot_estimates,
+  breaks = 50,
+  main = "Bootstrap Distribution of Indirect Effect",
+  xlab = "Indirect Effect (a * b)"
+)
 
 # Add percentile CI
 abline(v = boot_result@ci_lower, col = "red", lwd = 2)
@@ -200,9 +205,13 @@ The percentile bootstrap CI is computed as:
 c(boot_result@ci_lower, boot_result@ci_upper)
 
 # Change confidence level
-boot_90 <- bootstrap_mediation(med, method = "parametric",
-                                n_boot = 1000, ci_level = 0.90)
-c(boot_90@ci_lower, boot_90@ci_upper)  # Narrower
+boot_90 <- bootstrap_mediation(
+  med,
+  method = "parametric",
+  n_boot = 1000,
+  ci_level = 0.90
+)
+c(boot_90@ci_lower, boot_90@ci_upper) # Narrower
 ```
 
 ### Statistical Significance
@@ -253,18 +262,30 @@ Set a seed for reproducible results:
 
 ``` r
 # Same seed = same results
-boot1 <- bootstrap_mediation(med, method = "parametric",
-                              n_boot = 1000, seed = 123)
-boot2 <- bootstrap_mediation(med, method = "parametric",
-                              n_boot = 1000, seed = 123)
+boot1 <- bootstrap_mediation(
+  med,
+  method = "parametric",
+  n_boot = 1000,
+  seed = 123
+)
+boot2 <- bootstrap_mediation(
+  med,
+  method = "parametric",
+  n_boot = 1000,
+  seed = 123
+)
 
 # Identical results
-all.equal(boot1@boot_estimates, boot2@boot_estimates)  # TRUE
+all.equal(boot1@boot_estimates, boot2@boot_estimates) # TRUE
 
 # Different seed = different results
-boot3 <- bootstrap_mediation(med, method = "parametric",
-                              n_boot = 1000, seed = 456)
-all.equal(boot1@boot_estimates, boot3@boot_estimates)  # FALSE
+boot3 <- bootstrap_mediation(
+  med,
+  method = "parametric",
+  n_boot = 1000,
+  seed = 456
+)
+all.equal(boot1@boot_estimates, boot3@boot_estimates) # FALSE
 ```
 
 ## How Many Bootstrap Samples?
@@ -279,9 +300,24 @@ Check stability by varying `n_boot`:
 
 ``` r
 # Compare different n_boot
-boot_1k <- bootstrap_mediation(med, method = "parametric", n_boot = 1000, seed = 123)
-boot_5k <- bootstrap_mediation(med, method = "parametric", n_boot = 5000, seed = 123)
-boot_10k <- bootstrap_mediation(med, method = "parametric", n_boot = 10000, seed = 123)
+boot_1k <- bootstrap_mediation(
+  med,
+  method = "parametric",
+  n_boot = 1000,
+  seed = 123
+)
+boot_5k <- bootstrap_mediation(
+  med,
+  method = "parametric",
+  n_boot = 5000,
+  seed = 123
+)
+boot_10k <- bootstrap_mediation(
+  med,
+  method = "parametric",
+  n_boot = 10000,
+  seed = 123
+)
 
 # Compare CIs
 rbind(
@@ -314,7 +350,7 @@ a <- med@a_path
 b <- med@b_path
 var_a <- vcov(model_m)["X", "X"]
 var_b <- vcov(model_y)["M", "M"]
-cov_ab <- 0  # Assumed independent
+cov_ab <- 0 # Assumed independent
 
 se_delta <- sqrt(b^2 * var_a + a^2 * var_b)
 

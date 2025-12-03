@@ -270,7 +270,7 @@ Use the covariance matrix for computing standard errors:
 vcov_mat <- med@vcov
 
 # For delta method SE of indirect effect (a*b):
-# Var(a*b) ≈ b^2 * Var(a) + a^2 * Var(b) + 2*a*b*Cov(a,b)
+# Var(ab) = b^2 * Var(a) + a^2 * Var(b) + 2ab*Cov(a,b)
 
 a <- med@a_path
 b <- med@b_path

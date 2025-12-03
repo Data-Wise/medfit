@@ -30,6 +30,21 @@
 <meta property="og:image" content="https://data-wise.github.io/medfit/logo.png">
 </head>
 <body>
+<p>
+
+
+
+
+
+
+
+
+
+  pkgdown/mathjax-config.html
+
+  
+
+  </p>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -102,7 +117,7 @@
 <p>All methods return a <code>BootstrapResult</code> object with consistent structure.</p>
 </section><section class="level2"><h2 id="why-bootstrap-for-mediation">Why Bootstrap for Mediation?<a class="anchor" aria-label="anchor" href="#why-bootstrap-for-mediation"></a>
 </h2>
-<p>The sampling distribution of indirect effects (a × b) is typically:</p>
+<p>The sampling distribution of indirect effects (<span class="math inline">\(a \times b\)</span>) is typically:</p>
 <ul>
 <li>
 <strong>Non-normal</strong>: Even when a and b are normal, their product is not</li>
@@ -135,12 +150,16 @@
 <section class="level3"><h3 id="how-it-works">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
 </h3>
 <ol type="1">
-<li>Extract parameter estimates: θ̂ = (â, b̂, …)</li>
-<li>Extract covariance matrix: Σ̂</li>
-<li>For each bootstrap iteration i = 1, …, B:
+<li>Extract parameter estimates: <span class="math inline">\(\hat{\theta} = (\hat{a}, \hat{b}, ...)\)</span>
+</li>
+<li>Extract covariance matrix: <span class="math inline">\(\hat{\Sigma}\)</span>
+</li>
+<li>For each bootstrap iteration <span class="math inline">\(i = 1, ..., B\)</span>:
 <ul>
-<li>Sample θ*_i ~ N(θ̂, Σ̂)</li>
-<li>Compute indirect effect: IE*_i = a*_i × b*_i</li>
+<li>Sample <span class="math inline">\(\theta^*_i \sim N(\hat{\theta}, \hat{\Sigma})\)</span>
+</li>
+<li>Compute indirect effect: <span class="math inline">\(IE^*_i = a^*_i \times b^*_i\)</span>
+</li>
 </ul>
 </li>
 <li>Compute percentile CI from bootstrap distribution</li>
@@ -176,7 +195,7 @@
 <span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">123</span>,</span>
-<span>  parallel <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co"># Use parallel processing</span></span>
+<span>  parallel <span class="op">=</span> <span class="cn">TRUE</span>, <span class="co"># Use parallel processing</span></span>
 <span>  n_cores <span class="op">=</span> <span class="fl">4</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -185,13 +204,18 @@
 <section class="level3"><h3 id="how-it-works-1">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works-1"></a>
 </h3>
 <ol type="1">
-<li>For each bootstrap iteration i = 1, …, B:
+<li>For each bootstrap iteration <span class="math inline">\(i = 1, ..., B\)</span>:
 <ul>
-<li>Resample data with replacement: D*_i</li>
-<li>Refit mediator model on D*_i</li>
-<li>Refit outcome model on D*_i</li>
-<li>Extract paths: a*_i, b*_i</li>
-<li>Compute indirect effect: IE*_i = a*_i × b*_i</li>
+<li>Resample data with replacement: <span class="math inline">\(D^*_i\)</span>
+</li>
+<li>Refit mediator model on <span class="math inline">\(D^*_i\)</span>
+</li>
+<li>Refit outcome model on <span class="math inline">\(D^*_i\)</span>
+</li>
+<li>Extract paths: <span class="math inline">\(a^*_i\)</span>, <span class="math inline">\(b^*_i\)</span>
+</li>
+<li>Compute indirect effect: <span class="math inline">\(IE^*_i = a^*_i \times b^*_i\)</span>
+</li>
 </ul>
 </li>
 <li>Compute percentile CI from bootstrap distribution</li>
@@ -242,7 +266,7 @@
 <span><span class="va">plugin_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
 <span>  <span class="va">med</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"plugin"</span>,</span>
-<span>  n_boot <span class="op">=</span> <span class="fl">0</span>  <span class="co"># Not used for plugin</span></span>
+<span>  n_boot <span class="op">=</span> <span class="fl">0</span> <span class="co"># Not used for plugin</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plugin_result</span><span class="op">)</span></span></code></pre></div>
@@ -255,7 +279,7 @@
 <li>When CI is not needed</li>
 </ul></section><section class="level3"><h3 id="how-it-works-2">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works-2"></a>
 </h3>
-<p>Simply computes â × b̂ from the fitted model. No resampling.</p>
+<p>Simply computes <span class="math inline">\(\hat{a} \times \hat{b}\)</span> from the fitted model. No resampling.</p>
 </section></section><section class="level2"><h2 id="interpreting-results">Interpreting Results<a class="anchor" aria-label="anchor" href="#interpreting-results"></a>
 </h2>
 <section class="level3"><h3 id="bootstrap-distribution">Bootstrap Distribution<a class="anchor" aria-label="anchor" href="#bootstrap-distribution"></a>
@@ -267,10 +291,12 @@
 <span><span class="va">boot_estimates</span> <span class="op">&lt;-</span> <span class="va">boot_result</span><span class="op">@</span><span class="va">boot_estimates</span></span>
 <span></span>
 <span><span class="co"># Histogram</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">boot_estimates</span>,</span>
-<span>     breaks <span class="op">=</span> <span class="fl">50</span>,</span>
-<span>     main <span class="op">=</span> <span class="st">"Bootstrap Distribution of Indirect Effect"</span>,</span>
-<span>     xlab <span class="op">=</span> <span class="st">"Indirect Effect (a * b)"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span></span>
+<span>  <span class="va">boot_estimates</span>,</span>
+<span>  breaks <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>  main <span class="op">=</span> <span class="st">"Bootstrap Distribution of Indirect Effect"</span>,</span>
+<span>  xlab <span class="op">=</span> <span class="st">"Indirect Effect (a * b)"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Add percentile CI</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_lower</span>, col <span class="op">=</span> <span class="st">"red"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
@@ -294,9 +320,13 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Change confidence level</span></span>
-<span><span class="va">boot_90</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">med</span>, method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
-<span>                                n_boot <span class="op">=</span> <span class="fl">1000</span>, ci_level <span class="op">=</span> <span class="fl">0.90</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_90</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_90</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span>  <span class="co"># Narrower</span></span></code></pre></div>
+<span><span class="va">boot_90</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">med</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  ci_level <span class="op">=</span> <span class="fl">0.90</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_90</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_90</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span> <span class="co"># Narrower</span></span></code></pre></div>
 </div>
 </section><section class="level3"><h3 id="statistical-significance">Statistical Significance<a class="anchor" aria-label="anchor" href="#statistical-significance"></a>
 </h3>
@@ -343,18 +373,30 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Same seed = same results</span></span>
-<span><span class="va">boot1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">med</span>, method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
-<span>                              n_boot <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span></span>
-<span><span class="va">boot2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">med</span>, method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
-<span>                              n_boot <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span></span>
+<span><span class="va">boot1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">med</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">123</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">boot2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">med</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">123</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Identical results</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">boot1</span><span class="op">@</span><span class="va">boot_estimates</span>, <span class="va">boot2</span><span class="op">@</span><span class="va">boot_estimates</span><span class="op">)</span>  <span class="co"># TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">boot1</span><span class="op">@</span><span class="va">boot_estimates</span>, <span class="va">boot2</span><span class="op">@</span><span class="va">boot_estimates</span><span class="op">)</span> <span class="co"># TRUE</span></span>
 <span></span>
 <span><span class="co"># Different seed = different results</span></span>
-<span><span class="va">boot3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">med</span>, method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
-<span>                              n_boot <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">456</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">boot1</span><span class="op">@</span><span class="va">boot_estimates</span>, <span class="va">boot3</span><span class="op">@</span><span class="va">boot_estimates</span><span class="op">)</span>  <span class="co"># FALSE</span></span></code></pre></div>
+<span><span class="va">boot3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">med</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">456</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">boot1</span><span class="op">@</span><span class="va">boot_estimates</span>, <span class="va">boot3</span><span class="op">@</span><span class="va">boot_estimates</span><span class="op">)</span> <span class="co"># FALSE</span></span></code></pre></div>
 </div>
 </section><section class="level2"><h2 id="how-many-bootstrap-samples">How Many Bootstrap Samples?<a class="anchor" aria-label="anchor" href="#how-many-bootstrap-samples"></a>
 </h2>
@@ -371,9 +413,24 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Compare different n_boot</span></span>
-<span><span class="va">boot_1k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">med</span>, method <span class="op">=</span> <span class="st">"parametric"</span>, n_boot <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span></span>
-<span><span class="va">boot_5k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">med</span>, method <span class="op">=</span> <span class="st">"parametric"</span>, n_boot <span class="op">=</span> <span class="fl">5000</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span></span>
-<span><span class="va">boot_10k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">med</span>, method <span class="op">=</span> <span class="st">"parametric"</span>, n_boot <span class="op">=</span> <span class="fl">10000</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span></span>
+<span><span class="va">boot_1k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">med</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">123</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">boot_5k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">med</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">5000</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">123</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">boot_10k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">med</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">10000</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">123</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Compare CIs</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
@@ -404,7 +461,7 @@
 <span><span class="va">b</span> <span class="op">&lt;-</span> <span class="va">med</span><span class="op">@</span><span class="va">b_path</span></span>
 <span><span class="va">var_a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">model_m</span><span class="op">)</span><span class="op">[</span><span class="st">"X"</span>, <span class="st">"X"</span><span class="op">]</span></span>
 <span><span class="va">var_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">model_y</span><span class="op">)</span><span class="op">[</span><span class="st">"M"</span>, <span class="st">"M"</span><span class="op">]</span></span>
-<span><span class="va">cov_ab</span> <span class="op">&lt;-</span> <span class="fl">0</span>  <span class="co"># Assumed independent</span></span>
+<span><span class="va">cov_ab</span> <span class="op">&lt;-</span> <span class="fl">0</span> <span class="co"># Assumed independent</span></span>
 <span></span>
 <span><span class="va">se_delta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">b</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span> <span class="va">var_a</span> <span class="op">+</span> <span class="va">a</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span> <span class="va">var_b</span><span class="op">)</span></span>
 <span></span>
@@ -548,5 +605,6 @@
 
 
 
-  </body>
+  
+</body>
 </html>
