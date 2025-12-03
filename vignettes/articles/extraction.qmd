@@ -19,6 +19,47 @@ Note: OpenMx extraction is planned for a future release.
 
 All extraction methods return a `MediationData` or `SerialMediationData` object, ensuring consistency across modeling frameworks.
 
+## Theoretical Background
+
+### The Baron and Kenny Framework
+
+Modern mediation analysis builds on the foundational work of Baron & Kenny (1986), who formalized the statistical approach to testing mediation hypotheses. In their framework, mediation occurs when a treatment variable X influences an outcome Y through an intervening variable M (the mediator).
+
+The basic mediation model involves three regression equations:
+
+1. **Total effect**: $Y = c \cdot X + e_1$
+2. **Mediator model**: $M = a \cdot X + e_2$
+3. **Outcome model**: $Y = c' \cdot X + b \cdot M + e_3$
+
+Where:
+- $a$ = effect of X on M (the "a path")
+- $b$ = effect of M on Y, controlling for X (the "b path")
+- $c'$ = direct effect of X on Y, controlling for M (the "c prime" path)
+- $c$ = total effect of X on Y
+
+### Effect Decomposition
+
+The total effect decomposes into direct and indirect components:
+
+$$c = c' + ab$$
+
+This identity, known as the **Baron-Kenny decomposition**, means:
+- The **indirect effect** ($ab$) represents the portion of the total effect that operates through the mediator
+- The **direct effect** ($c'$) represents the portion that operates independently of the mediator
+
+### Parameter Extraction
+
+medfit extracts all parameters needed for effect decomposition and inference:
+
+| Parameter | Description | Source |
+|-----------|-------------|--------|
+| $a$ | X → M effect | Mediator model coefficient |
+| $b$ | M → Y effect (controlling for X) | Outcome model coefficient |
+| $c'$ | X → Y direct effect | Outcome model coefficient |
+| $\sigma^2_M$ | Residual variance of M | Mediator model |
+| $\sigma^2_Y$ | Residual variance of Y | Outcome model |
+| $\Sigma$ | Parameter covariance matrix | Combined from both models |
+
 ## Extraction Pattern
 
 All extraction methods follow this pattern:
@@ -281,29 +322,47 @@ med@estimates["a"]  # a_path
 med@estimates["b"]  # b_path
 ```
 
-### Covariance Matrix for Delta Method
+### Covariance Matrix for Inference
 
-Use the covariance matrix for computing standard errors:
+The covariance matrix is essential for computing standard errors and for parametric bootstrap. medfit constructs a joint covariance matrix from both models.
+
+**Construction Details:**
+
+For separate mediator and outcome models, the parameters from each model are assumed independent (they are estimated from the same data but different response variables). The joint covariance matrix is block-diagonal:
+
+$$\Sigma = \begin{pmatrix} \Sigma_M & 0 \\ 0 & \Sigma_Y \end{pmatrix}$$
+
+where $\Sigma_M$ is the covariance of mediator model parameters and $\Sigma_Y$ is the covariance of outcome model parameters.
 
 ```{r}
 #| label: vcov
 # Covariance matrix of all parameters
 vcov_mat <- med@vcov
 
-# For delta method SE of indirect effect (a*b):
-# Var(ab) = b^2 * Var(a) + a^2 * Var(b) + 2ab*Cov(a,b)
+# Block structure: mediator model params, then outcome model params
+dimnames(vcov_mat)
+
+# For Sobel test SE of indirect effect (a*b):
+# Since a comes from mediator model and b from outcome model,
+# Cov(a,b) = 0 in the block-diagonal structure
 
 a <- med@a_path
 b <- med@b_path
 var_a <- vcov_mat["a", "a"]
 var_b <- vcov_mat["b", "b"]
-cov_ab <- vcov_mat["a", "b"]
+cov_ab <- vcov_mat["a", "b"]  # Will be 0 for separate models
 
+# Sobel formula (when cov_ab = 0)
+se_sobel <- sqrt(b^2 * var_a + a^2 * var_b)
+
+# First-order Taylor approximation (general case with covariance term)
 var_indirect <- b^2 * var_a + a^2 * var_b + 2 * a * b * cov_ab
 se_indirect <- sqrt(var_indirect)
 
 se_indirect
 ```
+
+**Note:** For SEM models (lavaan), the covariance matrix is estimated jointly, so $\text{Cov}(a, b)$ may be non-zero. The bootstrap vignette discusses why bootstrap methods are generally preferred over delta-method standard errors.
 
 ## Design for Extensibility
 
@@ -334,3 +393,15 @@ Phase 3 (Model Extraction) is **complete**:
 **Note**: OpenMx extraction has been postponed to a future release.
 
 See `NEWS.md` for updates.
+
+## References
+
+- Baron, R. M., & Kenny, D. A. (1986). The moderator-mediator variable distinction in social psychological research: Conceptual, strategic, and statistical considerations. *Journal of Personality and Social Psychology*, 51(6), 1173-1182. https://doi.org/10.1037/0022-3514.51.6.1173
+
+- MacKinnon, D. P. (2008). *Introduction to Statistical Mediation Analysis*. Lawrence Erlbaum Associates.
+
+- VanderWeele, T. J. (2015). *Explanation in Causal Inference: Methods for Mediation and Interaction*. Oxford University Press.
+
+- Imai, K., Keele, L., & Tingley, D. (2010). A general approach to causal mediation analysis. *Psychological Methods*, 15(4), 309-334. https://doi.org/10.1037/a0020761
+
+- Pearl, J. (2014). Interpretation and identification of causal mediation. *Psychological Methods*, 19(4), 459-481. https://doi.org/10.1037/a0036434

@@ -17,6 +17,24 @@ Bootstrap inference provides confidence intervals for indirect effects without a
 
 All methods return a `BootstrapResult` object with consistent structure.
 
+## Theoretical Background
+
+### Why Bootstrap for Indirect Effects?
+
+The indirect effect in mediation analysis is computed as the product of path coefficients: $ab$. Even when the individual coefficients $a$ and $b$ are normally distributed, their product typically is not (Aroian, 1947; Craig, 1936). This creates challenges for traditional confidence interval methods.
+
+MacKinnon et al. (2002) compared 14 methods for testing mediation and found that:
+
+- Normal-theory methods (Sobel test) have low statistical power
+- Bootstrap methods provide the best balance of Type I error and power
+- Bias-corrected bootstrap has excellent coverage properties
+
+Preacher & Hayes (2008) further established bootstrap methods as the standard for mediation inference, noting that they:
+
+- Make no assumptions about the shape of the sampling distribution
+- Can be applied to complex mediation models
+- Provide confidence intervals with accurate coverage rates
+
 ## Why Bootstrap for Mediation?
 
 The sampling distribution of indirect effects ($a \times b$) is typically:
@@ -39,10 +57,16 @@ Samples from the estimated parameter distribution:
 # Assume we have extracted mediation structure
 med <- extract_mediation(model_m, model_y, treatment = "X", mediator = "M")
 
+# Define statistic function for indirect effect
+indirect_effect <- function(theta) {
+  theta["a"] * theta["b"]
+}
+
 # Parametric bootstrap
 boot_result <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   ci_level = 0.95,
   seed = 123
@@ -54,12 +78,22 @@ summary(boot_result)
 
 ### How It Works
 
-1. Extract parameter estimates: $\hat{\theta} = (\hat{a}, \hat{b}, ...)$
+The parametric bootstrap assumes that the parameter estimates follow a multivariate normal distribution (Efron & Tibshirani, 1993):
+
+$$\hat{\theta} \sim N(\theta, \Sigma)$$
+
+where $\theta = (a, b, c', \ldots)$ are the mediation path coefficients and $\Sigma$ is their covariance matrix.
+
+**Algorithm:**
+
+1. Extract parameter estimates: $\hat{\theta} = (\hat{a}, \hat{b}, \ldots)$
 2. Extract covariance matrix: $\hat{\Sigma}$
-3. For each bootstrap iteration $i = 1, ..., B$:
-   - Sample $\theta^*_i \sim N(\hat{\theta}, \hat{\Sigma})$
+3. For each bootstrap iteration $i = 1, \ldots, B$:
+   - Sample $\theta^*_i \sim N(\hat{\theta}, \hat{\Sigma})$ using `MASS::mvrnorm()`
    - Compute indirect effect: $IE^*_i = a^*_i \times b^*_i$
 4. Compute percentile CI from bootstrap distribution
+
+**Implementation Detail**: When the covariance matrix is near-singular (which can occur with highly correlated predictors), medfit applies eigenvalue adjustment to ensure positive definiteness before sampling.
 
 ### When to Use
 
@@ -86,13 +120,12 @@ Resamples data and refits models:
 #| label: nonparametric
 # Nonparametric bootstrap (requires original data)
 boot_result <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "nonparametric",
+  mediation_data = med,
   n_boot = 1000,
   ci_level = 0.95,
-  seed = 123,
-  parallel = TRUE, # Use parallel processing
-  n_cores = 4
+  seed = 123
 )
 
 print(boot_result)
@@ -100,13 +133,23 @@ print(boot_result)
 
 ### How It Works
 
-1. For each bootstrap iteration $i = 1, ..., B$:
-   - Resample data with replacement: $D^*_i$
-   - Refit mediator model on $D^*_i$
-   - Refit outcome model on $D^*_i$
+The nonparametric bootstrap (Efron, 1979) makes no distributional assumptions about the data:
+
+**Algorithm:**
+
+1. For each bootstrap iteration $i = 1, \ldots, B$:
+   - Resample data with replacement: $D^*_i$ (sample $n$ observations from original $n$)
+   - Refit mediator model on $D^*_i$ using the original formula
+   - Refit outcome model on $D^*_i$ using the original formula
    - Extract paths: $a^*_i$, $b^*_i$
    - Compute indirect effect: $IE^*_i = a^*_i \times b^*_i$
 2. Compute percentile CI from bootstrap distribution
+
+**Implementation Details:**
+
+- Uses the formulas stored in `MediationData` to refit models
+- Handles model convergence failures gracefully (returns NA for failed iterations)
+- Supports GLM families specified in the original model fit
 
 ### When to Use
 
@@ -350,34 +393,62 @@ Future versions may add:
 - **Studentized bootstrap**: Better coverage in some cases
 - **Bayesian bootstrap**: Posterior intervals
 
-## Comparison with Delta Method
+## Comparison with Delta Method (Sobel Test)
 
-The delta method provides asymptotic SE for indirect effects:
+The delta method, often called the Sobel test (Sobel, 1982), provides asymptotic standard errors for indirect effects:
+
+### Sobel Standard Error Formula
+
+The first-order delta method approximation yields:
+
+$$SE_{ab} = \sqrt{b^2 \cdot \text{Var}(a) + a^2 \cdot \text{Var}(b)}$$
+
+This is known as the Sobel (1982) formula. Aroian (1947) derived a more accurate formula that includes the product of variances:
+
+$$SE_{ab} = \sqrt{b^2 \cdot \text{Var}(a) + a^2 \cdot \text{Var}(b) + \text{Var}(a) \cdot \text{Var}(b)}$$
 
 ```{r}
 #| label: delta
-# Delta method SE
+# Sobel test SE (first-order approximation)
 a <- med@a_path
 b <- med@b_path
-var_a <- vcov(model_m)["X", "X"]
-var_b <- vcov(model_y)["M", "M"]
-cov_ab <- 0 # Assumed independent
+var_a <- med@vcov["a", "a"]
+var_b <- med@vcov["b", "b"]
 
-se_delta <- sqrt(b^2 * var_a + a^2 * var_b)
+# Sobel formula
+se_sobel <- sqrt(b^2 * var_a + a^2 * var_b)
 
-# Delta method 95% CI (assumes normality)
-ci_delta <- med@a_path * med@b_path + c(-1.96, 1.96) * se_delta
+# Aroian formula (more accurate)
+se_aroian <- sqrt(b^2 * var_a + a^2 * var_b + var_a * var_b)
+
+# Sobel 95% CI (assumes normality of ab)
+indirect <- a * b
+ci_sobel <- indirect + c(-1.96, 1.96) * se_sobel
 
 # Compare with bootstrap
 ci_boot <- c(boot_result@ci_lower, boot_result@ci_upper)
 
-rbind(delta = ci_delta, bootstrap = ci_boot)
+rbind(sobel = ci_sobel, bootstrap = ci_boot)
 ```
 
-Bootstrap is generally preferred because it:
-- Doesn't assume normality of indirect effect
-- Handles skewness correctly
-- Provides better coverage
+### Why Bootstrap is Preferred
+
+MacKinnon et al. (2002) compared the Sobel test to bootstrap methods and found:
+
+1. **Power**: Bootstrap methods have higher statistical power, especially when sample sizes are small or effects are modest
+2. **Coverage**: Bootstrap CIs maintain better coverage of the true parameter
+3. **Assumptions**: The Sobel test assumes the product $ab$ is normally distributed, which is often violated
+
+The Sobel test tends to be conservative (underpowered) because:
+
+- The product of two normal variables follows a complex distribution, not a normal distribution
+- The sampling distribution of $ab$ is typically skewed, especially when $a$ and $b$ are small
+
+Bootstrap methods address these issues by:
+
+- Making no assumptions about the shape of the sampling distribution
+- Directly estimating the sampling distribution through resampling
+- Providing accurate quantile-based confidence intervals
 
 ## Best Practices
 
@@ -404,10 +475,31 @@ Bootstrap is generally preferred because it:
 
 ## Development Status
 
-Currently implemented:
+Phase 5 (Bootstrap Inference) is **complete**:
+
 - ✅ S7 class for BootstrapResult
-- 📋 Parametric bootstrap (planned)
-- 📋 Nonparametric bootstrap (planned)
-- 📋 Parallel processing support (planned)
+- ✅ Parametric bootstrap (implemented)
+- ✅ Nonparametric bootstrap (implemented)
+- ✅ Plugin estimator (implemented)
+- ✅ Flexible statistic functions
+- ✅ Seed-based reproducibility
 
 See `NEWS.md` for updates.
+
+## References
+
+- Aroian, L. A. (1947). The probability function of the product of two normally distributed variables. *Annals of Mathematical Statistics*, 18(2), 265-271.
+
+- Baron, R. M., & Kenny, D. A. (1986). The moderator-mediator variable distinction in social psychological research: Conceptual, strategic, and statistical considerations. *Journal of Personality and Social Psychology*, 51(6), 1173-1182. https://doi.org/10.1037/0022-3514.51.6.1173
+
+- Craig, C. C. (1936). On the frequency function of xy. *Annals of Mathematical Statistics*, 7(1), 1-15.
+
+- Efron, B. (1979). Bootstrap methods: Another look at the jackknife. *Annals of Statistics*, 7(1), 1-26.
+
+- Efron, B., & Tibshirani, R. J. (1993). *An Introduction to the Bootstrap*. Chapman & Hall/CRC.
+
+- MacKinnon, D. P., Lockwood, C. M., Hoffman, J. M., West, S. G., & Sheets, V. (2002). A comparison of methods to test mediation and other intervening variable effects. *Psychological Methods*, 7(1), 83-104. https://doi.org/10.1037/1082-989X.7.1.83
+
+- Preacher, K. J., & Hayes, A. F. (2008). Asymptotic and resampling strategies for assessing and comparing indirect effects in multiple mediator models. *Behavior Research Methods*, 40(3), 879-891. https://doi.org/10.3758/BRM.40.3.879
+
+- Sobel, M. E. (1982). Asymptotic confidence intervals for indirect effects in structural equation models. *Sociological Methodology*, 13, 290-312. https://doi.org/10.2307/270723
