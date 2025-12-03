@@ -244,6 +244,26 @@
 <span>  <span class="co"># ... test code</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 </li>
+<li>
+<p><strong>S7 Method Registration in .onLoad()</strong>: Do NOT use <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># INCORRECT - causes load-time errors</span></span>
+<span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">libname</span>, <span class="va">pkgname</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">methods_register</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># DON'T DO THIS</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># CORRECT - rely on S4 registration</span></span>
+<span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">libname</span>, <span class="va">pkgname</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># S7 methods work automatically after S7::S4_register() in class definitions</span></span>
+<span>  <span class="co"># No additional registration needed</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><strong>Why</strong>:</p>
+<ul><li>
+<code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code> in <code>.onLoad()</code> tries to register methods before classes are defined</li>
+<li>S7 methods are defined at package build time, not load time</li>
+<li>S7 method dispatch works automatically after <code><a href="https://rconsortium.github.io/S7/reference/S4_register.html" class="external-link">S7::S4_register()</a></code> calls</li>
+<li>Always call <code>S7::S4_register(ClassName)</code> immediately after each class definition</li>
+</ul></li>
 </ol></div>
 <div class="section level3">
 <h3 id="core-function-hierarchy">Core Function Hierarchy<a class="anchor" aria-label="anchor" href="#core-function-hierarchy"></a></h3>
@@ -287,7 +307,7 @@
 <div class="section level3">
 <h3 id="explicit-namespacing">Explicit Namespacing<a class="anchor" aria-label="anchor" href="#explicit-namespacing"></a></h3>
 <p><strong>CRITICAL</strong>: All non-base functions MUST use explicit namespacing:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># CORRECT</span></span>
 <span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">formula</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
 <span><span class="fu">MASS</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html" class="external-link">mvrnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">mu</span>, <span class="va">Sigma</span><span class="op">)</span></span>
@@ -348,7 +368,7 @@
 <div class="section level3">
 <h3 id="dynamic-s7s4-dispatch">Dynamic S7/S4 Dispatch<a class="anchor" aria-label="anchor" href="#dynamic-s7s4-dispatch"></a></h3>
 <p>For S4 classes from suggested packages (lavaan, OpenMx):</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># In R/zzz.R</span></span>
 <span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">libname</span>, <span class="va">pkgname</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># Register lavaan method if available</span></span>
