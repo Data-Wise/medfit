@@ -15,3 +15,4 @@
 ^pkgdown$
 ^medfit.code-workspace$
 ^\.claude$
+^vignettes/articles$

@@ -16,7 +16,7 @@ Description: Provides S7-based infrastructure for fitting mediation models,
     mixed models and Bayesian methods), standardized extraction of mediation
     paths from various model types, and robust bootstrap inference methods.
 License: GPL (>= 3) + file LICENSE
-URL: https://github.com/data-wise/medfit
+URL: https://data-wise.github.io/medfit/, https://github.com/data-wise/medfit
 BugReports: https://github.com/data-wise/medfit/issues
 Depends:
     R (>= 4.1.0)
@@ -28,9 +28,13 @@ Suggests:
     MASS,
     lavaan (>= 0.6-0),
     OpenMx (>= 2.13),
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+Config/Needs/website: knitr, rmarkdown, quarto
+VignetteBuilder: knitr

@@ -96,6 +96,55 @@ The package uses pkgdown to generate a website from package documentation. Confi
 - Use `starts_with()` patterns for methods (print*, summary*, etc.)
 - Website builds to `docs/` directory
 
+**Quarto Vignettes and pkgdown Workflow:**
+
+To ensure Quarto vignettes pass workflow checks and render correctly on GitHub:
+
+1. **Initial Setup:**
+   ```r
+   # Initialize pkgdown with GitHub Pages support
+   usethis::use_pkgdown_github_pages()
+   ```
+   This automatically:
+   - Creates `gh-pages` branch for hosting
+   - Generates `.github/workflows/pkgdown.yaml`
+   - Updates DESCRIPTION and `_pkgdown.yml` with site URL
+
+2. **Declare Dependencies:**
+   - List all vignette dependencies in DESCRIPTION under `Suggests`
+   - For website-only dependencies, use `Config/Needs/website` field:
+     ```
+     Config/Needs/website: ggplot2, dplyr, tidyr
+     ```
+   - This ensures CI installs them without cluttering package dependencies
+
+3. **Quarto Support:**
+   - pkgdown automatically detects and renders Quarto vignettes
+   - Vignettes appear in the `articles/` section of the website
+   - No special configuration needed for basic Quarto files
+
+4. **Computationally Expensive Vignettes:**
+   - If vignette code is slow or requires credentials, use **Articles** instead:
+     ```r
+     usethis::use_article("article-name")
+     ```
+   - Articles are rendered by pkgdown but NOT included in `R CMD check`
+   - Prevents timeouts and failures on CI servers
+   - Use for: heavy simulations, API examples requiring keys, large data processing
+
+5. **Common Workflow Failures:**
+   - **Missing system libraries**: Ensure system dependencies are available on CI runner
+   - **Malformed markdown**: Use consistent header levels (`#`, `##`) in NEWS.md
+   - **Branch permissions**: Workflow needs write access to `gh-pages` branch
+   - **Missing dependencies**: Check that all packages used in vignettes are in DESCRIPTION
+
+6. **Workflow Checklist:**
+   - [ ] Run `usethis::use_pkgdown_github_pages()` for initial setup
+   - [ ] Add vignette dependencies to DESCRIPTION `Suggests` or `Config/Needs/website`
+   - [ ] Convert heavy vignettes to Articles with `usethis::use_article()`
+   - [ ] Test locally with `pkgdown::build_site()` before pushing
+   - [ ] Verify GitHub Actions has permission to deploy to `gh-pages`
+
 ### Testing
 
 ```r
