@@ -107,17 +107,17 @@
 <li>Using <code>--no-codoc</code> in R CMD check to suppress false positive warnings</li>
 <li>Package documentation and functionality remain correct and complete</li>
 </ul></li>
+<li>
+<strong>S7 Method Dispatch</strong>: Fixed print/summary methods in installed package context (RESOLVED)
+<ul><li>Added <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code> in <code>.onAttach()</code> hook (R/zzz.R)</li>
+<li>All 51 tests now pass in non-interactive mode (previously 5 were skipped)</li>
+<li>Methods work correctly in both <code>devtools::load_all()</code> and installed package contexts</li>
+<li>Wrapped in <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch()</a></code> to handle locked namespace during devtools operations</li>
+</ul></li>
 </ul></div>
 <div class="section level4">
 <h4 id="known-issues-development-version">Known Issues<a class="anchor" aria-label="anchor" href="#known-issues-development-version"></a></h4>
 <ul><li>
-<strong>S7 Method Dispatch</strong>: Print/summary methods don’t work properly in installed package context
-<ul><li>Tests skip in non-interactive mode (5 tests affected)</li>
-<li>Methods work correctly when using <code>devtools::load_all()</code>
-</li>
-<li>Related to S7 method registration in installed packages</li>
-</ul></li>
-<li>
 <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> and <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> are stubs awaiting implementation</li>
 <li>
 <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> methods need implementation for lm/glm, lavaan</li>

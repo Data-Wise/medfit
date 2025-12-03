@@ -73,14 +73,20 @@ Phase 7: Polish & release
   - Using `--no-codoc` in R CMD check to suppress false positive
     warnings
   - Package documentation and functionality remain correct and complete
+- **S7 Method Dispatch**: Fixed print/summary methods in installed
+  package context (RESOLVED)
+  - Added
+    [`S7::methods_register()`](https://rconsortium.github.io/S7/reference/methods_register.html)
+    in `.onAttach()` hook (R/zzz.R)
+  - All 51 tests now pass in non-interactive mode (previously 5 were
+    skipped)
+  - Methods work correctly in both `devtools::load_all()` and installed
+    package contexts
+  - Wrapped in [`tryCatch()`](https://rdrr.io/r/base/conditions.html) to
+    handle locked namespace during devtools operations
 
 #### Known Issues
 
-- **S7 Method Dispatch**: Print/summary methods don’t work properly in
-  installed package context
-  - Tests skip in non-interactive mode (5 tests affected)
-  - Methods work correctly when using `devtools::load_all()`
-  - Related to S7 method registration in installed packages
 - [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
   and
   [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
