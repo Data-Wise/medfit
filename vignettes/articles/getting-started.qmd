@@ -94,7 +94,8 @@ medfit provides three generic functions:
 medfit is under active development:
 
 - ✅ Phase 2 Complete: S7 class architecture
-- 🚧 Phase 3 In Progress: Model extraction
-- 📋 Planned: Model fitting, bootstrap infrastructure
+- ✅ Phase 3 Complete: Model extraction (lm/glm, lavaan)
+- 🚧 Phase 4 In Progress: Model fitting
+- 📋 Planned: Bootstrap infrastructure
 
 See `NEWS.md` for the latest updates.
