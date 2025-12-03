@@ -407,25 +407,33 @@ When documenting S7 classes and methods with roxygen2:
    })
    ```
 
-5. **S7 Method Registration in .onLoad()**: Do NOT use `S7::methods_register()`
+5. **S7 Method Registration in .onLoad()**: REQUIRED per official S7 documentation
    ```r
-   # INCORRECT - causes load-time errors
+   # CORRECT - per https://rconsortium.github.io/S7/articles/packages.html
    .onLoad <- function(libname, pkgname) {
-     S7::methods_register()  # DON'T DO THIS
-   }
+     # 1. First register S7 classes with S4 system
+     S7::S4_register(MediationData)
+     S7::S4_register(SerialMediationData)
+     S7::S4_register(BootstrapResult)
 
-   # CORRECT - rely on S4 registration
-   .onLoad <- function(libname, pkgname) {
-     # S7 methods work automatically after S7::S4_register() in class definitions
-     # No additional registration needed
+     # 2. Then register S7 methods for dispatch
+     S7::methods_register()
+
+     # 3. Register methods for Suggested packages (if available)
+     if (requireNamespace("lavaan", quietly = TRUE)) {
+       tryCatch(.register_lavaan_method(), error = function(e) invisible(NULL))
+     }
    }
    ```
 
-   **Why**:
-   - `S7::methods_register()` in `.onLoad()` tries to register methods before classes are defined
-   - S7 methods are defined at package build time, not load time
-   - S7 method dispatch works automatically after `S7::S4_register()` calls
-   - Always call `S7::S4_register(ClassName)` immediately after each class definition
+   **Key points**:
+   - `S4_register()` MUST be called for each S7 class BEFORE `methods_register()`
+   - `methods_register()` MUST be in `.onLoad()`, NOT `.onAttach()`
+   - Import full `methods` package: `@import methods` (not just `@importFrom methods is`)
+   - The "Overwriting method" message during `devtools::load_all()` is a known
+     development-time issue (GitHub #474) - does NOT affect installed packages
+   - See: https://rconsortium.github.io/S7/articles/packages.html
+   - See: https://github.com/RConsortium/S7/issues/474
 
 **S7 and S3 Class Integration:**
 
@@ -434,8 +442,7 @@ When working with S3 classes in S7 packages, follow this guide:
 1. **Mandatory Package Setup**: Call `S7::methods_register()` in `.onLoad()`
    - Required for dynamic method registration
    - Especially important for methods on generics from other packages
-   - **Note**: In medfit, this causes errors during package load because classes aren't defined yet
-   - Our approach: rely on `S7::S4_register()` immediately after class definitions
+   - Must call `S4_register()` for each class BEFORE `methods_register()`
 
 2. **Formalizing S3 Classes**: Use `new_S3_class()` to wrap S3 classes
    ```r
@@ -1116,6 +1123,11 @@ Users should:
 3. **Don't use plugin for inference**: Always bootstrap for CIs
 4. **Don't skip input validation**: Use validators rigorously
 5. **Don't break backward compatibility**: Coordinate with dependent packages
+6. **Don't suppress errors/warnings without understanding them**: When encountering R CMD check NOTEs, warnings, or errors during package development:
+   - **FIRST**: Research the issue to understand the root cause
+   - **THEN**: Fix the underlying problem properly
+   - **NEVER**: Use `suppressMessages()`, `suppressWarnings()`, or `tryCatch()` to hide issues without understanding them
+   - Example: The "Overwriting method" S7 message was initially suppressed, but the real fix was proper `.onLoad()` registration order
 
 ---
 
@@ -1196,6 +1208,37 @@ If bootstrap is slow:
 - Use `parallel=TRUE`
 - Consider parametric instead of nonparametric
 - Reduce `n_boot` for testing (use 1000+ for production)
+
+### R File Loading Order Issues
+
+If you get "object not found" errors during package load:
+- S7 generics MUST be defined before methods that use them
+- R files load alphabetically, so use prefixes: `aaa-imports.R`, `aab-generics.R`
+- Methods in `extract-*.R` require generics from `aab-generics.R` to load first
+
+### lavaan Extraction Issues
+
+If lavaan extraction fails with dimension errors:
+- **Parameter label conflicts**: When lavaan model uses labels like `M ~ a*X`, the parameter is already named "a"
+  - Don't add duplicate aliases that conflict with existing parameter names
+  - Check `names(lavaan::coef(fit))` to see existing names
+- **Data type issues**: `lavaan::lavInspect(object, "data")` may return matrix or numeric, not data.frame
+  - Convert to data.frame or return NULL if not convertible
+
+### S7 "Class has not been registered with S4" Error
+
+If you see this error during package installation:
+1. Ensure `S7::S4_register(ClassName)` is called in `.onLoad()` for each S7 class
+2. Call `S4_register()` BEFORE `methods_register()`
+3. Import full `methods` package: `@import methods`
+
+### S7 "Overwriting method" Messages
+
+During `devtools::load_all()`, you may see "Overwriting method" messages:
+- This is a **known development-time issue** (GitHub #474)
+- Does NOT affect installed packages
+- Caused by methods being registered twice: during sourcing and in `.onLoad()`
+- Do NOT suppress with `suppressMessages()` - the behavior is correct
 
 ---
 
