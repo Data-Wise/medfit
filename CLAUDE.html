@@ -107,7 +107,7 @@
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_deps</span><span class="op">(</span>dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Check package (standard R CMD check)</span></span>
-<span><span class="fu">rcmdcheck</span><span class="fu">::</span><span class="fu">rcmdcheck</span><span class="op">(</span>args <span class="op">=</span> <span class="st">"--no-manual"</span>, error_on <span class="op">=</span> <span class="st">"error"</span><span class="op">)</span></span>
+<span><span class="fu">rcmdcheck</span><span class="fu">::</span><span class="fu"><a href="http://r-lib.github.io/rcmdcheck/reference/rcmdcheck.html" class="external-link">rcmdcheck</a></span><span class="op">(</span>args <span class="op">=</span> <span class="st">"--no-manual"</span>, error_on <span class="op">=</span> <span class="st">"error"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Build package</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">build</span><span class="op">(</span><span class="op">)</span></span>
@@ -355,20 +355,366 @@
 <p><strong>S7 Classes:</strong> - CamelCase: <code>MediationData</code>, <code>BootstrapResult</code> - Properties use snake_case: <code>@a_path</code>, <code>@boot_estimates</code></p>
 </div>
 <div class="section level3">
+<h3 id="code-documentation-style">Code Documentation Style<a class="anchor" aria-label="anchor" href="#code-documentation-style"></a></h3>
+<p><strong>General Principles:</strong> - <strong>Comment the “why”, not the “what”</strong> - explain reasoning, not obvious operations - <strong>More explanatory comments for tricky code</strong> - shortcuts, clever tricks, non-obvious logic deserve explanation - <strong>Inline citations for statistical methods</strong> - e.g., <code># Per VanderWeele (2014), four-way decomposition...</code> - <strong>Self-documenting code first</strong> - use clear variable names, then add comments for context</p>
+<p><strong>In-line Comment Examples:</strong></p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># BAD - explains what (obvious)</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">1</span>  <span class="co"># add 1 to x</span></span>
+<span></span>
+<span><span class="co"># GOOD - explains why</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">1</span>  <span class="co"># Adjust for 1-based indexing expected by lavaan</span></span>
+<span></span>
+<span><span class="co"># GOOD - explains tricky shortcut</span></span>
+<span><span class="co"># Use outer product for efficient pairwise computation (O(n²) memory but O(1) loops)</span></span>
+<span><span class="va">pairwise_diff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/outer.html" class="external-link">outer</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">x</span>, <span class="va">`-`</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># GOOD - inline citation</span></span>
+<span><span class="co"># Per VanderWeele (2014), the four-way decomposition requires: TE = CDE + INTref + INTmed + PIE</span></span></code></pre></div>
+<p><strong>Section Headers in Functions:</strong> Use <code># --- Section Name ---</code> for functions longer than ~30 lines:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">my_function</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># --- Validate Inputs ---</span></span>
+<span>  <span class="va">...</span></span>
+<span></span>
+<span>  <span class="co"># --- Extract Parameters ---</span></span>
+<span>  <span class="va">...</span></span>
+<span></span>
+<span>  <span class="co"># --- Compute Results ---</span></span>
+<span>  <span class="va">...</span></span>
+<span></span>
+<span>  <span class="co"># --- Return ---</span></span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><strong>roxygen2 Documentation:</strong> Prefer BOTH concise <code>@description</code> AND detailed <code>@details</code>:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#' Extract Mediation Structure from Fitted Models</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @description</span></span>
+<span><span class="co">#' Generic function to extract mediation paths (a, b, c') and</span></span>
+<span><span class="co">#' variance-covariance matrices from fitted models.</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @param object Fitted model object (lm, glm, lavaan)</span></span>
+<span><span class="co">#' @param treatment Character: treatment variable name</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @return A [MediationData] object</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @details</span></span>
+<span><span class="co">#' ## Supported Model Types</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' - **lm/glm**: Requires separate mediator and outcome models</span></span>
+<span><span class="co">#' - **lavaan**: Extracts from SEM; auto-detects paths if labeled</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' ## Mathematical Background</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' The indirect effect is \eqn{a \times b}{a * b} where:</span></span>
+<span><span class="co">#' - \eqn{a} = effect of X on M (from mediator model)</span></span>
+<span><span class="co">#' - \eqn{b} = effect of M on Y controlling for X (from outcome model)</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' Per Baron &amp; Kenny (1986), mediation requires significant a and b paths.</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @references</span></span>
+<span><span class="co">#' Baron RM, Kenny DA (1986). The moderator-mediator variable distinction.</span></span>
+<span><span class="co">#' *Journal of Personality and Social Psychology*, 51(6), 1173-1182.</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @examples</span></span>
+<span><span class="co">#' \dontrun{</span></span>
+<span><span class="co">#' fit_m &lt;- lm(M ~ X + C, data = mydata)</span></span>
+<span><span class="co">#' fit_y &lt;- lm(Y ~ X + M + C, data = mydata)</span></span>
+<span><span class="co">#' med_data &lt;- extract_mediation(fit_m, model_y = fit_y,</span></span>
+<span><span class="co">#'                               treatment = "X", mediator = "M")</span></span>
+<span><span class="co">#' }</span></span>
+<span><span class="co">#'</span></span>
+<span><span class="co">#' @seealso [MediationData], [fit_mediation()]</span></span>
+<span><span class="co">#' @export</span></span></code></pre></div>
+<p><strong>TODO/FIXME Conventions:</strong></p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># TODO: Add support for multiple mediators (issue #42)</span></span>
+<span><span class="co"># FIXME: Breaks when n &lt; 10, needs better error handling</span></span>
+<span><span class="co"># HACK: Workaround for lavaan bug, remove when fixed upstream</span></span>
+<span><span class="co"># NOTE: Assumes Gaussian residuals for variance computation</span></span></code></pre></div>
+</div>
+<div class="section level3">
 <h3 id="code-organization">Code Organization<a class="anchor" aria-label="anchor" href="#code-organization"></a></h3>
 <pre><code>R/
 ├── aaa-imports.R           # Package imports and setup
+├── aab-generics.R          # S7 generic functions (must load before methods)
 ├── medfit-package.R        # Package documentation
 ├── classes.R               # S7 class definitions
-├── generics.R              # S7 generic functions
 ├── fit-glm.R              # GLM engine implementation
 ├── extract-lm.R           # lm/glm extraction
 ├── extract-lavaan.R       # lavaan extraction
-├── extract-openmx.R       # OpenMx extraction (if included)
 ├── bootstrap.R            # Bootstrap infrastructure
 ├── utils.R                # Utility functions
 └── zzz.R                  # .onLoad() for dynamic dispatch</code></pre>
 <hr></div>
+</div>
+<div class="section level2">
+<h2 id="defensive-programming">Defensive Programming<a class="anchor" aria-label="anchor" href="#defensive-programming"></a></h2>
+<p>Defensive programming employs a multi-layered approach: strict input validation, formal object definitions, automated testing, and continuous integration.</p>
+<div class="section level3">
+<h3 id="id_1-input-validation-with-checkmate">1. Input Validation with checkmate<a class="anchor" aria-label="anchor" href="#id_1-input-validation-with-checkmate"></a></h3>
+<p><strong>ALWAYS use checkmate</strong> for function argument validation. It provides fast (C-based), memory-efficient assertions with informative error messages.</p>
+<p><strong>Required import</strong> in <code>R/aaa-imports.R</code>:</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#' @import checkmate</span></span></code></pre></div>
+<p><strong>Common assertion patterns:</strong></p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">my_function</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">n</span>, <span class="va">method</span>, <span class="va">data</span>, <span class="va">optional_arg</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># --- Input Validation (using checkmate for fail-fast defensive programming) ---</span></span>
+<span></span>
+<span>  <span class="co"># Type assertions</span></span>
+<span>  <span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/checkNumeric.html" class="external-link">assert_numeric</a></span><span class="op">(</span><span class="va">x</span>, .var.name <span class="op">=</span> <span class="st">"x"</span><span class="op">)</span></span>
+<span>  <span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/checkCount.html" class="external-link">assert_count</a></span><span class="op">(</span><span class="va">n</span>, positive <span class="op">=</span> <span class="cn">TRUE</span>, .var.name <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span>
+<span>  <span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/checkString.html" class="external-link">assert_string</a></span><span class="op">(</span><span class="va">method</span>, .var.name <span class="op">=</span> <span class="st">"method"</span><span class="op">)</span></span>
+<span>  <span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/checkDataFrame.html" class="external-link">assert_data_frame</a></span><span class="op">(</span><span class="va">data</span>, .var.name <span class="op">=</span> <span class="st">"data"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Optional arguments (allow NULL)</span></span>
+<span>  <span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/checkString.html" class="external-link">assert_string</a></span><span class="op">(</span><span class="va">optional_arg</span>, null.ok <span class="op">=</span> <span class="cn">TRUE</span>, .var.name <span class="op">=</span> <span class="st">"optional_arg"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Choice from options</span></span>
+<span>  <span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/checkChoice.html" class="external-link">assert_choice</a></span><span class="op">(</span><span class="va">method</span>, choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"parametric"</span>, <span class="st">"nonparametric"</span>, <span class="st">"plugin"</span><span class="op">)</span>,</span>
+<span>                           .var.name <span class="op">=</span> <span class="st">"method"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Class checks (multiple allowed classes)</span></span>
+<span>  <span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/checkMultiClass.html" class="external-link">assert_multi_class</a></span><span class="op">(</span><span class="va">model</span>, classes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lm"</span>, <span class="st">"glm"</span><span class="op">)</span>, .var.name <span class="op">=</span> <span class="st">"model"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Logical flags</span></span>
+<span></span>
+<span>  <span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/checkFlag.html" class="external-link">assert_flag</a></span><span class="op">(</span><span class="va">verbose</span>, .var.name <span class="op">=</span> <span class="st">"verbose"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Variable exists in data</span></span>
+<span>  <span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/checkChoice.html" class="external-link">assert_choice</a></span><span class="op">(</span><span class="va">treatment</span>, choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>,</span>
+<span>                           .var.name <span class="op">=</span> <span class="st">"treatment in data"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># ... rest of function</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><strong>Key checkmate functions:</strong></p>
+<table class="table"><colgroup><col width="35%"><col width="32%"><col width="32%"></colgroup><thead><tr class="header"><th>Function</th>
+<th>Purpose</th>
+<th>Example</th>
+</tr></thead><tbody><tr class="odd"><td><code>assert_string()</code></td>
+<td>Single character string</td>
+<td><code>assert_string(x)</code></td>
+</tr><tr class="even"><td><code>assert_character()</code></td>
+<td>Character vector</td>
+<td><code>assert_character(x, min.len = 1)</code></td>
+</tr><tr class="odd"><td><code>assert_numeric()</code></td>
+<td>Numeric vector</td>
+<td><code>assert_numeric(x, lower = 0)</code></td>
+</tr><tr class="even"><td><code>assert_count()</code></td>
+<td>Single positive integer</td>
+<td><code>assert_count(n, positive = TRUE)</code></td>
+</tr><tr class="odd"><td><code>assert_int()</code></td>
+<td>Single integer</td>
+<td><code>assert_int(n, lower = 1)</code></td>
+</tr><tr class="even"><td><code>assert_flag()</code></td>
+<td>Single logical</td>
+<td><code>assert_flag(verbose)</code></td>
+</tr><tr class="odd"><td><code>assert_choice()</code></td>
+<td>Value from set</td>
+<td><code>assert_choice(x, c("a", "b"))</code></td>
+</tr><tr class="even"><td><code>assert_subset()</code></td>
+<td>Subset of set</td>
+<td><code>assert_subset(x, c("a", "b", "c"))</code></td>
+</tr><tr class="odd"><td><code>assert_data_frame()</code></td>
+<td>Data frame</td>
+<td><code>assert_data_frame(df, min.rows = 1)</code></td>
+</tr><tr class="even"><td><code>assert_matrix()</code></td>
+<td>Matrix</td>
+<td><code>assert_matrix(m, nrows = 3)</code></td>
+</tr><tr class="odd"><td><code>assert_list()</code></td>
+<td>List</td>
+<td><code>assert_list(x, types = "numeric")</code></td>
+</tr><tr class="even"><td><code>assert_class()</code></td>
+<td>Single class</td>
+<td><code>assert_class(obj, "lm")</code></td>
+</tr><tr class="odd"><td><code>assert_multi_class()</code></td>
+<td>Any of classes</td>
+<td><code>assert_multi_class(obj, c("lm", "glm"))</code></td>
+</tr><tr class="even"><td><code>assert_function()</code></td>
+<td>Function</td>
+<td><code>assert_function(f, nargs = 2)</code></td>
+</tr></tbody></table><p><strong>Options for all assertions:</strong> - <code>.var.name = "name"</code>: Custom variable name in error message - <code>null.ok = TRUE</code>: Allow NULL values - <code>add = collection</code>: Add to assertion collection for batch checking</p>
+<p><strong>Quick assertions with qassert:</strong></p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Compact type checking</span></span>
+<span><span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/qassert.html" class="external-link">qassert</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"N1"</span><span class="op">)</span>   <span class="co"># Numeric, length 1</span></span>
+<span><span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/qassert.html" class="external-link">qassert</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"S1"</span><span class="op">)</span>   <span class="co"># String, length 1</span></span>
+<span><span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/qassert.html" class="external-link">qassert</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"B1"</span><span class="op">)</span>   <span class="co"># Boolean/logical, length 1</span></span>
+<span><span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/qassert.html" class="external-link">qassert</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"X"</span><span class="op">)</span>    <span class="co"># NULL</span></span>
+<span><span class="fu">checkmate</span><span class="fu">::</span><span class="fu"><a href="https://mllg.github.io/checkmate/reference/qassert.html" class="external-link">qassert</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"N+"</span><span class="op">)</span>   <span class="co"># Numeric, length &gt;= 1</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="id_2-handling-ellipsis-">2. Handling Ellipsis (<code>...</code>)<a class="anchor" aria-label="anchor" href="#id_2-handling-ellipsis-"></a></h3>
+<p>When using <code>...</code> in function arguments, validate that passed arguments are actually used:</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">my_function</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># Check that all ... arguments are used</span></span>
+<span>  <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/check_dots_used.html" class="external-link">check_dots_used</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Or for stricter checking (error on unused dots)</span></span>
+<span>  <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/check_dots_empty.html" class="external-link">check_dots_empty</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># ... rest of function</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><strong>Why this matters</strong>: Without checking, misspelled arguments are silently ignored:</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># User typo: "treamtent" instead of "treatment"</span></span>
+<span><span class="fu"><a href="reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit</span>, treamtent <span class="op">=</span> <span class="st">"X"</span><span class="op">)</span>  <span class="co"># Silently ignored without check!</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="id_3-s7-class-validation-already-in-use">3. S7 Class Validation (Already in Use)<a class="anchor" aria-label="anchor" href="#id_3-s7-class-validation-already-in-use"></a></h3>
+<p>S7 provides automatic type validation through property declarations and custom validators:</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">MyClass</span> <span class="op">&lt;-</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/new_class.html" class="external-link">new_class</a></span><span class="op">(</span></span>
+<span>  <span class="st">"MyClass"</span>,</span>
+<span>  properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    <span class="co"># Automatic type checking</span></span>
+<span>    x <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,</span>
+<span>    name <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_character</a></span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  validator <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">self</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="co"># Custom validation for cross-property constraints</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">self</span><span class="op">@</span><span class="va">x</span><span class="op">)</span> <span class="op">!=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="st">"x must be scalar"</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="va">self</span><span class="op">@</span><span class="va">x</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="st">"x must be non-negative"</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="cn">NULL</span>  <span class="co"># Return NULL if valid</span></span>
+<span>  <span class="op">}</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>S7 + checkmate complement each other:</strong> - S7 validators: Class-level constraints, cross-property validation - checkmate: Function argument validation (fail-fast at entry point)</p>
+</div>
+<div class="section level3">
+<h3 id="id_4-testing-strategy">4. Testing Strategy<a class="anchor" aria-label="anchor" href="#id_4-testing-strategy"></a></h3>
+<p><strong>Four-layer testing approach:</strong></p>
+<ol style="list-style-type: decimal"><li>
+<p><strong>Unit Testing</strong> (testthat)</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">test_that</span><span class="op">(</span><span class="st">"function handles edge cases"</span>, <span class="op">{</span></span>
+<span>  <span class="fu">expect_error</span><span class="op">(</span><span class="fu">my_func</span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span>, <span class="st">"must not be NULL"</span><span class="op">)</span></span>
+<span>  <span class="fu">expect_equal</span><span class="op">(</span><span class="fu">my_func</span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, <span class="va">expected_value</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+</li>
+<li><p><strong>Acceptance Testing</strong>: Validate user workflows end-to-end</p></li>
+<li>
+<p><strong>Code Coverage</strong> (covr)</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Target: &gt;80% coverage, 100% for critical paths</span></span>
+<span><span class="fu">covr</span><span class="fu">::</span><span class="fu">package_coverage</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+</li>
+<li>
+<p><strong>Snapshot Testing</strong>: For complex outputs</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">test_that</span><span class="op">(</span><span class="st">"print output is stable"</span>, <span class="op">{</span></span>
+<span>  <span class="fu">expect_snapshot</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">my_object</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+</li>
+</ol></div>
+<div class="section level3">
+<h3 id="id_5-dependency-management">5. Dependency Management<a class="anchor" aria-label="anchor" href="#id_5-dependency-management"></a></h3>
+<p><strong>CRITICAL rules:</strong></p>
+<ol style="list-style-type: decimal"><li>
+<p><strong>Never use <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> or <code><a href="https://rdrr.io/r/base/library.html" class="external-link">require()</a></code> inside package functions</strong></p>
+<ul><li>These alter the global search path</li>
+<li>Use explicit namespacing: <code>package::function()</code>
+</li>
+</ul></li>
+<li>
+<p><strong>Imports vs Suggests:</strong></p>
+<ul><li>
+<strong>Imports</strong>: Required packages (always available)</li>
+<li>
+<strong>Suggests</strong>: Optional packages (check availability)</li>
+</ul><div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># For Suggested packages, check availability</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lavaan"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Package 'lavaan' is required but not installed."</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span></code></pre></div>
+</li>
+<li>
+<p><strong>Version pinning</strong> in DESCRIPTION:</p>
+<pre><code>Imports:
+    S7 (&gt;= 0.1.0),
+    checkmate
+Suggests:
+    lavaan (&gt;= 0.6-0)</code></pre>
+</li>
+</ol></div>
+<div class="section level3">
+<h3 id="id_6-managing-state-and-side-effects">6. Managing State and Side Effects<a class="anchor" aria-label="anchor" href="#id_6-managing-state-and-side-effects"></a></h3>
+<p><strong>Clean up side effects with <code><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit()</a></code>:</strong></p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">my_function</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># Save current state</span></span>
+<span>  <span class="va">old_opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>warn <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">old_wd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Ensure cleanup even if function errors</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old_opts</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd</a></span><span class="op">(</span><span class="va">old_wd</span><span class="op">)</span></span>
+<span>  <span class="op">}</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># ... function body</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><strong>File system hygiene:</strong> - Never write to user’s home directory - Use <code><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir()</a></code> for temporary files - Use <code>tools::R_user_dir("medfit", "cache")</code> for persistent cache</p>
+<p><strong>Prefer pure functions:</strong> - Return values instead of modifying in place - Avoid global state modifications</p>
+</div>
+<div class="section level3">
+<h3 id="id_7-continuous-integration-ci">7. Continuous Integration (CI)<a class="anchor" aria-label="anchor" href="#id_7-continuous-integration-ci"></a></h3>
+<p><strong>GitHub Actions workflow</strong> (<code>.github/workflows/R-CMD-check.yaml</code>):</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb31-3"><a href="#cb31-3" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> dev</span><span class="kw">]</span></span>
+<span id="cb31-4"><a href="#cb31-4" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb31-5"><a href="#cb31-5" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">]</span></span>
+<span id="cb31-6"><a href="#cb31-6" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> R-CMD-check</span></span>
+<span id="cb31-8"><a href="#cb31-8" tabindex="-1"></a></span>
+<span id="cb31-9"><a href="#cb31-9" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb31-10"><a href="#cb31-10" tabindex="-1"></a><span class="at">  </span><span class="fu">R-CMD-check</span><span class="kw">:</span></span>
+<span id="cb31-11"><a href="#cb31-11" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ${{ matrix.os }}</span></span>
+<span id="cb31-12"><a href="#cb31-12" tabindex="-1"></a><span class="at">    </span><span class="fu">strategy</span><span class="kw">:</span></span>
+<span id="cb31-13"><a href="#cb31-13" tabindex="-1"></a><span class="at">      </span><span class="fu">matrix</span><span class="kw">:</span></span>
+<span id="cb31-14"><a href="#cb31-14" tabindex="-1"></a><span class="at">        </span><span class="fu">os</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">ubuntu-latest</span><span class="kw">,</span><span class="at"> macos-latest</span><span class="kw">,</span><span class="at"> windows-latest</span><span class="kw">]</span></span>
+<span id="cb31-15"><a href="#cb31-15" tabindex="-1"></a><span class="at">        </span><span class="fu">r-version</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">'release'</span><span class="kw">]</span></span>
+<span id="cb31-16"><a href="#cb31-16" tabindex="-1"></a></span>
+<span id="cb31-17"><a href="#cb31-17" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb31-18"><a href="#cb31-18" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v4</span></span>
+<span id="cb31-19"><a href="#cb31-19" tabindex="-1"></a></span>
+<span id="cb31-20"><a href="#cb31-20" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r@v2</span></span>
+<span id="cb31-21"><a href="#cb31-21" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb31-22"><a href="#cb31-22" tabindex="-1"></a><span class="at">          </span><span class="fu">r-version</span><span class="kw">:</span><span class="at"> ${{ matrix.r-version }}</span></span>
+<span id="cb31-23"><a href="#cb31-23" tabindex="-1"></a></span>
+<span id="cb31-24"><a href="#cb31-24" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r-dependencies@v2</span></span>
+<span id="cb31-25"><a href="#cb31-25" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb31-26"><a href="#cb31-26" tabindex="-1"></a><span class="at">          </span><span class="fu">extra-packages</span><span class="kw">:</span><span class="at"> any::rcmdcheck</span></span>
+<span id="cb31-27"><a href="#cb31-27" tabindex="-1"></a></span>
+<span id="cb31-28"><a href="#cb31-28" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/check-r-package@v2</span></span></code></pre></div>
+<p><strong>Static code analysis</strong> with lintr:</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># .lintr file in package root</span></span>
+<span><span class="va">linters</span><span class="op">:</span> <span class="fu">linters_with_defaults</span><span class="op">(</span></span>
+<span>  <span class="fu">line_length_linter</span><span class="op">(</span><span class="fl">120</span><span class="op">)</span>,</span>
+<span>  <span class="fu">object_name_linter</span><span class="op">(</span>styles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"snake_case"</span>, <span class="st">"CamelCase"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="id_8-defensive-programming-checklist">8. Defensive Programming Checklist<a class="anchor" aria-label="anchor" href="#id_8-defensive-programming-checklist"></a></h3>
+<p>For every new function:</p>
+<ul class="task-list"><li><label><input type="checkbox">Add checkmate assertions for all arguments at function entry</label></li>
+<li><label><input type="checkbox">Use <code>.var.name</code> parameter for clear error messages</label></li>
+<li><label><input type="checkbox">Allow NULL where appropriate with <code>null.ok = TRUE</code></label></li>
+<li><label><input type="checkbox">Check <code>...</code> arguments with <code><a href="https://rlang.r-lib.org/reference/check_dots_used.html" class="external-link">rlang::check_dots_used()</a></code> if applicable</label></li>
+<li><label><input type="checkbox">Use explicit namespacing for all non-base functions</label></li>
+<li><label><input type="checkbox">Clean up side effects with <code><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit()</a></code></label></li>
+<li><label><input type="checkbox">Write tests for error conditions</label></li>
+<li><label><input type="checkbox">Verify function works with edge cases (NULL, empty, NA)</label></li>
+</ul><hr></div>
 </div>
 <div class="section level2">
 <h2 id="code-architecture">Code Architecture<a class="anchor" aria-label="anchor" href="#code-architecture"></a></h2>
@@ -416,7 +762,7 @@
 <p>When documenting S7 classes and methods with roxygen2:</p>
 <ol style="list-style-type: decimal"><li>
 <p><strong>S7 Class Constructors</strong>: Use explicit <code>@param</code> tags for all properties</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' MediationData S7 Class</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @description</span></span>
@@ -432,7 +778,7 @@
 </li>
 <li>
 <p><strong>S7 Methods</strong>: Use <code>@noRd</code> to prevent namespace export issues</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Print Method for MediationData</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param x A MediationData object</span></span>
@@ -447,7 +793,7 @@
 </ul></li>
 <li>
 <p><strong>S7 Generics</strong>: Only document generic parameters, not method-specific ones</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Extract Mediation Structure</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param object Fitted model object</span></span>
@@ -459,31 +805,43 @@
 </li>
 <li>
 <p><strong>Testing S7 Methods</strong>: Method dispatch may not work in installed package context</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">test_that</span><span class="op">(</span><span class="st">"MediationData print method works"</span>, <span class="op">{</span></span>
 <span>  <span class="fu">skip_if_not</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"S7 method dispatch issue in non-interactive mode"</span><span class="op">)</span></span>
 <span>  <span class="co"># ... test code</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 </li>
 <li>
-<p><strong>S7 Method Registration in .onLoad()</strong>: Do NOT use <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code></p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># INCORRECT - causes load-time errors</span></span>
+<p><strong>S7 Method Registration in .onLoad()</strong>: REQUIRED per official S7 documentation</p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># CORRECT - per https://rconsortium.github.io/S7/articles/packages.html</span></span>
 <span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">libname</span>, <span class="va">pkgname</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">methods_register</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># DON'T DO THIS</span></span>
-<span><span class="op">}</span></span>
+<span>  <span class="co"># 1. First register S7 classes with S4 system</span></span>
+<span>  <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/S4_register.html" class="external-link">S4_register</a></span><span class="op">(</span><span class="va">MediationData</span><span class="op">)</span></span>
+<span>  <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/S4_register.html" class="external-link">S4_register</a></span><span class="op">(</span><span class="va">SerialMediationData</span><span class="op">)</span></span>
+<span>  <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/S4_register.html" class="external-link">S4_register</a></span><span class="op">(</span><span class="va">BootstrapResult</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># CORRECT - rely on S4 registration</span></span>
-<span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">libname</span>, <span class="va">pkgname</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="co"># S7 methods work automatically after S7::S4_register() in class definitions</span></span>
-<span>  <span class="co"># No additional registration needed</span></span>
+<span>  <span class="co"># 2. Then register S7 methods for dispatch</span></span>
+<span>  <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">methods_register</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># 3. Register methods for Suggested packages (if available)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lavaan"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="reference/dot-register_lavaan_method.html">.register_lavaan_method</a></span><span class="op">(</span><span class="op">)</span>, error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p><strong>Why</strong>:</p>
+<p><strong>Key points</strong>:</p>
 <ul><li>
-<code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code> in <code>.onLoad()</code> tries to register methods before classes are defined</li>
-<li>S7 methods are defined at package build time, not load time</li>
-<li>S7 method dispatch works automatically after <code><a href="https://rconsortium.github.io/S7/reference/S4_register.html" class="external-link">S7::S4_register()</a></code> calls</li>
-<li>Always call <code>S7::S4_register(ClassName)</code> immediately after each class definition</li>
+<code>S4_register()</code> MUST be called for each S7 class BEFORE <code>methods_register()</code>
+</li>
+<li>
+<code>methods_register()</code> MUST be in <code>.onLoad()</code>, NOT <code>.onAttach()</code>
+</li>
+<li>Import full <code>methods</code> package: <code>@import methods</code> (not just <code>@importFrom methods is</code>)</li>
+<li>The “Overwriting method” message during <code>devtools::load_all()</code> is a known development-time issue (GitHub #474) - does NOT affect installed packages</li>
+<li>See: <a href="https://rconsortium.github.io/S7/articles/packages.html" class="external-link uri">https://rconsortium.github.io/S7/articles/packages.html</a>
+</li>
+<li>See: <a href="https://github.com/RConsortium/S7/issues/474" class="external-link uri">https://github.com/RConsortium/S7/issues/474</a>
+</li>
 </ul></li>
 </ol><p><strong>S7 and S3 Class Integration:</strong></p>
 <p>When working with S3 classes in S7 packages, follow this guide:</p>
@@ -491,13 +849,12 @@
 <p><strong>Mandatory Package Setup</strong>: Call <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code> in <code>.onLoad()</code></p>
 <ul><li>Required for dynamic method registration</li>
 <li>Especially important for methods on generics from other packages</li>
-<li>
-<strong>Note</strong>: In medfit, this causes errors during package load because classes aren’t defined yet</li>
-<li>Our approach: rely on <code><a href="https://rconsortium.github.io/S7/reference/S4_register.html" class="external-link">S7::S4_register()</a></code> immediately after class definitions</li>
+<li>Must call <code>S4_register()</code> for each class BEFORE <code>methods_register()</code>
+</li>
 </ul></li>
 <li>
 <p><strong>Formalizing S3 Classes</strong>: Use <code>new_S3_class()</code> to wrap S3 classes</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Register method for S3 class</span></span>
 <span><span class="fu">method</span><span class="op">(</span><span class="va">my_generic</span>, <span class="fu">new_S3_class</span><span class="op">(</span><span class="st">"data.frame"</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="va">...</span><span class="op">}</span></span>
 <span></span>
@@ -514,7 +871,7 @@
 </li>
 <li>
 <p><strong>Inheriting from S3 Classes</strong>: Requires custom constructor</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># When inheriting from S3 via parent argument</span></span>
 <span><span class="va">MyS7Class</span> <span class="op">&lt;-</span> <span class="fu">new_class</span><span class="op">(</span><span class="st">"MyS7Class"</span>,</span>
 <span>  parent <span class="op">=</span> <span class="fu">new_S3_class</span><span class="op">(</span><span class="st">"integer"</span>,</span>
@@ -527,7 +884,7 @@
 </li>
 <li>
 <p><strong>Calling Parent S3 Methods</strong>: Use <code>S7_data()</code>, not <code>super()</code></p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># INCORRECT - S3 generics don't understand super()</span></span>
 <span><span class="fu">method</span><span class="op">(</span><span class="va">print</span>, <span class="va">MyClass</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu">super</span><span class="op">(</span><span class="va">x</span>, <span class="va">print</span><span class="op">)</span>  <span class="co"># FAILS</span></span>
@@ -551,7 +908,7 @@
 <p>While S7 and S3 are fully compatible, S7 and S4 have specific interoperability features and limitations:</p>
 <ol style="list-style-type: decimal"><li>
 <p><strong>Registration with <code>S4_register()</code></strong>: CRITICAL for S4 compatibility</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define S7 class</span></span>
 <span><span class="va">Foo</span> <span class="op">&lt;-</span> <span class="fu">new_class</span><span class="op">(</span><span class="st">"Foo"</span>, package <span class="op">=</span> <span class="st">"mypackage"</span><span class="op">)</span></span>
 <span></span>
@@ -568,7 +925,7 @@
 </ul></li>
 <li>
 <p><strong>Bidirectional Method Dispatch</strong>: S7 supports multiple combinations</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># S7 method on S4 generic (requires S4_register)</span></span>
 <span><span class="fu">method</span><span class="op">(</span><span class="va">S4_generic</span>, <span class="va">S7_class</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="va">...</span><span class="op">}</span></span>
 <span></span>
@@ -581,7 +938,7 @@
 <li>
 <p><strong>Inheritance Limitations - The “Firewall”</strong>:</p>
 <p><strong>CRITICAL RESTRICTION</strong>: S7 cannot extend S4 classes</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># INVALID - Will fail</span></span>
 <span><span class="va">MyClass</span> <span class="op">&lt;-</span> <span class="fu">new_class</span><span class="op">(</span><span class="st">"MyClass"</span>, parent <span class="op">=</span> <span class="va">SomeS4Class</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Why this matters</strong>:</p>
@@ -591,7 +948,7 @@
 </li>
 <li>Must use composition instead of inheritance</li>
 </ul><p><strong>Workaround</strong>: Use composition</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Instead of inheriting, wrap</span></span>
 <span><span class="va">MyClass</span> <span class="op">&lt;-</span> <span class="fu">new_class</span><span class="op">(</span><span class="st">"MyClass"</span>,</span>
 <span>  properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -619,7 +976,7 @@
 <li>Call <code>S4_register()</code> for backward compatibility</li>
 <li>Move up hierarchy, replacing parents only after children converted</li>
 </ol><p><strong>Example</strong>:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Old S4 class</span></span>
 <span><span class="kw">setClass</span><span class="op">(</span><span class="st">"Foo"</span>, slots <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"numeric"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">setValidity</span><span class="op">(</span><span class="st">"Foo"</span>, <span class="kw">function</span><span class="op">(</span><span class="va">object</span><span class="op">)</span> <span class="op">{</span></span>
@@ -677,12 +1034,13 @@
 <div class="section level3">
 <h3 id="key-dependencies">Key Dependencies<a class="anchor" aria-label="anchor" href="#key-dependencies"></a></h3>
 <p><strong>Required:</strong> - <strong>S7</strong>: Modern object system - <strong>stats</strong>: GLM fitting, statistical functions - <strong>methods</strong>: S4 compatibility</p>
-<p><strong>Suggested:</strong> - <strong>MASS</strong>: <code>mvrnorm()</code> for parametric bootstrap - <strong>lavaan</strong>: SEM model extraction - <strong>OpenMx</strong>: SEM model extraction - <strong>lme4</strong>: Mixed models (future)</p>
+<p><strong>Suggested:</strong> - <strong>MASS</strong>: <code>mvrnorm()</code> for parametric bootstrap - <strong>lavaan</strong>: SEM model extraction - <strong>lme4</strong>: Mixed models (future)</p>
+<p><strong>Future Consideration:</strong> - <strong>OpenMx</strong>: SEM model extraction (postponed to future release)</p>
 </div>
 <div class="section level3">
 <h3 id="explicit-namespacing">Explicit Namespacing<a class="anchor" aria-label="anchor" href="#explicit-namespacing"></a></h3>
 <p><strong>CRITICAL</strong>: All non-base functions MUST use explicit namespacing:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># CORRECT</span></span>
 <span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">formula</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
 <span><span class="fu">MASS</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html" class="external-link">mvrnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">mu</span>, <span class="va">Sigma</span><span class="op">)</span></span>
@@ -709,7 +1067,7 @@
 <p><strong>Design Principles:</strong> 1. <strong>Separate classes for separate structures</strong>: Each mediation type gets its own class, optimized for its use case 2. <strong>Consistent interface</strong>: All classes share common properties (<code>estimates</code>, <code>vcov</code>, metadata) 3. <strong>No hard limits</strong>: Serial mediation supports chains of any length (2, 3, k mediators) 4. <strong>Extensible validators</strong>: Each class has comprehensive validation tailored to its structure</p>
 <p><strong>Future Extension Path:</strong></p>
 <p>For parallel mediation (X -&gt; M1 -&gt; Y, X -&gt; M2 -&gt; Y simultaneously):</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ParallelMediationData</span> <span class="op">&lt;-</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/new_class.html" class="external-link">new_class</a></span><span class="op">(</span></span>
 <span>  properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    a_paths <span class="op">=</span> <span class="va">numeric</span>,      <span class="co"># Vector: c(a1, a2, ...)</span></span>
@@ -721,7 +1079,177 @@
 <span><span class="op">)</span></span>
 <span><span class="co"># Indirect effect = sum(a_paths * b_paths)</span></span></code></pre></div>
 <p>For complex mediation (combinations of serial and parallel): - Could use graph representation or nested structure - Keep it simple: start with separate classes, add complexity only when needed</p>
+</div>
+<div class="section level3">
+<h3 id="treatment-mediator-interaction-vanderweele-four-way-decomposition">Treatment-Mediator Interaction (VanderWeele Four-Way Decomposition)<a class="anchor" aria-label="anchor" href="#treatment-mediator-interaction-vanderweele-four-way-decomposition"></a></h3>
+<p><strong>Planned for post-MVP release</strong> based on <a href="https://pubmed.ncbi.nlm.nih.gov/25000145/" class="external-link">VanderWeele (2014)</a>.</p>
+<p><strong>Theoretical Foundation</strong>:</p>
+<p>When treatment (X) and mediator (M) interact in their effect on outcome (Y), the total effect decomposes into four components:</p>
+<table class="table"><colgroup><col width="39%"><col width="32%"><col width="28%"></colgroup><thead><tr class="header"><th>Component</th>
+<th>Meaning</th>
+<th>Due to</th>
+</tr></thead><tbody><tr class="odd"><td><strong>CDE</strong></td>
+<td>Controlled Direct Effect</td>
+<td>Neither mediation nor interaction</td>
+</tr><tr class="even"><td><strong>INTref</strong></td>
+<td>Reference Interaction</td>
+<td>Interaction only</td>
+</tr><tr class="odd"><td><strong>INTmed</strong></td>
+<td>Mediated Interaction</td>
+<td>Both mediation and interaction</td>
+</tr><tr class="even"><td><strong>PIE</strong></td>
+<td>Pure Indirect Effect</td>
+<td>Mediation only</td>
+</tr></tbody></table><p><strong>Decomposition</strong>: TE = CDE + INTref + INTmed + PIE</p>
+<p><strong>Relationships</strong>: - NDE (Natural Direct Effect) = CDE + INTref - NIE (Natural Indirect Effect) = INTmed + PIE</p>
+<p><strong>Regression Models</strong>:</p>
+<pre><code>Mediator:  M = β₀ + β₁X + β₂'C + εₘ
+Outcome:   Y = θ₀ + θ₁X + θ₂M + θ₃(X×M) + θ₄'C + εᵧ</code></pre>
+<p>**Formulas (continuous Y/M, binary X: 0→1, m*=0)**: - CDE = θ₁ (effect of X when M=0) - INTref = θ₃(β₀ + β₂’c) (interaction at reference) - INTmed = θ₃β₁ (mediated interaction) - PIE = θ₂β₁ (pure indirect effect)</p>
+<p><strong>When θ₃=0</strong> (no interaction): reduces to standard mediation where CDE=NDE=θ₁ and NIE=PIE=θ₂β₁.</p>
+<p><strong>InteractionMediationData Class</strong> (planned):</p>
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">InteractionMediationData</span> <span class="op">&lt;-</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/new_class.html" class="external-link">new_class</a></span><span class="op">(</span></span>
+<span>  <span class="st">"InteractionMediationData"</span>,</span>
+<span>  package <span class="op">=</span> <span class="st">"medfit"</span>,</span>
+<span>  properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    <span class="co"># Core paths</span></span>
+<span>    a_path <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,           <span class="co"># β₁: X → M</span></span>
+<span>    b_path <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,           <span class="co"># θ₂: M → Y (main effect)</span></span>
+<span>    c_prime <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,          <span class="co"># θ₁: X → Y (main effect)</span></span>
+<span>    interaction <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,      <span class="co"># θ₃: X×M interaction</span></span>
+<span></span>
+<span>    <span class="co"># Four-way components</span></span>
+<span>    cde <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,              <span class="co"># Controlled Direct Effect</span></span>
+<span>    int_ref <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,          <span class="co"># Reference Interaction</span></span>
+<span>    int_med <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,          <span class="co"># Mediated Interaction</span></span>
+<span>    pie <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,              <span class="co"># Pure Indirect Effect</span></span>
+<span></span>
+<span>    <span class="co"># Derived effects</span></span>
+<span>    nde <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,              <span class="co"># Natural Direct Effect</span></span>
+<span>    nie <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,              <span class="co"># Natural Indirect Effect</span></span>
+<span>    total_effect <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,</span>
+<span></span>
+<span>    <span class="co"># Reference value</span></span>
+<span>    m_star <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,           <span class="co"># Reference mediator level</span></span>
+<span></span>
+<span>    <span class="co"># Standard properties (estimates, vcov, metadata, etc.)</span></span>
+<span>    <span class="va">...</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Usage Pattern</strong> (planned):</p>
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Model with interaction</span></span>
+<span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">C</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
+<span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span> <span class="op">+</span> <span class="va">X</span><span class="op">:</span><span class="va">M</span> <span class="op">+</span> <span class="va">C</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Extraction detects interaction, returns InteractionMediationData</span></span>
+<span><span class="va">med_int</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">fit_m</span>, model_y <span class="op">=</span> <span class="va">fit_y</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  m_star <span class="op">=</span> <span class="fl">0</span>  <span class="co"># Reference mediator level</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Access four-way components</span></span>
+<span><span class="va">med_int</span><span class="op">@</span><span class="va">cde</span>; <span class="va">med_int</span><span class="op">@</span><span class="va">int_ref</span>; <span class="va">med_int</span><span class="op">@</span><span class="va">int_med</span>; <span class="va">med_int</span><span class="op">@</span><span class="va">pie</span></span></code></pre></div>
+<p><strong>Key References</strong>: - VanderWeele TJ (2014). A unification of mediation and interaction. <em>Epidemiology</em>, 25(5):749-61. - Valeri L, VanderWeele TJ (2013). Mediation analysis allowing for exposure-mediator interactions. <em>Psychological Methods</em>, 18(2):137-150.</p>
+</div>
+<div class="section level3">
+<h3 id="decomposition-s7-class-planned">Decomposition S7 Class (Planned)<a class="anchor" aria-label="anchor" href="#decomposition-s7-class-planned"></a></h3>
+<p><strong>Design Decision</strong>: Decomposition as separate S7 class for flexibility and custom decompositions.</p>
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">Decomposition</span> <span class="op">&lt;-</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/new_class.html" class="external-link">new_class</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Decomposition"</span>,</span>
+<span>  package <span class="op">=</span> <span class="st">"medfit"</span>,</span>
+<span>  properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_character</a></span>,        <span class="co"># "two_way", "four_way", "custom"</span></span>
+<span>    components <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_list</a></span>,       <span class="co"># Named list: list(nde = 0.3, nie = 0.2)</span></span>
+<span>    total <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_numeric</a></span>,         <span class="co"># Total effect</span></span>
+<span>    formula <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_character</a></span>      <span class="co"># "NDE + NIE" or "CDE + INTref + INTmed + PIE"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  validator <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">self</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">comp_sum</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">self</span><span class="op">@</span><span class="va">components</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">comp_sum</span> <span class="op">-</span> <span class="va">self</span><span class="op">@</span><span class="va">total</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">1e-10</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="st">"Components must sum to total effect"</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Built-in constructors</strong>: - <code>two_way(nde, nie)</code> → NDE + NIE decomposition - <code>four_way(cde, int_ref, int_med, pie)</code> → VanderWeele 4-way - <code>custom_decomposition(...)</code> → User-defined</p>
+<p><strong>MediationData</strong> stores decompositions in a list, allowing multiple:</p>
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result</span><span class="op">@</span><span class="va">decompositions</span><span class="op">$</span><span class="va">two_way</span>   <span class="co"># Decomposition object</span></span>
+<span><span class="va">result</span><span class="op">@</span><span class="va">decompositions</span><span class="op">$</span><span class="va">four_way</span>  <span class="co"># Decomposition object (when interaction present)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="user-interface-design">User Interface Design<a class="anchor" aria-label="anchor" href="#user-interface-design"></a></h3>
+<p><strong>Hybrid approach</strong>: Simple strings for common cases, helper functions for advanced.</p>
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Simple (default)</span></span>
+<span><span class="fu">estimate_mediation</span><span class="op">(</span><span class="va">...</span>, effects <span class="op">=</span> <span class="st">"natural"</span><span class="op">)</span>  <span class="co"># NDE + NIE</span></span>
+<span></span>
+<span><span class="co"># Effect options</span></span>
+<span><span class="va">effects</span> <span class="op">=</span> <span class="st">"natural"</span>        <span class="co"># NDE, NIE (default)</span></span>
+<span><span class="va">effects</span> <span class="op">=</span> <span class="st">"interventional"</span> <span class="co"># IDE, IIE</span></span>
+<span><span class="va">effects</span> <span class="op">=</span> <span class="st">"controlled"</span>     <span class="co"># CDE</span></span>
+<span></span>
+<span><span class="co"># Advanced (helper functions)</span></span>
+<span><span class="va">effects</span> <span class="op">=</span> <span class="fu">natural_effects</span><span class="op">(</span>variant <span class="op">=</span> <span class="st">"total"</span><span class="op">)</span>  <span class="co"># TDE, TNIE</span></span>
+<span><span class="va">effects</span> <span class="op">=</span> <span class="fu">controlled_effects</span><span class="op">(</span>m <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>           <span class="co"># CDE at m=5</span></span></code></pre></div>
+<p><strong>Interaction handling</strong>: When <code>X:M</code> detected → compute BOTH two-way and four-way.</p>
 <p><strong>Why this design?</strong> - <strong>Clean separation</strong>: Each class handles one mediation type well - <strong>No over-engineering</strong>: Don’t add complexity for hypothetical future needs - <strong>Easy to extend</strong>: Adding new classes doesn’t break existing ones - <strong>Type safety</strong>: S7 validators ensure each class is used correctly</p>
+</div>
+<div class="section level3">
+<h3 id="engine-adapter-architecture-planned">Engine Adapter Architecture (Planned)<a class="anchor" aria-label="anchor" href="#engine-adapter-architecture-planned"></a></h3>
+<p>medfit uses an <strong>adapter pattern</strong> to integrate with external packages for advanced estimation methods.</p>
+<p><strong>Design principles</strong>: - Wrap validated implementations (CMAverse, tmle3) instead of reimplementing - All engines return standardized <code>MediationData</code> objects - External packages in <code>Suggests</code> (load on demand) - Engine-specific options via <code>engine_args = list(...)</code></p>
+<p><strong>Engine priority</strong>:</p>
+<table class="table"><colgroup><col width="24%"><col width="27%"><col width="24%"><col width="24%"></colgroup><thead><tr class="header"><th>Engine</th>
+<th>Package</th>
+<th>Method</th>
+<th>Status</th>
+</tr></thead><tbody><tr class="odd"><td><code>"regression"</code></td>
+<td>(internal)</td>
+<td>VanderWeele closed-form</td>
+<td>MVP (default)</td>
+</tr><tr class="even"><td><code>"gformula"</code></td>
+<td>CMAverse</td>
+<td>G-computation</td>
+<td>Planned</td>
+</tr><tr class="odd"><td><code>"ipw"</code></td>
+<td>CMAverse</td>
+<td>Inverse probability weighting</td>
+<td>Planned</td>
+</tr><tr class="even"><td><code>"tmle"</code></td>
+<td>tmle3</td>
+<td>Targeted learning</td>
+<td>Future</td>
+</tr><tr class="odd"><td><code>"dml"</code></td>
+<td>DoubleML</td>
+<td>Double machine learning</td>
+<td>Future</td>
+</tr></tbody></table><p><strong>Usage example</strong>:</p>
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Default regression engine</span></span>
+<span><span class="fu">estimate_mediation</span><span class="op">(</span></span>
+<span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span> <span class="op">+</span> <span class="va">C</span>,</span>
+<span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">C</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">df</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  effects <span class="op">=</span> <span class="st">"natural"</span>,     <span class="co"># NDE + NIE</span></span>
+<span>  engine <span class="op">=</span> <span class="st">"regression"</span>    <span class="co"># Default</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># CMAverse g-formula engine</span></span>
+<span><span class="fu">estimate_mediation</span><span class="op">(</span></span>
+<span>  <span class="va">...</span>,</span>
+<span>  engine <span class="op">=</span> <span class="st">"gformula"</span>,</span>
+<span>  engine_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    EMint <span class="op">=</span> <span class="cn">TRUE</span>,          <span class="co"># Exposure-mediator interaction</span></span>
+<span>    nboot <span class="op">=</span> <span class="fl">500</span>            <span class="co"># CMAverse-specific bootstrap</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>See <code>planning/medfit-roadmap.md</code> Phase 7c for detailed adapter implementation.</p>
 </div>
 <div class="section level3">
 <h3 id="model-extraction-pattern">Model Extraction Pattern<a class="anchor" aria-label="anchor" href="#model-extraction-pattern"></a></h3>
@@ -764,8 +1292,8 @@
 </div>
 <div class="section level3">
 <h3 id="dynamic-s7s4-dispatch">Dynamic S7/S4 Dispatch<a class="anchor" aria-label="anchor" href="#dynamic-s7s4-dispatch"></a></h3>
-<p>For S4 classes from suggested packages (lavaan, OpenMx):</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<p>For S4 classes from suggested packages (e.g., lavaan):</p>
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># In R/zzz.R</span></span>
 <span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">libname</span>, <span class="va">pkgname</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># Register lavaan method if available</span></span>
@@ -774,10 +1302,7 @@
 <span>    <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/method.html" class="external-link">method</a></span><span class="op">(</span><span class="va">extract_mediation</span>, <span class="va">lavaan_class</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">extract_mediation_lavaan</span></span>
 <span>  <span class="op">}</span></span>
 <span></span>
-<span>  <span class="co"># Register OpenMx method if available</span></span>
-<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"OpenMx"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="co"># Similar pattern</span></span>
-<span>  <span class="op">}</span></span>
+<span>  <span class="co"># Note: OpenMx integration postponed to future release</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>This allows methods to work without hard dependencies.</p>
 <hr></div>
@@ -930,6 +1455,16 @@
 <strong>Don’t skip input validation</strong>: Use validators rigorously</li>
 <li>
 <strong>Don’t break backward compatibility</strong>: Coordinate with dependent packages</li>
+<li>
+<strong>Don’t suppress errors/warnings without understanding them</strong>: When encountering R CMD check NOTEs, warnings, or errors during package development:
+<ul><li>
+<strong>FIRST</strong>: Research the issue to understand the root cause</li>
+<li>
+<strong>THEN</strong>: Fix the underlying problem properly</li>
+<li>
+<strong>NEVER</strong>: Use <code><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages()</a></code>, <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings()</a></code>, or <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch()</a></code> to hide issues without understanding them</li>
+<li>Example: The “Overwriting method” S7 message was initially suppressed, but the real fix was proper <code>.onLoad()</code> registration order</li>
+</ul></li>
 </ol><hr></div>
 <div class="section level2">
 <h2 id="key-mathematical-formulas">Key Mathematical Formulas<a class="anchor" aria-label="anchor" href="#key-mathematical-formulas"></a></h2>
@@ -998,7 +1533,24 @@
 <div class="section level3">
 <h3 id="performance-issues">Performance Issues<a class="anchor" aria-label="anchor" href="#performance-issues"></a></h3>
 <p>If bootstrap is slow: - Use <code>parallel=TRUE</code> - Consider parametric instead of nonparametric - Reduce <code>n_boot</code> for testing (use 1000+ for production)</p>
-<hr><p><strong>Last Updated</strong>: 2025-12-02 <strong>Maintained by</strong>: medfit development team</p>
+</div>
+<div class="section level3">
+<h3 id="r-file-loading-order-issues">R File Loading Order Issues<a class="anchor" aria-label="anchor" href="#r-file-loading-order-issues"></a></h3>
+<p>If you get “object not found” errors during package load: - S7 generics MUST be defined before methods that use them - R files load alphabetically, so use prefixes: <code>aaa-imports.R</code>, <code>aab-generics.R</code> - Methods in <code>extract-*.R</code> require generics from <code>aab-generics.R</code> to load first</p>
+</div>
+<div class="section level3">
+<h3 id="lavaan-extraction-issues">lavaan Extraction Issues<a class="anchor" aria-label="anchor" href="#lavaan-extraction-issues"></a></h3>
+<p>If lavaan extraction fails with dimension errors: - <strong>Parameter label conflicts</strong>: When lavaan model uses labels like <code>M ~ a*X</code>, the parameter is already named “a” - Don’t add duplicate aliases that conflict with existing parameter names - Check <code>names(lavaan::coef(fit))</code> to see existing names - <strong>Data type issues</strong>: <code>lavaan::lavInspect(object, "data")</code> may return matrix or numeric, not data.frame - Convert to data.frame or return NULL if not convertible</p>
+</div>
+<div class="section level3">
+<h3 id="s7-class-has-not-been-registered-with-s4-error">S7 “Class has not been registered with S4” Error<a class="anchor" aria-label="anchor" href="#s7-class-has-not-been-registered-with-s4-error"></a></h3>
+<p>If you see this error during package installation: 1. Ensure <code>S7::S4_register(ClassName)</code> is called in <code>.onLoad()</code> for each S7 class 2. Call <code>S4_register()</code> BEFORE <code>methods_register()</code> 3. Import full <code>methods</code> package: <code>@import methods</code></p>
+</div>
+<div class="section level3">
+<h3 id="s7-overwriting-method-messages">S7 “Overwriting method” Messages<a class="anchor" aria-label="anchor" href="#s7-overwriting-method-messages"></a></h3>
+<p>During <code>devtools::load_all()</code>, you may see “Overwriting method” messages: - This is a <strong>known development-time issue</strong> (GitHub #474) - Does NOT affect installed packages - Caused by methods being registered twice: during sourcing and in <code>.onLoad()</code> - Do NOT suppress with <code><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages()</a></code> - the behavior is correct</p>
+<hr><p><strong>Last Updated</strong>: 2025-12-03 <strong>Maintained by</strong>: medfit development team</p>
+<p><strong>Workflow Keywords:</strong> - <code>doc</code> - Update planning documentation, README, and NEWS - <code>check</code> - Run R CMD check –as-cran, build/preview website, and check GitHub Actions status - <code>sync</code> - Commit and push changes to remote</p>
 </div>
 </div>
 </div>

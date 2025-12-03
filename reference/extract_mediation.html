@@ -8,10 +8,10 @@
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Extract Mediation Structure from Fitted Models — extract_mediation"><meta name="description" content="Generic function to extract mediation structure (a, b, c' paths and
 variance-covariance matrices) from fitted models. This function provides
 a unified interface for extracting mediation information from various
-model types (lm, glm, lavaan, OpenMx, lmer, brms, etc.)."><meta property="og:description" content="Generic function to extract mediation structure (a, b, c' paths and
+model types (lm, glm, lavaan, lmer, brms, etc.)."><meta property="og:description" content="Generic function to extract mediation structure (a, b, c' paths and
 variance-covariance matrices) from fitted models. This function provides
 a unified interface for extracting mediation information from various
-model types (lm, glm, lavaan, OpenMx, lmer, brms, etc.)."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
+model types (lm, glm, lavaan, lmer, brms, etc.)."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
 
 
 
@@ -64,7 +64,7 @@ model types (lm, glm, lavaan, OpenMx, lmer, brms, etc.)."><meta property="og:ima
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Mediation Structure from Fitted Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/generics.R" class="external-link"><code>R/generics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
       <div class="d-none name"><code>extract_mediation.Rd</code></div>
     </div>
 
@@ -72,7 +72,7 @@ model types (lm, glm, lavaan, OpenMx, lmer, brms, etc.)."><meta property="og:ima
     <p>Generic function to extract mediation structure (a, b, c' paths and
 variance-covariance matrices) from fitted models. This function provides
 a unified interface for extracting mediation information from various
-model types (lm, glm, lavaan, OpenMx, lmer, brms, etc.).</p>
+model types (lm, glm, lavaan, lmer, brms, etc.).</p>
     </div>
 
     <div class="section level2">
@@ -85,7 +85,7 @@ model types (lm, glm, lavaan, OpenMx, lmer, brms, etc.).</p>
 
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
-<dd><p>Fitted model object (lm, glm, lavaan, OpenMx, etc.)</p></dd>
+<dd><p>Fitted model object (lm, glm, lavaan, etc.)</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -107,10 +107,10 @@ model types (lm, glm, lavaan, OpenMx, lmer, brms, etc.).</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The <code>extract_mediation()</code> generic provides methods for different model types:</p><ul><li><p><strong>lm/glm</strong>: Extract from linear and generalized linear models</p></li>
 <li><p><strong>lavaan</strong>: Extract from structural equation models</p></li>
-<li><p><strong>OpenMx</strong>: Extract from OpenMx models</p></li>
 <li><p><strong>lmerMod</strong>: Extract from mixed-effects models (future)</p></li>
 <li><p><strong>brmsfit</strong>: Extract from Bayesian models (future)</p></li>
-</ul><p>All methods return a standardized <a href="MediationData.html">MediationData</a> object that can be used
+</ul><p>Note: OpenMx extraction is planned for a future release.</p>
+<p>All methods return a standardized <a href="MediationData.html">MediationData</a> object that can be used
 with other medfit functions and dependent packages (probmed, RMediation,
 medrobust).</p>
     </div>

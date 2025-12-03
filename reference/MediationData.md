@@ -77,8 +77,8 @@ A MediationData S7 object
 ## Details
 
 This class provides a unified container for mediation model information
-extracted from various model types (lm, glm, lavaan, OpenMx, etc.). It
-ensures consistency across the mediation analysis ecosystem.
+extracted from various model types (lm, glm, lavaan, etc.). It ensures
+consistency across the mediation analysis ecosystem.
 
 The class includes comprehensive validation to ensure data integrity.
 

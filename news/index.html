@@ -69,6 +69,20 @@
 <div class="section level4">
 <h4 id="major-features-development-version">Major Features<a class="anchor" aria-label="anchor" href="#major-features-development-version"></a></h4>
 <ul><li>
+<strong>Defensive Programming Infrastructure</strong> (NEW)
+<ul><li>Added <code>checkmate</code> package for fail-fast input validation</li>
+<li>All extraction functions now use <code>checkmate::assert_*</code> for argument validation</li>
+<li>Provides fast (C-based), memory-efficient assertions with informative error messages</li>
+<li>Complements S7 validators: checkmate for function entry, S7 for class integrity</li>
+</ul></li>
+<li>
+<strong>Code Quality Tools</strong> (NEW)
+<ul><li>Added <code>.lintr</code> configuration for static code analysis</li>
+<li>Added <code>lint.yaml</code> GitHub Action for automated linting on PRs</li>
+<li>Comprehensive CLAUDE.md section on defensive programming best practices</li>
+<li>167+ tests passing with 0 errors, 0 warnings, 0 notes</li>
+</ul></li>
+<li>
 <strong>S7 Class Architecture</strong> (Phase 2 Complete + Extended)
 <ul><li>
 <code>MediationData</code> class for simple mediation (X -&gt; M -&gt; Y)</li>
@@ -121,17 +135,20 @@
 <div class="section level4">
 <h4 id="infrastructure-development-version">Infrastructure<a class="anchor" aria-label="anchor" href="#infrastructure-development-version"></a></h4>
 <ul><li>
-<strong>Testing</strong>: 87 comprehensive tests (51 original + 36 for SerialMediationData)
+<strong>Testing</strong>: 184 comprehensive tests (0 errors, 0 warnings, 1 skip)
 <ul><li>Full coverage of simple and serial mediation S7 classes</li>
 <li>Validation tests ensure data integrity across all mediation types</li>
-<li>4 tests skipped in non-interactive mode (S7 dispatch investigation)</li>
+<li>Tests updated for checkmate error message format</li>
+<li>1 skip: cannot test lavaan-not-installed path when lavaan is installed</li>
 </ul></li>
 <li>
 <strong>CI/CD</strong>: GitHub Actions workflows with Quarto support
-<ul><li>R-CMD-check with <code>_R_CHECK_CODOC_S4_METHODS_: false</code> for S7 compatibility</li>
-<li>pkgdown deployment with Quarto rendering (<code>quarto-dev/quarto-actions/setup@v2</code>)</li>
-<li>Automatic Quarto installation when .qmd files detected</li>
-<li>Test coverage tracking</li>
+<ul><li>R-CMD-check on Ubuntu (release, devel, oldrel-1), macOS, Windows</li>
+<li>
+<code>lint.yaml</code> for static code analysis with lintr</li>
+<li>pkgdown deployment with Quarto rendering</li>
+<li>Test coverage tracking with Codecov</li>
+<li>Dependabot for automated GitHub Actions updates</li>
 </ul></li>
 <li>
 <strong>pkgdown Website</strong>: <a href="https://data-wise.github.io/medfit/" class="uri">https://data-wise.github.io/medfit/</a>
@@ -143,12 +160,12 @@
 </ul></div>
 <div class="section level4">
 <h4 id="development-status-development-version">Development Status<a class="anchor" aria-label="anchor" href="#development-status-development-version"></a></h4>
-<p><strong>Current Phase</strong>: Phase 2 Complete + Documentation <strong>Next</strong>: Phase 3 (Model Extraction)</p>
+<p><strong>Current Phase</strong>: Phase 3 Complete <strong>Next</strong>: Phase 4 (Model Fitting)</p>
 <ul class="task-list"><li><label><input type="checkbox" checked>Phase 1: Package setup</label></li>
 <li><label><input type="checkbox" checked>Phase 2: S7 class architecture (simple + serial mediation)</label></li>
 <li><label><input type="checkbox" checked>Phase 2.5: Comprehensive Quarto documentation</label></li>
-<li><label><input type="checkbox">Phase 3: Model extraction (in progress)</label></li>
-<li><label><input type="checkbox">Phase 4: Model fitting</label></li>
+<li><label><input type="checkbox" checked>Phase 3: Model extraction (lm/glm, lavaan)</label></li>
+<li><label><input type="checkbox">Phase 4: Model fitting (in progress)</label></li>
 <li><label><input type="checkbox">Phase 5: Bootstrap infrastructure</label></li>
 <li><label><input type="checkbox">Phase 6: Extended testing</label></li>
 <li><label><input type="checkbox">Phase 7: Polish &amp; release</label></li>
@@ -167,35 +184,32 @@
 <div class="section level4">
 <h4 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h4>
 <ul><li>
-<strong>LICENSE</strong>: Added <code>+ file LICENSE</code> to DESCRIPTION to properly reference LICENSE file (NOTE resolved)</li>
-<li>
-<strong>Codoc warnings</strong>: Suppressed S7 constructor codoc checks with <code>--no-codoc</code> argument (WARNING resolved)
-<ul><li>S7-generated constructor defaults have whitespace formatting differences</li>
-<li>This is a known S7/roxygen2 limitation that cannot be resolved in documentation</li>
-<li>Using <code>--no-codoc</code> in R CMD check to suppress false positive warnings</li>
-<li>Package documentation and functionality remain correct and complete</li>
+<strong>CI Failures</strong>: Removed OpenMx from Suggests (was failing to compile on Ubuntu oldrel-1)
+<ul><li>OpenMx integration postponed to future release</li>
+<li>All GitHub Actions workflows now passing</li>
 </ul></li>
 <li>
-<strong>S7 Method Dispatch</strong>: Fixed print/summary methods in installed package context (RESOLVED)
-<ul><li>Added <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code> in <code>.onAttach()</code> hook (R/zzz.R)</li>
-<li>All 51 tests now pass in non-interactive mode (previously 5 were skipped)</li>
-<li>Methods work correctly in both <code>devtools::load_all()</code> and installed package contexts</li>
-<li>Wrapped in <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch()</a></code> to handle locked namespace during devtools operations</li>
+<strong>S7 Method Registration</strong>: Fixed proper registration order in <code>.onLoad()</code>
+<ul><li>Call <code><a href="https://rconsortium.github.io/S7/reference/S4_register.html" class="external-link">S7::S4_register()</a></code> for each class BEFORE <code>methods_register()</code>
+</li>
+<li>Import full <code>methods</code> package (not just <code>@importFrom methods is</code>)</li>
+<li>Per official S7 documentation: <a href="https://rconsortium.github.io/S7/articles/packages.html" class="external-link uri">https://rconsortium.github.io/S7/articles/packages.html</a>
+</li>
+<li>SerialMediationData print/summary methods now work in installed package context</li>
+<li>Removed 4 previously skipped tests (now all passing)</li>
+</ul></li>
+<li>
+<strong>LICENSE</strong>: Added <code>+ file LICENSE</code> to DESCRIPTION to properly reference LICENSE file</li>
+<li>
+<strong>Codoc warnings</strong>: Suppressed S7 constructor codoc checks with <code>--no-codoc</code> argument
+<ul><li>S7-generated constructor defaults have whitespace formatting differences</li>
+<li>This is a known S7/roxygen2 limitation</li>
 </ul></li>
 </ul></div>
 <div class="section level4">
 <h4 id="known-issues-development-version">Known Issues<a class="anchor" aria-label="anchor" href="#known-issues-development-version"></a></h4>
 <ul><li>
-<strong>S7 Method Dispatch for SerialMediationData</strong>: Print/summary methods for <code>SerialMediationData</code> need investigation for installed package context
-<ul><li>Tests skip in non-interactive mode (4 tests affected)</li>
-<li>Methods work correctly when using <code>devtools::load_all()</code>
-</li>
-<li>Related to S7 method registration timing in installed packages</li>
-</ul></li>
-<li>
 <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> and <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> are stubs awaiting implementation</li>
-<li>
-<code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> methods need implementation for lm/glm, lavaan</li>
 </ul></div>
 <div class="section level4">
 <h4 id="internal-development-version">Internal<a class="anchor" aria-label="anchor" href="#internal-development-version"></a></h4>

@@ -3,7 +3,7 @@
 Generic function to extract mediation structure (a, b, c' paths and
 variance-covariance matrices) from fitted models. This function provides
 a unified interface for extracting mediation information from various
-model types (lm, glm, lavaan, OpenMx, lmer, brms, etc.).
+model types (lm, glm, lavaan, lmer, brms, etc.).
 
 ## Usage
 
@@ -15,7 +15,7 @@ extract_mediation(object, ...)
 
 - object:
 
-  Fitted model object (lm, glm, lavaan, OpenMx, etc.)
+  Fitted model object (lm, glm, lavaan, etc.)
 
 - ...:
 
@@ -52,11 +52,11 @@ types:
 
 - **lavaan**: Extract from structural equation models
 
-- **OpenMx**: Extract from OpenMx models
-
 - **lmerMod**: Extract from mixed-effects models (future)
 
 - **brmsfit**: Extract from Bayesian models (future)
+
+Note: OpenMx extraction is planned for a future release.
 
 All methods return a standardized
 [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md)

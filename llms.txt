@@ -20,7 +20,7 @@ analysis ecosystem, supporting
 ### Key Features
 
 - **Unified Model Extraction**: Extract mediation structure from various
-  model types (lm, glm, lavaan, OpenMx)
+  model types (lm, glm, lavaan)
 - **Flexible Model Fitting**: Fit mediation models using different
   engines (GLM, with future support for mixed models and Bayesian
   methods)
@@ -132,7 +132,7 @@ print(result)
 
 - **[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)**:
   Extract mediation structure from fitted models
-  - Methods for: lm, glm, lavaan (OpenMx coming soon)
+  - Methods for: lm, glm, lavaan
 - **[`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)**:
   Fit mediation models with formula interface
   - Engines: GLM (lmer, brms coming soon)
@@ -182,7 +182,7 @@ Comprehensive Quarto vignettes are available:
 
 ## Development Status
 
-**Current Phase**: MVP Development (Phase 2 Complete + Documentation)
+**Current Phase**: MVP Development (Phase 3 Complete)
 
 Phase 1: Package setup
 
@@ -190,15 +190,22 @@ Phase 2: S7 class architecture (with SerialMediationData)
 
 Phase 2.5: Comprehensive Quarto documentation
 
-Phase 3: Model extraction (in progress)
+Phase 3: Model extraction (lm/glm, lavaan)
 
-Phase 4: Model fitting
+Phase 4: Model fitting (in progress)
 
 Phase 5: Bootstrap infrastructure
 
 Phase 6: Extended testing
 
 Phase 7: Polish & release
+
+### Code Quality
+
+- **Defensive Programming**: checkmate for input validation, S7
+  validators for class integrity
+- **Testing**: 184 tests with testthat, code coverage tracking
+- **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See
 [planning/medfit-roadmap.md](https://data-wise.github.io/medfit/planning/medfit-roadmap.md)

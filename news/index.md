@@ -8,6 +8,20 @@
 
 #### Major Features
 
+- **Defensive Programming Infrastructure** (NEW)
+  - Added `checkmate` package for fail-fast input validation
+  - All extraction functions now use `checkmate::assert_*` for argument
+    validation
+  - Provides fast (C-based), memory-efficient assertions with
+    informative error messages
+  - Complements S7 validators: checkmate for function entry, S7 for
+    class integrity
+- **Code Quality Tools** (NEW)
+  - Added `.lintr` configuration for static code analysis
+  - Added `lint.yaml` GitHub Action for automated linting on PRs
+  - Comprehensive CLAUDE.md section on defensive programming best
+    practices
+  - 167+ tests passing with 0 errors, 0 warnings, 0 notes
 - **S7 Class Architecture** (Phase 2 Complete + Extended)
   - `MediationData` class for simple mediation (X -\> M -\> Y)
   - **`SerialMediationData` class for serial mediation** (X -\> M1 -\>
@@ -51,18 +65,18 @@
 
 #### Infrastructure
 
-- **Testing**: 87 comprehensive tests (51 original + 36 for
-  SerialMediationData)
+- **Testing**: 184 comprehensive tests (0 errors, 0 warnings, 1 skip)
   - Full coverage of simple and serial mediation S7 classes
   - Validation tests ensure data integrity across all mediation types
-  - 4 tests skipped in non-interactive mode (S7 dispatch investigation)
+  - Tests updated for checkmate error message format
+  - 1 skip: cannot test lavaan-not-installed path when lavaan is
+    installed
 - **CI/CD**: GitHub Actions workflows with Quarto support
-  - R-CMD-check with `_R_CHECK_CODOC_S4_METHODS_: false` for S7
-    compatibility
+  - R-CMD-check on Ubuntu (release, devel, oldrel-1), macOS, Windows
+  - `lint.yaml` for static code analysis with lintr
   - pkgdown deployment with Quarto rendering
-    (`quarto-dev/quarto-actions/setup@v2`)
-  - Automatic Quarto installation when .qmd files detected
-  - Test coverage tracking
+  - Test coverage tracking with Codecov
+  - Dependabot for automated GitHub Actions updates
 - **pkgdown Website**: <https://data-wise.github.io/medfit/>
   - Bootstrap 5 with Flatly theme
   - Comprehensive reference documentation
@@ -71,8 +85,7 @@
 
 #### Development Status
 
-**Current Phase**: Phase 2 Complete + Documentation **Next**: Phase 3
-(Model Extraction)
+**Current Phase**: Phase 3 Complete **Next**: Phase 4 (Model Fitting)
 
 Phase 1: Package setup
 
@@ -80,9 +93,9 @@ Phase 2: S7 class architecture (simple + serial mediation)
 
 Phase 2.5: Comprehensive Quarto documentation
 
-Phase 3: Model extraction (in progress)
+Phase 3: Model extraction (lm/glm, lavaan)
 
-Phase 4: Model fitting
+Phase 4: Model fitting (in progress)
 
 Phase 5: Bootstrap infrastructure
 
@@ -104,43 +117,35 @@ Phase 7: Polish & release
 
 #### Fixes
 
+- **CI Failures**: Removed OpenMx from Suggests (was failing to compile
+  on Ubuntu oldrel-1)
+  - OpenMx integration postponed to future release
+  - All GitHub Actions workflows now passing
+- **S7 Method Registration**: Fixed proper registration order in
+  `.onLoad()`
+  - Call
+    [`S7::S4_register()`](https://rconsortium.github.io/S7/reference/S4_register.html)
+    for each class BEFORE `methods_register()`
+  - Import full `methods` package (not just `@importFrom methods is`)
+  - Per official S7 documentation:
+    <https://rconsortium.github.io/S7/articles/packages.html>
+  - SerialMediationData print/summary methods now work in installed
+    package context
+  - Removed 4 previously skipped tests (now all passing)
 - **LICENSE**: Added `+ file LICENSE` to DESCRIPTION to properly
-  reference LICENSE file (NOTE resolved)
+  reference LICENSE file
 - **Codoc warnings**: Suppressed S7 constructor codoc checks with
-  `--no-codoc` argument (WARNING resolved)
+  `--no-codoc` argument
   - S7-generated constructor defaults have whitespace formatting
     differences
-  - This is a known S7/roxygen2 limitation that cannot be resolved in
-    documentation
-  - Using `--no-codoc` in R CMD check to suppress false positive
-    warnings
-  - Package documentation and functionality remain correct and complete
-- **S7 Method Dispatch**: Fixed print/summary methods in installed
-  package context (RESOLVED)
-  - Added
-    [`S7::methods_register()`](https://rconsortium.github.io/S7/reference/methods_register.html)
-    in `.onAttach()` hook (R/zzz.R)
-  - All 51 tests now pass in non-interactive mode (previously 5 were
-    skipped)
-  - Methods work correctly in both `devtools::load_all()` and installed
-    package contexts
-  - Wrapped in [`tryCatch()`](https://rdrr.io/r/base/conditions.html) to
-    handle locked namespace during devtools operations
+  - This is a known S7/roxygen2 limitation
 
 #### Known Issues
 
-- **S7 Method Dispatch for SerialMediationData**: Print/summary methods
-  for `SerialMediationData` need investigation for installed package
-  context
-  - Tests skip in non-interactive mode (4 tests affected)
-  - Methods work correctly when using `devtools::load_all()`
-  - Related to S7 method registration timing in installed packages
 - [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
   and
   [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
   are stubs awaiting implementation
-- [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
-  methods need implementation for lm/glm, lavaan
 
 #### Internal
 

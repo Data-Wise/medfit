@@ -105,7 +105,7 @@
 </h3>
 <ul>
 <li>
-<strong>Unified Model Extraction</strong>: Extract mediation structure from various model types (lm, glm, lavaan, OpenMx)</li>
+<strong>Unified Model Extraction</strong>: Extract mediation structure from various model types (lm, glm, lavaan)</li>
 <li>
 <strong>Flexible Model Fitting</strong>: Fit mediation models using different engines (GLM, with future support for mixed models and Bayesian methods)</li>
 <li>
@@ -232,7 +232,7 @@
 <li>
 <strong><code><a href="reference/extract_mediation.html">extract_mediation()</a></code></strong>: Extract mediation structure from fitted models
 <ul>
-<li>Methods for: lm, glm, lavaan (OpenMx coming soon)</li>
+<li>Methods for: lm, glm, lavaan</li>
 </ul>
 </li>
 <li>
@@ -293,18 +293,30 @@
 <div class="section level2">
 <h2 id="development-status">Development Status<a class="anchor" aria-label="anchor" href="#development-status"></a>
 </h2>
-<p><strong>Current Phase</strong>: MVP Development (Phase 2 Complete + Documentation)</p>
+<p><strong>Current Phase</strong>: MVP Development (Phase 3 Complete)</p>
 <ul class="task-list">
 <li><label><input type="checkbox" checked>Phase 1: Package setup</label></li>
 <li><label><input type="checkbox" checked>Phase 2: S7 class architecture (with SerialMediationData)</label></li>
 <li><label><input type="checkbox" checked>Phase 2.5: Comprehensive Quarto documentation</label></li>
-<li><label><input type="checkbox">Phase 3: Model extraction (in progress)</label></li>
-<li><label><input type="checkbox">Phase 4: Model fitting</label></li>
+<li><label><input type="checkbox" checked>Phase 3: Model extraction (lm/glm, lavaan)</label></li>
+<li><label><input type="checkbox">Phase 4: Model fitting (in progress)</label></li>
 <li><label><input type="checkbox">Phase 5: Bootstrap infrastructure</label></li>
 <li><label><input type="checkbox">Phase 6: Extended testing</label></li>
 <li><label><input type="checkbox">Phase 7: Polish &amp; release</label></li>
 </ul>
+<div class="section level3">
+<h3 id="code-quality">Code Quality<a class="anchor" aria-label="anchor" href="#code-quality"></a>
+</h3>
+<ul>
+<li>
+<strong>Defensive Programming</strong>: checkmate for input validation, S7 validators for class integrity</li>
+<li>
+<strong>Testing</strong>: 184 tests with testthat, code coverage tracking</li>
+<li>
+<strong>CI/CD</strong>: R CMD check, lintr, coverage reporting via GitHub Actions</li>
+</ul>
 <p>See <a href="planning/medfit-roadmap.html">planning/medfit-roadmap.md</a> for detailed development plan.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>

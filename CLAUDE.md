@@ -341,20 +341,420 @@ bootstrap samples - `ci_level` for confidence level (default: 0.95)
 **S7 Classes:** - CamelCase: `MediationData`, `BootstrapResult` -
 Properties use snake_case: `@a_path`, `@boot_estimates`
 
+### Code Documentation Style
+
+**General Principles:** - **Comment the “why”, not the “what”** -
+explain reasoning, not obvious operations - **More explanatory comments
+for tricky code** - shortcuts, clever tricks, non-obvious logic deserve
+explanation - **Inline citations for statistical methods** - e.g.,
+`# Per VanderWeele (2014), four-way decomposition...` -
+**Self-documenting code first** - use clear variable names, then add
+comments for context
+
+**In-line Comment Examples:**
+
+``` r
+# BAD - explains what (obvious)
+x <- x + 1  # add 1 to x
+
+# GOOD - explains why
+x <- x + 1  # Adjust for 1-based indexing expected by lavaan
+
+# GOOD - explains tricky shortcut
+# Use outer product for efficient pairwise computation (O(n²) memory but O(1) loops)
+pairwise_diff <- outer(x, x, `-`)
+
+# GOOD - inline citation
+# Per VanderWeele (2014), the four-way decomposition requires: TE = CDE + INTref + INTmed + PIE
+```
+
+**Section Headers in Functions:** Use `# --- Section Name ---` for
+functions longer than ~30 lines:
+
+``` r
+my_function <- function(...) {
+  # --- Validate Inputs ---
+  ...
+
+  # --- Extract Parameters ---
+  ...
+
+  # --- Compute Results ---
+  ...
+
+  # --- Return ---
+  ...
+}
+```
+
+**roxygen2 Documentation:** Prefer BOTH concise `@description` AND
+detailed `@details`:
+
+``` r
+#' Extract Mediation Structure from Fitted Models
+#'
+#' @description
+#' Generic function to extract mediation paths (a, b, c') and
+#' variance-covariance matrices from fitted models.
+#'
+#' @param object Fitted model object (lm, glm, lavaan)
+#' @param treatment Character: treatment variable name
+#'
+#' @return A [MediationData] object
+#'
+#' @details
+#' ## Supported Model Types
+#'
+#' - **lm/glm**: Requires separate mediator and outcome models
+#' - **lavaan**: Extracts from SEM; auto-detects paths if labeled
+#'
+#' ## Mathematical Background
+#'
+#' The indirect effect is \eqn{a \times b}{a * b} where:
+#' - \eqn{a} = effect of X on M (from mediator model)
+#' - \eqn{b} = effect of M on Y controlling for X (from outcome model)
+#'
+#' Per Baron & Kenny (1986), mediation requires significant a and b paths.
+#'
+#' @references
+#' Baron RM, Kenny DA (1986). The moderator-mediator variable distinction.
+#' *Journal of Personality and Social Psychology*, 51(6), 1173-1182.
+#'
+#' @examples
+#' \dontrun{
+#' fit_m <- lm(M ~ X + C, data = mydata)
+#' fit_y <- lm(Y ~ X + M + C, data = mydata)
+#' med_data <- extract_mediation(fit_m, model_y = fit_y,
+#'                               treatment = "X", mediator = "M")
+#' }
+#'
+#' @seealso [MediationData], [fit_mediation()]
+#' @export
+```
+
+**TODO/FIXME Conventions:**
+
+``` r
+# TODO: Add support for multiple mediators (issue #42)
+# FIXME: Breaks when n < 10, needs better error handling
+# HACK: Workaround for lavaan bug, remove when fixed upstream
+# NOTE: Assumes Gaussian residuals for variance computation
+```
+
 ### Code Organization
 
     R/
     ├── aaa-imports.R           # Package imports and setup
+    ├── aab-generics.R          # S7 generic functions (must load before methods)
     ├── medfit-package.R        # Package documentation
     ├── classes.R               # S7 class definitions
-    ├── generics.R              # S7 generic functions
     ├── fit-glm.R              # GLM engine implementation
     ├── extract-lm.R           # lm/glm extraction
     ├── extract-lavaan.R       # lavaan extraction
-    ├── extract-openmx.R       # OpenMx extraction (if included)
     ├── bootstrap.R            # Bootstrap infrastructure
     ├── utils.R                # Utility functions
     └── zzz.R                  # .onLoad() for dynamic dispatch
+
+------------------------------------------------------------------------
+
+## Defensive Programming
+
+Defensive programming employs a multi-layered approach: strict input
+validation, formal object definitions, automated testing, and continuous
+integration.
+
+### 1. Input Validation with checkmate
+
+**ALWAYS use checkmate** for function argument validation. It provides
+fast (C-based), memory-efficient assertions with informative error
+messages.
+
+**Required import** in `R/aaa-imports.R`:
+
+``` r
+#' @import checkmate
+```
+
+**Common assertion patterns:**
+
+``` r
+my_function <- function(x, n, method, data, optional_arg = NULL) {
+  # --- Input Validation (using checkmate for fail-fast defensive programming) ---
+
+  # Type assertions
+  checkmate::assert_numeric(x, .var.name = "x")
+  checkmate::assert_count(n, positive = TRUE, .var.name = "n")
+  checkmate::assert_string(method, .var.name = "method")
+  checkmate::assert_data_frame(data, .var.name = "data")
+
+  # Optional arguments (allow NULL)
+  checkmate::assert_string(optional_arg, null.ok = TRUE, .var.name = "optional_arg")
+
+  # Choice from options
+  checkmate::assert_choice(method, choices = c("parametric", "nonparametric", "plugin"),
+                           .var.name = "method")
+
+  # Class checks (multiple allowed classes)
+  checkmate::assert_multi_class(model, classes = c("lm", "glm"), .var.name = "model")
+
+  # Logical flags
+
+  checkmate::assert_flag(verbose, .var.name = "verbose")
+
+  # Variable exists in data
+  checkmate::assert_choice(treatment, choices = names(data),
+                           .var.name = "treatment in data")
+
+  # ... rest of function
+}
+```
+
+**Key checkmate functions:**
+
+| Function               | Purpose                 | Example                                   |
+|------------------------|-------------------------|-------------------------------------------|
+| `assert_string()`      | Single character string | `assert_string(x)`                        |
+| `assert_character()`   | Character vector        | `assert_character(x, min.len = 1)`        |
+| `assert_numeric()`     | Numeric vector          | `assert_numeric(x, lower = 0)`            |
+| `assert_count()`       | Single positive integer | `assert_count(n, positive = TRUE)`        |
+| `assert_int()`         | Single integer          | `assert_int(n, lower = 1)`                |
+| `assert_flag()`        | Single logical          | `assert_flag(verbose)`                    |
+| `assert_choice()`      | Value from set          | `assert_choice(x, c("a", "b"))`           |
+| `assert_subset()`      | Subset of set           | `assert_subset(x, c("a", "b", "c"))`      |
+| `assert_data_frame()`  | Data frame              | `assert_data_frame(df, min.rows = 1)`     |
+| `assert_matrix()`      | Matrix                  | `assert_matrix(m, nrows = 3)`             |
+| `assert_list()`        | List                    | `assert_list(x, types = "numeric")`       |
+| `assert_class()`       | Single class            | `assert_class(obj, "lm")`                 |
+| `assert_multi_class()` | Any of classes          | `assert_multi_class(obj, c("lm", "glm"))` |
+| `assert_function()`    | Function                | `assert_function(f, nargs = 2)`           |
+
+**Options for all assertions:** - `.var.name = "name"`: Custom variable
+name in error message - `null.ok = TRUE`: Allow NULL values -
+`add = collection`: Add to assertion collection for batch checking
+
+**Quick assertions with qassert:**
+
+``` r
+# Compact type checking
+checkmate::qassert(x, "N1")   # Numeric, length 1
+checkmate::qassert(x, "S1")   # String, length 1
+checkmate::qassert(x, "B1")   # Boolean/logical, length 1
+checkmate::qassert(x, "X")    # NULL
+checkmate::qassert(x, "N+")   # Numeric, length >= 1
+```
+
+### 2. Handling Ellipsis (`...`)
+
+When using `...` in function arguments, validate that passed arguments
+are actually used:
+
+``` r
+my_function <- function(x, ...) {
+  # Check that all ... arguments are used
+  rlang::check_dots_used()
+
+  # Or for stricter checking (error on unused dots)
+  rlang::check_dots_empty()
+
+  # ... rest of function
+}
+```
+
+**Why this matters**: Without checking, misspelled arguments are
+silently ignored:
+
+``` r
+# User typo: "treamtent" instead of "treatment"
+extract_mediation(fit, treamtent = "X")  # Silently ignored without check!
+```
+
+### 3. S7 Class Validation (Already in Use)
+
+S7 provides automatic type validation through property declarations and
+custom validators:
+
+``` r
+MyClass <- S7::new_class(
+  "MyClass",
+  properties = list(
+    # Automatic type checking
+    x = S7::class_numeric,
+    name = S7::class_character
+  ),
+  validator = function(self) {
+    # Custom validation for cross-property constraints
+    if (length(self@x) != 1) {
+      return("x must be scalar")
+    }
+    if (any(self@x < 0)) {
+      return("x must be non-negative")
+    }
+    NULL  # Return NULL if valid
+  }
+)
+```
+
+**S7 + checkmate complement each other:** - S7 validators: Class-level
+constraints, cross-property validation - checkmate: Function argument
+validation (fail-fast at entry point)
+
+### 4. Testing Strategy
+
+**Four-layer testing approach:**
+
+1.  **Unit Testing** (testthat)
+
+    ``` r
+    test_that("function handles edge cases", {
+      expect_error(my_func(NULL), "must not be NULL")
+      expect_equal(my_func(0), expected_value)
+    })
+    ```
+
+2.  **Acceptance Testing**: Validate user workflows end-to-end
+
+3.  **Code Coverage** (covr)
+
+    ``` r
+    # Target: >80% coverage, 100% for critical paths
+    covr::package_coverage()
+    ```
+
+4.  **Snapshot Testing**: For complex outputs
+
+    ``` r
+    test_that("print output is stable", {
+      expect_snapshot(print(my_object))
+    })
+    ```
+
+### 5. Dependency Management
+
+**CRITICAL rules:**
+
+1.  **Never use [`library()`](https://rdrr.io/r/base/library.html) or
+    [`require()`](https://rdrr.io/r/base/library.html) inside package
+    functions**
+
+    - These alter the global search path
+    - Use explicit namespacing: `package::function()`
+
+2.  **Imports vs Suggests:**
+
+    - **Imports**: Required packages (always available)
+    - **Suggests**: Optional packages (check availability)
+
+    ``` r
+    # For Suggested packages, check availability
+    if (!requireNamespace("lavaan", quietly = TRUE)) {
+      stop("Package 'lavaan' is required but not installed.", call. = FALSE)
+    }
+    lavaan::sem(model, data = data)
+    ```
+
+3.  **Version pinning** in DESCRIPTION:
+
+        Imports:
+            S7 (>= 0.1.0),
+            checkmate
+        Suggests:
+            lavaan (>= 0.6-0)
+
+### 6. Managing State and Side Effects
+
+**Clean up side effects with
+[`on.exit()`](https://rdrr.io/r/base/on.exit.html):**
+
+``` r
+my_function <- function(...) {
+  # Save current state
+  old_opts <- options(warn = 2)
+  old_wd <- getwd()
+
+  # Ensure cleanup even if function errors
+  on.exit({
+    options(old_opts)
+    setwd(old_wd)
+  }, add = TRUE)
+
+  # ... function body
+}
+```
+
+**File system hygiene:** - Never write to user’s home directory - Use
+[`tempdir()`](https://rdrr.io/r/base/tempfile.html) for temporary
+files - Use `tools::R_user_dir("medfit", "cache")` for persistent cache
+
+**Prefer pure functions:** - Return values instead of modifying in
+place - Avoid global state modifications
+
+### 7. Continuous Integration (CI)
+
+**GitHub Actions workflow** (`.github/workflows/R-CMD-check.yaml`):
+
+``` yaml
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+name: R-CMD-check
+
+jobs:
+  R-CMD-check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        r-version: ['release']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r-version }}
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+
+      - uses: r-lib/actions/check-r-package@v2
+```
+
+**Static code analysis** with lintr:
+
+``` r
+# .lintr file in package root
+linters: linters_with_defaults(
+  line_length_linter(120),
+  object_name_linter(styles = c("snake_case", "CamelCase"))
+)
+```
+
+### 8. Defensive Programming Checklist
+
+For every new function:
+
+Add checkmate assertions for all arguments at function entry
+
+Use `.var.name` parameter for clear error messages
+
+Allow NULL where appropriate with `null.ok = TRUE`
+
+Check `...` arguments with
+[`rlang::check_dots_used()`](https://rlang.r-lib.org/reference/check_dots_used.html)
+if applicable
+
+Use explicit namespacing for all non-base functions
+
+Clean up side effects with
+[`on.exit()`](https://rdrr.io/r/base/on.exit.html)
+
+Write tests for error conditions
+
+Verify function works with edge cases (NULL, empty, NA)
 
 ------------------------------------------------------------------------
 
@@ -463,33 +863,39 @@ When documenting S7 classes and methods with roxygen2:
     })
     ```
 
-5.  **S7 Method Registration in .onLoad()**: Do NOT use
-    [`S7::methods_register()`](https://rconsortium.github.io/S7/reference/methods_register.html)
+5.  **S7 Method Registration in .onLoad()**: REQUIRED per official S7
+    documentation
 
     ``` r
-    # INCORRECT - causes load-time errors
+    # CORRECT - per https://rconsortium.github.io/S7/articles/packages.html
     .onLoad <- function(libname, pkgname) {
-      S7::methods_register()  # DON'T DO THIS
-    }
+      # 1. First register S7 classes with S4 system
+      S7::S4_register(MediationData)
+      S7::S4_register(SerialMediationData)
+      S7::S4_register(BootstrapResult)
 
-    # CORRECT - rely on S4 registration
-    .onLoad <- function(libname, pkgname) {
-      # S7 methods work automatically after S7::S4_register() in class definitions
-      # No additional registration needed
+      # 2. Then register S7 methods for dispatch
+      S7::methods_register()
+
+      # 3. Register methods for Suggested packages (if available)
+      if (requireNamespace("lavaan", quietly = TRUE)) {
+        tryCatch(.register_lavaan_method(), error = function(e) invisible(NULL))
+      }
     }
     ```
 
-    **Why**:
+    **Key points**:
 
-    - [`S7::methods_register()`](https://rconsortium.github.io/S7/reference/methods_register.html)
-      in `.onLoad()` tries to register methods before classes are
-      defined
-    - S7 methods are defined at package build time, not load time
-    - S7 method dispatch works automatically after
-      [`S7::S4_register()`](https://rconsortium.github.io/S7/reference/S4_register.html)
-      calls
-    - Always call `S7::S4_register(ClassName)` immediately after each
-      class definition
+    - `S4_register()` MUST be called for each S7 class BEFORE
+      `methods_register()`
+    - `methods_register()` MUST be in `.onLoad()`, NOT `.onAttach()`
+    - Import full `methods` package: `@import methods` (not just
+      `@importFrom methods is`)
+    - The “Overwriting method” message during `devtools::load_all()` is
+      a known development-time issue (GitHub \#474) - does NOT affect
+      installed packages
+    - See: <https://rconsortium.github.io/S7/articles/packages.html>
+    - See: <https://github.com/RConsortium/S7/issues/474>
 
 **S7 and S3 Class Integration:**
 
@@ -501,11 +907,8 @@ When working with S3 classes in S7 packages, follow this guide:
 
     - Required for dynamic method registration
     - Especially important for methods on generics from other packages
-    - **Note**: In medfit, this causes errors during package load
-      because classes aren’t defined yet
-    - Our approach: rely on
-      [`S7::S4_register()`](https://rconsortium.github.io/S7/reference/S4_register.html)
-      immediately after class definitions
+    - Must call `S4_register()` for each class BEFORE
+      `methods_register()`
 
 2.  **Formalizing S3 Classes**: Use `new_S3_class()` to wrap S3 classes
 
@@ -712,8 +1115,10 @@ interoperability features and limitations:
 statistical functions - **methods**: S4 compatibility
 
 **Suggested:** - **MASS**: `mvrnorm()` for parametric bootstrap -
-**lavaan**: SEM model extraction - **OpenMx**: SEM model extraction -
-**lme4**: Mixed models (future)
+**lavaan**: SEM model extraction - **lme4**: Mixed models (future)
+
+**Future Consideration:** - **OpenMx**: SEM model extraction (postponed
+to future release)
 
 ### Explicit Namespacing
 
@@ -791,11 +1196,207 @@ For complex mediation (combinations of serial and parallel): - Could use
 graph representation or nested structure - Keep it simple: start with
 separate classes, add complexity only when needed
 
+### Treatment-Mediator Interaction (VanderWeele Four-Way Decomposition)
+
+**Planned for post-MVP release** based on [VanderWeele
+(2014)](https://pubmed.ncbi.nlm.nih.gov/25000145/).
+
+**Theoretical Foundation**:
+
+When treatment (X) and mediator (M) interact in their effect on outcome
+(Y), the total effect decomposes into four components:
+
+| Component  | Meaning                  | Due to                            |
+|------------|--------------------------|-----------------------------------|
+| **CDE**    | Controlled Direct Effect | Neither mediation nor interaction |
+| **INTref** | Reference Interaction    | Interaction only                  |
+| **INTmed** | Mediated Interaction     | Both mediation and interaction    |
+| **PIE**    | Pure Indirect Effect     | Mediation only                    |
+
+**Decomposition**: TE = CDE + INTref + INTmed + PIE
+
+**Relationships**: - NDE (Natural Direct Effect) = CDE + INTref - NIE
+(Natural Indirect Effect) = INTmed + PIE
+
+**Regression Models**:
+
+    Mediator:  M = β₀ + β₁X + β₂'C + εₘ
+    Outcome:   Y = θ₀ + θ₁X + θ₂M + θ₃(X×M) + θ₄'C + εᵧ
+
+\*\*Formulas (continuous Y/M, binary X: 0→1, m\*=0)\*\*: - CDE = θ₁
+(effect of X when M=0) - INTref = θ₃(β₀ + β₂’c) (interaction at
+reference) - INTmed = θ₃β₁ (mediated interaction) - PIE = θ₂β₁ (pure
+indirect effect)
+
+**When θ₃=0** (no interaction): reduces to standard mediation where
+CDE=NDE=θ₁ and NIE=PIE=θ₂β₁.
+
+**InteractionMediationData Class** (planned):
+
+``` r
+InteractionMediationData <- S7::new_class(
+  "InteractionMediationData",
+  package = "medfit",
+  properties = list(
+    # Core paths
+    a_path = S7::class_numeric,           # β₁: X → M
+    b_path = S7::class_numeric,           # θ₂: M → Y (main effect)
+    c_prime = S7::class_numeric,          # θ₁: X → Y (main effect)
+    interaction = S7::class_numeric,      # θ₃: X×M interaction
+
+    # Four-way components
+    cde = S7::class_numeric,              # Controlled Direct Effect
+    int_ref = S7::class_numeric,          # Reference Interaction
+    int_med = S7::class_numeric,          # Mediated Interaction
+    pie = S7::class_numeric,              # Pure Indirect Effect
+
+    # Derived effects
+    nde = S7::class_numeric,              # Natural Direct Effect
+    nie = S7::class_numeric,              # Natural Indirect Effect
+    total_effect = S7::class_numeric,
+
+    # Reference value
+    m_star = S7::class_numeric,           # Reference mediator level
+
+    # Standard properties (estimates, vcov, metadata, etc.)
+    ...
+  )
+)
+```
+
+**Usage Pattern** (planned):
+
+``` r
+# Model with interaction
+fit_m <- lm(M ~ X + C, data = data)
+fit_y <- lm(Y ~ X + M + X:M + C, data = data)
+
+# Extraction detects interaction, returns InteractionMediationData
+med_int <- extract_mediation(
+  fit_m, model_y = fit_y,
+  treatment = "X", mediator = "M",
+  m_star = 0  # Reference mediator level
+)
+
+# Access four-way components
+med_int@cde; med_int@int_ref; med_int@int_med; med_int@pie
+```
+
+**Key References**: - VanderWeele TJ (2014). A unification of mediation
+and interaction. *Epidemiology*, 25(5):749-61. - Valeri L, VanderWeele
+TJ (2013). Mediation analysis allowing for exposure-mediator
+interactions. *Psychological Methods*, 18(2):137-150.
+
+### Decomposition S7 Class (Planned)
+
+**Design Decision**: Decomposition as separate S7 class for flexibility
+and custom decompositions.
+
+``` r
+Decomposition <- S7::new_class(
+  "Decomposition",
+  package = "medfit",
+  properties = list(
+    type = S7::class_character,        # "two_way", "four_way", "custom"
+    components = S7::class_list,       # Named list: list(nde = 0.3, nie = 0.2)
+    total = S7::class_numeric,         # Total effect
+    formula = S7::class_character      # "NDE + NIE" or "CDE + INTref + INTmed + PIE"
+  ),
+  validator = function(self) {
+    comp_sum <- sum(unlist(self@components))
+    if (abs(comp_sum - self@total) > 1e-10) {
+      "Components must sum to total effect"
+    }
+  }
+)
+```
+
+**Built-in constructors**: - `two_way(nde, nie)` → NDE + NIE
+decomposition - `four_way(cde, int_ref, int_med, pie)` → VanderWeele
+4-way - `custom_decomposition(...)` → User-defined
+
+**MediationData** stores decompositions in a list, allowing multiple:
+
+``` r
+result@decompositions$two_way   # Decomposition object
+result@decompositions$four_way  # Decomposition object (when interaction present)
+```
+
+### User Interface Design
+
+**Hybrid approach**: Simple strings for common cases, helper functions
+for advanced.
+
+``` r
+# Simple (default)
+estimate_mediation(..., effects = "natural")  # NDE + NIE
+
+# Effect options
+effects = "natural"        # NDE, NIE (default)
+effects = "interventional" # IDE, IIE
+effects = "controlled"     # CDE
+
+# Advanced (helper functions)
+effects = natural_effects(variant = "total")  # TDE, TNIE
+effects = controlled_effects(m = 5)           # CDE at m=5
+```
+
+**Interaction handling**: When `X:M` detected → compute BOTH two-way and
+four-way.
+
 **Why this design?** - **Clean separation**: Each class handles one
 mediation type well - **No over-engineering**: Don’t add complexity for
 hypothetical future needs - **Easy to extend**: Adding new classes
 doesn’t break existing ones - **Type safety**: S7 validators ensure each
 class is used correctly
+
+### Engine Adapter Architecture (Planned)
+
+medfit uses an **adapter pattern** to integrate with external packages
+for advanced estimation methods.
+
+**Design principles**: - Wrap validated implementations (CMAverse,
+tmle3) instead of reimplementing - All engines return standardized
+`MediationData` objects - External packages in `Suggests` (load on
+demand) - Engine-specific options via `engine_args = list(...)`
+
+**Engine priority**:
+
+| Engine         | Package    | Method                        | Status        |
+|----------------|------------|-------------------------------|---------------|
+| `"regression"` | (internal) | VanderWeele closed-form       | MVP (default) |
+| `"gformula"`   | CMAverse   | G-computation                 | Planned       |
+| `"ipw"`        | CMAverse   | Inverse probability weighting | Planned       |
+| `"tmle"`       | tmle3      | Targeted learning             | Future        |
+| `"dml"`        | DoubleML   | Double machine learning       | Future        |
+
+**Usage example**:
+
+``` r
+# Default regression engine
+estimate_mediation(
+  formula_y = Y ~ X + M + C,
+  formula_m = M ~ X + C,
+  data = df,
+  treatment = "X",
+  mediator = "M",
+  effects = "natural",     # NDE + NIE
+  engine = "regression"    # Default
+)
+
+# CMAverse g-formula engine
+estimate_mediation(
+  ...,
+  engine = "gformula",
+  engine_args = list(
+    EMint = TRUE,          # Exposure-mediator interaction
+    nboot = 500            # CMAverse-specific bootstrap
+  )
+)
+```
+
+See `planning/medfit-roadmap.md` Phase 7c for detailed adapter
+implementation.
 
 ### Model Extraction Pattern
 
@@ -834,7 +1435,7 @@ reproducibility
 
 ### Dynamic S7/S4 Dispatch
 
-For S4 classes from suggested packages (lavaan, OpenMx):
+For S4 classes from suggested packages (e.g., lavaan):
 
 ``` r
 # In R/zzz.R
@@ -845,10 +1446,7 @@ For S4 classes from suggested packages (lavaan, OpenMx):
     S7::method(extract_mediation, lavaan_class) <- extract_mediation_lavaan
   }
 
-  # Register OpenMx method if available
-  if (requireNamespace("OpenMx", quietly = TRUE)) {
-    # Similar pattern
-  }
+  # Note: OpenMx integration postponed to future release
 }
 ```
 
@@ -1014,6 +1612,19 @@ analyses
 4.  **Don’t skip input validation**: Use validators rigorously
 5.  **Don’t break backward compatibility**: Coordinate with dependent
     packages
+6.  **Don’t suppress errors/warnings without understanding them**: When
+    encountering R CMD check NOTEs, warnings, or errors during package
+    development:
+    - **FIRST**: Research the issue to understand the root cause
+    - **THEN**: Fix the underlying problem properly
+    - **NEVER**: Use
+      [`suppressMessages()`](https://rdrr.io/r/base/message.html),
+      [`suppressWarnings()`](https://rdrr.io/r/base/warning.html), or
+      [`tryCatch()`](https://rdrr.io/r/base/conditions.html) to hide
+      issues without understanding them
+    - Example: The “Overwriting method” S7 message was initially
+      suppressed, but the real fix was proper `.onLoad()` registration
+      order
 
 ------------------------------------------------------------------------
 
@@ -1090,6 +1701,45 @@ If bootstrap is slow: - Use `parallel=TRUE` - Consider parametric
 instead of nonparametric - Reduce `n_boot` for testing (use 1000+ for
 production)
 
+### R File Loading Order Issues
+
+If you get “object not found” errors during package load: - S7 generics
+MUST be defined before methods that use them - R files load
+alphabetically, so use prefixes: `aaa-imports.R`, `aab-generics.R` -
+Methods in `extract-*.R` require generics from `aab-generics.R` to load
+first
+
+### lavaan Extraction Issues
+
+If lavaan extraction fails with dimension errors: - **Parameter label
+conflicts**: When lavaan model uses labels like `M ~ a*X`, the parameter
+is already named “a” - Don’t add duplicate aliases that conflict with
+existing parameter names - Check `names(lavaan::coef(fit))` to see
+existing names - **Data type issues**:
+`lavaan::lavInspect(object, "data")` may return matrix or numeric, not
+data.frame - Convert to data.frame or return NULL if not convertible
+
+### S7 “Class has not been registered with S4” Error
+
+If you see this error during package installation: 1. Ensure
+`S7::S4_register(ClassName)` is called in `.onLoad()` for each S7 class
+2. Call `S4_register()` BEFORE `methods_register()` 3. Import full
+`methods` package: `@import methods`
+
+### S7 “Overwriting method” Messages
+
+During `devtools::load_all()`, you may see “Overwriting method”
+messages: - This is a **known development-time issue** (GitHub \#474) -
+Does NOT affect installed packages - Caused by methods being registered
+twice: during sourcing and in `.onLoad()` - Do NOT suppress with
+[`suppressMessages()`](https://rdrr.io/r/base/message.html) - the
+behavior is correct
+
 ------------------------------------------------------------------------
 
-**Last Updated**: 2025-12-02 **Maintained by**: medfit development team
+**Last Updated**: 2025-12-03 **Maintained by**: medfit development team
+
+**Workflow Keywords:** - `doc` - Update planning documentation, README,
+and NEWS - `check` - Run R CMD check –as-cran, build/preview website,
+and check GitHub Actions status - `sync` - Commit and push changes to
+remote

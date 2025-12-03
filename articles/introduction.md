@@ -201,11 +201,13 @@ medfit serves as the foundation for specialized mediation packages:
 ## Design Principles
 
 1.  **Type safety**: S7 classes with validators ensure data integrity
-2.  **Consistency**: Standardized interfaces across model types
-3.  **Extensibility**: Easy to add new model engines and methods
-4.  **Minimal dependencies**: Core functionality with minimal external
+2.  **Defensive programming**: checkmate assertions for fail-fast input
+    validation
+3.  **Consistency**: Standardized interfaces across model types
+4.  **Extensibility**: Easy to add new model engines and methods
+5.  **Minimal dependencies**: Core functionality with minimal external
     dependencies
-5.  **Infrastructure focus**: Provides tools, not effect sizes
+6.  **Infrastructure focus**: Provides tools, not effect sizes
 
 ## Next Steps
 
@@ -221,7 +223,8 @@ medfit serves as the foundation for specialized mediation packages:
 medfit is under active development. Current status:
 
 - ✅ Phase 2 Complete: S7 class architecture
-- 🚧 Phase 3 In Progress: Model extraction
-- 📋 Planned: Model fitting, bootstrap infrastructure
+- ✅ Phase 3 Complete: Model extraction (lm/glm, lavaan)
+- 🚧 Phase 4 In Progress: Model fitting
+- 📋 Planned: Bootstrap infrastructure
 
 See `NEWS.md` for the latest updates.

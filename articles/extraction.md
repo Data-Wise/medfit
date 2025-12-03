@@ -7,10 +7,11 @@ The
 function provides a standardized interface for extracting mediation
 structures from fitted models. It works with:
 
-- **lm/glm** models (base R)
-- **lavaan** SEM models (planned)
-- **OpenMx** models (planned)
+- **lm/glm** models (base R) - implemented
+- **lavaan** SEM models - implemented
 - **lmer** mixed models (future)
+
+Note: OpenMx extraction is planned for a future release.
 
 All extraction methods return a `MediationData` or `SerialMediationData`
 object, ensuring consistency across modeling frameworks.
@@ -221,7 +222,8 @@ The extraction design is compatible with RMediation’s lavaan extractor:
 
 ## Error Handling
 
-The extraction validates inputs:
+The extraction uses **checkmate** for fail-fast input validation with
+informative error messages:
 
 ``` r
 # Variable not in model
@@ -231,7 +233,17 @@ extract_mediation(
   treatment = "NonExistent",
   mediator = "M"
 )
-# Error: Treatment variable 'NonExistent' not found in model
+# Error: Assertion on 'treatment in mediator model' failed:
+#        Must be element of set {'(Intercept)','X'}, but is 'NonExistent'.
+
+# Wrong type for treatment argument
+extract_mediation(
+  model_m,
+  model_y,
+  treatment = 123,  # Should be character
+  mediator = "M"
+)
+# Error: Assertion on 'treatment' failed: Must be of type 'string', not 'double'.
 
 # Mediator not in outcome model
 model_y_wrong <- lm(Y ~ X, data = data)  # Missing M
@@ -241,8 +253,12 @@ extract_mediation(
   treatment = "X",
   mediator = "M"
 )
-# Error: Mediator variable 'M' not found in outcome model
+# Error: Assertion on 'mediator in outcome model' failed:
+#        Must be element of set {'(Intercept)','X'}, but is 'M'.
 ```
+
+This defensive programming approach catches errors early with clear
+messages, making debugging easier.
 
 ## Advanced Topics
 
@@ -309,8 +325,13 @@ All methods return the same S7 class structure, ensuring consistency.
 
 ## Development Status
 
-Currently implemented: - ✅ S7 class definitions (MediationData,
-SerialMediationData) - 🚧 lm/glm extraction (in development) - 📋 lavaan
-extraction (planned) - 📋 OpenMx extraction (planned)
+Phase 3 (Model Extraction) is **complete**:
+
+- ✅ S7 class definitions (MediationData, SerialMediationData)
+- ✅ lm/glm extraction with checkmate validation
+- ✅ lavaan extraction with checkmate validation
+- 📋 lmer extraction (future)
+
+**Note**: OpenMx extraction has been postponed to a future release.
 
 See `NEWS.md` for updates.

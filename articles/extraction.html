@@ -108,14 +108,13 @@
 <p>The <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> function provides a standardized interface for extracting mediation structures from fitted models. It works with:</p>
 <ul>
 <li>
-<strong>lm/glm</strong> models (base R)</li>
+<strong>lm/glm</strong> models (base R) - implemented</li>
 <li>
-<strong>lavaan</strong> SEM models (planned)</li>
-<li>
-<strong>OpenMx</strong> models (planned)</li>
+<strong>lavaan</strong> SEM models - implemented</li>
 <li>
 <strong>lmer</strong> mixed models (future)</li>
 </ul>
+<p>Note: OpenMx extraction is planned for a future release.</p>
 <p>All extraction methods return a <code>MediationData</code> or <code>SerialMediationData</code> object, ensuring consistency across modeling frameworks.</p>
 </section><section class="level2"><h2 id="extraction-pattern">Extraction Pattern<a class="anchor" aria-label="anchor" href="#extraction-pattern"></a>
 </h2>
@@ -315,7 +314,7 @@
 </div>
 </section><section class="level2"><h2 id="error-handling">Error Handling<a class="anchor" aria-label="anchor" href="#error-handling"></a>
 </h2>
-<p>The extraction validates inputs:</p>
+<p>The extraction uses <strong>checkmate</strong> for fail-fast input validation with informative error messages:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Variable not in model</span></span>
@@ -325,7 +324,17 @@
 <span>  treatment <span class="op">=</span> <span class="st">"NonExistent"</span>,</span>
 <span>  mediator <span class="op">=</span> <span class="st">"M"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co"># Error: Treatment variable 'NonExistent' not found in model</span></span>
+<span><span class="co"># Error: Assertion on 'treatment in mediator model' failed:</span></span>
+<span><span class="co">#        Must be element of set {'(Intercept)','X'}, but is 'NonExistent'.</span></span>
+<span></span>
+<span><span class="co"># Wrong type for treatment argument</span></span>
+<span><span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">model_m</span>,</span>
+<span>  <span class="va">model_y</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="fl">123</span>,  <span class="co"># Should be character</span></span>
+<span>  mediator <span class="op">=</span> <span class="st">"M"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Error: Assertion on 'treatment' failed: Must be of type 'string', not 'double'.</span></span>
 <span></span>
 <span><span class="co"># Mediator not in outcome model</span></span>
 <span><span class="va">model_y_wrong</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span>  <span class="co"># Missing M</span></span>
@@ -335,8 +344,10 @@
 <span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
 <span>  mediator <span class="op">=</span> <span class="st">"M"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co"># Error: Mediator variable 'M' not found in outcome model</span></span></code></pre></div>
+<span><span class="co"># Error: Assertion on 'mediator in outcome model' failed:</span></span>
+<span><span class="co">#        Must be element of set {'(Intercept)','X'}, but is 'M'.</span></span></code></pre></div>
 </div>
+<p>This defensive programming approach catches errors early with clear messages, making debugging easier.</p>
 </section><section class="level2"><h2 id="advanced-topics">Advanced Topics<a class="anchor" aria-label="anchor" href="#advanced-topics"></a>
 </h2>
 <section class="level3"><h3 id="extracting-full-parameter-vector">Extracting Full Parameter Vector<a class="anchor" aria-label="anchor" href="#extracting-full-parameter-vector"></a>
@@ -397,7 +408,14 @@
 <li>Check the reference documentation for <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> methods</li>
 </ul></section><section class="level2"><h2 id="development-status">Development Status<a class="anchor" aria-label="anchor" href="#development-status"></a>
 </h2>
-<p>Currently implemented: - ✅ S7 class definitions (MediationData, SerialMediationData) - 🚧 lm/glm extraction (in development) - 📋 lavaan extraction (planned) - 📋 OpenMx extraction (planned)</p>
+<p>Phase 3 (Model Extraction) is <strong>complete</strong>:</p>
+<ul>
+<li>✅ S7 class definitions (MediationData, SerialMediationData)</li>
+<li>✅ lm/glm extraction with checkmate validation</li>
+<li>✅ lavaan extraction with checkmate validation</li>
+<li>📋 lmer extraction (future)</li>
+</ul>
+<p><strong>Note</strong>: OpenMx extraction has been postponed to a future release.</p>
 <p>See <code>NEWS.md</code> for updates.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
