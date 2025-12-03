@@ -12,7 +12,8 @@ BootstrapResult(
   boot_estimates = integer(0),
   n_boot = integer(0),
   method = character(0),
-  call = quote({})
+  call = quote({
+ })
 )
 }
 \arguments{
