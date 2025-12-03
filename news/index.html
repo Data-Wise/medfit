@@ -97,8 +97,22 @@
 <strong>CLAUDE.md</strong>: Added comprehensive S7 documentation patterns section for future reference</li>
 </ul></div>
 <div class="section level4">
+<h4 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h4>
+<ul><li>
+<strong>LICENSE</strong>: Added <code>+ file LICENSE</code> to DESCRIPTION to properly reference LICENSE file</li>
+<li>
+<strong>Codoc warnings</strong>: Fixed BootstrapResult codoc mismatch by using correct default value for <code>call</code> parameter</li>
+</ul></div>
+<div class="section level4">
 <h4 id="known-issues-development-version">Known Issues<a class="anchor" aria-label="anchor" href="#known-issues-development-version"></a></h4>
 <ul><li>
+<strong>S7 Codoc Warning</strong>: MediationData has codoc mismatch for <code>vcov</code> and <code>data</code> parameters
+<ul><li>These use complex S7-generated defaults for S3 classes (matrix, data.frame)</li>
+<li>Whitespace formatting differences between S7 internals and roxygen2</li>
+<li>This is a known S7/roxygen2 interaction limitation, not a functional issue</li>
+<li>Does not affect package functionality or user experience</li>
+</ul></li>
+<li>
 <strong>S7 Method Dispatch</strong>: Print/summary methods don’t work properly in installed package context
 <ul><li>Tests skip in non-interactive mode (5 tests affected)</li>
 <li>Methods work correctly when using <code>devtools::load_all()</code>
