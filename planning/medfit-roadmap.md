@@ -1014,6 +1014,211 @@ Per VanderWeele (2014), causal interpretation requires:
 
 ---
 
+## Phase 7b: Estimation Engine Architecture (Future)
+
+**Goal**: Unified estimation infrastructure supporting multiple causal mediation methods
+
+**Status**: Design phase - brainstorming complete
+
+### 7b.1 User Interface Design
+
+**Design Decision**: Hybrid approach combining simple strings for common cases with helper functions for advanced control.
+
+#### Simple Interface (80% of users)
+
+```r
+estimate_mediation(
+  formula_y = Y ~ X + M + C,
+  formula_m = M ~ X + C,
+  data = df,
+  treatment = "X",
+  mediator = "M",
+  effects = "natural",     # DEFAULT: NDE + NIE
+  engine = "regression"
+)
+```
+
+#### Effect Specification Options
+
+| `effects =` | Returns | Use Case |
+|-------------|---------|----------|
+| `"natural"` (default) | NDE, NIE | Standard mediation |
+| `"interventional"` | IDE, IIE | Exposure-induced confounding |
+| `"controlled"` | CDE | Policy questions |
+
+#### Advanced Interface (helper functions)
+
+```r
+estimate_mediation(
+  ...,
+  effects = natural_effects(variant = "total"),     # TDE + TNIE
+  effects = controlled_effects(m = 5),              # CDE at m=5
+  effects = interventional_effects()                # IDE + IIE
+)
+```
+
+#### Interaction Handling
+
+When `X:M` interaction detected in formula → automatically compute BOTH decompositions:
+
+```r
+# formula_y = Y ~ X + M + X:M + C triggers both:
+result@decompositions$two_way   # NDE, NIE
+result@decompositions$four_way  # CDE, INTref, INTmed, PIE
+```
+
+### 7b.2 Decomposition S7 Class
+
+**Design Decision**: Decomposition as separate S7 class for flexibility and future extensibility.
+
+```r
+#' @title Decomposition
+#' @description S7 class for effect decomposition results
+Decomposition <- S7::new_class(
+  "Decomposition",
+  package = "medfit",
+  properties = list(
+    type = S7::class_character,        # "two_way", "four_way", "custom"
+    components = S7::class_list,       # Named list of effects
+    total = S7::class_numeric,         # Total effect
+    formula = S7::class_character      # Human-readable decomposition
+  ),
+  validator = function(self) {
+    comp_sum <- sum(unlist(self@components))
+    if (abs(comp_sum - self@total) > 1e-10) {
+      "Components must sum to total effect"
+    }
+  }
+)
+```
+
+#### Built-in Decomposition Constructors
+
+```r
+# Two-way (natural effects)
+two_way <- function(nde, nie) {
+  Decomposition(
+    type = "two_way",
+    components = list(nde = nde, nie = nie),
+    total = nde + nie,
+    formula = "NDE + NIE"
+  )
+}
+
+# Four-way (VanderWeele)
+four_way <- function(cde, int_ref, int_med, pie) {
+  Decomposition(
+    type = "four_way",
+    components = list(cde = cde, int_ref = int_ref,
+                      int_med = int_med, pie = pie),
+    total = cde + int_ref + int_med + pie,
+    formula = "CDE + INTref + INTmed + PIE"
+  )
+}
+
+# Custom (future extensibility)
+custom_decomposition <- function(..., formula = NULL) {
+  comps <- list(...)
+  Decomposition(
+    type = "custom",
+    components = comps,
+    total = sum(unlist(comps)),
+    formula = formula %||% paste(names(comps), collapse = " + ")
+  )
+}
+```
+
+### 7b.3 MediationData with Decompositions
+
+**Design Decision**: MediationData stores multiple decompositions in a list.
+
+```r
+MediationData <- S7::new_class(
+  "MediationData",
+  properties = list(
+    # Path coefficients (raw)
+    a_path = S7::class_numeric,
+    b_path = S7::class_numeric,
+    c_prime = S7::class_numeric,
+    interaction = S7::class_numeric | NULL,
+
+    # Decomposition results (flexible)
+    decompositions = S7::class_list,  # list(two_way = Decomposition, ...)
+
+    # Standard properties
+    estimates = S7::class_numeric,
+    vcov = S7::class_matrix,
+    # ... other properties
+  )
+)
+```
+
+### 7b.4 User-Friendly Access
+
+```r
+result <- estimate_mediation(...)
+
+# Helper functions (recommended)
+get_effect(result, "nde")                    # → 0.3
+get_effect(result, "four_way")               # → list(cde, int_ref, int_med, pie)
+get_decomposition(result, "two_way")         # → Decomposition object
+
+# Print method
+print(result)
+# Mediation Analysis Results
+# ==========================
+# Two-way decomposition:
+#   NDE: 0.30 (95% CI: 0.20, 0.40)
+#   NIE: 0.20 (95% CI: 0.12, 0.28)
+#   Total: 0.50
+#
+# Four-way decomposition:
+#   CDE:     0.20   INTref: 0.10
+#   INTmed:  0.08   PIE:    0.12
+#   Total: 0.50
+```
+
+### 7b.5 Estimation Engine Layer (Future)
+
+**Planned engines** based on causal mediation literature:
+
+| Engine | Method | Key Reference |
+|--------|--------|---------------|
+| `"regression"` | VanderWeele closed-form | Valeri & VanderWeele (2013) |
+| `"simulation"` | Monte Carlo integration | Imai et al. (2010) |
+| `"gformula"` | G-computation | Robins (1986) |
+| `"weighting"` | IPW-based | VanderWeele (2009) |
+| `"tmle"` | Targeted learning | Zheng & van der Laan (2012) |
+| `"dml"` | Double machine learning | Chernozhukov et al. (2018) |
+
+```r
+# Engine specification
+estimate_mediation(
+  ...,
+  engine = "regression",          # Default: closed-form
+  engine = "gformula",            # G-computation
+  engine = "tmle",                # Targeted learning
+  engine_args = list(...)         # Engine-specific options
+)
+```
+
+### 7b.6 Design Principles
+
+1. **Sensible defaults**: `effects = "natural"`, `engine = "regression"`
+2. **Progressive disclosure**: Simple for beginners, powerful for experts
+3. **Future-proof**: Decomposition class allows custom decompositions
+4. **Consistent output**: All engines return same MediationData structure
+5. **Multiple decompositions**: One result can hold two-way AND four-way
+
+### 7b.7 Key References (Estimation Methods)
+
+- **Imai K et al. (2010)**. A general approach to causal mediation analysis. *Psych Methods*.
+- **Valeri L, VanderWeele TJ (2013)**. Mediation analysis allowing for exposure-mediator interactions. *Psych Methods*.
+- **VanderWeele TJ (2015)**. *Explanation in Causal Inference*. Oxford University Press.
+- **Zheng W, van der Laan MJ (2012)**. Targeted maximum likelihood estimation of natural direct effects. *Int J Biostat*.
+
+---
+
 ## Phase 8: Polish & Release (Week 5)
 
 **Goal**: Finalize for release and integration

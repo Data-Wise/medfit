@@ -791,6 +791,61 @@ med_int@cde; med_int@int_ref; med_int@int_med; med_int@pie
 - VanderWeele TJ (2014). A unification of mediation and interaction. *Epidemiology*, 25(5):749-61.
 - Valeri L, VanderWeele TJ (2013). Mediation analysis allowing for exposure-mediator interactions. *Psychological Methods*, 18(2):137-150.
 
+### Decomposition S7 Class (Planned)
+
+**Design Decision**: Decomposition as separate S7 class for flexibility and custom decompositions.
+
+```r
+Decomposition <- S7::new_class(
+  "Decomposition",
+  package = "medfit",
+  properties = list(
+    type = S7::class_character,        # "two_way", "four_way", "custom"
+    components = S7::class_list,       # Named list: list(nde = 0.3, nie = 0.2)
+    total = S7::class_numeric,         # Total effect
+    formula = S7::class_character      # "NDE + NIE" or "CDE + INTref + INTmed + PIE"
+  ),
+  validator = function(self) {
+    comp_sum <- sum(unlist(self@components))
+    if (abs(comp_sum - self@total) > 1e-10) {
+      "Components must sum to total effect"
+    }
+  }
+)
+```
+
+**Built-in constructors**:
+- `two_way(nde, nie)` → NDE + NIE decomposition
+- `four_way(cde, int_ref, int_med, pie)` → VanderWeele 4-way
+- `custom_decomposition(...)` → User-defined
+
+**MediationData** stores decompositions in a list, allowing multiple:
+
+```r
+result@decompositions$two_way   # Decomposition object
+result@decompositions$four_way  # Decomposition object (when interaction present)
+```
+
+### User Interface Design
+
+**Hybrid approach**: Simple strings for common cases, helper functions for advanced.
+
+```r
+# Simple (default)
+estimate_mediation(..., effects = "natural")  # NDE + NIE
+
+# Effect options
+effects = "natural"        # NDE, NIE (default)
+effects = "interventional" # IDE, IIE
+effects = "controlled"     # CDE
+
+# Advanced (helper functions)
+effects = natural_effects(variant = "total")  # TDE, TNIE
+effects = controlled_effects(m = 5)           # CDE at m=5
+```
+
+**Interaction handling**: When `X:M` detected → compute BOTH two-way and four-way.
+
 **Why this design?**
 - **Clean separation**: Each class handles one mediation type well
 - **No over-engineering**: Don't add complexity for hypothetical future needs
