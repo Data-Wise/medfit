@@ -98,7 +98,7 @@ object containing:
 
 **Parametric Bootstrap** (`method = "parametric"`):
 
-- Samples parameter vectors from N(θ̂, Σ̂)
+- Samples parameter vectors from \\N(\hat{\theta}, \hat{\Sigma})\\
 
 - Fast and efficient
 

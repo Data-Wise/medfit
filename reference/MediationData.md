@@ -4,47 +4,6 @@ S7 class containing standardized mediation model structure, including
 path coefficients, parameter estimates, variance-covariance matrix, and
 metadata.
 
-## Usage
-
-``` r
-MediationData(
-  a_path = integer(0),
-  b_path = integer(0),
-  c_prime = integer(0),
-  estimates = integer(0),
-  vcov = (function (.data) 
- {
-    
-    stop(sprintf("S3 class <%s> doesn't have a constructor", class[[1]]), call. =
-    FALSE)
- })(),
-  sigma_m = integer(0),
-  sigma_y = integer(0),
-  treatment = character(0),
-  mediator = character(0),
-  outcome = character(0),
-  mediator_predictors = character(0),
-  outcome_predictors = character(0),
-  data = (function (.data = list(), row.names = NULL) 
- {
-     if (is.null(row.names)) {
-
-            list2DF(.data)
-     }
-     else {
-         out <- list2DF(.data,
-    length(row.names))
-attr(out, "row.names") <- row.names
-         out
-     }
-
-    })(),
-  n_obs = integer(0),
-  converged = logical(0),
-  source_package = character(0)
-)
-```
-
 ## Arguments
 
 - a_path:

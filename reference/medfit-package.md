@@ -29,6 +29,8 @@ Key classes:
 
 Useful links:
 
+- <https://data-wise.github.io/medfit/>
+
 - <https://github.com/data-wise/medfit>
 
 - Report bugs at <https://github.com/data-wise/medfit/issues>

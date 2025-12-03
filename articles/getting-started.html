@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Introduction to medfit • medfit</title>
+<title>Getting Started with medfit • medfit</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -18,9 +18,9 @@
 <link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="introduction_files/libs/quarto-html/popper.min.js"></script><script src="introduction_files/libs/quarto-html/tippy.umd.min.js"></script><link href="introduction_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="introduction_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Introduction to medfit">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="getting-started_files/libs/quarto-html/popper.min.js"></script><script src="getting-started_files/libs/quarto-html/tippy.umd.min.js"></script><link href="getting-started_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="getting-started_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting Started with medfit">
 <meta property="og:image" content="https://data-wise.github.io/medfit/logo.png">
 </head>
 <body>
@@ -42,7 +42,7 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fas fa-home fa-lg"></span></a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item dropdown">
+<li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/medfit.html">Getting Started</a></li>
@@ -68,12 +68,12 @@
 </nav><div class="container template-quarto">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Introduction to medfit</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Getting Started with medfit</h1>
 
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/getting-started.qmd" class="external-link"><code>vignettes/articles/getting-started.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -82,7 +82,7 @@
 
 
 
-    <section class="level2"><h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+    <section class="level2"><h2 id="what-is-medfit">What is medfit?<a class="anchor" aria-label="anchor" href="#what-is-medfit"></a>
 </h2>
 <p><strong>medfit</strong> provides unified infrastructure for mediation analysis in R. It offers:</p>
 <ul>
@@ -91,18 +91,14 @@
 <li>
 <strong>Generic functions</strong> for model fitting, extraction, and inference</li>
 <li>
-<strong>Foundation</strong> for the mediation analysis ecosystem (probmed, RMediation, medrobust)</li>
-</ul>
-<p>The package eliminates code duplication across mediation packages by providing shared infrastructure while allowing each package to focus on its unique methodological contributions.</p>
-</section><section class="level2"><h2 id="core-s7-classes">Core S7 Classes<a class="anchor" aria-label="anchor" href="#core-s7-classes"></a>
+<strong>Foundation</strong> for specialized mediation packages (probmed, RMediation, medrobust)</li>
+</ul></section><section class="level2"><h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<p>medfit defines three main S7 classes to represent mediation structures:</p>
-<section class="level3"><h3 id="mediationdata">MediationData<a class="anchor" aria-label="anchor" href="#mediationdata"></a>
+<section class="level3"><h3 id="create-a-mediation-data-object">Create a Mediation Data Object<a class="anchor" aria-label="anchor" href="#create-a-mediation-data-object"></a>
 </h3>
-<p>Stores simple mediation models (X -&gt; M -&gt; Y):</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Example: Create a MediationData object</span></span>
+<code class="sourceCode R"><span><span class="co"># Simple mediation: X -&gt; M -&gt; Y</span></span>
 <span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MediationData.html">MediationData</a></span><span class="op">(</span></span>
 <span>  a_path <span class="op">=</span> <span class="fl">0.5</span>,           <span class="co"># X -&gt; M effect</span></span>
 <span>  b_path <span class="op">=</span> <span class="fl">0.3</span>,           <span class="co"># M -&gt; Y effect (controlling for X)</span></span>
@@ -117,31 +113,24 @@
 <span>  source_package <span class="op">=</span> <span class="st">"medfit"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Print method shows key information</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Summary method provides details</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># View the object</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></code></pre></div>
 </div>
-<p>The indirect effect is computed as <code>a * b</code>:</p>
+</section><section class="level3"><h3 id="compute-indirect-effect">Compute Indirect Effect<a class="anchor" aria-label="anchor" href="#compute-indirect-effect"></a>
+</h3>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Access path coefficients</span></span>
-<span><span class="va">med_data</span><span class="op">@</span><span class="va">a_path</span></span>
-<span><span class="va">med_data</span><span class="op">@</span><span class="va">b_path</span></span>
-<span></span>
-<span><span class="co"># Indirect effect</span></span>
+<code class="sourceCode R"><span><span class="co"># Indirect effect = a * b</span></span>
 <span><span class="va">med_data</span><span class="op">@</span><span class="va">a_path</span> <span class="op">*</span> <span class="va">med_data</span><span class="op">@</span><span class="va">b_path</span></span></code></pre></div>
 </div>
-</section><section class="level3"><h3 id="serialmediationdata">SerialMediationData<a class="anchor" aria-label="anchor" href="#serialmediationdata"></a>
+</section><section class="level3"><h3 id="serial-mediation">Serial Mediation<a class="anchor" aria-label="anchor" href="#serial-mediation"></a>
 </h3>
-<p>Stores serial mediation models (X -&gt; M1 -&gt; M2 -&gt; … -&gt; Y):</p>
+<p>For serial mediation (X -&gt; M1 -&gt; M2 -&gt; Y):</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Example: Two-mediator serial mediation (X -&gt; M1 -&gt; M2 -&gt; Y)</span></span>
-<span><span class="va">serial_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/SerialMediationData.html">SerialMediationData</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">serial_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/SerialMediationData.html">SerialMediationData</a></span><span class="op">(</span></span>
 <span>  a_path <span class="op">=</span> <span class="fl">0.4</span>,           <span class="co"># X -&gt; M1</span></span>
-<span>  d_path <span class="op">=</span> <span class="fl">0.5</span>,           <span class="co"># M1 -&gt; M2 (scalar for 2 mediators)</span></span>
+<span>  d_path <span class="op">=</span> <span class="fl">0.5</span>,           <span class="co"># M1 -&gt; M2</span></span>
 <span>  b_path <span class="op">=</span> <span class="fl">0.3</span>,           <span class="co"># M2 -&gt; Y</span></span>
 <span>  c_prime <span class="op">=</span> <span class="fl">0.2</span>,          <span class="co"># X -&gt; Y direct effect</span></span>
 <span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
@@ -156,146 +145,31 @@
 <span>  source_package <span class="op">=</span> <span class="st">"medfit"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">serial_data</span><span class="op">)</span></span></code></pre></div>
-</div>
-<p>For two mediators, the serial indirect effect is <code>a * d * b</code>:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Serial indirect effect (product-of-three)</span></span>
+<span><span class="co"># Serial indirect effect = a * d * b</span></span>
 <span><span class="va">serial_data</span><span class="op">@</span><span class="va">a_path</span> <span class="op">*</span> <span class="va">serial_data</span><span class="op">@</span><span class="va">d_path</span> <span class="op">*</span> <span class="va">serial_data</span><span class="op">@</span><span class="va">b_path</span></span></code></pre></div>
-</div>
-<p><strong>Design for extensibility</strong>: For 3+ mediators, <code>d_path</code> becomes a vector: - 3 mediators: <code>a * d21 * d32 * b</code> (product-of-four) - k mediators: product-of-(k+1)</p>
-</section><section class="level3"><h3 id="bootstrapresult">BootstrapResult<a class="anchor" aria-label="anchor" href="#bootstrapresult"></a>
-</h3>
-<p>Stores bootstrap inference results:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Example: Bootstrap result for indirect effect</span></span>
-<span><span class="va">boot_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/BootstrapResult.html">BootstrapResult</a></span><span class="op">(</span></span>
-<span>  estimate <span class="op">=</span> <span class="fl">0.15</span>,        <span class="co"># Point estimate (a * b)</span></span>
-<span>  ci_lower <span class="op">=</span> <span class="fl">0.08</span>,        <span class="co"># Lower CI bound</span></span>
-<span>  ci_upper <span class="op">=</span> <span class="fl">0.25</span>,        <span class="co"># Upper CI bound</span></span>
-<span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,        <span class="co"># Confidence level</span></span>
-<span>  boot_estimates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1000</span>, mean <span class="op">=</span> <span class="fl">0.15</span>, sd <span class="op">=</span> <span class="fl">0.04</span><span class="op">)</span>,  <span class="co"># Bootstrap distribution</span></span>
-<span>  n_boot <span class="op">=</span> <span class="fl">1000L</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
-<span>  converged <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre></div>
 </div>
 </section></section><section class="level2"><h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
 </h2>
-<p>medfit provides three generic functions that work across different model types:</p>
-<section class="level3"><h3 id="extract_mediation">extract_mediation()<a class="anchor" aria-label="anchor" href="#extract_mediation"></a>
-</h3>
-<p>Extract mediation structure from fitted models:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># From lm/glm models</span></span>
-<span><span class="va">med</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span></span>
-<span>  <span class="va">model_m</span>,           <span class="co"># Mediator model (M ~ X)</span></span>
-<span>  <span class="va">model_y</span>,           <span class="co"># Outcome model (Y ~ X + M)</span></span>
-<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
-<span>  mediator <span class="op">=</span> <span class="st">"M"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># From lavaan SEM models</span></span>
-<span><span class="va">med</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span></span>
-<span>  <span class="va">lavaan_fit</span>,</span>
-<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
-<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
-<span>  outcome <span class="op">=</span> <span class="st">"Y"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<p>See <code>vignette("extraction")</code> for details.</p>
-</section><section class="level3"><h3 id="fit_mediation">fit_mediation()<a class="anchor" aria-label="anchor" href="#fit_mediation"></a>
-</h3>
-<p>Fit mediation models directly:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Fit using GLM engine</span></span>
-<span><span class="va">med</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">mydata</span>,</span>
-<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
-<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
-<span>  outcome <span class="op">=</span> <span class="st">"Y"</span>,</span>
-<span>  engine <span class="op">=</span> <span class="st">"glm"</span>,</span>
-<span>  family_m <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  family_y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-</section><section class="level3"><h3 id="bootstrap_mediation">bootstrap_mediation()<a class="anchor" aria-label="anchor" href="#bootstrap_mediation"></a>
-</h3>
-<p>Perform bootstrap inference on indirect effects:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Parametric bootstrap</span></span>
-<span><span class="va">boot_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
-<span>  <span class="va">med_data</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
-<span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>  parallel <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Nonparametric bootstrap (resamples data, refits models)</span></span>
-<span><span class="va">boot_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
-<span>  <span class="va">med_data</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"nonparametric"</span>,</span>
-<span>  n_boot <span class="op">=</span> <span class="fl">1000</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<p>See <code>vignette("bootstrap")</code> for details.</p>
-</section></section><section class="level2"><h2 id="package-ecosystem">Package Ecosystem<a class="anchor" aria-label="anchor" href="#package-ecosystem"></a>
-</h2>
-<p>medfit serves as the foundation for specialized mediation packages:</p>
-<ul>
-<li>
-<strong>probmed</strong>: Probabilistic mediation effect size (P_med)
-<ul>
-<li>Uses medfit for infrastructure</li>
-<li>Adds P_med computation and visualization</li>
-</ul>
-</li>
-<li>
-<strong>RMediation</strong>: Confidence intervals via distribution methods
-<ul>
-<li>Uses medfit for extraction</li>
-<li>Adds Distribution of Product (DOP), MBCO tests</li>
-</ul>
-</li>
-<li>
-<strong>medrobust</strong>: Sensitivity analysis
-<ul>
-<li>Uses medfit for baseline estimates</li>
-<li>Adds bounds computation, falsification tests</li>
-</ul>
-</li>
-</ul></section><section class="level2"><h2 id="design-principles">Design Principles<a class="anchor" aria-label="anchor" href="#design-principles"></a>
-</h2>
+<p>medfit provides three generic functions:</p>
 <ol type="1">
 <li>
-<strong>Type safety</strong>: S7 classes with validators ensure data integrity</li>
+<strong><code><a href="../reference/extract_mediation.html">extract_mediation()</a></code></strong> - Extract mediation structure from fitted models (lm/glm, lavaan)</li>
 <li>
-<strong>Consistency</strong>: Standardized interfaces across model types</li>
+<strong><code><a href="../reference/fit_mediation.html">fit_mediation()</a></code></strong> - Fit mediation models directly</li>
 <li>
-<strong>Extensibility</strong>: Easy to add new model engines and methods</li>
-<li>
-<strong>Minimal dependencies</strong>: Core functionality with minimal external dependencies</li>
-<li>
-<strong>Infrastructure focus</strong>: Provides tools, not effect sizes</li>
-</ol></section><section class="level2"><h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+<strong><code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code></strong> - Bootstrap inference for confidence intervals</li>
+</ol></section><section class="level2"><h2 id="learn-more">Learn More<a class="anchor" aria-label="anchor" href="#learn-more"></a>
 </h2>
 <ul>
-<li>Learn about <a href="extraction.html">model extraction</a> from different sources</li>
-<li>Explore <a href="bootstrap.html">bootstrap inference methods</a>
-</li>
-<li>See the reference documentation for detailed API information</li>
+<li>
+<a href="introduction.html">Introduction to medfit</a> - Detailed S7 class documentation</li>
+<li>
+<a href="extraction.html">Model Extraction</a> - Extract from lm, glm, lavaan models</li>
+<li>
+<a href="bootstrap.html">Bootstrap Inference</a> - Parametric and nonparametric bootstrap</li>
 </ul></section><section class="level2"><h2 id="development-status">Development Status<a class="anchor" aria-label="anchor" href="#development-status"></a>
 </h2>
-<p>medfit is under active development. Current status:</p>
+<p>medfit is under active development:</p>
 <ul>
 <li>✅ Phase 2 Complete: S7 class architecture</li>
 <li>🚧 Phase 3 In Progress: Model extraction</li>

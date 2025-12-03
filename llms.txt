@@ -248,9 +248,9 @@ If you use medfit in your research, please cite:
 
 Core S7 class definitions for mediation data structures
 
-- [`MediationData()`](https://data-wise.github.io/medfit/reference/MediationData.md)
+- [`MediationData`](https://data-wise.github.io/medfit/reference/MediationData.md)
   : MediationData S7 Class
-- [`SerialMediationData()`](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
+- [`SerialMediationData`](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
   : SerialMediationData S7 Class
 - [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
@@ -285,7 +285,7 @@ S7 methods for medfit classes
   Inference](https://data-wise.github.io/medfit/articles/bootstrap.md):
 - [Model
   Extraction](https://data-wise.github.io/medfit/articles/extraction.md):
+- [Getting Started with
+  medfit](https://data-wise.github.io/medfit/articles/getting-started.md):
 - [Introduction to
   medfit](https://data-wise.github.io/medfit/articles/introduction.md):
-- [Getting Started with
-  medfit](https://data-wise.github.io/medfit/articles/medfit.md):

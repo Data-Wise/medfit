@@ -4,9 +4,9 @@ pkgdown_sha: ~
 articles:
   articles/bootstrap: bootstrap.html
   articles/extraction: extraction.html
+  articles/getting-started: getting-started.html
   articles/introduction: introduction.html
-  medfit: medfit.html
-last_built: 2025-12-03T04:07Z
+last_built: 2025-12-03T04:46Z
 urls:
   reference: https://data-wise.github.io/medfit/reference
   article: https://data-wise.github.io/medfit/articles
