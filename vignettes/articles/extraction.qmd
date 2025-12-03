@@ -10,8 +10,9 @@ execute:
 ## Overview
 
 The `extract_mediation()` function provides a standardized interface for extracting mediation structures from fitted models. It works with:
-- **lm/glm** models (base R)
-- **lavaan** SEM models (planned)
+
+- **lm/glm** models (base R) - implemented
+- **lavaan** SEM models - implemented
 - **lmer** mixed models (future)
 
 Note: OpenMx extraction is planned for a future release.
@@ -313,8 +314,9 @@ All methods return the same S7 class structure, ensuring consistency.
 
 Currently implemented:
 - ✅ S7 class definitions (MediationData, SerialMediationData)
-- 🚧 lm/glm extraction (in development)
-- 📋 lavaan extraction (planned)
+- ✅ lm/glm extraction
+- ✅ lavaan extraction
+- 📋 lmer extraction (future)
 
 **Note**: OpenMx extraction has been postponed to a future release.
 
