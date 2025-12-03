@@ -732,8 +732,6 @@ test_that("SerialMediationData validates mediator_predictors list length", {
 # Test Methods -------------------------------------------------------------
 
 test_that("SerialMediationData print method works for 2 mediators", {
-  skip_if_not(interactive(), "S7 method dispatch for Serial MediationData needs investigation")
-
   serial_data <- SerialMediationData(
     a_path = 0.5,
     d_path = 0.4,
@@ -761,8 +759,6 @@ test_that("SerialMediationData print method works for 2 mediators", {
 
 
 test_that("SerialMediationData print method works for 3 mediators", {
-  skip_if_not(interactive(), "S7 method dispatch for SerialMediationData needs investigation")
-
   serial_data <- SerialMediationData(
     a_path = 0.5,
     d_path = c(0.4, 0.35),
@@ -792,8 +788,6 @@ test_that("SerialMediationData print method works for 3 mediators", {
 
 
 test_that("SerialMediationData summary method works", {
-  skip_if_not(interactive(), "S7 method dispatch for SerialMediationData needs investigation")
-
   serial_data <- SerialMediationData(
     a_path = 0.5,
     d_path = 0.4,
@@ -855,8 +849,6 @@ test_that("SerialMediationData works with NULL sigma values", {
 
 
 test_that("SerialMediationData computes correct indirect effect", {
-  skip_if_not(interactive(), "S7 method dispatch for SerialMediationData needs investigation")
-
   serial_data <- SerialMediationData(
     a_path = 0.5,
     d_path = c(0.4, 0.3),
