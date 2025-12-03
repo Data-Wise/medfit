@@ -22,28 +22,52 @@
   - `fit_mediation()` - Fit mediation models (stub)
   - `bootstrap_mediation()` - Bootstrap inference (stub)
 
+### Documentation
+
+* **Comprehensive Quarto Vignettes** (NEW)
+  - **Get Started** (`vignettes/medfit.qmd`): Quick introduction with examples
+  - **Introduction** (`vignettes/articles/introduction.qmd`): Detailed S7 class architecture
+  - **Model Extraction** (`vignettes/articles/extraction.qmd`): Extract from lm/glm/lavaan
+  - **Bootstrap Inference** (`vignettes/articles/bootstrap.qmd`): Parametric/nonparametric methods
+  - All vignettes use native Quarto format with `execute:` options in YAML
+  - Published at https://data-wise.github.io/medfit/
+
+* **Roxygen2 Documentation**: Complete API documentation for all exported functions and classes
+  - ASCII-compliant (replaced non-ASCII arrows and multiplication symbols)
+  - Explicit `@param` tags for all S7 class properties
+  - `@noRd` for S7 methods to prevent namespace export issues
+
 ### Infrastructure
 
 * **Testing**: 87 comprehensive tests (51 original + 36 for SerialMediationData)
   - Full coverage of simple and serial mediation S7 classes
   - Validation tests ensure data integrity across all mediation types
   - 4 tests skipped in non-interactive mode (S7 dispatch investigation)
-* **CI/CD**: GitHub Actions workflows for R-CMD-check, test coverage, and pkgdown
-* **Documentation**: Roxygen2 documentation for all exported functions and classes
-  - ASCII-compliant (replaced non-ASCII arrows and multiplication symbols)
-  - pkgdown website with comprehensive reference documentation
+
+* **CI/CD**: GitHub Actions workflows with Quarto support
+  - R-CMD-check with `_R_CHECK_CODOC_S4_METHODS_: false` for S7 compatibility
+  - pkgdown deployment with Quarto rendering (`quarto-dev/quarto-actions/setup@v2`)
+  - Automatic Quarto installation when .qmd files detected
+  - Test coverage tracking
+
+* **pkgdown Website**: https://data-wise.github.io/medfit/
+  - Bootstrap 5 with Flatly theme
+  - Comprehensive reference documentation
+  - Four Quarto vignettes with rich examples
+  - Auto-deployment on push to main branch
 
 ### Development Status
 
-**Current Phase**: Phase 2 Complete (S7 Classes)
+**Current Phase**: Phase 2 Complete + Documentation
 **Next**: Phase 3 (Model Extraction)
 
 * [x] Phase 1: Package setup
-* [x] Phase 2: S7 class architecture
+* [x] Phase 2: S7 class architecture (simple + serial mediation)
+* [x] Phase 2.5: Comprehensive Quarto documentation
 * [ ] Phase 3: Model extraction (in progress)
 * [ ] Phase 4: Model fitting
 * [ ] Phase 5: Bootstrap infrastructure
-* [ ] Phase 6: Testing & documentation
+* [ ] Phase 6: Extended testing
 * [ ] Phase 7: Polish & release
 
 ### Documentation Improvements
