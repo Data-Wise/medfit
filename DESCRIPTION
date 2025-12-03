@@ -15,7 +15,7 @@ Description: Provides S7-based infrastructure for fitting mediation models,
     for model fitting across different engines (GLM, with future support for
     mixed models and Bayesian methods), standardized extraction of mediation
     paths from various model types, and robust bootstrap inference methods.
-License: GPL (>= 3)
+License: GPL (>= 3) + file LICENSE
 URL: https://github.com/data-wise/medfit
 BugReports: https://github.com/data-wise/medfit/issues
 Depends:

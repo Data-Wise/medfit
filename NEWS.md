@@ -43,8 +43,18 @@
 * **Generic Documentation**: Fixed `extract_mediation()` to only document generic parameters
 * **CLAUDE.md**: Added comprehensive S7 documentation patterns section for future reference
 
+### Fixes
+
+* **LICENSE**: Added `+ file LICENSE` to DESCRIPTION to properly reference LICENSE file
+* **Codoc warnings**: Fixed BootstrapResult codoc mismatch by using correct default value for `call` parameter
+
 ### Known Issues
 
+* **S7 Codoc Warning**: MediationData has codoc mismatch for `vcov` and `data` parameters
+  - These use complex S7-generated defaults for S3 classes (matrix, data.frame)
+  - Whitespace formatting differences between S7 internals and roxygen2
+  - This is a known S7/roxygen2 interaction limitation, not a functional issue
+  - Does not affect package functionality or user experience
 * **S7 Method Dispatch**: Print/summary methods don't work properly in installed package context
   - Tests skip in non-interactive mode (5 tests affected)
   - Methods work correctly when using `devtools::load_all()`

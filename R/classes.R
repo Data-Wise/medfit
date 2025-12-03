@@ -28,6 +28,26 @@
 #' @param converged Logical scalar: whether models converged
 #' @param source_package Character scalar: package/engine used for fitting
 #'
+#' @usage
+#' MediationData(
+#'   a_path = integer(0),
+#'   b_path = integer(0),
+#'   c_prime = integer(0),
+#'   estimates = integer(0),
+#'   vcov = matrix(),
+#'   sigma_m = integer(0),
+#'   sigma_y = integer(0),
+#'   treatment = character(0),
+#'   mediator = character(0),
+#'   outcome = character(0),
+#'   mediator_predictors = character(0),
+#'   outcome_predictors = character(0),
+#'   data = data.frame(),
+#'   n_obs = integer(0),
+#'   converged = logical(0),
+#'   source_package = character(0)
+#' )
+#'
 #' @return A MediationData S7 object
 #'
 #' @details
@@ -178,6 +198,18 @@ S7::S4_register(MediationData)
 #' @param method Character scalar: bootstrap method
 #'   ("parametric", "nonparametric", or "plugin")
 #' @param call Call object or NULL: original function call
+#'
+#' @usage
+#' BootstrapResult(
+#'   estimate = integer(0),
+#'   ci_lower = integer(0),
+#'   ci_upper = integer(0),
+#'   ci_level = integer(0),
+#'   boot_estimates = integer(0),
+#'   n_boot = integer(0),
+#'   method = character(0),
+#'   call = quote({})
+#' )
 #'
 #' @return A BootstrapResult S7 object
 #'
