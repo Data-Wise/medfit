@@ -11,7 +11,11 @@
       "Bash(curl:*)",
       "Bash(echo:*)",
       "Bash(_R_CHECK_CODOC_S4_METHODS_=false Rscript:*)",
-      "Bash(_R_CHECK_CODOC_=FALSE Rscript:*)"
+      "Bash(_R_CHECK_CODOC_=FALSE Rscript:*)",
+      "Bash(cd:*)",
+      "Bash(quarto --version:*)",
+      "Bash(quarto render:*)",
+      "WebSearch"
     ]
   },
   "workingDirectory": "/Users/dt/Library/CloudStorage/GoogleDrive-dtofighi@gmail.com/My Drive/packages/medfit",
