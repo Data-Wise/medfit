@@ -3,11 +3,17 @@
 <url><loc>https://data-wise.github.io/medfit/CLAUDE.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/LICENSE-text.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/START-HERE.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/bootstrap.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/extraction.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/index.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/introduction.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/medfit.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/authors.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/index.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/news/index.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/BootstrapResult.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/MediationData.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/reference/SerialMediationData.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/bootstrap_mediation.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/extract_mediation.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/fit_mediation.html</loc></url>
@@ -15,5 +21,6 @@
 <url><loc>https://data-wise.github.io/medfit/reference/medfit-package.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/print.summary.BootstrapResult.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/print.summary.MediationData.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/reference/print.summary.SerialMediationData.html</loc></url>
 </urlset>
 

@@ -8,11 +8,18 @@
 
 #### Major Features
 
-- **S7 Class Architecture** (Phase 2 Complete)
-  - `MediationData` class for standardized mediation model structure
+- **S7 Class Architecture** (Phase 2 Complete + Extended)
+  - `MediationData` class for simple mediation (X -\> M -\> Y)
+  - **`SerialMediationData` class for serial mediation** (X -\> M1 -\>
+    M2 -\> … -\> Y) **NEW**
+    - Supports product-of-three (2 mediators: a \* d \* b)
+    - Extensible to product-of-k (3+ mediators: a \* d21 \* d32 \* … \*
+      b)
+    - Flexible `d_path` design: scalar for 2 mediators, vector for 3+
+    - Compatible with lavaan extraction patterns
   - `BootstrapResult` class for bootstrap inference results
   - Comprehensive validators ensuring data integrity
-  - Print, summary, and show methods for both classes
+  - Print, summary, and show methods for all classes
 - **Generics Defined**
   - [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) -
     Extract mediation structure from fitted models
@@ -21,22 +28,57 @@
   - [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md) -
     Bootstrap inference (stub)
 
+#### Documentation
+
+- **Comprehensive Quarto Vignettes** (NEW)
+  - **Get Started** (`vignettes/medfit.qmd`): Quick introduction with
+    examples
+  - **Introduction** (`vignettes/articles/introduction.qmd`): Detailed
+    S7 class architecture
+  - **Model Extraction** (`vignettes/articles/extraction.qmd`): Extract
+    from lm/glm/lavaan
+  - **Bootstrap Inference** (`vignettes/articles/bootstrap.qmd`):
+    Parametric/nonparametric methods
+  - All vignettes use native Quarto format with `execute:` options in
+    YAML
+  - Published at <https://data-wise.github.io/medfit/>
+- **Roxygen2 Documentation**: Complete API documentation for all
+  exported functions and classes
+  - ASCII-compliant (replaced non-ASCII arrows and multiplication
+    symbols)
+  - Explicit `@param` tags for all S7 class properties
+  - `@noRd` for S7 methods to prevent namespace export issues
+
 #### Infrastructure
 
-- **Testing**: 51 comprehensive tests with full coverage of S7 classes
-- **CI/CD**: GitHub Actions workflows for R-CMD-check, test coverage,
-  and pkgdown
-- **Documentation**: Roxygen2 documentation for all exported functions
-  and classes
+- **Testing**: 87 comprehensive tests (51 original + 36 for
+  SerialMediationData)
+  - Full coverage of simple and serial mediation S7 classes
+  - Validation tests ensure data integrity across all mediation types
+  - 4 tests skipped in non-interactive mode (S7 dispatch investigation)
+- **CI/CD**: GitHub Actions workflows with Quarto support
+  - R-CMD-check with `_R_CHECK_CODOC_S4_METHODS_: false` for S7
+    compatibility
+  - pkgdown deployment with Quarto rendering
+    (`quarto-dev/quarto-actions/setup@v2`)
+  - Automatic Quarto installation when .qmd files detected
+  - Test coverage tracking
+- **pkgdown Website**: <https://data-wise.github.io/medfit/>
+  - Bootstrap 5 with Flatly theme
+  - Comprehensive reference documentation
+  - Four Quarto vignettes with rich examples
+  - Auto-deployment on push to main branch
 
 #### Development Status
 
-**Current Phase**: Phase 2 Complete (S7 Classes) **Next**: Phase 3
+**Current Phase**: Phase 2 Complete + Documentation **Next**: Phase 3
 (Model Extraction)
 
 Phase 1: Package setup
 
-Phase 2: S7 class architecture
+Phase 2: S7 class architecture (simple + serial mediation)
+
+Phase 2.5: Comprehensive Quarto documentation
 
 Phase 3: Model extraction (in progress)
 
@@ -44,7 +86,7 @@ Phase 4: Model fitting
 
 Phase 5: Bootstrap infrastructure
 
-Phase 6: Testing & documentation
+Phase 6: Extended testing
 
 Phase 7: Polish & release
 
@@ -87,6 +129,12 @@ Phase 7: Polish & release
 
 #### Known Issues
 
+- **S7 Method Dispatch for SerialMediationData**: Print/summary methods
+  for `SerialMediationData` need investigation for installed package
+  context
+  - Tests skip in non-interactive mode (4 tests affected)
+  - Methods work correctly when using `devtools::load_all()`
+  - Related to S7 method registration timing in installed packages
 - [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
   and
   [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)

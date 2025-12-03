@@ -100,7 +100,7 @@
 <h3 id="extract-mediation-structure-from-fitted-models">Extract Mediation Structure from Fitted Models<a class="anchor" aria-label="anchor" href="#extract-mediation-structure-from-fitted-models"></a>
 </h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/data-wise/medfit" class="external-link">medfit</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simulate data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
@@ -163,12 +163,20 @@
 </h3>
 <ul>
 <li>
-<strong><code>MediationData</code></strong>: Standardized container for mediation model structure
+<strong><code>MediationData</code></strong>: Standardized container for simple mediation (X -&gt; M -&gt; Y)
 <ul>
 <li>Path coefficients (a, b, c’)</li>
 <li>Parameter estimates and variance-covariance matrix</li>
 <li>Residual variances (for Gaussian models)</li>
 <li>Variable names and metadata</li>
+</ul>
+</li>
+<li>
+<strong><code>SerialMediationData</code></strong>: Container for serial mediation (X -&gt; M1 -&gt; M2 -&gt; … -&gt; Y)
+<ul>
+<li>Supports product-of-three (2 mediators) and product-of-k (3+ mediators)</li>
+<li>Flexible design compatible with lavaan extraction patterns</li>
+<li>Extensible to complex mediation structures</li>
 </ul>
 </li>
 <li>
@@ -232,16 +240,32 @@
 </ul>
 </div>
 <div class="section level2">
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+</h2>
+<p>Comprehensive Quarto vignettes are available:</p>
+<ul>
+<li>
+<strong><a href="https://data-wise.github.io/medfit/articles/medfit.html">Get Started</a></strong>: Quick introduction to medfit</li>
+<li>
+<strong><a href="https://data-wise.github.io/medfit/articles/introduction.html">Introduction</a></strong>: Detailed S7 class documentation</li>
+<li>
+<strong><a href="https://data-wise.github.io/medfit/articles/extraction.html">Model Extraction</a></strong>: Extract from lm/glm/lavaan models</li>
+<li>
+<strong><a href="https://data-wise.github.io/medfit/articles/bootstrap.html">Bootstrap Inference</a></strong>: Parametric and nonparametric bootstrap methods</li>
+</ul>
+</div>
+<div class="section level2">
 <h2 id="development-status">Development Status<a class="anchor" aria-label="anchor" href="#development-status"></a>
 </h2>
-<p><strong>Current Phase</strong>: MVP Development (Phase 2 Complete)</p>
+<p><strong>Current Phase</strong>: MVP Development (Phase 2 Complete + Documentation)</p>
 <ul class="task-list">
 <li><label><input type="checkbox" checked>Phase 1: Package setup</label></li>
-<li><label><input type="checkbox" checked>Phase 2: S7 class architecture</label></li>
+<li><label><input type="checkbox" checked>Phase 2: S7 class architecture (with SerialMediationData)</label></li>
+<li><label><input type="checkbox" checked>Phase 2.5: Comprehensive Quarto documentation</label></li>
 <li><label><input type="checkbox">Phase 3: Model extraction (in progress)</label></li>
 <li><label><input type="checkbox">Phase 4: Model fitting</label></li>
 <li><label><input type="checkbox">Phase 5: Bootstrap infrastructure</label></li>
-<li><label><input type="checkbox">Phase 6: Testing &amp; documentation</label></li>
+<li><label><input type="checkbox">Phase 6: Extended testing</label></li>
 <li><label><input type="checkbox">Phase 7: Polish &amp; release</label></li>
 </ul>
 <p>See <a href="planning/medfit-roadmap.html">planning/medfit-roadmap.md</a> for detailed development plan.</p>

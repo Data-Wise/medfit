@@ -36,7 +36,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
@@ -47,13 +47,20 @@
 <div class="section level4">
 <h4 id="major-features-development-version">Major Features<a class="anchor" aria-label="anchor" href="#major-features-development-version"></a></h4>
 <ul><li>
-<strong>S7 Class Architecture</strong> (Phase 2 Complete)
+<strong>S7 Class Architecture</strong> (Phase 2 Complete + Extended)
 <ul><li>
-<code>MediationData</code> class for standardized mediation model structure</li>
+<code>MediationData</code> class for simple mediation (X -&gt; M -&gt; Y)</li>
+<li>
+<strong><code>SerialMediationData</code> class for serial mediation</strong> (X -&gt; M1 -&gt; M2 -&gt; … -&gt; Y) <strong>NEW</strong>
+<ul><li>Supports product-of-three (2 mediators: a * d * b)</li>
+<li>Extensible to product-of-k (3+ mediators: a * d21 * d32 * … * b)</li>
+<li>Flexible <code>d_path</code> design: scalar for 2 mediators, vector for 3+</li>
+<li>Compatible with lavaan extraction patterns</li>
+</ul></li>
 <li>
 <code>BootstrapResult</code> class for bootstrap inference results</li>
 <li>Comprehensive validators ensuring data integrity</li>
-<li>Print, summary, and show methods for both classes</li>
+<li>Print, summary, and show methods for all classes</li>
 </ul></li>
 <li>
 <strong>Generics Defined</strong>
@@ -66,23 +73,62 @@
 </ul></li>
 </ul></div>
 <div class="section level4">
+<h4 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h4>
+<ul><li>
+<strong>Comprehensive Quarto Vignettes</strong> (NEW)
+<ul><li>
+<strong>Get Started</strong> (<code>vignettes/medfit.qmd</code>): Quick introduction with examples</li>
+<li>
+<strong>Introduction</strong> (<code>vignettes/articles/introduction.qmd</code>): Detailed S7 class architecture</li>
+<li>
+<strong>Model Extraction</strong> (<code>vignettes/articles/extraction.qmd</code>): Extract from lm/glm/lavaan</li>
+<li>
+<strong>Bootstrap Inference</strong> (<code>vignettes/articles/bootstrap.qmd</code>): Parametric/nonparametric methods</li>
+<li>All vignettes use native Quarto format with <code>execute:</code> options in YAML</li>
+<li>Published at <a href="https://data-wise.github.io/medfit/" class="uri">https://data-wise.github.io/medfit/</a>
+</li>
+</ul></li>
+<li>
+<strong>Roxygen2 Documentation</strong>: Complete API documentation for all exported functions and classes
+<ul><li>ASCII-compliant (replaced non-ASCII arrows and multiplication symbols)</li>
+<li>Explicit <code>@param</code> tags for all S7 class properties</li>
+<li>
+<code>@noRd</code> for S7 methods to prevent namespace export issues</li>
+</ul></li>
+</ul></div>
+<div class="section level4">
 <h4 id="infrastructure-development-version">Infrastructure<a class="anchor" aria-label="anchor" href="#infrastructure-development-version"></a></h4>
 <ul><li>
-<strong>Testing</strong>: 51 comprehensive tests with full coverage of S7 classes</li>
+<strong>Testing</strong>: 87 comprehensive tests (51 original + 36 for SerialMediationData)
+<ul><li>Full coverage of simple and serial mediation S7 classes</li>
+<li>Validation tests ensure data integrity across all mediation types</li>
+<li>4 tests skipped in non-interactive mode (S7 dispatch investigation)</li>
+</ul></li>
 <li>
-<strong>CI/CD</strong>: GitHub Actions workflows for R-CMD-check, test coverage, and pkgdown</li>
+<strong>CI/CD</strong>: GitHub Actions workflows with Quarto support
+<ul><li>R-CMD-check with <code>_R_CHECK_CODOC_S4_METHODS_: false</code> for S7 compatibility</li>
+<li>pkgdown deployment with Quarto rendering (<code>quarto-dev/quarto-actions/setup@v2</code>)</li>
+<li>Automatic Quarto installation when .qmd files detected</li>
+<li>Test coverage tracking</li>
+</ul></li>
 <li>
-<strong>Documentation</strong>: Roxygen2 documentation for all exported functions and classes</li>
+<strong>pkgdown Website</strong>: <a href="https://data-wise.github.io/medfit/" class="uri">https://data-wise.github.io/medfit/</a>
+<ul><li>Bootstrap 5 with Flatly theme</li>
+<li>Comprehensive reference documentation</li>
+<li>Four Quarto vignettes with rich examples</li>
+<li>Auto-deployment on push to main branch</li>
+</ul></li>
 </ul></div>
 <div class="section level4">
 <h4 id="development-status-development-version">Development Status<a class="anchor" aria-label="anchor" href="#development-status-development-version"></a></h4>
-<p><strong>Current Phase</strong>: Phase 2 Complete (S7 Classes) <strong>Next</strong>: Phase 3 (Model Extraction)</p>
+<p><strong>Current Phase</strong>: Phase 2 Complete + Documentation <strong>Next</strong>: Phase 3 (Model Extraction)</p>
 <ul class="task-list"><li><label><input type="checkbox" checked>Phase 1: Package setup</label></li>
-<li><label><input type="checkbox" checked>Phase 2: S7 class architecture</label></li>
+<li><label><input type="checkbox" checked>Phase 2: S7 class architecture (simple + serial mediation)</label></li>
+<li><label><input type="checkbox" checked>Phase 2.5: Comprehensive Quarto documentation</label></li>
 <li><label><input type="checkbox">Phase 3: Model extraction (in progress)</label></li>
 <li><label><input type="checkbox">Phase 4: Model fitting</label></li>
 <li><label><input type="checkbox">Phase 5: Bootstrap infrastructure</label></li>
-<li><label><input type="checkbox">Phase 6: Testing &amp; documentation</label></li>
+<li><label><input type="checkbox">Phase 6: Extended testing</label></li>
 <li><label><input type="checkbox">Phase 7: Polish &amp; release</label></li>
 </ul></div>
 <div class="section level4">
@@ -118,6 +164,13 @@
 <div class="section level4">
 <h4 id="known-issues-development-version">Known Issues<a class="anchor" aria-label="anchor" href="#known-issues-development-version"></a></h4>
 <ul><li>
+<strong>S7 Method Dispatch for SerialMediationData</strong>: Print/summary methods for <code>SerialMediationData</code> need investigation for installed package context
+<ul><li>Tests skip in non-interactive mode (4 tests affected)</li>
+<li>Methods work correctly when using <code>devtools::load_all()</code>
+</li>
+<li>Related to S7 method registration timing in installed packages</li>
+</ul></li>
+<li>
 <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> and <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> are stubs awaiting implementation</li>
 <li>
 <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> methods need implementation for lm/glm, lavaan</li>

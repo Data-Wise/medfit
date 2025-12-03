@@ -104,12 +104,18 @@ print(result)
 
 ### S7 Classes
 
-- **`MediationData`**: Standardized container for mediation model
-  structure
+- **`MediationData`**: Standardized container for simple mediation (X
+  -\> M -\> Y)
   - Path coefficients (a, b, c’)
   - Parameter estimates and variance-covariance matrix
   - Residual variances (for Gaussian models)
   - Variable names and metadata
+- **`SerialMediationData`**: Container for serial mediation (X -\> M1
+  -\> M2 -\> … -\> Y)
+  - Supports product-of-three (2 mediators) and product-of-k (3+
+    mediators)
+  - Flexible design compatible with lavaan extraction patterns
+  - Extensible to complex mediation structures
 - **`BootstrapResult`**: Container for bootstrap inference results
   - Point estimates and confidence intervals
   - Bootstrap distribution
@@ -151,13 +157,31 @@ medfit is the foundation for three specialized mediation packages:
 - **[medrobust](https://github.com/data-wise/medrobust)**: Sensitivity
   analysis for unmeasured confounding
 
+## Documentation
+
+Comprehensive Quarto vignettes are available:
+
+- **[Get
+  Started](https://data-wise.github.io/medfit/articles/medfit.html)**:
+  Quick introduction to medfit
+- **[Introduction](https://data-wise.github.io/medfit/articles/introduction.html)**:
+  Detailed S7 class documentation
+- **[Model
+  Extraction](https://data-wise.github.io/medfit/articles/extraction.html)**:
+  Extract from lm/glm/lavaan models
+- **[Bootstrap
+  Inference](https://data-wise.github.io/medfit/articles/bootstrap.html)**:
+  Parametric and nonparametric bootstrap methods
+
 ## Development Status
 
-**Current Phase**: MVP Development (Phase 2 Complete)
+**Current Phase**: MVP Development (Phase 2 Complete + Documentation)
 
 Phase 1: Package setup
 
-Phase 2: S7 class architecture
+Phase 2: S7 class architecture (with SerialMediationData)
+
+Phase 2.5: Comprehensive Quarto documentation
 
 Phase 3: Model extraction (in progress)
 
@@ -165,7 +189,7 @@ Phase 4: Model fitting
 
 Phase 5: Bootstrap infrastructure
 
-Phase 6: Testing & documentation
+Phase 6: Extended testing
 
 Phase 7: Polish & release
 
@@ -226,6 +250,8 @@ Core S7 class definitions for mediation data structures
 
 - [`MediationData()`](https://data-wise.github.io/medfit/reference/MediationData.md)
   : MediationData S7 Class
+- [`SerialMediationData()`](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
+  : SerialMediationData S7 Class
 - [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
 
@@ -248,4 +274,18 @@ S7 methods for medfit classes
   : Print Summary for BootstrapResult
 - [`print(`*`<summary.MediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.MediationData.md)
   : Print Summary for MediationData
+- [`print(`*`<summary.SerialMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.SerialMediationData.md)
+  : Print Summary for SerialMediationData
 
+# Articles
+
+### All vignettes
+
+- [Bootstrap
+  Inference](https://data-wise.github.io/medfit/articles/bootstrap.md):
+- [Model
+  Extraction](https://data-wise.github.io/medfit/articles/extraction.md):
+- [Introduction to
+  medfit](https://data-wise.github.io/medfit/articles/introduction.md):
+- [Getting Started with
+  medfit](https://data-wise.github.io/medfit/articles/medfit.md):

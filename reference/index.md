@@ -6,6 +6,8 @@ Core S7 class definitions for mediation data structures
 
 - [`MediationData()`](https://data-wise.github.io/medfit/reference/MediationData.md)
   : MediationData S7 Class
+- [`SerialMediationData()`](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
+  : SerialMediationData S7 Class
 - [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
 
@@ -28,3 +30,5 @@ S7 methods for medfit classes
   : Print Summary for BootstrapResult
 - [`print(`*`<summary.MediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.MediationData.md)
   : Print Summary for MediationData
+- [`print(`*`<summary.SerialMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.SerialMediationData.md)
+  : Print Summary for SerialMediationData

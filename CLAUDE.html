@@ -36,7 +36,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>CLAUDE.md for medfit Package</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/CLAUDE.md" class="external-link"><code>CLAUDE.md</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/CLAUDE.md" class="external-link"><code>CLAUDE.md</code></a></small>
     </div>
 
 <div id="claudemd-for-medfit-package" class="section level1">
@@ -104,10 +104,86 @@
 <span></span>
 <span><span class="co"># Build pkgdown site</span></span>
 <span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-</div>
+<p><strong>pkgdown Website Building:</strong></p>
+<p>The package uses pkgdown to generate a website from package documentation. Configuration is in <code>_pkgdown.yml</code>.</p>
+<p><strong>Workflow:</strong> 1. <strong>Update <code>_pkgdown.yml</code></strong> when adding new exported functions or classes - Add new classes to the “S7 Classes” section in <code>reference:</code> - Add new functions to appropriate sections - Example: After adding <code>SerialMediationData</code>, must add to reference index</p>
+<ol start="2" style="list-style-type: decimal"><li>
+<p><strong>Build and check site:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+</li>
+<li>
+<p><strong>Common issues:</strong></p>
+<ul><li>
+<strong>“Topic missing from index”</strong>: Add the topic to <code>_pkgdown.yml</code> reference section</li>
+<li>
+<strong>“URL not ok”</strong>: Ensure DESCRIPTION has correct URL field</li>
+<li>
+<strong>Non-ASCII characters</strong>: Replace with ASCII equivalents (-&gt; instead of →, * instead of ×)</li>
+</ul></li>
+</ol><p><strong>pkgdown Configuration Essentials:</strong> - Reference index must list ALL exported topics - Group related functions/classes together for better organization - Use <code>starts_with()</code> patterns for methods (print<em>, summary</em>, etc.) - Website builds to <code>docs/</code> directory</p>
+<p><strong>Quarto Vignettes and pkgdown Workflow:</strong></p>
+<p>To ensure Quarto vignettes pass workflow checks and render correctly on GitHub:</p>
+<ol style="list-style-type: decimal"><li>
+<p><strong>Initial Setup:</strong></p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Initialize pkgdown with GitHub Pages support</span></span>
+<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_pkgdown_github_pages</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This automatically:</p>
+<ul><li>Creates <code>gh-pages</code> branch for hosting</li>
+<li>Generates <code>.github/workflows/pkgdown.yaml</code>
+</li>
+<li>Updates DESCRIPTION and <code>_pkgdown.yml</code> with site URL</li>
+</ul></li>
+<li>
+<p><strong>Declare Dependencies:</strong></p>
+<ul><li><p>List all vignette dependencies in DESCRIPTION under <code>Suggests</code></p></li>
+<li>
+<p>For website-only dependencies, use <code>Config/Needs/website</code> field:</p>
+<pre><code>Config/Needs/website: ggplot2, dplyr, tidyr</code></pre>
+</li>
+<li><p>This ensures CI installs them without cluttering package dependencies</p></li>
+</ul></li>
+<li>
+<p><strong>Quarto Support:</strong></p>
+<ul><li>pkgdown automatically detects and renders Quarto vignettes</li>
+<li>Vignettes appear in the <code>articles/</code> section of the website</li>
+<li>No special configuration needed for basic Quarto files</li>
+</ul></li>
+<li>
+<p><strong>Computationally Expensive Vignettes:</strong></p>
+<ul><li>
+<p>If vignette code is slow or requires credentials, use <strong>Articles</strong> instead:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_article</span><span class="op">(</span><span class="st">"article-name"</span><span class="op">)</span></span></code></pre></div>
+</li>
+<li><p>Articles are rendered by pkgdown but NOT included in <code>R CMD check</code></p></li>
+<li><p>Prevents timeouts and failures on CI servers</p></li>
+<li><p>Use for: heavy simulations, API examples requiring keys, large data processing</p></li>
+</ul></li>
+<li>
+<p><strong>Common Workflow Failures:</strong></p>
+<ul><li>
+<strong>Missing system libraries</strong>: Ensure system dependencies are available on CI runner</li>
+<li>
+<strong>Malformed markdown</strong>: Use consistent header levels (<code>#</code>, <code>##</code>) in NEWS.md</li>
+<li>
+<strong>Branch permissions</strong>: Workflow needs write access to <code>gh-pages</code> branch</li>
+<li>
+<strong>Missing dependencies</strong>: Check that all packages used in vignettes are in DESCRIPTION</li>
+</ul></li>
+<li>
+<p><strong>Workflow Checklist:</strong></p>
+<ul class="task-list"><li><label><input type="checkbox">Run <code>usethis::use_pkgdown_github_pages()</code> for initial setup</label></li>
+<li><label><input type="checkbox">Add vignette dependencies to DESCRIPTION <code>Suggests</code> or <code>Config/Needs/website</code></label></li>
+<li><label><input type="checkbox">Convert heavy vignettes to Articles with <code>usethis::use_article()</code></label></li>
+<li><label><input type="checkbox">Test locally with <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code> before pushing</label></li>
+<li><label><input type="checkbox">Verify GitHub Actions has permission to deploy to <code>gh-pages</code></label></li>
+</ul></li>
+</ol></div>
 <div class="section level3">
 <h3 id="testing">Testing<a class="anchor" aria-label="anchor" href="#testing"></a></h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run all tests</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -115,7 +191,7 @@
 <span><span class="fu">testthat</span><span class="fu">::</span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_file.html" class="external-link">test_file</a></span><span class="op">(</span><span class="st">"tests/testthat/test-classes.R"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Check coverage</span></span>
-<span><span class="fu">covr</span><span class="fu">::</span><span class="fu"><a href="http://covr.r-lib.org/reference/package_coverage.html" class="external-link">package_coverage</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">covr</span><span class="fu">::</span><span class="fu">package_coverage</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <hr></div>
 </div>
 <div class="section level2">
@@ -163,10 +239,17 @@
 <p>The package uses S7 for type-safe, modern object-oriented programming.</p>
 <p><strong>Key S7 Classes:</strong></p>
 <ol style="list-style-type: decimal"><li>
-<strong><code>MediationData</code></strong> - Standardized mediation model structure
+<strong><code>MediationData</code></strong> - Simple mediation (X -&gt; M -&gt; Y)
 <ul><li>Properties: <code>a_path</code>, <code>b_path</code>, <code>c_prime</code>, <code>estimates</code>, <code>vcov</code>, <code>data</code>, etc.</li>
 <li>Validator ensures internal consistency</li>
-<li>Base class that dependent packages can extend</li>
+<li>For product-of-two indirect effects (a * b)</li>
+</ul></li>
+<li>
+<strong><code>SerialMediationData</code></strong> - Serial mediation (X -&gt; M1 -&gt; M2 -&gt; … -&gt; Y)
+<ul><li>Properties: <code>a_path</code>, <code>d_path</code> (vector), <code>b_path</code>, <code>c_prime</code>, <code>mediators</code> (vector), etc.</li>
+<li>Supports product-of-three (a * d * b) and product-of-k</li>
+<li>Flexible <code>d_path</code>: scalar for 2 mediators, vector for 3+</li>
+<li>Extensible to chains of any length</li>
 </ul></li>
 <li>
 <strong><code>BootstrapResult</code></strong> - Bootstrap inference results
@@ -195,7 +278,7 @@
 <p>When documenting S7 classes and methods with roxygen2:</p>
 <ol style="list-style-type: decimal"><li>
 <p><strong>S7 Class Constructors</strong>: Use explicit <code>@param</code> tags for all properties</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' MediationData S7 Class</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @description</span></span>
@@ -211,7 +294,7 @@
 </li>
 <li>
 <p><strong>S7 Methods</strong>: Use <code>@noRd</code> to prevent namespace export issues</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Print Method for MediationData</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param x A MediationData object</span></span>
@@ -226,7 +309,7 @@
 </ul></li>
 <li>
 <p><strong>S7 Generics</strong>: Only document generic parameters, not method-specific ones</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#' Extract Mediation Structure</span></span>
 <span><span class="co">#'</span></span>
 <span><span class="co">#' @param object Fitted model object</span></span>
@@ -238,7 +321,7 @@
 </li>
 <li>
 <p><strong>Testing S7 Methods</strong>: Method dispatch may not work in installed package context</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">test_that</span><span class="op">(</span><span class="st">"MediationData print method works"</span>, <span class="op">{</span></span>
 <span>  <span class="fu">skip_if_not</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"S7 method dispatch issue in non-interactive mode"</span><span class="op">)</span></span>
 <span>  <span class="co"># ... test code</span></span>
@@ -246,7 +329,7 @@
 </li>
 <li>
 <p><strong>S7 Method Registration in .onLoad()</strong>: Do NOT use <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># INCORRECT - causes load-time errors</span></span>
 <span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">libname</span>, <span class="va">pkgname</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">methods_register</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># DON'T DO THIS</span></span>
@@ -276,7 +359,7 @@
 </ul></li>
 <li>
 <p><strong>Formalizing S3 Classes</strong>: Use <code>new_S3_class()</code> to wrap S3 classes</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Register method for S3 class</span></span>
 <span><span class="fu">method</span><span class="op">(</span><span class="va">my_generic</span>, <span class="fu">new_S3_class</span><span class="op">(</span><span class="st">"data.frame"</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="va">...</span><span class="op">}</span></span>
 <span></span>
@@ -293,7 +376,7 @@
 </li>
 <li>
 <p><strong>Inheriting from S3 Classes</strong>: Requires custom constructor</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># When inheriting from S3 via parent argument</span></span>
 <span><span class="va">MyS7Class</span> <span class="op">&lt;-</span> <span class="fu">new_class</span><span class="op">(</span><span class="st">"MyS7Class"</span>,</span>
 <span>  parent <span class="op">=</span> <span class="fu">new_S3_class</span><span class="op">(</span><span class="st">"integer"</span>,</span>
@@ -306,7 +389,7 @@
 </li>
 <li>
 <p><strong>Calling Parent S3 Methods</strong>: Use <code>S7_data()</code>, not <code>super()</code></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># INCORRECT - S3 generics don't understand super()</span></span>
 <span><span class="fu">method</span><span class="op">(</span><span class="va">print</span>, <span class="va">MyClass</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu">super</span><span class="op">(</span><span class="va">x</span>, <span class="va">print</span><span class="op">)</span>  <span class="co"># FAILS</span></span>
@@ -330,7 +413,7 @@
 <p>While S7 and S3 are fully compatible, S7 and S4 have specific interoperability features and limitations:</p>
 <ol style="list-style-type: decimal"><li>
 <p><strong>Registration with <code>S4_register()</code></strong>: CRITICAL for S4 compatibility</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define S7 class</span></span>
 <span><span class="va">Foo</span> <span class="op">&lt;-</span> <span class="fu">new_class</span><span class="op">(</span><span class="st">"Foo"</span>, package <span class="op">=</span> <span class="st">"mypackage"</span><span class="op">)</span></span>
 <span></span>
@@ -347,7 +430,7 @@
 </ul></li>
 <li>
 <p><strong>Bidirectional Method Dispatch</strong>: S7 supports multiple combinations</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># S7 method on S4 generic (requires S4_register)</span></span>
 <span><span class="fu">method</span><span class="op">(</span><span class="va">S4_generic</span>, <span class="va">S7_class</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="va">...</span><span class="op">}</span></span>
 <span></span>
@@ -360,7 +443,7 @@
 <li>
 <p><strong>Inheritance Limitations - The “Firewall”</strong>:</p>
 <p><strong>CRITICAL RESTRICTION</strong>: S7 cannot extend S4 classes</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># INVALID - Will fail</span></span>
 <span><span class="va">MyClass</span> <span class="op">&lt;-</span> <span class="fu">new_class</span><span class="op">(</span><span class="st">"MyClass"</span>, parent <span class="op">=</span> <span class="va">SomeS4Class</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Why this matters</strong>:</p>
@@ -370,7 +453,7 @@
 </li>
 <li>Must use composition instead of inheritance</li>
 </ul><p><strong>Workaround</strong>: Use composition</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Instead of inheriting, wrap</span></span>
 <span><span class="va">MyClass</span> <span class="op">&lt;-</span> <span class="fu">new_class</span><span class="op">(</span><span class="st">"MyClass"</span>,</span>
 <span>  properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -398,7 +481,7 @@
 <li>Call <code>S4_register()</code> for backward compatibility</li>
 <li>Move up hierarchy, replacing parents only after children converted</li>
 </ol><p><strong>Example</strong>:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Old S4 class</span></span>
 <span><span class="kw">setClass</span><span class="op">(</span><span class="st">"Foo"</span>, slots <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"numeric"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">setValidity</span><span class="op">(</span><span class="st">"Foo"</span>, <span class="kw">function</span><span class="op">(</span><span class="va">object</span><span class="op">)</span> <span class="op">{</span></span>
@@ -461,7 +544,7 @@
 <div class="section level3">
 <h3 id="explicit-namespacing">Explicit Namespacing<a class="anchor" aria-label="anchor" href="#explicit-namespacing"></a></h3>
 <p><strong>CRITICAL</strong>: All non-base functions MUST use explicit namespacing:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># CORRECT</span></span>
 <span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">formula</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
 <span><span class="fu">MASS</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html" class="external-link">mvrnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">mu</span>, <span class="va">Sigma</span><span class="op">)</span></span>
@@ -477,8 +560,30 @@
 <h2 id="important-implementation-details">Important Implementation Details<a class="anchor" aria-label="anchor" href="#important-implementation-details"></a></h2>
 <div class="section level3">
 <h3 id="s7-class-design">S7 Class Design<a class="anchor" aria-label="anchor" href="#s7-class-design"></a></h3>
-<p><strong>MediationData</strong> is the central data structure: - Contains all information about mediation model - Path coefficients (a, b, c’) - Full parameter vector and covariance matrix - Residual variances (for Gaussian models) - Variable names and metadata - Data and sample size</p>
+<p><strong>MediationData</strong> (Simple Mediation): - Contains all information about simple mediation model (X -&gt; M -&gt; Y) - Path coefficients (a, b, c’) - Full parameter vector and covariance matrix - Residual variances (for Gaussian models) - Variable names and metadata - Data and sample size</p>
+<p><strong>SerialMediationData</strong> (Serial Mediation): - Contains all information about serial mediation (X -&gt; M1 -&gt; M2 -&gt; … -&gt; Y) - Path coefficients: <code>a_path</code> (scalar), <code>d_path</code> (vector), <code>b_path</code> (scalar), <code>c_prime</code> (scalar) - Flexible design: <code>d_path</code> is scalar for 2 mediators, vector for 3+ - Vector properties: <code>mediators</code> (names), <code>sigma_mediators</code> (residual SDs) - List property: <code>mediator_predictors</code> (predictors for each mediator model) - Full parameter vector and covariance matrix (like MediationData)</p>
 <p><strong>Design principle</strong>: Complete information for downstream packages</p>
+</div>
+<div class="section level3">
+<h3 id="extensible-architecture-for-multiple-mediator-types">Extensible Architecture for Multiple Mediator Types<a class="anchor" aria-label="anchor" href="#extensible-architecture-for-multiple-mediator-types"></a></h3>
+<p>The package uses a <strong>modular class design</strong> that allows clean extension to different mediation structures:</p>
+<p><strong>Current Classes:</strong> - <code>MediationData</code>: Simple mediation (product-of-two: a * b) - <code>SerialMediationData</code>: Serial mediation (product-of-three and beyond: a * d * b, a * d21 * d32 * b, etc.)</p>
+<p><strong>Design Principles:</strong> 1. <strong>Separate classes for separate structures</strong>: Each mediation type gets its own class, optimized for its use case 2. <strong>Consistent interface</strong>: All classes share common properties (<code>estimates</code>, <code>vcov</code>, metadata) 3. <strong>No hard limits</strong>: Serial mediation supports chains of any length (2, 3, k mediators) 4. <strong>Extensible validators</strong>: Each class has comprehensive validation tailored to its structure</p>
+<p><strong>Future Extension Path:</strong></p>
+<p>For parallel mediation (X -&gt; M1 -&gt; Y, X -&gt; M2 -&gt; Y simultaneously):</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ParallelMediationData</span> <span class="op">&lt;-</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/new_class.html" class="external-link">new_class</a></span><span class="op">(</span></span>
+<span>  properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    a_paths <span class="op">=</span> <span class="va">numeric</span>,      <span class="co"># Vector: c(a1, a2, ...)</span></span>
+<span>    b_paths <span class="op">=</span> <span class="va">numeric</span>,      <span class="co"># Vector: c(b1, b2, ...)</span></span>
+<span>    c_prime <span class="op">=</span> <span class="va">numeric</span>,      <span class="co"># Scalar: X -&gt; Y direct effect</span></span>
+<span>    mediators <span class="op">=</span> <span class="va">character</span>,  <span class="co"># Vector: c("M1", "M2", ...)</span></span>
+<span>    <span class="co"># ... common properties (estimates, vcov, etc.)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Indirect effect = sum(a_paths * b_paths)</span></span></code></pre></div>
+<p>For complex mediation (combinations of serial and parallel): - Could use graph representation or nested structure - Keep it simple: start with separate classes, add complexity only when needed</p>
+<p><strong>Why this design?</strong> - <strong>Clean separation</strong>: Each class handles one mediation type well - <strong>No over-engineering</strong>: Don’t add complexity for hypothetical future needs - <strong>Easy to extend</strong>: Adding new classes doesn’t break existing ones - <strong>Type safety</strong>: S7 validators ensure each class is used correctly</p>
 </div>
 <div class="section level3">
 <h3 id="model-extraction-pattern">Model Extraction Pattern<a class="anchor" aria-label="anchor" href="#model-extraction-pattern"></a></h3>
@@ -522,7 +627,7 @@
 <div class="section level3">
 <h3 id="dynamic-s7s4-dispatch">Dynamic S7/S4 Dispatch<a class="anchor" aria-label="anchor" href="#dynamic-s7s4-dispatch"></a></h3>
 <p>For S4 classes from suggested packages (lavaan, OpenMx):</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># In R/zzz.R</span></span>
 <span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">libname</span>, <span class="va">pkgname</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># Register lavaan method if available</span></span>
