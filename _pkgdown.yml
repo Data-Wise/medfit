@@ -2,11 +2,19 @@ url: https://data-wise.github.io/medfit/
 
 template:
   bootstrap: 5
-  bootswatch: flatly
+  bootswatch: litera
   bslib:
+    # A deeper, more "academic" blue for primary actions
     primary: "#0054AD"
-    border-radius: 0.5rem
-    btn-border-radius: 0.25rem
+    # A slightly off-white background reduces eye strain compared to pure white
+    bg: "#ffffff"
+    fg: "#212529"
+    # Modern, readable fonts
+    base_font: { google: "Inter" }
+    heading_font: { google: "Montserrat" }
+    code_font: { google: "Fira Code" }
+    # Controls the global base font size (Default is 1rem)
+    font-size-base: 0.925rem
 
 home:
   title: "medfit: Infrastructure for Mediation Analysis in R"
@@ -14,31 +22,48 @@ home:
     S7-based infrastructure for fitting mediation models, extracting path
     coefficients, and performing bootstrap inference. Foundation package for
     the mediation analysis ecosystem.
+  sidebar:
+    structure: [dev, links, license, citation, authors]
+  links:
+  - text: "Source Code"
+    href: https://github.com/data-wise/medfit
+  - text: "Report Issues"
+    href: https://github.com/data-wise/medfit/issues
+  - text: "Request Feature"
+    href: https://github.com/data-wise/medfit/issues/new
 
 navbar:
   structure:
-    left:  [intro, reference, articles, news]
+    left:  [home, reference, articles, news]
     right: [search, github]
   components:
-    home: ~
-    intro:
-      text: Get started
-      href: articles/medfit.html
+    home:
+      icon: fas fa-home fa-lg
+      href: index.html
+      aria-label: Home
     reference:
       text: Reference
       href: reference/index.html
     articles:
       text: Articles
       menu:
-      - text: Introduction to medfit
+      - text: "Getting Started"
+        href: articles/medfit.html
+      - text: "─────────────"
+      - text: "Detailed Guides"
+      - text: "Introduction to medfit"
         href: articles/introduction.html
-      - text: Model Extraction
+      - text: "Model Extraction"
         href: articles/extraction.html
-      - text: Bootstrap Inference
+      - text: "Bootstrap Inference"
         href: articles/bootstrap.html
     news:
       text: News
       href: news/index.html
+    github:
+      icon: fab fa-github fa-lg
+      href: https://github.com/data-wise/medfit
+      aria-label: GitHub
 
 reference:
   - title: "S7 Classes"
@@ -62,7 +87,23 @@ reference:
       - starts_with("summary")
       - starts_with("show")
 
+development:
+  mode: auto
+  version_label: default
+  version_tooltip: "Development version"
+
+authors:
+  Davood Tofighi:
+    href: "https://orcid.org/0000-0001-8523-7776"
+    html: "<img src='https://orcid.org/sites/default/files/images/orcid_16x16.png' height='16' width='16' alt='ORCID iD icon'> Davood Tofighi"
+
 footer:
   structure:
-    left: developed_by
-    right: built_with
+    left: [developed_by, built_with]
+    right: [package_version]
+  components:
+    package_version: "Version {version}"
+    developed_by: |
+      Developed by [Davood Tofighi](https://orcid.org/0000-0001-8523-7776)
+    built_with: |
+      Built with [pkgdown](https://pkgdown.r-lib.org/)

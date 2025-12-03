@@ -1,5 +1,16 @@
 # medfit: Infrastructure for Mediation Analysis in R
 
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml)
+[![Codecov](https://codecov.io/gh/data-wise/medfit/graph/badge.svg)](https://codecov.io/gh/data-wise/medfit)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Repo
+Status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+
+<!-- badges: end -->
+
 ## Overview
 
 **medfit** provides unified S7-based infrastructure for fitting mediation models, extracting path coefficients, and performing bootstrap inference. It serves as the foundation package for the mediation analysis ecosystem, supporting [probmed](https://github.com/data-wise/probmed), [RMediation](https://github.com/data-wise/rmediation), and [medrobust](https://github.com/data-wise/medrobust).
@@ -200,8 +211,6 @@ R package version 0.1.0. https://github.com/data-wise/medfit
 - [Ecosystem Strategy](planning/ECOSYSTEM.md)
 
 ## Contact
-
-<img src="https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg" align="right" alt="R-CMD-check"/> <img src="https://codecov.io/gh/data-wise/medfit/graph/badge.svg" align="right" alt="Codecov"/> <img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" align="right" alt="Lifecycle"/> <img src="https://www.repostatus.org/badges/latest/wip.svg" align="right" alt="Status"/>
 
 - **Author**: Davood Tofighi
 - **Email**: dtofighi@gmail.com
