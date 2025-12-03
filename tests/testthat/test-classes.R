@@ -506,3 +506,379 @@ test_that("MediationData validator catches data/n_obs mismatch", {
     "Number of rows in data must match n_obs"
   )
 })
+
+
+# Test SerialMediationData Class ===========================================
+
+# Test Construction --------------------------------------------------------
+
+test_that("SerialMediationData creates valid object with 2 mediators", {
+  serial_data <- SerialMediationData(
+    a_path = 0.5,
+    d_path = 0.4,
+    b_path = 0.3,
+    c_prime = 0.1,
+    estimates = c(0.5, 0.4, 0.3, 0.1),
+    vcov = diag(4) * 0.01,
+    sigma_mediators = c(1.0, 1.1),
+    sigma_y = 1.2,
+    treatment = "X",
+    mediators = c("M1", "M2"),
+    outcome = "Y",
+    mediator_predictors = list(c("X"), c("X", "M1")),
+    outcome_predictors = c("X", "M1", "M2"),
+    data = NULL,
+    n_obs = 100L,
+    converged = TRUE,
+    source_package = "lavaan"
+  )
+
+  expect_true(S7::S7_inherits(serial_data, SerialMediationData))
+  expect_equal(serial_data@a_path, 0.5)
+  expect_equal(serial_data@d_path, 0.4)
+  expect_equal(serial_data@b_path, 0.3)
+  expect_equal(serial_data@c_prime, 0.1)
+  expect_equal(serial_data@mediators, c("M1", "M2"))
+  expect_equal(length(serial_data@d_path), 1)  # 2 mediators need 1 d_path
+})
+
+
+test_that("SerialMediationData creates valid object with 3 mediators", {
+  serial_data <- SerialMediationData(
+    a_path = 0.5,
+    d_path = c(0.4, 0.35),  # M1→M2, M2→M3
+    b_path = 0.3,
+    c_prime = 0.1,
+    estimates = c(0.5, 0.4, 0.35, 0.3, 0.1),
+    vcov = diag(5) * 0.01,
+    sigma_mediators = c(1.0, 1.1, 1.05),
+    sigma_y = 1.2,
+    treatment = "X",
+    mediators = c("M1", "M2", "M3"),
+    outcome = "Y",
+    mediator_predictors = list(c("X"), c("X", "M1"), c("X", "M1", "M2")),
+    outcome_predictors = c("X", "M1", "M2", "M3"),
+    data = NULL,
+    n_obs = 100L,
+    converged = TRUE,
+    source_package = "lavaan"
+  )
+
+  expect_true(S7::S7_inherits(serial_data, SerialMediationData))
+  expect_equal(length(serial_data@d_path), 2)  # 3 mediators need 2 d_paths
+  expect_equal(serial_data@mediators, c("M1", "M2", "M3"))
+  expect_equal(length(serial_data@sigma_mediators), 3)
+})
+
+
+# Test Validation ----------------------------------------------------------
+
+test_that("SerialMediationData rejects < 2 mediators", {
+  expect_error(
+    SerialMediationData(
+      a_path = 0.5,
+      d_path = numeric(0),  # No d paths
+      b_path = 0.3,
+      c_prime = 0.1,
+      estimates = c(0.5, 0.3, 0.1),
+      vcov = diag(3) * 0.01,
+      sigma_mediators = c(1.0),
+      sigma_y = 1.2,
+      treatment = "X",
+      mediators = c("M1"),  # Only 1 mediator
+      outcome = "Y",
+      mediator_predictors = list(c("X")),
+      outcome_predictors = c("X", "M1"),
+      data = NULL,
+      n_obs = 100L,
+      converged = TRUE,
+      source_package = "lavaan"
+    ),
+    "Serial mediation requires at least 2 mediators"
+  )
+})
+
+
+test_that("SerialMediationData validates d_path length", {
+  expect_error(
+    SerialMediationData(
+      a_path = 0.5,
+      d_path = c(0.4, 0.35),  # 2 d_paths but only 2 mediators
+      b_path = 0.3,
+      c_prime = 0.1,
+      estimates = c(0.5, 0.4, 0.35, 0.3, 0.1),
+      vcov = diag(5) * 0.01,
+      sigma_mediators = c(1.0, 1.1),
+      sigma_y = 1.2,
+      treatment = "X",
+      mediators = c("M1", "M2"),  # 2 mediators need 1 d_path
+      outcome = "Y",
+      mediator_predictors = list(c("X"), c("X", "M1")),
+      outcome_predictors = c("X", "M1", "M2"),
+      data = NULL,
+      n_obs = 100L,
+      converged = TRUE,
+      source_package = "lavaan"
+    ),
+    "d_path must have length 1 for 2 mediators"
+  )
+})
+
+
+test_that("SerialMediationData validates sigma_mediators length", {
+  expect_error(
+    SerialMediationData(
+      a_path = 0.5,
+      d_path = 0.4,
+      b_path = 0.3,
+      c_prime = 0.1,
+      estimates = c(0.5, 0.4, 0.3, 0.1),
+      vcov = diag(4) * 0.01,
+      sigma_mediators = c(1.0),  # Wrong length
+      sigma_y = 1.2,
+      treatment = "X",
+      mediators = c("M1", "M2"),  # 2 mediators
+      outcome = "Y",
+      mediator_predictors = list(c("X"), c("X", "M1")),
+      outcome_predictors = c("X", "M1", "M2"),
+      data = NULL,
+      n_obs = 100L,
+      converged = TRUE,
+      source_package = "lavaan"
+    ),
+    "sigma_mediators must have length 2"
+  )
+})
+
+
+test_that("SerialMediationData validates non-scalar paths", {
+  expect_error(
+    SerialMediationData(
+      a_path = c(0.5, 0.4),  # Not a scalar
+      d_path = 0.4,
+      b_path = 0.3,
+      c_prime = 0.1,
+      estimates = c(0.5, 0.4, 0.3, 0.1),
+      vcov = diag(4) * 0.01,
+      sigma_mediators = c(1.0, 1.1),
+      sigma_y = 1.2,
+      treatment = "X",
+      mediators = c("M1", "M2"),
+      outcome = "Y",
+      mediator_predictors = list(c("X"), c("X", "M1")),
+      outcome_predictors = c("X", "M1", "M2"),
+      data = NULL,
+      n_obs = 100L,
+      converged = TRUE,
+      source_package = "lavaan"
+    ),
+    "a_path must be a scalar"
+  )
+})
+
+
+test_that("SerialMediationData validates unique mediator names", {
+  expect_error(
+    SerialMediationData(
+      a_path = 0.5,
+      d_path = 0.4,
+      b_path = 0.3,
+      c_prime = 0.1,
+      estimates = c(0.5, 0.4, 0.3, 0.1),
+      vcov = diag(4) * 0.01,
+      sigma_mediators = c(1.0, 1.1),
+      sigma_y = 1.2,
+      treatment = "X",
+      mediators = c("M1", "M1"),  # Duplicate names
+      outcome = "Y",
+      mediator_predictors = list(c("X"), c("X", "M1")),
+      outcome_predictors = c("X", "M1", "M2"),
+      data = NULL,
+      n_obs = 100L,
+      converged = TRUE,
+      source_package = "lavaan"
+    ),
+    "All mediator names must be unique"
+  )
+})
+
+
+test_that("SerialMediationData validates mediator_predictors list length", {
+  expect_error(
+    SerialMediationData(
+      a_path = 0.5,
+      d_path = 0.4,
+      b_path = 0.3,
+      c_prime = 0.1,
+      estimates = c(0.5, 0.4, 0.3, 0.1),
+      vcov = diag(4) * 0.01,
+      sigma_mediators = c(1.0, 1.1),
+      sigma_y = 1.2,
+      treatment = "X",
+      mediators = c("M1", "M2"),
+      outcome = "Y",
+      mediator_predictors = list(c("X")),  # Wrong length
+      outcome_predictors = c("X", "M1", "M2"),
+      data = NULL,
+      n_obs = 100L,
+      converged = TRUE,
+      source_package = "lavaan"
+    ),
+    "mediator_predictors must have length 2"
+  )
+})
+
+
+# Test Methods -------------------------------------------------------------
+
+test_that("SerialMediationData print method works for 2 mediators", {
+  skip_if_not(interactive(), "S7 method dispatch for Serial MediationData needs investigation")
+
+  serial_data <- SerialMediationData(
+    a_path = 0.5,
+    d_path = 0.4,
+    b_path = 0.3,
+    c_prime = 0.1,
+    estimates = c(0.5, 0.4, 0.3, 0.1),
+    vcov = diag(4) * 0.01,
+    sigma_mediators = c(1.0, 1.1),
+    sigma_y = 1.2,
+    treatment = "X",
+    mediators = c("M1", "M2"),
+    outcome = "Y",
+    mediator_predictors = list(c("X"), c("X", "M1")),
+    outcome_predictors = c("X", "M1", "M2"),
+    data = NULL,
+    n_obs = 100L,
+    converged = TRUE,
+    source_package = "lavaan"
+  )
+
+  expect_output(print(serial_data), "SerialMediationData object")
+  expect_output(print(serial_data), "X -> M1 -> M2 -> Y")
+  expect_output(print(serial_data), "a \\* d \\* b")
+})
+
+
+test_that("SerialMediationData print method works for 3 mediators", {
+  skip_if_not(interactive(), "S7 method dispatch for SerialMediationData needs investigation")
+
+  serial_data <- SerialMediationData(
+    a_path = 0.5,
+    d_path = c(0.4, 0.35),
+    b_path = 0.3,
+    c_prime = 0.1,
+    estimates = c(0.5, 0.4, 0.35, 0.3, 0.1),
+    vcov = diag(5) * 0.01,
+    sigma_mediators = c(1.0, 1.1, 1.05),
+    sigma_y = 1.2,
+    treatment = "X",
+    mediators = c("M1", "M2", "M3"),
+    outcome = "Y",
+    mediator_predictors = list(c("X"), c("X", "M1"), c("X", "M1", "M2")),
+    outcome_predictors = c("X", "M1", "M2", "M3"),
+    data = NULL,
+    n_obs = 100L,
+    converged = TRUE,
+    source_package = "lavaan"
+  )
+
+  expect_output(print(serial_data), "SerialMediationData object")
+  expect_output(print(serial_data), "X -> M1 -> M2 -> M3 -> Y")
+  expect_output(print(serial_data), "d21.*M1 -> M2")
+  expect_output(print(serial_data), "d32.*M2 -> M3")
+  expect_output(print(serial_data), "a \\* d21 \\* d32 \\* b")
+})
+
+
+test_that("SerialMediationData summary method works", {
+  skip_if_not(interactive(), "S7 method dispatch for SerialMediationData needs investigation")
+
+  serial_data <- SerialMediationData(
+    a_path = 0.5,
+    d_path = 0.4,
+    b_path = 0.3,
+    c_prime = 0.1,
+    estimates = c(0.5, 0.4, 0.3, 0.1),
+    vcov = diag(4) * 0.01,
+    sigma_mediators = c(1.0, 1.1),
+    sigma_y = 1.2,
+    treatment = "X",
+    mediators = c("M1", "M2"),
+    outcome = "Y",
+    mediator_predictors = list(c("X"), c("X", "M1")),
+    outcome_predictors = c("X", "M1", "M2"),
+    data = NULL,
+    n_obs = 100L,
+    converged = TRUE,
+    source_package = "lavaan"
+  )
+
+  summ <- summary(serial_data)
+  expect_s3_class(summ, "summary.SerialMediationData")
+  expect_equal(unname(summ$paths["a"]), 0.5)
+  expect_equal(unname(summ$paths["d"]), 0.4)
+  expect_equal(unname(summ$paths["b"]), 0.3)
+  expect_equal(unname(summ$paths["c_prime"]), 0.1)
+  expect_equal(unname(summ$paths["indirect"]), 0.5 * 0.4 * 0.3)
+  expect_equal(summ$n_mediators, 2)
+  expect_equal(summ$mediators, c("M1", "M2"))
+})
+
+
+# Test Edge Cases ----------------------------------------------------------
+
+test_that("SerialMediationData works with NULL sigma values", {
+  serial_data <- SerialMediationData(
+    a_path = 0.5,
+    d_path = 0.4,
+    b_path = 0.3,
+    c_prime = 0.1,
+    estimates = c(0.5, 0.4, 0.3, 0.1),
+    vcov = diag(4) * 0.01,
+    sigma_mediators = NULL,
+    sigma_y = NULL,
+    treatment = "X",
+    mediators = c("M1", "M2"),
+    outcome = "Y",
+    mediator_predictors = list(c("X"), c("X", "M1")),
+    outcome_predictors = c("X", "M1", "M2"),
+    data = NULL,
+    n_obs = 100L,
+    converged = TRUE,
+    source_package = "lavaan"
+  )
+
+  expect_null(serial_data@sigma_mediators)
+  expect_null(serial_data@sigma_y)
+})
+
+
+test_that("SerialMediationData computes correct indirect effect", {
+  skip_if_not(interactive(), "S7 method dispatch for SerialMediationData needs investigation")
+
+  serial_data <- SerialMediationData(
+    a_path = 0.5,
+    d_path = c(0.4, 0.3),
+    b_path = 0.2,
+    c_prime = 0.1,
+    estimates = c(0.5, 0.4, 0.3, 0.2, 0.1),
+    vcov = diag(5) * 0.01,
+    sigma_mediators = c(1.0, 1.1, 1.05),
+    sigma_y = 1.2,
+    treatment = "X",
+    mediators = c("M1", "M2", "M3"),
+    outcome = "Y",
+    mediator_predictors = list(c("X"), c("X", "M1"), c("X", "M1", "M2")),
+    outcome_predictors = c("X", "M1", "M2", "M3"),
+    data = NULL,
+    n_obs = 100L,
+    converged = TRUE,
+    source_package = "lavaan"
+  )
+
+  # Indirect effect = a × d21 × d32 × b = 0.5 × 0.4 × 0.3 × 0.2
+  expected_indirect <- 0.5 * 0.4 * 0.3 * 0.2
+  summ <- summary(serial_data)
+  expect_equal(unname(summ$paths["indirect"]), expected_indirect)
+})

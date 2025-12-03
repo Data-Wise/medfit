@@ -70,6 +70,32 @@ devtools::build_vignettes()
 pkgdown::build_site()
 ```
 
+**pkgdown Website Building:**
+
+The package uses pkgdown to generate a website from package documentation. Configuration is in `_pkgdown.yml`.
+
+**Workflow:**
+1. **Update `_pkgdown.yml`** when adding new exported functions or classes
+   - Add new classes to the "S7 Classes" section in `reference:`
+   - Add new functions to appropriate sections
+   - Example: After adding `SerialMediationData`, must add to reference index
+
+2. **Build and check site:**
+   ```r
+   pkgdown::build_site()
+   ```
+
+3. **Common issues:**
+   - **"Topic missing from index"**: Add the topic to `_pkgdown.yml` reference section
+   - **"URL not ok"**: Ensure DESCRIPTION has correct URL field
+   - **Non-ASCII characters**: Replace with ASCII equivalents (-> instead of →, * instead of ×)
+
+**pkgdown Configuration Essentials:**
+- Reference index must list ALL exported topics
+- Group related functions/classes together for better organization
+- Use `starts_with()` patterns for methods (print*, summary*, etc.)
+- Website builds to `docs/` directory
+
 ### Testing
 
 ```r
@@ -142,12 +168,18 @@ The package uses S7 for type-safe, modern object-oriented programming.
 
 **Key S7 Classes:**
 
-1. **`MediationData`** - Standardized mediation model structure
+1. **`MediationData`** - Simple mediation (X -> M -> Y)
    - Properties: `a_path`, `b_path`, `c_prime`, `estimates`, `vcov`, `data`, etc.
    - Validator ensures internal consistency
-   - Base class that dependent packages can extend
+   - For product-of-two indirect effects (a * b)
 
-2. **`BootstrapResult`** - Bootstrap inference results
+2. **`SerialMediationData`** - Serial mediation (X -> M1 -> M2 -> ... -> Y)
+   - Properties: `a_path`, `d_path` (vector), `b_path`, `c_prime`, `mediators` (vector), etc.
+   - Supports product-of-three (a * d * b) and product-of-k
+   - Flexible `d_path`: scalar for 2 mediators, vector for 3+
+   - Extensible to chains of any length
+
+3. **`BootstrapResult`** - Bootstrap inference results
    - Properties: `estimate`, `ci_lower`, `ci_upper`, `boot_estimates`, `method`
    - Validator checks consistency
    - Used by all packages for inference
@@ -461,15 +493,63 @@ sem(model, data = data)
 
 ### S7 Class Design
 
-**MediationData** is the central data structure:
-- Contains all information about mediation model
+**MediationData** (Simple Mediation):
+- Contains all information about simple mediation model (X -> M -> Y)
 - Path coefficients (a, b, c')
 - Full parameter vector and covariance matrix
 - Residual variances (for Gaussian models)
 - Variable names and metadata
 - Data and sample size
 
+**SerialMediationData** (Serial Mediation):
+- Contains all information about serial mediation (X -> M1 -> M2 -> ... -> Y)
+- Path coefficients: `a_path` (scalar), `d_path` (vector), `b_path` (scalar), `c_prime` (scalar)
+- Flexible design: `d_path` is scalar for 2 mediators, vector for 3+
+- Vector properties: `mediators` (names), `sigma_mediators` (residual SDs)
+- List property: `mediator_predictors` (predictors for each mediator model)
+- Full parameter vector and covariance matrix (like MediationData)
+
 **Design principle**: Complete information for downstream packages
+
+### Extensible Architecture for Multiple Mediator Types
+
+The package uses a **modular class design** that allows clean extension to different mediation structures:
+
+**Current Classes:**
+- `MediationData`: Simple mediation (product-of-two: a * b)
+- `SerialMediationData`: Serial mediation (product-of-three and beyond: a * d * b, a * d21 * d32 * b, etc.)
+
+**Design Principles:**
+1. **Separate classes for separate structures**: Each mediation type gets its own class, optimized for its use case
+2. **Consistent interface**: All classes share common properties (`estimates`, `vcov`, metadata)
+3. **No hard limits**: Serial mediation supports chains of any length (2, 3, k mediators)
+4. **Extensible validators**: Each class has comprehensive validation tailored to its structure
+
+**Future Extension Path:**
+
+For parallel mediation (X -> M1 -> Y, X -> M2 -> Y simultaneously):
+```r
+ParallelMediationData <- S7::new_class(
+  properties = list(
+    a_paths = numeric,      # Vector: c(a1, a2, ...)
+    b_paths = numeric,      # Vector: c(b1, b2, ...)
+    c_prime = numeric,      # Scalar: X -> Y direct effect
+    mediators = character,  # Vector: c("M1", "M2", ...)
+    # ... common properties (estimates, vcov, etc.)
+  )
+)
+# Indirect effect = sum(a_paths * b_paths)
+```
+
+For complex mediation (combinations of serial and parallel):
+- Could use graph representation or nested structure
+- Keep it simple: start with separate classes, add complexity only when needed
+
+**Why this design?**
+- **Clean separation**: Each class handles one mediation type well
+- **No over-engineering**: Don't add complexity for hypothetical future needs
+- **Easy to extend**: Adding new classes doesn't break existing ones
+- **Type safety**: S7 validators ensure each class is used correctly
 
 ### Model Extraction Pattern
 

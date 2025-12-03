@@ -45,6 +45,7 @@ reference:
     desc: "Core S7 class definitions for mediation data structures"
     contents:
       - MediationData
+      - SerialMediationData
       - BootstrapResult
 
   - title: "Main Functions"

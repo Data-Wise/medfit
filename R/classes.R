@@ -1,8 +1,15 @@
 # S7 Class Definitions for medfit
 #
 # This file defines the core S7 classes:
-# - MediationData: Container for mediation model structure
+# - MediationData: Container for simple mediation model structure (X -> M -> Y)
+# - SerialMediationData: Container for serial mediation model structure (X -> M1 -> M2 -> ... -> Y)
 # - BootstrapResult: Container for bootstrap inference results
+#
+# Design Philosophy:
+# - Separate classes for different mediation structures (simple vs serial vs parallel)
+# - Each class optimized for its specific use case
+# - Extensible design allowing future addition of ParallelMediationData, ComplexMediationData
+# - Consistent interface across all classes (estimates, vcov, metadata)
 
 #' MediationData S7 Class
 #'
@@ -161,6 +168,267 @@ MediationData <- S7::new_class(
 
 # Register with S4 for compatibility
 S7::S4_register(MediationData)
+
+
+#' SerialMediationData S7 Class
+#'
+#' @description
+#' S7 class for serial mediation models where the effect flows through
+#' multiple mediators in sequence: X -> M1 -> M2 -> ... -> Mk -> Y.
+#'
+#' This class supports serial mediation chains of any length, from simple
+#' two-mediator models (product-of-three: a * d * b) to complex chains
+#' with many mediators (product-of-k).
+#'
+#' @param a_path Numeric scalar: effect of treatment on first mediator (X -> M1)
+#' @param d_path Numeric vector: sequential mediator-to-mediator effects
+#'   - For 2 mediators (X -> M1 -> M2 -> Y): scalar d21 (M1 -> M2)
+#'   - For 3 mediators (X -> M1 -> M2 -> M3 -> Y): c(d21, d32)
+#'   - For k mediators: vector of length (k-1)
+#' @param b_path Numeric scalar: effect of last mediator on outcome (Mk -> Y)
+#' @param c_prime Numeric scalar: direct effect of treatment on outcome (X -> Y)
+#' @param estimates Numeric vector: all parameter estimates
+#' @param vcov Numeric matrix: variance-covariance matrix of estimates
+#' @param sigma_mediators Numeric vector or NULL: residual SDs for mediator models.
+#'   Length should match number of mediators. First element is residual SD for M1 model,
+#'   second element for M2 model, etc.
+#' @param sigma_y Numeric scalar or NULL: residual SD for outcome model
+#' @param treatment Character scalar: name of treatment variable
+#' @param mediators Character vector: names of mediators in sequential order.
+#'   First element is M1, second element is M2, etc.
+#' @param outcome Character scalar: name of outcome variable
+#' @param mediator_predictors List of character vectors: predictor names for each mediator model.
+#'   First list element contains predictors for M1 (typically just "X"),
+#'   second element contains predictors for M2 (typically c("X", "M1")), etc.
+#' @param outcome_predictors Character vector: predictor names in outcome model
+#' @param data Data frame or NULL: original data
+#' @param n_obs Integer scalar: number of observations
+#' @param converged Logical scalar: whether all models converged
+#' @param source_package Character scalar: package/engine used for fitting
+#'
+#' @return A SerialMediationData S7 object
+#'
+#' @details
+#' ## Serial Mediation Structure
+#'
+#' Serial mediation models the indirect effect flowing through a sequence of
+#' mediators. The total indirect effect is the product of all path coefficients:
+#'
+#' - **2 mediators (product-of-three)**: Indirect = a * d * b
+#' - **3 mediators (product-of-four)**: Indirect = a * d21 * d32 * b
+#' - **k mediators (product-of-k+1)**: Indirect = a * d21 * d32 * ... * d(k,k-1) * b
+#'
+#' ## Path Notation
+#'
+#' - `a`: Treatment -> First mediator (X -> M1)
+#' - `d21`: First -> Second mediator (M1 -> M2)
+#' - `d32`: Second -> Third mediator (M2 -> M3)
+#' - `dji`: Previous mediator -> Current mediator
+#' - `b`: Last mediator -> Outcome (Mk -> Y)
+#' - `c'`: Direct effect (X -> Y, controlling for all mediators)
+#'
+#' ## Extensibility
+#'
+#' This class is designed to handle serial chains of any length:
+#' - Minimal case: 2 mediators (length(d_path) = 1)
+#' - No upper limit on chain length
+#' - Validator ensures consistency between mediators and paths
+#'
+#' @examples
+#' \dontrun{
+#' # Two-mediator serial mediation (X -> M1 -> M2 -> Y)
+#' # Product-of-three: a * d * b
+#' serial_data <- SerialMediationData(
+#'   a_path = 0.5,       # X -> M1
+#'   d_path = 0.4,       # M1 -> M2 (scalar for 2 mediators)
+#'   b_path = 0.3,       # M2 -> Y
+#'   c_prime = 0.1,      # X -> Y (direct)
+#'   estimates = c(0.5, 0.4, 0.3, 0.1),
+#'   vcov = diag(4) * 0.01,
+#'   sigma_mediators = c(1.0, 1.1),  # SD for M1, M2 models
+#'   sigma_y = 1.2,
+#'   treatment = "X",
+#'   mediators = c("M1", "M2"),
+#'   outcome = "Y",
+#'   mediator_predictors = list(
+#'     c("X"),           # M1 ~ X
+#'     c("X", "M1")      # M2 ~ X + M1
+#'   ),
+#'   outcome_predictors = c("X", "M1", "M2"),  # Y ~ X + M1 + M2
+#'   data = NULL,
+#'   n_obs = 100L,
+#'   converged = TRUE,
+#'   source_package = "lavaan"
+#' )
+#'
+#' # Three-mediator serial mediation (X -> M1 -> M2 -> M3 -> Y)
+#' # Product-of-four: a * d21 * d32 * b
+#' serial_data_3 <- SerialMediationData(
+#'   a_path = 0.5,           # X -> M1
+#'   d_path = c(0.4, 0.35),  # M1 -> M2, M2 -> M3 (vector for 3 mediators)
+#'   b_path = 0.3,           # M3 -> Y
+#'   c_prime = 0.1,
+#'   estimates = c(0.5, 0.4, 0.35, 0.3, 0.1),
+#'   vcov = diag(5) * 0.01,
+#'   sigma_mediators = c(1.0, 1.1, 1.05),  # SD for M1, M2, M3 models
+#'   sigma_y = 1.2,
+#'   treatment = "X",
+#'   mediators = c("M1", "M2", "M3"),
+#'   outcome = "Y",
+#'   mediator_predictors = list(
+#'     c("X"),              # M1 ~ X
+#'     c("X", "M1"),        # M2 ~ X + M1
+#'     c("X", "M1", "M2")   # M3 ~ X + M1 + M2
+#'   ),
+#'   outcome_predictors = c("X", "M1", "M2", "M3"),
+#'   data = NULL,
+#'   n_obs = 100L,
+#'   converged = TRUE,
+#'   source_package = "lavaan"
+#' )
+#' }
+#'
+#' @export
+SerialMediationData <- S7::new_class(
+  "SerialMediationData",
+  package = "medfit",
+  properties = list(
+    # Core paths (serial chain)
+    a_path = S7::class_numeric,       # X -> M1 (scalar)
+    d_path = S7::class_numeric,       # M1 -> M2 -> ... (scalar or vector)
+    b_path = S7::class_numeric,       # Mk -> Y (scalar)
+    c_prime = S7::class_numeric,      # X -> Y (scalar)
+
+    # Parameters (all models)
+    estimates = S7::class_numeric,
+    vcov = S7::new_S3_class("matrix"),
+
+    # Residual variances (for Gaussian models)
+    sigma_mediators = S7::class_numeric | NULL,  # Vector for each mediator
+    sigma_y = S7::class_numeric | NULL,
+
+    # Variable names
+    treatment = S7::class_character,
+    mediators = S7::class_character,   # Vector of mediator names (in order)
+    outcome = S7::class_character,
+    mediator_predictors = S7::class_list,  # List of predictor vectors
+    outcome_predictors = S7::class_character,
+
+    # Data and metadata
+    data = S7::class_data.frame | NULL,
+    n_obs = S7::class_integer,
+    converged = S7::class_logical,
+    source_package = S7::class_character
+  ),
+
+  validator = function(self) {
+    # Get number of mediators
+    n_mediators <- length(self@mediators)
+
+    # Must have at least 2 mediators for serial mediation
+    if (n_mediators < 2) {
+      return("Serial mediation requires at least 2 mediators")
+    }
+
+    # Validate path scalars
+    if (length(self@a_path) != 1) {
+      return("a_path must be a scalar (X -> M1)")
+    }
+    if (length(self@b_path) != 1) {
+      return("b_path must be a scalar (Mk -> Y)")
+    }
+    if (length(self@c_prime) != 1) {
+      return("c_prime must be a scalar (X -> Y)")
+    }
+
+    # Validate d_path length matches number of mediators
+    # For k mediators, need (k-1) d paths: M1->M2, M2->M3, ..., M(k-1)->Mk
+    expected_d_length <- n_mediators - 1
+    if (length(self@d_path) != expected_d_length) {
+      return(sprintf(
+        "d_path must have length %d for %d mediators (found length %d)",
+        expected_d_length, n_mediators, length(self@d_path)
+      ))
+    }
+
+    # Validate vcov is square
+    if (nrow(self@vcov) != ncol(self@vcov)) {
+      return("vcov must be a square matrix")
+    }
+
+    # Validate estimates and vcov dimensions match
+    if (length(self@estimates) != nrow(self@vcov)) {
+      return("Number of estimates must match vcov dimensions")
+    }
+
+    # Validate sigma_mediators if provided
+    if (!is.null(self@sigma_mediators)) {
+      if (length(self@sigma_mediators) != n_mediators) {
+        return(sprintf(
+          "sigma_mediators must have length %d (one for each mediator), found %d",
+          n_mediators, length(self@sigma_mediators)
+        ))
+      }
+      if (any(self@sigma_mediators < 0, na.rm = TRUE)) {
+        return("All sigma_mediators values must be non-negative")
+      }
+    }
+
+    # Validate sigma_y if provided
+    if (!is.null(self@sigma_y)) {
+      if (length(self@sigma_y) != 1 || self@sigma_y < 0) {
+        return("sigma_y must be a non-negative scalar")
+      }
+    }
+
+    # Validate variable names
+    if (length(self@treatment) != 1) {
+      return("treatment must be a single character string")
+    }
+    if (length(self@outcome) != 1) {
+      return("outcome must be a single character string")
+    }
+
+    # Validate mediators are all unique
+    if (length(unique(self@mediators)) != n_mediators) {
+      return("All mediator names must be unique")
+    }
+
+    # Validate mediator_predictors is a list with correct length
+    if (!is.list(self@mediator_predictors)) {
+      return("mediator_predictors must be a list")
+    }
+    if (length(self@mediator_predictors) != n_mediators) {
+      return(sprintf(
+        "mediator_predictors must have length %d (one for each mediator), found %d",
+        n_mediators, length(self@mediator_predictors)
+      ))
+    }
+
+    # Validate n_obs
+    if (length(self@n_obs) != 1 || self@n_obs < 1) {
+      return("n_obs must be a positive integer")
+    }
+
+    # Validate data if provided
+    if (!is.null(self@data)) {
+      if (nrow(self@data) != self@n_obs) {
+        return("Number of rows in data must match n_obs")
+      }
+    }
+
+    # Validate converged is logical scalar
+    if (length(self@converged) != 1) {
+      return("converged must be a single logical value")
+    }
+
+    # If all checks pass, return NULL
+    NULL
+  }
+)
+
+# Register with S4 for compatibility
+S7::S4_register(SerialMediationData)
 
 
 #' BootstrapResult S7 Class
@@ -504,5 +772,185 @@ S7::method(show, MediationData) <- function(object) {
 #' @param object A BootstrapResult object
 #' @noRd
 S7::method(show, BootstrapResult) <- function(object) {
+  print(object)
+}
+
+
+#' Print Method for SerialMediationData
+#'
+#' @param x A SerialMediationData object
+#' @param ... Additional arguments (ignored)
+#' @noRd
+S7::method(print, SerialMediationData) <- function(x, ...) {
+  cat("SerialMediationData object\n")
+  cat("==========================\n\n")
+
+  n_mediators <- length(x@mediators)
+
+  # Compute indirect effect (product of all paths)
+  indirect <- x@a_path * prod(x@d_path) * x@b_path
+
+  cat("Serial mediation chain:\n")
+  cat(sprintf("  %s -> %s -> %s\n",
+              x@treatment,
+              paste(x@mediators, collapse = " -> "),
+              x@outcome))
+  cat("\n")
+
+  cat("Path coefficients:\n")
+  cat(sprintf("  a  (%s -> %s):       %8.4f\n", x@treatment, x@mediators[1], x@a_path))
+
+  # Print d paths
+  if (n_mediators == 2) {
+    cat(sprintf("  d  (%s -> %s):       %8.4f\n",
+                x@mediators[1], x@mediators[2], x@d_path))
+  } else {
+    for (i in seq_along(x@d_path)) {
+      path_label <- sprintf("d%d%d", i+1, i)
+      cat(sprintf("  %-3s (%s -> %s):  %8.4f\n",
+                  path_label,
+                  x@mediators[i], x@mediators[i+1],
+                  x@d_path[i]))
+    }
+  }
+
+  cat(sprintf("  b  (%s -> %s):       %8.4f\n",
+              x@mediators[n_mediators], x@outcome, x@b_path))
+  cat(sprintf("  c' (%s -> %s|M):     %8.4f\n", x@treatment, x@outcome, x@c_prime))
+  cat("\n")
+
+  cat("Indirect effect:\n")
+  if (n_mediators == 2) {
+    cat(sprintf("  a * d * b = %8.4f\n", indirect))
+  } else {
+    d_str <- paste0("d", seq(2, n_mediators), seq(1, n_mediators-1), collapse = " * ")
+    cat(sprintf("  a * %s * b = %8.4f\n", d_str, indirect))
+  }
+  cat("\n")
+
+  cat("Model info:\n")
+  cat(sprintf("  N mediators:    %d\n", n_mediators))
+  cat(sprintf("  N observations: %d\n", x@n_obs))
+  cat(sprintf("  Converged:      %s\n", ifelse(x@converged, "Yes", "No")))
+  cat(sprintf("  Source:         %s\n", x@source_package))
+
+  if (!is.null(x@sigma_mediators) || !is.null(x@sigma_y)) {
+    cat("\n")
+    cat("Residual SDs:\n")
+    if (!is.null(x@sigma_mediators)) {
+      for (i in seq_along(x@sigma_mediators)) {
+        cat(sprintf("  %s model: %8.4f\n", x@mediators[i], x@sigma_mediators[i]))
+      }
+    }
+    if (!is.null(x@sigma_y)) {
+      cat(sprintf("  Outcome model:  %8.4f\n", x@sigma_y))
+    }
+  }
+
+  invisible(x)
+}
+
+
+#' Summary Method for SerialMediationData
+#'
+#' @param object A SerialMediationData object
+#' @param ... Additional arguments (ignored)
+#' @noRd
+S7::method(summary, SerialMediationData) <- function(object, ...) {
+  n_mediators <- length(object@mediators)
+  indirect <- object@a_path * prod(object@d_path) * object@b_path
+
+  # Create named paths vector
+  paths <- c(a = object@a_path)
+
+  # Add d paths with appropriate names
+  if (n_mediators == 2) {
+    paths <- c(paths, d = object@d_path)
+  } else {
+    d_names <- paste0("d", seq(2, n_mediators), seq(1, n_mediators-1))
+    names(object@d_path) <- d_names
+    paths <- c(paths, object@d_path)
+  }
+
+  paths <- c(paths,
+             b = object@b_path,
+             c_prime = object@c_prime,
+             indirect = indirect)
+
+  structure(
+    list(
+      paths = paths,
+      mediators = object@mediators,
+      variables = c(
+        treatment = object@treatment,
+        outcome = object@outcome
+      ),
+      n_mediators = n_mediators,
+      n_obs = object@n_obs,
+      converged = object@converged,
+      source_package = object@source_package,
+      estimates = object@estimates,
+      vcov = object@vcov,
+      sigma_mediators = object@sigma_mediators,
+      sigma_y = object@sigma_y
+    ),
+    class = "summary.SerialMediationData"
+  )
+}
+
+
+#' Print Summary for SerialMediationData
+#'
+#' @param x A summary.SerialMediationData object
+#' @param ... Additional arguments (ignored)
+#' @export
+print.summary.SerialMediationData <- function(x, ...) {
+  cat("Summary of SerialMediationData\n")
+  cat("==============================\n\n")
+
+  cat("Serial Chain:\n")
+  cat(sprintf("  %s -> %s -> %s\n",
+              x$variables["treatment"],
+              paste(x$mediators, collapse = " -> "),
+              x$variables["outcome"]))
+  cat("\n")
+
+  cat("Path Coefficients:\n")
+  print(x$paths)
+  cat("\n")
+
+  cat("Mediators: ", paste(x$mediators, collapse = ", "), "\n")
+  cat("N mediators:", x$n_mediators, "\n")
+  cat("Sample Size:", x$n_obs, "\n")
+  cat("Converged:  ", ifelse(x$converged, "Yes", "No"), "\n")
+  cat("Source:     ", x$source_package, "\n")
+
+  if (!is.null(x$sigma_mediators) || !is.null(x$sigma_y)) {
+    cat("\nResidual Standard Deviations:\n")
+    if (!is.null(x$sigma_mediators)) {
+      for (i in seq_along(x$sigma_mediators)) {
+        cat(sprintf("  %s model: %8.4f\n", x$mediators[i], x$sigma_mediators[i]))
+      }
+    }
+    if (!is.null(x$sigma_y)) {
+      cat("  Outcome model:", x$sigma_y, "\n")
+    }
+  }
+
+  cat("\nParameter Estimates:\n")
+  print(x$estimates)
+
+  cat("\nVariance-Covariance Matrix:\n")
+  print(x$vcov)
+
+  invisible(x)
+}
+
+
+#' Show Method for SerialMediationData
+#'
+#' @param object A SerialMediationData object
+#' @noRd
+S7::method(show, SerialMediationData) <- function(object) {
   print(object)
 }

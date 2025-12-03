@@ -1,18 +1,11 @@
 # Package Initialization
 #
-# This file contains .onLoad() for dynamic S7/S4 dispatch registration
-# for suggested packages (lavaan, OpenMx)
+# This file contains .onLoad() and .onAttach() hooks for S7 method registration
 #
 # Note: S7 classes are registered with S4 in classes.R immediately after
-# their definitions to avoid loading order issues.
+# their definitions using S7::S4_register()
 
 .onLoad <- function(libname, pkgname) {
-  # Note: S7 classes are registered with S4 in classes.R using S7::S4_register()
-  # This happens immediately after class definitions during package loading.
-
-  # S7::methods_register() is called in .onAttach() instead of here
-  # because .onLoad() runs before R files are sourced, so classes don't exist yet.
-
   # Future: Register extraction methods for suggested packages
   # if (requireNamespace("lavaan", quietly = TRUE)) {
   #   lavaan_class <- S7::as_class(methods::getClass("lavaan", where = "lavaan"))
@@ -26,15 +19,21 @@
 
 .onAttach <- function(libname, pkgname) {
   # Register S7 methods for dispatch
-  # This is called AFTER R files are sourced, so classes are defined and registered
-  # Required for S7 methods on base R generics (print, summary, show) to work
-  # in installed package context
+  # CRITICAL: S7 requires methods_register() to be called when the package loads
+  # Unlike S3/S4, S7 uses dynamic run-time registration, not the NAMESPACE file
+  # This ensures print, summary, and other S7 methods work in installed packages
+  #
+  # MUST be in .onAttach() not .onLoad() because:
+  # - .onLoad() runs BEFORE R files are sourced (classes don't exist yet)
+  # - .onAttach() runs AFTER R files are sourced (classes are defined and registered)
+  #
+  # Wrapped in tryCatch because namespace may be locked during package installation
+  # In that case, methods are still available via S4_register() which happens in classes.R
 
-  # Wrap in tryCatch because namespace may be locked during devtools operations
   tryCatch(
     S7::methods_register(),
     error = function(e) {
-      # Silently fail if namespace is locked (e.g., during devtools::load_all)
+      # Silently fail if namespace is locked (e.g., during package installation)
       # Methods will still work via S4_register() in most contexts
       invisible(NULL)
     }
