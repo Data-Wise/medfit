@@ -148,9 +148,27 @@ fit_mediation <- function(formula_y,
                           family_y = stats::gaussian(),
                           family_m = stats::gaussian(),
                           ...) {
-  # This is a regular function, not an S7 generic
-  # Implementation will be in fit-glm.R and other engine files
-  stop("fit_mediation() not yet implemented. See planning/medfit-roadmap.md")
+  # Validate engine argument
+  engine <- match.arg(engine, choices = c("glm"))
+
+  # Dispatch to engine-specific implementation
+  switch(engine,
+    glm = .fit_mediation_glm(
+      formula_y = formula_y,
+      formula_m = formula_m,
+      data = data,
+      treatment = treatment,
+      mediator = mediator,
+      family_y = family_y,
+      family_m = family_m,
+      ...
+    ),
+    # Future engines will be added here:
+    # lmer = .fit_mediation_lmer(...),
+    # brms = .fit_mediation_brms(...),
+    stop("Engine '", engine, "' not implemented. Available: 'glm'",
+         call. = FALSE)
+  )
 }
 
 
@@ -260,13 +278,100 @@ bootstrap_mediation <- function(statistic_fn,
                                 method = c("parametric", "nonparametric", "plugin"),
                                 mediation_data = NULL,
                                 data = NULL,
-                                n_boot = 1000,
+                                n_boot = 1000L,
                                 ci_level = 0.95,
                                 parallel = FALSE,
                                 ncores = NULL,
                                 seed = NULL,
                                 ...) {
-  # This is a regular function, not an S7 generic
-  # Implementation will be in bootstrap.R
-  stop("bootstrap_mediation() not yet implemented. See planning/medfit-roadmap.md")
+  # Validate method argument
+  method <- match.arg(method)
+
+  # Set seed for reproducibility
+  if (!is.null(seed)) {
+    set.seed(seed)
+  }
+
+  # Validate statistic_fn
+  if (!is.function(statistic_fn)) {
+    stop("statistic_fn must be a function", call. = FALSE)
+  }
+
+  # Validate n_boot
+  if (!is.numeric(n_boot) || length(n_boot) != 1 || n_boot < 1) {
+    stop("n_boot must be a positive integer", call. = FALSE)
+  }
+  n_boot <- as.integer(n_boot)
+
+  # Validate ci_level
+  if (!is.numeric(ci_level) || length(ci_level) != 1 ||
+      ci_level <= 0 || ci_level >= 1) {
+    stop("ci_level must be a number between 0 and 1 (exclusive)",
+         call. = FALSE)
+  }
+
+  # Dispatch to appropriate method
+  result <- switch(method,
+    parametric = {
+      # Validate mediation_data is provided
+      if (is.null(mediation_data)) {
+        stop("mediation_data is required for parametric bootstrap",
+             call. = FALSE)
+      }
+      if (!inherits(mediation_data, "medfit::MediationData")) {
+        stop("mediation_data must be a MediationData object",
+             call. = FALSE)
+      }
+      .bootstrap_parametric(
+        mediation_data = mediation_data,
+        statistic_fn = statistic_fn,
+        n_boot = n_boot,
+        ci_level = ci_level,
+        parallel = parallel,
+        ncores = ncores
+      )
+    },
+
+    nonparametric = {
+      # Validate data is provided
+      if (is.null(data)) {
+        stop("data is required for nonparametric bootstrap",
+             call. = FALSE)
+      }
+      if (!is.data.frame(data)) {
+        stop("data must be a data frame", call. = FALSE)
+      }
+      .bootstrap_nonparametric(
+        data = data,
+        statistic_fn = statistic_fn,
+        n_boot = n_boot,
+        ci_level = ci_level,
+        parallel = parallel,
+        ncores = ncores
+      )
+    },
+
+    plugin = {
+      # Validate mediation_data is provided
+      if (is.null(mediation_data)) {
+        stop("mediation_data is required for plugin method",
+             call. = FALSE)
+      }
+      if (!inherits(mediation_data, "medfit::MediationData")) {
+        stop("mediation_data must be a MediationData object",
+             call. = FALSE)
+      }
+      .bootstrap_plugin(
+        mediation_data = mediation_data,
+        statistic_fn = statistic_fn
+      )
+    },
+
+    stop("Unknown method: ", method, call. = FALSE)
+  )
+
+  # Store call in result
+  result@call <- match.call()
+
+  result
 }

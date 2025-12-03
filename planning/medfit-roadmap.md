@@ -1,7 +1,7 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: Phase 3 Complete → Phase 4 (Model Fitting) | Post-MVP Design Complete
+**Status**: Phase 5 Complete → Phase 6 (Testing) & Phase 8 (Polish) | Post-MVP Design Complete
 **Timeline**: 4-6 weeks for MVP (Started December 2024)
 **Last Updated**: December 3, 2025
 
@@ -1875,13 +1875,15 @@ Integration is successful when:
 
 ---
 
-**Status**: ✅ Phase 3 Complete → Phase 4 (Model Fitting) Next
+**Status**: ✅ Phase 5 Complete → Phase 6 (Testing) & Phase 8 (Polish) Next
 
 **Completed**:
 - ✅ Phase 1: Package Setup
 - ✅ Phase 2: S7 Class Architecture (extended with SerialMediationData)
 - ✅ Phase 2.5: Comprehensive Quarto Documentation (4 vignettes, pkgdown website)
 - ✅ Phase 3: Model Extraction (lm/glm and lavaan methods implemented)
+- ✅ Phase 4: Model Fitting (fit_mediation with GLM engine)
+- ✅ Phase 5: Bootstrap Infrastructure (parametric, nonparametric, plugin methods)
 - ✅ Post-MVP Design: Brainstorming complete for Phases 7, 7b, 7c
 
 **Documentation Infrastructure**:
@@ -1890,12 +1892,8 @@ Integration is successful when:
 - ✅ Version dropdown added to navbar (Release/Dev toggle)
 
 **Current**:
-- ⏳ Phase 4: Model Fitting (fit_mediation with GLM engine)
-
-**Next (MVP)**:
-- Phase 5: Bootstrap Infrastructure
-- Phase 6: Extended Testing
-- Phase 8: Polish & Release
+- ⏳ Phase 6: Extended Testing
+- ⏳ Phase 8: Polish & Release
 
 **Post-MVP** (design complete, ready for implementation):
 - Phase 7: Interaction Support (VanderWeele four-way decomposition)
@@ -1911,5 +1909,5 @@ Integration is successful when:
   - Engine registration system designed
   - `engine_args = list(...)` for engine-specific options
 
-**Next Review**: After Phase 4 completion
+**Next Review**: After Phase 6/8 completion (MVP ready)
 **Last Updated**: 2025-12-03
