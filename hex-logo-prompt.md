@@ -5,12 +5,14 @@
 Create a professional hexagonal sticker logo for an R package called "medfit" with the following specifications:
 
 ### Shape & Format
+
 - Hexagonal shape (like a standard R package hex sticker)
 - Border: thick border in academic blue (#0054AD)
 - Background: clean white or very light gray (#F8F9FA)
 - Dimensions: 181px × 209px (standard R hex sticker ratio)
 
 ### Typography
+
 - Package name "medfit" at the bottom
 - Font: Modern, clean sans-serif (similar to Montserrat or Inter)
 - Color: Academic blue (#0054AD)
@@ -19,6 +21,7 @@ Create a professional hexagonal sticker logo for an R package called "medfit" wi
 ### Visual Design Concept (Choose ONE)
 
 **Option 1: Path Diagram**
+
 - Central icon showing a simple mediation path diagram
 - Three connected nodes: X → M → Y
 - Arrows connecting them in a triangular/path arrangement
@@ -27,6 +30,7 @@ Create a professional hexagonal sticker logo for an R package called "medfit" wi
 - Modern, clean lines
 
 **Option 2: Infrastructure Blueprint**
+
 - Abstract geometric representation of "infrastructure"
 - Overlapping shapes suggesting building blocks/foundation
 - Grid or blueprint aesthetic
@@ -34,6 +38,7 @@ Create a professional hexagonal sticker logo for an R package called "medfit" wi
 - Technical, architectural feel
 
 **Option 3: Data Flow**
+
 - Abstract flowing lines representing data transformation
 - Three distinct flow paths merging and connecting
 - Gradient effect with blues
@@ -41,25 +46,30 @@ Create a professional hexagonal sticker logo for an R package called "medfit" wi
 - Suggests "fitting" data through models
 
 ### Style Guidelines
+
 - **Aesthetic**: Academic, professional, modern, clean
 - **Avoid**: Overly complex designs, too many colors, clipart style
 - **Mood**: Trustworthy, scientific, precise, foundational
 - **Reference packages**: Look at tidyverse, ggplot2 hex stickers for style inspiration
 
 ### Color Palette
+
 - Primary: #0054AD (academic blue)
 - Secondary: #F8F9FA (light background)
 - Accent: #FFFFFF (white)
 - Optional: Lighter blue tints (#4A90E2, #7FB3E8) for gradients
 
 ### Technical Requirements
+
 - High resolution (at least 600 DPI for print)
 - Clean vector-style appearance
 - Transparent background outside hexagon
 - Professional quality suitable for package website and stickers
 
 ### Context
+
 medfit is the foundation package for a mediation analysis ecosystem in R. It provides:
+
 - Infrastructure for fitting mediation models
 - Path coefficient extraction
 - Bootstrap inference
