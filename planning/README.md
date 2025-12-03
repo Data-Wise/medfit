@@ -40,15 +40,16 @@ The package implements defensive programming best practices:
 - S7 validators for class-level type safety
 
 **Testing**:
-- testthat with 167+ tests
+- testthat with 184 tests (0 errors, 0 warnings, 1 skip)
 - covr for code coverage tracking
 - Snapshot testing for complex outputs
 
 **CI/CD** (GitHub Actions):
-- `R-CMD-check.yaml` - Multi-platform R CMD check
+- `R-CMD-check.yaml` - Multi-platform R CMD check (r-lib/actions standard)
 - `test-coverage.yaml` - Code coverage reporting to Codecov
 - `lint.yaml` - Static code analysis with lintr
 - `pkgdown.yaml` - Website deployment
+- `dependabot.yml` - Automated GitHub Actions updates
 
 **Code Style**:
 - `.lintr` configuration for consistent style enforcement

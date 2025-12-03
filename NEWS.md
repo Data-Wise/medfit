@@ -62,6 +62,7 @@
   - `lint.yaml` for static code analysis with lintr
   - pkgdown deployment with Quarto rendering
   - Test coverage tracking with Codecov
+  - Dependabot for automated GitHub Actions updates
 
 * **pkgdown Website**: https://data-wise.github.io/medfit/
   - Bootstrap 5 with Flatly theme
