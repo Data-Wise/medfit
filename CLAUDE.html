@@ -264,6 +264,68 @@
 <li>S7 method dispatch works automatically after <code><a href="https://rconsortium.github.io/S7/reference/S4_register.html" class="external-link">S7::S4_register()</a></code> calls</li>
 <li>Always call <code>S7::S4_register(ClassName)</code> immediately after each class definition</li>
 </ul></li>
+</ol><p><strong>S7 and S3 Class Integration:</strong></p>
+<p>When working with S3 classes in S7 packages, follow this guide:</p>
+<ol style="list-style-type: decimal"><li>
+<p><strong>Mandatory Package Setup</strong>: Call <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code> in <code>.onLoad()</code></p>
+<ul><li>Required for dynamic method registration</li>
+<li>Especially important for methods on generics from other packages</li>
+<li>
+<strong>Note</strong>: In medfit, this causes errors during package load because classes aren’t defined yet</li>
+<li>Our approach: rely on <code><a href="https://rconsortium.github.io/S7/reference/S4_register.html" class="external-link">S7::S4_register()</a></code> immediately after class definitions</li>
+</ul></li>
+<li>
+<p><strong>Formalizing S3 Classes</strong>: Use <code>new_S3_class()</code> to wrap S3 classes</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Register method for S3 class</span></span>
+<span><span class="fu">method</span><span class="op">(</span><span class="va">my_generic</span>, <span class="fu">new_S3_class</span><span class="op">(</span><span class="st">"data.frame"</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="va">...</span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># Use in property definitions</span></span>
+<span><span class="va">MyClass</span> <span class="op">&lt;-</span> <span class="fu">new_class</span><span class="op">(</span><span class="st">"MyClass"</span>,</span>
+<span>  properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="fu">new_S3_class</span><span class="op">(</span><span class="st">"data.frame"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Use in unions</span></span>
+<span><span class="va">my_union</span> <span class="op">&lt;-</span> <span class="fu">new_union</span><span class="op">(</span><span class="va">class_numeric</span>, <span class="fu">new_S3_class</span><span class="op">(</span><span class="st">"Date"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Built-in S3 wrappers</strong>: S7 provides <code>class_data.frame</code>, <code>class_Date</code>, <code>class_factor</code>, etc.</p>
+</li>
+<li>
+<p><strong>Inheriting from S3 Classes</strong>: Requires custom constructor</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># When inheriting from S3 via parent argument</span></span>
+<span><span class="va">MyS7Class</span> <span class="op">&lt;-</span> <span class="fu">new_class</span><span class="op">(</span><span class="st">"MyS7Class"</span>,</span>
+<span>  parent <span class="op">=</span> <span class="fu">new_S3_class</span><span class="op">(</span><span class="st">"integer"</span>,</span>
+<span>    constructor <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">.data</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="co"># .data must be first argument</span></span>
+<span>      <span class="co"># Add S3 class attributes</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</li>
+<li>
+<p><strong>Calling Parent S3 Methods</strong>: Use <code>S7_data()</code>, not <code>super()</code></p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># INCORRECT - S3 generics don't understand super()</span></span>
+<span><span class="fu">method</span><span class="op">(</span><span class="va">print</span>, <span class="va">MyClass</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">super</span><span class="op">(</span><span class="va">x</span>, <span class="va">print</span><span class="op">)</span>  <span class="co"># FAILS</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># CORRECT - Extract underlying S3 object</span></span>
+<span><span class="fu">method</span><span class="op">(</span><span class="va">print</span>, <span class="va">MyClass</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu">S7_data</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>  <span class="co"># Dispatches to S3 print method</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+</li>
+<li>
+<p><strong>Migrating S3 Packages to S7</strong>: Incremental approach</p>
+<ul><li>Add <code><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">S7::methods_register()</a></code> to <code>.onLoad()</code>
+</li>
+<li>Wrap existing S3 classes with <code>new_S3_class()</code>
+</li>
+<li>Gradually replace informal S3 with formal <code>new_class()</code> definitions</li>
+<li>Existing S3 code continues to work because S7 objects retain S3 class attribute</li>
+</ul></li>
 </ol></div>
 <div class="section level3">
 <h3 id="core-function-hierarchy">Core Function Hierarchy<a class="anchor" aria-label="anchor" href="#core-function-hierarchy"></a></h3>
@@ -307,7 +369,7 @@
 <div class="section level3">
 <h3 id="explicit-namespacing">Explicit Namespacing<a class="anchor" aria-label="anchor" href="#explicit-namespacing"></a></h3>
 <p><strong>CRITICAL</strong>: All non-base functions MUST use explicit namespacing:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># CORRECT</span></span>
 <span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">formula</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
 <span><span class="fu">MASS</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html" class="external-link">mvrnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">mu</span>, <span class="va">Sigma</span><span class="op">)</span></span>
@@ -368,7 +430,7 @@
 <div class="section level3">
 <h3 id="dynamic-s7s4-dispatch">Dynamic S7/S4 Dispatch<a class="anchor" aria-label="anchor" href="#dynamic-s7s4-dispatch"></a></h3>
 <p>For S4 classes from suggested packages (lavaan, OpenMx):</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># In R/zzz.R</span></span>
 <span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">libname</span>, <span class="va">pkgname</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># Register lavaan method if available</span></span>
