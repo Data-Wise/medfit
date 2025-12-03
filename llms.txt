@@ -1,5 +1,12 @@
 # medfit: Infrastructure for Mediation Analysis in R
 
+[![R-CMD-check](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml)
+[![Codecov](https://codecov.io/gh/data-wise/medfit/graph/badge.svg)](https://codecov.io/gh/data-wise/medfit)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Repo
+Status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+
 ## Overview
 
 **medfit** provides unified S7-based infrastructure for fitting
