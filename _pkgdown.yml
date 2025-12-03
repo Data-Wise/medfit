@@ -4,6 +4,8 @@ template:
   bootstrap: 5
   bootswatch: litera
   math-rendering: mathjax
+  includes:
+    in_header: pkgdown/mathjax-config.html
   bslib:
     # A deeper, more "academic" blue for primary actions
     primary: "#0054AD"

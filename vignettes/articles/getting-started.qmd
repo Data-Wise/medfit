@@ -19,7 +19,8 @@ execute:
 
 ### Create a Mediation Data Object
 
-```{r create-med}
+```{r}
+#| label: create-med
 # Simple mediation: X -> M -> Y
 med_data <- MediationData(
   a_path = 0.5,           # X -> M effect
@@ -41,7 +42,8 @@ print(med_data)
 
 ### Compute Indirect Effect
 
-```{r indirect}
+```{r}
+#| label: indirect
 # Indirect effect = a * b
 med_data@a_path * med_data@b_path
 ```
@@ -50,7 +52,8 @@ med_data@a_path * med_data@b_path
 
 For serial mediation (X -> M1 -> M2 -> Y):
 
-```{r serial}
+```{r}
+#| label: serial
 serial_data <- SerialMediationData(
   a_path = 0.4,           # X -> M1
   d_path = 0.5,           # M1 -> M2

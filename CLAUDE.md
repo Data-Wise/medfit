@@ -96,6 +96,73 @@ The package uses pkgdown to generate a website from package documentation. Confi
 - Use `starts_with()` patterns for methods (print*, summary*, etc.)
 - Website builds to `docs/` directory
 
+**MathJax and LaTeX Equations:**
+
+Equation syntax differs by context. Use the correct format for each file type:
+
+| Context | File Format | Inline Syntax | Display Syntax |
+|---------|-------------|---------------|----------------|
+| **Function Docs** | `.Rd` / roxygen2 | `\eqn{latex}{ascii}` | `\deqn{latex}{ascii}` |
+| **Vignettes/Articles** | `.qmd` (Quarto) | `$equation$` | `$$equation$$` |
+| **Vignettes/Articles** | `.Rmd` (R Markdown) | `$equation$` | `$$equation$$` |
+
+### 1. Function Documentation (roxygen2 / .Rd files)
+
+Use Rd macros for help pages (`?function`):
+
+```r
+#' The indirect effect is \eqn{a \times b}{a * b}
+#'
+#' Sampling distribution:
+#' \deqn{N(\hat{\theta}, \hat{\Sigma})}{N(theta-hat, Sigma-hat)}
+```
+
+**Rules:**
+- `\eqn{latex}{ascii}` - inline (two arguments: LaTeX + ASCII fallback)
+- `\deqn{latex}{ascii}` - display/block math
+- Single argument form: `\eqn{latex}` uses same text for both
+- **No whitespace** between command and arguments!
+- R 4.2+ supports MathJax/KaTeX rendering in HTML help pages
+
+### 2. Quarto Vignettes/Articles (.qmd files)
+
+Use standard LaTeX with dollar signs:
+
+```markdown
+The indirect effect is $a \times b$ where $a$ is the X->M path.
+
+The sampling distribution is:
+$$\hat{\theta} \sim N(\theta, \Sigma)$$
+```
+
+### 3. pkgdown Configuration
+
+Enable MathJax in `_pkgdown.yml`:
+
+```yaml
+template:
+  bootstrap: 5
+  math-rendering: mathjax
+```
+
+### 4. Common LaTeX Symbols
+
+| Category | Code | Rendered |
+|----------|------|----------|
+| Greek letters | `\alpha`, `\beta`, `\theta`, `\Sigma` | $\alpha$, $\beta$, $\theta$, $\Sigma$ |
+| Hats/accents | `\hat{x}`, `\bar{x}`, `\tilde{x}` | $\hat{x}$, $\bar{x}$, $\tilde{x}$ |
+| Subscripts/superscripts | `x_i`, `x^2` | $x_i$, $x^2$ |
+| Fractions | `\frac{a}{b}` | $\frac{a}{b}$ |
+| Operators | `\times`, `\cdot`, `\sum`, `\prod` | $\times$, $\cdot$, $\sum$, $\prod$ |
+
+### 5. Avoid Unicode Math Characters
+
+In `.Rd` files and roxygen2 comments:
+- **DON'T use**: `θ`, `Σ`, `θ̂` (causes LaTeX PDF errors)
+- **DO use**: `\eqn{\theta}`, `\eqn{\Sigma}`, `\eqn{\hat{\theta}}`
+
+In `.qmd` files, Unicode is acceptable but LaTeX is preferred for consistency.
+
 **Quarto Vignettes and pkgdown Workflow:**
 
 To ensure Quarto vignettes pass workflow checks and render correctly on GitHub:
@@ -123,7 +190,45 @@ To ensure Quarto vignettes pass workflow checks and render correctly on GitHub:
    - Vignettes appear in the `articles/` section of the website
    - No special configuration needed for basic Quarto files
 
-4. **Computationally Expensive Vignettes:**
+4. **Quarto Code Chunk Format (PREFERRED):**
+
+   Use Quarto's hash-pipe (`#|`) syntax for chunk options, NOT R Markdown inline syntax:
+
+   **CORRECT (Quarto format):**
+   ````markdown
+   ```{r}
+   #| label: my-chunk
+   #| eval: false
+   #| echo: true
+   x <- 1 + 1
+   ```
+   ````
+
+   **INCORRECT (R Markdown format):**
+   ````markdown
+   ```{r my-chunk, eval=FALSE, echo=TRUE}
+   x <- 1 + 1
+   ```
+   ````
+
+   **Key differences:**
+   - Chunk label: `#| label: chunk-name` (not `{r chunk-name}`)
+   - Options on separate lines with `#|` prefix
+   - Boolean values: `true`/`false` (not `TRUE`/`FALSE`)
+   - Use hyphens in labels: `my-chunk` (not `my_chunk`)
+
+   **Common chunk options:**
+   ```yaml
+   #| label: chunk-name
+   #| eval: false
+   #| echo: true
+   #| warning: false
+   #| message: false
+   #| fig-width: 8
+   #| fig-height: 6
+   ```
+
+5. **Computationally Expensive Vignettes:**
    - If vignette code is slow or requires credentials, use **Articles** instead:
      ```r
      usethis::use_article("article-name")
@@ -132,13 +237,13 @@ To ensure Quarto vignettes pass workflow checks and render correctly on GitHub:
    - Prevents timeouts and failures on CI servers
    - Use for: heavy simulations, API examples requiring keys, large data processing
 
-5. **Common Workflow Failures:**
+6. **Common Workflow Failures:**
    - **Missing system libraries**: Ensure system dependencies are available on CI runner
    - **Malformed markdown**: Use consistent header levels (`#`, `##`) in NEWS.md
    - **Branch permissions**: Workflow needs write access to `gh-pages` branch
    - **Missing dependencies**: Check that all packages used in vignettes are in DESCRIPTION
 
-6. **Workflow Checklist:**
+7. **Workflow Checklist:**
    - [ ] Run `usethis::use_pkgdown_github_pages()` for initial setup
    - [ ] Add vignette dependencies to DESCRIPTION `Suggests` or `Config/Needs/website`
    - [ ] Convert heavy vignettes to Articles with `usethis::use_article()`

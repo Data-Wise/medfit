@@ -68,7 +68,7 @@ plugin methods.
 
 \strong{Parametric Bootstrap} (\code{method = "parametric"}):
 \itemize{
-\item Samples parameter vectors from \eqn{N(\hat{\theta}, \hat{\Sigma})}
+\item Samples parameter vectors from \eqn{N(\hat{\theta}, \hat{\Sigma})}{N(theta-hat, Sigma-hat)}
 \item Fast and efficient
 \item Assumes asymptotic normality of parameters
 \item Recommended for most applications with n > 50
