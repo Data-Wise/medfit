@@ -86,8 +86,25 @@
 <li><label><input type="checkbox">Phase 7: Polish &amp; release</label></li>
 </ul></div>
 <div class="section level4">
+<h4 id="documentation-improvements-development-version">Documentation Improvements<a class="anchor" aria-label="anchor" href="#documentation-improvements-development-version"></a></h4>
+<ul><li>
+<strong>S7 Class Documentation</strong>: Added explicit <code>@param</code> tags for all class properties</li>
+<li>
+<strong>S7 Method Documentation</strong>: Updated to use <code>@noRd</code> to prevent namespace export issues</li>
+<li>
+<strong>Generic Documentation</strong>: Fixed <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> to only document generic parameters</li>
+<li>
+<strong>CLAUDE.md</strong>: Added comprehensive S7 documentation patterns section for future reference</li>
+</ul></div>
+<div class="section level4">
 <h4 id="known-issues-development-version">Known Issues<a class="anchor" aria-label="anchor" href="#known-issues-development-version"></a></h4>
-<ul><li>S7 method dispatch in installed package context (R CMD check) needs investigation</li>
+<ul><li>
+<strong>S7 Method Dispatch</strong>: Print/summary methods don’t work properly in installed package context
+<ul><li>Tests skip in non-interactive mode (5 tests affected)</li>
+<li>Methods work correctly when using <code>devtools::load_all()</code>
+</li>
+<li>Related to S7 method registration in installed packages</li>
+</ul></li>
 <li>
 <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> and <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> are stubs awaiting implementation</li>
 <li>

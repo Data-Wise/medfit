@@ -47,6 +47,10 @@ contribution.
 
 ## Common Development Commands
 
+**Preferred Tools**: Use `devtools` and `usethis` packages for all R
+package development tasks. These provide convenient wrappers and best
+practices for package development workflows.
+
 ### Package Building and Checking
 
 ``` r
@@ -171,6 +175,70 @@ The package uses S7 for type-safe, modern object-oriented programming.
     Perform bootstrap inference
     - Methods: parametric, nonparametric, plugin
     - Returns: `BootstrapResult` object
+
+**S7 Documentation Patterns:**
+
+When documenting S7 classes and methods with roxygen2:
+
+1.  **S7 Class Constructors**: Use explicit `@param` tags for all
+    properties
+
+    ``` r
+    #' MediationData S7 Class
+    #'
+    #' @description
+    #' S7 class containing standardized mediation model structure
+    #'
+    #' @param a_path Numeric scalar: effect of treatment on mediator
+    #' @param b_path Numeric scalar: effect of mediator on outcome
+    #' # ... document ALL properties explicitly
+    #'
+    #' @return A MediationData S7 object
+    #' @export
+    MediationData <- S7::new_class(...)
+    ```
+
+2.  **S7 Methods**: Use `@noRd` to prevent namespace export issues
+
+    ``` r
+    #' Print Method for MediationData
+    #'
+    #' @param x A MediationData object
+    #' @param ... Additional arguments (ignored)
+    #' @noRd
+    S7::method(print, MediationData) <- function(x, ...) { ... }
+    ```
+
+    **Important**:
+
+    - Do NOT use `@export` for S7 methods (causes namespace errors)
+    - Do NOT use `@name` tag (causes duplicate .Rd files)
+    - Use `@noRd` to document internally without generating .Rd files
+    - S7 methods work via automatic dispatch, not namespace exports
+
+3.  **S7 Generics**: Only document generic parameters, not
+    method-specific ones
+
+    ``` r
+    #' Extract Mediation Structure
+    #'
+    #' @param object Fitted model object
+    #' @param ... Additional arguments passed to methods. Common arguments include:
+    #'   - `treatment`: Character string (document in prose, not as @param)
+    #'   - `mediator`: Character string (document in prose, not as @param)
+    #' @export
+    extract_mediation <- S7::new_generic("extract_mediation", dispatch_args = "object")
+    ```
+
+4.  **Testing S7 Methods**: Method dispatch may not work in installed
+    package context
+
+    ``` r
+    test_that("MediationData print method works", {
+      skip_if_not(interactive(), "S7 method dispatch issue in non-interactive mode")
+      # ... test code
+    })
+    ```
 
 ### Core Function Hierarchy
 
