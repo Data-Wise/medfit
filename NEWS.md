@@ -51,11 +51,11 @@
 
 ### Infrastructure
 
-* **Testing**: 167+ comprehensive tests
+* **Testing**: 184 comprehensive tests (0 errors, 0 warnings, 1 skip)
   - Full coverage of simple and serial mediation S7 classes
   - Validation tests ensure data integrity across all mediation types
   - Tests updated for checkmate error message format
-  - 4 tests skipped in non-interactive mode (S7 dispatch investigation)
+  - 1 skip: cannot test lavaan-not-installed path when lavaan is installed
 
 * **CI/CD**: GitHub Actions workflows with Quarto support
   - R-CMD-check on Ubuntu (release, devel, oldrel-1), macOS, Windows
@@ -99,6 +99,8 @@
   - Call `S7::S4_register()` for each class BEFORE `methods_register()`
   - Import full `methods` package (not just `@importFrom methods is`)
   - Per official S7 documentation: https://rconsortium.github.io/S7/articles/packages.html
+  - SerialMediationData print/summary methods now work in installed package context
+  - Removed 4 previously skipped tests (now all passing)
 * **LICENSE**: Added `+ file LICENSE` to DESCRIPTION to properly reference LICENSE file
 * **Codoc warnings**: Suppressed S7 constructor codoc checks with `--no-codoc` argument
   - S7-generated constructor defaults have whitespace formatting differences
@@ -106,9 +108,6 @@
 
 ### Known Issues
 
-* **S7 Method Dispatch for SerialMediationData**: Print/summary methods need investigation for installed package context
-  - 4 tests skip in non-interactive mode
-  - Methods work correctly with `devtools::load_all()`
 * `fit_mediation()` and `bootstrap_mediation()` are stubs awaiting implementation
 
 ### Internal
