@@ -39,7 +39,7 @@ probmed (v0.1.0)
 └── Location: ../probmed/
 
 RMediation (v1.4.0)
-├── Uses: medfit extraction (lavaan, OpenMx)
+├── Uses: medfit extraction (lavaan; OpenMx postponed)
 ├── Adds: DOP, MBCO, MC methods
 ├── Status: ✅ Stable on CRAN
 └── Location: ../rmediation/
@@ -347,5 +347,7 @@ ci(extract, type = "dop", ...)  # RMediation-specific
 
 ---
 
-**Last Updated**: 2025-12-02
+**Last Updated**: 2025-12-03
 **Next Review**: After medfit MVP completion
+
+**Note**: OpenMx integration has been postponed to a future release. MVP focuses on lm/glm and lavaan extraction.

@@ -306,7 +306,6 @@ R/
 ├── fit-glm.R              # GLM engine implementation
 ├── extract-lm.R           # lm/glm extraction
 ├── extract-lavaan.R       # lavaan extraction
-├── extract-openmx.R       # OpenMx extraction (if included)
 ├── bootstrap.R            # Bootstrap infrastructure
 ├── utils.R                # Utility functions
 └── zzz.R                  # .onLoad() for dynamic dispatch
@@ -622,8 +621,10 @@ While S7 and S3 are fully compatible, S7 and S4 have specific interoperability f
 **Suggested:**
 - **MASS**: `mvrnorm()` for parametric bootstrap
 - **lavaan**: SEM model extraction
-- **OpenMx**: SEM model extraction
 - **lme4**: Mixed models (future)
+
+**Future Consideration:**
+- **OpenMx**: SEM model extraction (postponed to future release)
 
 ### Explicit Namespacing
 
@@ -742,7 +743,7 @@ All `extract_mediation()` methods follow this pattern:
 
 ### Dynamic S7/S4 Dispatch
 
-For S4 classes from suggested packages (lavaan, OpenMx):
+For S4 classes from suggested packages (e.g., lavaan):
 
 ```r
 # In R/zzz.R
@@ -753,10 +754,7 @@ For S4 classes from suggested packages (lavaan, OpenMx):
     S7::method(extract_mediation, lavaan_class) <- extract_mediation_lavaan
   }
 
-  # Register OpenMx method if available
-  if (requireNamespace("OpenMx", quietly = TRUE)) {
-    # Similar pattern
-  }
+  # Note: OpenMx integration postponed to future release
 }
 ```
 
@@ -1008,5 +1006,5 @@ If bootstrap is slow:
 
 ---
 
-**Last Updated**: 2025-12-02
+**Last Updated**: 2025-12-03
 **Maintained by**: medfit development team

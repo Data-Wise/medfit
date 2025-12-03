@@ -40,7 +40,7 @@
 #'
 #' @details
 #' This class provides a unified container for mediation model information
-#' extracted from various model types (lm, glm, lavaan, OpenMx, etc.).
+#' extracted from various model types (lm, glm, lavaan, etc.).
 #' It ensures consistency across the mediation analysis ecosystem.
 #'
 #' The class includes comprehensive validation to ensure data integrity.

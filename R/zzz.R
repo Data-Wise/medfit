@@ -12,9 +12,7 @@
   #   S7::method(extract_mediation, lavaan_class) <- extract_mediation_lavaan
   # }
   #
-  # if (requireNamespace("OpenMx", quietly = TRUE)) {
-  #   # Similar pattern for OpenMx
-  # }
+  # Note: OpenMx integration postponed to future release
 }
 
 .onAttach <- function(libname, pkgname) {

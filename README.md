@@ -11,7 +11,7 @@
 
 ### Key Features
 
-- **Unified Model Extraction**: Extract mediation structure from various model types (lm, glm, lavaan, OpenMx)
+- **Unified Model Extraction**: Extract mediation structure from various model types (lm, glm, lavaan)
 - **Flexible Model Fitting**: Fit mediation models using different engines (GLM, with future support for mixed models and Bayesian methods)
 - **Robust Bootstrap Inference**: Three bootstrap methods (parametric, nonparametric, plugin) with parallel processing support
 - **Type-Safe S7 Classes**: Modern object-oriented design ensuring data integrity
@@ -116,7 +116,7 @@ print(result)
 ### Main Functions
 
 - **`extract_mediation()`**: Extract mediation structure from fitted models
-  - Methods for: lm, glm, lavaan (OpenMx coming soon)
+  - Methods for: lm, glm, lavaan
 
 - **`fit_mediation()`**: Fit mediation models with formula interface
   - Engines: GLM (lmer, brms coming soon)

@@ -36,11 +36,13 @@
 **Suggests**:
 - MASS (for mvrnorm in parametric bootstrap)
 - lavaan (>= 0.6-0) - SEM extraction
-- OpenMx (>= 2.13) - SEM extraction
 - lme4 (future - mixed models)
 - testthat (>= 3.0.0)
 - knitr
 - rmarkdown
+
+**Future Consideration**:
+- OpenMx (>= 2.13) - SEM extraction (postponed for future release)
 
 ---
 
@@ -89,11 +91,12 @@ R/
 ├── fit-glm.R              # GLM fitting methods
 ├── extract-lm.R           # lm/glm extraction
 ├── extract-lavaan.R       # lavaan extraction
-├── extract-openmx.R       # OpenMx extraction
 ├── bootstrap.R            # Bootstrap infrastructure
 ├── utils.R                # Utility functions
 └── zzz.R                  # .onLoad() for dynamic dispatch
 ```
+
+**Note**: OpenMx extraction (`extract-openmx.R`) postponed for future release.
 
 **Deliverables**:
 - Clean package skeleton
@@ -379,10 +382,16 @@ extract_mediation_lavaan <- function(object, treatment, mediator,
 }
 ```
 
-### 3.4 Method: OpenMx
+### 3.4 Method: OpenMx (POSTPONED)
 
-**Source**: Extract patterns from RMediation (if available)
+**Status**: Postponed for future release
 
+OpenMx integration has been deferred to a future version. Reasons:
+- Complexity of OpenMx model structure
+- Focus MVP on lm/glm and lavaan extraction
+- OpenMx can be added in a future release when needed
+
+**Future Implementation** (when added):
 ```r
 #' @export
 S7::method(extract_mediation, openmx_class) <- function(object,
@@ -395,13 +404,11 @@ S7::method(extract_mediation, openmx_class) <- function(object,
 }
 ```
 
-**Note**: May defer OpenMx to Phase 3 if complex
-
-**Deliverables**:
+**Deliverables** (MVP scope revised):
 - `extract_mediation()` generic
 - Methods for lm/glm (required)
 - Method for lavaan (required)
-- Method for OpenMx (nice-to-have)
+- ~~Method for OpenMx~~ (postponed to future release)
 - Comprehensive tests
 - Examples in documentation
 
@@ -947,7 +954,7 @@ Integration is successful when:
 1. **Should we include OpenMx extraction in MVP?**
    - Pro: RMediation uses it
    - Con: Adds complexity
-   - **Decision**: Include if straightforward, defer if complex
+   - **Decision**: ~~Include if straightforward, defer if complex~~ **RESOLVED: Postponed to future release**. Focus MVP on lm/glm and lavaan.
 
 2. **Should MVP include parallel bootstrap?**
    - Pro: Performance benefit
@@ -977,4 +984,4 @@ Integration is successful when:
 - Phase 6: Extended Testing
 - Phase 7: Polish & Release
 **Next Review**: After Phase 2 completion (S7 classes)
-**Last Updated**: 2025-12-02
+**Last Updated**: 2025-12-03
