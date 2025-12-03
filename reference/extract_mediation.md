@@ -19,15 +19,13 @@ extract_mediation(object, ...)
 
 - ...:
 
-  Additional arguments passed to methods
+  Additional arguments passed to methods. Common arguments include:
 
-- treatment:
+  - `treatment`: Character string specifying treatment variable name
 
-  Character string: name of treatment variable
+  - `mediator`: Character string specifying mediator variable name
 
-- mediator:
-
-  Character string: name of mediator variable
+  - Method-specific arguments (see individual method documentation)
 
 ## Value
 
