@@ -26,7 +26,7 @@ home:
     coefficients, and performing bootstrap inference. Foundation package for
     the mediation analysis ecosystem.
   sidebar:
-    structure: [dev, links, license, citation, authors]
+    structure: [links, license, citation, authors]
   links:
   - text: "Source Code"
     href: https://github.com/data-wise/medfit
