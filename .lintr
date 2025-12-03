@@ -5,4 +5,4 @@ linters: linters_with_defaults(
 exclusions: list(
     "inst/doc"
   )
-encoding: UTF-8
+encoding: "UTF-8"
