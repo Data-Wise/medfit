@@ -72,18 +72,12 @@ navbar:
       href: news/index.html
     version:
       icon: fas fa-code-branch
+      href: "#"
+      aria-label: "Switch version"
       menu:
-      - text: "
-          <span class='pkgdown-release'>
-            <i class='fas fa-tag'></i> Release (stable)
-          </span>
-          <span class='pkgdown-devel'>
-            <i class='fas fa-code-branch'></i> Development
-          </span>"
-      - text: "─────────────"
-      - text: "<i class='fas fa-tag'></i> Release version"
+      - text: "Release (stable)"
         href: https://data-wise.github.io/medfit/
-      - text: "<i class='fas fa-code-branch'></i> Dev version"
+      - text: "Development"
         href: https://data-wise.github.io/medfit/dev/
     github:
       icon: fab fa-github fa-lg

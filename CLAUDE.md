@@ -125,6 +125,54 @@ The package uses pkgdown to generate a website from package documentation. Confi
 - Don't include `dev` in `home.sidebar.structure` in `_pkgdown.yml` if you want badges in main content
 - Current sidebar structure: `[links, license, citation, authors]`
 
+**Development Mode and Version Switcher:**
+
+pkgdown supports separate websites for released and development versions.
+
+**Current configuration** in `_pkgdown.yml`:
+```yaml
+development:
+  mode: auto           # Automatic dev/release detection
+  version_label: default
+  version_tooltip: "Development version"
+```
+
+**How `mode: auto` works:**
+- Checks version in DESCRIPTION (e.g., `0.1.0` vs `0.1.0.9000`)
+- Released versions → built to `docs/` (site root)
+- Dev versions (with `.9000`) → built to `docs/dev/`
+- Users can access dev docs at `/dev/` subdirectory
+
+**Version switcher dropdown:**
+A custom navbar component provides links to switch versions:
+```yaml
+navbar:
+  structure:
+    right: [search, version, github]
+  components:
+    version:
+      icon: fas fa-code-branch
+      href: "#"
+      aria-label: "Switch version"
+      menu:
+      - text: "Release (stable)"
+        href: https://data-wise.github.io/medfit/
+      - text: "Development"
+        href: https://data-wise.github.io/medfit/dev/
+```
+
+**Note**: pkgdown escapes HTML in menu items, so complex styling with `<span>` tags won't work. Use plain text for menu items.
+
+**Selective content display** (in .Rmd/.qmd files):
+```html
+<div class="pkgdown-release">
+Only visible on release site
+</div>
+<div class="pkgdown-devel">
+Only visible on dev site
+</div>
+```
+
 **MathJax and LaTeX Equations:**
 
 Equation syntax differs by context. Use the correct format for each file type:
