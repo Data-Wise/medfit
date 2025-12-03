@@ -72,17 +72,17 @@
 
 ### Development Status
 
-**Current Phase**: Phase 3 Complete
-**Next**: Phase 4 (Model Fitting)
+**Current Phase**: Phase 3 Complete → Phase 4 In Progress
+**Next**: Complete Phase 4 (Model Fitting), then Phase 5 (Bootstrap)
 
-* [x] Phase 1: Package setup
-* [x] Phase 2: S7 class architecture (simple + serial mediation)
-* [x] Phase 2.5: Comprehensive Quarto documentation
-* [x] Phase 3: Model extraction (lm/glm, lavaan)
-* [ ] Phase 4: Model fitting (in progress)
-* [ ] Phase 5: Bootstrap infrastructure
-* [ ] Phase 6: Extended testing
-* [ ] Phase 7: Polish & release
+* [x] Phase 1: Package setup (CI/CD, documentation, Dependabot)
+* [x] Phase 2: S7 class architecture (MediationData, SerialMediationData, BootstrapResult)
+* [x] Phase 2.5: Comprehensive Quarto documentation (4 vignettes, pkgdown website)
+* [x] Phase 3: Model extraction (lm/glm, lavaan methods, 184 tests)
+* [ ] Phase 4: Model fitting (stub implemented, GLM engine needed)
+* [ ] Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
+* [ ] Phase 6: Extended testing (edge cases, integration)
+* [ ] Phase 8: Polish & release (R CMD check, CRAN prep)
 
 ### Documentation Improvements
 

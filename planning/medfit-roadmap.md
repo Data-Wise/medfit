@@ -1,9 +1,9 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: Phase 2 Complete + Documentation → Phase 3 (Model Extraction)
+**Status**: Phase 3 Complete → Phase 4 (Model Fitting)
 **Timeline**: 4-6 weeks for MVP (Started December 2024)
-**Last Updated**: December 2, 2025
+**Last Updated**: December 3, 2025
 
 ---
 
@@ -303,9 +303,11 @@ S7::method(show, BootstrapResult) <- function(object) print(object)
 
 ---
 
-## Phase 3: Model Extraction API (Week 2) 🚧 IN PROGRESS
+## Phase 3: Model Extraction API (Week 2) ✅ COMPLETE
 
 **Goal**: Implement `extract_mediation()` generic and core methods
+
+**Status**: All extraction methods implemented and tested with comprehensive documentation.
 
 ### 3.1 Generic Definition
 
@@ -405,20 +407,23 @@ S7::method(extract_mediation, openmx_class) <- function(object,
 ```
 
 **Deliverables** (MVP scope revised):
-- `extract_mediation()` generic
-- Methods for lm/glm (required)
-- Method for lavaan (required)
+- [x] `extract_mediation()` generic
+- [x] Methods for lm/glm (required)
+- [x] Method for lavaan (required)
 - ~~Method for OpenMx~~ (postponed to future release)
-- Comprehensive tests
-- Examples in documentation
+- [x] Comprehensive tests (184 tests passing)
+- [x] Examples in documentation
+- [x] Vignette: Model Extraction
 
-**Time**: 3-4 days
+**Time**: 3-4 days (completed)
 
 ---
 
-## Phase 4: Model Fitting API (Week 2-3)
+## Phase 4: Model Fitting API (Week 2-3) 🚧 IN PROGRESS
 
 **Goal**: Implement `fit_mediation()` for GLM engine
+
+**Status**: Generic defined with stub implementation. Needs GLM engine implementation.
 
 ### 4.1 Generic Definition
 
@@ -498,10 +503,12 @@ fit_mediation <- function(...) {
 ```
 
 **Deliverables**:
-- `fit_mediation()` function
-- GLM engine implementation
-- Comprehensive tests
-- Documentation with examples
+- [x] `fit_mediation()` function (stub)
+- [ ] GLM engine implementation (`R/fit-glm.R`)
+- [ ] Formula validation
+- [ ] Comprehensive tests
+- [ ] Documentation with examples
+- [ ] Update vignettes
 
 **Time**: 2-3 days
 
@@ -1875,21 +1882,21 @@ Integration is successful when:
 
 ---
 
-**Status**: ✅ Phase 3 Complete → Phase 4 (Model Fitting) Next
+**Status**: ✅ Phase 3 Complete → 🚧 Phase 4 (Model Fitting) In Progress
 
 **Completed**:
-- ✅ Phase 1: Package Setup
-- ✅ Phase 2: S7 Class Architecture (extended with SerialMediationData)
+- ✅ Phase 1: Package Setup (CI/CD, documentation, Dependabot)
+- ✅ Phase 2: S7 Class Architecture (MediationData, SerialMediationData, BootstrapResult)
 - ✅ Phase 2.5: Comprehensive Quarto Documentation (4 vignettes, pkgdown website)
-- ✅ Phase 3: Model Extraction (lm/glm and lavaan methods implemented)
+- ✅ Phase 3: Model Extraction (lm/glm and lavaan methods, 184 tests passing)
 
 **Current**:
-- ⏳ Phase 4: Model Fitting (fit_mediation with GLM engine)
+- 🚧 Phase 4: Model Fitting (stub implemented, GLM engine needed)
 
 **Next (MVP)**:
-- Phase 5: Bootstrap Infrastructure
-- Phase 6: Extended Testing
-- Phase 8: Polish & Release
+- Phase 5: Bootstrap Infrastructure (parametric, nonparametric, plugin)
+- Phase 6: Extended Testing (edge cases, integration tests)
+- Phase 8: Polish & Release (R CMD check, CRAN prep)
 
 **Post-MVP**:
 - Phase 7: Interaction Support (VanderWeele four-way decomposition)

@@ -5,7 +5,7 @@
 # - glm (generalized linear models)
 #
 # The extraction follows the simple mediation pattern:
-#   X -> M -> Y
+#   X -> M -> Y  # nolint: commented_code_linter.
 # where:
 #   - Mediator model: M ~ X + covariates
 #   - Outcome model: Y ~ X + M + covariates

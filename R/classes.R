@@ -296,10 +296,10 @@ SerialMediationData <- S7::new_class(
   package = "medfit",
   properties = list(
     # Core paths (serial chain)
-    a_path = S7::class_numeric,       # X -> M1 (scalar)
-    d_path = S7::class_numeric,       # M1 -> M2 -> ... (scalar or vector)
-    b_path = S7::class_numeric,       # Mk -> Y (scalar)
-    c_prime = S7::class_numeric,      # X -> Y (scalar)
+    a_path = S7::class_numeric,       # nolint: commented_code_linter.
+    d_path = S7::class_numeric,       # nolint: commented_code_linter.
+    b_path = S7::class_numeric,       # nolint: commented_code_linter.
+    c_prime = S7::class_numeric,      # nolint: commented_code_linter.
 
     # Parameters (all models)
     estimates = S7::class_numeric,
@@ -808,10 +808,10 @@ S7::method(print, SerialMediationData) <- function(x, ...) {
                 x@mediators[1], x@mediators[2], x@d_path))
   } else {
     for (i in seq_along(x@d_path)) {
-      path_label <- sprintf("d%d%d", i+1, i)
+      path_label <- sprintf("d%d%d", i + 1, i)
       cat(sprintf("  %-3s (%s -> %s):  %8.4f\n",
                   path_label,
-                  x@mediators[i], x@mediators[i+1],
+                  x@mediators[i], x@mediators[i + 1],
                   x@d_path[i]))
     }
   }
@@ -825,7 +825,7 @@ S7::method(print, SerialMediationData) <- function(x, ...) {
   if (n_mediators == 2) {
     cat(sprintf("  a * d * b = %8.4f\n", indirect))
   } else {
-    d_str <- paste0("d", seq(2, n_mediators), seq(1, n_mediators-1), collapse = " * ")
+    d_str <- paste0("d", seq(2, n_mediators), seq(1, n_mediators - 1), collapse = " * ")
     cat(sprintf("  a * %s * b = %8.4f\n", d_str, indirect))
   }
   cat("\n")
@@ -869,7 +869,7 @@ S7::method(summary, SerialMediationData) <- function(object, ...) {
   if (n_mediators == 2) {
     paths <- c(paths, d = object@d_path)
   } else {
-    d_names <- paste0("d", seq(2, n_mediators), seq(1, n_mediators-1))
+    d_names <- paste0("d", seq(2, n_mediators), seq(1, n_mediators - 1))
     names(object@d_path) <- d_names
     paths <- c(paths, object@d_path)
   }

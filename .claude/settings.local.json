@@ -22,7 +22,14 @@
       "Bash(git stash:*)",
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(/usr/local/bin/R:*)",
+      "Bash(/Library/Frameworks/R.framework/Resources/bin/R:*)",
+      "Bash(/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/bin/R:*)",
+      "Bash(cat:*)",
+      "Bash(/opt/homebrew/bin/R:*)",
+      "Bash(/opt/homebrew/bin/Rscript:*)",
+      "Bash(_R_CHECK_CODOC_S4_METHODS_=false /opt/homebrew/bin/Rscript:*)"
     ]
   },
   "workingDirectory": "/Users/dt/Library/CloudStorage/GoogleDrive-dtofighi@gmail.com/My Drive/packages/medfit",
