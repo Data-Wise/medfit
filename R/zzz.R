@@ -1,41 +1,42 @@
 # Package Initialization
 #
-# This file contains .onLoad() and .onAttach() hooks for S7 method registration
+# This file contains .onLoad() hook for S7 method registration
 #
-# Note: S7 classes are registered with S4 in classes.R immediately after
-# their definitions using S7::S4_register()
+# S7 Method Registration:
+# - S7 uses dynamic run-time registration, not the NAMESPACE file (unlike S3/S4)
+# - S4_register() must be called for each S7 class before methods_register()
+# - methods_register() must be called in .onLoad() per S7 documentation
+# - See: https://rconsortium.github.io/S7/articles/packages.html
+#
+# Note on "Overwriting method" messages during development:
+# - This is a known issue with devtools::load_all() (GitHub issue #474)
+# - Methods get registered twice: during sourcing and in .onLoad()
+# - This does NOT affect installed packages, only development workflows
+# - See: https://github.com/RConsortium/S7/issues/474
 
 .onLoad <- function(libname, pkgname) {
-  # Future: Register extraction methods for suggested packages
-  # if (requireNamespace("lavaan", quietly = TRUE)) {
-  #   lavaan_class <- S7::as_class(methods::getClass("lavaan", where = "lavaan"))
-  #   S7::method(extract_mediation, lavaan_class) <- extract_mediation_lavaan
-  # }
-  #
-  # if (requireNamespace("OpenMx", quietly = TRUE)) {
-  #   # Similar pattern for OpenMx
-  # }
-}
+  # Register S7 classes with S4 system
+  # This must happen before methods_register() to avoid
 
-.onAttach <- function(libname, pkgname) {
+  # "Class has not been registered with S4" errors
+  S7::S4_register(MediationData)
+  S7::S4_register(SerialMediationData)
+  S7::S4_register(BootstrapResult)
+
   # Register S7 methods for dispatch
-  # CRITICAL: S7 requires methods_register() to be called when the package loads
-  # Unlike S3/S4, S7 uses dynamic run-time registration, not the NAMESPACE file
-  # This ensures print, summary, and other S7 methods work in installed packages
-  #
-  # MUST be in .onAttach() not .onLoad() because:
-  # - .onLoad() runs BEFORE R files are sourced (classes don't exist yet)
-  # - .onAttach() runs AFTER R files are sourced (classes are defined and registered)
-  #
-  # Wrapped in tryCatch because namespace may be locked during package installation
-  # In that case, methods are still available via S4_register() which happens in classes.R
+  # This is required for methods on generics from other packages
+  S7::methods_register()
 
-  tryCatch(
-    S7::methods_register(),
-    error = function(e) {
-      # Silently fail if namespace is locked (e.g., during package installation)
-      # Methods will still work via S4_register() in most contexts
+  # Register extraction methods for suggested packages (S4 classes)
+  # lavaan is in Suggests, so we register dynamically if available
+  if (requireNamespace("lavaan", quietly = TRUE)) {
+    tryCatch({
+      .register_lavaan_method()
+    }, error = function(e) {
+      # Silently fail if registration fails (e.g., lavaan not fully loaded)
       invisible(NULL)
-    }
-  )
+    })
+  }
+
+  # Note: OpenMx integration postponed to future release
 }

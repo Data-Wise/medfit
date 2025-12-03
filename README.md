@@ -11,7 +11,7 @@
 
 ### Key Features
 
-- **Unified Model Extraction**: Extract mediation structure from various model types (lm, glm, lavaan, OpenMx)
+- **Unified Model Extraction**: Extract mediation structure from various model types (lm, glm, lavaan)
 - **Flexible Model Fitting**: Fit mediation models using different engines (GLM, with future support for mixed models and Bayesian methods)
 - **Robust Bootstrap Inference**: Three bootstrap methods (parametric, nonparametric, plugin) with parallel processing support
 - **Type-Safe S7 Classes**: Modern object-oriented design ensuring data integrity
@@ -116,7 +116,7 @@ print(result)
 ### Main Functions
 
 - **`extract_mediation()`**: Extract mediation structure from fitted models
-  - Methods for: lm, glm, lavaan (OpenMx coming soon)
+  - Methods for: lm, glm, lavaan
 
 - **`fit_mediation()`**: Fit mediation models with formula interface
   - Engines: GLM (lmer, brms coming soon)
@@ -158,16 +158,22 @@ Comprehensive Quarto vignettes are available:
 
 ## Development Status
 
-**Current Phase**: MVP Development (Phase 2 Complete + Documentation)
+**Current Phase**: MVP Development (Phase 3 Complete)
 
 - [x] Phase 1: Package setup
 - [x] Phase 2: S7 class architecture (with SerialMediationData)
 - [x] Phase 2.5: Comprehensive Quarto documentation
-- [ ] Phase 3: Model extraction (in progress)
-- [ ] Phase 4: Model fitting
+- [x] Phase 3: Model extraction (lm/glm, lavaan)
+- [ ] Phase 4: Model fitting (in progress)
 - [ ] Phase 5: Bootstrap infrastructure
 - [ ] Phase 6: Extended testing
 - [ ] Phase 7: Polish & release
+
+### Code Quality
+
+- **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
+- **Testing**: 167+ tests with testthat, code coverage tracking
+- **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See [planning/medfit-roadmap.md](planning/medfit-roadmap.md) for detailed development plan.
 

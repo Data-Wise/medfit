@@ -23,11 +23,11 @@ Depends:
 Imports:
     S7 (>= 0.1.0),
     stats,
-    methods
+    methods,
+    checkmate
 Suggests:
     MASS,
     lavaan (>= 0.6-0),
-    OpenMx (>= 2.13),
     testthat (>= 3.0.0)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))

@@ -36,11 +36,13 @@
 **Suggests**:
 - MASS (for mvrnorm in parametric bootstrap)
 - lavaan (>= 0.6-0) - SEM extraction
-- OpenMx (>= 2.13) - SEM extraction
 - lme4 (future - mixed models)
 - testthat (>= 3.0.0)
 - knitr
 - rmarkdown
+
+**Future Consideration**:
+- OpenMx (>= 2.13) - SEM extraction (postponed for future release)
 
 ---
 
@@ -89,11 +91,12 @@ R/
 ├── fit-glm.R              # GLM fitting methods
 ├── extract-lm.R           # lm/glm extraction
 ├── extract-lavaan.R       # lavaan extraction
-├── extract-openmx.R       # OpenMx extraction
 ├── bootstrap.R            # Bootstrap infrastructure
 ├── utils.R                # Utility functions
 └── zzz.R                  # .onLoad() for dynamic dispatch
 ```
+
+**Note**: OpenMx extraction (`extract-openmx.R`) postponed for future release.
 
 **Deliverables**:
 - Clean package skeleton
@@ -379,10 +382,16 @@ extract_mediation_lavaan <- function(object, treatment, mediator,
 }
 ```
 
-### 3.4 Method: OpenMx
+### 3.4 Method: OpenMx (POSTPONED)
 
-**Source**: Extract patterns from RMediation (if available)
+**Status**: Postponed for future release
 
+OpenMx integration has been deferred to a future version. Reasons:
+- Complexity of OpenMx model structure
+- Focus MVP on lm/glm and lavaan extraction
+- OpenMx can be added in a future release when needed
+
+**Future Implementation** (when added):
 ```r
 #' @export
 S7::method(extract_mediation, openmx_class) <- function(object,
@@ -395,13 +404,11 @@ S7::method(extract_mediation, openmx_class) <- function(object,
 }
 ```
 
-**Note**: May defer OpenMx to Phase 3 if complex
-
-**Deliverables**:
+**Deliverables** (MVP scope revised):
 - `extract_mediation()` generic
 - Methods for lm/glm (required)
 - Method for lavaan (required)
-- Method for OpenMx (nice-to-have)
+- ~~Method for OpenMx~~ (postponed to future release)
 - Comprehensive tests
 - Examples in documentation
 
@@ -781,11 +788,913 @@ tests/testthat/
 
 ---
 
-## Phase 7: Polish & Release (Week 5)
+## Phase 7: Interaction Support - VanderWeele Four-Way Decomposition (Future)
+
+**Goal**: Support treatment-mediator interactions using VanderWeele's potential outcomes framework
+
+**Status**: Planned for future release (after MVP)
+
+### 7.1 Theoretical Foundation
+
+Based on [VanderWeele (2014)](https://pubmed.ncbi.nlm.nih.gov/25000145/) "A unification of mediation and interaction: a 4-way decomposition" (*Epidemiology*, 25(5):749-61).
+
+**Key Insight**: When treatment and mediator interact, the total effect decomposes into four components:
+
+| Component | Interpretation | Due to |
+|-----------|----------------|--------|
+| **CDE** (Controlled Direct Effect) | Effect of X when M held constant | Neither mediation nor interaction |
+| **INTref** (Reference Interaction) | Interaction at reference mediator level | Interaction only |
+| **INTmed** (Mediated Interaction) | Interaction operating through mediator change | Both mediation and interaction |
+| **PIE** (Pure Indirect Effect) | Mediated effect without interaction | Mediation only |
+
+**Decomposition**: Total Effect = CDE + INTref + INTmed + PIE
+
+**Relationships to traditional effects**:
+- Natural Direct Effect (NDE) = CDE + INTref
+- Natural Indirect Effect (NIE) = INTmed + PIE
+
+### 7.2 Regression Model Specifications
+
+**Mediator Model** (same as simple mediation):
+```
+M = β₀ + β₁X + β₂'C + εₘ
+```
+
+**Outcome Model with Interaction**:
+```
+Y = θ₀ + θ₁X + θ₂M + θ₃(X×M) + θ₄'C + εᵧ
+```
+
+Where:
+- `θ₁` = main effect of treatment on outcome
+- `θ₂` = main effect of mediator on outcome
+- `θ₃` = treatment × mediator interaction coefficient
+- `β₁` = effect of treatment on mediator (a path)
+
+### 7.3 Four-Way Decomposition Formulas (Continuous Y and M)
+
+For binary exposure (X: 0 → 1) and reference mediator level m*:
+
+| Effect | Formula |
+|--------|---------|
+| **CDE(m*)** | θ₁ + θ₃m* |
+| **INTref** | θ₃(β₀ + β₂'c - m*) |
+| **INTmed** | θ₃β₁ |
+| **PIE** | θ₂β₁ |
+
+**Special case (m* = 0)**:
+- CDE = θ₁
+- INTref = θ₃(β₀ + β₂'c)
+- INTmed = θ₃β₁
+- PIE = θ₂β₁
+
+**Note**: When θ₃ = 0 (no interaction):
+- CDE = NDE = θ₁
+- INTref = INTmed = 0
+- NIE = PIE = θ₂β₁ (standard indirect effect)
+
+### 7.4 InteractionMediationData Class Design
+
+```r
+#' @title InteractionMediationData
+#' @description S7 class for mediation with treatment-mediator interaction
+InteractionMediationData <- S7::new_class(
+ "InteractionMediationData",
+ package = "medfit",
+ properties = list(
+   # Path coefficients (extended)
+   a_path = S7::class_numeric,           # β₁: X → M
+   b_path = S7::class_numeric,           # θ₂: M → Y (main effect)
+   c_prime = S7::class_numeric,          # θ₁: X → Y (main effect)
+   interaction = S7::class_numeric,      # θ₃: X×M interaction
+
+   # Four-way decomposition components
+   cde = S7::class_numeric,              # Controlled Direct Effect
+   int_ref = S7::class_numeric,          # Reference Interaction
+   int_med = S7::class_numeric,          # Mediated Interaction
+   pie = S7::class_numeric,              # Pure Indirect Effect
+
+   # Derived effects
+   nde = S7::class_numeric,              # Natural Direct Effect
+   nie = S7::class_numeric,              # Natural Indirect Effect
+   total_effect = S7::class_numeric,     # Total Effect
+
+   # Reference values for decomposition
+   m_star = S7::class_numeric,           # Reference mediator value
+
+   # Standard MediationData properties
+   estimates = S7::class_numeric,
+   vcov = S7::class_matrix,
+   sigma_m = S7::class_numeric | NULL,
+   sigma_y = S7::class_numeric | NULL,
+   treatment = S7::class_character,
+   mediator = S7::class_character,
+   outcome = S7::class_character,
+   mediator_predictors = S7::class_character,
+   outcome_predictors = S7::class_character,
+   data = S7::class_data.frame | NULL,
+   n_obs = S7::class_integer,
+   converged = S7::class_logical,
+   source_package = S7::class_character
+ ),
+
+ validator = function(self) {
+   # Validate interaction is scalar
+   if (length(self@interaction) != 1) "interaction must be scalar"
+   # Validate four-way components sum to total
+   else if (abs((self@cde + self@int_ref + self@int_med + self@pie) -
+                self@total_effect) > 1e-10) {
+     "Four-way components must sum to total effect"
+   }
+   # Validate NDE = CDE + INTref
+   else if (abs((self@cde + self@int_ref) - self@nde) > 1e-10) {
+     "NDE must equal CDE + INTref"
+   }
+   # Validate NIE = INTmed + PIE
+   else if (abs((self@int_med + self@pie) - self@nie) > 1e-10) {
+     "NIE must equal INTmed + PIE"
+   }
+ }
+)
+```
+
+### 7.5 Formula Interface Extension
+
+```r
+# Extended fit_mediation() for interactions
+fit_mediation(
+ formula_y = Y ~ X + M + X:M + C,    # Includes X:M interaction
+ formula_m = M ~ X + C,
+ data = data,
+ treatment = "X",
+ mediator = "M",
+ m_star = 0,                          # Reference mediator value
+ decomposition = "four_way",          # "two_way" | "four_way"
+ engine = "glm"
+)
+```
+
+### 7.6 Extraction from Models with Interaction
+
+The `extract_mediation()` function will detect interaction terms:
+
+```r
+# Automatic detection of X:M interaction in outcome model
+fit_m <- lm(M ~ X + C, data = data)
+fit_y <- lm(Y ~ X + M + X:M + C, data = data)
+
+# Returns InteractionMediationData when interaction detected
+med_int <- extract_mediation(
+ fit_m,
+ model_y = fit_y,
+ treatment = "X",
+ mediator = "M",
+ m_star = 0                           # Reference for decomposition
+)
+
+# Access four-way components
+med_int@cde       # Controlled Direct Effect
+med_int@int_ref   # Reference Interaction
+med_int@int_med   # Mediated Interaction
+med_int@pie       # Pure Indirect Effect
+```
+
+### 7.7 Standard Error Computation
+
+Use delta method for variance of decomposition components:
+
+```r
+# Variance formulas (simplified for continuous Y, M)
+# Var(PIE) = β₁²Var(θ₂) + θ₂²Var(β₁) + 2β₁θ₂Cov(θ₂,β₁)
+# Var(INTmed) = β₁²Var(θ₃) + θ₃²Var(β₁) + 2β₁θ₃Cov(θ₃,β₁)
+# etc.
+```
+
+Alternative: Bootstrap inference (already implemented).
+
+### 7.8 Identification Assumptions
+
+Per VanderWeele (2014), causal interpretation requires:
+1. No unmeasured exposure-outcome confounding given C
+2. No unmeasured mediator-outcome confounding given C
+3. No unmeasured exposure-mediator confounding given C
+4. No mediator-outcome confounder affected by exposure
+
+**Note**: medfit computes the decomposition; causal interpretation is user's responsibility.
+
+### 7.9 Implementation Priority
+
+| Priority | Feature | Complexity |
+|----------|---------|------------|
+| High | InteractionMediationData class | Medium |
+| High | Detection of X:M interaction in extraction | Low |
+| High | Four-way decomposition formulas (continuous) | Medium |
+| Medium | Delta method SEs for decomposition | High |
+| Medium | Binary outcome formulas | High |
+| Low | Binary mediator formulas | High |
+| Low | Survival outcome formulas | High |
+
+### 7.10 Key References
+
+- **VanderWeele TJ (2014)**. A unification of mediation and interaction: a 4-way decomposition. *Epidemiology*, 25(5):749-61. [PubMed](https://pubmed.ncbi.nlm.nih.gov/25000145/)
+- **Valeri L, VanderWeele TJ (2013)**. Mediation analysis allowing for exposure–mediator interactions and causal interpretation. *Psychological Methods*, 18(2):137-150.
+- **VanderWeele TJ (2015)**. *Explanation in Causal Inference: Methods for Mediation and Interaction*. Oxford University Press.
+- **Discacciati A et al. (2019)**. Med4way: A Stata command to investigate mediating and interactive mechanisms. *Int J Epidemiol*, 48(1):15-20.
+
+### 7.11 Deliverables
+
+- [ ] InteractionMediationData S7 class
+- [ ] Interaction detection in extract_mediation()
+- [ ] Four-way decomposition computation
+- [ ] Delta method or bootstrap SEs
+- [ ] Documentation with examples
+- [ ] Tests comparing to med4way/regmedint
+
+**Time**: 1-2 weeks (after MVP)
+
+---
+
+## Phase 7b: Estimation Engine Architecture (Future)
+
+**Goal**: Unified estimation infrastructure supporting multiple causal mediation methods
+
+**Status**: Design phase - brainstorming complete
+
+### 7b.1 User Interface Design
+
+**Design Decision**: Hybrid approach combining simple strings for common cases with helper functions for advanced control.
+
+#### Simple Interface (80% of users)
+
+```r
+estimate_mediation(
+  formula_y = Y ~ X + M + C,
+  formula_m = M ~ X + C,
+  data = df,
+  treatment = "X",
+  mediator = "M",
+  effects = "natural",     # DEFAULT: NDE + NIE
+  engine = "regression"
+)
+```
+
+#### Effect Specification Options
+
+| `effects =` | Returns | Use Case |
+|-------------|---------|----------|
+| `"natural"` (default) | NDE, NIE | Standard mediation |
+| `"interventional"` | IDE, IIE | Exposure-induced confounding |
+| `"controlled"` | CDE | Policy questions |
+
+#### Advanced Interface (helper functions)
+
+```r
+estimate_mediation(
+  ...,
+  effects = natural_effects(variant = "total"),     # TDE + TNIE
+  effects = controlled_effects(m = 5),              # CDE at m=5
+  effects = interventional_effects()                # IDE + IIE
+)
+```
+
+#### Interaction Handling
+
+When `X:M` interaction detected in formula → automatically compute BOTH decompositions:
+
+```r
+# formula_y = Y ~ X + M + X:M + C triggers both:
+result@decompositions$two_way   # NDE, NIE
+result@decompositions$four_way  # CDE, INTref, INTmed, PIE
+```
+
+### 7b.2 Decomposition S7 Class
+
+**Design Decision**: Decomposition as separate S7 class for flexibility and future extensibility.
+
+```r
+#' @title Decomposition
+#' @description S7 class for effect decomposition results
+Decomposition <- S7::new_class(
+  "Decomposition",
+  package = "medfit",
+  properties = list(
+    type = S7::class_character,        # "two_way", "four_way", "custom"
+    components = S7::class_list,       # Named list of effects
+    total = S7::class_numeric,         # Total effect
+    formula = S7::class_character      # Human-readable decomposition
+  ),
+  validator = function(self) {
+    comp_sum <- sum(unlist(self@components))
+    if (abs(comp_sum - self@total) > 1e-10) {
+      "Components must sum to total effect"
+    }
+  }
+)
+```
+
+#### Built-in Decomposition Constructors
+
+```r
+# Two-way (natural effects)
+two_way <- function(nde, nie) {
+  Decomposition(
+    type = "two_way",
+    components = list(nde = nde, nie = nie),
+    total = nde + nie,
+    formula = "NDE + NIE"
+  )
+}
+
+# Four-way (VanderWeele)
+four_way <- function(cde, int_ref, int_med, pie) {
+  Decomposition(
+    type = "four_way",
+    components = list(cde = cde, int_ref = int_ref,
+                      int_med = int_med, pie = pie),
+    total = cde + int_ref + int_med + pie,
+    formula = "CDE + INTref + INTmed + PIE"
+  )
+}
+
+# Custom (future extensibility)
+custom_decomposition <- function(..., formula = NULL) {
+  comps <- list(...)
+  Decomposition(
+    type = "custom",
+    components = comps,
+    total = sum(unlist(comps)),
+    formula = formula %||% paste(names(comps), collapse = " + ")
+  )
+}
+```
+
+### 7b.3 MediationData with Decompositions
+
+**Design Decision**: MediationData stores multiple decompositions in a list.
+
+```r
+MediationData <- S7::new_class(
+  "MediationData",
+  properties = list(
+    # Path coefficients (raw)
+    a_path = S7::class_numeric,
+    b_path = S7::class_numeric,
+    c_prime = S7::class_numeric,
+    interaction = S7::class_numeric | NULL,
+
+    # Decomposition results (flexible)
+    decompositions = S7::class_list,  # list(two_way = Decomposition, ...)
+
+    # Standard properties
+    estimates = S7::class_numeric,
+    vcov = S7::class_matrix,
+    # ... other properties
+  )
+)
+```
+
+### 7b.4 User-Friendly Access
+
+```r
+result <- estimate_mediation(...)
+
+# Helper functions (recommended)
+get_effect(result, "nde")                    # → 0.3
+get_effect(result, "four_way")               # → list(cde, int_ref, int_med, pie)
+get_decomposition(result, "two_way")         # → Decomposition object
+
+# Print method
+print(result)
+# Mediation Analysis Results
+# ==========================
+# Two-way decomposition:
+#   NDE: 0.30 (95% CI: 0.20, 0.40)
+#   NIE: 0.20 (95% CI: 0.12, 0.28)
+#   Total: 0.50
+#
+# Four-way decomposition:
+#   CDE:     0.20   INTref: 0.10
+#   INTmed:  0.08   PIE:    0.12
+#   Total: 0.50
+```
+
+### 7b.5 Estimation Engine Layer (Future)
+
+**Planned engines** based on causal mediation literature:
+
+| Engine | Method | Key Reference |
+|--------|--------|---------------|
+| `"regression"` | VanderWeele closed-form (MVP) | Valeri & VanderWeele (2013) |
+| `"simulation"` | Monte Carlo / quasi-Bayesian | Imai et al. (2010) |
+| `"gformula"` | G-computation | Robins (1986) |
+| `"ipw"` | Inverse probability weighting | VanderWeele (2009) |
+| `"tmle"` | Targeted learning | Zheng & van der Laan (2012) |
+| `"dml"` | Double machine learning | Chernozhukov et al. (2018) |
+
+```r
+# Engine specification
+estimate_mediation(
+  ...,
+  engine = "regression",          # Default (MVP)
+  engine_args = list(...)         # Engine-specific options
+)
+```
+
+### 7b.6 Inference Options
+
+**Design Decision**: Single `inference` argument with bootstrap as default.
+
+```r
+estimate_mediation(
+  ...,
+  # Inference method
+  inference = "bootstrap",        # Default
+  # inference = "delta",          # Delta method (analytical)
+  # inference = "none",           # Point estimates only
+
+  # Bootstrap options (when inference = "bootstrap")
+  n_boot = 1000,
+  ci_level = 0.95,
+  ci_type = "percentile",         # or "bca", "normal"
+  parallel = FALSE,
+  seed = NULL
+)
+```
+
+| `inference =` | Description | Use Case |
+|---------------|-------------|----------|
+| `"bootstrap"` (default) | Nonparametric bootstrap | General use, robust |
+| `"delta"` | Delta method (analytical SEs) | Fast, large samples |
+| `"none"` | Point estimates only | Quick exploration |
+
+### 7b.7 Output and Reporting
+
+**Summary tables:**
+```r
+summary(result)
+#                  Estimate    SE   95% CI         p
+# Total Effect        0.50  0.08  [0.34, 0.66]  <.001
+# Natural Direct      0.30  0.06  [0.18, 0.42]  <.001
+# Natural Indirect    0.20  0.04  [0.12, 0.28]  <.001
+# Prop. Mediated      0.40  0.10  [0.21, 0.59]  <.001
+
+# Tidy export
+as.data.frame(result)            # Data frame
+```
+**Plotting** (ggplot2 in Suggests with base R fallback):
+```r
+plot(result)                     # Default: effect comparison
+plot(result, type = "decomposition")  # Stacked bar (4-way)
+plot(result, type = "bootstrap")      # Bootstrap distribution
+```
+
+### 7b.8 Variable Types
+
+**MVP scope**: Continuous and binary variables only.
+
+| Variable | Type | Model |
+|----------|------|-------|
+| Outcome (Y) | Continuous | `gaussian()` |
+| Outcome (Y) | Binary | `binomial()` |
+| Mediator (M) | Continuous | `gaussian()` |
+| Mediator (M) | Binary | `binomial()` |
+
+**Future**: Count (Poisson), survival (Cox, AFT).
+
+### 7b.9 Design Principles
+
+1. **Sensible defaults**: `effects = "natural"`, `engine = "regression"`, `inference = "bootstrap"`
+2. **Progressive disclosure**: Simple for beginners, powerful for experts
+3. **Future-proof**: Decomposition class allows custom decompositions
+4. **Consistent output**: All engines return same MediationData structure
+5. **Multiple decompositions**: One result can hold two-way AND four-way
+6. **ggplot2 optional**: Suggests dependency with base R fallback
+
+### 7b.10 Key References (Estimation Methods)
+
+- **Imai K et al. (2010)**. A general approach to causal mediation analysis. *Psych Methods*.
+- **Valeri L, VanderWeele TJ (2013)**. Mediation analysis allowing for exposure-mediator interactions. *Psych Methods*.
+- **VanderWeele TJ (2015)**. *Explanation in Causal Inference*. Oxford University Press.
+- **Zheng W, van der Laan MJ (2012)**. Targeted maximum likelihood estimation of natural direct effects. *Int J Biostat*.
+
+---
+
+## Phase 7c: Engine Adapter Architecture (Future)
+
+**Goal**: Standardize integration with external packages for advanced estimation methods
+
+**Status**: Design phase - architecture documented
+
+### 7c.1 Motivation
+
+Rather than reimplementing complex estimation methods (g-formula, IPW, TMLE), medfit will wrap existing validated packages through a standardized adapter pattern. This provides:
+
+- **Reliability**: Leverage battle-tested implementations
+- **Reduced maintenance**: No need to maintain complex statistical code
+- **Flexibility**: Users can choose their preferred backend
+- **Consistency**: All engines return the same MediationData structure
+
+### 7c.2 Adapter Pattern Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      User Interface                          │
+│  estimate_mediation(..., engine = "gformula", ...)          │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+┌─────────────────────────▼───────────────────────────────────┐
+│                    Engine Dispatcher                         │
+│  .dispatch_engine(engine, formula_y, formula_m, data, ...)  │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+          ┌───────────────┼───────────────┐
+          ▼               ▼               ▼
+    ┌──────────┐    ┌──────────┐    ┌──────────┐
+    │ Internal │    │ CMAverse │    │  tmle3   │
+    │ Engines  │    │ Adapter  │    │ Adapter  │
+    └────┬─────┘    └────┬─────┘    └────┬─────┘
+         │               │               │
+         ▼               ▼               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 Standardized MediationData                   │
+│   (Same output structure regardless of estimation method)    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 7c.3 Adapter Interface Contract
+
+Each external engine adapter must implement:
+
+```r
+#' Engine Adapter Interface (Internal)
+#'
+#' All adapters must accept these standard arguments and return MediationData.
+#'
+#' @param formula_y Formula for outcome model
+#' @param formula_m Formula for mediator model (or list for multiple)
+#' @param data Data frame
+#' @param treatment Character: treatment variable name
+#' @param mediator Character: mediator variable name (or vector)
+#' @param outcome Character: outcome variable name
+#' @param effects Character: estimand type ("natural", "controlled", etc.)
+#' @param engine_args List: engine-specific options passed through
+#' @param ... Additional arguments
+#'
+#' @return MediationData object with standardized structure
+.adapter_template <- function(formula_y, formula_m, data,
+                              treatment, mediator, outcome,
+                              effects, engine_args, ...) {
+  # 1. Validate engine-specific requirements
+  # 2. Transform medfit inputs → external package format
+  # 3. Call external package function
+  # 4. Transform results → MediationData
+  # 5. Return standardized output
+}
+```
+
+### 7c.4 CMAverse Adapter (First Priority)
+
+**Package**: [CMAverse](https://bs1125.github.io/CMAverse/) (Shi et al., 2021)
+
+**Why CMAverse first**:
+- Comprehensive: g-formula, IPW, TMLE, MSM, and more
+- Well-documented with active maintenance
+- Supports binary/continuous treatments, mediators, outcomes
+- Handles interactions and multiple mediators
+
+**Dependency strategy**: Add to Suggests (load on demand)
+
+```r
+# In DESCRIPTION
+Suggests:
+    CMAverse (>= 0.1.0)
+```
+
+**Adapter implementation**:
+
+```r
+#' CMAverse Adapter
+#'
+#' @keywords internal
+.adapter_cmaverse <- function(formula_y, formula_m, data,
+                               treatment, mediator, outcome,
+                               effects, engine_args, ...) {
+  # Check dependency
+
+if (!requireNamespace("CMAverse", quietly = TRUE)) {
+    stop("CMAverse package required for engine = 'gformula'/'ipw'/'tmle'.\n",
+         "Install with: install.packages('CMAverse')",
+         call. = FALSE)
+  }
+
+  # Map medfit effects to CMAverse
+  cmaverse_effect <- switch(effects,
+    "natural" = "NDE_NIE",
+    "controlled" = "CDE",
+    "interventional" = "interventional",
+    stop("Effect type '", effects, "' not supported by CMAverse adapter")
+  )
+
+  # Build CMAverse arguments
+  cma_args <- list(
+    data = data,
+    exposure = treatment,
+    mediator = mediator,
+    outcome = outcome,
+    EMint = engine_args$interaction %||% FALSE,
+    model = engine_args$model %||% "rb",     # regression-based
+    inference = engine_args$inference %||% "bootstrap"
+  )
+
+  # Merge user-provided engine_args (engine-specific options)
+  cma_args <- utils::modifyList(cma_args, engine_args)
+
+  # Call CMAverse
+  cma_result <- do.call(CMAverse::cmest, cma_args)
+
+  # Transform to MediationData
+  .cmaverse_to_mediation_data(cma_result, effects = effects)
+}
+
+#' Transform CMAverse result to MediationData
+#' @keywords internal
+.cmaverse_to_mediation_data <- function(cma_result, effects) {
+  # Extract estimates based on effect type
+  estimates <- switch(effects,
+    "natural" = c(
+      nde = cma_result$effect.pe["pnde"],
+      nie = cma_result$effect.pe["tnie"]
+    ),
+    "controlled" = c(
+      cde = cma_result$effect.pe["cde"]
+    )
+  )
+
+  # Build MediationData
+  MediationData(
+    a_path = cma_result$reg.output$mreg$coefficients[treatment],
+    b_path = cma_result$reg.output$yreg$coefficients[mediator],
+    c_prime = cma_result$reg.output$yreg$coefficients[treatment],
+    estimates = as.numeric(estimates),
+    vcov = .extract_cmaverse_vcov(cma_result),
+    # ... additional properties
+    source_package = "CMAverse"
+  )
+}
+```
+
+**Supported CMAverse methods via `engine_args`**:
+
+| `engine_args$model` | CMAverse Method | Description |
+|---------------------|-----------------|-------------|
+| `"rb"` | Regression-based | Default, VanderWeele formulas |
+| `"wb"` | Weighting-based | IPW approach |
+| `"iorw"` | IORW | Inverse odds ratio weighting |
+| `"msm"` | MSM | Marginal structural models |
+| `"gformula"` | G-formula | Parametric g-computation |
+| `"ne"` | Natural effect | Natural effect models |
+
+### 7c.5 Engine-Specific Options via engine_args
+
+**Design decision**: Use `engine_args = list(...)` for engine-specific options (Option A).
+
+**Rationale**:
+- Clean separation: standard arguments vs engine-specific
+- Self-documenting: users see what's engine-specific
+- Flexible: each adapter defines its own options
+- No namespace pollution in main function signature
+
+**Usage examples**:
+
+```r
+# CMAverse with g-formula and bootstrap
+estimate_mediation(
+  formula_y = Y ~ X + M + C,
+  formula_m = M ~ X + C,
+  data = df,
+  treatment = "X",
+  mediator = "M",
+  effects = "natural",
+  engine = "gformula",
+  engine_args = list(
+    model = "gformula",           # CMAverse-specific
+    EMint = TRUE,                 # Exposure-mediator interaction
+    mreg = list(family = "binomial"),  # Binary mediator
+    yreg = list(family = "gaussian"),  # Continuous outcome
+    astar = 0,                    # Reference exposure level
+    a = 1,                        # Active exposure level
+    nboot = 500                   # CMAverse bootstrap samples
+  )
+)
+
+# tmle3 adapter (future)
+estimate_mediation(
+  ...,
+  engine = "tmle",
+  engine_args = list(
+    learner_list = list(          # tmle3-specific
+      A = sl3::Lrnr_glm$new(),
+      M = sl3::Lrnr_ranger$new()
+    ),
+    max_iter = 100
+  )
+)
+```
+
+### 7c.6 Engine Registration System
+
+```r
+# Internal registry of available engines
+.engine_registry <- new.env(parent = emptyenv())
+
+#' Register an estimation engine
+#' @keywords internal
+.register_engine <- function(name, adapter_fn, package = NULL, methods = NULL) {
+  .engine_registry[[name]] <- list(
+    adapter = adapter_fn,
+    package = package,
+    methods = methods,
+    available = is.null(package) || requireNamespace(package, quietly = TRUE)
+  )
+}
+
+#' Initialize built-in engines
+#' @keywords internal
+.init_engines <- function() {
+  # Internal engines (always available)
+  .register_engine("regression", .adapter_regression, package = NULL,
+                   methods = c("natural", "controlled"))
+
+  # External engine adapters (available if package installed)
+  .register_engine("gformula", .adapter_cmaverse, package = "CMAverse",
+                   methods = c("natural", "controlled", "interventional"))
+  .register_engine("ipw", .adapter_cmaverse, package = "CMAverse",
+                   methods = c("natural"))
+
+  # Future adapters
+  # .register_engine("tmle", .adapter_tmle3, package = "tmle3", ...)
+  # .register_engine("dml", .adapter_doubleml, package = "DoubleML", ...)
+}
+
+#' Dispatch to appropriate engine
+#' @keywords internal
+.dispatch_engine <- function(engine, ...) {
+  if (!exists(engine, envir = .engine_registry)) {
+    stop("Unknown engine: '", engine, "'. ",
+         "Available: ", paste(ls(.engine_registry), collapse = ", "))
+  }
+
+  reg <- .engine_registry[[engine]]
+
+  if (!reg$available) {
+    stop("Engine '", engine, "' requires package '", reg$package, "'.\n",
+         "Install with: install.packages('", reg$package, "')")
+  }
+
+  reg$adapter(...)
+}
+```
+
+### 7c.7 Future Engine Adapters
+
+| Priority | Engine | Package | Methods | Complexity |
+|----------|--------|---------|---------|------------|
+| **High** | gformula | CMAverse | G-computation | Medium |
+| **High** | ipw | CMAverse | Weighting | Medium |
+| Medium | tmle | tmle3/AIPW | Targeted ML | High |
+| Medium | dml | DoubleML | Double ML | High |
+| Low | bart | bartCause | Bayesian trees | High |
+| Low | msm | CMAverse | Marginal structural | Medium |
+
+### 7c.8 Error Handling and Validation
+
+```r
+#' Validate engine compatibility
+#' @keywords internal
+.validate_engine_request <- function(engine, effects, formula_y, ...) {
+  reg <- .engine_registry[[engine]]
+
+  # Check effect type supported
+  if (!effects %in% reg$methods)
+
+    stop("Engine '", engine, "' does not support effects = '", effects, "'.\n",
+         "Supported: ", paste(reg$methods, collapse = ", "))
+  }
+
+  # Check for interaction if required
+  has_interaction <- .formula_has_interaction(formula_y)
+  if (effects == "four_way" && !has_interaction) {
+    stop("Four-way decomposition requires X:M interaction in formula_y")
+  }
+
+  # Engine-specific validation
+  if (engine == "gformula" && has_interaction) {
+    message("Note: G-formula with interaction uses simulation-based estimation")
+  }
+}
+```
+
+### 7c.9 Testing Strategy for Adapters
+
+```r
+# tests/testthat/test-adapter-cmaverse.R
+
+test_that("CMAverse adapter returns valid MediationData", {
+  skip_if_not_installed("CMAverse")
+
+  result <- estimate_mediation(
+    formula_y = Y ~ X + M,
+    formula_m = M ~ X,
+    data = test_data,
+    treatment = "X",
+    mediator = "M",
+    engine = "gformula"
+  )
+
+  expect_s7_class(result, MediationData)
+  expect_equal(result@source_package, "CMAverse")
+})
+
+test_that("CMAverse adapter matches direct CMAverse output", {
+  skip_if_not_installed("CMAverse")
+
+  # Direct CMAverse call
+  cma_direct <- CMAverse::cmest(...)
+
+  # Via adapter
+  result <- estimate_mediation(..., engine = "gformula")
+
+  # Compare estimates
+  expect_equal(result@nde, cma_direct$effect.pe["pnde"], tolerance = 1e-6)
+})
+```
+
+### 7c.10 Documentation for Users
+
+```r
+#' Estimation Engines
+#'
+#' @description
+#' medfit supports multiple estimation engines for causal mediation analysis.
+#'
+#' @section Built-in Engines:
+#' \describe{
+#'   \item{regression}{VanderWeele closed-form formulas. Fast, parametric.
+#'     Default engine, always available.}
+#' }
+#'
+#' @section External Engines (require additional packages):
+#' \describe{
+#'   \item{gformula}{G-computation via CMAverse. Handles complex confounding.}
+#'   \item{ipw}{Inverse probability weighting via CMAverse.}
+#'   \item{tmle}{Targeted learning via tmle3 (future).}
+#' }
+#'
+#' @section Engine-Specific Options:
+#' Pass engine-specific options via \code{engine_args}:
+#' \preformatted{
+#' estimate_mediation(
+#'   ...,
+#'   engine = "gformula",
+#'   engine_args = list(
+#'     model = "gformula",
+#'     EMint = TRUE,
+#'     nboot = 500
+#'   )
+#' )
+#' }
+#'
+#' @name engines
+#' @seealso \code{\link{estimate_mediation}}
+NULL
+```
+
+### 7c.11 Key References
+
+- **Shi B et al. (2021)**. CMAverse: A suite of functions for reproducible causal mediation analyses. *Epidemiology*, 32(5):e20-e22.
+- **van der Laan MJ, Rose S (2011)**. *Targeted Learning*. Springer.
+- **Chernozhukov V et al. (2018)**. Double/debiased machine learning. *Econometrics J*, 21(1):C1-C68.
+- **Hill JL (2011)**. Bayesian nonparametric modeling for causal inference. *J Comp Graph Stat*, 20(1):217-240.
+
+### 7c.12 Deliverables
+
+- [ ] Engine registry system
+- [ ] Adapter interface specification
+- [ ] CMAverse adapter implementation
+- [ ] Engine-specific option documentation
+- [ ] Validation and error handling
+- [ ] Tests for adapter correctness
+- [ ] User documentation
+
+**Time**: 1-2 weeks (after MVP + Phase 7b)
+
+---
+
+## Phase 8: Polish & Release (Week 5)
 
 **Goal**: Finalize for release and integration
 
-### 7.1 R CMD check
+### 8.1 R CMD check
 
 - [ ] R CMD check passes on all platforms
   - [ ] macOS (latest R)
@@ -793,7 +1702,7 @@ tests/testthat/
   - [ ] Ubuntu (latest R and R-devel)
 - [ ] 0 errors, 0 warnings, 0 notes
 
-### 7.2 CI/CD
+### 8.2 CI/CD
 
 - [ ] GitHub Actions passing
   - [ ] R-CMD-check on multi-platform
@@ -802,7 +1711,7 @@ tests/testthat/
 - [ ] Coverage badges in README
 - [ ] Build status badges
 
-### 7.3 Documentation Website
+### 8.3 Documentation Website
 
 - [ ] pkgdown site deployed to GitHub Pages
 - [ ] All vignettes render correctly
@@ -810,7 +1719,7 @@ tests/testthat/
 - [ ] NEWS.md formatted properly
 - [ ] Search functionality works
 
-### 7.4 Prepare for CRAN (Optional)
+### 8.4 Prepare for CRAN (Optional)
 
 **If submitting to CRAN**:
 - [ ] CRAN comments file prepared
@@ -892,13 +1801,18 @@ Integration is successful when:
 | 4. Fitting | 2-3 days | Day 10 | Day 13 | fit_mediation() |
 | 5. Bootstrap | 3-4 days | Day 13 | Day 17 | bootstrap_mediation() |
 | 6. Testing & Docs | 3-4 days | Day 17 | Day 21 | Complete documentation |
-| 7. Polish | 2-3 days | Day 21 | Day 24 | Production ready |
+| 7. **Interaction Support** | 1-2 weeks | Post-MVP | - | VanderWeele 4-way decomposition |
+| 7b. **Estimation Engine** | 1 week | Post-MVP | - | User interface, Decomposition class |
+| 7c. **Engine Adapters** | 1-2 weeks | Post-MVP | - | CMAverse integration |
+| 8. Polish | 2-3 days | Day 21 | Day 24 | Production ready |
 
-**Total**: 17-24 days (3.5-5 weeks) for MVP
+**MVP Total**: 17-24 days (3.5-5 weeks) - Phases 1-6 + 8
+
+**Post-MVP**: Phase 7 (Interaction support) - 1-2 weeks
 
 **Buffer**: +1 week for unforeseen issues
 
-**Total with buffer**: 4-6 weeks
+**Total with buffer**: 4-6 weeks (MVP), +2 weeks (with interactions)
 
 ---
 
@@ -947,7 +1861,7 @@ Integration is successful when:
 1. **Should we include OpenMx extraction in MVP?**
    - Pro: RMediation uses it
    - Con: Adds complexity
-   - **Decision**: Include if straightforward, defer if complex
+   - **Decision**: ~~Include if straightforward, defer if complex~~ **RESOLVED: Postponed to future release**. Focus MVP on lm/glm and lavaan.
 
 2. **Should MVP include parallel bootstrap?**
    - Pro: Performance benefit
@@ -961,20 +1875,26 @@ Integration is successful when:
 
 ---
 
-**Status**: ✅ Phase 2 Complete + Documentation → 🚧 Phase 3 (Model Extraction) In Progress
+**Status**: ✅ Phase 3 Complete → Phase 4 (Model Fitting) Next
 
 **Completed**:
 - ✅ Phase 1: Package Setup
 - ✅ Phase 2: S7 Class Architecture (extended with SerialMediationData)
 - ✅ Phase 2.5: Comprehensive Quarto Documentation (4 vignettes, pkgdown website)
+- ✅ Phase 3: Model Extraction (lm/glm and lavaan methods implemented)
 
 **Current**:
-- 🚧 Phase 3: Model Extraction (generic defined, methods in progress)
+- ⏳ Phase 4: Model Fitting (fit_mediation with GLM engine)
 
-**Next**:
-- Phase 4: Model Fitting
+**Next (MVP)**:
 - Phase 5: Bootstrap Infrastructure
 - Phase 6: Extended Testing
-- Phase 7: Polish & Release
-**Next Review**: After Phase 2 completion (S7 classes)
-**Last Updated**: 2025-12-02
+- Phase 8: Polish & Release
+
+**Post-MVP**:
+- Phase 7: Interaction Support (VanderWeele four-way decomposition)
+- Phase 7b: Estimation Engine Architecture (user interface, Decomposition class)
+- Phase 7c: Engine Adapters (CMAverse, tmle3, etc.)
+
+**Next Review**: After Phase 4 completion
+**Last Updated**: 2025-12-03

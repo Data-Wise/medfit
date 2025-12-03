@@ -16,13 +16,9 @@
       "Bash(quarto --version:*)",
       "Bash(quarto render:*)",
       "WebSearch",
-      "Bash(git push:*)",
-      "Bash(git cherry-pick:*)",
-      "Bash(git stash:*)",
-      "Bash(git merge:*)",
-      "Bash(open:*)",
-      "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:pkgdown.r-lib.org)"
+      "Bash(git push origin main)",
+      "Bash(git cherry-pick 026be70)",
+      "Bash(git push origin dev)"
     ]
   },
   "workingDirectory": "/Users/dt/Library/CloudStorage/GoogleDrive-dtofighi@gmail.com/My Drive/packages/medfit",

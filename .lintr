@@ -1,0 +1,8 @@
+linters: linters_with_defaults(
+    line_length_linter(120L),
+    object_name_linter(styles = c("snake_case", "CamelCase", "dotted.case"))
+  )
+exclusions: list(
+    "inst/doc"
+  )
+encoding: UTF-8
