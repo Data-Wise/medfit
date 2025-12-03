@@ -12,6 +12,7 @@ All packages are located in the parent `packages/` directory:
 
 ```
 packages/
+├── mediationverse/   ← META-PACKAGE (planned Q2-Q3 2025)
 ├── medfit/           ← THIS PACKAGE (foundation)
 ├── probmed/          ← Will import medfit
 ├── rmediation/       ← Will import medfit (RMediation on CRAN)
@@ -23,6 +24,15 @@ packages/
 ## Dependency Graph
 
 ```
+mediationverse (meta-package) 📋 Planned (Q2-Q3 2025)
+├── Imports: medfit, probmed, RMediation, medrobust
+├── Provides: Unified installation and loading
+├── Documentation: Ecosystem overview and guides
+├── Website: https://mediationverse.org (future)
+└── Location: ../mediationverse/ (to be created)
+
+         ↓ (loads all packages)
+
 medfit (foundation) ✅ Phase 3 Complete → Phase 4 (Model Fitting)
 ├── Provides: MediationData, SerialMediationData, BootstrapResult classes
 ├── Provides: fit_mediation(), extract_mediation(), bootstrap_mediation()
@@ -115,6 +125,19 @@ Key strategic documents are in **probmed/planning/**:
 - [ ] Add medfit to DESCRIPTION (Suggests)
 - [ ] Use for naive estimates if beneficial
 - [ ] Update documentation
+
+### Phase 5: mediationverse Meta-Package (Weeks 11-15)
+**Status**: 📋 Planned (Q2-Q3 2025)
+- [ ] Create package skeleton with usethis
+- [ ] Implement attachment logic
+- [ ] Add startup message
+- [ ] Create conflict detection
+- [ ] Write comprehensive vignettes
+- [ ] Set up pkgdown website
+- [ ] Configure CI/CD workflows
+- [ ] CRAN submission
+
+**See**: `planning/MEDIATIONVERSE-PROPOSAL.md` for detailed implementation plan
 
 ---
 
