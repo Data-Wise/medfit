@@ -23,10 +23,12 @@ packages/
 ## Dependency Graph
 
 ```
-medfit (foundation)
-├── Provides: MediationData, BootstrapResult classes
-├── Provides: fit_mediation(), extract_mediation(), bootstrap_mediation()
-└── Engines: GLM (MVP), lmer (future), brms (future)
+medfit (foundation) ✅ Phase 2 Complete + Documentation
+├── Provides: MediationData, SerialMediationData, BootstrapResult classes
+├── Provides: fit_mediation(), extract_mediation(), bootstrap_mediation() (generics defined)
+├── Documentation: 4 comprehensive Quarto vignettes published
+├── Website: https://data-wise.github.io/medfit/
+└── Engines: GLM (in progress), lmer (future), brms (future)
 
          ↓ (imports medfit)
 
@@ -69,13 +71,15 @@ Key strategic documents are in **probmed/planning/**:
 ## Integration Timeline
 
 ### Phase 1: medfit Creation (Weeks 1-5)
-**Status**: 🔄 In Progress
-- [ ] Package skeleton (Week 1)
-- [ ] S7 classes (Week 1-2)
-- [ ] Extraction methods (Week 2)
+**Status**: ✅ Phase 2 Complete + Documentation → 🚧 Phase 3 (Model Extraction)
+- [x] Package skeleton (Week 1) ✅
+- [x] S7 classes (Week 1-2) ✅ Extended with SerialMediationData
+- [x] Comprehensive Quarto documentation (added) ✅
+- [x] pkgdown website with Bootstrap 5 ✅
+- [ ] Extraction methods (Week 2) 🚧 In Progress
 - [ ] Fitting API (Week 2-3)
 - [ ] Bootstrap (Week 3-4)
-- [ ] Testing & docs (Week 4)
+- [ ] Extended testing (Week 4)
 - [ ] Polish (Week 5)
 
 ### Phase 2: probmed Integration (Week 6-7)
