@@ -51,16 +51,17 @@
 
 ### Infrastructure
 
-* **Testing**: 87 comprehensive tests (51 original + 36 for SerialMediationData)
+* **Testing**: 167+ comprehensive tests
   - Full coverage of simple and serial mediation S7 classes
   - Validation tests ensure data integrity across all mediation types
+  - Tests updated for checkmate error message format
   - 4 tests skipped in non-interactive mode (S7 dispatch investigation)
 
 * **CI/CD**: GitHub Actions workflows with Quarto support
-  - R-CMD-check with `_R_CHECK_CODOC_S4_METHODS_: false` for S7 compatibility
-  - pkgdown deployment with Quarto rendering (`quarto-dev/quarto-actions/setup@v2`)
-  - Automatic Quarto installation when .qmd files detected
-  - Test coverage tracking
+  - R-CMD-check on Ubuntu (release, devel, oldrel-1), macOS, Windows
+  - `lint.yaml` for static code analysis with lintr
+  - pkgdown deployment with Quarto rendering
+  - Test coverage tracking with Codecov
 
 * **pkgdown Website**: https://data-wise.github.io/medfit/
   - Bootstrap 5 with Flatly theme
@@ -91,26 +92,24 @@
 
 ### Fixes
 
-* **LICENSE**: Added `+ file LICENSE` to DESCRIPTION to properly reference LICENSE file (NOTE resolved)
-* **Codoc warnings**: Suppressed S7 constructor codoc checks with `--no-codoc` argument (WARNING resolved)
+* **CI Failures**: Removed OpenMx from Suggests (was failing to compile on Ubuntu oldrel-1)
+  - OpenMx integration postponed to future release
+  - All GitHub Actions workflows now passing
+* **S7 Method Registration**: Fixed proper registration order in `.onLoad()`
+  - Call `S7::S4_register()` for each class BEFORE `methods_register()`
+  - Import full `methods` package (not just `@importFrom methods is`)
+  - Per official S7 documentation: https://rconsortium.github.io/S7/articles/packages.html
+* **LICENSE**: Added `+ file LICENSE` to DESCRIPTION to properly reference LICENSE file
+* **Codoc warnings**: Suppressed S7 constructor codoc checks with `--no-codoc` argument
   - S7-generated constructor defaults have whitespace formatting differences
-  - This is a known S7/roxygen2 limitation that cannot be resolved in documentation
-  - Using `--no-codoc` in R CMD check to suppress false positive warnings
-  - Package documentation and functionality remain correct and complete
-* **S7 Method Dispatch**: Fixed print/summary methods in installed package context (RESOLVED)
-  - Added `S7::methods_register()` in `.onAttach()` hook (R/zzz.R)
-  - All 51 tests now pass in non-interactive mode (previously 5 were skipped)
-  - Methods work correctly in both `devtools::load_all()` and installed package contexts
-  - Wrapped in `tryCatch()` to handle locked namespace during devtools operations
+  - This is a known S7/roxygen2 limitation
 
 ### Known Issues
 
-* **S7 Method Dispatch for SerialMediationData**: Print/summary methods for `SerialMediationData` need investigation for installed package context
-  - Tests skip in non-interactive mode (4 tests affected)
-  - Methods work correctly when using `devtools::load_all()`
-  - Related to S7 method registration timing in installed packages
+* **S7 Method Dispatch for SerialMediationData**: Print/summary methods need investigation for installed package context
+  - 4 tests skip in non-interactive mode
+  - Methods work correctly with `devtools::load_all()`
 * `fit_mediation()` and `bootstrap_mediation()` are stubs awaiting implementation
-* `extract_mediation()` methods need implementation for lm/glm, lavaan
 
 ### Internal
 
