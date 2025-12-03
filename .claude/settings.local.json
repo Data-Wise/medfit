@@ -8,7 +8,8 @@
       "Bash(git checkout:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:app.codecov.io)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(echo:*)"
     ]
   },
   "workingDirectory": "/Users/dt/Library/CloudStorage/GoogleDrive-dtofighi@gmail.com/My Drive/packages/medfit",
