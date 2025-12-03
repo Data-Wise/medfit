@@ -1,9 +1,9 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: Phase 2 Complete + Documentation → Phase 3 (Model Extraction)
+**Status**: Phase 3 Complete → Phase 4 (Model Fitting) | Post-MVP Design Complete
 **Timeline**: 4-6 weeks for MVP (Started December 2024)
-**Last Updated**: December 2, 2025
+**Last Updated**: December 3, 2025
 
 ---
 
@@ -1882,6 +1882,12 @@ Integration is successful when:
 - ✅ Phase 2: S7 Class Architecture (extended with SerialMediationData)
 - ✅ Phase 2.5: Comprehensive Quarto Documentation (4 vignettes, pkgdown website)
 - ✅ Phase 3: Model Extraction (lm/glm and lavaan methods implemented)
+- ✅ Post-MVP Design: Brainstorming complete for Phases 7, 7b, 7c
+
+**Documentation Infrastructure**:
+- ✅ pkgdown badge display fix documented
+- ✅ Development mode and version switcher configured
+- ✅ Version dropdown added to navbar (Release/Dev toggle)
 
 **Current**:
 - ⏳ Phase 4: Model Fitting (fit_mediation with GLM engine)
@@ -1891,10 +1897,19 @@ Integration is successful when:
 - Phase 6: Extended Testing
 - Phase 8: Polish & Release
 
-**Post-MVP**:
+**Post-MVP** (design complete, ready for implementation):
 - Phase 7: Interaction Support (VanderWeele four-way decomposition)
-- Phase 7b: Estimation Engine Architecture (user interface, Decomposition class)
-- Phase 7c: Engine Adapters (CMAverse, tmle3, etc.)
+  - InteractionMediationData class designed
+  - Four-way decomposition formulas documented
+- Phase 7b: Estimation Engine Architecture
+  - User interface: `effects = "natural"` default, helper functions
+  - Decomposition S7 class designed
+  - Inference options: bootstrap default, delta method option
+- Phase 7c: Engine Adapters
+  - Adapter pattern documented
+  - CMAverse first priority (g-formula, IPW)
+  - Engine registration system designed
+  - `engine_args = list(...)` for engine-specific options
 
 **Next Review**: After Phase 4 completion
 **Last Updated**: 2025-12-03
