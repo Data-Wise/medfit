@@ -1623,5 +1623,5 @@ During `devtools::load_all()`, you may see "Overwriting method" messages:
 
 **Workflow Keywords:**
 - `doc` - Update planning documentation, README, and NEWS
-- `check` - Run R CMD check --as-cran and build/preview the website
+- `check` - Run R CMD check --as-cran, build/preview website, and check GitHub Actions status
 - `sync` - Commit and push changes to remote
