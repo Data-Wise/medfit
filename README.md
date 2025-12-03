@@ -1,11 +1,15 @@
 # medfit: Infrastructure for Mediation Analysis in R
 
+<div align="right">
+
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/data-wise/medfit/graph/badge.svg)](https://app.codecov.io/gh/data-wise/medfit)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Project Status: WIP](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 <!-- badges: end -->
+
+</div>
 
 ## Overview
 
