@@ -1,4 +1,4 @@
-# medfit: Infrastructure for Mediation Analysis in R
+# medfit: Infrastructure for Mediation Analysis in R ![R-CMD-check](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg)![Codecov](https://codecov.io/gh/data-wise/medfit/graph/badge.svg)![Lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)![Status](https://www.repostatus.org/badges/latest/wip.svg)
 
 ## Overview
 
