@@ -215,52 +215,71 @@ extract_mediation_lavaan <- function(object,
   # Create estimates vector with named elements
   estimates <- all_coef
 
-  # Add convenient aliases for key paths
+  # Add convenient aliases for key paths (only if not already present)
+  # Track which aliases we're adding (not overwriting)
+  aliases_to_add <- character(0)
+  if (!("a" %in% names(estimates))) {
+    aliases_to_add <- c(aliases_to_add, "a")
+  }
+  if (!("b" %in% names(estimates))) {
+    aliases_to_add <- c(aliases_to_add, "b")
+  }
+  if (!("c_prime" %in% names(estimates))) {
+    aliases_to_add <- c(aliases_to_add, "c_prime")
+  }
+
+  # Add aliases
   estimates["a"] <- a_path
   estimates["b"] <- b_path
   estimates["c_prime"] <- c_prime
 
-  # Expand vcov to include aliases
+  # Expand vcov to include only NEW aliases
   n_orig <- length(all_coef)
-  n_total <- n_orig + 3
+  n_aliases <- length(aliases_to_add)
+  n_total <- n_orig + n_aliases
 
   vcov_expanded <- matrix(0, nrow = n_total, ncol = n_total)
-  rownames(vcov_expanded) <- names(estimates)
-  colnames(vcov_expanded) <- names(estimates)
+
+  # Build names for expanded vcov
+  vcov_names <- c(names(all_coef), aliases_to_add)
+  rownames(vcov_expanded) <- vcov_names
+  colnames(vcov_expanded) <- vcov_names
 
   # Fill in original vcov
   vcov_expanded[1:n_orig, 1:n_orig] <- vcov_mat
 
   # For aliases, we need to find the corresponding original parameter
-  # and copy its variance
+  # and copy its variance. Only do this for aliases that were actually added.
 
-  # Find a path in original parameters
-  if (paths_found_by_label) {
-    a_param_name <- paste0(mediator, "~", treatment)
-  } else {
-    a_param_name <- paste0(mediator, "~", treatment)
-  }
-  if (a_param_name %in% names(all_coef)) {
-    a_idx_orig <- which(names(all_coef) == a_param_name)
-    a_idx_new <- which(names(estimates) == "a")
-    vcov_expanded[a_idx_new, a_idx_new] <- vcov_mat[a_idx_orig, a_idx_orig]
+  # Helper function to copy variance for an alias
+  copy_alias_variance <- function(alias_name, param_names_to_try) {
+    if (!(alias_name %in% aliases_to_add)) {
+      # Alias already exists in original coefficients, no need to copy
+      return()
+    }
+    alias_idx <- which(vcov_names == alias_name)
+    if (length(alias_idx) == 0) return()
+
+    for (param_name in param_names_to_try) {
+      if (param_name %in% names(all_coef)) {
+        orig_idx <- which(names(all_coef) == param_name)
+        vcov_expanded[alias_idx, alias_idx] <<- vcov_mat[orig_idx, orig_idx]
+        return()
+      }
+    }
   }
 
-  # Find b path in original parameters
+  # Find and copy variance for "a" path
+  a_param_name <- paste0(mediator, "~", treatment)
+  copy_alias_variance("a", a_param_name)
+
+  # Find and copy variance for "b" path
   b_param_name <- paste0(outcome, "~", mediator)
-  if (b_param_name %in% names(all_coef)) {
-    b_idx_orig <- which(names(all_coef) == b_param_name)
-    b_idx_new <- which(names(estimates) == "b")
-    vcov_expanded[b_idx_new, b_idx_new] <- vcov_mat[b_idx_orig, b_idx_orig]
-  }
+  copy_alias_variance("b", b_param_name)
 
-  # Find c' path in original parameters
+  # Find and copy variance for "c_prime" path
   cp_param_name <- paste0(outcome, "~", treatment)
-  if (cp_param_name %in% names(all_coef)) {
-    cp_idx_orig <- which(names(all_coef) == cp_param_name)
-    cp_idx_new <- which(names(estimates) == "c_prime")
-    vcov_expanded[cp_idx_new, cp_idx_new] <- vcov_mat[cp_idx_orig, cp_idx_orig]
-  }
+  copy_alias_variance("c_prime", cp_param_name)
 
   # --- Extract Residual Variances ---
 
@@ -296,7 +315,16 @@ extract_mediation_lavaan <- function(object,
 
   # Try to get data from lavaan object
   data <- tryCatch({
-    lavaan::lavInspect(object, "data")
+    d <- lavaan::lavInspect(object, "data")
+    # lavaan may return a matrix; convert to data.frame if possible
+    if (is.matrix(d)) {
+      as.data.frame(d)
+    } else if (is.data.frame(d)) {
+      d
+    } else {
+      # If it's something else (like numeric), return NULL
+      NULL
+    }
   }, error = function(e) {
     NULL
   })

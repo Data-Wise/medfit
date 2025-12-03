@@ -5,14 +5,19 @@
 # Note: S7 classes are registered with S4 in classes.R immediately after
 # their definitions using S7::S4_register()
 
+# Track whether lavaan method has been registered to avoid duplicate registration
+.medfit_env <- new.env(parent = emptyenv())
+.medfit_env$lavaan_registered <- FALSE
+
 .onLoad <- function(libname, pkgname) {
   # Register extraction methods for suggested packages (S4 classes)
   # Note: This must happen in .onLoad() for S4 compatibility
 
-  # Register lavaan method if available
+  # Register lavaan method if available (suppress messages)
   if (requireNamespace("lavaan", quietly = TRUE)) {
     tryCatch({
-      .register_lavaan_method()
+      suppressMessages(.register_lavaan_method())
+      .medfit_env$lavaan_registered <- TRUE
     }, error = function(e) {
       # Silently fail if registration fails (e.g., lavaan not fully loaded)
       invisible(NULL)
@@ -36,7 +41,7 @@
   # In that case, methods are still available via S4_register() which happens in classes.R
 
   tryCatch(
-    S7::methods_register(),
+    suppressMessages(S7::methods_register()),
     error = function(e) {
       # Silently fail if namespace is locked (e.g., during package installation)
       # Methods will still work via S4_register() in most contexts
@@ -46,9 +51,12 @@
 
   # Also try to register lavaan method in .onAttach() as fallback
   # This handles cases where lavaan wasn't available during .onLoad()
-  if (requireNamespace("lavaan", quietly = TRUE)) {
+  # Only register if not already registered
+  if (!.medfit_env$lavaan_registered &&
+      requireNamespace("lavaan", quietly = TRUE)) {
     tryCatch({
-      .register_lavaan_method()
+      suppressMessages(.register_lavaan_method())
+      .medfit_env$lavaan_registered <- TRUE
     }, error = function(e) {
       invisible(NULL)
     })
