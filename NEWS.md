@@ -51,13 +51,14 @@
   - This is a known S7/roxygen2 limitation that cannot be resolved in documentation
   - Using `--no-codoc` in R CMD check to suppress false positive warnings
   - Package documentation and functionality remain correct and complete
+* **S7 Method Dispatch**: Fixed print/summary methods in installed package context (RESOLVED)
+  - Added `S7::methods_register()` in `.onAttach()` hook (R/zzz.R)
+  - All 51 tests now pass in non-interactive mode (previously 5 were skipped)
+  - Methods work correctly in both `devtools::load_all()` and installed package contexts
+  - Wrapped in `tryCatch()` to handle locked namespace during devtools operations
 
 ### Known Issues
 
-* **S7 Method Dispatch**: Print/summary methods don't work properly in installed package context
-  - Tests skip in non-interactive mode (5 tests affected)
-  - Methods work correctly when using `devtools::load_all()`
-  - Related to S7 method registration in installed packages
 * `fit_mediation()` and `bootstrap_mediation()` are stubs awaiting implementation
 * `extract_mediation()` methods need implementation for lm/glm, lavaan
 
