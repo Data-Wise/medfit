@@ -295,6 +295,104 @@ The package uses **snake_case** consistently:
 - CamelCase: `MediationData`, `BootstrapResult`
 - Properties use snake_case: `@a_path`, `@boot_estimates`
 
+### Code Documentation Style
+
+**General Principles:**
+- **Comment the "why", not the "what"** - explain reasoning, not obvious operations
+- **More explanatory comments for tricky code** - shortcuts, clever tricks, non-obvious logic deserve explanation
+- **Inline citations for statistical methods** - e.g., `# Per VanderWeele (2014), four-way decomposition...`
+- **Self-documenting code first** - use clear variable names, then add comments for context
+
+**In-line Comment Examples:**
+
+```r
+# BAD - explains what (obvious)
+x <- x + 1  # add 1 to x
+
+# GOOD - explains why
+x <- x + 1  # Adjust for 1-based indexing expected by lavaan
+
+# GOOD - explains tricky shortcut
+# Use outer product for efficient pairwise computation (O(n²) memory but O(1) loops)
+pairwise_diff <- outer(x, x, `-`)
+
+# GOOD - inline citation
+# Per VanderWeele (2014), the four-way decomposition requires: TE = CDE + INTref + INTmed + PIE
+```
+
+**Section Headers in Functions:**
+Use `# --- Section Name ---` for functions longer than ~30 lines:
+
+```r
+my_function <- function(...) {
+  # --- Validate Inputs ---
+  ...
+
+  # --- Extract Parameters ---
+  ...
+
+  # --- Compute Results ---
+  ...
+
+  # --- Return ---
+  ...
+}
+```
+
+**roxygen2 Documentation:**
+Prefer BOTH concise `@description` AND detailed `@details`:
+
+```r
+#' Extract Mediation Structure from Fitted Models
+#'
+#' @description
+#' Generic function to extract mediation paths (a, b, c') and
+#' variance-covariance matrices from fitted models.
+#'
+#' @param object Fitted model object (lm, glm, lavaan)
+#' @param treatment Character: treatment variable name
+#'
+#' @return A [MediationData] object
+#'
+#' @details
+#' ## Supported Model Types
+#'
+#' - **lm/glm**: Requires separate mediator and outcome models
+#' - **lavaan**: Extracts from SEM; auto-detects paths if labeled
+#'
+#' ## Mathematical Background
+#'
+#' The indirect effect is \eqn{a \times b}{a * b} where:
+#' - \eqn{a} = effect of X on M (from mediator model)
+#' - \eqn{b} = effect of M on Y controlling for X (from outcome model)
+#'
+#' Per Baron & Kenny (1986), mediation requires significant a and b paths.
+#'
+#' @references
+#' Baron RM, Kenny DA (1986). The moderator-mediator variable distinction.
+#' *Journal of Personality and Social Psychology*, 51(6), 1173-1182.
+#'
+#' @examples
+#' \dontrun{
+#' fit_m <- lm(M ~ X + C, data = mydata)
+#' fit_y <- lm(Y ~ X + M + C, data = mydata)
+#' med_data <- extract_mediation(fit_m, model_y = fit_y,
+#'                               treatment = "X", mediator = "M")
+#' }
+#'
+#' @seealso [MediationData], [fit_mediation()]
+#' @export
+```
+
+**TODO/FIXME Conventions:**
+
+```r
+# TODO: Add support for multiple mediators (issue #42)
+# FIXME: Breaks when n < 10, needs better error handling
+# HACK: Workaround for lavaan bug, remove when fixed upstream
+# NOTE: Assumes Gaussian residuals for variance computation
+```
+
 ### Code Organization
 
 ```
