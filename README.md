@@ -1,4 +1,4 @@
-# medfit: Infrastructure for Mediation Analysis in R <img src="https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg" align="right" alt="R-CMD-check"/> <img src="https://codecov.io/gh/data-wise/medfit/graph/badge.svg" align="right" alt="Codecov"/> <img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" align="right" alt="Lifecycle"/> <img src="https://www.repostatus.org/badges/latest/wip.svg" align="right" alt="Status"/>
+# medfit: Infrastructure for Mediation Analysis in R
 
 ## Overview
 
@@ -200,6 +200,8 @@ R package version 0.1.0. https://github.com/data-wise/medfit
 - [Ecosystem Strategy](planning/ECOSYSTEM.md)
 
 ## Contact
+
+<img src="https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg" align="right" alt="R-CMD-check"/> <img src="https://codecov.io/gh/data-wise/medfit/graph/badge.svg" align="right" alt="Codecov"/> <img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" align="right" alt="Lifecycle"/> <img src="https://www.repostatus.org/badges/latest/wip.svg" align="right" alt="Status"/>
 
 - **Author**: Davood Tofighi
 - **Email**: dtofighi@gmail.com
