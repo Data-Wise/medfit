@@ -1,7 +1,7 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: Phase 5 Complete → Phase 6 (Testing) & Phase 8 (Polish) | Post-MVP Design Complete
+**Status**: Phase 6 Complete → Phase 8 (Polish & Release) | MVP Near Complete
 **Timeline**: 4-6 weeks for MVP (Started December 2024)
 **Last Updated**: December 3, 2025
 
@@ -1892,8 +1892,8 @@ Integration is successful when:
 - ✅ Version dropdown added to navbar (Release/Dev toggle)
 
 **Current**:
-- ⏳ Phase 6: Extended Testing
-- ⏳ Phase 8: Polish & Release
+- ✅ Phase 6: Extended Testing (integration tests, edge cases, helper utilities added)
+- ⏳ Phase 8: Polish & Release (R CMD check, documentation finalization)
 
 **Post-MVP** (design complete, ready for implementation):
 - Phase 7: Interaction Support (VanderWeele four-way decomposition)
