@@ -1,0 +1,202 @@
+# Reverse Dependency Check Workflow
+#
+# Purpose: Test that changes to medfit don't break dependent packages
+# (probmed, RMediation, medrobust)
+#
+# Runs:
+# - Weekly on Sunday at midnight UTC
+# - Manually via workflow_dispatch
+# - Before releases (recommended)
+#
+# Uses r-lib/revdepcheck to:
+# 1. Install current CRAN version of medfit
+# 2. Run R CMD check on dependent packages
+# 3. Install development version of medfit
+# 4. Run R CMD check on dependent packages again
+# 5. Report only NEW failures (not pre-existing issues)
+
+name: Reverse Dependency Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Packages to check (comma-separated, or "all")'
+        required: false
+        default: 'all'
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
+
+jobs:
+  revdep-check:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::revdepcheck
+            any::rcmdcheck
+
+      - name: Configure revdepcheck
+        run: |
+          # Create revdep directory if it doesn't exist
+          dir.create("revdep", showWarnings = FALSE)
+
+          # Write packages to check
+          # Note: These are the packages that depend on medfit
+          # Update this list as new dependent packages are added
+          dependent_pkgs <- c(
+            "probmed",
+            "RMediation",
+            "medrobust"
+          )
+
+          # Filter if specific packages requested
+          input_pkgs <- "${{ github.event.inputs.packages }}"
+          if (input_pkgs != "" && input_pkgs != "all") {
+            requested <- strsplit(input_pkgs, ",")[[1]]
+            requested <- trimws(requested)
+            dependent_pkgs <- intersect(dependent_pkgs, requested)
+          }
+
+          writeLines(dependent_pkgs, "revdep/packages.txt")
+          cat("Will check:", paste(dependent_pkgs, collapse = ", "), "\n")
+        shell: Rscript {0}
+
+      - name: Run reverse dependency check
+        run: |
+          # Run revdepcheck
+          # This compares R CMD check results between CRAN and dev versions
+          revdepcheck::revdep_check(
+            num_workers = 4,
+            timeout = as.difftime(60, units = "mins")
+          )
+        shell: Rscript {0}
+        continue-on-error: true
+
+      - name: Generate summary report
+        run: |
+          # Generate summary
+          if (file.exists("revdep/README.md")) {
+            cat("## Reverse Dependency Check Results\n\n")
+            cat(readLines("revdep/README.md"), sep = "\n")
+          } else {
+            cat("No revdep results found.\n")
+          }
+
+          # Check for failures
+          if (file.exists("revdep/problems.md")) {
+            problems <- readLines("revdep/problems.md")
+            if (length(problems) > 0 && any(nchar(problems) > 0)) {
+              cat("\n\n## Problems Found\n\n")
+              cat(problems, sep = "\n")
+
+              # Create issue body for failures
+              issue_body <- paste(c(
+                "## Reverse Dependency Check Failed",
+                "",
+                "The following packages have new failures with the development version of medfit:",
+                "",
+                problems,
+                "",
+                "Please review and fix before releasing.",
+                "",
+                "Run details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              ), collapse = "\n")
+              writeLines(issue_body, "revdep/issue_body.md")
+            }
+          }
+        shell: Rscript {0}
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: revdep-results
+          path: |
+            revdep/
+            !revdep/library/
+            !revdep/checks/
+          retention-days: 30
+
+      - name: Check for failures
+        run: |
+          if (file.exists("revdep/problems.md")) {
+            problems <- readLines("revdep/problems.md")
+            if (length(problems) > 0 && any(nchar(trimws(problems)) > 0)) {
+              stop("Reverse dependency check found new failures. See uploaded artifacts for details.")
+            }
+          }
+          cat("All reverse dependency checks passed!\n")
+        shell: Rscript {0}
+
+  # Optional: Create issue on failure
+  create-issue:
+    needs: revdep-check
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Download results
+        uses: actions/download-artifact@v4
+        with:
+          name: revdep-results
+          path: revdep/
+
+      - name: Create issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let body = 'Reverse dependency check failed. See workflow run for details.';
+            if (fs.existsSync('revdep/issue_body.md')) {
+              body = fs.readFileSync('revdep/issue_body.md', 'utf8');
+            }
+
+            // Check for existing open issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'revdep-failure'
+            });
+
+            if (issues.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: 'Reverse Dependency Check Failed',
+                body: body,
+                labels: ['revdep-failure', 'ecosystem']
+              });
+            } else {
+              // Update existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues.data[0].number,
+                body: body
+              });
+            }
