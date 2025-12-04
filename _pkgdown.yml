@@ -46,7 +46,7 @@ logo:
 
 navbar:
   structure:
-    left:  [home, reference, articles, news]
+    left:  [home, reference, articles, ecosystem, status, news]
     right: [search, github]
   components:
     home:
@@ -69,6 +69,34 @@ navbar:
         href: articles/extraction.html
       - text: "Bootstrap Inference"
         href: articles/bootstrap.html
+    ecosystem:
+      text: Ecosystem
+      menu:
+      - text: "Core Packages"
+      - text: "mediationverse (Meta-package)"
+        href: https://data-wise.github.io/mediationverse/
+      - text: "medfit (Foundation)"
+        href: https://data-wise.github.io/medfit/
+      - text: "probmed (P_med Effect Size)"
+        href: https://data-wise.github.io/probmed/
+      - text: "RMediation (Confidence Intervals)"
+        href: https://data-wise.github.io/rmediation/
+      - text: "medrobust (Sensitivity Analysis)"
+        href: https://data-wise.github.io/medrobust/
+      - text: "---------"
+      - text: "Support Packages"
+      - text: "medsim (Simulation Infrastructure)"
+        href: https://data-wise.github.io/medsim/
+    status:
+      icon: fas fa-chart-line
+      text: Status
+      menu:
+      - text: "Package Status Dashboard"
+        href: https://github.com/data-wise/mediationverse/blob/main/STATUS.md
+      - text: "Development Roadmap"
+        href: https://data-wise.github.io/mediationverse/articles/roadmap.html
+      - text: "Contributing Guide"
+        href: https://data-wise.github.io/mediationverse/articles/contributing.html
     news:
       text: News
       href: news/index.html
