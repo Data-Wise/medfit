@@ -63,9 +63,10 @@ probmed (v0.1.0)
 └── Location: ../probmed/
 
 RMediation (v1.4.0)
-├── Uses: medfit extraction (lavaan; OpenMx postponed)
-├── Adds: DOP, MBCO, MC methods
-├── Status: ✅ Stable on CRAN
+├── Uses: medfit extraction (MediationData, SerialMediationData)
+├── Adds: DOP, MBCO, MC methods via ci() for medfit objects
+├── Status: ✅ medfit integration complete (ci_medfit.R)
+├── GitHub: https://github.com/data-wise/rmediation
 └── Location: ../rmediation/
 
 medrobust (v0.1.0.9000)
@@ -86,6 +87,7 @@ Key strategic documents:
 - **API-CONTRACTS.md** - Cross-package interfaces and compatibility
 - **BRANCHING-STRATEGY.md** - Git workflow (main + dev branches)
 - **DEVELOPMENT-STANDARDS.md** - Coding standards and best practices
+- **INTEGRATION-PLAN.md** - Package integration and redundancy removal plan
 - **MEDIATIONVERSE-PROPOSAL.md** - Meta-package detailed implementation
 - **MEDSIM-PROPOSAL.md** - Simulation infrastructure proposal
 
@@ -134,12 +136,13 @@ Key strategic documents:
 - [ ] Update documentation
 
 ### Phase 3: RMediation Integration (Week 8-9)
-**Status**: ⏳ Pending probmed integration
-- [ ] Add medfit to DESCRIPTION (Imports)
-- [ ] Replace extraction code
-- [ ] Use bootstrap utilities where appropriate
-- [ ] Update tests
-- [ ] Update documentation
+**Status**: ✅ Complete
+- [x] Add medfit to DESCRIPTION (Suggests) ✅
+- [x] Add ci() method for MediationData ✅
+- [x] Add ci() method for SerialMediationData ✅
+- [x] Dynamic method registration in .onLoad() ✅
+- [x] R CMD check passes (0/0/0) ✅
+- [x] Pushed to GitHub ✅
 
 ### Phase 4: medrobust Integration (Week 10)
 **Status**: ⏳ Optional
