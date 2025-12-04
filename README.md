@@ -1,9 +1,17 @@
 # medfit: Infrastructure for Mediation Analysis in R
 
-[![R-CMD-check](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml)
-[![Codecov](https://codecov.io/gh/data-wise/medfit/graph/badge.svg)](https://codecov.io/gh/data-wise/medfit)
+
+
+
+
+<!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Repo Status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![R-CMD-check](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml)
+[![Website Status](https://github.com/data-wise/medfit/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/pkgdown.yaml)
+[![R-hub](https://github.com/data-wise/medfit/actions/workflows/rhub.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/rhub.yaml)
+[![Codecov](https://codecov.io/gh/data-wise/medfit/graph/badge.svg)](https://codecov.io/gh/data-wise/medfit)
+<!-- badges: end -->
 
 ## Overview
 
