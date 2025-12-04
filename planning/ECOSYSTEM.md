@@ -12,12 +12,12 @@ All packages are located in the parent `packages/` directory:
 
 ```
 packages/
-├── mediationverse/   ← META-PACKAGE (planned Q2-Q3 2025)
-├── medfit/           ← THIS PACKAGE (foundation)
-├── probmed/          ← Will import medfit
-├── rmediation/       ← Will import medfit (RMediation on CRAN)
-├── medrobust/        ← Will suggest medfit
-└── medsim/           ← SIMULATION INFRASTRUCTURE (planned Q3 2025)
+├── mediationverse/   ← META-PACKAGE (skeleton ready, GitHub: data-wise/mediationverse)
+├── medfit/           ← THIS PACKAGE (foundation, GitHub: data-wise/medfit)
+├── probmed/          ← Will import medfit (GitHub: data-wise/probmed)
+├── rmediation/       ← Will import medfit (RMediation on CRAN, GitHub: data-wise/rmediation)
+├── medrobust/        ← Will suggest medfit (GitHub: data-wise/medrobust)
+└── medsim/           ← SIMULATION INFRASTRUCTURE (GitHub: data-wise/medsim) ✅
 ```
 
 ---
@@ -35,11 +35,12 @@ mediationverse (meta-package) 📋 Planned (Q2-Q3 2025)
 
          ↓ (loads analysis packages)
 
-medsim (simulation infrastructure) 📋 Planned (Q3 2025)
+medsim (simulation infrastructure) ✅ On GitHub
 ├── Suggests: medfit, probmed, RMediation, medrobust
 ├── Provides: Standardized simulation framework
 ├── Features: Environment detection, parallel processing, ground truth caching
 ├── Website: https://data-wise.github.io/medsim/
+├── GitHub: https://github.com/data-wise/medsim
 └── Location: ../medsim/
 
          ↓ (foundation for all packages)
@@ -161,23 +162,23 @@ Key strategic documents:
 **See**: `/Users/dt/mediation-planning/MEDIATIONVERSE-PROPOSAL.md` for detailed implementation plan
 
 ### Phase 6: medsim Simulation Package (Weeks 16-25)
-**Status**: 📋 Planned (Q3 2025)
+**Status**: ✅ Core Complete, On GitHub
 - [x] Create package skeleton ✅
 - [x] Write proposal document ✅
 - [x] Implement config.R (environment detection) ✅
 - [x] Implement scenarios.R (standard scenarios) ✅
-- [ ] Implement runner.R (simulation execution)
-- [ ] Implement parallel.R (parallel processing)
-- [ ] Implement cache.R (ground truth caching)
-- [ ] Implement analyze.R (result analysis)
-- [ ] Implement visualize.R (publication figures)
-- [ ] Implement tables.R (LaTeX tables)
+- [x] Implement runner.R (simulation execution) ✅
+- [x] Implement parallel.R (parallel processing) ✅
+- [x] Implement cache.R (ground truth caching) ✅
+- [x] Implement analyze.R (result analysis) ✅
+- [x] Implement visualize.R (publication figures) ✅
+- [x] Implement tables.R (LaTeX tables) ✅
+- [x] Push to GitHub: https://github.com/data-wise/medsim ✅
 - [ ] Implement workflow.R (complete pipeline)
 - [ ] Write 5 vignettes
 - [ ] Set up pkgdown website
 - [ ] Configure CI/CD workflows
 - [ ] Integration examples with medfit, probmed, RMediation, medrobust
-- [ ] Push to GitHub and create repository
 - [ ] CRAN submission
 
 **See**: `/Users/dt/mediation-planning/MEDSIM-PROPOSAL.md` for detailed implementation plan
@@ -439,10 +440,12 @@ ci(extract, type = "dop", ...)  # RMediation-specific
 **Package Maintainer**: Davood Tofighi (dtofighi@gmail.com)
 
 **GitHub Repositories**:
+- mediationverse: https://github.com/data-wise/mediationverse
 - medfit: https://github.com/data-wise/medfit
 - probmed: https://github.com/data-wise/probmed
 - RMediation: https://github.com/data-wise/rmediation
 - medrobust: https://github.com/data-wise/medrobust
+- medsim: https://github.com/data-wise/medsim
 
 **Issues**:
 - Report medfit issues: https://github.com/data-wise/medfit/issues
