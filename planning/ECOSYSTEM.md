@@ -57,9 +57,11 @@ medfit (foundation) ✅ Phase 3 Complete → Phase 4 (Model Fitting)
          ↓ (imports medfit)
 
 probmed (v0.1.0)
-├── Uses: medfit extraction, bootstrap
-├── Adds: P_med computation
-├── Status: ✅ Phase 2 complete, ready for integration
+├── Imports: medfit (MediationData class)
+├── Re-exports: extract_mediation from medfit
+├── Adds: P_med computation via pmed()
+├── Status: ✅ medfit integration complete
+├── GitHub: https://github.com/data-wise/probmed
 └── Location: ../probmed/
 
 RMediation (v1.4.0)
@@ -127,13 +129,15 @@ Key strategic documents:
 - [ ] Future: tmle3, DoubleML adapters
 
 ### Phase 2: probmed Integration (Week 6-7)
-**Status**: ⏳ Pending medfit completion
-- [ ] Add medfit to DESCRIPTION (Imports)
-- [ ] Replace extraction code
-- [ ] Replace bootstrap code
-- [ ] Verify backward compatibility
-- [ ] Update tests
-- [ ] Update documentation
+**Status**: ✅ Complete
+- [x] Add medfit to DESCRIPTION (Imports) ✅
+- [x] Replace MediationExtract with medfit::MediationData ✅
+- [x] Re-export extract_mediation from medfit ✅
+- [x] Update pmed methods for MediationData ✅
+- [x] Remove duplicate extraction code (1,568 lines removed) ✅
+- [x] Update tests ✅
+- [x] R CMD check passes (0/0/0) ✅
+- [x] Pushed to GitHub ✅
 
 ### Phase 3: RMediation Integration (Week 8-9)
 **Status**: ✅ Complete
@@ -159,10 +163,12 @@ Key strategic documents:
 - [x] Add mediationverse_packages() ✅
 - [x] Add mediationverse_update() ✅
 - [x] Set up pkgdown website (standardized theme) ✅
-- [x] Push to GitHub (on dev branch) ✅
-- [ ] Write comprehensive vignettes
+- [x] Push to GitHub ✅
+- [x] Write comprehensive Quarto vignettes ✅
+  - getting-started.qmd
+  - mediationverse-workflow.qmd
+- [x] R CMD check passes (0/0/0) ✅
 - [ ] Configure CI/CD workflows
-- [ ] Merge to main branch
 - [ ] CRAN submission
 
 **See**: `/Users/dt/mediation-planning/MEDIATIONVERSE-PROPOSAL.md` for detailed implementation plan
@@ -227,25 +233,29 @@ estimate_mediation()    # Unified interface with multiple engines
 | `tmle` | tmle3 | Targeted learning | Future |
 | `dml` | DoubleML | Double machine learning | Future |
 
-### Migration Guide for probmed
+### Migration Guide for probmed (✅ COMPLETE)
 
 **Before** (probmed v0.1.0):
 ```r
-# probmed code
+# probmed had its own MediationExtract class
 extract <- extract_mediation(fit, ...)  # probmed's version
-result <- .pmed_parametric_boot(...)     # internal function
+result <- pmed(extract)                  # used MediationExtract
 ```
 
 **After** (probmed v0.2.0 with medfit):
 ```r
-# medfit provides infrastructure
-library(medfit)
-extract <- medfit::extract_mediation(fit, ...)  # medfit's version
-boot <- medfit::bootstrap_mediation(...)         # medfit's version
-
-# probmed focuses on P_med
-pmed_value <- compute_pmed(extract)  # probmed-specific
+# medfit provides shared infrastructure
+library(probmed)  # auto-loads medfit via Imports
+extract <- extract_mediation(fit_m, model_y = fit_y,
+                             treatment = "X", mediator = "M")  # returns MediationData
+result <- pmed(extract)  # method for MediationData
 ```
+
+**Changes made:**
+- Removed 1,568 lines of duplicate code from probmed
+- Replaced MediationExtract with medfit::MediationData
+- Re-exported extract_mediation from medfit
+- Updated pmed() method signatures
 
 ### Migration Guide for RMediation
 
