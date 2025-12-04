@@ -1,6 +1,6 @@
 # medfit Ecosystem Connections
 
-**Last Updated**: 2025-12-02
+**Last Updated**: 2025-12-03
 
 This document tracks the connections between medfit and its dependent packages.
 
@@ -16,7 +16,8 @@ packages/
 ├── medfit/           ← THIS PACKAGE (foundation)
 ├── probmed/          ← Will import medfit
 ├── rmediation/       ← Will import medfit (RMediation on CRAN)
-└── medrobust/        ← Will suggest medfit
+├── medrobust/        ← Will suggest medfit
+└── medsim/           ← SIMULATION INFRASTRUCTURE (planned Q3 2025)
 ```
 
 ---
@@ -26,12 +27,22 @@ packages/
 ```
 mediationverse (meta-package) 📋 Planned (Q2-Q3 2025)
 ├── Imports: medfit, probmed, RMediation, medrobust
+├── Suggests: medsim (simulation infrastructure)
 ├── Provides: Unified installation and loading
 ├── Documentation: Ecosystem overview and guides
 ├── Website: https://mediationverse.org (future)
-└── Location: ../mediationverse/ (to be created)
+└── Location: ../mediationverse/
 
-         ↓ (loads all packages)
+         ↓ (loads analysis packages)
+
+medsim (simulation infrastructure) 📋 Planned (Q3 2025)
+├── Suggests: medfit, probmed, RMediation, medrobust
+├── Provides: Standardized simulation framework
+├── Features: Environment detection, parallel processing, ground truth caching
+├── Website: https://data-wise.github.io/medsim/
+└── Location: ../medsim/
+
+         ↓ (foundation for all packages)
 
 medfit (foundation) ✅ Phase 3 Complete → Phase 4 (Model Fitting)
 ├── Provides: MediationData, SerialMediationData, BootstrapResult classes
@@ -67,9 +78,18 @@ medrobust (v0.1.0.9000)
 
 ## Shared Planning Documents
 
-Key strategic documents are in **probmed/planning/**:
+**Centralized planning directory**: `/Users/dt/mediation-planning/`
 
-- **DECISIONS.md** - All major decisions (medfit name, architecture, etc.)
+Key strategic documents:
+
+- **API-CONTRACTS.md** - Cross-package interfaces and compatibility
+- **BRANCHING-STRATEGY.md** - Git workflow (main + dev branches)
+- **DEVELOPMENT-STANDARDS.md** - Coding standards and best practices
+- **MEDIATIONVERSE-PROPOSAL.md** - Meta-package detailed implementation
+- **MEDSIM-PROPOSAL.md** - Simulation infrastructure proposal
+
+**Legacy planning** (in probmed/planning/):
+- **DECISIONS.md** - Historical decisions (medfit name, architecture, etc.)
 - **ROADMAP.md** - Overall ecosystem roadmap
 - **three-package-ecosystem-strategy.md** - Detailed strategic analysis
 - **model-engines-brainstorm.md** - Model engine decisions
@@ -128,16 +148,39 @@ Key strategic documents are in **probmed/planning/**:
 
 ### Phase 5: mediationverse Meta-Package (Weeks 11-15)
 **Status**: 📋 Planned (Q2-Q3 2025)
-- [ ] Create package skeleton with usethis
-- [ ] Implement attachment logic
-- [ ] Add startup message
+- [x] Create package skeleton with usethis ✅
+- [x] Implement attachment logic ✅
+- [x] Add startup message ✅
 - [ ] Create conflict detection
 - [ ] Write comprehensive vignettes
 - [ ] Set up pkgdown website
 - [ ] Configure CI/CD workflows
+- [ ] Push to GitHub and create repository
 - [ ] CRAN submission
 
-**See**: `planning/MEDIATIONVERSE-PROPOSAL.md` for detailed implementation plan
+**See**: `/Users/dt/mediation-planning/MEDIATIONVERSE-PROPOSAL.md` for detailed implementation plan
+
+### Phase 6: medsim Simulation Package (Weeks 16-25)
+**Status**: 📋 Planned (Q3 2025)
+- [x] Create package skeleton ✅
+- [x] Write proposal document ✅
+- [x] Implement config.R (environment detection) ✅
+- [x] Implement scenarios.R (standard scenarios) ✅
+- [ ] Implement runner.R (simulation execution)
+- [ ] Implement parallel.R (parallel processing)
+- [ ] Implement cache.R (ground truth caching)
+- [ ] Implement analyze.R (result analysis)
+- [ ] Implement visualize.R (publication figures)
+- [ ] Implement tables.R (LaTeX tables)
+- [ ] Implement workflow.R (complete pipeline)
+- [ ] Write 5 vignettes
+- [ ] Set up pkgdown website
+- [ ] Configure CI/CD workflows
+- [ ] Integration examples with medfit, probmed, RMediation, medrobust
+- [ ] Push to GitHub and create repository
+- [ ] CRAN submission
+
+**See**: `/Users/dt/mediation-planning/MEDSIM-PROPOSAL.md` for detailed implementation plan
 
 ---
 
