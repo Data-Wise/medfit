@@ -26,7 +26,8 @@ home:
     coefficients, and performing bootstrap inference. Foundation package for
     the mediation analysis ecosystem.
   sidebar:
-    structure: [links, license, citation, authors]
+    structure: [links, license, citation, authors, dev]
+    components:
   links:
   - text: "Source Code"
     href: https://github.com/data-wise/medfit
@@ -34,6 +35,7 @@ home:
     href: https://github.com/data-wise/medfit/issues
   - text: "Request Feature"
     href: https://github.com/data-wise/medfit/issues/new
+
 
 # LOGO CONFIGURATION
 # best practice: keep your logo at man/figures/logo.png
