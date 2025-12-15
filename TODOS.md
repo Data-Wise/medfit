@@ -143,6 +143,13 @@ Active tasks, implementation plan, and progress tracking.
 ## ✅ Recently Completed
 
 ### 2025-12-15 (Afternoon)
+- [x] **Created API-DESIGN-DECISIONS.md** - Consolidated all strategic planning
+  - [x] Summarized all 8 major decisions (S7, hybrid generics, function naming, workflow, etc.)
+  - [x] Complete API reference (custom S3 generics + standard R generics + broom)
+  - [x] Implementation roadmap (6 phases: Core API, Bootstrap, Fit, Broom, Docs, CMAverse)
+  - [x] Testing strategy (unit tests, integration tests, coverage targets)
+  - [x] Documentation standards (roxygen2, vignettes, pkgdown)
+  - [x] **Strategic planning phase COMPLETE** - ready for implementation
 - [x] Created COORDINATION-BRAINSTORM.md
   - [x] Analyzed three-package-ecosystem-strategy.md findings
   - [x] Mapped generic functions strategy (extract/fit/bootstrap)
@@ -169,7 +176,7 @@ Active tasks, implementation plan, and progress tracking.
   - [x] Analyzed ADHD challenges (working memory, decision fatigue, flow state)
   - [x] Compared 6 workflow alternatives (pipe-first, single-function, builder, etc.)
   - [x] **RECOMMENDATION: Alternative 6 (Hybrid)** - short verbs + pipes + standard generics
-  - [x] Proposed med() + boot() + confint() pattern
+  - [x] Proposed mediate() + boot() + confint() pattern (revised from med())
   - [x] Smart defaults minimize decisions (parametric, 1000, 95% CI)
   - [x] Pipeline maintains flow state (no context switching)
   - [x] Complete examples and migration strategy
