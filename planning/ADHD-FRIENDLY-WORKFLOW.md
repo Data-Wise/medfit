@@ -816,31 +816,178 @@ fit_mediation(...)                 # Old (still works)
 
 ---
 
+## How S7 Works with S3 Generics (Key Technical Insight)
+
+### S7 Objects ARE S3 Objects
+
+**Critical understanding**: Every S7 object has an S3 class attribute, so S3 dispatch "just works".
+
+```r
+# S7 class definition
+MediationData <- S7::new_class("MediationData",
+  properties = list(
+    a_path = class_numeric,
+    b_path = class_numeric,
+    # ...
+  )
+)
+
+# Create instance
+med <- MediationData(a_path = 0.5, b_path = 0.3)
+
+# S7 object HAS S3 class
+class(med)
+# [1] "medfit::MediationData" "S7_object"
+
+# Works with S3 dispatch!
+is.object(med)  # TRUE
+```
+
+### Registering S7 Methods on S3 Generics
+
+S7 provides `method()<-` to register methods on ANY generic (S3, S4, or S7):
+
+```r
+# Define S3 generic
+boot <- function(object, ...) UseMethod("boot")
+
+# Register S7 method using S7's method()<-
+S7::method(boot, MediationData) <- function(object, ...) {
+  # Implementation for MediationData
+}
+
+# Dispatch works!
+boot(med_obj)  # Calls MediationData method
+```
+
+### Why This is Powerful
+
+1. **We define our OWN generics** (`boot()`, `med()`, `paths()`)
+2. **No conflicts** - our `boot()` ≠ `boot::boot()`
+3. **S7 type safety** - methods are type-checked
+4. **S3 compatibility** - works with existing S3 ecosystem
+
+### Custom Generics vs Standard Generics
+
+**Standard R generics** (use as-is):
+- `confint()` - confidence intervals (universal standard)
+- `coef()` - coefficients (universal standard)
+- `vcov()` - variance-covariance (universal standard)
+- `summary()`, `print()` - already standard
+
+**Custom S3 generics** (we define):
+- `boot()` - bootstrap (mediation-specific, different from boot::boot)
+- `med()` - fit mediation (mediation-specific)
+- `paths()` - path coefficients (mediation-specific)
+- `indirect_effect()`, `direct_effect()`, `total_effect()` (mediation-specific)
+
+**Pattern**:
+```r
+# Standard generics: register S7 methods on existing S3 generics
+S7::method(confint, MediationData) <- function(object, ...) { ... }
+
+# Custom generics: define new S3 generic + register S7 method
+boot <- function(object, ...) UseMethod("boot")
+S7::method(boot, MediationData) <- function(object, ...) { ... }
+```
+
+---
+
 ## Namespace Conflict Resolution
 
-### Problem: `boot()` conflicts with boot package
+### Solution: S7 Methods on Custom S3 Generics (No Conflicts!)
 
-**Solutions**:
+**Key insight**: S7 objects ARE S3 objects, so we can:
+1. Define our own S3 generics (`boot()`, `med()`, `paths()`)
+2. Register S7 methods on them using `method()<-`
+3. No namespace conflicts - our `boot()` is different from `boot::boot()`
 
-1. **Package namespacing** (user specifies)
-   ```r
-   medfit::boot(med_obj)  # Explicit
-   ```
+**Implementation**:
 
-2. **Selective import** (package handles)
-   ```r
-   # In NAMESPACE
-   export(boot)
-   importFrom(boot, boot.ci, boot.array)  # Import specific functions from boot pkg
-   ```
+```r
+# Define custom S3 generics (in R/aab-generics.R)
 
-3. **Different name** (avoid conflict entirely)
-   ```r
-   # Use medboot() instead
-   medboot <- function(...) bootstrap_mediation(...)
-   ```
+#' Bootstrap Mediation Inference
+#'
+#' @param object Object to bootstrap (MediationData, etc.)
+#' @param ... Additional arguments
+#' @export
+boot <- function(object, ...) {
+  UseMethod("boot")
+}
 
-**Recommendation**: Use `boot()` as primary name, document conflict, suggest `medfit::boot()` if boot package loaded.
+#' Fit Mediation Models
+#'
+#' @param outcome Outcome formula or fitted model
+#' @param ... Additional arguments
+#' @export
+med <- function(outcome, ...) {
+  UseMethod("med")
+}
+
+#' Extract Path Coefficients
+#'
+#' @param object Mediation object
+#' @param ... Additional arguments
+#' @export
+paths <- function(object, ...) {
+  UseMethod("paths")
+}
+
+# Register S7 methods on our S3 generics (in R/methods-*.R)
+
+# Method for MediationData
+S7::method(boot, MediationData) <- function(object, n = 1000,
+                                             method = "parametric",
+                                             ci_level = 0.95,
+                                             parallel = FALSE,
+                                             seed = NULL, ...) {
+  bootstrap_mediation(
+    object = object,
+    statistic = indirect_effect,
+    method = method,
+    n_boot = n,
+    ci_level = ci_level,
+    parallel = parallel,
+    seed = seed,
+    ...
+  )
+}
+
+# Method for data frames (convenience)
+S7::method(med, new_S3_class("data.frame")) <- function(outcome,
+                                                         mediator,
+                                                         data = outcome,
+                                                         treatment, ...) {
+  fit_mediation(
+    formula_y = outcome,
+    formula_m = mediator,
+    data = data,
+    treatment = treatment,
+    ...
+  )
+}
+```
+
+**Why this works**:
+- `medfit::boot()` is OUR generic (different from `boot::boot()`)
+- R's namespace system keeps them separate
+- Users call `medfit::boot()` or just `boot()` if medfit loaded
+- No conflict because they're different functions in different packages
+
+**Best practice**:
+```r
+# In package NAMESPACE
+export(boot)  # Export OUR boot generic
+export(med)
+export(paths)
+
+# Users load medfit
+library(medfit)
+
+# Now boot() refers to medfit::boot()
+# boot::boot() still available as boot::boot()
+```
 
 ---
 
@@ -848,25 +995,63 @@ fit_mediation(...)                 # Old (still works)
 
 **Primary Recommendation**: **Alternative 6 (Hybrid Approach)**
 
-**Why**:
+### Why This is Optimal
+
 1. ✅ **Minimal cognitive load** - short names, smart defaults, pipeable
 2. ✅ **Flow state friendly** - one continuous pipeline, no interruptions
 3. ✅ **Decision minimization** - good defaults, override only when needed
 4. ✅ **Ecosystem compatible** - uses `confint()`, `coef()`, standard generics
-5. ✅ **Tab completion** - `med<TAB>` → `med()`, easy discovery
-6. ✅ **Progressive disclosure** - simple default, advanced possible
-7. ✅ **Pattern consistency** - pipe all the way, like user's zsh workflow
+5. ✅ **NO namespace conflicts** - S7 methods on custom S3 generics
+6. ✅ **Tab completion** - `med<TAB>` → `med()`, easy discovery
+7. ✅ **Progressive disclosure** - simple default, advanced possible
+8. ✅ **Pattern consistency** - pipe all the way, like user's zsh workflow
 
-**Core API**:
+### Core API (Final)
+
+**Standard R generics** (ecosystem integration):
 ```r
-# Short, memorable, pipeable
+confint(object)    # Confidence intervals (not ci()!)
+coef(object)       # Coefficients
+vcov(object)       # Variance-covariance
+summary(object)    # Summary
+```
+
+**Custom S3 generics** (ADHD-friendly, mediation-specific):
+```r
+# Define OUR generics (no conflicts)
+boot <- function(object, ...) UseMethod("boot")
+med <- function(outcome, ...) UseMethod("med")
+paths <- function(object, ...) UseMethod("paths")
+
+# Register S7 methods
+S7::method(boot, MediationData) <- function(...) { ... }
+S7::method(med, new_S3_class("data.frame")) <- function(...) { ... }
+S7::method(paths, MediationData) <- function(...) { ... }
+```
+
+**User workflow** (short, pipeable, memorable):
+```r
+library(medfit)
+
+# Complete analysis in one pipeline
 data %>%
-  med(outcome ~ predictors, mediator ~ predictors, treatment = "X") %>%
+  med(Y ~ X + M + C, M ~ X + C, treatment = "X") %>%
   boot() %>%
   confint()
 ```
 
 **This matches the user's preferred pattern**: Simple verbs, context does the rest, pipeline-friendly, minimal decisions!
+
+### Key Technical Advantage
+
+✅ **S7 + Custom S3 generics = Best of both worlds**:
+- S7 type safety and validation
+- Custom short names (`boot()`, `med()`) with NO conflicts
+- Standard generics (`confint()`) for ecosystem integration
+- S3 dispatch compatibility
+- Clean, memorable API
+
+**No compromises needed!** We get ADHD-friendly short names AND ecosystem compatibility.
 
 ---
 
