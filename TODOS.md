@@ -165,6 +165,14 @@ Active tasks, implementation plan, and progress tracking.
   - [x] Standard generics for standard ops + custom S7 for mediation-specific
   - [x] 4-phase implementation roadmap with code examples
   - [x] Ecosystem integration benefits (broom, sandwich, car, lmtest, emmeans)
+- [x] Created ADHD-FRIENDLY-WORKFLOW.md
+  - [x] Analyzed ADHD challenges (working memory, decision fatigue, flow state)
+  - [x] Compared 6 workflow alternatives (pipe-first, single-function, builder, etc.)
+  - [x] **RECOMMENDATION: Alternative 6 (Hybrid)** - short verbs + pipes + standard generics
+  - [x] Proposed med() + boot() + confint() pattern
+  - [x] Smart defaults minimize decisions (parametric, 1000, 95% CI)
+  - [x] Pipeline maintains flow state (no context switching)
+  - [x] Complete examples and migration strategy
 
 ### 2025-12-15 (Morning)
 - [x] Created comprehensive test suite (241 tests)
