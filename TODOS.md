@@ -157,6 +157,14 @@ Active tasks, implementation plan, and progress tracking.
   - [x] Real-world adoption: ggplot2 4.0.0 migrated to S7
   - [x] **DECISION: KEEP S7 generics** (optimal for foundation package)
   - [x] Flexibility for dependent packages documented (all work with S7 classes)
+- [x] Created GENERIC-NAMING-STRATEGY.md
+  - [x] Researched base R standard generics (confint, coef, vcov, etc.)
+  - [x] Analyzed lavaan (hybrid approach), CMAverse (custom only), broom patterns
+  - [x] Compared 4 strategic options (standard only, custom only, hybrid, prefixed)
+  - [x] **DECISION: Use confint() not ci()** (hybrid approach recommended)
+  - [x] Standard generics for standard ops + custom S7 for mediation-specific
+  - [x] 4-phase implementation roadmap with code examples
+  - [x] Ecosystem integration benefits (broom, sandwich, car, lmtest, emmeans)
 
 ### 2025-12-15 (Morning)
 - [x] Created comprehensive test suite (241 tests)

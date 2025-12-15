@@ -35,7 +35,9 @@ Blocked: None
 📋 Recent Coordination:
 - Created COORDINATION-BRAINSTORM.md with implementation mechanics
 - Created GENERIC-FUNCTIONS-RESEARCH.md (comprehensive S3/S4/S7/R6 analysis)
-- **Decision**: KEEP S7 generics (current approach optimal for foundation package)
+- Created GENERIC-NAMING-STRATEGY.md (standard vs custom generics proposal)
+- **Decision**: KEEP S7 generics (current approach optimal)
+- **Decision**: Use confint() not ci() (hybrid approach - standard + custom)
 - Identified selective loading strategy (Option 2) for mediationverse
 - Mapped CMAverse integration as engine adapter pattern
 - Timeline: medfit v0.1.0 (this week) → probmed integration (next week)
