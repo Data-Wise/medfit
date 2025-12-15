@@ -150,6 +150,13 @@ Active tasks, implementation plan, and progress tracking.
   - [x] Recommended selective loading for mediationverse (Option 2)
   - [x] Created integration timeline (3 phases)
   - [x] Documented 4 open questions needing decisions
+- [x] Created GENERIC-FUNCTIONS-RESEARCH.md
+  - [x] Comprehensive comparison of S3, S4, S7, R6, R7 systems
+  - [x] Performance benchmarks (S3: 2.59μs, S7: 7.29μs - negligible for medfit)
+  - [x] Mixing S7 classes + S3 generics analysis (possible but loses features)
+  - [x] Real-world adoption: ggplot2 4.0.0 migrated to S7
+  - [x] **DECISION: KEEP S7 generics** (optimal for foundation package)
+  - [x] Flexibility for dependent packages documented (all work with S7 classes)
 
 ### 2025-12-15 (Morning)
 - [x] Created comprehensive test suite (241 tests)
