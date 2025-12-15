@@ -173,6 +173,14 @@ Active tasks, implementation plan, and progress tracking.
   - [x] Smart defaults minimize decisions (parametric, 1000, 95% CI)
   - [x] Pipeline maintains flow state (no context switching)
   - [x] Complete examples and migration strategy
+  - [x] Clarified S7+S3 generics pattern (NO namespace conflicts)
+- [x] Created FUNCTION-NAMING-DEEP-DIVE.md
+  - [x] Detailed explanation of med() function (fits + extracts)
+  - [x] Compared 6 alternatives (mediate, fit_med, medfit, estimate, etc.)
+  - [x] **RECOMMENDATION: mediate()** instead of med() (clearer verb, no ambiguity)
+  - [x] Explained paths() function (mediation structure extraction)
+  - [x] Compared to coef() (all params vs just paths)
+  - [x] **RECOMMENDATION: Keep paths()** (short, clear, no conflicts)
 
 ### 2025-12-15 (Morning)
 - [x] Created comprehensive test suite (241 tests)

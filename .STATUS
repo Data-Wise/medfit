@@ -36,10 +36,11 @@ Blocked: None
 - Created COORDINATION-BRAINSTORM.md with implementation mechanics
 - Created GENERIC-FUNCTIONS-RESEARCH.md (comprehensive S3/S4/S7/R6 analysis)
 - Created GENERIC-NAMING-STRATEGY.md (standard vs custom generics proposal)
-- Created ADHD-FRIENDLY-WORKFLOW.md (6 alternatives for reduced cognitive load)
+- Created ADHD-FRIENDLY-WORKFLOW.md (6 alternatives, S7+S3 generics pattern)
+- Created FUNCTION-NAMING-DEEP-DIVE.md (med() and paths() alternatives)
 - **Decision**: KEEP S7 generics (current approach optimal)
 - **Decision**: Use confint() not ci() (hybrid approach - standard + custom)
-- **Proposal**: Short verbs + pipes (med() + boot() + confint())
+- **Proposal**: mediate() + boot() + paths() (clear verbs, no ambiguity)
 - Identified selective loading strategy (Option 2) for mediationverse
 - Mapped CMAverse integration as engine adapter pattern
 - Timeline: medfit v0.1.0 (this week) → probmed integration (next week)
