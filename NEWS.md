@@ -111,6 +111,13 @@
 
 * `fit_mediation()` and `bootstrap_mediation()` are stubs awaiting implementation
 
+### Ecosystem Notes
+
+* Foundation package for the mediationverse ecosystem
+* probmed, RMediation, and medrobust are awaiting integration
+* Tested with R 4.1.0+, S7 0.1.0+
+* See [Ecosystem Coordination](planning/ECOSYSTEM.md) for cross-package guidelines
+
 ### Internal
 
 * Package skeleton created with proper structure
