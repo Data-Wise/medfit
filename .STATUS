@@ -5,14 +5,14 @@
 ~/projects/r-packages/active/medfit/
 
 ⏰ LAST UPDATED
-2025-12-15
+2025-12-16
 
 ────────────────────────────────────────────────
 
 🎯 CURRENT STATUS
 Priority: P1
 Status: active
-Progress: 80
+Progress: 95
 
 ────────────────────────────────────────────────
 
@@ -25,10 +25,17 @@ Version: 0.1.0.9000
 
 ────────────────────────────────────────────────
 
+## ✅ Just Completed (2025-12-16)
+- Implemented fit_mediation() with GLM engine
+- Implemented bootstrap_mediation() (parametric, nonparametric, plugin)
+- Fixed codecov v5 CI workflow
+- Updated vignettes with working examples
+- All 93 tests passing, CI green
+
 🎯 Next Action:
-A) Implement bootstrap_mediation() (3-4 hr) - 27 tests ready
-B) Implement fit_mediation() (2-3 hr) - 30 tests ready
-C) Implement custom generics: mediate(), boot(), paths()
+A) Phase 6: Extended testing (edge cases, integration) 🟢
+B) Merge dev -> main to deploy pkgdown site
+C) Future: lmer/brms engines, BCa confidence intervals
 
 Blocked: None
 
@@ -52,14 +59,13 @@ Blocked: None
 ────────────────────────────────────────────────
 
 ✅ COMPLETED
-- S7 class system implemented (MediationData, SerialMediationData, BootstrapResult)
-- Path coefficient extraction (lm/glm, lavaan)
-- Print and summary methods
-- Comprehensive test suite (241 tests: 184 PASS, 57 SKIP, 0 FAIL)
-  - test-bootstrap.R (27 tests for bootstrap_mediation)
-  - test-fit-glm.R (30 tests for fit_mediation)
-  - helper-test-data.R (centralized test generators)
-- Project management files (IDEAS.md, TODOS.md, PROJECT-HUB.md)
+- Phase 1: Package setup (CI/CD, documentation, Dependabot)
+- Phase 2: S7 class architecture (MediationData, SerialMediationData, BootstrapResult)
+- Phase 2.5: Comprehensive Quarto vignettes (4 articles)
+- Phase 3: Model extraction (lm/glm, lavaan)
+- Phase 4: fit_mediation() with GLM engine
+- Phase 5: bootstrap_mediation() (parametric, nonparametric, plugin)
+- 93 tests passing, R CMD check clean (1 NOTE)
 
 ────────────────────────────────────────────────
 
