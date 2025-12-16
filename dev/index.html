@@ -272,28 +272,50 @@
 </div>
 </div>
 <div class="section level2">
-<h2 id="package-ecosystem">Package Ecosystem<a class="anchor" aria-label="anchor" href="#package-ecosystem"></a>
+<h2 id="mediationverse-ecosystem">Mediationverse Ecosystem<a class="anchor" aria-label="anchor" href="#mediationverse-ecosystem"></a>
 </h2>
-<p>medfit is the foundation for three specialized mediation packages:</p>
-<pre><code>                    ┌─────────────┐
-                    │   medfit    │
-                    │ (Foundation)│
-                    └──────┬──────┘
-                           │
-            ┌──────────────┼──────────────┐
-            │              │              │
-      ┌─────▼─────┐  ┌────▼────┐  ┌──────▼──────┐
-      │  probmed  │  │RMediation│  │  medrobust  │
-      │   (P_med) │  │(DOP,MBCO)│  │(Sensitivity)│
-      └───────────┘  └─────────┘  └─────────────┘</code></pre>
-<ul>
-<li>
-<strong><a href="https://github.com/data-wise/probmed" class="external-link">probmed</a></strong>: Probabilistic effect size (P_med)</li>
-<li>
-<strong><a href="https://github.com/data-wise/rmediation" class="external-link">RMediation</a></strong>: Confidence intervals via Distribution of Product</li>
-<li>
-<strong><a href="https://github.com/data-wise/medrobust" class="external-link">medrobust</a></strong>: Sensitivity analysis for unmeasured confounding</li>
-</ul>
+<p>medfit is the foundation for the <strong>mediationverse</strong> ecosystem:</p>
+<table class="table">
+<colgroup>
+<col width="37%">
+<col width="37%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th>Package</th>
+<th>Purpose</th>
+<th>Role</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>
+<strong>medfit</strong> (this)</td>
+<td>Model fitting, extraction, bootstrap</td>
+<td>Foundation</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/data-wise/probmed" class="external-link">probmed</a></td>
+<td>Probabilistic effect size (P_med)</td>
+<td>Application</td>
+</tr>
+<tr class="odd">
+<td><a href="https://github.com/data-wise/rmediation" class="external-link">RMediation</a></td>
+<td>Confidence intervals (DOP, MBCO)</td>
+<td>Application</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/data-wise/medrobust" class="external-link">medrobust</a></td>
+<td>Sensitivity analysis</td>
+<td>Application</td>
+</tr>
+<tr class="odd">
+<td><a href="https://github.com/data-wise/medsim" class="external-link">medsim</a></td>
+<td>Simulation infrastructure</td>
+<td>Support</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="planning/ECOSYSTEM.html">Ecosystem Coordination</a> for version compatibility and development guidelines.</p>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>

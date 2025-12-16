@@ -7,7 +7,13 @@
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Perform Bootstrap Inference for Mediation Statistics — bootstrap_mediation"><meta name="description" content="Conduct bootstrap inference to compute confidence intervals for
 mediation statistics. Supports parametric, nonparametric, and
+plugin methods.
+Conduct bootstrap inference to compute confidence intervals for
+mediation statistics. Supports parametric, nonparametric, and
 plugin methods."><meta property="og:description" content="Conduct bootstrap inference to compute confidence intervals for
+mediation statistics. Supports parametric, nonparametric, and
+plugin methods.
+Conduct bootstrap inference to compute confidence intervals for
 mediation statistics. Supports parametric, nonparametric, and
 plugin methods."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"><meta name="robots" content="noindex"></head><body><p>
 
@@ -76,12 +82,15 @@ plugin methods."><meta property="og:image" content="https://data-wise.github.io/
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Perform Bootstrap Inference for Mediation Statistics</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a>, <a href="https://github.com/data-wise/medfit/blob/main/R/bootstrap.R" class="external-link"><code>R/bootstrap.R</code></a></small>
       <div class="d-none name"><code>bootstrap_mediation.Rd</code></div>
     </div>
 
     <div class="ref-description section level2">
     <p>Conduct bootstrap inference to compute confidence intervals for
+mediation statistics. Supports parametric, nonparametric, and
+plugin methods.</p>
+<p>Conduct bootstrap inference to compute confidence intervals for
 mediation statistics. Supports parametric, nonparametric, and
 plugin methods.</p>
     </div>
@@ -93,7 +102,20 @@ plugin methods.</p>
 <span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"parametric"</span>, <span class="st">"nonparametric"</span>, <span class="st">"plugin"</span><span class="op">)</span>,</span>
 <span>  mediation_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">1000L</span>,</span>
+<span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  ncores <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">bootstrap_mediation</span><span class="op">(</span></span>
+<span>  <span class="va">statistic_fn</span>,</span>
+<span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"parametric"</span>, <span class="st">"nonparametric"</span>, <span class="st">"plugin"</span><span class="op">)</span>,</span>
+<span>  mediation_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">1000L</span>,</span>
 <span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ncores <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -107,9 +129,9 @@ plugin methods.</p>
 
 
 <dl><dt id="arg-statistic-fn">statistic_fn<a class="anchor" aria-label="anchor" href="#arg-statistic-fn"></a></dt>
-<dd><p>Function that computes the statistic of interest.</p><ul><li><p>For parametric bootstrap: receives parameter vector, returns scalar</p></li>
+<dd><p>Function that computes the statistic of interest.</p><ul><li><p>For parametric bootstrap: receives named parameter vector, returns scalar</p></li>
 <li><p>For nonparametric bootstrap: receives data frame, returns scalar</p></li>
-<li><p>For plugin: receives parameter vector, returns scalar</p></li>
+<li><p>For plugin: receives named parameter vector, returns scalar</p></li>
 </ul></dd>
 
 
@@ -142,7 +164,7 @@ plugin methods.</p>
 
 <dt id="arg-ncores">ncores<a class="anchor" aria-label="anchor" href="#arg-ncores"></a></dt>
 <dd><p>Integer: number of cores for parallel processing.
-If NULL, uses <code>detectCores() - 1</code></p></dd>
+If NULL, uses <code>parallel::detectCores() - 1</code></p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
@@ -156,6 +178,10 @@ If NULL, uses <code>detectCores() - 1</code></p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <a href="BootstrapResult.html">BootstrapResult</a> object containing:</p><ul><li><p>Point estimate</p></li>
+<li><p>Confidence interval bounds</p></li>
+<li><p>Bootstrap distribution (for parametric and nonparametric)</p></li>
+<li><p>Method used</p></li>
+</ul><p>A <a href="BootstrapResult.html">BootstrapResult</a> object containing:</p><ul><li><p>Point estimate</p></li>
 <li><p>Confidence interval bounds</p></li>
 <li><p>Bootstrap distribution (for parametric and nonparametric)</p></li>
 <li><p>Method used</p></li>
@@ -199,10 +225,64 @@ If NULL, uses <code>detectCores() - 1</code></p></dd>
 <p></p><div class="sourceCode r"><pre><code><span><span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">...</span>, seed <span class="op">=</span> <span class="fl">12345</span><span class="op">)</span></span></code></pre><p></p></div>
 </div>
 
+<div class="section">
+<h3 id="bootstrap-methods-1">Bootstrap Methods<a class="anchor" aria-label="anchor" href="#bootstrap-methods-1"></a></h3>
+
+
+<p><strong>Parametric Bootstrap</strong> (<code>method = "parametric"</code>):</p><ul><li><p>Samples parameter vectors from \(N(\hat{\theta}, \hat{\Sigma})\)</p></li>
+<li><p>Fast and efficient</p></li>
+<li><p>Assumes asymptotic normality of parameters</p></li>
+<li><p>Recommended for most applications with n &gt; 50</p></li>
+<li><p>Requires <code>mediation_data</code> argument</p></li>
+</ul><p><strong>Nonparametric Bootstrap</strong> (<code>method = "nonparametric"</code>):</p><ul><li><p>Resamples observations with replacement</p></li>
+<li><p>Refits models for each bootstrap sample</p></li>
+<li><p>More robust, no normality assumption</p></li>
+<li><p>Computationally intensive</p></li>
+<li><p>Use when normality is questionable or n is small</p></li>
+<li><p>Requires <code>data</code> argument</p></li>
+</ul><p><strong>Plugin Estimator</strong> (<code>method = "plugin"</code>):</p><ul><li><p>Computes point estimate only</p></li>
+<li><p>No confidence interval</p></li>
+<li><p>Fastest method</p></li>
+<li><p>Use for quick checks or when CI not needed</p></li>
+<li><p>Requires <code>mediation_data</code> argument</p></li>
+</ul></div>
+
+<div class="section">
+<h3 id="statistic-function">Statistic Function<a class="anchor" aria-label="anchor" href="#statistic-function"></a></h3>
+
+
+<p>The <code>statistic_fn</code> should be a function that:</p><ul><li><p>For parametric/plugin: Takes a named numeric vector of parameters</p></li>
+<li><p>For nonparametric: Takes a data frame</p></li>
+<li><p>Returns a single numeric value</p></li>
+</ul><p>Common statistic functions for indirect effect:</p>
+<p></p><div class="sourceCode r"><pre><code><span><span class="co"># Using parameter names from MediationData</span></span>
+<span><span class="va">indirect_fn</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">theta</span><span class="op">[</span><span class="st">"m_X"</span><span class="op">]</span> <span class="op">*</span> <span class="va">theta</span><span class="op">[</span><span class="st">"y_M"</span><span class="op">]</span></span>
+<span><span class="op">}</span></span></code></pre><p></p></div>
+</div>
+
+<div class="section">
+<h3 id="parallel-processing-1">Parallel Processing<a class="anchor" aria-label="anchor" href="#parallel-processing-1"></a></h3>
+
+
+<p>Set <code>parallel = TRUE</code> to use multiple cores:</p><ul><li><p>Uses <code><a href="https://rdrr.io/r/parallel/mclapply.html" class="external-link">parallel::mclapply()</a></code> on Unix systems</p></li>
+<li><p>Falls back to sequential on Windows</p></li>
+<li><p>Automatically detects available cores</p></li>
+</ul></div>
+
+<div class="section">
+<h3 id="reproducibility-1">Reproducibility<a class="anchor" aria-label="anchor" href="#reproducibility-1"></a></h3>
+
+
+<p>Always set a seed for reproducible results:</p>
+<p></p><div class="sourceCode r"><pre><code><span><span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">...</span>, seed <span class="op">=</span> <span class="fl">12345</span><span class="op">)</span></span></code></pre><p></p></div>
+</div>
+
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><a href="BootstrapResult.html">BootstrapResult</a>, <a href="MediationData.html">MediationData</a>, <code><a href="extract_mediation.html">extract_mediation()</a></code></p></div>
+    <div class="dont-index"><p><a href="BootstrapResult.html">BootstrapResult</a>, <a href="MediationData.html">MediationData</a>, <code><a href="extract_mediation.html">extract_mediation()</a></code></p>
+<p><a href="BootstrapResult.html">BootstrapResult</a>, <a href="MediationData.html">MediationData</a>, <code><a href="fit_mediation.html">fit_mediation()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -238,6 +318,89 @@ If NULL, uses <code>detectCores() - 1</code></p></dd>
 <span class="r-in"><span>  mediation_data <span class="op">=</span> <span class="va">med_data</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Generate example data</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span></span>
+<span class="r-in"><span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fit mediation model</span></span></span>
+<span class="r-in"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>,</span></span>
+<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
+<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span></span>
+<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"M"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Define indirect effect function</span></span></span>
+<span class="r-in"><span><span class="va">indirect_fn</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="va">theta</span><span class="op">[</span><span class="st">"m_X"</span><span class="op">]</span> <span class="op">*</span> <span class="va">theta</span><span class="op">[</span><span class="st">"y_M"</span><span class="op">]</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Plugin estimator (point estimate only, fastest)</span></span></span>
+<span class="r-in"><span><span class="va">result_plugin</span> <span class="op">&lt;-</span> <span class="fu">bootstrap_mediation</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  statistic_fn <span class="op">=</span> <span class="va">indirect_fn</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"plugin"</span>,</span></span>
+<span class="r-in"><span>  mediation_data <span class="op">=</span> <span class="va">med_data</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_plugin</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> BootstrapResult object</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ======================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Method:   plugin</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estimate:   0.1897</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (No confidence interval for plugin method)</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># Parametric bootstrap (recommended for most applications)</span></span></span>
+<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">bootstrap_mediation</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  statistic_fn <span class="op">=</span> <span class="va">indirect_fn</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span></span>
+<span class="r-in"><span>  mediation_data <span class="op">=</span> <span class="va">med_data</span>,</span></span>
+<span class="r-in"><span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span></span>
+<span class="r-in"><span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span></span>
+<span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">12345</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> BootstrapResult object</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ======================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Method:   parametric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estimate:   0.1897</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> N bootstrap samples: 1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% Confidence Interval:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Lower:   0.0792</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Upper:   0.3230</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Nonparametric bootstrap (slower but more robust)</span></span></span>
+<span class="r-in"><span><span class="va">refit_fn</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">boot_data</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">boot_data</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, data <span class="op">=</span> <span class="va">boot_data</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_m</span><span class="op">)</span><span class="op">[</span><span class="st">"X"</span><span class="op">]</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_y</span><span class="op">)</span><span class="op">[</span><span class="st">"M"</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">result_np</span> <span class="op">&lt;-</span> <span class="fu">bootstrap_mediation</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  statistic_fn <span class="op">=</span> <span class="va">refit_fn</span>,</span></span>
+<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"nonparametric"</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
+<span class="r-in"><span>  n_boot <span class="op">=</span> <span class="fl">500</span>,</span></span>
+<span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">12345</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_np</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> BootstrapResult object</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ======================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Method:   nonparametric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estimate:   0.1897</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> N bootstrap samples: 500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% Confidence Interval:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Lower:   0.0746</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Upper:   0.3331</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

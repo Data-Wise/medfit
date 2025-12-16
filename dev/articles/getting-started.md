@@ -69,14 +69,84 @@ serial_data@a_path * serial_data@d_path * serial_data@b_path
 
 ## Main Functions
 
-medfit provides three generic functions:
+medfit provides three main functions:
 
-1.  **[`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md)** -
-    Extract mediation structure from fitted models (lm/glm, lavaan)
-2.  **[`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md)** -
-    Fit mediation models directly
-3.  **[`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md)** -
-    Bootstrap inference for confidence intervals
+### 1. fit_mediation() - Fit Models Directly
+
+The easiest way to get started:
+
+``` r
+library(medfit)
+
+# Create example data
+set.seed(123)
+n <- 200
+X <- rnorm(n)
+M <- 0.5 * X + rnorm(n)
+Y <- 0.3 * X + 0.4 * M + rnorm(n)
+mydata <- data.frame(X = X, M = M, Y = Y)
+
+# Fit mediation model
+med <- fit_mediation(
+  formula_y = Y ~ X + M,
+  formula_m = M ~ X,
+  data = mydata,
+  treatment = "X",
+  mediator = "M"
+)
+
+# View results
+print(med)
+
+# Access path coefficients
+med@a_path  # X -> M
+med@b_path  # M -> Y
+med@c_prime # X -> Y (direct)
+
+# Indirect effect
+med@a_path * med@b_path
+```
+
+### 2. extract_mediation() - Extract from Fitted Models
+
+If you already have fitted models:
+
+``` r
+# Fit models separately
+fit_m <- lm(M ~ X, data = mydata)
+fit_y <- lm(Y ~ X + M, data = mydata)
+
+# Extract mediation structure
+med <- extract_mediation(
+  fit_m,
+  model_y = fit_y,
+  treatment = "X",
+  mediator = "M"
+)
+```
+
+### 3. bootstrap_mediation() - Bootstrap Inference
+
+Compute confidence intervals:
+
+``` r
+# Define statistic function
+indirect_effect <- function(theta) {
+  theta["m_X"] * theta["y_M"]
+}
+
+# Bootstrap CI
+boot_result <- bootstrap_mediation(
+  statistic_fn = indirect_effect,
+  method = "parametric",
+  mediation_data = med,
+  n_boot = 1000,
+  ci_level = 0.95,
+  seed = 123
+)
+
+print(boot_result)
+```
 
 ## Learn More
 
@@ -96,7 +166,9 @@ medfit is under active development:
 
 - ✅ Phase 2 Complete: S7 class architecture
 - ✅ Phase 3 Complete: Model extraction (lm/glm, lavaan)
-- 🚧 Phase 4 In Progress: Model fitting
-- 📋 Planned: Bootstrap infrastructure
+- ✅ Phase 4 Complete: Model fitting
+  ([`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md))
+- ✅ Phase 5 Complete: Bootstrap infrastructure
+  ([`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md))
 
 See `NEWS.md` for the latest updates.

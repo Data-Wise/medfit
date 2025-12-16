@@ -1656,15 +1656,58 @@ Compute statistic for each θ\*, extract quantiles for CI.
 
 ------------------------------------------------------------------------
 
+## Ecosystem Coordination
+
+medfit is the **foundation package** for the mediationverse ecosystem.
+
+### Central Planning Documents
+
+All ecosystem-wide coordination is managed in
+`/Users/dt/mediation-planning/`:
+
+| Document                       | Purpose                                              |
+|--------------------------------|------------------------------------------------------|
+| `ECOSYSTEM-COORDINATION.md`    | Version matrix, change propagation, release timeline |
+| `MONTHLY-CHECKLIST.md`         | Recurring ecosystem health checks                    |
+| `templates/README-template.md` | Standardized README structure                        |
+| `templates/NEWS-template.md`   | Standardized NEWS.md format                          |
+
+### Change Propagation
+
+When making changes to medfit that may affect dependent packages:
+
+1.  **Document** - Update NEWS.md with ecosystem notes
+2.  **Test** - Run `revdepcheck::revdep_check()` locally
+3.  **Notify** - For breaking changes, create issue with 2-month notice
+4.  **Coordinate** - Schedule dependent package updates before release
+
+### Cross-Package CI
+
+The `.github/workflows/revdep-check.yaml` workflow runs weekly to
+test: - probmed against medfit @main - RMediation against medfit @main -
+medrobust against medfit @main
+
+### Breaking Change Protocol
+
+1.  Create GitHub issue with `[BREAKING]` prefix
+2.  Minimum 2-month deprecation period
+3.  Use
+    [`lifecycle::deprecate_warn()`](https://lifecycle.r-lib.org/reference/deprecate_soft.html)
+    for soft deprecation
+4.  Document migration path in vignette or NEWS.md
+5.  Update version matrix in ECOSYSTEM-COORDINATION.md
+
+------------------------------------------------------------------------
+
 ## Additional Resources
 
 ### Package Ecosystem Documentation
 
+- **Central**: `/Users/dt/mediation-planning/` - Ecosystem-wide strategy
 - **probmed**: `probmed/CLAUDE.md`, `probmed/planning/`
 - **RMediation**: `rmediation/CLAUDE.md`
 - **medrobust**: `medrobust/CLAUDE.md`
-- **Ecosystem strategy**:
-  `probmed/planning/three-package-ecosystem-strategy.md`
+- **medsim**: Simulation infrastructure for testing methods
 
 ### Key Planning Documents
 
@@ -1673,9 +1716,12 @@ plan - **ECOSYSTEM.md**: Connection to dependent packages
 
 ### Related Packages
 
-- probmed: <https://github.com/data-wise/probmed>
-- RMediation: <https://github.com/data-wise/rmediation>
-- medrobust: <https://github.com/data-wise/medrobust>
+| Package    | Repository                                | Purpose                           |
+|------------|-------------------------------------------|-----------------------------------|
+| probmed    | <https://github.com/data-wise/probmed>    | Probabilistic effect size (P_med) |
+| RMediation | <https://github.com/data-wise/rmediation> | Confidence intervals (DOP, MBCO)  |
+| medrobust  | <https://github.com/data-wise/medrobust>  | Sensitivity analysis              |
+| medsim     | <https://github.com/data-wise/medsim>     | Simulation infrastructure         |
 
 ------------------------------------------------------------------------
 

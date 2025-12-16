@@ -31,13 +31,26 @@ mediation, moderated mediation)
 Samples from the estimated parameter distribution:
 
 ``` r
-# Assume we have extracted mediation structure
-med <- extract_mediation(model_m, model_y, treatment = "X", mediator = "M")
+library(medfit)
+
+# Fit mediation models
+fit_m <- lm(M ~ X, data = mydata)
+fit_y <- lm(Y ~ X + M, data = mydata)
+
+# Extract mediation structure
+med <- extract_mediation(fit_m, model_y = fit_y, treatment = "X", mediator = "M")
+
+# Define statistic function for indirect effect
+# Parameter names follow pattern: m_X (mediator model), y_M, y_X (outcome model)
+indirect_effect <- function(theta) {
+  theta["m_X"] * theta["y_M"]
+}
 
 # Parametric bootstrap
 boot_result <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   ci_level = 0.95,
   seed = 123
@@ -79,15 +92,28 @@ summary(boot_result)
 Resamples data and refits models:
 
 ``` r
+# Statistic function that refits models on resampled data
+statistic_fn_refit <- function(boot_data) {
+  # Fit models on bootstrap sample
+  fit_m <- lm(M ~ X, data = boot_data)
+  fit_y <- lm(Y ~ X + M, data = boot_data)
+
+  # Extract and compute indirect effect
+  med_boot <- extract_mediation(fit_m, model_y = fit_y,
+                                treatment = "X", mediator = "M")
+  med_boot@a_path * med_boot@b_path
+}
+
 # Nonparametric bootstrap (requires original data)
 boot_result <- bootstrap_mediation(
-  med,
+  statistic_fn = statistic_fn_refit,
   method = "nonparametric",
+  data = mydata,
   n_boot = 1000,
   ci_level = 0.95,
   seed = 123,
-  parallel = TRUE, # Use parallel processing
-  n_cores = 4
+  parallel = TRUE,
+  ncores = 4
 )
 
 print(boot_result)
@@ -127,15 +153,17 @@ Speed up with parallel processing:
 
 ``` r
 # Detect available cores
-n_cores <- parallel::detectCores() - 1
+ncores <- parallel::detectCores() - 1
 
 # Run in parallel
 boot_result <- bootstrap_mediation(
-  med,
+  statistic_fn = statistic_fn_refit,
   method = "nonparametric",
+  data = mydata,
   n_boot = 5000,
   parallel = TRUE,
-  n_cores = n_cores
+  ncores = ncores,
+  seed = 123
 )
 ```
 
@@ -146,9 +174,9 @@ Point estimate only, no confidence interval:
 ``` r
 # Plugin estimator (fastest)
 plugin_result <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "plugin",
-  n_boot = 0 # Not used for plugin
+  mediation_data = med
 )
 
 print(plugin_result)
@@ -206,10 +234,12 @@ c(boot_result@ci_lower, boot_result@ci_upper)
 
 # Change confidence level
 boot_90 <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
-  ci_level = 0.90
+  ci_level = 0.90,
+  seed = 123
 )
 c(boot_90@ci_lower, boot_90@ci_upper) # Narrower
 ```
@@ -263,14 +293,16 @@ Set a seed for reproducible results:
 ``` r
 # Same seed = same results
 boot1 <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   seed = 123
 )
 boot2 <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   seed = 123
 )
@@ -280,8 +312,9 @@ all.equal(boot1@boot_estimates, boot2@boot_estimates) # TRUE
 
 # Different seed = different results
 boot3 <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   seed = 456
 )
@@ -301,20 +334,23 @@ Check stability by varying `n_boot`:
 ``` r
 # Compare different n_boot
 boot_1k <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   seed = 123
 )
 boot_5k <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "parametric",
+  mediation_data = med,
   n_boot = 5000,
   seed = 123
 )
 boot_10k <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_effect,
   method = "parametric",
+  mediation_data = med,
   n_boot = 10000,
   seed = 123
 )
@@ -397,8 +433,8 @@ coverage
 
 ## Development Status
 
-Currently implemented: - ✅ S7 class for BootstrapResult - 📋 Parametric
-bootstrap (planned) - 📋 Nonparametric bootstrap (planned) - 📋 Parallel
-processing support (planned)
+Currently implemented: - ✅ S7 class for BootstrapResult - ✅ Parametric
+bootstrap - ✅ Nonparametric bootstrap - ✅ Plugin estimator - ✅
+Parallel processing support - ✅ Seed-based reproducibility
 
 See `NEWS.md` for updates.

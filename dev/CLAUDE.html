@@ -1504,10 +1504,54 @@ Outcome:   Y = θ₀ + θ₁X + θ₂M + θ₃(X×M) + θ₄'C + εᵧ</code></p
 </ol><hr></div>
 </div>
 <div class="section level2">
+<h2 id="ecosystem-coordination">Ecosystem Coordination<a class="anchor" aria-label="anchor" href="#ecosystem-coordination"></a></h2>
+<p>medfit is the <strong>foundation package</strong> for the mediationverse ecosystem.</p>
+<div class="section level3">
+<h3 id="central-planning-documents">Central Planning Documents<a class="anchor" aria-label="anchor" href="#central-planning-documents"></a></h3>
+<p>All ecosystem-wide coordination is managed in <code>/Users/dt/mediation-planning/</code>:</p>
+<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr class="header"><th>Document</th>
+<th>Purpose</th>
+</tr></thead><tbody><tr class="odd"><td><code>ECOSYSTEM-COORDINATION.md</code></td>
+<td>Version matrix, change propagation, release timeline</td>
+</tr><tr class="even"><td><code>MONTHLY-CHECKLIST.md</code></td>
+<td>Recurring ecosystem health checks</td>
+</tr><tr class="odd"><td><code>templates/README-template.md</code></td>
+<td>Standardized README structure</td>
+</tr><tr class="even"><td><code>templates/NEWS-template.md</code></td>
+<td>Standardized NEWS.md format</td>
+</tr></tbody></table></div>
+<div class="section level3">
+<h3 id="change-propagation">Change Propagation<a class="anchor" aria-label="anchor" href="#change-propagation"></a></h3>
+<p>When making changes to medfit that may affect dependent packages:</p>
+<ol style="list-style-type: decimal"><li>
+<strong>Document</strong> - Update NEWS.md with ecosystem notes</li>
+<li>
+<strong>Test</strong> - Run <code>revdepcheck::revdep_check()</code> locally</li>
+<li>
+<strong>Notify</strong> - For breaking changes, create issue with 2-month notice</li>
+<li>
+<strong>Coordinate</strong> - Schedule dependent package updates before release</li>
+</ol></div>
+<div class="section level3">
+<h3 id="cross-package-ci">Cross-Package CI<a class="anchor" aria-label="anchor" href="#cross-package-ci"></a></h3>
+<p>The <code>.github/workflows/revdep-check.yaml</code> workflow runs weekly to test: - probmed against medfit @main - RMediation against medfit @main - medrobust against medfit @main</p>
+</div>
+<div class="section level3">
+<h3 id="breaking-change-protocol">Breaking Change Protocol<a class="anchor" aria-label="anchor" href="#breaking-change-protocol"></a></h3>
+<ol style="list-style-type: decimal"><li>Create GitHub issue with <code>[BREAKING]</code> prefix</li>
+<li>Minimum 2-month deprecation period</li>
+<li>Use <code><a href="https://lifecycle.r-lib.org/reference/deprecate_soft.html" class="external-link">lifecycle::deprecate_warn()</a></code> for soft deprecation</li>
+<li>Document migration path in vignette or NEWS.md</li>
+<li>Update version matrix in ECOSYSTEM-COORDINATION.md</li>
+</ol><hr></div>
+</div>
+<div class="section level2">
 <h2 id="additional-resources">Additional Resources<a class="anchor" aria-label="anchor" href="#additional-resources"></a></h2>
 <div class="section level3">
 <h3 id="package-ecosystem-documentation">Package Ecosystem Documentation<a class="anchor" aria-label="anchor" href="#package-ecosystem-documentation"></a></h3>
 <ul><li>
+<strong>Central</strong>: <code>/Users/dt/mediation-planning/</code> - Ecosystem-wide strategy</li>
+<li>
 <strong>probmed</strong>: <code>probmed/CLAUDE.md</code>, <code>probmed/planning/</code>
 </li>
 <li>
@@ -1517,8 +1561,7 @@ Outcome:   Y = θ₀ + θ₁X + θ₂M + θ₃(X×M) + θ₄'C + εᵧ</code></p
 <strong>medrobust</strong>: <code>medrobust/CLAUDE.md</code>
 </li>
 <li>
-<strong>Ecosystem strategy</strong>: <code>probmed/planning/three-package-ecosystem-strategy.md</code>
-</li>
+<strong>medsim</strong>: Simulation infrastructure for testing methods</li>
 </ul></div>
 <div class="section level3">
 <h3 id="key-planning-documents">Key Planning Documents<a class="anchor" aria-label="anchor" href="#key-planning-documents"></a></h3>
@@ -1526,13 +1569,22 @@ Outcome:   Y = θ₀ + θ₁X + θ₂M + θ₃(X×M) + θ₄'C + εᵧ</code></p
 </div>
 <div class="section level3">
 <h3 id="related-packages">Related Packages<a class="anchor" aria-label="anchor" href="#related-packages"></a></h3>
-<ul><li>probmed: <a href="https://github.com/data-wise/probmed" class="external-link uri">https://github.com/data-wise/probmed</a>
-</li>
-<li>RMediation: <a href="https://github.com/data-wise/rmediation" class="external-link uri">https://github.com/data-wise/rmediation</a>
-</li>
-<li>medrobust: <a href="https://github.com/data-wise/medrobust" class="external-link uri">https://github.com/data-wise/medrobust</a>
-</li>
-</ul><hr></div>
+<table class="table"><colgroup><col width="31%"><col width="37%"><col width="31%"></colgroup><thead><tr class="header"><th>Package</th>
+<th>Repository</th>
+<th>Purpose</th>
+</tr></thead><tbody><tr class="odd"><td>probmed</td>
+<td><a href="https://github.com/data-wise/probmed" class="external-link uri">https://github.com/data-wise/probmed</a></td>
+<td>Probabilistic effect size (P_med)</td>
+</tr><tr class="even"><td>RMediation</td>
+<td><a href="https://github.com/data-wise/rmediation" class="external-link uri">https://github.com/data-wise/rmediation</a></td>
+<td>Confidence intervals (DOP, MBCO)</td>
+</tr><tr class="odd"><td>medrobust</td>
+<td><a href="https://github.com/data-wise/medrobust" class="external-link uri">https://github.com/data-wise/medrobust</a></td>
+<td>Sensitivity analysis</td>
+</tr><tr class="even"><td>medsim</td>
+<td><a href="https://github.com/data-wise/medsim" class="external-link uri">https://github.com/data-wise/medsim</a></td>
+<td>Simulation infrastructure</td>
+</tr></tbody></table><hr></div>
 </div>
 <div class="section level2">
 <h2 id="troubleshooting">Troubleshooting<a class="anchor" aria-label="anchor" href="#troubleshooting"></a></h2>

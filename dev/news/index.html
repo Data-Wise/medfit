@@ -78,12 +78,50 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="medfit-development-version">medfit (development version)<a class="anchor" aria-label="anchor" href="#medfit-development-version"></a></h2>
 <div class="section level3">
-<h3 id="medfit-development-version-1">medfit 0.1.0<a class="anchor" aria-label="anchor" href="#medfit-development-version-1"></a></h3>
+<h3 id="medfit-development-version-1">medfit 0.1.0.9000 (2025-12-16)<a class="anchor" aria-label="anchor" href="#medfit-development-version-1"></a></h3>
+<div class="section level4">
+<h4 id="new-features-development-version">New Features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h4>
+<ul><li>
+<strong><code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> function</strong> - Fit mediation models with formula interface
+<ul><li>GLM engine for linear and generalized linear models</li>
+<li>Support for continuous and binary outcomes (<code>family_y</code> argument)</li>
+<li>Covariates supported in both mediator and outcome models</li>
+<li>Full checkmate input validation</li>
+<li>Returns <code>MediationData</code> object for downstream analysis</li>
+</ul></li>
+<li>
+<strong><code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> function</strong> - Bootstrap inference for mediation statistics
+<ul><li>
+<strong>Parametric bootstrap</strong>: Fast, samples from multivariate normal</li>
+<li>
+<strong>Nonparametric bootstrap</strong>: Robust, resamples data and refits models</li>
+<li>
+<strong>Plugin estimator</strong>: Point estimate only, fastest method</li>
+<li>Parallel processing support (<code>parallel = TRUE</code>, <code>ncores</code> argument)</li>
+<li>Seed-based reproducibility</li>
+<li>Returns <code>BootstrapResult</code> object with point estimate and CI</li>
+</ul></li>
+<li>
+<strong>CI workflow fix</strong>: Updated codecov action v5 parameter names (<code>file</code> -&gt; <code>files</code>, <code>plugin</code> -&gt; <code>plugins</code>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h4>
+<ul><li>Updated vignettes to reflect implemented features:
+<ul><li>
+<code>getting-started.qmd</code>: Added complete working examples for all three main functions</li>
+<li>
+<code>bootstrap.qmd</code>: Updated all code examples to use correct API with <code>statistic_fn</code>
+</li>
+</ul></li>
+</ul><hr></div>
+</div>
+<div class="section level3">
+<h3 id="medfit-development-version-2">medfit 0.1.0<a class="anchor" aria-label="anchor" href="#medfit-development-version-2"></a></h3>
 <p><strong>Initial development release</strong></p>
 <div class="section level4">
 <h4 id="major-features-development-version">Major Features<a class="anchor" aria-label="anchor" href="#major-features-development-version"></a></h4>
 <ul><li>
-<strong>Defensive Programming Infrastructure</strong> (NEW)
+<strong>Defensive Programming Infrastructure</strong>
 <ul><li>Added <code>checkmate</code> package for fail-fast input validation</li>
 <li>All extraction functions now use <code>checkmate::assert_*</code> for argument validation</li>
 <li>Provides fast (C-based), memory-efficient assertions with informative error messages</li>
@@ -123,7 +161,7 @@
 </ul></li>
 </ul></div>
 <div class="section level4">
-<h4 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h4>
+<h4 id="documentation-development-version-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version-1"></a></h4>
 <ul><li>
 <strong>Comprehensive Quarto Vignettes</strong> (NEW)
 <ul><li>
@@ -174,13 +212,13 @@
 </ul></div>
 <div class="section level4">
 <h4 id="development-status-development-version">Development Status<a class="anchor" aria-label="anchor" href="#development-status-development-version"></a></h4>
-<p><strong>Current Phase</strong>: Phase 3 Complete → Phase 4 In Progress <strong>Next</strong>: Complete Phase 4 (Model Fitting), then Phase 5 (Bootstrap)</p>
+<p><strong>Current Phase</strong>: Phase 5 Complete <strong>Next</strong>: Phase 6 (Extended Testing), Phase 8 (Polish &amp; Release)</p>
 <ul class="task-list"><li><label><input type="checkbox" checked>Phase 1: Package setup (CI/CD, documentation, Dependabot)</label></li>
 <li><label><input type="checkbox" checked>Phase 2: S7 class architecture (MediationData, SerialMediationData, BootstrapResult)</label></li>
 <li><label><input type="checkbox" checked>Phase 2.5: Comprehensive Quarto documentation (4 vignettes, pkgdown website)</label></li>
-<li><label><input type="checkbox" checked>Phase 3: Model extraction (lm/glm, lavaan methods, 184 tests)</label></li>
-<li><label><input type="checkbox">Phase 4: Model fitting (stub implemented, GLM engine needed)</label></li>
-<li><label><input type="checkbox">Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)</label></li>
+<li><label><input type="checkbox" checked>Phase 3: Model extraction (lm/glm, lavaan methods)</label></li>
+<li><label><input type="checkbox" checked>Phase 4: Model fitting (<code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> with GLM engine)</label></li>
+<li><label><input type="checkbox" checked>Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)</label></li>
 <li><label><input type="checkbox">Phase 6: Extended testing (edge cases, integration)</label></li>
 <li><label><input type="checkbox">Phase 8: Polish &amp; release (R CMD check, CRAN prep)</label></li>
 </ul></div>
@@ -222,8 +260,14 @@
 </ul></div>
 <div class="section level4">
 <h4 id="known-issues-development-version">Known Issues<a class="anchor" aria-label="anchor" href="#known-issues-development-version"></a></h4>
-<ul><li>
-<code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> and <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> are stubs awaiting implementation</li>
+<ul><li>OpenMx integration postponed (compilation issues on Ubuntu oldrel-1)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="ecosystem-notes-development-version">Ecosystem Notes<a class="anchor" aria-label="anchor" href="#ecosystem-notes-development-version"></a></h4>
+<ul><li>Foundation package for the mediationverse ecosystem</li>
+<li>probmed, RMediation, and medrobust are awaiting integration</li>
+<li>Tested with R 4.1.0+, S7 0.1.0+</li>
+<li>See <a href="planning/ECOSYSTEM.html">Ecosystem Coordination</a> for cross-package guidelines</li>
 </ul></div>
 <div class="section level4">
 <h4 id="internal-development-version">Internal<a class="anchor" aria-label="anchor" href="#internal-development-version"></a></h4>

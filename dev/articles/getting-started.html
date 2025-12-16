@@ -190,15 +190,82 @@
 </div>
 </section></section><section class="level2"><h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
 </h2>
-<p>medfit provides three generic functions:</p>
-<ol type="1">
-<li>
-<strong><code><a href="../reference/extract_mediation.html">extract_mediation()</a></code></strong> - Extract mediation structure from fitted models (lm/glm, lavaan)</li>
-<li>
-<strong><code><a href="../reference/fit_mediation.html">fit_mediation()</a></code></strong> - Fit mediation models directly</li>
-<li>
-<strong><code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code></strong> - Bootstrap inference for confidence intervals</li>
-</ol></section><section class="level2"><h2 id="learn-more">Learn More<a class="anchor" aria-label="anchor" href="#learn-more"></a>
+<p>medfit provides three main functions:</p>
+<section class="level3"><h3 id="fit_mediation---fit-models-directly">1. fit_mediation() - Fit Models Directly<a class="anchor" aria-label="anchor" href="#fit_mediation---fit-models-directly"></a>
+</h3>
+<p>The easiest way to get started:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create example data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">M</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">X</span>, M <span class="op">=</span> <span class="va">M</span>, Y <span class="op">=</span> <span class="va">Y</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit mediation model</span></span>
+<span><span class="va">med</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>,</span>
+<span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">mydata</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>  mediator <span class="op">=</span> <span class="st">"M"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># View results</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">med</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Access path coefficients</span></span>
+<span><span class="va">med</span><span class="op">@</span><span class="va">a_path</span>  <span class="co"># X -&gt; M</span></span>
+<span><span class="va">med</span><span class="op">@</span><span class="va">b_path</span>  <span class="co"># M -&gt; Y</span></span>
+<span><span class="va">med</span><span class="op">@</span><span class="va">c_prime</span> <span class="co"># X -&gt; Y (direct)</span></span>
+<span></span>
+<span><span class="co"># Indirect effect</span></span>
+<span><span class="va">med</span><span class="op">@</span><span class="va">a_path</span> <span class="op">*</span> <span class="va">med</span><span class="op">@</span><span class="va">b_path</span></span></code></pre></div>
+</div>
+</section><section class="level3"><h3 id="extract_mediation---extract-from-fitted-models">2. extract_mediation() - Extract from Fitted Models<a class="anchor" aria-label="anchor" href="#extract_mediation---extract-from-fitted-models"></a>
+</h3>
+<p>If you already have fitted models:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Fit models separately</span></span>
+<span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">mydata</span><span class="op">)</span></span>
+<span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, data <span class="op">=</span> <span class="va">mydata</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Extract mediation structure</span></span>
+<span><span class="va">med</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">fit_m</span>,</span>
+<span>  model_y <span class="op">=</span> <span class="va">fit_y</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>  mediator <span class="op">=</span> <span class="st">"M"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+</section><section class="level3"><h3 id="bootstrap_mediation---bootstrap-inference">3. bootstrap_mediation() - Bootstrap Inference<a class="anchor" aria-label="anchor" href="#bootstrap_mediation---bootstrap-inference"></a>
+</h3>
+<p>Compute confidence intervals:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Define statistic function</span></span>
+<span><span class="va">indirect_effect</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">theta</span><span class="op">[</span><span class="st">"m_X"</span><span class="op">]</span> <span class="op">*</span> <span class="va">theta</span><span class="op">[</span><span class="st">"y_M"</span><span class="op">]</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># Bootstrap CI</span></span>
+<span><span class="va">boot_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  statistic_fn <span class="op">=</span> <span class="va">indirect_effect</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
+<span>  mediation_data <span class="op">=</span> <span class="va">med</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">123</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre></div>
+</div>
+</section></section><section class="level2"><h2 id="learn-more">Learn More<a class="anchor" aria-label="anchor" href="#learn-more"></a>
 </h2>
 <ul>
 <li>
@@ -213,8 +280,8 @@
 <ul>
 <li>✅ Phase 2 Complete: S7 class architecture</li>
 <li>✅ Phase 3 Complete: Model extraction (lm/glm, lavaan)</li>
-<li>🚧 Phase 4 In Progress: Model fitting</li>
-<li>📋 Planned: Bootstrap infrastructure</li>
+<li>✅ Phase 4 Complete: Model fitting (<code><a href="../reference/fit_mediation.html">fit_mediation()</a></code>)</li>
+<li>✅ Phase 5 Complete: Bootstrap infrastructure (<code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code>)</li>
 </ul>
 <p>See <code>NEWS.md</code> for the latest updates.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
