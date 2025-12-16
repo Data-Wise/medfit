@@ -2,7 +2,7 @@ Package: medfit
 Type: Package
 Title: Infrastructure for Mediation Model Fitting and Extraction
 Version: 0.1.0
-Date: 2025-12-02
+Date: 2025-12-16
 Authors@R: person("Davood", "Tofighi",
     email = "dtofighi@gmail.com",
     role = c("aut", "cre"),
@@ -28,7 +28,9 @@ Suggests:
     MASS,
     lavaan (>= 0.6-0),
     OpenMx (>= 2.13),
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))
 RoxygenNote: 7.3.3
