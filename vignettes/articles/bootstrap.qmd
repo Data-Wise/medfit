@@ -4,8 +4,14 @@ format: html
 execute:
   collapse: true
   comment: "#>"
-  eval: false
+  eval: true
 ---
+
+```{r}
+#| label: setup
+#| include: false
+library(medfit)
+```
 
 ## Overview
 
@@ -30,26 +36,65 @@ Bootstrap methods:
 - Provide accurate coverage (closer to nominal 95%)
 - Handle complex indirect effects (serial mediation, moderated mediation)
 
+## Setup: Create Mediation Data
+
+First, let's create some example data and fit a mediation model:
+
+```{r}
+#| label: setup-data
+# Generate example data
+set.seed(123)
+n <- 200
+X <- rnorm(n)
+M <- 0.5 * X + rnorm(n)
+Y <- 0.3 * M + 0.2 * X + rnorm(n)
+data <- data.frame(X = X, M = M, Y = Y)
+
+# Fit mediation model
+med <- fit_mediation(
+  formula_y = Y ~ X + M,
+  formula_m = M ~ X,
+  data = data,
+  treatment = "X",
+  mediator = "M"
+)
+
+print(med)
+```
+
+## Defining the Statistic Function
+
+Bootstrap methods require a function that computes the statistic of interest from parameters:
+
+```{r}
+#| label: statistic-fn
+# Define indirect effect function
+# theta is a named vector with parameters from mediation model
+indirect_fn <- function(theta) {
+  theta["m_X"] * theta["y_M"]  # a * b
+}
+
+# Test it with current estimates
+indirect_fn(med@estimates)
+```
+
 ## Parametric Bootstrap
 
 Samples from the estimated parameter distribution:
 
 ```{r}
 #| label: parametric
-# Assume we have extracted mediation structure
-med <- extract_mediation(model_m, model_y, treatment = "X", mediator = "M")
-
 # Parametric bootstrap
 boot_result <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_fn,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   ci_level = 0.95,
   seed = 123
 )
 
 print(boot_result)
-summary(boot_result)
 ```
 
 ### How It Works
@@ -84,18 +129,17 @@ Resamples data and refits models:
 
 ```{r}
 #| label: nonparametric
-# Nonparametric bootstrap (requires original data)
-boot_result <- bootstrap_mediation(
-  med,
+# Nonparametric bootstrap (requires original data in mediation object)
+boot_np <- bootstrap_mediation(
+  statistic_fn = indirect_fn,
   method = "nonparametric",
-  n_boot = 1000,
+  mediation_data = med,
+  n_boot = 500,  # Fewer iterations for speed
   ci_level = 0.95,
-  seed = 123,
-  parallel = TRUE, # Use parallel processing
-  n_cores = 4
+  seed = 123
 )
 
-print(boot_result)
+print(boot_np)
 ```
 
 ### How It Works
@@ -128,20 +172,20 @@ print(boot_result)
 
 ### Parallel Processing
 
-Speed up with parallel processing:
+Speed up with parallel processing (Unix systems):
 
 ```{r}
 #| label: parallel
-# Detect available cores
-n_cores <- parallel::detectCores() - 1
-
-# Run in parallel
-boot_result <- bootstrap_mediation(
-  med,
+#| eval: false
+# Run in parallel (Unix only)
+boot_parallel <- bootstrap_mediation(
+  statistic_fn = indirect_fn,
   method = "nonparametric",
+  mediation_data = med,
   n_boot = 5000,
   parallel = TRUE,
-  n_cores = n_cores
+  ncores = 4,
+  seed = 123
 )
 ```
 
@@ -153,9 +197,9 @@ Point estimate only, no confidence interval:
 #| label: plugin
 # Plugin estimator (fastest)
 plugin_result <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_fn,
   method = "plugin",
-  n_boot = 0 # Not used for plugin
+  mediation_data = med
 )
 
 print(plugin_result)
@@ -169,7 +213,7 @@ print(plugin_result)
 
 ### How It Works
 
-Simply computes $\hat{a} \times \hat{b}$ from the fitted model. No resampling.
+Simply computes the statistic from the fitted model parameters. No resampling.
 
 ## Interpreting Results
 
@@ -185,19 +229,19 @@ boot_estimates <- boot_result@boot_estimates
 # Histogram
 hist(
   boot_estimates,
-  breaks = 50,
+  breaks = 30,
   main = "Bootstrap Distribution of Indirect Effect",
-  xlab = "Indirect Effect (a * b)"
+  xlab = "Indirect Effect (a * b)",
+  col = "lightblue"
 )
 
 # Add percentile CI
 abline(v = boot_result@ci_lower, col = "red", lwd = 2)
 abline(v = boot_result@ci_upper, col = "red", lwd = 2)
 abline(v = boot_result@estimate, col = "blue", lwd = 2)
-
-# Check for normality
-qqnorm(boot_estimates)
-qqline(boot_estimates)
+legend("topright",
+       legend = c("Point estimate", "95% CI"),
+       col = c("blue", "red"), lwd = 2)
 ```
 
 ### Confidence Interval
@@ -214,10 +258,12 @@ c(boot_result@ci_lower, boot_result@ci_upper)
 
 # Change confidence level
 boot_90 <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_fn,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
-  ci_level = 0.90
+  ci_level = 0.90,
+  seed = 123
 )
 c(boot_90@ci_lower, boot_90@ci_upper) # Narrower
 ```
@@ -230,39 +276,55 @@ If the confidence interval excludes zero, the indirect effect is statistically s
 #| label: significance
 # Check if CI excludes zero
 if (boot_result@ci_lower > 0 || boot_result@ci_upper < 0) {
-  print("Indirect effect is statistically significant")
+  cat("Indirect effect is statistically significant\n")
 } else {
-  print("Indirect effect is not statistically significant")
+  cat("Indirect effect is not statistically significant\n")
 }
+
+# Effect size and CI
+cat(sprintf("Indirect effect: %.3f [%.3f, %.3f]\n",
+            boot_result@estimate, boot_result@ci_lower, boot_result@ci_upper))
 ```
 
-## Serial Mediation Bootstrap
+## Custom Statistics
 
-Works the same for serial mediation:
+You can bootstrap any function of the parameters:
 
 ```{r}
-#| label: serial
-# Serial mediation (X -> M1 -> M2 -> Y)
-serial_med <- extract_mediation(
-  fit_serial,
-  treatment = "X",
-  mediators = c("M1", "M2"),
-  outcome = "Y"
-)
+#| label: custom
+# Total effect = c' + a*b
+total_fn <- function(theta) {
+  theta["y_X"] + theta["m_X"] * theta["y_M"]
+}
 
-# Bootstrap the serial indirect effect (a * d * b)
-boot_serial <- bootstrap_mediation(
-  serial_med,
+boot_total <- bootstrap_mediation(
+  statistic_fn = total_fn,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
-  ci_level = 0.95
+  seed = 123
 )
 
-# Serial indirect effect
-print(boot_serial)
+cat("Total effect:", boot_total@estimate,
+    "[", boot_total@ci_lower, ",", boot_total@ci_upper, "]\n")
 
-# Point estimate
-serial_med@a_path * serial_med@d_path * serial_med@b_path
+# Proportion mediated = (a*b) / (c' + a*b)
+prop_fn <- function(theta) {
+  indirect <- theta["m_X"] * theta["y_M"]
+  total <- theta["y_X"] + indirect
+  indirect / total
+}
+
+boot_prop <- bootstrap_mediation(
+  statistic_fn = prop_fn,
+  method = "parametric",
+  mediation_data = med,
+  n_boot = 1000,
+  seed = 123
+)
+
+cat("Proportion mediated:", boot_prop@estimate,
+    "[", boot_prop@ci_lower, ",", boot_prop@ci_upper, "]\n")
 ```
 
 ## Reproducibility
@@ -273,29 +335,32 @@ Set a seed for reproducible results:
 #| label: seed
 # Same seed = same results
 boot1 <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_fn,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   seed = 123
 )
 boot2 <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_fn,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   seed = 123
 )
 
 # Identical results
-all.equal(boot1@boot_estimates, boot2@boot_estimates) # TRUE
+all.equal(boot1@boot_estimates, boot2@boot_estimates)
 
 # Different seed = different results
 boot3 <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_fn,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   seed = 456
 )
-all.equal(boot1@boot_estimates, boot3@boot_estimates) # FALSE
+all.equal(boot1@boot_estimates, boot3@boot_estimates)
 ```
 
 ## How Many Bootstrap Samples?
@@ -312,43 +377,28 @@ Check stability by varying `n_boot`:
 #| label: n-boot
 # Compare different n_boot
 boot_1k <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_fn,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   seed = 123
 )
 boot_5k <- bootstrap_mediation(
-  med,
+  statistic_fn = indirect_fn,
   method = "parametric",
+  mediation_data = med,
   n_boot = 5000,
-  seed = 123
-)
-boot_10k <- bootstrap_mediation(
-  med,
-  method = "parametric",
-  n_boot = 10000,
   seed = 123
 )
 
 # Compare CIs
 rbind(
   "1K" = c(boot_1k@ci_lower, boot_1k@ci_upper),
-  "5K" = c(boot_5k@ci_lower, boot_5k@ci_upper),
-  "10K" = c(boot_10k@ci_lower, boot_10k@ci_upper)
+  "5K" = c(boot_5k@ci_lower, boot_5k@ci_upper)
 )
 ```
 
 If CIs are similar, n_boot is sufficient.
-
-## Alternative CI Methods
-
-medfit currently uses **percentile bootstrap** (simplest, most common).
-
-Future versions may add:
-
-- **BCa (bias-corrected and accelerated)**: Adjusts for bias and skewness
-- **Studentized bootstrap**: Better coverage in some cases
-- **Bayesian bootstrap**: Posterior intervals
 
 ## Comparison with Delta Method
 
@@ -359,10 +409,10 @@ The delta method provides asymptotic SE for indirect effects:
 # Delta method SE
 a <- med@a_path
 b <- med@b_path
-var_a <- vcov(model_m)["X", "X"]
-var_b <- vcov(model_y)["M", "M"]
-cov_ab <- 0 # Assumed independent
+var_a <- med@vcov["m_X", "m_X"]
+var_b <- med@vcov["y_M", "y_M"]
 
+# a and b are from different models, so Cov(a,b) = 0
 se_delta <- sqrt(b^2 * var_a + a^2 * var_b)
 
 # Delta method 95% CI (assumes normality)
@@ -371,7 +421,12 @@ ci_delta <- med@a_path * med@b_path + c(-1.96, 1.96) * se_delta
 # Compare with bootstrap
 ci_boot <- c(boot_result@ci_lower, boot_result@ci_upper)
 
-rbind(delta = ci_delta, bootstrap = ci_boot)
+comparison <- rbind(
+  "Delta method" = ci_delta,
+  "Bootstrap" = ci_boot
+)
+colnames(comparison) <- c("Lower", "Upper")
+comparison
 ```
 
 Bootstrap is generally preferred because it:
@@ -405,9 +460,10 @@ Bootstrap is generally preferred because it:
 ## Development Status
 
 Currently implemented:
-- ✅ S7 class for BootstrapResult
-- 📋 Parametric bootstrap (planned)
-- 📋 Nonparametric bootstrap (planned)
-- 📋 Parallel processing support (planned)
+- ✅ BootstrapResult S7 class
+- ✅ Parametric bootstrap
+- ✅ Nonparametric bootstrap
+- ✅ Plugin estimator
+- ✅ Parallel processing support (Unix)
 
 See `NEWS.md` for updates.

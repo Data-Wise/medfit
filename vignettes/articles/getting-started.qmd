@@ -4,8 +4,14 @@ format: html
 execute:
   collapse: true
   comment: "#>"
-  eval: false
+  eval: true
 ---
+
+```{r}
+#| label: setup
+#| include: false
+library(medfit)
+```
 
 ## What is medfit?
 
@@ -17,23 +23,27 @@ execute:
 
 ## Quick Start
 
-### Create a Mediation Data Object
+### Fit Mediation Models
+
+The easiest way to analyze mediation is with `fit_mediation()`:
 
 ```{r}
-#| label: create-med
-# Simple mediation: X -> M -> Y
-med_data <- MediationData(
-  a_path = 0.5,           # X -> M effect
-  b_path = 0.3,           # M -> Y effect (controlling for X)
-  c_prime = 0.2,          # X -> Y direct effect
+#| label: fit-med
+# Generate example data
+set.seed(123)
+n <- 200
+X <- rnorm(n)
+M <- 0.5 * X + rnorm(n)
+Y <- 0.3 * M + 0.2 * X + rnorm(n)
+data <- data.frame(X = X, M = M, Y = Y)
+
+# Fit mediation models with one call
+med_data <- fit_mediation(
+  formula_y = Y ~ X + M,
+  formula_m = M ~ X,
+  data = data,
   treatment = "X",
-  mediator = "M",
-  outcome = "Y",
-  estimates = c(a = 0.5, b = 0.3, c_prime = 0.2),
-  vcov = diag(3) * 0.01,  # Covariance matrix
-  n_obs = 100L,
-  converged = TRUE,
-  source_package = "medfit"
+  mediator = "M"
 )
 
 # View the object
@@ -46,6 +56,76 @@ print(med_data)
 #| label: indirect
 # Indirect effect = a * b
 med_data@a_path * med_data@b_path
+```
+
+### Bootstrap Confidence Intervals
+
+```{r}
+#| label: bootstrap
+# Define indirect effect function
+indirect_fn <- function(theta) {
+  theta["m_X"] * theta["y_M"]
+}
+
+# Parametric bootstrap
+boot_result <- bootstrap_mediation(
+  statistic_fn = indirect_fn,
+  method = "parametric",
+  mediation_data = med_data,
+  n_boot = 1000,
+  ci_level = 0.95,
+  seed = 123
+)
+
+print(boot_result)
+```
+
+### Extract from Pre-Fitted Models
+
+If you already have fitted models, use `extract_mediation()`:
+```{r}
+#| label: extract
+# Fit models separately
+fit_m <- lm(M ~ X, data = data)
+fit_y <- lm(Y ~ X + M, data = data)
+
+# Extract mediation structure
+med_data2 <- extract_mediation(
+  fit_m,
+  model_y = fit_y,
+  treatment = "X",
+  mediator = "M"
+)
+
+print(med_data2)
+```
+
+### Create Objects Directly
+
+You can also create mediation objects directly for analysis:
+
+```{r}
+#| label: create-med
+# Simple mediation: X -> M -> Y
+med_data_direct <- MediationData(
+  a_path = 0.5,           # X -> M effect
+  b_path = 0.3,           # M -> Y effect (controlling for X)
+  c_prime = 0.2,          # X -> Y direct effect
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y",
+  estimates = c(m_intercept = 0, m_X = 0.5, y_intercept = 0, y_X = 0.2, y_M = 0.3),
+  vcov = diag(5) * 0.01,
+  sigma_m = 1.0,
+  sigma_y = 1.0,
+  mediator_predictors = "X",
+  outcome_predictors = c("X", "M"),
+  n_obs = 100L,
+  converged = TRUE,
+  source_package = "medfit"
+)
+
+print(med_data_direct)
 ```
 
 ### Serial Mediation
@@ -64,6 +144,8 @@ serial_data <- SerialMediationData(
   outcome = "Y",
   estimates = c(a = 0.4, d = 0.5, b = 0.3, c_prime = 0.2),
   vcov = diag(4) * 0.01,
+  sigma_mediators = c(1.0, 1.0),
+  sigma_y = 1.0,
   mediator_predictors = list(M1 = "X", M2 = c("X", "M1")),
   outcome_predictors = c("X", "M1", "M2"),
   n_obs = 100L,
@@ -77,10 +159,9 @@ serial_data@a_path * serial_data@d_path * serial_data@b_path
 
 ## Main Functions
 
-medfit provides three generic functions:
-
-1. **`extract_mediation()`** - Extract mediation structure from fitted models (lm/glm, lavaan)
-2. **`fit_mediation()`** - Fit mediation models directly
+medfit provides three main functions:
+1. **`fit_mediation()`** - Fit mediation models directly
+2. **`extract_mediation()`** - Extract mediation structure from fitted models (lm/glm, lavaan)
 3. **`bootstrap_mediation()`** - Bootstrap inference for confidence intervals
 
 ## Learn More
@@ -91,10 +172,13 @@ medfit provides three generic functions:
 
 ## Development Status
 
-medfit is under active development:
+medfit is in Phase 6 (Extended Testing):
 
-- ✅ Phase 2 Complete: S7 class architecture
-- 🚧 Phase 3 In Progress: Model extraction
-- 📋 Planned: Model fitting, bootstrap infrastructure
+- ✅ Phase 1-2: S7 class architecture
+- ✅ Phase 3: Model extraction (lm/glm, lavaan)
+- ✅ Phase 4: Model fitting (GLM engine)
+- ✅ Phase 5: Bootstrap infrastructure
+- ✅ Phase 6: Extended testing
+- 📋 Phase 7: Polish & release
 
 See `NEWS.md` for the latest updates.

@@ -4,19 +4,25 @@ format: html
 execute:
   collapse: true
   comment: "#>"
-  eval: false
+  eval: true
 ---
+
+```{r}
+#| label: setup
+#| include: false
+library(medfit)
+```
 
 ## Overview
 
 The `extract_mediation()` function provides a standardized interface for extracting mediation structures from fitted models. It works with:
 
-- **lm/glm** models (base R)
-- **lavaan** SEM models (planned)
-- **OpenMx** models (planned)
+- **lm/glm** models (base R) ✅
+- **lavaan** SEM models ✅
+- **OpenMx** models (future)
 - **lmer** mixed models (future)
 
-All extraction methods return a `MediationData` or `SerialMediationData` object, ensuring consistency across modeling frameworks.
+All extraction methods return a `MediationData` object, ensuring consistency across modeling frameworks.
 
 ## Extraction Pattern
 
@@ -52,18 +58,14 @@ model_y <- lm(Y ~ X + M, data = data)
 
 # Extract mediation structure
 med <- extract_mediation(
-  model_m,           # Mediator model
-  model_y,           # Outcome model
+  model_m,             # Mediator model (first argument)
+  model_y = model_y,   # Outcome model
   treatment = "X",
   mediator = "M"
 )
 
 # View results
 print(med)
-summary(med)
-
-# Indirect effect
-med@a_path * med@b_path
 ```
 
 ### What Gets Extracted?
@@ -75,13 +77,30 @@ The extraction captures:
   - `b_path`: Coefficient of M in outcome model (M -> Y, controlling for X)
   - `c_prime`: Coefficient of X in outcome model (direct effect)
 
-- **Full parameter vector**: All coefficients from both models
+- **Full parameter vector**: All coefficients from both models with prefixed names (`m_` for mediator model, `y_` for outcome model)
 
-- **Covariance matrix**: For computing standard errors of functions of parameters
+- **Covariance matrix**: Block-diagonal matrix for computing standard errors of functions of parameters
 
-- **Residual variances**: `sigma_m^2` and `sigma_y^2` for Gaussian models
+- **Residual variances**: `sigma_m` and `sigma_y` for Gaussian models
 
 - **Data and metadata**: Sample size, variable names, convergence status
+
+```{r}
+#| label: extracted-info
+# Access path coefficients
+cat("a path (X -> M):", med@a_path, "\n")
+cat("b path (M -> Y):", med@b_path, "\n")
+cat("c' path (X -> Y direct):", med@c_prime, "\n")
+
+# Indirect effect
+cat("Indirect effect (a * b):", med@a_path * med@b_path, "\n")
+
+# All parameter names
+names(med@estimates)
+
+# Sample size
+med@n_obs
+```
 
 ### GLM with Non-Normal Outcomes
 
@@ -90,21 +109,22 @@ Works with any GLM family:
 ```{r}
 #| label: glm-binary
 # Binary outcome
+set.seed(456)
 Y_binary <- rbinom(n, 1, prob = plogis(0.3 * M + 0.2 * X))
 data$Y_binary <- Y_binary
 
 model_m <- lm(M ~ X, data = data)
 model_y <- glm(Y_binary ~ X + M, data = data, family = binomial())
 
-med <- extract_mediation(
+med_binary <- extract_mediation(
   model_m,
-  model_y,
+  model_y = model_y,
   treatment = "X",
   mediator = "M"
 )
 
 # Note: b_path and c_prime are on logit scale
-print(med)
+print(med_binary)
 ```
 
 ### Controlling for Covariates
@@ -120,15 +140,19 @@ data$Z2 <- rnorm(n)
 model_m <- lm(M ~ X + Z1 + Z2, data = data)
 model_y <- lm(Y ~ X + M + Z1 + Z2, data = data)
 
-med <- extract_mediation(
+med_cov <- extract_mediation(
   model_m,
-  model_y,
+  model_y = model_y,
   treatment = "X",
   mediator = "M"
 )
 
 # Path coefficients adjust for Z1 and Z2
-print(med)
+print(med_cov)
+
+# Covariates appear in predictors
+med_cov@mediator_predictors
+med_cov@outcome_predictors
 ```
 
 ## Extracting from lavaan Models
@@ -137,6 +161,7 @@ print(med)
 
 ```{r}
 #| label: lavaan-simple
+#| eval: false
 library(lavaan)
 
 # Define SEM model
@@ -145,84 +170,62 @@ model_syntax <- "
   M ~ a * X
 
   # Outcome model
-  Y ~ b * M + c_prime * X
+  Y ~ b * M + cp * X
 
   # Indirect effect
   indirect := a * b
 
   # Total effect
-  total := c_prime + a * b
+  total := cp + a * b
 "
 
 # Fit model
 fit <- sem(model_syntax, data = data)
 
 # Extract mediation structure
-med <- extract_mediation(
+med_lavaan <- extract_mediation(
   fit,
   treatment = "X",
   mediator = "M",
   outcome = "Y"
 )
 
-print(med)
+print(med_lavaan)
 ```
 
-### Serial Mediation in SEM
+### Notes on lavaan Extraction
 
-For serial mediation (X -> M1 -> M2 -> Y):
+- lavaan models require `outcome` to be specified explicitly
+- Path labels (like `a*`, `b*`) are optional but improve clarity
+- The method automatically extracts the covariance matrix from lavaan
+- Converged status is checked from the lavaan fit
+
+## Comparison: fit_mediation() vs extract_mediation()
+
+Both approaches give the same results:
 
 ```{r}
-#| label: lavaan-serial
-# Generate serial mediation data
-M1 <- 0.4 * X + rnorm(n, sd = 0.8)
-M2 <- 0.5 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
-Y_serial <- 0.3 * M2 + 0.1 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
-data_serial <- data.frame(X = X, M1 = M1, M2 = M2, Y = Y_serial)
-
-# Define serial mediation model
-serial_syntax <- "
-  # First mediator
-  M1 ~ a * X
-
-  # Second mediator
-  M2 ~ d * M1 + X
-
-  # Outcome
-  Y ~ b * M2 + M1 + c_prime * X
-
-  # Serial indirect effect (product-of-three)
-  serial_indirect := a * d * b
-"
-
-fit_serial <- sem(serial_syntax, data = data_serial)
-
-# Extract as SerialMediationData
-med_serial <- extract_mediation(
-  fit_serial,
+#| label: compare
+# Method 1: fit_mediation() - fits and extracts in one step
+med1 <- fit_mediation(
+  formula_y = Y ~ X + M,
+  formula_m = M ~ X,
+  data = data,
   treatment = "X",
-  mediators = c("M1", "M2"),
-  outcome = "Y"
+  mediator = "M"
 )
 
-print(med_serial)
+# Method 2: extract_mediation() - extract from existing models
+model_m <- lm(M ~ X, data = data)
+model_y <- lm(Y ~ X + M, data = data)
+med2 <- extract_mediation(model_m, model_y = model_y, treatment = "X", mediator = "M")
 
-# Serial indirect effect
-med_serial@a_path * med_serial@d_path * med_serial@b_path
+# Same results
+cat("fit_mediation a_path:", med1@a_path, "\n")
+cat("extract_mediation a_path:", med2@a_path, "\n")
 ```
 
-## Compatibility with RMediation
-
-The extraction design is compatible with RMediation's lavaan extractor:
-
-```{r}
-#| label: rmediation-compat
-# RMediation extracts parameters for Distribution of Product method
-# medfit extracts the same structure but as S7 classes
-
-# Both packages can work with the same fitted models
-# medfit provides infrastructure, RMediation adds DOP/MBCO methods
-```
+Use `fit_mediation()` for convenience; use `extract_mediation()` when you need more control over model fitting or want to use non-GLM models.
 
 ## Error Handling
 
@@ -230,24 +233,37 @@ The extraction validates inputs:
 
 ```{r}
 #| label: error-handling
+#| error: true
 # Variable not in model
-extract_mediation(
-  model_m,
-  model_y,
-  treatment = "NonExistent",
-  mediator = "M"
-)
-# Error: Treatment variable 'NonExistent' not found in model
+model_m <- lm(M ~ X, data = data)
+model_y <- lm(Y ~ X + M, data = data)
 
+# This will error: treatment "NonExistent" not found
+try(
+  extract_mediation(
+    model_m,
+    model_y = model_y,
+    treatment = "NonExistent",
+    mediator = "M"
+  )
+)
+```
+
+```{r}
+#| label: error-handling-2
+#| error: true
 # Mediator not in outcome model
 model_y_wrong <- lm(Y ~ X, data = data)  # Missing M
-extract_mediation(
-  model_m,
-  model_y_wrong,
-  treatment = "X",
-  mediator = "M"
+
+# This will error: mediator not in outcome model
+try(
+  extract_mediation(
+    model_m,
+    model_y = model_y_wrong,
+    treatment = "X",
+    mediator = "M"
+  )
 )
-# Error: Mediator variable 'M' not found in outcome model
 ```
 
 ## Advanced Topics
@@ -258,14 +274,17 @@ The `estimates` property contains all parameters from both models:
 
 ```{r}
 #| label: full-params
-med <- extract_mediation(model_m, model_y, treatment = "X", mediator = "M")
+model_m <- lm(M ~ X, data = data)
+model_y <- lm(Y ~ X + M, data = data)
+med <- extract_mediation(model_m, model_y = model_y, treatment = "X", mediator = "M")
 
 # All parameters (intercepts + coefficients)
 med@estimates
 
-# Access by name
-med@estimates["a"]  # a_path
-med@estimates["b"]  # b_path
+# Access by name (using medfit naming convention)
+med@estimates["m_X"]   # a_path
+med@estimates["y_M"]   # b_path
+med@estimates["y_X"]   # c_prime
 ```
 
 ### Covariance Matrix for Delta Method
@@ -277,19 +296,23 @@ Use the covariance matrix for computing standard errors:
 # Covariance matrix of all parameters
 vcov_mat <- med@vcov
 
+# Dimensions match estimates
+dim(vcov_mat)
+
 # For delta method SE of indirect effect (a*b):
 # Var(ab) = b^2 * Var(a) + a^2 * Var(b) + 2ab*Cov(a,b)
+# Note: a and b are from different models so Cov(a,b) = 0
 
 a <- med@a_path
 b <- med@b_path
-var_a <- vcov_mat["a", "a"]
-var_b <- vcov_mat["b", "b"]
-cov_ab <- vcov_mat["a", "b"]
+var_a <- vcov_mat["m_X", "m_X"]
+var_b <- vcov_mat["y_M", "y_M"]
 
-var_indirect <- b^2 * var_a + a^2 * var_b + 2 * a * b * cov_ab
+var_indirect <- b^2 * var_a + a^2 * var_b
 se_indirect <- sqrt(var_indirect)
 
-se_indirect
+cat("Delta method SE:", se_indirect, "\n")
+cat("95% CI:", med@a_path * med@b_path + c(-1.96, 1.96) * se_indirect, "\n")
 ```
 
 ## Design for Extensibility
@@ -313,8 +336,8 @@ All methods return the same S7 class structure, ensuring consistency.
 
 Currently implemented:
 - ✅ S7 class definitions (MediationData, SerialMediationData)
-- 🚧 lm/glm extraction (in development)
-- 📋 lavaan extraction (planned)
-- 📋 OpenMx extraction (planned)
+- ✅ lm/glm extraction
+- ✅ lavaan extraction
+- 📋 OpenMx extraction (future)
 
 See `NEWS.md` for updates.

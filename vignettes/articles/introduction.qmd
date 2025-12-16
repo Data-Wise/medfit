@@ -4,8 +4,14 @@ format: html
 execute:
   collapse: true
   comment: "#>"
-  eval: false
+  eval: true
 ---
+
+```{r}
+#| label: setup
+#| include: false
+library(medfit)
+```
 
 ## Overview
 
@@ -27,7 +33,7 @@ Stores simple mediation models (X -> M -> Y):
 
 ```{r}
 #| label: mediation-data
-# Example: Create a MediationData object
+# Create a MediationData object directly
 med_data <- MediationData(
   a_path = 0.5,           # X -> M effect
   b_path = 0.3,           # M -> Y effect (controlling for X)
@@ -35,8 +41,12 @@ med_data <- MediationData(
   treatment = "X",
   mediator = "M",
   outcome = "Y",
-  estimates = c(a = 0.5, b = 0.3, c_prime = 0.2),
-  vcov = diag(3) * 0.01,  # Covariance matrix
+  estimates = c(m_intercept = 0, m_X = 0.5, y_intercept = 0, y_X = 0.2, y_M = 0.3),
+  vcov = diag(5) * 0.01,
+  sigma_m = 1.0,
+  sigma_y = 1.0,
+  mediator_predictors = "X",
+  outcome_predictors = c("X", "M"),
   n_obs = 100L,
   converged = TRUE,
   source_package = "medfit"
@@ -44,9 +54,6 @@ med_data <- MediationData(
 
 # Print method shows key information
 print(med_data)
-
-# Summary method provides details
-summary(med_data)
 ```
 
 The indirect effect is computed as `a * b`:
@@ -78,6 +85,8 @@ serial_data <- SerialMediationData(
   outcome = "Y",
   estimates = c(a = 0.4, d = 0.5, b = 0.3, c_prime = 0.2),
   vcov = diag(4) * 0.01,
+  sigma_mediators = c(1.0, 1.0),
+  sigma_y = 1.0,
   mediator_predictors = list(M1 = "X", M2 = c("X", "M1")),
   outcome_predictors = c("X", "M1", "M2"),
   n_obs = 100L,
@@ -119,30 +128,74 @@ boot_result <- BootstrapResult(
 )
 
 print(boot_result)
-summary(boot_result)
 ```
 
 ## Main Functions
 
-medfit provides three generic functions that work across different model types:
+medfit provides three main functions that work across different model types:
+
+### fit_mediation()
+
+Fit mediation models directly with a formula interface:
+
+```{r}
+#| label: fit-example
+# Generate example data
+set.seed(123)
+n <- 200
+X <- rnorm(n)
+M <- 0.5 * X + rnorm(n)
+Y <- 0.3 * M + 0.2 * X + rnorm(n)
+data <- data.frame(X = X, M = M, Y = Y)
+
+# Fit mediation model
+med <- fit_mediation(
+  formula_y = Y ~ X + M,
+  formula_m = M ~ X,
+  data = data,
+  treatment = "X",
+  mediator = "M"
+)
+
+print(med)
+```
 
 ### extract_mediation()
 
 Extract mediation structure from fitted models:
 
 ```{r}
-#| label: extract-generic
+#| label: extract-example
 # From lm/glm models
-med <- extract_mediation(
-  model_m,           # Mediator model (M ~ X)
-  model_y,           # Outcome model (Y ~ X + M)
+model_m <- lm(M ~ X, data = data)
+model_y <- lm(Y ~ X + M, data = data)
+
+med_extracted <- extract_mediation(
+  model_m,             # Mediator model
+  model_y = model_y,   # Outcome model
   treatment = "X",
   mediator = "M"
 )
 
-# From lavaan SEM models
-med <- extract_mediation(
-  lavaan_fit,
+print(med_extracted)
+```
+
+For lavaan SEM models (requires lavaan package):
+```{r}
+#| label: extract-lavaan
+#| eval: false
+library(lavaan)
+
+# Fit lavaan model
+model_syntax <- "
+  M ~ X
+  Y ~ M + X
+"
+fit <- sem(model_syntax, data = data)
+
+# Extract mediation structure
+med_lavaan <- extract_mediation(
+  fit,
   treatment = "X",
   mediator = "M",
   outcome = "Y"
@@ -151,46 +204,34 @@ med <- extract_mediation(
 
 See `vignette("extraction")` for details.
 
-### fit_mediation()
-
-Fit mediation models directly:
-
-```{r}
-#| label: fit-generic
-# Fit using GLM engine
-med <- fit_mediation(
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y",
-  engine = "glm",
-  family_m = gaussian(),
-  family_y = gaussian()
-)
-```
-
 ### bootstrap_mediation()
 
 Perform bootstrap inference on indirect effects:
 
 ```{r}
-#| label: bootstrap-generic
+#| label: bootstrap-example
+# Define indirect effect function
+indirect_fn <- function(theta) {
+  theta["m_X"] * theta["y_M"]
+}
+
 # Parametric bootstrap
 boot_result <- bootstrap_mediation(
-  med_data,
+  statistic_fn = indirect_fn,
   method = "parametric",
+  mediation_data = med,
   n_boot = 1000,
   ci_level = 0.95,
-  parallel = TRUE
+  seed = 123
 )
 
-# Nonparametric bootstrap (resamples data, refits models)
-boot_result <- bootstrap_mediation(
-  med_data,
-  method = "nonparametric",
-  n_boot = 1000
-)
+print(boot_result)
 ```
+
+Three methods available:
+- **parametric**: Samples from N(theta-hat, Sigma-hat) - fast, assumes normality
+- **nonparametric**: Resamples data and refits models - robust, slower
+- **plugin**: Point estimate only - fastest, no CI
 
 See `vignette("bootstrap")` for details.
 
@@ -226,10 +267,13 @@ medfit serves as the foundation for specialized mediation packages:
 
 ## Development Status
 
-medfit is under active development. Current status:
+medfit is in Phase 6 (Extended Testing):
 
-- ✅ Phase 2 Complete: S7 class architecture
-- 🚧 Phase 3 In Progress: Model extraction
-- 📋 Planned: Model fitting, bootstrap infrastructure
+- ✅ Phase 1-2: S7 class architecture
+- ✅ Phase 3: Model extraction (lm/glm, lavaan)
+- ✅ Phase 4: Model fitting (GLM engine)
+- ✅ Phase 5: Bootstrap infrastructure
+- ✅ Phase 6: Extended testing
+- 📋 Phase 7: Polish & release
 
 See `NEWS.md` for the latest updates.
