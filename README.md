@@ -66,23 +66,27 @@ print(med_data)
 ### Fit Mediation Models Directly
 
 ```r
-# Coming soon: fit_mediation() for direct model fitting
+# Fit both mediator and outcome models with one call
 med_data <- fit_mediation(
   formula_y = Y ~ X + M,
   formula_m = M ~ X,
   data = data,
   treatment = "X",
-  mediator = "M",
-  engine = "glm"
+  mediator = "M"
 )
+
+print(med_data)
 ```
 
 ### Bootstrap Inference
 
 ```r
-# Coming soon: bootstrap_mediation() for inference
+# Define indirect effect function using parameter names
+indirect_fn <- function(theta) theta["m_X"] * theta["y_M"]
+
+# Parametric bootstrap (fast, recommended for n > 50)
 result <- bootstrap_mediation(
-  statistic_fn = function(theta) theta["a"] * theta["b"],
+  statistic_fn = indirect_fn,
   method = "parametric",
   mediation_data = med_data,
   n_boot = 5000,
@@ -158,15 +162,15 @@ Comprehensive Quarto vignettes are available:
 
 ## Development Status
 
-**Current Phase**: MVP Development (Phase 2 Complete + Documentation)
+**Current Phase**: Extended Testing (Phase 6)
 
 - [x] Phase 1: Package setup
 - [x] Phase 2: S7 class architecture (with SerialMediationData)
 - [x] Phase 2.5: Comprehensive Quarto documentation
-- [ ] Phase 3: Model extraction (in progress)
-- [ ] Phase 4: Model fitting
-- [ ] Phase 5: Bootstrap infrastructure
-- [ ] Phase 6: Extended testing
+- [x] Phase 3: Model extraction (lm/glm, lavaan)
+- [x] Phase 4: Model fitting (GLM engine)
+- [x] Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
+- [ ] Phase 6: Extended testing (in progress)
 - [ ] Phase 7: Polish & release
 
 See [planning/medfit-roadmap.md](planning/medfit-roadmap.md) for detailed development plan.

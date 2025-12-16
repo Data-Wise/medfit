@@ -90,8 +90,14 @@
 #' ```
 #'
 #' @examples
-#' \dontrun{
-#' # First, fit mediation model
+#' # Generate example data
+#' set.seed(123)
+#' n <- 100
+#' mydata <- data.frame(X = rnorm(n))
+#' mydata$M <- 0.5 * mydata$X + rnorm(n)
+#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
+#'
+#' # Fit mediation model
 #' med_data <- fit_mediation(
 #'   formula_y = Y ~ X + M,
 #'   formula_m = M ~ X,
@@ -103,41 +109,41 @@
 #' # Define indirect effect function
 #' indirect_fn <- function(theta) theta["m_X"] * theta["y_M"]
 #'
-#' # Parametric bootstrap for indirect effect
+#' # Plugin estimator (point estimate only, fastest)
+#' result_plugin <- bootstrap_mediation(
+#'   statistic_fn = indirect_fn,
+#'   method = "plugin",
+#'   mediation_data = med_data
+#' )
+#' print(result_plugin)
+#'
+#' \donttest{
+#' # Parametric bootstrap (recommended for most applications)
 #' result <- bootstrap_mediation(
 #'   statistic_fn = indirect_fn,
 #'   method = "parametric",
 #'   mediation_data = med_data,
-#'   n_boot = 5000,
+#'   n_boot = 1000,
 #'   ci_level = 0.95,
 #'   seed = 12345
 #' )
-#'
-#' # Print results
 #' print(result)
 #'
 #' # Nonparametric bootstrap (slower but more robust)
-#' # Note: statistic_fn must refit models when using nonparametric
 #' refit_fn <- function(boot_data) {
 #'   fit_m <- lm(M ~ X, data = boot_data)
 #'   fit_y <- lm(Y ~ X + M, data = boot_data)
-#'   coef(fit_m)["X"] * coef(fit_y)["M"]
+#'   unname(coef(fit_m)["X"] * coef(fit_y)["M"])
 #' }
 #'
 #' result_np <- bootstrap_mediation(
 #'   statistic_fn = refit_fn,
 #'   method = "nonparametric",
 #'   data = mydata,
-#'   n_boot = 1000,
+#'   n_boot = 500,
 #'   seed = 12345
 #' )
-#'
-#' # Plugin estimator (point estimate only)
-#' result_plugin <- bootstrap_mediation(
-#'   statistic_fn = indirect_fn,
-#'   method = "plugin",
-#'   mediation_data = med_data
-#' )
+#' print(result_np)
 #' }
 #'
 #' @seealso [BootstrapResult], [MediationData], [fit_mediation()]

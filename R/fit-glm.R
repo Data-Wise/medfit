@@ -58,7 +58,16 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
+#' # Generate example data
+#' set.seed(123)
+#' n <- 100
+#' mydata <- data.frame(
+#'   X = rnorm(n),
+#'   C = rnorm(n)
+#' )
+#' mydata$M <- 0.5 * mydata$X + 0.2 * mydata$C + rnorm(n)
+#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + 0.1 * mydata$C + rnorm(n)
+#'
 #' # Simple mediation with continuous variables
 #' med_data <- fit_mediation(
 #'   formula_y = Y ~ X + M,
@@ -67,35 +76,27 @@
 #'   treatment = "X",
 #'   mediator = "M"
 #' )
+#' print(med_data)
 #'
 #' # With covariates
-#' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M + age + gender,
-#'   formula_m = M ~ X + age + gender,
+#' med_data_cov <- fit_mediation(
+#'   formula_y = Y ~ X + M + C,
+#'   formula_m = M ~ X + C,
 #'   data = mydata,
 #'   treatment = "X",
 #'   mediator = "M"
 #' )
 #'
-#' # Binary outcome
-#' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
+#' \donttest{
+#' # Binary outcome (takes longer to fit)
+#' mydata$Y_bin <- rbinom(n, 1, plogis(0.3 * mydata$X + 0.4 * mydata$M))
+#' med_data_bin <- fit_mediation(
+#'   formula_y = Y_bin ~ X + M,
 #'   formula_m = M ~ X,
 #'   data = mydata,
 #'   treatment = "X",
 #'   mediator = "M",
 #'   family_y = binomial()
-#' )
-#'
-#' # Both mediator and outcome are binary
-#' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M",
-#'   family_y = binomial(),
-#'   family_m = binomial()
 #' )
 #' }
 #'
