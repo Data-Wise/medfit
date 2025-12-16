@@ -300,7 +300,7 @@ S7::method(show, BootstrapResult) <- function(object) print(object)
 
 ---
 
-## Phase 3: Model Extraction API (Week 2) 🚧 IN PROGRESS
+## Phase 3: Model Extraction API (Week 2) ✅ COMPLETE
 
 **Goal**: Implement `extract_mediation()` generic and core methods
 
@@ -409,7 +409,7 @@ S7::method(extract_mediation, openmx_class) <- function(object,
 
 ---
 
-## Phase 4: Model Fitting API (Week 2-3)
+## Phase 4: Model Fitting API (Week 2-3) ✅ COMPLETE
 
 **Goal**: Implement `fit_mediation()` for GLM engine
 
@@ -500,7 +500,7 @@ fit_mediation <- function(...) {
 
 ---
 
-## Phase 5: Bootstrap Infrastructure (Week 3-4)
+## Phase 5: Bootstrap Infrastructure (Week 3-4) ✅ COMPLETE
 
 **Goal**: Implement bootstrap methods
 
@@ -961,20 +961,27 @@ Integration is successful when:
 
 ---
 
-**Status**: ✅ Phase 2 Complete + Documentation → 🚧 Phase 3 (Model Extraction) In Progress
+**Status**: ✅ Phase 5 Complete → 🚧 Phase 6 (Extended Testing) In Progress
 
 **Completed**:
 - ✅ Phase 1: Package Setup
 - ✅ Phase 2: S7 Class Architecture (extended with SerialMediationData)
 - ✅ Phase 2.5: Comprehensive Quarto Documentation (4 vignettes, pkgdown website)
+- ✅ Phase 3: Model Extraction (lm/glm and lavaan methods implemented)
+- ✅ Phase 4: Model Fitting (GLM engine with fit_mediation())
+- ✅ Phase 5: Bootstrap Infrastructure (parametric, nonparametric, plugin methods)
 
 **Current**:
-- 🚧 Phase 3: Model Extraction (generic defined, methods in progress)
+- 🚧 Phase 6: Extended Testing & Documentation
 
 **Next**:
-- Phase 4: Model Fitting
-- Phase 5: Bootstrap Infrastructure
-- Phase 6: Extended Testing
 - Phase 7: Polish & Release
-**Next Review**: After Phase 2 completion (S7 classes)
-**Last Updated**: 2025-12-02
+
+**Implementation Details (Phase 3-5)**:
+- `extract_mediation()` methods for lm, glm, lavaan objects
+- `fit_mediation()` with formula interface and GLM engine
+- `bootstrap_mediation()` with parametric, nonparametric, and plugin methods
+- Parallel processing support for bootstrap (Unix)
+- Comprehensive test suite (5 new test files, ~200 tests total)
+
+**Last Updated**: 2025-12-16

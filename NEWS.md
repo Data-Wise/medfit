@@ -17,10 +17,28 @@
   - Comprehensive validators ensuring data integrity
   - Print, summary, and show methods for all classes
 
-* **Generics Defined**
-  - `extract_mediation()` - Extract mediation structure from fitted models
-  - `fit_mediation()` - Fit mediation models (stub)
-  - `bootstrap_mediation()` - Bootstrap inference (stub)
+* **Model Extraction** (Phase 3 Complete)
+  - `extract_mediation()` generic with methods for:
+    - `lm` and `glm` objects (standard R linear models)
+    - `lavaan` objects (structural equation models, dynamically registered)
+  - Extracts path coefficients (a, b, c'), vcov matrix, residual SDs
+  - Auto-detects outcome variable from model structure
+  - Validates variable names and model structure
+
+* **Model Fitting** (Phase 4 Complete)
+  - `fit_mediation()` - Formula-based interface for mediation models
+  - GLM engine supporting all GLM families (gaussian, binomial, poisson, etc.)
+  - Fits both mediator and outcome models simultaneously
+  - Returns standardized `MediationData` object
+
+* **Bootstrap Inference** (Phase 5 Complete)
+  - `bootstrap_mediation()` with three methods:
+    - **Parametric**: Samples from N(theta-hat, Sigma-hat) - fast, assumes normality
+    - **Nonparametric**: Resamples data and refits models - robust, no assumptions
+    - **Plugin**: Point estimate only - fastest, no CI
+  - Parallel processing support (Unix systems)
+  - Reproducible results via seed parameter
+  - Configurable confidence levels
 
 ### Documentation
 
@@ -39,10 +57,14 @@
 
 ### Infrastructure
 
-* **Testing**: 87 comprehensive tests (51 original + 36 for SerialMediationData)
-  - Full coverage of simple and serial mediation S7 classes
-  - Validation tests ensure data integrity across all mediation types
-  - 4 tests skipped in non-interactive mode (S7 dispatch investigation)
+* **Testing**: Comprehensive test suite (~200+ tests)
+  - `test-classes.R`: S7 class validation (87 tests)
+  - `test-extract-lm.R`: lm/glm extraction methods
+  - `test-extract-lavaan.R`: lavaan extraction methods (skipped if not installed)
+  - `test-fit-glm.R`: fit_mediation() with GLM engine
+  - `test-bootstrap.R`: All bootstrap methods (parametric, nonparametric, plugin)
+  - Reproducibility tests with seed verification
+  - Edge case handling (non-convergence, missing paths, etc.)
 
 * **CI/CD**: GitHub Actions workflows with Quarto support
   - R-CMD-check with `_R_CHECK_CODOC_S4_METHODS_: false` for S7 compatibility
@@ -58,16 +80,16 @@
 
 ### Development Status
 
-**Current Phase**: Phase 2 Complete + Documentation
-**Next**: Phase 3 (Model Extraction)
+**Current Phase**: Phase 6 (Extended Testing)
+**Next**: Phase 7 (Polish & Release)
 
 * [x] Phase 1: Package setup
 * [x] Phase 2: S7 class architecture (simple + serial mediation)
 * [x] Phase 2.5: Comprehensive Quarto documentation
-* [ ] Phase 3: Model extraction (in progress)
-* [ ] Phase 4: Model fitting
-* [ ] Phase 5: Bootstrap infrastructure
-* [ ] Phase 6: Extended testing
+* [x] Phase 3: Model extraction (lm/glm, lavaan)
+* [x] Phase 4: Model fitting (GLM engine)
+* [x] Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
+* [ ] Phase 6: Extended testing (in progress)
 * [ ] Phase 7: Polish & release
 
 ### Documentation Improvements
@@ -93,12 +115,12 @@
 
 ### Known Issues
 
-* **S7 Method Dispatch for SerialMediationData**: Print/summary methods for `SerialMediationData` need investigation for installed package context
+* **S7 Method Dispatch for SerialMediationData**: Print/summary methods for `SerialMediationData` may need investigation for installed package context
   - Tests skip in non-interactive mode (4 tests affected)
   - Methods work correctly when using `devtools::load_all()`
   - Related to S7 method registration timing in installed packages
-* `fit_mediation()` and `bootstrap_mediation()` are stubs awaiting implementation
-* `extract_mediation()` methods need implementation for lm/glm, lavaan
+* **lavaan extraction**: Requires lavaan package to be installed (optional dependency)
+* **Parallel bootstrap**: Only available on Unix systems (mclapply limitation)
 
 ### Internal
 
