@@ -162,7 +162,7 @@ Comprehensive Quarto vignettes are available:
 
 ## Development Status
 
-**Current Phase**: Extended Testing (Phase 6)
+**Current Phase**: Polish & Release (Phase 7)
 
 - [x] Phase 1: Package setup
 - [x] Phase 2: S7 class architecture (with SerialMediationData)
@@ -170,7 +170,7 @@ Comprehensive Quarto vignettes are available:
 - [x] Phase 3: Model extraction (lm/glm, lavaan)
 - [x] Phase 4: Model fitting (GLM engine)
 - [x] Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
-- [ ] Phase 6: Extended testing (in progress)
+- [x] Phase 6: Extended testing (78 tests, 4 vignettes)
 - [ ] Phase 7: Polish & release
 
 See [planning/medfit-roadmap.md](planning/medfit-roadmap.md) for detailed development plan.
