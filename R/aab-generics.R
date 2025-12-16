@@ -11,9 +11,9 @@
 #' Generic function to extract mediation structure (a, b, c' paths and
 #' variance-covariance matrices) from fitted models. This function provides
 #' a unified interface for extracting mediation information from various
-#' model types (lm, glm, lavaan, OpenMx, lmer, brms, etc.).
+#' model types (lm, glm, lavaan, lmer, brms, etc.).
 #'
-#' @param object Fitted model object (lm, glm, lavaan, OpenMx, etc.)
+#' @param object Fitted model object (lm, glm, lavaan, etc.)
 #' @param ... Additional arguments passed to methods. Common arguments include:
 #'   - `treatment`: Character string specifying treatment variable name
 #'   - `mediator`: Character string specifying mediator variable name
@@ -31,9 +31,10 @@
 #'
 #' - **lm/glm**: Extract from linear and generalized linear models
 #' - **lavaan**: Extract from structural equation models
-#' - **OpenMx**: Extract from OpenMx models
 #' - **lmerMod**: Extract from mixed-effects models (future)
 #' - **brmsfit**: Extract from Bayesian models (future)
+#'
+#' Note: OpenMx extraction is planned for a future release.
 #'
 #' All methods return a standardized [MediationData] object that can be used
 #' with other medfit functions and dependent packages (probmed, RMediation,

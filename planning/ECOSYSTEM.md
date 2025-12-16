@@ -12,6 +12,7 @@ All packages are located in the parent `packages/` directory:
 
 ```
 packages/
+├── mediationverse/   ← META-PACKAGE (planned Q2-Q3 2025)
 ├── medfit/           ← THIS PACKAGE (foundation)
 ├── probmed/          ← Will import medfit
 ├── rmediation/       ← Will import medfit (RMediation on CRAN)
@@ -23,12 +24,23 @@ packages/
 ## Dependency Graph
 
 ```
-medfit (foundation) ✅ Phase 2 Complete + Documentation
+mediationverse (meta-package) 📋 Planned (Q2-Q3 2025)
+├── Imports: medfit, probmed, RMediation, medrobust
+├── Provides: Unified installation and loading
+├── Documentation: Ecosystem overview and guides
+├── Website: https://mediationverse.org (future)
+└── Location: ../mediationverse/ (to be created)
+
+         ↓ (loads all packages)
+
+medfit (foundation) ✅ Phase 3 Complete → Phase 4 (Model Fitting)
 ├── Provides: MediationData, SerialMediationData, BootstrapResult classes
-├── Provides: fit_mediation(), extract_mediation(), bootstrap_mediation() (generics defined)
+├── Provides: fit_mediation(), extract_mediation(), bootstrap_mediation()
+├── Planned: estimate_mediation() with unified estimation engine
 ├── Documentation: 4 comprehensive Quarto vignettes published
 ├── Website: https://data-wise.github.io/medfit/
-└── Engines: GLM (in progress), lmer (future), brms (future)
+├── MVP Engines: regression (VanderWeele closed-form)
+└── Future Engines: gformula, ipw (via CMAverse), tmle, dml
 
          ↓ (imports medfit)
 
@@ -39,7 +51,7 @@ probmed (v0.1.0)
 └── Location: ../probmed/
 
 RMediation (v1.4.0)
-├── Uses: medfit extraction (lavaan, OpenMx)
+├── Uses: medfit extraction (lavaan; OpenMx postponed)
 ├── Adds: DOP, MBCO, MC methods
 ├── Status: ✅ Stable on CRAN
 └── Location: ../rmediation/
@@ -71,16 +83,25 @@ Key strategic documents are in **probmed/planning/**:
 ## Integration Timeline
 
 ### Phase 1: medfit Creation (Weeks 1-5)
-**Status**: ✅ Phase 2 Complete + Documentation → 🚧 Phase 3 (Model Extraction)
+**Status**: ✅ Phase 3 Complete → 🚧 Phase 4 (Model Fitting)
 - [x] Package skeleton (Week 1) ✅
 - [x] S7 classes (Week 1-2) ✅ Extended with SerialMediationData
 - [x] Comprehensive Quarto documentation (added) ✅
 - [x] pkgdown website with Bootstrap 5 ✅
-- [ ] Extraction methods (Week 2) 🚧 In Progress
-- [ ] Fitting API (Week 2-3)
+- [x] Extraction methods (Week 2) ✅ lm/glm and lavaan
+- [ ] Fitting API (Week 2-3) 🚧 In Progress
 - [ ] Bootstrap (Week 3-4)
 - [ ] Extended testing (Week 4)
 - [ ] Polish (Week 5)
+
+### Post-MVP: Estimation Engine Architecture
+**Status**: 📋 Designed, pending implementation
+- [ ] VanderWeele four-way decomposition (interaction support)
+- [ ] Decomposition S7 class for flexible effect storage
+- [ ] estimate_mediation() unified interface
+- [ ] Engine adapter pattern for external packages
+- [ ] CMAverse adapter (gformula, ipw)
+- [ ] Future: tmle3, DoubleML adapters
 
 ### Phase 2: probmed Integration (Week 6-7)
 **Status**: ⏳ Pending medfit completion
@@ -105,6 +126,19 @@ Key strategic documents are in **probmed/planning/**:
 - [ ] Use for naive estimates if beneficial
 - [ ] Update documentation
 
+### Phase 5: mediationverse Meta-Package (Weeks 11-15)
+**Status**: 📋 Planned (Q2-Q3 2025)
+- [ ] Create package skeleton with usethis
+- [ ] Implement attachment logic
+- [ ] Add startup message
+- [ ] Create conflict detection
+- [ ] Write comprehensive vignettes
+- [ ] Set up pkgdown website
+- [ ] Configure CI/CD workflows
+- [ ] CRAN submission
+
+**See**: `planning/MEDIATIONVERSE-PROPOSAL.md` for detailed implementation plan
+
 ---
 
 ## API Compatibility
@@ -113,16 +147,35 @@ Key strategic documents are in **probmed/planning/**:
 
 **Classes**:
 ```r
-MediationData       # Replaces probmed's MediationExtract
-BootstrapResult     # New, standardized bootstrap results
+MediationData           # Replaces probmed's MediationExtract
+SerialMediationData     # For X → M1 → M2 → ... → Y chains
+BootstrapResult         # Standardized bootstrap results
+Decomposition           # (Planned) Effect decomposition storage
 ```
 
-**Functions**:
+**Functions (MVP)**:
 ```r
-fit_mediation()         # New, GLM fitting
-extract_mediation()     # Replaces probmed's extract_mediation()
-bootstrap_mediation()   # New, unified bootstrap
+fit_mediation()         # GLM fitting
+extract_mediation()     # lm/glm and lavaan extraction
+bootstrap_mediation()   # Unified bootstrap
 ```
+
+**Functions (Post-MVP)**:
+```r
+estimate_mediation()    # Unified interface with multiple engines
+                        # - effects = "natural" | "controlled" | "interventional"
+                        # - engine = "regression" | "gformula" | "ipw" | "tmle"
+                        # - engine_args = list(...) for engine-specific options
+```
+
+**Estimation Engines**:
+| Engine | Package | Method | Status |
+|--------|---------|--------|--------|
+| `regression` | (internal) | VanderWeele closed-form | MVP default |
+| `gformula` | CMAverse | G-computation | Planned |
+| `ipw` | CMAverse | Inverse probability weighting | Planned |
+| `tmle` | tmle3 | Targeted learning | Future |
+| `dml` | DoubleML | Double machine learning | Future |
 
 ### Migration Guide for probmed
 
@@ -202,6 +255,13 @@ ci(extract, type = "dop", ...)  # RMediation-specific
 - Announce in all packages
 - Document in medfit and dependent packages
 - Provide migration guide if needed
+
+**New estimation engines** (via adapter pattern):
+- Add external package to Suggests in DESCRIPTION
+- Implement adapter following `.adapter_template()` contract
+- Register in `.engine_registry` during `.onLoad()`
+- Document engine-specific options in `engine_args`
+- Add tests that skip if package not installed
 
 ---
 
@@ -347,5 +407,9 @@ ci(extract, type = "dop", ...)  # RMediation-specific
 
 ---
 
-**Last Updated**: 2025-12-02
+**Last Updated**: 2025-12-03
 **Next Review**: After medfit MVP completion
+
+**Notes**:
+- OpenMx integration has been postponed to a future release. MVP focuses on lm/glm and lavaan extraction.
+- Post-MVP estimation engine architecture documented in `medfit-roadmap.md` Phases 7, 7b, 7c.

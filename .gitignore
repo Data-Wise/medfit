@@ -7,3 +7,5 @@
 docs/
 inst/doc
 medfit.code-workspace
+revdep/
+check/
