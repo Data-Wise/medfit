@@ -73,7 +73,6 @@ print(med_data)
 ### Fit Mediation Models Directly
 
 ``` r
-# Coming soon: fit_mediation() for direct model fitting
 med_data <- fit_mediation(
   formula_y = Y ~ X + M,
   formula_m = M ~ X,
@@ -87,7 +86,6 @@ med_data <- fit_mediation(
 ### Bootstrap Inference
 
 ``` r
-# Coming soon: bootstrap_mediation() for inference
 result <- bootstrap_mediation(
   statistic_fn = function(theta) theta["a"] * theta["b"],
   method = "parametric",
@@ -168,7 +166,7 @@ Comprehensive Quarto vignettes are available:
 
 ## Development Status
 
-**Current Phase**: MVP Development (Phase 3 Complete)
+**Current Phase**: MVP Development (Phase 5 Complete)
 
 Phase 1: Package setup
 
@@ -178,9 +176,9 @@ Phase 2.5: Comprehensive Quarto documentation
 
 Phase 3: Model extraction (lm/glm, lavaan)
 
-Phase 4: Model fitting (in progress)
+Phase 4: Model fitting (GLM engine)
 
-Phase 5: Bootstrap infrastructure
+Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
 
 Phase 6: Extended testing
 

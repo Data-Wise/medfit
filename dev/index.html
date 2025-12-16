@@ -184,8 +184,7 @@
 <h3 id="fit-mediation-models-directly">Fit Mediation Models Directly<a class="anchor" aria-label="anchor" href="#fit-mediation-models-directly"></a>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Coming soon: fit_mediation() for direct model fitting</span></span>
-<span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
 <span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>,</span>
 <span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">data</span>,</span>
@@ -198,8 +197,7 @@
 <h3 id="bootstrap-inference">Bootstrap Inference<a class="anchor" aria-label="anchor" href="#bootstrap-inference"></a>
 </h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Coming soon: bootstrap_mediation() for inference</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
 <span>  statistic_fn <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="va">theta</span><span class="op">[</span><span class="st">"a"</span><span class="op">]</span> <span class="op">*</span> <span class="va">theta</span><span class="op">[</span><span class="st">"b"</span><span class="op">]</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
 <span>  mediation_data <span class="op">=</span> <span class="va">med_data</span>,</span>
@@ -335,14 +333,14 @@
 <div class="section level2">
 <h2 id="development-status">Development Status<a class="anchor" aria-label="anchor" href="#development-status"></a>
 </h2>
-<p><strong>Current Phase</strong>: MVP Development (Phase 3 Complete)</p>
+<p><strong>Current Phase</strong>: MVP Development (Phase 5 Complete)</p>
 <ul class="task-list">
 <li><label><input type="checkbox" checked>Phase 1: Package setup</label></li>
 <li><label><input type="checkbox" checked>Phase 2: S7 class architecture (with SerialMediationData)</label></li>
 <li><label><input type="checkbox" checked>Phase 2.5: Comprehensive Quarto documentation</label></li>
 <li><label><input type="checkbox" checked>Phase 3: Model extraction (lm/glm, lavaan)</label></li>
-<li><label><input type="checkbox">Phase 4: Model fitting (in progress)</label></li>
-<li><label><input type="checkbox">Phase 5: Bootstrap infrastructure</label></li>
+<li><label><input type="checkbox" checked>Phase 4: Model fitting (GLM engine)</label></li>
+<li><label><input type="checkbox" checked>Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)</label></li>
 <li><label><input type="checkbox">Phase 6: Extended testing</label></li>
 <li><label><input type="checkbox">Phase 7: Polish &amp; release</label></li>
 </ul>
