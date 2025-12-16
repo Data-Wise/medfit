@@ -8,8 +8,6 @@
 # 5. Reproducibility and seed handling
 # 6. Input validation / error handling
 # 7. CI coverage properties
-#
-# Note: Tests are skipped until bootstrap_mediation() is implemented
 
 # --- Test Data Generators ---
 
@@ -35,9 +33,9 @@ create_test_mediation_data <- function(data) {
   )
 }
 
-# Simple indirect effect function
+# Simple indirect effect function (uses parameter names from extract_mediation)
 indirect_effect <- function(theta) {
-  theta["a"] * theta["b"]
+  theta["m_X"] * theta["y_M"]
 }
 
 
@@ -46,7 +44,7 @@ indirect_effect <- function(theta) {
 # ==============================================================================
 
 test_that("parametric bootstrap returns BootstrapResult object", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -59,14 +57,14 @@ test_that("parametric bootstrap returns BootstrapResult object", {
     seed = 123
   )
 
-  expect_s3_class(result, "medfit::BootstrapResult")
+  expect_true(S7::S7_inherits(result, BootstrapResult))
   expect_equal(result@method, "parametric")
   expect_equal(result@n_boot, 1000L)
 })
 
 
 test_that("parametric bootstrap computes reasonable point estimate", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data(a = 0.5, b = 0.4, c_prime = 0.1)
   med_data <- create_test_mediation_data(data)
@@ -86,7 +84,7 @@ test_that("parametric bootstrap computes reasonable point estimate", {
 
 
 test_that("parametric bootstrap produces valid confidence interval", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -114,7 +112,7 @@ test_that("parametric bootstrap produces valid confidence interval", {
 
 
 test_that("parametric bootstrap stores bootstrap distribution", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -139,7 +137,7 @@ test_that("parametric bootstrap stores bootstrap distribution", {
 
 
 test_that("parametric bootstrap respects ci_level argument", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -177,7 +175,7 @@ test_that("parametric bootstrap respects ci_level argument", {
 # ==============================================================================
 
 test_that("nonparametric bootstrap returns BootstrapResult object", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
 
@@ -195,14 +193,14 @@ test_that("nonparametric bootstrap returns BootstrapResult object", {
     seed = 123
   )
 
-  expect_s3_class(result, "medfit::BootstrapResult")
+  expect_true(S7::S7_inherits(result, BootstrapResult))
   expect_equal(result@method, "nonparametric")
   expect_equal(result@n_boot, 100L)
 })
 
 
 test_that("nonparametric bootstrap computes reasonable point estimate", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data(a = 0.5, b = 0.4, c_prime = 0.1)
 
@@ -225,7 +223,7 @@ test_that("nonparametric bootstrap computes reasonable point estimate", {
 
 
 test_that("nonparametric bootstrap produces valid confidence interval", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
 
@@ -252,7 +250,7 @@ test_that("nonparametric bootstrap produces valid confidence interval", {
 
 
 test_that("nonparametric bootstrap handles small samples", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   # Small sample size
   data <- generate_mediation_data(n = 30)
@@ -270,7 +268,7 @@ test_that("nonparametric bootstrap handles small samples", {
     seed = 123
   )
 
-  expect_s3_class(result, "medfit::BootstrapResult")
+  expect_true(S7::S7_inherits(result, BootstrapResult))
   expect_equal(result@n_boot, 100L)
 })
 
@@ -280,7 +278,7 @@ test_that("nonparametric bootstrap handles small samples", {
 # ==============================================================================
 
 test_that("plugin method returns BootstrapResult with NA confidence interval", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -291,7 +289,7 @@ test_that("plugin method returns BootstrapResult with NA confidence interval", {
     mediation_data = med_data
   )
 
-  expect_s3_class(result, "medfit::BootstrapResult")
+  expect_true(S7::S7_inherits(result, BootstrapResult))
   expect_equal(result@method, "plugin")
   expect_equal(result@n_boot, 0L)
 
@@ -306,7 +304,7 @@ test_that("plugin method returns BootstrapResult with NA confidence interval", {
 
 
 test_that("plugin method computes point estimate only", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data(a = 0.5, b = 0.4, c_prime = 0.1)
   med_data <- create_test_mediation_data(data)
@@ -327,7 +325,7 @@ test_that("plugin method computes point estimate only", {
 
 
 test_that("plugin method is fast", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -351,7 +349,7 @@ test_that("plugin method is fast", {
 # ==============================================================================
 
 test_that("parallel bootstrap produces same results as sequential (with seed)", {
-  skip("bootstrap_mediation() not yet implemented")
+  
   skip_on_os("windows")  # Parallel may not work on Windows
 
   data <- generate_mediation_data()
@@ -386,7 +384,7 @@ test_that("parallel bootstrap produces same results as sequential (with seed)", 
 
 
 test_that("parallel bootstrap uses correct number of cores", {
-  skip("bootstrap_mediation() not yet implemented")
+  
   skip_on_os("windows")
 
   data <- generate_mediation_data()
@@ -404,7 +402,7 @@ test_that("parallel bootstrap uses correct number of cores", {
     seed = 123
   )
 
-  expect_s3_class(result, "medfit::BootstrapResult")
+  expect_true(S7::S7_inherits(result, BootstrapResult))
 })
 
 
@@ -413,7 +411,7 @@ test_that("parallel bootstrap uses correct number of cores", {
 # ==============================================================================
 
 test_that("parametric bootstrap is reproducible with same seed", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -443,7 +441,7 @@ test_that("parametric bootstrap is reproducible with same seed", {
 
 
 test_that("nonparametric bootstrap is reproducible with same seed", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
 
@@ -476,7 +474,7 @@ test_that("nonparametric bootstrap is reproducible with same seed", {
 
 
 test_that("different seeds produce different results", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -507,7 +505,7 @@ test_that("different seeds produce different results", {
 # ==============================================================================
 
 test_that("bootstrap_mediation errors when mediation_data missing for parametric", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   expect_error(
     bootstrap_mediation(
@@ -521,7 +519,7 @@ test_that("bootstrap_mediation errors when mediation_data missing for parametric
 
 
 test_that("bootstrap_mediation errors when data missing for nonparametric", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   expect_error(
     bootstrap_mediation(
@@ -535,7 +533,7 @@ test_that("bootstrap_mediation errors when data missing for nonparametric", {
 
 
 test_that("bootstrap_mediation errors for invalid method", {
-  skip("bootstrap_mediation() not yet implemented")
+
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -546,13 +544,13 @@ test_that("bootstrap_mediation errors for invalid method", {
       method = "invalid_method",
       mediation_data = med_data
     ),
-    "method"
+    "should be one of"
   )
 })
 
 
 test_that("bootstrap_mediation errors for invalid n_boot", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -570,7 +568,7 @@ test_that("bootstrap_mediation errors for invalid n_boot", {
 
 
 test_that("bootstrap_mediation errors for invalid ci_level", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -588,7 +586,7 @@ test_that("bootstrap_mediation errors for invalid ci_level", {
 
 
 test_that("bootstrap_mediation errors when statistic_fn is not a function", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -609,7 +607,7 @@ test_that("bootstrap_mediation errors when statistic_fn is not a function", {
 # ==============================================================================
 
 test_that("parametric bootstrap achieves nominal CI coverage", {
-  skip("bootstrap_mediation() not yet implemented")
+  
   skip("Simulation test - run separately for CI coverage validation")
 
   # This test runs a simulation to verify that 95% CIs contain
@@ -652,7 +650,7 @@ test_that("parametric bootstrap achieves nominal CI coverage", {
 # ==============================================================================
 
 test_that("print method works for BootstrapResult from parametric", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -673,7 +671,7 @@ test_that("print method works for BootstrapResult from parametric", {
 
 
 test_that("print method works for BootstrapResult from plugin", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
@@ -691,7 +689,7 @@ test_that("print method works for BootstrapResult from plugin", {
 
 
 test_that("summary method works for BootstrapResult", {
-  skip("bootstrap_mediation() not yet implemented")
+  
 
   data <- generate_mediation_data()
   med_data <- create_test_mediation_data(data)
