@@ -6,12 +6,22 @@
 # their definitions using S7::S4_register()
 
 .onLoad <- function(libname, pkgname) {
-  # Future: Register extraction methods for suggested packages
-  # if (requireNamespace("lavaan", quietly = TRUE)) {
-  #   lavaan_class <- S7::as_class(methods::getClass("lavaan", where = "lavaan"))
-  #   S7::method(extract_mediation, lavaan_class) <- extract_mediation_lavaan
-  # }
-  #
+  # Register extraction methods for suggested packages
+  # These are registered dynamically because lavaan/OpenMx are optional dependencies
+
+  if (requireNamespace("lavaan", quietly = TRUE)) {
+    # Get the lavaan S4 class and convert to S7-compatible class
+    tryCatch({
+      lavaan_class <- S7::new_S3_class("lavaan")
+      S7::method(extract_mediation, lavaan_class) <- .extract_mediation_lavaan
+    }, error = function(e) {
+      # Silently fail if registration doesn't work
+      # Method will still be available if lavaan is loaded
+      invisible(NULL)
+    })
+  }
+
+  # Future: OpenMx support
   # if (requireNamespace("OpenMx", quietly = TRUE)) {
   #   # Similar pattern for OpenMx
   # }
