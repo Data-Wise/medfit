@@ -19,3 +19,9 @@
 ^vignettes/\.quarto$
 ^START-HERE\.md$
 ^hex-logo-prompt\.md$
+^\.STATUS$
+^COORDINATION-BRAINSTORM\.md$
+^ECOSYSTEM-COORDINATION\.md$
+^IDEAS\.md$
+^PROJECT-HUB\.md$
+^TODOS\.md$

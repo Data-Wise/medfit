@@ -23,7 +23,21 @@
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(git merge-base:*)",
+      "Bash(git -C /Users/dt/projects/r-packages/active/medfit diff .claude/settings.local.json)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git worktree:*)",
+      "Bash(cat:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr close:*)"
     ]
   },
   "workingDirectory": "/Users/dt/Library/CloudStorage/GoogleDrive-dtofighi@gmail.com/My Drive/packages/medfit",

@@ -1,12 +1,41 @@
 # medfit (development version)
 
+## medfit 0.1.0.9000 (2025-12-16)
+
+### New Features
+
+* **`fit_mediation()` function** - Fit mediation models with formula interface
+  - GLM engine for linear and generalized linear models
+  - Support for continuous and binary outcomes (`family_y` argument)
+  - Covariates supported in both mediator and outcome models
+  - Full checkmate input validation
+  - Returns `MediationData` object for downstream analysis
+
+* **`bootstrap_mediation()` function** - Bootstrap inference for mediation statistics
+  - **Parametric bootstrap**: Fast, samples from multivariate normal
+  - **Nonparametric bootstrap**: Robust, resamples data and refits models
+  - **Plugin estimator**: Point estimate only, fastest method
+  - Parallel processing support (`parallel = TRUE`, `ncores` argument)
+  - Seed-based reproducibility
+  - Returns `BootstrapResult` object with point estimate and CI
+
+* **CI workflow fix**: Updated codecov action v5 parameter names (`file` -> `files`, `plugin` -> `plugins`)
+
+### Documentation
+
+* Updated vignettes to reflect implemented features:
+  - `getting-started.qmd`: Added complete working examples for all three main functions
+  - `bootstrap.qmd`: Updated all code examples to use correct API with `statistic_fn`
+
+---
+
 ## medfit 0.1.0
 
 **Initial development release**
 
 ### Major Features
 
-* **Defensive Programming Infrastructure** (NEW)
+* **Defensive Programming Infrastructure**
   - Added `checkmate` package for fail-fast input validation
   - All extraction functions now use `checkmate::assert_*` for argument validation
   - Provides fast (C-based), memory-efficient assertions with informative error messages
@@ -72,15 +101,15 @@
 
 ### Development Status
 
-**Current Phase**: Phase 3 Complete → Phase 4 In Progress
-**Next**: Complete Phase 4 (Model Fitting), then Phase 5 (Bootstrap)
+**Current Phase**: Phase 5 Complete
+**Next**: Phase 6 (Extended Testing), Phase 8 (Polish & Release)
 
 * [x] Phase 1: Package setup (CI/CD, documentation, Dependabot)
 * [x] Phase 2: S7 class architecture (MediationData, SerialMediationData, BootstrapResult)
 * [x] Phase 2.5: Comprehensive Quarto documentation (4 vignettes, pkgdown website)
-* [x] Phase 3: Model extraction (lm/glm, lavaan methods, 184 tests)
-* [ ] Phase 4: Model fitting (stub implemented, GLM engine needed)
-* [ ] Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
+* [x] Phase 3: Model extraction (lm/glm, lavaan methods)
+* [x] Phase 4: Model fitting (`fit_mediation()` with GLM engine)
+* [x] Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
 * [ ] Phase 6: Extended testing (edge cases, integration)
 * [ ] Phase 8: Polish & release (R CMD check, CRAN prep)
 
@@ -109,7 +138,14 @@
 
 ### Known Issues
 
-* `fit_mediation()` and `bootstrap_mediation()` are stubs awaiting implementation
+* OpenMx integration postponed (compilation issues on Ubuntu oldrel-1)
+
+### Ecosystem Notes
+
+* Foundation package for the mediationverse ecosystem
+* probmed, RMediation, and medrobust are awaiting integration
+* Tested with R 4.1.0+, S7 0.1.0+
+* See [Ecosystem Coordination](planning/ECOSYSTEM.md) for cross-package guidelines
 
 ### Internal
 

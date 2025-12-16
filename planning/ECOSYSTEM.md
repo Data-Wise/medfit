@@ -1,6 +1,6 @@
 # medfit Ecosystem Connections
 
-**Last Updated**: 2025-12-02
+**Last Updated**: 2025-12-03
 
 This document tracks the connections between medfit and its dependent packages.
 
@@ -12,11 +12,12 @@ All packages are located in the parent `packages/` directory:
 
 ```
 packages/
-├── mediationverse/   ← META-PACKAGE (planned Q2-Q3 2025)
-├── medfit/           ← THIS PACKAGE (foundation)
-├── probmed/          ← Will import medfit
-├── rmediation/       ← Will import medfit (RMediation on CRAN)
-└── medrobust/        ← Will suggest medfit
+├── mediationverse/   ← META-PACKAGE (skeleton ready, GitHub: data-wise/mediationverse)
+├── medfit/           ← THIS PACKAGE (foundation, GitHub: data-wise/medfit)
+├── probmed/          ← Will import medfit (GitHub: data-wise/probmed)
+├── rmediation/       ← Will import medfit (RMediation on CRAN, GitHub: data-wise/rmediation)
+├── medrobust/        ← Will suggest medfit (GitHub: data-wise/medrobust)
+└── medsim/           ← SIMULATION INFRASTRUCTURE (GitHub: data-wise/medsim) ✅
 ```
 
 ---
@@ -26,12 +27,23 @@ packages/
 ```
 mediationverse (meta-package) 📋 Planned (Q2-Q3 2025)
 ├── Imports: medfit, probmed, RMediation, medrobust
+├── Suggests: medsim (simulation infrastructure)
 ├── Provides: Unified installation and loading
 ├── Documentation: Ecosystem overview and guides
 ├── Website: https://mediationverse.org (future)
-└── Location: ../mediationverse/ (to be created)
+└── Location: ../mediationverse/
 
-         ↓ (loads all packages)
+         ↓ (loads analysis packages)
+
+medsim (simulation infrastructure) ✅ On GitHub
+├── Suggests: medfit, probmed, RMediation, medrobust
+├── Provides: Standardized simulation framework
+├── Features: Environment detection, parallel processing, ground truth caching
+├── Website: https://data-wise.github.io/medsim/
+├── GitHub: https://github.com/data-wise/medsim
+└── Location: ../medsim/
+
+         ↓ (foundation for all packages)
 
 medfit (foundation) ✅ Phase 3 Complete → Phase 4 (Model Fitting)
 ├── Provides: MediationData, SerialMediationData, BootstrapResult classes
@@ -45,15 +57,18 @@ medfit (foundation) ✅ Phase 3 Complete → Phase 4 (Model Fitting)
          ↓ (imports medfit)
 
 probmed (v0.1.0)
-├── Uses: medfit extraction, bootstrap
-├── Adds: P_med computation
-├── Status: ✅ Phase 2 complete, ready for integration
+├── Imports: medfit (MediationData class)
+├── Re-exports: extract_mediation from medfit
+├── Adds: P_med computation via pmed()
+├── Status: ✅ medfit integration complete
+├── GitHub: https://github.com/data-wise/probmed
 └── Location: ../probmed/
 
 RMediation (v1.4.0)
-├── Uses: medfit extraction (lavaan; OpenMx postponed)
-├── Adds: DOP, MBCO, MC methods
-├── Status: ✅ Stable on CRAN
+├── Uses: medfit extraction (MediationData, SerialMediationData)
+├── Adds: DOP, MBCO, MC methods via ci() for medfit objects
+├── Status: ✅ medfit integration complete (ci_medfit.R)
+├── GitHub: https://github.com/data-wise/rmediation
 └── Location: ../rmediation/
 
 medrobust (v0.1.0.9000)
@@ -67,9 +82,19 @@ medrobust (v0.1.0.9000)
 
 ## Shared Planning Documents
 
-Key strategic documents are in **probmed/planning/**:
+**Centralized planning directory**: `/Users/dt/mediation-planning/`
 
-- **DECISIONS.md** - All major decisions (medfit name, architecture, etc.)
+Key strategic documents:
+
+- **API-CONTRACTS.md** - Cross-package interfaces and compatibility
+- **BRANCHING-STRATEGY.md** - Git workflow (main + dev branches)
+- **DEVELOPMENT-STANDARDS.md** - Coding standards and best practices
+- **INTEGRATION-PLAN.md** - Package integration and redundancy removal plan
+- **MEDIATIONVERSE-PROPOSAL.md** - Meta-package detailed implementation
+- **MEDSIM-PROPOSAL.md** - Simulation infrastructure proposal
+
+**Legacy planning** (in probmed/planning/):
+- **DECISIONS.md** - Historical decisions (medfit name, architecture, etc.)
 - **ROADMAP.md** - Overall ecosystem roadmap
 - **three-package-ecosystem-strategy.md** - Detailed strategic analysis
 - **model-engines-brainstorm.md** - Model engine decisions
@@ -104,21 +129,24 @@ Key strategic documents are in **probmed/planning/**:
 - [ ] Future: tmle3, DoubleML adapters
 
 ### Phase 2: probmed Integration (Week 6-7)
-**Status**: ⏳ Pending medfit completion
-- [ ] Add medfit to DESCRIPTION (Imports)
-- [ ] Replace extraction code
-- [ ] Replace bootstrap code
-- [ ] Verify backward compatibility
-- [ ] Update tests
-- [ ] Update documentation
+**Status**: ✅ Complete
+- [x] Add medfit to DESCRIPTION (Imports) ✅
+- [x] Replace MediationExtract with medfit::MediationData ✅
+- [x] Re-export extract_mediation from medfit ✅
+- [x] Update pmed methods for MediationData ✅
+- [x] Remove duplicate extraction code (1,568 lines removed) ✅
+- [x] Update tests ✅
+- [x] R CMD check passes (0/0/0) ✅
+- [x] Pushed to GitHub ✅
 
 ### Phase 3: RMediation Integration (Week 8-9)
-**Status**: ⏳ Pending probmed integration
-- [ ] Add medfit to DESCRIPTION (Imports)
-- [ ] Replace extraction code
-- [ ] Use bootstrap utilities where appropriate
-- [ ] Update tests
-- [ ] Update documentation
+**Status**: ✅ Complete
+- [x] Add medfit to DESCRIPTION (Suggests) ✅
+- [x] Add ci() method for MediationData ✅
+- [x] Add ci() method for SerialMediationData ✅
+- [x] Dynamic method registration in .onLoad() ✅
+- [x] R CMD check passes (0/0/0) ✅
+- [x] Pushed to GitHub ✅
 
 ### Phase 4: medrobust Integration (Week 10)
 **Status**: ⏳ Optional
@@ -127,17 +155,45 @@ Key strategic documents are in **probmed/planning/**:
 - [ ] Update documentation
 
 ### Phase 5: mediationverse Meta-Package (Weeks 11-15)
-**Status**: 📋 Planned (Q2-Q3 2025)
-- [ ] Create package skeleton with usethis
-- [ ] Implement attachment logic
-- [ ] Add startup message
-- [ ] Create conflict detection
-- [ ] Write comprehensive vignettes
-- [ ] Set up pkgdown website
+**Status**: 🚧 In Progress
+- [x] Create package skeleton with usethis ✅
+- [x] Implement attachment logic ✅
+- [x] Add startup message ✅
+- [x] Create conflict detection (mediationverse_conflicts()) ✅
+- [x] Add mediationverse_packages() ✅
+- [x] Add mediationverse_update() ✅
+- [x] Set up pkgdown website (standardized theme) ✅
+- [x] Push to GitHub ✅
+- [x] Write comprehensive Quarto vignettes ✅
+  - getting-started.qmd
+  - mediationverse-workflow.qmd
+- [x] R CMD check passes (0/0/0) ✅
 - [ ] Configure CI/CD workflows
 - [ ] CRAN submission
 
-**See**: `planning/MEDIATIONVERSE-PROPOSAL.md` for detailed implementation plan
+**See**: `/Users/dt/mediation-planning/MEDIATIONVERSE-PROPOSAL.md` for detailed implementation plan
+
+### Phase 6: medsim Simulation Package (Weeks 16-25)
+**Status**: ✅ Core Complete, On GitHub
+- [x] Create package skeleton ✅
+- [x] Write proposal document ✅
+- [x] Implement config.R (environment detection) ✅
+- [x] Implement scenarios.R (standard scenarios) ✅
+- [x] Implement runner.R (simulation execution) ✅
+- [x] Implement parallel.R (parallel processing) ✅
+- [x] Implement cache.R (ground truth caching) ✅
+- [x] Implement analyze.R (result analysis) ✅
+- [x] Implement visualize.R (publication figures) ✅
+- [x] Implement tables.R (LaTeX tables) ✅
+- [x] Push to GitHub: https://github.com/data-wise/medsim ✅
+- [ ] Implement workflow.R (complete pipeline)
+- [ ] Write 5 vignettes
+- [ ] Set up pkgdown website
+- [ ] Configure CI/CD workflows
+- [ ] Integration examples with medfit, probmed, RMediation, medrobust
+- [ ] CRAN submission
+
+**See**: `/Users/dt/mediation-planning/MEDSIM-PROPOSAL.md` for detailed implementation plan
 
 ---
 
@@ -177,25 +233,29 @@ estimate_mediation()    # Unified interface with multiple engines
 | `tmle` | tmle3 | Targeted learning | Future |
 | `dml` | DoubleML | Double machine learning | Future |
 
-### Migration Guide for probmed
+### Migration Guide for probmed (✅ COMPLETE)
 
 **Before** (probmed v0.1.0):
 ```r
-# probmed code
+# probmed had its own MediationExtract class
 extract <- extract_mediation(fit, ...)  # probmed's version
-result <- .pmed_parametric_boot(...)     # internal function
+result <- pmed(extract)                  # used MediationExtract
 ```
 
 **After** (probmed v0.2.0 with medfit):
 ```r
-# medfit provides infrastructure
-library(medfit)
-extract <- medfit::extract_mediation(fit, ...)  # medfit's version
-boot <- medfit::bootstrap_mediation(...)         # medfit's version
-
-# probmed focuses on P_med
-pmed_value <- compute_pmed(extract)  # probmed-specific
+# medfit provides shared infrastructure
+library(probmed)  # auto-loads medfit via Imports
+extract <- extract_mediation(fit_m, model_y = fit_y,
+                             treatment = "X", mediator = "M")  # returns MediationData
+result <- pmed(extract)  # method for MediationData
 ```
+
+**Changes made:**
+- Removed 1,568 lines of duplicate code from probmed
+- Replaced MediationExtract with medfit::MediationData
+- Re-exported extract_mediation from medfit
+- Updated pmed() method signatures
 
 ### Migration Guide for RMediation
 
@@ -396,10 +456,12 @@ ci(extract, type = "dop", ...)  # RMediation-specific
 **Package Maintainer**: Davood Tofighi (dtofighi@gmail.com)
 
 **GitHub Repositories**:
+- mediationverse: https://github.com/data-wise/mediationverse
 - medfit: https://github.com/data-wise/medfit
 - probmed: https://github.com/data-wise/probmed
 - RMediation: https://github.com/data-wise/rmediation
 - medrobust: https://github.com/data-wise/medrobust
+- medsim: https://github.com/data-wise/medsim
 
 **Issues**:
 - Report medfit issues: https://github.com/data-wise/medfit/issues

@@ -133,27 +133,19 @@ print(result)
   - Methods: parametric, nonparametric, plugin
   - Parallel processing support
 
-## Package Ecosystem
+## Mediationverse Ecosystem
 
-medfit is the foundation for three specialized mediation packages:
+medfit is the foundation for the **mediationverse** ecosystem:
 
-```
-                    ┌─────────────┐
-                    │   medfit    │
-                    │ (Foundation)│
-                    └──────┬──────┘
-                           │
-            ┌──────────────┼──────────────┐
-            │              │              │
-      ┌─────▼─────┐  ┌────▼────┐  ┌──────▼──────┐
-      │  probmed  │  │RMediation│  │  medrobust  │
-      │   (P_med) │  │(DOP,MBCO)│  │(Sensitivity)│
-      └───────────┘  └─────────┘  └─────────────┘
-```
+| Package | Purpose | Role |
+|---------|---------|------|
+| **medfit** (this) | Model fitting, extraction, bootstrap | Foundation |
+| [probmed](https://github.com/data-wise/probmed) | Probabilistic effect size (P_med) | Application |
+| [RMediation](https://github.com/data-wise/rmediation) | Confidence intervals (DOP, MBCO) | Application |
+| [medrobust](https://github.com/data-wise/medrobust) | Sensitivity analysis | Application |
+| [medsim](https://github.com/data-wise/medsim) | Simulation infrastructure | Support |
 
-- **[probmed](https://github.com/data-wise/probmed)**: Probabilistic effect size (P_med)
-- **[RMediation](https://github.com/data-wise/rmediation)**: Confidence intervals via Distribution of Product
-- **[medrobust](https://github.com/data-wise/medrobust)**: Sensitivity analysis for unmeasured confounding
+See [Ecosystem Coordination](planning/ECOSYSTEM.md) for version compatibility and development guidelines.
 
 ## Documentation
 
