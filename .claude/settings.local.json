@@ -37,7 +37,10 @@
       "Bash(git pull:*)",
       "Bash(gh pr diff:*)",
       "Bash(gh pr checks:*)",
-      "Bash(gh pr close:*)"
+      "Bash(gh pr close:*)",
+      "Bash(gh run watch:*)",
+      "WebFetch(domain:data-wise.github.io)",
+      "Bash(gh api:*)"
     ]
   },
   "workingDirectory": "/Users/dt/Library/CloudStorage/GoogleDrive-dtofighi@gmail.com/My Drive/packages/medfit",

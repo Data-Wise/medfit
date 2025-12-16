@@ -26,15 +26,15 @@ Version: 0.1.0.9000
 ────────────────────────────────────────────────
 
 ## ✅ Just Completed (2025-12-16)
-- Implemented fit_mediation() with GLM engine
-- Implemented bootstrap_mediation() (parametric, nonparametric, plugin)
-- Fixed codecov v5 CI workflow
-- Updated vignettes with working examples
-- All 93 tests passing, CI green
+- Branch cleanup: Removed sad-buck worktree and merged branches
+- Merged dev → main: Brought all Phase 4-5 work to main branch (24 commits)
+- Fixed deployment issue: Updated README.md to show Phase 5 Complete
+- Deployed documentation: Successfully pushed to GitHub Pages
+- Comprehensive docs check: Validated badges, links, pkgdown config, and build
 
 🎯 Next Action:
-A) Phase 6: Extended testing (edge cases, integration) 🟢
-B) Merge dev -> main to deploy pkgdown site
+A) Wait for GitHub Pages CDN to clear and verify site shows Phase 5 🟢
+B) Phase 6: Extended testing (edge cases, integration)
 C) Future: lmer/brms engines, BCa confidence intervals
 
 Blocked: None
