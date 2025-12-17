@@ -17,6 +17,35 @@ Bootstrap inference provides confidence intervals for indirect effects without a
 
 All methods return a `BootstrapResult` object with consistent structure.
 
+## Quick Start: Bootstrap with med()
+
+The easiest way to get bootstrap confidence intervals:
+
+```{r}
+#| label: quick-bootstrap
+library(medfit)
+
+# One-line bootstrap mediation
+result <- med(
+  data = mydata,
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y",
+  boot = TRUE,
+  n_boot = 1000,
+  seed = 123
+)
+
+# Instant results with CI
+quick(result)
+#> NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%
+
+# Access bootstrap result
+result@bootstrap
+```
+
+For more control over bootstrap methods, use `bootstrap_mediation()` directly.
+
 ## Why Bootstrap for Mediation?
 
 The sampling distribution of indirect effects ($a \times b$) is typically:
@@ -438,14 +467,54 @@ Bootstrap is generally preferred because it:
 - Learn about [model extraction](extraction.html)
 - Check reference documentation for `bootstrap_mediation()`
 
+## Working with Bootstrap Results
+
+### Tidyverse Integration
+
+```{r}
+#| label: tidy-boot
+library(generics)
+
+# Convert to tibble
+tidy(boot_result)
+#> # A tibble: 1 × 5
+#>   estimate ci_lower ci_upper ci_level method
+#>      <dbl>    <dbl>    <dbl>    <dbl> <chr>
+#> 1    0.190   0.0800    0.320     0.95 parametric
+
+# One-row summary
+glance(boot_result)
+#> # A tibble: 1 × 4
+#>   n_boot ci_level method     converged
+#>    <int>    <dbl> <chr>      <lgl>
+#> 1   1000     0.95 parametric TRUE
+```
+
+### Base R Methods
+
+```{r}
+#| label: base-boot
+# Extract estimate
+coef(boot_result)
+
+# Confidence interval
+confint(boot_result)
+confint(boot_result, level = 0.90)
+```
+
 ## Development Status
 
-Currently implemented:
+Bootstrap infrastructure is **complete**:
+
 - ✅ S7 class for BootstrapResult
 - ✅ Parametric bootstrap
 - ✅ Nonparametric bootstrap
 - ✅ Plugin estimator
 - ✅ Parallel processing support
 - ✅ Seed-based reproducibility
+- ✅ Integration with `med()` via `boot = TRUE`
+- ✅ Tidyverse methods (tidy, glance)
+- ✅ Base R methods (coef, confint)
+- 📋 BCa confidence intervals (future)
 
 See `NEWS.md` for updates.

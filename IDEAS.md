@@ -2,6 +2,22 @@
 
 Future ideas, enhancements, and research directions for the medfit package.
 
+**Last Updated:** 2025-12-17
+
+---
+
+## ✅ Recently Implemented (moved from ideas to features)
+
+### ADHD-Friendly API (Phase 6.5) ✅
+- `med()` - One-function mediation analysis
+- `quick()` - One-line summary output
+- Smart defaults minimize decision fatigue
+
+### Generic Functions (Phase 6) ✅
+- Effect extractors: `nie()`, `nde()`, `te()`, `pm()`, `paths()`
+- Tidyverse integration: `tidy()`, `glance()`
+- Base R generics: `coef()`, `vcov()`, `confint()`, `nobs()`
+
 ---
 
 ## 🔬 Research Ideas
@@ -71,14 +87,41 @@ Decomposition <- S7::new_class(
 - `four_way(cde, int_ref, int_med, pie)` → VanderWeele
 - `custom_decomposition(...)` → User-defined
 
-**Storage:**
-- MediationData gains `@decompositions` property (list)
-- Allows multiple decompositions per result
-- Each decomposition validates components sum to total
-
 ---
 
 ## 🔧 Technical Enhancements
+
+### Delta Method SEs for Derived Effects
+**Status:** Planned (next release)
+**Priority:** High
+**Complexity:** Low
+
+Add standard errors for NIE, NDE, TE using delta method:
+- `confint(result, type = "effects")` already exists
+- Need to compute delta method SEs
+- Display in `tidy()` output
+
+**Implementation:**
+```r
+# Delta method for indirect effect
+se_nie <- sqrt(b^2 * var_a + a^2 * var_b + 2*a*b*cov_ab)
+```
+
+---
+
+### BCa Bootstrap Confidence Intervals
+**Status:** Future
+**Priority:** Medium
+**Complexity:** Medium
+
+Bias-corrected and accelerated bootstrap:
+- Better coverage than percentile method
+- Adjusts for bias and skewness in bootstrap distribution
+
+**References:**
+- Efron & Tibshirani (1993). An Introduction to the Bootstrap
+
+---
 
 ### Engine Adapters for Advanced Methods
 **Status:** Planned (Phase 7c in roadmap)
@@ -88,29 +131,11 @@ Decomposition <- S7::new_class(
 Wrap validated implementations instead of reimplementing:
 
 **Priority order:**
-1. **regression** (internal) - VanderWeele closed-form [MVP]
-2. **gformula** (CMAverse) - G-computation [Phase 2]
-3. **ipw** (CMAverse) - Inverse probability weighting [Phase 2]
+1. **regression** (internal) - VanderWeele closed-form [Complete]
+2. **gformula** (CMAverse) - G-computation [Future]
+3. **ipw** (CMAverse) - Inverse probability weighting [Future]
 4. **tmle** (tmle3) - Targeted learning [Future]
 5. **dml** (DoubleML) - Double machine learning [Future]
-
-**Design pattern:**
-- All engines return standardized `MediationData`
-- External packages in `Suggests`
-- Engine-specific options via `engine_args = list(...)`
-- Graceful degradation if package unavailable
-
-**Example:**
-```r
-estimate_mediation(
-  ...,
-  engine = "gformula",
-  engine_args = list(
-    EMint = TRUE,    # Exposure-mediator interaction
-    nboot = 500      # CMAverse-specific bootstrap
-  )
-)
-```
 
 ---
 
@@ -124,14 +149,10 @@ Support for multilevel/hierarchical mediation:
 - Cluster-level vs individual-level effects
 - Cross-level interactions
 
-**Challenges:**
-- Random effect variance estimation
+**Implementation:**
+- `extract_mediation.lmerMod` method
+- Handle random effect variance estimation
 - Bootstrap with clustering
-- Defining indirect effect at different levels
-
-**References:**
-- Preacher et al. (2010). Multivariate Behavioral Research
-- Bauer et al. (2006). Psychological Methods
 
 ---
 
@@ -147,36 +168,33 @@ Bayesian mediation analysis:
 
 **Implementation:**
 - `extract_mediation.brmsfit` method
-- Extract posterior samples from stanfit
+- Extract posterior samples
 - Compute posterior of indirect effect
-- Return BayesianMediationResult (inherits BootstrapResult)
-
----
-
-### Sensitivity Analysis Integration
-**Status:** Coordinated with medrobust
-**Priority:** Medium
-**Complexity:** Low
-
-Allow medfit to optionally compute naive estimates for sensitivity analysis:
-
-```r
-# medrobust can call medfit for baseline
-naive_result <- medfit::fit_mediation(...)
-bounds <- medrobust::sensitivity_bounds(
-  naive = naive_result,
-  rho_range = c(-0.5, 0.5)
-)
-```
-
-**Requires:**
-- Stable MediationData API
-- Clear documentation of assumptions
-- Example workflow in vignette
+- Return BayesianMediationResult
 
 ---
 
 ## 📊 User Experience
+
+### Plotting Methods
+**Status:** Future
+**Priority:** Low
+**Complexity:** Medium
+
+Built-in visualization:
+- Path diagrams (via DiagrammeR or igraph)
+- Bootstrap distributions
+- Confidence interval plots
+- Sensitivity plots (coordinate with medrobust)
+
+**Design:**
+```r
+plot(med_result, type = "paths")       # Path diagram
+plot(boot_result, type = "bootstrap")  # Distribution
+plot(boot_result, type = "ci")         # Interval plot
+```
+
+---
 
 ### Formula Interface Enhancements
 **Status:** Brainstorming
@@ -202,88 +220,37 @@ fit_mediation(
 )
 ```
 
-**Challenges:**
-- Non-standard evaluation
-- Backward compatibility
-- Clear documentation
-
----
-
-### Effect Size Summaries
-**Status:** Brainstorming
-**Priority:** Low
-**Complexity:** Low
-
-Rich summary output with multiple effect sizes:
-
-```r
-summary(med_result, effects = "all")
-# Shows:
-# - Indirect effect (a×b)
-# - Direct effect (c')
-# - Total effect (a×b + c')
-# - Proportion mediated
-# - Ratio of indirect to direct
-# - Standardized effects (if requested)
-```
-
----
-
-### Plotting Methods
-**Status:** Future
-**Priority:** Low
-**Complexity:** Medium
-
-Built-in visualization:
-- Path diagrams (via DiagrammeR or igraph)
-- Bootstrap distributions
-- Confidence interval plots
-- Sensitivity plots (coordinate with medrobust)
-
-**Design:**
-```r
-plot(med_result, type = "paths")       # Path diagram
-plot(boot_result, type = "bootstrap")  # Distribution
-plot(boot_result, type = "ci")         # Interval plot
-```
-
 ---
 
 ## 🌐 Ecosystem Integration
+
+### probmed Integration
+**Status:** Next priority
+**Priority:** High
+**Complexity:** Low
+
+Test medfit output with P_med computation:
+- Ensure `nie()`, `nde()` work in probmed workflows
+- Update probmed vignettes with medfit examples
+- Test `med()` → P_med workflow
+
+---
 
 ### lavaan Bidirectional Integration
 **Status:** Partially implemented
 **Priority:** Medium
 **Complexity:** Low
 
-**Current:** medfit can extract from lavaan
+**Current:** medfit can extract from lavaan ✅
 **Future:** lavaan users can bootstrap with medfit
 
 Coordinate with lavaan team:
 - Ensure `extract_mediation.lavaan` stays current
-- Contribute examples to lavaan documentation
 - Handle edge cases (latent variables, multiple groups)
 
 ---
 
-### OpenMx Support
-**Status:** Postponed
-**Priority:** Low
-**Complexity:** Medium
-
-Extraction from OpenMx models (postponed from MVP):
-- Similar to lavaan extraction
-- Handle matrix specification
-- Extract parameter covariances
-
-**Blocked by:**
-- OpenMx API stability
-- Team capacity
-- User demand (assess after CRAN release)
-
----
-
-### probmed/RMediation/medrobust Coordination
+### RMediation/medrobust Coordination
 **Status:** Ongoing
 **Priority:** High
 **Complexity:** Low
@@ -292,12 +259,6 @@ Maintain clean API contracts:
 - Stable MediationData structure
 - Backward-compatible changes
 - Coordinated version bumps
-- Shared test infrastructure
-
-**Communication:**
-- Document breaking changes in NEWS
-- Deprecation warnings (1 version ahead)
-- Example migration code
 
 ---
 
@@ -306,10 +267,11 @@ Maintain clean API contracts:
 ### Vignette: "Mediation Analysis Workflow"
 End-to-end example:
 1. Data preparation
-2. Model fitting
-3. Bootstrap inference
-4. Sensitivity analysis (via medrobust)
-5. Reporting results
+2. Model fitting with `med()`
+3. Effect extraction with `nie()`, `nde()`
+4. Bootstrap inference
+5. Sensitivity analysis (via medrobust)
+6. Reporting results
 
 ---
 
@@ -348,8 +310,6 @@ Expand beyond psychology/epidemiology:
 - Climate science (pathway analysis)
 - Social networks (network mediation)
 
-Each field has unique challenges → modular ecosystem can adapt.
-
 ---
 
 ## 💡 Community Ideas
@@ -362,5 +322,4 @@ Each field has unique challenges → modular ecosystem can adapt.
 
 ---
 
-**Last Updated:** 2025-12-15
 **Review Cycle:** Quarterly (reassess priorities)

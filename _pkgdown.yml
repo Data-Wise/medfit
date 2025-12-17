@@ -135,8 +135,22 @@ reference:
       - fit_mediation
       - bootstrap_mediation
 
-  - title: "Methods"
-    desc: "S3/S7 methods for medfit classes"
+  - title: "Tidyverse Methods"
+    desc: "broom-style methods for tibble workflows"
+    contents:
+      - starts_with("tidy")
+      - starts_with("glance")
+
+  - title: "Base R Methods"
+    desc: "Standard R generics for medfit objects"
+    contents:
+      - starts_with("coef")
+      - starts_with("vcov")
+      - starts_with("confint")
+      - starts_with("nobs")
+
+  - title: "Print & Summary"
+    desc: "Display methods for medfit classes"
     contents:
       - starts_with("print")
       - starts_with("summary")

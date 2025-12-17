@@ -4,11 +4,11 @@ Active tasks, implementation plan, and progress tracking.
 
 ---
 
-## 🎯 Current Focus: Test-Driven Development Phase
+## 🎯 Current Focus: Phase 7 - Polish & Release
 
-**Status:** ✅ Test infrastructure complete
-**Next:** Implement core functions guided by tests
-**Updated:** 2025-12-15
+**Status:** Feature Complete (97%)
+**Next:** Polish, testing, CRAN prep
+**Updated:** 2025-12-17
 
 ---
 
@@ -16,315 +16,182 @@ Active tasks, implementation plan, and progress tracking.
 
 ### High Priority 🔴
 
-- [ ] **Update project documentation** [10 min] ⚡
-  - [x] Create IDEAS.md
-  - [x] Create TODOS.md
-  - [ ] Update .STATUS with test suite milestone
-  - [ ] Update PROJECT-HUB.md progress
+- [ ] **Phase 7: Polish & Release** [2-3 days]
+  - [ ] Run comprehensive R CMD check --as-cran
+  - [ ] Fix any remaining NOTEs/WARNINGs
+  - [ ] Spell check all documentation
+  - [ ] URL validation for all links
+  - [ ] Update DESCRIPTION for CRAN submission
 
-- [ ] **Commit test infrastructure** [5 min] ⚡
-  ```bash
-  git add tests/testthat/test-bootstrap.R
-  git add tests/testthat/test-fit-glm.R
-  git add tests/testthat/helper-test-data.R
-  git add IDEAS.md TODOS.md PROJECT-HUB.md
-  git commit -m "test: add comprehensive test suite
-
-  - Add test-bootstrap.R (27 tests)
-  - Add test-fit-glm.R (30 tests)
-  - Add helper-test-data.R (centralized generators)
-  - Add project management files
-  - Total: 241 tests (184 PASS, 57 SKIP, 0 FAIL)"
-  ```
-
-- [ ] **Implement bootstrap_mediation()** [3-4 hr]
-  Location: `R/bootstrap.R` (create new file)
-  Guided by: `tests/testthat/test-bootstrap.R` (27 tests)
-
-  Steps:
-  1. Create `R/bootstrap.R`
-  2. Implement parametric bootstrap (6 tests)
-  3. Implement nonparametric bootstrap (5 tests)
-  4. Implement plugin method (3 tests)
-  5. Add parallel processing support (2 tests)
-  6. Verify reproducibility (3 tests)
-  7. Remove `skip()` calls from test-bootstrap.R
-  8. Run tests: `devtools::test()`
-
-- [ ] **Implement fit_mediation()** [2-3 hr]
-  Location: `R/fit-glm.R` (create new file)
-  Guided by: `tests/testthat/test-fit-glm.R` (30 tests)
-
-  Steps:
-  1. Create `R/fit-glm.R`
-  2. Implement basic Gaussian GLM (6 tests)
-  3. Add family support (4 tests)
-  4. Validate formulas (4 tests)
-  5. Handle covariates (2 tests)
-  6. Add convergence detection (2 tests)
-  7. Remove `skip()` calls from test-fit-glm.R
-  8. Run tests: `devtools::test()`
+- [ ] **probmed Integration** [1 day]
+  - [ ] Test `med()` output with P_med computation
+  - [ ] Ensure `nie()`, `nde()` work in probmed workflows
+  - [ ] Update probmed vignettes with medfit examples
 
 ### Medium Priority 🟡
 
-- [ ] **Add roxygen2 documentation** [1-2 hr]
-  - [ ] Document bootstrap_mediation()
-  - [ ] Document fit_mediation()
-  - [ ] Add examples to each
-  - [ ] Build docs: `devtools::document()`
+- [ ] **Delta Method SEs** [2-3 hr]
+  - [ ] Add standard errors for NIE, NDE, TE
+  - [ ] Implement `confint()` for derived effects
+  - [ ] Document delta method assumptions
 
-- [ ] **Create intro vignette** [2 hr]
-  Title: "Getting Started with medfit"
-  File: `vignettes/intro-medfit.Rmd`
+- [ ] **Additional Vignette Ideas**
+  - [ ] "Mediation Analysis Workflow" (end-to-end example)
+  - [ ] "Comparing medfit with other packages"
+  - [ ] "Extending medfit" (for developers)
 
-  Sections:
-  - Installation
-  - Basic workflow
-  - Model fitting with fit_mediation()
-  - Bootstrap inference
-  - Integration with ecosystem packages
+### Low Priority / Future ⚪
 
-- [ ] **Run R CMD check** [10 min]
-  ```r
-  devtools::check()
-  ```
-  Fix any NOTEs, WARNINGs, ERRORs
+- [ ] **BCa Confidence Intervals**
+  - Bias-corrected and accelerated bootstrap
+  - Better coverage than percentile method
 
-### Low Priority / Quick Wins ⚡
+- [ ] **Mixed Models Support (lme4)**
+  - `extract_mediation.lmerMod` method
+  - Multilevel mediation analysis
 
-- [ ] **Update DESCRIPTION** [5 min]
-  - Add Authors (including contributors)
-  - Update URL and BugReports
-  - Review Suggests packages
-
-- [ ] **Setup pkgdown** [15 min]
-  ```r
-  usethis::use_pkgdown()
-  pkgdown::build_site()
-  ```
-
-- [ ] **Add NEWS.md entry** [5 min]
-  Document test infrastructure addition
-
----
-
-## 📋 Backlog (Future Sprints)
-
-### Core Functionality
-
-- [ ] Implement SerialMediationData extraction from lavaan
-- [ ] Add standardized coefficients option
-- [ ] Implement interaction detection (X:M in outcome model)
-- [ ] Add four-way decomposition (VanderWeele)
-
-### Testing & Quality
-
-- [ ] Increase test coverage to >90%
-- [ ] Add integration tests
-- [ ] Setup GitHub Actions CI/CD
-- [ ] Add code coverage reporting (codecov)
-
-### Documentation
-
-- [ ] Write "Comparison with mediation package" vignette
-- [ ] Write "Extending medfit" vignette (for developers)
-- [ ] Create pkgdown website
-- [ ] Add FAQ section
-
-### Ecosystem Integration
-
-- [ ] Coordinate with probmed on MediationData API
-- [ ] Coordinate with RMediation on BootstrapResult
-- [ ] Test integration with medrobust
-- [ ] Add examples to each package's vignettes
+- [ ] **Bayesian Support (brms)**
+  - `extract_mediation.brmsfit` method
+  - Posterior distributions for indirect effects
 
 ---
 
 ## ✅ Recently Completed
 
-### 2025-12-15 (Afternoon)
-- [x] **Created API-DESIGN-DECISIONS.md** - Consolidated all strategic planning
-  - [x] Summarized all 8 major decisions (S7, hybrid generics, function naming, workflow, etc.)
-  - [x] Complete API reference (custom S3 generics + standard R generics + broom)
-  - [x] Implementation roadmap (6 phases: Core API, Bootstrap, Fit, Broom, Docs, CMAverse)
-  - [x] Testing strategy (unit tests, integration tests, coverage targets)
-  - [x] Documentation standards (roxygen2, vignettes, pkgdown)
-  - [x] **Strategic planning phase COMPLETE** - ready for implementation
-- [x] Created COORDINATION-BRAINSTORM.md
-  - [x] Analyzed three-package-ecosystem-strategy.md findings
-  - [x] Mapped generic functions strategy (extract/fit/bootstrap)
-  - [x] Designed CMAverse integration as engine adapter pattern
-  - [x] Recommended selective loading for mediationverse (Option 2)
-  - [x] Created integration timeline (3 phases)
-  - [x] Documented 4 open questions needing decisions
-- [x] Created GENERIC-FUNCTIONS-RESEARCH.md
-  - [x] Comprehensive comparison of S3, S4, S7, R6, R7 systems
-  - [x] Performance benchmarks (S3: 2.59μs, S7: 7.29μs - negligible for medfit)
-  - [x] Mixing S7 classes + S3 generics analysis (possible but loses features)
-  - [x] Real-world adoption: ggplot2 4.0.0 migrated to S7
-  - [x] **DECISION: KEEP S7 generics** (optimal for foundation package)
-  - [x] Flexibility for dependent packages documented (all work with S7 classes)
-- [x] Created GENERIC-NAMING-STRATEGY.md
-  - [x] Researched base R standard generics (confint, coef, vcov, etc.)
-  - [x] Analyzed lavaan (hybrid approach), CMAverse (custom only), broom patterns
-  - [x] Compared 4 strategic options (standard only, custom only, hybrid, prefixed)
-  - [x] **DECISION: Use confint() not ci()** (hybrid approach recommended)
-  - [x] Standard generics for standard ops + custom S7 for mediation-specific
-  - [x] 4-phase implementation roadmap with code examples
-  - [x] Ecosystem integration benefits (broom, sandwich, car, lmtest, emmeans)
-- [x] Created ADHD-FRIENDLY-WORKFLOW.md
-  - [x] Analyzed ADHD challenges (working memory, decision fatigue, flow state)
-  - [x] Compared 6 workflow alternatives (pipe-first, single-function, builder, etc.)
-  - [x] **RECOMMENDATION: Alternative 6 (Hybrid)** - short verbs + pipes + standard generics
-  - [x] Proposed mediate() + boot() + confint() pattern (revised from med())
-  - [x] Smart defaults minimize decisions (parametric, 1000, 95% CI)
-  - [x] Pipeline maintains flow state (no context switching)
-  - [x] Complete examples and migration strategy
-  - [x] Clarified S7+S3 generics pattern (NO namespace conflicts)
-- [x] Created FUNCTION-NAMING-DEEP-DIVE.md
-  - [x] Detailed explanation of med() function (fits + extracts)
-  - [x] Compared 6 alternatives (mediate, fit_med, medfit, estimate, etc.)
-  - [x] **RECOMMENDATION: mediate()** instead of med() (clearer verb, no ambiguity)
-  - [x] Explained paths() function (mediation structure extraction)
-  - [x] Compared to coef() (all params vs just paths)
-  - [x] **RECOMMENDATION: Keep paths()** (short, clear, no conflicts)
+### 2025-12-17
 
-### 2025-12-15 (Morning)
-- [x] Created comprehensive test suite (241 tests)
-  - [x] test-bootstrap.R (27 tests for bootstrap_mediation)
-  - [x] test-fit-glm.R (30 tests for fit_mediation)
-  - [x] helper-test-data.R (11 generators, 7 statistic functions)
-- [x] All existing tests pass (184 PASS, 0 FAIL)
-- [x] Created IDEAS.md
-- [x] Created TODOS.md
-- [x] Created ECOSYSTEM-COORDINATION.md
+#### Phase 6.5: ADHD-Friendly API ✅
+- [x] **`med()` function** - One-function mediation analysis
+  - Fits mediator and outcome models automatically
+  - Optional bootstrap with `boot = TRUE`
+  - Supports covariates
+  - Returns MediationData object
 
-### 2025-12-14
-- [x] Added .STATUS file for project tracking
-- [x] Organized test structure per CLAUDE.md guidelines
-- [x] Documented defensive programming patterns
+- [x] **`quick()` function** - One-line summary
+  - Works with MediationData, SerialMediationData
+  - Shows NIE, NDE, PM in compact format
+  - Includes bootstrap CI when available
 
-### 2025-12-12
-- [x] Created PROJECT-HUB.md for task coordination
-- [x] Defined phases in medfit-roadmap.md
+#### Phase 6: Generic Functions ✅
+- [x] **Effect Extractors**
+  - `nie()` - Natural Indirect Effect
+  - `nde()` - Natural Direct Effect
+  - `te()` - Total Effect
+  - `pm()` - Proportion Mediated
+  - `paths()` - All path coefficients
 
-### Earlier
-- [x] Implemented S7 class system
-  - [x] MediationData class
-  - [x] SerialMediationData class
-  - [x] BootstrapResult class
-- [x] Implemented extract_mediation() methods
-  - [x] Method for lm/glm
-  - [x] Method for lavaan
-- [x] Created comprehensive test suite for classes
-- [x] Setup package structure
-- [x] Recovered package from Google Drive
+- [x] **Tidyverse Integration**
+  - `tidy()` - Convert to tibble
+  - `glance()` - One-row model summary
+  - Support for `type = "paths"` / `type = "effects"`
+  - Support for `conf.int = TRUE`
 
----
+- [x] **Base R Generics**
+  - `coef()` - Extract coefficients
+  - `vcov()` - Variance-covariance matrix
+  - `confint()` - Confidence intervals
+  - `nobs()` - Number of observations
 
-## 🚫 Blocked / Waiting
+#### Documentation Update ✅
+- [x] README.md - Complete rewrite with new API
+- [x] getting-started.qmd - Full vignette rewrite
+- [x] introduction.qmd - Updated all sections
+- [x] NEWS.md - Phase 6/6.5 documented
+- [x] pkgdown reference - Reorganized by category
 
-Currently no blockers! 🎉
+### 2025-12-16
+
+- [x] Branch cleanup: Removed worktrees and merged branches
+- [x] Merged dev → main: All Phase 4-5 work
+- [x] Fixed pkgdown deployment with clean deploys
+- [x] Comprehensive docs check passed
+
+### Earlier (Phase 1-5)
+
+- [x] Phase 1: Package setup (CI/CD, Dependabot)
+- [x] Phase 2: S7 classes (MediationData, SerialMediationData, BootstrapResult)
+- [x] Phase 2.5: Quarto vignettes (4 articles)
+- [x] Phase 3: Model extraction (lm/glm, lavaan)
+- [x] Phase 4: `fit_mediation()` with GLM engine
+- [x] Phase 5: `bootstrap_mediation()` (parametric, nonparametric, plugin)
 
 ---
 
 ## 📊 Progress Metrics
 
-### Test Coverage
-- **Current:** 184 tests passing
-- **Target MVP:** 241 tests passing (57 currently skipped)
-- **Target CRAN:** >90% code coverage
-
 ### Implementation Progress
-- **Phase 1 (Core API):** 40% complete
-  - [x] S7 classes
-  - [x] extract_mediation (lm/glm, lavaan)
-  - [ ] fit_mediation (GLM engine)
-  - [ ] bootstrap_mediation (3 methods)
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Package setup | ✅ Complete |
+| 2 | S7 classes | ✅ Complete |
+| 2.5 | Documentation | ✅ Complete |
+| 3 | Model extraction | ✅ Complete |
+| 4 | Model fitting | ✅ Complete |
+| 5 | Bootstrap | ✅ Complete |
+| 6 | Generics | ✅ Complete |
+| 6.5 | ADHD API | ✅ Complete |
+| 7 | Polish & release | 🚧 In Progress |
 
-- **Phase 2 (Bootstrap & Tests):** 60% complete
-  - [x] Test infrastructure
-  - [ ] Implementation
-  - [ ] Documentation
+### Code Quality
+- **Tests:** 427 passing
+- **Coverage:** Tracked via Codecov
+- **R CMD check:** Clean (1 NOTE - dev version)
+- **Linting:** GitHub Actions CI
 
-- **Phase 3 (CRAN Prep):** 0% complete
-  - [ ] Vignettes
-  - [ ] pkgdown site
-  - [ ] R CMD check passing
-  - [ ] Submit to CRAN
-
-### Documentation Progress
-- **Function docs:** 60% (classes done, generics need work)
-- **Vignettes:** 0% (none written yet)
-- **pkgdown site:** 0% (not setup)
-- **Examples:** 30% (classes have examples)
+### Documentation
+- **README:** ✅ Updated
+- **NEWS:** ✅ Updated
+- **Vignettes:** 4 articles (getting-started, introduction, extraction, bootstrap)
+- **pkgdown:** ✅ Live at https://data-wise.github.io/medfit/
 
 ---
 
-## 🎯 Sprint Planning
+## 📋 Backlog (Future Releases)
 
-### Current Sprint (Week of Dec 15)
-**Goal:** Complete core implementation (fit_mediation + bootstrap_mediation)
+### Core Functionality
+- [ ] Four-way decomposition (VanderWeele 2014)
+- [ ] Parallel mediation support
+- [ ] Standardized coefficients option
+- [ ] Treatment-mediator interaction detection
 
-**Capacity:** ~10-15 hours
-**Committed:**
-- Commit test suite (5 min)
-- Implement bootstrap_mediation (3-4 hr)
-- Implement fit_mediation (2-3 hr)
-- Documentation (1-2 hr)
-- Testing & fixes (2-3 hr)
+### Model Support
+- [ ] lmer/lme4 extraction
+- [ ] brms extraction
+- [ ] OpenMx extraction (postponed)
 
-**Stretch:**
-- Intro vignette (2 hr)
-- pkgdown site (15 min)
+### Inference
+- [ ] BCa bootstrap confidence intervals
+- [ ] Delta method SEs for derived effects
+- [ ] Studentized bootstrap
 
-### Next Sprint (Week of Dec 22)
-**Goal:** Documentation and CRAN readiness
-
-**Planned:**
-- Complete all vignettes
-- Setup pkgdown
-- R CMD check --as-cran (pass all checks)
-- Integration testing with ecosystem packages
+### Ecosystem
+- [ ] probmed integration testing
+- [ ] RMediation coordination
+- [ ] medrobust sensitivity analysis workflow
 
 ---
 
 ## 💡 Notes & Reminders
 
-### Code Style Reminders
-- Use snake_case for functions/arguments
-- Use CamelCase for S7 classes
+### API Design (Finalized)
+- **Entry points:** `med()` (simple) or `fit_mediation()` (advanced)
+- **Extractors:** `nie()`, `nde()`, `te()`, `pm()`, `paths()`
+- **Tidyverse:** `tidy()`, `glance()`
+- **Base R:** `coef()`, `vcov()`, `confint()`, `nobs()`
+- **Summary:** `quick()` for one-line output
+
+### Code Style
+- snake_case for functions/arguments
+- CamelCase for S7 classes
 - Prefix internal functions with `.`
 - Always use checkmate for input validation
-- Never use `library()` inside package functions
 
 ### Git Workflow
-- Commit frequently (small, logical chunks)
-- Write descriptive commit messages
-- Use conventional commits format:
-  - `feat:` new features
-  - `fix:` bug fixes
-  - `test:` test additions/changes
-  - `docs:` documentation
-  - `refactor:` code refactoring
-  - `chore:` maintenance
-
-### Testing Guidelines
-- Test edge cases (NULL, empty, NA)
-- Test error conditions
-- Use descriptive test names
-- Group related tests with comments
-- Aim for >90% coverage
-
-### Documentation Checklist
-- [ ] All exported functions have @export
-- [ ] All parameters documented with @param
-- [ ] Return values documented with @return
-- [ ] Examples provided with @examples
-- [ ] Mathematical notation uses \eqn{} or \deqn{}
-- [ ] References cited with @references
+- Main branch for releases
+- Dev branch for development
+- Feature branches for major changes
 
 ---
 
-**Last Updated:** 2025-12-15
-**Next Review:** After implementing bootstrap_mediation() and fit_mediation()
+**Last Updated:** 2025-12-17
+**Next Review:** After Phase 7 completion
