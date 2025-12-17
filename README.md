@@ -15,7 +15,7 @@
 
 ## Overview
 
-**medfit** provides unified S7-based infrastructure for fitting mediation models, extracting path coefficients, and performing bootstrap inference. It serves as the foundation package for the mediation analysis ecosystem, supporting [probmed](https://github.com/data-wise/probmed), [RMediation](https://github.com/data-wise/rmediation), and [medrobust](https://github.com/data-wise/medrobust).
+**medfit** provides unified S7-based infrastructure for fitting mediation models, extracting path coefficients, and performing bootstrap inference. It serves as the foundation package for the mediation analysis ecosystem, supporting [RMediation](https://github.com/data-wise/rmediation) and [mediationverse](https://github.com/data-wise/mediationverse).
 
 ### Key Features
 
@@ -203,10 +203,14 @@ medfit is the foundation for the **mediationverse** ecosystem:
 | Package | Purpose | Role |
 |---------|---------|------|
 | **medfit** (this) | Model fitting, extraction, bootstrap | Foundation |
-| [probmed](https://github.com/data-wise/probmed) | Probabilistic effect size (P_med) | Application |
 | [RMediation](https://github.com/data-wise/rmediation) | Confidence intervals (DOP, MBCO) | Application |
+| [mediationverse](https://github.com/data-wise/mediationverse) | Meta-package | Ecosystem |
+
+<!-- Future packages (in development):
+| [probmed](https://github.com/data-wise/probmed) | Probabilistic effect size (P_med) | Application |
 | [medrobust](https://github.com/data-wise/medrobust) | Sensitivity analysis | Application |
 | [medsim](https://github.com/data-wise/medsim) | Simulation infrastructure | Support |
+-->
 
 See [Ecosystem Coordination](planning/ECOSYSTEM.md) for version compatibility and development guidelines.
 
