@@ -24,11 +24,13 @@ Imports:
     S7 (>= 0.1.0),
     stats,
     methods,
-    checkmate
+    checkmate,
+    generics
 Suggests:
     MASS,
     lavaan (>= 0.6-0),
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    tibble
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))
 RoxygenNote: 7.3.3
