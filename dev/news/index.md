@@ -190,10 +190,9 @@
   - Four Quarto vignettes with rich examples
   - Auto-deployment on push to main branch
 
-#### Development Status
+#### Development Status (at 0.1.0 release)
 
-**Current Phase**: Phase 5 Complete **Next**: Phase 6 (Extended
-Testing), Phase 8 (Polish & Release)
+**Phase 5 Complete** - Bootstrap infrastructure implemented
 
 Phase 1: Package setup (CI/CD, documentation, Dependabot)
 
@@ -211,9 +210,7 @@ with GLM engine)
 
 Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
 
-Phase 6: Extended testing (edge cases, integration)
-
-Phase 8: Polish & release (R CMD check, CRAN prep)
+*See 0.1.0.9000 above for Phase 6/6.5 additions.*
 
 #### Documentation Improvements
 
