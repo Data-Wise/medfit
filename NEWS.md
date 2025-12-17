@@ -1,8 +1,50 @@
 # medfit (development version)
 
-## medfit 0.1.0.9000 (2025-12-16)
+## medfit 0.1.0.9000 (2025-12-17)
 
 ### New Features
+
+#### Phase 6.5: ADHD-Friendly API
+
+* **`med()` function** - Simple one-function mediation analysis
+  - Fits mediator and outcome models automatically
+  - Optional bootstrap inference with `boot = TRUE`
+  - Supports covariates via `covariates` argument
+  - Returns `MediationData` object
+  - The recommended entry point for most users
+
+* **`quick()` function** - One-line summary of mediation results
+  - Works with any medfit object (`MediationData`, `SerialMediationData`)
+  - Shows NIE, NDE, and PM in compact format
+  - Includes bootstrap CI when available
+  - Example output: `NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%`
+
+#### Phase 6: Generic Functions
+
+* **Effect Extractors** - Dedicated functions for mediation effects
+  - `nie()`: Natural Indirect Effect (a × b)
+  - `nde()`: Natural Direct Effect (c')
+  - `te()`: Total Effect (nie + nde)
+  - `pm()`: Proportion Mediated
+  - `paths()`: All path coefficients (a, b, c')
+  - All return `mediation_effect` class with custom print method
+
+* **Tidyverse Integration** - `tidy()` and `glance()` methods
+  - `tidy()`: Convert results to tibble with term, estimate, std.error
+  - `tidy(x, type = "paths")`: Just path coefficients
+  - `tidy(x, type = "effects")`: Just nie, nde, te
+  - `tidy(x, conf.int = TRUE)`: Include confidence intervals
+  - `glance()`: One-row model summary (nie, nde, te, pm, nobs, converged)
+  - Works on `MediationData`, `SerialMediationData`, and `BootstrapResult`
+
+* **Base R Generics** - Standard S3/S7 methods for medfit classes
+  - `coef()`: Extract coefficients (paths or effects)
+  - `vcov()`: Variance-covariance matrix
+  - `confint()`: Confidence intervals (Wald-based)
+  - `nobs()`: Number of observations
+  - Full S7/S3 dispatch compatibility
+
+#### Previous Features (Phase 4-5)
 
 * **`fit_mediation()` function** - Fit mediation models with formula interface
   - GLM engine for linear and generalized linear models
@@ -19,13 +61,27 @@
   - Seed-based reproducibility
   - Returns `BootstrapResult` object with point estimate and CI
 
-* **CI workflow fix**: Updated codecov action v5 parameter names (`file` -> `files`, `plugin` -> `plugins`)
-
 ### Documentation
 
-* Updated vignettes to reflect implemented features:
-  - `getting-started.qmd`: Added complete working examples for all three main functions
-  - `bootstrap.qmd`: Updated all code examples to use correct API with `statistic_fn`
+* **Major documentation update** reflecting new API:
+  - README.md: Complete rewrite of Quick Start with med()/quick() examples
+  - getting-started.qmd: Full vignette rewrite with ADHD-friendly workflow
+  - introduction.qmd: Updated with effect extractors, tidy/glance, base R methods
+  - pkgdown reference: Reorganized into Quick Start, Effect Extractors, S7 Classes sections
+
+### Development Status
+
+**Feature Complete (97%)**
+
+- ✅ Phase 2: S7 class architecture
+- ✅ Phase 3: Model extraction (lm/glm, lavaan)
+- ✅ Phase 4: Model fitting (`fit_mediation()`)
+- ✅ Phase 5: Bootstrap infrastructure
+- ✅ Phase 6: Generic functions (coef, vcov, confint, nobs, effect extractors, tidy, glance)
+- ✅ Phase 6.5: ADHD-friendly API (med, quick)
+- 🚧 Phase 7: Polish & release
+
+**Code Quality**: 427 tests passing, 0 errors, 0 warnings
 
 ---
 
