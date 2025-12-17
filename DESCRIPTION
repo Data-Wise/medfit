@@ -2,7 +2,7 @@ Package: medfit
 Type: Package
 Title: Infrastructure for Mediation Model Fitting and Extraction
 Version: 0.1.0.9000
-Date: 2025-12-02
+Date: 2025-12-17
 Authors@R: person("Davood", "Tofighi",
     email = "dtofighi@gmail.com",
     role = c("aut", "cre"),
@@ -32,6 +32,7 @@ Suggests:
     testthat (>= 3.0.0),
     tibble
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
