@@ -12,17 +12,33 @@ analysis ecosystem, supporting
 
 ### Key Features
 
+- **ADHD-Friendly API**: Simple
+  [`med()`](https://data-wise.github.io/medfit/dev/reference/med.md)
+  function for quick mediation analysis,
+  [`quick()`](https://data-wise.github.io/medfit/dev/reference/quick.md)
+  for instant results
+- **Effect Extractors**:
+  [`nie()`](https://data-wise.github.io/medfit/dev/reference/nie.md),
+  [`nde()`](https://data-wise.github.io/medfit/dev/reference/nde.md),
+  [`te()`](https://data-wise.github.io/medfit/dev/reference/te.md),
+  [`pm()`](https://data-wise.github.io/medfit/dev/reference/pm.md),
+  [`paths()`](https://data-wise.github.io/medfit/dev/reference/paths.md)
+  for extracting mediation effects
+- **Tidyverse Integration**:
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) methods
+  for tibble-based workflows
 - **Unified Model Extraction**: Extract mediation structure from various
   model types (lm, glm, lavaan)
 - **Flexible Model Fitting**: Fit mediation models using different
-  engines (GLM, with future support for mixed models and Bayesian
-  methods)
+  engines (GLM, with future support for mixed models)
 - **Robust Bootstrap Inference**: Three bootstrap methods (parametric,
-  nonparametric, plugin) with parallel processing support
-- **Type-Safe S7 Classes**: Modern object-oriented design ensuring data
-  integrity
-- **Ecosystem Foundation**: Shared infrastructure eliminating redundancy
-  across mediation packages
+  nonparametric, plugin) with parallel processing
+- **Type-Safe S7 Classes**: Modern object-oriented design with
+  [`coef()`](https://rdrr.io/r/stats/coef.html),
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html),
+  [`confint()`](https://rdrr.io/r/stats/confint.html),
+  [`nobs()`](https://rdrr.io/r/stats/nobs.html) methods
 
 ## Installation
 
@@ -42,7 +58,7 @@ remotes::install_github("data-wise/medfit")
 
 ## Quick Start
 
-### Extract Mediation Structure from Fitted Models
+### The Simplest Way: `med()` + `quick()`
 
 ``` r
 library(medfit)
@@ -50,16 +66,94 @@ library(medfit)
 # Simulate data
 set.seed(123)
 n <- 200
-X <- rnorm(n)
-M <- 0.5 * X + rnorm(n)
-Y <- 0.3 * M + 0.2 * X + rnorm(n)
-data <- data.frame(X = X, M = M, Y = Y)
+mydata <- data.frame(X = rnorm(n))
+mydata$M <- 0.5 * mydata$X + rnorm(n)
+mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
 
-# Fit models
-fit_m <- lm(M ~ X, data = data)
-fit_y <- lm(Y ~ X + M, data = data)
+# Run mediation analysis in one line
+result <- med(
+  data = mydata,
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y"
+)
 
-# Extract mediation structure
+# One-line summary
+quick(result)
+#> NIE = 0.19 | NDE = 0.16 | PM = 55%
+```
+
+### Extract Effects
+
+``` r
+# Individual effect extractors
+nie(result)   # Natural Indirect Effect (a * b)
+nde(result)   # Natural Direct Effect (c')
+te(result)    # Total Effect (nie + nde)
+pm(result)    # Proportion Mediated
+paths(result) # All path coefficients (a, b, c')
+```
+
+### Tidyverse Integration
+
+``` r
+library(generics)
+
+# Tidy tibble of all effects
+tidy(result)
+#> # A tibble: 6 × 3
+#>   term    estimate std.error
+#>   <chr>      <dbl>     <dbl>
+#> 1 a          0.448    0.107
+#> 2 b          0.424    0.099
+#> 3 c_prime    0.155    0.114
+#> 4 nie        0.190       NA
+#> 5 nde        0.155       NA
+#> 6 te         0.345       NA
+
+# One-row model summary
+glance(result)
+#> # A tibble: 1 × 6
+#>     nie   nde    te    pm  nobs converged
+#>   <dbl> <dbl> <dbl> <dbl> <int> <lgl>
+#> 1 0.190 0.155 0.345  0.55   200 TRUE
+```
+
+### Base R Methods
+
+``` r
+coef(result)              # Path coefficients
+coef(result, "effects")   # NIE, NDE, TE
+vcov(result)              # Variance-covariance matrix
+confint(result)           # 95% confidence intervals
+nobs(result)              # Number of observations
+```
+
+### Bootstrap Inference
+
+``` r
+# With bootstrap CI
+result_boot <- med(
+  data = mydata,
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y",
+  boot = TRUE,
+  n_boot = 1000,
+  seed = 42
+)
+
+quick(result_boot)
+#> NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%
+```
+
+### Advanced: Extract from Fitted Models
+
+``` r
+# If you already have fitted models
+fit_m <- lm(M ~ X, data = mydata)
+fit_y <- lm(Y ~ X + M, data = mydata)
+
 med_data <- extract_mediation(
   fit_m,
   model_y = fit_y,
@@ -67,35 +161,9 @@ med_data <- extract_mediation(
   mediator = "M"
 )
 
-print(med_data)
-```
-
-### Fit Mediation Models Directly
-
-``` r
-med_data <- fit_mediation(
-  formula_y = Y ~ X + M,
-  formula_m = M ~ X,
-  data = data,
-  treatment = "X",
-  mediator = "M",
-  engine = "glm"
-)
-```
-
-### Bootstrap Inference
-
-``` r
-result <- bootstrap_mediation(
-  statistic_fn = function(theta) theta["a"] * theta["b"],
-  method = "parametric",
-  mediation_data = med_data,
-  n_boot = 5000,
-  ci_level = 0.95,
-  seed = 12345
-)
-
-print(result)
+# Same extractors work
+nie(med_data)
+tidy(med_data)
 ```
 
 ## Core Components
@@ -121,16 +189,40 @@ print(result)
 
 ### Main Functions
 
-- **[`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md)**:
-  Extract mediation structure from fitted models
-  - Methods for: lm, glm, lavaan
-- **[`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md)**:
-  Fit mediation models with formula interface
-  - Engines: GLM (lmer, brms coming soon)
-- **[`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md)**:
-  Perform bootstrap inference
-  - Methods: parametric, nonparametric, plugin
-  - Parallel processing support
+**Quick Start:** -
+**[`med()`](https://data-wise.github.io/medfit/dev/reference/med.md)**:
+One-function mediation analysis (recommended starting point) -
+**[`quick()`](https://data-wise.github.io/medfit/dev/reference/quick.md)**:
+One-line summary of results
+
+**Effect Extractors:** -
+**[`nie()`](https://data-wise.github.io/medfit/dev/reference/nie.md)**,
+**[`nde()`](https://data-wise.github.io/medfit/dev/reference/nde.md)**,
+**[`te()`](https://data-wise.github.io/medfit/dev/reference/te.md)**:
+Natural indirect/direct and total effects -
+**[`pm()`](https://data-wise.github.io/medfit/dev/reference/pm.md)**:
+Proportion mediated -
+**[`paths()`](https://data-wise.github.io/medfit/dev/reference/paths.md)**:
+All path coefficients
+
+**Tidyverse Methods:** -
+**[`tidy()`](https://generics.r-lib.org/reference/tidy.html)**: Convert
+results to tidy tibble -
+**[`glance()`](https://generics.r-lib.org/reference/glance.html)**:
+One-row model summary
+
+**Base R Methods:** - **[`coef()`](https://rdrr.io/r/stats/coef.html)**,
+**[`vcov()`](https://rdrr.io/r/stats/vcov.html)**,
+**[`confint()`](https://rdrr.io/r/stats/confint.html)**,
+**[`nobs()`](https://rdrr.io/r/stats/nobs.html)**: Standard generics
+
+**Advanced:** -
+**[`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md)**:
+Extract from fitted lm/glm/lavaan models -
+**[`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md)**:
+Fit with formula interface (GLM engine) -
+**[`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md)**:
+Bootstrap inference (parametric, nonparametric, plugin)
 
 ## Mediationverse Ecosystem
 
@@ -166,11 +258,12 @@ Comprehensive Quarto vignettes are available:
 
 ## Development Status
 
-**Current Phase**: MVP Development (Phase 5 Complete)
+**Current Phase**: Feature Complete (97%)
 
 Phase 1: Package setup
 
-Phase 2: S7 class architecture (with SerialMediationData)
+Phase 2: S7 class architecture (MediationData, SerialMediationData,
+BootstrapResult)
 
 Phase 2.5: Comprehensive Quarto documentation
 
@@ -180,7 +273,10 @@ Phase 4: Model fitting (GLM engine)
 
 Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
 
-Phase 6: Extended testing
+Phase 6: Generic functions (coef, vcov, confint, nobs, nie, nde, te, pm,
+paths, tidy, glance)
+
+Phase 6.5: ADHD-friendly API (med, quick)
 
 Phase 7: Polish & release
 
@@ -188,7 +284,7 @@ Phase 7: Polish & release
 
 - **Defensive Programming**: checkmate for input validation, S7
   validators for class integrity
-- **Testing**: 184 tests with testthat, code coverage tracking
+- **Testing**: 427 tests with testthat, code coverage tracking
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See

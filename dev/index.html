@@ -125,15 +125,19 @@
 </h3>
 <ul>
 <li>
+<strong>ADHD-Friendly API</strong>: Simple <code><a href="reference/med.html">med()</a></code> function for quick mediation analysis, <code><a href="reference/quick.html">quick()</a></code> for instant results</li>
+<li>
+<strong>Effect Extractors</strong>: <code><a href="reference/nie.html">nie()</a></code>, <code><a href="reference/nde.html">nde()</a></code>, <code><a href="reference/te.html">te()</a></code>, <code><a href="reference/pm.html">pm()</a></code>, <code><a href="reference/paths.html">paths()</a></code> for extracting mediation effects</li>
+<li>
+<strong>Tidyverse Integration</strong>: <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> methods for tibble-based workflows</li>
+<li>
 <strong>Unified Model Extraction</strong>: Extract mediation structure from various model types (lm, glm, lavaan)</li>
 <li>
-<strong>Flexible Model Fitting</strong>: Fit mediation models using different engines (GLM, with future support for mixed models and Bayesian methods)</li>
+<strong>Flexible Model Fitting</strong>: Fit mediation models using different engines (GLM, with future support for mixed models)</li>
 <li>
-<strong>Robust Bootstrap Inference</strong>: Three bootstrap methods (parametric, nonparametric, plugin) with parallel processing support</li>
+<strong>Robust Bootstrap Inference</strong>: Three bootstrap methods (parametric, nonparametric, plugin) with parallel processing</li>
 <li>
-<strong>Type-Safe S7 Classes</strong>: Modern object-oriented design ensuring data integrity</li>
-<li>
-<strong>Ecosystem Foundation</strong>: Shared infrastructure eliminating redundancy across mediation packages</li>
+<strong>Type-Safe S7 Classes</strong>: Modern object-oriented design with <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> methods</li>
 </ul>
 </div>
 </div>
@@ -153,7 +157,8 @@
 <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <div class="section level3">
-<h3 id="extract-mediation-structure-from-fitted-models">Extract Mediation Structure from Fitted Models<a class="anchor" aria-label="anchor" href="#extract-mediation-structure-from-fitted-models"></a>
+<h3 id="the-simplest-way-med--quick">The Simplest Way: <code>med()</code> + <code>quick()</code>
+<a class="anchor" aria-label="anchor" href="#the-simplest-way-med--quick"></a>
 </h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span>
@@ -161,16 +166,94 @@
 <span><span class="co"># Simulate data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
-<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">M</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">X</span>, M <span class="op">=</span> <span class="va">M</span>, Y <span class="op">=</span> <span class="va">Y</span><span class="op">)</span></span>
+<span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">mydata</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Fit models</span></span>
-<span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
-<span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
+<span><span class="co"># Run mediation analysis in one line</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/med.html">med</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">mydata</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  outcome <span class="op">=</span> <span class="st">"Y"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Extract mediation structure</span></span>
+<span><span class="co"># One-line summary</span></span>
+<span><span class="fu"><a href="reference/quick.html">quick</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt; NIE = 0.19 | NDE = 0.16 | PM = 55%</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="extract-effects">Extract Effects<a class="anchor" aria-label="anchor" href="#extract-effects"></a>
+</h3>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Individual effect extractors</span></span>
+<span><span class="fu"><a href="reference/nie.html">nie</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>   <span class="co"># Natural Indirect Effect (a * b)</span></span>
+<span><span class="fu"><a href="reference/nde.html">nde</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>   <span class="co"># Natural Direct Effect (c')</span></span>
+<span><span class="fu"><a href="reference/te.html">te</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>    <span class="co"># Total Effect (nie + nde)</span></span>
+<span><span class="fu"><a href="reference/pm.html">pm</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>    <span class="co"># Proportion Mediated</span></span>
+<span><span class="fu"><a href="reference/paths.html">paths</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span> <span class="co"># All path coefficients (a, b, c')</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="tidyverse-integration">Tidyverse Integration<a class="anchor" aria-label="anchor" href="#tidyverse-integration"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://generics.r-lib.org" class="external-link">generics</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Tidy tibble of all effects</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 6 × 3</span></span>
+<span><span class="co">#&gt;   term    estimate std.error</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 a          0.448    0.107</span></span>
+<span><span class="co">#&gt; 2 b          0.424    0.099</span></span>
+<span><span class="co">#&gt; 3 c_prime    0.155    0.114</span></span>
+<span><span class="co">#&gt; 4 nie        0.190       NA</span></span>
+<span><span class="co">#&gt; 5 nde        0.155       NA</span></span>
+<span><span class="co">#&gt; 6 te         0.345       NA</span></span>
+<span></span>
+<span><span class="co"># One-row model summary</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 1 × 6</span></span>
+<span><span class="co">#&gt;     nie   nde    te    pm  nobs converged</span></span>
+<span><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;lgl&gt;</span></span>
+<span><span class="co">#&gt; 1 0.190 0.155 0.345  0.55   200 TRUE</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="base-r-methods">Base R Methods<a class="anchor" aria-label="anchor" href="#base-r-methods"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>              <span class="co"># Path coefficients</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">"effects"</span><span class="op">)</span>   <span class="co"># NIE, NDE, TE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>              <span class="co"># Variance-covariance matrix</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>           <span class="co"># 95% confidence intervals</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>              <span class="co"># Number of observations</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="bootstrap-inference">Bootstrap Inference<a class="anchor" aria-label="anchor" href="#bootstrap-inference"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># With bootstrap CI</span></span>
+<span><span class="va">result_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/med.html">med</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">mydata</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  outcome <span class="op">=</span> <span class="st">"Y"</span>,</span>
+<span>  boot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">42</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/quick.html">quick</a></span><span class="op">(</span><span class="va">result_boot</span><span class="op">)</span></span>
+<span><span class="co">#&gt; NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="advanced-extract-from-fitted-models">Advanced: Extract from Fitted Models<a class="anchor" aria-label="anchor" href="#advanced-extract-from-fitted-models"></a>
+</h3>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># If you already have fitted models</span></span>
+<span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">mydata</span><span class="op">)</span></span>
+<span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, data <span class="op">=</span> <span class="va">mydata</span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit_m</span>,</span>
 <span>  model_y <span class="op">=</span> <span class="va">fit_y</span>,</span>
@@ -178,35 +261,9 @@
 <span>  mediator <span class="op">=</span> <span class="st">"M"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="fit-mediation-models-directly">Fit Mediation Models Directly<a class="anchor" aria-label="anchor" href="#fit-mediation-models-directly"></a>
-</h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
-<span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>,</span>
-<span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">data</span>,</span>
-<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
-<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
-<span>  engine <span class="op">=</span> <span class="st">"glm"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="bootstrap-inference">Bootstrap Inference<a class="anchor" aria-label="anchor" href="#bootstrap-inference"></a>
-</h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
-<span>  statistic_fn <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="va">theta</span><span class="op">[</span><span class="st">"a"</span><span class="op">]</span> <span class="op">*</span> <span class="va">theta</span><span class="op">[</span><span class="st">"b"</span><span class="op">]</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"parametric"</span>,</span>
-<span>  mediation_data <span class="op">=</span> <span class="va">med_data</span>,</span>
-<span>  n_boot <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">12345</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Same extractors work</span></span>
+<span><span class="fu"><a href="reference/nie.html">nie</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -246,27 +303,11 @@
 <div class="section level3">
 <h3 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
 </h3>
-<ul>
-<li>
-<strong><code><a href="reference/extract_mediation.html">extract_mediation()</a></code></strong>: Extract mediation structure from fitted models
-<ul>
-<li>Methods for: lm, glm, lavaan</li>
-</ul>
-</li>
-<li>
-<strong><code><a href="reference/fit_mediation.html">fit_mediation()</a></code></strong>: Fit mediation models with formula interface
-<ul>
-<li>Engines: GLM (lmer, brms coming soon)</li>
-</ul>
-</li>
-<li>
-<strong><code><a href="reference/bootstrap_mediation.html">bootstrap_mediation()</a></code></strong>: Perform bootstrap inference
-<ul>
-<li>Methods: parametric, nonparametric, plugin</li>
-<li>Parallel processing support</li>
-</ul>
-</li>
-</ul>
+<p><strong>Quick Start:</strong> - <strong><code><a href="reference/med.html">med()</a></code></strong>: One-function mediation analysis (recommended starting point) - <strong><code><a href="reference/quick.html">quick()</a></code></strong>: One-line summary of results</p>
+<p><strong>Effect Extractors:</strong> - <strong><code><a href="reference/nie.html">nie()</a></code></strong>, <strong><code><a href="reference/nde.html">nde()</a></code></strong>, <strong><code><a href="reference/te.html">te()</a></code></strong>: Natural indirect/direct and total effects - <strong><code><a href="reference/pm.html">pm()</a></code></strong>: Proportion mediated - <strong><code><a href="reference/paths.html">paths()</a></code></strong>: All path coefficients</p>
+<p><strong>Tidyverse Methods:</strong> - <strong><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code></strong>: Convert results to tidy tibble - <strong><code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code></strong>: One-row model summary</p>
+<p><strong>Base R Methods:</strong> - <strong><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code></strong>, <strong><code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code></strong>, <strong><code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code></strong>, <strong><code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code></strong>: Standard generics</p>
+<p><strong>Advanced:</strong> - <strong><code><a href="reference/extract_mediation.html">extract_mediation()</a></code></strong>: Extract from fitted lm/glm/lavaan models - <strong><code><a href="reference/fit_mediation.html">fit_mediation()</a></code></strong>: Fit with formula interface (GLM engine) - <strong><code><a href="reference/bootstrap_mediation.html">bootstrap_mediation()</a></code></strong>: Bootstrap inference (parametric, nonparametric, plugin)</p>
 </div>
 </div>
 <div class="section level2">
@@ -333,15 +374,16 @@
 <div class="section level2">
 <h2 id="development-status">Development Status<a class="anchor" aria-label="anchor" href="#development-status"></a>
 </h2>
-<p><strong>Current Phase</strong>: MVP Development (Phase 5 Complete)</p>
+<p><strong>Current Phase</strong>: Feature Complete (97%)</p>
 <ul class="task-list">
 <li><label><input type="checkbox" checked>Phase 1: Package setup</label></li>
-<li><label><input type="checkbox" checked>Phase 2: S7 class architecture (with SerialMediationData)</label></li>
+<li><label><input type="checkbox" checked>Phase 2: S7 class architecture (MediationData, SerialMediationData, BootstrapResult)</label></li>
 <li><label><input type="checkbox" checked>Phase 2.5: Comprehensive Quarto documentation</label></li>
 <li><label><input type="checkbox" checked>Phase 3: Model extraction (lm/glm, lavaan)</label></li>
 <li><label><input type="checkbox" checked>Phase 4: Model fitting (GLM engine)</label></li>
 <li><label><input type="checkbox" checked>Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)</label></li>
-<li><label><input type="checkbox">Phase 6: Extended testing</label></li>
+<li><label><input type="checkbox" checked>Phase 6: Generic functions (coef, vcov, confint, nobs, nie, nde, te, pm, paths, tidy, glance)</label></li>
+<li><label><input type="checkbox" checked>Phase 6.5: ADHD-friendly API (med, quick)</label></li>
 <li><label><input type="checkbox">Phase 7: Polish &amp; release</label></li>
 </ul>
 <div class="section level3">
@@ -351,7 +393,7 @@
 <li>
 <strong>Defensive Programming</strong>: checkmate for input validation, S7 validators for class integrity</li>
 <li>
-<strong>Testing</strong>: 184 tests with testthat, code coverage tracking</li>
+<strong>Testing</strong>: 427 tests with testthat, code coverage tracking</li>
 <li>
 <strong>CI/CD</strong>: R CMD check, lintr, coverage reporting via GitHub Actions</li>
 </ul>

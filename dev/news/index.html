@@ -78,9 +78,75 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="medfit-development-version">medfit (development version)<a class="anchor" aria-label="anchor" href="#medfit-development-version"></a></h2>
 <div class="section level3">
-<h3 id="medfit-development-version-1">medfit 0.1.0.9000 (2025-12-16)<a class="anchor" aria-label="anchor" href="#medfit-development-version-1"></a></h3>
+<h3 id="medfit-development-version-1">medfit 0.1.0.9000 (2025-12-17)<a class="anchor" aria-label="anchor" href="#medfit-development-version-1"></a></h3>
 <div class="section level4">
 <h4 id="new-features-development-version">New Features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h4>
+<div class="section level5">
+<h5 id="phase-adhd-friendly-api-development-version">Phase 6.5: ADHD-Friendly API<a class="anchor" aria-label="anchor" href="#phase-adhd-friendly-api-development-version"></a></h5>
+<ul><li>
+<strong><code><a href="../reference/med.html">med()</a></code> function</strong> - Simple one-function mediation analysis
+<ul><li>Fits mediator and outcome models automatically</li>
+<li>Optional bootstrap inference with <code>boot = TRUE</code>
+</li>
+<li>Supports covariates via <code>covariates</code> argument</li>
+<li>Returns <code>MediationData</code> object</li>
+<li>The recommended entry point for most users</li>
+</ul></li>
+<li>
+<strong><code><a href="../reference/quick.html">quick()</a></code> function</strong> - One-line summary of mediation results
+<ul><li>Works with any medfit object (<code>MediationData</code>, <code>SerialMediationData</code>)</li>
+<li>Shows NIE, NDE, and PM in compact format</li>
+<li>Includes bootstrap CI when available</li>
+<li>Example output: <code>NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%</code>
+</li>
+</ul></li>
+</ul></div>
+<div class="section level5">
+<h5 id="phase-generic-functions-development-version">Phase 6: Generic Functions<a class="anchor" aria-label="anchor" href="#phase-generic-functions-development-version"></a></h5>
+<ul><li>
+<strong>Effect Extractors</strong> - Dedicated functions for mediation effects
+<ul><li>
+<code><a href="../reference/nie.html">nie()</a></code>: Natural Indirect Effect (a × b)</li>
+<li>
+<code><a href="../reference/nde.html">nde()</a></code>: Natural Direct Effect (c’)</li>
+<li>
+<code><a href="../reference/te.html">te()</a></code>: Total Effect (nie + nde)</li>
+<li>
+<code><a href="../reference/pm.html">pm()</a></code>: Proportion Mediated</li>
+<li>
+<code><a href="../reference/paths.html">paths()</a></code>: All path coefficients (a, b, c’)</li>
+<li>All return <code>mediation_effect</code> class with custom print method</li>
+</ul></li>
+<li>
+<strong>Tidyverse Integration</strong> - <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> methods
+<ul><li>
+<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>: Convert results to tibble with term, estimate, std.error</li>
+<li>
+<code>tidy(x, type = "paths")</code>: Just path coefficients</li>
+<li>
+<code>tidy(x, type = "effects")</code>: Just nie, nde, te</li>
+<li>
+<code>tidy(x, conf.int = TRUE)</code>: Include confidence intervals</li>
+<li>
+<code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>: One-row model summary (nie, nde, te, pm, nobs, converged)</li>
+<li>Works on <code>MediationData</code>, <code>SerialMediationData</code>, and <code>BootstrapResult</code>
+</li>
+</ul></li>
+<li>
+<strong>Base R Generics</strong> - Standard S3/S7 methods for medfit classes
+<ul><li>
+<code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>: Extract coefficients (paths or effects)</li>
+<li>
+<code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>: Variance-covariance matrix</li>
+<li>
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>: Confidence intervals (Wald-based)</li>
+<li>
+<code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code>: Number of observations</li>
+<li>Full S7/S3 dispatch compatibility</li>
+</ul></li>
+</ul></div>
+<div class="section level5">
+<h5 id="previous-features-phase-development-version">Previous Features (Phase 4-5)<a class="anchor" aria-label="anchor" href="#previous-features-phase-development-version"></a></h5>
 <ul><li>
 <strong><code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> function</strong> - Fit mediation models with formula interface
 <ul><li>GLM engine for linear and generalized linear models</li>
@@ -101,19 +167,30 @@
 <li>Seed-based reproducibility</li>
 <li>Returns <code>BootstrapResult</code> object with point estimate and CI</li>
 </ul></li>
-<li>
-<strong>CI workflow fix</strong>: Updated codecov action v5 parameter names (<code>file</code> -&gt; <code>files</code>, <code>plugin</code> -&gt; <code>plugins</code>)</li>
 </ul></div>
+</div>
 <div class="section level4">
 <h4 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h4>
-<ul><li>Updated vignettes to reflect implemented features:
 <ul><li>
-<code>getting-started.qmd</code>: Added complete working examples for all three main functions</li>
-<li>
-<code>bootstrap.qmd</code>: Updated all code examples to use correct API with <code>statistic_fn</code>
-</li>
+<strong>Major documentation update</strong> reflecting new API:
+<ul><li>README.md: Complete rewrite of Quick Start with med()/quick() examples</li>
+<li>getting-started.qmd: Full vignette rewrite with ADHD-friendly workflow</li>
+<li>introduction.qmd: Updated with effect extractors, tidy/glance, base R methods</li>
+<li>pkgdown reference: Reorganized into Quick Start, Effect Extractors, S7 Classes sections</li>
 </ul></li>
-</ul><hr></div>
+</ul></div>
+<div class="section level4">
+<h4 id="development-status-development-version">Development Status<a class="anchor" aria-label="anchor" href="#development-status-development-version"></a></h4>
+<p><strong>Feature Complete (97%)</strong></p>
+<ul><li>✅ Phase 2: S7 class architecture</li>
+<li>✅ Phase 3: Model extraction (lm/glm, lavaan)</li>
+<li>✅ Phase 4: Model fitting (<code><a href="../reference/fit_mediation.html">fit_mediation()</a></code>)</li>
+<li>✅ Phase 5: Bootstrap infrastructure</li>
+<li>✅ Phase 6: Generic functions (coef, vcov, confint, nobs, effect extractors, tidy, glance)</li>
+<li>✅ Phase 6.5: ADHD-friendly API (med, quick)</li>
+<li>🚧 Phase 7: Polish &amp; release</li>
+</ul><p><strong>Code Quality</strong>: 427 tests passing, 0 errors, 0 warnings</p>
+<hr></div>
 </div>
 <div class="section level3">
 <h3 id="medfit-development-version-2">medfit 0.1.0<a class="anchor" aria-label="anchor" href="#medfit-development-version-2"></a></h3>
@@ -211,7 +288,7 @@
 </ul></li>
 </ul></div>
 <div class="section level4">
-<h4 id="development-status-development-version">Development Status<a class="anchor" aria-label="anchor" href="#development-status-development-version"></a></h4>
+<h4 id="development-status-development-version-1">Development Status<a class="anchor" aria-label="anchor" href="#development-status-development-version-1"></a></h4>
 <p><strong>Current Phase</strong>: Phase 5 Complete <strong>Next</strong>: Phase 6 (Extended Testing), Phase 8 (Polish &amp; Release)</p>
 <ul class="task-list"><li><label><input type="checkbox" checked>Phase 1: Package setup (CI/CD, documentation, Dependabot)</label></li>
 <li><label><input type="checkbox" checked>Phase 2: S7 class architecture (MediationData, SerialMediationData, BootstrapResult)</label></li>
