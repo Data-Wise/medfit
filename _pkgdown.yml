@@ -106,6 +106,21 @@ navbar:
       aria-label: GitHub
 
 reference:
+  - title: "Quick Start"
+    desc: "ADHD-friendly entry points for rapid analysis"
+    contents:
+      - med
+      - quick
+
+  - title: "Effect Extractors"
+    desc: "Extract mediation effects from fitted models"
+    contents:
+      - nie
+      - nde
+      - te
+      - pm
+      - paths
+
   - title: "S7 Classes"
     desc: "Core S7 class definitions for mediation data structures"
     contents:
@@ -113,15 +128,15 @@ reference:
       - SerialMediationData
       - BootstrapResult
 
-  - title: "Main Functions"
-    desc: "Primary user-facing functions"
+  - title: "Model Fitting"
+    desc: "Functions for fitting and extracting mediation models"
     contents:
       - extract_mediation
       - fit_mediation
       - bootstrap_mediation
 
   - title: "Methods"
-    desc: "S7 methods for medfit classes"
+    desc: "S3/S7 methods for medfit classes"
     contents:
       - starts_with("print")
       - starts_with("summary")
