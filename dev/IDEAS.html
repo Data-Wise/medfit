@@ -78,7 +78,28 @@
 <div id="ideasmd---medfit" class="section level1">
 
 <p>Future ideas, enhancements, and research directions for the medfit package.</p>
+<p><strong>Last Updated:</strong> 2025-12-17</p>
 <hr><div class="section level2">
+<h2 id="id_-recently-implemented-moved-from-ideas-to-features">✅ Recently Implemented (moved from ideas to features)<a class="anchor" aria-label="anchor" href="#id_-recently-implemented-moved-from-ideas-to-features"></a></h2>
+<div class="section level3">
+<h3 id="adhd-friendly-api-phase-65-">ADHD-Friendly API (Phase 6.5) ✅<a class="anchor" aria-label="anchor" href="#adhd-friendly-api-phase-65-"></a></h3>
+<ul><li>
+<code><a href="reference/med.html">med()</a></code> - One-function mediation analysis</li>
+<li>
+<code><a href="reference/quick.html">quick()</a></code> - One-line summary output</li>
+<li>Smart defaults minimize decision fatigue</li>
+</ul></div>
+<div class="section level3">
+<h3 id="generic-functions-phase-6-">Generic Functions (Phase 6) ✅<a class="anchor" aria-label="anchor" href="#generic-functions-phase-6-"></a></h3>
+<ul><li>Effect extractors: <code><a href="reference/nie.html">nie()</a></code>, <code><a href="reference/nde.html">nde()</a></code>, <code><a href="reference/te.html">te()</a></code>, <code><a href="reference/pm.html">pm()</a></code>, <code><a href="reference/paths.html">paths()</a></code>
+</li>
+<li>Tidyverse integration: <code>tidy()</code>, <code>glance()</code>
+</li>
+<li>Base R generics: <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code>
+</li>
+</ul><hr></div>
+</div>
+<div class="section level2">
 <h2 id="id_-research-ideas">🔬 Research Ideas<a class="anchor" aria-label="anchor" href="#id_-research-ideas"></a></h2>
 <div class="section level3">
 <h3 id="four-way-decomposition-vanderweele-2014">Four-Way Decomposition (VanderWeele 2014)<a class="anchor" aria-label="anchor" href="#four-way-decomposition-vanderweele-2014"></a></h3>
@@ -108,57 +129,56 @@
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>Constructors:</strong> - <code>two_way(nde, nie)</code> → Standard mediation - <code>four_way(cde, int_ref, int_med, pie)</code> → VanderWeele - <code>custom_decomposition(...)</code> → User-defined</p>
-<p><strong>Storage:</strong> - MediationData gains <code>@decompositions</code> property (list) - Allows multiple decompositions per result - Each decomposition validates components sum to total</p>
 <hr></div>
 </div>
 <div class="section level2">
 <h2 id="id_-technical-enhancements">🔧 Technical Enhancements<a class="anchor" aria-label="anchor" href="#id_-technical-enhancements"></a></h2>
 <div class="section level3">
+<h3 id="delta-method-ses-for-derived-effects">Delta Method SEs for Derived Effects<a class="anchor" aria-label="anchor" href="#delta-method-ses-for-derived-effects"></a></h3>
+<p><strong>Status:</strong> Planned (next release) <strong>Priority:</strong> High <strong>Complexity:</strong> Low</p>
+<p>Add standard errors for NIE, NDE, TE using delta method: - <code>confint(result, type = "effects")</code> already exists - Need to compute delta method SEs - Display in <code>tidy()</code> output</p>
+<p><strong>Implementation:</strong></p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Delta method for indirect effect</span></span>
+<span><span class="va">se_nie</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">b</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span> <span class="va">var_a</span> <span class="op">+</span> <span class="va">a</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span> <span class="va">var_b</span> <span class="op">+</span> <span class="fl">2</span><span class="op">*</span><span class="va">a</span><span class="op">*</span><span class="va">b</span><span class="op">*</span><span class="va">cov_ab</span><span class="op">)</span></span></code></pre></div>
+<hr></div>
+<div class="section level3">
+<h3 id="bca-bootstrap-confidence-intervals">BCa Bootstrap Confidence Intervals<a class="anchor" aria-label="anchor" href="#bca-bootstrap-confidence-intervals"></a></h3>
+<p><strong>Status:</strong> Future <strong>Priority:</strong> Medium <strong>Complexity:</strong> Medium</p>
+<p>Bias-corrected and accelerated bootstrap: - Better coverage than percentile method - Adjusts for bias and skewness in bootstrap distribution</p>
+<p><strong>References:</strong> - Efron &amp; Tibshirani (1993). An Introduction to the Bootstrap</p>
+<hr></div>
+<div class="section level3">
 <h3 id="engine-adapters-for-advanced-methods">Engine Adapters for Advanced Methods<a class="anchor" aria-label="anchor" href="#engine-adapters-for-advanced-methods"></a></h3>
 <p><strong>Status:</strong> Planned (Phase 7c in roadmap) <strong>Priority:</strong> Medium <strong>Complexity:</strong> High</p>
 <p>Wrap validated implementations instead of reimplementing:</p>
-<p><strong>Priority order:</strong> 1. <strong>regression</strong> (internal) - VanderWeele closed-form [MVP] 2. <strong>gformula</strong> (CMAverse) - G-computation [Phase 2] 3. <strong>ipw</strong> (CMAverse) - Inverse probability weighting [Phase 2] 4. <strong>tmle</strong> (tmle3) - Targeted learning [Future] 5. <strong>dml</strong> (DoubleML) - Double machine learning [Future]</p>
-<p><strong>Design pattern:</strong> - All engines return standardized <code>MediationData</code> - External packages in <code>Suggests</code> - Engine-specific options via <code>engine_args = list(...)</code> - Graceful degradation if package unavailable</p>
-<p><strong>Example:</strong></p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">estimate_mediation</span><span class="op">(</span></span>
-<span>  <span class="va">...</span>,</span>
-<span>  engine <span class="op">=</span> <span class="st">"gformula"</span>,</span>
-<span>  engine_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    EMint <span class="op">=</span> <span class="cn">TRUE</span>,    <span class="co"># Exposure-mediator interaction</span></span>
-<span>    nboot <span class="op">=</span> <span class="fl">500</span>      <span class="co"># CMAverse-specific bootstrap</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Priority order:</strong> 1. <strong>regression</strong> (internal) - VanderWeele closed-form [Complete] 2. <strong>gformula</strong> (CMAverse) - G-computation [Future] 3. <strong>ipw</strong> (CMAverse) - Inverse probability weighting [Future] 4. <strong>tmle</strong> (tmle3) - Targeted learning [Future] 5. <strong>dml</strong> (DoubleML) - Double machine learning [Future]</p>
 <hr></div>
 <div class="section level3">
 <h3 id="mixed-models-support-lme4">Mixed Models Support (lme4)<a class="anchor" aria-label="anchor" href="#mixed-models-support-lme4"></a></h3>
 <p><strong>Status:</strong> Future <strong>Priority:</strong> Medium <strong>Complexity:</strong> High</p>
 <p>Support for multilevel/hierarchical mediation: - Random effects in mediator and/or outcome models - Cluster-level vs individual-level effects - Cross-level interactions</p>
-<p><strong>Challenges:</strong> - Random effect variance estimation - Bootstrap with clustering - Defining indirect effect at different levels</p>
-<p><strong>References:</strong> - Preacher et al. (2010). Multivariate Behavioral Research - Bauer et al. (2006). Psychological Methods</p>
+<p><strong>Implementation:</strong> - <code>extract_mediation.lmerMod</code> method - Handle random effect variance estimation - Bootstrap with clustering</p>
 <hr></div>
 <div class="section level3">
 <h3 id="bayesian-support-brms">Bayesian Support (brms)<a class="anchor" aria-label="anchor" href="#bayesian-support-brms"></a></h3>
 <p><strong>Status:</strong> Future <strong>Priority:</strong> Low <strong>Complexity:</strong> High</p>
 <p>Bayesian mediation analysis: - Full posterior distributions for indirect effects - Credible intervals instead of bootstrap CIs - Prior sensitivity analysis</p>
-<p><strong>Implementation:</strong> - <code>extract_mediation.brmsfit</code> method - Extract posterior samples from stanfit - Compute posterior of indirect effect - Return BayesianMediationResult (inherits BootstrapResult)</p>
-<hr></div>
-<div class="section level3">
-<h3 id="sensitivity-analysis-integration">Sensitivity Analysis Integration<a class="anchor" aria-label="anchor" href="#sensitivity-analysis-integration"></a></h3>
-<p><strong>Status:</strong> Coordinated with medrobust <strong>Priority:</strong> Medium <strong>Complexity:</strong> Low</p>
-<p>Allow medfit to optionally compute naive estimates for sensitivity analysis:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># medrobust can call medfit for baseline</span></span>
-<span><span class="va">naive_result</span> <span class="op">&lt;-</span> <span class="fu">medfit</span><span class="fu">::</span><span class="fu"><a href="reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
-<span><span class="va">bounds</span> <span class="op">&lt;-</span> <span class="fu">medrobust</span><span class="fu">::</span><span class="fu">sensitivity_bounds</span><span class="op">(</span></span>
-<span>  naive <span class="op">=</span> <span class="va">naive_result</span>,</span>
-<span>  rho_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><strong>Requires:</strong> - Stable MediationData API - Clear documentation of assumptions - Example workflow in vignette</p>
+<p><strong>Implementation:</strong> - <code>extract_mediation.brmsfit</code> method - Extract posterior samples - Compute posterior of indirect effect - Return BayesianMediationResult</p>
 <hr></div>
 </div>
 <div class="section level2">
 <h2 id="id_-user-experience">📊 User Experience<a class="anchor" aria-label="anchor" href="#id_-user-experience"></a></h2>
+<div class="section level3">
+<h3 id="plotting-methods">Plotting Methods<a class="anchor" aria-label="anchor" href="#plotting-methods"></a></h3>
+<p><strong>Status:</strong> Future <strong>Priority:</strong> Low <strong>Complexity:</strong> Medium</p>
+<p>Built-in visualization: - Path diagrams (via DiagrammeR or igraph) - Bootstrap distributions - Confidence interval plots - Sensitivity plots (coordinate with medrobust)</p>
+<p><strong>Design:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">med_result</span>, type <span class="op">=</span> <span class="st">"paths"</span><span class="op">)</span>       <span class="co"># Path diagram</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">boot_result</span>, type <span class="op">=</span> <span class="st">"bootstrap"</span><span class="op">)</span>  <span class="co"># Distribution</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">boot_result</span>, type <span class="op">=</span> <span class="st">"ci"</span><span class="op">)</span>         <span class="co"># Interval plot</span></span></code></pre></div>
+<hr></div>
 <div class="section level3">
 <h3 id="formula-interface-enhancements">Formula Interface Enhancements<a class="anchor" aria-label="anchor" href="#formula-interface-enhancements"></a></h3>
 <p><strong>Status:</strong> Brainstorming <strong>Priority:</strong> Low <strong>Complexity:</strong> Medium</p>
@@ -178,59 +198,32 @@
 <span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
 <span>  mediator <span class="op">=</span> <span class="st">"M"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><strong>Challenges:</strong> - Non-standard evaluation - Backward compatibility - Clear documentation</p>
-<hr></div>
-<div class="section level3">
-<h3 id="effect-size-summaries">Effect Size Summaries<a class="anchor" aria-label="anchor" href="#effect-size-summaries"></a></h3>
-<p><strong>Status:</strong> Brainstorming <strong>Priority:</strong> Low <strong>Complexity:</strong> Low</p>
-<p>Rich summary output with multiple effect sizes:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">med_result</span>, effects <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span></span>
-<span><span class="co"># Shows:</span></span>
-<span><span class="co"># - Indirect effect (a×b)</span></span>
-<span><span class="co"># - Direct effect (c')</span></span>
-<span><span class="co"># - Total effect (a×b + c')</span></span>
-<span><span class="co"># - Proportion mediated</span></span>
-<span><span class="co"># - Ratio of indirect to direct</span></span>
-<span><span class="co"># - Standardized effects (if requested)</span></span></code></pre></div>
-<hr></div>
-<div class="section level3">
-<h3 id="plotting-methods">Plotting Methods<a class="anchor" aria-label="anchor" href="#plotting-methods"></a></h3>
-<p><strong>Status:</strong> Future <strong>Priority:</strong> Low <strong>Complexity:</strong> Medium</p>
-<p>Built-in visualization: - Path diagrams (via DiagrammeR or igraph) - Bootstrap distributions - Confidence interval plots - Sensitivity plots (coordinate with medrobust)</p>
-<p><strong>Design:</strong></p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">med_result</span>, type <span class="op">=</span> <span class="st">"paths"</span><span class="op">)</span>       <span class="co"># Path diagram</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">boot_result</span>, type <span class="op">=</span> <span class="st">"bootstrap"</span><span class="op">)</span>  <span class="co"># Distribution</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">boot_result</span>, type <span class="op">=</span> <span class="st">"ci"</span><span class="op">)</span>         <span class="co"># Interval plot</span></span></code></pre></div>
 <hr></div>
 </div>
 <div class="section level2">
 <h2 id="id_-ecosystem-integration">🌐 Ecosystem Integration<a class="anchor" aria-label="anchor" href="#id_-ecosystem-integration"></a></h2>
 <div class="section level3">
+<h3 id="probmed-integration">probmed Integration<a class="anchor" aria-label="anchor" href="#probmed-integration"></a></h3>
+<p><strong>Status:</strong> Next priority <strong>Priority:</strong> High <strong>Complexity:</strong> Low</p>
+<p>Test medfit output with P_med computation: - Ensure <code><a href="reference/nie.html">nie()</a></code>, <code><a href="reference/nde.html">nde()</a></code> work in probmed workflows - Update probmed vignettes with medfit examples - Test <code><a href="reference/med.html">med()</a></code> → P_med workflow</p>
+<hr></div>
+<div class="section level3">
 <h3 id="lavaan-bidirectional-integration">lavaan Bidirectional Integration<a class="anchor" aria-label="anchor" href="#lavaan-bidirectional-integration"></a></h3>
 <p><strong>Status:</strong> Partially implemented <strong>Priority:</strong> Medium <strong>Complexity:</strong> Low</p>
-<p><strong>Current:</strong> medfit can extract from lavaan <strong>Future:</strong> lavaan users can bootstrap with medfit</p>
-<p>Coordinate with lavaan team: - Ensure <code>extract_mediation.lavaan</code> stays current - Contribute examples to lavaan documentation - Handle edge cases (latent variables, multiple groups)</p>
+<p><strong>Current:</strong> medfit can extract from lavaan ✅ <strong>Future:</strong> lavaan users can bootstrap with medfit</p>
+<p>Coordinate with lavaan team: - Ensure <code>extract_mediation.lavaan</code> stays current - Handle edge cases (latent variables, multiple groups)</p>
 <hr></div>
 <div class="section level3">
-<h3 id="openmx-support">OpenMx Support<a class="anchor" aria-label="anchor" href="#openmx-support"></a></h3>
-<p><strong>Status:</strong> Postponed <strong>Priority:</strong> Low <strong>Complexity:</strong> Medium</p>
-<p>Extraction from OpenMx models (postponed from MVP): - Similar to lavaan extraction - Handle matrix specification - Extract parameter covariances</p>
-<p><strong>Blocked by:</strong> - OpenMx API stability - Team capacity - User demand (assess after CRAN release)</p>
-<hr></div>
-<div class="section level3">
-<h3 id="probmedrmediationmedrobust-coordination">probmed/RMediation/medrobust Coordination<a class="anchor" aria-label="anchor" href="#probmedrmediationmedrobust-coordination"></a></h3>
+<h3 id="rmediationmedrobust-coordination">RMediation/medrobust Coordination<a class="anchor" aria-label="anchor" href="#rmediationmedrobust-coordination"></a></h3>
 <p><strong>Status:</strong> Ongoing <strong>Priority:</strong> High <strong>Complexity:</strong> Low</p>
-<p>Maintain clean API contracts: - Stable MediationData structure - Backward-compatible changes - Coordinated version bumps - Shared test infrastructure</p>
-<p><strong>Communication:</strong> - Document breaking changes in NEWS - Deprecation warnings (1 version ahead) - Example migration code</p>
+<p>Maintain clean API contracts: - Stable MediationData structure - Backward-compatible changes - Coordinated version bumps</p>
 <hr></div>
 </div>
 <div class="section level2">
 <h2 id="id_-documentation-ideas">📚 Documentation Ideas<a class="anchor" aria-label="anchor" href="#id_-documentation-ideas"></a></h2>
 <div class="section level3">
 <h3 id="vignette-mediation-analysis-workflow">Vignette: “Mediation Analysis Workflow”<a class="anchor" aria-label="anchor" href="#vignette-mediation-analysis-workflow"></a></h3>
-<p>End-to-end example: 1. Data preparation 2. Model fitting 3. Bootstrap inference 4. Sensitivity analysis (via medrobust) 5. Reporting results</p>
+<p>End-to-end example: 1. Data preparation 2. Model fitting with <code><a href="reference/med.html">med()</a></code> 3. Effect extraction with <code><a href="reference/nie.html">nie()</a></code>, <code><a href="reference/nde.html">nde()</a></code> 4. Bootstrap inference 5. Sensitivity analysis (via medrobust) 6. Reporting results</p>
 <hr></div>
 <div class="section level3">
 <h3 id="vignette-extending-medfit">Vignette: “Extending medfit”<a class="anchor" aria-label="anchor" href="#vignette-extending-medfit"></a></h3>
@@ -250,7 +243,6 @@
 <div class="section level3">
 <h3 id="cross-disciplinary-applications">Cross-Disciplinary Applications<a class="anchor" aria-label="anchor" href="#cross-disciplinary-applications"></a></h3>
 <p>Expand beyond psychology/epidemiology: - Economics (instrumental variables mediation) - Machine learning (causal ML + mediation) - Climate science (pathway analysis) - Social networks (network mediation)</p>
-<p>Each field has unique challenges → modular ecosystem can adapt.</p>
 <hr></div>
 </div>
 <div class="section level2">
@@ -259,7 +251,7 @@
 <ul class="task-list"><li><label><input type="checkbox">Idea from Issue #XX: [Description]</label></li>
 <li><label><input type="checkbox">Feature request: [Description]</label></li>
 <li><label><input type="checkbox">Research collaboration: [Description]</label></li>
-</ul><hr><p><strong>Last Updated:</strong> 2025-12-15 <strong>Review Cycle:</strong> Quarterly (reassess priorities)</p>
+</ul><hr><p><strong>Review Cycle:</strong> Quarterly (reassess priorities)</p>
 </div>
 </div>
 

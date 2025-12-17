@@ -5,16 +5,35 @@
 The
 [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md)
 function provides a standardized interface for extracting mediation
-structures from fitted models. It works with:
-
-- **lm/glm** models (base R) - implemented
-- **lavaan** SEM models - implemented
-- **lmer** mixed models (future)
-
-Note: OpenMx extraction is planned for a future release.
+structures from fitted models. It works with: - **lm/glm** models (base
+R) - implemented - **lavaan** SEM models - implemented - **lmer** mixed
+models (future)
 
 All extraction methods return a `MediationData` or `SerialMediationData`
 object, ensuring consistency across modeling frameworks.
+
+**Note:** For quick analysis, consider using
+[`med()`](https://data-wise.github.io/medfit/dev/reference/med.md)
+instead - it handles fitting and extraction in one step. Use
+[`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md)
+when you need more control or already have fitted models.
+
+## Quick Comparison: med() vs extract_mediation()
+
+``` r
+library(medfit)
+
+# Simple way: med() does everything
+result <- med(data = mydata, treatment = "X", mediator = "M", outcome = "Y")
+quick(result)
+#> NIE = 0.19 | NDE = 0.16 | PM = 55%
+
+# Advanced way: fit models separately, then extract
+fit_m <- lm(M ~ X, data = mydata)
+fit_y <- lm(Y ~ X + M, data = mydata)
+result <- extract_mediation(fit_m, model_y = fit_y, treatment = "X", mediator = "M")
+quick(result)
+```
 
 ## Extraction Pattern
 
@@ -59,8 +78,12 @@ med <- extract_mediation(
 print(med)
 summary(med)
 
-# Indirect effect
-med@a_path * med@b_path
+# Use effect extractors (recommended)
+nie(med)   # Indirect effect (a * b)
+nde(med)   # Direct effect (c')
+te(med)    # Total effect
+pm(med)    # Proportion mediated
+quick(med) # One-line summary
 ```
 
 ### What Gets Extracted?
@@ -323,15 +346,70 @@ All methods return the same S7 class structure, ensuring consistency.
   [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md)
   methods
 
+## Working with Extracted Results
+
+Once you have a `MediationData` object, you can use all medfit
+functions:
+
+### Effect Extractors
+
+``` r
+# Individual effects
+nie(med)    # Natural Indirect Effect (a * b)
+nde(med)    # Natural Direct Effect (c')
+te(med)     # Total Effect (nie + nde)
+pm(med)     # Proportion Mediated
+
+# All path coefficients
+paths(med)  # Named vector: a, b, c_prime
+```
+
+### Tidyverse Integration
+
+``` r
+library(generics)
+
+# Convert to tibble
+tidy(med)
+#> # A tibble: 6 × 3
+#>   term    estimate std.error
+#>   <chr>      <dbl>     <dbl>
+#> 1 a          0.448    0.107
+#> ...
+
+# Just path coefficients or effects
+tidy(med, type = "paths")
+tidy(med, type = "effects")
+
+# With confidence intervals
+tidy(med, conf.int = TRUE)
+
+# One-row summary
+glance(med)
+```
+
+### Base R Methods
+
+``` r
+# Standard generics
+coef(med)                # Path coefficients
+coef(med, "effects")     # NIE, NDE, TE
+vcov(med)                # Variance-covariance matrix
+confint(med)             # 95% confidence intervals
+confint(med, level = 0.90)
+nobs(med)                # Sample size
+```
+
 ## Development Status
 
-Phase 3 (Model Extraction) is **complete**:
+Model extraction is **complete**:
 
 - ✅ S7 class definitions (MediationData, SerialMediationData)
 - ✅ lm/glm extraction with checkmate validation
 - ✅ lavaan extraction with checkmate validation
+- ✅ Effect extractors (nie, nde, te, pm, paths)
+- ✅ Tidyverse methods (tidy, glance)
+- ✅ Base R generics (coef, vcov, confint, nobs)
 - 📋 lmer extraction (future)
-
-**Note**: OpenMx extraction has been postponed to a future release.
 
 See `NEWS.md` for updates.

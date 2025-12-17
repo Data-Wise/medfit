@@ -46,9 +46,17 @@ Functions for fitting and extracting mediation models
 - [`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md)
   : Perform Bootstrap Inference for Mediation Statistics
 
-## Methods
+## Tidyverse Methods
 
-S3/S7 methods for medfit classes
+broom-style methods for tibble workflows
+
+## Base R Methods
+
+Standard R generics for medfit objects
+
+## Print & Summary
+
+Display methods for medfit classes
 
 - [`print(`*`<mediation_effect>`*`)`](https://data-wise.github.io/medfit/dev/reference/print.mediation_effect.md)
   : Print Method for mediation_effect

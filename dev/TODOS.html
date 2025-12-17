@@ -79,351 +79,268 @@
 
 <p>Active tasks, implementation plan, and progress tracking.</p>
 <hr><div class="section level2">
-<h2 id="id_-current-focus-test-driven-development-phase">🎯 Current Focus: Test-Driven Development Phase<a class="anchor" aria-label="anchor" href="#id_-current-focus-test-driven-development-phase"></a></h2>
-<p><strong>Status:</strong> ✅ Test infrastructure complete <strong>Next:</strong> Implement core functions guided by tests <strong>Updated:</strong> 2025-12-15</p>
+<h2 id="id_-current-focus-phase-7---polish--release">🎯 Current Focus: Phase 7 - Polish &amp; Release<a class="anchor" aria-label="anchor" href="#id_-current-focus-phase-7---polish--release"></a></h2>
+<p><strong>Status:</strong> Feature Complete (97%) <strong>Next:</strong> Polish, testing, CRAN prep <strong>Updated:</strong> 2025-12-17</p>
 <hr></div>
 <div class="section level2">
 <h2 id="id_-active-tasks-this-sprint">🔥 Active Tasks (This Sprint)<a class="anchor" aria-label="anchor" href="#id_-active-tasks-this-sprint"></a></h2>
 <div class="section level3">
 <h3 id="high-priority-">High Priority 🔴<a class="anchor" aria-label="anchor" href="#high-priority-"></a></h3>
 <ul class="task-list"><li>
-<p><label><input type="checkbox"><strong>Update project documentation</strong> [10 min] ⚡</label></p>
-<ul class="task-list"><li><label><input type="checkbox" checked>Create IDEAS.md</label></li>
-<li><label><input type="checkbox" checked>Create TODOS.md</label></li>
-<li><label><input type="checkbox">Update .STATUS with test suite milestone</label></li>
-<li><label><input type="checkbox">Update PROJECT-HUB.md progress</label></li>
+<label><input type="checkbox"><strong>Phase 7: Polish &amp; Release</strong> [2-3 days]</label>
+<ul class="task-list"><li><label><input type="checkbox">Run comprehensive R CMD check –as-cran</label></li>
+<li><label><input type="checkbox">Fix any remaining NOTEs/WARNINGs</label></li>
+<li><label><input type="checkbox">Spell check all documentation</label></li>
+<li><label><input type="checkbox">URL validation for all links</label></li>
+<li><label><input type="checkbox">Update DESCRIPTION for CRAN submission</label></li>
 </ul></li>
 <li>
-<p><label><input type="checkbox"><strong>Commit test infrastructure</strong> [5 min] ⚡</label></p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">git</span> add tests/testthat/test-bootstrap.R</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">git</span> add tests/testthat/test-fit-glm.R</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">git</span> add tests/testthat/helper-test-data.R</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">git</span> add IDEAS.md TODOS.md PROJECT-HUB.md</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"test: add comprehensive test suite</span></span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="st">- Add test-bootstrap.R (27 tests)</span></span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="st">- Add test-fit-glm.R (30 tests)</span></span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="st">- Add helper-test-data.R (centralized generators)</span></span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="st">- Add project management files</span></span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="st">- Total: 241 tests (184 PASS, 57 SKIP, 0 FAIL)"</span></span></code></pre></div>
-</li>
-<li>
-<p><label><input type="checkbox"><strong>Implement bootstrap_mediation()</strong> [3-4 hr] Location: <code>R/bootstrap.R</code> (create new file) Guided by: <code>tests/testthat/test-bootstrap.R</code> (27 tests)</label></p>
-<p>Steps:</p>
-<ol style="list-style-type: decimal"><li>Create <code>R/bootstrap.R</code>
-</li>
-<li>Implement parametric bootstrap (6 tests)</li>
-<li>Implement nonparametric bootstrap (5 tests)</li>
-<li>Implement plugin method (3 tests)</li>
-<li>Add parallel processing support (2 tests)</li>
-<li>Verify reproducibility (3 tests)</li>
-<li>Remove <code>skip()</code> calls from test-bootstrap.R</li>
-<li>Run tests: <code>devtools::test()</code>
-</li>
-</ol></li>
-<li>
-<p><label><input type="checkbox"><strong>Implement fit_mediation()</strong> [2-3 hr] Location: <code>R/fit-glm.R</code> (create new file) Guided by: <code>tests/testthat/test-fit-glm.R</code> (30 tests)</label></p>
-<p>Steps:</p>
-<ol style="list-style-type: decimal"><li>Create <code>R/fit-glm.R</code>
-</li>
-<li>Implement basic Gaussian GLM (6 tests)</li>
-<li>Add family support (4 tests)</li>
-<li>Validate formulas (4 tests)</li>
-<li>Handle covariates (2 tests)</li>
-<li>Add convergence detection (2 tests)</li>
-<li>Remove <code>skip()</code> calls from test-fit-glm.R</li>
-<li>Run tests: <code>devtools::test()</code>
-</li>
-</ol></li>
+<label><input type="checkbox"><strong>probmed Integration</strong> [1 day]</label>
+<ul class="task-list"><li><label><input type="checkbox">Test <code><a href="reference/med.html">med()</a></code> output with P_med computation</label></li>
+<li><label><input type="checkbox">Ensure <code><a href="reference/nie.html">nie()</a></code>, <code><a href="reference/nde.html">nde()</a></code> work in probmed workflows</label></li>
+<li><label><input type="checkbox">Update probmed vignettes with medfit examples</label></li>
+</ul></li>
 </ul></div>
 <div class="section level3">
 <h3 id="medium-priority-">Medium Priority 🟡<a class="anchor" aria-label="anchor" href="#medium-priority-"></a></h3>
 <ul class="task-list"><li>
-<p><label><input type="checkbox"><strong>Add roxygen2 documentation</strong> [1-2 hr]</label></p>
-<ul class="task-list"><li><label><input type="checkbox">Document bootstrap_mediation()</label></li>
-<li><label><input type="checkbox">Document fit_mediation()</label></li>
-<li><label><input type="checkbox">Add examples to each</label></li>
-<li><label><input type="checkbox">Build docs: <code>devtools::document()</code></label></li>
+<label><input type="checkbox"><strong>Delta Method SEs</strong> [2-3 hr]</label>
+<ul class="task-list"><li><label><input type="checkbox">Add standard errors for NIE, NDE, TE</label></li>
+<li><label><input type="checkbox">Implement <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> for derived effects</label></li>
+<li><label><input type="checkbox">Document delta method assumptions</label></li>
 </ul></li>
 <li>
-<p><label><input type="checkbox"><strong>Create intro vignette</strong> [2 hr] Title: “Getting Started with medfit” File: <code>vignettes/intro-medfit.Rmd</code></label></p>
-<p>Sections:</p>
-<ul><li>Installation</li>
-<li>Basic workflow</li>
-<li>Model fitting with fit_mediation()</li>
-<li>Bootstrap inference</li>
-<li>Integration with ecosystem packages</li>
+<label><input type="checkbox"><strong>Additional Vignette Ideas</strong></label>
+<ul class="task-list"><li><label><input type="checkbox">“Mediation Analysis Workflow” (end-to-end example)</label></li>
+<li><label><input type="checkbox">“Comparing medfit with other packages”</label></li>
+<li><label><input type="checkbox">“Extending medfit” (for developers)</label></li>
 </ul></li>
-<li>
-<p><label><input type="checkbox"><strong>Run R CMD check</strong> [10 min]</label></p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Fix any NOTEs, WARNINGs, ERRORs</p>
-</li>
 </ul></div>
 <div class="section level3">
-<h3 id="low-priority--quick-wins-">Low Priority / Quick Wins ⚡<a class="anchor" aria-label="anchor" href="#low-priority--quick-wins-"></a></h3>
+<h3 id="low-priority--future-">Low Priority / Future ⚪<a class="anchor" aria-label="anchor" href="#low-priority--future-"></a></h3>
 <ul class="task-list"><li>
-<p><label><input type="checkbox"><strong>Update DESCRIPTION</strong> [5 min]</label></p>
-<ul><li>Add Authors (including contributors)</li>
-<li>Update URL and BugReports</li>
-<li>Review Suggests packages</li>
+<label><input type="checkbox"><strong>BCa Confidence Intervals</strong></label>
+<ul><li>Bias-corrected and accelerated bootstrap</li>
+<li>Better coverage than percentile method</li>
 </ul></li>
 <li>
-<p><label><input type="checkbox"><strong>Setup pkgdown</strong> [15 min]</label></p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_pkgdown</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-</li>
-<li><p><label><input type="checkbox"><strong>Add NEWS.md entry</strong> [5 min] Document test infrastructure addition</label></p></li>
-</ul><hr></div>
-</div>
-<div class="section level2">
-<h2 id="id_-backlog-future-sprints">📋 Backlog (Future Sprints)<a class="anchor" aria-label="anchor" href="#id_-backlog-future-sprints"></a></h2>
-<div class="section level3">
-<h3 id="core-functionality">Core Functionality<a class="anchor" aria-label="anchor" href="#core-functionality"></a></h3>
-<ul class="task-list"><li><label><input type="checkbox">Implement SerialMediationData extraction from lavaan</label></li>
-<li><label><input type="checkbox">Add standardized coefficients option</label></li>
-<li><label><input type="checkbox">Implement interaction detection (X:M in outcome model)</label></li>
-<li><label><input type="checkbox">Add four-way decomposition (VanderWeele)</label></li>
-</ul></div>
-<div class="section level3">
-<h3 id="testing--quality">Testing &amp; Quality<a class="anchor" aria-label="anchor" href="#testing--quality"></a></h3>
-<ul class="task-list"><li><label><input type="checkbox">Increase test coverage to &gt;90%</label></li>
-<li><label><input type="checkbox">Add integration tests</label></li>
-<li><label><input type="checkbox">Setup GitHub Actions CI/CD</label></li>
-<li><label><input type="checkbox">Add code coverage reporting (codecov)</label></li>
-</ul></div>
-<div class="section level3">
-<h3 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a></h3>
-<ul class="task-list"><li><label><input type="checkbox">Write “Comparison with mediation package” vignette</label></li>
-<li><label><input type="checkbox">Write “Extending medfit” vignette (for developers)</label></li>
-<li><label><input type="checkbox">Create pkgdown website</label></li>
-<li><label><input type="checkbox">Add FAQ section</label></li>
-</ul></div>
-<div class="section level3">
-<h3 id="ecosystem-integration">Ecosystem Integration<a class="anchor" aria-label="anchor" href="#ecosystem-integration"></a></h3>
-<ul class="task-list"><li><label><input type="checkbox">Coordinate with probmed on MediationData API</label></li>
-<li><label><input type="checkbox">Coordinate with RMediation on BootstrapResult</label></li>
-<li><label><input type="checkbox">Test integration with medrobust</label></li>
-<li><label><input type="checkbox">Add examples to each package’s vignettes</label></li>
+<label><input type="checkbox"><strong>Mixed Models Support (lme4)</strong></label>
+<ul><li>
+<code>extract_mediation.lmerMod</code> method</li>
+<li>Multilevel mediation analysis</li>
+</ul></li>
+<li>
+<label><input type="checkbox"><strong>Bayesian Support (brms)</strong></label>
+<ul><li>
+<code>extract_mediation.brmsfit</code> method</li>
+<li>Posterior distributions for indirect effects</li>
+</ul></li>
 </ul><hr></div>
 </div>
 <div class="section level2">
 <h2 id="id_-recently-completed">✅ Recently Completed<a class="anchor" aria-label="anchor" href="#id_-recently-completed"></a></h2>
 <div class="section level3">
-<h3 id="id_2025-12-15-afternoon">2025-12-15 (Afternoon)<a class="anchor" aria-label="anchor" href="#id_2025-12-15-afternoon"></a></h3>
+<h3 id="id_2025-12-17">2025-12-17<a class="anchor" aria-label="anchor" href="#id_2025-12-17"></a></h3>
+<div class="section level4">
+<h4 id="phase-65-adhd-friendly-api-">Phase 6.5: ADHD-Friendly API ✅<a class="anchor" aria-label="anchor" href="#phase-65-adhd-friendly-api-"></a></h4>
 <ul class="task-list"><li>
-<label><input type="checkbox" checked><strong>Created API-DESIGN-DECISIONS.md</strong> - Consolidated all strategic planning</label>
-<ul class="task-list"><li><label><input type="checkbox" checked>Summarized all 8 major decisions (S7, hybrid generics, function naming, workflow, etc.)</label></li>
-<li><label><input type="checkbox" checked>Complete API reference (custom S3 generics + standard R generics + broom)</label></li>
-<li><label><input type="checkbox" checked>Implementation roadmap (6 phases: Core API, Bootstrap, Fit, Broom, Docs, CMAverse)</label></li>
-<li><label><input type="checkbox" checked>Testing strategy (unit tests, integration tests, coverage targets)</label></li>
-<li><label><input type="checkbox" checked>Documentation standards (roxygen2, vignettes, pkgdown)</label></li>
-<li><label><input type="checkbox" checked><strong>Strategic planning phase COMPLETE</strong> - ready for implementation</label></li>
+<label><input type="checkbox" checked><strong><code><a href="reference/med.html">med()</a></code> function</strong> - One-function mediation analysis</label>
+<ul><li>Fits mediator and outcome models automatically</li>
+<li>Optional bootstrap with <code>boot = TRUE</code>
+</li>
+<li>Supports covariates</li>
+<li>Returns MediationData object</li>
 </ul></li>
 <li>
-<label><input type="checkbox" checked>Created COORDINATION-BRAINSTORM.md</label>
-<ul class="task-list"><li><label><input type="checkbox" checked>Analyzed three-package-ecosystem-strategy.md findings</label></li>
-<li><label><input type="checkbox" checked>Mapped generic functions strategy (extract/fit/bootstrap)</label></li>
-<li><label><input type="checkbox" checked>Designed CMAverse integration as engine adapter pattern</label></li>
-<li><label><input type="checkbox" checked>Recommended selective loading for mediationverse (Option 2)</label></li>
-<li><label><input type="checkbox" checked>Created integration timeline (3 phases)</label></li>
-<li><label><input type="checkbox" checked>Documented 4 open questions needing decisions</label></li>
-</ul></li>
-<li>
-<label><input type="checkbox" checked>Created GENERIC-FUNCTIONS-RESEARCH.md</label>
-<ul class="task-list"><li><label><input type="checkbox" checked>Comprehensive comparison of S3, S4, S7, R6, R7 systems</label></li>
-<li><label><input type="checkbox" checked>Performance benchmarks (S3: 2.59μs, S7: 7.29μs - negligible for medfit)</label></li>
-<li><label><input type="checkbox" checked>Mixing S7 classes + S3 generics analysis (possible but loses features)</label></li>
-<li><label><input type="checkbox" checked>Real-world adoption: ggplot2 4.0.0 migrated to S7</label></li>
-<li><label><input type="checkbox" checked><strong>DECISION: KEEP S7 generics</strong> (optimal for foundation package)</label></li>
-<li><label><input type="checkbox" checked>Flexibility for dependent packages documented (all work with S7 classes)</label></li>
-</ul></li>
-<li>
-<label><input type="checkbox" checked>Created GENERIC-NAMING-STRATEGY.md</label>
-<ul class="task-list"><li><label><input type="checkbox" checked>Researched base R standard generics (confint, coef, vcov, etc.)</label></li>
-<li><label><input type="checkbox" checked>Analyzed lavaan (hybrid approach), CMAverse (custom only), broom patterns</label></li>
-<li><label><input type="checkbox" checked>Compared 4 strategic options (standard only, custom only, hybrid, prefixed)</label></li>
-<li><label><input type="checkbox" checked><strong>DECISION: Use confint() not ci()</strong> (hybrid approach recommended)</label></li>
-<li><label><input type="checkbox" checked>Standard generics for standard ops + custom S7 for mediation-specific</label></li>
-<li><label><input type="checkbox" checked>4-phase implementation roadmap with code examples</label></li>
-<li><label><input type="checkbox" checked>Ecosystem integration benefits (broom, sandwich, car, lmtest, emmeans)</label></li>
-</ul></li>
-<li>
-<label><input type="checkbox" checked>Created ADHD-FRIENDLY-WORKFLOW.md</label>
-<ul class="task-list"><li><label><input type="checkbox" checked>Analyzed ADHD challenges (working memory, decision fatigue, flow state)</label></li>
-<li><label><input type="checkbox" checked>Compared 6 workflow alternatives (pipe-first, single-function, builder, etc.)</label></li>
-<li><label><input type="checkbox" checked><strong>RECOMMENDATION: Alternative 6 (Hybrid)</strong> - short verbs + pipes + standard generics</label></li>
-<li><label><input type="checkbox" checked>Proposed mediate() + boot() + confint() pattern (revised from med())</label></li>
-<li><label><input type="checkbox" checked>Smart defaults minimize decisions (parametric, 1000, 95% CI)</label></li>
-<li><label><input type="checkbox" checked>Pipeline maintains flow state (no context switching)</label></li>
-<li><label><input type="checkbox" checked>Complete examples and migration strategy</label></li>
-<li><label><input type="checkbox" checked>Clarified S7+S3 generics pattern (NO namespace conflicts)</label></li>
-</ul></li>
-<li>
-<label><input type="checkbox" checked>Created FUNCTION-NAMING-DEEP-DIVE.md</label>
-<ul class="task-list"><li><label><input type="checkbox" checked>Detailed explanation of med() function (fits + extracts)</label></li>
-<li><label><input type="checkbox" checked>Compared 6 alternatives (mediate, fit_med, medfit, estimate, etc.)</label></li>
-<li><label><input type="checkbox" checked><strong>RECOMMENDATION: mediate()</strong> instead of med() (clearer verb, no ambiguity)</label></li>
-<li><label><input type="checkbox" checked>Explained paths() function (mediation structure extraction)</label></li>
-<li><label><input type="checkbox" checked>Compared to coef() (all params vs just paths)</label></li>
-<li><label><input type="checkbox" checked><strong>RECOMMENDATION: Keep paths()</strong> (short, clear, no conflicts)</label></li>
+<label><input type="checkbox" checked><strong><code><a href="reference/quick.html">quick()</a></code> function</strong> - One-line summary</label>
+<ul><li>Works with MediationData, SerialMediationData</li>
+<li>Shows NIE, NDE, PM in compact format</li>
+<li>Includes bootstrap CI when available</li>
 </ul></li>
 </ul></div>
-<div class="section level3">
-<h3 id="id_2025-12-15-morning">2025-12-15 (Morning)<a class="anchor" aria-label="anchor" href="#id_2025-12-15-morning"></a></h3>
+<div class="section level4">
+<h4 id="phase-6-generic-functions-">Phase 6: Generic Functions ✅<a class="anchor" aria-label="anchor" href="#phase-6-generic-functions-"></a></h4>
 <ul class="task-list"><li>
-<label><input type="checkbox" checked>Created comprehensive test suite (241 tests)</label>
-<ul class="task-list"><li><label><input type="checkbox" checked>test-bootstrap.R (27 tests for bootstrap_mediation)</label></li>
-<li><label><input type="checkbox" checked>test-fit-glm.R (30 tests for fit_mediation)</label></li>
-<li><label><input type="checkbox" checked>helper-test-data.R (11 generators, 7 statistic functions)</label></li>
-</ul></li>
-<li><label><input type="checkbox" checked>All existing tests pass (184 PASS, 0 FAIL)</label></li>
-<li><label><input type="checkbox" checked>Created IDEAS.md</label></li>
-<li><label><input type="checkbox" checked>Created TODOS.md</label></li>
-<li><label><input type="checkbox" checked>Created ECOSYSTEM-COORDINATION.md</label></li>
-</ul></div>
-<div class="section level3">
-<h3 id="id_2025-12-14">2025-12-14<a class="anchor" aria-label="anchor" href="#id_2025-12-14"></a></h3>
-<ul class="task-list"><li><label><input type="checkbox" checked>Added .STATUS file for project tracking</label></li>
-<li><label><input type="checkbox" checked>Organized test structure per CLAUDE.md guidelines</label></li>
-<li><label><input type="checkbox" checked>Documented defensive programming patterns</label></li>
-</ul></div>
-<div class="section level3">
-<h3 id="id_2025-12-12">2025-12-12<a class="anchor" aria-label="anchor" href="#id_2025-12-12"></a></h3>
-<ul class="task-list"><li><label><input type="checkbox" checked>Created PROJECT-HUB.md for task coordination</label></li>
-<li><label><input type="checkbox" checked>Defined phases in medfit-roadmap.md</label></li>
-</ul></div>
-<div class="section level3">
-<h3 id="earlier">Earlier<a class="anchor" aria-label="anchor" href="#earlier"></a></h3>
-<ul class="task-list"><li>
-<label><input type="checkbox" checked>Implemented S7 class system</label>
-<ul class="task-list"><li><label><input type="checkbox" checked>MediationData class</label></li>
-<li><label><input type="checkbox" checked>SerialMediationData class</label></li>
-<li><label><input type="checkbox" checked>BootstrapResult class</label></li>
+<label><input type="checkbox" checked><strong>Effect Extractors</strong></label>
+<ul><li>
+<code><a href="reference/nie.html">nie()</a></code> - Natural Indirect Effect</li>
+<li>
+<code><a href="reference/nde.html">nde()</a></code> - Natural Direct Effect</li>
+<li>
+<code><a href="reference/te.html">te()</a></code> - Total Effect</li>
+<li>
+<code><a href="reference/pm.html">pm()</a></code> - Proportion Mediated</li>
+<li>
+<code><a href="reference/paths.html">paths()</a></code> - All path coefficients</li>
 </ul></li>
 <li>
-<label><input type="checkbox" checked>Implemented extract_mediation() methods</label>
-<ul class="task-list"><li><label><input type="checkbox" checked>Method for lm/glm</label></li>
-<li><label><input type="checkbox" checked>Method for lavaan</label></li>
+<label><input type="checkbox" checked><strong>Tidyverse Integration</strong></label>
+<ul><li>
+<code>tidy()</code> - Convert to tibble</li>
+<li>
+<code>glance()</code> - One-row model summary</li>
+<li>Support for <code>type = "paths"</code> / <code>type = "effects"</code>
+</li>
+<li>Support for <code>conf.int = TRUE</code>
+</li>
 </ul></li>
-<li><label><input type="checkbox" checked>Created comprehensive test suite for classes</label></li>
-<li><label><input type="checkbox" checked>Setup package structure</label></li>
-<li><label><input type="checkbox" checked>Recovered package from Google Drive</label></li>
+<li>
+<label><input type="checkbox" checked><strong>Base R Generics</strong></label>
+<ul><li>
+<code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> - Extract coefficients</li>
+<li>
+<code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> - Variance-covariance matrix</li>
+<li>
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> - Confidence intervals</li>
+<li>
+<code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> - Number of observations</li>
+</ul></li>
+</ul></div>
+<div class="section level4">
+<h4 id="documentation-update-">Documentation Update ✅<a class="anchor" aria-label="anchor" href="#documentation-update-"></a></h4>
+<ul class="task-list"><li><label><input type="checkbox" checked>README.md - Complete rewrite with new API</label></li>
+<li><label><input type="checkbox" checked>getting-started.qmd - Full vignette rewrite</label></li>
+<li><label><input type="checkbox" checked>introduction.qmd - Updated all sections</label></li>
+<li><label><input type="checkbox" checked>NEWS.md - Phase 6/6.5 documented</label></li>
+<li><label><input type="checkbox" checked>pkgdown reference - Reorganized by category</label></li>
+</ul></div>
+</div>
+<div class="section level3">
+<h3 id="id_2025-12-16">2025-12-16<a class="anchor" aria-label="anchor" href="#id_2025-12-16"></a></h3>
+<ul class="task-list"><li><label><input type="checkbox" checked>Branch cleanup: Removed worktrees and merged branches</label></li>
+<li><label><input type="checkbox" checked>Merged dev → main: All Phase 4-5 work</label></li>
+<li><label><input type="checkbox" checked>Fixed pkgdown deployment with clean deploys</label></li>
+<li><label><input type="checkbox" checked>Comprehensive docs check passed</label></li>
+</ul></div>
+<div class="section level3">
+<h3 id="earlier-phase-1-5">Earlier (Phase 1-5)<a class="anchor" aria-label="anchor" href="#earlier-phase-1-5"></a></h3>
+<ul class="task-list"><li><label><input type="checkbox" checked>Phase 1: Package setup (CI/CD, Dependabot)</label></li>
+<li><label><input type="checkbox" checked>Phase 2: S7 classes (MediationData, SerialMediationData, BootstrapResult)</label></li>
+<li><label><input type="checkbox" checked>Phase 2.5: Quarto vignettes (4 articles)</label></li>
+<li><label><input type="checkbox" checked>Phase 3: Model extraction (lm/glm, lavaan)</label></li>
+<li><label><input type="checkbox" checked>Phase 4: <code><a href="reference/fit_mediation.html">fit_mediation()</a></code> with GLM engine</label></li>
+<li><label><input type="checkbox" checked>Phase 5: <code><a href="reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> (parametric, nonparametric, plugin)</label></li>
 </ul><hr></div>
 </div>
-<div class="section level2">
-<h2 id="id_-blocked--waiting">🚫 Blocked / Waiting<a class="anchor" aria-label="anchor" href="#id_-blocked--waiting"></a></h2>
-<p>Currently no blockers! 🎉</p>
-<hr></div>
 <div class="section level2">
 <h2 id="id_-progress-metrics">📊 Progress Metrics<a class="anchor" aria-label="anchor" href="#id_-progress-metrics"></a></h2>
 <div class="section level3">
-<h3 id="test-coverage">Test Coverage<a class="anchor" aria-label="anchor" href="#test-coverage"></a></h3>
-<ul><li>
-<strong>Current:</strong> 184 tests passing</li>
-<li>
-<strong>Target MVP:</strong> 241 tests passing (57 currently skipped)</li>
-<li>
-<strong>Target CRAN:</strong> &gt;90% code coverage</li>
-</ul></div>
-<div class="section level3">
 <h3 id="implementation-progress">Implementation Progress<a class="anchor" aria-label="anchor" href="#implementation-progress"></a></h3>
+<table class="table"><thead><tr class="header"><th>Phase</th>
+<th>Description</th>
+<th>Status</th>
+</tr></thead><tbody><tr class="odd"><td>1</td>
+<td>Package setup</td>
+<td>✅ Complete</td>
+</tr><tr class="even"><td>2</td>
+<td>S7 classes</td>
+<td>✅ Complete</td>
+</tr><tr class="odd"><td>2.5</td>
+<td>Documentation</td>
+<td>✅ Complete</td>
+</tr><tr class="even"><td>3</td>
+<td>Model extraction</td>
+<td>✅ Complete</td>
+</tr><tr class="odd"><td>4</td>
+<td>Model fitting</td>
+<td>✅ Complete</td>
+</tr><tr class="even"><td>5</td>
+<td>Bootstrap</td>
+<td>✅ Complete</td>
+</tr><tr class="odd"><td>6</td>
+<td>Generics</td>
+<td>✅ Complete</td>
+</tr><tr class="even"><td>6.5</td>
+<td>ADHD API</td>
+<td>✅ Complete</td>
+</tr><tr class="odd"><td>7</td>
+<td>Polish &amp; release</td>
+<td>🚧 In Progress</td>
+</tr></tbody></table></div>
+<div class="section level3">
+<h3 id="code-quality">Code Quality<a class="anchor" aria-label="anchor" href="#code-quality"></a></h3>
 <ul><li>
-<strong>Phase 1 (Core API):</strong> 40% complete
-<ul class="task-list"><li><label><input type="checkbox" checked>S7 classes</label></li>
-<li><label><input type="checkbox" checked>extract_mediation (lm/glm, lavaan)</label></li>
-<li><label><input type="checkbox">fit_mediation (GLM engine)</label></li>
-<li><label><input type="checkbox">bootstrap_mediation (3 methods)</label></li>
-</ul></li>
+<strong>Tests:</strong> 427 passing</li>
 <li>
-<strong>Phase 2 (Bootstrap &amp; Tests):</strong> 60% complete
-<ul class="task-list"><li><label><input type="checkbox" checked>Test infrastructure</label></li>
-<li><label><input type="checkbox">Implementation</label></li>
-<li><label><input type="checkbox">Documentation</label></li>
-</ul></li>
+<strong>Coverage:</strong> Tracked via Codecov</li>
 <li>
-<strong>Phase 3 (CRAN Prep):</strong> 0% complete
-<ul class="task-list"><li><label><input type="checkbox">Vignettes</label></li>
-<li><label><input type="checkbox">pkgdown site</label></li>
-<li><label><input type="checkbox">R CMD check passing</label></li>
-<li><label><input type="checkbox">Submit to CRAN</label></li>
-</ul></li>
+<strong>R CMD check:</strong> Clean (1 NOTE - dev version)</li>
+<li>
+<strong>Linting:</strong> GitHub Actions CI</li>
 </ul></div>
 <div class="section level3">
-<h3 id="documentation-progress">Documentation Progress<a class="anchor" aria-label="anchor" href="#documentation-progress"></a></h3>
+<h3 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a></h3>
 <ul><li>
-<strong>Function docs:</strong> 60% (classes done, generics need work)</li>
+<strong>README:</strong> ✅ Updated</li>
 <li>
-<strong>Vignettes:</strong> 0% (none written yet)</li>
+<strong>NEWS:</strong> ✅ Updated</li>
 <li>
-<strong>pkgdown site:</strong> 0% (not setup)</li>
+<strong>Vignettes:</strong> 4 articles (getting-started, introduction, extraction, bootstrap)</li>
 <li>
-<strong>Examples:</strong> 30% (classes have examples)</li>
+<strong>pkgdown:</strong> ✅ Live at <a href="https://data-wise.github.io/medfit/" class="uri">https://data-wise.github.io/medfit/</a>
+</li>
 </ul><hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-sprint-planning">🎯 Sprint Planning<a class="anchor" aria-label="anchor" href="#id_-sprint-planning"></a></h2>
+<h2 id="id_-backlog-future-releases">📋 Backlog (Future Releases)<a class="anchor" aria-label="anchor" href="#id_-backlog-future-releases"></a></h2>
 <div class="section level3">
-<h3 id="current-sprint-week-of-dec-15">Current Sprint (Week of Dec 15)<a class="anchor" aria-label="anchor" href="#current-sprint-week-of-dec-15"></a></h3>
-<p><strong>Goal:</strong> Complete core implementation (fit_mediation + bootstrap_mediation)</p>
-<p><strong>Capacity:</strong> ~10-15 hours <strong>Committed:</strong> - Commit test suite (5 min) - Implement bootstrap_mediation (3-4 hr) - Implement fit_mediation (2-3 hr) - Documentation (1-2 hr) - Testing &amp; fixes (2-3 hr)</p>
-<p><strong>Stretch:</strong> - Intro vignette (2 hr) - pkgdown site (15 min)</p>
-</div>
+<h3 id="core-functionality">Core Functionality<a class="anchor" aria-label="anchor" href="#core-functionality"></a></h3>
+<ul class="task-list"><li><label><input type="checkbox">Four-way decomposition (VanderWeele 2014)</label></li>
+<li><label><input type="checkbox">Parallel mediation support</label></li>
+<li><label><input type="checkbox">Standardized coefficients option</label></li>
+<li><label><input type="checkbox">Treatment-mediator interaction detection</label></li>
+</ul></div>
 <div class="section level3">
-<h3 id="next-sprint-week-of-dec-22">Next Sprint (Week of Dec 22)<a class="anchor" aria-label="anchor" href="#next-sprint-week-of-dec-22"></a></h3>
-<p><strong>Goal:</strong> Documentation and CRAN readiness</p>
-<p><strong>Planned:</strong> - Complete all vignettes - Setup pkgdown - R CMD check –as-cran (pass all checks) - Integration testing with ecosystem packages</p>
-<hr></div>
+<h3 id="model-support">Model Support<a class="anchor" aria-label="anchor" href="#model-support"></a></h3>
+<ul class="task-list"><li><label><input type="checkbox">lmer/lme4 extraction</label></li>
+<li><label><input type="checkbox">brms extraction</label></li>
+<li><label><input type="checkbox">OpenMx extraction (postponed)</label></li>
+</ul></div>
+<div class="section level3">
+<h3 id="inference">Inference<a class="anchor" aria-label="anchor" href="#inference"></a></h3>
+<ul class="task-list"><li><label><input type="checkbox">BCa bootstrap confidence intervals</label></li>
+<li><label><input type="checkbox">Delta method SEs for derived effects</label></li>
+<li><label><input type="checkbox">Studentized bootstrap</label></li>
+</ul></div>
+<div class="section level3">
+<h3 id="ecosystem">Ecosystem<a class="anchor" aria-label="anchor" href="#ecosystem"></a></h3>
+<ul class="task-list"><li><label><input type="checkbox">probmed integration testing</label></li>
+<li><label><input type="checkbox">RMediation coordination</label></li>
+<li><label><input type="checkbox">medrobust sensitivity analysis workflow</label></li>
+</ul><hr></div>
 </div>
 <div class="section level2">
 <h2 id="id_-notes--reminders">💡 Notes &amp; Reminders<a class="anchor" aria-label="anchor" href="#id_-notes--reminders"></a></h2>
 <div class="section level3">
-<h3 id="code-style-reminders">Code Style Reminders<a class="anchor" aria-label="anchor" href="#code-style-reminders"></a></h3>
-<ul><li>Use snake_case for functions/arguments</li>
-<li>Use CamelCase for S7 classes</li>
+<h3 id="api-design-finalized">API Design (Finalized)<a class="anchor" aria-label="anchor" href="#api-design-finalized"></a></h3>
+<ul><li>
+<strong>Entry points:</strong> <code><a href="reference/med.html">med()</a></code> (simple) or <code><a href="reference/fit_mediation.html">fit_mediation()</a></code> (advanced)</li>
+<li>
+<strong>Extractors:</strong> <code><a href="reference/nie.html">nie()</a></code>, <code><a href="reference/nde.html">nde()</a></code>, <code><a href="reference/te.html">te()</a></code>, <code><a href="reference/pm.html">pm()</a></code>, <code><a href="reference/paths.html">paths()</a></code>
+</li>
+<li>
+<strong>Tidyverse:</strong> <code>tidy()</code>, <code>glance()</code>
+</li>
+<li>
+<strong>Base R:</strong> <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code>
+</li>
+<li>
+<strong>Summary:</strong> <code><a href="reference/quick.html">quick()</a></code> for one-line output</li>
+</ul></div>
+<div class="section level3">
+<h3 id="code-style">Code Style<a class="anchor" aria-label="anchor" href="#code-style"></a></h3>
+<ul><li>snake_case for functions/arguments</li>
+<li>CamelCase for S7 classes</li>
 <li>Prefix internal functions with <code>.</code>
 </li>
 <li>Always use checkmate for input validation</li>
-<li>Never use <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> inside package functions</li>
 </ul></div>
 <div class="section level3">
 <h3 id="git-workflow">Git Workflow<a class="anchor" aria-label="anchor" href="#git-workflow"></a></h3>
-<ul><li>Commit frequently (small, logical chunks)</li>
-<li>Write descriptive commit messages</li>
-<li>Use conventional commits format:
-<ul><li>
-<code>feat:</code> new features</li>
-<li>
-<code>fix:</code> bug fixes</li>
-<li>
-<code>test:</code> test additions/changes</li>
-<li>
-<code>docs:</code> documentation</li>
-<li>
-<code>refactor:</code> code refactoring</li>
-<li>
-<code>chore:</code> maintenance</li>
-</ul></li>
-</ul></div>
-<div class="section level3">
-<h3 id="testing-guidelines">Testing Guidelines<a class="anchor" aria-label="anchor" href="#testing-guidelines"></a></h3>
-<ul><li>Test edge cases (NULL, empty, NA)</li>
-<li>Test error conditions</li>
-<li>Use descriptive test names</li>
-<li>Group related tests with comments</li>
-<li>Aim for &gt;90% coverage</li>
-</ul></div>
-<div class="section level3">
-<h3 id="documentation-checklist">Documentation Checklist<a class="anchor" aria-label="anchor" href="#documentation-checklist"></a></h3>
-<ul class="task-list"><li><label><input type="checkbox">All exported functions have @export</label></li>
-<li><label><input type="checkbox">All parameters documented with @param</label></li>
-<li><label><input type="checkbox">Return values documented with @return</label></li>
-<li><label><input type="checkbox">Examples provided with @examples</label></li>
-<li><label><input type="checkbox">Mathematical notation uses  or </label></li>
-<li><label><input type="checkbox">References cited with @references</label></li>
-</ul><hr><p><strong>Last Updated:</strong> 2025-12-15 <strong>Next Review:</strong> After implementing bootstrap_mediation() and fit_mediation()</p>
+<ul><li>Main branch for releases</li>
+<li>Dev branch for development</li>
+<li>Feature branches for major changes</li>
+</ul><hr><p><strong>Last Updated:</strong> 2025-12-17 <strong>Next Review:</strong> After Phase 7 completion</p>
 </div>
 </div>
 </div>
