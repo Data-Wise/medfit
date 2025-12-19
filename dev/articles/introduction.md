@@ -26,8 +26,8 @@ It offers:
   [`confint()`](https://rdrr.io/r/stats/confint.html),
   [`nobs()`](https://rdrr.io/r/stats/nobs.html) for S7 classes
 - **S7-based classes** for standardized mediation data structures
-- **Foundation** for the mediation analysis ecosystem (probmed,
-  RMediation, medrobust)
+- **Foundation** for the mediation analysis ecosystem (RMediation,
+  mediationverse)
 
 The package eliminates code duplication across mediation packages by
 providing shared infrastructure while allowing each package to focus on
@@ -298,15 +298,12 @@ for details.
 
 medfit serves as the foundation for specialized mediation packages:
 
-- **probmed**: Probabilistic mediation effect size (P_med)
-  - Uses medfit for infrastructure
-  - Adds P_med computation and visualization
 - **RMediation**: Confidence intervals via distribution methods
   - Uses medfit for extraction
   - Adds Distribution of Product (DOP), MBCO tests
-- **medrobust**: Sensitivity analysis
-  - Uses medfit for baseline estimates
-  - Adds bounds computation, falsification tests
+- **mediationverse**: Meta-package for the ecosystem
+  - Loads medfit and RMediation together
+  - Provides unified documentation
 
 ## Design Principles
 

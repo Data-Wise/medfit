@@ -6,9 +6,8 @@
 mediation models, extracting path coefficients, and performing bootstrap
 inference. It serves as the foundation package for the mediation
 analysis ecosystem, supporting
-[probmed](https://github.com/data-wise/probmed),
-[RMediation](https://github.com/data-wise/rmediation), and
-[medrobust](https://github.com/data-wise/medrobust).
+[RMediation](https://github.com/data-wise/rmediation) and
+[mediationverse](https://github.com/data-wise/mediationverse).
 
 ### Key Features
 
@@ -228,13 +227,11 @@ Bootstrap inference (parametric, nonparametric, plugin)
 
 medfit is the foundation for the **mediationverse** ecosystem:
 
-| Package                                               | Purpose                              | Role        |
-|-------------------------------------------------------|--------------------------------------|-------------|
-| **medfit** (this)                                     | Model fitting, extraction, bootstrap | Foundation  |
-| [probmed](https://github.com/data-wise/probmed)       | Probabilistic effect size (P_med)    | Application |
-| [RMediation](https://github.com/data-wise/rmediation) | Confidence intervals (DOP, MBCO)     | Application |
-| [medrobust](https://github.com/data-wise/medrobust)   | Sensitivity analysis                 | Application |
-| [medsim](https://github.com/data-wise/medsim)         | Simulation infrastructure            | Support     |
+| Package                                                       | Purpose                              | Role        |
+|---------------------------------------------------------------|--------------------------------------|-------------|
+| **medfit** (this)                                             | Model fitting, extraction, bootstrap | Foundation  |
+| [RMediation](https://github.com/data-wise/rmediation)         | Confidence intervals (DOP, MBCO)     | Application |
+| [mediationverse](https://github.com/data-wise/mediationverse) | Meta-package                         | Ecosystem   |
 
 See [Ecosystem
 Coordination](https://data-wise.github.io/medfit/dev/planning/ECOSYSTEM.md)

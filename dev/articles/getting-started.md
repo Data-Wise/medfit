@@ -20,8 +20,8 @@ It offers:
   [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
   [`glance()`](https://generics.r-lib.org/reference/glance.html) methods
 - **S7-based classes** for standardized mediation data structures
-- **Foundation** for specialized mediation packages (probmed,
-  RMediation, medrobust)
+- **Foundation** for the mediation analysis ecosystem (RMediation,
+  mediationverse)
 
 ## Quick Start: The Simplest Way
 

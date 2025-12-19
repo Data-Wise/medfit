@@ -256,7 +256,7 @@ Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
 #### Ecosystem Notes
 
 - Foundation package for the mediationverse ecosystem
-- probmed, RMediation, and medrobust are awaiting integration
+- RMediation integration planned
 - Tested with R 4.1.0+, S7 0.1.0+
 - See [Ecosystem
   Coordination](https://data-wise.github.io/medfit/dev/news/planning/ECOSYSTEM.md)

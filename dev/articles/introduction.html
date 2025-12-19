@@ -137,7 +137,7 @@
 <li>
 <strong>S7-based classes</strong> for standardized mediation data structures</li>
 <li>
-<strong>Foundation</strong> for the mediation analysis ecosystem (probmed, RMediation, medrobust)</li>
+<strong>Foundation</strong> for the mediation analysis ecosystem (RMediation, mediationverse)</li>
 </ul>
 <p>The package eliminates code duplication across mediation packages by providing shared infrastructure while allowing each package to focus on its unique methodological contributions.</p>
 </section><section class="level2"><h2 id="core-s7-classes">Core S7 Classes<a class="anchor" aria-label="anchor" href="#core-s7-classes"></a>
@@ -386,13 +386,6 @@
 <p>medfit serves as the foundation for specialized mediation packages:</p>
 <ul>
 <li>
-<strong>probmed</strong>: Probabilistic mediation effect size (P_med)
-<ul>
-<li>Uses medfit for infrastructure</li>
-<li>Adds P_med computation and visualization</li>
-</ul>
-</li>
-<li>
 <strong>RMediation</strong>: Confidence intervals via distribution methods
 <ul>
 <li>Uses medfit for extraction</li>
@@ -400,13 +393,17 @@
 </ul>
 </li>
 <li>
-<strong>medrobust</strong>: Sensitivity analysis
+<strong>mediationverse</strong>: Meta-package for the ecosystem
 <ul>
-<li>Uses medfit for baseline estimates</li>
-<li>Adds bounds computation, falsification tests</li>
+<li>Loads medfit and RMediation together</li>
+<li>Provides unified documentation</li>
 </ul>
 </li>
-</ul></section><section class="level2"><h2 id="design-principles">Design Principles<a class="anchor" aria-label="anchor" href="#design-principles"></a>
+</ul>
+<!-- Future packages (in development):
+- **probmed**: Probabilistic mediation effect size (P_med)
+- **medrobust**: Sensitivity analysis
+--></section><section class="level2"><h2 id="design-principles">Design Principles<a class="anchor" aria-label="anchor" href="#design-principles"></a>
 </h2>
 <ol type="1">
 <li>
