@@ -7,8 +7,7 @@ template:
   includes:
     in_header: pkgdown/mathjax-config.html
     after_body: pkgdown/extra.html
-  params:
-    css: pkgdown/extra.css
+  assets: pkgdown
   bslib:
     # PLAN A: Refined Academic Color System
     # Primary: Academic blue for key actions
