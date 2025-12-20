@@ -6,30 +6,18 @@ template:
   math-rendering: mathjax
   includes:
     in_header: pkgdown/mathjax-config.html
-    after_body: pkgdown/extra.html
-  assets: pkgdown
   bslib:
-    # PLAN A: Refined Academic Color System
-    # Primary: Academic blue for key actions
+    # A deeper, more "academic" blue for primary actions
     primary: "#0054AD"
-    # Secondary: Muted slate for supporting elements
-    secondary: "#5A6C7D"
-    # Success: Earthy green for positive states
-    success: "#2D7B3F"
-
-    # Background: Off-white reduces eye strain vs pure white
-    bg: "#FAFBFC"
-    fg: "#2C3E50"
-
+    # A slightly off-white background reduces eye strain compared to pure white
+    bg: "#ffffff"
+    fg: "#212529"
     # Modern, readable fonts
     base_font: { google: "Inter" }
     heading_font: { google: "Montserrat" }
     code_font: { google: "Fira Code" }
-
-    # Enhanced typography scale (ADHD-friendly)
-    font-size-base: 1.0rem          # Increased from 0.925rem
-    headings-font-weight: 700       # Bolder headings for visual anchors
-    headings-line-height: 1.3       # Tighter spacing for impact
+    # Controls the global base font size (Default is 1rem)
+    font-size-base: 0.925rem
 
 home:
   title: "medfit: Infrastructure for Mediation Analysis in R"
