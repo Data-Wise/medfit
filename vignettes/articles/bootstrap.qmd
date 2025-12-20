@@ -1,6 +1,10 @@
 ---
 title: "Bootstrap Inference"
-format: html
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
 execute:
   collapse: true
   comment: "#>"
