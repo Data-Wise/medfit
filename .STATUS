@@ -5,14 +5,14 @@
 ~/projects/r-packages/active/medfit/
 
 ⏰ LAST UPDATED
-2025-12-17
+2025-12-20
 
 ────────────────────────────────────────────────
 
 🎯 CURRENT STATUS
 Priority: P1
 Status: active
-Progress: 97
+Progress: 100
 
 ────────────────────────────────────────────────
 
@@ -25,27 +25,30 @@ Version: 0.1.0.9000
 
 ────────────────────────────────────────────────
 
-## ✅ Just Completed (2025-12-17)
+## ✅ Just Completed (2025-12-20)
 
-### Phase 6.5: ADHD-Friendly API
+### Phase 7: Polish & Release
+- ✅ R CMD check --as-cran: **CLEAN** (0 errors, 0 warnings, 0 notes)
+- ✅ Fixed .Rbuildignore to exclude .vscode directory
+- ✅ DESCRIPTION file ready for CRAN submission
+- ✅ pkgdown website builds successfully
+- ✅ GitHub Actions: R CMD check ✓, test-coverage ✓, pkgdown ✓
+- ✅ All 427 tests passing
+
+### Previous Completion (2025-12-17)
+
+#### Phase 6.5: ADHD-Friendly API
 - `med()` - One-function mediation analysis (recommended entry point)
 - `quick()` - One-line summary (NIE = 0.19 | NDE = 0.16 | PM = 55%)
 
-### Phase 6: Generic Functions
+#### Phase 6: Generic Functions
 - Effect extractors: `nie()`, `nde()`, `te()`, `pm()`, `paths()`
 - Tidyverse integration: `tidy()`, `glance()` methods
 - Base R generics: `coef()`, `vcov()`, `confint()`, `nobs()`
 - Full S7/S3 dispatch compatibility
 
-### Documentation Update
-- README.md: Complete rewrite with new API
-- getting-started.qmd: Full vignette rewrite
-- introduction.qmd: Updated with all new features
-- NEWS.md: Documented Phase 6/6.5 features
-- pkgdown reference: Reorganized by function category
-
 🎯 Next Action:
-A) Phase 7: Polish & release (R CMD check, CRAN prep)
+A) Version bump to 0.1.0 and initial CRAN submission
 B) probmed integration (use medfit extractors)
 C) Delta method SEs for derived effects
 
@@ -63,16 +66,16 @@ Blocked: None
 - ✅ Phase 5: bootstrap_mediation() (parametric, nonparametric, plugin)
 - ✅ Phase 6: Generic functions (coef, vcov, confint, nobs, effect extractors, tidy, glance)
 - ✅ Phase 6.5: ADHD-friendly API (med, quick)
-- 🚧 Phase 7: Polish & release
+- ✅ Phase 7: Polish & release (R CMD check clean, CRAN-ready)
 
 ────────────────────────────────────────────────
 
 📊 CODE QUALITY
 
 - Tests: 427 passing (0 errors, 0 warnings)
-- R CMD check: Clean (1 NOTE - dev version)
+- R CMD check: **CLEAN** (0 errors, 0 warnings, 0 notes)
 - Coverage: Tracked via Codecov
-- Linting: GitHub Actions CI
+- GitHub Actions: R CMD check ✓, test-coverage ✓, pkgdown ✓
 
 ────────────────────────────────────────────────
 
