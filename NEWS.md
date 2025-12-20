@@ -1,215 +1,104 @@
-# medfit (development version)
+# medfit 0.1.0 (2025-12-20)
 
-## medfit 0.1.0.9000 (2025-12-17)
+**Initial CRAN release**
 
-### New Features
+## Overview
 
-#### Phase 6.5: ADHD-Friendly API
+medfit provides S7-based infrastructure for fitting mediation models, extracting path coefficients, and performing bootstrap inference. It serves as the foundation package for the mediationverse ecosystem.
 
-* **`med()` function** - Simple one-function mediation analysis
+## Major Features
+
+### User-Friendly API
+
+* **`med()` function** - Recommended entry point for most users
   - Fits mediator and outcome models automatically
   - Optional bootstrap inference with `boot = TRUE`
-  - Supports covariates via `covariates` argument
-  - Returns `MediationData` object
-  - The recommended entry point for most users
+  - Supports covariates and different model families
+  - Example: `med(data, treatment = "X", mediator = "M", outcome = "Y")`
 
-* **`quick()` function** - One-line summary of mediation results
-  - Works with any medfit object (`MediationData`, `SerialMediationData`)
-  - Shows NIE, NDE, and PM in compact format
-  - Includes bootstrap CI when available
-  - Example output: `NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%`
+* **`quick()` function** - One-line summary of results
+  - Compact display: `NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%`
+  - Works with all medfit objects
 
-#### Phase 6: Generic Functions
+### Effect Extractors
 
-* **Effect Extractors** - Dedicated functions for mediation effects
+* **Dedicated functions for mediation effects**
   - `nie()`: Natural Indirect Effect (a × b)
   - `nde()`: Natural Direct Effect (c')
-  - `te()`: Total Effect (nie + nde)
+  - `te()`: Total Effect
   - `pm()`: Proportion Mediated
-  - `paths()`: All path coefficients (a, b, c')
-  - All return `mediation_effect` class with custom print method
+  - `paths()`: Path coefficients (a, b, c')
 
-* **Tidyverse Integration** - `tidy()` and `glance()` methods
-  - `tidy()`: Convert results to tibble with term, estimate, std.error
-  - `tidy(x, type = "paths")`: Just path coefficients
-  - `tidy(x, type = "effects")`: Just nie, nde, te
-  - `tidy(x, conf.int = TRUE)`: Include confidence intervals
-  - `glance()`: One-row model summary (nie, nde, te, pm, nobs, converged)
-  - Works on `MediationData`, `SerialMediationData`, and `BootstrapResult`
-
-* **Base R Generics** - Standard S3/S7 methods for medfit classes
-  - `coef()`: Extract coefficients (paths or effects)
-  - `vcov()`: Variance-covariance matrix
-  - `confint()`: Confidence intervals (Wald-based)
-  - `nobs()`: Number of observations
-  - Full S7/S3 dispatch compatibility
-
-#### Previous Features (Phase 4-5)
+### Model Fitting and Extraction
 
 * **`fit_mediation()` function** - Fit mediation models with formula interface
   - GLM engine for linear and generalized linear models
-  - Support for continuous and binary outcomes (`family_y` argument)
-  - Covariates supported in both mediator and outcome models
-  - Full checkmate input validation
-  - Returns `MediationData` object for downstream analysis
+  - Support for continuous and binary outcomes
+  - Covariates in both mediator and outcome models
+  - Returns `MediationData` object
 
-* **`bootstrap_mediation()` function** - Bootstrap inference for mediation statistics
-  - **Parametric bootstrap**: Fast, samples from multivariate normal
-  - **Nonparametric bootstrap**: Robust, resamples data and refits models
-  - **Plugin estimator**: Point estimate only, fastest method
-  - Parallel processing support (`parallel = TRUE`, `ncores` argument)
-  - Seed-based reproducibility
-  - Returns `BootstrapResult` object with point estimate and CI
+* **`extract_mediation()` generic** - Extract from fitted models
+  - Methods for lm, glm objects
+  - Optional lavaan support (when installed)
+  - Extracts path coefficients and variance-covariance matrices
 
-### Documentation
+### Bootstrap Inference
 
-* **Major documentation update** reflecting new API:
-  - README.md: Complete rewrite of Quick Start with med()/quick() examples
-  - getting-started.qmd: Full vignette rewrite with ADHD-friendly workflow
-  - introduction.qmd: Updated with effect extractors, tidy/glance, base R methods
-  - pkgdown reference: Reorganized into Quick Start, Effect Extractors, S7 Classes sections
+* **`bootstrap_mediation()` function** - Three bootstrap methods
+  - **Parametric**: Fast, assumes multivariate normality
+  - **Nonparametric**: Robust, resamples data and refits models
+  - **Plugin**: Point estimate only
+  - Parallel processing support
+  - Returns `BootstrapResult` with confidence intervals
 
-### Development Status
+### Tidyverse and Base R Integration
 
-**Feature Complete (97%)**
+* **`tidy()` and `glance()` methods** for broom compatibility
+  - `tidy()`: Convert to tibble (paths, effects, or both)
+  - `tidy(conf.int = TRUE)`: Include confidence intervals
+  - `glance()`: One-row model summary
 
-- ✅ Phase 2: S7 class architecture
-- ✅ Phase 3: Model extraction (lm/glm, lavaan)
-- ✅ Phase 4: Model fitting (`fit_mediation()`)
-- ✅ Phase 5: Bootstrap infrastructure
-- ✅ Phase 6: Generic functions (coef, vcov, confint, nobs, effect extractors, tidy, glance)
-- ✅ Phase 6.5: ADHD-friendly API (med, quick)
-- 🚧 Phase 7: Polish & release
+* **Base R generics**: `coef()`, `vcov()`, `confint()`, `nobs()`
 
-**Code Quality**: 427 tests passing, 0 errors, 0 warnings
+### S7 Class Architecture
 
----
+* **Modern S7 object system** for type safety and extensibility
+  - `MediationData`: Simple mediation (X → M → Y)
+  - `SerialMediationData`: Serial mediation (X → M1 → M2 → ... → Y)
+  - `BootstrapResult`: Bootstrap inference results
+  - All classes include validators, print, summary, and show methods
 
-## medfit 0.1.0
+### Input Validation
 
-**Initial development release**
+* **Defensive programming** with `checkmate` package
+  - Fast, informative error messages
+  - All user-facing functions validate inputs
+  - Complements S7 class validators
 
-### Major Features
+## Documentation
 
-* **Defensive Programming Infrastructure**
-  - Added `checkmate` package for fail-fast input validation
-  - All extraction functions now use `checkmate::assert_*` for argument validation
-  - Provides fast (C-based), memory-efficient assertions with informative error messages
-  - Complements S7 validators: checkmate for function entry, S7 for class integrity
+* **Four comprehensive vignettes**
+  - Getting Started: Quick introduction with examples
+  - Introduction: Detailed package overview
+  - Model Extraction: Extract from lm, glm, lavaan objects
+  - Bootstrap Inference: Parametric and nonparametric methods
 
-* **Code Quality Tools** (NEW)
-  - Added `.lintr` configuration for static code analysis
-  - Added `lint.yaml` GitHub Action for automated linting on PRs
-  - Comprehensive CLAUDE.md section on defensive programming best practices
-  - 167+ tests passing with 0 errors, 0 warnings, 0 notes
+* **pkgdown website**: https://data-wise.github.io/medfit/
 
-* **S7 Class Architecture** (Phase 2 Complete + Extended)
-  - `MediationData` class for simple mediation (X -> M -> Y)
-  - **`SerialMediationData` class for serial mediation** (X -> M1 -> M2 -> ... -> Y) **NEW**
-    - Supports product-of-three (2 mediators: a * d * b)
-    - Extensible to product-of-k (3+ mediators: a * d21 * d32 * ... * b)
-    - Flexible `d_path` design: scalar for 2 mediators, vector for 3+
-    - Compatible with lavaan extraction patterns
-  - `BootstrapResult` class for bootstrap inference results
-  - Comprehensive validators ensuring data integrity
-  - Print, summary, and show methods for all classes
+## Testing and Quality
 
-* **Generics Defined**
-  - `extract_mediation()` - Extract mediation structure from fitted models
-  - `fit_mediation()` - Fit mediation models (stub)
-  - `bootstrap_mediation()` - Bootstrap inference (stub)
+* **427 comprehensive tests** (0 errors, 0 warnings)
+  - Full coverage of S7 classes and methods
+  - Validation tests for data integrity
+  - Edge case handling
 
-### Documentation
-
-* **Comprehensive Quarto Vignettes** (NEW)
-  - **Get Started** (`vignettes/medfit.qmd`): Quick introduction with examples
-  - **Introduction** (`vignettes/articles/introduction.qmd`): Detailed S7 class architecture
-  - **Model Extraction** (`vignettes/articles/extraction.qmd`): Extract from lm/glm/lavaan
-  - **Bootstrap Inference** (`vignettes/articles/bootstrap.qmd`): Parametric/nonparametric methods
-  - All vignettes use native Quarto format with `execute:` options in YAML
-  - Published at https://data-wise.github.io/medfit/
-
-* **Roxygen2 Documentation**: Complete API documentation for all exported functions and classes
-  - ASCII-compliant (replaced non-ASCII arrows and multiplication symbols)
-  - Explicit `@param` tags for all S7 class properties
-  - `@noRd` for S7 methods to prevent namespace export issues
-
-### Infrastructure
-
-* **Testing**: 184 comprehensive tests (0 errors, 0 warnings, 1 skip)
-  - Full coverage of simple and serial mediation S7 classes
-  - Validation tests ensure data integrity across all mediation types
-  - Tests updated for checkmate error message format
-  - 1 skip: cannot test lavaan-not-installed path when lavaan is installed
-
-* **CI/CD**: GitHub Actions workflows with Quarto support
-  - R-CMD-check on Ubuntu (release, devel, oldrel-1), macOS, Windows
-  - `lint.yaml` for static code analysis with lintr
-  - pkgdown deployment with Quarto rendering
+* **CI/CD**: GitHub Actions workflows
+  - R CMD check on Ubuntu, macOS, Windows
   - Test coverage tracking with Codecov
-  - Dependabot for automated GitHub Actions updates
+  - Automated pkgdown deployment
 
-* **pkgdown Website**: https://data-wise.github.io/medfit/
-  - Bootstrap 5 with Flatly theme
-  - Comprehensive reference documentation
-  - Four Quarto vignettes with rich examples
-  - Auto-deployment on push to main branch
+## Ecosystem
 
-### Development Status (at 0.1.0 release)
-
-**Phase 5 Complete** - Bootstrap infrastructure implemented
-
-* [x] Phase 1: Package setup (CI/CD, documentation, Dependabot)
-* [x] Phase 2: S7 class architecture (MediationData, SerialMediationData, BootstrapResult)
-* [x] Phase 2.5: Comprehensive Quarto documentation (4 vignettes, pkgdown website)
-* [x] Phase 3: Model extraction (lm/glm, lavaan methods)
-* [x] Phase 4: Model fitting (`fit_mediation()` with GLM engine)
-* [x] Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
-
-*See 0.1.0.9000 above for Phase 6/6.5 additions.*
-
-### Documentation Improvements
-
-* **S7 Class Documentation**: Added explicit `@param` tags for all class properties
-* **S7 Method Documentation**: Updated to use `@noRd` to prevent namespace export issues
-* **Generic Documentation**: Fixed `extract_mediation()` to only document generic parameters
-* **CLAUDE.md**: Added comprehensive S7 documentation patterns section for future reference
-
-### Fixes
-
-* **CI Failures**: Removed OpenMx from Suggests (was failing to compile on Ubuntu oldrel-1)
-  - OpenMx integration postponed to future release
-  - All GitHub Actions workflows now passing
-* **S7 Method Registration**: Fixed proper registration order in `.onLoad()`
-  - Call `S7::S4_register()` for each class BEFORE `methods_register()`
-  - Import full `methods` package (not just `@importFrom methods is`)
-  - Per official S7 documentation: https://rconsortium.github.io/S7/articles/packages.html
-  - SerialMediationData print/summary methods now work in installed package context
-  - Removed 4 previously skipped tests (now all passing)
-* **LICENSE**: Added `+ file LICENSE` to DESCRIPTION to properly reference LICENSE file
-* **Codoc warnings**: Suppressed S7 constructor codoc checks with `--no-codoc` argument
-  - S7-generated constructor defaults have whitespace formatting differences
-  - This is a known S7/roxygen2 limitation
-
-### Known Issues
-
-* OpenMx integration postponed (compilation issues on Ubuntu oldrel-1)
-
-### Ecosystem Notes
-
-* Foundation package for the mediationverse ecosystem
-* RMediation integration planned
-<!-- * probmed, medrobust awaiting development -->
-* Tested with R 4.1.0+, S7 0.1.0+
-* See [Ecosystem Coordination](planning/ECOSYSTEM.md) for cross-package guidelines
-
-### Internal
-
-* Package skeleton created with proper structure
-* GitHub repository initialized with `dev` branch workflow
-* pkgdown website configuration
-* Comprehensive CLAUDE.md and roadmap documentation
-
----
-
-*This is a development version. Breaking changes may occur.*
+* Foundation package for the **mediationverse** ecosystem
+* Supports future integration with probmed, RMediation, medrobust
+* Tested with R >= 4.1.0, S7 >= 0.1.0

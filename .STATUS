@@ -21,7 +21,7 @@ S7-based infrastructure for fitting mediation models,
 extracting path coefficients, and bootstrap inference.
 Foundation package for mediationverse ecosystem.
 
-Version: 0.1.0.9000
+Version: 0.1.0
 
 ────────────────────────────────────────────────
 

@@ -26,3 +26,4 @@
 ^PROJECT-HUB\.md$
 ^TODOS\.md$
 ^\.vscode$
+^cran-comments\.md$
