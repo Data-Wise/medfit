@@ -1,0 +1,345 @@
+# Introduction to medfit
+
+## Overview
+
+**medfit** provides unified infrastructure for mediation analysis in R.
+It offers:
+
+- **ADHD-friendly API**:
+  [`med()`](https://data-wise.github.io/medfit/reference/med.md) for
+  quick analysis,
+  [`quick()`](https://data-wise.github.io/medfit/reference/quick.md) for
+  instant results
+- **Effect extractors**:
+  [`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+  [`nde()`](https://data-wise.github.io/medfit/reference/nde.md),
+  [`te()`](https://data-wise.github.io/medfit/reference/te.md),
+  [`pm()`](https://data-wise.github.io/medfit/reference/pm.md),
+  [`paths()`](https://data-wise.github.io/medfit/reference/paths.md) for
+  mediation effects
+- **Tidyverse integration**:
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) methods
+  for tibble workflows
+- **Base R generics**: [`coef()`](https://rdrr.io/r/stats/coef.html),
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html),
+  [`confint()`](https://rdrr.io/r/stats/confint.html),
+  [`nobs()`](https://rdrr.io/r/stats/nobs.html) for S7 classes
+- **S7-based classes** for standardized mediation data structures
+- **Foundation** for the mediation analysis ecosystem (RMediation,
+  mediationverse)
+
+The package eliminates code duplication across mediation packages by
+providing shared infrastructure while allowing each package to focus on
+its unique methodological contributions.
+
+## Core S7 Classes
+
+medfit defines three main S7 classes to represent mediation structures:
+
+### MediationData
+
+Stores simple mediation models (X -\> M -\> Y):
+
+``` r
+# Example: Create a MediationData object
+med_data <- MediationData(
+  a_path = 0.5,           # X -> M effect
+  b_path = 0.3,           # M -> Y effect (controlling for X)
+  c_prime = 0.2,          # X -> Y direct effect
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y",
+  estimates = c(a = 0.5, b = 0.3, c_prime = 0.2),
+  vcov = diag(3) * 0.01,  # Covariance matrix
+  n_obs = 100L,
+  converged = TRUE,
+  source_package = "medfit"
+)
+
+# Print method shows key information
+print(med_data)
+
+# Summary method provides details
+summary(med_data)
+```
+
+The indirect effect is computed as `a * b`. Use the effect extractors:
+
+``` r
+# Effect extractors (recommended)
+nie(med_data)   # Natural Indirect Effect (a * b)
+nde(med_data)   # Natural Direct Effect (c')
+te(med_data)    # Total Effect (nie + nde)
+pm(med_data)    # Proportion Mediated
+paths(med_data) # All path coefficients
+
+# Direct slot access (advanced)
+med_data@a_path
+med_data@b_path
+med_data@a_path * med_data@b_path
+```
+
+### Tidyverse Methods
+
+``` r
+library(generics)
+
+# Tidy tibble of estimates
+tidy(med_data)
+tidy(med_data, type = "paths")    # Just a, b, c'
+tidy(med_data, type = "effects")  # Just nie, nde, te
+
+# One-row model summary
+glance(med_data)
+```
+
+### Base R Methods
+
+``` r
+# Standard generics work on medfit objects
+coef(med_data)               # Path coefficients
+coef(med_data, "effects")    # nie, nde, te
+vcov(med_data)               # Variance-covariance matrix
+confint(med_data)            # Confidence intervals
+nobs(med_data)               # Number of observations
+```
+
+### SerialMediationData
+
+Stores serial mediation models (X -\> M1 -\> M2 -\> … -\> Y):
+
+``` r
+# Example: Two-mediator serial mediation (X -> M1 -> M2 -> Y)
+serial_data <- SerialMediationData(
+  a_path = 0.4,           # X -> M1
+  d_path = 0.5,           # M1 -> M2 (scalar for 2 mediators)
+  b_path = 0.3,           # M2 -> Y
+  c_prime = 0.2,          # X -> Y direct effect
+  treatment = "X",
+  mediators = c("M1", "M2"),
+  outcome = "Y",
+  estimates = c(a = 0.4, d = 0.5, b = 0.3, c_prime = 0.2),
+  vcov = diag(4) * 0.01,
+  mediator_predictors = list(M1 = "X", M2 = c("X", "M1")),
+  outcome_predictors = c("X", "M1", "M2"),
+  n_obs = 100L,
+  converged = TRUE,
+  source_package = "medfit"
+)
+
+print(serial_data)
+```
+
+For two mediators, the serial indirect effect is `a * d * b`:
+
+``` r
+# Use extractors (recommended)
+nie(serial_data)    # a * d * b
+nde(serial_data)    # c'
+quick(serial_data)  # One-line summary
+
+# Direct computation
+serial_data@a_path * serial_data@d_path * serial_data@b_path
+```
+
+**Design for extensibility**: For 3+ mediators, `d_path` becomes a
+vector: - 3 mediators: `a * d21 * d32 * b` (product-of-four) - k
+mediators: product-of-(k+1)
+
+### BootstrapResult
+
+Stores bootstrap inference results:
+
+``` r
+# Example: Bootstrap result for indirect effect
+boot_result <- BootstrapResult(
+  estimate = 0.15,        # Point estimate (a * b)
+  ci_lower = 0.08,        # Lower CI bound
+  ci_upper = 0.25,        # Upper CI bound
+  ci_level = 0.95,        # Confidence level
+  boot_estimates = rnorm(1000, mean = 0.15, sd = 0.04),  # Bootstrap distribution
+  n_boot = 1000L,
+  method = "parametric",
+  converged = TRUE
+)
+
+print(boot_result)
+summary(boot_result)
+```
+
+## Main Functions
+
+### Quick Start Functions
+
+The simplest way to run mediation analysis:
+
+``` r
+library(medfit)
+
+# Simulate data
+set.seed(123)
+n <- 200
+mydata <- data.frame(X = rnorm(n))
+mydata$M <- 0.5 * mydata$X + rnorm(n)
+mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
+
+# One function does it all
+result <- med(
+  data = mydata,
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y"
+)
+
+# Instant summary
+quick(result)
+#> NIE = 0.19 | NDE = 0.16 | PM = 55%
+
+# With bootstrap CI
+result_boot <- med(
+  data = mydata,
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y",
+  boot = TRUE,
+  n_boot = 1000
+)
+
+quick(result_boot)
+#> NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%
+```
+
+### Effect Extractors
+
+Dedicated functions for extracting mediation effects:
+
+``` r
+nie(result)   # Natural Indirect Effect (a * b)
+nde(result)   # Natural Direct Effect (c')
+te(result)    # Total Effect (nie + nde)
+pm(result)    # Proportion Mediated
+paths(result) # All path coefficients (a, b, c')
+```
+
+### extract_mediation()
+
+Extract mediation structure from pre-fitted models:
+
+``` r
+# From lm/glm models
+fit_m <- lm(M ~ X, data = mydata)
+fit_y <- lm(Y ~ X + M, data = mydata)
+
+med <- extract_mediation(
+  fit_m,
+  model_y = fit_y,
+  treatment = "X",
+  mediator = "M"
+)
+
+# From lavaan SEM models
+med <- extract_mediation(
+  lavaan_fit,
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y"
+)
+```
+
+See [Model
+Extraction](https://data-wise.github.io/medfit/articles/extraction.md)
+for details.
+
+### fit_mediation()
+
+Fit mediation models with formula interface:
+
+``` r
+# Fit using GLM engine
+med <- fit_mediation(
+  formula_y = Y ~ X + M,
+  formula_m = M ~ X,
+  data = mydata,
+  treatment = "X",
+  mediator = "M"
+)
+```
+
+### bootstrap_mediation()
+
+Perform bootstrap inference on indirect effects:
+
+``` r
+# Define statistic function
+indirect_fn <- function(theta) {
+  theta["m_X"] * theta["y_M"]
+}
+
+# Parametric bootstrap
+boot_result <- bootstrap_mediation(
+  statistic_fn = indirect_fn,
+  method = "parametric",
+  mediation_data = med,
+  n_boot = 1000,
+  ci_level = 0.95
+)
+
+# tidy/glance work on bootstrap results too
+tidy(boot_result)
+glance(boot_result)
+```
+
+See [Bootstrap
+Inference](https://data-wise.github.io/medfit/articles/bootstrap.md) for
+details.
+
+## Package Ecosystem
+
+medfit serves as the foundation for specialized mediation packages:
+
+- **RMediation**: Confidence intervals via distribution methods
+  - Uses medfit for extraction
+  - Adds Distribution of Product (DOP), MBCO tests
+- **mediationverse**: Meta-package for the ecosystem
+  - Loads medfit and RMediation together
+  - Provides unified documentation
+
+## Design Principles
+
+1.  **Type safety**: S7 classes with validators ensure data integrity
+2.  **Defensive programming**: checkmate assertions for fail-fast input
+    validation
+3.  **Consistency**: Standardized interfaces across model types
+4.  **Extensibility**: Easy to add new model engines and methods
+5.  **Minimal dependencies**: Core functionality with minimal external
+    dependencies
+6.  **Infrastructure focus**: Provides tools, not effect sizes
+
+## Next Steps
+
+- Learn about [model
+  extraction](https://data-wise.github.io/medfit/articles/extraction.md)
+  from different sources
+- Explore [bootstrap inference
+  methods](https://data-wise.github.io/medfit/articles/bootstrap.md)
+- See the reference documentation for detailed API information
+
+## Development Status
+
+medfit is feature complete. Current status:
+
+- ✅ Phase 2: S7 class architecture (MediationData, SerialMediationData,
+  BootstrapResult)
+- ✅ Phase 3: Model extraction (lm/glm, lavaan)
+- ✅ Phase 4: Model fitting
+  ([`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  with GLM engine)
+- ✅ Phase 5: Bootstrap infrastructure (parametric, nonparametric,
+  plugin)
+- ✅ Phase 6: Generic functions (`coef`, `vcov`, `confint`, `nobs`,
+  `nie`, `nde`, `te`, `pm`, `paths`, `tidy`, `glance`)
+- ✅ Phase 6.5: ADHD-friendly API (`med`, `quick`)
+- 🚧 Phase 7: Polish & release
+
+See `NEWS.md` for the latest updates.
