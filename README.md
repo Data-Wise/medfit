@@ -5,12 +5,11 @@
 
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![Repo Status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![CRAN status](https://www.r-pkg.org/badges/version/medfit)](https://CRAN.R-project.org/package=medfit)
+[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![R-CMD-check](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/R-CMD-check.yaml)
-[![Website Status](https://github.com/data-wise/medfit/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/pkgdown.yaml)
-[![R-hub](https://github.com/data-wise/medfit/actions/workflows/rhub.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/rhub.yaml)
 [![Codecov](https://codecov.io/gh/data-wise/medfit/graph/badge.svg)](https://codecov.io/gh/data-wise/medfit)
+[![pkgdown](https://github.com/data-wise/medfit/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/data-wise/medfit/actions/workflows/pkgdown.yaml)
 <!-- badges: end -->
 
 ## Overview
@@ -29,18 +28,17 @@
 
 ## Installation
 
-You can install the development version of medfit from GitHub:
+Install the stable version from CRAN:
+
+```r
+install.packages("medfit")
+```
+
+Or install the development version from GitHub:
 
 ```r
 # install.packages("pak")
 pak::pak("data-wise/medfit")
-```
-
-Or using remotes:
-
-```r
-# install.packages("remotes")
-remotes::install_github("data-wise/medfit")
 ```
 
 ## Quick Start

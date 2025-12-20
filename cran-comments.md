@@ -11,9 +11,10 @@ This is the initial CRAN submission of medfit.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note
 
-* This is a new release
+* New submission - This is the first submission of medfit to CRAN
+* License components check - Using GPL (>= 3), which is standard and appropriate
 
 ## Downstream dependencies
 
