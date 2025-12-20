@@ -25,6 +25,7 @@ home:
     S7-based infrastructure for fitting mediation models, extracting path
     coefficients, and performing bootstrap inference. Foundation package for
     the mediation analysis ecosystem.
+  strip_header: false
   sidebar:
     structure: [links, license, citation, authors, dev]
     components:
