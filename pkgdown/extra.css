@@ -75,6 +75,53 @@ pre:not(.r) {
   opacity: 1;
 }
 
+/* Syntax highlighting color overrides for better contrast */
+/* Default code text - dark enough to read on light background */
+.sourceCode code {
+  color: #24292F !important;  /* GitHub's code color - much darker */
+}
+
+/* Comments - readable gray */
+.sourceCode .co {
+  color: #3D444D !important;  /* Darker gray for better contrast */
+  font-style: italic;
+}
+
+/* Strings */
+.sourceCode .st {
+  color: #0A3069 !important;  /* Dark blue for strings */
+}
+
+/* Numbers */
+.sourceCode .fl, .sourceCode .dv {
+  color: #0550AE !important;  /* Blue for numbers */
+}
+
+/* Functions */
+.sourceCode .fu {
+  color: #8250DF !important;  /* Purple for functions */
+}
+
+/* Keywords */
+.sourceCode .kw {
+  color: #CF222E !important;  /* Red for keywords */
+}
+
+/* Operators */
+.sourceCode .op {
+  color: #24292F !important;  /* Dark for operators */
+}
+
+/* Variables */
+.sourceCode .va {
+  color: #953800 !important;  /* Orange-brown for variables */
+}
+
+/* Output comments (#>) */
+.sourceCode .co:has-text("#>") {
+  color: #6E7781 !important;  /* Slightly lighter for output */
+}
+
 /* ----------------------------------------------------------------------------
    ADHD-FRIENDLY: VISUAL CHUNKING
    ---------------------------------------------------------------------------- */
