@@ -1882,21 +1882,28 @@ Integration is successful when:
 
 ---
 
-**Status**: ✅ Phase 3 Complete → 🚧 Phase 4 (Model Fitting) In Progress
+**Status**: ✅ ALL PHASES COMPLETE → v0.1.0 Released
 
 **Completed**:
 - ✅ Phase 1: Package Setup (CI/CD, documentation, Dependabot)
 - ✅ Phase 2: S7 Class Architecture (MediationData, SerialMediationData, BootstrapResult)
 - ✅ Phase 2.5: Comprehensive Quarto Documentation (4 vignettes, pkgdown website)
 - ✅ Phase 3: Model Extraction (lm/glm and lavaan methods, 184 tests passing)
+- ✅ Phase 4: Model Fitting (GLM engine, formula interface)
+- ✅ Phase 5: Bootstrap Infrastructure (parametric, nonparametric, plugin, parallel)
+- ✅ Phase 6: Generic Functions (coef, vcov, confint, nobs, nie, nde, te, pm, paths, tidy, glance)
+- ✅ Phase 6.5: ADHD-Friendly API (med, quick functions)
+- ✅ Phase 7: Polish & Release (R CMD check clean, badges, CRAN submission prep)
+- ✅ Phase 7.5: Site Redesign (Plan A: Refined Academic, ADHD-friendly enhancements, December 2025)
 
-**Current**:
-- 🚧 Phase 4: Model Fitting (stub implemented, GLM engine needed)
+**Current (Post-Release)**:
+- 🚀 v0.1.0 Tagged and Ready for CRAN
+- 🎨 pkgdown Site: Plan A enhancements deployed (off-white bg, enhanced typography, visual hierarchy)
 
-**Next (MVP)**:
-- Phase 5: Bootstrap Infrastructure (parametric, nonparametric, plugin)
-- Phase 6: Extended Testing (edge cases, integration tests)
-- Phase 8: Polish & Release (R CMD check, CRAN prep)
+**Future Development**:
+- Phase 7 (Post-MVP): Interaction Support (VanderWeele four-way decomposition)
+- Phase 7b (Post-MVP): Estimation Engine Architecture (user interface, Decomposition class)
+- Phase 7c (Post-MVP): Engine Adapters (CMAverse, tmle3, etc.)
 
 **Post-MVP**:
 - Phase 7: Interaction Support (VanderWeele four-way decomposition)
