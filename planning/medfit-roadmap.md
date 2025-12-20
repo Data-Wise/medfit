@@ -1894,11 +1894,10 @@ Integration is successful when:
 - ✅ Phase 6: Generic Functions (coef, vcov, confint, nobs, nie, nde, te, pm, paths, tidy, glance)
 - ✅ Phase 6.5: ADHD-Friendly API (med, quick functions)
 - ✅ Phase 7: Polish & Release (R CMD check clean, badges, CRAN submission prep)
-- ✅ Phase 7.5: Site Redesign (Plan A: Refined Academic, ADHD-friendly enhancements, December 2025)
 
 **Current (Post-Release)**:
 - 🚀 v0.1.0 Tagged and Ready for CRAN
-- 🎨 pkgdown Site: Plan A enhancements deployed (off-white bg, enhanced typography, visual hierarchy)
+- 🎨 pkgdown Site: Default Bootstrap 5 + litera theme (simple, clean design)
 
 **Future Development**:
 - Phase 7 (Post-MVP): Interaction Support (VanderWeele four-way decomposition)
