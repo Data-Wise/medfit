@@ -27,7 +27,16 @@ Version: 0.1.0
 
 ## ✅ Just Completed (2025-12-20)
 
-### Phase 7: Polish & Release
+### Phase 7.5: pkgdown Site Redesign & CRAN Prep
+- ✅ Fixed code chunk rendering (disabled Quarto highlighting, uses pkgdown's downlit)
+- ✅ Implemented Plan A pkgdown redesign (ADHD-friendly enhancements)
+- ✅ Added syntax highlighting with GitHub color palette (WCAG AAA compliant - 9.25:1 contrast)
+- ✅ Fixed badge display on pkgdown site
+- ✅ Created pkgdown design standard documentation for ecosystem
+- ✅ Merged 11 commits from dev to main
+- ✅ Version 0.1.0 ready for CRAN submission
+
+### Phase 7: Polish & Release (Completed 2025-12-20)
 - ✅ R CMD check --as-cran: **CLEAN** (0 errors, 0 warnings, 0 notes)
 - ✅ Fixed .Rbuildignore to exclude .vscode directory
 - ✅ DESCRIPTION file ready for CRAN submission
@@ -35,22 +44,11 @@ Version: 0.1.0
 - ✅ GitHub Actions: R CMD check ✓, test-coverage ✓, pkgdown ✓
 - ✅ All 427 tests passing
 
-### Previous Completion (2025-12-17)
-
-#### Phase 6.5: ADHD-Friendly API
-- `med()` - One-function mediation analysis (recommended entry point)
-- `quick()` - One-line summary (NIE = 0.19 | NDE = 0.16 | PM = 55%)
-
-#### Phase 6: Generic Functions
-- Effect extractors: `nie()`, `nde()`, `te()`, `pm()`, `paths()`
-- Tidyverse integration: `tidy()`, `glance()` methods
-- Base R generics: `coef()`, `vcov()`, `confint()`, `nobs()`
-- Full S7/S3 dispatch compatibility
-
 🎯 Next Action:
-A) Version bump to 0.1.0 and initial CRAN submission
-B) probmed integration (use medfit extractors)
-C) Delta method SEs for derived effects
+**Choose one:**
+- **A)** Submit v0.1.0 to CRAN (see CRAN-SUBMISSION-GUIDE.md) [est. 30 min] 🟢 RECOMMENDED
+- **B)** Apply pkgdown design to probmed package [est. 2-3 hours]
+- **C)** Review deployed site on GitHub Pages [est. 10 min]
 
 Blocked: None
 
