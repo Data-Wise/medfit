@@ -27,6 +27,21 @@
   # This is required for methods on generics from other packages
   S7::methods_register()
 
+  # Explicitly register the S3 print method for `mediation_effect`.
+  #
+  # `mediation_effect` is a lightweight S3 class layered on top of `numeric`
+  # (objects returned by nie()/nde()/te()/pm()). Because `print` is an
+  # internal generic and the object's implicit class includes the base
+  # `numeric` type, S3 dispatch to `print.mediation_effect` can fail to find
+  # the method via the package's own method table -- `print()` then silently
+  # falls back to `print.default`, showing the bare numeric value and the
+  # raw class/type attributes instead of the formatted label.
+  #
+  # Registering the method here, into the standard S3 dispatch table,
+  # guarantees `print()` reaches `print.mediation_effect` regardless of how
+  # the package is loaded (installed or via load_all()).
+  registerS3method("print", "mediation_effect", print.mediation_effect)
+
   # Register extraction methods for suggested packages (S4 classes)
   # lavaan is in Suggests, so we register dynamically if available
   if (requireNamespace("lavaan", quietly = TRUE)) {

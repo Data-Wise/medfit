@@ -293,3 +293,24 @@ test_that("print.mediation_effect formats output correctly", {
   output <- capture.output(print(pm(med_data)))
   expect_true(grepl("Proportion Mediated", output[1]))
 })
+
+test_that("print.mediation_effect dispatches via generic print(), not default", {
+  # Regression guard for the .onLoad registerS3method() fix. Because
+  # `mediation_effect` is layered on the base `numeric` type, a generic print()
+  # call can silently fall back to print.default unless the method is explicitly
+  # registered. Assert a generic print() reaches the formatted label AND does
+  # NOT emit the print.default representation (bare value + raw attributes).
+  md <- MediationData(
+    a_path = 0.5, b_path = 0.4, c_prime = 0.1,
+    estimates = c(a = 0.5, b = 0.4, c_prime = 0.1),
+    vcov = diag(3) * 0.01,
+    sigma_m = NULL, sigma_y = NULL,
+    treatment = "X", mediator = "M", outcome = "Y",
+    mediator_predictors = character(0), outcome_predictors = character(0),
+    data = NULL, n_obs = 100L, converged = TRUE, source_package = "test"
+  )
+  out <- capture.output(print(nie(md)))
+  expect_match(out[1], "Natural Indirect Effect", fixed = TRUE)
+  # print.default would emit an `attr(,"class")` line; the method must not.
+  expect_false(any(grepl("attr(", out, fixed = TRUE)))
+})

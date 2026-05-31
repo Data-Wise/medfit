@@ -1,3 +1,25 @@
+# medfit (development version)
+
+## Bug Fixes
+
+* `extract_mediation()` for lavaan models now preserves the **off-diagonal**
+  covariances among the `a`, `b`, and `c_prime` path aliases in the returned
+  `@vcov`. Previously only the diagonal variances were copied, so
+  `vcov[c("a", "b"), c("a", "b")]` reported `cov(a, b) = 0` even when the
+  underlying lavaan fit had a genuinely non-zero covariance (e.g. single-equation
+  SEM with correlated residuals, or the within-equation `cov(b, c')`). This
+  silently biased downstream indirect-effect confidence intervals; the alias
+  block now reproduces the true `lavaan::vcov()` covariances exactly.
+
+* `print()` on the effect objects returned by `nie()`, `nde()`, `te()`, and
+  `pm()` (class `mediation_effect`) now reliably shows the formatted label
+  (e.g. `Natural Indirect Effect (NIE): 0.1897`). Because `mediation_effect`
+  is layered on the base `numeric` type, S3 dispatch could miss
+  `print.mediation_effect` and fall back to the bare numeric value plus raw
+  attributes. The method is now explicitly registered in `.onLoad()` so
+  dispatch works whether the package is installed or loaded via `load_all()`.
+
+
 # medfit 0.1.0 (2025-12-20)
 
 **Initial CRAN release**
