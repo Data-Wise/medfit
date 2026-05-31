@@ -11,6 +11,14 @@
   silently biased downstream indirect-effect confidence intervals; the alias
   block now reproduces the true `lavaan::vcov()` covariances exactly.
 
+* `print()` on the effect objects returned by `nie()`, `nde()`, `te()`, and
+  `pm()` (class `mediation_effect`) now reliably shows the formatted label
+  (e.g. `Natural Indirect Effect (NIE): 0.1897`). Because `mediation_effect`
+  is layered on the base `numeric` type, S3 dispatch could miss
+  `print.mediation_effect` and fall back to the bare numeric value plus raw
+  attributes. The method is now explicitly registered in `.onLoad()` so
+  dispatch works whether the package is installed or loaded via `load_all()`.
+
 
 # medfit 0.1.0 (2025-12-20)
 
