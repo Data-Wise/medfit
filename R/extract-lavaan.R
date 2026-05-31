@@ -454,7 +454,7 @@ extract_mediation_lavaan <- function(object,
 #' required for serial indirect-effect standard errors.
 #'
 #' @keywords internal
-.extract_serial_mediation_lavaan <- function(object,
+.extract_serial_mediation_lavaan <- function(object, # nolint: object_length_linter.
                                               treatment,
                                               mediators,
                                               outcome = NULL,
@@ -488,13 +488,33 @@ extract_mediation_lavaan <- function(object,
     row[[est_col]][1]
   }
 
-  # --- Auto-detect the outcome (variable predicted by the LAST mediator) ---
+  # --- Structural paths ---
+  # Validate the chain links BEFORE outcome auto-detection so a missing link
+  # reports the specific path (e.g. the a path), not a vague outcome error.
+
+  # a path: treatment predicts the first mediator.
+  a_path <- get_path(mediators[1], treatment)
+  if (is.na(a_path)) {
+    stop(sprintf("Could not find a path (%s ~ %s).", mediators[1], treatment),
+         call. = FALSE)
+  }
+
+  # d paths: each mediator predicts the next; k - 1 links in chain order.
+  d_path <- vapply(seq_len(k - 1L), function(i) {
+    val <- get_path(mediators[i + 1L], mediators[i])
+    if (is.na(val)) {
+      stop(sprintf("Could not find d path (%s ~ %s).",
+                   mediators[i + 1L], mediators[i]), call. = FALSE)
+    }
+    val
+  }, numeric(1))
+
+  # --- Auto-detect the outcome (variable predicted by the last mediator) ---
   if (is.null(outcome)) {
-    last_med_effects <- param_table[param_table$op == "~" &
-                                       param_table$rhs == mediators[k], ]
+    is_pred <- param_table$op == "~" & param_table$rhs == mediators[k]
     # A well-formed serial chain has the last mediator point only at the
     # outcome; exclude any mediator-valued lhs defensively.
-    last_med_effects <- last_med_effects[!last_med_effects$lhs %in% mediators, ]
+    last_med_effects <- param_table[is_pred & !param_table$lhs %in% mediators, ]
     if (nrow(last_med_effects) == 0) {
       stop(sprintf(
         paste0("Could not auto-detect outcome: no regression has '%s' as a ",
@@ -506,36 +526,18 @@ extract_mediation_lavaan <- function(object,
   }
   checkmate::assert_string(outcome, .var.name = "outcome")
 
-  # --- Structural paths ---
-  # a: X -> M1
-  a_path <- get_path(mediators[1], treatment)
-  if (is.na(a_path)) {
-    stop(sprintf("Could not find a path (%s ~ %s).", mediators[1], treatment),
-         call. = FALSE)
-  }
-
-  # d: M_i -> M_{i+1}  (k - 1 inter-mediator paths, in chain order)
-  d_path <- vapply(seq_len(k - 1L), function(i) {
-    val <- get_path(mediators[i + 1L], mediators[i])
-    if (is.na(val)) {
-      stop(sprintf("Could not find d path (%s ~ %s).",
-                   mediators[i + 1L], mediators[i]), call. = FALSE)
-    }
-    val
-  }, numeric(1))
-
-  # b: Mk -> Y
+  # b path: last mediator predicts the outcome.
   b_path <- get_path(outcome, mediators[k])
   if (is.na(b_path)) {
     stop(sprintf("Could not find b path (%s ~ %s).", outcome, mediators[k]),
          call. = FALSE)
   }
 
-  # c': X -> Y (may legitimately be absent => full mediation)
+  # c-prime path: direct treatment-to-outcome effect (may be absent).
   c_prime <- get_path(outcome, treatment)
   if (is.na(c_prime)) {
     c_prime <- 0
-    warning("Direct effect (c' path) not found in model. Setting to 0.",
+    warning("Direct effect (c-prime path) not found in model. Setting to 0.",
             call. = FALSE)
   }
 

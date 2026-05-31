@@ -1,12 +1,12 @@
 # Tests for serial mediation extraction via extract_mediation() on lavaan models
 #
 # Triggered by passing a character VECTOR (length >= 2) as `mediator`, which
-# routes through .extract_serial_mediation_lavaan() and returns a
-# SerialMediationData object (X -> M1 -> M2 -> ... -> Mk -> Y).
+# routes through the internal serial extractor and returns a SerialMediationData
+# object for the chain treatment -> M1 -> M2 -> ... -> Mk -> outcome.
 #
 # Test categories:
 # 1. Structure and return type (2 and 3 mediators)
-# 2. Point estimates recover the data-generating paths
+# 2. Extraction fidelity vs lavaan's own coefficients
 # 3. vcov aliases + off-diagonal covariance preservation
 # 4. Outcome auto-detection
 # 5. Overload safety: scalar mediator still yields MediationData
@@ -14,6 +14,27 @@
 # Skipped entirely if lavaan is not installed.
 
 skip_if_not_installed("lavaan")
+
+# --- Test data generators (defined locally, matching sibling test files) ---
+
+generate_serial_mediation_data <- function(n = 200, a = 0.5, d = 0.4, b = 0.3, c_prime = 0.1, seed = 123) {
+  set.seed(seed)
+  X  <- rnorm(n)
+  M1 <- a * X  + rnorm(n)
+  M2 <- d * M1 + rnorm(n)
+  Y  <- b * M2 + c_prime * X + rnorm(n)
+  data.frame(X = X, M1 = M1, M2 = M2, Y = Y)
+}
+
+generate_serial_mediation_data_3med <- function(n = 200, seed = 123) {
+  set.seed(seed)
+  X  <- rnorm(n)
+  M1 <- 0.5 * X   + rnorm(n)
+  M2 <- 0.4 * M1  + rnorm(n)
+  M3 <- 0.35 * M2 + rnorm(n)
+  Y  <- 0.3 * M3 + 0.1 * X + rnorm(n)
+  data.frame(X = X, M1 = M1, M2 = M2, M3 = M3, Y = Y)
+}
 
 # Two-mediator serial lavaan model (unlabeled -> extracted by variable name).
 fit_serial_2med <- function(data = generate_serial_mediation_data()) {
@@ -91,7 +112,7 @@ test_that("three-mediator chain yields d_path of length 2", {
 })
 
 # ==============================================================================
-# Point estimates recover the data-generating paths
+# Extraction fidelity vs lavaan's own coefficients
 # ==============================================================================
 
 test_that("extracted paths faithfully reproduce lavaan's coefficients", {
@@ -100,8 +121,9 @@ test_that("extracted paths faithfully reproduce lavaan's coefficients", {
   # Extraction fidelity: the paths must EXACTLY match what lavaan estimated
   # (this is the extractor's contract -- not whether lavaan recovers the DGP,
   # which is a separate statistical question subject to sampling error).
-  data <- generate_serial_mediation_data(n = 5000, a = 0.5, d = 0.4,
-                                          b = 0.3, c_prime = 0.1, seed = 7)
+  data <- generate_serial_mediation_data(
+    n = 5000, a = 0.5, d = 0.4, b = 0.3, c_prime = 0.1, seed = 7
+  )
   fit <- fit_serial_2med(data)
   serial <- extract_mediation_lavaan(
     fit,
@@ -173,7 +195,7 @@ test_that("outcome is auto-detected from the last mediator when NULL", {
     fit_serial_2med(),
     treatment = "X",
     mediator  = c("M1", "M2")
-    # outcome omitted -> auto-detected from `Y ~ M2`
+    # outcome omitted -> auto-detected from the last mediator's regression
   )
 
   expect_equal(serial@outcome, "Y")
@@ -186,7 +208,10 @@ test_that("outcome is auto-detected from the last mediator when NULL", {
 test_that("scalar mediator still returns a MediationData object", {
   skip_if_not_installed("lavaan")
 
-  data <- generate_mediation_data()
+  d_x  <- rnorm(200)
+  d_m  <- 0.5 * d_x + rnorm(200)
+  d_y  <- 0.3 * d_m + 0.2 * d_x + rnorm(200)
+  data <- data.frame(X = d_x, M = d_m, Y = d_y)
   fit  <- lavaan::sem("M ~ a*X\n Y ~ b*M + cp*X", data = data)
 
   med <- extract_mediation_lavaan(fit, treatment = "X", mediator = "M")
