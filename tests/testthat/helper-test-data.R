@@ -114,13 +114,14 @@ generate_serial_mediation_data <- function(n = 200,
 #' @param seed Integer: random seed (default: 123)
 #'
 #' @return Data frame with columns X, M1, M2, M3, Y
-generate_serial_mediation_data_3med <- function(n = 200,
-                                                 a = 0.5,
-                                                 d21 = 0.4,
-                                                 d32 = 0.35,
-                                                 b = 0.3,
-                                                 c_prime = 0.1,
-                                                 seed = 123) {
+generate_serial_mediation_data_3med <- function(
+    n = 200,
+    a = 0.5,
+    d21 = 0.4,
+    d32 = 0.35,
+    b = 0.3,
+    c_prime = 0.1,
+    seed = 123) {
   set.seed(seed)
   X <- rnorm(n)
   M1 <- a * X + rnorm(n)
@@ -154,9 +155,9 @@ generate_binary_outcome_data <- function(n = 300,
   set.seed(seed)
   X <- rnorm(n)
   M <- a * X + rnorm(n)
-  Y_logit <- b * M + c_prime * X
-  Y_prob <- plogis(Y_logit)
-  Y <- rbinom(n, 1, Y_prob)
+  y_logit <- b * M + c_prime * X
+  y_prob <- plogis(y_logit)
+  Y <- rbinom(n, 1, y_prob)
   data.frame(X = X, M = M, Y = Y)
 }
 
@@ -182,9 +183,9 @@ generate_count_outcome_data <- function(n = 300,
   set.seed(seed)
   X <- rnorm(n)
   M <- a * X + rnorm(n)
-  Y_log <- intercept + b * M + c_prime * X
-  Y_lambda <- exp(Y_log)
-  Y <- rpois(n, Y_lambda)
+  y_log <- intercept + b * M + c_prime * X
+  y_lambda <- exp(y_log)
+  Y <- rpois(n, y_lambda)
   data.frame(X = X, M = M, Y = Y)
 }
 
@@ -211,9 +212,9 @@ generate_binary_mediator_data <- function(n = 300,
                                           seed = 123) {
   set.seed(seed)
   X <- rnorm(n)
-  M_logit <- a * X
-  M_prob <- plogis(M_logit)
-  M <- rbinom(n, 1, M_prob)
+  m_logit <- a * X
+  m_prob <- plogis(m_logit)
+  M <- rbinom(n, 1, m_prob)
   Y <- b * M + c_prime * X + rnorm(n)
   data.frame(X = X, M = M, Y = Y)
 }
@@ -237,12 +238,12 @@ generate_binary_both_data <- function(n = 300,
                                       seed = 123) {
   set.seed(seed)
   X <- rnorm(n)
-  M_logit <- a * X
-  M_prob <- plogis(M_logit)
-  M <- rbinom(n, 1, M_prob)
-  Y_logit <- b * M + c_prime * X
-  Y_prob <- plogis(Y_logit)
-  Y <- rbinom(n, 1, Y_prob)
+  m_logit <- a * X
+  m_prob <- plogis(m_logit)
+  M <- rbinom(n, 1, m_prob)
+  y_logit <- b * M + c_prime * X
+  y_prob <- plogis(y_logit)
+  Y <- rbinom(n, 1, y_prob)
   data.frame(X = X, M = M, Y = Y)
 }
 
@@ -278,7 +279,7 @@ create_test_mediation_data <- function(data) {
 #' @param data Data frame with columns X, M, Y, C1, C2
 #'
 #' @return MediationData object
-create_test_mediation_data_with_covariates <- function(data) {
+create_mediation_data_with_covariates <- function(data) {
   fit_m <- lm(M ~ X + C1, data = data)
   fit_y <- lm(Y ~ X + M + C1 + C2, data = data)
 

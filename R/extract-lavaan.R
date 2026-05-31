@@ -172,8 +172,8 @@ extract_mediation_lavaan <- function(object,
     # Fall back to extracting by variable names
     # Find a path: mediator ~ treatment
     a_row <- param_table[param_table$lhs == mediator &
-                         param_table$op == "~" &
-                         param_table$rhs == treatment, ]
+                           param_table$op == "~" &
+                           param_table$rhs == treatment, ]
 
     if (nrow(a_row) == 0) {
       stop(sprintf(
@@ -199,8 +199,8 @@ extract_mediation_lavaan <- function(object,
 
     # Find b path: outcome ~ mediator
     b_row <- param_table[param_table$lhs == outcome &
-                         param_table$op == "~" &
-                         param_table$rhs == mediator, ]
+                           param_table$op == "~" &
+                           param_table$rhs == mediator, ]
 
     if (nrow(b_row) == 0) {
       stop(sprintf(
@@ -213,8 +213,8 @@ extract_mediation_lavaan <- function(object,
 
     # Find c' path: outcome ~ treatment
     cp_row <- param_table[param_table$lhs == outcome &
-                          param_table$op == "~" &
-                          param_table$rhs == treatment, ]
+                            param_table$op == "~" &
+                            param_table$rhs == treatment, ]
 
     if (nrow(cp_row) == 0) {
       # c' might be zero (full mediation) or not in model
@@ -338,8 +338,8 @@ extract_mediation_lavaan <- function(object,
 
   # Mediator residual variance
   m_var_row <- param_table[param_table$lhs == mediator &
-                           param_table$op == "~~" &
-                           param_table$rhs == mediator, ]
+                             param_table$op == "~~" &
+                             param_table$rhs == mediator, ]
   if (nrow(m_var_row) > 0) {
     m_var <- m_var_row[[est_col]][1]
     if (m_var > 0) {
@@ -349,8 +349,8 @@ extract_mediation_lavaan <- function(object,
 
   # Outcome residual variance
   y_var_row <- param_table[param_table$lhs == outcome &
-                           param_table$op == "~~" &
-                           param_table$rhs == outcome, ]
+                             param_table$op == "~~" &
+                             param_table$rhs == outcome, ]
   if (nrow(y_var_row) > 0) {
     y_var <- y_var_row[[est_col]][1]
     if (y_var > 0) {
@@ -387,11 +387,11 @@ extract_mediation_lavaan <- function(object,
 
   # Mediator predictors: variables that predict the mediator
   m_predictors <- param_table[param_table$lhs == mediator &
-                               param_table$op == "~", "rhs"]
+                                param_table$op == "~", "rhs"]
 
   # Outcome predictors: variables that predict the outcome
   y_predictors <- param_table[param_table$lhs == outcome &
-                               param_table$op == "~", "rhs"]
+                                param_table$op == "~", "rhs"]
 
   # --- Check Convergence ---
 
@@ -454,12 +454,13 @@ extract_mediation_lavaan <- function(object,
 #' required for serial indirect-effect standard errors.
 #'
 #' @keywords internal
-.extract_serial_mediation_lavaan <- function(object, # nolint: object_length_linter.
-                                              treatment,
-                                              mediators,
-                                              outcome = NULL,
-                                              standardized = FALSE,
-                                              ...) {
+.extract_serial_mediation_lavaan <- function( # nolint: object_length_linter.
+    object,
+    treatment,
+    mediators,
+    outcome = NULL,
+    standardized = FALSE,
+    ...) {
 
   # --- Input validation ---
   checkmate::assert_character(mediators, min.len = 2, unique = TRUE,

@@ -140,7 +140,7 @@ test_that("confint() respects confidence level", {
   ci_95 <- confint(med_data, level = 0.95)
   ci_90 <- confint(med_data, level = 0.90)
 
-  # 90% CI should be narrower than 95% CI
+  # the ninety percent interval should be narrower than the ninety-five percent interval
   width_95 <- ci_95[, 2] - ci_95[, 1]
   width_90 <- ci_90[, 2] - ci_90[, 1]
   expect_true(all(width_90 < width_95))
@@ -174,8 +174,7 @@ test_that("confint() for effects warns about NIE approximation", {
 })
 
 
-test_that("confint() errors for bootstrap method",
-{
+test_that("confint() errors for bootstrap method", {
   set.seed(123)
   n <- 100
   mydata <- data.frame(X = rnorm(n))

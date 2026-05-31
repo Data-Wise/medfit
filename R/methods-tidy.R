@@ -94,7 +94,7 @@ glance.S7_object <- function(x, ...) {
 #'
 #' @noRd
 .tidy_mediation_data <- function(x, type = c("all", "paths", "effects"),
-                                  conf.int = FALSE, conf.level = 0.95, ...) {
+                                 conf.int = FALSE, conf.level = 0.95, ...) {
   type <- match.arg(type)
 
   # Extract effects and paths
@@ -233,7 +233,7 @@ glance.S7_object <- function(x, ...) {
 #'
 #' @noRd
 .tidy_serial_mediation_data <- function(x, type = c("all", "paths", "effects"),
-                                         conf.int = FALSE, conf.level = 0.95, ...) {
+                                        conf.int = FALSE, conf.level = 0.95, ...) {
   type <- match.arg(type)
 
   # Extract effects and paths

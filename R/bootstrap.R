@@ -165,12 +165,14 @@ bootstrap_mediation <- function(statistic_fn,
   checkmate::assert_number(ci_level, lower = 0, upper = 1,
                            .var.name = "ci_level")
   checkmate::assert_flag(parallel, .var.name = "parallel")
-  checkmate::assert_count(ncores, positive = TRUE, null.ok = TRUE,
-                          .var.name = "ncores")
+  checkmate::assert_count(
+    ncores, positive = TRUE, null.ok = TRUE,
+    .var.name = "ncores"
+  )
   checkmate::assert_int(seed, null.ok = TRUE, .var.name = "seed")
 
   # Set seed if provided
- if (!is.null(seed)) {
+  if (!is.null(seed)) {
     set.seed(seed)
   }
 
@@ -218,12 +220,14 @@ bootstrap_mediation <- function(statistic_fn,
 #' @return BootstrapResult object
 #' @keywords internal
 #' @noRd
-.bootstrap_parametric <- function(mediation_data,
-                                   statistic_fn,
-                                   n_boot,
-                                   ci_level,
-                                   parallel,
-                                   ncores) {
+.bootstrap_parametric <- function(
+  mediation_data,
+  statistic_fn,
+  n_boot,
+  ci_level,
+  parallel,
+  ncores
+) {
   # Validate mediation_data
   if (is.null(mediation_data)) {
     stop("mediation_data is required for parametric bootstrap", call. = FALSE)
@@ -307,12 +311,14 @@ bootstrap_mediation <- function(statistic_fn,
 #' @return BootstrapResult object
 #' @keywords internal
 #' @noRd
-.bootstrap_nonparametric <- function(data,
-                                      statistic_fn,
-                                      n_boot,
-                                      ci_level,
-                                      parallel,
-                                      ncores) {
+.bootstrap_nonparametric <- function(
+  data,
+  statistic_fn,
+  n_boot,
+  ci_level,
+  parallel,
+  ncores
+) {
   # Validate data
   checkmate::assert_data_frame(data, min.rows = 1, .var.name = "data")
 
@@ -429,6 +435,6 @@ bootstrap_mediation <- function(statistic_fn,
 #' @return x if not NULL, otherwise y
 #' @keywords internal
 #' @noRd
-`%||%` <- function(x, y) {
+`%||%` <- function(x, y) {  # nolint: object_name_linter.
   if (is.null(x)) y else x
 }

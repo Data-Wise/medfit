@@ -116,8 +116,8 @@ Works with any GLM family:
 ```{r}
 #| label: glm-binary
 # Binary outcome
-Y_binary <- rbinom(n, 1, prob = plogis(0.3 * M + 0.2 * X))
-data$Y_binary <- Y_binary
+y_binary <- rbinom(n, 1, prob = plogis(0.3 * M + 0.2 * X))
+data$Y_binary <- y_binary
 
 model_m <- lm(M ~ X, data = data)
 model_y <- glm(Y_binary ~ X + M, data = data, family = binomial())
@@ -203,8 +203,8 @@ For serial mediation (X -> M1 -> M2 -> Y):
 # Generate serial mediation data
 M1 <- 0.4 * X + rnorm(n, sd = 0.8)
 M2 <- 0.5 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
-Y_serial <- 0.3 * M2 + 0.1 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
-data_serial <- data.frame(X = X, M1 = M1, M2 = M2, Y = Y_serial)
+y_serial <- 0.3 * M2 + 0.1 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
+data_serial <- data.frame(X = X, M1 = M1, M2 = M2, Y = y_serial)
 
 # Define serial mediation model
 serial_syntax <- "
