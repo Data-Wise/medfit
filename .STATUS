@@ -1,3 +1,13 @@
+status: active
+priority: P1
+progress: 100
+next: Implement lm/glm serial extractor in feature/lm-serial-extractor worktree (or start CRAN prep)
+type: r
+
+# ═══════════════════════════════════════════════════════════════════
+# Below is the original .STATUS content (preserved for reference)
+# ═══════════════════════════════════════════════════════════════════
+
 📦 medfit - Infrastructure for Mediation Model Fitting
 ────────────────────────────────────────────────
 
@@ -5,7 +15,7 @@
 ~/projects/r-packages/active/medfit/
 
 ⏰ LAST UPDATED
-2025-12-20
+2026-05-31
 
 ────────────────────────────────────────────────
 
@@ -22,6 +32,35 @@ extracting path coefficients, and bootstrap inference.
 Foundation package for mediationverse ecosystem.
 
 Version: 0.1.0
+
+────────────────────────────────────────────────
+
+## ✅ Just Completed (2026-05-31) — Mediation covariance work
+
+- ✅ **Blocker B (lavaan serial extractor)** merged to `dev` via PR #20:
+  `extract_mediation()` returns `SerialMediationData` for `X→M1→…→Mk→Y`
+  (named `a/d1…/b/c_prime` vcov with off-diagonals); verified end-to-end
+  against RMediation's `ci_serial_mediation_data()`.
+- ✅ **Blocker A** confirmed merged (PR #19) — lavaan off-diagonal `cov(b,c')`.
+- ✅ **Repo-wide lint debt cleared** (PR #21): all 96 lintr warnings fixed;
+  CI `lint` green for the first time since Dec 2025 — **full CI tab green on dev**.
+- 📝 **lm-serial extractor spec'd**: `planning/specs/SPEC-lm-serial-extractor-2026-05-31.md`
+  (closes Blocker B item 4); ORCHESTRATE plan + worktree created.
+
+## 🌲 Active Worktrees
+
+- `feature/lm-serial-extractor` — lm/glm serial extractor (Blocker B item 4).
+  `ORCHESTRATE-lm-serial-extractor.md` committed + pushed; ready for
+  implementation in a worktree-pinned session (created 2026-05-31).
+
+🎯 Next Action (2026-05-31):
+- **A)** Implement the lm/glm serial extractor 🟢 —
+  `cd ~/.git-worktrees/medfit/feature-lm-serial-extractor && claude`
+  → "Read ORCHESTRATE-lm-serial-extractor.md, start Phase 1"
+- **B)** medfit CRAN prep — resolve the vignette articles-vs-true-vignettes
+  blocker (gates RMediation's `Remotes:`→`Imports` flip).
+
+Blocked: lm-serial implementation needs its own worktree session (not this one).
 
 ────────────────────────────────────────────────
 
