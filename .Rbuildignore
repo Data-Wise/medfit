@@ -15,7 +15,7 @@
 ^pkgdown$
 ^medfit.code-workspace$
 ^\.claude$
-^vignettes/articles$
+^vignettes$
 ^vignettes/\.quarto$
 ^START-HERE\.md$
 ^hex-logo-prompt\.md$
