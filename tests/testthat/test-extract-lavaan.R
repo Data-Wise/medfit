@@ -313,7 +313,7 @@ test_that("extract_mediation errors for invalid treatment argument", {
   )
 })
 
-test_that("extract_mediation errors for invalid mediator argument", {
+test_that("vector mediator on a non-serial model errors on the missing path", {
   skip_if_not_installed("lavaan")
 
   data <- generate_mediation_data()
@@ -325,13 +325,16 @@ test_that("extract_mediation errors for invalid mediator argument", {
 
   fit <- lavaan::sem(model, data = data)
 
+  # A vector mediator is now VALID input: it routes to the serial extractor.
+  # This simple model has no M1/M2, so the failure is a specific missing chain
+  # link (the a path), not a "length 1" rejection.
   expect_error(
     extract_mediation_lavaan(
       fit,
       treatment = "X",
-      mediator = c("M1", "M2")  # Multiple values
+      mediator = c("M1", "M2")
     ),
-    "mediator.*length 1"  # checkmate: Must have length 1
+    "Could not find a path"
   )
 })
 

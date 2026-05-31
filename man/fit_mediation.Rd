@@ -199,6 +199,4 @@ med_data_bin <- fit_mediation(
 }
 \seealso{
 \link{MediationData}, \code{\link[=extract_mediation]{extract_mediation()}}, \code{\link[=bootstrap_mediation]{bootstrap_mediation()}}
-
-\link{MediationData}, \code{\link[=extract_mediation]{extract_mediation()}}, \code{\link[=bootstrap_mediation]{bootstrap_mediation()}}
 }
