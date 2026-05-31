@@ -262,8 +262,8 @@ test_that("extract_mediation works with binary outcome (logistic)", {
   n <- 300
   X <- rnorm(n)
   M <- 0.5 * X + rnorm(n)
-  Y_prob <- plogis(0.5 * M + 0.3 * X)
-  Y <- rbinom(n, 1, Y_prob)
+  y_prob <- plogis(0.5 * M + 0.3 * X)
+  Y <- rbinom(n, 1, y_prob)
   data <- data.frame(X = X, M = M, Y = Y)
 
   fit_m <- lm(M ~ X, data = data)

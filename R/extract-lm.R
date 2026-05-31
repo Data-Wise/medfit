@@ -63,13 +63,14 @@ glm_class <- S7::new_S3_class("glm")
 #' }
 #'
 #' @noRd
-S7::method(extract_mediation, lm_class) <- function(object,
-                                                     model_y,
-                                                     treatment,
-                                                     mediator,
-                                                     outcome = NULL,
-                                                     data = NULL,
-                                                     ...) {
+S7::method(extract_mediation, lm_class) <- function(
+    object,
+    model_y,
+    treatment,
+    mediator,
+    outcome = NULL,
+    data = NULL,
+    ...) {
   # Call internal extraction function
   .extract_mediation_lm_impl(
     model_m = object,
@@ -86,13 +87,14 @@ S7::method(extract_mediation, lm_class) <- function(object,
 #'
 #' @inheritParams extract_mediation
 #' @noRd
-S7::method(extract_mediation, glm_class) <- function(object,
-                                                      model_y,
-                                                      treatment,
-                                                      mediator,
-                                                      outcome = NULL,
-                                                      data = NULL,
-                                                      ...) {
+S7::method(extract_mediation, glm_class) <- function(
+    object,
+    model_y,
+    treatment,
+    mediator,
+    outcome = NULL,
+    data = NULL,
+    ...) {
   # Call internal extraction function
   .extract_mediation_lm_impl(
     model_m = object,
@@ -116,12 +118,13 @@ S7::method(extract_mediation, glm_class) <- function(object,
 #'
 #' @return MediationData object
 #' @keywords internal
-.extract_mediation_lm_impl <- function(model_m,
-                                        model_y,
-                                        treatment,
-                                        mediator,
-                                        outcome = NULL,
-                                        data = NULL) {
+.extract_mediation_lm_impl <- function(
+    model_m,
+    model_y,
+    treatment,
+    mediator,
+    outcome = NULL,
+    data = NULL) {
 
 
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
@@ -222,12 +225,10 @@ S7::method(extract_mediation, glm_class) <- function(object,
   # Copy variances for aliases
   # a is the same as m_treatment
   a_idx <- which(names(estimates) == "a")
-  m_treatment_idx <- which(names_m == paste0("m_", treatment))
   vcov_combined[a_idx, a_idx] <- vcov_m[treatment, treatment]
 
   # b is the same as y_mediator
   b_idx <- which(names(estimates) == "b")
-  y_mediator_idx <- which(names_y == paste0("y_", mediator))
   vcov_combined[b_idx, b_idx] <- vcov_y[mediator, mediator]
 
   # c_prime is the same as y_treatment
@@ -310,7 +311,7 @@ S7::method(extract_mediation, glm_class) <- function(object,
 .get_response_var <- function(model) {
   formula_obj <- stats::formula(model)
   response <- all.vars(formula_obj)[1]
-  return(response)
+  response
 }
 
 
@@ -333,5 +334,5 @@ S7::method(extract_mediation, glm_class) <- function(object,
       return(NULL)
     }
   }
-  return(NULL)
+  NULL
 }
