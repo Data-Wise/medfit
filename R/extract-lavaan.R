@@ -231,6 +231,34 @@ extract_mediation_lavaan <- function(object,
   estimates["b"] <- b_path
   estimates["c_prime"] <- c_prime
 
+  # --- Resolve each alias to its source parameter in the original vcov ---
+  #
+  # lavaan names free parameters either by their label (e.g. "a", "b", "cp")
+  # or, when no label resolves to that name, by the variable-name form
+  # ("M~X", "Y~M", "Y~X"). To be robust across labeled / unlabeled / custom-
+  # label models we try BOTH forms for each path.
+  #
+  # Mapping the alias to a source *index* lets us copy the FULL covariance
+  # structure (variances AND off-diagonal covariances), not just the diagonal
+  # variance. This is essential: in single-equation SEM the a/b/c' paths are
+  # estimated jointly and their pairwise covariances are non-zero.
+  orig_names <- names(all_coef)
+
+  resolve_source_idx <- function(label, var_name) {
+    for (nm in c(label, var_name)) {
+      if (!is.null(nm) && nm %in% orig_names) {
+        return(which(orig_names == nm)[1])
+      }
+    }
+    NA_integer_
+  }
+
+  source_idx <- c(
+    a = resolve_source_idx(a_label, paste0(mediator, "~", treatment)),
+    b = resolve_source_idx(b_label, paste0(outcome, "~", mediator)),
+    c_prime = resolve_source_idx(cp_label, paste0(outcome, "~", treatment))
+  )
+
   # Expand vcov to include only NEW aliases
   n_orig <- length(all_coef)
   n_aliases <- length(aliases_to_add)
@@ -243,41 +271,37 @@ extract_mediation_lavaan <- function(object,
   rownames(vcov_expanded) <- vcov_names
   colnames(vcov_expanded) <- vcov_names
 
-  # Fill in original vcov
-  vcov_expanded[1:n_orig, 1:n_orig] <- vcov_mat
+  # Fill in original vcov block
+  vcov_expanded[seq_len(n_orig), seq_len(n_orig)] <- vcov_mat
 
-  # For aliases, we need to find the corresponding original parameter
-  # and copy its variance. Only do this for aliases that were actually added.
-
-  # Helper function to copy variance for an alias
-  copy_alias_variance <- function(alias_name, param_names_to_try) {
-    if (!(alias_name %in% aliases_to_add)) {
-      # Alias already exists in original coefficients, no need to copy
-      return()
-    }
+  # For each newly added alias, copy the FULL row/column of its source
+  # parameter (preserving covariances with every original parameter), then
+  # fix up the alias-to-alias intersections from the source-to-source
+  # covariances. This keeps the expanded matrix symmetric and consistent so
+  # that, e.g., vcov[c("a", "b"), c("a", "b")] reproduces the true lavaan
+  # covariance between those paths, including the off-diagonal cov(a, b).
+  for (alias_name in aliases_to_add) {
+    s_i <- source_idx[[alias_name]]
+    if (is.na(s_i)) next
     alias_idx <- which(vcov_names == alias_name)
-    if (length(alias_idx) == 0) return()
 
-    for (param_name in param_names_to_try) {
-      if (param_name %in% names(all_coef)) {
-        orig_idx <- which(names(all_coef) == param_name)
-        vcov_expanded[alias_idx, alias_idx] <<- vcov_mat[orig_idx, orig_idx]
-        return()
-      }
-    }
+    # Alias <-> original cross-covariances (copy source row/column).
+    vcov_expanded[alias_idx, seq_len(n_orig)] <- vcov_mat[s_i, ]
+    vcov_expanded[seq_len(n_orig), alias_idx] <- vcov_mat[, s_i]
   }
 
-  # Find and copy variance for "a" path
-  a_param_name <- paste0(mediator, "~", treatment)
-  copy_alias_variance("a", a_param_name)
-
-  # Find and copy variance for "b" path
-  b_param_name <- paste0(outcome, "~", mediator)
-  copy_alias_variance("b", b_param_name)
-
-  # Find and copy variance for "c_prime" path
-  cp_param_name <- paste0(outcome, "~", treatment)
-  copy_alias_variance("c_prime", cp_param_name)
+  # Alias <-> alias (co)variances, taken from the corresponding source pairs.
+  for (alias_i in aliases_to_add) {
+    s_i <- source_idx[[alias_i]]
+    if (is.na(s_i)) next
+    idx_i <- which(vcov_names == alias_i)
+    for (alias_j in aliases_to_add) {
+      s_j <- source_idx[[alias_j]]
+      if (is.na(s_j)) next
+      idx_j <- which(vcov_names == alias_j)
+      vcov_expanded[idx_i, idx_j] <- vcov_mat[s_i, s_j]
+    }
+  }
 
   # --- Extract Residual Variances ---
 

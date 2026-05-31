@@ -1,3 +1,17 @@
+# medfit (development version)
+
+## Bug Fixes
+
+* `extract_mediation()` for lavaan models now preserves the **off-diagonal**
+  covariances among the `a`, `b`, and `c_prime` path aliases in the returned
+  `@vcov`. Previously only the diagonal variances were copied, so
+  `vcov[c("a", "b"), c("a", "b")]` reported `cov(a, b) = 0` even when the
+  underlying lavaan fit had a genuinely non-zero covariance (e.g. single-equation
+  SEM with correlated residuals, or the within-equation `cov(b, c')`). This
+  silently biased downstream indirect-effect confidence intervals; the alias
+  block now reproduces the true `lavaan::vcov()` covariances exactly.
+
+
 # medfit 0.1.0 (2025-12-20)
 
 **Initial CRAN release**
