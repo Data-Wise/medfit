@@ -208,32 +208,36 @@ S7::method(extract_mediation, glm_class) <- function(
   estimates["b"] <- b_path
   estimates["c_prime"] <- c_prime
 
-  # Create block-diagonal combined vcov matrix
-  # This assumes independence between mediator and outcome model estimates
+  # Build the block-diagonal SOURCE covariance of the two regressions. The
+  # mediator and outcome equations are estimated separately, so their estimates
+  # are independent by construction and the cross blocks are zero.
   n_m <- length(coef_m)
   n_y <- length(coef_y)
-  n_total <- n_m + n_y + 3  # +3 for a, b, c_prime aliases
+  n_src <- n_m + n_y
 
-  vcov_combined <- matrix(0, nrow = n_total, ncol = n_total)
-  rownames(vcov_combined) <- names(estimates)
-  colnames(vcov_combined) <- names(estimates)
+  vcov_src <- matrix(
+    0,
+    nrow = n_src, ncol = n_src,
+    dimnames = list(c(names_m, names_y), c(names_m, names_y))
+  )
+  vcov_src[seq_len(n_m), seq_len(n_m)] <- vcov_m
+  vcov_src[(n_m + 1):n_src, (n_m + 1):n_src] <- vcov_y
 
-  # Fill in blocks
-  vcov_combined[1:n_m, 1:n_m] <- vcov_m
-  vcov_combined[(n_m + 1):(n_m + n_y), (n_m + 1):(n_m + n_y)] <- vcov_y
-
-  # Copy variances for aliases
-  # a is the same as m_treatment
-  a_idx <- which(names(estimates) == "a")
-  vcov_combined[a_idx, a_idx] <- vcov_m[treatment, treatment]
-
-  # b is the same as y_mediator
-  b_idx <- which(names(estimates) == "b")
-  vcov_combined[b_idx, b_idx] <- vcov_y[mediator, mediator]
-
-  # c_prime is the same as y_treatment
-  cp_idx <- which(names(estimates) == "c_prime")
-  vcov_combined[cp_idx, cp_idx] <- vcov_y[treatment, treatment]
+  # Map each alias to its source coefficient (by prefixed name) and expand with
+  # FULL row/column copies via the shared helper. Copying the whole source
+  # row/column -- not just the diagonal variance -- preserves cov(b, c_prime),
+  # since b (y_mediator) and c_prime (y_treatment) share the outcome equation.
+  # cov(a, b) stays 0 because a lives in the mediator block (block-diagonal).
+  source_idx <- c(
+    a = which(rownames(vcov_src) == paste0("m_", treatment)),
+    b = which(rownames(vcov_src) == paste0("y_", mediator)),
+    c_prime = which(rownames(vcov_src) == paste0("y_", treatment))
+  )
+  vcov_combined <- .expand_vcov_with_aliases(
+    vcov_src,
+    source_idx = source_idx,
+    aliases_to_add = c("a", "b", "c_prime")
+  )
 
   # --- Extract Residual Standard Deviations ---
 

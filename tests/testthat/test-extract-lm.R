@@ -208,6 +208,41 @@ test_that("extract_mediation creates square vcov matrix", {
   expect_equal(colnames(med_data@vcov), names(med_data@estimates))
 })
 
+test_that("alias vcov preserves cov(b, c_prime) from the outcome equation", {
+  # Regression test for the latent simple-lm bug (SPEC section 5): the alias
+  # block must copy the FULL within-outcome-equation covariance, not just the
+  # diagonal variance. b and c_prime both come from the outcome model, so their
+  # covariance is non-zero and must equal the source vcov(model_y) block.
+  data <- generate_mediation_data()
+
+  fit_m <- lm(M ~ X, data = data)
+  fit_y <- lm(Y ~ X + M, data = data)
+
+  med_data <- extract_mediation(
+    fit_m,
+    model_y = fit_y,
+    treatment = "X",
+    mediator = "M"
+  )
+
+  alias_block <- med_data@vcov[c("b", "c_prime"), c("b", "c_prime")]
+  source_block <- vcov(fit_y)[c("M", "X"), c("M", "X")]
+
+  # cov(b, c_prime) is now non-zero and equals the outcome-equation source.
+  expect_equal(unname(alias_block), unname(source_block))
+  expect_true(abs(med_data@vcov["b", "c_prime"]) > 0)
+
+  # cov(a, b) stays exactly 0: a and b come from separate regressions.
+  expect_equal(med_data@vcov["a", "b"], 0)
+  expect_equal(med_data@vcov["a", "c_prime"], 0)
+
+  # Behavior-neutral for the indirect effect: a*b is unchanged by the fix.
+  expect_equal(
+    med_data@a_path * med_data@b_path,
+    unname(coef(fit_m)["X"] * coef(fit_y)["M"])
+  )
+})
+
 test_that("vcov diagonal contains positive variances", {
   data <- generate_mediation_data()
 
