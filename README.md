@@ -211,7 +211,7 @@ See [Ecosystem Coordination](planning/ECOSYSTEM.md) for version compatibility an
 
 ## Documentation
 
-Comprehensive Quarto vignettes are available:
+Comprehensive articles are available on the package website:
 
 - **[Get Started](https://data-wise.github.io/medfit/articles/medfit.html)**: Quick introduction to medfit
 - **[Introduction](https://data-wise.github.io/medfit/articles/introduction.html)**: Detailed S7 class documentation
