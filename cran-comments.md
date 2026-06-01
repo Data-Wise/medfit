@@ -1,10 +1,11 @@
 ## Submission
 
-This is the initial CRAN submission of medfit.
+This is the initial CRAN submission of medfit (version 0.2.0).
 
 ## Test environments
 
-* Local: macOS 26.2.0 (Tahoe), R 4.5.2
+* Local: macOS 26.5.0 (Tahoe), R 4.6.0 — `R CMD check --as-cran`
+* win-builder (R-devel) — via `devtools::check_win_devel()`
 * GitHub Actions (ubuntu-latest): R-release, R-devel, R-oldrel-1
 * GitHub Actions (macos-latest): R-release
 * GitHub Actions (windows-latest): R-release

@@ -60,16 +60,22 @@ Version: 0.2.0 (released to main 2026-05-31; not yet on CRAN)
   0 warnings / **1 expected "New submission" NOTE**. `.Rbuildignore` cleanup
   (clears non-standard-files NOTE), `inst/CITATION` added, redundant `Maintainer:`
   dropped, "vignettes"→"articles" wording. Package is **CRAN-submittable**.
+- ✅ **CRAN prep synced to `main`** (PR #27, `0215535`); `dev` back-merged
+  (`d8efe48`). `main` is now CRAN-clean.
+- ✅ **win-builder submitted** — `devtools::check_win_devel()` uploaded; results
+  emailed to dtofighi@gmail.com (~30 min).
 
 ## 🌲 Active Worktrees
 
 - None.
 
 🎯 Next Action — CRAN submission:
-- **A)** Carry CRAN prep to `main` — the v0.2.0 tag/main predates PR #26, so do a
-  `dev → main` sync first so the submitted source matches the release.
-- **B)** `devtools::check_win_devel()` (win-builder, ~30 min, emailed) as the final
-  pre-submission check, then `devtools::submit_cran()` / the CRAN web form.
+- **A)** Review the **win-builder email** (and optionally `check_win_release()` /
+  `check_mac_release()`). If clean → submit.
+- **B)** Submit to CRAN (`devtools::submit_cran()` or the web form) with a
+  `cran-comments.md`. Note: the `v0.2.0` git tag predates the CRAN-prep commits;
+  optionally move the tag/release to `main` HEAD so it matches the submitted source.
+- Downstream: medfit on CRAN unblocks RMediation's `Remotes:`→`Imports` flip.
 - Downstream: medfit on CRAN unblocks RMediation's `Remotes:`→`Imports` flip.
 
 Blocked: none.
