@@ -1,0 +1,10 @@
+citHeader("To cite the medfit package in publications, please use:")
+
+bibentry(
+  bibtype = "Manual",
+  title   = "{medfit}: Infrastructure for Mediation Model Fitting and Extraction",
+  author  = c(person("Davood", "Tofighi")),
+  year    = "2026",
+  note    = sprintf("R package version %s", meta$Version),
+  url     = "https://data-wise.github.io/medfit/"
+)

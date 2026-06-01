@@ -124,7 +124,7 @@ medfit provides S7-based infrastructure for fitting mediation models, extracting
 
 ## Documentation
 
-* **Four comprehensive vignettes**
+* **Four comprehensive articles** (on the package website)
   - Getting Started: Quick introduction with examples
   - Introduction: Detailed package overview
   - Model Extraction: Extract from lm, glm, lavaan objects

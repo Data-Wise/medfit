@@ -27,3 +27,6 @@
 ^TODOS\.md$
 ^\.vscode$
 ^cran-comments\.md$
+^CRAN-SUBMISSION-GUIDE\.md$
+^REVERSION-SUMMARY\.md$
+^RHUB-BADGE-RESEARCH\.md$
