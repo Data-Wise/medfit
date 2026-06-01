@@ -235,7 +235,7 @@ Comprehensive Quarto vignettes are available:
 ### Code Quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
-- **Testing**: 427 tests with testthat, code coverage tracking
+- **Testing**: 584 tests with testthat (>90% coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See [planning/medfit-roadmap.md](planning/medfit-roadmap.md) for detailed development plan.
