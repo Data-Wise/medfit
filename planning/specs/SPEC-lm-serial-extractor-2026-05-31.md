@@ -223,8 +223,14 @@ serial path uses), so the simple and serial lm paths share one correct alias-vco
 
 ## 11. Review checklist
 
-- [ ] API reviewed (`mediator_models` ergonomics acceptable to maintainer)
-- [ ] vcov contract + lm/lavaan divergence agreed
+- [x] API reviewed (`mediator_models` ergonomics acceptable to maintainer)
+      — approved 2026-05-31: asymmetry (M1 in `object`, M2..Mk in
+      `mediator_models`) accepted as inherent to S7 dispatch + lm's lack of a
+      single all-equation object.
+- [x] vcov contract + lm/lavaan divergence agreed
+      — approved 2026-05-31: block-diagonal chain paths with preserved
+      `cov(b,c')`; same-data-different-CI footgun mitigated by `@details` +
+      vignette docs (infrastructure-not-methodology).
 - [x] Simple-lm bug fix confirmed behavior-neutral for indirect effect
       (regression test pins `a·b` unchanged; only `cov(b,c')` changes)
 - [x] Acceptance criteria complete and testable (all §6 items covered by tests)
