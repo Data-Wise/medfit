@@ -44,24 +44,24 @@ Version: 0.1.0
 - ✅ **Blocker A** confirmed merged (PR #19) — lavaan off-diagonal `cov(b,c')`.
 - ✅ **Repo-wide lint debt cleared** (PR #21): all 96 lintr warnings fixed;
   CI `lint` green for the first time since Dec 2025 — **full CI tab green on dev**.
-- ✅ **lm/glm serial extractor implemented** (PR #22, open, CI green) — closes
-  Blocker B item 4: `mediator_models` list API, shared `.expand_vcov_with_aliases`
-  helper, simple-lm `cov(b,c')` fix, lm + glm, full ordering cross-check.
-  Spec: `planning/specs/SPEC-lm-serial-extractor-2026-05-31.md`.
+- ✅ **lm/glm serial extractor merged** (PR #22 → `dev`) — closes Blocker B
+  item 4: `mediator_models` list API, shared `.expand_vcov_with_aliases` helper,
+  simple-lm `cov(b,c')` fix, lm + glm, full ordering cross-check. R CMD check OK,
+  CI green. Spec: `planning/specs/SPEC-lm-serial-extractor-2026-05-31.md`.
+- ✅ **Blocker B COMPLETE** (lavaan PR #20 + lm PR #22). RMediation serial CIs now
+  supported for both lavaan and lm fits; v1.5.0 gated only on medfit reaching CRAN.
 - ✅ **dependabot CI bumps #14–18 merged** to `dev` (download/upload-artifact,
   checkout, github-script, github-pages-deploy).
 
 ## 🌲 Active Worktrees
 
-- `feature/lm-serial-extractor` — lm/glm serial extractor (Blocker B item 4).
-  **IMPLEMENTED; PR #22 open** (under review, CI green). Retain until merge,
-  then prune the worktree and delete `ORCHESTRATE-*.md`.
+- None. (lm-serial worktree pruned after PR #22 merged.)
 
 🎯 Next Action (2026-05-31):
-- **A)** Review & merge **PR #22** (lm/glm serial extractor) 🟢 — CI green;
-  remove `ORCHESTRATE-*.md` at merge, then prune the worktree.
-- **B)** medfit CRAN prep — resolve the vignette articles-vs-true-vignettes
-  blocker (gates RMediation's `Remotes:`→`Imports` flip).
+- **A)** medfit CRAN prep 🟢 — resolve the vignette articles-vs-true-vignettes
+  blocker; delete stale `..Rcheck/`; win-builder/R-hub pre-checks. Last big item
+  before submission; unblocks RMediation's `Remotes:`→`Imports` flip downstream.
+- **B)** Release `dev → main` to carry Blocker A/B + lint + serial + CI bumps.
 
 Blocked: none.
 
