@@ -31,7 +31,7 @@ S7-based infrastructure for fitting mediation models,
 extracting path coefficients, and bootstrap inference.
 Foundation package for mediationverse ecosystem.
 
-Version: 0.1.0
+Version: 0.2.0 (released to main 2026-05-31; not yet on CRAN)
 
 ────────────────────────────────────────────────
 
@@ -52,16 +52,25 @@ Version: 0.1.0
   supported for both lavaan and lm fits; v1.5.0 gated only on medfit reaching CRAN.
 - ✅ **dependabot CI bumps #14–18 merged** to `dev` (download/upload-artifact,
   checkout, github-script, github-pages-deploy).
+- ✅ **Test coverage >90%** (PR #23, 584 tests) + **codecov gate** (PR #24,
+  `codecov.yml` enforcing ≥90% project / 80% patch).
+- ✅ **Released v0.2.0** — `dev → main` (PR #25), tag `v0.2.0`, GitHub release
+  published.
+- ✅ **CRAN prep COMPLETE** (PR #26 → `dev`): `R CMD check --as-cran` = 0 errors /
+  0 warnings / **1 expected "New submission" NOTE**. `.Rbuildignore` cleanup
+  (clears non-standard-files NOTE), `inst/CITATION` added, redundant `Maintainer:`
+  dropped, "vignettes"→"articles" wording. Package is **CRAN-submittable**.
 
 ## 🌲 Active Worktrees
 
-- None. (lm-serial worktree pruned after PR #22 merged.)
+- None.
 
-🎯 Next Action (2026-05-31):
-- **A)** medfit CRAN prep 🟢 — resolve the vignette articles-vs-true-vignettes
-  blocker; delete stale `..Rcheck/`; win-builder/R-hub pre-checks. Last big item
-  before submission; unblocks RMediation's `Remotes:`→`Imports` flip downstream.
-- **B)** Release `dev → main` to carry Blocker A/B + lint + serial + CI bumps.
+🎯 Next Action — CRAN submission:
+- **A)** Carry CRAN prep to `main` — the v0.2.0 tag/main predates PR #26, so do a
+  `dev → main` sync first so the submitted source matches the release.
+- **B)** `devtools::check_win_devel()` (win-builder, ~30 min, emailed) as the final
+  pre-submission check, then `devtools::submit_cran()` / the CRAN web form.
+- Downstream: medfit on CRAN unblocks RMediation's `Remotes:`→`Imports` flip.
 
 Blocked: none.
 
