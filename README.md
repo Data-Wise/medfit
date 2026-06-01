@@ -262,8 +262,8 @@ GPL (>= 3)
 If you use medfit in your research, please cite:
 
 ```
-Tofighi, D. (2025). medfit: Infrastructure for mediation analysis in R.
-R package version 0.1.0. https://github.com/data-wise/medfit
+Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
+R package version 0.2.0. https://github.com/data-wise/medfit
 ```
 
 ## Related Resources

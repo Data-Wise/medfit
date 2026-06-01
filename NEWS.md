@@ -1,4 +1,17 @@
-# medfit (development version)
+# medfit 0.2.0 (2026-05-31)
+
+## New features
+
+* `extract_mediation()` now supports **serial mediation**
+  (`X -> M1 -> M2 -> ... -> Mk -> Y`), returning a `SerialMediationData` object.
+  For **lavaan** fits, pass an ordered vector of mediator names
+  (`mediator = c("M1", "M2")`); for **lm/glm** sequential regressions, pass the
+  per-mediator models via the new `mediator_models` argument. The returned
+  `@vcov` is named with the path aliases `a`, `d1`, ..., `b`, `c_prime` and
+  preserves the full covariance structure (single-equation lavaan SEM keeps the
+  off-diagonals; the separately-fitted lm equations are block-diagonal among
+  chain paths with `cov(b, c')` preserved), so downstream serial
+  indirect-effect confidence intervals are correct.
 
 ## Bug Fixes
 
@@ -18,6 +31,18 @@
   `print.mediation_effect` and fall back to the bare numeric value plus raw
   attributes. The method is now explicitly registered in `.onLoad()` so
   dispatch works whether the package is installed or loaded via `load_all()`.
+
+* The **lm/glm** extractor now copies the full within-equation covariance onto
+  the `a`/`b`/`c_prime` aliases, so `cov(b, c_prime)` is preserved (previously
+  only the diagonal variance was copied). The indirect effect `a * b` is
+  unchanged; `cov(a, b)` remains `0` (separate equations).
+
+## Internal
+
+* Overall test coverage raised to >90% (enforced via `codecov`), and all
+  repo-wide `lintr` warnings cleared. A shared alias-vcov helper
+  (`.expand_vcov_with_aliases()`) now backs both the lm/glm and lavaan
+  extractors so the two engines cannot drift.
 
 
 # medfit 0.1.0 (2025-12-20)
