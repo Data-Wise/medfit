@@ -202,7 +202,7 @@ test_that("MediationData print method works", {
   expect_output(print(med_data), "a \\(X -> M\\)")
   expect_output(print(med_data), "0.5000")
   expect_output(print(med_data), "Indirect")
-  expect_output(print(med_data), "0.1500")  # 0.5 * 0.3
+  expect_output(print(med_data), "0.1500")  # product of 0.5 and 0.3
 })
 
 

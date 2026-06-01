@@ -21,7 +21,10 @@ extract_mediation_lavaan(
 
 \item{treatment}{Character: name of the treatment variable}
 
-\item{mediator}{Character: name of the mediator variable}
+\item{mediator}{Character: name of the mediator variable for simple
+mediation (X -> M -> Y), OR an ordered character vector of length >= 2 for
+serial mediation (X -> M1 -> M2 -> ... -> Y). When a vector is supplied the
+function returns a \link{SerialMediationData} object instead of \link{MediationData}.}
 
 \item{outcome}{Character: name of the outcome variable (optional, auto-detected)}
 
@@ -36,7 +39,8 @@ extract_mediation_lavaan(
 \item{...}{Additional arguments (ignored)}
 }
 \value{
-A \link{MediationData} object
+A \link{MediationData} object, or a \link{SerialMediationData} object when
+\code{mediator} is a character vector of length >= 2 (serial mediation).
 }
 \description{
 Internal function for extracting mediation structure from lavaan models.

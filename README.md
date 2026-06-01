@@ -235,7 +235,7 @@ Comprehensive Quarto vignettes are available:
 ### Code Quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
-- **Testing**: 427 tests with testthat, code coverage tracking
+- **Testing**: 584 tests with testthat (>90% coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See [planning/medfit-roadmap.md](planning/medfit-roadmap.md) for detailed development plan.
@@ -262,8 +262,8 @@ GPL (>= 3)
 If you use medfit in your research, please cite:
 
 ```
-Tofighi, D. (2025). medfit: Infrastructure for mediation analysis in R.
-R package version 0.1.0. https://github.com/data-wise/medfit
+Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
+R package version 0.2.0. https://github.com/data-wise/medfit
 ```
 
 ## Related Resources

@@ -85,7 +85,7 @@ test_that("te() extracts total effect", {
   expect_true(is.numeric(result))
   expect_length(result, 1)
 
-  # TE = NIE + NDE
+  # total effect equals NIE plus NDE
   expected_te <- as.numeric(nie(med_data)) + as.numeric(nde(med_data))
   expect_equal(as.numeric(result), expected_te)
 
@@ -115,7 +115,7 @@ test_that("pm() extracts proportion mediated", {
   expect_true(is.numeric(result))
   expect_length(result, 1)
 
-  # PM = NIE / TE
+  # proportion mediated is NIE divided by TE
   expected_pm <- as.numeric(nie(med_data)) / as.numeric(te(med_data))
   expect_equal(as.numeric(result), expected_pm)
 
@@ -206,18 +206,18 @@ test_that("effect extractors work for SerialMediationData", {
     source_package = "test"
   )
 
-  # NIE = a * d * b
+  # serial indirect effect is the product a, d, b
   expected_nie <- 0.5 * 0.4 * 0.3
   expect_equal(as.numeric(nie(serial_data)), expected_nie)
 
-  # NDE = c_prime
+  # direct effect equals c prime
   expect_equal(as.numeric(nde(serial_data)), 0.1)
 
-  # TE = NIE + NDE
+  # total effect equals NIE plus NDE
   expected_te <- expected_nie + 0.1
   expect_equal(as.numeric(te(serial_data)), expected_te)
 
-  # PM = NIE / TE
+  # proportion mediated is NIE divided by TE
   expected_pm <- expected_nie / expected_te
   expect_equal(as.numeric(pm(serial_data)), expected_pm)
 
@@ -262,7 +262,7 @@ test_that("SerialMediationData paths() handles multiple mediators", {
   expect_true("d21" %in% names(p))
   expect_true("d32" %in% names(p))
 
-  # NIE = a * d21 * d32 * b
+  # serial indirect effect is the product a, d21, d32, b
   expected_nie <- 0.5 * 0.4 * 0.35 * 0.3
   expect_equal(as.numeric(nie(serial_data)), expected_nie)
 })
@@ -292,4 +292,25 @@ test_that("print.mediation_effect formats output correctly", {
 
   output <- capture.output(print(pm(med_data)))
   expect_true(grepl("Proportion Mediated", output[1]))
+})
+
+test_that("print.mediation_effect dispatches via generic print(), not default", {
+  # Regression guard for the .onLoad registerS3method() fix. Because
+  # `mediation_effect` is layered on the base `numeric` type, a generic print()
+  # call can silently fall back to print.default unless the method is explicitly
+  # registered. Assert a generic print() reaches the formatted label AND does
+  # NOT emit the print.default representation (bare value + raw attributes).
+  md <- MediationData(
+    a_path = 0.5, b_path = 0.4, c_prime = 0.1,
+    estimates = c(a = 0.5, b = 0.4, c_prime = 0.1),
+    vcov = diag(3) * 0.01,
+    sigma_m = NULL, sigma_y = NULL,
+    treatment = "X", mediator = "M", outcome = "Y",
+    mediator_predictors = character(0), outcome_predictors = character(0),
+    data = NULL, n_obs = 100L, converged = TRUE, source_package = "test"
+  )
+  out <- capture.output(print(nie(md)))
+  expect_match(out[1], "Natural Indirect Effect", fixed = TRUE)
+  # print.default would emit an `attr(,"class")` line; the method must not.
+  expect_false(any(grepl("attr(", out, fixed = TRUE)))
 })

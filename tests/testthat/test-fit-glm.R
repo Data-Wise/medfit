@@ -71,8 +71,8 @@ test_that("fit_mediation works with binary outcome", {
   n <- 200
   X <- rnorm(n)
   M <- 0.5 * X + rnorm(n)
-  prob_Y <- plogis(0.3 * X + 0.4 * M)
-  Y <- rbinom(n, 1, prob_Y)
+  prob_y <- plogis(0.3 * X + 0.4 * M)
+  Y <- rbinom(n, 1, prob_y)
   test_data <- data.frame(X = X, M = M, Y = Y)
 
   # Fit mediation model with binary outcome

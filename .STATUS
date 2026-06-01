@@ -1,3 +1,13 @@
+status: active
+priority: P1
+progress: 100
+next: Implement lm/glm serial extractor in feature/lm-serial-extractor worktree (or start CRAN prep)
+type: r
+
+# ═══════════════════════════════════════════════════════════════════
+# Below is the original .STATUS content (preserved for reference)
+# ═══════════════════════════════════════════════════════════════════
+
 📦 medfit - Infrastructure for Mediation Model Fitting
 ────────────────────────────────────────────────
 
@@ -5,7 +15,7 @@
 ~/projects/r-packages/active/medfit/
 
 ⏰ LAST UPDATED
-2025-12-20
+2026-05-31
 
 ────────────────────────────────────────────────
 
@@ -22,6 +32,38 @@ extracting path coefficients, and bootstrap inference.
 Foundation package for mediationverse ecosystem.
 
 Version: 0.1.0
+
+────────────────────────────────────────────────
+
+## ✅ Just Completed (2026-05-31) — Mediation covariance work
+
+- ✅ **Blocker B (lavaan serial extractor)** merged to `dev` via PR #20:
+  `extract_mediation()` returns `SerialMediationData` for `X→M1→…→Mk→Y`
+  (named `a/d1…/b/c_prime` vcov with off-diagonals); verified end-to-end
+  against RMediation's `ci_serial_mediation_data()`.
+- ✅ **Blocker A** confirmed merged (PR #19) — lavaan off-diagonal `cov(b,c')`.
+- ✅ **Repo-wide lint debt cleared** (PR #21): all 96 lintr warnings fixed;
+  CI `lint` green for the first time since Dec 2025 — **full CI tab green on dev**.
+- ✅ **lm/glm serial extractor merged** (PR #22 → `dev`) — closes Blocker B
+  item 4: `mediator_models` list API, shared `.expand_vcov_with_aliases` helper,
+  simple-lm `cov(b,c')` fix, lm + glm, full ordering cross-check. R CMD check OK,
+  CI green. Spec: `planning/specs/SPEC-lm-serial-extractor-2026-05-31.md`.
+- ✅ **Blocker B COMPLETE** (lavaan PR #20 + lm PR #22). RMediation serial CIs now
+  supported for both lavaan and lm fits; v1.5.0 gated only on medfit reaching CRAN.
+- ✅ **dependabot CI bumps #14–18 merged** to `dev` (download/upload-artifact,
+  checkout, github-script, github-pages-deploy).
+
+## 🌲 Active Worktrees
+
+- None. (lm-serial worktree pruned after PR #22 merged.)
+
+🎯 Next Action (2026-05-31):
+- **A)** medfit CRAN prep 🟢 — resolve the vignette articles-vs-true-vignettes
+  blocker; delete stale `..Rcheck/`; win-builder/R-hub pre-checks. Last big item
+  before submission; unblocks RMediation's `Remotes:`→`Imports` flip downstream.
+- **B)** Release `dev → main` to carry Blocker A/B + lint + serial + CI bumps.
+
+Blocked: none.
 
 ────────────────────────────────────────────────
 

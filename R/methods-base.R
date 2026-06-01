@@ -220,7 +220,7 @@ S7::method(vcov, SerialMediationData) <- function(object, ...) {
 #' @seealso [bootstrap_mediation()] for bootstrap confidence intervals
 #' @noRd
 S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0.95,
-                                                method = c("normal", "boot"), ...) {
+                                               method = c("normal", "boot"), ...) {
   method <- match.arg(method)
 
   if (method == "boot") {

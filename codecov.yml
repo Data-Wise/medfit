@@ -1,0 +1,22 @@
+# Codecov configuration for medfit.
+# Locks in the >90% coverage achieved in the test suite: PRs that drop overall
+# coverage by more than the threshold (or fall below the target) fail the
+# codecov/project check. Patch coverage keeps new code well-tested.
+coverage:
+  status:
+    project:
+      default:
+        target: 90%       # overall coverage must stay at/above 90%
+        threshold: 1%     # tolerate <=1% drop (sampling / unmeasurable .onLoad)
+    patch:
+      default:
+        target: 80%       # new/changed lines should be well covered
+        threshold: 1%
+
+# Keep PR noise low; the status checks above are the gate.
+comment: false
+
+# .onLoad (zzz.R) runs before covr can instrument it, so it is unmeasurable by
+# design -- exclude it so it does not depress the project number.
+ignore:
+  - "R/zzz.R"

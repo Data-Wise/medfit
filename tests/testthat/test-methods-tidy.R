@@ -14,7 +14,7 @@ test_that("tidy.S7_object works for MediationData", {
     outcome = "Y"
   )
 
-  # Default: type = "all"
+  # by default the type is all
   tidy_all <- generics::tidy(result)
   expect_s3_class(tidy_all, "data.frame")
   expect_equal(nrow(tidy_all), 6)  # a, b, c_prime, nie, nde, te
@@ -106,7 +106,7 @@ test_that("tidy() conf.level parameter works", {
   tidy_95 <- generics::tidy(result, type = "paths", conf.int = TRUE, conf.level = 0.95)
   tidy_90 <- generics::tidy(result, type = "paths", conf.int = TRUE, conf.level = 0.90)
 
-  # 90% CI should be narrower than 95% CI
+  # the ninety percent interval should be narrower than the ninety-five percent interval
   width_95 <- tidy_95$conf.high[1] - tidy_95$conf.low[1]
   width_90 <- tidy_90$conf.high[1] - tidy_90$conf.low[1]
   expect_true(width_90 < width_95)
@@ -161,7 +161,7 @@ test_that("tidy.S7_object works for SerialMediationData", {
     source_package = "test"
   )
 
-  # Default: type = "all"
+  # by default the type is all
   tidy_all <- generics::tidy(serial_data)
   expect_s3_class(tidy_all, "data.frame")
   expect_equal(nrow(tidy_all), 7)  # a, d, b, c_prime, nie, nde, te

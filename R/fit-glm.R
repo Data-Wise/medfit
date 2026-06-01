@@ -173,14 +173,15 @@ fit_mediation <- function(formula_y,
 #' @return MediationData object
 #' @keywords internal
 #' @noRd
-.fit_mediation_glm <- function(formula_y,
-                                formula_m,
-                                data,
-                                treatment,
-                                mediator,
-                                family_y,
-                                family_m,
-                                ...) {
+.fit_mediation_glm <- function(
+    formula_y,
+    formula_m,
+    data,
+    treatment,
+    mediator,
+    family_y,
+    family_m,
+    ...) {
   # Fit mediator model
   fit_m <- stats::glm(
     formula = formula_m,
