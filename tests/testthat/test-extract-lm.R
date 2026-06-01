@@ -426,7 +426,10 @@ test_that("extract_mediation errors when treatment is not character", {
   )
 })
 
-test_that("extract_mediation errors when mediator is not character", {
+test_that("extract_mediation requires mediator_models for a serial (length >= 2) mediator", {
+  # A length >= 2 mediator now triggers the serial branch (see
+  # test-extract-lm-serial.R). Without mediator_models the call must fail with a
+  # directed message rather than silently treating the vector as a scalar.
   data <- generate_mediation_data()
 
   fit_m <- lm(M ~ X, data = data)
@@ -439,7 +442,7 @@ test_that("extract_mediation errors when mediator is not character", {
       treatment = "X",
       mediator = c("M", "M2")
     ),
-    "mediator.*length 1"  # checkmate: Must have length 1
+    "requires 'mediator_models'"
   )
 })
 
