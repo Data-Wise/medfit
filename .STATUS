@@ -56,16 +56,21 @@ Version: 0.2.0 (released to main 2026-05-31; not yet on CRAN)
   `codecov.yml` enforcing ≥90% project / 80% patch).
 - ✅ **Released v0.2.0** — `dev → main` (PR #25), tag `v0.2.0`, GitHub release
   published.
+- ✅ **CRAN prep COMPLETE** (PR #26 → `dev`): `R CMD check --as-cran` = 0 errors /
+  0 warnings / **1 expected "New submission" NOTE**. `.Rbuildignore` cleanup
+  (clears non-standard-files NOTE), `inst/CITATION` added, redundant `Maintainer:`
+  dropped, "vignettes"→"articles" wording. Package is **CRAN-submittable**.
 
 ## 🌲 Active Worktrees
 
 - None.
 
-🎯 Next Action:
-- **A)** medfit CRAN prep 🟢 — resolve the vignette articles-vs-true-vignettes
-  blocker; delete stale `..Rcheck/`; drop redundant `Maintainer:`; add
-  `inst/CITATION`; win-builder/R-hub pre-checks. Last gate before CRAN
-  submission, which then unblocks RMediation's `Remotes:`→`Imports` flip.
+🎯 Next Action — CRAN submission:
+- **A)** Carry CRAN prep to `main` — the v0.2.0 tag/main predates PR #26, so do a
+  `dev → main` sync first so the submitted source matches the release.
+- **B)** `devtools::check_win_devel()` (win-builder, ~30 min, emailed) as the final
+  pre-submission check, then `devtools::submit_cran()` / the CRAN web form.
+- Downstream: medfit on CRAN unblocks RMediation's `Remotes:`→`Imports` flip.
 
 Blocked: none.
 
