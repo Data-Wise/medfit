@@ -44,25 +44,26 @@ Version: 0.1.0
 - ✅ **Blocker A** confirmed merged (PR #19) — lavaan off-diagonal `cov(b,c')`.
 - ✅ **Repo-wide lint debt cleared** (PR #21): all 96 lintr warnings fixed;
   CI `lint` green for the first time since Dec 2025 — **full CI tab green on dev**.
-- 📝 **lm-serial extractor spec'd**: `planning/specs/SPEC-lm-serial-extractor-2026-05-31.md`
-  (closes Blocker B item 4); ORCHESTRATE plan + worktree created.
+- ✅ **lm/glm serial extractor implemented** (PR #22, open, CI green) — closes
+  Blocker B item 4: `mediator_models` list API, shared `.expand_vcov_with_aliases`
+  helper, simple-lm `cov(b,c')` fix, lm + glm, full ordering cross-check.
+  Spec: `planning/specs/SPEC-lm-serial-extractor-2026-05-31.md`.
+- ✅ **dependabot CI bumps #14–18 merged** to `dev` (download/upload-artifact,
+  checkout, github-script, github-pages-deploy).
 
 ## 🌲 Active Worktrees
 
 - `feature/lm-serial-extractor` — lm/glm serial extractor (Blocker B item 4).
-  `ORCHESTRATE-lm-serial-extractor.md` committed + pushed; ready for
-  implementation in a worktree-pinned session (created 2026-05-31).
+  **IMPLEMENTED; PR #22 open** (under review, CI green). Retain until merge,
+  then prune the worktree and delete `ORCHESTRATE-*.md`.
 
 🎯 Next Action (2026-05-31):
-- **A)** Implement the lm/glm serial extractor 🟢 —
-  `cd ~/.git-worktrees/medfit/feature-lm-serial-extractor && claude`
-  → "Read ORCHESTRATE-lm-serial-extractor.md, start Phase 1"
+- **A)** Review & merge **PR #22** (lm/glm serial extractor) 🟢 — CI green;
+  remove `ORCHESTRATE-*.md` at merge, then prune the worktree.
 - **B)** medfit CRAN prep — resolve the vignette articles-vs-true-vignettes
   blocker (gates RMediation's `Remotes:`→`Imports` flip).
-- **C)** Review/merge open dependabot CI PRs #14–18 (routine GitHub Actions
-  version bumps awaiting review).
 
-Blocked: lm-serial implementation needs its own worktree session (not this one).
+Blocked: none.
 
 ────────────────────────────────────────────────
 
