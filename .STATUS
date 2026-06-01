@@ -59,6 +59,8 @@ Version: 0.1.0
   → "Read ORCHESTRATE-lm-serial-extractor.md, start Phase 1"
 - **B)** medfit CRAN prep — resolve the vignette articles-vs-true-vignettes
   blocker (gates RMediation's `Remotes:`→`Imports` flip).
+- **C)** Review/merge open dependabot CI PRs #14–18 (routine GitHub Actions
+  version bumps awaiting review).
 
 Blocked: lm-serial implementation needs its own worktree session (not this one).
 
