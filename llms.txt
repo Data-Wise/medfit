@@ -255,7 +255,7 @@ for version compatibility and development guidelines.
 
 ## Documentation
 
-Comprehensive Quarto vignettes are available:
+Comprehensive articles are available on the package website:
 
 - **[Get
   Started](https://data-wise.github.io/medfit/articles/medfit.html)**:

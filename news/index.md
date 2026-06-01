@@ -152,7 +152,7 @@ serves as the foundation package for the mediationverse ecosystem.
 
 ### Documentation
 
-- **Four comprehensive vignettes**
+- **Four comprehensive articles** (on the package website)
   - Getting Started: Quick introduction with examples
   - Introduction: Detailed package overview
   - Model Extraction: Extract from lm, glm, lavaan objects

@@ -10,14 +10,14 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/data-wise/medfit/blob/v0.2.0/DESCRIPTION)
+[`inst/CITATION`](https://github.com/data-wise/medfit/blob/main/inst/CITATION)
 
 Tofighi D (2026). *medfit: Infrastructure for Mediation Model Fitting
 and Extraction*. R package version 0.2.0,
 <https://data-wise.github.io/medfit/>.
 
     @Manual{,
-      title = {medfit: Infrastructure for Mediation Model Fitting and Extraction},
+      title = {{medfit}: Infrastructure for Mediation Model Fitting and Extraction},
       author = {Davood Tofighi},
       year = {2026},
       note = {R package version 0.2.0},
