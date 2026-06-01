@@ -18,26 +18,57 @@ glm_class <- S7::new_S3_class("glm")
 
 #' Extract Mediation Structure from lm Model
 #'
-#' @param object Fitted lm model for the mediator (M ~ X + covariates)
-#' @param model_y Fitted lm or glm model for the outcome (Y ~ X + M + covariates)
+#' @param object Fitted lm model. For simple mediation this is the mediator
+#'   model (`M ~ X + covariates`); for serial mediation it is the first
+#'   mediator model (`M1 ~ X + covariates`).
+#' @param model_y Fitted lm or glm model for the outcome (`Y ~ X + M + covariates`,
+#'   or `Y ~ X + Mk + covariates` for serial chains).
 #' @param treatment Character: name of the treatment variable
-#' @param mediator Character: name of the mediator variable
+#' @param mediator Character: name of the mediator variable for simple mediation
+#'   (`X -> M -> Y`), OR an ordered character vector of length >= 2 for serial
+#'   mediation (`X -> M1 -> M2 -> ... -> Y`). When a vector is supplied the
+#'   method returns a [SerialMediationData] object instead of [MediationData].
+#' @param mediator_models List of fitted lm/glm models for mediators 2..k (the
+#'   `M2 ~ M1 + ...`, ..., `Mk ~ M(k-1) + ...` regressions), in chain order.
+#'   Required and only used on the serial branch; must have length
+#'   `length(mediator) - 1`.
 #' @param outcome Character: name of the outcome variable (optional, auto-detected)
 #' @param data Data frame: original data (optional, extracted from model if available)
 #' @param ... Additional arguments (ignored)
 #'
-#' @return A [MediationData] object
+#' @return A [MediationData] object, or a [SerialMediationData] object when
+#'   `mediator` is a character vector of length >= 2 (serial mediation).
 #'
 #' @details
-#' This method extracts mediation structure from two fitted linear models:
+#' This method extracts mediation structure from separately-fitted linear
+#' models. For simple mediation it uses two models:
 #' 1. Mediator model: `M ~ X + covariates`
 #' 2. Outcome model: `Y ~ X + M + covariates`
 #'
+#' For serial mediation (`mediator` length >= 2) it uses `k + 1` models: the
+#' first mediator model in `object`, mediators 2..k in `mediator_models`, and
+#' the outcome model in `model_y`. See [SerialMediationData].
+#'
 #' The method extracts:
-#' - Path coefficients (a, b, c')
+#' - Path coefficients (`a`, `b`, `c'`; plus `d1..d{k-1}` for serial chains)
 #' - Combined parameter vector and variance-covariance matrix
 #' - Residual standard deviations (for Gaussian models)
 #' - Variable names and metadata
+#'
+#' ## Covariance contract and lm-vs-lavaan divergence
+#'
+#' The combined `vcov` is **block-diagonal across separately-fitted equations**:
+#' coefficients from different regressions are independent by construction, so
+#' `cov(a, b)`, `cov(a, d_i)`, `cov(d_i, b)` are all zero. The covariance
+#' *within* the outcome equation is preserved, so `cov(b, c')` (and, in serial
+#' chains, the joint covariance among outcome-equation terms) is non-zero.
+#'
+#' For the *same data*, a single lavaan `sem()` fit estimates all equations
+#' jointly and yields the **full** (non-block-diagonal) covariance among chain
+#' paths. Consequently the indirect-effect standard error / CI computed from an
+#' lm chain will generally differ from (and is often tighter than) the lavaan
+#' fit. This is correct given the different estimators, but downstream consumers
+#' must be aware that the engine choice changes the CI for identical data.
 #'
 #' @examples
 #' \dontrun{
@@ -60,6 +91,18 @@ glm_class <- S7::new_S3_class("glm")
 #'   treatment = "X",
 #'   mediator = "M"
 #' )
+#'
+#' # Serial chain X -> M1 -> M2 -> Y
+#' fit_m1 <- lm(M1 ~ X, data = data)
+#' fit_m2 <- lm(M2 ~ M1, data = data)
+#' fit_y2 <- lm(Y ~ M2 + X, data = data)
+#' serial <- extract_mediation(
+#'   fit_m1,
+#'   model_y = fit_y2,
+#'   treatment = "X",
+#'   mediator = c("M1", "M2"),
+#'   mediator_models = list(fit_m2)
+#' )
 #' }
 #'
 #' @noRd
@@ -68,6 +111,7 @@ S7::method(extract_mediation, lm_class) <- function(
     model_y,
     treatment,
     mediator,
+    mediator_models = NULL,
     outcome = NULL,
     data = NULL,
     ...) {
@@ -77,6 +121,7 @@ S7::method(extract_mediation, lm_class) <- function(
     model_y = model_y,
     treatment = treatment,
     mediator = mediator,
+    mediator_models = mediator_models,
     outcome = outcome,
     data = data
   )
@@ -92,6 +137,7 @@ S7::method(extract_mediation, glm_class) <- function(
     model_y,
     treatment,
     mediator,
+    mediator_models = NULL,
     outcome = NULL,
     data = NULL,
     ...) {
@@ -101,6 +147,7 @@ S7::method(extract_mediation, glm_class) <- function(
     model_y = model_y,
     treatment = treatment,
     mediator = mediator,
+    mediator_models = mediator_models,
     outcome = outcome,
     data = data
   )
@@ -112,20 +159,39 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param model_m Fitted model for mediator
 #' @param model_y Fitted model for outcome
 #' @param treatment Treatment variable name
-#' @param mediator Mediator variable name
+#' @param mediator Mediator variable name (scalar) or ordered mediator vector
+#'   (length >= 2, serial mediation)
+#' @param mediator_models List of fitted mediator models 2..k (serial only)
 #' @param outcome Outcome variable name (auto-detected if NULL)
 #' @param data Original data (extracted from model if NULL)
 #'
-#' @return MediationData object
+#' @return MediationData object, or SerialMediationData when `mediator` is a
+#'   vector of length >= 2
 #' @keywords internal
 .extract_mediation_lm_impl <- function(
     model_m,
     model_y,
     treatment,
     mediator,
+    mediator_models = NULL,
     outcome = NULL,
     data = NULL) {
 
+  # --- Serial mediation: dispatch on mediator arity ---
+  # The lm/glm S7 methods dispatch on object class only, so the simple-vs-serial
+  # decision is made here from the number of mediators supplied (mirrors the
+  # lavaan extractor). Branch BEFORE the scalar-mediator assertion below.
+  if (length(mediator) >= 2L) {
+    return(.extract_serial_mediation_lm(
+      object          = model_m,
+      mediator_models = mediator_models,
+      model_y         = model_y,
+      treatment       = treatment,
+      mediators       = mediator,
+      outcome         = outcome,
+      data            = data
+    ))
+  }
 
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
 
@@ -208,32 +274,36 @@ S7::method(extract_mediation, glm_class) <- function(
   estimates["b"] <- b_path
   estimates["c_prime"] <- c_prime
 
-  # Create block-diagonal combined vcov matrix
-  # This assumes independence between mediator and outcome model estimates
+  # Build the block-diagonal SOURCE covariance of the two regressions. The
+  # mediator and outcome equations are estimated separately, so their estimates
+  # are independent by construction and the cross blocks are zero.
   n_m <- length(coef_m)
   n_y <- length(coef_y)
-  n_total <- n_m + n_y + 3  # +3 for a, b, c_prime aliases
+  n_src <- n_m + n_y
 
-  vcov_combined <- matrix(0, nrow = n_total, ncol = n_total)
-  rownames(vcov_combined) <- names(estimates)
-  colnames(vcov_combined) <- names(estimates)
+  vcov_src <- matrix(
+    0,
+    nrow = n_src, ncol = n_src,
+    dimnames = list(c(names_m, names_y), c(names_m, names_y))
+  )
+  vcov_src[seq_len(n_m), seq_len(n_m)] <- vcov_m
+  vcov_src[(n_m + 1):n_src, (n_m + 1):n_src] <- vcov_y
 
-  # Fill in blocks
-  vcov_combined[1:n_m, 1:n_m] <- vcov_m
-  vcov_combined[(n_m + 1):(n_m + n_y), (n_m + 1):(n_m + n_y)] <- vcov_y
-
-  # Copy variances for aliases
-  # a is the same as m_treatment
-  a_idx <- which(names(estimates) == "a")
-  vcov_combined[a_idx, a_idx] <- vcov_m[treatment, treatment]
-
-  # b is the same as y_mediator
-  b_idx <- which(names(estimates) == "b")
-  vcov_combined[b_idx, b_idx] <- vcov_y[mediator, mediator]
-
-  # c_prime is the same as y_treatment
-  cp_idx <- which(names(estimates) == "c_prime")
-  vcov_combined[cp_idx, cp_idx] <- vcov_y[treatment, treatment]
+  # Map each alias to its source coefficient (by prefixed name) and expand with
+  # FULL row/column copies via the shared helper. Copying the whole source
+  # row/column -- not just the diagonal variance -- preserves cov(b, c_prime),
+  # since b (y_mediator) and c_prime (y_treatment) share the outcome equation.
+  # cov(a, b) stays 0 because a lives in the mediator block (block-diagonal).
+  source_idx <- c(
+    a = which(rownames(vcov_src) == paste0("m_", treatment)),
+    b = which(rownames(vcov_src) == paste0("y_", mediator)),
+    c_prime = which(rownames(vcov_src) == paste0("y_", treatment))
+  )
+  vcov_combined <- .expand_vcov_with_aliases(
+    vcov_src,
+    source_idx = source_idx,
+    aliases_to_add = c("a", "b", "c_prime")
+  )
 
   # --- Extract Residual Standard Deviations ---
 
@@ -292,6 +362,255 @@ S7::method(extract_mediation, glm_class) <- function(
     sigma_y = sigma_y,
     treatment = treatment,
     mediator = mediator,
+    outcome = outcome,
+    mediator_predictors = mediator_predictors,
+    outcome_predictors = outcome_predictors,
+    data = data,
+    n_obs = as.integer(n_obs),
+    converged = converged,
+    source_package = source_package
+  )
+}
+
+
+#' Extract Serial Mediation Structure from lm/glm Models
+#'
+#' Internal worker for the serial branch of the lm/glm [extract_mediation()]
+#' method. Invoked by [.extract_mediation_lm_impl()] when `mediator` is a
+#' character vector of length >= 2. It assembles a [SerialMediationData] object
+#' for the chain `X -> M1 -> M2 -> ... -> Mk -> Y` from `k + 1` separately
+#' fitted regressions.
+#'
+#' @param object Fitted lm/glm for the first mediator (`M1 ~ X + ...`).
+#' @param mediator_models List (length `k - 1`) of fitted lm/glm models for
+#'   mediators 2..k (`M2 ~ M1 + ...`, ..., `Mk ~ M(k-1) + ...`), in chain order.
+#' @param model_y Fitted lm/glm for the outcome (`Y ~ Mk + X + ...`).
+#' @param treatment Character scalar: treatment variable name.
+#' @param mediators Character vector (length >= 2): mediator names in causal
+#'   order (`M1 -> M2 -> ... -> Mk`).
+#' @param outcome Character scalar, or `NULL` to auto-detect from `model_y`.
+#' @param data Data frame, or `NULL` to take the `object` model frame.
+#'
+#' @return A [SerialMediationData] object.
+#'
+#' @details
+#' Path resolution: `a` = coefficient of `treatment` in `object`; `d_i` =
+#' coefficient of `mediators[i]` in `mediator_models[[i]]` (the predecessor
+#' mediator, read regardless of any additional covariates in that equation);
+#' `b` = coefficient of `mediators[k]` in `model_y`; `c'` = coefficient of
+#' `treatment` in `model_y` (0 with a warning if absent).
+#'
+#' The combined `vcov` is block-diagonal across the separately-fitted equations
+#' (so `cov(a, d_i) = cov(d_i, b) = 0`) but preserves the within-`model_y`
+#' covariance, so `cov(b, c')` is non-zero. See the `extract_mediation` lm
+#' method docs for the lm-vs-lavaan covariance divergence this implies.
+#'
+#' @keywords internal
+.extract_serial_mediation_lm <- function( # nolint: object_length_linter.
+    object,
+    mediator_models,
+    model_y,
+    treatment,
+    mediators,
+    outcome = NULL,
+    data = NULL) {
+
+  # --- Input validation ---
+  checkmate::assert_string(treatment, .var.name = "treatment")
+  checkmate::assert_character(mediators, min.len = 2, unique = TRUE,
+                              any.missing = FALSE, .var.name = "mediator")
+  checkmate::assert_multi_class(object, c("lm", "glm"), .var.name = "object")
+  checkmate::assert_multi_class(model_y, c("lm", "glm"), .var.name = "model_y")
+  checkmate::assert_string(outcome, null.ok = TRUE, .var.name = "outcome")
+  checkmate::assert_data_frame(data, null.ok = TRUE, .var.name = "data")
+
+  k <- length(mediators)
+
+  # mediator_models is required on the serial branch: the M2..Mk regressions
+  # have no other entry point. Fail with a directed message before the generic
+  # checkmate type assertion (which would otherwise say only "not 'NULL'").
+  if (is.null(mediator_models)) {
+    msg <- paste0(
+      "Serial mediation (length(mediator) >= 2) requires 'mediator_models': ",
+      sprintf("a list of the %d mediator models (M2 ~ M1, ..., Mk ~ M(k-1)) in chain order.",
+              k - 1L)
+    )
+    stop(msg, call. = FALSE)
+  }
+
+  # mediator_models must be a list of k - 1 fitted lm/glm models.
+  checkmate::assert_list(mediator_models, len = k - 1L,
+                         .var.name = "mediator_models")
+  for (i in seq_along(mediator_models)) {
+    checkmate::assert_multi_class(
+      mediator_models[[i]], c("lm", "glm"),
+      .var.name = sprintf("mediator_models[[%d]]", i)
+    )
+  }
+
+  # Full ordered list of mediator models: object is the M1 model; mediator_models
+  # hold the M2..Mk models. (length k)
+  med_models <- c(list(object), mediator_models)
+
+  # --- Order cross-check (Q2): informative stop() on any mismatch ---
+  # (a) treatment predicts M1 in object, whose response must be M1.
+  if (!treatment %in% names(stats::coef(object))) {
+    stop(sprintf("Treatment '%s' is not a predictor in 'object' (the '%s' model).",
+                 treatment, mediators[1]), call. = FALSE)
+  }
+  obj_resp <- .get_response_var(object)
+  if (!identical(obj_resp, mediators[1])) {
+    msg <- sprintf(
+      "'object' must be the model for the first mediator ('%s'), but its response is '%s'.",
+      mediators[1], obj_resp
+    )
+    stop(msg, call. = FALSE)
+  }
+  # (b) each mediator_models[[i]] regresses mediators[i+1] on mediators[i].
+  for (i in seq_len(k - 1L)) {
+    mod <- mediator_models[[i]]
+    resp <- .get_response_var(mod)
+    if (!identical(resp, mediators[i + 1L])) {
+      msg <- paste0(
+        sprintf("mediator_models[[%d]] must be the model for mediator %d ('%s'), ",
+                i, i + 1L, mediators[i + 1L]),
+        sprintf("but its response is '%s'. Check the order of 'mediator_models'.", resp)
+      )
+      stop(msg, call. = FALSE)
+    }
+    if (!mediators[i] %in% names(stats::coef(mod))) {
+      msg <- sprintf(
+        "Predecessor mediator '%s' is not a predictor in mediator_models[[%d]] (the '%s' model).",
+        mediators[i], i, mediators[i + 1L]
+      )
+      stop(msg, call. = FALSE)
+    }
+  }
+  # (c) last mediator predicts the response in model_y.
+  if (!mediators[k] %in% names(stats::coef(model_y))) {
+    stop(sprintf("Last mediator '%s' is not a predictor in 'model_y' (the outcome model).",
+                 mediators[k]), call. = FALSE)
+  }
+
+  # --- Outcome name ---
+  if (is.null(outcome)) outcome <- .get_response_var(model_y)
+
+  # --- Path coefficients ---
+  coef_y <- stats::coef(model_y)
+  a_path <- unname(stats::coef(object)[treatment])
+  d_path <- vapply(seq_len(k - 1L), function(i) {
+    unname(stats::coef(mediator_models[[i]])[mediators[i]])
+  }, numeric(1))
+  b_path <- unname(coef_y[mediators[k]])
+  # c' may be absent (full mediation) -> 0 with a warning.
+  if (treatment %in% names(coef_y)) {
+    c_prime <- unname(coef_y[treatment])
+  } else {
+    c_prime <- 0
+    warning("Direct effect (c-prime path) not found in outcome model. Setting to 0.",
+            call. = FALSE)
+  }
+
+  # --- Combined estimates with per-model prefixes (m1_, m2_, ..., mk_, y_) ---
+  coef_list <- c(med_models, list(model_y))
+  prefixes <- c(paste0("m", seq_len(k), "_"), "y_")
+  named_coefs <- Map(function(mod, pre) {
+    cf <- stats::coef(mod)
+    stats::setNames(cf, paste0(pre, names(cf)))
+  }, coef_list, prefixes)
+  estimates <- unlist(unname(named_coefs))
+
+  # Structural aliases (a, d1..d{k-1}, b, c_prime).
+  d_names <- paste0("d", seq_len(k - 1L))
+  alias_val <- c(
+    a = a_path,
+    stats::setNames(d_path, d_names),
+    b = b_path,
+    c_prime = c_prime
+  )
+  for (al in names(alias_val)) estimates[al] <- alias_val[[al]]
+
+  # --- Block-diagonal source vcov of all k + 1 models ---
+  vcov_list <- lapply(coef_list, stats::vcov)
+  src_names <- unlist(Map(function(v, pre) paste0(pre, rownames(v)),
+                          vcov_list, prefixes), use.names = FALSE)
+  n_src <- length(src_names)
+  vcov_src <- matrix(0, nrow = n_src, ncol = n_src,
+                     dimnames = list(src_names, src_names))
+  pos <- 0L
+  for (v in vcov_list) {
+    idx <- seq_len(nrow(v)) + pos
+    vcov_src[idx, idx] <- v
+    pos <- pos + nrow(v)
+  }
+
+  # --- Map aliases to source rows; expand with full row/column copies ---
+  # a -> m1_<treatment>; d_i -> m{i+1}_<mediators[i]>; b -> y_<mediators[k]>;
+  # c_prime -> y_<treatment>. Cross-model blocks are zero (separate equations),
+  # so cov(a, d_i) = cov(d_i, b) = 0; cov(b, c_prime) survives (same y eqn).
+  alias_src_name <- c(
+    a = paste0("m1_", treatment),
+    stats::setNames(
+      paste0("m", seq_len(k - 1L) + 1L, "_", mediators[seq_len(k - 1L)]),
+      d_names
+    ),
+    b = paste0("y_", mediators[k]),
+    c_prime = paste0("y_", treatment)
+  )
+  resolve <- function(nm) {
+    if (nm %in% src_names) which(src_names == nm)[1] else NA_integer_
+  }
+  source_idx <- vapply(alias_src_name, resolve, integer(1))
+
+  vcov_combined <- .expand_vcov_with_aliases(
+    vcov_src,
+    source_idx = source_idx,
+    aliases_to_add = names(alias_val)
+  )
+
+  # --- Residual standard deviations (Q3: per-mediator NA for non-Gaussian) ---
+  sigma_mediators <- vapply(med_models, function(m) {
+    s <- .extract_sigma(m)
+    if (is.null(s)) NA_real_ else s
+  }, numeric(1))
+  if (all(is.na(sigma_mediators))) sigma_mediators <- NULL
+  sigma_y <- .extract_sigma(model_y)  # NULL for non-Gaussian outcome
+
+  # --- Predictor bookkeeping (exclude the intercept) ---
+  drop_intercept <- function(nm) nm[nm != "(Intercept)"]
+  mediator_predictors <- lapply(med_models,
+                                function(m) drop_intercept(names(stats::coef(m))))
+  outcome_predictors <- drop_intercept(names(coef_y))
+
+  # --- Data, sample size, convergence ---
+  if (is.null(data)) {
+    data <- tryCatch(stats::model.frame(object), error = function(e) NULL)
+  }
+  n_obs <- if (!is.null(data)) nrow(data) else length(stats::residuals(object))
+
+  all_models <- c(med_models, list(model_y))
+  converged <- all(vapply(all_models, function(m) {
+    if (inherits(m, "glm")) isTRUE(m$converged) else TRUE
+  }, logical(1)))
+
+  source_package <- if (any(vapply(all_models, inherits, logical(1), "glm"))) {
+    "stats::glm"
+  } else {
+    "stats::lm"
+  }
+
+  # --- Assemble SerialMediationData ---
+  SerialMediationData(
+    a_path = a_path,
+    d_path = d_path,
+    b_path = b_path,
+    c_prime = c_prime,
+    estimates = estimates,
+    vcov = vcov_combined,
+    sigma_mediators = sigma_mediators,
+    sigma_y = sigma_y,
+    treatment = treatment,
+    mediators = mediators,
     outcome = outcome,
     mediator_predictors = mediator_predictors,
     outcome_predictors = outcome_predictors,

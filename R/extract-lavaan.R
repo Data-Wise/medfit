@@ -284,49 +284,15 @@ extract_mediation_lavaan <- function(object,
     c_prime = resolve_source_idx(cp_label, paste0(outcome, "~", treatment))
   )
 
-  # Expand vcov to include only NEW aliases
-  n_orig <- length(all_coef)
-  n_aliases <- length(aliases_to_add)
-  n_total <- n_orig + n_aliases
-
-  vcov_expanded <- matrix(0, nrow = n_total, ncol = n_total)
-
-  # Build names for expanded vcov
-  vcov_names <- c(names(all_coef), aliases_to_add)
-  rownames(vcov_expanded) <- vcov_names
-  colnames(vcov_expanded) <- vcov_names
-
-  # Fill in original vcov block
-  vcov_expanded[seq_len(n_orig), seq_len(n_orig)] <- vcov_mat
-
-  # For each newly added alias, copy the FULL row/column of its source
-  # parameter (preserving covariances with every original parameter), then
-  # fix up the alias-to-alias intersections from the source-to-source
-  # covariances. This keeps the expanded matrix symmetric and consistent so
-  # that, e.g., vcov[c("a", "b"), c("a", "b")] reproduces the true lavaan
-  # covariance between those paths, including the off-diagonal cov(a, b).
-  for (alias_name in aliases_to_add) {
-    s_i <- source_idx[[alias_name]]
-    if (is.na(s_i)) next
-    alias_idx <- which(vcov_names == alias_name)
-
-    # Alias <-> original cross-covariances (copy source row/column).
-    vcov_expanded[alias_idx, seq_len(n_orig)] <- vcov_mat[s_i, ]
-    vcov_expanded[seq_len(n_orig), alias_idx] <- vcov_mat[, s_i]
-  }
-
-  # Alias <-> alias (co)variances, taken from the corresponding source pairs.
-  for (alias_i in aliases_to_add) {
-    s_i <- source_idx[[alias_i]]
-    if (is.na(s_i)) next
-    idx_i <- which(vcov_names == alias_i)
-    for (alias_j in aliases_to_add) {
-      s_j <- source_idx[[alias_j]]
-      if (is.na(s_j)) next
-      idx_j <- which(vcov_names == alias_j)
-      vcov_expanded[idx_i, idx_j] <- vcov_mat[s_i, s_j]
-    }
-  }
+  # Expand vcov so each NEW alias carries the FULL covariance row/column of its
+  # source parameter (preserving off-diagonals such as cov(a, b), which are
+  # non-zero in single-equation SEM). Shared with the lm/glm extractor so the
+  # two engines cannot drift in how they assemble the alias block.
+  vcov_expanded <- .expand_vcov_with_aliases(
+    vcov_mat,
+    source_idx = source_idx,
+    aliases_to_add = aliases_to_add
+  )
 
   # --- Extract Residual Variances ---
 
@@ -576,32 +542,14 @@ extract_mediation_lavaan <- function(object,
 
   source_idx <- vapply(alias_var, resolve_source_idx, integer(1))
 
-  n_orig <- length(all_coef)
-  n_total <- n_orig + length(aliases_to_add)
-  vcov_names <- c(orig_names, aliases_to_add)
-  vcov_expanded <- matrix(0, nrow = n_total, ncol = n_total,
-                          dimnames = list(vcov_names, vcov_names))
-  vcov_expanded[seq_len(n_orig), seq_len(n_orig)] <- vcov_mat
-
-  # Alias <-> original cross-covariances (copy the source row/column).
-  for (al in aliases_to_add) {
-    s_i <- source_idx[[al]]
-    if (is.na(s_i)) next
-    idx <- which(vcov_names == al)
-    vcov_expanded[idx, seq_len(n_orig)] <- vcov_mat[s_i, ]
-    vcov_expanded[seq_len(n_orig), idx] <- vcov_mat[, s_i]
-  }
-  # Alias <-> alias (co)variances, from the corresponding source pairs.
-  for (al_i in aliases_to_add) {
-    s_i <- source_idx[[al_i]]
-    if (is.na(s_i)) next
-    idx_i <- which(vcov_names == al_i)
-    for (al_j in aliases_to_add) {
-      s_j <- source_idx[[al_j]]
-      if (is.na(s_j)) next
-      vcov_expanded[idx_i, which(vcov_names == al_j)] <- vcov_mat[s_i, s_j]
-    }
-  }
+  # Same full-row/column alias expansion as the simple path and the lm/glm
+  # extractor (shared helper), so the serial chain's off-diagonal covariances
+  # -- needed for serial indirect-effect SEs -- are preserved.
+  vcov_expanded <- .expand_vcov_with_aliases(
+    vcov_mat,
+    source_idx = source_idx,
+    aliases_to_add = aliases_to_add
+  )
 
   # --- Residual standard deviations (sqrt of estimated error variances) ---
   get_resid_sd <- function(v) {

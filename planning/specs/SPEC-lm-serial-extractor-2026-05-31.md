@@ -1,6 +1,6 @@
 # SPEC: lm/glm Serial Mediation Extractor (medfit Blocker B — item 4)
 
-**Status:** Draft
+**Status:** Implemented (feature/lm-serial-extractor, 2026-05-31)
 **Created:** 2026-05-31
 **Author:** Davood Tofighi (with Claude Code)
 **From brainstorm:** `/workflow:brainstorm api save "lm serial extractor"` (2026-05-31)
@@ -144,26 +144,26 @@ serial path uses), so the simple and serial lm paths share one correct alias-vco
 
 ## 6. Acceptance criteria
 
-- [ ] `extract_mediation(m1_fit, model_y=y_fit, treatment, mediator=c("M1","M2"), mediator_models=list(m2_fit))`
+- [x] `extract_mediation(m1_fit, model_y=y_fit, treatment, mediator=c("M1","M2"), mediator_models=list(m2_fit))`
       returns a `SerialMediationData` with `@mediators = c("M1","M2")`, `@d_path` length 1.
-- [ ] `@estimates`/`@vcov` are named with `a`, `d1…d{k-1}`, `b`, `c_prime`; `@vcov` dim matches
+- [x] `@estimates`/`@vcov` are named with `a`, `d1…d{k-1}`, `b`, `c_prime`; `@vcov` dim matches
       `@estimates`; matrix is symmetric.
-- [ ] vcov is block-diagonal across chain paths (`cov(a,d1)=cov(d1,b)=0`) **and** preserves
+- [x] vcov is block-diagonal across chain paths (`cov(a,d1)=cov(d1,b)=0`) **and** preserves
       `cov(b, c_prime)` from the outcome equation (asserted against `vcov(y_fit)`).
-- [ ] Works for 2- and 3-mediator chains; works for `glm` outcome and `glm` mediators (link-scale
+- [x] Works for 2- and 3-mediator chains; works for `glm` outcome and `glm` mediators (link-scale
       paths). `@sigma_mediators` is length-k with `NA` for each non-Gaussian mediator (whole slot
       `NULL` only if all mediators are non-Gaussian); `@sigma_y` `NULL` for non-Gaussian outcome (Q3).
-- [ ] **Order cross-check (Q2):** `length(mediator_models) == length(mediator) - 1`; for each `i`,
+- [x] **Order cross-check (Q2):** `length(mediator_models) == length(mediator) - 1`; for each `i`,
       `mediator[i]` is a predictor in `mediator_models[[i]]` and `mediator[i+1]` is its response;
       `treatment` predicts `mediator[1]` in `object`; `mediator[k]` predicts the response in
       `model_y`. Informative `stop()` on any mismatch (with a test per failure mode).
-- [ ] Extra covariates in mediator/outcome equations are accepted without warning; `d_i` is read as
+- [x] Extra covariates in mediator/outcome equations are accepted without warning; `d_i` is read as
       the predecessor-mediator coefficient regardless (Q1) — asserted by a test with `M2 ~ M1 + X`.
-- [ ] **Simple-lm regression test**: `extract_mediation(m_fit, model_y=y_fit, …)@vcov[c("b","c_prime"),
+- [x] **Simple-lm regression test**: `extract_mediation(m_fit, model_y=y_fit, …)@vcov[c("b","c_prime"),
       c("b","c_prime")]` equals `vcov(y_fit)[c(mediator,treatment), c(mediator,treatment)]`
       (off-diagonal now non-zero).
-- [ ] `R CMD check` clean; medfit test suite green; `lintr::lint_package()` == 0.
-- [ ] `@details` + a vignette note document the lm-vs-lavaan covariance divergence (§4.3).
+- [x] `R CMD check` clean; medfit test suite green; `lintr::lint_package()` == 0.
+- [x] `@details` + a vignette note document the lm-vs-lavaan covariance divergence (§4.3).
 
 ---
 
@@ -223,10 +223,17 @@ serial path uses), so the simple and serial lm paths share one correct alias-vco
 
 ## 11. Review checklist
 
-- [ ] API reviewed (`mediator_models` ergonomics acceptable to maintainer)
-- [ ] vcov contract + lm/lavaan divergence agreed
-- [ ] Simple-lm bug fix confirmed behavior-neutral for indirect effect
-- [ ] Acceptance criteria complete and testable
+- [x] API reviewed (`mediator_models` ergonomics acceptable to maintainer)
+      — approved 2026-05-31: asymmetry (M1 in `object`, M2..Mk in
+      `mediator_models`) accepted as inherent to S7 dispatch + lm's lack of a
+      single all-equation object.
+- [x] vcov contract + lm/lavaan divergence agreed
+      — approved 2026-05-31: block-diagonal chain paths with preserved
+      `cov(b,c')`; same-data-different-CI footgun mitigated by `@details` +
+      vignette docs (infrastructure-not-methodology).
+- [x] Simple-lm bug fix confirmed behavior-neutral for indirect effect
+      (regression test pins `a·b` unchanged; only `cov(b,c')` changes)
+- [x] Acceptance criteria complete and testable (all §6 items covered by tests)
 - [x] Open questions resolved before implementation (§7, 2026-05-31)
 
 ---
@@ -237,3 +244,10 @@ serial path uses), so the simple and serial lm paths share one correct alias-vco
   list; fix both simple + serial; lm + glm; spec home = medfit `planning/specs/`).
 - 2026-05-31 — §7 open questions resolved: (1) covariates = document-only; (2) ordering = full
   cross-check; (3) glm sigma = per-mediator `NA`. Acceptance criteria §6 updated accordingly.
+- 2026-05-31 — Implemented on `feature/lm-serial-extractor`. Phase 1: shared
+  `.expand_vcov_with_aliases()` helper (`R/utils.R`); simple-lm `cov(b,c')` fix; both lavaan paths
+  refactored onto the helper (no drift). Phase 2: `mediator_models` API + `.extract_serial_mediation_lm()`
+  worker with full ordering cross-check and per-mediator `NA` sigma. Phase 3: `test-extract-lm-serial.R`
+  (2-/3-mediator, lm+glm, vcov block structure + `cov(b,c')`, 5 ordering-error modes, covariate
+  tolerance) + `@details`/vignette divergence docs. All §6 acceptance items met; `R CMD check` OK,
+  `lintr::lint_package()` == 0.
