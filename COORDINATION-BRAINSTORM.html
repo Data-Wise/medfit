@@ -5,7 +5,7 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="mediationverse Coordination Brainstorming"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
+</script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="mediationverse Coordination Brainstorming"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
 
 
 
@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,12 +80,12 @@
 
 <p><strong>Date</strong>: 2025-12-15 <strong>Context</strong>: medfit MVP nearing completion, need to coordinate integration with mediationverse ecosystem <strong>Decision Made</strong>: medfit is the foundation package (per three-package-ecosystem-strategy.md, Dec 2, 2025)</p>
 <hr><div class="section level2">
-<h2 id="id_-executive-summary">🎯 Executive Summary<a class="anchor" aria-label="anchor" href="#id_-executive-summary"></a></h2>
+<h2 id="dart-executive-summary">🎯 Executive Summary<a class="anchor" aria-label="anchor" href="#dart-executive-summary"></a></h2>
 <p><strong>Strategic Decision Already Made</strong>: Create medfit as foundation package providing: - Model fitting API: <code><a href="reference/fit_mediation.html">fit_mediation()</a></code> - Model extraction API: <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> - Bootstrap infrastructure: <code><a href="reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> - S7 base classes: <code>MediationData</code>, <code>SerialMediationData</code>, <code>BootstrapResult</code></p>
 <p><strong>This Document</strong>: Implementation coordination mechanics for mediationverse loading, generic functions, and CMAverse integration.</p>
 <hr></div>
 <div class="section level2">
-<h2 id="id_-findings-from-strategic-planning-documents">📋 Findings from Strategic Planning Documents<a class="anchor" aria-label="anchor" href="#id_-findings-from-strategic-planning-documents"></a></h2>
+<h2 id="clipboard-findings-from-strategic-planning-documents">📋 Findings from Strategic Planning Documents<a class="anchor" aria-label="anchor" href="#clipboard-findings-from-strategic-planning-documents"></a></h2>
 <div class="section level3">
 <h3 id="key-document-probmedplanningthree-package-ecosystem-strategymd">Key Document: <code>probmed/planning/three-package-ecosystem-strategy.md</code>
 <a class="anchor" aria-label="anchor" href="#key-document-probmedplanningthree-package-ecosystem-strategymd"></a></h3>
@@ -103,7 +103,7 @@ probmed | RMediation | medrobust</code></pre>
 <hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-generic-functions-strategy">🔧 Generic Functions Strategy<a class="anchor" aria-label="anchor" href="#id_-generic-functions-strategy"></a></h2>
+<h2 id="wrench-generic-functions-strategy">🔧 Generic Functions Strategy<a class="anchor" aria-label="anchor" href="#wrench-generic-functions-strategy"></a></h2>
 <div class="section level3">
 <h3 id="core-generics-medfit-provides">Core Generics (medfit provides)<a class="anchor" aria-label="anchor" href="#core-generics-medfit-provides"></a></h3>
 <div class="section level4">
@@ -147,32 +147,32 @@ probmed | RMediation | medrobust</code></pre>
 <span>  engine_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>Engine Architecture</strong> (CMAverse Integration):</p>
-<table class="table"><thead><tr class="header"><th>Engine</th>
+<table class="table"><thead><tr><th>Engine</th>
 <th>Package</th>
 <th>Method</th>
 <th>Status</th>
 <th>Priority</th>
-</tr></thead><tbody><tr class="odd"><td><code>"glm"</code></td>
+</tr></thead><tbody><tr><td><code>"glm"</code></td>
 <td>stats (base)</td>
 <td>Regression</td>
 <td>✅ MVP</td>
 <td>P0</td>
-</tr><tr class="even"><td><code>"gformula"</code></td>
+</tr><tr><td><code>"gformula"</code></td>
 <td>CMAverse</td>
 <td>G-computation</td>
 <td>🔮 Planned</td>
 <td>P1</td>
-</tr><tr class="odd"><td><code>"ipw"</code></td>
+</tr><tr><td><code>"ipw"</code></td>
 <td>CMAverse</td>
 <td>Inverse prob weighting</td>
 <td>🔮 Planned</td>
 <td>P1</td>
-</tr><tr class="even"><td><code>"tmle"</code></td>
+</tr><tr><td><code>"tmle"</code></td>
 <td>tmle3</td>
 <td>Targeted learning</td>
 <td>🔮 Future</td>
 <td>P2</td>
-</tr><tr class="odd"><td><code>"dml"</code></td>
+</tr><tr><td><code>"dml"</code></td>
 <td>DoubleML</td>
 <td>Double ML</td>
 <td>🔮 Future</td>
@@ -257,7 +257,7 @@ probmed | RMediation | medrobust</code></pre>
 </div>
 </div>
 <div class="section level2">
-<h2 id="id_-mediationverse-loading-coordination">🌐 mediationverse Loading Coordination<a class="anchor" aria-label="anchor" href="#id_-mediationverse-loading-coordination"></a></h2>
+<h2 id="globe_with_meridians-mediationverse-loading-coordination">🌐 mediationverse Loading Coordination<a class="anchor" aria-label="anchor" href="#globe_with_meridians-mediationverse-loading-coordination"></a></h2>
 <div class="section level3">
 <h3 id="current-mediationverse-structure">Current mediationverse Structure<a class="anchor" aria-label="anchor" href="#current-mediationverse-structure"></a></h3>
 <p>From <code>mediationverse/R/attach.R</code>:</p>
@@ -338,7 +338,7 @@ probmed | RMediation | medrobust</code></pre>
 <hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-package-integration-workflows">🔀 Package Integration Workflows<a class="anchor" aria-label="anchor" href="#id_-package-integration-workflows"></a></h2>
+<h2 id="twisted_rightwards_arrows-package-integration-workflows">🔀 Package Integration Workflows<a class="anchor" aria-label="anchor" href="#twisted_rightwards_arrows-package-integration-workflows"></a></h2>
 <div class="section level3">
 <h3 id="workflow-1-probmed-integration">Workflow 1: probmed Integration<a class="anchor" aria-label="anchor" href="#workflow-1-probmed-integration"></a></h3>
 <p><strong>Before medfit</strong>:</p>
@@ -413,7 +413,7 @@ probmed | RMediation | medrobust</code></pre>
 <hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_️-implementation-timeline">🗓️ Implementation Timeline<a class="anchor" aria-label="anchor" href="#id_%EF%B8%8F-implementation-timeline"></a></h2>
+<h2 id="spiral_calendar-implementation-timeline">🗓️ Implementation Timeline<a class="anchor" aria-label="anchor" href="#spiral_calendar-implementation-timeline"></a></h2>
 <div class="section level3">
 <h3 id="phase-1-medfit-mvp-this-week-dec-15-21">Phase 1: medfit MVP (This Week, Dec 15-21)<a class="anchor" aria-label="anchor" href="#phase-1-medfit-mvp-this-week-dec-15-21"></a></h3>
 <p><strong>Status</strong>: 75% complete, 241 tests ready</p>
@@ -509,7 +509,7 @@ probmed | RMediation | medrobust</code></pre>
 <hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-coordination-checkpoints">🎯 Coordination Checkpoints<a class="anchor" aria-label="anchor" href="#id_-coordination-checkpoints"></a></h2>
+<h2 id="dart-coordination-checkpoints">🎯 Coordination Checkpoints<a class="anchor" aria-label="anchor" href="#dart-coordination-checkpoints"></a></h2>
 <div class="section level3">
 <h3 id="before-releasing-medfit-v010">Before Releasing medfit v0.1.0<a class="anchor" aria-label="anchor" href="#before-releasing-medfit-v010"></a></h3>
 <ul class="task-list"><li><label><input type="checkbox">Confirm API stability with probmed team</label></li>
@@ -534,7 +534,7 @@ probmed | RMediation | medrobust</code></pre>
 </ul><hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-success-metrics">📊 Success Metrics<a class="anchor" aria-label="anchor" href="#id_-success-metrics"></a></h2>
+<h2 id="bar_chart-success-metrics">📊 Success Metrics<a class="anchor" aria-label="anchor" href="#bar_chart-success-metrics"></a></h2>
 <div class="section level3">
 <h3 id="technical-metrics">Technical Metrics<a class="anchor" aria-label="anchor" href="#technical-metrics"></a></h3>
 <ul class="task-list"><li><label><input type="checkbox">Code duplication reduced by &gt;50%</label></li>
@@ -553,7 +553,7 @@ probmed | RMediation | medrobust</code></pre>
 </ul><hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-open-questions">🚧 Open Questions<a class="anchor" aria-label="anchor" href="#id_-open-questions"></a></h2>
+<h2 id="construction-open-questions">🚧 Open Questions<a class="anchor" aria-label="anchor" href="#construction-open-questions"></a></h2>
 <div class="section level3">
 <h3 id="id_1-mediationverse-loading-strategy---needs-decision">1. mediationverse Loading Strategy - NEEDS DECISION<a class="anchor" aria-label="anchor" href="#id_1-mediationverse-loading-strategy---needs-decision"></a></h3>
 <p><strong>Question</strong>: Load all packages or just medfit?</p>
@@ -583,7 +583,7 @@ probmed | RMediation | medrobust</code></pre>
 <hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-next-immediate-actions">💡 Next Immediate Actions<a class="anchor" aria-label="anchor" href="#id_-next-immediate-actions"></a></h2>
+<h2 id="bulb-next-immediate-actions">💡 Next Immediate Actions<a class="anchor" aria-label="anchor" href="#bulb-next-immediate-actions"></a></h2>
 <div class="section level3">
 <h3 id="this-week-dec-15-21-complete-medfit-mvp">This Week (Dec 15-21): Complete medfit MVP<a class="anchor" aria-label="anchor" href="#this-week-dec-15-21-complete-medfit-mvp"></a></h3>
 <ol style="list-style-type: decimal"><li>
@@ -633,7 +633,7 @@ probmed | RMediation | medrobust</code></pre>
 </ol><hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-reference-documents">📚 Reference Documents<a class="anchor" aria-label="anchor" href="#id_-reference-documents"></a></h2>
+<h2 id="books-reference-documents">📚 Reference Documents<a class="anchor" aria-label="anchor" href="#books-reference-documents"></a></h2>
 <div class="section level3">
 <h3 id="strategic-planning-already-decided">Strategic Planning (Already Decided)<a class="anchor" aria-label="anchor" href="#strategic-planning-already-decided"></a></h3>
 <ul><li>

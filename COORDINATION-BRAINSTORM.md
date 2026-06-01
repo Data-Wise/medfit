@@ -71,6 +71,7 @@ models - `extract_mediation.brmsfit()` - Bayesian models -
 **Design Pattern**:
 
 ``` r
+
 # Generic signature
 extract_mediation <- S7::new_generic(
   "extract_mediation",
@@ -102,6 +103,7 @@ needed
 **Current Implementation**:
 
 ``` r
+
 fit_mediation(
   formula_y = Y ~ X + M + C,
   formula_m = M ~ X + C,
@@ -126,6 +128,7 @@ fit_mediation(
 **CMAverse Integration Pattern**:
 
 ``` r
+
 # User interface
 result <- fit_mediation(
   ...,
@@ -180,6 +183,7 @@ self-contained function - All engines return `MediationData`
 **Current Methods**:
 
 ``` r
+
 bootstrap_mediation(
   object,              # MediationData object
   statistic = indirect_effect,  # Function: MediationData -> scalar
@@ -194,6 +198,7 @@ bootstrap_mediation(
 **Statistic Functions** (helper-test-data.R pattern):
 
 ``` r
+
 # Indirect effect (default)
 indirect_effect <- function(med_data) {
   med_data@a_path * med_data@b_path
@@ -224,6 +229,7 @@ functions for P_med/DOP/MBCO
 From `mediationverse/R/attach.R`:
 
 ``` r
+
 core <- c("medfit", "probmed", "RMediation", "medrobust", "medsim")
 
 # Startup message shows:
@@ -236,6 +242,7 @@ core <- c("medfit", "probmed", "RMediation", "medrobust", "medsim")
 #### Option 1: Load All Packages (tidyverse pattern)
 
 ``` r
+
 library(mediationverse)
 # Attaches: medfit, probmed, RMediation, medrobust, medsim
 # Message:
@@ -257,6 +264,7 @@ conflicts
 #### Option 2: Selective Loading (recommended)
 
 ``` r
+
 library(mediationverse)
 # Attaches ONLY: medfit (foundation always loaded)
 # Message:
@@ -271,6 +279,7 @@ library(mediationverse)
 **Implementation**:
 
 ``` r
+
 # mediationverse/R/attach.R
 .onAttach <- function(libname, pkgname) {
   # Only attach medfit by default
@@ -297,6 +306,7 @@ always available (foundation)
 #### Option 3: Hybrid (tidyverse::tidyverse_packages() pattern)
 
 ``` r
+
 library(mediationverse)
 # Attaches: medfit (foundation)
 
@@ -329,6 +339,7 @@ analysis - Clean namespace reduces conflicts
 **Before medfit**:
 
 ``` r
+
 library(probmed)
 
 # probmed had its own extraction
@@ -340,6 +351,7 @@ result <- compute_pmed(fit_m, fit_y, treatment = "X", mediator = "M")
 **After medfit**:
 
 ``` r
+
 library(mediationverse)  # Loads medfit
 library(probmed)
 
@@ -367,6 +379,7 @@ method 5. Backward compatibility maintained
 **Before medfit**:
 
 ``` r
+
 library(RMediation)
 
 # RMediation had its own extraction (from lavaan)
@@ -377,6 +390,7 @@ result <- medci(fit, type = "dop")
 **After medfit**:
 
 ``` r
+
 library(mediationverse)
 library(RMediation)
 
@@ -396,6 +410,7 @@ result <- RMediation::medci(fit, type = "dop")
 **medrobust uses medfit optionally**:
 
 ``` r
+
 library(mediationverse)
 library(medrobust)
 
@@ -453,6 +468,7 @@ v0.1.0
 3.  **Add S7 method for P_med**
 
     ``` r
+
     # In probmed
     S7::method(compute_pmed, medfit::MediationData) <- function(object, ...) {
       # P_med computation using medfit structure
@@ -462,6 +478,7 @@ v0.1.0
 4.  **Maintain backward compatibility**
 
     ``` r
+
     # probmed wrapper
     compute_pmed <- function(fit_m, fit_y = NULL, ...) {
       if (inherits(fit_m, "medfit::MediationData")) {
@@ -504,6 +521,7 @@ v0.1.0
 3.  **Add utility functions**
 
     ``` r
+
     # mediationverse/R/packages.R
     mediationverse_packages <- function() {
       c("medfit", "probmed", "RMediation", "medrobust", "medsim")

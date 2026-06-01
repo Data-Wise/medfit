@@ -53,17 +53,9 @@ med_data <- fit_mediation(
 )
 
 te(med_data)
-#> [1] 0.3445904
-#> attr(,"class")
-#> [1] "mediation_effect" "numeric"         
-#> attr(,"type")
-#> [1] "te"
+#> Total Effect (TE): 0.3446
 
 # Verify: TE = NIE + NDE
 nie(med_data) + nde(med_data)
-#> [1] 0.3445904
-#> attr(,"class")
-#> [1] "mediation_effect" "numeric"         
-#> attr(,"type")
-#> [1] "nie"
+#> Natural Indirect Effect (NIE): 0.3446
 ```

@@ -5,7 +5,7 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="START HERE: medfit Package"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
+</script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="START HERE: medfit Package"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
 
 
 
@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,7 @@
 
 <p><strong>Created</strong>: 2025-12-02 <strong>Status</strong>: Package skeleton ready, implementation starting</p>
 <hr><div class="section level2">
-<h2 id="id_-what-is-medfit">🎯 What is medfit?<a class="anchor" aria-label="anchor" href="#id_-what-is-medfit"></a></h2>
+<h2 id="dart-what-is-medfit">🎯 What is medfit?<a class="anchor" aria-label="anchor" href="#dart-what-is-medfit"></a></h2>
 <p><strong>medfit</strong> is the <strong>foundation package</strong> for the mediation analysis ecosystem. It provides shared infrastructure (S7 classes, model fitting, extraction, bootstrap) that eliminates redundancy across three packages:</p>
 <ul><li>
 <strong>probmed</strong> - P_med (probabilistic effect size)</li>
@@ -90,7 +90,7 @@
 <strong>medrobust</strong> - Sensitivity analysis</li>
 </ul><hr></div>
 <div class="section level2">
-<h2 id="id_-package-location">📁 Package Location<a class="anchor" aria-label="anchor" href="#id_-package-location"></a></h2>
+<h2 id="file_folder-package-location">📁 Package Location<a class="anchor" aria-label="anchor" href="#file_folder-package-location"></a></h2>
 <pre><code>packages/
 ├── medfit/           ← YOU ARE HERE (new foundation package)
 ├── probmed/          ← Will use medfit (phase 2 complete)
@@ -98,7 +98,7 @@
 └── medrobust/        ← May use medfit (in development)</code></pre>
 <hr></div>
 <div class="section level2">
-<h2 id="id_-key-documents">📋 Key Documents<a class="anchor" aria-label="anchor" href="#id_-key-documents"></a></h2>
+<h2 id="clipboard-key-documents">📋 Key Documents<a class="anchor" aria-label="anchor" href="#clipboard-key-documents"></a></h2>
 <div class="section level3">
 <h3 id="in-this-package-medfit">In This Package (medfit/)<a class="anchor" aria-label="anchor" href="#in-this-package-medfit"></a></h3>
 <ol style="list-style-type: decimal"><li>
@@ -124,37 +124,37 @@
 </ol><hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-implementation-roadmap-summary">🚀 Implementation Roadmap (Summary)<a class="anchor" aria-label="anchor" href="#id_-implementation-roadmap-summary"></a></h2>
-<table class="table"><thead><tr class="header"><th>Phase</th>
+<h2 id="rocket-implementation-roadmap-summary">🚀 Implementation Roadmap (Summary)<a class="anchor" aria-label="anchor" href="#rocket-implementation-roadmap-summary"></a></h2>
+<table class="table"><thead><tr><th>Phase</th>
 <th>Duration</th>
 <th>What Gets Built</th>
-</tr></thead><tbody><tr class="odd"><td>1. Setup</td>
+</tr></thead><tbody><tr><td>1. Setup</td>
 <td>2-3 days</td>
 <td>✅ DONE - Package skeleton</td>
-</tr><tr class="even"><td>2. S7 Classes</td>
+</tr><tr><td>2. S7 Classes</td>
 <td>2-3 days</td>
 <td>MediationData, BootstrapResult</td>
-</tr><tr class="odd"><td>3. Extraction</td>
+</tr><tr><td>3. Extraction</td>
 <td>3-4 days</td>
 <td>extract_mediation() + methods</td>
-</tr><tr class="even"><td>4. Fitting</td>
+</tr><tr><td>4. Fitting</td>
 <td>2-3 days</td>
 <td>fit_mediation() with GLM</td>
-</tr><tr class="odd"><td>5. Bootstrap</td>
+</tr><tr><td>5. Bootstrap</td>
 <td>3-4 days</td>
 <td>bootstrap_mediation()</td>
-</tr><tr class="even"><td>6. Testing</td>
+</tr><tr><td>6. Testing</td>
 <td>3-4 days</td>
 <td>&gt;90% coverage + vignettes</td>
-</tr><tr class="odd"><td>7. Polish</td>
+</tr><tr><td>7. Polish</td>
 <td>2-3 days</td>
 <td>R CMD check + pkgdown</td>
 </tr></tbody></table><p><strong>Total</strong>: 4-6 weeks for MVP</p>
 <hr></div>
 <div class="section level2">
-<h2 id="id_-whats-already-set-up">🔧 What’s Already Set Up<a class="anchor" aria-label="anchor" href="#id_-whats-already-set-up"></a></h2>
+<h2 id="wrench-whats-already-set-up">🔧 What’s Already Set Up<a class="anchor" aria-label="anchor" href="#wrench-whats-already-set-up"></a></h2>
 <div class="section level3">
-<h3 id="id_-package-skeleton">✅ Package Skeleton<a class="anchor" aria-label="anchor" href="#id_-package-skeleton"></a></h3>
+<h3 id="white_check_mark-package-skeleton">✅ Package Skeleton<a class="anchor" aria-label="anchor" href="#white_check_mark-package-skeleton"></a></h3>
 <ul><li>DESCRIPTION with dependencies</li>
 <li>LICENSE (GPL-3)</li>
 <li>README.md with overview</li>
@@ -163,7 +163,7 @@
 <li>.Rbuildignore, .gitignore</li>
 </ul></div>
 <div class="section level3">
-<h3 id="id_-directory-structure">✅ Directory Structure<a class="anchor" aria-label="anchor" href="#id_-directory-structure"></a></h3>
+<h3 id="white_check_mark-directory-structure">✅ Directory Structure<a class="anchor" aria-label="anchor" href="#white_check_mark-directory-structure"></a></h3>
 <pre><code>medfit/
 ├── CLAUDE.md              ← AI assistance guide
 ├── DESCRIPTION            ← Package metadata
@@ -189,14 +189,14 @@
 └── .github/workflows/     ← CI/CD (to be added)</code></pre>
 </div>
 <div class="section level3">
-<h3 id="id_-planning-documents">✅ Planning Documents<a class="anchor" aria-label="anchor" href="#id_-planning-documents"></a></h3>
+<h3 id="white_check_mark-planning-documents">✅ Planning Documents<a class="anchor" aria-label="anchor" href="#white_check_mark-planning-documents"></a></h3>
 <ul><li>Detailed roadmap (7 phases)</li>
 <li>Ecosystem connections documented</li>
 <li>Links to parent ecosystem decisions</li>
 </ul><hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-next-steps">🎬 Next Steps<a class="anchor" aria-label="anchor" href="#id_-next-steps"></a></h2>
+<h2 id="clapper-next-steps">🎬 Next Steps<a class="anchor" aria-label="anchor" href="#clapper-next-steps"></a></h2>
 <div class="section level3">
 <h3 id="immediate-starting-now">Immediate (Starting Now)<a class="anchor" aria-label="anchor" href="#immediate-starting-now"></a></h3>
 <ol style="list-style-type: decimal"><li>
@@ -243,7 +243,7 @@
 </ul><hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-ecosystem-connections">🔗 Ecosystem Connections<a class="anchor" aria-label="anchor" href="#id_-ecosystem-connections"></a></h2>
+<h2 id="link-ecosystem-connections">🔗 Ecosystem Connections<a class="anchor" aria-label="anchor" href="#link-ecosystem-connections"></a></h2>
 <div class="section level3">
 <h3 id="probmed-will-import-medfit">probmed (Will Import medfit)<a class="anchor" aria-label="anchor" href="#probmed-will-import-medfit"></a></h3>
 <p><strong>Location</strong>: <code>../probmed/</code></p>
@@ -267,7 +267,7 @@
 <hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-key-design-decisions-already-made">💡 Key Design Decisions (Already Made)<a class="anchor" aria-label="anchor" href="#id_-key-design-decisions-already-made"></a></h2>
+<h2 id="bulb-key-design-decisions-already-made">💡 Key Design Decisions (Already Made)<a class="anchor" aria-label="anchor" href="#bulb-key-design-decisions-already-made"></a></h2>
 <p>From <code>../probmed/planning/DECISIONS.md</code>:</p>
 <ol style="list-style-type: decimal"><li>
 <strong>Package name</strong>: medfit ✅</li>
@@ -283,7 +283,7 @@
 <strong>&gt;90% test coverage</strong>: Quality standard ✅</li>
 </ol><hr></div>
 <div class="section level2">
-<h2 id="id_-getting-help">📞 Getting Help<a class="anchor" aria-label="anchor" href="#id_-getting-help"></a></h2>
+<h2 id="telephone_receiver-getting-help">📞 Getting Help<a class="anchor" aria-label="anchor" href="#telephone_receiver-getting-help"></a></h2>
 <div class="section level3">
 <h3 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a></h3>
 <ul><li>
@@ -309,7 +309,7 @@
 </ul><hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-checklist-for-new-session">✅ Checklist for New Session<a class="anchor" aria-label="anchor" href="#id_-checklist-for-new-session"></a></h2>
+<h2 id="white_check_mark-checklist-for-new-session">✅ Checklist for New Session<a class="anchor" aria-label="anchor" href="#white_check_mark-checklist-for-new-session"></a></h2>
 <p>When starting a new session in medfit:</p>
 <ul class="task-list"><li><label><input type="checkbox">Read this file (START-HERE.md)</label></li>
 <li><label><input type="checkbox">Check current phase in <code>planning/medfit-roadmap.md</code></label></li>
@@ -318,18 +318,18 @@
 <li><label><input type="checkbox">Review recent decisions in <code>../probmed/planning/DECISIONS.md</code></label></li>
 </ul><hr></div>
 <div class="section level2">
-<h2 id="id_-quick-reference">🎓 Quick Reference<a class="anchor" aria-label="anchor" href="#id_-quick-reference"></a></h2>
-<table class="table"><thead><tr class="header"><th>Need to…</th>
+<h2 id="mortar_board-quick-reference">🎓 Quick Reference<a class="anchor" aria-label="anchor" href="#mortar_board-quick-reference"></a></h2>
+<table class="table"><thead><tr><th>Need to…</th>
 <th>Look here</th>
-</tr></thead><tbody><tr class="odd"><td>Understand medfit</td>
+</tr></thead><tbody><tr><td>Understand medfit</td>
 <td>README.md, CLAUDE.md</td>
-</tr><tr class="even"><td>See implementation plan</td>
+</tr><tr><td>See implementation plan</td>
 <td>planning/medfit-roadmap.md</td>
-</tr><tr class="odd"><td>Check ecosystem connections</td>
+</tr><tr><td>Check ecosystem connections</td>
 <td>planning/ECOSYSTEM.md</td>
-</tr><tr class="even"><td>Review decisions</td>
+</tr><tr><td>Review decisions</td>
 <td>../probmed/planning/DECISIONS.md</td>
-</tr><tr class="odd"><td>Check overall status</td>
+</tr><tr><td>Check overall status</td>
 <td>../probmed/planning/ROADMAP.md</td>
 </tr></tbody></table><hr><p><strong>Status</strong>: 📦 Package skeleton complete, ready for Phase 2 (S7 classes)</p>
 <p><strong>Next session</strong>: Start in this directory (<code>packages/medfit/</code>), review CLAUDE.md, begin S7 class implementation</p>

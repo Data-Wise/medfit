@@ -10,14 +10,14 @@ with mediationverse ecosystem
 
 ### Package Status Matrix
 
-| Package            | Progress | Status                            | Blocks                          | Blocked By                   |
-|--------------------|----------|-----------------------------------|---------------------------------|------------------------------|
-| **medfit**         | 75%      | 🚧 Test suite done, awaiting impl | probmed, RMediation integration | \-                           |
-| **mediationverse** | 40%      | ⏸️ Meta-package skeleton          | All packages                    | medfit, probmed stability    |
-| **probmed**        | Stable   | ✅ Ready for integration          | \-                              | medfit completion            |
-| **RMediation**     | Stable   | ✅ On CRAN, can integrate         | \-                              | medfit completion (optional) |
-| **medrobust**      | In Dev   | 🚧 Active development             | \-                              | medfit completion (optional) |
-| **medsim**         | Complete | ✅ Core features done             | \-                              | \-                           |
+| Package | Progress | Status | Blocks | Blocked By |
+|----|----|----|----|----|
+| **medfit** | 75% | 🚧 Test suite done, awaiting impl | probmed, RMediation integration | \- |
+| **mediationverse** | 40% | ⏸️ Meta-package skeleton | All packages | medfit, probmed stability |
+| **probmed** | Stable | ✅ Ready for integration | \- | medfit completion |
+| **RMediation** | Stable | ✅ On CRAN, can integrate | \- | medfit completion (optional) |
+| **medrobust** | In Dev | 🚧 Active development | \- | medfit completion (optional) |
+| **medsim** | Complete | ✅ Core features done | \- | \- |
 
 ### medfit Current State
 
@@ -168,13 +168,13 @@ spent on mocks vs real implementation - May create false confidence
 
 ## 🎲 Decision Matrix
 
-| Option                     | Time   | Priority    | Blocks Others | Risk | Reward        |
-|----------------------------|--------|-------------|---------------|------|---------------|
-| **A: Complete medfit MVP** | 1-2 wk | 🔴 High     | Yes           | Low  | **Very High** |
-| B: mediationverse loading  | 2-3 d  | 🟡 Med      | No            | Med  | Medium        |
-| C: probmed planning        | 1 d    | 🟡 Med-High | No            | Low  | High          |
-| D: Update docs             | 1-2 d  | 🟢 Low-Med  | No            | Low  | Low           |
-| E: Test integration        | 2-3 d  | 🟡 Med      | No            | Med  | Medium        |
+| Option | Time | Priority | Blocks Others | Risk | Reward |
+|----|----|----|----|----|----|
+| **A: Complete medfit MVP** | 1-2 wk | 🔴 High | Yes | Low | **Very High** |
+| B: mediationverse loading | 2-3 d | 🟡 Med | No | Med | Medium |
+| C: probmed planning | 1 d | 🟡 Med-High | No | Low | High |
+| D: Update docs | 1-2 d | 🟢 Low-Med | No | Low | Low |
+| E: Test integration | 2-3 d | 🟡 Med | No | Med | Medium |
 
 ------------------------------------------------------------------------
 
@@ -253,6 +253,7 @@ spent on mocks vs real implementation - May create false confidence
 #### Test 1: probmed Integration
 
 ``` r
+
 # In probmed directory
 library(medfit)
 
@@ -271,6 +272,7 @@ pmed_result <- compute_pmed(med_data)  # Should work seamlessly
 #### Test 2: mediationverse Loading
 
 ``` r
+
 # In mediationverse directory
 library(mediationverse)
 # Should attach: medfit, probmed, RMediation, medrobust, medsim
@@ -285,6 +287,7 @@ mediationverse_conflicts()
 #### Test 3: Cross-Package Workflow
 
 ``` r
+
 library(mediationverse)
 
 # Full workflow using all packages

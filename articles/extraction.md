@@ -113,8 +113,8 @@ Works with any GLM family:
 
 ``` r
 # Binary outcome
-Y_binary <- rbinom(n, 1, prob = plogis(0.3 * M + 0.2 * X))
-data$Y_binary <- Y_binary
+y_binary <- rbinom(n, 1, prob = plogis(0.3 * M + 0.2 * X))
+data$Y_binary <- y_binary
 
 model_m <- lm(M ~ X, data = data)
 model_y <- glm(Y_binary ~ X + M, data = data, family = binomial())
@@ -152,6 +152,61 @@ med <- extract_mediation(
 # Path coefficients adjust for Z1 and Z2
 print(med)
 ```
+
+### Serial Mediation with lm/glm
+
+For a serial chain (X -\> M1 -\> M2 -\> … -\> Mk -\> Y) fit as separate
+regressions (“sequential regression”), pass an ordered `mediator`
+**vector** plus the mediator models 2..k via `mediator_models`. The
+first mediator model (`M1 ~ X`) goes in the usual `object` slot; the
+outcome model in `model_y`. The result is a `SerialMediationData`
+object.
+
+``` r
+# Serial data: a chain from X through M1 and M2 to Y
+M1 <- 0.5 * X + rnorm(n)
+M2 <- 0.4 * M1 + rnorm(n)
+y_serial <- 0.3 * M2 + 0.2 * X + rnorm(n)
+data_lm_serial <- data.frame(X = X, M1 = M1, M2 = M2, Y = y_serial)
+
+# First mediator model goes in the object slot; the rest in mediator_models
+fit_m1 <- lm(M1 ~ X, data = data_lm_serial)
+fit_m2 <- lm(M2 ~ M1, data = data_lm_serial)
+fit_y  <- lm(Y ~ M2 + X, data = data_lm_serial)
+
+med_serial_lm <- extract_mediation(
+  fit_m1,
+  model_y = fit_y,
+  treatment = "X",
+  mediator = c("M1", "M2"),       # a length-2 vector selects the serial branch
+  mediator_models = list(fit_m2)  # the remaining k minus 1 mediator models
+)
+
+# Serial indirect effect: a * d1 * b
+med_serial_lm@a_path * med_serial_lm@d_path * med_serial_lm@b_path
+```
+
+The order of `mediator_models` is cross-checked against the `mediator`
+vector: each model’s response and predecessor are validated, so a
+mis-ordered list fails fast with an informative error rather than
+silently producing wrong `d`-paths.
+
+> **Same data, different CI: lm vs lavaan**
+>
+> An lm/glm serial chain estimates each equation **separately**, so the
+> combined covariance is **block-diagonal** across chain paths:
+> `cov(a, d_i)`, `cov(d_i, b)`, and `cov(d_i, d_j)` are all zero by
+> construction. (The within-outcome-equation covariance,
+> e.g. `cov(b, c')`, is still preserved.)
+>
+> A single lavaan [`sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fit
+> of the *same data* estimates all equations jointly and yields the
+> **full** covariance among chain paths. Because the serial
+> indirect-effect standard error depends on these off-diagonal
+> covariances, the CI from an lm chain will generally differ from — and
+> is often tighter than — the lavaan fit. This is correct given the
+> different estimators; just be aware that the engine choice changes the
+> interval for identical data.
 
 ## Extracting from lavaan Models
 
@@ -197,8 +252,8 @@ For serial mediation (X -\> M1 -\> M2 -\> Y):
 # Generate serial mediation data
 M1 <- 0.4 * X + rnorm(n, sd = 0.8)
 M2 <- 0.5 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
-Y_serial <- 0.3 * M2 + 0.1 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
-data_serial <- data.frame(X = X, M1 = M1, M2 = M2, Y = Y_serial)
+y_serial <- 0.3 * M2 + 0.1 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
+data_serial <- data.frame(X = X, M1 = M1, M2 = M2, Y = y_serial)
 
 # Define serial mediation model
 serial_syntax <- "

@@ -63,9 +63,5 @@ med_data <- fit_mediation(
 )
 
 pm(med_data)
-#> [1] 0.5504146
-#> attr(,"class")
-#> [1] "mediation_effect" "numeric"         
-#> attr(,"type")
-#> [1] "pm"
+#> Proportion Mediated (PM): 0.5504
 ```

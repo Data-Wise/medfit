@@ -5,7 +5,7 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Changelog"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Changelog"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
 
 
 
@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,6 +76,24 @@
       <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="medfit-020-2026-05-31">medfit 0.2.0 (2026-05-31)<a class="anchor" aria-label="anchor" href="#medfit-020-2026-05-31"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-2-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> now supports <strong>serial mediation</strong> (<code>X -&gt; M1 -&gt; M2 -&gt; ... -&gt; Mk -&gt; Y</code>), returning a <code>SerialMediationData</code> object. For <strong>lavaan</strong> fits, pass an ordered vector of mediator names (<code>mediator = c("M1", "M2")</code>); for <strong>lm/glm</strong> sequential regressions, pass the per-mediator models via the new <code>mediator_models</code> argument. The returned <code>@vcov</code> is named with the path aliases <code>a</code>, <code>d1</code>, …, <code>b</code>, <code>c_prime</code> and preserves the full covariance structure (single-equation lavaan SEM keeps the off-diagonals; the separately-fitted lm equations are block-diagonal among chain paths with <code>cov(b, c')</code> preserved), so downstream serial indirect-effect confidence intervals are correct.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-2-0">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-0"></a></h3>
+<ul><li><p><code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> for lavaan models now preserves the <strong>off-diagonal</strong> covariances among the <code>a</code>, <code>b</code>, and <code>c_prime</code> path aliases in the returned <code>@vcov</code>. Previously only the diagonal variances were copied, so <code>vcov[c("a", "b"), c("a", "b")]</code> reported <code>cov(a, b) = 0</code> even when the underlying lavaan fit had a genuinely non-zero covariance (e.g. single-equation SEM with correlated residuals, or the within-equation <code>cov(b, c')</code>). This silently biased downstream indirect-effect confidence intervals; the alias block now reproduces the true <code>lavaan::vcov()</code> covariances exactly.</p></li>
+<li><p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> on the effect objects returned by <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/te.html">te()</a></code>, and <code><a href="../reference/pm.html">pm()</a></code> (class <code>mediation_effect</code>) now reliably shows the formatted label (e.g. <code>Natural Indirect Effect (NIE): 0.1897</code>). Because <code>mediation_effect</code> is layered on the base <code>numeric</code> type, S3 dispatch could miss <code>print.mediation_effect</code> and fall back to the bare numeric value plus raw attributes. The method is now explicitly registered in <code>.onLoad()</code> so dispatch works whether the package is installed or loaded via <code>load_all()</code>.</p></li>
+<li><p>The <strong>lm/glm</strong> extractor now copies the full within-equation covariance onto the <code>a</code>/<code>b</code>/<code>c_prime</code> aliases, so <code>cov(b, c_prime)</code> is preserved (previously only the diagonal variance was copied). The indirect effect <code>a * b</code> is unchanged; <code>cov(a, b)</code> remains <code>0</code> (separate equations).</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-0-2-0">Internal<a class="anchor" aria-label="anchor" href="#internal-0-2-0"></a></h3>
+<ul><li>Overall test coverage raised to &gt;90% (enforced via <code>codecov</code>), and all repo-wide <code>lintr</code> warnings cleared. A shared alias-vcov helper (<code><a href="../reference/dot-expand_vcov_with_aliases.html">.expand_vcov_with_aliases()</a></code>) now backs both the lm/glm and lavaan extractors so the two engines cannot drift.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="medfit-010-2025-12-20">medfit 0.1.0 (2025-12-20)<a class="anchor" aria-label="anchor" href="#medfit-010-2025-12-20"></a></h2>
 <p><strong>Initial CRAN release</strong></p>

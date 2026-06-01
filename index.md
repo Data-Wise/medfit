@@ -53,12 +53,14 @@ analysis ecosystem, supporting
 Install the stable version from CRAN:
 
 ``` r
+
 install.packages("medfit")
 ```
 
 Or install the development version from GitHub:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("data-wise/medfit")
 ```
@@ -68,6 +70,7 @@ pak::pak("data-wise/medfit")
 ### The Simplest Way: `med()` + `quick()`
 
 ``` r
+
 library(medfit)
 
 # Simulate data
@@ -93,6 +96,7 @@ quick(result)
 ### Extract Effects
 
 ``` r
+
 # Individual effect extractors
 nie(result)   # Natural Indirect Effect (a * b)
 nde(result)   # Natural Direct Effect (c')
@@ -104,6 +108,7 @@ paths(result) # All path coefficients (a, b, c')
 ### Tidyverse Integration
 
 ``` r
+
 library(generics)
 
 # Tidy tibble of all effects
@@ -129,6 +134,7 @@ glance(result)
 ### Base R Methods
 
 ``` r
+
 coef(result)              # Path coefficients
 coef(result, "effects")   # NIE, NDE, TE
 vcov(result)              # Variance-covariance matrix
@@ -139,6 +145,7 @@ nobs(result)              # Number of observations
 ### Bootstrap Inference
 
 ``` r
+
 # With bootstrap CI
 result_boot <- med(
   data = mydata,
@@ -157,6 +164,7 @@ quick(result_boot)
 ### Advanced: Extract from Fitted Models
 
 ``` r
+
 # If you already have fitted models
 fit_m <- lm(M ~ X, data = mydata)
 fit_y <- lm(Y ~ X + M, data = mydata)
@@ -235,11 +243,11 @@ Bootstrap inference (parametric, nonparametric, plugin)
 
 medfit is the foundation for the **mediationverse** ecosystem:
 
-| Package                                                       | Purpose                              | Role        |
-|---------------------------------------------------------------|--------------------------------------|-------------|
-| **medfit** (this)                                             | Model fitting, extraction, bootstrap | Foundation  |
-| [RMediation](https://github.com/data-wise/rmediation)         | Confidence intervals (DOP, MBCO)     | Application |
-| [mediationverse](https://github.com/data-wise/mediationverse) | Meta-package                         | Ecosystem   |
+| Package | Purpose | Role |
+|----|----|----|
+| **medfit** (this) | Model fitting, extraction, bootstrap | Foundation |
+| [RMediation](https://github.com/data-wise/rmediation) | Confidence intervals (DOP, MBCO) | Application |
+| [mediationverse](https://github.com/data-wise/mediationverse) | Meta-package | Ecosystem |
 
 See [Ecosystem
 Coordination](https://data-wise.github.io/medfit/planning/ECOSYSTEM.md)
@@ -289,7 +297,8 @@ Phase 7: Polish & release
 
 - **Defensive Programming**: checkmate for input validation, S7
   validators for class integrity
-- **Testing**: 427 tests with testthat, code coverage tracking
+- **Testing**: 584 tests with testthat (\>90% coverage, enforced via
+  codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See
@@ -321,8 +330,8 @@ GPL (\>= 3)
 
 If you use medfit in your research, please cite:
 
-    Tofighi, D. (2025). medfit: Infrastructure for mediation analysis in R.
-    R package version 0.1.0. https://github.com/data-wise/medfit
+    Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
+    R package version 0.2.0. https://github.com/data-wise/medfit
 
 ## Related Resources
 

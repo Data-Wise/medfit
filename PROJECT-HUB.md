@@ -247,13 +247,13 @@ mapped
 
 ## 📞 Quick Links
 
-| Resource                       | Link                                                                 |
-|--------------------------------|----------------------------------------------------------------------|
-| **GitHub Repo**                | [Data-Wise/medfit](https://github.com/Data-Wise/medfit)              |
+| Resource | Link |
+|----|----|
+| **GitHub Repo** | [Data-Wise/medfit](https://github.com/Data-Wise/medfit) |
 | **Generic Functions Strategy** | ~/projects/research/mediation-planning/GENERIC-FUNCTIONS-STRATEGY.md |
-| **API Contracts**              | ~/projects/research/mediation-planning/API-CONTRACTS.md              |
-| **PROJECT-BOARD**              | ~/projects/r-packages/PROJECT-BOARD.md                               |
-| **NOW.md**                     | ~/projects/dev-tools/data-wise/planning/NOW.md                       |
+| **API Contracts** | ~/projects/research/mediation-planning/API-CONTRACTS.md |
+| **PROJECT-BOARD** | ~/projects/r-packages/PROJECT-BOARD.md |
+| **NOW.md** | ~/projects/dev-tools/data-wise/planning/NOW.md |
 
 ------------------------------------------------------------------------
 

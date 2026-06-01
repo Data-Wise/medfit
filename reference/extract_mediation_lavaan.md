@@ -32,7 +32,13 @@ extract_mediation_lavaan(
 
 - mediator:
 
-  Character: name of the mediator variable
+  Character: name of the mediator variable for simple mediation (X -\> M
+  -\> Y), OR an ordered character vector of length \>= 2 for serial
+  mediation (X -\> M1 -\> M2 -\> ... -\> Y). When a vector is supplied
+  the function returns a
+  [SerialMediationData](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
+  object instead of
+  [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md).
 
 - outcome:
 
@@ -62,7 +68,10 @@ extract_mediation_lavaan(
 
 A
 [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md)
-object
+object, or a
+[SerialMediationData](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
+object when `mediator` is a character vector of length \>= 2 (serial
+mediation).
 
 ## Details
 

@@ -1,5 +1,62 @@
 # Changelog
 
+## medfit 0.2.0 (2026-05-31)
+
+### New features
+
+- [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  now supports **serial mediation** (`X -> M1 -> M2 -> ... -> Mk -> Y`),
+  returning a `SerialMediationData` object. For **lavaan** fits, pass an
+  ordered vector of mediator names (`mediator = c("M1", "M2")`); for
+  **lm/glm** sequential regressions, pass the per-mediator models via
+  the new `mediator_models` argument. The returned `@vcov` is named with
+  the path aliases `a`, `d1`, …, `b`, `c_prime` and preserves the full
+  covariance structure (single-equation lavaan SEM keeps the
+  off-diagonals; the separately-fitted lm equations are block-diagonal
+  among chain paths with `cov(b, c')` preserved), so downstream serial
+  indirect-effect confidence intervals are correct.
+
+### Bug Fixes
+
+- [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  for lavaan models now preserves the **off-diagonal** covariances among
+  the `a`, `b`, and `c_prime` path aliases in the returned `@vcov`.
+  Previously only the diagonal variances were copied, so
+  `vcov[c("a", "b"), c("a", "b")]` reported `cov(a, b) = 0` even when
+  the underlying lavaan fit had a genuinely non-zero covariance
+  (e.g. single-equation SEM with correlated residuals, or the
+  within-equation `cov(b, c')`). This silently biased downstream
+  indirect-effect confidence intervals; the alias block now reproduces
+  the true `lavaan::vcov()` covariances exactly.
+
+- [`print()`](https://rdrr.io/r/base/print.html) on the effect objects
+  returned by
+  [`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+  [`nde()`](https://data-wise.github.io/medfit/reference/nde.md),
+  [`te()`](https://data-wise.github.io/medfit/reference/te.md), and
+  [`pm()`](https://data-wise.github.io/medfit/reference/pm.md) (class
+  `mediation_effect`) now reliably shows the formatted label
+  (e.g. `Natural Indirect Effect (NIE): 0.1897`). Because
+  `mediation_effect` is layered on the base `numeric` type, S3 dispatch
+  could miss `print.mediation_effect` and fall back to the bare numeric
+  value plus raw attributes. The method is now explicitly registered in
+  `.onLoad()` so dispatch works whether the package is installed or
+  loaded via `load_all()`.
+
+- The **lm/glm** extractor now copies the full within-equation
+  covariance onto the `a`/`b`/`c_prime` aliases, so `cov(b, c_prime)` is
+  preserved (previously only the diagonal variance was copied). The
+  indirect effect `a * b` is unchanged; `cov(a, b)` remains `0`
+  (separate equations).
+
+### Internal
+
+- Overall test coverage raised to \>90% (enforced via `codecov`), and
+  all repo-wide `lintr` warnings cleared. A shared alias-vcov helper
+  ([`.expand_vcov_with_aliases()`](https://data-wise.github.io/medfit/reference/dot-expand_vcov_with_aliases.md))
+  now backs both the lm/glm and lavaan extractors so the two engines
+  cannot drift.
+
 ## medfit 0.1.0 (2025-12-20)
 
 **Initial CRAN release**

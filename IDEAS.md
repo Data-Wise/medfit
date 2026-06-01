@@ -74,6 +74,7 @@ indirect effect - Variance estimation via delta method or bootstrap
 Flexible decomposition system allowing custom effect decompositions:
 
 ``` r
+
 Decomposition <- S7::new_class(
   "Decomposition",
   properties = list(
@@ -105,6 +106,7 @@ delta method SEs - Display in `tidy()` output
 **Implementation:**
 
 ``` r
+
 # Delta method for indirect effect
 se_nie <- sqrt(b^2 * var_a + a^2 * var_b + 2*a*b*cov_ab)
 ```
@@ -179,6 +181,7 @@ Bootstrap distributions - Confidence interval plots - Sensitivity plots
 **Design:**
 
 ``` r
+
 plot(med_result, type = "paths")       # Path diagram
 plot(boot_result, type = "bootstrap")  # Distribution
 plot(boot_result, type = "ci")         # Interval plot
@@ -193,6 +196,7 @@ plot(boot_result, type = "ci")         # Interval plot
 Simplified formula interface for common cases:
 
 ``` r
+
 # Instead of separate formulas:
 fit_mediation(
   formula_y = Y ~ X + M + C,

@@ -28,6 +28,7 @@ Post](https://blog.r-hub.io/2024/04/11/rhub2/)
 **Setup workflow**:
 
 ``` r
+
 # 1. Install
 install.packages("rhub")
 
@@ -159,6 +160,7 @@ R-hub is still valuable, just **not for badges**:
 1.  **Pre-CRAN submission testing**
 
     ``` r
+
     rhub::rhub_check()  # Before submitting to CRAN
     ```
 

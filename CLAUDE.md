@@ -14,6 +14,7 @@ pipe `|>`)
 ### Essential Commands
 
 ``` r
+
 # Development cycle
 devtools::load_all()              # Load package
 devtools::document()              # Update docs
@@ -55,11 +56,11 @@ contributions.
 
 ### Package Ecosystem
 
-| Package        | Uses medfit for                 | Adds                              |
-|----------------|---------------------------------|-----------------------------------|
-| **probmed**    | Fitting, extraction, bootstrap  | P_med computation, visualization  |
-| **RMediation** | Extraction, bootstrap utilities | DOP, MBCO, MC methods             |
-| **medrobust**  | Optional naive estimates        | Sensitivity bounds, falsification |
+| Package | Uses medfit for | Adds |
+|----|----|----|
+| **probmed** | Fitting, extraction, bootstrap | P_med computation, visualization |
+| **RMediation** | Extraction, bootstrap utilities | DOP, MBCO, MC methods |
+| **medrobust** | Optional naive estimates | Sensitivity bounds, falsification |
 
 ------------------------------------------------------------------------
 
@@ -111,6 +112,7 @@ Properties: snake_case (`@a_path`, `@boot_estimates`)
 **ALWAYS** validate arguments at function entry:
 
 ``` r
+
 my_function <- function(x, method, data) {
   # --- Input Validation ---
   checkmate::assert_numeric(x, .var.name = "x")
@@ -133,6 +135,7 @@ Any of multiple classes
 ### 2. Ellipsis Validation
 
 ``` r
+
 my_function <- function(x, ...) {
   rlang::check_dots_used()  # Error on unused dots (catches typos)
 }
@@ -141,6 +144,7 @@ my_function <- function(x, ...) {
 ### 3. S7 Class Validation
 
 ``` r
+
 MyClass <- S7::new_class(
   "MyClass",
   properties = list(
@@ -188,6 +192,7 @@ Distribution: `boot_estimates` - Metadata: `method`, `n_boot`
 **Class constructors:**
 
 ``` r
+
 #' @param a_path Numeric scalar: effect of treatment on mediator
 #' @return A MediationData S7 object
 #' @export
@@ -197,6 +202,7 @@ MediationData <- S7::new_class(...)
 **Methods:**
 
 ``` r
+
 #' @param x A MediationData object
 #' @noRd  # CRITICAL: Don't use @export for S7 methods!
 S7::method(print, MediationData) <- function(x, ...) { ... }
@@ -205,6 +211,7 @@ S7::method(print, MediationData) <- function(x, ...) { ... }
 **Generics:**
 
 ``` r
+
 #' @param object Fitted model object
 #' @param ... Additional arguments passed to methods
 #' @export
@@ -216,6 +223,7 @@ extract_mediation <- S7::new_generic("extract_mediation", dispatch_args = "objec
 In `R/zzz.R`:
 
 ``` r
+
 .onLoad <- function(libname, pkgname) {
   # 1. Register classes with S4 (BEFORE methods_register!)
   S7::S4_register(MediationData)
@@ -235,6 +243,7 @@ In `R/zzz.R`:
 **Import full methods package:**
 
 ``` r
+
 #' @import methods
 ```
 
@@ -283,6 +292,7 @@ x <- 1 + 1
 **Initial setup:**
 
 ``` r
+
 usethis::use_pkgdown_github_pages()  # Creates gh-pages, workflow, config
 ```
 
@@ -296,6 +306,7 @@ usethis::use_pkgdown_github_pages()  # Creates gh-pages, workflow, config
 **Computationally expensive vignettes:**
 
 ``` r
+
 usethis::use_article("article-name")  # Not included in R CMD check
 ```
 
@@ -424,6 +435,7 @@ with ecosystem notes 2. **Test** - `revdepcheck::revdep_check()` 3.
 **Future extension (parallel mediation):**
 
 ``` r
+
 ParallelMediationData <- S7::new_class(
   properties = list(
     a_paths = numeric,      # c(a1, a2, ...)
@@ -452,6 +464,7 @@ Total Effect = CDE + INTref + INTmed + PIE
 **Planned class:**
 
 ``` r
+
 InteractionMediationData <- S7::new_class(
   properties = list(
     interaction = S7::class_numeric,  # θ₃: X×M
@@ -525,12 +538,12 @@ matrix - Convert to data.frame or return NULL
 
 ### Related Packages
 
-| Package    | Repository                      | Purpose                           |
-|------------|---------------------------------|-----------------------------------|
-| probmed    | github.com/data-wise/probmed    | Probabilistic effect size (P_med) |
-| RMediation | github.com/data-wise/rmediation | CIs (DOP, MBCO)                   |
-| medrobust  | github.com/data-wise/medrobust  | Sensitivity analysis              |
-| medsim     | github.com/data-wise/medsim     | Simulation infrastructure         |
+| Package | Repository | Purpose |
+|----|----|----|
+| probmed | github.com/data-wise/probmed | Probabilistic effect size (P_med) |
+| RMediation | github.com/data-wise/rmediation | CIs (DOP, MBCO) |
+| medrobust | github.com/data-wise/medrobust | Sensitivity analysis |
+| medsim | github.com/data-wise/medsim | Simulation infrastructure |
 
 ------------------------------------------------------------------------
 

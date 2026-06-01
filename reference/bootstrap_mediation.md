@@ -347,8 +347,8 @@ print(result)
 #> N bootstrap samples: 1000
 #> 
 #> 95% Confidence Interval:
-#>   Lower:   0.0792
-#>   Upper:   0.3230
+#>   Lower:   0.0837
+#>   Upper:   0.3289
 
 # Nonparametric bootstrap (slower but more robust)
 refit_fn <- function(boot_data) {

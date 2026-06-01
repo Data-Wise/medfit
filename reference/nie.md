@@ -58,9 +58,5 @@ med_data <- fit_mediation(
 )
 
 nie(med_data)
-#> [1] 0.1896676
-#> attr(,"class")
-#> [1] "mediation_effect" "numeric"         
-#> attr(,"type")
-#> [1] "nie"
+#> Natural Indirect Effect (NIE): 0.1897
 ```

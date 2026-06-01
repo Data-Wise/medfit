@@ -5,7 +5,7 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Ecosystem Coordination Brainstorming"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
+</script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Ecosystem Coordination Brainstorming"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
 
 
 
@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,40 +80,40 @@
 
 <p><strong>Date</strong>: 2025-12-15 <strong>Context</strong>: medfit test suite complete (241 tests), ready for implementation <strong>Goal</strong>: Coordinate medfit development with mediationverse ecosystem</p>
 <hr><div class="section level2">
-<h2 id="id_-current-ecosystem-status">📊 Current Ecosystem Status<a class="anchor" aria-label="anchor" href="#id_-current-ecosystem-status"></a></h2>
+<h2 id="bar_chart-current-ecosystem-status">📊 Current Ecosystem Status<a class="anchor" aria-label="anchor" href="#bar_chart-current-ecosystem-status"></a></h2>
 <div class="section level3">
 <h3 id="package-status-matrix">Package Status Matrix<a class="anchor" aria-label="anchor" href="#package-status-matrix"></a></h3>
-<table class="table"><colgroup><col width="19%"><col width="21%"><col width="17%"><col width="17%"><col width="25%"></colgroup><thead><tr class="header"><th>Package</th>
+<table class="table"><colgroup><col width="19%"><col width="21%"><col width="17%"><col width="17%"><col width="25%"></colgroup><thead><tr><th>Package</th>
 <th>Progress</th>
 <th>Status</th>
 <th>Blocks</th>
 <th>Blocked By</th>
-</tr></thead><tbody><tr class="odd"><td><strong>medfit</strong></td>
+</tr></thead><tbody><tr><td><strong>medfit</strong></td>
 <td>75%</td>
 <td>🚧 Test suite done, awaiting impl</td>
 <td>probmed, RMediation integration</td>
 <td>-</td>
-</tr><tr class="even"><td><strong>mediationverse</strong></td>
+</tr><tr><td><strong>mediationverse</strong></td>
 <td>40%</td>
 <td>⏸️ Meta-package skeleton</td>
 <td>All packages</td>
 <td>medfit, probmed stability</td>
-</tr><tr class="odd"><td><strong>probmed</strong></td>
+</tr><tr><td><strong>probmed</strong></td>
 <td>Stable</td>
 <td>✅ Ready for integration</td>
 <td>-</td>
 <td>medfit completion</td>
-</tr><tr class="even"><td><strong>RMediation</strong></td>
+</tr><tr><td><strong>RMediation</strong></td>
 <td>Stable</td>
 <td>✅ On CRAN, can integrate</td>
 <td>-</td>
 <td>medfit completion (optional)</td>
-</tr><tr class="odd"><td><strong>medrobust</strong></td>
+</tr><tr><td><strong>medrobust</strong></td>
 <td>In Dev</td>
 <td>🚧 Active development</td>
 <td>-</td>
 <td>medfit completion (optional)</td>
-</tr><tr class="even"><td><strong>medsim</strong></td>
+</tr><tr><td><strong>medsim</strong></td>
 <td>Complete</td>
 <td>✅ Core features done</td>
 <td>-</td>
@@ -137,9 +137,9 @@
 <hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-coordination-options-what-to-do-next">🎯 Coordination Options: What to Do Next?<a class="anchor" aria-label="anchor" href="#id_-coordination-options-what-to-do-next"></a></h2>
+<h2 id="dart-coordination-options-what-to-do-next">🎯 Coordination Options: What to Do Next?<a class="anchor" aria-label="anchor" href="#dart-coordination-options-what-to-do-next"></a></h2>
 <div class="section level3">
-<h3 id="option-a--complete-medfit-mvp-first-recommended">Option A: 🚀 Complete medfit MVP First (RECOMMENDED)<a class="anchor" aria-label="anchor" href="#option-a--complete-medfit-mvp-first-recommended"></a></h3>
+<h3 id="option-a-rocket-complete-medfit-mvp-first-recommended">Option A: 🚀 Complete medfit MVP First (RECOMMENDED)<a class="anchor" aria-label="anchor" href="#option-a-rocket-complete-medfit-mvp-first-recommended"></a></h3>
 <p><strong>Timeline</strong>: 1-2 weeks <strong>Priority</strong>: High <strong>Impact</strong>: Unblocks entire ecosystem</p>
 <p><strong>Rationale:</strong> - medfit is the <strong>foundation</strong> - everything else depends on it - Test suite is complete (57 tests ready to guide implementation) - probmed and RMediation are stable and ready to integrate - Completing medfit unblocks integration work across ecosystem</p>
 <p><strong>Action Items:</strong> 1. ✅ Test suite committed (DONE TODAY) 2. Implement bootstrap_mediation() (3-4 hr, 27 tests activate) 3. Implement fit_mediation() (2-3 hr, 30 tests activate) 4. Add roxygen2 documentation (1-2 hr) 5. R CMD check –as-cran (fix any issues) 6. Create intro vignette (2 hr) 7. Tag v0.1.0 release</p>
@@ -147,7 +147,7 @@
 <p><strong>Risks:</strong> - Delays coordination work slightly - But: Foundation quality more important than speed</p>
 <hr></div>
 <div class="section level3">
-<h3 id="option-b--coordinate-mediationverse-loading-now">Option B: 🔄 Coordinate mediationverse Loading Now<a class="anchor" aria-label="anchor" href="#option-b--coordinate-mediationverse-loading-now"></a></h3>
+<h3 id="option-b-arrows_counterclockwise-coordinate-mediationverse-loading-now">Option B: 🔄 Coordinate mediationverse Loading Now<a class="anchor" aria-label="anchor" href="#option-b-arrows_counterclockwise-coordinate-mediationverse-loading-now"></a></h3>
 <p><strong>Timeline</strong>: 2-3 days <strong>Priority</strong>: Medium <strong>Impact</strong>: Sets up meta-package infrastructure</p>
 <p><strong>Rationale:</strong> - mediationverse needs to know what packages it will load - Loading logic depends on what medfit exports - Could design loading mechanism in parallel</p>
 <p><strong>Action Items:</strong> 1. Design mediationverse attachment strategy - Which packages load by default? - Conflict detection (functions with same names) - Startup message format 2. Update mediationverse DESCRIPTION - Imports: medfit, probmed, RMediation, medrobust, medsim - Minimum version constraints 3. Implement attach.R (similar to tidyverse) 4. Test loading with current package states</p>
@@ -155,7 +155,7 @@
 <p><strong>Risks:</strong> - Working with incomplete medfit API - May need to revise when medfit changes - Less urgent than completing medfit</p>
 <hr></div>
 <div class="section level3">
-<h3 id="option-c--probmed-integration-planning">Option C: 🤝 probmed Integration Planning<a class="anchor" aria-label="anchor" href="#option-c--probmed-integration-planning"></a></h3>
+<h3 id="option-c-handshake-probmed-integration-planning">Option C: 🤝 probmed Integration Planning<a class="anchor" aria-label="anchor" href="#option-c-handshake-probmed-integration-planning"></a></h3>
 <p><strong>Timeline</strong>: 1 day <strong>Priority</strong>: Medium-High <strong>Impact</strong>: Validates medfit API design</p>
 <p><strong>Rationale:</strong> - probmed is first consumer of medfit - Integration tests medfit’s API choices - Can identify missing features early</p>
 <p><strong>Action Items:</strong> 1. Read probmed’s current extraction code 2. Map probmed functions → medfit equivalents - probmed::extract_mediation() → medfit::extract_mediation() - probmed bootstrap → medfit::bootstrap_mediation() 3. Identify API gaps - What does probmed need that medfit doesn’t provide? - What changes would make integration easier? 4. Draft probmed migration plan - DESCRIPTION changes - Code changes - Test updates 5. Create integration test suite</p>
@@ -163,7 +163,7 @@
 <p><strong>Risks:</strong> - Premature optimization (medfit not complete) - May discover medfit needs changes - Time spent on planning vs implementation</p>
 <hr></div>
 <div class="section level3">
-<h3 id="option-d--update-cross-package-documentation">Option D: 📚 Update Cross-Package Documentation<a class="anchor" aria-label="anchor" href="#option-d--update-cross-package-documentation"></a></h3>
+<h3 id="option-d-books-update-cross-package-documentation">Option D: 📚 Update Cross-Package Documentation<a class="anchor" aria-label="anchor" href="#option-d-books-update-cross-package-documentation"></a></h3>
 <p><strong>Timeline</strong>: 1-2 days <strong>Priority</strong>: Low-Medium <strong>Impact</strong>: Improves coordination clarity</p>
 <p><strong>Rationale:</strong> - Documentation helps coordinate across packages - Current state is clear but could be more detailed - Good reference for future work</p>
 <p><strong>Action Items:</strong> 1. Update medfit/planning/ECOSYSTEM.md - Current medfit progress (75%) - Test suite completion - Implementation timeline 2. Update mediationverse README - Reflect medfit test completion - Update roadmap timeline 3. Create INTEGRATION-GUIDE.md - Step-by-step for each package - API mapping tables - Migration examples 4. Update STATUS.md in mediationverse - Reflect current package states - Update badges</p>
@@ -171,7 +171,7 @@
 <p><strong>Risks:</strong> - Documentation work != progress on code - May become outdated quickly - Low priority vs implementation</p>
 <hr></div>
 <div class="section level3">
-<h3 id="option-e--test-integration-points-now">Option E: 🔬 Test Integration Points Now<a class="anchor" aria-label="anchor" href="#option-e--test-integration-points-now"></a></h3>
+<h3 id="option-e-microscope-test-integration-points-now">Option E: 🔬 Test Integration Points Now<a class="anchor" aria-label="anchor" href="#option-e-microscope-test-integration-points-now"></a></h3>
 <p><strong>Timeline</strong>: 2-3 days <strong>Priority</strong>: Medium <strong>Impact</strong>: Validates architecture early</p>
 <p><strong>Rationale:</strong> - Even without complete implementation, can test interfaces - Mock implementations let us test integration - Catch design issues early</p>
 <p><strong>Action Items:</strong> 1. Create mock implementations - bootstrap_mediation() stub - fit_mediation() stub 2. Test probmed integration - Can probmed use medfit::extract_mediation()? - Does MediationData work for probmed? 3. Test RMediation integration - Can RMediation use medfit extraction? - Any missing features? 4. Document findings 5. Adjust medfit design if needed</p>
@@ -180,38 +180,38 @@
 <hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-decision-matrix">🎲 Decision Matrix<a class="anchor" aria-label="anchor" href="#id_-decision-matrix"></a></h2>
-<table class="table"><colgroup><col width="15%"><col width="11%"><col width="18%"><col width="28%"><col width="11%"><col width="15%"></colgroup><thead><tr class="header"><th>Option</th>
+<h2 id="game_die-decision-matrix">🎲 Decision Matrix<a class="anchor" aria-label="anchor" href="#game_die-decision-matrix"></a></h2>
+<table class="table"><colgroup><col width="15%"><col width="11%"><col width="18%"><col width="28%"><col width="11%"><col width="15%"></colgroup><thead><tr><th>Option</th>
 <th>Time</th>
 <th>Priority</th>
 <th>Blocks Others</th>
 <th>Risk</th>
 <th>Reward</th>
-</tr></thead><tbody><tr class="odd"><td><strong>A: Complete medfit MVP</strong></td>
+</tr></thead><tbody><tr><td><strong>A: Complete medfit MVP</strong></td>
 <td>1-2 wk</td>
 <td>🔴 High</td>
 <td>Yes</td>
 <td>Low</td>
 <td><strong>Very High</strong></td>
-</tr><tr class="even"><td>B: mediationverse loading</td>
+</tr><tr><td>B: mediationverse loading</td>
 <td>2-3 d</td>
 <td>🟡 Med</td>
 <td>No</td>
 <td>Med</td>
 <td>Medium</td>
-</tr><tr class="odd"><td>C: probmed planning</td>
+</tr><tr><td>C: probmed planning</td>
 <td>1 d</td>
 <td>🟡 Med-High</td>
 <td>No</td>
 <td>Low</td>
 <td>High</td>
-</tr><tr class="even"><td>D: Update docs</td>
+</tr><tr><td>D: Update docs</td>
 <td>1-2 d</td>
 <td>🟢 Low-Med</td>
 <td>No</td>
 <td>Low</td>
 <td>Low</td>
-</tr><tr class="odd"><td>E: Test integration</td>
+</tr><tr><td>E: Test integration</td>
 <td>2-3 d</td>
 <td>🟡 Med</td>
 <td>No</td>
@@ -219,7 +219,7 @@
 <td>Medium</td>
 </tr></tbody></table><hr></div>
 <div class="section level2">
-<h2 id="id_-recommended-path-forward">💡 Recommended Path Forward<a class="anchor" aria-label="anchor" href="#id_-recommended-path-forward"></a></h2>
+<h2 id="bulb-recommended-path-forward">💡 Recommended Path Forward<a class="anchor" aria-label="anchor" href="#bulb-recommended-path-forward"></a></h2>
 <div class="section level3">
 <h3 id="phase-1-complete-medfit-mvp-this-week"><strong>Phase 1: Complete medfit MVP (This Week)</strong><a class="anchor" aria-label="anchor" href="#phase-1-complete-medfit-mvp-this-week"></a></h3>
 <p><strong>Priority</strong>: 🔴 CRITICAL PATH</p>
@@ -289,7 +289,7 @@
 <hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-integration-testing-strategy">🔍 Integration Testing Strategy<a class="anchor" aria-label="anchor" href="#id_-integration-testing-strategy"></a></h2>
+<h2 id="mag-integration-testing-strategy">🔍 Integration Testing Strategy<a class="anchor" aria-label="anchor" href="#mag-integration-testing-strategy"></a></h2>
 <div class="section level3">
 <h3 id="when-medfit-mvp-complete">When medfit MVP Complete<a class="anchor" aria-label="anchor" href="#when-medfit-mvp-complete"></a></h3>
 <div class="section level4">
@@ -335,7 +335,7 @@
 </div>
 </div>
 <div class="section level2">
-<h2 id="id_-immediate-action-items">📋 Immediate Action Items<a class="anchor" aria-label="anchor" href="#id_-immediate-action-items"></a></h2>
+<h2 id="clipboard-immediate-action-items">📋 Immediate Action Items<a class="anchor" aria-label="anchor" href="#clipboard-immediate-action-items"></a></h2>
 <div class="section level3">
 <h3 id="this-week-dec-15-21">This Week (Dec 15-21)<a class="anchor" aria-label="anchor" href="#this-week-dec-15-21"></a></h3>
 <ul class="task-list"><li><label><input type="checkbox">Implement bootstrap_mediation() [3-4 hr]</label></li>
@@ -362,7 +362,7 @@
 </ul><hr></div>
 </div>
 <div class="section level2">
-<h2 id="id_-open-questions">🤔 Open Questions<a class="anchor" aria-label="anchor" href="#id_-open-questions"></a></h2>
+<h2 id="thinking-open-questions">🤔 Open Questions<a class="anchor" aria-label="anchor" href="#thinking-open-questions"></a></h2>
 <ol style="list-style-type: decimal"><li>
 <strong>mediationverse package priority?</strong>
 <ul><li>Should mediationverse wait for all packages to stabilize?</li>
@@ -398,12 +398,12 @@
 </ul></li>
 </ol><hr></div>
 <div class="section level2">
-<h2 id="id_-coordination-checklist">📞 Coordination Checklist<a class="anchor" aria-label="anchor" href="#id_-coordination-checklist"></a></h2>
+<h2 id="telephone_receiver-coordination-checklist">📞 Coordination Checklist<a class="anchor" aria-label="anchor" href="#telephone_receiver-coordination-checklist"></a></h2>
 <p>Before making changes to medfit: - [ ] Check impact on probmed (ECOSYSTEM.md) - [ ] Check impact on RMediation (if integrated) - [ ] Check impact on medrobust (if used) - [ ] Update ECOSYSTEM.md - [ ] Update NEWS.md - [ ] Test integration points - [ ] Document changes clearly</p>
 <p>Before releasing medfit: - [ ] All tests passing (241/241) - [ ] R CMD check clean - [ ] Documentation complete - [ ] probmed integration tested - [ ] Version bumped appropriately - [ ] NEWS.md updated - [ ] Coordinate with dependent packages</p>
 <hr></div>
 <div class="section level2">
-<h2 id="id_-success-metrics">🎯 Success Metrics<a class="anchor" aria-label="anchor" href="#id_-success-metrics"></a></h2>
+<h2 id="dart-success-metrics">🎯 Success Metrics<a class="anchor" aria-label="anchor" href="#dart-success-metrics"></a></h2>
 <p><strong>Short-term</strong> (This Sprint): - [x] medfit test suite complete (241 tests) - [ ] medfit MVP implementation complete - [ ] All 241 tests passing - [ ] R CMD check passing</p>
 <p><strong>Medium-term</strong> (Next Month): - [ ] probmed integrated with medfit - [ ] mediationverse loading mechanism working - [ ] Integration tests passing - [ ] Documentation updated</p>
 <p><strong>Long-term</strong> (Q1 2026): - [ ] medfit v0.1.0 on CRAN - [ ] probmed v0.2.0 on CRAN - [ ] mediationverse v0.1.0 ready - [ ] Full ecosystem functional</p>

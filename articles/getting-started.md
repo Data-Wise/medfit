@@ -180,9 +180,9 @@ For serial mediation (X -\> M1 -\> M2 -\> Y):
 
 ``` r
 serial_data <- SerialMediationData(
-  a_path = 0.4,           # X -> M1
-  d_path = 0.5,           # M1 -> M2
-  b_path = 0.3,           # M2 -> Y
+  a_path = 0.4,           # treatment to first mediator
+  d_path = 0.5,           # first mediator to second mediator
+  b_path = 0.3,           # second mediator to outcome
   c_prime = 0.2,          # X -> Y direct effect
   treatment = "X",
   mediators = c("M1", "M2"),
@@ -197,7 +197,7 @@ serial_data <- SerialMediationData(
 )
 
 # Same extractors work
-nie(serial_data)   # a * d * b
+nie(serial_data)   # product a, d, b
 nde(serial_data)   # c'
 quick(serial_data)
 #> [2 mediators] NIE = 0.06 | NDE = 0.2 | PM = 23%
@@ -240,9 +240,9 @@ med_data <- fit_mediation(
 )
 
 # Access path coefficients directly
-med_data@a_path  # X -> M
-med_data@b_path  # M -> Y
-med_data@c_prime # X -> Y (direct)
+med_data@a_path  # treatment to mediator
+med_data@b_path  # mediator to outcome
+med_data@c_prime # treatment to outcome, the direct path
 ```
 
 ### Custom Bootstrap

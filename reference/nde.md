@@ -56,9 +56,5 @@ med_data <- fit_mediation(
 )
 
 nde(med_data)
-#> [1] 0.1549228
-#> attr(,"class")
-#> [1] "mediation_effect" "numeric"         
-#> attr(,"type")
-#> [1] "nde"
+#> Natural Direct Effect (NDE): 0.1549
 ```

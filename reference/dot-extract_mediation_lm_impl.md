@@ -10,6 +10,7 @@ Internal Implementation for lm/glm Extraction
   model_y,
   treatment,
   mediator,
+  mediator_models = NULL,
   outcome = NULL,
   data = NULL
 )
@@ -31,7 +32,12 @@ Internal Implementation for lm/glm Extraction
 
 - mediator:
 
-  Mediator variable name
+  Mediator variable name (scalar) or ordered mediator vector (length \>=
+  2, serial mediation)
+
+- mediator_models:
+
+  List of fitted mediator models 2..k (serial only)
 
 - outcome:
 
@@ -43,4 +49,5 @@ Internal Implementation for lm/glm Extraction
 
 ## Value
 
-MediationData object
+MediationData object, or SerialMediationData when `mediator` is a vector
+of length \>= 2

@@ -5,7 +5,7 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="CLAUDE.md for medfit Package"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
+</script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="CLAUDE.md for medfit Package"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
 
 
 
@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -115,16 +115,16 @@
 <p><strong>Core Principle</strong>: medfit provides infrastructure, not effect sizes. Dependent packages (probmed, RMediation, medrobust) add methodological contributions.</p>
 <div class="section level3">
 <h3 id="package-ecosystem">Package Ecosystem<a class="anchor" aria-label="anchor" href="#package-ecosystem"></a></h3>
-<table class="table"><colgroup><col width="29%"><col width="51%"><col width="19%"></colgroup><thead><tr class="header"><th>Package</th>
+<table class="table"><colgroup><col width="29%"><col width="51%"><col width="19%"></colgroup><thead><tr><th>Package</th>
 <th>Uses medfit for</th>
 <th>Adds</th>
-</tr></thead><tbody><tr class="odd"><td><strong>probmed</strong></td>
+</tr></thead><tbody><tr><td><strong>probmed</strong></td>
 <td>Fitting, extraction, bootstrap</td>
 <td>P_med computation, visualization</td>
-</tr><tr class="even"><td><strong>RMediation</strong></td>
+</tr><tr><td><strong>RMediation</strong></td>
 <td>Extraction, bootstrap utilities</td>
 <td>DOP, MBCO, MC methods</td>
-</tr><tr class="odd"><td><strong>medrobust</strong></td>
+</tr><tr><td><strong>medrobust</strong></td>
 <td>Optional naive estimates</td>
 <td>Sensitivity bounds, falsification</td>
 </tr></tbody></table><hr></div>
@@ -272,16 +272,16 @@
 <h2 id="documentation-quick-guide">Documentation Quick Guide<a class="anchor" aria-label="anchor" href="#documentation-quick-guide"></a></h2>
 <div class="section level3">
 <h3 id="latex-equations-by-context">LaTeX Equations by Context<a class="anchor" aria-label="anchor" href="#latex-equations-by-context"></a></h3>
-<table class="table"><colgroup><col width="28%"><col width="18%"><col width="25%"><col width="28%"></colgroup><thead><tr class="header"><th>Context</th>
+<table class="table"><colgroup><col width="28%"><col width="18%"><col width="25%"><col width="28%"></colgroup><thead><tr><th>Context</th>
 <th>File</th>
 <th>Inline</th>
 <th>Display</th>
-</tr></thead><tbody><tr class="odd"><td>Function docs</td>
+</tr></thead><tbody><tr><td>Function docs</td>
 <td>
 <code>.Rd</code> / roxygen2</td>
 <td><code>\eqn{a \times b}{a * b}</code></td>
 <td><code>\deqn{...}{...}</code></td>
-</tr><tr class="even"><td>Vignettes</td>
+</tr><tr><td>Vignettes</td>
 <td><code>.qmd</code></td>
 <td><code>$a \times b$</code></td>
 <td><code>$$...$$</code></td>
@@ -361,19 +361,19 @@
 </div>
 <div class="section level3">
 <h3 id="bootstrap-methods">Bootstrap Methods<a class="anchor" aria-label="anchor" href="#bootstrap-methods"></a></h3>
-<table class="table"><colgroup><col width="21%"><col width="34%"><col width="18%"><col width="26%"></colgroup><thead><tr class="header"><th>Method</th>
+<table class="table"><colgroup><col width="21%"><col width="34%"><col width="18%"><col width="26%"></colgroup><thead><tr><th>Method</th>
 <th>Samples from</th>
 <th>Speed</th>
 <th>Use case</th>
-</tr></thead><tbody><tr class="odd"><td>Parametric</td>
+</tr></thead><tbody><tr><td>Parametric</td>
 <td>N(θ̂, Σ̂)</td>
 <td>Fast</td>
 <td>Default, assumes normality</td>
-</tr><tr class="even"><td>Nonparametric</td>
+</tr><tr><td>Nonparametric</td>
 <td>Resample data, refit</td>
 <td>Slow</td>
 <td>Robust, no normality needed</td>
-</tr><tr class="odd"><td>Plugin</td>
+</tr><tr><td>Plugin</td>
 <td>Point estimate only</td>
 <td>Fastest</td>
 <td>Quick checks, no CI</td>
@@ -385,11 +385,11 @@
 <div class="section level3">
 <h3 id="central-planning">Central Planning<a class="anchor" aria-label="anchor" href="#central-planning"></a></h3>
 <p>Location: <code>/Users/dt/mediation-planning/</code></p>
-<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr class="header"><th>Document</th>
+<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr><th>Document</th>
 <th>Purpose</th>
-</tr></thead><tbody><tr class="odd"><td><code>ECOSYSTEM-COORDINATION.md</code></td>
+</tr></thead><tbody><tr><td><code>ECOSYSTEM-COORDINATION.md</code></td>
 <td>Version matrix, change propagation, releases</td>
-</tr><tr class="even"><td><code>MONTHLY-CHECKLIST.md</code></td>
+</tr><tr><td><code>MONTHLY-CHECKLIST.md</code></td>
 <td>Health checks</td>
 </tr></tbody></table></div>
 <div class="section level3">
@@ -459,23 +459,23 @@
 <div class="section level3">
 <h3 id="engine-adapter-architecture-planned">Engine Adapter Architecture (Planned)<a class="anchor" aria-label="anchor" href="#engine-adapter-architecture-planned"></a></h3>
 <p><strong>Adapter pattern</strong> for external packages: - Wrap validated implementations (CMAverse, tmle3) - All return standardized <code>MediationData</code> - External packages in <code>Suggests</code></p>
-<table class="table"><thead><tr class="header"><th>Engine</th>
+<table class="table"><thead><tr><th>Engine</th>
 <th>Package</th>
 <th>Method</th>
 <th>Status</th>
-</tr></thead><tbody><tr class="odd"><td><code>"regression"</code></td>
+</tr></thead><tbody><tr><td><code>"regression"</code></td>
 <td>(internal)</td>
 <td>VanderWeele closed-form</td>
 <td>MVP ✓</td>
-</tr><tr class="even"><td><code>"gformula"</code></td>
+</tr><tr><td><code>"gformula"</code></td>
 <td>CMAverse</td>
 <td>G-computation</td>
 <td>Planned</td>
-</tr><tr class="odd"><td><code>"ipw"</code></td>
+</tr><tr><td><code>"ipw"</code></td>
 <td>CMAverse</td>
 <td>IPW</td>
 <td>Planned</td>
-</tr><tr class="even"><td><code>"tmle"</code></td>
+</tr><tr><td><code>"tmle"</code></td>
 <td>tmle3</td>
 <td>Targeted learning</td>
 <td>Future</td>
@@ -519,19 +519,19 @@
 </div>
 <div class="section level3">
 <h3 id="related-packages">Related Packages<a class="anchor" aria-label="anchor" href="#related-packages"></a></h3>
-<table class="table"><colgroup><col width="31%"><col width="37%"><col width="31%"></colgroup><thead><tr class="header"><th>Package</th>
+<table class="table"><colgroup><col width="31%"><col width="37%"><col width="31%"></colgroup><thead><tr><th>Package</th>
 <th>Repository</th>
 <th>Purpose</th>
-</tr></thead><tbody><tr class="odd"><td>probmed</td>
+</tr></thead><tbody><tr><td>probmed</td>
 <td>github.com/data-wise/probmed</td>
 <td>Probabilistic effect size (P_med)</td>
-</tr><tr class="even"><td>RMediation</td>
+</tr><tr><td>RMediation</td>
 <td>github.com/data-wise/rmediation</td>
 <td>CIs (DOP, MBCO)</td>
-</tr><tr class="odd"><td>medrobust</td>
+</tr><tr><td>medrobust</td>
 <td>github.com/data-wise/medrobust</td>
 <td>Sensitivity analysis</td>
-</tr><tr class="even"><td>medsim</td>
+</tr><tr><td>medsim</td>
 <td>github.com/data-wise/medsim</td>
 <td>Simulation infrastructure</td>
 </tr></tbody></table><hr><p><strong>Last Updated</strong>: 2025-12-19 <strong>Maintained by</strong>: medfit development team</p>

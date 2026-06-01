@@ -18,8 +18,8 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -215,8 +215,8 @@
 <p>Works with any GLM family:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="co"># Binary outcome</span></span>
-<span><span class="va">Y_binary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="fl">0.3</span> <span class="op">*</span> <span class="va">M</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">X</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">data</span><span class="op">$</span><span class="va">Y_binary</span> <span class="op">&lt;-</span> <span class="va">Y_binary</span></span>
+<span><span class="va">y_binary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="fl">0.3</span> <span class="op">*</span> <span class="va">M</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">X</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">data</span><span class="op">$</span><span class="va">Y_binary</span> <span class="op">&lt;-</span> <span class="va">y_binary</span></span>
 <span></span>
 <span><span class="va">model_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
 <span><span class="va">model_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">Y_binary</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, data <span class="op">=</span> <span class="va">data</span>, family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
@@ -251,6 +251,40 @@
 <span></span>
 <span><span class="co"># Path coefficients adjust for Z1 and Z2</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">med</span><span class="op">)</span></span></code></pre>
+</div>
+</section><section class="level3"><h3 id="serial-mediation-with-lmglm">Serial Mediation with lm/glm<a class="anchor" aria-label="anchor" href="#serial-mediation-with-lmglm"></a>
+</h3>
+<p>For a serial chain (X -&gt; M1 -&gt; M2 -&gt; … -&gt; Mk -&gt; Y) fit as separate regressions (“sequential regression”), pass an ordered <code>mediator</code> <strong>vector</strong> plus the mediator models 2..k via <code>mediator_models</code>. The first mediator model (<code>M1 ~ X</code>) goes in the usual <code>object</code> slot; the outcome model in <code>model_y</code>. The result is a <code>SerialMediationData</code> object.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="co"># Serial data: a chain from X through M1 and M2 to Y</span></span>
+<span><span class="va">M1</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">M2</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">M1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">y_serial</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">M2</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">data_lm_serial</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">X</span>, M1 <span class="op">=</span> <span class="va">M1</span>, M2 <span class="op">=</span> <span class="va">M2</span>, Y <span class="op">=</span> <span class="va">y_serial</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># First mediator model goes in the object slot; the rest in mediator_models</span></span>
+<span><span class="va">fit_m1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M1</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">data_lm_serial</span><span class="op">)</span></span>
+<span><span class="va">fit_m2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M2</span> <span class="op">~</span> <span class="va">M1</span>, data <span class="op">=</span> <span class="va">data_lm_serial</span><span class="op">)</span></span>
+<span><span class="va">fit_y</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">M2</span> <span class="op">+</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">data_lm_serial</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">med_serial_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">fit_m1</span>,</span>
+<span>  model_y <span class="op">=</span> <span class="va">fit_y</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>  mediator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"M1"</span>, <span class="st">"M2"</span><span class="op">)</span>,       <span class="co"># a length-2 vector selects the serial branch</span></span>
+<span>  mediator_models <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">fit_m2</span><span class="op">)</span>  <span class="co"># the remaining k minus 1 mediator models</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Serial indirect effect: a * d1 * b</span></span>
+<span><span class="va">med_serial_lm</span><span class="op">@</span><span class="va">a_path</span> <span class="op">*</span> <span class="va">med_serial_lm</span><span class="op">@</span><span class="va">d_path</span> <span class="op">*</span> <span class="va">med_serial_lm</span><span class="op">@</span><span class="va">b_path</span></span></code></pre>
+</div>
+<p>The order of <code>mediator_models</code> is cross-checked against the <code>mediator</code> vector: each model’s response and predecessor are validated, so a mis-ordered list fails fast with an informative error rather than silently producing wrong <code>d</code>-paths.</p>
+<div>
+<blockquote>
+<p><strong>Same data, different CI: lm vs lavaan</strong></p>
+<p>An lm/glm serial chain estimates each equation <strong>separately</strong>, so the combined covariance is <strong>block-diagonal</strong> across chain paths: <code>cov(a, d_i)</code>, <code>cov(d_i, b)</code>, and <code>cov(d_i, d_j)</code> are all zero by construction. (The within-outcome-equation covariance, e.g. <code>cov(b, c')</code>, is still preserved.)</p>
+<p>A single lavaan <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem()</a></code> fit of the <em>same data</em> estimates all equations jointly and yields the <strong>full</strong> covariance among chain paths. Because the serial indirect-effect standard error depends on these off-diagonal covariances, the CI from an lm chain will generally differ from — and is often tighter than — the lavaan fit. This is correct given the different estimators; just be aware that the engine choice changes the interval for identical data.</p>
+</blockquote>
 </div>
 </section></section><section class="level2"><h2 id="extracting-from-lavaan-models">Extracting from lavaan Models<a class="anchor" aria-label="anchor" href="#extracting-from-lavaan-models"></a>
 </h2>
@@ -294,8 +328,8 @@
 <pre class="r cell-code"><code><span><span class="co"># Generate serial mediation data</span></span>
 <span><span class="va">M1</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
 <span><span class="va">M2</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">M1</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
-<span><span class="va">Y_serial</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">M2</span> <span class="op">+</span> <span class="fl">0.1</span> <span class="op">*</span> <span class="va">M1</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
-<span><span class="va">data_serial</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">X</span>, M1 <span class="op">=</span> <span class="va">M1</span>, M2 <span class="op">=</span> <span class="va">M2</span>, Y <span class="op">=</span> <span class="va">Y_serial</span><span class="op">)</span></span>
+<span><span class="va">y_serial</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">M2</span> <span class="op">+</span> <span class="fl">0.1</span> <span class="op">*</span> <span class="va">M1</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
+<span><span class="va">data_serial</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">X</span>, M1 <span class="op">=</span> <span class="va">M1</span>, M2 <span class="op">=</span> <span class="va">M2</span>, Y <span class="op">=</span> <span class="va">y_serial</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Define serial mediation model</span></span>
 <span><span class="va">serial_syntax</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
