@@ -9,6 +9,7 @@
   model_y,
   treatment,
   mediator,
+  mediator_models = NULL,
   outcome = NULL,
   data = NULL
 )
@@ -20,14 +21,18 @@
 
 \item{treatment}{Treatment variable name}
 
-\item{mediator}{Mediator variable name}
+\item{mediator}{Mediator variable name (scalar) or ordered mediator vector
+(length >= 2, serial mediation)}
+
+\item{mediator_models}{List of fitted mediator models 2..k (serial only)}
 
 \item{outcome}{Outcome variable name (auto-detected if NULL)}
 
 \item{data}{Original data (extracted from model if NULL)}
 }
 \value{
-MediationData object
+MediationData object, or SerialMediationData when \code{mediator} is a
+vector of length >= 2
 }
 \description{
 Internal Implementation for lm/glm Extraction
