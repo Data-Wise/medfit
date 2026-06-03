@@ -1,3 +1,15 @@
+# medfit (development version)
+
+## New features
+
+* New S7 class `ParallelMediationData` for **parallel mediation**
+  (`X -> M_j -> Y` for independent mediators `j = 1..k`). The total indirect
+  effect is the sum of per-mediator products, `sum(a_j * b_j)`. Completes the
+  structural trio alongside `MediationData` (simple) and `SerialMediationData`
+  (serial). Effect extractors (`nie`, `nde`, `te`, `pm`, `paths`) have methods
+  for the new class; `paths()` returns interleaved `a1, b1, a2, b2, ..., c_prime`.
+  (Foundational class; formula/`extract_mediation()` support to follow.)
+
 # medfit 0.2.0 (2026-05-31)
 
 ## New features

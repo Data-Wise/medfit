@@ -21,11 +21,22 @@
   # "Class has not been registered with S4" errors
   S7::S4_register(MediationData)
   S7::S4_register(SerialMediationData)
+  S7::S4_register(ParallelMediationData)
   S7::S4_register(BootstrapResult)
 
   # Register S7 methods for dispatch
   # This is required for methods on generics from other packages
   S7::methods_register()
+
+  # `show` is an S4 generic; registering an S7 method for it requires the class
+  # to be S4-registered first, so it cannot live at source time in classes.R
+  # (where it would run before .onLoad). Register it here, after S4_register().
+  # Bind the generic to a local symbol first: the `method(...) <-` replacement
+  # form cannot take a namespaced LHS (`methods::show`).
+  show <- methods::show
+  S7::method(show, ParallelMediationData) <- function(object) {
+    print(object)
+  }
 
   # Explicitly register the S3 print method for `mediation_effect`.
   #

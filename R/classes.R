@@ -956,3 +956,192 @@ print.summary.SerialMediationData <- function(x, ...) {
 S7::method(show, SerialMediationData) <- function(object) {
   print(object)
 }
+
+
+#' ParallelMediationData: Parallel (Multiple-Mediator) Mediation Structure
+#'
+#' @description
+#' S7 class for **parallel** mediation, where a treatment affects an outcome
+#' through two or more *independent* mediators operating in parallel
+#' (\eqn{X \rightarrow M_j \rightarrow Y}{X -> M_j -> Y} for
+#' \eqn{j = 1, \dots, k}{j = 1, ..., k}). The total indirect effect is the sum
+#' of the per-mediator products, \eqn{\sum_{j=1}^{k} a_j b_j}{sum(a_j * b_j)}.
+#' This complements [MediationData] (simple) and [SerialMediationData]
+#' (serial chains).
+#'
+#' @param a_paths Numeric vector: treatment -> mediator effects
+#'   \eqn{(a_1, \dots, a_k)}{(a_1, ..., a_k)}.
+#' @param b_paths Numeric vector: mediator -> outcome effects
+#'   \eqn{(b_1, \dots, b_k)}{(b_1, ..., b_k)}; must be the same length as `a_paths`.
+#' @param c_prime Numeric scalar: direct effect \eqn{X \rightarrow Y}{X -> Y}.
+#' @param estimates Numeric vector of all parameter estimates.
+#' @param vcov Square variance-covariance matrix of `estimates`.
+#' @param sigma_mediators Optional numeric vector of mediator residual SDs (length k), or NULL.
+#' @param sigma_y Optional numeric scalar outcome residual SD, or NULL.
+#' @param treatment,outcome Single character strings naming the treatment / outcome.
+#' @param mediators Character vector of mediator names (length k, unique).
+#' @param mediator_predictors List of predictor-name vectors, one per mediator.
+#' @param outcome_predictors Character vector of outcome-model predictor names.
+#' @param data Optional data frame, or NULL.
+#' @param n_obs Integer number of observations.
+#' @param converged Logical convergence flag.
+#' @param source_package Character name of the originating package.
+#'
+#' @return A `ParallelMediationData` S7 object.
+#'
+#' @examples
+#' pmd <- ParallelMediationData(
+#'   a_paths = c(0.5, 0.4),
+#'   b_paths = c(0.6, 0.3),
+#'   c_prime = 0.2,
+#'   estimates = c(0.5, 0.4, 0.6, 0.3, 0.2),
+#'   vcov = diag(0.01, 5),
+#'   treatment = "X",
+#'   mediators = c("M1", "M2"),
+#'   outcome = "Y",
+#'   mediator_predictors = list("X", "X"),
+#'   outcome_predictors = c("X", "M1", "M2"),
+#'   n_obs = 200L,
+#'   converged = TRUE,
+#'   source_package = "medfit"
+#' )
+#'
+#' nie(pmd)   # total indirect effect: sum(a_j * b_j) = 0.42
+#' paths(pmd) # a1, b1, a2, b2, c_prime
+#'
+#' @export
+ParallelMediationData <- S7::new_class(
+  "ParallelMediationData",
+  package = "medfit",
+  properties = list(
+    # Core paths (parallel mediators)
+    a_paths = S7::class_numeric,      # nolint: commented_code_linter.
+    b_paths = S7::class_numeric,      # nolint: commented_code_linter.
+    c_prime = S7::class_numeric,      # nolint: commented_code_linter.
+
+    # Parameters (all models)
+    estimates = S7::class_numeric,
+    vcov = S7::new_S3_class("matrix"),
+
+    # Residual variances (for Gaussian models). An S7 `class_numeric | NULL`
+    # union defaults to numeric(0) (not NULL), so the validator treats a
+    # length-0 value as "not supplied" (see guards below).
+    sigma_mediators = S7::class_numeric | NULL,
+    sigma_y = S7::class_numeric | NULL,
+
+    # Variable names
+    treatment = S7::class_character,
+    mediators = S7::class_character,
+    outcome = S7::class_character,
+    mediator_predictors = S7::class_list,
+    outcome_predictors = S7::class_character,
+
+    # Data and metadata
+    data = S7::class_data.frame | NULL,
+    n_obs = S7::class_integer,
+    converged = S7::class_logical,
+    source_package = S7::class_character
+  ),
+
+  validator = function(self) {
+    n_mediators <- length(self@mediators)
+
+    # Parallel mediation requires at least 2 mediators (1 is simple mediation)
+    if (n_mediators < 2) {
+      return("Parallel mediation requires at least 2 mediators (use MediationData for 1)")
+    }
+
+    # a_paths and b_paths must be equal length and match the mediator count
+    if (length(self@a_paths) != n_mediators) {
+      return(sprintf(
+        "a_paths must have length %d (one per mediator), found %d",
+        n_mediators, length(self@a_paths)
+      ))
+    }
+    if (length(self@b_paths) != n_mediators) {
+      return(sprintf(
+        "b_paths must have length %d (one per mediator), found %d",
+        n_mediators, length(self@b_paths)
+      ))
+    }
+
+    # c_prime must be scalar
+    if (length(self@c_prime) != 1) {
+      return("c_prime must be a scalar (X -> Y)")
+    }
+
+    # vcov must be square and consistent with estimates
+    if (nrow(self@vcov) != ncol(self@vcov)) {
+      return("vcov must be a square matrix")
+    }
+    if (length(self@estimates) != nrow(self@vcov)) {
+      return("Number of estimates must match vcov dimensions")
+    }
+
+    # sigma_mediators (optional; length-0 means not supplied)
+    if (!is.null(self@sigma_mediators) && length(self@sigma_mediators) > 0) {
+      if (length(self@sigma_mediators) != n_mediators) {
+        return(sprintf(
+          "sigma_mediators must have length %d (one per mediator), found %d",
+          n_mediators, length(self@sigma_mediators)
+        ))
+      }
+      if (any(self@sigma_mediators < 0, na.rm = TRUE)) {
+        return("All sigma_mediators values must be non-negative")
+      }
+    }
+
+    # sigma_y (optional; length-0 means not supplied)
+    if (!is.null(self@sigma_y) && length(self@sigma_y) > 0) {
+      if (length(self@sigma_y) != 1 || self@sigma_y < 0) {
+        return("sigma_y must be a non-negative scalar")
+      }
+    }
+
+    # Variable names
+    if (length(self@treatment) != 1) {
+      return("treatment must be a single character string")
+    }
+    if (length(self@outcome) != 1) {
+      return("outcome must be a single character string")
+    }
+    if (length(unique(self@mediators)) != n_mediators) {
+      return("All mediator names must be unique")
+    }
+
+    # mediator_predictors must be a list with one entry per mediator
+    if (!is.list(self@mediator_predictors)) {
+      return("mediator_predictors must be a list")
+    }
+    if (length(self@mediator_predictors) != n_mediators) {
+      return(sprintf(
+        "mediator_predictors must have length %d (one per mediator), found %d",
+        n_mediators, length(self@mediator_predictors)
+      ))
+    }
+
+    NULL
+  }
+)
+
+
+#' Print Method for ParallelMediationData
+#'
+#' @param x A ParallelMediationData object
+#' @param ... Additional arguments (unused)
+#' @noRd
+S7::method(print, ParallelMediationData) <- function(x, ...) {
+  k <- length(x@mediators)
+  indirect <- sum(x@a_paths * x@b_paths)
+  cat("<ParallelMediationData>\n")
+  cat(sprintf("  %s -> {%s} -> %s  (%d parallel mediators)\n",
+              x@treatment, paste(x@mediators, collapse = ", "), x@outcome, k))
+  for (j in seq_len(k)) {
+    cat(sprintf("    %-8s a%d = %+.4f   b%d = %+.4f\n",
+                x@mediators[j], j, x@a_paths[j], j, x@b_paths[j]))
+  }
+  cat(sprintf("  Direct (c'): %+.4f\n", x@c_prime))
+  cat(sprintf("  Indirect (sum a_j*b_j): %+.4f\n", indirect))
+  cat(sprintf("  Total: %+.4f   |   n = %d\n", indirect + x@c_prime, x@n_obs))
+  invisible(x)
+}
