@@ -963,15 +963,17 @@ S7::method(show, SerialMediationData) <- function(object) {
 #' @description
 #' S7 class for **parallel** mediation, where a treatment affects an outcome
 #' through two or more *independent* mediators operating in parallel
-#' (\eqn{X \rightarrow M_j \rightarrow Y} for \eqn{j = 1, \dots, k}). The total
-#' indirect effect is the sum of the per-mediator products,
-#' \eqn{\sum_{j=1}^{k} a_j b_j}. This complements [MediationData] (simple) and
-#' [SerialMediationData] (serial chains).
+#' (\eqn{X \rightarrow M_j \rightarrow Y}{X -> M_j -> Y} for
+#' \eqn{j = 1, \dots, k}{j = 1, ..., k}). The total indirect effect is the sum
+#' of the per-mediator products, \eqn{\sum_{j=1}^{k} a_j b_j}{sum(a_j * b_j)}.
+#' This complements [MediationData] (simple) and [SerialMediationData]
+#' (serial chains).
 #'
-#' @param a_paths Numeric vector: treatment -> mediator effects \eqn{(a_1, \dots, a_k)}.
-#' @param b_paths Numeric vector: mediator -> outcome effects \eqn{(b_1, \dots, b_k)};
-#'   must be the same length as `a_paths`.
-#' @param c_prime Numeric scalar: direct effect \eqn{X \rightarrow Y}.
+#' @param a_paths Numeric vector: treatment -> mediator effects
+#'   \eqn{(a_1, \dots, a_k)}{(a_1, ..., a_k)}.
+#' @param b_paths Numeric vector: mediator -> outcome effects
+#'   \eqn{(b_1, \dots, b_k)}{(b_1, ..., b_k)}; must be the same length as `a_paths`.
+#' @param c_prime Numeric scalar: direct effect \eqn{X \rightarrow Y}{X -> Y}.
 #' @param estimates Numeric vector of all parameter estimates.
 #' @param vcov Square variance-covariance matrix of `estimates`.
 #' @param sigma_mediators Optional numeric vector of mediator residual SDs (length k), or NULL.

@@ -42,12 +42,13 @@ ParallelMediationData(
 )
 }
 \arguments{
-\item{a_paths}{Numeric vector: treatment -> mediator effects \eqn{(a_1, \dots, a_k)}.}
+\item{a_paths}{Numeric vector: treatment -> mediator effects
+\eqn{(a_1, \dots, a_k)}{(a_1, ..., a_k)}.}
 
-\item{b_paths}{Numeric vector: mediator -> outcome effects \eqn{(b_1, \dots, b_k)};
-must be the same length as \code{a_paths}.}
+\item{b_paths}{Numeric vector: mediator -> outcome effects
+\eqn{(b_1, \dots, b_k)}{(b_1, ..., b_k)}; must be the same length as \code{a_paths}.}
 
-\item{c_prime}{Numeric scalar: direct effect \eqn{X \rightarrow Y}.}
+\item{c_prime}{Numeric scalar: direct effect \eqn{X \rightarrow Y}{X -> Y}.}
 
 \item{estimates}{Numeric vector of all parameter estimates.}
 
@@ -79,10 +80,11 @@ A \code{ParallelMediationData} S7 object.
 \description{
 S7 class for \strong{parallel} mediation, where a treatment affects an outcome
 through two or more \emph{independent} mediators operating in parallel
-(\eqn{X \rightarrow M_j \rightarrow Y} for \eqn{j = 1, \dots, k}). The total
-indirect effect is the sum of the per-mediator products,
-\eqn{\sum_{j=1}^{k} a_j b_j}. This complements \link{MediationData} (simple) and
-\link{SerialMediationData} (serial chains).
+(\eqn{X \rightarrow M_j \rightarrow Y}{X -> M_j -> Y} for
+\eqn{j = 1, \dots, k}{j = 1, ..., k}). The total indirect effect is the sum
+of the per-mediator products, \eqn{\sum_{j=1}^{k} a_j b_j}{sum(a_j * b_j)}.
+This complements \link{MediationData} (simple) and \link{SerialMediationData}
+(serial chains).
 }
 \examples{
 \dontrun{
