@@ -114,9 +114,15 @@ directly). Each extension: spec → worktree → TDD → vignette → PR → CRA
 ---
 
 ## Immediate next actions
-1. **Q1–Q3** (docs, safe on `dev`) — refresh roadmap header, add parallel stub, fix pkgdown reference.
-2. **Write `SPEC-parallel-mediation.md`** (on `dev`) — then a worktree to implement A.
-3. Hold B/C specs until A lands (keeps the board focused).
+1. ~~Q1–Q3~~ done (roadmap header refreshed; pkgdown reference verified complete).
+2. **Extension A increment 1 — class:** DONE — `ParallelMediationData` + effects + coef/vcov/nobs/show, 34 tests. **PR #34** (`feature/parallel-mediation → dev`).
+3. **Extension A increment 2 — extractor + inference:** spec'd in
+   `planning/specs/SPEC-parallel-extractor-2026-06-03.md` (defines the `@vcov`
+   naming contract that unblocks `confint()` + `extract_mediation()` parallel
+   detection). Implement after PR #34 lands.
+4. **Toolchain:** roxygen2 8.0.0 migration tracked in **issue #35** (fixes the S7
+   `\usage` rendering + the `Config/roxygen2/version` field move, package-wide).
+5. Hold B/C specs until A lands (keeps the board focused).
 
 See also: `medfit-roadmap.md` (detailed designs), `CASCADE-cran-flip-2026-06-03.md`
 (post-CRAN dependent updates), `MEDIATIONVERSE-PROPOSAL.md` (ecosystem context).
