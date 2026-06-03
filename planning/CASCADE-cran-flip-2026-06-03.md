@@ -17,9 +17,9 @@ that run *before* this cascade: merge PR #33 → tag → release).
 ## Update order
 
 1. **medfit** on CRAN (gate — Phase 0)
-2. **RMediation** (external repo, not staged here — the v1.5.0 blocker)
-3. **probmed**, **mediationverse** (below)
-4. **medsim** (Suggests-only — optional, no urgency)
+2. **RMediation** (`stable/rmediation`, the v1.5.0 blocker — §0.5; Suggests, drop Remotes)
+3. **probmed**, **mediationverse** (§1–2)
+4. **medsim** (Suggests-only — optional, no urgency — §3)
 
 ---
 
@@ -95,6 +95,52 @@ git add DESCRIPTION NAMESPACE
 git commit -m "chore(deps): medfit on CRAN — drop from Remotes, pin Imports >= 0.2.0"
 git push origin dev
 ```
+
+---
+
+## 0.5 RMediation  `~/projects/r-packages/stable/rmediation`  🎯 the v1.5.0 blocker
+
+- **Branch:** `dev`. **Version:** 1.4.0 → bump to **1.5.0** on release.
+- **Decision (2026-06-03):** keep medfit in **`Suggests:`**, do NOT promote to
+  Imports. RMediation's medfit usage in `R/ci_medfit.R` is fully guarded with
+  `requireNamespace("medfit", quietly = TRUE)` (lines 140/159/223) — the
+  Suggests contract. Promoting to Imports would force the dependency on all
+  users and orphan those guards. So the only required change is dropping the
+  `Remotes:` line + pinning the floor.
+
+### Diff
+
+```diff
+--- a/DESCRIPTION
++++ b/DESCRIPTION
+@@ Suggests:
+ Suggests:
+     knitr,
+-    medfit,
++    medfit (>= 0.2.0),
+     OpenMx (>= 2.13),
+     rmarkdown,
+     testthat (>= 3.0.0)
+-Remotes:
+-    data-wise/medfit
+ Encoding: UTF-8
+```
+
+### Apply
+
+```bash
+cd ~/projects/r-packages/stable/rmediation   # already on dev
+# edit DESCRIPTION per diff above; bump Version: 1.5.0; update NEWS.md
+Rscript -e 'devtools::document()'
+R CMD build . && R CMD check --as-cran RMediation_*.tar.gz   # Remotes-NOTE gone
+# ci_medfit() + serial-medfit integration tests should pass against CRAN medfit 0.2.0
+git add DESCRIPTION NEWS.md NAMESPACE
+git commit -m "feat(deps): medfit on CRAN — drop Remotes, pin Suggests >= 0.2.0; v1.5.0"
+git push origin dev
+```
+
+> Leave the `requireNamespace("medfit")` guards in place — they stay correct
+> for a Suggests dependency.
 
 ---
 
