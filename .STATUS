@@ -3,7 +3,7 @@ priority: P1
 progress: 100
 next: SUBMITTED to CRAN (2026-06-03) — awaiting acceptance email. On acceptance → merge PR #33 → tag/refresh v0.2.0 → GitHub release → RMediation Remotes→Imports flip.
 watcher: Daily remote routine "medfit-cran-watch" (trig_018qiNZMTUP5Az2UGXyv6vRf, 9am America/Denver) checks the CRAN page + Gmail and reports ACCEPTED / ACTION REQUIRED / STILL PENDING. Runs: https://claude.ai/code/routines/trig_018qiNZMTUP5Az2UGXyv6vRf
-extensions: Ext A — increment 1 (class, PR #34) + increment 2 PR 2a (lm/glm parallel extractor + structure='auto' detection + confint, 31 tests, PR #36) MERGED to dev. PR 2b (lavaan parallel extractor + vignette + pkgdown, 50 tests) OPEN as PR #37 on feature/parallel-lavaan (awaiting CI). After 2b merges, Ext A is COMPLETE → Ext B (interaction) / C (engine adapters). Toolchain: roxygen2 8.0.0 migration = issue #35.
+extensions: Ext A (parallel mediation) COMPLETE — class (#34), lm/glm extractor+confint (#36), lavaan extractor+vignette+pkgdown (#37) ALL MERGED to dev. Structural trio (simple/serial/parallel) now closed across lm/glm + lavaan. NEXT: Ext B (VanderWeele 4-way interaction, InteractionMediationData + Decomposition class; design in medfit-roadmap.md §7, needs SPEC-interaction-fourway.md) then Ext C (engine adapters). Toolchain: roxygen2 8.0.0 migration = issue #35.
 type: r
 
 # ═══════════════════════════════════════════════════════════════════
@@ -98,8 +98,7 @@ Version: 0.2.0 (released to main 2026-05-31; not yet on CRAN)
 
 ## 🌲 Active Worktrees
 
-- `~/.git-worktrees/medfit/feature-parallel-lavaan` (branch `feature/parallel-lavaan`)
-  — Ext A PR 2b (lavaan parallel extractor + docs); PR #37 open to `dev`.
+- None.
 
 🎯 Next Action — CRAN submission:
 - **A)** Review the **win-builder email** (and optionally `check_win_release()` /
