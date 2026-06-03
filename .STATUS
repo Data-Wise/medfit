@@ -1,7 +1,7 @@
 status: active
 priority: P1
 progress: 100
-next: Implement lm/glm serial extractor in feature/lm-serial-extractor worktree (or start CRAN prep)
+next: Re-upload medfit_0.2.0.tar.gz to CRAN (reviewer fixes done). On acceptance email → merge PR #33 → tag/refresh v0.2.0 → GitHub release → RMediation Remotes→Imports flip.
 type: r
 
 # ═══════════════════════════════════════════════════════════════════
@@ -15,7 +15,7 @@ type: r
 ~/projects/r-packages/active/medfit/
 
 ⏰ LAST UPDATED
-2026-05-31
+2026-06-02
 
 ────────────────────────────────────────────────
 
@@ -34,6 +34,25 @@ Foundation package for mediationverse ecosystem.
 Version: 0.2.0 (released to main 2026-05-31; not yet on CRAN)
 
 ────────────────────────────────────────────────
+
+## ✅ Just Completed (2026-06-02) — CRAN resubmission (reviewer round 1)
+
+- ✅ **Built + verified v0.2.0 submission tarball** — `R CMD build` then
+  `R CMD check --as-cran medfit_0.2.0.tar.gz` = 0 errors / 0 warnings.
+- ✅ **Full CRAN audit** — maintainer (`cre` + email), `file LICENSE`, version
+  sync, R version, Date all confirmed at the tarball level.
+- ✅ **Addressed CRAN reviewer feedback** (commit `27cc086`, pushed to `dev`):
+  - Dropped `+ file LICENSE` → `License: GPL (>= 3)`; `git rm LICENSE`
+    (template was flagged as a misplaced MIT license).
+  - Single-quoted `'probmed'`, `'RMediation'`, `'medrobust'` in Description
+    (CRAN spell-check).
+  - `cran-comments.md` rewritten as a resubmission; `Date` bumped;
+    `.Rbuildignore` now ignores the generated `CRAN-SUBMISSION` marker.
+- ✅ **Installed `V8` locally** (`DOWNLOAD_STATIC_LIBV8=1`) — clears the
+  HTML-manual math-rendering NOTE; local check now matches CRAN exactly
+  (**0 / 0 / 1** = New submission only).
+- ✅ **Opened release PR #33** (`dev → main`, "Release: medfit v0.2.0 (CRAN)") —
+  all CI checks PASS, `mergeStateStatus: CLEAN`. **HELD** pending CRAN acceptance.
 
 ## ✅ Just Completed (2026-05-31) — Mediation covariance work
 
