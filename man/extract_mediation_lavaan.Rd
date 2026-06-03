@@ -13,6 +13,7 @@ extract_mediation_lavaan(
   b_label = "b",
   cp_label = "cp",
   standardized = FALSE,
+  structure = c("auto", "serial", "parallel"),
   ...
 )
 }
@@ -36,11 +37,18 @@ function returns a \link{SerialMediationData} object instead of \link{MediationD
 
 \item{standardized}{Logical: extract standardized coefficients? (default: FALSE)}
 
+\item{structure}{Character: one of \code{"auto"} (default), \code{"serial"}, or
+\code{"parallel"}. Selects the multi-mediator structure when \code{mediator} has
+length >= 2. \code{"auto"} infers it from the SEM's regression rows: a mediator
+regressed on another mediator implies \code{"serial"}, otherwise \code{"parallel"}.
+The explicit values are authoritative and skip detection.}
+
 \item{...}{Additional arguments (ignored)}
 }
 \value{
-A \link{MediationData} object, or a \link{SerialMediationData} object when
-\code{mediator} is a character vector of length >= 2 (serial mediation).
+A \link{MediationData} object; a \link{SerialMediationData} object when
+\code{mediator} is a length >= 2 vector resolving to a serial chain; or a
+\code{ParallelMediationData} object when it resolves to parallel mediation.
 }
 \description{
 Internal function for extracting mediation structure from lavaan models.
