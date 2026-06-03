@@ -211,6 +211,52 @@ the lavaan fit. This is correct given the different estimators; just be aware
 that the engine choice changes the interval for identical data.
 :::
 
+### Parallel Mediation with lm/glm
+
+In **parallel** mediation the mediators are independent (X -> M_j -> Y) rather
+than chained: each `M_j` is regressed on the treatment only, and all mediators
+enter a single outcome model. The total indirect effect is the **sum** of the
+per-mediator products, $\sum_j a_j b_j$. The API mirrors the serial case — pass
+a `mediator` vector and the remaining mediator models via `mediator_models` — but
+set `structure = "parallel"` (or rely on `structure = "auto"`, which infers
+parallel when no mediator is regressed on another). The result is a
+`ParallelMediationData` object.
+
+```{r}
+#| label: lm-parallel
+# Parallel data: two independent mediators, each driven by X
+M1p <- 0.5 * X + rnorm(n)
+M2p <- 0.4 * X + rnorm(n)
+y_par <- 0.3 * M1p + 0.45 * M2p + 0.1 * X + rnorm(n)
+data_lm_par <- data.frame(X = X, M1 = M1p, M2 = M2p, Y = y_par)
+
+# Each mediator is regressed on X alone; the outcome holds both mediators + X
+fit_m1p <- lm(M1 ~ X, data = data_lm_par)
+fit_m2p <- lm(M2 ~ X, data = data_lm_par)
+fit_yp  <- lm(Y ~ M1 + M2 + X, data = data_lm_par)
+
+med_parallel_lm <- extract_mediation(
+  fit_m1p,
+  model_y = fit_yp,
+  treatment = "X",
+  mediator = c("M1", "M2"),
+  mediator_models = list(fit_m2p),
+  structure = "parallel"
+)
+
+# Per-mediator paths and the summed indirect effect
+med_parallel_lm@a_paths
+med_parallel_lm@b_paths
+nie(med_parallel_lm)               # sum_j a_j * b_j
+confint(med_parallel_lm, parm = "effects")
+```
+
+Because the mediator equations are fit separately, `cov(a_j, a_{j'}) = 0` and
+`cov(a_j, b_{j'}) = 0`; but the `b_j` (and `c'`) share the single outcome
+equation, so `cov(b_j, b_{j'})` and `cov(b_j, c')` are preserved. The
+`confint()` indirect-effect SE uses the full delta method over the joint
+`a*/b*` block, not a naive per-mediator sum.
+
 ## Extracting from lavaan Models
 
 ### Simple Mediation in SEM
@@ -290,6 +336,44 @@ print(med_serial)
 # Serial indirect effect
 med_serial@a_path * med_serial@d_path * med_serial@b_path
 ```
+
+### Parallel Mediation in SEM
+
+A single `sem()` fit handles parallel mediators directly: regress each mediator
+on the treatment and let the outcome depend on all of them. Passing a `mediator`
+vector returns a `ParallelMediationData` object (auto-detected, since no mediator
+is regressed on another).
+
+```{r}
+#| label: lavaan-parallel
+# Define a parallel mediation model: M1, M2 each on X; Y on both + X
+parallel_syntax <- "
+  M1 ~ a1 * X
+  M2 ~ a2 * X
+  Y  ~ b1 * M1 + b2 * M2 + c_prime * X
+
+  # Total indirect effect = sum of per-mediator products
+  indirect := a1 * b1 + a2 * b2
+"
+
+fit_parallel <- sem(parallel_syntax, data = data_lm_par)
+
+med_parallel <- extract_mediation(
+  fit_parallel,
+  treatment = "X",
+  mediator = c("M1", "M2"),
+  outcome = "Y"
+)
+
+print(med_parallel)
+nie(med_parallel)
+```
+
+Unlike the lm/glm engine, the SEM estimates the whole system jointly, so the
+extracted `vcov` preserves **all** off-diagonals — including `cov(a_j, b_j)` and
+`cov(a_j, a_{j'})`. Standard errors for the indirect effect therefore reflect the
+full joint covariance, and (as with serial mediation) the lavaan interval will
+generally differ from the lm one for identical data.
 
 ## Compatibility with RMediation
 

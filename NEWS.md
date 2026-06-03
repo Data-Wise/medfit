@@ -12,10 +12,19 @@
 * `extract_mediation()` now builds `ParallelMediationData` from **lm/glm** fits:
   pass the per-mediator models via `mediator_models` and the new
   `structure = "parallel"` argument. `structure = "auto"` (default) infers serial
-  vs parallel from the mediator models' predictors and errors on an ambiguous mix.
+  vs parallel from the mediator models' predictors, defaulting to serial unless
+  there is positive evidence of a parallel structure.
   The returned `@vcov` is named `a1, b1, ..., c_prime`; the `b_j` (jointly fit in
   the outcome model) keep their mutual covariances and `cov(b_j, c')`, while the
-  `a_j` (separate mediator regressions) are independent. (lavaan support to follow.)
+  `a_j` (separate mediator regressions) are independent.
+
+* `extract_mediation()` also builds `ParallelMediationData` from a single
+  **lavaan** `sem()` fit: pass a `mediator` vector and (optionally)
+  `structure = "parallel"`. `structure = "auto"` infers parallel vs serial from
+  the SEM's regression rows. Because the system is estimated jointly, the
+  extracted `@vcov` preserves **all** off-diagonals — including `cov(a_j, b_j)`
+  and `cov(a_j, a_{j'})` — so SEs reflect the full joint covariance (and differ
+  from the block-diagonal lm/glm engine for identical data).
 
 * New `confint()` method for `ParallelMediationData` (`parm = "paths"` or
   `"effects"`). The indirect-effect variance uses the delta method over the full
