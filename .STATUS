@@ -1,7 +1,7 @@
 status: active
 priority: P1
 progress: 100
-next: Re-upload medfit_0.2.0.tar.gz to CRAN (reviewer fixes done). On acceptance email → merge PR #33 → tag/refresh v0.2.0 → GitHub release → RMediation Remotes→Imports flip.
+next: SUBMITTED to CRAN (2026-06-03) — awaiting acceptance email. On acceptance → merge PR #33 → tag/refresh v0.2.0 → GitHub release → RMediation Remotes→Imports flip.
 type: r
 
 # ═══════════════════════════════════════════════════════════════════
@@ -34,6 +34,16 @@ Foundation package for mediationverse ecosystem.
 Version: 0.2.0 (released to main 2026-05-31; not yet on CRAN)
 
 ────────────────────────────────────────────────
+
+## ✅ Just Completed (2026-06-03) — CRAN upload + dependabot cleanup
+
+- ✅ **Uploaded medfit_0.2.0.tar.gz to CRAN** — resubmission submitted;
+  **awaiting acceptance email**. Fresh `R CMD check --as-cran` on R 4.6.0 =
+  0 errors / 0 warnings / 1 expected "New submission" NOTE.
+- ✅ **Merged dependabot CI bumps #29–32** (download/upload-artifact,
+  codecov-action, github-script) — landed on `main`, back-merged to `dev`.
+- ✅ **Retargeted Dependabot to `dev`** (`target-branch: "dev"`) so future CI
+  bumps follow the dev→main PR flow instead of landing on `main`.
 
 ## ✅ Just Completed (2026-06-02) — CRAN resubmission (reviewer round 1)
 
