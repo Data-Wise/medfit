@@ -63,7 +63,7 @@ test_that("validator rejects duplicate mediator names", {
 
 test_that("nie sums the per-mediator products", {
   pmd <- make_parallel(a = c(0.5, 0.4), b = c(0.6, 0.3))
-  # 0.5*0.6 + 0.4*0.3 = 0.30 + 0.12 = 0.42
+  # a1*b1 plus a2*b2 gives 0.30 plus 0.12, i.e. 0.42
   expect_equal(as.numeric(nie(pmd)), 0.42)
   expect_equal(attr(nie(pmd), "type"), "nie")
   expect_equal(attr(nie(pmd), "n_mediators"), 2L)
@@ -86,7 +86,7 @@ test_that("pm is indirect / total and guards the zero-total case", {
   expect_equal(as.numeric(pm(pmd)), 0.42 / 0.62)
 
   zero_total <- make_parallel(a = c(0.5, -0.5), b = c(0.6, 0.6), cp = 0)
-  # indirect = 0.5*0.6 + (-0.5)*0.6 = 0; total = 0
+  # indirect cancels to zero (one positive, one equal-and-opposite); direct is zero too
   expect_warning(res <- pm(zero_total), "undefined")
   expect_true(is.na(res))
 })
@@ -109,7 +109,7 @@ test_that("scales to 3 parallel mediators", {
     a = c(0.5, 0.4, 0.3), b = c(0.6, 0.3, 0.2),
     mediators = c("M1", "M2", "M3")
   )
-  # 0.30 + 0.12 + 0.06 = 0.48
+  # three products sum to 0.48 (0.30 and 0.12 and 0.06)
   expect_equal(as.numeric(nie(pmd)), 0.48)
   expect_identical(names(paths(pmd)),
                    c("a1", "b1", "a2", "b2", "a3", "b3", "c_prime"))
