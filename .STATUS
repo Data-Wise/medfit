@@ -3,7 +3,7 @@ priority: P1
 progress: 100
 next: SUBMITTED to CRAN (2026-06-03) — awaiting acceptance email. On acceptance → merge PR #33 → tag/refresh v0.2.0 → GitHub release → RMediation Remotes→Imports flip.
 watcher: Daily remote routine "medfit-cran-watch" (trig_018qiNZMTUP5Az2UGXyv6vRf, 9am America/Denver) checks the CRAN page + Gmail and reports ACCEPTED / ACTION REQUIRED / STILL PENDING. Runs: https://claude.ai/code/routines/trig_018qiNZMTUP5Az2UGXyv6vRf
-extensions: Extension A increment 1 (ParallelMediationData class + effects + coef/vcov/nobs/show, 34 tests) MERGED to dev via PR #34 (2026-06-03; worktree removed). Next: increment 2 = parallel extractor + confint per planning/specs/SPEC-parallel-extractor-2026-06-03.md. Then Ext B (interaction) / C (engine adapters). Toolchain: roxygen2 8.0.0 migration tracked in issue #35.
+extensions: Ext A increment 1 (ParallelMediationData class, 34 tests) MERGED via PR #34. Increment 2 PR 2a (lm/glm parallel extractor + structure='auto' detection + confint, 31 tests) OPEN as PR #36 (worktree ~/.git-worktrees/medfit/feature-parallel-extractor-lm). Next: PR 2b = lavaan parallel extractor + vignette + pkgdown. Then Ext B (interaction) / C (engine adapters). Toolchain: roxygen2 8.0.0 migration = issue #35.
 type: r
 
 # ═══════════════════════════════════════════════════════════════════
