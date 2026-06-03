@@ -8,7 +8,19 @@
   structural trio alongside `MediationData` (simple) and `SerialMediationData`
   (serial). Effect extractors (`nie`, `nde`, `te`, `pm`, `paths`) have methods
   for the new class; `paths()` returns interleaved `a1, b1, a2, b2, ..., c_prime`.
-  (Foundational class; formula/`extract_mediation()` support to follow.)
+
+* `extract_mediation()` now builds `ParallelMediationData` from **lm/glm** fits:
+  pass the per-mediator models via `mediator_models` and the new
+  `structure = "parallel"` argument. `structure = "auto"` (default) infers serial
+  vs parallel from the mediator models' predictors and errors on an ambiguous mix.
+  The returned `@vcov` is named `a1, b1, ..., c_prime`; the `b_j` (jointly fit in
+  the outcome model) keep their mutual covariances and `cov(b_j, c')`, while the
+  `a_j` (separate mediator regressions) are independent. (lavaan support to follow.)
+
+* New `confint()` method for `ParallelMediationData` (`parm = "paths"` or
+  `"effects"`). The indirect-effect variance uses the delta method over the full
+  `{a1, b1, ..., ak, bk}` covariance block, so correlated `b_j` are handled
+  correctly; `method = "boot"` directs to `bootstrap_mediation()`.
 
 # medfit 0.2.0 (2026-05-31)
 
