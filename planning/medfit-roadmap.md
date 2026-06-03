@@ -1,9 +1,12 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: Phase 3 Complete → Phase 4 (Model Fitting)
-**Timeline**: 4-6 weeks for MVP (Started December 2024)
-**Last Updated**: December 3, 2025
+**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.2.0 released** (simple + serial mediation), submitted to CRAN. Next = post-v0.2.0 extensions (see `EXTENSIONS-PLAN-2026-06-03.md`).
+**Timeline**: MVP shipped; extensions A/B/C planned (parallel → interaction → engine adapters)
+**Last Updated**: 2026-06-03
+
+> **Note:** Phases 7/7b/7c below are the detailed *design reference*. The current,
+> prioritized board lives in `planning/EXTENSIONS-PLAN-2026-06-03.md`.
 
 ---
 
