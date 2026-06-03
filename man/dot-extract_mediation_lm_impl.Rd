@@ -11,7 +11,8 @@
   mediator,
   mediator_models = NULL,
   outcome = NULL,
-  data = NULL
+  data = NULL,
+  structure = c("auto", "serial", "parallel")
 )
 }
 \arguments{

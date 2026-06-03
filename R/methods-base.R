@@ -403,3 +403,76 @@ S7::method(vcov, ParallelMediationData) <- function(object, ...) {
 S7::method(nobs, ParallelMediationData) <- function(object, ...) {
   object@n_obs
 }
+
+
+#' Confidence Intervals for ParallelMediationData
+#'
+#' @description
+#' Normal-approximation confidence intervals for parallel-mediation path
+#' coefficients (`parm = "paths"`) or effects (`parm = "effects"`). The indirect
+#' effect is `sum(a_j * b_j)`; its variance uses the **delta method over the full
+#' `{a1, b1, ..., ak, bk}` covariance sub-block**, so correlations among the
+#' jointly-estimated `b_j` (and between them and `c'`) are accounted for -- a
+#' naive per-mediator sum would understate it.
+#'
+#' @param object A ParallelMediationData object.
+#' @param parm `"paths"` (per-mediator a/b plus c') or `"effects"`
+#'   (indirect/direct/total).
+#' @param level Confidence level (default 0.95).
+#' @param method `"normal"` (delta-method normal approximation) or `"boot"`
+#'   (directs the user to [bootstrap_mediation()]).
+#' @param ... Additional arguments (ignored).
+#' @return A numeric matrix with lower/upper columns and one row per parameter.
+#' @noRd
+S7::method(confint, ParallelMediationData) <- function(object,
+                                                       parm = "paths",
+                                                       level = 0.95,
+                                                       method = c("normal", "boot"),
+                                                       ...) {
+  method <- match.arg(method)
+  if (identical(method, "boot")) {
+    stop("Bootstrap CIs are computed via bootstrap_mediation(); ",
+         "call it directly with the desired statistic.", call. = FALSE)
+  }
+  checkmate::assert_number(level, lower = 0, upper = 1)
+
+  vc <- object@vcov
+  k <- length(object@mediators)
+  # Interleaved alias order a1, b1, ..., ak, bk (matches the extractor / paths()).
+  ab_idx <- as.vector(rbind(paste0("a", seq_len(k)), paste0("b", seq_len(k))))
+
+  alpha <- 1 - level
+  z <- stats::qnorm(1 - alpha / 2)
+
+  if (identical(parm, "paths")) {
+    coefs <- paths(object)                       # named a1, b1, ..., c_prime
+    se <- sqrt(diag(vc)[names(coefs)])
+  } else if (identical(parm, "effects")) {
+    warning("Normal (delta-method) approximation for the indirect effect may be ",
+            "inaccurate; consider bootstrap_mediation() for robust inference.",
+            call. = FALSE)
+
+    a <- object@a_paths
+    b <- object@b_paths
+    # Gradient of nie = sum(a_j b_j): d/da_j = b_j, d/db_j = a_j, aligned to ab_idx.
+    g <- as.vector(rbind(b, a))
+    sigma_ab <- vc[ab_idx, ab_idx, drop = FALSE]
+    var_nie <- as.numeric(t(g) %*% sigma_ab %*% g)
+    var_nde <- vc["c_prime", "c_prime"]
+    cov_nie_cp <- sum(g * vc[ab_idx, "c_prime"])
+    var_te <- var_nie + var_nde + 2 * cov_nie_cp
+
+    coefs <- coef(object, type = "effects")      # indirect, direct, total
+    se <- c(sqrt(var_nie), sqrt(var_nde), sqrt(var_te))
+    names(se) <- names(coefs)
+  } else {
+    stop("`parm` must be 'paths' or 'effects'.", call. = FALSE)
+  }
+
+  ci_mat <- cbind(coefs - z * se, coefs + z * se)
+  colnames(ci_mat) <- c(
+    paste0(format(100 * alpha / 2, digits = 3), " %"),
+    paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
+  )
+  ci_mat
+}
