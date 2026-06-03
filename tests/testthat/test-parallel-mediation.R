@@ -114,3 +114,69 @@ test_that("scales to 3 parallel mediators", {
   expect_identical(names(paths(pmd)),
                    c("a1", "b1", "a2", "b2", "a3", "b3", "c_prime"))
 })
+
+test_that("optional residual SDs are accepted when well-formed", {
+  pmd <- ParallelMediationData(
+    a_paths = c(0.5, 0.4), b_paths = c(0.6, 0.3), c_prime = 0.2,
+    estimates = c(0.5, 0.4, 0.6, 0.3, 0.2), vcov = diag(0.01, 5),
+    sigma_mediators = c(1.0, 1.1), sigma_y = 0.9,
+    treatment = "X", mediators = c("M1", "M2"), outcome = "Y",
+    mediator_predictors = list("X", "X"), outcome_predictors = c("X", "M1", "M2"),
+    n_obs = 200L, converged = TRUE, source_package = "medfit"
+  )
+  expect_equal(pmd@sigma_mediators, c(1.0, 1.1))
+  expect_equal(pmd@sigma_y, 0.9)
+})
+
+test_that("validator rejects wrong-length sigma_mediators and negative sigma_y", {
+  base <- list(
+    a_paths = c(0.5, 0.4), b_paths = c(0.6, 0.3), c_prime = 0.2,
+    estimates = c(0.5, 0.4, 0.6, 0.3, 0.2), vcov = diag(0.01, 5),
+    treatment = "X", mediators = c("M1", "M2"), outcome = "Y",
+    mediator_predictors = list("X", "X"), outcome_predictors = c("X", "M1", "M2"),
+    n_obs = 200L, converged = TRUE, source_package = "medfit"
+  )
+  expect_error(do.call(ParallelMediationData, c(base, list(sigma_mediators = 1.0))),
+               "sigma_mediators must have length 2")
+  expect_error(do.call(ParallelMediationData, c(base, list(sigma_y = -1))),
+               "non-negative scalar")
+})
+
+test_that("validator rejects non-square vcov and estimates/vcov mismatch", {
+  expect_error(
+    ParallelMediationData(
+      a_paths = c(0.5, 0.4), b_paths = c(0.6, 0.3), c_prime = 0.2,
+      estimates = c(0.5, 0.4, 0.6, 0.3, 0.2),
+      vcov = matrix(0.01, nrow = 5, ncol = 4),  # non-square
+      treatment = "X", mediators = c("M1", "M2"), outcome = "Y",
+      mediator_predictors = list("X", "X"), outcome_predictors = c("X", "M1", "M2"),
+      n_obs = 200L, converged = TRUE, source_package = "medfit"
+    ),
+    "vcov must be a square matrix"
+  )
+  expect_error(
+    ParallelMediationData(
+      a_paths = c(0.5, 0.4), b_paths = c(0.6, 0.3), c_prime = 0.2,
+      estimates = c(0.5, 0.4, 0.6),              # length 3 vs 4x4 vcov
+      vcov = diag(0.01, 4),
+      treatment = "X", mediators = c("M1", "M2"), outcome = "Y",
+      mediator_predictors = list("X", "X"), outcome_predictors = c("X", "M1", "M2"),
+      n_obs = 200L, converged = TRUE, source_package = "medfit"
+    ),
+    "estimates must match vcov"
+  )
+})
+
+test_that("coef/vcov/nobs methods work", {
+  pmd <- make_parallel(a = c(0.5, 0.4), b = c(0.6, 0.3), cp = 0.2)
+  expect_identical(names(coef(pmd, "paths")), c("a1", "b1", "a2", "b2", "c_prime"))
+  expect_equal(unname(coef(pmd, "effects")), c(0.42, 0.2, 0.62))
+  expect_equal(coef(pmd, "all"), pmd@estimates)
+  expect_equal(dim(vcov(pmd)), c(5L, 5L))
+  expect_identical(nobs(pmd), 200L)
+})
+
+test_that("show method dispatches to print", {
+  pmd <- make_parallel()
+  expect_output(methods::show(pmd), "ParallelMediationData")
+})

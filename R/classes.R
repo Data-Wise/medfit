@@ -990,8 +990,7 @@ S7::method(show, SerialMediationData) <- function(object) {
 #' @return A `ParallelMediationData` S7 object.
 #'
 #' @examples
-#' \dontrun{
-#' ParallelMediationData(
+#' pmd <- ParallelMediationData(
 #'   a_paths = c(0.5, 0.4),
 #'   b_paths = c(0.6, 0.3),
 #'   c_prime = 0.2,
@@ -1006,7 +1005,9 @@ S7::method(show, SerialMediationData) <- function(object) {
 #'   converged = TRUE,
 #'   source_package = "medfit"
 #' )
-#' }
+#'
+#' nie(pmd)   # total indirect effect: sum(a_j * b_j) = 0.42
+#' paths(pmd) # a1, b1, a2, b2, c_prime
 #'
 #' @export
 ParallelMediationData <- S7::new_class(

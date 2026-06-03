@@ -359,3 +359,47 @@ S7::method(nobs, MediationData) <- function(object, ...) {
 S7::method(nobs, SerialMediationData) <- function(object, ...) {
   object@n_obs
 }
+
+
+# --- Base-generic methods for ParallelMediationData ---
+
+#' Extract Coefficients from ParallelMediationData
+#'
+#' @param object A ParallelMediationData object
+#' @param type One of `"paths"` (per-mediator a/b + c'), `"effects"`
+#'   (indirect/direct/total), or `"all"` (raw estimates).
+#' @param ... Additional arguments (ignored)
+#' @return A named numeric vector
+#' @noRd
+S7::method(coef, ParallelMediationData) <- function(object, type = c("paths", "effects", "all"), ...) {
+  type <- match.arg(type)
+  switch(type,
+    paths = paths(object),
+    effects = {
+      indirect <- sum(object@a_paths * object@b_paths)
+      direct <- object@c_prime
+      c(indirect = indirect, direct = direct, total = indirect + direct)
+    },
+    all = object@estimates
+  )
+}
+
+#' Extract Variance-Covariance Matrix from ParallelMediationData
+#'
+#' @param object A ParallelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A numeric matrix
+#' @noRd
+S7::method(vcov, ParallelMediationData) <- function(object, ...) {
+  object@vcov
+}
+
+#' Number of Observations from ParallelMediationData
+#'
+#' @param object A ParallelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return Integer: number of observations
+#' @noRd
+S7::method(nobs, ParallelMediationData) <- function(object, ...) {
+  object@n_obs
+}
