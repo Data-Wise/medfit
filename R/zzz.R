@@ -21,6 +21,7 @@
   # "Class has not been registered with S4" errors
   S7::S4_register(MediationData)
   S7::S4_register(SerialMediationData)
+  S7::S4_register(ParallelMediationData)
   S7::S4_register(BootstrapResult)
 
   # Register S7 methods for dispatch

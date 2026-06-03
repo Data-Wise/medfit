@@ -352,6 +352,70 @@ S7::method(paths, SerialMediationData) <- function(x, ...) {
 }
 
 
+# --- Methods for ParallelMediationData ---
+
+#' @describeIn nie Method for ParallelMediationData (sum of a_j * b_j)
+#' @noRd
+S7::method(nie, ParallelMediationData) <- function(x, ...) {
+  effect <- sum(x@a_paths * x@b_paths)
+  class(effect) <- c("mediation_effect", "numeric")
+  attr(effect, "type") <- "nie"
+  attr(effect, "n_mediators") <- length(x@mediators)
+  effect
+}
+
+#' @describeIn nde Method for ParallelMediationData
+#' @noRd
+S7::method(nde, ParallelMediationData) <- function(x, ...) {
+  effect <- x@c_prime
+  class(effect) <- c("mediation_effect", "numeric")
+  attr(effect, "type") <- "nde"
+  effect
+}
+
+#' @describeIn te Method for ParallelMediationData
+#' @noRd
+S7::method(te, ParallelMediationData) <- function(x, ...) {
+  indirect <- sum(x@a_paths * x@b_paths)
+  effect <- indirect + x@c_prime
+  class(effect) <- c("mediation_effect", "numeric")
+  attr(effect, "type") <- "te"
+  effect
+}
+
+#' @describeIn pm Method for ParallelMediationData
+#' @noRd
+S7::method(pm, ParallelMediationData) <- function(x, ...) {
+  indirect <- sum(x@a_paths * x@b_paths)
+  total <- indirect + x@c_prime
+
+  if (abs(total) < .Machine$double.eps) {
+    warning("Total effect is approximately zero; proportion mediated is undefined.",
+            call. = FALSE)
+    return(NA_real_)
+  }
+
+  prop <- indirect / total
+  class(prop) <- c("mediation_effect", "numeric")
+  attr(prop, "type") <- "pm"
+  prop
+}
+
+#' @describeIn paths Method for ParallelMediationData
+#' @noRd
+S7::method(paths, ParallelMediationData) <- function(x, ...) {
+  k <- length(x@mediators)
+  # Interleave a_j, b_j with names a1, b1, a2, b2, ...
+  result <- numeric(0)
+  for (j in seq_len(k)) {
+    result <- c(result,
+                stats::setNames(x@a_paths[j], paste0("a", j)),
+                stats::setNames(x@b_paths[j], paste0("b", j)))
+  }
+  c(result, c_prime = x@c_prime)
+}
+
+
 # --- Methods for BootstrapResult ---
 
 #' @describeIn nie Method for BootstrapResult (extracts estimate)
