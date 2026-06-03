@@ -96,10 +96,9 @@ test_that("structure='auto' classifies parallel vs serial, errors on ambiguous",
   )
   expect_s3_class(mu_ser, "medfit::SerialMediationData")
 
-  # mixed: M2 ~ X + M1 (has both a parallel-looking root and a chain edge but
-  # not a clean chain for the full set) -> ambiguous when combined oddly.
-  # Build a genuinely ambiguous case: 3 mediators where only M2~M1 (one chain
-  # edge) but M3~X (parallel), so neither clean chain nor fully parallel.
+  # Mixed structure (a chain edge M2~M1 but M3~X) is NOT confidently parallel,
+  # so "auto" conservatively defers to serial; the serial worker then emits its
+  # specific validation error (predecessor M2 missing from the M3 model).
   set.seed(5)
   n <- 800
   X <- rnorm(n)
@@ -114,7 +113,7 @@ test_that("structure='auto' classifies parallel vs serial, errors on ambiguous",
       treatment = "X", mediator = c("M1", "M2", "M3"),
       mediator_models = list(lm(M2 ~ M1, dm), lm(M3 ~ X, dm))
     ),
-    "Ambiguous"
+    "Predecessor mediator"
   )
 })
 

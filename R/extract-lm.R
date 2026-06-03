@@ -199,7 +199,7 @@ S7::method(extract_mediation, glm_class) <- function(
         ), call. = FALSE)
       }
       med_models <- c(list(model_m), mediator_models)
-      structure <- .classify_multimediator_structure(med_models, mediator, treatment)
+      structure <- .classify_multimediator_structure(med_models, mediator, treatment, model_y)
     }
     if (structure == "serial") {
       return(.extract_serial_mediation_lm(
@@ -654,46 +654,41 @@ S7::method(extract_mediation, glm_class) <- function(
 
 #' Classify a multi-mediator structure as serial or parallel
 #'
-#' @param med_models Ordered list of the k mediator models (M1..Mk), where
-#'   `med_models[[j]]` has response `mediators[j]`.
+#' Conservative, backward-compatible inference for `structure = "auto"`. Returns
+#' `"parallel"` only on POSITIVE evidence of a parallel structure (no mediator is
+#' regressed on another, and every mediator enters the outcome model); otherwise
+#' defaults to `"serial"` (the historical default for vector `mediator`). It never
+#' errors -- malformed inputs fall through to the chosen worker's own validation,
+#' which emits specific, directed messages. Users can always set `structure`
+#' explicitly to override.
+#'
+#' @param med_models Ordered list of the k mediator models (`med_models[[j]]` is
+#'   intended to be the model for `mediators[j]`).
 #' @param mediators Character vector of mediator names (length k).
 #' @param treatment Treatment variable name.
-#' @return `"serial"` or `"parallel"`; errors on an ambiguous/mixed structure.
+#' @param model_y The outcome model.
+#' @return `"serial"` or `"parallel"`.
 #' @keywords internal
-.classify_multimediator_structure <- function(med_models, mediators, treatment) {
+.classify_multimediator_structure <- function(med_models, mediators, treatment, model_y) {
   k <- length(mediators)
-  if (length(med_models) != k) {
-    stop(sprintf(
-      "Expected %d mediator models (one per mediator) for structure detection, found %d.",
-      k, length(med_models)
-    ), call. = FALSE)
-  }
-  preds <- lapply(med_models, function(m) names(stats::coef(m)))
+  # Model-count mismatch: defer to the serial worker's length validation.
+  if (length(med_models) != k) return("serial")
 
-  # Count mediator models that include ANY OTHER mediator as a predictor.
-  has_med_pred <- vapply(seq_len(k), function(i) {
+  safe_names <- function(m) tryCatch(names(stats::coef(m)), error = function(e) character(0))
+  preds <- lapply(med_models, safe_names)
+
+  # Any mediator regressed on another mediator => chain-like => serial.
+  has_med_pred <- any(vapply(seq_len(k), function(i) {
     any(setdiff(mediators, mediators[i]) %in% preds[[i]])
-  }, logical(1))
-
-  # Parallel: no mediator regressed on another (each M_j ~ X (+ C)).
-  if (!any(has_med_pred)) {
-    return("parallel")
-  }
-
-  # Serial: a clean chain -- M_i predicts M_{i+1} for every i, and there are
-  # exactly k-1 such edges (no extra cross-mediator predictors).
-  is_chain <- all(vapply(seq_len(k - 1L), function(i) {
-    mediators[i] %in% preds[[i + 1L]]
   }, logical(1)))
-  if (is_chain && sum(has_med_pred) == (k - 1L)) {
-    return("serial")
-  }
+  if (has_med_pred) return("serial")
 
-  stop(paste0(
-    "Ambiguous mediator structure: the mediator models are neither a clean ",
-    "serial chain (M_i -> M_{i+1}) nor fully parallel (each M_j ~ ", treatment,
-    "). Set structure = 'serial' or 'parallel' explicitly."
-  ), call. = FALSE)
+  # Positive parallel evidence: every mediator enters the single outcome model
+  # (Y ~ X + M1 + ... + Mk). Serial outcome models carry only the last mediator.
+  if (all(mediators %in% safe_names(model_y))) return("parallel")
+
+  # Otherwise default to serial (historical behavior; the worker validates).
+  "serial"
 }
 
 

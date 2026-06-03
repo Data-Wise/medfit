@@ -4,20 +4,28 @@
 \alias{.classify_multimediator_structure}
 \title{Classify a multi-mediator structure as serial or parallel}
 \usage{
-.classify_multimediator_structure(med_models, mediators, treatment)
+.classify_multimediator_structure(med_models, mediators, treatment, model_y)
 }
 \arguments{
-\item{med_models}{Ordered list of the k mediator models (M1..Mk), where
-\code{med_models[[j]]} has response \code{mediators[j]}.}
+\item{med_models}{Ordered list of the k mediator models (\code{med_models[[j]]} is
+intended to be the model for \code{mediators[j]}).}
 
 \item{mediators}{Character vector of mediator names (length k).}
 
 \item{treatment}{Treatment variable name.}
+
+\item{model_y}{The outcome model.}
 }
 \value{
-\code{"serial"} or \code{"parallel"}; errors on an ambiguous/mixed structure.
+\code{"serial"} or \code{"parallel"}.
 }
 \description{
-Classify a multi-mediator structure as serial or parallel
+Conservative, backward-compatible inference for \code{structure = "auto"}. Returns
+\code{"parallel"} only on POSITIVE evidence of a parallel structure (no mediator is
+regressed on another, and every mediator enters the outcome model); otherwise
+defaults to \code{"serial"} (the historical default for vector \code{mediator}). It never
+errors -- malformed inputs fall through to the chosen worker's own validation,
+which emits specific, directed messages. Users can always set \code{structure}
+explicitly to override.
 }
 \keyword{internal}
