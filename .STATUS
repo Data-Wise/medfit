@@ -3,7 +3,7 @@ priority: P1
 progress: 100
 next: SUBMITTED to CRAN (2026-06-03) — awaiting acceptance email. On acceptance → merge PR #33 → tag/refresh v0.2.0 → GitHub release → RMediation Remotes→Imports flip.
 watcher: Daily remote routine "medfit-cran-watch" (trig_018qiNZMTUP5Az2UGXyv6vRf, 9am America/Denver) checks the CRAN page + Gmail and reports ACCEPTED / ACTION REQUIRED / STILL PENDING. Runs: https://claude.ai/code/routines/trig_018qiNZMTUP5Az2UGXyv6vRf
-extensions: Ext A (parallel mediation) COMPLETE — class (#34), lm/glm extractor+confint (#36), lavaan extractor+vignette+pkgdown (#37) ALL MERGED to dev. Structural trio (simple/serial/parallel) now closed across lm/glm + lavaan. NEXT: Ext B (VanderWeele 4-way interaction, InteractionMediationData + Decomposition class; design in medfit-roadmap.md §7, needs SPEC-interaction-fourway.md) then Ext C (engine adapters). Toolchain: roxygen2 8.0.0 migration = issue #35.
+extensions: Ext A (parallel mediation) COMPLETE — class (#34), lm/glm extractor+confint (#36), lavaan extractor+vignette+pkgdown (#37) ALL MERGED to dev. Structural trio (simple/serial/parallel) now closed across lm/glm + lavaan. NEXT: Ext B (VanderWeele 4-way interaction, InteractionMediationData) — SPEC DRAFTED at planning/specs/SPEC-interaction-fourway-2026-06-03.md (PR split B1 class / B2a lm+delta SEs / B2b lavaan+docs; reuses Ext A vcov helper + confint delta pattern). Then Ext C (engine adapters). Toolchain: roxygen2 8.0.0 migration = issue #35.
 type: r
 
 # ═══════════════════════════════════════════════════════════════════

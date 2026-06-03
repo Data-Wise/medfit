@@ -62,7 +62,8 @@ contract (`a1,b1,a2,b2,…`) → tests vs hand-built + lavaan parallel SEM → v
 **Work:** class + validator (component-sum invariants) → interaction detection in
 `extract_mediation()` (`X:M` term) → four-way formulas (continuous Y/M first) →
 delta-method SEs (bootstrap already available) → tests vs `regmedint`/`med4way` →
-vignette. **Spec to write:** `planning/specs/SPEC-interaction-fourway.md`.
+vignette. **Spec:** `planning/specs/SPEC-interaction-fourway-2026-06-03.md` (drafted
+2026-06-03; PR split B1 class / B2a lm+SEs / B2b lavaan+docs).
 
 ### 🔴 Extension C — Engine adapter architecture + CMAverse (2–3 weeks)
 **Design already in `medfit-roadmap.md §7b–7c`** (registry, adapter contract, CMAverse
