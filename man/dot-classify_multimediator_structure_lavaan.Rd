@@ -33,6 +33,10 @@ through to the chosen worker's own directed validation. Users can always set
 }
 \details{
 Detection reads only \code{op == "~"} (regression) rows, so residual covariances
-(\verb{~~}) among mediators cannot masquerade as serial chain edges.
+(\verb{~~}) among mediators cannot masquerade as serial chain edges. Like the
+lm/glm classifier, it returns \code{"parallel"} only on POSITIVE evidence: no
+mediator-on-mediator edge AND every mediator enters a single common outcome
+equation. Anything else (e.g. one mediator missing from the outcome model)
+falls back to \code{"serial"}, preserving the historical vector-mediator behavior.
 }
 \keyword{internal}

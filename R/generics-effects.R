@@ -226,6 +226,25 @@ pm <- S7::new_generic("pm", "x")
 paths <- S7::new_generic("paths", "x")
 
 
+#' Four-Way Decomposition of a Mediation Effect
+#'
+#' @description
+#' Return VanderWeele's (2014) four-way decomposition of the total effect for an
+#' [InteractionMediationData] object: controlled direct effect (CDE), reference
+#' interaction (INTref), mediated interaction (INTmed), and pure indirect effect
+#' (PIE), together with the derived natural direct/indirect and total effects.
+#'
+#' @param x An [InteractionMediationData] object.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return A named numeric vector:
+#'   `c(cde, int_ref, int_med, pie, nde, nie, total)`.
+#'
+#' @seealso [nie()], [nde()], [te()]
+#' @export
+decompose <- S7::new_generic("decompose", "x")
+
+
 # --- Methods for MediationData ---
 
 #' @describeIn nie Method for MediationData
@@ -413,6 +432,69 @@ S7::method(paths, ParallelMediationData) <- function(x, ...) {
                 stats::setNames(x@b_paths[j], paste0("b", j)))
   }
   c(result, c_prime = x@c_prime)
+}
+
+
+# --- Methods for InteractionMediationData ---
+
+#' @describeIn nie Method for InteractionMediationData (INTmed + PIE)
+#' @noRd
+S7::method(nie, InteractionMediationData) <- function(x, ...) {
+  effect <- x@int_med + x@pie
+  class(effect) <- c("mediation_effect", "numeric")
+  attr(effect, "type") <- "nie"
+  effect
+}
+
+#' @describeIn nde Method for InteractionMediationData (CDE + INTref)
+#' @noRd
+S7::method(nde, InteractionMediationData) <- function(x, ...) {
+  effect <- x@cde + x@int_ref
+  class(effect) <- c("mediation_effect", "numeric")
+  attr(effect, "type") <- "nde"
+  effect
+}
+
+#' @describeIn te Method for InteractionMediationData (CDE + INTref + INTmed + PIE)
+#' @noRd
+S7::method(te, InteractionMediationData) <- function(x, ...) {
+  effect <- x@cde + x@int_ref + x@int_med + x@pie
+  class(effect) <- c("mediation_effect", "numeric")
+  attr(effect, "type") <- "te"
+  effect
+}
+
+#' @describeIn pm Method for InteractionMediationData (NIE / TE)
+#' @noRd
+S7::method(pm, InteractionMediationData) <- function(x, ...) {
+  indirect <- x@int_med + x@pie
+  total <- x@cde + x@int_ref + indirect
+
+  if (abs(total) < .Machine$double.eps) {
+    warning("Total effect is approximately zero; proportion mediated is undefined.",
+            call. = FALSE)
+    return(NA_real_)
+  }
+
+  prop <- indirect / total
+  class(prop) <- c("mediation_effect", "numeric")
+  attr(prop, "type") <- "pm"
+  prop
+}
+
+#' @describeIn paths Method for InteractionMediationData (a, b, c_prime, theta3)
+#' @noRd
+S7::method(paths, InteractionMediationData) <- function(x, ...) {
+  c(a = x@a_path, b = x@b_path, c_prime = x@c_prime, theta3 = x@interaction)
+}
+
+#' @describeIn decompose Method for InteractionMediationData
+#' @noRd
+S7::method(decompose, InteractionMediationData) <- function(x, ...) {
+  indirect <- x@int_med + x@pie
+  direct <- x@cde + x@int_ref
+  c(cde = x@cde, int_ref = x@int_ref, int_med = x@int_med, pie = x@pie,
+    nde = direct, nie = indirect, total = direct + indirect)
 }
 
 

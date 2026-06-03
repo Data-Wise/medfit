@@ -476,3 +476,52 @@ S7::method(confint, ParallelMediationData) <- function(object,
   )
   ci_mat
 }
+
+
+# --- Base-generic methods for InteractionMediationData ---
+
+#' Extract Coefficients from InteractionMediationData
+#'
+#' @param object An InteractionMediationData object
+#' @param type One of `"paths"` (a/b/c'/theta3), `"components"` (the four-way
+#'   CDE/INTref/INTmed/PIE), `"effects"` (nde/nie/total), or `"all"` (raw
+#'   estimates).
+#' @param ... Additional arguments (ignored)
+#' @return A named numeric vector
+#' @noRd
+S7::method(coef, InteractionMediationData) <- function(object,
+                                                       type = c("paths", "components", "effects", "all"),
+                                                       ...) {
+  type <- match.arg(type)
+  switch(type,
+    paths = paths(object),
+    components = c(cde = object@cde, int_ref = object@int_ref,
+                   int_med = object@int_med, pie = object@pie),
+    effects = {
+      direct <- object@cde + object@int_ref
+      indirect <- object@int_med + object@pie
+      c(nde = direct, nie = indirect, total = direct + indirect)
+    },
+    all = object@estimates
+  )
+}
+
+#' Extract Variance-Covariance Matrix from InteractionMediationData
+#'
+#' @param object An InteractionMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A numeric matrix
+#' @noRd
+S7::method(vcov, InteractionMediationData) <- function(object, ...) {
+  object@vcov
+}
+
+#' Number of Observations from InteractionMediationData
+#'
+#' @param object An InteractionMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return Integer: number of observations
+#' @noRd
+S7::method(nobs, InteractionMediationData) <- function(object, ...) {
+  object@n_obs
+}

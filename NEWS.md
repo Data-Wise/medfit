@@ -2,6 +2,19 @@
 
 ## New features
 
+* New S7 class `InteractionMediationData` for simple mediation **with a
+  treatment-by-mediator interaction** (`X:M` in the outcome model), carrying
+  VanderWeele's (2014) four-way decomposition of the total effect into
+  controlled direct effect (CDE), reference interaction (INTref), mediated
+  interaction (INTmed), and pure indirect effect (PIE), with
+  `NDE = CDE + INTref` and `NIE = INTmed + PIE`. The class validator enforces
+  both the aggregate identities and the path ties (`INTmed = theta3 * beta1`,
+  `PIE = theta2 * beta1`, `CDE = theta1 + theta3 * m*`), so an inconsistent
+  decomposition is rejected at construction. Effect extractors (`nie`, `nde`,
+  `te`, `pm`) have methods for the new class, plus a new `decompose()` generic
+  returning all four components and the derived effects. (Extraction from fitted
+  models and delta-method `confint()` follow in later increments.)
+
 * New S7 class `ParallelMediationData` for **parallel mediation**
   (`X -> M_j -> Y` for independent mediators `j = 1..k`). The total indirect
   effect is the sum of per-mediator products, `sum(a_j * b_j)`. Completes the

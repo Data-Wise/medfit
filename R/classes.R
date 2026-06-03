@@ -1145,3 +1145,211 @@ S7::method(print, ParallelMediationData) <- function(x, ...) {
   cat(sprintf("  Total: %+.4f   |   n = %d\n", indirect + x@c_prime, x@n_obs))
   invisible(x)
 }
+
+
+#' InteractionMediationData: Mediation with Treatment-Mediator Interaction
+#'
+#' @description
+#' S7 class for simple mediation **with a treatment-by-mediator interaction**
+#' (\eqn{X \rightarrow M \rightarrow Y}{X -> M -> Y} where the outcome model
+#' contains an \eqn{X \times M}{X*M} term). It carries VanderWeele's (2014)
+#' four-way decomposition of the total effect into controlled direct effect
+#' (CDE), reference interaction (INTref), mediated interaction (INTmed), and
+#' pure indirect effect (PIE):
+#' \deqn{TE = CDE + INTref + INTmed + PIE}{TE = CDE + INTref + INTmed + PIE}
+#' with \eqn{NDE = CDE + INTref}{NDE = CDE + INTref} and
+#' \eqn{NIE = INTmed + PIE}{NIE = INTmed + PIE}. medfit computes the
+#' decomposition; causal interpretation is the user's responsibility (it requires
+#' the four no-unmeasured-confounding assumptions of VanderWeele 2014).
+#'
+#' @details
+#' Path coefficients follow the outcome model
+#' \eqn{Y = \theta_0 + \theta_1 X + \theta_2 M + \theta_3 XM + \dots}{Y = t0 + t1*X + t2*M + t3*X:M + ...}
+#' and mediator model \eqn{M = \beta_0 + \beta_1 X + \dots}{M = b0 + b1*X + ...}:
+#' `a_path` = \eqn{\beta_1}{b1}, `b_path` = \eqn{\theta_2}{t2},
+#' `c_prime` = \eqn{\theta_1}{t1}, `interaction` = \eqn{\theta_3}{t3}. With
+#' reference level `m_star` (\eqn{m^*}{m*}) the components are
+#' \eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = t1 + t3*m*},
+#' \eqn{INTmed = \theta_3 \beta_1}{INTmed = t3*b1}, and
+#' \eqn{PIE = \theta_2 \beta_1}{PIE = t2*b1}. When \eqn{\theta_3 = 0}{t3 = 0} the
+#' decomposition collapses to standard simple mediation (CDE = NDE = \eqn{\theta_1}{t1};
+#' INTref = INTmed = 0; NIE = PIE = \eqn{\theta_2\beta_1}{t2*b1}).
+#'
+#' @param a_path Numeric scalar: treatment -> mediator effect (\eqn{\beta_1}{b1}).
+#' @param b_path Numeric scalar: mediator -> outcome main effect (\eqn{\theta_2}{t2}).
+#' @param c_prime Numeric scalar: treatment -> outcome main effect (\eqn{\theta_1}{t1}).
+#' @param interaction Numeric scalar: treatment x mediator coefficient (\eqn{\theta_3}{t3}).
+#' @param cde,int_ref,int_med,pie Numeric scalars: the four-way components
+#'   (controlled direct, reference interaction, mediated interaction, pure indirect).
+#' @param nde,nie,total_effect Numeric scalars: derived natural direct effect
+#'   (CDE + INTref), natural indirect effect (INTmed + PIE), and total effect (the
+#'   sum of all four components).
+#' @param m_star Numeric scalar: reference mediator level for the decomposition
+#'   (default 0).
+#' @param estimates Numeric vector of all parameter estimates.
+#' @param vcov Square variance-covariance matrix of `estimates`.
+#' @param sigma_m Optional numeric scalar mediator residual SD, or NULL.
+#' @param sigma_y Optional numeric scalar outcome residual SD, or NULL.
+#' @param treatment,mediator,outcome Single character strings naming the
+#'   treatment / mediator / outcome.
+#' @param mediator_predictors,outcome_predictors Character vectors of predictor
+#'   names for the mediator and outcome models.
+#' @param data Optional data frame, or NULL.
+#' @param n_obs Integer number of observations.
+#' @param converged Logical convergence flag.
+#' @param source_package Character name of the originating package.
+#'
+#' @return An `InteractionMediationData` S7 object.
+#'
+#' @examples
+#' # Hand-built object (theta3 = 0.2 interaction, m* = 0)
+#' imd <- InteractionMediationData(
+#'   a_path = 0.5, b_path = 0.3, c_prime = 0.1, interaction = 0.2,
+#'   cde = 0.1, int_ref = 0.04, int_med = 0.10, pie = 0.15,
+#'   nde = 0.14, nie = 0.25, total_effect = 0.39, m_star = 0,
+#'   estimates = c(a = 0.5, b = 0.3, c_prime = 0.1, theta3 = 0.2),
+#'   vcov = diag(0.01, 4),
+#'   treatment = "X", mediator = "M", outcome = "Y",
+#'   mediator_predictors = "X", outcome_predictors = c("X", "M", "X:M"),
+#'   n_obs = 200L, converged = TRUE, source_package = "medfit"
+#' )
+#'
+#' nie(imd)       # INTmed + PIE = 0.25
+#' decompose(imd) # all four components + derived effects
+#'
+#' @export
+InteractionMediationData <- S7::new_class(
+  "InteractionMediationData",
+  package = "medfit",
+  properties = list(
+    # Core path coefficients (all scalar)
+    a_path = S7::class_numeric,        # beta_1: treatment effect on mediator
+    b_path = S7::class_numeric,        # theta_2: mediator main effect on outcome
+    c_prime = S7::class_numeric,       # theta_1: treatment main effect on outcome
+    interaction = S7::class_numeric,   # theta_3: treatment-by-mediator product
+
+    # Four-way decomposition components (scalar)
+    cde = S7::class_numeric,
+    int_ref = S7::class_numeric,
+    int_med = S7::class_numeric,
+    pie = S7::class_numeric,
+
+    # Derived effects (scalar)
+    nde = S7::class_numeric,
+    nie = S7::class_numeric,
+    total_effect = S7::class_numeric,
+
+    # Reference mediator level for the decomposition
+    m_star = S7::class_numeric,
+
+    # Parameters
+    estimates = S7::class_numeric,
+    vcov = S7::new_S3_class("matrix"),
+
+    # Residual SDs (Gaussian). class_numeric | NULL defaults to numeric(0),
+    # so validators treat length-0 as "not supplied" (see ParallelMediationData).
+    sigma_m = S7::class_numeric | NULL,
+    sigma_y = S7::class_numeric | NULL,
+
+    # Variable names
+    treatment = S7::class_character,
+    mediator = S7::class_character,
+    outcome = S7::class_character,
+    mediator_predictors = S7::class_character,
+    outcome_predictors = S7::class_character,
+
+    # Data and metadata
+    data = S7::class_data.frame | NULL,
+    n_obs = S7::class_integer,
+    converged = S7::class_logical,
+    source_package = S7::class_character
+  ),
+
+  validator = function(self) {
+    tol <- 1e-8 * max(1, abs(self@total_effect))
+
+    # --- Structural checks (shape; implemented) ---
+    scalars <- list(
+      a_path = self@a_path, b_path = self@b_path, c_prime = self@c_prime,
+      interaction = self@interaction, cde = self@cde, int_ref = self@int_ref,
+      int_med = self@int_med, pie = self@pie, nde = self@nde, nie = self@nie,
+      total_effect = self@total_effect, m_star = self@m_star
+    )
+    for (nm in names(scalars)) {
+      if (length(scalars[[nm]]) != 1) return(sprintf("%s must be a scalar", nm))
+    }
+    if (nrow(self@vcov) != ncol(self@vcov)) {
+      return("vcov must be a square matrix")
+    }
+    if (length(self@estimates) != nrow(self@vcov)) {
+      return("Number of estimates must match vcov dimensions")
+    }
+    if (length(self@treatment) != 1 || length(self@mediator) != 1 ||
+          length(self@outcome) != 1) {
+      return("treatment, mediator, and outcome must each be a single string")
+    }
+    if (!is.null(self@sigma_m) && length(self@sigma_m) > 0 &&
+          (length(self@sigma_m) != 1 || self@sigma_m < 0)) {
+      return("sigma_m must be a non-negative scalar")
+    }
+    if (!is.null(self@sigma_y) && length(self@sigma_y) > 0 &&
+          (length(self@sigma_y) != 1 || self@sigma_y < 0)) {
+      return("sigma_y must be a non-negative scalar")
+    }
+
+    # --- Algebraic invariants (the VALUE-ADD of this class) ---
+    # Two families of consistency checks, both enforced. They make the class a
+    # tripwire on a buggy extractor: bad numbers are rejected at construction.
+    #
+    # (i) Aggregate identities -- the decomposition must add up: the four
+    #     components sum to total_effect; NDE is CDE plus INTref; NIE is
+    #     INTmed plus PIE.
+    if (abs((self@cde + self@int_ref + self@int_med + self@pie) -
+              self@total_effect) > tol) {
+      return("Four-way components must sum to total_effect (CDE+INTref+INTmed+PIE)")
+    }
+    if (abs((self@cde + self@int_ref) - self@nde) > tol) {
+      return("nde must equal cde + int_ref (NDE = CDE + INTref)")
+    }
+    if (abs((self@int_med + self@pie) - self@nie) > tol) {
+      return("nie must equal int_med + pie (NIE = INTmed + PIE)")
+    }
+    #
+    # (ii) Path ties -- the stronger checks: tie each component back to the raw
+    # coefficients (VanderWeele 2014, continuous Y/M). These catch extractor math
+    # errors that the aggregate identities alone (tautological if the extractor
+    # defines nde/nie as sums) would miss. INTref also depends on beta_0, which
+    # is not a slot, so it is checked only via the aggregate identity above.
+    if (abs(self@cde - (self@c_prime + self@interaction * self@m_star)) > tol) {
+      return("cde must equal c_prime + interaction * m_star (CDE = theta1 + theta3 * m*)")
+    }
+    if (abs(self@int_med - self@interaction * self@a_path) > tol) {
+      return("int_med must equal interaction * a_path (INTmed = theta3 * beta1)")
+    }
+    if (abs(self@pie - self@b_path * self@a_path) > tol) {
+      return("pie must equal b_path * a_path (PIE = theta2 * beta1)")
+    }
+
+    NULL
+  }
+)
+
+
+#' Print Method for InteractionMediationData
+#'
+#' @param x An InteractionMediationData object
+#' @param ... Additional arguments (unused)
+#' @noRd
+S7::method(print, InteractionMediationData) <- function(x, ...) {
+  cat("<InteractionMediationData>\n")
+  cat(sprintf("  %s -> %s -> %s   (with %s x %s interaction)\n",
+              x@treatment, x@mediator, x@outcome, x@treatment, x@mediator))
+  cat(sprintf("  Paths:  a (b1) = %+.4f   b (t2) = %+.4f   c' (t1) = %+.4f   t3 = %+.4f\n",
+              x@a_path, x@b_path, x@c_prime, x@interaction))
+  cat(sprintf("  Four-way (m* = %g):\n", x@m_star))
+  cat(sprintf("    CDE = %+.4f   INTref = %+.4f   INTmed = %+.4f   PIE = %+.4f\n",
+              x@cde, x@int_ref, x@int_med, x@pie))
+  cat(sprintf("  NDE = %+.4f   NIE = %+.4f   Total = %+.4f   |   n = %d\n",
+              x@nde, x@nie, x@total_effect, x@n_obs))
+  invisible(x)
+}
