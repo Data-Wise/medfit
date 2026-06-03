@@ -17,7 +17,7 @@ that run *before* this cascade: merge PR #33 → tag → release).
 ## Update order
 
 1. **medfit** on CRAN (gate — Phase 0)
-2. **RMediation** (`stable/rmediation`, the v1.5.0 blocker — §0.5; Suggests, drop Remotes)
+2. **RMediation** (`active/rmediation`, the v1.5.0 blocker — §0.5; Suggests, drop Remotes)
 3. **probmed**, **mediationverse** (§1–2)
 4. **medsim** (Suggests-only — optional, no urgency — §3)
 
@@ -98,7 +98,7 @@ git push origin dev
 
 ---
 
-## 0.5 RMediation  `~/projects/r-packages/stable/rmediation`  🎯 the v1.5.0 blocker
+## 0.5 RMediation  `~/projects/r-packages/active/rmediation`  🎯 the v1.5.0 blocker
 
 - **Branch:** `dev`. **Version:** 1.4.0 → bump to **1.5.0** on release.
 - **Decision (2026-06-03):** keep medfit in **`Suggests:`**, do NOT promote to
@@ -129,7 +129,7 @@ git push origin dev
 ### Apply
 
 ```bash
-cd ~/projects/r-packages/stable/rmediation   # already on dev
+cd ~/projects/r-packages/active/rmediation   # already on dev
 # edit DESCRIPTION per diff above; bump Version: 1.5.0; update NEWS.md
 Rscript -e 'devtools::document()'
 R CMD build . && R CMD check --as-cran RMediation_*.tar.gz   # Remotes-NOTE gone
