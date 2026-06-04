@@ -1,7 +1,7 @@
 status: active
 priority: P1
 progress: 100
-next: SUBMITTED to CRAN (2026-06-03) — awaiting acceptance email. On acceptance → merge PR #33 → tag/refresh v0.2.0 → GitHub release → RMediation Remotes→Imports flip.
+next: SUBMITTED to CRAN (2026-06-03) — awaiting acceptance email. On acceptance → RETARGET PR #33 FIRST (it predates Ext A/B and now carries unreleased work; re-scope as next minor release OR merge only the v0.2.0 state) → tag/refresh → GitHub release → RMediation Remotes→Imports flip.
 watcher: Daily remote routine "medfit-cran-watch" (trig_018qiNZMTUP5Az2UGXyv6vRf, 9am America/Denver) checks the CRAN page + Gmail and reports ACCEPTED / ACTION REQUIRED / STILL PENDING. Runs: https://claude.ai/code/routines/trig_018qiNZMTUP5Az2UGXyv6vRf
 extensions: Ext A (parallel mediation) COMPLETE — class (#34), lm/glm extractor+confint (#36), lavaan extractor+vignette+pkgdown (#37) ALL MERGED to dev. Structural trio (simple/serial/parallel) now closed across lm/glm + lavaan. Ext B (VanderWeele 4-way interaction) COMPLETE — spec at planning/specs/SPEC-interaction-fourway-2026-06-03.md. PR B1 (InteractionMediationData class, 35 tests, #38) + PR B2a (lm/glm extraction + decomposition/m_star + delta confint, 27 tests, #39) + PR B2b (lavaan extraction + vignette, 22 tests, #40) ALL MERGED to dev. Four-way decomposition (CDE/INTref/INTmed/PIE) now ships across lm/glm + lavaan. NEXT: Ext C (engine adapters/CMAverse), needs SPEC-engine-registry.md + SPEC-cmaverse-adapter.md. Toolchain: roxygen2 8.0.0 migration = issue #35.
 type: r
