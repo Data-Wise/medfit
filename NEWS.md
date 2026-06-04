@@ -21,8 +21,14 @@
   and outcome are supported (non-Gaussian models error with a clear message);
   the no-interaction path is unchanged. The companion `confint()` method gives
   delta-method intervals for `parm = "paths"`, `"components"` (the four-way
-  CDE/INTref/INTmed/PIE), and `"effects"` (NDE/NIE/TE). (lavaan support and a
-  vignette follow in the next increment.)
+  CDE/INTref/INTmed/PIE), and `"effects"` (NDE/NIE/TE).
+
+* `extract_mediation()` also builds `InteractionMediationData` from a **lavaan**
+  fit. The interaction enters as a product variable named via the `interaction`
+  argument, and the model must be fit with `meanstructure = TRUE` (the mediator
+  intercept is needed for INTref). Because the SEM is estimated jointly, the
+  extracted `@vcov` carries the full joint covariance of the paths. A
+  "treatment-mediator interaction" section was added to the extraction article.
 
 * New S7 class `ParallelMediationData` for **parallel mediation**
   (`X -> M_j -> Y` for independent mediators `j = 1..k`). The total indirect

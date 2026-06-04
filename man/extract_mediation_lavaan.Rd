@@ -14,6 +14,9 @@ extract_mediation_lavaan(
   cp_label = "cp",
   standardized = FALSE,
   structure = c("auto", "serial", "parallel"),
+  decomposition = c("auto", "four_way", "two_way"),
+  interaction = NULL,
+  m_star = 0,
   ...
 )
 }
