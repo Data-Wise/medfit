@@ -106,6 +106,9 @@ extract_mediation_lavaan <- function(object,
                                      cp_label = "cp",
                                      standardized = FALSE,
                                      structure = c("auto", "serial", "parallel"),
+                                     decomposition = c("auto", "four_way", "two_way"),
+                                     interaction = NULL,
+                                     m_star = 0,
                                      ...) {
 
   # --- Check lavaan is available ---
@@ -126,6 +129,7 @@ extract_mediation_lavaan <- function(object,
   checkmate::assert_string(outcome, null.ok = TRUE, .var.name = "outcome")
   checkmate::assert_flag(standardized, .var.name = "standardized")
   structure <- match.arg(structure)
+  decomposition <- match.arg(decomposition)
 
   # --- Multi-mediator: dispatch on mediator arity AND structure -------------
   # The lavaan S7 method dispatches on object class only, so the simple-vs-
@@ -154,6 +158,34 @@ extract_mediation_lavaan <- function(object,
       outcome      = outcome,
       standardized = standardized,
       ...
+    ))
+  }
+
+  # --- Single mediator with treatment x mediator interaction (Extension B) ---
+  # In lavaan the interaction enters as a product predictor of the outcome
+  # (a data column the user multiplies, e.g. Y ~ b*M + cp*X + t3*XM). Detect it
+  # by the explicit `interaction` name or an X:M / M:X term, then route to the
+  # four-way worker. Falls through to the standard simple path when absent.
+  int_term <- .find_interaction_term_lavaan(object, treatment, mediator,
+                                            interaction, standardized)
+  if (decomposition == "four_way" && is.na(int_term)) {
+    stop(
+      paste0("decomposition = 'four_way' requires an interaction term in the ",
+             "outcome model. Pass its name via `interaction = ` (the product ",
+             "variable, e.g. 'XM') or include an '", treatment, ":", mediator,
+             "' term."),
+      call. = FALSE
+    )
+  }
+  if (decomposition != "two_way" && !is.na(int_term)) {
+    return(.extract_interaction_mediation_lavaan(
+      object,
+      treatment    = treatment,
+      mediator     = mediator,
+      int_term     = int_term,
+      outcome      = outcome,
+      m_star       = m_star,
+      standardized = standardized
     ))
   }
 
@@ -880,6 +912,217 @@ extract_mediation_lavaan <- function(object,
     n_obs = as.integer(n_obs),
     converged = converged,
     source_package = "lavaan"
+  )
+}
+
+
+#' Locate a treatment-by-mediator interaction term in a lavaan outcome equation
+#'
+#' In lavaan the interaction enters as a product predictor of the outcome (a data
+#' column, e.g. `XM`). This returns its coefficient name, preferring an explicit
+#' `interaction` argument and otherwise trying `treatment:mediator` /
+#' `mediator:treatment`. Returns `NA_character_` when none is found.
+#'
+#' @keywords internal
+.find_interaction_term_lavaan <- function(object, treatment, mediator, # nolint: object_length_linter.
+                                          interaction = NULL,
+                                          standardized = FALSE) {
+  pt <- tryCatch(
+    if (standardized) lavaan::standardizedSolution(object)
+    else lavaan::parameterEstimates(object),
+    error = function(e) NULL
+  )
+  if (is.null(pt)) return(NA_character_)
+  reg <- pt[pt$op == "~", , drop = FALSE]
+  outc <- unique(reg$lhs[reg$rhs == mediator & reg$lhs != mediator])
+  if (length(outc) == 0) return(NA_character_)
+  preds <- reg$rhs[reg$lhs == outc[1]]
+  cand <- c(interaction, paste0(treatment, ":", mediator),
+            paste0(mediator, ":", treatment))
+  cand <- cand[!is.null(cand) & nzchar(cand)]
+  hit <- cand[cand %in% preds]
+  if (length(hit)) hit[1] else NA_character_
+}
+
+
+#' Extract Treatment-Mediator Interaction Structure from a lavaan Model
+#'
+#' @description
+#' Internal worker for the four-way (VanderWeele 2014) branch of
+#' [extract_mediation()] on lavaan objects. The SEM analogue of
+#' [.extract_interaction_mediation_lm()]: it returns an `InteractionMediationData`
+#' object for continuous `Y` and `M` with binary treatment and reference level
+#' `m_star`.
+#'
+#' @details
+#' Because lavaan fits one joint system, the expanded `vcov` preserves the FULL
+#' covariance among the paths -- including `cov(beta1, theta3)` and
+#' `cov(beta0, theta3)` -- unlike the block-diagonal lm/glm engine, so the
+#' delta-method standard errors reflect the joint estimation. The mediator
+#' intercept `beta0` (needed for INTref) is read from the `~1` row, so the model
+#' must be fit with `meanstructure = TRUE`.
+#'
+#' @param int_term Character: the interaction (product) coefficient name in the
+#'   outcome equation.
+#' @param m_star Numeric scalar reference mediator level.
+#' @inheritParams .extract_serial_mediation_lavaan
+#' @return An `InteractionMediationData` object.
+#' @keywords internal
+.extract_interaction_mediation_lavaan <- function( # nolint: object_length_linter.
+    object,
+    treatment,
+    mediator,
+    int_term,
+    outcome = NULL,
+    m_star = 0,
+    standardized = FALSE) {
+
+  checkmate::assert_string(treatment, .var.name = "treatment")
+  checkmate::assert_string(mediator, .var.name = "mediator")
+  checkmate::assert_string(int_term, .var.name = "interaction")
+  checkmate::assert_number(m_star, .var.name = "m_star")
+
+  if (standardized) {
+    param_table <- lavaan::standardizedSolution(object)
+    est_col <- "est.std"
+  } else {
+    param_table <- lavaan::parameterEstimates(object)
+    est_col <- "est"
+  }
+  all_coef <- lavaan::coef(object)
+  vcov_mat <- lavaan::vcov(object)
+
+  get_path <- function(lhs, rhs) {
+    row <- param_table[param_table$lhs == lhs & param_table$op == "~" &
+                         param_table$rhs == rhs, ]
+    if (nrow(row) == 0) return(NA_real_)
+    row[[est_col]][1]
+  }
+
+  # Outcome: a non-mediator variable predicted by the mediator.
+  if (is.null(outcome)) {
+    is_pred <- param_table$op == "~" & param_table$rhs == mediator &
+      param_table$lhs != mediator
+    cand <- param_table$lhs[is_pred]
+    if (!length(cand)) {
+      stop(paste0("Could not auto-detect outcome (no regression has '", mediator,
+                  "' as a predictor). Please specify the 'outcome' argument."),
+           call. = FALSE)
+    }
+    outcome <- cand[1]
+  }
+
+  beta1  <- get_path(mediator, treatment)   # a path, treatment on mediator
+  if (is.na(beta1)) {
+    stop(sprintf("Could not find a path (%s ~ %s).", mediator, treatment), call. = FALSE)
+  }
+  theta2 <- get_path(outcome, mediator)     # b
+  if (is.na(theta2)) {
+    stop(sprintf("Could not find b path (%s ~ %s).", outcome, mediator), call. = FALSE)
+  }
+  theta3 <- get_path(outcome, int_term)     # interaction
+  if (is.na(theta3)) {
+    stop(sprintf("Could not find interaction path (%s ~ %s).", outcome, int_term),
+         call. = FALSE)
+  }
+  theta1 <- get_path(outcome, treatment)    # c' (may be absent)
+  if (is.na(theta1)) {
+    theta1 <- 0
+    warning("Direct effect (c-prime path) not found in model. Setting to 0.",
+            call. = FALSE)
+  }
+
+  # Mediator intercept E[M | X=0, C=0], from the `~1` row (needs meanstructure).
+  b0_row <- param_table[param_table$lhs == mediator & param_table$op == "~1", ]
+  if (nrow(b0_row) == 0) {
+    stop(paste0("Four-way decomposition needs the mediator intercept E[M | X=0]; ",
+                "refit the lavaan model with meanstructure = TRUE."), call. = FALSE)
+  }
+  beta0 <- b0_row[[est_col]][1]
+
+  # Covariate contribution to E[M | X=0]: mediator predictors other than the
+  # treatment, evaluated at their sample means.
+  m_covs <- setdiff(param_table$rhs[param_table$lhs == mediator &
+                                      param_table$op == "~"], treatment)
+  data <- tryCatch({
+    d <- lavaan::lavInspect(object, "data")
+    if (is.matrix(d)) as.data.frame(d) else if (is.data.frame(d)) d else NULL
+  }, error = function(e) NULL)
+  m_ref <- beta0
+  if (length(m_covs) && !is.null(data)) {
+    for (cv in m_covs) {
+      cf <- get_path(mediator, cv)
+      if (!is.na(cf) && cv %in% names(data) && is.numeric(data[[cv]])) {
+        m_ref <- m_ref + cf * mean(data[[cv]], na.rm = TRUE)
+      }
+    }
+  }
+
+  cde     <- theta1 + theta3 * m_star
+  int_med <- theta3 * beta1
+  pie     <- theta2 * beta1
+  int_ref <- theta3 * (m_ref - m_star)
+  nde   <- cde + int_ref
+  nie   <- int_med + pie
+  total <- nde + nie
+
+  # Estimates + interaction aliases; single SEM keeps the full joint covariance.
+  orig_names <- names(all_coef)
+  resolve_source_idx <- function(var_name) {
+    if (!is.null(var_name) && var_name %in% orig_names) {
+      which(orig_names == var_name)[1]
+    } else {
+      NA_integer_
+    }
+  }
+  alias_var <- c(
+    a = paste0(mediator, "~", treatment),
+    b = paste0(outcome, "~", mediator),
+    c_prime = paste0(outcome, "~", treatment),
+    theta3 = paste0(outcome, "~", int_term),
+    b0 = paste0(mediator, "~1")
+  )
+  alias_val <- c(a = beta1, b = theta2, c_prime = theta1, theta3 = theta3, b0 = beta0)
+  estimates <- all_coef
+  aliases_to_add <- names(alias_var)[!names(alias_var) %in% names(estimates)]
+  for (al in names(alias_var)) estimates[al] <- alias_val[[al]]
+  source_idx <- vapply(alias_var, resolve_source_idx, integer(1))
+  vcov_expanded <- .expand_vcov_with_aliases(
+    vcov_mat, source_idx = source_idx, aliases_to_add = aliases_to_add
+  )
+
+  get_resid_sd <- function(v) {
+    row <- param_table[param_table$lhs == v & param_table$op == "~~" &
+                         param_table$rhs == v, ]
+    if (nrow(row) == 0) return(NA_real_)
+    val <- row[[est_col]][1]
+    if (is.na(val) || val < 0) return(NA_real_)
+    sqrt(val)
+  }
+  sigma_m <- get_resid_sd(mediator)
+  if (is.na(sigma_m)) sigma_m <- NULL
+  sigma_y <- get_resid_sd(outcome)
+  if (is.na(sigma_y)) sigma_y <- NULL
+
+  mediator_predictors <- param_table$rhs[param_table$lhs == mediator &
+                                           param_table$op == "~"]
+  outcome_predictors <- param_table$rhs[param_table$lhs == outcome &
+                                          param_table$op == "~"]
+  n_obs <- lavaan::lavInspect(object, "nobs")
+  if (length(n_obs) > 1) n_obs <- sum(n_obs)
+  converged <- lavaan::lavInspect(object, "converged")
+
+  InteractionMediationData(
+    a_path = beta1, b_path = theta2, c_prime = theta1, interaction = theta3,
+    cde = cde, int_ref = int_ref, int_med = int_med, pie = pie,
+    nde = nde, nie = nie, total_effect = total, m_star = m_star,
+    estimates = estimates, vcov = vcov_expanded,
+    sigma_m = sigma_m, sigma_y = sigma_y,
+    treatment = treatment, mediator = mediator, outcome = outcome,
+    mediator_predictors = mediator_predictors,
+    outcome_predictors = outcome_predictors,
+    data = data, n_obs = as.integer(n_obs),
+    converged = converged, source_package = "lavaan"
   )
 }
 

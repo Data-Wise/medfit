@@ -375,6 +375,79 @@ extracted `vcov` preserves **all** off-diagonals — including `cov(a_j, b_j)` a
 full joint covariance, and (as with serial mediation) the lavaan interval will
 generally differ from the lm one for identical data.
 
+## Treatment-Mediator Interaction (Four-Way Decomposition)
+
+When treatment and mediator **interact**, the total effect splits into four
+pieces (VanderWeele 2014): the controlled direct effect (CDE), reference
+interaction (INTref), mediated interaction (INTmed), and pure indirect effect
+(PIE), with `Total = CDE + INTref + INTmed + PIE`, `NDE = CDE + INTref`, and
+`NIE = INTmed + PIE`. medfit computes the decomposition; the causal
+interpretation (which requires VanderWeele's no-unmeasured-confounding
+assumptions) is the analyst's responsibility.
+
+`extract_mediation()` returns an `InteractionMediationData` object whenever the
+outcome model carries an `X:M` term. Set the reference mediator level with
+`m_star` (default 0).
+
+### Interaction with lm/glm
+
+For lm/glm, the `X:M` term is detected automatically:
+
+```{r}
+#| label: lm-interaction
+# Outcome model includes the X:M interaction
+fit_mi <- lm(M ~ X, data = data)
+fit_yi <- lm(Y ~ X + M + X:M, data = data)
+
+med_int <- extract_mediation(
+  fit_mi,
+  model_y = fit_yi,
+  treatment = "X",
+  mediator = "M",
+  m_star = 0           # reference mediator level for the decomposition
+)
+
+decompose(med_int)                          # CDE, INTref, INTmed, PIE + effects
+confint(med_int, parm = "components")       # delta-method CIs for the components
+```
+
+The four-way formulas (continuous `Y` and `M`) are
+`CDE = θ₁ + θ₃·m*`, `INTref = θ₃·(E[M|X=0] − m*)`, `INTmed = θ₃·β₁`, and
+`PIE = θ₂·β₁`, where `θ₃` is the interaction coefficient and `β₁` the `a` path.
+Non-Gaussian outcomes are not yet supported and raise an informative error.
+
+### Interaction with lavaan
+
+In lavaan the interaction enters as a **product variable** (a column you create),
+and the model must be fit with `meanstructure = TRUE` so the mediator intercept
+(needed for INTref) is estimated. Name the product term via `interaction`:
+
+```{r}
+#| label: lavaan-interaction
+data$XM <- data$X * data$M     # product term
+
+fit_int <- sem(
+  "M ~ X
+   Y ~ M + X + XM",
+  data = data,
+  meanstructure = TRUE
+)
+
+med_int_sem <- extract_mediation(
+  fit_int,
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y",
+  interaction = "XM"     # name of the product predictor in the outcome model
+)
+
+decompose(med_int_sem)
+```
+
+When the interaction is absent (or `decomposition = "two_way"`), extraction falls
+back to the standard `MediationData` — so existing two-way workflows are
+unchanged.
+
 ## Compatibility with RMediation
 
 The extraction design is compatible with RMediation's lavaan extractor:
