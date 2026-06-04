@@ -12,8 +12,17 @@
   `PIE = theta2 * beta1`, `CDE = theta1 + theta3 * m*`), so an inconsistent
   decomposition is rejected at construction. Effect extractors (`nie`, `nde`,
   `te`, `pm`) have methods for the new class, plus a new `decompose()` generic
-  returning all four components and the derived effects. (Extraction from fitted
-  models and delta-method `confint()` follow in later increments.)
+  returning all four components and the derived effects.
+
+* `extract_mediation()` now builds `InteractionMediationData` from **lm/glm**
+  fits whose outcome model contains an `X:M` term. A new `decomposition`
+  argument (`"auto"` default / `"four_way"` / `"two_way"`) controls detection,
+  and `m_star` sets the reference mediator level. Continuous (Gaussian) mediator
+  and outcome are supported (non-Gaussian models error with a clear message);
+  the no-interaction path is unchanged. The companion `confint()` method gives
+  delta-method intervals for `parm = "paths"`, `"components"` (the four-way
+  CDE/INTref/INTmed/PIE), and `"effects"` (NDE/NIE/TE). (lavaan support and a
+  vignette follow in the next increment.)
 
 * New S7 class `ParallelMediationData` for **parallel mediation**
   (`X -> M_j -> Y` for independent mediators `j = 1..k`). The total indirect
