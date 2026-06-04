@@ -39,6 +39,9 @@ Version: 0.2.0 (released to main 2026-05-31; not yet on CRAN)
 
 ## ✅ Just Completed (2026-06-03) — CRAN upload + dependabot cleanup
 
+- ✅ **Updated the v0.2.0 GitHub release notes** with a "CRAN status: submitted —
+  awaiting acceptance (hold)" banner + GitHub install snippet; fixed the stale
+  "not yet submitted" line. Tag NOT moved; no new release cut (Ext A/B stay on dev).
 - ✅ **Uploaded medfit_0.2.0.tar.gz to CRAN** — resubmission submitted;
   **awaiting acceptance email**. Fresh `R CMD check --as-cran` on R 4.6.0 =
   0 errors / 0 warnings / 1 expected "New submission" NOTE.
