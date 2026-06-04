@@ -115,6 +115,8 @@ S7::method(extract_mediation, lm_class) <- function(
     outcome = NULL,
     data = NULL,
     structure = c("auto", "serial", "parallel"),
+    decomposition = c("auto", "four_way", "two_way"),
+    m_star = 0,
     ...) {
   # Call internal extraction function
   .extract_mediation_lm_impl(
@@ -125,7 +127,9 @@ S7::method(extract_mediation, lm_class) <- function(
     mediator_models = mediator_models,
     outcome = outcome,
     data = data,
-    structure = structure
+    structure = structure,
+    decomposition = decomposition,
+    m_star = m_star
   )
 }
 
@@ -143,6 +147,8 @@ S7::method(extract_mediation, glm_class) <- function(
     outcome = NULL,
     data = NULL,
     structure = c("auto", "serial", "parallel"),
+    decomposition = c("auto", "four_way", "two_way"),
+    m_star = 0,
     ...) {
   # Call internal extraction function
   .extract_mediation_lm_impl(
@@ -153,7 +159,9 @@ S7::method(extract_mediation, glm_class) <- function(
     mediator_models = mediator_models,
     outcome = outcome,
     data = data,
-    structure = structure
+    structure = structure,
+    decomposition = decomposition,
+    m_star = m_star
   )
 }
 
@@ -180,9 +188,12 @@ S7::method(extract_mediation, glm_class) <- function(
     mediator_models = NULL,
     outcome = NULL,
     data = NULL,
-    structure = c("auto", "serial", "parallel")) {
+    structure = c("auto", "serial", "parallel"),
+    decomposition = c("auto", "four_way", "two_way"),
+    m_star = 0) {
 
   structure <- match.arg(structure)
+  decomposition <- match.arg(decomposition)
 
   # --- Multi-mediator: dispatch on mediator arity AND structure ---
   # The lm/glm S7 methods dispatch on object class only, so the simple-vs-
@@ -220,6 +231,27 @@ S7::method(extract_mediation, glm_class) <- function(
       mediators       = mediator,
       outcome         = outcome,
       data            = data
+    ))
+  }
+
+  # --- Single mediator with treatment x mediator interaction (Extension B) ---
+  # Detect an X:M product term in the outcome model. When present (and not
+  # explicitly disabled via decomposition = "two_way"), route to the four-way
+  # decomposition worker; otherwise fall through to the standard simple path so
+  # the no-interaction behavior is unchanged.
+  int_term <- .find_interaction_term(model_y, treatment, mediator)
+  if (decomposition == "four_way" && is.na(int_term)) {
+    stop(
+      sprintf("decomposition = 'four_way' requires an interaction term ('%s:%s') in 'model_y'.",
+              treatment, mediator),
+      call. = FALSE
+    )
+  }
+  if (decomposition != "two_way" && !is.na(int_term)) {
+    return(.extract_interaction_mediation_lm(
+      model_m = model_m, model_y = model_y, treatment = treatment,
+      mediator = mediator, int_term = int_term, outcome = outcome,
+      data = data, m_star = m_star
     ))
   }
 
@@ -399,6 +431,186 @@ S7::method(extract_mediation, glm_class) <- function(
     n_obs = as.integer(n_obs),
     converged = converged,
     source_package = source_package
+  )
+}
+
+
+#' Locate a treatment-by-mediator interaction term in an outcome model
+#'
+#' Returns the coefficient name of the `X:M` product term in `model_y`, trying
+#' both orderings (`treatment:mediator` and `mediator:treatment`, since the
+#' formula order determines which `lm()`/`glm()` emits). Returns `NA_character_`
+#' when no interaction term is present.
+#'
+#' @keywords internal
+.find_interaction_term <- function(model_y, treatment, mediator) {
+  nms <- names(stats::coef(model_y))
+  cand <- c(paste0(treatment, ":", mediator), paste0(mediator, ":", treatment))
+  hit <- cand[cand %in% nms]
+  if (length(hit) >= 1L) hit[1] else NA_character_
+}
+
+
+#' Extract Treatment-Mediator Interaction Structure from lm/glm Models
+#'
+#' @description
+#' Internal worker for the four-way (VanderWeele 2014) branch of the lm/glm
+#' [extract_mediation()] method. Invoked by [.extract_mediation_lm_impl()] when a
+#' single mediator's outcome model carries an `X:M` term. Builds an
+#' `InteractionMediationData` object for continuous `Y` and `M` with binary
+#' treatment (0 -> 1) and reference mediator level `m_star`.
+#'
+#' @details
+#' With mediator model \eqn{M = \beta_0 + \beta_1 X + \beta_2^\top C}{M = b0 + b1*X + b2'C}
+#' and outcome model
+#' \eqn{Y = \theta_0 + \theta_1 X + \theta_2 M + \theta_3 XM + \dots}{Y = t0 + t1*X + t2*M + t3*XM + ...}
+#' the components are CDE = \eqn{\theta_1 + \theta_3 m^*}{t1 + t3*m*},
+#' INTref = \eqn{\theta_3 (E[M\mid X=0] - m^*)}{t3*(E[M|X=0] - m*)},
+#' INTmed = \eqn{\theta_3 \beta_1}{t3*b1}, PIE = \eqn{\theta_2 \beta_1}{t2*b1},
+#' where \eqn{E[M\mid X=0]}{E[M|X=0]} evaluates covariates at their sample means.
+#' The combined `vcov` is block-diagonal across the two separately-fitted
+#' equations and named with the aliases `a`, `b`, `c_prime`, `theta3`, `b0`.
+#'
+#' @param int_term Character: the interaction coefficient name in `model_y`
+#'   (from [.find_interaction_term()]).
+#' @param m_star Numeric scalar reference mediator level.
+#' @inheritParams .extract_serial_mediation_lm
+#' @return An `InteractionMediationData` object.
+#' @keywords internal
+.extract_interaction_mediation_lm <- function( # nolint: object_length_linter.
+    model_m,
+    model_y,
+    treatment,
+    mediator,
+    int_term,
+    outcome = NULL,
+    data = NULL,
+    m_star = 0) {
+
+  # --- Input validation ---
+  checkmate::assert_multi_class(model_m, c("lm", "glm"), .var.name = "object")
+  checkmate::assert_multi_class(model_y, c("lm", "glm"), .var.name = "model_y")
+  checkmate::assert_string(treatment, .var.name = "treatment")
+  checkmate::assert_string(mediator, .var.name = "mediator")
+  checkmate::assert_number(m_star, .var.name = "m_star")
+
+  # MVP: continuous (Gaussian) mediator and outcome only -- the linear four-way
+  # formulas do not hold for non-Gaussian links (binary/survival Y are a planned
+  # extension, see the interaction spec).
+  non_gaussian <- function(m) {
+    inherits(m, "glm") && !identical(stats::family(m)$family, "gaussian")
+  }
+  if (non_gaussian(model_m) || non_gaussian(model_y)) {
+    stop(paste0("Four-way decomposition currently supports continuous (Gaussian) ",
+                "mediator and outcome only; non-Gaussian models are not yet supported."),
+         call. = FALSE)
+  }
+
+  coef_m <- stats::coef(model_m)
+  coef_y <- stats::coef(model_y)
+  if (!treatment %in% names(coef_m)) {
+    stop(sprintf("Treatment '%s' is not a predictor in the mediator model.", treatment),
+         call. = FALSE)
+  }
+  if (!mediator %in% names(coef_y)) {
+    stop(sprintf("Mediator '%s' is not a predictor in 'model_y'.", mediator),
+         call. = FALSE)
+  }
+  if (!treatment %in% names(coef_y)) {
+    stop(sprintf("Treatment '%s' is not a predictor in 'model_y'.", treatment),
+         call. = FALSE)
+  }
+
+  # --- Coefficients (VanderWeele notation) ---
+  beta0  <- if ("(Intercept)" %in% names(coef_m)) unname(coef_m[["(Intercept)"]]) else 0
+  beta1  <- unname(coef_m[treatment])   # a path (X -> M)
+  theta1 <- unname(coef_y[treatment])   # c' (X -> Y main effect)
+  theta2 <- unname(coef_y[mediator])    # b  (M -> Y main effect)
+  theta3 <- unname(coef_y[int_term])    # X x M interaction
+
+  if (is.null(outcome)) outcome <- .get_response_var(model_y)
+  if (is.null(data)) {
+    data <- tryCatch(stats::model.frame(model_m), error = function(e) NULL)
+  }
+
+  # --- Reference prediction E[M | X = 0]: covariates at their sample means ---
+  m_covs <- setdiff(names(coef_m), c("(Intercept)", treatment))
+  m_ref <- beta0
+  if (length(m_covs) > 0 && !is.null(data)) {
+    for (cv in m_covs) {
+      if (cv %in% names(data) && is.numeric(data[[cv]])) {
+        m_ref <- m_ref + unname(coef_m[[cv]]) * mean(data[[cv]], na.rm = TRUE)
+      }
+    }
+  }
+
+  # --- Four-way components (continuous Y, M; binary X) ---
+  cde     <- theta1 + theta3 * m_star
+  int_med <- theta3 * beta1
+  pie     <- theta2 * beta1
+  int_ref <- theta3 * (m_ref - m_star)
+  nde   <- cde + int_ref
+  nie   <- int_med + pie
+  total <- nde + nie
+
+  # --- Combined estimates + block-diagonal source vcov ---
+  names_m <- paste0("m_", names(coef_m))
+  names_y <- paste0("y_", names(coef_y))
+  estimates <- c(coef_m, coef_y)
+  names(estimates) <- c(names_m, names_y)
+
+  n_m <- length(coef_m)
+  n_y <- length(coef_y)
+  n_src <- n_m + n_y
+  vcov_src <- matrix(0, n_src, n_src,
+                     dimnames = list(c(names_m, names_y), c(names_m, names_y)))
+  vcov_src[seq_len(n_m), seq_len(n_m)] <- stats::vcov(model_m)
+  vcov_src[(n_m + 1):n_src, (n_m + 1):n_src] <- stats::vcov(model_y)
+
+  # Aliases a/b/c_prime/theta3 (+ b0 for the INTref intercept term).
+  alias_src <- c(
+    a = paste0("m_", treatment),
+    b = paste0("y_", mediator),
+    c_prime = paste0("y_", treatment),
+    theta3 = paste0("y_", int_term)
+  )
+  alias_val <- c(a = beta1, b = theta2, c_prime = theta1, theta3 = theta3)
+  if ("(Intercept)" %in% names(coef_m)) {
+    alias_src["b0"] <- "m_(Intercept)"
+    alias_val["b0"] <- beta0
+  }
+  resolve <- function(nm) {
+    w <- which(rownames(vcov_src) == nm)
+    if (length(w)) w[1] else NA_integer_
+  }
+  source_idx <- vapply(alias_src, resolve, integer(1))
+  for (al in names(alias_val)) estimates[al] <- alias_val[[al]]
+  vcov_combined <- .expand_vcov_with_aliases(
+    vcov_src, source_idx = source_idx, aliases_to_add = names(alias_src)
+  )
+
+  # --- Metadata ---
+  sigma_m <- .extract_sigma(model_m)
+  sigma_y <- .extract_sigma(model_y)
+  n_obs <- if (!is.null(data)) nrow(data) else length(stats::residuals(model_m))
+  mediator_predictors <- names(coef_m)[names(coef_m) != "(Intercept)"]
+  outcome_predictors <- names(coef_y)[names(coef_y) != "(Intercept)"]
+  is_glm <- inherits(model_m, "glm") || inherits(model_y, "glm")
+  source_package <- if (is_glm) "stats::glm" else "stats::lm"
+  converged <- (if (inherits(model_m, "glm")) isTRUE(model_m$converged) else TRUE) &&
+    (if (inherits(model_y, "glm")) isTRUE(model_y$converged) else TRUE)
+
+  InteractionMediationData(
+    a_path = beta1, b_path = theta2, c_prime = theta1, interaction = theta3,
+    cde = cde, int_ref = int_ref, int_med = int_med, pie = pie,
+    nde = nde, nie = nie, total_effect = total, m_star = m_star,
+    estimates = estimates, vcov = vcov_combined,
+    sigma_m = sigma_m, sigma_y = sigma_y,
+    treatment = treatment, mediator = mediator, outcome = outcome,
+    mediator_predictors = mediator_predictors,
+    outcome_predictors = outcome_predictors,
+    data = data, n_obs = as.integer(n_obs),
+    converged = converged, source_package = source_package
   )
 }
 
