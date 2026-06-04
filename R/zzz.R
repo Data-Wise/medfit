@@ -22,6 +22,7 @@
   S7::S4_register(MediationData)
   S7::S4_register(SerialMediationData)
   S7::S4_register(ParallelMediationData)
+  S7::S4_register(InteractionMediationData)
   S7::S4_register(BootstrapResult)
 
   # Register S7 methods for dispatch
@@ -35,6 +36,9 @@
   # form cannot take a namespaced LHS (`methods::show`).
   show <- methods::show
   S7::method(show, ParallelMediationData) <- function(object) {
+    print(object)
+  }
+  S7::method(show, InteractionMediationData) <- function(object) {
     print(object)
   }
 
