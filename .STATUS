@@ -3,7 +3,7 @@ priority: P1
 progress: 100
 next: SUBMITTED to CRAN (2026-06-03) — awaiting acceptance email. On acceptance → merge PR #33 → tag/refresh v0.2.0 → GitHub release → RMediation Remotes→Imports flip.
 watcher: Daily remote routine "medfit-cran-watch" (trig_018qiNZMTUP5Az2UGXyv6vRf, 9am America/Denver) checks the CRAN page + Gmail and reports ACCEPTED / ACTION REQUIRED / STILL PENDING. Runs: https://claude.ai/code/routines/trig_018qiNZMTUP5Az2UGXyv6vRf
-extensions: Ext A (parallel mediation) COMPLETE — class (#34), lm/glm extractor+confint (#36), lavaan extractor+vignette+pkgdown (#37) ALL MERGED to dev. Structural trio (simple/serial/parallel) now closed across lm/glm + lavaan. Ext B (VanderWeele 4-way interaction) IN PROGRESS — spec at planning/specs/SPEC-interaction-fourway-2026-06-03.md. PR B1 (InteractionMediationData class + validator w/ aggregate+path-tie invariants + decompose() + effect methods, 35 tests) OPEN as PR #38 on feature/interaction-class (awaiting CI). NEXT after B1: PR B2a (lm/glm extraction + four-way + delta SEs), then B2b (lavaan + docs). Then Ext C (engine adapters). Toolchain: roxygen2 8.0.0 migration = issue #35.
+extensions: Ext A (parallel mediation) COMPLETE — class (#34), lm/glm extractor+confint (#36), lavaan extractor+vignette+pkgdown (#37) ALL MERGED to dev. Structural trio (simple/serial/parallel) now closed across lm/glm + lavaan. Ext B (VanderWeele 4-way interaction) IN PROGRESS — spec at planning/specs/SPEC-interaction-fourway-2026-06-03.md. PR B1 (InteractionMediationData class, 35 tests) MERGED (#38). PR B2a (lm/glm extraction + decomposition arg + m_star + delta-method confint, 27 tests) OPEN as PR #39 on feature/interaction-extract (awaiting CI/merge). NEXT: PR B2b (lavaan extraction + vignette + pkgdown). Then Ext C (engine adapters). Toolchain: roxygen2 8.0.0 migration = issue #35.
 type: r
 
 # ═══════════════════════════════════════════════════════════════════
@@ -98,8 +98,8 @@ Version: 0.2.0 (released to main 2026-05-31; not yet on CRAN)
 
 ## 🌲 Active Worktrees
 
-- `~/.git-worktrees/medfit/feature-interaction-class` (branch `feature/interaction-class`)
-  — Ext B PR B1 (InteractionMediationData class + four-way decomposition); PR #38 open to `dev`.
+- `~/.git-worktrees/medfit/feature-interaction-extract` (branch `feature/interaction-extract`)
+  — Ext B PR B2a (lm/glm interaction extraction + four-way + delta confint). PR B1 (#38) MERGED.
 
 🎯 Next Action — CRAN submission:
 - **A)** Review the **win-builder email** (and optionally `check_win_release()` /
