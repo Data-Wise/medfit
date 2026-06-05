@@ -372,6 +372,11 @@ S7::method(extract_mediation, glm_class) <- function(
   sigma_m <- .extract_sigma(model_m)
   sigma_y <- .extract_sigma(model_y)
 
+  # --- Extract GLM Families ---
+  # stats::family() works on both lm (returns gaussian) and glm fits.
+  family_m <- stats::family(model_m)
+  family_y <- stats::family(model_y)
+
   # --- Extract Data ---
 
   if (is.null(data)) {
@@ -422,6 +427,8 @@ S7::method(extract_mediation, glm_class) <- function(
     vcov = vcov_combined,
     sigma_m = sigma_m,
     sigma_y = sigma_y,
+    family_m = family_m,
+    family_y = family_y,
     treatment = treatment,
     mediator = mediator,
     outcome = outcome,

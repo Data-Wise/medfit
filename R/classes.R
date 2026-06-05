@@ -25,6 +25,12 @@
 #' @param vcov Numeric matrix: variance-covariance matrix of estimates
 #' @param sigma_m Numeric scalar or NULL: residual SD for mediator model
 #' @param sigma_y Numeric scalar or NULL: residual SD for outcome model
+#' @param family_m GLM `family` object (or NULL): family/link for the mediator
+#'   model (e.g. `gaussian()`, `binomial()`). Defaults to `gaussian()`.
+#' @param family_y GLM `family` object (or NULL): family/link for the outcome
+#'   model. Required by scale-free estimands (e.g. probmed) to simulate
+#'   non-Gaussian potential outcomes on the correct scale. Defaults to
+#'   `gaussian()`.
 #' @param treatment Character scalar: name of treatment variable
 #' @param mediator Character scalar: name of mediator variable
 #' @param outcome Character scalar: name of outcome variable
@@ -86,6 +92,14 @@ MediationData <- S7::new_class(
     sigma_m = S7::class_numeric | NULL,
     sigma_y = S7::class_numeric | NULL,
 
+    # GLM family/link objects (for non-Gaussian potential-outcome simulation).
+    # A stats `family` is an S3 list; we type these as list | NULL and enforce
+    # the `family` class in the validator. (`new_S3_class("family")` would
+    # require a constructor.) Default is gaussian() so older callers that omit
+    # the families behave exactly as before (identity-scale / Gaussian).
+    family_m = S7::new_property(class = S7::class_list | NULL, default = stats::gaussian()),
+    family_y = S7::new_property(class = S7::class_list | NULL, default = stats::gaussian()),
+
     # Variable names
     treatment = S7::class_character,
     mediator = S7::class_character,
@@ -132,6 +146,14 @@ MediationData <- S7::new_class(
       if (length(self@sigma_y) != 1 || self@sigma_y < 0) {
         return("sigma_y must be a non-negative scalar")
       }
+    }
+
+    # Validate family objects if provided
+    if (!is.null(self@family_m) && !inherits(self@family_m, "family")) {
+      return("family_m must be a stats 'family' object or NULL")
+    }
+    if (!is.null(self@family_y) && !inherits(self@family_y, "family")) {
+      return("family_y must be a stats 'family' object or NULL")
     }
 
     # Validate variable names are scalar

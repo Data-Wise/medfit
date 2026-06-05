@@ -2,6 +2,14 @@
 
 ## New features
 
+* `MediationData` now carries the GLM `family`/link of the mediator and outcome
+  models in new `family_m` and `family_y` properties (populated by the lm/glm
+  and lavaan extractors; default `NULL` is treated as Gaussian). This lets
+  scale-free estimands such as `probmed::pmed()` simulate non-Gaussian
+  potential outcomes on the correct (e.g. logit) scale rather than discarding
+  the link. Backward compatible: existing constructors that omit the families
+  continue to work.
+
 * New S7 class `InteractionMediationData` for simple mediation **with a
   treatment-by-mediator interaction** (`X:M` in the outcome model), carrying
   VanderWeele's (2014) four-way decomposition of the total effect into
