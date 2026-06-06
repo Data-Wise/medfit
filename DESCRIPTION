@@ -1,8 +1,8 @@
 Package: medfit
 Type: Package
 Title: Infrastructure for Mediation Model Fitting and Extraction
-Version: 0.2.0.9000
-Date: 2026-06-02
+Version: 0.3.0
+Date: 2026-06-06
 Authors@R: person("Davood", "Tofighi",
     email = "dtofighi@gmail.com",
     role = c("aut", "cre"),
