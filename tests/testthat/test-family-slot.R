@@ -32,8 +32,7 @@ test_that("lm extraction records Gaussian families on identity link", {
   fit_m <- lm(M ~ X, data = data)
   fit_y <- lm(Y ~ X + M, data = data)
 
-  md <- extract_mediation(fit_m, model_y = fit_y,
-    treatment = "X", mediator = "M", outcome = "Y")
+  md <- extract_mediation(fit_m, model_y = fit_y, treatment = "X", mediator = "M", outcome = "Y")
 
   expect_s3_class(md@family_m, "family")
   expect_s3_class(md@family_y, "family")
@@ -47,8 +46,7 @@ test_that("glm extraction records the binomial outcome family and link", {
   fit_m <- glm(M ~ X, data = data)                       # gaussian mediator
   fit_y <- glm(Y ~ X + M, data = data, family = binomial())
 
-  md <- extract_mediation(fit_m, model_y = fit_y,
-    treatment = "X", mediator = "M", outcome = "Y")
+  md <- extract_mediation(fit_m, model_y = fit_y, treatment = "X", mediator = "M", outcome = "Y")
 
   expect_identical(md@family_m$family, "gaussian")
   expect_identical(md@family_y$family, "binomial")
