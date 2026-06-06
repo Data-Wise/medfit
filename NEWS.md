@@ -78,6 +78,17 @@
   `print.mediation_effect`), so dispatch works whether the package is installed
   or loaded via `load_all()`.
 
+## Internal
+
+* `R CMD check` is clean again (0 errors / 0 warnings / 0 notes). Added
+  `@usage NULL` to the `BootstrapResult`, `ParallelMediationData`, and
+  `InteractionMediationData` class docs (matching `MediationData` /
+  `SerialMediationData`), which removes spurious codoc mismatches from the S7
+  constructors' complex property defaults. The `show` method bodies registered
+  in `.onLoad()` now delegate to a top-level helper (`.show_via_print()`) so no
+  literal `print()` call sits in `.onLoad`, clearing the "startup functions
+  should use packageStartupMessage" note.
+
 # medfit 0.2.0 (2026-05-31)
 
 ## New features

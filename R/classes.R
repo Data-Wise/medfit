@@ -472,6 +472,7 @@ S7::S4_register(SerialMediationData)
 #' @param call Call object or NULL: original function call
 #'
 #' @return A BootstrapResult S7 object
+#' @usage NULL
 #'
 #' @details
 #' This class standardizes bootstrap inference results across different
@@ -1010,6 +1011,7 @@ S7::method(show, SerialMediationData) <- function(object) {
 #' @param source_package Character name of the originating package.
 #'
 #' @return A `ParallelMediationData` S7 object.
+#' @usage NULL
 #'
 #' @examples
 #' pmd <- ParallelMediationData(
@@ -1222,6 +1224,7 @@ S7::method(print, ParallelMediationData) <- function(x, ...) {
 #' @param source_package Character name of the originating package.
 #'
 #' @return An `InteractionMediationData` S7 object.
+#' @usage NULL
 #'
 #' @examples
 #' # Hand-built object (theta3 = 0.2 interaction, m* = 0)

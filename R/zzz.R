@@ -14,6 +14,13 @@
 # - This does NOT affect installed packages, only development workflows
 # - See: https://github.com/RConsortium/S7/issues/474
 
+# Show-method body for S7 classes whose `show` is registered in `.onLoad()`.
+# Kept as a named top-level function (not an inline body in `.onLoad`) so the
+# `print()` call is not seen as a startup message by R CMD check.
+.show_via_print <- function(object) {
+  print(object)
+}
+
 .onLoad <- function(libname, pkgname) {
   # Register S7 classes with S4 system
   # This must happen before methods_register() to avoid
@@ -33,14 +40,12 @@
   # to be S4-registered first, so it cannot live at source time in classes.R
   # (where it would run before .onLoad). Register it here, after S4_register().
   # Bind the generic to a local symbol first: the `method(...) <-` replacement
-  # form cannot take a namespaced LHS (`methods::show`).
+  # form cannot take a namespaced LHS (`methods::show`). The method body lives in
+  # the top-level helper `.show_via_print()` so no literal `print()` call sits in
+  # `.onLoad` (which R CMD check would flag as a startup message).
   show <- methods::show
-  S7::method(show, ParallelMediationData) <- function(object) {
-    print(object)
-  }
-  S7::method(show, InteractionMediationData) <- function(object) {
-    print(object)
-  }
+  S7::method(show, ParallelMediationData) <- .show_via_print
+  S7::method(show, InteractionMediationData) <- .show_via_print
 
   # Explicitly register the S3 print method for `mediation_effect`.
   #
