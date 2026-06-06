@@ -3,53 +3,6 @@
 \name{InteractionMediationData}
 \alias{InteractionMediationData}
 \title{InteractionMediationData: Mediation with Treatment-Mediator Interaction}
-\usage{
-InteractionMediationData(
-  a_path = integer(0),
-  b_path = integer(0),
-  c_prime = integer(0),
-  interaction = integer(0),
-  cde = integer(0),
-  int_ref = integer(0),
-  int_med = integer(0),
-  pie = integer(0),
-  nde = integer(0),
-  nie = integer(0),
-  total_effect = integer(0),
-  m_star = integer(0),
-  estimates = integer(0),
-  vcov = (function (.data) 
- {
-    
-    stop(sprintf("S3 class <\%s> doesn't have a constructor", class[[1]]), call. =
-    FALSE)
- })(),
-  sigma_m = integer(0),
-  sigma_y = integer(0),
-  treatment = character(0),
-  mediator = character(0),
-  outcome = character(0),
-  mediator_predictors = character(0),
-  outcome_predictors = character(0),
-  data = (function (.data = list(), row.names = NULL) 
- {
-     if (is.null(row.names)) {
-
-            list2DF(.data)
-     }
-     else {
-         out <- list2DF(.data,
-    length(row.names))
-         attr(out, "row.names") <- row.names
-         out
-     }
-
-    })(),
-  n_obs = integer(0),
-  converged = logical(0),
-  source_package = character(0)
-)
-}
 \arguments{
 \item{a_path}{Numeric scalar: treatment -> mediator effect (\eqn{\beta_1}{b1}).}
 

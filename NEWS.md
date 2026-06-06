@@ -2,6 +2,14 @@
 
 ## New features
 
+* `MediationData` now carries the GLM `family`/link of the mediator and outcome
+  models in new `family_m` and `family_y` properties (populated by the lm/glm
+  and lavaan extractors; default `NULL` is treated as Gaussian). This lets
+  scale-free estimands such as `probmed::pmed()` simulate non-Gaussian
+  potential outcomes on the correct (e.g. logit) scale rather than discarding
+  the link. Backward compatible: existing constructors that omit the families
+  continue to work.
+
 * New S7 class `InteractionMediationData` for simple mediation **with a
   treatment-by-mediator interaction** (`X:M` in the outcome model), carrying
   VanderWeele's (2014) four-way decomposition of the total effect into
@@ -58,6 +66,28 @@
   `"effects"`). The indirect-effect variance uses the delta method over the full
   `{a1, b1, ..., ak, bk}` covariance block, so correlated `b_j` are handled
   correctly; `method = "boot"` directs to `bootstrap_mediation()`.
+
+## Bug Fixes
+
+* `print(summary(x))` now shows the formatted summary for `MediationData`,
+  `BootstrapResult`, and `SerialMediationData` instead of dumping the raw list.
+  The `print.summary.*` S3 methods exist and are correct, but their
+  `S3method()` NAMESPACE directives are not activated once `print` participates
+  in S7 dispatch, so `print()` silently fell back to `print.default`. They are
+  now registered explicitly in `.onLoad()` (the same fix already used for
+  `print.mediation_effect`), so dispatch works whether the package is installed
+  or loaded via `load_all()`.
+
+## Internal
+
+* `R CMD check` is clean again (0 errors / 0 warnings / 0 notes). Added
+  `@usage NULL` to the `BootstrapResult`, `ParallelMediationData`, and
+  `InteractionMediationData` class docs (matching `MediationData` /
+  `SerialMediationData`), which removes spurious codoc mismatches from the S7
+  constructors' complex property defaults. The `show` method bodies registered
+  in `.onLoad()` now delegate to a top-level helper (`.show_via_print()`) so no
+  literal `print()` call sits in `.onLoad`, clearing the "startup functions
+  should use packageStartupMessage" note.
 
 # medfit 0.2.0 (2026-05-31)
 

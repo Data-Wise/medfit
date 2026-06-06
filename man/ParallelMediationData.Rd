@@ -3,44 +3,6 @@
 \name{ParallelMediationData}
 \alias{ParallelMediationData}
 \title{ParallelMediationData: Parallel (Multiple-Mediator) Mediation Structure}
-\usage{
-ParallelMediationData(
-  a_paths = integer(0),
-  b_paths = integer(0),
-  c_prime = integer(0),
-  estimates = integer(0),
-  vcov = (function (.data) 
- {
-    
-    stop(sprintf("S3 class <\%s> doesn't have a constructor", class[[1]]), call. =
-    FALSE)
- })(),
-  sigma_mediators = integer(0),
-  sigma_y = integer(0),
-  treatment = character(0),
-  mediators = character(0),
-  outcome = character(0),
-  mediator_predictors = list(),
-  outcome_predictors = character(0),
-  data = (function (.data = list(), row.names = NULL) 
- {
-     if (is.null(row.names)) {
-
-            list2DF(.data)
-     }
-     else {
-         out <- list2DF(.data,
-    length(row.names))
-         attr(out, "row.names") <- row.names
-         out
-     }
-
-    })(),
-  n_obs = integer(0),
-  converged = logical(0),
-  source_package = character(0)
-)
-}
 \arguments{
 \item{a_paths}{Numeric vector: treatment -> mediator effects
 \eqn{(a_1, \dots, a_k)}{(a_1, ..., a_k)}.}
