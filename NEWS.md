@@ -67,6 +67,17 @@
   `{a1, b1, ..., ak, bk}` covariance block, so correlated `b_j` are handled
   correctly; `method = "boot"` directs to `bootstrap_mediation()`.
 
+## Bug Fixes
+
+* `print(summary(x))` now shows the formatted summary for `MediationData`,
+  `BootstrapResult`, and `SerialMediationData` instead of dumping the raw list.
+  The `print.summary.*` S3 methods exist and are correct, but their
+  `S3method()` NAMESPACE directives are not activated once `print` participates
+  in S7 dispatch, so `print()` silently fell back to `print.default`. They are
+  now registered explicitly in `.onLoad()` (the same fix already used for
+  `print.mediation_effect`), so dispatch works whether the package is installed
+  or loaded via `load_all()`.
+
 # medfit 0.2.0 (2026-05-31)
 
 ## New features

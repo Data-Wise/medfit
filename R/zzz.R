@@ -57,6 +57,16 @@
   # the package is loaded (installed or via load_all()).
   registerS3method("print", "mediation_effect", print.mediation_effect)
 
+  # Same issue for the `summary.*` print methods. `summary()` on the S7 data
+  # objects returns a plain S3-classed list (e.g. class "summary.MediationData"),
+  # but the `S3method(print, summary.*)` NAMESPACE directives are not activated
+  # once `print` participates in S7 dispatch -- `print(summary(x))` then falls
+  # back to `print.default` and dumps the raw list instead of the formatted
+  # summary. Registering them here restores dispatch (installed or load_all()).
+  registerS3method("print", "summary.MediationData", print.summary.MediationData)
+  registerS3method("print", "summary.BootstrapResult", print.summary.BootstrapResult)
+  registerS3method("print", "summary.SerialMediationData", print.summary.SerialMediationData)
+
   # Register extraction methods for suggested packages (S4 classes)
   # lavaan is in Suggests, so we register dynamically if available
   if (requireNamespace("lavaan", quietly = TRUE)) {
