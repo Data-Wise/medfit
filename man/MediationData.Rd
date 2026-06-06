@@ -19,12 +19,13 @@
 \item{sigma_y}{Numeric scalar or NULL: residual SD for outcome model}
 
 \item{family_m}{GLM \code{family} object (or NULL): family/link for the mediator
-model (e.g. \code{gaussian()}, \code{binomial()}). Defaults to \code{gaussian()}.}
+model (e.g. \code{gaussian()}, \code{binomial()}). Defaults to unset (empty), which
+consumers treat as Gaussian.}
 
 \item{family_y}{GLM \code{family} object (or NULL): family/link for the outcome
 model. Required by scale-free estimands (e.g. probmed) to simulate
-non-Gaussian potential outcomes on the correct scale. Defaults to
-\code{gaussian()}.}
+non-Gaussian potential outcomes on the correct scale. Defaults to unset
+(empty), treated as Gaussian.}
 
 \item{treatment}{Character scalar: name of treatment variable}
 

@@ -26,11 +26,12 @@
 #' @param sigma_m Numeric scalar or NULL: residual SD for mediator model
 #' @param sigma_y Numeric scalar or NULL: residual SD for outcome model
 #' @param family_m GLM `family` object (or NULL): family/link for the mediator
-#'   model (e.g. `gaussian()`, `binomial()`). Defaults to `gaussian()`.
+#'   model (e.g. `gaussian()`, `binomial()`). Defaults to unset (empty), which
+#'   consumers treat as Gaussian.
 #' @param family_y GLM `family` object (or NULL): family/link for the outcome
 #'   model. Required by scale-free estimands (e.g. probmed) to simulate
-#'   non-Gaussian potential outcomes on the correct scale. Defaults to
-#'   `gaussian()`.
+#'   non-Gaussian potential outcomes on the correct scale. Defaults to unset
+#'   (empty), treated as Gaussian.
 #' @param treatment Character scalar: name of treatment variable
 #' @param mediator Character scalar: name of mediator variable
 #' @param outcome Character scalar: name of outcome variable
@@ -95,10 +96,12 @@ MediationData <- S7::new_class(
     # GLM family/link objects (for non-Gaussian potential-outcome simulation).
     # A stats `family` is an S3 list; we type these as list | NULL and enforce
     # the `family` class in the validator. (`new_S3_class("family")` would
-    # require a constructor.) Default is gaussian() so older callers that omit
-    # the families behave exactly as before (identity-scale / Gaussian).
-    family_m = S7::new_property(class = S7::class_list | NULL, default = stats::gaussian()),
-    family_y = S7::new_property(class = S7::class_list | NULL, default = stats::gaussian()),
+    # require a constructor.) The default is the empty list() prototype, which
+    # consumers treat as Gaussian -- we deliberately avoid a rich object such as
+    # `gaussian()` as the default, because an S7 property default that embeds
+    # functions/environments loses its class under covr instrumentation.
+    family_m = S7::class_list | NULL,
+    family_y = S7::class_list | NULL,
 
     # Variable names
     treatment = S7::class_character,
@@ -148,11 +151,13 @@ MediationData <- S7::new_class(
       }
     }
 
-    # Validate family objects if provided
-    if (!is.null(self@family_m) && !inherits(self@family_m, "family")) {
+    # Validate family objects if provided. The empty list() default (and NULL)
+    # both mean "unset" and are treated as Gaussian by consumers, so only a
+    # non-empty value that is not a `family` object is rejected.
+    if (length(self@family_m) > 0 && !inherits(self@family_m, "family")) {
       return("family_m must be a stats 'family' object or NULL")
     }
-    if (!is.null(self@family_y) && !inherits(self@family_y, "family")) {
+    if (length(self@family_y) > 0 && !inherits(self@family_y, "family")) {
       return("family_y must be a stats 'family' object or NULL")
     }
 

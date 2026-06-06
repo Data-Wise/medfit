@@ -57,7 +57,7 @@ test_that("glm extraction records the binomial outcome family and link", {
 # Backward compatibility + validation
 # ==============================================================================
 
-test_that("MediationData constructs without families (defaults to gaussian)", {
+test_that("MediationData constructs without families (default unset, treated as Gaussian)", {
   md <- MediationData(
     a_path = 0.5, b_path = 0.3, c_prime = 0.2,
     estimates = c(0.5, 0.3, 0.2), vcov = diag(3) * 0.01,
@@ -66,8 +66,9 @@ test_that("MediationData constructs without families (defaults to gaussian)", {
     mediator_predictors = "X", outcome_predictors = c("X", "M"),
     data = NULL, n_obs = 100L, converged = TRUE, source_package = "stats"
   )
-  expect_identical(md@family_m$family, "gaussian")
-  expect_identical(md@family_y$family, "gaussian")
+  # default is the empty prototype, not a populated family object
+  expect_false(inherits(md@family_m, "family"))
+  expect_length(md@family_m, 0)
 })
 
 test_that("MediationData accepts an explicit NULL family", {
