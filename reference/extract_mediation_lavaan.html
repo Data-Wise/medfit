@@ -31,7 +31,7 @@ is available."><meta property="og:image" content="https://data-wise.github.io/me
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,7 @@ is available."><meta property="og:image" content="https://data-wise.github.io/me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Mediation Structure from lavaan Model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/extract-lavaan.R" class="external-link"><code>R/extract-lavaan.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.3.0/R/extract-lavaan.R" class="external-link"><code>R/extract-lavaan.R</code></a></small>
       <div class="d-none name"><code>extract_mediation_lavaan.Rd</code></div>
     </div>
 
@@ -98,6 +98,10 @@ is available.</p>
 <span>  b_label <span class="op">=</span> <span class="st">"b"</span>,</span>
 <span>  cp_label <span class="op">=</span> <span class="st">"cp"</span>,</span>
 <span>  standardized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  structure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"serial"</span>, <span class="st">"parallel"</span><span class="op">)</span>,</span>
+<span>  decomposition <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"four_way"</span>, <span class="st">"two_way"</span><span class="op">)</span>,</span>
+<span>  interaction <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  m_star <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -141,14 +145,23 @@ function returns a <a href="SerialMediationData.html">SerialMediationData</a> ob
 <dd><p>Logical: extract standardized coefficients? (default: FALSE)</p></dd>
 
 
+<dt id="arg-structure">structure<a class="anchor" aria-label="anchor" href="#arg-structure"></a></dt>
+<dd><p>Character: one of <code>"auto"</code> (default), <code>"serial"</code>, or
+<code>"parallel"</code>. Selects the multi-mediator structure when <code>mediator</code> has
+length &gt;= 2. <code>"auto"</code> infers it from the SEM's regression rows: a mediator
+regressed on another mediator implies <code>"serial"</code>, otherwise <code>"parallel"</code>.
+The explicit values are authoritative and skip detection.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments (ignored)</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <a href="MediationData.html">MediationData</a> object, or a <a href="SerialMediationData.html">SerialMediationData</a> object when
-<code>mediator</code> is a character vector of length &gt;= 2 (serial mediation).</p>
+    <p>A <a href="MediationData.html">MediationData</a> object; a <a href="SerialMediationData.html">SerialMediationData</a> object when
+<code>mediator</code> is a length &gt;= 2 vector resolving to a serial chain; or a
+<code>ParallelMediationData</code> object when it resolves to parallel mediation.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

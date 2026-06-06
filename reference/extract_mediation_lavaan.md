@@ -16,6 +16,10 @@ extract_mediation_lavaan(
   b_label = "b",
   cp_label = "cp",
   standardized = FALSE,
+  structure = c("auto", "serial", "parallel"),
+  decomposition = c("auto", "four_way", "two_way"),
+  interaction = NULL,
+  m_star = 0,
   ...
 )
 ```
@@ -60,6 +64,15 @@ extract_mediation_lavaan(
 
   Logical: extract standardized coefficients? (default: FALSE)
 
+- structure:
+
+  Character: one of `"auto"` (default), `"serial"`, or `"parallel"`.
+  Selects the multi-mediator structure when `mediator` has length \>= 2.
+  `"auto"` infers it from the SEM's regression rows: a mediator
+  regressed on another mediator implies `"serial"`, otherwise
+  `"parallel"`. The explicit values are authoritative and skip
+  detection.
+
 - ...:
 
   Additional arguments (ignored)
@@ -68,10 +81,11 @@ extract_mediation_lavaan(
 
 A
 [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md)
-object, or a
+object; a
 [SerialMediationData](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
-object when `mediator` is a character vector of length \>= 2 (serial
-mediation).
+object when `mediator` is a length \>= 2 vector resolving to a serial
+chain; or a `ParallelMediationData` object when it resolves to parallel
+mediation.
 
 ## Details
 

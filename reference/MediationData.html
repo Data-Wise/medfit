@@ -31,7 +31,7 @@ and metadata."><meta property="og:image" content="https://data-wise.github.io/me
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,7 @@ and metadata."><meta property="og:image" content="https://data-wise.github.io/me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>MediationData S7 Class</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/classes.R" class="external-link"><code>R/classes.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.3.0/R/classes.R" class="external-link"><code>R/classes.R</code></a></small>
       <div class="d-none name"><code>MediationData.Rd</code></div>
     </div>
 
@@ -118,6 +118,19 @@ and metadata.</p>
 
 <dt id="arg-sigma-y">sigma_y<a class="anchor" aria-label="anchor" href="#arg-sigma-y"></a></dt>
 <dd><p>Numeric scalar or NULL: residual SD for outcome model</p></dd>
+
+
+<dt id="arg-family-m">family_m<a class="anchor" aria-label="anchor" href="#arg-family-m"></a></dt>
+<dd><p>GLM <code>family</code> object (or NULL): family/link for the mediator
+model (e.g. <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian()</a></code>, <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial()</a></code>). Defaults to unset (empty), which
+consumers treat as Gaussian.</p></dd>
+
+
+<dt id="arg-family-y">family_y<a class="anchor" aria-label="anchor" href="#arg-family-y"></a></dt>
+<dd><p>GLM <code>family</code> object (or NULL): family/link for the outcome
+model. Required by scale-free estimands (e.g. probmed) to simulate
+non-Gaussian potential outcomes on the correct scale. Defaults to unset
+(empty), treated as Gaussian.</p></dd>
 
 
 <dt id="arg-treatment">treatment<a class="anchor" aria-label="anchor" href="#arg-treatment"></a></dt>

@@ -34,6 +34,20 @@ metadata.
 
   Numeric scalar or NULL: residual SD for outcome model
 
+- family_m:
+
+  GLM `family` object (or NULL): family/link for the mediator model
+  (e.g. [`gaussian()`](https://rdrr.io/r/stats/family.html),
+  [`binomial()`](https://rdrr.io/r/stats/family.html)). Defaults to
+  unset (empty), which consumers treat as Gaussian.
+
+- family_y:
+
+  GLM `family` object (or NULL): family/link for the outcome model.
+  Required by scale-free estimands (e.g. probmed) to simulate
+  non-Gaussian potential outcomes on the correct scale. Defaults to
+  unset (empty), treated as Gaussian.
+
 - treatment:
 
   Character scalar: name of treatment variable

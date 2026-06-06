@@ -375,6 +375,8 @@ Extract mediation effects from fitted models
   Proportion Mediated (PM)
 - [`paths()`](https://data-wise.github.io/medfit/reference/paths.md) :
   Extract All Path Coefficients
+- [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
+  : Four-Way Decomposition of a Mediation Effect
 
 ## S7 Classes
 
@@ -384,7 +386,13 @@ Core S7 class definitions for mediation data structures
   : MediationData S7 Class
 - [`SerialMediationData`](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
   : SerialMediationData S7 Class
-- [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
+- [`ParallelMediationData`](https://data-wise.github.io/medfit/reference/ParallelMediationData.md)
+  : ParallelMediationData: Parallel (Multiple-Mediator) Mediation
+  Structure
+- [`InteractionMediationData`](https://data-wise.github.io/medfit/reference/InteractionMediationData.md)
+  : InteractionMediationData: Mediation with Treatment-Mediator
+  Interaction
+- [`BootstrapResult`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
 
 ## Model Fitting

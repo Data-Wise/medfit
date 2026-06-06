@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,7 +73,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Internal Implementation for lm/glm Extraction</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/extract-lm.R" class="external-link"><code>R/extract-lm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.3.0/R/extract-lm.R" class="external-link"><code>R/extract-lm.R</code></a></small>
       <div class="d-none name"><code>dot-extract_mediation_lm_impl.Rd</code></div>
     </div>
 
@@ -90,7 +90,10 @@
 <span>  <span class="va">mediator</span>,</span>
 <span>  mediator_models <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  outcome <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  data <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  structure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"serial"</span>, <span class="st">"parallel"</span><span class="op">)</span>,</span>
+<span>  decomposition <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"four_way"</span>, <span class="st">"two_way"</span><span class="op">)</span>,</span>
+<span>  m_star <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
