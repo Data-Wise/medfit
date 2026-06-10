@@ -14,9 +14,11 @@ Description: Provides S7-based infrastructure for fitting mediation models,
     for model fitting across different engines (currently generalized linear models,
     with future support for mixed models and Bayesian methods), standardized
     extraction of mediation paths from various model types, and robust bootstrap
-    inference methods. Methods are described in MacKinnon, Lockwood, Hoffman, West and
-    Sheets (2002) <doi:10.1037/1082-989X.7.1.83> and Tofighi and MacKinnon (2011)
-    <doi:10.3758/s13428-011-0076-x>.
+    inference methods. Mediation methods are described in MacKinnon, Lockwood and
+    Williams (2004) <doi:10.1207/s15327906mbr3901_4>, Preacher and Hayes (2008)
+    <doi:10.3758/brm.40.3.879>, Tofighi and MacKinnon (2011)
+    <doi:10.3758/s13428-011-0076-x>, and VanderWeele (2014)
+    <doi:10.1097/EDE.0000000000000121>.
 License: GPL (>= 3)
 URL: https://data-wise.github.io/medfit/, https://github.com/data-wise/medfit
 BugReports: https://github.com/data-wise/medfit/issues
