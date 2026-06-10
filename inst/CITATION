@@ -1,10 +1,46 @@
-citHeader("To cite the medfit package in publications, please use:")
+citHeader(
+  "To cite medfit in publications, cite the software. To cite the underlying",
+  "methodology, cite the relevant references below."
+)
 
+## Software
 bibentry(
   bibtype = "Manual",
   title   = "{medfit}: Infrastructure for Mediation Model Fitting and Extraction",
-  author  = c(person("Davood", "Tofighi")),
+  author  = c(person("Davood", "Tofighi",
+                     comment = c(ORCID = "0000-0001-8523-7776"))),
   year    = "2026",
   note    = sprintf("R package version %s", meta$Version),
   url     = "https://data-wise.github.io/medfit/"
+)
+
+## Methods: confidence limits for the indirect effect (distribution of the
+## product and resampling) -- the basis for medfit's bootstrap inference.
+bibentry(
+  bibtype = "Article",
+  title   = "Confidence Limits for the Indirect Effect: Distribution of the Product and Resampling Methods",
+  author  = c(person("David P.", "MacKinnon"),
+              person("Chondra M.", "Lockwood"),
+              person("Jason", "Williams")),
+  journal = "Multivariate Behavioral Research",
+  year    = "2004",
+  volume  = "39",
+  number  = "1",
+  pages   = "99--128",
+  doi     = "10.1207/s15327906mbr3901_4"
+)
+
+## Methods: RMediation and confidence intervals for mediation (the ecosystem
+## medfit underpins).
+bibentry(
+  bibtype = "Article",
+  title   = "{RMediation}: An {R} package for mediation analysis confidence intervals",
+  author  = c(person("Davood", "Tofighi"),
+              person("David P.", "MacKinnon")),
+  journal = "Behavior Research Methods",
+  year    = "2011",
+  volume  = "43",
+  number  = "3",
+  pages   = "692--700",
+  doi     = "10.3758/s13428-011-0076-x"
 )
