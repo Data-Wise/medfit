@@ -6,9 +6,10 @@ reviewer's (Konstanze Lauseker) feedback on version 0.2.0:
 * Explained the acronym in the Description text: "GLM" is now written out as
   "generalized linear models".
 * Added references describing the methods to the Description field in the
-  requested `authors (year) <doi:...>` form: MacKinnon, Lockwood, Hoffman,
-  West and Sheets (2002) <doi:10.1037/1082-989X.7.1.83> and Tofighi and
-  MacKinnon (2011) <doi:10.3758/s13428-011-0076-x>.
+  requested `authors (year) <doi:...>` form: MacKinnon, Lockwood and Williams
+  (2004) <doi:10.1207/s15327906mbr3901_4> and Tofighi and MacKinnon (2011)
+  <doi:10.3758/s13428-011-0076-x>. (The 'Possibly misspelled words' NOTE flags
+  the author surnames in these references, which are spelled correctly.)
 * Added `\value` tags documenting the return value (class and meaning) for the
   exported print methods that were missing them: `print.mediation_effect`,
   `print.summary.BootstrapResult`, `print.summary.MediationData`, and
