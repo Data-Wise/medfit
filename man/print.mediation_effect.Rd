@@ -11,6 +11,10 @@
 
 \item{...}{Additional arguments (ignored)}
 }
+\value{
+Invisibly returns \code{x} (the \code{mediation_effect} object). Called for
+its side effect of printing a formatted effect summary to the console.
+}
 \description{
 Print Method for mediation_effect
 }

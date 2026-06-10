@@ -515,6 +515,8 @@ S7::method(nie, BootstrapResult) <- function(x, ...) {
 #'
 #' @param x A mediation_effect object
 #' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x` (the `mediation_effect` object). Called for
+#'   its side effect of printing a formatted effect summary to the console.
 #' @export
 print.mediation_effect <- function(x, ...) {
   type <- attr(x, "type")

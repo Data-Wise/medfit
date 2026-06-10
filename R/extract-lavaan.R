@@ -75,25 +75,31 @@
 #' and `outcome` arguments.
 #'
 #' @examples
-#' \dontrun{
-#' library(lavaan)
+#' \donttest{
+#' if (requireNamespace("lavaan", quietly = TRUE)) {
+#'   # Simulate a simple mediation data set (X -> M -> Y)
+#'   set.seed(123)
+#'   n <- 200
+#'   X <- rnorm(n)
+#'   M <- 0.5 * X + rnorm(n)
+#'   Y <- 0.3 * M + 0.2 * X + rnorm(n)
+#'   dat <- data.frame(X = X, M = M, Y = Y)
 #'
-#' # Define mediation model
-#' model <- "
-#'   M ~ a*X
-#'   Y ~ b*M + cp*X
-#' "
+#'   # Fit a labeled lavaan mediation model
+#'   model <- "
+#'     M ~ a*X
+#'     Y ~ b*M + cp*X
+#'   "
+#'   fit <- lavaan::sem(model, data = dat)
 #'
-#' # Fit model
-#' fit <- sem(model, data = mydata)
-#'
-#' # Extract mediation structure
-#' med_data <- extract_mediation(
-#'   fit,
-#'   treatment = "X",
-#'   mediator = "M",
-#'   outcome = "Y"
-#' )
+#'   # Extract the mediation structure (dispatches to the lavaan method)
+#'   med_data <- extract_mediation(
+#'     fit,
+#'     treatment = "X",
+#'     mediator = "M",
+#'     outcome = "Y"
+#'   )
+#' }
 #' }
 #'
 #' @keywords internal

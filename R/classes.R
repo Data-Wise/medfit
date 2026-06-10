@@ -53,7 +53,7 @@
 #' The class includes comprehensive validation to ensure data integrity.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Create a MediationData object
 #' med_data <- MediationData(
 #'   a_path = 0.5,
@@ -264,7 +264,7 @@ S7::S4_register(MediationData)
 #' - Validator ensures consistency between mediators and paths
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Two-mediator serial mediation (X -> M1 -> M2 -> Y)
 #' # Product-of-three: a * d * b
 #' serial_data <- SerialMediationData(
@@ -487,7 +487,7 @@ S7::S4_register(SerialMediationData)
 #' method type and required fields.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Parametric bootstrap result
 #' result <- BootstrapResult(
 #'   estimate = 0.15,
@@ -697,6 +697,8 @@ S7::method(summary, MediationData) <- function(object, ...) {
 #'
 #' @param x A summary.MediationData object
 #' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x` (the `summary.MediationData` object). Called
+#'   for its side effect of printing the formatted summary to the console.
 #' @export
 print.summary.MediationData <- function(x, ...) {
   cat("Summary of MediationData\n")
@@ -765,6 +767,8 @@ S7::method(summary, BootstrapResult) <- function(object, ...) {
 #'
 #' @param x A summary.BootstrapResult object
 #' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x` (the `summary.BootstrapResult` object). Called
+#'   for its side effect of printing the formatted summary to the console.
 #' @export
 print.summary.BootstrapResult <- function(x, ...) {
   cat("Summary of BootstrapResult\n")
@@ -933,6 +937,8 @@ S7::method(summary, SerialMediationData) <- function(object, ...) {
 #'
 #' @param x A summary.SerialMediationData object
 #' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x` (the `summary.SerialMediationData` object).
+#'   Called for its side effect of printing the formatted summary to the console.
 #' @export
 print.summary.SerialMediationData <- function(x, ...) {
   cat("Summary of SerialMediationData\n")
