@@ -113,7 +113,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.3.0/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -283,7 +283,7 @@
 <blockquote>
 <p><strong>Same data, different CI: lm vs lavaan</strong></p>
 <p>An lm/glm serial chain estimates each equation <strong>separately</strong>, so the combined covariance is <strong>block-diagonal</strong> across chain paths: <code>cov(a, d_i)</code>, <code>cov(d_i, b)</code>, and <code>cov(d_i, d_j)</code> are all zero by construction. (The within-outcome-equation covariance, e.g. <code>cov(b, c')</code>, is still preserved.)</p>
-<p>A single lavaan <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem()</a></code> fit of the <em>same data</em> estimates all equations jointly and yields the <strong>full</strong> covariance among chain paths. Because the serial indirect-effect standard error depends on these off-diagonal covariances, the CI from an lm chain will generally differ from — and is often tighter than — the lavaan fit. This is correct given the different estimators; just be aware that the engine choice changes the interval for identical data.</p>
+<p>A single lavaan <code>sem()</code> fit of the <em>same data</em> estimates all equations jointly and yields the <strong>full</strong> covariance among chain paths. Because the serial indirect-effect standard error depends on these off-diagonal covariances, the CI from an lm chain will generally differ from — and is often tighter than — the lavaan fit. This is correct given the different estimators; just be aware that the engine choice changes the interval for identical data.</p>
 </blockquote>
 </div>
 </section><section class="level3"><h3 id="parallel-mediation-with-lmglm">Parallel Mediation with lm/glm<a class="anchor" aria-label="anchor" href="#parallel-mediation-with-lmglm"></a>
@@ -394,7 +394,7 @@
 </div>
 </section><section class="level3"><h3 id="parallel-mediation-in-sem">Parallel Mediation in SEM<a class="anchor" aria-label="anchor" href="#parallel-mediation-in-sem"></a>
 </h3>
-<p>A single <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem()</a></code> fit handles parallel mediators directly: regress each mediator on the treatment and let the outcome depend on all of them. Passing a <code>mediator</code> vector returns a <code>ParallelMediationData</code> object (auto-detected, since no mediator is regressed on another).</p>
+<p>A single <code>sem()</code> fit handles parallel mediators directly: regress each mediator on the treatment and let the outcome depend on all of them. Passing a <code>mediator</code> vector returns a <code>ParallelMediationData</code> object (auto-detected, since no mediator is regressed on another).</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="co"># Define a parallel mediation model: M1, M2 each on X; Y on both + X</span></span>
 <span><span class="va">parallel_syntax</span> <span class="op">&lt;-</span> <span class="st">"</span></span>

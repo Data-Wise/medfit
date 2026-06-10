@@ -1,11 +1,13 @@
 # 🎯 medfit - Project Control Hub
 
-> **Quick Status:** 🔴 Blocked on Implementation \| **Phase:** 1 of 3 \|
-> **Progress:** 0%
+> **Quick Status:** 🟢 Feature-complete \| **CRAN:** 0.2.1 resubmission
+> pending \| **dev:** 0.3.0
 
-**Last Updated:** 2025-12-12  
-**Current Phase:** Phase 1 - Core API Development  
-**Next Action:** Implement fit_mediation() skeleton
+**Last Updated:** 2026-06-10  
+**Current Phase:** CRAN submission (0.2.1) + 0.3.0 release line (Ext A/B
+shipped on dev)  
+**Next Action:** Resubmit medfit_0.2.1.tar.gz (round-2 fixes done) +
+confirm email
 
 ------------------------------------------------------------------------
 
@@ -22,14 +24,15 @@
 
 ## 📊 Overall Progress
 
-    Phase 1: Core API                ░░░░░░░░░░░░░░░░░░░░   0% 🔴
-    Phase 2: Bootstrap & Tests       ░░░░░░░░░░░░░░░░░░░░   0% ⏸️
-    Phase 3: CRAN Preparation        ░░░░░░░░░░░░░░░░░░░░   0% ⏸️
+    Phase 1: Core API                ████████████████████ 100% 🟢
+    Phase 2: Bootstrap & Tests       ████████████████████ 100% 🟢
+    Phase 3: CRAN Preparation        ████████████████████ 100% 🟢
+    Phase 4: Extensions (A/B, dev)   ████████████████████ 100% 🟢
     ──────────────────────────────────────────────────────────
-    Overall Project:                  ░░░░░░░░░░░░░░░░░░░░   0% 🔴
+    Overall Project:                  ████████████████████ 100% 🟢
 
-**Status:** 🔴 Blocked - Need to implement foundation \| **Priority:**
-P0 - Blocks entire ecosystem
+**Status:** 🟢 Feature-complete — on the CRAN path (0.2.1 resubmission)
+\| **Priority:** P1
 
 ------------------------------------------------------------------------
 

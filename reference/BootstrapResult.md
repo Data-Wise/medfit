@@ -53,7 +53,7 @@ and required fields.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 # Parametric bootstrap result
 result <- BootstrapResult(
   estimate = 0.15,
@@ -65,5 +65,5 @@ result <- BootstrapResult(
   method = "parametric",
   call = NULL
 )
-} # }
+# }
 ```

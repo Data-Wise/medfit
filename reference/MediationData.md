@@ -99,7 +99,7 @@ The class includes comprehensive validation to ensure data integrity.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 # Create a MediationData object
 med_data <- MediationData(
   a_path = 0.5,
@@ -119,5 +119,5 @@ med_data <- MediationData(
   converged = TRUE,
   source_package = "stats"
 )
-} # }
+# }
 ```

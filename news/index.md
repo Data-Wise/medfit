@@ -109,6 +109,21 @@
   clearing the “startup functions should use packageStartupMessage”
   note.
 
+### CRAN compliance and dependencies
+
+- Moved **MASS** from `Suggests` to `Imports`: the default parametric
+  bootstrap (`bootstrap_mediation(method = "parametric")`) calls
+  [`MASS::mvrnorm()`](https://rdrr.io/pkg/MASS/man/mvrnorm.html)
+  unconditionally, so MASS must always be available (it previously
+  failed under CRAN’s “noSuggests” check flavor).
+- Documentation/CRAN fixes (forward-ported from the 0.2.1 CRAN
+  resubmission): added `\value` to the exported
+  `print`/`print.summary.*` methods; converted `\dontrun{}` examples to
+  self-contained `\donttest{}` (the lavaan example guarded with
+  [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html)); spelled
+  out the “GLM” acronym and added method references (`<doi:...>`) to the
+  Description; enriched `inst/CITATION`.
+
 ## medfit 0.2.0 (2026-05-31)
 
 ### New features

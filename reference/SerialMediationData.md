@@ -135,7 +135,7 @@ This class is designed to handle serial chains of any length:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 # Two-mediator serial mediation (X -> M1 -> M2 -> Y)
 # Product-of-three: a * d * b
 serial_data <- SerialMediationData(
@@ -186,5 +186,5 @@ serial_data_3 <- SerialMediationData(
   converged = TRUE,
   source_package = "lavaan"
 )
-} # }
+# }
 ```

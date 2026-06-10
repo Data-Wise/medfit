@@ -73,7 +73,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.3.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
@@ -98,6 +98,11 @@
 <h3 id="internal-0-3-0">Internal<a class="anchor" aria-label="anchor" href="#internal-0-3-0"></a></h3>
 <ul><li>
 <code>R CMD check</code> is clean again (0 errors / 0 warnings / 0 notes). Added <code>@usage NULL</code> to the <code>BootstrapResult</code>, <code>ParallelMediationData</code>, and <code>InteractionMediationData</code> class docs (matching <code>MediationData</code> / <code>SerialMediationData</code>), which removes spurious codoc mismatches from the S7 constructors’ complex property defaults. The <code>show</code> method bodies registered in <code>.onLoad()</code> now delegate to a top-level helper (<code>.show_via_print()</code>) so no literal <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> call sits in <code>.onLoad</code>, clearing the “startup functions should use packageStartupMessage” note.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="cran-compliance-and-dependencies-0-3-0">CRAN compliance and dependencies<a class="anchor" aria-label="anchor" href="#cran-compliance-and-dependencies-0-3-0"></a></h3>
+<ul><li>Moved <strong>MASS</strong> from <code>Suggests</code> to <code>Imports</code>: the default parametric bootstrap (<code>bootstrap_mediation(method = "parametric")</code>) calls <code><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html" class="external-link">MASS::mvrnorm()</a></code> unconditionally, so MASS must always be available (it previously failed under CRAN’s “noSuggests” check flavor).</li>
+<li>Documentation/CRAN fixes (forward-ported from the 0.2.1 CRAN resubmission): added <code>\value</code> to the exported <code>print</code>/<code>print.summary.*</code> methods; converted <code>\dontrun{}</code> examples to self-contained <code>\donttest{}</code> (the lavaan example guarded with <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code>); spelled out the “GLM” acronym and added method references (<code>&lt;doi:...&gt;</code>) to the Description; enriched <code>inst/CITATION</code>.</li>
 </ul></div>
 </div>
     <div class="section level2">

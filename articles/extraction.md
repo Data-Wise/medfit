@@ -199,14 +199,13 @@ silently producing wrong `d`-paths.
 > construction. (The within-outcome-equation covariance,
 > e.g. `cov(b, c')`, is still preserved.)
 >
-> A single lavaan [`sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fit
-> of the *same data* estimates all equations jointly and yields the
-> **full** covariance among chain paths. Because the serial
-> indirect-effect standard error depends on these off-diagonal
-> covariances, the CI from an lm chain will generally differ from — and
-> is often tighter than — the lavaan fit. This is correct given the
-> different estimators; just be aware that the engine choice changes the
-> interval for identical data.
+> A single lavaan `sem()` fit of the *same data* estimates all equations
+> jointly and yields the **full** covariance among chain paths. Because
+> the serial indirect-effect standard error depends on these
+> off-diagonal covariances, the CI from an lm chain will generally
+> differ from — and is often tighter than — the lavaan fit. This is
+> correct given the different estimators; just be aware that the engine
+> choice changes the interval for identical data.
 
 ### Parallel Mediation with lm/glm
 
@@ -336,11 +335,10 @@ med_serial@a_path * med_serial@d_path * med_serial@b_path
 
 ### Parallel Mediation in SEM
 
-A single [`sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fit handles
-parallel mediators directly: regress each mediator on the treatment and
-let the outcome depend on all of them. Passing a `mediator` vector
-returns a `ParallelMediationData` object (auto-detected, since no
-mediator is regressed on another).
+A single `sem()` fit handles parallel mediators directly: regress each
+mediator on the treatment and let the outcome depend on all of them.
+Passing a `mediator` vector returns a `ParallelMediationData` object
+(auto-detected, since no mediator is regressed on another).
 
 ``` r
 # Define a parallel mediation model: M1, M2 each on X; Y on both + X

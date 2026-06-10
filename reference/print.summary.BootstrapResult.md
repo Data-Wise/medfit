@@ -18,3 +18,8 @@ print(x, ...)
 - ...:
 
   Additional arguments (ignored)
+
+## Value
+
+Invisibly returns `x` (the `summary.BootstrapResult` object). Called for
+its side effect of printing the formatted summary to the console.
