@@ -1,9 +1,21 @@
-# Post-CRAN-Acceptance Checklist — medfit 0.2.0
+# Post-CRAN-Acceptance Checklist — medfit 0.2.1
 
-Actions to run **once CRAN accepts medfit 0.2.0**. Created 2026-06-01.
-Submission status before this: checked clean (`R CMD check --as-cran` 0/0/1 = "New
-submission" NOTE; win-builder OK); `submit_cran()` + email confirmation pending
-(maintainer action). medfit on CRAN is the gate for the RMediation v1.5.0 flip.
+Actions to run **once CRAN accepts medfit 0.2.1**. Created 2026-06-01; updated 2026-06-10.
+
+> 🔺 **UPDATE 2026-06-10:** the submission is now **0.2.1** (round-2 reviewer
+> fixes: GLM acronym, references, `\value`, `\donttest`, MASS→Imports), not 0.2.0.
+> This is a **two-stage** release: 0.2.1 unblocks the Suggests/`>= 0.2.0`
+> dependents (RMediation, mediationverse, medsim); **probmed needs medfit
+> 0.3.0 on CRAN** (a later submission — it imports 0.3.0-only features). See the
+> corrected `planning/CASCADE-cran-flip-2026-06-03.md`. Also, per the 2026-06-03
+> decision **RMediation KEEPS medfit in `Suggests`** (not Imports) — §3 below
+> (the "Remotes→Imports flip") is superseded by the CASCADE doc; only the
+> Remotes-drop + floor-pin applies.
+
+Submission status: 0.2.1 checked clean (`--as-cran --run-donttest` +
+`_R_CHECK_DEPENDS_ONLY_`/`_R_CHECK_SUGGESTS_ONLY_` = 0/0/0); win-builder R-devel
+= 1 NOTE (author surnames). `submit_cran()` + email confirmation pending
+(maintainer action). medfit on CRAN gates the downstream cascade.
 
 ---
 

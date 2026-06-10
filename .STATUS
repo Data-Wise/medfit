@@ -1,7 +1,7 @@
 status: active
 priority: P1
 progress: 100
-next: SUBMITTED to CRAN (2026-06-03) — awaiting acceptance email. On acceptance → RETARGET PR #33 FIRST (it predates Ext A/B and now carries unreleased work; re-scope as next minor release OR merge only the v0.2.0 state) → tag/refresh → GitHub release → RMediation Remotes→Imports flip.
+next: CRAN reviewer ROUND 2 (2026-06-08, Lauseker) addressed as v0.2.1 on branch feature/cran-round2 (off commit 27cc086; main is stale at 0.1.0). Fixes: GLM acronym, method references (DOIs), \value on 4 print methods, \dontrun→\donttest, MASS Suggests→Imports. win-builder R-devel = 1 NOTE (author surnames only). Forward-ported to dev (0.3.0) + added a noSuggests CI job. NEXT → resubmit medfit_0.2.1.tar.gz + confirm email; on acceptance run the cascade (RETARGET PR #33 first — it predates Ext A/B).
 watcher: Daily remote routine "medfit-cran-watch" (trig_018qiNZMTUP5Az2UGXyv6vRf, 9am America/Denver) checks the CRAN page + Gmail and reports ACCEPTED / ACTION REQUIRED / STILL PENDING. Runs: https://claude.ai/code/routines/trig_018qiNZMTUP5Az2UGXyv6vRf
 extensions: Ext A (parallel mediation) COMPLETE — class (#34), lm/glm extractor+confint (#36), lavaan extractor+vignette+pkgdown (#37) ALL MERGED to dev. Structural trio (simple/serial/parallel) now closed across lm/glm + lavaan. Ext B (VanderWeele 4-way interaction) COMPLETE — spec at planning/specs/SPEC-interaction-fourway-2026-06-03.md. PR B1 (InteractionMediationData class, 35 tests, #38) + PR B2a (lm/glm extraction + decomposition/m_star + delta confint, 27 tests, #39) + PR B2b (lavaan extraction + vignette, 22 tests, #40) ALL MERGED to dev. Four-way decomposition (CDE/INTref/INTmed/PIE) now ships across lm/glm + lavaan. NEXT: Ext C (engine adapters/CMAverse), needs SPEC-engine-registry.md + SPEC-cmaverse-adapter.md. Toolchain: roxygen2 8.0.0 migration = issue #35.
 type: r
@@ -17,7 +17,7 @@ type: r
 ~/projects/r-packages/active/medfit/
 
 ⏰ LAST UPDATED
-2026-06-02
+2026-06-10
 
 ────────────────────────────────────────────────
 
@@ -33,9 +33,28 @@ S7-based infrastructure for fitting mediation models,
 extracting path coefficients, and bootstrap inference.
 Foundation package for mediationverse ecosystem.
 
-Version: 0.2.0 (released to main 2026-05-31; not yet on CRAN)
+Version: 0.2.1 CRAN resubmission pending (branch feature/cran-round2); dev at 0.3.0. main stale at 0.1.0.
 
 ────────────────────────────────────────────────
+
+## ✅ Just Completed (2026-06-10) — CRAN reviewer round 2 → v0.2.1
+
+- ✅ **Addressed CRAN round-2 feedback** (Konstanze Lauseker, 2026-06-08) on
+  branch `feature/cran-round2` (based on the reviewed commit `27cc086`, since
+  `main` is stale at 0.1.0): explained the "GLM" acronym; added method
+  references (MacKinnon, Lockwood & Williams 2004; Tofighi & MacKinnon 2011) as
+  `<doi:...>`; added `\value` to the four exported print methods; converted
+  `\dontrun{}`→`\donttest{}` (self-contained, lavaan guarded); bumped to **0.2.1**.
+- ✅ **Hardening** — strict `_R_CHECK_SUGGESTS_ONLY_` + `--run-donttest` caught
+  the default parametric bootstrap hard-requiring **MASS** (a Suggests pkg) →
+  moved **MASS to Imports**. `--as-cran --run-donttest` + DEPENDS_ONLY/SUGGESTS_ONLY
+  = **0/0/0**.
+- ✅ **win-builder R-devel (0.2.1)** = 1 NOTE (author surnames only; noted in cran-comments).
+- ✅ **Forward-ported** all fixes + MASS→Imports to `dev` (0.3.0); added a
+  **noSuggests CI job** to `R-CMD-check.yaml` (CI all green). Enriched
+  `inst/CITATION` with method references + ORCID. rforge proposal written
+  (`docs/specs/PROPOSAL-cran-incoming-hardening-2026-06-10.md`).
+- 🎯 **NEXT:** resubmit `medfit_0.2.1.tar.gz` + confirm email → then the cascade.
 
 ## ✅ Just Completed (2026-06-03) — CRAN upload + dependabot cleanup
 
@@ -177,7 +196,7 @@ vignettes/      # Long-form docs (4 articles)
 ────────────────────────────────────────────────
 
 🔗 DEPENDENCIES
-Imports: S7, stats, methods, checkmate, generics, tibble
+Imports: S7, stats, methods, checkmate, generics, MASS (tibble is in Suggests)
 Part of: mediationverse ecosystem
 
 ────────────────────────────────────────────────

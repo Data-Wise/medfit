@@ -9,6 +9,16 @@
 > makes `R CMD check` unable to resolve `Imports: medfit`. Apply only *after*
 > acceptance. This is a non-breaking availability change, not an API migration.
 
+> 🔺 **UPDATE 2026-06-10 — this is a TWO-STAGE medfit release.** The CRAN
+> submission in flight is **0.2.1** (round-2 fixes). But **probmed requires
+> `medfit (>= 0.3.0)`** (it uses parallel/interaction/family features that only
+> exist in 0.3.0, currently a GitHub-only release). So:
+> - **medfit 0.2.1 on CRAN** unblocks the *Suggests-level* dependents only
+>   (RMediation, medsim, mediationverse — they need `>= 0.2.0`).
+> - **probmed is gated on medfit 0.3.0 reaching CRAN**, not 0.2.1. Sequence:
+>   `medfit 0.2.1 → accept → medfit 0.3.0 → accept → probmed`.
+> The probmed pin below is corrected to `>= 0.3.0`.
+
 Companion: `planning/CRAN-POST-ACCEPTANCE-CHECKLIST.md` (the medfit-side steps
 that run *before* this cascade: merge PR #33 → tag → release).
 
@@ -16,18 +26,23 @@ that run *before* this cascade: merge PR #33 → tag → release).
 
 ## Update order
 
-1. **medfit** on CRAN (gate — Phase 0)
+1. **medfit 0.2.1** on CRAN (gate for the Suggests/`>= 0.2.0` dependents)
 2. **RMediation** (`active/rmediation`, the v1.5.0 blocker — §0.5; Suggests, drop Remotes)
-3. **probmed**, **mediationverse** (§1–2)
-4. **medsim** (Suggests-only — optional, no urgency — §3)
+3. **mediationverse** (Imports floor `>= 0.2.0` — §2)
+4. **medfit 0.3.0** on CRAN (gate for probmed — Ext A/B features)
+5. **probmed** (Imports floor `>= 0.3.0`, drop Remotes — §1)
+6. **medsim** (Suggests-only — optional, no urgency — §3)
 
 ---
 
 ## 1. probmed  `~/projects/r-packages/active/probmed`
 
-- **Branch:** currently on `main` → create a feature branch first (PR-only repo).
+- **Branch:** feature branch off the integration branch (verify current branch first).
+- **GATE: medfit `0.3.0` on CRAN** (NOT 0.2.1). probmed already declares
+  `Imports: medfit (>= 0.3.0)` because it uses 0.3.0-only features (parallel /
+  interaction / family). Do this flip only after medfit **0.3.0** is accepted.
 - **Change:** `medfit` is the *only* `Remotes:` entry, so remove the entire
-  `Remotes:` block. Pin the floor in `Imports:` to `medfit (>= 0.2.0)`.
+  `Remotes:` block. Keep the `Imports:` floor at `medfit (>= 0.3.0)`.
 
 ### Diff
 
@@ -36,13 +51,12 @@ that run *before* this cascade: merge PR #33 → tag → release).
 +++ b/DESCRIPTION
 @@ Imports:
  Imports:
--    medfit,
-+    medfit (>= 0.2.0),
+     medfit (>= 0.3.0),
      methods,
      S7 (>= 0.2.1),
      stats
 -Remotes:
--    data-wise/medfit
+-    data-wise/medfit@v0.3.0
  VignetteBuilder: knitr, quarto
 ```
 
@@ -55,8 +69,8 @@ git checkout -b chore/medfit-cran-imports
 Rscript -e 'devtools::document()'
 R CMD build . && R CMD check --as-cran probmed_*.tar.gz   # expect Remotes-NOTE gone
 git add DESCRIPTION NAMESPACE
-git commit -m "chore(deps): medfit on CRAN — drop Remotes, pin Imports >= 0.2.0"
-gh pr create --base main --title "Depend on CRAN medfit (drop Remotes)"
+git commit -m "chore(deps): medfit 0.3.0 on CRAN — drop Remotes, keep Imports >= 0.3.0"
+gh pr create --base main --title "Depend on CRAN medfit 0.3.0 (drop Remotes)"
 ```
 
 ---
@@ -155,4 +169,4 @@ Drop `Data-Wise/medfit` from its `Remotes:` whenever convenient — no release p
 
 - [ ] `R CMD check --as-cran` no longer shows a Remotes-related NOTE
 - [ ] Package installs resolving `medfit` from CRAN (not GitHub)
-- [ ] Tests pass against CRAN medfit 0.2.0
+- [ ] Tests pass against CRAN medfit (>= 0.2.0 for Suggests deps; >= 0.3.0 for probmed)

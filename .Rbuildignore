@@ -31,3 +31,7 @@
 ^REVERSION-SUMMARY\.md$
 ^RHUB-BADGE-RESEARCH\.md$
 ^CRAN-SUBMISSION$
+^check$
+^.*\.Rcheck$
+^.*\.tar\.gz$
+^medfit\.code-workspace$
