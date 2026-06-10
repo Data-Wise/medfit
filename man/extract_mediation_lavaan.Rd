@@ -13,6 +13,10 @@ extract_mediation_lavaan(
   b_label = "b",
   cp_label = "cp",
   standardized = FALSE,
+  structure = c("auto", "serial", "parallel"),
+  decomposition = c("auto", "four_way", "two_way"),
+  interaction = NULL,
+  m_star = 0,
   ...
 )
 }
@@ -36,11 +40,18 @@ function returns a \link{SerialMediationData} object instead of \link{MediationD
 
 \item{standardized}{Logical: extract standardized coefficients? (default: FALSE)}
 
+\item{structure}{Character: one of \code{"auto"} (default), \code{"serial"}, or
+\code{"parallel"}. Selects the multi-mediator structure when \code{mediator} has
+length >= 2. \code{"auto"} infers it from the SEM's regression rows: a mediator
+regressed on another mediator implies \code{"serial"}, otherwise \code{"parallel"}.
+The explicit values are authoritative and skip detection.}
+
 \item{...}{Additional arguments (ignored)}
 }
 \value{
-A \link{MediationData} object, or a \link{SerialMediationData} object when
-\code{mediator} is a character vector of length >= 2 (serial mediation).
+A \link{MediationData} object; a \link{SerialMediationData} object when
+\code{mediator} is a length >= 2 vector resolving to a serial chain; or a
+\code{ParallelMediationData} object when it resolves to parallel mediation.
 }
 \description{
 Internal function for extracting mediation structure from lavaan models.
@@ -87,25 +98,31 @@ and \code{outcome} arguments.
 }
 }
 \examples{
-\dontrun{
-library(lavaan)
+\donttest{
+if (requireNamespace("lavaan", quietly = TRUE)) {
+  # Simulate a simple mediation data set (X -> M -> Y)
+  set.seed(123)
+  n <- 200
+  X <- rnorm(n)
+  M <- 0.5 * X + rnorm(n)
+  Y <- 0.3 * M + 0.2 * X + rnorm(n)
+  dat <- data.frame(X = X, M = M, Y = Y)
 
-# Define mediation model
-model <- "
-  M ~ a*X
-  Y ~ b*M + cp*X
-"
+  # Fit a labeled lavaan mediation model
+  model <- "
+    M ~ a*X
+    Y ~ b*M + cp*X
+  "
+  fit <- lavaan::sem(model, data = dat)
 
-# Fit model
-fit <- sem(model, data = mydata)
-
-# Extract mediation structure
-med_data <- extract_mediation(
-  fit,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y"
-)
+  # Extract the mediation structure (dispatches to the lavaan method)
+  med_data <- extract_mediation(
+    fit,
+    treatment = "X",
+    mediator = "M",
+    outcome = "Y"
+  )
+}
 }
 
 }

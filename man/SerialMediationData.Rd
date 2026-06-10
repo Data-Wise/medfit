@@ -93,7 +93,7 @@ This class is designed to handle serial chains of any length:
 }
 }
 \examples{
-\dontrun{
+\donttest{
 # Two-mediator serial mediation (X -> M1 -> M2 -> Y)
 # Product-of-three: a * d * b
 serial_data <- SerialMediationData(

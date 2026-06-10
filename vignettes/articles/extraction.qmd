@@ -211,6 +211,52 @@ the lavaan fit. This is correct given the different estimators; just be aware
 that the engine choice changes the interval for identical data.
 :::
 
+### Parallel Mediation with lm/glm
+
+In **parallel** mediation the mediators are independent (X -> M_j -> Y) rather
+than chained: each `M_j` is regressed on the treatment only, and all mediators
+enter a single outcome model. The total indirect effect is the **sum** of the
+per-mediator products, $\sum_j a_j b_j$. The API mirrors the serial case — pass
+a `mediator` vector and the remaining mediator models via `mediator_models` — but
+set `structure = "parallel"` (or rely on `structure = "auto"`, which infers
+parallel when no mediator is regressed on another). The result is a
+`ParallelMediationData` object.
+
+```{r}
+#| label: lm-parallel
+# Parallel data: two independent mediators, each driven by X
+M1p <- 0.5 * X + rnorm(n)
+M2p <- 0.4 * X + rnorm(n)
+y_par <- 0.3 * M1p + 0.45 * M2p + 0.1 * X + rnorm(n)
+data_lm_par <- data.frame(X = X, M1 = M1p, M2 = M2p, Y = y_par)
+
+# Each mediator is regressed on X alone; the outcome holds both mediators + X
+fit_m1p <- lm(M1 ~ X, data = data_lm_par)
+fit_m2p <- lm(M2 ~ X, data = data_lm_par)
+fit_yp  <- lm(Y ~ M1 + M2 + X, data = data_lm_par)
+
+med_parallel_lm <- extract_mediation(
+  fit_m1p,
+  model_y = fit_yp,
+  treatment = "X",
+  mediator = c("M1", "M2"),
+  mediator_models = list(fit_m2p),
+  structure = "parallel"
+)
+
+# Per-mediator paths and the summed indirect effect
+med_parallel_lm@a_paths
+med_parallel_lm@b_paths
+nie(med_parallel_lm)               # sum_j a_j * b_j
+confint(med_parallel_lm, parm = "effects")
+```
+
+Because the mediator equations are fit separately, `cov(a_j, a_{j'}) = 0` and
+`cov(a_j, b_{j'}) = 0`; but the `b_j` (and `c'`) share the single outcome
+equation, so `cov(b_j, b_{j'})` and `cov(b_j, c')` are preserved. The
+`confint()` indirect-effect SE uses the full delta method over the joint
+`a*/b*` block, not a naive per-mediator sum.
+
 ## Extracting from lavaan Models
 
 ### Simple Mediation in SEM
@@ -290,6 +336,117 @@ print(med_serial)
 # Serial indirect effect
 med_serial@a_path * med_serial@d_path * med_serial@b_path
 ```
+
+### Parallel Mediation in SEM
+
+A single `sem()` fit handles parallel mediators directly: regress each mediator
+on the treatment and let the outcome depend on all of them. Passing a `mediator`
+vector returns a `ParallelMediationData` object (auto-detected, since no mediator
+is regressed on another).
+
+```{r}
+#| label: lavaan-parallel
+# Define a parallel mediation model: M1, M2 each on X; Y on both + X
+parallel_syntax <- "
+  M1 ~ a1 * X
+  M2 ~ a2 * X
+  Y  ~ b1 * M1 + b2 * M2 + c_prime * X
+
+  # Total indirect effect = sum of per-mediator products
+  indirect := a1 * b1 + a2 * b2
+"
+
+fit_parallel <- sem(parallel_syntax, data = data_lm_par)
+
+med_parallel <- extract_mediation(
+  fit_parallel,
+  treatment = "X",
+  mediator = c("M1", "M2"),
+  outcome = "Y"
+)
+
+print(med_parallel)
+nie(med_parallel)
+```
+
+Unlike the lm/glm engine, the SEM estimates the whole system jointly, so the
+extracted `vcov` preserves **all** off-diagonals — including `cov(a_j, b_j)` and
+`cov(a_j, a_{j'})`. Standard errors for the indirect effect therefore reflect the
+full joint covariance, and (as with serial mediation) the lavaan interval will
+generally differ from the lm one for identical data.
+
+## Treatment-Mediator Interaction (Four-Way Decomposition)
+
+When treatment and mediator **interact**, the total effect splits into four
+pieces (VanderWeele 2014): the controlled direct effect (CDE), reference
+interaction (INTref), mediated interaction (INTmed), and pure indirect effect
+(PIE), with `Total = CDE + INTref + INTmed + PIE`, `NDE = CDE + INTref`, and
+`NIE = INTmed + PIE`. medfit computes the decomposition; the causal
+interpretation (which requires VanderWeele's no-unmeasured-confounding
+assumptions) is the analyst's responsibility.
+
+`extract_mediation()` returns an `InteractionMediationData` object whenever the
+outcome model carries an `X:M` term. Set the reference mediator level with
+`m_star` (default 0).
+
+### Interaction with lm/glm
+
+For lm/glm, the `X:M` term is detected automatically:
+
+```{r}
+#| label: lm-interaction
+# Outcome model includes the X:M interaction
+fit_mi <- lm(M ~ X, data = data)
+fit_yi <- lm(Y ~ X + M + X:M, data = data)
+
+med_int <- extract_mediation(
+  fit_mi,
+  model_y = fit_yi,
+  treatment = "X",
+  mediator = "M",
+  m_star = 0           # reference mediator level for the decomposition
+)
+
+decompose(med_int)                          # CDE, INTref, INTmed, PIE + effects
+confint(med_int, parm = "components")       # delta-method CIs for the components
+```
+
+The four-way formulas (continuous `Y` and `M`) are
+`CDE = θ₁ + θ₃·m*`, `INTref = θ₃·(E[M|X=0] − m*)`, `INTmed = θ₃·β₁`, and
+`PIE = θ₂·β₁`, where `θ₃` is the interaction coefficient and `β₁` the `a` path.
+Non-Gaussian outcomes are not yet supported and raise an informative error.
+
+### Interaction with lavaan
+
+In lavaan the interaction enters as a **product variable** (a column you create),
+and the model must be fit with `meanstructure = TRUE` so the mediator intercept
+(needed for INTref) is estimated. Name the product term via `interaction`:
+
+```{r}
+#| label: lavaan-interaction
+data$XM <- data$X * data$M     # product term
+
+fit_int <- sem(
+  "M ~ X
+   Y ~ M + X + XM",
+  data = data,
+  meanstructure = TRUE
+)
+
+med_int_sem <- extract_mediation(
+  fit_int,
+  treatment = "X",
+  mediator = "M",
+  outcome = "Y",
+  interaction = "XM"     # name of the product predictor in the outcome model
+)
+
+decompose(med_int_sem)
+```
+
+When the interaction is absent (or `decomposition = "two_way"`), extraction falls
+back to the standard `MediationData` — so existing two-way workflows are
+unchanged.
 
 ## Compatibility with RMediation
 

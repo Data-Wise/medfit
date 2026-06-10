@@ -7,6 +7,9 @@ updates:
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
+    # Target the integration branch so CI bumps follow the dev->main PR flow
+    # (default is main, which would leave main ahead of dev and force back-merges)
+    target-branch: "dev"
     schedule:
       interval: "weekly"
       day: "monday"

@@ -1,3 +1,106 @@
+# medfit 0.3.0 (2026-06-06)
+
+## New features
+
+* `MediationData` now carries the GLM `family`/link of the mediator and outcome
+  models in new `family_m` and `family_y` properties (populated by the lm/glm
+  and lavaan extractors; default `NULL` is treated as Gaussian). This lets
+  scale-free estimands such as `probmed::pmed()` simulate non-Gaussian
+  potential outcomes on the correct (e.g. logit) scale rather than discarding
+  the link. Backward compatible: existing constructors that omit the families
+  continue to work.
+
+* New S7 class `InteractionMediationData` for simple mediation **with a
+  treatment-by-mediator interaction** (`X:M` in the outcome model), carrying
+  VanderWeele's (2014) four-way decomposition of the total effect into
+  controlled direct effect (CDE), reference interaction (INTref), mediated
+  interaction (INTmed), and pure indirect effect (PIE), with
+  `NDE = CDE + INTref` and `NIE = INTmed + PIE`. The class validator enforces
+  both the aggregate identities and the path ties (`INTmed = theta3 * beta1`,
+  `PIE = theta2 * beta1`, `CDE = theta1 + theta3 * m*`), so an inconsistent
+  decomposition is rejected at construction. Effect extractors (`nie`, `nde`,
+  `te`, `pm`) have methods for the new class, plus a new `decompose()` generic
+  returning all four components and the derived effects.
+
+* `extract_mediation()` now builds `InteractionMediationData` from **lm/glm**
+  fits whose outcome model contains an `X:M` term. A new `decomposition`
+  argument (`"auto"` default / `"four_way"` / `"two_way"`) controls detection,
+  and `m_star` sets the reference mediator level. Continuous (Gaussian) mediator
+  and outcome are supported (non-Gaussian models error with a clear message);
+  the no-interaction path is unchanged. The companion `confint()` method gives
+  delta-method intervals for `parm = "paths"`, `"components"` (the four-way
+  CDE/INTref/INTmed/PIE), and `"effects"` (NDE/NIE/TE).
+
+* `extract_mediation()` also builds `InteractionMediationData` from a **lavaan**
+  fit. The interaction enters as a product variable named via the `interaction`
+  argument, and the model must be fit with `meanstructure = TRUE` (the mediator
+  intercept is needed for INTref). Because the SEM is estimated jointly, the
+  extracted `@vcov` carries the full joint covariance of the paths. A
+  "treatment-mediator interaction" section was added to the extraction article.
+
+* New S7 class `ParallelMediationData` for **parallel mediation**
+  (`X -> M_j -> Y` for independent mediators `j = 1..k`). The total indirect
+  effect is the sum of per-mediator products, `sum(a_j * b_j)`. Completes the
+  structural trio alongside `MediationData` (simple) and `SerialMediationData`
+  (serial). Effect extractors (`nie`, `nde`, `te`, `pm`, `paths`) have methods
+  for the new class; `paths()` returns interleaved `a1, b1, a2, b2, ..., c_prime`.
+
+* `extract_mediation()` now builds `ParallelMediationData` from **lm/glm** fits:
+  pass the per-mediator models via `mediator_models` and the new
+  `structure = "parallel"` argument. `structure = "auto"` (default) infers serial
+  vs parallel from the mediator models' predictors, defaulting to serial unless
+  there is positive evidence of a parallel structure.
+  The returned `@vcov` is named `a1, b1, ..., c_prime`; the `b_j` (jointly fit in
+  the outcome model) keep their mutual covariances and `cov(b_j, c')`, while the
+  `a_j` (separate mediator regressions) are independent.
+
+* `extract_mediation()` also builds `ParallelMediationData` from a single
+  **lavaan** `sem()` fit: pass a `mediator` vector and (optionally)
+  `structure = "parallel"`. `structure = "auto"` infers parallel vs serial from
+  the SEM's regression rows. Because the system is estimated jointly, the
+  extracted `@vcov` preserves **all** off-diagonals — including `cov(a_j, b_j)`
+  and `cov(a_j, a_{j'})` — so SEs reflect the full joint covariance (and differ
+  from the block-diagonal lm/glm engine for identical data).
+
+* New `confint()` method for `ParallelMediationData` (`parm = "paths"` or
+  `"effects"`). The indirect-effect variance uses the delta method over the full
+  `{a1, b1, ..., ak, bk}` covariance block, so correlated `b_j` are handled
+  correctly; `method = "boot"` directs to `bootstrap_mediation()`.
+
+## Bug Fixes
+
+* `print(summary(x))` now shows the formatted summary for `MediationData`,
+  `BootstrapResult`, and `SerialMediationData` instead of dumping the raw list.
+  The `print.summary.*` S3 methods exist and are correct, but their
+  `S3method()` NAMESPACE directives are not activated once `print` participates
+  in S7 dispatch, so `print()` silently fell back to `print.default`. They are
+  now registered explicitly in `.onLoad()` (the same fix already used for
+  `print.mediation_effect`), so dispatch works whether the package is installed
+  or loaded via `load_all()`.
+
+## Internal
+
+* `R CMD check` is clean again (0 errors / 0 warnings / 0 notes). Added
+  `@usage NULL` to the `BootstrapResult`, `ParallelMediationData`, and
+  `InteractionMediationData` class docs (matching `MediationData` /
+  `SerialMediationData`), which removes spurious codoc mismatches from the S7
+  constructors' complex property defaults. The `show` method bodies registered
+  in `.onLoad()` now delegate to a top-level helper (`.show_via_print()`) so no
+  literal `print()` call sits in `.onLoad`, clearing the "startup functions
+  should use packageStartupMessage" note.
+
+## CRAN compliance and dependencies
+
+* Moved **MASS** from `Suggests` to `Imports`: the default parametric bootstrap
+  (`bootstrap_mediation(method = "parametric")`) calls `MASS::mvrnorm()`
+  unconditionally, so MASS must always be available (it previously failed under
+  CRAN's "noSuggests" check flavor).
+* Documentation/CRAN fixes (forward-ported from the 0.2.1 CRAN resubmission):
+  added `\value` to the exported `print`/`print.summary.*` methods; converted
+  `\dontrun{}` examples to self-contained `\donttest{}` (the lavaan example
+  guarded with `requireNamespace()`); spelled out the "GLM" acronym and added
+  method references (`<doi:...>`) to the Description; enriched `inst/CITATION`.
+
 # medfit 0.2.0 (2026-05-31)
 
 ## New features

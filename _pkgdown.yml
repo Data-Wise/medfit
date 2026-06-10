@@ -124,12 +124,15 @@ reference:
       - te
       - pm
       - paths
+      - decompose
 
   - title: "S7 Classes"
     desc: "Core S7 class definitions for mediation data structures"
     contents:
       - MediationData
       - SerialMediationData
+      - ParallelMediationData
+      - InteractionMediationData
       - BootstrapResult
 
   - title: "Model Fitting"

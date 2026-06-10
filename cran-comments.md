@@ -1,6 +1,13 @@
 ## Submission
 
-This is the initial CRAN submission of medfit (version 0.2.0).
+This is a resubmission of medfit (version 0.2.0), addressing the CRAN
+reviewer's feedback on the initial submission:
+
+* Removed `+ file LICENSE` from the `License` field and deleted the
+  accompanying `LICENSE` file. The package is now licensed under a plain
+  `GPL (>= 3)` with no additional restrictions.
+* Single-quoted the software names 'probmed', 'RMediation', and 'medrobust'
+  in the Description field.
 
 ## Test environments
 
@@ -15,7 +22,6 @@ This is the initial CRAN submission of medfit (version 0.2.0).
 0 errors | 0 warnings | 1 note
 
 * New submission - This is the first submission of medfit to CRAN
-* License components check - Using GPL (>= 3), which is standard and appropriate
 
 ## Downstream dependencies
 

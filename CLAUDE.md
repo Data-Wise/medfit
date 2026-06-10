@@ -533,5 +533,7 @@ During `devtools::load_all()`:
 
 ---
 
-**Last Updated**: 2025-12-19
+**Last Updated**: 2026-06-02
 **Maintained by**: medfit development team
+
+**Current status**: v0.2.0 released to `main` (2026-05-31). CRAN resubmission ready — `R CMD check --as-cran` = 0 errors / 0 warnings / 1 expected "New submission" NOTE. Gated only on the manual CRAN upload + acceptance email; release PR #33 (`dev → main`) held pending acceptance.

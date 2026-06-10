@@ -25,6 +25,13 @@
 #' @param vcov Numeric matrix: variance-covariance matrix of estimates
 #' @param sigma_m Numeric scalar or NULL: residual SD for mediator model
 #' @param sigma_y Numeric scalar or NULL: residual SD for outcome model
+#' @param family_m GLM `family` object (or NULL): family/link for the mediator
+#'   model (e.g. `gaussian()`, `binomial()`). Defaults to unset (empty), which
+#'   consumers treat as Gaussian.
+#' @param family_y GLM `family` object (or NULL): family/link for the outcome
+#'   model. Required by scale-free estimands (e.g. probmed) to simulate
+#'   non-Gaussian potential outcomes on the correct scale. Defaults to unset
+#'   (empty), treated as Gaussian.
 #' @param treatment Character scalar: name of treatment variable
 #' @param mediator Character scalar: name of mediator variable
 #' @param outcome Character scalar: name of outcome variable
@@ -46,7 +53,7 @@
 #' The class includes comprehensive validation to ensure data integrity.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Create a MediationData object
 #' med_data <- MediationData(
 #'   a_path = 0.5,
@@ -85,6 +92,16 @@ MediationData <- S7::new_class(
     # Residual variances (for Gaussian models)
     sigma_m = S7::class_numeric | NULL,
     sigma_y = S7::class_numeric | NULL,
+
+    # GLM family/link objects (for non-Gaussian potential-outcome simulation).
+    # A stats `family` is an S3 list; we type these as list | NULL and enforce
+    # the `family` class in the validator. (`new_S3_class("family")` would
+    # require a constructor.) The default is the empty list() prototype, which
+    # consumers treat as Gaussian -- we deliberately avoid a rich object such as
+    # `gaussian()` as the default, because an S7 property default that embeds
+    # functions/environments loses its class under covr instrumentation.
+    family_m = S7::class_list | NULL,
+    family_y = S7::class_list | NULL,
 
     # Variable names
     treatment = S7::class_character,
@@ -132,6 +149,16 @@ MediationData <- S7::new_class(
       if (length(self@sigma_y) != 1 || self@sigma_y < 0) {
         return("sigma_y must be a non-negative scalar")
       }
+    }
+
+    # Validate family objects if provided. The empty list() default (and NULL)
+    # both mean "unset" and are treated as Gaussian by consumers, so only a
+    # non-empty value that is not a `family` object is rejected.
+    if (length(self@family_m) > 0 && !inherits(self@family_m, "family")) {
+      return("family_m must be a stats 'family' object or NULL")
+    }
+    if (length(self@family_y) > 0 && !inherits(self@family_y, "family")) {
+      return("family_y must be a stats 'family' object or NULL")
     }
 
     # Validate variable names are scalar
@@ -237,7 +264,7 @@ S7::S4_register(MediationData)
 #' - Validator ensures consistency between mediators and paths
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Two-mediator serial mediation (X -> M1 -> M2 -> Y)
 #' # Product-of-three: a * d * b
 #' serial_data <- SerialMediationData(
@@ -450,6 +477,7 @@ S7::S4_register(SerialMediationData)
 #' @param call Call object or NULL: original function call
 #'
 #' @return A BootstrapResult S7 object
+#' @usage NULL
 #'
 #' @details
 #' This class standardizes bootstrap inference results across different
@@ -459,7 +487,7 @@ S7::S4_register(SerialMediationData)
 #' method type and required fields.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Parametric bootstrap result
 #' result <- BootstrapResult(
 #'   estimate = 0.15,
@@ -669,6 +697,8 @@ S7::method(summary, MediationData) <- function(object, ...) {
 #'
 #' @param x A summary.MediationData object
 #' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x` (the `summary.MediationData` object). Called
+#'   for its side effect of printing the formatted summary to the console.
 #' @export
 print.summary.MediationData <- function(x, ...) {
   cat("Summary of MediationData\n")
@@ -737,6 +767,8 @@ S7::method(summary, BootstrapResult) <- function(object, ...) {
 #'
 #' @param x A summary.BootstrapResult object
 #' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x` (the `summary.BootstrapResult` object). Called
+#'   for its side effect of printing the formatted summary to the console.
 #' @export
 print.summary.BootstrapResult <- function(x, ...) {
   cat("Summary of BootstrapResult\n")
@@ -905,6 +937,8 @@ S7::method(summary, SerialMediationData) <- function(object, ...) {
 #'
 #' @param x A summary.SerialMediationData object
 #' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x` (the `summary.SerialMediationData` object).
+#'   Called for its side effect of printing the formatted summary to the console.
 #' @export
 print.summary.SerialMediationData <- function(x, ...) {
   cat("Summary of SerialMediationData\n")
@@ -955,4 +989,403 @@ print.summary.SerialMediationData <- function(x, ...) {
 #' @noRd
 S7::method(show, SerialMediationData) <- function(object) {
   print(object)
+}
+
+
+#' ParallelMediationData: Parallel (Multiple-Mediator) Mediation Structure
+#'
+#' @description
+#' S7 class for **parallel** mediation, where a treatment affects an outcome
+#' through two or more *independent* mediators operating in parallel
+#' (\eqn{X \rightarrow M_j \rightarrow Y}{X -> M_j -> Y} for
+#' \eqn{j = 1, \dots, k}{j = 1, ..., k}). The total indirect effect is the sum
+#' of the per-mediator products, \eqn{\sum_{j=1}^{k} a_j b_j}{sum(a_j * b_j)}.
+#' This complements [MediationData] (simple) and [SerialMediationData]
+#' (serial chains).
+#'
+#' @param a_paths Numeric vector: treatment -> mediator effects
+#'   \eqn{(a_1, \dots, a_k)}{(a_1, ..., a_k)}.
+#' @param b_paths Numeric vector: mediator -> outcome effects
+#'   \eqn{(b_1, \dots, b_k)}{(b_1, ..., b_k)}; must be the same length as `a_paths`.
+#' @param c_prime Numeric scalar: direct effect \eqn{X \rightarrow Y}{X -> Y}.
+#' @param estimates Numeric vector of all parameter estimates.
+#' @param vcov Square variance-covariance matrix of `estimates`.
+#' @param sigma_mediators Optional numeric vector of mediator residual SDs (length k), or NULL.
+#' @param sigma_y Optional numeric scalar outcome residual SD, or NULL.
+#' @param treatment,outcome Single character strings naming the treatment / outcome.
+#' @param mediators Character vector of mediator names (length k, unique).
+#' @param mediator_predictors List of predictor-name vectors, one per mediator.
+#' @param outcome_predictors Character vector of outcome-model predictor names.
+#' @param data Optional data frame, or NULL.
+#' @param n_obs Integer number of observations.
+#' @param converged Logical convergence flag.
+#' @param source_package Character name of the originating package.
+#'
+#' @return A `ParallelMediationData` S7 object.
+#' @usage NULL
+#'
+#' @examples
+#' pmd <- ParallelMediationData(
+#'   a_paths = c(0.5, 0.4),
+#'   b_paths = c(0.6, 0.3),
+#'   c_prime = 0.2,
+#'   estimates = c(0.5, 0.4, 0.6, 0.3, 0.2),
+#'   vcov = diag(0.01, 5),
+#'   treatment = "X",
+#'   mediators = c("M1", "M2"),
+#'   outcome = "Y",
+#'   mediator_predictors = list("X", "X"),
+#'   outcome_predictors = c("X", "M1", "M2"),
+#'   n_obs = 200L,
+#'   converged = TRUE,
+#'   source_package = "medfit"
+#' )
+#'
+#' nie(pmd)   # total indirect effect: sum(a_j * b_j) = 0.42
+#' paths(pmd) # a1, b1, a2, b2, c_prime
+#'
+#' @export
+ParallelMediationData <- S7::new_class(
+  "ParallelMediationData",
+  package = "medfit",
+  properties = list(
+    # Core paths (parallel mediators)
+    a_paths = S7::class_numeric,      # nolint: commented_code_linter.
+    b_paths = S7::class_numeric,      # nolint: commented_code_linter.
+    c_prime = S7::class_numeric,      # nolint: commented_code_linter.
+
+    # Parameters (all models)
+    estimates = S7::class_numeric,
+    vcov = S7::new_S3_class("matrix"),
+
+    # Residual variances (for Gaussian models). An S7 `class_numeric | NULL`
+    # union defaults to numeric(0) (not NULL), so the validator treats a
+    # length-0 value as "not supplied" (see guards below).
+    sigma_mediators = S7::class_numeric | NULL,
+    sigma_y = S7::class_numeric | NULL,
+
+    # Variable names
+    treatment = S7::class_character,
+    mediators = S7::class_character,
+    outcome = S7::class_character,
+    mediator_predictors = S7::class_list,
+    outcome_predictors = S7::class_character,
+
+    # Data and metadata
+    data = S7::class_data.frame | NULL,
+    n_obs = S7::class_integer,
+    converged = S7::class_logical,
+    source_package = S7::class_character
+  ),
+
+  validator = function(self) {
+    n_mediators <- length(self@mediators)
+
+    # Parallel mediation requires at least 2 mediators (1 is simple mediation)
+    if (n_mediators < 2) {
+      return("Parallel mediation requires at least 2 mediators (use MediationData for 1)")
+    }
+
+    # a_paths and b_paths must be equal length and match the mediator count
+    if (length(self@a_paths) != n_mediators) {
+      return(sprintf(
+        "a_paths must have length %d (one per mediator), found %d",
+        n_mediators, length(self@a_paths)
+      ))
+    }
+    if (length(self@b_paths) != n_mediators) {
+      return(sprintf(
+        "b_paths must have length %d (one per mediator), found %d",
+        n_mediators, length(self@b_paths)
+      ))
+    }
+
+    # c_prime must be scalar
+    if (length(self@c_prime) != 1) {
+      return("c_prime must be a scalar (X -> Y)")
+    }
+
+    # vcov must be square and consistent with estimates
+    if (nrow(self@vcov) != ncol(self@vcov)) {
+      return("vcov must be a square matrix")
+    }
+    if (length(self@estimates) != nrow(self@vcov)) {
+      return("Number of estimates must match vcov dimensions")
+    }
+
+    # sigma_mediators (optional; length-0 means not supplied)
+    if (!is.null(self@sigma_mediators) && length(self@sigma_mediators) > 0) {
+      if (length(self@sigma_mediators) != n_mediators) {
+        return(sprintf(
+          "sigma_mediators must have length %d (one per mediator), found %d",
+          n_mediators, length(self@sigma_mediators)
+        ))
+      }
+      if (any(self@sigma_mediators < 0, na.rm = TRUE)) {
+        return("All sigma_mediators values must be non-negative")
+      }
+    }
+
+    # sigma_y (optional; length-0 means not supplied)
+    if (!is.null(self@sigma_y) && length(self@sigma_y) > 0) {
+      if (length(self@sigma_y) != 1 || self@sigma_y < 0) {
+        return("sigma_y must be a non-negative scalar")
+      }
+    }
+
+    # Variable names
+    if (length(self@treatment) != 1) {
+      return("treatment must be a single character string")
+    }
+    if (length(self@outcome) != 1) {
+      return("outcome must be a single character string")
+    }
+    if (length(unique(self@mediators)) != n_mediators) {
+      return("All mediator names must be unique")
+    }
+
+    # mediator_predictors must be a list with one entry per mediator
+    if (!is.list(self@mediator_predictors)) {
+      return("mediator_predictors must be a list")
+    }
+    if (length(self@mediator_predictors) != n_mediators) {
+      return(sprintf(
+        "mediator_predictors must have length %d (one per mediator), found %d",
+        n_mediators, length(self@mediator_predictors)
+      ))
+    }
+
+    NULL
+  }
+)
+
+
+#' Print Method for ParallelMediationData
+#'
+#' @param x A ParallelMediationData object
+#' @param ... Additional arguments (unused)
+#' @noRd
+S7::method(print, ParallelMediationData) <- function(x, ...) {
+  k <- length(x@mediators)
+  indirect <- sum(x@a_paths * x@b_paths)
+  cat("<ParallelMediationData>\n")
+  cat(sprintf("  %s -> {%s} -> %s  (%d parallel mediators)\n",
+              x@treatment, paste(x@mediators, collapse = ", "), x@outcome, k))
+  for (j in seq_len(k)) {
+    cat(sprintf("    %-8s a%d = %+.4f   b%d = %+.4f\n",
+                x@mediators[j], j, x@a_paths[j], j, x@b_paths[j]))
+  }
+  cat(sprintf("  Direct (c'): %+.4f\n", x@c_prime))
+  cat(sprintf("  Indirect (sum a_j*b_j): %+.4f\n", indirect))
+  cat(sprintf("  Total: %+.4f   |   n = %d\n", indirect + x@c_prime, x@n_obs))
+  invisible(x)
+}
+
+
+#' InteractionMediationData: Mediation with Treatment-Mediator Interaction
+#'
+#' @description
+#' S7 class for simple mediation **with a treatment-by-mediator interaction**
+#' (\eqn{X \rightarrow M \rightarrow Y}{X -> M -> Y} where the outcome model
+#' contains an \eqn{X \times M}{X*M} term). It carries VanderWeele's (2014)
+#' four-way decomposition of the total effect into controlled direct effect
+#' (CDE), reference interaction (INTref), mediated interaction (INTmed), and
+#' pure indirect effect (PIE):
+#' \deqn{TE = CDE + INTref + INTmed + PIE}{TE = CDE + INTref + INTmed + PIE}
+#' with \eqn{NDE = CDE + INTref}{NDE = CDE + INTref} and
+#' \eqn{NIE = INTmed + PIE}{NIE = INTmed + PIE}. medfit computes the
+#' decomposition; causal interpretation is the user's responsibility (it requires
+#' the four no-unmeasured-confounding assumptions of VanderWeele 2014).
+#'
+#' @details
+#' Path coefficients follow the outcome model
+#' \eqn{Y = \theta_0 + \theta_1 X + \theta_2 M + \theta_3 XM + \dots}{Y = t0 + t1*X + t2*M + t3*X:M + ...}
+#' and mediator model \eqn{M = \beta_0 + \beta_1 X + \dots}{M = b0 + b1*X + ...}:
+#' `a_path` = \eqn{\beta_1}{b1}, `b_path` = \eqn{\theta_2}{t2},
+#' `c_prime` = \eqn{\theta_1}{t1}, `interaction` = \eqn{\theta_3}{t3}. With
+#' reference level `m_star` (\eqn{m^*}{m*}) the components are
+#' \eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = t1 + t3*m*},
+#' \eqn{INTmed = \theta_3 \beta_1}{INTmed = t3*b1}, and
+#' \eqn{PIE = \theta_2 \beta_1}{PIE = t2*b1}. When \eqn{\theta_3 = 0}{t3 = 0} the
+#' decomposition collapses to standard simple mediation (CDE = NDE = \eqn{\theta_1}{t1};
+#' INTref = INTmed = 0; NIE = PIE = \eqn{\theta_2\beta_1}{t2*b1}).
+#'
+#' @param a_path Numeric scalar: treatment -> mediator effect (\eqn{\beta_1}{b1}).
+#' @param b_path Numeric scalar: mediator -> outcome main effect (\eqn{\theta_2}{t2}).
+#' @param c_prime Numeric scalar: treatment -> outcome main effect (\eqn{\theta_1}{t1}).
+#' @param interaction Numeric scalar: treatment x mediator coefficient (\eqn{\theta_3}{t3}).
+#' @param cde,int_ref,int_med,pie Numeric scalars: the four-way components
+#'   (controlled direct, reference interaction, mediated interaction, pure indirect).
+#' @param nde,nie,total_effect Numeric scalars: derived natural direct effect
+#'   (CDE + INTref), natural indirect effect (INTmed + PIE), and total effect (the
+#'   sum of all four components).
+#' @param m_star Numeric scalar: reference mediator level for the decomposition
+#'   (default 0).
+#' @param estimates Numeric vector of all parameter estimates.
+#' @param vcov Square variance-covariance matrix of `estimates`.
+#' @param sigma_m Optional numeric scalar mediator residual SD, or NULL.
+#' @param sigma_y Optional numeric scalar outcome residual SD, or NULL.
+#' @param treatment,mediator,outcome Single character strings naming the
+#'   treatment / mediator / outcome.
+#' @param mediator_predictors,outcome_predictors Character vectors of predictor
+#'   names for the mediator and outcome models.
+#' @param data Optional data frame, or NULL.
+#' @param n_obs Integer number of observations.
+#' @param converged Logical convergence flag.
+#' @param source_package Character name of the originating package.
+#'
+#' @return An `InteractionMediationData` S7 object.
+#' @usage NULL
+#'
+#' @examples
+#' # Hand-built object (theta3 = 0.2 interaction, m* = 0)
+#' imd <- InteractionMediationData(
+#'   a_path = 0.5, b_path = 0.3, c_prime = 0.1, interaction = 0.2,
+#'   cde = 0.1, int_ref = 0.04, int_med = 0.10, pie = 0.15,
+#'   nde = 0.14, nie = 0.25, total_effect = 0.39, m_star = 0,
+#'   estimates = c(a = 0.5, b = 0.3, c_prime = 0.1, theta3 = 0.2),
+#'   vcov = diag(0.01, 4),
+#'   treatment = "X", mediator = "M", outcome = "Y",
+#'   mediator_predictors = "X", outcome_predictors = c("X", "M", "X:M"),
+#'   n_obs = 200L, converged = TRUE, source_package = "medfit"
+#' )
+#'
+#' nie(imd)       # INTmed + PIE = 0.25
+#' decompose(imd) # all four components + derived effects
+#'
+#' @export
+InteractionMediationData <- S7::new_class(
+  "InteractionMediationData",
+  package = "medfit",
+  properties = list(
+    # Core path coefficients (all scalar)
+    a_path = S7::class_numeric,        # beta_1: treatment effect on mediator
+    b_path = S7::class_numeric,        # theta_2: mediator main effect on outcome
+    c_prime = S7::class_numeric,       # theta_1: treatment main effect on outcome
+    interaction = S7::class_numeric,   # theta_3: treatment-by-mediator product
+
+    # Four-way decomposition components (scalar)
+    cde = S7::class_numeric,
+    int_ref = S7::class_numeric,
+    int_med = S7::class_numeric,
+    pie = S7::class_numeric,
+
+    # Derived effects (scalar)
+    nde = S7::class_numeric,
+    nie = S7::class_numeric,
+    total_effect = S7::class_numeric,
+
+    # Reference mediator level for the decomposition
+    m_star = S7::class_numeric,
+
+    # Parameters
+    estimates = S7::class_numeric,
+    vcov = S7::new_S3_class("matrix"),
+
+    # Residual SDs (Gaussian). class_numeric | NULL defaults to numeric(0),
+    # so validators treat length-0 as "not supplied" (see ParallelMediationData).
+    sigma_m = S7::class_numeric | NULL,
+    sigma_y = S7::class_numeric | NULL,
+
+    # Variable names
+    treatment = S7::class_character,
+    mediator = S7::class_character,
+    outcome = S7::class_character,
+    mediator_predictors = S7::class_character,
+    outcome_predictors = S7::class_character,
+
+    # Data and metadata
+    data = S7::class_data.frame | NULL,
+    n_obs = S7::class_integer,
+    converged = S7::class_logical,
+    source_package = S7::class_character
+  ),
+
+  validator = function(self) {
+    tol <- 1e-8 * max(1, abs(self@total_effect))
+
+    # --- Structural checks (shape; implemented) ---
+    scalars <- list(
+      a_path = self@a_path, b_path = self@b_path, c_prime = self@c_prime,
+      interaction = self@interaction, cde = self@cde, int_ref = self@int_ref,
+      int_med = self@int_med, pie = self@pie, nde = self@nde, nie = self@nie,
+      total_effect = self@total_effect, m_star = self@m_star
+    )
+    for (nm in names(scalars)) {
+      if (length(scalars[[nm]]) != 1) return(sprintf("%s must be a scalar", nm))
+    }
+    if (nrow(self@vcov) != ncol(self@vcov)) {
+      return("vcov must be a square matrix")
+    }
+    if (length(self@estimates) != nrow(self@vcov)) {
+      return("Number of estimates must match vcov dimensions")
+    }
+    if (length(self@treatment) != 1 || length(self@mediator) != 1 ||
+          length(self@outcome) != 1) {
+      return("treatment, mediator, and outcome must each be a single string")
+    }
+    if (!is.null(self@sigma_m) && length(self@sigma_m) > 0 &&
+          (length(self@sigma_m) != 1 || self@sigma_m < 0)) {
+      return("sigma_m must be a non-negative scalar")
+    }
+    if (!is.null(self@sigma_y) && length(self@sigma_y) > 0 &&
+          (length(self@sigma_y) != 1 || self@sigma_y < 0)) {
+      return("sigma_y must be a non-negative scalar")
+    }
+
+    # --- Algebraic invariants (the VALUE-ADD of this class) ---
+    # Two families of consistency checks, both enforced. They make the class a
+    # tripwire on a buggy extractor: bad numbers are rejected at construction.
+    #
+    # (i) Aggregate identities -- the decomposition must add up: the four
+    #     components sum to total_effect; NDE is CDE plus INTref; NIE is
+    #     INTmed plus PIE.
+    if (abs((self@cde + self@int_ref + self@int_med + self@pie) -
+              self@total_effect) > tol) {
+      return("Four-way components must sum to total_effect (CDE+INTref+INTmed+PIE)")
+    }
+    if (abs((self@cde + self@int_ref) - self@nde) > tol) {
+      return("nde must equal cde + int_ref (NDE = CDE + INTref)")
+    }
+    if (abs((self@int_med + self@pie) - self@nie) > tol) {
+      return("nie must equal int_med + pie (NIE = INTmed + PIE)")
+    }
+    #
+    # (ii) Path ties -- the stronger checks: tie each component back to the raw
+    # coefficients (VanderWeele 2014, continuous Y/M). These catch extractor math
+    # errors that the aggregate identities alone (tautological if the extractor
+    # defines nde/nie as sums) would miss. INTref also depends on beta_0, which
+    # is not a slot, so it is checked only via the aggregate identity above.
+    if (abs(self@cde - (self@c_prime + self@interaction * self@m_star)) > tol) {
+      return("cde must equal c_prime + interaction * m_star (CDE = theta1 + theta3 * m*)")
+    }
+    if (abs(self@int_med - self@interaction * self@a_path) > tol) {
+      return("int_med must equal interaction * a_path (INTmed = theta3 * beta1)")
+    }
+    if (abs(self@pie - self@b_path * self@a_path) > tol) {
+      return("pie must equal b_path * a_path (PIE = theta2 * beta1)")
+    }
+
+    NULL
+  }
+)
+
+
+#' Print Method for InteractionMediationData
+#'
+#' @param x An InteractionMediationData object
+#' @param ... Additional arguments (unused)
+#' @noRd
+S7::method(print, InteractionMediationData) <- function(x, ...) {
+  cat("<InteractionMediationData>\n")
+  cat(sprintf("  %s -> %s -> %s   (with %s x %s interaction)\n",
+              x@treatment, x@mediator, x@outcome, x@treatment, x@mediator))
+  cat(sprintf("  Paths:  a (b1) = %+.4f   b (t2) = %+.4f   c' (t1) = %+.4f   t3 = %+.4f\n",
+              x@a_path, x@b_path, x@c_prime, x@interaction))
+  cat(sprintf("  Four-way (m* = %g):\n", x@m_star))
+  cat(sprintf("    CDE = %+.4f   INTref = %+.4f   INTmed = %+.4f   PIE = %+.4f\n",
+              x@cde, x@int_ref, x@int_med, x@pie))
+  cat(sprintf("  NDE = %+.4f   NIE = %+.4f   Total = %+.4f   |   n = %d\n",
+              x@nde, x@nie, x@total_effect, x@n_obs))
+  invisible(x)
 }
