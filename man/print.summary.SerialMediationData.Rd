@@ -11,6 +11,10 @@
 
 \item{...}{Additional arguments (ignored)}
 }
+\value{
+Invisibly returns \code{x} (the \code{summary.SerialMediationData} object).
+Called for its side effect of printing the formatted summary to the console.
+}
 \description{
 Print Summary for SerialMediationData
 }

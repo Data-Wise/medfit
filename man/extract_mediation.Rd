@@ -48,21 +48,20 @@ with other medfit functions and dependent packages (probmed, RMediation,
 medrobust).
 }
 \examples{
-\dontrun{
-# Extract from lm models
-fit_m <- lm(M ~ X + C, data = mydata)
-fit_y <- lm(Y ~ X + M + C, data = mydata)
+\donttest{
+# Simulate data with a single mediator (X -> M -> Y)
+set.seed(123)
+n <- 200
+X <- rnorm(n)
+M <- 0.5 * X + rnorm(n)
+Y <- 0.3 * M + 0.2 * X + rnorm(n)
+dat <- data.frame(X = X, M = M, Y = Y)
+
+# Extract the mediation structure from fitted lm models
+fit_m <- lm(M ~ X, data = dat)
+fit_y <- lm(Y ~ X + M, data = dat)
 med_data <- extract_mediation(fit_m, model_y = fit_y,
                               treatment = "X", mediator = "M")
-
-# Extract from lavaan model
-library(lavaan)
-model <- "
-  M ~ a*X
-  Y ~ b*M + cp*X
-"
-fit <- sem(model, data = mydata)
-med_data <- extract_mediation(fit, treatment = "X", mediator = "M")
 }
 
 }

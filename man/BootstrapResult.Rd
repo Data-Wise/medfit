@@ -49,7 +49,7 @@ The class includes validation to ensure consistency between
 method type and required fields.
 }
 \examples{
-\dontrun{
+\donttest{
 # Parametric bootstrap result
 result <- BootstrapResult(
   estimate = 0.15,

@@ -52,7 +52,7 @@ It ensures consistency across the mediation analysis ecosystem.
 The class includes comprehensive validation to ensure data integrity.
 }
 \examples{
-\dontrun{
+\donttest{
 # Create a MediationData object
 med_data <- MediationData(
   a_path = 0.5,
