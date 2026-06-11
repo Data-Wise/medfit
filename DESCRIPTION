@@ -30,7 +30,8 @@ Imports:
     methods,
     checkmate,
     generics,
-    MASS
+    MASS,
+    sandwich
 Suggests:
     lavaan (>= 0.6-0),
     testthat (>= 3.0.0),

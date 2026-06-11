@@ -14,6 +14,7 @@ fit_mediation(
   family_y = stats::gaussian(),
   family_m = stats::gaussian(),
   weights = NULL,
+  se_type = c("model", "sandwich"),
   ...
 )
 
@@ -27,6 +28,7 @@ fit_mediation(
   family_y = stats::gaussian(),
   family_m = stats::gaussian(),
   weights = NULL,
+  se_type = c("model", "sandwich"),
   ...
 )
 }
@@ -53,6 +55,11 @@ fit_mediation(
 \item{weights}{Optional numeric vector of case weights (length \code{nrow(data)}),
 passed to both the mediator and outcome \code{\link[stats:glm]{stats::glm()}} fits. Use for
 inverse-probability weighting (IPW). \code{NULL} (default) fits unweighted.}
+
+\item{se_type}{Variance-covariance estimator for \verb{@vcov}: \code{"model"} (default,
+model-based \code{stats::vcov}) or \code{"sandwich"} (heteroskedasticity-consistent
+\code{sandwich::vcovHC}, recommended for IPW-weighted fits). Applies to the
+single-mediator path.}
 
 \item{...}{Additional arguments passed to the fitting function}
 }

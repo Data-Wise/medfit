@@ -24,6 +24,10 @@
 #' @param weights Optional numeric vector of case weights (length `nrow(data)`),
 #'   passed to both the mediator and outcome [stats::glm()] fits. Use for
 #'   inverse-probability weighting (IPW). `NULL` (default) fits unweighted.
+#' @param se_type Variance-covariance estimator for `@vcov`: `"model"` (default,
+#'   model-based `stats::vcov`) or `"sandwich"` (heteroskedasticity-consistent
+#'   `sandwich::vcovHC`, recommended for IPW-weighted fits). Applies to the
+#'   single-mediator path.
 #' @param ... Additional arguments passed to the fitting function
 #'
 #' @return A [MediationData] object containing the fitted mediation structure
@@ -114,7 +118,9 @@ fit_mediation <- function(formula_y,
                           family_y = stats::gaussian(),
                           family_m = stats::gaussian(),
                           weights = NULL,
+                          se_type = c("model", "sandwich"),
                           ...) {
+  se_type <- match.arg(se_type)
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
   checkmate::assert_formula(formula_y, .var.name = "formula_y")
   checkmate::assert_formula(formula_m, .var.name = "formula_m")
@@ -161,6 +167,7 @@ fit_mediation <- function(formula_y,
       family_y = family_y,
       family_m = family_m,
       weights = weights,
+      se_type = se_type,
       ...
     ),
     stop(sprintf("Engine '%s' not implemented", engine), call. = FALSE)
@@ -194,7 +201,9 @@ fit_mediation <- function(formula_y,
     family_y,
     family_m,
     weights = NULL,
+    se_type = c("model", "sandwich"),
     ...) {
+  se_type <- match.arg(se_type)
   # Build glm calls via do.call so the `weights` *value* (vector or absent) is
   # inlined: passing the `weights` symbol fails because glm evaluates it in the
   # formula's environment (the caller's), not this frame. Adding `weights` only
@@ -214,12 +223,20 @@ fit_mediation <- function(formula_y,
   # Fit outcome model
   fit_y <- do.call(stats::glm, args_y)
 
+  # Choose vcov estimator: model-based (default) or HC sandwich (for IPW).
+  vcov_fun <- if (se_type == "sandwich") {
+    function(m) sandwich::vcovHC(m)
+  } else {
+    stats::vcov
+  }
+
   # Extract mediation structure using extract_mediation
   extract_mediation(
     object = fit_m,
     model_y = fit_y,
     treatment = treatment,
     mediator = mediator,
-    data = data
+    data = data,
+    vcov_fun = vcov_fun
   )
 }
