@@ -6,6 +6,11 @@
 **Current Phase:** CRAN submission (0.2.1) + 0.3.0 release line (Ext A/B shipped on dev)  
 **Next Action:** Resubmit medfit_0.2.1.tar.gz (round-2 fixes done) + confirm email
 
+> **Ecosystem-wide planning** (roadmap, coordination, API/naming design, manifest)
+> lives in the hub: `~/projects/r-packages/mediation-planning/` (start at
+> `PROJECT-HUB.md`). This file tracks **medfit only**. Live ecosystem status:
+> `cd ~/projects/r-packages && /rforge:status`.
+
 ---
 
 ## 🎯 Quick Reference
