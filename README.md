@@ -38,6 +38,16 @@ Or install the development version from GitHub:
 pak::pak("data-wise/medfit")
 ```
 
+Or from the [Data-Wise r-universe](https://data-wise.r-universe.dev/medfit)
+(pre-built binaries — no compiler needed):
+
+```r
+install.packages(
+  "medfit",
+  repos = c("https://data-wise.r-universe.dev", "https://cloud.r-project.org")
+)
+```
+
 ## Quick Start
 
 ### The Simplest Way: `med()` + `quick()`
