@@ -13,6 +13,7 @@ fit_mediation(
   engine = "glm",
   family_y = stats::gaussian(),
   family_m = stats::gaussian(),
+  weights = NULL,
   ...
 )
 
@@ -25,6 +26,7 @@ fit_mediation(
   engine = "glm",
   family_y = stats::gaussian(),
   family_m = stats::gaussian(),
+  weights = NULL,
   ...
 )
 }
@@ -47,6 +49,10 @@ fit_mediation(
 \item{family_y}{Family object for outcome model (default: \code{gaussian()})}
 
 \item{family_m}{Family object for mediator model (default: \code{gaussian()})}
+
+\item{weights}{Optional numeric vector of case weights (length \code{nrow(data)}),
+passed to both the mediator and outcome \code{\link[stats:glm]{stats::glm()}} fits. Use for
+inverse-probability weighting (IPW). \code{NULL} (default) fits unweighted.}
 
 \item{...}{Additional arguments passed to the fitting function}
 }

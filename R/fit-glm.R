@@ -21,6 +21,9 @@
 #'   }
 #' @param family_y Family object for outcome model (default: `gaussian()`)
 #' @param family_m Family object for mediator model (default: `gaussian()`)
+#' @param weights Optional numeric vector of case weights (length `nrow(data)`),
+#'   passed to both the mediator and outcome [stats::glm()] fits. Use for
+#'   inverse-probability weighting (IPW). `NULL` (default) fits unweighted.
 #' @param ... Additional arguments passed to the fitting function
 #'
 #' @return A [MediationData] object containing the fitted mediation structure
@@ -110,6 +113,7 @@ fit_mediation <- function(formula_y,
                           engine = "glm",
                           family_y = stats::gaussian(),
                           family_m = stats::gaussian(),
+                          weights = NULL,
                           ...) {
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
   checkmate::assert_formula(formula_y, .var.name = "formula_y")
@@ -118,6 +122,10 @@ fit_mediation <- function(formula_y,
   checkmate::assert_string(treatment, .var.name = "treatment")
   checkmate::assert_string(mediator, .var.name = "mediator")
   checkmate::assert_choice(engine, choices = c("glm"), .var.name = "engine")
+  if (!is.null(weights)) {
+    checkmate::assert_numeric(weights, len = nrow(data), lower = 0,
+                              any.missing = FALSE, .var.name = "weights")
+  }
 
   # Validate that treatment and mediator exist in data
   checkmate::assert_choice(treatment, choices = names(data),
@@ -152,6 +160,7 @@ fit_mediation <- function(formula_y,
       mediator = mediator,
       family_y = family_y,
       family_m = family_m,
+      weights = weights,
       ...
     ),
     stop(sprintf("Engine '%s' not implemented", engine), call. = FALSE)
@@ -168,6 +177,9 @@ fit_mediation <- function(formula_y,
 #' @param mediator Mediator variable name
 #' @param family_y Family for outcome model
 #' @param family_m Family for mediator model
+#' @param weights Optional numeric case-weight vector (length `nrow(data)`), or
+#'   `NULL` for an unweighted fit. Passed explicitly (not via `...`) so glm's
+#'   non-standard evaluation of `weights` resolves in this frame.
 #' @param ... Additional arguments (passed to glm)
 #'
 #' @return MediationData object
@@ -181,22 +193,26 @@ fit_mediation <- function(formula_y,
     mediator,
     family_y,
     family_m,
+    weights = NULL,
     ...) {
+  # Build glm calls via do.call so the `weights` *value* (vector or absent) is
+  # inlined: passing the `weights` symbol fails because glm evaluates it in the
+  # formula's environment (the caller's), not this frame. Adding `weights` only
+  # when non-NULL keeps the unweighted path identical to an unweighted glm().
+  dots <- list(...)
+
+  args_m <- c(list(formula = formula_m, data = data, family = family_m), dots)
+  args_y <- c(list(formula = formula_y, data = data, family = family_y), dots)
+  if (!is.null(weights)) {
+    args_m$weights <- weights
+    args_y$weights <- weights
+  }
+
   # Fit mediator model
-  fit_m <- stats::glm(
-    formula = formula_m,
-    data = data,
-    family = family_m,
-    ...
-  )
+  fit_m <- do.call(stats::glm, args_m)
 
   # Fit outcome model
-  fit_y <- stats::glm(
-    formula = formula_y,
-    data = data,
-    family = family_y,
-    ...
-  )
+  fit_y <- do.call(stats::glm, args_y)
 
   # Extract mediation structure using extract_mediation
   extract_mediation(

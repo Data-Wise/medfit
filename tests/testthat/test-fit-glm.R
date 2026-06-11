@@ -307,3 +307,48 @@ test_that("print method works for fit_mediation result", {
   # Should print without error
   expect_output(print(med_data), "MediationData")
 })
+
+test_that("fit_mediation accepts case weights and matches weighted glm", {
+  set.seed(123)
+  n <- 300
+  X <- rnorm(n)
+  M <- 0.5 * X + rnorm(n)
+  Y <- 0.3 * X + 0.4 * M + rnorm(n)
+  d <- data.frame(X = X, M = M, Y = Y)
+  w <- runif(n, 0.5, 2)
+
+  wtd <- fit_mediation(Y ~ X + M, M ~ X, data = d,
+    treatment = "X", mediator = "M", weights = w)
+  gm <- stats::glm(M ~ X, data = d, weights = w)
+  gy <- stats::glm(Y ~ X + M, data = d, weights = w)
+
+  expect_s7_class(wtd, MediationData)
+  expect_true(all(c("a", "b", "c_prime") %in% names(wtd@estimates)))
+  expect_equal(unname(wtd@a_path), unname(coef(gm)["X"]))
+  expect_equal(unname(wtd@b_path), unname(coef(gy)["M"]))
+})
+
+test_that("fit_mediation weights = NULL is identical to unweighted fit", {
+  set.seed(123)
+  n <- 200
+  X <- rnorm(n)
+  M <- 0.5 * X + rnorm(n)
+  Y <- 0.3 * X + 0.4 * M + rnorm(n)
+  d <- data.frame(X = X, M = M, Y = Y)
+
+  unw <- fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X", mediator = "M")
+  nul <- fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X", mediator = "M",
+    weights = NULL)
+  expect_equal(unw@estimates, nul@estimates)
+  expect_equal(unw@vcov, nul@vcov)
+})
+
+test_that("fit_mediation rejects malformed weights", {
+  set.seed(1)
+  d <- data.frame(X = rnorm(50), M = rnorm(50), Y = rnorm(50))
+  expect_error(
+    fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X", mediator = "M",
+      weights = runif(10)),
+    "weights"
+  )
+})
