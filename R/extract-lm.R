@@ -117,6 +117,7 @@ S7::method(extract_mediation, lm_class) <- function(
     structure = c("auto", "serial", "parallel"),
     decomposition = c("auto", "four_way", "two_way"),
     m_star = 0,
+    vcov_fun = stats::vcov,
     ...) {
   # Call internal extraction function
   .extract_mediation_lm_impl(
@@ -129,7 +130,8 @@ S7::method(extract_mediation, lm_class) <- function(
     data = data,
     structure = structure,
     decomposition = decomposition,
-    m_star = m_star
+    m_star = m_star,
+    vcov_fun = vcov_fun
   )
 }
 
@@ -149,6 +151,7 @@ S7::method(extract_mediation, glm_class) <- function(
     structure = c("auto", "serial", "parallel"),
     decomposition = c("auto", "four_way", "two_way"),
     m_star = 0,
+    vcov_fun = stats::vcov,
     ...) {
   # Call internal extraction function
   .extract_mediation_lm_impl(
@@ -161,7 +164,8 @@ S7::method(extract_mediation, glm_class) <- function(
     data = data,
     structure = structure,
     decomposition = decomposition,
-    m_star = m_star
+    m_star = m_star,
+    vcov_fun = vcov_fun
   )
 }
 
@@ -190,7 +194,8 @@ S7::method(extract_mediation, glm_class) <- function(
     data = NULL,
     structure = c("auto", "serial", "parallel"),
     decomposition = c("auto", "four_way", "two_way"),
-    m_star = 0) {
+    m_star = 0,
+    vcov_fun = stats::vcov) {
 
   structure <- match.arg(structure)
   decomposition <- match.arg(decomposition)
@@ -319,8 +324,10 @@ S7::method(extract_mediation, glm_class) <- function(
 
   # --- Extract Variance-Covariance Matrices ---
 
-  vcov_m <- stats::vcov(model_m)
-  vcov_y <- stats::vcov(model_y)
+  # vcov_fun defaults to stats::vcov (model-based); pass sandwich::vcovHC for
+  # heteroskedasticity-consistent SEs (used by IPW, se_type = "sandwich").
+  vcov_m <- vcov_fun(model_m)
+  vcov_y <- vcov_fun(model_y)
 
   # Create combined parameter vector with named elements
   # Structure: mediator model params, then outcome model params

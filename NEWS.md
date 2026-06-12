@@ -1,3 +1,18 @@
+# medfit 0.3.1 (2026-06-11)
+
+## New features
+
+* `fit_mediation()` gains a `weights=` argument and a `se_type=` argument
+  (`"model"` default, or `"sandwich"` for robust SEs), enabling IPW-weighted
+  estimation. Unweighted calls are byte-identical to 0.3.0. Consumed by
+  `missingmed`'s IPW estimator — downstream packages should require
+  `medfit (>= 0.3.1)` when they pass `weights=`/`se_type=`.
+  * `se_type = "sandwich"` uses the suggested \pkg{sandwich} package
+    (`vcovHC`, HC3); it is required only on that opt-in path, so \pkg{sandwich}
+    is a `Suggests` dependency, not `Imports`.
+  * Supplying `weights=` with the default `se_type = "model"` emits a one-time
+    advisory message, since model-based SEs are not valid under IPW.
+
 # medfit 0.3.0 (2026-06-06)
 
 ## New features

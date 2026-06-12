@@ -307,3 +307,95 @@ test_that("print method works for fit_mediation result", {
   # Should print without error
   expect_output(print(med_data), "MediationData")
 })
+
+test_that("fit_mediation accepts case weights and matches weighted glm", {
+  set.seed(123)
+  n <- 300
+  X <- rnorm(n)
+  M <- 0.5 * X + rnorm(n)
+  Y <- 0.3 * X + 0.4 * M + rnorm(n)
+  d <- data.frame(X = X, M = M, Y = Y)
+  w <- runif(n, 0.5, 2)
+
+  wtd <- fit_mediation(Y ~ X + M, M ~ X,
+    data = d,
+    treatment = "X", mediator = "M", weights = w
+  )
+  gm <- stats::glm(M ~ X, data = d, weights = w)
+  gy <- stats::glm(Y ~ X + M, data = d, weights = w)
+
+  expect_s7_class(wtd, MediationData)
+  expect_true(all(c("a", "b", "c_prime") %in% names(wtd@estimates)))
+  expect_equal(unname(wtd@a_path), unname(coef(gm)["X"]))
+  expect_equal(unname(wtd@b_path), unname(coef(gy)["M"]))
+})
+
+test_that("fit_mediation weights = NULL is identical to unweighted fit", {
+  set.seed(123)
+  n <- 200
+  X <- rnorm(n)
+  M <- 0.5 * X + rnorm(n)
+  Y <- 0.3 * X + 0.4 * M + rnorm(n)
+  d <- data.frame(X = X, M = M, Y = Y)
+
+  unw <- fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X", mediator = "M")
+  nul <- fit_mediation(Y ~ X + M, M ~ X,
+    data = d, treatment = "X", mediator = "M",
+    weights = NULL
+  )
+  expect_equal(unw@estimates, nul@estimates)
+  expect_equal(unw@vcov, nul@vcov)
+})
+
+test_that("fit_mediation rejects malformed weights", {
+  set.seed(1)
+  d <- data.frame(X = rnorm(50), M = rnorm(50), Y = rnorm(50))
+  expect_error(
+    fit_mediation(Y ~ X + M, M ~ X,
+      data = d, treatment = "X", mediator = "M",
+      weights = runif(10)
+    ),
+    "weights"
+  )
+})
+
+test_that("se_type = 'sandwich' yields HC vcov; estimates unchanged", {
+  skip_if_not_installed("sandwich")
+  set.seed(123)
+  n <- 300
+  X <- rnorm(n)
+  M <- 0.5 * X + rnorm(n)
+  Y <- 0.3 * X + 0.4 * M + rnorm(n)
+  d <- data.frame(X = X, M = M, Y = Y)
+
+  mod <- fit_mediation(Y ~ X + M, M ~ X,
+    data = d, treatment = "X",
+    mediator = "M", se_type = "model"
+  )
+  sw <- fit_mediation(Y ~ X + M, M ~ X,
+    data = d, treatment = "X",
+    mediator = "M", se_type = "sandwich"
+  )
+
+  # Point estimates identical; only the vcov differs.
+  expect_equal(mod@estimates, sw@estimates)
+  expect_false(isTRUE(all.equal(mod@vcov, sw@vcov)))
+
+  # b-path SE matches sandwich::vcovHC on the outcome glm.
+  gy <- stats::glm(Y ~ X + M, data = d)
+  expect_equal(
+    unname(sqrt(sw@vcov["b", "b"])),
+    unname(sqrt(sandwich::vcovHC(gy)["M", "M"]))
+  )
+})
+
+test_that("se_type defaults to model-based", {
+  set.seed(7)
+  d <- data.frame(X = rnorm(150), M = rnorm(150), Y = rnorm(150))
+  default <- fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X", mediator = "M")
+  model <- fit_mediation(Y ~ X + M, M ~ X,
+    data = d, treatment = "X",
+    mediator = "M", se_type = "model"
+  )
+  expect_equal(default@vcov, model@vcov)
+})

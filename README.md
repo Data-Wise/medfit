@@ -7,6 +7,9 @@
 [![pkgdown](https://github.com/Data-Wise/medfit/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/Data-Wise/medfit/actions/workflows/pkgdown.yaml)
 
 <!-- badges: start -->
+<!-- TODO: uncomment once medfit builds green on the universe (after feature/fit-weights → main triggers a rebuild; verify https://data-wise.r-universe.dev/badges/medfit returns 200):
+[![r-universe](https://data-wise.r-universe.dev/badges/medfit)](https://data-wise.r-universe.dev/medfit)
+-->
 <!-- badges: end -->
 
 ## Overview
@@ -36,6 +39,16 @@ Or install the development version from GitHub:
 ```r
 # install.packages("pak")
 pak::pak("data-wise/medfit")
+```
+
+Or from the [Data-Wise r-universe](https://data-wise.r-universe.dev/medfit)
+(pre-built binaries — no compiler needed):
+
+```r
+install.packages(
+  "medfit",
+  repos = c("https://data-wise.r-universe.dev", "https://cloud.r-project.org")
+)
 ```
 
 ## Quick Start
