@@ -21,6 +21,14 @@
 #'   }
 #' @param family_y Family object for outcome model (default: `gaussian()`)
 #' @param family_m Family object for mediator model (default: `gaussian()`)
+#' @param weights Optional numeric vector of case weights (length `nrow(data)`),
+#'   passed to both the mediator and outcome [stats::glm()] fits. Use for
+#'   inverse-probability weighting (IPW). `NULL` (default) fits unweighted.
+#' @param se_type Variance-covariance estimator for `@vcov`: `"model"` (default,
+#'   model-based `stats::vcov`) or `"sandwich"` (heteroskedasticity-consistent
+#'   `sandwich::vcovHC`, type HC3, recommended for IPW-weighted fits). The
+#'   `"sandwich"` option requires the suggested \pkg{sandwich} package. Applies
+#'   to the single-mediator path.
 #' @param ... Additional arguments passed to the fitting function
 #'
 #' @return A [MediationData] object containing the fitted mediation structure
@@ -110,7 +118,10 @@ fit_mediation <- function(formula_y,
                           engine = "glm",
                           family_y = stats::gaussian(),
                           family_m = stats::gaussian(),
+                          weights = NULL,
+                          se_type = c("model", "sandwich"),
                           ...) {
+  se_type <- match.arg(se_type)
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
   checkmate::assert_formula(formula_y, .var.name = "formula_y")
   checkmate::assert_formula(formula_m, .var.name = "formula_m")
@@ -118,6 +129,24 @@ fit_mediation <- function(formula_y,
   checkmate::assert_string(treatment, .var.name = "treatment")
   checkmate::assert_string(mediator, .var.name = "mediator")
   checkmate::assert_choice(engine, choices = c("glm"), .var.name = "engine")
+  if (!is.null(weights)) {
+    checkmate::assert_numeric(weights, len = nrow(data), lower = 0,
+                              any.missing = FALSE, .var.name = "weights")
+  }
+
+  # Nudge: model-based SEs are invalid under IPW. Fire once per session so tight
+  # refit loops (e.g. bootstrap) are not spammed.
+  if (!is.null(weights) && se_type == "model") {
+    .notify_once(
+      "ipw_model_se",
+      paste0(
+        "medfit: `weights` supplied with `se_type = \"model\"`. ",
+        "Model-based standard errors are not valid under inverse-probability ",
+        "weighting; pass `se_type = \"sandwich\"` for robust (HC) SEs. ",
+        "(Shown once per session.)"
+      )
+    )
+  }
 
   # Validate that treatment and mediator exist in data
   checkmate::assert_choice(treatment, choices = names(data),
@@ -152,6 +181,8 @@ fit_mediation <- function(formula_y,
       mediator = mediator,
       family_y = family_y,
       family_m = family_m,
+      weights = weights,
+      se_type = se_type,
       ...
     ),
     stop(sprintf("Engine '%s' not implemented", engine), call. = FALSE)
@@ -168,6 +199,9 @@ fit_mediation <- function(formula_y,
 #' @param mediator Mediator variable name
 #' @param family_y Family for outcome model
 #' @param family_m Family for mediator model
+#' @param weights Optional numeric case-weight vector (length `nrow(data)`), or
+#'   `NULL` for an unweighted fit. Passed explicitly (not via `...`) so glm's
+#'   non-standard evaluation of `weights` resolves in this frame.
 #' @param ... Additional arguments (passed to glm)
 #'
 #' @return MediationData object
@@ -181,22 +215,44 @@ fit_mediation <- function(formula_y,
     mediator,
     family_y,
     family_m,
+    weights = NULL,
+    se_type = c("model", "sandwich"),
     ...) {
+  se_type <- match.arg(se_type)
+  # Build glm calls via do.call so the `weights` *value* (vector or absent) is
+  # inlined: passing the `weights` symbol fails because glm evaluates it in the
+  # formula's environment (the caller's), not this frame. Adding `weights` only
+  # when non-NULL keeps the unweighted path identical to an unweighted glm().
+  dots <- list(...)
+
+  args_m <- c(list(formula = formula_m, data = data, family = family_m), dots)
+  args_y <- c(list(formula = formula_y, data = data, family = family_y), dots)
+  if (!is.null(weights)) {
+    args_m$weights <- weights
+    args_y$weights <- weights
+  }
+
   # Fit mediator model
-  fit_m <- stats::glm(
-    formula = formula_m,
-    data = data,
-    family = family_m,
-    ...
-  )
+  fit_m <- do.call(stats::glm, args_m)
 
   # Fit outcome model
-  fit_y <- stats::glm(
-    formula = formula_y,
-    data = data,
-    family = family_y,
-    ...
-  )
+  fit_y <- do.call(stats::glm, args_y)
+
+  # Choose vcov estimator: model-based (default) or HC sandwich (for IPW).
+  # `sandwich` is an optional (Suggests) dependency reached only on this opt-in
+  # path, so guard it rather than forcing it on every medfit install.
+  vcov_fun <- if (se_type == "sandwich") {
+    if (!requireNamespace("sandwich", quietly = TRUE)) {
+      stop(
+        "se_type = \"sandwich\" requires the 'sandwich' package. ",
+        "Install it with install.packages(\"sandwich\").",
+        call. = FALSE
+      )
+    }
+    function(m) sandwich::vcovHC(m)
+  } else {
+    stats::vcov
+  }
 
   # Extract mediation structure using extract_mediation
   extract_mediation(
@@ -204,6 +260,7 @@ fit_mediation <- function(formula_y,
     model_y = fit_y,
     treatment = treatment,
     mediator = mediator,
-    data = data
+    data = data,
+    vcov_fun = vcov_fun
   )
 }
