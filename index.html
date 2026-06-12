@@ -54,7 +54,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -116,6 +116,9 @@
 </div>
 <p><a href="https://CRAN.R-project.org/package=medfit" class="external-link"><img src="https://www.r-pkg.org/badges/version/medfit" alt="CRAN status"></a> <a href="https://lifecycle.r-lib.org/articles/stages.html#stable" class="external-link"><img src="https://img.shields.io/badge/lifecycle-stable-brightgreen.svg" alt="Lifecycle: stable"></a> <a href="https://github.com/Data-Wise/medfit/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Data-Wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://codecov.io/gh/Data-Wise/medfit" class="external-link"><img src="https://codecov.io/gh/Data-Wise/medfit/graph/badge.svg" alt="Codecov test coverage"></a> <a href="https://github.com/Data-Wise/medfit/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/Data-Wise/medfit/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a></p>
 <!-- badges: start -->
+<!-- TODO: uncomment once medfit builds green on the universe (after feature/fit-weights → main triggers a rebuild; verify https://data-wise.r-universe.dev/badges/medfit returns 200):
+[![r-universe](https://data-wise.r-universe.dev/badges/medfit)](https://data-wise.r-universe.dev/medfit)
+-->
 <!-- badges: end -->
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
@@ -152,6 +155,12 @@
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"data-wise/medfit"</span><span class="op">)</span></span></code></pre></div>
+<p>Or from the <a href="https://data-wise.r-universe.dev/medfit" class="external-link">Data-Wise r-universe</a> (pre-built binaries — no compiler needed):</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span></span>
+<span>  <span class="st">"medfit"</span>,</span>
+<span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://data-wise.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
@@ -160,7 +169,7 @@
 <h3 id="the-simplest-way-med--quick">The Simplest Way: <code>med()</code> + <code>quick()</code>
 <a class="anchor" aria-label="anchor" href="#the-simplest-way-med--quick"></a>
 </h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simulate data</span></span>
@@ -185,7 +194,7 @@
 <div class="section level3">
 <h3 id="extract-effects">Extract Effects<a class="anchor" aria-label="anchor" href="#extract-effects"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Individual effect extractors</span></span>
 <span><span class="fu"><a href="reference/nie.html">nie</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>   <span class="co"># Natural Indirect Effect (a * b)</span></span>
 <span><span class="fu"><a href="reference/nde.html">nde</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>   <span class="co"># Natural Direct Effect (c')</span></span>
@@ -196,7 +205,7 @@
 <div class="section level3">
 <h3 id="tidyverse-integration">Tidyverse Integration<a class="anchor" aria-label="anchor" href="#tidyverse-integration"></a>
 </h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://generics.r-lib.org" class="external-link">generics</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Tidy tibble of all effects</span></span>
@@ -221,7 +230,7 @@
 <div class="section level3">
 <h3 id="base-r-methods">Base R Methods<a class="anchor" aria-label="anchor" href="#base-r-methods"></a>
 </h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>              <span class="co"># Path coefficients</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">"effects"</span><span class="op">)</span>   <span class="co"># NIE, NDE, TE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>              <span class="co"># Variance-covariance matrix</span></span>
@@ -231,7 +240,7 @@
 <div class="section level3">
 <h3 id="bootstrap-inference">Bootstrap Inference<a class="anchor" aria-label="anchor" href="#bootstrap-inference"></a>
 </h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># With bootstrap CI</span></span>
 <span><span class="va">result_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/med.html">med</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">mydata</span>,</span>
@@ -249,7 +258,7 @@
 <div class="section level3">
 <h3 id="advanced-extract-from-fitted-models">Advanced: Extract from Fitted Models<a class="anchor" aria-label="anchor" href="#advanced-extract-from-fitted-models"></a>
 </h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># If you already have fitted models</span></span>
 <span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">mydata</span><span class="op">)</span></span>
 <span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, data <span class="op">=</span> <span class="va">mydata</span><span class="op">)</span></span>

@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,6 +76,18 @@
       <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.1" id="medfit-031-2026-06-11">medfit 0.3.1 (2026-06-11)<a class="anchor" aria-label="anchor" href="#medfit-031-2026-06-11"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-3-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-1"></a></h3>
+<ul><li>
+<code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> gains a <code>weights=</code> argument and a <code>se_type=</code> argument (<code>"model"</code> default, or <code>"sandwich"</code> for robust SEs), enabling IPW-weighted estimation. Unweighted calls are byte-identical to 0.3.0. Consumed by <code>missingmed</code>’s IPW estimator — downstream packages should require <code>medfit (&gt;= 0.3.1)</code> when they pass <code>weights=</code>/<code>se_type=</code>.
+<ul><li>
+<code>se_type = "sandwich"</code> uses the suggested  package (<code>vcovHC</code>, HC3); it is required only on that opt-in path, so  is a <code>Suggests</code> dependency, not <code>Imports</code>.</li>
+<li>Supplying <code>weights=</code> with the default <code>se_type = "model"</code> emits a one-time advisory message, since model-based SEs are not valid under IPW.</li>
+</ul></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="medfit-030-2026-06-06">medfit 0.3.0 (2026-06-06)<a class="anchor" aria-label="anchor" href="#medfit-030-2026-06-06"></a></h2>
 <div class="section level3">

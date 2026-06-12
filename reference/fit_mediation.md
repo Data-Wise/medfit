@@ -20,6 +20,8 @@ fit_mediation(
   engine = "glm",
   family_y = stats::gaussian(),
   family_m = stats::gaussian(),
+  weights = NULL,
+  se_type = c("model", "sandwich"),
   ...
 )
 
@@ -32,6 +34,8 @@ fit_mediation(
   engine = "glm",
   family_y = stats::gaussian(),
   family_m = stats::gaussian(),
+  weights = NULL,
+  se_type = c("model", "sandwich"),
   ...
 )
 ```
@@ -73,6 +77,23 @@ fit_mediation(
 
   Family object for mediator model (default:
   [`gaussian()`](https://rdrr.io/r/stats/family.html))
+
+- weights:
+
+  Optional numeric vector of case weights (length `nrow(data)`), passed
+  to both the mediator and outcome
+  [`stats::glm()`](https://rdrr.io/r/stats/glm.html) fits. Use for
+  inverse-probability weighting (IPW). `NULL` (default) fits unweighted.
+
+- se_type:
+
+  Variance-covariance estimator for `@vcov`: `"model"` (default,
+  model-based [`stats::vcov`](https://rdrr.io/r/stats/vcov.html)) or
+  `"sandwich"` (heteroskedasticity-consistent
+  [`sandwich::vcovHC`](https://sandwich.R-Forge.R-project.org/reference/vcovHC.html),
+  type HC3, recommended for IPW-weighted fits). The `"sandwich"` option
+  requires the suggested sandwich package. Applies to the
+  single-mediator path.
 
 - ...:
 
