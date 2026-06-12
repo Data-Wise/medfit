@@ -1,3 +1,13 @@
+# medfit 0.3.1 (2026-06-11)
+
+## New features
+
+* `fit_mediation()` gains a `weights=` argument and a `se_type=` argument
+  (`"model"` default, or `"sandwich"` for robust SEs), enabling IPW-weighted
+  estimation. Unweighted calls are byte-identical to 0.3.0. Consumed by
+  `missingmed`'s IPW estimator — downstream packages should require
+  `medfit (>= 0.3.1)` when they pass `weights=`/`se_type=`.
+
 # medfit 0.3.0 (2026-06-06)
 
 ## New features
