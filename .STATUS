@@ -1,7 +1,7 @@
 status: active
 priority: P1
 progress: 100
-next: CRAN reviewer ROUND 2 (2026-06-08, Lauseker) addressed as v0.2.1 on branch feature/cran-round2 (off commit 27cc086; main is stale at 0.1.0). Fixes: GLM acronym, method references (DOIs), \value on 4 print methods, \dontrun→\donttest, MASS Suggests→Imports. win-builder R-devel = 1 NOTE (author surnames only). Forward-ported to dev (0.3.0) + added a noSuggests CI job. NEXT → resubmit medfit_0.2.1.tar.gz + confirm email; on acceptance run the cascade (RETARGET PR #33 first — it predates Ext A/B).
+next: CRAN reviewer ROUND 2 (2026-06-08, Lauseker) addressed as v0.2.1 on branch feature/cran-round2 (off commit 27cc086, a parallel line to 0.3.x; origin/main is 0.3.0). Fixes: GLM acronym, method references (DOIs), \value on 4 print methods, \dontrun→\donttest, MASS Suggests→Imports. win-builder R-devel = 1 NOTE (author surnames only). Forward-ported to dev (0.3.0) + added a noSuggests CI job. NEXT → resubmit medfit_0.2.1.tar.gz + confirm email; on acceptance run the cascade (RETARGET PR #33 first — it predates Ext A/B).
 watcher: Daily remote routine "medfit-cran-watch" (trig_018qiNZMTUP5Az2UGXyv6vRf, 9am America/Denver) checks the CRAN page + Gmail and reports ACCEPTED / ACTION REQUIRED / STILL PENDING. Runs: https://claude.ai/code/routines/trig_018qiNZMTUP5Az2UGXyv6vRf
 extensions: Ext A (parallel mediation) COMPLETE — class (#34), lm/glm extractor+confint (#36), lavaan extractor+vignette+pkgdown (#37) ALL MERGED to dev. Structural trio (simple/serial/parallel) now closed across lm/glm + lavaan. Ext B (VanderWeele 4-way interaction) COMPLETE — spec at planning/specs/SPEC-interaction-fourway-2026-06-03.md. PR B1 (InteractionMediationData class, 35 tests, #38) + PR B2a (lm/glm extraction + decomposition/m_star + delta confint, 27 tests, #39) + PR B2b (lavaan extraction + vignette, 22 tests, #40) ALL MERGED to dev. Four-way decomposition (CDE/INTref/INTmed/PIE) now ships across lm/glm + lavaan. NEXT: Ext C (engine adapters/CMAverse), needs SPEC-engine-registry.md + SPEC-cmaverse-adapter.md. Toolchain: roxygen2 8.0.0 migration = issue #35.
 type: r
@@ -33,7 +33,7 @@ S7-based infrastructure for fitting mediation models,
 extracting path coefficients, and bootstrap inference.
 Foundation package for mediationverse ecosystem.
 
-Version: 0.2.1 CRAN resubmission pending (branch feature/cran-round2); dev at 0.3.0. main stale at 0.1.0.
+Version: 0.2.1 CRAN resubmission pending (branch feature/cran-round2); dev at 0.3.0; origin/main at 0.3.0. feature/fit-weights carries 0.3.1 (no PR yet).
 
 ────────────────────────────────────────────────
 
