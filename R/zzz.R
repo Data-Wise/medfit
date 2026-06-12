@@ -14,6 +14,21 @@
 # - This does NOT affect installed packages, only development workflows
 # - See: https://github.com/RConsortium/S7/issues/474
 
+# Internal mutable package state (e.g. one-time user notifications). Parented on
+# `emptyenv()` so nothing leaks in from the global environment.
+.medfit_state <- new.env(parent = emptyenv())
+
+# Emit `msg` via message() at most once per session, keyed by `id`. Used for
+# advisory nudges that would otherwise spam tight refit loops (e.g. bootstrap).
+.notify_once <- function(id, msg) {
+  if (isTRUE(.medfit_state[[id]])) {
+    return(invisible(FALSE))
+  }
+  .medfit_state[[id]] <- TRUE
+  message(msg)
+  invisible(TRUE)
+}
+
 # Show-method body for S7 classes whose `show` is registered in `.onLoad()`.
 # Kept as a named top-level function (not an inline body in `.onLoad`) so the
 # `print()` call is not seen as a startup message by R CMD check.

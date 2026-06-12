@@ -58,8 +58,9 @@ inverse-probability weighting (IPW). \code{NULL} (default) fits unweighted.}
 
 \item{se_type}{Variance-covariance estimator for \verb{@vcov}: \code{"model"} (default,
 model-based \code{stats::vcov}) or \code{"sandwich"} (heteroskedasticity-consistent
-\code{sandwich::vcovHC}, recommended for IPW-weighted fits). Applies to the
-single-mediator path.}
+\code{sandwich::vcovHC}, type HC3, recommended for IPW-weighted fits). The
+\code{"sandwich"} option requires the suggested \pkg{sandwich} package. Applies
+to the single-mediator path.}
 
 \item{...}{Additional arguments passed to the fitting function}
 }

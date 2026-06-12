@@ -26,8 +26,9 @@
 #'   inverse-probability weighting (IPW). `NULL` (default) fits unweighted.
 #' @param se_type Variance-covariance estimator for `@vcov`: `"model"` (default,
 #'   model-based `stats::vcov`) or `"sandwich"` (heteroskedasticity-consistent
-#'   `sandwich::vcovHC`, recommended for IPW-weighted fits). Applies to the
-#'   single-mediator path.
+#'   `sandwich::vcovHC`, type HC3, recommended for IPW-weighted fits). The
+#'   `"sandwich"` option requires the suggested \pkg{sandwich} package. Applies
+#'   to the single-mediator path.
 #' @param ... Additional arguments passed to the fitting function
 #'
 #' @return A [MediationData] object containing the fitted mediation structure
@@ -133,6 +134,20 @@ fit_mediation <- function(formula_y,
                               any.missing = FALSE, .var.name = "weights")
   }
 
+  # Nudge: model-based SEs are invalid under IPW. Fire once per session so tight
+  # refit loops (e.g. bootstrap) are not spammed.
+  if (!is.null(weights) && se_type == "model") {
+    .notify_once(
+      "ipw_model_se",
+      paste0(
+        "medfit: `weights` supplied with `se_type = \"model\"`. ",
+        "Model-based standard errors are not valid under inverse-probability ",
+        "weighting; pass `se_type = \"sandwich\"` for robust (HC) SEs. ",
+        "(Shown once per session.)"
+      )
+    )
+  }
+
   # Validate that treatment and mediator exist in data
   checkmate::assert_choice(treatment, choices = names(data),
                            .var.name = "treatment (must be in data)")
@@ -224,7 +239,16 @@ fit_mediation <- function(formula_y,
   fit_y <- do.call(stats::glm, args_y)
 
   # Choose vcov estimator: model-based (default) or HC sandwich (for IPW).
+  # `sandwich` is an optional (Suggests) dependency reached only on this opt-in
+  # path, so guard it rather than forcing it on every medfit install.
   vcov_fun <- if (se_type == "sandwich") {
+    if (!requireNamespace("sandwich", quietly = TRUE)) {
+      stop(
+        "se_type = \"sandwich\" requires the 'sandwich' package. ",
+        "Install it with install.packages(\"sandwich\").",
+        call. = FALSE
+      )
+    }
     function(m) sandwich::vcovHC(m)
   } else {
     stats::vcov

@@ -30,10 +30,10 @@ Imports:
     methods,
     checkmate,
     generics,
-    MASS,
-    sandwich
+    MASS
 Suggests:
     lavaan (>= 0.6-0),
+    sandwich,
     testthat (>= 3.0.0),
     tibble
 Encoding: UTF-8
