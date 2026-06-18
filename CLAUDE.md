@@ -536,4 +536,4 @@ During `devtools::load_all()`:
 **Last Updated**: 2026-06-02
 **Maintained by**: medfit development team
 
-**Current status**: v0.2.0 released to `main` (2026-05-31). CRAN resubmission ready — `R CMD check --as-cran` = 0 errors / 0 warnings / 1 expected "New submission" NOTE. Gated only on the manual CRAN upload + acceptance email; release PR #33 (`dev → main`) held pending acceptance.
+**Current status**: v0.3.1 on `main`/`dev`. medfit **0.2.1 ACCEPTED ON CRAN** (2026-06-18). Stage 1 cascade COMPLETE: RMediation 1.5.0 released to GitHub (strict check 0/0/0 ✅, CRAN submit pending maintainer action — push `0e2c997` + `devtools::submit_cran()`); mediationverse + medsim Remotes dropped, medfit>=0.2.0 pinned. Stage 2 (probmed, needs medfit 0.3.0 on CRAN) still blocked. Next independent workstream: medrobust CRAN prep.
