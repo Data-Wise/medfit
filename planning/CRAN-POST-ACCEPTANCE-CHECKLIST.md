@@ -31,7 +31,7 @@ Actions to run **once CRAN accepts medfit 0.2.1**. Created 2026-06-01; updated 2
 - [x] `.STATUS`: marked medfit on CRAN ✅ (2026-06-18)
 - [x] `NEWS.md`: 0.2.1 entry added ✅
 - [x] `README.md`: citation updated to 0.2.1 + CRAN URL ✅
-- [ ] Tag `v0.2.1` on `feature/cran-round2` HEAD (traceability)
+- [x] Tag `v0.2.1` on `feature/cran-round2` HEAD ✅ (2026-06-18)
 
 ## 3. RMediation v1.5.0 — THE downstream unblock
 
@@ -41,14 +41,14 @@ Actions to run **once CRAN accepts medfit 0.2.1**. Created 2026-06-01; updated 2
 - [x] CI all green (macOS/Windows/Ubuntu/coverage/pkgdown) ✅
 - [x] Version bumped → 1.5.0, NEWS updated ✅
 - [x] PR #7 open (`dev → main`) ✅
-- [ ] **Merge PR #7** → tag `v1.5.0` → GitHub release → submit 1.5.0 to CRAN
+- [x] **Merge PR #7** → tag `v1.5.0` → GitHub release ✅ (2026-06-18) | CRAN submit pending (maintainer action)
 
 ## 4. Ecosystem doc sync
 
 - [x] `ECOSYSTEM-HEALTH-2026-06-03.md` dashboard updated ✅
 - [x] `CASCADE-cran-flip-2026-06-03.md` status updated ✅
 - [x] mediationverse `Remotes:` drop committed to dev ✅
-- [ ] medsim: drop `Data-Wise/medfit` from Remotes (low urgency)
+- [x] medsim: drop `Data-Wise/medfit` from Remotes, pin Suggests >= 0.2.0 ✅ (2026-06-18)
 
 ## Gotchas carried from this cycle
 
