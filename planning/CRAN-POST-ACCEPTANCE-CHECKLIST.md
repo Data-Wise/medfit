@@ -42,6 +42,8 @@ Actions to run **once CRAN accepts medfit 0.2.1**. Created 2026-06-01; updated 2
 - [x] Version bumped → 1.5.0, NEWS updated ✅
 - [x] PR #7 open (`dev → main`) ✅
 - [x] **Merge PR #7** → tag `v1.5.0` → GitHub release ✅ (2026-06-18) | CRAN submit pending (maintainer action)
+- [x] **Pre-release strict check re-run (2026-06-18)**: noSuggests + suggests-only = 0/0/0 ✅ (fixed medsim 404 URL in README → commit `0e2c997` on main, push pending release)
+- [ ] Push `0e2c997` to `origin/main` + `devtools::submit_cran()` + email click
 
 ## 4. Ecosystem doc sync
 
