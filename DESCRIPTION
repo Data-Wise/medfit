@@ -5,7 +5,7 @@ Version: 0.3.1
 Date: 2026-06-11
 Authors@R: person("Davood", "Tofighi",
     email = "dtofighi@gmail.com",
-    role = c("aut", "cre"),
+    role = c("aut", "cre", "cph"),
     comment = c(ORCID = "0000-0001-8523-7776"))
 Description: Provides S7-based infrastructure for fitting mediation models,
     extracting path coefficients, and performing bootstrap inference. Designed

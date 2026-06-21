@@ -1,28 +1,24 @@
-## Submission
-
-This is a resubmission of medfit (version 0.2.0), addressing the CRAN
-reviewer's feedback on the initial submission:
-
-* Removed `+ file LICENSE` from the `License` field and deleted the
-  accompanying `LICENSE` file. The package is now licensed under a plain
-  `GPL (>= 3)` with no additional restrictions.
-* Single-quoted the software names 'probmed', 'RMediation', and 'medrobust'
-  in the Description field.
-
-## Test environments
-
-* Local: macOS 26.5.0 (Tahoe), R 4.6.0 — `R CMD check --as-cran`
-* win-builder (R-devel) — via `devtools::check_win_devel()`
-* GitHub Actions (ubuntu-latest): R-release, R-devel, R-oldrel-1
-* GitHub Actions (macos-latest): R-release
-* GitHub Actions (windows-latest): R-release
-
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note
 
-* New submission - This is the first submission of medfit to CRAN
+Remaining NOTEs:
+* checking CRAN incoming feasibility ... NOTE
+  - Maintainer: 'Davood Tofighi <dtofighi@gmail.com>' (informational).
+  - Days since last update: <N>. medfit 0.2.1 was accepted on CRAN 2026-06-18.
 
-## Downstream dependencies
+## Submission timing
 
-There are currently no downstream dependencies for this package.
+This release is being **held** to respect the CRAN 1–2 month update cadence:
+planned submission **on or after ~2026-07-18** (≥ 1 month after 0.2.1). By then
+the "Days since last update" NOTE should no longer appear.
+
+<!-- IF an earlier submission becomes necessary, replace the line below with the
+     real reason (e.g. a user-facing bug fix, or a documented ecosystem
+     dependency) before submitting. Do NOT submit within the cadence window
+     without a concrete justification CRAN will accept. -->
+Justification for any early submission: **[FILL IN — concrete reason]**
+
+## Reverse dependencies
+
+All reverse dependencies passed (see revdep/cran.md).
