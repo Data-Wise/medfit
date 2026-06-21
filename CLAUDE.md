@@ -537,3 +537,24 @@ During `devtools::load_all()`:
 **Maintained by**: medfit development team
 
 **Current status**: v0.3.1 on `main`/`dev`. medfit **0.2.1 ACCEPTED ON CRAN** (2026-06-18). Stage 1 cascade COMPLETE: RMediation 1.5.0 released to GitHub (strict check 0/0/0 ✅, CRAN submit pending maintainer action — push `0e2c997` + `devtools::submit_cran()`); mediationverse + medsim Remotes dropped, medfit>=0.2.0 pinned. Stage 2 (probmed, needs medfit 0.3.0 on CRAN) still blocked. Next independent workstream: medrobust CRAN prep.
+
+### CRAN check practice (learned 2026-06-10)
+
+- **Before any CRAN submit, run the strict flavors** — plain `--as-cran` and the win-builder
+  pretest install Suggests and skip `\donttest`, so they miss failures CRAN's *ongoing* farm
+  later flags:
+
+  ```r
+  devtools::check(cran = TRUE, args = "--run-donttest",
+                  env_vars = c("_R_CHECK_DEPENDS_ONLY_" = "true",
+                               "_R_CHECK_SUGGESTS_ONLY_" = "true"))
+  ```
+
+  This caught the default parametric bootstrap hard-requiring **MASS** → MASS is now in
+  **`Imports`** (not Suggests). A `noSuggests` CI job guards this on every push.
+- Any Suggests pkg used unconditionally must move to Imports, or be guarded with
+  `requireNamespace()` in code **and** `skip_if_not_installed()` in tests. `\donttest` examples
+  run under `--as-cran`; only genuinely-unrunnable code (e.g. the unimplemented
+  `fit_mediation`/`bootstrap_mediation` stubs) may keep `\dontrun{}`.
+- CRAN submission is maintainer-manual: `devtools::submit_cran()` needs an interactive session
+  and CRAN emails a confirmation link to click — it cannot be fired headless.
