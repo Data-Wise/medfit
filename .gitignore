@@ -9,6 +9,7 @@ inst/doc
 medfit.code-workspace
 revdep/
 # build / check artifacts (never commit these)
+CRAN-SUBMISSION
 *.tar.gz
 *.Rcheck/
 /check/
