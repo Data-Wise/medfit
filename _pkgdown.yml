@@ -72,25 +72,7 @@ navbar:
         href: articles/bootstrap.html
     ecosystem:
       text: Ecosystem
-      menu:
-      - text: "Core Packages"
-      - text: "mediationverse (Meta-package)"
-        href: https://data-wise.github.io/mediationverse/
-      - text: "medfit (Foundation)"
-        href: https://data-wise.github.io/medfit/
-      # Work in progress - uncomment when ready:
-      # - text: "probmed (P_med Effect Size)"
-      #   href: https://data-wise.github.io/probmed/
-      - text: "RMediation (Confidence Intervals)"
-        href: https://data-wise.github.io/rmediation/
-      # Work in progress - uncomment when ready:
-      # - text: "medrobust (Sensitivity Analysis)"
-      #   href: https://data-wise.github.io/medrobust/
-      - text: "---------"
-      - text: "Support Packages"
-      # Work in progress - uncomment when ready:
-      # - text: "medsim (Simulation Infrastructure)"
-      #   href: https://data-wise.github.io/medsim/
+      href: https://data-wise.github.io/mediationverse/articles/ecosystem.html
     status:
       icon: fas fa-chart-line
       text: Status
