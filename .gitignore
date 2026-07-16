@@ -14,4 +14,6 @@ revdep/
 *.Rcheck/
 /check/
 .vscode/
+.claude/allow-dev-edit
 .claude/guard-session-counts
+.claude/settings.local.json
