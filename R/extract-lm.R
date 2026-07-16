@@ -107,18 +107,18 @@ glm_class <- S7::new_S3_class("glm")
 #'
 #' @noRd
 S7::method(extract_mediation, lm_class) <- function(
-    object,
-    model_y,
-    treatment,
-    mediator,
-    mediator_models = NULL,
-    outcome = NULL,
-    data = NULL,
-    structure = c("auto", "serial", "parallel"),
-    decomposition = c("auto", "four_way", "two_way"),
-    m_star = 0,
-    vcov_fun = stats::vcov,
-    ...) {
+  object,
+  model_y,
+  treatment,
+  mediator,
+  mediator_models = NULL,
+  outcome = NULL,
+  data = NULL,
+  structure = c("auto", "serial", "parallel"),
+  decomposition = c("auto", "four_way", "two_way"),
+  m_star = 0,
+  vcov_fun = stats::vcov,
+  ...) {
   # Call internal extraction function
   .extract_mediation_lm_impl(
     model_m = object,
@@ -141,18 +141,18 @@ S7::method(extract_mediation, lm_class) <- function(
 #' @inheritParams extract_mediation
 #' @noRd
 S7::method(extract_mediation, glm_class) <- function(
-    object,
-    model_y,
-    treatment,
-    mediator,
-    mediator_models = NULL,
-    outcome = NULL,
-    data = NULL,
-    structure = c("auto", "serial", "parallel"),
-    decomposition = c("auto", "four_way", "two_way"),
-    m_star = 0,
-    vcov_fun = stats::vcov,
-    ...) {
+  object,
+  model_y,
+  treatment,
+  mediator,
+  mediator_models = NULL,
+  outcome = NULL,
+  data = NULL,
+  structure = c("auto", "serial", "parallel"),
+  decomposition = c("auto", "four_way", "two_way"),
+  m_star = 0,
+  vcov_fun = stats::vcov,
+  ...) {
   # Call internal extraction function
   .extract_mediation_lm_impl(
     model_m = object,
@@ -185,17 +185,17 @@ S7::method(extract_mediation, glm_class) <- function(
 #'   vector of length >= 2
 #' @keywords internal
 .extract_mediation_lm_impl <- function(
-    model_m,
-    model_y,
-    treatment,
-    mediator,
-    mediator_models = NULL,
-    outcome = NULL,
-    data = NULL,
-    structure = c("auto", "serial", "parallel"),
-    decomposition = c("auto", "four_way", "two_way"),
-    m_star = 0,
-    vcov_fun = stats::vcov) {
+  model_m,
+  model_y,
+  treatment,
+  mediator,
+  mediator_models = NULL,
+  outcome = NULL,
+  data = NULL,
+  structure = c("auto", "serial", "parallel"),
+  decomposition = c("auto", "four_way", "two_way"),
+  m_star = 0,
+  vcov_fun = stats::vcov) {
 
   structure <- match.arg(structure)
   decomposition <- match.arg(decomposition)
@@ -492,14 +492,14 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @return An `InteractionMediationData` object.
 #' @keywords internal
 .extract_interaction_mediation_lm <- function( # nolint: object_length_linter.
-    model_m,
-    model_y,
-    treatment,
-    mediator,
-    int_term,
-    outcome = NULL,
-    data = NULL,
-    m_star = 0) {
+  model_m,
+  model_y,
+  treatment,
+  mediator,
+  int_term,
+  outcome = NULL,
+  data = NULL,
+  m_star = 0) {
 
   # --- Input validation ---
   checkmate::assert_multi_class(model_m, c("lm", "glm"), .var.name = "object")
@@ -663,13 +663,13 @@ S7::method(extract_mediation, glm_class) <- function(
 #'
 #' @keywords internal
 .extract_serial_mediation_lm <- function( # nolint: object_length_linter.
-    object,
-    mediator_models,
-    model_y,
-    treatment,
-    mediators,
-    outcome = NULL,
-    data = NULL) {
+  object,
+  mediator_models,
+  model_y,
+  treatment,
+  mediators,
+  outcome = NULL,
+  data = NULL) {
 
   # --- Input validation ---
   checkmate::assert_string(treatment, .var.name = "treatment")
@@ -934,13 +934,13 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @return A `ParallelMediationData` object.
 #' @keywords internal
 .extract_parallel_mediation_lm <- function( # nolint: object_length_linter.
-    object,
-    mediator_models,
-    model_y,
-    treatment,
-    mediators,
-    outcome = NULL,
-    data = NULL) {
+  object,
+  mediator_models,
+  model_y,
+  treatment,
+  mediators,
+  outcome = NULL,
+  data = NULL) {
 
   # --- Input validation ---
   checkmate::assert_string(treatment, .var.name = "treatment")
