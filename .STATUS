@@ -1,6 +1,7 @@
 status: active
 priority: P1
 progress: 100
+kind: package
 cran_state: planned
 next: Ship medfit 0.3.1 → CRAN — cadence-held: submit on/after ~2026-07-18 (≥1mo after 0.2.1, accepted 2026-06-18); unblocks Stage 2 / probmed (Imports medfit ≥0.3.0). Independent now: medrobust CRAN prep (6 TODOs + NEWS/DESCRIPTION drift). (Dropped the stale "push 0e2c997 to main" loose end — verified 2026-06-21: that SHA is a DANGLING commit in the rmediation repo, not medfit; its medsim-URL fix is already on rmediation/dev and reaches main via the rmediation 1.5.0 release, not a medfit push.)
 done: 2026-06-22: gitignored devtools CRAN-SUBMISSION artifact (anchored /CRAN-SUBMISSION) + removed stale v0.2.0 marker — PR #47 merged to dev (10/10 CI green). Stage-1 cascade COMPLETE (2026-06-18); medfit 0.2.1 on CRAN. RMediation 1.5.0 released (GitHub, pre-release strict checks 0/0/0 ✅) + CRAN-submitted 2026-06-20 (pkg_id 345448, awaiting acceptance). mediationverse + medsim: Remotes dropped, medfit ≥0.2.0 pinned.
