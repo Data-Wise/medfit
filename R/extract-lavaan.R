@@ -486,12 +486,12 @@ extract_mediation_lavaan <- function(object,
 #'
 #' @keywords internal
 .extract_serial_mediation_lavaan <- function( # nolint: object_length_linter.
-    object,
-    treatment,
-    mediators,
-    outcome = NULL,
-    standardized = FALSE,
-    ...) {
+  object,
+  treatment,
+  mediators,
+  outcome = NULL,
+  standardized = FALSE,
+  ...) {
 
   # --- Input validation ---
   checkmate::assert_character(mediators, min.len = 2, unique = TRUE,
@@ -755,12 +755,12 @@ extract_mediation_lavaan <- function(object,
 #'
 #' @keywords internal
 .extract_parallel_mediation_lavaan <- function( # nolint: object_length_linter.
-    object,
-    treatment,
-    mediators,
-    outcome = NULL,
-    standardized = FALSE,
-    ...) {
+  object,
+  treatment,
+  mediators,
+  outcome = NULL,
+  standardized = FALSE,
+  ...) {
 
   # --- Input validation ---
   checkmate::assert_character(mediators, min.len = 2, unique = TRUE,
@@ -978,13 +978,13 @@ extract_mediation_lavaan <- function(object,
 #' @return An `InteractionMediationData` object.
 #' @keywords internal
 .extract_interaction_mediation_lavaan <- function( # nolint: object_length_linter.
-    object,
-    treatment,
-    mediator,
-    int_term,
-    outcome = NULL,
-    m_star = 0,
-    standardized = FALSE) {
+  object,
+  treatment,
+  mediator,
+  int_term,
+  outcome = NULL,
+  m_star = 0,
+  standardized = FALSE) {
 
   checkmate::assert_string(treatment, .var.name = "treatment")
   checkmate::assert_string(mediator, .var.name = "mediator")
