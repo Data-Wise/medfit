@@ -1,6 +1,6 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes (expected)
 
 Checked with `devtools::check(cran = TRUE, args = "--run-donttest", env_vars =
 c(_R_CHECK_DEPENDS_ONLY_ = "true", _R_CHECK_SUGGESTS_ONLY_ = "true",
@@ -9,14 +9,19 @@ on R 4.6.1 (macOS, aarch64): 0/0/0 (this machine has no local `aspell`, so
 the DESCRIPTION spell-check sub-check does not run here). `urlchecker::url_check()`
 and `spelling::spell_check_package()` both clean.
 
-Confirmed via win-builder (R-devel 4.6.1 and R-release 4.5.3, both of which do
-run `aspell`): 1 NOTE on both flavors --
+win-builder (R-release 4.6.1, R-oldrelease 4.5.3, R-devel r90279 -- all of
+which do run `aspell`) previously reported 1 NOTE on every flavor:
 
   Possibly misspelled words in DESCRIPTION:
     VanderWeele (20:42)
 
 This is the cited author's surname (VanderWeele 2014, four-way decomposition
-method reference), not a misspelling.
+method reference), not a misspelling. Added `.aspell/defaults.R` with
+`description <- list(ignore = c("VanderWeele"))` (PR #51, merged to dev) to
+suppress it via R's documented package-defaults mechanism
+(`?aspell-utils`); not yet re-verified against a machine with `aspell` or a
+fresh win-builder round -- if it still appears at submission time, it is
+CRAN-safe to submit with as an explained NOTE regardless.
 
 ## Submission timing
 
