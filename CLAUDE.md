@@ -536,7 +536,7 @@ During `devtools::load_all()`:
 **Last Updated**: 2026-06-02
 **Maintained by**: medfit development team
 
-**Current status**: v0.3.1 checked clean (0/0/0) on `dev`, 27 commits ahead of `main` (not yet released). medfit **0.2.1 ACCEPTED ON CRAN** (2026-06-18); 0.3.1 cadence-hold (≥1mo) expired 2026-07-18, cleared for submission. Stage 1 cascade COMPLETE: RMediation 1.5.0 released to GitHub (strict check 0/0/0 ✅, CRAN submit pending maintainer action — push `0e2c997` + `devtools::submit_cran()`); mediationverse + medsim Remotes dropped, medfit>=0.2.0 pinned. Stage 2 (probmed, needs medfit 0.3.0 on CRAN) still blocked. Next independent workstream: medrobust CRAN prep.
+**Current status**: v0.3.2 released to `main`, tagged `v0.3.2` as a GitHub pre-release (tarball attached), `cran-prep` verdict ready — only `devtools::submit_cran()` remains (maintainer-manual). medfit **0.2.1 ACCEPTED ON CRAN** (2026-06-18); cadence-hold (≥1mo) expired 2026-07-18, cleared for submission. (Bumped 0.3.1→0.3.2 to avoid colliding with an already-published, non-CRAN `v0.3.1` GitHub tag from 2026-06-12 — no `R/` code changed since that tag.) Stage 1 cascade COMPLETE: RMediation 1.5.0 released to GitHub (strict check 0/0/0 ✅, CRAN submit pending maintainer action — push `0e2c997` + `devtools::submit_cran()`); mediationverse + medsim Remotes dropped, medfit>=0.2.0 pinned. Stage 2 (probmed, needs medfit 0.3.x on CRAN) still blocked. Next independent workstream: medrobust CRAN prep.
 
 ### CRAN check practice (learned 2026-06-10, extended 2026-07-20)
 
