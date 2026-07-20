@@ -21,9 +21,8 @@ This is the cited author's surname (VanderWeele 2014, four-way decomposition
 method reference), not a misspelling. Added `.aspell/defaults.R` with
 `description <- list(ignore = c("VanderWeele"))` (PR #51, merged to dev) to
 suppress it via R's documented package-defaults mechanism
-(`?aspell-utils`); not yet re-verified against a machine with `aspell` or a
-fresh win-builder round -- if it still appears at submission time, it is
-CRAN-safe to submit with as an explained NOTE regardless.
+(`?aspell-utils`). Re-dispatched win-builder (all 3 flavors) against the
+0.3.2 source on 2026-07-20 to confirm; results pending.
 
 ## Submission timing
 
