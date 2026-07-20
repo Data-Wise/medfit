@@ -1,3 +1,29 @@
+# medfit 0.3.2 (2026-07-20)
+
+CRAN patch release. No new features; CI/lint compatibility and CRAN
+compliance fixes only (no non-whitespace change to `R/`).
+
+## CI and lint
+
+* Fixed `lint` job breakage from lintr 3.4.0's tightened `indentation_linter`
+  (reindented function signatures 4 -> 2 spaces; whitespace only,
+  `git diff -w` empty).
+* Re-documented with roxygen2 8.0.0 (`RoxygenNote` -> `Config/roxygen2/version`).
+
+## CRAN compliance
+
+* Fixed a stale `Date` field (CRAN incoming-feasibility check flags dates
+  over a month old).
+* `.Rbuildignore`d the `.remember` session-memory scratch directory, which
+  was leaking into the built source tarball (`.Rbuildignore` is independent
+  of `.gitignore`).
+* Added `inst/WORDLIST` entries for domain vocabulary (VanderWeele
+  decomposition acronyms, S7 class names, DOI journal-code fragments) that
+  `spelling::spell_check_package()`/CRAN's `aspell` pass would flag.
+* Added `.aspell/defaults.R` to suppress a "possibly misspelled" NOTE on the
+  cited author surname "VanderWeele" in the DESCRIPTION field (a separate
+  aspell mechanism from `inst/WORDLIST`).
+
 # medfit 0.3.1 (2026-06-11)
 
 ## New features
