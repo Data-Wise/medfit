@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,6 +68,23 @@
       <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.2" id="medfit-032-2026-07-20">medfit 0.3.2 (2026-07-20)<a class="anchor" aria-label="anchor" href="#medfit-032-2026-07-20"></a></h2>
+<p>CRAN patch release. No new features; CI/lint compatibility and CRAN compliance fixes only (no non-whitespace change to <code>R/</code>).</p>
+<div class="section level3">
+<h3 id="ci-and-lint-0-3-2">CI and lint<a class="anchor" aria-label="anchor" href="#ci-and-lint-0-3-2"></a></h3>
+<ul><li>Fixed <code>lint</code> job breakage from lintr 3.4.0’s tightened <code>indentation_linter</code> (reindented function signatures 4 -&gt; 2 spaces; whitespace only, <code>git diff -w</code> empty).</li>
+<li>Re-documented with roxygen2 8.0.0 (<code>RoxygenNote</code> -&gt; <code>Config/roxygen2/version</code>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="cran-compliance-0-3-2">CRAN compliance<a class="anchor" aria-label="anchor" href="#cran-compliance-0-3-2"></a></h3>
+<ul><li>Fixed a stale <code>Date</code> field (CRAN incoming-feasibility check flags dates over a month old).</li>
+<li>
+<code>.Rbuildignore</code>d the <code>.remember</code> session-memory scratch directory, which was leaking into the built source tarball (<code>.Rbuildignore</code> is independent of <code>.gitignore</code>).</li>
+<li>Added <code>inst/WORDLIST</code> entries for domain vocabulary (VanderWeele decomposition acronyms, S7 class names, DOI journal-code fragments) that <code>spelling::spell_check_package()</code>/CRAN’s <code>aspell</code> pass would flag.</li>
+<li>Added <code>.aspell/defaults.R</code> to suppress a “possibly misspelled” NOTE on the cited author surname “VanderWeele” in the DESCRIPTION field (a separate aspell mechanism from <code>inst/WORDLIST</code>).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.1" id="medfit-031-2026-06-11">medfit 0.3.1 (2026-06-11)<a class="anchor" aria-label="anchor" href="#medfit-031-2026-06-11"></a></h2>
 <div class="section level3">
