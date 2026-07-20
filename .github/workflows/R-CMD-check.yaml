@@ -83,7 +83,14 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"'
-          extra-packages: any::rcmdcheck
+          # testthat is a Suggests dep (deliberately, so production code can't use it
+          # unguarded) but the test harness itself needs it to run tests/testthat.R.
+          # dependencies: "hard" excludes Suggests for every package it resolves,
+          # including extra-packages, so it must be listed explicitly here or install
+          # is left to chance (transitive pulls from RSPM binary snapshots / stale
+          # cache), which is what caused the intermittent "no package called
+          # 'testthat'" failures.
+          extra-packages: any::rcmdcheck, any::testthat
 
       - uses: r-lib/actions/check-r-package@v2
         with:
