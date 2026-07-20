@@ -280,7 +280,7 @@ R package version 0.2.0. https://github.com/data-wise/medfit
 ## Related Resources
 
 - [Package Documentation](https://data-wise.github.io/medfit/)
-- [Development Guide](CLAUDE.md)
+- [Development Guide](https://github.com/data-wise/medfit/blob/main/CLAUDE.md)
 - [Roadmap](planning/medfit-roadmap.md)
 - [Ecosystem Strategy](planning/ECOSYSTEM.md)
 
