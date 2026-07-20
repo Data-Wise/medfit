@@ -1,12 +1,22 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note
 
 Checked with `devtools::check(cran = TRUE, args = "--run-donttest", env_vars =
 c(_R_CHECK_DEPENDS_ONLY_ = "true", _R_CHECK_SUGGESTS_ONLY_ = "true",
 _R_CHECK_CRAN_INCOMING_ = "true", _R_CHECK_CRAN_INCOMING_REMOTE_ = "true"))`
-on R 4.6.1 (macOS, aarch64). `urlchecker::url_check()` and
-`spelling::spell_check_package()` both clean.
+on R 4.6.1 (macOS, aarch64): 0/0/0 (this machine has no local `aspell`, so
+the DESCRIPTION spell-check sub-check does not run here). `urlchecker::url_check()`
+and `spelling::spell_check_package()` both clean.
+
+Confirmed via win-builder (R-devel 4.6.1 and R-release 4.5.3, both of which do
+run `aspell`): 1 NOTE on both flavors --
+
+  Possibly misspelled words in DESCRIPTION:
+    VanderWeele (20:42)
+
+This is the cited author's surname (VanderWeele 2014, four-way decomposition
+method reference), not a misspelling.
 
 ## Submission timing
 

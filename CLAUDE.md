@@ -571,7 +571,12 @@ During `devtools::load_all()`:
   too. Domain jargon (method acronyms, S7 class names, DOI journal-code fragments) will always
   false-positive; maintain `inst/WORDLIST` as the allowlist rather than rewording legitimate
   terminology. Genuine hits are usually hyphenation artifacts (e.g. "mis-ordered" tokenizing
-  to "mis") — reword those, don't just whitelist the fragment.
+  to "mis") — reword those, don't just whitelist the fragment. **Caveat:** `R CMD check`'s own
+  "Possibly misspelled words in DESCRIPTION" sub-check needs a local `aspell` binary — if this
+  machine doesn't have one (`which aspell`), that specific check silently doesn't run and
+  `devtools::check()` will under-report (0.3.1: local said 0 notes, win-builder — which does
+  run `aspell` — found 1 on both devel and release: the cited author surname "VanderWeele").
+  Treat win-builder as the source of truth for this particular NOTE, not the local machine.
 - **`cran-comments.md` must be re-synced against the actual check output immediately before
   submission**, not written speculatively weeks ahead. The 0.3.1 draft described an
   incoming-feasibility NOTE that had already stopped occurring once the cadence window
