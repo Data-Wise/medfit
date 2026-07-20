@@ -15,6 +15,7 @@
 ^pkgdown$
 ^medfit.code-workspace$
 ^\.claude$
+^\.remember$
 ^vignettes$
 ^vignettes/\.quarto$
 ^START-HERE\.md$
