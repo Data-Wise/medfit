@@ -36,5 +36,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Davood Tofighi \email{dtofighi@gmail.com} (\href{https://orcid.org/0000-0001-8523-7776}{ORCID}) [copyright holder]
 
+Authors:
+\itemize{
+  \item Davood Tofighi \email{dtofighi@gmail.com} (\href{https://orcid.org/0000-0001-8523-7776}{ORCID}) [copyright holder]
+}
+
 }
 \keyword{internal}
