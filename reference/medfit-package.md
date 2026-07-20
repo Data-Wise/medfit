@@ -38,4 +38,9 @@ Useful links:
 ## Author
 
 **Maintainer**: Davood Tofighi <dtofighi@gmail.com>
-([ORCID](https://orcid.org/0000-0001-8523-7776))
+([ORCID](https://orcid.org/0000-0001-8523-7776)) \[copyright holder\]
+
+Authors:
+
+- Davood Tofighi <dtofighi@gmail.com>
+  ([ORCID](https://orcid.org/0000-0001-8523-7776)) \[copyright holder\]

@@ -46,15 +46,7 @@
     <li><a class="dropdown-item" href="articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="articles/bootstrap.html">Bootstrap Inference</a></li>
   </ul></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-ecosystem" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Ecosystem</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-ecosystem"><li><h6 class="dropdown-header" data-toc-skip>Core Packages</h6></li>
-    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/">mediationverse (Meta-package)</a></li>
-    <li><a class="dropdown-item" href="https://data-wise.github.io/medfit/">medfit (Foundation)</a></li>
-    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/rmediation/">RMediation (Confidence Intervals)</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Support Packages</h6></li>
-  </ul></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-status"><li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
@@ -305,7 +297,7 @@
 <span>                                       treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Test with probmed functions</span></span>
-<span><span class="va">pmed_result</span> <span class="op">&lt;-</span> <span class="fu">compute_pmed</span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span>  <span class="co"># Should work seamlessly</span></span></code></pre></div>
+<span><span class="va">pmed_result</span> <span class="op">&lt;-</span> <span class="fu">pmed</span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span>  <span class="co"># Should work seamlessly</span></span></code></pre></div>
 <p><strong>Expected</strong>: probmed uses medfit extraction without modifications</p>
 </div>
 <div class="section level4">
@@ -327,7 +319,7 @@
 <span></span>
 <span><span class="co"># Full workflow using all packages</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">medfit</span><span class="fu">::</span><span class="fu"><a href="reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
-<span><span class="va">pmed</span> <span class="op">&lt;-</span> <span class="fu">probmed</span><span class="fu">::</span><span class="fu">compute_pmed</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="va">pmed</span> <span class="op">&lt;-</span> <span class="fu">probmed</span><span class="fu">::</span><span class="fu">pmed</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="va">ci</span> <span class="op">&lt;-</span> <span class="fu">RMediation</span><span class="fu">::</span><span class="fu">ci</span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"dop"</span><span class="op">)</span></span>
 <span><span class="va">robust</span> <span class="op">&lt;-</span> <span class="fu">medrobust</span><span class="fu">::</span><span class="fu">sensitivity_analysis</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Expected</strong>: Seamless integration across packages</p>

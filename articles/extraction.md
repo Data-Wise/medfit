@@ -188,7 +188,7 @@ med_serial_lm@a_path * med_serial_lm@d_path * med_serial_lm@b_path
 
 The order of `mediator_models` is cross-checked against the `mediator`
 vector: each model’s response and predecessor are validated, so a
-mis-ordered list fails fast with an informative error rather than
+misordered list fails fast with an informative error rather than
 silently producing wrong `d`-paths.
 
 > **Same data, different CI: lm vs lavaan**

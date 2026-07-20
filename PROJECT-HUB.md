@@ -1,13 +1,19 @@
 # 🎯 medfit - Project Control Hub
 
-> **Quick Status:** 🟢 Feature-complete \| **CRAN:** 0.2.1 resubmission
-> pending \| **dev:** 0.3.0
+> **Quick Status:** 🟢 Feature-complete \| **CRAN:** 0.2.1 accepted
+> (2026-06-18) \| **main/dev:** 0.3.1
 
-**Last Updated:** 2026-06-10  
-**Current Phase:** CRAN submission (0.2.1) + 0.3.0 release line (Ext A/B
-shipped on dev)  
-**Next Action:** Resubmit medfit_0.2.1.tar.gz (round-2 fixes done) +
-confirm email
+**Last Updated:** 2026-06-21  
+**Current Phase:** 0.2.1 on CRAN; 0.3.1 on main/dev (Ext A/B shipped).
+Next CRAN: 0.3.1 (cadence-held ~2026-07-18)  
+**Next Action:** Ship 0.3.1 → CRAN (held to ~2026-07-18 cadence); then
+Stage 2 / probmed. Independent now: medrobust CRAN prep
+
+> **Ecosystem-wide planning** (roadmap, coordination, API/naming design,
+> manifest) lives in the hub:
+> `~/projects/r-packages/mediation-planning/` (start at
+> `PROJECT-HUB.md`). This file tracks **medfit only**. Live ecosystem
+> status: `cd ~/projects/r-packages && /rforge:status`.
 
 ------------------------------------------------------------------------
 
@@ -31,7 +37,7 @@ confirm email
     ──────────────────────────────────────────────────────────
     Overall Project:                  ████████████████████ 100% 🟢
 
-**Status:** 🟢 Feature-complete — on the CRAN path (0.2.1 resubmission)
+**Status:** 🟢 Feature-complete — on the CRAN path (0.3.1, cadence-held)
 \| **Priority:** P1
 
 ------------------------------------------------------------------------

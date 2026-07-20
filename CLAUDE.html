@@ -46,15 +46,7 @@
     <li><a class="dropdown-item" href="articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="articles/bootstrap.html">Bootstrap Inference</a></li>
   </ul></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-ecosystem" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Ecosystem</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-ecosystem"><li><h6 class="dropdown-header" data-toc-skip>Core Packages</h6></li>
-    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/">mediationverse (Meta-package)</a></li>
-    <li><a class="dropdown-item" href="https://data-wise.github.io/medfit/">medfit (Foundation)</a></li>
-    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/rmediation/">RMediation (Confidence Intervals)</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Support Packages</h6></li>
-  </ul></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-status"><li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
@@ -535,8 +527,27 @@
 <td>github.com/data-wise/medsim</td>
 <td>Simulation infrastructure</td>
 </tr></tbody></table><hr><p><strong>Last Updated</strong>: 2026-06-02 <strong>Maintained by</strong>: medfit development team</p>
-<p><strong>Current status</strong>: v0.2.0 released to <code>main</code> (2026-05-31). CRAN resubmission ready — <code>R CMD check --as-cran</code> = 0 errors / 0 warnings / 1 expected “New submission” NOTE. Gated only on the manual CRAN upload + acceptance email; release PR #33 (<code>dev → main</code>) held pending acceptance.</p>
+<p><strong>Current status</strong>: v0.3.1 checked clean (0/0/0) on <code>dev</code>, 27 commits ahead of <code>main</code> (not yet released). medfit <strong>0.2.1 ACCEPTED ON CRAN</strong> (2026-06-18); 0.3.1 cadence-hold (≥1mo) expired 2026-07-18, cleared for submission. Stage 1 cascade COMPLETE: RMediation 1.5.0 released to GitHub (strict check 0/0/0 ✅, CRAN submit pending maintainer action — push <code>0e2c997</code> + <code>devtools::submit_cran()</code>); mediationverse + medsim Remotes dropped, medfit&gt;=0.2.0 pinned. Stage 2 (probmed, needs medfit 0.3.0 on CRAN) still blocked. Next independent workstream: medrobust CRAN prep.</p>
 </div>
+<div class="section level3">
+<h3 id="cran-check-practice-learned-2026-06-10-extended-2026-07-20">CRAN check practice (learned 2026-06-10, extended 2026-07-20)<a class="anchor" aria-label="anchor" href="#cran-check-practice-learned-2026-06-10-extended-2026-07-20"></a></h3>
+<ul><li>
+<p><strong>Before any CRAN submit, run the strict flavors</strong> — plain <code>--as-cran</code> and the win-builder pretest install Suggests and skip <code>\donttest</code>, so they miss failures CRAN’s <em>ongoing</em> farm later flags:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span>cran <span class="op">=</span> <span class="cn">TRUE</span>, args <span class="op">=</span> <span class="st">"--run-donttest"</span>,</span>
+<span>                env_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"_R_CHECK_DEPENDS_ONLY_"</span> <span class="op">=</span> <span class="st">"true"</span>,</span>
+<span>                             <span class="st">"_R_CHECK_SUGGESTS_ONLY_"</span> <span class="op">=</span> <span class="st">"true"</span>,</span>
+<span>                             <span class="st">"_R_CHECK_CRAN_INCOMING_"</span> <span class="op">=</span> <span class="st">"true"</span>,</span>
+<span>                             <span class="st">"_R_CHECK_CRAN_INCOMING_REMOTE_"</span> <span class="op">=</span> <span class="st">"true"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>This caught the default parametric bootstrap hard-requiring <strong>MASS</strong> → MASS is now in <strong><code>Imports</code></strong> (not Suggests). A <code>noSuggests</code> CI job guards this on every push. The two <code>_R_CHECK_CRAN_INCOMING_*</code> vars simulate CRAN’s new/updated-submission feasibility checks (Date freshness, hidden-file scan, remote URL/DOI validation) — run them every time, not just for first submissions.</p>
+</li>
+<li><p>Any Suggests pkg used unconditionally must move to Imports, or be guarded with <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> in code <strong>and</strong> <code>skip_if_not_installed()</code> in tests. <code>\donttest</code> examples run under <code>--as-cran</code>; only genuinely-unrunnable code (e.g. the unimplemented <code>fit_mediation</code>/<code>bootstrap_mediation</code> stubs) may keep <code>\dontrun{}</code>.</p></li>
+<li><p><strong><code>.Rbuildignore</code> is independent of <code>.gitignore</code></strong> — a directory git-ignores (e.g. the <code>.remember/</code> session-memory scratch dir used across the mediationverse repos) still gets swept into the tarball by <code>R CMD build</code> unless it’s <em>also</em> in <code>.Rbuildignore</code>. <code>git status</code> clean proves nothing about what ships. Caught by the incoming-check’s hidden-file NOTE during 0.3.1 prep; all 6 mediationverse repos now Rbuildignore <code>.remember</code>.</p></li>
+<li><p><strong>Run <code>urlchecker::url_check()</code> and <code>spelling::spell_check_package()</code> every cycle</strong> — CRAN’s own submission server runs <code>aspell</code> on Description/Rd/vignettes, so a clean local check must too. Domain jargon (method acronyms, S7 class names, DOI journal-code fragments) will always false-positive; maintain <code>inst/WORDLIST</code> as the allowlist rather than rewording legitimate terminology. Genuine hits are usually hyphenation artifacts (e.g. “mis-ordered” tokenizing to “mis”) — reword those, don’t just whitelist the fragment. <strong>Caveat:</strong> <code>R CMD check</code>’s own “Possibly misspelled words in DESCRIPTION” sub-check needs a local <code>aspell</code> binary — if this machine doesn’t have one (<code>which aspell</code>), that specific check silently doesn’t run and <code>devtools::check()</code> will under-report (0.3.1: local said 0 notes, win-builder — which does run <code>aspell</code> — found 1 on both devel and release: the cited author surname “VanderWeele”). Treat win-builder as the source of truth for this particular NOTE, not the local machine.</p></li>
+<li><p><strong><code>cran-comments.md</code> must be re-synced against the actual check output immediately before submission</strong>, not written speculatively weeks ahead. The 0.3.1 draft described an incoming-feasibility NOTE that had already stopped occurring once the cadence window passed, and cited a <code>revdep/cran.md</code> file that was never created — both looked plausible but were wrong. Regenerate the check-results section and the revdep section from a fresh run right before <code>submit_cran()</code>.</p></li>
+<li><p><strong>Scale the reverse-dependency check to the actual risk.</strong> Full <code>revdepcheck::revdep_check()</code> builds isolated libraries for both the CRAN and dev versions of every revdep and diffs complete <code>R CMD check</code> output — worth it for a large revdep count or a hard <code>Imports</code> dependent (e.g. probmed once it pins medfit ≥0.3.0). For a single <code>Suggests</code>-only revdep (medfit’s only current one, RMediation), installing the dev build into a scratch <code><a href="https://rdrr.io/r/base/libPaths.html" class="external-link">.libPaths()</a></code> and running the dependent’s existing test suite answers the same question in under a minute.</p></li>
+<li><p>CRAN submission is maintainer-manual: <code>devtools::submit_cran()</code> needs an interactive session and CRAN emails a confirmation link to click — it cannot be fired headless.</p></li>
+</ul></div>
 </div>
 </div>
 

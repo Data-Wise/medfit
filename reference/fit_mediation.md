@@ -186,10 +186,6 @@ When `engine = "glm"` (default):
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md),
 [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
 
-[MediationData](https://data-wise.github.io/medfit/reference/MediationData.md),
-[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md),
-[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
-
 ## Examples
 
 ``` r

@@ -264,7 +264,7 @@ med_data <- medfit::extract_mediation(fit_m, model_y = fit_y,
                                        treatment = "X", mediator = "M")
 
 # Test with probmed functions
-pmed_result <- compute_pmed(med_data)  # Should work seamlessly
+pmed_result <- pmed(med_data)  # Should work seamlessly
 ```
 
 **Expected**: probmed uses medfit extraction without modifications
@@ -292,7 +292,7 @@ library(mediationverse)
 
 # Full workflow using all packages
 fit <- medfit::fit_mediation(...)
-pmed <- probmed::compute_pmed(fit)
+pmed <- probmed::pmed(fit)
 ci <- RMediation::ci(fit, type = "dop")
 robust <- medrobust::sensitivity_analysis(fit)
 ```

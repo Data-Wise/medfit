@@ -141,6 +141,29 @@
   out the “GLM” acronym and added method references (`<doi:...>`) to the
   Description; enriched `inst/CITATION`.
 
+## medfit 0.2.1 (2026-06-18)
+
+CRAN release: 2026-06-18
+
+CRAN patch release. No new features; documentation and compliance fixes
+only (all changes forward-ported to 0.3.0).
+
+### CRAN compliance and documentation
+
+- Explained the “GLM” acronym in the package Description.
+- Added method references (`<doi:...>`) to the Description field
+  (MacKinnon, Lockwood & Williams 2004; Tofighi & MacKinnon 2011).
+- Added `\value` sections to the four exported `print` /
+  `print.summary.*` methods.
+- Converted `\dontrun{}` examples to self-contained `\donttest{}`
+  (lavaan example guarded with
+  [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html)).
+- Enriched `inst/CITATION` with method references and ORCID.
+- Moved **MASS** from `Suggests` to `Imports`: the default parametric
+  bootstrap calls
+  [`MASS::mvrnorm()`](https://rdrr.io/pkg/MASS/man/mvrnorm.html)
+  unconditionally, so MASS must always be available.
+
 ## medfit 0.2.0 (2026-05-31)
 
 ### New features
