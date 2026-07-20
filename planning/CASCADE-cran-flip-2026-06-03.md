@@ -3,7 +3,7 @@
 **Created:** 2026-06-03
 **Trigger:** medfit 0.2.0 accepted to CRAN (watched by `medfit-cran-watch`,
 `trig_018qiNZMTUP5Az2UGXyv6vRf`).
-**Status:** ⏳ HELD — do NOT apply until the CRAN page returns 200 / acceptance email arrives.
+**Status:** ✅ STAGE 1 COMPLETE (2026-06-18) — medfit 0.2.1 accepted on CRAN; RMediation PR #7 merged; mediationverse committed to dev. Stage 2 (probmed) blocked on medfit 0.3.0 CRAN.
 
 > ⚠️ **Why held:** removing the `Remotes:` pointer before medfit is on CRAN
 > makes `R CMD check` unable to resolve `Imports: medfit`. Apply only *after*

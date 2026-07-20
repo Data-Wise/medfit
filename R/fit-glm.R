@@ -208,16 +208,16 @@ fit_mediation <- function(formula_y,
 #' @keywords internal
 #' @noRd
 .fit_mediation_glm <- function(
-    formula_y,
-    formula_m,
-    data,
-    treatment,
-    mediator,
-    family_y,
-    family_m,
-    weights = NULL,
-    se_type = c("model", "sandwich"),
-    ...) {
+  formula_y,
+  formula_m,
+  data,
+  treatment,
+  mediator,
+  family_y,
+  family_m,
+  weights = NULL,
+  se_type = c("model", "sandwich"),
+  ...) {
   se_type <- match.arg(se_type)
   # Build glm calls via do.call so the `weights` *value* (vector or absent) is
   # inlined: passing the `weights` symbol fails because glm evaluates it in the

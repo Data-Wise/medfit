@@ -1,28 +1,36 @@
-## Submission
-
-This is a resubmission of medfit (version 0.2.0), addressing the CRAN
-reviewer's feedback on the initial submission:
-
-* Removed `+ file LICENSE` from the `License` field and deleted the
-  accompanying `LICENSE` file. The package is now licensed under a plain
-  `GPL (>= 3)` with no additional restrictions.
-* Single-quoted the software names 'probmed', 'RMediation', and 'medrobust'
-  in the Description field.
-
-## Test environments
-
-* Local: macOS 26.5.0 (Tahoe), R 4.6.0 — `R CMD check --as-cran`
-* win-builder (R-devel) — via `devtools::check_win_devel()`
-* GitHub Actions (ubuntu-latest): R-release, R-devel, R-oldrel-1
-* GitHub Actions (macos-latest): R-release
-* GitHub Actions (windows-latest): R-release
-
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes (expected)
 
-* New submission - This is the first submission of medfit to CRAN
+Checked with `devtools::check(cran = TRUE, args = "--run-donttest", env_vars =
+c(_R_CHECK_DEPENDS_ONLY_ = "true", _R_CHECK_SUGGESTS_ONLY_ = "true",
+_R_CHECK_CRAN_INCOMING_ = "true", _R_CHECK_CRAN_INCOMING_REMOTE_ = "true"))`
+on R 4.6.1 (macOS, aarch64): 0/0/0 (this machine has no local `aspell`, so
+the DESCRIPTION spell-check sub-check does not run here). `urlchecker::url_check()`
+and `spelling::spell_check_package()` both clean.
 
-## Downstream dependencies
+win-builder (R-release 4.6.1, R-oldrelease 4.5.3, R-devel r90279 -- all of
+which do run `aspell`) previously reported 1 NOTE on every flavor:
 
-There are currently no downstream dependencies for this package.
+  Possibly misspelled words in DESCRIPTION:
+    VanderWeele (20:42)
+
+This is the cited author's surname (VanderWeele 2014, four-way decomposition
+method reference), not a misspelling. Added `.aspell/defaults.R` with
+`description <- list(ignore = c("VanderWeele"))` (PR #51, merged to dev) to
+suppress it via R's documented package-defaults mechanism
+(`?aspell-utils`); not yet re-verified against a machine with `aspell` or a
+fresh win-builder round -- if it still appears at submission time, it is
+CRAN-safe to submit with as an explained NOTE regardless.
+
+## Submission timing
+
+This release respects the CRAN 1-2 month update cadence: medfit 0.2.1 was
+accepted 2026-06-18; this submission is on/after 2026-07-18 (>= 1 month
+later), so no "Days since last update" NOTE is expected.
+
+## Reverse dependencies
+
+One reverse dependency on CRAN: RMediation (via Suggests). RMediation's full
+test suite (307 tests) run against this medfit 0.3.1 build: 0 failures, 0
+warnings.

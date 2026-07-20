@@ -536,4 +536,59 @@ During `devtools::load_all()`:
 **Last Updated**: 2026-06-02
 **Maintained by**: medfit development team
 
-**Current status**: v0.2.0 released to `main` (2026-05-31). CRAN resubmission ready — `R CMD check --as-cran` = 0 errors / 0 warnings / 1 expected "New submission" NOTE. Gated only on the manual CRAN upload + acceptance email; release PR #33 (`dev → main`) held pending acceptance.
+**Current status**: v0.3.1 checked clean (0/0/0) on `dev`, 27 commits ahead of `main` (not yet released). medfit **0.2.1 ACCEPTED ON CRAN** (2026-06-18); 0.3.1 cadence-hold (≥1mo) expired 2026-07-18, cleared for submission. Stage 1 cascade COMPLETE: RMediation 1.5.0 released to GitHub (strict check 0/0/0 ✅, CRAN submit pending maintainer action — push `0e2c997` + `devtools::submit_cran()`); mediationverse + medsim Remotes dropped, medfit>=0.2.0 pinned. Stage 2 (probmed, needs medfit 0.3.0 on CRAN) still blocked. Next independent workstream: medrobust CRAN prep.
+
+### CRAN check practice (learned 2026-06-10, extended 2026-07-20)
+
+- **Before any CRAN submit, run the strict flavors** — plain `--as-cran` and the win-builder
+  pretest install Suggests and skip `\donttest`, so they miss failures CRAN's *ongoing* farm
+  later flags:
+
+  ```r
+  devtools::check(cran = TRUE, args = "--run-donttest",
+                  env_vars = c("_R_CHECK_DEPENDS_ONLY_" = "true",
+                               "_R_CHECK_SUGGESTS_ONLY_" = "true",
+                               "_R_CHECK_CRAN_INCOMING_" = "true",
+                               "_R_CHECK_CRAN_INCOMING_REMOTE_" = "true"))
+  ```
+
+  This caught the default parametric bootstrap hard-requiring **MASS** → MASS is now in
+  **`Imports`** (not Suggests). A `noSuggests` CI job guards this on every push. The two
+  `_R_CHECK_CRAN_INCOMING_*` vars simulate CRAN's new/updated-submission feasibility checks
+  (Date freshness, hidden-file scan, remote URL/DOI validation) — run them every time, not
+  just for first submissions.
+- Any Suggests pkg used unconditionally must move to Imports, or be guarded with
+  `requireNamespace()` in code **and** `skip_if_not_installed()` in tests. `\donttest` examples
+  run under `--as-cran`; only genuinely-unrunnable code (e.g. the unimplemented
+  `fit_mediation`/`bootstrap_mediation` stubs) may keep `\dontrun{}`.
+- **`.Rbuildignore` is independent of `.gitignore`** — a directory git-ignores (e.g. the
+  `.remember/` session-memory scratch dir used across the mediationverse repos) still gets
+  swept into the tarball by `R CMD build` unless it's *also* in `.Rbuildignore`. `git status`
+  clean proves nothing about what ships. Caught by the incoming-check's hidden-file NOTE
+  during 0.3.1 prep; all 6 mediationverse repos now Rbuildignore `.remember`.
+- **Run `urlchecker::url_check()` and `spelling::spell_check_package()` every cycle** — CRAN's
+  own submission server runs `aspell` on Description/Rd/vignettes, so a clean local check must
+  too. Domain jargon (method acronyms, S7 class names, DOI journal-code fragments) will always
+  false-positive; maintain `inst/WORDLIST` as the allowlist rather than rewording legitimate
+  terminology. Genuine hits are usually hyphenation artifacts (e.g. "mis-ordered" tokenizing
+  to "mis") — reword those, don't just whitelist the fragment. **Caveat:** `R CMD check`'s own
+  "Possibly misspelled words in DESCRIPTION" sub-check needs a local `aspell` binary — if this
+  machine doesn't have one (`which aspell`), that specific check silently doesn't run and
+  `devtools::check()` will under-report (0.3.1: local said 0 notes, win-builder — which does
+  run `aspell` — found 1 on both devel and release: the cited author surname "VanderWeele").
+  Treat win-builder as the source of truth for this particular NOTE, not the local machine.
+- **`cran-comments.md` must be re-synced against the actual check output immediately before
+  submission**, not written speculatively weeks ahead. The 0.3.1 draft described an
+  incoming-feasibility NOTE that had already stopped occurring once the cadence window
+  passed, and cited a `revdep/cran.md` file that was never created — both looked plausible
+  but were wrong. Regenerate the check-results section and the revdep section from a fresh
+  run right before `submit_cran()`.
+- **Scale the reverse-dependency check to the actual risk.** Full `revdepcheck::revdep_check()`
+  builds isolated libraries for both the CRAN and dev versions of every revdep and diffs
+  complete `R CMD check` output — worth it for a large revdep count or a hard `Imports`
+  dependent (e.g. probmed once it pins medfit ≥0.3.0). For a single `Suggests`-only revdep
+  (medfit's only current one, RMediation), installing the dev build into a scratch
+  `.libPaths()` and running the dependent's existing test suite answers the same question in
+  under a minute.
+- CRAN submission is maintainer-manual: `devtools::submit_cran()` needs an interactive session
+  and CRAN emails a confirmation link to click — it cannot be fired headless.

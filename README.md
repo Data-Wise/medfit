@@ -3,7 +3,7 @@
 [![CRAN status](https://www.r-pkg.org/badges/version/medfit)](https://CRAN.R-project.org/package=medfit)
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![R-CMD-check](https://github.com/Data-Wise/medfit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Data-Wise/medfit/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/Data-Wise/medfit/graph/badge.svg)](https://codecov.io/gh/Data-Wise/medfit)
+[![Codecov test coverage](https://codecov.io/gh/Data-Wise/medfit/graph/badge.svg)](https://app.codecov.io/gh/Data-Wise/medfit)
 [![pkgdown](https://github.com/Data-Wise/medfit/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/Data-Wise/medfit/actions/workflows/pkgdown.yaml)
 
 <!-- badges: start -->
@@ -224,7 +224,7 @@ See [Ecosystem Coordination](planning/ECOSYSTEM.md) for version compatibility an
 
 Comprehensive articles are available on the package website:
 
-- **[Get Started](https://data-wise.github.io/medfit/articles/medfit.html)**: Quick introduction to medfit
+- **[Get Started](https://data-wise.github.io/medfit/articles/getting-started.html)**: Quick introduction to medfit
 - **[Introduction](https://data-wise.github.io/medfit/articles/introduction.html)**: Detailed S7 class documentation
 - **[Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html)**: Extract from lm/glm/lavaan models
 - **[Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html)**: Parametric and nonparametric bootstrap methods
@@ -274,7 +274,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.2.0. https://github.com/data-wise/medfit
+R package version 0.2.1. https://CRAN.R-project.org/package=medfit
 ```
 
 ## Related Resources

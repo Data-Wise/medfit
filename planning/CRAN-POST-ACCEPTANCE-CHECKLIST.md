@@ -1,27 +1,19 @@
 # Post-CRAN-Acceptance Checklist — medfit 0.2.1
 
-Actions to run **once CRAN accepts medfit 0.2.1**. Created 2026-06-01; updated 2026-06-10.
+Actions to run **once CRAN accepts medfit 0.2.1**. Created 2026-06-01; updated 2026-06-18.
 
-> 🔺 **UPDATE 2026-06-10:** the submission is now **0.2.1** (round-2 reviewer
-> fixes: GLM acronym, references, `\value`, `\donttest`, MASS→Imports), not 0.2.0.
-> This is a **two-stage** release: 0.2.1 unblocks the Suggests/`>= 0.2.0`
-> dependents (RMediation, mediationverse, medsim); **probmed needs medfit
-> 0.3.0 on CRAN** (a later submission — it imports 0.3.0-only features). See the
-> corrected `planning/CASCADE-cran-flip-2026-06-03.md`. Also, per the 2026-06-03
-> decision **RMediation KEEPS medfit in `Suggests`** (not Imports) — §3 below
-> (the "Remotes→Imports flip") is superseded by the CASCADE doc; only the
-> Remotes-drop + floor-pin applies.
+> ✅ **UPDATE 2026-06-18: medfit 0.2.1 ACCEPTED ON CRAN.** Stage 1 cascade
+> complete (RMediation PR #7, mediationverse dev). Stage 2 (probmed) blocked
+> on medfit 0.3.0 CRAN.
 
-Submission status: 0.2.1 checked clean (`--as-cran --run-donttest` +
-`_R_CHECK_DEPENDS_ONLY_`/`_R_CHECK_SUGGESTS_ONLY_` = 0/0/0); win-builder R-devel
-= 1 NOTE (author surnames). `submit_cran()` + email confirmation pending
-(maintainer action). medfit on CRAN gates the downstream cascade.
+~~Submission status: 0.2.1 checked clean; submit_cran() + email confirmation pending.~~
+**Accepted 2026-06-18.**
 
 ---
 
 ## 1. Tag / release hygiene (medfit)
 
-- [ ] **Refresh the `v0.2.0` tag to match the accepted source.** The current tag
+- [ ] **Refresh the `v0.2.1` tag to point at `feature/cran-round2` HEAD** (the submitted source). The accepted source lives on that branch; a tag on its tip makes the CRAN submission traceable. The current tag
       (`0b58ca8`) predates the CRAN-prep commits; `main` HEAD has the accepted
       source (delta is metadata-only: `.Rbuildignore`, `inst/CITATION`, wording).
       From a **clean shell** (branch-guard blocks `--force` from dev/main-pinned
@@ -32,37 +24,33 @@ Submission status: 0.2.1 checked clean (`--as-cran --run-donttest` +
       git push origin v0.2.0 --force      # tag ref, not a branch
       ```
       The existing GitHub release follows the tag name automatically.
-- [ ] Confirm the CRAN page is live: https://CRAN.R-project.org/package=medfit
-      (the README CRAN badge turns green once indexed, ~1 day).
+- [x] Confirm the CRAN page is live: https://CRAN.R-project.org/package=medfit ✅
 
 ## 2. Start the next dev cycle (medfit)
 
-- [ ] On `dev`: bump `DESCRIPTION` to `Version: 0.2.0.9000` (development version).
-- [ ] Add a fresh `# medfit (development version)` heading at the top of `NEWS.md`.
-- [ ] `.STATUS`: mark medfit **on CRAN**; Blocker B fully shipped.
+- [x] `.STATUS`: marked medfit on CRAN ✅ (2026-06-18)
+- [x] `NEWS.md`: 0.2.1 entry added ✅
+- [x] `README.md`: citation updated to 0.2.1 + CRAN URL ✅
+- [x] Tag `v0.2.1` on `feature/cran-round2` HEAD ✅ (2026-06-18)
 
-## 3. RMediation: `Remotes:` → `Imports` flip (v1.5.0) — THE downstream unblock
+## 3. RMediation v1.5.0 — THE downstream unblock
 
-- [ ] DESCRIPTION: move `medfit` from `Suggests:` to `Imports:` with a floor:
-      `medfit (>= 0.2.0)`.
-- [ ] **Remove the `Remotes: data-wise/medfit` line** (CRAN forbids `Remotes:` in
-      submitted packages — this is the whole reason the flip waited on CRAN).
-- [ ] Replace any `requireNamespace("medfit", quietly = TRUE)` guards / conditional
-      use with direct `medfit::` calls now that it is a hard dependency. (Check
-      `R/ci_medfit.R` and `R/zzz.R`.)
-- [ ] `R CMD check` + tests against **CRAN medfit** (not the GitHub Remotes build);
-      confirm the serial CI path (`ci_serial_mediation_data()`) still resolves the
-      `a`/`d1…`/`b` name contract — it does as of medfit 0.2.0 (verified this cycle).
-- [ ] Version-bump RMediation → 1.5.0, update NEWS, release.
-- [ ] Submit RMediation 1.5.0 to CRAN.
-- [ ] (Related, independent) rename RMediation `develop` → `dev` for ecosystem
-      naming consistency (long-tracked item; do alongside or separately).
+- [x] `Remotes: data-wise/medfit` line removed ✅
+- [x] `Suggests: medfit (>= 0.2.0)` pinned ✅ (kept in Suggests — guards intact)
+- [x] `R CMD check --strict` (noSuggests + suggests-only + --run-donttest) = 0/0/1 (expected NOTE) ✅
+- [x] CI all green (macOS/Windows/Ubuntu/coverage/pkgdown) ✅
+- [x] Version bumped → 1.5.0, NEWS updated ✅
+- [x] PR #7 open (`dev → main`) ✅
+- [x] **Merge PR #7** → tag `v1.5.0` → GitHub release ✅ (2026-06-18) | CRAN submit pending (maintainer action)
+- [x] **Pre-release strict check re-run (2026-06-18)**: noSuggests + suggests-only = 0/0/0 ✅ (fixed medsim 404 URL in README → commit `0e2c997` on main, push pending release)
+- [ ] Push `0e2c997` to `origin/main` + `devtools::submit_cran()` + email click
 
 ## 4. Ecosystem doc sync
 
-- [ ] `mediation-planning`: in `TODOS.md` + `MEDFIT-COVARIANCE-EXTRACTION-BLOCKERS-SPEC.md`,
-      mark medfit on CRAN, Blocker B shipped, RMediation v1.5.0 unblocked/in-progress.
-- [ ] `mediationverse` `STATUS.md`: medfit on CRAN; refresh per-package status.
+- [x] `ECOSYSTEM-HEALTH-2026-06-03.md` dashboard updated ✅
+- [x] `CASCADE-cran-flip-2026-06-03.md` status updated ✅
+- [x] mediationverse `Remotes:` drop committed to dev ✅
+- [x] medsim: drop `Data-Wise/medfit` from Remotes, pin Suggests >= 0.2.0 ✅ (2026-06-18)
 
 ## Gotchas carried from this cycle
 

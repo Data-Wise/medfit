@@ -9,8 +9,11 @@ inst/doc
 medfit.code-workspace
 revdep/
 # build / check artifacts (never commit these)
+/CRAN-SUBMISSION
 *.tar.gz
 *.Rcheck/
 /check/
 .vscode/
+.claude/allow-dev-edit
 .claude/guard-session-counts
+.claude/settings.local.json

@@ -115,13 +115,13 @@ generate_serial_mediation_data <- function(n = 200,
 #'
 #' @return Data frame with columns X, M1, M2, M3, Y
 generate_serial_mediation_data_3med <- function(
-    n = 200,
-    a = 0.5,
-    d21 = 0.4,
-    d32 = 0.35,
-    b = 0.3,
-    c_prime = 0.1,
-    seed = 123) {
+  n = 200,
+  a = 0.5,
+  d21 = 0.4,
+  d32 = 0.35,
+  b = 0.3,
+  c_prime = 0.1,
+  seed = 123) {
   set.seed(seed)
   X <- rnorm(n)
   M1 <- a * X + rnorm(n)
