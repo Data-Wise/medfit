@@ -1,24 +1,21 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes
 
-Remaining NOTEs:
-* checking CRAN incoming feasibility ... NOTE
-  - Maintainer: 'Davood Tofighi <dtofighi@gmail.com>' (informational).
-  - Days since last update: <N>. medfit 0.2.1 was accepted on CRAN 2026-06-18.
+Checked with `devtools::check(cran = TRUE, args = "--run-donttest", env_vars =
+c(_R_CHECK_DEPENDS_ONLY_ = "true", _R_CHECK_SUGGESTS_ONLY_ = "true",
+_R_CHECK_CRAN_INCOMING_ = "true", _R_CHECK_CRAN_INCOMING_REMOTE_ = "true"))`
+on R 4.6.1 (macOS, aarch64). `urlchecker::url_check()` and
+`spelling::spell_check_package()` both clean.
 
 ## Submission timing
 
-This release is being **held** to respect the CRAN 1–2 month update cadence:
-planned submission **on or after ~2026-07-18** (≥ 1 month after 0.2.1). By then
-the "Days since last update" NOTE should no longer appear.
-
-<!-- IF an earlier submission becomes necessary, replace the line below with the
-     real reason (e.g. a user-facing bug fix, or a documented ecosystem
-     dependency) before submitting. Do NOT submit within the cadence window
-     without a concrete justification CRAN will accept. -->
-Justification for any early submission: **[FILL IN — concrete reason]**
+This release respects the CRAN 1-2 month update cadence: medfit 0.2.1 was
+accepted 2026-06-18; this submission is on/after 2026-07-18 (>= 1 month
+later), so no "Days since last update" NOTE is expected.
 
 ## Reverse dependencies
 
-All reverse dependencies passed (see revdep/cran.md).
+One reverse dependency on CRAN: RMediation (via Suggests). RMediation's full
+test suite (307 tests) run against this medfit 0.3.1 build: 0 failures, 0
+warnings.
