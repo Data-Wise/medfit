@@ -22,9 +22,9 @@ mechanism from `spelling::spell_check_package()`, controlled by
      same ignore list to cover all 4 words (PR #54).
 
 Re-dispatched win-builder (all 3 flavors) against the final 0.3.2 source
-(commit 9b4d377) on 2026-07-20 to confirm; results pending. If any NOTE
-still recurs, it is CRAN-safe to submit with as explained above --
-CRAN accepts proper-noun aspell NOTEs routinely.
+(commit 9b4d377) on 2026-07-20: R-release 4.5.3 and R-devel (r90279) both
+returned `Status: OK`, no NOTEs -- the aspell fix (PR #54) is confirmed
+clean on all checked flavors.
 
 ## Submission timing
 
