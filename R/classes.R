@@ -43,7 +43,10 @@
 #' @param source_package Character scalar: package/engine used for fitting
 #'
 #' @return A MediationData S7 object
-#' @usage NULL
+#' @usage
+#' MediationData(a_path, b_path, c_prime, estimates, vcov, sigma_m, sigma_y,
+#'   family_m, family_y, treatment, mediator, outcome, mediator_predictors,
+#'   outcome_predictors, data, n_obs, converged, source_package)
 #'
 #' @details
 #' This class provides a unified container for mediation model information
@@ -235,7 +238,11 @@ S7::S4_register(MediationData)
 #' @param source_package Character scalar: package/engine used for fitting
 #'
 #' @return A SerialMediationData S7 object
-#' @usage NULL
+#' @usage
+#' SerialMediationData(a_path, d_path, b_path, c_prime, estimates, vcov,
+#'   sigma_mediators, sigma_y, treatment, mediators, outcome,
+#'   mediator_predictors, outcome_predictors, data, n_obs, converged,
+#'   source_package)
 #'
 #' @details
 #' ## Serial Mediation Structure
@@ -477,7 +484,9 @@ S7::S4_register(SerialMediationData)
 #' @param call Call object or NULL: original function call
 #'
 #' @return A BootstrapResult S7 object
-#' @usage NULL
+#' @usage
+#' BootstrapResult(estimate, ci_lower, ci_upper, ci_level, boot_estimates,
+#'   n_boot, method, call)
 #'
 #' @details
 #' This class standardizes bootstrap inference results across different
@@ -1022,7 +1031,11 @@ S7::method(show, SerialMediationData) <- function(object) {
 #' @param source_package Character name of the originating package.
 #'
 #' @return A `ParallelMediationData` S7 object.
-#' @usage NULL
+#' @usage
+#' ParallelMediationData(a_paths, b_paths, c_prime, estimates, vcov,
+#'   sigma_mediators, sigma_y, treatment, mediators, outcome,
+#'   mediator_predictors, outcome_predictors, data, n_obs, converged,
+#'   source_package)
 #'
 #' @examples
 #' pmd <- ParallelMediationData(
@@ -1235,7 +1248,11 @@ S7::method(print, ParallelMediationData) <- function(x, ...) {
 #' @param source_package Character name of the originating package.
 #'
 #' @return An `InteractionMediationData` S7 object.
-#' @usage NULL
+#' @usage
+#' InteractionMediationData(a_path, b_path, c_prime, interaction, cde,
+#'   int_ref, int_med, pie, nde, nie, total_effect, m_star, estimates, vcov,
+#'   sigma_m, sigma_y, treatment, mediator, outcome, mediator_predictors,
+#'   outcome_predictors, data, n_obs, converged, source_package)
 #'
 #' @examples
 #' # Hand-built object (theta3 = 0.2 interaction, m* = 0)

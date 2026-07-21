@@ -3,6 +3,11 @@
 \name{MediationData}
 \alias{MediationData}
 \title{MediationData S7 Class}
+\usage{
+MediationData(a_path, b_path, c_prime, estimates, vcov, sigma_m, sigma_y,
+  family_m, family_y, treatment, mediator, outcome, mediator_predictors,
+  outcome_predictors, data, n_obs, converged, source_package)
+}
 \arguments{
 \item{a_path}{Numeric scalar: effect of treatment on mediator (a path)}
 

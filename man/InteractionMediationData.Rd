@@ -3,6 +3,12 @@
 \name{InteractionMediationData}
 \alias{InteractionMediationData}
 \title{InteractionMediationData: Mediation with Treatment-Mediator Interaction}
+\usage{
+InteractionMediationData(a_path, b_path, c_prime, interaction, cde,
+  int_ref, int_med, pie, nde, nie, total_effect, m_star, estimates, vcov,
+  sigma_m, sigma_y, treatment, mediator, outcome, mediator_predictors,
+  outcome_predictors, data, n_obs, converged, source_package)
+}
 \arguments{
 \item{a_path}{Numeric scalar: treatment -> mediator effect (\eqn{\beta_1}{b1}).}
 
