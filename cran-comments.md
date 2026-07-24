@@ -9,20 +9,22 @@ on R 4.6.1 (macOS, aarch64): 0/0/0 (this machine has no local `aspell`, so
 the DESCRIPTION spell-check sub-check does not run here). `urlchecker::url_check()`
 and `spelling::spell_check_package()` both clean.
 
-win-builder (R-release 4.6.1, R-oldrelease 4.5.3, R-devel r90279 -- all of
-which do run `aspell`) checked this same source as 0.3.1, before the
-Version bump to 0.3.2 (no code change since, only Version/Date/NEWS -- see
-"Submission timing" below for why); it reported 1 NOTE on every flavor:
+win-builder (R-release, R-oldrelease, R-devel -- all of which do run
+`aspell`) iterated twice on this DESCRIPTION-only spelling check (a separate
+mechanism from `spelling::spell_check_package()`, controlled by
+`.aspell/defaults.R`, not `inst/WORDLIST`):
 
-  Possibly misspelled words in DESCRIPTION:
-    VanderWeele (20:42)
+  1. Original 1 NOTE: "VanderWeele" (cited author surname). Fixed via
+     `.aspell/defaults.R` (PR #51).
+  2. Recheck surfaced a different 1 NOTE instead: "RMediation medrobust
+     probmed" (single-quoted package names on the DESCRIPTION line citing
+     the mediationverse ecosystem, text unchanged throughout). Extended the
+     same ignore list to cover all 4 words (PR #54).
 
-This is the cited author's surname (VanderWeele 2014, four-way decomposition
-method reference), not a misspelling. Added `.aspell/defaults.R` with
-`description <- list(ignore = c("VanderWeele"))` (PR #51, merged to dev) to
-suppress it via R's documented package-defaults mechanism
-(`?aspell-utils`). Re-dispatched win-builder (all 3 flavors) against the
-0.3.2 source on 2026-07-20 to confirm; results pending.
+Re-dispatched win-builder (all 3 flavors) against the final 0.3.2 source
+(commit 9b4d377) on 2026-07-20: R-release 4.5.3 and R-devel (r90279) both
+returned `Status: OK`, no NOTEs -- the aspell fix (PR #54) is confirmed
+clean on all checked flavors.
 
 ## Submission timing
 

@@ -3,6 +3,12 @@
 \name{SerialMediationData}
 \alias{SerialMediationData}
 \title{SerialMediationData S7 Class}
+\usage{
+SerialMediationData(a_path, d_path, b_path, c_prime, estimates, vcov,
+  sigma_mediators, sigma_y, treatment, mediators, outcome,
+  mediator_predictors, outcome_predictors, data, n_obs, converged,
+  source_package)
+}
 \arguments{
 \item{a_path}{Numeric scalar: effect of treatment on first mediator (X -> M1)}
 

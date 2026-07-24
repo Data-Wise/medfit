@@ -3,6 +3,12 @@
 \name{ParallelMediationData}
 \alias{ParallelMediationData}
 \title{ParallelMediationData: Parallel (Multiple-Mediator) Mediation Structure}
+\usage{
+ParallelMediationData(a_paths, b_paths, c_prime, estimates, vcov,
+  sigma_mediators, sigma_y, treatment, mediators, outcome,
+  mediator_predictors, outcome_predictors, data, n_obs, converged,
+  source_package)
+}
 \arguments{
 \item{a_paths}{Numeric vector: treatment -> mediator effects
 \eqn{(a_1, \dots, a_k)}{(a_1, ..., a_k)}.}
