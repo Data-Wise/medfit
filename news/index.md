@@ -1,11 +1,22 @@
 # Changelog
 
-## medfit 0.3.2 (2026-07-20)
+## medfit 0.3.2 (2026-07-23)
 
 CRAN release: 2026-07-23
 
-CRAN patch release. No new features; CI/lint compatibility and CRAN
-compliance fixes only (no non-whitespace change to `R/`).
+CRAN patch release. No new features; CI/lint compatibility, CRAN
+compliance, and Rd documentation fixes only (no change to exported
+function behavior).
+
+### CRAN pretest fix
+
+- First submission attempt (2026-07-21) was archived by CRAN’s incoming
+  pretest over a Debian-flavor NOTE: S7 class Rd files had `\arguments`
+  without a `\usage` section (`BootstrapResult`,
+  `InteractionMediationData`, `MediationData`, `ParallelMediationData`,
+  `SerialMediationData`). Fixed by adding explicit constructor-call
+  `@usage` signatures to all 5 S7 classes. Resubmitted 2026-07-23 and
+  accepted.
 
 ### CI and lint
 

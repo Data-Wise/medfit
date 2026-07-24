@@ -69,8 +69,12 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.3.2" id="medfit-032-2026-07-20">medfit 0.3.2 (2026-07-20)<a class="anchor" aria-label="anchor" href="#medfit-032-2026-07-20"></a></h2><p class="text-muted">CRAN release: 2026-07-23</p>
-<p>CRAN patch release. No new features; CI/lint compatibility and CRAN compliance fixes only (no non-whitespace change to <code>R/</code>).</p>
+<h2 class="pkg-version" data-toc-text="0.3.2" id="medfit-032-2026-07-23">medfit 0.3.2 (2026-07-23)<a class="anchor" aria-label="anchor" href="#medfit-032-2026-07-23"></a></h2><p class="text-muted">CRAN release: 2026-07-23</p>
+<p>CRAN patch release. No new features; CI/lint compatibility, CRAN compliance, and Rd documentation fixes only (no change to exported function behavior).</p>
+<div class="section level3">
+<h3 id="cran-pretest-fix-0-3-2">CRAN pretest fix<a class="anchor" aria-label="anchor" href="#cran-pretest-fix-0-3-2"></a></h3>
+<ul><li>First submission attempt (2026-07-21) was archived by CRAN’s incoming pretest over a Debian-flavor NOTE: S7 class Rd files had <code>\arguments</code> without a <code>\usage</code> section (<code>BootstrapResult</code>, <code>InteractionMediationData</code>, <code>MediationData</code>, <code>ParallelMediationData</code>, <code>SerialMediationData</code>). Fixed by adding explicit constructor-call <code>@usage</code> signatures to all 5 S7 classes. Resubmitted 2026-07-23 and accepted.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="ci-and-lint-0-3-2">CI and lint<a class="anchor" aria-label="anchor" href="#ci-and-lint-0-3-2"></a></h3>
 <ul><li>Fixed <code>lint</code> job breakage from lintr 3.4.0’s tightened <code>indentation_linter</code> (reindented function signatures 4 -&gt; 2 spaces; whitespace only, <code>git diff -w</code> empty).</li>
