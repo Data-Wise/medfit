@@ -1,9 +1,9 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.2.0 released** (simple + serial mediation), submitted to CRAN. Next = post-v0.2.0 extensions (see `EXTENSIONS-PLAN-2026-06-03.md`).
-**Timeline**: MVP shipped; extensions A/B/C planned (parallel → interaction → engine adapters)
-**Last Updated**: 2026-06-03
+**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23). Extensions A (parallel mediation) and B (VanderWeele four-way interaction) both COMPLETE and merged to dev. Next = Extension C (engine adapters/CMAverse) — see `EXTENSIONS-PLAN-2026-06-03.md`.
+**Timeline**: MVP shipped; extensions A ✅ done, B ✅ done, C planned (engine adapters)
+**Last Updated**: 2026-07-24
 
 > **Note:** Phases 7/7b/7c below are the detailed *design reference*. The current,
 > prioritized board lives in `planning/EXTENSIONS-PLAN-2026-06-03.md`.
@@ -1885,32 +1885,28 @@ Integration is successful when:
 
 ---
 
-**Status**: ✅ ALL PHASES COMPLETE → v0.1.0 Released
+**Status**: ✅ ALL MVP PHASES COMPLETE + Extensions A & B COMPLETE → v0.3.2 on CRAN
 
 **Completed**:
 - ✅ Phase 1: Package Setup (CI/CD, documentation, Dependabot)
 - ✅ Phase 2: S7 Class Architecture (MediationData, SerialMediationData, BootstrapResult)
 - ✅ Phase 2.5: Comprehensive Quarto Documentation (4 vignettes, pkgdown website)
-- ✅ Phase 3: Model Extraction (lm/glm and lavaan methods, 184 tests passing)
+- ✅ Phase 3: Model Extraction (lm/glm and lavaan methods)
 - ✅ Phase 4: Model Fitting (GLM engine, formula interface)
 - ✅ Phase 5: Bootstrap Infrastructure (parametric, nonparametric, plugin, parallel)
 - ✅ Phase 6: Generic Functions (coef, vcov, confint, nobs, nie, nde, te, pm, paths, tidy, glance)
 - ✅ Phase 6.5: ADHD-Friendly API (med, quick functions)
-- ✅ Phase 7: Polish & Release (R CMD check clean, badges, CRAN submission prep)
+- ✅ Phase 7 (Ext B): VanderWeele four-way interaction — `InteractionMediationData`, lm/glm + lavaan extraction, delta-method CIs. PRs #38/#39/#40 merged to dev.
+- ✅ Phase 7's structural sibling, Ext A (parallel mediation) — `ParallelMediationData`, lm/glm + lavaan extraction, vignette. PRs #34/#36/#37 merged to dev.
+- ✅ Phase 8: Polish & Release — v0.3.2 accepted + published on CRAN (2026-07-23)
 
-**Current (Post-Release)**:
-- 🚀 v0.1.0 Tagged and Ready for CRAN
-- 🎨 pkgdown Site: Default Bootstrap 5 + litera theme (simple, clean design)
+**Current**:
+- 🚀 v0.3.2 live on CRAN; `main`/`dev` synced
+- 🎨 pkgdown site deployed at https://data-wise.github.io/medfit/
 
 **Future Development**:
-- Phase 7 (Post-MVP): Interaction Support (VanderWeele four-way decomposition)
-- Phase 7b (Post-MVP): Estimation Engine Architecture (user interface, Decomposition class)
-- Phase 7c (Post-MVP): Engine Adapters (CMAverse, tmle3, etc.)
+- Phase 7c (Ext C, NEXT): Engine Adapters (CMAverse first, tmle3 future) — needs `SPEC-engine-registry.md` + `SPEC-cmaverse-adapter.md` (not yet written)
+- Phase 7b design (estimation-engine UI, Decomposition class) informs Ext C but has no standalone increment of its own — folded into Ext C's scope
 
-**Post-MVP**:
-- Phase 7: Interaction Support (VanderWeele four-way decomposition)
-- Phase 7b: Estimation Engine Architecture (user interface, Decomposition class)
-- Phase 7c: Engine Adapters (CMAverse, tmle3, etc.)
-
-**Next Review**: After Phase 4 completion
-**Last Updated**: 2025-12-03
+**Next Review**: After Ext C spec is written
+**Last Updated**: 2026-07-24
