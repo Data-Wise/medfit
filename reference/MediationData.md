@@ -4,6 +4,14 @@ S7 class containing standardized mediation model structure, including
 path coefficients, parameter estimates, variance-covariance matrix, and
 metadata.
 
+## Usage
+
+``` r
+MediationData(a_path, b_path, c_prime, estimates, vcov, sigma_m, sigma_y,
+  family_m, family_y, treatment, mediator, outcome, mediator_predictors,
+  outcome_predictors, data, n_obs, converged, source_package)
+```
+
 ## Arguments
 
 - a_path:

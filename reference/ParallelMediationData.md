@@ -10,6 +10,15 @@ The total indirect effect is the sum of the per-mediator products,
 [SerialMediationData](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
 (serial chains).
 
+## Usage
+
+``` r
+ParallelMediationData(a_paths, b_paths, c_prime, estimates, vcov,
+  sigma_mediators, sigma_y, treatment, mediators, outcome,
+  mediator_predictors, outcome_predictors, data, n_obs, converged,
+  source_package)
+```
+
 ## Arguments
 
 - a_paths:

@@ -65,7 +65,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="logo.png" class="logo" alt=""><h1>CLAUDE.md for medfit Package</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.3.2/CLAUDE.md" class="external-link"><code>CLAUDE.md</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/CLAUDE.md" class="external-link"><code>CLAUDE.md</code></a></small>
     </div>
 
 <div id="claudemd-for-medfit-package" class="section level1">
@@ -527,7 +527,7 @@
 <td>github.com/data-wise/medsim</td>
 <td>Simulation infrastructure</td>
 </tr></tbody></table><hr><p><strong>Last Updated</strong>: 2026-06-02 <strong>Maintained by</strong>: medfit development team</p>
-<p><strong>Current status</strong>: v0.3.2 released to <code>main</code>, tagged <code>v0.3.2</code> as a GitHub pre-release (tarball attached), <code>cran-prep</code> verdict ready — only <code>devtools::submit_cran()</code> remains (maintainer-manual). medfit <strong>0.2.1 ACCEPTED ON CRAN</strong> (2026-06-18); cadence-hold (≥1mo) expired 2026-07-18, cleared for submission. (Bumped 0.3.1→0.3.2 to avoid colliding with an already-published, non-CRAN <code>v0.3.1</code> GitHub tag from 2026-06-12 — no <code>R/</code> code changed since that tag.) Stage 1 cascade COMPLETE: RMediation 1.5.0 released to GitHub (strict check 0/0/0 ✅, CRAN submit pending maintainer action — push <code>0e2c997</code> + <code>devtools::submit_cran()</code>); mediationverse + medsim Remotes dropped, medfit&gt;=0.2.0 pinned. Stage 2 (probmed, needs medfit 0.3.x on CRAN) still blocked. Next independent workstream: medrobust CRAN prep.</p>
+<p><strong>Current status</strong>: medfit <strong>0.3.2 ACCEPTED + PUBLISHED ON CRAN</strong> (2026-07-23, confirmed live at <a href="https://cran.r-project.org/web/packages/medfit/index.html" class="external-link uri">https://cran.r-project.org/web/packages/medfit/index.html</a>). First submission attempt (2026-07-21) was <code>[CRAN-pretest-archived]</code> over a Debian-flavor NOTE (S7 Rd files missing explicit <code>@usage</code>); fixed via 5 S7 Rd <code>@usage</code> signatures + <code>ParallelMediationData</code> codoc (commit <code>fc7b39c</code>, PR #55), resubmitted 2026-07-23, passed pretest clean. GitHub <code>v0.3.2</code> release promoted from pre-release to full/latest same day. RMediation 1.6.1 also ACCEPTED + PUBLISHED ON CRAN (2026-07-21). <strong>Stage 2 cascade UNBLOCKED</strong>: probmed (<code>Imports: medfit &gt;= 0.3.0</code>) can now drop its <code>Remotes: data-wise/medfit@v0.3.0</code> pin and proceed to its own CRAN submission — see <code>.STATUS</code> for the mechanical checklist (~2-3hr, most pre-CRAN TODOs already closed). Independent workstream: medrobust CRAN prep is ON HOLD pending its associated manuscript submission (not medfit-related).</p>
 </div>
 <div class="section level3">
 <h3 id="cran-check-practice-learned-2026-06-10-extended-2026-07-20">CRAN check practice (learned 2026-06-10, extended 2026-07-20)<a class="anchor" aria-label="anchor" href="#cran-check-practice-learned-2026-06-10-extended-2026-07-20"></a></h3>

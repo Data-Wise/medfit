@@ -7,6 +7,15 @@ This class supports serial mediation chains of any length, from simple
 two-mediator models (product-of-three: a \* d \* b) to complex chains
 with many mediators (product-of-k).
 
+## Usage
+
+``` r
+SerialMediationData(a_path, d_path, b_path, c_prime, estimates, vcov,
+  sigma_mediators, sigma_y, treatment, mediators, outcome,
+  mediator_predictors, outcome_predictors, data, n_obs, converged,
+  source_package)
+```
+
 ## Arguments
 
 - a_path:

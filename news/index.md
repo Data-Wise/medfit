@@ -2,6 +2,8 @@
 
 ## medfit 0.3.2 (2026-07-20)
 
+CRAN release: 2026-07-23
+
 CRAN patch release. No new features; CI/lint compatibility and CRAN
 compliance fixes only (no non-whitespace change to `R/`).
 

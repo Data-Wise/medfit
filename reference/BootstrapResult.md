@@ -3,6 +3,13 @@
 S7 class containing results from bootstrap inference, including point
 estimates, confidence intervals, and bootstrap distribution.
 
+## Usage
+
+``` r
+BootstrapResult(estimate, ci_lower, ci_upper, ci_level, boot_estimates,
+  n_boot, method, call)
+```
+
 ## Arguments
 
 - estimate:

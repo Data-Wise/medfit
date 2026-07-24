@@ -11,6 +11,15 @@ the decomposition; causal interpretation is the user's responsibility
 (it requires the four no-unmeasured-confounding assumptions of
 VanderWeele 2014).
 
+## Usage
+
+``` r
+InteractionMediationData(a_path, b_path, c_prime, interaction, cde,
+  int_ref, int_med, pie, nde, nie, total_effect, m_star, estimates, vcov,
+  sigma_m, sigma_y, treatment, mediator, outcome, mediator_predictors,
+  outcome_predictors, data, n_obs, converged, source_package)
+```
+
 ## Arguments
 
 - a_path:

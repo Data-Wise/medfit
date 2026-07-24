@@ -85,7 +85,7 @@ the four no-unmeasured-confounding assumptions of VanderWeele 2014)."><meta prop
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>InteractionMediationData: Mediation with Treatment-Mediator Interaction</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.3.2/R/classes.R" class="external-link"><code>R/classes.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/classes.R" class="external-link"><code>R/classes.R</code></a></small>
       <div class="d-none name"><code>InteractionMediationData.Rd</code></div>
     </div>
 
@@ -103,6 +103,13 @@ decomposition; causal interpretation is the user's responsibility (it requires
 the four no-unmeasured-confounding assumptions of VanderWeele 2014).</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">InteractionMediationData</span><span class="op">(</span><span class="va">a_path</span>, <span class="va">b_path</span>, <span class="va">c_prime</span>, <span class="va">interaction</span>, <span class="va">cde</span>,</span>
+<span>  <span class="va">int_ref</span>, <span class="va">int_med</span>, <span class="va">pie</span>, <span class="va">nde</span>, <span class="va">nie</span>, <span class="va">total_effect</span>, <span class="va">m_star</span>, <span class="va">estimates</span>, <span class="va">vcov</span>,</span>
+<span>  <span class="va">sigma_m</span>, <span class="va">sigma_y</span>, <span class="va">treatment</span>, <span class="va">mediator</span>, <span class="va">outcome</span>, <span class="va">mediator_predictors</span>,</span>
+<span>  <span class="va">outcome_predictors</span>, <span class="va">data</span>, <span class="va">n_obs</span>, <span class="va">converged</span>, <span class="va">source_package</span><span class="op">)</span></span></code></pre></div>
+    </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
