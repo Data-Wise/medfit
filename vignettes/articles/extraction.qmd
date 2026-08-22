@@ -448,6 +448,77 @@ When the interaction is absent (or `decomposition = "two_way"`), extraction fall
 back to the standard `MediationData` — so existing two-way workflows are
 unchanged.
 
+### Interaction via the regmedint engine
+
+The two paths above extract from models **you** fit. `fit_mediation()` can
+instead delegate the fitting to the
+[regmedint](https://cran.r-project.org/package=regmedint) package, which
+implements VanderWeele's regression-based estimators in closed form, and hand
+back the same medfit classes:
+
+```{r}
+#| label: regmedint-interaction
+# regmedint requires a numeric 0/1 treatment
+set.seed(11)
+n <- 300
+d <- data.frame(X = rbinom(n, 1, 0.5), C = rnorm(n))
+d$M <- 0.5 * d$X + 0.2 * d$C + rnorm(n)
+d$Y <- 0.3 * d$X + 0.4 * d$M + 0.25 * d$X * d$M + 0.1 * d$C + rnorm(n)
+
+med_rmi <- fit_mediation(
+  formula_y = Y ~ X * M + C,
+  formula_m = M ~ X + C,
+  data = d,
+  treatment = "X",
+  mediator = "M",
+  engine = "regmedint"
+)
+
+decompose(med_rmi)                        # same four-way layout as above
+confint(med_rmi, parm = "components")     # regmedint's analytical SEs
+```
+
+The return class follows the same rule as `extract_mediation()`: an `X:M` term
+in `formula_y` yields an `InteractionMediationData`, its absence a plain
+`MediationData`. Components map from regmedint's own output as
+`CDE = cde`, `INTref = pnde − cde`, `INTmed = tnie − pnie`, and `PIE = pnie`.
+
+Standard errors come from regmedint's delta method rather than medfit's, so
+they are analytical — no bootstrap needed — and reproduce the SEs
+`regmedint::summary()` reports for the same model.
+
+Pass engine-specific settings through `engine_args`:
+
+```{r}
+#| label: regmedint-args
+med_rmi2 <- fit_mediation(
+  formula_y = Y ~ X * M + C,
+  formula_m = M ~ X + C,
+  data = d,
+  treatment = "X",
+  mediator = "M",
+  engine = "regmedint",
+  engine_args = list(
+    m_cde = 1,          # reference mediator level (default 0, as with m_star)
+    interaction = TRUE  # override the formula-based auto-detection
+  )
+)
+```
+
+Recognized names are `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`,
+`m_cde`, and `c_cond`; each replaces a value the adapter would otherwise derive
+from the formulas, families, and data.
+
+**Scope.** The regmedint engine needs a numeric 0/1 treatment and a linear
+(Gaussian) mediator model; the outcome may be Gaussian or binomial. Outside
+that range regmedint's closed-form effects stop being the products of
+regression coefficients that `MediationData` and `InteractionMediationData` are
+defined in terms of, so the adapter raises an explicit error instead of
+returning an object whose numbers would disagree with `nie()`. `weights` and
+`se_type = "sandwich"` are likewise refused rather than silently ignored.
+`regmedint` is a suggested package — install it with
+`install.packages("regmedint")`.
+
 ## Compatibility with RMediation
 
 The extraction design is compatible with RMediation's lavaan extractor:

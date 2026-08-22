@@ -1,3 +1,56 @@
+# medfit 0.4.0
+
+## New features
+
+* `fit_mediation()` gains a second engine, `engine = "regmedint"`, which fits
+  the mediator and outcome regressions through the suggested \pkg{regmedint}
+  package and returns medfit's own classes. On a formula without a
+  treatment-by-mediator term it returns a `MediationData`; on one carrying an
+  `X:M` term it returns an `InteractionMediationData` with the four-way
+  (VanderWeele) decomposition filled in from regmedint's closed-form
+  `cde`/`pnde`/`tnie`/`pnie`/`te` output. Auto-detection mirrors
+  `extract_mediation(decomposition = "auto")`.
+
+* `fit_mediation()` gains an `engine_args` argument: a named list of
+  engine-specific overrides, ignored by `engine = "glm"`. For the regmedint
+  engine it accepts `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`,
+  `m_cde`, and `c_cond`, each replacing a value the adapter would otherwise
+  derive from the formulas, families, and data.
+
+* Standard errors for the regmedint engine are analytical, not bootstrapped.
+  `confint()` on an `InteractionMediationData` now prefers a stored component
+  covariance block when the fitting engine supplied one; objects from the
+  lm/glm and lavaan extractors carry none, so their existing delta-method
+  gradient path is unchanged.
+
+## Details and limitations
+
+* The regmedint engine requires a numeric 0/1 treatment and a linear (Gaussian)
+  mediator model. Outside those cases regmedint's closed-form effects are no
+  longer the products of regression coefficients that
+  `MediationData`/`InteractionMediationData` are defined in terms of, so the
+  adapter raises an explicit error with guidance rather than returning an
+  object whose numbers disagree with `nie()`. Outcome models may be Gaussian or
+  binomial.
+
+* `engine = "regmedint"` does not support `weights` or `se_type = "sandwich"`
+  (regmedint implements neither); supplying them is an error rather than a
+  silent no-op.
+
+* `m_cde` defaults to `0`, matching the `m_star = 0` default already used by
+  the lm/glm and lavaan extractors, so all three report the CDE/INTref split at
+  the same reference level. `nde()`, `nie()`, `te()`, and `pm()` are invariant
+  to this choice.
+
+* \pkg{regmedint} is a `Suggests` dependency; medfit checks and tests cleanly
+  with it absent.
+
+## Internal
+
+* New internal helper `.find_interaction_term_formula()` (`R/utils.R`): the
+  formula-level counterpart of `.find_interaction_term()`, used to choose the
+  return class before any model is fitted.
+
 # medfit 0.3.2 (2026-07-23)
 
 CRAN patch release. No new features; CI/lint compatibility, CRAN

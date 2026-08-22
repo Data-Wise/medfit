@@ -21,7 +21,7 @@ blocked — see spec §7).
 | 1 | Dispatch extension (§2) | High | Low | **Done** (2026-08-22) |
 | 2 | regmedint adapter core (§3–§5) | High | Med | **Done** (2026-08-22) |
 | 3 | Tests + acceptance criteria (§6) | High | Med | **Done** (2026-08-22) |
-| 4 | Vignette + pkgdown + NEWS | Med | Low | Not started |
+| 4 | Vignette + pkgdown + NEWS | Med | Low | **Done** (2026-08-22) |
 
 **Total estimate:** ~1 week (per `EXTENSIONS-PLAN-2026-06-03.md`'s Ext C effort row).
 
@@ -146,17 +146,48 @@ new `engine_args` param)
 **Scope:** Per the grill's Open Questions (mechanical, decided at implementation time, not
 re-litigated here).
 
-- [ ] 4.1 Vignette section: "Using the regmedint engine" (where the existing fitting/extraction
+- [x] 4.1 Vignette section: "Using the regmedint engine" (where the existing fitting/extraction
       vignette lives — check `vignettes/` for the right file to extend vs. a new one)
-- [ ] 4.2 `_pkgdown.yml` reference entry for any newly exported symbols (if `.adapter_regmedint`
+- [x] 4.2 `_pkgdown.yml` reference entry for any newly exported symbols (if `.adapter_regmedint`
       stays internal/`@keywords internal`, likely no new reference entries needed — confirm)
-- [ ] 4.3 `NEWS.md` entry
-- [ ] 4.4 Roxygen docs on `fit_mediation()`'s updated signature (`engine_args` param, `"regmedint"`
+- [x] 4.3 `NEWS.md` entry
+- [x] 4.4 Roxygen docs on `fit_mediation()`'s updated signature (`engine_args` param, `"regmedint"`
       choice) — `devtools::document()`, verify `RoxygenNote` pin unchanged (`git diff dev --
       DESCRIPTION` empty per the Ext A/B gotcha)
 
-**Key files:** `vignettes/*.qmd` (update or new), `_pkgdown.yml` (update if needed), `NEWS.md`
-(update), `man/fit_mediation.Rd` (regenerated)
+**Key files:** `vignettes/articles/extraction.qmd` + `vignettes/articles/getting-started.qmd`
+(updated), `NEWS.md` (updated), `man/fit_mediation.Rd` (regenerated). `_pkgdown.yml` **not**
+changed — see 4.2 below.
+
+**Phase 4 notes / decisions taken (see `planning/specs/BRAINSTORM-ext-c-phase4-decisions-2026-08-22.md`):**
+
+- **4.1:** the four-way material lives in `vignettes/articles/extraction.qmd`, so the regmedint
+  engine got a sibling subsection there ("Interaction via the regmedint engine"), plus a
+  "Choosing an Engine" subsection in `getting-started.qmd`. Both articles set `eval: false`
+  globally, so the examples are displayed, not run — no regmedint build-time dependency for
+  pkgdown. The examples define their own numeric 0/1 treatment, since the articles' shared
+  `data` uses a continuous `X` that this engine deliberately rejects.
+- **4.2 resolved: no `_pkgdown.yml` change needed.** `fit_mediation` (line 124) and
+  `InteractionMediationData` (line 117) are already listed, and the adapter is `@noRd`/internal
+  with no new exported symbol.
+- **4.3:** NEWS.md has never carried an `[Unreleased]`/`(development version)` heading (verified
+  with `git log -S"Unreleased" -- NEWS.md`, zero hits), so the entry required a real version.
+  **Version bumped `0.3.2` → `0.4.0`, `Date` refreshed to 2026-08-22** — a new exported engine
+  is a minor bump on this package's own precedent (`0.3.1` carried `weights=`/`se_type=`). Only
+  `DESCRIPTION:4` and `NEWS.md:1` hold the version as live data; no test, CI job, or badge
+  asserts it. **This also cleared the strict-flavor WARNING** documented under 3.5: the strict
+  run is now 0 errors / 0 warnings / 0 notes.
+- **`m_cde` default flipped `mean(M)` → `0`** (the caveat raised in the Phase 2 notes). The
+  spec's rationale was wrong twice: the lm/glm extractor defaults `m_star = 0`
+  (`R/extract-lm.R:119,153`) and so does the lavaan extractor
+  (`test-extract-interaction-lavaan.R:38`), while regmedint has no `m_cde` default at all. All
+  three engines now report the CDE/INTref split at the same reference level; the cross-engine
+  test no longer needs to align `m_star` by hand, which is what makes it a real guard. `c_cond`
+  keeps the covariate sample means, matching the lm extractor's `E[M | X = 0]` convention.
+  Spec §5 updated with a dated correction note.
+- **PR split: one PR, Phases 1–4** (the grill filed this as "adjust if a single PR reads cleaner
+  once the diff exists"). The docs describe the code in the same diff, and splitting would merge
+  a user-facing engine into `dev` with no NEWS entry and no vignette.
 
 ## Friction Prevention
 

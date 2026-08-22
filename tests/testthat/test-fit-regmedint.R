@@ -26,7 +26,7 @@ test_that("no-interaction formula returns MediationData matching regmedint nde/n
   )
   ref <- regmedint::regmedint(
     data = d, yvar = "Y", avar = "X", mvar = "M", cvar = "C",
-    a0 = 0, a1 = 1, m_cde = mean(d$M), c_cond = mean(d$C),
+    a0 = 0, a1 = 1, m_cde = 0, c_cond = mean(d$C),
     mreg = "linear", yreg = "linear", interaction = FALSE
   )
 
@@ -62,14 +62,14 @@ test_that("X:M formula returns InteractionMediationData matching the section-3 m
   )
   ref <- regmedint::regmedint(
     data = d, yvar = "Y", avar = "X", mvar = "M", cvar = "C",
-    a0 = 0, a1 = 1, m_cde = mean(d$M), c_cond = mean(d$C),
+    a0 = 0, a1 = 1, m_cde = 0, c_cond = mean(d$C),
     mreg = "linear", yreg = "linear", interaction = TRUE
   )
   eff <- coef(ref)
 
   expect_s7_class(fit, InteractionMediationData)
   expect_equal(fit@source_package, "regmedint")
-  expect_equal(fit@m_star, mean(d$M))
+  expect_equal(fit@m_star, 0)
   # Section-3 mapping
   expect_equal(fit@cde, unname(eff[["cde"]]))
   expect_equal(fit@int_ref, unname(eff[["pnde"]] - eff[["cde"]]))
@@ -88,17 +88,17 @@ test_that("X:M formula returns InteractionMediationData matching the section-3 m
   expect_equal(fit@cde, fit@c_prime + fit@interaction * fit@m_star)
 })
 
-test_that("interaction case agrees with the glm engine when m_star is aligned", {
+test_that("interaction case agrees with the glm engine at the shared default m_star", {
   d <- regmedint_data()
   rm_fit <- fit_mediation(Y ~ X * M + C, M ~ X + C,
     data = d, treatment = "X", mediator = "M", engine = "regmedint"
   )
-  # glm engine defaults to m_star = 0; regmedint engine uses mean(M). Align the
-  # glm side via extract_mediation(m_star = ) on the same regressions.
-  glm_fit <- extract_mediation(
-    lm(M ~ X + C, data = d), model_y = lm(Y ~ X * M + C, data = d),
-    treatment = "X", mediator = "M", data = d, m_star = mean(d$M)
+  # No m_star alignment: both engines default to 0, so the four-way split must
+  # agree out of the box. A failure here means the defaults have drifted apart.
+  glm_fit <- fit_mediation(Y ~ X * M + C, M ~ X + C,
+    data = d, treatment = "X", mediator = "M", engine = "glm"
   )
+  expect_equal(rm_fit@m_star, glm_fit@m_star)
   expect_equal(decompose(rm_fit), decompose(glm_fit))
 })
 
@@ -111,7 +111,7 @@ test_that("stored component SEs reproduce regmedint's reported SEs (Gaussian Y)"
   )
   ref <- regmedint::regmedint(
     data = d, yvar = "Y", avar = "X", mvar = "M", cvar = "C",
-    a0 = 0, a1 = 1, m_cde = mean(d$M), c_cond = mean(d$C),
+    a0 = 0, a1 = 1, m_cde = 0, c_cond = mean(d$C),
     mreg = "linear", yreg = "linear", interaction = TRUE
   )
   # regmedint::vcov() is diagonal-only, so only its SEs are comparable.
@@ -144,9 +144,8 @@ test_that("Gaussian-outcome SEs coincide with medfit's own delta method (cross-c
   rm_fit <- fit_mediation(Y ~ X * M + C, M ~ X + C,
     data = d, treatment = "X", mediator = "M", engine = "regmedint"
   )
-  glm_fit <- extract_mediation(
-    lm(M ~ X + C, data = d), model_y = lm(Y ~ X * M + C, data = d),
-    treatment = "X", mediator = "M", data = d, m_star = mean(d$M)
+  glm_fit <- fit_mediation(Y ~ X * M + C, M ~ X + C,
+    data = d, treatment = "X", mediator = "M", engine = "glm"
   )
   expect_equal(
     ci_se(suppressMessages(confint(rm_fit, parm = "components"))),
@@ -166,7 +165,7 @@ test_that("logistic outcome with interaction maps and carries regmedint SEs", {
   )
   ref <- regmedint::regmedint(
     data = d, yvar = "Yb", avar = "X", mvar = "M", cvar = "C",
-    a0 = 0, a1 = 1, m_cde = mean(d$M), c_cond = mean(d$C),
+    a0 = 0, a1 = 1, m_cde = 0, c_cond = mean(d$C),
     mreg = "linear", yreg = "logistic", interaction = TRUE
   )
   expect_s7_class(fit, InteractionMediationData)

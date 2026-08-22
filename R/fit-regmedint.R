@@ -217,12 +217,16 @@
 
   .regmedint_check_representable(a0, a1, mreg, has_interaction)
 
-  # --- m_cde / c_cond: sample means on the analysis data ---
+  # --- m_cde / c_cond: evaluation points for the CDE ---
+  # m_cde defaults to 0, matching the `m_star = 0` default of both other
+  # extractors (R/extract-lm.R, R/extract-lavaan.R) so all three engines report
+  # the CDE/INTref split at the same reference level. c_cond keeps the sample
+  # means, which is also what the lm extractor uses for E[M | X = 0].
   m_cde <- if ("m_cde" %in% names(engine_args)) {
     checkmate::assert_number(engine_args$m_cde, .var.name = "engine_args$m_cde")
     engine_args$m_cde
   } else {
-    mean(data_cc[[mediator]])
+    0
   }
   c_cond <- if ("c_cond" %in% names(engine_args)) {
     checkmate::assert_numeric(engine_args$c_cond, len = length(cvar), any.missing = FALSE,

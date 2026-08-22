@@ -253,6 +253,36 @@ med_data@b_path  # mediator to outcome
 med_data@c_prime # treatment to outcome, the direct path
 ```
 
+### Choosing an Engine
+
+`fit_mediation()` defaults to `engine = "glm"`, which fits both models with
+`stats::glm()`. A second engine delegates to the suggested
+[regmedint](https://cran.r-project.org/package=regmedint) package for
+closed-form regression-based effects:
+
+```{r}
+#| label: engine-regmedint
+# regmedint requires a numeric 0/1 treatment
+bin_data <- transform(mydata, X = as.integer(X > 0))
+
+med_rm <- fit_mediation(
+  formula_y = Y ~ X + M,
+  formula_m = M ~ X,
+  data = bin_data,
+  treatment = "X",
+  mediator = "M",
+  engine = "regmedint"
+)
+
+nie(med_rm)   # every generic works the same way
+```
+
+If `formula_y` carries a treatment-by-mediator term (`Y ~ X * M`), the
+regmedint engine returns an `InteractionMediationData` with the four-way
+decomposition and analytical standard errors. Engine-specific settings go
+through `engine_args`; see
+[Model Extraction](extraction.html) for the full mapping and its scope limits.
+
 ### Custom Bootstrap
 
 ```{r}

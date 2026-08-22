@@ -8,7 +8,8 @@ revised below after an adversarial-review pass + a 9-branch grill session; see
 **Reuses (do NOT reimplement):** the one-class-per-structure pattern
 (`MediationData`/`InteractionMediationData`); the `@vcov` naming-alias contract
 (`.expand_vcov_with_aliases()`, `R/utils.R`); `InteractionMediationData`'s existing `m_star`
-convention (reused for regmedint's `m_cde`/`c_cond` evaluation-point defaults).
+convention (reused for regmedint's `m_cde`/`c_cond` evaluation-point defaults — see the §5
+correction note: the actual convention is `m_star = 0`, not the sample mean).
 
 ---
 
@@ -168,8 +169,19 @@ family_y, family_m, ...`) currently exposes directly.
 | `cvar` | Remaining RHS terms of `formula_y` minus treatment/mediator/interaction | `engine_args$cvar` |
 | `mreg`/`yreg` | `family_m`/`family_y`: `gaussian()`→`"linear"`, `binomial()`→`"logistic"` | `engine_args$mreg`/`$yreg` |
 | `a0`/`a1` | `0`/`1` if `treatment` is binary in `data`; **error** with an explicit message otherwise (no silent guess for continuous/multi-level treatment) | `engine_args$a0`/`$a1` |
-| `m_cde`/`c_cond` | Sample means of `mediator`/covariates — same convention as `InteractionMediationData`'s existing `m_star` default | `engine_args$m_cde`/`$c_cond` |
+| `m_cde`/`c_cond` | `m_cde = 0`; `c_cond` = covariate sample means — see the correction note below | `engine_args$m_cde`/`$c_cond` |
 | `interaction` | Auto-detected per §4 | `engine_args$interaction` |
+
+> **Implementation correction (2026-08-22, Phase 4):** this row originally specified `m_cde` =
+> *sample mean of the mediator*, justified as "the same convention as `InteractionMediationData`'s
+> existing `m_star` default." That justification was wrong on both counts: the lm/glm extractor
+> defaults `m_star = 0` (`R/extract-lm.R:119,153`) and so does the lavaan extractor (asserted in
+> `test-extract-interaction-lavaan.R:38`), while regmedint itself has *no* `m_cde` default — it is
+> a required argument. Shipping the sample mean would have made the new engine the only one of
+> three reporting the CDE/INTref split at a different reference level. **`m_cde` therefore
+> defaults to `0`.** `c_cond` keeps the covariate sample means, which does match the lm
+> extractor's own `E[M | X = 0]` convention. `nde`/`nie`/`te`/`pm` are invariant to `m*` either
+> way; only the CDE/INTref split moves.
 
 ## 6. Acceptance criteria
 
