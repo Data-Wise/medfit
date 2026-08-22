@@ -124,6 +124,15 @@ internally. `Var(int_ref) = Var(pnde) + Var(cde) - 2·Cov(pnde,cde)`; `Var(int_m
 Var(pnie) - 2·Cov(tnie,pnie)` — read directly off regmedint's reported `vcov()`, no re-derivation
 of the underlying regression covariance needed.
 
+> **Implementation correction (2026-08-22, Phase 2):** `regmedint::vcov()` (v1.0.2) returns
+> **variances only** — every off-diagonal entry is `NA` (`regmedint:::vcov.regmedint` builds
+> `diag(se^2)` and blanks the triangles). The covariance route above is therefore unavailable.
+> The adapter reproduces regmedint's own delta method instead (same parameter vector
+> `(β, θ, σ²)`, same `Σ = bdiag(vcov(mreg), vcov(yreg), 2σ⁴/df)`, same gradients specialized to
+> `a0 = 0, a1 = 1`), which yields the full component covariance; its diagonal equals regmedint's
+> reported SEs exactly (tested). See `ORCHESTRATE-engine-adapter-architecture.md` Phase 2 notes
+> for the other implementation-time findings (representability guard, `m_cde` default caveat).
+
 **Simple-mediation case** (`interaction = FALSE`): regmedint reports plain natural effects
 (`nde`/`nie`) directly compatible with `MediationData` — no component mapping needed.
 

@@ -563,9 +563,24 @@ S7::method(confint, InteractionMediationData) <- function(object,
   alpha <- 1 - level
   z <- stats::qnorm(1 - alpha / 2)
 
+  comp_names <- c("cde", "int_ref", "int_med", "pie", "nde", "nie", "total_effect")
   if (parm == "paths") {
     coefs <- paths(object)            # a, b, c_prime, theta3
     se <- sqrt(diag(vc)[names(coefs)])
+  } else if (all(comp_names %in% rownames(vc))) {
+    # Engine-supplied component covariance (e.g. the regmedint engine stores
+    # its own delta-method block); use it directly instead of re-deriving
+    # gradients under the Gaussian-outcome formulas.
+    if (parm == "components") {
+      coefs <- c(cde = object@cde, int_ref = object@int_ref,
+                 int_med = object@int_med, pie = object@pie)
+      se <- sqrt(diag(vc)[c("cde", "int_ref", "int_med", "pie")])
+    } else {
+      coefs <- c(nde = object@nde, nie = object@nie, total = object@total_effect)
+      se <- sqrt(diag(vc)[c("nde", "nie", "total_effect")])
+    }
+    message("Normal (delta-method) approximation for four-way components; ",
+            "consider bootstrap_mediation() for robust inference.")
   } else {
     # --- Delta-method gradients (named over @vcov parameters) ---
     # Variance of a linear combination g of the parameters is

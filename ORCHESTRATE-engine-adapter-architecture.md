@@ -19,8 +19,8 @@ blocked — see spec §7).
 | Phase | Increment | Priority | Effort | Status |
 |---|---|---|---|---|
 | 1 | Dispatch extension (§2) | High | Low | **Done** (2026-08-22) |
-| 2 | regmedint adapter core (§3–§5) | High | Med | Not started |
-| 3 | Tests + acceptance criteria (§6) | High | Med | Not started |
+| 2 | regmedint adapter core (§3–§5) | High | Med | **Done** (2026-08-22) |
+| 3 | Tests + acceptance criteria (§6) | High | Med | 3.1–3.4 done with Phase 2; 3.5–3.6 pending |
 | 4 | Vignette + pkgdown + NEWS | Med | Low | Not started |
 
 **Total estimate:** ~1 week (per `EXTENSIONS-PLAN-2026-06-03.md`'s Ext C effort row).
@@ -55,36 +55,75 @@ new `engine_args` param)
 `engine_args` param existing.
 
 - [x] 2.1 `Suggests: regmedint` in `DESCRIPTION`; `requireNamespace()` guard + install-hint error (done in Phase 1)
-- [ ] 2.2 `.formula_has_interaction()` reuse — confirm the existing helper `extract_mediation
+- [x] 2.2 `.formula_has_interaction()` reuse — confirm the existing helper `extract_mediation
       (decomposition = "auto")` uses is exported/accessible internally, or factor it out to
       `R/utils.R` if it's currently private to the lm/lavaan extraction path (check before
       assuming — this is exactly the kind of implementation-time detail the grill ledger flagged
       as deferred, not a re-litigated design decision)
-- [ ] 2.3 Argument bridging per spec §5 table: auto-derive `cvar`/`mreg`/`yreg`/`a0`/`a1`/
+- [x] 2.3 Argument bridging per spec §5 table: auto-derive `cvar`/`mreg`/`yreg`/`a0`/`a1`/
       `m_cde`/`c_cond` from `formula_y`/`formula_m`/`family_y`/`family_m`/`data`; explicit error
       (not a silent default) for non-binary treatment without an `engine_args` override
-- [ ] 2.4 `.regmedint_to_mediation_data()` — simple (no-interaction) case
-- [ ] 2.5 `.regmedint_to_interaction_mediation_data()` — four-way mapping per spec §3:
+- [x] 2.4 `.regmedint_to_mediation_data()` — simple (no-interaction) case
+- [x] 2.5 `.regmedint_to_interaction_mediation_data()` — four-way mapping per spec §3:
       `cde=cde`, `int_ref=pnde-cde`, `int_med=tnie-pnie`, `pie=pnie`, plus delta-method SE
       propagation through regmedint's own `vcov()` (analytical — no bootstrap)
-- [ ] 2.6 Class-selection dispatch: `has_interaction` auto-detected from `formula_y`, with
+- [x] 2.6 Class-selection dispatch: `has_interaction` auto-detected from `formula_y`, with
       `engine_args$interaction` as the explicit override (spec §4)
 
 **Key files:** `R/fit-regmedint.R` (NEW), `DESCRIPTION` (update `Suggests`)
+
+**Phase 2 notes (implementation-time findings — premise corrections, not design re-opens):**
+
+- **2.2:** the existing helper (`.find_interaction_term()`, `R/extract-lm.R`) reads a *fitted
+  model's* coefficient names; the adapter needs the decision before fitting, so a formula-level
+  sibling `.find_interaction_term_formula()` was added to `R/utils.R` (same both-orderings
+  convention). The spec's `.formula_has_interaction()` name was a placeholder.
+- **§3 premise correction — `regmedint::vcov()` is diagonal-only** (off-diagonals are `NA`,
+  verified in `regmedint:::vcov.regmedint`). `Var(int_ref) = Var(pnde) + Var(cde) − 2Cov` is
+  therefore not computable from regmedint's output. The adapter instead reproduces regmedint's
+  own delta method (parameter vector `(β, θ, σ²)`, `Σ = bdiag(vcov(mreg), vcov(yreg), 2σ⁴/df)`,
+  gradients = regmedint's `Γ_pnde − Γ_cde` etc. specialized to `a0=0, a1=1`) in
+  `.regmedint_component_vcov()`, giving the full 7×7 component block plus cross-covariances
+  with the coefficients. Its diagonal equals regmedint's reported SEs (tested, Gaussian and
+  logistic Y). `confint(InteractionMediationData)` now prefers a stored component block when
+  present (backward-compatible: lm/glm objects have none, gradient path untouched).
+- **Representability (new guard, §4/§5):** `InteractionMediationData`'s validator pins
+  `pie = b·a`, `int_med = θ₃·β₁`, `cde = c' + θ₃·m*`. regmedint's `PNIE = (θ₂β₁ + θ₃β₁a₀)(a₁−a₀)`
+  matches only for `a0 = 0, a1 = 1` and a **linear mediator model**; a logistic `mreg` gives
+  `PNIE = θ₂[expit(·) − expit(·)]` (Δ = −0.136 on the probe data). The adapter errors with
+  guidance for logistic `mreg`, for `a0/a1` outside the unit contrast, and for non-0/1
+  treatments (regmedint itself rejects factor/logical `avar`). Net: `engine_args$a0/a1` is
+  accepted and forwarded but can only pass the check at `(0, 1)` — recoding is the real fix.
+- **yreg mapping:** regmedint pairs `mreg = "linear"` only with `yreg ∈ {linear, logistic}`
+  (`ls(asNamespace("regmedint"), "calc_myreg_mreg_linear_")`), so `poisson()` is not
+  auto-mapped (error suggests `engine_args$yreg`). Logistic Y **is** supported and tested —
+  its rare-outcome closed forms keep `PNIE`/`CDE`/`INTmed` in product form; only `INTref`
+  absorbs the `θ₂σ²` / `½θ₃²σ²` terms, and the validator leaves `int_ref` free.
+- **`m_cde` default = `mean(M)` per spec §5 text.** ⚠️ The spec's stated rationale ("matching
+  `InteractionMediationData`'s existing `m_star` convention") is factually wrong: the lm/glm
+  extractor defaults `m_star = 0` (`R/extract-lm.R:119`). So `engine = "glm"` and
+  `engine = "regmedint"` report CDE/INTref at different reference levels by default. Followed
+  the spec's literal value; **one-line flip if the user prefers cross-engine consistency.**
+- **No-interaction path** reuses `extract_mediation(fit$mreg_fit, model_y = fit$yreg_fit)` on
+  regmedint's own lm/glm fits (`source_package = "regmedint"`), with an internal assertion that
+  regmedint's `pnde`/`pnie` equal `c'` / `a·b`. Numerically identical to the glm engine (tested).
+- `fit_mediation()` refuses `weights` / `se_type = "sandwich"` for this engine (regmedint has
+  neither) instead of silently ignoring them. Rows with `NA` on used variables are dropped
+  (glm-engine parity; regmedint errors on `NA` by default).
 
 ## Phase 3: Tests + acceptance criteria
 
 **Scope:** Validate every item in spec §6 with `skip_if_not_installed("regmedint")`.
 
-- [ ] 3.1 No-interaction case: `nde()`/`nie()` match regmedint's own output
-- [ ] 3.2 Interaction case: `cde/int_ref/int_med/pie` match the §3 mapping within tolerance;
+- [x] 3.1 No-interaction case: `nde()`/`nie()` match regmedint's own output
+- [x] 3.2 Interaction case: `cde/int_ref/int_med/pie` match the §3 mapping within tolerance;
       `InteractionMediationData`'s existing validator invariants pass (they hold by
       construction — a failure here is a mapping bug, not a tolerance issue, per the grill's
       verified-numerically finding)
-- [ ] 3.3 Component SEs match delta-method propagation through regmedint's `vcov()`
-- [ ] 3.4 Continuous/multi-level treatment without an explicit `a0`/`a1` override → clear error,
+- [x] 3.3 Component SEs match delta-method propagation through regmedint's `vcov()`
+- [x] 3.4 Continuous/multi-level treatment without an explicit `a0`/`a1` override → clear error,
       not silent wrong default
-- [ ] 3.5 `R CMD check --as-cran` clean with regmedint **absent** and **present**
+- [ ] 3.5 `R CMD check --as-cran` clean with regmedint **absent** and **present** (plain `devtools::check()` 0/0/0 after Phase 2; strict flavors pending)
 - [ ] 3.6 Phase 1.4's backward-compat regression check re-confirmed at the end (full suite green)
 
 **Key files:** `tests/testthat/test-fit-regmedint.R` (NEW)

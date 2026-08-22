@@ -446,16 +446,14 @@ test_that("engine_args must be a uniquely-named list", {
   )
 })
 
-test_that("engine = 'regmedint' passes validation and reaches its adapter", {
+test_that("engine = 'regmedint' dispatches to its adapter", {
+  skip_if_not_installed("regmedint")
   set.seed(2)
   d <- data.frame(X = rbinom(50, 1, 0.5), M = rnorm(50), Y = rnorm(50))
-  # Must not fail on the engine choice itself; the adapter's own error (missing
-  # package, or not-yet-implemented) is what surfaces.
-  expect_error(
-    fit_mediation(Y ~ X + M, M ~ X,
-      data = d, treatment = "X", mediator = "M",
-      engine = "regmedint"
-    ),
-    "regmedint"
+  fit <- fit_mediation(Y ~ X + M, M ~ X,
+    data = d, treatment = "X", mediator = "M",
+    engine = "regmedint"
   )
+  expect_s7_class(fit, MediationData)
+  expect_equal(fit@source_package, "regmedint")
 })

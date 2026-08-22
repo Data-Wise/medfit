@@ -147,6 +147,16 @@ fit_mediation <- function(formula_y,
     checkmate::assert_numeric(weights, len = nrow(data), lower = 0,
                               any.missing = FALSE, .var.name = "weights")
   }
+  # regmedint has no case-weight or sandwich-vcov path; refuse rather than
+  # silently ignore arguments that would change the glm engine's answer.
+  if (engine == "regmedint") {
+    if (!is.null(weights)) {
+      stop("engine = \"regmedint\" does not support `weights`.", call. = FALSE)
+    }
+    if (se_type != "model") {
+      stop("engine = \"regmedint\" supports se_type = \"model\" only.", call. = FALSE)
+    }
+  }
 
   # Nudge: model-based SEs are invalid under IPW. Fire once per session so tight
   # refit loops (e.g. bootstrap) are not spammed.
