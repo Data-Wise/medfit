@@ -15,6 +15,7 @@ fit_mediation(
   family_m = stats::gaussian(),
   weights = NULL,
   se_type = c("model", "sandwich"),
+  engine_args = list(),
   ...
 )
 
@@ -29,6 +30,7 @@ fit_mediation(
   family_m = stats::gaussian(),
   weights = NULL,
   se_type = c("model", "sandwich"),
+  engine_args = list(),
   ...
 )
 }
@@ -46,6 +48,9 @@ fit_mediation(
 \item{engine}{Character string: modeling engine to use. Currently supports:
 \itemize{
 \item \code{"glm"}: Generalized linear models (default)
+\item \code{"regmedint"}: Closed-form regression-based (in)direct effects via
+the suggested \pkg{regmedint} package (VanderWeele's regression
+approach, with optional treatment-mediator interaction)
 }}
 
 \item{family_y}{Family object for outcome model (default: \code{gaussian()})}
@@ -62,12 +67,21 @@ model-based \code{stats::vcov}) or \code{"sandwich"} (heteroskedasticity-consist
 \code{"sandwich"} option requires the suggested \pkg{sandwich} package. Applies
 to the single-mediator path.}
 
+\item{engine_args}{Named list of engine-specific overrides (default:
+\code{list()}, no overrides). Ignored by \code{engine = "glm"}. For
+\code{engine = "regmedint"}, recognized names are \code{interaction}, \code{cvar},
+\code{mreg}, \code{yreg}, \code{a0}, \code{a1}, \code{m_cde}, and \code{c_cond}; each replaces the
+value the adapter would otherwise derive from the formulas, families, and
+data.}
+
 \item{...}{Additional arguments passed to the fitting function}
 }
 \value{
 A \link{MediationData} object containing the fitted mediation structure
 
-A \link{MediationData} object containing the fitted mediation structure
+A \link{MediationData} object containing the fitted mediation structure,
+or an \link{InteractionMediationData} object when \code{formula_y} contains a
+treatment-by-mediator interaction term.
 }
 \description{
 Fit mediation models using a specified modeling engine. This function
@@ -89,6 +103,15 @@ using \code{\link[=extract_mediation]{extract_mediation()}}.
 \item Fits models using \code{stats::glm()}
 \item Supports all GLM families (gaussian, binomial, poisson, etc.)
 \item For Gaussian models, extracts residual variances
+}
+
+\strong{regmedint} (\code{engine = "regmedint"}):
+\itemize{
+\item Delegates to \code{regmedint::regmedint()} (suggested package) for closed-form
+natural (in)direct effects, with or without a treatment-mediator interaction
+\item Returns \link{MediationData} or \link{InteractionMediationData} depending on whether
+\code{formula_y} contains a treatment-by-mediator interaction term; use
+\code{engine_args} to override the derived regmedint arguments
 }
 
 \strong{Future Engines}:

@@ -83,6 +83,9 @@ extract_mediation <- S7::new_generic(
 #'   - `"brms"`: Bayesian regression models (future)
 #' @param family_y Family object for outcome model (default: `gaussian()`)
 #' @param family_m Family object for mediator model (default: `gaussian()`)
+#' @param engine_args Named list of engine-specific overrides (default:
+#'   `list()`). See the `fit_mediation()` documentation in `R/fit-glm.R` for
+#'   the names each engine recognizes.
 #' @param ... Additional arguments passed to the engine-specific function
 #'
 #' @return A [MediationData] object containing the fitted mediation structure
@@ -98,6 +101,13 @@ extract_mediation <- S7::new_generic(
 #' - Fits models using `stats::glm()`
 #' - Supports all GLM families (gaussian, binomial, poisson, etc.)
 #' - For Gaussian models, extracts residual variances
+#'
+#' **regmedint** (`engine = "regmedint"`):
+#' - Delegates to `regmedint::regmedint()` (suggested package) for closed-form
+#'   natural (in)direct effects, with or without a treatment-mediator interaction
+#' - Returns [MediationData] or [InteractionMediationData] depending on whether
+#'   `formula_y` contains a treatment-by-mediator interaction term; use
+#'   `engine_args` to override the derived regmedint arguments
 #'
 #' **Future Engines**:
 #' - `"lmer"`: Mixed-effects models via lme4
@@ -146,6 +156,7 @@ fit_mediation <- function(formula_y,
                           engine = "glm",
                           family_y = stats::gaussian(),
                           family_m = stats::gaussian(),
+                          engine_args = list(),
                           ...) {
   # This is a regular function, not an S7 generic
   # Implementation will be in fit-glm.R and other engine files

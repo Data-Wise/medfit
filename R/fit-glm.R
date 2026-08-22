@@ -18,6 +18,9 @@
 #' @param engine Character string: modeling engine to use. Currently supports:
 #'   \itemize{
 #'     \item `"glm"`: Generalized linear models (default)
+#'     \item `"regmedint"`: Closed-form regression-based (in)direct effects via
+#'       the suggested \pkg{regmedint} package (VanderWeele's regression
+#'       approach, with optional treatment-mediator interaction)
 #'   }
 #' @param family_y Family object for outcome model (default: `gaussian()`)
 #' @param family_m Family object for mediator model (default: `gaussian()`)
@@ -29,9 +32,17 @@
 #'   `sandwich::vcovHC`, type HC3, recommended for IPW-weighted fits). The
 #'   `"sandwich"` option requires the suggested \pkg{sandwich} package. Applies
 #'   to the single-mediator path.
+#' @param engine_args Named list of engine-specific overrides (default:
+#'   `list()`, no overrides). Ignored by `engine = "glm"`. For
+#'   `engine = "regmedint"`, recognized names are `interaction`, `cvar`,
+#'   `mreg`, `yreg`, `a0`, `a1`, `m_cde`, and `c_cond`; each replaces the
+#'   value the adapter would otherwise derive from the formulas, families, and
+#'   data.
 #' @param ... Additional arguments passed to the fitting function
 #'
-#' @return A [MediationData] object containing the fitted mediation structure
+#' @return A [MediationData] object containing the fitted mediation structure,
+#'   or an [InteractionMediationData] object when `formula_y` contains a
+#'   treatment-by-mediator interaction term.
 #'
 #' @details
 #' ## Model Specification
@@ -120,6 +131,7 @@ fit_mediation <- function(formula_y,
                           family_m = stats::gaussian(),
                           weights = NULL,
                           se_type = c("model", "sandwich"),
+                          engine_args = list(),
                           ...) {
   se_type <- match.arg(se_type)
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
@@ -128,7 +140,9 @@ fit_mediation <- function(formula_y,
   checkmate::assert_data_frame(data, min.rows = 1, .var.name = "data")
   checkmate::assert_string(treatment, .var.name = "treatment")
   checkmate::assert_string(mediator, .var.name = "mediator")
-  checkmate::assert_choice(engine, choices = c("glm"), .var.name = "engine")
+  checkmate::assert_choice(engine, choices = c("glm", "regmedint"),
+                           .var.name = "engine")
+  checkmate::assert_list(engine_args, names = "unique", .var.name = "engine_args")
   if (!is.null(weights)) {
     checkmate::assert_numeric(weights, len = nrow(data), lower = 0,
                               any.missing = FALSE, .var.name = "weights")
@@ -183,6 +197,17 @@ fit_mediation <- function(formula_y,
       family_m = family_m,
       weights = weights,
       se_type = se_type,
+      ...
+    ),
+    regmedint = .adapter_regmedint(
+      formula_y = formula_y,
+      formula_m = formula_m,
+      data = data,
+      treatment = treatment,
+      mediator = mediator,
+      family_y = family_y,
+      family_m = family_m,
+      engine_args = engine_args,
       ...
     ),
     stop(sprintf("Engine '%s' not implemented", engine), call. = FALSE)

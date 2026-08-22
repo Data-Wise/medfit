@@ -36,3 +36,6 @@
 ^.*\.Rcheck$
 ^.*\.tar\.gz$
 ^medfit\.code-workspace$
+^\.token-optimizer$
+^AGENTS\.md$
+^ORCHESTRATE-.*\.md$

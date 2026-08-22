@@ -18,7 +18,7 @@ blocked — see spec §7).
 
 | Phase | Increment | Priority | Effort | Status |
 |---|---|---|---|---|
-| 1 | Dispatch extension (§2) | High | Low | Not started |
+| 1 | Dispatch extension (§2) | High | Low | **Done** (2026-08-22) |
 | 2 | regmedint adapter core (§3–§5) | High | Med | Not started |
 | 3 | Tests + acceptance criteria (§6) | High | Med | Not started |
 | 4 | Vignette + pkgdown + NEWS | Med | Low | Not started |
@@ -30,12 +30,21 @@ blocked — see spec §7).
 **Scope:** Widen `fit_mediation()`'s dispatch (`R/fit-glm.R:131,175-189`) with zero behavior
 change to the existing `"glm"` path (spec §2).
 
-- [ ] 1.1 Widen `checkmate::assert_choice(engine, choices = c("glm"))` → `c("glm", "regmedint")`
-- [ ] 1.2 Add `engine_args = list()` as a new optional `fit_mediation()` parameter (default empty)
-- [ ] 1.3 Add the `regmedint = .adapter_regmedint(...)` arm to the existing `switch()`
-- [ ] 1.4 **Backward-compat regression check:** run the full existing test suite for
+- [x] 1.1 Widen `checkmate::assert_choice(engine, choices = c("glm"))` → `c("glm", "regmedint")`
+- [x] 1.2 Add `engine_args = list()` as a new optional `fit_mediation()` parameter (default empty)
+- [x] 1.3 Add the `regmedint = .adapter_regmedint(...)` arm to the existing `switch()`
+- [x] 1.4 **Backward-compat regression check:** run the full existing test suite for
       `engine = "glm"` and confirm byte-identical output before/after (spec §2 acceptance
       criterion — this is the gate for the rest of the phases, not a nice-to-have)
+      → **Passed:** 7 glm configs (basic/cov/binom/interaction/weights/sandwich/dots)
+      serialized before/after — `identical(serialize(before), serialize(after))` TRUE;
+      full suite 0 fail before, 813 pass / 0 fail / 2 skip after (+7 new expectations).
+
+**Phase 1 notes:** 2.1's `Suggests: regmedint` was pulled forward (the `.adapter_regmedint()`
+stub's `requireNamespace()` guard otherwise triggers a check WARNING). `R/fit-regmedint.R`
+holds a stub that errors "not yet implemented" so the `switch()` arm is check-clean; Phase 2
+replaces the stub body. `.Rbuildignore` gained `.token-optimizer`, `AGENTS.md` (added on dev in
+`ef66b5b`), and `ORCHESTRATE-*.md` — all three were `R CMD check` NOTEs.
 
 **Key files:** `R/fit-glm.R` (update), `R/aab-generics.R` (update `fit_mediation` generic docs —
 new `engine_args` param)
@@ -45,7 +54,7 @@ new `engine_args` param)
 **Scope:** `.adapter_regmedint()` — the translation layer (spec §3–§5). Depends on Phase 1's
 `engine_args` param existing.
 
-- [ ] 2.1 `Suggests: regmedint` in `DESCRIPTION`; `requireNamespace()` guard + install-hint error
+- [x] 2.1 `Suggests: regmedint` in `DESCRIPTION`; `requireNamespace()` guard + install-hint error (done in Phase 1)
 - [ ] 2.2 `.formula_has_interaction()` reuse — confirm the existing helper `extract_mediation
       (decomposition = "auto")` uses is exported/accessible internally, or factor it out to
       `R/utils.R` if it's currently private to the lm/lavaan extraction path (check before
@@ -163,13 +172,10 @@ cd ~/.git-worktrees/medfit/feature-engine-adapter-architecture && claude
 | `e2e` / `dogfood` | ✅ | Full `fit_mediation(engine="regmedint")` → generic-method round-trip |
 | `count-cascade` | N/A | No new command/skill/agent — package code only |
 
-```r
-# TODO(author): delete if not contract-bearing
-test_that("fit_mediation(engine='glm') output is byte-identical after the dispatch widen", {
-  # placeholder — snapshot existing glm-engine test output before Phase 1, compare after
-  expect_true(FALSE)  # red-first stub
-})
-```
+Phase 1 shipped the contract-bearing tests in `tests/testthat/test-fit-glm.R` (section
+"Dispatch extension"): `engine_args` default/ignored-by-glm output identity, `engine_args`
+validation, and `engine = "regmedint"` reaching its adapter. The byte-identical snapshot
+comparison was run out-of-tree (scratchpad script, not committed).
 
 ## Documentation
 
