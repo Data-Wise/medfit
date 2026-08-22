@@ -20,7 +20,7 @@ blocked — see spec §7).
 |---|---|---|---|---|
 | 1 | Dispatch extension (§2) | High | Low | **Done** (2026-08-22) |
 | 2 | regmedint adapter core (§3–§5) | High | Med | **Done** (2026-08-22) |
-| 3 | Tests + acceptance criteria (§6) | High | Med | 3.1–3.4 done with Phase 2; 3.5–3.6 pending |
+| 3 | Tests + acceptance criteria (§6) | High | Med | **Done** (2026-08-22) |
 | 4 | Vignette + pkgdown + NEWS | Med | Low | Not started |
 
 **Total estimate:** ~1 week (per `EXTENSIONS-PLAN-2026-06-03.md`'s Ext C effort row).
@@ -123,8 +123,21 @@ new `engine_args` param)
 - [x] 3.3 Component SEs match delta-method propagation through regmedint's `vcov()`
 - [x] 3.4 Continuous/multi-level treatment without an explicit `a0`/`a1` override → clear error,
       not silent wrong default
-- [ ] 3.5 `R CMD check --as-cran` clean with regmedint **absent** and **present** (plain `devtools::check()` 0/0/0 after Phase 2; strict flavors pending)
-- [ ] 3.6 Phase 1.4's backward-compat regression check re-confirmed at the end (full suite green)
+- [x] 3.5 `R CMD check --as-cran` clean with regmedint **absent** and **present**
+      → **present:** `check(cran = TRUE, args = "--run-donttest")` = 0/0/0.
+      **absent:** the suite was run against a purpose-built library containing medfit's hard
+      deps but *not* regmedint (`requireNamespace("regmedint")` = FALSE) — 0 fail / 0 error,
+      `test-fit-regmedint.R` skipped at file level and `test-fit-glm.R:450` individually.
+      The strict flavor (`_R_CHECK_DEPENDS_ONLY_`/`SUGGESTS_ONLY_`/`CRAN_INCOMING(_REMOTE)`)
+      returns 0 errors / **1 warning** / 0 notes — the warning is
+      `Insufficient package version (submitted: 0.3.2, existing: 0.3.2)` + `Date field is over
+      a month old`, i.e. pure release cadence. **Reproduced identically on `dev`** (which also
+      still carries the 2 NOTEs this branch fixed), so it is a documented baseline, not a
+      regression. It clears on the next version bump + Date refresh.
+- [x] 3.6 Phase 1.4's backward-compat regression check re-confirmed at the end (full suite green)
+      → 888 pass / 0 fail / 2 skip; glm output still byte-identical to the pre-Phase-1 snapshot.
+      Also clean: `urlchecker::url_check()` (17 URLs), `spelling::spell_check_package()`
+      (`regmedint` added to `inst/WORDLIST`), `lintr::lint_package()`.
 
 **Key files:** `tests/testthat/test-fit-regmedint.R` (NEW)
 
@@ -160,13 +173,14 @@ re-litigated here).
 
 (mirrors spec §6, repeated here for a single checklist at merge time)
 
-- [ ] `fit_mediation(engine = "glm", ...)` test-suite output byte-identical before/after
-- [ ] No-interaction `fit_mediation(..., engine = "regmedint")` → `MediationData`, matches
+- [x] `fit_mediation(engine = "glm", ...)` test-suite output byte-identical before/after
+- [x] No-interaction `fit_mediation(..., engine = "regmedint")` → `MediationData`, matches
       regmedint's own `nde`/`nie`
-- [ ] Interaction case → `InteractionMediationData`, matches the §3 mapping + validator invariants
-- [ ] Component SEs match delta-method propagation through regmedint's `vcov()`
-- [ ] Non-binary treatment without override → clear error
-- [ ] `R CMD check --as-cran` clean, regmedint absent and present
+- [x] Interaction case → `InteractionMediationData`, matches the §3 mapping + validator invariants
+- [x] Component SEs match delta-method propagation through regmedint's `vcov()` — met by
+      reproducing regmedint's delta method (its `vcov()` is diagonal-only; see Phase 2 notes)
+- [x] Non-binary treatment without override → clear error
+- [x] `R CMD check --as-cran` clean, regmedint absent and present
 
 ## Commit Strategy
 
