@@ -1,0 +1,182 @@
+# Engine Adapter Architecture (regmedint) — Orchestration Plan
+
+> **Branch:** `feature/engine-adapter-architecture`
+> **Base:** `dev`
+> **Worktree:** `~/.git-worktrees/medfit/feature-engine-adapter-architecture`
+> **Spec:** `planning/specs/SPEC-engine-adapter-architecture-2026-08-22.md`
+> **Grill:** `planning/specs/GRILL-engine-adapter-architecture-2026-08-22.md` (9 decisions locked — read before touching design; do not re-litigate resolved branches)
+
+## Objective
+
+Add a second `fit_mediation()` engine (`"regmedint"`, CRAN-published, closed-form) that returns
+`MediationData` or `InteractionMediationData` depending on whether the fitted formula has an
+`X:M` interaction term — extending the existing `switch`-based dispatch minimally, with zero
+behavior change to the existing `"glm"` path. CMAverse is explicitly out of scope (deferred,
+blocked — see spec §7).
+
+## Phase Overview
+
+| Phase | Increment | Priority | Effort | Status |
+|---|---|---|---|---|
+| 1 | Dispatch extension (§2) | High | Low | Not started |
+| 2 | regmedint adapter core (§3–§5) | High | Med | Not started |
+| 3 | Tests + acceptance criteria (§6) | High | Med | Not started |
+| 4 | Vignette + pkgdown + NEWS | Med | Low | Not started |
+
+**Total estimate:** ~1 week (per `EXTENSIONS-PLAN-2026-06-03.md`'s Ext C effort row).
+
+## Phase 1: Dispatch extension
+
+**Scope:** Widen `fit_mediation()`'s dispatch (`R/fit-glm.R:131,175-189`) with zero behavior
+change to the existing `"glm"` path (spec §2).
+
+- [ ] 1.1 Widen `checkmate::assert_choice(engine, choices = c("glm"))` → `c("glm", "regmedint")`
+- [ ] 1.2 Add `engine_args = list()` as a new optional `fit_mediation()` parameter (default empty)
+- [ ] 1.3 Add the `regmedint = .adapter_regmedint(...)` arm to the existing `switch()`
+- [ ] 1.4 **Backward-compat regression check:** run the full existing test suite for
+      `engine = "glm"` and confirm byte-identical output before/after (spec §2 acceptance
+      criterion — this is the gate for the rest of the phases, not a nice-to-have)
+
+**Key files:** `R/fit-glm.R` (update), `R/aab-generics.R` (update `fit_mediation` generic docs —
+new `engine_args` param)
+
+## Phase 2: regmedint adapter core
+
+**Scope:** `.adapter_regmedint()` — the translation layer (spec §3–§5). Depends on Phase 1's
+`engine_args` param existing.
+
+- [ ] 2.1 `Suggests: regmedint` in `DESCRIPTION`; `requireNamespace()` guard + install-hint error
+- [ ] 2.2 `.formula_has_interaction()` reuse — confirm the existing helper `extract_mediation
+      (decomposition = "auto")` uses is exported/accessible internally, or factor it out to
+      `R/utils.R` if it's currently private to the lm/lavaan extraction path (check before
+      assuming — this is exactly the kind of implementation-time detail the grill ledger flagged
+      as deferred, not a re-litigated design decision)
+- [ ] 2.3 Argument bridging per spec §5 table: auto-derive `cvar`/`mreg`/`yreg`/`a0`/`a1`/
+      `m_cde`/`c_cond` from `formula_y`/`formula_m`/`family_y`/`family_m`/`data`; explicit error
+      (not a silent default) for non-binary treatment without an `engine_args` override
+- [ ] 2.4 `.regmedint_to_mediation_data()` — simple (no-interaction) case
+- [ ] 2.5 `.regmedint_to_interaction_mediation_data()` — four-way mapping per spec §3:
+      `cde=cde`, `int_ref=pnde-cde`, `int_med=tnie-pnie`, `pie=pnie`, plus delta-method SE
+      propagation through regmedint's own `vcov()` (analytical — no bootstrap)
+- [ ] 2.6 Class-selection dispatch: `has_interaction` auto-detected from `formula_y`, with
+      `engine_args$interaction` as the explicit override (spec §4)
+
+**Key files:** `R/fit-regmedint.R` (NEW), `DESCRIPTION` (update `Suggests`)
+
+## Phase 3: Tests + acceptance criteria
+
+**Scope:** Validate every item in spec §6 with `skip_if_not_installed("regmedint")`.
+
+- [ ] 3.1 No-interaction case: `nde()`/`nie()` match regmedint's own output
+- [ ] 3.2 Interaction case: `cde/int_ref/int_med/pie` match the §3 mapping within tolerance;
+      `InteractionMediationData`'s existing validator invariants pass (they hold by
+      construction — a failure here is a mapping bug, not a tolerance issue, per the grill's
+      verified-numerically finding)
+- [ ] 3.3 Component SEs match delta-method propagation through regmedint's `vcov()`
+- [ ] 3.4 Continuous/multi-level treatment without an explicit `a0`/`a1` override → clear error,
+      not silent wrong default
+- [ ] 3.5 `R CMD check --as-cran` clean with regmedint **absent** and **present**
+- [ ] 3.6 Phase 1.4's backward-compat regression check re-confirmed at the end (full suite green)
+
+**Key files:** `tests/testthat/test-fit-regmedint.R` (NEW)
+
+## Phase 4: Vignette + docs
+
+**Scope:** Per the grill's Open Questions (mechanical, decided at implementation time, not
+re-litigated here).
+
+- [ ] 4.1 Vignette section: "Using the regmedint engine" (where the existing fitting/extraction
+      vignette lives — check `vignettes/` for the right file to extend vs. a new one)
+- [ ] 4.2 `_pkgdown.yml` reference entry for any newly exported symbols (if `.adapter_regmedint`
+      stays internal/`@keywords internal`, likely no new reference entries needed — confirm)
+- [ ] 4.3 `NEWS.md` entry
+- [ ] 4.4 Roxygen docs on `fit_mediation()`'s updated signature (`engine_args` param, `"regmedint"`
+      choice) — `devtools::document()`, verify `RoxygenNote` pin unchanged (`git diff dev --
+      DESCRIPTION` empty per the Ext A/B gotcha)
+
+**Key files:** `vignettes/*.qmd` (update or new), `_pkgdown.yml` (update if needed), `NEWS.md`
+(update), `man/fit_mediation.Rd` (regenerated)
+
+## Friction Prevention
+
+- Context first: re-read the GRILL file before Phase 2 — 9 decisions are already locked, do not
+  re-open them (e.g. don't reconsider CMAverse, don't add a registry, don't add a `decomposition=`
+  override argument).
+- Verify CWD/branch before any git operation: `pwd && git branch --show-current` should show this
+  worktree and `feature/engine-adapter-architecture`.
+- No autonomous multi-phase runs — verify each phase (tests green) before starting the next.
+- Phase 1.4's backward-compat check gates everything after it — do not proceed to Phase 2 if it
+  fails.
+
+## Acceptance Criteria
+
+(mirrors spec §6, repeated here for a single checklist at merge time)
+
+- [ ] `fit_mediation(engine = "glm", ...)` test-suite output byte-identical before/after
+- [ ] No-interaction `fit_mediation(..., engine = "regmedint")` → `MediationData`, matches
+      regmedint's own `nde`/`nie`
+- [ ] Interaction case → `InteractionMediationData`, matches the §3 mapping + validator invariants
+- [ ] Component SEs match delta-method propagation through regmedint's `vcov()`
+- [ ] Non-binary treatment without override → clear error
+- [ ] `R CMD check --as-cran` clean, regmedint absent and present
+
+## Commit Strategy
+
+Conventional commits per phase (`feat(fit): ...`, `test(fit): ...`, `docs(vignette): ...`). Two
+PRs suggested (per the grill's Open Questions, not a re-litigated decision — adjust if a single
+PR reads cleaner once the diff exists):
+
+- **PR 1:** Phases 1–3 (dispatch + adapter core + tests) — the correctness-bearing change.
+- **PR 2:** Phase 4 (vignette/pkgdown/NEWS) — docs-only follow-up.
+
+## Verification
+
+```r
+devtools::document()
+devtools::test()
+devtools::check(cran = TRUE, args = "--run-donttest",
+                env_vars = c("_R_CHECK_DEPENDS_ONLY_" = "true",
+                             "_R_CHECK_SUGGESTS_ONLY_" = "true",
+                             "_R_CHECK_CRAN_INCOMING_" = "true",
+                             "_R_CHECK_CRAN_INCOMING_REMOTE_" = "true"))
+```
+
+Run both with regmedint installed and with it removed (`_R_CHECK_SUGGESTS_ONLY_` covers the
+absent case) — spec §6's last acceptance criterion needs both.
+
+## Session Instructions
+
+```
+cd ~/.git-worktrees/medfit/feature-engine-adapter-architecture && claude
+```
+> "Read ORCHESTRATE-engine-adapter-architecture.md and start Phase 1."
+
+(Desktop app, no persistent shell: `EnterWorktree({ path: "~/.git-worktrees/medfit/feature-engine-adapter-architecture" })` switches the session's cwd directly instead of opening a new terminal.)
+
+## Test-Plan Scaffolding (default-on)
+
+| Tier | Applies? | Reason |
+|---|---|---|
+| `unit` | ✅ | New adapter function, argument-bridging logic, mapping formulas |
+| `integration` | ✅ | Adapter output must interoperate with existing `nde()`/`nie()`/`confint()` generics unchanged |
+| `dependency` | ✅ | `regmedint` new `Suggests` — both present/absent paths must check clean |
+| `e2e` / `dogfood` | ✅ | Full `fit_mediation(engine="regmedint")` → generic-method round-trip |
+| `count-cascade` | N/A | No new command/skill/agent — package code only |
+
+```r
+# TODO(author): delete if not contract-bearing
+test_that("fit_mediation(engine='glm') output is byte-identical after the dispatch widen", {
+  # placeholder — snapshot existing glm-engine test output before Phase 1, compare after
+  expect_true(FALSE)  # red-first stub
+})
+```
+
+## Documentation
+
+- [x] **Guide/vignette** — new engine choice + fitting workflow change, needed (Phase 4.1).
+- [x] **Refcard/README/NEWS** — new exported choice on `fit_mediation()`, needed (Phase 4.3).
+- [ ] **Demo** — N/A, no CLI/interactive demo surface in this package.
+- [ ] **Mermaid diagram** — N/A this pass (single new adapter, not an architecture change worth
+      diagramming); reconsider once/if Ext C.1 (CMAverse) makes the adapter layer non-trivial.
+
+CHANGELOG `[Unreleased]` mirror only — no version/count-line changes.
