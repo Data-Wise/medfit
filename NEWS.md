@@ -68,6 +68,14 @@
 * \pkg{regmedint} is a `Suggests` dependency; medfit checks and tests cleanly
   with it absent.
 
+## Bug fixes
+
+* `BootstrapResult()`'s validator checked `method` for length *after* three
+  `self@method != "plugin"` branches had already used it. A non-scalar `method`
+  therefore raised R's `the condition has length > 1` instead of the intended
+  message, `method must be a single character string`. The `method` scalar and
+  membership checks are now hoisted above every branch that reads it.
+
 ## Internal
 
 * New internal helper `.find_interaction_term_formula()` (`R/utils.R`): the
