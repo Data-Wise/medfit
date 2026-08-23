@@ -42,7 +42,10 @@
 #'   the controlled direct effect is evaluated (default: `0`). Used only when
 #'   `formula_y` carries a treatment-by-mediator term, i.e. when the returned
 #'   object is an [InteractionMediationData]. Supplying it for a fit that has no
-#'   such term is an error rather than a silent no-op.
+#'   such term is an error rather than a silent no-op. That check keys on whether
+#'   the argument was given at the call site, not on whether it differs from the
+#'   default, so a wrapper that forwards `m_star` unconditionally will trigger it
+#'   on two-way fits; forward it only when its own caller supplied one.
 #' @param ... Additional arguments passed to the fitting function
 #'
 #' @return A [MediationData] object containing the fitted mediation structure,

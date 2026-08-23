@@ -80,7 +80,10 @@ data. The reference mediator level is set with \code{m_star}, not here.}
 the controlled direct effect is evaluated (default: \code{0}). Used only when
 \code{formula_y} carries a treatment-by-mediator term, i.e. when the returned
 object is an \link{InteractionMediationData}. Supplying it for a fit that has no
-such term is an error rather than a silent no-op.}
+such term is an error rather than a silent no-op. That check keys on whether
+the argument was given at the call site, not on whether it differs from the
+default, so a wrapper that forwards \code{m_star} unconditionally will trigger it
+on two-way fits; forward it only when its own caller supplied one.}
 
 \item{...}{Additional arguments passed to the fitting function}
 }

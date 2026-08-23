@@ -130,6 +130,25 @@ The predicate is now `!is.na(...)`, matching the idiom the adapter already uses 
 `R/fit-regmedint.R:157`. `R/utils.R:94-99` is the contract: the helper returns the matched term
 label or `NA_character_`.
 
+**Inference at a non-zero `m_star` is separately covered.** The CDE gradient row is
+`c(c_prime = 1, theta3 = m_star)` (`R/methods-base.R:624`), so at the default the entire `theta3`
+contribution to `Var(CDE)` drops out — a wrong sign or dropped term there would be unreachable by
+any test running at `m_star = 0`, which until now was all of them. Two tests close it: effect- and
+path-level SEs are invariant to `m_star` (the terms cancel in the summed gradient, to ~1e-17),
+while the component-level `cde` SE does move; and medfit's gradient path agrees with regmedint's
+independent delta method on every component and effect SE at `m_star = 2` (relative difference
+0 to 4e-16).
+
+**`missing()` semantics.** The D3 guard keys on *supplied at the call site*, not *differs from the
+default*, so a wrapper forwarding `m_star` unconditionally errors on two-way fits even when its own
+caller never set one. No existing caller can trip this — the argument did not exist before — so it
+is documented in `@param` rather than worked around.
+
+**Bootstrap is unaffected.** `bootstrap_mediation()` takes a user-supplied `statistic_fn` over the
+coefficient vector and never rebuilds an `InteractionMediationData`, so there is no `m_star` for it
+to silently reset. A user bootstrapping the CDE applies the reference level inside their own
+`statistic_fn`.
+
 **Verification on the final tree.** 931 tests pass / 0 fail / 2 skip (up from 889).
 `--as-cran --run-donttest` = 0/0/0; the same under `_R_CHECK_DEPENDS_ONLY_`,
 `_R_CHECK_SUGGESTS_ONLY_`, and `_R_CHECK_CRAN_INCOMING_(REMOTE_)` = 0/0/0 — the DEPENDS_ONLY run

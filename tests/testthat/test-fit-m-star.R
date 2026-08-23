@@ -172,3 +172,51 @@ test_that("the other engine_args names still work", {
                        engine_args = list(c_cond = 0), m_star = 0.5)
   expect_equal(obj@m_star, 0.5)
 })
+
+# --- Inference at a non-zero m_star --------------------------------------
+#
+# The CDE gradient row is `c(c_prime = 1, theta3 = m_star)`, so at the default
+# m_star = 0 the whole theta3 contribution to Var(CDE) drops out. Every other
+# test in the package runs at that default, which would leave a wrong sign or a
+# dropped term in that row unreachable. These two exercise it.
+
+test_that("effect-level standard errors are invariant to m_star", {
+  d <- make_int_data()
+  se_of <- function(obj, parm) {
+    ci <- suppressMessages(confint(obj, parm = parm))
+    (ci[, 2] - ci[, 1]) / (2 * stats::qnorm(0.975))
+  }
+  a <- fit_mediation(Y ~ X * M, M ~ X, data = d,
+                     treatment = "X", mediator = "M", m_star = 0)
+  b <- fit_mediation(Y ~ X * M, M ~ X, data = d,
+                     treatment = "X", mediator = "M", m_star = 2)
+
+  # NDE = CDE + INTref, and both shift compensatingly, so the m_star terms must
+  # cancel in the summed gradient -- Var(NDE) cannot depend on a reference level.
+  expect_equal(se_of(a, "effects"), se_of(b, "effects"))
+  expect_equal(se_of(a, "paths"), se_of(b, "paths"))
+
+  # The split itself does move, or the test above would be vacuous.
+  expect_false(isTRUE(all.equal(
+    se_of(a, "components")[["cde"]], se_of(b, "components")[["cde"]]
+  )))
+})
+
+test_that("the two engines agree on component SEs at a non-zero m_star", {
+  skip_if_not_installed("regmedint")
+  d <- make_int_data()
+  se_of <- function(obj, parm) {
+    ci <- suppressMessages(confint(obj, parm = parm))
+    (ci[, 2] - ci[, 1]) / (2 * stats::qnorm(0.975))
+  }
+  # medfit's delta-method gradients (R/methods-base.R) and regmedint's own
+  # delta method (.regmedint_component_vcov) are independent implementations,
+  # so agreement here is evidence rather than a tautology.
+  g <- fit_mediation(Y ~ X * M, M ~ X, data = d, treatment = "X",
+                     mediator = "M", m_star = 2)
+  r <- fit_mediation(Y ~ X * M, M ~ X, data = d, treatment = "X",
+                     mediator = "M", m_star = 2, engine = "regmedint")
+
+  expect_equal(se_of(g, "components"), se_of(r, "components"), tolerance = 1e-8)
+  expect_equal(se_of(g, "effects"), se_of(r, "effects"), tolerance = 1e-8)
+})
