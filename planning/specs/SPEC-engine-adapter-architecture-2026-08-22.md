@@ -1,6 +1,6 @@
 # SPEC: Engine Adapter Architecture (Extension C) — regmedint adapter
 
-**Status:** Draft, grilled · **Created:** 2026-08-22 · **Author:** Davood Tofighi (with Claude Code)
+**Status:** Implemented, merged (PR #59, `08351f1`, 2026-08-22) · **Created:** 2026-08-22 · **Author:** Davood Tofighi (with Claude Code)
 **Plan:** `planning/EXTENSIONS-PLAN-2026-06-03.md` → **Extension C** (gate: Extension B merged ✓ — #38/#39/#40)
 **Design source:** `planning/medfit-roadmap.md §7b–7c` (original design, pre-Ext-A/B — substantially
 revised below after an adversarial-review pass + a 9-branch grill session; see

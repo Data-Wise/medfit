@@ -84,10 +84,13 @@ bias) as evidenced by their savant skill library.
 
 ## Recommended Next Step
 
-→ **Item 1** (write `SPEC-engine-registry.md` + `SPEC-cmaverse-adapter.md`) — Ext C is already
-the committed next extension and is only blocked on missing specs, not on anything from this
-brainstorm. Do Ext D (multilevel) after Ext C ships, since D doesn't depend on the engine
-registry; sequence Ext E (longitudinal) last, after Ext C's adapter pattern exists to reuse.
+→ **Item 1 DONE (2026-08-22):** Ext C shipped as the regmedint adapter (PR #59, not the
+originally-planned CMAverse/registry design — see `SPEC-engine-adapter-architecture-2026-08-22.md`
+and its GRILL ledger for why). Ext D (multilevel) is now unblocked — it never depended on the
+engine registry, which this spec deliberately didn't build. Ext E (longitudinal) still waits: it
+was meant to reuse Ext C's adapter *registry* pattern, and Ext C shipped without one (YAGNI,
+minimal `switch` extension instead) — re-evaluate what Ext E actually needs to reuse once its own
+spec is written, rather than assuming the registry will exist by then.
 
 ---
 

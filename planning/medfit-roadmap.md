@@ -1,9 +1,9 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23). Extensions A (parallel mediation) and B (VanderWeele four-way interaction) both COMPLETE and merged to dev. Next = Extension C (engine adapters/CMAverse) — see `EXTENSIONS-PLAN-2026-06-03.md`.
-**Timeline**: MVP shipped; extensions A ✅ done, B ✅ done, C planned (engine adapters)
-**Last Updated**: 2026-07-24
+**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.4.0 on `dev`, not yet tagged/submitted**. Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) all COMPLETE and merged to dev. Next = Extension C.1 (CMAverse adapter, blocked — CRAN availability + effect-representation, not yet spec'd) — see `EXTENSIONS-PLAN-2026-06-03.md`.
+**Timeline**: MVP shipped; extensions A ✅ done, B ✅ done, C ✅ done, C.1 blocked (CMAverse)
+**Last Updated**: 2026-08-22
 
 > **Note:** Phases 7/7b/7c below are the detailed *design reference*. The current,
 > prioritized board lives in `planning/EXTENSIONS-PLAN-2026-06-03.md`.
