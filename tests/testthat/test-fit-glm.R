@@ -399,3 +399,61 @@ test_that("se_type defaults to model-based", {
   )
   expect_equal(default@vcov, model@vcov)
 })
+
+# --- Dispatch extension: engine_args / "regmedint" choice (Ext C, Phase 1) ---
+
+test_that("engine_args default leaves the glm engine output unchanged", {
+  set.seed(123)
+  n <- 200
+  X <- rnorm(n)
+  M <- 0.5 * X + rnorm(n)
+  Y <- 0.3 * X + 0.4 * M + rnorm(n)
+  d <- data.frame(X = X, M = M, Y = Y)
+
+  omitted <- fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X", mediator = "M")
+  explicit <- fit_mediation(Y ~ X + M, M ~ X,
+    data = d, treatment = "X", mediator = "M",
+    engine_args = list()
+  )
+  # glm ignores engine_args entirely: a populated list must not change output
+  ignored <- fit_mediation(Y ~ X + M, M ~ X,
+    data = d, treatment = "X", mediator = "M",
+    engine_args = list(interaction = TRUE)
+  )
+
+  expect_identical(omitted@estimates, explicit@estimates)
+  expect_identical(omitted@vcov, explicit@vcov)
+  expect_identical(omitted@estimates, ignored@estimates)
+  expect_identical(omitted@vcov, ignored@vcov)
+})
+
+test_that("engine_args must be a uniquely-named list", {
+  set.seed(1)
+  d <- data.frame(X = rnorm(50), M = rnorm(50), Y = rnorm(50))
+  expect_error(
+    fit_mediation(Y ~ X + M, M ~ X,
+      data = d, treatment = "X", mediator = "M",
+      engine_args = "interaction"
+    ),
+    "engine_args"
+  )
+  expect_error(
+    fit_mediation(Y ~ X + M, M ~ X,
+      data = d, treatment = "X", mediator = "M",
+      engine_args = list(a0 = 0, a0 = 1)
+    ),
+    "engine_args"
+  )
+})
+
+test_that("engine = 'regmedint' dispatches to its adapter", {
+  skip_if_not_installed("regmedint")
+  set.seed(2)
+  d <- data.frame(X = rbinom(50, 1, 0.5), M = rnorm(50), Y = rnorm(50))
+  fit <- fit_mediation(Y ~ X + M, M ~ X,
+    data = d, treatment = "X", mediator = "M",
+    engine = "regmedint"
+  )
+  expect_s7_class(fit, MediationData)
+  expect_equal(fit@source_package, "regmedint")
+})

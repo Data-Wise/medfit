@@ -1,9 +1,11 @@
 # medfit Extensions Plan (post-v0.2.0)
 
-**Created:** 2026-06-03 · **Package state:** v0.2.0 released to `main`, submitted to CRAN
-(awaiting acceptance). Simple + **serial** mediation shipped; extraction (lm/glm/lavaan),
-fitting (GLM), bootstrap (parametric/nonparametric/plugin), and the generics layer
-(`nie/nde/te/pm/paths/coef/vcov/confint/tidy/glance`) are all in place.
+**Created:** 2026-06-03 · **Updated:** 2026-08-22 · **Package state:** v0.4.0 on `dev` (not yet
+tagged/CRAN-submitted — floor pins only). Simple + serial + **parallel** (Ext A) +
+**interaction/4-way** (Ext B) + **regmedint engine adapter** (Ext C) mediation all shipped;
+extraction (lm/glm/lavaan), fitting (GLM + regmedint), bootstrap (parametric/nonparametric/plugin),
+and the generics layer (`nie/nde/te/pm/paths/coef/vcov/confint/tidy/glance`) are all in place.
+Ext A, Ext B, and Ext C are all COMPLETE and merged to `dev` — CMAverse (Ext C.1) remains, blocked.
 
 This plan supersedes the status framing in `medfit-roadmap.md` (whose detailed Phase 7/7b/7c
 *designs* remain the reference — this doc is the prioritized, current **board**).
@@ -31,7 +33,7 @@ over-engineering, type-safe via validators. This is the established medfit patte
 | Q2 | Add a `parallel-mediation` *design stub* section (class sketch below) | The one structure with no design doc yet |
 | Q3 | pkgdown: ensure `reference:` lists all v0.2.0 exports + serial article | Website currently pre-serial in places (see website task) |
 
-### 🟡 Extension A — Parallel mediation (1–2 weeks)
+### ✅ Extension A — Parallel mediation — COMPLETE
 **New class:** `ParallelMediationData` (X → M₁..Mₖ → Y, independent mediators).
 The natural sibling to `SerialMediationData`; currently the only core structure with
 **no design doc**. Indirect effect = Σ aⱼ·bⱼ.
@@ -56,7 +58,7 @@ mediator models, no chaining) → `paths()`/`nie()` sum-of-products → vcov nam
 contract (`a1,b1,a2,b2,…`) → tests vs hand-built + lavaan parallel SEM → vignette.
 **Spec to write:** `planning/specs/SPEC-parallel-mediation.md`.
 
-### 🟡 Extension B — Treatment×mediator interaction / VanderWeele 4-way (1–2 weeks)
+### ✅ Extension B — Treatment×mediator interaction / VanderWeele 4-way — COMPLETE
 **New class:** `InteractionMediationData`. Full design already in `medfit-roadmap.md §7`
 (formulas, class, delta-method SEs, identification notes). Total = CDE + INTref + INTmed + PIE.
 **Work:** class + validator (component-sum invariants) → interaction detection in
@@ -65,29 +67,42 @@ delta-method SEs (bootstrap already available) → tests vs `regmedint`/`med4way
 vignette. **Spec:** `planning/specs/SPEC-interaction-fourway-2026-06-03.md` (drafted
 2026-06-03; PR split B1 class / B2a lm+SEs / B2b lavaan+docs).
 
-### 🔴 Extension C — Engine adapter architecture + CMAverse (2–3 weeks)
-**Design already in `medfit-roadmap.md §7b–7c`** (registry, adapter contract, CMAverse
-mapping). Wrap validated external estimators (g-formula, IPW, TMLE) behind one
-`engine = "gformula"|"ipw"|...` interface; all return `MediationData`.
-**Sequencing:** depends on B (shares the `Decomposition` class + `estimate_mediation()`
-front door). Start with the **registry + `.adapter_regression`** (internal, always
-available), then the **CMAverse adapter** (Suggests). **Specs:** `SPEC-engine-registry.md`,
-`SPEC-cmaverse-adapter.md`.
+### ✅ Extension C — Engine adapter: regmedint — COMPLETE
+**Spec:** `planning/specs/SPEC-engine-adapter-architecture-2026-08-22.md` (grilled —
+`GRILL-engine-adapter-architecture-2026-08-22.md`). Substantially revised from the original
+`§7b–7c` design after a 2026-08-22 adversarial-review + grill pass found the original CMAverse-first
+plan rested on an unverified assumption: **CMAverse is not on CRAN**, and its simulation-based
+effects (g-formula/IPW) have no correct slot given `nie()`/`nde()`'s live-computed contract
+(`a_path*b_path`). Revised scope: extend `fit_mediation(engine=)`'s existing dispatch (no new
+registry abstraction, no generic `Decomposition` class) with one **regmedint** adapter (CRAN,
+closed-form, already medfit's own Ext B validation target). **Shipped 2026-08-22 (PR #59,
+`08351f1`)** — `fit_mediation(engine = "regmedint")` returns `MediationData`/
+`InteractionMediationData`; a follow-up rode along promoting `m_star` to a first-class
+`fit_mediation()` argument (`planning/specs/SPEC-m-star-argument-2026-08-22.md`). Implementation
+found `regmedint::vcov()` (v1.0.2) returns variances only (no off-diagonal covariance), correcting
+the spec's original delta-method-via-full-vcov assumption — see the SPEC's own "Implementation
+correction" note. Version bumped 0.3.2→0.4.0 (no tag cut, not yet CRAN-submitted).
+
+### ⏸ Extension C.1 — CMAverse adapter (not yet spec'd, blocked)
+Deferred from C. Blocked on: (1) CRAN-availability strategy for a non-CRAN `Suggests` dependency,
+(2) the engine-native-effects representation problem for simulation-based methods. Do not start
+until both are resolved in `SPEC-cmaverse-adapter.md`.
 
 ---
 
 ## Sequencing & rationale
 
 ```
-v0.2.0 (CRAN, in flight)
+v0.3.2 (CRAN, accepted + published 2026-07-23)
    │
-   ├─ Q1–Q3 quick wins ........................ now, on dev (docs only)
+   ├─ Q1–Q3 quick wins ........................ ✅ done
    │
-   ├─ A: ParallelMediationData ................ v0.3.0  (independent; do first — closes the structure set)
+   ├─ A: ParallelMediationData ................ ✅ done (merged to dev)
    │
-   ├─ B: InteractionMediationData (4-way) ..... v0.4.0  (introduces Decomposition class)
+   ├─ B: InteractionMediationData (4-way) ..... ✅ done (merged to dev)
    │        │
-   │        └─ C: Engine registry + CMAverse .. v0.5.0  (builds on B's Decomposition + estimate_mediation())
+   │        └─ C: regmedint adapter .......... ✅ done (merged to dev, PR #59)
+   │                 └─ C.1: CMAverse adapter . blocked (CRAN availability + effect repr.)
 ```
 
 **Why A before B/C:** Parallel mediation completes the *structural* trio
@@ -107,7 +122,8 @@ change — additive only. Per CLAUDE.md, breaking changes need a 2-month notice 
 |-----|-------------|---------------|------|------|
 | A Parallel | `ParallelMediationData` (+ method updates) | none | 1–2 wk | none |
 | B Interaction | `InteractionMediationData`, `Decomposition` | none | 1–2 wk | A merged (shared test scaffold) |
-| C Adapters | `estimate_mediation`, engine registry | CMAverse (Suggests) | 2–3 wk | B merged |
+| C Adapter | one new `engine_args` param on `fit_mediation()` | regmedint (Suggests) | ~1 wk | ✅ B merged, C done |
+| C.1 Adapter (deferred) | — (blocked, not spec'd) | CMAverse (Suggests, non-CRAN) | TBD | CRAN-availability + effect-repr. resolved |
 
 All work happens on **feature worktrees off `dev`** (code can't land on `dev`/`main`
 directly). Each extension: spec → worktree → TDD → vignette → PR → CRAN-clean check.
@@ -116,14 +132,18 @@ directly). Each extension: spec → worktree → TDD → vignette → PR → CRA
 
 ## Immediate next actions
 1. ~~Q1–Q3~~ done (roadmap header refreshed; pkgdown reference verified complete).
-2. **Extension A increment 1 — class:** DONE — `ParallelMediationData` + effects + coef/vcov/nobs/show, 34 tests. **PR #34** (`feature/parallel-mediation → dev`).
-3. **Extension A increment 2 — extractor + inference:** spec'd in
-   `planning/specs/SPEC-parallel-extractor-2026-06-03.md` (defines the `@vcov`
-   naming contract that unblocks `confint()` + `extract_mediation()` parallel
-   detection). Implement after PR #34 lands.
-4. **Toolchain:** roxygen2 8.0.0 migration tracked in **issue #35** (fixes the S7
-   `\usage` rendering + the `Config/roxygen2/version` field move, package-wide).
-5. Hold B/C specs until A lands (keeps the board focused).
+2. ~~Extension A~~ **DONE** — class (#34), lm/glm extractor+confint (#36), lavaan
+   extractor+vignette+pkgdown (#37) all merged to `dev`.
+3. ~~Extension B~~ **DONE** — `InteractionMediationData` class (#38, 35 tests), lm/glm
+   extraction+decomposition+delta CI (#39, 27 tests), lavaan extraction+vignette (#40,
+   22 tests) all merged to `dev`. Spec: `planning/specs/SPEC-interaction-fourway-2026-06-03.md`.
+4. ~~Toolchain: roxygen2 8.0.0 migration~~ **DONE** (issue #35, landed alongside 0.3.x work).
+5. ~~Extension C~~ **DONE** (2026-08-22) — regmedint adapter merged (PR #59, `08351f1`); `m_star`
+   promoted to a first-class `fit_mediation()` arg alongside it. Version now 0.4.0 on `dev`.
+   `planning/specs/SPEC-engine-adapter-architecture-2026-08-22.md` (regmedint adapter; CMAverse
+   deferred to Ext C.1, blocked — see `GRILL-engine-adapter-architecture-2026-08-22.md`).
+6. **No worktree open** — Ext C.1 (CMAverse) needs its own spec first (blocked, see above);
+   otherwise nothing queued.
 
 See also: `medfit-roadmap.md` (detailed designs), `CASCADE-cran-flip-2026-06-03.md`
 (post-CRAN dependent updates), `MEDIATIONVERSE-PROPOSAL.md` (ecosystem context).

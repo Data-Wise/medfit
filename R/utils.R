@@ -76,3 +76,24 @@
 
   vcov_expanded
 }
+
+
+#' Locate a treatment-by-mediator interaction term in a model formula
+#'
+#' Formula-level counterpart of [.find_interaction_term()] (which inspects a
+#' fitted model's coefficient names). Returns the term label of the `X:M`
+#' product term in `formula`, trying both orderings, or `NA_character_` when
+#' no such term is present. Used by the `"regmedint"` engine to decide between
+#' [MediationData] and [InteractionMediationData] before any model is fitted,
+#' mirroring `extract_mediation(decomposition = "auto")`'s convention.
+#'
+#' @param formula A model formula (e.g. `Y ~ X * M + C`).
+#' @param treatment,mediator Variable names.
+#' @return A single string (the matching term label) or `NA_character_`.
+#' @keywords internal
+.find_interaction_term_formula <- function(formula, treatment, mediator) { # nolint: object_length_linter.
+  labs <- attr(stats::terms(formula), "term.labels")
+  cand <- c(paste0(treatment, ":", mediator), paste0(mediator, ":", treatment))
+  hit <- cand[cand %in% labs]
+  if (length(hit) >= 1L) hit[1] else NA_character_
+}

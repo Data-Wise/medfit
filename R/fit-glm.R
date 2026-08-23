@@ -18,6 +18,9 @@
 #' @param engine Character string: modeling engine to use. Currently supports:
 #'   \itemize{
 #'     \item `"glm"`: Generalized linear models (default)
+#'     \item `"regmedint"`: Closed-form regression-based (in)direct effects via
+#'       the suggested \pkg{regmedint} package (VanderWeele's regression
+#'       approach, with optional treatment-mediator interaction)
 #'   }
 #' @param family_y Family object for outcome model (default: `gaussian()`)
 #' @param family_m Family object for mediator model (default: `gaussian()`)
@@ -29,9 +32,25 @@
 #'   `sandwich::vcovHC`, type HC3, recommended for IPW-weighted fits). The
 #'   `"sandwich"` option requires the suggested \pkg{sandwich} package. Applies
 #'   to the single-mediator path.
+#' @param engine_args Named list of engine-specific overrides (default:
+#'   `list()`, no overrides). Ignored by `engine = "glm"`. For
+#'   `engine = "regmedint"`, recognized names are `interaction`, `cvar`,
+#'   `mreg`, `yreg`, `a0`, `a1`, and `c_cond`; each replaces the
+#'   value the adapter would otherwise derive from the formulas, families, and
+#'   data. The reference mediator level is set with `m_star`, not here.
+#' @param m_star Numeric scalar: reference mediator level \eqn{m^*}{m*} at which
+#'   the controlled direct effect is evaluated (default: `0`). Used only when
+#'   `formula_y` carries a treatment-by-mediator term, i.e. when the returned
+#'   object is an [InteractionMediationData]. Supplying it for a fit that has no
+#'   such term is an error rather than a silent no-op. That check keys on whether
+#'   the argument was given at the call site, not on whether it differs from the
+#'   default, so a wrapper that forwards `m_star` unconditionally will trigger it
+#'   on two-way fits; forward it only when its own caller supplied one.
 #' @param ... Additional arguments passed to the fitting function
 #'
-#' @return A [MediationData] object containing the fitted mediation structure
+#' @return A [MediationData] object containing the fitted mediation structure,
+#'   or an [InteractionMediationData] object when `formula_y` contains a
+#'   treatment-by-mediator interaction term.
 #'
 #' @details
 #' ## Model Specification
@@ -120,6 +139,8 @@ fit_mediation <- function(formula_y,
                           family_m = stats::gaussian(),
                           weights = NULL,
                           se_type = c("model", "sandwich"),
+                          engine_args = list(),
+                          m_star = 0,
                           ...) {
   se_type <- match.arg(se_type)
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
@@ -128,10 +149,23 @@ fit_mediation <- function(formula_y,
   checkmate::assert_data_frame(data, min.rows = 1, .var.name = "data")
   checkmate::assert_string(treatment, .var.name = "treatment")
   checkmate::assert_string(mediator, .var.name = "mediator")
-  checkmate::assert_choice(engine, choices = c("glm"), .var.name = "engine")
+  checkmate::assert_choice(engine, choices = c("glm", "regmedint"),
+                           .var.name = "engine")
+  checkmate::assert_list(engine_args, names = "unique", .var.name = "engine_args")
+  checkmate::assert_number(m_star, .var.name = "m_star")
   if (!is.null(weights)) {
     checkmate::assert_numeric(weights, len = nrow(data), lower = 0,
                               any.missing = FALSE, .var.name = "weights")
+  }
+  # regmedint has no case-weight or sandwich-vcov path; refuse rather than
+  # silently ignore arguments that would change the glm engine's answer.
+  if (engine == "regmedint") {
+    if (!is.null(weights)) {
+      stop("engine = \"regmedint\" does not support `weights`.", call. = FALSE)
+    }
+    if (se_type != "model") {
+      stop("engine = \"regmedint\" supports se_type = \"model\" only.", call. = FALSE)
+    }
   }
 
   # Nudge: model-based SEs are invalid under IPW. Fire once per session so tight
@@ -171,6 +205,26 @@ fit_mediation <- function(formula_y,
          call. = FALSE)
   }
 
+  # `m_star` only has meaning for the four-way decomposition, which needs a
+  # treatment-by-mediator term. Refuse a value that could not be used rather
+  # than dropping it silently -- same stance as the regmedint guards above.
+  if (!missing(m_star)) {
+    has_interaction <-
+      !is.na(.find_interaction_term_formula(formula_y, treatment, mediator))
+    if (engine == "regmedint" && "interaction" %in% names(engine_args)) {
+      has_interaction <- isTRUE(engine_args$interaction)
+    }
+    if (!has_interaction) {
+      stop(
+        "`m_star` applies to the four-way decomposition only, which requires a ",
+        "treatment-by-mediator term in `formula_y` (e.g. ", deparse(formula_y[[2]]),
+        " ~ ", treatment, " * ", mediator, "). ",
+        "Drop `m_star`, or add the interaction term.",
+        call. = FALSE
+      )
+    }
+  }
+
   # Dispatch to engine-specific function
   switch(engine,
     glm = .fit_mediation_glm(
@@ -183,6 +237,19 @@ fit_mediation <- function(formula_y,
       family_m = family_m,
       weights = weights,
       se_type = se_type,
+      m_star = m_star,
+      ...
+    ),
+    regmedint = .adapter_regmedint(
+      formula_y = formula_y,
+      formula_m = formula_m,
+      data = data,
+      treatment = treatment,
+      mediator = mediator,
+      family_y = family_y,
+      family_m = family_m,
+      engine_args = engine_args,
+      m_star = m_star,
       ...
     ),
     stop(sprintf("Engine '%s' not implemented", engine), call. = FALSE)
@@ -202,6 +269,9 @@ fit_mediation <- function(formula_y,
 #' @param weights Optional numeric case-weight vector (length `nrow(data)`), or
 #'   `NULL` for an unweighted fit. Passed explicitly (not via `...`) so glm's
 #'   non-standard evaluation of `weights` resolves in this frame.
+#' @param m_star Numeric scalar reference mediator level for the four-way
+#'   decomposition; forwarded to [extract_mediation()], which applies it when
+#'   `formula_y` carries a treatment-by-mediator term.
 #' @param ... Additional arguments (passed to glm)
 #'
 #' @return MediationData object
@@ -217,6 +287,7 @@ fit_mediation <- function(formula_y,
   family_m,
   weights = NULL,
   se_type = c("model", "sandwich"),
+  m_star = 0,
   ...) {
   se_type <- match.arg(se_type)
   # Build glm calls via do.call so the `weights` *value* (vector or absent) is
@@ -254,13 +325,17 @@ fit_mediation <- function(formula_y,
     stats::vcov
   }
 
-  # Extract mediation structure using extract_mediation
+  # Extract mediation structure using extract_mediation. `m_star` is applied
+  # here -- extraction-time -- because the four-way split is computed from the
+  # fitted coefficients; contrast the regmedint engine, which hands the same
+  # value to its own estimator at fitting time.
   extract_mediation(
     object = fit_m,
     model_y = fit_y,
     treatment = treatment,
     mediator = mediator,
     data = data,
+    m_star = m_star,
     vcov_fun = vcov_fun
   )
 }

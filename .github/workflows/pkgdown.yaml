@@ -39,6 +39,18 @@ jobs:
           extra-packages: any::pkgdown, local::.
           needs: website
 
+      - name: Hide agent-instruction docs from pkgdown
+        run: |
+          # pkgdown renders every root-level *.md into a site page (HTML,
+          # plus an llms.txt-era markdown twin, a sitemap.xml entry, and a
+          # full-text search.json entry — see pkgdown:::package_mds()).
+          # CLAUDE.md and AGENTS.md must stay at the repo root for Claude
+          # Code / Codex discovery, so they can't be moved like the other
+          # internal planning docs. This checkout is a disposable CI copy,
+          # so just remove them here before the build ever sees them; the
+          # tracked files are untouched.
+          rm -f CLAUDE.md AGENTS.md
+
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
@@ -51,7 +63,7 @@ jobs:
 
       - name: Deploy to GitHub pages 🚀
         if: github.event_name != 'pull_request'
-        uses: JamesIves/github-pages-deploy-action@v4.8.0
+        uses: JamesIves/github-pages-deploy-action@v4.9.0
         with:
           clean: true
           branch: gh-pages
