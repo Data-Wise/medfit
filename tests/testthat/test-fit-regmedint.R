@@ -200,11 +200,13 @@ test_that("engine_args$interaction overrides formula-based auto-detection", {
   expect_s7_class(forced_on, InteractionMediationData)
 })
 
-test_that("engine_args m_cde / c_cond / cvar overrides reach regmedint", {
+test_that("m_star / engine_args c_cond / cvar overrides reach regmedint", {
   d <- regmedint_data()
+  # The reference mediator level is fit_mediation()'s `m_star`, which the
+  # adapter forwards as regmedint's `m_cde` (SPEC-m-star-argument, D1/D2).
   fit <- fit_mediation(Y ~ X * M + C, M ~ X + C,
     data = d, treatment = "X", mediator = "M", engine = "regmedint",
-    engine_args = list(m_cde = 1, c_cond = 0.5)
+    m_star = 1, engine_args = list(c_cond = 0.5)
   )
   ref <- regmedint::regmedint(
     data = d, yvar = "Y", avar = "X", mvar = "M", cvar = "C",

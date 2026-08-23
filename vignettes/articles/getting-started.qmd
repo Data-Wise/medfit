@@ -277,10 +277,11 @@ med_rm <- fit_mediation(
 nie(med_rm)   # every generic works the same way
 ```
 
-If `formula_y` carries a treatment-by-mediator term (`Y ~ X * M`), the
-regmedint engine returns an `InteractionMediationData` with the four-way
-decomposition and analytical standard errors. Engine-specific settings go
-through `engine_args`; see
+If `formula_y` carries a treatment-by-mediator term (`Y ~ X * M`), either
+engine returns an `InteractionMediationData` with the four-way decomposition —
+analytical standard errors in the regmedint case. The reference mediator level
+for the CDE is set with `m_star` (default `0`, on both engines); other
+engine-specific settings go through `engine_args`. See
 [Model Extraction](extraction.html) for the full mapping and its scope limits.
 
 ### Custom Bootstrap

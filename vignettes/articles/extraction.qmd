@@ -487,7 +487,47 @@ Standard errors come from regmedint's delta method rather than medfit's, so
 they are analytical — no bootstrap needed — and reproduce the SEs
 `regmedint::summary()` reports for the same model.
 
-Pass engine-specific settings through `engine_args`:
+#### The reference mediator level
+
+The four-way split is read off at a reference mediator level $m^*$:
+
+$$\text{CDE} = \theta_1 + \theta_3 m^*, \qquad
+  \text{INTref} = \theta_3\,(E[M \mid X = 0] - m^*).$$
+
+Set it with `fit_mediation(m_star = )`, which defaults to `0` on every engine:
+
+```{r}
+#| label: m-star-argument
+med_rm_m1 <- fit_mediation(
+  formula_y = Y ~ X * M,
+  formula_m = M ~ X,
+  data = d,
+  treatment = "X",
+  mediator = "M",
+  engine = "regmedint",
+  m_star = 1
+)
+
+med_rm_m1@m_star   # 1
+med_rm_m1@cde      # theta1 + theta3 * 1
+```
+
+The two terms shift in exactly compensating directions, so `nde()`, `nie()`,
+`te()`, and `pm()` are **invariant** to `m_star` — only the CDE/INTref split
+moves. Passing `m_star` to a fit with no treatment-by-mediator term is an
+error, not a silent no-op.
+
+The engines reach the same answer by different routes. `engine = "glm"` applies
+`m_star` at *extraction* time, after the coefficients are fit;
+`engine = "regmedint"` hands the same value to `regmedint::regmedint()` as its
+`m_cde` argument, where the closed-form estimator consumes it at *fitting*
+time. Because the two names denote one quantity, `m_cde` is not accepted in
+`engine_args` — use `m_star`.
+
+#### Other engine settings
+
+Everything regmedint-specific that is *not* the reference level goes through
+`engine_args`:
 
 ```{r}
 #| label: regmedint-args
@@ -498,16 +538,17 @@ med_rmi2 <- fit_mediation(
   treatment = "X",
   mediator = "M",
   engine = "regmedint",
+  m_star = 1,           # reference mediator level (default 0)
   engine_args = list(
-    m_cde = 1,          # reference mediator level (default 0, as with m_star)
+    c_cond = 0,         # covariate level for the conditional effects
     interaction = TRUE  # override the formula-based auto-detection
   )
 )
 ```
 
-Recognized names are `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`,
-`m_cde`, and `c_cond`; each replaces a value the adapter would otherwise derive
-from the formulas, families, and data.
+Recognized names are `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`, and
+`c_cond`; each replaces a value the adapter would otherwise derive from the
+formulas, families, and data.
 
 **Scope.** The regmedint engine needs a numeric 0/1 treatment and a linear
 (Gaussian) mediator model; the outcome may be Gaussian or binomial. Outside

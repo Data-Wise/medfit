@@ -13,9 +13,32 @@
 
 * `fit_mediation()` gains an `engine_args` argument: a named list of
   engine-specific overrides, ignored by `engine = "glm"`. For the regmedint
-  engine it accepts `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`,
-  `m_cde`, and `c_cond`, each replacing a value the adapter would otherwise
-  derive from the formulas, families, and data.
+  engine it accepts `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`, and
+  `c_cond`, each replacing a value the adapter would otherwise derive from the
+  formulas, families, and data.
+
+* `fit_mediation()` gains an `m_star` argument: the reference mediator level
+  \eqn{m^*}{m*} at which the controlled direct effect is evaluated, when the
+  fit returns an `InteractionMediationData`. It closes a gap that predates the
+  engine work -- `extract_mediation()` has always accepted `m_star`, but
+  `fit_mediation()` routed unrecognized arguments to `stats::glm()`, so
+  `fit_mediation(Y ~ X * M, ..., m_star = 1)` previously failed with
+  `unused argument`. The default of `0` is unchanged behavior, and matches the
+  lm/glm and lavaan extractors.
+
+  Both engines honor it, by different routes: `engine = "glm"` applies it at
+  extraction time, after the coefficients are fit, while `engine = "regmedint"`
+  passes it to `regmedint::regmedint()` as `m_cde`, where that package's
+  closed-form estimator consumes it at fitting time. The two agree to
+  delta-method tolerance on `@cde` and `@int_ref` at any shared `m_star`.
+  Because `m_star` and `regmedint`'s `m_cde` name one quantity, `m_cde` is no
+  longer accepted in `engine_args`; supplying it errors with a pointer to
+  `m_star`. (Both surfaces are new in this release, so no deprecation cycle
+  applies.)
+
+  `nde()`, `nie()`, `te()`, and `pm()` are invariant to `m_star` -- only the
+  CDE/INTref split moves. Supplying `m_star` for a fit with no
+  treatment-by-mediator term is an error rather than a silent no-op.
 
 * Standard errors for the regmedint engine are analytical, not bootstrapped.
   `confint()` on an `InteractionMediationData` now prefers a stored component

@@ -49,7 +49,11 @@
 #' @param family_y Family for outcome model
 #' @param family_m Family for mediator model
 #' @param engine_args Named list of regmedint-specific overrides:
-#'   `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`, `m_cde`, `c_cond`.
+#'   `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`, `c_cond`.
+#' @param m_star Numeric scalar reference mediator level. Passed to regmedint as
+#'   its `m_cde` argument -- unlike the glm engine, which applies the same value
+#'   at extraction time, regmedint consumes it inside its own closed-form `cde`
+#'   estimator at fitting time. Same observable effect, different route.
 #' @param ... Must be empty; regmedint takes no pass-through arguments.
 #'
 #' @return A MediationData or InteractionMediationData object
@@ -63,6 +67,7 @@
                                family_y,
                                family_m,
                                engine_args = list(),
+                               m_star = 0,
                                ...) {
   if (!requireNamespace("regmedint", quietly = TRUE)) {
     stop(
@@ -80,7 +85,17 @@
       call. = FALSE
     )
   }
-  known <- c("interaction", "cvar", "mreg", "yreg", "a0", "a1", "m_cde", "c_cond")
+  known <- c("interaction", "cvar", "mreg", "yreg", "a0", "a1", "c_cond")
+  # `m_cde` is regmedint's own spelling of the reference mediator level. medfit
+  # exposes exactly one knob for it -- fit_mediation(m_star = ) -- so that an
+  # object's @m_star can never disagree with the value the engine used.
+  if ("m_cde" %in% names(engine_args)) {
+    stop(
+      "`engine_args$m_cde` is not accepted. Use the `m_star` argument of ",
+      "fit_mediation() instead; it is passed to regmedint as `m_cde`.",
+      call. = FALSE
+    )
+  }
   unknown <- setdiff(names(engine_args), known)
   if (length(unknown) > 0) {
     stop(
@@ -94,7 +109,8 @@
   spec <- .regmedint_build_args(
     formula_y = formula_y, formula_m = formula_m, data = data,
     treatment = treatment, mediator = mediator,
-    family_y = family_y, family_m = family_m, engine_args = engine_args
+    family_y = family_y, family_m = family_m, engine_args = engine_args,
+    m_star = m_star
   )
   fit <- do.call(regmedint::regmedint, spec$args)
 
@@ -119,7 +135,7 @@
 #' @keywords internal
 #' @noRd
 .regmedint_build_args <- function(formula_y, formula_m, data, treatment, mediator,
-                                  family_y, family_m, engine_args) {
+                                  family_y, family_m, engine_args, m_star = 0) {
   # --- Variables from the formulas ---
   outcome <- all.vars(formula_y[[2]])
   if (length(outcome) != 1L) {
@@ -218,16 +234,12 @@
   .regmedint_check_representable(a0, a1, mreg, has_interaction)
 
   # --- m_cde / c_cond: evaluation points for the CDE ---
-  # m_cde defaults to 0, matching the `m_star = 0` default of both other
-  # extractors (R/extract-lm.R, R/extract-lavaan.R) so all three engines report
-  # the CDE/INTref split at the same reference level. c_cond keeps the sample
-  # means, which is also what the lm extractor uses for E[M | X = 0].
-  m_cde <- if ("m_cde" %in% names(engine_args)) {
-    checkmate::assert_number(engine_args$m_cde, .var.name = "engine_args$m_cde")
-    engine_args$m_cde
-  } else {
-    0
-  }
+  # regmedint's `m_cde` is fit_mediation()'s `m_star`, whose default of 0 matches
+  # both other extractors (R/extract-lm.R, R/extract-lavaan.R) so all three
+  # engines report the CDE/INTref split at the same reference level. c_cond keeps
+  # the sample means, which is also what the lm extractor uses for E[M | X = 0].
+  checkmate::assert_number(m_star, .var.name = "m_star")
+  m_cde <- m_star
   c_cond <- if ("c_cond" %in% names(engine_args)) {
     checkmate::assert_numeric(engine_args$c_cond, len = length(cvar), any.missing = FALSE,
                               null.ok = length(cvar) == 0L, .var.name = "engine_args$c_cond")

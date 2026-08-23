@@ -16,6 +16,7 @@ fit_mediation(
   weights = NULL,
   se_type = c("model", "sandwich"),
   engine_args = list(),
+  m_star = 0,
   ...
 )
 
@@ -31,6 +32,7 @@ fit_mediation(
   weights = NULL,
   se_type = c("model", "sandwich"),
   engine_args = list(),
+  m_star = 0,
   ...
 )
 }
@@ -70,9 +72,15 @@ to the single-mediator path.}
 \item{engine_args}{Named list of engine-specific overrides (default:
 \code{list()}, no overrides). Ignored by \code{engine = "glm"}. For
 \code{engine = "regmedint"}, recognized names are \code{interaction}, \code{cvar},
-\code{mreg}, \code{yreg}, \code{a0}, \code{a1}, \code{m_cde}, and \code{c_cond}; each replaces the
+\code{mreg}, \code{yreg}, \code{a0}, \code{a1}, and \code{c_cond}; each replaces the
 value the adapter would otherwise derive from the formulas, families, and
-data.}
+data. The reference mediator level is set with \code{m_star}, not here.}
+
+\item{m_star}{Numeric scalar: reference mediator level \eqn{m^*}{m*} at which
+the controlled direct effect is evaluated (default: \code{0}). Used only when
+\code{formula_y} carries a treatment-by-mediator term, i.e. when the returned
+object is an \link{InteractionMediationData}. Supplying it for a fit that has no
+such term is an error rather than a silent no-op.}
 
 \item{...}{Additional arguments passed to the fitting function}
 }
@@ -113,6 +121,23 @@ natural (in)direct effects, with or without a treatment-mediator interaction
 \code{formula_y} contains a treatment-by-mediator interaction term; use
 \code{engine_args} to override the derived regmedint arguments
 }
+}
+
+\subsection{Reference Mediator Level}{
+
+When the fit yields an \link{InteractionMediationData}, \code{m_star} fixes the level
+\eqn{m^*}{m*} at which the controlled direct effect is read off:
+\eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = theta1 + theta3 * m*} and
+\eqn{INTref = \theta_3 (E[M \mid X = 0] - m^*)}{INTref = theta3 * (E[M | X = 0] - m*)}.
+The two shift in compensating directions, so \code{nde()}, \code{nie()}, \code{te()}, and
+\code{pm()} are invariant to \code{m_star}; only the CDE/INTref split moves.
+
+The engines reach the same result by different routes. \code{engine = "glm"}
+applies \code{m_star} at \emph{extraction} time, after the coefficients are fit;
+\code{engine = "regmedint"} passes it to \code{regmedint::regmedint()} as \code{m_cde},
+where it is consumed by that package's closed-form estimator at \emph{fitting}
+time. Supplying \code{m_star} for a fit with no treatment-by-mediator term is an
+error, not a silent no-op.
 
 \strong{Future Engines}:
 \itemize{
