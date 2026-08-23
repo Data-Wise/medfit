@@ -548,6 +548,16 @@ BootstrapResult <- S7::new_class(
       return("ci_upper must be a scalar numeric value")
     }
 
+    # Validate method BEFORE any `self@method != ...` branch below: a non-scalar
+    # method would make those `if` conditions length > 1, which is an R error
+    # rather than this validator's own message.
+    if (length(self@method) != 1) {
+      return("method must be a single character string")
+    }
+    if (!(self@method %in% c("parametric", "nonparametric", "plugin"))) {
+      return("method must be 'parametric', 'nonparametric', or 'plugin'")
+    }
+
     # For non-plugin methods, check CI ordering
     if (self@method != "plugin") {
       if (!is.na(self@ci_lower) && !is.na(self@ci_upper)) {
@@ -567,14 +577,6 @@ BootstrapResult <- S7::new_class(
           return("ci_level must be between 0 and 1 (exclusive)")
         }
       }
-    }
-
-    # Validate method
-    if (length(self@method) != 1) {
-      return("method must be a single character string")
-    }
-    if (!(self@method %in% c("parametric", "nonparametric", "plugin"))) {
-      return("method must be 'parametric', 'nonparametric', or 'plugin'")
     }
 
     # Validate n_boot

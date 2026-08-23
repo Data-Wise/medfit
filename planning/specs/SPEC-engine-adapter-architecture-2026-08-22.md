@@ -8,7 +8,8 @@ revised below after an adversarial-review pass + a 9-branch grill session; see
 **Reuses (do NOT reimplement):** the one-class-per-structure pattern
 (`MediationData`/`InteractionMediationData`); the `@vcov` naming-alias contract
 (`.expand_vcov_with_aliases()`, `R/utils.R`); `InteractionMediationData`'s existing `m_star`
-convention (reused for regmedint's `m_cde`/`c_cond` evaluation-point defaults).
+convention (reused for regmedint's `m_cde`/`c_cond` evaluation-point defaults — see the §5
+correction note: the actual convention is `m_star = 0`, not the sample mean).
 
 ---
 
@@ -124,6 +125,15 @@ internally. `Var(int_ref) = Var(pnde) + Var(cde) - 2·Cov(pnde,cde)`; `Var(int_m
 Var(pnie) - 2·Cov(tnie,pnie)` — read directly off regmedint's reported `vcov()`, no re-derivation
 of the underlying regression covariance needed.
 
+> **Implementation correction (2026-08-22, Phase 2):** `regmedint::vcov()` (v1.0.2) returns
+> **variances only** — every off-diagonal entry is `NA` (`regmedint:::vcov.regmedint` builds
+> `diag(se^2)` and blanks the triangles). The covariance route above is therefore unavailable.
+> The adapter reproduces regmedint's own delta method instead (same parameter vector
+> `(β, θ, σ²)`, same `Σ = bdiag(vcov(mreg), vcov(yreg), 2σ⁴/df)`, same gradients specialized to
+> `a0 = 0, a1 = 1`), which yields the full component covariance; its diagonal equals regmedint's
+> reported SEs exactly (tested). See `ORCHESTRATE-engine-adapter-architecture.md` Phase 2 notes
+> for the other implementation-time findings (representability guard, `m_cde` default caveat).
+
 **Simple-mediation case** (`interaction = FALSE`): regmedint reports plain natural effects
 (`nde`/`nie`) directly compatible with `MediationData` — no component mapping needed.
 
@@ -159,8 +169,19 @@ family_y, family_m, ...`) currently exposes directly.
 | `cvar` | Remaining RHS terms of `formula_y` minus treatment/mediator/interaction | `engine_args$cvar` |
 | `mreg`/`yreg` | `family_m`/`family_y`: `gaussian()`→`"linear"`, `binomial()`→`"logistic"` | `engine_args$mreg`/`$yreg` |
 | `a0`/`a1` | `0`/`1` if `treatment` is binary in `data`; **error** with an explicit message otherwise (no silent guess for continuous/multi-level treatment) | `engine_args$a0`/`$a1` |
-| `m_cde`/`c_cond` | Sample means of `mediator`/covariates — same convention as `InteractionMediationData`'s existing `m_star` default | `engine_args$m_cde`/`$c_cond` |
+| `m_cde`/`c_cond` | `m_cde = 0`; `c_cond` = covariate sample means — see the correction note below | `engine_args$m_cde`/`$c_cond` |
 | `interaction` | Auto-detected per §4 | `engine_args$interaction` |
+
+> **Implementation correction (2026-08-22, Phase 4):** this row originally specified `m_cde` =
+> *sample mean of the mediator*, justified as "the same convention as `InteractionMediationData`'s
+> existing `m_star` default." That justification was wrong on both counts: the lm/glm extractor
+> defaults `m_star = 0` (`R/extract-lm.R:119,153`) and so does the lavaan extractor (asserted in
+> `test-extract-interaction-lavaan.R:38`), while regmedint itself has *no* `m_cde` default — it is
+> a required argument. Shipping the sample mean would have made the new engine the only one of
+> three reporting the CDE/INTref split at a different reference level. **`m_cde` therefore
+> defaults to `0`.** `c_cond` keeps the covariate sample means, which does match the lm
+> extractor's own `E[M | X = 0]` convention. `nde`/`nie`/`te`/`pm` are invariant to `m*` either
+> way; only the CDE/INTref split moves.
 
 ## 6. Acceptance criteria
 

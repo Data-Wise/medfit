@@ -83,6 +83,11 @@ extract_mediation <- S7::new_generic(
 #'   - `"brms"`: Bayesian regression models (future)
 #' @param family_y Family object for outcome model (default: `gaussian()`)
 #' @param family_m Family object for mediator model (default: `gaussian()`)
+#' @param engine_args Named list of engine-specific overrides (default:
+#'   `list()`). See the `fit_mediation()` documentation in `R/fit-glm.R` for
+#'   the names each engine recognizes.
+#' @param m_star Numeric scalar: reference mediator level \eqn{m^*}{m*} for the
+#'   four-way decomposition (default: `0`).
 #' @param ... Additional arguments passed to the engine-specific function
 #'
 #' @return A [MediationData] object containing the fitted mediation structure
@@ -98,6 +103,29 @@ extract_mediation <- S7::new_generic(
 #' - Fits models using `stats::glm()`
 #' - Supports all GLM families (gaussian, binomial, poisson, etc.)
 #' - For Gaussian models, extracts residual variances
+#'
+#' **regmedint** (`engine = "regmedint"`):
+#' - Delegates to `regmedint::regmedint()` (suggested package) for closed-form
+#'   natural (in)direct effects, with or without a treatment-mediator interaction
+#' - Returns [MediationData] or [InteractionMediationData] depending on whether
+#'   `formula_y` contains a treatment-by-mediator interaction term; use
+#'   `engine_args` to override the derived regmedint arguments
+#'
+#' ## Reference Mediator Level
+#'
+#' When the fit yields an [InteractionMediationData], `m_star` fixes the level
+#' \eqn{m^*}{m*} at which the controlled direct effect is read off:
+#' \eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = theta1 + theta3 * m*} and
+#' \eqn{INTref = \theta_3 (E[M \mid X = 0] - m^*)}{INTref = theta3 * (E[M | X = 0] - m*)}.
+#' The two shift in compensating directions, so `nde()`, `nie()`, `te()`, and
+#' `pm()` are invariant to `m_star`; only the CDE/INTref split moves.
+#'
+#' The engines reach the same result by different routes. `engine = "glm"`
+#' applies `m_star` at *extraction* time, after the coefficients are fit;
+#' `engine = "regmedint"` passes it to `regmedint::regmedint()` as `m_cde`,
+#' where it is consumed by that package's closed-form estimator at *fitting*
+#' time. Supplying `m_star` for a fit with no treatment-by-mediator term is an
+#' error, not a silent no-op.
 #'
 #' **Future Engines**:
 #' - `"lmer"`: Mixed-effects models via lme4
@@ -146,6 +174,8 @@ fit_mediation <- function(formula_y,
                           engine = "glm",
                           family_y = stats::gaussian(),
                           family_m = stats::gaussian(),
+                          engine_args = list(),
+                          m_star = 0,
                           ...) {
   # This is a regular function, not an S7 generic
   # Implementation will be in fit-glm.R and other engine files
