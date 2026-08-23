@@ -117,3 +117,24 @@ fit_mediation(formula_y, formula_m, data, treatment, mediator,
 5. `engine_args = list(m_cde = ...)` errors with a message naming `m_star` (D1).
 6. Omitting `m_star` reproduces byte-identical output to the pre-change glm path.
 7. `R CMD check --as-cran` and the strict flavors stay 0/0/0.
+
+---
+
+## 6. Implementation notes (2026-08-22)
+
+**`.find_interaction_term_formula()` returns `NA_character_`, not `NULL`.** The D3 guard was first
+written as `!is.null(.find_interaction_term_formula(...))`, which is *always* `TRUE` — the guard
+silently never fired, and `fit_mediation(Y ~ X + M, ..., m_star = 1)` returned a `MediationData`
+instead of erroring. Caught by running the acceptance criteria rather than by reading the code.
+The predicate is now `!is.na(...)`, matching the idiom the adapter already uses at
+`R/fit-regmedint.R:157`. `R/utils.R:94-99` is the contract: the helper returns the matched term
+label or `NA_character_`.
+
+**Verification on the final tree.** 931 tests pass / 0 fail / 2 skip (up from 889).
+`--as-cran --run-donttest` = 0/0/0; the same under `_R_CHECK_DEPENDS_ONLY_`,
+`_R_CHECK_SUGGESTS_ONLY_`, and `_R_CHECK_CRAN_INCOMING_(REMOTE_)` = 0/0/0 — the DEPENDS_ONLY run
+is also what exercises the regmedint-absent path, since a `Suggests` package is invisible under
+it. `lint_package()` clean against an installed copy; `spell_check_package()` and
+`urlchecker::url_check()` (17/17) clean. AC6 held: with `m_star` omitted, the glm path's
+serialized properties are byte-identical to a baseline captured before the change, for the
+two-way, four-way, and four-way-with-covariate fits.

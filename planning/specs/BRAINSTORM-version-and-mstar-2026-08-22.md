@@ -138,9 +138,13 @@ follow-up spec must not drift into it.
 1. **Keep `0.4.0`.** No edit. The tag, not the string, is the claim — and every downstream pin is
    a floor.
 
-### Later (own session, ~1.5 hr)
+### Later (own session, ~1.5 hr) — **DONE 2026-08-22**
 
-2. **`SPEC-m-star-argument-<date>.md`** — the four sub-decisions above, then implement: signature,
+2. ~~**`SPEC-m-star-argument-<date>.md`**~~ — written and implemented the same session; see
+   `SPEC-m-star-argument-2026-08-22.md`. All four sub-decisions landed as recommended.
+   Original scope:
+
+   **`SPEC-m-star-argument-<date>.md`** — the four sub-decisions above, then implement: signature,
    thread through `.fit_mediation_glm()` → `extract_mediation()`, retire `engine_args$m_cde`, docs,
    tests for both engines + the two-way path.
 
