@@ -22,6 +22,8 @@ fit_mediation(
   family_m = stats::gaussian(),
   weights = NULL,
   se_type = c("model", "sandwich"),
+  engine_args = list(),
+  m_star = 0,
   ...
 )
 
@@ -36,6 +38,8 @@ fit_mediation(
   family_m = stats::gaussian(),
   weights = NULL,
   se_type = c("model", "sandwich"),
+  engine_args = list(),
+  m_star = 0,
   ...
 )
 ```
@@ -68,6 +72,10 @@ fit_mediation(
 
   - `"glm"`: Generalized linear models (default)
 
+  - `"regmedint"`: Closed-form regression-based (in)direct effects via
+    the suggested regmedint package (VanderWeele's regression approach,
+    with optional treatment-mediator interaction)
+
 - family_y:
 
   Family object for outcome model (default:
@@ -90,10 +98,33 @@ fit_mediation(
   Variance-covariance estimator for `@vcov`: `"model"` (default,
   model-based [`stats::vcov`](https://rdrr.io/r/stats/vcov.html)) or
   `"sandwich"` (heteroskedasticity-consistent
-  [`sandwich::vcovHC`](https://sandwich.R-Forge.R-project.org/reference/vcovHC.html),
+  [`sandwich::vcovHC`](https://zeileis.codeberg.page/sandwich/reference/vcovHC.html),
   type HC3, recommended for IPW-weighted fits). The `"sandwich"` option
   requires the suggested sandwich package. Applies to the
   single-mediator path.
+
+- engine_args:
+
+  Named list of engine-specific overrides (default:
+  [`list()`](https://rdrr.io/r/base/list.html), no overrides). Ignored
+  by `engine = "glm"`. For `engine = "regmedint"`, recognized names are
+  `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`, and `c_cond`; each
+  replaces the value the adapter would otherwise derive from the
+  formulas, families, and data. The reference mediator level is set with
+  `m_star`, not here.
+
+- m_star:
+
+  Numeric scalar: reference mediator level \\m^\*\\ at which the
+  controlled direct effect is evaluated (default: `0`). Used only when
+  `formula_y` carries a treatment-by-mediator term, i.e. when the
+  returned object is an
+  [InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md).
+  Supplying it for a fit that has no such term is an error rather than a
+  silent no-op. That check keys on whether the argument was given at the
+  call site, not on whether it differs from the default, so a wrapper
+  that forwards `m_star` unconditionally will trigger it on two-way
+  fits; forward it only when its own caller supplied one.
 
 - ...:
 
@@ -107,7 +138,10 @@ object containing the fitted mediation structure
 
 A
 [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md)
-object containing the fitted mediation structure
+object containing the fitted mediation structure, or an
+[InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md)
+object when `formula_y` contains a treatment-by-mediator interaction
+term.
 
 ## Details
 
@@ -125,6 +159,42 @@ using
 - Supports all GLM families (gaussian, binomial, poisson, etc.)
 
 - For Gaussian models, extracts residual variances
+
+**regmedint** (`engine = "regmedint"`):
+
+- Delegates to
+  [`regmedint::regmedint()`](https://kaz-yos.github.io/regmedint/reference/regmedint.html)
+  (suggested package) for closed-form natural (in)direct effects, with
+  or without a treatment-mediator interaction
+
+- Returns
+  [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md)
+  or
+  [InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md)
+  depending on whether `formula_y` contains a treatment-by-mediator
+  interaction term; use `engine_args` to override the derived regmedint
+  arguments
+
+### Reference Mediator Level
+
+When the fit yields an
+[InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md),
+`m_star` fixes the level \\m^\*\\ at which the controlled direct effect
+is read off: \\CDE = \theta_1 + \theta_3 m^\*\\ and \\INTref = \theta_3
+(E\[M \mid X = 0\] - m^\*)\\. The two shift in compensating directions,
+so [`nde()`](https://data-wise.github.io/medfit/reference/nde.md),
+[`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+[`te()`](https://data-wise.github.io/medfit/reference/te.md), and
+[`pm()`](https://data-wise.github.io/medfit/reference/pm.md) are
+invariant to `m_star`; only the CDE/INTref split moves.
+
+The engines reach the same result by different routes. `engine = "glm"`
+applies `m_star` at *extraction* time, after the coefficients are fit;
+`engine = "regmedint"` passes it to
+[`regmedint::regmedint()`](https://kaz-yos.github.io/regmedint/reference/regmedint.html)
+as `m_cde`, where it is consumed by that package's closed-form estimator
+at *fitting* time. Supplying `m_star` for a fit with no
+treatment-by-mediator term is an error, not a silent no-op.
 
 **Future Engines**:
 

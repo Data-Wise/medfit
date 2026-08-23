@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.2</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -333,6 +333,25 @@
 <span><span class="va">med_data</span><span class="op">@</span><span class="va">b_path</span>  <span class="co"># mediator to outcome</span></span>
 <span><span class="va">med_data</span><span class="op">@</span><span class="va">c_prime</span> <span class="co"># treatment to outcome, the direct path</span></span></code></pre>
 </div>
+</section><section class="level3"><h3 id="choosing-an-engine">Choosing an Engine<a class="anchor" aria-label="anchor" href="#choosing-an-engine"></a>
+</h3>
+<p><code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> defaults to <code>engine = "glm"</code>, which fits both models with <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code>. A second engine delegates to the suggested <a href="https://cran.r-project.org/package=regmedint" class="external-link">regmedint</a> package for closed-form regression-based effects:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="co"># regmedint requires a numeric 0/1 treatment</span></span>
+<span><span class="va">bin_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">mydata</span>, X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">X</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">med_rm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>,</span>
+<span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">bin_data</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  engine <span class="op">=</span> <span class="st">"regmedint"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">med_rm</span><span class="op">)</span>   <span class="co"># every generic works the same way</span></span></code></pre>
+</div>
+<p>If <code>formula_y</code> carries a treatment-by-mediator term (<code>Y ~ X * M</code>), either engine returns an <code>InteractionMediationData</code> with the four-way decomposition — analytical standard errors in the regmedint case. The reference mediator level for the CDE is set with <code>m_star</code> (default <code>0</code>, on both engines); other engine-specific settings go through <code>engine_args</code>. See <a href="extraction.html">Model Extraction</a> for the full mapping and its scope limits.</p>
 </section><section class="level3"><h3 id="custom-bootstrap">Custom Bootstrap<a class="anchor" aria-label="anchor" href="#custom-bootstrap"></a>
 </h3>
 <div class="cell">

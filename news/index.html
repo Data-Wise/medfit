@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.2</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,6 +68,36 @@
       <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="medfit-040">medfit 0.4.0<a class="anchor" aria-label="anchor" href="#medfit-040"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-4-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-4-0"></a></h3>
+<ul><li><p><code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> gains a second engine, <code>engine = "regmedint"</code>, which fits the mediator and outcome regressions through the suggested  package and returns medfit’s own classes. On a formula without a treatment-by-mediator term it returns a <code>MediationData</code>; on one carrying an <code>X:M</code> term it returns an <code>InteractionMediationData</code> with the four-way (VanderWeele) decomposition filled in from regmedint’s closed-form <code>cde</code>/<code>pnde</code>/<code>tnie</code>/<code>pnie</code>/<code>te</code> output. Auto-detection mirrors <code>extract_mediation(decomposition = "auto")</code>.</p></li>
+<li><p><code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> gains an <code>engine_args</code> argument: a named list of engine-specific overrides, ignored by <code>engine = "glm"</code>. For the regmedint engine it accepts <code>interaction</code>, <code>cvar</code>, <code>mreg</code>, <code>yreg</code>, <code>a0</code>, <code>a1</code>, and <code>c_cond</code>, each replacing a value the adapter would otherwise derive from the formulas, families, and data.</p></li>
+<li>
+<p><code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> gains an <code>m_star</code> argument: the reference mediator level (<code>m*</code>) at which the controlled direct effect is evaluated, when the fit returns an <code>InteractionMediationData</code>. It closes a gap that predates the engine work – <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> has always accepted <code>m_star</code>, but <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> routed unrecognized arguments to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code>, so <code>fit_mediation(Y ~ X * M, ..., m_star = 1)</code> previously failed with <code>unused argument</code>. The default of <code>0</code> is unchanged behavior, and matches the lm/glm and lavaan extractors.</p>
+<p>Both engines honor it, by different routes: <code>engine = "glm"</code> applies it at extraction time, after the coefficients are fit, while <code>engine = "regmedint"</code> passes it to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code> as <code>m_cde</code>, where that package’s closed-form estimator consumes it at fitting time. The two agree to delta-method tolerance on <code>@cde</code> and <code>@int_ref</code> at any shared <code>m_star</code>. Because <code>m_star</code> and <code>regmedint</code>’s <code>m_cde</code> name one quantity, <code>m_cde</code> is no longer accepted in <code>engine_args</code>; supplying it errors with a pointer to <code>m_star</code>. (Both surfaces are new in this release, so no deprecation cycle applies.)</p>
+<p><code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="../reference/te.html">te()</a></code>, and <code><a href="../reference/pm.html">pm()</a></code> are invariant to <code>m_star</code> – only the CDE/INTref split moves. Supplying <code>m_star</code> for a fit with no treatment-by-mediator term is an error rather than a silent no-op.</p>
+</li>
+<li><p>Standard errors for the regmedint engine are analytical, not bootstrapped. <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> on an <code>InteractionMediationData</code> now prefers a stored component covariance block when the fitting engine supplied one; objects from the lm/glm and lavaan extractors carry none, so their existing delta-method gradient path is unchanged.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="details-and-limitations-0-4-0">Details and limitations<a class="anchor" aria-label="anchor" href="#details-and-limitations-0-4-0"></a></h3>
+<ul><li><p>The regmedint engine requires a numeric 0/1 treatment and a linear (Gaussian) mediator model. Outside those cases regmedint’s closed-form effects are no longer the products of regression coefficients that <code>MediationData</code>/<code>InteractionMediationData</code> are defined in terms of, so the adapter raises an explicit error with guidance rather than returning an object whose numbers disagree with <code><a href="../reference/nie.html">nie()</a></code>. Outcome models may be Gaussian or binomial.</p></li>
+<li><p><code>engine = "regmedint"</code> does not support <code>weights</code> or <code>se_type = "sandwich"</code> (regmedint implements neither); supplying them is an error rather than a silent no-op.</p></li>
+<li><p><code>m_cde</code> defaults to <code>0</code>, matching the <code>m_star = 0</code> default already used by the lm/glm and lavaan extractors, so all three report the CDE/INTref split at the same reference level. <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="../reference/te.html">te()</a></code>, and <code><a href="../reference/pm.html">pm()</a></code> are invariant to this choice.</p></li>
+<li><p> is a <code>Suggests</code> dependency; medfit checks and tests cleanly with it absent.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-4-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-4-0"></a></h3>
+<ul><li>
+<code><a href="../reference/BootstrapResult.html">BootstrapResult()</a></code>’s validator checked <code>method</code> for length <em>after</em> three <code>self@method != "plugin"</code> branches had already used it. A non-scalar <code>method</code> therefore raised R’s <code>the condition has length &gt; 1</code> instead of the intended message, <code>method must be a single character string</code>. The <code>method</code> scalar and membership checks are now hoisted above every branch that reads it.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-0-4-0">Internal<a class="anchor" aria-label="anchor" href="#internal-0-4-0"></a></h3>
+<ul><li>New internal helper <code><a href="../reference/dot-find_interaction_term_formula.html">.find_interaction_term_formula()</a></code> (<code>R/utils.R</code>): the formula-level counterpart of <code><a href="../reference/dot-find_interaction_term.html">.find_interaction_term()</a></code>, used to choose the return class before any model is fitted.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.2" id="medfit-032-2026-07-23">medfit 0.3.2 (2026-07-23)<a class="anchor" aria-label="anchor" href="#medfit-032-2026-07-23"></a></h2><p class="text-muted">CRAN release: 2026-07-23</p>
 <p>CRAN patch release. No new features; CI/lint compatibility, CRAN compliance, and Rd documentation fixes only (no change to exported function behavior).</p>

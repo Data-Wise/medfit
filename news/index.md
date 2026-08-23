@@ -1,5 +1,111 @@
 # Changelog
 
+## medfit 0.4.0
+
+### New features
+
+- [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  gains a second engine, `engine = "regmedint"`, which fits the mediator
+  and outcome regressions through the suggested package and returns
+  medfit’s own classes. On a formula without a treatment-by-mediator
+  term it returns a `MediationData`; on one carrying an `X:M` term it
+  returns an `InteractionMediationData` with the four-way (VanderWeele)
+  decomposition filled in from regmedint’s closed-form
+  `cde`/`pnde`/`tnie`/`pnie`/`te` output. Auto-detection mirrors
+  `extract_mediation(decomposition = "auto")`.
+
+- [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  gains an `engine_args` argument: a named list of engine-specific
+  overrides, ignored by `engine = "glm"`. For the regmedint engine it
+  accepts `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`, and
+  `c_cond`, each replacing a value the adapter would otherwise derive
+  from the formulas, families, and data.
+
+- [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  gains an `m_star` argument: the reference mediator level (`m*`) at
+  which the controlled direct effect is evaluated, when the fit returns
+  an `InteractionMediationData`. It closes a gap that predates the
+  engine work –
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  has always accepted `m_star`, but
+  [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  routed unrecognized arguments to
+  [`stats::glm()`](https://rdrr.io/r/stats/glm.html), so
+  `fit_mediation(Y ~ X * M, ..., m_star = 1)` previously failed with
+  `unused argument`. The default of `0` is unchanged behavior, and
+  matches the lm/glm and lavaan extractors.
+
+  Both engines honor it, by different routes: `engine = "glm"` applies
+  it at extraction time, after the coefficients are fit, while
+  `engine = "regmedint"` passes it to
+  [`regmedint::regmedint()`](https://kaz-yos.github.io/regmedint/reference/regmedint.html)
+  as `m_cde`, where that package’s closed-form estimator consumes it at
+  fitting time. The two agree to delta-method tolerance on `@cde` and
+  `@int_ref` at any shared `m_star`. Because `m_star` and `regmedint`’s
+  `m_cde` name one quantity, `m_cde` is no longer accepted in
+  `engine_args`; supplying it errors with a pointer to `m_star`. (Both
+  surfaces are new in this release, so no deprecation cycle applies.)
+
+  [`nde()`](https://data-wise.github.io/medfit/reference/nde.md),
+  [`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+  [`te()`](https://data-wise.github.io/medfit/reference/te.md), and
+  [`pm()`](https://data-wise.github.io/medfit/reference/pm.md) are
+  invariant to `m_star` – only the CDE/INTref split moves. Supplying
+  `m_star` for a fit with no treatment-by-mediator term is an error
+  rather than a silent no-op.
+
+- Standard errors for the regmedint engine are analytical, not
+  bootstrapped. [`confint()`](https://rdrr.io/r/stats/confint.html) on
+  an `InteractionMediationData` now prefers a stored component
+  covariance block when the fitting engine supplied one; objects from
+  the lm/glm and lavaan extractors carry none, so their existing
+  delta-method gradient path is unchanged.
+
+### Details and limitations
+
+- The regmedint engine requires a numeric 0/1 treatment and a linear
+  (Gaussian) mediator model. Outside those cases regmedint’s closed-form
+  effects are no longer the products of regression coefficients that
+  `MediationData`/`InteractionMediationData` are defined in terms of, so
+  the adapter raises an explicit error with guidance rather than
+  returning an object whose numbers disagree with
+  [`nie()`](https://data-wise.github.io/medfit/reference/nie.md).
+  Outcome models may be Gaussian or binomial.
+
+- `engine = "regmedint"` does not support `weights` or
+  `se_type = "sandwich"` (regmedint implements neither); supplying them
+  is an error rather than a silent no-op.
+
+- `m_cde` defaults to `0`, matching the `m_star = 0` default already
+  used by the lm/glm and lavaan extractors, so all three report the
+  CDE/INTref split at the same reference level.
+  [`nde()`](https://data-wise.github.io/medfit/reference/nde.md),
+  [`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+  [`te()`](https://data-wise.github.io/medfit/reference/te.md), and
+  [`pm()`](https://data-wise.github.io/medfit/reference/pm.md) are
+  invariant to this choice.
+
+- is a `Suggests` dependency; medfit checks and tests cleanly with it
+  absent.
+
+### Bug fixes
+
+- [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)’s
+  validator checked `method` for length *after* three
+  `self@method != "plugin"` branches had already used it. A non-scalar
+  `method` therefore raised R’s `the condition has length > 1` instead
+  of the intended message, `method must be a single character string`.
+  The `method` scalar and membership checks are now hoisted above every
+  branch that reads it.
+
+### Internal
+
+- New internal helper
+  [`.find_interaction_term_formula()`](https://data-wise.github.io/medfit/reference/dot-find_interaction_term_formula.md)
+  (`R/utils.R`): the formula-level counterpart of
+  [`.find_interaction_term()`](https://data-wise.github.io/medfit/reference/dot-find_interaction_term.md),
+  used to choose the return class before any model is fitted.
+
 ## medfit 0.3.2 (2026-07-23)
 
 CRAN release: 2026-07-23

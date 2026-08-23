@@ -37,7 +37,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.2</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -101,6 +101,8 @@ mediator and outcome models simultaneously.</p>
 <span>  family_m <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  se_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"sandwich"</span><span class="op">)</span>,</span>
+<span>  engine_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  m_star <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -115,6 +117,8 @@ mediator and outcome models simultaneously.</p>
 <span>  family_m <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  se_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"sandwich"</span><span class="op">)</span>,</span>
+<span>  engine_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  m_star <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -145,6 +149,9 @@ mediator and outcome models simultaneously.</p>
 
 <dt id="arg-engine">engine<a class="anchor" aria-label="anchor" href="#arg-engine"></a></dt>
 <dd><p>Character string: modeling engine to use. Currently supports:</p><ul><li><p><code>"glm"</code>: Generalized linear models (default)</p></li>
+<li><p><code>"regmedint"</code>: Closed-form regression-based (in)direct effects via
+the suggested <span class="pkg">regmedint</span> package (VanderWeele's regression
+approach, with optional treatment-mediator interaction)</p></li>
 </ul></dd>
 
 
@@ -165,9 +172,29 @@ inverse-probability weighting (IPW). <code>NULL</code> (default) fits unweighted
 <dt id="arg-se-type">se_type<a class="anchor" aria-label="anchor" href="#arg-se-type"></a></dt>
 <dd><p>Variance-covariance estimator for <code>@vcov</code>: <code>"model"</code> (default,
 model-based <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">stats::vcov</a></code>) or <code>"sandwich"</code> (heteroskedasticity-consistent
-<code><a href="https://sandwich.R-Forge.R-project.org/reference/vcovHC.html" class="external-link">sandwich::vcovHC</a></code>, type HC3, recommended for IPW-weighted fits). The
+<code><a href="https://zeileis.codeberg.page/sandwich/reference/vcovHC.html" class="external-link">sandwich::vcovHC</a></code>, type HC3, recommended for IPW-weighted fits). The
 <code>"sandwich"</code> option requires the suggested <span class="pkg">sandwich</span> package. Applies
 to the single-mediator path.</p></dd>
+
+
+<dt id="arg-engine-args">engine_args<a class="anchor" aria-label="anchor" href="#arg-engine-args"></a></dt>
+<dd><p>Named list of engine-specific overrides (default:
+<code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code>, no overrides). Ignored by <code>engine = "glm"</code>. For
+<code>engine = "regmedint"</code>, recognized names are <code>interaction</code>, <code>cvar</code>,
+<code>mreg</code>, <code>yreg</code>, <code>a0</code>, <code>a1</code>, and <code>c_cond</code>; each replaces the
+value the adapter would otherwise derive from the formulas, families, and
+data. The reference mediator level is set with <code>m_star</code>, not here.</p></dd>
+
+
+<dt id="arg-m-star">m_star<a class="anchor" aria-label="anchor" href="#arg-m-star"></a></dt>
+<dd><p>Numeric scalar: reference mediator level \(m^*\) at which
+the controlled direct effect is evaluated (default: <code>0</code>). Used only when
+<code>formula_y</code> carries a treatment-by-mediator term, i.e. when the returned
+object is an <a href="InteractionMediationData.html">InteractionMediationData</a>. Supplying it for a fit that has no
+such term is an error rather than a silent no-op. That check keys on whether
+the argument was given at the call site, not on whether it differs from the
+default, so a wrapper that forwards <code>m_star</code> unconditionally will trigger it
+on two-way fits; forward it only when its own caller supplied one.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -177,7 +204,9 @@ to the single-mediator path.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <a href="MediationData.html">MediationData</a> object containing the fitted mediation structure</p>
-<p>A <a href="MediationData.html">MediationData</a> object containing the fitted mediation structure</p>
+<p>A <a href="MediationData.html">MediationData</a> object containing the fitted mediation structure,
+or an <a href="InteractionMediationData.html">InteractionMediationData</a> object when <code>formula_y</code> contains a
+treatment-by-mediator interaction term.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -190,7 +219,30 @@ using <code><a href="extract_mediation.html">extract_mediation()</a></code>.</p>
 <p><strong>GLM</strong> (<code>engine = "glm"</code>):</p><ul><li><p>Fits models using <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code></p></li>
 <li><p>Supports all GLM families (gaussian, binomial, poisson, etc.)</p></li>
 <li><p>For Gaussian models, extracts residual variances</p></li>
-</ul><p><strong>Future Engines</strong>:</p><ul><li><p><code>"lmer"</code>: Mixed-effects models via lme4</p></li>
+</ul><p><strong>regmedint</strong> (<code>engine = "regmedint"</code>):</p><ul><li><p>Delegates to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code> (suggested package) for closed-form
+natural (in)direct effects, with or without a treatment-mediator interaction</p></li>
+<li><p>Returns <a href="MediationData.html">MediationData</a> or <a href="InteractionMediationData.html">InteractionMediationData</a> depending on whether
+<code>formula_y</code> contains a treatment-by-mediator interaction term; use
+<code>engine_args</code> to override the derived regmedint arguments</p></li>
+</ul></div>
+
+<div class="section">
+<h3 id="reference-mediator-level">Reference Mediator Level<a class="anchor" aria-label="anchor" href="#reference-mediator-level"></a></h3>
+
+
+<p>When the fit yields an <a href="InteractionMediationData.html">InteractionMediationData</a>, <code>m_star</code> fixes the level
+\(m^*\) at which the controlled direct effect is read off:
+\(CDE = \theta_1 + \theta_3 m^*\) and
+\(INTref = \theta_3 (E[M \mid X = 0] - m^*)\).
+The two shift in compensating directions, so <code><a href="nde.html">nde()</a></code>, <code><a href="nie.html">nie()</a></code>, <code><a href="te.html">te()</a></code>, and
+<code><a href="pm.html">pm()</a></code> are invariant to <code>m_star</code>; only the CDE/INTref split moves.</p>
+<p>The engines reach the same result by different routes. <code>engine = "glm"</code>
+applies <code>m_star</code> at <em>extraction</em> time, after the coefficients are fit;
+<code>engine = "regmedint"</code> passes it to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code> as <code>m_cde</code>,
+where it is consumed by that package's closed-form estimator at <em>fitting</em>
+time. Supplying <code>m_star</code> for a fit with no treatment-by-mediator term is an
+error, not a silent no-op.</p>
+<p><strong>Future Engines</strong>:</p><ul><li><p><code>"lmer"</code>: Mixed-effects models via lme4</p></li>
 <li><p><code>"brms"</code>: Bayesian models via brms</p></li>
 </ul></div>
 

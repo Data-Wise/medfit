@@ -445,6 +445,127 @@ When the interaction is absent (or `decomposition = "two_way"`),
 extraction falls back to the standard `MediationData` — so existing
 two-way workflows are unchanged.
 
+### Interaction via the regmedint engine
+
+The two paths above extract from models **you** fit.
+[`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+can instead delegate the fitting to the
+[regmedint](https://cran.r-project.org/package=regmedint) package, which
+implements VanderWeele’s regression-based estimators in closed form, and
+hand back the same medfit classes:
+
+``` r
+# regmedint requires a numeric 0/1 treatment
+set.seed(11)
+n <- 300
+d <- data.frame(X = rbinom(n, 1, 0.5), C = rnorm(n))
+d$M <- 0.5 * d$X + 0.2 * d$C + rnorm(n)
+d$Y <- 0.3 * d$X + 0.4 * d$M + 0.25 * d$X * d$M + 0.1 * d$C + rnorm(n)
+
+med_rmi <- fit_mediation(
+  formula_y = Y ~ X * M + C,
+  formula_m = M ~ X + C,
+  data = d,
+  treatment = "X",
+  mediator = "M",
+  engine = "regmedint"
+)
+
+decompose(med_rmi)                        # same four-way layout as above
+confint(med_rmi, parm = "components")     # regmedint's analytical SEs
+```
+
+The return class follows the same rule as
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md):
+an `X:M` term in `formula_y` yields an `InteractionMediationData`, its
+absence a plain `MediationData`. Components map from regmedint’s own
+output as `CDE = cde`, `INTref = pnde − cde`, `INTmed = tnie − pnie`,
+and `PIE = pnie`.
+
+Standard errors come from regmedint’s delta method rather than medfit’s,
+so they are analytical — no bootstrap needed — and reproduce the SEs
+`regmedint::summary()` reports for the same model.
+
+#### The reference mediator level
+
+The four-way split is read off at a reference mediator level \\m^\*\\:
+
+\\\text{CDE} = \theta_1 + \theta_3 m^\*\\
+
+\\\text{INTref} = \theta_3\\(E\[M \mid X = 0\] - m^\*)\\
+
+Set it with `fit_mediation(m_star = )`, which defaults to `0` on every
+engine:
+
+``` r
+med_rm_m1 <- fit_mediation(
+  formula_y = Y ~ X * M,
+  formula_m = M ~ X,
+  data = d,
+  treatment = "X",
+  mediator = "M",
+  engine = "regmedint",
+  m_star = 1
+)
+
+med_rm_m1@m_star   # the reference level that was used
+med_rm_m1@cde      # direct effect, holding the mediator at that level
+```
+
+The two terms shift in exactly compensating directions, so
+[`nde()`](https://data-wise.github.io/medfit/reference/nde.md),
+[`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+[`te()`](https://data-wise.github.io/medfit/reference/te.md), and
+[`pm()`](https://data-wise.github.io/medfit/reference/pm.md) are
+**invariant** to `m_star` — only the CDE/INTref split moves. Passing
+`m_star` to a fit with no treatment-by-mediator term is an error, not a
+silent no-op.
+
+The engines reach the same answer by different routes. `engine = "glm"`
+applies `m_star` at *extraction* time, after the coefficients are fit;
+`engine = "regmedint"` hands the same value to
+[`regmedint::regmedint()`](https://kaz-yos.github.io/regmedint/reference/regmedint.html)
+as its `m_cde` argument, where the closed-form estimator consumes it at
+*fitting* time. Because the two names denote one quantity, `m_cde` is
+not accepted in `engine_args` — use `m_star`.
+
+#### Other engine settings
+
+Everything regmedint-specific that is *not* the reference level goes
+through `engine_args`:
+
+``` r
+med_rmi2 <- fit_mediation(
+  formula_y = Y ~ X * M + C,
+  formula_m = M ~ X + C,
+  data = d,
+  treatment = "X",
+  mediator = "M",
+  engine = "regmedint",
+  m_star = 1,           # reference mediator level (default 0)
+  engine_args = list(
+    c_cond = 0,         # covariate level for the conditional effects
+    interaction = TRUE  # override the formula-based auto-detection
+  )
+)
+```
+
+Recognized names are `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`,
+and `c_cond`; each replaces a value the adapter would otherwise derive
+from the formulas, families, and data.
+
+**Scope.** The regmedint engine needs a numeric 0/1 treatment and a
+linear (Gaussian) mediator model; the outcome may be Gaussian or
+binomial. Outside that range regmedint’s closed-form effects stop being
+the products of regression coefficients that `MediationData` and
+`InteractionMediationData` are defined in terms of, so the adapter
+raises an explicit error instead of returning an object whose numbers
+would disagree with
+[`nie()`](https://data-wise.github.io/medfit/reference/nie.md).
+`weights` and `se_type = "sandwich"` are likewise refused rather than
+silently ignored. `regmedint` is a suggested package — install it with
+`install.packages("regmedint")`.
+
 ## Compatibility with RMediation
 
 The extraction design is compatible with RMediation’s lavaan extractor:

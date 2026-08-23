@@ -348,7 +348,8 @@ If you use medfit in your research, please cite:
 ## Related Resources
 
 - [Package Documentation](https://data-wise.github.io/medfit/)
-- [Development Guide](https://data-wise.github.io/medfit/CLAUDE.md)
+- [Development
+  Guide](https://github.com/data-wise/medfit/blob/main/CLAUDE.md)
 - [Roadmap](https://data-wise.github.io/medfit/planning/medfit-roadmap.md)
 - [Ecosystem
   Strategy](https://data-wise.github.io/medfit/planning/ECOSYSTEM.md)

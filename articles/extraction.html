@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.2</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -457,7 +457,74 @@
 <span><span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">med_int_sem</span><span class="op">)</span></span></code></pre>
 </div>
 <p>When the interaction is absent (or <code>decomposition = "two_way"</code>), extraction falls back to the standard <code>MediationData</code> — so existing two-way workflows are unchanged.</p>
-</section></section><section class="level2"><h2 id="compatibility-with-rmediation">Compatibility with RMediation<a class="anchor" aria-label="anchor" href="#compatibility-with-rmediation"></a>
+</section><section class="level3"><h3 id="interaction-via-the-regmedint-engine">Interaction via the regmedint engine<a class="anchor" aria-label="anchor" href="#interaction-via-the-regmedint-engine"></a>
+</h3>
+<p>The two paths above extract from models <strong>you</strong> fit. <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> can instead delegate the fitting to the <a href="https://cran.r-project.org/package=regmedint" class="external-link">regmedint</a> package, which implements VanderWeele’s regression-based estimators in closed form, and hand back the same medfit classes:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="co"># regmedint requires a numeric 0/1 treatment</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">11</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">300</span></span>
+<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span>, C <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">d</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">d</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">d</span><span class="op">$</span><span class="va">C</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">d</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">d</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">d</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fl">0.25</span> <span class="op">*</span> <span class="va">d</span><span class="op">$</span><span class="va">X</span> <span class="op">*</span> <span class="va">d</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fl">0.1</span> <span class="op">*</span> <span class="va">d</span><span class="op">$</span><span class="va">C</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">med_rmi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">*</span> <span class="va">M</span> <span class="op">+</span> <span class="va">C</span>,</span>
+<span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">C</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">d</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  engine <span class="op">=</span> <span class="st">"regmedint"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">med_rmi</span><span class="op">)</span>                        <span class="co"># same four-way layout as above</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">med_rmi</span>, parm <span class="op">=</span> <span class="st">"components"</span><span class="op">)</span>     <span class="co"># regmedint's analytical SEs</span></span></code></pre>
+</div>
+<p>The return class follows the same rule as <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>: an <code>X:M</code> term in <code>formula_y</code> yields an <code>InteractionMediationData</code>, its absence a plain <code>MediationData</code>. Components map from regmedint’s own output as <code>CDE = cde</code>, <code>INTref = pnde − cde</code>, <code>INTmed = tnie − pnie</code>, and <code>PIE = pnie</code>.</p>
+<p>Standard errors come from regmedint’s delta method rather than medfit’s, so they are analytical — no bootstrap needed — and reproduce the SEs <code>regmedint::summary()</code> reports for the same model.</p>
+<section class="level4"><h4 id="the-reference-mediator-level">The reference mediator level<a class="anchor" aria-label="anchor" href="#the-reference-mediator-level"></a>
+</h4>
+<p>The four-way split is read off at a reference mediator level <span class="math inline">\(m^*\)</span>:</p>
+<p><span class="math display">\[\text{CDE} = \theta_1 + \theta_3 m^*\]</span></p>
+<p><span class="math display">\[\text{INTref} = \theta_3\,(E[M \mid X = 0] - m^*)\]</span></p>
+<p>Set it with <code>fit_mediation(m_star = )</code>, which defaults to <code>0</code> on every engine:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">med_rm_m1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">*</span> <span class="va">M</span>,</span>
+<span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">d</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  engine <span class="op">=</span> <span class="st">"regmedint"</span>,</span>
+<span>  m_star <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">med_rm_m1</span><span class="op">@</span><span class="va">m_star</span>   <span class="co"># the reference level that was used</span></span>
+<span><span class="va">med_rm_m1</span><span class="op">@</span><span class="va">cde</span>      <span class="co"># direct effect, holding the mediator at that level</span></span></code></pre>
+</div>
+<p>The two terms shift in exactly compensating directions, so <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="../reference/te.html">te()</a></code>, and <code><a href="../reference/pm.html">pm()</a></code> are <strong>invariant</strong> to <code>m_star</code> — only the CDE/INTref split moves. Passing <code>m_star</code> to a fit with no treatment-by-mediator term is an error, not a silent no-op.</p>
+<p>The engines reach the same answer by different routes. <code>engine = "glm"</code> applies <code>m_star</code> at <em>extraction</em> time, after the coefficients are fit; <code>engine = "regmedint"</code> hands the same value to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code> as its <code>m_cde</code> argument, where the closed-form estimator consumes it at <em>fitting</em> time. Because the two names denote one quantity, <code>m_cde</code> is not accepted in <code>engine_args</code> — use <code>m_star</code>.</p>
+</section><section class="level4"><h4 id="other-engine-settings">Other engine settings<a class="anchor" aria-label="anchor" href="#other-engine-settings"></a>
+</h4>
+<p>Everything regmedint-specific that is <em>not</em> the reference level goes through <code>engine_args</code>:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">med_rmi2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">*</span> <span class="va">M</span> <span class="op">+</span> <span class="va">C</span>,</span>
+<span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">C</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">d</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  engine <span class="op">=</span> <span class="st">"regmedint"</span>,</span>
+<span>  m_star <span class="op">=</span> <span class="fl">1</span>,           <span class="co"># reference mediator level (default 0)</span></span>
+<span>  engine_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    c_cond <span class="op">=</span> <span class="fl">0</span>,         <span class="co"># covariate level for the conditional effects</span></span>
+<span>    interaction <span class="op">=</span> <span class="cn">TRUE</span>  <span class="co"># override the formula-based auto-detection</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre>
+</div>
+<p>Recognized names are <code>interaction</code>, <code>cvar</code>, <code>mreg</code>, <code>yreg</code>, <code>a0</code>, <code>a1</code>, and <code>c_cond</code>; each replaces a value the adapter would otherwise derive from the formulas, families, and data.</p>
+<p><strong>Scope.</strong> The regmedint engine needs a numeric 0/1 treatment and a linear (Gaussian) mediator model; the outcome may be Gaussian or binomial. Outside that range regmedint’s closed-form effects stop being the products of regression coefficients that <code>MediationData</code> and <code>InteractionMediationData</code> are defined in terms of, so the adapter raises an explicit error instead of returning an object whose numbers would disagree with <code><a href="../reference/nie.html">nie()</a></code>. <code>weights</code> and <code>se_type = "sandwich"</code> are likewise refused rather than silently ignored. <code>regmedint</code> is a suggested package — install it with <code>install.packages("regmedint")</code>.</p>
+</section></section></section><section class="level2"><h2 id="compatibility-with-rmediation">Compatibility with RMediation<a class="anchor" aria-label="anchor" href="#compatibility-with-rmediation"></a>
 </h2>
 <p>The extraction design is compatible with RMediation’s lavaan extractor:</p>
 <div class="cell">
