@@ -18,7 +18,7 @@
   formulas, families, and data.
 
 * `fit_mediation()` gains an `m_star` argument: the reference mediator level
-  \eqn{m^*}{m*} at which the controlled direct effect is evaluated, when the
+  (`m*`) at which the controlled direct effect is evaluated, when the
   fit returns an `InteractionMediationData`. It closes a gap that predates the
   engine work -- `extract_mediation()` has always accepted `m_star`, but
   `fit_mediation()` routed unrecognized arguments to `stats::glm()`, so

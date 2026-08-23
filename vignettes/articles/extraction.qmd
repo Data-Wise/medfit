@@ -491,8 +491,9 @@ they are analytical — no bootstrap needed — and reproduce the SEs
 
 The four-way split is read off at a reference mediator level $m^*$:
 
-$$\text{CDE} = \theta_1 + \theta_3 m^*, \qquad
-  \text{INTref} = \theta_3\,(E[M \mid X = 0] - m^*).$$
+$$\text{CDE} = \theta_1 + \theta_3 m^*$$
+
+$$\text{INTref} = \theta_3\,(E[M \mid X = 0] - m^*)$$
 
 Set it with `fit_mediation(m_star = )`, which defaults to `0` on every engine:
 
@@ -508,8 +509,8 @@ med_rm_m1 <- fit_mediation(
   m_star = 1
 )
 
-med_rm_m1@m_star   # 1
-med_rm_m1@cde      # theta1 + theta3 * 1
+med_rm_m1@m_star   # the reference level that was used
+med_rm_m1@cde      # direct effect, holding the mediator at that level
 ```
 
 The two terms shift in exactly compensating directions, so `nde()`, `nie()`,
