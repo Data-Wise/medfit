@@ -1,6 +1,6 @@
 # Plan: delta-method effect SEs in `tidy()` and `confint()`
 
-**Date:** 2026-09-23 · **Status:** approved 2026-09-23
+**Date:** 2026-09-23 · **Status:** implemented (feature/tidy-effect-se)
 **Spec:** [SPEC-tidy-effect-se-2026-09-23.md](SPEC-tidy-effect-se-2026-09-23.md) (approved) ·
 **Decisions:** [GRILL-tidy-effect-se-2026-09-23.md](GRILL-tidy-effect-se-2026-09-23.md) D1–D7
 **Where:** worktree `~/.git-worktrees/medfit/feature-tidy-effect-se`, branch
@@ -36,40 +36,40 @@ merge conflicts.
 
 ## Tasks
 
-- [ ] **T1 — Capture regression pins (before any code change).**
+- [x] **T1 — Capture regression pins (before any code change).**
   - Acceptance: `tests/testthat/test-effect-se.R` exists with (a) Parallel and Interaction (glm
     and regmedint engines) `confint(parm = "effects")` values and row names pinned from current
     `dev`, (b) Simple NIE/NDE pinned, (c) the D2 pin (Simple TE SE 0.1194 ± 5e-4) marked as the
     one expected failure.
   - Verify: `testthat::test_file("tests/testthat/test-effect-se.R")` → only the D2 pin fails.
   - Files: `tests/testthat/test-effect-se.R`
-- [ ] **T2 — Helper with Simple, Serial, Parallel gradients.**
+- [x] **T2 — Helper with Simple, Serial, Parallel gradients.**
   - Acceptance: `R/effect-se.R` defines `.effect_se(x, terms)` and `.effect_gradients(x)` for the
     three classes, per the spec's gradient table; unknown keys fail via `checkmate`.
   - Verify: new tests pass — Oracle A (lavaan `:=`, 1e-6) for Simple/Serial/Parallel; Oracle B
     (parametric bootstrap SD, 3%) for the same; Serial with 2 and 3 mediators.
   - Files: `R/effect-se.R`, `tests/testthat/test-effect-se.R`
-- [ ] **T3 — Interaction gradients in the helper.**
+- [x] **T3 — Interaction gradients in the helper.**
   - Acceptance: `.effect_gradients()` covers `InteractionMediationData`, moving the glm-branch
     gradient block from `confint()` unchanged and returning unit gradients for the regmedint
     branch; keys `cde`, `int_ref`, `int_med`, `pie`, `nde`, `nie`, `te`.
   - Verify: Oracle B for Interaction (glm engine); helper SEs equal the T1-pinned Interaction
     values to 1e-10 for both engines.
   - Files: `R/effect-se.R`, `tests/testthat/test-effect-se.R`
-- [ ] **T4 — `confint(parm = "effects")` through the helper (Simple, Parallel, Interaction).**
+- [x] **T4 — `confint(parm = "effects")` through the helper (Simple, Parallel, Interaction).**
   - Acceptance: the three methods call `.effect_se()`; warnings/messages and row names unchanged;
     Simple TE now uses the full gradient.
   - Verify: all T1 pins pass, including the D2 pin; existing `test-methods-base.R` passes (update
     only an expectation that encoded the old TE SE, and say so in the commit).
   - Files: `R/methods-base.R`, possibly `tests/testthat/test-methods-base.R`
-- [ ] **T5 — New `confint(<SerialMediationData>)`.**
+- [x] **T5 — New `confint(<SerialMediationData>)`.**
   - Acceptance: `parm = "paths"` (rows `a`, `d` or `d1..dk`, `b`, `c_prime`) and
     `parm = "effects"` (rows `nie`, `nde`, `te`); normal approximation with the same warning as
     the Simple method; `level` validated with `checkmate`.
   - Verify: tests for both `parm` values, 2 and 3 mediators, `level = 0.90`; values match
     `estimate ± z * .effect_se()`.
   - Files: `R/methods-base.R`, `tests/testthat/test-effect-se.R`
-- [ ] **T6 — `tidy()` through the helper, all four classes.**
+- [x] **T6 — `tidy()` through the helper, all four classes.**
   - Acceptance: every effect/component row has a numeric `std.error`; Serial gains path SEs and a
     `std.error` column; `conf.int = TRUE` no longer returns `NA` or warns for Serial; `tidy()`
     emits nothing; `@details` carries the approximation note, the lm-chain block-diagonal
@@ -77,7 +77,7 @@ merge conflicts.
   - Verify: consistency test (`tidy()` CIs = `confint()` CIs to 1e-12 after name mapping) and
     `expect_silent()` for all four classes; `glance()` unchanged; no `pm` row in `tidy()`.
   - Files: `R/methods-tidy.R`, `tests/testthat/test-effect-se.R`
-- [ ] **T7 — Docs, NEWS, gates, positive control, PR.**
+- [x] **T7 — Docs, NEWS, gates, positive control, PR.**
   - Acceptance: NEWS "New features" + "Bug fixes" entries (D7); `devtools::document()` with the
     roxygen churn reverted; positive control run (flip one gradient sign per class → Oracles A
     and B fail) with its transcript saved for the PR body.
