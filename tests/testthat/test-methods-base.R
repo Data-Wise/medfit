@@ -288,3 +288,81 @@ test_that("nobs() works for SerialMediationData", {
 
   expect_equal(nobs(serial_data), 100L)
 })
+
+
+# ==============================================================================
+# coef() / confint() for BootstrapResult
+# ==============================================================================
+
+boot_fixture <- function(method = "parametric") {
+  set.seed(42)
+  X <- rnorm(200)
+  M <- 0.5 * X + rnorm(200)
+  Y <- 0.3 * M + 0.2 * X + rnorm(200)
+  d <- data.frame(X, M, Y)
+  med <- extract_mediation(lm(M ~ X, d), model_y = lm(Y ~ X + M, d),
+                           treatment = "X", mediator = "M")
+  if (method == "nonparametric") {
+    return(bootstrap_mediation(
+      function(bd) {
+        unname(coef(lm(M ~ X, bd))["X"] * coef(lm(Y ~ X + M, bd))["M"])
+      },
+      method = "nonparametric", data = d, n_boot = 200, seed = 1
+    ))
+  }
+  bootstrap_mediation(function(t) unname(t["a"] * t["b"]), method = method,
+                      mediation_data = med, n_boot = 500, seed = 1)
+}
+
+test_that("coef() on BootstrapResult returns the named point estimate", {
+  r <- boot_fixture()
+  expect_identical(coef(r), c(estimate = unname(r@estimate)))
+})
+
+test_that("coef() on BootstrapResult keeps the term name for a named statistic", {
+  med <- extract_mediation(
+    lm(mediator1 ~ treatment, data = mediation_demo),
+    model_y = lm(outcome ~ treatment + mediator1, data = mediation_demo),
+    treatment = "treatment", mediator = "mediator1"
+  )
+  # No unname(): the product carries the name "a"
+  r <- bootstrap_mediation(function(t) t["a"] * t["b"], method = "plugin",
+                           mediation_data = med)
+  expect_named(coef(r), "estimate")
+  expect_equal(unname(coef(r)), unname(r@estimate))
+})
+
+test_that("confint() on BootstrapResult returns the stored interval by default", {
+  r <- boot_fixture("nonparametric")
+  ci <- confint(r)
+  expect_true(is.matrix(ci))
+  expect_identical(dim(ci), c(1L, 2L))
+  expect_identical(rownames(ci), "estimate")
+  expect_identical(colnames(ci), c("2.5 %", "97.5 %"))
+  expect_identical(unname(ci[1, ]), c(r@ci_lower, r@ci_upper))
+  # Supplying the stored level explicitly is the same as the default
+  expect_identical(confint(r, level = 0.95), ci)
+})
+
+test_that("confint() on BootstrapResult recomputes a different level", {
+  r <- boot_fixture()
+  ci90 <- confint(r, level = 0.90)
+  expect_identical(colnames(ci90), c("5 %", "95 %"))
+  expect_equal(unname(ci90[1, ]),
+               stats::quantile(r@boot_estimates, c(0.05, 0.95), names = FALSE))
+  expect_gt(ci90[1, 1], r@ci_lower)
+  expect_lt(ci90[1, 2], r@ci_upper)
+})
+
+test_that("confint() on a plugin BootstrapResult warns and returns NA", {
+  r <- boot_fixture("plugin")
+  expect_warning(ci <- confint(r), "no bootstrap distribution")
+  expect_true(all(is.na(ci)))
+  expect_identical(colnames(ci), c("2.5 %", "97.5 %"))
+})
+
+test_that("confint() on BootstrapResult validates its arguments", {
+  r <- boot_fixture()
+  expect_error(confint(r, parm = "a"), "parm")
+  expect_error(confint(r, level = 2), "level")
+})

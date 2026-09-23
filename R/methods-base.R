@@ -5,6 +5,8 @@
 # - vcov(): Extract variance-covariance matrix
 # - confint(): Compute confidence intervals
 # - nobs(): Get number of observations
+#
+# BootstrapResult gets coef() and confint() at the end of this file.
 
 #' Extract Coefficients from MediationData
 #'
@@ -617,6 +619,71 @@ S7::method(confint, InteractionMediationData) <- function(object,
 
   ci_mat <- cbind(coefs - z * se, coefs + z * se)
   rownames(ci_mat) <- names(coefs)
+  colnames(ci_mat) <- c(
+    paste0(format(100 * alpha / 2, digits = 3), " %"),
+    paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
+  )
+  ci_mat
+}
+
+
+# --- Base-generic methods for BootstrapResult ---
+
+#' Extract the Point Estimate from a BootstrapResult
+#'
+#' @param object A BootstrapResult object
+#' @param ... Additional arguments (ignored)
+#' @return A named numeric scalar, `c(estimate = <value>)` (the same term name
+#'   `tidy()` uses)
+#' @noRd
+S7::method(coef, BootstrapResult) <- function(object, ...) {
+  # unname(): a statistic_fn that returns a named value (e.g. theta["a"] *
+  # theta["b"]) leaves that name on @estimate, and c() would paste it on
+  c(estimate = unname(object@estimate))
+}
+
+
+#' Confidence Interval from a BootstrapResult
+#'
+#' @description
+#' With `level` left `NULL` (or equal to the stored `@ci_level`), returns the
+#' stored `@ci_lower`/`@ci_upper` unchanged. A different `level` recomputes the
+#' percentile interval from `@boot_estimates`. Plugin results carry no
+#' bootstrap distribution, so their interval is `NA` with a warning.
+#'
+#' @param object A BootstrapResult object.
+#' @param parm Ignored beyond validation; a BootstrapResult holds one statistic,
+#'   `"estimate"`.
+#' @param level Confidence level, or `NULL` (default) for the stored level.
+#' @param ... Additional arguments (ignored).
+#' @return A 1 x 2 numeric matrix with row `"estimate"` and percentage columns.
+#' @noRd
+S7::method(confint, BootstrapResult) <- function(object,
+                                                 parm = "estimate",
+                                                 level = NULL,
+                                                 ...) {
+  checkmate::assert_choice(parm, "estimate", .var.name = "parm")
+  checkmate::assert_number(level, lower = 0, upper = 1, null.ok = TRUE,
+                           .var.name = "level")
+
+  stored_level <- object@ci_level
+  if (is.null(level)) {
+    level <- if (is.na(stored_level)) 0.95 else stored_level
+  }
+  alpha <- 1 - level
+
+  if (identical(object@method, "plugin") || length(object@boot_estimates) == 0) {
+    warning("A plugin BootstrapResult has no bootstrap distribution; ",
+            "the confidence interval is NA.", call. = FALSE)
+    ci <- c(NA_real_, NA_real_)
+  } else if (!is.na(stored_level) && isTRUE(all.equal(level, stored_level))) {
+    ci <- c(object@ci_lower, object@ci_upper)
+  } else {
+    ci <- stats::quantile(object@boot_estimates,
+                          probs = c(alpha / 2, 1 - alpha / 2), names = FALSE)
+  }
+
+  ci_mat <- matrix(ci, nrow = 1, dimnames = list("estimate", NULL))
   colnames(ci_mat) <- c(
     paste0(format(100 * alpha / 2, digits = 3), " %"),
     paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
