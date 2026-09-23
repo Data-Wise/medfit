@@ -23,19 +23,12 @@
 #' @return Named numeric vector of coefficients
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #'
 #' # Extract path coefficients (default)
@@ -127,19 +120,12 @@ S7::method(coef, SerialMediationData) <- function(object, type = c("paths", "eff
 #' @return A numeric matrix
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #'
 #' vcov(med_data)
@@ -196,19 +182,12 @@ S7::method(vcov, SerialMediationData) <- function(object, ...) {
 #' via [bootstrap_mediation()] for more robust inference on mediation effects.
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #'
 #' # 95% CI for paths (default)
@@ -326,19 +305,12 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
 #' @return Integer: number of observations
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #'
 #' nobs(med_data)

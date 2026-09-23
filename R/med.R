@@ -48,34 +48,16 @@
 #' - `summary(result)`: Detailed summary
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 200
-#' mydata <- data.frame(
-#'   treatment = rnorm(n),
-#'   covariate = rnorm(n)
-#' )
-#' mydata$mediator <- 0.5 * mydata$treatment + 0.2 * mydata$covariate + rnorm(n)
-#' mydata$outcome <- 0.3 * mydata$treatment + 0.4 * mydata$mediator +
-#'                   0.1 * mydata$covariate + rnorm(n)
-#'
-#' # Simple mediation (no covariates)
+#' # mediation_demo is simulated data bundled with medfit; its covariates
+#' # confound the mediator-outcome relation, so adjust for them
 #' result <- med(
-#'   data = mydata,
+#'   data = mediation_demo,
 #'   treatment = "treatment",
-#'   mediator = "mediator",
-#'   outcome = "outcome"
+#'   mediator = "mediator1",
+#'   outcome = "outcome",
+#'   covariates = c("covariate1", "covariate2")
 #' )
 #' print(result)
-#'
-#' # With covariates
-#' result_cov <- med(
-#'   data = mydata,
-#'   treatment = "treatment",
-#'   mediator = "mediator",
-#'   outcome = "outcome",
-#'   covariates = "covariate"
-#' )
 #'
 #' # Quick summary
 #' quick(result)
@@ -83,10 +65,11 @@
 #' \donttest{
 #' # With bootstrap CI (slower)
 #' result_boot <- med(
-#'   data = mydata,
+#'   data = mediation_demo,
 #'   treatment = "treatment",
-#'   mediator = "mediator",
+#'   mediator = "mediator1",
 #'   outcome = "outcome",
+#'   covariates = c("covariate1", "covariate2"),
 #'   boot = TRUE,
 #'   n_boot = 1000,
 #'   seed = 42
@@ -208,18 +191,12 @@ med <- function(data,
 #' confidence intervals are shown for NIE.
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' result <- med(
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M",
-#'   outcome = "Y"
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1",
+#'   outcome = "outcome",
+#'   covariates = c("covariate1", "covariate2")
 #' )
 #'
 #' # One-line summary
