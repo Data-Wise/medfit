@@ -5,6 +5,8 @@ needs a `feature/*` worktree per this repo's own branch-guard rules)
 **Origin:** requested directly ("create a plan to include data in the medfit package; check
 mediationverse packages and identify gaps for the bppk" — confirmed "bppk" = medfit itself).
 **Depends on:** nothing blocking; independent of the open 0.4.0 CRAN-submission decision in `.STATUS`.
+**Revised:** 2026-09-23 (medfit session) — corrected column count, vignette location, and the
+`R CMD check` rationale; added the `.Rbuildignore` and roxygen steps; design questions moved to §7.
 
 ---
 
@@ -30,16 +32,19 @@ or honestly-labeled-synthetic provenance). medfit alone has no example data, no 
 and — checked in full — **no prior planning trace anywhere** (`.STATUS`, `CLAUDE.md`, `NEWS.md`,
 `planning/`) that this gap was ever noted.
 
-The visible cost: all four of medfit's own vignettes (`getting-started`, `introduction`,
-`extraction`, `bootstrap`) and its README build data inline with `set.seed()` + `rnorm()` at
-render time, every time. That's fine for a one-off demo but means:
+The visible cost: three of medfit's four pkgdown articles (`vignettes/articles/getting-started.qmd`,
+`introduction.qmd`, `extraction.qmd`; `bootstrap.qmd` has no inline data), its README, and the
+roxygen `@examples` in 10 `R/*.R` files build data inline with `set.seed()` + `rnorm()`. That's
+fine for a one-off demo but means:
 
 - No single canonical example a user can `data(...)` and follow along with outside a vignette.
 - Every vignette re-derives its own toy scenario, so the four read as four unrelated demos rather
   than one running example shown from four angles.
-- `R CMD check --as-cran` reproducibility rests entirely on `set.seed()` calls staying correct as
-  vignettes are edited — a bundled, version-controlled `.rda` removes that fragility for at least
-  the primary example.
+- The `@examples` blocks, which `R CMD check --as-cran` does run, each re-simulate their own data,
+  so their reproducibility rests on every `set.seed()` call staying correct as examples are edited.
+  A bundled, version-controlled `.rda` removes that fragility for any example that switches to it.
+  (The articles themselves are not part of the check: `.Rbuildignore` excludes `^vignettes$`, so
+  they render only in the pkgdown site build.)
 
 ## 2. Non-goals
 
@@ -98,22 +103,28 @@ Follows the ecosystem's own established convention exactly (medrobust/probmed/rm
 this shape; medrobust's `inst/scripts/` variant is not used here since medfit has no reason to
 depart from the more common `data-raw/` placement probmed and rmediation already use):
 
-1. **`data-raw/mediation_demo.R`** — generation script: `set.seed()`, the DGP for all six columns
+1. **`data-raw/mediation_demo.R`** — create with `usethis::use_data_raw("mediation_demo")`, which
+   also adds `^data-raw$` to `.Rbuildignore` (without it, `R CMD check` NOTEs a non-standard
+   top-level directory). Generation script: `set.seed()`, the DGP for all seven columns
    (confidence <- f(training, tenure, noise); performance <- f(training, confidence,
    support, covariates, noise); etc.), ending in `usethis::use_data(mediation_demo, overwrite =
    TRUE)`. Comment block at the top states plainly this is synthetic and documents the generating
    equations so the `\source` field and the script agree.
 2. **`data/mediation_demo.rda`** — built by running the script above; not hand-edited.
-3. **`man/mediation_demo.Rd`** — `\docType{data}`, `\keyword{datasets}`, full `\format` (all six
+3. **`R/data.R`** — roxygen block (`@docType data`, `@keywords datasets`, `@format`, `@source`,
+   `@examples`) that `devtools::document()` turns into `man/mediation_demo.Rd`; medfit's `man/` is
+   roxygen-generated, so the `.Rd` is not hand-written. Content: full `\format` (all seven
    columns, types, ranges), `\source` stating "Simulated data for package demonstration; not drawn
    from or representing any real study," and `\examples` showing `data(mediation_demo);
    fit_mediation(outcome ~ treatment + mediator1, mediator1 ~ treatment, data = mediation_demo,
    treatment = "treatment", mediator = "mediator1")`.
 4. **`DESCRIPTION`** — add `LazyData: true` (currently absent).
-5. **Vignettes** — replace at least `getting-started.qmd`'s inline `rnorm()` block with
-   `data(mediation_demo)`; `extraction.qmd` and `bootstrap.qmd` follow once the base example is
-   settled (can land in a follow-up commit within the same feature branch rather than blocking on
-   rewriting all four at once).
+5. **Articles** — replace at least `vignettes/articles/getting-started.qmd`'s inline `rnorm()`
+   block with `data(mediation_demo)`; `introduction.qmd` and `extraction.qmd` follow once the base
+   example is settled (can land in a follow-up commit within the same feature branch rather than
+   blocking on rewriting all three at once). Optionally switch the roxygen `@examples` that
+   simulate a simple X → M → Y model to `mediation_demo` too, since those are what `R CMD check`
+   actually runs.
 6. **`NEWS.md`** — new entry under the next unreleased version.
 7. **README.md** — while touching this file, also fix the two stale items this survey found
    (§6): the ecosystem table listing probmed/medrobust/medsim as "future" packages when all three
@@ -131,12 +142,13 @@ directly on `dev`.
 
 ## 5. Acceptance criteria
 
-- `data(mediation_demo, package = "medfit")` loads a 250-row, 6-column data frame matching §3's
+- `data(mediation_demo, package = "medfit")` loads a 250-row, 7-column data frame matching §3's
   shape, reproducibly (`data-raw/mediation_demo.R` regenerates byte-identical output).
 - `man/mediation_demo.Rd` passes `R CMD check --as-cran` with no dataset-documentation NOTE (the
   same `\docType{data}`/`\keyword{datasets}`/`\format`/`\source` shape medrobust and rmediation
   already pass CRAN with).
-- At least one existing vignette (`getting-started.qmd`) runs its worked example against
+- `.Rbuildignore` contains `^data-raw$`, and `man/mediation_demo.Rd` is generated from `R/data.R`.
+- At least one existing article (`vignettes/articles/getting-started.qmd`) runs its worked example against
   `mediation_demo` instead of `rnorm()`, and its rendered output changes accordingly (numbers will
   differ from the current ad hoc simulation — expected, not a regression).
 - `DESCRIPTION` carries `LazyData: true`.
@@ -150,3 +162,19 @@ directly on `dev`.
   that does not exist anywhere in that package (`data/`, `man/`, or R source) — almost certainly a
   stale reference predating `heals_data`'s current name. Breaks the README's own quick-start
   example today, independent of anything in this spec.
+
+Both already have their own sessions working on them as of 2026-09-23.
+
+## 7. Open questions (decide before implementation)
+
+1. **What is `moderator` for?** §3 lists it for the `treatment * mediator1` term, but that is a
+   treatment-by-mediator interaction (what medfit's four-way decomposition and
+   `InteractionMediationData` use) and needs no separate column. The cover story instead has tenure
+   moderating the treatment -> confidence path, which is a moderated-mediation model medfit does not
+   currently fit. Options: drop `moderator` and generate a real `treatment:mediator1` effect in the
+   outcome equation; keep it for a future moderated-path feature; or both.
+2. **Serial or parallel?** One DGP can make only one mediator structure true. If `mediator1` causes
+   `mediator2`, the serial demo is correctly specified and a parallel fit is misspecified; if
+   `mediator2` depends only on `treatment`, the reverse holds. Options: pick one structure as true
+   and say so in `\source`; or generate two columns (e.g. `mediator2_serial`, `mediator2_parallel`)
+   so both demos are correctly specified.
