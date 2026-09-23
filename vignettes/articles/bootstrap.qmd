@@ -21,14 +21,27 @@ Bootstrap inference provides confidence intervals for indirect effects without a
 
 All methods return a `BootstrapResult` object with consistent structure.
 
+## Example Data
+
+The examples below use a simulated single-mediator data set (X -> M -> Y):
+
+```{r}
+#| label: setup-data
+library(medfit)
+
+set.seed(123)
+n <- 200
+mydata <- data.frame(X = rnorm(n))
+mydata$M <- 0.5 * mydata$X + rnorm(n)
+mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
+```
+
 ## Quick Start: Bootstrap with med()
 
 The easiest way to get bootstrap confidence intervals:
 
 ```{r}
 #| label: quick-bootstrap
-library(medfit)
-
 # One-line bootstrap mediation
 result <- med(
   data = mydata,
@@ -42,10 +55,10 @@ result <- med(
 
 # Instant results with CI
 quick(result)
-#> NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%
+#> NIE = 0.164  [0.0885, 0.252] | NDE = 0.293 | PM = 36 %
 
-# Access bootstrap result
-result@bootstrap
+# The BootstrapResult is attached as an attribute (not an S7 property)
+attr(result, "bootstrap")
 ```
 
 For more control over bootstrap methods, use `bootstrap_mediation()` directly.
@@ -69,14 +82,12 @@ Samples from the estimated parameter distribution:
 
 ```{r}
 #| label: parametric
-library(medfit)
-
 # Fit mediation models
 fit_m <- lm(M ~ X, data = mydata)
 fit_y <- lm(Y ~ X + M, data = mydata)
 
 # Extract mediation structure
-med <- extract_mediation(fit_m, model_y = fit_y, treatment = "X", mediator = "M")
+med_data <- extract_mediation(fit_m, model_y = fit_y, treatment = "X", mediator = "M")
 
 # Define statistic function for indirect effect
 # Parameter names follow pattern: m_X (mediator model), y_M, y_X (outcome model)
@@ -88,7 +99,7 @@ indirect_effect <- function(theta) {
 boot_result <- bootstrap_mediation(
   statistic_fn = indirect_effect,
   method = "parametric",
-  mediation_data = med,
+  mediation_data = med_data,
   n_boot = 1000,
   ci_level = 0.95,
   seed = 123
@@ -143,7 +154,7 @@ statistic_fn_refit <- function(boot_data) {
 }
 
 # Nonparametric bootstrap (requires original data)
-boot_result <- bootstrap_mediation(
+boot_np <- bootstrap_mediation(
   statistic_fn = statistic_fn_refit,
   method = "nonparametric",
   data = mydata,
@@ -154,7 +165,7 @@ boot_result <- bootstrap_mediation(
   ncores = 4
 )
 
-print(boot_result)
+print(boot_np)
 ```
 
 ### How It Works
@@ -195,7 +206,7 @@ Speed up with parallel processing:
 ncores <- parallel::detectCores() - 1
 
 # Run in parallel
-boot_result <- bootstrap_mediation(
+boot_np_par <- bootstrap_mediation(
   statistic_fn = statistic_fn_refit,
   method = "nonparametric",
   data = mydata,
@@ -216,7 +227,7 @@ Point estimate only, no confidence interval:
 plugin_result <- bootstrap_mediation(
   statistic_fn = indirect_effect,
   method = "plugin",
-  mediation_data = med
+  mediation_data = med_data
 )
 
 print(plugin_result)
@@ -240,7 +251,7 @@ The bootstrap distribution shows the sampling variability:
 
 ```{r}
 #| label: distribution
-# Access bootstrap estimates
+# Access bootstrap estimates (parametric bootstrap from above)
 boot_estimates <- boot_result@boot_estimates
 
 # Histogram
@@ -277,7 +288,7 @@ c(boot_result@ci_lower, boot_result@ci_upper)
 boot_90 <- bootstrap_mediation(
   statistic_fn = indirect_effect,
   method = "parametric",
-  mediation_data = med,
+  mediation_data = med_data,
   n_boot = 1000,
   ci_level = 0.90,
   seed = 123
@@ -301,31 +312,50 @@ if (boot_result@ci_lower > 0 || boot_result@ci_upper < 0) {
 
 ## Serial Mediation Bootstrap
 
-Works the same for serial mediation:
+For serial mediation (X -> M1 -> M2 -> Y), the indirect effect is the product
+of the chain's paths, $a \times d \times b$. The parametric and plugin methods
+currently accept only a single-mediator `MediationData` object, so bootstrap a
+serial chain nonparametrically by refitting all three models:
 
 ```{r}
 #| label: serial
-# Serial mediation (X -> M1 -> M2 -> Y)
-serial_med <- extract_mediation(
-  fit_serial,
-  treatment = "X",
-  mediators = c("M1", "M2"),
-  outcome = "Y"
-)
+# Serial mediation data (X -> M1 -> M2 -> Y)
+set.seed(456)
+serial_data <- data.frame(X = rnorm(n))
+serial_data$M1 <- 0.5 * serial_data$X + rnorm(n)
+serial_data$M2 <- 0.4 * serial_data$M1 + 0.2 * serial_data$X + rnorm(n)
+serial_data$Y <- 0.4 * serial_data$M2 + 0.2 * serial_data$M1 +
+  0.2 * serial_data$X + rnorm(n)
 
-# Bootstrap the serial indirect effect (a * d * b)
-boot_serial <- bootstrap_mediation(
-  serial_med,
-  method = "parametric",
-  n_boot = 1000,
-  ci_level = 0.95
-)
+# Fit the chain: each model includes all upstream variables
+fit_serial <- function(d) {
+  extract_mediation(
+    lm(M1 ~ X, data = d),
+    model_y = lm(Y ~ X + M1 + M2, data = d),
+    treatment = "X",
+    mediator = c("M1", "M2"),
+    mediator_models = list(lm(M2 ~ X + M1, data = d))
+  )
+}
+serial_med <- fit_serial(serial_data)
 
-# Serial indirect effect
-print(boot_serial)
-
-# Point estimate
+# Point estimate of the serial indirect effect (a * d * b)
 serial_med@a_path * serial_med@d_path * serial_med@b_path
+
+# Bootstrap the serial indirect effect by resampling and refitting
+boot_serial <- bootstrap_mediation(
+  statistic_fn = function(boot_data) {
+    s <- fit_serial(boot_data)
+    s@a_path * s@d_path * s@b_path
+  },
+  method = "nonparametric",
+  data = serial_data,
+  n_boot = 1000,
+  ci_level = 0.95,
+  seed = 123
+)
+
+print(boot_serial)
 ```
 
 ## Reproducibility
@@ -338,30 +368,32 @@ Set a seed for reproducible results:
 boot1 <- bootstrap_mediation(
   statistic_fn = indirect_effect,
   method = "parametric",
-  mediation_data = med,
+  mediation_data = med_data,
   n_boot = 1000,
   seed = 123
 )
 boot2 <- bootstrap_mediation(
   statistic_fn = indirect_effect,
   method = "parametric",
-  mediation_data = med,
+  mediation_data = med_data,
   n_boot = 1000,
   seed = 123
 )
 
 # Identical results
-all.equal(boot1@boot_estimates, boot2@boot_estimates) # TRUE
+identical(boot1@boot_estimates, boot2@boot_estimates)
+#> [1] TRUE
 
 # Different seed = different results
 boot3 <- bootstrap_mediation(
   statistic_fn = indirect_effect,
   method = "parametric",
-  mediation_data = med,
+  mediation_data = med_data,
   n_boot = 1000,
   seed = 456
 )
-all.equal(boot1@boot_estimates, boot3@boot_estimates) # FALSE
+identical(boot1@boot_estimates, boot3@boot_estimates)
+#> [1] FALSE
 ```
 
 ## How Many Bootstrap Samples?
@@ -380,21 +412,21 @@ Check stability by varying `n_boot`:
 boot_1k <- bootstrap_mediation(
   statistic_fn = indirect_effect,
   method = "parametric",
-  mediation_data = med,
+  mediation_data = med_data,
   n_boot = 1000,
   seed = 123
 )
 boot_5k <- bootstrap_mediation(
   statistic_fn = indirect_effect,
   method = "parametric",
-  mediation_data = med,
+  mediation_data = med_data,
   n_boot = 5000,
   seed = 123
 )
 boot_10k <- bootstrap_mediation(
   statistic_fn = indirect_effect,
   method = "parametric",
-  mediation_data = med,
+  mediation_data = med_data,
   n_boot = 10000,
   seed = 123
 )
@@ -426,16 +458,16 @@ The delta method provides asymptotic SE for indirect effects:
 ```{r}
 #| label: delta
 # Delta method SE
-a <- med@a_path
-b <- med@b_path
-var_a <- vcov(model_m)["X", "X"]
-var_b <- vcov(model_y)["M", "M"]
+a <- med_data@a_path
+b <- med_data@b_path
+var_a <- vcov(fit_m)["X", "X"]
+var_b <- vcov(fit_y)["M", "M"]
 cov_ab <- 0 # Assumed independent
 
 se_delta <- sqrt(b^2 * var_a + a^2 * var_b)
 
 # Delta method 95% CI (assumes normality)
-ci_delta <- med@a_path * med@b_path + c(-1.96, 1.96) * se_delta
+ci_delta <- a * b + c(-1.96, 1.96) * se_delta
 
 # Compare with bootstrap
 ci_boot <- c(boot_result@ci_lower, boot_result@ci_upper)
@@ -482,28 +514,33 @@ library(generics)
 # Convert to tibble
 tidy(boot_result)
 #> # A tibble: 1 × 5
-#>   estimate ci_lower ci_upper ci_level method
-#>      <dbl>    <dbl>    <dbl>    <dbl> <chr>
-#> 1    0.190   0.0800    0.320     0.95 parametric
+#>   term     estimate std.error conf.low conf.high
+#>   <chr>       <dbl>     <dbl>    <dbl>     <dbl>
+#> 1 estimate    0.164    0.0430   0.0885     0.252
 
 # One-row summary
 glance(boot_result)
 #> # A tibble: 1 × 4
-#>   n_boot ci_level method     converged
-#>    <int>    <dbl> <chr>      <lgl>
-#> 1   1000     0.95 parametric TRUE
+#>   estimate ci_level method     n_boot
+#>      <dbl>    <dbl> <chr>       <int>
+#> 1    0.164     0.95 parametric   1000
 ```
 
-### Base R Methods
+### Accessing Results Directly
+
+`BootstrapResult` does not define `coef()` or `confint()` methods; read the
+estimate and interval from its properties:
 
 ```{r}
 #| label: base-boot
-# Extract estimate
-coef(boot_result)
+# Point estimate
+boot_result@estimate
 
 # Confidence interval
-confint(boot_result)
-confint(boot_result, level = 0.90)
+c(lower = boot_result@ci_lower, upper = boot_result@ci_upper)
+
+# A different level requires re-running the bootstrap (see above)
+c(lower = boot_90@ci_lower, upper = boot_90@ci_upper)
 ```
 
 ## Development Status
@@ -518,7 +555,7 @@ Bootstrap infrastructure is **complete**:
 - ✅ Seed-based reproducibility
 - ✅ Integration with `med()` via `boot = TRUE`
 - ✅ Tidyverse methods (tidy, glance)
-- ✅ Base R methods (coef, confint)
+- ✅ Direct property access (`@estimate`, `@ci_lower`, `@ci_upper`)
 - 📋 BCa confidence intervals (future)
 
 See `NEWS.md` for updates.
