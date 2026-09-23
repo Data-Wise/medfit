@@ -112,8 +112,9 @@ both the lm and lavaan paths, with tests (a serial and a parallel case, each on 
 product terms, citing only verified published literature.
 **Why:** medfit currently returns wrong numbers silently; an error costs little and turns
 the silent failure into a loud one. Full support is a methods feature that needs its own design.
-**Status:** implemented on `feature/multi-mediator-interaction-guard` (`edd2a7f`, `343505b`):
-7 tests; `R CMD check` 0/0/0. Not yet merged.
+**Status:** (a) **merged to `dev` as `aa3362c`** (PR #62, 2026-09-23). 7 tests; CI passed on 6
+platforms plus lint and coverage; strict CRAN check 0/0/1 (the Date-field NOTE `dev` also has). (b) is
+still open (see Open questions).
 **Relation to this spec:** independent of the dataset PRs, and should ship first. Once it lands,
 fitting `outcome_int` with serial mediators errors instead of silently dropping the interaction,
 so D1's rule that serial demos use `outcome` is enforced by code.
@@ -191,7 +192,7 @@ inside `@examples` (recounted).
   seed retries rare. Changes the spec's stated n; not decided.
 - **Out of scope, flagged:** a dead `fit_mediation()` stub at `R/aab-generics.R:169`
   (`stop("not yet implemented")`) loses to `R/fit-glm.R:132` only through alphabetical load order
-  (no `Collate`). Also, `.Rbuildignore` excludes `^NEWS\.md$`, so CRAN shows no changelog, and it lists
-  the `.code-workspace` pattern twice.
+  (no `Collate`). *(Resolved: the `.Rbuildignore` NEWS exclusion and the duplicate `.code-workspace`
+  pattern, fixed in `dd9e883`.)*
 - **D8(b) spec:** not yet written. It gets its own `SPEC-*.md` (serial mediation with
   exposure–mediator and mediator–mediator product terms), separate from this dataset spec.
