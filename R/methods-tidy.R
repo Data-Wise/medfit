@@ -19,6 +19,12 @@ tidy.S7_object <- function(x, ...) {
   if (S7::S7_inherits(x, SerialMediationData)) {
     return(.tidy_serial_mediation_data(x, ...))
   }
+  if (S7::S7_inherits(x, ParallelMediationData)) {
+    return(.tidy_parallel_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, InteractionMediationData)) {
+    return(.tidy_interaction_mediation_data(x, ...))
+  }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.tidy_bootstrap_result(x, ...))
   }
@@ -34,6 +40,12 @@ glance.S7_object <- function(x, ...) {
   }
   if (S7::S7_inherits(x, SerialMediationData)) {
     return(.glance_serial_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, ParallelMediationData)) {
+    return(.glance_parallel_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, InteractionMediationData)) {
+    return(.glance_interaction_mediation_data(x, ...))
   }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.glance_bootstrap_result(x, ...))
@@ -287,6 +299,154 @@ glance.S7_object <- function(x, ...) {
   )
 
   # Convert to tibble if available
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Build a Tidy Table from Named Path and Effect Vectors
+#'
+#' @description
+#' Shared body for the Parallel and Interaction tidiers. Path rows get standard
+#' errors from the diagonal of `@vcov` (the path names are aliases in it);
+#' effect rows get `NA`, as in `.tidy_mediation_data()`, since their SEs need
+#' the delta method (see `confint()`).
+#'
+#' @param x A mediation data object with `@vcov`
+#' @param path_vec Named numeric vector of path coefficients (or `NULL`)
+#' @param effect_vec Named numeric vector of effects (or `NULL`)
+#' @param conf.int,conf.level As in `.tidy_mediation_data()`
+#' @noRd
+.tidy_paths_effects <- function(x, path_vec, effect_vec, conf.int, conf.level) {
+  vc <- x@vcov
+  # match() gives NA (not an error) for a path name missing from @vcov
+  path_se <- sqrt(diag(vc)[match(names(path_vec), rownames(vc))])
+
+  result <- data.frame(
+    term = c(names(path_vec), names(effect_vec)),
+    estimate = unname(c(path_vec, effect_vec)),
+    std.error = unname(c(path_se, rep(NA_real_, length(effect_vec)))),
+    stringsAsFactors = FALSE
+  )
+
+  if (conf.int) {
+    z <- stats::qnorm(1 - (1 - conf.level) / 2)
+    result$conf.low <- result$estimate - z * result$std.error
+    result$conf.high <- result$estimate + z * result$std.error
+  }
+
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Tidy a ParallelMediationData Object
+#'
+#' @param x A ParallelMediationData object
+#' @param type `"all"` (default), `"paths"` (a1, b1, ..., c_prime), or
+#'   `"effects"` (nie, nde, te)
+#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
+#' @param conf.level Confidence level (default 0.95)
+#' @param ... Additional arguments (ignored)
+#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
+#'   `conf.high` when `conf.int = TRUE`)
+#' @noRd
+.tidy_parallel_mediation_data <- function(x, type = c("all", "paths", "effects"),
+                                          conf.int = FALSE, conf.level = 0.95,
+                                          ...) {
+  type <- match.arg(type)
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  effect_vec <- if (type %in% c("all", "effects")) {
+    c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)), te = as.numeric(te(x)))
+  }
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+}
+
+
+#' Glance at a ParallelMediationData Object
+#'
+#' @param x A ParallelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A one-row tibble: nie, nde, te, pm, n_mediators, nobs, converged
+#' @noRd
+.glance_parallel_mediation_data <- function(x, ...) {
+  result <- data.frame(
+    nie = as.numeric(nie(x)),
+    nde = as.numeric(nde(x)),
+    te = as.numeric(te(x)),
+    pm = as.numeric(pm(x)),
+    n_mediators = length(x@mediators),
+    nobs = nobs(x),
+    converged = x@converged,
+    stringsAsFactors = FALSE
+  )
+
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Tidy an InteractionMediationData Object
+#'
+#' @param x An InteractionMediationData object
+#' @param type `"all"` (default), `"paths"` (a, b, c_prime, theta3),
+#'   `"components"` (cde, int_ref, int_med, pie), or `"effects"` (nie, nde, te)
+#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
+#' @param conf.level Confidence level (default 0.95)
+#' @param ... Additional arguments (ignored)
+#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
+#'   `conf.high` when `conf.int = TRUE`)
+#' @noRd
+.tidy_interaction_mediation_data <- function(x,
+                                             type = c("all", "paths",
+                                                      "components", "effects"),
+                                             conf.int = FALSE, conf.level = 0.95,
+                                             ...) {
+  type <- match.arg(type)
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  components <- c(cde = x@cde, int_ref = x@int_ref, int_med = x@int_med,
+                  pie = x@pie)
+  effects <- c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)),
+               te = as.numeric(te(x)))
+  effect_vec <- switch(type,
+    all = c(components, effects),
+    paths = NULL,
+    components = components,
+    effects = effects
+  )
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+}
+
+
+#' Glance at an InteractionMediationData Object
+#'
+#' @param x An InteractionMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A one-row tibble: nie, nde, te, pm, interaction, m_star, nobs,
+#'   converged
+#' @noRd
+.glance_interaction_mediation_data <- function(x, ...) {
+  result <- data.frame(
+    nie = as.numeric(nie(x)),
+    nde = as.numeric(nde(x)),
+    te = as.numeric(te(x)),
+    pm = as.numeric(pm(x)),
+    interaction = x@interaction,
+    m_star = x@m_star,
+    nobs = nobs(x),
+    converged = x@converged,
+    stringsAsFactors = FALSE
+  )
+
   if (requireNamespace("tibble", quietly = TRUE)) {
     result <- tibble::as_tibble(result)
   }
