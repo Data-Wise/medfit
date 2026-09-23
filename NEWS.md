@@ -37,6 +37,14 @@
   articles, which passed `mediators =` to `extract_mediation()`; the argument
   is `mediator`.
 
+* Repaired the "Bootstrap Inference" article so every code chunk runs against
+  the current API. It now uses `mediation_demo`, adjusting for both covariates,
+  and reads `med()`'s bootstrap via `attr(result, "bootstrap")`. The serial
+  example refits the chain nonparametrically, because the parametric and plugin
+  methods accept only `MediationData`. The article also reads `BootstrapResult`
+  properties directly, since that class has no `coef()`/`confint()` methods,
+  and its printed output has been regenerated.
+
 # medfit 0.4.0
 
 ## New features
