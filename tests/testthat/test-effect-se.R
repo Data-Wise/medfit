@@ -293,3 +293,19 @@ test_that(".effect_se() rejects keys the class does not provide", {
   expect_error(.effect_se(demo_simple(), "cde"), "terms")
   expect_error(.effect_se(demo_simple(), character(0)), "terms")
 })
+
+test_that("confint(parm = 'effects') works for lavaan-extracted MediationData", {
+  skip_if_not_installed("lavaan")
+  fit <- lavaan::sem(
+    "mediator1 ~ treatment + covariate1 + covariate2
+     outcome ~ treatment + mediator1 + covariate1 + covariate2",
+    data = mediation_demo
+  )
+  med <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
+                           outcome = "outcome")
+  # Previously stopped: the method located a/b/c' by lm-style m_/y_ names
+  ci <- quiet_confint(med, parm = "effects")
+  expect_identical(rownames(ci), c("nie", "nde", "te"))
+  expect_equal(ci_half_width_se(ci), unname(.effect_se(med, c("nie", "nde", "te"))),
+               tolerance = 1e-12)
+})
