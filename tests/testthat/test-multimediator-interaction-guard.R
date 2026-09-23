@@ -119,4 +119,3 @@ test_that("lavaan guard passes a product-free multi-mediator model", {
   sm <- extract_mediation(fit, treatment = "X", mediator = c("M1", "M2"))
   expect_s3_class(sm, "medfit::SerialMediationData")
 })
-
