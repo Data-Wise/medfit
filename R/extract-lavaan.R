@@ -323,30 +323,15 @@ extract_mediation_lavaan <- function(object,
 
   # --- Resolve each alias to its source parameter in the original vcov ---
   #
-  # lavaan names free parameters either by their label (e.g. "a", "b", "cp")
-  # or, when no label resolves to that name, by the variable-name form
-  # ("M~X", "Y~M", "Y~X"). To be robust across labeled / unlabeled / custom-
-  # label models we try BOTH forms for each path.
-  #
   # Mapping the alias to a source *index* lets us copy the FULL covariance
   # structure (variances AND off-diagonal covariances), not just the diagonal
   # variance. This is essential: in single-equation SEM the a/b/c' paths are
   # estimated jointly and their pairwise covariances are non-zero.
-  orig_names <- names(all_coef)
-
-  resolve_source_idx <- function(label, var_name) {
-    for (nm in c(label, var_name)) {
-      if (!is.null(nm) && nm %in% orig_names) {
-        return(which(orig_names == nm)[1])
-      }
-    }
-    NA_integer_
-  }
-
-  source_idx <- c(
-    a = resolve_source_idx(a_label, paste0(mediator, "~", treatment)),
-    b = resolve_source_idx(b_label, paste0(outcome, "~", mediator)),
-    c_prime = resolve_source_idx(cp_label, paste0(outcome, "~", treatment))
+  source_idx <- .lavaan_alias_source_idx(
+    object,
+    lhs = c(a = mediator, b = outcome, c_prime = outcome),
+    rhs = c(a = treatment, b = mediator, c_prime = treatment),
+    orig_names = names(all_coef)
   )
 
   # Expand vcov so each NEW alias carries the FULL covariance row/column of its
@@ -582,15 +567,6 @@ extract_mediation_lavaan <- function(object,
   # (a, d1..d{k-1}, b, c_prime) alongside lavaan's raw parameter vector, and
   # copy the FULL covariance row/column of each source parameter so the
   # off-diagonal covariances between chain paths are preserved.
-  orig_names <- names(all_coef)
-
-  resolve_source_idx <- function(var_name) {
-    if (!is.null(var_name) && var_name %in% orig_names) {
-      return(which(orig_names == var_name)[1])
-    }
-    NA_integer_
-  }
-
   d_names <- paste0("d", seq_len(k - 1L))
   alias_var <- c(
     a = paste0(mediators[1], "~", treatment),
@@ -609,7 +585,7 @@ extract_mediation_lavaan <- function(object,
   aliases_to_add <- names(alias_var)[!names(alias_var) %in% names(estimates)]
   for (al in names(alias_var)) estimates[al] <- alias_val[[al]]
 
-  source_idx <- vapply(alias_var, resolve_source_idx, integer(1))
+  source_idx <- .lavaan_alias_source_idx_from_names(object, alias_var, names(all_coef))
 
   # Same full-row/column alias expansion as the simple path and the lm/glm
   # extractor (shared helper), so the serial chain's off-diagonal covariances
@@ -842,15 +818,6 @@ extract_mediation_lavaan <- function(object,
   # each source parameter. In single-equation SEM the system is estimated
   # jointly, so every off-diagonal (cov(a_j, b_j), cov(a_j, a_j'), cov(b_j, c'))
   # is real and is preserved here.
-  orig_names <- names(all_coef)
-
-  resolve_source_idx <- function(var_name) {
-    if (!is.null(var_name) && var_name %in% orig_names) {
-      return(which(orig_names == var_name)[1])
-    }
-    NA_integer_
-  }
-
   alias_var <- character(0)
   alias_val <- numeric(0)
   for (j in seq_len(k)) {
@@ -866,7 +833,7 @@ extract_mediation_lavaan <- function(object,
   aliases_to_add <- names(alias_var)[!names(alias_var) %in% names(estimates)]
   for (al in names(alias_var)) estimates[al] <- alias_val[[al]]
 
-  source_idx <- vapply(alias_var, resolve_source_idx, integer(1))
+  source_idx <- .lavaan_alias_source_idx_from_names(object, alias_var, names(all_coef))
 
   vcov_expanded <- .expand_vcov_with_aliases(
     vcov_mat,
@@ -1105,14 +1072,6 @@ extract_mediation_lavaan <- function(object,
   total <- nde + nie
 
   # Estimates + interaction aliases; single SEM keeps the full joint covariance.
-  orig_names <- names(all_coef)
-  resolve_source_idx <- function(var_name) {
-    if (!is.null(var_name) && var_name %in% orig_names) {
-      which(orig_names == var_name)[1]
-    } else {
-      NA_integer_
-    }
-  }
   alias_var <- c(
     a = paste0(mediator, "~", treatment),
     b = paste0(outcome, "~", mediator),
@@ -1124,7 +1083,7 @@ extract_mediation_lavaan <- function(object,
   estimates <- all_coef
   aliases_to_add <- names(alias_var)[!names(alias_var) %in% names(estimates)]
   for (al in names(alias_var)) estimates[al] <- alias_val[[al]]
-  source_idx <- vapply(alias_var, resolve_source_idx, integer(1))
+  source_idx <- .lavaan_alias_source_idx_from_names(object, alias_var, names(all_coef))
   vcov_expanded <- .expand_vcov_with_aliases(
     vcov_mat, source_idx = source_idx, aliases_to_add = aliases_to_add
   )
@@ -1164,6 +1123,38 @@ extract_mediation_lavaan <- function(object,
   )
 }
 
+# Map structural aliases to lavaan's free-parameter vector ----------------
+#
+# lavaan names a free parameter by its user label when one is set (e.g. "aa"
+# in `M ~ aa*X`) and otherwise by the "lhs op rhs" form ("M~X", "M~1"). The
+# name therefore cannot be rebuilt from variable names alone; look each path
+# up in parTable() and use its label if non-empty. Returns an integer index
+# into `orig_names` per alias (NA when the path is absent or not free), for
+# .expand_vcov_with_aliases().
+.lavaan_alias_source_idx <- function(object, lhs, rhs, op = "~", orig_names) {
+  pt <- lavaan::parTable(object)
+  op <- rep_len(op, length(lhs))
+  idx <- vapply(seq_along(lhs), function(i) {
+    row <- which(pt$lhs == lhs[[i]] & pt$op == op[[i]] & pt$rhs == rhs[[i]])
+    if (length(row) == 0L) return(NA_integer_)
+    lab <- pt$label[row[1L]]
+    nm <- if (!is.na(lab) && nzchar(lab)) lab else paste0(lhs[[i]], op[[i]], rhs[[i]])
+    match(nm, orig_names)
+  }, integer(1))
+  stats::setNames(idx, names(lhs))
+}
+
+# Same, for aliases given in "lhs~rhs" / "lhs~1" form (named character vector).
+.lavaan_alias_source_idx_from_names <- function(object, alias_var, orig_names) { # nolint: object_length_linter.
+  is_int <- grepl("~1$", alias_var)
+  .lavaan_alias_source_idx(
+    object,
+    lhs = stats::setNames(sub("~.*$", "", alias_var), names(alias_var)),
+    rhs = ifelse(is_int, "", sub("^[^~]*~", "", alias_var)),
+    op = ifelse(is_int, "~1", "~"),
+    orig_names = orig_names
+  )
+}
 
 #' Register lavaan Method for extract_mediation
 #'
