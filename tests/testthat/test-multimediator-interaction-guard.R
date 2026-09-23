@@ -106,3 +106,17 @@ test_that("parallel lavaan extraction errors on a named product column", {
     "product term.*XM1"
   )
 })
+
+test_that("lavaan guard passes a product-free multi-mediator model", {
+  skip_if_not_installed("lavaan")
+  d <- generate_guard_data()
+  fit <- lavaan::sem("
+    M1 ~ X + C
+    M2 ~ X + M1 + C
+    Y  ~ X + M1 + M2 + C
+  ", data = d)
+  expect_length(.find_product_terms_lavaan(fit, c("X", "M1", "M2")), 0L)
+  sm <- extract_mediation(fit, treatment = "X", mediator = c("M1", "M2"))
+  expect_s3_class(sm, "medfit::SerialMediationData")
+})
+

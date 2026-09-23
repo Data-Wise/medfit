@@ -947,6 +947,8 @@ extract_mediation_lavaan <- function(object,
                     function(parts) length(parts) > 1L && any(parts %in% vars),
                     logical(1))
   if (length(interaction)) is_prod <- is_prod | reg$rhs %in% interaction
+  # Return early: paste0() on zero-length vectors still yields ": ".
+  if (!any(is_prod)) return(character(0))
   unique(paste0(reg$lhs[is_prod], ": ", reg$rhs[is_prod]))
 }
 
