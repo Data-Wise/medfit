@@ -7,10 +7,10 @@
   examples from one running example. The covariates are mediator-outcome
   confounders, so examples adjust for them. See `?mediation_demo` for the
   generating equations; the generating script is in `data-raw/`. The
-  "Getting Started" and "Introduction" articles and the single-mediator
-  examples for `fit_mediation()`, `extract_mediation()`, `med()`, `quick()`,
-  `bootstrap_mediation()`, `nie()`, `nde()`, `te()`, `pm()`, and `paths()`
-  now use it, adjusting for both covariates.
+  "Getting Started", "Introduction", and "Model Extraction" articles and the
+  single-mediator examples for `fit_mediation()`, `extract_mediation()`,
+  `med()`, `quick()`, `bootstrap_mediation()`, `nie()`, `nde()`, `te()`,
+  `pm()`, and `paths()` now use it, adjusting for both covariates.
 
 ## Bug fixes
 
