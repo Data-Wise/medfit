@@ -21,8 +21,10 @@ glm_class <- S7::new_S3_class("glm")
 #' @param object Fitted lm model. For simple mediation this is the mediator
 #'   model (`M ~ X + covariates`); for serial mediation it is the first
 #'   mediator model (`M1 ~ X + covariates`).
-#' @param model_y Fitted lm or glm model for the outcome (`Y ~ X + M + covariates`,
-#'   or `Y ~ X + Mk + covariates` for serial chains).
+#' @param model_y Fitted lm or glm model for the outcome (`Y ~ X + M + covariates`).
+#'   For serial chains, include every mediator, not only the last:
+#'   `Y ~ X + M1 + ... + Mk + covariates`. Only `Mk`'s coefficient becomes the
+#'   `b` path, but omitting an earlier mediator that also affects `Y` biases it.
 #' @param treatment Character: name of the treatment variable
 #' @param mediator Character: name of the mediator variable for simple mediation
 #'   (`X -> M -> Y`), OR an ordered character vector of length >= 2 for serial
@@ -94,8 +96,9 @@ glm_class <- S7::new_S3_class("glm")
 #'
 #' # Serial chain X -> M1 -> M2 -> Y
 #' fit_m1 <- lm(M1 ~ X, data = data)
-#' fit_m2 <- lm(M2 ~ M1, data = data)
-#' fit_y2 <- lm(Y ~ M2 + X, data = data)
+#' fit_m2 <- lm(M2 ~ X + M1, data = data)
+#' # Keep M1 in the outcome model: if M1 also affects Y, dropping it biases b
+#' fit_y2 <- lm(Y ~ X + M1 + M2, data = data)
 #' serial <- extract_mediation(
 #'   fit_m1,
 #'   model_y = fit_y2,
@@ -692,7 +695,11 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param object Fitted lm/glm for the first mediator (`M1 ~ X + ...`).
 #' @param mediator_models List (length `k - 1`) of fitted lm/glm models for
 #'   mediators 2..k (`M2 ~ M1 + ...`, ..., `Mk ~ M(k-1) + ...`), in chain order.
-#' @param model_y Fitted lm/glm for the outcome (`Y ~ Mk + X + ...`).
+#' @param model_y Fitted lm/glm for the outcome. Only `Mk`'s coefficient is read
+#'   as `b`, but the model should include `X` and every earlier mediator
+#'   (`Y ~ X + M1 + ... + Mk + ...`); omitting an earlier mediator that also
+#'   affects `Y` biases `b`. The serial indirect effect `a * d * b` is then the
+#'   effect through the full chain only.
 #' @param treatment Character scalar: treatment variable name.
 #' @param mediators Character vector (length >= 2): mediator names in causal
 #'   order (`M1 -> M2 -> ... -> Mk`).

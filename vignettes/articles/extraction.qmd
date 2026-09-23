@@ -175,8 +175,9 @@ data_lm_serial <- data.frame(X = X, M1 = M1, M2 = M2, Y = y_serial)
 
 # First mediator model goes in the object slot; the rest in mediator_models
 fit_m1 <- lm(M1 ~ X, data = data_lm_serial)
-fit_m2 <- lm(M2 ~ M1, data = data_lm_serial)
-fit_y  <- lm(Y ~ M2 + X, data = data_lm_serial)
+fit_m2 <- lm(M2 ~ X + M1, data = data_lm_serial)
+# Include every mediator in the outcome model, not only the last one
+fit_y  <- lm(Y ~ X + M1 + M2, data = data_lm_serial)
 
 med_serial_lm <- extract_mediation(
   fit_m1,
@@ -189,6 +190,13 @@ med_serial_lm <- extract_mediation(
 # Serial indirect effect: a * d1 * b
 med_serial_lm@a_path * med_serial_lm@d_path * med_serial_lm@b_path
 ```
+
+Include `X` and every earlier mediator in each downstream model, as the SEM
+version below does. Only `M2`'s coefficient becomes the `b` path, but if `M1`
+also affects `Y` directly, an outcome model without `M1` (`Y ~ X + M2`)
+confounds it: `M1` is a common cause of `M2` and `Y`, so `b` is biased. The
+product `a * d1 * b` is then the effect through the full chain
+`X -> M1 -> M2 -> Y` only; a direct `M1 -> Y` path is not part of it.
 
 The order of `mediator_models` is cross-checked against the `mediator` vector:
 each model's response and predecessor are validated, so a misordered list
@@ -327,7 +335,7 @@ fit_serial <- sem(serial_syntax, data = data_serial)
 med_serial <- extract_mediation(
   fit_serial,
   treatment = "X",
-  mediators = c("M1", "M2"),
+  mediator = c("M1", "M2"),
   outcome = "Y"
 )
 

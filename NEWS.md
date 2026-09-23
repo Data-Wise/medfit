@@ -1,5 +1,19 @@
 # medfit (development version)
 
+## Documentation
+
+* Serial mediation docs now recommend including the treatment and every
+  earlier mediator in the outcome model (`Y ~ X + M1 + M2`, not `Y ~ X + M2`).
+  Only the last mediator's coefficient becomes the `b` path, but when an
+  earlier mediator also affects the outcome, leaving it out confounds `b`.
+  The serial indirect effect `a * d * b` is the effect through the full chain
+  only. Updated in the `extract_mediation()` lm/glm and lavaan documentation
+  and the "Model Extraction" article; a new test checks the bias.
+
+* Fixed the lavaan serial examples in the "Model Extraction" and "Bootstrap"
+  articles, which passed `mediators =` to `extract_mediation()`; the argument
+  is `mediator`.
+
 ## Bug fixes
 
 * `extract_mediation()` with two or more mediators (serial or parallel) now
