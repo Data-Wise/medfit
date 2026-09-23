@@ -1,5 +1,25 @@
 # medfit (development version)
 
+## New features
+
+* New bundled dataset `mediation_demo` (400 rows, 8 variables): simulated data
+  that supports simple, serial, parallel, and treatment-by-mediator interaction
+  examples from one running example. The covariates are mediator-outcome
+  confounders, so examples adjust for them. See `?mediation_demo` for the
+  generating equations; the generating script is in `data-raw/`. The
+  "Getting Started" article now uses it throughout.
+
+## Bug fixes
+
+* `extract_mediation()` with two or more mediators (serial or parallel) now
+  errors when a model carries a product term involving the treatment or a
+  mediator, e.g. `X:M1` in the outcome model. Previously the multi-mediator
+  branch returned before any interaction check, so the product term was
+  ignored silently and main-effect paths were reported as if no interaction
+  existed. Applies to both the lm/glm and lavaan methods; for lavaan, a
+  product precomputed as a plain data column is recognized when named via
+  `interaction =`. Products among covariates alone are still allowed.
+
 ## Documentation
 
 * Serial mediation docs now recommend including the treatment and every
@@ -13,17 +33,6 @@
 * Fixed the lavaan serial examples in the "Model Extraction" and "Bootstrap"
   articles, which passed `mediators =` to `extract_mediation()`; the argument
   is `mediator`.
-
-## Bug fixes
-
-* `extract_mediation()` with two or more mediators (serial or parallel) now
-  errors when a model carries a product term involving the treatment or a
-  mediator, e.g. `X:M1` in the outcome model. Previously the multi-mediator
-  branch returned before any interaction check, so the product term was
-  ignored silently and main-effect paths were reported as if no interaction
-  existed. Applies to both the lm/glm and lavaan methods; for lavaan, a
-  product precomputed as a plain data column is recognized when named via
-  `interaction =`. Products among covariates alone are still allowed.
 
 # medfit 0.4.0
 

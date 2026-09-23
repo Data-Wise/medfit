@@ -28,3 +28,4 @@
 ^\.token-optimizer$
 ^AGENTS\.md$
 ^ORCHESTRATE-.*\.md$
+^data-raw$

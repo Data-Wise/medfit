@@ -98,6 +98,11 @@ reference:
       - med
       - quick
 
+  - title: "Data"
+    desc: "Simulated example data"
+    contents:
+      - mediation_demo
+
   - title: "Effect Extractors"
     desc: "Extract mediation effects from fitted models"
     contents:
