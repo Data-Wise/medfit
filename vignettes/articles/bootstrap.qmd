@@ -323,9 +323,10 @@ if (boot_result@ci_lower > 0 || boot_result@ci_upper < 0) {
 
 For serial mediation (treatment -> mediator1 -> mediator2 -> outcome), the
 indirect effect is the product of the chain's paths, $a \times d \times b$.
-The parametric and plugin methods currently accept only a single-mediator
-`MediationData` object, so bootstrap a serial chain nonparametrically by
-refitting all three models:
+The parametric and plugin methods accept a `SerialMediationData` object (and
+`ParallelMediationData` or `InteractionMediationData`) as well as
+`MediationData`. `statistic_fn` receives the named `@estimates` vector, which
+carries the chain's path aliases `a`, `d1`, `b`, and `c_prime`:
 
 ```{r}
 #| label: serial
@@ -348,7 +349,25 @@ serial_med <- fit_serial(mediation_demo)
 # Point estimate of the serial indirect effect (a * d * b)
 serial_med@a_path * serial_med@d_path * serial_med@b_path
 
-# Bootstrap the serial indirect effect by resampling and refitting
+# Parametric bootstrap: draw the chain's paths from N(estimates, vcov)
+boot_serial_param <- bootstrap_mediation(
+  statistic_fn = function(theta) unname(theta["a"] * theta["d1"] * theta["b"]),
+  method = "parametric",
+  mediation_data = serial_med,
+  n_boot = 1000,
+  seed = 123
+)
+
+print(boot_serial_param)
+```
+
+The lm chain above estimates each equation separately, so its covariance
+matrix sets the covariances between equations to zero (see the Model
+Extraction article). To avoid that assumption, bootstrap nonparametrically by
+resampling the data and refitting all three models:
+
+```{r}
+#| label: serial-nonparametric
 boot_serial <- bootstrap_mediation(
   statistic_fn = function(boot_data) {
     s <- fit_serial(boot_data)
@@ -534,19 +553,21 @@ glance(boot_result)
 
 ### Accessing Results Directly
 
-`BootstrapResult` does not define `coef()` or `confint()` methods; read the
-estimate and interval from its properties:
+`coef()` and `confint()` work on a `BootstrapResult`, and its properties can
+be read directly:
 
 ```{r}
 #| label: base-boot
 # Point estimate
+coef(boot_result)
 boot_result@estimate
 
-# Confidence interval
+# Stored percentile interval
+confint(boot_result)
 c(lower = boot_result@ci_lower, upper = boot_result@ci_upper)
 
-# A different level requires re-running the bootstrap (see above)
-c(lower = boot_90@ci_lower, upper = boot_90@ci_upper)
+# A different level is recomputed from the stored bootstrap draws
+confint(boot_result, level = 0.90)
 ```
 
 ## Development Status
@@ -561,6 +582,8 @@ Bootstrap infrastructure is **complete**:
 - ✅ Seed-based reproducibility
 - ✅ Integration with `med()` via `boot = TRUE`
 - ✅ Tidyverse methods (tidy, glance)
+- ✅ Base R methods (`coef()`, `confint()`)
+- ✅ Serial, parallel, and interaction data in the parametric and plugin methods
 - ✅ Direct property access (`@estimate`, `@ci_lower`, `@ci_upper`)
 - 📋 BCa confidence intervals (future)
 

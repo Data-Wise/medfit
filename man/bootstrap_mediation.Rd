@@ -45,7 +45,11 @@ bootstrap_mediation(
 \item \code{"plugin"}: Point estimate only, no CI (fastest)
 }}
 
-\item{mediation_data}{\link{MediationData} object (required for parametric/plugin)}
+\item{mediation_data}{A mediation data object (required for parametric/plugin):
+\link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData}, or
+\link{InteractionMediationData}. \code{statistic_fn} receives its named \verb{@estimates}
+vector, which includes path aliases (e.g. \code{a}, \code{d1}, \code{b}, \code{c_prime} for a
+serial chain; \code{a1}, \code{b1}, \code{a2}, \code{b2} for parallel mediators).}
 
 \item{data}{Data frame (required for nonparametric bootstrap)}
 
