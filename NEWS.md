@@ -26,6 +26,16 @@
   `level` is given, and returns `NA` with a warning for plugin results.
   Previously both errored with "Can't get S7 properties with `$`".
 
+* `tidy()` and `glance()` now support `ParallelMediationData` and
+  `InteractionMediationData`; previously both errored with "not implemented
+  for this S7 object type". `tidy()` returns path rows (`a1, b1, ..., c_prime`
+  or `a, b, c_prime, theta3`) with standard errors from `vcov()`, then effect
+  rows (`nie`, `nde`, `te`, plus the four-way `cde`, `int_ref`, `int_med`,
+  `pie` for interaction models) whose `std.error` is `NA`, as for
+  `MediationData`; use `confint(parm = "effects")` for delta-method intervals.
+  `glance()` adds `n_mediators` (parallel) or `interaction` and `m_star`
+  (interaction).
+
 ## Bug fixes
 
 * `extract_mediation()` with two or more mediators (serial or parallel) now
