@@ -210,13 +210,10 @@ medfit is the foundation for the **mediationverse** ecosystem:
 |---------|---------|------|
 | **medfit** (this) | Model fitting, extraction, bootstrap | Foundation |
 | [RMediation](https://github.com/data-wise/rmediation) | Confidence intervals (DOP, MBCO) | Application |
-| [mediationverse](https://github.com/data-wise/mediationverse) | Meta-package | Ecosystem |
-
-<!-- Future packages (in development):
 | [probmed](https://github.com/data-wise/probmed) | Probabilistic effect size (P_med) | Application |
-| [medrobust](https://github.com/data-wise/medrobust) | Sensitivity analysis | Application |
+| [medrobust](https://github.com/data-wise/medrobust) | Sensitivity analysis | Application (independent of medfit) |
 | [medsim](https://github.com/data-wise/medsim) | Simulation infrastructure | Support |
--->
+| [mediationverse](https://github.com/data-wise/mediationverse) | Meta-package | Ecosystem |
 
 See [Ecosystem Coordination](planning/ECOSYSTEM.md) for version compatibility and development guidelines.
 
@@ -274,8 +271,10 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.2.1. https://CRAN.R-project.org/package=medfit
+R package version 0.4.0. https://CRAN.R-project.org/package=medfit
 ```
+
+For the entry matching your installed version, run `citation("medfit")`.
 
 ## Related Resources
 
