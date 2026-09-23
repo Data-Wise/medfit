@@ -1,5 +1,14 @@
 # medfit (development version)
 
+## New features
+
+* New bundled dataset `mediation_demo` (400 rows, 8 variables): simulated data
+  that supports simple, serial, parallel, and treatment-by-mediator interaction
+  examples from one running example. The covariates are mediator-outcome
+  confounders, so examples adjust for them. See `?mediation_demo` for the
+  generating equations; the generating script is in `data-raw/`. The
+  "Getting Started" article now uses it throughout.
+
 ## Bug fixes
 
 * `extract_mediation()` with two or more mediators (serial or parallel) now
