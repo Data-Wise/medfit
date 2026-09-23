@@ -1,6 +1,6 @@
 # Plan: delta-method effect SEs in `tidy()` and `confint()`
 
-**Date:** 2026-09-23 · **Status:** proposed — awaiting approval
+**Date:** 2026-09-23 · **Status:** approved 2026-09-23
 **Spec:** [SPEC-tidy-effect-se-2026-09-23.md](SPEC-tidy-effect-se-2026-09-23.md) (approved) ·
 **Decisions:** [GRILL-tidy-effect-se-2026-09-23.md](GRILL-tidy-effect-se-2026-09-23.md) D1–D7
 **Where:** worktree `~/.git-worktrees/medfit/feature-tidy-effect-se`, branch
