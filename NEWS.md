@@ -31,12 +31,34 @@
   for this S7 object type". `tidy()` returns path rows (`a1, b1, ..., c_prime`
   or `a, b, c_prime, theta3`) with standard errors from `vcov()`, then effect
   rows (`nie`, `nde`, `te`, plus the four-way `cde`, `int_ref`, `int_med`,
-  `pie` for interaction models) whose `std.error` is `NA`, as for
-  `MediationData`; use `confint(parm = "effects")` for delta-method intervals.
-  `glance()` adds `n_mediators` (parallel) or `interaction` and `m_star`
+  `pie` for interaction models) with delta-method standard errors (see
+  below). `glance()` adds `n_mediators` (parallel) or `interaction` and `m_star`
   (interaction).
 
+* `tidy()` now reports delta-method standard errors for effect rows (NIE,
+  NDE, TE, and the four-way components) for all four mediation classes, from
+  the same computation as `confint(parm = "effects")`, so
+  `tidy(conf.int = TRUE)` reproduces `confint()` exactly. Previously these rows
+  had `NA` standard errors, and `SerialMediationData` returned `NA` intervals
+  with a warning. `tidy()` stays silent; `?tidy.S7_object` documents that the
+  intervals are normal approximations and that the proportion mediated should
+  be bootstrapped.
+
+* New `confint()` method for `SerialMediationData`, with `parm = "paths"` or
+  `"effects"`.
+
 ## Bug fixes
+
+* `confint(parm = "effects")` for `MediationData` gave a total-effect interval
+  that was too wide: it treated the indirect effect and `c'` as independent,
+  dropping their covariance. It now uses the full delta-method gradient (on the
+  simple `mediation_demo` fit the TE standard error drops from 0.127 to
+  0.119, matching a parametric bootstrap). NIE and NDE are unchanged.
+
+* `confint(parm = "effects")` and `tidy()` now work for `MediationData`
+  extracted from lavaan. Both located paths by lm-style names, so
+  `confint()` stopped with "Could not compute SEs for effects" and `tidy()`
+  omitted standard errors.
 
 * `extract_mediation()` with two or more mediators (serial or parallel) now
   errors when a model carries a product term involving the treatment or a
