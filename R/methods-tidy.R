@@ -11,6 +11,52 @@
 # Register S3 methods for S7 classes by adding explicit class attribute
 # Since S7 class names contain "::", we use .onLoad to register methods
 
+#' Tidy a medfit Object
+#'
+#' @description
+#' Convert a mediation data object or a [BootstrapResult] into a tidy tibble,
+#' one row per path coefficient or effect.
+#'
+#' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
+#'   [InteractionMediationData], or [BootstrapResult] object.
+#' @param ... Passed to the class method: `type` (`"all"`, `"paths"`,
+#'   `"effects"`, and for interaction objects `"components"`), `conf.int`
+#'   (logical, add `conf.low`/`conf.high`), and `conf.level` (default 0.95).
+#'
+#' @return A tibble (a data frame if tibble is not installed) with columns
+#'   `term`, `estimate`, `std.error`, and, when `conf.int = TRUE`, `conf.low`
+#'   and `conf.high`.
+#'
+#' @details
+#' Path standard errors are the square roots of the diagonal of `@vcov`.
+#' Effect standard errors (NIE, NDE, TE, and for interaction objects the
+#' four-way components) use the delta method over the full `@vcov`, the same
+#' computation as `confint(parm = "effects")`, so `tidy(conf.int = TRUE)`
+#' reproduces `confint()` exactly. Intervals are normal approximations
+#' (\eqn{\hat{\theta} \pm z \, SE}{estimate +/- z * SE}); the sampling
+#' distribution of a product of coefficients is skewed, so for inference on
+#' indirect effects prefer [bootstrap_mediation()]. `tidy()` raises no warning
+#' about this; `confint()` does.
+#'
+#' For a serial chain fitted as separate lm/glm regressions, `@vcov` has zero
+#' covariances between equations, and the effect standard errors inherit that.
+#' The proportion mediated (reported by `glance()`) has no standard error: it
+#' is a ratio whose delta-method standard error is unstable when the total
+#' effect is near zero, so bootstrap it instead.
+#'
+#' @examples
+#' med_data <- fit_mediation(
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
+#' )
+#' # tidy() is the generic from the generics package (also re-exported by broom)
+#' generics::tidy(med_data)
+#' generics::tidy(med_data, type = "effects", conf.int = TRUE)
+#'
+#' @seealso [bootstrap_mediation()], [MediationData]
 #' @export
 tidy.S7_object <- function(x, ...) {
   if (S7::S7_inherits(x, MediationData)) {
@@ -102,76 +148,11 @@ glance.S7_object <- function(x, ...) {
 .tidy_mediation_data <- function(x, type = c("all", "paths", "effects"),
                                  conf.int = FALSE, conf.level = 0.95, ...) {
   type <- match.arg(type)
-
-  # Extract effects and paths
-  paths_vec <- paths(x)
-  nie_val <- as.numeric(nie(x))
-  nde_val <- as.numeric(nde(x))
-  te_val <- as.numeric(te(x))
-
-  # Build tibble based on type
-  if (type == "paths") {
-    result <- data.frame(
-      term = names(paths_vec),
-      estimate = unname(paths_vec),
-      stringsAsFactors = FALSE
-    )
-  } else if (type == "effects") {
-    result <- data.frame(
-      term = c("nie", "nde", "te"),
-      estimate = c(nie_val, nde_val, te_val),
-      stringsAsFactors = FALSE
-    )
-  } else {
-    # "all" - combine both
-    result <- data.frame(
-      term = c(names(paths_vec), "nie", "nde", "te"),
-      estimate = c(unname(paths_vec), nie_val, nde_val, te_val),
-      stringsAsFactors = FALSE
-    )
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL      # a, b, c_prime
+  effect_vec <- if (type %in% c("all", "effects")) {
+    c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)), te = as.numeric(te(x)))
   }
-
-  # Add standard errors if we can compute them
-  if (type %in% c("paths", "all")) {
-    vcov_mat <- x@vcov
-    param_names <- names(x@estimates)
-
-    # Try to get SEs for paths
-    a_idx <- grep(paste0("^m_", x@treatment, "$"), param_names)
-    b_idx <- grep(paste0("^y_", x@mediator, "$"), param_names)
-    cp_idx <- grep(paste0("^y_", x@treatment, "$"), param_names)
-
-    if (length(a_idx) > 0 && length(b_idx) > 0 && length(cp_idx) > 0) {
-      se_a <- sqrt(vcov_mat[a_idx[1], a_idx[1]])
-      se_b <- sqrt(vcov_mat[b_idx[1], b_idx[1]])
-      se_cp <- sqrt(vcov_mat[cp_idx[1], cp_idx[1]])
-
-      if (type == "paths") {
-        result$std.error <- c(se_a, se_b, se_cp)
-      } else {
-        # For "all", add SEs for paths and NA for effects (need delta method)
-        result$std.error <- c(se_a, se_b, se_cp, NA, NA, NA)
-      }
-    }
-  }
-
-  # Add confidence intervals
-  if (conf.int) {
-    if (!"std.error" %in% names(result)) {
-      result$std.error <- NA_real_
-    }
-
-    z <- stats::qnorm(1 - (1 - conf.level) / 2)
-    result$conf.low <- result$estimate - z * result$std.error
-    result$conf.high <- result$estimate + z * result$std.error
-  }
-
-  # Convert to tibble if available, otherwise data.frame
-  if (requireNamespace("tibble", quietly = TRUE)) {
-    result <- tibble::as_tibble(result)
-  }
-
-  result
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
 }
 
 
@@ -235,48 +216,15 @@ glance.S7_object <- function(x, ...) {
 .tidy_serial_mediation_data <- function(x, type = c("all", "paths", "effects"),
                                         conf.int = FALSE, conf.level = 0.95, ...) {
   type <- match.arg(type)
-
-  # Extract effects and paths
-  paths_vec <- paths(x)
-  nie_val <- as.numeric(nie(x))
-  nde_val <- as.numeric(nde(x))
-  te_val <- as.numeric(te(x))
-
-  # Build result based on type
-  if (type == "paths") {
-    result <- data.frame(
-      term = names(paths_vec),
-      estimate = unname(paths_vec),
-      stringsAsFactors = FALSE
-    )
-  } else if (type == "effects") {
-    result <- data.frame(
-      term = c("nie", "nde", "te"),
-      estimate = c(nie_val, nde_val, te_val),
-      stringsAsFactors = FALSE
-    )
-  } else {
-    result <- data.frame(
-      term = c(names(paths_vec), "nie", "nde", "te"),
-      estimate = c(unname(paths_vec), nie_val, nde_val, te_val),
-      stringsAsFactors = FALSE
-    )
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  # paths() names the d paths by mediator pair (d, or d21, d32, ...);
+  # @vcov aliases them d1..dk
+  path_alias <- c("a", paste0("d", seq_along(x@d_path)), "b", "c_prime")
+  effect_vec <- if (type %in% c("all", "effects")) {
+    c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)), te = as.numeric(te(x)))
   }
-
-  # Add CI if requested (without SEs for serial - need full delta method)
-  if (conf.int) {
-    result$conf.low <- NA_real_
-    result$conf.high <- NA_real_
-    warning("Confidence intervals for serial mediation require bootstrap. ",
-            "Use bootstrap_mediation() for robust inference.", call. = FALSE)
-  }
-
-  # Convert to tibble if available
-  if (requireNamespace("tibble", quietly = TRUE)) {
-    result <- tibble::as_tibble(result)
-  }
-
-  result
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level,
+                      path_alias = path_alias)
 }
 
 
@@ -310,25 +258,32 @@ glance.S7_object <- function(x, ...) {
 #' Build a Tidy Table from Named Path and Effect Vectors
 #'
 #' @description
-#' Shared body for the Parallel and Interaction tidiers. Path rows get standard
-#' errors from the diagonal of `@vcov` (the path names are aliases in it);
-#' effect rows get `NA`, as in `.tidy_mediation_data()`, since their SEs need
-#' the delta method (see `confint()`).
+#' Shared body for every mediation tidier. Path rows get standard errors from
+#' the diagonal of `@vcov` (the path names, or `path_alias`, are aliases in it);
+#' effect rows get delta-method standard errors from the same helper
+#' `confint()` uses, so `tidy(conf.int = TRUE)` and `confint()` agree. An
+#' object without the alias rows gets `NA` SEs rather than an error. No
+#' warning is raised here (GRILL D3).
 #'
 #' @param x A mediation data object with `@vcov`
 #' @param path_vec Named numeric vector of path coefficients (or `NULL`)
-#' @param effect_vec Named numeric vector of effects (or `NULL`)
+#' @param effect_vec Named numeric vector of effects (or `NULL`); names must be
+#'   canonical `.effect_se()` keys
 #' @param conf.int,conf.level As in `.tidy_mediation_data()`
+#' @param path_alias `@vcov` row names for `path_vec`, when they differ from
+#'   `names(path_vec)` (serial d paths)
 #' @noRd
-.tidy_paths_effects <- function(x, path_vec, effect_vec, conf.int, conf.level) {
+.tidy_paths_effects <- function(x, path_vec, effect_vec, conf.int, conf.level,
+                                path_alias = names(path_vec)) {
   vc <- x@vcov
   # match() gives NA (not an error) for a path name missing from @vcov
-  path_se <- sqrt(diag(vc)[match(names(path_vec), rownames(vc))])
+  path_se <- sqrt(diag(vc)[match(path_alias, rownames(vc))])
+  effect_se <- if (length(effect_vec)) .effect_se_or_na(x, names(effect_vec)) else NULL
 
   result <- data.frame(
     term = c(names(path_vec), names(effect_vec)),
     estimate = unname(c(path_vec, effect_vec)),
-    std.error = unname(c(path_se, rep(NA_real_, length(effect_vec)))),
+    std.error = unname(c(path_se, effect_se)),
     stringsAsFactors = FALSE
   )
 

@@ -4,6 +4,9 @@
 # Every confint() number must survive the refactor unchanged, except the Simple
 # TE interval, which the old formula computed without Cov(ab, c') (GRILL D2).
 
+# Explicit binding so lintr's object_usage_linter sees the lazy-loaded data
+mediation_demo <- medfit::mediation_demo
+
 demo_formula <- function(lhs_rhs) {
   stats::as.formula(paste(lhs_rhs, "+ covariate1 + covariate2"))
 }
@@ -47,8 +50,8 @@ quiet_confint <- function(...) suppressWarnings(suppressMessages(confint(...)))
 
 # Pinned values are column-major: all lower bounds, then all upper bounds.
 expect_pinned_ci <- function(ci, rows, values) {
-  expect_identical(rownames(ci), rows)
-  expect_equal(as.vector(ci), values, tolerance = 1e-10)
+  expect_identical(rownames(ci), rows) # nolint: object_usage_linter.
+  expect_equal(as.vector(ci), values, tolerance = 1e-10) # nolint: object_usage_linter.
 }
 
 # ==============================================================================
@@ -134,7 +137,7 @@ expect_lavaan_oracle <- function(unlabeled, labeled, treatment, mediator,
   fit_l <- lavaan::sem(labeled, data = data)
   med <- extract_mediation(fit_u, treatment = treatment, mediator = mediator,
                            outcome = outcome)
-  expect_equal(
+  expect_equal( # nolint: object_usage_linter.
     unname(.effect_se(med, c("nie", "nde", "te"))),
     c(lavaan_defined_se(fit_l, "ind"), lavaan_defined_se(fit_l, "cp"),
       lavaan_defined_se(fit_l, "tot")),
@@ -365,4 +368,70 @@ test_that("Serial confint() validates its arguments", {
   expect_error(confint(med, parm = "components"), "parm")
   expect_error(confint(med, level = 2), "level")
   expect_error(confint(med, method = "boot"), "bootstrap_mediation")
+})
+
+# ==============================================================================
+# tidy() through the helper (T6)
+# ==============================================================================
+
+all_demo_objects <- function() {
+  list(simple = demo_simple(), serial = demo_serial(),
+       parallel = demo_parallel(), interaction = demo_interaction())
+}
+
+tidy_rows <- function(tt, terms) tt[match(terms, tt$term), , drop = FALSE]
+
+test_that("tidy() effect CIs equal confint(parm = 'effects') for all classes", {
+  objs <- all_demo_objects()
+  # confint() row names per class, in tidy()'s nie/nde/te order
+  ci_rows <- list(simple = c("nie", "nde", "te"), serial = c("nie", "nde", "te"),
+                  parallel = c("indirect", "direct", "total"),
+                  interaction = c("nie", "nde", "total"))
+  for (nm in names(objs)) {
+    tt <- tidy_rows(generics::tidy(objs[[nm]], conf.int = TRUE), c("nie", "nde", "te"))
+    ci <- quiet_confint(objs[[nm]], parm = "effects")[ci_rows[[nm]], , drop = FALSE]
+    expect_equal(tt$conf.low, unname(ci[, 1]), tolerance = 1e-12, info = nm)
+    expect_equal(tt$conf.high, unname(ci[, 2]), tolerance = 1e-12, info = nm)
+  }
+  comp <- c("cde", "int_ref", "int_med", "pie")
+  tt <- tidy_rows(generics::tidy(objs$interaction, conf.int = TRUE), comp)
+  ci <- quiet_confint(objs$interaction, parm = "components")
+  expect_equal(tt$conf.low, unname(ci[comp, 1]), tolerance = 1e-12)
+})
+
+test_that("tidy() is silent and reports numeric SEs for every row", {
+  for (obj in all_demo_objects()) {
+    expect_silent(tt <- generics::tidy(obj))
+    expect_silent(generics::tidy(obj, conf.int = TRUE))
+    expect_true(is.numeric(tt$std.error))
+    expect_false(anyNA(tt$std.error))
+    expect_false("pm" %in% tt$term)
+  }
+})
+
+test_that("tidy() serial path SEs use the vcov aliases", {
+  med <- serial3_lm()
+  tt <- generics::tidy(med, type = "paths")
+  expect_identical(tt$term, names(paths(med)))
+  expect_equal(tt$std.error,
+               unname(sqrt(diag(med@vcov)[c("a", "d1", "d2", "b", "c_prime")])),
+               tolerance = 1e-12)
+})
+
+test_that("tidy() gives SEs for lavaan-extracted MediationData", {
+  skip_if_not_installed("lavaan")
+  fit <- lavaan::sem(
+    "mediator1 ~ treatment + covariate1 + covariate2
+     outcome ~ treatment + mediator1 + covariate1 + covariate2",
+    data = mediation_demo
+  )
+  med <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
+                           outcome = "outcome")
+  tt <- generics::tidy(med)
+  expect_false(anyNA(tt$std.error))
+})
+
+test_that("glance() output is unchanged in shape", {
+  g <- generics::glance(demo_simple())
+  expect_named(g, c("nie", "nde", "te", "pm", "nobs", "converged"))
 })

@@ -24,6 +24,31 @@
 }
 
 
+#' Effect Standard Errors, or NA Where `@vcov` Lacks the Rows
+#'
+#' For descriptive output (`tidy()`): an object built by hand without the
+#' extractors' alias rows gets `NA` for an effect whose gradient refers to a
+#' missing row, matching how `tidy()` already treats path SEs. `confint()`
+#' calls `.effect_se()` instead, which errors.
+#'
+#' @inheritParams .effect_se
+#' @return Named numeric vector of standard errors (`NA` where unavailable).
+#' @keywords internal
+#' @noRd
+.effect_se_or_na <- function(x, terms) {
+  grads <- .effect_gradients(x)
+  checkmate::assert_subset(terms, names(grads), .var.name = "terms")
+  vc <- x@vcov
+  vapply(terms, function(k) {
+    g <- grads[[k]]
+    if (is.null(rownames(vc)) || !all(names(g) %in% rownames(vc))) {
+      return(NA_real_)
+    }
+    sqrt(.gradient_var(g, vc))
+  }, numeric(1))
+}
+
+
 #' Variance of a Linear Combination of Parameters
 #'
 #' `t(g) %*% Sigma %*% g` over the sub-block of `vc` named by `g`.
