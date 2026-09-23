@@ -94,11 +94,15 @@ glm_class <- S7::new_S3_class("glm")
 #'   mediator = "M"
 #' )
 #'
-#' # Serial chain X -> M1 -> M2 -> Y
-#' fit_m1 <- lm(M1 ~ X, data = data)
-#' fit_m2 <- lm(M2 ~ X + M1, data = data)
-#' # Keep M1 in the outcome model: if M1 also affects Y, dropping it biases b
-#' fit_y2 <- lm(Y ~ X + M1 + M2, data = data)
+#' # Serial chain X -> M1 -> M2 -> Y, with a direct M1 -> Y path
+#' M1 <- 0.5 * X + rnorm(n)
+#' M2 <- 0.2 * X + 0.5 * M1 + rnorm(n)
+#' Y2 <- 0.2 * X + 0.4 * M1 + 0.3 * M2 + rnorm(n)
+#' serial_data <- data.frame(X = X, M1 = M1, M2 = M2, Y = Y2)
+#' fit_m1 <- lm(M1 ~ X, data = serial_data)
+#' fit_m2 <- lm(M2 ~ X + M1, data = serial_data)
+#' # Keep M1 in the outcome model: M1 also affects Y, so dropping it biases b
+#' fit_y2 <- lm(Y ~ X + M1 + M2, data = serial_data)
 #' serial <- extract_mediation(
 #'   fit_m1,
 #'   model_y = fit_y2,
