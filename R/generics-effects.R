@@ -28,19 +28,12 @@
 #' \deqn{NIE = a \times d_{21} \times d_{32} \times \ldots \times b}
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #'
 #' nie(med_data)
@@ -69,19 +62,12 @@ nie <- S7::new_generic("nie", "x")
 #' where c' is the direct effect coefficient.
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #'
 #' nde(med_data)
@@ -106,19 +92,12 @@ nde <- S7::new_generic("nde", "x")
 #' \deqn{TE = NIE + NDE}
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #'
 #' te(med_data)
@@ -155,19 +134,12 @@ te <- S7::new_generic("te", "x")
 #' }
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #'
 #' pm(med_data)
@@ -204,19 +176,12 @@ pm <- S7::new_generic("pm", "x")
 #' }
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #'
 #' paths(med_data)
