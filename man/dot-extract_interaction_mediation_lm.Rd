@@ -16,7 +16,11 @@
 )
 }
 \arguments{
-\item{model_y}{Fitted lm/glm for the outcome (\code{Y ~ Mk + X + ...}).}
+\item{model_y}{Fitted lm/glm for the outcome. Only \code{Mk}'s coefficient is read
+as \code{b}, but the model should include \code{X} and every earlier mediator
+(\code{Y ~ X + M1 + ... + Mk + ...}); omitting an earlier mediator that also
+affects \code{Y} biases \code{b}. The serial indirect effect \code{a * d * b} is then the
+effect through the full chain only.}
 
 \item{treatment}{Character scalar: treatment variable name.}
 

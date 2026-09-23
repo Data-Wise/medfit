@@ -42,7 +42,8 @@ Paths are located in the lavaan parameter table by variable name:
 \itemize{
 \item \code{a}  : \code{M1 ~ X}
 \item \code{d_i}: \verb{M_\{i+1\} ~ M_i} for \verb{i = 1 .. k-1} (the \code{k - 1} inter-mediator paths)
-\item \code{b}  : \code{Y ~ Mk}
+\item \code{b}  : \code{Y ~ Mk} (the outcome equation should also include \code{X} and the
+earlier mediators \verb{M1 .. M(k-1)}; only the \code{Mk} coefficient is read as \code{b})
 \item \verb{c'} : \code{Y ~ X} (defaults to 0 with a warning if absent -- full mediation)
 }
 

@@ -379,3 +379,34 @@ test_that("extra covariates in a mediator equation are tolerated (M2 ~ M1 + X)",
   expect_equal(sm@d_path, unname(coef(f2_cov)["M1"]))
   expect_true("X" %in% sm@mediator_predictors[[2]])
 })
+
+test_that("serial b needs every mediator in the outcome model when M1 -> Y exists", {
+  # DGP with a direct M1 -> Y path: dropping M1 from the outcome model makes
+  # M1 an omitted common cause of M2 and Y, biasing b (the documented reason
+  # to fit Y ~ X + M1 + M2).
+  set.seed(2026)
+  n <- 5000
+  X  <- rnorm(n)
+  M1 <- 0.5 * X + rnorm(n)
+  M2 <- 0.2 * X + 0.5 * M1 + rnorm(n)
+  Y  <- 0.2 * X + 0.4 * M1 + 0.3 * M2 + rnorm(n)
+  d <- data.frame(X = X, M1 = M1, M2 = M2, Y = Y)
+
+  serial_b <- function(fy) {
+    extract_mediation(
+      lm(M1 ~ X, data = d), model_y = fy, treatment = "X",
+      mediator = c("M1", "M2"), mediator_models = list(lm(M2 ~ X + M1, data = d))
+    )
+  }
+  full <- serial_b(lm(Y ~ X + M1 + M2, data = d))
+  omit <- serial_b(lm(Y ~ X + M2, data = d))
+
+  expect_s3_class(full, "medfit::SerialMediationData")
+  expect_lt(abs(full@b_path - 0.3), 0.05)
+  expect_gt(omit@b_path - 0.3, 0.1)
+
+  skip_if_not_installed("lavaan")
+  sem_fit <- lavaan::sem("M1 ~ X\n M2 ~ X + M1\n Y ~ X + M1 + M2", data = d)
+  sem_serial <- extract_mediation(sem_fit, treatment = "X", mediator = c("M1", "M2"))
+  expect_equal(sem_serial@b_path, full@b_path, tolerance = 1e-6)
+})
