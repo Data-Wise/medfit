@@ -1,3 +1,16 @@
+# medfit (development version)
+
+## Bug fixes
+
+* `extract_mediation()` with two or more mediators (serial or parallel) now
+  errors when a model carries a product term involving the treatment or a
+  mediator, e.g. `X:M1` in the outcome model. Previously the multi-mediator
+  branch returned before any interaction check, so the product term was
+  ignored silently and main-effect paths were reported as if no interaction
+  existed. Applies to both the lm/glm and lavaan methods; for lavaan, a
+  product precomputed as a plain data column is recognized when named via
+  `interaction =`. Products among covariates alone are still allowed.
+
 # medfit 0.4.0
 
 ## New features
