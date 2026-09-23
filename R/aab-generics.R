@@ -42,19 +42,14 @@
 #'
 #' @examples
 #' \donttest{
-#' # Simulate data with a single mediator (X -> M -> Y)
-#' set.seed(123)
-#' n <- 200
-#' X <- rnorm(n)
-#' M <- 0.5 * X + rnorm(n)
-#' Y <- 0.3 * M + 0.2 * X + rnorm(n)
-#' dat <- data.frame(X = X, M = M, Y = Y)
-#'
-#' # Extract the mediation structure from fitted lm models
-#' fit_m <- lm(M ~ X, data = dat)
-#' fit_y <- lm(Y ~ X + M, data = dat)
+#' # Extract the mediation structure from fitted lm models, using the
+#' # simulated mediation_demo data bundled with medfit
+#' fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+#'             data = mediation_demo)
+#' fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'             data = mediation_demo)
 #' med_data <- extract_mediation(fit_m, model_y = fit_y,
-#'                               treatment = "X", mediator = "M")
+#'                               treatment = "treatment", mediator = "mediator1")
 #' }
 #'
 #' @seealso [MediationData], [fit_mediation()], [bootstrap_mediation()]
