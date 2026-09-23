@@ -309,7 +309,7 @@ Works the same for serial mediation:
 serial_med <- extract_mediation(
   fit_serial,
   treatment = "X",
-  mediators = c("M1", "M2"),
+  mediator = c("M1", "M2"),
   outcome = "Y"
 )
 
