@@ -637,7 +637,9 @@ S7::method(confint, InteractionMediationData) <- function(object,
 #'   `tidy()` uses)
 #' @noRd
 S7::method(coef, BootstrapResult) <- function(object, ...) {
-  c(estimate = object@estimate)
+  # unname(): a statistic_fn that returns a named value (e.g. theta["a"] *
+  # theta["b"]) leaves that name on @estimate, and c() would paste it on
+  c(estimate = unname(object@estimate))
 }
 
 

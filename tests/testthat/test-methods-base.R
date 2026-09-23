@@ -316,7 +316,20 @@ boot_fixture <- function(method = "parametric") {
 
 test_that("coef() on BootstrapResult returns the named point estimate", {
   r <- boot_fixture()
-  expect_identical(coef(r), c(estimate = r@estimate))
+  expect_identical(coef(r), c(estimate = unname(r@estimate)))
+})
+
+test_that("coef() on BootstrapResult keeps the term name for a named statistic", {
+  med <- extract_mediation(
+    lm(mediator1 ~ treatment, data = mediation_demo),
+    model_y = lm(outcome ~ treatment + mediator1, data = mediation_demo),
+    treatment = "treatment", mediator = "mediator1"
+  )
+  # No unname(): the product carries the name "a"
+  r <- bootstrap_mediation(function(t) t["a"] * t["b"], method = "plugin",
+                           mediation_data = med)
+  expect_named(coef(r), "estimate")
+  expect_equal(unname(coef(r)), unname(r@estimate))
 })
 
 test_that("confint() on BootstrapResult returns the stored interval by default", {
