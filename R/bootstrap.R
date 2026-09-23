@@ -19,7 +19,11 @@
 #'   - `"parametric"`: Sample from multivariate normal (fast, assumes normality)
 #'   - `"nonparametric"`: Resample data and refit (robust, slower)
 #'   - `"plugin"`: Point estimate only, no CI (fastest)
-#' @param mediation_data [MediationData] object (required for parametric/plugin)
+#' @param mediation_data A mediation data object (required for parametric/plugin):
+#'   [MediationData], [SerialMediationData], [ParallelMediationData], or
+#'   [InteractionMediationData]. `statistic_fn` receives its named `@estimates`
+#'   vector, which includes path aliases (e.g. `a`, `d1`, `b`, `c_prime` for a
+#'   serial chain; `a1`, `b1`, `a2`, `b2` for parallel mediators).
 #' @param data Data frame (required for nonparametric bootstrap)
 #' @param n_boot Integer: number of bootstrap samples (default: 1000)
 #' @param ci_level Numeric: confidence level between 0 and 1 (default: 0.95)
@@ -232,9 +236,7 @@ bootstrap_mediation <- function(statistic_fn,
   if (is.null(mediation_data)) {
     stop("mediation_data is required for parametric bootstrap", call. = FALSE)
   }
-  if (!S7::S7_inherits(mediation_data, MediationData)) {
-    stop("mediation_data must be a MediationData object", call. = FALSE)
-  }
+  .assert_param_mediation_data(mediation_data)
 
   # Check for MASS package
   if (!requireNamespace("MASS", quietly = TRUE)) {
@@ -403,9 +405,7 @@ bootstrap_mediation <- function(statistic_fn,
   if (is.null(mediation_data)) {
     stop("mediation_data is required for plugin method", call. = FALSE)
   }
-  if (!S7::S7_inherits(mediation_data, MediationData)) {
-    stop("mediation_data must be a MediationData object", call. = FALSE)
-  }
+  .assert_param_mediation_data(mediation_data)
 
   # Compute point estimate
   estimate <- statistic_fn(mediation_data@estimates)
@@ -421,6 +421,34 @@ bootstrap_mediation <- function(statistic_fn,
     method = "plugin",
     call = NULL
   )
+}
+
+
+#' Validate a Mediation Data Object for Parameter-Based Bootstrap
+#'
+#' @description
+#' The parametric and plugin methods only read `@estimates` and `@vcov`, which
+#' every mediation data class carries with matching names (including the path
+#' aliases such as `a`, `d1`, `b1`, `c_prime`). Accept any of them rather than
+#' only `MediationData`, which the other classes do not inherit from.
+#'
+#' @param x Object to check
+#'
+#' @return `x`, invisibly; errors if `x` is not a supported class
+#' @keywords internal
+#' @noRd
+.assert_param_mediation_data <- function(x) {
+  supported <- list(
+    MediationData, SerialMediationData,
+    ParallelMediationData, InteractionMediationData
+  )
+  ok <- any(vapply(supported, function(cls) S7::S7_inherits(x, cls), logical(1)))
+  if (!ok) {
+    stop("mediation_data must be a MediationData, SerialMediationData, ",
+         "ParallelMediationData, or InteractionMediationData object",
+         call. = FALSE)
+  }
+  invisible(x)
 }
 
 

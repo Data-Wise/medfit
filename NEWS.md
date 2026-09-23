@@ -9,6 +9,20 @@
   generating equations; the generating script is in `data-raw/`. The
   "Getting Started" article now uses it throughout.
 
+* `bootstrap_mediation(method = "parametric")` and `method = "plugin"` now
+  accept `SerialMediationData`, `ParallelMediationData`, and
+  `InteractionMediationData`, not only `MediationData`. Both methods read only
+  `@estimates` and `@vcov`, which every class carries with matching names, so
+  `statistic_fn` can use the path aliases directly (e.g. `a * d1 * b` for a
+  serial chain, `a1 * b1 + a2 * b2` for parallel mediators). Previously these
+  classes were rejected because they do not inherit from `MediationData`.
+
+* `BootstrapResult` gains `coef()` and `confint()` methods. `coef()` returns
+  `c(estimate = ...)`; `confint()` returns the stored percentile interval as a
+  1 x 2 matrix, recomputes it from the bootstrap distribution when a different
+  `level` is given, and returns `NA` with a warning for plugin results.
+  Previously both errored with "Can't get S7 properties with `$`".
+
 ## Bug fixes
 
 * `extract_mediation()` with two or more mediators (serial or parallel) now
