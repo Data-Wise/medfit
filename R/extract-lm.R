@@ -206,6 +206,10 @@ S7::method(extract_mediation, glm_class) <- function(
   # and there are >= 2 mediators, infer serial vs parallel from the mediator
   # models' predictors. Branch BEFORE the scalar-mediator assertion below.
   if (length(mediator) >= 2L) {
+    .stop_on_multimediator_products(
+      .find_product_terms(c(list(model_m), mediator_models, list(model_y)),
+                          c(treatment, mediator))
+    )
     if (structure == "auto") {
       if (is.null(mediator_models)) {
         stop(paste0(
@@ -446,6 +450,54 @@ S7::method(extract_mediation, glm_class) <- function(
     converged = converged,
     source_package = source_package
   )
+}
+
+
+#' Find product terms involving the treatment or a mediator
+#'
+#' Scans each model's `terms()` for interaction terms (order > 1) with at least
+#' one component in `vars`. Products among covariates alone are allowed.
+#' Returns `"<response>: <term>"` labels, or `character(0)` when none are found.
+#'
+#' @param models List of fitted lm/glm models (`NULL` entries are skipped).
+#' @param vars Character vector: treatment and mediator names.
+#' @keywords internal
+.find_product_terms <- function(models, vars) {
+  hits <- character(0)
+  for (mod in models) {
+    if (is.null(mod)) next
+    tt <- stats::terms(mod)
+    labs <- attr(tt, "term.labels")[attr(tt, "order") > 1L]
+    involved <- vapply(strsplit(labs, ":", fixed = TRUE),
+                       function(parts) any(parts %in% vars), logical(1))
+    if (any(involved)) {
+      resp <- deparse(stats::formula(mod)[[2L]])
+      hits <- c(hits, paste0(resp, ": ", labs[involved]))
+    }
+  }
+  unique(hits)
+}
+
+
+#' Error when a multi-mediator model carries product terms
+#'
+#' Serial and parallel extraction estimate main-effect paths only, so a
+#' product term involving the treatment or a mediator would otherwise be
+#' ignored silently. Shared by the lm/glm and lavaan engines.
+#'
+#' @param hits Character vector of offending terms (from
+#'   [.find_product_terms()] or [.find_product_terms_lavaan()]).
+#' @keywords internal
+.stop_on_multimediator_products <- function(hits) {
+  if (length(hits) == 0L) return(invisible(NULL))
+  stop(paste0(
+    "Multi-mediator (serial or parallel) extraction does not support product ",
+    "terms involving the treatment or a mediator; found product term(s): ",
+    paste(hits, collapse = ", "), ". These paths would be reported as main ",
+    "effects that ignore the interaction. Refit without the product term(s), ",
+    "or use a single mediator (whose X:M interaction is supported via the ",
+    "four-way decomposition)."
+  ), call. = FALSE)
 }
 
 

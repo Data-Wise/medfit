@@ -143,6 +143,9 @@ extract_mediation_lavaan <- function(object,
   # structure = "auto" (default), infer serial vs parallel from the single SEM's
   # regression rows (mirrors the lm/glm engine's `.classify_multimediator_*`).
   if (length(mediator) > 1L) {
+    .stop_on_multimediator_products(
+      .find_product_terms_lavaan(object, c(treatment, mediator), interaction)
+    )
     if (structure == "auto") {
       structure <- .classify_multimediator_structure_lavaan(object, mediator,
                                                             standardized)
@@ -922,6 +925,31 @@ extract_mediation_lavaan <- function(object,
     converged = converged,
     source_package = "lavaan"
   )
+}
+
+
+#' Find product regressors involving the treatment or a mediator in a lavaan fit
+#'
+#' Flags regression predictors written as `a:b` with a component in `vars`,
+#' plus any explicit `interaction` column name that appears as a predictor. A
+#' product precomputed as a plain data column (e.g. `XM`) is only recognized
+#' when named through `interaction`.
+#'
+#' @param object A fitted lavaan object.
+#' @param vars Character vector: treatment and mediator names.
+#' @param interaction Optional character: product column name(s).
+#' @keywords internal
+.find_product_terms_lavaan <- function(object, vars, interaction = NULL) {
+  pt <- tryCatch(lavaan::parameterTable(object), error = function(e) NULL)
+  if (is.null(pt)) return(character(0))
+  reg <- pt[pt$op == "~", , drop = FALSE]
+  is_prod <- vapply(strsplit(reg$rhs, ":", fixed = TRUE),
+                    function(parts) length(parts) > 1L && any(parts %in% vars),
+                    logical(1))
+  if (length(interaction)) is_prod <- is_prod | reg$rhs %in% interaction
+  # Return early: paste0() on zero-length vectors still yields ": ".
+  if (!any(is_prod)) return(character(0))
+  unique(paste0(reg$lhs[is_prod], ": ", reg$rhs[is_prod]))
 }
 
 
