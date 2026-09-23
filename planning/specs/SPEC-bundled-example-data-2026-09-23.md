@@ -7,7 +7,7 @@ mediationverse packages and identify gaps for the bppk" — confirmed "bppk" = m
 **Depends on:** nothing blocking; independent of the open 0.4.0 CRAN-submission decision in `.STATUS`.
 **Revised:** 2026-09-23 (medfit session) — corrected column count, vignette location, and the
 `R CMD check` rationale; added the `.Rbuildignore` and roxygen steps; design questions moved to §7.
-**Grill:** [GRILL-bundled-example-data-2026-09-23.md](GRILL-bundled-example-data-2026-09-23.md) resolves §7 and supersedes the §3 column table.
+**Grill:** [GRILL-bundled-example-data-2026-09-23.md](GRILL-bundled-example-data-2026-09-23.md) resolves §7 and supersedes the §3 column table; D9 records the adversarial-review corrections.
 
 ---
 
@@ -76,23 +76,29 @@ serves three of its vignettes.
 
 | Column | Role | Type | Used by |
 |---|---|---|---|
-| `treatment` | X | binary (0/1) | all four vignettes |
-| `mediator1` | M1 | continuous | getting-started, introduction, extraction (serial: `treatment -> mediator1`) |
-| `mediator2` | M2 | continuous | extraction (serial: `mediator1 -> mediator2`; parallel: `treatment -> mediator2` independently of M1) |
-| `moderator` | W | binary | extraction, interaction demos (`treatment * mediator1` term) |
-| `covariate1`, `covariate2` | C | continuous, binary | all four (covariate-adjusted fitting, the realistic case) |
-| `outcome` | Y | continuous | all four |
+| `treatment` | X | binary 0/1, randomized | all demos |
+| `mediator1` | M1 | continuous | simple, serial (first link), parallel, interaction |
+| `mediator2` | M2 | continuous; depends on treatment + mediator1 | serial (second link) |
+| `mediator3` | M3 | continuous; depends on treatment only | parallel (with mediator1) |
+| `covariate1`, `covariate2` | C | continuous, binary; mediator–outcome confounders | every demo adjusts for both (GRILL D3) |
+| `outcome` | Y | continuous; no product terms | simple, serial, parallel |
+| `outcome_int` | Y | continuous; `outcome` terms + treatment×mediator1 | interaction / four-way decomposition only |
+
+8 columns. The generating equations, the per-demo formulas and the known-answer targets are in the
+GRILL ledger (D2, D6, D9); the serial demo's outcome model includes mediator1 (GRILL D9-R1).
 
 Column names spelled out (`treatment`, not `X`) rather than single letters, matching this
 ecosystem's existing convention (`gesthtn`'s and `memory_exp`'s documented columns are named, not
 lettered) and making `formula_y = outcome ~ treatment + mediator1` self-explanatory in a vignette
 without a lookup table.
 
-**A plausible, clearly-fictional cover story**, generated once and reused: a workplace-training
-scenario (training assignment -> skill confidence -> job performance, with supervisor support as a
-second, parallel mediator, and tenure as a moderator of the confidence path). Chosen only for
-concreteness in prose and `\examples`; the `\source` field states outright that it is simulated for
-package demonstration and describes no real study, study population, or claim.
+**A plausible, clearly-fictional cover story** (GRILL D7), used only in prose: randomized
+assignment to a training program (`treatment`) raises skill confidence (`mediator1`), which builds
+task mastery (`mediator2`, serial); the assignment also triggers supervisor check-ins
+(`mediator3`, parallel); prior performance and full-time status are covariates; `outcome` is job
+performance, and `outcome_int` is the version where confidence pays off more for trained employees.
+The `\source` field states outright that the data is simulated for package demonstration and
+describes no real study, study population, or claim.
 
 **Naming:** `mediation_demo` — descriptive, and distinct from every existing name in the ecosystem
 (`gesthtn`, `heals_data`, `nhanes_pa`, `multilevel_designs`, `memory_exp`) so a user working across
@@ -106,7 +112,7 @@ depart from the more common `data-raw/` placement probmed and rmediation already
 
 1. **`data-raw/mediation_demo.R`** — create with `usethis::use_data_raw("mediation_demo")`, which
    also adds `^data-raw$` to `.Rbuildignore` (without it, `R CMD check` NOTEs a non-standard
-   top-level directory). Generation script: `set.seed()`, the DGP for all seven columns
+   top-level directory). Generation script: `set.seed()`, the DGP for all eight columns (GRILL D6)
    (confidence <- f(training, tenure, noise); performance <- f(training, confidence,
    support, covariates, noise); etc.), ending in `usethis::use_data(mediation_demo, overwrite =
    TRUE)`. Comment block at the top states plainly this is synthetic and documents the generating
@@ -114,11 +120,12 @@ depart from the more common `data-raw/` placement probmed and rmediation already
 2. **`data/mediation_demo.rda`** — built by running the script above; not hand-edited.
 3. **`R/data.R`** — roxygen block (`@docType data`, `@keywords datasets`, `@format`, `@source`,
    `@examples`) that `devtools::document()` turns into `man/mediation_demo.Rd`; medfit's `man/` is
-   roxygen-generated, so the `.Rd` is not hand-written. Content: full `\format` (all seven
+   roxygen-generated, so the `.Rd` is not hand-written. Content: full `\format` (all eight
    columns, types, ranges), `\source` stating "Simulated data for package demonstration; not drawn
-   from or representing any real study," and `\examples` showing `data(mediation_demo);
-   fit_mediation(outcome ~ treatment + mediator1, mediator1 ~ treatment, data = mediation_demo,
-   treatment = "treatment", mediator = "mediator1")`.
+   from or representing any real study," and `\examples` showing a covariate-adjusted fit (GRILL D3; this runs during `R CMD check`):
+   `fit_mediation(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+   mediator1 ~ treatment + covariate1 + covariate2, data = mediation_demo, treatment = "treatment",
+   mediator = "mediator1")`.
 4. **`DESCRIPTION`** — add `LazyData: true` (currently absent).
 5. **Articles** — replace at least `vignettes/articles/getting-started.qmd`'s inline `rnorm()`
    block with `data(mediation_demo)`; `introduction.qmd` and `extraction.qmd` follow once the base
@@ -143,8 +150,11 @@ directly on `dev`.
 
 ## 5. Acceptance criteria
 
-- `data(mediation_demo, package = "medfit")` loads a 250-row, 7-column data frame matching §3's
-  shape, reproducibly (`data-raw/mediation_demo.R` regenerates byte-identical output).
+- `data(mediation_demo, package = "medfit")` loads a 250-row, 8-column data frame matching the
+  GRILL ledger's column set. `data-raw/mediation_demo.R` regenerates `identical()` values under its
+  recorded `RNGkind()`, seed and R version (GRILL D4/D9-R4); byte identity is not required.
+- A known-answer test checks each demo's fitted paths against the per-demo reduced-form targets in
+  GRILL D9-R2, not against the structural DGP coefficients.
 - `man/mediation_demo.Rd` passes `R CMD check --as-cran` with no dataset-documentation NOTE (the
   same `\docType{data}`/`\keyword{datasets}`/`\format`/`\source` shape medrobust and rmediation
   already pass CRAN with).
@@ -166,16 +176,9 @@ directly on `dev`.
 
 Both already have their own sessions working on them as of 2026-09-23.
 
-## 7. Open questions (decide before implementation)
+## 7. Open questions — resolved
 
-1. **What is `moderator` for?** §3 lists it for the `treatment * mediator1` term, but that is a
-   treatment-by-mediator interaction (what medfit's four-way decomposition and
-   `InteractionMediationData` use) and needs no separate column. The cover story instead has tenure
-   moderating the treatment -> confidence path, which is a moderated-mediation model medfit does not
-   currently fit. Options: drop `moderator` and generate a real `treatment:mediator1` effect in the
-   outcome equation; keep it for a future moderated-path feature; or both.
-2. **Serial or parallel?** One DGP can make only one mediator structure true. If `mediator1` causes
-   `mediator2`, the serial demo is correctly specified and a parallel fit is misspecified; if
-   `mediator2` depends only on `treatment`, the reverse holds. Options: pick one structure as true
-   and say so in `\source`; or generate two columns (e.g. `mediator2_serial`, `mediator2_parallel`)
-   so both demos are correctly specified.
+Both questions are answered in [GRILL-bundled-example-data-2026-09-23.md](GRILL-bundled-example-data-2026-09-23.md):
+the `moderator` column is dropped in favor of `outcome_int` (D1), and the serial/parallel
+conflict is resolved by making `mediator2` serial and adding a parallel `mediator3` (D2, corrected
+by D9-R1).
