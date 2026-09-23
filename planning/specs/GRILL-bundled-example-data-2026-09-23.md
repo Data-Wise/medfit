@@ -151,7 +151,7 @@ compares against these plims (simulation, n = 2×10⁶):
 The a and d paths (the mediator equations) are structural in every demo. The four-way components
 of the interaction demo are therefore built from these reduced-form θ1/θ2 (for example
 PIE = θ2·β1 = 0.275), and the test targets them, not structural values. The test file records
-both sets, with a comment explaining why they differ. At n = 250 a 3-SE window (~0.18 for b) is
+both sets, with a comment explaining why they differ. At n = 250 (now 400, D10) a 3-SE window (~0.18 for b; ~0.14 at 400) is
 wider than the 0.15–0.25 structural-vs-reduced-form gaps, so testing against structural values
 would pass a mislabeled estimand.
 
@@ -178,6 +178,19 @@ formulas. Treatment must be numeric 0/1, which D6 satisfies.
 **Rejected finding:** "the @examples claim is 9 files, not 10" — 10 `R/*.R` files have `rnorm()`
 inside `@examples` (recounted).
 
+### D10 — sample size n = 400 (2026-09-23)
+
+**Decision:** `mediation_demo` has **n = 400** rows, not the spec's original 250.
+**Why:** standard errors shrink by √(250/400) ≈ 0.79. The weakest named paths (a, a3, θ3) move
+from t ≈ 4 to t ≈ 5, so the D6/D9-R3 floor (|est/SE| ≥ 3) passes on most seeds and D9-R4 retries
+become rare. The 3-SE known-answer window for b narrows from ~0.18 to ~0.14. The D9-R2
+reduced-form targets are probability limits and do not change with n.
+**Effect on D9-R3:** the exempt covariate paths rise (covariate2 → mediator1 t ≈ 3.0,
+treatment → mediator2 t ≈ 1.9) but stay exempt from the floor. The floor still covers named paths only.
+**Rejected:** n = 250 (thin floor margins, retries near-certain); larger n (≥ 1000) makes
+every CI tiny, so demos can no longer show realistic uncertainty. Data size stays trivial at
+400 × 8.
+
 ## Resulting column set (supersedes spec §3 table)
 
 `treatment` (binary, randomized) · `mediator1` · `mediator2` (serial child of `mediator1`) ·
@@ -188,8 +201,6 @@ inside `@examples` (recounted).
 
 - **Spec §3–§5** still describe the old 7-column shape; update them from this ledger when
   implementation starts.
-- **n = 250 vs 400:** R4's thin floor margins (a-path t ≈ 4) would widen at n ≈ 400 (t ≈ 5), making
-  seed retries rare. Changes the spec's stated n; not decided.
 - **Out of scope, flagged:** a dead `fit_mediation()` stub at `R/aab-generics.R:169`
   (`stop("not yet implemented")`) loses to `R/fit-glm.R:132` only through alphabetical load order
   (no `Collate`). *(Resolved: the `.Rbuildignore` NEWS exclusion and the duplicate `.code-workspace`

@@ -72,7 +72,7 @@ fine for a one-off demo but means:
 running example instead of four disconnected toy scenarios, mirroring how medrobust's `gesthtn`
 serves three of its vignettes.
 
-**Shape** (synthetic; n = 250, one row per unit):
+**Shape** (synthetic; n = 400, one row per unit; GRILL D10):
 
 | Column | Role | Type | Used by |
 |---|---|---|---|
@@ -150,7 +150,7 @@ directly on `dev`.
 
 ## 5. Acceptance criteria
 
-- `data(mediation_demo, package = "medfit")` loads a 250-row, 8-column data frame matching the
+- `data(mediation_demo, package = "medfit")` loads a 400-row, 8-column data frame matching the
   GRILL ledger's column set. `data-raw/mediation_demo.R` regenerates `identical()` values under its
   recorded `RNGkind()`, seed and R version (GRILL D4/D9-R4); byte identity is not required.
 - A known-answer test checks each demo's fitted paths against the per-demo reduced-form targets in
