@@ -261,6 +261,62 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
 }
 
 
+#' Confidence Intervals for SerialMediationData
+#'
+#' @description
+#' Normal-approximation confidence intervals for the chain's path coefficients
+#' or for the serial effects. Effect standard errors use the delta method over
+#' the full `@vcov` (see [bootstrap_mediation()] for a bootstrap alternative).
+#' For an lm/glm chain the equations are estimated separately, so `@vcov` has
+#' zero covariances between equations.
+#'
+#' @param object A SerialMediationData object.
+#' @param parm `"paths"` (a, the d paths as named by [paths()], b, c') or
+#'   `"effects"` (nie, nde, te).
+#' @param level Confidence level (default 0.95).
+#' @param method `"normal"` (default) or `"boot"` (directs the user to
+#'   [bootstrap_mediation()]).
+#' @param ... Additional arguments (ignored).
+#' @return A numeric matrix with lower/upper columns and one row per parameter.
+#' @noRd
+S7::method(confint, SerialMediationData) <- function(object,
+                                                     parm = "paths",
+                                                     level = 0.95,
+                                                     method = c("normal", "boot"),
+                                                     ...) {
+  method <- match.arg(method)
+  if (identical(method, "boot")) {
+    stop("Bootstrap CIs are computed via bootstrap_mediation(); ",
+         "call it directly with the desired statistic.", call. = FALSE)
+  }
+  checkmate::assert_choice(parm, c("paths", "effects"), .var.name = "parm")
+  checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
+
+  if (identical(parm, "paths")) {
+    coefs <- paths(object)            # a, d (or d21, d32, ...), b, c_prime
+    # paths() names the d paths by mediator pair; @vcov aliases them d1..dk
+    alias <- c("a", paste0("d", seq_along(object@d_path)), "b", "c_prime")
+    se <- sqrt(diag(object@vcov)[alias])
+  } else {
+    warning("Normal approximation for NIE may be inaccurate. ",
+            "Consider bootstrap_mediation() for robust inference.", call. = FALSE)
+    coefs <- c(nie = unname(nie(object)), nde = unname(nde(object)),
+               te = unname(te(object)))
+    se <- .effect_se(object, c("nie", "nde", "te"))
+  }
+
+  alpha <- 1 - level
+  z <- stats::qnorm(1 - alpha / 2)
+  ci_mat <- cbind(coefs - z * se, coefs + z * se)
+  rownames(ci_mat) <- names(coefs)
+  colnames(ci_mat) <- c(
+    paste0(format(100 * alpha / 2, digits = 3), " %"),
+    paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
+  )
+  ci_mat
+}
+
+
 #' Number of Observations from MediationData
 #'
 #' @description

@@ -309,3 +309,60 @@ test_that("confint(parm = 'effects') works for lavaan-extracted MediationData", 
   expect_equal(ci_half_width_se(ci), unname(.effect_se(med, c("nie", "nde", "te"))),
                tolerance = 1e-12)
 })
+
+# ==============================================================================
+# confint() for SerialMediationData (T5)
+# ==============================================================================
+
+demo_serial <- function() {
+  extract_mediation(
+    lm(demo_formula("mediator1 ~ treatment"), data = mediation_demo),
+    model_y = lm(demo_formula("outcome ~ treatment + mediator1 + mediator2"),
+                 data = mediation_demo),
+    treatment = "treatment", mediator = c("mediator1", "mediator2"),
+    mediator_models = list(lm(demo_formula("mediator2 ~ treatment + mediator1"),
+                              data = mediation_demo))
+  )
+}
+
+serial3_lm <- function() {
+  d <- serial3_data()
+  extract_mediation(
+    lm(M1 ~ X, data = d), model_y = lm(Y ~ X + M1 + M2 + M3, data = d),
+    treatment = "X", mediator = c("M1", "M2", "M3"),
+    mediator_models = list(lm(M2 ~ X + M1, data = d), lm(M3 ~ X + M1 + M2, data = d))
+  )
+}
+
+test_that("Serial confint() paths use paths() names and the alias SEs", {
+  for (med in list(demo_serial(), serial3_lm())) {
+    ci <- confint(med)
+    k <- length(med@d_path)
+    expect_identical(rownames(ci), names(paths(med)))
+    alias <- c("a", paste0("d", seq_len(k)), "b", "c_prime")
+    expect_equal(ci_half_width_se(ci), unname(sqrt(diag(med@vcov)[alias])),
+                 tolerance = 1e-12)
+    expect_equal(unname(rowMeans(ci)), unname(paths(med)), tolerance = 1e-12)
+  }
+  expect_identical(rownames(confint(serial3_lm()))[2:3], c("d21", "d32"))
+})
+
+test_that("Serial confint() effects equal estimate +/- z * helper SE", {
+  for (med in list(demo_serial(), serial3_lm())) {
+    expect_warning(ci <- confint(med, parm = "effects", level = 0.90),
+                   "Normal approximation")
+    expect_identical(rownames(ci), c("nie", "nde", "te"))
+    est <- c(unname(nie(med)), unname(nde(med)), unname(te(med)))
+    half <- stats::qnorm(0.95) * unname(.effect_se(med, c("nie", "nde", "te")))
+    expect_equal(unname(ci[, 1]), est - half, tolerance = 1e-12)
+    expect_equal(unname(ci[, 2]), est + half, tolerance = 1e-12)
+    expect_identical(colnames(ci), c("5 %", "95 %"))
+  }
+})
+
+test_that("Serial confint() validates its arguments", {
+  med <- demo_serial()
+  expect_error(confint(med, parm = "components"), "parm")
+  expect_error(confint(med, level = 2), "level")
+  expect_error(confint(med, method = "boot"), "bootstrap_mediation")
+})
