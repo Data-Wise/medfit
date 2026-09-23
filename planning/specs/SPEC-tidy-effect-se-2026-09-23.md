@@ -39,9 +39,11 @@ scan, GRILL D7).
    `d`); each existing `confint()` keeps its row names (Parallel `indirect`/`direct`/`total`,
    Interaction `nde`/`nie`/`total` and the four components). The helper works on canonical keys
    and each caller maps them. Renaming rows would be a breaking change outside D1–D7.
-2. **Serial `confint()` row names** follow the Simple method: `parm = "paths"` → `a`, `d` (or
-   `d1..dk` for 3+ mediators, matching `tidy()`), `b`, `c_prime`; `parm = "effects"` → `nie`,
-   `nde`, `te`.
+2. **Serial `confint()` row names** follow the Simple method: `parm = "paths"` → the names
+   `paths()` and `tidy()` use (`a`, `d`, `b`, `c_prime`; for 3+ mediators the d paths are named
+   by mediator pair, `d21`, `d32`, ...), while their SEs come from the `@vcov` aliases `d1..dk`
+   by position; `parm = "effects"` → `nie`, `nde`, `te`. (Corrected during T5: the approved
+   text said `d1..dk` for the row names.)
 3. **Interaction reuses its existing gradients.** `confint(<InteractionMediationData>)` already
    builds component gradients (and uses the regmedint engine's stored `vcov` for components). The
    refactor moves that gradient construction behind the helper without changing its numbers; a

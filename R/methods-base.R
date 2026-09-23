@@ -234,46 +234,11 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
     }
     names(se) <- names(coefs)
   } else if (identical(parm, "effects")) {
-    # For effects (nie, nde, te), we need delta method or bootstrap
-    # For now, provide warning and use simple approximation for NDE only
-    coefs <- coef(object, type = "effects")
-
-    # NDE = c' has straightforward SE
-    # NIE = a*b requires delta method
-    # For simplicity, only provide normal CI for NDE, warn about NIE
+    coefs <- coef(object, type = "effects")      # nie, nde, te
     warning("Normal approximation for NIE may be inaccurate. ",
             "Consider bootstrap_mediation() for robust inference.", call. = FALSE)
-
-    # Use delta method for NIE: Var(a*b) ≈ b²*Var(a) + a²*Var(b) + 2ab*Cov(a,b)
-    vcov_mat <- object@vcov
-    param_names <- names(object@estimates)
-
-    a_idx <- grep(paste0("^m_", object@treatment, "$"), param_names)
-    b_idx <- grep(paste0("^y_", object@mediator, "$"), param_names)
-    cp_idx <- grep(paste0("^y_", object@treatment, "$"), param_names)
-
-    if (length(a_idx) > 0 && length(b_idx) > 0 && length(cp_idx) > 0) {
-      var_a <- vcov_mat[a_idx[1], a_idx[1]]
-      var_b <- vcov_mat[b_idx[1], b_idx[1]]
-      var_cp <- vcov_mat[cp_idx[1], cp_idx[1]]
-      # Cov(a, b) is typically 0 for separate models
-      cov_ab <- 0
-
-      a <- object@a_path
-      b <- object@b_path
-
-      # Delta method variance for a*b
-      var_nie <- b^2 * var_a + a^2 * var_b + 2 * a * b * cov_ab
-      se_nie <- sqrt(var_nie)
-      se_nde <- sqrt(var_cp)
-      # TE = NIE + NDE, assuming independence: Var(TE) = Var(NIE) + Var(NDE)
-      se_te <- sqrt(var_nie + var_cp)
-
-      se <- c(nie = se_nie, nde = se_nde, te = se_te)
-    } else {
-      stop("Could not compute SEs for effects. Use bootstrap_mediation() instead.",
-           call. = FALSE)
-    }
+    # Delta method over the full vcov, including Cov(a, b) and Cov(ab, c')
+    se <- .effect_se(object, c("nie", "nde", "te"))
   } else {
     stop("parm must be 'paths', 'effects', or specific parameter names", call. = FALSE)
   }
@@ -292,6 +257,62 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
     paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
   )
 
+  ci_mat
+}
+
+
+#' Confidence Intervals for SerialMediationData
+#'
+#' @description
+#' Normal-approximation confidence intervals for the chain's path coefficients
+#' or for the serial effects. Effect standard errors use the delta method over
+#' the full `@vcov` (see [bootstrap_mediation()] for a bootstrap alternative).
+#' For an lm/glm chain the equations are estimated separately, so `@vcov` has
+#' zero covariances between equations.
+#'
+#' @param object A SerialMediationData object.
+#' @param parm `"paths"` (a, the d paths as named by [paths()], b, c') or
+#'   `"effects"` (nie, nde, te).
+#' @param level Confidence level (default 0.95).
+#' @param method `"normal"` (default) or `"boot"` (directs the user to
+#'   [bootstrap_mediation()]).
+#' @param ... Additional arguments (ignored).
+#' @return A numeric matrix with lower/upper columns and one row per parameter.
+#' @noRd
+S7::method(confint, SerialMediationData) <- function(object,
+                                                     parm = "paths",
+                                                     level = 0.95,
+                                                     method = c("normal", "boot"),
+                                                     ...) {
+  method <- match.arg(method)
+  if (identical(method, "boot")) {
+    stop("Bootstrap CIs are computed via bootstrap_mediation(); ",
+         "call it directly with the desired statistic.", call. = FALSE)
+  }
+  checkmate::assert_choice(parm, c("paths", "effects"), .var.name = "parm")
+  checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
+
+  if (identical(parm, "paths")) {
+    coefs <- paths(object)            # a, d (or d21, d32, ...), b, c_prime
+    # paths() names the d paths by mediator pair; @vcov aliases them d1..dk
+    alias <- c("a", paste0("d", seq_along(object@d_path)), "b", "c_prime")
+    se <- sqrt(diag(object@vcov)[alias])
+  } else {
+    warning("Normal approximation for NIE may be inaccurate. ",
+            "Consider bootstrap_mediation() for robust inference.", call. = FALSE)
+    coefs <- c(nie = unname(nie(object)), nde = unname(nde(object)),
+               te = unname(te(object)))
+    se <- .effect_se(object, c("nie", "nde", "te"))
+  }
+
+  alpha <- 1 - level
+  z <- stats::qnorm(1 - alpha / 2)
+  ci_mat <- cbind(coefs - z * se, coefs + z * se)
+  rownames(ci_mat) <- names(coefs)
+  colnames(ci_mat) <- c(
+    paste0(format(100 * alpha / 2, digits = 3), " %"),
+    paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
+  )
   ci_mat
 }
 
@@ -411,9 +432,6 @@ S7::method(confint, ParallelMediationData) <- function(object,
   checkmate::assert_number(level, lower = 0, upper = 1)
 
   vc <- object@vcov
-  k <- length(object@mediators)
-  # Interleaved alias order a1, b1, ..., ak, bk (matches the extractor / paths()).
-  ab_idx <- as.vector(rbind(paste0("a", seq_len(k)), paste0("b", seq_len(k))))
 
   alpha <- 1 - level
   z <- stats::qnorm(1 - alpha / 2)
@@ -426,18 +444,8 @@ S7::method(confint, ParallelMediationData) <- function(object,
             "inaccurate; consider bootstrap_mediation() for robust inference.",
             call. = FALSE)
 
-    a <- object@a_paths
-    b <- object@b_paths
-    # Gradient of nie = sum(a_j b_j): d/da_j = b_j, d/db_j = a_j, aligned to ab_idx.
-    g <- as.vector(rbind(b, a))
-    sigma_ab <- vc[ab_idx, ab_idx, drop = FALSE]
-    var_nie <- as.numeric(t(g) %*% sigma_ab %*% g)
-    var_nde <- vc["c_prime", "c_prime"]
-    cov_nie_cp <- sum(g * vc[ab_idx, "c_prime"])
-    var_te <- var_nie + var_nde + 2 * cov_nie_cp
-
     coefs <- coef(object, type = "effects")      # indirect, direct, total
-    se <- c(sqrt(var_nie), sqrt(var_nde), sqrt(var_te))
+    se <- .effect_se(object, c("nie", "nde", "te"))
     names(se) <- names(coefs)
   } else {
     stop("`parm` must be 'paths' or 'effects'.", call. = FALSE)
@@ -537,81 +545,19 @@ S7::method(confint, InteractionMediationData) <- function(object,
   alpha <- 1 - level
   z <- stats::qnorm(1 - alpha / 2)
 
-  comp_names <- c("cde", "int_ref", "int_med", "pie", "nde", "nie", "total_effect")
   if (parm == "paths") {
     coefs <- paths(object)            # a, b, c_prime, theta3
     se <- sqrt(diag(vc)[names(coefs)])
-  } else if (all(comp_names %in% rownames(vc))) {
-    # Engine-supplied component covariance (e.g. the regmedint engine stores
-    # its own delta-method block); use it directly instead of re-deriving
-    # gradients under the Gaussian-outcome formulas.
-    if (parm == "components") {
-      coefs <- c(cde = object@cde, int_ref = object@int_ref,
-                 int_med = object@int_med, pie = object@pie)
-      se <- sqrt(diag(vc)[c("cde", "int_ref", "int_med", "pie")])
-    } else {
-      coefs <- c(nde = object@nde, nie = object@nie, total = object@total_effect)
-      se <- sqrt(diag(vc)[c("nde", "nie", "total_effect")])
-    }
-    message("Normal (delta-method) approximation for four-way components; ",
-            "consider bootstrap_mediation() for robust inference.")
   } else {
-    # --- Delta-method gradients (named over @vcov parameters) ---
-    # Variance of a linear combination g of the parameters is
-    # t(g) %*% Sigma %*% g over the sub-block Sigma = vc[names(g), names(g)].
-    gvar <- function(g) {
-      nm <- names(g)
-      as.numeric(t(g) %*% vc[nm, nm, drop = FALSE] %*% g)
-    }
-    # Combine named gradients by aligning on parameter names (for aggregates).
-    addg <- function(...) {
-      gs <- list(...)
-      allnm <- unique(unlist(lapply(gs, names)))
-      out <- stats::setNames(numeric(length(allnm)), allnm)
-      for (g in gs) out[names(g)] <- out[names(g)] + g
-      out
-    }
-
-    a <- object@a_path          # beta1
-    b <- object@b_path          # theta2
-    t3 <- object@interaction    # theta3
-    m_star <- object@m_star
-
-    # Reference deviation (E[M | X = 0] minus m_star) and its covariate gradient.
-    beta0 <- if ("b0" %in% rownames(vc)) unname(object@estimates[["b0"]]) else 0
-    m_ref <- beta0
-    cov_grad <- numeric(0)
-    m_covs <- setdiff(object@mediator_predictors, object@treatment)
-    if (length(m_covs) > 0 && !is.null(object@data)) {
-      for (cv in m_covs) {
-        pn <- paste0("m_", cv)
-        if (cv %in% names(object@data) && is.numeric(object@data[[cv]]) &&
-              pn %in% rownames(vc)) {
-          cm <- mean(object@data[[cv]], na.rm = TRUE)
-          m_ref <- m_ref + unname(object@estimates[[pn]]) * cm
-          cov_grad[pn] <- t3 * cm
-        }
-      }
-    }
-    ref_dev <- m_ref - m_star
-
-    g_cde <- c(c_prime = 1, theta3 = m_star)
-    g_intmed <- c(theta3 = a, a = t3)
-    g_pie <- c(b = a, a = b)
-    g_intref <- c(theta3 = ref_dev)
-    if ("b0" %in% rownames(vc)) g_intref["b0"] <- t3
-    if (length(cov_grad)) g_intref <- addg(g_intref, cov_grad)
-
+    # Delta method via the shared helper: engine-stored component rows (the
+    # regmedint engine) or Gaussian-outcome gradients (the glm engine)
     if (parm == "components") {
       coefs <- c(cde = object@cde, int_ref = object@int_ref,
                  int_med = object@int_med, pie = object@pie)
-      se <- c(sqrt(gvar(g_cde)), sqrt(gvar(g_intref)),
-              sqrt(gvar(g_intmed)), sqrt(gvar(g_pie)))
+      se <- .effect_se(object, c("cde", "int_ref", "int_med", "pie"))
     } else {
       coefs <- c(nde = object@nde, nie = object@nie, total = object@total_effect)
-      se <- c(sqrt(gvar(addg(g_cde, g_intref))),
-              sqrt(gvar(addg(g_intmed, g_pie))),
-              sqrt(gvar(addg(g_cde, g_intref, g_intmed, g_pie))))
+      se <- .effect_se(object, c("nde", "nie", "te"))
     }
     message("Normal (delta-method) approximation for four-way components; ",
             "consider bootstrap_mediation() for robust inference.")

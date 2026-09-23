@@ -196,7 +196,7 @@ test_that("tidy() for SerialMediationData with type='paths'", {
 })
 
 
-test_that("tidy() for SerialMediationData warns about conf.int", {
+test_that("tidy() for SerialMediationData gives NA CIs, silently, without vcov aliases", {
   serial_data <- SerialMediationData(
     a_path = 0.5,
     d_path = 0.4,
@@ -217,10 +217,11 @@ test_that("tidy() for SerialMediationData warns about conf.int", {
     source_package = "test"
   )
 
-  expect_warning(
-    generics::tidy(serial_data, conf.int = TRUE),
-    "bootstrap"
-  )
+  # This hand-built object has an unnamed vcov (no alias rows), so no SE can
+  # be located: tidy() reports NA instead of erroring, and no longer warns
+  expect_silent(td <- generics::tidy(serial_data, conf.int = TRUE))
+  expect_true(all(is.na(td$std.error)))
+  expect_true(all(is.na(td$conf.low)))
 })
 
 
@@ -454,9 +455,9 @@ test_that("tidy() works for ParallelMediationData", {
   expect_identical(td$term, c("a1", "b1", "a2", "b2", "c_prime", "nie", "nde", "te"))
   expect_equal(td$estimate[1:5], unname(paths(p)))
   expect_equal(td$estimate[td$term == "nie"], sum(p@a_paths * p@b_paths))
-  # Path SEs come from the vcov diagonal (aliases); effects are NA
+  # Path SEs come from the vcov diagonal (aliases); effects use the delta method
   expect_equal(td$std.error[1:5], unname(sqrt(diag(p@vcov)[names(paths(p))])))
-  expect_true(all(is.na(td$std.error[6:8])))
+  expect_equal(td$std.error[6:8], unname(.effect_se(p, c("nie", "nde", "te"))))
 
   expect_identical(generics::tidy(p, type = "paths")$term,
                    c("a1", "b1", "a2", "b2", "c_prime"))
@@ -492,7 +493,9 @@ test_that("tidy() works for InteractionMediationData", {
   expect_equal(sum(td$estimate[td$term %in% c("cde", "int_ref", "int_med", "pie")]),
                as.numeric(te(imd)))
   expect_equal(td$std.error[1:4], unname(sqrt(diag(imd@vcov)[names(paths(imd))])))
-  expect_true(all(is.na(td$std.error[5:11])))
+  expect_equal(td$std.error[5:11],
+               unname(.effect_se(imd, c("cde", "int_ref", "int_med", "pie",
+                                        "nie", "nde", "te"))))
 
   expect_identical(generics::tidy(imd, type = "components")$term,
                    c("cde", "int_ref", "int_med", "pie"))

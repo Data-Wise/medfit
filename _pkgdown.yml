@@ -132,6 +132,7 @@ reference:
   - title: "Methods"
     desc: "Print and summary methods for medfit classes"
     contents:
+      - tidy.S7_object
       - starts_with("print")
 
 development:
