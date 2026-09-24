@@ -734,16 +734,6 @@ S7::method(extract_mediation, glm_class) <- function(
     data <- tryCatch(stats::model.frame(model_m), error = function(e) NULL)
   }
 
-  # A caller-supplied data frame (fit_mediation() passes the raw data) is not a
-  # model frame; record the mediator model's design so the delta-method
-  # gradients can rebuild factor dummies and transformed columns from @data.
-  # (A "terms" attribute would make model.matrix() read it as a model frame.)
-  if (!is.null(data) && is.null(attr(data, "terms"))) {
-    attr(data, "medfit_design") <- list(terms = stats::terms(model_m),
-                                        contrasts = model_m$contrasts,
-                                        xlevels = model_m$xlevels)
-  }
-
   # --- Reference prediction E[M | X = 0]: covariates at their sample means ---
   # Means are over the mediator model's design columns, so factor dummies
   # (e.g. Gb, Gc) and transformed terms (e.g. log(C)) are included.
@@ -754,6 +744,10 @@ S7::method(extract_mediation, glm_class) <- function(
   for (cv in m_covs) {
     m_ref <- m_ref + unname(coef_m[[cv]]) * c_bar[[cv]]
   }
+  # Keep the exact means with @data so the delta-method gradients reuse them:
+  # caller-supplied data (fit_mediation() passes the raw data) is not a model
+  # frame and may hold rows the mediator model did not use.
+  if (!is.null(data)) attr(data, "medfit_covariate_means") <- c_bar
 
   # --- Four-way components (continuous Y, M; binary X) ---
   cde     <- theta1 + theta3 * m_star
@@ -829,10 +823,10 @@ S7::method(extract_mediation, glm_class) <- function(
 #' Covariate means for the reference mediator mean (four-way decomposition)
 #'
 #' Sample means of the mediator model's covariate design columns: from `mm`
-#' when given (the extractor passes `model.matrix(model_m)`), else rebuilt
-#' from `dat` -- a model frame via its `terms` attribute, or caller data via
-#' the `medfit_design` attribute the extractor attaches -- else plain numeric
-#' columns of `dat` (e.g. the lavaan data matrix). Uses [mean()] per column so
+#' when given (the extractor passes `model.matrix(model_m)`), else the means
+#' the extractor stored on `dat` (attribute `medfit_covariate_means`), else
+#' rebuilt from a model frame's `terms` attribute, else plain numeric columns
+#' of `dat` (e.g. the lavaan data matrix). Uses [mean()] per column so
 #' numeric-covariate results match the column means exactly.
 #'
 #' @param dat Data frame (the object's `@data`), or `NULL`.
@@ -846,8 +840,11 @@ S7::method(extract_mediation, glm_class) <- function(
   col_means <- function(get) {
     stats::setNames(vapply(covs, get, numeric(1), USE.NAMES = FALSE), covs)
   }
-  if (is.null(mm) && !is.null(dat)) {
-    mm <- .interaction_design_matrix(dat)
+  stored <- attr(dat, "medfit_covariate_means")
+  if (is.null(mm) && all(covs %in% names(stored))) return(stored[covs])
+  if (is.null(mm) && !is.null(attr(dat, "terms"))) {
+    mm <- tryCatch(stats::model.matrix(attr(dat, "terms"), dat),
+                   error = function(e) NULL)
   }
   if (!is.null(mm) && all(covs %in% colnames(mm))) {
     return(col_means(function(cv) mean(mm[, cv])))
@@ -858,23 +855,6 @@ S7::method(extract_mediation, glm_class) <- function(
   }
   stop("Cannot compute the covariate means for E[M | X = 0] (four-way ",
        "decomposition) for: ", paste(covs, collapse = ", "), ".", call. = FALSE)
-}
-
-
-# Rebuild the mediator model's design matrix from an object's @data: a model
-# frame carries "terms"; caller data carries the "medfit_design" attribute set
-# by .extract_interaction_mediation_lm(). NULL when neither is available.
-.interaction_design_matrix <- function(dat) {
-  tryCatch({
-    if (!is.null(attr(dat, "terms"))) {
-      stats::model.matrix(attr(dat, "terms"), dat)
-    } else if (!is.null(des <- attr(dat, "medfit_design"))) {
-      mf <- stats::model.frame(des$terms, as.data.frame(dat), xlev = des$xlevels)
-      stats::model.matrix(des$terms, mf, contrasts.arg = des$contrasts)
-    } else {
-      NULL
-    }
-  }, error = function(e) NULL)
 }
 
 

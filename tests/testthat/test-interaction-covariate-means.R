@@ -206,3 +206,16 @@ test_that("a poly() covariate works with and without caller-supplied data", {
   expect_equal(medfit:::.effect_se(o_fit, keys), medfit:::.effect_se(o_lm, keys),
                tolerance = 1e-8)
 })
+
+test_that("SEs use the estimation-sample means when data has unused rows", {
+  d <- gen_factor_cov()
+  s <- seq_len(nrow(d)) <= 3000
+  fm <- lm(M ~ X + G, d, subset = s)
+  fy <- lm(Y ~ X * M + G, d, subset = s)
+  o_mf <- extract_mediation(fm, model_y = fy, treatment = "X", mediator = "M")
+  o_d <- extract_mediation(fm, model_y = fy, treatment = "X", mediator = "M",
+                           data = d)
+  expect_identical(o_d@nde, o_mf@nde)
+  keys <- c("nde", "int_ref", "te")
+  expect_identical(medfit:::.effect_se(o_d, keys), medfit:::.effect_se(o_mf, keys))
+})

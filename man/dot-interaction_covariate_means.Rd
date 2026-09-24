@@ -19,10 +19,10 @@ Named numeric vector over \code{covs}.
 }
 \description{
 Sample means of the mediator model's covariate design columns: from \code{mm}
-when given (the extractor passes \code{model.matrix(model_m)}), else rebuilt
-from \code{dat} -- a model frame via its \code{terms} attribute, or caller data via
-the \code{medfit_design} attribute the extractor attaches -- else plain numeric
-columns of \code{dat} (e.g. the lavaan data matrix). Uses \code{\link[=mean]{mean()}} per column so
+when given (the extractor passes \code{model.matrix(model_m)}), else the means
+the extractor stored on \code{dat} (attribute \code{medfit_covariate_means}), else
+rebuilt from a model frame's \code{terms} attribute, else plain numeric columns
+of \code{dat} (e.g. the lavaan data matrix). Uses \code{\link[=mean]{mean()}} per column so
 numeric-covariate results match the column means exactly.
 }
 \keyword{internal}
