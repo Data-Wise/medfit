@@ -80,6 +80,17 @@
   parallel, and interaction extractors recognized no labels at all. All four
   now read each path's parameter name from `lavaan::parTable()`.
 
+* `extract_mediation()` on a lavaan fit now stops with an error when a user
+  label reuses one of medfit's alias names for a different path, for example
+  `a1`/`a2` written for `mediator = c("M1", "M2")` while the call lists
+  `c("M2", "M1")`, or a covariate path labeled `a`. The alias estimate was
+  taken from the right path, but its `@vcov` row stayed the labeled
+  parameter's, so standard errors and bootstrap draws used the wrong
+  variance. A label on the alias's own path (such as the default `a`, `b`)
+  is still accepted. The simple extractor now takes each alias's `@vcov` row
+  from the same parameter-table row as its estimate, so the two agree when
+  the paths were found through `a_label`, `b_label`, and `cp_label`.
+
 ## Documentation
 
 * `?fit_mediation` and `?bootstrap_mediation` no longer merge in the

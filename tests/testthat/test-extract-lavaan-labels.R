@@ -143,3 +143,83 @@ test_that("parametric bootstrap on a labeled fit is non-degenerate", {
   expect_gt(stats::sd(boot@boot_estimates), 0)
   expect_lt(boot@ci_lower, boot@ci_upper)
 })
+
+# --- Each alias estimate and its @vcov row describe the same parameter -------
+
+test_that("simple: labeled paths give the alias vcov when arguments differ", {
+  # a/b/cp labels resolve, so the estimates come from the labeled rows. The
+  # alias rows must come from those rows too, not from the path the
+  # `treatment` argument names (here covariate1).
+  m <- "mediator1 ~ a*treatment + covariate1
+        outcome ~ b*mediator1 + cp*treatment + covariate1"
+  fit <- lavaan::sem(m, data = mediation_demo)
+  x <- extract_mediation(fit, treatment = "covariate1", mediator = "mediator1",
+                         outcome = "outcome")
+  v <- unclass(lavaan::vcov(fit))[c("a", "b", "cp"), c("a", "b", "cp")]
+
+  expect_equal(x@estimates[["c_prime"]], lavaan::coef(fit)[["cp"]])
+  expect_equal(unname(alias_block(x, c("a", "b", "c_prime"))), unname(v),
+               tolerance = 1e-12)
+})
+
+test_that("a label naming another path's alias is an error", {
+  # parallel: labels a1/a2 follow mediator1, mediator3; `mediator` is reversed
+  par <- "mediator1 ~ a1*treatment
+          mediator3 ~ a2*treatment
+          outcome ~ b1*mediator1 + b2*mediator3 + treatment"
+  expect_error(
+    extract_mediation(lavaan::sem(par, data = mediation_demo),
+                      treatment = "treatment",
+                      mediator = c("mediator3", "mediator1"),
+                      outcome = "outcome", structure = "parallel"),
+    "already has a parameter named 'a1'"
+  )
+
+  # simple: a covariate path labeled "a"
+  cov_a <- "mediator1 ~ treatment + covariate1
+            outcome ~ treatment + mediator1 + a*covariate1"
+  expect_error(
+    extract_mediation(lavaan::sem(cov_a, data = mediation_demo),
+                      treatment = "treatment", mediator = "mediator1",
+                      outcome = "outcome"),
+    "already has a parameter named 'a'"
+  )
+
+  # serial: "d1" on treatment -> mediator2 instead of mediator1 -> mediator2
+  ser <- "mediator1 ~ treatment
+          mediator2 ~ mediator1 + d1*treatment
+          outcome ~ mediator2 + mediator1 + treatment"
+  expect_error(
+    extract_mediation(lavaan::sem(ser, data = mediation_demo),
+                      treatment = "treatment",
+                      mediator = c("mediator1", "mediator2"),
+                      outcome = "outcome", structure = "serial"),
+    "already has a parameter named 'd1'"
+  )
+})
+
+test_that("labels in the extractor's order and shared equality labels pass", {
+  par <- "mediator1 ~ a1*treatment
+          mediator3 ~ a2*treatment
+          outcome ~ b1*mediator1 + b2*mediator3 + treatment"
+  plain <- "mediator1 ~ treatment
+            mediator3 ~ treatment
+            outcome ~ mediator1 + mediator3 + treatment"
+  args <- list(treatment = "treatment",
+               mediator = c("mediator1", "mediator3"), outcome = "outcome",
+               structure = "parallel")
+  xl <- do.call(extract_mediation,
+                c(list(lavaan::sem(par, data = mediation_demo)), args))
+  xu <- do.call(extract_mediation,
+                c(list(lavaan::sem(plain, data = mediation_demo)), args))
+  expect_same_alias_block(xu, xl, c("a1", "b1", "a2", "b2", "c_prime"))
+
+  # a == b through one shared label: lavaan names both parameters "a"
+  eq <- "mediator1 ~ a*treatment
+         outcome ~ a*mediator1 + treatment"
+  fit <- lavaan::sem(eq, data = mediation_demo)
+  x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
+                         outcome = "outcome")
+  expect_equal(x@vcov["a", "a"], x@vcov["b", "b"])
+  expect_gt(x@vcov["b", "b"], 0)
+})
