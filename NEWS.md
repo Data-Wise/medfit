@@ -125,6 +125,17 @@
   `fit_mediation()` with an `X * M` outcome formula is fixed as well. The
   lavaan engine accepts only numeric observed variables, so it is
   unaffected.
+* `JointMediationData` effect standard errors are no longer `NA` in
+  `tidy()` and `summary()` when `extract_mediation()` receives `data =` and
+  a model has a factor or transformed covariate (e.g. `G` with levels
+  `a`/`b`/`c`, or `poly(W, 2)`); `confint(parm = "effects")` no longer
+  errors for the same fits. The gradients rebuilt the covariate means from
+  `@data`, which only works for a model frame, so the SE computation failed
+  and `tidy()` and `summary()` caught the failure and reported `NA`. The
+  extractor now stores the exact means the point estimate uses on `@data`
+  (attribute `medfit_covariate_means`, the convention of the four-way
+  extractor), so SEs with `data = d` equal those with `data = NULL`,
+  including fits with `subset =`. Point estimates were already correct.
 
 * `fit_mediation(se_type = "sandwich")` now applies the sandwich estimator
   to fits with a treatment-by-mediator interaction. The four-way worker

@@ -15,8 +15,9 @@
 Named numeric vector (length 0 when there are no covariates).
 }
 \description{
-Rebuilds the design from \verb{@data} (the outcome model frame, whose \code{terms}
-attribute gives factor dummies the extractor's column names). Falls back to
-plain numeric columns for a hand-built \code{data}.
+Reads the means the extractor stored on \verb{@data} (attribute
+\code{medfit_covariate_means}, the exact vector the point estimate used), else
+rebuilds the design from a model frame's \code{terms} attribute, else plain
+numeric columns for a hand-built \code{data}.
 }
 \keyword{internal}

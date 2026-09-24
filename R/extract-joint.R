@@ -259,9 +259,10 @@
 
 #' Sample means of the covariate design columns of a joint object
 #'
-#' Rebuilds the design from `@data` (the outcome model frame, whose `terms`
-#' attribute gives factor dummies the extractor's column names). Falls back to
-#' plain numeric columns for a hand-built `data`.
+#' Reads the means the extractor stored on `@data` (attribute
+#' `medfit_covariate_means`, the exact vector the point estimate used), else
+#' rebuilds the design from a model frame's `terms` attribute, else plain
+#' numeric columns for a hand-built `data`.
 #'
 #' @param x A JointMediationData object.
 #' @param covs Covariate coefficient names.
@@ -274,6 +275,8 @@
     stop("JointMediationData has no @data; covariate means are unavailable.",
          call. = FALSE)
   }
+  stored <- attr(dat, "medfit_covariate_means")
+  if (all(covs %in% names(stored))) return(stored[covs])
   mm <- tryCatch(stats::model.matrix(attr(dat, "terms"), dat),
                  error = function(e) NULL)
   if (!is.null(mm) && all(covs %in% colnames(mm))) {
@@ -448,6 +451,11 @@
   if (is.null(data)) {
     data <- tryCatch(stats::model.frame(model_y), error = function(e) NULL)
   }
+  # Keep the exact means with @data so the delta-method gradients reuse them:
+  # caller-supplied data is not a model frame (no terms attribute, so factor
+  # dummies and poly() columns cannot be rebuilt) and may hold rows the
+  # models did not use.
+  if (!is.null(data)) attr(data, "medfit_covariate_means") <- c_bar
   is_glm <- vapply(all_models, inherits, logical(1), what = "glm")
   converged <- all(vapply(all_models, function(m) {
     if (inherits(m, "glm")) isTRUE(m$converged) else TRUE
