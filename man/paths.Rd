@@ -7,7 +7,8 @@
 paths(x, ...)
 }
 \arguments{
-\item{x}{A MediationData or SerialMediationData object}
+\item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
+\link{InteractionMediationData}, or \link{JointMediationData} object.}
 
 \item{...}{Additional arguments passed to methods}
 }
@@ -28,10 +29,20 @@ For simple mediation (MediationData):
 For serial mediation (SerialMediationData):
 \itemize{
 \item \code{a}: Treatment -> First mediator
-\item \code{d21}, \code{d32}, ...: Mediator-to-mediator paths
+\item \code{d} (two mediators) or \code{d21}, \code{d32}, ...: Mediator-to-mediator paths
 \item \code{b}: Last mediator -> Outcome
 \item \code{c_prime}: Direct effect
 }
+
+For parallel mediation (ParallelMediationData): \code{a1}, \code{b1}, \code{a2}, \code{b2},
+..., \code{c_prime}.
+
+For InteractionMediationData: \code{a}, \code{b}, \code{c_prime}, and \code{theta3} (the
+treatment-by-mediator coefficient).
+
+For JointMediationData: the raw coefficients \code{a1..aK}, \code{dij}, \code{b1..bK},
+\verb{theta3_<mediator>}, and \code{c_prime}. The \code{a} paths here are the raw
+coefficients, not the propagated \verb{a*} values used by the effects.
 }
 \examples{
 med_data <- fit_mediation(

@@ -60,7 +60,8 @@ If NULL, uses \code{parallel::detectCores() - 1}}
 A \link{BootstrapResult} object containing:
 \itemize{
 \item Point estimate
-\item Confidence interval bounds
+\item Percentile confidence interval bounds (the \eqn{\alpha/2}{alpha/2} and
+\eqn{1 - \alpha/2}{1 - alpha/2} quantiles of the bootstrap distribution)
 \item Bootstrap distribution (for parametric and nonparametric)
 \item Method used
 }

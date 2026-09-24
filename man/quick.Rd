@@ -7,7 +7,8 @@
 quick(x, digits = 3, ...)
 }
 \arguments{
-\item{x}{A MediationData object (or result from \code{\link[=med]{med()}})}
+\item{x}{A \link{MediationData} or \link{SerialMediationData} object (or result from
+\code{\link[=med]{med()}}). Other classes error; use \code{print()} or \code{summary()} for them.}
 
 \item{digits}{Integer: number of significant digits (default: 3)}
 

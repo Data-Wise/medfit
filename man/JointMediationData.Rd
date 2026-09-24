@@ -67,9 +67,12 @@ and \eqn{\beta^*_{1i}}{b1i*} the total (propagated) effect of the treatment on
 mediator \eqn{i} (for a serial chain this includes the paths through earlier
 mediators), the unit-contrast effects are
 \deqn{NIE = \sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{NIE = sum((t2i + t3i) * b1i*)}
+\deqn{NDE = \theta_1 + \sum_i \theta_{3i} \mu^*_{0i}}{NDE = t1 + sum(t3i * mu0i*)}
 \deqn{CDE = \theta_1 + \sum_i \theta_{3i} m^*_i}{CDE = t1 + sum(t3i * mi*)}
 and \eqn{TE = NDE + NIE}{TE = NDE + NIE}. \eqn{\theta_{3i}}{t3i} is zero for a
-mediator without a product term. The validator enforces the NIE and CDE
+mediator without a product term, and \eqn{\mu^*_{0i}}{mu0i*} is the mean of
+mediator \eqn{i} under no treatment at the covariate means (propagated down a
+serial chain like \eqn{\beta^*_{1i}}{b1i*}). The validator enforces the NIE and CDE
 identities, so an object with inconsistent numbers cannot be built.
 \subsection{What the joint NIE is, and is not}{
 

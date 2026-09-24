@@ -122,9 +122,9 @@ tidy(result)
 #> 1 a          0.583   0.0989
 #> 2 b          0.571   0.0535
 #> 3 c_prime    0.206   0.110
-#> 4 nie        0.333  NA
-#> 5 nde        0.206  NA
-#> 6 te         0.539  NA
+#> 4 nie        0.333    0.0645
+#> 5 nde        0.206    0.110
+#> 6 te         0.539    0.119
 
 # Just paths with CIs
 tidy(result, type = "paths", conf.int = TRUE)
@@ -160,7 +160,7 @@ vcov(result)
 # Confidence intervals
 confint(result)                       # 95% CI for paths
 confint(result, level = 0.90)         # 90% CI
-confint(result, type = "effects")     # CI for effects
+confint(result, parm = "effects")     # delta-method CI for effects
 
 # Number of observations
 nobs(result)
@@ -304,16 +304,20 @@ glance(boot_result)
 - [Introduction to medfit](introduction.html) - Detailed S7 class documentation
 - [Model Extraction](extraction.html) - Extract from lm, glm, lavaan models
 - [Bootstrap Inference](bootstrap.html) - Parametric and nonparametric bootstrap
+- [Methods and Formulas](methods.html) - Estimands, formulas, and standard errors
 
-## Development Status
+## What medfit Covers
 
-medfit is feature complete:
-
-- ✅ Phase 2: S7 class architecture
-- ✅ Phase 3: Model extraction (lm/glm, lavaan)
-- ✅ Phase 4: Model fitting (`fit_mediation()`)
-- ✅ Phase 5: Bootstrap infrastructure (`bootstrap_mediation()`)
-- ✅ Phase 6: Generic functions (`coef`, `vcov`, `confint`, `nobs`, `nie`, `nde`, `te`, `pm`, `paths`, `tidy`, `glance`)
-- ✅ Phase 6.5: ADHD-friendly API (`med`, `quick`)
+- Simple mediation (`MediationData`), with a treatment-by-mediator
+  interaction and the four-way decomposition (`InteractionMediationData`)
+- Serial and parallel mediators (`SerialMediationData`,
+  `ParallelMediationData`), and joint natural effects of several mediators
+  with treatment-by-mediator products (`JointMediationData`)
+- Extraction from lm/glm and lavaan fits; fitting with the `glm` and
+  `regmedint` engines, optional case weights and sandwich standard errors
+- Delta-method standard errors in `tidy()` and `confint()`, and parametric,
+  nonparametric and plugin bootstrap
+- The [Methods and Formulas](methods.html) article gives the math behind
+  every effect and standard error
 
 See `NEWS.md` for the latest updates.
