@@ -253,3 +253,95 @@ test_that("K = 1 reduces to the four-way InteractionMediationData", {
                                 c("a", "b", "theta3", "c_prime")]),
                tolerance = 1e-10)
 })
+
+# ==============================================================================
+# Point-estimate oracles (PLAN T5; spec test groups 1, 2, 3, 8 and 9)
+# ==============================================================================
+
+joint_fixtures <- list(
+  serial_M1 = c("serial", "M1"),
+  serial_M2 = c("serial", "M2"),
+  parallel_M1 = c("parallel", "M1")
+)
+
+# Oracle 1 (counterfactual truth, 3 SE), oracle 2 (g-computation, 4 Monte
+# Carlo SEs), and the planted defects, which must fail both oracles.
+check_joint_oracles <- function(n, truth_draws, gcomp_draws, seed) {
+  out <- list()
+  for (nm in names(joint_fixtures)) {
+    f <- joint_fixtures[[nm]]
+    sim <- sim_joint(f[1], f[2], n = n, seed = seed)
+    fj <- fit_joint(sim$data, f[1], f[2])
+    obj <- fj$obj
+    est <- c(nde = obj@nde, nie = obj@nie, te = obj@total_effect)
+    # The test-side re-implementation reproduces the object exactly, so the
+    # planted defects below perturb a correct baseline.
+    expect_equal(effects_from(obj, joint_effect_fn()), est, tolerance = 1e-10)
+
+    truth <- true_joint_effects(sim, draws = truth_draws)
+    se <- joint_mc_se(obj)
+    for (e in names(est)) {
+      expect_lt(abs(est[[e]] - truth[[e]]), 3 * se[[e]], label = paste(nm, e, "vs truth"))
+    }
+    expect_lt(abs(obj@cde - truth[["cde"]]), 3 * se[["cde"]], label = paste(nm, "cde"))
+    g <- gcomp_joint(fj$models, sim$data, f[1], draws = gcomp_draws)
+    mcse <- attr(g, "mcse")
+    for (e in names(est)) {
+      expect_lt(abs(est[[e]] - g[[e]]), 4 * mcse[[e]] + 1e-12,
+                label = paste(nm, e, "vs g-computation"))
+    }
+
+    defects <- list(flip_theta3 = joint_effect_fn(flip_theta3 = TRUE))
+    if (f[1] == "serial") defects$raw_b1 <- joint_effect_fn(raw_b1 = TRUE)
+    for (dn in names(defects)) {
+      bad <- effects_from(obj, defects[[dn]])
+      expect_true(abs(bad[["nie"]] - truth[["nie"]]) > 3 * se[["nie"]],
+                  label = paste(nm, dn, "caught by oracle 1"))
+      expect_true(abs(bad[["nie"]] - g[["nie"]]) > 4 * mcse[["nie"]],
+                  label = paste(nm, dn, "caught by oracle 2"))
+    }
+    out[[nm]] <- est
+  }
+  out
+}
+
+test_that("joint effects match the truth and g-computation (small n, always on)", {
+  est <- check_joint_oracles(n = 5000, truth_draws = 2e5, gcomp_draws = 5e4, seed = 41)
+  # Regression pins at the fixed seed.
+  expect_equal(unlist(est), c(
+    serial_M1.nde = 0.2057887549, serial_M1.nie = 0.5010109192, serial_M1.te = 0.7067996741,
+    serial_M2.nde = 0.1947546533, serial_M2.nie = 0.4946574373, serial_M2.te = 0.6894120906,
+    parallel_M1.nde = 0.2057887549, parallel_M1.nie = 0.4190438150, parallel_M1.te = 0.6248325699
+  ), tolerance = 1e-8)
+})
+
+test_that("joint effects match the truth and g-computation (n = 20,000)", {
+  skip_on_cran()
+  check_joint_oracles(n = 20000, truth_draws = 1e6, gcomp_draws = 2e5, seed = 42)
+})
+
+test_that("without products the joint NIE is the all-paths sum (G1, group 3)", {
+  # Parallel: the joint worker with no interactions reproduces
+  # ParallelMediationData on the same fits.
+  dp <- sim_joint("parallel", "none", n = 800, seed = 43)$data
+  fp <- fit_joint(dp, "parallel", "none")
+  jp <- .extract_joint_mediation_lm(unname(fp$models[c("m1", "m2")]), fp$models$y,
+                                    "X", c("M1", "M2"), "parallel", character(0),
+                                    stats::setNames(numeric(0), character(0)))
+  expect_equal(jp@nie, unname(unclass(nie(fp$obj))[1]), tolerance = 1e-8)
+  expect_equal(jp@nde, fp$obj@c_prime, tolerance = 1e-8)
+  # Serial: the joint NIE counts every path and differs from the chain-only
+  # a * d * b that SerialMediationData reports.
+  ds <- sim_joint("serial", "none", n = 800, seed = 44)$data
+  fs <- fit_joint(ds, "serial", "none")
+  js <- .extract_joint_mediation_lm(unname(fs$models[c("m1", "m2")]), fs$models$y,
+                                    "X", c("M1", "M2"), "serial", character(0),
+                                    stats::setNames(numeric(0), character(0)))
+  cf <- lapply(fs$models, stats::coef)
+  all_paths <- cf$m1[["X"]] * cf$y[["M1"]] +
+    (cf$m2[["X"]] + cf$m2[["M1"]] * cf$m1[["X"]]) * cf$y[["M2"]]
+  chain <- unname(unclass(nie(fs$obj))[1])
+  expect_equal(js@nie, all_paths, tolerance = 1e-10)
+  expect_equal(chain, cf$m1[["X"]] * cf$m2[["M1"]] * cf$y[["M2"]], tolerance = 1e-10)
+  expect_gt(abs(js@nie - chain), 0.05)
+})

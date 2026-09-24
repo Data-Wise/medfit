@@ -120,7 +120,9 @@ gcomp_joint <- function(models, data, structure, draws = 2e5, seed = 7) {
   y_1m1 <- y_at(1, w1)
   nde <- mean(y_1m0 - y_0m0)
   nie <- mean(y_1m1 - y_1m0)
-  c(nde = nde, nie = nie, te = nde + nie)
+  structure(c(nde = nde, nie = nie, te = nde + nie),
+            mcse = c(nde = stats::sd(y_1m0 - y_0m0), nie = stats::sd(y_1m1 - y_1m0),
+                     te = stats::sd(y_1m1 - y_0m0)) / sqrt(draws))
 }
 
 # Fit the shared models (identical covariate set C in every model) and extract.
@@ -166,4 +168,70 @@ boot_joint_se <- function(data, fit_fun, stat_fun, B = 5000, seed = 11) {
   })
   apply(matrix(draws, ncol = B), 1L, stats::sd) |>
     stats::setNames(names(stat_fun(fit_fun(data))))
+}
+
+# Test-side re-implementation of the joint effects from a named estimate
+# vector (source rows m1_..mK_, y_), independent of R/extract-joint.R. The
+# planted-defect switches reproduce the spec's group-9 bugs: a sign-flipped
+# theta3 in the NIE, and the raw (unpropagated) treatment coefficient.
+# `spec` comes from joint_spec(obj); covariates must be numeric columns.
+joint_spec <- function(obj) {
+  est <- obj@estimates
+  covs <- sub("^m1_", "", grep("^m1_", names(est), value = TRUE))
+  covs <- setdiff(covs, c("(Intercept)", obj@treatment))
+  ints <- obj@interactions
+  int_rows <- vapply(ints, function(m) {
+    cand <- paste0("y_", c(paste0(obj@treatment, ":", m), paste0(m, ":", obj@treatment)))
+    cand[cand %in% names(est)][1]
+  }, character(1))
+  list(treatment = obj@treatment, mediators = obj@mediators, ints = ints,
+       int_rows = int_rows, covs = covs, m_star = obj@m_star,
+       c_bar = colMeans(obj@data[, covs, drop = FALSE]),
+       src = grep("^(m[0-9]+|y)_", names(est), value = TRUE))
+}
+
+joint_effects_est <- function(est, spec, flip_theta3 = FALSE, raw_b1 = FALSE) {
+  g0 <- function(nm) if (nm %in% names(est)) unname(est[[nm]]) else 0
+  meds <- spec$mediators
+  k <- length(meds)
+  mu0 <- b1 <- b1_raw <- numeric(k)
+  for (i in seq_len(k)) {
+    p <- paste0("m", i, "_")
+    b1_raw[i] <- g0(paste0(p, spec$treatment))
+    # Mean at X = 0, cbar and the total X effect, by substitution down the chain.
+    mu0[i] <- g0(paste0(p, "(Intercept)")) +
+      sum(vapply(spec$covs, function(cv) g0(paste0(p, cv)), numeric(1)) * spec$c_bar)
+    b1[i] <- b1_raw[i]
+    for (j in seq_len(i - 1L)) {
+      dij <- g0(paste0(p, meds[j]))
+      mu0[i] <- mu0[i] + dij * mu0[j]
+      b1[i] <- b1[i] + dij * b1[j]
+    }
+  }
+  if (raw_b1) b1 <- b1_raw
+  t1 <- g0(paste0("y_", spec$treatment))
+  t2 <- vapply(meds, function(m) g0(paste0("y_", m)), numeric(1))
+  t3 <- stats::setNames(numeric(k), meds)
+  t3[spec$ints] <- vapply(spec$int_rows, g0, numeric(1))
+  t3_nie <- if (flip_theta3) -t3 else t3
+  nie <- sum((t2 + t3_nie) * b1)
+  nde <- t1 + sum(t3 * mu0)
+  cde <- t1 + sum(t3[spec$ints] * spec$m_star[spec$ints])
+  c(nde = nde, nie = nie, te = nde + nie, cde = cde)
+}
+
+# effect_fn for effects_from(): `...` passes the planted-defect switches.
+joint_effect_fn <- function(...) {
+  function(o) joint_effects_est(o@estimates, joint_spec(o), ...)[c("nde", "nie", "te")]
+}
+
+# Monte Carlo SE of the effects: draws from N(estimates, vcov) over the source
+# rows, pushed through joint_effects_est().
+joint_mc_se <- function(obj, draws = 4000, seed = 5) {
+  spec <- joint_spec(obj)
+  set.seed(seed)
+  z <- MASS::mvrnorm(draws, obj@estimates[spec$src],
+                     obj@vcov[spec$src, spec$src])
+  eff <- apply(z, 1L, joint_effects_est, spec = spec)
+  apply(eff, 1L, stats::sd)
 }
