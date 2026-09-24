@@ -13,7 +13,9 @@
 }
 \description{
 Scans each model's \code{terms()} for interaction terms (order > 1) with at least
-one component in \code{vars}. Products among covariates alone are allowed.
-Returns \code{"<response>: <term>"} labels, or \code{character(0)} when none are found.
+one component in \code{vars}, plus function-wrapped products such as
+\code{I(X * M1)} (see \code{\link[=.find_wrapped_products]{.find_wrapped_products()}}). Products among covariates alone
+are allowed. Returns \code{"<response>: <term>"} labels, or \code{character(0)} when
+none are found.
 }
 \keyword{internal}

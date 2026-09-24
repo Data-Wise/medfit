@@ -255,6 +255,18 @@ S7::method(extract_mediation, glm_class) <- function(
   # explicitly disabled via decomposition = "two_way"), route to the four-way
   # decomposition worker; otherwise fall through to the standard simple path so
   # the no-interaction behavior is unchanged.
+  wrapped <- .find_wrapped_products(list(model_m, model_y),
+                                    c(treatment, mediator), require_all = TRUE)
+  if (length(wrapped) > 0L) {
+    stop(paste0(
+      "Found function-wrapped treatment-by-mediator product term(s): ",
+      paste(wrapped, collapse = ", "), ". medfit recognizes the product only ",
+      "when written with ':' or '*' (e.g. ", treatment, " * ", mediator,
+      "); otherwise it is treated as an unrelated covariate and the effects ",
+      "ignore the interaction. Rewrite the term with ':' or '*'."
+    ), call. = FALSE)
+  }
+
   int_term <- .find_interaction_term(model_y, treatment, mediator)
   if (decomposition == "four_way" && is.na(int_term)) {
     stop(
@@ -463,8 +475,10 @@ S7::method(extract_mediation, glm_class) <- function(
 #' Find product terms involving the treatment or a mediator
 #'
 #' Scans each model's `terms()` for interaction terms (order > 1) with at least
-#' one component in `vars`. Products among covariates alone are allowed.
-#' Returns `"<response>: <term>"` labels, or `character(0)` when none are found.
+#' one component in `vars`, plus function-wrapped products such as
+#' `I(X * M1)` (see [.find_wrapped_products()]). Products among covariates alone
+#' are allowed. Returns `"<response>: <term>"` labels, or `character(0)` when
+#' none are found.
 #'
 #' @param models List of fitted lm/glm models (`NULL` entries are skipped).
 #' @param vars Character vector: treatment and mediator names.
@@ -480,6 +494,42 @@ S7::method(extract_mediation, glm_class) <- function(
     if (any(involved)) {
       resp <- deparse(stats::formula(mod)[[2L]])
       hits <- c(hits, paste0(resp, ": ", labs[involved]))
+    }
+  }
+  unique(c(hits, .find_wrapped_products(models, vars)))
+}
+
+
+#' Find function-wrapped product terms
+#'
+#' A product written inside a function call, such as `I(X * M)`, is a single
+#' order-1 term, so the `":"`-based scans miss it and the product is treated as
+#' an unrelated covariate. This flags order-1 terms whose variables (via
+#' [all.vars()]) include at least two distinct names and involve `vars`: any of
+#' them by default, or all of them when `require_all = TRUE`. Single-variable
+#' transforms such as `I(X^2)` or `log(C)` are not flagged. Products precomputed
+#' as a data column cannot be detected from the formula.
+#'
+#' @param models List of fitted lm/glm models (`NULL` entries are skipped).
+#' @param vars Character vector: treatment and mediator names.
+#' @param require_all Logical: flag only terms involving every name in `vars`.
+#' @return `"<response>: <term>"` labels, or `character(0)`.
+#' @keywords internal
+.find_wrapped_products <- function(models, vars, require_all = FALSE) {
+  hits <- character(0)
+  for (mod in models) {
+    if (is.null(mod)) next
+    tt <- stats::terms(mod)
+    labs <- attr(tt, "term.labels")[attr(tt, "order") == 1L]
+    wrapped <- vapply(labs, function(lab) {
+      term_vars <- tryCatch(unique(all.vars(str2lang(lab))),
+                            error = function(e) character(0))
+      if (length(term_vars) < 2L) return(FALSE)
+      if (require_all) all(vars %in% term_vars) else any(term_vars %in% vars)
+    }, logical(1))
+    if (any(wrapped)) {
+      resp <- deparse(stats::formula(mod)[[2L]])
+      hits <- c(hits, paste0(resp, ": ", labs[wrapped]))
     }
   }
   unique(hits)
@@ -499,7 +549,8 @@ S7::method(extract_mediation, glm_class) <- function(
   if (length(hits) == 0L) return(invisible(NULL))
   stop(paste0(
     "Multi-mediator (serial or parallel) extraction does not support product ",
-    "terms involving the treatment or a mediator; found product term(s): ",
+    "terms involving the treatment or a mediator, including function-wrapped ",
+    "terms such as I(X * M) that combine one with another variable; found: ",
     paste(hits, collapse = ", "), ". These paths would be reported as main ",
     "effects that ignore the interaction. Refit without the product term(s), ",
     "or use a single mediator (whose X:M interaction is supported via the ",
