@@ -120,6 +120,7 @@ reference:
       - SerialMediationData
       - ParallelMediationData
       - InteractionMediationData
+      - JointMediationData
       - BootstrapResult
 
   - title: "Model Fitting"
