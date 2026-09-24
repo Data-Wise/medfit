@@ -113,3 +113,36 @@ test_that("lavaan serial te() matches lm with labeled skip paths", {
   expect_equal(as.numeric(te(sl)), ref, tolerance = 1e-6)
   expect_true(all(c("a2", "b1") %in% rownames(sl@vcov)))
 })
+
+collect_warnings <- function(expr) {
+  msgs <- character(0)
+  withCallingHandlers(expr, warning = function(w) {
+    msgs <<- c(msgs, conditionMessage(w))
+    invokeRestart("muffleWarning")
+  })
+  msgs
+}
+
+test_that("glance()/quick()/tidy() warn once when the total is unavailable", {
+  s <- serial_hand(list("X", c("X", "M1")), c("X", "M1", "M2"),
+                   c(a = 0.5, d1 = 0.4, b = 0.3, c_prime = 0.1))
+  w_glance <- collect_warnings(gl <- generics::glance(s))
+  expect_length(w_glance, 1L)
+  expect_match(w_glance, "Total effect is unavailable")
+  expect_true(is.na(gl$te) && is.na(gl$nie_total) && is.na(gl$pm))
+
+  w_quick <- collect_warnings(utils::capture.output(quick(s)))
+  expect_length(w_quick, 1L)
+  expect_match(w_quick, "Total effect is unavailable")
+
+  w_tidy <- collect_warnings(generics::tidy(s, type = "effects"))
+  expect_length(w_tidy, 1L)
+})
+
+test_that("coef(type = 'effects') keeps positions 1-3 and appends indirect_total", {
+  s <- serial_hand(list("X", "M1"), c("X", "M2"),
+                   c(a = 0.5, d1 = 0.4, b = 0.3, c_prime = 0.1))
+  eff <- coef(s, type = "effects")
+  expect_named(eff, c("indirect", "direct", "total", "indirect_total"))
+  expect_equal(unname(eff[3]), as.numeric(te(s)))
+})

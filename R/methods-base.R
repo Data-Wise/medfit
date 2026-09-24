@@ -74,7 +74,8 @@ S7::method(coef, MediationData) <- function(object, type = c("paths", "effects",
 #'   \itemize{
 #'     \item `"paths"`: Path coefficients a, d (vector), b, c' (default)
 #'     \item `"effects"`: Mediation effects: indirect (chain product of paths),
-#'       indirect_total (all paths through a mediator), direct, total (all paths)
+#'       direct, total (all paths), indirect_total (all paths through a
+#'       mediator; last, so earlier positions are unchanged)
 #'     \item `"all"`: Full parameter vector
 #'   }
 #' @param ... Additional arguments (ignored)
@@ -107,8 +108,9 @@ S7::method(coef, SerialMediationData) <- function(object, type = c("paths", "eff
       indirect <- object@a_path * prod(object@d_path) * object@b_path
       direct <- object@c_prime
       total <- as.numeric(te(object))
-      c(indirect = indirect, indirect_total = total - direct,
-        direct = direct, total = total)
+      # indirect_total is appended so positions 1-3 match medfit <= 0.4.0
+      c(indirect = indirect, direct = direct, total = total,
+        indirect_total = total - direct)
     },
     all = object@estimates
   )

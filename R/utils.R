@@ -208,3 +208,21 @@
   k <- length(x@mediators)
   sys$inv[k + 2L, 1L]
 }
+
+
+# Proportion mediated from an already-computed serial total effect, so callers
+# that also report te() compute the total (and raise its warning) only once.
+.serial_pm_from_total <- function(total, c_prime) {
+  if (is.na(total)) return(NA_real_)
+
+  if (abs(total) < .Machine$double.eps) {
+    warning("Total effect is approximately zero; proportion mediated is undefined.",
+            call. = FALSE)
+    return(NA_real_)
+  }
+
+  prop <- (total - c_prime) / total
+  class(prop) <- c("mediation_effect", "numeric")
+  attr(prop, "type") <- "pm"
+  prop
+}

@@ -250,7 +250,7 @@ test_that("coef() works for SerialMediationData", {
 
   # Test effects extraction
   effects <- coef(serial_data, type = "effects")
-  expect_named(effects, c("indirect", "indirect_total", "direct", "total"))
+  expect_named(effects, c("indirect", "direct", "total", "indirect_total"))
 
   # Verify indirect = a * d * b
   expect_equal(

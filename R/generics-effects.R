@@ -408,19 +408,7 @@ S7::method(te, SerialMediationData) <- function(x, ...) {
 #' @describeIn pm Method for SerialMediationData
 #' @noRd
 S7::method(pm, SerialMediationData) <- function(x, ...) {
-  total <- .serial_total_effect(x)
-  if (is.na(total)) return(NA_real_)
-
-  if (abs(total) < .Machine$double.eps) {
-    warning("Total effect is approximately zero; proportion mediated is undefined.",
-            call. = FALSE)
-    return(NA_real_)
-  }
-
-  prop <- (total - x@c_prime) / total
-  class(prop) <- c("mediation_effect", "numeric")
-  attr(prop, "type") <- "pm"
-  prop
+  .serial_pm_from_total(.serial_total_effect(x), x@c_prime)
 }
 
 #' @describeIn paths Method for SerialMediationData

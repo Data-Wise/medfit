@@ -95,7 +95,8 @@
   in `@estimates` and `@vcov`. The delta-method SE of `te` in `confint()` and
   `tidy()` differentiates the full sum. It matches lavaan `:=` SEs. Serial
   `tidy()` gains a `nie_total` row, `glance()` gains a `nie_total` column and
-  `coef(type = "effects")` gains `indirect_total`. A hand-built object whose
+  `coef(type = "effects")` gains `indirect_total`, appended after `total`
+  so existing positions are unchanged. A hand-built object whose
   predictor lists include a skip path without its coefficient gets `NA` and a
   warning from `te()` and `pm()`, because assuming zero would reproduce the
   bug. For glm fits with a non-identity link, the path sum is on the
