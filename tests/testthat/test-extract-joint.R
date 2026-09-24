@@ -587,5 +587,11 @@ test_that("caller-supplied data with factor and poly() covariates gives the same
     expect_equal(c(usr@nie, usr@nde, usr@cde), c(ref@nie, ref@nde, ref@cde))
     expect_equal(.effect_se(usr, keys), .effect_se(ref, keys))
     expect_true(all(is.finite(.effect_se(usr, keys))))
+    # User-facing path: tidy() turns a failed SE into NA rather than erroring.
+    td_usr <- generics::tidy(usr, type = "effects")
+    expect_true(all(is.finite(td_usr$std.error)))
+    expect_equal(td_usr$std.error, generics::tidy(ref, type = "effects")$std.error)
+    expect_equal(suppressWarnings(confint(usr, parm = "effects")),
+                 suppressWarnings(confint(ref, parm = "effects")))
   }
 })
