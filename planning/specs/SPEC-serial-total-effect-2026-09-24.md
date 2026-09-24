@@ -1,6 +1,6 @@
 # SPEC: Serial `te()` / `pm()` total-effect correctness
 
-**Status:** DRAFT, awaiting decision (a / b / c)
+**Status:** DECIDED (b), implemented 2026-09-24 in b714e6e
 **Date:** 2026-09-24
 **Branch:** `feature/serial-total-effect` (off `origin/dev` 2b05958)
 **Related:** `feature/docs-methods-math` (unmerged, no PR) documents `te()`/`pm()` as chain-only
@@ -111,8 +111,9 @@ matrix over (X, M1, …, Mk, Y). This works for any k and any missing edges.
   separate helper exposes total indirect = `te − c'`.
 - `pm()`: **total indirect / total effect** (**D2**). Under the alternative,
   "chain share of total", it would change name semantics silently.
-- `tidy()`/`glance()`/`quick()` for serial: report `nie_chain`, `nie_total`,
-  `nde`, `te`, so the rows add up (`nie_total + nde = te`).
+- `tidy()`/`glance()`/`coef(type="effects")` for serial: keep `nie` (chain) and
+  **add** `nie_total` / `indirect_total` (additive, no rename), so
+  `nie_total + nde = te`. `quick()` is unchanged apart from `pm()`.
 - Nonlinear glm (non-identity link): the sum of products is not a total effect on
   a natural scale. **The simple `MediationData` `te()` already computes
   `a*b + c'` link-naively**, so (b) inherits the same convention for
@@ -157,8 +158,8 @@ Reasons:
 |---|---|---|
 | D1 | Total indirect via `nie(x, type = "total")` or a new exported helper? | `type` argument, default `"chain"` (no value change for existing callers) |
 | D2 | `pm()` = total-indirect/total, or chain/total? | total-indirect / total |
-| D3 | Canonical alias names for skip paths in `@estimates` | `a{j}` for X→Mj (keeping `a` = a1), `b{i}` for Mi→Y (keeping `b` = bk), `d{j}{i}` for non-adjacent Mi→Mj |
-| D4 | Effect SEs for full `te` (delta method over all paths)? | Out of scope. Serial `tidy(conf.int=TRUE)` already returns NA + a bootstrap pointer; keep that |
+| D3 | Canonical alias names for skip paths in `@estimates` | **Done:** `a{j}` for X→Mj (j ≥ 2), `b{i}` for Mi→Y (i < k), `d{i}_{j}` for non-adjacent Mi→Mj; `a`, `d{i}`, `b`, `c_prime` unchanged |
+| D4 | Effect SEs for full `te` (delta method over all paths)? | **In scope (revised):** dev already has delta-method serial SEs (`R/effect-se.R`), so the `te` gradient was rewritten as `inv[Y,t] * inv[f,X]`, verified against lavaan `:=` SEs |
 | D5 | Sequence with `feature/docs-methods-math` | Land docs first as-is. This PR then rewrites the "chain-only" wording to "full total effect" |
 
 ## 7. Verification plan (b)
