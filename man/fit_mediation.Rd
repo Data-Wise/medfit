@@ -82,35 +82,6 @@ provides a convenient formula-based interface for fitting both the
 mediator and outcome models simultaneously.
 }
 \details{
-\subsection{regmedint Engine}{
-
-When \code{engine = "regmedint"}:
-\itemize{
-\item Delegates to \code{regmedint::regmedint()} (suggested package) for closed-form
-natural (in)direct effects, with or without a treatment-mediator interaction
-\item Returns \link{MediationData} or \link{InteractionMediationData} depending on whether
-\code{formula_y} contains a treatment-by-mediator interaction term; use
-\code{engine_args} to override the derived regmedint arguments
-}
-}
-
-\subsection{Reference Mediator Level}{
-
-When the fit yields an \link{InteractionMediationData}, \code{m_star} fixes the level
-\eqn{m^*}{m*} at which the controlled direct effect is read off:
-\eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = theta1 + theta3 * m*} and
-\eqn{INTref = \theta_3 (E[M \mid X = 0] - m^*)}{INTref = theta3 * (E[M | X = 0] - m*)}.
-The two shift in compensating directions, so \code{nde()}, \code{nie()}, \code{te()}, and
-\code{pm()} are invariant to \code{m_star}; only the CDE/INTref split moves.
-
-The engines reach the same result by different routes. \code{engine = "glm"}
-applies \code{m_star} at \emph{extraction} time, after the coefficients are fit;
-\code{engine = "regmedint"} passes it to \code{regmedint::regmedint()} as \code{m_cde},
-where it is consumed by that package's closed-form estimator at \emph{fitting}
-time. Supplying \code{m_star} for a fit with no treatment-by-mediator term is an
-error, not a silent no-op.
-}
-
 \subsection{Model Specification}{
 
 The function fits two models:
@@ -143,6 +114,35 @@ When \code{engine = "glm"} (default):
 \item \code{poisson()}: Count outcomes
 \item \code{Gamma()}: Positive continuous outcomes
 }
+}
+
+\subsection{regmedint Engine}{
+
+When \code{engine = "regmedint"}:
+\itemize{
+\item Delegates to \code{regmedint::regmedint()} (suggested package) for closed-form
+natural (in)direct effects, with or without a treatment-mediator interaction
+\item Returns \link{MediationData} or \link{InteractionMediationData} depending on whether
+\code{formula_y} contains a treatment-by-mediator interaction term; use
+\code{engine_args} to override the derived regmedint arguments
+}
+}
+
+\subsection{Reference Mediator Level}{
+
+When the fit yields an \link{InteractionMediationData}, \code{m_star} fixes the level
+\eqn{m^*}{m*} at which the controlled direct effect is read off:
+\eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = theta1 + theta3 * m*} and
+\eqn{INTref = \theta_3 (E[M \mid X = 0] - m^*)}{INTref = theta3 * (E[M | X = 0] - m*)}.
+The two shift in compensating directions, so \code{nde()}, \code{nie()}, \code{te()}, and
+\code{pm()} are invariant to \code{m_star}; only the CDE/INTref split moves.
+
+The engines reach the same result by different routes. \code{engine = "glm"}
+applies \code{m_star} at \emph{extraction} time, after the coefficients are fit;
+\code{engine = "regmedint"} passes it to \code{regmedint::regmedint()} as \code{m_cde},
+where it is consumed by that package's closed-form estimator at \emph{fitting}
+time. Supplying \code{m_star} for a fit with no treatment-by-mediator term is an
+error, not a silent no-op.
 }
 }
 \examples{
