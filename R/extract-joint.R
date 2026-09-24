@@ -300,7 +300,7 @@
 #'   coefficients.
 #' @param gamma K x p matrix of raw covariate coefficients (p may be 0).
 #' @param d K x K strictly lower-triangular matrix: `d[i, j]` is the coefficient
-#'   of mediator j in mediator i's model.
+#'   of mediator j in the model for mediator i.
 #' @return `list(b0, b1, gamma)` of propagated coefficients.
 #' @keywords internal
 .propagate_mediator_means <- function(b0, b1, gamma, d) {

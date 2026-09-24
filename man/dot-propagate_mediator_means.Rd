@@ -13,7 +13,7 @@ coefficients.}
 \item{gamma}{K x p matrix of raw covariate coefficients (p may be 0).}
 
 \item{d}{K x K strictly lower-triangular matrix: \code{d[i, j]} is the coefficient
-of mediator j in mediator i's model.}
+of mediator j in the model for mediator i.}
 }
 \value{
 \code{list(b0, b1, gamma)} of propagated coefficients.

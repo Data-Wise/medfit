@@ -2,6 +2,29 @@
 
 ## New features
 
+* New `JointMediationData` class: `extract_mediation()` on lm/glm fits with
+  two or more mediators (serial or parallel) now supports treatment-by-mediator
+  product terms in the outcome model, written with `:` or `*` (e.g.
+  `Y ~ X * M2 + M1 + C`). It returns the **joint** natural effects of the
+  mediators as a block (VanderWeele and Vansteelandt 2014): for a 0/1
+  treatment, NIE = sum over mediators of (theta2 + theta3) times the total
+  treatment effect on that mediator, NDE and CDE add the product terms at the
+  covariate means and at `m_star`. There is no per-mediator split of the NIE.
+  For a serial chain the joint NIE counts every path through the mediators,
+  so it differs from the chain-only `a * d * b` that `SerialMediationData`
+  reports. Standard errors use analytic delta-method gradients and a
+  stacked-OLS covariance that includes the correlation between parallel
+  mediator equations; they are conditional on the observed covariates.
+  `nie()`, `nde()`, `te()`, `pm()`, `decompose()`, `paths()`, and
+  `bootstrap_mediation(method = "parametric" / "plugin")` accept the class.
+  The fit must use Gaussian identity-link models without weights, an
+  intercept in each, the same rows and the same covariates in every model, a
+  numeric 0/1 treatment, and every mediator in the outcome model; each
+  violation errors, naming the cause. `m_star` is a scalar or a vector named
+  by the interacting mediators. Products elsewhere (in a mediator model,
+  mediator-by-mediator, three-way, with a covariate, or function-wrapped)
+  still error, as do lavaan multi-mediator fits with products.
+
 * New bundled dataset `mediation_demo` (400 rows, 8 variables): simulated data
   that supports simple, serial, parallel, and treatment-by-mediator interaction
   examples from one running example. The covariates are mediator-outcome
@@ -62,8 +85,8 @@
   is not linear in its coefficients. It now errors, naming the link.
 
 * `extract_mediation()` now errors when `m_star` is supplied but no four-way
-  decomposition runs (no treatment-by-mediator term, `decomposition =
-  "two_way"`, or several mediators), on both the lm/glm and lavaan paths.
+  decomposition or joint-effects fit uses it (no treatment-by-mediator term,
+  or `decomposition = "two_way"`), on both the lm/glm and lavaan paths.
   The value was previously dropped silently. As in `fit_mediation()`, the
   check keys on whether `m_star` was given at the call site, not on its value.
 
@@ -97,7 +120,10 @@
   ignored silently and main-effect paths were reported as if no interaction
   existed. Applies to both the lm/glm and lavaan methods; for lavaan, a
   product precomputed as a plain data column is recognized when named via
-  `interaction =`. Products among covariates alone are still allowed.
+  `interaction =`. Products among covariates alone are still allowed. On
+  lm/glm, a treatment-by-mediator product in the outcome model is now
+  supported through `JointMediationData` (see New features); every other
+  product still errors.
 
 * `extract_mediation()` on a lavaan fit whose paths carry custom labels
   (e.g. `M ~ aa*X`) now fills the alias rows of `@vcov` (`a`, `b`, `c_prime`,

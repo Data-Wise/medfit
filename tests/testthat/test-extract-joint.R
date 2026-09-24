@@ -266,6 +266,9 @@ joint_fixtures <- list(
 
 # Oracle 1 (counterfactual truth, 3 SE), oracle 2 (g-computation, 4 Monte
 # Carlo SEs), and the planted defects, which must fail both oracles.
+# Top-level helpers call testthat and helper-joint.R functions, which
+# object_usage_linter cannot resolve outside test_that().
+# nolint start: object_usage_linter.
 check_joint_oracles <- function(n, truth_draws, gcomp_draws, seed) {
   out <- list()
   for (nm in names(joint_fixtures)) {
@@ -304,6 +307,8 @@ check_joint_oracles <- function(n, truth_draws, gcomp_draws, seed) {
   }
   out
 }
+# nolint end
+
 
 test_that("joint effects match the truth and g-computation (small n, always on)", {
   est <- check_joint_oracles(n = 5000, truth_draws = 2e5, gcomp_draws = 5e4, seed = 41)
@@ -414,6 +419,9 @@ se_fixtures <- list(
   parallel_M1_rho = list("parallel", "M1", 0.5)
 )
 
+# Top-level helpers call testthat and helper-joint.R functions, which
+# object_usage_linter cannot resolve outside test_that().
+# nolint start: object_usage_linter.
 check_joint_se <- function(n, B, tol, seed) {
   for (nm in names(se_fixtures)) {
     f <- se_fixtures[[nm]]
@@ -442,6 +450,8 @@ check_joint_se <- function(n, B, tol, seed) {
     }
   }
 }
+
+# nolint end
 
 test_that("delta-method SEs agree with the bootstrap (always on, loose)", {
   check_joint_se(n = 800, B = 300, tol = 0.15, seed = 61)
