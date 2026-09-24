@@ -7,20 +7,22 @@
 pm(x, ...)
 }
 \arguments{
-\item{x}{A MediationData, SerialMediationData, or BootstrapResult object}
+\item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
+\link{InteractionMediationData}, or \link{JointMediationData} object.}
 
 \item{...}{Additional arguments passed to methods}
 }
 \value{
-A numeric value between 0 and 1 (or negative/greater than 1 in
-cases of suppression effects)
+A numeric scalar of class \code{mediation_effect}, usually between 0 and
+1 (negative or greater than 1 in cases of suppression effects), or
+\code{NA} with a warning when the total effect is numerically zero.
 }
 \description{
 Extract the proportion of the total effect that is mediated (operates
-through the mediator).
+through the mediator(s)).
 }
 \details{
-\deqn{PM = \frac{NIE}{TE} = \frac{NIE}{NIE + NDE}}
+\deqn{PM = \frac{NIE}{TE} = \frac{NIE}{NIE + NDE}}{PM = NIE / TE = NIE / (NIE + NDE)}
 
 For serial mediation (SerialMediationData) the numerator is the total
 indirect effect, \code{nie(x, type = "total")}, and the denominator the full
@@ -33,6 +35,9 @@ The proportion mediated can be:
 opposite signs)
 \item Negative: Inconsistent mediation
 }
+
+The ratio has no delta-method standard error in medfit; bootstrap it with
+\code{\link[=bootstrap_mediation]{bootstrap_mediation()}}.
 }
 \examples{
 med_data <- fit_mediation(

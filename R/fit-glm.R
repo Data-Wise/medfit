@@ -30,8 +30,7 @@
 #' @param se_type Variance-covariance estimator for `@vcov`: `"model"` (default,
 #'   model-based `stats::vcov`) or `"sandwich"` (heteroskedasticity-consistent
 #'   `sandwich::vcovHC`, type HC3, recommended for IPW-weighted fits). The
-#'   `"sandwich"` option requires the suggested \pkg{sandwich} package. Applies
-#'   to the single-mediator path.
+#'   `"sandwich"` option requires the suggested \pkg{sandwich} package.
 #' @param engine_args Named list of engine-specific overrides (default:
 #'   `list()`, no overrides). Ignored by `engine = "glm"`. For
 #'   `engine = "regmedint"`, recognized names are `interaction`, `cvar`,
@@ -71,6 +70,13 @@
 #' \itemize{
 #'   \item Models are fit using [stats::glm()]
 #'   \item Supports all GLM families (gaussian, binomial, poisson, etc.)
+#'   \item With a non-identity link the path coefficients are on the link
+#'     scale, where the product \eqn{a b}{a * b} is not a natural indirect
+#'     effect on the outcome scale; interpret it with care or use
+#'     `engine = "regmedint"` for closed-form effects of a logistic outcome
+#'   \item A treatment-by-mediator term in `formula_y` requires Gaussian
+#'     identity-link models (the four-way formulas are linear); other families
+#'     error
 #'   \item For Gaussian models, residual standard deviations are extracted
 #'   \item Non-Gaussian outcomes have `sigma_y = NULL`
 #' }
@@ -134,6 +140,10 @@
 #'   family_y = binomial()
 #' )
 #' }
+#'
+#' @references
+#' VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+#' 4-way decomposition. *Epidemiology*, 25(5), 749--761.
 #'
 #' @seealso [MediationData], [extract_mediation()], [bootstrap_mediation()]
 #' @export

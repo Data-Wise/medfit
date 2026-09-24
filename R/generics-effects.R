@@ -12,26 +12,38 @@
 #' @description
 #' Extract the natural indirect effect from a mediation analysis result.
 #' The NIE represents the effect of treatment on outcome that operates
-#' through the mediator.
+#' through the mediator(s).
 #'
-#' @param x A MediationData, SerialMediationData, or BootstrapResult object
-#' @param ... Additional arguments passed to methods. For SerialMediationData,
-#'   `type = c("chain", "total")` selects the chain-specific or the total
-#'   indirect effect (see Details).
+#' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
+#'   [InteractionMediationData], [JointMediationData], or [BootstrapResult]
+#'   object. For a `BootstrapResult`, `nie()` returns the bootstrapped point
+#'   estimate (with a warning if the statistic was not an NIE).
+#' @param ... Additional arguments passed to methods. For a
+#'   `SerialMediationData`, `type = c("chain", "total")` selects the
+#'   chain-specific (default) or the total indirect effect (see Details).
 #'
-#' @return A numeric value (or named vector for SerialMediationData) with
-#'   optional attributes for confidence intervals if available
+#' @return A numeric scalar of class `mediation_effect` carrying a `type`
+#'   attribute. For intervals use [confint()] or [bootstrap_mediation()].
 #'
 #' @details
-#' For simple mediation (MediationData):
-#' \deqn{NIE = a \times b}
-#'
-#' For serial mediation (SerialMediationData), `type = "chain"` (the default)
-#' gives the chain-specific indirect effect through every mediator in order,
-#' \deqn{NIE_{chain} = a \times d_{21} \times d_{32} \times \ldots \times b}{NIE_chain = a * d21 * d32 * ... * b}
-#' and `type = "total"` gives the total indirect effect, the sum over every
-#' X-to-Y path through at least one mediator (including paths that skip a
-#' mediator, such as X -> M2 -> Y), which equals `te(x) - nde(x)`.
+#' The effects are for a unit contrast of the treatment. By class:
+#' \itemize{
+#'   \item `MediationData`: \eqn{NIE = a b}{NIE = a * b}.
+#'   \item `SerialMediationData`: with `type = "chain"` (the default), the
+#'     effect through the full chain only,
+#'     \eqn{NIE = a \, d_1 \cdots d_{k-1} \, b}{NIE = a * d1 * ... * d(k-1) * b};
+#'     with `type = "total"`, the total indirect effect, the sum over every
+#'     treatment-to-outcome path through at least one mediator (including paths
+#'     that skip a mediator, such as X -> M2 -> Y), which equals
+#'     `te(x) - nde(x)`.
+#'   \item `ParallelMediationData`: \eqn{NIE = \sum_j a_j b_j}{NIE = sum(a_j * b_j)}.
+#'   \item `InteractionMediationData`: \eqn{NIE = INTmed + PIE =
+#'     (\theta_2 + \theta_3) \beta_1}{NIE = INTmed + PIE = (t2 + t3) * b1}.
+#'   \item `JointMediationData`: the joint NIE through all the mediators,
+#'     \eqn{\sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{sum((t2i + t3i) * b1i*)}.
+#' }
+#' The "Methods and Formulas" article on the package website gives the full
+#' formulas.
 #'
 #' @examples
 #' med_data <- fit_mediation(
@@ -44,7 +56,7 @@
 #'
 #' nie(med_data)
 #'
-#' @seealso [nde()], [te()], [pm()], [paths()]
+#' @seealso [nde()], [te()], [pm()], [paths()], [decompose()]
 #' @export
 nie <- S7::new_generic("nie", "x")
 
@@ -54,18 +66,27 @@ nie <- S7::new_generic("nie", "x")
 #' @description
 #' Extract the natural direct effect from a mediation analysis result.
 #' The NDE represents the effect of treatment on outcome that does NOT
-#' operate through the mediator.
+#' operate through the mediator(s).
 #'
-#' @param x A MediationData, SerialMediationData, or BootstrapResult object
+#' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
+#'   [InteractionMediationData], or [JointMediationData] object.
 #' @param ... Additional arguments passed to methods
 #'
-#' @return A numeric value with optional attributes for confidence intervals
+#' @return A numeric scalar of class `mediation_effect` carrying a `type`
+#'   attribute.
 #'
 #' @details
-#' For both simple and serial mediation:
-#' \deqn{NDE = c'}
-#'
-#' where c' is the direct effect coefficient.
+#' Without a treatment-by-mediator product (`MediationData`,
+#' `SerialMediationData`, `ParallelMediationData`) the NDE is the direct-path
+#' coefficient, \eqn{NDE = c'}{NDE = c'}. With a product it also depends on the
+#' mediator's mean under no treatment:
+#' \itemize{
+#'   \item `InteractionMediationData`: \eqn{NDE = CDE + INTref =
+#'     \theta_1 + \theta_3 E[M \mid X = 0, \bar c]}{NDE = CDE + INTref = t1 + t3 * E[M | X = 0, cbar]}.
+#'   \item `JointMediationData`: \eqn{NDE = \theta_1 + \sum_i \theta_{3i}
+#'     \mu^*_{0i}}{NDE = t1 + sum(t3i * mu0i*)}, with \eqn{\mu^*_{0i}}{mu0i*}
+#'     the mean of mediator \eqn{i} under no treatment at the covariate means.
+#' }
 #'
 #' @examples
 #' med_data <- fit_mediation(
@@ -78,7 +99,7 @@ nie <- S7::new_generic("nie", "x")
 #'
 #' nde(med_data)
 #'
-#' @seealso [nie()], [te()], [pm()], [paths()]
+#' @seealso [nie()], [te()], [pm()], [paths()], [decompose()]
 #' @export
 nde <- S7::new_generic("nde", "x")
 
@@ -86,18 +107,20 @@ nde <- S7::new_generic("nde", "x")
 #' Extract Total Effect (TE)
 #'
 #' @description
-#' Extract the total effect from a mediation analysis result.
-#' The TE is the sum of the indirect and direct effects.
+#' Extract the total effect from a mediation analysis result: the sum of the
+#' indirect and direct effects.
 #'
-#' @param x A MediationData, SerialMediationData, or BootstrapResult object
+#' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
+#'   [InteractionMediationData], or [JointMediationData] object.
 #' @param ... Additional arguments passed to methods
 #'
-#' @return A numeric value with optional attributes for confidence intervals
+#' @return A numeric scalar of class `mediation_effect` carrying a `type`
+#'   attribute.
 #'
 #' @details
-#' \deqn{TE = NIE + NDE}
+#' \deqn{TE = NIE + NDE}{TE = NIE + NDE}
 #'
-#' For serial mediation (SerialMediationData) the total effect is the sum over
+#' For a [SerialMediationData] object the total effect is the sum over
 #' every directed X-to-Y path in the fitted models: the direct path, the full
 #' chain, and every path that skips a mediator (for two mediators,
 #' \eqn{c' + a_1 b_1 + a_2 b_2 + a_1 d_{21} b_2}{c' + a1*b1 + a2*b2 + a1*d21*b2}).
@@ -123,7 +146,7 @@ nde <- S7::new_generic("nde", "x")
 #' # Verify: TE = NIE + NDE
 #' nie(med_data) + nde(med_data)
 #'
-#' @seealso [nie()], [nde()], [pm()], [paths()]
+#' @seealso [nie()], [nde()], [pm()], [paths()], [decompose()]
 #' @export
 te <- S7::new_generic("te", "x")
 
@@ -132,16 +155,18 @@ te <- S7::new_generic("te", "x")
 #'
 #' @description
 #' Extract the proportion of the total effect that is mediated (operates
-#' through the mediator).
+#' through the mediator(s)).
 #'
-#' @param x A MediationData, SerialMediationData, or BootstrapResult object
+#' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
+#'   [InteractionMediationData], or [JointMediationData] object.
 #' @param ... Additional arguments passed to methods
 #'
-#' @return A numeric value between 0 and 1 (or negative/greater than 1 in
-#'   cases of suppression effects)
+#' @return A numeric scalar of class `mediation_effect`, usually between 0 and
+#'   1 (negative or greater than 1 in cases of suppression effects), or
+#'   `NA` with a warning when the total effect is numerically zero.
 #'
 #' @details
-#' \deqn{PM = \frac{NIE}{TE} = \frac{NIE}{NIE + NDE}}
+#' \deqn{PM = \frac{NIE}{TE} = \frac{NIE}{NIE + NDE}}{PM = NIE / TE = NIE / (NIE + NDE)}
 #'
 #' For serial mediation (SerialMediationData) the numerator is the total
 #' indirect effect, `nie(x, type = "total")`, and the denominator the full
@@ -154,6 +179,9 @@ te <- S7::new_generic("te", "x")
 #'     opposite signs)
 #'   \item Negative: Inconsistent mediation
 #' }
+#'
+#' The ratio has no delta-method standard error in medfit; bootstrap it with
+#' [bootstrap_mediation()].
 #'
 #' @examples
 #' med_data <- fit_mediation(
@@ -176,7 +204,8 @@ pm <- S7::new_generic("pm", "x")
 #' @description
 #' Extract all path coefficients from a mediation analysis result.
 #'
-#' @param x A MediationData or SerialMediationData object
+#' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
+#'   [InteractionMediationData], or [JointMediationData] object.
 #' @param ... Additional arguments passed to methods
 #'
 #' @return A named numeric vector of path coefficients
@@ -192,10 +221,20 @@ pm <- S7::new_generic("pm", "x")
 #' For serial mediation (SerialMediationData):
 #' \itemize{
 #'   \item `a`: Treatment -> First mediator
-#'   \item `d21`, `d32`, ...: Mediator-to-mediator paths
+#'   \item `d` (two mediators) or `d21`, `d32`, ...: Mediator-to-mediator paths
 #'   \item `b`: Last mediator -> Outcome
 #'   \item `c_prime`: Direct effect
 #' }
+#'
+#' For parallel mediation (ParallelMediationData): `a1`, `b1`, `a2`, `b2`,
+#' ..., `c_prime`.
+#'
+#' For InteractionMediationData: `a`, `b`, `c_prime`, and `theta3` (the
+#' treatment-by-mediator coefficient).
+#'
+#' For JointMediationData: the raw coefficients `a1..aK`, `dij`, `b1..bK`,
+#' `theta3_<mediator>`, and `c_prime`. The `a` paths here are the raw
+#' coefficients, not the propagated `a*` values used by the effects.
 #'
 #' @examples
 #' med_data <- fit_mediation(
@@ -213,19 +252,59 @@ pm <- S7::new_generic("pm", "x")
 paths <- S7::new_generic("paths", "x")
 
 
-#' Four-Way Decomposition of a Mediation Effect
+#' Decomposition of a Mediation Effect
 #'
 #' @description
-#' Return VanderWeele's (2014) four-way decomposition of the total effect for an
-#' [InteractionMediationData] object: controlled direct effect (CDE), reference
-#' interaction (INTref), mediated interaction (INTmed), and pure indirect effect
-#' (PIE), together with the derived natural direct/indirect and total effects.
+#' Return the components of the total effect for an object whose outcome model
+#' has treatment-by-mediator products.
 #'
-#' @param x An [InteractionMediationData] object.
+#' For an [InteractionMediationData] object this is VanderWeele's (2014)
+#' four-way decomposition: controlled direct effect (CDE), reference
+#' interaction (INTref), mediated interaction (INTmed), and pure indirect
+#' effect (PIE), together with the derived natural direct and indirect effects
+#' and the total effect. For a [JointMediationData] object it is the CDE and
+#' the joint natural direct and indirect effects (VanderWeele and Vansteelandt
+#' 2014).
+#'
+#' @param x An [InteractionMediationData] or [JointMediationData] object.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return A named numeric vector:
-#'   `c(cde, int_ref, int_med, pie, nde, nie, total)`.
+#' @return A named numeric vector: `c(cde, int_ref, int_med, pie, nde, nie,
+#'   total)` for `InteractionMediationData`, `c(cde, nde, nie, total)` for
+#'   `JointMediationData`.
+#'
+#' @details
+#' For a 0/1 treatment, outcome model
+#' \eqn{Y = \theta_0 + \theta_1 X + \theta_2 M + \theta_3 X M + \dots}{Y = t0 + t1*X + t2*M + t3*X*M + ...},
+#' mediator model \eqn{M = \beta_0 + \beta_1 X + \dots}{M = b0 + b1*X + ...},
+#' and reference mediator level \eqn{m^*}{m*}:
+#' \deqn{CDE = \theta_1 + \theta_3 m^*}{CDE = t1 + t3 * m*}
+#' \deqn{INTref = \theta_3 (E[M \mid X = 0, \bar c] - m^*)}{INTref = t3 * (E[M | X = 0, cbar] - m*)}
+#' \deqn{INTmed = \theta_3 \beta_1}{INTmed = t3 * b1}
+#' \deqn{PIE = \theta_2 \beta_1}{PIE = t2 * b1}
+#' with \eqn{NDE = CDE + INTref}{NDE = CDE + INTref},
+#' \eqn{NIE = INTmed + PIE}{NIE = INTmed + PIE}, and
+#' \eqn{TE = NDE + NIE}{TE = NDE + NIE}. \eqn{E[M \mid X = 0, \bar c]}{E[M | X = 0, cbar]}
+#' is the mediator model's prediction at no treatment and the covariate means.
+#'
+#' @references
+#' VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+#' 4-way decomposition. *Epidemiology*, 25(5), 749--761.
+#'
+#' VanderWeele, T. J., & Vansteelandt, S. (2014). Mediation analysis with
+#' multiple mediators. *Epidemiologic Methods*, 2(1), 95--115.
+#' \doi{10.1515/em-2012-0010}
+#'
+#' @examples
+#' \donttest{
+#' fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+#'             data = mediation_demo)
+#' fit_y <- lm(outcome ~ treatment * mediator1 + covariate1 + covariate2,
+#'             data = mediation_demo)
+#' med_int <- extract_mediation(fit_m, model_y = fit_y,
+#'                              treatment = "treatment", mediator = "mediator1")
+#' decompose(med_int)
+#' }
 #'
 #' @seealso [nie()], [nde()], [te()]
 #' @export
@@ -291,93 +370,6 @@ S7::method(paths, MediationData) <- function(x, ...) {
 
 
 # --- Methods for SerialMediationData ---
-
-# Structural edges of a serial model: every regression path from X or an
-# earlier mediator into a later mediator or Y. The chain edges keep their
-# historical aliases (a, d1..d{k-1}, b); the edges that skip a link get
-# a{j} (X -> Mj), d{i}_{j} (Mi -> Mj, j > i + 1) and b{i} (Mi -> Y, i < k).
-.serial_edges <- function(k) {
-  # Node indices: 0 = X, 1..k = mediators, k + 1 = Y.
-  mm <- which(upper.tri(diag(k)), arr.ind = TRUE)  # (from = row, to = col)
-  mm <- mm[order(mm[, 1L], mm[, 2L]), , drop = FALSE]
-  adjacent <- mm[, 2L] == mm[, 1L] + 1L
-  data.frame(
-    from = c(rep(0L, k), mm[, 1L], seq_len(k), 0L),
-    to = c(seq_len(k), mm[, 2L], rep(k + 1L, k), k + 1L),
-    alias = c("a", if (k > 1L) paste0("a", seq(2L, k)),
-              ifelse(adjacent, paste0("d", mm[, 1L]),
-                     paste0("d", mm[, 1L], "_", mm[, 2L])),
-              if (k > 1L) paste0("b", seq_len(k - 1L)), "b", "c_prime"),
-    chain = c(TRUE, rep(FALSE, k - 1L), adjacent, rep(FALSE, k - 1L), TRUE, FALSE),
-    stringsAsFactors = FALSE
-  )
-}
-
-
-# Recursive path system of a SerialMediationData object.
-#
-# Returns list(edges, inv) where `edges` holds the edges present in the model
-# (with their values) and `inv` is (I - B)^{-1} over the nodes (X, M1..Mk, Y),
-# so the total effect of X on Y is inv[Y, X]. An edge is present when its
-# source is a predictor of its target (from @mediator_predictors /
-# @outcome_predictors); a skip edge absent from the model is a structural zero.
-# Returns a character string (the reason) when a present skip edge has no
-# stored coefficient, or the predictor bookkeeping is missing: guessing zero
-# there would silently understate or overstate the total effect.
-.serial_path_system <- function(x) {
-  k <- length(x@mediators)
-  nodes <- c(x@treatment, x@mediators)
-  edges <- .serial_edges(k)
-  chain_val <- c(a = x@a_path, stats::setNames(x@d_path, paste0("d", seq_len(k - 1L))),
-                 b = x@b_path, c_prime = x@c_prime)
-
-  preds <- x@mediator_predictors
-  if (length(preds) < k || length(x@outcome_predictors) == 0L) {
-    return("the mediator/outcome predictor lists are not recorded")
-  }
-
-  edges$value <- NA_real_
-  keep <- logical(nrow(edges))
-  for (r in seq_len(nrow(edges))) {
-    al <- edges$alias[r]
-    if (al %in% names(chain_val)) {
-      edges$value[r] <- chain_val[[al]]
-      keep[r] <- TRUE
-      next
-    }
-    target_preds <- if (edges$to[r] > k) x@outcome_predictors else preds[[edges$to[r]]]
-    if (!nodes[edges$from[r] + 1L] %in% target_preds) next
-    val <- if (al %in% names(x@estimates)) unname(x@estimates[[al]]) else NA_real_
-    if (is.na(val)) {
-      return(sprintf("no coefficient '%s' (%s -> %s) is stored in @estimates",
-                     al, nodes[edges$from[r] + 1L],
-                     c(nodes, x@outcome)[edges$to[r] + 1L]))
-    }
-    edges$value[r] <- val
-    keep[r] <- TRUE
-  }
-  edges <- edges[keep, , drop = FALSE]
-
-  n <- k + 2L
-  B <- matrix(0, n, n)
-  B[cbind(edges$to + 1L, edges$from + 1L)] <- edges$value
-  list(edges = edges, inv = solve(diag(n) - B))
-}
-
-
-# Total effect of X on Y (sum over all directed paths), or NA with a warning
-# when the skip-path coefficients are unavailable.
-.serial_total_effect <- function(x) {
-  sys <- .serial_path_system(x)
-  if (is.character(sys)) {
-    warning("Total effect is unavailable for this SerialMediationData: ", sys,
-            ". Use extract_mediation() so every path is recorded.", call. = FALSE)
-    return(NA_real_)
-  }
-  k <- length(x@mediators)
-  sys$inv[k + 2L, 1L]
-}
-
 
 #' @describeIn nie Method for SerialMediationData
 #' @noRd

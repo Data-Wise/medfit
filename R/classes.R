@@ -248,11 +248,20 @@ S7::S4_register(MediationData)
 #' ## Serial Mediation Structure
 #'
 #' Serial mediation models the indirect effect flowing through a sequence of
-#' mediators. The total indirect effect is the product of all path coefficients:
+#' mediators. The indirect effect through the full chain is the product of the
+#' chain's path coefficients:
 #'
 #' - **2 mediators (product-of-three)**: Indirect = a * d * b
 #' - **3 mediators (product-of-four)**: Indirect = a * d21 * d32 * b
 #' - **k mediators (product-of-k+1)**: Indirect = a * d21 * d32 * ... * d(k,k-1) * b
+#'
+#' This is the effect through the chain only, and what [nie()] returns by
+#' default. Paths that skip a mediator (`X -> M2`, `M1 -> Y`, ...) are not part
+#' of it; `nie(x, type = "total")` adds them, and [te()] is the full total
+#' effect over every path, so `pm()` is the total indirect share of it. With
+#' treatment-by-mediator products in the outcome model, [extract_mediation()]
+#' returns a [JointMediationData] object with the effect through all the
+#' mediators together.
 #'
 #' ## Path Notation
 #'
@@ -1220,10 +1229,19 @@ S7::method(print, ParallelMediationData) <- function(x, ...) {
 #' `c_prime` = \eqn{\theta_1}{t1}, `interaction` = \eqn{\theta_3}{t3}. With
 #' reference level `m_star` (\eqn{m^*}{m*}) the components are
 #' \eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = t1 + t3*m*},
+#' \eqn{INTref = \theta_3 (E[M \mid X = 0, \bar c] - m^*)}{INTref = t3*(E[M | X = 0, cbar] - m*)},
 #' \eqn{INTmed = \theta_3 \beta_1}{INTmed = t3*b1}, and
 #' \eqn{PIE = \theta_2 \beta_1}{PIE = t2*b1}. When \eqn{\theta_3 = 0}{t3 = 0} the
 #' decomposition collapses to standard simple mediation (CDE = NDE = \eqn{\theta_1}{t1};
 #' INTref = INTmed = 0; NIE = PIE = \eqn{\theta_2\beta_1}{t2*b1}).
+#'
+#' \eqn{E[M \mid X = 0, \bar c] = \beta_0 + \gamma^\top \bar c}{E[M | X = 0, cbar] = b0 + g'cbar}
+#' is the mediator model's prediction at no treatment and the covariate means
+#' \eqn{\bar c}{cbar}. The effects are for the treatment contrast 0 to 1, and
+#' the lm/glm extractor requires Gaussian identity-link models. From
+#' `fit_mediation(engine = "regmedint")`, `@estimates` and `@vcov` also carry
+#' regmedint's own delta-method covariance of the four components and the
+#' derived effects.
 #'
 #' @param a_path Numeric scalar: treatment -> mediator effect (\eqn{\beta_1}{b1}).
 #' @param b_path Numeric scalar: mediator -> outcome main effect (\eqn{\theta_2}{t2}).
@@ -1255,6 +1273,10 @@ S7::method(print, ParallelMediationData) <- function(x, ...) {
 #'   int_ref, int_med, pie, nde, nie, total_effect, m_star, estimates, vcov,
 #'   sigma_m, sigma_y, treatment, mediator, outcome, mediator_predictors,
 #'   outcome_predictors, data, n_obs, converged, source_package)
+#'
+#' @references
+#' VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+#' 4-way decomposition. *Epidemiology*, 25(5), 749--761.
 #'
 #' @examples
 #' # Hand-built object (theta3 = 0.2 interaction, m* = 0)
@@ -1428,9 +1450,12 @@ S7::method(print, InteractionMediationData) <- function(x, ...) {
 #' mediator \eqn{i} (for a serial chain this includes the paths through earlier
 #' mediators), the unit-contrast effects are
 #' \deqn{NIE = \sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{NIE = sum((t2i + t3i) * b1i*)}
+#' \deqn{NDE = \theta_1 + \sum_i \theta_{3i} \mu^*_{0i}}{NDE = t1 + sum(t3i * mu0i*)}
 #' \deqn{CDE = \theta_1 + \sum_i \theta_{3i} m^*_i}{CDE = t1 + sum(t3i * mi*)}
 #' and \eqn{TE = NDE + NIE}{TE = NDE + NIE}. \eqn{\theta_{3i}}{t3i} is zero for a
-#' mediator without a product term. The validator enforces the NIE and CDE
+#' mediator without a product term, and \eqn{\mu^*_{0i}}{mu0i*} is the mean of
+#' mediator \eqn{i} under no treatment at the covariate means (propagated down a
+#' serial chain like \eqn{\beta^*_{1i}}{b1i*}). The validator enforces the NIE and CDE
 #' identities, so an object with inconsistent numbers cannot be built.
 #'
 #' ## What the joint NIE is, and is not
@@ -1439,8 +1464,8 @@ S7::method(print, InteractionMediationData) <- function(x, ...) {
 #' the treatment through any mediator, including paths among the mediators. It
 #' is not split into per-mediator or per-path pieces, and none of its parts
 #' should be reported as the effect "through M1". For a serial chain it
-#' therefore differs from the `a * d * b` that [SerialMediationData] reports,
-#' which is the effect through the full chain only: with no product term, the
+#' therefore differs from the default `nie()` of a [SerialMediationData]
+#' (`a * d * b`, the effect through the full chain only): with no product term, the
 #' joint NIE of `M1 -> M2` is \eqn{a_1 b_1 + (a_2 + d a_1) b_2}{a1*b1 + (a2 + d*a1)*b2},
 #' not \eqn{a_1 d b_2}{a1*d*b2}. The effects use the unit contrast of a 0/1
 #' treatment (0 to 1).

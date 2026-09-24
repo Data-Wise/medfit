@@ -50,8 +50,7 @@ inverse-probability weighting (IPW). \code{NULL} (default) fits unweighted.}
 \item{se_type}{Variance-covariance estimator for \verb{@vcov}: \code{"model"} (default,
 model-based \code{stats::vcov}) or \code{"sandwich"} (heteroskedasticity-consistent
 \code{sandwich::vcovHC}, type HC3, recommended for IPW-weighted fits). The
-\code{"sandwich"} option requires the suggested \pkg{sandwich} package. Applies
-to the single-mediator path.}
+\code{"sandwich"} option requires the suggested \pkg{sandwich} package.}
 
 \item{engine_args}{Named list of engine-specific overrides (default:
 \code{list()}, no overrides). Ignored by \code{engine = "glm"}. For
@@ -101,6 +100,13 @@ When \code{engine = "glm"} (default):
 \itemize{
 \item Models are fit using \code{\link[stats:glm]{stats::glm()}}
 \item Supports all GLM families (gaussian, binomial, poisson, etc.)
+\item With a non-identity link the path coefficients are on the link
+scale, where the product \eqn{a b}{a * b} is not a natural indirect
+effect on the outcome scale; interpret it with care or use
+\code{engine = "regmedint"} for closed-form effects of a logistic outcome
+\item A treatment-by-mediator term in \code{formula_y} requires Gaussian
+identity-link models (the four-way formulas are linear); other families
+error
 \item For Gaussian models, residual standard deviations are extracted
 \item Non-Gaussian outcomes have \code{sigma_y = NULL}
 }
@@ -171,6 +177,10 @@ med_data_bin <- fit_mediation(
 )
 }
 
+}
+\references{
+VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+4-way decomposition. \emph{Epidemiology}, 25(5), 749--761.
 }
 \seealso{
 \link{MediationData}, \code{\link[=extract_mediation]{extract_mediation()}}, \code{\link[=bootstrap_mediation]{bootstrap_mediation()}}

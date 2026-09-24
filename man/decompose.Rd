@@ -2,24 +2,64 @@
 % Please edit documentation in R/generics-effects.R
 \name{decompose}
 \alias{decompose}
-\title{Four-Way Decomposition of a Mediation Effect}
+\title{Decomposition of a Mediation Effect}
 \usage{
 decompose(x, ...)
 }
 \arguments{
-\item{x}{An \link{InteractionMediationData} object.}
+\item{x}{An \link{InteractionMediationData} or \link{JointMediationData} object.}
 
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-A named numeric vector:
-\code{c(cde, int_ref, int_med, pie, nde, nie, total)}.
+A named numeric vector: \code{c(cde, int_ref, int_med, pie, nde, nie, total)} for \code{InteractionMediationData}, \code{c(cde, nde, nie, total)} for
+\code{JointMediationData}.
 }
 \description{
-Return VanderWeele's (2014) four-way decomposition of the total effect for an
-\link{InteractionMediationData} object: controlled direct effect (CDE), reference
-interaction (INTref), mediated interaction (INTmed), and pure indirect effect
-(PIE), together with the derived natural direct/indirect and total effects.
+Return the components of the total effect for an object whose outcome model
+has treatment-by-mediator products.
+
+For an \link{InteractionMediationData} object this is VanderWeele's (2014)
+four-way decomposition: controlled direct effect (CDE), reference
+interaction (INTref), mediated interaction (INTmed), and pure indirect
+effect (PIE), together with the derived natural direct and indirect effects
+and the total effect. For a \link{JointMediationData} object it is the CDE and
+the joint natural direct and indirect effects (VanderWeele and Vansteelandt
+2014).
+}
+\details{
+For a 0/1 treatment, outcome model
+\eqn{Y = \theta_0 + \theta_1 X + \theta_2 M + \theta_3 X M + \dots}{Y = t0 + t1*X + t2*M + t3*X*M + ...},
+mediator model \eqn{M = \beta_0 + \beta_1 X + \dots}{M = b0 + b1*X + ...},
+and reference mediator level \eqn{m^*}{m*}:
+\deqn{CDE = \theta_1 + \theta_3 m^*}{CDE = t1 + t3 * m*}
+\deqn{INTref = \theta_3 (E[M \mid X = 0, \bar c] - m^*)}{INTref = t3 * (E[M | X = 0, cbar] - m*)}
+\deqn{INTmed = \theta_3 \beta_1}{INTmed = t3 * b1}
+\deqn{PIE = \theta_2 \beta_1}{PIE = t2 * b1}
+with \eqn{NDE = CDE + INTref}{NDE = CDE + INTref},
+\eqn{NIE = INTmed + PIE}{NIE = INTmed + PIE}, and
+\eqn{TE = NDE + NIE}{TE = NDE + NIE}. \eqn{E[M \mid X = 0, \bar c]}{E[M | X = 0, cbar]}
+is the mediator model's prediction at no treatment and the covariate means.
+}
+\examples{
+\donttest{
+fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+            data = mediation_demo)
+fit_y <- lm(outcome ~ treatment * mediator1 + covariate1 + covariate2,
+            data = mediation_demo)
+med_int <- extract_mediation(fit_m, model_y = fit_y,
+                             treatment = "treatment", mediator = "mediator1")
+decompose(med_int)
+}
+
+}
+\references{
+VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+4-way decomposition. \emph{Epidemiology}, 25(5), 749--761.
+
+VanderWeele, T. J., & Vansteelandt, S. (2014). Mediation analysis with
+multiple mediators. \emph{Epidemiologic Methods}, 2(1), 95--115.
+\doi{10.1515/em-2012-0010}
 }
 \seealso{
 \code{\link[=nie]{nie()}}, \code{\link[=nde]{nde()}}, \code{\link[=te]{te()}}

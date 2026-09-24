@@ -7,21 +7,23 @@
 te(x, ...)
 }
 \arguments{
-\item{x}{A MediationData, SerialMediationData, or BootstrapResult object}
+\item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
+\link{InteractionMediationData}, or \link{JointMediationData} object.}
 
 \item{...}{Additional arguments passed to methods}
 }
 \value{
-A numeric value with optional attributes for confidence intervals
+A numeric scalar of class \code{mediation_effect} carrying a \code{type}
+attribute.
 }
 \description{
-Extract the total effect from a mediation analysis result.
-The TE is the sum of the indirect and direct effects.
+Extract the total effect from a mediation analysis result: the sum of the
+indirect and direct effects.
 }
 \details{
-\deqn{TE = NIE + NDE}
+\deqn{TE = NIE + NDE}{TE = NIE + NDE}
 
-For serial mediation (SerialMediationData) the total effect is the sum over
+For a \link{SerialMediationData} object the total effect is the sum over
 every directed X-to-Y path in the fitted models: the direct path, the full
 chain, and every path that skips a mediator (for two mediators,
 \eqn{c' + a_1 b_1 + a_2 b_2 + a_1 d_{21} b_2}{c' + a1*b1 + a2*b2 + a1*d21*b2}).
@@ -49,5 +51,5 @@ nie(med_data) + nde(med_data)
 
 }
 \seealso{
-\code{\link[=nie]{nie()}}, \code{\link[=nde]{nde()}}, \code{\link[=pm]{pm()}}, \code{\link[=paths]{paths()}}
+\code{\link[=nie]{nie()}}, \code{\link[=nde]{nde()}}, \code{\link[=pm]{pm()}}, \code{\link[=paths]{paths()}}, \code{\link[=decompose]{decompose()}}
 }

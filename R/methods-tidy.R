@@ -11,11 +11,14 @@
 # Register S3 methods for S7 classes by adding explicit class attribute
 # Since S7 class names contain "::", we use .onLoad to register methods
 
-#' Tidy a medfit Object
+#' Tidy, Glance, and Inference Methods for medfit Objects
 #'
 #' @description
-#' Convert a mediation data object or a [BootstrapResult] into a tidy tibble,
-#' one row per path coefficient or effect.
+#' `tidy()` converts a mediation data object or a [BootstrapResult] into a
+#' tidy tibble, one row per path coefficient or effect. `glance()` returns a
+#' one-row summary. The base generics [stats::coef()], [stats::vcov()],
+#' [stats::confint()], and [stats::nobs()] also have methods for every
+#' mediation class; see Details.
 #'
 #' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
 #'   [InteractionMediationData], [JointMediationData], or [BootstrapResult]
@@ -24,9 +27,14 @@
 #'   `"effects"`, and for interaction objects `"components"`), `conf.int`
 #'   (logical, add `conf.low`/`conf.high`), and `conf.level` (default 0.95).
 #'
-#' @return A tibble (a data frame if tibble is not installed) with columns
-#'   `term`, `estimate`, `std.error`, and, when `conf.int = TRUE`, `conf.low`
-#'   and `conf.high`.
+#' @return `tidy()`: a tibble (a data frame if tibble is not installed) with
+#'   columns `term`, `estimate`, `std.error`, and, when `conf.int = TRUE`,
+#'   `conf.low` and `conf.high`.
+#'
+#'   `glance()`: a one-row tibble with `nie`, `nde`, `te`, `pm`, `nobs`, and
+#'   `converged`; interaction objects add `interaction` and `m_star`, and
+#'   joint objects add `cde`, `structure`, `n_mediators`, `interactions`, and
+#'   `m_star`.
 #'
 #' @details
 #' Path standard errors are the square roots of the diagonal of `@vcov`.
@@ -44,6 +52,19 @@
 #' The proportion mediated (reported by `glance()`) has no standard error: it
 #' is a ratio whose delta-method standard error is unstable when the total
 #' effect is near zero, so bootstrap it instead.
+#'
+#' ## Base methods
+#'
+#' - `coef(object, type = "paths")`: the path coefficients; `type = "effects"`
+#'   gives the effects, `"all"` both, and for interaction objects
+#'   `"components"` gives the four-way components.
+#' - `vcov(object)`: the stored `@vcov`, covering every entry of `@estimates`.
+#' - `confint(object, parm = "paths", level = 0.95)`: normal intervals for the
+#'   paths, or with `parm = "effects"` for the effects using the delta-method
+#'   standard errors above (interaction objects also accept
+#'   `parm = "components"`). With `parm = "effects"` it warns that the normal
+#'   approximation may be inaccurate for an indirect effect.
+#' - `nobs(object)`: the number of observations.
 #'
 #' @examples
 #' med_data <- fit_mediation(
@@ -83,6 +104,7 @@ tidy.S7_object <- function(x, ...) {
 }
 
 
+#' @rdname tidy.S7_object
 #' @export
 glance.S7_object <- function(x, ...) {
   if (S7::S7_inherits(x, MediationData)) {

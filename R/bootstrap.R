@@ -38,7 +38,8 @@
 #'
 #' @return A [BootstrapResult] object containing:
 #'   - Point estimate
-#'   - Confidence interval bounds
+#'   - Percentile confidence interval bounds (the \eqn{\alpha/2}{alpha/2} and
+#'     \eqn{1 - \alpha/2}{1 - alpha/2} quantiles of the bootstrap distribution)
 #'   - Bootstrap distribution (for parametric and nonparametric)
 #'   - Method used
 #'

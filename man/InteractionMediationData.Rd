@@ -74,10 +74,19 @@ and mediator model \eqn{M = \beta_0 + \beta_1 X + \dots}{M = b0 + b1*X + ...}:
 \code{c_prime} = \eqn{\theta_1}{t1}, \code{interaction} = \eqn{\theta_3}{t3}. With
 reference level \code{m_star} (\eqn{m^*}{m*}) the components are
 \eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = t1 + t3*m*},
+\eqn{INTref = \theta_3 (E[M \mid X = 0, \bar c] - m^*)}{INTref = t3*(E[M | X = 0, cbar] - m*)},
 \eqn{INTmed = \theta_3 \beta_1}{INTmed = t3*b1}, and
 \eqn{PIE = \theta_2 \beta_1}{PIE = t2*b1}. When \eqn{\theta_3 = 0}{t3 = 0} the
 decomposition collapses to standard simple mediation (CDE = NDE = \eqn{\theta_1}{t1};
 INTref = INTmed = 0; NIE = PIE = \eqn{\theta_2\beta_1}{t2*b1}).
+
+\eqn{E[M \mid X = 0, \bar c] = \beta_0 + \gamma^\top \bar c}{E[M | X = 0, cbar] = b0 + g'cbar}
+is the mediator model's prediction at no treatment and the covariate means
+\eqn{\bar c}{cbar}. The effects are for the treatment contrast 0 to 1, and
+the lm/glm extractor requires Gaussian identity-link models. From
+\code{fit_mediation(engine = "regmedint")}, \verb{@estimates} and \verb{@vcov} also carry
+regmedint's own delta-method covariance of the four components and the
+derived effects.
 }
 \examples{
 # Hand-built object (theta3 = 0.2 interaction, m* = 0)
@@ -95,4 +104,8 @@ imd <- InteractionMediationData(
 nie(imd)       # INTmed + PIE = 0.25
 decompose(imd) # all four components + derived effects
 
+}
+\references{
+VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+4-way decomposition. \emph{Epidemiology}, 25(5), 749--761.
 }

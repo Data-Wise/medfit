@@ -11,9 +11,10 @@
   treatment effect on that mediator, NDE and CDE add the product terms at the
   covariate means and at `m_star`. There is no per-mediator split of the NIE.
   For a serial chain the joint NIE counts every path through the mediators,
-  so it differs from the chain-only `a * d * b` that `SerialMediationData`
-  reports. Standard errors use analytic delta-method gradients and a
-  stacked-OLS covariance that includes the correlation between parallel
+  so it differs from the chain-only `a * d * b` that `nie()` reports by
+  default for `SerialMediationData` (it matches `nie(type = "total")` when
+  there is no product term). Standard errors use analytic delta-method
+  gradients and a stacked-OLS covariance that includes the correlation between parallel
   mediator equations; they are conditional on the observed covariates.
   `nie()`, `nde()`, `te()`, `pm()`, `decompose()`, `paths()`, `print()`,
   `summary()`, `coef()`, `vcov()`, `nobs()`, `confint(parm = "paths" /
@@ -180,6 +181,25 @@
   the paths were found through `a_label`, `b_label`, and `cp_label`.
 
 ## Documentation
+
+* New "Methods and Formulas" article collecting the estimand, formula,
+  covariance and standard-error computation for every class, the bootstrap
+  methods, and the fitting engines, with the assumptions each estimand needs.
+
+* Help pages now cover every class: `nie()`, `nde()`, `te()`, `pm()` and
+  `paths()` give the formulas for parallel, interaction and joint objects;
+  `decompose()` gains the four-way formulas, the joint method, references and
+  an example; `InteractionMediationData` gains the INTref formula and
+  `JointMediationData` the NDE formula; `extract_mediation()` documents the
+  lm/glm arguments, the returned classes, and the covariance of the
+  estimates; `tidy()`/`glance()` document `glance()` and the `coef()`,
+  `vcov()`, `confint()` and `nobs()` methods; bootstrap intervals are stated
+  to be percentile intervals.
+
+* Corrected stale examples and statements in the articles and README:
+  `confint(parm = "effects")` (not `type =`), tidy output with delta-method
+  effect SEs, the list of classes, and the covariance between parallel
+  mediator equations, which the lm/glm `@vcov` omits.
 
 * `?fit_mediation` and `?bootstrap_mediation` no longer merge in the
   placeholder stubs left over in `R/aab-generics.R` (removed). Each page had
