@@ -324,8 +324,8 @@ if (boot_result@ci_lower > 0 || boot_result@ci_upper < 0) {
 For serial mediation (treatment -> mediator1 -> mediator2 -> outcome), the
 indirect effect is the product of the chain's paths, $a \times d \times b$.
 The parametric and plugin methods accept a `SerialMediationData` object (and
-`ParallelMediationData` or `InteractionMediationData`) as well as
-`MediationData`. `statistic_fn` receives the named `@estimates` vector, which
+`ParallelMediationData`, `InteractionMediationData`, or `JointMediationData`)
+as well as `MediationData`. `statistic_fn` receives the named `@estimates` vector, which
 carries the chain's path aliases `a`, `d1`, `b`, and `c_prime`:
 
 ```{r}
@@ -480,19 +480,14 @@ Future versions may add:
 
 The delta method provides asymptotic SE for indirect effects:
 
+`confint(parm = "effects")` computes it over the full `@vcov` (for this
+model `Cov(a, b)` is exactly zero, as the outcome equation contains every
+regressor of the mediator equation):
+
 ```{r}
 #| label: delta
-# Delta method SE
-a <- med_data@a_path
-b <- med_data@b_path
-var_a <- vcov(fit_m)["treatment", "treatment"]
-var_b <- vcov(fit_y)["mediator1", "mediator1"]
-cov_ab <- 0 # Assumed independent
-
-se_delta <- sqrt(b^2 * var_a + a^2 * var_b)
-
-# Delta method 95% CI (assumes normality)
-ci_delta <- a * b + c(-1.96, 1.96) * se_delta
+# Delta-method 95% CI for the NIE (assumes normality; warns about it)
+ci_delta <- confint(med_data, parm = "effects")["nie", ]
 
 # Compare with bootstrap
 ci_boot <- c(boot_result@ci_lower, boot_result@ci_upper)

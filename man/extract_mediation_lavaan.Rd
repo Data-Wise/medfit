@@ -46,12 +46,26 @@ length >= 2. \code{"auto"} infers it from the SEM's regression rows: a mediator
 regressed on another mediator implies \code{"serial"}, otherwise \code{"parallel"}.
 The explicit values are authoritative and skip detection.}
 
+\item{decomposition}{Character: \code{"auto"} (default) uses the four-way
+decomposition when a single mediator's outcome equation has a
+treatment-by-mediator product; \code{"four_way"} requires that product;
+\code{"two_way"} ignores it.}
+
+\item{interaction}{Optional character: name of the product column in the
+outcome equation (lavaan takes the product as a data column). When \code{NULL},
+\code{treatment:mediator} and \code{mediator:treatment} are tried.}
+
+\item{m_star}{Numeric scalar: reference mediator level for the controlled
+direct effect in the four-way decomposition (default 0).}
+
 \item{...}{Additional arguments (ignored)}
 }
 \value{
-A \link{MediationData} object; a \link{SerialMediationData} object when
-\code{mediator} is a length >= 2 vector resolving to a serial chain; or a
-\code{ParallelMediationData} object when it resolves to parallel mediation.
+A \link{MediationData} object; an \link{InteractionMediationData} object when
+a single mediator's outcome equation has a treatment-by-mediator product;
+a \link{SerialMediationData} object when \code{mediator} is a length >= 2 vector
+resolving to a serial chain; or a \link{ParallelMediationData} object when it
+resolves to parallel mediation.
 }
 \description{
 Internal function for extracting mediation structure from lavaan models.

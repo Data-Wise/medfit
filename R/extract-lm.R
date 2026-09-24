@@ -28,12 +28,13 @@ glm_class <- S7::new_S3_class("glm")
 #' @param treatment Character: name of the treatment variable
 #' @param mediator Character: name of the mediator variable for simple mediation
 #'   (`X -> M -> Y`), OR an ordered character vector of length >= 2 for serial
-#'   mediation (`X -> M1 -> M2 -> ... -> Y`). When a vector is supplied the
-#'   method returns a [SerialMediationData] object instead of [MediationData].
+#'   or parallel mediation. When a vector is supplied the method returns a
+#'   [SerialMediationData], [ParallelMediationData], or [JointMediationData]
+#'   object instead of [MediationData].
 #' @param mediator_models List of fitted lm/glm models for mediators 2..k (the
 #'   `M2 ~ M1 + ...`, ..., `Mk ~ M(k-1) + ...` regressions), in chain order.
-#'   Required and only used on the serial branch; must have length
-#'   `length(mediator) - 1`.
+#'   Required whenever `mediator` has length >= 2 (serial or parallel); must
+#'   have length `length(mediator) - 1`.
 #' @param outcome Character: name of the outcome variable (optional, auto-detected)
 #' @param data Data frame: original data (optional, extracted from model if available)
 #' @param ... Additional arguments (ignored)
@@ -69,9 +70,12 @@ glm_class <- S7::new_S3_class("glm")
 #'
 #' ## Covariance contract and lm-vs-lavaan divergence
 #'
-#' The combined `vcov` is **block-diagonal across separately-fitted equations**:
-#' coefficients from different regressions are independent by construction, so
-#' `cov(a, b)`, `cov(a, d_i)`, `cov(d_i, b)` are all zero. The covariance
+#' The combined `vcov` is **block-diagonal across separately-fitted equations**,
+#' so `cov(a, b)`, `cov(a, d_i)`, `cov(d_i, b)` are stored as zero. For OLS this
+#' is exact when each later equation contains every regressor of the earlier one
+#' (simple, serial, four-way); for parallel mediators it omits the covariance
+#' between their `a` paths. [JointMediationData] instead stores the full stacked
+#' OLS covariance. The covariance
 #' *within* the outcome equation is preserved, so `cov(b, c')` (and, in serial
 #' chains, the joint covariance among outcome-equation terms) is non-zero.
 #'

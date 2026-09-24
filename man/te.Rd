@@ -7,19 +7,30 @@
 te(x, ...)
 }
 \arguments{
-\item{x}{A MediationData, SerialMediationData, or BootstrapResult object}
+\item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
+\link{InteractionMediationData}, or \link{JointMediationData} object.}
 
 \item{...}{Additional arguments passed to methods}
 }
 \value{
-A numeric value with optional attributes for confidence intervals
+A numeric scalar of class \code{mediation_effect} carrying a \code{type}
+attribute.
 }
 \description{
-Extract the total effect from a mediation analysis result.
-The TE is the sum of the indirect and direct effects.
+Extract the total effect from a mediation analysis result: the sum of the
+indirect and direct effects.
 }
 \details{
-\deqn{TE = NIE + NDE}
+\deqn{TE = NIE + NDE}{TE = NIE + NDE}
+
+For a \link{SerialMediationData} object the NIE is the chain-only effect, so
+\code{te()} returns \eqn{a \, d_1 \cdots d_{k-1} \, b + c'}{a * d1 * ... * b + c'}.
+This equals the total effect of the treatment only when every path that
+skips a mediator (for example \eqn{X \to M_2}{X -> M2} or
+\eqn{M_1 \to Y}{M1 -> Y}) is zero; otherwise it understates or overstates
+it. For linear models with the same covariates, the total effect is the
+treatment coefficient of the outcome regressed on the treatment and
+covariates alone.
 }
 \examples{
 med_data <- fit_mediation(
@@ -37,5 +48,5 @@ nie(med_data) + nde(med_data)
 
 }
 \seealso{
-\code{\link[=nie]{nie()}}, \code{\link[=nde]{nde()}}, \code{\link[=pm]{pm()}}, \code{\link[=paths]{paths()}}
+\code{\link[=nie]{nie()}}, \code{\link[=nde]{nde()}}, \code{\link[=pm]{pm()}}, \code{\link[=paths]{paths()}}, \code{\link[=decompose]{decompose()}}
 }

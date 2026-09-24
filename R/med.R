@@ -19,8 +19,11 @@
 #' @param outcome Character: name of outcome variable
 #' @param covariates Character vector: names of covariates to include
 #'   (optional, default: none)
-#' @param boot Logical: compute bootstrap confidence intervals?
-#'   (default: FALSE for speed)
+#' @param boot Logical: compute a bootstrap confidence interval for the
+#'   indirect effect? (default: FALSE for speed). Uses a parametric bootstrap
+#'   of \eqn{a b}{a * b} with a 95% percentile interval, attached to the result
+#'   as the `"bootstrap"` attribute; call [bootstrap_mediation()] directly for
+#'   another method or level.
 #' @param n_boot Integer: number of bootstrap samples (default: 1000)
 #' @param seed Integer: random seed for reproducibility (optional)
 #' @param ... Additional arguments passed to [fit_mediation()]
@@ -175,7 +178,8 @@ med <- function(data,
 #' Print a one-line summary of mediation results, perfect for quick checks
 #' or ADHD-friendly workflows.
 #'
-#' @param x A MediationData object (or result from [med()])
+#' @param x A [MediationData] or [SerialMediationData] object (or result from
+#'   [med()]). Other classes error; use `print()` or `summary()` for them.
 #' @param digits Integer: number of significant digits (default: 3)
 #' @param ... Additional arguments (ignored)
 #'

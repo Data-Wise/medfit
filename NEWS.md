@@ -171,6 +171,29 @@
 
 ## Documentation
 
+* New "Methods and Formulas" article collecting the estimand, formula,
+  covariance and standard-error computation for every class, the bootstrap
+  methods, and the fitting engines, with the assumptions each estimand needs.
+
+* Help pages now cover every class: `nie()`, `nde()`, `te()`, `pm()` and
+  `paths()` give the formulas for parallel, interaction and joint objects;
+  `decompose()` gains the four-way formulas, the joint method, references and
+  an example; `InteractionMediationData` gains the INTref formula and
+  `JointMediationData` the NDE formula; `extract_mediation()` documents the
+  lm/glm arguments, the returned classes, and the covariance of the
+  estimates; `tidy()`/`glance()` document `glance()` and the `coef()`,
+  `vcov()`, `confint()` and `nobs()` methods; bootstrap intervals are stated
+  to be percentile intervals.
+
+* `te()` and `pm()` for a `SerialMediationData` object are documented as
+  chain-only: they add `c'` to the chain effect `a * d * b`, which equals the
+  total effect only when paths that skip a mediator are zero.
+
+* Corrected stale examples and statements in the articles and README:
+  `confint(parm = "effects")` (not `type =`), tidy output with delta-method
+  effect SEs, the list of classes, and the covariance between parallel
+  mediator equations, which the lm/glm `@vcov` omits.
+
 * `?fit_mediation` and `?bootstrap_mediation` no longer merge in the
   placeholder stubs left over in `R/aab-generics.R` (removed). Each page had
   two usage blocks, two return values, duplicated details sections, and

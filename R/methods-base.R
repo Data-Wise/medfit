@@ -240,7 +240,7 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
     # Delta method over the full vcov, including Cov(a, b) and Cov(ab, c')
     se <- .effect_se(object, c("nie", "nde", "te"))
   } else {
-    stop("parm must be 'paths', 'effects', or specific parameter names", call. = FALSE)
+    stop("parm must be 'paths' or 'effects'", call. = FALSE)
   }
 
   # Compute CI

@@ -28,8 +28,11 @@ med(
 \item{covariates}{Character vector: names of covariates to include
 (optional, default: none)}
 
-\item{boot}{Logical: compute bootstrap confidence intervals?
-(default: FALSE for speed)}
+\item{boot}{Logical: compute a bootstrap confidence interval for the
+indirect effect? (default: FALSE for speed). Uses a parametric bootstrap
+of \eqn{a b}{a * b} with a 95\% percentile interval, attached to the result
+as the \code{"bootstrap"} attribute; call \code{\link[=bootstrap_mediation]{bootstrap_mediation()}} directly for
+another method or level.}
 
 \item{n_boot}{Integer: number of bootstrap samples (default: 1000)}
 

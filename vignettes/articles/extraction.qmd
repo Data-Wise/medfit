@@ -18,7 +18,7 @@ The `extract_mediation()` function provides a standardized interface for extract
 - **lavaan** SEM models - implemented
 - **lmer** mixed models (future)
 
-All extraction methods return a `MediationData` or `SerialMediationData` object, ensuring consistency across modeling frameworks.
+Extraction returns the S7 class that matches the structure: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, or `JointMediationData`. All share one interface (`nie()`, `confint()`, `tidy()`, `bootstrap_mediation()`, ...) across modeling frameworks.
 
 **Note:** For quick analysis, consider using `med()` instead - it handles fitting and extraction in one step. Use `extract_mediation()` when you need more control or already have fitted models.
 
@@ -264,11 +264,16 @@ This model leaves out `mediator2`, a descendant of `mediator1`, so
 `mediator1`'s `b` path (about 0.55 in the population) includes its effect
 through `mediator2`; see `?mediation_demo` for the reduced-form values.
 
-Because the mediator equations are fit separately, `cov(a_j, a_{j'}) = 0` and
-`cov(a_j, b_{j'}) = 0`; but the `b_j` (and `c'`) share the single outcome
-equation, so `cov(b_j, b_{j'})` and `cov(b_j, c')` are preserved. The
-`confint()` indirect-effect SE uses the full delta method over the joint
-`a*/b*` block, not a naive per-mediator sum.
+The mediator equations are fit separately, and the stored `@vcov` sets the
+covariances between their coefficients to zero. `cov(a_j, b_{j'})` is exactly
+zero for least squares, because the outcome equation contains every regressor
+of the mediator equations. `cov(a_j, a_{j'})` is not: when the mediators'
+errors are correlated it is nonzero, and the block-diagonal `@vcov` omits it,
+so the indirect-effect SE can be off. The `b_j` (and `c'`) share the single
+outcome equation, so `cov(b_j, b_{j'})` and `cov(b_j, c')` are preserved. The
+`confint()` indirect-effect SE uses the delta method over this `@vcov`, not a
+naive per-mediator sum. A lavaan fit, or a nonparametric bootstrap, captures
+the omitted covariance; see [Methods and Formulas](methods.html).
 
 ### Several Mediators with a Treatment-by-Mediator Product
 
@@ -740,16 +745,17 @@ se_indirect
 The extraction system is designed to accommodate future extensions:
 
 - **New model types**: Add methods for lmer, brms, etc.
-- **Complex mediation**: Multiple mediators, moderated mediation
+- **Complex mediation**: Moderated mediation
 - **Multiple treatments**: Comparative mediation analysis
 - **Latent variables**: SEM with measurement models
 
-All methods return the same S7 class structure, ensuring consistency.
+All classes share the same interface, so new model types plug into the same effects, intervals and bootstrap.
 
 ## Next Steps
 
 - Learn about [bootstrap inference](bootstrap.html) on extracted models
 - See the [introduction](introduction.html) for S7 class details
+- Read the [formulas behind every effect and standard error](methods.html)
 - Check the reference documentation for `extract_mediation()` methods
 
 ## Working with Extracted Results
@@ -812,7 +818,8 @@ nobs(med_data)                # Sample size
 
 Model extraction is **complete**:
 
-- ✅ S7 class definitions (MediationData, SerialMediationData)
+- ✅ S7 class definitions (MediationData, InteractionMediationData,
+  SerialMediationData, ParallelMediationData, JointMediationData)
 - ✅ lm/glm extraction with checkmate validation
 - ✅ lavaan extraction with checkmate validation
 - ✅ Effect extractors (nie, nde, te, pm, paths)

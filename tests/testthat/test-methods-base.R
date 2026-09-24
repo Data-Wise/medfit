@@ -195,6 +195,28 @@ test_that("confint() errors for bootstrap method", {
   )
 })
 
+test_that("confint() errors for an unsupported parm", {
+  set.seed(123)
+  n <- 100
+  mydata <- data.frame(X = rnorm(n))
+  mydata$M <- 0.5 * mydata$X + rnorm(n)
+  mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
+
+  med_data <- fit_mediation(
+    formula_y = Y ~ X + M,
+    formula_m = M ~ X,
+    data = mydata,
+    treatment = "X",
+    mediator = "M"
+  )
+
+  # Parameter names are not accepted, only the two groups
+  expect_error(
+    confint(med_data, parm = c("a", "b")),
+    "parm must be 'paths' or 'effects'"
+  )
+})
+
 
 test_that("coef() works for SerialMediationData", {
   # Create a SerialMediationData object directly

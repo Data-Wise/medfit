@@ -69,12 +69,20 @@ with many mediators (product-of-k).
 \subsection{Serial Mediation Structure}{
 
 Serial mediation models the indirect effect flowing through a sequence of
-mediators. The total indirect effect is the product of all path coefficients:
+mediators. The indirect effect through the full chain is the product of the
+chain's path coefficients:
 \itemize{
 \item \strong{2 mediators (product-of-three)}: Indirect = a * d * b
 \item \strong{3 mediators (product-of-four)}: Indirect = a * d21 * d32 * b
 \item \strong{k mediators (product-of-k+1)}: Indirect = a * d21 * d32 * ... * d(k,k-1) * b
 }
+
+This is the effect through the chain only. Paths that skip a mediator
+(\code{X -> M2}, \code{M1 -> Y}, ...) are not part of it, so \code{te()} (chain effect plus
+\verb{c'}) equals the total effect only when those paths are zero; see \code{\link[=te]{te()}}. With
+treatment-by-mediator products in the outcome model, \code{\link[=extract_mediation]{extract_mediation()}}
+returns a \link{JointMediationData} object with the effect through all the
+mediators together.
 }
 
 \subsection{Path Notation}{
