@@ -73,6 +73,63 @@ test_that("lm guard ignores products that involve only covariates", {
   expect_s3_class(sm, "medfit::SerialMediationData")
 })
 
+test_that("serial lm extraction errors on a wrapped I(X * M2) product", {
+  d <- generate_guard_data()
+  expect_error(
+    extract_mediation(
+      lm(M1 ~ X + C, d),
+      model_y = lm(Y ~ X + M1 + M2 + I(X * M2) + C, d),
+      treatment = "X", mediator = c("M1", "M2"),
+      mediator_models = list(lm(M2 ~ X + M1 + C, d))
+    ),
+    "product term.*I\\(X \\* M2\\)"
+  )
+})
+
+test_that("parallel lm extraction errors on a wrapped product in a mediator model", {
+  d <- generate_guard_data()
+  d$M3 <- 0.4 * d$X + rnorm(nrow(d))
+  expect_error(
+    extract_mediation(
+      lm(M1 ~ X + C, d),
+      model_y = lm(Y ~ X + M1 + M3 + C, d),
+      treatment = "X", mediator = c("M1", "M3"),
+      mediator_models = list(lm(M3 ~ X + I(X * C), d))
+    ),
+    "product term.*I\\(X \\* C\\)"
+  )
+})
+
+test_that("single-mediator lm extraction errors on a wrapped X-by-M product", {
+  d <- generate_guard_data()
+  expect_error(
+    extract_mediation(
+      lm(M1 ~ X + C, d),
+      model_y = lm(Y ~ X + M1 + I(X * M1) + C, d),
+      treatment = "X", mediator = "M1"
+    ),
+    "function-wrapped.*I\\(X \\* M1\\)"
+  )
+})
+
+test_that("wrapped-product detection ignores single-variable transforms", {
+  d <- generate_guard_data()
+  d$C2 <- abs(rnorm(nrow(d))) + 1
+  sm <- extract_mediation(
+    lm(M1 ~ X + C, d),
+    model_y = lm(Y ~ X + M1 + M2 + I(X^2) + log(C2) + I(C * C2), d),
+    treatment = "X", mediator = c("M1", "M2"),
+    mediator_models = list(lm(M2 ~ X + M1 + C, d))
+  )
+  expect_s3_class(sm, "medfit::SerialMediationData")
+  single <- extract_mediation(
+    lm(M1 ~ X + C, d),
+    model_y = lm(Y ~ X + M1 + I(X * C) + C, d),
+    treatment = "X", mediator = "M1"
+  )
+  expect_s3_class(single, "medfit::MediationData")
+})
+
 # ==============================================================================
 # lavaan path
 # ==============================================================================

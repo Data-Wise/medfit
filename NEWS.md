@@ -49,6 +49,18 @@
 
 ## Bug fixes
 
+* `extract_mediation()` on lm/glm fits now detects products written inside a
+  function call, such as `I(X * M)`. R records such a term as an ordinary
+  covariate, so it previously bypassed both the multi-mediator product guard
+  and the single-mediator interaction check: the fit returned main-effect
+  estimates that ignored the product, with no error. Multi-mediator
+  extraction now errors on any wrapped product involving the treatment or a
+  mediator. Single-mediator extraction errors on a wrapped
+  treatment-by-mediator product and asks for `X * M` or `X:M`, which route
+  to the four-way decomposition. Single-variable transforms such as
+  `I(X^2)` are unaffected, and a product precomputed as a data column still
+  cannot be detected from the formula.
+
 * `confint(parm = "effects")` for `MediationData` gave a total-effect interval
   that was too wide: it treated the indirect effect and `c'` as independent,
   dropping their covariance. It now uses the full delta-method gradient (on the
