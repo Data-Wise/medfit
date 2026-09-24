@@ -549,7 +549,8 @@ S7::method(extract_mediation, glm_class) <- function(
   if (length(hits) == 0L) return(invisible(NULL))
   stop(paste0(
     "Multi-mediator (serial or parallel) extraction does not support product ",
-    "terms involving the treatment or a mediator; found product term(s): ",
+    "terms involving the treatment or a mediator, including function-wrapped ",
+    "terms such as I(X * M) that combine one with another variable; found: ",
     paste(hits, collapse = ", "), ". These paths would be reported as main ",
     "effects that ignore the interaction. Refit without the product term(s), ",
     "or use a single mediator (whose X:M interaction is supported via the ",

@@ -54,8 +54,8 @@
   covariate, so it previously bypassed both the multi-mediator product guard
   and the single-mediator interaction check: the fit returned main-effect
   estimates that ignored the product, with no error. Multi-mediator
-  extraction now errors on any wrapped product involving the treatment or a
-  mediator. Single-mediator extraction errors on a wrapped
+  extraction now errors on any wrapped term that combines the treatment or a
+  mediator with another variable (e.g. `I(X * M2)` or `log(M1 + C)`). Single-mediator extraction errors on a wrapped
   treatment-by-mediator product and asks for `X * M` or `X:M`, which route
   to the four-way decomposition. Single-variable transforms such as
   `I(X^2)` are unaffected, and a product precomputed as a data column still
