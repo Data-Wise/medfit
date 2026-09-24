@@ -559,8 +559,7 @@ During `devtools::load_all()`:
   just for first submissions.
 - Any Suggests pkg used unconditionally must move to Imports, or be guarded with
   `requireNamespace()` in code **and** `skip_if_not_installed()` in tests. `\donttest` examples
-  run under `--as-cran`; only genuinely-unrunnable code (e.g. the unimplemented
-  `fit_mediation`/`bootstrap_mediation` stubs) may keep `\dontrun{}`.
+  run under `--as-cran`; only genuinely-unrunnable code may keep `\dontrun{}`.
 - **`.Rbuildignore` is independent of `.gitignore`** — a directory git-ignores (e.g. the
   `.remember/` session-memory scratch dir used across the mediationverse repos) still gets
   swept into the tarball by `R CMD build` unless it's *also* in `.Rbuildignore`. `git status`
