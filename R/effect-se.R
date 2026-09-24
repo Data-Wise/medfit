@@ -182,16 +182,17 @@
   beta0 <- if ("b0" %in% rownames(vc)) unname(x@estimates[["b0"]]) else 0
   m_ref <- beta0
   cov_grad <- numeric(0)
+  # Covariate means as in the extractor: design columns rebuilt from @data, so
+  # factor dummies and transformed terms are included.
   m_covs <- setdiff(x@mediator_predictors, x@treatment)
+  m_covs <- m_covs[paste0("m_", m_covs) %in% rownames(vc)]
   if (length(m_covs) > 0 && !is.null(x@data)) {
+    c_bar <- .interaction_covariate_means(x@data, m_covs)
     for (cv in m_covs) {
       pn <- paste0("m_", cv)
-      if (cv %in% names(x@data) && is.numeric(x@data[[cv]]) &&
-            pn %in% rownames(vc)) {
-        cm <- mean(x@data[[cv]], na.rm = TRUE)
-        m_ref <- m_ref + unname(x@estimates[[pn]]) * cm
-        cov_grad[pn] <- t3 * cm
-      }
+      cm <- c_bar[[cv]]
+      m_ref <- m_ref + unname(x@estimates[[pn]]) * cm
+      cov_grad[pn] <- t3 * cm
     }
   }
   ref_dev <- m_ref - m_star

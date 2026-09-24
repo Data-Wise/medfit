@@ -739,15 +739,22 @@ S7::method(extract_mediation, glm_class) <- function(
   }
 
   # --- Reference prediction E[M | X = 0]: covariates at their sample means ---
+  # Means are over the mediator model's design columns, so factor dummies
+  # (e.g. Gb, Gc) and transformed terms (e.g. log(C)) are included.
   m_covs <- setdiff(names(coef_m), c("(Intercept)", treatment))
+  # With case weights (frequency, survey or IPW), the means are weighted.
+  mm_m <- tryCatch(stats::model.matrix(model_m), error = function(e) NULL)
+  w_m <- tryCatch(stats::model.weights(stats::model.frame(model_m)),
+                  error = function(e) NULL)
+  c_bar <- .interaction_covariate_means(data, m_covs, mm = mm_m, w = w_m)
   m_ref <- beta0
-  if (length(m_covs) > 0 && !is.null(data)) {
-    for (cv in m_covs) {
-      if (cv %in% names(data) && is.numeric(data[[cv]])) {
-        m_ref <- m_ref + unname(coef_m[[cv]]) * mean(data[[cv]], na.rm = TRUE)
-      }
-    }
+  for (cv in m_covs) {
+    m_ref <- m_ref + unname(coef_m[[cv]]) * c_bar[[cv]]
   }
+  # Keep the exact means with @data so the delta-method gradients reuse them:
+  # caller-supplied data (fit_mediation() passes the raw data) is not a model
+  # frame and may hold rows the mediator model did not use.
+  if (!is.null(data)) attr(data, "medfit_covariate_means") <- c_bar
 
   # --- Four-way components (continuous Y, M; binary X) ---
   cde     <- theta1 + theta3 * m_star
@@ -817,6 +824,49 @@ S7::method(extract_mediation, glm_class) <- function(
     data = data, n_obs = as.integer(n_obs),
     converged = converged, source_package = source_package
   )
+}
+
+
+#' Covariate means for the reference mediator mean (four-way decomposition)
+#'
+#' Sample (or case-weighted) means of the mediator model's covariate design
+#' columns: from `mm` when given (the extractor passes
+#' `model.matrix(model_m)`), else the means
+#' the extractor stored on `dat` (attribute `medfit_covariate_means`), else
+#' rebuilt from a model frame's `terms` attribute, else plain numeric columns
+#' of `dat` (e.g. the lavaan data matrix). Uses [mean()] per column so
+#' numeric-covariate results match the column means exactly.
+#'
+#' @param dat Data frame (the object's `@data`), or `NULL`.
+#' @param covs Covariate coefficient names (mediator model, excluding the
+#'   intercept and the treatment).
+#' @param mm Optional design matrix of the mediator model.
+#' @param w Optional case weights over the rows of `mm`; `NULL` for unweighted
+#'   means. A model frame's `(weights)` column is used when rebuilding.
+#' @return Named numeric vector over `covs`.
+#' @keywords internal
+.interaction_covariate_means <- function(dat, covs, mm = NULL, w = NULL) { # nolint: object_length_linter.
+  if (length(covs) == 0L) return(stats::setNames(numeric(0), character(0)))
+  col_means <- function(get) {
+    stats::setNames(vapply(covs, get, numeric(1), USE.NAMES = FALSE), covs)
+  }
+  stored <- attr(dat, "medfit_covariate_means")
+  if (is.null(mm) && all(covs %in% names(stored))) return(stored[covs])
+  if (is.null(mm) && !is.null(attr(dat, "terms"))) {
+    w <- stats::model.weights(dat)
+    mm <- tryCatch(stats::model.matrix(attr(dat, "terms"), dat),
+                   error = function(e) NULL)
+  }
+  if (!is.null(mm) && all(covs %in% colnames(mm))) {
+    if (is.null(w)) return(col_means(function(cv) mean(mm[, cv])))
+    return(col_means(function(cv) sum(mm[, cv] * w) / sum(w)))
+  }
+  if (!is.null(dat) && all(covs %in% names(dat)) &&
+        all(vapply(covs, function(cv) is.numeric(dat[[cv]]), logical(1)))) {
+    return(col_means(function(cv) mean(dat[[cv]], na.rm = TRUE)))
+  }
+  stop("Cannot compute the covariate means for E[M | X = 0] (four-way ",
+       "decomposition) for: ", paste(covs, collapse = ", "), ".", call. = FALSE)
 }
 
 
