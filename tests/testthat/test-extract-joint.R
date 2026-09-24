@@ -345,3 +345,109 @@ test_that("without products the joint NIE is the all-paths sum (G1, group 3)", {
   expect_equal(chain, cf$m1[["X"]] * cf$m2[["M1"]] * cf$y[["M2"]], tolerance = 1e-10)
   expect_gt(abs(js@nie - chain), 0.05)
 })
+
+# ==============================================================================
+# Gradients, SEs, generics, bootstrap (PLAN T6; spec test groups 5 and 8)
+# ==============================================================================
+
+test_that("analytic gradients match central differences for every effect", {
+  cases <- list(
+    serial_M1 = list(sim_joint("serial", "M1", n = 500, seed = 51)$data, "serial", "M1"),
+    serial_M2 = list(sim_joint("serial", "M2", n = 500, seed = 52)$data, "serial", "M2"),
+    parallel_M1 = list(sim_joint("parallel", "M1", n = 500, seed = 53)$data, "parallel", "M1")
+  )
+  for (nm in names(cases)) {
+    cs <- cases[[nm]]
+    obj <- fit_joint(cs[[1]], cs[[2]], cs[[3]], m_star = 0.7)$obj
+    spec <- joint_spec(obj)
+    est <- obj@estimates[spec$src]
+    grads <- .effect_gradients(obj)
+    h <- 1e-6
+    for (e in c("nde", "nie", "te", "cde")) {
+      num <- vapply(names(est), function(p) {
+        up <- est
+        dn <- est
+        up[p] <- up[p] + h
+        dn[p] <- dn[p] - h
+        (joint_effects_est(up, spec)[[e]] - joint_effects_est(dn, spec)[[e]]) / (2 * h)
+      }, numeric(1))
+      ana <- stats::setNames(numeric(length(est)), names(est))
+      ana[names(grads[[e]])] <- grads[[e]]
+      expect_equal(ana, num, tolerance = 1e-6, label = paste(nm, e, "gradient"))
+    }
+  }
+})
+
+test_that("effect generics read the stored joint effects", {
+  obj <- fit_joint(sim_joint("serial", "M2", n = 400, seed = 54)$data,
+                   "serial", "M2")$obj
+  expect_equal(unclass(nie(obj))[1], obj@nie, ignore_attr = TRUE)
+  expect_equal(unclass(nde(obj))[1], obj@nde, ignore_attr = TRUE)
+  expect_equal(unclass(te(obj))[1], obj@total_effect, ignore_attr = TRUE)
+  expect_equal(unclass(pm(obj))[1], obj@nie / obj@total_effect, ignore_attr = TRUE)
+  expect_equal(decompose(obj), c(cde = obj@cde, nde = obj@nde, nie = obj@nie,
+                                 total = obj@total_effect))
+  expect_named(paths(obj), c("a1", "a2", "b1", "b2", "theta3_M2", "c_prime", "d21"))
+  # pm() warns and returns NA when the total effect is ~0.
+  z <- make_joint_obj(a_total = c(M1 = 0, M2 = 0), c_prime = 0, cde = 0.2,
+                      nde = 0, nie = 0, total_effect = 0)
+  expect_warning(expect_true(is.na(pm(z))), "approximately zero")
+})
+
+test_that("plugin and parametric bootstraps accept JointMediationData", {
+  obj <- fit_joint(sim_joint("serial", "M2", n = 400, seed = 55)$data,
+                   "serial", "M2")$obj
+  spec <- joint_spec(obj)
+  stat <- function(theta) joint_effects_est(theta, spec)[["nie"]]
+  plug <- bootstrap_mediation(stat, method = "plugin", mediation_data = obj)
+  expect_equal(plug@estimate, obj@nie, tolerance = 1e-10)
+  par <- bootstrap_mediation(stat, method = "parametric", mediation_data = obj,
+                             n_boot = 200L, seed = 1)
+  expect_equal(par@estimate, obj@nie, tolerance = 1e-10)
+})
+
+# Oracle 5: delta-method SEs against nonparametric bootstrap SDs, for serial
+# and for parallel mediators with correlated errors (where the stacked-OLS
+# cross-block matters).
+se_fixtures <- list(
+  serial_M2 = list("serial", "M2", 0),
+  parallel_M1_rho = list("parallel", "M1", 0.5)
+)
+
+check_joint_se <- function(n, B, tol, seed) {
+  for (nm in names(se_fixtures)) {
+    f <- se_fixtures[[nm]]
+    d <- sim_joint(f[[1]], f[[2]], n = n, seed = seed, rho = f[[3]])$data
+    obj <- fit_joint(d, f[[1]], f[[2]])$obj
+    delta <- .effect_se(obj, c("nde", "nie", "te"))
+    boot <- boot_joint_se(
+      d, function(dd) fit_joint(dd, f[[1]], f[[2]])$obj,
+      function(o) c(nde = o@nde, nie = o@nie, te = o@total_effect),
+      B = B, seed = seed
+    )
+    expect_equal(unname(delta), unname(boot[c("nde", "nie", "te")]),
+                 tolerance = tol, label = paste(nm, "delta SE vs bootstrap"))
+    if (f[[3]] > 0) {
+      # Positive control: a block-diagonal vcov misses the correlation.
+      src <- grep("^(m[0-9]+|y)_", rownames(obj@vcov), value = TRUE)
+      bd <- obj@vcov[src, src]
+      eq <- sub("_.*", "", src)
+      bd[outer(eq, eq, "!=")] <- 0
+      g <- .effect_gradients(obj)$nie
+      se_bd <- sqrt(.gradient_var(g, bd))
+      # The correlated cross-block moves the NIE SE (deterministic) ...
+      expect_gt(abs(se_bd / delta[["nie"]] - 1), 0.03)
+      # ... and at the strict tolerance, dropping it fails the bootstrap oracle.
+      if (tol <= 0.03) expect_gt(abs(se_bd / boot[["nie"]] - 1), tol)
+    }
+  }
+}
+
+test_that("delta-method SEs agree with the bootstrap (always on, loose)", {
+  check_joint_se(n = 800, B = 300, tol = 0.15, seed = 61)
+})
+
+test_that("delta-method SEs are within 3% of the bootstrap (B = 5000)", {
+  skip_on_cran()
+  check_joint_se(n = 1500, B = 5000, tol = 0.03, seed = 62)
+})

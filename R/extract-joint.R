@@ -238,6 +238,55 @@
 }
 
 
+# Covariate coefficient names of a joint object: first-mediator source rows
+# other than the intercept and the treatment (that model uses no mediator).
+.joint_cov_names <- function(est, treatment) {
+  covs <- sub("^m1_", "", grep("^m1_", names(est), value = TRUE))
+  setdiff(covs, c("(Intercept)", treatment))
+}
+
+
+# Outcome source rows of the treatment-by-mediator products, in the order of
+# `interactions` (either spelling, X:M or M:X).
+.joint_theta3_rows <- function(est, treatment, interactions) {
+  vapply(interactions, function(m) {
+    cand <- paste0("y_", c(paste0(treatment, ":", m), paste0(m, ":", treatment)))
+    hit <- cand[cand %in% names(est)]
+    if (length(hit) == 0L) NA_character_ else hit[1L]
+  }, character(1), USE.NAMES = FALSE)
+}
+
+
+#' Sample means of the covariate design columns of a joint object
+#'
+#' Rebuilds the design from `@data` (the outcome model frame, whose `terms`
+#' attribute gives factor dummies the extractor's column names). Falls back to
+#' plain numeric columns for a hand-built `data`.
+#'
+#' @param x A JointMediationData object.
+#' @param covs Covariate coefficient names.
+#' @return Named numeric vector (length 0 when there are no covariates).
+#' @keywords internal
+.joint_covariate_means <- function(x, covs) {
+  if (length(covs) == 0L) return(stats::setNames(numeric(0), character(0)))
+  dat <- x@data
+  if (is.null(dat)) {
+    stop("JointMediationData has no @data; covariate means are unavailable.",
+         call. = FALSE)
+  }
+  mm <- tryCatch(stats::model.matrix(attr(dat, "terms"), dat),
+                 error = function(e) NULL)
+  if (!is.null(mm) && all(covs %in% colnames(mm))) {
+    return(colMeans(mm[, covs, drop = FALSE]))
+  }
+  if (all(covs %in% names(dat)) && all(vapply(dat[covs], is.numeric, logical(1)))) {
+    return(colMeans(dat[covs]))
+  }
+  stop("cannot rebuild covariate means for: ", paste(covs, collapse = ", "),
+       call. = FALSE)
+}
+
+
 #' Propagate mediator means down a serial chain
 #'
 #' The joint effects need each mediator's mean given the treatment and

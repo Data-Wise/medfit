@@ -463,6 +463,60 @@ S7::method(decompose, InteractionMediationData) <- function(x, ...) {
 }
 
 
+# --- Methods for JointMediationData ---
+
+# Wrap a stored joint effect as a mediation_effect.
+.joint_effect <- function(value, type) {
+  class(value) <- c("mediation_effect", "numeric")
+  attr(value, "type") <- type
+  value
+}
+
+#' @describeIn nie Method for JointMediationData (joint NIE through all
+#'   mediators and every path among them)
+#' @noRd
+S7::method(nie, JointMediationData) <- function(x, ...) {
+  .joint_effect(x@nie, "nie")
+}
+
+#' @describeIn nde Method for JointMediationData
+#' @noRd
+S7::method(nde, JointMediationData) <- function(x, ...) {
+  .joint_effect(x@nde, "nde")
+}
+
+#' @describeIn te Method for JointMediationData (NDE + NIE)
+#' @noRd
+S7::method(te, JointMediationData) <- function(x, ...) {
+  .joint_effect(x@total_effect, "te")
+}
+
+#' @describeIn pm Method for JointMediationData (NIE / TE)
+#' @noRd
+S7::method(pm, JointMediationData) <- function(x, ...) {
+  if (abs(x@total_effect) < .Machine$double.eps) {
+    warning("Total effect is approximately zero; proportion mediated is undefined.",
+            call. = FALSE)
+    return(NA_real_)
+  }
+  .joint_effect(x@nie / x@total_effect, "pm")
+}
+
+#' @describeIn paths Method for JointMediationData (raw path coefficients:
+#'   a1..aK, dij, b1..bK, theta3_<mediator>, c_prime)
+#' @noRd
+S7::method(paths, JointMediationData) <- function(x, ...) {
+  est <- x@estimates
+  est[grepl("^(a[0-9]+|d[0-9]+|b[0-9]+|theta3_.+|c_prime)$", names(est))]
+}
+
+#' @describeIn decompose Method for JointMediationData (CDE, NDE, NIE, total)
+#' @noRd
+S7::method(decompose, JointMediationData) <- function(x, ...) {
+  c(cde = x@cde, nde = x@nde, nie = x@nie, total = x@total_effect)
+}
+
+
 # --- Methods for BootstrapResult ---
 
 #' @describeIn nie Method for BootstrapResult (extracts estimate)

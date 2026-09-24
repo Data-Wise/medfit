@@ -33,10 +33,13 @@ bootstrap_mediation(
 }}
 
 \item{mediation_data}{A mediation data object (required for parametric/plugin):
-\link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData}, or
-\link{InteractionMediationData}. \code{statistic_fn} receives its named \verb{@estimates}
-vector, which includes path aliases (e.g. \code{a}, \code{d1}, \code{b}, \code{c_prime} for a
-serial chain; \code{a1}, \code{b1}, \code{a2}, \code{b2} for parallel mediators).}
+\link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
+\link{InteractionMediationData}, or \link{JointMediationData}. \code{statistic_fn}
+receives its named \verb{@estimates} vector, which includes path aliases (e.g.
+\code{a}, \code{d1}, \code{b}, \code{c_prime} for a serial chain; \code{a1}, \code{b1}, \code{a2}, \code{b2} for
+parallel mediators). For a \link{JointMediationData} the aliases alone cannot
+reproduce the NDE, which also needs the prefixed intercept and covariate
+rows (\code{m1_}, ..., \code{y_}) and the sample covariate means.}
 
 \item{data}{Data frame (required for nonparametric bootstrap)}
 
