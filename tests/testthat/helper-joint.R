@@ -224,14 +224,3 @@ joint_effects_est <- function(est, spec, flip_theta3 = FALSE, raw_b1 = FALSE) {
 joint_effect_fn <- function(...) {
   function(o) joint_effects_est(o@estimates, joint_spec(o), ...)[c("nde", "nie", "te")]
 }
-
-# Monte Carlo SE of the effects: draws from N(estimates, vcov) over the source
-# rows, pushed through joint_effects_est().
-joint_mc_se <- function(obj, draws = 4000, seed = 5) {
-  spec <- joint_spec(obj)
-  set.seed(seed)
-  z <- MASS::mvrnorm(draws, obj@estimates[spec$src],
-                     obj@vcov[spec$src, spec$src])
-  eff <- apply(z, 1L, joint_effects_est, spec = spec)
-  apply(eff, 1L, stats::sd)
-}

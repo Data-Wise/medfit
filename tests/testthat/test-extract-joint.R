@@ -282,7 +282,9 @@ check_joint_oracles <- function(n, truth_draws, gcomp_draws, seed) {
     expect_equal(effects_from(obj, joint_effect_fn()), est, tolerance = 1e-10)
 
     truth <- true_joint_effects(sim, draws = truth_draws)
-    se <- joint_mc_se(obj)
+    # Deterministic delta-method SEs (validated against the bootstrap below);
+    # Monte Carlo SEs from MASS::mvrnorm() vary across LAPACK builds.
+    se <- .effect_se(obj, c("nde", "nie", "te", "cde"))
     for (e in names(est)) {
       expect_lt(abs(est[[e]] - truth[[e]]), 3 * se[[e]], label = paste(nm, e, "vs truth"))
     }
@@ -311,12 +313,12 @@ check_joint_oracles <- function(n, truth_draws, gcomp_draws, seed) {
 
 
 test_that("joint effects match the truth and g-computation (small n, always on)", {
-  est <- check_joint_oracles(n = 5000, truth_draws = 2e5, gcomp_draws = 5e4, seed = 41)
+  est <- check_joint_oracles(n = 10000, truth_draws = 2e5, gcomp_draws = 5e4, seed = 41)
   # Regression pins at the fixed seed.
   expect_equal(unlist(est), c(
-    serial_M1.nde = 0.2057887549, serial_M1.nie = 0.5010109192, serial_M1.te = 0.7067996741,
-    serial_M2.nde = 0.1947546533, serial_M2.nie = 0.4946574373, serial_M2.te = 0.6894120906,
-    parallel_M1.nde = 0.2057887549, parallel_M1.nie = 0.4190438150, parallel_M1.te = 0.6248325699
+    serial_M1.nde = 0.2146090223, serial_M1.nie = 0.4973033264, serial_M1.te = 0.7119123487,
+    serial_M2.nde = 0.2163920635, serial_M2.nie = 0.4941334549, serial_M2.te = 0.7105255183,
+    parallel_M1.nde = 0.2146090223, parallel_M1.nie = 0.4168810885, parallel_M1.te = 0.6314901108
   ), tolerance = 1e-8)
 })
 
