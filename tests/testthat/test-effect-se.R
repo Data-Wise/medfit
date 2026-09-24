@@ -123,19 +123,17 @@ test_that("Interaction (regmedint) confint() effects and components are unchange
 # ==============================================================================
 #
 # lavaan's := SEs are delta-method SEs on the same joint vcov, so the helper
-# must match them. Extraction uses the unlabeled fit of the same model: custom
-# path labels currently zero the extractor's alias rows (tracked separately).
+# must match them. Extraction and the oracle share one labeled fit, which also
+# exercises the extractor's alias rows under custom path labels.
 
 lavaan_defined_se <- function(labeled_fit, label) {
   pe <- lavaan::parameterEstimates(labeled_fit)
   pe$se[pe$label == label]
 }
 
-expect_lavaan_oracle <- function(unlabeled, labeled, treatment, mediator,
-                                 outcome, data) {
-  fit_u <- lavaan::sem(unlabeled, data = data)
+expect_lavaan_oracle <- function(labeled, treatment, mediator, outcome, data) {
   fit_l <- lavaan::sem(labeled, data = data)
-  med <- extract_mediation(fit_u, treatment = treatment, mediator = mediator,
+  med <- extract_mediation(fit_l, treatment = treatment, mediator = mediator,
                            outcome = outcome)
   expect_equal( # nolint: object_usage_linter.
     unname(.effect_se(med, c("nie", "nde", "te"))),
@@ -148,8 +146,6 @@ expect_lavaan_oracle <- function(unlabeled, labeled, treatment, mediator,
 test_that("helper matches lavaan := SEs for simple mediation", {
   skip_if_not_installed("lavaan")
   expect_lavaan_oracle(
-    "mediator1 ~ treatment + covariate1 + covariate2
-     outcome ~ treatment + mediator1 + covariate1 + covariate2",
     "mediator1 ~ aa*treatment + covariate1 + covariate2
      outcome ~ cp*treatment + bb*mediator1 + covariate1 + covariate2
      ind := aa*bb
@@ -161,9 +157,6 @@ test_that("helper matches lavaan := SEs for simple mediation", {
 test_that("helper matches lavaan := SEs for serial mediation (2 mediators)", {
   skip_if_not_installed("lavaan")
   expect_lavaan_oracle(
-    "mediator1 ~ treatment + covariate1 + covariate2
-     mediator2 ~ mediator1 + treatment + covariate1 + covariate2
-     outcome ~ treatment + mediator1 + mediator2 + covariate1 + covariate2",
     "mediator1 ~ aa*treatment + covariate1 + covariate2
      mediator2 ~ dd*mediator1 + treatment + covariate1 + covariate2
      outcome ~ cp*treatment + mediator1 + bb*mediator2 + covariate1 + covariate2
@@ -187,10 +180,6 @@ serial3_data <- function() {
 test_that("helper matches lavaan := SEs for serial mediation (3 mediators)", {
   skip_if_not_installed("lavaan")
   expect_lavaan_oracle(
-    "M1 ~ X
-     M2 ~ X + M1
-     M3 ~ X + M1 + M2
-     Y ~ X + M1 + M2 + M3",
     "M1 ~ aa*X
      M2 ~ X + d1*M1
      M3 ~ X + M1 + d2*M2
@@ -204,9 +193,6 @@ test_that("helper matches lavaan := SEs for serial mediation (3 mediators)", {
 test_that("helper matches lavaan := SEs for parallel mediation", {
   skip_if_not_installed("lavaan")
   expect_lavaan_oracle(
-    "mediator1 ~ treatment + covariate1 + covariate2
-     mediator3 ~ treatment + covariate1 + covariate2
-     outcome ~ treatment + mediator1 + mediator3 + covariate1 + covariate2",
     "mediator1 ~ a1*treatment + covariate1 + covariate2
      mediator3 ~ a2*treatment + covariate1 + covariate2
      outcome ~ cp*treatment + b1*mediator1 + b2*mediator3 + covariate1 + covariate2
