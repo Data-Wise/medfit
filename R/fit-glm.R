@@ -245,7 +245,7 @@ fit_mediation <- function(formula_y,
       family_m = family_m,
       weights = weights,
       se_type = se_type,
-      m_star = m_star,
+      m_star = if (missing(m_star)) NULL else m_star,
       ...
     ),
     regmedint = .adapter_regmedint(
@@ -278,8 +278,9 @@ fit_mediation <- function(formula_y,
 #'   `NULL` for an unweighted fit. Passed explicitly (not via `...`) so glm's
 #'   non-standard evaluation of `weights` resolves in this frame.
 #' @param m_star Numeric scalar reference mediator level for the four-way
-#'   decomposition; forwarded to [extract_mediation()], which applies it when
-#'   `formula_y` carries a treatment-by-mediator term.
+#'   decomposition, or `NULL` when the caller did not supply one. Forwarded to
+#'   [extract_mediation()] only when non-`NULL`, because the extractor refuses an
+#'   `m_star` that no four-way fit uses (it keys on the call site).
 #' @param ... Additional arguments (passed to glm)
 #'
 #' @return MediationData object
@@ -295,7 +296,7 @@ fit_mediation <- function(formula_y,
   family_m,
   weights = NULL,
   se_type = c("model", "sandwich"),
-  m_star = 0,
+  m_star = NULL,
   ...) {
   se_type <- match.arg(se_type)
   # Build glm calls via do.call so the `weights` *value* (vector or absent) is
@@ -337,6 +338,16 @@ fit_mediation <- function(formula_y,
   # here -- extraction-time -- because the four-way split is computed from the
   # fitted coefficients; contrast the regmedint engine, which hands the same
   # value to its own estimator at fitting time.
+  # extract_mediation() refuses an `m_star` that no four-way fit will use, so
+  # forward it only when the caller supplied one (fit_mediation() has already
+  # rejected a supplied m_star without an interaction term). Omitting it lets
+  # the extractor use its default of 0.
+  if (is.null(m_star)) {
+    return(extract_mediation(
+      object = fit_m, model_y = fit_y, treatment = treatment,
+      mediator = mediator, data = data, vcov_fun = vcov_fun
+    ))
+  }
   extract_mediation(
     object = fit_m,
     model_y = fit_y,

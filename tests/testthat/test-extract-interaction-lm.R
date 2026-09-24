@@ -211,6 +211,29 @@ test_that("a non-Gaussian outcome model is rejected with a clear message", {
   )
 })
 
+test_that("a Gaussian model with a non-identity link is rejected", {
+  set.seed(6)
+  n <- 1000
+  X <- rbinom(n, 1, 0.5)
+  M <- 0.4 + 0.5 * X + rnorm(n)
+  Y <- exp(0.5 + 0.1 * X + 0.1 * M + 0.05 * X * M) + rnorm(n, sd = 0.1)
+  d <- data.frame(X = X, M = M, Y = Y)
+  fm <- lm(M ~ X, d)
+  fy <- glm(Y ~ X + M + X:M, family = gaussian(link = "log"), data = d,
+            start = c(0.5, 0.1, 0.1, 0.05))
+  # Previously accepted: family was "gaussian", so identity-link formulas ran.
+  expect_error(
+    extract_mediation(fm, model_y = fy, treatment = "X", mediator = "M"),
+    "identity link.*'log' \\(outcome model\\)"
+  )
+  # A Gaussian glm with the identity link is still fine.
+  fy_id <- glm(Y ~ X + M + X:M, family = gaussian(), data = d)
+  expect_s3_class(
+    extract_mediation(fm, model_y = fy_id, treatment = "X", mediator = "M"),
+    "medfit::InteractionMediationData"
+  )
+})
+
 # ==============================================================================
 # Simulation: delta CI brackets the truth at roughly nominal rate
 # ==============================================================================

@@ -11,7 +11,8 @@
   treatment,
   mediators,
   outcome = NULL,
-  data = NULL
+  data = NULL,
+  vcov_fun = stats::vcov
 )
 }
 \arguments{
@@ -34,6 +35,9 @@ order (\code{M1 -> M2 -> ... -> Mk}).}
 \item{outcome}{Character scalar, or \code{NULL} to auto-detect from \code{model_y}.}
 
 \item{data}{Data frame, or \code{NULL} to take the \code{object} model frame.}
+
+\item{vcov_fun}{Function returning a model's coefficient covariance
+(default \code{\link[stats:vcov]{stats::vcov()}}), applied to every equation.}
 }
 \value{
 A \link{SerialMediationData} object.
