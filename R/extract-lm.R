@@ -28,12 +28,13 @@ glm_class <- S7::new_S3_class("glm")
 #' @param treatment Character: name of the treatment variable
 #' @param mediator Character: name of the mediator variable for simple mediation
 #'   (`X -> M -> Y`), OR an ordered character vector of length >= 2 for serial
-#'   mediation (`X -> M1 -> M2 -> ... -> Y`). When a vector is supplied the
-#'   method returns a [SerialMediationData] object instead of [MediationData].
+#'   or parallel mediation. When a vector is supplied the method returns a
+#'   [SerialMediationData], [ParallelMediationData], or [JointMediationData]
+#'   object instead of [MediationData].
 #' @param mediator_models List of fitted lm/glm models for mediators 2..k (the
 #'   `M2 ~ M1 + ...`, ..., `Mk ~ M(k-1) + ...` regressions), in chain order.
-#'   Required and only used on the serial branch; must have length
-#'   `length(mediator) - 1`.
+#'   Required whenever `mediator` has length >= 2 (serial or parallel); must
+#'   have length `length(mediator) - 1`.
 #' @param outcome Character: name of the outcome variable (optional, auto-detected)
 #' @param data Data frame: original data (optional, extracted from model if available)
 #' @param ... Additional arguments (ignored)
@@ -69,9 +70,12 @@ glm_class <- S7::new_S3_class("glm")
 #'
 #' ## Covariance contract and lm-vs-lavaan divergence
 #'
-#' The combined `vcov` is **block-diagonal across separately-fitted equations**:
-#' coefficients from different regressions are independent by construction, so
-#' `cov(a, b)`, `cov(a, d_i)`, `cov(d_i, b)` are all zero. The covariance
+#' The combined `vcov` is **block-diagonal across separately-fitted equations**,
+#' so `cov(a, b)`, `cov(a, d_i)`, `cov(d_i, b)` are stored as zero. For OLS this
+#' is exact when each later equation contains every regressor of the earlier one
+#' (simple, serial, four-way); for parallel mediators it omits the covariance
+#' between their `a` paths. [JointMediationData] instead stores the full stacked
+#' OLS covariance. The covariance
 #' *within* the outcome equation is preserved, so `cov(b, c')` (and, in serial
 #' chains, the joint covariance among outcome-equation terms) is non-zero.
 #'
@@ -735,15 +739,22 @@ S7::method(extract_mediation, glm_class) <- function(
   }
 
   # --- Reference prediction E[M | X = 0]: covariates at their sample means ---
+  # Means are over the mediator model's design columns, so factor dummies
+  # (e.g. Gb, Gc) and transformed terms (e.g. log(C)) are included.
   m_covs <- setdiff(names(coef_m), c("(Intercept)", treatment))
+  # With case weights (frequency, survey or IPW), the means are weighted.
+  mm_m <- tryCatch(stats::model.matrix(model_m), error = function(e) NULL)
+  w_m <- tryCatch(stats::model.weights(stats::model.frame(model_m)),
+                  error = function(e) NULL)
+  c_bar <- .interaction_covariate_means(data, m_covs, mm = mm_m, w = w_m)
   m_ref <- beta0
-  if (length(m_covs) > 0 && !is.null(data)) {
-    for (cv in m_covs) {
-      if (cv %in% names(data) && is.numeric(data[[cv]])) {
-        m_ref <- m_ref + unname(coef_m[[cv]]) * mean(data[[cv]], na.rm = TRUE)
-      }
-    }
+  for (cv in m_covs) {
+    m_ref <- m_ref + unname(coef_m[[cv]]) * c_bar[[cv]]
   }
+  # Keep the exact means with @data so the delta-method gradients reuse them:
+  # caller-supplied data (fit_mediation() passes the raw data) is not a model
+  # frame and may hold rows the mediator model did not use.
+  if (!is.null(data)) attr(data, "medfit_covariate_means") <- c_bar
 
   # --- Four-way components (continuous Y, M; binary X) ---
   cde     <- theta1 + theta3 * m_star
@@ -816,6 +827,49 @@ S7::method(extract_mediation, glm_class) <- function(
 }
 
 
+#' Covariate means for the reference mediator mean (four-way decomposition)
+#'
+#' Sample (or case-weighted) means of the mediator model's covariate design
+#' columns: from `mm` when given (the extractor passes
+#' `model.matrix(model_m)`), else the means
+#' the extractor stored on `dat` (attribute `medfit_covariate_means`), else
+#' rebuilt from a model frame's `terms` attribute, else plain numeric columns
+#' of `dat` (e.g. the lavaan data matrix). Uses [mean()] per column so
+#' numeric-covariate results match the column means exactly.
+#'
+#' @param dat Data frame (the object's `@data`), or `NULL`.
+#' @param covs Covariate coefficient names (mediator model, excluding the
+#'   intercept and the treatment).
+#' @param mm Optional design matrix of the mediator model.
+#' @param w Optional case weights over the rows of `mm`; `NULL` for unweighted
+#'   means. A model frame's `(weights)` column is used when rebuilding.
+#' @return Named numeric vector over `covs`.
+#' @keywords internal
+.interaction_covariate_means <- function(dat, covs, mm = NULL, w = NULL) { # nolint: object_length_linter.
+  if (length(covs) == 0L) return(stats::setNames(numeric(0), character(0)))
+  col_means <- function(get) {
+    stats::setNames(vapply(covs, get, numeric(1), USE.NAMES = FALSE), covs)
+  }
+  stored <- attr(dat, "medfit_covariate_means")
+  if (is.null(mm) && all(covs %in% names(stored))) return(stored[covs])
+  if (is.null(mm) && !is.null(attr(dat, "terms"))) {
+    w <- stats::model.weights(dat)
+    mm <- tryCatch(stats::model.matrix(attr(dat, "terms"), dat),
+                   error = function(e) NULL)
+  }
+  if (!is.null(mm) && all(covs %in% colnames(mm))) {
+    if (is.null(w)) return(col_means(function(cv) mean(mm[, cv])))
+    return(col_means(function(cv) sum(mm[, cv] * w) / sum(w)))
+  }
+  if (!is.null(dat) && all(covs %in% names(dat)) &&
+        all(vapply(covs, function(cv) is.numeric(dat[[cv]]), logical(1)))) {
+    return(col_means(function(cv) mean(dat[[cv]], na.rm = TRUE)))
+  }
+  stop("Cannot compute the covariate means for E[M | X = 0] (four-way ",
+       "decomposition) for: ", paste(covs, collapse = ", "), ".", call. = FALSE)
+}
+
+
 #' Extract Serial Mediation Structure from lm/glm Models
 #'
 #' Internal worker for the serial branch of the lm/glm [extract_mediation()]
@@ -827,11 +881,12 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param object Fitted lm/glm for the first mediator (`M1 ~ X + ...`).
 #' @param mediator_models List (length `k - 1`) of fitted lm/glm models for
 #'   mediators 2..k (`M2 ~ M1 + ...`, ..., `Mk ~ M(k-1) + ...`), in chain order.
-#' @param model_y Fitted lm/glm for the outcome. Only `Mk`'s coefficient is read
-#'   as `b`, but the model should include `X` and every earlier mediator
-#'   (`Y ~ X + M1 + ... + Mk + ...`); omitting an earlier mediator that also
-#'   affects `Y` biases `b`. The serial indirect effect `a * d * b` is then the
-#'   effect through the full chain only.
+#' @param model_y Fitted lm/glm for the outcome. `Mk`'s coefficient is read as
+#'   `b`; the model should include `X` and every earlier mediator
+#'   (`Y ~ X + M1 + ... + Mk + ...`), whose coefficients are stored as the
+#'   skip-path aliases `b1..b{k-1}`. Omitting an earlier mediator that also
+#'   affects `Y` biases `b`. `a * d * b` is the effect through the full chain
+#'   only; `te()` sums every path.
 #' @param treatment Character scalar: treatment variable name.
 #' @param mediators Character vector (length >= 2): mediator names in causal
 #'   order (`M1 -> M2 -> ... -> Mk`).
@@ -1007,6 +1062,24 @@ S7::method(extract_mediation, glm_class) <- function(
     b = paste0("y_", mediators[k]),
     c_prime = paste0("y_", treatment)
   )
+
+  # Paths that skip a chain link (X -> Mj, Mi -> Mj for j > i + 1, Mi -> Y for
+  # i < k) are aliased too, so te() can sum every X -> Y path. A path absent
+  # from its model is a structural zero and gets no alias.
+  skip <- .serial_edges(k)
+  skip <- skip[!skip$chain & skip$alias != "c_prime", , drop = FALSE]
+  node_names <- c(treatment, mediators)
+  for (r in seq_len(nrow(skip))) {
+    to <- skip$to[r]
+    from_nm <- node_names[skip$from[r] + 1L]
+    cf <- if (to > k) coef_y else stats::coef(med_models[[to]])
+    if (!from_nm %in% names(cf)) next
+    alias_val[skip$alias[r]] <- unname(cf[from_nm])
+    alias_src_name[skip$alias[r]] <- paste0(if (to > k) "y_" else paste0("m", to, "_"),
+                                            from_nm)
+    estimates[skip$alias[r]] <- unname(cf[from_nm])
+  }
+
   resolve <- function(nm) {
     if (nm %in% src_names) which(src_names == nm)[1] else NA_integer_
   }

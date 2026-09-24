@@ -17,14 +17,12 @@ extract_mediation(object, ...)
 }}
 }
 \value{
-A \link{MediationData} object containing:
-\itemize{
-\item Path coefficients (a, b, c')
-\item Full parameter vector and variance-covariance matrix
-\item Residual variances (for Gaussian models)
-\item Variable names and metadata
-\item Original data (if available)
-}
+An S7 object whose class depends on the mediation structure (see
+Details): \link{MediationData}, \link{InteractionMediationData},
+\link{SerialMediationData}, \link{ParallelMediationData}, or \link{JointMediationData}.
+Each carries the path coefficients, the full parameter vector and its
+variance-covariance matrix, residual standard deviations (for Gaussian
+models), variable names, and the original data when available.
 }
 \description{
 Generic function to extract mediation structure (a, b, c' paths and
@@ -43,9 +41,9 @@ The \code{extract_mediation()} generic provides methods for different model type
 
 Note: OpenMx extraction is planned for a future release.
 
-All methods return a standardized \link{MediationData} object that can be used
-with other medfit functions and dependent packages (probmed, RMediation,
-medrobust).
+The returned objects share one interface (\code{\link[=nie]{nie()}}, \code{\link[=nde]{nde()}}, \code{\link[=te]{te()}},
+\code{\link[=confint]{confint()}}, \code{\link[=bootstrap_mediation]{bootstrap_mediation()}}, ...) for use by other medfit functions
+and dependent packages (probmed, RMediation, medrobust).
 
 The class returned depends on the structure. A single mediator gives a
 \link{MediationData} object, or an \link{InteractionMediationData} object when the
@@ -55,6 +53,49 @@ object; for lm/glm fits whose outcome model has a treatment-by-mediator term
 written with \code{:} or \code{*}, it gives a \link{JointMediationData} object with the
 joint natural effects of the mediators. Any other product term in a
 multi-mediator fit errors.
+\subsection{Arguments for lm and glm models}{
+
+With \code{object} the fitted mediator model (the first mediator's model for
+several mediators), the lm/glm method takes:
+\itemize{
+\item \code{model_y}: the fitted outcome model. With several mediators include every
+mediator, not only the last: omitting one that also affects the outcome
+biases the others' coefficients.
+\item \code{treatment}: name of the treatment variable.
+\item \code{mediator}: name of the mediator, or an ordered character vector of two or
+more mediator names.
+\item \code{mediator_models}: list of the fitted models for mediators 2 to k, in
+order; required whenever \code{mediator} has length two or more.
+\item \code{structure}: \code{"auto"} (default), \code{"serial"}, or \code{"parallel"}; \code{"auto"}
+classifies the mediators from the mediator models.
+\item \code{decomposition}: \code{"auto"} (default) uses the four-way decomposition when
+a single mediator's outcome model has a treatment-by-mediator term;
+\code{"four_way"} requires that term; \code{"two_way"} ignores it and returns a
+\link{MediationData} object.
+\item \code{m_star}: the reference mediator level for the controlled direct effect
+(default 0; for \link{JointMediationData} a scalar or a vector named by the
+interacting mediators).
+\item \code{vcov_fun}: function returning each model's covariance matrix (default
+\code{\link[stats:vcov]{stats::vcov()}}; for example \code{sandwich::vcovHC}). Not supported for
+\link{JointMediationData}.
+\item \code{outcome}, \code{data}: optional; detected from the models when omitted.
+}
+
+The lavaan method takes a fitted lavaan model and the variable names; see
+\code{?extract_mediation_lavaan} for its arguments.
+}
+
+\subsection{Covariance of the estimates}{
+
+For lm/glm fits, each equation's block of \verb{@vcov} is that model's own
+covariance. The blocks for different equations are stored as zero. This is
+exact for simple mediation, serial chains, and the four-way model, whose
+later equations contain every regressor of the earlier ones, but for
+parallel mediators it leaves out the covariance between their \code{a} paths.
+\link{JointMediationData} stores the full stacked least-squares covariance, and a
+lavaan fit estimates all equations jointly, so for the same data the
+intervals can differ between engines.
+}
 }
 \examples{
 \donttest{

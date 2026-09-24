@@ -70,6 +70,8 @@ navbar:
         href: articles/extraction.html
       - text: "Bootstrap Inference"
         href: articles/bootstrap.html
+      - text: "Methods and Formulas"
+        href: articles/methods.html
     ecosystem:
       text: Ecosystem
       href: https://data-wise.github.io/mediationverse/articles/ecosystem.html

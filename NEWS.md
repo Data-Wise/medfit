@@ -11,9 +11,10 @@
   treatment effect on that mediator, NDE and CDE add the product terms at the
   covariate means and at `m_star`. There is no per-mediator split of the NIE.
   For a serial chain the joint NIE counts every path through the mediators,
-  so it differs from the chain-only `a * d * b` that `SerialMediationData`
-  reports. Standard errors use analytic delta-method gradients and a
-  stacked-OLS covariance that includes the correlation between parallel
+  so it differs from the chain-only `a * d * b` that `nie()` reports by
+  default for `SerialMediationData` (it matches `nie(type = "total")` when
+  there is no product term). Standard errors use analytic delta-method
+  gradients and a stacked-OLS covariance that includes the correlation between parallel
   mediator equations; they are conditional on the observed covariates.
   `nie()`, `nde()`, `te()`, `pm()`, `decompose()`, `paths()`, `print()`,
   `summary()`, `coef()`, `vcov()`, `nobs()`, `confint(parm = "paths" /
@@ -78,15 +79,63 @@
 
 ## Bug fixes
 
-* `JointMediationData` delta-method standard errors (`tidy()`, `summary()`,
-  `confint(parm = "effects")`) no longer fail when `extract_mediation()`
-  receives `data =` and a model has a factor or transformed covariate (e.g.
-  `G` with levels `a`/`b`/`c`, or `poly(W, 2)`). The gradients rebuilt the
-  covariate means from `@data`, which only works for a model frame; raw
-  data raised "cannot rebuild covariate means for: Gb, Gc". The extractor
-  now stores the exact means the point estimate uses on `@data` (attribute
-  `medfit_covariate_means`, the convention of the four-way extractor), so
-  SEs with `data = d` equal those with `data = NULL`.
+* **Behavior change:** `te()` and `pm()` for `SerialMediationData` now use the
+  full total effect, the sum over every X-to-Y path, instead of only the chain
+  plus the direct effect (`a * d * b + c'`). For the usual specification
+  (`M2 ~ X + M1`, `Y ~ X + M1 + M2`) the old value left out the paths that
+  skip a mediator (X -> M1 -> Y, X -> M2 -> Y) and could be badly off. In one
+  simulated example it gave 0.13 where the true total effect was 0.54. With
+  linear models and the same covariates in every equation, `te()` now equals
+  the treatment coefficient of `lm(Y ~ X + covariates)`. `pm()` is the total
+  indirect effect divided by that total. `nie()` still returns the
+  chain-specific indirect effect by default. The new `nie(x, type = "total")`
+  returns the total indirect effect, `te(x) - nde(x)`. The serial lm/glm and
+  lavaan extractors now record the skip-path coefficients as `a2..ak`
+  (`X -> Mj`), `b1..b{k-1}` (`Mi -> Y`) and `d{i}_{j}` (`Mi -> Mj`, j > i + 1)
+  in `@estimates` and `@vcov`. The delta-method SE of `te` in `confint()` and
+  `tidy()` differentiates the full sum. It matches lavaan `:=` SEs. Serial
+  `tidy()` gains a `nie_total` row, `glance()` gains a `nie_total` column and
+  `coef(type = "effects")` gains `indirect_total`, appended after `total`
+  so existing positions are unchanged. A hand-built object whose
+  predictor lists include a skip path without its coefficient gets `NA` and a
+  warning from `te()` and `pm()`, because assuming zero would reproduce the
+  bug. For glm fits with a non-identity link, the path sum is on the
+  linear-predictor scale, as it already is for `MediationData`. `quick()` now
+  prints the chain and total NIE side by side. Downstream impact: none for
+  probmed (imports only `extract_mediation()`) or RMediation (its serial
+  `ci()` reads `@a_path`, `@d_path` and `@b_path`, which are unchanged);
+  neither calls serial `te()` or `pm()`. Code that stored serial `te()` or
+  `pm()` values from medfit 0.4.0 or earlier will see different numbers.
+* `tidy(<SerialMediationData>, type = "effects")` no longer errors on
+  mismatched row counts.
+* The single-mediator four-way decomposition (`InteractionMediationData`,
+  lm/glm engine) now includes factor covariates in E[M | X = 0]. Covariate
+  means were taken only for numeric data columns named after a coefficient,
+  so a factor's dummy coefficients (e.g. `Gb`, `Gc`) were skipped without
+  a warning. NDE, INTref and the total effect were wrong, and so were their
+  delta-method SEs. The means now come from the mediator model's design
+  matrix, as in `JointMediationData`, and both the point estimates and the
+  gradients use them. Two other cases change for the same reason:
+  transformed covariate terms (e.g. `log(C)`, `poly(C, 2)`) were also
+  skipped and are now included, and when a caller-supplied `data` has rows
+  the mediator model did not use, the means now cover only the estimation
+  sample. With case weights (e.g. `fit_mediation(weights = )`), the means
+  are now weighted by them; they were unweighted before. Results with plain
+  numeric covariates and no weights are unchanged.
+  `fit_mediation()` with an `X * M` outcome formula is fixed as well. The
+  lavaan engine accepts only numeric observed variables, so it is
+  unaffected.
+* `JointMediationData` effect standard errors are no longer `NA` in
+  `tidy()` and `summary()` when `extract_mediation()` receives `data =` and
+  a model has a factor or transformed covariate (e.g. `G` with levels
+  `a`/`b`/`c`, or `poly(W, 2)`); `confint(parm = "effects")` no longer
+  errors for the same fits. The gradients rebuilt the covariate means from
+  `@data`, which only works for a model frame, so the SE computation failed
+  and `tidy()` and `summary()` caught the failure and reported `NA`. The
+  extractor now stores the exact means the point estimate uses on `@data`
+  (attribute `medfit_covariate_means`, the convention of the four-way
+  extractor), so SEs with `data = d` equal those with `data = NULL`,
+  including fits with `subset =`. Point estimates were already correct.
 
 * `fit_mediation(se_type = "sandwich")` now applies the sandwich estimator
   to fits with a treatment-by-mediator interaction. The four-way worker
@@ -164,6 +213,25 @@
   the paths were found through `a_label`, `b_label`, and `cp_label`.
 
 ## Documentation
+
+* New "Methods and Formulas" article collecting the estimand, formula,
+  covariance and standard-error computation for every class, the bootstrap
+  methods, and the fitting engines, with the assumptions each estimand needs.
+
+* Help pages now cover every class: `nie()`, `nde()`, `te()`, `pm()` and
+  `paths()` give the formulas for parallel, interaction and joint objects;
+  `decompose()` gains the four-way formulas, the joint method, references and
+  an example; `InteractionMediationData` gains the INTref formula and
+  `JointMediationData` the NDE formula; `extract_mediation()` documents the
+  lm/glm arguments, the returned classes, and the covariance of the
+  estimates; `tidy()`/`glance()` document `glance()` and the `coef()`,
+  `vcov()`, `confint()` and `nobs()` methods; bootstrap intervals are stated
+  to be percentile intervals.
+
+* Corrected stale examples and statements in the articles and README:
+  `confint(parm = "effects")` (not `type =`), tidy output with delta-method
+  effect SEs, the list of classes, and the covariance between parallel
+  mediator equations, which the lm/glm `@vcov` omits.
 
 * `?fit_mediation` and `?bootstrap_mediation` no longer merge in the
   placeholder stubs left over in `R/aab-generics.R` (removed). Each page had

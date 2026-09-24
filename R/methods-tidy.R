@@ -11,11 +11,14 @@
 # Register S3 methods for S7 classes by adding explicit class attribute
 # Since S7 class names contain "::", we use .onLoad to register methods
 
-#' Tidy a medfit Object
+#' Tidy, Glance, and Inference Methods for medfit Objects
 #'
 #' @description
-#' Convert a mediation data object or a [BootstrapResult] into a tidy tibble,
-#' one row per path coefficient or effect.
+#' `tidy()` converts a mediation data object or a [BootstrapResult] into a
+#' tidy tibble, one row per path coefficient or effect. `glance()` returns a
+#' one-row summary. The base generics [stats::coef()], [stats::vcov()],
+#' [stats::confint()], and [stats::nobs()] also have methods for every
+#' mediation class; see Details.
 #'
 #' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
 #'   [InteractionMediationData], [JointMediationData], or [BootstrapResult]
@@ -24,9 +27,14 @@
 #'   `"effects"`, and for interaction objects `"components"`), `conf.int`
 #'   (logical, add `conf.low`/`conf.high`), and `conf.level` (default 0.95).
 #'
-#' @return A tibble (a data frame if tibble is not installed) with columns
-#'   `term`, `estimate`, `std.error`, and, when `conf.int = TRUE`, `conf.low`
-#'   and `conf.high`.
+#' @return `tidy()`: a tibble (a data frame if tibble is not installed) with
+#'   columns `term`, `estimate`, `std.error`, and, when `conf.int = TRUE`,
+#'   `conf.low` and `conf.high`.
+#'
+#'   `glance()`: a one-row tibble with `nie`, `nde`, `te`, `pm`, `nobs`, and
+#'   `converged`; interaction objects add `interaction` and `m_star`, and
+#'   joint objects add `cde`, `structure`, `n_mediators`, `interactions`, and
+#'   `m_star`.
 #'
 #' @details
 #' Path standard errors are the square roots of the diagonal of `@vcov`.
@@ -44,6 +52,19 @@
 #' The proportion mediated (reported by `glance()`) has no standard error: it
 #' is a ratio whose delta-method standard error is unstable when the total
 #' effect is near zero, so bootstrap it instead.
+#'
+#' ## Base methods
+#'
+#' - `coef(object, type = "paths")`: the path coefficients; `type = "effects"`
+#'   gives the effects, `"all"` both, and for interaction objects
+#'   `"components"` gives the four-way components.
+#' - `vcov(object)`: the stored `@vcov`, covering every entry of `@estimates`.
+#' - `confint(object, parm = "paths", level = 0.95)`: normal intervals for the
+#'   paths, or with `parm = "effects"` for the effects using the delta-method
+#'   standard errors above (interaction objects also accept
+#'   `parm = "components"`). With `parm = "effects"` it warns that the normal
+#'   approximation may be inaccurate for an indirect effect.
+#' - `nobs(object)`: the number of observations.
 #'
 #' @examples
 #' med_data <- fit_mediation(
@@ -83,6 +104,7 @@ tidy.S7_object <- function(x, ...) {
 }
 
 
+#' @rdname tidy.S7_object
 #' @export
 glance.S7_object <- function(x, ...) {
   if (S7::S7_inherits(x, MediationData)) {
@@ -226,9 +248,15 @@ glance.S7_object <- function(x, ...) {
   path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
   # paths() names the d paths by mediator pair (d, or d21, d32, ...);
   # @vcov aliases them d1..dk
-  path_alias <- c("a", paste0("d", seq_along(x@d_path)), "b", "c_prime")
+  path_alias <- if (!is.null(path_vec)) {
+    c("a", paste0("d", seq_along(x@d_path)), "b", "c_prime")
+  }
   effect_vec <- if (type %in% c("all", "effects")) {
-    c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)), te = as.numeric(te(x)))
+    # nie: chain-specific (a * d1 * ... * b); nie_total + nde = te (all paths)
+    te_val <- as.numeric(te(x))
+    nde_val <- as.numeric(nde(x))
+    c(nie = as.numeric(nie(x)), nie_total = te_val - nde_val,
+      nde = nde_val, te = te_val)
   }
   .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level,
                       path_alias = path_alias)
@@ -242,11 +270,15 @@ glance.S7_object <- function(x, ...) {
 #'
 #' @noRd
 .glance_serial_mediation_data <- function(x, ...) {
+  # One te() call: nie_total and pm derive from it (one warning when unavailable)
+  te_val <- as.numeric(te(x))
+  nde_val <- as.numeric(nde(x))
   result <- data.frame(
     nie = as.numeric(nie(x)),
-    nde = as.numeric(nde(x)),
-    te = as.numeric(te(x)),
-    pm = as.numeric(pm(x)),
+    nie_total = te_val - nde_val,
+    nde = nde_val,
+    te = te_val,
+    pm = as.numeric(.serial_pm_from_total(te_val, x@c_prime)),
     n_mediators = length(x@mediators),
     nobs = nobs(x),
     converged = x@converged,

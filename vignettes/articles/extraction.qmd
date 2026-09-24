@@ -18,7 +18,7 @@ The `extract_mediation()` function provides a standardized interface for extract
 - **lavaan** SEM models - implemented
 - **lmer** mixed models (future)
 
-All extraction methods return a `MediationData` or `SerialMediationData` object, ensuring consistency across modeling frameworks.
+Extraction returns the S7 class that matches the structure: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, or `JointMediationData`. All share one interface (`nie()`, `confint()`, `tidy()`, `bootstrap_mediation()`, ...) across modeling frameworks.
 
 **Note:** For quick analysis, consider using `med()` instead - it handles fitting and extraction in one step. Use `extract_mediation()` when you need more control or already have fitted models.
 
@@ -189,8 +189,18 @@ med_serial_lm <- extract_mediation(
   mediator_models = list(fit_m2)  # the remaining k minus 1 mediator models
 )
 
-# Serial indirect effect: a * d1 * b
-med_serial_lm@a_path * med_serial_lm@d_path * med_serial_lm@b_path
+# Serial indirect effect through the full chain: a * d1 * b
+nie(med_serial_lm)
+#> Natural Indirect Effect (NIE): 0.07545
+
+# Total indirect effect: every path through at least one mediator
+nie(med_serial_lm, type = "total")
+#> Natural Indirect Effect (NIE): 0.3674
+
+# Total effect over every path; it equals the treatment coefficient when the
+# outcome is regressed on the treatment and both covariates alone
+te(med_serial_lm)
+#> Total Effect (TE): 0.5386
 ```
 
 Include the treatment and every earlier mediator in each downstream model, as
@@ -200,7 +210,9 @@ outcome model without it (`outcome ~ treatment + mediator2 + ...`) confounds
 `b`: `mediator1` is a common cause of `mediator2` and `outcome`. The product
 `a * d1 * b` is then the effect through the full chain
 `treatment -> mediator1 -> mediator2 -> outcome` only; the direct
-`mediator1 -> outcome` path is not part of it.
+`mediator1 -> outcome` path is not part of it. `nie(type = "total")` adds the
+paths that skip a mediator, and `te()` and `pm()` use every path, so here the
+chain carries about 0.08 of a 0.37 total indirect effect.
 
 The order of `mediator_models` is cross-checked against the `mediator` vector:
 each model's response and predecessor are validated, so a misordered list
@@ -212,15 +224,17 @@ fails fast with an informative error rather than silently producing wrong
 
 An lm/glm serial chain estimates each equation **separately**, so the combined
 covariance is **block-diagonal** across chain paths: `cov(a, d_i)`,
-`cov(d_i, b)`, and `cov(d_i, d_j)` are all zero by construction. (The
-within-outcome-equation covariance, e.g. `cov(b, c')`, is still preserved.)
+`cov(d_i, b)`, and `cov(d_i, d_j)` are stored as zero. For least squares this
+is exact when each downstream equation contains every regressor of the
+earlier ones, as recommended above. (The within-outcome-equation covariance,
+e.g. `cov(b, c')`, is preserved.)
 
-A single lavaan `sem()` fit of the *same data* estimates all equations jointly
-and yields the **full** covariance among chain paths. Because the serial
-indirect-effect standard error depends on these off-diagonal covariances, the
-CI from an lm chain will generally differ from — and is often tighter than —
-the lavaan fit. This is correct given the different estimators; just be aware
-that the engine choice changes the interval for identical data.
+A single lavaan `sem()` fit of the *same equations* estimates them jointly by
+maximum likelihood. Its covariances among chain paths are then also zero, so
+the two engines' intervals differ only by the small-sample difference between
+the OLS and ML variance estimates. They can differ more when the lavaan model
+specifies different equations (for example, omits a path that skips a
+mediator) or adds residual covariances.
 :::
 
 ### Parallel Mediation with lm/glm
@@ -264,11 +278,16 @@ This model leaves out `mediator2`, a descendant of `mediator1`, so
 `mediator1`'s `b` path (about 0.55 in the population) includes its effect
 through `mediator2`; see `?mediation_demo` for the reduced-form values.
 
-Because the mediator equations are fit separately, `cov(a_j, a_{j'}) = 0` and
-`cov(a_j, b_{j'}) = 0`; but the `b_j` (and `c'`) share the single outcome
-equation, so `cov(b_j, b_{j'})` and `cov(b_j, c')` are preserved. The
-`confint()` indirect-effect SE uses the full delta method over the joint
-`a*/b*` block, not a naive per-mediator sum.
+The mediator equations are fit separately, and the stored `@vcov` sets the
+covariances between their coefficients to zero. `cov(a_j, b_{j'})` is exactly
+zero for least squares, because the outcome equation contains every regressor
+of the mediator equations. `cov(a_j, a_{j'})` is not: when the mediators'
+errors are correlated it is nonzero, and the block-diagonal `@vcov` omits it,
+so the indirect-effect SE can be off. The `b_j` (and `c'`) share the single
+outcome equation, so `cov(b_j, b_{j'})` and `cov(b_j, c')` are preserved. The
+`confint()` indirect-effect SE uses the delta method over this `@vcov`, not a
+naive per-mediator sum. A lavaan fit, or a nonparametric bootstrap, captures
+the omitted covariance; see [Methods and Formulas](methods.html).
 
 ### Several Mediators with a Treatment-by-Mediator Product
 
@@ -740,16 +759,17 @@ se_indirect
 The extraction system is designed to accommodate future extensions:
 
 - **New model types**: Add methods for lmer, brms, etc.
-- **Complex mediation**: Multiple mediators, moderated mediation
+- **Complex mediation**: Moderated mediation
 - **Multiple treatments**: Comparative mediation analysis
 - **Latent variables**: SEM with measurement models
 
-All methods return the same S7 class structure, ensuring consistency.
+All classes share the same interface, so new model types plug into the same effects, intervals and bootstrap.
 
 ## Next Steps
 
 - Learn about [bootstrap inference](bootstrap.html) on extracted models
 - See the [introduction](introduction.html) for S7 class details
+- Read the [formulas behind every effect and standard error](methods.html)
 - Check the reference documentation for `extract_mediation()` methods
 
 ## Working with Extracted Results
@@ -812,7 +832,8 @@ nobs(med_data)                # Sample size
 
 Model extraction is **complete**:
 
-- ✅ S7 class definitions (MediationData, SerialMediationData)
+- ✅ S7 class definitions (MediationData, InteractionMediationData,
+  SerialMediationData, ParallelMediationData, JointMediationData)
 - ✅ lm/glm extraction with checkmate validation
 - ✅ lavaan extraction with checkmate validation
 - ✅ Effect extractors (nie, nde, te, pm, paths)

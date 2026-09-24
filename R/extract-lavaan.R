@@ -32,11 +32,22 @@
 #'   length >= 2. `"auto"` infers it from the SEM's regression rows: a mediator
 #'   regressed on another mediator implies `"serial"`, otherwise `"parallel"`.
 #'   The explicit values are authoritative and skip detection.
+#' @param decomposition Character: `"auto"` (default) uses the four-way
+#'   decomposition when a single mediator's outcome equation has a
+#'   treatment-by-mediator product; `"four_way"` requires that product;
+#'   `"two_way"` ignores it.
+#' @param interaction Optional character: name of the product column in the
+#'   outcome equation (lavaan takes the product as a data column). When `NULL`,
+#'   `treatment:mediator` and `mediator:treatment` are tried.
+#' @param m_star Numeric scalar: reference mediator level for the controlled
+#'   direct effect in the four-way decomposition (default 0).
 #' @param ... Additional arguments (ignored)
 #'
-#' @return A [MediationData] object; a [SerialMediationData] object when
-#'   `mediator` is a length >= 2 vector resolving to a serial chain; or a
-#'   `ParallelMediationData` object when it resolves to parallel mediation.
+#' @return A [MediationData] object; an [InteractionMediationData] object when
+#'   a single mediator's outcome equation has a treatment-by-mediator product;
+#'   a [SerialMediationData] object when `mediator` is a length >= 2 vector
+#'   resolving to a serial chain; or a [ParallelMediationData] object when it
+#'   resolves to parallel mediation.
 #'
 #' @details
 #' This method extracts mediation structure from a fitted lavaan SEM model.
@@ -588,6 +599,21 @@ extract_mediation_lavaan <- function(object,
     b = b_path,
     c_prime = c_prime
   )
+
+  # Paths that skip a chain link (X -> Mj, Mi -> Mj for j > i + 1, Mi -> Y for
+  # i < k) are aliased too, so te() can sum every X -> Y path. Resolved here
+  # from the parameter table, since user labels rename them in coef().
+  skip <- .serial_edges(k)
+  skip <- skip[!skip$chain & skip$alias != "c_prime", , drop = FALSE]
+  node_names <- c(treatment, mediators, outcome)
+  for (r in seq_len(nrow(skip))) {
+    lhs <- node_names[skip$to[r] + 1L]
+    rhs <- node_names[skip$from[r] + 1L]
+    val <- get_path(lhs, rhs)
+    if (is.na(val)) next
+    alias_var[skip$alias[r]] <- paste0(lhs, "~", rhs)
+    alias_val[skip$alias[r]] <- val
+  }
 
   estimates <- all_coef
   aliases_to_add <- names(alias_var)[!names(alias_var) %in% names(estimates)]

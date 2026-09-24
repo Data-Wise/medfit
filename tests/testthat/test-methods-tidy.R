@@ -153,8 +153,9 @@ test_that("tidy.S7_object works for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
@@ -164,8 +165,8 @@ test_that("tidy.S7_object works for SerialMediationData", {
   # by default the type is all
   tidy_all <- generics::tidy(serial_data)
   expect_s3_class(tidy_all, "data.frame")
-  expect_equal(nrow(tidy_all), 7)  # a, d, b, c_prime, nie, nde, te
-  expect_true(all(c("a", "d", "b", "c_prime", "nie", "nde", "te") %in%
+  expect_equal(nrow(tidy_all), 8)  # a, d, b, c_prime, nie, nie_total, nde, te
+  expect_true(all(c("a", "d", "b", "c_prime", "nie", "nie_total", "nde", "te") %in%
                     tidy_all$term))
 })
 
@@ -183,8 +184,9 @@ test_that("tidy() for SerialMediationData with type='paths'", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
@@ -209,8 +211,9 @@ test_that("tidy() for SerialMediationData gives NA CIs, silently, without vcov a
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
@@ -238,8 +241,9 @@ test_that("glance.S7_object works for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,

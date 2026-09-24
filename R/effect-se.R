@@ -114,6 +114,11 @@
     names(vals) <- c("a", paste0("d", seq_along(x@d_path)), "b")
     g_nie <- vapply(seq_along(vals), function(i) prod(vals[-i]), numeric(1))
     names(g_nie) <- names(vals)
+    # te sums every X -> Y path; nie_total is te without the direct path
+    g_te <- .serial_te_gradient(x)
+    g_nie_total <- if (anyNA(g_te)) g_te else g_te[names(g_te) != "c_prime"]
+    return(list(nie = g_nie, nie_total = g_nie_total, nde = c(c_prime = 1),
+                te = g_te))
   } else if (S7::S7_inherits(x, ParallelMediationData)) {
     # NIE = sum_j a_j * b_j
     k <- length(x@a_paths)
@@ -125,6 +130,27 @@
 
   g_nde <- c(c_prime = 1)
   list(nie = g_nie, nde = g_nde, te = .add_gradients(g_nie, g_nde))
+}
+
+
+#' Total-Effect Gradient for a SerialMediationData Object
+#'
+#' The total effect is `T = [(I - B)^{-1}]_{Y,X}` over the recursive path
+#' matrix B, so `dT / dB[t, f] = [(I - B)^{-1}]_{Y,t} [(I - B)^{-1}]_{f,X}`:
+#' each path coefficient's partial is the sum of the path products through it
+#' with that coefficient removed.
+#'
+#' @param x A SerialMediationData object.
+#' @return Named gradient over the path aliases in `@vcov`; `NA` when the
+#'   skip-path coefficients are unavailable (as for [te()]).
+#' @keywords internal
+#' @noRd
+.serial_te_gradient <- function(x) {
+  sys <- .serial_path_system(x)
+  if (is.character(sys)) return(c(c_prime = NA_real_))
+  y <- length(x@mediators) + 2L
+  e <- sys$edges
+  stats::setNames(sys$inv[y, e$to + 1L] * sys$inv[e$from + 1L, 1L], e$alias)
 }
 
 
@@ -156,16 +182,17 @@
   beta0 <- if ("b0" %in% rownames(vc)) unname(x@estimates[["b0"]]) else 0
   m_ref <- beta0
   cov_grad <- numeric(0)
+  # Covariate means as in the extractor: design columns rebuilt from @data, so
+  # factor dummies and transformed terms are included.
   m_covs <- setdiff(x@mediator_predictors, x@treatment)
+  m_covs <- m_covs[paste0("m_", m_covs) %in% rownames(vc)]
   if (length(m_covs) > 0 && !is.null(x@data)) {
+    c_bar <- .interaction_covariate_means(x@data, m_covs)
     for (cv in m_covs) {
       pn <- paste0("m_", cv)
-      if (cv %in% names(x@data) && is.numeric(x@data[[cv]]) &&
-            pn %in% rownames(vc)) {
-        cm <- mean(x@data[[cv]], na.rm = TRUE)
-        m_ref <- m_ref + unname(x@estimates[[pn]]) * cm
-        cov_grad[pn] <- t3 * cm
-      }
+      cm <- c_bar[[cv]]
+      m_ref <- m_ref + unname(x@estimates[[pn]]) * cm
+      cov_grad[pn] <- t3 * cm
     }
   }
   ref_dev <- m_ref - m_star

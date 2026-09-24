@@ -67,9 +67,12 @@ and \eqn{\beta^*_{1i}}{b1i*} the total (propagated) effect of the treatment on
 mediator \eqn{i} (for a serial chain this includes the paths through earlier
 mediators), the unit-contrast effects are
 \deqn{NIE = \sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{NIE = sum((t2i + t3i) * b1i*)}
+\deqn{NDE = \theta_1 + \sum_i \theta_{3i} \mu^*_{0i}}{NDE = t1 + sum(t3i * mu0i*)}
 \deqn{CDE = \theta_1 + \sum_i \theta_{3i} m^*_i}{CDE = t1 + sum(t3i * mi*)}
 and \eqn{TE = NDE + NIE}{TE = NDE + NIE}. \eqn{\theta_{3i}}{t3i} is zero for a
-mediator without a product term. The validator enforces the NIE and CDE
+mediator without a product term, and \eqn{\mu^*_{0i}}{mu0i*} is the mean of
+mediator \eqn{i} under no treatment at the covariate means (propagated down a
+serial chain like \eqn{\beta^*_{1i}}{b1i*}). The validator enforces the NIE and CDE
 identities, so an object with inconsistent numbers cannot be built.
 \subsection{What the joint NIE is, and is not}{
 
@@ -77,8 +80,8 @@ The NIE is the effect through the mediators \strong{as a block}: every path from
 the treatment through any mediator, including paths among the mediators. It
 is not split into per-mediator or per-path pieces, and none of its parts
 should be reported as the effect "through M1". For a serial chain it
-therefore differs from the \code{a * d * b} that \link{SerialMediationData} reports,
-which is the effect through the full chain only: with no product term, the
+therefore differs from the default \code{nie()} of a \link{SerialMediationData}
+(\code{a * d * b}, the effect through the full chain only): with no product term, the
 joint NIE of \code{M1 -> M2} is \eqn{a_1 b_1 + (a_2 + d a_1) b_2}{a1*b1 + (a2 + d*a1)*b2},
 not \eqn{a_1 d b_2}{a1*d*b2}. The effects use the unit contrast of a 0/1
 treatment (0 to 1).

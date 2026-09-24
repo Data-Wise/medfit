@@ -195,6 +195,28 @@ test_that("confint() errors for bootstrap method", {
   )
 })
 
+test_that("confint() errors for an unsupported parm", {
+  set.seed(123)
+  n <- 100
+  mydata <- data.frame(X = rnorm(n))
+  mydata$M <- 0.5 * mydata$X + rnorm(n)
+  mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
+
+  med_data <- fit_mediation(
+    formula_y = Y ~ X + M,
+    formula_m = M ~ X,
+    data = mydata,
+    treatment = "X",
+    mediator = "M"
+  )
+
+  # Parameter names are not accepted, only the two groups
+  expect_error(
+    confint(med_data, parm = c("a", "b")),
+    "parm must be 'paths' or 'effects'"
+  )
+})
+
 
 test_that("coef() works for SerialMediationData", {
   # Create a SerialMediationData object directly
@@ -210,8 +232,9 @@ test_that("coef() works for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
@@ -227,7 +250,7 @@ test_that("coef() works for SerialMediationData", {
 
   # Test effects extraction
   effects <- coef(serial_data, type = "effects")
-  expect_named(effects, c("indirect", "direct", "total"))
+  expect_named(effects, c("indirect", "direct", "total", "indirect_total"))
 
   # Verify indirect = a * d * b
   expect_equal(
@@ -250,8 +273,9 @@ test_that("vcov() works for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
@@ -278,8 +302,9 @@ test_that("nobs() works for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
