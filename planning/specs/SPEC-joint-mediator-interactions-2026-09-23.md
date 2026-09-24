@@ -1,7 +1,7 @@
 # Spec: joint natural effects for serial and parallel mediators with exposure–mediator products (D8(b))
 
 **Date:** 2026-09-23 · **Status:** draft, grilled (G1–G6 folded in), awaiting approval
-**Grill:** [GRILL-joint-mediator-interactions-2026-09-23.md](GRILL-joint-mediator-interactions-2026-09-23.md)
+**Grill:** [GRILL-joint-mediator-interactions-2026-09-23.md](GRILL-joint-mediator-interactions-2026-09-23.md) (G1–G6, plus G7: adverse-review triage)
 **Origin:** D8(b) in [GRILL-bundled-example-data-2026-09-23.md](GRILL-bundled-example-data-2026-09-23.md).
 It replaces part of the D8(a) guard (PR #62, `aa3362c`), which today makes every multi-mediator
 extraction with a product term error.
@@ -58,8 +58,10 @@ Notation (paper's): exposure `A` with contrast `a` vs `a*`, mediators `M(1)…M(
 |---|---|
 | CDE(m) | `θ1 + Σi∈I θ3(i) m(i)` |
 | NDE | `θ1 + Σi∈I θ3(i) (β0(i) + β1(i) a* + β2(i)' c)` |
-| NIE | `Σi (θ2(i) + θ3(i) a) β1(i)`, with `θ3(i) = 0` for `i ∉ I` |
+| NIE | `Σi (θ2(i) + θ3(i) a) β1(i)`, with `θ3(i) = 0` for `i ∉ I` (evaluated at the active level `a`, not `a*`) |
 | TE | `NDE + NIE` |
+
+medfit uses the unit contrast `a* = 0`, `a = 1`, so `NIE = Σi (θ2(i) + θ3(i)) β1(i)`.
 
 **Identification** (paper, §3.1): the four no-unmeasured-confounding assumptions, stated for the
 whole mediator vector. These are no unmeasured exposure–outcome confounding, none for mediators–outcome,
@@ -81,7 +83,12 @@ delta-method formulas are possible but would need deriving case by case. See the
    OLS omitted-variable identity (to 1e-10).
 2. **Covariate evaluation point.** NDE depends on `c`. medfit evaluates it at the sample covariate
    means, the convention `extract_mediation()` already uses for the single-mediator four-way path
-   (`R/extract-lm.R`, the `m_ref` computation near line 615). This is stated in the docs.
+   (`R/extract-lm.R`, the `m_ref` computation near line 615).
+   - The effects are linear in `c`, so the value at `c̄` equals the sample average of the
+     per-observation effects exactly.
+   - The delta-method SE treats `c̄` as fixed. That makes it conditional on the observed
+     covariates, as in the four-way path, and it slightly understates the SE of the
+     population-average effect. The docs say so (G7).
 3. **Joint vcov for delta-method SEs (G2).** The existing lm chains use a vcov that is
    block-diagonal across equations. That is wrong for parallel mediators with correlated
    residuals. `JointMediationData` fills the cross-equation blocks with the stacked-OLS covariance
@@ -90,6 +97,10 @@ delta-method formulas are possible but would need deriving case by case. See the
      a serial chain with identical covariate sets (G4), and for the outcome equation against every
      mediator equation.
    - So only parallel mediator–mediator blocks are nonzero.
+   - This relies on every model having an intercept and on unweighted OLS. Checked 2026-09-23 (n = 500):
+     the serial and outcome cross-products are about 1e-14, and the parallel one is 176.
+   - With `weights`, the zero holds only for the weighted cross-product. Module 1 therefore errors
+     on weighted or intercept-free models (G7).
    - All models must use the same rows; error otherwise.
    - Existing classes are untouched.
    *Test:* delta-method SEs match nonparametric bootstrap SDs within 3% for **both** structures,
@@ -104,7 +115,10 @@ delta-method formulas are possible but would need deriving case by case. See the
   - With **only exposure × mediator products in the outcome model**, a Gaussian outcome and
     Gaussian mediator models: returns a new **`JointMediationData`** object.
   - **Every model must carry the same covariate set** after removing the treatment and the
-    mediators (G4). Otherwise error, naming the differing terms.
+    mediators (G4). Otherwise error, naming the differing terms. This is a medfit limitation that
+    keeps the identities exact, not a requirement of the paper. The paper requires only that the
+    confounders be controlled for every mediator. Relaxing to nested sets is future work.
+  - **Weighted or intercept-free models error** (G7).
   - With any other product the error stays, with the message narrowed to what is still
     unsupported. That covers:
     - a product in a mediator model,
@@ -113,10 +127,17 @@ delta-method formulas are possible but would need deriving case by case. See the
     - an exposure × covariate or mediator × covariate product,
     - non-Gaussian families,
     - any lavaan multi-mediator fit with products.
+  - **Product detection covers wrapped terms (G7).** The detector checks `all.vars()` of every term,
+    not only order > 1 terms, so `I(X * M2)` and other function-wrapped products are caught. This
+    fixes a gap in the current D8(a) guard: `I(X * M2)` passes today and silently returns
+    `SerialMediationData` (reproduced on `dev`, 2026-09-23). A product precomputed as a plain data
+    column cannot be detected from the formula. The docs say so.
 - New argument behavior (G3): `m_star` is a scalar (applied to every interacting mediator) or a
   named vector keyed by the interacting mediators only, such as `m_star = c(M2 = 1)`. Unknown or
   non-interacting names error. The default is `0`. Supplying `m_star` when no product is present
-  remains an error, as it is today for single-mediator fits.
+  remains an error, as it is today for single-mediator fits. The extractor expands a scalar into a
+  vector named by the interacting mediators before building the object, so the stored `@m_star` is
+  always named.
 - **The NIE's meaning changes, and this is labeled (G1).** Without a product, `nie()` on a serial
   fit is the chain-only `a*d*b`. The joint NIE counts every mediated path. `print()` and the docs
   say "joint NIE (all paths through M1..MK)", and a test pins the difference.
@@ -207,8 +228,11 @@ All tests go in `test-extract-joint.R` and use fixed seeds. Each oracle is indep
 under test.
 
 1. **Known answer (simulation).** Generate serial and parallel data with chosen `θ`, `β` and
-   `θ3(i)`, at n = 20,000. Compute the true joint NDE/NIE from the formulas at the true parameters;
-   estimates fall within 3 SE.
+   `θ3(i)`, at n = 20,000.
+   - Compute the true joint NDE/NIE **without the closed-form formulas** (G7): simulate the nested
+     counterfactuals `Y(1, M(0))`, `Y(0, M(0))` and `Y(1, M(1))` directly from the data-generating
+     process (1,000,000 draws), then take differences of means.
+   - Estimates fall within 3 SE.
 2. **Mediation-formula Monte Carlo oracle.** From the fitted models, simulate `M(a*)` and `M(a)`
    draws and average the outcome model over them (g-computation, 200,000 draws). The joint
    NDE/NIE match the closed form to Monte Carlo error. This checks the formulas without reusing them.
@@ -218,9 +242,12 @@ under test.
      the existing serial/parallel NIE. This check is qualitative.
 4. **Serial propagation identity.** This is medfit step 1 above: an exact 1e-10 match to direct
    `M(i) ~ X + C` OLS.
-5. **SE oracle.** This is medfit step 3 above. Delta-method SEs are within 3% of nonparametric
-   bootstrap SDs (5,000 reps) for serial and for parallel with correlated mediator errors. Serial
-   cross-blocks are zero to 1e-10. Models with different rows error.
+5. **SE oracle.** This is medfit step 3 above.
+   - Delta-method SEs are within 3% of nonparametric bootstrap SDs, for serial and for parallel
+     with correlated mediator errors. Use 5,000 reps (3% is about 3 Monte Carlo SEs of a bootstrap
+     SD, 1/√(2B) ≈ 1%) and n ≥ 5,000 (keeps the delta-method approximation gap small).
+   - Serial and outcome cross-blocks are zero to 1e-10.
+   - Models with different rows, weights or no intercept error.
 6. **Guard.** Each still-unsupported product type errors with its term named, on lm and glm. lavaan
    multi-mediator with products still errors. No-product fits are unchanged: snapshot of the
    existing serial/parallel outputs.
@@ -234,6 +261,7 @@ under test.
      paths and differs from `a*d*b`.
    - A non-interacting or unknown `m_star` name errors.
    - Differing covariate sets error, naming the terms.
+   - An `I(X * M)` product in any model is detected (guard and routing).
 9. **Positive control.** Flip the sign of one `θ3(i)` term in the NIE; oracles 1 and 2 must fail.
 
 ## Boundaries

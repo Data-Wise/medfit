@@ -116,3 +116,24 @@ G1–G6 are folded into the spec (same date).
 
 None blocking. Later modules (`joint-mm`, `joint-lavaan`, `joint-nongaussian`) and an opt-in
 `estimand = "joint"` for no-product fits (from G1) each need their own spec.
+
+### G7: adverse-review triage (2026-09-23)
+
+**Source:** an independent review via the OpenCode MCP, model `opencode/nemotron-3-ultra-free`
+(OpenCode Zen), read-only `plan` agent, session `ses_f2e774a90ffeIkbFFtgxdOXnKn`. It came back with
+11 findings and the verdict REVISE. The paid `opencode/gpt-6-sol` run failed with HTTP 402
+(insufficient account funds). Each finding was checked against the code or a direct R run before
+triage.
+
+| # | Finding | Triage |
+|---|---|---|
+| 1, 7 | "σ̂_ij = 0 exactly is false in finite samples" (BLOCKER) | **Rejected, empirically.** OLS residuals are orthogonal to their own column space, and e1 lies in equation 2's. An R run (n = 500) gave serial and outcome cross-products of about 1e-14 against 176 for the parallel pair. **A new caveat surfaced:** with `weights`, the zero holds only for the weighted cross-product, so weighted and intercept-free models error in module 1 |
+| 2 | Oracle 1 circular | **Accepted.** The truth now comes from simulating nested counterfactuals from the data-generating process, not from the formulas |
+| 3 | Covariate means | **Partly accepted.** The value at `c̄` equals the sample-average effect exactly (linearity), so that part of the claim was wrong. But the delta-method SE is conditional on the observed covariates, and the docs now say so |
+| 4 | `m_star` validator vs a scalar default | **Accepted (clarity).** The extractor expands a scalar into a named vector before construction |
+| 5 | `I(X*M)` bypasses the guard | **Confirmed on `dev`.** `I(X * M2)` returns `SerialMediationData` silently. Detection moves to `all.vars()` per term. Precomputed columns are documented as undetectable. **The existing D8(a) guard has this bug today**, a candidate for a separate fix PR |
+| 6 | Identical covariates stricter than the paper | **Accepted (wording).** Documented as a medfit limitation; nested sets are future work |
+| 8 | 3% tolerance unjustified | **Accepted.** 3% is about 3 Monte Carlo SEs at B = 5,000, and the fixture uses n ≥ 5,000 |
+| 9 | The class may not generalize to later modules | **Deferred** to those modules' specs |
+| 10 | `a` vs `a*` in the NIE | **Accepted.** Footnote added |
+| 11 | G1 is a breaking change | **Rejected.** Those fits error today, so nothing that currently works changes |
