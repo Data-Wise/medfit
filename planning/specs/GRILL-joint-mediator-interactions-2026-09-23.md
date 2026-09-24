@@ -38,8 +38,8 @@
 **Decision:** for `JointMediationData` only, fill the cross-equation blocks with the stacked-OLS
 covariance σ̂_ij (Xi'Xi)⁻¹ Xi'Xj (Xj'Xj)⁻¹, where σ̂_ij is the mean residual cross-product.
 - The same rule covers both structures. When a residual lies in another equation's column space,
-  σ̂_ij = 0 exactly. That holds for a serial chain whose covariate sets nest, and for the outcome
-  equation against every mediator equation.
+  σ̂_ij = 0 exactly. That holds for a serial chain whose covariate sets nest (G4 makes them
+  identical), and for the outcome equation against every mediator equation.
 - So serial and outcome blocks stay zero, and only parallel mediator–mediator blocks become
   nonzero.
 - All models must share the same rows; error if they differ.
@@ -86,7 +86,8 @@ mediator models share their regressors, so their cross-block is σ̂_ij (X'X)⁻
 **Decision:** two PRs.
 - **PR A:** class, extractor, guard narrowing, cross-equation vcov (G2), `.effect_gradients()` and
   the effect generics (`nie`/`nde`/`te`/`pm`/`decompose`/`paths`). It carries oracle tests 1–6 and
-  8. The SE oracle calls `.effect_se()` directly.
+  8 (renumbered 1–6, 8 and 9 after G1–G4 added a test group). The SE oracle calls `.effect_se()`
+  directly.
 - **PR B:** methods contract (`print`/`summary`/`confint`/`tidy`/`glance`, bootstrap aliases), NEWS,
   pkgdown and the Model Extraction section.
 - Between the merges, `dev` briefly has a class without `tidy()`/`confint()`. No CRAN release is
@@ -137,3 +138,34 @@ triage.
 | 9 | The class may not generalize to later modules | **Deferred** to those modules' specs |
 | 10 | `a` vs `a*` in the NIE | **Accepted.** Footnote added |
 | 11 | G1 is a breaking change | **Rejected.** Those fits error today, so nothing that currently works changes |
+
+### G8: second adverse review (2026-09-23)
+
+**Source:** OpenCode MCP, model `opencode/muse-spark-1.3-contributor-free` (OpenCode Zen, $0),
+read-only `plan` agent. It came back with 11 findings and the verdict REVISE. All 11 were new.
+Every code claim was checked. Two of them also exposed **live bugs on `dev`**, outside this spec
+(below).
+
+| # | Finding | Triage |
+|---|---|---|
+| 1 | Raw vs propagated `β1` never disambiguated. A downstream product (`X:M2`, `d ≠ 0`) would drop the `θ3 d β1*(1)` piece | **Accepted.** Propagated `β0*`/`β1*`/`γ*` are defined explicitly. The fixtures require `d ≠ 0` with upstream **and** downstream products, plus a raw-wiring negative control |
+| 2 | Aliases alone can't reproduce NDE; gradient terms not listed | **Accepted.** Per-equation source rows plus path aliases, the full list of gradient terms, and a documented `statistic_fn` recipe |
+| 3 | Routing ignores which model a product is in; treatment type unchecked | **Accepted.** A product is allowed only as an outcome-model X × mediator; anywhere else it errors, naming the model. Treatment must be numeric 0/1 |
+| 4 | `decomposition`/`structure`/`vcov_fun` unspecified on the joint branch | **Accepted.** `two_way` with a product errors, a conflicting `structure` errors, and a non-default `vcov_fun` errors in module 1. Verified: the existing workers hardcode `stats::vcov` (`R/extract-lm.R:691-692`) |
+| 5 | Every mediator not required in the outcome model; assumption 4 misstated | **Accepted.** Verified: the serial worker checks only the last mediator. Now every mediator is required, and assumption 4 says "outside the mediator vector" |
+| 6 | Heavy oracles unsuitable for CRAN; qualitative oracle | **Accepted.** `skip_on_cran()` on the heavy oracles, always-on pinned companions, and the qualitative check replaced by a 1e-8 parallel reduction. Fixed seeds already make the tests deterministic, so flakiness is moot |
+| 7 | Validator tautological and absolute; no path slots | **Accepted.** Relative tolerance, path slots, and validator ties for NIE and CDE |
+| 8 | pm/tidy/glance/confint unspecified; `R/bootstrap.R` missing | **Accepted.** Verified: `.assert_param_mediation_data()` hardcodes four classes. The contract is defined and the file added to PR A |
+| 9 | Identity link never required | **Accepted.** Verified live on `dev`: the four-way path accepts `gaussian(link = "log")` |
+| 10 | Stale #74 premise; G2/G4 wording; G5 test numbering; fixtures; the `m_star` claim | **Accepted.** All corrected. Verified: `extract_mediation()` ignores `m_star` when there is no product |
+| 11 | Rows, weights, intercept and order checks sketched but not specified | **Accepted.** Row-name identity, detectors for weights and missing intercepts, mediator order as causal order, and stronger wording on precomputed columns |
+
+**Live bugs on `dev` found while verifying (separate fixes, not D8(b)):**
+1. `fit_mediation(Y ~ X * M + C, ..., se_type = "sandwich")` returns a vcov identical to
+   `se_type = "model"`, so the four-way path silently ignores `vcov_fun`. Simple fits do get the
+   sandwich. Reproduced 2026-09-23.
+2. `extract_mediation()` with a `gaussian(link = "log")` outcome and an X × M product returns an
+   `InteractionMediationData` using identity-link formulas. The four-way check tests only the
+   family name (`R/extract-lm.R:624-631`). Reproduced 2026-09-23.
+3. `extract_mediation(..., m_star = <value>)` with no product silently ignores `m_star`. Only
+   `fit_mediation()` rejects it.

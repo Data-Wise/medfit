@@ -1,7 +1,7 @@
 # Spec: joint natural effects for serial and parallel mediators with exposure–mediator products (D8(b))
 
 **Date:** 2026-09-23 · **Status:** draft, grilled (G1–G6 folded in), awaiting approval
-**Grill:** [GRILL-joint-mediator-interactions-2026-09-23.md](GRILL-joint-mediator-interactions-2026-09-23.md) (G1–G6, plus G7: adverse-review triage)
+**Grill:** [GRILL-joint-mediator-interactions-2026-09-23.md](GRILL-joint-mediator-interactions-2026-09-23.md) (G1–G6, plus G7 and G8: triage of two adverse reviews)
 **Origin:** D8(b) in [GRILL-bundled-example-data-2026-09-23.md](GRILL-bundled-example-data-2026-09-23.md).
 It replaces part of the D8(a) guard (PR #62, `aa3362c`), which today makes every multi-mediator
 extraction with a product term error.
@@ -63,9 +63,19 @@ Notation (paper's): exposure `A` with contrast `a` vs `a*`, mediators `M(1)…M(
 
 medfit uses the unit contrast `a* = 0`, `a = 1`, so `NIE = Σi (θ2(i) + θ3(i)) β1(i)`.
 
+**The `β` in this table are total (reduced-form) coefficients (G8).** They are the coefficients of
+`M(i)` on `(a, c)` alone. For a serial chain they are **not** the raw coefficients the user's
+mediator models report. The extractor computes propagated quantities `β0*(i)`, `β1*(i)`, `γ*(i)`
+by recursion down the chain (medfit step 1). For example, `β1*(2) = β1(2) + d21 β1*(1)`, where
+`β1(2)` is the raw X coefficient in `M2 ~ X + M1 + C`. Only the propagated quantities enter the
+table. For parallel mediators, raw and propagated coincide.
+
 **Identification** (paper, §3.1): the four no-unmeasured-confounding assumptions, stated for the
 whole mediator vector. These are no unmeasured exposure–outcome confounding, none for mediators–outcome,
-none for exposure–mediators, and no exposure-induced mediator–outcome confounder. The docs must say
+none for exposure–mediators, and no exposure-induced mediator–outcome confounder **outside the
+mediator vector**. Earlier mediators in a serial chain are exposure-induced and confound later
+ones. They are allowed precisely because they are in the vector; the paper says such a variable
+must be added to the vector. The docs must say
 that mediator–outcome and exposure–mediator confounders must be controlled for **every** mediator.
 
 **Standard errors.** The paper recommends the bootstrap for these variants and notes that
@@ -107,6 +117,26 @@ delta-method formulas are possible but would need deriving case by case. See the
    including a parallel fixture with correlated mediator errors. The serial cross-blocks are zero
    to 1e-10.
 
+### Gradient terms and parameter naming (G8)
+
+The effects depend on these quantities, and every one needs a row in `@estimates` and `@vcov`:
+- outcome coefficients `θ1`, `θ2(i)`, `θ3(i)`;
+- every mediator model's intercept `β0(i)`, treatment coefficient `β1(i)`, mediator-to-mediator
+  coefficients `d_ij` (serial) and covariate coefficients `γ(i)`.
+
+The covariate means `c̄` are constants, conditional on the observed covariates as in the four-way
+path.
+- **Naming:** source rows keep per-equation prefixes (`m1_`, `m2_`, …, `y_`), following the
+  four-way path's `m_`/`y_` rows (`R/effect-se.R`). Aliases (`a1..aK`, `d21, d32, …`,
+  `b1..bK`, `theta3_<mediator>`, `c_prime`) are added for the path coefficients only. Intercepts
+  and covariate coefficients are reached through the source rows.
+- **Gradients:** analytic, for each effect with respect to every quantity above. NDE, for
+  example, has non-zero partials in `θ1`, each `θ3(i)`, each `β0(i)` and `β1(i)`, each `d_ij`
+  (through the propagated means), and each `γ(i)` (weighted by `c̄`). The plan lists them per
+  effect.
+- **Bootstrap:** a parametric `statistic_fn` receives the full named `@estimates`. The docs give
+  a recipe that closes over `c̄`. Aliases alone cannot reproduce NDE, and the docs say so.
+
 ## Behavior
 
 - `extract_mediation(model_m, model_y = ..., mediator = c("M1", "M2"), mediator_models = ...)`
@@ -118,7 +148,30 @@ delta-method formulas are possible but would need deriving case by case. See the
     mediators (G4). Otherwise error, naming the differing terms. This is a medfit limitation that
     keeps the identities exact, not a requirement of the paper. The paper requires only that the
     confounders be controlled for every mediator. Relaxing to nested sets is future work.
-  - **Weighted or intercept-free models error** (G7).
+  - **Weighted or intercept-free models error** (G7). Detection: non-`NULL` `weights(model)`, or
+    no `"(Intercept)"` in `coef(model)`.
+  - **Routing depends on which model a product is in (G8).** Product hits keep their
+    `"<response>: <term>"` label. A product is allowed only when it is in the outcome model, is
+    exactly treatment × one mediator, and is written with `:` or `*`. A product anywhere else
+    (for example `X:M1` in the `M2` model of a serial chain) errors, naming the term and the
+    model, even when the outcome model is legal.
+  - **Every mediator must appear in the outcome model (G8).** The joint NIE counts every mediated
+    path, so `Y ~ X + M2` with `M1` left out errors. The existing serial worker requires only the
+    last mediator.
+  - **Treatment must be numeric 0/1 (G8).** The formulas assume the unit contrast. Factor,
+    logical and multi-valued treatments error in module 1.
+  - **Gaussian means identity link (G8).** A `gaussian(link = "log")` or any non-identity link
+    errors, naming the link.
+  - **Mediator order defines the causal order (G8).** For serial chains, `mediator = c("M1", "M2")`
+    means M1 precedes M2. A chain whose models contradict that order (for example `M1 ~ X + M2`)
+    errors.
+  - **Rows must be identical (G8).** The check compares model-frame row names, not just `nrow()`.
+    Models fit on different subsets error.
+  - **Other arguments on the joint branch (G8):**
+    - `decomposition = "two_way"` with a product errors: it would return main-effect numbers.
+    - An explicit `structure` that conflicts with the models' predictors errors.
+    - A non-default `vcov_fun` (for example `se_type = "sandwich"` through `fit_mediation()`)
+      errors in module 1, because the stacked-OLS cross-blocks assume OLS.
   - With any other product the error stays, with the message narrowed to what is still
     unsupported. That covers:
     - a product in a mediator model,
@@ -127,15 +180,17 @@ delta-method formulas are possible but would need deriving case by case. See the
     - an exposure × covariate or mediator × covariate product,
     - non-Gaussian families,
     - any lavaan multi-mediator fit with products.
-  - **Product detection covers wrapped terms (G7).** The detector checks `all.vars()` of every term,
-    not only order > 1 terms, so `I(X * M2)` and other function-wrapped products are caught. This
-    fixes a gap in the current D8(a) guard: `I(X * M2)` passes today and silently returns
-    `SerialMediationData` (reproduced on `dev`, 2026-09-23). A product precomputed as a plain data
-    column cannot be detected from the formula. The docs say so.
+  - **Product detection covers wrapped terms.** This shipped in PR #74 (`c09d7c8`):
+    `.find_wrapped_products()` catches `I(X * M2)` and similar. The joint branch reuses it, and
+    test group 8 keeps a regression test. **A product precomputed as a data column cannot be
+    detected, and the result would silently ignore it.** The docs must say this plainly in
+    `@details`, not only in NEWS.
 - New argument behavior (G3): `m_star` is a scalar (applied to every interacting mediator) or a
   named vector keyed by the interacting mediators only, such as `m_star = c(M2 = 1)`. Unknown or
   non-interacting names error. The default is `0`. Supplying `m_star` when no product is present
-  remains an error, as it is today for single-mediator fits. The extractor expands a scalar into a
+  errors on the joint branch. (Today `extract_mediation()` silently ignores `m_star` when there is
+  no product; only `fit_mediation()` checks it. That gap is tracked separately.) The extractor
+  expands a scalar into a
   vector named by the interacting mediators before building the object, so the stored `@m_star` is
   always named.
 - **The NIE's meaning changes, and this is labeled (G1).** Without a product, `nie()` on a serial
@@ -145,7 +200,15 @@ delta-method formulas are possible but would need deriving case by case. See the
   `paths()` returns the coefficients the effects depend on.
 - `print()`, `summary()`, `confint(parm = "effects")`, `tidy()`, `glance()` work, and follow the
   contracts from #68/#70: effect rows carry numeric delta-method SEs from `.effect_se()`, and
-  `tidy()` is silent.
+  `tidy()` is silent. Specifically (G8):
+  - `pm()` warns and returns `NA` when |TE| is near 0, like the four existing methods.
+  - `confint()` warns about the normal approximation, and `tidy()` stays silent (#70 convention).
+  - `tidy()` types: `paths` (`a*`, `d*`, `b*`, `theta3_*`, `c_prime`) and `effects` (`cde`,
+    `nde`, `nie`, `te`). There is no `components` type, because there is no four-way split.
+  - `glance()` gains `structure`, `n_mediators` and `interactions`, with the interacting mediators
+    collapsed into one string such as `"M2"`. It also gains `m_star`, formatted as `"M2=0"`.
+- `nie()`/`nde()`/`te()`/`pm()` read the stored effect slots. The validator ties those slots to
+  the stored path slots, so the two cannot drift apart.
 - `bootstrap_mediation()`:
   - `method = "parametric"` and `"plugin"` accept the object. Every coefficient the effects use has
     a named alias row in `@vcov`.
@@ -163,6 +226,11 @@ JointMediationData <- S7::new_class(
     treatment    = S7::class_character,
     outcome      = S7::class_character,
     interactions = S7::class_character,   # mediators carrying an X x M product
+    # path slots (G8): propagated totals + outcome coefficients
+    a_total = S7::class_numeric,          # beta1*(i), named by mediator
+    b_paths = S7::class_numeric,          # theta2(i), named by mediator
+    theta3  = S7::class_numeric,          # theta3(i), named by interacting mediator
+    c_prime = S7::class_numeric,          # theta1
     cde = S7::class_numeric, nde = S7::class_numeric,
     nie = S7::class_numeric, total_effect = S7::class_numeric,
     m_star   = S7::class_numeric,         # named by interacting mediators (G3)
@@ -171,8 +239,15 @@ JointMediationData <- S7::new_class(
     n = S7::class_integer
   ),
   validator = function(self) {
-    if (abs(self@total_effect - (self@nde + self@nie)) > 1e-10)
+    tol <- 1e-8 * max(1, abs(self@total_effect))   # relative, as InteractionMediationData
+    if (abs(self@total_effect - (self@nde + self@nie)) > tol)
       return("total_effect must equal nde + nie")
+    th3 <- stats::setNames(numeric(length(self@mediators)), self@mediators)
+    th3[names(self@theta3)] <- self@theta3
+    if (abs(self@nie - sum((self@b_paths + th3) * self@a_total)) > tol)
+      return("nie must equal sum((theta2 + theta3) * beta1*)")
+    if (abs(self@cde - (self@c_prime + sum(self@theta3 * self@m_star[names(self@theta3)]))) > tol)
+      return("cde must equal theta1 + sum(theta3 * m_star)")
     if (!setequal(names(self@m_star), self@interactions))
       return("m_star must be named by exactly the interacting mediators")
     NULL
@@ -188,6 +263,7 @@ testthat::test_file("tests/testthat/test-extract-joint.R")
 devtools::test()                             # report failed + error counts
 # lint the way CI does
 R CMD INSTALL --library=<scratch> . && R_LIBS=<scratch> Rscript -e 'lintr::lint_package()'
+spelling::spell_check_package(); urlchecker::url_check()   # every cycle (CLAUDE.md CRAN practice)
 devtools::check(cran = TRUE, args = c("--run-donttest", "--no-manual"), document = FALSE,
   env_vars = c(`_R_CHECK_DEPENDS_ONLY_` = "true", `_R_CHECK_SUGGESTS_ONLY_` = "true",
                `_R_CHECK_CRAN_INCOMING_` = "true", `_R_CHECK_CRAN_INCOMING_REMOTE_` = "true"))
@@ -201,9 +277,12 @@ devtools::check(cran = TRUE, args = c("--run-donttest", "--no-manual"), document
 | `R/extract-joint.R` (new) | `.extract_joint_mediation_lm()`: mediator means (propagated for serial), effects, estimates/vcov with aliases |
 | `R/extract-lm.R` | narrow `.stop_on_multimediator_products()`; route supported cases to the new worker |
 | `R/effect-se.R` | gradients for the new class in `.effect_gradients()` |
-| `R/generics-effects.R`, `R/methods-base.R`, `R/methods-tidy.R` | methods for the new class |
+| `R/generics-effects.R` | `nie`/`nde`/`te`/`pm`/`decompose`/`paths` methods (PR A) |
+| `R/bootstrap.R` | add the class to `.assert_param_mediation_data()` (PR A, or the class is rejected) |
+| `R/methods-base.R`, `R/methods-tidy.R` | print/summary/confint/tidy/glance (PR B) |
+| `_pkgdown.yml` | `JointMediationData` in the classes section (every exported topic is listed) |
 | `tests/testthat/test-extract-joint.R` (new) | all tests below |
-| `NEWS.md`, `_pkgdown.yml`, `inst/WORDLIST` | entries |
+| `NEWS.md`, `inst/WORDLIST` | entries |
 | `vignettes/` | a short section in the "Model Extraction" article (`mediation_demo$outcome_int` carries a treatment × mediator1 product) |
 
 ## Code style
@@ -224,8 +303,18 @@ helpers prefixed with `.`, S7 methods `@noRd`, error messages that name the offe
 
 ## Testing strategy
 
-All tests go in `test-extract-joint.R` and use fixed seeds. Each oracle is independent of the code
-under test.
+All tests go in `test-extract-joint.R` and use fixed seeds, so results are deterministic and
+cannot flake. Each oracle is independent of the code under test.
+
+**Runtime policy (G8).** The heavy oracles use `skip_on_cran()`: test 1's 1,000,000-draw truth,
+test 2's 200,000-draw Monte Carlo, and test 5's 5,000-rep nonparametric bootstrap. Each has an
+always-on companion that runs under `R CMD check`: small n, a pinned value, tolerance 1e-8. CRAN
+runs the pins; CI and `devtools::test()` run everything.
+
+**Fixtures (G8).** The serial oracle fixtures must have `d ≠ 0` and cover both an upstream product
+(`X:M1`) and a downstream product (`X:M2`). The downstream case is the only one where raw and
+propagated `β1` differ. A negative-control test shows that wiring the raw coefficient fails
+oracles 1–2.
 
 1. **Known answer (simulation).** Generate serial and parallel data with chosen `θ`, `β` and
    `θ3(i)`, at n = 20,000.
@@ -238,8 +327,9 @@ under test.
    NDE/NIE match the closed form to Monte Carlo error. This checks the formulas without reusing them.
 3. **Reductions.**
    - K = 1 with a product: matches `InteractionMediationData`'s `nde`/`nie`/`cde` (1e-10).
-   - Products present but `θ3` fixed to 0 by the data-generating process: the NIE converges toward
-     the existing serial/parallel NIE. This check is qualitative.
+   - Parallel with `θ3 = 0` in the data-generating process: the joint NIE equals the existing
+     `ParallelMediationData` NIE on the same fits (1e-8). Serial is covered by the G1 pin in
+     group 8.
 4. **Serial propagation identity.** This is medfit step 1 above: an exact 1e-10 match to direct
    `M(i) ~ X + C` OLS.
 5. **SE oracle.** This is medfit step 3 above.
@@ -261,7 +351,11 @@ under test.
      paths and differs from `a*d*b`.
    - A non-interacting or unknown `m_star` name errors.
    - Differing covariate sets error, naming the terms.
-   - An `I(X * M)` product in any model is detected (guard and routing).
+   - An `I(X * M)` product in any model is detected (regression test for #74).
+   - Each G8 error: a legal outcome product with an illegal mediator-model product, a missing
+     mediator in the outcome, a factor treatment, a `gaussian(link = "log")` model, a reversed
+     mediator order, same-n but different rows, weights, no intercept, `decomposition = "two_way"`
+     with a product, and a non-default `vcov_fun`.
 9. **Positive control.** Flip the sign of one `θ3(i)` term in the NIE; oracles 1 and 2 must fail.
 
 ## Boundaries
@@ -282,8 +376,9 @@ under test.
 
 ## Success criteria
 
-- The D8 motivating case works: a serial fit with a treatment × mediator1 product (the GRILL D8 reproduction:
-  coefficient 0.82, n = 5000) returns `JointMediationData` whose NIE/NDE pass oracles 1–2.
+- The D8 motivating case works: a serial fit with a treatment × mediator1 product (the GRILL D8
+  reproduction: coefficient 0.82, n = 5000) returns `JointMediationData` whose NIE/NDE pass
+  oracles 1–2. So does a downstream-product serial fit (`X:M2`, `d ≠ 0`).
 - Every still-unsupported product still errors, naming the term.
 - All 9 test groups pass. Full suite: 0 failed, 0 errors. Lint adds no hits. Strict check 0/0 with
   only the Date NOTE.
