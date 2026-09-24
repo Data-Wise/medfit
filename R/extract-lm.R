@@ -742,8 +742,11 @@ S7::method(extract_mediation, glm_class) <- function(
   # Means are over the mediator model's design columns, so factor dummies
   # (e.g. Gb, Gc) and transformed terms (e.g. log(C)) are included.
   m_covs <- setdiff(names(coef_m), c("(Intercept)", treatment))
+  # With case weights (frequency, survey or IPW), the means are weighted.
   mm_m <- tryCatch(stats::model.matrix(model_m), error = function(e) NULL)
-  c_bar <- .interaction_covariate_means(data, m_covs, mm = mm_m)
+  w_m <- tryCatch(stats::model.weights(stats::model.frame(model_m)),
+                  error = function(e) NULL)
+  c_bar <- .interaction_covariate_means(data, m_covs, mm = mm_m, w = w_m)
   m_ref <- beta0
   for (cv in m_covs) {
     m_ref <- m_ref + unname(coef_m[[cv]]) * c_bar[[cv]]
@@ -826,8 +829,9 @@ S7::method(extract_mediation, glm_class) <- function(
 
 #' Covariate means for the reference mediator mean (four-way decomposition)
 #'
-#' Sample means of the mediator model's covariate design columns: from `mm`
-#' when given (the extractor passes `model.matrix(model_m)`), else the means
+#' Sample (or case-weighted) means of the mediator model's covariate design
+#' columns: from `mm` when given (the extractor passes
+#' `model.matrix(model_m)`), else the means
 #' the extractor stored on `dat` (attribute `medfit_covariate_means`), else
 #' rebuilt from a model frame's `terms` attribute, else plain numeric columns
 #' of `dat` (e.g. the lavaan data matrix). Uses [mean()] per column so
@@ -837,9 +841,11 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param covs Covariate coefficient names (mediator model, excluding the
 #'   intercept and the treatment).
 #' @param mm Optional design matrix of the mediator model.
+#' @param w Optional case weights over the rows of `mm`; `NULL` for unweighted
+#'   means. A model frame's `(weights)` column is used when rebuilding.
 #' @return Named numeric vector over `covs`.
 #' @keywords internal
-.interaction_covariate_means <- function(dat, covs, mm = NULL) { # nolint: object_length_linter.
+.interaction_covariate_means <- function(dat, covs, mm = NULL, w = NULL) { # nolint: object_length_linter.
   if (length(covs) == 0L) return(stats::setNames(numeric(0), character(0)))
   col_means <- function(get) {
     stats::setNames(vapply(covs, get, numeric(1), USE.NAMES = FALSE), covs)
@@ -847,11 +853,13 @@ S7::method(extract_mediation, glm_class) <- function(
   stored <- attr(dat, "medfit_covariate_means")
   if (is.null(mm) && all(covs %in% names(stored))) return(stored[covs])
   if (is.null(mm) && !is.null(attr(dat, "terms"))) {
+    w <- stats::model.weights(dat)
     mm <- tryCatch(stats::model.matrix(attr(dat, "terms"), dat),
                    error = function(e) NULL)
   }
   if (!is.null(mm) && all(covs %in% colnames(mm))) {
-    return(col_means(function(cv) mean(mm[, cv])))
+    if (is.null(w)) return(col_means(function(cv) mean(mm[, cv])))
+    return(col_means(function(cv) sum(mm[, cv] * w) / sum(w)))
   }
   if (!is.null(dat) && all(covs %in% names(dat)) &&
         all(vapply(covs, function(cv) is.numeric(dat[[cv]]), logical(1)))) {

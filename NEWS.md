@@ -89,7 +89,9 @@
   transformed covariate terms (e.g. `log(C)`, `poly(C, 2)`) were also
   skipped and are now included, and when a caller-supplied `data` has rows
   the mediator model did not use, the means now cover only the estimation
-  sample. Results with plain numeric covariates are unchanged.
+  sample. With case weights (e.g. `fit_mediation(weights = )`), the means
+  are now weighted by them; they were unweighted before. Results with plain
+  numeric covariates and no weights are unchanged.
   `fit_mediation()` with an `X * M` outcome formula is fixed as well. The
   lavaan engine accepts only numeric observed variables, so it is
   unaffected.

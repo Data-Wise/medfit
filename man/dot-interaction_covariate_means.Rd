@@ -4,7 +4,7 @@
 \alias{.interaction_covariate_means}
 \title{Covariate means for the reference mediator mean (four-way decomposition)}
 \usage{
-.interaction_covariate_means(dat, covs, mm = NULL)
+.interaction_covariate_means(dat, covs, mm = NULL, w = NULL)
 }
 \arguments{
 \item{dat}{Data frame (the object's \verb{@data}), or \code{NULL}.}
@@ -13,13 +13,17 @@
 intercept and the treatment).}
 
 \item{mm}{Optional design matrix of the mediator model.}
+
+\item{w}{Optional case weights over the rows of \code{mm}; \code{NULL} for unweighted
+means. A model frame's \code{(weights)} column is used when rebuilding.}
 }
 \value{
 Named numeric vector over \code{covs}.
 }
 \description{
-Sample means of the mediator model's covariate design columns: from \code{mm}
-when given (the extractor passes \code{model.matrix(model_m)}), else the means
+Sample (or case-weighted) means of the mediator model's covariate design
+columns: from \code{mm} when given (the extractor passes
+\code{model.matrix(model_m)}), else the means
 the extractor stored on \code{dat} (attribute \code{medfit_covariate_means}), else
 rebuilt from a model frame's \code{terms} attribute, else plain numeric columns
 of \code{dat} (e.g. the lavaan data matrix). Uses \code{\link[=mean]{mean()}} per column so

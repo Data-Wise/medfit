@@ -261,3 +261,40 @@ test_that("without stored means, unresolvable factor dummies error, not skip", {
   expect_error(medfit:::.effect_se(o2, "nde"),
                "Cannot compute the covariate means.*Gb, Gc")
 })
+
+# ==============================================================================
+# Case weights
+# ==============================================================================
+
+test_that("case weights give weighted covariate means in E[M | X = 0]", {
+  d <- gen_factor_cov()
+  set.seed(9)
+  # Weights that favor level "c", so weighted and unweighted means differ.
+  w <- ifelse(d$G == "c", 3, 1) * runif(nrow(d), 0.5, 1.5)
+  o <- suppressMessages(fit_mediation(
+    formula_y = Y ~ X * M + G, formula_m = M ~ X + G, data = d,
+    treatment = "X", mediator = "M", weights = w
+  ))
+  fm <- lm(M ~ X + G, d, weights = w)
+  fy <- lm(Y ~ X * M + G, d, weights = w)
+  mm <- model.matrix(fm)
+  cv <- c("Gb", "Gc")
+  nde_at <- function(cbar) {
+    unname(coef(fy)[["X"]] + coef(fy)[["X:M"]] *
+             (coef(fm)[["(Intercept)"]] + sum(coef(fm)[cv] * cbar)))
+  }
+  cbar_w <- vapply(cv, function(j) weighted.mean(mm[, j], w), numeric(1))
+  cbar_u <- colMeans(mm[, cv])
+  expect_equal(o@nde, nde_at(cbar_w), tolerance = 1e-8)
+  # Planted check: the unweighted means give a clearly different NDE.
+  expect_gt(abs(nde_at(cbar_u) - nde_at(cbar_w)), 0.05)
+  expect_gt(abs(o@nde - nde_at(cbar_u)), 0.05)
+
+  # The gradient reuses the stored weighted means; the model-frame rebuild
+  # (no stored means) reads the (weights) column and agrees.
+  o_mf <- extract_mediation(fm, model_y = fy, treatment = "X", mediator = "M")
+  expect_equal(o_mf@nde, nde_at(cbar_w), tolerance = 1e-10)
+  keys <- c("nde", "int_ref", "te")
+  expect_equal(medfit:::.effect_se(drop_stored_means(o_mf), keys),
+               medfit:::.effect_se(o_mf, keys), tolerance = 1e-12)
+})
