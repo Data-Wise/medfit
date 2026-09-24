@@ -221,11 +221,31 @@ S7::method(extract_mediation, glm_class) <- function(
   # and there are >= 2 mediators, infer serial vs parallel from the mediator
   # models' predictors. Branch BEFORE the scalar-mediator assertion below.
   if (length(mediator) >= 2L) {
+    hits <- .find_product_terms(c(list(model_m), mediator_models, list(model_y)),
+                                c(treatment, mediator))
+    # --- Joint branch: treatment-by-mediator products in the outcome model ---
+    # Supported products route to the joint natural effects; any other product
+    # errors, naming the term and its model. No-product fits skip this block.
+    if (length(hits) > 0L) {
+      split <- .partition_joint_products(hits, model_y, treatment, mediator)
+      .stop_on_unsupported_joint_products(split$unsupported)
+      med_models <- c(list(model_m), mediator_models)
+      structure <- .check_joint_fit(med_models, model_y, treatment, mediator,
+                                    structure, decomposition, vcov_fun)
+      m_star <- .normalize_joint_m_star(m_star, split$interactions, m_star_supplied)
+      return(.extract_joint_mediation_lm(
+        med_models   = med_models,
+        model_y      = model_y,
+        treatment    = treatment,
+        mediators    = mediator,
+        structure    = structure,
+        interactions = split$interactions,
+        m_star       = m_star,
+        outcome      = outcome,
+        data         = data
+      ))
+    }
     if (m_star_supplied) .stop_on_unused_m_star(treatment, mediator[1L])
-    .stop_on_multimediator_products(
-      .find_product_terms(c(list(model_m), mediator_models, list(model_y)),
-                          c(treatment, mediator))
-    )
     if (structure == "auto") {
       if (is.null(mediator_models)) {
         stop(paste0(
@@ -582,10 +602,9 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @keywords internal
 .stop_on_unused_m_star <- function(treatment, mediator) {
   stop(paste0(
-    "`m_star` applies to the four-way decomposition only, which requires a ",
-    "single mediator and a treatment-by-mediator term (e.g. ", treatment,
-    " * ", mediator, ") that is not disabled by decomposition = 'two_way'. ",
-    "Drop `m_star`, or add the interaction term."
+    "`m_star` applies only when the outcome model has a treatment-by-mediator ",
+    "term (e.g. ", treatment, " * ", mediator, ") that is not disabled by ",
+    "decomposition = 'two_way'. Drop `m_star`, or add the interaction term."
   ), call. = FALSE)
 }
 

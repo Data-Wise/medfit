@@ -103,20 +103,20 @@ test_that("extract_mediation() refuses an m_star that no four-way fit uses", {
   expect_error(
     extract_mediation(fm, model_y = lm(Y ~ X + M + C, d),
                       treatment = "X", mediator = "M", m_star = 1),
-    "four-way decomposition only"
+    "applies only when"
   )
   # Keyed on the call site, not the value.
   expect_error(
     extract_mediation(fm, model_y = lm(Y ~ X + M + C, d),
                       treatment = "X", mediator = "M", m_star = 0),
-    "four-way decomposition only"
+    "applies only when"
   )
   # Product present but the four-way split disabled.
   expect_error(
     extract_mediation(fm, model_y = lm(Y ~ X * M + C, d),
                       treatment = "X", mediator = "M", m_star = 1,
                       decomposition = "two_way"),
-    "four-way decomposition only"
+    "applies only when"
   )
   # Multi-mediator fits never use m_star.
   expect_error(
@@ -124,7 +124,7 @@ test_that("extract_mediation() refuses an m_star that no four-way fit uses", {
                       treatment = "X", mediator = c("M", "M2"),
                       mediator_models = list(lm(M2 ~ X + M + C, d)),
                       m_star = 1),
-    "four-way decomposition only"
+    "applies only when"
   )
   # Omitted m_star and a used m_star both still work.
   expect_s3_class(
@@ -157,7 +157,7 @@ test_that("the lavaan extractor refuses an unused m_star", {
   fit <- lavaan::sem("M ~ X + C\n Y ~ X + M + C", data = d)
   expect_error(
     extract_mediation(fit, treatment = "X", mediator = "M", m_star = 1),
-    "four-way decomposition only"
+    "applies only when"
   )
   expect_s3_class(
     extract_mediation(fit, treatment = "X", mediator = "M"),

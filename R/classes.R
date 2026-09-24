@@ -1408,3 +1408,205 @@ S7::method(print, InteractionMediationData) <- function(x, ...) {
               x@nde, x@nie, x@total_effect, x@n_obs))
   invisible(x)
 }
+
+
+#' JointMediationData: Joint Natural Effects of Multiple Mediators
+#'
+#' @description
+#' S7 class for the **joint** natural effects of two or more mediators, serial
+#' or parallel, when the outcome model may contain treatment-by-mediator product
+#' terms (VanderWeele and Vansteelandt 2014). The mediators are treated as one
+#' block: the natural indirect effect (NIE) runs through every mediator and every
+#' path among them, and the natural direct effect (NDE) is the remainder.
+#' medfit computes the effects; causal interpretation is the user's
+#' responsibility.
+#'
+#' @details
+#' With outcome model
+#' \eqn{Y = \theta_1 X + \sum_i (\theta_{2i} + \theta_{3i} X) M_i + \dots}{Y = t1*X + sum((t2i + t3i*X)*Mi) + ...}
+#' and \eqn{\beta^*_{1i}}{b1i*} the total (propagated) effect of the treatment on
+#' mediator \eqn{i} (for a serial chain this includes the paths through earlier
+#' mediators), the unit-contrast effects are
+#' \deqn{NIE = \sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{NIE = sum((t2i + t3i) * b1i*)}
+#' \deqn{CDE = \theta_1 + \sum_i \theta_{3i} m^*_i}{CDE = t1 + sum(t3i * mi*)}
+#' and \eqn{TE = NDE + NIE}{TE = NDE + NIE}. \eqn{\theta_{3i}}{t3i} is zero for a
+#' mediator without a product term. The validator enforces the NIE and CDE
+#' identities, so an object with inconsistent numbers cannot be built.
+#'
+#' @param structure Single string, `"serial"` or `"parallel"`.
+#' @param mediators Character vector of mediator names, in causal order.
+#' @param treatment,outcome Single character strings.
+#' @param interactions Character vector naming the mediators that carry a
+#'   treatment-by-mediator product in the outcome model (may be empty).
+#' @param a_total Numeric vector named by `mediators`: total effect of the
+#'   treatment on each mediator (\eqn{\beta^*_{1i}}{b1i*}).
+#' @param b_paths Numeric vector named by `mediators`: outcome main effect of each
+#'   mediator (\eqn{\theta_{2i}}{t2i}).
+#' @param theta3 Numeric vector named by `interactions`: product coefficients
+#'   (\eqn{\theta_{3i}}{t3i}).
+#' @param c_prime Numeric scalar: treatment main effect on the outcome
+#'   (\eqn{\theta_1}{t1}).
+#' @param cde,nde,nie,total_effect Numeric scalars: controlled direct, natural
+#'   direct, natural indirect and total effects.
+#' @param m_star Numeric vector named by `interactions`: reference mediator levels
+#'   for the CDE.
+#' @param estimates Named numeric vector of parameter estimates.
+#' @param vcov Square variance-covariance matrix of `estimates`.
+#' @param data Optional data frame, or NULL.
+#' @param n_obs Integer number of observations.
+#' @param converged Logical convergence flag.
+#' @param source_package Character name of the originating package.
+#'
+#' @return A `JointMediationData` S7 object.
+#' @usage
+#' JointMediationData(structure, mediators, treatment, outcome, interactions,
+#'   a_total, b_paths, theta3, c_prime, cde, nde, nie, total_effect, m_star,
+#'   estimates, vcov, data, n_obs, converged, source_package)
+#'
+#' @references
+#' VanderWeele, T. J., & Vansteelandt, S. (2014). Mediation analysis with
+#' multiple mediators. *Epidemiologic Methods*, 2(1), 95--115.
+#' \doi{10.1515/em-2012-0010}
+#'
+#' @examples
+#' # Hand-built parallel object with an X x M2 product (m2* = 0)
+#' jmd <- JointMediationData(
+#'   structure = "parallel", mediators = c("M1", "M2"),
+#'   treatment = "X", outcome = "Y", interactions = "M2",
+#'   a_total = c(M1 = 0.5, M2 = 0.3), b_paths = c(M1 = 0.3, M2 = 0.4),
+#'   theta3 = c(M2 = 0.2), c_prime = 0.1,
+#'   cde = 0.1, nde = 0.12, nie = 0.33, total_effect = 0.45,
+#'   m_star = c(M2 = 0),
+#'   estimates = c(a1 = 0.5, a2 = 0.3, b1 = 0.3, b2 = 0.4,
+#'                 theta3_M2 = 0.2, c_prime = 0.1),
+#'   vcov = diag(0.01, 6),
+#'   n_obs = 200L, converged = TRUE, source_package = "medfit"
+#' )
+#' jmd@nie  # (0.3 + 0) * 0.5 + (0.4 + 0.2) * 0.3 = 0.33
+#'
+#' @export
+JointMediationData <- S7::new_class(
+  "JointMediationData",
+  package = "medfit",
+  properties = list(
+    structure = S7::class_character,
+    mediators = S7::class_character,
+    treatment = S7::class_character,
+    outcome = S7::class_character,
+    interactions = S7::class_character,  # mediators carrying an X x M product
+
+    # Path slots: propagated treatment effects and outcome coefficients
+    a_total = S7::class_numeric,         # beta1*(i), named by mediator
+    b_paths = S7::class_numeric,         # theta2(i), named by mediator
+    theta3 = S7::class_numeric,          # theta3(i), named by interacting mediator
+    c_prime = S7::class_numeric,         # theta1
+
+    # Effects (scalar)
+    cde = S7::class_numeric,
+    nde = S7::class_numeric,
+    nie = S7::class_numeric,
+    total_effect = S7::class_numeric,
+
+    # Reference levels for the CDE, named by interacting mediator
+    m_star = S7::class_numeric,
+
+    # Parameters
+    estimates = S7::class_numeric,
+    vcov = S7::new_S3_class("matrix"),
+
+    # Data and metadata
+    data = S7::class_data.frame | NULL,
+    n_obs = S7::class_integer,
+    converged = S7::class_logical,
+    source_package = S7::class_character
+  ),
+
+  validator = function(self) {
+    tol <- 1e-8 * max(1, abs(self@total_effect))
+
+    # --- Structural checks ---
+    if (length(self@structure) != 1 ||
+          !self@structure %in% c("serial", "parallel")) {
+      return("structure must be \"serial\" or \"parallel\"")
+    }
+    if (length(self@treatment) != 1 || length(self@outcome) != 1) {
+      return("treatment and outcome must each be a single string")
+    }
+    k <- length(self@mediators)
+    if (k < 1 || anyDuplicated(self@mediators)) {
+      return("mediators must be a non-empty vector of unique names")
+    }
+    for (nm in c("a_total", "b_paths")) {
+      v <- S7::prop(self, nm)
+      if (length(v) != k || !identical(names(v), self@mediators)) {
+        return(sprintf("%s must be named by mediators, in order", nm))
+      }
+    }
+    if (!all(self@interactions %in% self@mediators)) {
+      return("interactions must be a subset of mediators")
+    }
+    if (!setequal(names(self@theta3), self@interactions) ||
+          length(self@theta3) != length(self@interactions)) {
+      return("theta3 must be named by exactly the interacting mediators")
+    }
+    if (!setequal(names(self@m_star), self@interactions) ||
+          length(self@m_star) != length(self@interactions)) {
+      return("m_star must be named by exactly the interacting mediators")
+    }
+    scalars <- list(c_prime = self@c_prime, cde = self@cde, nde = self@nde,
+                    nie = self@nie, total_effect = self@total_effect)
+    for (nm in names(scalars)) {
+      if (length(scalars[[nm]]) != 1) return(sprintf("%s must be a scalar", nm))
+    }
+    if (nrow(self@vcov) != ncol(self@vcov)) {
+      return("vcov must be a square matrix")
+    }
+    if (length(self@estimates) != nrow(self@vcov)) {
+      return("Number of estimates must match vcov dimensions")
+    }
+
+    # --- Algebraic invariants: tie the effects back to the path slots ---
+    if (abs(self@total_effect - (self@nde + self@nie)) > tol) {
+      return("total_effect must equal nde + nie")
+    }
+    th3 <- stats::setNames(numeric(k), self@mediators)
+    th3[names(self@theta3)] <- self@theta3
+    if (abs(self@nie - sum((self@b_paths + th3) * self@a_total)) > tol) {
+      return("nie must equal sum((theta2 + theta3) * beta1*)")
+    }
+    cde_path <- self@c_prime +
+      sum(self@theta3 * self@m_star[names(self@theta3)])
+    if (abs(self@cde - cde_path) > tol) {
+      return("cde must equal theta1 + sum(theta3 * m_star)")
+    }
+
+    NULL
+  }
+)
+
+
+#' Print Method for JointMediationData
+#'
+#' @param x A JointMediationData object
+#' @param ... Additional arguments (unused)
+#' @noRd
+S7::method(print, JointMediationData) <- function(x, ...) {
+  sep <- if (x@structure == "serial") " -> " else ", "
+  cat("<JointMediationData>\n")
+  cat(sprintf("  %s -> {%s} -> %s  (%s, joint effects)\n",
+              x@treatment, paste(x@mediators, collapse = sep), x@outcome,
+              x@structure))
+  for (m in x@mediators) {
+    t3 <- if (m %in% x@interactions) {
+      sprintf("   t3 = %+.4f (m* = %g)", x@theta3[[m]], x@m_star[[m]])
+    } else {
+      ""
+    }
+    cat(sprintf("    %-8s a* = %+.4f   b = %+.4f%s\n",
+                m, x@a_total[[m]], x@b_paths[[m]], t3))
+  }
+  cat(sprintf("  c' (t1) = %+.4f   CDE = %+.4f\n", x@c_prime, x@cde))
+  cat(sprintf("  NDE = %+.4f   NIE = %+.4f   Total = %+.4f   |   n = %d\n",
+              x@nde, x@nie, x@total_effect, x@n_obs))
+  invisible(x)
+}

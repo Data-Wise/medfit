@@ -17,6 +17,7 @@ confounder
 Dependabot
 DOP
 EDE
+Epidemiologic
 errored
 estimands
 extensibility
@@ -29,6 +30,7 @@ InteractionMediationData
 INTmed
 INTref
 IPW
+JointMediationData
 lavaan
 Lifecycle
 lintr
@@ -99,6 +101,7 @@ Hayes
 Preacher
 VanderWeele
 VanderWeele's
+Vansteelandt
 Williams
 CRAN's
 SEM's

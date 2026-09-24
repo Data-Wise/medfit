@@ -20,10 +20,13 @@
 #'   - `"nonparametric"`: Resample data and refit (robust, slower)
 #'   - `"plugin"`: Point estimate only, no CI (fastest)
 #' @param mediation_data A mediation data object (required for parametric/plugin):
-#'   [MediationData], [SerialMediationData], [ParallelMediationData], or
-#'   [InteractionMediationData]. `statistic_fn` receives its named `@estimates`
-#'   vector, which includes path aliases (e.g. `a`, `d1`, `b`, `c_prime` for a
-#'   serial chain; `a1`, `b1`, `a2`, `b2` for parallel mediators).
+#'   [MediationData], [SerialMediationData], [ParallelMediationData],
+#'   [InteractionMediationData], or [JointMediationData]. `statistic_fn`
+#'   receives its named `@estimates` vector, which includes path aliases (e.g.
+#'   `a`, `d1`, `b`, `c_prime` for a serial chain; `a1`, `b1`, `a2`, `b2` for
+#'   parallel mediators). For a [JointMediationData] the aliases alone cannot
+#'   reproduce the NDE, which also needs the prefixed intercept and covariate
+#'   rows (`m1_`, ..., `y_`) and the sample covariate means.
 #' @param data Data frame (required for nonparametric bootstrap)
 #' @param n_boot Integer: number of bootstrap samples (default: 1000)
 #' @param ci_level Numeric: confidence level between 0 and 1 (default: 0.95)
@@ -435,12 +438,13 @@ bootstrap_mediation <- function(statistic_fn,
 .assert_param_mediation_data <- function(x) {
   supported <- list(
     MediationData, SerialMediationData,
-    ParallelMediationData, InteractionMediationData
+    ParallelMediationData, InteractionMediationData, JointMediationData
   )
   ok <- any(vapply(supported, function(cls) S7::S7_inherits(x, cls), logical(1)))
   if (!ok) {
     stop("mediation_data must be a MediationData, SerialMediationData, ",
-         "ParallelMediationData, or InteractionMediationData object",
+         "ParallelMediationData, InteractionMediationData, or ",
+         "JointMediationData object",
          call. = FALSE)
   }
   invisible(x)
