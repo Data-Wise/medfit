@@ -169,3 +169,36 @@ Every code claim was checked. Two of them also exposed **live bugs on `dev`**, o
    family name (`R/extract-lm.R:624-631`). Reproduced 2026-09-23.
 3. `extract_mediation(..., m_star = <value>)` with no product silently ignores `m_star`. Only
    `fit_mediation()` rejects it.
+
+### G9: consistency pass, harness and outcomes, approval (2026-09-23)
+
+**Request:** "fix all the issues and approve; add harness and outcomes."
+
+**Consistency fixes** (places where later decisions weren't carried through):
+1. `m_star` without a product: the note said it was "silently ignored, tracked separately". PR #75
+   fixed that, so the joint branch reuses `.stop_on_unused_m_star()`.
+2. The bootstrap bullet said every coefficient has an alias row. It now matches G8: aliases for
+   paths, prefixed source rows for intercepts and covariate coefficients.
+3. Test group 7 said "runs on the alias names" and "wrong-length `m_star`". Both now match G3 and G8
+   (the full-`@estimates` recipe reproduces NDE/NIE; `m_star` names; path-tie violations).
+4. Resolved question 4 claimed "equals the population-average effect". Corrected to "sample
+   average, SE conditional on the observed covariates" (G7).
+5. The code-style snippet showed the flat routing G8 replaced. It now names the outcome model and
+   documents that allowed terms are removed first.
+6. The `vcov_fun` rule now notes #75 (the existing workers honor it; only the joint branch refuses
+   it, because the stacked-OLS blocks assume OLS). `fit_mediation()` never reaches the joint branch.
+7. PR A adds the class to `R/bootstrap.R` but had no test for it. A plugin-bootstrap acceptance
+   check is added to test group 8.
+8. The Behavior bullet now says identity link alongside Gaussian.
+
+**Added:**
+- **Verification harness:** `helper-joint.R` with independent oracles (counterfactual-simulation
+  truth, g-computation from the fitted models, nonparametric bootstrap SE), planted defects injected
+  through an `effect_fn` argument without editing production code, `skip_on_cran()` gating with
+  pinned always-on companions, a required check that CI actually runs the heavy oracles, and a
+  fresh-session E2E transcript per PR.
+- **Outcomes:** a table of each check's expected outcome, pass criterion and PR. Two rows are
+  labeled targets to measure first: CRAN runtime under 10 s, and heavy oracles executed on CI.
+
+**Decision:** the spec is **approved** by the user. Next step: the task plan
+(`PLAN-joint-mediator-interactions-2026-09-23.md`), PR A first.

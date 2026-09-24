@@ -1,7 +1,7 @@
 # Spec: joint natural effects for serial and parallel mediators with exposure–mediator products (D8(b))
 
-**Date:** 2026-09-23 · **Status:** draft, grilled (G1–G6 folded in), awaiting approval
-**Grill:** [GRILL-joint-mediator-interactions-2026-09-23.md](GRILL-joint-mediator-interactions-2026-09-23.md) (G1–G6, plus G7 and G8: triage of two adverse reviews)
+**Date:** 2026-09-23 · **Status:** **approved** 2026-09-23 (after grill G1–G6, two adverse reviews G7–G8, consistency pass G9)
+**Grill:** [GRILL-joint-mediator-interactions-2026-09-23.md](GRILL-joint-mediator-interactions-2026-09-23.md) (G1–G6, G7 and G8: triage of two adverse reviews, G9: consistency pass and approval)
 **Origin:** D8(b) in [GRILL-bundled-example-data-2026-09-23.md](GRILL-bundled-example-data-2026-09-23.md).
 It replaces part of the D8(a) guard (PR #62, `aa3362c`), which today makes every multi-mediator
 extraction with a product term error.
@@ -75,8 +75,8 @@ whole mediator vector. These are no unmeasured exposure–outcome confounding, n
 none for exposure–mediators, and no exposure-induced mediator–outcome confounder **outside the
 mediator vector**. Earlier mediators in a serial chain are exposure-induced and confound later
 ones. They are allowed precisely because they are in the vector; the paper says such a variable
-must be added to the vector. The docs must say
-that mediator–outcome and exposure–mediator confounders must be controlled for **every** mediator.
+must be added to the vector. The docs must say that mediator–outcome and exposure–mediator
+confounders must be controlled for **every** mediator.
 
 **Standard errors.** The paper recommends the bootstrap for these variants and notes that
 delta-method formulas are possible but would need deriving case by case. See the SE design below.
@@ -142,8 +142,9 @@ path.
 - `extract_mediation(model_m, model_y = ..., mediator = c("M1", "M2"), mediator_models = ...)`
   - With **no product terms**: unchanged. Returns `SerialMediationData` or
     `ParallelMediationData`.
-  - With **only exposure × mediator products in the outcome model**, a Gaussian outcome and
-    Gaussian mediator models: returns a new **`JointMediationData`** object.
+  - With **only exposure × mediator products in the outcome model**, a Gaussian identity-link
+    outcome and Gaussian identity-link mediator models: returns a new **`JointMediationData`**
+    object.
   - **Every model must carry the same covariate set** after removing the treatment and the
     mediators (G4). Otherwise error, naming the differing terms. This is a medfit limitation that
     keeps the identities exact, not a requirement of the paper. The paper requires only that the
@@ -170,8 +171,11 @@ path.
   - **Other arguments on the joint branch (G8):**
     - `decomposition = "two_way"` with a product errors: it would return main-effect numbers.
     - An explicit `structure` that conflicts with the models' predictors errors.
-    - A non-default `vcov_fun` (for example `se_type = "sandwich"` through `fit_mediation()`)
-      errors in module 1, because the stacked-OLS cross-blocks assume OLS.
+    - A non-default `vcov_fun` errors on the joint branch in module 1, because the stacked-OLS
+      cross-blocks assume OLS. PR #75 made `vcov_fun` reach the existing serial, parallel and
+      four-way workers; the joint branch is the one place that refuses it. (`fit_mediation()` is
+      single-mediator only, so its `se_type` never reaches the joint branch.) A stacked sandwich
+      for joint fits is future work.
   - With any other product the error stays, with the message narrowed to what is still
     unsupported. That covers:
     - a product in a mediator model,
@@ -188,11 +192,10 @@ path.
 - New argument behavior (G3): `m_star` is a scalar (applied to every interacting mediator) or a
   named vector keyed by the interacting mediators only, such as `m_star = c(M2 = 1)`. Unknown or
   non-interacting names error. The default is `0`. Supplying `m_star` when no product is present
-  errors on the joint branch. (Today `extract_mediation()` silently ignores `m_star` when there is
-  no product; only `fit_mediation()` checks it. That gap is tracked separately.) The extractor
-  expands a scalar into a
-  vector named by the interacting mediators before building the object, so the stored `@m_star` is
-  always named.
+  errors on the joint branch, reusing `.stop_on_unused_m_star()` from PR #75, which already refuses
+  an unused `m_star` on every other path. The check keys on the call site. The extractor expands a
+  scalar into a vector named by the interacting mediators before building the object, so the
+  stored `@m_star` is always named.
 - **The NIE's meaning changes, and this is labeled (G1).** Without a product, `nie()` on a serial
   fit is the chain-only `a*d*b`. The joint NIE counts every mediated path. `print()` and the docs
   say "joint NIE (all paths through M1..MK)", and a test pins the difference.
@@ -211,7 +214,8 @@ path.
   the stored path slots, so the two cannot drift apart.
 - `bootstrap_mediation()`:
   - `method = "parametric"` and `"plugin"` accept the object. Every coefficient the effects use has
-    a named alias row in `@vcov`.
+    a named row in `@estimates` and `@vcov`: an alias for path coefficients, a prefixed source row
+    for intercepts and covariate coefficients (see "Gradient terms and parameter naming").
   - `method = "nonparametric"` works through the user's own refit function, as today.
 
 ## Class sketch
@@ -291,11 +295,13 @@ Match the existing extractors: `checkmate` validation at entry, explicit namespa
 helpers prefixed with `.`, S7 methods `@noRd`, error messages that name the offending term.
 
 ```r
-.stop_on_unsupported_joint_products <- function(hits) {
+# hits carry "<response>: <term>" labels (.find_product_terms()), so the model
+# is named. The allowed outcome-model X:M terms are removed before this runs.
+.stop_on_unsupported_joint_products <- function(hits, outcome) {
   if (length(hits) == 0L) return(invisible(NULL))
   stop(paste0(
-    "Multi-mediator extraction supports exposure x mediator products in the ",
-    "outcome model only; found unsupported product term(s): ",
+    "Multi-mediator extraction supports treatment x mediator products in the ",
+    "outcome model ('", outcome, "') only; found unsupported term(s): ",
     paste(hits, collapse = ", "), "."
   ), call. = FALSE)
 }
@@ -344,8 +350,10 @@ oracles 1–2.
 7. **Methods contract.**
    - `tidy()` is silent and returns numeric effect SEs.
    - `confint()` equals `tidy(conf.int = TRUE)`.
-   - Parametric bootstrap runs on the alias names.
-   - The validator rejects a bad `total_effect` and a wrong-length `m_star`.
+   - A parametric bootstrap with the documented `statistic_fn` recipe (full named `@estimates`,
+     closing over `c̄`) reproduces the point NDE and NIE exactly.
+   - The validator rejects a bad `total_effect`, an `m_star` not named by exactly the interacting
+     mediators, and NIE or CDE values that break the path ties.
 8. **G1 pin, G3 and G4.**
    - With θ3 = 0 in the data-generating process, the joint NIE equals the sum over all mediated
      paths and differs from `a*d*b`.
@@ -356,7 +364,68 @@ oracles 1–2.
      mediator in the outcome, a factor treatment, a `gaussian(link = "log")` model, a reversed
      mediator order, same-n but different rows, weights, no intercept, `decomposition = "two_way"`
      with a product, and a non-default `vcov_fun`.
+   - `bootstrap_mediation(method = "plugin")` accepts the class (the `R/bootstrap.R` change ships
+     in PR A).
 9. **Positive control.** Flip the sign of one `θ3(i)` term in the NIE; oracles 1 and 2 must fail.
+
+## Verification harness
+
+Everything the tests need to check the estimator independently lives in one helper file, so each
+oracle is written once and reused, and a planted defect can be injected without editing
+production code.
+
+**`tests/testthat/helper-joint.R`** (new):
+
+| Helper | What it does |
+|---|---|
+| `sim_joint(structure, product, n, seed, rho = 0)` | Data from a known data-generating process. `structure` is `"serial"` or `"parallel"`; `product` is `"M1"`, `"M2"` or `"none"`. Serial uses `d ≠ 0`. `rho` sets the mediator error correlation (parallel). Returns the data plus the true parameters. |
+| `true_joint_effects(dgp, draws = 1e6, seed)` | Oracle 1 truth. Simulates `M(0)` and `M(1)` for each unit from the true mediator equations, then `Y(1, M(0))`, `Y(0, M(0))` and `Y(1, M(1))` from the true outcome equation. Returns NDE, NIE, TE and CDE(m*) as differences of means. It never calls the closed-form formulas. |
+| `gcomp_joint(fits, draws = 2e5, seed)` | Oracle 2. The same simulation, but from the **fitted** models, with residual SDs from the fits. |
+| `boot_joint_se(dat, spec, B = 5000, seed)` | Oracle 5. Nonparametric bootstrap: resample rows, refit every model, re-extract, and return the SD of each effect. |
+| `effects_from(obj, effect_fn = NULL)` | Returns the object's effects. With `effect_fn` supplied, it recomputes them from `@estimates` with that function instead. The planted-defect controls pass a broken `effect_fn` (sign-flipped `θ3`, or raw instead of propagated `β1`) and assert that oracles 1–2 then **fail**. Production code is never edited. |
+| `fit_joint(dat, structure, product, ...)` | Fits the models the tests share, with identical covariate sets, and calls `extract_mediation()`. |
+
+**Gating.** Each heavy oracle carries `skip_on_cran()`: `true_joint_effects()` at 1e6 draws,
+`gcomp_joint()` at 2e5 draws, and `boot_joint_se()` at B = 5,000. Each has an always-on
+companion at small n with a value pinned to 1e-8, so `R CMD check` on CRAN still exercises every
+code path. `withr` is not in DESCRIPTION (checked 2026-09-23), so tests call `set.seed()` inside
+each `test_that()` block, which is the existing test files' convention. No new dependency.
+
+**CI must actually run the heavy oracles.** `skip_on_cran()` skips unless `NOT_CRAN = "true"`. None
+of `.github/workflows/` sets it explicitly (checked 2026-09-23); whether the r-lib actions set it
+implicitly is unverified. The plan's first task confirms from a CI log that the heavy oracles run,
+or sets `NOT_CRAN` in the workflow. That workflow change needs asking first (Boundaries). A heavy oracle that CI
+silently skips proves nothing.
+
+**End-to-end run (before each PR, per the e2e-before-pr rule).** In a fresh R session, run the D8
+motivating case: serial, `X:M1`, n = 5,000, coefficient 0.82. Then run a downstream `X:M2` case.
+Paste the printed `JointMediationData`, its `tidy()` output, and the oracle-1 comparison into the
+PR body. The run can fail: a mismatch against `true_joint_effects()` beyond 3 SE blocks the PR.
+
+## Outcomes
+
+What "done" looks like, check by check. Each row can fail.
+
+| Check | Expected outcome | Pass criterion | PR |
+|---|---|---|---|
+| Oracle 1 (known answer) | Joint NDE, NIE, TE, CDE match the simulated counterfactual truth: serial with `X:M1`, serial with `X:M2` (`d ≠ 0`), parallel with `X:M1` | every estimate within 3 SE of the truth | A |
+| Oracle 2 (g-computation) | The closed form matches the Monte Carlo average over the fitted models | within 4 Monte Carlo SEs | A |
+| Planted defects | A sign-flipped `θ3` and a raw-`β1` wiring each **fail** oracles 1–2 | at least one oracle fails for each defect | A |
+| Reductions | K = 1 matches `InteractionMediationData`; parallel with θ3 = 0 matches `ParallelMediationData` NIE | 1e-10 and 1e-8 | A |
+| Propagation identity | Propagated `β1*(i)` equals a direct `M(i) ~ X + C` OLS fit | 1e-10 | A |
+| SE oracle | Delta-method SEs match bootstrap SDs, serial and correlated-error parallel | within 3% | A |
+| Zero cross-blocks | Serial and outcome cross-equation blocks | 1e-10 | A |
+| Guards | Every unsupported product, and every G8 condition, errors naming the term and model | `expect_error()` with a regex naming the term | A |
+| No-product behavior | Serial and parallel outputs are unchanged | snapshot equality | A |
+| G1 pin | With θ3 = 0, the joint NIE differs from `a*d*b` and equals the all-paths sum | 1e-8 | A |
+| Methods contract | `tidy()` silent; `confint()` equals `tidy()`; the bootstrap recipe reproduces NDE/NIE | exact | B |
+| CRAN runtime | The always-on portion of `test-extract-joint.R` | target under 10 s on one core | A |
+| CI coverage | The heavy oracles run, not skip, on GitHub Actions | CI log shows them executed | A |
+| Suite and gates | Full `devtools::test()`; lint; spelling; strict check | 0 failed, 0 errors; 0 lints; clean; 0/0 plus only the Date note | A, B |
+| E2E transcript | D8 motivating case and downstream case in a fresh session | pasted in the PR body; oracle 1 within 3 SE | A, B |
+
+Two rows are targets, not proven facts: CRAN runtime (to be measured) and CI coverage (to be
+confirmed from a log). The plan's first task measures or confirms both before any feature code.
 
 ## Boundaries
 
@@ -398,9 +467,10 @@ oracles 1–2.
 1. **Class name:** `JointMediationData`.
 2. **Gradients:** analytic, by the chain rule through the propagated means.
 3. **A four-way analog for K ≥ 2:** out unless a verified source is found.
-4. **Covariate evaluation:** at the sample means, which equals the population-average effect
-   because the effects are linear in `c`. The means are treated as fixed in the delta method, as in
-   the four-way path.
+4. **Covariate evaluation:** at the sample means. Because the effects are linear in `c`, this
+   equals the sample average of the per-observation effects exactly (G7 corrected the earlier
+   "population-average" wording). The means are treated as fixed in the delta method, as in the
+   four-way path, so the SE is conditional on the observed covariates.
 
 ## References
 
