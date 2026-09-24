@@ -3,7 +3,7 @@
 # This file defines S7 generics and methods for extracting mediation effects:
 # - nie(): Natural Indirect Effect (a * b)
 # - nde(): Natural Direct Effect (c')
-# - te(): Total Effect (nie + nde)
+# - te(): Total Effect (nie + nde; every X -> Y path for serial)
 # - pm(): Proportion Mediated (nie / te)
 # - paths(): All path coefficients
 
@@ -15,7 +15,9 @@
 #' through the mediator.
 #'
 #' @param x A MediationData, SerialMediationData, or BootstrapResult object
-#' @param ... Additional arguments passed to methods
+#' @param ... Additional arguments passed to methods. For SerialMediationData,
+#'   `type = c("chain", "total")` selects the chain-specific or the total
+#'   indirect effect (see Details).
 #'
 #' @return A numeric value (or named vector for SerialMediationData) with
 #'   optional attributes for confidence intervals if available
@@ -24,8 +26,12 @@
 #' For simple mediation (MediationData):
 #' \deqn{NIE = a \times b}
 #'
-#' For serial mediation (SerialMediationData):
-#' \deqn{NIE = a \times d_{21} \times d_{32} \times \ldots \times b}
+#' For serial mediation (SerialMediationData), `type = "chain"` (the default)
+#' gives the chain-specific indirect effect through every mediator in order,
+#' \deqn{NIE_{chain} = a \times d_{21} \times d_{32} \times \ldots \times b}{NIE_chain = a * d21 * d32 * ... * b}
+#' and `type = "total"` gives the total indirect effect, the sum over every
+#' X-to-Y path through at least one mediator (including paths that skip a
+#' mediator, such as X -> M2 -> Y), which equals `te(x) - nde(x)`.
 #'
 #' @examples
 #' med_data <- fit_mediation(
@@ -91,6 +97,16 @@ nde <- S7::new_generic("nde", "x")
 #' @details
 #' \deqn{TE = NIE + NDE}
 #'
+#' For serial mediation (SerialMediationData) the total effect is the sum over
+#' every directed X-to-Y path in the fitted models: the direct path, the full
+#' chain, and every path that skips a mediator (for two mediators,
+#' \eqn{c' + a_1 b_1 + a_2 b_2 + a_1 d_{21} b_2}{c' + a1*b1 + a2*b2 + a1*d21*b2}).
+#' With the same covariates in every equation and linear models this equals
+#' the treatment coefficient of the outcome regressed on the treatment and
+#' covariates alone. A path missing from its model counts as zero; when a path
+#' is in a model but its coefficient was not recorded (a hand-built object),
+#' `te()` returns `NA` with a warning.
+#'
 #' @examples
 #' med_data <- fit_mediation(
 #'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
@@ -124,6 +140,10 @@ te <- S7::new_generic("te", "x")
 #'
 #' @details
 #' \deqn{PM = \frac{NIE}{TE} = \frac{NIE}{NIE + NDE}}
+#'
+#' For serial mediation (SerialMediationData) the numerator is the total
+#' indirect effect, `nie(x, type = "total")`, and the denominator the full
+#' total effect from [te()].
 #'
 #' The proportion mediated can be:
 #' \itemize{
@@ -270,12 +290,105 @@ S7::method(paths, MediationData) <- function(x, ...) {
 
 # --- Methods for SerialMediationData ---
 
+# Structural edges of a serial model: every regression path from X or an
+# earlier mediator into a later mediator or Y. The chain edges keep their
+# historical aliases (a, d1..d{k-1}, b); the edges that skip a link get
+# a{j} (X -> Mj), d{i}_{j} (Mi -> Mj, j > i + 1) and b{i} (Mi -> Y, i < k).
+.serial_edges <- function(k) {
+  # Node indices: 0 = X, 1..k = mediators, k + 1 = Y.
+  mm <- which(upper.tri(diag(k)), arr.ind = TRUE)  # (from = row, to = col)
+  mm <- mm[order(mm[, 1L], mm[, 2L]), , drop = FALSE]
+  adjacent <- mm[, 2L] == mm[, 1L] + 1L
+  data.frame(
+    from = c(rep(0L, k), mm[, 1L], seq_len(k), 0L),
+    to = c(seq_len(k), mm[, 2L], rep(k + 1L, k), k + 1L),
+    alias = c("a", if (k > 1L) paste0("a", seq(2L, k)),
+              ifelse(adjacent, paste0("d", mm[, 1L]),
+                     paste0("d", mm[, 1L], "_", mm[, 2L])),
+              if (k > 1L) paste0("b", seq_len(k - 1L)), "b", "c_prime"),
+    chain = c(TRUE, rep(FALSE, k - 1L), adjacent, rep(FALSE, k - 1L), TRUE, FALSE),
+    stringsAsFactors = FALSE
+  )
+}
+
+
+# Recursive path system of a SerialMediationData object.
+#
+# Returns list(edges, inv) where `edges` holds the edges present in the model
+# (with their values) and `inv` is (I - B)^{-1} over the nodes (X, M1..Mk, Y),
+# so the total effect of X on Y is inv[Y, X]. An edge is present when its
+# source is a predictor of its target (from @mediator_predictors /
+# @outcome_predictors); a skip edge absent from the model is a structural zero.
+# Returns a character string (the reason) when a present skip edge has no
+# stored coefficient, or the predictor bookkeeping is missing: guessing zero
+# there would silently understate or overstate the total effect.
+.serial_path_system <- function(x) {
+  k <- length(x@mediators)
+  nodes <- c(x@treatment, x@mediators)
+  edges <- .serial_edges(k)
+  chain_val <- c(a = x@a_path, stats::setNames(x@d_path, paste0("d", seq_len(k - 1L))),
+                 b = x@b_path, c_prime = x@c_prime)
+
+  preds <- x@mediator_predictors
+  if (length(preds) < k || length(x@outcome_predictors) == 0L) {
+    return("the mediator/outcome predictor lists are not recorded")
+  }
+
+  edges$value <- NA_real_
+  keep <- logical(nrow(edges))
+  for (r in seq_len(nrow(edges))) {
+    al <- edges$alias[r]
+    if (al %in% names(chain_val)) {
+      edges$value[r] <- chain_val[[al]]
+      keep[r] <- TRUE
+      next
+    }
+    target_preds <- if (edges$to[r] > k) x@outcome_predictors else preds[[edges$to[r]]]
+    if (!nodes[edges$from[r] + 1L] %in% target_preds) next
+    val <- if (al %in% names(x@estimates)) unname(x@estimates[[al]]) else NA_real_
+    if (is.na(val)) {
+      return(sprintf("no coefficient '%s' (%s -> %s) is stored in @estimates",
+                     al, nodes[edges$from[r] + 1L],
+                     c(nodes, x@outcome)[edges$to[r] + 1L]))
+    }
+    edges$value[r] <- val
+    keep[r] <- TRUE
+  }
+  edges <- edges[keep, , drop = FALSE]
+
+  n <- k + 2L
+  B <- matrix(0, n, n)
+  B[cbind(edges$to + 1L, edges$from + 1L)] <- edges$value
+  list(edges = edges, inv = solve(diag(n) - B))
+}
+
+
+# Total effect of X on Y (sum over all directed paths), or NA with a warning
+# when the skip-path coefficients are unavailable.
+.serial_total_effect <- function(x) {
+  sys <- .serial_path_system(x)
+  if (is.character(sys)) {
+    warning("Total effect is unavailable for this SerialMediationData: ", sys,
+            ". Use extract_mediation() so every path is recorded.", call. = FALSE)
+    return(NA_real_)
+  }
+  k <- length(x@mediators)
+  sys$inv[k + 2L, 1L]
+}
+
+
 #' @describeIn nie Method for SerialMediationData
 #' @noRd
-S7::method(nie, SerialMediationData) <- function(x, ...) {
-  effect <- x@a_path * prod(x@d_path) * x@b_path
+S7::method(nie, SerialMediationData) <- function(x, type = c("chain", "total"), ...) {
+  type <- match.arg(type)
+  effect <- if (identical(type, "chain")) {
+    x@a_path * prod(x@d_path) * x@b_path
+  } else {
+    .serial_total_effect(x) - x@c_prime
+  }
   class(effect) <- c("mediation_effect", "numeric")
   attr(effect, "type") <- "nie"
+  attr(effect, "nie_type") <- type
   attr(effect, "n_mediators") <- length(x@mediators)
   effect
 }
@@ -292,8 +405,7 @@ S7::method(nde, SerialMediationData) <- function(x, ...) {
 #' @describeIn te Method for SerialMediationData
 #' @noRd
 S7::method(te, SerialMediationData) <- function(x, ...) {
-  indirect <- x@a_path * prod(x@d_path) * x@b_path
-  effect <- indirect + x@c_prime
+  effect <- .serial_total_effect(x)
   class(effect) <- c("mediation_effect", "numeric")
   attr(effect, "type") <- "te"
   effect
@@ -302,8 +414,8 @@ S7::method(te, SerialMediationData) <- function(x, ...) {
 #' @describeIn pm Method for SerialMediationData
 #' @noRd
 S7::method(pm, SerialMediationData) <- function(x, ...) {
-  indirect <- x@a_path * prod(x@d_path) * x@b_path
-  total <- indirect + x@c_prime
+  total <- .serial_total_effect(x)
+  if (is.na(total)) return(NA_real_)
 
   if (abs(total) < .Machine$double.eps) {
     warning("Total effect is approximately zero; proportion mediated is undefined.",
@@ -311,7 +423,7 @@ S7::method(pm, SerialMediationData) <- function(x, ...) {
     return(NA_real_)
   }
 
-  prop <- indirect / total
+  prop <- (total - x@c_prime) / total
   class(prop) <- c("mediation_effect", "numeric")
   attr(prop, "type") <- "pm"
   prop

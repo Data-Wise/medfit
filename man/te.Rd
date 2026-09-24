@@ -20,6 +20,16 @@ The TE is the sum of the indirect and direct effects.
 }
 \details{
 \deqn{TE = NIE + NDE}
+
+For serial mediation (SerialMediationData) the total effect is the sum over
+every directed X-to-Y path in the fitted models: the direct path, the full
+chain, and every path that skips a mediator (for two mediators,
+\eqn{c' + a_1 b_1 + a_2 b_2 + a_1 d_{21} b_2}{c' + a1*b1 + a2*b2 + a1*d21*b2}).
+With the same covariates in every equation and linear models this equals
+the treatment coefficient of the outcome regressed on the treatment and
+covariates alone. A path missing from its model counts as zero; when a path
+is in a model but its coefficient was not recorded (a hand-built object),
+\code{te()} returns \code{NA} with a warning.
 }
 \examples{
 med_data <- fit_mediation(

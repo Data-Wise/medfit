@@ -22,6 +22,10 @@ through the mediator).
 \details{
 \deqn{PM = \frac{NIE}{TE} = \frac{NIE}{NIE + NDE}}
 
+For serial mediation (SerialMediationData) the numerator is the total
+indirect effect, \code{nie(x, type = "total")}, and the denominator the full
+total effect from \code{\link[=te]{te()}}.
+
 The proportion mediated can be:
 \itemize{
 \item Between 0 and 1: Normal mediation

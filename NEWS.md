@@ -78,6 +78,29 @@
 
 ## Bug fixes
 
+* **Behavior change:** `te()` and `pm()` for `SerialMediationData` now use the
+  full total effect, the sum over every X-to-Y path, instead of only the chain
+  plus the direct effect (`a * d * b + c'`). For the usual specification
+  (`M2 ~ X + M1`, `Y ~ X + M1 + M2`) the old value left out the paths that
+  skip a mediator (X -> M1 -> Y, X -> M2 -> Y) and could be badly off. In one
+  simulated example it gave 0.13 where the true total effect was 0.54. With
+  linear models and the same covariates in every equation, `te()` now equals
+  the treatment coefficient of `lm(Y ~ X + covariates)`. `pm()` is the total
+  indirect effect divided by that total. `nie()` still returns the
+  chain-specific indirect effect by default. The new `nie(x, type = "total")`
+  returns the total indirect effect, `te(x) - nde(x)`. The serial lm/glm and
+  lavaan extractors now record the skip-path coefficients as `a2..ak`
+  (X -> Mj), `b1..b{k-1}` (Mi -> Y) and `d{i}_{j}` (Mi -> Mj with j > i + 1)
+  in `@estimates` and `@vcov`. The delta-method SE of `te` in `confint()` and
+  `tidy()` differentiates the full sum. It matches lavaan `:=` SEs. Serial
+  `tidy()` gains a `nie_total` row, `glance()` gains a `nie_total` column and
+  `coef(type = "effects")` gains `indirect_total`. A hand-built object whose
+  predictor lists include a skip path without its coefficient gets `NA` and a
+  warning from `te()` and `pm()`, because assuming zero would reproduce the
+  bug. No mediationverse package calls serial `te()` or `pm()`.
+* `tidy(<SerialMediationData>, type = "effects")` no longer errors on
+  mismatched row counts.
+
 * `fit_mediation(se_type = "sandwich")` now applies the sandwich estimator
   to fits with a treatment-by-mediator interaction. The four-way worker
   ignored `vcov_fun` and always used the model-based `stats::vcov()`, so the

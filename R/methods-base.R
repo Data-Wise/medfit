@@ -73,7 +73,8 @@ S7::method(coef, MediationData) <- function(object, type = c("paths", "effects",
 #' @param type Character: type of coefficients to extract
 #'   \itemize{
 #'     \item `"paths"`: Path coefficients a, d (vector), b, c' (default)
-#'     \item `"effects"`: Mediation effects: indirect (product of paths), direct, total
+#'     \item `"effects"`: Mediation effects: indirect (chain product of paths),
+#'       indirect_total (all paths through a mediator), direct, total (all paths)
 #'     \item `"all"`: Full parameter vector
 #'   }
 #' @param ... Additional arguments (ignored)
@@ -101,10 +102,13 @@ S7::method(coef, SerialMediationData) <- function(object, type = c("paths", "eff
       c(paths, b = object@b_path, c_prime = object@c_prime)
     },
     effects = {
+      # indirect: the chain-specific effect; indirect_total: every X -> Y path
+      # through any mediator (total - direct).
       indirect <- object@a_path * prod(object@d_path) * object@b_path
       direct <- object@c_prime
-      total <- indirect + direct
-      c(indirect = indirect, direct = direct, total = total)
+      total <- as.numeric(te(object))
+      c(indirect = indirect, indirect_total = total - direct,
+        direct = direct, total = total)
     },
     all = object@estimates
   )

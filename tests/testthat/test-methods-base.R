@@ -210,8 +210,9 @@ test_that("coef() works for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
@@ -227,7 +228,7 @@ test_that("coef() works for SerialMediationData", {
 
   # Test effects extraction
   effects <- coef(serial_data, type = "effects")
-  expect_named(effects, c("indirect", "direct", "total"))
+  expect_named(effects, c("indirect", "indirect_total", "direct", "total"))
 
   # Verify indirect = a * d * b
   expect_equal(
@@ -250,8 +251,9 @@ test_that("vcov() works for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
@@ -278,8 +280,9 @@ test_that("nobs() works for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,

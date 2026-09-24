@@ -9,7 +9,9 @@ nie(x, ...)
 \arguments{
 \item{x}{A MediationData, SerialMediationData, or BootstrapResult object}
 
-\item{...}{Additional arguments passed to methods}
+\item{...}{Additional arguments passed to methods. For SerialMediationData,
+\code{type = c("chain", "total")} selects the chain-specific or the total
+indirect effect (see Details).}
 }
 \value{
 A numeric value (or named vector for SerialMediationData) with
@@ -24,8 +26,12 @@ through the mediator.
 For simple mediation (MediationData):
 \deqn{NIE = a \times b}
 
-For serial mediation (SerialMediationData):
-\deqn{NIE = a \times d_{21} \times d_{32} \times \ldots \times b}
+For serial mediation (SerialMediationData), \code{type = "chain"} (the default)
+gives the chain-specific indirect effect through every mediator in order,
+\deqn{NIE_{chain} = a \times d_{21} \times d_{32} \times \ldots \times b}{NIE_chain = a * d21 * d32 * ... * b}
+and \code{type = "total"} gives the total indirect effect, the sum over every
+X-to-Y path through at least one mediator (including paths that skip a
+mediator, such as X -> M2 -> Y), which equals \code{te(x) - nde(x)}.
 }
 \examples{
 med_data <- fit_mediation(
