@@ -1593,20 +1593,101 @@ JointMediationData <- S7::new_class(
 S7::method(print, JointMediationData) <- function(x, ...) {
   sep <- if (x@structure == "serial") " -> " else ", "
   cat("<JointMediationData>\n")
-  cat(sprintf("  %s -> {%s} -> %s  (%s, joint effects)\n",
+  cat(sprintf("  %s -> {%s} -> %s  (%s mediators, joint effects)\n",
               x@treatment, paste(x@mediators, collapse = sep), x@outcome,
               x@structure))
+  prods <- if (length(x@interactions)) {
+    paste(sprintf("%s x %s (m* = %g)", x@treatment, x@interactions,
+                  x@m_star[x@interactions]), collapse = ", ")
+  } else {
+    "none"
+  }
+  cat(sprintf("  Products: %s\n", prods))
   for (m in x@mediators) {
-    t3 <- if (m %in% x@interactions) {
-      sprintf("   t3 = %+.4f (m* = %g)", x@theta3[[m]], x@m_star[[m]])
-    } else {
-      ""
-    }
+    t3 <- if (m %in% x@interactions) sprintf("   t3 = %+.4f", x@theta3[[m]]) else ""
     cat(sprintf("    %-8s a* = %+.4f   b = %+.4f%s\n",
                 m, x@a_total[[m]], x@b_paths[[m]], t3))
   }
-  cat(sprintf("  c' (t1) = %+.4f   CDE = %+.4f\n", x@c_prime, x@cde))
-  cat(sprintf("  NDE = %+.4f   NIE = %+.4f   Total = %+.4f   |   n = %d\n",
-              x@nde, x@nie, x@total_effect, x@n_obs))
+  cat(sprintf("  c' (t1) = %+.4f   CDE = %+.4f   NDE = %+.4f\n",
+              x@c_prime, x@cde, x@nde))
+  cat(sprintf("  Joint NIE (all paths through %s) = %+.4f\n",
+              paste(x@mediators, collapse = ", "), x@nie))
+  cat(sprintf("  Total = %+.4f   |   n = %d\n", x@total_effect, x@n_obs))
+  invisible(x)
+}
+
+
+#' Summary Method for JointMediationData
+#'
+#' @param object A JointMediationData object
+#' @param level Confidence level for the normal-approximation intervals.
+#' @param ... Additional arguments (ignored)
+#' @noRd
+S7::method(summary, JointMediationData) <- function(object, level = 0.95, ...) {
+  checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
+  keys <- c("cde", "nde", "nie", "te")
+  est <- c(object@cde, object@nde, object@nie, object@total_effect)
+  se <- .effect_se_or_na(object, keys)
+  z <- stats::qnorm(1 - (1 - level) / 2)
+  effects <- data.frame(estimate = est, std.error = unname(se),
+                        conf.low = est - z * unname(se),
+                        conf.high = est + z * unname(se),
+                        row.names = c("CDE", "NDE", "NIE (joint)", "Total"))
+  structure(
+    list(
+      effects = effects,
+      level = level,
+      paths = paths(object),
+      a_total = object@a_total,
+      structure = object@structure,
+      mediators = object@mediators,
+      interactions = object@interactions,
+      m_star = object@m_star,
+      variables = c(treatment = object@treatment, outcome = object@outcome),
+      n_obs = object@n_obs,
+      converged = object@converged,
+      source_package = object@source_package
+    ),
+    class = "summary.JointMediationData"
+  )
+}
+
+
+#' Print Summary for JointMediationData
+#'
+#' @param x A summary.JointMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x` (the `summary.JointMediationData` object).
+#'   Called for its side effect of printing the formatted summary to the console.
+#' @export
+print.summary.JointMediationData <- function(x, ...) {
+  sep <- if (x$structure == "serial") " -> " else ", "
+  cat("Summary of JointMediationData\n")
+  cat("=============================\n\n")
+  cat(sprintf("%s mediators: %s -> {%s} -> %s\n",
+              if (x$structure == "serial") "Serial" else "Parallel",
+              x$variables["treatment"], paste(x$mediators, collapse = sep),
+              x$variables["outcome"]))
+  if (length(x$interactions)) {
+    cat(sprintf("Treatment-by-mediator products: %s\n",
+                paste(sprintf("%s (m* = %g)", x$interactions,
+                              x$m_star[x$interactions]), collapse = ", ")))
+  } else {
+    cat("Treatment-by-mediator products: none\n")
+  }
+  cat("\nEffects (unit contrast 0 -> 1, covariates at their means):\n")
+  print(round(x$effects, 4))
+  cat(sprintf(paste0("  %g%% normal-approximation intervals; SEs are conditional ",
+                     "on the observed covariates.\n"), 100 * x$level))
+  cat(sprintf("  The joint NIE runs through all paths via %s; it has no ",
+              paste(x$mediators, collapse = ", ")),
+      "per-mediator split.\n", sep = "")
+  cat("\nTotal treatment effect on each mediator (a*):\n")
+  print(round(x$a_total, 4))
+  cat("\nPath coefficients:\n")
+  print(round(x$paths, 4))
+  cat("\nSample Size:", x$n_obs, "\n")
+  cat("Converged:  ", ifelse(x$converged, "Yes", "No"), "\n")
+  cat("Source:     ", x$source_package, "\n")
   invisible(x)
 }

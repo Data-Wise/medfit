@@ -8,7 +8,8 @@
 }
 \arguments{
 \item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
-\link{InteractionMediationData}, or \link{BootstrapResult} object.}
+\link{InteractionMediationData}, \link{JointMediationData}, or \link{BootstrapResult}
+object.}
 
 \item{...}{Passed to the class method: \code{type} (\code{"all"}, \code{"paths"},
 \code{"effects"}, and for interaction objects \code{"components"}), \code{conf.int}

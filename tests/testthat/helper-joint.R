@@ -224,3 +224,13 @@ joint_effects_est <- function(est, spec, flip_theta3 = FALSE, raw_b1 = FALSE) {
 joint_effect_fn <- function(...) {
   function(o) joint_effects_est(o@estimates, joint_spec(o), ...)[c("nde", "nie", "te")]
 }
+
+# Serial (X:M2, m* = 0.5) and parallel (X:M1) objects for the methods tests.
+methods_fixtures <- function() {
+  list(
+    serial = fit_joint(sim_joint("serial", "M2", n = 400, seed = 71)$data,
+                       "serial", "M2", m_star = 0.5)$obj,
+    parallel = fit_joint(sim_joint("parallel", "M1", n = 400, seed = 72)$data,
+                         "parallel", "M1")$obj
+  )
+}

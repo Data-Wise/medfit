@@ -196,34 +196,20 @@
 #' @keywords internal
 #' @noRd
 .effect_gradients_joint <- function(x) {
+  pp <- .joint_parts(x, x@estimates)
   est <- x@estimates
   trt <- x@treatment
   meds <- x@mediators
   k <- length(meds)
-  g0 <- function(nm) if (nm %in% names(est)) unname(est[[nm]]) else 0
-  pre <- paste0("m", seq_len(k), "_")
-
-  covs <- .joint_cov_names(est, trt)
-  c_bar <- .joint_covariate_means(x, covs)
-
-  d <- matrix(0, k, k)
-  for (i in seq_len(k)) for (j in seq_len(i - 1L)) d[i, j] <- g0(paste0(pre[i], meds[j]))
-  b1 <- vapply(pre, function(p) g0(paste0(p, trt)), numeric(1))
-  mu0 <- vapply(seq_len(k), function(i) {
-    g0(paste0(pre[i], "(Intercept)")) +
-      sum(vapply(covs, function(cv) g0(paste0(pre[i], cv)), numeric(1)) * c_bar)
-  }, numeric(1))
-  big_b1 <- b1
-  for (i in seq_len(k)[-1L]) {
-    j <- seq_len(i - 1L)
-    big_b1[i] <- b1[i] + sum(d[i, j] * big_b1[j])
-    mu0[i] <- mu0[i] + sum(d[i, j] * mu0[j])
-  }
-
-  t3_rows <- .joint_theta3_rows(est, trt, x@interactions)
-  t3 <- stats::setNames(numeric(k), meds)
-  t3[x@interactions] <- vapply(t3_rows, g0, numeric(1))
-  w <- vapply(meds, function(m) g0(paste0("y_", m)), numeric(1)) + t3
+  pre <- pp$pre
+  covs <- pp$covs
+  c_bar <- pp$c_bar
+  d <- pp$d
+  big_b1 <- pp$big_b1
+  mu0 <- pp$mu0
+  t3_rows <- pp$t3_rows
+  t3 <- pp$t3
+  w <- pp$w
 
   adjoint <- function(v) {
     out <- v
@@ -265,4 +251,47 @@
   g_cde <- keep(c(stats::setNames(1, paste0("y_", trt)),
                   stats::setNames(unname(x@m_star[x@interactions]), t3_rows)))
   list(nie = g_nie, nde = g_nde, te = .add_gradients(g_nie, g_nde), cde = g_cde)
+}
+
+
+#' Building Blocks of the Joint Effects at a Given Estimate Vector
+#'
+#' Shared by the gradients and [joint_effects()]: reads the prefixed source
+#' rows of `est` (`m<i>_`, `y_`) and returns the mediator-to-mediator
+#' coefficients `d`, propagated treatment effects `big_b1`, mediator means at
+#' X = 0 and the covariate means `mu0`, the product coefficients `t3` and the
+#' NIE weights `w = theta2 + theta3`.
+#'
+#' @param x A JointMediationData object (structure, names, covariate means).
+#' @param est Named estimate vector with the source rows.
+#' @return A named list.
+#' @keywords internal
+#' @noRd
+.joint_parts <- function(x, est) {
+  trt <- x@treatment
+  meds <- x@mediators
+  k <- length(meds)
+  g0 <- function(nm) if (nm %in% names(est)) unname(est[[nm]]) else 0
+  pre <- paste0("m", seq_len(k), "_")
+  covs <- .joint_cov_names(x@estimates, trt)
+  c_bar <- .joint_covariate_means(x, covs)
+
+  d <- matrix(0, k, k)
+  for (i in seq_len(k)) for (j in seq_len(i - 1L)) d[i, j] <- g0(paste0(pre[i], meds[j]))
+  big_b1 <- vapply(pre, function(p) g0(paste0(p, trt)), numeric(1), USE.NAMES = FALSE)
+  mu0 <- vapply(seq_len(k), function(i) {
+    g0(paste0(pre[i], "(Intercept)")) +
+      sum(vapply(covs, function(cv) g0(paste0(pre[i], cv)), numeric(1)) * c_bar)
+  }, numeric(1))
+  for (i in seq_len(k)[-1L]) {
+    j <- seq_len(i - 1L)
+    big_b1[i] <- big_b1[i] + sum(d[i, j] * big_b1[j])
+    mu0[i] <- mu0[i] + sum(d[i, j] * mu0[j])
+  }
+  t3_rows <- .joint_theta3_rows(x@estimates, trt, x@interactions)
+  t3 <- stats::setNames(numeric(k), meds)
+  t3[x@interactions] <- vapply(t3_rows, g0, numeric(1))
+  w <- vapply(meds, function(m) g0(paste0("y_", m)), numeric(1)) + t3
+  list(pre = pre, covs = covs, c_bar = c_bar, d = d, big_b1 = big_b1, mu0 = mu0,
+       t3_rows = t3_rows, t3 = t3, w = w, theta1 = g0(paste0("y_", trt)))
 }

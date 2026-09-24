@@ -18,7 +18,8 @@
 #' one row per path coefficient or effect.
 #'
 #' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
-#'   [InteractionMediationData], or [BootstrapResult] object.
+#'   [InteractionMediationData], [JointMediationData], or [BootstrapResult]
+#'   object.
 #' @param ... Passed to the class method: `type` (`"all"`, `"paths"`,
 #'   `"effects"`, and for interaction objects `"components"`), `conf.int`
 #'   (logical, add `conf.low`/`conf.high`), and `conf.level` (default 0.95).
@@ -71,6 +72,9 @@ tidy.S7_object <- function(x, ...) {
   if (S7::S7_inherits(x, InteractionMediationData)) {
     return(.tidy_interaction_mediation_data(x, ...))
   }
+  if (S7::S7_inherits(x, JointMediationData)) {
+    return(.tidy_joint_mediation_data(x, ...))
+  }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.tidy_bootstrap_result(x, ...))
   }
@@ -92,6 +96,9 @@ glance.S7_object <- function(x, ...) {
   }
   if (S7::S7_inherits(x, InteractionMediationData)) {
     return(.glance_interaction_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, JointMediationData)) {
+    return(.glance_joint_mediation_data(x, ...))
   }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.glance_bootstrap_result(x, ...))
@@ -397,6 +404,60 @@ glance.S7_object <- function(x, ...) {
     pm = as.numeric(pm(x)),
     interaction = x@interaction,
     m_star = x@m_star,
+    nobs = nobs(x),
+    converged = x@converged,
+    stringsAsFactors = FALSE
+  )
+
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Tidy a JointMediationData Object
+#'
+#' @param x A JointMediationData object
+#' @param type `"all"` (default), `"paths"` (a1..aK, dij, b1..bK,
+#'   theta3_<mediator>, c_prime), or `"effects"` (cde, nde, nie, te)
+#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
+#' @param conf.level Confidence level (default 0.95)
+#' @param ... Additional arguments (ignored)
+#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
+#'   `conf.high` when `conf.int = TRUE`)
+#' @noRd
+.tidy_joint_mediation_data <- function(x, type = c("all", "paths", "effects"),
+                                       conf.int = FALSE, conf.level = 0.95,
+                                       ...) {
+  type <- match.arg(type)
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  effect_vec <- if (type %in% c("all", "effects")) {
+    c(cde = x@cde, nde = x@nde, nie = x@nie, te = x@total_effect)
+  }
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+}
+
+
+#' Glance at a JointMediationData Object
+#'
+#' @param x A JointMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A one-row tibble: nie, nde, te, pm, cde, structure, n_mediators,
+#'   interactions, m_star, nobs, converged
+#' @noRd
+.glance_joint_mediation_data <- function(x, ...) {
+  result <- data.frame(
+    nie = x@nie,
+    nde = x@nde,
+    te = x@total_effect,
+    pm = as.numeric(pm(x)),
+    cde = x@cde,
+    structure = x@structure,
+    n_mediators = length(x@mediators),
+    interactions = paste(x@interactions, collapse = ", "),
+    m_star = paste(sprintf("%s=%g", names(x@m_star), x@m_star), collapse = ", "),
     nobs = nobs(x),
     converged = x@converged,
     stringsAsFactors = FALSE

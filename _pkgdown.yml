@@ -112,6 +112,7 @@ reference:
       - pm
       - paths
       - decompose
+      - joint_effects
 
   - title: "S7 Classes"
     desc: "Core S7 class definitions for mediation data structures"
