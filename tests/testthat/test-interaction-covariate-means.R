@@ -219,3 +219,45 @@ test_that("SEs use the estimation-sample means when data has unused rows", {
   keys <- c("nde", "int_ref", "te")
   expect_identical(medfit:::.effect_se(o_d, keys), medfit:::.effect_se(o_mf, keys))
 })
+
+# ==============================================================================
+# Fallbacks for objects without stored means (e.g. built before this fix)
+# ==============================================================================
+
+drop_stored_means <- function(o) {
+  dat <- o@data
+  attr(dat, "medfit_covariate_means") <- NULL
+  o@data <- dat
+  o
+}
+
+test_that("without stored means, a model frame's terms rebuild the factor means", {
+  d <- gen_factor_cov()
+  o <- extract_mediation(lm(M ~ X + G, d), model_y = lm(Y ~ X * M + G, d),
+                         treatment = "X", mediator = "M")
+  o2 <- drop_stored_means(o)
+  expect_null(attr(o2@data, "medfit_covariate_means"))
+  keys <- c("nde", "int_ref", "te")
+  expect_equal(medfit:::.effect_se(o2, keys), medfit:::.effect_se(o, keys),
+               tolerance = 1e-12)
+})
+
+test_that("without stored means, plain numeric columns are the fallback", {
+  d <- gen_numeric_covs()
+  o <- extract_mediation(lm(M ~ X + C1 + C2, d),
+                         model_y = lm(Y ~ X * M + C1 + C2, d),
+                         treatment = "X", mediator = "M", data = d)
+  o2 <- drop_stored_means(o)
+  keys <- c("nde", "int_ref", "te")
+  expect_equal(medfit:::.effect_se(o2, keys), medfit:::.effect_se(o, keys),
+               tolerance = 1e-12)
+})
+
+test_that("without stored means, unresolvable factor dummies error, not skip", {
+  d <- gen_factor_cov()
+  o <- extract_mediation(lm(M ~ X + G, d), model_y = lm(Y ~ X * M + G, d),
+                         treatment = "X", mediator = "M", data = d)
+  o2 <- drop_stored_means(o)
+  expect_error(medfit:::.effect_se(o2, "nde"),
+               "Cannot compute the covariate means.*Gb, Gc")
+})
