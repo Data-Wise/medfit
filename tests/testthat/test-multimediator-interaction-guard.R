@@ -20,7 +20,8 @@ generate_guard_data <- function(n = 500, seed = 42) {
 # lm / glm path
 # ==============================================================================
 
-test_that("serial lm extraction errors on an X:M1 term in the outcome model", {
+test_that("serial lm extraction routes an outcome X:M1 term to the joint effects", {
+  # D8(b): an outcome-model treatment-by-mediator product is now supported.
   d <- generate_guard_data()
   expect_error(
     extract_mediation(
@@ -29,7 +30,7 @@ test_that("serial lm extraction errors on an X:M1 term in the outcome model", {
       treatment = "X", mediator = c("M1", "M2"),
       mediator_models = list(lm(M2 ~ X + M1 + C, d))
     ),
-    "product term.*X:M1"
+    class = "medfit_joint_not_implemented"
   )
 })
 

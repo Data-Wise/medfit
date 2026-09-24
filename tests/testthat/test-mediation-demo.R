@@ -81,7 +81,7 @@ test_that("interaction demo recovers its reduced-form targets", {
   expect_near_target(fy, "treatment", 0.41)
 })
 
-test_that("serial extraction of outcome_int errors instead of dropping X:M", {
+test_that("serial extraction of outcome_int routes to the joint effects", {
   fy <- demo_fit_lm("treatment * mediator1 + mediator2", "outcome_int")
   expect_error(
     extract_mediation(
@@ -91,6 +91,6 @@ test_that("serial extraction of outcome_int errors instead of dropping X:M", {
       mediator = c("mediator1", "mediator2"),
       mediator_models = list(demo_fit_lm("treatment + mediator1", "mediator2"))
     ),
-    "product term"
+    class = "medfit_joint_not_implemented"
   )
 })
