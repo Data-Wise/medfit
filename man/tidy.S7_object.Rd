@@ -2,9 +2,12 @@
 % Please edit documentation in R/methods-tidy.R
 \name{tidy.S7_object}
 \alias{tidy.S7_object}
-\title{Tidy a medfit Object}
+\alias{glance.S7_object}
+\title{Tidy, Glance, and Inference Methods for medfit Objects}
 \usage{
 \method{tidy}{S7_object}(x, ...)
+
+\method{glance}{S7_object}(x, ...)
 }
 \arguments{
 \item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
@@ -16,13 +19,21 @@ object.}
 (logical, add \code{conf.low}/\code{conf.high}), and \code{conf.level} (default 0.95).}
 }
 \value{
-A tibble (a data frame if tibble is not installed) with columns
-\code{term}, \code{estimate}, \code{std.error}, and, when \code{conf.int = TRUE}, \code{conf.low}
-and \code{conf.high}.
+\code{tidy()}: a tibble (a data frame if tibble is not installed) with
+columns \code{term}, \code{estimate}, \code{std.error}, and, when \code{conf.int = TRUE},
+\code{conf.low} and \code{conf.high}.
+
+\code{glance()}: a one-row tibble with \code{nie}, \code{nde}, \code{te}, \code{pm}, \code{nobs}, and
+\code{converged}; interaction objects add \code{interaction} and \code{m_star}, and
+joint objects add \code{cde}, \code{structure}, \code{n_mediators}, \code{interactions}, and
+\code{m_star}.
 }
 \description{
-Convert a mediation data object or a \link{BootstrapResult} into a tidy tibble,
-one row per path coefficient or effect.
+\code{tidy()} converts a mediation data object or a \link{BootstrapResult} into a
+tidy tibble, one row per path coefficient or effect. \code{glance()} returns a
+one-row summary. The base generics \code{\link[stats:coef]{stats::coef()}}, \code{\link[stats:vcov]{stats::vcov()}},
+\code{\link[stats:confint]{stats::confint()}}, and \code{\link[stats:nobs]{stats::nobs()}} also have methods for every
+mediation class; see Details.
 }
 \details{
 Path standard errors are the square roots of the diagonal of \verb{@vcov}.
@@ -40,6 +51,20 @@ covariances between equations, and the effect standard errors inherit that.
 The proportion mediated (reported by \code{glance()}) has no standard error: it
 is a ratio whose delta-method standard error is unstable when the total
 effect is near zero, so bootstrap it instead.
+\subsection{Base methods}{
+\itemize{
+\item \code{coef(object, type = "paths")}: the path coefficients; \code{type = "effects"}
+gives the effects, \code{"all"} both, and for interaction objects
+\code{"components"} gives the four-way components.
+\item \code{vcov(object)}: the stored \verb{@vcov}, covering every entry of \verb{@estimates}.
+\item \code{confint(object, parm = "paths", level = 0.95)}: normal intervals for the
+paths, or with \code{parm = "effects"} for the effects using the delta-method
+standard errors above (interaction objects also accept
+\code{parm = "components"}). With \code{parm = "effects"} it warns that the normal
+approximation may be inaccurate for an indirect effect.
+\item \code{nobs(object)}: the number of observations.
+}
+}
 }
 \examples{
 med_data <- fit_mediation(

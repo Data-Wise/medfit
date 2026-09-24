@@ -7,23 +7,32 @@
 nde(x, ...)
 }
 \arguments{
-\item{x}{A MediationData, SerialMediationData, or BootstrapResult object}
+\item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
+\link{InteractionMediationData}, or \link{JointMediationData} object.}
 
 \item{...}{Additional arguments passed to methods}
 }
 \value{
-A numeric value with optional attributes for confidence intervals
+A numeric scalar of class \code{mediation_effect} carrying a \code{type}
+attribute.
 }
 \description{
 Extract the natural direct effect from a mediation analysis result.
 The NDE represents the effect of treatment on outcome that does NOT
-operate through the mediator.
+operate through the mediator(s).
 }
 \details{
-For both simple and serial mediation:
-\deqn{NDE = c'}
-
-where c' is the direct effect coefficient.
+Without a treatment-by-mediator product (\code{MediationData},
+\code{SerialMediationData}, \code{ParallelMediationData}) the NDE is the direct-path
+coefficient, \eqn{NDE = c'}{NDE = c'}. With a product it also depends on the
+mediator's mean under no treatment:
+\itemize{
+\item \code{InteractionMediationData}: \eqn{NDE = CDE + INTref =
+    \theta_1 + \theta_3 E[M \mid X = 0, \bar c]}{NDE = CDE + INTref = t1 + t3 * E[M | X = 0, cbar]}.
+\item \code{JointMediationData}: \eqn{NDE = \theta_1 + \sum_i \theta_{3i}
+    \mu^*_{0i}}{NDE = t1 + sum(t3i * mu0i*)}, with \eqn{\mu^*_{0i}}{mu0i*}
+the mean of mediator \eqn{i} under no treatment at the covariate means.
+}
 }
 \examples{
 med_data <- fit_mediation(
@@ -38,5 +47,5 @@ nde(med_data)
 
 }
 \seealso{
-\code{\link[=nie]{nie()}}, \code{\link[=te]{te()}}, \code{\link[=pm]{pm()}}, \code{\link[=paths]{paths()}}
+\code{\link[=nie]{nie()}}, \code{\link[=te]{te()}}, \code{\link[=pm]{pm()}}, \code{\link[=paths]{paths()}}, \code{\link[=decompose]{decompose()}}
 }
