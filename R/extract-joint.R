@@ -238,14 +238,181 @@
 }
 
 
+#' Propagate mediator means down a serial chain
+#'
+#' The joint effects need each mediator's mean given the treatment and
+#' covariates only. For a serial chain, where `M2 ~ X + M1 + C`, iterated
+#' expectations give reduced-form coefficients by recursion:
+#' \eqn{\beta^*_{1i} = \beta_{1i} + \sum_{j<i} d_{ij} \beta^*_{1j}}{b1i* = b1i + sum(dij * b1j*)},
+#' and likewise for the intercept and covariate coefficients. For parallel
+#' mediators every `d` is 0, so raw and propagated coefficients coincide.
+#'
+#' @param b0,b1 Numeric vectors (length K): raw intercepts and treatment
+#'   coefficients.
+#' @param gamma K x p matrix of raw covariate coefficients (p may be 0).
+#' @param d K x K strictly lower-triangular matrix: `d[i, j]` is the coefficient
+#'   of mediator j in mediator i's model.
+#' @return `list(b0, b1, gamma)` of propagated coefficients.
+#' @keywords internal
+.propagate_mediator_means <- function(b0, b1, gamma, d) {
+  k <- length(b0)
+  for (i in seq_len(k)[-1L]) {
+    j <- seq_len(i - 1L)
+    b0[i] <- b0[i] + sum(d[i, j] * b0[j])
+    b1[i] <- b1[i] + sum(d[i, j] * b1[j])
+    gamma[i, ] <- gamma[i, ] + colSums(d[i, j] * gamma[j, , drop = FALSE])
+  }
+  list(b0 = b0, b1 = b1, gamma = gamma)
+}
+
+
+#' Stacked-OLS covariance of several equations fit to the same rows
+#'
+#' Diagonal blocks are each model's [stats::vcov()]. Off-diagonal blocks are
+#' \eqn{\hat\sigma_{ef} (X_e'X_e)^{-1} X_e'X_f (X_f'X_f)^{-1}}{s_ef (Xe'Xe)^-1 Xe'Xf (Xf'Xf)^-1},
+#' with the residual cross-product divided by
+#' \eqn{\sqrt{(n - p_e)(n - p_f)}}{sqrt((n - pe)(n - pf))}, so the formula
+#' reduces to `vcov()` on the diagonal. A block is exactly zero when one
+#' equation's residual lies in the other's column space (serial chains with
+#' shared covariates; the outcome against every mediator).
+#'
+#' @param models List of fitted lm/glm (Gaussian identity) models.
+#' @param prefixes Character prefixes for the stacked coefficient names.
+#' @return Named covariance matrix of the stacked coefficients.
+#' @keywords internal
+.stacked_ols_vcov <- function(models, prefixes) {
+  info <- lapply(models, function(m) {
+    r <- stats::residuals(m, type = "response")
+    df <- m$df.residual
+    v <- stats::vcov(m)
+    list(x = stats::model.matrix(m), r = r, df = df, v = v,
+         inv = v / (sum(r^2) / df))
+  })
+  nms <- unlist(Map(function(m, p) paste0(p, names(stats::coef(m))), models, prefixes))
+  blocks <- lapply(seq_along(info), function(e) {
+    lapply(seq_along(info), function(f) {
+      if (e == f) return(info[[e]]$v)
+      s_ef <- sum(info[[e]]$r * info[[f]]$r) / sqrt(info[[e]]$df * info[[f]]$df)
+      s_ef * info[[e]]$inv %*% crossprod(info[[e]]$x, info[[f]]$x) %*% info[[f]]$inv
+    })
+  })
+  out <- do.call(rbind, lapply(blocks, function(row) do.call(cbind, row)))
+  dimnames(out) <- list(nms, nms)
+  out
+}
+
+
 #' Extract joint natural effects from lm/glm models (worker)
 #'
-#' Placeholder until the worker lands (PLAN T4).
+#' Called by [.extract_mediation_lm_impl()] after [.check_joint_fit()] has
+#' validated the models. Evaluates the unit-contrast (0 -> 1) effects at the
+#' sample covariate means (VanderWeele and Vansteelandt 2014):
+#' NIE = \eqn{\sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{sum((t2i + t3i) * b1i*)},
+#' NDE = \eqn{\theta_1 + \sum_i \theta_{3i} E[M_i \mid X = 0, \bar c]}{t1 + sum(t3i * E[Mi | X = 0, cbar])},
+#' CDE = \eqn{\theta_1 + \sum_i \theta_{3i} m^*_i}{t1 + sum(t3i * mi*)}.
 #'
+#' `@estimates` holds every model's coefficients as prefixed source rows
+#' (`m1_`, ..., `mK_`, `y_`) plus path aliases (`a1..aK`, `dij`, `b1..bK`,
+#' `theta3_<mediator>`, `c_prime`); `@vcov` is the stacked-OLS covariance of
+#' the source rows, with alias rows duplicating their source rows. K = 1 is
+#' accepted internally (reduction test only).
+#'
+#' @param med_models List of the K mediator models, in causal order.
+#' @param model_y Outcome model.
+#' @param treatment,mediators,outcome Variable names (`outcome` auto-detected
+#'   when NULL).
+#' @param structure `"serial"` or `"parallel"`.
+#' @param interactions Mediators carrying a treatment product, in order.
+#' @param m_star Numeric vector named by `interactions`.
+#' @param data Optional data frame; defaults to the outcome model frame.
+#' @return A `JointMediationData` object.
 #' @keywords internal
 .extract_joint_mediation_lm <- function(med_models, model_y, treatment,
                                         mediators, structure, interactions,
                                         m_star, outcome = NULL, data = NULL) {
-  stop(errorCondition("Joint mediation effects are not implemented yet.",
-                      class = "medfit_joint_not_implemented", call = NULL))
+  k <- length(mediators)
+  all_models <- c(med_models, list(model_y))
+  coefs <- lapply(all_models, stats::coef)
+  if (anyNA(unlist(coefs))) {
+    .stop_joint("a model has aliased (NA) coefficients; remove the collinear terms.")
+  }
+  cm <- coefs[seq_len(k)]
+  cy <- coefs[[k + 1L]]
+  get0 <- function(v, nm) if (nm %in% names(v)) unname(v[[nm]]) else 0
+
+  # Covariate coefficients: the first mediator model uses no other mediator.
+  cov_names <- setdiff(names(cm[[1L]]), c("(Intercept)", treatment))
+  c_bar <- colMeans(stats::model.matrix(med_models[[1L]])[, cov_names, drop = FALSE])
+
+  # Raw mediator coefficients, then propagate down the chain.
+  b0 <- vapply(cm, get0, numeric(1), nm = "(Intercept)")
+  b1 <- vapply(cm, get0, numeric(1), nm = treatment)
+  gamma <- matrix(vapply(cm, function(v) vapply(cov_names, get0, numeric(1), v = v),
+                         numeric(length(cov_names))),
+                  nrow = k, byrow = TRUE, dimnames = list(mediators, cov_names))
+  d <- matrix(0, k, k, dimnames = list(mediators, mediators))
+  for (i in seq_len(k)) {
+    for (j in seq_len(i - 1L)) d[i, j] <- get0(cm[[i]], mediators[j])
+  }
+  prop <- .propagate_mediator_means(b0, b1, gamma, d)
+  a_total <- stats::setNames(prop$b1, mediators)
+  m_at_zero <- stats::setNames(prop$b0 + drop(prop$gamma %*% c_bar), mediators)
+
+  # Outcome coefficients.
+  theta1 <- get0(cy, treatment)
+  theta2 <- stats::setNames(vapply(mediators, get0, numeric(1), v = cy), mediators)
+  int_names <- vapply(interactions, function(m) {
+    .find_interaction_term(model_y, treatment, m)
+  }, character(1))
+  theta3 <- stats::setNames(unname(cy[int_names]), interactions)
+  th3_all <- stats::setNames(numeric(k), mediators)
+  th3_all[interactions] <- theta3
+
+  nie <- sum((theta2 + th3_all) * a_total)
+  nde <- theta1 + sum(theta3 * m_at_zero[interactions])
+  cde <- theta1 + sum(theta3 * m_star[interactions])
+
+  # Estimates: prefixed source rows plus path aliases.
+  prefixes <- c(paste0("m", seq_len(k), "_"), "y_")
+  src <- unlist(Map(function(v, p) stats::setNames(v, paste0(p, names(v))), coefs, prefixes))
+  alias_src <- c(
+    stats::setNames(paste0("m", seq_len(k), "_", treatment), paste0("a", seq_len(k))),
+    stats::setNames(paste0("y_", mediators), paste0("b", seq_len(k))),
+    stats::setNames(paste0("y_", int_names), paste0("theta3_", interactions)),
+    c(c_prime = paste0("y_", treatment))
+  )
+  for (i in seq_len(k)) {
+    for (j in seq_len(i - 1L)) {
+      alias_src[paste0("d", i, j)] <- paste0("m", i, "_", mediators[j])
+    }
+  }
+  alias_src <- alias_src[alias_src %in% names(src)]
+  full <- c(names(src), alias_src)
+  sel <- match(full, names(src))
+  v_src <- .stacked_ols_vcov(all_models, prefixes)
+  estimates <- stats::setNames(unname(src[sel]), c(names(src), names(alias_src)))
+  vcov <- v_src[sel, sel, drop = FALSE]
+  dimnames(vcov) <- list(names(estimates), names(estimates))
+
+  # Metadata.
+  if (is.null(outcome)) outcome <- .get_response_var(model_y)
+  if (is.null(data)) {
+    data <- tryCatch(stats::model.frame(model_y), error = function(e) NULL)
+  }
+  is_glm <- vapply(all_models, inherits, logical(1), what = "glm")
+  converged <- all(vapply(all_models, function(m) {
+    if (inherits(m, "glm")) isTRUE(m$converged) else TRUE
+  }, logical(1)))
+
+  JointMediationData(
+    structure = structure, mediators = mediators, treatment = treatment,
+    outcome = outcome, interactions = interactions,
+    a_total = a_total, b_paths = theta2, theta3 = theta3, c_prime = theta1,
+    cde = cde, nde = nde, nie = nie, total_effect = nde + nie,
+    m_star = m_star[interactions],
+    estimates = estimates, vcov = vcov,
+    data = data, n_obs = as.integer(stats::nobs(model_y)),
+    converged = converged,
+    source_package = if (any(is_glm)) "stats::glm" else "stats::lm"
+  )
 }

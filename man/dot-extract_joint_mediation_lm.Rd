@@ -16,7 +16,38 @@
   data = NULL
 )
 }
+\arguments{
+\item{med_models}{List of the K mediator models, in causal order.}
+
+\item{model_y}{Outcome model.}
+
+\item{treatment, mediators, outcome}{Variable names (\code{outcome} auto-detected
+when NULL).}
+
+\item{structure}{\code{"serial"} or \code{"parallel"}.}
+
+\item{interactions}{Mediators carrying a treatment product, in order.}
+
+\item{m_star}{Numeric vector named by \code{interactions}.}
+
+\item{data}{Optional data frame; defaults to the outcome model frame.}
+}
+\value{
+A \code{JointMediationData} object.
+}
 \description{
-Placeholder until the worker lands (PLAN T4).
+Called by \code{\link[=.extract_mediation_lm_impl]{.extract_mediation_lm_impl()}} after \code{\link[=.check_joint_fit]{.check_joint_fit()}} has
+validated the models. Evaluates the unit-contrast (0 -> 1) effects at the
+sample covariate means (VanderWeele and Vansteelandt 2014):
+NIE = \eqn{\sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{sum((t2i + t3i) * b1i*)},
+NDE = \eqn{\theta_1 + \sum_i \theta_{3i} E[M_i \mid X = 0, \bar c]}{t1 + sum(t3i * E[Mi | X = 0, cbar])},
+CDE = \eqn{\theta_1 + \sum_i \theta_{3i} m^*_i}{t1 + sum(t3i * mi*)}.
+}
+\details{
+\verb{@estimates} holds every model's coefficients as prefixed source rows
+(\code{m1_}, ..., \code{mK_}, \code{y_}) plus path aliases (\code{a1..aK}, \code{dij}, \code{b1..bK},
+\verb{theta3_<mediator>}, \code{c_prime}); \verb{@vcov} is the stacked-OLS covariance of
+the source rows, with alias rows duplicating their source rows. K = 1 is
+accepted internally (reduction test only).
 }
 \keyword{internal}

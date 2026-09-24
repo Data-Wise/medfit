@@ -70,14 +70,18 @@ joint_call <- function(d, m1 = M1 ~ X + C, m2 = M2 ~ X + M1 + C,
 
 test_that("supported outcome products route to the joint worker", {
   d <- sim_joint("serial", "M2", n = 300)$data
-  expect_error(joint_call(d), class = "medfit_joint_not_implemented")
+  s <- joint_call(d)
+  expect_true(S7::S7_inherits(s, JointMediationData))
+  expect_identical(s@structure, "serial")
+  expect_identical(s@interactions, "M2")
   dp <- sim_joint("parallel", "M1", n = 300)$data
-  expect_error(joint_call(dp, m2 = M2 ~ X + C, y = Y ~ X * M1 + M2 + C),
-               class = "medfit_joint_not_implemented")
-  # Both mediators interacting, `:` spelling, and a supported m_star.
-  expect_error(joint_call(d, y = Y ~ X + M1 + M2 + X:M1 + M2:X + C,
-                          m_star = c(M1 = 1, M2 = 0)),
-               class = "medfit_joint_not_implemented")
+  p <- joint_call(dp, m2 = M2 ~ X + C, y = Y ~ X * M1 + M2 + C)
+  expect_identical(p@structure, "parallel")
+  # Both mediators interacting, `:` spelling in either order, named m_star.
+  b <- joint_call(d, y = Y ~ X + M1 + M2 + X:M1 + M2:X + C,
+                  m_star = c(M2 = 0, M1 = 1))
+  expect_identical(b@interactions, c("M1", "M2"))
+  expect_equal(b@m_star, c(M1 = 1, M2 = 0))
 })
 
 test_that("unsupported products still error, naming the term and model", {
@@ -175,4 +179,77 @@ test_that("no-product serial and parallel outputs are unchanged", {
   }
   expect_snapshot_value(list(serial = snap(s), parallel = snap(p)),
                         style = "deparse")
+})
+
+# ==============================================================================
+# Worker (PLAN T4; spec test group 4)
+# ==============================================================================
+
+test_that("propagated serial coefficients equal the reduced-form OLS fit", {
+  d <- sim_joint("serial", "M2", n = 500, seed = 31)$data
+  obj <- joint_call(d)
+  direct <- stats::coef(lm(M2 ~ X + C, d))
+  # OLS omitted-variable identity: exact with shared covariate sets.
+  expect_equal(unname(obj@a_total[["M2"]]), unname(direct[["X"]]), tolerance = 1e-10)
+  cm1 <- stats::coef(lm(M1 ~ X + C, d))
+  cm2 <- stats::coef(lm(M2 ~ X + M1 + C, d))
+  p <- .propagate_mediator_means(
+    b0 = c(cm1[[1]], cm2[[1]]), b1 = c(cm1[["X"]], cm2[["X"]]),
+    gamma = matrix(c(cm1[["C"]], cm2[["C"]]), 2, 1),
+    d = matrix(c(0, cm2[["M1"]], 0, 0), 2, 2)
+  )
+  expect_equal(c(p$b0[2], p$b1[2], p$gamma[2, 1]),
+               unname(direct[c("(Intercept)", "X", "C")]), tolerance = 1e-10)
+})
+
+test_that("serial and outcome cross-blocks of the stacked vcov are zero", {
+  d <- sim_joint("serial", "M2", n = 500, seed = 32)$data
+  v <- joint_call(d)@vcov
+  blk <- function(a, b) v[startsWith(rownames(v), a), startsWith(colnames(v), b)]
+  expect_lt(max(abs(blk("m1_", "m2_"))), 1e-10)
+  expect_lt(max(abs(blk("m1_", "y_"))), 1e-10)
+  expect_lt(max(abs(blk("m2_", "y_"))), 1e-10)
+  # Diagonal blocks are each model's vcov().
+  expect_equal(unname(blk("y_", "y_")),
+               unname(stats::vcov(lm(Y ~ X * M2 + M1 + C, d))), tolerance = 1e-12)
+  # Parallel mediators with correlated errors: the cross-block is not zero.
+  dp <- sim_joint("parallel", "M1", n = 500, seed = 33, rho = 0.5)$data
+  vp <- joint_call(dp, m2 = M2 ~ X + C, y = Y ~ X * M1 + M2 + C)@vcov
+  expect_gt(abs(vp["m1_X", "m2_X"]), 1e-4)
+  expect_equal(vp["a1", "a2"], vp["m1_X", "m2_X"])
+})
+
+test_that("estimates carry source rows and path aliases", {
+  d <- sim_joint("serial", "M2", n = 300, seed = 34)$data
+  obj <- joint_call(d)
+  est <- obj@estimates
+  expect_true(all(c("m1_(Intercept)", "m2_M1", "y_X:M2", "a1", "a2", "d21",
+                    "b1", "b2", "theta3_M2", "c_prime") %in% names(est)))
+  expect_identical(est[["d21"]], est[["m2_M1"]])
+  expect_identical(est[["theta3_M2"]], est[["y_X:M2"]])
+  expect_identical(rownames(obj@vcov), names(est))
+})
+
+test_that("K = 1 reduces to the four-way InteractionMediationData", {
+  set.seed(35)
+  n <- 400
+  x <- stats::rbinom(n, 1, 0.5)
+  cv <- stats::rnorm(n)
+  m <- 0.4 + 0.5 * x + 0.3 * cv + stats::rnorm(n)
+  y <- 0.1 + 0.2 * x + 0.3 * m + 0.25 * x * m + 0.2 * cv + stats::rnorm(n)
+  d <- data.frame(X = x, C = cv, M = m, Y = y)
+  fm <- lm(M ~ X + C, d)
+  fy <- lm(Y ~ X * M + C, d)
+  four <- extract_mediation(fm, model_y = fy, treatment = "X", mediator = "M",
+                            m_star = 0.5)
+  joint <- .extract_joint_mediation_lm(list(fm), fy, "X", "M", "serial", "M",
+                                       c(M = 0.5))
+  expect_equal(joint@nie, four@nie, tolerance = 1e-10)
+  expect_equal(joint@nde, four@nde, tolerance = 1e-10)
+  expect_equal(joint@cde, four@cde, tolerance = 1e-10)
+  expect_equal(unname(joint@vcov[c("a1", "b1", "theta3_M", "c_prime"),
+                                 c("a1", "b1", "theta3_M", "c_prime")]),
+               unname(four@vcov[c("a", "b", "theta3", "c_prime"),
+                                c("a", "b", "theta3", "c_prime")]),
+               tolerance = 1e-10)
 })

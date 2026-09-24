@@ -23,15 +23,13 @@ generate_guard_data <- function(n = 500, seed = 42) {
 test_that("serial lm extraction routes an outcome X:M1 term to the joint effects", {
   # D8(b): an outcome-model treatment-by-mediator product is now supported.
   d <- generate_guard_data()
-  expect_error(
-    extract_mediation(
-      lm(M1 ~ X + C, d),
-      model_y = lm(Y ~ X * M1 + M2 + C, d),
-      treatment = "X", mediator = c("M1", "M2"),
-      mediator_models = list(lm(M2 ~ X + M1 + C, d))
-    ),
-    class = "medfit_joint_not_implemented"
+  obj <- extract_mediation(
+    lm(M1 ~ X + C, d),
+    model_y = lm(Y ~ X * M1 + M2 + C, d),
+    treatment = "X", mediator = c("M1", "M2"),
+    mediator_models = list(lm(M2 ~ X + M1 + C, d))
   )
+  expect_true(S7::S7_inherits(obj, JointMediationData))
 })
 
 test_that("parallel lm extraction errors on a mediator product term", {

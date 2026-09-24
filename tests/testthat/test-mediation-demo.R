@@ -83,14 +83,12 @@ test_that("interaction demo recovers its reduced-form targets", {
 
 test_that("serial extraction of outcome_int routes to the joint effects", {
   fy <- demo_fit_lm("treatment * mediator1 + mediator2", "outcome_int")
-  expect_error(
-    extract_mediation(
-      demo_fit_lm("treatment", "mediator1"),
-      model_y = fy,
-      treatment = "treatment",
-      mediator = c("mediator1", "mediator2"),
-      mediator_models = list(demo_fit_lm("treatment + mediator1", "mediator2"))
-    ),
-    class = "medfit_joint_not_implemented"
+  obj <- extract_mediation(
+    demo_fit_lm("treatment", "mediator1"),
+    model_y = fy,
+    treatment = "treatment",
+    mediator = c("mediator1", "mediator2"),
+    mediator_models = list(demo_fit_lm("treatment + mediator1", "mediator2"))
   )
+  expect_true(S7::S7_inherits(obj, JointMediationData))
 })
