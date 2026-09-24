@@ -36,7 +36,13 @@
 #' @keywords internal
 #' @noRd
 .effect_se_or_na <- function(x, terms) {
-  grads <- .effect_gradients(x)
+  # A hand-built object can lack what the gradients need (for a
+  # JointMediationData, the prefixed source rows or `@data` for the covariate
+  # means): report NA, as for a missing alias row, rather than stop.
+  grads <- tryCatch(.effect_gradients(x), error = function(e) NULL)
+  if (is.null(grads)) {
+    return(stats::setNames(rep(NA_real_, length(terms)), terms))
+  }
   checkmate::assert_subset(terms, names(grads), .var.name = "terms")
   vc <- x@vcov
   vapply(terms, function(k) {
@@ -196,6 +202,7 @@
 #' @keywords internal
 #' @noRd
 .effect_gradients_joint <- function(x) {
+  .assert_joint_source_rows(x)
   pp <- .joint_parts(x, x@estimates)
   est <- x@estimates
   trt <- x@treatment
@@ -294,4 +301,29 @@
   w <- vapply(meds, function(m) g0(paste0("y_", m)), numeric(1)) + t3
   list(pre = pre, covs = covs, c_bar = c_bar, d = d, big_b1 = big_b1, mu0 = mu0,
        t3_rows = t3_rows, t3 = t3, w = w, theta1 = g0(paste0("y_", trt)))
+}
+
+
+#' Error Unless a JointMediationData Object Carries Its Source Rows
+#'
+#' The joint effects and their gradients are computed from the prefixed
+#' per-equation rows of `@estimates` (`m1_`, ..., `mK_`, `y_`) that the
+#' extractor stores. A hand-built object with only the path aliases cannot
+#' give the NDE, so refuse it instead of treating the missing rows as zero.
+#'
+#' @param x A JointMediationData object.
+#' @return `x`, invisibly.
+#' @keywords internal
+#' @noRd
+.assert_joint_source_rows <- function(x) {
+  k <- length(x@mediators)
+  need <- c(paste0("m", seq_len(k), "_(Intercept)"), "y_(Intercept)")
+  missing_rows <- setdiff(need, names(x@estimates))
+  if (length(missing_rows) > 0L) {
+    stop("This JointMediationData object has no per-equation source rows in ",
+         "@estimates (missing: ", paste(missing_rows, collapse = ", "), "). ",
+         "Joint effects and their standard errors need the rows ",
+         "extract_mediation() stores; build the object with it.", call. = FALSE)
+  }
+  invisible(x)
 }

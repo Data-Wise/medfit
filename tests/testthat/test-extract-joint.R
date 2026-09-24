@@ -523,6 +523,9 @@ test_that("joint_effects() reproduces the object and drives a parametric bootstr
   expect_equal(stats::sd(boot@boot_estimates), unname(.effect_se(obj, "nie")),
                tolerance = 0.15)
   expect_error(joint_effects(make_joint_obj()@vcov), "JointMediationData")
+  # A missing source row is an error, never a silent zero.
+  expect_error(joint_effects(obj, paths(obj)), "missing: m1_\\(Intercept\\)")
+  expect_error(joint_effects(make_joint_obj()), "no per-equation source rows")
 })
 
 test_that("glance() reports structure, mediators, products and m_star", {
@@ -536,4 +539,20 @@ test_that("glance() reports structure, mediators, products and m_star", {
   expect_identical(g$m_star, "M2=0.5")
   expect_identical(generics::glance(objs$parallel)$m_star, "M1=0")
   expect_equal(g$pm, objs$serial@nie / objs$serial@total_effect)
+})
+
+test_that("hand-built objects get NA effect SEs from tidy() and summary()", {
+  # Alias-only estimates: the gradients cannot be formed.
+  hb <- make_joint_obj()
+  expect_silent(td <- generics::tidy(hb, type = "effects"))
+  expect_true(all(is.na(td$std.error)))
+  expect_true(all(is.na(summary(hb)$effects$std.error)))
+  expect_error(suppressWarnings(confint(hb, parm = "effects")),
+               "no per-equation source rows")
+  # Extracted object with @data dropped: covariate means are unavailable.
+  obj <- methods_fixtures()$serial
+  nodata <- obj
+  nodata@data <- NULL
+  expect_true(all(is.na(generics::tidy(nodata, type = "effects")$std.error)))
+  expect_error(suppressWarnings(confint(nodata, parm = "effects")), "no @data")
 })

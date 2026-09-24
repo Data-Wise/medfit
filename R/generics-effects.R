@@ -485,8 +485,9 @@ S7::method(decompose, InteractionMediationData) <- function(x, ...) {
 #' (`m1_`, ..., `y_`) and the covariate means, not only the path aliases.
 #'
 #' @param object A [JointMediationData] object.
-#' @param estimates Named numeric vector with the prefixed source rows of
-#'   `object@estimates` (alias rows are ignored).
+#' @param estimates Named numeric vector containing every prefixed source row
+#'   of `object@estimates` (`m1_...`, `y_...`); alias rows are ignored. A
+#'   missing source row is an error, not a zero.
 #' @return Named numeric vector: `cde`, `nde`, `nie`, `te`.
 #' @examples
 #' d <- mediation_demo
@@ -514,6 +515,13 @@ joint_effects <- function(object, estimates = object@estimates) {
   }
   checkmate::assert_numeric(estimates, any.missing = FALSE, names = "unique",
                             .var.name = "estimates")
+  .assert_joint_source_rows(object)
+  src <- grep("^(m[0-9]+|y)_", names(object@estimates), value = TRUE)
+  absent <- setdiff(src, names(estimates))
+  if (length(absent) > 0L) {
+    stop("`estimates` must contain every source row of `object@estimates`; ",
+         "missing: ", paste(absent, collapse = ", "), ".", call. = FALSE)
+  }
   pp <- .joint_parts(object, estimates)
   ints <- object@interactions
   nie <- sum(pp$w * pp$big_b1)

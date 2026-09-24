@@ -9,8 +9,9 @@ joint_effects(object, estimates = object@estimates)
 \arguments{
 \item{object}{A \link{JointMediationData} object.}
 
-\item{estimates}{Named numeric vector with the prefixed source rows of
-\code{object@estimates} (alias rows are ignored).}
+\item{estimates}{Named numeric vector containing every prefixed source row
+of \code{object@estimates} (\code{m1_...}, \code{y_...}); alias rows are ignored. A
+missing source row is an error, not a zero.}
 }
 \value{
 Named numeric vector: \code{cde}, \code{nde}, \code{nie}, \code{te}.

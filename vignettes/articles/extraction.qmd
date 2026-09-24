@@ -302,11 +302,13 @@ med_joint
 #>   Total = +0.8757   |   n = 400
 
 generics::tidy(med_joint, type = "effects", conf.int = TRUE)
+#> # A tibble: 4 × 5
 #>   term  estimate std.error conf.low conf.high
-#> 1 cde      0.175     0.113  -0.0468     0.396
-#> 2 nde      0.220     0.116  -0.0071     0.447
-#> 3 nie      0.656     0.116   0.428      0.884
-#> 4 te       0.876     0.135   0.611      1.14
+#>   <chr>    <dbl>     <dbl>    <dbl>     <dbl>
+#> 1 cde      0.175     0.113 -0.0468      0.396
+#> 2 nde      0.220     0.116 -0.00710     0.447
+#> 3 nie      0.656     0.116  0.428       0.884
+#> 4 te       0.876     0.135  0.611       1.14
 ```
 
 `a*` is each mediator's **total** treatment effect: for `mediator2` it includes the
