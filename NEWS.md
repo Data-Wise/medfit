@@ -90,14 +90,17 @@
   chain-specific indirect effect by default. The new `nie(x, type = "total")`
   returns the total indirect effect, `te(x) - nde(x)`. The serial lm/glm and
   lavaan extractors now record the skip-path coefficients as `a2..ak`
-  (X -> Mj), `b1..b{k-1}` (Mi -> Y) and `d{i}_{j}` (Mi -> Mj with j > i + 1)
+  (`X -> Mj`), `b1..b{k-1}` (`Mi -> Y`) and `d{i}_{j}` (`Mi -> Mj`, j > i + 1)
   in `@estimates` and `@vcov`. The delta-method SE of `te` in `confint()` and
   `tidy()` differentiates the full sum. It matches lavaan `:=` SEs. Serial
   `tidy()` gains a `nie_total` row, `glance()` gains a `nie_total` column and
   `coef(type = "effects")` gains `indirect_total`. A hand-built object whose
   predictor lists include a skip path without its coefficient gets `NA` and a
   warning from `te()` and `pm()`, because assuming zero would reproduce the
-  bug. No mediationverse package calls serial `te()` or `pm()`.
+  bug. For glm fits with a non-identity link, the path sum is on the
+  linear-predictor scale, as it already is for `MediationData`. `quick()` now
+  prints the chain and total NIE side by side. No mediationverse package calls
+  serial `te()` or `pm()`.
 * `tidy(<SerialMediationData>, type = "effects")` no longer errors on
   mismatched row counts.
 

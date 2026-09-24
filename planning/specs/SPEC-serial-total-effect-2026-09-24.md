@@ -98,7 +98,8 @@ detectably nonzero (lm/glm: via prefixed estimates) or can't be ruled out.
 coefficients as the (X, Y) element of `(I − B)⁻¹`, where B is the recursive path
 matrix over (X, M1, …, Mk, Y). This works for any k and any missing edges.
 
-- Extraction: lm/glm needs no change (coefficients are already there). lavaan
+- Extraction: lm/glm adds canonical aliases from the prefixed coefficients it
+  already stores (implemented, so vcov rows exist for the SE gradient). lavaan
   resolves `X→Mj`, `Mi→Mj` (non-adjacent), and `Mi→Y` (i < k) through
   `get_path()` and adds them as canonical aliases to `@estimates`/`@vcov` (same
   `.expand_vcov_with_aliases()` mechanism as a/d/b/c').

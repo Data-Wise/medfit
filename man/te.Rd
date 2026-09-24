@@ -29,7 +29,9 @@ With the same covariates in every equation and linear models this equals
 the treatment coefficient of the outcome regressed on the treatment and
 covariates alone. A path missing from its model counts as zero; when a path
 is in a model but its coefficient was not recorded (a hand-built object),
-\code{te()} returns \code{NA} with a warning.
+\code{te()} returns \code{NA} with a warning. For glm fits with a non-identity link
+the sum of path products is on the linear-predictor scale, as for
+\link{MediationData}.
 }
 \examples{
 med_data <- fit_mediation(

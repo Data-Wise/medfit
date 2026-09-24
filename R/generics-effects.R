@@ -105,7 +105,9 @@ nde <- S7::new_generic("nde", "x")
 #' the treatment coefficient of the outcome regressed on the treatment and
 #' covariates alone. A path missing from its model counts as zero; when a path
 #' is in a model but its coefficient was not recorded (a hand-built object),
-#' `te()` returns `NA` with a warning.
+#' `te()` returns `NA` with a warning. For glm fits with a non-identity link
+#' the sum of path products is on the linear-predictor scale, as for
+#' [MediationData].
 #'
 #' @examples
 #' med_data <- fit_mediation(
