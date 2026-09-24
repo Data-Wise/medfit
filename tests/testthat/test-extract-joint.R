@@ -23,7 +23,7 @@ test_that("a consistent JointMediationData object builds and prints", {
   obj <- make_joint_obj()
   expect_true(S7::S7_inherits(obj, JointMediationData))
   expect_output(print(obj), "JointMediationData")
-  expect_output(print(obj), "t3 = \\+0.2000 \\(m\\* = 1\\)")
+  expect_output(print(obj), "Products: X x M2 \\(m\\* = 1\\)")
   # No products: empty theta3 / m_star, CDE = NDE = c_prime.
   obj0 <- make_joint_obj(interactions = character(0),
                          theta3 = stats::setNames(numeric(0), character(0)),
@@ -394,7 +394,7 @@ test_that("effect generics read the stored joint effects", {
   expect_equal(unclass(pm(obj))[1], obj@nie / obj@total_effect, ignore_attr = TRUE)
   expect_equal(decompose(obj), c(cde = obj@cde, nde = obj@nde, nie = obj@nie,
                                  total = obj@total_effect))
-  expect_named(paths(obj), c("a1", "a2", "b1", "b2", "theta3_M2", "c_prime", "d21"))
+  expect_named(paths(obj), c("a1", "a2", "d21", "b1", "b2", "theta3_M2", "c_prime"))
   # pm() warns and returns NA when the total effect is ~0.
   z <- make_joint_obj(a_total = c(M1 = 0, M2 = 0), c_prime = 0, cde = 0.2,
                       nde = 0, nie = 0, total_effect = 0)
@@ -462,4 +462,97 @@ test_that("delta-method SEs agree with the bootstrap (always on, loose)", {
 test_that("delta-method SEs are within 3% of the bootstrap (B = 5000)", {
   skip_on_cran()
   check_joint_se(n = 1500, B = 5000, tol = 0.03, seed = 62)
+})
+
+# ==============================================================================
+# Methods (PLAN T8-T9; spec test group 7)
+# ==============================================================================
+
+test_that("print() and summary() label the joint NIE and the products", {
+  objs <- methods_fixtures()
+  expect_output(print(objs$serial), "Joint NIE \\(all paths through M1, M2\\)")
+  expect_output(print(objs$serial), "Products: X x M2 \\(m\\* = 0.5\\)")
+  expect_output(print(summary(objs$parallel)), "no per-mediator split")
+  expect_s3_class(summary(objs$serial), "summary.JointMediationData")
+  expect_snapshot(print(objs$serial))
+  expect_snapshot(print(objs$parallel))
+  expect_snapshot(print(summary(objs$serial)))
+})
+
+test_that("tidy() is silent and carries numeric SEs for paths and effects", {
+  obj <- methods_fixtures()$serial
+  expect_silent(td <- generics::tidy(obj))
+  expect_identical(td$term, c(names(paths(obj)), "cde", "nde", "nie", "te"))
+  expect_false(anyNA(td$std.error))
+  eff <- generics::tidy(obj, type = "effects")
+  expect_equal(eff$std.error, unname(.effect_se(obj, c("cde", "nde", "nie", "te"))),
+               tolerance = 1e-12)
+  expect_identical(generics::tidy(obj, type = "paths")$term, names(paths(obj)))
+})
+
+test_that("confint() warns for effects and equals tidy(conf.int = TRUE)", {
+  obj <- methods_fixtures()$parallel
+  expect_warning(ci <- confint(obj, parm = "effects"), "Normal \\(delta-method\\)")
+  td <- generics::tidy(obj, type = "effects", conf.int = TRUE)
+  expect_equal(unname(ci), unname(cbind(td$conf.low, td$conf.high)), tolerance = 1e-12)
+  expect_silent(cp <- confint(obj, parm = "paths", level = 0.9))
+  tp <- generics::tidy(obj, type = "paths", conf.int = TRUE, conf.level = 0.9)
+  expect_equal(unname(cp), unname(cbind(tp$conf.low, tp$conf.high)), tolerance = 1e-12)
+  expect_error(confint(obj, method = "boot"), "joint_effects")
+})
+
+test_that("joint_effects() reproduces the object and drives a parametric bootstrap", {
+  obj <- methods_fixtures()$serial
+  expect_equal(joint_effects(obj),
+               c(cde = obj@cde, nde = obj@nde, nie = obj@nie, te = obj@total_effect),
+               tolerance = 1e-12)
+  # At a perturbed vector it agrees with the independent test-side formulas.
+  theta <- obj@estimates + 0.01 * seq_along(obj@estimates)
+  expect_equal(joint_effects(obj, theta),
+               joint_effects_est(theta, joint_spec(obj))[c("cde", "nde", "nie", "te")],
+               tolerance = 1e-12)
+  # The documented recipe: the plugin estimate is the point NDE/NIE exactly.
+  for (e in c("nde", "nie")) {
+    stat <- function(th) joint_effects(obj, th)[[e]]
+    plug <- bootstrap_mediation(stat, method = "plugin", mediation_data = obj)
+    expect_identical(plug@estimate, unname(joint_effects(obj)[[e]]))
+  }
+  boot <- bootstrap_mediation(function(th) joint_effects(obj, th)[["nie"]],
+                              method = "parametric", mediation_data = obj,
+                              n_boot = 300L, seed = 3)
+  expect_equal(stats::sd(boot@boot_estimates), unname(.effect_se(obj, "nie")),
+               tolerance = 0.15)
+  expect_error(joint_effects(make_joint_obj()@vcov), "JointMediationData")
+  # A missing source row is an error, never a silent zero.
+  expect_error(joint_effects(obj, paths(obj)), "missing: m1_\\(Intercept\\)")
+  expect_error(joint_effects(make_joint_obj()), "no per-equation source rows")
+})
+
+test_that("glance() reports structure, mediators, products and m_star", {
+  objs <- methods_fixtures()
+  g <- generics::glance(objs$serial)
+  expect_identical(names(g), c("nie", "nde", "te", "pm", "cde", "structure",
+                               "n_mediators", "interactions", "m_star", "nobs",
+                               "converged"))
+  expect_identical(g$structure, "serial")
+  expect_identical(g$interactions, "M2")
+  expect_identical(g$m_star, "M2=0.5")
+  expect_identical(generics::glance(objs$parallel)$m_star, "M1=0")
+  expect_equal(g$pm, objs$serial@nie / objs$serial@total_effect)
+})
+
+test_that("hand-built objects get NA effect SEs from tidy() and summary()", {
+  # Alias-only estimates: the gradients cannot be formed.
+  hb <- make_joint_obj()
+  expect_silent(td <- generics::tidy(hb, type = "effects"))
+  expect_true(all(is.na(td$std.error)))
+  expect_true(all(is.na(summary(hb)$effects$std.error)))
+  expect_error(suppressWarnings(confint(hb, parm = "effects")),
+               "no per-equation source rows")
+  # Extracted object with @data dropped: covariate means are unavailable.
+  obj <- methods_fixtures()$serial
+  nodata <- obj
+  nodata@data <- NULL
+  expect_true(all(is.na(generics::tidy(nodata, type = "effects")$std.error)))
+  expect_error(suppressWarnings(confint(nodata, parm = "effects")), "no @data")
 })

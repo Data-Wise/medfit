@@ -270,6 +270,78 @@ equation, so `cov(b_j, b_{j'})` and `cov(b_j, c')` are preserved. The
 `confint()` indirect-effect SE uses the full delta method over the joint
 `a*/b*` block, not a naive per-mediator sum.
 
+### Several Mediators with a Treatment-by-Mediator Product
+
+When the outcome model of a serial or parallel fit carries a treatment-by-mediator
+term, `extract_mediation()` returns a `JointMediationData` object with the
+**joint** natural effects of the mediators (VanderWeele and Vansteelandt 2014).
+The mediators are treated as one block: the NIE runs through every mediator and
+every path among them, and it has no per-mediator split. `outcome_int` carries a
+`treatment` by `mediator1` product, so it fits the serial chain from above:
+
+```{r}
+#| label: lm-joint
+fit_yj <- lm(outcome_int ~ treatment * mediator1 + mediator2 +
+               covariate1 + covariate2, data = mediation_demo)
+
+med_joint <- extract_mediation(
+  fit_m1,                  # the serial mediator1 model from above
+  model_y = fit_yj,
+  treatment = "treatment",
+  mediator = c("mediator1", "mediator2"),
+  mediator_models = list(fit_m2)   # the serial mediator2 model
+)
+med_joint
+#> <JointMediationData>
+#>   treatment -> {mediator1 -> mediator2} -> outcome_int  (serial mediators, joint effects)
+#>   Products: treatment x mediator1 (m* = 0)
+#>     mediator1 a* = +0.5826   b = +0.4465   t3 = +0.4906
+#>     mediator2 a* = +0.4248   b = +0.2590
+#>   c' (t1) = +0.1748   CDE = +0.1748   NDE = +0.2197
+#>   Joint NIE (all paths through mediator1, mediator2) = +0.6560
+#>   Total = +0.8757   |   n = 400
+
+generics::tidy(med_joint, type = "effects", conf.int = TRUE)
+#> # A tibble: 4 × 5
+#>   term  estimate std.error conf.low conf.high
+#>   <chr>    <dbl>     <dbl>    <dbl>     <dbl>
+#> 1 cde      0.175     0.113 -0.0468      0.396
+#> 2 nde      0.220     0.116 -0.00710     0.447
+#> 3 nie      0.656     0.116  0.428       0.884
+#> 4 te       0.876     0.135  0.611       1.14
+```
+
+`a*` is each mediator's **total** treatment effect: for `mediator2` it includes the
+path through `mediator1` (`a2 + d * a1`). The joint NIE is
+`(b1 + t3) * a*_1 + b2 * a*_2`; its population value in `mediation_demo` is
+0.585. It is not comparable to the serial `a * d * b` (0.075 on the same data
+without the product), which counts only the path through the full chain.
+
+Standard errors use the delta method over a stacked covariance of all the
+equations, conditional on the observed covariates (the NDE is evaluated at their
+means). For a parametric bootstrap, use `joint_effects()` as the statistic; it
+recomputes the effects from any parameter draw:
+
+```{r}
+#| label: lm-joint-boot
+boot_nie <- bootstrap_mediation(
+  function(theta) joint_effects(med_joint, theta)[["nie"]],
+  method = "parametric", mediation_data = med_joint, n_boot = 2000, seed = 1
+)
+c(boot_nie@ci_lower, boot_nie@ci_upper)
+#> [1] 0.443 0.896
+```
+
+The fit must meet a few requirements, and each violation errors with its cause:
+every model carries the same covariates (a medfit limitation), all models are
+Gaussian identity-link, unweighted, with an intercept, and fit to the same rows,
+every mediator appears in the outcome model, and the treatment is coded 0/1.
+Only outcome-model products written with `:` or `*` are supported; a product in
+a mediator model, between mediators, with a covariate, or inside `I()` errors. A
+product **precomputed as a data column** cannot be recognized from the formula
+and would be ignored silently, so write it in the formula. The identification
+assumptions are stated for the whole mediator vector; see `?JointMediationData`.
+
 ## Extracting from lavaan Models
 
 ### Simple Mediation in SEM

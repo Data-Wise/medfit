@@ -38,6 +38,15 @@
 #' with other medfit functions and dependent packages (probmed, RMediation,
 #' medrobust).
 #'
+#' The class returned depends on the structure. A single mediator gives a
+#' [MediationData] object, or an [InteractionMediationData] object when the
+#' outcome model has a treatment-by-mediator term. A `mediator` vector of
+#' length two or more gives a [SerialMediationData] or [ParallelMediationData]
+#' object; for lm/glm fits whose outcome model has a treatment-by-mediator term
+#' written with `:` or `*`, it gives a [JointMediationData] object with the
+#' joint natural effects of the mediators. Any other product term in a
+#' multi-mediator fit errors.
+#'
 #' @examples
 #' \donttest{
 #' # Extract the mediation structure from fitted lm models, using the

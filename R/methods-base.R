@@ -573,6 +573,100 @@ S7::method(confint, InteractionMediationData) <- function(object,
 }
 
 
+# --- Base-generic methods for JointMediationData ---
+
+#' Extract Coefficients from JointMediationData
+#'
+#' @param object A JointMediationData object
+#' @param type One of `"paths"` (raw path coefficients), `"effects"`
+#'   (cde, nde, nie, total), or `"all"` (raw estimates).
+#' @param ... Additional arguments (ignored)
+#' @return A named numeric vector
+#' @noRd
+S7::method(coef, JointMediationData) <- function(object,
+                                                 type = c("paths", "effects", "all"),
+                                                 ...) {
+  type <- match.arg(type)
+  switch(type,
+    paths = paths(object),
+    effects = c(cde = object@cde, nde = object@nde, nie = object@nie,
+                total = object@total_effect),
+    all = object@estimates
+  )
+}
+
+#' Extract Variance-Covariance Matrix from JointMediationData
+#'
+#' @param object A JointMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A numeric matrix
+#' @noRd
+S7::method(vcov, JointMediationData) <- function(object, ...) {
+  object@vcov
+}
+
+#' Number of Observations from JointMediationData
+#'
+#' @param object A JointMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return Integer: number of observations
+#' @noRd
+S7::method(nobs, JointMediationData) <- function(object, ...) {
+  object@n_obs
+}
+
+#' Confidence Intervals for JointMediationData
+#'
+#' @description
+#' Normal-approximation intervals. `parm = "paths"` covers the raw path
+#' coefficients from `paths()`, with SEs from the diagonal of `@vcov`;
+#' `parm = "effects"` covers CDE, NDE, NIE and TE, with delta-method SEs over
+#' the stacked `@vcov` (conditional on the observed covariates). The effects
+#' warn that the normal approximation may be inaccurate, as for the other
+#' classes.
+#'
+#' @param object A JointMediationData object.
+#' @param parm `"paths"` or `"effects"`.
+#' @param level Confidence level (default 0.95).
+#' @param method `"normal"`, or `"boot"` (directs to [bootstrap_mediation()]).
+#' @param ... Additional arguments (ignored).
+#' @return A two-column matrix of lower/upper bounds.
+#' @noRd
+S7::method(confint, JointMediationData) <- function(object,
+                                                    parm = c("paths", "effects"),
+                                                    level = 0.95,
+                                                    method = c("normal", "boot"),
+                                                    ...) {
+  parm <- match.arg(parm)
+  method <- match.arg(method)
+  if (method == "boot") {
+    stop("Bootstrap CIs are computed via bootstrap_mediation(); see ",
+         "?joint_effects for a parametric recipe.", call. = FALSE)
+  }
+  checkmate::assert_number(level, lower = 0, upper = 1)
+  z <- stats::qnorm(1 - (1 - level) / 2)
+  if (parm == "paths") {
+    coefs <- paths(object)
+    se <- sqrt(diag(object@vcov)[names(coefs)])
+  } else {
+    warning("Normal (delta-method) approximation for the joint effects may be ",
+            "inaccurate; consider bootstrap_mediation() for robust inference.",
+            call. = FALSE)
+    coefs <- c(cde = object@cde, nde = object@nde, nie = object@nie,
+               te = object@total_effect)
+    se <- .effect_se(object, names(coefs))
+  }
+  ci_mat <- cbind(coefs - z * se, coefs + z * se)
+  rownames(ci_mat) <- names(coefs)
+  alpha <- 1 - level
+  colnames(ci_mat) <- c(
+    paste0(format(100 * alpha / 2, digits = 3), " %"),
+    paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
+  )
+  ci_mat
+}
+
+
 # --- Base-generic methods for BootstrapResult ---
 
 #' Extract the Point Estimate from a BootstrapResult

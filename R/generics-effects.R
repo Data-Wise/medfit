@@ -472,6 +472,64 @@ S7::method(decompose, InteractionMediationData) <- function(x, ...) {
   value
 }
 
+#' Joint Effects at a Given Parameter Vector
+#'
+#' @description
+#' Recomputes the joint CDE, NDE, NIE and total effect of a
+#' [JointMediationData] object from a named parameter vector, holding the
+#' object's structure, reference levels (`m_star`) and sample covariate means
+#' fixed. With the default `estimates = object@estimates` it returns the stored
+#' effects. Its main use is as the statistic of a parametric bootstrap: the
+#' draws [bootstrap_mediation()] passes to `statistic_fn` are named like
+#' `@estimates`, and the NDE needs the prefixed intercept and covariate rows
+#' (`m1_`, ..., `y_`) and the covariate means, not only the path aliases.
+#'
+#' @param object A [JointMediationData] object.
+#' @param estimates Named numeric vector containing every prefixed source row
+#'   of `object@estimates` (`m1_...`, `y_...`); alias rows are ignored. A
+#'   missing source row is an error, not a zero.
+#' @return Named numeric vector: `cde`, `nde`, `nie`, `te`.
+#' @examples
+#' d <- mediation_demo
+#' fit <- extract_mediation(
+#'   lm(mediator1 ~ treatment + covariate1 + covariate2, d),
+#'   model_y = lm(outcome_int ~ treatment * mediator1 + mediator2 +
+#'                  covariate1 + covariate2, d),
+#'   treatment = "treatment", mediator = c("mediator1", "mediator2"),
+#'   mediator_models = list(lm(mediator2 ~ treatment + mediator1 +
+#'                               covariate1 + covariate2, d))
+#' )
+#' joint_effects(fit)
+#'
+#' # Parametric bootstrap of the joint NIE
+#' boot <- bootstrap_mediation(
+#'   function(theta) joint_effects(fit, theta)[["nie"]],
+#'   method = "parametric", mediation_data = fit, n_boot = 500, seed = 1
+#' )
+#' boot@ci_lower
+#' boot@ci_upper
+#' @export
+joint_effects <- function(object, estimates = object@estimates) {
+  if (!S7::S7_inherits(object, JointMediationData)) {
+    stop("`object` must be a JointMediationData object.", call. = FALSE)
+  }
+  checkmate::assert_numeric(estimates, any.missing = FALSE, names = "unique",
+                            .var.name = "estimates")
+  .assert_joint_source_rows(object)
+  src <- grep("^(m[0-9]+|y)_", names(object@estimates), value = TRUE)
+  absent <- setdiff(src, names(estimates))
+  if (length(absent) > 0L) {
+    stop("`estimates` must contain every source row of `object@estimates`; ",
+         "missing: ", paste(absent, collapse = ", "), ".", call. = FALSE)
+  }
+  pp <- .joint_parts(object, estimates)
+  ints <- object@interactions
+  nie <- sum(pp$w * pp$big_b1)
+  nde <- pp$theta1 + sum(pp$t3[ints] * pp$mu0[match(ints, object@mediators)])
+  cde <- pp$theta1 + sum(pp$t3[ints] * object@m_star[ints])
+  c(cde = cde, nde = nde, nie = nie, te = nde + nie)
+}
+
 #' @describeIn nie Method for JointMediationData (joint NIE through all
 #'   mediators and every path among them)
 #' @noRd
@@ -507,7 +565,8 @@ S7::method(pm, JointMediationData) <- function(x, ...) {
 #' @noRd
 S7::method(paths, JointMediationData) <- function(x, ...) {
   est <- x@estimates
-  est[grepl("^(a[0-9]+|d[0-9]+|b[0-9]+|theta3_.+|c_prime)$", names(est))]
+  groups <- c("^a[0-9]+$", "^d[0-9]+$", "^b[0-9]+$", "^theta3_.+$", "^c_prime$")
+  est[unlist(lapply(groups, grep, x = names(est)))]
 }
 
 #' @describeIn decompose Method for JointMediationData (CDE, NDE, NIE, total)

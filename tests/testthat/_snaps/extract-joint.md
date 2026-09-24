@@ -85,3 +85,63 @@
             "m2_X", "m2_C", "y_(Intercept)", "y_X", "y_M1", "y_M2", 
             "y_C", "a1", "b1", "a2", "b2", "c_prime")))))
 
+# print() and summary() label the joint NIE and the products
+
+    Code
+      print(objs$serial)
+    Output
+      <JointMediationData>
+        X -> {M1 -> M2} -> Y  (serial mediators, joint effects)
+        Products: X x M2 (m* = 0.5)
+          M1       a* = +0.5138   b = +0.3255
+          M2       a* = +0.5030   b = +0.4062   t3 = +0.3392
+        c' (t1) = +0.0509   CDE = +0.2205   NDE = +0.1339
+        Joint NIE (all paths through M1, M2) = +0.5422
+        Total = +0.6761   |   n = 400
+
+---
+
+    Code
+      print(objs$parallel)
+    Output
+      <JointMediationData>
+        X -> {M1, M2} -> Y  (parallel mediators, joint effects)
+        Products: X x M1 (m* = 0)
+          M1       a* = +0.3939   b = +0.2883   t3 = +0.3090
+          M2       a* = +0.2126   b = +0.4140
+        c' (t1) = +0.2629   CDE = +0.2629   NDE = +0.3635
+        Joint NIE (all paths through M1, M2) = +0.3233
+        Total = +0.6868   |   n = 400
+
+---
+
+    Code
+      print(summary(objs$serial))
+    Output
+      Summary of JointMediationData
+      =============================
+      
+      Serial mediators: X -> {M1 -> M2} -> Y
+      Treatment-by-mediator products: M2 (m* = 0.5)
+      
+      Effects (unit contrast 0 -> 1, covariates at their means):
+                  estimate std.error conf.low conf.high
+      CDE           0.2205    0.1035   0.0178    0.4233
+      NDE           0.1339    0.1095  -0.0807    0.3485
+      NIE (joint)   0.5422    0.1087   0.3292    0.7553
+      Total         0.6761    0.1326   0.4163    0.9360
+        95% normal-approximation intervals; SEs are conditional on the observed covariates.
+        The joint NIE runs through all paths via M1, M2; it has no per-mediator split.
+      
+      Total treatment effect on each mediator (a*):
+          M1     M2 
+      0.5138 0.5030 
+      
+      Path coefficients:
+             a1        a2       d21        b1        b2 theta3_M2   c_prime 
+         0.5138    0.2853    0.4236    0.3255    0.4062    0.3392    0.0509 
+      
+      Sample Size: 400 
+      Converged:   Yes 
+      Source:      stats::lm 
+
