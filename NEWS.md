@@ -72,9 +72,9 @@
 * `extract_mediation()` on a lavaan fit whose paths carry custom labels
   (e.g. `M ~ aa*X`) now fills the alias rows of `@vcov` (`a`, `b`, `c_prime`,
   and the serial, parallel, and interaction aliases) from the labeled
-  parameters. Previously lavaan's label-based parameter names did not match
-  the names the extractors looked for, so those rows and columns were all
-  zero, and `bootstrap_mediation(method = "parametric")` drew a degenerate
+  parameters. Previously the label-based parameter names from lavaan did not
+  match the names the extractors looked for, so those rows and columns were
+  all zero, and `bootstrap_mediation(method = "parametric")` drew a degenerate
   distribution with a zero-width interval. The simple extractor only
   recognized labels equal to `a_label`/`b_label`/`cp_label`; the serial,
   parallel, and interaction extractors recognized no labels at all. All four
