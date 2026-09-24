@@ -78,6 +78,22 @@
 
 ## Bug fixes
 
+* The single-mediator four-way decomposition (`InteractionMediationData`,
+  lm/glm engine) now includes factor covariates in E[M | X = 0]. Covariate
+  means were taken only for numeric data columns named after a coefficient,
+  so a factor's dummy coefficients (e.g. `Gb`, `Gc`) were skipped without
+  a warning. NDE, INTref and the total effect were wrong, and so were their
+  delta-method SEs. The means now come from the mediator model's design
+  matrix, as in `JointMediationData`, and both the point estimates and the
+  gradients use them. Two other cases change for the same reason:
+  transformed covariate terms (e.g. `log(C)`, `poly(C, 2)`) were also
+  skipped and are now included, and when a caller-supplied `data` has rows
+  the mediator model did not use, the means now cover only the estimation
+  sample. Results with plain numeric covariates are unchanged.
+  `fit_mediation()` with an `X * M` outcome formula is fixed as well. The
+  lavaan engine accepts only numeric observed variables, so it is
+  unaffected.
+
 * `fit_mediation(se_type = "sandwich")` now applies the sandwich estimator
   to fits with a treatment-by-mediator interaction. The four-way worker
   ignored `vcov_fun` and always used the model-based `stats::vcov()`, so the

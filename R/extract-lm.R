@@ -734,15 +734,25 @@ S7::method(extract_mediation, glm_class) <- function(
     data <- tryCatch(stats::model.frame(model_m), error = function(e) NULL)
   }
 
+  # A caller-supplied data frame (fit_mediation() passes the raw data) is not a
+  # model frame; record the mediator model's design so the delta-method
+  # gradients can rebuild factor dummies and transformed columns from @data.
+  # (A "terms" attribute would make model.matrix() read it as a model frame.)
+  if (!is.null(data) && is.null(attr(data, "terms"))) {
+    attr(data, "medfit_design") <- list(terms = stats::terms(model_m),
+                                        contrasts = model_m$contrasts,
+                                        xlevels = model_m$xlevels)
+  }
+
   # --- Reference prediction E[M | X = 0]: covariates at their sample means ---
+  # Means are over the mediator model's design columns, so factor dummies
+  # (e.g. Gb, Gc) and transformed terms (e.g. log(C)) are included.
   m_covs <- setdiff(names(coef_m), c("(Intercept)", treatment))
+  mm_m <- tryCatch(stats::model.matrix(model_m), error = function(e) NULL)
+  c_bar <- .interaction_covariate_means(data, m_covs, mm = mm_m)
   m_ref <- beta0
-  if (length(m_covs) > 0 && !is.null(data)) {
-    for (cv in m_covs) {
-      if (cv %in% names(data) && is.numeric(data[[cv]])) {
-        m_ref <- m_ref + unname(coef_m[[cv]]) * mean(data[[cv]], na.rm = TRUE)
-      }
-    }
+  for (cv in m_covs) {
+    m_ref <- m_ref + unname(coef_m[[cv]]) * c_bar[[cv]]
   }
 
   # --- Four-way components (continuous Y, M; binary X) ---
@@ -813,6 +823,58 @@ S7::method(extract_mediation, glm_class) <- function(
     data = data, n_obs = as.integer(n_obs),
     converged = converged, source_package = source_package
   )
+}
+
+
+#' Covariate means for the reference mediator mean (four-way decomposition)
+#'
+#' Sample means of the mediator model's covariate design columns: from `mm`
+#' when given (the extractor passes `model.matrix(model_m)`), else rebuilt
+#' from `dat` -- a model frame via its `terms` attribute, or caller data via
+#' the `medfit_design` attribute the extractor attaches -- else plain numeric
+#' columns of `dat` (e.g. the lavaan data matrix). Uses [mean()] per column so
+#' numeric-covariate results match the column means exactly.
+#'
+#' @param dat Data frame (the object's `@data`), or `NULL`.
+#' @param covs Covariate coefficient names (mediator model, excluding the
+#'   intercept and the treatment).
+#' @param mm Optional design matrix of the mediator model.
+#' @return Named numeric vector over `covs`.
+#' @keywords internal
+.interaction_covariate_means <- function(dat, covs, mm = NULL) { # nolint: object_length_linter.
+  if (length(covs) == 0L) return(stats::setNames(numeric(0), character(0)))
+  col_means <- function(get) {
+    stats::setNames(vapply(covs, get, numeric(1), USE.NAMES = FALSE), covs)
+  }
+  if (is.null(mm) && !is.null(dat)) {
+    mm <- .interaction_design_matrix(dat)
+  }
+  if (!is.null(mm) && all(covs %in% colnames(mm))) {
+    return(col_means(function(cv) mean(mm[, cv])))
+  }
+  if (!is.null(dat) && all(covs %in% names(dat)) &&
+        all(vapply(covs, function(cv) is.numeric(dat[[cv]]), logical(1)))) {
+    return(col_means(function(cv) mean(dat[[cv]], na.rm = TRUE)))
+  }
+  stop("Cannot compute the covariate means for E[M | X = 0] (four-way ",
+       "decomposition) for: ", paste(covs, collapse = ", "), ".", call. = FALSE)
+}
+
+
+# Rebuild the mediator model's design matrix from an object's @data: a model
+# frame carries "terms"; caller data carries the "medfit_design" attribute set
+# by .extract_interaction_mediation_lm(). NULL when neither is available.
+.interaction_design_matrix <- function(dat) {
+  tryCatch({
+    if (!is.null(attr(dat, "terms"))) {
+      stats::model.matrix(attr(dat, "terms"), dat)
+    } else if (!is.null(des <- attr(dat, "medfit_design"))) {
+      mf <- stats::model.frame(des$terms, as.data.frame(dat), xlev = des$xlevels)
+      stats::model.matrix(des$terms, mf, contrasts.arg = des$contrasts)
+    } else {
+      NULL
+    }
+  }, error = function(e) NULL)
 }
 
 
