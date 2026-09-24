@@ -595,3 +595,69 @@ test_that("caller-supplied data with factor and poly() covariates gives the same
                  suppressWarnings(confint(ref, parm = "effects")))
   }
 })
+
+test_that("caller data with rows the models did not use (subset=) gives the same effect SEs", {
+  set.seed(3)
+  n <- 600
+  g <- factor(sample(letters[1:3], n, TRUE))
+  x <- stats::rbinom(n, 1, 0.5)
+  m1 <- x + (g == "b") + stats::rnorm(n)
+  m2 <- x + (g == "c") + stats::rnorm(n)
+  y <- x + m1 + m2 + 0.5 * x * m2 + stats::rnorm(n)
+  d <- data.frame(X = x, M1 = m1, M2 = m2, Y = y, G = g)
+  keep <- seq_len(n) <= 400
+  fit <- function(data) {
+    extract_mediation(
+      stats::lm(M1 ~ X + G, d, subset = keep),
+      mediator_models = list(stats::lm(M2 ~ X + G, d, subset = keep)),
+      model_y = stats::lm(Y ~ X * M2 + M1 + G, d, subset = keep),
+      treatment = "X", mediator = c("M1", "M2"), structure = "parallel",
+      data = data
+    )
+  }
+  ref <- fit(NULL)
+  usr <- fit(d)
+  keys <- c("nie", "nde", "te")
+  expect_equal(c(usr@nie, usr@nde), c(ref@nie, ref@nde))
+  # A rebuild over all rows of d would ignore subset= and shift the means.
+  expect_equal(.effect_se(usr, keys), .effect_se(ref, keys))
+})
+
+test_that(".joint_covariate_means() falls back when no means are stored", {
+  set.seed(4)
+  n <- 300
+  g <- factor(sample(letters[1:3], n, TRUE))
+  x <- stats::rbinom(n, 1, 0.5)
+  cc <- stats::rnorm(n)
+  m1 <- x + (g == "b") + cc + stats::rnorm(n)
+  m2 <- x + stats::rnorm(n)
+  y <- x + m1 + m2 + 0.5 * x * m2 + stats::rnorm(n)
+  d <- data.frame(X = x, M1 = m1, M2 = m2, Y = y, G = g, C = cc)
+  fit <- function(covs, data = NULL) {
+    f <- function(lhs) stats::as.formula(paste(lhs, "+", covs))
+    extract_mediation(
+      stats::lm(f("M1 ~ X"), d), mediator_models = list(stats::lm(f("M2 ~ X"), d)),
+      model_y = stats::lm(f("Y ~ X * M2 + M1"), d),
+      treatment = "X", mediator = c("M1", "M2"), structure = "parallel",
+      data = data
+    )
+  }
+  drop_means <- function(obj) {
+    dat <- obj@data
+    attr(dat, "medfit_covariate_means") <- NULL
+    obj@data <- dat
+    obj
+  }
+  # Model frame: rebuilt from its terms attribute (factor dummies included).
+  obj <- fit("G + C")
+  stored <- attr(obj@data, "medfit_covariate_means")
+  mf <- drop_means(obj)
+  expect_equal(.joint_covariate_means(mf, names(stored)), stored)
+  # Raw numeric covariates: plain column means.
+  num <- drop_means(fit("C", data = d))
+  expect_equal(.joint_covariate_means(num, "C"), c(C = mean(cc)))
+  # Raw data with a factor covariate: no way to rebuild the dummies.
+  fac <- drop_means(fit("G + C", data = d))
+  expect_error(.joint_covariate_means(fac, names(stored)),
+               "cannot rebuild covariate means for: Gb, Gc")
+})
