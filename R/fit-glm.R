@@ -337,6 +337,15 @@ fit_mediation <- function(formula_y,
   # here -- extraction-time -- because the four-way split is computed from the
   # fitted coefficients; contrast the regmedint engine, which hands the same
   # value to its own estimator at fitting time.
+  # extract_mediation() refuses an `m_star` that no four-way fit will use, so
+  # forward it only when formula_y carries the interaction (fit_mediation()
+  # has already rejected a user-supplied m_star without one).
+  if (is.na(.find_interaction_term_formula(formula_y, treatment, mediator))) {
+    return(extract_mediation(
+      object = fit_m, model_y = fit_y, treatment = treatment,
+      mediator = mediator, data = data, vcov_fun = vcov_fun
+    ))
+  }
   extract_mediation(
     object = fit_m,
     model_y = fit_y,

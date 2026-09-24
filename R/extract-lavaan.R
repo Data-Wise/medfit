@@ -143,6 +143,7 @@ extract_mediation_lavaan <- function(object,
   # structure = "auto" (default), infer serial vs parallel from the single SEM's
   # regression rows (mirrors the lm/glm engine's `.classify_multimediator_*`).
   if (length(mediator) > 1L) {
+    if (!missing(m_star)) .stop_on_unused_m_star(treatment, mediator[1L])
     .stop_on_multimediator_products(
       .find_product_terms_lavaan(object, c(treatment, mediator), interaction)
     )
@@ -197,6 +198,7 @@ extract_mediation_lavaan <- function(object,
       standardized = standardized
     ))
   }
+  if (!missing(m_star)) .stop_on_unused_m_star(treatment, mediator)
 
   # --- Simple mediation (scalar mediator): path-label args apply ------------
   checkmate::assert_string(a_label, .var.name = "a_label")

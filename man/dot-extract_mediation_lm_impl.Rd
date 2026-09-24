@@ -15,7 +15,8 @@
   structure = c("auto", "serial", "parallel"),
   decomposition = c("auto", "four_way", "two_way"),
   m_star = 0,
-  vcov_fun = stats::vcov
+  vcov_fun = stats::vcov,
+  m_star_supplied = FALSE
 )
 }
 \arguments{

@@ -49,6 +49,24 @@
 
 ## Bug fixes
 
+* `fit_mediation(se_type = "sandwich")` now applies the sandwich estimator
+  to fits with a treatment-by-mediator interaction. The four-way worker
+  ignored `vcov_fun` and always used the model-based `stats::vcov()`, so the
+  returned `@vcov` was identical to `se_type = "model"`, with no warning. A
+  `vcov_fun` passed to `extract_mediation()` now also reaches serial and
+  parallel fits, which ignored it the same way.
+
+* The four-way decomposition now requires the identity link. A Gaussian
+  `glm()` with another link (e.g. `gaussian(link = "log")`) passed the
+  family check, and the linear four-way formulas were applied to a model that
+  is not linear in its coefficients. It now errors, naming the link.
+
+* `extract_mediation()` now errors when `m_star` is supplied but no four-way
+  decomposition runs (no treatment-by-mediator term, `decomposition =
+  "two_way"`, or several mediators), on both the lm/glm and lavaan paths.
+  The value was previously dropped silently. As in `fit_mediation()`, the
+  check keys on whether `m_star` was given at the call site, not on its value.
+
 * `extract_mediation()` on lm/glm fits now detects products written inside a
   function call, such as `I(X * M)`. R records such a term as an ordinary
   covariate, so it previously bypassed both the multi-mediator product guard

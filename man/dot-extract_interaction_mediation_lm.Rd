@@ -12,7 +12,8 @@
   int_term,
   outcome = NULL,
   data = NULL,
-  m_star = 0
+  m_star = 0,
+  vcov_fun = stats::vcov
 )
 }
 \arguments{

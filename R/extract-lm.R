@@ -138,6 +138,7 @@ S7::method(extract_mediation, lm_class) <- function(
     structure = structure,
     decomposition = decomposition,
     m_star = m_star,
+    m_star_supplied = !missing(m_star),
     vcov_fun = vcov_fun
   )
 }
@@ -172,6 +173,7 @@ S7::method(extract_mediation, glm_class) <- function(
     structure = structure,
     decomposition = decomposition,
     m_star = m_star,
+    m_star_supplied = !missing(m_star),
     vcov_fun = vcov_fun
   )
 }
@@ -202,7 +204,8 @@ S7::method(extract_mediation, glm_class) <- function(
   structure = c("auto", "serial", "parallel"),
   decomposition = c("auto", "four_way", "two_way"),
   m_star = 0,
-  vcov_fun = stats::vcov) {
+  vcov_fun = stats::vcov,
+  m_star_supplied = FALSE) {
 
   structure <- match.arg(structure)
   decomposition <- match.arg(decomposition)
@@ -213,6 +216,7 @@ S7::method(extract_mediation, glm_class) <- function(
   # and there are >= 2 mediators, infer serial vs parallel from the mediator
   # models' predictors. Branch BEFORE the scalar-mediator assertion below.
   if (length(mediator) >= 2L) {
+    if (m_star_supplied) .stop_on_unused_m_star(treatment, mediator[1L])
     .stop_on_multimediator_products(
       .find_product_terms(c(list(model_m), mediator_models, list(model_y)),
                           c(treatment, mediator))
@@ -236,7 +240,8 @@ S7::method(extract_mediation, glm_class) <- function(
         treatment       = treatment,
         mediators       = mediator,
         outcome         = outcome,
-        data            = data
+        data            = data,
+        vcov_fun        = vcov_fun
       ))
     }
     return(.extract_parallel_mediation_lm(
@@ -246,7 +251,8 @@ S7::method(extract_mediation, glm_class) <- function(
       treatment       = treatment,
       mediators       = mediator,
       outcome         = outcome,
-      data            = data
+      data            = data,
+      vcov_fun        = vcov_fun
     ))
   }
 
@@ -279,9 +285,10 @@ S7::method(extract_mediation, glm_class) <- function(
     return(.extract_interaction_mediation_lm(
       model_m = model_m, model_y = model_y, treatment = treatment,
       mediator = mediator, int_term = int_term, outcome = outcome,
-      data = data, m_star = m_star
+      data = data, m_star = m_star, vcov_fun = vcov_fun
     ))
   }
+  if (m_star_supplied) .stop_on_unused_m_star(treatment, mediator)
 
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
 
@@ -559,6 +566,25 @@ S7::method(extract_mediation, glm_class) <- function(
 }
 
 
+#' Error when `m_star` was supplied but no four-way decomposition is run
+#'
+#' `m_star` only enters the four-way decomposition, which needs a single
+#' mediator and a treatment-by-mediator product. A value supplied for any other
+#' fit would be dropped silently, so refuse it. The check keys on whether the
+#' argument was given at the call site, as in [fit_mediation()].
+#'
+#' @param treatment,mediator Variable names, used in the suggested formula.
+#' @keywords internal
+.stop_on_unused_m_star <- function(treatment, mediator) {
+  stop(paste0(
+    "`m_star` applies to the four-way decomposition only, which requires a ",
+    "single mediator and a treatment-by-mediator term (e.g. ", treatment,
+    " * ", mediator, ") that is not disabled by decomposition = 'two_way'. ",
+    "Drop `m_star`, or add the interaction term."
+  ), call. = FALSE)
+}
+
+
 #' Locate a treatment-by-mediator interaction term in an outcome model
 #'
 #' Returns the coefficient name of the `X:M` product term in `model_y`, trying
@@ -609,7 +635,8 @@ S7::method(extract_mediation, glm_class) <- function(
   int_term,
   outcome = NULL,
   data = NULL,
-  m_star = 0) {
+  m_star = 0,
+  vcov_fun = stats::vcov) {
 
   # --- Input validation ---
   checkmate::assert_multi_class(model_m, c("lm", "glm"), .var.name = "object")
@@ -627,6 +654,20 @@ S7::method(extract_mediation, glm_class) <- function(
   if (non_gaussian(model_m) || non_gaussian(model_y)) {
     stop(paste0("Four-way decomposition currently supports continuous (Gaussian) ",
                 "mediator and outcome only; non-Gaussian models are not yet supported."),
+         call. = FALSE)
+  }
+  # The linear four-way formulas also need the identity link: a Gaussian glm
+  # with, say, a log link is non-linear in the coefficients.
+  non_identity <- function(m) {
+    inherits(m, "glm") && !identical(stats::family(m)$link, "identity")
+  }
+  if (non_identity(model_m) || non_identity(model_y)) {
+    links <- vapply(list(model_m, model_y), function(m) {
+      if (inherits(m, "glm")) stats::family(m)$link else "identity"
+    }, character(1))
+    stop(paste0("Four-way decomposition requires the identity link; got ",
+                "link '", links[1L], "' (mediator model) and '", links[2L],
+                "' (outcome model). Refit with gaussian(link = \"identity\")."),
          call. = FALSE)
   }
 
@@ -688,8 +729,8 @@ S7::method(extract_mediation, glm_class) <- function(
   n_src <- n_m + n_y
   vcov_src <- matrix(0, n_src, n_src,
                      dimnames = list(c(names_m, names_y), c(names_m, names_y)))
-  vcov_src[seq_len(n_m), seq_len(n_m)] <- stats::vcov(model_m)
-  vcov_src[(n_m + 1):n_src, (n_m + 1):n_src] <- stats::vcov(model_y)
+  vcov_src[seq_len(n_m), seq_len(n_m)] <- vcov_fun(model_m)
+  vcov_src[(n_m + 1):n_src, (n_m + 1):n_src] <- vcov_fun(model_y)
 
   # Aliases a/b/c_prime/theta3 (+ b0 for the INTref intercept term).
   alias_src <- c(
@@ -783,7 +824,8 @@ S7::method(extract_mediation, glm_class) <- function(
   treatment,
   mediators,
   outcome = NULL,
-  data = NULL) {
+  data = NULL,
+  vcov_fun = stats::vcov) {
 
   # --- Input validation ---
   checkmate::assert_string(treatment, .var.name = "treatment")
@@ -901,7 +943,7 @@ S7::method(extract_mediation, glm_class) <- function(
   for (al in names(alias_val)) estimates[al] <- alias_val[[al]]
 
   # --- Block-diagonal source vcov of all k + 1 models ---
-  vcov_list <- lapply(coef_list, stats::vcov)
+  vcov_list <- lapply(coef_list, vcov_fun)
   src_names <- unlist(Map(function(v, pre) paste0(pre, rownames(v)),
                           vcov_list, prefixes), use.names = FALSE)
   n_src <- length(src_names)
@@ -1054,7 +1096,8 @@ S7::method(extract_mediation, glm_class) <- function(
   treatment,
   mediators,
   outcome = NULL,
-  data = NULL) {
+  data = NULL,
+  vcov_fun = stats::vcov) {
 
   # --- Input validation ---
   checkmate::assert_string(treatment, .var.name = "treatment")
@@ -1153,7 +1196,7 @@ S7::method(extract_mediation, glm_class) <- function(
   for (al in names(alias_val)) estimates[al] <- alias_val[[al]]
 
   # --- Block-diagonal source vcov of all k + 1 models ---
-  vcov_list <- lapply(coef_list, stats::vcov)
+  vcov_list <- lapply(coef_list, vcov_fun)
   src_names <- unlist(Map(function(v, pre) paste0(pre, rownames(v)),
                           vcov_list, prefixes), use.names = FALSE)
   n_src <- length(src_names)
