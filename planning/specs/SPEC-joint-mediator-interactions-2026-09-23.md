@@ -1,6 +1,7 @@
 # Spec: joint natural effects for serial and parallel mediators with exposure–mediator products (D8(b))
 
-**Date:** 2026-09-23 · **Status:** draft, awaiting approval
+**Date:** 2026-09-23 · **Status:** draft, grilled (G1–G6 folded in), awaiting approval
+**Grill:** [GRILL-joint-mediator-interactions-2026-09-23.md](GRILL-joint-mediator-interactions-2026-09-23.md)
 **Origin:** D8(b) in [GRILL-bundled-example-data-2026-09-23.md](GRILL-bundled-example-data-2026-09-23.md).
 It replaces part of the D8(a) guard (PR #62, `aa3362c`), which today makes every multi-mediator
 extraction with a product term error.
@@ -81,16 +82,19 @@ delta-method formulas are possible but would need deriving case by case. See the
 2. **Covariate evaluation point.** NDE depends on `c`. medfit evaluates it at the sample covariate
    means, the convention `extract_mediation()` already uses for the single-mediator four-way path
    (`R/extract-lm.R`, the `m_ref` computation near line 615). This is stated in the docs.
-3. **Joint vcov for delta-method SEs.** medfit's lm chains use a vcov that is block-diagonal across
-   equations.
-   - For a **serial** chain, each model conditions on everything earlier, so the joint likelihood
-     factorizes into separately parameterized pieces and the block-diagonal vcov is asymptotically
-     correct.
-   - For **parallel** mediators with correlated residuals given `(X, C)`, it is not. Cross-equation
-     covariance of the `β1(i)` is ignored. That is the same limitation the existing parallel class
-     already documents.
-   *Test:* serial delta-method SEs match nonparametric bootstrap SDs within 3%. A parallel fixture
-   with correlated mediator errors shows the expected divergence, and the docs name it.
+3. **Joint vcov for delta-method SEs (G2).** The existing lm chains use a vcov that is
+   block-diagonal across equations. That is wrong for parallel mediators with correlated
+   residuals. `JointMediationData` fills the cross-equation blocks with the stacked-OLS covariance
+   `σ̂_ij (Xi'Xi)⁻¹ Xi'Xj (Xj'Xj)⁻¹`, where `σ̂_ij` is the mean residual cross-product.
+   - When a residual lies in another equation's column space, `σ̂_ij = 0` exactly. That holds for
+     a serial chain with identical covariate sets (G4), and for the outcome equation against every
+     mediator equation.
+   - So only parallel mediator–mediator blocks are nonzero.
+   - All models must use the same rows; error otherwise.
+   - Existing classes are untouched.
+   *Test:* delta-method SEs match nonparametric bootstrap SDs within 3% for **both** structures,
+   including a parallel fixture with correlated mediator errors. The serial cross-blocks are zero
+   to 1e-10.
 
 ## Behavior
 
@@ -98,7 +102,9 @@ delta-method formulas are possible but would need deriving case by case. See the
   - With **no product terms**: unchanged. Returns `SerialMediationData` or
     `ParallelMediationData`.
   - With **only exposure × mediator products in the outcome model**, a Gaussian outcome and
-    Gaussian mediator models: returns a new **`JointMediationData`** object (name is an open question).
+    Gaussian mediator models: returns a new **`JointMediationData`** object.
+  - **Every model must carry the same covariate set** after removing the treatment and the
+    mediators (G4). Otherwise error, naming the differing terms.
   - With any other product the error stays, with the message narrowed to what is still
     unsupported. That covers:
     - a product in a mediator model,
@@ -107,9 +113,13 @@ delta-method formulas are possible but would need deriving case by case. See the
     - an exposure × covariate or mediator × covariate product,
     - non-Gaussian families,
     - any lavaan multi-mediator fit with products.
-- New argument behavior: `m_star` accepts a length-K vector for the CDE (default `0` for each
-  mediator). A scalar is recycled. Supplying `m_star` when no product is present remains an error,
-  as it is today for single-mediator fits.
+- New argument behavior (G3): `m_star` is a scalar (applied to every interacting mediator) or a
+  named vector keyed by the interacting mediators only, such as `m_star = c(M2 = 1)`. Unknown or
+  non-interacting names error. The default is `0`. Supplying `m_star` when no product is present
+  remains an error, as it is today for single-mediator fits.
+- **The NIE's meaning changes, and this is labeled (G1).** Without a product, `nie()` on a serial
+  fit is the chain-only `a*d*b`. The joint NIE counts every mediated path. `print()` and the docs
+  say "joint NIE (all paths through M1..MK)", and a test pins the difference.
 - `nie()`, `nde()`, `te()`, `pm()` return the joint effects. `decompose()` returns CDE/NDE/NIE/TE.
   `paths()` returns the coefficients the effects depend on.
 - `print()`, `summary()`, `confint(parm = "effects")`, `tidy()`, `glance()` work, and follow the
@@ -120,7 +130,7 @@ delta-method formulas are possible but would need deriving case by case. See the
     a named alias row in `@vcov`.
   - `method = "nonparametric"` works through the user's own refit function, as today.
 
-## Class sketch (final names settled in the plan)
+## Class sketch
 
 ```r
 JointMediationData <- S7::new_class(
@@ -134,7 +144,7 @@ JointMediationData <- S7::new_class(
     interactions = S7::class_character,   # mediators carrying an X x M product
     cde = S7::class_numeric, nde = S7::class_numeric,
     nie = S7::class_numeric, total_effect = S7::class_numeric,
-    m_star   = S7::class_numeric,         # length K
+    m_star   = S7::class_numeric,         # named by interacting mediators (G3)
     estimates = S7::class_numeric,        # named, with alias rows
     vcov      = S7::class_any,            # named matrix matching estimates
     n = S7::class_integer
@@ -142,8 +152,8 @@ JointMediationData <- S7::new_class(
   validator = function(self) {
     if (abs(self@total_effect - (self@nde + self@nie)) > 1e-10)
       return("total_effect must equal nde + nie")
-    if (length(self@m_star) != length(self@mediators))
-      return("m_star must have one value per mediator")
+    if (!setequal(names(self@m_star), self@interactions))
+      return("m_star must be named by exactly the interacting mediators")
     NULL
   }
 )
@@ -208,9 +218,9 @@ under test.
      the existing serial/parallel NIE. This check is qualitative.
 4. **Serial propagation identity.** This is medfit step 1 above: an exact 1e-10 match to direct
    `M(i) ~ X + C` OLS.
-5. **SE oracle.** This is medfit step 3 above. Serial delta-method SEs are within 3% of
-   nonparametric bootstrap SDs (5,000 reps). Parallel with correlated errors diverges, and the test
-   asserts the documented direction.
+5. **SE oracle.** This is medfit step 3 above. Delta-method SEs are within 3% of nonparametric
+   bootstrap SDs (5,000 reps) for serial and for parallel with correlated mediator errors. Serial
+   cross-blocks are zero to 1e-10. Models with different rows error.
 6. **Guard.** Each still-unsupported product type errors with its term named, on lm and glm. lavaan
    multi-mediator with products still errors. No-product fits are unchanged: snapshot of the
    existing serial/parallel outputs.
@@ -219,7 +229,12 @@ under test.
    - `confint()` equals `tidy(conf.int = TRUE)`.
    - Parametric bootstrap runs on the alias names.
    - The validator rejects a bad `total_effect` and a wrong-length `m_star`.
-8. **Positive control.** Flip the sign of one `θ3(i)` term in the NIE; oracles 1 and 2 must fail.
+8. **G1 pin, G3 and G4.**
+   - With θ3 = 0 in the data-generating process, the joint NIE equals the sum over all mediated
+     paths and differs from `a*d*b`.
+   - A non-interacting or unknown `m_star` name errors.
+   - Differing covariate sets error, naming the terms.
+9. **Positive control.** Flip the sign of one `θ3(i)` term in the NIE; oracles 1 and 2 must fail.
 
 ## Boundaries
 
@@ -242,20 +257,27 @@ under test.
 - The D8 motivating case works: a serial fit with a treatment × mediator1 product (the GRILL D8 reproduction:
   coefficient 0.82, n = 5000) returns `JointMediationData` whose NIE/NDE pass oracles 1–2.
 - Every still-unsupported product still errors, naming the term.
-- All 8 test groups pass. Full suite: 0 failed, 0 errors. Lint adds no hits. Strict check 0/0 with
+- All 9 test groups pass. Full suite: 0 failed, 0 errors. Lint adds no hits. Strict check 0/0 with
   only the Date NOTE.
-- Docs state the estimand (joint, no per-path split), the whole-vector assumptions, the covariate
-  evaluation point and the parallel-vcov limitation.
+- Docs state the estimand (joint, no per-path split), the NIE-meaning difference from the
+  no-product serial class (G1), the whole-vector assumptions, the identical-covariate-set
+  requirement and the covariate evaluation point.
 
-## Open questions (for the approval step)
+## Delivery (G5)
 
-1. **Class name:** `JointMediationData` (recommended: it names the estimand) or something like
-   `MultiMediatorInteractionData`?
-2. **Delta-method gradients:** the serial NIE depends on chain coefficients through propagated
-   means. Should the gradients be analytic (recommended, matching `.effect_gradients()`) or computed
-   by internal central differences?
-3. **A single-mediator four-way analog** (CDE / INTref / INTmed / PIE for K ≥ 2) is not in the paper
-   read. It stays out unless a verified source is found.
+- **PR A:** class, extractor, guard narrowing, cross-equation vcov, `.effect_gradients()` and the
+  effect generics. It carries test groups 1–6, 8 and 9.
+- **PR B:** `print`/`summary`/`confint`/`tidy`/`glance`, bootstrap aliases (test group 7), NEWS,
+  pkgdown and the Model Extraction section.
+
+## Resolved questions (G6)
+
+1. **Class name:** `JointMediationData`.
+2. **Gradients:** analytic, by the chain rule through the propagated means.
+3. **A four-way analog for K ≥ 2:** out unless a verified source is found.
+4. **Covariate evaluation:** at the sample means, which equals the population-average effect
+   because the effects are linear in `c`. The means are treated as fixed in the delta method, as in
+   the four-way path.
 
 ## References
 
