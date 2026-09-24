@@ -881,11 +881,12 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param object Fitted lm/glm for the first mediator (`M1 ~ X + ...`).
 #' @param mediator_models List (length `k - 1`) of fitted lm/glm models for
 #'   mediators 2..k (`M2 ~ M1 + ...`, ..., `Mk ~ M(k-1) + ...`), in chain order.
-#' @param model_y Fitted lm/glm for the outcome. Only `Mk`'s coefficient is read
-#'   as `b`, but the model should include `X` and every earlier mediator
-#'   (`Y ~ X + M1 + ... + Mk + ...`); omitting an earlier mediator that also
-#'   affects `Y` biases `b`. The serial indirect effect `a * d * b` is then the
-#'   effect through the full chain only.
+#' @param model_y Fitted lm/glm for the outcome. `Mk`'s coefficient is read as
+#'   `b`; the model should include `X` and every earlier mediator
+#'   (`Y ~ X + M1 + ... + Mk + ...`), whose coefficients are stored as the
+#'   skip-path aliases `b1..b{k-1}`. Omitting an earlier mediator that also
+#'   affects `Y` biases `b`. `a * d * b` is the effect through the full chain
+#'   only; `te()` sums every path.
 #' @param treatment Character scalar: treatment variable name.
 #' @param mediators Character vector (length >= 2): mediator names in causal
 #'   order (`M1 -> M2 -> ... -> Mk`).

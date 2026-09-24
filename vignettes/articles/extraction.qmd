@@ -189,8 +189,18 @@ med_serial_lm <- extract_mediation(
   mediator_models = list(fit_m2)  # the remaining k minus 1 mediator models
 )
 
-# Serial indirect effect: a * d1 * b
-med_serial_lm@a_path * med_serial_lm@d_path * med_serial_lm@b_path
+# Serial indirect effect through the full chain: a * d1 * b
+nie(med_serial_lm)
+#> Natural Indirect Effect (NIE): 0.07545
+
+# Total indirect effect: every path through at least one mediator
+nie(med_serial_lm, type = "total")
+#> Natural Indirect Effect (NIE): 0.3674
+
+# Total effect over every path; it equals the treatment coefficient when the
+# outcome is regressed on the treatment and both covariates alone
+te(med_serial_lm)
+#> Total Effect (TE): 0.5386
 ```
 
 Include the treatment and every earlier mediator in each downstream model, as
@@ -200,7 +210,9 @@ outcome model without it (`outcome ~ treatment + mediator2 + ...`) confounds
 `b`: `mediator1` is a common cause of `mediator2` and `outcome`. The product
 `a * d1 * b` is then the effect through the full chain
 `treatment -> mediator1 -> mediator2 -> outcome` only; the direct
-`mediator1 -> outcome` path is not part of it.
+`mediator1 -> outcome` path is not part of it. `nie(type = "total")` adds the
+paths that skip a mediator, and `te()` and `pm()` use every path, so here the
+chain carries about 0.08 of a 0.37 total indirect effect.
 
 The order of `mediator_models` is cross-checked against the `mediator` vector:
 each model's response and predecessor are validated, so a misordered list
@@ -212,15 +224,17 @@ fails fast with an informative error rather than silently producing wrong
 
 An lm/glm serial chain estimates each equation **separately**, so the combined
 covariance is **block-diagonal** across chain paths: `cov(a, d_i)`,
-`cov(d_i, b)`, and `cov(d_i, d_j)` are all zero by construction. (The
-within-outcome-equation covariance, e.g. `cov(b, c')`, is still preserved.)
+`cov(d_i, b)`, and `cov(d_i, d_j)` are stored as zero. For least squares this
+is exact when each downstream equation contains every regressor of the
+earlier ones, as recommended above. (The within-outcome-equation covariance,
+e.g. `cov(b, c')`, is preserved.)
 
-A single lavaan `sem()` fit of the *same data* estimates all equations jointly
-and yields the **full** covariance among chain paths. Because the serial
-indirect-effect standard error depends on these off-diagonal covariances, the
-CI from an lm chain will generally differ from — and is often tighter than —
-the lavaan fit. This is correct given the different estimators; just be aware
-that the engine choice changes the interval for identical data.
+A single lavaan `sem()` fit of the *same equations* estimates them jointly by
+maximum likelihood. Its covariances among chain paths are then also zero, so
+the two engines' intervals differ only by the small-sample difference between
+the OLS and ML variance estimates. They can differ more when the lavaan model
+specifies different equations (for example, omits a path that skips a
+mediator) or adds residual covariances.
 :::
 
 ### Parallel Mediation with lm/glm

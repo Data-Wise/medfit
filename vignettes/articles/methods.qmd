@@ -256,8 +256,10 @@ one gradient builder per class, shared by `confint(parm = "effects")`,
 |---|---|---|
 | Simple | NIE $= ab$ | $\partial/\partial a = b$, $\partial/\partial b = a$ |
 | Serial | NIE $= a \prod d_j \, b$ | each factor: the product of the others |
+| Serial | TE $= [(I - B)^{-1}]_{Y,X}$ | on each path $f \to t$: $[(I - B)^{-1}]_{Y,t} \, [(I - B)^{-1}]_{f,X}$, the sum of the path products through it with it removed; the total NIE drops $c'$ |
 | Parallel | NIE $= \sum a_j b_j$ | $\partial/\partial a_j = b_j$, $\partial/\partial b_j = a_j$ |
-| all three | NDE $= c'$; TE | $1$ on $c'$; the sum of the two gradients |
+| all three | NDE $= c'$ | $1$ on $c'$ |
+| Simple, parallel | TE | the sum of the NIE and NDE gradients |
 | Four-way | CDE, INT<sub>ref</sub>, INT<sub>med</sub>, PIE | in $\theta_1, \theta_2, \theta_3, \beta_0, \beta_1$ and the covariate coefficients (weighted by $\bar c$) |
 | Joint | NIE | $\lambda_j$ on $\beta_{1j}$, $\lambda_i \beta^*_{1j}$ on $d_{ij}$, $\beta^*_{1i}$ on $\theta_{2i}$ and $\theta_{3i}$ |
 | Joint | NDE | $1$ on $\theta_1$, $\mu^*_{0i}$ on $\theta_{3i}$, $\kappa_j$ on $\beta_{0j}$, $\kappa_j \bar c$ on $\gamma_j$, $\kappa_i \mu^*_{0j}$ on $d_{ij}$ |

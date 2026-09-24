@@ -25,7 +25,7 @@ Status key: **fixed** (in this branch) · **open** (not addressed here).
 | Hidden lm roxygen stale (`mediator_models` "serial only"; covariance "independent by construction") | **fixed** |
 | `?extract_mediation_lavaan`: `decomposition`, `interaction`, `m_star` undocumented; `@return` omits interaction | **fixed** |
 | `nde`/`te`/`pm` claim `BootstrapResult` support; phantom "CI attributes" in `@return` | **fixed** |
-| `?SerialMediationData` calls `a*d*b` "the total indirect effect"; `te()`/`pm()` silently chain-only | **fixed (docs)**; behavior change is **open** (separate task) |
+| `?SerialMediationData` calls `a*d*b` "the total indirect effect"; `te()`/`pm()` silently chain-only | **fixed**: docs in #79; `te()`/`pm()` now sum every path (#81) |
 | `glance()`, `coef()`, `vcov()`, `confint()`, `nobs()` undocumented | **fixed**: `?tidy.S7_object` |
 | `confint()` error advertises "specific parameter names" (unsupported) | **fixed** (message) |
 | `?fit_mediation`: no link-scale caveat, no identity-link requirement for the four-way model, no references | **fixed** |
@@ -59,9 +59,9 @@ Status key: **fixed** (in this branch) · **open** (not addressed here).
 
 ## 5. Code findings surfaced by the audit (not fixed in a docs PR)
 
-- `te()`/`pm()` for `SerialMediationData` add `c'` to the chain-only effect,
-  so they are not the total effect when paths skip a mediator. Documented here;
-  whether to change the behavior is a separate decision.
-- Four-way NDE ignores factor covariates in `E[M | X = 0, cbar]` (already
-  tracked as its own task).
+- `te()`/`pm()` for `SerialMediationData` added `c'` to the chain-only effect,
+  so they were not the total effect when paths skip a mediator. **Fixed** in
+  #81: they now sum every path; `nie(type = "total")` added.
+- Four-way NDE ignored factor covariates in `E[M | X = 0, cbar]`. **Fixed** in
+  #78 (design-column means, case-weighted when weights are supplied).
 - lm/glm `@vcov` for parallel mediators omits `Cov(a_j, a_j')`; documented.
