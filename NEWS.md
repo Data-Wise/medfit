@@ -100,8 +100,11 @@
   warning from `te()` and `pm()`, because assuming zero would reproduce the
   bug. For glm fits with a non-identity link, the path sum is on the
   linear-predictor scale, as it already is for `MediationData`. `quick()` now
-  prints the chain and total NIE side by side. No mediationverse package calls
-  serial `te()` or `pm()`.
+  prints the chain and total NIE side by side. Downstream impact: none for
+  probmed (imports only `extract_mediation()`) or RMediation (its serial
+  `ci()` reads `@a_path`, `@d_path` and `@b_path`, which are unchanged);
+  neither calls serial `te()` or `pm()`. Code that stored serial `te()` or
+  `pm()` values from medfit 0.4.0 or earlier will see different numbers.
 * `tidy(<SerialMediationData>, type = "effects")` no longer errors on
   mismatched row counts.
 
