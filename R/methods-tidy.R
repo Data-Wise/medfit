@@ -248,9 +248,15 @@ glance.S7_object <- function(x, ...) {
   path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
   # paths() names the d paths by mediator pair (d, or d21, d32, ...);
   # @vcov aliases them d1..dk
-  path_alias <- c("a", paste0("d", seq_along(x@d_path)), "b", "c_prime")
+  path_alias <- if (!is.null(path_vec)) {
+    c("a", paste0("d", seq_along(x@d_path)), "b", "c_prime")
+  }
   effect_vec <- if (type %in% c("all", "effects")) {
-    c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)), te = as.numeric(te(x)))
+    # nie: chain-specific (a * d1 * ... * b); nie_total + nde = te (all paths)
+    te_val <- as.numeric(te(x))
+    nde_val <- as.numeric(nde(x))
+    c(nie = as.numeric(nie(x)), nie_total = te_val - nde_val,
+      nde = nde_val, te = te_val)
   }
   .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level,
                       path_alias = path_alias)
@@ -264,11 +270,15 @@ glance.S7_object <- function(x, ...) {
 #'
 #' @noRd
 .glance_serial_mediation_data <- function(x, ...) {
+  # One te() call: nie_total and pm derive from it (one warning when unavailable)
+  te_val <- as.numeric(te(x))
+  nde_val <- as.numeric(nde(x))
   result <- data.frame(
     nie = as.numeric(nie(x)),
-    nde = as.numeric(nde(x)),
-    te = as.numeric(te(x)),
-    pm = as.numeric(pm(x)),
+    nie_total = te_val - nde_val,
+    nde = nde_val,
+    te = te_val,
+    pm = as.numeric(.serial_pm_from_total(te_val, x@c_prime)),
     n_mediators = length(x@mediators),
     nobs = nobs(x),
     converged = x@converged,

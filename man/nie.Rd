@@ -12,7 +12,9 @@ nie(x, ...)
 object. For a \code{BootstrapResult}, \code{nie()} returns the bootstrapped point
 estimate (with a warning if the statistic was not an NIE).}
 
-\item{...}{Additional arguments passed to methods}
+\item{...}{Additional arguments passed to methods. For a
+\code{SerialMediationData}, \code{type = c("chain", "total")} selects the
+chain-specific (default) or the total indirect effect (see Details).}
 }
 \value{
 A numeric scalar of class \code{mediation_effect} carrying a \code{type}
@@ -27,9 +29,13 @@ through the mediator(s).
 The effects are for a unit contrast of the treatment. By class:
 \itemize{
 \item \code{MediationData}: \eqn{NIE = a b}{NIE = a * b}.
-\item \code{SerialMediationData}: the effect through the full chain only,
+\item \code{SerialMediationData}: with \code{type = "chain"} (the default), the
+effect through the full chain only,
 \eqn{NIE = a \, d_1 \cdots d_{k-1} \, b}{NIE = a * d1 * ... * d(k-1) * b};
-paths that skip a mediator are not included.
+with \code{type = "total"}, the total indirect effect, the sum over every
+treatment-to-outcome path through at least one mediator (including paths
+that skip a mediator, such as X -> M2 -> Y), which equals
+\code{te(x) - nde(x)}.
 \item \code{ParallelMediationData}: \eqn{NIE = \sum_j a_j b_j}{NIE = sum(a_j * b_j)}.
 \item \code{InteractionMediationData}: \eqn{NIE = INTmed + PIE =
     (\theta_2 + \theta_3) \beta_1}{NIE = INTmed + PIE = (t2 + t3) * b1}.

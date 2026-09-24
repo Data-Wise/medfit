@@ -154,14 +154,15 @@ test_that("helper matches lavaan := SEs for simple mediation", {
   )
 })
 
+# tot sums every X -> Y path (te() for serial is the full total effect)
 test_that("helper matches lavaan := SEs for serial mediation (2 mediators)", {
   skip_if_not_installed("lavaan")
   expect_lavaan_oracle(
     "mediator1 ~ aa*treatment + covariate1 + covariate2
-     mediator2 ~ dd*mediator1 + treatment + covariate1 + covariate2
-     outcome ~ cp*treatment + mediator1 + bb*mediator2 + covariate1 + covariate2
+     mediator2 ~ dd*mediator1 + sa2*treatment + covariate1 + covariate2
+     outcome ~ cp*treatment + sb1*mediator1 + bb*mediator2 + covariate1 + covariate2
      ind := aa*dd*bb
-     tot := aa*dd*bb + cp",
+     tot := aa*dd*bb + aa*sb1 + sa2*bb + cp",
     "treatment", c("mediator1", "mediator2"), "outcome", mediation_demo
   )
 })
@@ -181,11 +182,12 @@ test_that("helper matches lavaan := SEs for serial mediation (3 mediators)", {
   skip_if_not_installed("lavaan")
   expect_lavaan_oracle(
     "M1 ~ aa*X
-     M2 ~ X + d1*M1
-     M3 ~ X + M1 + d2*M2
-     Y ~ cp*X + M1 + M2 + bb*M3
+     M2 ~ sa2*X + d1*M1
+     M3 ~ sa3*X + s13*M1 + d2*M2
+     Y ~ cp*X + sb1*M1 + sb2*M2 + bb*M3
      ind := aa*d1*d2*bb
-     tot := aa*d1*d2*bb + cp",
+     tot := cp + aa*sb1 + sa2*sb2 + sa3*bb + aa*d1*sb2 + aa*s13*bb +
+            sa2*d2*bb + aa*d1*d2*bb",
     "X", c("M1", "M2", "M3"), "Y", serial3_data()
   )
 })

@@ -77,9 +77,10 @@ chain's path coefficients:
 \item \strong{k mediators (product-of-k+1)}: Indirect = a * d21 * d32 * ... * d(k,k-1) * b
 }
 
-This is the effect through the chain only. Paths that skip a mediator
-(\code{X -> M2}, \code{M1 -> Y}, ...) are not part of it, so \code{te()} (chain effect plus
-\verb{c'}) equals the total effect only when those paths are zero; see \code{\link[=te]{te()}}. With
+This is the effect through the chain only, and what \code{\link[=nie]{nie()}} returns by
+default. Paths that skip a mediator (\code{X -> M2}, \code{M1 -> Y}, ...) are not part
+of it; \code{nie(x, type = "total")} adds them, and \code{\link[=te]{te()}} is the full total
+effect over every path, so \code{pm()} is the total indirect share of it. With
 treatment-by-mediator products in the outcome model, \code{\link[=extract_mediation]{extract_mediation()}}
 returns a \link{JointMediationData} object with the effect through all the
 mediators together.

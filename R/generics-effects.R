@@ -3,7 +3,7 @@
 # This file defines S7 generics and methods for extracting mediation effects:
 # - nie(): Natural Indirect Effect (a * b)
 # - nde(): Natural Direct Effect (c')
-# - te(): Total Effect (nie + nde)
+# - te(): Total Effect (nie + nde; every X -> Y path for serial)
 # - pm(): Proportion Mediated (nie / te)
 # - paths(): All path coefficients
 
@@ -18,7 +18,9 @@
 #'   [InteractionMediationData], [JointMediationData], or [BootstrapResult]
 #'   object. For a `BootstrapResult`, `nie()` returns the bootstrapped point
 #'   estimate (with a warning if the statistic was not an NIE).
-#' @param ... Additional arguments passed to methods
+#' @param ... Additional arguments passed to methods. For a
+#'   `SerialMediationData`, `type = c("chain", "total")` selects the
+#'   chain-specific (default) or the total indirect effect (see Details).
 #'
 #' @return A numeric scalar of class `mediation_effect` carrying a `type`
 #'   attribute. For intervals use [confint()] or [bootstrap_mediation()].
@@ -27,9 +29,13 @@
 #' The effects are for a unit contrast of the treatment. By class:
 #' \itemize{
 #'   \item `MediationData`: \eqn{NIE = a b}{NIE = a * b}.
-#'   \item `SerialMediationData`: the effect through the full chain only,
+#'   \item `SerialMediationData`: with `type = "chain"` (the default), the
+#'     effect through the full chain only,
 #'     \eqn{NIE = a \, d_1 \cdots d_{k-1} \, b}{NIE = a * d1 * ... * d(k-1) * b};
-#'     paths that skip a mediator are not included.
+#'     with `type = "total"`, the total indirect effect, the sum over every
+#'     treatment-to-outcome path through at least one mediator (including paths
+#'     that skip a mediator, such as X -> M2 -> Y), which equals
+#'     `te(x) - nde(x)`.
 #'   \item `ParallelMediationData`: \eqn{NIE = \sum_j a_j b_j}{NIE = sum(a_j * b_j)}.
 #'   \item `InteractionMediationData`: \eqn{NIE = INTmed + PIE =
 #'     (\theta_2 + \theta_3) \beta_1}{NIE = INTmed + PIE = (t2 + t3) * b1}.
@@ -114,14 +120,17 @@ nde <- S7::new_generic("nde", "x")
 #' @details
 #' \deqn{TE = NIE + NDE}{TE = NIE + NDE}
 #'
-#' For a [SerialMediationData] object the NIE is the chain-only effect, so
-#' `te()` returns \eqn{a \, d_1 \cdots d_{k-1} \, b + c'}{a * d1 * ... * b + c'}.
-#' This equals the total effect of the treatment only when every path that
-#' skips a mediator (for example \eqn{X \to M_2}{X -> M2} or
-#' \eqn{M_1 \to Y}{M1 -> Y}) is zero; otherwise it understates or overstates
-#' it. For linear models with the same covariates, the total effect is the
-#' treatment coefficient of the outcome regressed on the treatment and
-#' covariates alone.
+#' For a [SerialMediationData] object the total effect is the sum over
+#' every directed X-to-Y path in the fitted models: the direct path, the full
+#' chain, and every path that skips a mediator (for two mediators,
+#' \eqn{c' + a_1 b_1 + a_2 b_2 + a_1 d_{21} b_2}{c' + a1*b1 + a2*b2 + a1*d21*b2}).
+#' With the same covariates in every equation and linear models this equals
+#' the treatment coefficient of the outcome regressed on the treatment and
+#' covariates alone. A path missing from its model counts as zero; when a path
+#' is in a model but its coefficient was not recorded (a hand-built object),
+#' `te()` returns `NA` with a warning. For glm fits with a non-identity link
+#' the sum of path products is on the linear-predictor scale, as for
+#' [MediationData].
 #'
 #' @examples
 #' med_data <- fit_mediation(
@@ -159,6 +168,10 @@ te <- S7::new_generic("te", "x")
 #' @details
 #' \deqn{PM = \frac{NIE}{TE} = \frac{NIE}{NIE + NDE}}{PM = NIE / TE = NIE / (NIE + NDE)}
 #'
+#' For serial mediation (SerialMediationData) the numerator is the total
+#' indirect effect, `nie(x, type = "total")`, and the denominator the full
+#' total effect from [te()].
+#'
 #' The proportion mediated can be:
 #' \itemize{
 #'   \item Between 0 and 1: Normal mediation
@@ -168,8 +181,7 @@ te <- S7::new_generic("te", "x")
 #' }
 #'
 #' The ratio has no delta-method standard error in medfit; bootstrap it with
-#' [bootstrap_mediation()]. For [SerialMediationData] it inherits the
-#' chain-only numerator and denominator described in [te()].
+#' [bootstrap_mediation()].
 #'
 #' @examples
 #' med_data <- fit_mediation(
@@ -361,10 +373,16 @@ S7::method(paths, MediationData) <- function(x, ...) {
 
 #' @describeIn nie Method for SerialMediationData
 #' @noRd
-S7::method(nie, SerialMediationData) <- function(x, ...) {
-  effect <- x@a_path * prod(x@d_path) * x@b_path
+S7::method(nie, SerialMediationData) <- function(x, type = c("chain", "total"), ...) {
+  type <- match.arg(type)
+  effect <- if (identical(type, "chain")) {
+    x@a_path * prod(x@d_path) * x@b_path
+  } else {
+    .serial_total_effect(x) - x@c_prime
+  }
   class(effect) <- c("mediation_effect", "numeric")
   attr(effect, "type") <- "nie"
+  attr(effect, "nie_type") <- type
   attr(effect, "n_mediators") <- length(x@mediators)
   effect
 }
@@ -381,8 +399,7 @@ S7::method(nde, SerialMediationData) <- function(x, ...) {
 #' @describeIn te Method for SerialMediationData
 #' @noRd
 S7::method(te, SerialMediationData) <- function(x, ...) {
-  indirect <- x@a_path * prod(x@d_path) * x@b_path
-  effect <- indirect + x@c_prime
+  effect <- .serial_total_effect(x)
   class(effect) <- c("mediation_effect", "numeric")
   attr(effect, "type") <- "te"
   effect
@@ -391,19 +408,7 @@ S7::method(te, SerialMediationData) <- function(x, ...) {
 #' @describeIn pm Method for SerialMediationData
 #' @noRd
 S7::method(pm, SerialMediationData) <- function(x, ...) {
-  indirect <- x@a_path * prod(x@d_path) * x@b_path
-  total <- indirect + x@c_prime
-
-  if (abs(total) < .Machine$double.eps) {
-    warning("Total effect is approximately zero; proportion mediated is undefined.",
-            call. = FALSE)
-    return(NA_real_)
-  }
-
-  prop <- indirect / total
-  class(prop) <- c("mediation_effect", "numeric")
-  attr(prop, "type") <- "pm"
-  prop
+  .serial_pm_from_total(.serial_total_effect(x), x@c_prime)
 }
 
 #' @describeIn paths Method for SerialMediationData

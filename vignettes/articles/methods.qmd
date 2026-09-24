@@ -51,7 +51,7 @@ is no longer a natural indirect effect on the outcome scale.
 |---|---|---|
 | one mediator, no product | `MediationData` | $a b$ |
 | one mediator, $X \times M$ in the outcome | `InteractionMediationData` | $\text{INTmed} + \text{PIE}$ |
-| several mediators in a chain, no product | `SerialMediationData` | $a \, d_1 \cdots d_{K-1} \, b$ (chain only) |
+| several mediators in a chain, no product | `SerialMediationData` | $a \, d_1 \cdots d_{K-1} \, b$ (chain; `type = "total"` for all paths) |
 | several mediators, not chained, no product | `ParallelMediationData` | $\sum_j a_j b_j$ |
 | several mediators, $X \times M_i$ in the outcome | `JointMediationData` | joint NIE through all mediators |
 
@@ -80,7 +80,7 @@ treatment.
 
 For a chain $X \to M_1 \to \cdots \to M_K \to Y$ fit as separate regressions
 (each $M_j$ on $X$, the earlier mediators and $C$; the outcome on $X$, all
-mediators and $C$), `SerialMediationData` reports the effect through the
+mediators and $C$), `nie()` reports by default the effect through the
 **full chain only**:
 
 $$
@@ -90,15 +90,27 @@ $$
 where $a$ is the $X$ coefficient of $M_1$, $d_j$ the coefficient of $M_j$ in
 the model for $M_{j+1}$, and $b$ the coefficient of $M_K$ in the outcome model.
 Paths that skip a mediator (for example $X \to M_2 \to Y$, or $M_1 \to Y$
-directly) are not part of it. For the effect through all the mediators
-together, including every such path, see the joint effects below; with two
-mediators and no product the joint NIE is $a_1 b_1 + (a_2 + d \, a_1) b_2$.
+directly) are not part of it. `nie(x, type = "total")` returns the total
+indirect effect, the sum over every path from $X$ to $Y$ through at least one
+mediator; with two mediators it is $a_1 b_1 + a_2 b_2 + a_1 d \, b_2$, the same
+as the joint NIE below when there is no product term.
 
-`te()` for this class adds $c'$ to the chain effect, so it equals the total
-effect only when every skipping path is zero. With linear models and the same
-covariates, the total effect is the treatment coefficient of the outcome
-regressed on the treatment and covariates alone. `pm()` inherits the same
-restriction.
+`te()` is the full total effect, the sum over every directed path from $X$ to
+$Y$, including $c'$:
+
+$$
+\text{TE} = \big[(I - B)^{-1}\big]_{Y,X}, \qquad
+\text{TE} = c' + a_1 b_1 + a_2 b_2 + a_1 d \, b_2 \quad (K = 2),
+$$
+
+where $B$ holds the path coefficients among $(X, M_1, \dots, M_K, Y)$. With
+linear models and the same covariates in every equation it equals the
+treatment coefficient of the outcome regressed on the treatment and covariates
+alone. `pm()` is the total indirect effect divided by `te()`. The skip-path
+coefficients are stored as `a2`, ..., `b1`, ..., and `d1_3`-style aliases in
+`@estimates`, and the delta-method standard error of `te()` differentiates the
+whole sum. A path that is not in its model counts as zero; a hand-built object
+that lists a path without its coefficient gets `NA` and a warning.
 
 A causal reading of the chain effect needs the simple-mediation assumptions
 for every mediator, plus no unmeasured confounding of each mediator–mediator

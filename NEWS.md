@@ -11,9 +11,10 @@
   treatment effect on that mediator, NDE and CDE add the product terms at the
   covariate means and at `m_star`. There is no per-mediator split of the NIE.
   For a serial chain the joint NIE counts every path through the mediators,
-  so it differs from the chain-only `a * d * b` that `SerialMediationData`
-  reports. Standard errors use analytic delta-method gradients and a
-  stacked-OLS covariance that includes the correlation between parallel
+  so it differs from the chain-only `a * d * b` that `nie()` reports by
+  default for `SerialMediationData` (it matches `nie(type = "total")` when
+  there is no product term). Standard errors use analytic delta-method
+  gradients and a stacked-OLS covariance that includes the correlation between parallel
   mediator equations; they are conditional on the observed covariates.
   `nie()`, `nde()`, `te()`, `pm()`, `decompose()`, `paths()`, `print()`,
   `summary()`, `coef()`, `vcov()`, `nobs()`, `confint(parm = "paths" /
@@ -78,6 +79,35 @@
 
 ## Bug fixes
 
+* **Behavior change:** `te()` and `pm()` for `SerialMediationData` now use the
+  full total effect, the sum over every X-to-Y path, instead of only the chain
+  plus the direct effect (`a * d * b + c'`). For the usual specification
+  (`M2 ~ X + M1`, `Y ~ X + M1 + M2`) the old value left out the paths that
+  skip a mediator (X -> M1 -> Y, X -> M2 -> Y) and could be badly off. In one
+  simulated example it gave 0.13 where the true total effect was 0.54. With
+  linear models and the same covariates in every equation, `te()` now equals
+  the treatment coefficient of `lm(Y ~ X + covariates)`. `pm()` is the total
+  indirect effect divided by that total. `nie()` still returns the
+  chain-specific indirect effect by default. The new `nie(x, type = "total")`
+  returns the total indirect effect, `te(x) - nde(x)`. The serial lm/glm and
+  lavaan extractors now record the skip-path coefficients as `a2..ak`
+  (`X -> Mj`), `b1..b{k-1}` (`Mi -> Y`) and `d{i}_{j}` (`Mi -> Mj`, j > i + 1)
+  in `@estimates` and `@vcov`. The delta-method SE of `te` in `confint()` and
+  `tidy()` differentiates the full sum. It matches lavaan `:=` SEs. Serial
+  `tidy()` gains a `nie_total` row, `glance()` gains a `nie_total` column and
+  `coef(type = "effects")` gains `indirect_total`, appended after `total`
+  so existing positions are unchanged. A hand-built object whose
+  predictor lists include a skip path without its coefficient gets `NA` and a
+  warning from `te()` and `pm()`, because assuming zero would reproduce the
+  bug. For glm fits with a non-identity link, the path sum is on the
+  linear-predictor scale, as it already is for `MediationData`. `quick()` now
+  prints the chain and total NIE side by side. Downstream impact: none for
+  probmed (imports only `extract_mediation()`) or RMediation (its serial
+  `ci()` reads `@a_path`, `@d_path` and `@b_path`, which are unchanged);
+  neither calls serial `te()` or `pm()`. Code that stored serial `te()` or
+  `pm()` values from medfit 0.4.0 or earlier will see different numbers.
+* `tidy(<SerialMediationData>, type = "effects")` no longer errors on
+  mismatched row counts.
 * The single-mediator four-way decomposition (`InteractionMediationData`,
   lm/glm engine) now includes factor covariates in E[M | X = 0]. Covariate
   means were taken only for numeric data columns named after a coefficient,
@@ -186,10 +216,6 @@
   estimates; `tidy()`/`glance()` document `glance()` and the `coef()`,
   `vcov()`, `confint()` and `nobs()` methods; bootstrap intervals are stated
   to be percentile intervals.
-
-* `te()` and `pm()` for a `SerialMediationData` object are documented as
-  chain-only: they add `c'` to the chain effect `a * d * b`, which equals the
-  total effect only when paths that skip a mediator are zero.
 
 * Corrected stale examples and statements in the articles and README:
   `confint(parm = "effects")` (not `type =`), tidy output with delta-method

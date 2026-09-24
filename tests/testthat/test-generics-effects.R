@@ -198,8 +198,9 @@ test_that("effect extractors work for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,

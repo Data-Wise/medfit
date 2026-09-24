@@ -80,8 +80,8 @@ The NIE is the effect through the mediators \strong{as a block}: every path from
 the treatment through any mediator, including paths among the mediators. It
 is not split into per-mediator or per-path pieces, and none of its parts
 should be reported as the effect "through M1". For a serial chain it
-therefore differs from the \code{a * d * b} that \link{SerialMediationData} reports,
-which is the effect through the full chain only: with no product term, the
+therefore differs from the default \code{nie()} of a \link{SerialMediationData}
+(\code{a * d * b}, the effect through the full chain only): with no product term, the
 joint NIE of \code{M1 -> M2} is \eqn{a_1 b_1 + (a_2 + d a_1) b_2}{a1*b1 + (a2 + d*a1)*b2},
 not \eqn{a_1 d b_2}{a1*d*b2}. The effects use the unit contrast of a 0/1
 treatment (0 to 1).

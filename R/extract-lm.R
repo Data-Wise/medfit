@@ -1061,6 +1061,24 @@ S7::method(extract_mediation, glm_class) <- function(
     b = paste0("y_", mediators[k]),
     c_prime = paste0("y_", treatment)
   )
+
+  # Paths that skip a chain link (X -> Mj, Mi -> Mj for j > i + 1, Mi -> Y for
+  # i < k) are aliased too, so te() can sum every X -> Y path. A path absent
+  # from its model is a structural zero and gets no alias.
+  skip <- .serial_edges(k)
+  skip <- skip[!skip$chain & skip$alias != "c_prime", , drop = FALSE]
+  node_names <- c(treatment, mediators)
+  for (r in seq_len(nrow(skip))) {
+    to <- skip$to[r]
+    from_nm <- node_names[skip$from[r] + 1L]
+    cf <- if (to > k) coef_y else stats::coef(med_models[[to]])
+    if (!from_nm %in% names(cf)) next
+    alias_val[skip$alias[r]] <- unname(cf[from_nm])
+    alias_src_name[skip$alias[r]] <- paste0(if (to > k) "y_" else paste0("m", to, "_"),
+                                            from_nm)
+    estimates[skip$alias[r]] <- unname(cf[from_nm])
+  }
+
   resolve <- function(nm) {
     if (nm %in% src_names) which(src_names == nm)[1] else NA_integer_
   }

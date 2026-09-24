@@ -255,9 +255,10 @@ S7::S4_register(MediationData)
 #' - **3 mediators (product-of-four)**: Indirect = a * d21 * d32 * b
 #' - **k mediators (product-of-k+1)**: Indirect = a * d21 * d32 * ... * d(k,k-1) * b
 #'
-#' This is the effect through the chain only. Paths that skip a mediator
-#' (`X -> M2`, `M1 -> Y`, ...) are not part of it, so `te()` (chain effect plus
-#' `c'`) equals the total effect only when those paths are zero; see [te()]. With
+#' This is the effect through the chain only, and what [nie()] returns by
+#' default. Paths that skip a mediator (`X -> M2`, `M1 -> Y`, ...) are not part
+#' of it; `nie(x, type = "total")` adds them, and [te()] is the full total
+#' effect over every path, so `pm()` is the total indirect share of it. With
 #' treatment-by-mediator products in the outcome model, [extract_mediation()]
 #' returns a [JointMediationData] object with the effect through all the
 #' mediators together.
@@ -1463,8 +1464,8 @@ S7::method(print, InteractionMediationData) <- function(x, ...) {
 #' the treatment through any mediator, including paths among the mediators. It
 #' is not split into per-mediator or per-path pieces, and none of its parts
 #' should be reported as the effect "through M1". For a serial chain it
-#' therefore differs from the `a * d * b` that [SerialMediationData] reports,
-#' which is the effect through the full chain only: with no product term, the
+#' therefore differs from the default `nie()` of a [SerialMediationData]
+#' (`a * d * b`, the effect through the full chain only): with no product term, the
 #' joint NIE of `M1 -> M2` is \eqn{a_1 b_1 + (a_2 + d a_1) b_2}{a1*b1 + (a2 + d*a1)*b2},
 #' not \eqn{a_1 d b_2}{a1*d*b2}. The effects use the unit contrast of a 0/1
 #' treatment (0 to 1).

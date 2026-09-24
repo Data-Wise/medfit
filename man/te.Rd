@@ -23,14 +23,17 @@ indirect and direct effects.
 \details{
 \deqn{TE = NIE + NDE}{TE = NIE + NDE}
 
-For a \link{SerialMediationData} object the NIE is the chain-only effect, so
-\code{te()} returns \eqn{a \, d_1 \cdots d_{k-1} \, b + c'}{a * d1 * ... * b + c'}.
-This equals the total effect of the treatment only when every path that
-skips a mediator (for example \eqn{X \to M_2}{X -> M2} or
-\eqn{M_1 \to Y}{M1 -> Y}) is zero; otherwise it understates or overstates
-it. For linear models with the same covariates, the total effect is the
-treatment coefficient of the outcome regressed on the treatment and
-covariates alone.
+For a \link{SerialMediationData} object the total effect is the sum over
+every directed X-to-Y path in the fitted models: the direct path, the full
+chain, and every path that skips a mediator (for two mediators,
+\eqn{c' + a_1 b_1 + a_2 b_2 + a_1 d_{21} b_2}{c' + a1*b1 + a2*b2 + a1*d21*b2}).
+With the same covariates in every equation and linear models this equals
+the treatment coefficient of the outcome regressed on the treatment and
+covariates alone. A path missing from its model counts as zero; when a path
+is in a model but its coefficient was not recorded (a hand-built object),
+\code{te()} returns \code{NA} with a warning. For glm fits with a non-identity link
+the sum of path products is on the linear-predictor scale, as for
+\link{MediationData}.
 }
 \examples{
 med_data <- fit_mediation(

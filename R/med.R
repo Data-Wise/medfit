@@ -261,13 +261,18 @@ quick <- function(x, digits = 3, ...) {
 #' @noRd
 .quick_serial_mediation_data <- function(x, digits = 3, ...) {
   # Extract effects
+  # PM uses the total indirect effect, so show it beside the chain NIE; one
+  # te() call feeds both (one warning when the total is unavailable)
   indirect <- as.numeric(nie(x))
+  total <- as.numeric(te(x))
   direct <- as.numeric(nde(x))
-  prop_med <- as.numeric(pm(x))
+  indirect_total <- total - direct
+  prop_med <- as.numeric(.serial_pm_from_total(total, x@c_prime))
   n_mediators <- length(x@mediators)
 
   # Format values
   nie_str <- format(indirect, digits = digits)
+  nie_total_str <- format(indirect_total, digits = digits)
   nde_str <- format(direct, digits = digits)
   pm_str <- format(prop_med * 100, digits = digits)
 
@@ -284,9 +289,10 @@ quick <- function(x, digits = 3, ...) {
 
   # Print one-liner with mediator count
   cat("[", n_mediators, " mediators] ",
-      "NIE =", nie_str, ci_str,
-      "| NDE =", nde_str,
-      "| PM =", pm_str, "%\n", sep = "")
+      "NIE chain = ", nie_str, ci_str,
+      " | NIE total = ", nie_total_str,
+      " | NDE = ", nde_str,
+      " | PM = ", pm_str, "%\n", sep = "")
 
   invisible(x)
 }

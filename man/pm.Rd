@@ -24,6 +24,10 @@ through the mediator(s)).
 \details{
 \deqn{PM = \frac{NIE}{TE} = \frac{NIE}{NIE + NDE}}{PM = NIE / TE = NIE / (NIE + NDE)}
 
+For serial mediation (SerialMediationData) the numerator is the total
+indirect effect, \code{nie(x, type = "total")}, and the denominator the full
+total effect from \code{\link[=te]{te()}}.
+
 The proportion mediated can be:
 \itemize{
 \item Between 0 and 1: Normal mediation
@@ -33,8 +37,7 @@ opposite signs)
 }
 
 The ratio has no delta-method standard error in medfit; bootstrap it with
-\code{\link[=bootstrap_mediation]{bootstrap_mediation()}}. For \link{SerialMediationData} it inherits the
-chain-only numerator and denominator described in \code{\link[=te]{te()}}.
+\code{\link[=bootstrap_mediation]{bootstrap_mediation()}}.
 }
 \examples{
 med_data <- fit_mediation(
