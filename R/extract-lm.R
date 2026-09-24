@@ -38,8 +38,11 @@ glm_class <- S7::new_S3_class("glm")
 #' @param data Data frame: original data (optional, extracted from model if available)
 #' @param ... Additional arguments (ignored)
 #'
-#' @return A [MediationData] object, or a [SerialMediationData] object when
-#'   `mediator` is a character vector of length >= 2 (serial mediation).
+#' @return A [MediationData] object; an [InteractionMediationData] object when
+#'   a single mediator's outcome model has a treatment-by-mediator term; a
+#'   [SerialMediationData] or [ParallelMediationData] object when `mediator`
+#'   has length >= 2; or a [JointMediationData] object when it has length >= 2
+#'   and the outcome model has a treatment-by-mediator term.
 #'
 #' @details
 #' This method extracts mediation structure from separately-fitted linear
@@ -50,6 +53,13 @@ glm_class <- S7::new_S3_class("glm")
 #' For serial mediation (`mediator` length >= 2) it uses `k + 1` models: the
 #' first mediator model in `object`, mediators 2..k in `mediator_models`, and
 #' the outcome model in `model_y`. See [SerialMediationData].
+#'
+#' With two or more mediators, a treatment-by-mediator product in the outcome
+#' model (written with `:` or `*`, e.g. `Y ~ X * M2 + M1 + C`) returns a
+#' [JointMediationData] object with the joint natural effects of the mediators
+#' instead; `m_star` is then a scalar or a vector named by the interacting
+#' mediators. Every other product (in a mediator model, between mediators,
+#' three-way, with a covariate, or inside a function such as `I(X * M)`) errors.
 #'
 #' The method extracts:
 #' - Path coefficients (`a`, `b`, `c'`; plus `d1..d{k-1}` for serial chains)

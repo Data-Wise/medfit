@@ -15,8 +15,14 @@
   reports. Standard errors use analytic delta-method gradients and a
   stacked-OLS covariance that includes the correlation between parallel
   mediator equations; they are conditional on the observed covariates.
-  `nie()`, `nde()`, `te()`, `pm()`, `decompose()`, `paths()`, and
-  `bootstrap_mediation(method = "parametric" / "plugin")` accept the class.
+  `nie()`, `nde()`, `te()`, `pm()`, `decompose()`, `paths()`, `print()`,
+  `summary()`, `coef()`, `vcov()`, `nobs()`, `confint(parm = "paths" /
+  "effects")`, `tidy()` (types `"paths"` and `"effects"`, with delta-method
+  SEs) and `glance()` (adding `structure`, `n_mediators`, `interactions` and
+  `m_star`) support the class. The new `joint_effects()` recomputes the
+  effects at any parameter vector, which makes it the statistic for a
+  parametric `bootstrap_mediation()`. The "Model Extraction" article has a
+  worked example on `mediation_demo$outcome_int`.
   The fit must use Gaussian identity-link models without weights, an
   intercept in each, the same rows and the same covariates in every model, a
   numeric 0/1 treatment, and every mediator in the outcome model; each

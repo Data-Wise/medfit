@@ -1433,6 +1433,56 @@ S7::method(print, InteractionMediationData) <- function(x, ...) {
 #' mediator without a product term. The validator enforces the NIE and CDE
 #' identities, so an object with inconsistent numbers cannot be built.
 #'
+#' ## What the joint NIE is, and is not
+#'
+#' The NIE is the effect through the mediators **as a block**: every path from
+#' the treatment through any mediator, including paths among the mediators. It
+#' is not split into per-mediator or per-path pieces, and none of its parts
+#' should be reported as the effect "through M1". For a serial chain it
+#' therefore differs from the `a * d * b` that [SerialMediationData] reports,
+#' which is the effect through the full chain only: with no product term, the
+#' joint NIE of `M1 -> M2` is \eqn{a_1 b_1 + (a_2 + d a_1) b_2}{a1*b1 + (a2 + d*a1)*b2},
+#' not \eqn{a_1 d b_2}{a1*d*b2}. The effects use the unit contrast of a 0/1
+#' treatment (0 to 1).
+#'
+#' ## Assumptions
+#'
+#' The joint effects are identified under no-unmeasured-confounding assumptions
+#' stated for the whole mediator vector: none for the treatment and outcome,
+#' none for the mediators and the outcome, none for the treatment and the
+#' mediators, and no mediator-outcome confounder affected by the treatment
+#' **outside the mediator vector** (VanderWeele and Vansteelandt 2014). In a
+#' serial chain the earlier mediators are affected by the treatment and
+#' confound the later ones; that is allowed precisely because they are part of
+#' the vector. Mediator-outcome and treatment-mediator confounders must be
+#' controlled for **every** mediator.
+#'
+#' ## medfit's requirements
+#'
+#' - Every model (each mediator model and the outcome model) must carry the
+#'   **same covariates**. This is a medfit limitation that keeps the
+#'   serial-chain algebra and the covariance exact, not a requirement of the
+#'   method; differing sets error, naming the terms.
+#' - The models must be Gaussian with the identity link, unweighted, with an
+#'   intercept, fit to the same rows; every mediator must appear in the outcome
+#'   model; `mediator` lists the mediators in causal order.
+#' - A product must be written in the outcome formula with `:` or `*`. A product
+#'   **precomputed as a data column** (for example `XM <- X * M1` added to the
+#'   data and then used as `Y ~ X + M1 + M2 + XM`) cannot be recognized from the
+#'   formula: medfit treats it as an ordinary covariate and the effects ignore
+#'   the interaction, with no error. Write `X * M1` in the formula instead.
+#'
+#' ## Covariates and standard errors
+#'
+#' The NDE depends on the covariates; it is evaluated at their sample means.
+#' The effects are linear in the covariates, so this equals the sample average
+#' of the per-observation effects. Standard errors use the delta method with
+#' analytic gradients over a stacked-OLS covariance that includes the
+#' correlation between parallel mediator equations. They treat the covariate
+#' means as fixed, so they are conditional on the observed covariates and
+#' slightly understate the uncertainty of a population-average effect. For a
+#' parametric bootstrap use [joint_effects()] as the statistic.
+#'
 #' @param structure Single string, `"serial"` or `"parallel"`.
 #' @param mediators Character vector of mediator names, in causal order.
 #' @param treatment,outcome Single character strings.

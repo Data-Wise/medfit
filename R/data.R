@@ -25,8 +25,9 @@
 #'   \item{outcome}{Numeric. Outcome with no product terms; use it for the
 #'     simple, serial, and parallel models.}
 #'   \item{outcome_int}{Numeric. `outcome` plus a `treatment` by `mediator1`
-#'     interaction; use it only for the interaction (four-way decomposition)
-#'     model with a single mediator.}
+#'     interaction; use it only for models with that interaction: the four-way
+#'     decomposition with a single mediator, or joint effects with several
+#'     mediators ([JointMediationData]).}
 #' }
 #'
 #' @details

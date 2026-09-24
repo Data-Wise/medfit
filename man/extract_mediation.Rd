@@ -46,6 +46,15 @@ Note: OpenMx extraction is planned for a future release.
 All methods return a standardized \link{MediationData} object that can be used
 with other medfit functions and dependent packages (probmed, RMediation,
 medrobust).
+
+The class returned depends on the structure. A single mediator gives a
+\link{MediationData} object, or an \link{InteractionMediationData} object when the
+outcome model has a treatment-by-mediator term. A \code{mediator} vector of
+length two or more gives a \link{SerialMediationData} or \link{ParallelMediationData}
+object; for lm/glm fits whose outcome model has a treatment-by-mediator term
+written with \code{:} or \code{*}, it gives a \link{JointMediationData} object with the
+joint natural effects of the mediators. Any other product term in a
+multi-mediator fit errors.
 }
 \examples{
 \donttest{
