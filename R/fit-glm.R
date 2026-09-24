@@ -53,6 +53,31 @@
 #'   treatment-by-mediator interaction term.
 #'
 #' @details
+#' ## regmedint Engine
+#'
+#' When `engine = "regmedint"`:
+#' - Delegates to `regmedint::regmedint()` (suggested package) for closed-form
+#'   natural (in)direct effects, with or without a treatment-mediator interaction
+#' - Returns [MediationData] or [InteractionMediationData] depending on whether
+#'   `formula_y` contains a treatment-by-mediator interaction term; use
+#'   `engine_args` to override the derived regmedint arguments
+#'
+#' ## Reference Mediator Level
+#'
+#' When the fit yields an [InteractionMediationData], `m_star` fixes the level
+#' \eqn{m^*}{m*} at which the controlled direct effect is read off:
+#' \eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = theta1 + theta3 * m*} and
+#' \eqn{INTref = \theta_3 (E[M \mid X = 0] - m^*)}{INTref = theta3 * (E[M | X = 0] - m*)}.
+#' The two shift in compensating directions, so `nde()`, `nie()`, `te()`, and
+#' `pm()` are invariant to `m_star`; only the CDE/INTref split moves.
+#'
+#' The engines reach the same result by different routes. `engine = "glm"`
+#' applies `m_star` at *extraction* time, after the coefficients are fit;
+#' `engine = "regmedint"` passes it to `regmedint::regmedint()` as `m_cde`,
+#' where it is consumed by that package's closed-form estimator at *fitting*
+#' time. Supplying `m_star` for a fit with no treatment-by-mediator term is an
+#' error, not a silent no-op.
+#'
 #' ## Model Specification
 #'
 #' The function fits two models:

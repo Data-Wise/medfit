@@ -2,7 +2,6 @@
 #
 # This file defines the core S7 generics:
 # - extract_mediation(): Extract mediation structure from fitted models
-# - fit_mediation(): Fit mediation models
 # - bootstrap_mediation(): Perform bootstrap inference
 
 #' Extract Mediation Structure from Fitted Models
@@ -58,124 +57,6 @@ extract_mediation <- S7::new_generic(
   "extract_mediation",
   dispatch_args = "object"
 )
-
-
-#' Fit Mediation Models
-#'
-#' @description
-#' Fit mediation models using a specified modeling engine. This function
-#' provides a convenient formula-based interface for fitting both the
-#' mediator and outcome models simultaneously.
-#'
-#' @param formula_y Formula for outcome model (e.g., `Y ~ X + M + C`)
-#' @param formula_m Formula for mediator model (e.g., `M ~ X + C`)
-#' @param data Data frame containing all variables
-#' @param treatment Character string: name of treatment variable
-#' @param mediator Character string: name of mediator variable
-#' @param engine Character string: modeling engine to use. Options:
-#'   - `"glm"`: Generalized linear models (current)
-#'   - `"lmer"`: Mixed-effects models (future)
-#'   - `"brms"`: Bayesian regression models (future)
-#' @param family_y Family object for outcome model (default: `gaussian()`)
-#' @param family_m Family object for mediator model (default: `gaussian()`)
-#' @param engine_args Named list of engine-specific overrides (default:
-#'   `list()`). See the `fit_mediation()` documentation in `R/fit-glm.R` for
-#'   the names each engine recognizes.
-#' @param m_star Numeric scalar: reference mediator level \eqn{m^*}{m*} for the
-#'   four-way decomposition (default: `0`).
-#' @param ... Additional arguments passed to the engine-specific function
-#'
-#' @return A [MediationData] object containing the fitted mediation structure
-#'
-#' @details
-#' The `fit_mediation()` function fits both the mediator model and outcome
-#' model using the specified engine, then extracts the mediation structure
-#' using [extract_mediation()].
-#'
-#' ## Supported Engines
-#'
-#' **GLM** (`engine = "glm"`):
-#' - Fits models using `stats::glm()`
-#' - Supports all GLM families (gaussian, binomial, poisson, etc.)
-#' - For Gaussian models, extracts residual variances
-#'
-#' **regmedint** (`engine = "regmedint"`):
-#' - Delegates to `regmedint::regmedint()` (suggested package) for closed-form
-#'   natural (in)direct effects, with or without a treatment-mediator interaction
-#' - Returns [MediationData] or [InteractionMediationData] depending on whether
-#'   `formula_y` contains a treatment-by-mediator interaction term; use
-#'   `engine_args` to override the derived regmedint arguments
-#'
-#' ## Reference Mediator Level
-#'
-#' When the fit yields an [InteractionMediationData], `m_star` fixes the level
-#' \eqn{m^*}{m*} at which the controlled direct effect is read off:
-#' \eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = theta1 + theta3 * m*} and
-#' \eqn{INTref = \theta_3 (E[M \mid X = 0] - m^*)}{INTref = theta3 * (E[M | X = 0] - m*)}.
-#' The two shift in compensating directions, so `nde()`, `nie()`, `te()`, and
-#' `pm()` are invariant to `m_star`; only the CDE/INTref split moves.
-#'
-#' The engines reach the same result by different routes. `engine = "glm"`
-#' applies `m_star` at *extraction* time, after the coefficients are fit;
-#' `engine = "regmedint"` passes it to `regmedint::regmedint()` as `m_cde`,
-#' where it is consumed by that package's closed-form estimator at *fitting*
-#' time. Supplying `m_star` for a fit with no treatment-by-mediator term is an
-#' error, not a silent no-op.
-#'
-#' **Future Engines**:
-#' - `"lmer"`: Mixed-effects models via lme4
-#' - `"brms"`: Bayesian models via brms
-#'
-#' ## Model Specification
-#'
-#' The formulas should follow standard R formula syntax:
-#' - `formula_m`: Mediator model (e.g., `M ~ X + C1 + C2`)
-#' - `formula_y`: Outcome model (e.g., `Y ~ X + M + C1 + C2`)
-#'
-#' The mediator must appear in `formula_y`, and the treatment must appear
-#' in both formulas.
-#'
-#' @examples
-#' \dontrun{
-#' # Fit Gaussian mediation model
-#' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M + C,
-#'   formula_m = M ~ X + C,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M",
-#'   engine = "glm"
-#' )
-#'
-#' # Fit with binary outcome
-#' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M + C,
-#'   formula_m = M ~ X + C,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M",
-#'   engine = "glm",
-#'   family_y = binomial()
-#' )
-#' }
-#'
-#' @seealso [MediationData], [extract_mediation()], [bootstrap_mediation()]
-#' @export
-fit_mediation <- function(formula_y,
-                          formula_m,
-                          data,
-                          treatment,
-                          mediator,
-                          engine = "glm",
-                          family_y = stats::gaussian(),
-                          family_m = stats::gaussian(),
-                          engine_args = list(),
-                          m_star = 0,
-                          ...) {
-  # This is a regular function, not an S7 generic
-  # Implementation will be in fit-glm.R and other engine files
-  stop("fit_mediation() not yet implemented. See planning/medfit-roadmap.md")
-}
 
 
 #' Perform Bootstrap Inference for Mediation Statistics

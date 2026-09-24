@@ -82,6 +82,12 @@
 
 ## Documentation
 
+* `?fit_mediation` no longer merges in the placeholder stub left over in
+  `R/aab-generics.R` (removed). The page had two usage blocks, two return
+  values, a duplicated "Model Specification" section, and examples on
+  nonexistent data inside `\dontrun{}`. Its regmedint-engine and
+  reference-mediator-level notes now live with the real function.
+
 * Serial mediation docs now recommend including the treatment and every
   earlier mediator in the outcome model (`Y ~ X + M1 + M2`, not `Y ~ X + M2`).
   Only the last mediator's coefficient becomes the `b` path, but when an
