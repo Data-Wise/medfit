@@ -189,6 +189,11 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param mediator_models List of fitted mediator models 2..k (serial only)
 #' @param outcome Outcome variable name (auto-detected if NULL)
 #' @param data Original data (extracted from model if NULL)
+#' @param structure,decomposition,m_star See [extract_mediation()].
+#' @param vcov_fun Function returning a model's coefficient covariance
+#'   (default [stats::vcov()]); passed to every worker.
+#' @param m_star_supplied Logical: was `m_star` given at the call site? Set by
+#'   the S7 methods from `!missing(m_star)`; an unused supplied value errors.
 #'
 #' @return MediationData object, or SerialMediationData when `mediator` is a
 #'   vector of length >= 2
@@ -624,6 +629,8 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param int_term Character: the interaction coefficient name in `model_y`
 #'   (from [.find_interaction_term()]).
 #' @param m_star Numeric scalar reference mediator level.
+#' @param vcov_fun Function returning a model's coefficient covariance
+#'   (default [stats::vcov()]), e.g. a sandwich estimator.
 #' @inheritParams .extract_serial_mediation_lm
 #' @return An `InteractionMediationData` object.
 #' @keywords internal
@@ -801,6 +808,8 @@ S7::method(extract_mediation, glm_class) <- function(
 #'   order (`M1 -> M2 -> ... -> Mk`).
 #' @param outcome Character scalar, or `NULL` to auto-detect from `model_y`.
 #' @param data Data frame, or `NULL` to take the `object` model frame.
+#' @param vcov_fun Function returning a model's coefficient covariance
+#'   (default [stats::vcov()]), applied to every equation.
 #'
 #' @return A [SerialMediationData] object.
 #'

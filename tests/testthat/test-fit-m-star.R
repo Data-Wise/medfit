@@ -139,6 +139,18 @@ test_that("extract_mediation() refuses an m_star that no four-way fit uses", {
   )
 })
 
+test_that("fit_mediation() does not blame m_star the caller never supplied", {
+  d <- make_int_data()
+  d$X <- factor(ifelse(d$X == 1, "b", "a"))
+  # A factor treatment is unsupported; the error must name the real cause.
+  err <- tryCatch(
+    fit_mediation(Y ~ X * M, M ~ X, data = d, treatment = "X", mediator = "M"),
+    error = function(e) conditionMessage(e)
+  )
+  expect_type(err, "character")
+  expect_false(grepl("m_star", err, fixed = TRUE))
+})
+
 test_that("the lavaan extractor refuses an unused m_star", {
   skip_if_not_installed("lavaan")
   d <- make_int_data()

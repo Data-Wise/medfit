@@ -33,6 +33,9 @@ effect through the full chain only.}
 \item{data}{Data frame, or \code{NULL} to take the \code{object} model frame.}
 
 \item{m_star}{Numeric scalar reference mediator level.}
+
+\item{vcov_fun}{Function returning a model's coefficient covariance
+(default \code{\link[stats:vcov]{stats::vcov()}}), e.g. a sandwich estimator.}
 }
 \value{
 An \code{InteractionMediationData} object.

@@ -34,6 +34,14 @@
 \item{outcome}{Outcome variable name (auto-detected if NULL)}
 
 \item{data}{Original data (extracted from model if NULL)}
+
+\item{structure, decomposition, m_star}{See \code{\link[=extract_mediation]{extract_mediation()}}.}
+
+\item{vcov_fun}{Function returning a model's coefficient covariance
+(default \code{\link[stats:vcov]{stats::vcov()}}); passed to every worker.}
+
+\item{m_star_supplied}{Logical: was \code{m_star} given at the call site? Set by
+the S7 methods from \code{!missing(m_star)}; an unused supplied value errors.}
 }
 \value{
 MediationData object, or SerialMediationData when \code{mediator} is a
