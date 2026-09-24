@@ -556,3 +556,36 @@ test_that("hand-built objects get NA effect SEs from tidy() and summary()", {
   expect_true(all(is.na(generics::tidy(nodata, type = "effects")$std.error)))
   expect_error(suppressWarnings(confint(nodata, parm = "effects")), "no @data")
 })
+
+test_that("caller-supplied data with factor and poly() covariates gives the same effect SEs", {
+  set.seed(2)
+  n <- 500
+  g <- factor(sample(letters[1:3], n, TRUE))
+  x <- stats::rbinom(n, 1, 0.5)
+  w <- stats::rnorm(n)
+  m1 <- x + (g == "b") + w + stats::rnorm(n)
+  m2 <- x + (g == "c") + stats::rnorm(n)
+  y <- x + m1 + m2 + 0.5 * x * m2 + stats::rnorm(n)
+  d <- data.frame(X = x, M1 = m1, M2 = m2, Y = y, G = g, W = w)
+  fit <- function(data, structure) {
+    f_m2 <- if (structure == "serial") M2 ~ X + M1 + G + poly(W, 2) else
+      M2 ~ X + G + poly(W, 2)
+    extract_mediation(
+      stats::lm(M1 ~ X + G + poly(W, 2), d),
+      mediator_models = list(stats::lm(f_m2, d)),
+      model_y = stats::lm(Y ~ X * M2 + M1 + G + poly(W, 2), d),
+      treatment = "X", mediator = c("M1", "M2"), structure = structure,
+      data = data
+    )
+  }
+  keys <- c("nie", "nde", "te")
+  for (structure in c("parallel", "serial")) {
+    ref <- fit(NULL, structure)
+    usr <- fit(d, structure)
+    # Raw data carries no terms attribute: model.matrix() must not see one.
+    expect_null(attr(usr@data, "terms"))
+    expect_equal(c(usr@nie, usr@nde, usr@cde), c(ref@nie, ref@nde, ref@cde))
+    expect_equal(.effect_se(usr, keys), .effect_se(ref, keys))
+    expect_true(all(is.finite(.effect_se(usr, keys))))
+  }
+})

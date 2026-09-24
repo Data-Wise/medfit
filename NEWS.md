@@ -78,6 +78,16 @@
 
 ## Bug fixes
 
+* `JointMediationData` delta-method standard errors (`tidy()`, `summary()`,
+  `confint(parm = "effects")`) no longer fail when `extract_mediation()`
+  receives `data =` and a model has a factor or transformed covariate (e.g.
+  `G` with levels `a`/`b`/`c`, or `poly(W, 2)`). The gradients rebuilt the
+  covariate means from `@data`, which only works for a model frame; raw
+  data raised "cannot rebuild covariate means for: Gb, Gc". The extractor
+  now stores the exact means the point estimate uses on `@data` (attribute
+  `medfit_covariate_means`, the convention of the four-way extractor), so
+  SEs with `data = d` equal those with `data = NULL`.
+
 * `fit_mediation(se_type = "sandwich")` now applies the sandwich estimator
   to fits with a treatment-by-mediator interaction. The four-way worker
   ignored `vcov_fun` and always used the model-based `stats::vcov()`, so the
