@@ -327,10 +327,16 @@ extract_mediation_lavaan <- function(object,
   # structure (variances AND off-diagonal covariances), not just the diagonal
   # variance. This is essential: in single-equation SEM the a/b/c' paths are
   # estimated jointly and their pairwise covariances are non-zero.
+  #
+  # The source is the same parameter-table row each estimate was read from
+  # (a_row / b_row / cp_row), not a path rebuilt from the variable-name
+  # arguments: when the paths were found by label, those arguments need not
+  # name the labeled paths. An absent c' row (zero rows) gives NA.
   source_idx <- .lavaan_alias_source_idx(
     object,
-    lhs = c(a = mediator, b = outcome, c_prime = outcome),
-    rhs = c(a = treatment, b = mediator, c_prime = treatment),
+    lhs = c(a = a_row$lhs[1], b = b_row$lhs[1], c_prime = cp_row$lhs[1]),
+    rhs = c(a = a_row$rhs[1], b = b_row$rhs[1], c_prime = cp_row$rhs[1]),
+    op = c(a_row$op[1], b_row$op[1], cp_row$op[1]),
     orig_names = names(all_coef)
   )
 

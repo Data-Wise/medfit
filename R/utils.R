@@ -30,7 +30,11 @@
 #'   zero-variance placeholder). Must contain an entry for every name in
 #'   `aliases_to_add`.
 #' @param aliases_to_add Character vector of alias names to append as new
-#'   rows/columns (those not already present in `vcov_src`).
+#'   rows/columns (those not already present in `vcov_src`). An alias in
+#'   `source_idx` that is *not* appended, because `vcov_src` already has a
+#'   parameter of that name, must resolve to that same parameter. Otherwise the
+#'   alias estimate and its row would describe different parameters (e.g. a
+#'   lavaan user label `a1` on the path medfit calls `a2`), so this is an error.
 #'
 #' @return A symmetric numeric matrix of dimension
 #'   `nrow(vcov_src) + length(aliases_to_add)`, with the original block intact,
@@ -50,6 +54,24 @@
     dimnames = list(vcov_names, vcov_names)
   )
   vcov_expanded[seq_len(n_orig), seq_len(n_orig)] <- vcov_src
+
+  # An alias already present in vcov_src keeps that parameter's row, so it must
+  # be the alias's own source; a name taken by another parameter would pair the
+  # alias estimate with the wrong variance.
+  for (al in setdiff(names(source_idx), aliases_to_add)) {
+    own <- which(orig_names == al)
+    if (length(own) == 0L) next
+    s_i <- source_idx[[al]]
+    if (is.na(s_i) || !(s_i %in% own)) {
+      stop(sprintf(paste0(
+        "The model already has a parameter named '%s', but it is not the ",
+        "path medfit reports as '%s'%s. Rename that label in the model, or ",
+        "list `mediator` in the order your labels assume."
+      ), al, al,
+      if (is.na(s_i)) "" else sprintf(" (that path is parameter '%s')", orig_names[s_i])),
+      call. = FALSE)
+    }
+  }
 
   # For each new alias, copy the FULL row/column of its source parameter so the
   # alias inherits every covariance the source has with the original block.
