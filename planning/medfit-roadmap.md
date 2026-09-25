@@ -1,7 +1,7 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.4.0 tagged and released on `main`/GitHub** (2026-08-23, not CRAN-submitted). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0. Unreleased on `dev` since 0.4.0 (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Next = **0.5.0 release (proposed)** — checklist in `TODOS.md`; board in `EXTENSIONS-PLAN-2026-06-03.md`.
+**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.5.0 released on `main`/GitHub/r-universe** (2026-09-25, tag `v0.5.0`, not CRAN-submitted by decision). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0 (2026-08-23). 0.5.0 added (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Next = **Ext D (multilevel) spec**; board in `EXTENSIONS-PLAN-2026-06-03.md`.
 **Timeline**: MVP shipped; extensions A ✅, B ✅, C ✅ (0.4.0), D8(b) ✅ (dev); 0.5.0 next; C.1 blocked (CMAverse); D/E brainstormed
 **Last Updated**: 2026-09-24
 
@@ -24,7 +24,7 @@
 **Title**: Infrastructure for Mediation Model Fitting and Extraction
 **Description**: Provides S7-based infrastructure for fitting mediation models, extracting path coefficients, and performing bootstrap inference. Designed as a foundation package for probmed, RMediation, and medrobust.
 
-**Version**: 0.1.0 (MVP); current 0.4.0 (CRAN: 0.3.2), next 0.5.0 (proposed)
+**Version**: 0.1.0 (MVP); current 0.5.0 (CRAN: 0.3.2)
 **License**: GPL-3
 **R Version**: >= 4.1.0
 **Repository**: https://github.com/data-wise/medfit
@@ -1845,8 +1845,8 @@ Integration is successful when:
 
 The original week-by-week plan is complete. Current next actions:
 
-1. **0.5.0 release (proposed)** — checklist in `planning/TODOS.md`
-2. **Ext D (multilevel)** — needs a spec; see `planning/specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
+1. **Ext D (multilevel)** — needs a spec; see `planning/specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
+2. **Next CRAN release** — trigger still open (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
 3. **Ext C.1 (CMAverse)** — blocked; see `planning/EXTENSIONS-PLAN-2026-06-03.md`
 
 ---
@@ -1870,7 +1870,7 @@ The original week-by-week plan is complete. Current next actions:
 
 ---
 
-**Status**: ✅ ALL MVP PHASES COMPLETE + Extensions A, B, C COMPLETE (v0.4.0, GitHub) + D8(b) on dev → v0.3.2 on CRAN; 0.5.0 proposed
+**Status**: ✅ ALL MVP PHASES COMPLETE + Extensions A, B, C COMPLETE (v0.4.0) + D8(b) (v0.5.0, GitHub + r-universe) → v0.3.2 on CRAN
 
 **Completed**:
 - ✅ Phase 1: Package Setup (CI/CD, documentation, Dependabot)
@@ -1885,18 +1885,18 @@ The original week-by-week plan is complete. Current next actions:
 - ✅ Phase 7's structural sibling, Ext A (parallel mediation) — `ParallelMediationData`, lm/glm + lavaan extraction, vignette. PRs #34/#36/#37 merged to dev.
 - ✅ Phase 8: Polish & Release — v0.3.2 accepted + published on CRAN (2026-07-23)
 - ✅ Phase 7c (Ext C): regmedint engine adapter + `m_star` argument (PR #59) → v0.4.0, tagged and released on GitHub 2026-08-23
-- ✅ D8(b): `JointMediationData` + `joint_effects()` (#76/#77, dev)
-- ✅ Post-0.4.0 (dev): `mediation_demo` (#62-#67), effect SEs for all classes (#69-#75), Methods and Formulas article (#79), four-way factor covariates (#78), joint SEs with `data =` (#80), serial total effect (#81, behavior change), `confint()` path alias lookup (#82, behavior change); articles evaluate at site build
+- ✅ D8(b): `JointMediationData` + `joint_effects()` (#76/#77, 0.5.0)
+- ✅ Post-0.4.0 (0.5.0, released 2026-09-25): `mediation_demo` (#62-#67), effect SEs for all classes (#69-#75), Methods and Formulas article (#79), four-way factor covariates (#78), joint SEs with `data =` (#80), serial total effect (#81, behavior change), `confint()` path alias lookup (#82, behavior change); articles evaluate at site build
 
 **Current**:
-- 🚀 v0.3.2 live on CRAN; v0.4.0 on `main`/GitHub; `dev` ahead of `main` with unreleased work
-- 🎨 pkgdown site deployed at https://data-wise.github.io/medfit/ (from `main`; Methods article appears after the next main deploy)
+- 🚀 v0.3.2 live on CRAN (known bugs in pinned #83); v0.5.0 on `main`/GitHub/r-universe
+- 🎨 pkgdown site deployed at https://data-wise.github.io/medfit/ (0.5.0, including the Methods and Formulas article)
 
 **Future Development**:
-- 0.5.0 release (proposed; minor bump for #81/#82) — checklist in `TODOS.md`
+- Next CRAN release (carries 0.5.0's fixes) — trigger open
 - Ext C.1: CMAverse adapter — blocked (not on CRAN; simulation-based effects have no slot)
 - Ext D (multilevel) / Ext E (longitudinal) — brainstormed 2026-08-22, not spec'd
 - Phase 7b design (estimation-engine UI) has no standalone increment; `decompose()` shipped, no `Decomposition` class
 
-**Next Review**: After the 0.5.0 release
+**Next Review**: After the Ext D spec
 **Last Updated**: 2026-09-24

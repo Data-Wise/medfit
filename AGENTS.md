@@ -528,7 +528,7 @@ During `devtools::load_all()`:
 
 ---
 
-**Last Updated**: 2026-09-24
+**Last Updated**: 2026-09-25
 **Maintained by**: medfit development team
 
 **Current status** (2026-09-25): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.5.0** (released 2026-09-25, tag `v0.5.0`; GitHub-only by decision, not submitted to CRAN), a minor bump because two changes alter results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). Also in 0.5.0: `JointMediationData` (#76/#77), the Methods and Formulas article (#79), four-way factor covariates (#78), joint SEs with `data =` (#80). Articles now evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`.

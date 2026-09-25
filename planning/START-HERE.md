@@ -1,7 +1,7 @@
 # START HERE: medfit Package
 
 **Created**: 2025-12-02
-**Status**: 0.3.2 on CRAN; 0.4.0 on main/GitHub; unreleased work on `dev`, next release proposed as 0.5.0
+**Status**: 0.3.2 on CRAN; 0.5.0 on main/GitHub/r-universe (released 2026-09-25, tag `v0.5.0`)
 
 ---
 
@@ -145,8 +145,9 @@ medfit/
 
 ### Immediate
 
-1. **0.5.0 release (proposed)** — minor bump for two behavior changes (#81 serial `te()`/`pm()`,
-   #82 `confint(parm = "paths")`); checklist in `planning/TODOS.md`
+1. **Ext D (multilevel) spec** — see `planning/specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`.
+   0.5.0 shipped 2026-09-25 (GitHub-only); the next CRAN trigger is open
+   (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
 
 2. **After 0.5.0**
    - Ext D (multilevel) spec — see `planning/specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`

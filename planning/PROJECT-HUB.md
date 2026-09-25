@@ -1,10 +1,10 @@
 # 🎯 medfit - Project Control Hub
 
-> **Quick Status:** 🟢 Feature-complete | **CRAN:** 0.3.2 accepted (2026-07-23) | **main:** 0.4.0 (GitHub) | **dev:** unreleased since 0.4.0
+> **Quick Status:** 🟢 Feature-complete | **CRAN:** 0.3.2 accepted (2026-07-23) | **main:** 0.5.0 (GitHub + r-universe, 2026-09-25)
 
-**Last Updated:** 2026-09-24  
-**Current Phase:** 0.3.2 on CRAN; 0.4.0 on main/GitHub (Ext A/B/C); dev adds `JointMediationData`, effect SEs for all classes, `mediation_demo`, two behavior changes (#81, #82)  
-**Next Action:** 0.5.0 release (proposed) — checklist in `TODOS.md`. probmed Stage 2 lives in probmed
+**Last Updated:** 2026-09-25  
+**Current Phase:** 0.5.0 released on main/GitHub/r-universe (tag `v0.5.0`, #84); CRAN still 0.3.2 (known bugs in pinned #83)  
+**Next Action:** Ext D (multilevel) spec. Next CRAN trigger is open. probmed Stage 2 lives in probmed
 
 > **Ecosystem-wide planning** (roadmap, coordination, API/naming design, manifest)
 > lives in the hub: `~/projects/r-packages/mediation-planning/` (start at
@@ -31,13 +31,13 @@ Phase 1: Core API                ███████████████�
 Phase 2: Bootstrap & Tests       ████████████████████ 100% 🟢
 Phase 3: CRAN Preparation        ████████████████████ 100% 🟢
 Phase 4: Extensions (A/B/C, 0.4.0) ████████████████████ 100% 🟢
-Phase 5: D8(b) + fixes (dev)     ████████████████████ 100% 🟢
-Phase 6: 0.5.0 release           ░░░░░░░░░░░░░░░░░░░░   0% ⏳
+Phase 5: D8(b) + fixes           ████████████████████ 100% 🟢
+Phase 6: 0.5.0 release           ████████████████████ 100% 🟢
 ──────────────────────────────────────────────────────────
 Features (Phases 1-5):            ████████████████████ 100% 🟢
 ```
 
-**Status:** 🟢 Feature-complete — 0.5.0 release proposed | **Priority:** P1
+**Status:** 🟢 0.5.0 released (GitHub-only) | **Priority:** P2 (next: Ext D spec)
 
 ---
 
@@ -72,14 +72,11 @@ Features (Phases 1-5):            ███████████████�
 ## 🎯 Active Tasks (This Week)
 
 ### High Priority 🔴
-- [ ] 0.5.0 release (proposed) — full checklist in `TODOS.md`
-  - Version bump + NEWS heading
-  - Strict CRAN check, urlchecker, spelling
-  - Revdep check (probmed Imports medfit)
-  - dev → main, tag, GitHub release
+- [x] 0.5.0 release — GitHub + r-universe, 2026-09-25 (#84, tag `v0.5.0`; checklist in `TODOS.md`)
+- [ ] Ext D (multilevel) spec — see `specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
 
 ### Medium Priority 🟡
-- [ ] Ext D (multilevel) spec — see `specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
+- [ ] Decide the next CRAN trigger (open in `specs/GRILL-0.5.0-release-2026-09-24.md`)
 
 ### Done (original skeleton tasks)
 - [x] fit_mediation() with GLM engine, validation, S7 return
@@ -119,16 +116,7 @@ $ ccrcov          # Check test coverage
 
 **Choose your focus:**
 
-### Option A: Release 0.5.0 ⭐ Recommended
-```
-Goal: Ship dev (#62-#82) as 0.5.0
-Tasks: see TODOS.md checklist
-```
-**Why:** Two behavior changes (#81, #82) fix wrong results; users of 0.4.0 still get the old values
-
----
-
-### Option B: Spec Ext D (multilevel mediation)
+### Option A: Spec Ext D (multilevel mediation) ⭐ Recommended
 ```
 Goal: SPEC for MultilevelMediationData (lme4, 1-1-1 first)
 Source: specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md
@@ -137,11 +125,11 @@ Source: specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md
 
 ---
 
-### Option C: Keep accumulating on dev
+### Option B: Plan the next CRAN release
 ```
-Goal: Hold the release (the 2026-09-23 .STATUS decision)
+Goal: Carry 0.5.0's fixes to CRAN (0.3.2 still has the serial te()/pm() and confint() bugs, #83)
 ```
-**Why:** Fewer releases; but the #81/#82 fixes stay unreleased
+**Why:** Only when a trigger fires (probmed needing >= 0.4.0 on CRAN, or a user report)
 
 ---
 
@@ -212,14 +200,14 @@ Goal: Hold the release (the 2026-09-23 .STATUS decision)
 
 ---
 
-### Phase 5: D8(b) + post-0.4.0 fixes 🟢 COMPLETE (dev, unreleased)
+### Phase 5: D8(b) + post-0.4.0 fixes 🟢 COMPLETE (released in 0.5.0)
 **Status:** #62-#82 merged to dev; see "Completed Recently"
 
 ---
 
-### Phase 6: 0.5.0 Release ⏳ NEXT (proposed)
+### Phase 6: 0.5.0 Release 🟢 COMPLETE (2026-09-25)
 **Goal:** Release the dev work since 0.4.0  
-**Status:** Not started; checklist in `TODOS.md`
+**Status:** GitHub-only by decision (`specs/GRILL-0.5.0-release-2026-09-24.md`); #84 → `4cb0550`, tag `v0.5.0`, r-universe 0.5.0
 
 ---
 
@@ -300,7 +288,7 @@ Goal: Hold the release (the 2026-09-23 .STATUS decision)
 
 ### 2026-09-24 - D8(b) and post-0.4.0 fixes on dev
 - `JointMediationData`, effect SEs for all classes, `mediation_demo`, Methods and Formulas article (#62-#82)
-- Two behavior changes (#81, #82); 0.5.0 proposed
+- Two behavior changes (#81, #82); released in 0.5.0 (2026-09-25)
 
 ### 2026-08-23 - 0.4.0 on GitHub
 - Ext C (regmedint engine) + `m_star` argument; tag `v0.4.0`
@@ -335,6 +323,6 @@ Goal: Hold the release (the 2026-09-23 .STATUS decision)
 
 ---
 
-**Status:** 🟢 Feature-complete; 0.5.0 release proposed  
-**Last Updated:** 2026-09-24  
-**Next Review:** After the 0.5.0 release
+**Status:** 🟢 0.5.0 released (GitHub-only)  
+**Last Updated:** 2026-09-25  
+**Next Review:** After the Ext D spec
