@@ -79,6 +79,23 @@
 
 ## Bug fixes
 
+* **Behavior change:** `confint(parm = "paths")` now finds each path's row of
+  `@vcov` by name: the alias rows (`a`, `b`, `c_prime`; `d1`, ...; `a1`,
+  `b1`, ...; `theta3`) first, then, for `MediationData`, the lm-style
+  `m_<treatment>`, `y_<mediator>`, `y_<treatment>` rows. Names come from
+  `rownames(@vcov)`, or from `names(@estimates)` when `@vcov` has none.
+  Previously `MediationData` looked only for the lm-style names and otherwise
+  warned and took the first three diagonal entries. That gave wrong SEs for
+  every lavaan-extracted object, where rows 1-3 are a, c', b, so b and c'
+  swapped SEs. It was right for a hand-built object with alias names only
+  when those came first. The serial, parallel, interaction and joint methods
+  returned `NA` bounds for a missing row. All five now error, naming the
+  missing rows, when neither set of names resolves. `tidy()` still reports
+  `NA` there, as it is descriptive; `confint()` is strict.
+  **Ecosystem note:** downstream code that builds these objects by hand with
+  unnamed `@estimates`/`@vcov` gets an error from `confint(parm = "paths")`
+  instead of a warning or `NA`.
+
 * **Behavior change:** `te()` and `pm()` for `SerialMediationData` now use the
   full total effect, the sum over every X-to-Y path, instead of only the chain
   plus the direct effect (`a * d * b + c'`). For the usual specification

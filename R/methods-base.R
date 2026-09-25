@@ -218,26 +218,13 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
   # Determine which parameters to compute CIs for
   if (identical(parm, "paths")) {
     coefs <- c(a = object@a_path, b = object@b_path, c_prime = object@c_prime)
-    # Get SEs from vcov diagonal (need to find correct indices)
-    vcov_mat <- object@vcov
-    param_names <- names(object@estimates)
-
-    # Find indices for a, b, c' in the full parameter vector
-    # a: coefficient of treatment in mediator model (typically "m_<treatment>")
-    # b: coefficient of mediator in outcome model (typically "y_<mediator>")
-    # c': coefficient of treatment in outcome model (typically "y_<treatment>")
-    a_idx <- grep(paste0("^m_", object@treatment, "$"), param_names)
-    b_idx <- grep(paste0("^y_", object@mediator, "$"), param_names)
-    cp_idx <- grep(paste0("^y_", object@treatment, "$"), param_names)
-
-    if (length(a_idx) == 0 || length(b_idx) == 0 || length(cp_idx) == 0) {
-      # Fall back: try to extract from position
-      warning("Could not identify parameter indices by name. Using position-based extraction.",
-              call. = FALSE)
-      se <- sqrt(diag(vcov_mat)[1:3])
-    } else {
-      se <- sqrt(diag(vcov_mat)[c(a_idx[1], b_idx[1], cp_idx[1])])
-    }
+    # Alias rows first (as tidy() and .effect_se() use), then the lm-style
+    # source rows; error rather than guess by position
+    se <- .path_se(object, names(coefs), fallback = c(
+      paste0("m_", object@treatment),
+      paste0("y_", object@mediator),
+      paste0("y_", object@treatment)
+    ))
     names(se) <- names(coefs)
   } else if (identical(parm, "effects")) {
     coefs <- coef(object, type = "effects")      # nie, nde, te
@@ -302,7 +289,7 @@ S7::method(confint, SerialMediationData) <- function(object,
     coefs <- paths(object)            # a, d (or d21, d32, ...), b, c_prime
     # paths() names the d paths by mediator pair; @vcov aliases them d1..dk
     alias <- c("a", paste0("d", seq_along(object@d_path)), "b", "c_prime")
-    se <- sqrt(diag(object@vcov)[alias])
+    se <- .path_se(object, alias)
   } else {
     warning("Normal approximation for NIE may be inaccurate. ",
             "Consider bootstrap_mediation() for robust inference.", call. = FALSE)
@@ -437,14 +424,12 @@ S7::method(confint, ParallelMediationData) <- function(object,
   }
   checkmate::assert_number(level, lower = 0, upper = 1)
 
-  vc <- object@vcov
-
   alpha <- 1 - level
   z <- stats::qnorm(1 - alpha / 2)
 
   if (identical(parm, "paths")) {
     coefs <- paths(object)                       # named a1, b1, ..., c_prime
-    se <- sqrt(diag(vc)[names(coefs)])
+    se <- .path_se(object, names(coefs))
   } else if (identical(parm, "effects")) {
     warning("Normal (delta-method) approximation for the indirect effect may be ",
             "inaccurate; consider bootstrap_mediation() for robust inference.",
@@ -547,13 +532,12 @@ S7::method(confint, InteractionMediationData) <- function(object,
   }
   checkmate::assert_number(level, lower = 0, upper = 1)
 
-  vc <- object@vcov
   alpha <- 1 - level
   z <- stats::qnorm(1 - alpha / 2)
 
   if (parm == "paths") {
     coefs <- paths(object)            # a, b, c_prime, theta3
-    se <- sqrt(diag(vc)[names(coefs)])
+    se <- .path_se(object, names(coefs))
   } else {
     # Delta method via the shared helper: engine-stored component rows (the
     # regmedint engine) or Gaussian-outcome gradients (the glm engine)
@@ -653,7 +637,7 @@ S7::method(confint, JointMediationData) <- function(object,
   z <- stats::qnorm(1 - (1 - level) / 2)
   if (parm == "paths") {
     coefs <- paths(object)
-    se <- sqrt(diag(object@vcov)[names(coefs)])
+    se <- .path_se(object, names(coefs))
   } else {
     warning("Normal (delta-method) approximation for the joint effects may be ",
             "inaccurate; consider bootstrap_mediation() for robust inference.",
