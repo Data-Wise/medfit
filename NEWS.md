@@ -231,6 +231,14 @@
 
 ## Documentation
 
+* The articles now evaluate their code when the site is built, instead of
+  showing output typed in by hand, so the shown output cannot drift from the
+  code and a broken example fails the build. The pkgdown workflow also runs
+  on pull requests to `dev`. Turning this on exposed three broken examples in
+  the "Introduction" article (a missing `library(medfit)` and two
+  hand-built objects missing required properties), now fixed; the
+  error-handling example in "Model Extraction" shows the real messages.
+
 * New "Methods and Formulas" article collecting the estimand, formula,
   covariance and standard-error computation for every class, the bootstrap
   methods, and the fitting engines, with the assumptions each estimand needs.

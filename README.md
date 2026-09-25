@@ -173,6 +173,7 @@ tidy(med_data)
 
 - **`SerialMediationData`**: Container for serial mediation (X -> M1 -> M2 -> ... -> Y)
   - Supports product-of-three (2 mediators) and product-of-k (3+ mediators)
+  - `nie()` gives the chain effect; `nie(type = "total")`, `te()` and `pm()` count every path, including paths that skip a mediator
   - Flexible design compatible with lavaan extraction patterns
   - Extensible to complex mediation structures
 
