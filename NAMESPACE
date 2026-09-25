@@ -28,16 +28,20 @@ export(te)
 import(S7)
 import(checkmate)
 import(methods)
-importFrom(generics,glance)
-importFrom(generics,tidy)
-importFrom(stats,coef)
-importFrom(stats,confint)
-importFrom(stats,formula)
-importFrom(stats,gaussian)
-importFrom(stats,glm)
-importFrom(stats,lm)
-importFrom(stats,nobs)
-importFrom(stats,qnorm)
-importFrom(stats,setNames)
-importFrom(stats,sigma)
-importFrom(stats,vcov)
+importFrom(generics,
+  glance,
+  tidy
+)
+importFrom(stats,
+  coef,
+  confint,
+  formula,
+  gaussian,
+  glm,
+  lm,
+  nobs,
+  qnorm,
+  setNames,
+  sigma,
+  vcov
+)
