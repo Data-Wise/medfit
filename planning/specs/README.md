@@ -23,6 +23,6 @@ Updated 2026-09-25. Each file's own `Status:` line is authoritative; this index 
 | `GRILL-0.5.0-release-2026-09-24.md` | decision ledger | decided; 0.5.0 released GitHub-only 2026-09-25 |
 | `REVIEW-multilevel-mediation-2026-09-25.md` | literature review | complete; feeds the Ext D spec (decisions in the GRILL below) |
 | `GRILL-multilevel-mediation-ext-d-2026-09-25.md` | decision ledger | decided (D1-D9); module 1 = 2-1-1 |
+| `SPEC-multilevel-mediation-2-1-1-2026-09-25.md` | spec | draft, awaiting approval (A1-A5) |
 
-Next spec to write: Ext D module 1 (2-1-1 multilevel mediation), from the decisions in
-`GRILL-multilevel-mediation-ext-d-2026-09-25.md`; background in `REVIEW-multilevel-mediation-2026-09-25.md`.
+Next: approve `SPEC-multilevel-mediation-2-1-1-2026-09-25.md` (items A1-A5), then write its plan.
