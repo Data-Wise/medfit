@@ -231,7 +231,7 @@ medfit is the foundation for the **mediationverse** ecosystem:
 | [medsim](https://github.com/data-wise/medsim) | Simulation infrastructure | Support |
 | [mediationverse](https://github.com/data-wise/mediationverse) | Meta-package | Ecosystem |
 
-See [Ecosystem Coordination](https://github.com/data-wise/medfit/blob/main/planning/ECOSYSTEM.md) for version compatibility and development guidelines.
+See [Ecosystem Coordination](https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md) for version compatibility and development guidelines.
 
 ## Documentation
 
@@ -289,7 +289,7 @@ For the entry matching your installed version, run `citation("medfit")`.
 - [Package Documentation](https://data-wise.github.io/medfit/)
 - [Development Guide](https://github.com/data-wise/medfit/blob/main/CLAUDE.md)
 - [Roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md)
-- [Ecosystem Strategy](https://github.com/data-wise/medfit/blob/main/planning/ECOSYSTEM.md)
+- [Ecosystem Strategy](https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md)
 
 ## Contact
 

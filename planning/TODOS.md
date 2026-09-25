@@ -177,18 +177,18 @@ Active tasks, implementation plan, and progress tracking.
 | 6.5 | ADHD API | ✅ Complete |
 | 7 | Polish & release | ✅ Complete (0.3.2 on CRAN) |
 | Ext A/B/C | Parallel, four-way, regmedint | ✅ Complete (0.4.0) |
-| D8(b) | Joint multi-mediator interactions | ✅ Complete (dev) |
-| 0.5.0 | Release | 🚧 Next (proposed) |
+| D8(b) | Joint multi-mediator interactions | ✅ Complete (0.5.0) |
+| 0.5.0 | Release | ✅ Released 2026-09-25 (GitHub + r-universe) |
 
 ### Code Quality
-- **Tests:** 1528 expectations (as of #80)
+- **Tests:** 1546 expectations (recorded at the 0.5.0 release gate)
 - **Coverage:** Tracked via Codecov
 - **R CMD check:** strict 0/0/1 (Date NOTE only) at last recorded run
 - **Linting:** GitHub Actions CI
 
 ### Documentation
 - **README:** ✅ Updated (#79)
-- **NEWS:** ✅ Development section current through #82
+- **NEWS:** ✅ 0.5.0 section current through #82
 - **Vignettes:** 5 articles (getting-started, introduction, extraction, bootstrap, methods),
   evaluated at site build
 - **pkgdown:** ✅ Live at https://data-wise.github.io/medfit/ (deploys from main)

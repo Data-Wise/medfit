@@ -19,7 +19,7 @@
 |------|--------|---------------|
 | **Package Files** | 🟢 | ~/projects/r-packages/active/medfit/ |
 | **Documentation** | 🟢 | man/, vignettes/articles/ (5 articles, evaluated at site build) |
-| **Tests** | 🟢 | tests/testthat/ (1528 expectations as of #80) |
+| **Tests** | 🟢 | tests/testthat/ (1546 expectations at the 0.5.0 release gate) |
 | **Repository** | 🟢 | github.com/Data-Wise/medfit |
 
 ---
@@ -37,7 +37,7 @@ Phase 6: 0.5.0 release           ███████████████�
 Features (Phases 1-5):            ████████████████████ 100% 🟢
 ```
 
-**Status:** 🟢 0.5.0 released (GitHub-only) | **Priority:** P2 (next: Ext D spec)
+**Status:** 🟢 0.5.0 released (GitHub-only) | **Priority:** P1 (next: Ext D spec)
 
 ---
 
@@ -237,7 +237,7 @@ Goal: Carry 0.5.0's fixes to CRAN (0.3.2 still has the serial te()/pm() and conf
 ### Package Stats
 - **R Files:** 18
 - **Exports:** 18 in NAMESPACE (6 classes + 12 functions), plus S3/S7 methods
-- **Tests:** 1528 expectations (as of #80)
+- **Tests:** 1546 expectations (recorded at the 0.5.0 release gate)
 - **Documentation:** all exports documented; 5 articles
 
 ### Dependencies

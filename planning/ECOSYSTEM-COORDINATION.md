@@ -2,7 +2,7 @@
 
 > **Historical snapshot (2025-12-15).** Current medfit state: 0.3.2 on CRAN, 0.5.0 on
 > GitHub/r-universe (2026-09-25); see `.STATUS` and `planning/PROJECT-HUB.md`. The live ecosystem
-> version matrix is `~/projects/r-packages/mediation-planning/ECOSYSTEM-COORDINATION.md`.
+> version matrix is `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`.
 **Date**: 2025-12-15
 **Context**: medfit test suite complete (241 tests), ready for implementation
 **Goal**: Coordinate medfit development with mediationverse ecosystem

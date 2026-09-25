@@ -48,7 +48,7 @@
 
 6. **planning/medfit-roadmap.md** - Original phase plan (all phases complete) and design reference
 
-7. **planning/ECOSYSTEM.md** - Connections to other packages
+7. **`~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`** - Connections to other packages (ecosystem hub)
 
 ### In Parent Ecosystem (probmed/planning/)
 
@@ -77,7 +77,7 @@ Ecosystem-wide planning now lives in `~/projects/r-packages/mediation-planning/`
 | 6. Testing | 3-4 days | ✅ DONE - tests + vignettes |
 | 7. Polish | 2-3 days | ✅ DONE - R CMD check + pkgdown; 0.3.2 on CRAN |
 
-**Total**: MVP shipped. Since then: parallel (Ext A), four-way interaction (Ext B), regmedint engine (Ext C) in 0.4.0; `JointMediationData`, effect SEs for all classes and `mediation_demo` on `dev`.
+**Total**: MVP shipped. Since then: parallel (Ext A), four-way interaction (Ext B), regmedint engine (Ext C) in 0.4.0; `JointMediationData`, effect SEs for all classes and `mediation_demo` in 0.5.0 (2026-09-25).
 
 ---
 
@@ -128,7 +128,7 @@ medfit/
 │   ├── medfit-roadmap.md      (phase plan + design reference)
 │   ├── EXTENSIONS-PLAN-2026-06-03.md (current board)
 │   ├── TODOS.md               (active tasks)
-│   ├── ECOSYSTEM.md           (connections)
+│   ├── ECOSYSTEM.md           (stub → ecosystem hub)
 │   └── README.md              (planning guide)
 └── .github/workflows/     ← CI/CD (R-CMD-check, coverage, pkgdown)
 ```
@@ -231,7 +231,7 @@ From `../probmed/planning/DECISIONS.md`:
 ### Questions?
 - **Strategic**: Review `../probmed/planning/three-package-ecosystem-strategy.md`
 - **Technical**: Review `planning/medfit-roadmap.md`
-- **Connections**: Review `planning/ECOSYSTEM.md`
+- **Connections**: Review the hub's `docs/ECOSYSTEM-COORDINATION.md`
 
 ---
 
@@ -242,7 +242,7 @@ When starting a new session in medfit:
 - [ ] Read this file (START-HERE.md)
 - [ ] Read `.STATUS` (`next:` line) and `planning/TODOS.md`
 - [ ] Check the board in `planning/EXTENSIONS-PLAN-2026-06-03.md`
-- [ ] Review `planning/ECOSYSTEM.md` for package connections
+- [ ] Review the hub's `docs/ECOSYSTEM-COORDINATION.md` for package connections
 - [ ] Check `../probmed/planning/ROADMAP.md` for ecosystem status
 - [ ] Review recent decisions in `../probmed/planning/DECISIONS.md`
 
@@ -255,13 +255,13 @@ When starting a new session in medfit:
 | Understand medfit | README.md, CLAUDE.md |
 | See current tasks | .STATUS, planning/TODOS.md |
 | See implementation plan | planning/medfit-roadmap.md |
-| Check ecosystem connections | planning/ECOSYSTEM.md |
+| Check ecosystem connections | mediation-planning/docs/ECOSYSTEM-COORDINATION.md |
 | Review decisions | ../probmed/planning/DECISIONS.md |
 | Check overall status | ../probmed/planning/ROADMAP.md |
 
 ---
 
-**Status**: 📦 0.3.2 on CRAN, 0.4.0 on GitHub, `dev` ready for the proposed 0.5.0 release
+**Status**: 📦 0.3.2 on CRAN, 0.5.0 on GitHub and r-universe
 
 **Next session**: Start in this directory (`~/projects/r-packages/active/medfit/`), read `.STATUS` and `planning/TODOS.md`
 

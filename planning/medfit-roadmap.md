@@ -2,8 +2,8 @@
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
 **Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.5.0 released on `main`/GitHub/r-universe** (2026-09-25, tag `v0.5.0`, not CRAN-submitted by decision). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0 (2026-08-23). 0.5.0 added (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Next = **Ext D (multilevel) spec**; board in `EXTENSIONS-PLAN-2026-06-03.md`.
-**Timeline**: MVP shipped; extensions A ✅, B ✅, C ✅ (0.4.0), D8(b) ✅ (dev); 0.5.0 next; C.1 blocked (CMAverse); D/E brainstormed
-**Last Updated**: 2026-09-24
+**Timeline**: MVP shipped; extensions A ✅, B ✅, C ✅ (0.4.0), D8(b) ✅ (0.5.0, released 2026-09-25); C.1 blocked (CMAverse); D/E brainstormed
+**Last Updated**: 2026-09-25
 
 > **Note:** Phases 7/7b/7c below are the detailed *design reference*. The current,
 > prioritized board lives in `planning/EXTENSIONS-PLAN-2026-06-03.md`.
@@ -1899,4 +1899,4 @@ The original week-by-week plan is complete. Current next actions:
 - Phase 7b design (estimation-engine UI) has no standalone increment; `decompose()` shipped, no `Decomposition` class
 
 **Next Review**: After the Ext D spec
-**Last Updated**: 2026-09-24
+**Last Updated**: 2026-09-25

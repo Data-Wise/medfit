@@ -1,6 +1,6 @@
 # SPEC: Treatment×mediator interaction — VanderWeele four-way decomposition
 
-**Status:** Draft (for a future increment) · **Created:** 2026-06-03 · **Author:** Davood Tofighi (with Claude Code)
+**Status:** Implemented — #38/#39/#40 (merged 2026-06-04) · **Created:** 2026-06-03 · **Author:** Davood Tofighi (with Claude Code)
 **Plan:** `planning/EXTENSIONS-PLAN-2026-06-03.md` → **Extension B** (gate: Extension A merged ✓ — #34/#36/#37)
 **Design source:** `planning/medfit-roadmap.md §7` (formulas, class sketch, identification notes)
 **Reuses (do NOT reimplement):** the Extension A machinery —

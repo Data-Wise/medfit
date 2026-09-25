@@ -1,10 +1,10 @@
 # SPEC: bundled example data for medfit
 
-**Date:** 2026-09-23 · **Status:** proposed · **Branch:** `dev` (this spec is doc-only; implementation
+**Date:** 2026-09-23 · **Status:** implemented — #62-#65, #67 (merged 2026-09-23; released in 0.5.0) · **Branch:** `dev` (this spec is doc-only; implementation
 needs a `feature/*` worktree per this repo's own branch-guard rules)
 **Origin:** requested directly ("create a plan to include data in the medfit package; check
 mediationverse packages and identify gaps for the bppk" — confirmed "bppk" = medfit itself).
-**Depends on:** nothing blocking; independent of the open 0.4.0 CRAN-submission decision in `.STATUS`.
+**Depends on:** nothing blocking; independent of the (then open) 0.4.0 CRAN-submission decision in `.STATUS`.
 **Revised:** 2026-09-23 (medfit session) — corrected column count, vignette location, and the
 `R CMD check` rationale; added the `.Rbuildignore` and roxygen steps; design questions moved to §7.
 **Grill:** [GRILL-bundled-example-data-2026-09-23.md](GRILL-bundled-example-data-2026-09-23.md) resolves §7 and supersedes the §3 column table; D9 records the adversarial-review corrections.

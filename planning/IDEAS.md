@@ -2,7 +2,7 @@
 
 Future ideas, enhancements, and research directions for the medfit package.
 
-**Last Updated:** 2025-12-17
+**Last Updated:** 2026-09-25 (status of each idea checked against the 0.5.0 release)
 
 ---
 
@@ -18,55 +18,31 @@ Future ideas, enhancements, and research directions for the medfit package.
 - Tidyverse integration: `tidy()`, `glance()`
 - Base R generics: `coef()`, `vcov()`, `confint()`, `nobs()`
 
+### Four-Way Decomposition (VanderWeele 2014) ✅
+- `InteractionMediationData`, lm/glm + lavaan extraction, `decompose()` (#38/#39/#40)
+
+### Parallel Mediation ✅
+- `ParallelMediationData`, lm/glm + lavaan extraction (#34/#36/#37)
+
+### Delta-Method SEs for Derived Effects ✅
+- Effect SEs in `tidy()` and `confint(parm = "effects")` for every class (#70)
+
+### Engine Adapter: regmedint ✅
+- `fit_mediation(engine = "regmedint")` plus the `m_star` argument (#59, 0.4.0)
+
+### Joint Effects with Exposure-Mediator Products ✅
+- `JointMediationData`, `joint_effects()` (#76/#77, 0.5.0)
+
+### "Mediation Analysis Workflow" vignette ✅
+- Covered by Getting Started on `mediation_demo` (#63, #67)
+
 ---
 
 ## 🔬 Research Ideas
 
-### Four-Way Decomposition (VanderWeele 2014)
-**Status:** Planned for post-MVP
-**Priority:** High
-**Complexity:** Medium
-
-Add support for treatment-mediator interaction decomposition:
-- CDE (Controlled Direct Effect)
-- INTref (Reference Interaction)
-- INTmed (Mediated Interaction)
-- PIE (Pure Indirect Effect)
-
-**Implementation:**
-- New S7 class: `InteractionMediationData`
-- Detect `X:M` interaction in outcome model
-- Compute all four components
-- Add to decomposition framework
-
-**References:**
-- VanderWeele TJ (2014). Epidemiology, 25(5):749-61
-- Valeri & VanderWeele (2013). Psychological Methods, 18(2):137-150
-
----
-
-### Parallel Mediation
-**Status:** Future consideration
-**Priority:** Medium
-**Complexity:** Medium
-
-Support for multiple mediators operating in parallel (not serial):
-- X → M1 → Y
-- X → M2 → Y
-- Total indirect = (a1×b1) + (a2×b2)
-
-**Design:**
-- New S7 class: `ParallelMediationData`
-- Properties: `a_paths` (vector), `b_paths` (vector)
-- Methods for computing total indirect effect
-- Variance estimation via delta method or bootstrap
-
----
-
 ### Decomposition Framework
-**Status:** Planned
-**Priority:** High
-**Complexity:** Low
+**Status:** Decided against (for now) — `decompose()` shipped as a function returning named
+components; no `Decomposition` class (roadmap Phase 7b note, Ext C grill)
 
 Flexible decomposition system allowing custom effect decompositions:
 
@@ -91,24 +67,6 @@ Decomposition <- S7::new_class(
 
 ## 🔧 Technical Enhancements
 
-### Delta Method SEs for Derived Effects
-**Status:** Planned (next release)
-**Priority:** High
-**Complexity:** Low
-
-Add standard errors for NIE, NDE, TE using delta method:
-- `confint(result, type = "effects")` already exists
-- Need to compute delta method SEs
-- Display in `tidy()` output
-
-**Implementation:**
-```r
-# Delta method for indirect effect
-se_nie <- sqrt(b^2 * var_a + a^2 * var_b + 2*a*b*cov_ab)
-```
-
----
-
 ### BCa Bootstrap Confidence Intervals
 **Status:** Future
 **Priority:** Medium
@@ -124,23 +82,24 @@ Bias-corrected and accelerated bootstrap:
 ---
 
 ### Engine Adapters for Advanced Methods
-**Status:** Planned (Phase 7c in roadmap)
+**Status:** regmedint adapter shipped (#59, 0.4.0); CMAverse (C.1) blocked
 **Priority:** Medium
 **Complexity:** High
 
 Wrap validated implementations instead of reimplementing:
 
-**Priority order:**
-1. **regression** (internal) - VanderWeele closed-form [Complete]
-2. **gformula** (CMAverse) - G-computation [Future]
-3. **ipw** (CMAverse) - Inverse probability weighting [Future]
-4. **tmle** (tmle3) - Targeted learning [Future]
-5. **dml** (DoubleML) - Double machine learning [Future]
+**Engines:**
+1. **glm** (internal) - fit, then `extract_mediation()` [Complete]
+2. **regmedint** (regmedint) - VanderWeele closed-form [Complete]
+3. **gformula** (CMAverse) - G-computation [Blocked: CMAverse not on CRAN]
+4. **ipw** (CMAverse) - Inverse probability weighting [Blocked]
+5. **tmle** (tmle3) - Targeted learning [Future]
+6. **dml** (DoubleML) - Double machine learning [Future]
 
 ---
 
 ### Mixed Models Support (lme4)
-**Status:** Future
+**Status:** Next — Ext D (multilevel) spec, from `specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
 **Priority:** Medium
 **Complexity:** High
 
@@ -225,8 +184,9 @@ fit_mediation(
 ## 🌐 Ecosystem Integration
 
 ### probmed Integration
-**Status:** Next priority
-**Priority:** High
+**Status:** Done on the medfit side — probmed `Imports: medfit (>= 0.3.0)`, uses
+`extract_mediation()` and defines `pmed` methods on medfit classes; its tests pass against 0.5.0
+**Priority:** —
 **Complexity:** Low
 
 Test medfit output with P_med computation:
@@ -263,17 +223,6 @@ Maintain clean API contracts:
 ---
 
 ## 📚 Documentation Ideas
-
-### Vignette: "Mediation Analysis Workflow"
-End-to-end example:
-1. Data preparation
-2. Model fitting with `med()`
-3. Effect extraction with `nie()`, `nde()`
-4. Bootstrap inference
-5. Sensitivity analysis (via medrobust)
-6. Reporting results
-
----
 
 ### Vignette: "Extending medfit"
 For package developers:

@@ -400,12 +400,13 @@ first, error instead of guessing).
 
 ### Central Planning
 
-Location: `~/projects/r-packages/mediation-planning/` (medfit also keeps a copy at `planning/ECOSYSTEM-COORDINATION.md`)
+Location: `~/projects/r-packages/mediation-planning/` (start at `PROJECT-HUB.md`). medfit's
+`planning/ECOSYSTEM-COORDINATION.md` is a separate 2025-12 brainstorm snapshot, not a copy.
 
 | Document | Purpose |
 |----------|---------|
-| `ECOSYSTEM-COORDINATION.md` | Version matrix, change propagation, releases |
-| `MONTHLY-CHECKLIST.md` | Health checks |
+| `docs/ECOSYSTEM-COORDINATION.md` | Version matrix, change propagation, releases |
+| `docs/MONTHLY-CHECKLIST.md` | Health checks |
 
 ### Change Propagation
 
@@ -515,7 +516,7 @@ During `devtools::load_all()`:
 ### Planning Documents
 
 **Package:** `planning/medfit-roadmap.md`
-**Ecosystem:** `~/projects/r-packages/mediation-planning/ECOSYSTEM-COORDINATION.md`
+**Ecosystem:** `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`
 
 ### Related Packages
 
