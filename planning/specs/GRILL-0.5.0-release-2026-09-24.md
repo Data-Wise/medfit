@@ -50,6 +50,6 @@ total effect from `lm(Y ~ X + C)`), plus a one-line README pointer.
 
 ## Next
 
-1. Post the known-issues GitHub issue (needs explicit OK — public content).
-2. README note + `CLAUDE.md` exemption line (dev, docs-only).
-3. 0.5.0 release checklist in `planning/TODOS.md`, GitHub-only path.
+1. ~~Post the known-issues GitHub issue~~ — done: #83 (pinned).
+2. ~~README note + `CLAUDE.md` exemption line~~ — done.
+3. ~~0.5.0 checklist in `planning/TODOS.md`, GitHub-only path~~ — done.

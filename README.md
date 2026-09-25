@@ -34,6 +34,11 @@ Install the stable version from CRAN:
 install.packages("medfit")
 ```
 
+> **Known issues in CRAN 0.3.2:** serial `te()`/`pm()` omit paths that skip a
+> mediator, and `confint()` path intervals can use the wrong covariance rows.
+> Both are fixed in the development version; see
+> [#83](https://github.com/Data-Wise/medfit/issues/83) for details and workarounds.
+
 Or install the development version from GitHub:
 
 ```r

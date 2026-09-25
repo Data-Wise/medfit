@@ -7,11 +7,12 @@ Active tasks, implementation plan, and progress tracking.
 ## 🎯 Current Focus: 0.5.0 Release (proposed)
 
 **Status:** 0.3.2 on CRAN (2026-07-23); 0.4.0 on main/GitHub (tag `v0.4.0`, 2026-08-23); dev carries unreleased work since 0.4.0 (#62-#82)
-**Next:** Release dev as **0.5.0** (proposed; minor bump because of two behavior changes, #81 and #82)
+**Next:** Release dev as **0.5.0** on GitHub only (minor bump for two behavior changes, #81 and #82)
 **Updated:** 2026-09-24
 
-> `.STATUS` still records the 2026-09-23 decision "no CRAN release yet". Whether 0.5.0 goes to
-> CRAN or stays GitHub-only is open; the checklist below covers both.
+> Decided 2026-09-24 (`specs/GRILL-0.5.0-release-2026-09-24.md`): 0.5.0 is **GitHub-only**;
+> #81/#82 are correctness fixes, exempt from the deprecation period. CRAN 0.3.2 users are
+> pointed to pinned issue #83 (README note). Next CRAN trigger is still open.
 
 ---
 
@@ -19,21 +20,21 @@ Active tasks, implementation plan, and progress tracking.
 
 ### High Priority 🔴
 
-- [ ] **0.5.0 release** (checklist follows CLAUDE.md "CRAN check practice")
+- [x] Pinned known-issues issue #83 for CRAN 0.3.2 + README pointer (2026-09-24)
+- [ ] **0.5.0 release — GitHub only**
   - [ ] Bump DESCRIPTION 0.4.0 → 0.5.0; rename NEWS "(development version)" heading to 0.5.0
   - [ ] NEWS: confirm both behavior changes carry ecosystem notes (serial `te()`/`pm()` #81;
         `confint(parm = "paths")` alias lookup #82)
-  - [ ] Strict check: `--run-donttest` + `_R_CHECK_DEPENDS_ONLY_`, `_R_CHECK_SUGGESTS_ONLY_`,
-        `_R_CHECK_CRAN_INCOMING_`, `_R_CHECK_CRAN_INCOMING_REMOTE_`
-  - [ ] `urlchecker::url_check()` + `spelling::spell_check_package()` (win-builder is the source
-        of truth for the DESCRIPTION aspell NOTE)
-  - [ ] Reverse-dependency check sized to risk: probmed Imports medfit (full check); RMediation
-        Suggests (lightweight)
-  - [ ] Resync `cran-comments.md` from the fresh check output (if submitting to CRAN)
+  - [ ] `devtools::check()` clean + full test suite (strict CRAN flavors not required for a
+        GitHub-only release, but cheap; run them if time allows)
+  - [ ] Dependents: install dev build in a scratch library and run probmed and RMediation tests
+        (neither calls `te()`/`pm()`/`confint()`, checked 2026-09-24)
   - [ ] dev → main PR (merge commit), tag `v0.5.0`, GitHub release
   - [ ] Confirm the main pkgdown deploy fixes the README link to `articles/methods.html` (404s
         until then)
-  - [ ] CRAN submit is maintainer-manual (`devtools::submit_cran()` + email confirmation)
+  - [ ] Confirm r-universe picks up the `v0.5.0` build (check the `/api/packages` list, not
+        `/api/packages/medfit`)
+  - [ ] Once released, update #83 with the release link
 
 - [ ] **probmed Stage 2** (lives in the probmed repo, not here)
   - Unblocked by 0.3.2 on CRAN. probmed's DESCRIPTION already has `Imports: medfit (>= 0.3.0)`

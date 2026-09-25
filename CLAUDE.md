@@ -423,6 +423,12 @@ When changes affect dependent packages:
 4. Document migration path
 5. Update ECOSYSTEM-COORDINATION.md
 
+**Exemption — correctness fixes:** a change that replaces a wrong result with the right one
+(e.g. #81 serial `te()`/`pm()`, #82 `confint()` path rows) skips the deprecation period: there is
+no behavior worth preserving. Ship it with a NEWS behavior-change note and at least a minor
+version bump, and check dependents' usage first (decided 2026-09-24,
+`planning/specs/GRILL-0.5.0-release-2026-09-24.md`).
+
 ---
 
 ## Common Pitfalls
