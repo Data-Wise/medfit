@@ -8,7 +8,7 @@ format:
 execute:
   collapse: true
   comment: "#>"
-  eval: false
+  eval: true
 ---
 
 ## Overview
@@ -55,7 +55,6 @@ result <- med(
 
 # Instant results with CI
 quick(result)
-#> NIE = 0.333  [0.217, 0.463] | NDE = 0.206 | PM = 61.8 %
 
 # The BootstrapResult is attached as an attribute (not an S7 property)
 attr(result, "bootstrap")
@@ -407,7 +406,6 @@ boot2 <- bootstrap_mediation(
 
 # Identical results
 identical(boot1@boot_estimates, boot2@boot_estimates)
-#> [1] TRUE
 
 # Different seed = different results
 boot3 <- bootstrap_mediation(
@@ -418,7 +416,6 @@ boot3 <- bootstrap_mediation(
   seed = 456
 )
 identical(boot1@boot_estimates, boot3@boot_estimates)
-#> [1] FALSE
 ```
 
 ## How Many Bootstrap Samples?
@@ -533,17 +530,9 @@ library(generics)
 
 # Convert to tibble
 tidy(boot_result)
-#> # A tibble: 1 × 5
-#>   term     estimate std.error conf.low conf.high
-#>   <chr>       <dbl>     <dbl>    <dbl>     <dbl>
-#> 1 estimate    0.333    0.0612    0.217     0.463
 
 # One-row summary
 glance(boot_result)
-#> # A tibble: 1 × 4
-#>   estimate ci_level method     n_boot
-#>      <dbl>    <dbl> <chr>       <int>
-#> 1    0.333     0.95 parametric   1000
 ```
 
 ### Accessing Results Directly

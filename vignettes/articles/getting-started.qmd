@@ -8,7 +8,7 @@ format:
 execute:
   collapse: true
   comment: "#>"
-  eval: false
+  eval: true
   echo: true
 ---
 
@@ -52,7 +52,6 @@ print(result)
 #| label: quick
 # One-line summary
 quick(result)
-#> NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
 ```
 
 ### Why the Covariates Matter
@@ -79,7 +78,6 @@ result_boot <- med(
 )
 
 quick(result_boot)
-#> NIE = 0.333  [0.208, 0.458] | NDE = 0.206 | PM = 61.8 %
 ```
 
 ## Extract Individual Effects
@@ -102,8 +100,6 @@ pm(result)
 
 # All path coefficients
 paths(result)
-#> Named num [1:3] 0.583 0.571 0.206
-#> - attr(*, "names")= chr [1:3] "a" "b" "c_prime"
 ```
 
 ## Tidyverse Integration
@@ -116,15 +112,6 @@ library(generics)
 
 # Tidy tibble of all estimates
 tidy(result)
-#> # A tibble: 6 × 3
-#>   term    estimate std.error
-#>   <chr>      <dbl>     <dbl>
-#> 1 a          0.583   0.0989
-#> 2 b          0.571   0.0535
-#> 3 c_prime    0.206   0.110
-#> 4 nie        0.333    0.0645
-#> 5 nde        0.206    0.110
-#> 6 te         0.539    0.119
 
 # Just paths with CIs
 tidy(result, type = "paths", conf.int = TRUE)
@@ -137,10 +124,6 @@ tidy(result, type = "effects")
 #| label: glance
 # One-row model summary
 glance(result)
-#> # A tibble: 1 × 6
-#>     nie   nde    te    pm  nobs converged
-#>   <dbl> <dbl> <dbl> <dbl> <int> <lgl>
-#> 1 0.333 0.206 0.539 0.618   400 TRUE
 ```
 
 ## Base R Methods
@@ -193,7 +176,6 @@ serial_data <- extract_mediation(
 nie(serial_data)   # a * d * b: the effect through the chain mediator1 -> mediator2
 nde(serial_data)   # c'
 quick(serial_data)
-#> [2 mediators] NIE =0.0755| NDE =0.171| PM =30.6%
 ```
 
 The serial indirect effect covers only the path through both mediators in
@@ -265,8 +247,6 @@ p_marg  <- mean(mediation_demo$treatment)
 ipw <- ifelse(mediation_demo$treatment == 1,
               p_marg / p_treat, (1 - p_marg) / (1 - p_treat))
 summary(ipw)
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-#>  0.7044  0.8933  0.9841  0.9997  1.0954  1.5436
 
 med_ipw <- fit_mediation(
   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
@@ -280,12 +260,6 @@ med_ipw <- fit_mediation(
 
 library(generics)
 tidy(med_ipw, type = "effects", conf.int = TRUE)
-#> # A tibble: 3 × 5
-#>   term  estimate std.error conf.low conf.high
-#>   <chr>    <dbl>     <dbl>    <dbl>     <dbl>
-#> 1 nie      0.335    0.0657   0.206      0.463
-#> 2 nde      0.208    0.115   -0.0180     0.433
-#> 3 te       0.542    0.119    0.308      0.776
 ```
 
 With the default `se_type = "model"` the same fit gives NIE SE 0.0640 and

@@ -8,7 +8,7 @@ format:
 execute:
   collapse: true
   comment: "#>"
-  eval: false
+  eval: true
 ---
 
 ## Overview
@@ -36,7 +36,6 @@ covs <- c("covariate1", "covariate2")
 result <- med(data = mediation_demo, treatment = "treatment",
               mediator = "mediator1", outcome = "outcome", covariates = covs)
 quick(result)
-#> NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
 
 # Advanced way: fit models separately, then extract
 fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2, data = mediation_demo)
@@ -45,7 +44,6 @@ fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
 result <- extract_mediation(fit_m, model_y = fit_y, treatment = "treatment",
                             mediator = "mediator1")
 quick(result)
-#> NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
 ```
 
 ## Extraction Pattern
@@ -157,8 +155,6 @@ med_unadj <- extract_mediation(
 
 # Compare the b paths: adjusted vs unadjusted
 round(c(adjusted = med_data@b_path, unadjusted = med_unadj@b_path), 3)
-#>   adjusted unadjusted
-#>      0.571      0.713
 ```
 
 ### Serial Mediation with lm/glm
@@ -191,16 +187,13 @@ med_serial_lm <- extract_mediation(
 
 # Serial indirect effect through the full chain: a * d1 * b
 nie(med_serial_lm)
-#> Natural Indirect Effect (NIE): 0.07545
 
 # Total indirect effect: every path through at least one mediator
 nie(med_serial_lm, type = "total")
-#> Natural Indirect Effect (NIE): 0.3674
 
 # Total effect over every path; it equals the treatment coefficient when the
 # outcome is regressed on the treatment and both covariates alone
 te(med_serial_lm)
-#> Total Effect (TE): 0.5386
 ```
 
 Include the treatment and every earlier mediator in each downstream model, as
@@ -281,18 +274,8 @@ intervals, and `glance()` gives a one-row summary:
 #| label: lm-parallel-tidy
 library(generics)
 tidy(med_parallel_lm, type = "effects", conf.int = TRUE)
-#> # A tibble: 3 × 5
-#>   term  estimate std.error conf.low conf.high
-#>   <chr>    <dbl>     <dbl>    <dbl>     <dbl>
-#> 1 nie      0.432    0.0716    0.292     0.573
-#> 2 nde      0.106    0.110    -0.109     0.322
-#> 3 te       0.539    0.119     0.304     0.773
 
 glance(med_parallel_lm)
-#> # A tibble: 1 × 7
-#>     nie   nde    te    pm n_mediators  nobs converged
-#>   <dbl> <dbl> <dbl> <dbl>       <int> <int> <lgl>
-#> 1 0.432 0.106 0.539 0.803           2   400 TRUE
 ```
 
 The normal interval for `nie` treats a sum of coefficient products as normal;
@@ -336,23 +319,8 @@ med_joint <- extract_mediation(
   mediator_models = list(fit_m2)   # the serial mediator2 model
 )
 med_joint
-#> <JointMediationData>
-#>   treatment -> {mediator1 -> mediator2} -> outcome_int  (serial mediators, joint effects)
-#>   Products: treatment x mediator1 (m* = 0)
-#>     mediator1 a* = +0.5826   b = +0.4465   t3 = +0.4906
-#>     mediator2 a* = +0.4248   b = +0.2590
-#>   c' (t1) = +0.1748   CDE = +0.1748   NDE = +0.2197
-#>   Joint NIE (all paths through mediator1, mediator2) = +0.6560
-#>   Total = +0.8757   |   n = 400
 
 generics::tidy(med_joint, type = "effects", conf.int = TRUE)
-#> # A tibble: 4 × 5
-#>   term  estimate std.error conf.low conf.high
-#>   <chr>    <dbl>     <dbl>    <dbl>     <dbl>
-#> 1 cde      0.175     0.113 -0.0468      0.396
-#> 2 nde      0.220     0.116 -0.00710     0.447
-#> 3 nie      0.656     0.116  0.428       0.884
-#> 4 te       0.876     0.135  0.611       1.14
 ```
 
 `a*` is each mediator's **total** treatment effect: for `mediator2` it includes the
@@ -368,8 +336,6 @@ mediator (default 0); the NDE, NIE and total effect do not depend on it:
 ```{r}
 #| label: lm-joint-decompose
 decompose(med_joint)
-#>       cde       nde       nie     total
-#> 0.1747908 0.2197091 0.6560315 0.8757405
 
 # CDE with mediator1 held at 1 instead of 0
 med_joint_m1 <- extract_mediation(
@@ -381,8 +347,6 @@ med_joint_m1 <- extract_mediation(
   m_star = c(mediator1 = 1)   # named by the interacting mediator
 )
 decompose(med_joint_m1)
-#>       cde       nde       nie     total
-#> 0.6654399 0.2197091 0.6560315 0.8757405
 ```
 
 The CDE moves by `t3 * (1 - 0) = 0.49`, while the other three stay put. Unlike
@@ -402,7 +366,6 @@ boot_nie <- bootstrap_mediation(
   method = "parametric", mediation_data = med_joint, n_boot = 2000, seed = 1
 )
 c(boot_nie@ci_lower, boot_nie@ci_upper)
-#> [1] 0.443 0.896
 ```
 
 The fit must meet a few requirements, and each violation errors with its cause:
@@ -576,27 +539,10 @@ coefficient and `m_star`:
 #| label: lm-interaction-tidy
 library(generics)
 tidy(med_int, type = "components", conf.int = TRUE)
-#> # A tibble: 4 × 5
-#>   term    estimate std.error conf.low conf.high
-#>   <chr>      <dbl>     <dbl>    <dbl>     <dbl>
-#> 1 cde       0.215     0.116   -0.0124     0.443
-#> 2 int_ref   0.0435    0.0343  -0.0238     0.111
-#> 3 int_med   0.277     0.0737   0.133      0.422
-#> 4 pie       0.340     0.0717   0.200      0.481
 
 tidy(med_int, type = "effects")
-#> # A tibble: 3 × 3
-#>   term  estimate std.error
-#>   <chr>    <dbl>     <dbl>
-#> 1 nie      0.617     0.113
-#> 2 nde      0.259     0.118
-#> 3 te       0.876     0.135
 
 glance(med_int)
-#> # A tibble: 1 × 8
-#>     nie   nde    te    pm interaction m_star  nobs converged
-#>   <dbl> <dbl> <dbl> <dbl>       <dbl>  <dbl> <int> <lgl>
-#> 1 0.617 0.259 0.876 0.705       0.476      0   400 TRUE
 ```
 
 The four-way formulas (continuous `Y` and `M`) are
@@ -762,6 +708,7 @@ The extraction design is compatible with RMediation's lavaan extractor:
 The extraction uses **checkmate** for fail-fast input validation with informative error messages:
 ```{r}
 #| label: error-handling
+#| error: true
 # Variable not in model
 extract_mediation(
   model_m,
@@ -769,8 +716,6 @@ extract_mediation(
   treatment = "NonExistent",
   mediator = "mediator1"
 )
-# Error: Assertion on 'treatment in mediator model' failed: Must be element of
-#   set {'(Intercept)','treatment','covariate1','covariate2'}, but is 'NonExistent'.
 
 # Wrong type for treatment argument
 extract_mediation(
@@ -779,7 +724,6 @@ extract_mediation(
   treatment = 123,  # Should be character
   mediator = "mediator1"
 )
-# Error: Assertion on 'treatment' failed: Must be of type 'string', not 'double'.
 
 # Mediator not in outcome model
 model_y_wrong <- lm(outcome ~ treatment + covariate1 + covariate2,
@@ -790,8 +734,6 @@ extract_mediation(
   treatment = "treatment",
   mediator = "mediator1"
 )
-# Error: Assertion on 'mediator in outcome model' failed: Must be element of
-#   set {'(Intercept)','treatment','covariate1','covariate2'}, but is 'mediator1'.
 ```
 
 This defensive programming approach catches errors early with clear messages, making debugging easier.
@@ -883,11 +825,6 @@ library(generics)
 
 # Convert to tibble
 tidy(med_data)
-#> # A tibble: 6 × 3
-#>   term    estimate std.error
-#>   <chr>      <dbl>     <dbl>
-#> 1 a          0.583    0.0989
-#> ...
 
 # Just path coefficients or effects
 tidy(med_data, type = "paths")

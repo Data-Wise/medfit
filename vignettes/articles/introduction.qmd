@@ -8,7 +8,7 @@ format:
 execute:
   collapse: true
   comment: "#>"
-  eval: false
+  eval: true
 ---
 
 ## Overview
@@ -39,6 +39,8 @@ Stores simple mediation models (X -> M -> Y):
 
 ```{r}
 #| label: mediation-data
+library(medfit)
+
 # Example: Create a MediationData object
 med_data <- MediationData(
   a_path = 0.5,           # X -> M effect
@@ -49,6 +51,11 @@ med_data <- MediationData(
   outcome = "Y",
   estimates = c(a = 0.5, b = 0.3, c_prime = 0.2),
   vcov = diag(3) * 0.01,  # Covariance matrix
+  sigma_m = 1.0,          # residual SD of the mediator model
+  sigma_y = 1.2,          # residual SD of the outcome model
+  mediator_predictors = "X",
+  outcome_predictors = c("X", "M"),
+  data = NULL,
   n_obs = 100L,
   converged = TRUE,
   source_package = "medfit"
@@ -122,8 +129,14 @@ serial_data <- SerialMediationData(
   outcome = "Y",
   estimates = c(a = 0.4, d = 0.5, b = 0.3, c_prime = 0.2),
   vcov = diag(4) * 0.01,
-  mediator_predictors = list(M1 = "X", M2 = c("X", "M1")),
-  outcome_predictors = c("X", "M1", "M2"),
+  sigma_mediators = c(1.0, 1.1),  # residual SDs of the M1 and M2 models
+  sigma_y = 1.2,
+  # A pure chain: M2 depends on M1 only, and Y on X and M2 only. Paths that
+  # skip a mediator would need their own coefficients (extract_mediation()
+  # records them), or te() and pm() return NA.
+  mediator_predictors = list(M1 = "X", M2 = "M1"),
+  outcome_predictors = c("X", "M2"),
+  data = NULL,
   n_obs = 100L,
   converged = TRUE,
   source_package = "medfit"
@@ -192,7 +205,6 @@ result <- med(
 
 # Instant summary
 quick(result)
-#> NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
 
 # With bootstrap CI
 result_boot <- med(
@@ -207,7 +219,6 @@ result_boot <- med(
 )
 
 quick(result_boot)
-#> NIE = 0.333  [0.208, 0.458] | NDE = 0.206 | PM = 61.8 %
 ```
 
 ### Effect Extractors

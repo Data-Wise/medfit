@@ -8,7 +8,7 @@ format:
 execute:
   collapse: true
   comment: "#>"
-  eval: false
+  eval: true
 ---
 
 This article collects, in one place, the estimands medfit computes, the
@@ -302,6 +302,7 @@ statistic:
 
 ```{r}
 #| label: joint-boot-recipe
+#| eval: false
 bootstrap_mediation(
   function(theta) joint_effects(fit, theta)[["nie"]],
   method = "parametric", mediation_data = fit, n_boot = 2000
