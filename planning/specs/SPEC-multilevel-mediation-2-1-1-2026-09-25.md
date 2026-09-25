@@ -1,8 +1,8 @@
 # Spec: multilevel mediation, module 1 — cluster-level treatment (2-1-1)
 
-**Date:** 2026-09-25 · **Status:** draft, revision 2 (after two adverse reviews); awaiting approval of A1 and A2
+**Date:** 2026-09-25 · **Status:** **approved** 2026-09-25 (revision 2, after two adverse reviews; A1-A2 approved as D15-D16)
 **Grill:** [GRILL-multilevel-mediation-ext-d-2026-09-25.md](GRILL-multilevel-mediation-ext-d-2026-09-25.md)
-(D1–D9; D10–D14 triage the adverse reviews)
+(D1–D9; D10–D14 triage the adverse reviews; D15–D16 approve A1–A2)
 **Background:** [REVIEW-multilevel-mediation-2026-09-25.md](REVIEW-multilevel-mediation-2026-09-25.md)
 (sections 1, 3, 5, 6; read depth for every source is in its section 9)
 **Origin:** Ext D in [BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md](BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md)
@@ -11,8 +11,8 @@
 
 | # | Item | Status |
 |---|---|---|
-| A1 | Class name `ClusterMediationData` (treatment varies at the cluster level). Module 2's class is named in its own grill. | **open** |
-| A2 | Few-cluster warning: J < 25 with `se_type = "model"` points to `"kr"` and the cluster bootstrap; J < 10 warns whatever the SE type. Both numbers are medfit's choices (see Inference). | **open** |
+| A1 | Class name `ClusterMediationData` (treatment varies at the cluster level). Module 2's class is named in its own grill. | approved, D15 |
+| A2 | Few-cluster warning: J < 25 with `se_type = "model"` points to `"kr"` and the cluster bootstrap; J < 10 warns whatever the SE type. Both numbers are medfit's choices (see Inference). | approved, D16 |
 | A3 | Approximation warning in `decompose()` fires on the relative size of the gap | decided, D11 |
 | A4 | `se_type = "kr"`: Kenward-Roger df give t intervals for paths | decided, D10 |
 | A5 | Complete-case rows for both models and the cluster means | decided, D12 |
@@ -277,7 +277,7 @@ class, plus its branches in the tidy/glance chains.
 - **SEs.** Model-based fixed-effect vcov from lme4 by default. Kenward-Roger changes the SEs
   very little: one check at J = 15 with unbalanced clusters gave ratios of 1.000–1.002. Its
   value is the df (D10).
-- **Few clusters (A2, open).** J < 25 with model-based SEs warns and points to `"kr"` for paths
+- **Few clusters (A2, approved as D16).** J < 25 with model-based SEs warns and points to `"kr"` for paths
   and the cluster bootstrap for products. J < 10 warns whatever the SE type. Both numbers are
   medfit's choices. For the record:
   - McNeish (2017) always used REML with KR in the mixed-model arm, and judged coverage
@@ -583,7 +583,7 @@ implementation and the harness. Both ran R checks. Revision 2 applies:
 
 ## Open questions
 
-- **A1 and A2** need approval before the plan.
+- ~~A1 and A2 need approval before the plan~~ — approved 2026-09-25 (D15, D16).
 - If the SE ratio or the D4 correlation fails (group 5), the options are a joint fit for the
   cross-equation block, or the cluster bootstrap as the default interval. Either reopens D4.
 - Module 2's grill should revisit D8 with the individual-average own effect and the D-own exact

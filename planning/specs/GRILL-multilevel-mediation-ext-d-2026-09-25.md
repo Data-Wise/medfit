@@ -1,7 +1,7 @@
 # GRILL: medfit Extension D — multilevel mediation design decisions (2026-09-25)
 
 **Target:** section 8 of [REVIEW-multilevel-mediation-2026-09-25.md](REVIEW-multilevel-mediation-2026-09-25.md)
-**Status:** decided (D1-D14), 2026-09-25; D10-D14 triage two adverse reviews of spec revision 1. Open: spec items A1 (class name) and A2 (few-cluster thresholds)
+**Status:** decided (D1-D16), 2026-09-25; D10-D14 triage two adverse reviews of spec revision 1; D15-D16 approve spec items A1-A2. Spec approved.
 
 Each row is appended as it is decided. Recommended answers were pre-filled from the review and
 the codebase; the author's pick is recorded, with the recommendation noted when they differ.
@@ -24,14 +24,13 @@ the codebase; the author's pick is recorded, with the recommendation noted when 
 | D12 | Adverse review: cluster-mean rows (A5) | Both models fit identical complete-case rows and M-bar_j comes from them; print() adds that members missing from the analysis rows are assumed not to drive their peers' outcomes. Rejected: all rows with M observed (models on different rows, extract route needs data =). Recommended, chosen. |
 | D13 | Adverse review: scope corrections (D7 amended) | Random slopes allowed on the within-mediator term only; slopes on raw M, on the cluster-mean term or on X error (a raw-M slope loads on M-bar_j and changes the model: delta b_B up to 0.06 in review runs). Products of a mediator term with a covariate error as well as with X. The fit engine cluster-mean centers level-1 covariates in the outcome model and adds their means (Talloen et al. 2016, eqs. 9-10, p. 370); without this the own effect loses its upper-level robustness. Applied as corrections; D7's intent unchanged. |
 | D14 | Adverse review: bootstrap failures | Singular fits and convergence warnings in cluster-bootstrap refits count as failures, caught with withCallingHandlers, reported in the existing warning; @n_boot already holds successes. BootstrapResult unchanged. Rejected: a new slot (changes a class dependents consume). Recommended, chosen. |
+| D15 | Class name (spec A1) | ClusterMediationData: treatment varies at the cluster level; module 2 names its own class. Approved as proposed. |
+| D16 | Few-cluster thresholds (spec A2) | Warn when J < 25 with se_type = "model" (points to "kr" for paths and the cluster bootstrap for products); warn at J < 10 whatever the SE type. Medfit's own choices: McNeish (2017) and Hox et al. (2014) do not test lme4 model-based SEs below 25 clusters. Approved as proposed. |
 
 ## Open Questions
 
 Left for the spec to settle, or to check before implementation:
 
-- **A1, A2** in the spec: the class name, and the few-cluster thresholds (J < 25 with model SEs,
-  J < 10 always), which are medfit's choices; McNeish (2017) and Hox et al. (2014) do not test
-  lme4 model-based SEs below 25 clusters.
 - **Block-diagonal vcov (D4).** A first-order argument plus one simulated dataset (corr -0.06).
   The spec's simulation gates (SE ratio, cross-replication correlation) must hold with unbalanced
   clusters and random within-slopes.
@@ -47,5 +46,5 @@ Left for the spec to settle, or to check before implementation:
 1. ~~Commit this ledger to `dev`~~ — done (`fe6ff2f`).
 2. ~~Write the module-1 spec~~ — `SPEC-multilevel-mediation-2-1-1-2026-09-25.md`, revision 2
    after two adverse reviews (D10-D14).
-3. Approve spec items A1 and A2, then write the plan.
+3. ~~Approve spec items A1 and A2~~ — D15, D16. Next: write the plan.
 4. Module 2 (1-1-1) gets its own grill after module 1 ships.

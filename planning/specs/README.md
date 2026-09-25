@@ -22,7 +22,7 @@ Updated 2026-09-25. Each file's own `Status:` line is authoritative; this index 
 | `SPEC-serial-total-effect-2026-09-24.md` | spec | implemented, #81 (0.5.0) |
 | `GRILL-0.5.0-release-2026-09-24.md` | decision ledger | decided; 0.5.0 released GitHub-only 2026-09-25 |
 | `REVIEW-multilevel-mediation-2026-09-25.md` | literature review | complete; feeds the Ext D spec (decisions in the GRILL below) |
-| `GRILL-multilevel-mediation-ext-d-2026-09-25.md` | decision ledger | decided (D1-D14); module 1 = 2-1-1; D10-D14 triage the adverse reviews |
-| `SPEC-multilevel-mediation-2-1-1-2026-09-25.md` | spec | draft revision 2 after two adverse reviews; awaiting A1-A2 |
+| `GRILL-multilevel-mediation-ext-d-2026-09-25.md` | decision ledger | decided (D1-D16); module 1 = 2-1-1; D10-D14 triage the adverse reviews |
+| `SPEC-multilevel-mediation-2-1-1-2026-09-25.md` | spec | approved 2026-09-25 (revision 2, after two adverse reviews) |
 
-Next: approve `SPEC-multilevel-mediation-2-1-1-2026-09-25.md` (items A1-A2), then write its plan.
+Next: write the plan for `SPEC-multilevel-mediation-2-1-1-2026-09-25.md` (approved).
