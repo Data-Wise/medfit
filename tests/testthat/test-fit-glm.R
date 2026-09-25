@@ -389,6 +389,62 @@ test_that("se_type = 'sandwich' yields HC vcov; estimates unchanged", {
   )
 })
 
+test_that("se_type = 'sandwich' reaches the four-way (interaction) path", {
+  skip_if_not_installed("sandwich")
+  set.seed(321)
+  n <- 400
+  X <- rbinom(n, 1, 0.5)
+  M <- 0.5 * X + rnorm(n)
+  Y <- 0.3 * X + 0.4 * M + 0.3 * X * M + rnorm(n, sd = 0.5 + 2 * X)
+  d <- data.frame(X = X, M = M, Y = Y)
+
+  mod <- fit_mediation(Y ~ X * M, M ~ X, data = d,
+                       treatment = "X", mediator = "M")
+  sw <- fit_mediation(Y ~ X * M, M ~ X, data = d,
+                      treatment = "X", mediator = "M", se_type = "sandwich")
+
+  expect_s3_class(sw, "medfit::InteractionMediationData")
+  expect_equal(mod@estimates, sw@estimates)
+  # Previously the four-way worker hardcoded stats::vcov, so these matched.
+  expect_false(isTRUE(all.equal(mod@vcov, sw@vcov)))
+  gy <- stats::glm(Y ~ X * M, data = d)
+  expect_equal(
+    unname(sqrt(sw@vcov["theta3", "theta3"])),
+    unname(sqrt(sandwich::vcovHC(gy)["X:M", "X:M"]))
+  )
+})
+
+test_that("a supplied vcov_fun reaches the serial and parallel workers", {
+  skip_if_not_installed("sandwich")
+  set.seed(99)
+  n <- 400
+  X <- rbinom(n, 1, 0.5)
+  M1 <- 0.5 * X + rnorm(n)
+  M2 <- 0.4 * M1 + 0.2 * X + rnorm(n)
+  Y <- 0.3 * M2 + 0.2 * M1 + 0.2 * X + rnorm(n, sd = 0.5 + 2 * X)
+  d <- data.frame(X = X, M1 = M1, M2 = M2, Y = Y)
+  hc <- function(m) sandwich::vcovHC(m)
+
+  serial <- function(vf) {
+    extract_mediation(lm(M1 ~ X, d), model_y = lm(Y ~ X + M1 + M2, d),
+                      treatment = "X", mediator = c("M1", "M2"),
+                      mediator_models = list(lm(M2 ~ X + M1, d)),
+                      vcov_fun = vf)
+  }
+  s_hc <- serial(hc)
+  expect_false(isTRUE(all.equal(serial(stats::vcov)@vcov, s_hc@vcov)))
+  expect_equal(unname(sqrt(s_hc@vcov["b", "b"])),
+               unname(sqrt(hc(lm(Y ~ X + M1 + M2, d))["M2", "M2"])))
+
+  parallel <- function(vf) {
+    extract_mediation(lm(M1 ~ X, d), model_y = lm(Y ~ X + M1 + M2, d),
+                      treatment = "X", mediator = c("M1", "M2"),
+                      mediator_models = list(lm(M2 ~ X, d)),
+                      structure = "parallel", vcov_fun = vf)
+  }
+  expect_false(isTRUE(all.equal(parallel(stats::vcov)@vcov, parallel(hc)@vcov)))
+})
+
 test_that("se_type defaults to model-based", {
   set.seed(7)
   d <- data.frame(X = rnorm(150), M = rnorm(150), Y = rnorm(150))

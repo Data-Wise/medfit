@@ -70,6 +70,8 @@ navbar:
         href: articles/extraction.html
       - text: "Bootstrap Inference"
         href: articles/bootstrap.html
+      - text: "Methods and Formulas"
+        href: articles/methods.html
     ecosystem:
       text: Ecosystem
       href: https://data-wise.github.io/mediationverse/articles/ecosystem.html
@@ -98,6 +100,11 @@ reference:
       - med
       - quick
 
+  - title: "Data"
+    desc: "Simulated example data"
+    contents:
+      - mediation_demo
+
   - title: "Effect Extractors"
     desc: "Extract mediation effects from fitted models"
     contents:
@@ -107,6 +114,7 @@ reference:
       - pm
       - paths
       - decompose
+      - joint_effects
 
   - title: "S7 Classes"
     desc: "Core S7 class definitions for mediation data structures"
@@ -115,6 +123,7 @@ reference:
       - SerialMediationData
       - ParallelMediationData
       - InteractionMediationData
+      - JointMediationData
       - BootstrapResult
 
   - title: "Model Fitting"
@@ -127,6 +136,7 @@ reference:
   - title: "Methods"
     desc: "Print and summary methods for medfit classes"
     contents:
+      - tidy.S7_object
       - starts_with("print")
 
 development:

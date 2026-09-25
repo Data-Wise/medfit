@@ -18,7 +18,11 @@ zero-variance placeholder). Must contain an entry for every name in
 \code{aliases_to_add}.}
 
 \item{aliases_to_add}{Character vector of alias names to append as new
-rows/columns (those not already present in \code{vcov_src}).}
+rows/columns (those not already present in \code{vcov_src}). An alias in
+\code{source_idx} that is \emph{not} appended, because \code{vcov_src} already has a
+parameter of that name, must resolve to that same parameter. Otherwise the
+alias estimate and its row would describe different parameters (e.g. a
+lavaan user label \code{a1} on the path medfit calls \code{a2}), so this is an error.}
 }
 \value{
 A symmetric numeric matrix of dimension

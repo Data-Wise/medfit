@@ -30,8 +30,7 @@
 #' @param se_type Variance-covariance estimator for `@vcov`: `"model"` (default,
 #'   model-based `stats::vcov`) or `"sandwich"` (heteroskedasticity-consistent
 #'   `sandwich::vcovHC`, type HC3, recommended for IPW-weighted fits). The
-#'   `"sandwich"` option requires the suggested \pkg{sandwich} package. Applies
-#'   to the single-mediator path.
+#'   `"sandwich"` option requires the suggested \pkg{sandwich} package.
 #' @param engine_args Named list of engine-specific overrides (default:
 #'   `list()`, no overrides). Ignored by `engine = "glm"`. For
 #'   `engine = "regmedint"`, recognized names are `interaction`, `cvar`,
@@ -71,6 +70,13 @@
 #' \itemize{
 #'   \item Models are fit using [stats::glm()]
 #'   \item Supports all GLM families (gaussian, binomial, poisson, etc.)
+#'   \item With a non-identity link the path coefficients are on the link
+#'     scale, where the product \eqn{a b}{a * b} is not a natural indirect
+#'     effect on the outcome scale; interpret it with care or use
+#'     `engine = "regmedint"` for closed-form effects of a logistic outcome
+#'   \item A treatment-by-mediator term in `formula_y` requires Gaussian
+#'     identity-link models (the four-way formulas are linear); other families
+#'     error
 #'   \item For Gaussian models, residual standard deviations are extracted
 #'   \item Non-Gaussian outcomes have `sigma_y = NULL`
 #' }
@@ -84,48 +90,60 @@
 #'   \item `Gamma()`: Positive continuous outcomes
 #' }
 #'
-#' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(
-#'   X = rnorm(n),
-#'   C = rnorm(n)
-#' )
-#' mydata$M <- 0.5 * mydata$X + 0.2 * mydata$C + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + 0.1 * mydata$C + rnorm(n)
+#' ## regmedint Engine
 #'
-#' # Simple mediation with continuous variables
+#' When `engine = "regmedint"`:
+#' - Delegates to `regmedint::regmedint()` (suggested package) for closed-form
+#'   natural (in)direct effects, with or without a treatment-mediator interaction
+#' - Returns [MediationData] or [InteractionMediationData] depending on whether
+#'   `formula_y` contains a treatment-by-mediator interaction term; use
+#'   `engine_args` to override the derived regmedint arguments
+#'
+#' ## Reference Mediator Level
+#'
+#' When the fit yields an [InteractionMediationData], `m_star` fixes the level
+#' \eqn{m^*}{m*} at which the controlled direct effect is read off:
+#' \eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = theta1 + theta3 * m*} and
+#' \eqn{INTref = \theta_3 (E[M \mid X = 0] - m^*)}{INTref = theta3 * (E[M | X = 0] - m*)}.
+#' The two shift in compensating directions, so `nde()`, `nie()`, `te()`, and
+#' `pm()` are invariant to `m_star`; only the CDE/INTref split moves.
+#'
+#' The engines reach the same result by different routes. `engine = "glm"`
+#' applies `m_star` at *extraction* time, after the coefficients are fit;
+#' `engine = "regmedint"` passes it to `regmedint::regmedint()` as `m_cde`,
+#' where it is consumed by that package's closed-form estimator at *fitting*
+#' time. Supplying `m_star` for a fit with no treatment-by-mediator term is an
+#' error, not a silent no-op.
+#'
+#' @examples
+#' # mediation_demo is simulated data bundled with medfit; its covariates
+#' # confound the mediator-outcome relation, so both models adjust for them
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #' print(med_data)
 #'
-#' # With covariates
-#' med_data_cov <- fit_mediation(
-#'   formula_y = Y ~ X + M + C,
-#'   formula_m = M ~ X + C,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
-#' )
-#'
 #' \donttest{
-#' # Binary outcome (takes longer to fit)
-#' mydata$Y_bin <- rbinom(n, 1, plogis(0.3 * mydata$X + 0.4 * mydata$M))
+#' # Binary outcome (takes longer to fit): dichotomize the outcome at its median
+#' demo <- mediation_demo
+#' demo$outcome_bin <- as.integer(demo$outcome > stats::median(demo$outcome))
 #' med_data_bin <- fit_mediation(
-#'   formula_y = Y_bin ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M",
+#'   formula_y = outcome_bin ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1",
 #'   family_y = binomial()
 #' )
 #' }
+#'
+#' @references
+#' VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+#' 4-way decomposition. *Epidemiology*, 25(5), 749--761.
 #'
 #' @seealso [MediationData], [extract_mediation()], [bootstrap_mediation()]
 #' @export
@@ -237,7 +255,7 @@ fit_mediation <- function(formula_y,
       family_m = family_m,
       weights = weights,
       se_type = se_type,
-      m_star = m_star,
+      m_star = if (missing(m_star)) NULL else m_star,
       ...
     ),
     regmedint = .adapter_regmedint(
@@ -270,8 +288,9 @@ fit_mediation <- function(formula_y,
 #'   `NULL` for an unweighted fit. Passed explicitly (not via `...`) so glm's
 #'   non-standard evaluation of `weights` resolves in this frame.
 #' @param m_star Numeric scalar reference mediator level for the four-way
-#'   decomposition; forwarded to [extract_mediation()], which applies it when
-#'   `formula_y` carries a treatment-by-mediator term.
+#'   decomposition, or `NULL` when the caller did not supply one. Forwarded to
+#'   [extract_mediation()] only when non-`NULL`, because the extractor refuses an
+#'   `m_star` that no four-way fit uses (it keys on the call site).
 #' @param ... Additional arguments (passed to glm)
 #'
 #' @return MediationData object
@@ -287,7 +306,7 @@ fit_mediation <- function(formula_y,
   family_m,
   weights = NULL,
   se_type = c("model", "sandwich"),
-  m_star = 0,
+  m_star = NULL,
   ...) {
   se_type <- match.arg(se_type)
   # Build glm calls via do.call so the `weights` *value* (vector or absent) is
@@ -329,6 +348,16 @@ fit_mediation <- function(formula_y,
   # here -- extraction-time -- because the four-way split is computed from the
   # fitted coefficients; contrast the regmedint engine, which hands the same
   # value to its own estimator at fitting time.
+  # extract_mediation() refuses an `m_star` that no four-way fit will use, so
+  # forward it only when the caller supplied one (fit_mediation() has already
+  # rejected a supplied m_star without an interaction term). Omitting it lets
+  # the extractor use its default of 0.
+  if (is.null(m_star)) {
+    return(extract_mediation(
+      object = fit_m, model_y = fit_y, treatment = treatment,
+      mediator = mediator, data = data, vcov_fun = vcov_fun
+    ))
+  }
   extract_mediation(
     object = fit_m,
     model_y = fit_y,

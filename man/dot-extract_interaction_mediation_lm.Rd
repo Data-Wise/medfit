@@ -12,11 +12,17 @@
   int_term,
   outcome = NULL,
   data = NULL,
-  m_star = 0
+  m_star = 0,
+  vcov_fun = stats::vcov
 )
 }
 \arguments{
-\item{model_y}{Fitted lm/glm for the outcome (\code{Y ~ Mk + X + ...}).}
+\item{model_y}{Fitted lm/glm for the outcome. \code{Mk}'s coefficient is read as
+\code{b}; the model should include \code{X} and every earlier mediator
+(\code{Y ~ X + M1 + ... + Mk + ...}), whose coefficients are stored as the
+skip-path aliases \verb{b1..b\{k-1\}}. Omitting an earlier mediator that also
+affects \code{Y} biases \code{b}. \code{a * d * b} is the effect through the full chain
+only; \code{te()} sums every path.}
 
 \item{treatment}{Character scalar: treatment variable name.}
 
@@ -28,6 +34,9 @@
 \item{data}{Data frame, or \code{NULL} to take the \code{object} model frame.}
 
 \item{m_star}{Numeric scalar reference mediator level.}
+
+\item{vcov_fun}{Function returning a model's coefficient covariance
+(default \code{\link[stats:vcov]{stats::vcov()}}), e.g. a sandwich estimator.}
 }
 \value{
 An \code{InteractionMediationData} object.

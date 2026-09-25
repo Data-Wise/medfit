@@ -19,8 +19,11 @@
 #' @param outcome Character: name of outcome variable
 #' @param covariates Character vector: names of covariates to include
 #'   (optional, default: none)
-#' @param boot Logical: compute bootstrap confidence intervals?
-#'   (default: FALSE for speed)
+#' @param boot Logical: compute a bootstrap confidence interval for the
+#'   indirect effect? (default: FALSE for speed). Uses a parametric bootstrap
+#'   of \eqn{a b}{a * b} with a 95% percentile interval, attached to the result
+#'   as the `"bootstrap"` attribute; call [bootstrap_mediation()] directly for
+#'   another method or level.
 #' @param n_boot Integer: number of bootstrap samples (default: 1000)
 #' @param seed Integer: random seed for reproducibility (optional)
 #' @param ... Additional arguments passed to [fit_mediation()]
@@ -48,34 +51,16 @@
 #' - `summary(result)`: Detailed summary
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 200
-#' mydata <- data.frame(
-#'   treatment = rnorm(n),
-#'   covariate = rnorm(n)
-#' )
-#' mydata$mediator <- 0.5 * mydata$treatment + 0.2 * mydata$covariate + rnorm(n)
-#' mydata$outcome <- 0.3 * mydata$treatment + 0.4 * mydata$mediator +
-#'                   0.1 * mydata$covariate + rnorm(n)
-#'
-#' # Simple mediation (no covariates)
+#' # mediation_demo is simulated data bundled with medfit; its covariates
+#' # confound the mediator-outcome relation, so adjust for them
 #' result <- med(
-#'   data = mydata,
+#'   data = mediation_demo,
 #'   treatment = "treatment",
-#'   mediator = "mediator",
-#'   outcome = "outcome"
+#'   mediator = "mediator1",
+#'   outcome = "outcome",
+#'   covariates = c("covariate1", "covariate2")
 #' )
 #' print(result)
-#'
-#' # With covariates
-#' result_cov <- med(
-#'   data = mydata,
-#'   treatment = "treatment",
-#'   mediator = "mediator",
-#'   outcome = "outcome",
-#'   covariates = "covariate"
-#' )
 #'
 #' # Quick summary
 #' quick(result)
@@ -83,10 +68,11 @@
 #' \donttest{
 #' # With bootstrap CI (slower)
 #' result_boot <- med(
-#'   data = mydata,
+#'   data = mediation_demo,
 #'   treatment = "treatment",
-#'   mediator = "mediator",
+#'   mediator = "mediator1",
 #'   outcome = "outcome",
+#'   covariates = c("covariate1", "covariate2"),
 #'   boot = TRUE,
 #'   n_boot = 1000,
 #'   seed = 42
@@ -192,7 +178,8 @@ med <- function(data,
 #' Print a one-line summary of mediation results, perfect for quick checks
 #' or ADHD-friendly workflows.
 #'
-#' @param x A MediationData object (or result from [med()])
+#' @param x A [MediationData] or [SerialMediationData] object (or result from
+#'   [med()]). Other classes error; use `print()` or `summary()` for them.
 #' @param digits Integer: number of significant digits (default: 3)
 #' @param ... Additional arguments (ignored)
 #'
@@ -208,18 +195,12 @@ med <- function(data,
 #' confidence intervals are shown for NIE.
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' result <- med(
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M",
-#'   outcome = "Y"
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1",
+#'   outcome = "outcome",
+#'   covariates = c("covariate1", "covariate2")
 #' )
 #'
 #' # One-line summary
@@ -280,13 +261,18 @@ quick <- function(x, digits = 3, ...) {
 #' @noRd
 .quick_serial_mediation_data <- function(x, digits = 3, ...) {
   # Extract effects
+  # PM uses the total indirect effect, so show it beside the chain NIE; one
+  # te() call feeds both (one warning when the total is unavailable)
   indirect <- as.numeric(nie(x))
+  total <- as.numeric(te(x))
   direct <- as.numeric(nde(x))
-  prop_med <- as.numeric(pm(x))
+  indirect_total <- total - direct
+  prop_med <- as.numeric(.serial_pm_from_total(total, x@c_prime))
   n_mediators <- length(x@mediators)
 
   # Format values
   nie_str <- format(indirect, digits = digits)
+  nie_total_str <- format(indirect_total, digits = digits)
   nde_str <- format(direct, digits = digits)
   pm_str <- format(prop_med * 100, digits = digits)
 
@@ -303,9 +289,10 @@ quick <- function(x, digits = 3, ...) {
 
   # Print one-liner with mediator count
   cat("[", n_mediators, " mediators] ",
-      "NIE =", nie_str, ci_str,
-      "| NDE =", nde_str,
-      "| PM =", pm_str, "%\n", sep = "")
+      "NIE chain = ", nie_str, ci_str,
+      " | NIE total = ", nie_total_str,
+      " | NDE = ", nde_str,
+      " | PM = ", pm_str, "%\n", sep = "")
 
   invisible(x)
 }

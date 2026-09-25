@@ -1,9 +1,9 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.4.0 on `dev`, not yet tagged/submitted**. Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) all COMPLETE and merged to dev. Next = Extension C.1 (CMAverse adapter, blocked — CRAN availability + effect-representation, not yet spec'd) — see `EXTENSIONS-PLAN-2026-06-03.md`.
-**Timeline**: MVP shipped; extensions A ✅ done, B ✅ done, C ✅ done, C.1 blocked (CMAverse)
-**Last Updated**: 2026-08-22
+**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.4.0 tagged and released on `main`/GitHub** (2026-08-23, not CRAN-submitted). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0. Unreleased on `dev` since 0.4.0 (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Next = **0.5.0 release (proposed)** — checklist in `TODOS.md`; board in `EXTENSIONS-PLAN-2026-06-03.md`.
+**Timeline**: MVP shipped; extensions A ✅, B ✅, C ✅ (0.4.0), D8(b) ✅ (dev); 0.5.0 next; C.1 blocked (CMAverse); D/E brainstormed
+**Last Updated**: 2026-09-24
 
 > **Note:** Phases 7/7b/7c below are the detailed *design reference*. The current,
 > prioritized board lives in `planning/EXTENSIONS-PLAN-2026-06-03.md`.
@@ -24,25 +24,28 @@
 **Title**: Infrastructure for Mediation Model Fitting and Extraction
 **Description**: Provides S7-based infrastructure for fitting mediation models, extracting path coefficients, and performing bootstrap inference. Designed as a foundation package for probmed, RMediation, and medrobust.
 
-**Version**: 0.1.0 (MVP)
+**Version**: 0.1.0 (MVP); current 0.4.0 (CRAN: 0.3.2), next 0.5.0 (proposed)
 **License**: GPL-3
 **R Version**: >= 4.1.0
 **Repository**: https://github.com/data-wise/medfit
 
 ### Dependencies
 
-**Imports**:
+**Imports** (current DESCRIPTION):
 - S7 (>= 0.1.0)
-- stats (>= 4.1.0)
+- stats
 - methods
+- checkmate
+- generics
+- MASS (mvrnorm in the default parametric bootstrap; moved from Suggests for CRAN)
 
-**Suggests**:
-- MASS (for mvrnorm in parametric bootstrap)
+**Suggests** (current DESCRIPTION):
 - lavaan (>= 0.6-0) - SEM extraction
-- lme4 (future - mixed models)
+- regmedint - `fit_mediation(engine = "regmedint")`
+- sandwich - `se_type = "sandwich"`
 - testthat (>= 3.0.0)
-- knitr
-- rmarkdown
+- tibble
+- lme4 (future - mixed models; not yet in DESCRIPTION)
 
 **Future Consideration**:
 - OpenMx (>= 2.13) - SEM extraction (postponed for future release)
@@ -422,11 +425,11 @@ S7::method(extract_mediation, openmx_class) <- function(object,
 
 ---
 
-## Phase 4: Model Fitting API (Week 2-3) 🚧 IN PROGRESS
+## Phase 4: Model Fitting API (Week 2-3) ✅ COMPLETE
 
 **Goal**: Implement `fit_mediation()` for GLM engine
 
-**Status**: Generic defined with stub implementation. Needs GLM engine implementation.
+**Status**: GLM engine shipped (plus the regmedint engine in 0.4.0, Ext C). The dead generic stub was removed in #72.
 
 ### 4.1 Generic Definition
 
@@ -517,7 +520,7 @@ fit_mediation <- function(...) {
 
 ---
 
-## Phase 5: Bootstrap Infrastructure (Week 3-4)
+## Phase 5: Bootstrap Infrastructure (Week 3-4) ✅ COMPLETE
 
 **Goal**: Implement bootstrap methods
 
@@ -685,7 +688,7 @@ bootstrap_mediation <- function(data = NULL,
 
 ---
 
-## Phase 6: Testing & Documentation (Week 4)
+## Phase 6: Testing & Documentation (Week 4) ✅ COMPLETE
 
 **Goal**: Comprehensive testing and documentation
 
@@ -798,11 +801,11 @@ tests/testthat/
 
 ---
 
-## Phase 7: Interaction Support - VanderWeele Four-Way Decomposition (Future)
+## Phase 7: Interaction Support - VanderWeele Four-Way Decomposition ✅ COMPLETE (Ext B)
 
 **Goal**: Support treatment-mediator interactions using VanderWeele's potential outcomes framework
 
-**Status**: Planned for future release (after MVP)
+**Status**: Shipped as Ext B (#38/#39/#40; single mediator). The multi-mediator case shipped on `dev` as D8(b) `JointMediationData` (#76/#77; joint effects, no per-mediator split). The design below is kept as reference.
 
 ### 7.1 Theoretical Foundation
 
@@ -1028,7 +1031,7 @@ Per VanderWeele (2014), causal interpretation requires:
 
 **Goal**: Unified estimation infrastructure supporting multiple causal mediation methods
 
-**Status**: Design phase - brainstorming complete
+**Status**: Design reference only. No standalone increment; `decompose()` shipped, the `Decomposition` class did not (see Ext C spec).
 
 ### 7b.1 User Interface Design
 
@@ -1293,7 +1296,7 @@ plot(result, type = "bootstrap")      # Bootstrap distribution
 
 **Goal**: Standardize integration with external packages for advanced estimation methods
 
-**Status**: Design phase - architecture documented
+**Status**: Partly superseded. Ext C shipped one regmedint adapter by extending `fit_mediation(engine =)` (no registry, PR #59); the CMAverse adapter below is Ext C.1, blocked (see `EXTENSIONS-PLAN-2026-06-03.md`).
 
 ### 7c.1 Motivation
 
@@ -1700,44 +1703,44 @@ NULL
 
 ---
 
-## Phase 8: Polish & Release (Week 5)
+## Phase 8: Polish & Release (Week 5) ✅ COMPLETE (v0.3.2 on CRAN)
 
 **Goal**: Finalize for release and integration
 
 ### 8.1 R CMD check
 
-- [ ] R CMD check passes on all platforms
-  - [ ] macOS (latest R)
-  - [ ] Windows (latest R)
-  - [ ] Ubuntu (latest R and R-devel)
-- [ ] 0 errors, 0 warnings, 0 notes
+- [x] R CMD check passes on all platforms
+  - [x] macOS (latest R)
+  - [x] Windows (latest R)
+  - [x] Ubuntu (latest R and R-devel)
+- [x] 0 errors, 0 warnings (strict check 0/0/1: the Date NOTE only)
 
 ### 8.2 CI/CD
 
-- [ ] GitHub Actions passing
-  - [ ] R-CMD-check on multi-platform
-  - [ ] test-coverage reporting
-  - [ ] pkgdown site builds
-- [ ] Coverage badges in README
-- [ ] Build status badges
+- [x] GitHub Actions passing
+  - [x] R-CMD-check on multi-platform
+  - [x] test-coverage reporting
+  - [x] pkgdown site builds
+- [x] Coverage badges in README
+- [x] Build status badges
 
 ### 8.3 Documentation Website
 
-- [ ] pkgdown site deployed to GitHub Pages
-- [ ] All vignettes render correctly
-- [ ] Function reference complete
-- [ ] NEWS.md formatted properly
+- [x] pkgdown site deployed to GitHub Pages
+- [x] All vignettes render correctly (evaluated at site build since `b888ffe`)
+- [x] Function reference complete
+- [x] NEWS.md formatted properly
 - [ ] Search functionality works
 
 ### 8.4 Prepare for CRAN (Optional)
 
 **If submitting to CRAN**:
-- [ ] CRAN comments file prepared
+- [x] CRAN comments file prepared
 - [ ] All examples run < 5 seconds
 - [ ] No calls to external services in tests
-- [ ] Appropriate use of `\donttest{}`
-- [ ] DESCRIPTION fields complete
-- [ ] cran-comments.md written
+- [x] Appropriate use of `\donttest{}`
+- [x] DESCRIPTION fields complete
+- [x] cran-comments.md written
 
 **Deliverables**:
 - Production-ready package
@@ -1781,12 +1784,12 @@ NULL
 
 medfit is ready for integration when:
 
-- [ ] All core functions implemented and tested
-- [ ] S7 classes defined and validated
+- [x] All core functions implemented and tested
+- [x] S7 classes defined and validated
 - [ ] >90% test coverage
-- [ ] R CMD check: 0 errors, 0 warnings, 0 notes
-- [ ] Documentation complete (functions + vignettes)
-- [ ] pkgdown site deployed
+- [x] R CMD check: 0 errors, 0 warnings (strict check 0/0/1: the Date NOTE only)
+- [x] Documentation complete (functions + vignettes)
+- [x] pkgdown site deployed
 - [ ] probmed can use medfit without breaking changes
 
 ### Integration Success Criteria
@@ -1840,29 +1843,11 @@ Integration is successful when:
 
 ## Next Actions
 
-### This Week
+The original week-by-week plan is complete. Current next actions:
 
-1. **Review this roadmap** - Discuss and approve
-2. **Create GitHub repository** - Set up infrastructure
-3. **Begin Phase 1** - Package skeleton
-
-### Week 1
-
-- [ ] Complete Phase 1 (setup)
-- [ ] Complete Phase 2 (S7 classes)
-- [ ] Begin Phase 3 (extraction)
-
-### Week 2
-
-- [ ] Complete Phase 3 (extraction)
-- [ ] Complete Phase 4 (fitting)
-- [ ] Begin Phase 5 (bootstrap)
-
-### Weeks 3-4
-
-- [ ] Complete Phase 5 (bootstrap)
-- [ ] Complete Phase 6 (testing & docs)
-- [ ] Complete Phase 7 (polish)
+1. **0.5.0 release (proposed)** — checklist in `planning/TODOS.md`
+2. **Ext D (multilevel)** — needs a spec; see `planning/specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
+3. **Ext C.1 (CMAverse)** — blocked; see `planning/EXTENSIONS-PLAN-2026-06-03.md`
 
 ---
 
@@ -1885,7 +1870,7 @@ Integration is successful when:
 
 ---
 
-**Status**: ✅ ALL MVP PHASES COMPLETE + Extensions A & B COMPLETE → v0.3.2 on CRAN
+**Status**: ✅ ALL MVP PHASES COMPLETE + Extensions A, B, C COMPLETE (v0.4.0, GitHub) + D8(b) on dev → v0.3.2 on CRAN; 0.5.0 proposed
 
 **Completed**:
 - ✅ Phase 1: Package Setup (CI/CD, documentation, Dependabot)
@@ -1899,14 +1884,19 @@ Integration is successful when:
 - ✅ Phase 7 (Ext B): VanderWeele four-way interaction — `InteractionMediationData`, lm/glm + lavaan extraction, delta-method CIs. PRs #38/#39/#40 merged to dev.
 - ✅ Phase 7's structural sibling, Ext A (parallel mediation) — `ParallelMediationData`, lm/glm + lavaan extraction, vignette. PRs #34/#36/#37 merged to dev.
 - ✅ Phase 8: Polish & Release — v0.3.2 accepted + published on CRAN (2026-07-23)
+- ✅ Phase 7c (Ext C): regmedint engine adapter + `m_star` argument (PR #59) → v0.4.0, tagged and released on GitHub 2026-08-23
+- ✅ D8(b): `JointMediationData` + `joint_effects()` (#76/#77, dev)
+- ✅ Post-0.4.0 (dev): `mediation_demo` (#62-#67), effect SEs for all classes (#69-#75), Methods and Formulas article (#79), four-way factor covariates (#78), joint SEs with `data =` (#80), serial total effect (#81, behavior change), `confint()` path alias lookup (#82, behavior change); articles evaluate at site build
 
 **Current**:
-- 🚀 v0.3.2 live on CRAN; `main`/`dev` synced
-- 🎨 pkgdown site deployed at https://data-wise.github.io/medfit/
+- 🚀 v0.3.2 live on CRAN; v0.4.0 on `main`/GitHub; `dev` ahead of `main` with unreleased work
+- 🎨 pkgdown site deployed at https://data-wise.github.io/medfit/ (from `main`; Methods article appears after the next main deploy)
 
 **Future Development**:
-- Phase 7c (Ext C, NEXT): Engine Adapters (CMAverse first, tmle3 future) — needs `SPEC-engine-registry.md` + `SPEC-cmaverse-adapter.md` (not yet written)
-- Phase 7b design (estimation-engine UI, Decomposition class) informs Ext C but has no standalone increment of its own — folded into Ext C's scope
+- 0.5.0 release (proposed; minor bump for #81/#82) — checklist in `TODOS.md`
+- Ext C.1: CMAverse adapter — blocked (not on CRAN; simulation-based effects have no slot)
+- Ext D (multilevel) / Ext E (longitudinal) — brainstormed 2026-08-22, not spec'd
+- Phase 7b design (estimation-engine UI) has no standalone increment; `decompose()` shipped, no `Decomposition` class
 
-**Next Review**: After Ext C spec is written
-**Last Updated**: 2026-07-24
+**Next Review**: After the 0.5.0 release
+**Last Updated**: 2026-09-24

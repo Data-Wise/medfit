@@ -21,23 +21,29 @@ glm_class <- S7::new_S3_class("glm")
 #' @param object Fitted lm model. For simple mediation this is the mediator
 #'   model (`M ~ X + covariates`); for serial mediation it is the first
 #'   mediator model (`M1 ~ X + covariates`).
-#' @param model_y Fitted lm or glm model for the outcome (`Y ~ X + M + covariates`,
-#'   or `Y ~ X + Mk + covariates` for serial chains).
+#' @param model_y Fitted lm or glm model for the outcome (`Y ~ X + M + covariates`).
+#'   For serial chains, include every mediator, not only the last:
+#'   `Y ~ X + M1 + ... + Mk + covariates`. Only `Mk`'s coefficient becomes the
+#'   `b` path, but omitting an earlier mediator that also affects `Y` biases it.
 #' @param treatment Character: name of the treatment variable
 #' @param mediator Character: name of the mediator variable for simple mediation
 #'   (`X -> M -> Y`), OR an ordered character vector of length >= 2 for serial
-#'   mediation (`X -> M1 -> M2 -> ... -> Y`). When a vector is supplied the
-#'   method returns a [SerialMediationData] object instead of [MediationData].
+#'   or parallel mediation. When a vector is supplied the method returns a
+#'   [SerialMediationData], [ParallelMediationData], or [JointMediationData]
+#'   object instead of [MediationData].
 #' @param mediator_models List of fitted lm/glm models for mediators 2..k (the
 #'   `M2 ~ M1 + ...`, ..., `Mk ~ M(k-1) + ...` regressions), in chain order.
-#'   Required and only used on the serial branch; must have length
-#'   `length(mediator) - 1`.
+#'   Required whenever `mediator` has length >= 2 (serial or parallel); must
+#'   have length `length(mediator) - 1`.
 #' @param outcome Character: name of the outcome variable (optional, auto-detected)
 #' @param data Data frame: original data (optional, extracted from model if available)
 #' @param ... Additional arguments (ignored)
 #'
-#' @return A [MediationData] object, or a [SerialMediationData] object when
-#'   `mediator` is a character vector of length >= 2 (serial mediation).
+#' @return A [MediationData] object; an [InteractionMediationData] object when
+#'   a single mediator's outcome model has a treatment-by-mediator term; a
+#'   [SerialMediationData] or [ParallelMediationData] object when `mediator`
+#'   has length >= 2; or a [JointMediationData] object when it has length >= 2
+#'   and the outcome model has a treatment-by-mediator term.
 #'
 #' @details
 #' This method extracts mediation structure from separately-fitted linear
@@ -49,6 +55,13 @@ glm_class <- S7::new_S3_class("glm")
 #' first mediator model in `object`, mediators 2..k in `mediator_models`, and
 #' the outcome model in `model_y`. See [SerialMediationData].
 #'
+#' With two or more mediators, a treatment-by-mediator product in the outcome
+#' model (written with `:` or `*`, e.g. `Y ~ X * M2 + M1 + C`) returns a
+#' [JointMediationData] object with the joint natural effects of the mediators
+#' instead; `m_star` is then a scalar or a vector named by the interacting
+#' mediators. Every other product (in a mediator model, between mediators,
+#' three-way, with a covariate, or inside a function such as `I(X * M)`) errors.
+#'
 #' The method extracts:
 #' - Path coefficients (`a`, `b`, `c'`; plus `d1..d{k-1}` for serial chains)
 #' - Combined parameter vector and variance-covariance matrix
@@ -57,9 +70,12 @@ glm_class <- S7::new_S3_class("glm")
 #'
 #' ## Covariance contract and lm-vs-lavaan divergence
 #'
-#' The combined `vcov` is **block-diagonal across separately-fitted equations**:
-#' coefficients from different regressions are independent by construction, so
-#' `cov(a, b)`, `cov(a, d_i)`, `cov(d_i, b)` are all zero. The covariance
+#' The combined `vcov` is **block-diagonal across separately-fitted equations**,
+#' so `cov(a, b)`, `cov(a, d_i)`, `cov(d_i, b)` are stored as zero. For OLS this
+#' is exact when each later equation contains every regressor of the earlier one
+#' (simple, serial, four-way); for parallel mediators it omits the covariance
+#' between their `a` paths. [JointMediationData] instead stores the full stacked
+#' OLS covariance. The covariance
 #' *within* the outcome equation is preserved, so `cov(b, c')` (and, in serial
 #' chains, the joint covariance among outcome-equation terms) is non-zero.
 #'
@@ -92,10 +108,15 @@ glm_class <- S7::new_S3_class("glm")
 #'   mediator = "M"
 #' )
 #'
-#' # Serial chain X -> M1 -> M2 -> Y
-#' fit_m1 <- lm(M1 ~ X, data = data)
-#' fit_m2 <- lm(M2 ~ M1, data = data)
-#' fit_y2 <- lm(Y ~ M2 + X, data = data)
+#' # Serial chain X -> M1 -> M2 -> Y, with a direct M1 -> Y path
+#' M1 <- 0.5 * X + rnorm(n)
+#' M2 <- 0.2 * X + 0.5 * M1 + rnorm(n)
+#' Y2 <- 0.2 * X + 0.4 * M1 + 0.3 * M2 + rnorm(n)
+#' serial_data <- data.frame(X = X, M1 = M1, M2 = M2, Y = Y2)
+#' fit_m1 <- lm(M1 ~ X, data = serial_data)
+#' fit_m2 <- lm(M2 ~ X + M1, data = serial_data)
+#' # Keep M1 in the outcome model: M1 also affects Y, so dropping it biases b
+#' fit_y2 <- lm(Y ~ X + M1 + M2, data = serial_data)
 #' serial <- extract_mediation(
 #'   fit_m1,
 #'   model_y = fit_y2,
@@ -131,6 +152,7 @@ S7::method(extract_mediation, lm_class) <- function(
     structure = structure,
     decomposition = decomposition,
     m_star = m_star,
+    m_star_supplied = !missing(m_star),
     vcov_fun = vcov_fun
   )
 }
@@ -165,6 +187,7 @@ S7::method(extract_mediation, glm_class) <- function(
     structure = structure,
     decomposition = decomposition,
     m_star = m_star,
+    m_star_supplied = !missing(m_star),
     vcov_fun = vcov_fun
   )
 }
@@ -180,6 +203,11 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param mediator_models List of fitted mediator models 2..k (serial only)
 #' @param outcome Outcome variable name (auto-detected if NULL)
 #' @param data Original data (extracted from model if NULL)
+#' @param structure,decomposition,m_star See [extract_mediation()].
+#' @param vcov_fun Function returning a model's coefficient covariance
+#'   (default [stats::vcov()]); passed to every worker.
+#' @param m_star_supplied Logical: was `m_star` given at the call site? Set by
+#'   the S7 methods from `!missing(m_star)`; an unused supplied value errors.
 #'
 #' @return MediationData object, or SerialMediationData when `mediator` is a
 #'   vector of length >= 2
@@ -195,7 +223,8 @@ S7::method(extract_mediation, glm_class) <- function(
   structure = c("auto", "serial", "parallel"),
   decomposition = c("auto", "four_way", "two_way"),
   m_star = 0,
-  vcov_fun = stats::vcov) {
+  vcov_fun = stats::vcov,
+  m_star_supplied = FALSE) {
 
   structure <- match.arg(structure)
   decomposition <- match.arg(decomposition)
@@ -206,6 +235,31 @@ S7::method(extract_mediation, glm_class) <- function(
   # and there are >= 2 mediators, infer serial vs parallel from the mediator
   # models' predictors. Branch BEFORE the scalar-mediator assertion below.
   if (length(mediator) >= 2L) {
+    hits <- .find_product_terms(c(list(model_m), mediator_models, list(model_y)),
+                                c(treatment, mediator))
+    # --- Joint branch: treatment-by-mediator products in the outcome model ---
+    # Supported products route to the joint natural effects; any other product
+    # errors, naming the term and its model. No-product fits skip this block.
+    if (length(hits) > 0L) {
+      split <- .partition_joint_products(hits, model_y, treatment, mediator)
+      .stop_on_unsupported_joint_products(split$unsupported)
+      med_models <- c(list(model_m), mediator_models)
+      structure <- .check_joint_fit(med_models, model_y, treatment, mediator,
+                                    structure, decomposition, vcov_fun)
+      m_star <- .normalize_joint_m_star(m_star, split$interactions, m_star_supplied)
+      return(.extract_joint_mediation_lm(
+        med_models   = med_models,
+        model_y      = model_y,
+        treatment    = treatment,
+        mediators    = mediator,
+        structure    = structure,
+        interactions = split$interactions,
+        m_star       = m_star,
+        outcome      = outcome,
+        data         = data
+      ))
+    }
+    if (m_star_supplied) .stop_on_unused_m_star(treatment, mediator[1L])
     if (structure == "auto") {
       if (is.null(mediator_models)) {
         stop(paste0(
@@ -225,7 +279,8 @@ S7::method(extract_mediation, glm_class) <- function(
         treatment       = treatment,
         mediators       = mediator,
         outcome         = outcome,
-        data            = data
+        data            = data,
+        vcov_fun        = vcov_fun
       ))
     }
     return(.extract_parallel_mediation_lm(
@@ -235,7 +290,8 @@ S7::method(extract_mediation, glm_class) <- function(
       treatment       = treatment,
       mediators       = mediator,
       outcome         = outcome,
-      data            = data
+      data            = data,
+      vcov_fun        = vcov_fun
     ))
   }
 
@@ -244,6 +300,18 @@ S7::method(extract_mediation, glm_class) <- function(
   # explicitly disabled via decomposition = "two_way"), route to the four-way
   # decomposition worker; otherwise fall through to the standard simple path so
   # the no-interaction behavior is unchanged.
+  wrapped <- .find_wrapped_products(list(model_m, model_y),
+                                    c(treatment, mediator), require_all = TRUE)
+  if (length(wrapped) > 0L) {
+    stop(paste0(
+      "Found function-wrapped treatment-by-mediator product term(s): ",
+      paste(wrapped, collapse = ", "), ". medfit recognizes the product only ",
+      "when written with ':' or '*' (e.g. ", treatment, " * ", mediator,
+      "); otherwise it is treated as an unrelated covariate and the effects ",
+      "ignore the interaction. Rewrite the term with ':' or '*'."
+    ), call. = FALSE)
+  }
+
   int_term <- .find_interaction_term(model_y, treatment, mediator)
   if (decomposition == "four_way" && is.na(int_term)) {
     stop(
@@ -256,9 +324,10 @@ S7::method(extract_mediation, glm_class) <- function(
     return(.extract_interaction_mediation_lm(
       model_m = model_m, model_y = model_y, treatment = treatment,
       mediator = mediator, int_term = int_term, outcome = outcome,
-      data = data, m_star = m_star
+      data = data, m_star = m_star, vcov_fun = vcov_fun
     ))
   }
+  if (m_star_supplied) .stop_on_unused_m_star(treatment, mediator)
 
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
 
@@ -449,6 +518,111 @@ S7::method(extract_mediation, glm_class) <- function(
 }
 
 
+#' Find product terms involving the treatment or a mediator
+#'
+#' Scans each model's `terms()` for interaction terms (order > 1) with at least
+#' one component in `vars`, plus function-wrapped products such as
+#' `I(X * M1)` (see [.find_wrapped_products()]). Products among covariates alone
+#' are allowed. Returns `"<response>: <term>"` labels, or `character(0)` when
+#' none are found.
+#'
+#' @param models List of fitted lm/glm models (`NULL` entries are skipped).
+#' @param vars Character vector: treatment and mediator names.
+#' @keywords internal
+.find_product_terms <- function(models, vars) {
+  hits <- character(0)
+  for (mod in models) {
+    if (is.null(mod)) next
+    tt <- stats::terms(mod)
+    labs <- attr(tt, "term.labels")[attr(tt, "order") > 1L]
+    involved <- vapply(strsplit(labs, ":", fixed = TRUE),
+                       function(parts) any(parts %in% vars), logical(1))
+    if (any(involved)) {
+      resp <- deparse(stats::formula(mod)[[2L]])
+      hits <- c(hits, paste0(resp, ": ", labs[involved]))
+    }
+  }
+  unique(c(hits, .find_wrapped_products(models, vars)))
+}
+
+
+#' Find function-wrapped product terms
+#'
+#' A product written inside a function call, such as `I(X * M)`, is a single
+#' order-1 term, so the `":"`-based scans miss it and the product is treated as
+#' an unrelated covariate. This flags order-1 terms whose variables (via
+#' [all.vars()]) include at least two distinct names and involve `vars`: any of
+#' them by default, or all of them when `require_all = TRUE`. Single-variable
+#' transforms such as `I(X^2)` or `log(C)` are not flagged. Products precomputed
+#' as a data column cannot be detected from the formula.
+#'
+#' @param models List of fitted lm/glm models (`NULL` entries are skipped).
+#' @param vars Character vector: treatment and mediator names.
+#' @param require_all Logical: flag only terms involving every name in `vars`.
+#' @return `"<response>: <term>"` labels, or `character(0)`.
+#' @keywords internal
+.find_wrapped_products <- function(models, vars, require_all = FALSE) {
+  hits <- character(0)
+  for (mod in models) {
+    if (is.null(mod)) next
+    tt <- stats::terms(mod)
+    labs <- attr(tt, "term.labels")[attr(tt, "order") == 1L]
+    wrapped <- vapply(labs, function(lab) {
+      term_vars <- tryCatch(unique(all.vars(str2lang(lab))),
+                            error = function(e) character(0))
+      if (length(term_vars) < 2L) return(FALSE)
+      if (require_all) all(vars %in% term_vars) else any(term_vars %in% vars)
+    }, logical(1))
+    if (any(wrapped)) {
+      resp <- deparse(stats::formula(mod)[[2L]])
+      hits <- c(hits, paste0(resp, ": ", labs[wrapped]))
+    }
+  }
+  unique(hits)
+}
+
+
+#' Error when a multi-mediator model carries product terms
+#'
+#' Serial and parallel extraction estimate main-effect paths only, so a
+#' product term involving the treatment or a mediator would otherwise be
+#' ignored silently. Shared by the lm/glm and lavaan engines.
+#'
+#' @param hits Character vector of offending terms (from
+#'   [.find_product_terms()] or [.find_product_terms_lavaan()]).
+#' @keywords internal
+.stop_on_multimediator_products <- function(hits) {
+  if (length(hits) == 0L) return(invisible(NULL))
+  stop(paste0(
+    "Multi-mediator (serial or parallel) extraction does not support product ",
+    "terms involving the treatment or a mediator, including function-wrapped ",
+    "terms such as I(X * M) that combine one with another variable; found: ",
+    paste(hits, collapse = ", "), ". These paths would be reported as main ",
+    "effects that ignore the interaction. Refit without the product term(s), ",
+    "or use a single mediator (whose X:M interaction is supported via the ",
+    "four-way decomposition)."
+  ), call. = FALSE)
+}
+
+
+#' Error when `m_star` was supplied but no four-way decomposition is run
+#'
+#' `m_star` only enters the four-way decomposition, which needs a single
+#' mediator and a treatment-by-mediator product. A value supplied for any other
+#' fit would be dropped silently, so refuse it. The check keys on whether the
+#' argument was given at the call site, as in [fit_mediation()].
+#'
+#' @param treatment,mediator Variable names, used in the suggested formula.
+#' @keywords internal
+.stop_on_unused_m_star <- function(treatment, mediator) {
+  stop(paste0(
+    "`m_star` applies only when the outcome model has a treatment-by-mediator ",
+    "term (e.g. ", treatment, " * ", mediator, ") that is not disabled by ",
+    "decomposition = 'two_way'. Drop `m_star`, or add the interaction term."
+  ), call. = FALSE)
+}
+
+
 #' Locate a treatment-by-mediator interaction term in an outcome model
 #'
 #' Returns the coefficient name of the `X:M` product term in `model_y`, trying
@@ -488,6 +662,8 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param int_term Character: the interaction coefficient name in `model_y`
 #'   (from [.find_interaction_term()]).
 #' @param m_star Numeric scalar reference mediator level.
+#' @param vcov_fun Function returning a model's coefficient covariance
+#'   (default [stats::vcov()]), e.g. a sandwich estimator.
 #' @inheritParams .extract_serial_mediation_lm
 #' @return An `InteractionMediationData` object.
 #' @keywords internal
@@ -499,7 +675,8 @@ S7::method(extract_mediation, glm_class) <- function(
   int_term,
   outcome = NULL,
   data = NULL,
-  m_star = 0) {
+  m_star = 0,
+  vcov_fun = stats::vcov) {
 
   # --- Input validation ---
   checkmate::assert_multi_class(model_m, c("lm", "glm"), .var.name = "object")
@@ -517,6 +694,20 @@ S7::method(extract_mediation, glm_class) <- function(
   if (non_gaussian(model_m) || non_gaussian(model_y)) {
     stop(paste0("Four-way decomposition currently supports continuous (Gaussian) ",
                 "mediator and outcome only; non-Gaussian models are not yet supported."),
+         call. = FALSE)
+  }
+  # The linear four-way formulas also need the identity link: a Gaussian glm
+  # with, say, a log link is non-linear in the coefficients.
+  non_identity <- function(m) {
+    inherits(m, "glm") && !identical(stats::family(m)$link, "identity")
+  }
+  if (non_identity(model_m) || non_identity(model_y)) {
+    links <- vapply(list(model_m, model_y), function(m) {
+      if (inherits(m, "glm")) stats::family(m)$link else "identity"
+    }, character(1))
+    stop(paste0("Four-way decomposition requires the identity link; got ",
+                "link '", links[1L], "' (mediator model) and '", links[2L],
+                "' (outcome model). Refit with gaussian(link = \"identity\")."),
          call. = FALSE)
   }
 
@@ -548,15 +739,22 @@ S7::method(extract_mediation, glm_class) <- function(
   }
 
   # --- Reference prediction E[M | X = 0]: covariates at their sample means ---
+  # Means are over the mediator model's design columns, so factor dummies
+  # (e.g. Gb, Gc) and transformed terms (e.g. log(C)) are included.
   m_covs <- setdiff(names(coef_m), c("(Intercept)", treatment))
+  # With case weights (frequency, survey or IPW), the means are weighted.
+  mm_m <- tryCatch(stats::model.matrix(model_m), error = function(e) NULL)
+  w_m <- tryCatch(stats::model.weights(stats::model.frame(model_m)),
+                  error = function(e) NULL)
+  c_bar <- .interaction_covariate_means(data, m_covs, mm = mm_m, w = w_m)
   m_ref <- beta0
-  if (length(m_covs) > 0 && !is.null(data)) {
-    for (cv in m_covs) {
-      if (cv %in% names(data) && is.numeric(data[[cv]])) {
-        m_ref <- m_ref + unname(coef_m[[cv]]) * mean(data[[cv]], na.rm = TRUE)
-      }
-    }
+  for (cv in m_covs) {
+    m_ref <- m_ref + unname(coef_m[[cv]]) * c_bar[[cv]]
   }
+  # Keep the exact means with @data so the delta-method gradients reuse them:
+  # caller-supplied data (fit_mediation() passes the raw data) is not a model
+  # frame and may hold rows the mediator model did not use.
+  if (!is.null(data)) attr(data, "medfit_covariate_means") <- c_bar
 
   # --- Four-way components (continuous Y, M; binary X) ---
   cde     <- theta1 + theta3 * m_star
@@ -578,8 +776,8 @@ S7::method(extract_mediation, glm_class) <- function(
   n_src <- n_m + n_y
   vcov_src <- matrix(0, n_src, n_src,
                      dimnames = list(c(names_m, names_y), c(names_m, names_y)))
-  vcov_src[seq_len(n_m), seq_len(n_m)] <- stats::vcov(model_m)
-  vcov_src[(n_m + 1):n_src, (n_m + 1):n_src] <- stats::vcov(model_y)
+  vcov_src[seq_len(n_m), seq_len(n_m)] <- vcov_fun(model_m)
+  vcov_src[(n_m + 1):n_src, (n_m + 1):n_src] <- vcov_fun(model_y)
 
   # Aliases a/b/c_prime/theta3 (+ b0 for the INTref intercept term).
   alias_src <- c(
@@ -629,6 +827,49 @@ S7::method(extract_mediation, glm_class) <- function(
 }
 
 
+#' Covariate means for the reference mediator mean (four-way decomposition)
+#'
+#' Sample (or case-weighted) means of the mediator model's covariate design
+#' columns: from `mm` when given (the extractor passes
+#' `model.matrix(model_m)`), else the means
+#' the extractor stored on `dat` (attribute `medfit_covariate_means`), else
+#' rebuilt from a model frame's `terms` attribute, else plain numeric columns
+#' of `dat` (e.g. the lavaan data matrix). Uses [mean()] per column so
+#' numeric-covariate results match the column means exactly.
+#'
+#' @param dat Data frame (the object's `@data`), or `NULL`.
+#' @param covs Covariate coefficient names (mediator model, excluding the
+#'   intercept and the treatment).
+#' @param mm Optional design matrix of the mediator model.
+#' @param w Optional case weights over the rows of `mm`; `NULL` for unweighted
+#'   means. A model frame's `(weights)` column is used when rebuilding.
+#' @return Named numeric vector over `covs`.
+#' @keywords internal
+.interaction_covariate_means <- function(dat, covs, mm = NULL, w = NULL) { # nolint: object_length_linter.
+  if (length(covs) == 0L) return(stats::setNames(numeric(0), character(0)))
+  col_means <- function(get) {
+    stats::setNames(vapply(covs, get, numeric(1), USE.NAMES = FALSE), covs)
+  }
+  stored <- attr(dat, "medfit_covariate_means")
+  if (is.null(mm) && all(covs %in% names(stored))) return(stored[covs])
+  if (is.null(mm) && !is.null(attr(dat, "terms"))) {
+    w <- stats::model.weights(dat)
+    mm <- tryCatch(stats::model.matrix(attr(dat, "terms"), dat),
+                   error = function(e) NULL)
+  }
+  if (!is.null(mm) && all(covs %in% colnames(mm))) {
+    if (is.null(w)) return(col_means(function(cv) mean(mm[, cv])))
+    return(col_means(function(cv) sum(mm[, cv] * w) / sum(w)))
+  }
+  if (!is.null(dat) && all(covs %in% names(dat)) &&
+        all(vapply(covs, function(cv) is.numeric(dat[[cv]]), logical(1)))) {
+    return(col_means(function(cv) mean(dat[[cv]], na.rm = TRUE)))
+  }
+  stop("Cannot compute the covariate means for E[M | X = 0] (four-way ",
+       "decomposition) for: ", paste(covs, collapse = ", "), ".", call. = FALSE)
+}
+
+
 #' Extract Serial Mediation Structure from lm/glm Models
 #'
 #' Internal worker for the serial branch of the lm/glm [extract_mediation()]
@@ -640,12 +881,19 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param object Fitted lm/glm for the first mediator (`M1 ~ X + ...`).
 #' @param mediator_models List (length `k - 1`) of fitted lm/glm models for
 #'   mediators 2..k (`M2 ~ M1 + ...`, ..., `Mk ~ M(k-1) + ...`), in chain order.
-#' @param model_y Fitted lm/glm for the outcome (`Y ~ Mk + X + ...`).
+#' @param model_y Fitted lm/glm for the outcome. `Mk`'s coefficient is read as
+#'   `b`; the model should include `X` and every earlier mediator
+#'   (`Y ~ X + M1 + ... + Mk + ...`), whose coefficients are stored as the
+#'   skip-path aliases `b1..b{k-1}`. Omitting an earlier mediator that also
+#'   affects `Y` biases `b`. `a * d * b` is the effect through the full chain
+#'   only; `te()` sums every path.
 #' @param treatment Character scalar: treatment variable name.
 #' @param mediators Character vector (length >= 2): mediator names in causal
 #'   order (`M1 -> M2 -> ... -> Mk`).
 #' @param outcome Character scalar, or `NULL` to auto-detect from `model_y`.
 #' @param data Data frame, or `NULL` to take the `object` model frame.
+#' @param vcov_fun Function returning a model's coefficient covariance
+#'   (default [stats::vcov()]), applied to every equation.
 #'
 #' @return A [SerialMediationData] object.
 #'
@@ -669,7 +917,8 @@ S7::method(extract_mediation, glm_class) <- function(
   treatment,
   mediators,
   outcome = NULL,
-  data = NULL) {
+  data = NULL,
+  vcov_fun = stats::vcov) {
 
   # --- Input validation ---
   checkmate::assert_string(treatment, .var.name = "treatment")
@@ -787,7 +1036,7 @@ S7::method(extract_mediation, glm_class) <- function(
   for (al in names(alias_val)) estimates[al] <- alias_val[[al]]
 
   # --- Block-diagonal source vcov of all k + 1 models ---
-  vcov_list <- lapply(coef_list, stats::vcov)
+  vcov_list <- lapply(coef_list, vcov_fun)
   src_names <- unlist(Map(function(v, pre) paste0(pre, rownames(v)),
                           vcov_list, prefixes), use.names = FALSE)
   n_src <- length(src_names)
@@ -813,6 +1062,24 @@ S7::method(extract_mediation, glm_class) <- function(
     b = paste0("y_", mediators[k]),
     c_prime = paste0("y_", treatment)
   )
+
+  # Paths that skip a chain link (X -> Mj, Mi -> Mj for j > i + 1, Mi -> Y for
+  # i < k) are aliased too, so te() can sum every X -> Y path. A path absent
+  # from its model is a structural zero and gets no alias.
+  skip <- .serial_edges(k)
+  skip <- skip[!skip$chain & skip$alias != "c_prime", , drop = FALSE]
+  node_names <- c(treatment, mediators)
+  for (r in seq_len(nrow(skip))) {
+    to <- skip$to[r]
+    from_nm <- node_names[skip$from[r] + 1L]
+    cf <- if (to > k) coef_y else stats::coef(med_models[[to]])
+    if (!from_nm %in% names(cf)) next
+    alias_val[skip$alias[r]] <- unname(cf[from_nm])
+    alias_src_name[skip$alias[r]] <- paste0(if (to > k) "y_" else paste0("m", to, "_"),
+                                            from_nm)
+    estimates[skip$alias[r]] <- unname(cf[from_nm])
+  }
+
   resolve <- function(nm) {
     if (nm %in% src_names) which(src_names == nm)[1] else NA_integer_
   }
@@ -940,7 +1207,8 @@ S7::method(extract_mediation, glm_class) <- function(
   treatment,
   mediators,
   outcome = NULL,
-  data = NULL) {
+  data = NULL,
+  vcov_fun = stats::vcov) {
 
   # --- Input validation ---
   checkmate::assert_string(treatment, .var.name = "treatment")
@@ -1039,7 +1307,7 @@ S7::method(extract_mediation, glm_class) <- function(
   for (al in names(alias_val)) estimates[al] <- alias_val[[al]]
 
   # --- Block-diagonal source vcov of all k + 1 models ---
-  vcov_list <- lapply(coef_list, stats::vcov)
+  vcov_list <- lapply(coef_list, vcov_fun)
   src_names <- unlist(Map(function(v, pre) paste0(pre, rownames(v)),
                           vcov_list, prefixes), use.names = FALSE)
   n_src <- length(src_names)

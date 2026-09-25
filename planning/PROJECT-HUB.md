@@ -1,10 +1,10 @@
 # 🎯 medfit - Project Control Hub
 
-> **Quick Status:** 🟢 Feature-complete | **CRAN:** 0.2.1 accepted (2026-06-18) | **main/dev:** 0.3.1
+> **Quick Status:** 🟢 Feature-complete | **CRAN:** 0.3.2 accepted (2026-07-23) | **main:** 0.4.0 (GitHub) | **dev:** unreleased since 0.4.0
 
-**Last Updated:** 2026-06-21  
-**Current Phase:** 0.2.1 on CRAN; 0.3.1 on main/dev (Ext A/B shipped). Next CRAN: 0.3.1 (cadence-held ~2026-07-18)  
-**Next Action:** Ship 0.3.1 → CRAN (held to ~2026-07-18 cadence); then Stage 2 / probmed. Independent now: medrobust CRAN prep
+**Last Updated:** 2026-09-24  
+**Current Phase:** 0.3.2 on CRAN; 0.4.0 on main/GitHub (Ext A/B/C); dev adds `JointMediationData`, effect SEs for all classes, `mediation_demo`, two behavior changes (#81, #82)  
+**Next Action:** 0.5.0 release (proposed) — checklist in `TODOS.md`. probmed Stage 2 lives in probmed
 
 > **Ecosystem-wide planning** (roadmap, coordination, API/naming design, manifest)
 > lives in the hub: `~/projects/r-packages/mediation-planning/` (start at
@@ -18,8 +18,8 @@
 | What | Status | Link/Location |
 |------|--------|---------------|
 | **Package Files** | 🟢 | ~/projects/r-packages/active/medfit/ |
-| **Documentation** | 🟡 | man/, vignettes/ |
-| **Tests** | 🟡 | tests/testthat/ |
+| **Documentation** | 🟢 | man/, vignettes/articles/ (5 articles, evaluated at site build) |
+| **Tests** | 🟢 | tests/testthat/ (1528 expectations as of #80) |
 | **Repository** | 🟢 | github.com/Data-Wise/medfit |
 
 ---
@@ -30,16 +30,31 @@
 Phase 1: Core API                ████████████████████ 100% 🟢
 Phase 2: Bootstrap & Tests       ████████████████████ 100% 🟢
 Phase 3: CRAN Preparation        ████████████████████ 100% 🟢
-Phase 4: Extensions (A/B, dev)   ████████████████████ 100% 🟢
+Phase 4: Extensions (A/B/C, 0.4.0) ████████████████████ 100% 🟢
+Phase 5: D8(b) + fixes (dev)     ████████████████████ 100% 🟢
+Phase 6: 0.5.0 release           ░░░░░░░░░░░░░░░░░░░░   0% ⏳
 ──────────────────────────────────────────────────────────
-Overall Project:                  ████████████████████ 100% 🟢
+Features (Phases 1-5):            ████████████████████ 100% 🟢
 ```
 
-**Status:** 🟢 Feature-complete — on the CRAN path (0.3.1, cadence-held) | **Priority:** P1
+**Status:** 🟢 Feature-complete — 0.5.0 release proposed | **Priority:** P1
 
 ---
 
 ## ✅ Completed Recently
+
+### Since 0.4.0 (dev, 2026-09-23/24)
+- [x] ✅ `mediation_demo` dataset; examples and articles moved to it (#62-#65, #67)
+- [x] ✅ Delta-method effect SEs in `tidy()`/`confint()` for all classes; lavaan alias, wrapped-product, `vcov_fun`, identity-link and `m_star` fixes (#69-#75)
+- [x] ✅ D8(b) `JointMediationData` + `joint_effects()` (#76, #77)
+- [x] ✅ Methods and Formulas article + doc gap fixes (#79)
+- [x] ✅ Four-way factor covariates (#78); joint SEs with `data =` (#80)
+- [x] ✅ Behavior changes: serial total effect (#81); `confint()` path alias lookup (#82)
+
+### Releases
+- [x] ✅ 0.2.1 accepted on CRAN (2026-06-18)
+- [x] ✅ 0.3.2 accepted + published on CRAN (2026-07-23)
+- [x] ✅ 0.4.0 tagged + GitHub release (2026-08-23): Ext A/B/C
 
 ### Package Recovery
 - [x] ✅ Recovered from Google Drive trash (Dec 11)
@@ -57,22 +72,20 @@ Overall Project:                  ███████████████�
 ## 🎯 Active Tasks (This Week)
 
 ### High Priority 🔴
-- [ ] Implement fit_mediation() skeleton [2 hr]
-  - GLM engine for continuous outcomes
-  - Parameter validation
-  - Return S7 mediation_fit object
-  
-- [ ] Create S7 class structure [1 hr]
-  - mediation_fit base class
-  - Method definitions (print, summary, coef)
+- [ ] 0.5.0 release (proposed) — full checklist in `TODOS.md`
+  - Version bump + NEWS heading
+  - Strict CRAN check, urlchecker, spelling
+  - Revdep check (probmed Imports medfit)
+  - dev → main, tag, GitHub release
 
 ### Medium Priority 🟡
-- [ ] Write unit tests for fit_mediation() [1.5 hr]
-- [ ] Document fit_mediation() function [1 hr]
+- [ ] Ext D (multilevel) spec — see `specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
 
-### Quick Wins ⚡
-- [ ] Update DESCRIPTION file [5 min]
-- [ ] Create pkgdown site structure [10 min]
+### Done (original skeleton tasks)
+- [x] fit_mediation() with GLM engine, validation, S7 return
+- [x] S7 class structure with print/summary/coef methods
+- [x] Unit tests and documentation for fit_mediation()
+- [x] DESCRIPTION and pkgdown site
 
 ---
 
@@ -106,43 +119,29 @@ $ ccrcov          # Check test coverage
 
 **Choose your focus:**
 
-### Option A: Start Core Implementation ⭐ Recommended
+### Option A: Release 0.5.0 ⭐ Recommended
 ```
-Goal: Get fit_mediation() working with GLM engine
-Time: 2-4 hours
-Tasks:
-  - [ ] Implement fit_mediation() skeleton
-  - [ ] Add GLM engine for continuous Y
-  - [ ] Basic parameter validation
-  - [ ] Return mediation_fit S7 object
+Goal: Ship dev (#62-#82) as 0.5.0
+Tasks: see TODOS.md checklist
 ```
-**Why:** Unblocks entire mediationverse ecosystem
+**Why:** Two behavior changes (#81, #82) fix wrong results; users of 0.4.0 still get the old values
 
 ---
 
-### Option B: Setup Infrastructure First
+### Option B: Spec Ext D (multilevel mediation)
 ```
-Goal: Get testing and docs framework ready
-Time: 1-2 hours
-Tasks:
-  - [ ] Create S7 class definitions
-  - [ ] Setup test structure
-  - [ ] Initialize pkgdown
+Goal: SPEC for MultilevelMediationData (lme4, 1-1-1 first)
+Source: specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md
 ```
-**Why:** Makes development smoother
+**Why:** Next new structure; not blocked on anything
 
 ---
 
-### Option C: Review & Plan
+### Option C: Keep accumulating on dev
 ```
-Goal: Deep dive into Generic Functions Strategy
-Time: 30 min
-Tasks:
-  - [ ] Review GENERIC-FUNCTIONS-STRATEGY.md
-  - [ ] Validate API design decisions
-  - [ ] Plan implementation details
+Goal: Hold the release (the 2026-09-23 .STATUS decision)
 ```
-**Why:** Ensure design is solid before coding
+**Why:** Fewer releases; but the #81/#82 fixes stay unreleased
 
 ---
 
@@ -153,56 +152,74 @@ Tasks:
 ## 🔴 Blockers & Dependencies
 
 ### Current Blockers
-- 🔴 **fit_mediation() not implemented** - Blocks all ecosystem development
+- None for medfit. Ext C.1 (CMAverse) is blocked: not on CRAN, and its simulation-based effects have no slot
 
-### Dependencies (Waiting On medfit)
-- probmed - Needs medfit API
-- medrobust - Needs medfit classes
-- medsim - Needs medfit for validation
-- mediationverse - Needs all packages
+### Dependencies (on medfit)
+- probmed - Imports medfit (>= 0.3.0)
+- RMediation - Suggests medfit (>= 0.2.0)
+- medsim - Suggests medfit (>= 0.2.0)
+- mediationverse - Imports medfit (>= 0.2.0)
+- medrobust - does not depend on medfit
+- A CRAN dependent that needs the regmedint engine or `m_star` needs medfit >= 0.4.0 on CRAN
 
 ---
 
 ## 📋 Phase Details
 
-### Phase 1: Core API Implementation 🔴 IN PROGRESS
+### Phase 1: Core API Implementation 🟢 COMPLETE
 **Goal:** Working fit_mediation() with basic functionality  
 **Duration:** 2-3 weeks  
-**Status:** 0% complete
+**Status:** 100% complete
 
 **Critical Path Tasks:**
-- [ ] 🔴 fit_mediation() skeleton
-- [ ] 🔴 GLM engine implementation
-- [ ] 🔴 S7 class structure
-- [ ] 🟡 Parameter validation
-- [ ] 🟡 Basic tests
-- [ ] 🟡 Documentation
+- [x] fit_mediation() skeleton
+- [x] GLM engine implementation
+- [x] S7 class structure
+- [x] Parameter validation
+- [x] Basic tests
+- [x] Documentation
 
 ---
 
-### Phase 2: Bootstrap & Testing ⏸️ PLANNED
+### Phase 2: Bootstrap & Testing 🟢 COMPLETE
 **Goal:** Robust bootstrap_mediation() + comprehensive tests  
 **Duration:** 2-3 weeks  
-**Status:** Not started
+**Status:** 100% complete
 
 **Tasks:**
-- [ ] bootstrap_mediation() implementation
-- [ ] Comprehensive test suite
-- [ ] Edge case handling
-- [ ] Performance optimization
+- [x] bootstrap_mediation() implementation (parametric, nonparametric, plugin; all classes for parametric/plugin)
+- [x] Comprehensive test suite
+- [x] Edge case handling
+- [x] Performance optimization (parallel bootstrap)
 
 ---
 
-### Phase 3: CRAN Preparation ⏸️ PLANNED
+### Phase 3: CRAN Preparation 🟢 COMPLETE
 **Goal:** CRAN-ready package  
 **Duration:** 1-2 weeks  
-**Status:** Not started
+**Status:** 0.3.2 on CRAN (2026-07-23)
 
 **Tasks:**
-- [ ] R CMD check --as-cran passes
-- [ ] Vignettes complete
-- [ ] NEWS.md updated
-- [ ] Submit to CRAN
+- [x] R CMD check --as-cran passes
+- [x] Vignettes complete
+- [x] NEWS.md updated
+- [x] Submit to CRAN
+
+---
+
+### Phase 4: Extensions A/B/C 🟢 COMPLETE
+**Status:** Parallel (Ext A), four-way interaction (Ext B), regmedint engine (Ext C); released as 0.4.0 on GitHub (2026-08-23)
+
+---
+
+### Phase 5: D8(b) + post-0.4.0 fixes 🟢 COMPLETE (dev, unreleased)
+**Status:** #62-#82 merged to dev; see "Completed Recently"
+
+---
+
+### Phase 6: 0.5.0 Release ⏳ NEXT (proposed)
+**Goal:** Release the dev work since 0.4.0  
+**Status:** Not started; checklist in `TODOS.md`
 
 ---
 
@@ -221,20 +238,24 @@ Tasks:
 
 **That's solid foundation work! 🎉**
 
+**On CRAN!**
+- [x] ✅ 0.2.1 accepted (2026-06-18)
+- [x] ✅ 0.3.2 accepted + published (2026-07-23)
+
 ---
 
 ## 📊 Metrics & Stats
 
 ### Package Stats
-- **R Files:** ~15 estimated
-- **Functions:** 8 core (fit_mediation, bootstrap_mediation, etc.)
-- **Tests:** 0/50 target
-- **Documentation:** 0/8 functions
+- **R Files:** 18
+- **Exports:** 18 in NAMESPACE (6 classes + 12 functions), plus S3/S7 methods
+- **Tests:** 1528 expectations (as of #80)
+- **Documentation:** all exports documented; 5 articles
 
 ### Dependencies
-- **Depends:** None (Base R)
-- **Imports:** rlang, cli, glue
-- **Suggests:** testthat, covr
+- **Depends:** R (>= 4.1.0)
+- **Imports:** S7, stats, methods, checkmate, generics, MASS
+- **Suggests:** lavaan, regmedint, sandwich, testthat, tibble
 
 ---
 
@@ -243,10 +264,9 @@ Tasks:
 | Resource | Link |
 |----------|------|
 | **GitHub Repo** | [Data-Wise/medfit](https://github.com/Data-Wise/medfit) |
-| **Generic Functions Strategy** | ~/projects/research/mediation-planning/GENERIC-FUNCTIONS-STRATEGY.md |
-| **API Contracts** | ~/projects/research/mediation-planning/API-CONTRACTS.md |
+| **Generic Functions Strategy** | ~/projects/r-packages/mediation-planning/specs/GENERIC-FUNCTIONS-STRATEGY.md |
+| **API Contracts** | ~/projects/r-packages/mediation-planning/specs/API-CONTRACTS.md |
 | **PROJECT-BOARD** | ~/projects/r-packages/PROJECT-BOARD.md |
-| **NOW.md** | ~/projects/dev-tools/data-wise/planning/NOW.md |
 
 ---
 
@@ -254,13 +274,14 @@ Tasks:
 
 | Path | Purpose | Status |
 |------|---------|--------|
-| `R/fit_mediation.R` | Main fitting function | ⏸️ Not started |
-| `R/bootstrap_mediation.R` | Bootstrap implementation | ⏸️ Not started |
-| `R/classes.R` | S7 class definitions | ⏸️ Not started |
-| `R/methods.R` | S7 method implementations | ⏸️ Not started |
-| `R/utils.R` | Utility functions | ⏸️ Not started |
-| `tests/testthat/` | Test suite | ⏸️ Not started |
-| `vignettes/` | Package vignettes | ⏸️ Not started |
+| `R/fit-glm.R`, `R/fit-regmedint.R` | Fitting (GLM and regmedint engines) | 🟢 Done |
+| `R/extract-lm.R`, `R/extract-joint.R`, `R/extract-lavaan.R` | Extraction | 🟢 Done |
+| `R/bootstrap.R` | Bootstrap implementation | 🟢 Done |
+| `R/classes.R` | S7 class definitions | 🟢 Done |
+| `R/methods-base.R`, `R/methods-tidy.R`, `R/generics-effects.R`, `R/effect-se.R` | S7 methods, effects, delta-method SEs | 🟢 Done |
+| `R/utils.R` | Utility functions | 🟢 Done |
+| `tests/testthat/` | Test suite | 🟢 Done |
+| `vignettes/articles/` | Package articles | 🟢 Done |
 
 ---
 
@@ -276,6 +297,15 @@ Tasks:
 ---
 
 ## 🔄 Update Log
+
+### 2026-09-24 - D8(b) and post-0.4.0 fixes on dev
+- `JointMediationData`, effect SEs for all classes, `mediation_demo`, Methods and Formulas article (#62-#82)
+- Two behavior changes (#81, #82); 0.5.0 proposed
+
+### 2026-08-23 - 0.4.0 on GitHub
+- Ext C (regmedint engine) + `m_star` argument; tag `v0.4.0`
+
+### 2026-07-23 - 0.3.2 on CRAN
 
 ### 2025-12-12 - Package Recovered
 - Recovered all files from Google Drive trash
@@ -298,13 +328,13 @@ Tasks:
 3. **Publication quality** - Companion to methodology papers
 
 ### Success Criteria
-- [ ] On CRAN with 0 ERRORs, 0 WARNINGs
-- [ ] Used by probmed, medrobust, medsim
+- [x] On CRAN with 0 ERRORs, 0 WARNINGs
+- [ ] Used by probmed, medrobust, medsim (probmed and medsim yes; medrobust no)
 - [ ] Downloaded >1000 times/month
 - [ ] Cited in research papers
 
 ---
 
-**Status:** 🔴 Ready to start - foundation in place, time to build!  
-**Last Updated:** 2025-12-12  
-**Next Review:** After Phase 1 completion
+**Status:** 🟢 Feature-complete; 0.5.0 release proposed  
+**Last Updated:** 2026-09-24  
+**Next Review:** After the 0.5.0 release

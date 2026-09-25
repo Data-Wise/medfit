@@ -1,3 +1,297 @@
+# medfit 0.5.0
+
+Two fixes change results (marked **Behavior change** below): serial `te()`
+and `pm()` now sum every path (#81), and `confint(parm = "paths")` finds path
+rows by name instead of by position (#82). Both correct wrong output, so they
+ship without a deprecation period. Ecosystem: probmed and RMediation call
+neither function and their test suites pass against this release. The same
+bugs are present in CRAN 0.3.2; see #83 for workarounds.
+
+## New features
+
+* New `JointMediationData` class: `extract_mediation()` on lm/glm fits with
+  two or more mediators (serial or parallel) now supports treatment-by-mediator
+  product terms in the outcome model, written with `:` or `*` (e.g.
+  `Y ~ X * M2 + M1 + C`). It returns the **joint** natural effects of the
+  mediators as a block (VanderWeele and Vansteelandt 2014): for a 0/1
+  treatment, NIE = sum over mediators of (theta2 + theta3) times the total
+  treatment effect on that mediator, NDE and CDE add the product terms at the
+  covariate means and at `m_star`. There is no per-mediator split of the NIE.
+  For a serial chain the joint NIE counts every path through the mediators,
+  so it differs from the chain-only `a * d * b` that `nie()` reports by
+  default for `SerialMediationData` (it matches `nie(type = "total")` when
+  there is no product term). Standard errors use analytic delta-method
+  gradients and a stacked-OLS covariance that includes the correlation between parallel
+  mediator equations; they are conditional on the observed covariates.
+  `nie()`, `nde()`, `te()`, `pm()`, `decompose()`, `paths()`, `print()`,
+  `summary()`, `coef()`, `vcov()`, `nobs()`, `confint(parm = "paths" /
+  "effects")`, `tidy()` (types `"paths"` and `"effects"`, with delta-method
+  SEs) and `glance()` (adding `structure`, `n_mediators`, `interactions` and
+  `m_star`) support the class. The new `joint_effects()` recomputes the
+  effects at any parameter vector, which makes it the statistic for a
+  parametric `bootstrap_mediation()`. The "Model Extraction" article has a
+  worked example on `mediation_demo$outcome_int`.
+  The fit must use Gaussian identity-link models without weights, an
+  intercept in each, the same rows and the same covariates in every model, a
+  numeric 0/1 treatment, and every mediator in the outcome model; each
+  violation errors, naming the cause. `m_star` is a scalar or a vector named
+  by the interacting mediators. Products elsewhere (in a mediator model,
+  mediator-by-mediator, three-way, with a covariate, or function-wrapped)
+  still error, as do lavaan multi-mediator fits with products.
+
+* New bundled dataset `mediation_demo` (400 rows, 8 variables): simulated data
+  that supports simple, serial, parallel, and treatment-by-mediator interaction
+  examples from one running example. The covariates are mediator-outcome
+  confounders, so examples adjust for them. See `?mediation_demo` for the
+  generating equations; the generating script is in `data-raw/`. The
+  "Getting Started", "Introduction", and "Model Extraction" articles and the
+  single-mediator examples for `fit_mediation()`, `extract_mediation()`,
+  `med()`, `quick()`, `bootstrap_mediation()`, `nie()`, `nde()`, `te()`,
+  `pm()`, and `paths()` now use it, adjusting for both covariates.
+
+* `bootstrap_mediation(method = "parametric")` and `method = "plugin"` now
+  accept `SerialMediationData`, `ParallelMediationData`, and
+  `InteractionMediationData`, not only `MediationData`. Both methods read only
+  `@estimates` and `@vcov`, which every class carries with matching names, so
+  `statistic_fn` can use the path aliases directly (e.g. `a * d1 * b` for a
+  serial chain, `a1 * b1 + a2 * b2` for parallel mediators). Previously these
+  classes were rejected because they do not inherit from `MediationData`.
+
+* `BootstrapResult` gains `coef()` and `confint()` methods. `coef()` returns
+  `c(estimate = ...)`; `confint()` returns the stored percentile interval as a
+  1 x 2 matrix, recomputes it from the bootstrap distribution when a different
+  `level` is given, and returns `NA` with a warning for plugin results.
+  Previously both errored with "Can't get S7 properties with `$`".
+
+* `tidy()` and `glance()` now support `ParallelMediationData` and
+  `InteractionMediationData`; previously both errored with "not implemented
+  for this S7 object type". `tidy()` returns path rows (`a1, b1, ..., c_prime`
+  or `a, b, c_prime, theta3`) with standard errors from `vcov()`, then effect
+  rows (`nie`, `nde`, `te`, plus the four-way `cde`, `int_ref`, `int_med`,
+  `pie` for interaction models) with delta-method standard errors (see
+  below). `glance()` adds `n_mediators` (parallel) or `interaction` and `m_star`
+  (interaction).
+
+* `tidy()` now reports delta-method standard errors for effect rows (NIE,
+  NDE, TE, and the four-way components) for all four mediation classes, from
+  the same computation as `confint(parm = "effects")`, so
+  `tidy(conf.int = TRUE)` reproduces `confint()` exactly. Previously these rows
+  had `NA` standard errors, and `SerialMediationData` returned `NA` intervals
+  with a warning. `tidy()` stays silent; `?tidy.S7_object` documents that the
+  intervals are normal approximations and that the proportion mediated should
+  be bootstrapped.
+
+* New `confint()` method for `SerialMediationData`, with `parm = "paths"` or
+  `"effects"`.
+
+## Bug fixes
+
+* **Behavior change:** `confint(parm = "paths")` now finds each path's row of
+  `@vcov` by name: the alias rows (`a`, `b`, `c_prime`; `d1`, ...; `a1`,
+  `b1`, ...; `theta3`) first, then, for `MediationData`, the lm-style
+  `m_<treatment>`, `y_<mediator>`, `y_<treatment>` rows. Names come from
+  `rownames(@vcov)`, or from `names(@estimates)` when `@vcov` has none.
+  Previously `MediationData` looked only for the lm-style names and otherwise
+  warned and took the first three diagonal entries. That gave wrong SEs for
+  every lavaan-extracted object, where rows 1-3 are a, c', b, so b and c'
+  swapped SEs. It was right for a hand-built object with alias names only
+  when those came first. The serial, parallel, interaction and joint methods
+  returned `NA` bounds for a missing row. All five now error, naming the
+  missing rows, when neither set of names resolves. `tidy()` still reports
+  `NA` there, as it is descriptive; `confint()` is strict.
+  **Ecosystem note:** downstream code that builds these objects by hand with
+  unnamed `@estimates`/`@vcov` gets an error from `confint(parm = "paths")`
+  instead of a warning or `NA`.
+
+* **Behavior change:** `te()` and `pm()` for `SerialMediationData` now use the
+  full total effect, the sum over every X-to-Y path, instead of only the chain
+  plus the direct effect (`a * d * b + c'`). For the usual specification
+  (`M2 ~ X + M1`, `Y ~ X + M1 + M2`) the old value left out the paths that
+  skip a mediator (X -> M1 -> Y, X -> M2 -> Y) and could be badly off. In one
+  simulated example it gave 0.13 where the true total effect was 0.54. With
+  linear models and the same covariates in every equation, `te()` now equals
+  the treatment coefficient of `lm(Y ~ X + covariates)`. `pm()` is the total
+  indirect effect divided by that total. `nie()` still returns the
+  chain-specific indirect effect by default. The new `nie(x, type = "total")`
+  returns the total indirect effect, `te(x) - nde(x)`. The serial lm/glm and
+  lavaan extractors now record the skip-path coefficients as `a2..ak`
+  (`X -> Mj`), `b1..b{k-1}` (`Mi -> Y`) and `d{i}_{j}` (`Mi -> Mj`, j > i + 1)
+  in `@estimates` and `@vcov`. The delta-method SE of `te` in `confint()` and
+  `tidy()` differentiates the full sum. It matches lavaan `:=` SEs. Serial
+  `tidy()` gains a `nie_total` row, `glance()` gains a `nie_total` column and
+  `coef(type = "effects")` gains `indirect_total`, appended after `total`
+  so existing positions are unchanged. A hand-built object whose
+  predictor lists include a skip path without its coefficient gets `NA` and a
+  warning from `te()` and `pm()`, because assuming zero would reproduce the
+  bug. For glm fits with a non-identity link, the path sum is on the
+  linear-predictor scale, as it already is for `MediationData`. `quick()` now
+  prints the chain and total NIE side by side. Downstream impact: none for
+  probmed (imports only `extract_mediation()`) or RMediation (its serial
+  `ci()` reads `@a_path`, `@d_path` and `@b_path`, which are unchanged);
+  neither calls serial `te()` or `pm()`. Code that stored serial `te()` or
+  `pm()` values from medfit 0.4.0 or earlier will see different numbers.
+* `tidy(<SerialMediationData>, type = "effects")` no longer errors on
+  mismatched row counts.
+* The single-mediator four-way decomposition (`InteractionMediationData`,
+  lm/glm engine) now includes factor covariates in E[M | X = 0]. Covariate
+  means were taken only for numeric data columns named after a coefficient,
+  so a factor's dummy coefficients (e.g. `Gb`, `Gc`) were skipped without
+  a warning. NDE, INTref and the total effect were wrong, and so were their
+  delta-method SEs. The means now come from the mediator model's design
+  matrix, as in `JointMediationData`, and both the point estimates and the
+  gradients use them. Two other cases change for the same reason:
+  transformed covariate terms (e.g. `log(C)`, `poly(C, 2)`) were also
+  skipped and are now included, and when a caller-supplied `data` has rows
+  the mediator model did not use, the means now cover only the estimation
+  sample. With case weights (e.g. `fit_mediation(weights = )`), the means
+  are now weighted by them; they were unweighted before. Results with plain
+  numeric covariates and no weights are unchanged.
+  `fit_mediation()` with an `X * M` outcome formula is fixed as well. The
+  lavaan engine accepts only numeric observed variables, so it is
+  unaffected.
+* `JointMediationData` effect standard errors are no longer `NA` in
+  `tidy()` and `summary()` when `extract_mediation()` receives `data =` and
+  a model has a factor or transformed covariate (e.g. `G` with levels
+  `a`/`b`/`c`, or `poly(W, 2)`); `confint(parm = "effects")` no longer
+  errors for the same fits. The gradients rebuilt the covariate means from
+  `@data`, which only works for a model frame, so the SE computation failed
+  and `tidy()` and `summary()` caught the failure and reported `NA`. The
+  extractor now stores the exact means the point estimate uses on `@data`
+  (attribute `medfit_covariate_means`, the convention of the four-way
+  extractor), so SEs with `data = d` equal those with `data = NULL`,
+  including fits with `subset =`. Point estimates were already correct.
+
+* `fit_mediation(se_type = "sandwich")` now applies the sandwich estimator
+  to fits with a treatment-by-mediator interaction. The four-way worker
+  ignored `vcov_fun` and always used the model-based `stats::vcov()`, so the
+  returned `@vcov` was identical to `se_type = "model"`, with no warning. A
+  `vcov_fun` passed to `extract_mediation()` now also reaches serial and
+  parallel fits, which ignored it the same way.
+
+* The four-way decomposition now requires the identity link. A Gaussian
+  `glm()` with another link (e.g. `gaussian(link = "log")`) passed the
+  family check, and the linear four-way formulas were applied to a model that
+  is not linear in its coefficients. It now errors, naming the link.
+
+* `extract_mediation()` now errors when `m_star` is supplied but no four-way
+  decomposition or joint-effects fit uses it (no treatment-by-mediator term,
+  or `decomposition = "two_way"`), on both the lm/glm and lavaan paths.
+  The value was previously dropped silently. As in `fit_mediation()`, the
+  check keys on whether `m_star` was given at the call site, not on its value.
+
+* `extract_mediation()` on lm/glm fits now detects products written inside a
+  function call, such as `I(X * M)`. R records such a term as an ordinary
+  covariate, so it previously bypassed both the multi-mediator product guard
+  and the single-mediator interaction check: the fit returned main-effect
+  estimates that ignored the product, with no error. Multi-mediator
+  extraction now errors on any wrapped term that combines the treatment or a
+  mediator with another variable (e.g. `I(X * M2)` or `log(M1 + C)`). Single-mediator extraction errors on a wrapped
+  treatment-by-mediator product and asks for `X * M` or `X:M`, which route
+  to the four-way decomposition. Single-variable transforms such as
+  `I(X^2)` are unaffected, and a product precomputed as a data column still
+  cannot be detected from the formula.
+
+* `confint(parm = "effects")` for `MediationData` gave a total-effect interval
+  that was too wide: it treated the indirect effect and `c'` as independent,
+  dropping their covariance. It now uses the full delta-method gradient (on the
+  simple `mediation_demo` fit the TE standard error drops from 0.127 to
+  0.119, matching a parametric bootstrap). NIE and NDE are unchanged.
+
+* `confint(parm = "effects")` and `tidy()` now work for `MediationData`
+  extracted from lavaan. Both located paths by lm-style names, so
+  `confint()` stopped with "Could not compute SEs for effects" and `tidy()`
+  omitted standard errors.
+
+* `extract_mediation()` with two or more mediators (serial or parallel) now
+  errors when a model carries a product term involving the treatment or a
+  mediator, e.g. `X:M1` in the outcome model. Previously the multi-mediator
+  branch returned before any interaction check, so the product term was
+  ignored silently and main-effect paths were reported as if no interaction
+  existed. Applies to both the lm/glm and lavaan methods; for lavaan, a
+  product precomputed as a plain data column is recognized when named via
+  `interaction =`. Products among covariates alone are still allowed. On
+  lm/glm, a treatment-by-mediator product in the outcome model is now
+  supported through `JointMediationData` (see New features); every other
+  product still errors.
+
+* `extract_mediation()` on a lavaan fit whose paths carry custom labels
+  (e.g. `M ~ aa*X`) now fills the alias rows of `@vcov` (`a`, `b`, `c_prime`,
+  and the serial, parallel, and interaction aliases) from the labeled
+  parameters. Previously the label-based parameter names from lavaan did not
+  match the names the extractors looked for, so those rows and columns were
+  all zero, and `bootstrap_mediation(method = "parametric")` drew a degenerate
+  distribution with a zero-width interval. The simple extractor only
+  recognized labels equal to `a_label`/`b_label`/`cp_label`; the serial,
+  parallel, and interaction extractors recognized no labels at all. All four
+  now read each path's parameter name from `lavaan::parTable()`.
+
+* `extract_mediation()` on a lavaan fit now stops with an error when a user
+  label reuses one of medfit's alias names for a different path, for example
+  `a1`/`a2` written for `mediator = c("M1", "M2")` while the call lists
+  `c("M2", "M1")`, or a covariate path labeled `a`. The alias estimate was
+  taken from the right path, but its `@vcov` row stayed the labeled
+  parameter's, so standard errors and bootstrap draws used the wrong
+  variance. A label on the alias's own path (such as the default `a`, `b`)
+  is still accepted. The simple extractor now takes each alias's `@vcov` row
+  from the same parameter-table row as its estimate, so the two agree when
+  the paths were found through `a_label`, `b_label`, and `cp_label`.
+
+## Documentation
+
+* The articles now evaluate their code when the site is built, instead of
+  showing output typed in by hand, so the shown output cannot drift from the
+  code and a broken example fails the build. The pkgdown workflow also runs
+  on pull requests to `dev`. Turning this on exposed three broken examples in
+  the "Introduction" article (a missing `library(medfit)` and two
+  hand-built objects missing required properties), now fixed; the
+  error-handling example in "Model Extraction" shows the real messages.
+
+* New "Methods and Formulas" article collecting the estimand, formula,
+  covariance and standard-error computation for every class, the bootstrap
+  methods, and the fitting engines, with the assumptions each estimand needs.
+
+* Help pages now cover every class: `nie()`, `nde()`, `te()`, `pm()` and
+  `paths()` give the formulas for parallel, interaction and joint objects;
+  `decompose()` gains the four-way formulas, the joint method, references and
+  an example; `InteractionMediationData` gains the INTref formula and
+  `JointMediationData` the NDE formula; `extract_mediation()` documents the
+  lm/glm arguments, the returned classes, and the covariance of the
+  estimates; `tidy()`/`glance()` document `glance()` and the `coef()`,
+  `vcov()`, `confint()` and `nobs()` methods; bootstrap intervals are stated
+  to be percentile intervals.
+
+* Corrected stale examples and statements in the articles and README:
+  `confint(parm = "effects")` (not `type =`), tidy output with delta-method
+  effect SEs, the list of classes, and the covariance between parallel
+  mediator equations, which the lm/glm `@vcov` omits.
+
+* `?fit_mediation` and `?bootstrap_mediation` no longer merge in the
+  placeholder stubs left over in `R/aab-generics.R` (removed). Each page had
+  two usage blocks, two return values, duplicated details sections, and
+  examples on nonexistent objects inside `\dontrun{}`. The regmedint-engine
+  and reference-mediator-level notes from the `fit_mediation()` stub now live
+  with the real function.
+
+* Serial mediation docs now recommend including the treatment and every
+  earlier mediator in the outcome model (`Y ~ X + M1 + M2`, not `Y ~ X + M2`).
+  Only the last mediator's coefficient becomes the `b` path, but when an
+  earlier mediator also affects the outcome, leaving it out confounds `b`.
+  The serial indirect effect `a * d * b` is the effect through the full chain
+  only. Updated in the `extract_mediation()` lm/glm and lavaan documentation
+  and the "Model Extraction" article; a new test checks the bias.
+
+* Fixed the lavaan serial examples in the "Model Extraction" and "Bootstrap"
+  articles, which passed `mediators =` to `extract_mediation()`; the argument
+  is `mediator`.
+
+* Repaired the "Bootstrap Inference" article so every code chunk runs against
+  the current API. It now uses `mediation_demo`, adjusting for both covariates,
+  and reads `med()`'s bootstrap via `attr(result, "bootstrap")`. The serial
+  example refits the chain nonparametrically, because the parametric and plugin
+  methods accept only `MediationData`. The article also reads `BootstrapResult`
+  properties directly, since that class has no `coef()`/`confint()` methods,
+  and its printed output has been regenerated.
+
 # medfit 0.4.0
 
 ## New features

@@ -153,8 +153,9 @@ test_that("tidy.S7_object works for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
@@ -164,8 +165,8 @@ test_that("tidy.S7_object works for SerialMediationData", {
   # by default the type is all
   tidy_all <- generics::tidy(serial_data)
   expect_s3_class(tidy_all, "data.frame")
-  expect_equal(nrow(tidy_all), 7)  # a, d, b, c_prime, nie, nde, te
-  expect_true(all(c("a", "d", "b", "c_prime", "nie", "nde", "te") %in%
+  expect_equal(nrow(tidy_all), 8)  # a, d, b, c_prime, nie, nie_total, nde, te
+  expect_true(all(c("a", "d", "b", "c_prime", "nie", "nie_total", "nde", "te") %in%
                     tidy_all$term))
 })
 
@@ -183,8 +184,9 @@ test_that("tidy() for SerialMediationData with type='paths'", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
@@ -196,7 +198,7 @@ test_that("tidy() for SerialMediationData with type='paths'", {
 })
 
 
-test_that("tidy() for SerialMediationData warns about conf.int", {
+test_that("tidy() for SerialMediationData gives NA CIs, silently, without vcov aliases", {
   serial_data <- SerialMediationData(
     a_path = 0.5,
     d_path = 0.4,
@@ -209,18 +211,20 @@ test_that("tidy() for SerialMediationData warns about conf.int", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
     source_package = "test"
   )
 
-  expect_warning(
-    generics::tidy(serial_data, conf.int = TRUE),
-    "bootstrap"
-  )
+  # This hand-built object has an unnamed vcov (no alias rows), so no SE can
+  # be located: tidy() reports NA instead of erroring, and no longer warns
+  expect_silent(td <- generics::tidy(serial_data, conf.int = TRUE))
+  expect_true(all(is.na(td$std.error)))
+  expect_true(all(is.na(td$conf.low)))
 })
 
 
@@ -237,8 +241,9 @@ test_that("glance.S7_object works for SerialMediationData", {
     treatment = "X",
     mediators = c("M1", "M2"),
     outcome = "Y",
-    mediator_predictors = list(c("X"), c("X", "M1")),
-    outcome_predictors = c("X", "M1", "M2"),
+    # pure chain: no X -> M2 or M1 -> Y path, so te() = a * d * b + c'
+    mediator_predictors = list(c("X"), c("M1")),
+    outcome_predictors = c("X", "M2"),
     data = NULL,
     n_obs = 100L,
     converged = TRUE,
@@ -414,4 +419,110 @@ test_that("glance() values match effect extractors", {
   expect_equal(glance_result$te, as.numeric(te(result)))
   expect_equal(glance_result$pm, as.numeric(pm(result)))
   expect_equal(glance_result$nobs, nobs(result))
+})
+
+
+# ==============================================================================
+# ParallelMediationData and InteractionMediationData
+# ==============================================================================
+
+tidy_parallel_fixture <- function() {
+  set.seed(11)
+  n <- 400
+  X <- rnorm(n)
+  M1 <- 0.5 * X + rnorm(n)
+  M2 <- 0.4 * X + rnorm(n)
+  Y <- 0.6 * M1 + 0.3 * M2 + 0.2 * X + rnorm(n)
+  d <- data.frame(X, M1, M2, Y)
+  extract_mediation(
+    lm(M1 ~ X, d), model_y = lm(Y ~ X + M1 + M2, d),
+    treatment = "X", mediator = c("M1", "M2"),
+    mediator_models = list(lm(M2 ~ X, d)), structure = "parallel"
+  )
+}
+
+tidy_interaction_fixture <- function() {
+  set.seed(2)
+  n <- 400
+  X <- rbinom(n, 1, 0.5)
+  M <- 0.4 + 0.5 * X + rnorm(n)
+  Y <- 0.1 * X + 0.3 * M + 0.25 * X * M + rnorm(n)
+  d <- data.frame(X, M, Y)
+  extract_mediation(lm(M ~ X, d), model_y = lm(Y ~ X + M + X:M, d),
+                    treatment = "X", mediator = "M", outcome = "Y")
+}
+
+test_that("tidy() works for ParallelMediationData", {
+  p <- tidy_parallel_fixture()
+  td <- generics::tidy(p)
+  expect_s3_class(td, "data.frame")
+  expect_identical(td$term, c("a1", "b1", "a2", "b2", "c_prime", "nie", "nde", "te"))
+  expect_equal(td$estimate[1:5], unname(paths(p)))
+  expect_equal(td$estimate[td$term == "nie"], sum(p@a_paths * p@b_paths))
+  # Path SEs come from the vcov diagonal (aliases); effects use the delta method
+  expect_equal(td$std.error[1:5], unname(sqrt(diag(p@vcov)[names(paths(p))])))
+  expect_equal(td$std.error[6:8], unname(.effect_se(p, c("nie", "nde", "te"))))
+
+  expect_identical(generics::tidy(p, type = "paths")$term,
+                   c("a1", "b1", "a2", "b2", "c_prime"))
+  expect_identical(generics::tidy(p, type = "effects")$term, c("nie", "nde", "te"))
+})
+
+test_that("tidy(conf.int = TRUE) on ParallelMediationData matches confint() for paths", {
+  p <- tidy_parallel_fixture()
+  td <- generics::tidy(p, type = "paths", conf.int = TRUE, conf.level = 0.9)
+  ci <- confint(p, parm = "paths", level = 0.9)
+  expect_equal(td$conf.low, unname(ci[, 1]))
+  expect_equal(td$conf.high, unname(ci[, 2]))
+})
+
+test_that("glance() works for ParallelMediationData", {
+  p <- tidy_parallel_fixture()
+  gl <- generics::glance(p)
+  expect_equal(nrow(gl), 1)
+  expect_equal(gl$nie, as.numeric(nie(p)))
+  expect_equal(gl$pm, as.numeric(pm(p)))
+  expect_equal(gl$n_mediators, 2L)
+  expect_equal(gl$nobs, nobs(p))
+})
+
+test_that("tidy() works for InteractionMediationData", {
+  imd <- tidy_interaction_fixture()
+  td <- generics::tidy(imd)
+  expect_identical(td$term, c("a", "b", "c_prime", "theta3",
+                              "cde", "int_ref", "int_med", "pie",
+                              "nie", "nde", "te"))
+  expect_equal(td$estimate[td$term == "theta3"], imd@interaction)
+  expect_equal(td$estimate[td$term == "te"], as.numeric(te(imd)))
+  expect_equal(sum(td$estimate[td$term %in% c("cde", "int_ref", "int_med", "pie")]),
+               as.numeric(te(imd)))
+  expect_equal(td$std.error[1:4], unname(sqrt(diag(imd@vcov)[names(paths(imd))])))
+  expect_equal(td$std.error[5:11],
+               unname(.effect_se(imd, c("cde", "int_ref", "int_med", "pie",
+                                        "nie", "nde", "te"))))
+
+  expect_identical(generics::tidy(imd, type = "components")$term,
+                   c("cde", "int_ref", "int_med", "pie"))
+  expect_identical(generics::tidy(imd, type = "effects")$term, c("nie", "nde", "te"))
+  expect_identical(generics::tidy(imd, type = "paths")$term,
+                   c("a", "b", "c_prime", "theta3"))
+})
+
+test_that("tidy(conf.int = TRUE) on InteractionMediationData matches confint() for paths", {
+  imd <- tidy_interaction_fixture()
+  td <- generics::tidy(imd, type = "paths", conf.int = TRUE)
+  ci <- confint(imd, parm = "paths")
+  expect_equal(td$conf.low, unname(ci[, 1]))
+  expect_equal(td$conf.high, unname(ci[, 2]))
+})
+
+test_that("glance() works for InteractionMediationData", {
+  imd <- tidy_interaction_fixture()
+  gl <- generics::glance(imd)
+  expect_equal(nrow(gl), 1)
+  expect_equal(gl$nie, as.numeric(nie(imd)))
+  expect_equal(gl$te, as.numeric(te(imd)))
+  expect_equal(gl$interaction, imd@interaction)
+  expect_equal(gl$m_star, imd@m_star)
+  expect_equal(gl$nobs, nobs(imd))
 })

@@ -7,7 +7,8 @@
 quick(x, digits = 3, ...)
 }
 \arguments{
-\item{x}{A MediationData object (or result from \code{\link[=med]{med()}})}
+\item{x}{A \link{MediationData} or \link{SerialMediationData} object (or result from
+\code{\link[=med]{med()}}). Other classes error; use \code{print()} or \code{summary()} for them.}
 
 \item{digits}{Integer: number of significant digits (default: 3)}
 
@@ -32,18 +33,12 @@ If bootstrap results are available (from \code{med(..., boot = TRUE)}),
 confidence intervals are shown for NIE.
 }
 \examples{
-# Generate example data
-set.seed(123)
-n <- 100
-mydata <- data.frame(X = rnorm(n))
-mydata$M <- 0.5 * mydata$X + rnorm(n)
-mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-
 result <- med(
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y"
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
+  outcome = "outcome",
+  covariates = c("covariate1", "covariate2")
 )
 
 # One-line summary

@@ -3,11 +3,13 @@
 S3method(glance,S7_object)
 S3method(print,mediation_effect)
 S3method(print,summary.BootstrapResult)
+S3method(print,summary.JointMediationData)
 S3method(print,summary.MediationData)
 S3method(print,summary.SerialMediationData)
 S3method(tidy,S7_object)
 export(BootstrapResult)
 export(InteractionMediationData)
+export(JointMediationData)
 export(MediationData)
 export(ParallelMediationData)
 export(SerialMediationData)
@@ -15,6 +17,7 @@ export(bootstrap_mediation)
 export(decompose)
 export(extract_mediation)
 export(fit_mediation)
+export(joint_effects)
 export(med)
 export(nde)
 export(nie)
@@ -25,16 +28,20 @@ export(te)
 import(S7)
 import(checkmate)
 import(methods)
-importFrom(generics,glance)
-importFrom(generics,tidy)
-importFrom(stats,coef)
-importFrom(stats,confint)
-importFrom(stats,formula)
-importFrom(stats,gaussian)
-importFrom(stats,glm)
-importFrom(stats,lm)
-importFrom(stats,nobs)
-importFrom(stats,qnorm)
-importFrom(stats,setNames)
-importFrom(stats,sigma)
-importFrom(stats,vcov)
+importFrom(generics,
+  glance,
+  tidy
+)
+importFrom(stats,
+  coef,
+  confint,
+  formula,
+  gaussian,
+  glm,
+  lm,
+  nobs,
+  qnorm,
+  setNames,
+  sigma,
+  vcov
+)

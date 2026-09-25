@@ -2,8 +2,6 @@
 #
 # This file defines the core S7 generics:
 # - extract_mediation(): Extract mediation structure from fitted models
-# - fit_mediation(): Fit mediation models
-# - bootstrap_mediation(): Perform bootstrap inference
 
 #' Extract Mediation Structure from Fitted Models
 #'
@@ -19,12 +17,12 @@
 #'   - `mediator`: Character string specifying mediator variable name
 #'   - Method-specific arguments (see individual method documentation)
 #'
-#' @return A [MediationData] object containing:
-#'   - Path coefficients (a, b, c')
-#'   - Full parameter vector and variance-covariance matrix
-#'   - Residual variances (for Gaussian models)
-#'   - Variable names and metadata
-#'   - Original data (if available)
+#' @return An S7 object whose class depends on the mediation structure (see
+#'   Details): [MediationData], [InteractionMediationData],
+#'   [SerialMediationData], [ParallelMediationData], or [JointMediationData].
+#'   Each carries the path coefficients, the full parameter vector and its
+#'   variance-covariance matrix, residual standard deviations (for Gaussian
+#'   models), variable names, and the original data when available.
 #'
 #' @details
 #' The `extract_mediation()` generic provides methods for different model types:
@@ -36,25 +34,70 @@
 #'
 #' Note: OpenMx extraction is planned for a future release.
 #'
-#' All methods return a standardized [MediationData] object that can be used
-#' with other medfit functions and dependent packages (probmed, RMediation,
-#' medrobust).
+#' The returned objects share one interface ([nie()], [nde()], [te()],
+#' [confint()], [bootstrap_mediation()], ...) for use by other medfit functions
+#' and dependent packages (probmed, RMediation, medrobust).
+#'
+#' The class returned depends on the structure. A single mediator gives a
+#' [MediationData] object, or an [InteractionMediationData] object when the
+#' outcome model has a treatment-by-mediator term. A `mediator` vector of
+#' length two or more gives a [SerialMediationData] or [ParallelMediationData]
+#' object; for lm/glm fits whose outcome model has a treatment-by-mediator term
+#' written with `:` or `*`, it gives a [JointMediationData] object with the
+#' joint natural effects of the mediators. Any other product term in a
+#' multi-mediator fit errors.
+#'
+#' ## Arguments for lm and glm models
+#'
+#' With `object` the fitted mediator model (the first mediator's model for
+#' several mediators), the lm/glm method takes:
+#'
+#' - `model_y`: the fitted outcome model. With several mediators include every
+#'   mediator, not only the last: omitting one that also affects the outcome
+#'   biases the others' coefficients.
+#' - `treatment`: name of the treatment variable.
+#' - `mediator`: name of the mediator, or an ordered character vector of two or
+#'   more mediator names.
+#' - `mediator_models`: list of the fitted models for mediators 2 to k, in
+#'   order; required whenever `mediator` has length two or more.
+#' - `structure`: `"auto"` (default), `"serial"`, or `"parallel"`; `"auto"`
+#'   classifies the mediators from the mediator models.
+#' - `decomposition`: `"auto"` (default) uses the four-way decomposition when
+#'   a single mediator's outcome model has a treatment-by-mediator term;
+#'   `"four_way"` requires that term; `"two_way"` ignores it and returns a
+#'   [MediationData] object.
+#' - `m_star`: the reference mediator level for the controlled direct effect
+#'   (default 0; for [JointMediationData] a scalar or a vector named by the
+#'   interacting mediators).
+#' - `vcov_fun`: function returning each model's covariance matrix (default
+#'   [stats::vcov()]; for example `sandwich::vcovHC`). Not supported for
+#'   [JointMediationData].
+#' - `outcome`, `data`: optional; detected from the models when omitted.
+#'
+#' The lavaan method takes a fitted lavaan model and the variable names; see
+#' `?extract_mediation_lavaan` for its arguments.
+#'
+#' ## Covariance of the estimates
+#'
+#' For lm/glm fits, each equation's block of `@vcov` is that model's own
+#' covariance. The blocks for different equations are stored as zero. This is
+#' exact for simple mediation, serial chains, and the four-way model, whose
+#' later equations contain every regressor of the earlier ones, but for
+#' parallel mediators it leaves out the covariance between their `a` paths.
+#' [JointMediationData] stores the full stacked least-squares covariance, and a
+#' lavaan fit estimates all equations jointly, so for the same data the
+#' intervals can differ between engines.
 #'
 #' @examples
 #' \donttest{
-#' # Simulate data with a single mediator (X -> M -> Y)
-#' set.seed(123)
-#' n <- 200
-#' X <- rnorm(n)
-#' M <- 0.5 * X + rnorm(n)
-#' Y <- 0.3 * M + 0.2 * X + rnorm(n)
-#' dat <- data.frame(X = X, M = M, Y = Y)
-#'
-#' # Extract the mediation structure from fitted lm models
-#' fit_m <- lm(M ~ X, data = dat)
-#' fit_y <- lm(Y ~ X + M, data = dat)
+#' # Extract the mediation structure from fitted lm models, using the
+#' # simulated mediation_demo data bundled with medfit
+#' fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+#'             data = mediation_demo)
+#' fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'             data = mediation_demo)
 #' med_data <- extract_mediation(fit_m, model_y = fit_y,
-#'                               treatment = "X", mediator = "M")
+#'                               treatment = "treatment", mediator = "mediator1")
 #' }
 #'
 #' @seealso [MediationData], [fit_mediation()], [bootstrap_mediation()]
@@ -63,239 +106,3 @@ extract_mediation <- S7::new_generic(
   "extract_mediation",
   dispatch_args = "object"
 )
-
-
-#' Fit Mediation Models
-#'
-#' @description
-#' Fit mediation models using a specified modeling engine. This function
-#' provides a convenient formula-based interface for fitting both the
-#' mediator and outcome models simultaneously.
-#'
-#' @param formula_y Formula for outcome model (e.g., `Y ~ X + M + C`)
-#' @param formula_m Formula for mediator model (e.g., `M ~ X + C`)
-#' @param data Data frame containing all variables
-#' @param treatment Character string: name of treatment variable
-#' @param mediator Character string: name of mediator variable
-#' @param engine Character string: modeling engine to use. Options:
-#'   - `"glm"`: Generalized linear models (current)
-#'   - `"lmer"`: Mixed-effects models (future)
-#'   - `"brms"`: Bayesian regression models (future)
-#' @param family_y Family object for outcome model (default: `gaussian()`)
-#' @param family_m Family object for mediator model (default: `gaussian()`)
-#' @param engine_args Named list of engine-specific overrides (default:
-#'   `list()`). See the `fit_mediation()` documentation in `R/fit-glm.R` for
-#'   the names each engine recognizes.
-#' @param m_star Numeric scalar: reference mediator level \eqn{m^*}{m*} for the
-#'   four-way decomposition (default: `0`).
-#' @param ... Additional arguments passed to the engine-specific function
-#'
-#' @return A [MediationData] object containing the fitted mediation structure
-#'
-#' @details
-#' The `fit_mediation()` function fits both the mediator model and outcome
-#' model using the specified engine, then extracts the mediation structure
-#' using [extract_mediation()].
-#'
-#' ## Supported Engines
-#'
-#' **GLM** (`engine = "glm"`):
-#' - Fits models using `stats::glm()`
-#' - Supports all GLM families (gaussian, binomial, poisson, etc.)
-#' - For Gaussian models, extracts residual variances
-#'
-#' **regmedint** (`engine = "regmedint"`):
-#' - Delegates to `regmedint::regmedint()` (suggested package) for closed-form
-#'   natural (in)direct effects, with or without a treatment-mediator interaction
-#' - Returns [MediationData] or [InteractionMediationData] depending on whether
-#'   `formula_y` contains a treatment-by-mediator interaction term; use
-#'   `engine_args` to override the derived regmedint arguments
-#'
-#' ## Reference Mediator Level
-#'
-#' When the fit yields an [InteractionMediationData], `m_star` fixes the level
-#' \eqn{m^*}{m*} at which the controlled direct effect is read off:
-#' \eqn{CDE = \theta_1 + \theta_3 m^*}{CDE = theta1 + theta3 * m*} and
-#' \eqn{INTref = \theta_3 (E[M \mid X = 0] - m^*)}{INTref = theta3 * (E[M | X = 0] - m*)}.
-#' The two shift in compensating directions, so `nde()`, `nie()`, `te()`, and
-#' `pm()` are invariant to `m_star`; only the CDE/INTref split moves.
-#'
-#' The engines reach the same result by different routes. `engine = "glm"`
-#' applies `m_star` at *extraction* time, after the coefficients are fit;
-#' `engine = "regmedint"` passes it to `regmedint::regmedint()` as `m_cde`,
-#' where it is consumed by that package's closed-form estimator at *fitting*
-#' time. Supplying `m_star` for a fit with no treatment-by-mediator term is an
-#' error, not a silent no-op.
-#'
-#' **Future Engines**:
-#' - `"lmer"`: Mixed-effects models via lme4
-#' - `"brms"`: Bayesian models via brms
-#'
-#' ## Model Specification
-#'
-#' The formulas should follow standard R formula syntax:
-#' - `formula_m`: Mediator model (e.g., `M ~ X + C1 + C2`)
-#' - `formula_y`: Outcome model (e.g., `Y ~ X + M + C1 + C2`)
-#'
-#' The mediator must appear in `formula_y`, and the treatment must appear
-#' in both formulas.
-#'
-#' @examples
-#' \dontrun{
-#' # Fit Gaussian mediation model
-#' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M + C,
-#'   formula_m = M ~ X + C,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M",
-#'   engine = "glm"
-#' )
-#'
-#' # Fit with binary outcome
-#' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M + C,
-#'   formula_m = M ~ X + C,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M",
-#'   engine = "glm",
-#'   family_y = binomial()
-#' )
-#' }
-#'
-#' @seealso [MediationData], [extract_mediation()], [bootstrap_mediation()]
-#' @export
-fit_mediation <- function(formula_y,
-                          formula_m,
-                          data,
-                          treatment,
-                          mediator,
-                          engine = "glm",
-                          family_y = stats::gaussian(),
-                          family_m = stats::gaussian(),
-                          engine_args = list(),
-                          m_star = 0,
-                          ...) {
-  # This is a regular function, not an S7 generic
-  # Implementation will be in fit-glm.R and other engine files
-  stop("fit_mediation() not yet implemented. See planning/medfit-roadmap.md")
-}
-
-
-#' Perform Bootstrap Inference for Mediation Statistics
-#'
-#' @description
-#' Conduct bootstrap inference to compute confidence intervals for
-#' mediation statistics. Supports parametric, nonparametric, and
-#' plugin methods.
-#'
-#' @param statistic_fn Function that computes the statistic of interest.
-#'   - For parametric bootstrap: receives parameter vector, returns scalar
-#'   - For nonparametric bootstrap: receives data frame, returns scalar
-#'   - For plugin: receives parameter vector, returns scalar
-#' @param method Character string: bootstrap method. Options:
-#'   - `"parametric"`: Sample from multivariate normal (fast, assumes normality)
-#'   - `"nonparametric"`: Resample data and refit (robust, slower)
-#'   - `"plugin"`: Point estimate only, no CI (fastest)
-#' @param mediation_data [MediationData] object (required for parametric/plugin)
-#' @param data Data frame (required for nonparametric bootstrap)
-#' @param n_boot Integer: number of bootstrap samples (default: 1000)
-#' @param ci_level Numeric: confidence level between 0 and 1 (default: 0.95)
-#' @param parallel Logical: use parallel processing? (default: FALSE)
-#' @param ncores Integer: number of cores for parallel processing.
-#'   If NULL, uses `detectCores() - 1`
-#' @param seed Integer: random seed for reproducibility (optional but recommended)
-#' @param ... Additional arguments (reserved for future use)
-#'
-#' @return A [BootstrapResult] object containing:
-#'   - Point estimate
-#'   - Confidence interval bounds
-#'   - Bootstrap distribution (for parametric and nonparametric)
-#'   - Method used
-#'
-#' @details
-#' ## Bootstrap Methods
-#'
-#' **Parametric Bootstrap** (`method = "parametric"`):
-#' - Samples parameter vectors from \eqn{N(\hat{\theta}, \hat{\Sigma})}{N(theta-hat, Sigma-hat)}
-#' - Fast and efficient
-#' - Assumes asymptotic normality of parameters
-#' - Recommended for most applications with n > 50
-#'
-#' **Nonparametric Bootstrap** (`method = "nonparametric"`):
-#' - Resamples observations with replacement
-#' - Refits models for each bootstrap sample
-#' - More robust, no normality assumption
-#' - Computationally intensive
-#' - Use when normality is questionable or n is small
-#'
-#' **Plugin Estimator** (`method = "plugin"`):
-#' - Computes point estimate only
-#' - No confidence interval
-#' - Fastest method
-#' - Use for quick checks or when CI not needed
-#'
-#' ## Parallel Processing
-#'
-#' Set `parallel = TRUE` to use multiple cores:
-#' - Automatically detects available cores
-#' - Falls back to sequential if parallel fails
-#' - Seed handling ensures reproducibility
-#'
-#' ## Reproducibility
-#'
-#' Always set a seed for reproducible results:
-#' ```r
-#' bootstrap_mediation(..., seed = 12345)
-#' ```
-#'
-#' @examples
-#' \dontrun{
-#' # Parametric bootstrap for indirect effect
-#' result <- bootstrap_mediation(
-#'   statistic_fn = function(theta) theta["a"] * theta["b"],
-#'   method = "parametric",
-#'   mediation_data = med_data,
-#'   n_boot = 5000,
-#'   ci_level = 0.95,
-#'   seed = 12345
-#' )
-#'
-#' # Nonparametric bootstrap with parallel processing
-#' result <- bootstrap_mediation(
-#'   statistic_fn = function(data) {
-#'     # Refit models and compute statistic
-#'     # ...
-#'   },
-#'   method = "nonparametric",
-#'   data = mydata,
-#'   n_boot = 5000,
-#'   parallel = TRUE,
-#'   seed = 12345
-#' )
-#'
-#' # Plugin estimator (no CI)
-#' result <- bootstrap_mediation(
-#'   statistic_fn = function(theta) theta["a"] * theta["b"],
-#'   method = "plugin",
-#'   mediation_data = med_data
-#' )
-#' }
-#'
-#' @seealso [BootstrapResult], [MediationData], [extract_mediation()]
-#' @export
-bootstrap_mediation <- function(statistic_fn,
-                                method = c("parametric", "nonparametric", "plugin"),
-                                mediation_data = NULL,
-                                data = NULL,
-                                n_boot = 1000,
-                                ci_level = 0.95,
-                                parallel = FALSE,
-                                ncores = NULL,
-                                seed = NULL,
-                                ...) {
-  # This is a regular function, not an S7 generic
-  # Implementation will be in bootstrap.R
-  stop("bootstrap_mediation() not yet implemented. See planning/medfit-roadmap.md")
-}

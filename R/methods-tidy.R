@@ -11,6 +11,74 @@
 # Register S3 methods for S7 classes by adding explicit class attribute
 # Since S7 class names contain "::", we use .onLoad to register methods
 
+#' Tidy, Glance, and Inference Methods for medfit Objects
+#'
+#' @description
+#' `tidy()` converts a mediation data object or a [BootstrapResult] into a
+#' tidy tibble, one row per path coefficient or effect. `glance()` returns a
+#' one-row summary. The base generics [stats::coef()], [stats::vcov()],
+#' [stats::confint()], and [stats::nobs()] also have methods for every
+#' mediation class; see Details.
+#'
+#' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
+#'   [InteractionMediationData], [JointMediationData], or [BootstrapResult]
+#'   object.
+#' @param ... Passed to the class method: `type` (`"all"`, `"paths"`,
+#'   `"effects"`, and for interaction objects `"components"`), `conf.int`
+#'   (logical, add `conf.low`/`conf.high`), and `conf.level` (default 0.95).
+#'
+#' @return `tidy()`: a tibble (a data frame if tibble is not installed) with
+#'   columns `term`, `estimate`, `std.error`, and, when `conf.int = TRUE`,
+#'   `conf.low` and `conf.high`.
+#'
+#'   `glance()`: a one-row tibble with `nie`, `nde`, `te`, `pm`, `nobs`, and
+#'   `converged`; interaction objects add `interaction` and `m_star`, and
+#'   joint objects add `cde`, `structure`, `n_mediators`, `interactions`, and
+#'   `m_star`.
+#'
+#' @details
+#' Path standard errors are the square roots of the diagonal of `@vcov`.
+#' Effect standard errors (NIE, NDE, TE, and for interaction objects the
+#' four-way components) use the delta method over the full `@vcov`, the same
+#' computation as `confint(parm = "effects")`, so `tidy(conf.int = TRUE)`
+#' reproduces `confint()` exactly. Intervals are normal approximations
+#' (\eqn{\hat{\theta} \pm z \, SE}{estimate +/- z * SE}); the sampling
+#' distribution of a product of coefficients is skewed, so for inference on
+#' indirect effects prefer [bootstrap_mediation()]. `tidy()` raises no warning
+#' about this; `confint()` does.
+#'
+#' For a serial chain fitted as separate lm/glm regressions, `@vcov` has zero
+#' covariances between equations, and the effect standard errors inherit that.
+#' The proportion mediated (reported by `glance()`) has no standard error: it
+#' is a ratio whose delta-method standard error is unstable when the total
+#' effect is near zero, so bootstrap it instead.
+#'
+#' ## Base methods
+#'
+#' - `coef(object, type = "paths")`: the path coefficients; `type = "effects"`
+#'   gives the effects, `"all"` both, and for interaction objects
+#'   `"components"` gives the four-way components.
+#' - `vcov(object)`: the stored `@vcov`, covering every entry of `@estimates`.
+#' - `confint(object, parm = "paths", level = 0.95)`: normal intervals for the
+#'   paths, or with `parm = "effects"` for the effects using the delta-method
+#'   standard errors above (interaction objects also accept
+#'   `parm = "components"`). With `parm = "effects"` it warns that the normal
+#'   approximation may be inaccurate for an indirect effect.
+#' - `nobs(object)`: the number of observations.
+#'
+#' @examples
+#' med_data <- fit_mediation(
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
+#' )
+#' # tidy() is the generic from the generics package (also re-exported by broom)
+#' generics::tidy(med_data)
+#' generics::tidy(med_data, type = "effects", conf.int = TRUE)
+#'
+#' @seealso [bootstrap_mediation()], [MediationData]
 #' @export
 tidy.S7_object <- function(x, ...) {
   if (S7::S7_inherits(x, MediationData)) {
@@ -18,6 +86,15 @@ tidy.S7_object <- function(x, ...) {
   }
   if (S7::S7_inherits(x, SerialMediationData)) {
     return(.tidy_serial_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, ParallelMediationData)) {
+    return(.tidy_parallel_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, InteractionMediationData)) {
+    return(.tidy_interaction_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, JointMediationData)) {
+    return(.tidy_joint_mediation_data(x, ...))
   }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.tidy_bootstrap_result(x, ...))
@@ -27,6 +104,7 @@ tidy.S7_object <- function(x, ...) {
 }
 
 
+#' @rdname tidy.S7_object
 #' @export
 glance.S7_object <- function(x, ...) {
   if (S7::S7_inherits(x, MediationData)) {
@@ -34,6 +112,15 @@ glance.S7_object <- function(x, ...) {
   }
   if (S7::S7_inherits(x, SerialMediationData)) {
     return(.glance_serial_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, ParallelMediationData)) {
+    return(.glance_parallel_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, InteractionMediationData)) {
+    return(.glance_interaction_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, JointMediationData)) {
+    return(.glance_joint_mediation_data(x, ...))
   }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.glance_bootstrap_result(x, ...))
@@ -69,18 +156,12 @@ glance.S7_object <- function(x, ...) {
 #'   }
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' result <- med(
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M",
-#'   outcome = "Y"
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1",
+#'   outcome = "outcome",
+#'   covariates = c("covariate1", "covariate2")
 #' )
 #'
 #' # Get tidy output
@@ -96,76 +177,11 @@ glance.S7_object <- function(x, ...) {
 .tidy_mediation_data <- function(x, type = c("all", "paths", "effects"),
                                  conf.int = FALSE, conf.level = 0.95, ...) {
   type <- match.arg(type)
-
-  # Extract effects and paths
-  paths_vec <- paths(x)
-  nie_val <- as.numeric(nie(x))
-  nde_val <- as.numeric(nde(x))
-  te_val <- as.numeric(te(x))
-
-  # Build tibble based on type
-  if (type == "paths") {
-    result <- data.frame(
-      term = names(paths_vec),
-      estimate = unname(paths_vec),
-      stringsAsFactors = FALSE
-    )
-  } else if (type == "effects") {
-    result <- data.frame(
-      term = c("nie", "nde", "te"),
-      estimate = c(nie_val, nde_val, te_val),
-      stringsAsFactors = FALSE
-    )
-  } else {
-    # "all" - combine both
-    result <- data.frame(
-      term = c(names(paths_vec), "nie", "nde", "te"),
-      estimate = c(unname(paths_vec), nie_val, nde_val, te_val),
-      stringsAsFactors = FALSE
-    )
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL      # a, b, c_prime
+  effect_vec <- if (type %in% c("all", "effects")) {
+    c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)), te = as.numeric(te(x)))
   }
-
-  # Add standard errors if we can compute them
-  if (type %in% c("paths", "all")) {
-    vcov_mat <- x@vcov
-    param_names <- names(x@estimates)
-
-    # Try to get SEs for paths
-    a_idx <- grep(paste0("^m_", x@treatment, "$"), param_names)
-    b_idx <- grep(paste0("^y_", x@mediator, "$"), param_names)
-    cp_idx <- grep(paste0("^y_", x@treatment, "$"), param_names)
-
-    if (length(a_idx) > 0 && length(b_idx) > 0 && length(cp_idx) > 0) {
-      se_a <- sqrt(vcov_mat[a_idx[1], a_idx[1]])
-      se_b <- sqrt(vcov_mat[b_idx[1], b_idx[1]])
-      se_cp <- sqrt(vcov_mat[cp_idx[1], cp_idx[1]])
-
-      if (type == "paths") {
-        result$std.error <- c(se_a, se_b, se_cp)
-      } else {
-        # For "all", add SEs for paths and NA for effects (need delta method)
-        result$std.error <- c(se_a, se_b, se_cp, NA, NA, NA)
-      }
-    }
-  }
-
-  # Add confidence intervals
-  if (conf.int) {
-    if (!"std.error" %in% names(result)) {
-      result$std.error <- NA_real_
-    }
-
-    z <- stats::qnorm(1 - (1 - conf.level) / 2)
-    result$conf.low <- result$estimate - z * result$std.error
-    result$conf.high <- result$estimate + z * result$std.error
-  }
-
-  # Convert to tibble if available, otherwise data.frame
-  if (requireNamespace("tibble", quietly = TRUE)) {
-    result <- tibble::as_tibble(result)
-  }
-
-  result
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
 }
 
 
@@ -189,18 +205,12 @@ glance.S7_object <- function(x, ...) {
 #'   }
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' result <- med(
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M",
-#'   outcome = "Y"
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1",
+#'   outcome = "outcome",
+#'   covariates = c("covariate1", "covariate2")
 #' )
 #'
 #' glance(result)
@@ -235,48 +245,21 @@ glance.S7_object <- function(x, ...) {
 .tidy_serial_mediation_data <- function(x, type = c("all", "paths", "effects"),
                                         conf.int = FALSE, conf.level = 0.95, ...) {
   type <- match.arg(type)
-
-  # Extract effects and paths
-  paths_vec <- paths(x)
-  nie_val <- as.numeric(nie(x))
-  nde_val <- as.numeric(nde(x))
-  te_val <- as.numeric(te(x))
-
-  # Build result based on type
-  if (type == "paths") {
-    result <- data.frame(
-      term = names(paths_vec),
-      estimate = unname(paths_vec),
-      stringsAsFactors = FALSE
-    )
-  } else if (type == "effects") {
-    result <- data.frame(
-      term = c("nie", "nde", "te"),
-      estimate = c(nie_val, nde_val, te_val),
-      stringsAsFactors = FALSE
-    )
-  } else {
-    result <- data.frame(
-      term = c(names(paths_vec), "nie", "nde", "te"),
-      estimate = c(unname(paths_vec), nie_val, nde_val, te_val),
-      stringsAsFactors = FALSE
-    )
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  # paths() names the d paths by mediator pair (d, or d21, d32, ...);
+  # @vcov aliases them d1..dk
+  path_alias <- if (!is.null(path_vec)) {
+    c("a", paste0("d", seq_along(x@d_path)), "b", "c_prime")
   }
-
-  # Add CI if requested (without SEs for serial - need full delta method)
-  if (conf.int) {
-    result$conf.low <- NA_real_
-    result$conf.high <- NA_real_
-    warning("Confidence intervals for serial mediation require bootstrap. ",
-            "Use bootstrap_mediation() for robust inference.", call. = FALSE)
+  effect_vec <- if (type %in% c("all", "effects")) {
+    # nie: chain-specific (a * d1 * ... * b); nie_total + nde = te (all paths)
+    te_val <- as.numeric(te(x))
+    nde_val <- as.numeric(nde(x))
+    c(nie = as.numeric(nie(x)), nie_total = te_val - nde_val,
+      nde = nde_val, te = te_val)
   }
-
-  # Convert to tibble if available
-  if (requireNamespace("tibble", quietly = TRUE)) {
-    result <- tibble::as_tibble(result)
-  }
-
-  result
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level,
+                      path_alias = path_alias)
 }
 
 
@@ -287,6 +270,106 @@ glance.S7_object <- function(x, ...) {
 #'
 #' @noRd
 .glance_serial_mediation_data <- function(x, ...) {
+  # One te() call: nie_total and pm derive from it (one warning when unavailable)
+  te_val <- as.numeric(te(x))
+  nde_val <- as.numeric(nde(x))
+  result <- data.frame(
+    nie = as.numeric(nie(x)),
+    nie_total = te_val - nde_val,
+    nde = nde_val,
+    te = te_val,
+    pm = as.numeric(.serial_pm_from_total(te_val, x@c_prime)),
+    n_mediators = length(x@mediators),
+    nobs = nobs(x),
+    converged = x@converged,
+    stringsAsFactors = FALSE
+  )
+
+  # Convert to tibble if available
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Build a Tidy Table from Named Path and Effect Vectors
+#'
+#' @description
+#' Shared body for every mediation tidier. Path rows get standard errors from
+#' the diagonal of `@vcov` (the path names, or `path_alias`, are aliases in it);
+#' effect rows get delta-method standard errors from the same helper
+#' `confint()` uses, so `tidy(conf.int = TRUE)` and `confint()` agree. An
+#' object without the alias rows gets `NA` SEs rather than an error. No
+#' warning is raised here (GRILL D3).
+#'
+#' @param x A mediation data object with `@vcov`
+#' @param path_vec Named numeric vector of path coefficients (or `NULL`)
+#' @param effect_vec Named numeric vector of effects (or `NULL`); names must be
+#'   canonical `.effect_se()` keys
+#' @param conf.int,conf.level As in `.tidy_mediation_data()`
+#' @param path_alias `@vcov` row names for `path_vec`, when they differ from
+#'   `names(path_vec)` (serial d paths)
+#' @noRd
+.tidy_paths_effects <- function(x, path_vec, effect_vec, conf.int, conf.level,
+                                path_alias = names(path_vec)) {
+  vc <- x@vcov
+  # match() gives NA (not an error) for a path name missing from @vcov
+  path_se <- sqrt(diag(vc)[match(path_alias, rownames(vc))])
+  effect_se <- if (length(effect_vec)) .effect_se_or_na(x, names(effect_vec)) else NULL
+
+  result <- data.frame(
+    term = c(names(path_vec), names(effect_vec)),
+    estimate = unname(c(path_vec, effect_vec)),
+    std.error = unname(c(path_se, effect_se)),
+    stringsAsFactors = FALSE
+  )
+
+  if (conf.int) {
+    z <- stats::qnorm(1 - (1 - conf.level) / 2)
+    result$conf.low <- result$estimate - z * result$std.error
+    result$conf.high <- result$estimate + z * result$std.error
+  }
+
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Tidy a ParallelMediationData Object
+#'
+#' @param x A ParallelMediationData object
+#' @param type `"all"` (default), `"paths"` (a1, b1, ..., c_prime), or
+#'   `"effects"` (nie, nde, te)
+#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
+#' @param conf.level Confidence level (default 0.95)
+#' @param ... Additional arguments (ignored)
+#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
+#'   `conf.high` when `conf.int = TRUE`)
+#' @noRd
+.tidy_parallel_mediation_data <- function(x, type = c("all", "paths", "effects"),
+                                          conf.int = FALSE, conf.level = 0.95,
+                                          ...) {
+  type <- match.arg(type)
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  effect_vec <- if (type %in% c("all", "effects")) {
+    c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)), te = as.numeric(te(x)))
+  }
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+}
+
+
+#' Glance at a ParallelMediationData Object
+#'
+#' @param x A ParallelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A one-row tibble: nie, nde, te, pm, n_mediators, nobs, converged
+#' @noRd
+.glance_parallel_mediation_data <- function(x, ...) {
   result <- data.frame(
     nie = as.numeric(nie(x)),
     nde = as.numeric(nde(x)),
@@ -298,7 +381,120 @@ glance.S7_object <- function(x, ...) {
     stringsAsFactors = FALSE
   )
 
-  # Convert to tibble if available
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Tidy an InteractionMediationData Object
+#'
+#' @param x An InteractionMediationData object
+#' @param type `"all"` (default), `"paths"` (a, b, c_prime, theta3),
+#'   `"components"` (cde, int_ref, int_med, pie), or `"effects"` (nie, nde, te)
+#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
+#' @param conf.level Confidence level (default 0.95)
+#' @param ... Additional arguments (ignored)
+#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
+#'   `conf.high` when `conf.int = TRUE`)
+#' @noRd
+.tidy_interaction_mediation_data <- function(x,
+                                             type = c("all", "paths",
+                                                      "components", "effects"),
+                                             conf.int = FALSE, conf.level = 0.95,
+                                             ...) {
+  type <- match.arg(type)
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  components <- c(cde = x@cde, int_ref = x@int_ref, int_med = x@int_med,
+                  pie = x@pie)
+  effects <- c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)),
+               te = as.numeric(te(x)))
+  effect_vec <- switch(type,
+    all = c(components, effects),
+    paths = NULL,
+    components = components,
+    effects = effects
+  )
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+}
+
+
+#' Glance at an InteractionMediationData Object
+#'
+#' @param x An InteractionMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A one-row tibble: nie, nde, te, pm, interaction, m_star, nobs,
+#'   converged
+#' @noRd
+.glance_interaction_mediation_data <- function(x, ...) {
+  result <- data.frame(
+    nie = as.numeric(nie(x)),
+    nde = as.numeric(nde(x)),
+    te = as.numeric(te(x)),
+    pm = as.numeric(pm(x)),
+    interaction = x@interaction,
+    m_star = x@m_star,
+    nobs = nobs(x),
+    converged = x@converged,
+    stringsAsFactors = FALSE
+  )
+
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Tidy a JointMediationData Object
+#'
+#' @param x A JointMediationData object
+#' @param type `"all"` (default), `"paths"` (a1..aK, dij, b1..bK,
+#'   theta3_<mediator>, c_prime), or `"effects"` (cde, nde, nie, te)
+#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
+#' @param conf.level Confidence level (default 0.95)
+#' @param ... Additional arguments (ignored)
+#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
+#'   `conf.high` when `conf.int = TRUE`)
+#' @noRd
+.tidy_joint_mediation_data <- function(x, type = c("all", "paths", "effects"),
+                                       conf.int = FALSE, conf.level = 0.95,
+                                       ...) {
+  type <- match.arg(type)
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  effect_vec <- if (type %in% c("all", "effects")) {
+    c(cde = x@cde, nde = x@nde, nie = x@nie, te = x@total_effect)
+  }
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+}
+
+
+#' Glance at a JointMediationData Object
+#'
+#' @param x A JointMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A one-row tibble: nie, nde, te, pm, cde, structure, n_mediators,
+#'   interactions, m_star, nobs, converged
+#' @noRd
+.glance_joint_mediation_data <- function(x, ...) {
+  result <- data.frame(
+    nie = x@nie,
+    nde = x@nde,
+    te = x@total_effect,
+    pm = as.numeric(pm(x)),
+    cde = x@cde,
+    structure = x@structure,
+    n_mediators = length(x@mediators),
+    interactions = paste(x@interactions, collapse = ", "),
+    m_star = paste(sprintf("%s=%g", names(x@m_star), x@m_star), collapse = ", "),
+    nobs = nobs(x),
+    converged = x@converged,
+    stringsAsFactors = FALSE
+  )
+
   if (requireNamespace("tibble", quietly = TRUE)) {
     result <- tibble::as_tibble(result)
   }

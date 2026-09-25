@@ -19,7 +19,14 @@
 #'   - `"parametric"`: Sample from multivariate normal (fast, assumes normality)
 #'   - `"nonparametric"`: Resample data and refit (robust, slower)
 #'   - `"plugin"`: Point estimate only, no CI (fastest)
-#' @param mediation_data [MediationData] object (required for parametric/plugin)
+#' @param mediation_data A mediation data object (required for parametric/plugin):
+#'   [MediationData], [SerialMediationData], [ParallelMediationData],
+#'   [InteractionMediationData], or [JointMediationData]. `statistic_fn`
+#'   receives its named `@estimates` vector, which includes path aliases (e.g.
+#'   `a`, `d1`, `b`, `c_prime` for a serial chain; `a1`, `b1`, `a2`, `b2` for
+#'   parallel mediators). For a [JointMediationData] the aliases alone cannot
+#'   reproduce the NDE, which also needs the prefixed intercept and covariate
+#'   rows (`m1_`, ..., `y_`) and the sample covariate means.
 #' @param data Data frame (required for nonparametric bootstrap)
 #' @param n_boot Integer: number of bootstrap samples (default: 1000)
 #' @param ci_level Numeric: confidence level between 0 and 1 (default: 0.95)
@@ -31,7 +38,8 @@
 #'
 #' @return A [BootstrapResult] object containing:
 #'   - Point estimate
-#'   - Confidence interval bounds
+#'   - Percentile confidence interval bounds (the \eqn{\alpha/2}{alpha/2} and
+#'     \eqn{1 - \alpha/2}{1 - alpha/2} quantiles of the bootstrap distribution)
 #'   - Bootstrap distribution (for parametric and nonparametric)
 #'   - Method used
 #'
@@ -90,24 +98,17 @@
 #' ```
 #'
 #' @examples
-#' # Generate example data
-#' set.seed(123)
-#' n <- 100
-#' mydata <- data.frame(X = rnorm(n))
-#' mydata$M <- 0.5 * mydata$X + rnorm(n)
-#' mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-#'
 #' # Fit mediation model
 #' med_data <- fit_mediation(
-#'   formula_y = Y ~ X + M,
-#'   formula_m = M ~ X,
-#'   data = mydata,
-#'   treatment = "X",
-#'   mediator = "M"
+#'   formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+#'   data = mediation_demo,
+#'   treatment = "treatment",
+#'   mediator = "mediator1"
 #' )
 #'
 #' # Define indirect effect function
-#' indirect_fn <- function(theta) theta["m_X"] * theta["y_M"]
+#' indirect_fn <- function(theta) theta["m_treatment"] * theta["y_mediator1"]
 #'
 #' # Plugin estimator (point estimate only, fastest)
 #' result_plugin <- bootstrap_mediation(
@@ -131,15 +132,17 @@
 #'
 #' # Nonparametric bootstrap (slower but more robust)
 #' refit_fn <- function(boot_data) {
-#'   fit_m <- lm(M ~ X, data = boot_data)
-#'   fit_y <- lm(Y ~ X + M, data = boot_data)
-#'   unname(coef(fit_m)["X"] * coef(fit_y)["M"])
+#'   fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+#'               data = boot_data)
+#'   fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+#'               data = boot_data)
+#'   unname(coef(fit_m)["treatment"] * coef(fit_y)["mediator1"])
 #' }
 #'
 #' result_np <- bootstrap_mediation(
 #'   statistic_fn = refit_fn,
 #'   method = "nonparametric",
-#'   data = mydata,
+#'   data = mediation_demo,
 #'   n_boot = 500,
 #'   seed = 12345
 #' )
@@ -232,9 +235,7 @@ bootstrap_mediation <- function(statistic_fn,
   if (is.null(mediation_data)) {
     stop("mediation_data is required for parametric bootstrap", call. = FALSE)
   }
-  if (!S7::S7_inherits(mediation_data, MediationData)) {
-    stop("mediation_data must be a MediationData object", call. = FALSE)
-  }
+  .assert_param_mediation_data(mediation_data)
 
   # Check for MASS package
   if (!requireNamespace("MASS", quietly = TRUE)) {
@@ -403,9 +404,7 @@ bootstrap_mediation <- function(statistic_fn,
   if (is.null(mediation_data)) {
     stop("mediation_data is required for plugin method", call. = FALSE)
   }
-  if (!S7::S7_inherits(mediation_data, MediationData)) {
-    stop("mediation_data must be a MediationData object", call. = FALSE)
-  }
+  .assert_param_mediation_data(mediation_data)
 
   # Compute point estimate
   estimate <- statistic_fn(mediation_data@estimates)
@@ -421,6 +420,35 @@ bootstrap_mediation <- function(statistic_fn,
     method = "plugin",
     call = NULL
   )
+}
+
+
+#' Validate a Mediation Data Object for Parameter-Based Bootstrap
+#'
+#' @description
+#' The parametric and plugin methods only read `@estimates` and `@vcov`, which
+#' every mediation data class carries with matching names (including the path
+#' aliases such as `a`, `d1`, `b1`, `c_prime`). Accept any of them rather than
+#' only `MediationData`, which the other classes do not inherit from.
+#'
+#' @param x Object to check
+#'
+#' @return `x`, invisibly; errors if `x` is not a supported class
+#' @keywords internal
+#' @noRd
+.assert_param_mediation_data <- function(x) {
+  supported <- list(
+    MediationData, SerialMediationData,
+    ParallelMediationData, InteractionMediationData, JointMediationData
+  )
+  ok <- any(vapply(supported, function(cls) S7::S7_inherits(x, cls), logical(1)))
+  if (!ok) {
+    stop("mediation_data must be a MediationData, SerialMediationData, ",
+         "ParallelMediationData, InteractionMediationData, or ",
+         "JointMediationData object",
+         call. = FALSE)
+  }
+  invisible(x)
 }
 
 

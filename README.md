@@ -17,10 +17,12 @@
 ### Key Features
 
 - **ADHD-Friendly API**: Simple `med()` function for quick mediation analysis, `quick()` for instant results
+- **Mediation Structures**: simple, serial, and parallel mediators; a treatment-by-mediator interaction with VanderWeele's four-way decomposition (`decompose()`); and joint natural effects of several mediators with treatment-by-mediator products (`joint_effects()`)
 - **Effect Extractors**: `nie()`, `nde()`, `te()`, `pm()`, `paths()` for extracting mediation effects
-- **Tidyverse Integration**: `tidy()` and `glance()` methods for tibble-based workflows
-- **Unified Model Extraction**: Extract mediation structure from various model types (lm, glm, lavaan)
-- **Flexible Model Fitting**: Fit mediation models using different engines (GLM, with future support for mixed models)
+- **Tidyverse Integration**: `tidy()` and `glance()` methods, with delta-method standard errors for the effects
+- **Unified Model Extraction**: Extract mediation structure from lm, glm, and lavaan fits
+- **Flexible Model Fitting**: `fit_mediation()` with the `glm` and `regmedint` engines, optional case weights (IPW), and sandwich (HC3) standard errors
+- **Bundled Example Data**: `mediation_demo`, a simulated dataset for every workflow
 - **Robust Bootstrap Inference**: Three bootstrap methods (parametric, nonparametric, plugin) with parallel processing
 - **Type-Safe S7 Classes**: Modern object-oriented design with `coef()`, `vcov()`, `confint()`, `nobs()` methods
 
@@ -31,6 +33,11 @@ Install the stable version from CRAN:
 ```r
 install.packages("medfit")
 ```
+
+> **Known issues in CRAN 0.3.2:** serial `te()`/`pm()` omit paths that skip a
+> mediator, and `confint()` path intervals can use the wrong covariance rows.
+> Both are fixed in the development version; see
+> [#83](https://github.com/Data-Wise/medfit/issues/83) for details and workarounds.
 
 Or install the development version from GitHub:
 
@@ -73,7 +80,7 @@ result <- med(
 
 # One-line summary
 quick(result)
-#> NIE = 0.19 | NDE = 0.16 | PM = 55%
+#> NIE = 0.164  | NDE = 0.293 | PM = 36 %
 ```
 
 ### Extract Effects
@@ -97,19 +104,19 @@ tidy(result)
 #> # A tibble: 6 × 3
 #>   term    estimate std.error
 #>   <chr>      <dbl>     <dbl>
-#> 1 a          0.448    0.107
-#> 2 b          0.424    0.099
-#> 3 c_prime    0.155    0.114
-#> 4 nie        0.190       NA
-#> 5 nde        0.155       NA
-#> 6 te         0.345       NA
+#> 1 a          0.471    0.0750
+#> 2 b          0.349    0.0689
+#> 3 c_prime    0.293    0.0797
+#> 4 nie        0.164    0.0417
+#> 5 nde        0.293    0.0797
+#> 6 te         0.457    0.0773
 
 # One-row model summary
 glance(result)
 #> # A tibble: 1 × 6
 #>     nie   nde    te    pm  nobs converged
 #>   <dbl> <dbl> <dbl> <dbl> <int> <lgl>
-#> 1 0.190 0.155 0.345  0.55   200 TRUE
+#> 1 0.164 0.293 0.457 0.360   200 TRUE
 ```
 
 ### Base R Methods
@@ -171,8 +178,15 @@ tidy(med_data)
 
 - **`SerialMediationData`**: Container for serial mediation (X -> M1 -> M2 -> ... -> Y)
   - Supports product-of-three (2 mediators) and product-of-k (3+ mediators)
+  - `nie()` gives the chain effect; `nie(type = "total")`, `te()` and `pm()` count every path, including paths that skip a mediator
   - Flexible design compatible with lavaan extraction patterns
   - Extensible to complex mediation structures
+
+- **`ParallelMediationData`**: Container for parallel mediators (indirect effect = sum of a_j * b_j)
+
+- **`InteractionMediationData`**: Simple mediation with a treatment-by-mediator interaction, carrying the four-way decomposition (CDE, INTref, INTmed, PIE)
+
+- **`JointMediationData`**: Joint natural effects of two or more mediators when the outcome model has treatment-by-mediator products
 
 - **`BootstrapResult`**: Container for bootstrap inference results
   - Point estimates and confidence intervals
@@ -189,6 +203,8 @@ tidy(med_data)
 - **`nie()`**, **`nde()`**, **`te()`**: Natural indirect/direct and total effects
 - **`pm()`**: Proportion mediated
 - **`paths()`**: All path coefficients
+- **`decompose()`**: Four-way or joint decomposition of the total effect
+- **`joint_effects()`**: Joint effects at any parameter vector (for bootstrapping)
 
 **Tidyverse Methods:**
 - **`tidy()`**: Convert results to tidy tibble
@@ -199,7 +215,7 @@ tidy(med_data)
 
 **Advanced:**
 - **`extract_mediation()`**: Extract from fitted lm/glm/lavaan models
-- **`fit_mediation()`**: Fit with formula interface (GLM engine)
+- **`fit_mediation()`**: Fit with formula interface (`glm` or `regmedint` engine)
 - **`bootstrap_mediation()`**: Bootstrap inference (parametric, nonparametric, plugin)
 
 ## Mediationverse Ecosystem
@@ -210,15 +226,12 @@ medfit is the foundation for the **mediationverse** ecosystem:
 |---------|---------|------|
 | **medfit** (this) | Model fitting, extraction, bootstrap | Foundation |
 | [RMediation](https://github.com/data-wise/rmediation) | Confidence intervals (DOP, MBCO) | Application |
+| [probmed](https://github.com/data-wise/probmed) | Probabilistic effect size (P_med) | Application |
+| [medrobust](https://github.com/data-wise/medrobust) | Sensitivity analysis | Application (independent of medfit) |
+| [medsim](https://github.com/data-wise/medsim) | Simulation infrastructure | Support |
 | [mediationverse](https://github.com/data-wise/mediationverse) | Meta-package | Ecosystem |
 
-<!-- Future packages (in development):
-| [probmed](https://github.com/data-wise/probmed) | Probabilistic effect size (P_med) | Application |
-| [medrobust](https://github.com/data-wise/medrobust) | Sensitivity analysis | Application |
-| [medsim](https://github.com/data-wise/medsim) | Simulation infrastructure | Support |
--->
-
-See [Ecosystem Coordination](planning/ECOSYSTEM.md) for version compatibility and development guidelines.
+See [Ecosystem Coordination](https://github.com/data-wise/medfit/blob/main/planning/ECOSYSTEM.md) for version compatibility and development guidelines.
 
 ## Documentation
 
@@ -228,28 +241,20 @@ Comprehensive articles are available on the package website:
 - **[Introduction](https://data-wise.github.io/medfit/articles/introduction.html)**: Detailed S7 class documentation
 - **[Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html)**: Extract from lm/glm/lavaan models
 - **[Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html)**: Parametric and nonparametric bootstrap methods
+- **[Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html)**: Estimands, formulas, covariance, and standard errors for every class
 
 ## Development Status
 
-**Current Phase**: Feature Complete (97%)
-
-- [x] Phase 1: Package setup
-- [x] Phase 2: S7 class architecture (MediationData, SerialMediationData, BootstrapResult)
-- [x] Phase 2.5: Comprehensive Quarto documentation
-- [x] Phase 3: Model extraction (lm/glm, lavaan)
-- [x] Phase 4: Model fitting (GLM engine)
-- [x] Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)
-- [x] Phase 6: Generic functions (coef, vcov, confint, nobs, nie, nde, te, pm, paths, tidy, glance)
-- [x] Phase 6.5: ADHD-friendly API (med, quick)
-- [ ] Phase 7: Polish & release
+medfit is on CRAN. Current development adds mediation structures and inference
+on the `dev` branch; see `NEWS.md` for what each release contains.
 
 ### Code Quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
-- **Testing**: 584 tests with testthat (>90% coverage, enforced via codecov)
+- **Testing**: 1,400+ tests with testthat (>90% coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
-See [planning/medfit-roadmap.md](planning/medfit-roadmap.md) for detailed development plan.
+See the [roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md) for the detailed development plan.
 
 ## Contributing
 
@@ -274,15 +279,17 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.2.1. https://CRAN.R-project.org/package=medfit
+R package version 0.5.0. https://data-wise.github.io/medfit/
 ```
+
+For the entry matching your installed version, run `citation("medfit")`.
 
 ## Related Resources
 
 - [Package Documentation](https://data-wise.github.io/medfit/)
 - [Development Guide](https://github.com/data-wise/medfit/blob/main/CLAUDE.md)
-- [Roadmap](planning/medfit-roadmap.md)
-- [Ecosystem Strategy](planning/ECOSYSTEM.md)
+- [Roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md)
+- [Ecosystem Strategy](https://github.com/data-wise/medfit/blob/main/planning/ECOSYSTEM.md)
 
 ## Contact
 

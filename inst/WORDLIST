@@ -13,9 +13,12 @@ codoc
 Codoc
 coef
 confint
+confounder
 Dependabot
 DOP
 EDE
+Epidemiologic
+errored
 estimands
 extensibility
 Extensibility
@@ -27,6 +30,7 @@ InteractionMediationData
 INTmed
 INTref
 IPW
+JointMediationData
 lavaan
 Lifecycle
 lintr
@@ -49,6 +53,7 @@ nie
 NIE
 noSuggests
 nobs
+nonparametrically
 oldrel
 OpenMx
 ORCID
@@ -96,6 +101,17 @@ Hayes
 Preacher
 VanderWeele
 VanderWeele's
+Vansteelandt
 Williams
 CRAN's
 SEM's
+cdots
+Cov
+ef
+estimand
+frac
+ij
+nabla
+operatorname
+qquad
+widehat

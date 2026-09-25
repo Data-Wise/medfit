@@ -1,7 +1,7 @@
 # START HERE: medfit Package
 
 **Created**: 2025-12-02
-**Status**: Package skeleton ready, implementation starting
+**Status**: 0.3.2 on CRAN; 0.4.0 on main/GitHub; unreleased work on `dev`, next release proposed as 0.5.0
 
 ---
 
@@ -18,11 +18,13 @@
 ## 📁 Package Location
 
 ```
-packages/
-├── medfit/           ← YOU ARE HERE (new foundation package)
-├── probmed/          ← Will use medfit (phase 2 complete)
-├── rmediation/       ← Will use medfit (RMediation on CRAN)
-└── medrobust/        ← May use medfit (in development)
+~/projects/r-packages/active/
+├── medfit/           ← YOU ARE HERE (foundation package; 0.3.2 on CRAN)
+├── probmed/          ← Imports medfit (>= 0.3.0)
+├── rmediation/       ← Suggests medfit (>= 0.2.0); RMediation on CRAN
+├── medrobust/        ← Does not depend on medfit
+├── medsim/           ← Suggests medfit (>= 0.2.0)
+└── mediationverse/   ← Meta-package; Imports medfit (>= 0.2.0)
 ```
 
 ---
@@ -38,20 +40,28 @@ packages/
 
 2. **README.md** - Package overview and quick start
 
-3. **planning/medfit-roadmap.md** - Implementation plan (7 phases, 4-6 weeks)
+3. **.STATUS** - Current state and per-PR record (source of truth)
 
-4. **planning/ECOSYSTEM.md** - Connections to other packages
+4. **planning/TODOS.md** - Active tasks, including the 0.5.0 release checklist
+
+5. **planning/EXTENSIONS-PLAN-2026-06-03.md** - Prioritized extensions board
+
+6. **planning/medfit-roadmap.md** - Original phase plan (all phases complete) and design reference
+
+7. **planning/ECOSYSTEM.md** - Connections to other packages
 
 ### In Parent Ecosystem (probmed/planning/)
 
-5. **DECISIONS.md** - All key decisions including:
+8. **DECISIONS.md** - All key decisions including:
    - medfit name choice
    - Package ecosystem strategy
    - Model engine decisions
 
-6. **ROADMAP.md** - Overall ecosystem status and timeline
+9. **ROADMAP.md** - Overall ecosystem status and timeline
 
-7. **three-package-ecosystem-strategy.md** - Detailed strategic analysis
+10. **three-package-ecosystem-strategy.md** - Detailed strategic analysis
+
+Ecosystem-wide planning now lives in `~/projects/r-packages/mediation-planning/` (start at `PROJECT-HUB.md`).
 
 ---
 
@@ -60,14 +70,14 @@ packages/
 | Phase | Duration | What Gets Built |
 |-------|----------|-----------------|
 | 1. Setup | 2-3 days | ✅ DONE - Package skeleton |
-| 2. S7 Classes | 2-3 days | MediationData, BootstrapResult |
-| 3. Extraction | 3-4 days | extract_mediation() + methods |
-| 4. Fitting | 2-3 days | fit_mediation() with GLM |
-| 5. Bootstrap | 3-4 days | bootstrap_mediation() |
-| 6. Testing | 3-4 days | >90% coverage + vignettes |
-| 7. Polish | 2-3 days | R CMD check + pkgdown |
+| 2. S7 Classes | 2-3 days | ✅ DONE - MediationData, SerialMediationData, BootstrapResult |
+| 3. Extraction | 3-4 days | ✅ DONE - extract_mediation() for lm/glm and lavaan |
+| 4. Fitting | 2-3 days | ✅ DONE - fit_mediation() with GLM (+ regmedint engine, 0.4.0) |
+| 5. Bootstrap | 3-4 days | ✅ DONE - bootstrap_mediation() |
+| 6. Testing | 3-4 days | ✅ DONE - tests + vignettes |
+| 7. Polish | 2-3 days | ✅ DONE - R CMD check + pkgdown; 0.3.2 on CRAN |
 
-**Total**: 4-6 weeks for MVP
+**Total**: MVP shipped. Since then: parallel (Ext A), four-way interaction (Ext B), regmedint engine (Ext C) in 0.4.0; `JointMediationData`, effect SEs for all classes and `mediation_demo` on `dev`.
 
 ---
 
@@ -92,24 +102,40 @@ medfit/
 ├── NAMESPACE              ← Auto-generated
 ├── R/                     ← Source code
 │   ├── aaa-imports.R          (imports setup)
+│   ├── aab-generics.R         (S7 generics)
 │   ├── medfit-package.R       (package docs)
-│   ├── classes.R              (placeholder)
-│   ├── generics.R             (placeholder)
-│   ├── utils.R                (placeholder)
-│   └── zzz.R                  (placeholder)
+│   ├── classes.R              (S7 classes, incl. Parallel/Interaction/Joint)
+│   ├── data.R                 (mediation_demo docs)
+│   ├── extract-lm.R           (lm/glm extraction)
+│   ├── extract-joint.R        (joint multi-mediator X:M extraction)
+│   ├── extract-lavaan.R       (lavaan extraction)
+│   ├── fit-glm.R              (fit_mediation(), GLM engine)
+│   ├── fit-regmedint.R        (regmedint engine)
+│   ├── bootstrap.R            (bootstrap_mediation())
+│   ├── effect-se.R            (delta-method effect SEs)
+│   ├── generics-effects.R     (nie/nde/te/pm/paths/decompose)
+│   ├── methods-base.R         (print/summary/coef/vcov/confint/nobs)
+│   ├── methods-tidy.R         (tidy/glance)
+│   ├── med.R                  (med(), quick())
+│   ├── utils.R
+│   └── zzz.R                  (.onLoad registration)
+├── data/ + data-raw/      ← mediation_demo and its generating script
 ├── tests/
-│   └── testthat/          ← Test files go here
+│   └── testthat/          ← Test suite
 ├── man/                   ← Auto-generated docs
-├── vignettes/             ← User guides
-├── planning/              ← Implementation plans
-│   ├── medfit-roadmap.md      (7-phase plan)
+├── vignettes/articles/    ← 5 Quarto articles (evaluated at site build)
+├── planning/              ← Plans, specs, status docs
+│   ├── medfit-roadmap.md      (phase plan + design reference)
+│   ├── EXTENSIONS-PLAN-2026-06-03.md (current board)
+│   ├── TODOS.md               (active tasks)
 │   ├── ECOSYSTEM.md           (connections)
 │   └── README.md              (planning guide)
-└── .github/workflows/     ← CI/CD (to be added)
+└── .github/workflows/     ← CI/CD (R-CMD-check, coverage, pkgdown)
 ```
 
 ### ✅ Planning Documents
-- Detailed roadmap (7 phases)
+- Detailed roadmap (7 phases, all complete)
+- Extensions board, specs and grill ledgers in `planning/specs/`
 - Ecosystem connections documented
 - Links to parent ecosystem decisions
 
@@ -117,74 +143,61 @@ medfit/
 
 ## 🎬 Next Steps
 
-### Immediate (Starting Now)
+### Immediate
 
-1. **Review planning documents**
-   - Read `planning/medfit-roadmap.md`
-   - Read `planning/ECOSYSTEM.md`
-   - Check `../probmed/planning/DECISIONS.md`
+1. **0.5.0 release (proposed)** — minor bump for two behavior changes (#81 serial `te()`/`pm()`,
+   #82 `confint(parm = "paths")`); checklist in `planning/TODOS.md`
 
-2. **Set up Git repository**
-   - Initialize: `git init`
-   - Add remote: `git remote add origin https://github.com/data-wise/medfit.git`
-   - Initial commit
-   - Push to GitHub
+2. **After 0.5.0**
+   - Ext D (multilevel) spec — see `planning/specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
+   - Ext C.1 (CMAverse) stays blocked
 
-3. **Begin Phase 2 (S7 Classes)**
-   - Implement `MediationData` class in `R/classes.R`
-   - Implement `BootstrapResult` class in `R/classes.R`
-   - Add print/summary methods
-   - Write tests
+### Done (Phases 1-4)
 
-### This Week (Phase 1-2)
-
-- [ ] Git repository set up
-- [ ] GitHub Actions CI/CD configured
-- [ ] S7 classes implemented
-- [ ] Basic tests passing
-- [ ] R CMD check clean
-
-### Next Week (Phase 3-4)
-
-- [ ] Extraction methods implemented
-- [ ] Fitting API implemented
-- [ ] Tests comprehensive
+- [x] Git repository set up
+- [x] GitHub Actions CI/CD configured
+- [x] S7 classes implemented
+- [x] Basic tests passing
+- [x] R CMD check clean
+- [x] Extraction methods implemented
+- [x] Fitting API implemented
+- [x] Tests comprehensive
 
 ---
 
 ## 🔗 Ecosystem Connections
 
-### probmed (Will Import medfit)
+### probmed (Imports medfit)
 
 **Location**: `../probmed/`
 
-**Current status**: Phase 2 complete (lavaan + mediation integration)
+**Current status**: `Imports: medfit (>= 0.3.0)`; its CRAN prep (Stage 2) is tracked in probmed
 
-**Will change**:
+**Changes planned at the start**:
 - Replace `probmed::extract_mediation()` with `medfit::extract_mediation()`
 - Replace bootstrap code with `medfit::bootstrap_mediation()`
 - Keep P_med computation (unique to probmed)
 
-**Migration**: Planned for Week 6-7 after medfit MVP
+**Migration**: Done on the medfit side; probmed calls `extract_mediation()`
 
-### RMediation (Will Import medfit)
+### RMediation (Suggests medfit)
 
 **Location**: `../rmediation/`
 
-**Current status**: Stable v1.4.0 on CRAN
+**Current status**: 1.6.1 on CRAN (2026-07-21); `Suggests: medfit (>= 0.2.0)`
 
-**Will change**:
+**Changes planned at the start**:
 - Replace extraction code with `medfit::extract_mediation()`
 - Optionally use `medfit::bootstrap_mediation()`
 - Keep unique methods (DOP, MBCO, MC)
 
-**Migration**: Planned for Week 8-9 after probmed
+**Migration**: Suggests-level; its serial `ci()` reads `@a_path`, `@d_path`, `@b_path`
 
 ### medrobust (May Suggest medfit)
 
 **Location**: `../medrobust/`
 
-**Current status**: v0.1.0.9000 in development
+**Current status**: 0.4.2; does not list medfit in DESCRIPTION. CRAN prep on hold pending its manuscript
 
 **May change**:
 - Optionally use medfit for naive estimates
@@ -226,7 +239,8 @@ From `../probmed/planning/DECISIONS.md`:
 When starting a new session in medfit:
 
 - [ ] Read this file (START-HERE.md)
-- [ ] Check current phase in `planning/medfit-roadmap.md`
+- [ ] Read `.STATUS` (`next:` line) and `planning/TODOS.md`
+- [ ] Check the board in `planning/EXTENSIONS-PLAN-2026-06-03.md`
 - [ ] Review `planning/ECOSYSTEM.md` for package connections
 - [ ] Check `../probmed/planning/ROADMAP.md` for ecosystem status
 - [ ] Review recent decisions in `../probmed/planning/DECISIONS.md`
@@ -238,6 +252,7 @@ When starting a new session in medfit:
 | Need to... | Look here |
 |------------|-----------|
 | Understand medfit | README.md, CLAUDE.md |
+| See current tasks | .STATUS, planning/TODOS.md |
 | See implementation plan | planning/medfit-roadmap.md |
 | Check ecosystem connections | planning/ECOSYSTEM.md |
 | Review decisions | ../probmed/planning/DECISIONS.md |
@@ -245,13 +260,13 @@ When starting a new session in medfit:
 
 ---
 
-**Status**: 📦 Package skeleton complete, ready for Phase 2 (S7 classes)
+**Status**: 📦 0.3.2 on CRAN, 0.4.0 on GitHub, `dev` ready for the proposed 0.5.0 release
 
-**Next session**: Start in this directory (`packages/medfit/`), review CLAUDE.md, begin S7 class implementation
+**Next session**: Start in this directory (`~/projects/r-packages/active/medfit/`), read `.STATUS` and `planning/TODOS.md`
 
 **Remember**: This is the foundation package - focus on clean, efficient infrastructure. Effect size computation stays in dependent packages.
 
 ---
 
 **Created**: 2025-12-02
-**Last Updated**: 2025-12-02
+**Last Updated**: 2026-09-24

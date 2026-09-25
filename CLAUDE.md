@@ -39,10 +39,12 @@ covr::package_coverage()          # Target: >90%
 ## About This Package
 
 **medfit** is the foundation package for the mediationverse ecosystem, providing:
-- **S7 classes**: `MediationData`, `SerialMediationData`, `BootstrapResult`
+- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `BootstrapResult`
 - **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan
-- **Fitting**: Formula-based `fit_mediation()` with multiple engines
-- **Bootstrap**: Three methods (parametric, nonparametric, plugin)
+- **Fitting**: Formula-based `fit_mediation()` with the `glm` and `regmedint` engines, case `weights`, and `se_type = "sandwich"` (HC3)
+- **Inference**: delta-method effect SEs in `tidy()`/`confint()`; bootstrap (parametric, nonparametric, plugin)
+- **Data**: bundled simulated `mediation_demo` for every workflow
+- **Math**: every formula lives in `vignettes/articles/methods.qmd` (Methods and Formulas)
 
 **Core Principle**: medfit provides infrastructure, not effect sizes. Dependent packages (probmed, RMediation, medrobust) add methodological contributions.
 
@@ -72,13 +74,21 @@ R/
 ├── aaa-imports.R           # Package imports
 ├── aab-generics.R          # S7 generics (load before methods!)
 ├── medfit-package.R        # Package documentation
-├── classes.R               # S7 class definitions
-├── fit-glm.R              # GLM engine
-├── extract-lm.R           # lm/glm extraction
-├── extract-lavaan.R       # lavaan extraction
-├── bootstrap.R            # Bootstrap infrastructure
-├── utils.R                # Utilities
-└── zzz.R                  # .onLoad() for dispatch
+├── classes.R               # S7 class definitions (all six classes)
+├── data.R                  # mediation_demo documentation
+├── fit-glm.R               # fit_mediation(), glm engine, weights/sandwich
+├── fit-regmedint.R         # regmedint engine adapter
+├── extract-lm.R            # lm/glm extraction (simple, four-way, serial, parallel)
+├── extract-joint.R         # JointMediationData worker, stacked-OLS vcov
+├── extract-lavaan.R        # lavaan extraction
+├── generics-effects.R      # nie/nde/te/pm/paths/decompose
+├── effect-se.R             # delta-method gradients, .effect_se(), .path_se()
+├── methods-base.R          # print/summary/coef/vcov/confint/nobs
+├── methods-tidy.R          # tidy()/glance()
+├── med.R                   # med()/quick()
+├── bootstrap.R             # Bootstrap infrastructure
+├── utils.R                 # Utilities, serial path system (te() over all paths)
+└── zzz.R                   # .onLoad() for dispatch
 ```
 
 ### Naming Patterns
@@ -170,10 +180,21 @@ MyClass <- S7::new_class(
 - Inference: `estimates`, `vcov`
 - Metadata: `treatment`, `mediator`, `outcome`, `n`
 
+**InteractionMediationData** (Simple with X × M: four-way decomposition)
+- Paths plus `interaction` (θ₃); components `cde`, `int_ref`, `int_med`, `pie`; `m_star`
+- E[M | X = 0] uses the mediator model's design-column means (factor dummies; case-weighted)
+
 **SerialMediationData** (Serial: X → M1 → M2 → Y)
 - Paths: `a_path`, `d_path` (vector), `b_path`, `c_prime`
 - Flexible: scalar `d_path` for 2 mediators, vector for 3+
 - Properties: `mediators` (names), `mediator_predictors` (list)
+- `nie()` is the chain effect by default; `nie(type = "total")` and `te()`/`pm()` sum every path (skip paths stored as `a2`, `b1`, `d1_3`, ...)
+
+**ParallelMediationData** (X → M_j → Y)
+- `a_paths`, `b_paths`; NIE = Σ a_j b_j. lm/glm `@vcov` omits Cov(a_j, a_j')
+
+**JointMediationData** (several mediators with X × M products)
+- Joint NDE/NIE/CDE over the mediator block (VanderWeele & Vansteelandt 2014); stacked-OLS `@vcov`; `joint_effects()` for bootstrapping
 
 **BootstrapResult**
 - Inference: `estimate`, `ci_lower`, `ci_upper`
@@ -306,14 +327,19 @@ usethis::use_article("article-name")  # Not included in R CMD check
 
 ```
 tests/testthat/
-├── helper-test-data.R      # Test data generators
-├── test-classes.R          # S7 validation
-├── test-extract-lm.R       # lm/glm extraction
-├── test-extract-lavaan.R   # lavaan extraction
-├── test-fit-glm.R          # GLM fitting
-├── test-bootstrap.R        # Bootstrap methods
-└── test-utils.R            # Utilities
+├── helper-test-data.R, helper-joint.R   # Test data generators, joint oracles
+├── test-classes*.R, test-validators.R   # S7 validation
+├── test-extract-*.R                     # lm/glm, lavaan, serial, parallel, interaction, joint
+├── test-effect-se.R, test-confint-paths.R, test-methods-*.R   # SEs, confint, tidy
+├── test-serial-total-effect.R           # te() over every path
+├── test-fit-*.R                         # glm, regmedint, m_star
+├── test-bootstrap*.R                    # Bootstrap methods
+└── test-mediation-demo.R                # bundled data known answers
 ```
+
+Verify numeric claims against an independent oracle (lavaan `:=`, `lm(Y ~ X + C)`
+for the total effect, a hand calculation, or a nonparametric bootstrap) and plant a
+defect the test must catch; the SE tests use this pattern throughout.
 
 ### What to Test
 
@@ -343,13 +369,17 @@ tests/testthat/
 ### Model Extraction Pattern
 
 All `extract_mediation()` methods:
-1. Validate inputs (variable names exist)
-2. Extract parameters (a, b, c')
-3. Extract covariance matrix
+1. Validate inputs (variable names exist; unsupported products error)
+2. Extract parameters (a, b, c'; plus d, skip paths, θ₃ as the structure needs)
+3. Extract covariance matrix, with alias rows (`a`, `b`, `c_prime`, `d1`, ...)
 4. Extract residual variances (if Gaussian)
-5. Get data (if available)
-6. Create MediationData object
+5. Get data (if available); store covariate means on `@data` when effects need them
+6. Create the S7 object for the structure (see `?extract_mediation`)
 7. Return
+
+Effect SEs (`tidy()`, `confint()`, `summary()`) all go through one gradient
+builder per class in `R/effect-se.R`; path SEs through `.path_se()` (alias rows
+first, error instead of guessing).
 
 ### Bootstrap Methods
 
@@ -370,7 +400,7 @@ All `extract_mediation()` methods:
 
 ### Central Planning
 
-Location: `/Users/dt/mediation-planning/`
+Location: `~/projects/r-packages/mediation-planning/` (medfit also keeps a copy at `planning/ECOSYSTEM-COORDINATION.md`)
 
 | Document | Purpose |
 |----------|---------|
@@ -393,6 +423,12 @@ When changes affect dependent packages:
 4. Document migration path
 5. Update ECOSYSTEM-COORDINATION.md
 
+**Exemption — correctness fixes:** a change that replaces a wrong result with the right one
+(e.g. #81 serial `te()`/`pm()`, #82 `confint()` path rows) skips the deprecation period: there is
+no behavior worth preserving. Ship it with a NEWS behavior-change note and at least a minor
+version bump, and check dependents' usage first (decided 2026-09-24,
+`planning/specs/GRILL-0.5.0-release-2026-09-24.md`).
+
 ---
 
 ## Common Pitfalls
@@ -410,67 +446,26 @@ When changes affect dependent packages:
 
 ### Extensible Mediation Architecture
 
-**Design principle**: Separate classes for separate structures
+**Design principle**: Separate classes for separate structures.
 
-**Current:**
-- `MediationData` - Simple (product-of-two: a × b)
-- `SerialMediationData` - Serial (product-of-k: a × d₁ × ... × dₖ × b)
+| Class | Structure | Indirect effect |
+|---|---|---|
+| `MediationData` | X → M → Y | a × b |
+| `InteractionMediationData` | X → M → Y with X × M | INTmed + PIE (VanderWeele 2014 four-way) |
+| `SerialMediationData` | X → M1 → … → Mk → Y | chain a × d × … × b; total over every path via `nie(type = "total")` |
+| `ParallelMediationData` | X → M_j → Y | Σ a_j b_j |
+| `JointMediationData` | several mediators with X × M products | joint NIE over the block |
 
-**Future extension (parallel mediation):**
-```r
-ParallelMediationData <- S7::new_class(
-  properties = list(
-    a_paths = numeric,      # c(a1, a2, ...)
-    b_paths = numeric,      # c(b1, b2, ...)
-    # Indirect = sum(a_paths * b_paths)
-  )
-)
-```
+**Why separate classes?** Clean separation, no over-engineering, extend without
+breaking existing code, type safety via S7 validators.
 
-**Why separate classes?**
-- Clean separation of concerns
-- No over-engineering
-- Easy to extend without breaking existing code
-- Type safety via S7 validators
-
-### Treatment-Mediator Interaction (Planned)
-
-**VanderWeele Four-Way Decomposition** [VanderWeele 2014](https://pubmed.ncbi.nlm.nih.gov/25000145/):
-
-When X and M interact:
-- **CDE** (Controlled Direct Effect) - Neither mediation nor interaction
-- **INTref** (Reference Interaction) - Interaction only
-- **INTmed** (Mediated Interaction) - Both
-- **PIE** (Pure Indirect Effect) - Mediation only
-
-Total Effect = CDE + INTref + INTmed + PIE
-
-**Planned class:**
-```r
-InteractionMediationData <- S7::new_class(
-  properties = list(
-    interaction = S7::class_numeric,  # θ₃: X×M
-    cde = S7::class_numeric,
-    int_ref = S7::class_numeric,
-    int_med = S7::class_numeric,
-    pie = S7::class_numeric,
-    # ... standard properties
-  )
-)
-```
-
-### Engine Adapter Architecture (Planned)
-
-**Adapter pattern** for external packages:
-- Wrap validated implementations (CMAverse, tmle3)
-- All return standardized `MediationData`
-- External packages in `Suggests`
+### Engines
 
 | Engine | Package | Method | Status |
 |--------|---------|--------|--------|
-| `"regression"` | (internal) | VanderWeele closed-form | MVP ✓ |
-| `"gformula"` | CMAverse | G-computation | Planned |
-| `"ipw"` | CMAverse | IPW | Planned |
+| `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
+| `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
+| `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 
 ---
@@ -520,7 +515,7 @@ During `devtools::load_all()`:
 ### Planning Documents
 
 **Package:** `planning/medfit-roadmap.md`
-**Ecosystem:** `/Users/dt/mediation-planning/ECOSYSTEM-COORDINATION.md`
+**Ecosystem:** `~/projects/r-packages/mediation-planning/ECOSYSTEM-COORDINATION.md`
 
 ### Related Packages
 
@@ -533,10 +528,10 @@ During `devtools::load_all()`:
 
 ---
 
-**Last Updated**: 2026-06-02
+**Last Updated**: 2026-09-24
 **Maintained by**: medfit development team
 
-**Current status**: medfit **0.3.2 ACCEPTED + PUBLISHED ON CRAN** (2026-07-23, confirmed live at https://cran.r-project.org/web/packages/medfit/index.html). First submission attempt (2026-07-21) was `[CRAN-pretest-archived]` over a Debian-flavor NOTE (S7 Rd files missing explicit `@usage`); fixed via 5 S7 Rd `@usage` signatures + `ParallelMediationData` codoc (commit `fc7b39c`, PR #55), resubmitted 2026-07-23, passed pretest clean. GitHub `v0.3.2` release promoted from pre-release to full/latest same day. RMediation 1.6.1 also ACCEPTED + PUBLISHED ON CRAN (2026-07-21). **Stage 2 cascade UNBLOCKED**: probmed (`Imports: medfit >= 0.3.0`) can now drop its `Remotes: data-wise/medfit@v0.3.0` pin and proceed to its own CRAN submission — see `.STATUS` for the mechanical checklist (~2-3hr, most pre-CRAN TODOs already closed). Independent workstream: medrobust CRAN prep is ON HOLD pending its associated manuscript submission (not medfit-related).
+**Current status** (2026-09-24): CRAN has **0.3.2** (accepted 2026-07-23). `main` and GitHub are at **0.4.0** (not submitted to CRAN). `dev` is versioned **0.5.0** (GitHub-only release, decided 2026-09-24; not yet tagged), a minor bump because two changes alter results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). Also on `dev`: `JointMediationData` (#76/#77), the Methods and Formulas article (#79), four-way factor covariates (#78), joint SEs with `data =` (#80). Articles now evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`.
 
 ### CRAN check practice (learned 2026-06-10, extended 2026-07-20)
 
@@ -559,8 +554,7 @@ During `devtools::load_all()`:
   just for first submissions.
 - Any Suggests pkg used unconditionally must move to Imports, or be guarded with
   `requireNamespace()` in code **and** `skip_if_not_installed()` in tests. `\donttest` examples
-  run under `--as-cran`; only genuinely-unrunnable code (e.g. the unimplemented
-  `fit_mediation`/`bootstrap_mediation` stubs) may keep `\dontrun{}`.
+  run under `--as-cran`; only genuinely-unrunnable code may keep `\dontrun{}`.
 - **`.Rbuildignore` is independent of `.gitignore`** — a directory git-ignores (e.g. the
   `.remember/` session-memory scratch dir used across the mediationverse repos) still gets
   swept into the tarball by `R CMD build` unless it's *also* in `.Rbuildignore`. `git status`

@@ -8,7 +8,7 @@ format:
 execute:
   collapse: true
   comment: "#>"
-  eval: false
+  eval: true
   echo: true
 ---
 
@@ -30,19 +30,16 @@ execute:
 #| label: med-simple
 library(medfit)
 
-# Create example data
-set.seed(123)
-n <- 200
-mydata <- data.frame(X = rnorm(n))
-mydata$M <- 0.5 * mydata$X + rnorm(n)
-mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
+# Bundled simulated data (see ?mediation_demo)
+data(mediation_demo)
 
-# Run mediation analysis
+# Run mediation analysis, adjusting for both covariates
 result <- med(
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y"
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
+  outcome = "outcome",
+  covariates = c("covariate1", "covariate2")
 )
 
 # View results
@@ -55,26 +52,14 @@ print(result)
 #| label: quick
 # One-line summary
 quick(result)
-#> NIE = 0.19 | NDE = 0.16 | PM = 55%
 ```
 
-### With Covariates
+### Why the Covariates Matter
 
-```{r}
-#| label: med-covariates
-# Add a covariate
-mydata$C <- rnorm(n)
-
-result_cov <- med(
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y",
-  covariates = "C"
-)
-
-quick(result_cov)
-```
+`mediation_demo` is simulated so that `covariate1` and `covariate2` affect both
+the mediators and the outcome. Leaving them out of either model would bias the
+mediator-outcome path, so every example in this article adjusts for both. The
+data are described in `?mediation_demo`.
 
 ### With Bootstrap CI
 
@@ -82,17 +67,17 @@ quick(result_cov)
 #| label: med-bootstrap
 # Get bootstrap confidence intervals
 result_boot <- med(
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y",
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
+  outcome = "outcome",
+  covariates = c("covariate1", "covariate2"),
   boot = TRUE,
   n_boot = 1000,
   seed = 42
 )
 
 quick(result_boot)
-#> NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%
 ```
 
 ## Extract Individual Effects
@@ -115,8 +100,6 @@ pm(result)
 
 # All path coefficients
 paths(result)
-#> Named num [1:3] 0.448 0.424 0.155
-#> - attr(*, "names")= chr [1:3] "a" "b" "c_prime"
 ```
 
 ## Tidyverse Integration
@@ -129,15 +112,6 @@ library(generics)
 
 # Tidy tibble of all estimates
 tidy(result)
-#> # A tibble: 6 × 3
-#>   term    estimate std.error
-#>   <chr>      <dbl>     <dbl>
-#> 1 a          0.448    0.107
-#> 2 b          0.424    0.099
-#> 3 c_prime    0.155    0.114
-#> 4 nie        0.190       NA
-#> 5 nde        0.155       NA
-#> 6 te         0.345       NA
 
 # Just paths with CIs
 tidy(result, type = "paths", conf.int = TRUE)
@@ -150,10 +124,6 @@ tidy(result, type = "effects")
 #| label: glance
 # One-row model summary
 glance(result)
-#> # A tibble: 1 × 6
-#>     nie   nde    te    pm  nobs converged
-#>   <dbl> <dbl> <dbl> <dbl> <int> <lgl>
-#> 1 0.190 0.155 0.345  0.55   200 TRUE
 ```
 
 ## Base R Methods
@@ -173,7 +143,7 @@ vcov(result)
 # Confidence intervals
 confint(result)                       # 95% CI for paths
 confint(result, level = 0.90)         # 90% CI
-confint(result, type = "effects")     # CI for effects
+confint(result, parm = "effects")     # delta-method CI for effects
 
 # Number of observations
 nobs(result)
@@ -181,33 +151,35 @@ nobs(result)
 
 ## Serial Mediation
 
-For serial mediation (X -> M1 -> M2 -> Y):
+For serial mediation (treatment -> mediator1 -> mediator2 -> outcome), fit one
+model per mediator plus the outcome model, then extract:
 
 ```{r}
 #| label: serial
-serial_data <- SerialMediationData(
-  a_path = 0.4,           # treatment to first mediator
-  d_path = 0.5,           # first mediator to second mediator
-  b_path = 0.3,           # second mediator to outcome
-  c_prime = 0.2,          # X -> Y direct effect
-  treatment = "X",
-  mediators = c("M1", "M2"),
-  outcome = "Y",
-  estimates = c(a = 0.4, d = 0.5, b = 0.3, c_prime = 0.2),
-  vcov = diag(4) * 0.01,
-  mediator_predictors = list(M1 = "X", M2 = c("X", "M1")),
-  outcome_predictors = c("X", "M1", "M2"),
-  n_obs = 100L,
-  converged = TRUE,
-  source_package = "medfit"
+fit_m1 <- lm(mediator1 ~ treatment + covariate1 + covariate2, data = mediation_demo)
+fit_m2 <- lm(mediator2 ~ treatment + mediator1 + covariate1 + covariate2,
+             data = mediation_demo)
+# Keep mediator1 in the outcome model: it affects both mediator2 and the
+# outcome, so leaving it out would bias the mediator2 -> outcome path
+fit_y <- lm(outcome ~ treatment + mediator1 + mediator2 + covariate1 + covariate2,
+            data = mediation_demo)
+
+serial_data <- extract_mediation(
+  fit_m1,
+  model_y = fit_y,
+  treatment = "treatment",
+  mediator = c("mediator1", "mediator2"),
+  mediator_models = list(fit_m2)
 )
 
 # Same extractors work
-nie(serial_data)   # product a, d, b
+nie(serial_data)   # a * d * b: the effect through the chain mediator1 -> mediator2
 nde(serial_data)   # c'
 quick(serial_data)
-#> [2 mediators] NIE = 0.06 | NDE = 0.2 | PM = 23%
 ```
+
+The serial indirect effect covers only the path through both mediators in
+order; paths such as mediator1 -> outcome directly are not part of it.
 
 ## Advanced Usage
 
@@ -218,15 +190,16 @@ If you already have fitted models:
 ```{r}
 #| label: extract-mediation
 # Fit models separately
-fit_m <- lm(M ~ X, data = mydata)
-fit_y <- lm(Y ~ X + M, data = mydata)
+fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2, data = mediation_demo)
+fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+            data = mediation_demo)
 
 # Extract mediation structure
 med_data <- extract_mediation(
   fit_m,
   model_y = fit_y,
-  treatment = "X",
-  mediator = "M"
+  treatment = "treatment",
+  mediator = "mediator1"
 )
 
 # All the same methods work
@@ -240,11 +213,11 @@ quick(med_data)
 ```{r}
 #| label: fit-mediation
 med_data <- fit_mediation(
-  formula_y = Y ~ X + M,
-  formula_m = M ~ X,
-  data = mydata,
-  treatment = "X",
-  mediator = "M"
+  formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1"
 )
 
 # Access path coefficients directly
@@ -252,6 +225,49 @@ med_data@a_path  # treatment to mediator
 med_data@b_path  # mediator to outcome
 med_data@c_prime # treatment to outcome, the direct path
 ```
+
+### Case Weights and Robust Standard Errors
+
+`weights` passes case weights (for example survey weights or
+inverse-probability weights) to both model fits. Model-based standard errors
+assume the weights are known precision weights, which inverse-probability
+weights are not, so pair them with `se_type = "sandwich"` for
+heteroskedasticity-consistent (HC3) standard errors; this needs the suggested
+sandwich package. The example builds stabilized inverse-probability weights
+for the treatment from the covariates. `mediation_demo`'s treatment is
+randomized, so the weights stay close to 1 and mainly illustrate the calls:
+
+```{r}
+#| label: weights-sandwich
+# Stabilized inverse-probability-of-treatment weights
+ps_fit <- glm(treatment ~ covariate1 + covariate2, family = binomial(),
+              data = mediation_demo)
+p_treat <- fitted(ps_fit)
+p_marg  <- mean(mediation_demo$treatment)
+ipw <- ifelse(mediation_demo$treatment == 1,
+              p_marg / p_treat, (1 - p_marg) / (1 - p_treat))
+summary(ipw)
+
+med_ipw <- fit_mediation(
+  formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
+  weights = ipw,
+  se_type = "sandwich"
+)
+
+library(generics)
+tidy(med_ipw, type = "effects", conf.int = TRUE)
+```
+
+With the default `se_type = "model"` the same fit gives NIE SE 0.0640 and
+NDE SE 0.109, and `fit_mediation()` prints a once-per-session message that model-based
+standard errors are not valid under inverse-probability weighting. The
+weights also apply to the covariate means used by the four-way decomposition
+when `formula_y` has a treatment-by-mediator term. The regmedint engine
+supports neither `weights` nor `se_type = "sandwich"`.
 
 ### Choosing an Engine
 
@@ -262,22 +278,22 @@ closed-form regression-based effects:
 
 ```{r}
 #| label: engine-regmedint
-# regmedint requires a numeric 0/1 treatment
-bin_data <- transform(mydata, X = as.integer(X > 0))
-
+# regmedint requires a numeric 0/1 treatment (mediation_demo$treatment is one)
+# and the same covariates in both formulas
 med_rm <- fit_mediation(
-  formula_y = Y ~ X + M,
-  formula_m = M ~ X,
-  data = bin_data,
-  treatment = "X",
-  mediator = "M",
+  formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
   engine = "regmedint"
 )
 
 nie(med_rm)   # every generic works the same way
 ```
 
-If `formula_y` carries a treatment-by-mediator term (`Y ~ X * M`), either
+If `formula_y` carries a treatment-by-mediator term (for example
+`outcome_int ~ treatment * mediator1 + covariate1 + covariate2`), either
 engine returns an `InteractionMediationData` with the four-way decomposition —
 analytical standard errors in the regmedint case. The reference mediator level
 for the CDE is set with `m_star` (default `0`, on both engines); other
@@ -290,7 +306,7 @@ engine-specific settings go through `engine_args`. See
 #| label: bootstrap-custom
 # Define custom statistic function
 indirect_effect <- function(theta) {
-  theta["m_X"] * theta["y_M"]
+  theta["m_treatment"] * theta["y_mediator1"]
 }
 
 # Run bootstrap
@@ -313,16 +329,20 @@ glance(boot_result)
 - [Introduction to medfit](introduction.html) - Detailed S7 class documentation
 - [Model Extraction](extraction.html) - Extract from lm, glm, lavaan models
 - [Bootstrap Inference](bootstrap.html) - Parametric and nonparametric bootstrap
+- [Methods and Formulas](methods.html) - Estimands, formulas, and standard errors
 
-## Development Status
+## What medfit Covers
 
-medfit is feature complete:
-
-- ✅ Phase 2: S7 class architecture
-- ✅ Phase 3: Model extraction (lm/glm, lavaan)
-- ✅ Phase 4: Model fitting (`fit_mediation()`)
-- ✅ Phase 5: Bootstrap infrastructure (`bootstrap_mediation()`)
-- ✅ Phase 6: Generic functions (`coef`, `vcov`, `confint`, `nobs`, `nie`, `nde`, `te`, `pm`, `paths`, `tidy`, `glance`)
-- ✅ Phase 6.5: ADHD-friendly API (`med`, `quick`)
+- Simple mediation (`MediationData`), with a treatment-by-mediator
+  interaction and the four-way decomposition (`InteractionMediationData`)
+- Serial and parallel mediators (`SerialMediationData`,
+  `ParallelMediationData`), and joint natural effects of several mediators
+  with treatment-by-mediator products (`JointMediationData`)
+- Extraction from lm/glm and lavaan fits; fitting with the `glm` and
+  `regmedint` engines, optional case weights and sandwich standard errors
+- Delta-method standard errors in `tidy()` and `confint()`, and parametric,
+  nonparametric and plugin bootstrap
+- The [Methods and Formulas](methods.html) article gives the math behind
+  every effect and standard error
 
 See `NEWS.md` for the latest updates.

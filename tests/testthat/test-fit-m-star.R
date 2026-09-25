@@ -95,6 +95,76 @@ test_that("omitting m_star on a two-way fit is unaffected", {
   expect_s3_class(obj, "medfit::MediationData")
 })
 
+test_that("extract_mediation() refuses an m_star that no four-way fit uses", {
+  d <- make_int_data()
+  d$M2 <- 0.5 * d$M + stats::rnorm(nrow(d))
+  fm <- lm(M ~ X + C, d)
+  # No product: previously m_star was dropped silently.
+  expect_error(
+    extract_mediation(fm, model_y = lm(Y ~ X + M + C, d),
+                      treatment = "X", mediator = "M", m_star = 1),
+    "applies only when"
+  )
+  # Keyed on the call site, not the value.
+  expect_error(
+    extract_mediation(fm, model_y = lm(Y ~ X + M + C, d),
+                      treatment = "X", mediator = "M", m_star = 0),
+    "applies only when"
+  )
+  # Product present but the four-way split disabled.
+  expect_error(
+    extract_mediation(fm, model_y = lm(Y ~ X * M + C, d),
+                      treatment = "X", mediator = "M", m_star = 1,
+                      decomposition = "two_way"),
+    "applies only when"
+  )
+  # Multi-mediator fits never use m_star.
+  expect_error(
+    extract_mediation(fm, model_y = lm(Y ~ X + M + M2 + C, d),
+                      treatment = "X", mediator = c("M", "M2"),
+                      mediator_models = list(lm(M2 ~ X + M + C, d)),
+                      m_star = 1),
+    "applies only when"
+  )
+  # Omitted m_star and a used m_star both still work.
+  expect_s3_class(
+    extract_mediation(fm, model_y = lm(Y ~ X + M + C, d),
+                      treatment = "X", mediator = "M"),
+    "medfit::MediationData"
+  )
+  expect_equal(
+    extract_mediation(fm, model_y = lm(Y ~ X * M + C, d),
+                      treatment = "X", mediator = "M", m_star = 2)@m_star,
+    2
+  )
+})
+
+test_that("fit_mediation() does not blame m_star the caller never supplied", {
+  d <- make_int_data()
+  d$X <- factor(ifelse(d$X == 1, "b", "a"))
+  # A factor treatment is unsupported; the error must name the real cause.
+  err <- tryCatch(
+    fit_mediation(Y ~ X * M, M ~ X, data = d, treatment = "X", mediator = "M"),
+    error = function(e) conditionMessage(e)
+  )
+  expect_type(err, "character")
+  expect_false(grepl("m_star", err, fixed = TRUE))
+})
+
+test_that("the lavaan extractor refuses an unused m_star", {
+  skip_if_not_installed("lavaan")
+  d <- make_int_data()
+  fit <- lavaan::sem("M ~ X + C\n Y ~ X + M + C", data = d)
+  expect_error(
+    extract_mediation(fit, treatment = "X", mediator = "M", m_star = 1),
+    "applies only when"
+  )
+  expect_s3_class(
+    extract_mediation(fit, treatment = "X", mediator = "M"),
+    "medfit::MediationData"
+  )
+})
+
 test_that("an explicit X:M term counts as an interaction for the guard", {
   d <- make_int_data()
   obj <- fit_mediation(Y ~ X + M + X:M, M ~ X, data = d,

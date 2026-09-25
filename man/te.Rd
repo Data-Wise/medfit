@@ -7,34 +7,41 @@
 te(x, ...)
 }
 \arguments{
-\item{x}{A MediationData, SerialMediationData, or BootstrapResult object}
+\item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
+\link{InteractionMediationData}, or \link{JointMediationData} object.}
 
 \item{...}{Additional arguments passed to methods}
 }
 \value{
-A numeric value with optional attributes for confidence intervals
+A numeric scalar of class \code{mediation_effect} carrying a \code{type}
+attribute.
 }
 \description{
-Extract the total effect from a mediation analysis result.
-The TE is the sum of the indirect and direct effects.
+Extract the total effect from a mediation analysis result: the sum of the
+indirect and direct effects.
 }
 \details{
-\deqn{TE = NIE + NDE}
+\deqn{TE = NIE + NDE}{TE = NIE + NDE}
+
+For a \link{SerialMediationData} object the total effect is the sum over
+every directed X-to-Y path in the fitted models: the direct path, the full
+chain, and every path that skips a mediator (for two mediators,
+\eqn{c' + a_1 b_1 + a_2 b_2 + a_1 d_{21} b_2}{c' + a1*b1 + a2*b2 + a1*d21*b2}).
+With the same covariates in every equation and linear models this equals
+the treatment coefficient of the outcome regressed on the treatment and
+covariates alone. A path missing from its model counts as zero; when a path
+is in a model but its coefficient was not recorded (a hand-built object),
+\code{te()} returns \code{NA} with a warning. For glm fits with a non-identity link
+the sum of path products is on the linear-predictor scale, as for
+\link{MediationData}.
 }
 \examples{
-# Generate example data
-set.seed(123)
-n <- 100
-mydata <- data.frame(X = rnorm(n))
-mydata$M <- 0.5 * mydata$X + rnorm(n)
-mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-
 med_data <- fit_mediation(
-  formula_y = Y ~ X + M,
-  formula_m = M ~ X,
-  data = mydata,
-  treatment = "X",
-  mediator = "M"
+  formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1"
 )
 
 te(med_data)
@@ -44,5 +51,5 @@ nie(med_data) + nde(med_data)
 
 }
 \seealso{
-\code{\link[=nie]{nie()}}, \code{\link[=nde]{nde()}}, \code{\link[=pm]{pm()}}, \code{\link[=paths]{paths()}}
+\code{\link[=nie]{nie()}}, \code{\link[=nde]{nde()}}, \code{\link[=pm]{pm()}}, \code{\link[=paths]{paths()}}, \code{\link[=decompose]{decompose()}}
 }
