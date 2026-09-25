@@ -4,7 +4,7 @@
 
 **Last Updated:** 2026-09-25  
 **Current Phase:** 0.5.0 released on main/GitHub/r-universe (tag `v0.5.0`, #84); CRAN still 0.3.2 (known bugs in pinned #83)  
-**Next Action:** Ext D (multilevel) spec. Next CRAN trigger is open. probmed Stage 2 lives in probmed
+**Next Action:** Plan Ext D module 1 (2-1-1 multilevel; spec approved 2026-09-25). Next CRAN trigger is open. probmed Stage 2 lives in probmed
 
 > **Ecosystem-wide planning** (roadmap, coordination, API/naming design, manifest)
 > lives in the hub: `~/projects/r-packages/mediation-planning/` (start at
@@ -37,7 +37,7 @@ Phase 6: 0.5.0 release           ███████████████�
 Features (Phases 1-5):            ████████████████████ 100% 🟢
 ```
 
-**Status:** 🟢 0.5.0 released (GitHub-only) | **Priority:** P1 (next: Ext D spec)
+**Status:** 🟢 0.5.0 released (GitHub-only) | **Priority:** P1 (next: Ext D module-1 plan)
 
 ---
 
@@ -73,7 +73,8 @@ Features (Phases 1-5):            ███████████████�
 
 ### High Priority 🔴
 - [x] 0.5.0 release — GitHub + r-universe, 2026-09-25 (#84, tag `v0.5.0`; checklist in `TODOS.md`)
-- [ ] Ext D (multilevel) spec — see `specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
+- [x] Ext D (multilevel) module-1 spec — approved 2026-09-25, `specs/SPEC-multilevel-mediation-2-1-1-2026-09-25.md`
+- [ ] Ext D module-1 plan (PRs A extract, B fit engine, C cluster bootstrap)
 
 ### Medium Priority 🟡
 - [ ] Decide the next CRAN trigger (open in `specs/GRILL-0.5.0-release-2026-09-24.md`)
@@ -116,12 +117,12 @@ $ ccrcov          # Check test coverage
 
 **Choose your focus:**
 
-### Option A: Spec Ext D (multilevel mediation) ⭐ Recommended
+### Option A: Plan and build Ext D module 1 (2-1-1 multilevel mediation) ⭐ Recommended
 ```
-Goal: SPEC for MultilevelMediationData (lme4, 1-1-1 first)
-Source: specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md
+Goal: ClusterMediationData from cluster-mean-centered lmer fits (cluster-level treatment)
+Spec: specs/SPEC-multilevel-mediation-2-1-1-2026-09-25.md (approved; decisions D1-D16)
 ```
-**Why:** Next new structure; not blocked on anything
+**Why:** Spec approved and adversarially reviewed; 1-1-1 designs are module 2
 
 ---
 
@@ -325,4 +326,4 @@ Goal: Carry 0.5.0's fixes to CRAN (0.3.2 still has the serial te()/pm() and conf
 
 **Status:** 🟢 0.5.0 released (GitHub-only)  
 **Last Updated:** 2026-09-25  
-**Next Review:** After the Ext D spec
+**Next Review:** After the Ext D module-1 plan

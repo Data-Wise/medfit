@@ -4,10 +4,10 @@ Active tasks, implementation plan, and progress tracking.
 
 ---
 
-## 🎯 Current Focus: Ext D (multilevel) spec
+## 🎯 Current Focus: Ext D (multilevel) — plan module 1
 
 **Status:** 0.3.2 on CRAN (2026-07-23); **0.5.0 on main/GitHub/r-universe** (tag `v0.5.0`, 2026-09-25)
-**Next:** Spec Ext D (multilevel); decide the next CRAN trigger
+**Next:** Write the plan for the approved Ext D module-1 spec (2-1-1); decide the next CRAN trigger
 **Updated:** 2026-09-25
 
 > Decided 2026-09-24 (`specs/GRILL-0.5.0-release-2026-09-24.md`): 0.5.0 is **GitHub-only**;
@@ -20,7 +20,8 @@ Active tasks, implementation plan, and progress tracking.
 
 ### High Priority 🔴
 
-- [ ] **Ext D (multilevel) spec** — `specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
+- [x] **Ext D (multilevel) spec** — module 1 (2-1-1, `ClusterMediationData`) approved 2026-09-25: `specs/SPEC-multilevel-mediation-2-1-1-2026-09-25.md` (decisions D1-D16 in `specs/GRILL-multilevel-mediation-ext-d-2026-09-25.md`)
+- [ ] **Ext D module-1 plan** — tasks T0…Tn for PRs A (extract), B (fit engine), C (cluster bootstrap); T0 measures CRAN runtime and simulates the block-diagonal vcov
 - [ ] **Next CRAN trigger** — open in `specs/GRILL-0.5.0-release-2026-09-24.md`
 
 - [ ] **probmed Stage 2** (lives in the probmed repo, not here)
@@ -45,8 +46,8 @@ Active tasks, implementation plan, and progress tracking.
   - Bias-corrected and accelerated bootstrap
   - Better coverage than percentile method (bootstrap is percentile-only today)
 
-- [ ] **Mixed Models Support (lme4)** — same as the Ext D spec task above; source brainstorm in
-      `specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
+- [ ] **Mixed Models Support (lme4)** — Ext D; module 1 (2-1-1) specced in
+      `specs/SPEC-multilevel-mediation-2-1-1-2026-09-25.md`, module 2 (1-1-1) needs its own grill
   - `extract_mediation.lmerMod` method
   - Multilevel mediation analysis
 
@@ -202,7 +203,7 @@ Active tasks, implementation plan, and progress tracking.
 - [x] Parallel mediation support — Ext A
 - [ ] Standardized coefficients option — lavaan extractor only (`standardized = TRUE`); none for lm/glm
 - [x] Treatment-mediator interaction detection — Ext B (single mediator), D8(b) (multiple mediators)
-- [ ] Multilevel mediation (Ext D) and longitudinal mediation (Ext E) — see the 2026-08-22 brainstorm
+- [ ] Multilevel mediation (Ext D; module-1 spec approved 2026-09-25) and longitudinal mediation (Ext E) — see the 2026-08-22 brainstorm
 
 ### Model Support
 - [ ] lmer/lme4 extraction
@@ -244,4 +245,4 @@ Active tasks, implementation plan, and progress tracking.
 ---
 
 **Last Updated:** 2026-09-25
-**Next Review:** After the Ext D spec
+**Next Review:** After the Ext D module-1 plan
