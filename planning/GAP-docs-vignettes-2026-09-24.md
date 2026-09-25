@@ -44,8 +44,8 @@ Status key: **fixed** (in this branch) · **open** (not addressed here).
 | extraction: parallel `cov(a_j, a_j') = 0` presented as by construction (contradicts the methods article) | **fixed** |
 | bootstrap: accepted classes omit Joint; hand-rolled delta method with `cov_ab <- 0` | **fixed** (uses `confint(parm = "effects")`) |
 | Stale "Development Status" phase lists (getting-started, introduction, README) | **fixed** |
-| No worked example of `weights` / `se_type = "sandwich"` | **open** |
-| No worked `tidy()`/`glance()` on parallel or interaction objects; no `decompose()` on a joint object | **open** |
+| No worked example of `weights` / `se_type = "sandwich"` | **fixed**: getting-started "Case Weights and Robust Standard Errors" (stabilized IPW, live output) |
+| No worked `tidy()`/`glance()` on parallel or interaction objects; no `decompose()` on a joint object | **fixed** for parallel and interaction (extraction article); joint `decompose()` still **open** |
 | Articles are `eval: false` with hand-written output, so drift is never caught | **open**: consider evaluating the cheap chunks at site build |
 
 ## 4. README / pkgdown

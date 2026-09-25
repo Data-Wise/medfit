@@ -244,6 +244,57 @@ med_data@b_path  # mediator to outcome
 med_data@c_prime # treatment to outcome, the direct path
 ```
 
+### Case Weights and Robust Standard Errors
+
+`weights` passes case weights (for example survey weights or
+inverse-probability weights) to both model fits. Model-based standard errors
+assume the weights are known precision weights, which inverse-probability
+weights are not, so pair them with `se_type = "sandwich"` for
+heteroskedasticity-consistent (HC3) standard errors; this needs the suggested
+sandwich package. The example builds stabilized inverse-probability weights
+for the treatment from the covariates. `mediation_demo`'s treatment is
+randomized, so the weights stay close to 1 and mainly illustrate the calls:
+
+```{r}
+#| label: weights-sandwich
+# Stabilized inverse-probability-of-treatment weights
+ps_fit <- glm(treatment ~ covariate1 + covariate2, family = binomial(),
+              data = mediation_demo)
+p_treat <- fitted(ps_fit)
+p_marg  <- mean(mediation_demo$treatment)
+ipw <- ifelse(mediation_demo$treatment == 1,
+              p_marg / p_treat, (1 - p_marg) / (1 - p_treat))
+summary(ipw)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+#>  0.7044  0.8933  0.9841  0.9997  1.0954  1.5436
+
+med_ipw <- fit_mediation(
+  formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
+  weights = ipw,
+  se_type = "sandwich"
+)
+
+library(generics)
+tidy(med_ipw, type = "effects", conf.int = TRUE)
+#> # A tibble: 3 × 5
+#>   term  estimate std.error conf.low conf.high
+#>   <chr>    <dbl>     <dbl>    <dbl>     <dbl>
+#> 1 nie      0.335    0.0657   0.206      0.463
+#> 2 nde      0.208    0.115   -0.0180     0.433
+#> 3 te       0.542    0.119    0.308      0.776
+```
+
+With the default `se_type = "model"` the same fit gives NIE SE 0.0640 and
+NDE SE 0.109, and `fit_mediation()` prints a once-per-session message that model-based
+standard errors are not valid under inverse-probability weighting. The
+weights also apply to the covariate means used by the four-way decomposition
+when `formula_y` has a treatment-by-mediator term. The regmedint engine
+supports neither `weights` nor `se_type = "sandwich"`.
+
 ### Choosing an Engine
 
 `fit_mediation()` defaults to `engine = "glm"`, which fits both models with

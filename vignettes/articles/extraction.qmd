@@ -274,6 +274,31 @@ nie(med_parallel_lm)               # sum_j a_j * b_j
 confint(med_parallel_lm, parm = "effects")
 ```
 
+`tidy()` gives the effects with delta-method standard errors and normal
+intervals, and `glance()` gives a one-row summary:
+
+```{r}
+#| label: lm-parallel-tidy
+library(generics)
+tidy(med_parallel_lm, type = "effects", conf.int = TRUE)
+#> # A tibble: 3 × 5
+#>   term  estimate std.error conf.low conf.high
+#>   <chr>    <dbl>     <dbl>    <dbl>     <dbl>
+#> 1 nie      0.432    0.0716    0.292     0.573
+#> 2 nde      0.106    0.110    -0.109     0.322
+#> 3 te       0.539    0.119     0.304     0.773
+
+glance(med_parallel_lm)
+#> # A tibble: 1 × 7
+#>     nie   nde    te    pm n_mediators  nobs converged
+#>   <dbl> <dbl> <dbl> <dbl>       <int> <int> <lgl>
+#> 1 0.432 0.106 0.539 0.803           2   400 TRUE
+```
+
+The normal interval for `nie` treats a sum of coefficient products as normal;
+for inference on the indirect effect prefer
+[`bootstrap_mediation()`](bootstrap.html).
+
 This model leaves out `mediator2`, a descendant of `mediator1`, so
 `mediator1`'s `b` path (about 0.55 in the population) includes its effect
 through `mediator2`; see `?mediation_demo` for the reduced-form values.
@@ -512,6 +537,37 @@ med_int <- extract_mediation(
 
 decompose(med_int)                          # CDE, INTref, INTmed, PIE + effects
 confint(med_int, parm = "components")       # delta-method CIs for the components
+```
+
+`tidy()` reports the four components with `type = "components"` and the
+natural effects with `type = "effects"`; `glance()` adds the interaction
+coefficient and `m_star`:
+
+```{r}
+#| label: lm-interaction-tidy
+library(generics)
+tidy(med_int, type = "components", conf.int = TRUE)
+#> # A tibble: 4 × 5
+#>   term    estimate std.error conf.low conf.high
+#>   <chr>      <dbl>     <dbl>    <dbl>     <dbl>
+#> 1 cde       0.215     0.116   -0.0124     0.443
+#> 2 int_ref   0.0435    0.0343  -0.0238     0.111
+#> 3 int_med   0.277     0.0737   0.133      0.422
+#> 4 pie       0.340     0.0717   0.200      0.481
+
+tidy(med_int, type = "effects")
+#> # A tibble: 3 × 3
+#>   term  estimate std.error
+#>   <chr>    <dbl>     <dbl>
+#> 1 nie      0.617     0.113
+#> 2 nde      0.259     0.118
+#> 3 te       0.876     0.135
+
+glance(med_int)
+#> # A tibble: 1 × 8
+#>     nie   nde    te    pm interaction m_star  nobs converged
+#>   <dbl> <dbl> <dbl> <dbl>       <dbl>  <dbl> <int> <lgl>
+#> 1 0.617 0.259 0.876 0.705       0.476      0   400 TRUE
 ```
 
 The four-way formulas (continuous `Y` and `M`) are
