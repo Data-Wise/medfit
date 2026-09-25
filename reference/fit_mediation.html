@@ -7,13 +7,7 @@
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Fit Mediation Models — fit_mediation"><meta name="description" content="Fit mediation models using a specified modeling engine. This function
 provides a convenient formula-based interface for fitting both the
-mediator and outcome models simultaneously.
-Fit mediation models using a specified modeling engine. This function
-provides a convenient formula-based interface for fitting both the
 mediator and outcome models simultaneously."><meta property="og:description" content="Fit mediation models using a specified modeling engine. This function
-provides a convenient formula-based interface for fitting both the
-mediator and outcome models simultaneously.
-Fit mediation models using a specified modeling engine. This function
 provides a convenient formula-based interface for fitting both the
 mediator and outcome models simultaneously."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
 
@@ -37,7 +31,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,6 +49,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
@@ -75,7 +70,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit Mediation Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.4.0/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a>, <a href="https://github.com/data-wise/medfit/blob/v0.4.0/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
       <div class="d-none name"><code>fit_mediation.Rd</code></div>
     </div>
 
@@ -83,30 +78,11 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
     <p>Fit mediation models using a specified modeling engine. This function
 provides a convenient formula-based interface for fitting both the
 mediator and outcome models simultaneously.</p>
-<p>Fit mediation models using a specified modeling engine. This function
-provides a convenient formula-based interface for fitting both the
-mediator and outcome models simultaneously.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">fit_mediation</span><span class="op">(</span></span>
-<span>  <span class="va">formula_y</span>,</span>
-<span>  <span class="va">formula_m</span>,</span>
-<span>  <span class="va">data</span>,</span>
-<span>  <span class="va">treatment</span>,</span>
-<span>  <span class="va">mediator</span>,</span>
-<span>  engine <span class="op">=</span> <span class="st">"glm"</span>,</span>
-<span>  family_y <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  family_m <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  se_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"sandwich"</span><span class="op">)</span>,</span>
-<span>  engine_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  m_star <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">fit_mediation</span><span class="op">(</span></span>
 <span>  <span class="va">formula_y</span>,</span>
 <span>  <span class="va">formula_m</span>,</span>
 <span>  <span class="va">data</span>,</span>
@@ -173,8 +149,7 @@ inverse-probability weighting (IPW). <code>NULL</code> (default) fits unweighted
 <dd><p>Variance-covariance estimator for <code>@vcov</code>: <code>"model"</code> (default,
 model-based <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">stats::vcov</a></code>) or <code>"sandwich"</code> (heteroskedasticity-consistent
 <code><a href="https://zeileis.codeberg.page/sandwich/reference/vcovHC.html" class="external-link">sandwich::vcovHC</a></code>, type HC3, recommended for IPW-weighted fits). The
-<code>"sandwich"</code> option requires the suggested <span class="pkg">sandwich</span> package. Applies
-to the single-mediator path.</p></dd>
+<code>"sandwich"</code> option requires the suggested <span class="pkg">sandwich</span> package.</p></dd>
 
 
 <dt id="arg-engine-args">engine_args<a class="anchor" aria-label="anchor" href="#arg-engine-args"></a></dt>
@@ -203,23 +178,56 @@ on two-way fits; forward it only when its own caller supplied one.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <a href="MediationData.html">MediationData</a> object containing the fitted mediation structure</p>
-<p>A <a href="MediationData.html">MediationData</a> object containing the fitted mediation structure,
+    <p>A <a href="MediationData.html">MediationData</a> object containing the fitted mediation structure,
 or an <a href="InteractionMediationData.html">InteractionMediationData</a> object when <code>formula_y</code> contains a
 treatment-by-mediator interaction term.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The <code>fit_mediation()</code> function fits both the mediator model and outcome
-model using the specified engine, then extracts the mediation structure
-using <code><a href="extract_mediation.html">extract_mediation()</a></code>.</p><div class="section">
-<h3 id="supported-engines">Supported Engines<a class="anchor" aria-label="anchor" href="#supported-engines"></a></h3>
+
+<div class="section">
+<h3 id="model-specification">Model Specification<a class="anchor" aria-label="anchor" href="#model-specification"></a></h3>
 
 
-<p><strong>GLM</strong> (<code>engine = "glm"</code>):</p><ul><li><p>Fits models using <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code></p></li>
+<p>The function fits two models:</p><ol><li><p><strong>Mediator model</strong>: <code>formula_m</code> (e.g., <code>M ~ X + C1 + C2</code>)</p></li>
+<li><p><strong>Outcome model</strong>: <code>formula_y</code> (e.g., <code>Y ~ X + M + C1 + C2</code>)</p></li>
+</ol><p>The treatment variable must appear in both formulas. The mediator variable
+must appear in the outcome formula but NOT in the mediator formula (as it
+is the response).</p>
+</div>
+
+<div class="section">
+<h3 id="glm-engine">GLM Engine<a class="anchor" aria-label="anchor" href="#glm-engine"></a></h3>
+
+
+<p>When <code>engine = "glm"</code> (default):</p><ul><li><p>Models are fit using <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code></p></li>
 <li><p>Supports all GLM families (gaussian, binomial, poisson, etc.)</p></li>
-<li><p>For Gaussian models, extracts residual variances</p></li>
-</ul><p><strong>regmedint</strong> (<code>engine = "regmedint"</code>):</p><ul><li><p>Delegates to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code> (suggested package) for closed-form
+<li><p>With a non-identity link the path coefficients are on the link
+scale, where the product \(a b\) is not a natural indirect
+effect on the outcome scale; interpret it with care or use
+<code>engine = "regmedint"</code> for closed-form effects of a logistic outcome</p></li>
+<li><p>A treatment-by-mediator term in <code>formula_y</code> requires Gaussian
+identity-link models (the four-way formulas are linear); other families
+error</p></li>
+<li><p>For Gaussian models, residual standard deviations are extracted</p></li>
+<li><p>Non-Gaussian outcomes have <code>sigma_y = NULL</code></p></li>
+</ul></div>
+
+<div class="section">
+<h3 id="common-family-specifications">Common Family Specifications<a class="anchor" aria-label="anchor" href="#common-family-specifications"></a></h3>
+
+
+<ul><li><p><code><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian()</a></code>: Continuous outcomes (default)</p></li>
+<li><p><code><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial()</a></code>: Binary outcomes</p></li>
+<li><p><code><a href="https://rdrr.io/r/stats/family.html" class="external-link">poisson()</a></code>: Count outcomes</p></li>
+<li><p><code><a href="https://rdrr.io/r/stats/family.html" class="external-link">Gamma()</a></code>: Positive continuous outcomes</p></li>
+</ul></div>
+
+<div class="section">
+<h3 id="regmedint-engine">regmedint Engine<a class="anchor" aria-label="anchor" href="#regmedint-engine"></a></h3>
+
+
+<p>When <code>engine = "regmedint"</code>:</p><ul><li><p>Delegates to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code> (suggested package) for closed-form
 natural (in)direct effects, with or without a treatment-mediator interaction</p></li>
 <li><p>Returns <a href="MediationData.html">MediationData</a> or <a href="InteractionMediationData.html">InteractionMediationData</a> depending on whether
 <code>formula_y</code> contains a treatment-by-mediator interaction term; use
@@ -242,51 +250,13 @@ applies <code>m_star</code> at <em>extraction</em> time, after the coefficients 
 where it is consumed by that package's closed-form estimator at <em>fitting</em>
 time. Supplying <code>m_star</code> for a fit with no treatment-by-mediator term is an
 error, not a silent no-op.</p>
-<p><strong>Future Engines</strong>:</p><ul><li><p><code>"lmer"</code>: Mixed-effects models via lme4</p></li>
-<li><p><code>"brms"</code>: Bayesian models via brms</p></li>
-</ul></div>
-
-<div class="section">
-<h3 id="model-specification">Model Specification<a class="anchor" aria-label="anchor" href="#model-specification"></a></h3>
-
-
-<p>The formulas should follow standard R formula syntax:</p><ul><li><p><code>formula_m</code>: Mediator model (e.g., <code>M ~ X + C1 + C2</code>)</p></li>
-<li><p><code>formula_y</code>: Outcome model (e.g., <code>Y ~ X + M + C1 + C2</code>)</p></li>
-</ul><p>The mediator must appear in <code>formula_y</code>, and the treatment must appear
-in both formulas.</p>
 </div>
 
-<div class="section">
-<h3 id="model-specification-1">Model Specification<a class="anchor" aria-label="anchor" href="#model-specification-1"></a></h3>
-
-
-<p>The function fits two models:</p><ol><li><p><strong>Mediator model</strong>: <code>formula_m</code> (e.g., <code>M ~ X + C1 + C2</code>)</p></li>
-<li><p><strong>Outcome model</strong>: <code>formula_y</code> (e.g., <code>Y ~ X + M + C1 + C2</code>)</p></li>
-</ol><p>The treatment variable must appear in both formulas. The mediator variable
-must appear in the outcome formula but NOT in the mediator formula (as it
-is the response).</p>
-</div>
-
-<div class="section">
-<h3 id="glm-engine">GLM Engine<a class="anchor" aria-label="anchor" href="#glm-engine"></a></h3>
-
-
-<p>When <code>engine = "glm"</code> (default):</p><ul><li><p>Models are fit using <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code></p></li>
-<li><p>Supports all GLM families (gaussian, binomial, poisson, etc.)</p></li>
-<li><p>For Gaussian models, residual standard deviations are extracted</p></li>
-<li><p>Non-Gaussian outcomes have <code>sigma_y = NULL</code></p></li>
-</ul></div>
-
-<div class="section">
-<h3 id="common-family-specifications">Common Family Specifications<a class="anchor" aria-label="anchor" href="#common-family-specifications"></a></h3>
-
-
-<ul><li><p><code><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian()</a></code>: Continuous outcomes (default)</p></li>
-<li><p><code><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial()</a></code>: Binary outcomes</p></li>
-<li><p><code><a href="https://rdrr.io/r/stats/family.html" class="external-link">poisson()</a></code>: Count outcomes</p></li>
-<li><p><code><a href="https://rdrr.io/r/stats/family.html" class="external-link">Gamma()</a></code>: Positive continuous outcomes</p></li>
-</ul></div>
-
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+4-way decomposition. <em>Epidemiology</em>, 25(5), 749–761.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -295,89 +265,49 @@ is the response).</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># Fit Gaussian mediation model</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># mediation_demo is simulated data bundled with medfit; its covariates</span></span></span>
+<span class="r-in"><span><span class="co"># confound the mediator-outcome relation, so both models adjust for them</span></span></span>
 <span class="r-in"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu">fit_mediation</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span> <span class="op">+</span> <span class="va">C</span>,</span></span>
-<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">C</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
-<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span></span>
-<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span></span>
-<span class="r-in"><span>  engine <span class="op">=</span> <span class="st">"glm"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Fit with binary outcome</span></span></span>
-<span class="r-in"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu">fit_mediation</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span> <span class="op">+</span> <span class="va">C</span>,</span></span>
-<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">C</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
-<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span></span>
-<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span></span>
-<span class="r-in"><span>  engine <span class="op">=</span> <span class="st">"glm"</span>,</span></span>
-<span class="r-in"><span>  family_y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Generate example data</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  C <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">C</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fl">0.1</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">C</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Simple mediation with continuous variables</span></span></span>
-<span class="r-in"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu">fit_mediation</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>,</span></span>
-<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
-<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span></span>
-<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"M"</span></span></span>
+<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">outcome</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">mediator1</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span></span>
+<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">mediator1</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span>,</span></span>
+<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"treatment"</span>,</span></span>
+<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"mediator1"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> MediationData object</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ====================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path coefficients:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a (X -&gt; M):        0.3551</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b (M -&gt; Y|X):      0.3779</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   c' (X -&gt; Y|M):     0.2524</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Indirect (a*b):    0.1342</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a (X -&gt; M):        0.5826</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b (M -&gt; Y|X):      0.5711</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   c' (X -&gt; Y|M):     0.2058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Indirect (a*b):    0.3328</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Variables:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Treatment: X</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Mediator:  M</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Outcome:   Y</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Treatment: treatment</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Mediator:  mediator1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Outcome:   outcome</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model info:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N observations: 100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N observations: 400</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Converged:      Yes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Source:         stats::glm</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Residual SDs:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Mediator model:   0.9710</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Outcome model:    1.0568</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># With covariates</span></span></span>
-<span class="r-in"><span><span class="va">med_data_cov</span> <span class="op">&lt;-</span> <span class="fu">fit_mediation</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span> <span class="op">+</span> <span class="va">C</span>,</span></span>
-<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">C</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
-<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span></span>
-<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"M"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Mediator model:   0.9792</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Outcome model:    1.0426</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># Binary outcome (takes longer to fit)</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">Y_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="fl">0.3</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">M</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Binary outcome (takes longer to fit): dichotomize the outcome at its median</span></span></span>
+<span class="r-in"><span><span class="va">demo</span> <span class="op">&lt;-</span> <span class="va">mediation_demo</span></span></span>
+<span class="r-in"><span><span class="va">demo</span><span class="op">$</span><span class="va">outcome_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">demo</span><span class="op">$</span><span class="va">outcome</span> <span class="op">&gt;</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">demo</span><span class="op">$</span><span class="va">outcome</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">med_data_bin</span> <span class="op">&lt;-</span> <span class="fu">fit_mediation</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">Y_bin</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>,</span></span>
-<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
-<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span></span>
-<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span></span>
+<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">outcome_bin</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">mediator1</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span></span>
+<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">mediator1</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">demo</span>,</span></span>
+<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"treatment"</span>,</span></span>
+<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span></span>
 <span class="r-in"><span>  family_y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

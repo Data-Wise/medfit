@@ -19,7 +19,8 @@ treatment (0 -\> 1) and reference mediator level `m_star`.
   int_term,
   outcome = NULL,
   data = NULL,
-  m_star = 0
+  m_star = 0,
+  vcov_fun = stats::vcov
 )
 ```
 
@@ -27,7 +28,14 @@ treatment (0 -\> 1) and reference mediator level `m_star`.
 
 - model_y:
 
-  Fitted lm/glm for the outcome (`Y ~ Mk + X + ...`).
+  Fitted lm/glm for the outcome. `Mk`'s coefficient is read as `b`; the
+  model should include `X` and every earlier mediator
+  (`Y ~ X + M1 + ... + Mk + ...`), whose coefficients are stored as the
+  skip-path aliases `b1..b{k-1}`. Omitting an earlier mediator that also
+  affects `Y` biases `b`. `a * d * b` is the effect through the full
+  chain only;
+  [`te()`](https://data-wise.github.io/medfit/reference/te.md) sums
+  every path.
 
 - treatment:
 
@@ -49,6 +57,12 @@ treatment (0 -\> 1) and reference mediator level `m_star`.
 - m_star:
 
   Numeric scalar reference mediator level.
+
+- vcov_fun:
+
+  Function returning a model's coefficient covariance (default
+  [`stats::vcov()`](https://rdrr.io/r/stats/vcov.html)), e.g. a sandwich
+  estimator.
 
 ## Value
 

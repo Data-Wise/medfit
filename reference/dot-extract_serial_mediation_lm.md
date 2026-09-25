@@ -19,7 +19,8 @@ separately fitted regressions.
   treatment,
   mediators,
   outcome = NULL,
-  data = NULL
+  data = NULL,
+  vcov_fun = stats::vcov
 )
 ```
 
@@ -36,7 +37,14 @@ separately fitted regressions.
 
 - model_y:
 
-  Fitted lm/glm for the outcome (`Y ~ Mk + X + ...`).
+  Fitted lm/glm for the outcome. `Mk`'s coefficient is read as `b`; the
+  model should include `X` and every earlier mediator
+  (`Y ~ X + M1 + ... + Mk + ...`), whose coefficients are stored as the
+  skip-path aliases `b1..b{k-1}`. Omitting an earlier mediator that also
+  affects `Y` biases `b`. `a * d * b` is the effect through the full
+  chain only;
+  [`te()`](https://data-wise.github.io/medfit/reference/te.md) sums
+  every path.
 
 - treatment:
 
@@ -54,6 +62,12 @@ separately fitted regressions.
 - data:
 
   Data frame, or `NULL` to take the `object` model frame.
+
+- vcov_fun:
+
+  Function returning a model's coefficient covariance (default
+  [`stats::vcov()`](https://rdrr.io/r/stats/vcov.html)), applied to
+  every equation.
 
 ## Value
 

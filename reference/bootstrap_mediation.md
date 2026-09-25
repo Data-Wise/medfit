@@ -4,26 +4,9 @@ Conduct bootstrap inference to compute confidence intervals for
 mediation statistics. Supports parametric, nonparametric, and plugin
 methods.
 
-Conduct bootstrap inference to compute confidence intervals for
-mediation statistics. Supports parametric, nonparametric, and plugin
-methods.
-
 ## Usage
 
 ``` r
-bootstrap_mediation(
-  statistic_fn,
-  method = c("parametric", "nonparametric", "plugin"),
-  mediation_data = NULL,
-  data = NULL,
-  n_boot = 1000L,
-  ci_level = 0.95,
-  parallel = FALSE,
-  ncores = NULL,
-  seed = NULL,
-  ...
-)
-
 bootstrap_mediation(
   statistic_fn,
   method = c("parametric", "nonparametric", "plugin"),
@@ -64,8 +47,20 @@ bootstrap_mediation(
 
 - mediation_data:
 
-  [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md)
-  object (required for parametric/plugin)
+  A mediation data object (required for parametric/plugin):
+  [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md),
+  [SerialMediationData](https://data-wise.github.io/medfit/reference/SerialMediationData.md),
+  [ParallelMediationData](https://data-wise.github.io/medfit/reference/ParallelMediationData.md),
+  [InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md),
+  or
+  [JointMediationData](https://data-wise.github.io/medfit/reference/JointMediationData.md).
+  `statistic_fn` receives its named `@estimates` vector, which includes
+  path aliases (e.g. `a`, `d1`, `b`, `c_prime` for a serial chain; `a1`,
+  `b1`, `a2`, `b2` for parallel mediators). For a
+  [JointMediationData](https://data-wise.github.io/medfit/reference/JointMediationData.md)
+  the aliases alone cannot reproduce the NDE, which also needs the
+  prefixed intercept and covariate rows (`m1_`, ..., `y_`) and the
+  sample covariate means.
 
 - data:
 
@@ -104,75 +99,14 @@ object containing:
 
 - Point estimate
 
-- Confidence interval bounds
-
-- Bootstrap distribution (for parametric and nonparametric)
-
-- Method used
-
-A
-[BootstrapResult](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
-object containing:
-
-- Point estimate
-
-- Confidence interval bounds
+- Percentile confidence interval bounds (the \\\alpha/2\\ and \\1 -
+  \alpha/2\\ quantiles of the bootstrap distribution)
 
 - Bootstrap distribution (for parametric and nonparametric)
 
 - Method used
 
 ## Details
-
-### Bootstrap Methods
-
-**Parametric Bootstrap** (`method = "parametric"`):
-
-- Samples parameter vectors from \\N(\hat{\theta}, \hat{\Sigma})\\
-
-- Fast and efficient
-
-- Assumes asymptotic normality of parameters
-
-- Recommended for most applications with n \> 50
-
-**Nonparametric Bootstrap** (`method = "nonparametric"`):
-
-- Resamples observations with replacement
-
-- Refits models for each bootstrap sample
-
-- More robust, no normality assumption
-
-- Computationally intensive
-
-- Use when normality is questionable or n is small
-
-**Plugin Estimator** (`method = "plugin"`):
-
-- Computes point estimate only
-
-- No confidence interval
-
-- Fastest method
-
-- Use for quick checks or when CI not needed
-
-### Parallel Processing
-
-Set `parallel = TRUE` to use multiple cores:
-
-- Automatically detects available cores
-
-- Falls back to sequential if parallel fails
-
-- Seed handling ensures reproducibility
-
-### Reproducibility
-
-Always set a seed for reproducible results:
-
-    bootstrap_mediation(..., seed = 12345)
 
 ### Bootstrap Methods
 
@@ -253,65 +187,22 @@ Always set a seed for reproducible results:
 
 [BootstrapResult](https://data-wise.github.io/medfit/reference/BootstrapResult.md),
 [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md),
-[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
-
-[BootstrapResult](https://data-wise.github.io/medfit/reference/BootstrapResult.md),
-[MediationData](https://data-wise.github.io/medfit/reference/MediationData.md),
 [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
 
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Parametric bootstrap for indirect effect
-result <- bootstrap_mediation(
-  statistic_fn = function(theta) theta["a"] * theta["b"],
-  method = "parametric",
-  mediation_data = med_data,
-  n_boot = 5000,
-  ci_level = 0.95,
-  seed = 12345
-)
-
-# Nonparametric bootstrap with parallel processing
-result <- bootstrap_mediation(
-  statistic_fn = function(data) {
-    # Refit models and compute statistic
-    # ...
-  },
-  method = "nonparametric",
-  data = mydata,
-  n_boot = 5000,
-  parallel = TRUE,
-  seed = 12345
-)
-
-# Plugin estimator (no CI)
-result <- bootstrap_mediation(
-  statistic_fn = function(theta) theta["a"] * theta["b"],
-  method = "plugin",
-  mediation_data = med_data
-)
-} # }
-
-# Generate example data
-set.seed(123)
-n <- 100
-mydata <- data.frame(X = rnorm(n))
-mydata$M <- 0.5 * mydata$X + rnorm(n)
-mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-
 # Fit mediation model
 med_data <- fit_mediation(
-  formula_y = Y ~ X + M,
-  formula_m = M ~ X,
-  data = mydata,
-  treatment = "X",
-  mediator = "M"
+  formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1"
 )
 
 # Define indirect effect function
-indirect_fn <- function(theta) theta["m_X"] * theta["y_M"]
+indirect_fn <- function(theta) theta["m_treatment"] * theta["y_mediator1"]
 
 # Plugin estimator (point estimate only, fastest)
 result_plugin <- bootstrap_mediation(
@@ -324,7 +215,7 @@ print(result_plugin)
 #> ======================
 #> 
 #> Method:   plugin
-#> Estimate:   0.1897
+#> Estimate:   0.3328
 #> 
 #> (No confidence interval for plugin method)
 
@@ -343,24 +234,26 @@ print(result)
 #> ======================
 #> 
 #> Method:   parametric
-#> Estimate:   0.1897
+#> Estimate:   0.3328
 #> N bootstrap samples: 1000
 #> 
 #> 95% Confidence Interval:
-#>   Lower:   0.0837
-#>   Upper:   0.3289
+#>   Lower:   0.2163
+#>   Upper:   0.4674
 
 # Nonparametric bootstrap (slower but more robust)
 refit_fn <- function(boot_data) {
-  fit_m <- lm(M ~ X, data = boot_data)
-  fit_y <- lm(Y ~ X + M, data = boot_data)
-  unname(coef(fit_m)["X"] * coef(fit_y)["M"])
+  fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+              data = boot_data)
+  fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+              data = boot_data)
+  unname(coef(fit_m)["treatment"] * coef(fit_y)["mediator1"])
 }
 
 result_np <- bootstrap_mediation(
   statistic_fn = refit_fn,
   method = "nonparametric",
-  data = mydata,
+  data = mediation_demo,
   n_boot = 500,
   seed = 12345
 )
@@ -369,11 +262,11 @@ print(result_np)
 #> ======================
 #> 
 #> Method:   nonparametric
-#> Estimate:   0.1897
+#> Estimate:   0.3328
 #> N bootstrap samples: 500
 #> 
 #> 95% Confidence Interval:
-#>   Lower:   0.0746
-#>   Upper:   0.3331
+#>   Lower:   0.1956
+#>   Upper:   0.4865
 # }
 ```

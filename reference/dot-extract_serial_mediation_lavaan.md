@@ -64,7 +64,9 @@ Paths are located in the lavaan parameter table by variable name:
 - `d_i`: `M_{i+1} ~ M_i` for `i = 1 .. k-1` (the `k - 1` inter-mediator
   paths)
 
-- `b` : `Y ~ Mk`
+- `b` : `Y ~ Mk` (the outcome equation should also include `X` and the
+  earlier mediators `M1 .. M(k-1)`; only the `Mk` coefficient is read as
+  `b`)
 
 - `c'` : `Y ~ X` (defaults to 0 with a warning if absent – full
   mediation)

@@ -9,8 +9,15 @@ structures from fitted models. It works with: - **lm/glm** models (base
 R) - implemented - **lavaan** SEM models - implemented - **lmer** mixed
 models (future)
 
-All extraction methods return a `MediationData` or `SerialMediationData`
-object, ensuring consistency across modeling frameworks.
+Extraction returns the S7 class that matches the structure:
+`MediationData`, `InteractionMediationData`, `SerialMediationData`,
+`ParallelMediationData`, or `JointMediationData`. All share one
+interface
+([`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+[`confint()`](https://rdrr.io/r/stats/confint.html),
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html),
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md),
+…) across modeling frameworks.
 
 **Note:** For quick analysis, consider using
 [`med()`](https://data-wise.github.io/medfit/reference/med.md) instead -
@@ -22,18 +29,39 @@ when you need more control or already have fitted models.
 
 ``` r
 library(medfit)
+```
+
+
+    Attaching package: 'medfit'
+
+    The following object is masked from 'package:stats':
+
+        decompose
+
+``` r
+# mediation_demo: simulated data bundled with medfit (see ?mediation_demo).
+# Its covariates confound the mediator-outcome relation, so adjust for them.
+covs <- c("covariate1", "covariate2")
 
 # Simple way: med() does everything
-result <- med(data = mydata, treatment = "X", mediator = "M", outcome = "Y")
-quick(result)
-#> NIE = 0.19 | NDE = 0.16 | PM = 55%
-
-# Advanced way: fit models separately, then extract
-fit_m <- lm(M ~ X, data = mydata)
-fit_y <- lm(Y ~ X + M, data = mydata)
-result <- extract_mediation(fit_m, model_y = fit_y, treatment = "X", mediator = "M")
+result <- med(data = mediation_demo, treatment = "treatment",
+              mediator = "mediator1", outcome = "outcome", covariates = covs)
 quick(result)
 ```
+
+    NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
+
+``` r
+# Advanced way: fit models separately, then extract
+fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2, data = mediation_demo)
+fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+            data = mediation_demo)
+result <- extract_mediation(fit_m, model_y = fit_y, treatment = "treatment",
+                            mediator = "mediator1")
+quick(result)
+```
+
+    NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
 
 ## Extraction Pattern
 
@@ -51,40 +79,154 @@ All extraction methods follow this pattern:
 
 ### Simple Mediation
 
-For simple mediation (X -\> M -\> Y), fit two models:
+For simple mediation (X -\> M -\> Y), fit two models. Both adjust for
+the covariates, which confound the mediator-outcome relation in
+`mediation_demo`:
 
 ``` r
-# Generate example data
-set.seed(123)
-n <- 200
-X <- rnorm(n)
-M <- 0.5 * X + rnorm(n, sd = 0.8)
-Y <- 0.3 * M + 0.2 * X + rnorm(n, sd = 0.8)
-data <- data.frame(X = X, M = M, Y = Y)
-
 # Fit mediation models
-model_m <- lm(M ~ X, data = data)
-model_y <- lm(Y ~ X + M, data = data)
+model_m <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+              data = mediation_demo)
+model_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+              data = mediation_demo)
 
 # Extract mediation structure
-med <- extract_mediation(
+med_data <- extract_mediation(
   model_m,           # Mediator model
   model_y,           # Outcome model
-  treatment = "X",
-  mediator = "M"
+  treatment = "treatment",
+  mediator = "mediator1"
 )
 
 # View results
-print(med)
-summary(med)
-
-# Use effect extractors (recommended)
-nie(med)   # Indirect effect (a * b)
-nde(med)   # Direct effect (c')
-te(med)    # Total effect
-pm(med)    # Proportion mediated
-quick(med) # One-line summary
+print(med_data)
 ```
+
+    MediationData object
+    ====================
+
+    Path coefficients:
+      a (X -> M):        0.5826
+      b (M -> Y|X):      0.5711
+      c' (X -> Y|M):     0.2058
+      Indirect (a*b):    0.3328
+
+    Variables:
+      Treatment: treatment
+      Mediator:  mediator1
+      Outcome:   outcome
+
+    Model info:
+      N observations: 400
+      Converged:      Yes
+      Source:         stats::lm
+
+    Residual SDs:
+      Mediator model:   0.9792
+      Outcome model:    1.0426
+
+``` r
+summary(med_data)
+```
+
+    Summary of MediationData
+    ========================
+
+    Path Coefficients:
+            a         b   c_prime  indirect
+    0.5826425 0.5711384 0.2057983 0.3327695
+
+    Variables:
+      treatment    mediator     outcome
+    "treatment" "mediator1"   "outcome"
+
+    Sample Size:  400
+    Converged:    Yes
+    Source:       stats::lm
+
+    Residual Standard Deviations:
+      Mediator model: 0.9792151
+      Outcome model:  1.042567
+
+    Parameter Estimates:
+    m_(Intercept)   m_treatment  m_covariate1  m_covariate2 y_(Intercept)
+       0.02052158    0.58264246    0.44789496    0.13109906    0.17120346
+      y_treatment   y_mediator1  y_covariate1  y_covariate2             a
+       0.20579826    0.57113843    0.35665236    0.05259769    0.58264246
+                b       c_prime
+       0.57113843    0.20579826
+
+    Variance-Covariance Matrix:
+                  m_(Intercept)   m_treatment  m_covariate1  m_covariate2
+    m_(Intercept)  0.0071554488 -4.965720e-03 -3.621581e-04 -4.677171e-03
+    m_treatment   -0.0049657198  9.773742e-03  6.574305e-04  8.913315e-05
+    m_covariate1  -0.0003621581  6.574305e-04  2.349599e-03 -1.859182e-05
+    m_covariate2  -0.0046771705  8.913315e-05 -1.859182e-05  9.601458e-03
+    y_(Intercept)  0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    y_treatment    0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    y_mediator1    0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    y_covariate1   0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    y_covariate2   0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    a             -0.0049657198  9.773742e-03  6.574305e-04  8.913315e-05
+    b              0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    c_prime        0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+                  y_(Intercept)   y_treatment   y_mediator1  y_covariate1
+    m_(Intercept)  0.0000000000  0.0000000000  0.0000000000  0.0000000000
+    m_treatment    0.0000000000  0.0000000000  0.0000000000  0.0000000000
+    m_covariate1   0.0000000000  0.0000000000  0.0000000000  0.0000000000
+    m_covariate2   0.0000000000  0.0000000000  0.0000000000  0.0000000000
+    y_(Intercept)  0.0081124689 -0.0055948064 -0.0000587445 -0.0003842233
+    y_treatment   -0.0055948064  0.0120510683 -0.0016678561  0.0014922734
+    y_mediator1   -0.0000587445 -0.0016678561  0.0028625721 -0.0012821316
+    y_covariate1  -0.0003842233  0.0014922734 -0.0012821316  0.0032377150
+    y_covariate2  -0.0052942389  0.0003196938 -0.0003752805  0.0001470110
+    a              0.0000000000  0.0000000000  0.0000000000  0.0000000000
+    b             -0.0000587445 -0.0016678561  0.0028625721 -0.0012821316
+    c_prime       -0.0055948064  0.0120510683 -0.0016678561  0.0014922734
+                   y_covariate2             a             b       c_prime
+    m_(Intercept)  0.0000000000 -4.965720e-03  0.0000000000  0.0000000000
+    m_treatment    0.0000000000  9.773742e-03  0.0000000000  0.0000000000
+    m_covariate1   0.0000000000  6.574305e-04  0.0000000000  0.0000000000
+    m_covariate2   0.0000000000  8.913315e-05  0.0000000000  0.0000000000
+    y_(Intercept) -0.0052942389  0.000000e+00 -0.0000587445 -0.0055948064
+    y_treatment    0.0003196938  0.000000e+00 -0.0016678561  0.0120510683
+    y_mediator1   -0.0003752805  0.000000e+00  0.0028625721 -0.0016678561
+    y_covariate1   0.0001470110  0.000000e+00 -0.0012821316  0.0014922734
+    y_covariate2   0.0109332064  0.000000e+00 -0.0003752805  0.0003196938
+    a              0.0000000000  9.773742e-03  0.0000000000  0.0000000000
+    b             -0.0003752805  0.000000e+00  0.0028625721 -0.0016678561
+    c_prime        0.0003196938  0.000000e+00 -0.0016678561  0.0120510683
+
+``` r
+# Use effect extractors (recommended)
+nie(med_data)   # Indirect effect (a * b)
+```
+
+    Natural Indirect Effect (NIE): 0.3328
+
+``` r
+nde(med_data)   # Direct effect (c')
+```
+
+    Natural Direct Effect (NDE): 0.2058
+
+``` r
+te(med_data)    # Total effect
+```
+
+    Total Effect (TE): 0.5386
+
+``` r
+pm(med_data)    # Proportion mediated
+```
+
+    Proportion Mediated (PM): 0.6179
+
+``` r
+quick(med_data) # One-line summary
+```
+
+    NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
 
 ### What Gets Extracted?
 
@@ -112,46 +254,70 @@ The extraction captures:
 Works with any GLM family:
 
 ``` r
-# Binary outcome
-y_binary <- rbinom(n, 1, prob = plogis(0.3 * M + 0.2 * X))
-data$Y_binary <- y_binary
+# Binary outcome: dichotomize the outcome at its median
+demo <- mediation_demo
+demo$outcome_bin <- as.integer(demo$outcome > median(demo$outcome))
 
-model_m <- lm(M ~ X, data = data)
-model_y <- glm(Y_binary ~ X + M, data = data, family = binomial())
+model_y_bin <- glm(outcome_bin ~ treatment + mediator1 + covariate1 + covariate2,
+                   data = demo, family = binomial())
 
-med <- extract_mediation(
+med_bin <- extract_mediation(
   model_m,
-  model_y,
-  treatment = "X",
-  mediator = "M"
+  model_y_bin,
+  treatment = "treatment",
+  mediator = "mediator1"
 )
 
 # Note: b_path and c_prime are on logit scale
-print(med)
+print(med_bin)
 ```
+
+    MediationData object
+    ====================
+
+    Path coefficients:
+      a (X -> M):        0.5826
+      b (M -> Y|X):      0.8633
+      c' (X -> Y|M):     0.1272
+      Indirect (a*b):    0.5030
+
+    Variables:
+      Treatment: treatment
+      Mediator:  mediator1
+      Outcome:   outcome_bin
+
+    Model info:
+      N observations: 400
+      Converged:      Yes
+      Source:         stats::lm
+
+    Residual SDs:
+      Mediator model:   0.9792
 
 ### Controlling for Covariates
 
-Include covariates in both models:
+Every model above includes `covariate1` and `covariate2` in **both**
+equations. In `mediation_demo` they affect the mediator and the outcome,
+so leaving them out of the outcome model confounds the `b` path:
 
 ``` r
-# Add covariates
-data$Z1 <- rnorm(n)
-data$Z2 <- rnorm(n)
+# The same models without the covariates
+model_m_unadj <- lm(mediator1 ~ treatment, data = mediation_demo)
+model_y_unadj <- lm(outcome ~ treatment + mediator1, data = mediation_demo)
 
-model_m <- lm(M ~ X + Z1 + Z2, data = data)
-model_y <- lm(Y ~ X + M + Z1 + Z2, data = data)
-
-med <- extract_mediation(
-  model_m,
-  model_y,
-  treatment = "X",
-  mediator = "M"
+med_unadj <- extract_mediation(
+  model_m_unadj,
+  model_y_unadj,
+  treatment = "treatment",
+  mediator = "mediator1"
 )
 
-# Path coefficients adjust for Z1 and Z2
-print(med)
+# Compare the b paths: adjusted vs unadjusted
+round(c(adjusted = med_data@b_path, unadjusted = med_unadj@b_path), 3)
 ```
+
+      adjusted unadjusted
+         0.571      0.713 
 
 ### Serial Mediation with lm/glm
 
@@ -163,28 +329,59 @@ outcome model in `model_y`. The result is a `SerialMediationData`
 object.
 
 ``` r
-# Serial data: a chain from X through M1 and M2 to Y
-M1 <- 0.5 * X + rnorm(n)
-M2 <- 0.4 * M1 + rnorm(n)
-y_serial <- 0.3 * M2 + 0.2 * X + rnorm(n)
-data_lm_serial <- data.frame(X = X, M1 = M1, M2 = M2, Y = y_serial)
-
+# Serial chain: treatment -> mediator1 -> mediator2 -> outcome
 # First mediator model goes in the object slot; the rest in mediator_models
-fit_m1 <- lm(M1 ~ X, data = data_lm_serial)
-fit_m2 <- lm(M2 ~ M1, data = data_lm_serial)
-fit_y  <- lm(Y ~ M2 + X, data = data_lm_serial)
+fit_m1 <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+             data = mediation_demo)
+fit_m2 <- lm(mediator2 ~ treatment + mediator1 + covariate1 + covariate2,
+             data = mediation_demo)
+# Include every mediator in the outcome model, not only the last one
+fit_y  <- lm(outcome ~ treatment + mediator1 + mediator2 + covariate1 + covariate2,
+             data = mediation_demo)
 
 med_serial_lm <- extract_mediation(
   fit_m1,
   model_y = fit_y,
-  treatment = "X",
-  mediator = c("M1", "M2"),       # a length-2 vector selects the serial branch
+  treatment = "treatment",
+  mediator = c("mediator1", "mediator2"),  # a length-2 vector selects the serial branch
   mediator_models = list(fit_m2)  # the remaining k minus 1 mediator models
 )
 
-# Serial indirect effect: a * d1 * b
-med_serial_lm@a_path * med_serial_lm@d_path * med_serial_lm@b_path
+# Serial indirect effect through the full chain: a * d1 * b
+nie(med_serial_lm)
 ```
+
+    Natural Indirect Effect (NIE): 0.07545
+
+``` r
+# Total indirect effect: every path through at least one mediator
+nie(med_serial_lm, type = "total")
+```
+
+    Natural Indirect Effect (NIE): 0.3674
+
+``` r
+# Total effect over every path; it equals the treatment coefficient when the
+# outcome is regressed on the treatment and both covariates alone
+te(med_serial_lm)
+```
+
+    Total Effect (TE): 0.5386
+
+Include the treatment and every earlier mediator in each downstream
+model, as the SEM version below does. Only `mediator2`’s coefficient
+becomes the `b` path, but `mediator1` also affects `outcome` directly in
+`mediation_demo`, so an outcome model without it
+(`outcome ~ treatment + mediator2 + ...`) confounds `b`: `mediator1` is
+a common cause of `mediator2` and `outcome`. The product `a * d1 * b` is
+then the effect through the full chain
+`treatment -> mediator1 -> mediator2 -> outcome` only; the direct
+`mediator1 -> outcome` path is not part of it. `nie(type = "total")`
+adds the paths that skip a mediator, and
+[`te()`](https://data-wise.github.io/medfit/reference/te.md) and
+[`pm()`](https://data-wise.github.io/medfit/reference/pm.md) use every
+path, so here the chain carries about 0.08 of a 0.37 total indirect
+effect.
 
 The order of `mediator_models` is cross-checked against the `mediator`
 vector: each model’s response and predecessor are validated, so a
@@ -195,65 +392,255 @@ silently producing wrong `d`-paths.
 >
 > An lm/glm serial chain estimates each equation **separately**, so the
 > combined covariance is **block-diagonal** across chain paths:
-> `cov(a, d_i)`, `cov(d_i, b)`, and `cov(d_i, d_j)` are all zero by
-> construction. (The within-outcome-equation covariance,
-> e.g. `cov(b, c')`, is still preserved.)
+> `cov(a, d_i)`, `cov(d_i, b)`, and `cov(d_i, d_j)` are stored as zero.
+> For least squares this is exact when each downstream equation contains
+> every regressor of the earlier ones, as recommended above. (The
+> within-outcome-equation covariance, e.g. `cov(b, c')`, is preserved.)
 >
-> A single lavaan `sem()` fit of the *same data* estimates all equations
-> jointly and yields the **full** covariance among chain paths. Because
-> the serial indirect-effect standard error depends on these
-> off-diagonal covariances, the CI from an lm chain will generally
-> differ from — and is often tighter than — the lavaan fit. This is
-> correct given the different estimators; just be aware that the engine
-> choice changes the interval for identical data.
+> A single lavaan `sem()` fit of the *same equations* estimates them
+> jointly by maximum likelihood. Its covariances among chain paths are
+> then also zero, so the two engines’ intervals differ only by the
+> small-sample difference between the OLS and ML variance estimates.
+> They can differ more when the lavaan model specifies different
+> equations (for example, omits a path that skips a mediator) or adds
+> residual covariances.
 
 ### Parallel Mediation with lm/glm
 
-In **parallel** mediation the mediators are independent (X -\> M_j -\>
-Y) rather than chained: each `M_j` is regressed on the treatment only,
-and all mediators enter a single outcome model. The total indirect
-effect is the **sum** of the per-mediator products, \\\sum_j a_j b_j\\.
-The API mirrors the serial case — pass a `mediator` vector and the
-remaining mediator models via `mediator_models` — but set
-`structure = "parallel"` (or rely on `structure = "auto"`, which infers
-parallel when no mediator is regressed on another). The result is a
-`ParallelMediationData` object.
+In **parallel** mediation the mediators are not chained (X -\> M_j -\>
+Y): each `M_j` is regressed on the treatment (and covariates) only, and
+all mediators enter a single outcome model. The total indirect effect is
+the **sum** of the per-mediator products, \\\sum_j a_j b_j\\. The API
+mirrors the serial case — pass a `mediator` vector and the remaining
+mediator models via `mediator_models` — but set `structure = "parallel"`
+(or rely on `structure = "auto"`, which infers parallel when no mediator
+is regressed on another). The result is a `ParallelMediationData`
+object.
 
 ``` r
-# Parallel data: two independent mediators, each driven by X
-M1p <- 0.5 * X + rnorm(n)
-M2p <- 0.4 * X + rnorm(n)
-y_par <- 0.3 * M1p + 0.45 * M2p + 0.1 * X + rnorm(n)
-data_lm_par <- data.frame(X = X, M1 = M1p, M2 = M2p, Y = y_par)
-
-# Each mediator is regressed on X alone; the outcome holds both mediators + X
-fit_m1p <- lm(M1 ~ X, data = data_lm_par)
-fit_m2p <- lm(M2 ~ X, data = data_lm_par)
-fit_yp  <- lm(Y ~ M1 + M2 + X, data = data_lm_par)
+# Parallel mediators mediator1 and mediator3, each driven by the treatment
+fit_m1p <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+              data = mediation_demo)
+fit_m3p <- lm(mediator3 ~ treatment + covariate1 + covariate2,
+              data = mediation_demo)
+fit_yp  <- lm(outcome ~ treatment + mediator1 + mediator3 + covariate1 + covariate2,
+              data = mediation_demo)
 
 med_parallel_lm <- extract_mediation(
   fit_m1p,
   model_y = fit_yp,
-  treatment = "X",
-  mediator = c("M1", "M2"),
-  mediator_models = list(fit_m2p),
+  treatment = "treatment",
+  mediator = c("mediator1", "mediator3"),
+  mediator_models = list(fit_m3p),
   structure = "parallel"
 )
 
 # Per-mediator paths and the summed indirect effect
 med_parallel_lm@a_paths
+```
+
+    [1] 0.5826425 0.4760604
+
+``` r
 med_parallel_lm@b_paths
+```
+
+    [1] 0.5685676 0.2124038
+
+``` r
 nie(med_parallel_lm)               # sum_j a_j * b_j
+```
+
+    Natural Indirect Effect (NIE): 0.4324
+
+``` r
 confint(med_parallel_lm, parm = "effects")
 ```
 
-Because the mediator equations are fit separately,
-`cov(a_j, a_{j'}) = 0` and `cov(a_j, b_{j'}) = 0`; but the `b_j` (and
-`c'`) share the single outcome equation, so `cov(b_j, b_{j'})` and
-`cov(b_j, c')` are preserved. The
+    Warning: Normal (delta-method) approximation for the indirect effect may be
+    inaccurate; consider bootstrap_mediation() for robust inference.
+
+                  2.5 %    97.5 %
+    indirect  0.2920764 0.5727009
+    direct   -0.1094317 0.3217899
+    total     0.3044806 0.7726549
+
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) gives the
+effects with delta-method standard errors and normal intervals, and
+[`glance()`](https://generics.r-lib.org/reference/glance.html) gives a
+one-row summary:
+
+``` r
+library(generics)
+```
+
+
+    Attaching package: 'generics'
+
+    The following objects are masked from 'package:base':
+
+        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
+        setequal, union
+
+``` r
+tidy(med_parallel_lm, type = "effects", conf.int = TRUE)
+```
+
+    # A tibble: 3 × 5
+      term  estimate std.error conf.low conf.high
+      <chr>    <dbl>     <dbl>    <dbl>     <dbl>
+    1 nie      0.432    0.0716    0.292     0.573
+    2 nde      0.106    0.110    -0.109     0.322
+    3 te       0.539    0.119     0.304     0.773
+
+``` r
+glance(med_parallel_lm)
+```
+
+    # A tibble: 1 × 7
+        nie   nde    te    pm n_mediators  nobs converged
+      <dbl> <dbl> <dbl> <dbl>       <int> <int> <lgl>
+    1 0.432 0.106 0.539 0.803           2   400 TRUE     
+
+The normal interval for `nie` treats a sum of coefficient products as
+normal; for inference on the indirect effect prefer
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/articles/bootstrap.md).
+
+This model leaves out `mediator2`, a descendant of `mediator1`, so
+`mediator1`’s `b` path (about 0.55 in the population) includes its
+effect through `mediator2`; see
+[`?mediation_demo`](https://data-wise.github.io/medfit/reference/mediation_demo.md)
+for the reduced-form values.
+
+The mediator equations are fit separately, and the stored `@vcov` sets
+the covariances between their coefficients to zero. `cov(a_j, b_{j'})`
+is exactly zero for least squares, because the outcome equation contains
+every regressor of the mediator equations. `cov(a_j, a_{j'})` is not:
+when the mediators’ errors are correlated it is nonzero, and the
+block-diagonal `@vcov` omits it, so the indirect-effect SE can be off.
+The `b_j` (and `c'`) share the single outcome equation, so
+`cov(b_j, b_{j'})` and `cov(b_j, c')` are preserved. The
 [`confint()`](https://rdrr.io/r/stats/confint.html) indirect-effect SE
-uses the full delta method over the joint `a*/b*` block, not a naive
-per-mediator sum.
+uses the delta method over this `@vcov`, not a naive per-mediator sum. A
+lavaan fit, or a nonparametric bootstrap, captures the omitted
+covariance; see [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.md).
+
+### Several Mediators with a Treatment-by-Mediator Product
+
+When the outcome model of a serial or parallel fit carries a
+treatment-by-mediator term,
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+returns a `JointMediationData` object with the **joint** natural effects
+of the mediators (VanderWeele and Vansteelandt 2014). The mediators are
+treated as one block: the NIE runs through every mediator and every path
+among them, and it has no per-mediator split. `outcome_int` carries a
+`treatment` by `mediator1` product, so it fits the serial chain from
+above:
+
+``` r
+fit_yj <- lm(outcome_int ~ treatment * mediator1 + mediator2 +
+               covariate1 + covariate2, data = mediation_demo)
+
+med_joint <- extract_mediation(
+  fit_m1,                  # the serial mediator1 model from above
+  model_y = fit_yj,
+  treatment = "treatment",
+  mediator = c("mediator1", "mediator2"),
+  mediator_models = list(fit_m2)   # the serial mediator2 model
+)
+med_joint
+```
+
+    <JointMediationData>
+      treatment -> {mediator1 -> mediator2} -> outcome_int  (serial mediators, joint effects)
+      Products: treatment x mediator1 (m* = 0)
+        mediator1 a* = +0.5826   b = +0.4465   t3 = +0.4906
+        mediator2 a* = +0.4248   b = +0.2590
+      c' (t1) = +0.1748   CDE = +0.1748   NDE = +0.2197
+      Joint NIE (all paths through mediator1, mediator2) = +0.6560
+      Total = +0.8757   |   n = 400
+
+``` r
+generics::tidy(med_joint, type = "effects", conf.int = TRUE)
+```
+
+    # A tibble: 4 × 5
+      term  estimate std.error conf.low conf.high
+      <chr>    <dbl>     <dbl>    <dbl>     <dbl>
+    1 cde      0.175     0.113 -0.0468      0.396
+    2 nde      0.220     0.116 -0.00710     0.447
+    3 nie      0.656     0.116  0.428       0.884
+    4 te       0.876     0.135  0.611       1.14 
+
+`a*` is each mediator’s **total** treatment effect: for `mediator2` it
+includes the path through `mediator1` (`a2 + d * a1`). The joint NIE is
+`(b1 + t3) * a*_1 + b2 * a*_2`; its population value in `mediation_demo`
+is 0.585. It is not comparable to the serial `a * d * b` (0.075 on the
+same data without the product), which counts only the path through the
+full chain.
+
+[`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
+returns the controlled direct effect with the joint natural effects. The
+CDE is read at the reference level `m_star` of each interacting mediator
+(default 0); the NDE, NIE and total effect do not depend on it:
+
+``` r
+decompose(med_joint)
+```
+
+          cde       nde       nie     total
+    0.1747908 0.2197091 0.6560315 0.8757405 
+
+``` r
+# CDE with mediator1 held at 1 instead of 0
+med_joint_m1 <- extract_mediation(
+  fit_m1,
+  model_y = fit_yj,
+  treatment = "treatment",
+  mediator = c("mediator1", "mediator2"),
+  mediator_models = list(fit_m2),
+  m_star = c(mediator1 = 1)   # named by the interacting mediator
+)
+decompose(med_joint_m1)
+```
+
+          cde       nde       nie     total
+    0.6654399 0.2197091 0.6560315 0.8757405 
+
+The CDE moves by `t3 * (1 - 0) = 0.49`, while the other three stay put.
+Unlike the single-mediator four-way decomposition, the joint object has
+no INT_(ref)/INT_(med) split: the interaction is absorbed into the joint
+NDE and NIE.
+
+Standard errors use the delta method over a stacked covariance of all
+the equations, conditional on the observed covariates (the NDE is
+evaluated at their means). For a parametric bootstrap, use
+[`joint_effects()`](https://data-wise.github.io/medfit/reference/joint_effects.md)
+as the statistic; it recomputes the effects from any parameter draw:
+
+``` r
+boot_nie <- bootstrap_mediation(
+  function(theta) joint_effects(med_joint, theta)[["nie"]],
+  method = "parametric", mediation_data = med_joint, n_boot = 2000, seed = 1
+)
+c(boot_nie@ci_lower, boot_nie@ci_upper)
+```
+
+    [1] 0.4483248 0.8930866
+
+The fit must meet a few requirements, and each violation errors with its
+cause: every model carries the same covariates (a medfit limitation),
+all models are Gaussian identity-link, unweighted, with an intercept,
+and fit to the same rows, every mediator appears in the outcome model,
+and the treatment is coded 0/1. Only outcome-model products written with
+`:` or `*` are supported; a product in a mediator model, between
+mediators, with a covariate, or inside
+[`I()`](https://rdrr.io/r/base/AsIs.html) errors. A product
+**precomputed as a data column** cannot be recognized from the formula
+and would be ignored silently, so write it in the formula. The
+identification assumptions are stated for the whole mediator vector; see
+[`?JointMediationData`](https://data-wise.github.io/medfit/reference/JointMediationData.md).
 
 ## Extracting from lavaan Models
 
@@ -261,14 +648,19 @@ per-mediator sum.
 
 ``` r
 library(lavaan)
+```
 
+    This is lavaan 0.7-2
+    lavaan is FREE software! Please report any bugs.
+
+``` r
 # Define SEM model
 model_syntax <- "
   # Mediator model
-  M ~ a * X
+  mediator1 ~ a * treatment + covariate1 + covariate2
 
   # Outcome model
-  Y ~ b * M + c_prime * X
+  outcome ~ b * mediator1 + c_prime * treatment + covariate1 + covariate2
 
   # Indirect effect
   indirect := a * b
@@ -278,60 +670,109 @@ model_syntax <- "
 "
 
 # Fit model
-fit <- sem(model_syntax, data = data)
+fit <- sem(model_syntax, data = mediation_demo)
 
 # Extract mediation structure
-med <- extract_mediation(
+med_sem <- extract_mediation(
   fit,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y"
+  treatment = "treatment",
+  mediator = "mediator1",
+  outcome = "outcome"
 )
 
-print(med)
+print(med_sem)
 ```
+
+    MediationData object
+    ====================
+
+    Path coefficients:
+      a (X -> M):        0.5826
+      b (M -> Y|X):      0.5711
+      c' (X -> Y|M):     0.2058
+      Indirect (a*b):    0.3328
+
+    Variables:
+      Treatment: treatment
+      Mediator:  mediator1
+      Outcome:   outcome
+
+    Model info:
+      N observations: 400
+      Converged:      Yes
+      Source:         lavaan
+
+    Residual SDs:
+      Mediator model:   0.9743
+      Outcome model:    1.0360
 
 ### Serial Mediation in SEM
 
-For serial mediation (X -\> M1 -\> M2 -\> Y):
+For serial mediation (treatment -\> mediator1 -\> mediator2 -\>
+outcome):
 
 ``` r
-# Generate serial mediation data
-M1 <- 0.4 * X + rnorm(n, sd = 0.8)
-M2 <- 0.5 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
-y_serial <- 0.3 * M2 + 0.1 * M1 + 0.2 * X + rnorm(n, sd = 0.8)
-data_serial <- data.frame(X = X, M1 = M1, M2 = M2, Y = y_serial)
-
 # Define serial mediation model
 serial_syntax <- "
   # First mediator
-  M1 ~ a * X
+  mediator1 ~ a * treatment + covariate1 + covariate2
 
   # Second mediator
-  M2 ~ d * M1 + X
+  mediator2 ~ d * mediator1 + treatment + covariate1 + covariate2
 
   # Outcome
-  Y ~ b * M2 + M1 + c_prime * X
+  outcome ~ b * mediator2 + mediator1 + c_prime * treatment +
+    covariate1 + covariate2
 
   # Serial indirect effect (product-of-three)
   serial_indirect := a * d * b
 "
 
-fit_serial <- sem(serial_syntax, data = data_serial)
+fit_serial <- sem(serial_syntax, data = mediation_demo)
 
 # Extract as SerialMediationData
 med_serial <- extract_mediation(
   fit_serial,
-  treatment = "X",
-  mediators = c("M1", "M2"),
-  outcome = "Y"
+  treatment = "treatment",
+  mediator = c("mediator1", "mediator2"),
+  outcome = "outcome"
 )
 
 print(med_serial)
+```
 
+    SerialMediationData object
+    ==========================
+
+    Serial mediation chain:
+      treatment -> mediator1 -> mediator2 -> outcome
+
+    Path coefficients:
+      a  (treatment -> mediator1):         0.5826
+      d  (mediator1 -> mediator2):         0.4996
+      b  (mediator2 -> outcome):         0.2592
+      c' (treatment -> outcome|M):       0.1712
+
+    Indirect effect:
+      a * d * b =   0.0755
+
+    Model info:
+      N mediators:    2
+      N observations: 400
+      Converged:      Yes
+      Source:         lavaan
+
+    Residual SDs:
+      mediator1 model:   0.9743
+      mediator2 model:   0.9783
+      Outcome model:    1.0045
+
+``` r
 # Serial indirect effect
 med_serial@a_path * med_serial@d_path * med_serial@b_path
 ```
+
+    [1] 0.07545039
 
 ### Parallel Mediation in SEM
 
@@ -341,28 +782,42 @@ Passing a `mediator` vector returns a `ParallelMediationData` object
 (auto-detected, since no mediator is regressed on another).
 
 ``` r
-# Define a parallel mediation model: M1, M2 each on X; Y on both + X
+# Parallel model: mediator1 and mediator3 each on the treatment; outcome on both
 parallel_syntax <- "
-  M1 ~ a1 * X
-  M2 ~ a2 * X
-  Y  ~ b1 * M1 + b2 * M2 + c_prime * X
+  mediator1 ~ a1 * treatment + covariate1 + covariate2
+  mediator3 ~ a2 * treatment + covariate1 + covariate2
+  outcome   ~ b1 * mediator1 + b2 * mediator3 + c_prime * treatment +
+    covariate1 + covariate2
 
   # Total indirect effect = sum of per-mediator products
   indirect := a1 * b1 + a2 * b2
 "
 
-fit_parallel <- sem(parallel_syntax, data = data_lm_par)
+fit_parallel <- sem(parallel_syntax, data = mediation_demo)
 
 med_parallel <- extract_mediation(
   fit_parallel,
-  treatment = "X",
-  mediator = c("M1", "M2"),
-  outcome = "Y"
+  treatment = "treatment",
+  mediator = c("mediator1", "mediator3"),
+  outcome = "outcome"
 )
 
 print(med_parallel)
+```
+
+    <ParallelMediationData>
+      treatment -> {mediator1, mediator3} -> outcome  (2 parallel mediators)
+        mediator1 a1 = +0.5826   b1 = +0.5686
+        mediator3 a2 = +0.4761   b2 = +0.2124
+      Direct (c'): +0.1062
+      Indirect (sum a_j*b_j): +0.4324
+      Total: +0.5386   |   n = 400
+
+``` r
 nie(med_parallel)
 ```
+
+    Natural Indirect Effect (NIE): 0.4324
 
 Unlike the lm/glm engine, the SEM estimates the whole system jointly, so
 the extracted `vcov` preserves **all** off-diagonals — including
@@ -388,24 +843,80 @@ carries an `X:M` term. Set the reference mediator level with `m_star`
 
 ### Interaction with lm/glm
 
-For lm/glm, the `X:M` term is detected automatically:
+For lm/glm, the `X:M` term is detected automatically. `mediation_demo`’s
+`outcome_int` carries a `treatment` by `mediator1` interaction:
 
 ``` r
-# Outcome model includes the X:M interaction
-fit_mi <- lm(M ~ X, data = data)
-fit_yi <- lm(Y ~ X + M + X:M, data = data)
+# Outcome model includes the treatment:mediator1 interaction
+fit_mi <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+             data = mediation_demo)
+fit_yi <- lm(outcome_int ~ treatment * mediator1 + covariate1 + covariate2,
+             data = mediation_demo)
 
 med_int <- extract_mediation(
   fit_mi,
   model_y = fit_yi,
-  treatment = "X",
-  mediator = "M",
+  treatment = "treatment",
+  mediator = "mediator1",
   m_star = 0           # reference mediator level for the decomposition
 )
 
 decompose(med_int)                          # CDE, INTref, INTmed, PIE + effects
+```
+
+           cde    int_ref    int_med        pie        nde        nie      total
+    0.21521278 0.04353909 0.27709549 0.34001758 0.25875187 0.61711307 0.87586495 
+
+``` r
 confint(med_int, parm = "components")       # delta-method CIs for the components
 ```
+
+    Normal (delta-method) approximation for four-way components; consider bootstrap_mediation() for robust inference.
+
+                  2.5 %    97.5 %
+    cde     -0.01242752 0.4428531
+    int_ref -0.02378409 0.1108623
+    int_med  0.13266955 0.4215214
+    pie      0.19952257 0.4805126
+
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) reports the
+four components with `type = "components"` and the natural effects with
+`type = "effects"`;
+[`glance()`](https://generics.r-lib.org/reference/glance.html) adds the
+interaction coefficient and `m_star`:
+
+``` r
+library(generics)
+tidy(med_int, type = "components", conf.int = TRUE)
+```
+
+    # A tibble: 4 × 5
+      term    estimate std.error conf.low conf.high
+      <chr>      <dbl>     <dbl>    <dbl>     <dbl>
+    1 cde       0.215     0.116   -0.0124     0.443
+    2 int_ref   0.0435    0.0343  -0.0238     0.111
+    3 int_med   0.277     0.0737   0.133      0.422
+    4 pie       0.340     0.0717   0.200      0.481
+
+``` r
+tidy(med_int, type = "effects")
+```
+
+    # A tibble: 3 × 3
+      term  estimate std.error
+      <chr>    <dbl>     <dbl>
+    1 nie      0.617     0.113
+    2 nde      0.259     0.118
+    3 te       0.876     0.135
+
+``` r
+glance(med_int)
+```
+
+    # A tibble: 1 × 8
+        nie   nde    te    pm interaction m_star  nobs converged
+      <dbl> <dbl> <dbl> <dbl>       <dbl>  <dbl> <int> <lgl>
+    1 0.617 0.259 0.876 0.705       0.476      0   400 TRUE     
 
 The four-way formulas (continuous `Y` and `M`) are `CDE = θ₁ + θ₃·m*`,
 `INTref = θ₃·(E[M|X=0] − m*)`, `INTmed = θ₃·β₁`, and `PIE = θ₂·β₁`,
@@ -421,25 +932,29 @@ mediator intercept (needed for INTref) is estimated. Name the product
 term via `interaction`:
 
 ``` r
-data$XM <- data$X * data$M     # product term
+demo <- mediation_demo
+demo$XM <- demo$treatment * demo$mediator1     # product term
 
 fit_int <- sem(
-  "M ~ X
-   Y ~ M + X + XM",
-  data = data,
+  "mediator1 ~ treatment + covariate1 + covariate2
+   outcome_int ~ mediator1 + treatment + XM + covariate1 + covariate2",
+  data = demo,
   meanstructure = TRUE
 )
 
 med_int_sem <- extract_mediation(
   fit_int,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y",
+  treatment = "treatment",
+  mediator = "mediator1",
+  outcome = "outcome_int",
   interaction = "XM"     # name of the product predictor in the outcome model
 )
 
 decompose(med_int_sem)
 ```
+
+           cde    int_ref    int_med        pie        nde        nie      total
+    0.21521278 0.04353909 0.27709549 0.34001758 0.25875187 0.61711307 0.87586495 
 
 When the interaction is absent (or `decomposition = "two_way"`),
 extraction falls back to the standard `MediationData` — so existing
@@ -455,25 +970,33 @@ implements VanderWeele’s regression-based estimators in closed form, and
 hand back the same medfit classes:
 
 ``` r
-# regmedint requires a numeric 0/1 treatment
-set.seed(11)
-n <- 300
-d <- data.frame(X = rbinom(n, 1, 0.5), C = rnorm(n))
-d$M <- 0.5 * d$X + 0.2 * d$C + rnorm(n)
-d$Y <- 0.3 * d$X + 0.4 * d$M + 0.25 * d$X * d$M + 0.1 * d$C + rnorm(n)
-
+# regmedint requires a numeric 0/1 treatment, which mediation_demo has
 med_rmi <- fit_mediation(
-  formula_y = Y ~ X * M + C,
-  formula_m = M ~ X + C,
-  data = d,
-  treatment = "X",
-  mediator = "M",
+  formula_y = outcome_int ~ treatment * mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
   engine = "regmedint"
 )
 
 decompose(med_rmi)                        # same four-way layout as above
+```
+
+           cde    int_ref    int_med        pie        nde        nie      total
+    0.21521278 0.04353909 0.27709549 0.34001758 0.25875187 0.61711307 0.87586495 
+
+``` r
 confint(med_rmi, parm = "components")     # regmedint's analytical SEs
 ```
+
+    Normal (delta-method) approximation for four-way components; consider bootstrap_mediation() for robust inference.
+
+                  2.5 %    97.5 %
+    cde     -0.01242752 0.4428531
+    int_ref -0.02378409 0.1108623
+    int_med  0.13266955 0.4215214
+    pie      0.19952257 0.4805126
 
 The return class follows the same rule as
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md):
@@ -499,18 +1022,25 @@ engine:
 
 ``` r
 med_rm_m1 <- fit_mediation(
-  formula_y = Y ~ X * M,
-  formula_m = M ~ X,
-  data = d,
-  treatment = "X",
-  mediator = "M",
+  formula_y = outcome_int ~ treatment * mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
   engine = "regmedint",
   m_star = 1
 )
 
 med_rm_m1@m_star   # the reference level that was used
+```
+
+    [1] 1
+
+``` r
 med_rm_m1@cde      # direct effect, holding the mediator at that level
 ```
+
+    [1] 0.6907969
 
 The two terms shift in exactly compensating directions, so
 [`nde()`](https://data-wise.github.io/medfit/reference/nde.md),
@@ -536,15 +1066,15 @@ through `engine_args`:
 
 ``` r
 med_rmi2 <- fit_mediation(
-  formula_y = Y ~ X * M + C,
-  formula_m = M ~ X + C,
-  data = d,
-  treatment = "X",
-  mediator = "M",
+  formula_y = outcome_int ~ treatment * mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
   engine = "regmedint",
   m_star = 1,           # reference mediator level (default 0)
   engine_args = list(
-    c_cond = 0,         # covariate level for the conditional effects
+    c_cond = c(0, 0),   # covariate levels for the conditional effects (one per covariate)
     interaction = TRUE  # override the formula-based auto-detection
   )
 )
@@ -589,31 +1119,40 @@ extract_mediation(
   model_m,
   model_y,
   treatment = "NonExistent",
-  mediator = "M"
+  mediator = "mediator1"
 )
-# Error: Assertion on 'treatment in mediator model' failed:
-#        Must be element of set {'(Intercept)','X'}, but is 'NonExistent'.
+```
 
+    Error in `.extract_mediation_lm_impl()`:
+    ! Assertion on 'treatment in mediator model' failed: Must be element of set {'(Intercept)','treatment','covariate1','covariate2'}, but is 'NonExistent'.
+
+``` r
 # Wrong type for treatment argument
 extract_mediation(
   model_m,
   model_y,
   treatment = 123,  # Should be character
-  mediator = "M"
+  mediator = "mediator1"
 )
-# Error: Assertion on 'treatment' failed: Must be of type 'string', not 'double'.
+```
 
+    Error in `.extract_mediation_lm_impl()`:
+    ! Assertion on 'treatment' failed: Must be of type 'string', not 'double'.
+
+``` r
 # Mediator not in outcome model
-model_y_wrong <- lm(Y ~ X, data = data)  # Missing M
+model_y_wrong <- lm(outcome ~ treatment + covariate1 + covariate2,
+                    data = mediation_demo)  # Missing mediator1
 extract_mediation(
   model_m,
   model_y_wrong,
-  treatment = "X",
-  mediator = "M"
+  treatment = "treatment",
+  mediator = "mediator1"
 )
-# Error: Assertion on 'mediator in outcome model' failed:
-#        Must be element of set {'(Intercept)','X'}, but is 'M'.
 ```
+
+    Error in `.extract_mediation_lm_impl()`:
+    ! Assertion on 'mediator in outcome model' failed: Must be element of set {'(Intercept)','treatment','covariate1','covariate2'}, but is 'mediator1'.
 
 This defensive programming approach catches errors early with clear
 messages, making debugging easier.
@@ -625,15 +1164,34 @@ messages, making debugging easier.
 The `estimates` property contains all parameters from both models:
 
 ``` r
-med <- extract_mediation(model_m, model_y, treatment = "X", mediator = "M")
+med_data <- extract_mediation(model_m, model_y, treatment = "treatment",
+                              mediator = "mediator1")
 
 # All parameters (intercepts + coefficients)
-med@estimates
-
-# Access by name
-med@estimates["a"]  # a_path
-med@estimates["b"]  # b_path
+med_data@estimates
 ```
+
+    m_(Intercept)   m_treatment  m_covariate1  m_covariate2 y_(Intercept)
+       0.02052158    0.58264246    0.44789496    0.13109906    0.17120346
+      y_treatment   y_mediator1  y_covariate1  y_covariate2             a
+       0.20579826    0.57113843    0.35665236    0.05259769    0.58264246
+                b       c_prime
+       0.57113843    0.20579826 
+
+``` r
+# Access by name
+med_data@estimates["a"]  # a_path
+```
+
+            a
+    0.5826425 
+
+``` r
+med_data@estimates["b"]  # b_path
+```
+
+            b
+    0.5711384 
 
 ### Covariance Matrix for Delta Method
 
@@ -641,13 +1199,13 @@ Use the covariance matrix for computing standard errors:
 
 ``` r
 # Covariance matrix of all parameters
-vcov_mat <- med@vcov
+vcov_mat <- med_data@vcov
 
 # For delta method SE of indirect effect (a*b):
 # Var(ab) = b^2 * Var(a) + a^2 * Var(b) + 2ab*Cov(a,b)
 
-a <- med@a_path
-b <- med@b_path
+a <- med_data@a_path
+b <- med_data@b_path
 var_a <- vcov_mat["a", "a"]
 var_b <- vcov_mat["b", "b"]
 cov_ab <- vcov_mat["a", "b"]
@@ -658,16 +1216,19 @@ se_indirect <- sqrt(var_indirect)
 se_indirect
 ```
 
+    [1] 0.06449767
+
 ## Design for Extensibility
 
 The extraction system is designed to accommodate future extensions:
 
 - **New model types**: Add methods for lmer, brms, etc.
-- **Complex mediation**: Multiple mediators, moderated mediation
+- **Complex mediation**: Moderated mediation
 - **Multiple treatments**: Comparative mediation analysis
 - **Latent variables**: SEM with measurement models
 
-All methods return the same S7 class structure, ensuring consistency.
+All classes share the same interface, so new model types plug into the
+same effects, intervals and bootstrap.
 
 ## Next Steps
 
@@ -677,6 +1238,8 @@ All methods return the same S7 class structure, ensuring consistency.
 - See the
   [introduction](https://data-wise.github.io/medfit/articles/introduction.md)
   for S7 class details
+- Read the [formulas behind every effect and standard
+  error](https://data-wise.github.io/medfit/articles/methods.md)
 - Check the reference documentation for
   [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
   methods
@@ -690,14 +1253,36 @@ functions:
 
 ``` r
 # Individual effects
-nie(med)    # Natural Indirect Effect (a * b)
-nde(med)    # Natural Direct Effect (c')
-te(med)     # Total Effect (nie + nde)
-pm(med)     # Proportion Mediated
-
-# All path coefficients
-paths(med)  # Named vector: a, b, c_prime
+nie(med_data)    # Natural Indirect Effect (a * b)
 ```
+
+    Natural Indirect Effect (NIE): 0.3328
+
+``` r
+nde(med_data)    # Natural Direct Effect (c')
+```
+
+    Natural Direct Effect (NDE): 0.2058
+
+``` r
+te(med_data)     # Total Effect (nie + nde)
+```
+
+    Total Effect (TE): 0.5386
+
+``` r
+pm(med_data)     # Proportion Mediated
+```
+
+    Proportion Mediated (PM): 0.6179
+
+``` r
+# All path coefficients
+paths(med_data)  # Named vector: a, b, c_prime
+```
+
+            a         b   c_prime
+    0.5826425 0.5711384 0.2057983 
 
 ### Tidyverse Integration
 
@@ -705,41 +1290,158 @@ paths(med)  # Named vector: a, b, c_prime
 library(generics)
 
 # Convert to tibble
-tidy(med)
-#> # A tibble: 6 × 3
-#>   term    estimate std.error
-#>   <chr>      <dbl>     <dbl>
-#> 1 a          0.448    0.107
-#> ...
-
-# Just path coefficients or effects
-tidy(med, type = "paths")
-tidy(med, type = "effects")
-
-# With confidence intervals
-tidy(med, conf.int = TRUE)
-
-# One-row summary
-glance(med)
+tidy(med_data)
 ```
+
+    # A tibble: 6 × 3
+      term    estimate std.error
+      <chr>      <dbl>     <dbl>
+    1 a          0.583    0.0989
+    2 b          0.571    0.0535
+    3 c_prime    0.206    0.110
+    4 nie        0.333    0.0645
+    5 nde        0.206    0.110
+    6 te         0.539    0.119 
+
+``` r
+# Just path coefficients or effects
+tidy(med_data, type = "paths")
+```
+
+    # A tibble: 3 × 3
+      term    estimate std.error
+      <chr>      <dbl>     <dbl>
+    1 a          0.583    0.0989
+    2 b          0.571    0.0535
+    3 c_prime    0.206    0.110 
+
+``` r
+tidy(med_data, type = "effects")
+```
+
+    # A tibble: 3 × 3
+      term  estimate std.error
+      <chr>    <dbl>     <dbl>
+    1 nie      0.333    0.0645
+    2 nde      0.206    0.110
+    3 te       0.539    0.119 
+
+``` r
+# With confidence intervals
+tidy(med_data, conf.int = TRUE)
+```
+
+    # A tibble: 6 × 5
+      term    estimate std.error conf.low conf.high
+      <chr>      <dbl>     <dbl>    <dbl>     <dbl>
+    1 a          0.583    0.0989  0.389       0.776
+    2 b          0.571    0.0535  0.466       0.676
+    3 c_prime    0.206    0.110  -0.00936     0.421
+    4 nie        0.333    0.0645  0.206       0.459
+    5 nde        0.206    0.110  -0.00936     0.421
+    6 te         0.539    0.119   0.304       0.773
+
+``` r
+# One-row summary
+glance(med_data)
+```
+
+    # A tibble: 1 × 6
+        nie   nde    te    pm  nobs converged
+      <dbl> <dbl> <dbl> <dbl> <int> <lgl>
+    1 0.333 0.206 0.539 0.618   400 TRUE     
 
 ### Base R Methods
 
 ``` r
 # Standard generics
-coef(med)                # Path coefficients
-coef(med, "effects")     # NIE, NDE, TE
-vcov(med)                # Variance-covariance matrix
-confint(med)             # 95% confidence intervals
-confint(med, level = 0.90)
-nobs(med)                # Sample size
+coef(med_data)                # Path coefficients
 ```
+
+            a         b   c_prime
+    0.5826425 0.5711384 0.2057983 
+
+``` r
+coef(med_data, "effects")     # NIE, NDE, TE
+```
+
+          nie       nde        te
+    0.3327695 0.2057983 0.5385678 
+
+``` r
+vcov(med_data)                # Variance-covariance matrix
+```
+
+                  m_(Intercept)   m_treatment  m_covariate1  m_covariate2
+    m_(Intercept)  0.0071554488 -4.965720e-03 -3.621581e-04 -4.677171e-03
+    m_treatment   -0.0049657198  9.773742e-03  6.574305e-04  8.913315e-05
+    m_covariate1  -0.0003621581  6.574305e-04  2.349599e-03 -1.859182e-05
+    m_covariate2  -0.0046771705  8.913315e-05 -1.859182e-05  9.601458e-03
+    y_(Intercept)  0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    y_treatment    0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    y_mediator1    0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    y_covariate1   0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    y_covariate2   0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    a             -0.0049657198  9.773742e-03  6.574305e-04  8.913315e-05
+    b              0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+    c_prime        0.0000000000  0.000000e+00  0.000000e+00  0.000000e+00
+                  y_(Intercept)   y_treatment   y_mediator1  y_covariate1
+    m_(Intercept)  0.0000000000  0.0000000000  0.0000000000  0.0000000000
+    m_treatment    0.0000000000  0.0000000000  0.0000000000  0.0000000000
+    m_covariate1   0.0000000000  0.0000000000  0.0000000000  0.0000000000
+    m_covariate2   0.0000000000  0.0000000000  0.0000000000  0.0000000000
+    y_(Intercept)  0.0081124689 -0.0055948064 -0.0000587445 -0.0003842233
+    y_treatment   -0.0055948064  0.0120510683 -0.0016678561  0.0014922734
+    y_mediator1   -0.0000587445 -0.0016678561  0.0028625721 -0.0012821316
+    y_covariate1  -0.0003842233  0.0014922734 -0.0012821316  0.0032377150
+    y_covariate2  -0.0052942389  0.0003196938 -0.0003752805  0.0001470110
+    a              0.0000000000  0.0000000000  0.0000000000  0.0000000000
+    b             -0.0000587445 -0.0016678561  0.0028625721 -0.0012821316
+    c_prime       -0.0055948064  0.0120510683 -0.0016678561  0.0014922734
+                   y_covariate2             a             b       c_prime
+    m_(Intercept)  0.0000000000 -4.965720e-03  0.0000000000  0.0000000000
+    m_treatment    0.0000000000  9.773742e-03  0.0000000000  0.0000000000
+    m_covariate1   0.0000000000  6.574305e-04  0.0000000000  0.0000000000
+    m_covariate2   0.0000000000  8.913315e-05  0.0000000000  0.0000000000
+    y_(Intercept) -0.0052942389  0.000000e+00 -0.0000587445 -0.0055948064
+    y_treatment    0.0003196938  0.000000e+00 -0.0016678561  0.0120510683
+    y_mediator1   -0.0003752805  0.000000e+00  0.0028625721 -0.0016678561
+    y_covariate1   0.0001470110  0.000000e+00 -0.0012821316  0.0014922734
+    y_covariate2   0.0109332064  0.000000e+00 -0.0003752805  0.0003196938
+    a              0.0000000000  9.773742e-03  0.0000000000  0.0000000000
+    b             -0.0003752805  0.000000e+00  0.0028625721 -0.0016678561
+    c_prime        0.0003196938  0.000000e+00 -0.0016678561  0.0120510683
+
+``` r
+confint(med_data)             # 95% confidence intervals
+```
+
+                  2.5 %    97.5 %
+    a        0.38887603 0.7764089
+    b        0.46627446 0.6760024
+    c_prime -0.00936141 0.4209579
+
+``` r
+confint(med_data, level = 0.90)
+```
+
+                   5 %      95 %
+    a       0.42002855 0.7452564
+    b       0.48313381 0.6591431
+    c_prime 0.02523057 0.3863659
+
+``` r
+nobs(med_data)                # Sample size
+```
+
+    [1] 400
 
 ## Development Status
 
 Model extraction is **complete**:
 
-- ✅ S7 class definitions (MediationData, SerialMediationData)
+- ✅ S7 class definitions (MediationData, InteractionMediationData,
+  SerialMediationData, ParallelMediationData, JointMediationData)
 - ✅ lm/glm extraction with checkmate validation
 - ✅ lavaan extraction with checkmate validation
 - ✅ Effect extractors (nie, nde, te, pm, paths)

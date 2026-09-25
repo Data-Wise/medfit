@@ -73,6 +73,23 @@ extract_mediation_lavaan(
   `"parallel"`. The explicit values are authoritative and skip
   detection.
 
+- decomposition:
+
+  Character: `"auto"` (default) uses the four-way decomposition when a
+  single mediator's outcome equation has a treatment-by-mediator
+  product; `"four_way"` requires that product; `"two_way"` ignores it.
+
+- interaction:
+
+  Optional character: name of the product column in the outcome equation
+  (lavaan takes the product as a data column). When `NULL`,
+  `treatment:mediator` and `mediator:treatment` are tried.
+
+- m_star:
+
+  Numeric scalar: reference mediator level for the controlled direct
+  effect in the four-way decomposition (default 0).
+
 - ...:
 
   Additional arguments (ignored)
@@ -81,11 +98,15 @@ extract_mediation_lavaan(
 
 A
 [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md)
-object; a
+object; an
+[InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md)
+object when a single mediator's outcome equation has a
+treatment-by-mediator product; a
 [SerialMediationData](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
 object when `mediator` is a length \>= 2 vector resolving to a serial
-chain; or a `ParallelMediationData` object when it resolves to parallel
-mediation.
+chain; or a
+[ParallelMediationData](https://data-wise.github.io/medfit/reference/ParallelMediationData.md)
+object when it resolves to parallel mediation.
 
 ## Details
 

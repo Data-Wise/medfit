@@ -33,7 +33,7 @@ For more control over model specifications, use fit_mediation() directly."><meta
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,6 +51,7 @@ For more control over model specifications, use fit_mediation() directly."><meta
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
@@ -71,7 +72,7 @@ For more control over model specifications, use fit_mediation() directly."><meta
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Simple Mediation Analysis</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.4.0/R/med.R" class="external-link"><code>R/med.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/med.R" class="external-link"><code>R/med.R</code></a></small>
       <div class="d-none name"><code>med.Rd</code></div>
     </div>
 
@@ -123,8 +124,11 @@ For more control over model specifications, use <code><a href="fit_mediation.htm
 
 
 <dt id="arg-boot">boot<a class="anchor" aria-label="anchor" href="#arg-boot"></a></dt>
-<dd><p>Logical: compute bootstrap confidence intervals?
-(default: FALSE for speed)</p></dd>
+<dd><p>Logical: compute a bootstrap confidence interval for the
+indirect effect? (default: FALSE for speed). Uses a parametric bootstrap
+of \(a b\) with a 95% percentile interval, attached to the result
+as the <code>"bootstrap"</code> attribute; call <code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code> directly for
+another method or level.</p></dd>
 
 
 <dt id="arg-n-boot">n_boot<a class="anchor" aria-label="anchor" href="#arg-n-boot"></a></dt>
@@ -175,68 +179,51 @@ It constructs the model formulas automatically from variable names.</p><div clas
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Generate example data</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">200</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  covariate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">mediator</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">treatment</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">covariate</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">outcome</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">treatment</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">mediator</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>                  <span class="fl">0.1</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">covariate</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Simple mediation (no covariates)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># mediation_demo is simulated data bundled with medfit; its covariates</span></span></span>
+<span class="r-in"><span><span class="co"># confound the mediator-outcome relation, so adjust for them</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">med</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span>,</span></span>
 <span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"treatment"</span>,</span></span>
-<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"mediator"</span>,</span></span>
-<span class="r-in"><span>  outcome <span class="op">=</span> <span class="st">"outcome"</span></span></span>
+<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span></span>
+<span class="r-in"><span>  outcome <span class="op">=</span> <span class="st">"outcome"</span>,</span></span>
+<span class="r-in"><span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"covariate1"</span>, <span class="st">"covariate2"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> MediationData object</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ====================</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path coefficients:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a (X -&gt; M):        0.4632</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b (M -&gt; Y|X):      0.4644</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   c' (X -&gt; Y|M):     0.2168</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Indirect (a*b):    0.2151</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a (X -&gt; M):        0.5826</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b (M -&gt; Y|X):      0.5711</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   c' (X -&gt; Y|M):     0.2058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Indirect (a*b):    0.3328</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Variables:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Treatment: treatment</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Mediator:  mediator</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Mediator:  mediator1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Outcome:   outcome</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model info:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   N observations: 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   N observations: 400</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Converged:      Yes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Source:         stats::glm</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Residual SDs:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Mediator model:   0.9769</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Outcome model:    1.0395</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># With covariates</span></span></span>
-<span class="r-in"><span><span class="va">result_cov</span> <span class="op">&lt;-</span> <span class="fu">med</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
-<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"treatment"</span>,</span></span>
-<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"mediator"</span>,</span></span>
-<span class="r-in"><span>  outcome <span class="op">=</span> <span class="st">"outcome"</span>,</span></span>
-<span class="r-in"><span>  covariates <span class="op">=</span> <span class="st">"covariate"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Mediator model:   0.9792</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Outcome model:    1.0426</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Quick summary</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="quick.html">quick</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NIE = 0.215  | NDE = 0.217 | PM = 49.8 %</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NIE = 0.333  | NDE = 0.206 | PM = 61.8 %</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># With bootstrap CI (slower)</span></span></span>
 <span class="r-in"><span><span class="va">result_boot</span> <span class="op">&lt;-</span> <span class="fu">med</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span>,</span></span>
 <span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"treatment"</span>,</span></span>
-<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"mediator"</span>,</span></span>
+<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span></span>
 <span class="r-in"><span>  outcome <span class="op">=</span> <span class="st">"outcome"</span>,</span></span>
+<span class="r-in"><span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"covariate1"</span>, <span class="st">"covariate2"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  boot <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span></span>
 <span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">42</span></span></span>

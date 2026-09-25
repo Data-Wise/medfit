@@ -10,3 +10,5 @@
   medfit](https://data-wise.github.io/medfit/articles/getting-started.md):
 - [Introduction to
   medfit](https://data-wise.github.io/medfit/articles/introduction.md):
+- [Methods and
+  Formulas](https://data-wise.github.io/medfit/articles/methods.md):

@@ -13,8 +13,14 @@ quick(x, digits = 3, ...)
 
 - x:
 
-  A MediationData object (or result from
-  [`med()`](https://data-wise.github.io/medfit/reference/med.md))
+  A
+  [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md)
+  or
+  [SerialMediationData](https://data-wise.github.io/medfit/reference/SerialMediationData.md)
+  object (or result from
+  [`med()`](https://data-wise.github.io/medfit/reference/med.md)). Other
+  classes error; use [`print()`](https://rdrr.io/r/base/print.html) or
+  [`summary()`](https://rdrr.io/r/base/summary.html) for them.
 
 - digits:
 
@@ -51,21 +57,15 @@ confidence intervals are shown for NIE.
 ## Examples
 
 ``` r
-# Generate example data
-set.seed(123)
-n <- 100
-mydata <- data.frame(X = rnorm(n))
-mydata$M <- 0.5 * mydata$X + rnorm(n)
-mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-
 result <- med(
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y"
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
+  outcome = "outcome",
+  covariates = c("covariate1", "covariate2")
 )
 
 # One-line summary
 quick(result)
-#> NIE = 0.19  | NDE = 0.155 | PM = 55 %
+#> NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
 ```

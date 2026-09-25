@@ -17,10 +17,34 @@ Key functions:
 - [`bootstrap_mediation`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md):
   Bootstrap inference
 
+- [`nie`](https://data-wise.github.io/medfit/reference/nie.md),
+  [`nde`](https://data-wise.github.io/medfit/reference/nde.md),
+  [`te`](https://data-wise.github.io/medfit/reference/te.md),
+  [`pm`](https://data-wise.github.io/medfit/reference/pm.md),
+  [`decompose`](https://data-wise.github.io/medfit/reference/decompose.md):
+  Effects
+
+- [`joint_effects`](https://data-wise.github.io/medfit/reference/joint_effects.md):
+  Joint effects at a parameter vector
+
 Key classes:
 
 - [`MediationData`](https://data-wise.github.io/medfit/reference/MediationData.md):
-  Mediation model structure
+  Simple mediation
+
+- [`InteractionMediationData`](https://data-wise.github.io/medfit/reference/InteractionMediationData.md):
+  Simple mediation with a treatment-by-mediator interaction (four-way
+  decomposition)
+
+- [`SerialMediationData`](https://data-wise.github.io/medfit/reference/SerialMediationData.md):
+  Serial chain of mediators
+
+- [`ParallelMediationData`](https://data-wise.github.io/medfit/reference/ParallelMediationData.md):
+  Parallel mediators
+
+- [`JointMediationData`](https://data-wise.github.io/medfit/reference/JointMediationData.md):
+  Joint natural effects of several mediators with treatment-by-mediator
+  products
 
 - [`BootstrapResult`](https://data-wise.github.io/medfit/reference/BootstrapResult.md):
   Bootstrap results

@@ -107,8 +107,8 @@ A SerialMediationData S7 object
 ### Serial Mediation Structure
 
 Serial mediation models the indirect effect flowing through a sequence
-of mediators. The total indirect effect is the product of all path
-coefficients:
+of mediators. The indirect effect through the full chain is the product
+of the chain's path coefficients:
 
 - **2 mediators (product-of-three)**: Indirect = a \* d \* b
 
@@ -116,6 +116,20 @@ coefficients:
 
 - **k mediators (product-of-k+1)**: Indirect = a \* d21 \* d32 \* ... \*
   d(k,k-1) \* b
+
+This is the effect through the chain only, and what
+[`nie()`](https://data-wise.github.io/medfit/reference/nie.md) returns
+by default. Paths that skip a mediator (`X -> M2`, `M1 -> Y`, ...) are
+not part of it; `nie(x, type = "total")` adds them, and
+[`te()`](https://data-wise.github.io/medfit/reference/te.md) is the full
+total effect over every path, so
+[`pm()`](https://data-wise.github.io/medfit/reference/pm.md) is the
+total indirect share of it. With treatment-by-mediator products in the
+outcome model,
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+returns a
+[JointMediationData](https://data-wise.github.io/medfit/reference/JointMediationData.md)
+object with the effect through all the mediators together.
 
 ### Path Notation
 

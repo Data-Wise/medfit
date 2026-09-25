@@ -6,8 +6,8 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Extract Proportion Mediated (PM) — pm"><meta name="description" content="Extract the proportion of the total effect that is mediated (operates
-through the mediator)."><meta property="og:description" content="Extract the proportion of the total effect that is mediated (operates
-through the mediator)."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
+through the mediator(s))."><meta property="og:description" content="Extract the proportion of the total effect that is mediated (operates
+through the mediator(s))."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
 
 
 
@@ -29,7 +29,7 @@ through the mediator)."><meta property="og:image" content="https://data-wise.git
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -47,6 +47,7 @@ through the mediator)."><meta property="og:image" content="https://data-wise.git
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
@@ -67,13 +68,13 @@ through the mediator)."><meta property="og:image" content="https://data-wise.git
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Proportion Mediated (PM)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.4.0/R/generics-effects.R" class="external-link"><code>R/generics-effects.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/generics-effects.R" class="external-link"><code>R/generics-effects.R</code></a></small>
       <div class="d-none name"><code>pm.Rd</code></div>
     </div>
 
     <div class="ref-description section level2">
     <p>Extract the proportion of the total effect that is mediated (operates
-through the mediator).</p>
+through the mediator(s)).</p>
     </div>
 
     <div class="section level2">
@@ -86,7 +87,8 @@ through the mediator).</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A MediationData, SerialMediationData, or BootstrapResult object</p></dd>
+<dd><p>A <a href="MediationData.html">MediationData</a>, <a href="SerialMediationData.html">SerialMediationData</a>, <a href="ParallelMediationData.html">ParallelMediationData</a>,
+<a href="InteractionMediationData.html">InteractionMediationData</a>, or <a href="JointMediationData.html">JointMediationData</a> object.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -95,17 +97,23 @@ through the mediator).</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A numeric value between 0 and 1 (or negative/greater than 1 in
-cases of suppression effects)</p>
+    <p>A numeric scalar of class <code>mediation_effect</code>, usually between 0 and
+1 (negative or greater than 1 in cases of suppression effects), or
+<code>NA</code> with a warning when the total effect is numerically zero.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>$$PM = \frac{NIE}{TE} = \frac{NIE}{NIE + NDE}$$</p>
+<p>For serial mediation (SerialMediationData) the numerator is the total
+indirect effect, <code>nie(x, type = "total")</code>, and the denominator the full
+total effect from <code><a href="te.html">te()</a></code>.</p>
 <p>The proportion mediated can be:</p><ul><li><p>Between 0 and 1: Normal mediation</p></li>
 <li><p>Greater than 1: Suppression (direct and indirect effects have
 opposite signs)</p></li>
 <li><p>Negative: Inconsistent mediation</p></li>
-</ul></div>
+</ul><p>The ratio has no delta-method standard error in medfit; bootstrap it with
+<code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="nie.html">nie()</a></code>, <code><a href="nde.html">nde()</a></code>, <code><a href="te.html">te()</a></code>, <code><a href="paths.html">paths()</a></code></p></div>
@@ -113,23 +121,16 @@ opposite signs)</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Generate example data</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>,</span></span>
-<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
-<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span></span>
-<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"M"</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">outcome</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">mediator1</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span></span>
+<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">mediator1</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span>,</span></span>
+<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"treatment"</span>,</span></span>
+<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"mediator1"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">pm</span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Proportion Mediated (PM): 0.5504</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Proportion Mediated (PM): 0.6179</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

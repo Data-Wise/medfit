@@ -32,7 +32,12 @@ has – both with the original parameters and with the other aliases.
 - aliases_to_add:
 
   Character vector of alias names to append as new rows/columns (those
-  not already present in `vcov_src`).
+  not already present in `vcov_src`). An alias in `source_idx` that is
+  *not* appended, because `vcov_src` already has a parameter of that
+  name, must resolve to that same parameter. Otherwise the alias
+  estimate and its row would describe different parameters (e.g. a
+  lavaan user label `a1` on the path medfit calls `a2`), so this is an
+  error.
 
 ## Value
 

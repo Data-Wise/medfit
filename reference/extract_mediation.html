@@ -33,7 +33,7 @@ model types (lm, glm, lavaan, lmer, brms, etc.)."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,6 +51,7 @@ model types (lm, glm, lavaan, lmer, brms, etc.)."><meta property="og:image" cont
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
@@ -71,7 +72,7 @@ model types (lm, glm, lavaan, lmer, brms, etc.)."><meta property="og:image" cont
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Mediation Structure from Fitted Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.4.0/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
       <div class="d-none name"><code>extract_mediation.Rd</code></div>
     </div>
 
@@ -104,12 +105,13 @@ model types (lm, glm, lavaan, lmer, brms, etc.).</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <a href="MediationData.html">MediationData</a> object containing:</p><ul><li><p>Path coefficients (a, b, c')</p></li>
-<li><p>Full parameter vector and variance-covariance matrix</p></li>
-<li><p>Residual variances (for Gaussian models)</p></li>
-<li><p>Variable names and metadata</p></li>
-<li><p>Original data (if available)</p></li>
-</ul></div>
+    <p>An S7 object whose class depends on the mediation structure (see
+Details): <a href="MediationData.html">MediationData</a>, <a href="InteractionMediationData.html">InteractionMediationData</a>,
+<a href="SerialMediationData.html">SerialMediationData</a>, <a href="ParallelMediationData.html">ParallelMediationData</a>, or <a href="JointMediationData.html">JointMediationData</a>.
+Each carries the path coefficients, the full parameter vector and its
+variance-covariance matrix, residual standard deviations (for Gaussian
+models), variable names, and the original data when available.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The <code>extract_mediation()</code> generic provides methods for different model types:</p><ul><li><p><strong>lm/glm</strong>: Extract from linear and generalized linear models</p></li>
@@ -117,9 +119,60 @@ model types (lm, glm, lavaan, lmer, brms, etc.).</p>
 <li><p><strong>lmerMod</strong>: Extract from mixed-effects models (future)</p></li>
 <li><p><strong>brmsfit</strong>: Extract from Bayesian models (future)</p></li>
 </ul><p>Note: OpenMx extraction is planned for a future release.</p>
-<p>All methods return a standardized <a href="MediationData.html">MediationData</a> object that can be used
-with other medfit functions and dependent packages (probmed, RMediation,
-medrobust).</p>
+<p>The returned objects share one interface (<code><a href="nie.html">nie()</a></code>, <code><a href="nde.html">nde()</a></code>, <code><a href="te.html">te()</a></code>,
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code>, ...) for use by other medfit functions
+and dependent packages (probmed, RMediation, medrobust).</p>
+<p>The class returned depends on the structure. A single mediator gives a
+<a href="MediationData.html">MediationData</a> object, or an <a href="InteractionMediationData.html">InteractionMediationData</a> object when the
+outcome model has a treatment-by-mediator term. A <code>mediator</code> vector of
+length two or more gives a <a href="SerialMediationData.html">SerialMediationData</a> or <a href="ParallelMediationData.html">ParallelMediationData</a>
+object; for lm/glm fits whose outcome model has a treatment-by-mediator term
+written with <code>:</code> or <code>*</code>, it gives a <a href="JointMediationData.html">JointMediationData</a> object with the
+joint natural effects of the mediators. Any other product term in a
+multi-mediator fit errors.</p><div class="section">
+<h3 id="arguments-for-lm-and-glm-models">Arguments for lm and glm models<a class="anchor" aria-label="anchor" href="#arguments-for-lm-and-glm-models"></a></h3>
+
+
+<p>With <code>object</code> the fitted mediator model (the first mediator's model for
+several mediators), the lm/glm method takes:</p><ul><li><p><code>model_y</code>: the fitted outcome model. With several mediators include every
+mediator, not only the last: omitting one that also affects the outcome
+biases the others' coefficients.</p></li>
+<li><p><code>treatment</code>: name of the treatment variable.</p></li>
+<li><p><code>mediator</code>: name of the mediator, or an ordered character vector of two or
+more mediator names.</p></li>
+<li><p><code>mediator_models</code>: list of the fitted models for mediators 2 to k, in
+order; required whenever <code>mediator</code> has length two or more.</p></li>
+<li><p><code>structure</code>: <code>"auto"</code> (default), <code>"serial"</code>, or <code>"parallel"</code>; <code>"auto"</code>
+classifies the mediators from the mediator models.</p></li>
+<li><p><code>decomposition</code>: <code>"auto"</code> (default) uses the four-way decomposition when
+a single mediator's outcome model has a treatment-by-mediator term;
+<code>"four_way"</code> requires that term; <code>"two_way"</code> ignores it and returns a
+<a href="MediationData.html">MediationData</a> object.</p></li>
+<li><p><code>m_star</code>: the reference mediator level for the controlled direct effect
+(default 0; for <a href="JointMediationData.html">JointMediationData</a> a scalar or a vector named by the
+interacting mediators).</p></li>
+<li><p><code>vcov_fun</code>: function returning each model's covariance matrix (default
+<code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">stats::vcov()</a></code>; for example <code><a href="https://zeileis.codeberg.page/sandwich/reference/vcovHC.html" class="external-link">sandwich::vcovHC</a></code>). Not supported for
+<a href="JointMediationData.html">JointMediationData</a>.</p></li>
+<li><p><code>outcome</code>, <code>data</code>: optional; detected from the models when omitted.</p></li>
+</ul><p>The lavaan method takes a fitted lavaan model and the variable names; see
+<code><a href="extract_mediation_lavaan.html">?extract_mediation_lavaan</a></code> for its arguments.</p>
+</div>
+
+<div class="section">
+<h3 id="covariance-of-the-estimates">Covariance of the estimates<a class="anchor" aria-label="anchor" href="#covariance-of-the-estimates"></a></h3>
+
+
+<p>For lm/glm fits, each equation's block of <code>@vcov</code> is that model's own
+covariance. The blocks for different equations are stored as zero. This is
+exact for simple mediation, serial chains, and the four-way model, whose
+later equations contain every regressor of the earlier ones, but for
+parallel mediators it leaves out the covariance between their <code>a</code> paths.
+<a href="JointMediationData.html">JointMediationData</a> stores the full stacked least-squares covariance, and a
+lavaan fit estimates all equations jointly, so for the same data the
+intervals can differ between engines.</p>
+</div>
+
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -129,19 +182,14 @@ medrobust).</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># Simulate data with a single mediator (X -&gt; M -&gt; Y)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">200</span></span></span>
-<span class="r-in"><span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">M</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">X</span>, M <span class="op">=</span> <span class="va">M</span>, Y <span class="op">=</span> <span class="va">Y</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Extract the mediation structure from fitted lm models</span></span></span>
-<span class="r-in"><span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Extract the mediation structure from fitted lm models, using the</span></span></span>
+<span class="r-in"><span><span class="co"># simulated mediation_demo data bundled with medfit</span></span></span>
+<span class="r-in"><span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">mediator1</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span></span>
+<span class="r-in"><span>            data <span class="op">=</span> <span class="va">mediation_demo</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">outcome</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">mediator1</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span></span>
+<span class="r-in"><span>            data <span class="op">=</span> <span class="va">mediation_demo</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu">extract_mediation</span><span class="op">(</span><span class="va">fit_m</span>, model_y <span class="op">=</span> <span class="va">fit_y</span>,</span></span>
-<span class="r-in"><span>                              treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                              treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

@@ -16,7 +16,8 @@ Internal Implementation for lm/glm Extraction
   structure = c("auto", "serial", "parallel"),
   decomposition = c("auto", "four_way", "two_way"),
   m_star = 0,
-  vcov_fun = stats::vcov
+  vcov_fun = stats::vcov,
+  m_star_supplied = FALSE
 )
 ```
 
@@ -50,6 +51,22 @@ Internal Implementation for lm/glm Extraction
 - data:
 
   Original data (extracted from model if NULL)
+
+- structure, decomposition, m_star:
+
+  See
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md).
+
+- vcov_fun:
+
+  Function returning a model's coefficient covariance (default
+  [`stats::vcov()`](https://rdrr.io/r/stats/vcov.html)); passed to every
+  worker.
+
+- m_star_supplied:
+
+  Logical: was `m_star` given at the call site? Set by the S7 methods
+  from `!missing(m_star)`; an unused supplied value errors.
 
 ## Value
 

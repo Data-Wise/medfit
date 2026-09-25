@@ -33,7 +33,7 @@ describing the chain X -&amp;gt; M1 -&amp;gt; M2 -&amp;gt; ... -&amp;gt; Mk -&am
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,6 +51,7 @@ describing the chain X -&amp;gt; M1 -&amp;gt; M2 -&amp;gt; ... -&amp;gt; Mk -&am
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
@@ -71,7 +72,7 @@ describing the chain X -&amp;gt; M1 -&amp;gt; M2 -&amp;gt; ... -&amp;gt; Mk -&am
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Serial Mediation Structure from a lavaan Model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.4.0/R/extract-lavaan.R" class="external-link"><code>R/extract-lavaan.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/extract-lavaan.R" class="external-link"><code>R/extract-lavaan.R</code></a></small>
       <div class="d-none name"><code>dot-extract_serial_mediation_lavaan.Rd</code></div>
     </div>
 
@@ -132,7 +133,8 @@ predicted by the last mediator.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Paths are located in the lavaan parameter table by variable name:</p><ul><li><p><code>a</code>  : <code>M1 ~ X</code></p></li>
 <li><p><code>d_i</code>: <code>M_{i+1} ~ M_i</code> for <code>i = 1 .. k-1</code> (the <code>k - 1</code> inter-mediator paths)</p></li>
-<li><p><code>b</code>  : <code>Y ~ Mk</code></p></li>
+<li><p><code>b</code>  : <code>Y ~ Mk</code> (the outcome equation should also include <code>X</code> and the
+earlier mediators <code>M1 .. M(k-1)</code>; only the <code>Mk</code> coefficient is read as <code>b</code>)</p></li>
 <li><p><code>c'</code> : <code>Y ~ X</code> (defaults to 0 with a warning if absent – full mediation)</p></li>
 </ul><p>As in the simple-mediation extractor, named structural aliases
 (<code>a</code>, <code>d1</code>, ..., <code>d{k-1}</code>, <code>b</code>, <code>c_prime</code>) are appended to <code>estimates</code> and

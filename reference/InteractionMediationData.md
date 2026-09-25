@@ -106,10 +106,24 @@ Path coefficients follow the outcome model \\Y = \theta_0 + \theta_1 X +
 \beta_1 X + \dots\\: `a_path` = \\\beta_1\\, `b_path` = \\\theta_2\\,
 `c_prime` = \\\theta_1\\, `interaction` = \\\theta_3\\. With reference
 level `m_star` (\\m^\*\\) the components are \\CDE = \theta_1 + \theta_3
-m^\*\\, \\INTmed = \theta_3 \beta_1\\, and \\PIE = \theta_2 \beta_1\\.
-When \\\theta_3 = 0\\ the decomposition collapses to standard simple
+m^\*\\, \\INTref = \theta_3 (E\[M \mid X = 0, \bar c\] - m^\*)\\,
+\\INTmed = \theta_3 \beta_1\\, and \\PIE = \theta_2 \beta_1\\. When
+\\\theta_3 = 0\\ the decomposition collapses to standard simple
 mediation (CDE = NDE = \\\theta_1\\; INTref = INTmed = 0; NIE = PIE =
 \\\theta_2\beta_1\\).
+
+\\E\[M \mid X = 0, \bar c\] = \beta_0 + \gamma^\top \bar c\\ is the
+mediator model's prediction at no treatment and the covariate means
+\\\bar c\\. The effects are for the treatment contrast 0 to 1, and the
+lm/glm extractor requires Gaussian identity-link models. From
+`fit_mediation(engine = "regmedint")`, `@estimates` and `@vcov` also
+carry regmedint's own delta-method covariance of the four components and
+the derived effects.
+
+## References
+
+VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+4-way decomposition. *Epidemiology*, 25(5), 749–761.
 
 ## Examples
 

@@ -49,8 +49,12 @@ med(
 
 - boot:
 
-  Logical: compute bootstrap confidence intervals? (default: FALSE for
-  speed)
+  Logical: compute a bootstrap confidence interval for the indirect
+  effect? (default: FALSE for speed). Uses a parametric bootstrap of \\a
+  b\\ with a 95% percentile interval, attached to the result as the
+  `"bootstrap"` attribute; call
+  [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+  directly for another method or level.
 
 - n_boot:
 
@@ -113,68 +117,51 @@ extracting effects
 ## Examples
 
 ``` r
-# Generate example data
-set.seed(123)
-n <- 200
-mydata <- data.frame(
-  treatment = rnorm(n),
-  covariate = rnorm(n)
-)
-mydata$mediator <- 0.5 * mydata$treatment + 0.2 * mydata$covariate + rnorm(n)
-mydata$outcome <- 0.3 * mydata$treatment + 0.4 * mydata$mediator +
-                  0.1 * mydata$covariate + rnorm(n)
-
-# Simple mediation (no covariates)
+# mediation_demo is simulated data bundled with medfit; its covariates
+# confound the mediator-outcome relation, so adjust for them
 result <- med(
-  data = mydata,
+  data = mediation_demo,
   treatment = "treatment",
-  mediator = "mediator",
-  outcome = "outcome"
+  mediator = "mediator1",
+  outcome = "outcome",
+  covariates = c("covariate1", "covariate2")
 )
 print(result)
 #> MediationData object
 #> ====================
 #> 
 #> Path coefficients:
-#>   a (X -> M):        0.4632
-#>   b (M -> Y|X):      0.4644
-#>   c' (X -> Y|M):     0.2168
-#>   Indirect (a*b):    0.2151
+#>   a (X -> M):        0.5826
+#>   b (M -> Y|X):      0.5711
+#>   c' (X -> Y|M):     0.2058
+#>   Indirect (a*b):    0.3328
 #> 
 #> Variables:
 #>   Treatment: treatment
-#>   Mediator:  mediator
+#>   Mediator:  mediator1
 #>   Outcome:   outcome
 #> 
 #> Model info:
-#>   N observations: 200
+#>   N observations: 400
 #>   Converged:      Yes
 #>   Source:         stats::glm
 #> 
 #> Residual SDs:
-#>   Mediator model:   0.9769
-#>   Outcome model:    1.0395
-
-# With covariates
-result_cov <- med(
-  data = mydata,
-  treatment = "treatment",
-  mediator = "mediator",
-  outcome = "outcome",
-  covariates = "covariate"
-)
+#>   Mediator model:   0.9792
+#>   Outcome model:    1.0426
 
 # Quick summary
 quick(result)
-#> NIE = 0.215  | NDE = 0.217 | PM = 49.8 %
+#> NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
 
 # \donttest{
 # With bootstrap CI (slower)
 result_boot <- med(
-  data = mydata,
+  data = mediation_demo,
   treatment = "treatment",
-  mediator = "mediator",
+  mediator = "mediator1",
   outcome = "outcome",
+  covariates = c("covariate1", "covariate2"),
   boot = TRUE,
   n_boot = 1000,
   seed = 42

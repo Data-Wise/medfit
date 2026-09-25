@@ -31,7 +31,7 @@ is available."><meta property="og:image" content="https://data-wise.github.io/me
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,6 +49,7 @@ is available."><meta property="og:image" content="https://data-wise.github.io/me
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
@@ -69,7 +70,7 @@ is available."><meta property="og:image" content="https://data-wise.github.io/me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Mediation Structure from lavaan Model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.4.0/R/extract-lavaan.R" class="external-link"><code>R/extract-lavaan.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/extract-lavaan.R" class="external-link"><code>R/extract-lavaan.R</code></a></small>
       <div class="d-none name"><code>extract_mediation_lavaan.Rd</code></div>
     </div>
 
@@ -145,15 +146,35 @@ regressed on another mediator implies <code>"serial"</code>, otherwise <code>"pa
 The explicit values are authoritative and skip detection.</p></dd>
 
 
+<dt id="arg-decomposition">decomposition<a class="anchor" aria-label="anchor" href="#arg-decomposition"></a></dt>
+<dd><p>Character: <code>"auto"</code> (default) uses the four-way
+decomposition when a single mediator's outcome equation has a
+treatment-by-mediator product; <code>"four_way"</code> requires that product;
+<code>"two_way"</code> ignores it.</p></dd>
+
+
+<dt id="arg-interaction">interaction<a class="anchor" aria-label="anchor" href="#arg-interaction"></a></dt>
+<dd><p>Optional character: name of the product column in the
+outcome equation (lavaan takes the product as a data column). When <code>NULL</code>,
+<code>treatment:mediator</code> and <code>mediator:treatment</code> are tried.</p></dd>
+
+
+<dt id="arg-m-star">m_star<a class="anchor" aria-label="anchor" href="#arg-m-star"></a></dt>
+<dd><p>Numeric scalar: reference mediator level for the controlled
+direct effect in the four-way decomposition (default 0).</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments (ignored)</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <a href="MediationData.html">MediationData</a> object; a <a href="SerialMediationData.html">SerialMediationData</a> object when
-<code>mediator</code> is a length &gt;= 2 vector resolving to a serial chain; or a
-<code>ParallelMediationData</code> object when it resolves to parallel mediation.</p>
+    <p>A <a href="MediationData.html">MediationData</a> object; an <a href="InteractionMediationData.html">InteractionMediationData</a> object when
+a single mediator's outcome equation has a treatment-by-mediator product;
+a <a href="SerialMediationData.html">SerialMediationData</a> object when <code>mediator</code> is a length &gt;= 2 vector
+resolving to a serial chain; or a <a href="ParallelMediationData.html">ParallelMediationData</a> object when it
+resolves to parallel mediation.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

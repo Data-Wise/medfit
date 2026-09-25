@@ -35,7 +35,7 @@ fitted regressions."><meta property="og:image" content="https://data-wise.github
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,6 +53,7 @@ fitted regressions."><meta property="og:image" content="https://data-wise.github
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
@@ -73,7 +74,7 @@ fitted regressions."><meta property="og:image" content="https://data-wise.github
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Serial Mediation Structure from lm/glm Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.4.0/R/extract-lm.R" class="external-link"><code>R/extract-lm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/extract-lm.R" class="external-link"><code>R/extract-lm.R</code></a></small>
       <div class="d-none name"><code>dot-extract_serial_mediation_lm.Rd</code></div>
     </div>
 
@@ -94,7 +95,8 @@ fitted regressions.</p>
 <span>  <span class="va">treatment</span>,</span>
 <span>  <span class="va">mediators</span>,</span>
 <span>  outcome <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  data <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  vcov_fun <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -112,7 +114,12 @@ mediators 2..k (<code>M2 ~ M1 + ...</code>, ..., <code>Mk ~ M(k-1) + ...</code>)
 
 
 <dt id="arg-model-y">model_y<a class="anchor" aria-label="anchor" href="#arg-model-y"></a></dt>
-<dd><p>Fitted lm/glm for the outcome (<code>Y ~ Mk + X + ...</code>).</p></dd>
+<dd><p>Fitted lm/glm for the outcome. <code>Mk</code>'s coefficient is read as
+<code>b</code>; the model should include <code>X</code> and every earlier mediator
+(<code>Y ~ X + M1 + ... + Mk + ...</code>), whose coefficients are stored as the
+skip-path aliases <code>b1..b{k-1}</code>. Omitting an earlier mediator that also
+affects <code>Y</code> biases <code>b</code>. <code>a * d * b</code> is the effect through the full chain
+only; <code><a href="te.html">te()</a></code> sums every path.</p></dd>
 
 
 <dt id="arg-treatment">treatment<a class="anchor" aria-label="anchor" href="#arg-treatment"></a></dt>
@@ -130,6 +137,11 @@ order (<code>M1 -&gt; M2 -&gt; ... -&gt; Mk</code>).</p></dd>
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>Data frame, or <code>NULL</code> to take the <code>object</code> model frame.</p></dd>
+
+
+<dt id="arg-vcov-fun">vcov_fun<a class="anchor" aria-label="anchor" href="#arg-vcov-fun"></a></dt>
+<dd><p>Function returning a model's coefficient covariance
+(default <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">stats::vcov()</a></code>), applied to every equation.</p></dd>
 
 </dl></div>
     <div class="section level2">

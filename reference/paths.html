@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,6 +45,7 @@
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
@@ -65,7 +66,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract All Path Coefficients</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.4.0/R/generics-effects.R" class="external-link"><code>R/generics-effects.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/generics-effects.R" class="external-link"><code>R/generics-effects.R</code></a></small>
       <div class="d-none name"><code>paths.Rd</code></div>
     </div>
 
@@ -83,7 +84,8 @@
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A MediationData or SerialMediationData object</p></dd>
+<dd><p>A <a href="MediationData.html">MediationData</a>, <a href="SerialMediationData.html">SerialMediationData</a>, <a href="ParallelMediationData.html">ParallelMediationData</a>,
+<a href="InteractionMediationData.html">InteractionMediationData</a>, or <a href="JointMediationData.html">JointMediationData</a> object.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -100,10 +102,17 @@
 <li><p><code>b</code>: Mediator -&gt; Outcome (M -&gt; Y | X)</p></li>
 <li><p><code>c_prime</code>: Direct effect (X -&gt; Y | M)</p></li>
 </ul><p>For serial mediation (SerialMediationData):</p><ul><li><p><code>a</code>: Treatment -&gt; First mediator</p></li>
-<li><p><code>d21</code>, <code>d32</code>, ...: Mediator-to-mediator paths</p></li>
+<li><p><code>d</code> (two mediators) or <code>d21</code>, <code>d32</code>, ...: Mediator-to-mediator paths</p></li>
 <li><p><code>b</code>: Last mediator -&gt; Outcome</p></li>
 <li><p><code>c_prime</code>: Direct effect</p></li>
-</ul></div>
+</ul><p>For parallel mediation (ParallelMediationData): <code>a1</code>, <code>b1</code>, <code>a2</code>, <code>b2</code>,
+..., <code>c_prime</code>.</p>
+<p>For InteractionMediationData: <code>a</code>, <code>b</code>, <code>c_prime</code>, and <code>theta3</code> (the
+treatment-by-mediator coefficient).</p>
+<p>For JointMediationData: the raw coefficients <code>a1..aK</code>, <code>dij</code>, <code>b1..bK</code>,
+<code>theta3_&lt;mediator&gt;</code>, and <code>c_prime</code>. The <code>a</code> paths here are the raw
+coefficients, not the propagated <code>a*</code> values used by the effects.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="nie.html">nie()</a></code>, <code><a href="nde.html">nde()</a></code>, <code><a href="te.html">te()</a></code>, <code><a href="pm.html">pm()</a></code></p></div>
@@ -111,24 +120,17 @@
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Generate example data</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mydata</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>,</span></span>
-<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mydata</span>,</span></span>
-<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span></span>
-<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"M"</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  formula_y <span class="op">=</span> <span class="va">outcome</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">mediator1</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span></span>
+<span class="r-in"><span>  formula_m <span class="op">=</span> <span class="va">mediator1</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span>,</span></span>
+<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"treatment"</span>,</span></span>
+<span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"mediator1"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">paths</span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         a         b   c_prime </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.4475284 0.4238113 0.1549228 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.5826425 0.5711384 0.2057983 </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

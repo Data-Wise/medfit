@@ -9,6 +9,13 @@ ADHD-friendly entry points for rapid analysis
 - [`quick()`](https://data-wise.github.io/medfit/reference/quick.md) :
   Quick Summary of Mediation Results
 
+## Data
+
+Simulated example data
+
+- [`mediation_demo`](https://data-wise.github.io/medfit/reference/mediation_demo.md)
+  : Simulated Mediation Data for Examples
+
 ## Effect Extractors
 
 Extract mediation effects from fitted models
@@ -24,7 +31,9 @@ Extract mediation effects from fitted models
 - [`paths()`](https://data-wise.github.io/medfit/reference/paths.md) :
   Extract All Path Coefficients
 - [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
-  : Four-Way Decomposition of a Mediation Effect
+  : Decomposition of a Mediation Effect
+- [`joint_effects()`](https://data-wise.github.io/medfit/reference/joint_effects.md)
+  : Joint Effects at a Given Parameter Vector
 
 ## S7 Classes
 
@@ -40,6 +49,8 @@ Core S7 class definitions for mediation data structures
 - [`InteractionMediationData()`](https://data-wise.github.io/medfit/reference/InteractionMediationData.md)
   : InteractionMediationData: Mediation with Treatment-Mediator
   Interaction
+- [`JointMediationData()`](https://data-wise.github.io/medfit/reference/JointMediationData.md)
+  : JointMediationData: Joint Natural Effects of Multiple Mediators
 - [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
 
@@ -58,10 +69,15 @@ Functions for fitting and extracting mediation models
 
 Print and summary methods for medfit classes
 
+- [`tidy(`*`<S7_object>`*`)`](https://data-wise.github.io/medfit/reference/tidy.S7_object.md)
+  [`glance(`*`<S7_object>`*`)`](https://data-wise.github.io/medfit/reference/tidy.S7_object.md)
+  : Tidy, Glance, and Inference Methods for medfit Objects
 - [`print(`*`<mediation_effect>`*`)`](https://data-wise.github.io/medfit/reference/print.mediation_effect.md)
   : Print Method for mediation_effect
 - [`print(`*`<summary.BootstrapResult>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.BootstrapResult.md)
   : Print Summary for BootstrapResult
+- [`print(`*`<summary.JointMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.JointMediationData.md)
+  : Print Summary for JointMediationData
 - [`print(`*`<summary.MediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.MediationData.md)
   : Print Summary for MediationData
 - [`print(`*`<summary.SerialMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.SerialMediationData.md)

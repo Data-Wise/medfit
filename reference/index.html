@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,6 +45,7 @@
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
@@ -90,6 +91,22 @@
 
         </dt>
         <dd>Quick Summary of Mediation Results</dd>
+      </dl></div><div class="section level2">
+      <h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a></h2>
+
+      <div class="section-desc"><p>Simulated example data</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="mediation_demo.html">mediation_demo</a></code>
+
+        </dt>
+        <dd>Simulated Mediation Data for Examples</dd>
       </dl></div><div class="section level2">
       <h2 id="effect-extractors">Effect Extractors<a class="anchor" aria-label="anchor" href="#effect-extractors"></a></h2>
 
@@ -140,7 +157,14 @@
           <code><a href="decompose.html">decompose()</a></code>
 
         </dt>
-        <dd>Four-Way Decomposition of a Mediation Effect</dd>
+        <dd>Decomposition of a Mediation Effect</dd>
+
+        <dt>
+
+          <code><a href="joint_effects.html">joint_effects()</a></code>
+
+        </dt>
+        <dd>Joint Effects at a Given Parameter Vector</dd>
       </dl></div><div class="section level2">
       <h2 id="s-classes">S7 Classes<a class="anchor" aria-label="anchor" href="#s-classes"></a></h2>
 
@@ -178,6 +202,13 @@
 
         </dt>
         <dd>InteractionMediationData: Mediation with Treatment-Mediator Interaction</dd>
+
+        <dt>
+
+          <code><a href="JointMediationData.html">JointMediationData()</a></code>
+
+        </dt>
+        <dd>JointMediationData: Joint Natural Effects of Multiple Mediators</dd>
 
         <dt>
 
@@ -227,6 +258,13 @@
 
       <dl><dt>
 
+          <code><a href="tidy.S7_object.html">tidy(<i>&lt;S7_object&gt;</i>)</a></code> <code><a href="tidy.S7_object.html">glance(<i>&lt;S7_object&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Tidy, Glance, and Inference Methods for medfit Objects</dd>
+
+        <dt>
+
           <code><a href="print.mediation_effect.html">print(<i>&lt;mediation_effect&gt;</i>)</a></code>
 
         </dt>
@@ -238,6 +276,13 @@
 
         </dt>
         <dd>Print Summary for BootstrapResult</dd>
+
+        <dt>
+
+          <code><a href="print.summary.JointMediationData.html">print(<i>&lt;summary.JointMediationData&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print Summary for JointMediationData</dd>
 
         <dt>
 

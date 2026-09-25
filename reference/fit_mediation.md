@@ -4,29 +4,9 @@ Fit mediation models using a specified modeling engine. This function
 provides a convenient formula-based interface for fitting both the
 mediator and outcome models simultaneously.
 
-Fit mediation models using a specified modeling engine. This function
-provides a convenient formula-based interface for fitting both the
-mediator and outcome models simultaneously.
-
 ## Usage
 
 ``` r
-fit_mediation(
-  formula_y,
-  formula_m,
-  data,
-  treatment,
-  mediator,
-  engine = "glm",
-  family_y = stats::gaussian(),
-  family_m = stats::gaussian(),
-  weights = NULL,
-  se_type = c("model", "sandwich"),
-  engine_args = list(),
-  m_star = 0,
-  ...
-)
-
 fit_mediation(
   formula_y,
   formula_m,
@@ -100,8 +80,7 @@ fit_mediation(
   `"sandwich"` (heteroskedasticity-consistent
   [`sandwich::vcovHC`](https://zeileis.codeberg.page/sandwich/reference/vcovHC.html),
   type HC3, recommended for IPW-weighted fits). The `"sandwich"` option
-  requires the suggested sandwich package. Applies to the
-  single-mediator path.
+  requires the suggested sandwich package.
 
 - engine_args:
 
@@ -134,10 +113,6 @@ fit_mediation(
 
 A
 [MediationData](https://data-wise.github.io/medfit/reference/MediationData.md)
-object containing the fitted mediation structure
-
-A
-[MediationData](https://data-wise.github.io/medfit/reference/MediationData.md)
 object containing the fitted mediation structure, or an
 [InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md)
 object when `formula_y` contains a treatment-by-mediator interaction
@@ -145,22 +120,55 @@ term.
 
 ## Details
 
-The `fit_mediation()` function fits both the mediator model and outcome
-model using the specified engine, then extracts the mediation structure
-using
-[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md).
+### Model Specification
 
-### Supported Engines
+The function fits two models:
 
-**GLM** (`engine = "glm"`):
+1.  **Mediator model**: `formula_m` (e.g., `M ~ X + C1 + C2`)
 
-- Fits models using [`stats::glm()`](https://rdrr.io/r/stats/glm.html)
+2.  **Outcome model**: `formula_y` (e.g., `Y ~ X + M + C1 + C2`)
+
+The treatment variable must appear in both formulas. The mediator
+variable must appear in the outcome formula but NOT in the mediator
+formula (as it is the response).
+
+### GLM Engine
+
+When `engine = "glm"` (default):
+
+- Models are fit using
+  [`stats::glm()`](https://rdrr.io/r/stats/glm.html)
 
 - Supports all GLM families (gaussian, binomial, poisson, etc.)
 
-- For Gaussian models, extracts residual variances
+- With a non-identity link the path coefficients are on the link scale,
+  where the product \\a b\\ is not a natural indirect effect on the
+  outcome scale; interpret it with care or use `engine = "regmedint"`
+  for closed-form effects of a logistic outcome
 
-**regmedint** (`engine = "regmedint"`):
+- A treatment-by-mediator term in `formula_y` requires Gaussian
+  identity-link models (the four-way formulas are linear); other
+  families error
+
+- For Gaussian models, residual standard deviations are extracted
+
+- Non-Gaussian outcomes have `sigma_y = NULL`
+
+### Common Family Specifications
+
+- [`gaussian()`](https://rdrr.io/r/stats/family.html): Continuous
+  outcomes (default)
+
+- [`binomial()`](https://rdrr.io/r/stats/family.html): Binary outcomes
+
+- [`poisson()`](https://rdrr.io/r/stats/family.html): Count outcomes
+
+- [`Gamma()`](https://rdrr.io/r/stats/family.html): Positive continuous
+  outcomes
+
+### regmedint Engine
+
+When `engine = "regmedint"`:
 
 - Delegates to
   [`regmedint::regmedint()`](https://kaz-yos.github.io/regmedint/reference/regmedint.html)
@@ -196,59 +204,10 @@ as `m_cde`, where it is consumed by that package's closed-form estimator
 at *fitting* time. Supplying `m_star` for a fit with no
 treatment-by-mediator term is an error, not a silent no-op.
 
-**Future Engines**:
+## References
 
-- `"lmer"`: Mixed-effects models via lme4
-
-- `"brms"`: Bayesian models via brms
-
-### Model Specification
-
-The formulas should follow standard R formula syntax:
-
-- `formula_m`: Mediator model (e.g., `M ~ X + C1 + C2`)
-
-- `formula_y`: Outcome model (e.g., `Y ~ X + M + C1 + C2`)
-
-The mediator must appear in `formula_y`, and the treatment must appear
-in both formulas.
-
-### Model Specification
-
-The function fits two models:
-
-1.  **Mediator model**: `formula_m` (e.g., `M ~ X + C1 + C2`)
-
-2.  **Outcome model**: `formula_y` (e.g., `Y ~ X + M + C1 + C2`)
-
-The treatment variable must appear in both formulas. The mediator
-variable must appear in the outcome formula but NOT in the mediator
-formula (as it is the response).
-
-### GLM Engine
-
-When `engine = "glm"` (default):
-
-- Models are fit using
-  [`stats::glm()`](https://rdrr.io/r/stats/glm.html)
-
-- Supports all GLM families (gaussian, binomial, poisson, etc.)
-
-- For Gaussian models, residual standard deviations are extracted
-
-- Non-Gaussian outcomes have `sigma_y = NULL`
-
-### Common Family Specifications
-
-- [`gaussian()`](https://rdrr.io/r/stats/family.html): Continuous
-  outcomes (default)
-
-- [`binomial()`](https://rdrr.io/r/stats/family.html): Binary outcomes
-
-- [`poisson()`](https://rdrr.io/r/stats/family.html): Count outcomes
-
-- [`Gamma()`](https://rdrr.io/r/stats/family.html): Positive continuous
-  outcomes
+VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+4-way decomposition. *Epidemiology*, 25(5), 749–761.
 
 ## See also
 
@@ -259,89 +218,49 @@ When `engine = "glm"` (default):
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Fit Gaussian mediation model
+# mediation_demo is simulated data bundled with medfit; its covariates
+# confound the mediator-outcome relation, so both models adjust for them
 med_data <- fit_mediation(
-  formula_y = Y ~ X + M + C,
-  formula_m = M ~ X + C,
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
-  engine = "glm"
-)
-
-# Fit with binary outcome
-med_data <- fit_mediation(
-  formula_y = Y ~ X + M + C,
-  formula_m = M ~ X + C,
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
-  engine = "glm",
-  family_y = binomial()
-)
-} # }
-
-# Generate example data
-set.seed(123)
-n <- 100
-mydata <- data.frame(
-  X = rnorm(n),
-  C = rnorm(n)
-)
-mydata$M <- 0.5 * mydata$X + 0.2 * mydata$C + rnorm(n)
-mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + 0.1 * mydata$C + rnorm(n)
-
-# Simple mediation with continuous variables
-med_data <- fit_mediation(
-  formula_y = Y ~ X + M,
-  formula_m = M ~ X,
-  data = mydata,
-  treatment = "X",
-  mediator = "M"
+  formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1"
 )
 print(med_data)
 #> MediationData object
 #> ====================
 #> 
 #> Path coefficients:
-#>   a (X -> M):        0.3551
-#>   b (M -> Y|X):      0.3779
-#>   c' (X -> Y|M):     0.2524
-#>   Indirect (a*b):    0.1342
+#>   a (X -> M):        0.5826
+#>   b (M -> Y|X):      0.5711
+#>   c' (X -> Y|M):     0.2058
+#>   Indirect (a*b):    0.3328
 #> 
 #> Variables:
-#>   Treatment: X
-#>   Mediator:  M
-#>   Outcome:   Y
+#>   Treatment: treatment
+#>   Mediator:  mediator1
+#>   Outcome:   outcome
 #> 
 #> Model info:
-#>   N observations: 100
+#>   N observations: 400
 #>   Converged:      Yes
 #>   Source:         stats::glm
 #> 
 #> Residual SDs:
-#>   Mediator model:   0.9710
-#>   Outcome model:    1.0568
-
-# With covariates
-med_data_cov <- fit_mediation(
-  formula_y = Y ~ X + M + C,
-  formula_m = M ~ X + C,
-  data = mydata,
-  treatment = "X",
-  mediator = "M"
-)
+#>   Mediator model:   0.9792
+#>   Outcome model:    1.0426
 
 # \donttest{
-# Binary outcome (takes longer to fit)
-mydata$Y_bin <- rbinom(n, 1, plogis(0.3 * mydata$X + 0.4 * mydata$M))
+# Binary outcome (takes longer to fit): dichotomize the outcome at its median
+demo <- mediation_demo
+demo$outcome_bin <- as.integer(demo$outcome > stats::median(demo$outcome))
 med_data_bin <- fit_mediation(
-  formula_y = Y_bin ~ X + M,
-  formula_m = M ~ X,
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
+  formula_y = outcome_bin ~ treatment + mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = demo,
+  treatment = "treatment",
+  mediator = "mediator1",
   family_y = binomial()
 )
 # }

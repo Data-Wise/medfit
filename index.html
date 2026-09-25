@@ -54,7 +54,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,6 +74,7 @@
     <li><a class="dropdown-item" href="articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="articles/methods.html">Methods and Formulas</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
@@ -118,13 +119,17 @@
 <li>
 <strong>ADHD-Friendly API</strong>: Simple <code><a href="reference/med.html">med()</a></code> function for quick mediation analysis, <code><a href="reference/quick.html">quick()</a></code> for instant results</li>
 <li>
+<strong>Mediation Structures</strong>: simple, serial, and parallel mediators; a treatment-by-mediator interaction with VanderWeele’s four-way decomposition (<code><a href="reference/decompose.html">decompose()</a></code>); and joint natural effects of several mediators with treatment-by-mediator products (<code><a href="reference/joint_effects.html">joint_effects()</a></code>)</li>
+<li>
 <strong>Effect Extractors</strong>: <code><a href="reference/nie.html">nie()</a></code>, <code><a href="reference/nde.html">nde()</a></code>, <code><a href="reference/te.html">te()</a></code>, <code><a href="reference/pm.html">pm()</a></code>, <code><a href="reference/paths.html">paths()</a></code> for extracting mediation effects</li>
 <li>
-<strong>Tidyverse Integration</strong>: <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> methods for tibble-based workflows</li>
+<strong>Tidyverse Integration</strong>: <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> methods, with delta-method standard errors for the effects</li>
 <li>
-<strong>Unified Model Extraction</strong>: Extract mediation structure from various model types (lm, glm, lavaan)</li>
+<strong>Unified Model Extraction</strong>: Extract mediation structure from lm, glm, and lavaan fits</li>
 <li>
-<strong>Flexible Model Fitting</strong>: Fit mediation models using different engines (GLM, with future support for mixed models)</li>
+<strong>Flexible Model Fitting</strong>: <code><a href="reference/fit_mediation.html">fit_mediation()</a></code> with the <code>glm</code> and <code>regmedint</code> engines, optional case weights (IPW), and sandwich (HC3) standard errors</li>
+<li>
+<strong>Bundled Example Data</strong>: <code>mediation_demo</code>, a simulated dataset for every workflow</li>
 <li>
 <strong>Robust Bootstrap Inference</strong>: Three bootstrap methods (parametric, nonparametric, plugin) with parallel processing</li>
 <li>
@@ -138,6 +143,9 @@
 <p>Install the stable version from CRAN:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"medfit"</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Known issues in CRAN 0.3.2:</strong> serial <code><a href="reference/te.html">te()</a></code>/<code><a href="reference/pm.html">pm()</a></code> omit paths that skip a mediator, and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> path intervals can use the wrong covariance rows. Both are fixed in the development version; see <a href="https://github.com/Data-Wise/medfit/issues/83" class="external-link">#83</a> for details and workarounds.</p>
+</blockquote>
 <p>Or install the development version from GitHub:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
@@ -176,7 +184,7 @@
 <span></span>
 <span><span class="co"># One-line summary</span></span>
 <span><span class="fu"><a href="reference/quick.html">quick</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
-<span><span class="co">#&gt; NIE = 0.19 | NDE = 0.16 | PM = 55%</span></span></code></pre></div>
+<span><span class="co">#&gt; NIE = 0.164  | NDE = 0.293 | PM = 36 %</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="extract-effects">Extract Effects<a class="anchor" aria-label="anchor" href="#extract-effects"></a>
@@ -200,19 +208,19 @@
 <span><span class="co">#&gt; # A tibble: 6 × 3</span></span>
 <span><span class="co">#&gt;   term    estimate std.error</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 a          0.448    0.107</span></span>
-<span><span class="co">#&gt; 2 b          0.424    0.099</span></span>
-<span><span class="co">#&gt; 3 c_prime    0.155    0.114</span></span>
-<span><span class="co">#&gt; 4 nie        0.190       NA</span></span>
-<span><span class="co">#&gt; 5 nde        0.155       NA</span></span>
-<span><span class="co">#&gt; 6 te         0.345       NA</span></span>
+<span><span class="co">#&gt; 1 a          0.471    0.0750</span></span>
+<span><span class="co">#&gt; 2 b          0.349    0.0689</span></span>
+<span><span class="co">#&gt; 3 c_prime    0.293    0.0797</span></span>
+<span><span class="co">#&gt; 4 nie        0.164    0.0417</span></span>
+<span><span class="co">#&gt; 5 nde        0.293    0.0797</span></span>
+<span><span class="co">#&gt; 6 te         0.457    0.0773</span></span>
 <span></span>
 <span><span class="co"># One-row model summary</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # A tibble: 1 × 6</span></span>
 <span><span class="co">#&gt;     nie   nde    te    pm  nobs converged</span></span>
 <span><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;lgl&gt;</span></span>
-<span><span class="co">#&gt; 1 0.190 0.155 0.345  0.55   200 TRUE</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 0.164 0.293 0.457 0.360   200 TRUE</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="base-r-methods">Base R Methods<a class="anchor" aria-label="anchor" href="#base-r-methods"></a>
@@ -270,7 +278,7 @@
 </h3>
 <ul>
 <li>
-<strong><code>MediationData</code></strong>: Standardized container for simple mediation (X -&gt; M -&gt; Y)
+<p><strong><code>MediationData</code></strong>: Standardized container for simple mediation (X -&gt; M -&gt; Y)</p>
 <ul>
 <li>Path coefficients (a, b, c’)</li>
 <li>Parameter estimates and variance-covariance matrix</li>
@@ -279,15 +287,20 @@
 </ul>
 </li>
 <li>
-<strong><code>SerialMediationData</code></strong>: Container for serial mediation (X -&gt; M1 -&gt; M2 -&gt; … -&gt; Y)
+<p><strong><code>SerialMediationData</code></strong>: Container for serial mediation (X -&gt; M1 -&gt; M2 -&gt; … -&gt; Y)</p>
 <ul>
 <li>Supports product-of-three (2 mediators) and product-of-k (3+ mediators)</li>
+<li>
+<code><a href="reference/nie.html">nie()</a></code> gives the chain effect; <code>nie(type = "total")</code>, <code><a href="reference/te.html">te()</a></code> and <code><a href="reference/pm.html">pm()</a></code> count every path, including paths that skip a mediator</li>
 <li>Flexible design compatible with lavaan extraction patterns</li>
 <li>Extensible to complex mediation structures</li>
 </ul>
 </li>
+<li><p><strong><code>ParallelMediationData</code></strong>: Container for parallel mediators (indirect effect = sum of a_j * b_j)</p></li>
+<li><p><strong><code>InteractionMediationData</code></strong>: Simple mediation with a treatment-by-mediator interaction, carrying the four-way decomposition (CDE, INTref, INTmed, PIE)</p></li>
+<li><p><strong><code>JointMediationData</code></strong>: Joint natural effects of two or more mediators when the outcome model has treatment-by-mediator products</p></li>
 <li>
-<strong><code>BootstrapResult</code></strong>: Container for bootstrap inference results
+<p><strong><code>BootstrapResult</code></strong>: Container for bootstrap inference results</p>
 <ul>
 <li>Point estimates and confidence intervals</li>
 <li>Bootstrap distribution</li>
@@ -300,10 +313,10 @@
 <h3 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
 </h3>
 <p><strong>Quick Start:</strong> - <strong><code><a href="reference/med.html">med()</a></code></strong>: One-function mediation analysis (recommended starting point) - <strong><code><a href="reference/quick.html">quick()</a></code></strong>: One-line summary of results</p>
-<p><strong>Effect Extractors:</strong> - <strong><code><a href="reference/nie.html">nie()</a></code></strong>, <strong><code><a href="reference/nde.html">nde()</a></code></strong>, <strong><code><a href="reference/te.html">te()</a></code></strong>: Natural indirect/direct and total effects - <strong><code><a href="reference/pm.html">pm()</a></code></strong>: Proportion mediated - <strong><code><a href="reference/paths.html">paths()</a></code></strong>: All path coefficients</p>
+<p><strong>Effect Extractors:</strong> - <strong><code><a href="reference/nie.html">nie()</a></code></strong>, <strong><code><a href="reference/nde.html">nde()</a></code></strong>, <strong><code><a href="reference/te.html">te()</a></code></strong>: Natural indirect/direct and total effects - <strong><code><a href="reference/pm.html">pm()</a></code></strong>: Proportion mediated - <strong><code><a href="reference/paths.html">paths()</a></code></strong>: All path coefficients - <strong><code><a href="reference/decompose.html">decompose()</a></code></strong>: Four-way or joint decomposition of the total effect - <strong><code><a href="reference/joint_effects.html">joint_effects()</a></code></strong>: Joint effects at any parameter vector (for bootstrapping)</p>
 <p><strong>Tidyverse Methods:</strong> - <strong><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code></strong>: Convert results to tidy tibble - <strong><code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code></strong>: One-row model summary</p>
 <p><strong>Base R Methods:</strong> - <strong><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code></strong>, <strong><code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code></strong>, <strong><code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code></strong>, <strong><code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code></strong>: Standard generics</p>
-<p><strong>Advanced:</strong> - <strong><code><a href="reference/extract_mediation.html">extract_mediation()</a></code></strong>: Extract from fitted lm/glm/lavaan models - <strong><code><a href="reference/fit_mediation.html">fit_mediation()</a></code></strong>: Fit with formula interface (GLM engine) - <strong><code><a href="reference/bootstrap_mediation.html">bootstrap_mediation()</a></code></strong>: Bootstrap inference (parametric, nonparametric, plugin)</p>
+<p><strong>Advanced:</strong> - <strong><code><a href="reference/extract_mediation.html">extract_mediation()</a></code></strong>: Extract from fitted lm/glm/lavaan models - <strong><code><a href="reference/fit_mediation.html">fit_mediation()</a></code></strong>: Fit with formula interface (<code>glm</code> or <code>regmedint</code> engine) - <strong><code><a href="reference/bootstrap_mediation.html">bootstrap_mediation()</a></code></strong>: Bootstrap inference (parametric, nonparametric, plugin)</p>
 </div>
 </div>
 <div class="section level2">
@@ -334,17 +347,28 @@
 <td>Application</td>
 </tr>
 <tr>
+<td><a href="https://github.com/data-wise/probmed" class="external-link">probmed</a></td>
+<td>Probabilistic effect size (P_med)</td>
+<td>Application</td>
+</tr>
+<tr>
+<td><a href="https://github.com/data-wise/medrobust" class="external-link">medrobust</a></td>
+<td>Sensitivity analysis</td>
+<td>Application (independent of medfit)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/data-wise/medsim" class="external-link">medsim</a></td>
+<td>Simulation infrastructure</td>
+<td>Support</td>
+</tr>
+<tr>
 <td><a href="https://github.com/data-wise/mediationverse" class="external-link">mediationverse</a></td>
 <td>Meta-package</td>
 <td>Ecosystem</td>
 </tr>
 </tbody>
 </table>
-<!-- Future packages (in development):
-| [probmed](https://github.com/data-wise/probmed) | Probabilistic effect size (P_med) | Application |
-| [medrobust](https://github.com/data-wise/medrobust) | Sensitivity analysis | Application |
-| [medsim](https://github.com/data-wise/medsim) | Simulation infrastructure | Support |
---><p>See <a href="planning/ECOSYSTEM.html">Ecosystem Coordination</a> for version compatibility and development guidelines.</p>
+<p>See <a href="https://github.com/data-wise/medfit/blob/main/planning/ECOSYSTEM.md" class="external-link">Ecosystem Coordination</a> for version compatibility and development guidelines.</p>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
@@ -359,23 +383,14 @@
 <strong><a href="https://data-wise.github.io/medfit/articles/extraction.html">Model Extraction</a></strong>: Extract from lm/glm/lavaan models</li>
 <li>
 <strong><a href="https://data-wise.github.io/medfit/articles/bootstrap.html">Bootstrap Inference</a></strong>: Parametric and nonparametric bootstrap methods</li>
+<li>
+<strong><a href="https://data-wise.github.io/medfit/articles/methods.html">Methods and Formulas</a></strong>: Estimands, formulas, covariance, and standard errors for every class</li>
 </ul>
 </div>
 <div class="section level2">
 <h2 id="development-status">Development Status<a class="anchor" aria-label="anchor" href="#development-status"></a>
 </h2>
-<p><strong>Current Phase</strong>: Feature Complete (97%)</p>
-<ul class="task-list">
-<li><label><input type="checkbox" checked>Phase 1: Package setup</label></li>
-<li><label><input type="checkbox" checked>Phase 2: S7 class architecture (MediationData, SerialMediationData, BootstrapResult)</label></li>
-<li><label><input type="checkbox" checked>Phase 2.5: Comprehensive Quarto documentation</label></li>
-<li><label><input type="checkbox" checked>Phase 3: Model extraction (lm/glm, lavaan)</label></li>
-<li><label><input type="checkbox" checked>Phase 4: Model fitting (GLM engine)</label></li>
-<li><label><input type="checkbox" checked>Phase 5: Bootstrap infrastructure (parametric, nonparametric, plugin)</label></li>
-<li><label><input type="checkbox" checked>Phase 6: Generic functions (coef, vcov, confint, nobs, nie, nde, te, pm, paths, tidy, glance)</label></li>
-<li><label><input type="checkbox" checked>Phase 6.5: ADHD-friendly API (med, quick)</label></li>
-<li><label><input type="checkbox">Phase 7: Polish &amp; release</label></li>
-</ul>
+<p>medfit is on CRAN. Current development adds mediation structures and inference on the <code>dev</code> branch; see <code>NEWS.md</code> for what each release contains.</p>
 <div class="section level3">
 <h3 id="code-quality">Code Quality<a class="anchor" aria-label="anchor" href="#code-quality"></a>
 </h3>
@@ -383,11 +398,11 @@
 <li>
 <strong>Defensive Programming</strong>: checkmate for input validation, S7 validators for class integrity</li>
 <li>
-<strong>Testing</strong>: 584 tests with testthat (&gt;90% coverage, enforced via codecov)</li>
+<strong>Testing</strong>: 1,400+ tests with testthat (&gt;90% coverage, enforced via codecov)</li>
 <li>
 <strong>CI/CD</strong>: R CMD check, lintr, coverage reporting via GitHub Actions</li>
 </ul>
-<p>See <a href="planning/medfit-roadmap.html">planning/medfit-roadmap.md</a> for detailed development plan.</p>
+<p>See the <a href="https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md" class="external-link">roadmap</a> for the detailed development plan.</p>
 </div>
 </div>
 <div class="section level2">
@@ -418,7 +433,8 @@
 </h2>
 <p>If you use medfit in your research, please cite:</p>
 <pre><code>Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.2.1. https://CRAN.R-project.org/package=medfit</code></pre>
+R package version 0.5.0. https://data-wise.github.io/medfit/</code></pre>
+<p>For the entry matching your installed version, run <code>citation("medfit")</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="related-resources">Related Resources<a class="anchor" aria-label="anchor" href="#related-resources"></a>
@@ -426,8 +442,8 @@ R package version 0.2.1. https://CRAN.R-project.org/package=medfit</code></pre>
 <ul>
 <li><a href="https://data-wise.github.io/medfit/">Package Documentation</a></li>
 <li><a href="https://github.com/data-wise/medfit/blob/main/CLAUDE.md" class="external-link">Development Guide</a></li>
-<li><a href="planning/medfit-roadmap.html">Roadmap</a></li>
-<li><a href="planning/ECOSYSTEM.html">Ecosystem Strategy</a></li>
+<li><a href="https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md" class="external-link">Roadmap</a></li>
+<li><a href="https://github.com/data-wise/medfit/blob/main/planning/ECOSYSTEM.md" class="external-link">Ecosystem Strategy</a></li>
 </ul>
 </div>
 <div class="section level2">

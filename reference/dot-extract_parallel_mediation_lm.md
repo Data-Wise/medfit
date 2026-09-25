@@ -17,7 +17,8 @@ covariates), in mediator-index order.
   treatment,
   mediators,
   outcome = NULL,
-  data = NULL
+  data = NULL,
+  vcov_fun = stats::vcov
 )
 ```
 

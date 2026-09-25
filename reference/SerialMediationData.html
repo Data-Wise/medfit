@@ -35,7 +35,7 @@ with many mediators (product-of-k)."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,6 +53,7 @@ with many mediators (product-of-k)."><meta property="og:image" content="https://
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
@@ -73,7 +74,7 @@ with many mediators (product-of-k)."><meta property="og:image" content="https://
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>SerialMediationData S7 Class</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.4.0/R/classes.R" class="external-link"><code>R/classes.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/classes.R" class="external-link"><code>R/classes.R</code></a></small>
       <div class="d-none name"><code>SerialMediationData.Rd</code></div>
     </div>
 
@@ -185,10 +186,18 @@ second element contains predictors for M2 (typically c("X", "M1")), etc.</p></dd
 
 
 <p>Serial mediation models the indirect effect flowing through a sequence of
-mediators. The total indirect effect is the product of all path coefficients:</p><ul><li><p><strong>2 mediators (product-of-three)</strong>: Indirect = a * d * b</p></li>
+mediators. The indirect effect through the full chain is the product of the
+chain's path coefficients:</p><ul><li><p><strong>2 mediators (product-of-three)</strong>: Indirect = a * d * b</p></li>
 <li><p><strong>3 mediators (product-of-four)</strong>: Indirect = a * d21 * d32 * b</p></li>
 <li><p><strong>k mediators (product-of-k+1)</strong>: Indirect = a * d21 * d32 * ... * d(k,k-1) * b</p></li>
-</ul></div>
+</ul><p>This is the effect through the chain only, and what <code><a href="nie.html">nie()</a></code> returns by
+default. Paths that skip a mediator (<code>X -&gt; M2</code>, <code>M1 -&gt; Y</code>, ...) are not part
+of it; <code>nie(x, type = "total")</code> adds them, and <code><a href="te.html">te()</a></code> is the full total
+effect over every path, so <code><a href="pm.html">pm()</a></code> is the total indirect share of it. With
+treatment-by-mediator products in the outcome model, <code><a href="extract_mediation.html">extract_mediation()</a></code>
+returns a <a href="JointMediationData.html">JointMediationData</a> object with the effect through all the
+mediators together.</p>
+</div>
 
 <div class="section">
 <h3 id="path-notation">Path Notation<a class="anchor" aria-label="anchor" href="#path-notation"></a></h3>
