@@ -22,7 +22,7 @@ Active tasks, implementation plan, and progress tracking.
 
 - [x] Pinned known-issues issue #83 for CRAN 0.3.2 + README pointer (2026-09-24)
 - [ ] **0.5.0 release — GitHub only**
-  - [ ] Bump DESCRIPTION 0.4.0 → 0.5.0; rename NEWS "(development version)" heading to 0.5.0
+  - [x] Bump DESCRIPTION 0.4.0 → 0.5.0 (Date 2026-09-24); NEWS heading; README citation
   - [ ] NEWS: confirm both behavior changes carry ecosystem notes (serial `te()`/`pm()` #81;
         `confint(parm = "paths")` alias lookup #82)
   - [ ] `devtools::check()` clean + full test suite (strict CRAN flavors not required for a

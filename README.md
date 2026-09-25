@@ -279,7 +279,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.4.0. https://CRAN.R-project.org/package=medfit
+R package version 0.5.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.
