@@ -75,6 +75,43 @@
 }
 
 
+#' Path Standard Errors from the `@vcov` Diagonal, by Name
+#'
+#' For `confint(parm = "paths")`. Each path is located by its alias row
+#' (`a`, `b`, `c_prime`, ...), then by its `fallback` name (the lm-style
+#' `m_<treatment>`, `y_<mediator>`, ...), and errors when neither resolves;
+#' rows are never guessed by position. Names come from `rownames(@vcov)`, or
+#' from `names(@estimates)` when `@vcov` has no dimnames (the validators keep
+#' the two the same length).
+#'
+#' @param x A mediation data object with `@vcov` and `@estimates`.
+#' @param alias Character: the row name of each path.
+#' @param fallback Character (same length as `alias`) or `NULL`: a second row
+#'   name to try for each path.
+#' @return Numeric vector of standard errors, one per `alias`.
+#' @keywords internal
+#' @noRd
+.path_se <- function(x, alias, fallback = NULL) {
+  vc <- x@vcov
+  nm <- rownames(vc)
+  if (is.null(nm)) nm <- names(x@estimates)
+  idx <- match(alias, nm)
+  if (!is.null(fallback)) {
+    idx[is.na(idx)] <- match(fallback[is.na(idx)], nm)
+  }
+  if (anyNA(idx)) {
+    wanted <- alias[is.na(idx)]
+    if (!is.null(fallback)) {
+      wanted <- paste0(wanted, " (or ", fallback[is.na(idx)], ")")
+    }
+    stop("vcov has no row for path: ", paste(wanted, collapse = ", "),
+         ". Name the rows of @estimates/@vcov with the path aliases.",
+         call. = FALSE)
+  }
+  sqrt(diag(vc)[idx])
+}
+
+
 #' Add Named Gradients, Aligning on Parameter Names
 #'
 #' @param ... Named numeric gradients.
