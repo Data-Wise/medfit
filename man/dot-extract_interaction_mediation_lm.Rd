@@ -17,11 +17,12 @@
 )
 }
 \arguments{
-\item{model_y}{Fitted lm/glm for the outcome. Only \code{Mk}'s coefficient is read
-as \code{b}, but the model should include \code{X} and every earlier mediator
-(\code{Y ~ X + M1 + ... + Mk + ...}); omitting an earlier mediator that also
-affects \code{Y} biases \code{b}. The serial indirect effect \code{a * d * b} is then the
-effect through the full chain only.}
+\item{model_y}{Fitted lm/glm for the outcome. \code{Mk}'s coefficient is read as
+\code{b}; the model should include \code{X} and every earlier mediator
+(\code{Y ~ X + M1 + ... + Mk + ...}), whose coefficients are stored as the
+skip-path aliases \verb{b1..b\{k-1\}}. Omitting an earlier mediator that also
+affects \code{Y} biases \code{b}. \code{a * d * b} is the effect through the full chain
+only; \code{te()} sums every path.}
 
 \item{treatment}{Character scalar: treatment variable name.}
 
