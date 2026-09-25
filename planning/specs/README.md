@@ -21,7 +21,8 @@ Updated 2026-09-25. Each file's own `Status:` line is authoritative; this index 
 | `SPEC-joint-mediator-interactions-2026-09-23.md` / `PLAN-joint-mediator-interactions-2026-09-23.md` | spec / plan | implemented, #76/#77 (D8(b), 0.5.0) |
 | `SPEC-serial-total-effect-2026-09-24.md` | spec | implemented, #81 (0.5.0) |
 | `GRILL-0.5.0-release-2026-09-24.md` | decision ledger | decided; 0.5.0 released GitHub-only 2026-09-25 |
-| `REVIEW-multilevel-mediation-2026-09-25.md` | literature review | complete; feeds the Ext D spec (decisions open) |
+| `REVIEW-multilevel-mediation-2026-09-25.md` | literature review | complete; feeds the Ext D spec (decisions in the GRILL below) |
+| `GRILL-multilevel-mediation-ext-d-2026-09-25.md` | decision ledger | decided (D1-D9); module 1 = 2-1-1 |
 
-Next spec to write: Ext D (multilevel). Read `REVIEW-multilevel-mediation-2026-09-25.md` first; its section 8
-lists the estimand decisions the spec depends on.
+Next spec to write: Ext D module 1 (2-1-1 multilevel mediation), from the decisions in
+`GRILL-multilevel-mediation-ext-d-2026-09-25.md`; background in `REVIEW-multilevel-mediation-2026-09-25.md`.
