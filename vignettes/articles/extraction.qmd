@@ -361,6 +361,35 @@ path through `mediator1` (`a2 + d * a1`). The joint NIE is
 0.585. It is not comparable to the serial `a * d * b` (0.075 on the same data
 without the product), which counts only the path through the full chain.
 
+`decompose()` returns the controlled direct effect with the joint natural
+effects. The CDE is read at the reference level `m_star` of each interacting
+mediator (default 0); the NDE, NIE and total effect do not depend on it:
+
+```{r}
+#| label: lm-joint-decompose
+decompose(med_joint)
+#>       cde       nde       nie     total
+#> 0.1747908 0.2197091 0.6560315 0.8757405
+
+# CDE with mediator1 held at 1 instead of 0
+med_joint_m1 <- extract_mediation(
+  fit_m1,
+  model_y = fit_yj,
+  treatment = "treatment",
+  mediator = c("mediator1", "mediator2"),
+  mediator_models = list(fit_m2),
+  m_star = c(mediator1 = 1)   # named by the interacting mediator
+)
+decompose(med_joint_m1)
+#>       cde       nde       nie     total
+#> 0.6654399 0.2197091 0.6560315 0.8757405
+```
+
+The CDE moves by `t3 * (1 - 0) = 0.49`, while the other three stay put. Unlike
+the single-mediator four-way decomposition, the joint object has no
+INT<sub>ref</sub>/INT<sub>med</sub> split: the interaction is absorbed into
+the joint NDE and NIE.
+
 Standard errors use the delta method over a stacked covariance of all the
 equations, conditional on the observed covariates (the NDE is evaluated at their
 means). For a parametric bootstrap, use `joint_effects()` as the statistic; it
