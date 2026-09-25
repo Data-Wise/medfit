@@ -4,11 +4,14 @@ Active tasks, implementation plan, and progress tracking.
 
 ---
 
-## 🎯 Current Focus: Phase 7 - Polish & Release
+## 🎯 Current Focus: 0.5.0 Release (proposed)
 
-**Status:** Feature Complete (97%)
-**Next:** Polish, testing, CRAN prep
-**Updated:** 2025-12-17
+**Status:** 0.3.2 on CRAN (2026-07-23); 0.4.0 on main/GitHub (tag `v0.4.0`, 2026-08-23); dev carries unreleased work since 0.4.0 (#62-#82)
+**Next:** Release dev as **0.5.0** (proposed; minor bump because of two behavior changes, #81 and #82)
+**Updated:** 2026-09-24
+
+> `.STATUS` still records the 2026-09-23 decision "no CRAN release yet". Whether 0.5.0 goes to
+> CRAN or stays GitHub-only is open; the checklist below covers both.
 
 ---
 
@@ -16,27 +19,35 @@ Active tasks, implementation plan, and progress tracking.
 
 ### High Priority 🔴
 
-- [ ] **Phase 7: Polish & Release** [2-3 days]
-  - [ ] Run comprehensive R CMD check --as-cran
-  - [ ] Fix any remaining NOTEs/WARNINGs
-  - [ ] Spell check all documentation
-  - [ ] URL validation for all links
-  - [ ] Update DESCRIPTION for CRAN submission
+- [ ] **0.5.0 release** (checklist follows CLAUDE.md "CRAN check practice")
+  - [ ] Bump DESCRIPTION 0.4.0 → 0.5.0; rename NEWS "(development version)" heading to 0.5.0
+  - [ ] NEWS: confirm both behavior changes carry ecosystem notes (serial `te()`/`pm()` #81;
+        `confint(parm = "paths")` alias lookup #82)
+  - [ ] Strict check: `--run-donttest` + `_R_CHECK_DEPENDS_ONLY_`, `_R_CHECK_SUGGESTS_ONLY_`,
+        `_R_CHECK_CRAN_INCOMING_`, `_R_CHECK_CRAN_INCOMING_REMOTE_`
+  - [ ] `urlchecker::url_check()` + `spelling::spell_check_package()` (win-builder is the source
+        of truth for the DESCRIPTION aspell NOTE)
+  - [ ] Reverse-dependency check sized to risk: probmed Imports medfit (full check); RMediation
+        Suggests (lightweight)
+  - [ ] Resync `cran-comments.md` from the fresh check output (if submitting to CRAN)
+  - [ ] dev → main PR (merge commit), tag `v0.5.0`, GitHub release
+  - [ ] Confirm the main pkgdown deploy fixes the README link to `articles/methods.html` (404s
+        until then)
+  - [ ] CRAN submit is maintainer-manual (`devtools::submit_cran()` + email confirmation)
 
-- [ ] **probmed Integration** [1 day]
-  - [ ] Test `med()` output with P_med computation
-  - [ ] Ensure `nie()`, `nde()` work in probmed workflows
-  - [ ] Update probmed vignettes with medfit examples
+- [ ] **probmed Stage 2** (lives in the probmed repo, not here)
+  - Unblocked by 0.3.2 on CRAN. probmed's DESCRIPTION already has `Imports: medfit (>= 0.3.0)`
+    and no `Remotes:` pin (checked 2026-09-24); its CRAN prep is tracked in probmed
+  - medfit side: probmed imports only `extract_mediation()`; #81/#82 do not affect it
 
 ### Medium Priority 🟡
 
-- [ ] **Delta Method SEs** [2-3 hr]
-  - [ ] Add standard errors for NIE, NDE, TE
-  - [ ] Implement `confint()` for derived effects
-  - [ ] Document delta method assumptions
+- [x] **Delta Method SEs** — done in #70 (`.effect_se()` feeds `confint(parm = "effects")` and
+      `tidy()` for all classes; documented in `?tidy.S7_object` and the Methods and Formulas article)
 
 - [ ] **Additional Vignette Ideas**
-  - [ ] "Mediation Analysis Workflow" (end-to-end example)
+  - [x] "Mediation Analysis Workflow" (end-to-end example) — covered by Getting Started on
+        `mediation_demo` (#63, #67)
   - [ ] "Comparing medfit with other packages"
   - [ ] "Extending medfit" (for developers)
 
@@ -44,9 +55,10 @@ Active tasks, implementation plan, and progress tracking.
 
 - [ ] **BCa Confidence Intervals**
   - Bias-corrected and accelerated bootstrap
-  - Better coverage than percentile method
+  - Better coverage than percentile method (bootstrap is percentile-only today)
 
-- [ ] **Mixed Models Support (lme4)**
+- [ ] **Mixed Models Support (lme4)** — Ext D (multilevel) in
+      `specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`; no spec yet
   - `extract_mediation.lmerMod` method
   - Multilevel mediation analysis
 
@@ -54,9 +66,37 @@ Active tasks, implementation plan, and progress tracking.
   - `extract_mediation.brmsfit` method
   - Posterior distributions for indirect effects
 
+- [ ] **CMAverse adapter (Ext C.1)** — blocked: CMAverse is not on CRAN; simulation-based effects
+      have no slot in the live-computed effect contract. See `EXTENSIONS-PLAN-2026-06-03.md`
+
 ---
 
 ## ✅ Recently Completed
+
+### 2026-09-23 / 2026-09-24 (dev, unreleased since 0.4.0)
+
+- [x] **Bundled `mediation_demo` dataset** (#62-#65, #67) — examples and articles moved to it;
+      multi-mediator extraction errors on product terms (D8 guard, #62)
+- [x] **Effect SEs** — `tidy()`/`confint()` delta-method effect SEs for all classes (#70); lavaan
+      alias fixes (#69, #71, #73); wrapped-product detection (#74); `sandwich`/`vcov_fun` reach
+      all workers, identity-link and unused `m_star` guards (#75); dead stubs removed (#72)
+- [x] **D8(b) `JointMediationData`** (#76, #77) — joint natural effects for multi-mediator fits
+      with X:M products (VanderWeele & Vansteelandt 2014), plus `joint_effects()`
+- [x] **Methods and Formulas article** + documentation gap fixes (#79)
+- [x] **Four-way E[M | X = 0]** uses design-column means (factor covariates, case-weighted) (#78)
+- [x] **BEHAVIOR CHANGE:** serial `te()`/`pm()` sum every path; `nie(type = "total")` (#81)
+- [x] **Joint SEs with caller-supplied `data =`** (#80)
+- [x] **BEHAVIOR CHANGE:** `confint(parm = "paths")` finds rows by alias, errors instead of
+      position-guessing; fixed wrong lavaan path SEs (#82)
+- [x] Articles evaluate their code at site build (`b888ffe`); pkgdown CI runs on PRs to dev
+
+### 2026-06 to 2026-08
+
+- [x] Ext A: `ParallelMediationData` (#34, #36, #37)
+- [x] Ext B: `InteractionMediationData`, VanderWeele four-way (#38, #39, #40)
+- [x] Ext C: `fit_mediation(engine = "regmedint")` + `m_star` argument (#59) → 0.4.0
+- [x] CRAN: 0.2.1 accepted (2026-06-18); 0.3.2 accepted + published (2026-07-23)
+- [x] Phase 7: Polish & Release (R CMD check --as-cran, NOTEs, spelling, URLs, DESCRIPTION)
 
 ### 2025-12-17
 
@@ -130,29 +170,34 @@ Active tasks, implementation plan, and progress tracking.
 | 5 | Bootstrap | ✅ Complete |
 | 6 | Generics | ✅ Complete |
 | 6.5 | ADHD API | ✅ Complete |
-| 7 | Polish & release | 🚧 In Progress |
+| 7 | Polish & release | ✅ Complete (0.3.2 on CRAN) |
+| Ext A/B/C | Parallel, four-way, regmedint | ✅ Complete (0.4.0) |
+| D8(b) | Joint multi-mediator interactions | ✅ Complete (dev) |
+| 0.5.0 | Release | 🚧 Next (proposed) |
 
 ### Code Quality
-- **Tests:** 427 passing
+- **Tests:** 1528 expectations (as of #80)
 - **Coverage:** Tracked via Codecov
-- **R CMD check:** Clean (1 NOTE - dev version)
+- **R CMD check:** strict 0/0/1 (Date NOTE only) at last recorded run
 - **Linting:** GitHub Actions CI
 
 ### Documentation
-- **README:** ✅ Updated
-- **NEWS:** ✅ Updated
-- **Vignettes:** 4 articles (getting-started, introduction, extraction, bootstrap)
-- **pkgdown:** ✅ Live at https://data-wise.github.io/medfit/
+- **README:** ✅ Updated (#79)
+- **NEWS:** ✅ Development section current through #82
+- **Vignettes:** 5 articles (getting-started, introduction, extraction, bootstrap, methods),
+  evaluated at site build
+- **pkgdown:** ✅ Live at https://data-wise.github.io/medfit/ (deploys from main)
 
 ---
 
 ## 📋 Backlog (Future Releases)
 
 ### Core Functionality
-- [ ] Four-way decomposition (VanderWeele 2014)
-- [ ] Parallel mediation support
-- [ ] Standardized coefficients option
-- [ ] Treatment-mediator interaction detection
+- [x] Four-way decomposition (VanderWeele 2014) — Ext B
+- [x] Parallel mediation support — Ext A
+- [ ] Standardized coefficients option — lavaan extractor only (`standardized = TRUE`); none for lm/glm
+- [x] Treatment-mediator interaction detection — Ext B (single mediator), D8(b) (multiple mediators)
+- [ ] Multilevel mediation (Ext D) and longitudinal mediation (Ext E) — see the 2026-08-22 brainstorm
 
 ### Model Support
 - [ ] lmer/lme4 extraction
@@ -161,11 +206,11 @@ Active tasks, implementation plan, and progress tracking.
 
 ### Inference
 - [ ] BCa bootstrap confidence intervals
-- [ ] Delta method SEs for derived effects
+- [x] Delta method SEs for derived effects — #70
 - [ ] Studentized bootstrap
 
 ### Ecosystem
-- [ ] probmed integration testing
+- [ ] probmed integration testing — probmed Stage 2, in the probmed repo
 - [ ] RMediation coordination
 - [ ] medrobust sensitivity analysis workflow
 
@@ -193,5 +238,5 @@ Active tasks, implementation plan, and progress tracking.
 
 ---
 
-**Last Updated:** 2025-12-17
-**Next Review:** After Phase 7 completion
+**Last Updated:** 2026-09-24
+**Next Review:** After the 0.5.0 release

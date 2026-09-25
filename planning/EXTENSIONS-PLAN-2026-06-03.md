@@ -1,11 +1,13 @@
 # medfit Extensions Plan (post-v0.2.0)
 
-**Created:** 2026-06-03 · **Updated:** 2026-08-22 · **Package state:** v0.4.0 on `dev` (not yet
-tagged/CRAN-submitted — floor pins only). Simple + serial + **parallel** (Ext A) +
-**interaction/4-way** (Ext B) + **regmedint engine adapter** (Ext C) mediation all shipped;
-extraction (lm/glm/lavaan), fitting (GLM + regmedint), bootstrap (parametric/nonparametric/plugin),
-and the generics layer (`nie/nde/te/pm/paths/coef/vcov/confint/tidy/glance`) are all in place.
-Ext A, Ext B, and Ext C are all COMPLETE and merged to `dev` — CMAverse (Ext C.1) remains, blocked.
+**Created:** 2026-06-03 · **Updated:** 2026-09-24 · **Package state:** v0.3.2 on CRAN; v0.4.0
+tagged and released on `main`/GitHub (2026-08-23, not CRAN-submitted); `dev` carries unreleased
+work since 0.4.0 (#62-#82), proposed as **0.5.0**. Simple + serial + **parallel** (Ext A) +
+**interaction/4-way** (Ext B) + **regmedint engine adapter** (Ext C) + **joint multi-mediator
+interactions** (D8(b)) all shipped; extraction (lm/glm/lavaan), fitting (GLM + regmedint), bootstrap
+(parametric/nonparametric/plugin), and the generics layer (`nie/nde/te/pm/paths/coef/vcov/confint/tidy/glance`,
+with delta-method effect SEs) are all in place. CMAverse (Ext C.1) remains, blocked; Ext D/E are
+brainstormed, not spec'd.
 
 This plan supersedes the status framing in `medfit-roadmap.md` (whose detailed Phase 7/7b/7c
 *designs* remain the reference — this doc is the prioritized, current **board**).
@@ -56,7 +58,7 @@ ParallelMediationData <- S7::new_class("ParallelMediationData",
 **Work:** class + validator → `extract_mediation()` parallel detection (multiple
 mediator models, no chaining) → `paths()`/`nie()` sum-of-products → vcov naming
 contract (`a1,b1,a2,b2,…`) → tests vs hand-built + lavaan parallel SEM → vignette.
-**Spec to write:** `planning/specs/SPEC-parallel-mediation.md`.
+**Spec:** `planning/specs/SPEC-parallel-extractor-2026-06-03.md`.
 
 ### ✅ Extension B — Treatment×mediator interaction / VanderWeele 4-way — COMPLETE
 **New class:** `InteractionMediationData`. Full design already in `medfit-roadmap.md §7`
@@ -81,12 +83,41 @@ closed-form, already medfit's own Ext B validation target). **Shipped 2026-08-22
 `fit_mediation()` argument (`planning/specs/SPEC-m-star-argument-2026-08-22.md`). Implementation
 found `regmedint::vcov()` (v1.0.2) returns variances only (no off-diagonal covariance), correcting
 the spec's original delta-method-via-full-vcov assumption — see the SPEC's own "Implementation
-correction" note. Version bumped 0.3.2→0.4.0 (no tag cut, not yet CRAN-submitted).
+correction" note. Version bumped 0.3.2→0.4.0; tagged `v0.4.0` and released on GitHub 2026-08-23
+(not CRAN-submitted).
+
+### ✅ D8(b) — Joint effects for multi-mediator X:M products — COMPLETE (dev, unreleased)
+**New class:** `JointMediationData` + `joint_effects()`. Joint natural effects of all mediators
+as a block (VanderWeele & Vansteelandt 2014) when an outcome model with two or more mediators
+carries treatment-by-mediator products; no per-mediator split of the NIE. Spec
+`planning/specs/SPEC-joint-mediator-interactions-2026-09-23.md`, plan
+`PLAN-joint-mediator-interactions-2026-09-23.md`. PR A #76 (`fff0ab7`, core) and PR B #77
+(`b40444e`, methods/docs) merged to `dev` 2026-09-24. lavaan multi-mediator fits with products
+still error.
+
+### ✅ Post-0.4.0 fixes and docs — COMPLETE (dev, unreleased)
+`mediation_demo` dataset (#62-#65, #67); delta-method effect SEs in `tidy()`/`confint()` for all
+classes (#70) with lavaan alias fixes (#69, #71, #73), wrapped-product detection (#74),
+`sandwich`/`vcov_fun` on every worker plus identity-link and unused-`m_star` guards (#75);
+Methods and Formulas article (#79); four-way factor covariates (#78); joint SEs with
+caller-supplied `data =` (#80). **Two behavior changes:** serial `te()`/`pm()` sum every path,
+new `nie(type = "total")` (#81); `confint(parm = "paths")` finds rows by alias and errors instead
+of position-guessing (#82). Articles evaluate at site build (`b888ffe`).
 
 ### ⏸ Extension C.1 — CMAverse adapter (not yet spec'd, blocked)
 Deferred from C. Blocked on: (1) CRAN-availability strategy for a non-CRAN `Suggests` dependency,
 (2) the engine-native-effects representation problem for simulation-based methods. Do not start
-until both are resolved in `SPEC-cmaverse-adapter.md`.
+until both are resolved in `SPEC-cmaverse-adapter.md`. (Verified 2026-09-24: CMAverse is not
+in DESCRIPTION `Suggests`, no adapter code in `R/`.)
+
+### ⏸ Extension D — Multilevel/clustered mediation (brainstormed, not spec'd)
+`MultilevelMediationData` from lme4/nlme fits, 1-1-1 first. See
+`planning/specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`. Not blocked on
+Ext C. No lme4 code in `R/` yet.
+
+### ⏸ Extension E — Longitudinal/time-varying mediation (brainstormed, not spec'd)
+Same brainstorm. Largest new estimand; was meant to reuse an Ext C adapter registry that Ext C
+did not build, so its reuse needs are open until its own spec is written.
 
 ---
 
@@ -101,8 +132,14 @@ v0.3.2 (CRAN, accepted + published 2026-07-23)
    │
    ├─ B: InteractionMediationData (4-way) ..... ✅ done (merged to dev)
    │        │
-   │        └─ C: regmedint adapter .......... ✅ done (merged to dev, PR #59)
+   │        └─ C: regmedint adapter .......... ✅ done (PR #59) → v0.4.0 (GitHub, 2026-08-23)
    │                 └─ C.1: CMAverse adapter . blocked (CRAN availability + effect repr.)
+   │
+   ├─ D8(b): JointMediationData ............... ✅ done (merged to dev, #76/#77)
+   │
+   ├─ 0.5.0 release (proposed) ................ next (two behavior changes: #81, #82)
+   │
+   └─ D: multilevel / E: longitudinal ......... brainstormed, not spec'd
 ```
 
 **Why A before B/C:** Parallel mediation completes the *structural* trio
@@ -112,7 +149,8 @@ deps, so they carry more design + review risk and should follow.
 
 **Ecosystem coordination:** each new class is a downstream opportunity, not a breaking
 change — additive only. Per CLAUDE.md, breaking changes need a 2-month notice +
-`lifecycle::deprecate_warn()`; none of A/B/C is breaking.
+`lifecycle::deprecate_warn()`; none of A/B/C or D8(b) is breaking. #81 and #82 change results
+(bug fixes, documented as behavior changes with ecosystem notes in NEWS).
 
 ---
 
@@ -121,8 +159,9 @@ change — additive only. Per CLAUDE.md, breaking changes need a 2-month notice 
 | Ext | New exports | External deps | Est. | Gate |
 |-----|-------------|---------------|------|------|
 | A Parallel | `ParallelMediationData` (+ method updates) | none | 1–2 wk | none |
-| B Interaction | `InteractionMediationData`, `Decomposition` | none | 1–2 wk | A merged (shared test scaffold) |
+| B Interaction | `InteractionMediationData`, `decompose()` (no `Decomposition` class was built) | none | 1–2 wk | A merged (shared test scaffold) |
 | C Adapter | one new `engine_args` param on `fit_mediation()` | regmedint (Suggests) | ~1 wk | ✅ B merged, C done |
+| D8(b) Joint | `JointMediationData`, `joint_effects()` | none | done | ✅ merged to dev |
 | C.1 Adapter (deferred) | — (blocked, not spec'd) | CMAverse (Suggests, non-CRAN) | TBD | CRAN-availability + effect-repr. resolved |
 
 All work happens on **feature worktrees off `dev`** (code can't land on `dev`/`main`
@@ -142,8 +181,9 @@ directly). Each extension: spec → worktree → TDD → vignette → PR → CRA
    promoted to a first-class `fit_mediation()` arg alongside it. Version now 0.4.0 on `dev`.
    `planning/specs/SPEC-engine-adapter-architecture-2026-08-22.md` (regmedint adapter; CMAverse
    deferred to Ext C.1, blocked — see `GRILL-engine-adapter-architecture-2026-08-22.md`).
-6. **No worktree open** — Ext C.1 (CMAverse) needs its own spec first (blocked, see above);
-   otherwise nothing queued.
+6. ~~D8(b) joint effects + post-0.4.0 fixes~~ **DONE** (#62-#82, merged to `dev`).
+7. **Next: 0.5.0 release (proposed)** — checklist in `TODOS.md`. After that: Ext D spec
+   (multilevel); Ext C.1 stays blocked.
 
 See also: `medfit-roadmap.md` (detailed designs), `CASCADE-cran-flip-2026-06-03.md`
 (post-CRAN dependent updates), `MEDIATIONVERSE-PROPOSAL.md` (ecosystem context).
