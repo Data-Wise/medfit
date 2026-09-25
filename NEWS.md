@@ -1,5 +1,12 @@
 # medfit 0.5.0
 
+Two fixes change results (marked **Behavior change** below): serial `te()`
+and `pm()` now sum every path (#81), and `confint(parm = "paths")` finds path
+rows by name instead of by position (#82). Both correct wrong output, so they
+ship without a deprecation period. Ecosystem: probmed and RMediation call
+neither function and their test suites pass against this release. The same
+bugs are present in CRAN 0.3.2; see #83 for workarounds.
+
 ## New features
 
 * New `JointMediationData` class: `extract_mediation()` on lm/glm fits with
