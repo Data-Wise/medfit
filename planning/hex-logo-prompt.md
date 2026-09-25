@@ -1,5 +1,7 @@
 # Hex Logo Prompt for medfit Package
 
+> **Historical (2025-12).** The logo exists (`man/figures/logo.png`); kept for regenerating it.
+
 ## For AI Image Generators (DALL-E, Midjourney, Gemini, etc.)
 
 Create a professional hexagonal sticker logo for an R package called "medfit" with the following specifications:

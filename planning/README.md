@@ -1,96 +1,35 @@
-# medfit Planning Documents
+# medfit planning documents
 
-This directory contains implementation planning for the medfit package.
+Index of `planning/`. Updated 2026-09-25 (0.5.0 released on GitHub and r-universe; CRAN has
+0.3.2). Live state is in `../.STATUS`; ecosystem-wide planning is in the hub,
+`~/projects/r-packages/mediation-planning/` (public: `Data-Wise/mediation-planning`).
 
----
+## Start here
 
-## 📋 Active Documents
+| File | Use it for |
+|---|---|
+| `START-HERE.md` | Orientation for a new session |
+| `TODOS.md` | Active tasks and the most recent completed work |
+| `PROJECT-HUB.md` | One-page status, phases and the current decision point |
+| `EXTENSIONS-PLAN-2026-06-03.md` | Extension board (A-E, D8) and what is next |
+| `medfit-roadmap.md` | Detailed designs and the original phase plan (historical checklists) |
+| `IDEAS.md` | Idea backlog, with shipped ideas marked |
+| `GAP-docs-vignettes-2026-09-24.md` | Documentation gap analysis (all items fixed) |
+| `specs/` | Specs, plans and decision ledgers; index in `specs/README.md` |
 
-### **medfit-roadmap.md** - Implementation Plan
-Detailed multi-phase implementation plan for creating medfit MVP and post-MVP features.
+## Pointers to the ecosystem hub
 
-**MVP Phases**:
-1. Package Setup - COMPLETE
-2. S7 Classes - COMPLETE
-3. Extraction API - COMPLETE (lm/glm, lavaan)
-4. Fitting API (in progress)
-5. Bootstrap
-6. Testing & Docs
-8. Polish & Release
+`ECOSYSTEM.md`, `API-DESIGN-DECISIONS.md`, `FUNCTION-NAMING-DEEP-DIVE.md`,
+`GENERIC-FUNCTIONS-RESEARCH.md`, `GENERIC-NAMING-STRATEGY.md` and `MEDIATIONVERSE-PROPOSAL.md` are
+stubs that name where the content moved in the hub.
 
-**Post-MVP Phases**:
-7. Interaction Support - VanderWeele four-way decomposition
-7b. Estimation Engine - User interface, Decomposition class
-7c. Engine Adapters - CMAverse integration, external package wrapping
+## Historical records
 
-**Use this to**:
-- Track implementation progress
-- See specific tasks for each phase
-- Check success criteria
-- Understand architecture decisions
+`ADHD-FRIENDLY-WORKFLOW.md`, `COORDINATION-BRAINSTORM.md`, `ECOSYSTEM-COORDINATION.md`,
+`REVERSION-SUMMARY.md`, `RHUB-BADGE-RESEARCH.md` and `hex-logo-prompt.md` are dated snapshots,
+each marked with a banner. Superseded documents are in `archive/` (see `archive/README.md`).
 
----
+## Conventions
 
-### **Code Quality Infrastructure**
-
-The package implements defensive programming best practices:
-
-**Input Validation**:
-- **checkmate** package for fast, informative argument assertions
-- S7 validators for class-level type safety
-
-**Testing**:
-- testthat with 184 tests (0 errors, 0 warnings, 1 skip)
-- covr for code coverage tracking
-- Snapshot testing for complex outputs
-
-**CI/CD** (GitHub Actions):
-- `R-CMD-check.yaml` - Multi-platform R CMD check (r-lib/actions standard)
-- `test-coverage.yaml` - Code coverage reporting to Codecov
-- `lint.yaml` - Static code analysis with lintr
-- `pkgdown.yaml` - Website deployment
-- `dependabot.yml` - Automated GitHub Actions updates
-
-**Code Style**:
-- `.lintr` configuration for consistent style enforcement
-- tidyverse style guide with snake_case naming
-
----
-
-### **ECOSYSTEM.md** 🔗 Package Connections
-Documents connections to probmed, RMediation, and medrobust.
-
-**Use this to**:
-- Understand how medfit fits in ecosystem
-- Check impact of changes on other packages
-- See migration guides for dependent packages
-- Coordinate releases
-
----
-
-## 🗂️ Related Planning Documents
-
-These are in the **probmed/planning/** directory (parent ecosystem):
-
-- **DECISIONS.md** - Key architectural decisions (including medfit)
-- **ROADMAP.md** - Overall ecosystem roadmap
-- **three-package-ecosystem-strategy.md** - Strategic analysis
-- **model-engines-brainstorm.md** - Model engine decisions
-
----
-
-## 🎯 Quick Start
-
-**Starting medfit development?**
-1. Read `medfit-roadmap.md` for implementation plan
-2. Read `ECOSYSTEM.md` for ecosystem context
-3. Read `../probmed/planning/DECISIONS.md` for key decisions
-
-**Checking impact on other packages?**
-1. Read `ECOSYSTEM.md` → "Coordination Points"
-2. Check version compatibility matrix
-3. Review migration guides
-
----
-
-**Last Updated**: 2025-12-03
+- `planning/` is excluded from the package tarball (`.Rbuildignore`: `^planning$`).
+- Specs are `SPEC-<topic>-<date>.md`; decision ledgers from a grill are `GRILL-<topic>-<date>.md`.

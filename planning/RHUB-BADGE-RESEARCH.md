@@ -1,5 +1,7 @@
 # R-hub Badge Research: Tidyverse Best Practices
 
+> **Historical (2025-12).** Decision in effect: no R-hub badge in README; `.github/workflows/rhub.yaml` is kept for on-demand runs.
+
 **Date**: 2025-12-20
 **Research Question**: Should we include an R-hub badge in medfit's README?
 

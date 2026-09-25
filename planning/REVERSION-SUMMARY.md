@@ -1,5 +1,7 @@
 # Website Design Reversion Summary
 
+> **Historical (2025-12).** Kept as the record of why the pkgdown design was reverted.
+
 **Date**: 2025-12-20
 **Action**: Reverted pkgdown website design to pre-ADHD state
 **Reason**: Code chunks not rendering properly with custom CSS overrides

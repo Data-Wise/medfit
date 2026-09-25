@@ -185,5 +185,5 @@ directly). Each extension: spec → worktree → TDD → vignette → PR → CRA
 7. ~~0.5.0 release~~ **DONE** (2026-09-25, #84, tag `v0.5.0`; GitHub-only).
 8. **Next: Ext D spec** (multilevel); Ext C.1 stays blocked.
 
-See also: `medfit-roadmap.md` (detailed designs), `CASCADE-cran-flip-2026-06-03.md`
-(post-CRAN dependent updates), `MEDIATIONVERSE-PROPOSAL.md` (ecosystem context).
+See also: `medfit-roadmap.md` (detailed designs), `archive/CASCADE-cran-flip-2026-06-03.md`
+(post-CRAN dependent updates; historical), `MEDIATIONVERSE-PROPOSAL.md` (ecosystem context).

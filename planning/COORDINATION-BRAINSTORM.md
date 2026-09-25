@@ -1,5 +1,7 @@
 # mediationverse Coordination Brainstorming
 
+> **Historical (2025-12).** Current coordination lives in the ecosystem hub (`mediation-planning/docs/ECOSYSTEM-COORDINATION.md`) and `.STATUS`.
+
 **Date**: 2025-12-15
 **Context**: medfit MVP nearing completion, need to coordinate integration with mediationverse ecosystem
 **Decision Made**: medfit is the foundation package (per three-package-ecosystem-strategy.md, Dec 2, 2025)
