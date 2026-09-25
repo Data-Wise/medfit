@@ -26,7 +26,7 @@ Active tasks, implementation plan, and progress tracking.
 - [ ] **probmed Stage 2** (lives in the probmed repo, not here)
   - Unblocked by 0.3.2 on CRAN. probmed's DESCRIPTION already has `Imports: medfit (>= 0.3.0)`
     and no `Remotes:` pin (checked 2026-09-24); its CRAN prep is tracked in probmed
-  - medfit side: probmed imports only `extract_mediation()`; #81/#82 do not affect it
+  - medfit side: probmed imports `extract_mediation()` and defines `pmed` methods on medfit classes; it calls neither `te()`/`pm()` nor `confint()`, so #81/#82 do not affect it
 
 ### Medium Priority 🟡
 

@@ -43,7 +43,7 @@ Features (Phases 1-5):            ███████████████�
 
 ## ✅ Completed Recently
 
-### Since 0.4.0 (dev, 2026-09-23/24)
+### Since 0.4.0 (released in 0.5.0; merged 2026-09-23/24)
 - [x] ✅ `mediation_demo` dataset; examples and articles moved to it (#62-#65, #67)
 - [x] ✅ Delta-method effect SEs in `tidy()`/`confint()` for all classes; lavaan alias, wrapped-product, `vcov_fun`, identity-link and `m_star` fixes (#69-#75)
 - [x] ✅ D8(b) `JointMediationData` + `joint_effects()` (#76, #77)
@@ -57,7 +57,7 @@ Features (Phases 1-5):            ███████████████�
 - [x] ✅ 0.4.0 tagged + GitHub release (2026-08-23): Ext A/B/C
 
 ### Package Recovery
-- [x] ✅ Recovered from Google Drive trash (Dec 11)
+- [x] ✅ Recovered from Google Drive trash (2025-12-12)
 - [x] ✅ Git history preserved
 - [x] ✅ Package loads without errors
 - [x] ✅ Organized in active/ directory

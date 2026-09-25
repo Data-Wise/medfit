@@ -509,12 +509,12 @@ fit_mediation <- function(...) {
 ```
 
 **Deliverables**:
-- [x] `fit_mediation()` function (stub)
-- [ ] GLM engine implementation (`R/fit-glm.R`)
-- [ ] Formula validation
-- [ ] Comprehensive tests
-- [ ] Documentation with examples
-- [ ] Update vignettes
+- [x] `fit_mediation()` function
+- [x] GLM engine implementation (`R/fit-glm.R`)
+- [x] Formula validation
+- [x] Comprehensive tests (`tests/testthat/test-fit-*.R`)
+- [x] Documentation with examples
+- [x] Update vignettes
 
 **Time**: 2-3 days
 
@@ -712,14 +712,14 @@ tests/testthat/
 - Classes: 100%
 - Bootstrap: >95%
 
-**Test scenarios**:
-- [ ] S7 class validation catches errors
-- [ ] Extraction from lm/glm matches manual
-- [ ] Extraction from lavaan consistent
-- [ ] GLM fitting produces valid MediationData
-- [ ] Parametric bootstrap reproducible with seed
-- [ ] Nonparametric bootstrap reproducible with seed
-- [ ] Plugin method fast and accurate
+**Test scenarios** (all covered; see `tests/testthat/`):
+- [x] S7 class validation catches errors
+- [x] Extraction from lm/glm matches manual
+- [x] Extraction from lavaan consistent
+- [x] GLM fitting produces valid MediationData
+- [x] Parametric bootstrap reproducible with seed
+- [x] Nonparametric bootstrap reproducible with seed
+- [x] Plugin method fast and accurate
 - [ ] Edge cases handled (small n, non-convergence)
 
 ### 6.2 Documentation
@@ -1016,12 +1016,14 @@ Per VanderWeele (2014), causal interpretation requires:
 
 ### 7.11 Deliverables
 
-- [ ] InteractionMediationData S7 class
-- [ ] Interaction detection in extract_mediation()
-- [ ] Four-way decomposition computation
-- [ ] Delta method or bootstrap SEs
-- [ ] Documentation with examples
-- [ ] Tests comparing to med4way/regmedint
+Shipped in #38/#39/#40 (2026-06-04):
+
+- [x] InteractionMediationData S7 class
+- [x] Interaction detection in extract_mediation()
+- [x] Four-way decomposition computation
+- [x] Delta method or bootstrap SEs
+- [x] Documentation with examples
+- [x] Tests comparing to regmedint (`tests/testthat/test-fit-regmedint.R`)
 
 **Time**: 1-2 weeks (after MVP)
 
@@ -1292,7 +1294,7 @@ plot(result, type = "bootstrap")      # Bootstrap distribution
 
 ---
 
-## Phase 7c: Engine Adapter Architecture (Future)
+## Phase 7c: Engine Adapter Architecture (regmedint shipped in 0.4.0; CMAverse blocked)
 
 **Goal**: Standardize integration with external packages for advanced estimation methods
 
@@ -1754,6 +1756,10 @@ NULL
 
 ## Integration Plan (Week 6+)
 
+> **Historical plan (2025-12).** What happened: probmed `Imports: medfit (>= 0.3.0)` and uses
+> `extract_mediation()`; RMediation lists medfit in `Suggests (>= 0.2.0)`; medrobust does not
+> depend on medfit. Both probmed and RMediation tests pass against 0.5.0.
+
 **After medfit MVP is complete**:
 
 ### probmed Integration
@@ -1786,21 +1792,21 @@ medfit is ready for integration when:
 
 - [x] All core functions implemented and tested
 - [x] S7 classes defined and validated
-- [ ] >90% test coverage
+- [x] >90% test coverage (94.04% on main at 0.5.0, Codecov)
 - [x] R CMD check: 0 errors, 0 warnings (strict check 0/0/1: the Date NOTE only)
 - [x] Documentation complete (functions + vignettes)
 - [x] pkgdown site deployed
-- [ ] probmed can use medfit without breaking changes
+- [x] probmed can use medfit without breaking changes (probmed tests pass against 0.5.0)
 
 ### Integration Success Criteria
 
 Integration is successful when:
 
-- [ ] probmed uses medfit backend
-- [ ] All probmed tests pass
-- [ ] probmed R CMD check clean
-- [ ] No user-facing breaking changes
-- [ ] Documentation updated
+- [x] probmed uses medfit backend (`importFrom(medfit, extract_mediation)`)
+- [x] All probmed tests pass (465 passed, 0 failed against 0.5.0; 2026-09-25)
+- [ ] probmed R CMD check clean (tracked in probmed)
+- [x] No user-facing breaking changes
+- [ ] Documentation updated (tracked in probmed)
 
 ---
 
@@ -1866,7 +1872,7 @@ The original week-by-week plan is complete. Current next actions:
 3. **CRAN submission timing?**
    - Option 1: Submit medfit to CRAN before integration
    - Option 2: Submit after probmed integration
-   - **Decision**: After probmed integration (reduces risk)
+   - **Decision**: ~~After probmed integration (reduces risk)~~ **Superseded**: medfit reached CRAN first (0.2.1, then 0.3.2 on 2026-07-23); probmed followed as a dependent
 
 ---
 

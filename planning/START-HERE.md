@@ -42,7 +42,7 @@
 
 3. **.STATUS** - Current state and per-PR record (source of truth)
 
-4. **planning/TODOS.md** - Active tasks, including the 0.5.0 release checklist
+4. **planning/TODOS.md** - Active tasks (the completed 0.5.0 checklist is under Recently Completed)
 
 5. **planning/EXTENSIONS-PLAN-2026-06-03.md** - Prioritized extensions board
 
@@ -130,7 +130,7 @@ medfit/
 │   ├── TODOS.md               (active tasks)
 │   ├── ECOSYSTEM.md           (stub → ecosystem hub)
 │   └── README.md              (planning guide)
-└── .github/workflows/     ← CI/CD (R-CMD-check, coverage, pkgdown)
+└── .github/workflows/     ← CI/CD (R-CMD-check, test-coverage, lint, pkgdown, revdep-check, rhub, claude)
 ```
 
 ### ✅ Planning Documents
@@ -149,9 +149,7 @@ medfit/
    0.5.0 shipped 2026-09-25 (GitHub-only); the next CRAN trigger is open
    (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
 
-2. **After 0.5.0**
-   - Ext D (multilevel) spec — see `planning/specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
-   - Ext C.1 (CMAverse) stays blocked
+2. **Blocked:** Ext C.1 (CMAverse) — not on CRAN
 
 ### Done (Phases 1-4)
 
@@ -204,7 +202,7 @@ medfit/
 - Optionally use medfit for naive estimates
 - Optionally use bootstrap utilities
 
-**Migration**: Optional, Week 10
+**Migration**: Optional; no date (medrobust does not depend on medfit)
 
 ---
 

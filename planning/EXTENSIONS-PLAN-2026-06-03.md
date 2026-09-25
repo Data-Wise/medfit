@@ -37,8 +37,8 @@ over-engineering, type-safe via validators. This is the established medfit patte
 
 ### ✅ Extension A — Parallel mediation — COMPLETE
 **New class:** `ParallelMediationData` (X → M₁..Mₖ → Y, independent mediators).
-The natural sibling to `SerialMediationData`; currently the only core structure with
-**no design doc**. Indirect effect = Σ aⱼ·bⱼ.
+The natural sibling to `SerialMediationData`; designed in
+`specs/SPEC-parallel-extractor-2026-06-03.md` and shipped in #34/#36/#37. Indirect effect = Σ aⱼ·bⱼ.
 
 ```r
 ParallelMediationData <- S7::new_class("ParallelMediationData",
@@ -128,14 +128,14 @@ v0.3.2 (CRAN, accepted + published 2026-07-23)
    │
    ├─ Q1–Q3 quick wins ........................ ✅ done
    │
-   ├─ A: ParallelMediationData ................ ✅ done (merged to dev)
+   ├─ A: ParallelMediationData ................ ✅ done (#34/#36/#37)
    │
-   ├─ B: InteractionMediationData (4-way) ..... ✅ done (merged to dev)
+   ├─ B: InteractionMediationData (4-way) ..... ✅ done (#38/#39/#40)
    │        │
    │        └─ C: regmedint adapter .......... ✅ done (PR #59) → v0.4.0 (GitHub, 2026-08-23)
    │                 └─ C.1: CMAverse adapter . blocked (CRAN availability + effect repr.)
    │
-   ├─ D8(b): JointMediationData ............... ✅ done (merged to dev, #76/#77)
+   ├─ D8(b): JointMediationData ............... ✅ done (#76/#77) → v0.5.0
    │
    ├─ 0.5.0 release ........................... ✅ done (GitHub + r-universe, 2026-09-25)
    │
@@ -160,8 +160,8 @@ change — additive only. Per CLAUDE.md, breaking changes need a 2-month notice 
 |-----|-------------|---------------|------|------|
 | A Parallel | `ParallelMediationData` (+ method updates) | none | 1–2 wk | none |
 | B Interaction | `InteractionMediationData`, `decompose()` (no `Decomposition` class was built) | none | 1–2 wk | A merged (shared test scaffold) |
-| C Adapter | one new `engine_args` param on `fit_mediation()` | regmedint (Suggests) | ~1 wk | ✅ B merged, C done |
-| D8(b) Joint | `JointMediationData`, `joint_effects()` | none | done | ✅ merged to dev |
+| C Adapter | `engine_args` and `m_star` params on `fit_mediation()` | regmedint (Suggests) | ~1 wk | ✅ B merged, C done |
+| D8(b) Joint | `JointMediationData`, `joint_effects()` | none | done | ✅ released in 0.5.0 |
 | C.1 Adapter (deferred) | — (blocked, not spec'd) | CMAverse (Suggests, non-CRAN) | TBD | CRAN-availability + effect-repr. resolved |
 
 All work happens on **feature worktrees off `dev`** (code can't land on `dev`/`main`
@@ -178,7 +178,7 @@ directly). Each extension: spec → worktree → TDD → vignette → PR → CRA
    22 tests) all merged to `dev`. Spec: `planning/specs/SPEC-interaction-fourway-2026-06-03.md`.
 4. ~~Toolchain: roxygen2 8.0.0 migration~~ **DONE** (issue #35, landed alongside 0.3.x work).
 5. ~~Extension C~~ **DONE** (2026-08-22) — regmedint adapter merged (PR #59, `08351f1`); `m_star`
-   promoted to a first-class `fit_mediation()` arg alongside it. Version now 0.4.0 on `dev`.
+   promoted to a first-class `fit_mediation()` arg alongside it. Released as 0.4.0 (2026-08-23).
    `planning/specs/SPEC-engine-adapter-architecture-2026-08-22.md` (regmedint adapter; CMAverse
    deferred to Ext C.1, blocked — see `GRILL-engine-adapter-architecture-2026-08-22.md`).
 6. ~~D8(b) joint effects + post-0.4.0 fixes~~ **DONE** (#62-#82, merged to `dev`).
