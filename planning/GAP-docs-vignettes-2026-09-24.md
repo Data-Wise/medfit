@@ -46,7 +46,7 @@ Status key: **fixed** (in this branch) · **open** (not addressed here).
 | Stale "Development Status" phase lists (getting-started, introduction, README) | **fixed** |
 | No worked example of `weights` / `se_type = "sandwich"` | **fixed**: getting-started "Case Weights and Robust Standard Errors" (stabilized IPW, live output) |
 | No worked `tidy()`/`glance()` on parallel or interaction objects; no `decompose()` on a joint object | **fixed**: parallel and interaction `tidy()`/`glance()`, and joint `decompose()` with an `m_star` comparison (extraction article) |
-| Articles are `eval: false` with hand-written output, so drift is never caught | **open**: consider evaluating the cheap chunks at site build |
+| Articles are `eval: false` with hand-written output, so drift is never caught | **fixed** (`b888ffe`): articles evaluate at site build; pkgdown CI runs on PRs to dev. Turning it on caught 3 broken examples |
 
 ## 4. README / pkgdown
 
