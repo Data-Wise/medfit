@@ -21,7 +21,7 @@ Active tasks, implementation plan, and progress tracking.
 ### High Priority 🔴
 
 - [x] Pinned known-issues issue #83 for CRAN 0.3.2 + README pointer (2026-09-24)
-- [ ] **0.5.0 release — GitHub only**
+- [x] **0.5.0 release — GitHub only** (released 2026-09-25, #84 → `4cb0550`, tag `v0.5.0`)
   - [x] Bump DESCRIPTION 0.4.0 → 0.5.0 (Date 2026-09-24); NEWS heading; README citation
   - [x] NEWS: both behavior changes marked, plus a 0.5.0 lead paragraph with the ecosystem
         note and #83 pointer
@@ -30,12 +30,10 @@ Active tasks, implementation plan, and progress tracking.
   - [x] Dependents vs dev 0.5.0 (scratch library, 2026-09-24): probmed `64f37cf` 465 passed /
         0 failed / 20 skipped (probmed's own incremental/rg-flow/Wasserstein skips); RMediation
         `7c588d4` 426 passed / 0 failed / 0 skipped
-  - [ ] dev → main PR (merge commit), tag `v0.5.0`, GitHub release
-  - [ ] Confirm the main pkgdown deploy fixes the README link to `articles/methods.html` (404s
-        until then)
-  - [ ] Confirm r-universe picks up the `v0.5.0` build (check the `/api/packages` list, not
-        `/api/packages/medfit`)
-  - [ ] Once released, update #83 with the release link
+  - [x] dev → main PR #84 (merge commit, 17/17 checks), main CI green, tag `v0.5.0`, GitHub release
+  - [x] Site serves 0.5.0; `articles/methods.html` returns 200
+  - [x] r-universe `/api/packages` lists medfit 0.5.0
+  - [x] #83 updated with the release link (stays open until a CRAN release)
 
 - [ ] **probmed Stage 2** (lives in the probmed repo, not here)
   - Unblocked by 0.3.2 on CRAN. probmed's DESCRIPTION already has `Imports: medfit (>= 0.3.0)`
