@@ -25,10 +25,11 @@ Active tasks, implementation plan, and progress tracking.
   - [x] Bump DESCRIPTION 0.4.0 → 0.5.0 (Date 2026-09-24); NEWS heading; README citation
   - [ ] NEWS: confirm both behavior changes carry ecosystem notes (serial `te()`/`pm()` #81;
         `confint(parm = "paths")` alias lookup #82)
-  - [ ] `devtools::check()` clean + full test suite (strict CRAN flavors not required for a
+  - [x] `devtools::check()` clean + full test suite (cran-prep gate 2026-09-24: 0 errors, 0 warnings; 1546 tests pass; strict CRAN flavors not required for a
         GitHub-only release, but cheap; run them if time allows)
-  - [ ] Dependents: install dev build in a scratch library and run probmed and RMediation tests
-        (neither calls `te()`/`pm()`/`confint()`, checked 2026-09-24)
+  - [x] Dependents vs dev 0.5.0 (scratch library, 2026-09-24): probmed `64f37cf` 465 passed /
+        0 failed / 20 skipped (probmed's own incremental/rg-flow/Wasserstein skips); RMediation
+        `7c588d4` 426 passed / 0 failed / 0 skipped
   - [ ] dev → main PR (merge commit), tag `v0.5.0`, GitHub release
   - [ ] Confirm the main pkgdown deploy fixes the README link to `articles/methods.html` (404s
         until then)
