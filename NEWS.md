@@ -86,6 +86,12 @@ bugs are present in CRAN 0.3.2; see #83 for workarounds.
 
 ## Bug fixes
 
+* `extract_mediation()` on a lavaan fit with sampling weights no longer fails
+  with "Number of rows in data must match n_obs". lavaan normalizes the weights
+  to sum to N, so its `nobs` can read N - 1e-13 (355.99999999999994 for
+  N = 356), and `n_obs` was truncated to N - 1. It is now rounded. This affects
+  the mediation, parallel, serial and interaction extractors.
+
 * **Behavior change:** `confint(parm = "paths")` now finds each path's row of
   `@vcov` by name: the alias rows (`a`, `b`, `c_prime`; `d1`, ...; `a1`,
   `b1`, ...; `theta3`) first, then, for `MediationData`, the lm-style

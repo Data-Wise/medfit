@@ -412,11 +412,8 @@ extract_mediation_lavaan <- function(object,
   })
 
   # Get sample size
-  n_obs <- lavaan::lavInspect(object, "nobs")
-  if (length(n_obs) > 1) {
-    # Multiple groups - use total
-    n_obs <- sum(n_obs)
-  }
+  # Multiple groups: the total
+  n_obs <- .lavaan_n_obs(object)
 
   # --- Get Predictor Names ---
 
@@ -658,8 +655,7 @@ extract_mediation_lavaan <- function(object,
     if (is.matrix(d)) as.data.frame(d) else if (is.data.frame(d)) d else NULL
   }, error = function(e) NULL)
 
-  n_obs <- lavaan::lavInspect(object, "nobs")
-  if (length(n_obs) > 1) n_obs <- sum(n_obs)
+  n_obs <- .lavaan_n_obs(object)
 
   converged <- lavaan::lavInspect(object, "converged")
 
@@ -903,8 +899,7 @@ extract_mediation_lavaan <- function(object,
     if (is.matrix(d)) as.data.frame(d) else if (is.data.frame(d)) d else NULL
   }, error = function(e) NULL)
 
-  n_obs <- lavaan::lavInspect(object, "nobs")
-  if (length(n_obs) > 1) n_obs <- sum(n_obs)
+  n_obs <- .lavaan_n_obs(object)
 
   converged <- lavaan::lavInspect(object, "converged")
 
@@ -1139,8 +1134,7 @@ extract_mediation_lavaan <- function(object,
                                            param_table$op == "~"]
   outcome_predictors <- param_table$rhs[param_table$lhs == outcome &
                                           param_table$op == "~"]
-  n_obs <- lavaan::lavInspect(object, "nobs")
-  if (length(n_obs) > 1) n_obs <- sum(n_obs)
+  n_obs <- .lavaan_n_obs(object)
   converged <- lavaan::lavInspect(object, "converged")
 
   InteractionMediationData(
@@ -1210,4 +1204,13 @@ extract_mediation_lavaan <- function(object,
       S7::method(extract_mediation, lavaan_class) <- extract_mediation_lavaan
     }
   }
+}
+
+# Sample size of a lavaan fit, as a whole number. lavaan normalizes sampling
+# weights to sum to N, so lavInspect(fit, "nobs") can read N - 1e-13 (e.g.
+# 355.99999999999994); as.integer() would truncate that to N - 1 and the
+# MediationData validator would reject the object. Multiple groups: the total.
+#' @noRd
+.lavaan_n_obs <- function(object) {
+  as.integer(round(sum(lavaan::lavInspect(object, "nobs"))))
 }
