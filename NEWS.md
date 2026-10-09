@@ -157,7 +157,7 @@ bugs are present in CRAN 0.3.2; see #83 for workarounds.
   `@vcov` by name: the alias rows (`a`, `b`, `c_prime`; `d1`, ...; `a1`,
   `b1`, ...; `theta3`) first, then, for `MediationData`, the lm-style
   `m_<treatment>`, `y_<mediator>`, `y_<treatment>` rows. Names come from
-  `rownames(@vcov)`, or from `names(@estimates)` when `@vcov` has none.
+  `rownames(x@vcov)`, or from `names(x@estimates)` when `x@vcov` has none.
   Previously `MediationData` looked only for the lm-style names and otherwise
   warned and took the first three diagonal entries. That gave wrong SEs for
   every lavaan-extracted object, where rows 1-3 are a, c', b, so b and c'
