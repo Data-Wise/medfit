@@ -12,6 +12,8 @@ permissions: read-all
 jobs:
   lint:
     runs-on: ubuntu-latest
+    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default.
+    timeout-minutes: 15
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
