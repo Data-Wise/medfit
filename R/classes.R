@@ -1986,6 +1986,56 @@ ClusterMediationData <- S7::new_class(
 )
 
 
+# Effects reported with standard errors (tidy, confint, summary): estimate
+# vector in canonical order. own and spillover are the cluster-average,
+# large-cluster approximation of the NIE split.
+.cluster_effect_vec <- function(x) {
+  a <- x@a_path
+  c(nie = a * x@b_between, nde = x@c_prime, te = a * x@b_between + x@c_prime,
+    own = a * x@b_within, spillover = a * (x@b_between - x@b_within))
+}
+
+# The "Estimand and assumptions" block shared by print() and summary(): the
+# design, the cluster count and size range, and one line per row of the
+# assumptions table (D9), adjusted by `covariates_centered` (Behavior 8).
+.cluster_assumptions_block <- function(x) {
+  sizes <- x@cluster_sizes
+  upper <- if (isTRUE(x@covariates_centered)) {
+    paste0("Own (a * b_within): no unmeasured lower-level M-Y confounding; ",
+           "additive upper-level confounders are allowed because level-1 ",
+           "covariates are cluster-mean centered.")
+  } else {
+    paste0("Own (a * b_within): no unmeasured lower-level M-Y confounding. ",
+           "Level-1 covariates in the outcome model have no cluster-mean ",
+           "companion, so robustness to upper-level confounding does NOT hold.")
+  }
+  items <- c(
+    sprintf(paste0("Design: treatment `%s` assigned to %d clusters (`%s`, ",
+                   "sizes %d to %d); linear mixed models with a random ",
+                   "cluster intercept, mediator entering through the ",
+                   "observed cluster mean."),
+            x@treatment, x@n_clusters, x@cluster, min(sizes), max(sizes)),
+    paste0("All rows: linear models with no mediator-by-treatment or ",
+           "mediator-by-covariate products; treatment randomized; clusters ",
+           "intact."),
+    upper,
+    paste0("Spillover, NIE and NDE: also no unmeasured upper-level M-Y ",
+           "confounding."),
+    "TE: no assumption beyond randomization of the treatment.",
+    paste0("Own/spillover split: a cross-world assumption across ",
+           "individuals in a cluster; no treatment-induced M-Y confounding."),
+    paste0("Interference only through the observed cluster mean of the ",
+           "mediator and none between clusters; members missing from the ",
+           "analysis rows are assumed not to drive their peers' outcomes.")
+  )
+  wrap <- function(txt, first) {
+    strwrap(txt, width = 88, initial = first, prefix = "", exdent = 4)
+  }
+  c("Estimand and assumptions:",
+    wrap(items[1], "  "),
+    unlist(lapply(items[-1], wrap, first = "  - ")))
+}
+
 #' Print Method for ClusterMediationData
 #'
 #' @param x A ClusterMediationData object
@@ -2001,5 +2051,80 @@ S7::method(print, ClusterMediationData) <- function(x, ...) {
   cat(sprintf("  n = %d in %d clusters (sizes %d to %d)   |   %s outcome model, %s SEs\n",
               x@n_obs, x@n_clusters, min(x@cluster_sizes), max(x@cluster_sizes),
               x@parameterization, x@se_type))
+  cat(paste0(.cluster_assumptions_block(x), "\n"), sep = "")
+  invisible(x)
+}
+
+
+#' Summary Method for ClusterMediationData
+#'
+#' @param object A ClusterMediationData object
+#' @param level Confidence level for the normal-approximation intervals.
+#' @param ... Additional arguments (ignored)
+#' @noRd
+S7::method(summary, ClusterMediationData) <- function(object, level = 0.95, ...) {
+  checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
+  keys <- c("nie", "nde", "te", "own", "spillover")
+  est <- .cluster_effect_vec(object)[keys]
+  se <- .effect_se_or_na(object, keys)
+  z <- stats::qnorm(1 - (1 - level) / 2)
+  effects <- data.frame(estimate = unname(est), std.error = unname(se),
+                        conf.low = unname(est - z * se),
+                        conf.high = unname(est + z * se),
+                        row.names = c("NIE", "NDE", "Total", "Own (a*b_within)",
+                                      "Spillover"))
+  structure(
+    list(
+      effects = effects,
+      level = level,
+      paths = paths(object),
+      own_gap = .cluster_own_gap(object),
+      own_se = unname(se["own"]),
+      block = .cluster_assumptions_block(object),
+      variables = c(treatment = object@treatment, mediator = object@mediator,
+                    outcome = object@outcome, cluster = object@cluster),
+      n_obs = object@n_obs,
+      n_clusters = object@n_clusters,
+      converged = object@converged,
+      se_type = object@se_type,
+      source_package = object@source_package
+    ),
+    class = "summary.ClusterMediationData"
+  )
+}
+
+
+#' Print Summary for ClusterMediationData
+#'
+#' @param x A summary.ClusterMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x` (the `summary.ClusterMediationData` object).
+#'   Called for its side effect of printing the formatted summary to the console.
+#' @export
+print.summary.ClusterMediationData <- function(x, ...) {
+  cat("Summary of ClusterMediationData\n")
+  cat("===============================\n\n")
+  cat(sprintf("%s -> %s -> %s, clusters `%s`\n", x$variables["treatment"],
+              x$variables["mediator"], x$variables["outcome"],
+              x$variables["cluster"]))
+  cat("\nEffects (unit contrast 0 -> 1):\n")
+  print(round(x$effects, 4))
+  cat(sprintf("  %g%% normal-approximation intervals (%s SEs).\n",
+              100 * x$level, x$se_type))
+  cat("  Own and spillover are the cluster-average, large-cluster approximation.\n")
+  cat(sprintf(paste0("  D-own gap |a (b_between - b_within)| / H = %.4g ",
+                     "(own SE %.4g)%s\n"), x$own_gap, x$own_se,
+              if (!is.na(x$own_se) && x$own_gap > 0.5 * x$own_se) {
+                "; larger than half the SE, so read the split with care"
+              } else {
+                ""
+              }))
+  cat("\nPath coefficients:\n")
+  print(round(x$paths, 4))
+  cat("\n")
+  cat(paste0(x$block, "\n"), sep = "")
+  cat("\nSample Size:", x$n_obs, "in", x$n_clusters, "clusters\n")
+  cat("Converged:  ", ifelse(x$converged, "Yes", "No"), "\n")
+  cat("Source:     ", x$source_package, "\n")
   invisible(x)
 }

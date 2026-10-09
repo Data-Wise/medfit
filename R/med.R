@@ -218,8 +218,26 @@ quick <- function(x, digits = 3, ...) {
     return(.quick_serial_mediation_data(x, digits, ...))
   }
 
-  stop("quick() requires a MediationData or SerialMediationData object. ",
-       "Use med() or fit_mediation() first.", call. = FALSE)
+  if (S7::S7_inherits(x, ClusterMediationData)) {
+    return(.quick_cluster_mediation_data(x, digits, ...))
+  }
+
+  stop("quick() requires a MediationData, SerialMediationData or ",
+       "ClusterMediationData object. Use med() or fit_mediation() first.",
+       call. = FALSE)
+}
+
+
+#' Internal quick implementation for ClusterMediationData
+#' @noRd
+.quick_cluster_mediation_data <- function(x, digits = 3, ...) {
+  fmt <- function(v) format(v, digits = digits)
+  cat("NIE =", fmt(unclass(nie(x))[[1]]),
+      "| NDE =", fmt(x@c_prime),
+      "| own =", fmt(x@a_path * x@b_within),
+      "| spillover =", fmt(x@a_path * (x@b_between - x@b_within)),
+      "| clusters =", x@n_clusters, "\n")
+  invisible(x)
 }
 
 

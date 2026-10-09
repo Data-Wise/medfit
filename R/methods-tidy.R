@@ -96,6 +96,9 @@ tidy.S7_object <- function(x, ...) {
   if (S7::S7_inherits(x, JointMediationData)) {
     return(.tidy_joint_mediation_data(x, ...))
   }
+  if (S7::S7_inherits(x, ClusterMediationData)) {
+    return(.tidy_cluster_mediation_data(x, ...))
+  }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.tidy_bootstrap_result(x, ...))
   }
@@ -121,6 +124,9 @@ glance.S7_object <- function(x, ...) {
   }
   if (S7::S7_inherits(x, JointMediationData)) {
     return(.glance_joint_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, ClusterMediationData)) {
+    return(.glance_cluster_mediation_data(x, ...))
   }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.glance_bootstrap_result(x, ...))
@@ -490,6 +496,53 @@ glance.S7_object <- function(x, ...) {
     n_mediators = length(x@mediators),
     interactions = paste(x@interactions, collapse = ", "),
     m_star = paste(sprintf("%s=%g", names(x@m_star), x@m_star), collapse = ", "),
+    nobs = nobs(x),
+    converged = x@converged,
+    stringsAsFactors = FALSE
+  )
+
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Tidy a ClusterMediationData Object
+#'
+#' @param x A ClusterMediationData object
+#' @param type `"all"` (default), `"paths"` (a, b_within, b_between, c_prime),
+#'   or `"effects"` (nie, nde, te, own, spillover)
+#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
+#' @param conf.level Confidence level (default 0.95)
+#' @param ... Additional arguments (ignored)
+#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
+#'   `conf.high` when `conf.int = TRUE`)
+#' @noRd
+.tidy_cluster_mediation_data <- function(x, type = c("all", "paths", "effects"),
+                                         conf.int = FALSE, conf.level = 0.95,
+                                         ...) {
+  type <- match.arg(type)
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  effect_vec <- if (type %in% c("all", "effects")) .cluster_effect_vec(x)
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+}
+
+
+#' Glance at a ClusterMediationData Object
+#'
+#' @param x A ClusterMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A one-row tibble: nie, nde, te, pm, n_clusters, nobs, converged
+#' @noRd
+.glance_cluster_mediation_data <- function(x, ...) {
+  result <- data.frame(
+    nie = unclass(nie(x))[[1]],
+    nde = x@c_prime,
+    te = unclass(te(x))[[1]],
+    pm = as.numeric(pm(x)),
+    n_clusters = x@n_clusters,
     nobs = nobs(x),
     converged = x@converged,
     stringsAsFactors = FALSE

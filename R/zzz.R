@@ -91,6 +91,7 @@
   registerS3method("print", "summary.BootstrapResult", print.summary.BootstrapResult)
   registerS3method("print", "summary.SerialMediationData", print.summary.SerialMediationData)
   registerS3method("print", "summary.JointMediationData", print.summary.JointMediationData)
+  registerS3method("print", "summary.ClusterMediationData", print.summary.ClusterMediationData)
 
   # Register extraction methods for suggested packages (S4 classes)
   # lavaan is in Suggests, so we register dynamically if available

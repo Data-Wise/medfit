@@ -793,3 +793,110 @@ test_that("group 7: a parametric bootstrap from @estimates/@vcov reproduces the 
   expect_error(bootstrap_mediation(stat, method = "plugin", mediation_data = 1),
                "ClusterMediationData")
 })
+
+
+# T8: base and tidy methods, print and summary ---------------------------------
+
+# A hand-built object with fixed numbers, so the snapshots do not depend on lme4.
+# nolint start: object_usage_linter.
+snap_object <- function(centered = TRUE) {
+  nm <- c("a", "c_prime", "b_within", "b_between")
+  est <- c(a = 0.5, c_prime = 0.2, b_within = 0.3, b_between = 0.6)
+  vc <- matrix(c(0.0100, 0, 0, 0,
+                 0, 0.0200, 0.0010, 0.0005,
+                 0, 0.0010, 0.0030, 0.0004,
+                 0, 0.0005, 0.0004, 0.0150), 4, 4, dimnames = list(nm, nm))
+  ClusterMediationData(
+    a_path = 0.5, b_within = 0.3, b_between = 0.6, c_prime = 0.2,
+    estimates = est, vcov = vc, treatment = "X", mediator = "M",
+    outcome = "Y", cluster = "school", n_obs = 400L, n_clusters = 40L,
+    cluster_sizes = rep(c(8L, 12L), 20), parameterization = "within",
+    covariates_centered = centered, se_type = "model", reml = TRUE,
+    converged = TRUE, sigma_m = 1, sigma_y = 1, tau_m = 0.5, tau_y = 0.5,
+    source_package = "lme4"
+  )
+}
+# nolint end
+
+test_that("print() and summary() end with the estimand and assumptions block", {
+  expect_snapshot(print(snap_object(TRUE)))
+  expect_snapshot(print(summary(snap_object(TRUE))))
+  expect_snapshot(print(snap_object(FALSE)))
+  expect_snapshot(print(summary(snap_object(FALSE))))
+})
+
+test_that("the uncentered block drops the upper-level robustness clause", {
+  flat <- function(x) {
+    gsub("\\s+", " ", paste(utils::capture.output(print(x)), collapse = " "))
+  }
+  centered <- flat(snap_object(TRUE))
+  uncentered <- flat(snap_object(FALSE))
+  expect_match(centered, "additive upper-level confounders are allowed")
+  expect_no_match(centered, "does NOT hold")
+  expect_match(uncentered, "robustness to upper-level confounding does NOT hold")
+  expect_no_match(uncentered, "additive upper-level")
+})
+
+test_that("summary() always prints the D-own gap and flags a large one", {
+  s <- utils::capture.output(print(summary(snap_object())))
+  expect_true(any(grepl("D-own gap", s, fixed = TRUE)))
+  expect_false(any(grepl("read the split with care", s, fixed = TRUE)))
+  # Dyads: the gap is large against the own SE.
+  d <- snap_object()
+  d <- S7::set_props(d, n_obs = 400L, n_clusters = 200L,
+                     cluster_sizes = rep(2L, 200))
+  expect_true(any(grepl("read the split with care",
+                        utils::capture.output(print(summary(d))), fixed = TRUE)))
+  expect_equal(summary(snap_object())$own_gap, 0.5 * 0.3 / (2 / (1 / 8 + 1 / 12)),
+               tolerance = 1e-12)
+})
+
+test_that("coef(), vcov() and nobs() read the object", {
+  o <- snap_object()
+  expect_identical(coef(o), c(a = 0.5, b_within = 0.3, b_between = 0.6, c_prime = 0.2))
+  expect_equal(coef(o, "effects"), c(nie = 0.3, nde = 0.2, te = 0.5))
+  expect_identical(coef(o, "all"), o@estimates)
+  expect_identical(vcov(o), o@vcov)
+  expect_identical(class(vcov(o)), c("matrix", "array"))
+  expect_identical(nobs(o), 400L)
+})
+
+test_that("confint() equals tidy(conf.int = TRUE) to 1e-12", {
+  o <- snap_object()
+  td <- tidy(o, conf.int = TRUE)
+  for (parm in c("paths", "effects")) {
+    ci <- confint(o, parm = parm)
+    rows <- td[td$term %in% rownames(ci), ]
+    expect_identical(rows$term, rownames(ci))
+    expect_equal(unname(ci[, 1]), rows$conf.low, tolerance = 1e-12)
+    expect_equal(unname(ci[, 2]), rows$conf.high, tolerance = 1e-12)
+  }
+  expect_identical(tidy(o, type = "paths")$term,
+                   c("a", "b_within", "b_between", "c_prime"))
+  expect_identical(tidy(o, type = "effects")$term,
+                   c("nie", "nde", "te", "own", "spillover"))
+  # The tidy SEs are the delta-method SEs.
+  expect_equal(tidy(o, type = "effects")$std.error,
+               unname(.effect_se(o, c("nie", "nde", "te", "own", "spillover"))),
+               tolerance = 1e-12)
+})
+
+test_that("glance() has the stated columns and n_clusters", {
+  g <- glance(snap_object())
+  expect_identical(names(g), c("nie", "nde", "te", "pm", "n_clusters", "nobs",
+                               "converged"))
+  expect_identical(g$n_clusters, 40L)
+  expect_equal(g$nie, 0.3)
+  expect_equal(g$pm, 0.3 / 0.5)
+})
+
+test_that("quick() works and med() does not take cluster =", {
+  expect_output(quick(snap_object()), "NIE = 0.3 .*own = 0.15 .*clusters = 40")
+  expect_error(med(medfit::mediation_demo, "treatment", "mediator1", "outcome",
+                   cluster = "covariate1"), "unused argument")
+})
+
+test_that("print.summary is registered for S3 dispatch", {
+  expect_true(is.function(utils::getS3method("print", "summary.ClusterMediationData")))
+  expect_s3_class(summary(snap_object()), "summary.ClusterMediationData")
+})

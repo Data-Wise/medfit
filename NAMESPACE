@@ -3,6 +3,7 @@
 S3method(glance,S7_object)
 S3method(print,mediation_effect)
 S3method(print,summary.BootstrapResult)
+S3method(print,summary.ClusterMediationData)
 S3method(print,summary.JointMediationData)
 S3method(print,summary.MediationData)
 S3method(print,summary.SerialMediationData)
