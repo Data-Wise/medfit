@@ -9,7 +9,7 @@ test_that("the 28 rejection inputs are rejected with the construct named", {
   rej <- c(
     'base::system("echo hi")' = "disallowed call head",
     'get("system")("echo hi")' = "disallowed call head",
-    '(function() 1)()' = "disallowed call head",
+    "(function() 1)()" = "disallowed call head",
     'do.call("system", list("echo hi"))' = "'do.call' is not in the math allowlist",
     "Recall(a)" = "'Recall' is not in the math allowlist",
     "ifelse(a > 0, a, b)" = "'ifelse' is not in the math allowlist",
@@ -86,7 +86,7 @@ test_that("planted defect: removing the result guard lets 1/0 and 0/0 through", 
   expect_error(.sem_expr_eval("0/0"), "finite real number")
 })
 
-test_that("planted defect: a caller-side rebinding of exp changes an all.names()-only check, not the locked evaluator", {
+test_that("planted defect: rebinding exp fools an all.names() check but not the locked evaluator", {
   flag <- FALSE
   exp <- function(x) {
     flag <<- TRUE
