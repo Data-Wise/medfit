@@ -40,7 +40,10 @@
 #' @param se_type Variance-covariance estimator for `@vcov`: `"model"` (default,
 #'   model-based `stats::vcov`) or `"sandwich"` (heteroskedasticity-consistent
 #'   `sandwich::vcovHC`, type HC3, recommended for IPW-weighted fits). The
-#'   `"sandwich"` option requires the suggested \pkg{sandwich} package.
+#'   `"sandwich"` option requires the suggested \pkg{sandwich} package. With
+#'   `engine = "lmer"` only, `"kr"` uses the Kenward-Roger adjusted covariance
+#'   and stores a degrees of freedom for each path, so the path intervals are
+#'   t intervals; it needs REML fits and the suggested \pkg{pbkrtest} package.
 #' @param engine_args Named list of engine-specific overrides (default:
 #'   `list()`, no overrides). Ignored by `engine = "glm"`. For
 #'   `engine = "lmer"`, recognized names are `random_y` and `random_m`
@@ -170,7 +173,7 @@ fit_mediation <- function(formula_y,
                           family_y = stats::gaussian(),
                           family_m = stats::gaussian(),
                           weights = NULL,
-                          se_type = c("model", "sandwich"),
+                          se_type = c("model", "sandwich", "kr"),
                           engine_args = list(),
                           m_star = 0,
                           cluster = NULL,
@@ -195,6 +198,10 @@ fit_mediation <- function(formula_y,
   if (!is.null(cluster) && engine != "lmer") {
     stop("`cluster` is only used with engine = \"lmer\".", call. = FALSE)
   }
+  if (se_type == "kr" && engine != "lmer") {
+    stop("se_type = \"kr\" (Kenward-Roger) is only used with engine = \"lmer\".",
+         call. = FALSE)
+  }
   if (engine == "lmer") {
     if (is.null(cluster)) {
       stop("engine = \"lmer\" needs `cluster`, the name of the cluster variable.",
@@ -203,8 +210,9 @@ fit_mediation <- function(formula_y,
     if (!is.null(weights)) {
       stop("engine = \"lmer\" does not support `weights`.", call. = FALSE)
     }
-    if (se_type != "model") {
-      stop("engine = \"lmer\" supports se_type = \"model\" only.", call. = FALSE)
+    if (se_type == "sandwich") {
+      stop("engine = \"lmer\" supports se_type = \"model\" or \"kr\", not ",
+           "\"sandwich\".", call. = FALSE)
     }
     if (!missing(family_y) || !missing(family_m)) {
       stop("engine = \"lmer\" fits Gaussian linear mixed models; `family_y` ",

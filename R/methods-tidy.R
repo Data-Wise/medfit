@@ -319,7 +319,7 @@ glance.S7_object <- function(x, ...) {
 #'   `names(path_vec)` (serial d paths)
 #' @noRd
 .tidy_paths_effects <- function(x, path_vec, effect_vec, conf.int, conf.level,
-                                path_alias = names(path_vec)) {
+                                path_alias = names(path_vec), path_df = NULL) {
   vc <- x@vcov
   # match() gives NA (not an error) for a path name missing from @vcov
   path_se <- sqrt(diag(vc)[match(path_alias, rownames(vc))])
@@ -333,9 +333,15 @@ glance.S7_object <- function(x, ...) {
   )
 
   if (conf.int) {
-    z <- stats::qnorm(1 - (1 - conf.level) / 2)
-    result$conf.low <- result$estimate - z * result$std.error
-    result$conf.high <- result$estimate + z * result$std.error
+    # Normal quantile, or a t quantile per path row when `path_df` is given
+    # (Kenward-Roger df); effect rows stay normal.
+    q <- rep(stats::qnorm(1 - (1 - conf.level) / 2), nrow(result))
+    if (!is.null(path_df)) {
+      i <- match(names(path_vec), result$term)
+      q[i] <- stats::qt(1 - (1 - conf.level) / 2, df = path_df[names(path_vec)])
+    }
+    result$conf.low <- result$estimate - q * result$std.error
+    result$conf.high <- result$estimate + q * result$std.error
   }
 
   if (requireNamespace("tibble", quietly = TRUE)) {
@@ -526,7 +532,9 @@ glance.S7_object <- function(x, ...) {
   type <- match.arg(type)
   path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
   effect_vec <- if (type %in% c("all", "effects")) .cluster_effect_vec(x)
-  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+  path_df <- if (identical(x@se_type, "kr")) x@kr_df
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level,
+                      path_df = path_df)
 }
 
 

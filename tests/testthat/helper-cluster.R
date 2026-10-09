@@ -20,6 +20,16 @@
 # fit_cluster211(), te_oracle() and sim_gate() call ClusterMediationData code
 # that arrives in T2-T5, so no test exercises them yet (first use: T6/T9).
 
+# Muffle only the few-cluster warning (A2), so tests that fit on a handful of
+# clusters stay quiet while every other warning still surfaces.
+quiet_few <- function(expr) {
+  withCallingHandlers(expr, warning = function(w) {
+    if (grepl("^Only [0-9]+ clusters|clusters \\(fewer than 25\\)", conditionMessage(w))) {
+      invokeRestart("muffleWarning")
+    }
+  })
+}
+
 # Default constants. M = b0 + a X + g C + v + r; Y adds t4 (within) and t5
 # (between) covariate effects, so t5 only matters when C has a between part.
 cluster_default_par <- function() {
@@ -184,8 +194,9 @@ fit_cluster211 <- function(dat, parameterization = c("within", "raw"),
                       data = d, REML = TRUE)
   y_fit <- lme4::lmer(stats::as.formula(paste("Y ~", rhs_y, "+", re_y)),
                       data = d, REML = TRUE)
-  extract_mediation(m_fit, model_y = y_fit, treatment = "X", mediator = "M",
-                    cluster = "cluster", se_type = se_type)
+  quiet_few(extract_mediation(m_fit, model_y = y_fit, treatment = "X",
+                              mediator = "M", cluster = "cluster",
+                              se_type = se_type))
 }
 
 # Reduced-form X coefficient: lmer(Y ~ X + covariates + (1 | cluster)).
@@ -243,6 +254,7 @@ sim_gate <- function(scenario, R = 200, seed = 1, fit_args = list(), cores = 1L,
     )
     if (is.null(obj)) return(NULL)
     list(
+      kr_df = if (identical(obj@se_type, "kr")) obj@kr_df,
       est = c(obj@estimates[paths], medfit:::.cluster_effect_vec(obj)),
       se = se_scale * c(sqrt(diag(obj@vcov)[paths]),
                         medfit:::.effect_se(obj, effects)),
@@ -257,10 +269,17 @@ sim_gate <- function(scenario, R = 200, seed = 1, fit_args = list(), cores = 1L,
   se <- do.call(rbind, lapply(runs, `[[`, "se"))
   truth <- runs[[1]]$truth
   err <- sweep(est, 2, truth[colnames(est)])
+  # Wald coverage; path intervals are t intervals with the Kenward-Roger df when
+  # the fits are KR (D10), effect intervals stay normal.
+  crit <- matrix(stats::qnorm(0.975), nrow(est), ncol(est), dimnames = dimnames(est))
+  if (!is.null(runs[[1]]$kr_df)) {
+    df <- do.call(rbind, lapply(runs, `[[`, "kr_df"))
+    crit[, paths] <- stats::qt(0.975, df = df[, paths])
+  }
   list(
     n_fits = length(runs), R = R,
     se_ratio = colMeans(se) / apply(est, 2, stats::sd),
-    coverage = colMeans(abs(err) <= 1.96 * se),
+    coverage = colMeans(abs(err) <= crit * se),
     bias = colMeans(err),
     mc_se = apply(err, 2, stats::sd) / sqrt(nrow(err)),
     cor_a_b_between = stats::cor(est[, "a"], est[, "b_between"]),

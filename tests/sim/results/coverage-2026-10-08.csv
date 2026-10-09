@@ -35,6 +35,30 @@
 "random_slope","product_coverage","nie",0.942,NA,NA
 "random_slope","product_coverage","own",0.93,NA,NA
 "random_slope","product_coverage","spillover",0.933,NA,NA
+"kr_J15","fits","n",1000,NA,NA
+"kr_J15","se_ratio","nie",1.022,"[0.9, 1.1]",TRUE
+"kr_J15","se_ratio","own",0.9958,"[0.9, 1.1]",TRUE
+"kr_J15","se_ratio","spillover",1.004,"[0.9, 1.1]",TRUE
+"kr_J15","d4_correlation","a,b_between",-0.02092,"|r| < 0.1",TRUE
+"kr_J15","coverage","a",0.949,"(0.925, 0.975)",TRUE
+"kr_J15","coverage","b_within",0.953,"(0.925, 0.975)",TRUE
+"kr_J15","coverage","b_between",0.938,"(0.925, 0.975)",TRUE
+"kr_J15","coverage","c_prime",0.951,"(0.925, 0.975)",TRUE
+"kr_J15","product_coverage","nie",0.905,NA,NA
+"kr_J15","product_coverage","own",0.922,NA,NA
+"kr_J15","product_coverage","spillover",0.918,NA,NA
+"kr_J15_unbalanced","fits","n",1000,NA,NA
+"kr_J15_unbalanced","se_ratio","nie",1.016,"[0.9, 1.1]",TRUE
+"kr_J15_unbalanced","se_ratio","own",0.9735,"[0.9, 1.1]",TRUE
+"kr_J15_unbalanced","se_ratio","spillover",1.006,"[0.9, 1.1]",TRUE
+"kr_J15_unbalanced","d4_correlation","a,b_between",-0.02199,"|r| < 0.1",TRUE
+"kr_J15_unbalanced","coverage","a",0.947,"(0.925, 0.975)",TRUE
+"kr_J15_unbalanced","coverage","b_within",0.957,"(0.925, 0.975)",TRUE
+"kr_J15_unbalanced","coverage","b_between",0.952,"(0.925, 0.975)",TRUE
+"kr_J15_unbalanced","coverage","c_prime",0.956,"(0.925, 0.975)",TRUE
+"kr_J15_unbalanced","product_coverage","nie",0.917,NA,NA
+"kr_J15_unbalanced","product_coverage","own",0.92,NA,NA
+"kr_J15_unbalanced","product_coverage","spillover",0.927,NA,NA
 "balanced","te_oracle_max_abs_z","te",1.636,"< 3",TRUE
 "unbalanced","te_oracle_max_abs_z","te",0.5553,"< 3",TRUE
 "claims_rho0.5","bias_z","own",0.9333,"|z| < 2",TRUE

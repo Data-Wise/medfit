@@ -25,7 +25,7 @@
 #'
 #' @inheritParams fit_mediation
 #' @param cluster Character name of the cluster variable in `data`.
-#' @param se_type `"model"` (the lmer engine's only value so far).
+#' @param se_type `"model"` or `"kr"` (Kenward-Roger).
 #' @param ... Must be empty: arguments never reach `lmer()`.
 #' @return A [ClusterMediationData] object.
 #' @keywords internal

@@ -14,7 +14,7 @@ fit_mediation(
   family_y = stats::gaussian(),
   family_m = stats::gaussian(),
   weights = NULL,
-  se_type = c("model", "sandwich"),
+  se_type = c("model", "sandwich", "kr"),
   engine_args = list(),
   m_star = 0,
   cluster = NULL,
@@ -59,7 +59,10 @@ inverse-probability weighting (IPW). \code{NULL} (default) fits unweighted.}
 \item{se_type}{Variance-covariance estimator for \verb{@vcov}: \code{"model"} (default,
 model-based \code{stats::vcov}) or \code{"sandwich"} (heteroskedasticity-consistent
 \code{sandwich::vcovHC}, type HC3, recommended for IPW-weighted fits). The
-\code{"sandwich"} option requires the suggested \pkg{sandwich} package.}
+\code{"sandwich"} option requires the suggested \pkg{sandwich} package. With
+\code{engine = "lmer"} only, \code{"kr"} uses the Kenward-Roger adjusted covariance
+and stores a degrees of freedom for each path, so the path intervals are
+t intervals; it needs REML fits and the suggested \pkg{pbkrtest} package.}
 
 \item{engine_args}{Named list of engine-specific overrides (default:
 \code{list()}, no overrides). Ignored by \code{engine = "glm"}. For

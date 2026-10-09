@@ -117,7 +117,7 @@ lmer_pair <- function(dat = sim_cluster211(J = 10, sizes = 5, seed = 1)$data,
 }
 
 extract_pair <- function(p, ...) {
-  extract_mediation(p$m, model_y = p$y, treatment = "X", mediator = "M", ...)
+  quiet_few(extract_mediation(p$m, model_y = p$y, treatment = "X", mediator = "M", ...))
 }
 
 # Guards pass when extraction returns a ClusterMediationData.
@@ -140,7 +140,7 @@ test_that("a subclass of lmerMod dispatches through the merMod method", {
   sub_m <- methods::as(p$m, "localLmer")
   expect_s4_class(sub_m, "localLmer")
   expect_true(S7::S7_inherits(
-    extract_mediation(sub_m, model_y = p$y, treatment = "X", mediator = "M"),
+    quiet_few(extract_mediation(sub_m, model_y = p$y, treatment = "X", mediator = "M")),
     ClusterMediationData
   ))
 })
@@ -238,7 +238,6 @@ test_that("vcov_fun and se_type = 'kr' are refused on the lmer method (P1)", {
   skip_if_not_installed("lme4")
   p <- lmer_pair()
   expect_error(extract_pair(p, vcov_fun = stats::vcov), "`vcov_fun` is not used")
-  expect_error(extract_pair(p, se_type = "kr"), "arrives with the fit engine")
   expect_error(extract_pair(p, se_type = "sandwich"), "should be one of")
 })
 
@@ -412,7 +411,7 @@ test_that("covariates_centered follows cluster-mean centering (P10)", {
 fit_obj <- function(fml_y, d, fml_m = M ~ X + (1 | cluster)) {
   m <- suppressWarnings(suppressMessages(lme4::lmer(fml_m, data = d)))
   y <- suppressWarnings(suppressMessages(lme4::lmer(fml_y, data = d)))
-  list(obj = extract_mediation(m, model_y = y, treatment = "X", mediator = "M"),
+  list(obj = quiet_few(extract_mediation(m, model_y = y, treatment = "X", mediator = "M")),
        m = m, y = y)
 }
 # nolint end
@@ -525,7 +524,7 @@ test_that("an ML fit is flagged reml = FALSE and converged tracks lme4", {
   d <- cluster_fit_data(sim_cluster211(J = 24, sizes = 8, seed = 7)$data)
   m <- suppressMessages(lme4::lmer(M ~ X + (1 | cluster), d, REML = FALSE))
   y <- suppressMessages(lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), d, REML = FALSE))
-  o <- extract_mediation(m, model_y = y, treatment = "X", mediator = "M")
+  o <- quiet_few(extract_mediation(m, model_y = y, treatment = "X", mediator = "M"))
   expect_false(o@reml)
   expect_true(o@converged)
 })
@@ -1032,7 +1031,7 @@ test_that("fit-engine errors: cluster, weights, sandwich, families, missing pack
   expect_error(f(engine = "lmer", cluster = "cluster", weights = rep(1, nrow(dat))),
                "does not support `weights`")
   expect_error(f(engine = "lmer", cluster = "cluster", se_type = "sandwich"),
-               "supports se_type = \"model\" only")
+               "not \"sandwich\"")
   expect_error(f(engine = "lmer", cluster = "cluster", family_y = stats::binomial()),
                "Gaussian linear mixed models")
   local_mocked_bindings(.pkg_available = function(pkg) FALSE)
@@ -1057,4 +1056,146 @@ test_that("oracle 1 through the fit route: NIE, NDE and TE within 3 SE of the tr
   o <- fit_route(sim$data, formula_y = Y ~ X + M, formula_m = M ~ X)
   z <- cluster_z(o, true_cluster_effects(sim))
   expect_true(all(z < 3), info = paste(round(z, 2), collapse = ", "))
+})
+
+
+# T12: Kenward-Roger and the few-cluster warnings ------------------------------
+
+# nolint start: object_usage_linter.
+kr_data <- function(J = 15, seed = 61) {
+  sim_cluster211(J = J, sizes = rep(5:14, length.out = J), seed = seed)$data
+}
+# nolint end
+
+test_that("se_type = 'kr' stores a positive df per path, below J for cluster-level paths", {
+  skip_if_not_installed("lme4")
+  skip_if_not_installed("pbkrtest")
+  o <- fit_cluster211(kr_data(), se_type = "kr")
+  expect_identical(o@se_type, "kr")
+  expect_identical(names(o@kr_df), c("a", "c_prime", "b_within", "b_between"))
+  expect_true(all(o@kr_df > 0))
+  expect_true(all(o@kr_df[c("a", "c_prime", "b_between")] < 15))
+  expect_gt(o@kr_df[["b_within"]], 15)
+  # Estimates do not change; the covariance is the adjusted one.
+  m <- fit_cluster211(kr_data())
+  keys <- c("a", "c_prime", "b_within", "b_between")
+  expect_equal(o@estimates[keys], m@estimates[keys], tolerance = 1e-10)
+  expect_equal(unname(sqrt(diag(o@vcov))[keys] / sqrt(diag(m@vcov))[keys]),
+               rep(1, 4), tolerance = 0.01)
+  expect_false(isTRUE(all.equal(o@vcov, m@vcov, tolerance = 1e-12)))
+})
+
+test_that("KR route identity: the fit route equals the extract route to 1e-8", {
+  skip_if_not_installed("lme4")
+  skip_if_not_installed("pbkrtest")
+  dat <- kr_data(seed = 62)
+  by_fit <- fit_route(dat, formula_y = Y ~ X + M, formula_m = M ~ X, se_type = "kr")
+  by_extract <- fit_cluster211(dat, se_type = "kr")
+  keys <- c("a", "c_prime", "b_within", "b_between")
+  expect_equal(by_fit@vcov[keys, keys], by_extract@vcov[keys, keys], tolerance = 1e-8)
+  expect_equal(by_fit@kr_df, by_extract@kr_df, tolerance = 1e-8)
+})
+
+test_that("KR path intervals are t intervals; effect intervals stay normal (D10)", {
+  skip_if_not_installed("lme4")
+  skip_if_not_installed("pbkrtest")
+  o <- fit_cluster211(kr_data(seed = 63), se_type = "kr")
+  ci <- confint(o)
+  se <- sqrt(diag(o@vcov))[rownames(ci)]
+  est <- paths(o)[rownames(ci)]
+  q <- stats::qt(0.975, df = o@kr_df[rownames(ci)])
+  expect_equal(unname(ci[, 1]), unname(est - q * se), tolerance = 1e-12)
+  expect_equal(unname(ci[, 2]), unname(est + q * se), tolerance = 1e-12)
+  expect_true(all(q > stats::qnorm(0.975)))
+  # tidy agrees with confint, for the paths and the effects.
+  td <- tidy(o, conf.int = TRUE)
+  for (parm in c("paths", "effects")) {
+    cm <- confint(o, parm = parm)
+    rows <- td[td$term %in% rownames(cm), ]
+    expect_equal(unname(cm[, 1]), rows$conf.low, tolerance = 1e-12)
+    expect_equal(unname(cm[, 2]), rows$conf.high, tolerance = 1e-12)
+  }
+  eff <- confint(o, parm = "effects")
+  e_se <- .effect_se(o, rownames(eff))
+  e_est <- .cluster_effect_vec(o)[rownames(eff)]
+  expect_equal(unname(eff[, 1]), unname(e_est - stats::qnorm(0.975) * e_se),
+               tolerance = 1e-12)
+  expect_match(paste(utils::capture.output(print(o)), collapse = " "), "kr SEs")
+})
+
+test_that("kr needs REML fits and the pbkrtest package", {
+  skip_if_not_installed("lme4")
+  skip_if_not_installed("pbkrtest")
+  d <- cluster_fit_data(kr_data(seed = 64))
+  m <- suppressMessages(lme4::lmer(M ~ X + (1 | cluster), d, REML = FALSE))
+  y <- suppressMessages(lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), d, REML = FALSE))
+  expect_error(extract_mediation(m, model_y = y, treatment = "X", mediator = "M",
+                                 se_type = "kr"), "needs REML fits")
+  m_reml <- suppressMessages(lme4::lmer(M ~ X + (1 | cluster), d))
+  expect_error(extract_mediation(m_reml, model_y = y, treatment = "X", mediator = "M",
+                                 se_type = "kr"), "needs REML fits")
+  y_reml <- suppressMessages(lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), d))
+  local_mocked_bindings(.pkg_available = function(pkg) pkg != "pbkrtest")
+  expect_error(extract_mediation(m_reml, model_y = y_reml, treatment = "X", mediator = "M",
+                                 se_type = "kr"), "Package 'pbkrtest' is required")
+})
+
+test_that("fit_mediation accepts kr with lmer only", {
+  skip_if_not_installed("lme4")
+  dat <- kr_data(seed = 65)
+  f <- function(...) {
+    fit_mediation(Y ~ X + M, M ~ X, data = dat, treatment = "X", mediator = "M", ...)
+  }
+  expect_error(f(se_type = "kr"), "only used with engine = \"lmer\"")
+  expect_error(f(engine = "regmedint", se_type = "kr"), "only used with engine = \"lmer\"")
+  skip_if_not_installed("pbkrtest")
+  expect_identical(suppressWarnings(f(engine = "lmer", cluster = "cluster",
+                                      se_type = "kr"))@se_type, "kr")
+})
+
+# Count how many times `expr` warns with a message matching `pattern`.
+count_warnings <- function(expr, pattern) {
+  n <- 0L
+  withCallingHandlers(expr, warning = function(w) {
+    if (grepl(pattern, conditionMessage(w))) n <<- n + 1L
+    invokeRestart("muffleWarning")
+  })
+  n
+}
+
+test_that("A2: few-cluster warnings fire at J = 20 (model) and J = 8 (any), not at J = 30", {
+  skip_if_not_installed("lme4")
+  skip_if_not_installed("pbkrtest")
+  fit <- function(J, se_type = "model") {
+    d <- sim_cluster211(J = J, sizes = 6, seed = 70 + J)$data
+    d <- cluster_fit_data(d)
+    m <- suppressMessages(lme4::lmer(M ~ X + (1 | cluster), d))
+    y <- suppressMessages(lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), d))
+    extract_mediation(m, model_y = y, treatment = "X", mediator = "M", se_type = se_type)
+  }
+  pat <- "clusters"
+  expect_identical(count_warnings(fit(20), pat), 1L)
+  expect_warning(fit(20), "fewer than 25.*Kenward-Roger")
+  expect_identical(count_warnings(fit(8), pat), 1L)
+  expect_identical(count_warnings(fit(8, "kr"), pat), 1L)
+  expect_warning(fit(8), "Only 8 clusters.*kr")
+  expect_identical(count_warnings(fit(30), pat), 0L)
+  # kr at J = 20 is the recommended route and stays quiet.
+  expect_identical(count_warnings(fit(20, "kr"), pat), 0L)
+})
+
+test_that("A2: two qualifying calls in one session each warn exactly once (P4)", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_cluster211(J = 12, sizes = 6, seed = 80)$data)
+  m <- suppressMessages(lme4::lmer(M ~ X + (1 | cluster), d))
+  y <- suppressMessages(lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), d))
+  call <- function() {
+    extract_mediation(m, model_y = y, treatment = "X", mediator = "M")
+  }
+  first <- count_warnings(call(), "fewer than 25")
+  second <- count_warnings(call(), "fewer than 25")
+  expect_identical(c(first, second), c(1L, 1L))
+  # The helper that would silence the second call is session-wide; the warning
+  # must not go through it.
+  expect_false(isTRUE(medfit:::.medfit_state[["few_clusters"]]))
 })

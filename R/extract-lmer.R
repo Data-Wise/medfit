@@ -15,8 +15,9 @@
 #' @param model_y Fitted `lmerMod` outcome model.
 #' @param cluster Character name of the cluster variable, or `NULL` for the
 #'   single grouping factor the two models share.
-#' @param se_type `"model"` (lme4's model-based fixed-effect covariance).
-#'   `"kr"` arrives with the fit engine.
+#' @param se_type `"model"` (lme4's model-based fixed-effect covariance) or
+#'   `"kr"` (Kenward-Roger adjusted covariance and degrees of freedom of each
+#'   path, via pbkrtest; needs REML fits).
 #' @param vcov_fun Not used by the lmer method; supplying it is an error.
 #' @noRd
 .extract_mediation_lmer <- function(object, model_y, treatment, mediator,
@@ -25,7 +26,33 @@
   ctx <- .lmer_guard(object, model_y, treatment, mediator, cluster, se_type,
                      vcov_fun)
   terms <- .lmer_terms(object, model_y, ctx)
-  .lmer_assemble(object, model_y, ctx, terms)
+  out <- .lmer_assemble(object, model_y, ctx, terms)
+  .warn_few_clusters(out@n_clusters, out@se_type)
+  out
+}
+
+# Few-cluster warnings (A2), once per call: with fewer than 10 clusters, whatever
+# the SE type; with fewer than 25 and model-based SEs. warning(), not
+# .notify_once(): that helper is session-wide, and a second qualifying call in
+# the same session must warn again.
+.warn_few_clusters <- function(J, se_type) {
+  if (J < 10L) {
+    fmt <- paste0(
+      "Only %d clusters: inference on the cluster-level paths is unreliable%s; ",
+      "bootstrap_mediation(cluster = ) is the safer interval for the products."
+    )
+    hint <- if (se_type == "model") " (consider se_type = \"kr\")" else ""
+    warning(sprintf(fmt, J, hint), call. = FALSE)
+  } else if (J < 25L && se_type == "model") {
+    fmt <- paste0(
+      "%d clusters (fewer than 25) with model-based standard errors, which can ",
+      "be too small: se_type = \"kr\" gives Kenward-Roger t intervals for the ",
+      "paths, and bootstrap_mediation(cluster = ) is the safer interval for ",
+      "the products."
+    )
+    warning(sprintf(fmt, J), call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 # Routing and design guards (Behavior 1-5). Returns the validated context.
@@ -39,12 +66,16 @@
     stop("`vcov_fun` is not used with lmer models; choose the covariance with ",
          "`se_type`", call. = FALSE)
   }
-  if (se_type == "kr") {
-    stop("se_type = \"kr\" arrives with the fit engine; use se_type = \"model\" ",
-         "for now", call. = FALSE)
-  }
   .lmer_check_class(object, "mediator model (`object`)")
   .lmer_check_class(model_y, "outcome model (`model_y`)")
+  if (se_type == "kr") {
+    .assert_pkg("pbkrtest", "se_type = \"kr\"")
+    # pbkrtest::vcovAdj() silently returns the REML matrix for an ML fit.
+    if (!lme4::isREML(object) || !lme4::isREML(model_y)) {
+      stop("se_type = \"kr\" needs REML fits (the Kenward-Roger adjustment is ",
+           "defined for REML); refit both models with REML = TRUE", call. = FALSE)
+    }
+  }
 
   cluster <- .lmer_cluster(object, model_y, cluster)
   for (spec in list(list(object, "mediator model"), list(model_y, "outcome model"))) {
@@ -72,7 +103,7 @@
          "are not supported yet", call. = FALSE)
   }
   list(cluster = cluster, ids = ids[[1]], x = x[[1]], treatment = treatment,
-       mediator = mediator)
+       mediator = mediator, se_type = se_type)
 }
 
 # Behavior 1: lmerMod and its subclasses; glmerMod gets the D7 error.
@@ -396,6 +427,21 @@
   all.vars(stats::formula(fit)[[2]])[1]
 }
 
+# Kenward-Roger denominator df of each path: the df of the linear combination
+# that defines it (the treatment row for `a`, the rows of the term map for the
+# outcome paths), from the unadjusted and adjusted covariances.
+.lmer_kr_df <- function(object, model_y, adj_m, adj_y, A, pm, py, nm_m, nm_y) {
+  v0_m <- as.matrix(lme4::vcov.merMod(object))
+  v0_y <- as.matrix(lme4::vcov.merMod(model_y))
+  ddf <- function(row, v0, adj) {
+    unname(pbkrtest::Lb_ddf(matrix(row, nrow = 1), v0, adj))
+  }
+  c(a = ddf(A["a", seq_len(pm)], v0_m, adj_m),
+    c_prime = ddf(A["c_prime", pm + seq_len(py)], v0_y, adj_y),
+    b_within = ddf(A["b_within", pm + seq_len(py)], v0_y, adj_y),
+    b_between = ddf(A["b_between", pm + seq_len(py)], v0_y, adj_y))
+}
+
 # Build the ClusterMediationData object. `@estimates` carries the four alias
 # rows (a, c_prime, b_within, b_between) and each model's fixed effects with an
 # `m_`/`y_` prefix. `@vcov` is T V T' for the linear map T from the stacked
@@ -417,9 +463,15 @@
   py <- length(beta_y)
   nm_m <- paste0("m_", names(beta_m))
   nm_y <- paste0("y_", names(beta_y))
+  kr <- ctx$se_type == "kr"
+  # Kenward-Roger replaces each model's covariance by the adjusted one (the
+  # estimates do not change). Keep the vcovAdj objects: Lb_ddf() needs them.
+  adj_m <- if (kr) pbkrtest::vcovAdj(object)
+  adj_y <- if (kr) pbkrtest::vcovAdj(model_y)
   V <- matrix(0, pm + py, pm + py)
-  V[seq_len(pm), seq_len(pm)] <- as.matrix(lme4::vcov.merMod(object))
-  V[pm + seq_len(py), pm + seq_len(py)] <- as.matrix(lme4::vcov.merMod(model_y))
+  V[seq_len(pm), seq_len(pm)] <- as.matrix(if (kr) adj_m else lme4::vcov.merMod(object))
+  V[pm + seq_len(py), pm + seq_len(py)] <-
+    as.matrix(if (kr) adj_y else lme4::vcov.merMod(model_y))
 
   # Alias map: a reads the treatment coefficient of the mediator model; the
   # outcome paths read terms$L (rescaling and the raw-to-within map included).
@@ -438,6 +490,9 @@
   vc[c("a", nm_m), c("c_prime", "b_within", "b_between", nm_y)] <- 0
   vc[c("c_prime", "b_within", "b_between", nm_y), c("a", nm_m)] <- 0
 
+  kr_df <- if (kr) {
+    .lmer_kr_df(object, model_y, adj_m, adj_y, A, pm, py, names(beta_m), names(beta_y))
+  }
   sizes <- as.integer(table(factor(ctx$ids, levels = unique(ctx$ids))))
   ClusterMediationData(
     a_path = unname(estimates[["a"]]), b_within = unname(estimates[["b_within"]]),
@@ -450,7 +505,7 @@
     n_clusters = length(sizes), cluster_sizes = sizes,
     parameterization = terms$parameterization,
     covariates_centered = terms$covariates_centered,
-    se_type = "model",
+    se_type = ctx$se_type, kr_df = kr_df,
     reml = isTRUE(lme4::isREML(object)) && isTRUE(lme4::isREML(model_y)),
     converged = .lmer_converged(object) && .lmer_converged(model_y),
     sigma_m = stats::sigma(object), sigma_y = stats::sigma(model_y),
