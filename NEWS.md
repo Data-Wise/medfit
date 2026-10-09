@@ -76,7 +76,7 @@
 
 * New "Reference Card" article listing every export and class on one page, and a
   "Cookbook" article with ten task recipes (a first fit through cluster designs).
-  Both are linked from the navbar and README; tests check that the card names
+  Both are linked from the site menu and README; tests check that the card names
   every export and that each recipe's code and links resolve. The cluster
   examples on `?fit_mediation`, `?bootstrap_mediation` and `?extract_mediation`
   now run, and Getting Started and Introduction point to the new pages.
