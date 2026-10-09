@@ -106,7 +106,7 @@ jobs:
           # Check for failures
           if (file.exists("revdep/problems.md")) {
             problems <- readLines("revdep/problems.md")
-            if (length(problems) > 0 && any(nchar(problems) > 0)) {
+            if (length(problems) > 0 && any(nchar(trimws(problems)) > 0 & !grepl("no problems at all", problems, fixed = TRUE))) {
               cat("\n\n## Problems Found\n\n")
               cat(problems, sep = "\n")
 
@@ -142,7 +142,7 @@ jobs:
         run: |
           if (file.exists("revdep/problems.md")) {
             problems <- readLines("revdep/problems.md")
-            if (length(problems) > 0 && any(nchar(trimws(problems)) > 0)) {
+            if (length(problems) > 0 && any(nchar(trimws(problems)) > 0 & !grepl("no problems at all", problems, fixed = TRUE))) {
               stop("Reverse dependency check found new failures. See uploaded artifacts for details.")
             }
           }
