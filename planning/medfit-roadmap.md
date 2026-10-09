@@ -1,7 +1,7 @@
 # medfit Package Development Roadmap
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.5.0 released on `main`/GitHub/r-universe** (2026-09-25, tag `v0.5.0`, not CRAN-submitted by decision). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0 (2026-08-23). 0.5.0 added (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Ext D module 1 (2-1-1 cluster mediation: `ClusterMediationData`, `lmer` engine, Kenward-Roger, cluster bootstrap; #90-#92, #95) is merged on `dev`, unreleased, assigned to 0.6.0; native SEM engine is 0.7.0. Next = **cut 0.6.0**; board in `EXTENSIONS-PLAN-2026-06-03.md`.
+**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.5.0 released on `main`/GitHub/r-universe** (2026-09-25, tag `v0.5.0`, not CRAN-submitted by decision). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0 (2026-08-23). 0.5.0 added (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Ext D module 1 (2-1-1 cluster mediation: `ClusterMediationData`, `lmer` engine, Kenward-Roger, cluster bootstrap; #90-#92, #95, #100) shipped in **0.6.0** (2026-10-09, GitHub-only); native SEM engine is 0.7.0. Next = **native SEM plan (0.7.0)**; board in `EXTENSIONS-PLAN-2026-06-03.md`.
 **Timeline**: MVP shipped; extensions A ✅, B ✅, C ✅ (0.4.0), D8(b) ✅ (0.5.0, released 2026-09-25); C.1 blocked (CMAverse); D/E brainstormed
 **Last Updated**: 2026-10-09
 
@@ -24,7 +24,7 @@
 **Title**: Infrastructure for Mediation Model Fitting and Extraction
 **Description**: Provides S7-based infrastructure for fitting mediation models, extracting path coefficients, and performing bootstrap inference. Designed as a foundation package for probmed, RMediation, and medrobust.
 
-**Version**: 0.1.0 (MVP); current 0.5.0 (CRAN: 0.3.2)
+**Version**: 0.1.0 (MVP); current 0.6.0 (CRAN: 0.3.2)
 **License**: GPL-3
 **R Version**: >= 4.1.0
 **Repository**: https://github.com/data-wise/medfit
@@ -1851,7 +1851,7 @@ Integration is successful when:
 
 The original week-by-week plan is complete. Current next actions:
 
-1. **Release 0.6.0 (Ext D module 1)** — merged on `dev`; see `planning/specs/PLAN-multilevel-mediation-2-1-1-2026-10-08.md` and `.STATUS`. Module 2 (1-1-1, random slopes) and the native SEM engine (0.7.0, `planning/specs/SPEC-sem-grammar-2026-10-08.md`) follow
+1. ~~Release 0.6.0 (Ext D module 1)~~ — done 2026-10-09; see `planning/specs/PLAN-multilevel-mediation-2-1-1-2026-10-08.md` and `.STATUS`. Module 2 (1-1-1, random slopes) and the native SEM engine (0.7.0, `planning/specs/SPEC-sem-grammar-2026-10-08.md`) follow
 2. **Next CRAN release** — trigger still open (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
 3. **Ext C.1 (CMAverse)** — blocked; see `planning/EXTENSIONS-PLAN-2026-06-03.md`
 

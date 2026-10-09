@@ -1,4 +1,4 @@
-# medfit (development version)
+# medfit 0.6.0
 
 ## New features
 
@@ -71,6 +71,15 @@
   and fail with `Invalid grouping factor specification`. The message names the
   formula and points to `engine_args` for random slopes. `I(a | b)` as a
   covariate is not affected.
+
+## Documentation
+
+* New "Reference Card" article listing every export and class on one page, and a
+  "Cookbook" article with ten task recipes (a first fit through cluster designs).
+  Both are linked from the navbar and README; tests check that the card names
+  every export and that each recipe's code and links resolve. The cluster
+  examples on `?fit_mediation`, `?bootstrap_mediation` and `?extract_mediation`
+  now run, and Getting Started and Introduction point to the new pages.
 
 # medfit 0.5.0
 

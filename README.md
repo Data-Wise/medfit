@@ -279,6 +279,8 @@ Comprehensive articles are available on the package website:
 - **[Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html)**: Extract from lm/glm/lavaan models
 - **[Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html)**: Parametric and nonparametric bootstrap methods
 - **[Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html)**: Estimands, formulas, covariance, and standard errors for every class
+- **[Reference Card](https://data-wise.github.io/medfit/articles/refcard.html)**: Every export and class on one page
+- **[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html)**: Ten task recipes, from a first mediation fit to cluster-randomized designs
 
 ## Development Status
 
@@ -316,7 +318,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.5.0. https://data-wise.github.io/medfit/
+R package version 0.6.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.
