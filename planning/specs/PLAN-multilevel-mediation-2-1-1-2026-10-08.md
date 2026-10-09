@@ -1,6 +1,6 @@
 # Plan: multilevel mediation, module 1, cluster-level treatment (2-1-1)
 
-**Date:** 2026-10-08 · **Status:** **DRAFT**, not yet adversarially reviewed or approved
+**Date:** 2026-10-08 · **Status:** **APPROVED** 2026-10-08 after two Codex adversarial reviews (round 1: P4, P5; round 2: P6); the P6 edit was not re-reviewed
 **Spec:** [SPEC-multilevel-mediation-2-1-1-2026-09-25.md](SPEC-multilevel-mediation-2-1-1-2026-09-25.md) (approved 2026-09-25, revision 2) ·
 **Decisions:** [GRILL-multilevel-mediation-ext-d-2026-09-25.md](GRILL-multilevel-mediation-ext-d-2026-09-25.md) D1–D16 ·
 **Background:** [REVIEW-multilevel-mediation-2026-09-25.md](REVIEW-multilevel-mediation-2026-09-25.md)
