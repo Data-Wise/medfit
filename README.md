@@ -188,6 +188,8 @@ tidy(med_data)
 
 - **`JointMediationData`**: Joint natural effects of two or more mediators when the outcome model has treatment-by-mediator products
 
+- **`ClusterMediationData`**: Mediation for a treatment assigned to whole clusters (the 2-1-1 design), from `lme4` mixed models: natural indirect effect `a * b_between`, split into an own-mediator and a spillover part; Kenward-Roger intervals and a cluster bootstrap for few clusters
+
 - **`BootstrapResult`**: Container for bootstrap inference results
   - Point estimates and confidence intervals
   - Bootstrap distribution
