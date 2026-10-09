@@ -529,3 +529,155 @@ test_that("an ML fit is flagged reml = FALSE and converged tracks lme4", {
   expect_false(o@reml)
   expect_true(o@converged)
 })
+
+
+# T6: point-estimate oracles (test groups 1, 4 and 8) --------------------------
+# The effect generics and SEs arrive in T7, so these tests read the effects off
+# the paths and take delta-method SEs from `@vcov` themselves.
+
+# nolint start: object_usage_linter.
+cluster_effects <- function(o) {
+  a <- o@a_path
+  bw <- o@b_within
+  bb <- o@b_between
+  c(nie = a * bb, nde = o@c_prime, te = a * bb + o@c_prime,
+    own = a * bw, spillover = a * (bb - bw))
+}
+
+# Gradients of each effect over the alias rows (a, c_prime, b_within, b_between).
+cluster_grads <- function(o) {
+  a <- o@a_path
+  bw <- o@b_within
+  bb <- o@b_between
+  k <- c("a", "c_prime", "b_within", "b_between")
+  g <- function(...) stats::setNames(c(...), k)
+  list(nie = g(bb, 0, 0, a), nde = g(0, 1, 0, 0), te = g(bb, 1, 0, a),
+       own = g(bw, 0, a, 0), spillover = g(bb - bw, 0, -a, a))
+}
+
+cluster_se <- function(o) {
+  V <- o@vcov[c("a", "c_prime", "b_within", "b_between"),
+              c("a", "c_prime", "b_within", "b_between")]
+  vapply(cluster_grads(o), function(g) sqrt(drop(t(g) %*% V %*% g)), numeric(1))
+}
+
+# |estimate - truth| in SE units, for the effect names in `keys`.
+cluster_z <- function(o, truth, keys = c("nie", "nde", "te"), effect_fn = NULL) {
+  fn <- if (is.null(effect_fn)) cluster_effects else effect_fn
+  est <- effects_from(o, effect_fn = fn)
+  abs(est[keys] - truth[keys]) / cluster_se(o)[keys]
+}
+
+fit_sim <- function(sim, ...) fit_cluster211(sim$data, ...)
+
+# nolint end
+
+test_that("group 1: NIE, NDE and TE fall within 3 SE of the counterfactual truth", {
+  skip_if_not_installed("lme4")
+  skip_on_cran()
+  sim <- sim_cluster211(J = 200, sizes = 30, cov = "centered", seed = 11)
+  truth <- true_cluster_effects(sim)
+  for (param in c("within", "raw")) {
+    z <- cluster_z(fit_sim(sim, parameterization = param), truth)
+    expect_true(all(z < 3), info = sprintf("%s: z = %s", param,
+                                           paste(round(z, 2), collapse = ", ")))
+  }
+})
+
+test_that("group 1 companion: a small fixed-seed fit is pinned (always on)", {
+  skip_if_not_installed("lme4")
+  sim <- sim_cluster211(J = 12, sizes = 6, cov = "centered", seed = 21)
+  o <- fit_sim(sim)
+  est <- unname(o@estimates[c("a", "c_prime", "b_within", "b_between")])
+  # A regression pin, not a truth check (J = 12 is too small for that). Constants
+  # recorded from this fit under lme4 2.0.6; 1e-6 relative absorbs optimizer drift.
+  expect_equal(est, c(-0.3259615080, 0.1049751247, 0.5247731995, 0.4712130474),
+               tolerance = 1e-6)
+  expect_equal(unname(cluster_se(o)["nie"]), 0.2083165481, tolerance = 1e-5)
+})
+
+test_that("group 4 O3: own is within 3 SE of the exact own effect at n_j = 50", {
+  skip_if_not_installed("lme4")
+  skip_on_cran()
+  sim <- sim_cluster211(J = 120, sizes = 50, cov = "centered", seed = 12)
+  truth <- true_cluster_effects(sim)
+  o <- fit_sim(sim)
+  expect_lt(cluster_z(o, truth, "own")[[1]], 3)
+  # Spillover against the true NIE minus the true own effect.
+  expect_lt(cluster_z(o, truth, "spillover")[[1]], 3)
+})
+
+test_that("group 4 O4: with dyads own misses by the D-own gap a (b_B - b_W) / H", {
+  skip_if_not_installed("lme4")
+  skip_on_cran()
+  a <- 0.8
+  bw <- 0.2
+  bb <- 1.0
+  sim <- sim_cluster211(J = 1000, sizes = 2, a = a, b_W = bw, b_B = bb,
+                        tau_y = 0.1, seed = 13)
+  truth <- true_cluster_effects(sim)
+  o <- fit_sim(sim)
+  # The harmonic mean cluster size of dyads is 2.
+  gap <- a * (bb - bw) / 2
+  expect_gt(gap / cluster_se(o)[["own"]], 6)    # power: the gap exceeds 6 SE of own
+  expect_equal(unname(truth["own"] - cluster_effects(o)["own"]), gap,
+               tolerance = 3 * cluster_se(o)[["own"]])
+})
+
+test_that("group 4 O5: the peer-mean difference is reported, not gated", {
+  skip_if_not_installed("lme4")
+  skip_on_cran()
+  sizes <- rep(2:10, length.out = 150)
+  sim <- sim_cluster211(J = 150, sizes = sizes, process = "peer_mean", seed = 14)
+  truth <- true_cluster_effects(sim)
+  o <- fit_sim(sim)
+  d_own_truth <- sim$a * sim$b_W + sim$a * (sim$b_B - sim$b_W) * mean(1 / sizes)
+  diff <- unname(truth["own"] - d_own_truth)
+  # Recorded for the PR body: class-mean D-own truth vs the peer-mean truth.
+  note <- sprintf("O5: peer-mean own %.4f, class-mean D-own %.4f, difference %.4f",
+                  truth[["own"]], d_own_truth, diff)
+  expect_true(is.finite(diff), info = note)
+  expect_true(is.finite(cluster_effects(o)[["own"]]))
+})
+
+test_that("group 8: planted point-estimate defects each fail their oracle", {
+  skip_if_not_installed("lme4")
+  skip_on_cran()
+  # Low-noise process with a (b_B - b_W) well above 6 SE.
+  a <- 0.8
+  bw <- 0.2
+  bb <- 1.0
+  sim <- sim_cluster211(J = 200, sizes = 30, a = a, b_W = bw, b_B = bb,
+                        tau_y = 0.1, cov = "centered", seed = 15)
+  truth <- true_cluster_effects(sim)
+  o <- fit_sim(sim)
+  expect_lt(cluster_z(o, truth, c("nie", "spillover"))[["nie"]], 3)
+
+  # NIE computed as a b_W.
+  nie_bw <- function(x) {
+    e <- cluster_effects(x)
+    e[["nie"]] <- x@a_path * x@b_within
+    e
+  }
+  z_nie <- cluster_z(o, truth, "nie", effect_fn = nie_bw)[[1]]
+  expect_gt(z_nie, 6)
+
+  # Spillover with its sign flipped.
+  flip <- function(x) {
+    e <- cluster_effects(x)
+    e[["spillover"]] <- -e[["spillover"]]
+    e
+  }
+  expect_gt(cluster_z(o, truth, "spillover", effect_fn = flip)[[1]], 6)
+
+  # Raw read as within (R1): b_between becomes kappa = b_B - b_W, so the raw fit
+  # no longer reproduces the within fit's b_between. Without the defect it does.
+  within_fit <- fit_sim(sim)
+  expect_equal(fit_sim(sim, parameterization = "raw")@b_between,
+               within_fit@b_between, tolerance = 1e-6)
+  local_mocked_bindings(.raw_to_within = function(L) L)
+  raw <- fit_sim(sim, parameterization = "raw")
+  expect_gt(abs(raw@b_between - within_fit@b_between), 0.1)
+  expect_equal(raw@b_between, within_fit@b_between - within_fit@b_within,
+               tolerance = 1e-6)
+})
