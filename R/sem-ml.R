@@ -213,7 +213,18 @@
 # central-difference Jacobian of the analytic gradient of F, with the K3 step
 # eps^(1/3) * max(|x|, 1) and no extra dependency.
 .sem_info_observed <- function(theta, ram, smp) {
-  h <- .Machine$double.eps^(1 / 3) * pmax(abs(theta), 1)
+  info <- smp$n / 2 * .sem_hess_f(theta, ram, smp)
+  dimnames(info) <- list(ram$par_names, ram$par_names)
+  info
+}
+
+# Hessian of the discrepancy F: central-difference Jacobian of the analytic
+# gradient, symmetrized. The step is the K3 relative step eps^(1/3) * max(|x|, u)
+# with the floor u in the parameter's own units instead of a fixed 1, so the
+# Hessian (and the Newton decrement built on it) transports exactly when the
+# data are rescaled.
+.sem_hess_f <- function(theta, ram, smp) {
+  h <- .Machine$double.eps^(1 / 3) * pmax(abs(theta), .sem_step_floor(ram, smp))
   hess <- vapply(seq_along(theta), function(j) {
     up <- theta
     dn <- theta
@@ -221,7 +232,21 @@
     dn[j] <- dn[j] - h[j]
     (.sem_grad(up, ram, smp) - .sem_grad(dn, ram, smp)) / (2 * h[j])
   }, numeric(length(theta)))
-  info <- smp$n / 2 * (hess + t(hess)) / 2
-  dimnames(info) <- list(ram$par_names, ram$par_names)
-  info
+  (hess + t(hess)) / 2
+}
+
+# Natural unit of each parameter: sd(to) / sd(from) for a path and sd(r) * sd(c)
+# for a (co)variance, with a latent variable's sd taken as the mean observed sd.
+# Under a rescaling of the observed variables the floor scales like the parameter.
+.sem_step_floor <- function(ram, smp) {
+  sd_all <- rep(mean(sqrt(diag(smp$s))), ram$nv)
+  sd_all[ram$obs_idx] <- sqrt(diag(smp$s))
+  rc <- function(pos) cbind((pos - 1L) %% ram$nv + 1L, (pos - 1L) %/% ram$nv + 1L)
+  ra <- rc(ram$pos_a)
+  rs <- rc(ram$pos_s)
+  fl <- rep(1, ram$q)
+  # Assigned in reverse so that, for a shared label, the first entry wins.
+  fl[rev(ram$k_s)] <- rev(sd_all[rs[, 1]] * sd_all[rs[, 2]])
+  fl[rev(ram$k_a)] <- rev(sd_all[ra[, 1]] / sd_all[ra[, 2]])
+  fl
 }

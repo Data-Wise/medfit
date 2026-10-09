@@ -131,14 +131,14 @@ sem_lavaan_text <- function(name) {
 
 # A valid starting vector: variances 1, covariances 0, everything else 0.1.
 sem_start <- function(ram) {
-  vapply(ram$par_names, function(nm) {
+  stats::setNames(vapply(ram$par_names, function(nm) {
     if (grepl(" ~~ ", nm, fixed = TRUE)) {
       parts <- strsplit(nm, " ~~ ", fixed = TRUE)[[1]]
       if (parts[1] == parts[2]) 1 else 0
     } else {
       0.1
     }
-  }, numeric(1), USE.NAMES = FALSE)
+  }, numeric(1), USE.NAMES = FALSE), ram$par_names)
 }
 
 # lavaan's estimates and SEs for a structure, reordered to the engine's parameter order.
@@ -156,4 +156,26 @@ sem_lavaan_ref <- function(nm, information, n = 400, seed = 21) {
     mod = mod, smp = .sem_sample(d, mod$ram), # nolint: object_usage_linter.
     theta = unname(lavaan::coef(fit))[pos], se = sqrt(diag(lavaan::vcov(fit)))[pos]
   )
+}
+
+# Latent-mediator model with small indicator residuals; at n = 50 and seed 10 lavaan
+# returns a negative variance (a Heywood case), the fixture for improper solutions.
+sem_model_heywood <- function() {
+  mod <- sem_model_latent()
+  mod$theta["m1 ~~ m1"] <- 0.05
+  mod$theta["m2 ~~ m2"] <- 0.1
+  mod
+}
+
+# Exact transport of a parameter vector to data multiplied by `s` in every
+# observed and latent variable: (co)variances scale by s^2, paths and loadings
+# do not, and the discrepancy is unchanged.
+sem_transport <- function(theta, s) {
+  ifelse(grepl(" ~~ ", names(theta), fixed = TRUE), theta * s^2, theta)
+}
+
+sem_scale_sample <- function(smp, s) {
+  smp$s <- smp$s * s^2
+  smp$logdet <- smp$logdet + smp$p * log(s^2)
+  smp
 }
