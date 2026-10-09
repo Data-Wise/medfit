@@ -24,6 +24,16 @@ if (a) 1 else 2                    -> function 'if' is not in the math allowlist
 unknown*a                          -> unknown parameter label 'unknown'
 1 +                                -> constraint expression does not parse: <text>:2:0: unexpected end of input
 1: 1 +
+5L                                 -> disallowed construct: 5L (integer)
+0x10                               -> hexadecimal literals are not supported
+1i                                 -> disallowed construct: 0+1i (complex)
+1e                                 -> constraint expression does not parse: <text>:1:1: unexpected input
+1: 1e
+    ^
+Inf                                -> disallowed construct: Inf (double)
+1e999                              -> disallowed construct: Inf (double)
+TALLY rejected: 28 of 28 inputs; unexpectedly accepted: 0
+label containing 0x is not a hex literal: a0x1 + 1 = 2 
 
 -- accepted --
 -2^2                 = -4
@@ -35,4 +45,10 @@ log(a, 2)            = 0.5849625
 pnorm(a) - 0.5       = 0.4331928
 2^-1                 = 0.5
 1e-3*a               = 0.0015
+.5 + a               = 2
+1. * a               = 1.5
+1e3*a                = 1500
+2E-2*a               = 0.03
+a^.5                 = 1.2247449
+TALLY accepted: 14 of 14 valid expressions evaluated; 14 equal R's own evaluation of the same text (tolerance 1e-14)
 R check: parse(-2^2) = -4  2^3^2 = 512 

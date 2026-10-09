@@ -7,6 +7,37 @@ a^2        linear: FALSE
 a*0+b      linear: TRUE
 abs(a)-b   linear: FALSE
 
-== stalled start (0,0,0,.5,.5): single solve F = 1.0290 (|h| = 0.0e+00) | 5 starts F = 0.0952, winner = start 3, spread = 0.9338 ==
+== stalled start (0,0,0,.5,.5): single solve F = 1.0290 (|h| = 0.0e+00) | 5 starts F = 0.0952, winner = start 5, spread = 0.9338 ==
 60 random user starts, reaches the better solution (F = 0.095154): 1 start 34/60 | 5 starts 56/60
 infeasible constraint set:  status -4, max |residual| 1.70 -> rejected by the 1e-6 gate: TRUE 
+
+== 4.5a syntactic linearity on the expression tree (conservative: anything unproven is nonlinear) ==
+a*b              nonlinear  PASS
+a+b-0.5          linear     PASS
+a-2*b            linear     PASS
+exp(a)-1         nonlinear  PASS
+a^2              nonlinear  PASS
+a*0+b            linear     PASS
+abs(a)-b         nonlinear  PASS
+(a-b)*(a+b)      nonlinear  PASS
+2*(a+b)/3        linear     PASS
+a/b              nonlinear  PASS
+-a + 3           linear     PASS
+exp(1)*a         linear     PASS
+a*b - a*b + a    nonlinear  PASS
+a^1              nonlinear  PASS
+min(a, b)        nonlinear  PASS
+1e3*a - b        linear     PASS
+(a*b - a*b + a and a^1 are numerically linear; the syntactic rule calls them nonlinear on purpose: the cost is a warning and 5 starts, never a missed safeguard.)
+A kink outside [-2, 2] that the old 3-point numeric check missed:  nonlinear 
+
+== 4.5d warning rule: warn if any start is infeasible/failed OR spread > max(1e-6, 1e-6*|F_best|) ==
+a*b == 0, normal (two local solutions)         feasible 5/5 | best 0.0952 | spread 1.10e-02 (threshold 1.0e-06) | warn: infeasible=FALSE spread=TRUE -> TRUE
+exp(a) + b == 1.5, normal (unique optimum)     feasible 5/5 | best 0.0146 | spread 1.90e-11 (threshold 1.0e-06) | warn: infeasible=FALSE spread=FALSE -> FALSE
+
+== 4.5d rule, unit level (stubbed start results): warn if any start fails OR spread > max(1e-6, 1e-6*|F_best|) ==
+one feasible start of five, at a poor local solution (F = 1.03) old rule: silent  new rule: WARN
+all five feasible and agreeing                                 old rule: silent  new rule: silent
+all five feasible, two local solutions (0.0952 / 0.1061)       old rule: WARN    new rule: WARN
+four feasible agreeing, one failed                             old rule: silent  new rule: WARN
+none feasible                                                  old rule: ERROR: no feasible start new rule: ERROR: no feasible start

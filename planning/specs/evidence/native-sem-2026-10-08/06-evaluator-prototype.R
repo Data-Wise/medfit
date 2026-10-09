@@ -6,11 +6,13 @@ BOUND <- list(`+`=base::`+`, `-`=base::`-`, `*`=base::`*`, `/`=base::`/`, `^`=ba
   exp=base::exp, log=base::log, log10=base::log10, sqrt=base::sqrt, abs=base::abs, min=base::min, max=base::max,
   sin=base::sin, cos=base::cos, tan=base::tan, pnorm=stats::pnorm, qnorm=stats::qnorm)
 parse_expr <- function(text) {
+  # R parses 0x10 as the double 16; the grammar allows decimal literals only, so reject hex before parsing (names such as a0x1 are not literals).
+  if (grepl("(^|[^A-Za-z0-9._])0[xX][0-9a-fA-F]", text)) stop("hexadecimal literals are not supported", call. = FALSE)
   ex <- tryCatch(parse(text = text, keep.source = FALSE), error = function(e) stop("constraint expression does not parse: ", conditionMessage(e), call. = FALSE))
   if (length(ex) != 1L) stop("constraint expression must be a single expression, got ", length(ex), call. = FALSE)
   ex[[1L]] }
 validate_expr <- function(e, labels) {
-  if (is.numeric(e) && length(e) == 1L && !is.na(e)) return(invisible(TRUE))
+  if (is.double(e) && length(e) == 1L && is.finite(e)) return(invisible(TRUE))   # finite double literals only (no 5L, 0x10, 1i, Inf)
   if (is.symbol(e)) { nm <- as.character(e)
     if (nm %in% names(ALLOWED)) stop("'", nm, "' is a function name, not a parameter label", call. = FALSE)
     if (!nm %in% labels) stop("unknown parameter label '", nm, "'", call. = FALSE); return(invisible(TRUE)) }
@@ -34,7 +36,13 @@ flag <- FALSE; r <- eval_expr(txt, vals); cat(sprintf("locked evaluator: value %
 rm(exp)
 # ---- T1 step 4: rejection tests ----
 cases <- c('base::system("echo hi")', 'get("system")("echo hi")', 'do.call("system", list("echo hi"))', 'Recall(a)', '"abc"', '(function() 1)()',
-           'a[1]', 'a$b', 'ifelse(a>0,a,b)', 'a <- 3', 'a = 3', 'TRUE', 'NA', 'exp(a, b)', 'log(x = a)', 'a; system("x")', 'exp', '`a b`', 'if (a) 1 else 2', '~a', 'unknown*a', '1 +')
-for (cs in cases) { r <- tryCatch({ eval_expr(cs, c(a=1, b=2)); "ACCEPTED" }, error = function(e) conditionMessage(e)); cat(sprintf("%-34s -> %s\n", cs, substr(r, 1, 80))) }
-cat("\n-- accepted --\n"); for (cs in c("-2^2", "a*b", "a^2 + b^2", "exp(a)/sqrt(b+1)", "min(a, b, 3)", "log(a, 2)", "pnorm(a) - 0.5", "2^-1", "1e-3*a")) cat(sprintf("%-20s = %s\n", cs, format(eval_expr(cs, c(a=1.5, b=2)), digits = 8)))
+           'a[1]', 'a$b', 'ifelse(a>0,a,b)', 'a <- 3', 'a = 3', 'TRUE', 'NA', 'exp(a, b)', 'log(x = a)', 'a; system("x")', 'exp', '`a b`', 'if (a) 1 else 2', '~a', 'unknown*a', '1 +', '5L', '0x10', '1i', '1e', 'Inf', '1e999')
+n_unexpected <- 0
+for (cs in cases) { r <- tryCatch({ eval_expr(cs, c(a=1, b=2)); "ACCEPTED" }, error = function(e) conditionMessage(e)); if (r == "ACCEPTED") n_unexpected <- n_unexpected + 1; cat(sprintf("%-34s -> %s\n", cs, substr(r, 1, 80))) }
+cat(sprintf("TALLY rejected: %d of %d inputs; unexpectedly accepted: %d\n", length(cases) - n_unexpected, length(cases), n_unexpected))
+cat("label containing 0x is not a hex literal: a0x1 + 1 =", eval_expr("a0x1 + 1", c(a0x1 = 1)), "\n")
+cat("\n-- accepted --\n"); acc_cases <- c("-2^2", "a*b", "a^2 + b^2", "exp(a)/sqrt(b+1)", "min(a, b, 3)", "log(a, 2)", "pnorm(a) - 0.5", "2^-1", "1e-3*a", ".5 + a", "1. * a", "1e3*a", "2E-2*a", "a^.5")
+for (cs in acc_cases) cat(sprintf("%-20s = %s\n", cs, format(eval_expr(cs, c(a=1.5, b=2)), digits = 8)))
+same <- vapply(acc_cases, function(cs) isTRUE(all.equal(eval_expr(cs, c(a=1.5, b=2)), eval(parse(text = cs), list(a=1.5, b=2)), tolerance = 1e-14)), TRUE)
+cat(sprintf("TALLY accepted: %d of %d valid expressions evaluated; %d equal R's own evaluation of the same text (tolerance 1e-14)\n", length(acc_cases), length(acc_cases), sum(same)))
 cat("R check: parse(-2^2) =", eval(parse(text = "-2^2")), " 2^3^2 =", eval(parse(text = "2^3^2")), "\n")

@@ -1,10 +1,10 @@
 
 == constraint: prod ==
-nloptr_SLSQP  feasible(|h|<1e-6): 10/10 | at best fmin(0.095154) +1e-6:  6/10 | ms/solve 10.8
-alabama       feasible(|h|<1e-6): 10/10 | at best fmin(0.095154) +1e-6:  9/10 | ms/solve 42.6
+nloptr_SLSQP  feasible(|h|<1e-6): 10/10 | at best fmin(0.095154) +1e-6:  6/10 | ms/solve 10.4
+alabama       feasible(|h|<1e-6): 10/10 | at best fmin(0.095154) +1e-6:  9/10 | ms/solve 45.0
   nloptr_SLSQP  fmin by start: 0.0952 0.1061 0.0952 1.029 0.0952 0.1061 0.1061 0.0952 0.0952 0.0952
   alabama       fmin by start: 0.0952 0.0952 0.0952 0.0952 0.0952 0.1061 0.0952 0.0952 0.0952 0.0952
 
 == constraint: lin ==
-nloptr_SLSQP  feasible(|h|<1e-6): 10/10 | at best fmin(0.010154) +1e-6: 10/10 | ms/solve 11.4
-alabama       feasible(|h|<1e-6): 10/10 | at best fmin(0.010154) +1e-6: 10/10 | ms/solve 31.4
+nloptr_SLSQP  feasible(|h|<1e-6): 10/10 | at best fmin(0.010154) +1e-6: 10/10 | ms/solve 11.7
+alabama       feasible(|h|<1e-6): 10/10 | at best fmin(0.010154) +1e-6: 10/10 | ms/solve 32.9

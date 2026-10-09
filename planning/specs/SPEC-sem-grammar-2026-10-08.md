@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-08 |
-| **Status** | DRAFT. Written by the medfit session (K1). Section 9 items 1-3 were accepted as proposed on 2026-10-08 ("do recommended"); the author's final approval of the whole spec is still pending. Revised after the adversarial review: T1 (evaluator boundary, 4.2a) and T2 (full productions, 4.1 and 4.2b) done; T3 (nonlinear-constraint contract, 4.5a-f, K9) done. |
+| **Status** | DRAFT. Written by the medfit session (K1). Section 9 items 1-3 were accepted as proposed on 2026-10-08 ("do recommended"); the author's final approval of the whole spec is still pending. Revised after the adversarial review: T1 (evaluator boundary, 4.2a) and T2 (full productions, 4.1 and 4.2b) done; T3 (nonlinear-constraint contract, 4.5a-f, K9) done. Review round 2 (4 medium findings) addressed: `fname`, literal forms and hex (4.1, 4.2a), syntactic linearity (4.5a), valid starts and the failure-or-spread warning rule (4.5b, 4.5d), runner failure propagation (evidence `run-all.sh`). |
 | **Task** | P0 grammar spec; precedes P1 (parser) and P2 (converters). |
 | **Inherits** | Handoff J13-J17 (missingmed `docs/specs/HANDOFF-medfit-native-sem-engine-2026-10-08.md`) and this repo's ledger [GRILL-native-sem-engine-medfit-2026-10-08.md](GRILL-native-sem-engine-medfit-2026-10-08.md): K1 (spec lives here), K2/K2b (any math expression, allowlist-checked), K4 (name), K5c (raw data only). |
 | **Evidence labels** | **[V]** verified by a command in this session; **[A]** assumed or proposed, needs the author's confirmation. |
@@ -31,7 +31,7 @@ Probe: `lavaan::lavParseModelString(model, as.data.frame. = TRUE)`, run on **lav
 1. Statements end at a newline or `;`. A statement continues onto the next line while its right side ends with `+`, `,`, `*`, or an open parenthesis.
 2. Comments start with `#` or `!` and run to the end of the line.
 3. Names: start with a letter or `.`, then letters, digits, `.`, `_`. Quoted names (backticks) are **not** supported in v0 (error naming the feature).
-4. Numbers: decimal, optional sign and exponent. `NA` is allowed in `start()` only.
+4. Numbers: decimal literals as R reads them (`.5` and `1.` are valid; no `L`, hex, or `i` suffix). A sign belongs to a modifier (`snumber`) or to the unary operator in an expression, never to the literal. `NA` is allowed in `start()` only.
 5. Whitespace is insignificant except inside names.
 
 ## 4. Core grammar (lavaan-compatible; checked against `lavParseModelString()`)
@@ -49,7 +49,7 @@ intercept   := lhs "~" [ modifier "*" ] "1"     # stored as op "~1" with rhs ""
 term        := [ modifier "*" ] name
 lhs         := name                              # core
              | name { "," name }                 # medfit extension (section 6): comma shorthand
-modifier    := number | label | "start(" number ")" | "lower(" number ")" | "upper(" number ")"
+modifier    := snumber | label | "start(" snumber ")" | "lower(" snumber ")" | "upper(" snumber ")"
 defined     := name ":=" expr
 constraint  := expr cmp expr
 cmp         := "==" | "<" | ">"                  # exactly one, at parenthesis depth 0
@@ -57,8 +57,14 @@ directive   := "CONSTRAINT(" expr cmp expr ")"   # medfit extension (section 6)
 expr        := see 4.2b                          # arithmetic subset of R
 label       := name                              # must not be a reserved word (below)
 name        := letter_or_dot { letter | digit | "." | "_" }
-number      := [ "-" | "+" ] digits [ "." digits ] [ ( "e" | "E" ) [ "-" | "+" ] digits ]
+number      := ( digits [ "." [ digits ] ] | "." digits ) [ ( "e" | "E" ) [ "-" | "+" ] digits ]   # unsigned; as R: .5 and 1. are valid
+snumber     := [ "-" | "+" ] number                                                            # modifiers only; expressions use unary minus
+fname       := "exp" | "log" | "log10" | "sqrt" | "abs" | "min" | "max" | "sin" | "cos" | "tan" | "pnorm" | "qnorm"   # the function rows of the 4.2a table
 integer     := digits
+digits      := digit { digit }
+digit       := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+letter      := "A" .. "Z" | "a" .. "z"
+letter_or_dot := letter | "."
 ```
 
 **Reserved words.** A `label` may not equal an allowlisted function name (4.2a) or one of `start`, `lower`, `upper`, `level`, `CONSTRAINT`; the parser errors naming the clash. `~1` is not a token: an intercept is `lhs ~ [modifier *] 1`, matching how lavaan parses `m1 ~ 0*1` [V].
@@ -75,7 +81,7 @@ integer     := digits
 #### 4.2a Evaluation environment (normative)
 
 1. **Parse.** `parse(text = , keep.source = FALSE)` must yield exactly one expression; zero, several (`a; system("x")`), or a syntax error is rejected.
-2. **Validate the call tree before any evaluation.** Allowed nodes only: a finite numeric literal; a symbol that is a declared label; a call whose head is a **bare symbol** in the allowlist below, with no named arguments and an argument count inside its arity. Everything else is rejected and the first offending construct is named: strings, `TRUE`/`NA`, `::`, `:::`, `$`, `@`, `[`, `[[`, `<-`, `=`, `function`, `if`, formulas, backtick names, calls whose head is not a bare symbol (`base::system(...)`, `get("system")(...)`, `(function() 1)()`), and a symbol that is an allowlisted function name used as a label.
+2. **Validate the call tree before any evaluation.** Allowed nodes only: a finite double literal (`5L`, `1i`, `Inf` and `1e999` are rejected, and hexadecimal literals such as `0x10` are rejected by a pre-parse check that ignores names like `a0x1`); a symbol that is a declared label; a call whose head is a **bare symbol** in the allowlist below, with no named arguments and an argument count inside its arity. Everything else is rejected and the first offending construct is named: strings, `TRUE`/`NA`, `::`, `:::`, `$`, `@`, `[`, `[[`, `<-`, `=`, `function`, `if`, formulas, backtick names, calls whose head is not a bare symbol (`base::system(...)`, `get("system")(...)`, `(function() 1)()`), and a symbol that is an allowlisted function name used as a label.
 3. **Evaluate in a locked environment.** `env <- new.env(parent = emptyenv())`; bind each allowlisted function **explicitly to its `base`/`stats` object** (`exp = base::exp`, `pnorm = stats::pnorm`, ...); bind each label to a numeric value; `eval(expr, env)`. Never evaluate in, or inherit from, the caller, global, or package environment.
 
 | Function | Arity |
@@ -89,7 +95,7 @@ integer     := digits
 
 `pnorm` and `qnorm` take their first argument only, so `lower.tail` and `log.p` (which would need named or logical arguments) are not available.
 
-**Verified [V]** with a scratchpad prototype (script: `planning/specs/evidence/native-sem-2026-10-08/06-evaluator-prototype.R`, output in `results/`): a caller-side `exp <- function(x) { flag <<- TRUE; base::exp(x) }` passes an `all.names()`-only check and runs when evaluated in the caller's scope (`flag` becomes `TRUE`); the locked evaluator returns the correct value (`exp(1) + 2 = 4.718282`) and `flag` stays `FALSE`. All 22 evaluator-level inputs in the section 7 rejection table (every row except the `<=`/`>=`/`!=`, `CONSTRAINT(...)` and right-side-comma rows, which belong to the statement parser and were not prototyped) were rejected with the construct named; nine valid expressions (`-2^2`, `2^-1`, `a*b`, `exp(a)/sqrt(b+1)`, `min(a, b, 3)`, `log(a, 2)`, `pnorm(a) - 0.5`, `1e-3*a`, `a^2 + b^2`) evaluated to R's own values.
+**Verified [V]** with a scratchpad prototype (script: `planning/specs/evidence/native-sem-2026-10-08/06-evaluator-prototype.R`, output in `results/`): a caller-side `exp <- function(x) { flag <<- TRUE; base::exp(x) }` passes an `all.names()`-only check and runs when evaluated in the caller's scope (`flag` becomes `TRUE`); the locked evaluator returns the correct value (`exp(1) + 2 = 4.718282`) and `flag` stays `FALSE`. Evidence run (`06-evaluator-prototype.R`): **28 of 28** rejection inputs were rejected with the construct named (the rows of the section 7 table that the evaluator handles, plus the literal forms `5L`, `0x10`, `1i`, `1e`, `Inf`, `1e999`); **14 of 14** valid expressions, including `.5 + a`, `1. * a`, `1e3*a`, `2E-2*a`, `a^.5`, evaluated and equal R's own evaluation of the same text to 1e-14. The rows not prototyped (`<=`/`>=`/`!=`, `CONSTRAINT(...)`, right-side comma) belong to the statement parser.
 
 #### 4.2b Expression grammar
 
@@ -105,7 +111,7 @@ atom    := number | label | call | "(" expr ")"
 call    := fname "(" [ expr { "," expr } ] ")"
 ```
 
-Consequences pinned by tests: `-2^2` is `-4`; `2^3^2` is `512`; `2^-1` is `0.5`. Comparison operators never occur inside an `expr`: a constraint line is split at its single depth-0 `==`, `<`, or `>`, and `<=`, `>=`, `!=` are rejected by name (lavaan's `<` already means "at most").
+`fname` is defined in 4.1 as the function names of the 4.2a table (operators excluded). Consequences pinned by tests: `.5` and `1.` are valid literals; `-2^2` is `-4`; `2^3^2` is `512`; `2^-1` is `0.5`. Comparison operators never occur inside an `expr`: a constraint line is split at its single depth-0 `==`, `<`, or `>`, and `<=`, `>=`, `!=` are rejected by name (lavaan's `<` already means "at most").
 
 #### 4.2c Other rules
 
@@ -125,18 +131,32 @@ A constraint of the form `label < number`, `label > number` (or the mirrored `nu
 
 Decided 2026-10-08 (D-A, recommended option): nonlinear equalities and inequalities are **allowed, with a one-time warning**, solved from several starts, and checked for feasibility and agreement across starts. This section is the full contract.
 
-#### 4.5a Classification (at model-build time, once per constraint)
+#### 4.5a Classification (syntactic, conservative; at model-build time, once per constraint)
 
-A constraint `lhs cmp rhs` is reduced to `h(x) = lhs - rhs`. It is **linear** if the central-difference Jacobian (K3 step) of `h` at three fixed pseudo-random points (seeded, drawn uniformly from [-2, 2] per parameter) agrees across the points to within `1e-6 * max(1, max|J|)`; otherwise **nonlinear**.
+Review round 2 replaced the three-point numeric check, which could call a constraint linear when its nonlinearity lay outside the sampled points. Classification now walks the **validated expression tree** (4.2a) after `:=` names are substituted by their definitions. An expression is **linear** only if it is provably linear by these rules; anything else is **nonlinear**:
 
-**Verified [V]** on seven expressions with 5 parameters: `a+b-0.5`, `a-2*b` and `a*0+b` classify linear; `a*b`, `exp(a)-1`, `a^2` and `abs(a)-b` classify nonlinear. Known limit: a function that is nonlinear only in a region the three points miss (for example a kink outside [-2, 2]) is classified linear; the feasibility gate (4.5c) still applies to it.
+| Node | Linear when |
+|---|---|
+| number, or any subtree with no label | always (a constant) |
+| label | always |
+| `(e)`, unary `+` or `-` | `e` is linear |
+| `e1 + e2`, `e1 - e2` | both linear |
+| `e1 * e2` | both linear **and at most one contains a label** |
+| `e1 / e2` | `e2` has no label and `e1` is linear |
+| any other call (`exp`, `abs`, `min`, `^`, ...) with a label inside | never |
+
+The rule errs in one direction only: an expression that is linear in fact but not provably so (`a*b - a*b + a`, `a^1`) is called nonlinear, which costs a warning and five starts and **never** a missed safeguard. Nothing depends on the region sampled.
+
+**Verified [V]** (`04b-constraint-contract.R`): all 16 test expressions classify as expected, including `(a-b)*(a+b)`, `a/b`, `min(a, b)`, `2*(a+b)/3`, `exp(1)*a` and `1e3*a - b`, and `abs(a - 50) - b` (a kink the old three-point check missed) is nonlinear.
 
 #### 4.5b Solve policy
 
 | Class | Starts | Warning |
 |---|---|---|
 | Linear equalities and inequalities | one solve from the user's start | none |
-| Any nonlinear constraint | `n_starts = 5`: the user's start plus four perturbations `x0 + N(0, (0.5 * max(|x0|, 1))^2)` per coordinate, drawn with a seed derived from the model so reruns are identical | once per fit: "constraint `<text>` is nonlinear; the solution may depend on starting values" |
+| Any nonlinear constraint | `n_starts = 5`: the user's start plus four perturbations `x0 + N(0, (0.5 * max(|x0|, 1))^2)` per coordinate, drawn with a seed derived from the model so reruns are identical. A perturbed start must have a **finite objective** (positive definite implied covariance): redraw up to 20 times, otherwise reuse the user's start | once per fit: "constraint `<text>` is nonlinear; the solution may depend on starting values" |
+
+[V] Without the validity rule, one of the four perturbed starts in the evidence run had a negative variance (objective 1e10) and made nloptr error, so the failure warning below would have fired on routine runs.
 
 `engine_args` may set `n_starts` (integer, at least 1). Among starts that satisfy 4.5c, the lowest objective wins.
 
@@ -152,20 +172,26 @@ A start is **feasible** only if every equality has `abs(h(x)) <= 1e-6` and every
 | `winner` | index of the winning start (1 is the user's) |
 | `objective_spread` | max minus min objective among feasible starts |
 
-If `objective_spread` exceeds `1e-6` (relative to the winning objective, with an absolute floor of `1e-6`), the fit warns once: "starts reached different solutions (spread `<value>`); the reported fit is the best of `<n_feasible>`". The spread is the only signal for a start that stalls **at a feasible point**: [V] the start (0, 0, 0, .5, .5) on `a*b == 0` returned F = 1.029 with residual 0.0 (feasible) against the best F = 0.0952, so the feasibility gate alone cannot catch it.
+**Warning rule** (review round 2, finding F3-b): the fit warns once if **either** (i) at least one start failed 4.5c or errored (`n_feasible < n_starts`), **or** (ii) `objective_spread > max(1e-6, 1e-6 * abs(F_best))`, where `F_best` is the winning objective. The message names which condition fired, the values, and "the reported fit is the best of `<n_feasible>`". If no start is feasible the fit errors (4.5c).
+
+Why both conditions: the spread alone is blind when a single start survives. [V] Rule-level cases (`04b`): one feasible start of five at a poor local solution (F = 1.03): the spread-only rule is silent, the new rule warns; four feasible and agreeing plus one failed: spread-only silent, new rule warns; five feasible and agreeing: silent under both; five feasible at two local solutions: warns under both. Integration runs: `a*b == 0` warns (five feasible, spread 1.1e-2); `exp(a) + b == 1.5` is silent (five feasible, spread 1.9e-11).
+
+The spread is also the only signal for a start that stalls **at a feasible point**: [V] the start (0, 0, 0, .5, .5) on `a*b == 0` returned F = 1.029 with residual 0.0 against the best F = 0.0952, so the feasibility gate alone cannot catch it. With `n_starts = 1` nothing can be compared, so only the one-time nonlinearity warning remains.
 
 #### 4.5e What the multi-start does and does not guarantee
 
-Measured [V] on `a*b == 0` (n = 300, observed three-variable model, 60 random user starts): the better solution (`a` = 0, F = 0.095154) was reached from **34 of 60** with one start and **56 of 60** with five starts. Five starts raise the odds; they do **not** guarantee the global solution (4 of 60 still missed). `a*b == 0` has two legitimate local solutions (`a` = 0 and `b` = 0, F = 0.0952 and 0.1061), so it will always raise the spread warning; the message adds: "for `a*b == 0` solve `a == 0` and `b == 0` separately and keep the better (medfit MBCO, N7)".
+Measured [V] on `a*b == 0` (n = 300, observed three-variable model, 60 random user starts): the better solution (`a` = 0, F = 0.095154) was reached from **34 of 60** with one start and **56 of 60** with five starts. (Re-measured after the valid-start rule: unchanged, 34/60 and 56/60.) Five starts raise the odds; they do **not** guarantee the global solution (4 of 60 still missed). `a*b == 0` has two legitimate local solutions (`a` = 0 and `b` = 0, F = 0.0952 and 0.1061), so it will always raise the spread warning; the message adds: "for `a*b == 0` solve `a == 0` and `b == 0` separately and keep the better (medfit MBCO, N7)".
 
 #### 4.5f Tests (planted defects, each must turn red when its mechanism is removed)
 
-1. Linearity: the seven-expression table above gives the stated classes; planting a sign error in the Jacobian difference flips at least one.
-2. Stalled start: `a*b == 0` from (0, 0, 0, .5, .5) with `n_starts = 1` returns F near 1.03 and raises **no** spread warning (a single start has nothing to compare; the test documents why `n_starts = 1` is unsafe for nonlinear constraints, and the one-time nonlinearity warning is the only signal); with `n_starts = 5` and the model-derived seed it returns F within `1e-6` of 0.095154 (verified [V] with seed 1, where start 3 won) and the spread warning fires.
-3. Agreement warning: fires on `a*b == 0` and does not fire on the linear `a + b == 0.5` (all starts agree).
-4. Feasibility: `a == 1` with `a == 2` errors naming a constraint and the residual.
-5. No-warning path: a linear constraint produces no warning and runs one solve.
-6. Reproducibility: two runs of the same model give identical start perturbations and the same winner.
+1. **Linearity (4.5a):** the 16-expression table gives the stated classes. Planted defect: treating `e1 * e2` as linear when both sides contain labels must flip `a*b` and `(a-b)*(a+b)`; treating an unknown call as linear must flip `abs(a)-b` and `min(a, b)`.
+2. **Stalled start:** `a*b == 0` from (0, 0, 0, .5, .5) with `n_starts = 1` returns F near 1.03 and raises **no** spread or failure warning (a single start has nothing to compare; the one-time nonlinearity warning is the only signal). With `n_starts = 5` and the pinned seed it returns F within `1e-6` of 0.095154 (verified [V] with seed 1, where start 5 won) and the spread warning fires.
+3. **Warning rule (4.5d), unit level:** the five stubbed cases above, each with its stated old-rule and new-rule outcome. Planted defect: restoring the spread-only rule must turn the "one feasible start" and "four feasible plus one failed" cases red.
+4. **Warning rule, integration:** `a*b == 0` warns on spread; `exp(a) + b == 1.5` is silent with `n_feasible = 5`.
+5. **Valid starts (4.5b):** a perturbation that yields a non-positive-definite implied covariance is redrawn; planted defect: removing the redraw must make a start fail with a negative variance on the evidence seed.
+6. **Feasibility (4.5c):** `a == 1` with `a == 2` errors naming a constraint and the residual.
+7. **No-warning path:** a provably linear constraint produces no warning and runs one solve.
+8. **Reproducibility:** two runs of the same model give identical start perturbations and the same winner.
 
 ## 5. The parameter table (J14)
 
@@ -216,7 +242,8 @@ Unsupported operators error **by name**, never silently: `<~`, `~*~`, `|~`, `:~`
 | `base::system("x")`, `get("system")("x")`, `(function() 1)()` | call head is not a bare allowlisted symbol |
 | `do.call(...)`, `Recall(a)`, `ifelse(...)`, `if (a) 1 else 2` | function not in the allowlist |
 | `a[1]`, `a$b`, `a <- 3`, `a = 3`, `~a` | operator not in the allowlist |
-| `"abc"`, `TRUE`, `NA` | disallowed literal |
+| `"abc"`, `TRUE`, `NA`, `5L`, `1i`, `Inf`, `1e999` | disallowed literal (only finite double literals) |
+| `0x10` | hexadecimal literals are not supported (rejected before parsing; `a0x1` as a label is fine) |
 | `exp(a, b)`, `log(x = a)` | wrong arity; named argument |
 | `exp` (used as a label), `` `a b` ``, `unknown * a` | reserved word as label; unknown label |
 | `a <= 2`, `a >= 2`, `a != 2` | comparison operator not supported |
@@ -230,7 +257,7 @@ Unsupported operators error **by name**, never silently: `<~`, `~*~`, `|~`, `:~`
 | Core grammar (section 4) | `lavParseModelString()` on lavaan >= 0.7-3; compare `lhs, op, rhs, level (= block), fixed, label, start, lower, upper` and the constraint set after applying bound folding to both sides | the models in section 2, a simple mediation, serial and parallel mediation, latent mediator, equal-label constraints, `:=` indirect effects, two-level syntax |
 | Extensions (section 6) | own expected tables | comma expansion; `CONSTRAINT(...)` equivalence; **planted defect:** the oracle drops `y1` and our parser must not |
 | Safety (4.2a) | locked evaluator | every row of the section 7 rejection table; **planted defect (positive control):** a caller-side rebinding of `exp` must change the result of an `all.names()`-only implementation and must **not** change the locked evaluator's result or run the caller's function |
-| Expression grammar (4.2b) | `parse(text = )` restricted to the 4.2a node types | `-2^2`, `2^3^2`, `2^-1`, `a*b`, `exp(a)/sqrt(b+1)`, `min(a, b, 3)`, `log(a, 2)`, `pnorm(a) - 0.5`, `1e-3*a`: values equal R's own evaluation of the same text |
+| Expression grammar (4.2b) | `parse(text = )` restricted to the 4.2a node types | `-2^2`, `2^3^2`, `2^-1`, `a*b`, `exp(a)/sqrt(b+1)`, `min(a, b, 3)`, `log(a, 2)`, `pnorm(a) - 0.5`, `1e-3*a`, `.5 + a`, `1. * a`, `1e3*a`, `2E-2*a`, `a^.5`: values equal R's own evaluation of the same text (14 of 14 verified [V]) |
 | Errors (section 7) | pinned regexes | every row of section 7 |
 | Level (section 4.3) | own | parses; fitting errors with the pinned message |
 

@@ -7,7 +7,7 @@ Reproduces the numbers quoted in `../../GRILL-native-sem-engine-medfit-2026-10-0
 
 ```sh
 cd planning/specs/evidence/native-sem-2026-10-08
-./run-all.sh                         # about 3 minutes; writes results/<script>.out
+./run-all.sh                         # about 3 minutes; writes results/<script>.out; deletes each old output first and exits nonzero if any script fails
 REPS=5 ./run-all.sh                  # quick benchmark
 LAVAAN_ALT_LIB=/path/to/lib ./run-all.sh   # also re-runs the lavaan probe under another lavaan version
 ```
@@ -30,10 +30,10 @@ Machine: macOS, 18 cores (affects only the parallel timings). Timings vary by ab
 | `02-p0-openmx-information.R` | OpenMx SEs vs observed and expected information; the `n/(n-1)` convention. The Hessian-matrix lines in this output are **not valid evidence** (relative differences blow up on near-zero entries); the SE lines are | ledger P0 facts, K10 |
 | `03-bench-optimizers.R` | 5 unconstrained optimizers x 3 model shapes x n of 50/200/1000 x default and random starts x 30 datasets, against lavaan | research table, K10 context |
 | `04-constrained-solvers.R` | nloptr SLSQP vs alabama on `a*b == 0` and `a + b == 0.5`, 10 starts | research table |
-| `04b-constraint-contract.R` | linearity test, 5-start rule, stalled start, feasibility gate | spec 4.5 |
+| `04b-constraint-contract.R` | syntactic linearity (16 expressions), 5-start rule with valid starts, stalled start, feasibility gate, failure-or-spread warning rule (5 stubbed cases + 2 integration runs); the older numeric three-point check is kept in the output for comparison | spec 4.5 |
 | `05-speed.R` | per-call cost, vectorized objective, dense vs sparse, parallel fits | research table, K7b |
 | `05b-optimizer-speed.R` | nloptr SLSQP/LBFGS vs nlminb with the vectorized objective | research table |
-| `06-evaluator-prototype.R` | locked constraint evaluator, planted caller-side `exp` defect, rejection table | spec 4.2a |
+| `06-evaluator-prototype.R` | locked constraint evaluator, planted caller-side `exp` defect, 28 rejection inputs (incl. `5L`, hex, `1i`, `Inf`), 14 valid expressions compared with R's own evaluation; prints `TALLY` lines | spec 4.2a |
 
 ## Seeds
 
