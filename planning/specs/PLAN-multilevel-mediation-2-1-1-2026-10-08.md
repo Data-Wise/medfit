@@ -42,15 +42,17 @@ may claim 0.6.0).
 | P2 | The planted defects mock helpers that do not exist yet (`.raw_to_within`, the relabel helper) | Create them as separately named internal functions (`.raw_to_within()` in T4, `.relabel_clusters()` in T14) so `local_mocked_bindings()` can reach them | The spec's group 8 injects defects through those names |
 | P4 | The spec says the A2 warnings fire "once per call" and names `.notify_once()`, but that helper is **session-wide** (`R/zzz.R:23`: keyed state, `message()`, at most once per session), so a second qualifying fit in the same session would stay silent and the spec's own test (warn at J = 20 and J = 8) would pass only for the first fit | Emit each A2 warning with base `warning(call. = FALSE)` (the house style, as in `R/generics-effects.R:350`), once per `extract_mediation()` call, with no keyed state; test two qualifying calls in one session, each warning exactly once | The spec's behavior (once per call) wins over its parenthetical naming the wrong helper; `.notify_once()` stays for advisory nudges in refit loops |
 | P5 | The spec assigns the TE oracle to PR A (Outcomes table) and to PR C (Delivery) | The TE oracle runs in **PR A** (T9); PR C only repeats it through `bootstrap_mediation(cluster = )` | `te_oracle()` takes its SE from the harness's own cluster bootstrap, so it does not depend on PR C; running it before PR A merges means a failed check cannot force rework after integration |
+| P6 | Behavior 6 detects the mean term by values (constant within clusters, exact affine function of the cluster mean), but when every cluster has the same mean of M the intercept meets that rule and the between effect is not identifiable; the spec has no guard (found by the second adversarial review) | `.find_cluster_mean_term()` never considers `(Intercept)`, requires `sd(cluster means) > 1e-8 * max(1, sd(M))` on the model rows and a matched column that is present and non-aliased in `fixef()` (lme4 drops rank-deficient columns), and otherwise errors "no between-cluster variation in the mediator, so the between-cluster effect is not identifiable" | A misleading NIE is worse than an error; the guard costs one variance check and one membership check |
 | P3 | `tests/sim/` does not exist | T9 creates it with `^tests/sim$` in `.Rbuildignore` and `tests/sim/results/` for the CSVs | Spec project structure; heavy runs stay out of testthat and out of the tarball |
 
 ## Spec inconsistencies found while planning
 
-The spec is approved, so it is not edited here. Each item is resolved in the plan (P1, P4, P5); an errata note on the spec is optional and the author's call.
+The spec is approved, so it is not edited here. Each item is resolved in the plan (P1, P4, P5, P6); an errata note on the spec is optional and the author's call.
 
 | Spec text | Conflict | Resolution |
 |---|---|---|
 | Behavior 10 (KR in extraction) vs Delivery (KR in PR B) | placement | P1 |
+| Behavior 6: value-based detection, no identifiability guard | gap, not a conflict: the intercept can match the mean-term rule | P6 |
 | Behavior 11 and test group 7: "once per call (`.notify_once`)" | `.notify_once()` is once per session | P4 |
 | Outcomes table (TE oracle in PR A) vs Delivery (TE oracle in PR C) | placement | P5 |
 
@@ -59,6 +61,7 @@ The spec is approved, so it is not edited here. Each item is resolved in the pla
 | Risk | Mitigation |
 |---|---|
 | The harness is wrong, so every oracle agrees with a wrong estimator | T1 validates each helper on balanced cases whose answer is a closed form (`a·b_B`, `a·b_W`) before T4 starts, and shows defect injection changes the numbers |
+| Value-based term detection (Behavior 6) accepts the intercept when cluster means of M are all equal | P6: intercept excluded, between-cluster variance and non-aliasing required, error otherwise; T4 plants the intercept-accepting detector |
 | Value-based term detection (Behavior 6) mislabels a column | T4 tests grand-mean centering, `scale()`, near-miss means and uncentered raw terms, and asserts the rescaled coefficient and vcov (1e-8) |
 | The SE ratio or D4 correlation fails with unbalanced clusters or random within-slopes | T9 is a checkpoint before PR A; a failure sends D4 back to the grill (spec Outcomes), so PR A does not merge on a hope |
 | Heavy tests are silently skipped on CI | The spec records that r-lib's check action sets `NOT_CRAN = "true"` (settled in the joint work); T0 re-confirms it with a canary test on the first push of `feature/cluster-extract` and reads the SKIP summary |
@@ -108,10 +111,11 @@ The spec is approved, so it is not edited here. Each item is resolved in the pla
   - Acceptance:
     - `.find_cluster_mean_term()` as in the spec's code style block (constant within clusters, exact affine function of the cluster mean on the model rows), plus the within and raw term finders; coefficients and vcov rescaled by the affine slope.
     - `.raw_to_within()` as its own function (P2): `b_B = b_W + κ`, vcov `J V J'`.
+    - Identifiability guard (P6): `(Intercept)` is excluded from detection; zero between-cluster variation in M (every cluster mean equal to within 1e-8 relative) or a mean term dropped by lme4 as aliased errors "no between-cluster variation in the mediator", never returning the intercept as the between term.
     - A missing mean term errors with the corrected formula; a near-miss (constant within clusters, correlation above 0.99 with the cluster mean, not affine) errors "the cluster mean must be computed on the rows the models use".
     - Product guards run on value-detected names (any mediator term times `X` or a covariate, including `I(X * M)`); random slopes read from `lme4::getME(fit, "cnms")`: within-term slope accepted; slope on raw M, on the mean term or on X errors.
     - Level-1 covariates with no cluster-mean companion are accepted and set `covariates_centered = FALSE` (drives Behavior 8's printed line).
-  - Verify: test group 2 (R1 identity 1e-8, affine detection under grand-mean centering and `scale()` 1e-8) and group 6's remaining rows.
+  - Verify: test group 2 (R1 identity 1e-8, affine detection under grand-mean centering and `scale()` 1e-8) and group 6's remaining rows, plus a P6 row: data whose cluster means of M are all equal fit without error in lme4 but `extract_mediation()` errors with the regex "between-cluster variation", and a planted detector that accepts the intercept fails that row.
   - Files: `R/extract-lmer.R`, `tests/testthat/test-cluster-211.R`.
 - [ ] **T5: vcov assembly and object construction (Behavior 9).**
   - Acceptance: `@vcov` block-diagonal over the alias rows plus each model's full fixed effects, coerced to base matrices (lme4 returns a `dpoMatrix`); `@estimates` carries prefixed source rows plus the aliases; `n_clusters`, `cluster_sizes`, `parameterization`, `sigma_*`, `tau_*`, `reml`, `converged` filled; the object validates for both parameterizations.
