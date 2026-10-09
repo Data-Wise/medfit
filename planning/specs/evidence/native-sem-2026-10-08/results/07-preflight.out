@@ -1,0 +1,24 @@
+[a1] diffLL a1 == 0, with means: PASS | measured 221.045546 | plan 221.045546 | rule: within 1e-4 of the plan value
+[a2] diffLL b1 == 0, with means: PASS | measured 0.083100 | plan 0.083100 | rule: within 1e-4 of the plan value
+[a3] diffLL without means equals with means: PASS | measured 4.46e-08 (a1 == 0: 221.045546 vs 221.045546; b1 == 0: 0.083100 vs 0.083100) | plan < 1e-6 | rule: equal to 1e-6, else stop and ask the author
+    per-parameter relative SE difference: a2 1.81e-04; cp 3.98e-03; b1 1.21e-03; b2 8.62e-04
+    cp: SE 0.441885 (mxConstraint) vs 0.443649 (fixed); estimate 0.108912 vs 0.108993 (relative estimate difference 7.45e-04)
+    structural paths only (a2, cp, b1, b2): max 3.98e-03
+[b1] constrained parameter SE is NA under mxConstraint: PASS | measured TRUE | plan TRUE | rule: Q8: no mxConstraint in SE oracles
+[b2] other SEs differ from fixed-parameter model: PASS | measured 3.98e-03 | plan up to 4.1e-4 | rule: Q8 stands if a difference of this order appears
+[c1] nonlinear ind1 == 0, seed 1: PASS | measured diffLL 221.045546, a1 = 1.01e-94, b1 = 0.0215 | plan diffLL 221.045546 at a1 = 0 (the b1 = 0 optimum is 0.083100) | rule: J2 MBCO known-answer = min(diffLL(a1 == 0), diffLL(b1 == 0)) from the two linear solves
+[c2] nonlinear ind1 == 0, seed 2: PASS | measured diffLL 221.045546, a1 = 1.01e-94, b1 = 0.0215 | plan diffLL 221.045546 at a1 = 0 (the b1 = 0 optimum is 0.083100) | rule: J2 MBCO known-answer = min(diffLL(a1 == 0), diffLL(b1 == 0)) from the two linear solves
+[c3] nonlinear ind1 == 0, seed 3: PASS | measured diffLL 221.045546, a1 = 1.01e-94, b1 = 0.0215 | plan diffLL 221.045546 at a1 = 0 (the b1 = 0 optimum is 0.083100) | rule: J2 MBCO known-answer = min(diffLL(a1 == 0), diffLL(b1 == 0)) from the two linear solves
+[c4] min of the two linear solves: PASS | measured 0.083100 | plan 0.083100 | rule: S19 known-answer
+Warning message:
+In insertPathRAM(prepPath(path), model) :
+  Looks like there is a pre-existing one-headed path from 'x' to 'x'.
+That path is now overwritten by a two-headed path between 'x' and 'x'.
+To retain the one-headed path, either use 'dummy' latent variables, or directly modify the MxModel's 'A' matrix;
+See the `mxPath()` help page for examples.
+Be advised, this overwriting behavior may change in the future, so do not write scripts that rely upon it!
+[d1] labels shift in the Rd example: PASS | measured a2,cp,a1 | plan a2,cp,a1 (x->repetition, x->imagery, x->recall) | rule: if not shifted the as-written value is correct; S19 then drops the separate correctly-labeled assertions
+[d2] as-written example diffLL: PASS | measured 0.060332 | plan 0.060332 | rule: S19 reproduces as written (literal J2) and the correctly labeled values
+[e] versions: lavaan 0.7.2; OpenMx 2.22.11; nloptr 2.2.1; RMediation 1.6.1 | plan: lavaan 0.7-2, OpenMx 2.22.11, nloptr 2.2.1
+[g] budgets are recorded in the plan (always-on test file <= 10 s; one fit of a p <= 10 model < 5 ms median, 05b SLSQP 2.6 ms); see results/05b-optimizer-speed.out
+PREFLIGHT OK: all 11 checks passed

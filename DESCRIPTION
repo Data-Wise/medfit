@@ -32,10 +32,12 @@ Imports:
     checkmate,
     generics,
     lifecycle,
-    MASS
+    MASS,
+    nloptr (>= 1.0.4)
 Suggests:
     lavaan (>= 0.6-0),
     lme4,
+    OpenMx,
     pbkrtest,
     regmedint,
     sandwich,
