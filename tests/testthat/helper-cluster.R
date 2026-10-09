@@ -226,7 +226,11 @@ te_oracle <- function(dat, B = 200, seed = 3, ...) {
 # the cross-replication correlation of a-hat and b_between-hat (D4) and the
 # number of fits. Effects are nie, nde, te, own, spillover (own and spillover
 # are the large-cluster approximation). Uses fork parallelism on Unix.
-sim_gate <- function(scenario, R = 200, seed = 1, fit_args = list(), cores = 1L) {
+# `se_scale` multiplies every SE, a hook for planting a wrong-SE defect.
+# mclapply() cannot fork on Windows, so `cores` falls back to 1 there.
+sim_gate <- function(scenario, R = 200, seed = 1, fit_args = list(), cores = 1L,
+                     se_scale = 1) {
+  if (.Platform$OS.type == "windows") cores <- 1L
   paths <- c("a", "b_within", "b_between", "c_prime")
   effects <- c("nie", "nde", "te", "own", "spillover")
   one <- function(r) {
@@ -240,7 +244,8 @@ sim_gate <- function(scenario, R = 200, seed = 1, fit_args = list(), cores = 1L)
     if (is.null(obj)) return(NULL)
     list(
       est = c(obj@estimates[paths], medfit:::.cluster_effect_vec(obj)),
-      se = c(sqrt(diag(obj@vcov)[paths]), medfit:::.effect_se(obj, effects)),
+      se = se_scale * c(sqrt(diag(obj@vcov)[paths]),
+                        medfit:::.effect_se(obj, effects)),
       truth = c(sim$truth[paths],
                 nie = sim$a * sim$b_B, nde = sim$c_prime,
                 te = sim$a * sim$b_B + sim$c_prime, own = sim$a * sim$b_W,

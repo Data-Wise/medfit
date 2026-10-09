@@ -922,8 +922,12 @@ test_that("group 5 companion: SE ratios and coverage hold at R = 100 (widened ba
 test_that("sim_gate() reports a planted wrong SE through the SE ratio", {
   skip_if_not_installed("lme4")
   skip_on_cran()
-  # Halving every SE halves the ratio: the gate would catch an SE that is too small.
-  g <- sim_gate(list(J = 60, sizes = 10), R = 60, seed = 1000L, cores = 2L)
-  expect_gt(g$se_ratio[["nie"]], 0.8)
-  expect_lt(0.5 * g$se_ratio[["nie"]], 0.8)
+  # Halving every SE halves the ratio, which the [0.9, 1.1] gate would catch.
+  good <- sim_gate(list(J = 60, sizes = 10), R = 60, seed = 1000L, cores = 2L)
+  bad <- sim_gate(list(J = 60, sizes = 10), R = 60, seed = 1000L, cores = 2L,
+                  se_scale = 0.5)
+  expect_equal(bad$se_ratio[["nie"]], 0.5 * good$se_ratio[["nie"]], tolerance = 1e-10)
+  expect_gt(good$se_ratio[["nie"]], 0.8)
+  expect_lt(bad$se_ratio[["nie"]], 0.8)
+  expect_lt(bad$coverage[["nie"]], good$coverage[["nie"]])
 })
