@@ -78,7 +78,8 @@ fixtures <- list(
 )
 
 extract_new <- function(fit, args) do.call(extract_mediation_lavaan, c(list(fit), args))
-extract_old <- function(fit, args) do.call(.frozen_extract_mediation_lavaan, c(list(fit), args))
+# Looked up by name: the frozen copy is defined in a helper file, which the CI linter does not source.
+extract_old <- function(fit, args) do.call(match.fun(".frozen_extract_mediation_lavaan"), c(list(fit), args))
 
 test_that("every lavaan fixture extracts identically through the seam and the frozen pre-refactor code", {
   for (nm in names(fixtures)) {
