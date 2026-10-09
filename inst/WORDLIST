@@ -6,6 +6,7 @@ brm
 brms
 brmsfit
 callout
+ClusterMediationData
 CDE
 CMD
 Codecov
@@ -31,8 +32,10 @@ INTmed
 INTref
 IPW
 JointMediationData
+Kenward
 lavaan
 Lifecycle
+Loeys
 lintr
 lm
 lme
@@ -103,6 +106,9 @@ VanderWeele
 VanderWeele's
 Vansteelandt
 Williams
+Rosseel
+Talloen
+Moerkerke
 CRAN's
 SEM's
 cdots
