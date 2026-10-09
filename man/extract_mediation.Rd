@@ -114,8 +114,9 @@ them. The lavaan method adds the same three names to \verb{@estimates} and
 \verb{@vcov} for an observed, continuous treatment, mediator and outcome. Each is
 a second name for the \code{a}, \code{b} or \code{c_prime} path, with the same estimate and
 covariances, appended after the existing rows. A lavaan fit with a latent or
-ordered treatment, mediator or outcome gets none of the three and works with
-the plugin estimators only. Serial, parallel and four-way objects are not
+ordered treatment, mediator or outcome, and any extraction with
+\code{standardized = TRUE}, gets none of the three and works with the plugin
+estimators only. Serial, parallel and four-way objects are not
 affected.
 }
 }

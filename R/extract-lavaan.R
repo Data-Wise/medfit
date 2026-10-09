@@ -338,7 +338,9 @@ extract_mediation_lavaan <- function(object,
   # up as m_<treatment>, y_<mediator> and y_<treatment>, the names the glm
   # route gives its coefficients. Each is a second name for a path already
   # aliased above; they are appended after it, so no existing row moves.
-  probmed_names <- .lavaan_probmed_alias_names(object, treatment, mediator, outcome)
+  probmed_names <- .lavaan_probmed_alias_names(
+    object, treatment, mediator, outcome, standardized
+  )
   aliases_to_add <- c(
     aliases_to_add,
     setdiff(unname(probmed_names), c(names(all_coef), aliases_to_add))
@@ -1193,13 +1195,18 @@ extract_mediation_lavaan <- function(object,
 # "c_prime"). Only an observed, continuous treatment, mediator and outcome
 # get them: a latent variable has no column for a probmed bootstrap to
 # simulate, and an ordered one is not Gaussian, so those fits return
-# character(0) and stay plugin-only.
-.lavaan_probmed_alias_names <- function(object, treatment, mediator, outcome) {
+# character(0) and stay plugin-only. So do standardized extractions: their
+# estimates are standardized but @vcov is lavaan's unstandardized covariance,
+# and a bootstrap drawing from that pair would mix scales.
+.lavaan_probmed_alias_names <- function(object, treatment, mediator, outcome,
+                                        standardized = FALSE) {
   checkmate::assert_class(object, "lavaan", .var.name = "object")
   checkmate::assert_string(treatment, .var.name = "treatment")
   checkmate::assert_string(mediator, .var.name = "mediator")
   checkmate::assert_string(outcome, .var.name = "outcome")
+  checkmate::assert_flag(standardized, .var.name = "standardized")
 
+  if (standardized) return(character(0))
   vars <- c(treatment, mediator, outcome)
   observed <- all(vars %in% lavaan::lavNames(object, "ov"))
   if (!observed || any(vars %in% lavaan::lavNames(object, "ov.ord"))) {

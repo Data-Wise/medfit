@@ -105,8 +105,9 @@
 #' `@vcov` for an observed, continuous treatment, mediator and outcome. Each is
 #' a second name for the `a`, `b` or `c_prime` path, with the same estimate and
 #' covariances, appended after the existing rows. A lavaan fit with a latent or
-#' ordered treatment, mediator or outcome gets none of the three and works with
-#' the plugin estimators only. Serial, parallel and four-way objects are not
+#' ordered treatment, mediator or outcome, and any extraction with
+#' `standardized = TRUE`, gets none of the three and works with the plugin
+#' estimators only. Serial, parallel and four-way objects are not
 #' affected.
 #'
 #' @examples

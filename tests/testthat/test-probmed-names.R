@@ -169,6 +169,15 @@ test_that("an ordered outcome gets none of the three rows and does not error", {
   expect_identical(names(md@estimates), rownames(md@vcov))
 })
 
+test_that("a standardized extraction gets none of the three rows", {
+  fit <- probmed_names_fits()$unlabeled
+  md <- extract_mediation_lavaan(fit, treatment = "X", mediator = "M",
+                                 standardized = TRUE)
+  expect_false(any(grepl("^(m|y)_", names(md@estimates))))
+  expect_false(any(grepl("^(m|y)_", rownames(md@vcov))))
+  expect_identical(names(md@estimates), rownames(md@vcov))
+})
+
 test_that("serial, parallel and four-way lavaan objects get no m_/y_ rows", {
   set.seed(3)
   n <- 300

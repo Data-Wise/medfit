@@ -471,7 +471,8 @@ Besides the parameter names lavaan assigns, the extracted `@estimates` and `@vco
 carry `m_<treatment>`, `y_<mediator>` and `y_<treatment>`, the names the
 lm/glm route gives these three coefficients, so code that looks them up by name
 (such as the parametric bootstrap in probmed) works on either route. A latent or
-ordered treatment, mediator or outcome gets none of them.
+ordered treatment, mediator or outcome, and any `standardized = TRUE`
+extraction, gets none of them.
 
 ```{r}
 #| label: lavaan-names
