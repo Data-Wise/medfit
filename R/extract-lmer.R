@@ -25,9 +25,7 @@
   ctx <- .lmer_guard(object, model_y, treatment, mediator, cluster, se_type,
                      vcov_fun)
   terms <- .lmer_terms(object, model_y, ctx)
-  # Object assembly arrives in T5.
-  stop("extraction from lmer fits is not implemented yet (", terms$parameterization,
-       " parameterization, cluster ", ctx$cluster, ")", call. = FALSE)
+  .lmer_assemble(object, model_y, ctx, terms)
 }
 
 # Routing and design guards (Behavior 1-5). Returns the validated context.
@@ -377,6 +375,89 @@
     bad(trt, "the treatment", "it is constant within clusters")
   }
   invisible(NULL)
+}
+
+# Object assembly (Behavior 9) -------------------------------------------------
+
+# Intercept SD of a model's random effect for `cluster`.
+.lmer_tau <- function(fit, cluster) {
+  vc <- lme4::VarCorr(fit)[[cluster]]
+  sqrt(unname(vc["(Intercept)", "(Intercept)"]))
+}
+
+# TRUE when lme4 reports no optimizer failure or convergence message.
+.lmer_converged <- function(fit) {
+  conv <- fit@optinfo$conv
+  isTRUE(conv$opt == 0) && length(conv$lme4$messages) == 0L
+}
+
+# The response name of an lmer fit.
+.lmer_response <- function(fit) {
+  all.vars(stats::formula(fit)[[2]])[1]
+}
+
+# Build the ClusterMediationData object. `@estimates` carries the four alias
+# rows (a, c_prime, b_within, b_between) and each model's fixed effects with an
+# `m_`/`y_` prefix. `@vcov` is T V T' for the linear map T from the stacked
+# fixed effects to that vector and V = blockdiag(V_m, V_y), so every block
+# between the mediator model and the outcome block is exactly zero (D4).
+.lmer_assemble <- function(object, model_y, ctx, terms) {
+  trt <- ctx$treatment
+  if (!identical(.lmer_response(object), ctx$mediator)) {
+    stop("`mediator = \"", ctx$mediator, "\"` is not the response of the ",
+         "mediator model (`", .lmer_response(object), "`)", call. = FALSE)
+  }
+  beta_m <- lme4::fixef(object)
+  beta_y <- lme4::fixef(model_y)
+  if (!trt %in% names(beta_m)) {
+    stop("Treatment `", trt, "` is not a fixed effect of the mediator model ",
+         "(a coefficient dropped as aliased?)", call. = FALSE)
+  }
+  pm <- length(beta_m)
+  py <- length(beta_y)
+  nm_m <- paste0("m_", names(beta_m))
+  nm_y <- paste0("y_", names(beta_y))
+  V <- matrix(0, pm + py, pm + py)
+  V[seq_len(pm), seq_len(pm)] <- as.matrix(lme4::vcov.merMod(object))
+  V[pm + seq_len(py), pm + seq_len(py)] <- as.matrix(lme4::vcov.merMod(model_y))
+
+  # Alias map: a reads the treatment coefficient of the mediator model; the
+  # outcome paths read terms$L (rescaling and the raw-to-within map included).
+  A <- matrix(0, 4, pm + py,
+              dimnames = list(c("a", "c_prime", "b_within", "b_between"), NULL))
+  A["a", match(trt, names(beta_m))] <- 1
+  A[c("c_prime", "b_within", "b_between"), pm + seq_len(py)] <-
+    terms$L[c("c_prime", "b_within", "b_between"), names(beta_y), drop = FALSE]
+  Tm <- rbind(A, diag(pm + py))
+  est_all <- c(beta_m, beta_y)
+  names_all <- c(rownames(A), nm_m, nm_y)
+  estimates <- stats::setNames(drop(Tm %*% est_all), names_all)
+  vc <- Tm %*% V %*% t(Tm)
+  dimnames(vc) <- list(names_all, names_all)
+  # Structural zeros: the mediator block and the outcome block are independent.
+  vc[c("a", nm_m), c("c_prime", "b_within", "b_between", nm_y)] <- 0
+  vc[c("c_prime", "b_within", "b_between", nm_y), c("a", nm_m)] <- 0
+
+  sizes <- as.integer(table(factor(ctx$ids, levels = unique(ctx$ids))))
+  ClusterMediationData(
+    a_path = unname(estimates[["a"]]), b_within = unname(estimates[["b_within"]]),
+    b_between = unname(estimates[["b_between"]]),
+    c_prime = unname(estimates[["c_prime"]]),
+    estimates = estimates, vcov = vc,
+    treatment = trt, mediator = ctx$mediator, outcome = .lmer_response(model_y),
+    cluster = ctx$cluster,
+    n_obs = as.integer(stats::nobs(model_y)),
+    n_clusters = length(sizes), cluster_sizes = sizes,
+    parameterization = terms$parameterization,
+    covariates_centered = terms$covariates_centered,
+    se_type = "model",
+    reml = isTRUE(lme4::isREML(object)) && isTRUE(lme4::isREML(model_y)),
+    converged = .lmer_converged(object) && .lmer_converged(model_y),
+    sigma_m = stats::sigma(object), sigma_y = stats::sigma(model_y),
+    tau_m = .lmer_tau(object, ctx$cluster),
+    tau_y = .lmer_tau(model_y, ctx$cluster),
+    source_package = "lme4"
+  )
 }
 
 # Register the lmer method for lme4's merMod class (lmerMod, glmerMod and

@@ -120,13 +120,13 @@ extract_pair <- function(p, ...) {
   extract_mediation(p$m, model_y = p$y, treatment = "X", mediator = "M", ...)
 }
 
-# Guards pass when the next error is the T4 stub, not a guard message.
+# Guards pass when extraction returns a ClusterMediationData.
 expect_passes_guards <- function(p, ...) {
-  expect_error(extract_pair(p, ...), "not implemented yet")
+  expect_true(S7::S7_inherits(extract_pair(p, ...), ClusterMediationData))
 }
 # nolint end
 
-test_that("an lmerMod pair reaches the extraction body and reports the cluster", {
+test_that("an lmerMod pair extracts a ClusterMediationData", {
   skip_if_not_installed("lme4")
   expect_passes_guards(lmer_pair())
   expect_passes_guards(lmer_pair(), cluster = "cluster")
@@ -139,10 +139,10 @@ test_that("a subclass of lmerMod dispatches through the merMod method", {
   p <- lmer_pair()
   sub_m <- methods::as(p$m, "localLmer")
   expect_s4_class(sub_m, "localLmer")
-  expect_error(
+  expect_true(S7::S7_inherits(
     extract_mediation(sub_m, model_y = p$y, treatment = "X", mediator = "M"),
-    "not implemented yet"
-  )
+    ClusterMediationData
+  ))
 })
 
 test_that("glmerMod gets the D7 error, not S7's 'can't find method'", {
@@ -403,4 +403,129 @@ test_that("covariates_centered follows cluster-mean centering (P10)", {
   pre <- cluster_fit_data(sim_c(cov = "centered")$data)
   pre_c <- terms_for(Y ~ X + M_w + M_bar + C + (1 | cluster), NULL, d = pre)
   expect_true(pre_c$t$covariates_centered)
+})
+
+
+# T5: vcov assembly and object construction -----------------------------------
+
+# nolint start: object_usage_linter.
+fit_obj <- function(fml_y, d, fml_m = M ~ X + (1 | cluster)) {
+  m <- suppressWarnings(suppressMessages(lme4::lmer(fml_m, data = d)))
+  y <- suppressWarnings(suppressMessages(lme4::lmer(fml_y, data = d)))
+  list(obj = extract_mediation(m, model_y = y, treatment = "X", mediator = "M"),
+       m = m, y = y)
+}
+# nolint end
+
+test_that("the object validates for both parameterizations and carries the design", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_cluster211(J = 24, sizes = c(rep(6, 12), rep(9, 12)),
+                                       seed = 7, cov = "centered")$data)
+  for (fml in list(Y ~ X + M_w + M_bar + C + (1 | cluster),
+                   Y ~ X + M + M_bar + C + (1 | cluster))) {
+    r <- fit_obj(fml, d)
+    o <- r$obj
+    expect_true(S7::S7_inherits(o, ClusterMediationData))
+    expect_identical(o@n_obs, 180L)
+    expect_identical(o@n_clusters, 24L)
+    expect_identical(o@cluster_sizes, c(rep(6L, 12), rep(9L, 12)))
+    expect_identical(c(o@treatment, o@mediator, o@outcome, o@cluster),
+                     c("X", "M", "Y", "cluster"))
+    expect_true(o@reml)
+    expect_true(o@converged)
+    expect_identical(o@se_type, "model")
+    expect_identical(o@source_package, "lme4")
+    expect_equal(o@sigma_m, stats::sigma(r$m))
+    expect_equal(o@sigma_y, stats::sigma(r$y))
+    expect_equal(o@tau_m, sqrt(lme4::VarCorr(r$m)$cluster[1, 1]))
+    expect_equal(o@tau_y, sqrt(lme4::VarCorr(r$y)$cluster[1, 1]))
+    expect_true(o@covariates_centered)
+  }
+  expect_identical(fit_obj(Y ~ X + M_w + M_bar + C + (1 | cluster), d)$obj@parameterization,
+                   "within")
+  expect_identical(fit_obj(Y ~ X + M + M_bar + C + (1 | cluster), d)$obj@parameterization,
+                   "raw")
+})
+
+test_that("alias rows equal their source rows and the vcov is a base matrix", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_cluster211(J = 24, sizes = 8, seed = 7)$data)
+  r <- fit_obj(Y ~ X + M_w + M_bar + (1 | cluster), d)
+  o <- r$obj
+  expect_identical(class(o@vcov), c("matrix", "array"))
+  expect_false(methods::is(o@vcov, "Matrix"))
+  expect_identical(rownames(o@vcov), names(o@estimates))
+  expect_identical(colnames(o@vcov), names(o@estimates))
+  fy <- lme4::fixef(r$y)
+  fm <- lme4::fixef(r$m)
+  expect_equal(o@estimates[["a"]], unname(fm["X"]), tolerance = 1e-12)
+  expect_equal(o@estimates[["c_prime"]], unname(fy["X"]), tolerance = 1e-12)
+  expect_equal(o@estimates[["b_within"]], unname(fy["M_w"]), tolerance = 1e-12)
+  expect_equal(o@estimates[["b_between"]], unname(fy["M_bar"]), tolerance = 1e-12)
+  expect_equal(o@estimates[["y_M_bar"]], unname(fy["M_bar"]), tolerance = 1e-12)
+  expect_equal(o@estimates[["m_(Intercept)"]], unname(fm["(Intercept)"]),
+               tolerance = 1e-12)
+  # Alias variances match the source variances (within parameterization).
+  Vy <- as.matrix(stats::vcov(r$y))
+  Vm <- as.matrix(stats::vcov(r$m))
+  expect_equal(o@vcov["b_between", "b_between"], Vy["M_bar", "M_bar"], tolerance = 1e-10)
+  expect_equal(o@vcov["a", "a"], Vm["X", "X"], tolerance = 1e-10)
+  expect_equal(o@vcov["c_prime", "b_within"], Vy["X", "M_w"], tolerance = 1e-10)
+})
+
+test_that("blocks between the mediator model and the outcome block are exactly zero", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_cluster211(J = 24, sizes = 8, seed = 7)$data)
+  for (fml in list(Y ~ X + M_w + M_bar + (1 | cluster), Y ~ X + M + M_bar + (1 | cluster))) {
+    o <- fit_obj(fml, d)$obj
+    nm <- names(o@estimates)
+    left <- c("a", nm[startsWith(nm, "m_")])
+    right <- c("c_prime", "b_within", "b_between", nm[startsWith(nm, "y_")])
+    expect_true(all(o@vcov[left, right] == 0))
+    expect_true(all(o@vcov[right, left] == 0))
+    expect_true(isSymmetric(o@vcov, tol = 1e-12))
+    expect_true(all(diag(o@vcov) > 0))
+  }
+})
+
+test_that("the raw parameterization's vcov carries b_between = b_within + kappa", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_cluster211(J = 24, sizes = 8, seed = 7)$data)
+  r <- fit_obj(Y ~ X + M + M_bar + (1 | cluster), d)
+  V <- as.matrix(stats::vcov(r$y))
+  expect_equal(r$obj@vcov["b_between", "b_between"],
+               V["M", "M"] + V["M_bar", "M_bar"] + 2 * V["M", "M_bar"],
+               tolerance = 1e-10)
+  expect_equal(r$obj@vcov["b_within", "b_between"], V["M", "M"] + V["M", "M_bar"],
+               tolerance = 1e-10)
+})
+
+test_that("a rescaled mean term gives the same paths, SEs and covariances", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_cluster211(J = 24, sizes = 8, seed = 7)$data)
+  d$M_bar_sc <- as.numeric(scale(d$M_bar))
+  base <- fit_obj(Y ~ X + M_w + M_bar + (1 | cluster), d)$obj
+  sc <- fit_obj(Y ~ X + M_w + M_bar_sc + (1 | cluster), d)$obj
+  keys <- c("a", "c_prime", "b_within", "b_between")
+  expect_equal(sc@estimates[keys], base@estimates[keys], tolerance = 1e-6)
+  expect_equal(sc@vcov[keys, keys], base@vcov[keys, keys], tolerance = 1e-5)
+})
+
+test_that("the mediator name must be the response of the mediator model", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_cluster211(J = 10, sizes = 5, seed = 1)$data)
+  m <- suppressMessages(lme4::lmer(M ~ X + (1 | cluster), d))
+  y <- suppressMessages(lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), d))
+  expect_error(extract_mediation(m, model_y = y, treatment = "X", mediator = "Z"),
+               "not the response of the mediator model")
+})
+
+test_that("an ML fit is flagged reml = FALSE and converged tracks lme4", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_cluster211(J = 24, sizes = 8, seed = 7)$data)
+  m <- suppressMessages(lme4::lmer(M ~ X + (1 | cluster), d, REML = FALSE))
+  y <- suppressMessages(lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), d, REML = FALSE))
+  o <- extract_mediation(m, model_y = y, treatment = "X", mediator = "M")
+  expect_false(o@reml)
+  expect_true(o@converged)
 })
