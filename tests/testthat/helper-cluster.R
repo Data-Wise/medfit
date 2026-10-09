@@ -20,6 +20,16 @@
 # fit_cluster211(), te_oracle() and sim_gate() call ClusterMediationData code
 # that arrives in T2-T5, so no test exercises them yet (first use: T6/T9).
 
+# Muffle only the few-cluster warning (A2), so tests that fit on a handful of
+# clusters stay quiet while every other warning still surfaces.
+quiet_few <- function(expr) {
+  withCallingHandlers(expr, warning = function(w) {
+    if (grepl("^Only [0-9]+ clusters|clusters \\(fewer than 25\\)", conditionMessage(w))) {
+      invokeRestart("muffleWarning")
+    }
+  })
+}
+
 # Default constants. M = b0 + a X + g C + v + r; Y adds t4 (within) and t5
 # (between) covariate effects, so t5 only matters when C has a between part.
 cluster_default_par <- function() {
@@ -159,7 +169,7 @@ cluster_cov_terms <- function(dat) {
 }
 
 # Fit both models the way the tests share and return the ClusterMediationData.
-# route = "fit" needs the lmer engine of fit_mediation(), which arrives in PR B.
+# route = "fit" goes through fit_mediation(engine = "lmer") (no covariate override).
 # `cov_terms` overrides the covariate terms of the outcome model (for example
 # "C" alone, an uncentered level-1 covariate with no cluster-mean companion).
 fit_cluster211 <- function(dat, parameterization = c("within", "raw"),
@@ -168,8 +178,17 @@ fit_cluster211 <- function(dat, parameterization = c("within", "raw"),
   parameterization <- match.arg(parameterization)
   route <- match.arg(route)
   if (route == "fit") {
-    stop("route = \"fit\" needs the lmer engine of fit_mediation() (PR B)",
-         call. = FALSE)
+    if (parameterization != "within" || slope || !is.null(cov_terms)) {
+      stop("route = \"fit\" builds the within parameterization with a random ",
+           "intercept and its own covariate terms", call. = FALSE)
+    }
+    rhs <- paste(c("X", "M", if ("C" %in% names(dat)) "C"), collapse = " + ")
+    rhs_m <- paste(c("X", if ("C" %in% names(dat)) "C"), collapse = " + ")
+    return(quiet_few(fit_mediation(
+      stats::as.formula(paste("Y ~", rhs)), stats::as.formula(paste("M ~", rhs_m)),
+      data = dat, treatment = "X", mediator = "M", engine = "lmer",
+      cluster = "cluster", se_type = se_type
+    )))
   }
   if (slope && parameterization == "raw") {
     stop("a random slope is supported on the within term only", call. = FALSE)
@@ -184,8 +203,9 @@ fit_cluster211 <- function(dat, parameterization = c("within", "raw"),
                       data = d, REML = TRUE)
   y_fit <- lme4::lmer(stats::as.formula(paste("Y ~", rhs_y, "+", re_y)),
                       data = d, REML = TRUE)
-  extract_mediation(m_fit, model_y = y_fit, treatment = "X", mediator = "M",
-                    cluster = "cluster", se_type = se_type)
+  quiet_few(extract_mediation(m_fit, model_y = y_fit, treatment = "X",
+                              mediator = "M", cluster = "cluster",
+                              se_type = se_type))
 }
 
 # Reduced-form X coefficient: lmer(Y ~ X + covariates + (1 | cluster)).
@@ -243,6 +263,7 @@ sim_gate <- function(scenario, R = 200, seed = 1, fit_args = list(), cores = 1L,
     )
     if (is.null(obj)) return(NULL)
     list(
+      kr_df = if (identical(obj@se_type, "kr")) obj@kr_df,
       est = c(obj@estimates[paths], medfit:::.cluster_effect_vec(obj)),
       se = se_scale * c(sqrt(diag(obj@vcov)[paths]),
                         medfit:::.effect_se(obj, effects)),
@@ -257,10 +278,17 @@ sim_gate <- function(scenario, R = 200, seed = 1, fit_args = list(), cores = 1L,
   se <- do.call(rbind, lapply(runs, `[[`, "se"))
   truth <- runs[[1]]$truth
   err <- sweep(est, 2, truth[colnames(est)])
+  # Wald coverage; path intervals are t intervals with the Kenward-Roger df when
+  # the fits are KR (D10), effect intervals stay normal.
+  crit <- matrix(stats::qnorm(0.975), nrow(est), ncol(est), dimnames = dimnames(est))
+  if (!is.null(runs[[1]]$kr_df)) {
+    df <- do.call(rbind, lapply(runs, `[[`, "kr_df"))
+    crit[, paths] <- stats::qt(0.975, df = df[, paths])
+  }
   list(
     n_fits = length(runs), R = R,
     se_ratio = colMeans(se) / apply(est, 2, stats::sd),
-    coverage = colMeans(abs(err) <= 1.96 * se),
+    coverage = colMeans(abs(err) <= crit * se),
     bias = colMeans(err),
     mc_se = apply(err, 2, stats::sd) / sqrt(nrow(err)),
     cor_a_b_between = stats::cor(est[, "a"], est[, "b_between"]),

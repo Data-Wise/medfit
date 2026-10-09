@@ -14,9 +14,10 @@ fit_mediation(
   family_y = stats::gaussian(),
   family_m = stats::gaussian(),
   weights = NULL,
-  se_type = c("model", "sandwich"),
+  se_type = c("model", "sandwich", "kr"),
   engine_args = list(),
   m_star = 0,
+  cluster = NULL,
   ...
 )
 }
@@ -37,6 +38,14 @@ fit_mediation(
 \item \code{"regmedint"}: Closed-form regression-based (in)direct effects via
 the suggested \pkg{regmedint} package (VanderWeele's regression
 approach, with optional treatment-mediator interaction)
+\item \code{"lmer"}: Linear mixed models for a treatment assigned to whole
+clusters (the 2-1-1 design), via the suggested \pkg{lme4} package;
+needs \verb{cluster =} and returns a \link{ClusterMediationData}. The engine
+drops incomplete rows once, splits the mediator and each level-1
+covariate into its within-cluster deviation and observed cluster mean
+(\verb{<M>_cwc}, \verb{<M>_cm}), adds a random cluster intercept to both models,
+and fits by REML. It does not take \code{weights}, non-Gaussian families,
+\code{se_type = "sandwich"}, or extra arguments.
 }}
 
 \item{family_y}{Family object for outcome model (default: \code{gaussian()})}
@@ -50,10 +59,17 @@ inverse-probability weighting (IPW). \code{NULL} (default) fits unweighted.}
 \item{se_type}{Variance-covariance estimator for \verb{@vcov}: \code{"model"} (default,
 model-based \code{stats::vcov}) or \code{"sandwich"} (heteroskedasticity-consistent
 \code{sandwich::vcovHC}, type HC3, recommended for IPW-weighted fits). The
-\code{"sandwich"} option requires the suggested \pkg{sandwich} package.}
+\code{"sandwich"} option requires the suggested \pkg{sandwich} package. With
+\code{engine = "lmer"} only, \code{"kr"} uses the Kenward-Roger adjusted covariance
+and stores a degrees of freedom for each path, so the path intervals are
+t intervals; it needs REML fits and the suggested \pkg{pbkrtest} package.}
 
 \item{engine_args}{Named list of engine-specific overrides (default:
 \code{list()}, no overrides). Ignored by \code{engine = "glm"}. For
+\code{engine = "lmer"}, recognized names are \code{random_y} and \code{random_m}
+(one-sided formulas of level-1 terms that get correlated random slopes;
+\code{~ M} in \code{random_y} is applied to the within-cluster mediator term) and
+\code{REML} (default \code{TRUE}); any other name is an error. For
 \code{engine = "regmedint"}, recognized names are \code{interaction}, \code{cvar},
 \code{mreg}, \code{yreg}, \code{a0}, \code{a1}, and \code{c_cond}; each replaces the
 value the adapter would otherwise derive from the formulas, families, and
@@ -67,6 +83,9 @@ such term is an error rather than a silent no-op. That check keys on whether
 the argument was given at the call site, not on whether it differs from the
 default, so a wrapper that forwards \code{m_star} unconditionally will trigger it
 on two-way fits; forward it only when its own caller supplied one.}
+
+\item{cluster}{Character string: name of the cluster variable in \code{data}.
+Required with \code{engine = "lmer"}, an error with the other engines.}
 
 \item{...}{Additional arguments passed to the fitting function}
 }

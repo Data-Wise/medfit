@@ -136,9 +136,11 @@ test_that("effects_from(effect_fn = broken) changes the numbers", {
   expect_length(good, 3L)
 })
 
-test_that("fit_cluster211() refuses the fit route and raw random slopes", {
+test_that("fit_cluster211() refuses raw on the fit route and raw random slopes", {
+  skip_if_not_installed("lme4")
   d <- sim_cluster211(J = 6, sizes = 4, seed = 1)$data
-  expect_error(fit_cluster211(d, route = "fit"), "PR B")
+  expect_error(fit_cluster211(d, route = "fit", parameterization = "raw"),
+               "within parameterization")
   expect_error(fit_cluster211(d, parameterization = "raw", slope = TRUE),
                "within term only")
 })

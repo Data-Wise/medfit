@@ -31,7 +31,11 @@ scenarios <- list(
   unbalanced = list(args = list(J = 60, sizes = rep(3:30, length.out = 60)),
                     fit = list()),
   random_slope = list(args = list(J = 60, sizes = 10, slope_sd = 0.3),
-                      fit = list(slope = TRUE))
+                      fit = list(slope = TRUE)),
+  # Few clusters with Kenward-Roger: t intervals for the paths (D10).
+  kr_J15 = list(args = list(J = 15, sizes = 10), fit = list(se_type = "kr")),
+  kr_J15_unbalanced = list(args = list(J = 15, sizes = rep(3:30, length.out = 15)),
+                           fit = list(se_type = "kr"))
 )
 gates <- list()
 for (nm in names(scenarios)) {

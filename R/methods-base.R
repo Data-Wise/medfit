@@ -704,7 +704,9 @@ S7::method(nobs, ClusterMediationData) <- function(object, ...) {
 #' Normal-approximation intervals. `parm = "paths"` covers a, b_within,
 #' b_between and c_prime with SEs from the diagonal of `@vcov`;
 #' `parm = "effects"` covers NIE, NDE, TE, own and spillover with delta-method
-#' SEs through the alias rows. Both use the same SEs as `tidy()`.
+#' SEs through the alias rows. Both use the same SEs as `tidy()`. With
+#' `se_type = "kr"` the path intervals are t intervals with the Kenward-Roger
+#' degrees of freedom; the effect intervals stay normal.
 #'
 #' @param object A ClusterMediationData object.
 #' @param parm `"paths"` or `"effects"`.
@@ -722,6 +724,10 @@ S7::method(confint, ClusterMediationData) <- function(object,
   if (parm == "paths") {
     coefs <- paths(object)
     se <- .path_se(object, names(coefs))
+    # Kenward-Roger fits get t intervals with the stored df (D10).
+    if (identical(object@se_type, "kr")) {
+      z <- stats::qt(1 - (1 - level) / 2, df = object@kr_df[names(coefs)])
+    }
   } else {
     coefs <- .cluster_effect_vec(object)
     se <- .effect_se(object, names(coefs))

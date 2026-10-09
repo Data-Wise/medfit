@@ -21,7 +21,17 @@
 #'     \item `"regmedint"`: Closed-form regression-based (in)direct effects via
 #'       the suggested \pkg{regmedint} package (VanderWeele's regression
 #'       approach, with optional treatment-mediator interaction)
+#'     \item `"lmer"`: Linear mixed models for a treatment assigned to whole
+#'       clusters (the 2-1-1 design), via the suggested \pkg{lme4} package;
+#'       needs `cluster =` and returns a [ClusterMediationData]. The engine
+#'       drops incomplete rows once, splits the mediator and each level-1
+#'       covariate into its within-cluster deviation and observed cluster mean
+#'       (`<M>_cwc`, `<M>_cm`), adds a random cluster intercept to both models,
+#'       and fits by REML. It does not take `weights`, non-Gaussian families,
+#'       `se_type = "sandwich"`, or extra arguments.
 #'   }
+#' @param cluster Character string: name of the cluster variable in `data`.
+#'   Required with `engine = "lmer"`, an error with the other engines.
 #' @param family_y Family object for outcome model (default: `gaussian()`)
 #' @param family_m Family object for mediator model (default: `gaussian()`)
 #' @param weights Optional numeric vector of case weights (length `nrow(data)`),
@@ -30,9 +40,16 @@
 #' @param se_type Variance-covariance estimator for `@vcov`: `"model"` (default,
 #'   model-based `stats::vcov`) or `"sandwich"` (heteroskedasticity-consistent
 #'   `sandwich::vcovHC`, type HC3, recommended for IPW-weighted fits). The
-#'   `"sandwich"` option requires the suggested \pkg{sandwich} package.
+#'   `"sandwich"` option requires the suggested \pkg{sandwich} package. With
+#'   `engine = "lmer"` only, `"kr"` uses the Kenward-Roger adjusted covariance
+#'   and stores a degrees of freedom for each path, so the path intervals are
+#'   t intervals; it needs REML fits and the suggested \pkg{pbkrtest} package.
 #' @param engine_args Named list of engine-specific overrides (default:
 #'   `list()`, no overrides). Ignored by `engine = "glm"`. For
+#'   `engine = "lmer"`, recognized names are `random_y` and `random_m`
+#'   (one-sided formulas of level-1 terms that get correlated random slopes;
+#'   `~ M` in `random_y` is applied to the within-cluster mediator term) and
+#'   `REML` (default `TRUE`); any other name is an error. For
 #'   `engine = "regmedint"`, recognized names are `interaction`, `cvar`,
 #'   `mreg`, `yreg`, `a0`, `a1`, and `c_cond`; each replaces the
 #'   value the adapter would otherwise derive from the formulas, families, and
@@ -156,9 +173,10 @@ fit_mediation <- function(formula_y,
                           family_y = stats::gaussian(),
                           family_m = stats::gaussian(),
                           weights = NULL,
-                          se_type = c("model", "sandwich"),
+                          se_type = c("model", "sandwich", "kr"),
                           engine_args = list(),
                           m_star = 0,
+                          cluster = NULL,
                           ...) {
   se_type <- match.arg(se_type)
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
@@ -167,13 +185,39 @@ fit_mediation <- function(formula_y,
   checkmate::assert_data_frame(data, min.rows = 1, .var.name = "data")
   checkmate::assert_string(treatment, .var.name = "treatment")
   checkmate::assert_string(mediator, .var.name = "mediator")
-  checkmate::assert_choice(engine, choices = c("glm", "regmedint"),
+  checkmate::assert_choice(engine, choices = c("glm", "regmedint", "lmer"),
                            .var.name = "engine")
   checkmate::assert_list(engine_args, names = "unique", .var.name = "engine_args")
   checkmate::assert_number(m_star, .var.name = "m_star")
   if (!is.null(weights)) {
     checkmate::assert_numeric(weights, len = nrow(data), lower = 0,
                               any.missing = FALSE, .var.name = "weights")
+  }
+  # `cluster` belongs to the lmer engine; the lmer engine is linear, unweighted
+  # and model-based, so refuse what it cannot honor rather than ignore it.
+  if (!is.null(cluster) && engine != "lmer") {
+    stop("`cluster` is only used with engine = \"lmer\".", call. = FALSE)
+  }
+  if (se_type == "kr" && engine != "lmer") {
+    stop("se_type = \"kr\" (Kenward-Roger) is only used with engine = \"lmer\".",
+         call. = FALSE)
+  }
+  if (engine == "lmer") {
+    if (is.null(cluster)) {
+      stop("engine = \"lmer\" needs `cluster`, the name of the cluster variable.",
+           call. = FALSE)
+    }
+    if (!is.null(weights)) {
+      stop("engine = \"lmer\" does not support `weights`.", call. = FALSE)
+    }
+    if (se_type == "sandwich") {
+      stop("engine = \"lmer\" supports se_type = \"model\" or \"kr\", not ",
+           "\"sandwich\".", call. = FALSE)
+    }
+    if (!missing(family_y) || !missing(family_m)) {
+      stop("engine = \"lmer\" fits Gaussian linear mixed models; `family_y` ",
+           "and `family_m` are not used.", call. = FALSE)
+    }
   }
   # regmedint has no case-weight or sandwich-vcov path; refuse rather than
   # silently ignore arguments that would change the glm engine's answer.
@@ -245,6 +289,17 @@ fit_mediation <- function(formula_y,
 
   # Dispatch to engine-specific function
   switch(engine,
+    lmer = .fit_mediation_lmer(
+      formula_y = formula_y,
+      formula_m = formula_m,
+      data = data,
+      treatment = treatment,
+      mediator = mediator,
+      cluster = cluster,
+      se_type = se_type,
+      engine_args = engine_args,
+      ...
+    ),
     glm = .fit_mediation_glm(
       formula_y = formula_y,
       formula_m = formula_m,
