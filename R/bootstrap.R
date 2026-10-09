@@ -439,13 +439,14 @@ bootstrap_mediation <- function(statistic_fn,
 .assert_param_mediation_data <- function(x) {
   supported <- list(
     MediationData, SerialMediationData,
-    ParallelMediationData, InteractionMediationData, JointMediationData
+    ParallelMediationData, InteractionMediationData, JointMediationData,
+    ClusterMediationData
   )
   ok <- any(vapply(supported, function(cls) S7::S7_inherits(x, cls), logical(1)))
   if (!ok) {
     stop("mediation_data must be a MediationData, SerialMediationData, ",
-         "ParallelMediationData, InteractionMediationData, or ",
-         "JointMediationData object",
+         "ParallelMediationData, InteractionMediationData, ",
+         "JointMediationData, or ClusterMediationData object",
          call. = FALSE)
   }
   invisible(x)

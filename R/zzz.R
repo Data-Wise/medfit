@@ -46,6 +46,7 @@
   S7::S4_register(ParallelMediationData)
   S7::S4_register(InteractionMediationData)
   S7::S4_register(JointMediationData)
+  S7::S4_register(ClusterMediationData)
   S7::S4_register(BootstrapResult)
 
   # Register S7 methods for dispatch
@@ -63,6 +64,7 @@
   S7::method(show, ParallelMediationData) <- .show_via_print
   S7::method(show, InteractionMediationData) <- .show_via_print
   S7::method(show, JointMediationData) <- .show_via_print
+  S7::method(show, ClusterMediationData) <- .show_via_print
 
   # Explicitly register the S3 print method for `mediation_effect`.
   #
@@ -89,6 +91,7 @@
   registerS3method("print", "summary.BootstrapResult", print.summary.BootstrapResult)
   registerS3method("print", "summary.SerialMediationData", print.summary.SerialMediationData)
   registerS3method("print", "summary.JointMediationData", print.summary.JointMediationData)
+  registerS3method("print", "summary.ClusterMediationData", print.summary.ClusterMediationData)
 
   # Register extraction methods for suggested packages (S4 classes)
   # lavaan is in Suggests, so we register dynamically if available
@@ -97,6 +100,15 @@
       .register_lavaan_method()
     }, error = function(e) {
       # Silently fail if registration fails (e.g., lavaan not fully loaded)
+      invisible(NULL)
+    })
+  }
+
+  # Same for lme4's merMod (cluster-level mediation from mixed models)
+  if (requireNamespace("lme4", quietly = TRUE)) {
+    tryCatch({
+      .register_lmer_method()
+    }, error = function(e) {
       invisible(NULL)
     })
   }

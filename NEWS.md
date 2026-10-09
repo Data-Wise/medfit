@@ -1,3 +1,30 @@
+# medfit (development version)
+
+## New features
+
+* New `ClusterMediationData` class and an `lmer` method for
+  `extract_mediation()`: mediation for a treatment assigned to whole clusters
+  (such as schools), with the mediator and outcome measured on individuals (the
+  2-1-1 design). Pass the mediator model `M ~ X + ... + (1 | cluster)` as
+  `object` and the outcome model as `model_y`, both fitted with
+  `lme4::lmer()` on the same rows. The outcome model must carry the mediator
+  as its within-cluster deviation plus the **observed cluster mean**, or the
+  raw mediator plus the cluster mean (the within parameterization is
+  recovered from it); medfit finds these terms by value, so grand-mean
+  centering and `scale()` work. The natural indirect effect is
+  `a * b_between`; `decompose()` splits it into an own-mediator part
+  `a * b_within` and a spillover part `a * (b_between - b_within)`, labeled
+  as the cluster-average, large-cluster approximation, with a warning when the
+  approximation error exceeds half the own effect's standard error.
+  `print()` and `summary()` end with an "Estimand and assumptions" block.
+  `nie()`, `nde()`, `te()`, `pm()`, `paths()`, `decompose()`, `coef()`,
+  `vcov()`, `nobs()`, `confint()`, `tidy()`, `glance()` and `quick()` support
+  the class, and the parametric bootstrap accepts it. Standard errors are
+  delta-method SEs from lme4's model-based covariance. Treatment-by-mediator
+  and covariate-by-mediator products, non-Gaussian (`glmer`) fits and random
+  slopes on anything but the within term are errors. `lme4` is in
+  `Suggests`.
+
 # medfit 0.5.0
 
 Two fixes change results (marked **Behavior change** below): serial `te()`
