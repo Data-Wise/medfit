@@ -103,6 +103,21 @@ parallel mediators it leaves out the covariance between their \code{a} paths.
 lavaan fit estimates all equations jointly, so for the same data the
 intervals can differ between engines.
 }
+
+\subsection{Coefficient names}{
+
+The simple single-mediator \link{MediationData} from lm/glm fits names three
+coefficients \verb{m_<treatment>}, \verb{y_<mediator>} and \verb{y_<treatment>}
+(\code{m_X}, \code{y_M} and \code{y_X} for variables \code{X} and \code{M}), and code that looks
+coefficients up by name, such as the parametric bootstrap in probmed, relies on
+them. The lavaan method adds the same three names to \verb{@estimates} and
+\verb{@vcov} for an observed, continuous treatment, mediator and outcome. Each is
+a second name for the \code{a}, \code{b} or \code{c_prime} path, with the same estimate and
+covariances, appended after the existing rows. A lavaan fit with a latent or
+ordered treatment, mediator or outcome gets none of the three and works with
+the plugin estimators only. Serial, parallel and four-way objects are not
+affected.
+}
 }
 \examples{
 \donttest{

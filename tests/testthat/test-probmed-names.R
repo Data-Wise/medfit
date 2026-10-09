@@ -151,6 +151,24 @@ test_that("a latent mediator gets none of the three rows and does not error", {
   expect_true(all(c("a", "b", "c_prime") %in% names(md@estimates)))
 })
 
+test_that("an ordered outcome gets none of the three rows and does not error", {
+  set.seed(5)
+  n <- 500
+  X <- stats::rnorm(n)
+  M <- 0.5 * X + stats::rnorm(n)
+  Y <- cut(0.5 * M + 0.2 * X + stats::rnorm(n), c(-Inf, -0.5, 0.5, Inf),
+           labels = FALSE)
+  d <- data.frame(X = X, M = M, Y = Y)
+  fit <- suppressWarnings(
+    lavaan::sem("M ~ X\n Y ~ M + X", data = d, ordered = "Y")
+  )
+
+  md <- expect_no_error(extract_simple(fit))
+  expect_false(any(grepl("^(m|y)_", names(md@estimates))))
+  expect_false(any(grepl("^(m|y)_", rownames(md@vcov))))
+  expect_identical(names(md@estimates), rownames(md@vcov))
+})
+
 test_that("serial, parallel and four-way lavaan objects get no m_/y_ rows", {
   set.seed(3)
   n <- 300

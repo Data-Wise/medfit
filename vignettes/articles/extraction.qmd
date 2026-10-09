@@ -467,6 +467,17 @@ med_sem <- extract_mediation(
 print(med_sem)
 ```
 
+Besides the parameter names lavaan assigns, the extracted `@estimates` and `@vcov`
+carry `m_<treatment>`, `y_<mediator>` and `y_<treatment>`, the names the
+lm/glm route gives these three coefficients, so code that looks them up by name
+(such as the parametric bootstrap in probmed) works on either route. A latent or
+ordered treatment, mediator or outcome gets none of them.
+
+```{r}
+#| label: lavaan-names
+grep("^(m|y)_", names(med_sem@estimates), value = TRUE)
+```
+
 ### Serial Mediation in SEM
 
 For serial mediation (treatment -> mediator1 -> mediator2 -> outcome):
