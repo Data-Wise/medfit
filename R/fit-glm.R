@@ -160,6 +160,26 @@
 #' )
 #' }
 #'
+#' \donttest{
+#' if (requireNamespace("lme4", quietly = TRUE)) {
+#' # Treatment assigned to whole clusters (needs lme4); formulas hold fixed
+#' # effects only, the engine adds the random cluster intercept
+#' set.seed(1)
+#' J <- 30
+#' id <- rep(seq_len(J), each = 6)
+#' cdat <- data.frame(school = factor(id), X = sample(rep(0:1, J / 2))[id])
+#' cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+#' cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+#' cluster_fit <- fit_mediation(
+#'   Y ~ X + M, M ~ X, data = cdat,
+#'   treatment = "X", mediator = "M",
+#'   engine = "lmer", cluster = "school"
+#' )
+#' nie(cluster_fit)       # a * b_between
+#' decompose(cluster_fit) # own-mediator and spillover parts
+#' }
+#' }
+#'
 #' @references
 #' VanderWeele, T. J. (2014). A unification of mediation and interaction: A
 #' 4-way decomposition. *Epidemiology*, 25(5), 749--761.

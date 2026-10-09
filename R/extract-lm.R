@@ -522,7 +522,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #'
 #' Scans each model's `terms()` for interaction terms (order > 1) with at least
 #' one component in `vars`, plus function-wrapped products such as
-#' `I(X * M1)` (see [.find_wrapped_products()]). Products among covariates alone
+#' `I(X * M1)` (see `.find_wrapped_products()`). Products among covariates alone
 #' are allowed. Returns `"<response>: <term>"` labels, or `character(0)` when
 #' none are found.
 #'
@@ -589,7 +589,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' ignored silently. Shared by the lm/glm and lavaan engines.
 #'
 #' @param hits Character vector of offending terms (from
-#'   [.find_product_terms()] or [.find_product_terms_lavaan()]).
+#'   `.find_product_terms()` or `.find_product_terms_lavaan()`).
 #' @noRd
 .stop_on_multimediator_products <- function(hits) {
   if (length(hits) == 0L) return(invisible(NULL))
@@ -643,7 +643,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #'
 #' @description
 #' Internal worker for the four-way (VanderWeele 2014) branch of the lm/glm
-#' [extract_mediation()] method. Invoked by [.extract_mediation_lm_impl()] when a
+#' [extract_mediation()] method. Invoked by `.extract_mediation_lm_impl()` when a
 #' single mediator's outcome model carries an `X:M` term. Builds an
 #' `InteractionMediationData` object for continuous `Y` and `M` with binary
 #' treatment (0 -> 1) and reference mediator level `m_star`.
@@ -660,7 +660,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' equations and named with the aliases `a`, `b`, `c_prime`, `theta3`, `b0`.
 #'
 #' @param int_term Character: the interaction coefficient name in `model_y`
-#'   (from [.find_interaction_term()]).
+#'   (from `.find_interaction_term()`).
 #' @param m_star Numeric scalar reference mediator level.
 #' @param vcov_fun Function returning a model's coefficient covariance
 #'   (default [stats::vcov()]), e.g. a sandwich estimator.
@@ -873,7 +873,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' Extract Serial Mediation Structure from lm/glm Models
 #'
 #' Internal worker for the serial branch of the lm/glm [extract_mediation()]
-#' method. Invoked by [.extract_mediation_lm_impl()] when `mediator` is a
+#' method. Invoked by `.extract_mediation_lm_impl()` when `mediator` is a
 #' character vector of length >= 2. It assembles a [SerialMediationData] object
 #' for the chain `X -> M1 -> M2 -> ... -> Mk -> Y` from `k + 1` separately
 #' fitted regressions.
@@ -1189,7 +1189,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #'
 #' @description
 #' Internal worker for parallel mediation (`X -> M_j -> Y`, independent
-#' mediators). Mirrors [.extract_serial_mediation_lm()] but the mediator models
+#' mediators). Mirrors `.extract_serial_mediation_lm()` but the mediator models
 #' are NOT chained: `mediator_models[[j - 1]]` is the model for `mediators[j]`
 #' regressed on the treatment (and covariates), in mediator-index order.
 #'
@@ -1197,7 +1197,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param mediator_models List of the remaining mediator models 2..k, in index
 #'   order (each `mediators[j] ~ treatment (+ C)`).
 #' @param model_y Outcome model (`Y ~ treatment + M1 + ... + Mk (+ C)`).
-#' @param treatment,mediators,outcome,data See [.extract_serial_mediation_lm()].
+#' @param treatment,mediators,outcome,data See `.extract_serial_mediation_lm()`.
 #' @return A `ParallelMediationData` object.
 #' @noRd
 .extract_parallel_mediation_lm <- function( # nolint: object_length_linter.

@@ -336,7 +336,8 @@ tests/testthat/
 ├── helper-test-data.R, helper-joint.R   # Test data generators, joint oracles
 ├── test-classes*.R, test-validators.R   # S7 validation
 ├── test-extract-*.R                     # lm/glm, lavaan, serial, parallel, interaction, joint
-├── test-cluster-211.R, test-cluster-boot.R, helper-cluster.R   # cluster mediation: guards, oracles, KR, fit engine, cluster bootstrap, harness
+├── test-cluster-211.R, test-cluster-boot.R, test-cluster-harness.R, helper-cluster.R   # cluster mediation: guards, oracles, KR, fit engine, cluster bootstrap, harness
+├── test-refcard-coverage.R, test-cookbook-consistency.R   # refcard names every export and class; cookbook recipes, links and cluster data match methods.qmd
 ├── test-effect-se.R, test-confint-paths.R, test-methods-*.R   # SEs, confint, tidy
 ├── test-serial-total-effect.R           # te() over every path
 ├── test-fit-*.R                         # glm, regmedint, m_star
