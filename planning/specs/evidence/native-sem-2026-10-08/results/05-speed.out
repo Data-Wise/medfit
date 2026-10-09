@@ -1,19 +1,19 @@
 == 1. cost per call (microseconds), latent model, 6 vars, 10 params ==
-mats 226 | sigma 233 | fml 260 | gml 489
+mats 223 | sigma 238 | fml 267 | gml 478
 vectorized: max|f diff| 1.8e-15, max|g diff| 1.3e-15
-vectorized f+g 32 us vs original f+g 723 us
-== 2. end-to-end nlminb fit: original 12.5 ms | vectorized 1.1 ms
+vectorized f+g 32 us vs original f+g 761 us
+== 2. end-to-end nlminb fit: original 12.7 ms | vectorized 1.2 ms
 
 == 3. dense vs sparse (Matrix) for B = (I - A)^-1, A strictly lower-triangular, ~3 nonzeros/row, microseconds ==
-p=   6 dense        10 | sparse       270
-p=  30 dense        20 | sparse       210
-p= 100 dense       320 | sparse       240
-p= 300 dense      1400 | sparse       400
-p=1000 dense     19200 | sparse      1600
+p=   6 dense        10 | sparse       280
+p=  30 dense        20 | sparse       230
+p= 100 dense       310 | sparse       250
+p= 300 dense      1600 | sparse       600
+p=1000 dense     21400 | sparse      1800
 
 == 4. parallelism across independent fits (200 fits of the latent model) ==
 cores available: 18 
 mc.cores=1: 0.23 s
-mc.cores=2: 0.14 s
-mc.cores=4: 0.10 s
-mc.cores=8: 0.07 s
+mc.cores=2: 0.15 s
+mc.cores=4: 0.12 s
+mc.cores=8: 0.09 s

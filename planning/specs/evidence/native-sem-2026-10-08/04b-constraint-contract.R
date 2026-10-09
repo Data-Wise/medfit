@@ -122,3 +122,46 @@ stubs <- list(list("converged (status 3, resid 1e-9, KKT 1e-8)", 3, 1e-9, 1e-8),
   list("max evaluations (status 5), feasible, stationary", 5, 0, 1e-9), list("roundoff-limited stall (status -4, resid 0, KKT 1.0): the real stalled start", -4, 0, 1),
   list("stall mislabeled as success (status 4, resid 0, KKT 1.0): only KKT can catch it", 4, 0, 1), list("success but infeasible (status 3, resid 1e-3, KKT 1e-9)", 3, 1e-3, 1e-9))
 for (st in stubs) cat(sprintf("%-82s -> %s\n", st[[1]], accept(st[[2]], st[[3]], st[[4]])))
+
+# ======================================================================================================
+# Review round 5 (F3-d). Inequality constraints: normalization, active set, multiplier sign (KKT with lambda >= 0).
+# ======================================================================================================
+cat("\n== 4.5c inequality KKT: non-negative multipliers (Lawson-Hanson NNLS, base R) ==\n")
+nnls <- function(A, b, tol = 1e-12, maxit = 500) { n <- ncol(A); x <- numeric(n); P <- rep(FALSE, n); w <- as.vector(crossprod(A, b - A %*% x)); it <- 0
+  ls_on <- function(P) { s <- numeric(n); if (any(P)) { cf <- lm.fit(A[, P, drop = FALSE], b)$coefficients; cf[is.na(cf)] <- 0; s[P] <- cf }; s }
+  while (any(!P) && max(w[!P]) > tol && it < maxit) { it <- it + 1; j <- which(!P)[which.max(w[!P])]; P[j] <- TRUE
+    repeat { s <- ls_on(P); if (all(s[P] > 0)) { x <- s; break }
+      neg <- P & s <= 0; alpha <- min(x[neg] / (x[neg] - s[neg])); x <- x + alpha * (s - x); P <- P & x > tol; x[!P] <- 0 }
+    w <- as.vector(crossprod(A, b - A %*% x)) }
+  x }
+set.seed(5); worst <- 0
+for (i in 1:50) { A <- matrix(rnorm(8 * 4), 8, 4); b <- rnorm(8); z <- nnls(A, b)
+  ref <- optim(rep(0.1, 4), function(p) sum((A %*% p - b)^2), function(p) as.vector(2 * crossprod(A, A %*% p - b)), method = "L-BFGS-B", lower = 0, control = list(factr = 10, pgtol = 0))$par
+  worst <- max(worst, sum((A %*% z - b)^2) - sum((A %*% ref - b)^2)); if (any(z < 0)) stop("negative multiplier") }
+cat(sprintf("NNLS vs L-BFGS-B on 50 random problems: largest excess residual %.2e (<= 1e-8 means NNLS is at least as good), no negative entries\n", worst))
+
+# Normalization: every inequality becomes c(x) <= 0.  'lhs < rhs' -> lhs - rhs;  'lhs > rhs' -> rhs - lhs.  Active set: c(x) >= -1e-6.
+kkt_general <- function(x, gradF, ineq = list(), eq = list(), signed = TRUE) {
+  act <- Filter(function(cf) cf(x) >= -1e-6, ineq); Jc <- lapply(act, function(cf) jac(cf, x)); Je <- lapply(eq, function(hf) jac(hf, x))
+  rows <- c(Jc, Je); if (!length(rows)) return(max(abs(gradF)) / max(1, max(abs(gradF))))
+  Jm <- do.call(rbind, lapply(rows, function(r) matrix(r, nrow = 1))); k <- length(Jc); m <- length(Je)
+  if (signed) { A <- t(rbind(Jm[seq_len(k), , drop = FALSE], Jm[k + seq_len(m), , drop = FALSE], -Jm[k + seq_len(m), , drop = FALSE])); z <- nnls(A, -gradF); r <- gradF + as.vector(A %*% z) }   # lambda >= 0; mu free (split)
+  else { lam <- tryCatch(qr.solve(t(Jm), -gradF), error = function(e) rep(0, nrow(Jm))); r <- gradF + as.vector(t(Jm) %*% lam) }                                          # the draft rule: free-sign multipliers
+  max(abs(r)) / max(1, max(abs(gradF))) }
+cat("\nReviewer's planted case, F(x) = x with x <= 0, at x = 0 (a feasible descent direction exists):\n")
+c1 <- function(x) x[1]; gF1 <- 1
+cat(sprintf("  free-sign multipliers (draft rule): KKT = %.2g -> %s\n", kkt_general(0, gF1, list(c1), signed = FALSE), "accepts a non-optimal point"))
+cat(sprintf("  non-negative multipliers          : KKT = %.2g -> %s\n", kkt_general(0, gF1, list(c1), signed = TRUE), "rejects it (correct)"))
+cat("Mirror case, F(x) = -x with x <= 0 (x = 0 IS the constrained minimizer):\n")
+cat(sprintf("  non-negative multipliers          : KKT = %.2g -> accepts (correct)\n", kkt_general(0, -1, list(c1), signed = TRUE)))
+
+cat("\nReal runs on the three-variable model (F = ML discrepancy), constraint on a + b:\n")
+c_le <- function(x) x[1] + x[2] - 0.2     # a + b <= 0.2   (active at the optimum)
+c_ge <- function(x) 0.2 - x[1] - x[2]     # a + b >= 0.2   (inactive at the optimum: the unconstrained a + b is about 0.6)
+solve_ineq <- function(cf, s) nloptr(s, f, g, eval_g_ineq = cf, eval_jac_g_ineq = function(x) matrix(jac(cf, x), nrow = 1), opts = list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-10, ftol_rel = 1e-14, maxeval = 2000))
+for (nm in c("c_le", "c_ge")) { cf <- get(nm); o <- solve_ineq(cf, c(.3, .3, .1, 1, 1)); x <- o$solution
+  cat(sprintf("  %s via nloptr SLSQP: status %d, c(x) = %.2e (%s), KKT signed = %.2e, KKT free-sign = %.2e\n", nm, o$status, cf(x), if (cf(x) >= -1e-6) "active" else "inactive", kkt_general(x, g(x), list(cf), signed = TRUE), kkt_general(x, g(x), list(cf), signed = FALSE))) }
+he2 <- function(x) x[1] + x[2] - 0.2; oe <- nloptr(c(.3,.3,.1,1,1), f, g, eval_g_eq = he2, eval_jac_g_eq = function(x) matrix(jac(he2, x), nrow = 1), opts = list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-10, ftol_rel = 1e-14, maxeval = 2000)); xe <- oe$solution
+cat(sprintf("  Wrong-sign point: the EQUALITY solution a + b == 0.2 judged against the inequality a + b >= 0.2 (c_ge): c(x) = %.1e (active)\n", c_ge(xe)))
+cat(sprintf("    free-sign rule KKT = %.2e -> %s | signed rule KKT = %.2e -> %s\n", kkt_general(xe, g(xe), list(c_ge), signed = FALSE), if (kkt_general(xe, g(xe), list(c_ge), signed = FALSE) <= 1e-3) "ACCEPTS (wrong: moving into the feasible interior lowers F)" else "rejects",
+    kkt_general(xe, g(xe), list(c_ge), signed = TRUE), if (kkt_general(xe, g(xe), list(c_ge), signed = TRUE) <= 1e-3) "accepts" else "REJECTS (correct)"))

@@ -85,3 +85,18 @@ max evaluations (status 5), feasible, stationary                                
 roundoff-limited stall (status -4, resid 0, KKT 1.0): the real stalled start       -> REJECT by status + KKT
 stall mislabeled as success (status 4, resid 0, KKT 1.0): only KKT can catch it    -> REJECT by KKT
 success but infeasible (status 3, resid 1e-3, KKT 1e-9)                            -> REJECT by residual
+
+== 4.5c inequality KKT: non-negative multipliers (Lawson-Hanson NNLS, base R) ==
+NNLS vs L-BFGS-B on 50 random problems: largest excess residual 1.78e-15 (<= 1e-8 means NNLS is at least as good), no negative entries
+
+Reviewer's planted case, F(x) = x with x <= 0, at x = 0 (a feasible descent direction exists):
+  free-sign multipliers (draft rule): KKT = 0 -> accepts a non-optimal point
+  non-negative multipliers          : KKT = 1 -> rejects it (correct)
+Mirror case, F(x) = -x with x <= 0 (x = 0 IS the constrained minimizer):
+  non-negative multipliers          : KKT = 0 -> accepts (correct)
+
+Real runs on the three-variable model (F = ML discrepancy), constraint on a + b:
+  c_le via nloptr SLSQP: status 3, c(x) = 5.55e-17 (active), KKT signed = 1.27e-09, KKT free-sign = 1.27e-09
+  c_ge via nloptr SLSQP: status 4, c(x) = -4.41e-01 (inactive), KKT signed = 5.58e-09, KKT free-sign = 5.58e-09
+  Wrong-sign point: the EQUALITY solution a + b == 0.2 judged against the inequality a + b >= 0.2 (c_ge): c(x) = -1.4e-17 (active)
+    free-sign rule KKT = 1.91e-09 -> ACCEPTS (wrong: moving into the feasible interior lowers F) | signed rule KKT = 4.31e-01 -> REJECTS (correct)
