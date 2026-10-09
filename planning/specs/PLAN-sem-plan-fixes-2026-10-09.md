@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-09 |
-| **Status** | **IN PROGRESS** (2026-10-09). T0-T14 done: T8 review applied (11 of 14 findings, ledger D18); workstream B merged as #108 (`dbe5af5`). T15 (comment on #105) and T16 (close-out) wait for this docs PR to merge. |
+| **Status** | **COMPLETE** (2026-10-09). Docs PR #109 (`8850f5a`, T1-T8, review applied: 11 of 14 findings, ledger D18); workstream B #108 (`dbe5af5`); `lifecycle` #107 (`f91d6cf`); #105 commented; worktrees removed. One item left to the author: `git branch -D` of the merged local branches (branch-guard blocks it). |
 | **Spec** | [SPEC-sem-plan-fixes-2026-10-09.md](SPEC-sem-plan-fixes-2026-10-09.md), APPROVED 2026-10-09 (fix ids F1-F22, modules `plan-fixes`, `lavaan-probmed-names`, `spec-errata`) |
 | **Edits** | [PLAN-native-sem-implementation-2026-10-09.md](PLAN-native-sem-implementation-2026-10-09.md) and [GRILL-native-sem-implementation-2026-10-09.md](GRILL-native-sem-implementation-2026-10-09.md) |
 | **Task list location** | This file. The skill's default `tasks/todo.md` is not used: `.Rbuildignore` ignores `^planning$` but not `tasks/`, so a new top-level `tasks/` would ship in the tarball. Repo convention is `planning/specs/PLAN-*.md` with embedded checkboxes. |
@@ -135,10 +135,10 @@ T4 (S17b) refers to workstream B by name only; it does not wait for B to merge.
 
 ### Phase 3: close-out
 
-- [ ] **T15: Comment on issue 105 (XS).** After checkpoint A merges: findings in four bullets, the S17b plan, the contract paragraph, and a link to the merged plan. Ask first if the wording changes the scope the issue requests.
+- [x] **T15: Comment on issue 105 (XS).** *(done 2026-10-09: [comment](https://github.com/Data-Wise/medfit/issues/105#issuecomment-6087441532).)* After checkpoint A merges: findings in four bullets, the S17b plan, the contract paragraph, and a link to the merged plan. Ask first if the wording changes the scope the issue requests.
   - Acceptance: comment posted; the issue stays open (the gate itself is PR 6's S17b).
   - Verify: `gh issue view 105 --comments`. Depends on: Checkpoint A.
-- [ ] **T16: Close-out (XS).** Update `.STATUS` (merged PRs, next = PR 1 of the SEM plan), remove both worktrees after the usual gate (local tip equals PR head, merge commit in `dev`), and remind the author to run `git branch -D` for the leftover local branches.
+- [x] **T16: Close-out (XS).** *(done 2026-10-09 except the author's `git branch -D`: `.STATUS` `6dfab2a`, three worktrees removed after the head check.)* Update `.STATUS` (merged PRs, next = PR 1 of the SEM plan), remove both worktrees after the usual gate (local tip equals PR head, merge commit in `dev`), and remind the author to run `git branch -D` for the leftover local branches.
   - Acceptance: clean tree on `dev`; `git worktree list` shows only the main checkout.
   - Verify: the three commands. Depends on: Checkpoints A and B.
 
