@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-08 |
-| **Status** | In progress. D-A decided (recommended option, ledger K9). **T1-T5 done** (spec 4.1, 4.2a-c, 4.5a-f, section 7 table, section 8; ledger K9, K10, the N5 SE gate, and the evidence directory). T6 remains. |
+| **Status** | **CLOSED 2026-10-08.** T1-T6 done. D-A decided (ledger K9). Closed by the author's decision after review round 5, without a sixth review (see the close-out below). |
 | **Source** | Codex adversarial review of `origin/dev...HEAD` (2026-10-08, verdict needs-attention, 1 high, 3 medium, 1 low). Reviewed: [SPEC-sem-grammar-2026-10-08.md](SPEC-sem-grammar-2026-10-08.md) and [GRILL-native-sem-engine-medfit-2026-10-08.md](GRILL-native-sem-engine-medfit-2026-10-08.md). |
 | **Branch** | `feature/native-sem-grill` (docs and evidence scripts only; no `R/` changes). |
 | **Sizes** | XS 1 file, S 1-2 files, M 3-5 files. |
@@ -91,3 +91,29 @@ About 90 minutes of drafting for T1, T2, T4 (30 min), T3 (30 min after D-A), T5 
 ## Parked, not part of this plan
 
 The earlier Codex finding on `R/extract-joint.R:162-167` (row names do not prove shared subjects) concerns code already on `dev` (PR #76). It is unverified and belongs in its own issue and fix, not on this docs branch.
+
+## T6 close-out (2026-10-08)
+
+**Acceptance rule:** no high finding, and every medium fixed or recorded as a decision with its reason.
+
+| Review round | Findings | Disposition | Commit |
+|---|---|---|---|
+| 1 (grammar spec and ledger) | 1 high, 3 medium, 1 low | all fixed (T1-T5) | `c134b3d`, `4d4e116`, `7a888cb`, `cd7a0eb` |
+| 2 | 4 medium (`fname` and literals, linearity check, spread blind spot, runner) | all fixed | `7d23e69` |
+| 3 | 1 medium (start validity must be positive definiteness) | fixed | `63e5a7b` |
+| 4 | 2 medium (optimizer termination and KKT, result-domain guard) | both fixed | `b0e61a3` |
+| 5 | 1 medium (inequality KKT multiplier signs) | fixed | `73c322a` |
+
+**No high finding after round 1.** Every medium raised in rounds 1-5 is fixed, with a prototype run behind each fix and the outputs saved in `evidence/native-sem-2026-10-08/results/`.
+
+**What is not confirmed:** the round 5 fix (`73c322a`) has **not** been re-reviewed; the author closed T6 instead of running a sixth review. Each round found a smaller issue in the text added the round before, so a sixth review may find another.
+
+**Known gaps recorded in the spec rather than fixed (carried to the implementation plan):**
+- Several simultaneous active inequalities and degenerate active sets: checked only on random NNLS problems, not on a fitted model (spec 4.5c, "Not covered").
+- The KKT threshold `1e-3` is provisional, calibrated on two problems; re-check in N3 (spec 4.5c).
+- The N5 SE tolerance `1e-3` is a proposal, calibrated on the first gate run (ledger K10).
+- The optimizer reliability claim rests on 30 datasets per cell, and a mismatch is not split into "solver stalled" versus "lavaan on another local solution" (ledger research table).
+- J6 (L-BFGS for unconstrained fits) was the least reliable solver from random starts: 93.3% against 100% for nlminb and 98.5% for SLSQP. Flagged for the author, not changed.
+- The first Codex finding on `R/extract-joint.R:162-167` (row names do not prove shared subjects) concerns code already on `dev` (PR #76), is unverified, and is not part of this branch.
+
+**Still needs the author:** approval of the whole grammar spec (its status line says DRAFT), and the release assignment for Ext D versus native (both may claim 0.6.0).

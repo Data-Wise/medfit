@@ -4,7 +4,7 @@
 |---|---|
 | **Date** | 2026-10-08 |
 | **Target** | Handoff `HANDOFF-medfit-native-sem-engine-2026-10-08.md` (missingmed repo, `docs/specs/`). J1-J17 are locked there and are not re-litigated here; this ledger numbers new decisions K1+. |
-| **Status** | Resolved K1-K8, then re-grilled (K2b, K5c, K7b): K5/K5b and K7/K8 are superseded as noted in their rows. One small item open at the end. Committed on `feature/native-sem-grill` (from `origin/dev`, not pushed). |
+| **Status** | Resolved K1-K8, then re-grilled (K2b, K5c, K7b): K5/K5b and K7/K8 are superseded as noted in their rows. Review fixes T1-T6 closed (see the PLAN close-out); one small item open at the end. Committed on `feature/native-sem-grill` (from `origin/dev`, not pushed). |
 
 ## P0 facts (scratchpad run, 2026-10-08; no medfit writes)
 
