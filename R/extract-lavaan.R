@@ -334,6 +334,17 @@ extract_mediation_lavaan <- function(object,
   estimates["b"] <- b_path
   estimates["c_prime"] <- c_prime
 
+  # Name-based consumers (probmed's parametric bootstrap) look the three paths
+  # up as m_<treatment>, y_<mediator> and y_<treatment>, the names the glm
+  # route gives its coefficients. Each is a second name for a path already
+  # aliased above; they are appended after it, so no existing row moves.
+  probmed_names <- .lavaan_probmed_alias_names(object, treatment, mediator, outcome)
+  aliases_to_add <- c(
+    aliases_to_add,
+    setdiff(unname(probmed_names), c(names(all_coef), aliases_to_add))
+  )
+  estimates[unname(probmed_names)] <- c(a = a_path, b = b_path, c_prime = c_prime)[names(probmed_names)]
+
   # --- Resolve each alias to its source parameter in the original vcov ---
   #
   # Mapping the alias to a source *index* lets us copy the FULL covariance
@@ -351,6 +362,10 @@ extract_mediation_lavaan <- function(object,
     rhs = c(a = a_row$rhs[1], b = b_row$rhs[1], c_prime = cp_row$rhs[1]),
     op = c(a_row$op[1], b_row$op[1], cp_row$op[1]),
     orig_names = names(all_coef)
+  )
+  source_idx <- c(
+    source_idx,
+    stats::setNames(source_idx[names(probmed_names)], unname(probmed_names))
   )
 
   # Expand vcov so each NEW alias carries the FULL covariance row/column of its
@@ -1170,6 +1185,31 @@ extract_mediation_lavaan <- function(object,
     match(nm, orig_names)
   }, integer(1))
   stats::setNames(idx, names(lhs))
+}
+
+# Names under which name-based consumers (probmed) look up the simple path
+# coefficients: m_<treatment> (the a path), y_<mediator> (b), y_<treatment>
+# (c'). Returned named by the structural alias each one repeats ("a", "b",
+# "c_prime"). Only an observed, continuous treatment, mediator and outcome
+# get them: a latent variable has no column for a probmed bootstrap to
+# simulate, and an ordered one is not Gaussian, so those fits return
+# character(0) and stay plugin-only.
+.lavaan_probmed_alias_names <- function(object, treatment, mediator, outcome) {
+  checkmate::assert_class(object, "lavaan", .var.name = "object")
+  checkmate::assert_string(treatment, .var.name = "treatment")
+  checkmate::assert_string(mediator, .var.name = "mediator")
+  checkmate::assert_string(outcome, .var.name = "outcome")
+
+  vars <- c(treatment, mediator, outcome)
+  observed <- all(vars %in% lavaan::lavNames(object, "ov"))
+  if (!observed || any(vars %in% lavaan::lavNames(object, "ov.ord"))) {
+    return(character(0))
+  }
+  c(
+    a = paste0("m_", treatment),
+    b = paste0("y_", mediator),
+    c_prime = paste0("y_", treatment)
+  )
 }
 
 # Same, for aliases given in "lhs~rhs" / "lhs~1" form (named character vector).

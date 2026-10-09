@@ -112,10 +112,19 @@ test_that("labeled, meanstructure, fixed.x = FALSE and covariate fits get the ro
   }
 })
 
-test_that("a model parameter already named m_X is a named error", {
+test_that("a label equal to an alias name keeps one row for the same path", {
   d <- probmed_names_data()
-  fit <- lavaan::sem("M ~ m_X*X\n Y ~ M + X", data = d)
-  expect_error(extract_simple(fit), "already has a parameter named 'm_X'")
+  md <- extract_simple(lavaan::sem("M ~ m_X*X\n Y ~ M + X", data = d))
+
+  expect_identical(sum(names(md@estimates) == "m_X"), 1L)
+  expect_identical(names(md@estimates), rownames(md@vcov))
+  expect_equal(unname(md@estimates["m_X"]), md@a_path)
+})
+
+test_that("a label that names a different path as an alias is a named error", {
+  d <- probmed_names_data()
+  fit <- lavaan::sem("M ~ y_X*X\n Y ~ M + X", data = d)
+  expect_error(extract_simple(fit), "already has a parameter named 'y_X'")
 })
 
 test_that("a latent mediator gets none of the three rows and does not error", {
@@ -178,28 +187,54 @@ test_that("serial, parallel and four-way lavaan objects get no m_/y_ rows", {
 # 4. Integration with probmed
 # ==============================================================================
 
-test_that("pmed() parametric bootstrap runs on a lavaan object and matches glm", {
-  skip_if_not_installed("probmed")
-  skip_if_not_installed("MASS")
-
+# Parametric-bootstrap P_med of the glm and lavaan routes for the same data.
+# Returns the glm result, the lavaan result and the agreement tolerance, a
+# quarter of the glm interval's own width: the routes differ only in the
+# residual variance divisor and Monte Carlo draws (observed gap about a tenth
+# of that), while a mixed-up coefficient moves P_med by more than the tolerance.
+probmed_routes <- function(lav_md_fun = extract_simple) {
   d <- probmed_names_data()
   glm_md <- fit_mediation(Y ~ X + M, M ~ X, data = d,
                           treatment = "X", mediator = "M")
-  lav_md <- extract_simple(lavaan::sem("M ~ X\n Y ~ M + X", data = d))
-
+  lav_md <- lav_md_fun(lavaan::sem("M ~ X\n Y ~ M + X", data = d))
   boot <- function(md) {
     probmed::pmed(md, method = "parametric_bootstrap", n_boot = 500, seed = 1)
   }
   r_glm <- boot(glm_md)
-  r_lav <- expect_no_error(boot(lav_md))
+  list(glm = r_glm, lav = boot(lav_md),
+       tol = 0.25 * (r_glm@ci_upper - r_glm@ci_lower))
+}
 
-  # Tolerance comes from the glm route's own interval: the two routes may
-  # differ by at most half its width (their models differ only in the residual
-  # variance divisor and in Monte Carlo draws).
-  tol <- 0.5 * (r_glm@ci_upper - r_glm@ci_lower)
-  expect_gt(tol, 0)
-  expect_lt(abs(r_lav@estimate - r_glm@estimate), tol)
-  expect_lt(abs(r_lav@ci_lower - r_glm@ci_lower), tol)
-  expect_lt(abs(r_lav@ci_upper - r_glm@ci_upper), tol)
-  expect_gt(r_lav@ci_upper, r_lav@ci_lower)
+routes_gap <- function(x) {
+  c(estimate = abs(x$lav@estimate - x$glm@estimate),
+    ci_lower = abs(x$lav@ci_lower - x$glm@ci_lower),
+    ci_upper = abs(x$lav@ci_upper - x$glm@ci_upper))
+}
+
+test_that("pmed() parametric bootstrap runs on a lavaan object and matches glm", {
+  skip_if_not_installed("probmed")
+  skip_if_not_installed("MASS")
+
+  x <- expect_no_error(probmed_routes())
+
+  expect_gt(x$tol, 0)
+  expect_true(all(routes_gap(x) < x$tol))
+  expect_gt(x$lav@ci_upper, x$lav@ci_lower)
+})
+
+test_that("agreement test catches y_<M> and y_<X> swapped (planted defect)", {
+  skip_if_not_installed("probmed")
+  skip_if_not_installed("MASS")
+
+  # Same rows, but the b path is filed under y_X and c' under y_M.
+  local_mocked_bindings(
+    .lavaan_probmed_alias_names = function(object, treatment, mediator, outcome) {
+      c(a = paste0("m_", treatment),
+        b = paste0("y_", treatment),
+        c_prime = paste0("y_", mediator))
+    }
+  )
+  x <- probmed_routes()
+
+  expect_false(all(routes_gap(x) < x$tol))
 })
