@@ -118,4 +118,4 @@ The earlier Codex finding on `R/extract-joint.R:162-167` (row names do not prove
 
 **Whole-spec approval:** given by the author on 2026-10-08; the grammar spec's status line now says APPROVED.
 
-**Still needs the author:** the release assignment for Ext D versus native (both may claim 0.6.0).
+**Release assignment (author, 2026-10-08):** Ext D module 1 ships as 0.6.0; native SEM is 0.7.0.

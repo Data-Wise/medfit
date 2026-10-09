@@ -61,6 +61,8 @@
 "kr_J15_unbalanced","product_coverage","spillover",0.927,NA,NA
 "balanced","te_oracle_max_abs_z","te",1.636,"< 3",TRUE
 "unbalanced","te_oracle_max_abs_z","te",0.5553,"< 3",TRUE
+"balanced","te_bootstrap_sd_ratio","te",0.9276,NA,NA
+"unbalanced","te_bootstrap_sd_ratio","te",0.8851,NA,NA
 "claims_rho0.5","bias_z","own",0.9333,"|z| < 2",TRUE
 "claims_rho0.5","bias_z","nie",21.91,"z > 4 (upward)",TRUE
 "claims_rho0.5","bias_z","nde",-20.63,"z < -4 (downward)",TRUE

@@ -31,8 +31,8 @@ T2–T8 touch the same files, so they run in sequence. After PR A merges, PR B a
 
 Ext D goes first (native-engine ledger K6). Shared hot spots, to avoid conflicts: `R/fit-glm.R` (engine dispatch and
 checks, PR B here, N4 there), `DESCRIPTION` (Suggests here, Imports `nloptr` there), `NEWS.md`, `_pkgdown.yml`,
-`R/zzz.R`. The native engine's N4 waits for PR B to merge. Which release carries which is not assigned yet (both
-may claim 0.6.0).
+`R/zzz.R`. The native engine's N4 waits for PR B to merge. Release assignment (author, 2026-10-08): Ext D module 1 is
+0.6.0; native SEM is 0.7.0.
 
 ## Decisions this plan makes where the spec is silent
 
