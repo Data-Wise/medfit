@@ -277,6 +277,11 @@ S1 review of 73c322a├─> PR 2: S7 parser -> S8 evaluator -> S9 linearity, fol
 - [ ] **S21: IPW with sandwich SEs (N6).** `fit_sem(sampling_weights = )`: weighted ML on the weighted covariance, sandwich `H^-1 B H^-1` with casewise scores. Oracle: point estimates equal `fit_mediation(engine = "glm", weights = )` to 1e-6 (handoff N6); SEs equal the glm route's HC sandwich [inferred: HC0 versus HC3 scaling must be matched; checked first] and `lavaan::sem(sampling.weights = )` to 1e-5. Planted defect: dropping the weights in the score matrix. Files: `R/sem-sandwich.R`, `tests/testthat/test-sem-ipw.R`.
 - [ ] **S22: SEM MBCO (N7).** An exported function (name [A] `mbco_sem()`; the author may rename it at review) that refits with `a == 0` and `b == 0` separately (linear, one solve each), reports both solves, both diffLL values and the minimum as the statistic with `df = 1` and its p-value. Oracle: the S19 known-answer; a latent-mediator case against lavaan >= 0.7-3 constrained fits. Planted defect: reporting the larger diffLL. Files: `R/sem-mbco.R`, `tests/testthat/test-sem-mbco.R`, NEWS, refcard, `_pkgdown.yml`.
 
+#### PR 10 and release
+
+- [ ] **S23: Docs (N8).** Cookbook recipe 11 "Mediation with a latent mediator, native engine" in `vignettes/articles/cookbook.qmd`, and `test-cookbook-consistency.R` updated from `paste0(1:10, ".")` to `1:11` (the test pins ten recipes [V]); README quick start line; CLAUDE.md, AGENTS.md and README file lists (new `R/sem-*.R` files, `SEMFit`, the native engine row in the Engines table); `.STATUS`.
+- [ ] **S24: Release (N8).** Version 0.6.0 to 0.7.0 in `DESCRIPTION` and NEWS heading; grep for `0.6.0` leftovers; full revdepcheck (section 8); release PR `dev` -> `main` (merge commit), tag `v0.7.0`, GitHub release, r-universe check through the `/api/packages` list (the per-package endpoint 404s when healthy, memory note). **Ask before merging.**
+
 #### PR 11: nonlinear constraints (`feature/sem-nonlinear`, after checkpoint B, grill-1)
 
 The release (S24) does not wait on this PR. If it merges before S24 it ships in 0.7.0; otherwise it ships in a later minor release and nonlinear constraints keep erroring by name.
@@ -287,11 +292,6 @@ The release (S24) does not wait on this PR. If it merges before S24 it ships in 
   - **G2 recalibration:** record the KKT value of every accepted and every failed start across the S15 constrained gate cells and the `04b` problems. Rule: keep `1e-3` if it sits at least 10x above the largest converged value and at least 10x below the smallest stall; otherwise stop and ask the author with the table.
   - **Code review:** a fresh-context reviewer (agent with no session history) gets `.sem_kkt()`, `.nnls()` and the planted cases, and must reproduce the 4.5c verdicts before PR 11 opens (CLAUDE.md "plant a defect the test must catch").
   - Files: `R/sem-optim.R` (`.sem_kkt()`, `.nnls()`, `.sem_multistart()`), `tests/testthat/test-sem-nonlinear.R`, NEWS, `_pkgdown.yml` if a help topic is added.
-
-#### PR 10 and release
-
-- [ ] **S23: Docs (N8).** Cookbook recipe 11 "Mediation with a latent mediator, native engine" in `vignettes/articles/cookbook.qmd`, and `test-cookbook-consistency.R` updated from `paste0(1:10, ".")` to `1:11` (the test pins ten recipes [V]); README quick start line; CLAUDE.md, AGENTS.md and README file lists (new `R/sem-*.R` files, `SEMFit`, the native engine row in the Engines table); `.STATUS`.
-- [ ] **S24: Release (N8).** Version 0.6.0 to 0.7.0 in `DESCRIPTION` and NEWS heading; grep for `0.6.0` leftovers; full revdepcheck (section 8); release PR `dev` -> `main` (merge commit), tag `v0.7.0`, GitHub release, r-universe check through the `/api/packages` list (the per-package endpoint 404s when healthy, memory note). **Ask before merging.**
 
 ### 4.5 Gates every PR runs (in the worktree the PR ships from)
 
