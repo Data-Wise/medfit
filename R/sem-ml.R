@@ -95,11 +95,20 @@
   n <- nrow(x)
   p <- ncol(x)
   s_mat <- stats::cov(x) * (n - 1) / n
-  ld <- if (n > p) .sem_logdet(s_mat) else NA_real_
+  ld <- if (n > p && .sem_cov_full_rank(s_mat)) .sem_logdet(s_mat) else NA_real_
   if (is.na(ld)) {
     stop(sprintf("sample covariance matrix is singular (n = %d, p = %d)", n, p), call. = FALSE)
   }
   list(s = s_mat, n = n, p = p, logdet = ld)
+}
+
+# Full rank judged on the correlation scale: the smallest eigenvalue of the
+# correlation matrix must exceed 1e-10. A Cholesky factorization alone is not a
+# rank test: on some BLAS builds it succeeds on an exactly collinear covariance.
+.sem_cov_full_rank <- function(s_mat) {
+  d <- 1 / sqrt(diag(s_mat))
+  all(is.finite(d)) &&
+    min(eigen(s_mat * outer(d, d), symmetric = TRUE, only.values = TRUE)$values) > 1e-10
 }
 
 # log|M| for a symmetric positive-definite matrix, NA if not positive definite.
