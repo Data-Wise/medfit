@@ -151,7 +151,7 @@ test_that("planted defects are caught", {
   expect_true(is.finite(.sem_fml(bad, mod$ram, smp)))
 
   # (4) Remove the positive-definiteness guard: an indefinite start now errors.
-  no_guard <- sem_mutate(.sem_eval, "<= .sem_pd_floor", "<= -Inf")
+  no_guard <- sem_mutate(.sem_eval, "!.sem_sigma_pd(sigma)", "FALSE")
   expect_error(no_guard(bad, mod$ram, smp, deriv = TRUE), "leading minor")
   expect_no_error(.sem_eval(bad, mod$ram, smp, deriv = TRUE))
 })

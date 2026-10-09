@@ -156,7 +156,7 @@ test_that("planted defects are caught", {
   }
   expect_true(all(run_recording()))
   local({
-    local_mocked_bindings(.sem_start_valid = sem_mutate(.sem_start_valid, "> .sem_pd_floor", "> -Inf"))
+    local_mocked_bindings(.sem_start_valid = sem_mutate(.sem_start_valid, ".sem_sigma_pd(sigma)", "TRUE"))
     expect_false(all(run_recording()))
   })
 
@@ -226,4 +226,123 @@ test_that("the default start is a valid point and rescales with the data", {
       expect_equal(st_s, sem_transport(st, s), tolerance = 1e-10, label = paste(nm, "at scale", s))
     }
   }
+})
+
+# Review of PR 110 ---------------------------------------------------------------
+
+test_that("retries from an invalid first start converge at every data scale", {
+  mod <- sem_model_latent()
+  d0 <- sem_sim(mod, 200, 7)
+  for (s in c(0.01, 1, 100, 1000)) {
+    smp <- .sem_sample(d0 * s, mod$ram)
+    bad <- .sem_default_start(mod$ram, smp)
+    bad["X ~~ X"] <- -0.5 * abs(bad[["X ~~ X"]])
+    fit <- suppressWarnings(.sem_optimize(mod$ram, smp, bad, n_starts = 5))
+    expect_true(fit$converged, label = paste("scale", s))
+    expect_gt(fit$retries, 0)
+  }
+  # The perturbation step is in the parameter's own unit: at scale 0.01 a perturbed variance start
+  # stays within a small multiple of the default start, not 9700 times it.
+  smp <- .sem_sample(d0 * 0.01, mod$ram)
+  base <- .sem_default_start(mod$ram, smp)
+  st <- .sem_perturbed_starts(base, mod$ram, smp, rep(-Inf, mod$ram$q), rep(Inf, mod$ram$q), 5)
+  expect_lt(max(vapply(st, function(x) max(abs(x / base)), numeric(1))), 20)
+})
+
+test_that("data in units near 1e-5 still gives a valid start and the transported optimum", {
+  mod <- sem_model_latent()
+  d0 <- sem_sim(mod, 200, 7)
+  smp1 <- .sem_sample(d0, mod$ram)
+  fit1 <- .sem_optimize(mod$ram, smp1, .sem_default_start(mod$ram, smp1))
+  smp <- .sem_sample(d0 * 1e-5, mod$ram)
+  expect_true(.sem_start_valid(.sem_default_start(mod$ram, smp), mod$ram))
+  fit <- .sem_optimize(mod$ram, smp, .sem_default_start(mod$ram, smp))
+  expect_lt(max(abs(fit$theta / sem_transport(fit1$theta, 1e-5) - 1)), 1e-4)
+})
+
+test_that("the gate checks the gradient sign at an active bound", {
+  mod <- sem_model_observed()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  k <- match("Y ~ M", mod$ram$par_names)
+  obj <- .sem_objective(mod$ram, smp)
+  pin <- function(value) {
+    x <- fit$theta
+    x[k] <- value
+    fr <- setdiff(seq_len(q), k)
+    o <- stats::nlminb(x[fr], function(z) {
+      y <- x
+      y[fr] <- z
+      obj$f(y)
+    }, function(z) {
+      y <- x
+      y[fr] <- z
+      obj$g(y)[fr]
+    }, control = list(rel.tol = 1e-14))
+    x[fr] <- o$par
+    x
+  }
+  # A true constrained optimum: the lower bound sits above the unconstrained optimum, so the gradient
+  # at the bound points out of the box and the point is accepted.
+  lb_up <- rep(-Inf, q)
+  lb_up[k] <- fit$theta[k] + 0.3
+  ok <- .sem_gate(pin(lb_up[k]), 3L, mod$ram, smp, lb_up, rep(Inf, q))
+  expect_true(ok$accepted)
+  expect_true(ok$active[k])
+  # Not an optimum: the lower bound sits below it, F still falls into the interior; status 3 alone
+  # (and a free-coordinate decrement of 0) used to accept this.
+  lb_down <- rep(-Inf, q)
+  lb_down[k] <- fit$theta[k] - 0.3
+  bad <- .sem_gate(pin(lb_down[k]), 3L, mod$ram, smp, lb_down, rep(Inf, q))
+  expect_false(bad$accepted)
+  expect_match(bad$reason, "points into the interior")
+  # Mirror case at an upper bound.
+  ub_up <- rep(Inf, q)
+  ub_up[k] <- fit$theta[k] + 0.3
+  expect_false(.sem_gate(pin(ub_up[k]), 3L, mod$ram, smp, rep(-Inf, q), ub_up)$accepted)
+  # lb == ub on every coordinate leaves a feasible set of one point, so that point is the constrained optimum
+  # wherever it lies; the sign check is skipped for a coordinate pinned from both sides.
+  far <- fit$theta * 1.5 + 0.2
+  fixed <- .sem_gate(far, 3L, mod$ram, smp, far, far)
+  expect_true(fixed$accepted)
+  expect_true(all(fixed$active))
+})
+
+test_that("the active-bound window does not depend on the data scale", {
+  mod <- sem_model_latent()
+  d0 <- sem_sim(mod, 200, 7)
+  is_var <- vapply(strsplit(mod$ram$par_names, " ~~ ", fixed = TRUE),
+                   function(p) length(p) == 2 && p[1] == p[2], logical(1))
+  for (s in c(1e-3, 1, 1000)) {
+    smp <- .sem_sample(d0 * s, mod$ram)
+    lb <- ifelse(is_var, 0, -Inf)
+    fit <- .sem_optimize(mod$ram, smp, .sem_default_start(mod$ram, smp), lb = lb)
+    expect_length(fit$active_bounds, 0)
+  }
+})
+
+test_that("shared labels give the right information, Jacobian and step floor", {
+  a <- sem_rows(list("Y", "X1", "b"), list("Y", "X2", "b"), list("M", "X1"))
+  s <- sem_rows(list("X1", "X1", "v"), list("X2", "X2", "v"), list("Y", "Y"), list("M", "M"))
+  ram <- .sem_ram(c("X1", "X2", "Y", "M"), c("X1", "X2", "Y", "M"), a, s)
+  expect_equal(ram$q, 5)
+  d <- sem_sim(sem_model_observed(), 200, 4)[, c("X", "C", "Y", "M")]
+  names(d) <- c("X1", "X2", "Y", "M")
+  smp <- .sem_sample(d, ram)
+  theta <- stats::setNames(c(.4, .5, 1.1, .9, .8), ram$par_names)[ram$par_names]
+  ds <- .sem_dsigma(theta, ram)
+  for (k in seq_len(ram$q)) {
+    e <- numeric(ram$q)
+    e[k] <- 1e-6
+    fd <- (.sem_implied(ram, theta + e) - .sem_implied(ram, theta - e)) / 2e-6
+    expect_lt(max(abs(ds[[k]] - fd)), 1e-8)
+  }
+  ie <- .sem_info_expected(theta, ram, smp)
+  fd_info <- outer(seq_len(ram$q), seq_len(ram$q), Vectorize(function(i, j) {
+    si <- solve(.sem_implied(ram, theta))
+    smp$n / 2 * sum(diag(si %*% ds[[i]] %*% si %*% ds[[j]]))
+  }))
+  expect_lt(max(abs(ie - fd_info)), 1e-8)
+  expect_true(all(is.finite(.sem_step_floor(ram, smp))) && all(.sem_step_floor(ram, smp) > 0))
 })

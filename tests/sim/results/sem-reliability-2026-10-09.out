@@ -2,89 +2,89 @@
 1200 datasets, 76800 fits recorded (datasets where lavaan did not converge at scale 1 skipped)
 
 Reliability (fraction matching lavaan), by solver, start, mode and scale:
-    algo   start precond   mode scale   match
-1  LBFGS default   FALSE  retry 1e-02 0.36417
-2  SLSQP default   FALSE  retry 1e-02 0.15917
-3  LBFGS  random   FALSE  retry 1e-02 0.39167
-4  SLSQP  random   FALSE  retry 1e-02 0.22583
-5  LBFGS default    TRUE  retry 1e-02 0.95917
-6  SLSQP default    TRUE  retry 1e-02 1.00000
-7  LBFGS  random    TRUE  retry 1e-02 0.89333
-8  SLSQP  random    TRUE  retry 1e-02 0.99250
-9  LBFGS default   FALSE single 1e-02 0.26250
-10 SLSQP default   FALSE single 1e-02 0.15917
-11 LBFGS  random   FALSE single 1e-02 0.33083
-12 SLSQP  random   FALSE single 1e-02 0.22500
-13 LBFGS default    TRUE single 1e-02 1.00000
-14 SLSQP default    TRUE single 1e-02 1.00000
-15 LBFGS  random    TRUE single 1e-02 0.93833
-16 SLSQP  random    TRUE single 1e-02 0.99083
-17 LBFGS default   FALSE  retry 1e+00 1.00000
-18 SLSQP default   FALSE  retry 1e+00 1.00000
-19 LBFGS  random   FALSE  retry 1e+00 1.00000
-20 SLSQP  random   FALSE  retry 1e+00 1.00000
-21 LBFGS default    TRUE  retry 1e+00 1.00000
-22 SLSQP default    TRUE  retry 1e+00 1.00000
-23 LBFGS  random    TRUE  retry 1e+00 0.99833
-24 SLSQP  random    TRUE  retry 1e+00 1.00000
-25 LBFGS default   FALSE single 1e+00 1.00000
-26 SLSQP default   FALSE single 1e+00 1.00000
-27 LBFGS  random   FALSE single 1e+00 0.94667
-28 SLSQP  random   FALSE single 1e+00 0.99417
-29 LBFGS default    TRUE single 1e+00 1.00000
-30 SLSQP default    TRUE single 1e+00 1.00000
-31 LBFGS  random    TRUE single 1e+00 0.93500
-32 SLSQP  random    TRUE single 1e+00 0.99083
-33 LBFGS default   FALSE  retry 1e+02 0.23500
-34 SLSQP default   FALSE  retry 1e+02 0.74500
-35 LBFGS  random   FALSE  retry 1e+02 0.25000
-36 SLSQP  random   FALSE  retry 1e+02 0.83750
-37 LBFGS default    TRUE  retry 1e+02 0.99833
-38 SLSQP default    TRUE  retry 1e+02 1.00000
-39 LBFGS  random    TRUE  retry 1e+02 0.97417
-40 SLSQP  random    TRUE  retry 1e+02 1.00000
-41 LBFGS default   FALSE single 1e+02 0.13167
-42 SLSQP default   FALSE single 1e+02 0.73500
-43 LBFGS  random   FALSE single 1e+02 0.14250
-44 SLSQP  random   FALSE single 1e+02 0.81000
-45 LBFGS default    TRUE single 1e+02 1.00000
-46 SLSQP default    TRUE single 1e+02 1.00000
-47 LBFGS  random    TRUE single 1e+02 0.94083
-48 SLSQP  random    TRUE single 1e+02 0.99083
-49 LBFGS default   FALSE  retry 1e+03 0.00000
-50 SLSQP default   FALSE  retry 1e+03 0.00333
-51 LBFGS  random   FALSE  retry 1e+03 0.00000
-52 SLSQP  random   FALSE  retry 1e+03 0.17000
-53 LBFGS default    TRUE  retry 1e+03 0.99833
-54 SLSQP default    TRUE  retry 1e+03 1.00000
-55 LBFGS  random    TRUE  retry 1e+03 0.96917
-56 SLSQP  random    TRUE  retry 1e+03 1.00000
-57 LBFGS default   FALSE single 1e+03 0.00000
-58 SLSQP default   FALSE single 1e+03 0.00000
-59 LBFGS  random   FALSE single 1e+03 0.00000
-60 SLSQP  random   FALSE single 1e+03 0.02833
-61 LBFGS default    TRUE single 1e+03 1.00000
-62 SLSQP default    TRUE single 1e+03 1.00000
-63 LBFGS  random    TRUE single 1e+03 0.93750
-64 SLSQP  random    TRUE single 1e+03 0.99083
+    algo   start precond   mode scale match
+1  LBFGS default   FALSE  retry 1e-02 0.541
+2  SLSQP default   FALSE  retry 1e-02 0.968
+3  LBFGS  random   FALSE  retry 1e-02 0.556
+4  SLSQP  random   FALSE  retry 1e-02 0.866
+5  LBFGS default    TRUE  retry 1e-02 0.998
+6  SLSQP default    TRUE  retry 1e-02 1.000
+7  LBFGS  random    TRUE  retry 1e-02 0.997
+8  SLSQP  random    TRUE  retry 1e-02 1.000
+9  LBFGS default   FALSE single 1e-02 0.268
+10 SLSQP default   FALSE single 1e-02 0.165
+11 LBFGS  random   FALSE single 1e-02 0.312
+12 SLSQP  random   FALSE single 1e-02 0.236
+13 LBFGS default    TRUE single 1e-02 1.000
+14 SLSQP default    TRUE single 1e-02 1.000
+15 LBFGS  random    TRUE single 1e-02 0.940
+16 SLSQP  random    TRUE single 1e-02 0.992
+17 LBFGS default   FALSE  retry 1e+00 1.000
+18 SLSQP default   FALSE  retry 1e+00 1.000
+19 LBFGS  random   FALSE  retry 1e+00 0.998
+20 SLSQP  random   FALSE  retry 1e+00 1.000
+21 LBFGS default    TRUE  retry 1e+00 1.000
+22 SLSQP default    TRUE  retry 1e+00 1.000
+23 LBFGS  random    TRUE  retry 1e+00 0.997
+24 SLSQP  random    TRUE  retry 1e+00 1.000
+25 LBFGS default   FALSE single 1e+00 1.000
+26 SLSQP default   FALSE single 1e+00 1.000
+27 LBFGS  random   FALSE single 1e+00 0.946
+28 SLSQP  random   FALSE single 1e+00 0.993
+29 LBFGS default    TRUE single 1e+00 1.000
+30 SLSQP default    TRUE single 1e+00 1.000
+31 LBFGS  random    TRUE single 1e+00 0.941
+32 SLSQP  random    TRUE single 1e+00 0.992
+33 LBFGS default   FALSE  retry 1e+02 0.248
+34 SLSQP default   FALSE  retry 1e+02 0.751
+35 LBFGS  random   FALSE  retry 1e+02 0.257
+36 SLSQP  random   FALSE  retry 1e+02 0.843
+37 LBFGS default    TRUE  retry 1e+02 0.999
+38 SLSQP default    TRUE  retry 1e+02 1.000
+39 LBFGS  random    TRUE  retry 1e+02 0.998
+40 SLSQP  random    TRUE  retry 1e+02 1.000
+41 LBFGS default   FALSE single 1e+02 0.148
+42 SLSQP default   FALSE single 1e+02 0.738
+43 LBFGS  random   FALSE single 1e+02 0.143
+44 SLSQP  random   FALSE single 1e+02 0.803
+45 LBFGS default    TRUE single 1e+02 1.000
+46 SLSQP default    TRUE single 1e+02 1.000
+47 LBFGS  random    TRUE single 1e+02 0.938
+48 SLSQP  random    TRUE single 1e+02 0.992
+49 LBFGS default   FALSE  retry 1e+03 0.000
+50 SLSQP default   FALSE  retry 1e+03 0.131
+51 LBFGS  random   FALSE  retry 1e+03 0.000
+52 SLSQP  random   FALSE  retry 1e+03 0.124
+53 LBFGS default    TRUE  retry 1e+03 0.999
+54 SLSQP default    TRUE  retry 1e+03 1.000
+55 LBFGS  random    TRUE  retry 1e+03 0.996
+56 SLSQP  random    TRUE  retry 1e+03 1.000
+57 LBFGS default   FALSE single 1e+03 0.000
+58 SLSQP default   FALSE single 1e+03 0.000
+59 LBFGS  random   FALSE single 1e+03 0.000
+60 SLSQP  random   FALSE single 1e+03 0.025
+61 LBFGS default    TRUE single 1e+03 1.000
+62 SLSQP default    TRUE single 1e+03 1.000
+63 LBFGS  random    TRUE single 1e+03 0.941
+64 SLSQP  random    TRUE single 1e+03 0.992
 
 Worst cell (structure x n) per solver, start and mode:
                             algo   start precond   mode structure    n match
-LBFGS.default.FALSE.retry  LBFGS default   FALSE  retry    latent   50 0.318
-SLSQP.default.FALSE.retry  SLSQP default   FALSE  retry    latent  200 0.330
-LBFGS.random.FALSE.retry   LBFGS  random   FALSE  retry    latent  200 0.343
-SLSQP.random.FALSE.retry   SLSQP  random   FALSE  retry    latent  200 0.463
-LBFGS.default.TRUE.retry   LBFGS default    TRUE  retry    latent 1000 0.955
+LBFGS.default.FALSE.retry  LBFGS default   FALSE  retry    latent 1000 0.365
+SLSQP.default.FALSE.retry  SLSQP default   FALSE  retry    latent  200 0.585
+LBFGS.random.FALSE.retry   LBFGS  random   FALSE  retry    latent  200 0.393
+SLSQP.random.FALSE.retry   SLSQP  random   FALSE  retry    latent  200 0.660
+LBFGS.default.TRUE.retry   LBFGS default    TRUE  retry    latent 1000 0.995
 SLSQP.default.TRUE.retry   SLSQP default    TRUE  retry    latent   50 1.000
-LBFGS.random.TRUE.retry    LBFGS  random    TRUE  retry    latent  200 0.848
-SLSQP.random.TRUE.retry    SLSQP  random    TRUE  retry    latent   50 0.993
+LBFGS.random.TRUE.retry    LBFGS  random    TRUE  retry    latent  200 0.988
+SLSQP.random.TRUE.retry    SLSQP  random    TRUE  retry    latent   50 1.000
 LBFGS.default.FALSE.single LBFGS default   FALSE single    latent  200 0.255
-SLSQP.default.FALSE.single SLSQP default   FALSE single    latent  200 0.330
-LBFGS.random.FALSE.single  LBFGS  random   FALSE single    latent  200 0.233
-SLSQP.random.FALSE.single  SLSQP  random   FALSE single    latent   50 0.422
+SLSQP.default.FALSE.single SLSQP default   FALSE single    latent  200 0.325
+LBFGS.random.FALSE.single  LBFGS  random   FALSE single    latent   50 0.228
+SLSQP.random.FALSE.single  SLSQP  random   FALSE single    latent  200 0.415
 LBFGS.default.TRUE.single  LBFGS default    TRUE single    latent   50 1.000
 SLSQP.default.TRUE.single  SLSQP default    TRUE single    latent   50 1.000
-LBFGS.random.TRUE.single   LBFGS  random    TRUE single    latent  200 0.733
+LBFGS.random.TRUE.single   LBFGS  random    TRUE single    latent  200 0.755
 SLSQP.random.TRUE.single   SLSQP  random    TRUE single    latent   50 0.960
 
 Mismatch classes (single start):
@@ -92,19 +92,17 @@ Mismatch classes (single start):
 
                 
                  LBFGS SLSQP
-  error              1    66
-  flat             503   147
-  match           3377  4742
-  native_stalled  5719  4645
+  flat             467   137
+  match           3381  4752
+  native_stalled  5752  4711
 
 , ,  = TRUE
 
                 
                  LBFGS SLSQP
-  error              4     0
   flat               0     0
-  match           9302  9556
-  native_stalled   294    44
+  match           9312  9560
+  native_stalled   288    40
 
 
 Mismatch classes (Q9 retry):
@@ -112,42 +110,42 @@ Mismatch classes (Q9 retry):
 
                     
                      LBFGS SLSQP
-  flat                 754   160
-  match               3889  4969
-  native_stalled      1182   371
-  no_start_converged  3775  4100
+  flat                 806   144
+  match               4319  6819
+  native_stalled      1321   376
+  no_start_converged  3154  2261
 
 , ,  = TRUE
 
                     
                      LBFGS SLSQP
   flat                   0     0
-  match               9349  9591
+  match               9581  9600
   native_stalled         0     0
-  no_start_converged   251     9
+  no_start_converged    19     0
 
 
 Calibration of the Newton-decrement threshold (single-start runs with a success status):
                  scale  algo precond n_conv max_conv n_stall min_stall    ratio
-0.01 LBFGS FALSE 1e-02 LBFGS   FALSE    388 5.24e-05     127  0.000144 2.76e+00
-0.01 LBFGS TRUE  1e-02 LBFGS    TRUE   1934 1.11e-07       4  0.088872 8.03e+05
-0.01 SLSQP FALSE 1e-02 SLSQP   FALSE    461 1.43e-07    1240  0.841231 5.90e+06
-0.01 SLSQP TRUE  1e-02 SLSQP    TRUE   2389 3.59e-07       0        NA       NA
-1 LBFGS FALSE    1e+00 LBFGS   FALSE   2089 7.03e-08       1  0.126382 1.80e+06
-1 LBFGS TRUE     1e+00 LBFGS    TRUE   2073 1.11e-07       4  0.088989 8.04e+05
-1 SLSQP FALSE    1e+00 SLSQP   FALSE   2393 1.62e-07       0        NA       NA
-1 SLSQP TRUE     1e+00 SLSQP    TRUE   2389 3.59e-07       0        NA       NA
-100 LBFGS FALSE  1e+02 LBFGS   FALSE    298 3.38e-05    1514  0.000142 4.21e+00
-100 LBFGS TRUE   1e+02 LBFGS    TRUE   1926 2.02e-07       5  0.091322 4.52e+05
-100 SLSQP FALSE  1e+02 SLSQP   FALSE   1854 2.49e-05     370  0.000142 5.72e+00
-100 SLSQP TRUE   1e+02 SLSQP    TRUE   2389 3.59e-07       0        NA       NA
-1000 LBFGS FALSE 1e+03 LBFGS   FALSE      0       NA    2170  0.100246       NA
-1000 LBFGS TRUE  1e+03 LBFGS    TRUE   1876 1.11e-07       3  0.097389 8.80e+05
-1000 SLSQP FALSE 1e+03 SLSQP   FALSE     34 1.87e-06    2159  0.000218 1.17e+02
-1000 SLSQP TRUE  1e+03 SLSQP    TRUE   2389 3.59e-07       0        NA       NA
+0.01 LBFGS FALSE 1e-02 LBFGS   FALSE    339 3.44e-05     151  0.000146 4.26e+00
+0.01 LBFGS TRUE  1e-02 LBFGS    TRUE   1959 6.99e-08       8  0.090478 1.29e+06
+0.01 SLSQP FALSE 1e-02 SLSQP   FALSE    481 1.50e-07    1290  0.772340 5.14e+06
+0.01 SLSQP TRUE  1e-02 SLSQP    TRUE   2390 3.21e-07       0        NA       NA
+1 LBFGS FALSE    1e+00 LBFGS   FALSE   2071 7.42e-08       6  0.099770 1.34e+06
+1 LBFGS TRUE     1e+00 LBFGS    TRUE   2070 6.99e-08       8  0.095891 1.37e+06
+1 SLSQP FALSE    1e+00 SLSQP   FALSE   2391 1.49e-07       0        NA       NA
+1 SLSQP TRUE     1e+00 SLSQP    TRUE   2390 3.21e-07       0        NA       NA
+100 LBFGS FALSE  1e+02 LBFGS   FALSE    308 4.37e-05    1526  0.000143 3.27e+00
+100 LBFGS TRUE   1e+02 LBFGS    TRUE   1954 6.99e-08       4  0.096857 1.39e+06
+100 SLSQP FALSE  1e+02 SLSQP   FALSE   1850 3.68e-05     386  0.000142 3.85e+00
+100 SLSQP TRUE   1e+02 SLSQP    TRUE   2390 3.21e-07       0        NA       NA
+1000 LBFGS FALSE 1e+03 LBFGS   FALSE      0       NA    2175  0.098778       NA
+1000 LBFGS TRUE  1e+03 LBFGS    TRUE   1878 9.57e-08       5  0.092435 9.66e+05
+1000 SLSQP FALSE 1e+03 SLSQP   FALSE     30 1.12e-07    2162  0.000188 1.68e+03
+1000 SLSQP TRUE  1e+03 SLSQP    TRUE   2390 3.21e-07       0        NA       NA
 
 Jacobi-scaled smallest Hessian eigenvalue: converged quantiles and stalled/flat minimum
     0%   0.1%     1%     5% 
-0.0241 0.0288 0.1249 0.1873 
+0.0259 0.0525 0.1239 0.1827 
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  0.000   0.181   0.396   0.332   0.483   0.719 
+  0.000   0.179   0.394   0.332   0.482   0.736 

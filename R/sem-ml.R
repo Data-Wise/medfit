@@ -14,6 +14,17 @@
 .sem_sentinel <- 1e10
 .sem_pd_floor <- 1e-10
 
+# Positive definiteness of an implied covariance, judged on the correlation scale
+# (smallest eigenvalue of the correlation matrix above 1e-10) so the verdict does
+# not depend on the units of the data; the spec's absolute 1e-10 on the covariance
+# rejected every valid start once the data were in units near 1e-5.
+.sem_sigma_pd <- function(sigma) {
+  dg <- diag(sigma)
+  if (!all(is.finite(dg)) || any(dg <= 0)) return(FALSE)
+  d <- 1 / sqrt(dg)
+  min(eigen(sigma * outer(d, d), symmetric = TRUE, only.values = TRUE)$values) > .sem_pd_floor
+}
+
 # Build the index vectors for one RAM model.
 #
 # `a` and `s` are data frames with columns `row`, `col` (variable names),
@@ -148,7 +159,7 @@
   sigma <- (bs %*% t(b))[ram$obs_idx, ram$obs_idx, drop = FALSE]
   sigma <- (sigma + t(sigma)) / 2
   if (!all(is.finite(sigma))) return(NULL)
-  if (min(eigen(sigma, symmetric = TRUE, only.values = TRUE)$values) <= .sem_pd_floor) return(NULL)
+  if (!.sem_sigma_pd(sigma)) return(NULL)
   ch <- chol(sigma)
   sigma_inv <- chol2inv(ch)
   f <- 2 * sum(log(diag(ch))) + sum(smp$s * sigma_inv) - smp$logdet - smp$p

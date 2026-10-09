@@ -1,19 +1,19 @@
 Per cell (all runs with both engines fitted; improper counted):
               runs improper failed max_rel_obs max_rel_exp
-latent.50       20        0      0    1.00e-04    1.43e-01
-observed.50     20        0      0    2.25e-05    2.25e-05
-parallel.50     20        0      0    1.65e-05    1.64e-05
-serial.50       20        0      0    2.84e-05    2.84e-05
-latent.200      20        0      0    8.47e-05    4.31e-02
-observed.200    20        0      0    1.41e-05    1.41e-05
-parallel.200    20        0      0    1.77e-05    1.77e-05
-serial.200      20        0      0    2.10e-05    2.10e-05
-latent.1000     20        0      0    1.22e-04    2.16e-02
-observed.1000   20        0      0    1.47e-05    1.47e-05
-parallel.1000   20        0      0    2.37e-05    2.37e-05
-serial.1000     20        0      0    1.99e-05    1.99e-05
+latent.50       20        0      0    1.62e-04    1.08e-01
+observed.50     20        0      0    1.63e-05    1.63e-05
+parallel.50     20        0      0    1.61e-05    1.61e-05
+serial.50       20        0      0    2.03e-05    2.03e-05
+latent.200      20        0      0    8.19e-05    5.34e-02
+observed.200    20        0      0    1.64e-05    1.64e-05
+parallel.200    20        0      0    2.43e-05    2.43e-05
+serial.200      20        0      0    2.29e-05    2.29e-05
+latent.1000     20        0      0    1.01e-04    2.14e-02
+observed.1000   20        0      0    1.44e-05    1.44e-05
+parallel.1000   20        0      0    1.81e-05    1.81e-05
+serial.1000     20        0      0    1.51e-05    1.51e-05
 
-Proper cells: 240 of 240 runs; observed-information max relative SE difference 1.218e-04; expected 1.432e-01
+Proper cells: 240 of 240 runs; observed-information max relative SE difference 1.621e-04; expected 1.081e-01
 Improper runs (listed, not dropped):
 [1] structure n         seed      improper  rel_obs  
 <0 rows> (or 0-length row.names)

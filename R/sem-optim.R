@@ -8,9 +8,9 @@
 
 # Both thresholds were calibrated in S6 (tests/sim/sem-reliability.R, 100 datasets per cell, four
 # structures, scales x0.01 to x1000, preconditioned solver) and fixed at checkpoint A (2026-10-09):
-# the decrement of converged fits is at most 3.6e-7 and of accepted stalls at least 0.089 (1e-3 sits
-# 2800x above and 89x below). The Jacobi-scaled smallest eigenvalue is at least 0.024 for converged fits
-# and at most 1.7e-5 at the degenerate F = 0.680 points; the author chose 1e-4 (240x below the converged
+# the decrement of converged fits is at most 3.2e-7 and of accepted stalls at least 0.0905 (1e-3 sits
+# 3100x above and 90x below). The Jacobi-scaled smallest eigenvalue is at least 0.026 for converged fits
+# and at most 1.7e-5 at the degenerate F = 0.680 points; the author chose 1e-4 (260x below the converged
 # minimum but only 5.9x above the degenerate points, short of the 10x rule; S6 recommended 1e-3).
 .sem_stat_tol <- 1e-3
 .sem_singular_tol <- 1e-4
@@ -66,8 +66,7 @@
 # the objective value (the sentinel is finite and large values can be valid).
 .sem_start_valid <- function(theta, ram) {
   sigma <- tryCatch(.sem_implied(ram, theta), error = function(e) NULL)
-  !is.null(sigma) && all(is.finite(sigma)) &&
-    min(eigen(sigma, symmetric = TRUE, only.values = TRUE)$values) > .sem_pd_floor
+  !is.null(sigma) && all(is.finite(sigma)) && .sem_sigma_pd(sigma)
 }
 
 # Seed from the model's own text (base-R hash, no dependency), so reruns agree.
@@ -93,13 +92,16 @@
   expr
 }
 
-# Perturbed starts x0 + N(0, (0.5 * max(|x0|, 1))^2), each clamped into the box
+# Perturbed starts x0 + N(0, (0.5 * max(|x0|, u))^2), each clamped into the box
 # before the validity test (the spec's perturbation ignores bounds), redrawn up
-# to 20 times, otherwise the user's start is reused.
-.sem_perturbed_starts <- function(start, ram, lb, ub, n) {
+# to 20 times, otherwise the user's start is reused. The floor u is the
+# parameter's natural unit (the spec's fixed floor of 1 made the step 9700x the
+# start at data scale 0.01).
+.sem_perturbed_starts <- function(start, ram, smp, lb, ub, n) {
+  u <- .sem_step_floor(ram, smp)
   .sem_with_seed(.sem_seed(ram), lapply(seq_len(n), function(i) {
     for (try in seq_len(20L)) {
-      cand <- .sem_clamp(start + stats::rnorm(length(start), 0, 0.5 * pmax(abs(start), 1)), lb, ub)
+      cand <- .sem_clamp(start + stats::rnorm(length(start), 0, 0.5 * pmax(abs(start), u)), lb, ub)
       if (.sem_start_valid(cand, ram)) return(cand)
     }
     start
@@ -119,14 +121,32 @@
     out$reason <- "implied covariance is not positive definite"
     return(out)
   }
-  out$active <- (theta - lb <= .sem_bound_window) | (ub - theta <= .sem_bound_window)
+  # The bound window is relative to the parameter's natural unit, so it does not depend on the data scale.
+  u <- .sem_step_floor(ram, smp)
+  at_lb <- (theta - lb) / u <= .sem_bound_window
+  at_ub <- (ub - theta) / u <= .sem_bound_window
+  out$active <- at_lb | at_ub
   free <- !out$active
+  hess_all <- .sem_hess_f(theta, ram, smp)
+  # KKT sign at an active bound: moving into the interior must not lower F. The gradient is judged in
+  # the unit-free scale g / sqrt(H_kk) against the stationarity threshold.
+  push <- (at_lb & !at_ub & r$g < 0) | (at_ub & !at_lb & r$g > 0)
+  if (any(push)) {
+    hk <- diag(hess_all)[push]
+    gk <- abs(r$g[push])
+    bad <- !is.finite(hk) | hk <= 0 | gk / sqrt(pmax(hk, 0)) > .sem_stat_tol
+    if (any(bad)) {
+      out$reason <- sprintf("the gradient at an active bound points into the interior (%s)",
+                            paste(ram$par_names[push][bad], collapse = ", "))
+      return(out)
+    }
+  }
   if (!any(free)) {
     out$decrement <- 0
     out$accepted <- TRUE
     return(out)
   }
-  hess <- .sem_hess_f(theta, ram, smp)[free, free, drop = FALSE]
+  hess <- hess_all[free, free, drop = FALSE]
   # Definiteness is judged on the Jacobi-scaled matrix (the same verdict, but not blind to a small
   # negative diagonal entry beside entries of size 1e12, where raw eigenvalues are only accurate
   # to about 1e-4).
@@ -194,7 +214,7 @@
   opts <- list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-10, ftol_rel = 1e-12, maxeval = 10000L)
   opts[names(control)] <- control
   start0 <- .sem_clamp(start, lb, ub)
-  starts <- c(list(start0), if (n_starts > 1L) .sem_perturbed_starts(start0, ram, lb, ub, n_starts - 1L))
+  starts <- c(list(start0), if (n_starts > 1L) .sem_perturbed_starts(start0, ram, smp, lb, ub, n_starts - 1L))
   obj <- .sem_objective(ram, smp)
 
   attempts <- vector("list", length(starts))

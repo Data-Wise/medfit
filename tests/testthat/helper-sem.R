@@ -76,11 +76,16 @@ sem_models <- function() {
        parallel = sem_model_parallel(), serial = sem_model_serial())
 }
 
-# Data drawn from the model-implied covariance at the true parameters.
+# Data drawn from the model-implied covariance at the true parameters, with rnorm and the Cholesky factor
+# (platform independent: MASS::mvrnorm uses eigen(), whose eigenvector signs differ across LAPACK/BLAS builds
+# and so changes the dataset, not just its sign).
 sem_sim <- function(model, n, seed) {
   set.seed(seed)
   sigma <- .sem_implied(model$ram, model$theta) # nolint: object_usage_linter.
-  as.data.frame(MASS::mvrnorm(n, rep(0, ncol(sigma)), sigma))
+  z <- matrix(stats::rnorm(n * ncol(sigma)), n, ncol(sigma))
+  out <- as.data.frame(z %*% chol(sigma))
+  names(out) <- colnames(sigma)
+  out
 }
 
 # Central-difference gradient, the independent check for the analytic one.
