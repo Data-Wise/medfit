@@ -160,9 +160,11 @@ cluster_cov_terms <- function(dat) {
 
 # Fit both models the way the tests share and return the ClusterMediationData.
 # route = "fit" needs the lmer engine of fit_mediation(), which arrives in PR B.
+# `cov_terms` overrides the covariate terms of the outcome model (for example
+# "C" alone, an uncentered level-1 covariate with no cluster-mean companion).
 fit_cluster211 <- function(dat, parameterization = c("within", "raw"),
                            slope = FALSE, route = c("extract", "fit"),
-                           se_type = "model") {
+                           se_type = "model", cov_terms = NULL) {
   parameterization <- match.arg(parameterization)
   route <- match.arg(route)
   if (route == "fit") {
@@ -173,7 +175,7 @@ fit_cluster211 <- function(dat, parameterization = c("within", "raw"),
     stop("a random slope is supported on the within term only", call. = FALSE)
   }
   d <- cluster_fit_data(dat)
-  covs <- cluster_cov_terms(dat)
+  covs <- if (is.null(cov_terms)) cluster_cov_terms(dat) else cov_terms
   rhs_m <- paste(c("X", if ("C" %in% names(d)) "C"), collapse = " + ")
   mterms <- if (parameterization == "within") c("M_w", "M_bar") else c("M", "M_bar")
   rhs_y <- paste(c("X", mterms, covs), collapse = " + ")
@@ -218,28 +220,45 @@ te_oracle <- function(dat, B = 200, seed = 3, ...) {
 }
 
 # Replication gates: simulate `R` data sets from `scenario` (named arguments of
-# sim_cluster211()), fit each, and return the SE ratios (mean model SE over the
-# SD of the estimates), the cross-replication correlation of a-hat and
-# b_between-hat (D4), 95% path coverage and the NIE Wald coverage.
-sim_gate <- function(scenario, R = 200, seed = 1, ...) {
+# sim_cluster211()), fit each (`fit_args` go to fit_cluster211()), and return
+# per path and effect: the SE ratio (mean model SE over the SD of the
+# estimates), 95% Wald coverage, and the mean bias with its Monte Carlo SE; plus
+# the cross-replication correlation of a-hat and b_between-hat (D4) and the
+# number of fits. Effects are nie, nde, te, own, spillover (own and spillover
+# are the large-cluster approximation). Uses fork parallelism on Unix.
+sim_gate <- function(scenario, R = 200, seed = 1, fit_args = list(), cores = 1L) {
   paths <- c("a", "b_within", "b_between", "c_prime")
-  est <- se <- matrix(NA_real_, R, 4, dimnames = list(NULL, paths))
-  truth <- NULL
-  for (r in seq_len(R)) {
+  effects <- c("nie", "nde", "te", "own", "spillover")
+  one <- function(r) {
     sim <- do.call(sim_cluster211, c(scenario, list(seed = seed + r)))
-    truth <- sim$truth
-    obj <- fit_cluster211(sim$data, ...)
-    est[r, ] <- obj@estimates[paths]
-    se[r, ] <- sqrt(diag(obj@vcov)[paths])
+    obj <- tryCatch(
+      suppressWarnings(suppressMessages(
+        do.call(fit_cluster211, c(list(sim$data), fit_args))
+      )),
+      error = function(e) NULL
+    )
+    if (is.null(obj)) return(NULL)
+    list(
+      est = c(obj@estimates[paths], medfit:::.cluster_effect_vec(obj)),
+      se = c(sqrt(diag(obj@vcov)[paths]), medfit:::.effect_se(obj, effects)),
+      truth = c(sim$truth[paths],
+                nie = sim$a * sim$b_B, nde = sim$c_prime,
+                te = sim$a * sim$b_B + sim$c_prime, own = sim$a * sim$b_W,
+                spillover = sim$a * (sim$b_B - sim$b_W))
+    )
   }
-  nie <- est[, "a"] * est[, "b_between"]
-  se_nie <- sqrt(se[, "a"]^2 * est[, "b_between"]^2 +
-                   est[, "a"]^2 * se[, "b_between"]^2)
+  runs <- Filter(Negate(is.null), parallel::mclapply(seq_len(R), one, mc.cores = cores))
+  est <- do.call(rbind, lapply(runs, `[[`, "est"))
+  se <- do.call(rbind, lapply(runs, `[[`, "se"))
+  truth <- runs[[1]]$truth
+  err <- sweep(est, 2, truth[colnames(est)])
   list(
+    n_fits = length(runs), R = R,
     se_ratio = colMeans(se) / apply(est, 2, stats::sd),
+    coverage = colMeans(abs(err) <= 1.96 * se),
+    bias = colMeans(err),
+    mc_se = apply(err, 2, stats::sd) / sqrt(nrow(err)),
     cor_a_b_between = stats::cor(est[, "a"], est[, "b_between"]),
-    path_coverage = colMeans(abs(sweep(est, 2, truth[paths])) <= 1.96 * se),
-    nie_coverage = mean(abs(nie - truth[["a"]] * truth[["b_between"]]) <=
-                          1.96 * se_nie)
+    err = err, truth = truth
   )
 }

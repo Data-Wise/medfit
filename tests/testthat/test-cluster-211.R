@@ -900,3 +900,30 @@ test_that("print.summary is registered for S3 dispatch", {
   expect_true(is.function(utils::getS3method("print", "summary.ClusterMediationData")))
   expect_s3_class(summary(snap_object()), "summary.ClusterMediationData")
 })
+
+
+# T9: simulation-gate companion (the full gates live in tests/sim/) -------------
+
+test_that("group 5 companion: SE ratios and coverage hold at R = 100 (widened band)", {
+  skip_if_not_installed("lme4")
+  skip_on_cran()
+  g <- sim_gate(list(J = 60, sizes = 10), R = 100, seed = 1000L, cores = 2L)
+  expect_identical(g$n_fits, 100L)
+  for (e in c("nie", "own", "spillover")) {
+    expect_true(g$se_ratio[[e]] >= 0.8 && g$se_ratio[[e]] <= 1.2,
+                info = sprintf("%s SE ratio %.3f", e, g$se_ratio[[e]]))
+  }
+  # D4: the two blocks are independent by construction, so the sample
+  # correlation is noise of order 1 / sqrt(R); a gross failure shows here.
+  expect_lt(abs(g$cor_a_b_between), 0.35)
+  expect_true(all(g$coverage[c("a", "b_within", "b_between", "c_prime")] > 0.85))
+})
+
+test_that("sim_gate() reports a planted wrong SE through the SE ratio", {
+  skip_if_not_installed("lme4")
+  skip_on_cran()
+  # Halving every SE halves the ratio: the gate would catch an SE that is too small.
+  g <- sim_gate(list(J = 60, sizes = 10), R = 60, seed = 1000L, cores = 2L)
+  expect_gt(g$se_ratio[["nie"]], 0.8)
+  expect_lt(0.5 * g$se_ratio[["nie"]], 0.8)
+})
