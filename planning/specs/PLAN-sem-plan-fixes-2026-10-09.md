@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-09 |
-| **Status** | **IN PROGRESS** (2026-10-09). T0 and T14 done; T1 is next. |
+| **Status** | **IN PROGRESS** (2026-10-09). T0, T1-T7 and T14 done; T8 (sweep and review) is next; workstream B (T9-T13) is running in its own worktree. |
 | **Spec** | [SPEC-sem-plan-fixes-2026-10-09.md](SPEC-sem-plan-fixes-2026-10-09.md), APPROVED 2026-10-09 (fix ids F1-F22, modules `plan-fixes`, `lavaan-probmed-names`, `spec-errata`) |
 | **Edits** | [PLAN-native-sem-implementation-2026-10-09.md](PLAN-native-sem-implementation-2026-10-09.md) and [GRILL-native-sem-implementation-2026-10-09.md](GRILL-native-sem-implementation-2026-10-09.md) |
 | **Task list location** | This file. The skill's default `tasks/todo.md` is not used: `.Rbuildignore` ignores `^planning$` but not `tasks/`, so a new top-level `tasks/` would ship in the tarball. Repo convention is `planning/specs/PLAN-*.md` with embedded checkboxes. |
@@ -51,7 +51,7 @@ T4 (S17b) refers to workstream B by name only; it does not wait for B to merge.
 
 ### Phase 1: workstream A, `plan-fixes` (sequential, one worker)
 
-- [ ] **T1: Scale-free acceptance gate (M). Fixes F1, F7.**
+- [x] **T1: Scale-free acceptance gate (M). Fixes F1, F7.** *(done 2026-10-09: Q14, R12, S5/S6/S14/G2 edits; Q14 cited 10 times, unit-invariance in Q14, S5, S6, S14, G2, R12.)*
   - Acceptance:
     - New decision Q14 in section 3: stationarity measured by a scale-free quantity (Newton decrement on the reduced Hessian), model kept in original units, threshold calibrated in S6 and not frozen before.
     - Q9 amended: a near-singular Hessian at an accepted point triggers the retry.
@@ -59,7 +59,7 @@ T4 (S17b) refers to workstream B by name only; it does not wait for B to merge.
     - S6 calibrates the threshold across the K10 structures and the scale cells; S14 and section 6.1 G2 and G3 cite Q14.
   - Verify: `grep -n "Q14" PLAN` finds the decision and at least four citations; `grep -n "unit-invariance" PLAN` finds S5, S6 and S14; the old `max(1, max` wording survives only in a quoted citation of the spec.
   - Files: PLAN, GRILL. Depends on: T0.
-- [ ] **T2: Constraint-gate hygiene (S). Fixes F2, F3, F4, F6, F9, F10.**
+- [x] **T2: Constraint-gate hygiene (S). Fixes F2, F3, F4, F6, F9, F10.** *(done 2026-10-09: Q10 bound-row signs, S14 sign check on bounds, rank-deficient skip, scaled windows, D14 tolerance, S5 clamp; evidence labels corrected so only checked items are marked [V].)*
   - Acceptance:
     - Q10 states the signs: a lower bound is column `-e_i` (`c = l_i - x_i`), an upper bound `+e_i` (`c = x_i - u_i`).
     - S14's warn-only check also covers active bound rows; it is skipped, with a message, on a rank-deficient active set.
@@ -68,32 +68,32 @@ T4 (S17b) refers to workstream B by name only; it does not wait for B to merge.
     - S5 clamps perturbed starts into `[lb, ub]` with a planted defect (an unclamped start must fail a test).
   - Verify: `grep -n -E "clamp|rank-deficient|-e_i|\+e_i" PLAN` finds each; no remaining "multiplier sign unchecked" text.
   - Files: PLAN. Depends on: T1.
-- [ ] **T3: Numeric hygiene (XS). Fixes F5, F8.**
+- [x] **T3: Numeric hygiene (XS). Fixes F5, F8.** *(done 2026-10-09: S3 gradient sentinel, S25 NNLS scaling and step guard.)*
   - Acceptance: S3 gives the analytic gradient the same non-positive-definite sentinel path as the objective (planted defect: an indefinite start through the gradient must not error); S25 scales the NNLS columns and `b` first and guards the step length (planted defect from the S1 review: a dependent column).
   - Verify: grep S3 and S25 for "sentinel" and "scale".
   - Files: PLAN. Depends on: T2.
-- [ ] **T4: Downstream contract and the probmed gate (M). Fixes F11, F15, F17, F18.**
+- [x] **T4: Downstream contract and the probmed gate (M). Fixes F11, F15, F17, F18.** *(done 2026-10-09: S17 contract paragraph, new S17b, equal-label collapse; sigma divisor corrected to n-2 (mediator) and n-3 (outcome) against the saved output.)*
   - Acceptance:
     - New task S17b in the task table, PR 6 list, DAG and E2E row: a `skip_if_not_installed("probmed")` test with a `pmed()` plugin known answer (own `set.seed()`, divisor-n sigma note) and a `parametric_bootstrap` case; latent mediators documented as plugin-only; it depends on workstream B.
     - S17 gets a contract paragraph: the fields probmed reads, the `m_<X>`, `y_<M>`, `y_<X>` names, the intercept default of 0, name-not-position indexing (Q3 covariate rows move positions), and `source_package = "medfit"` with missingmed noted.
     - Equal labels collapse to one parameter in section 2.4, S11 and S17 (free-parameter numbering matches `lavaanify()` after collapsing).
   - Verify: `grep -n "S17b" PLAN` appears in the task table, section 4.3 and the DAG; the phrase "a shared label appears once" no longer contradicts S11.
   - Files: PLAN. Depends on: T3.
-- [ ] **T5: API surface and ecosystem record (S). Fixes F13, F16, F19, F20, F21.**
+- [x] **T5: API surface and ecosystem record (S). Fixes F13, F16, F19, F20, F21.** *(done 2026-10-09: Q2 and R9 model-argument capture, S16/S21 weights routing, six-package table, reserved seam columns, experimental label (now the lifecycle badge, D17).)*
   - Acceptance:
     - Q2 and R9: the `model` argument captures glm's `model =` and partial-matches `mod =`; it is a behavior change in NEWS; `model` joins missingmed's reserved arguments (a note for its owner, not a write); R9 no longer says "additive only" and lists all six packages with the impact table.
     - S16 and S21: `fit_mediation(engine = "native", weights =, se_type = "sandwich")` routes to N6, one argument name on both front ends.
     - Section 2.4 reserves `level`, `block`, `group` columns (NA in 0.7.0) and states `cluster =` semantics for a later native two-level fit.
-    - R5 and S18: an experimental label on `SEMFit` and `fit_sem()`, a NEWS line, and the rename cost. **Deviation found while editing:** `lifecycle` is not a dependency of medfit (absent from `DESCRIPTION`, `NAMESPACE`, `R/`), so the label is a prose "Lifecycle: experimental" line; adding the package for badges is an ask-first item left to the author.
+    - R5 and S18: an experimental label on `SEMFit` and `fit_sem()`, a NEWS line, and the rename cost. **Found while editing:** `lifecycle` is not a dependency of medfit (absent from `DESCRIPTION`, `NAMESPACE`, `R/`). The author approved adding it ("add lifecycle", 2026-10-09, D17); it is added in PR 6 (S18), not in this docs PR.
   - Verify: grep `additive only` returns nothing; grep `lifecycle` finds R5 and S18.
   - Files: PLAN. Depends on: T4.
-- [ ] **T6: Seam coverage and the release gate (S). Fixes F12, F14.**
+- [x] **T6: Seam coverage and the release gate (S). Fixes F12, F14.** *(done 2026-10-09: S10 covers all 31 lavaan:: calls with a mechanical grep test, S24 and section 8 run the dependents' suites.)*
   - Acceptance: S10 routes every `lavaan::` call in `R/extract-lavaan.R` through the seam, moves the `requireNamespace("lavaan")` guard behind it, and adds a noSuggests job step that extracts a native fit with lavaan absent; S24 and section 8 replace "full `revdepcheck`" with installing the dev build into a scratch library and running the test suites of probmed, missingmed, mediationverse and RMediation (counts quoted), keeping `revdep_check()` as the CRAN-facing check.
   - Verify: grep S10 for the five helper names; grep S24 for the four package names.
   - Files: PLAN. Depends on: T5.
-- [ ] **T7: Ledger rows and errata (S). Fix F22; spec-errata draft.**
+- [x] **T7: Ledger rows and errata (S). Fix F22; spec-errata draft.** *(done 2026-10-09: ledger rows D9-D17 (17 total), errata block, plan section 10 cross-reference; the frozen spec is byte-identical.)*
   - Acceptance: GRILL rows D9-D16 for the eight resolutions in the spec; an "Errata for spec 4.5c" section with the three text items from the spec (bound rows, scale-free measure, scaled windows), marked draft and not applied; the plan's section 10 cross-references D9-D16.
-  - Verify: `grep -c "^| D" GRILL` is 16; the frozen spec file is byte-identical (`git diff --stat SPEC-sem-grammar-2026-10-08.md` empty).
+  - Verify: `grep -c "^| D" GRILL` is 17; the frozen spec file is byte-identical (`git diff --stat SPEC-sem-grammar-2026-10-08.md` empty).
   - Files: GRILL, PLAN. Depends on: T6.
 - [ ] **T8: Consistency sweep and independent review (M).**
   - Acceptance: a cross-reference pass (every `S`, `Q`, `R`, `OD`, `D` id cited is defined exactly once; the PR table, DAG and task table agree); `markdownlint` shows no MD056, MD038, MD040; a fresh-context code review of the two edited documents returns no high finding, and every finding is verified before fixing; the docs PR is open with the F1-F22 table in its body.
