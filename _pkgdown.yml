@@ -124,6 +124,7 @@ reference:
       - ParallelMediationData
       - InteractionMediationData
       - JointMediationData
+      - ClusterMediationData
       - BootstrapResult
 
   - title: "Model Fitting"

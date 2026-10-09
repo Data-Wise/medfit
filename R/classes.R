@@ -1766,3 +1766,240 @@ print.summary.JointMediationData <- function(x, ...) {
   cat("Source:     ", x$source_package, "\n")
   invisible(x)
 }
+
+
+#' ClusterMediationData: Cluster-Level Treatment Mediation (2-1-1)
+#'
+#' @description
+#' S7 class for mediation with a treatment assigned to whole clusters (such as
+#' schools) and a mediator and outcome measured on the individuals in them. It
+#' holds the paths of a two-level linear mixed model pair: the mediator model
+#' `M ~ X + ... + (1 | cluster)` and the outcome model with the mediator split
+#' into its within-cluster deviation and the observed cluster mean. medfit
+#' computes the effects; causal interpretation is the user's responsibility.
+#'
+#' @details
+#' With the within parameterization
+#' \eqn{Y_{ij} = \theta_0 + c' X_j + b_W (M_{ij} - \bar M_j) + b_B \bar M_j + \dots}{
+#' Y = t0 + c'*X + bW*(M - Mbar) + bB*Mbar + ...}
+#' and \eqn{a}{a} the effect of the treatment on the mediator, the natural
+#' indirect effect is \eqn{a b_B}{a*bB}. It splits into an own-mediator part
+#' \eqn{a b_W}{a*bW} and a spillover part \eqn{a (b_B - b_W)}{a*(bB - bW)}.
+#' The validator ties the alias rows `a`, `c_prime`, `b_within` and
+#' `b_between` of `estimates` and `vcov` to the path properties, so an object
+#' with inconsistent numbers cannot be built.
+#'
+#' `kr_df` holds the Kenward-Roger degrees of freedom of each path when
+#' `se_type = "kr"`, and is empty otherwise.
+#'
+#' @param a_path Numeric scalar: effect of the treatment on the mediator.
+#' @param b_within Numeric scalar: within-cluster mediator effect on the outcome.
+#' @param b_between Numeric scalar: between-cluster (cluster-mean) mediator
+#'   effect on the outcome.
+#' @param c_prime Numeric scalar: direct effect of the treatment.
+#' @param estimates Named numeric vector of parameter estimates: the four alias
+#'   rows plus each model's fixed effects.
+#' @param vcov Square variance-covariance matrix of `estimates`, with matching
+#'   dimnames.
+#' @param kr_df Named numeric vector of Kenward-Roger degrees of freedom, one
+#'   per path, when `se_type = "kr"`; `NULL` otherwise.
+#' @param treatment,mediator,outcome Character names of the variables.
+#' @param cluster Character name of the cluster variable.
+#' @param n_obs Integer number of observations.
+#' @param n_clusters Integer number of clusters.
+#' @param cluster_sizes Integer vector with one size per cluster.
+#' @param parameterization `"within"` or `"raw"`: how the outcome model was
+#'   fitted.
+#' @param covariates_centered Logical: whether every level-1 covariate in the
+#'   outcome model has a cluster-mean companion.
+#' @param se_type `"model"` or `"kr"`.
+#' @param reml Logical: whether the models were fitted by REML.
+#' @param converged Logical convergence flag.
+#' @param sigma_m,sigma_y Numeric scalars: residual standard deviations of the
+#'   mediator and outcome models.
+#' @param tau_m,tau_y Numeric scalars: random-intercept standard deviations of
+#'   the mediator and outcome models.
+#' @param data Optional data frame, or NULL.
+#' @param source_package Character name of the originating package.
+#'
+#' @return A `ClusterMediationData` S7 object.
+#' @usage
+#' ClusterMediationData(a_path, b_within, b_between, c_prime, estimates, vcov,
+#'   kr_df, treatment, mediator, outcome, cluster, n_obs, n_clusters,
+#'   cluster_sizes, parameterization, covariates_centered, se_type, reml,
+#'   converged, sigma_m, sigma_y, tau_m, tau_y, data, source_package)
+#'
+#' @references
+#' Talloen, W., Loeys, T., Moerkerke, B., Vansteelandt, S., & Rosseel, Y.
+#' (2016). Mediation analysis in cluster randomized trials with interference.
+#' *Statistics in Medicine*.
+#'
+#' @examples
+#' # Hand-built object (the paths and their alias rows must agree)
+#' est <- c(a = 0.5, c_prime = 0.2, b_within = 0.3, b_between = 0.6)
+#' vc <- diag(0.01, 4)
+#' dimnames(vc) <- list(names(est), names(est))
+#' cmd <- ClusterMediationData(
+#'   a_path = 0.5, b_within = 0.3, b_between = 0.6, c_prime = 0.2,
+#'   estimates = est, vcov = vc,
+#'   treatment = "X", mediator = "M", outcome = "Y", cluster = "school",
+#'   n_obs = 400L, n_clusters = 40L, cluster_sizes = rep(10L, 40),
+#'   parameterization = "within", covariates_centered = TRUE, se_type = "model",
+#'   reml = TRUE, converged = TRUE, sigma_m = 1, sigma_y = 1, tau_m = 0.5,
+#'   tau_y = 0.5, source_package = "medfit"
+#' )
+#' cmd@a_path * cmd@b_between  # the NIE, 0.5 * 0.6
+#'
+#' @export
+ClusterMediationData <- S7::new_class(
+  "ClusterMediationData",
+  package = "medfit",
+  properties = list(
+    # Paths (scalars); also stored as alias rows of `estimates` and `vcov`
+    a_path = S7::class_numeric,
+    b_within = S7::class_numeric,
+    b_between = S7::class_numeric,
+    c_prime = S7::class_numeric,
+
+    # Parameters
+    estimates = S7::class_numeric,
+    vcov = S7::new_S3_class("matrix"),
+    # `class_numeric | NULL` defaults to numeric(0); state the NULL default
+    kr_df = S7::new_property(S7::class_numeric | NULL, default = NULL),
+
+    # Variables
+    treatment = S7::class_character,
+    mediator = S7::class_character,
+    outcome = S7::class_character,
+    cluster = S7::class_character,
+
+    # Design
+    n_obs = S7::class_integer,
+    n_clusters = S7::class_integer,
+    cluster_sizes = S7::class_integer,
+
+    # How the models were fitted
+    parameterization = S7::class_character,
+    covariates_centered = S7::class_logical,
+    se_type = S7::class_character,
+    reml = S7::class_logical,
+    converged = S7::class_logical,
+
+    # Variance components
+    sigma_m = S7::class_numeric,
+    sigma_y = S7::class_numeric,
+    tau_m = S7::class_numeric,
+    tau_y = S7::class_numeric,
+
+    # Data and metadata
+    data = S7::class_data.frame | NULL,
+    source_package = S7::class_character
+  ),
+
+  validator = function(self) {
+    aliases <- c("a", "c_prime", "b_within", "b_between")
+
+    # --- Scalars ---
+    scalars <- list(
+      a_path = self@a_path, b_within = self@b_within,
+      b_between = self@b_between, c_prime = self@c_prime,
+      sigma_m = self@sigma_m, sigma_y = self@sigma_y,
+      tau_m = self@tau_m, tau_y = self@tau_y, n_obs = self@n_obs,
+      n_clusters = self@n_clusters, treatment = self@treatment,
+      mediator = self@mediator, outcome = self@outcome,
+      cluster = self@cluster, parameterization = self@parameterization,
+      covariates_centered = self@covariates_centered,
+      se_type = self@se_type, reml = self@reml, converged = self@converged
+    )
+    for (nm in names(scalars)) {
+      if (length(scalars[[nm]]) != 1 || is.na(scalars[[nm]])) {
+        return(sprintf("%s must be a single non-missing value", nm))
+      }
+    }
+    for (nm in c("sigma_m", "sigma_y", "tau_m", "tau_y")) {
+      if (!is.finite(scalars[[nm]]) || scalars[[nm]] < 0) {
+        return(sprintf("%s must be finite and non-negative", nm))
+      }
+    }
+    if (!self@parameterization %in% c("within", "raw")) {
+      return("parameterization must be \"within\" or \"raw\"")
+    }
+    if (!self@se_type %in% c("model", "kr")) {
+      return("se_type must be \"model\" or \"kr\"")
+    }
+
+    # --- Design ---
+    if (self@n_clusters != length(self@cluster_sizes)) {
+      return("n_clusters must equal length(cluster_sizes)")
+    }
+    if (self@n_clusters < 2L) {
+      return("a cluster design needs at least 2 clusters")
+    }
+    if (anyNA(self@cluster_sizes) || any(self@cluster_sizes < 1L)) {
+      return("cluster_sizes must all be at least 1")
+    }
+    if (sum(self@cluster_sizes) != self@n_obs) {
+      return("sum(cluster_sizes) must equal n_obs")
+    }
+
+    # --- Estimates, vcov and the alias rows ---
+    if (nrow(self@vcov) != ncol(self@vcov)) {
+      return("vcov must be a square matrix")
+    }
+    if (length(self@estimates) != nrow(self@vcov)) {
+      return("Number of estimates must match vcov dimensions")
+    }
+    nms <- names(self@estimates)
+    if (is.null(nms) || anyNA(nms) || anyDuplicated(nms)) {
+      return("estimates must have unique names")
+    }
+    if (!identical(rownames(self@vcov), nms) ||
+          !identical(colnames(self@vcov), nms)) {
+      return("vcov dimnames must equal names(estimates)")
+    }
+    if (!all(aliases %in% nms)) {
+      return("estimates and vcov must carry the alias rows a, c_prime, b_within and b_between")
+    }
+    paths <- c(a = self@a_path, c_prime = self@c_prime,
+               b_within = self@b_within, b_between = self@b_between)
+    if (!isTRUE(all.equal(unname(self@estimates[aliases]), unname(paths[aliases]),
+                          tolerance = 1e-12))) {
+      return("alias rows of estimates must equal the path properties")
+    }
+
+    # --- Kenward-Roger df: present iff se_type is "kr" ---
+    if (self@se_type == "kr") {
+      if (!isTRUE(self@reml)) {
+        return("se_type = \"kr\" requires REML fits")
+      }
+      if (length(self@kr_df) != length(aliases) ||
+            !setequal(names(self@kr_df), aliases) ||
+            any(!is.finite(self@kr_df)) || any(self@kr_df <= 0)) {
+        return("kr_df must hold a positive df for each of a, c_prime, b_within and b_between when se_type is \"kr\"")
+      }
+    } else if (length(self@kr_df) > 0L) {
+      return("kr_df must be empty unless se_type is \"kr\"")
+    }
+
+    NULL
+  }
+)
+
+
+#' Print Method for ClusterMediationData
+#'
+#' @param x A ClusterMediationData object
+#' @param ... Additional arguments (unused)
+#' @noRd
+S7::method(print, ClusterMediationData) <- function(x, ...) {
+  cat("<ClusterMediationData>\n")
+  cat(sprintf("  %s -> %s -> %s  (clusters: %s)\n",
+              x@treatment, x@mediator, x@outcome, x@cluster))
+  cat(sprintf("  a = %+.4f   b_within = %+.4f   b_between = %+.4f   c' = %+.4f\n",
+              x@a_path, x@b_within, x@b_between, x@c_prime))
+  cat(sprintf("  NIE (a * b_between) = %+.4f\n", x@a_path * x@b_between))
+  cat(sprintf("  n = %d in %d clusters (sizes %d to %d)   |   %s outcome model, %s SEs\n",
+              x@n_obs, x@n_clusters, min(x@cluster_sizes), max(x@cluster_sizes),
+              x@parameterization, x@se_type))
+  invisible(x)
+}

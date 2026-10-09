@@ -46,6 +46,7 @@
   S7::S4_register(ParallelMediationData)
   S7::S4_register(InteractionMediationData)
   S7::S4_register(JointMediationData)
+  S7::S4_register(ClusterMediationData)
   S7::S4_register(BootstrapResult)
 
   # Register S7 methods for dispatch
@@ -63,6 +64,7 @@
   S7::method(show, ParallelMediationData) <- .show_via_print
   S7::method(show, InteractionMediationData) <- .show_via_print
   S7::method(show, JointMediationData) <- .show_via_print
+  S7::method(show, ClusterMediationData) <- .show_via_print
 
   # Explicitly register the S3 print method for `mediation_effect`.
   #

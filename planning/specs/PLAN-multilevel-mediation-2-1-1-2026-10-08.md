@@ -92,7 +92,7 @@ The spec is approved, so it is not edited here. Each item is resolved in the pla
     - A `skip_on_cran()` canary (for T0).
   - Verify: `testthat::test_file("tests/testthat/test-cluster-harness.R")`, all pass.
   - Files: `tests/testthat/helper-cluster.R`, `tests/testthat/test-cluster-harness.R`.
-- [ ] **T2: `ClusterMediationData` class.**
+- [x] **T2: `ClusterMediationData` class.** *(done 2026-10-08, `test-cluster-211.R`: 30 pass; full suite 0 failed, 0 errors. `show` is registered with a short `print()`; the `print.summary` registration moves to T8 with the `summary()` method it needs. `data` keeps the empty-data-frame default like the other classes, `kr_df` has an explicit `NULL` default.)*
   - Acceptance:
     - Class and properties as in the spec sketch, with the validator: scalars have length 1; `n_clusters == length(cluster_sizes)`; `sum(cluster_sizes) == n_obs`; alias rows `a`, `c_prime`, `b_within`, `b_between` present in `estimates` and `vcov` and equal to the path properties; `parameterization` and `se_type` in their sets; `kr_df` present iff `se_type == "kr"`.
     - `kr_df` default handled against the `class_numeric | NULL` pitfall (`numeric(0)`).
