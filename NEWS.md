@@ -17,6 +17,11 @@
   supports the plugin estimators only. Serial, parallel and four-way objects
   are unchanged (#106).
 
+## Dependencies
+
+* `lifecycle` is now in `Imports`, and the lifecycle badge figures ship in
+  `man/figures/`. Deprecations and experimental features are marked with it.
+
 # medfit 0.6.0
 
 ## New features
