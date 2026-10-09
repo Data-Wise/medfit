@@ -24,7 +24,7 @@ Machine: macOS, 18 cores (affects only the parallel timings). Timings vary by ab
 
 | Script | What it shows | Ledger / spec reference |
 |---|---|---|
-| `common.R` | the RAM engine (model builder, implied covariance, ML discrepancy, analytic gradient) copied from missingmed `dev/spike-ram-nloptr-vs-openmx.R` | all |
+| `common.R` | the RAM engine (model builder, implied covariance, ML discrepancy, analytic gradient) copied from missingmed `dev/spike-ram-nloptr-vs-openmx.R`, plus `pd_ok()` (positive-definite start test, added in review round 3) | all |
 | `00-spike-ram-nloptr-vs-openmx.R` | the original spike (verbatim copy); `02` sources it | P0 |
 | `01-probe-lavaan.R` | `lavParseModelString()` output for the grammar subset: bound folding, dropped `y1`, `level:` rows | spec section 2 |
 | `02-p0-openmx-information.R` | OpenMx SEs vs observed and expected information; the `n/(n-1)` convention. The Hessian-matrix lines in this output are **not valid evidence** (relative differences blow up on near-zero entries); the SE lines are | ledger P0 facts, K10 |

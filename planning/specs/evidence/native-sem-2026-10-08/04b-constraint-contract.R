@@ -12,8 +12,8 @@ cat("== linearity test (q = 5 parameters) ==\n"); for (nm in names(tests)) cat(s
 h <- function(x) x[1]*x[2]; hj <- function(x) jac(h, x)
 solve1 <- function(s) { o <- try(nloptr(s,f,g,eval_g_eq=h,eval_jac_g_eq=hj,opts=list(algorithm="NLOPT_LD_SLSQP",xtol_rel=1e-10,ftol_rel=1e-14,maxeval=2000)), silent=TRUE)
   if (inherits(o,"try-error")) return(list(fm=Inf, res=Inf, th=s)); list(fm=o$objective, res=abs(h(o$solution)), th=o$solution) }
-# Perturbed starts must be valid (finite objective, i.e. positive definite Sigma): redraw up to 20 times, else reuse the user's start.
-perturb <- function(s) { for (j in 1:20) { p <- s + rnorm(length(s), 0, 0.5*pmax(abs(s), 1)); if (f(p) < 1e9) return(p) }; s }
+# Perturbed starts must be valid (positive-definite implied covariance, pd_ok in common.R): redraw up to 20 times, else reuse the user's start.
+perturb <- function(s) { for (j in 1:20) { p <- s + rnorm(length(s), 0, 0.5*pmax(abs(s), 1)); if (pd_ok(mod, p)) return(p) }; s }
 multistart <- function(s, k = 5, seed = 1, feas = 1e-6) { set.seed(seed); starts <- c(list(s), lapply(seq_len(k-1), function(i) perturb(s)))
   r <- lapply(starts, solve1); fm <- vapply(r, `[[`, 0, "fm"); res <- vapply(r, `[[`, 0, "res"); ok <- res <= feas & is.finite(fm)
   if (!any(ok)) return(list(fm = NA, won = NA, spread = NA, feasible = FALSE))
@@ -74,3 +74,9 @@ cases <- list(
   list("four feasible agreeing, one failed", c(rep(0.0952, 4), Inf), c(rep(0, 4), 3)),
   list("none feasible", rep(Inf, 5), rep(Inf, 5)))
 for (cs in cases) cat(sprintf("%-62s old rule: %-7s new rule: %s\n", cs[[1]], warn_rule(cs[[2]], cs[[3]], FALSE), warn_rule(cs[[2]], cs[[3]], TRUE)))
+
+cat("\n== 4.5b start validity: three candidate rules on the same starts (spec uses pd_ok) ==\n")
+cases <- list("negative variances (vm = vy = -0.5)" = c(0,0,0,-0.5,-0.5), "tiny positive variances (vm = vy = 1e-9), positive definite" = c(0,0,0,1e-9,1e-9), "ordinary start" = c(.3,.3,.1,1,1))
+cat(sprintf("%-58s %12s | %-14s %-18s %-8s\n", "start", "objective", "is.finite(F)", "F < 1e9 (old script)", "pd_ok"))
+for (nm in names(cases)) { st <- cases[[nm]]; v <- f(st); cat(sprintf("%-58s %12.3g | %-14s %-18s %-8s\n", nm, v, is.finite(v), v < 1e9, pd_ok(mod, st))) }
+cat("is.finite(F) admits the negative-variance start (the sentinel 1e10 is finite); F < 1e9 rejects a genuinely positive-definite start whose objective is large; pd_ok decides both correctly.\n")

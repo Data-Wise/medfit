@@ -41,3 +41,10 @@ all five feasible and agreeing                                 old rule: silent 
 all five feasible, two local solutions (0.0952 / 0.1061)       old rule: WARN    new rule: WARN
 four feasible agreeing, one failed                             old rule: silent  new rule: WARN
 none feasible                                                  old rule: ERROR: no feasible start new rule: ERROR: no feasible start
+
+== 4.5b start validity: three candidate rules on the same starts (spec uses pd_ok) ==
+start                                                         objective | is.finite(F)   F < 1e9 (old script) pd_ok   
+negative variances (vm = vy = -0.5)                               1e+10 | TRUE           FALSE              FALSE   
+tiny positive variances (vm = vy = 1e-9), positive definite     2.19e+09 | TRUE           FALSE              TRUE    
+ordinary start                                                   0.0115 | TRUE           TRUE               TRUE    
+is.finite(F) admits the negative-variance start (the sentinel 1e10 is finite); F < 1e9 rejects a genuinely positive-definite start whose objective is large; pd_ok decides both correctly.

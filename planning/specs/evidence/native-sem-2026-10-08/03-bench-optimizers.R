@@ -2,7 +2,7 @@
 # Unconstrained optimizer reliability and speed against lavaan, on three model shapes.
 #   models : latent mediator | observed + covariate | parallel two-mediator
 #   n      : 50, 200, 1000
-#   starts : "default" (moment-based) and "random" (default start perturbed by U(-0.5, 0.5), valid starts only)
+#   starts : "default" (moment-based) and "random" (default start perturbed by U(-0.5, 0.5); starts must have a positive-definite implied covariance, pd_ok in common.R)
 # Reliability = the fitted model-implied covariance is within 1e-5 of lavaan's (model-agnostic, so improper
 # solutions are compared too). Reps where lavaan itself did not converge are skipped and counted.
 # Run from this directory:  Rscript 03-bench-optimizers.R      (REPS=30 by default; REPS=5 for a quick check)
@@ -43,8 +43,8 @@ for (mn in names(models)) for (n in c(50, 200, 1000)) for (st in c("default", "r
     if (inherits(lv, "try-error") || !lavInspect(lv, "converged")) { skip <- skip + 1; next }
     ref <- fitted(lv)$cov[M$ov, M$ov]
     s0 <- M$start
-    if (st == "random") { for (k in 1:20) { s0 <- M$start + runif(length(M$start), -.5, .5); if (fml(mod, s0, Sm) < 1e9) break }
-      if (fml(mod, s0, Sm) >= 1e9) s0 <- M$start }
+    if (st == "random") { for (k in 1:20) { s0 <- M$start + runif(length(M$start), -.5, .5); if (pd_ok(mod, s0)) break }
+      if (!pd_ok(mod, s0)) s0 <- M$start }
     f <- function(x) fml(mod, x, Sm); g <- function(x) gml(mod, x, Sm)
     for (nm in names(solvers)) {
       t <- system.time(o <- try(suppressWarnings(solvers[[nm]](f, g, s0)), silent = TRUE))[["elapsed"]]

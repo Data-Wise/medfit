@@ -16,3 +16,8 @@ gml <- function(mod,th,Sm){m<-mats(mod,th);B<-solve(diag(mod$nv)-m$A);Sg<-mod$F%
   W<-Si-Si%*%Sm%*%Si;P<-t(mod$F)%*%W%*%mod$F;gA<-2*t(B%*%m$S%*%t(B)%*%P%*%B);gS<-t(B)%*%P%*%B
   g<-numeric(length(th));for(i in seq_len(nrow(mod$pr))){p<-mod$pr[i,];if(!p$free)next
     g[p$k]<-g[p$k]+if(p$m=="A") gA[p$r,p$c] else if(p$r==p$c) gS[p$r,p$c] else 2*gS[p$r,p$c]};g}
+
+# Start validity: the implied covariance must be positive definite (smallest eigenvalue above 1e-10, the same test fml() applies
+# before it returns its 1e10 sentinel). A finite objective value is NOT evidence of validity: the sentinel itself is finite.
+pd_ok <- function(mod, th) { Sg <- tryCatch(sigma(mod, th), error = function(e) NULL)
+  !is.null(Sg) && all(is.finite(Sg)) && min(eigen(Sg, symmetric = TRUE, only.values = TRUE)$values) > 1e-10 }
