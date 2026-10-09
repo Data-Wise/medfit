@@ -31,6 +31,7 @@ Imports:
     methods,
     checkmate,
     generics,
+    lifecycle,
     MASS
 Suggests:
     lavaan (>= 0.6-0),
