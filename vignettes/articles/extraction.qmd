@@ -16,9 +16,9 @@ execute:
 The `extract_mediation()` function provides a standardized interface for extracting mediation structures from fitted models. It works with:
 - **lm/glm** models (base R) - implemented
 - **lavaan** SEM models - implemented
-- **lmer** mixed models (future)
+- **lmer** mixed models (cluster-level treatment, 2-1-1) - implemented
 
-Extraction returns the S7 class that matches the structure: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, or `JointMediationData`. All share one interface (`nie()`, `confint()`, `tidy()`, `bootstrap_mediation()`, ...) across modeling frameworks.
+Extraction returns the S7 class that matches the structure: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, or `ClusterMediationData`. All share one interface (`nie()`, `confint()`, `tidy()`, `bootstrap_mediation()`, ...) across modeling frameworks.
 
 **Note:** For quick analysis, consider using `med()` instead - it handles fitting and extraction in one step. Use `extract_mediation()` when you need more control or already have fitted models.
 
@@ -377,6 +377,58 @@ a mediator model, between mediators, with a covariate, or inside `I()` errors. A
 product **precomputed as a data column** cannot be recognized from the formula
 and would be ignored silently, so write it in the formula. The identification
 assumptions are stated for the whole mediator vector; see `?JointMediationData`.
+
+## Extracting from lmer Models: Cluster-Level Treatment
+
+When the treatment is assigned to whole clusters (for example schools) and the
+mediator and outcome are measured on the individuals in them (the 2-1-1
+design), fit two linear mixed models with `lme4::lmer()` and pass them to
+`extract_mediation()`. It returns a `ClusterMediationData` object. The outcome
+model must carry the mediator as its within-cluster deviation plus the
+observed cluster mean (or the raw mediator plus the cluster mean); medfit finds
+these terms by value, so grand-mean centering and `scale()` work.
+
+```{r}
+#| label: lmer-extract
+#| eval: !expr requireNamespace("lme4", quietly = TRUE)
+set.seed(2026)
+J <- 40
+n <- 10
+cl <- rep(seq_len(J), each = n)
+x_j <- sample(rep(0:1, length.out = J))
+v <- rnorm(J, sd = 0.5)
+u <- rnorm(J, sd = 0.5)
+cdat <- data.frame(school = factor(cl), X = x_j[cl])
+cdat$M <- 0.5 * cdat$X + v[cl] + rnorm(J * n)
+cdat$M_bar <- ave(cdat$M, cdat$school)
+cdat$M_w <- cdat$M - cdat$M_bar
+cdat$Y <- 0.2 * cdat$X + 0.3 * cdat$M_w + 0.6 * cdat$M_bar + u[cl] + rnorm(J * n)
+
+fit_m <- lme4::lmer(M ~ X + (1 | school), data = cdat)
+fit_y <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | school), data = cdat)
+cluster_med <- extract_mediation(
+  fit_m, model_y = fit_y, treatment = "X", mediator = "M", cluster = "school"
+)
+cluster_med
+```
+
+The natural indirect effect is $a \, b_B$ (the cluster-mean slope), and
+`decompose()` splits it into an own-mediator part and a spillover part, labeled
+as the large-cluster approximation:
+
+```{r}
+#| label: lmer-effects
+#| eval: !expr requireNamespace("lme4", quietly = TRUE)
+nie(cluster_med)
+decompose(cluster_med)
+```
+
+`fit_mediation(engine = "lmer", cluster = )` builds the cluster means and both
+models for you, and `se_type = "kr"` adds Kenward-Roger degrees of freedom
+(needs `pbkrtest`). The few-cluster warnings, the assumptions each effect needs
+and the formulas are in [Methods and Formulas](methods.html); use
+`bootstrap_mediation(cluster = )` for intervals on the products
+([Bootstrap](bootstrap.html)).
 
 ## Extracting from lavaan Models
 
@@ -785,7 +837,7 @@ se_indirect
 
 The extraction system is designed to accommodate future extensions:
 
-- **New model types**: Add methods for lmer, brms, etc.
+- **New model types**: Add methods for brms, glmer, etc. (`lmer` is done)
 - **Complex mediation**: Moderated mediation
 - **Multiple treatments**: Comparative mediation analysis
 - **Latent variables**: SEM with measurement models
@@ -855,12 +907,13 @@ nobs(med_data)                # Sample size
 Model extraction is **complete**:
 
 - ✅ S7 class definitions (MediationData, InteractionMediationData,
-  SerialMediationData, ParallelMediationData, JointMediationData)
+  SerialMediationData, ParallelMediationData, JointMediationData,
+  ClusterMediationData)
 - ✅ lm/glm extraction with checkmate validation
 - ✅ lavaan extraction with checkmate validation
 - ✅ Effect extractors (nie, nde, te, pm, paths)
 - ✅ Tidyverse methods (tidy, glance)
 - ✅ Base R generics (coef, vcov, confint, nobs)
-- 📋 lmer extraction (future)
+- ✅ lmer extraction (`ClusterMediationData`, cluster-level treatment)
 
 See `NEWS.md` for updates.
