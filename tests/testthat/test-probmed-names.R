@@ -255,7 +255,8 @@ test_that("agreement test catches y_<M> and y_<X> swapped (planted defect)", {
 
   # Same rows, but the b path is filed under y_X and c' under y_M.
   local_mocked_bindings(
-    .lavaan_probmed_alias_names = function(object, treatment, mediator, outcome) {
+    .lavaan_probmed_alias_names = function(object, treatment, mediator, outcome,
+                                           standardized = FALSE) {
       c(a = paste0("m_", treatment),
         b = paste0("y_", treatment),
         c_prime = paste0("y_", mediator))
