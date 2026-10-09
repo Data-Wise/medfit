@@ -1,0 +1,38 @@
+naive all.names-only check passes: TRUE 
+naive eval ran the caller's rebound exp: TRUE 
+locked evaluator: value 4.718282 (base exp(1)+2 = 4.718282), caller's exp ran: FALSE
+base::system("echo hi")            -> disallowed call head (only bare allowlisted function names): base::system
+get("system")("echo hi")           -> disallowed call head (only bare allowlisted function names): get("system")
+do.call("system", list("echo hi")) -> function 'do.call' is not in the math allowlist
+Recall(a)                          -> function 'Recall' is not in the math allowlist
+"abc"                              -> disallowed construct: "abc" (character)
+(function() 1)()                   -> disallowed call head (only bare allowlisted function names): (function() 1)
+a[1]                               -> function '[' is not in the math allowlist
+a$b                                -> function '$' is not in the math allowlist
+ifelse(a>0,a,b)                    -> function 'ifelse' is not in the math allowlist
+a <- 3                             -> function '<-' is not in the math allowlist
+a = 3                              -> function '=' is not in the math allowlist
+TRUE                               -> disallowed construct: TRUE (logical)
+NA                                 -> disallowed construct: NA (logical)
+exp(a, b)                          -> 'exp' called with 2 argument(s)
+log(x = a)                         -> named arguments are not allowed in 'log'
+a; system("x")                     -> constraint expression must be a single expression, got 2
+exp                                -> 'exp' is a function name, not a parameter label
+`a b`                              -> unknown parameter label 'a b'
+if (a) 1 else 2                    -> function 'if' is not in the math allowlist
+~a                                 -> function '~' is not in the math allowlist
+unknown*a                          -> unknown parameter label 'unknown'
+1 +                                -> constraint expression does not parse: <text>:2:0: unexpected end of input
+1: 1 +
+
+-- accepted --
+-2^2                 = -4
+a*b                  = 3
+a^2 + b^2            = 6.25
+exp(a)/sqrt(b+1)     = 2.5875044
+min(a, b, 3)         = 1.5
+log(a, 2)            = 0.5849625
+pnorm(a) - 0.5       = 0.4331928
+2^-1                 = 0.5
+1e-3*a               = 0.0015
+R check: parse(-2^2) = -4  2^3^2 = 512 

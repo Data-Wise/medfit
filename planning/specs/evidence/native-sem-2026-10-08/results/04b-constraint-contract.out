@@ -1,0 +1,12 @@
+== linearity test (q = 5 parameters) ==
+a*b        linear: FALSE
+a+b-0.5    linear: TRUE
+a-2*b      linear: TRUE
+exp(a)-1   linear: FALSE
+a^2        linear: FALSE
+a*0+b      linear: TRUE
+abs(a)-b   linear: FALSE
+
+== stalled start (0,0,0,.5,.5): single solve F = 1.0290 (|h| = 0.0e+00) | 5 starts F = 0.0952, winner = start 3, spread = 0.9338 ==
+60 random user starts, reaches the better solution (F = 0.095154): 1 start 34/60 | 5 starts 56/60
+infeasible constraint set:  status -4, max |residual| 1.70 -> rejected by the 1e-6 gate: TRUE 
