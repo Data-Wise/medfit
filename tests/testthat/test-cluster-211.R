@@ -681,3 +681,115 @@ test_that("group 8: planted point-estimate defects each fail their oracle", {
   expect_equal(raw@b_between, within_fit@b_between - within_fit@b_within,
                tolerance = 1e-6)
 })
+
+
+# T7: gradients, SEs, effect generics, bootstrap acceptance --------------------
+
+# nolint start: object_usage_linter.
+fn_effects <- function(theta) {
+  a <- theta[["a"]]
+  bw <- theta[["b_within"]]
+  bb <- theta[["b_between"]]
+  c(nie = a * bb, nde = theta[["c_prime"]], te = a * bb + theta[["c_prime"]],
+    own = a * bw, spillover = a * (bb - bw))
+}
+
+central_grad <- function(f, theta, key, h = 1e-6) {
+  vapply(names(theta), function(nm) {
+    up <- dn <- theta
+    up[[nm]] <- up[[nm]] + h
+    dn[[nm]] <- dn[[nm]] - h
+    (f(up)[[key]] - f(dn)[[key]]) / (2 * h)
+  }, numeric(1))
+}
+# nolint end
+
+test_that("effect gradients equal central differences of the effect formulas", {
+  skip_if_not_installed("lme4")
+  o <- fit_sim(sim_cluster211(J = 40, sizes = 8, cov = "centered", seed = 31))
+  theta <- c(a = o@a_path, c_prime = o@c_prime, b_within = o@b_within,
+             b_between = o@b_between)
+  grads <- .effect_gradients(o)
+  expect_setequal(names(grads), c("nie", "nde", "te", "own", "spillover"))
+  for (key in names(grads)) {
+    num <- central_grad(fn_effects, theta, key)
+    got <- stats::setNames(numeric(4), names(theta))
+    got[names(grads[[key]])] <- grads[[key]]
+    expect_equal(got, num, tolerance = 1e-6, info = key)
+  }
+  # SEs agree with the hand delta method used in T6.
+  expect_equal(.effect_se(o, c("nie", "nde", "te", "own", "spillover")),
+               cluster_se(o), tolerance = 1e-12)
+})
+
+test_that("a planted wrong gradient is caught by the central-difference check", {
+  skip_if_not_installed("lme4")
+  o <- fit_sim(sim_cluster211(J = 40, sizes = 8, seed = 31))
+  theta <- c(a = o@a_path, c_prime = o@c_prime, b_within = o@b_within,
+             b_between = o@b_between)
+  bad <- c(a = o@b_within, b_between = o@a_path)   # a b_W's gradient used for NIE
+  num <- central_grad(fn_effects, theta, "nie")
+  expect_gt(max(abs(c(bad, c_prime = 0, b_within = 0)[names(theta)] - num)), 0.05)
+})
+
+test_that("nie(), nde(), te(), pm() and paths() follow the effects table", {
+  skip_if_not_installed("lme4")
+  o <- fit_sim(sim_cluster211(J = 40, sizes = 8, seed = 32))
+  expect_equal(unclass(nie(o))[[1]], o@a_path * o@b_between)
+  expect_equal(unclass(nde(o))[[1]], o@c_prime)
+  expect_equal(unclass(te(o))[[1]], o@a_path * o@b_between + o@c_prime)
+  expect_equal(unclass(pm(o))[[1]], unclass(nie(o))[[1]] / unclass(te(o))[[1]])
+  expect_s3_class(nie(o), "mediation_effect")
+  expect_identical(names(paths(o)), c("a", "b_within", "b_between", "c_prime"))
+  expect_equal(unname(paths(o)),
+               c(o@a_path, o@b_within, o@b_between, o@c_prime))
+})
+
+test_that("pm() is undefined with a zero total effect", {
+  skip_if_not_installed("lme4")
+  o <- fit_sim(sim_cluster211(J = 40, sizes = 8, seed = 32))
+  est <- o@estimates
+  est[c("a", "b_between", "c_prime")] <- c(0.5, 0.4, -0.2)
+  o <- S7::set_props(o, a_path = 0.5, b_between = 0.4, c_prime = -0.2,
+                     estimates = est)
+  expect_warning(expect_true(is.na(pm(o))), "approximately zero")
+})
+
+test_that("decompose() splits the NIE and carries its label", {
+  skip_if_not_installed("lme4")
+  o <- fit_sim(sim_cluster211(J = 120, sizes = 50, seed = 33))
+  d <- decompose(o)
+  expect_identical(names(d), c("own", "spillover", "nie"))
+  expect_equal(unname(d["own"] + d["spillover"]), unname(d["nie"]))
+  expect_identical(attr(d, "label"), "cluster-average, large-cluster approximation")
+})
+
+test_that("D11: decompose() warns on dyads and stays quiet at n_j = 50", {
+  skip_if_not_installed("lme4")
+  skip_on_cran()
+  dyads <- fit_sim(sim_cluster211(J = 1000, sizes = 2, a = 0.8, b_W = 0.2, b_B = 1.0,
+                                  tau_y = 0.1, seed = 13))
+  expect_warning(decompose(dyads), "own-effect approximation")
+  big <- fit_sim(sim_cluster211(J = 120, sizes = 50, seed = 12, cov = "centered"))
+  expect_no_warning(decompose(big))
+  # The warning rule: gap above half the own SE.
+  gap <- medfit:::.cluster_own_gap(dyads)
+  expect_gt(gap, 0.5 * .effect_se(dyads, "own")[[1]])
+  expect_lt(medfit:::.cluster_own_gap(big), 0.5 * .effect_se(big, "own")[[1]])
+})
+
+test_that("group 7: a parametric bootstrap from @estimates/@vcov reproduces the NIE", {
+  skip_if_not_installed("lme4")
+  o <- fit_sim(sim_cluster211(J = 60, sizes = 10, seed = 34))
+  stat <- function(theta) theta[["a"]] * theta[["b_between"]]
+  plug <- bootstrap_mediation(stat, method = "plugin", mediation_data = o)
+  expect_equal(plug@estimate, unclass(nie(o))[[1]], tolerance = 1e-10)
+  boot <- bootstrap_mediation(stat, method = "parametric", mediation_data = o,
+                              n_boot = 400L, seed = 1)
+  expect_equal(boot@estimate, unclass(nie(o))[[1]], tolerance = 1e-10)
+  # The draws' spread matches the delta SE (Monte Carlo tolerance).
+  expect_equal(stats::sd(boot@boot_estimates), .effect_se(o, "nie")[[1]],
+               tolerance = 0.2)
+  expect_error(bootstrap_mediation(stat, method = "plugin", mediation_data = 1),
+               "ClusterMediationData")
+})

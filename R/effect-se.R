@@ -140,6 +140,9 @@
   if (S7::S7_inherits(x, JointMediationData)) {
     return(.effect_gradients_joint(x))
   }
+  if (S7::S7_inherits(x, ClusterMediationData)) {
+    return(.effect_gradients_cluster(x))
+  }
 
   if (S7::S7_inherits(x, MediationData)) {
     a <- x@a_path
@@ -167,6 +170,30 @@
 
   g_nde <- c(c_prime = 1)
   list(nie = g_nie, nde = g_nde, te = .add_gradients(g_nie, g_nde))
+}
+
+
+#' Effect Gradients for a ClusterMediationData Object
+#'
+#' NIE = a b_B, own = a b_W, spillover = a (b_B - b_W), NDE = c', TE = NIE + c'.
+#' Gradients are named over the alias rows `a`, `b_within`, `b_between` and
+#' `c_prime` that every extraction adds to `@vcov`.
+#'
+#' @param x A ClusterMediationData object.
+#' @return Named list: canonical effect key -> named gradient over `@vcov`.
+#' @keywords internal
+#' @noRd
+.effect_gradients_cluster <- function(x) {
+  a <- x@a_path
+  bw <- x@b_within
+  bb <- x@b_between
+  g_nie <- c(a = bb, b_between = a)
+  g_nde <- c(c_prime = 1)
+  list(
+    nie = g_nie, nde = g_nde, te = .add_gradients(g_nie, g_nde),
+    own = c(a = bw, b_within = a),
+    spillover = c(a = bb - bw, b_between = a, b_within = -a)
+  )
 }
 
 

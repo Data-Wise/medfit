@@ -134,7 +134,7 @@ The spec is approved, so it is not edited here. Each item is resolved in the pla
     - Heavy versions use `skip_on_cran()`; always-on companions pin values to 1e-6 relative.
   - Verify: `devtools::test(filter = "cluster-211")`, all pass, planted defects caught.
   - Files: `tests/testthat/test-cluster-211.R`.
-- [ ] **T7: Gradients, SEs, effect generics, bootstrap acceptance.**
+- [x] **T7: Gradients, SEs, effect generics, bootstrap acceptance.** *(done 2026-10-08, 196 pass in `test-cluster-211.R`, full suite 543 tests 0 failed. Each gradient matches a central difference to 1e-6 and the SEs equal T6's hand delta method; a wrong spillover gradient and a removed D11 threshold each fail a test. `decompose()` returns own, spillover and nie with a `label` attribute; the D11 warning fires on dyads and not at n_j = 50. `paths()` returns a, b_within, b_between, c_prime.)*
   - Acceptance:
     - `.effect_gradients()` gains a `ClusterMediationData` branch: NIE `(a: b_B, b_between: a)`, own `(a: b_W, b_within: a)`, spillover `(a: b_B − b_W, b_between: a, b_within: −a)`.
     - `nie()`, `nde()`, `te()`, `pm()`, `paths()` and `decompose()` methods; `decompose()` labels its parts "cluster-average, large-cluster approximation" and warns when `|a·(b_B − b_W)|/H` exceeds half the own effect's SE (D11).
