@@ -166,6 +166,41 @@ nie(med_data)
 tidy(med_data)
 ```
 
+### Cluster-Randomized Trials
+
+When the treatment is assigned to whole clusters (such as schools), use the
+`lmer` engine (needs the suggested `lme4`; add `se_type = "kr"` with `pbkrtest`
+for few clusters):
+
+```r
+# 40 schools of 10 students, treatment assigned by school
+set.seed(123)
+J <- 40
+n <- 10
+school <- rep(seq_len(J), each = n)
+cdat <- data.frame(school = factor(school), X = sample(rep(0:1, J / 2))[school])
+cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[school] + rnorm(J * n)
+cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[school] + rnorm(J * n)
+
+fit <- fit_mediation(
+  Y ~ X + M, M ~ X, data = cdat,
+  treatment = "X", mediator = "M",
+  engine = "lmer", cluster = "school"
+)
+
+nie(fit)        # a * b_between
+decompose(fit)  # own-mediator and spillover parts (large-cluster approximation)
+```
+
+```
+#> Natural Indirect Effect (NIE): 0.328
+#>        own  spillover        nie
+#> 0.25763321 0.07036432 0.32799753
+```
+
+See [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html)
+for the estimand and the assumptions each effect needs.
+
 ## Core Components
 
 ### S7 Classes
@@ -253,7 +288,7 @@ on the `dev` branch; see `NEWS.md` for what each release contains.
 ### Code Quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
-- **Testing**: 1,400+ tests with testthat (>90% coverage, enforced via codecov)
+- **Testing**: 1,900+ tests with testthat (>90% coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See the [roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md) for the detailed development plan.

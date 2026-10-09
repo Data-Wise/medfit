@@ -538,10 +538,10 @@ During `devtools::load_all()`:
 
 ---
 
-**Last Updated**: 2026-09-25
+**Last Updated**: 2026-10-09
 **Maintained by**: medfit development team
 
-**Current status** (2026-09-25): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.5.0** (released 2026-09-25, tag `v0.5.0`; GitHub-only by decision, not submitted to CRAN), a minor bump because two changes alter results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). Also in 0.5.0: `JointMediationData` (#76/#77), the Methods and Formulas article (#79), four-way factor covariates (#78), joint SEs with `data =` (#80). Articles now evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`.
+**Current status** (2026-09-25): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.5.0** (released 2026-09-25, tag `v0.5.0`; GitHub-only by decision, not submitted to CRAN), a minor bump because two changes alter results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). Also in 0.5.0: `JointMediationData` (#76/#77), the Methods and Formulas article (#79), four-way factor covariates (#78), joint SEs with `data =` (#80). Articles now evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`. **Unreleased on `dev` (2026-10-09):** Ext D module 1, 2-1-1 cluster mediation (`ClusterMediationData`, `engine = "lmer"`, `se_type = "kr"`, cluster bootstrap, #90-#92, #95), assigned to 0.6.0 (native SEM engine is 0.7.0); reference card and extraction/introduction/bootstrap article coverage added (#93, #94).
 
 ### CRAN check practice (learned 2026-06-10, extended 2026-07-20)
 
