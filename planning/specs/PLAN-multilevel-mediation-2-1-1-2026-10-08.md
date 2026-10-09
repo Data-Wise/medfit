@@ -40,7 +40,19 @@ may claim 0.6.0).
 |---|---|---|---|
 | P1 | Behavior 10 puts `se_type = "kr"` in extraction, but Delivery puts KR in PR B | PR A's `lmer` method accepts `se_type = "model"` only and errors "kr arrives with the fit engine" for `"kr"`; PR B adds KR to both routes | Follows the spec's Delivery section, which is the more specific statement; the PR A SE gates then cover model-based SEs only, as Delivery says |
 | P2 | The planted defects mock helpers that do not exist yet (`.raw_to_within`, the relabel helper) | Create them as separately named internal functions (`.raw_to_within()` in T4, `.relabel_clusters()` in T14) so `local_mocked_bindings()` can reach them | The spec's group 8 injects defects through those names |
+| P4 | The spec says the A2 warnings fire "once per call" and names `.notify_once()`, but that helper is **session-wide** (`R/zzz.R:23`: keyed state, `message()`, at most once per session), so a second qualifying fit in the same session would stay silent and the spec's own test (warn at J = 20 and J = 8) would pass only for the first fit | Emit each A2 warning with base `warning(call. = FALSE)` (the house style, as in `R/generics-effects.R:350`), once per `extract_mediation()` call, with no keyed state; test two qualifying calls in one session, each warning exactly once | The spec's behavior (once per call) wins over its parenthetical naming the wrong helper; `.notify_once()` stays for advisory nudges in refit loops |
+| P5 | The spec assigns the TE oracle to PR A (Outcomes table) and to PR C (Delivery) | The TE oracle runs in **PR A** (T9); PR C only repeats it through `bootstrap_mediation(cluster = )` | `te_oracle()` takes its SE from the harness's own cluster bootstrap, so it does not depend on PR C; running it before PR A merges means a failed check cannot force rework after integration |
 | P3 | `tests/sim/` does not exist | T9 creates it with `^tests/sim$` in `.Rbuildignore` and `tests/sim/results/` for the CSVs | Spec project structure; heavy runs stay out of testthat and out of the tarball |
+
+## Spec inconsistencies found while planning
+
+The spec is approved, so it is not edited here. Each item is resolved in the plan (P1, P4, P5); an errata note on the spec is optional and the author's call.
+
+| Spec text | Conflict | Resolution |
+|---|---|---|
+| Behavior 10 (KR in extraction) vs Delivery (KR in PR B) | placement | P1 |
+| Behavior 11 and test group 7: "once per call (`.notify_once`)" | `.notify_once()` is once per session | P4 |
+| Outcomes table (TE oracle in PR A) vs Delivery (TE oracle in PR C) | placement | P5 |
 
 ## Risks
 
@@ -130,6 +142,7 @@ may claim 0.6.0).
     - cross-replication |corr(â, b̂_B)| < 0.1 (D4);
     - Bradley (0.925, 0.975) coverage for path intervals; product coverage reported, not gated.
     - Group 9 (R = 200, J = 100, Corr(v, u) = 0.5): own bias within 2 Monte Carlo SE of zero; NIE and NDE biases more than 4 Monte Carlo SE from zero in Talloen's eqs. 17–18 directions; TE and `c′ + a·κ` unbiased; the uncentered, confounded-covariate run shows own biased.
+    - **TE oracle (group 3, P5):** `te()` against the reduced-form `lmer(Y ~ X + C̄ + W + (1 | cluster))` X coefficient via `te_oracle()`, judged against the SE of the difference from the harness's cluster bootstrap, not 3 SE of either estimate.
     - Results in `tests/sim/results/coverage-<date>.csv`; the testthat companion runs R = 100 balanced with the SE-ratio band widened to [0.8, 1.2].
     - **If the SE ratio or D4 correlation fails with unbalanced clusters or random within-slopes, stop: D4 returns to the grill before PR A merges.**
   - Verify: `Rscript tests/sim/coverage-2-1-1.R`; the CSV and the gate table go in the PR body.
@@ -138,7 +151,7 @@ may claim 0.6.0).
   - Acceptance:
     - NEWS "New features" entry stating the estimand and the observed-mean model; `inst/WORDLIST` additions inserted in place; `DESCRIPTION` gains `lme4` and `pbkrtest` in Suggests and drops the "future support for mixed models" line; `devtools::document()` with any roxygen churn reverted.
     - The always-on runtime of `test-cluster-211.R` measured against 10 s.
-    - E2E transcript (fresh session, 40 clusters, n_j 5–25, a level-1 and a level-2 covariate, extract route): printed object with its assumptions block, `tidy()`, `decompose()` with its warning state, the oracle-1 comparison within 3 SE.
+    - E2E transcript (fresh session, 40 clusters, n_j 5–25, a level-1 and a level-2 covariate, extract route): printed object with its assumptions block, `tidy()`, `decompose()` with its warning state, the oracle-1 comparison within 3 SE and the TE oracle result.
     - The T0 CI skip outcome recorded.
   - Verify: full `devtools::test()` (0 failed, 0 errors, counts quoted); CI-style lint (0 hits); `spelling::spell_check_package()` clean; `urlchecker::url_check()`; the strict check from the spec's Commands block (0 errors, 0 warnings, only the Date NOTE); noSuggests job green; PR to `dev` with counts, planted-defect results, the gate table and the transcript. **Ask before merging.**
   - Files: `NEWS.md`, `inst/WORDLIST`, `DESCRIPTION`, `man/*.Rd`.
@@ -150,8 +163,8 @@ may claim 0.6.0).
   - Verify: route identity (fit route equals extract route to 1e-8, group 2); the fit-engine error rows of group 6; oracle 1 through the fit route within 3 SE.
   - Files: `R/fit-lmer.R`, `R/fit-glm.R`, `tests/testthat/test-cluster-211.R`.
 - [ ] **T12: Kenward-Roger and the few-cluster warnings.**
-  - Acceptance: `se_type = "kr"` in both routes (P1): needs REML (errors on ML fits, because `pbkrtest::vcovAdj()` silently returns the REML matrix); stores the KR vcov and the KR df of each path; path intervals are t intervals with the KR df, product intervals stay normal (D10); the A2 warnings fire once per call through `.notify_once()` (J < 25 with model-based SEs points to `"kr"` and the cluster bootstrap; J < 10 warns whatever the SE type).
-  - Verify: group 7 (KR df positive and below J for the cluster-level paths; warnings fire at J = 20 model and J = 8 any, silent at J = 30, once per call); `kr` on an ML fit errors; the J = 15 KR simulation scenario (SE ratio, D4 correlation, Bradley coverage with t intervals) added to `tests/sim/coverage-2-1-1.R`.
+  - Acceptance: `se_type = "kr"` in both routes (P1): needs REML (errors on ML fits, because `pbkrtest::vcovAdj()` silently returns the REML matrix); stores the KR vcov and the KR df of each path; path intervals are t intervals with the KR df, product intervals stay normal (D10); the A2 warnings are emitted once per call with `warning(call. = FALSE)` (P4: not `.notify_once()`, which is session-wide): J < 25 with model-based SEs points to `"kr"` and the cluster bootstrap; J < 10 warns whatever the SE type.
+  - Verify: group 7 (KR df positive and below J for the cluster-level paths; warnings fire at J = 20 model and J = 8 any, silent at J = 30, and **two qualifying calls in the same session each warn exactly once**, so the second call is not silenced (P4)); `kr` on an ML fit errors; the J = 15 KR simulation scenario (SE ratio, D4 correlation, Bradley coverage with t intervals) added to `tests/sim/coverage-2-1-1.R`.
   - Files: `R/extract-lmer.R`, `R/fit-lmer.R`, `R/effect-se.R`, `R/methods-base.R`, `tests/sim/coverage-2-1-1.R`, `tests/testthat/test-cluster-211.R`.
 - [ ] **T13: Methods article, PR B gates and PR.**
   - Acceptance: `vignettes/articles/methods.qmd` gains the 2-1-1 section (models, effects, D-own, R1, the D4 argument, the assumptions table; chunk options in the `#|` form, LaTeX per the CLAUDE.md contexts); `?ClusterMediationData` states the estimand, the assumptions and the observed-mean model; NEWS entry; E2E transcript through both routes.
@@ -164,8 +177,8 @@ may claim 0.6.0).
   - Acceptance: `bootstrap_mediation(method = "nonparametric", cluster = "school")` draws J cluster ids with replacement and gives each draw a fresh id through a separately named `.relabel_clusters()` (P2) before `statistic_fn` sees the data; singular fits and convergence warnings from a refit count as failures (D14), caught with `withCallingHandlers()` with per-refit messages suppressed and the count added to the existing warning; `@n_boot` already holds the successes and `BootstrapResult` is unchanged; `cluster = NULL` keeps today's row bootstrap unchanged; `cluster =` with `"parametric"` or `"plugin"` errors.
   - Verify: group 7 (every resample has J distinct ids; a forced singular fit is counted in the warning); group 6's `cluster =` with a parametric bootstrap row; the existing bootstrap tests unchanged and green; group 8's relabel defect (no relabeling, via `local_mocked_bindings` on `.relabel_clusters`, at ICC ≥ 0.3) fails the structural check and drives the SE below 0.9 × delta SE.
   - Files: `R/bootstrap.R`, `tests/testthat/test-cluster-211.R`.
-- [ ] **T15: TE oracle, docs, PR C gates and PR.**
-  - Acceptance: group 3 in `tests/sim/` (`te()` against the reduced-form `lmer(Y ~ X + C̄ + W + (1 | cluster))` X coefficient, judged against the SE of the difference from the cluster bootstrap in the harness, not 3 SE of either estimate); NEWS entry; `CLAUDE.md`, `AGENTS.md` and `README.md` list the seventh class, the new files and the `lmer` engine.
+- [ ] **T15: Docs, bootstrap repeat of the TE check, PR C gates and PR.**
+  - Acceptance: the TE oracle (run in PR A, P5) is repeated once through `bootstrap_mediation(cluster = )` to show the two bootstraps agree (reported, not gated); NEWS entry; `CLAUDE.md`, `AGENTS.md` and `README.md` list the seventh class, the new files and the `lmer` engine.
   - Verify: same gates as T10; the no-regression row (full suite 0 failed, 0 errors); PR to `dev`. **Ask before merging.**
   - Files: `tests/sim/coverage-2-1-1.R`, `NEWS.md`, `CLAUDE.md`, `AGENTS.md`, `README.md`.
 
@@ -173,7 +186,7 @@ may claim 0.6.0).
 
 1. **After T1:** the harness reproduces closed-form answers on balanced cases and defect injection changes the numbers. No estimator code exists yet.
 2. **After T6:** point estimates pass the counterfactual truth and the D-own checks, both parameterizations, and the planted defects are caught. Only then do standard errors start.
-3. **After T9, before PR A:** the SE ratio, D4 correlation and path coverage pass in all PR A scenarios, and the assumption claims hold. A failure reopens D4.
+3. **After T9, before PR A:** the SE ratio, D4 correlation, path coverage and the TE oracle pass in all PR A scenarios, and the assumption claims hold. A failure reopens D4.
 4. **After PR A merges:** `ClusterMediationData` works through `nie()`/`nde()`/`te()`/`decompose()` from user-supplied `lmer` fits, with verified SEs. PR B and PR C start from the merged `dev`, in either order.
 
 ## Not in this plan
