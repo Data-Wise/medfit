@@ -6,10 +6,13 @@
 # the Hessian of the coordinates that are not at an active bound, so it does
 # not depend on the units of the data. The model itself stays in original units.
 
-# Both thresholds are provisional until the S6 calibration across the K10
-# structures and four data scales; they are named constants so S6 changes one line.
+# Both thresholds were calibrated in S6 (tests/sim/sem-reliability.R, 100 datasets per cell, four
+# structures, scales x0.01 to x1000, preconditioned solver) and wait for the author's checkpoint A:
+# the decrement of converged fits is at most 3.6e-7 and of accepted stalls at least 0.089 (1e-3 sits
+# 2800x above and 89x below); the Jacobi-scaled smallest eigenvalue is at least 0.024 for converged fits
+# and at most 1.7e-5 at the degenerate F = 0.680 points (1e-3 sits 24x below and 59x above).
 .sem_stat_tol <- 1e-3
-.sem_singular_tol <- 1e-4
+.sem_singular_tol <- 1e-3
 .sem_bound_window <- 1e-6
 .sem_ok_status <- c(1L, 3L, 4L)
 
@@ -44,6 +47,19 @@
 }
 
 .sem_clamp <- function(x, lb, ub) pmin(pmax(x, lb), ub)
+
+# One nloptr run from `start`. With `precondition`, the solver works in units of
+# each parameter's natural scale (theta / u, u from .sem_step_floor()): the
+# objective, gradient and bounds are mapped in and the solution mapped back, so
+# the model, the start, the bounds and the acceptance gate stay in original
+# units. SLSQP stalls when parameters differ by orders of magnitude (variances
+# 1e6 beside paths of 1 when the data are in large units).
+.sem_solve_one <- function(start, ram, smp, lb, ub, opts, precondition = TRUE, obj = .sem_objective(ram, smp)) {
+  u <- if (precondition) .sem_step_floor(ram, smp) else rep(1, ram$q)
+  res <- .sem_nlopt(start / u, function(x) obj$f(x * u), function(x) obj$g(x * u) * u, lb / u, ub / u, opts)
+  res$solution <- res$solution * u
+  res
+}
 
 # A start is valid when its implied covariance is positive definite, never by
 # the objective value (the sentinel is finite and large values can be valid).
@@ -110,17 +126,30 @@
     return(out)
   }
   hess <- .sem_hess_f(theta, ram, smp)[free, free, drop = FALSE]
-  if (!all(is.finite(hess)) || min(eigen(hess, symmetric = TRUE, only.values = TRUE)$values) <= 0) {
+  # Definiteness is judged on the Jacobi-scaled matrix (the same verdict, but not blind to a small
+  # negative diagonal entry beside entries of size 1e12, where raw eigenvalues are only accurate
+  # to about 1e-4).
+  dg <- diag(hess)
+  if (!all(is.finite(hess)) || any(dg <= 0)) {
     out$reason <- "reduced Hessian is not positive definite"
     return(out)
   }
-  d <- 1 / sqrt(diag(hess))
-  out$min_eig <- min(eigen(hess * outer(d, d), symmetric = TRUE, only.values = TRUE)$values)
-  g <- r$g[free]
-  out$decrement <- sqrt(sum(g * solve(hess, g)))
+  d <- 1 / sqrt(dg)
+  scaled <- hess * outer(d, d)
+  ev <- eigen(scaled, symmetric = TRUE, only.values = TRUE)$values
+  if (min(ev) <= 0) {
+    out$reason <- "reduced Hessian is not positive definite"
+    return(out)
+  }
+  out$min_eig <- min(ev)
   if (out$min_eig < .sem_singular_tol) {
     out$reason <- sprintf("Hessian is nearly singular (scaled smallest eigenvalue %.2e)", out$min_eig)
-  } else if (out$decrement > .sem_stat_tol) {
+    return(out)
+  }
+  # The decrement is solved in the Jacobi-scaled coordinates (the same number, better conditioned).
+  g <- r$g[free] * d
+  out$decrement <- sqrt(sum(g * solve(scaled, g)))
+  if (out$decrement > .sem_stat_tol) {
     out$reason <- sprintf("stationarity %.2e exceeds %.0e", out$decrement, .sem_stat_tol)
   } else {
     out$accepted <- TRUE
@@ -153,13 +182,14 @@
 # merged into the nloptr options. Errors "no start converged" when no start is
 # accepted, naming the best attempt's status and stationarity.
 .sem_optimize <- function(ram, smp, start, lb = rep(-Inf, ram$q), ub = rep(Inf, ram$q),
-                          n_starts = 5L, control = list()) {
+                          n_starts = 5L, control = list(), precondition = TRUE) {
   checkmate::assert_numeric(start, len = ram$q, any.missing = FALSE, .var.name = "start")
   checkmate::assert_numeric(lb, len = ram$q, any.missing = FALSE, .var.name = "lb")
   checkmate::assert_numeric(ub, len = ram$q, any.missing = FALSE, .var.name = "ub")
   checkmate::assert_true(all(lb <= ub), .var.name = "lb <= ub")
   checkmate::assert_count(n_starts, positive = TRUE, .var.name = "n_starts")
   checkmate::assert_list(control, .var.name = "control")
+  checkmate::assert_flag(precondition, .var.name = "precondition")
   opts <- list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-10, ftol_rel = 1e-12, maxeval = 10000L)
   opts[names(control)] <- control
   start0 <- .sem_clamp(start, lb, ub)
@@ -169,7 +199,7 @@
   attempts <- vector("list", length(starts))
   win <- NA_integer_
   for (i in seq_along(starts)) {
-    res <- tryCatch(.sem_nlopt(starts[[i]], obj$f, obj$g, lb, ub, opts), error = function(e) e)
+    res <- tryCatch(.sem_solve_one(starts[[i]], ram, smp, lb, ub, opts, precondition, obj), error = function(e) e)
     if (inherits(res, "error")) {
       attempts[[i]] <- list(accepted = FALSE, status = NA_integer_, decrement = NA_real_, f = Inf,
                             reason = paste("nloptr error:", conditionMessage(res)))
@@ -207,4 +237,18 @@
     decrement = fit$decrement, converged = TRUE, retries = win - 1L,
     active_bounds = ram$par_names[fit$active], improper = improper, attempts = attempts
   )
+}
+
+# Moment-based start in the parameters' own units: paths 0.1 * sd(to) / sd(from),
+# variances half the variable's variance (a latent variable's variance is half the
+# mean observed variance), covariances zero. Equivariant: rescaling the data
+# rescales the start exactly as it rescales the parameters.
+.sem_default_start <- function(ram, smp) {
+  u <- .sem_step_floor(ram, smp)
+  start <- numeric(ram$q)
+  start[ram$k_a] <- 0.1 * u[ram$k_a]
+  var_k <- ram$k_s[ram$s_weight == 1]
+  start[ram$k_s[ram$s_weight == 2]] <- 0
+  start[var_k] <- 0.5 * u[var_k]
+  stats::setNames(start, ram$par_names)
 }

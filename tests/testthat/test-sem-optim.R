@@ -148,7 +148,7 @@ test_that("planted defects are caught", {
   run_recording <- function() {
     rec <- seen()
     local_mocked_bindings(.sem_nlopt = function(x0, eval_f, eval_grad_f, lb, ub, opts) {
-      rec$record(x0)
+      rec$record(x0 * .sem_step_floor(mod$ram, smp))
       nloptr::nloptr(x0 = x0, eval_f = eval_f, eval_grad_f = eval_grad_f, lb = lb, ub = ub, opts = opts)
     }, .env = parent.frame())
     suppressWarnings(try(.sem_optimize(mod$ram, smp, bad, n_starts = 6), silent = TRUE))
@@ -168,7 +168,7 @@ test_that("planted defects are caught", {
   in_box <- function() {
     rec <- seen()
     local_mocked_bindings(.sem_nlopt = function(x0, eval_f, eval_grad_f, lb, ub, opts) {
-      rec$record(x0)
+      rec$record(x0 * .sem_step_floor(mod$ram, smp))
       nloptr::nloptr(x0 = x0, eval_f = eval_f, eval_grad_f = eval_grad_f, lb = lb, ub = ub, opts = opts)
     }, .env = parent.frame())
     # An invalid first start forces the retries whose perturbed starts the clamp must keep in the box.
@@ -182,4 +182,48 @@ test_that("planted defects are caught", {
     local_mocked_bindings(.sem_clamp = sem_mutate(.sem_clamp, "pmin(pmax(x, lb), ub)", "x"))
     expect_false(all(in_box()))
   })
+})
+
+test_that("a Hessian with a negative diagonal beside huge entries is rejected, not an error", {
+  mod <- sem_model_observed()
+  smp <- .sem_sample(sem_sim(mod, 100, 2), mod$ram)
+  q <- mod$ram$q
+  h <- diag(c(1e12, rep(1, q - 2), -1e-6))
+  local_mocked_bindings(.sem_hess_f = function(theta, ram, smp) h)
+  gate <- expect_no_error(.sem_gate(mod$theta, 3L, mod$ram, smp, rep(-Inf, q), rep(Inf, q)))
+  expect_false(gate$accepted)
+  expect_match(gate$reason, "not positive definite")
+})
+
+test_that("standard errors match OpenMx within the frozen tolerance at n = 200", {
+  skip_on_cran()
+  skip_if_not_installed("OpenMx")
+  for (nm in names(sem_models())) {
+    mod <- sem_models()[[nm]]
+    for (seed in 1:3) {
+      smp <- .sem_sample(sem_sim(mod, 200, 10 * seed), mod$ram)
+      fit <- .sem_optimize(mod$ram, smp, .sem_default_start(mod$ram, smp))
+      om <- sem_openmx(mod, smp)
+      sm <- summary(om)$parameters
+      lbl <- as.integer(sub("^p", "", sm$name))
+      est_o <- stats::setNames(sm$Estimate, mod$ram$par_names[lbl])[names(fit$theta)]
+      se_o <- stats::setNames(sm[["Std.Error"]], mod$ram$par_names[lbl])[names(fit$theta)]
+      expect_lt(max(abs(est_o - fit$theta)), 1e-4, label = paste("estimates", nm, seed))
+      se_n <- sqrt(diag(.sem_vcov(fit$theta, mod$ram, smp, "observed")))
+      expect_lt(max(abs(se_n / se_o - 1)), 1e-3, label = paste("observed SEs", nm, seed))
+    }
+  }
+})
+
+test_that("the default start is a valid point and rescales with the data", {
+  for (nm in names(sem_models())) {
+    mod <- sem_models()[[nm]]
+    smp <- .sem_sample(sem_sim(mod, 200, 3), mod$ram)
+    st <- .sem_default_start(mod$ram, smp)
+    expect_true(.sem_start_valid(st, mod$ram), label = paste("valid start", nm))
+    for (s in c(0.01, 100, 1000)) {
+      st_s <- .sem_default_start(mod$ram, sem_scale_sample(smp, s))
+      expect_equal(st_s, sem_transport(st, s), tolerance = 1e-10, label = paste(nm, "at scale", s))
+    }
+  }
 })

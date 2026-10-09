@@ -4,6 +4,8 @@ linters: linters_with_defaults(
     object_length_linter(length = 40L)
   )
 exclusions: list(
-    "inst/doc"
+    "inst/doc",
+    "tests/sim/sem-reliability.R" = list(object_usage_linter = Inf, line_length_linter = Inf),
+    "tests/sim/sem-se-gate.R" = list(object_usage_linter = Inf, line_length_linter = Inf)
   )
 encoding: "UTF-8"

@@ -19,7 +19,7 @@ sem_rows <- function(...) {
 sem_model <- function(vars, obs, a, s, theta, latent = character(), loadings = character()) {
   ram <- .sem_ram(vars, obs, a, s) # nolint: object_usage_linter.
   stopifnot(setequal(names(theta), ram$par_names))
-  list(ram = ram, theta = theta[ram$par_names], latent = latent, loadings = loadings)
+  list(ram = ram, theta = theta[ram$par_names], latent = latent, loadings = loadings, a = a, s = s)
 }
 
 # Observed path model with one covariate: C -> M, X -> M -> Y, X -> Y, C -> Y.
@@ -171,11 +171,49 @@ sem_model_heywood <- function() {
 # observed and latent variable: (co)variances scale by s^2, paths and loadings
 # do not, and the discrepancy is unchanged.
 sem_transport <- function(theta, s) {
-  ifelse(grepl(" ~~ ", names(theta), fixed = TRUE), theta * s^2, theta)
+  theta * ifelse(grepl(" ~~ ", names(theta), fixed = TRUE), s^2, 1)
 }
 
 sem_scale_sample <- function(smp, s) {
   smp$s <- smp$s * s^2
   smp$logdet <- smp$logdet + smp$p * log(s^2)
   smp
+}
+
+# OpenMx oracle for a model built by sem_model(): a RAM model on the covariance
+# matrix S * n / (n - 1) with numObs = n, labels p1..pq so the parameters line up.
+# Returns the fitted model; OpenMx's own numerical Hessian gives the SEs.
+sem_openmx <- function(mod, smp) {
+  ram <- mod$ram
+  lab <- function(df, default) {
+    key <- ifelse(nzchar(df$label), df$label, default)
+    ifelse(is.na(df$value), paste0("p", match(key, ram$par_names)), NA_character_)
+  }
+  a_lab <- lab(mod$a, paste0(mod$a$row, " ~ ", mod$a$col))
+  s_lab <- lab(mod$s, paste0(mod$s$row, " ~~ ", mod$s$col))
+  start <- .sem_default_start(ram, smp) # nolint: object_usage_linter.
+  paths <- list()
+  for (i in seq_len(nrow(mod$a))) {
+    free <- is.na(mod$a$value[i])
+    paths[[length(paths) + 1L]] <- OpenMx::mxPath(
+      from = mod$a$col[i], to = mod$a$row[i], arrows = 1, free = free,
+      values = if (free) start[[as.integer(sub("^p", "", a_lab[i]))]] else mod$a$value[i],
+      labels = a_lab[i]
+    )
+  }
+  for (i in seq_len(nrow(mod$s))) {
+    free <- is.na(mod$s$value[i])
+    paths[[length(paths) + 1L]] <- OpenMx::mxPath(
+      from = mod$s$row[i], to = if (mod$s$row[i] == mod$s$col[i]) NA else mod$s$col[i], arrows = 2, free = free,
+      values = if (free) start[[as.integer(sub("^p", "", s_lab[i]))]] else mod$s$value[i],
+      labels = s_lab[i]
+    )
+  }
+  cv <- smp$s * smp$n / (smp$n - 1)
+  dimnames(cv) <- list(ram$obs, ram$obs)
+  m <- do.call(OpenMx::mxModel, c(
+    list("oracle", type = "RAM", manifestVars = ram$obs, latentVars = setdiff(ram$vars, ram$obs)),
+    paths, list(OpenMx::mxData(observed = cv, type = "cov", numObs = smp$n))
+  ))
+  suppressMessages(OpenMx::mxRun(m, silent = TRUE))
 }
