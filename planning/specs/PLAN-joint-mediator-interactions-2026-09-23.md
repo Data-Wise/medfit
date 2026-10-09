@@ -1,6 +1,6 @@
 # Plan: joint natural effects with exposure × mediator products (D8(b), module `joint-xm-lm`)
 
-**Date:** 2026-09-23 · **Status:** **approved** 2026-09-23
+**Date:** 2026-09-23 · **Status:** **done** — PR A #76 (`fff0ab7`), PR B #77 (`b40444e`); approved 2026-09-23
 **Spec:** [SPEC-joint-mediator-interactions-2026-09-23.md](SPEC-joint-mediator-interactions-2026-09-23.md) (approved) ·
 **Decisions:** [GRILL-joint-mediator-interactions-2026-09-23.md](GRILL-joint-mediator-interactions-2026-09-23.md) G1–G9
 **Where:** two worktrees, created only on an explicit "make the worktree":

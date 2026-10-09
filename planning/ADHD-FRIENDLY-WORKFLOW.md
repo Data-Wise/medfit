@@ -1,5 +1,7 @@
 # ADHD-Friendly Workflow Design for medfit
 
+> **Historical (2025-12).** Outcome: medfit shipped `med()` and `quick()` (Phase 6.5); `boot()`/`mediate()` were not adopted.
+
 **Purpose**: Propose alternative interfaces that minimize cognitive load and decision fatigue
 **Date**: 2025-12-15
 **Context**: The user has ADHD and values simple, consistent, context-aware workflows

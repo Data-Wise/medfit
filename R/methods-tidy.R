@@ -96,6 +96,9 @@ tidy.S7_object <- function(x, ...) {
   if (S7::S7_inherits(x, JointMediationData)) {
     return(.tidy_joint_mediation_data(x, ...))
   }
+  if (S7::S7_inherits(x, ClusterMediationData)) {
+    return(.tidy_cluster_mediation_data(x, ...))
+  }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.tidy_bootstrap_result(x, ...))
   }
@@ -121,6 +124,9 @@ glance.S7_object <- function(x, ...) {
   }
   if (S7::S7_inherits(x, JointMediationData)) {
     return(.glance_joint_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, ClusterMediationData)) {
+    return(.glance_cluster_mediation_data(x, ...))
   }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.glance_bootstrap_result(x, ...))
@@ -313,7 +319,7 @@ glance.S7_object <- function(x, ...) {
 #'   `names(path_vec)` (serial d paths)
 #' @noRd
 .tidy_paths_effects <- function(x, path_vec, effect_vec, conf.int, conf.level,
-                                path_alias = names(path_vec)) {
+                                path_alias = names(path_vec), path_df = NULL) {
   vc <- x@vcov
   # match() gives NA (not an error) for a path name missing from @vcov
   path_se <- sqrt(diag(vc)[match(path_alias, rownames(vc))])
@@ -327,9 +333,15 @@ glance.S7_object <- function(x, ...) {
   )
 
   if (conf.int) {
-    z <- stats::qnorm(1 - (1 - conf.level) / 2)
-    result$conf.low <- result$estimate - z * result$std.error
-    result$conf.high <- result$estimate + z * result$std.error
+    # Normal quantile, or a t quantile per path row when `path_df` is given
+    # (Kenward-Roger df); effect rows stay normal.
+    q <- rep(stats::qnorm(1 - (1 - conf.level) / 2), nrow(result))
+    if (!is.null(path_df)) {
+      i <- match(names(path_vec), result$term)
+      q[i] <- stats::qt(1 - (1 - conf.level) / 2, df = path_df[names(path_vec)])
+    }
+    result$conf.low <- result$estimate - q * result$std.error
+    result$conf.high <- result$estimate + q * result$std.error
   }
 
   if (requireNamespace("tibble", quietly = TRUE)) {
@@ -490,6 +502,55 @@ glance.S7_object <- function(x, ...) {
     n_mediators = length(x@mediators),
     interactions = paste(x@interactions, collapse = ", "),
     m_star = paste(sprintf("%s=%g", names(x@m_star), x@m_star), collapse = ", "),
+    nobs = nobs(x),
+    converged = x@converged,
+    stringsAsFactors = FALSE
+  )
+
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Tidy a ClusterMediationData Object
+#'
+#' @param x A ClusterMediationData object
+#' @param type `"all"` (default), `"paths"` (a, b_within, b_between, c_prime),
+#'   or `"effects"` (nie, nde, te, own, spillover)
+#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
+#' @param conf.level Confidence level (default 0.95)
+#' @param ... Additional arguments (ignored)
+#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
+#'   `conf.high` when `conf.int = TRUE`)
+#' @noRd
+.tidy_cluster_mediation_data <- function(x, type = c("all", "paths", "effects"),
+                                         conf.int = FALSE, conf.level = 0.95,
+                                         ...) {
+  type <- match.arg(type)
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  effect_vec <- if (type %in% c("all", "effects")) .cluster_effect_vec(x)
+  path_df <- if (identical(x@se_type, "kr")) x@kr_df
+  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level,
+                      path_df = path_df)
+}
+
+
+#' Glance at a ClusterMediationData Object
+#'
+#' @param x A ClusterMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A one-row tibble: nie, nde, te, pm, n_clusters, nobs, converged
+#' @noRd
+.glance_cluster_mediation_data <- function(x, ...) {
+  result <- data.frame(
+    nie = unclass(nie(x))[[1]],
+    nde = x@c_prime,
+    te = unclass(te(x))[[1]],
+    pm = as.numeric(pm(x)),
+    n_clusters = x@n_clusters,
     nobs = nobs(x),
     converged = x@converged,
     stringsAsFactors = FALSE

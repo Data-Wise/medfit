@@ -39,7 +39,7 @@ covr::package_coverage()          # Target: >90%
 ## About This Package
 
 **medfit** is the foundation package for the mediationverse ecosystem, providing:
-- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `BootstrapResult`
+- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`
 - **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan
 - **Fitting**: Formula-based `fit_mediation()` with the `glm` and `regmedint` engines, case `weights`, and `se_type = "sandwich"` (HC3)
 - **Inference**: delta-method effect SEs in `tidy()`/`confint()`; bootstrap (parametric, nonparametric, plugin)
@@ -74,19 +74,21 @@ R/
 ├── aaa-imports.R           # Package imports
 ├── aab-generics.R          # S7 generics (load before methods!)
 ├── medfit-package.R        # Package documentation
-├── classes.R               # S7 class definitions (all six classes)
+├── classes.R               # S7 class definitions (all seven classes)
 ├── data.R                  # mediation_demo documentation
 ├── fit-glm.R               # fit_mediation(), glm engine, weights/sandwich
 ├── fit-regmedint.R         # regmedint engine adapter
+├── fit-lmer.R              # lmer engine: cluster means, rewritten formulas, REML fits
 ├── extract-lm.R            # lm/glm extraction (simple, four-way, serial, parallel)
 ├── extract-joint.R         # JointMediationData worker, stacked-OLS vcov
 ├── extract-lavaan.R        # lavaan extraction
+├── extract-lmer.R          # ClusterMediationData from lme4 fits (term detection by value, KR)
 ├── generics-effects.R      # nie/nde/te/pm/paths/decompose
 ├── effect-se.R             # delta-method gradients, .effect_se(), .path_se()
 ├── methods-base.R          # print/summary/coef/vcov/confint/nobs
 ├── methods-tidy.R          # tidy()/glance()
 ├── med.R                   # med()/quick()
-├── bootstrap.R             # Bootstrap infrastructure
+├── bootstrap.R             # Bootstrap infrastructure (cluster resampling via cluster =)
 ├── utils.R                 # Utilities, serial path system (te() over all paths)
 └── zzz.R                   # .onLoad() for dispatch
 ```
@@ -195,6 +197,10 @@ MyClass <- S7::new_class(
 
 **JointMediationData** (several mediators with X × M products)
 - Joint NDE/NIE/CDE over the mediator block (VanderWeele & Vansteelandt 2014); stacked-OLS `@vcov`; `joint_effects()` for bootstrapping
+
+**ClusterMediationData** (treatment assigned to clusters, 2-1-1)
+- Paths `a_path`, `b_within`, `b_between`, `c_prime`; NIE = a × b_between, own a × b_within, spillover a × (b_between − b_within) (`decompose()`, labeled large-cluster approximation, D11 warning)
+- `extract_mediation()` on `lmer` fits finds the mean/within/raw terms by value; `fit_mediation(engine = "lmer", cluster = )`; `se_type = "kr"` for Kenward-Roger t intervals; `bootstrap_mediation(cluster = )` for cluster resampling
 
 **BootstrapResult**
 - Inference: `estimate`, `ci_lower`, `ci_upper`
@@ -330,6 +336,8 @@ tests/testthat/
 ├── helper-test-data.R, helper-joint.R   # Test data generators, joint oracles
 ├── test-classes*.R, test-validators.R   # S7 validation
 ├── test-extract-*.R                     # lm/glm, lavaan, serial, parallel, interaction, joint
+├── test-cluster-211.R, test-cluster-boot.R, test-cluster-harness.R, helper-cluster.R   # cluster mediation: guards, oracles, KR, fit engine, cluster bootstrap, harness
+├── test-refcard-coverage.R, test-cookbook-consistency.R   # refcard names every export and class; cookbook recipes, links and cluster data match methods.qmd
 ├── test-effect-se.R, test-confint-paths.R, test-methods-*.R   # SEs, confint, tidy
 ├── test-serial-total-effect.R           # te() over every path
 ├── test-fit-*.R                         # glm, regmedint, m_star
@@ -400,12 +408,13 @@ first, error instead of guessing).
 
 ### Central Planning
 
-Location: `~/projects/r-packages/mediation-planning/` (medfit also keeps a copy at `planning/ECOSYSTEM-COORDINATION.md`)
+Location: `~/projects/r-packages/mediation-planning/` (start at `PROJECT-HUB.md`). medfit's
+`planning/ECOSYSTEM-COORDINATION.md` is a separate 2025-12 brainstorm snapshot, not a copy.
 
 | Document | Purpose |
 |----------|---------|
-| `ECOSYSTEM-COORDINATION.md` | Version matrix, change propagation, releases |
-| `MONTHLY-CHECKLIST.md` | Health checks |
+| `docs/ECOSYSTEM-COORDINATION.md` | Version matrix, change propagation, releases |
+| `docs/MONTHLY-CHECKLIST.md` | Health checks |
 
 ### Change Propagation
 
@@ -455,6 +464,7 @@ version bump, and check dependents' usage first (decided 2026-09-24,
 | `SerialMediationData` | X → M1 → … → Mk → Y | chain a × d × … × b; total over every path via `nie(type = "total")` |
 | `ParallelMediationData` | X → M_j → Y | Σ a_j b_j |
 | `JointMediationData` | several mediators with X × M products | joint NIE over the block |
+| `ClusterMediationData` | cluster-level X → M → Y with mixed models | a × b_between (own a × b_within, spillover the rest) |
 
 **Why separate classes?** Clean separation, no over-engineering, extend without
 breaking existing code, type safety via S7 validators.
@@ -465,6 +475,7 @@ breaking existing code, type safety via S7 validators.
 |--------|---------|--------|--------|
 | `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
 | `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
+| `"lmer"` | lme4, pbkrtest (Suggests) | mixed models for cluster-level treatment; `cluster =`, `se_type = "kr"` | ✓ (no weights/sandwich/families) |
 | `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 
@@ -515,7 +526,7 @@ During `devtools::load_all()`:
 ### Planning Documents
 
 **Package:** `planning/medfit-roadmap.md`
-**Ecosystem:** `~/projects/r-packages/mediation-planning/ECOSYSTEM-COORDINATION.md`
+**Ecosystem:** `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`
 
 ### Related Packages
 
@@ -528,10 +539,10 @@ During `devtools::load_all()`:
 
 ---
 
-**Last Updated**: 2026-09-24
+**Last Updated**: 2026-10-09
 **Maintained by**: medfit development team
 
-**Current status** (2026-09-24): CRAN has **0.3.2** (accepted 2026-07-23). `main` and GitHub are at **0.4.0** (not submitted to CRAN). `dev` is versioned **0.5.0** (GitHub-only release, decided 2026-09-24; not yet tagged), a minor bump because two changes alter results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). Also on `dev`: `JointMediationData` (#76/#77), the Methods and Formulas article (#79), four-way factor covariates (#78), joint SEs with `data =` (#80). Articles now evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`.
+**Current status** (2026-10-09): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.6.0** (released 2026-10-09, tag `v0.6.0`; GitHub-only, not submitted to CRAN). 0.6.0 ships Ext D module 1, 2-1-1 cluster mediation (`ClusterMediationData`, `engine = "lmer"`, `se_type = "kr"`, cluster bootstrap; #90-#92, #95, #100), the Reference Card and Cookbook articles (#94, #97), and 30 fewer published internal reference pages (#98). The native SEM engine is 0.7.0. 0.5.0 (2026-09-25) changed two results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). Articles evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`.
 
 ### CRAN check practice (learned 2026-06-10, extended 2026-07-20)
 

@@ -1,0 +1,65 @@
+naive all.names-only check passes: TRUE 
+naive eval ran the caller's rebound exp: TRUE 
+locked evaluator: value 4.718282 (base exp(1)+2 = 4.718282), caller's exp ran: FALSE
+base::system("echo hi")            -> disallowed call head (only bare allowlisted function names): base::system
+get("system")("echo hi")           -> disallowed call head (only bare allowlisted function names): get("system")
+do.call("system", list("echo hi")) -> function 'do.call' is not in the math allowlist
+Recall(a)                          -> function 'Recall' is not in the math allowlist
+"abc"                              -> disallowed construct: "abc" (character)
+(function() 1)()                   -> disallowed call head (only bare allowlisted function names): (function() 1)
+a[1]                               -> function '[' is not in the math allowlist
+a$b                                -> function '$' is not in the math allowlist
+ifelse(a>0,a,b)                    -> function 'ifelse' is not in the math allowlist
+a <- 3                             -> function '<-' is not in the math allowlist
+a = 3                              -> function '=' is not in the math allowlist
+TRUE                               -> disallowed construct: TRUE (logical)
+NA                                 -> disallowed construct: NA (logical)
+exp(a, b)                          -> 'exp' called with 2 argument(s)
+log(x = a)                         -> named arguments are not allowed in 'log'
+a; system("x")                     -> constraint expression must be a single expression, got 2
+exp                                -> 'exp' is a function name, not a parameter label
+`a b`                              -> unknown parameter label 'a b'
+if (a) 1 else 2                    -> function 'if' is not in the math allowlist
+~a                                 -> function '~' is not in the math allowlist
+unknown*a                          -> unknown parameter label 'unknown'
+1 +                                -> constraint expression does not parse: <text>:2:0: unexpected end of input
+1: 1 +
+5L                                 -> disallowed construct: 5L (integer)
+0x10                               -> hexadecimal literals are not supported
+1i                                 -> disallowed construct: 0+1i (complex)
+1e                                 -> constraint expression does not parse: <text>:1:1: unexpected input
+1: 1e
+    ^
+Inf                                -> disallowed construct: Inf (double)
+1e999                              -> disallowed construct: Inf (double)
+TALLY rejected: 28 of 28 inputs; unexpectedly accepted: 0
+label containing 0x is not a hex literal: a0x1 + 1 = 2 
+
+-- accepted --
+-2^2                 = -4
+a*b                  = 3
+a^2 + b^2            = 6.25
+exp(a)/sqrt(b+1)     = 2.5875044
+min(a, b, 3)         = 1.5
+log(a, 2)            = 0.5849625
+pnorm(a) - 0.5       = 0.4331928
+2^-1                 = 0.5
+1e-3*a               = 0.0015
+.5 + a               = 2
+1. * a               = 1.5
+1e3*a                = 1500
+2E-2*a               = 0.03
+a^.5                 = 1.2247449
+TALLY accepted: 14 of 14 valid expressions evaluated; 14 equal R's own evaluation of the same text (tolerance 1e-14)
+R check: parse(-2^2) = -4  2^3^2 = 512 
+
+== result-domain guard: every evaluation must return one finite real double ==
+1/0            -> expression '1/0' did not evaluate to one finite real number (got Inf) at a = 1.5, b = 2.0
+0/0            -> expression '0/0' did not evaluate to one finite real number (got NaN) at a = 1.5, b = 2.0
+(-1)^.5        -> expression '(-1)^.5' did not evaluate to one finite real number (got NaN) at a = 1.5, b = 2.0
+log(-1)        -> expression 'log(-1)' did not evaluate to one finite real number (got NaN) at a = 1.5, b = 2.0
+sqrt(-1)       -> expression 'sqrt(-1)' did not evaluate to one finite real number (got NaN) at a = 1.5, b = 2.0
+exp(1000)      -> expression 'exp(1000)' did not evaluate to one finite real number (got Inf) at a = 1.5, b = 2.0
+qnorm(2)       -> expression 'qnorm(2)' did not evaluate to one finite real number (got NaN) at a = 1.5, b = 2.0
+1/(a - 1.5)    -> expression '1/(a - 1.5)' did not evaluate to one finite real number (got Inf) at a = 1.5, b = 2.0
+TALLY domain: 8 of 8 non-finite or non-real results rejected; 5 of 5 valid boundary expressions accepted

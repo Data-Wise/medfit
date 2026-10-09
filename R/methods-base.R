@@ -657,6 +657,92 @@ S7::method(confint, JointMediationData) <- function(object,
 }
 
 
+# --- Base-generic methods for ClusterMediationData ---
+
+#' Extract Coefficients from ClusterMediationData
+#'
+#' @param object A ClusterMediationData object
+#' @param type One of `"paths"` (a, b_within, b_between, c_prime), `"effects"`
+#'   (nie, nde, te), or `"all"` (raw estimates).
+#' @param ... Additional arguments (ignored)
+#' @return A named numeric vector
+#' @noRd
+S7::method(coef, ClusterMediationData) <- function(object,
+                                                   type = c("paths", "effects", "all"),
+                                                   ...) {
+  type <- match.arg(type)
+  switch(type,
+    paths = paths(object),
+    effects = .cluster_effect_vec(object)[c("nie", "nde", "te")],
+    all = object@estimates
+  )
+}
+
+#' Extract Variance-Covariance Matrix from ClusterMediationData
+#'
+#' @param object A ClusterMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A base numeric matrix
+#' @noRd
+S7::method(vcov, ClusterMediationData) <- function(object, ...) {
+  object@vcov
+}
+
+#' Number of Observations from ClusterMediationData
+#'
+#' @param object A ClusterMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return Integer: number of observations
+#' @noRd
+S7::method(nobs, ClusterMediationData) <- function(object, ...) {
+  object@n_obs
+}
+
+#' Confidence Intervals for ClusterMediationData
+#'
+#' @description
+#' Normal-approximation intervals. `parm = "paths"` covers a, b_within,
+#' b_between and c_prime with SEs from the diagonal of `@vcov`;
+#' `parm = "effects"` covers NIE, NDE, TE, own and spillover with delta-method
+#' SEs through the alias rows. Both use the same SEs as `tidy()`. With
+#' `se_type = "kr"` the path intervals are t intervals with the Kenward-Roger
+#' degrees of freedom; the effect intervals stay normal.
+#'
+#' @param object A ClusterMediationData object.
+#' @param parm `"paths"` or `"effects"`.
+#' @param level Confidence level (default 0.95).
+#' @param ... Additional arguments (ignored).
+#' @return A two-column matrix of lower/upper bounds.
+#' @noRd
+S7::method(confint, ClusterMediationData) <- function(object,
+                                                      parm = c("paths", "effects"),
+                                                      level = 0.95,
+                                                      ...) {
+  parm <- match.arg(parm)
+  checkmate::assert_number(level, lower = 0, upper = 1)
+  z <- stats::qnorm(1 - (1 - level) / 2)
+  if (parm == "paths") {
+    coefs <- paths(object)
+    se <- .path_se(object, names(coefs))
+    # Kenward-Roger fits get t intervals with the stored df (D10).
+    if (identical(object@se_type, "kr")) {
+      z <- stats::qt(1 - (1 - level) / 2, df = object@kr_df[names(coefs)])
+    }
+  } else {
+    coefs <- .cluster_effect_vec(object)
+    se <- .effect_se(object, names(coefs))
+  }
+  ci_mat <- cbind(coefs - z * se, coefs + z * se)
+  rownames(ci_mat) <- names(coefs)
+  alpha <- 1 - level
+  colnames(ci_mat) <- c(
+    paste0(format(100 * alpha / 2, digits = 3), " %"),
+    paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
+  )
+  ci_mat
+}
+
+
 # --- Base-generic methods for BootstrapResult ---
 
 #' Extract the Point Estimate from a BootstrapResult

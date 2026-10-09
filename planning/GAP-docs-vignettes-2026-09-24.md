@@ -4,7 +4,7 @@ Scope: all Rd pages (from roxygen in `R/`), the four articles under
 `vignettes/articles/`, `README.md`, and `_pkgdown.yml`, audited against the
 code on `dev` at `2b05958`. Branch: `feature/docs-methods-math`.
 
-Status key: **fixed** (in this branch) · **open** (not addressed here).
+Status key: **fixed** (in the #79 branch, or later directly on `dev` where a commit is cited) · **open** (not addressed).
 
 ## 1. Math documentation
 
@@ -44,8 +44,8 @@ Status key: **fixed** (in this branch) · **open** (not addressed here).
 | extraction: parallel `cov(a_j, a_j') = 0` presented as by construction (contradicts the methods article) | **fixed** |
 | bootstrap: accepted classes omit Joint; hand-rolled delta method with `cov_ab <- 0` | **fixed** (uses `confint(parm = "effects")`) |
 | Stale "Development Status" phase lists (getting-started, introduction, README) | **fixed** |
-| No worked example of `weights` / `se_type = "sandwich"` | **fixed**: getting-started "Case Weights and Robust Standard Errors" (stabilized IPW, live output) |
-| No worked `tidy()`/`glance()` on parallel or interaction objects; no `decompose()` on a joint object | **fixed**: parallel and interaction `tidy()`/`glance()`, and joint `decompose()` with an `m_star` comparison (extraction article) |
+| No worked example of `weights` / `se_type = "sandwich"` | **fixed** (`1f32a25`): getting-started "Case Weights and Robust Standard Errors" (stabilized IPW, live output) |
+| No worked `tidy()`/`glance()` on parallel or interaction objects; no `decompose()` on a joint object | **fixed** (`1f32a25`, `2823952`): parallel and interaction `tidy()`/`glance()`, and joint `decompose()` with an `m_star` comparison (extraction article) |
 | Articles are `eval: false` with hand-written output, so drift is never caught | **fixed** (`b888ffe`): articles evaluate at site build; pkgdown CI runs on PRs to dev. Turning it on caught 3 broken examples |
 
 ## 4. README / pkgdown

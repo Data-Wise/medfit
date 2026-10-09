@@ -1,6 +1,6 @@
 # Spec: joint natural effects for serial and parallel mediators with exposure–mediator products (D8(b))
 
-**Date:** 2026-09-23 · **Status:** **approved** 2026-09-23 (after grill G1–G6, two adverse reviews G7–G8, consistency pass G9)
+**Date:** 2026-09-23 · **Status:** **implemented** in #76 (`fff0ab7`) and #77 (`b40444e`), released in 0.5.0; approved 2026-09-23 (after grill G1–G6, two adverse reviews G7–G8, consistency pass G9)
 **Grill:** [GRILL-joint-mediator-interactions-2026-09-23.md](GRILL-joint-mediator-interactions-2026-09-23.md) (G1–G6, G7 and G8: triage of two adverse reviews, G9: consistency pass and approval)
 **Origin:** D8(b) in [GRILL-bundled-example-data-2026-09-23.md](GRILL-bundled-example-data-2026-09-23.md).
 It replaces part of the D8(a) guard (PR #62, `aa3362c`), which today makes every multi-mediator

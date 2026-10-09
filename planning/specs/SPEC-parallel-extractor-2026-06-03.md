@@ -1,7 +1,7 @@
 # SPEC: Parallel mediation extractor + inference
 
-**Status:** Draft · **Created:** 2026-06-03 · **Author:** Davood Tofighi (with Claude Code)
-**Depends on:** PR #34 (`ParallelMediationData` class — merged/in review)
+**Status:** Implemented — #36/#37 (merged 2026-06-03) · **Created:** 2026-06-03 · **Author:** Davood Tofighi (with Claude Code)
+**Depends on:** PR #34 (`ParallelMediationData` class — merged)
 **Unblocks:** `confint(ParallelMediationData)`, `extract_mediation()` parallel detection
 **Plan:** `planning/EXTENSIONS-PLAN-2026-06-03.md` → Extension A (implementation increment 2)
 

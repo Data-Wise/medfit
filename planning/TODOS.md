@@ -4,11 +4,11 @@ Active tasks, implementation plan, and progress tracking.
 
 ---
 
-## 🎯 Current Focus: 0.5.0 Release (proposed)
+## 🎯 Current Focus: Ext D (multilevel) — plan module 1
 
-**Status:** 0.3.2 on CRAN (2026-07-23); 0.4.0 on main/GitHub (tag `v0.4.0`, 2026-08-23); dev carries unreleased work since 0.4.0 (#62-#82)
-**Next:** Release dev as **0.5.0** on GitHub only (minor bump for two behavior changes, #81 and #82)
-**Updated:** 2026-09-24
+**Status:** 0.3.2 on CRAN (2026-07-23); **0.5.0 on main/GitHub/r-universe** (tag `v0.5.0`, 2026-09-25)
+**Next:** Write the plan for the approved Ext D module-1 spec (2-1-1); decide the next CRAN trigger
+**Updated:** 2026-09-25
 
 > Decided 2026-09-24 (`specs/GRILL-0.5.0-release-2026-09-24.md`): 0.5.0 is **GitHub-only**;
 > #81/#82 are correctness fixes, exempt from the deprecation period. CRAN 0.3.2 users are
@@ -20,27 +20,14 @@ Active tasks, implementation plan, and progress tracking.
 
 ### High Priority 🔴
 
-- [x] Pinned known-issues issue #83 for CRAN 0.3.2 + README pointer (2026-09-24)
-- [ ] **0.5.0 release — GitHub only**
-  - [x] Bump DESCRIPTION 0.4.0 → 0.5.0 (Date 2026-09-24); NEWS heading; README citation
-  - [x] NEWS: both behavior changes marked, plus a 0.5.0 lead paragraph with the ecosystem
-        note and #83 pointer
-  - [x] `devtools::check()` clean + full test suite (cran-prep gate 2026-09-24: 0 errors, 0 warnings; 1546 tests pass; strict CRAN flavors not required for a
-        GitHub-only release, but cheap; run them if time allows)
-  - [x] Dependents vs dev 0.5.0 (scratch library, 2026-09-24): probmed `64f37cf` 465 passed /
-        0 failed / 20 skipped (probmed's own incremental/rg-flow/Wasserstein skips); RMediation
-        `7c588d4` 426 passed / 0 failed / 0 skipped
-  - [ ] dev → main PR (merge commit), tag `v0.5.0`, GitHub release
-  - [ ] Confirm the main pkgdown deploy fixes the README link to `articles/methods.html` (404s
-        until then)
-  - [ ] Confirm r-universe picks up the `v0.5.0` build (check the `/api/packages` list, not
-        `/api/packages/medfit`)
-  - [ ] Once released, update #83 with the release link
+- [x] **Ext D (multilevel) spec** — module 1 (2-1-1, `ClusterMediationData`) approved 2026-09-25: `specs/SPEC-multilevel-mediation-2-1-1-2026-09-25.md` (decisions D1-D16 in `specs/GRILL-multilevel-mediation-ext-d-2026-09-25.md`)
+- [ ] **Ext D module-1 plan** — tasks T0…Tn for PRs A (extract), B (fit engine), C (cluster bootstrap); T0 measures CRAN runtime and simulates the block-diagonal vcov
+- [ ] **Next CRAN trigger** — open in `specs/GRILL-0.5.0-release-2026-09-24.md`
 
 - [ ] **probmed Stage 2** (lives in the probmed repo, not here)
   - Unblocked by 0.3.2 on CRAN. probmed's DESCRIPTION already has `Imports: medfit (>= 0.3.0)`
     and no `Remotes:` pin (checked 2026-09-24); its CRAN prep is tracked in probmed
-  - medfit side: probmed imports only `extract_mediation()`; #81/#82 do not affect it
+  - medfit side: probmed imports `extract_mediation()` and defines `pmed` methods on medfit classes; it calls neither `te()`/`pm()` nor `confint()`, so #81/#82 do not affect it
 
 ### Medium Priority 🟡
 
@@ -59,8 +46,8 @@ Active tasks, implementation plan, and progress tracking.
   - Bias-corrected and accelerated bootstrap
   - Better coverage than percentile method (bootstrap is percentile-only today)
 
-- [ ] **Mixed Models Support (lme4)** — Ext D (multilevel) in
-      `specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`; no spec yet
+- [ ] **Mixed Models Support (lme4)** — Ext D; module 1 (2-1-1) specced in
+      `specs/SPEC-multilevel-mediation-2-1-1-2026-09-25.md`, module 2 (1-1-1) needs its own grill
   - `extract_mediation.lmerMod` method
   - Multilevel mediation analysis
 
@@ -75,7 +62,24 @@ Active tasks, implementation plan, and progress tracking.
 
 ## ✅ Recently Completed
 
-### 2026-09-23 / 2026-09-24 (dev, unreleased since 0.4.0)
+### 2026-09-25 — 0.5.0 released (GitHub-only)
+
+- [x] Pinned known-issues issue #83 for CRAN 0.3.2 + README pointer (2026-09-24)
+- [x] **0.5.0 release — GitHub only** (released 2026-09-25, #84 → `4cb0550`, tag `v0.5.0`)
+  - [x] Bump DESCRIPTION 0.4.0 → 0.5.0 (Date 2026-09-24); NEWS heading; README citation
+  - [x] NEWS: both behavior changes marked, plus a 0.5.0 lead paragraph with the ecosystem
+        note and #83 pointer
+  - [x] `devtools::check()` clean + full test suite (cran-prep gate 2026-09-24: 0 errors, 0 warnings; 1546 tests pass; strict CRAN flavors not required for a
+        GitHub-only release, but cheap; run them if time allows)
+  - [x] Dependents vs dev 0.5.0 (scratch library, 2026-09-24): probmed `64f37cf` 465 passed /
+        0 failed / 20 skipped (probmed's own incremental/rg-flow/Wasserstein skips); RMediation
+        `7c588d4` 426 passed / 0 failed / 0 skipped
+  - [x] dev → main PR #84 (merge commit, 17/17 checks), main CI green, tag `v0.5.0`, GitHub release
+  - [x] Site serves 0.5.0; `articles/methods.html` returns 200
+  - [x] r-universe `/api/packages` lists medfit 0.5.0
+  - [x] #83 updated with the release link (stays open until a CRAN release)
+
+### 2026-09-23 / 2026-09-24 (released in 0.5.0)
 
 - [x] **Bundled `mediation_demo` dataset** (#62-#65, #67) — examples and articles moved to it;
       multi-mediator extraction errors on product terms (D8 guard, #62)
@@ -174,18 +178,18 @@ Active tasks, implementation plan, and progress tracking.
 | 6.5 | ADHD API | ✅ Complete |
 | 7 | Polish & release | ✅ Complete (0.3.2 on CRAN) |
 | Ext A/B/C | Parallel, four-way, regmedint | ✅ Complete (0.4.0) |
-| D8(b) | Joint multi-mediator interactions | ✅ Complete (dev) |
-| 0.5.0 | Release | 🚧 Next (proposed) |
+| D8(b) | Joint multi-mediator interactions | ✅ Complete (0.5.0) |
+| 0.5.0 | Release | ✅ Released 2026-09-25 (GitHub + r-universe) |
 
 ### Code Quality
-- **Tests:** 1528 expectations (as of #80)
+- **Tests:** 1546 expectations (recorded at the 0.5.0 release gate)
 - **Coverage:** Tracked via Codecov
 - **R CMD check:** strict 0/0/1 (Date NOTE only) at last recorded run
 - **Linting:** GitHub Actions CI
 
 ### Documentation
 - **README:** ✅ Updated (#79)
-- **NEWS:** ✅ Development section current through #82
+- **NEWS:** ✅ 0.5.0 section current through #82
 - **Vignettes:** 5 articles (getting-started, introduction, extraction, bootstrap, methods),
   evaluated at site build
 - **pkgdown:** ✅ Live at https://data-wise.github.io/medfit/ (deploys from main)
@@ -199,7 +203,7 @@ Active tasks, implementation plan, and progress tracking.
 - [x] Parallel mediation support — Ext A
 - [ ] Standardized coefficients option — lavaan extractor only (`standardized = TRUE`); none for lm/glm
 - [x] Treatment-mediator interaction detection — Ext B (single mediator), D8(b) (multiple mediators)
-- [ ] Multilevel mediation (Ext D) and longitudinal mediation (Ext E) — see the 2026-08-22 brainstorm
+- [ ] Multilevel mediation (Ext D; module-1 spec approved 2026-09-25) and longitudinal mediation (Ext E) — see the 2026-08-22 brainstorm
 
 ### Model Support
 - [ ] lmer/lme4 extraction
@@ -240,5 +244,5 @@ Active tasks, implementation plan, and progress tracking.
 
 ---
 
-**Last Updated:** 2026-09-24
-**Next Review:** After the 0.5.0 release
+**Last Updated:** 2026-09-25
+**Next Review:** After the Ext D module-1 plan

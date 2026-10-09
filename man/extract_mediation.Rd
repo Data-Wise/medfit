@@ -35,7 +35,14 @@ The \code{extract_mediation()} generic provides methods for different model type
 \itemize{
 \item \strong{lm/glm}: Extract from linear and generalized linear models
 \item \strong{lavaan}: Extract from structural equation models
-\item \strong{lmerMod}: Extract from mixed-effects models (future)
+\item \strong{lmerMod}: Extract from two linear mixed models for a treatment assigned
+to whole clusters, as a \link{ClusterMediationData}: the mediator model is
+\code{object}, the outcome model is \code{model_y}, and \code{cluster} names the cluster
+variable. Both models must be fitted to the same rows; the cluster means
+must be computed on those rows, and a pair of fits that kept different
+individuals is an error (best effort: it compares the data row names the
+fits kept, so it cannot see a mismatch between frames whose row names were
+both reset)
 \item \strong{brmsfit}: Extract from Bayesian models (future)
 }
 
@@ -107,6 +114,28 @@ fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
             data = mediation_demo)
 med_data <- extract_mediation(fit_m, model_y = fit_y,
                               treatment = "treatment", mediator = "mediator1")
+}
+
+\donttest{
+if (requireNamespace("lme4", quietly = TRUE)) {
+# Treatment assigned to whole clusters (needs lme4); formulas hold fixed
+# effects only, the engine adds the random cluster intercept
+set.seed(1)
+J <- 30
+id <- rep(seq_len(J), each = 6)
+cdat <- data.frame(school = factor(id), X = sample(rep(0:1, J / 2))[id])
+cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+# The outcome model carries the mediator as its within-cluster deviation
+# plus the observed cluster mean
+cdat$M_bar <- ave(cdat$M, cdat$school)
+cdat$M_w <- cdat$M - cdat$M_bar
+fit_m <- lme4::lmer(M ~ X + (1 | school), data = cdat)
+fit_y <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | school), data = cdat)
+cluster_med <- extract_mediation(fit_m, model_y = fit_y, treatment = "X",
+                                 mediator = "M", cluster = "school")
+nie(cluster_med)
+}
 }
 
 }

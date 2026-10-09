@@ -1,6 +1,6 @@
 # Spec: delta-method effect standard errors in `tidy()` and `confint()`
 
-**Date:** 2026-09-23 · **Status:** approved 2026-09-23 · **Branch for implementation:**
+**Date:** 2026-09-23 · **Status:** approved 2026-09-23; implemented in #70 (`894bf70`), released in 0.5.0 · **Branch for implementation:**
 `feature/tidy-effect-se` (worktree `~/.git-worktrees/medfit/feature-tidy-effect-se`, from `dev`)
 **Decisions:** [GRILL-tidy-effect-se-2026-09-23.md](GRILL-tidy-effect-se-2026-09-23.md) D1–D7.
 This spec turns those decisions into a buildable contract; where they conflict, the ledger wins

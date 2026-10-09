@@ -1,9 +1,9 @@
 # SPEC: Serial `te()` / `pm()` total-effect correctness
 
-**Status:** DECIDED (b), implemented 2026-09-24 in b714e6e
+**Status:** DECIDED (b), implemented in #81 (`3058b90`, merged 2026-09-24), released in 0.5.0
 **Date:** 2026-09-24
 **Branch:** `feature/serial-total-effect` (off `origin/dev` 2b05958)
-**Related:** `feature/docs-methods-math` (unmerged, no PR) documents `te()`/`pm()` as chain-only
+**Related:** `feature/docs-methods-math` (later merged as #79, `9aef925`) documented `te()`/`pm()` as chain-only at the time
 
 ---
 

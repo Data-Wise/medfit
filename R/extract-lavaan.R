@@ -412,11 +412,8 @@ extract_mediation_lavaan <- function(object,
   })
 
   # Get sample size
-  n_obs <- lavaan::lavInspect(object, "nobs")
-  if (length(n_obs) > 1) {
-    # Multiple groups - use total
-    n_obs <- sum(n_obs)
-  }
+  # Multiple groups: the total
+  n_obs <- .lavaan_n_obs(object)
 
   # --- Get Predictor Names ---
 
@@ -492,7 +489,7 @@ extract_mediation_lavaan <- function(object,
 #' via, for example, `vcov[c("a", "d1", "b"), c("a", "d1", "b")]` -- which is
 #' required for serial indirect-effect standard errors.
 #'
-#' @keywords internal
+#' @noRd
 .extract_serial_mediation_lavaan <- function( # nolint: object_length_linter.
   object,
   treatment,
@@ -658,8 +655,7 @@ extract_mediation_lavaan <- function(object,
     if (is.matrix(d)) as.data.frame(d) else if (is.data.frame(d)) d else NULL
   }, error = function(e) NULL)
 
-  n_obs <- lavaan::lavInspect(object, "nobs")
-  if (length(n_obs) > 1) n_obs <- sum(n_obs)
+  n_obs <- .lavaan_n_obs(object)
 
   converged <- lavaan::lavInspect(object, "converged")
 
@@ -689,7 +685,7 @@ extract_mediation_lavaan <- function(object,
 #' Classify a multi-mediator lavaan structure as serial or parallel
 #'
 #' Conservative, backward-compatible inference for `structure = "auto"` on
-#' lavaan objects -- the SEM analogue of [.classify_multimediator_structure()]
+#' lavaan objects -- the SEM analogue of `.classify_multimediator_structure()`
 #' for lm/glm. Returns `"parallel"` only on POSITIVE evidence (no mediator is
 #' regressed on another); otherwise defaults to `"serial"` (the historical
 #' default for vector `mediator`). It never errors -- malformed inputs fall
@@ -709,7 +705,7 @@ extract_mediation_lavaan <- function(object,
 #'   used for detection are identical, but keeping it consistent avoids a second
 #'   solver call surprising the caller).
 #' @return `"serial"` or `"parallel"`.
-#' @keywords internal
+#' @noRd
 .classify_multimediator_structure_lavaan <- function(object, mediators, # nolint: object_length_linter.
                                                      standardized = FALSE) {
   param_table <- tryCatch(
@@ -741,7 +737,7 @@ extract_mediation_lavaan <- function(object,
 #'
 #' Internal worker for the parallel branch of [extract_mediation()] on lavaan
 #' objects (`X -> M_j -> Y` for k independent mediators). It is the SEM analogue
-#' of [.extract_parallel_mediation_lm()] and returns a `ParallelMediationData`
+#' of `.extract_parallel_mediation_lm()` and returns a `ParallelMediationData`
 #' object. Total indirect effect = `sum_j a_j * b_j`.
 #'
 #' @param object Fitted lavaan model.
@@ -767,7 +763,7 @@ extract_mediation_lavaan <- function(object,
 #' `cov(a_j, b_j)` and `cov(a_j, a_j')`). Downstream SEs therefore reflect the
 #' true joint covariance; tests must not hardcode any of these to zero.
 #'
-#' @keywords internal
+#' @noRd
 .extract_parallel_mediation_lavaan <- function( # nolint: object_length_linter.
   object,
   treatment,
@@ -903,8 +899,7 @@ extract_mediation_lavaan <- function(object,
     if (is.matrix(d)) as.data.frame(d) else if (is.data.frame(d)) d else NULL
   }, error = function(e) NULL)
 
-  n_obs <- lavaan::lavInspect(object, "nobs")
-  if (length(n_obs) > 1) n_obs <- sum(n_obs)
+  n_obs <- .lavaan_n_obs(object)
 
   converged <- lavaan::lavInspect(object, "converged")
 
@@ -940,7 +935,7 @@ extract_mediation_lavaan <- function(object,
 #' @param object A fitted lavaan object.
 #' @param vars Character vector: treatment and mediator names.
 #' @param interaction Optional character: product column name(s).
-#' @keywords internal
+#' @noRd
 .find_product_terms_lavaan <- function(object, vars, interaction = NULL) {
   pt <- tryCatch(lavaan::parameterTable(object), error = function(e) NULL)
   if (is.null(pt)) return(character(0))
@@ -962,7 +957,7 @@ extract_mediation_lavaan <- function(object,
 #' `interaction` argument and otherwise trying `treatment:mediator` /
 #' `mediator:treatment`. Returns `NA_character_` when none is found.
 #'
-#' @keywords internal
+#' @noRd
 .find_interaction_term_lavaan <- function(object, treatment, mediator, # nolint: object_length_linter.
                                           interaction = NULL,
                                           standardized = FALSE) {
@@ -989,7 +984,7 @@ extract_mediation_lavaan <- function(object,
 #' @description
 #' Internal worker for the four-way (VanderWeele 2014) branch of
 #' [extract_mediation()] on lavaan objects. The SEM analogue of
-#' [.extract_interaction_mediation_lm()]: it returns an `InteractionMediationData`
+#' `.extract_interaction_mediation_lm()`: it returns an `InteractionMediationData`
 #' object for continuous `Y` and `M` with binary treatment and reference level
 #' `m_star`.
 #'
@@ -1006,7 +1001,7 @@ extract_mediation_lavaan <- function(object,
 #' @param m_star Numeric scalar reference mediator level.
 #' @inheritParams .extract_serial_mediation_lavaan
 #' @return An `InteractionMediationData` object.
-#' @keywords internal
+#' @noRd
 .extract_interaction_mediation_lavaan <- function( # nolint: object_length_linter.
   object,
   treatment,
@@ -1139,8 +1134,7 @@ extract_mediation_lavaan <- function(object,
                                            param_table$op == "~"]
   outcome_predictors <- param_table$rhs[param_table$lhs == outcome &
                                           param_table$op == "~"]
-  n_obs <- lavaan::lavInspect(object, "nobs")
-  if (length(n_obs) > 1) n_obs <- sum(n_obs)
+  n_obs <- .lavaan_n_obs(object)
   converged <- lavaan::lavInspect(object, "converged")
 
   InteractionMediationData(
@@ -1195,7 +1189,7 @@ extract_mediation_lavaan <- function(object,
 #' This function is called from `.onLoad()` to register the S7 method
 #' for lavaan objects when the lavaan package is available.
 #'
-#' @keywords internal
+#' @noRd
 .register_lavaan_method <- function() {
   if (requireNamespace("lavaan", quietly = TRUE)) {
     # Get the lavaan S4 class
@@ -1210,4 +1204,13 @@ extract_mediation_lavaan <- function(object,
       S7::method(extract_mediation, lavaan_class) <- extract_mediation_lavaan
     }
   }
+}
+
+# Sample size of a lavaan fit, as a whole number. lavaan normalizes sampling
+# weights to sum to N, so lavInspect(fit, "nobs") can read N - 1e-13 (e.g.
+# 355.99999999999994); as.integer() would truncate that to N - 1 and the
+# MediationData validator would reject the object. Multiple groups: the total.
+#' @noRd
+.lavaan_n_obs <- function(object) {
+  as.integer(round(sum(lavaan::lavInspect(object, "nobs"))))
 }

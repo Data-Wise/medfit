@@ -670,6 +670,86 @@ S7::method(decompose, JointMediationData) <- function(x, ...) {
 }
 
 
+# --- Methods for ClusterMediationData ---
+
+# Wrap a cluster effect as a mediation_effect.
+.cluster_effect <- function(value, type) {
+  class(value) <- c("mediation_effect", "numeric")
+  attr(value, "type") <- type
+  value
+}
+
+#' @describeIn nie Method for ClusterMediationData (a * b_between)
+#' @noRd
+S7::method(nie, ClusterMediationData) <- function(x, ...) {
+  .cluster_effect(x@a_path * x@b_between, "nie")
+}
+
+#' @describeIn nde Method for ClusterMediationData
+#' @noRd
+S7::method(nde, ClusterMediationData) <- function(x, ...) {
+  .cluster_effect(x@c_prime, "nde")
+}
+
+#' @describeIn te Method for ClusterMediationData (a * b_between + c')
+#' @noRd
+S7::method(te, ClusterMediationData) <- function(x, ...) {
+  .cluster_effect(x@a_path * x@b_between + x@c_prime, "te")
+}
+
+#' @describeIn pm Method for ClusterMediationData (NIE / TE)
+#' @noRd
+S7::method(pm, ClusterMediationData) <- function(x, ...) {
+  indirect <- x@a_path * x@b_between
+  total <- indirect + x@c_prime
+  if (abs(total) < .Machine$double.eps) {
+    warning("Total effect is approximately zero; proportion mediated is undefined.",
+            call. = FALSE)
+    return(NA_real_)
+  }
+  .cluster_effect(indirect / total, "pm")
+}
+
+#' @describeIn paths Method for ClusterMediationData
+#' @noRd
+S7::method(paths, ClusterMediationData) <- function(x, ...) {
+  c(a = x@a_path, b_within = x@b_within, b_between = x@b_between,
+    c_prime = x@c_prime)
+}
+
+# The D-own gap |a (b_B - b_W)| / H, with H the harmonic mean cluster size: how
+# far the large-cluster own effect a * b_W sits from the exact own effect.
+.cluster_own_gap <- function(x) {
+  h <- length(x@cluster_sizes) / sum(1 / x@cluster_sizes)
+  abs(x@a_path * (x@b_between - x@b_within)) / h
+}
+
+#' @describeIn decompose Method for ClusterMediationData: the own-mediator,
+#'   spillover and total indirect effects, labeled as the cluster-average
+#'   large-cluster approximation. Warns (D11) when the D-own gap exceeds half
+#'   the own effect's standard error.
+#' @noRd
+S7::method(decompose, ClusterMediationData) <- function(x, ...) {
+  own_se <- .effect_se_or_na(x, "own")[[1]]
+  gap <- .cluster_own_gap(x)
+  if (!is.na(own_se) && gap > 0.5 * own_se) {
+    fmt <- paste0(
+      "The own-effect approximation a * b_within is off by about %.3g ",
+      "(a * (b_between - b_within) / H, H = harmonic mean cluster size), ",
+      "more than half its standard error (%.3g); with clusters this ",
+      "small, read the own/spillover split with care."
+    )
+    msg <- sprintf(fmt, gap, own_se)
+    warning(msg, call. = FALSE)
+  }
+  out <- c(own = x@a_path * x@b_within,
+           spillover = x@a_path * (x@b_between - x@b_within),
+           nie = x@a_path * x@b_between)
+  attr(out, "label") <- "cluster-average, large-cluster approximation"
+  out
+}
+
+
 # --- Methods for BootstrapResult ---
 
 #' @describeIn nie Method for BootstrapResult (extracts estimate)

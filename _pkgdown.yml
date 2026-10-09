@@ -63,6 +63,12 @@ navbar:
       - text: "Getting Started"
         href: articles/getting-started.html
       - text: "─────────────"
+      - text: "Quick Reference"
+      - text: "Reference Card"
+        href: articles/refcard.html
+      - text: "Cookbook"
+        href: articles/cookbook.html
+      - text: "─────────────"
       - text: "Detailed Guides"
       - text: "Introduction to medfit"
         href: articles/introduction.html
@@ -124,6 +130,7 @@ reference:
       - ParallelMediationData
       - InteractionMediationData
       - JointMediationData
+      - ClusterMediationData
       - BootstrapResult
 
   - title: "Model Fitting"

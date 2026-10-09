@@ -9,5 +9,6 @@
 > `mediation-planning/docs/design/API-DESIGN-DECISIONS.md`
 > (index: `mediation-planning/docs/design/README.md`)
 >
-> medfit implements these decisions; medfit-specific roadmap detail is in
+> medfit follows these decisions with one exception: it exports `med()`/`quick()` and
+> `bootstrap_mediation()` rather than the hub's `mediate()`/`boot()` names. medfit-specific roadmap detail is in
 > `planning/medfit-roadmap.md`.

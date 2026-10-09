@@ -41,7 +41,7 @@
 #'   each alias row/column populated from its source, and the alias-to-alias
 #'   intersections filled from the corresponding source-to-source covariances.
 #'
-#' @keywords internal
+#' @noRd
 .expand_vcov_with_aliases <- function(vcov_src, source_idx, aliases_to_add) {
   orig_names <- rownames(vcov_src)
   n_orig <- nrow(vcov_src)
@@ -102,7 +102,7 @@
 
 #' Locate a treatment-by-mediator interaction term in a model formula
 #'
-#' Formula-level counterpart of [.find_interaction_term()] (which inspects a
+#' Formula-level counterpart of `.find_interaction_term()` (which inspects a
 #' fitted model's coefficient names). Returns the term label of the `X:M`
 #' product term in `formula`, trying both orderings, or `NA_character_` when
 #' no such term is present. Used by the `"regmedint"` engine to decide between
@@ -112,7 +112,7 @@
 #' @param formula A model formula (e.g. `Y ~ X * M + C`).
 #' @param treatment,mediator Variable names.
 #' @return A single string (the matching term label) or `NA_character_`.
-#' @keywords internal
+#' @noRd
 .find_interaction_term_formula <- function(formula, treatment, mediator) { # nolint: object_length_linter.
   labs <- attr(stats::terms(formula), "term.labels")
   cand <- c(paste0(treatment, ":", mediator), paste0(mediator, ":", treatment))

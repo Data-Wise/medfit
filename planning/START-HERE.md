@@ -1,7 +1,7 @@
 # START HERE: medfit Package
 
 **Created**: 2025-12-02
-**Status**: 0.3.2 on CRAN; 0.4.0 on main/GitHub; unreleased work on `dev`, next release proposed as 0.5.0
+**Status**: 0.3.2 on CRAN; 0.5.0 on main/GitHub/r-universe (released 2026-09-25, tag `v0.5.0`)
 
 ---
 
@@ -42,13 +42,13 @@
 
 3. **.STATUS** - Current state and per-PR record (source of truth)
 
-4. **planning/TODOS.md** - Active tasks, including the 0.5.0 release checklist
+4. **planning/TODOS.md** - Active tasks (the completed 0.5.0 checklist is under Recently Completed)
 
 5. **planning/EXTENSIONS-PLAN-2026-06-03.md** - Prioritized extensions board
 
 6. **planning/medfit-roadmap.md** - Original phase plan (all phases complete) and design reference
 
-7. **planning/ECOSYSTEM.md** - Connections to other packages
+7. **`~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`** - Connections to other packages (ecosystem hub)
 
 ### In Parent Ecosystem (probmed/planning/)
 
@@ -77,7 +77,7 @@ Ecosystem-wide planning now lives in `~/projects/r-packages/mediation-planning/`
 | 6. Testing | 3-4 days | ✅ DONE - tests + vignettes |
 | 7. Polish | 2-3 days | ✅ DONE - R CMD check + pkgdown; 0.3.2 on CRAN |
 
-**Total**: MVP shipped. Since then: parallel (Ext A), four-way interaction (Ext B), regmedint engine (Ext C) in 0.4.0; `JointMediationData`, effect SEs for all classes and `mediation_demo` on `dev`.
+**Total**: MVP shipped. Since then: parallel (Ext A), four-way interaction (Ext B), regmedint engine (Ext C) in 0.4.0; `JointMediationData`, effect SEs for all classes and `mediation_demo` in 0.5.0 (2026-09-25).
 
 ---
 
@@ -128,9 +128,9 @@ medfit/
 │   ├── medfit-roadmap.md      (phase plan + design reference)
 │   ├── EXTENSIONS-PLAN-2026-06-03.md (current board)
 │   ├── TODOS.md               (active tasks)
-│   ├── ECOSYSTEM.md           (connections)
+│   ├── ECOSYSTEM.md           (stub → ecosystem hub)
 │   └── README.md              (planning guide)
-└── .github/workflows/     ← CI/CD (R-CMD-check, coverage, pkgdown)
+└── .github/workflows/     ← CI/CD (R-CMD-check, test-coverage, lint, pkgdown, revdep-check, rhub, claude)
 ```
 
 ### ✅ Planning Documents
@@ -145,12 +145,11 @@ medfit/
 
 ### Immediate
 
-1. **0.5.0 release (proposed)** — minor bump for two behavior changes (#81 serial `te()`/`pm()`,
-   #82 `confint(parm = "paths")`); checklist in `planning/TODOS.md`
+1. **Ext D (multilevel) spec** — see `planning/specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`.
+   0.5.0 shipped 2026-09-25 (GitHub-only); the next CRAN trigger is open
+   (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
 
-2. **After 0.5.0**
-   - Ext D (multilevel) spec — see `planning/specs/BRAINSTORM-medfit-mediationverse-next-features-2026-08-22.md`
-   - Ext C.1 (CMAverse) stays blocked
+2. **Blocked:** Ext C.1 (CMAverse) — not on CRAN
 
 ### Done (Phases 1-4)
 
@@ -203,7 +202,7 @@ medfit/
 - Optionally use medfit for naive estimates
 - Optionally use bootstrap utilities
 
-**Migration**: Optional, Week 10
+**Migration**: Optional; no date (medrobust does not depend on medfit)
 
 ---
 
@@ -230,7 +229,7 @@ From `../probmed/planning/DECISIONS.md`:
 ### Questions?
 - **Strategic**: Review `../probmed/planning/three-package-ecosystem-strategy.md`
 - **Technical**: Review `planning/medfit-roadmap.md`
-- **Connections**: Review `planning/ECOSYSTEM.md`
+- **Connections**: Review the hub's `docs/ECOSYSTEM-COORDINATION.md`
 
 ---
 
@@ -241,7 +240,7 @@ When starting a new session in medfit:
 - [ ] Read this file (START-HERE.md)
 - [ ] Read `.STATUS` (`next:` line) and `planning/TODOS.md`
 - [ ] Check the board in `planning/EXTENSIONS-PLAN-2026-06-03.md`
-- [ ] Review `planning/ECOSYSTEM.md` for package connections
+- [ ] Review the hub's `docs/ECOSYSTEM-COORDINATION.md` for package connections
 - [ ] Check `../probmed/planning/ROADMAP.md` for ecosystem status
 - [ ] Review recent decisions in `../probmed/planning/DECISIONS.md`
 
@@ -254,13 +253,13 @@ When starting a new session in medfit:
 | Understand medfit | README.md, CLAUDE.md |
 | See current tasks | .STATUS, planning/TODOS.md |
 | See implementation plan | planning/medfit-roadmap.md |
-| Check ecosystem connections | planning/ECOSYSTEM.md |
+| Check ecosystem connections | mediation-planning/docs/ECOSYSTEM-COORDINATION.md |
 | Review decisions | ../probmed/planning/DECISIONS.md |
 | Check overall status | ../probmed/planning/ROADMAP.md |
 
 ---
 
-**Status**: 📦 0.3.2 on CRAN, 0.4.0 on GitHub, `dev` ready for the proposed 0.5.0 release
+**Status**: 📦 0.3.2 on CRAN, 0.5.0 on GitHub and r-universe
 
 **Next session**: Start in this directory (`~/projects/r-packages/active/medfit/`), read `.STATUS` and `planning/TODOS.md`
 

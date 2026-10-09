@@ -14,6 +14,7 @@ bootstrap_mediation(
   parallel = FALSE,
   ncores = NULL,
   seed = NULL,
+  cluster = NULL,
   ...
 )
 }
@@ -53,6 +54,15 @@ rows (\code{m1_}, ..., \code{y_}) and the sample covariate means.}
 If NULL, uses \code{parallel::detectCores() - 1}}
 
 \item{seed}{Integer: random seed for reproducibility (optional but recommended)}
+
+\item{cluster}{Character string: name of a cluster variable in \code{data}, for
+\code{method = "nonparametric"} only (an error with the other methods). The
+resampling then draws whole clusters with replacement and gives each draw
+a fresh cluster id before \code{statistic_fn} sees the data, so a cluster drawn
+twice is refit as two clusters, not one bigger one. Singular fits and
+convergence warnings from a refit count as failures: they are excluded,
+their messages are suppressed, and their number is added to the warning.
+\code{NULL} (default) resamples rows as before.}
 
 \item{...}{Additional arguments (reserved for future use)}
 }
@@ -189,6 +199,31 @@ result_np <- bootstrap_mediation(
   seed = 12345
 )
 print(result_np)
+}
+
+\donttest{
+if (requireNamespace("lme4", quietly = TRUE)) {
+# Treatment assigned to whole clusters (needs lme4); formulas hold fixed
+# effects only, the engine adds the random cluster intercept
+set.seed(1)
+J <- 30
+id <- rep(seq_len(J), each = 6)
+cdat <- data.frame(school = factor(id), X = sample(rep(0:1, J / 2))[id])
+cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+# Resample whole clusters. A refit that is singular or does not converge is
+# dropped, and the warning counts how many were
+nie_of <- function(d) {
+  unname(nie(fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X",
+                           mediator = "M", engine = "lmer",
+                           cluster = "school")))
+}
+result_cluster <- bootstrap_mediation(
+  nie_of, method = "nonparametric", data = cdat, cluster = "school",
+  n_boot = 20, seed = 1
+)
+print(result_cluster)
+}
 }
 
 }
