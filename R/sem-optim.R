@@ -7,12 +7,13 @@
 # not depend on the units of the data. The model itself stays in original units.
 
 # Both thresholds were calibrated in S6 (tests/sim/sem-reliability.R, 100 datasets per cell, four
-# structures, scales x0.01 to x1000, preconditioned solver) and wait for the author's checkpoint A:
+# structures, scales x0.01 to x1000, preconditioned solver) and fixed at checkpoint A (2026-10-09):
 # the decrement of converged fits is at most 3.6e-7 and of accepted stalls at least 0.089 (1e-3 sits
-# 2800x above and 89x below); the Jacobi-scaled smallest eigenvalue is at least 0.024 for converged fits
-# and at most 1.7e-5 at the degenerate F = 0.680 points (1e-3 sits 24x below and 59x above).
+# 2800x above and 89x below). The Jacobi-scaled smallest eigenvalue is at least 0.024 for converged fits
+# and at most 1.7e-5 at the degenerate F = 0.680 points; the author chose 1e-4 (240x below the converged
+# minimum but only 5.9x above the degenerate points, short of the 10x rule; S6 recommended 1e-3).
 .sem_stat_tol <- 1e-3
-.sem_singular_tol <- 1e-3
+.sem_singular_tol <- 1e-4
 .sem_bound_window <- 1e-6
 .sem_ok_status <- c(1L, 3L, 4L)
 

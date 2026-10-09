@@ -130,20 +130,20 @@ Mismatch classes (Q9 retry):
 Calibration of the Newton-decrement threshold (single-start runs with a success status):
                  scale  algo precond n_conv max_conv n_stall min_stall    ratio
 0.01 LBFGS FALSE 1e-02 LBFGS   FALSE    388 5.24e-05     127  0.000144 2.76e+00
-0.01 LBFGS TRUE  1e-02 LBFGS    TRUE   1934 1.11e-07       1  0.088872 8.03e+05
-0.01 SLSQP FALSE 1e-02 SLSQP   FALSE    461 1.43e-07    1202  0.841231 5.90e+06
+0.01 LBFGS TRUE  1e-02 LBFGS    TRUE   1934 1.11e-07       4  0.088872 8.03e+05
+0.01 SLSQP FALSE 1e-02 SLSQP   FALSE    461 1.43e-07    1240  0.841231 5.90e+06
 0.01 SLSQP TRUE  1e-02 SLSQP    TRUE   2389 3.59e-07       0        NA       NA
 1 LBFGS FALSE    1e+00 LBFGS   FALSE   2089 7.03e-08       1  0.126382 1.80e+06
-1 LBFGS TRUE     1e+00 LBFGS    TRUE   2073 1.11e-07       1  0.088989 8.04e+05
+1 LBFGS TRUE     1e+00 LBFGS    TRUE   2073 1.11e-07       4  0.088989 8.04e+05
 1 SLSQP FALSE    1e+00 SLSQP   FALSE   2393 1.62e-07       0        NA       NA
 1 SLSQP TRUE     1e+00 SLSQP    TRUE   2389 3.59e-07       0        NA       NA
 100 LBFGS FALSE  1e+02 LBFGS   FALSE    298 3.38e-05    1514  0.000142 4.21e+00
-100 LBFGS TRUE   1e+02 LBFGS    TRUE   1926 2.02e-07       1  0.091322 4.52e+05
+100 LBFGS TRUE   1e+02 LBFGS    TRUE   1926 2.02e-07       5  0.091322 4.52e+05
 100 SLSQP FALSE  1e+02 SLSQP   FALSE   1854 2.49e-05     370  0.000142 5.72e+00
 100 SLSQP TRUE   1e+02 SLSQP    TRUE   2389 3.59e-07       0        NA       NA
-1000 LBFGS FALSE 1e+03 LBFGS   FALSE      0       NA    2160  0.100246       NA
-1000 LBFGS TRUE  1e+03 LBFGS    TRUE   1876 1.11e-07       1  0.097389 8.80e+05
-1000 SLSQP FALSE 1e+03 SLSQP   FALSE     34 1.87e-06    2150  0.000218 1.17e+02
+1000 LBFGS FALSE 1e+03 LBFGS   FALSE      0       NA    2170  0.100246       NA
+1000 LBFGS TRUE  1e+03 LBFGS    TRUE   1876 1.11e-07       3  0.097389 8.80e+05
+1000 SLSQP FALSE 1e+03 SLSQP   FALSE     34 1.87e-06    2159  0.000218 1.17e+02
 1000 SLSQP TRUE  1e+03 SLSQP    TRUE   2389 3.59e-07       0        NA       NA
 
 Jacobi-scaled smallest Hessian eigenvalue: converged quantiles and stalled/flat minimum
