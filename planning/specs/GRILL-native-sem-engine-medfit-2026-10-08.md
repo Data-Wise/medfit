@@ -8,7 +8,7 @@
 
 ## P0 facts (scratchpad run, 2026-10-08; no medfit writes)
 
-- OpenMx SEs are observed-information: latent model (n = 300) max SE diff vs OpenMx is 5.0e-6 for observed info at scale n/2, 2.4e-3 for expected. Saturated path model: observed = expected, 3.4e-7. (n-1)/2 scale is worse (2.1e-4, 9.5e-5). One model, one seed: the N5 gate generalizes it.
+- OpenMx SEs are observed-information: latent model (n = 300) max SE diff vs OpenMx is 5.0e-6 for observed info at scale n/2, 2.4e-3 for expected. Saturated path model: observed = expected, 3.4e-7. (n-1)/2 scale is worse (2.1e-4, 9.5e-5). **One model, one seed, so the observed-information default (J9) is provisional until the N5 SE gate (K10) passes.**
 - Covariance convention: OpenMx treats `type = "cov"` input as unbiased and rescales internally. Input `S * n/(n-1)` reproduces divisor-n estimates (max diff 2.3e-6 latent, 2.2e-7 observed); the divisor-n matrix shrinks variances by exactly (n-1)/n (0.9975 at n = 400).
 - Sweep: `fit_mediation()` accepts `engine` in `c("glm", "regmedint")` (`R/fit-glm.R:170`); base `stats::deriv()` differentiates `+ - * / ^ exp log sqrt` and errors by name on anything else.
 
@@ -32,6 +32,21 @@
 | K5c | Is matrix input needed in v0? (re-grill of K5) | **Raw data only in v0; matrix input is a follow-up** (Recommended). **Supersedes K5 and defers K5b.** | Evidence: RMediation's `mbco_semi.R` resamples raw rows and refits with `mxData(df, type = "raw")`, so matrix input would not serve J10's migration for the bootstrap MBCO variants, only asymptotic fits. Adding matrix input later is additive; shipping it now would fix `cov_type`, `n_obs` and the `data = NULL` error contracts in 0.6.0. Raw-data rules stay: listwise deletion once, count reported, `nrow == n_obs`. Matrix users must wait; `MediationData(data = NULL)` stays available for that follow-up. |
 | K9 | Nonlinear constraint contract (adversarial review F3, decision D-A) | **Allow nonlinear equalities/inequalities with a one-time warning; solve from `n_starts = 5` perturbed starts; keep the best feasible objective; report which start won and the spread; reject a solution with equality residual above 1e-6** (Recommended) | Linear constraints (constant Jacobian) are solved once with no warning. `a*b == 0` gets a message pointing to separate solves (N7). Rejected: refuse nonlinear constraints (loses the `a*b == c` cases J15 promised); allow silently (the measured SLSQP stall at (0, 0) and the 6/10 start result would pass unflagged). Details in the grammar spec 4.5, full text with plan task T3. |
 | K2c | Evaluator boundary (adversarial review F1; refines K2b) | **Locked evaluation environment**: parse to exactly one expression, validate the call tree (bare allowlisted heads, declared labels, finite numeric literals, arity, no named arguments), evaluate in `new.env(parent = emptyenv())` with each allowlisted function bound explicitly to its `base`/`stats` object. | Verified with a prototype: a caller-rebound `exp` passes an `all.names()`-only check and runs; the locked evaluator ignores it. K2b's name check alone is not a safety boundary. See spec 4.2a. |
+| K10 | Is "observed information by default" (J9) established? (adversarial review F4) | **Provisional until the N5 SE gate passes; if the gate fails the default reverts to expected information until resolved.** | The P0 evidence is one latent model at one seed (observed 5.0e-6 vs expected 2.4e-3 SE difference from OpenMx at n = 300). The gate below makes it a defined, reproducible test. |
+
+**N5 SE gate (defines what "passes" means):**
+
+| Dimension | Levels |
+|---|---|
+| Model structures (at least 5) | observed path model with covariates; latent mediator; parallel two-mediator; serial two-mediator; one constrained model (`a == b` or `a + b == c`) |
+| Sample sizes | 50, 200, 1000 |
+| Seeds | at least 20 per cell, fixed in the script |
+| Oracle | OpenMx with input `S * n/(n - 1)` (P0 convention); both engines at the same optimum, so the comparison is of SEs at the solution |
+| Pass criterion | max relative SE difference below 1e-3 for observed information in **every** cell that has a proper solution; the expected-information difference is recorded alongside for contrast |
+| Improper-solution cells | cells with a negative variance or an active bound are **reported separately with their counts, not dropped**; the gate states the pass rate over proper cells and lists the improper ones |
+| Reproducibility | the script (grown from `p0.R`/`p0b.R`, plan task T5) lives in `planning/specs/evidence/` with package versions and seeds |
+
+The 1e-3 relative tolerance is a proposal, not yet calibrated: P0 measured an absolute SE difference of 5.0e-6, but the SE magnitudes were not recorded, so the relative figure is unknown. OpenMx's Hessian is numeric, so a very tight bound would test its differencing and not our information matrix. Calibrate the tolerance on the first gate run, record the observed maximum, and then freeze it.
 
 ## Research: speed and package choice (scratchpad runs, 2026-10-08; latent mediator, 6 variables, 10 parameters)
 

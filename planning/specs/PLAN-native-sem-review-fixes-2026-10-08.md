@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-08 |
-| **Status** | In progress. D-A decided (recommended option, ledger K9). **T1 and T2 done** (spec 4.1, 4.2a-c, section 7 table, section 8). T3 text, T4, T5, T6 remain. |
+| **Status** | In progress. D-A decided (recommended option, ledger K9). **T1, T2 and T4 done** (spec 4.1, 4.2a-c, section 7 table, section 8; ledger K10 and the N5 SE gate). T3 full text, T5, T6 remain. |
 | **Source** | Codex adversarial review of `origin/dev...HEAD` (2026-10-08, verdict needs-attention, 1 high, 3 medium, 1 low). Reviewed: [SPEC-sem-grammar-2026-10-08.md](SPEC-sem-grammar-2026-10-08.md) and [GRILL-native-sem-engine-medfit-2026-10-08.md](GRILL-native-sem-engine-medfit-2026-10-08.md). |
 | **Branch** | `feature/native-sem-grill` (docs and evidence scripts only; no `R/` changes). |
 | **Sizes** | XS 1 file, S 1-2 files, M 3-5 files. |
