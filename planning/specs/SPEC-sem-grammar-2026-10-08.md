@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-08 |
-| **Status** | DRAFT. Written by the medfit session (K1). Section 9 items 1-3 were accepted as proposed on 2026-10-08 ("do recommended"); the author's final approval of the whole spec is still pending. Revised after the adversarial review: T1 (evaluator boundary, 4.2a) and T2 (full productions, 4.1 and 4.2b) done; 4.5 (K9) is a summary until T3. |
+| **Status** | DRAFT. Written by the medfit session (K1). Section 9 items 1-3 were accepted as proposed on 2026-10-08 ("do recommended"); the author's final approval of the whole spec is still pending. Revised after the adversarial review: T1 (evaluator boundary, 4.2a) and T2 (full productions, 4.1 and 4.2b) done; T3 (nonlinear-constraint contract, 4.5a-f, K9) done. |
 | **Task** | P0 grammar spec; precedes P1 (parser) and P2 (converters). |
 | **Inherits** | Handoff J13-J17 (missingmed `docs/specs/HANDOFF-medfit-native-sem-engine-2026-10-08.md`) and this repo's ledger [GRILL-native-sem-engine-medfit-2026-10-08.md](GRILL-native-sem-engine-medfit-2026-10-08.md): K1 (spec lives here), K2/K2b (any math expression, allowlist-checked), K4 (name), K5c (raw data only). |
 | **Evidence labels** | **[V]** verified by a command in this session; **[A]** assumed or proposed, needs the author's confirmation. |
@@ -111,7 +111,7 @@ Consequences pinned by tests: `-2^2` is `-4`; `2^3^2` is `512`; `2^-1` is `0.5`.
 
 - Jacobians are central differences with relative step `eps^(1/3) * max(abs(x), 1)` (K3).
 - `:=` right sides may reference labels and earlier `:=` names. Cycles error.
-- **Nonlinear constraint classes and diagnostics** are specified in 4.5 (K9).
+- **Nonlinear constraint classes and diagnostics** are specified in 4.5a-f (K9).
 
 ### 4.3 `level:` blocks (J16)
 
@@ -121,9 +121,51 @@ Consequences pinned by tests: `-2^2` is `-4`; `2^3^2` is `512`; `2^-1` is `0.5`.
 
 A constraint of the form `label < number`, `label > number` (or the mirrored `number > label`) where `label` is a single parameter label becomes `upper` / `lower` on every row with that label, exactly as lavaan does [V]. Any other `<` or `>` (several labels, a function, a defined parameter) stays in the constraint table as a general inequality.
 
-### 4.5 Nonlinear constraints (K9; summary, full text lands with plan task T3)
+### 4.5 Nonlinear constraints (K9, adversarial-review finding F3)
 
-Decided 2026-10-08 (D-A, recommended option): nonlinear equalities and inequalities are **allowed, with a one-time warning** that the solution may depend on starting values, solved from `n_starts = 5` perturbed starts (including the user's); the best feasible objective is kept and the result reports which start won and the spread of objectives. A solution with any equality residual above `1e-6` is not accepted (the fit reports non-convergence naming the constraint). Linear constraints are detected at parse time (constant Jacobian), solved once, and warn about nothing. `a*b == 0` gets a message pointing to separate `a == 0` / `b == 0` solves (N7). Still to specify under T3: the exact linearity test, the diagnostics fields, and the planted-defect tests.
+Decided 2026-10-08 (D-A, recommended option): nonlinear equalities and inequalities are **allowed, with a one-time warning**, solved from several starts, and checked for feasibility and agreement across starts. This section is the full contract.
+
+#### 4.5a Classification (at model-build time, once per constraint)
+
+A constraint `lhs cmp rhs` is reduced to `h(x) = lhs - rhs`. It is **linear** if the central-difference Jacobian (K3 step) of `h` at three fixed pseudo-random points (seeded, drawn uniformly from [-2, 2] per parameter) agrees across the points to within `1e-6 * max(1, max|J|)`; otherwise **nonlinear**.
+
+**Verified [V]** on seven expressions with 5 parameters: `a+b-0.5`, `a-2*b` and `a*0+b` classify linear; `a*b`, `exp(a)-1`, `a^2` and `abs(a)-b` classify nonlinear. Known limit: a function that is nonlinear only in a region the three points miss (for example a kink outside [-2, 2]) is classified linear; the feasibility gate (4.5c) still applies to it.
+
+#### 4.5b Solve policy
+
+| Class | Starts | Warning |
+|---|---|---|
+| Linear equalities and inequalities | one solve from the user's start | none |
+| Any nonlinear constraint | `n_starts = 5`: the user's start plus four perturbations `x0 + N(0, (0.5 * max(|x0|, 1))^2)` per coordinate, drawn with a seed derived from the model so reruns are identical | once per fit: "constraint `<text>` is nonlinear; the solution may depend on starting values" |
+
+`engine_args` may set `n_starts` (integer, at least 1). Among starts that satisfy 4.5c, the lowest objective wins.
+
+#### 4.5c Feasibility gate
+
+A start is **feasible** only if every equality has `abs(h(x)) <= 1e-6` and every inequality is satisfied to `1e-6` at its solution. If no start is feasible the fit reports non-convergence, naming the first violated constraint and its residual. (Verified [V]: the contradictory pair `a == 1`, `a == 2` returned nloptr status -4 with max residual 1.70 and is rejected by this gate.)
+
+#### 4.5d Agreement diagnostics (attached to the fit)
+
+| Field | Content |
+|---|---|
+| `n_starts`, `n_feasible` | starts run and starts passing 4.5c |
+| `winner` | index of the winning start (1 is the user's) |
+| `objective_spread` | max minus min objective among feasible starts |
+
+If `objective_spread` exceeds `1e-6` (relative to the winning objective, with an absolute floor of `1e-6`), the fit warns once: "starts reached different solutions (spread `<value>`); the reported fit is the best of `<n_feasible>`". The spread is the only signal for a start that stalls **at a feasible point**: [V] the start (0, 0, 0, .5, .5) on `a*b == 0` returned F = 1.029 with residual 0.0 (feasible) against the best F = 0.0952, so the feasibility gate alone cannot catch it.
+
+#### 4.5e What the multi-start does and does not guarantee
+
+Measured [V] on `a*b == 0` (n = 300, observed three-variable model, 60 random user starts): the better solution (`a` = 0, F = 0.095154) was reached from **34 of 60** with one start and **56 of 60** with five starts. Five starts raise the odds; they do **not** guarantee the global solution (4 of 60 still missed). `a*b == 0` has two legitimate local solutions (`a` = 0 and `b` = 0, F = 0.0952 and 0.1061), so it will always raise the spread warning; the message adds: "for `a*b == 0` solve `a == 0` and `b == 0` separately and keep the better (medfit MBCO, N7)".
+
+#### 4.5f Tests (planted defects, each must turn red when its mechanism is removed)
+
+1. Linearity: the seven-expression table above gives the stated classes; planting a sign error in the Jacobian difference flips at least one.
+2. Stalled start: `a*b == 0` from (0, 0, 0, .5, .5) with `n_starts = 1` returns F near 1.03 and raises **no** spread warning (a single start has nothing to compare; the test documents why `n_starts = 1` is unsafe for nonlinear constraints, and the one-time nonlinearity warning is the only signal); with `n_starts = 5` and the model-derived seed it returns F within `1e-6` of 0.095154 (verified [V] with seed 1, where start 3 won) and the spread warning fires.
+3. Agreement warning: fires on `a*b == 0` and does not fire on the linear `a + b == 0.5` (all starts agree).
+4. Feasibility: `a == 1` with `a == 2` errors naming a constraint and the residual.
+5. No-warning path: a linear constraint produces no warning and runs one solve.
+6. Reproducibility: two runs of the same model give identical start perturbations and the same winner.
 
 ## 5. The parameter table (J14)
 
