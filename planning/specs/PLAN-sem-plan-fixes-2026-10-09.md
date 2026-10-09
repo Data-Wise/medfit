@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-09 |
-| **Status** | **IN PROGRESS** (2026-10-09). T0, T1-T7 and T14 done; T8 (sweep and review) is next; workstream B (T9-T13) is running in its own worktree. |
+| **Status** | **IN PROGRESS** (2026-10-09). T0-T14 done: T8 review applied (11 of 14 findings, ledger D18); workstream B merged as #108 (`dbe5af5`). T15 (comment on #105) and T16 (close-out) wait for this docs PR to merge. |
 | **Spec** | [SPEC-sem-plan-fixes-2026-10-09.md](SPEC-sem-plan-fixes-2026-10-09.md), APPROVED 2026-10-09 (fix ids F1-F22, modules `plan-fixes`, `lavaan-probmed-names`, `spec-errata`) |
 | **Edits** | [PLAN-native-sem-implementation-2026-10-09.md](PLAN-native-sem-implementation-2026-10-09.md) and [GRILL-native-sem-implementation-2026-10-09.md](GRILL-native-sem-implementation-2026-10-09.md) |
 | **Task list location** | This file. The skill's default `tasks/todo.md` is not used: `.Rbuildignore` ignores `^planning$` but not `tasks/`, so a new top-level `tasks/` would ship in the tarball. Repo convention is `planning/specs/PLAN-*.md` with embedded checkboxes. |
@@ -95,7 +95,7 @@ T4 (S17b) refers to workstream B by name only; it does not wait for B to merge.
   - Acceptance: GRILL rows D9-D16 for the eight resolutions in the spec; an "Errata for spec 4.5c" section with the three text items from the spec (bound rows, scale-free measure, scaled windows), marked draft and not applied; the plan's section 10 cross-references D9-D16.
   - Verify: `grep -c "^| D" GRILL` is 17; the frozen spec file is byte-identical (`git diff --stat SPEC-sem-grammar-2026-10-08.md` empty).
   - Files: GRILL, PLAN. Depends on: T6.
-- [ ] **T8: Consistency sweep and independent review (M).**
+- [x] **T8: Consistency sweep and independent review (M).**
   - Acceptance: a cross-reference pass (every `S`, `Q`, `R`, `OD`, `D` id cited is defined exactly once; the PR table, DAG and task table agree); `markdownlint` shows no MD056, MD038, MD040; a fresh-context code review of the two edited documents returns no high finding, and every finding is verified before fixing; the docs PR is open with the F1-F22 table in its body.
   - Verify: the sweep script's output is quoted in the PR body; CI on the PR is green.
   - Files: PLAN, GRILL. Depends on: T7.
@@ -107,23 +107,23 @@ T4 (S17b) refers to workstream B by name only; it does not wait for B to merge.
 
 ### Phase 2: workstream B, `lavaan-probmed-names` (code, parallel with Phase 1, own worktree)
 
-- [ ] **T9: Red tests (S).** `tests/testthat/test-probmed-names.R`: (a) names test: for a lavaan simple single-mediator fit, `names(@estimates)` and `rownames(@vcov)` contain `m_<X>`, `y_<M>`, `y_<X>` and the pre-existing rows; (b) integration test, `skip_if_not_installed("probmed")`: `pmed(method = "parametric_bootstrap")` on the lavaan object runs and agrees with the glm route within Monte Carlo error at a fixed seed.
+- [x] **T9: Red tests (S).** `tests/testthat/test-probmed-names.R`: (a) names test: for a lavaan simple single-mediator fit, `names(@estimates)` and `rownames(@vcov)` contain `m_<X>`, `y_<M>`, `y_<X>` and the pre-existing rows; (b) integration test, `skip_if_not_installed("probmed")`: `pmed(method = "parametric_bootstrap")` on the lavaan object runs and agrees with the glm route within Monte Carlo error at a fixed seed.
   - Acceptance: both tests fail on current `dev` with the errors recorded (the names test on missing rows; the integration test on `subscriptOutOfBoundsError`).
   - Verify: `NOT_CRAN=true Rscript -e 'testthat::test_file("tests/testthat/test-probmed-names.R")'` shows the failures; transcript saved for the PR body.
   - Files: `tests/testthat/test-probmed-names.R`, `tests/testthat/helper-test-data.R` if a fixture is needed. Depends on: T14.
-- [ ] **T10: Implement the alias rows (M).** In the lavaan simple-path worker, add `m_<treatment>`, `y_<mediator>`, `y_<treatment>` rows to `@estimates` and `@vcov` through `.expand_vcov_with_aliases()`, sourced from the `M~X`, `Y~M`, `Y~X` rows via `.lavaan_alias_source_idx()`; leave every existing row and its order unchanged.
+- [x] **T10: Implement the alias rows (M).** In the lavaan simple-path worker, add `m_<treatment>`, `y_<mediator>`, `y_<treatment>` rows to `@estimates` and `@vcov` through `.expand_vcov_with_aliases()`, sourced from the `M~X`, `Y~M`, `Y~X` rows via `.lavaan_alias_source_idx()`; leave every existing row and its order unchanged.
   - Acceptance: T9's tests pass; the pre-existing block of `@estimates` and `@vcov` is `identical()` to the pre-change output; the full existing lavaan suite is unchanged.
   - Verify: `NOT_CRAN=true Rscript -e 'devtools::test()'` with counts quoted; an `identical()` regression test on a frozen copy of the old output.
   - Files: `R/extract-lavaan.R`, `R/utils.R` (only if the helper needs an argument), `tests/testthat/test-extract-lavaan.R`. Depends on: T9.
-- [ ] **T11: Edge cases and planted defects (S).**
+- [x] **T11: Edge cases and planted defects (S).**
   - Acceptance: labeled parameters (`a`, `b`, `cp`), `meanstructure = TRUE`, `fixed.x = FALSE` and covariates each get the three rows or a named error; a latent mediator gets none and is documented plugin-only; serial, parallel and four-way objects are unchanged; planted defects: dropping one alias row fails the names test, swapping `y_<M>` and `y_<X>` fails the bootstrap agreement test.
   - Verify: the new tests pass; each planted defect, applied with `local_mocked_bindings()` or a temporary edit, turns its test red and leaves `git diff` clean after revert.
   - Files: `tests/testthat/test-probmed-names.R`, `tests/testthat/test-extract-lavaan.R`. Depends on: T10.
-- [ ] **T12: Docs (S).** NEWS "behavior change" entry (rows added to `@estimates` and `@vcov` of lavaan-derived `MediationData`; name-based consumers such as probmed now resolve them); a sentence in `?extract_mediation` and `extraction.qmd` on the names; `inst/WORDLIST`.
+- [x] **T12: Docs (S).** NEWS "behavior change" entry (rows added to `@estimates` and `@vcov` of lavaan-derived `MediationData`; name-based consumers such as probmed now resolve them); a sentence in `?extract_mediation` and `extraction.qmd` on the names; `inst/WORDLIST`.
   - Acceptance: `devtools::document()` leaves only the intended Rd diff; spelling and `pkgdown::check_pkgdown()` clean.
   - Verify: both commands, output quoted.
   - Files: `NEWS.md`, `R/aab-generics.R`, `vignettes/articles/extraction.qmd`, `inst/WORDLIST`, `man/extract_mediation.Rd`. Depends on: T11.
-- [ ] **T13: Gates, E2E and PR (S).**
+- [x] **T13: Gates, E2E and PR (S).**
   - Acceptance: full suite, lint on an installed scratch library, spelling, `check_pkgdown()`, and the strict `devtools::check(cran = TRUE, args = "--run-donttest", ...)` all clean, counts quoted; an E2E transcript from a fresh `Rscript` (lavaan fit, `extract_mediation()`, `probmed::pmed(parametric_bootstrap)`) that errors on pre-change `dev` and succeeds on the branch; the PR body links the T14 issue and quotes both transcripts.
   - Verify: the PR's CI is green.
   - Files: none new. Depends on: T12.
