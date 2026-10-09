@@ -890,10 +890,10 @@ test_that("glance() has the stated columns and n_clusters", {
   expect_equal(g$pm, 0.3 / 0.5)
 })
 
-test_that("quick() works and med() does not take cluster =", {
+test_that("quick() works and med() still refuses cluster =", {
   expect_output(quick(snap_object()), "NIE = 0.3 .*own = 0.15 .*clusters = 40")
   expect_error(med(medfit::mediation_demo, "treatment", "mediator1", "outcome",
-                   cluster = "covariate1"), "unused argument")
+                   cluster = "covariate1"), "only used with engine")
 })
 
 test_that("print.summary is registered for S3 dispatch", {
@@ -930,4 +930,131 @@ test_that("sim_gate() reports a planted wrong SE through the SE ratio", {
   expect_gt(good$se_ratio[["nie"]], 0.8)
   expect_lt(bad$se_ratio[["nie"]], 0.8)
   expect_lt(bad$coverage[["nie"]], good$coverage[["nie"]])
+})
+
+
+# T11: the lmer fit engine ------------------------------------------------------
+
+# nolint start: object_usage_linter.
+fit_route <- function(dat, ..., formula_y = Y ~ X + M + C, formula_m = M ~ X + C) {
+  suppressWarnings(suppressMessages(
+    fit_mediation(formula_y, formula_m, data = dat, treatment = "X", mediator = "M",
+                  engine = "lmer", cluster = "cluster", ...)
+  ))
+}
+# nolint end
+
+test_that("route identity: the fit route equals the extract route to 1e-8", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 30, sizes = rep(5:12, length.out = 30), cov = "confounded",
+                        seed = 41)$data
+  by_fit <- fit_route(dat)
+  by_extract <- fit_cluster211(dat)
+  keys <- c("a", "c_prime", "b_within", "b_between")
+  expect_equal(by_fit@estimates[keys], by_extract@estimates[keys], tolerance = 1e-8)
+  expect_equal(by_fit@vcov[keys, keys], by_extract@vcov[keys, keys], tolerance = 1e-8)
+  expect_identical(by_fit@parameterization, "within")
+  expect_true(by_fit@covariates_centered)
+  expect_identical(by_fit@n_obs, by_extract@n_obs)
+})
+
+test_that("route identity holds with a random within-slope via engine_args", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 40, sizes = 10, slope_sd = 0.3, seed = 42)$data
+  by_fit <- fit_route(dat, formula_y = Y ~ X + M, formula_m = M ~ X,
+                      engine_args = list(random_y = ~M))
+  by_extract <- fit_cluster211(dat, slope = TRUE)
+  keys <- c("a", "c_prime", "b_within", "b_between")
+  expect_equal(by_fit@estimates[keys], by_extract@estimates[keys], tolerance = 1e-6)
+  expect_equal(by_fit@vcov[keys, keys], by_extract@vcov[keys, keys], tolerance = 1e-5)
+})
+
+test_that("incomplete rows are dropped once and the cluster means use the kept rows", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 20, sizes = 8, cov = "confounded", seed = 43)$data
+  dat$Y[c(3, 40)] <- NA
+  dat$C[75] <- NA
+  o <- fit_route(dat)
+  expect_identical(o@n_obs, nrow(dat) - 3L)
+  expect_identical(sum(o@cluster_sizes), nrow(dat) - 3L)
+  # Extract route on the same complete rows gives the same paths.
+  keep <- dat[stats::complete.cases(dat), ]
+  keys <- c("a", "c_prime", "b_within", "b_between")
+  expect_equal(o@estimates[keys], fit_cluster211(keep)@estimates[keys], tolerance = 1e-8)
+})
+
+test_that("a level-1 covariate with no variation within clusters is a level-2 covariate", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 24, sizes = 6, seed = 44)$data
+  dat$W <- stats::rnorm(24)[as.integer(dat$cluster)]
+  o <- fit_route(dat, formula_y = Y ~ X + M + W, formula_m = M ~ X + W)
+  expect_s7_class <- S7::S7_inherits(o, ClusterMediationData)
+  expect_true(expect_s7_class)
+  expect_true(o@covariates_centered)
+  expect_true(all(c("y_W", "m_W") %in% names(o@estimates)))
+  expect_false(any(grepl("W_cwc|W_cm", names(o@estimates))))
+})
+
+test_that("engine_args accepts only random_y, random_m and REML", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 10, sizes = 5, seed = 1)$data
+  expect_error(fit_route(dat, formula_y = Y ~ X + M, formula_m = M ~ X,
+                         engine_args = list(optimizer = "bobyqa")),
+               "Unknown `engine_args`.*optimizer")
+  expect_error(fit_route(dat, formula_y = Y ~ X + M, formula_m = M ~ X,
+                         engine_args = list(random_y = "M")),
+               "must be a one-sided formula")
+  ml <- fit_route(dat, formula_y = Y ~ X + M, formula_m = M ~ X,
+                  engine_args = list(REML = FALSE))
+  expect_false(ml@reml)
+  expect_true(fit_route(dat, formula_y = Y ~ X + M, formula_m = M ~ X)@reml)
+})
+
+test_that("extra arguments never reach lmer()", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 10, sizes = 5, seed = 1)$data
+  expect_error(fit_route(dat, formula_y = Y ~ X + M, formula_m = M ~ X,
+                         control = lme4::lmerControl()),
+               "takes no extra arguments; unused: control")
+})
+
+test_that("fit-engine errors: cluster, weights, sandwich, families, missing packages", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 10, sizes = 5, seed = 1)$data
+  f <- function(...) {
+    fit_mediation(Y ~ X + M, M ~ X, data = dat, treatment = "X", mediator = "M", ...)
+  }
+  expect_error(f(engine = "lmer"), "needs `cluster`")
+  expect_error(f(engine = "lmer", cluster = "school"), "cluster \\(must be in data\\)")
+  expect_error(f(cluster = "cluster"), "only used with engine = \"lmer\"")
+  expect_error(f(engine = "regmedint", cluster = "cluster"),
+               "only used with engine = \"lmer\"")
+  expect_error(f(engine = "lmer", cluster = "cluster", weights = rep(1, nrow(dat))),
+               "does not support `weights`")
+  expect_error(f(engine = "lmer", cluster = "cluster", se_type = "sandwich"),
+               "supports se_type = \"model\" only")
+  expect_error(f(engine = "lmer", cluster = "cluster", family_y = stats::binomial()),
+               "Gaussian linear mixed models")
+  local_mocked_bindings(.pkg_available = function(pkg) FALSE)
+  expect_error(f(engine = "lmer", cluster = "cluster"), "Package 'lme4' is required")
+})
+
+test_that("mediator products and transformed mediator terms are refused", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 10, sizes = 5, cov = "confounded", seed = 1)$data
+  expect_error(fit_route(dat, formula_y = Y ~ X * M + C, formula_m = M ~ X + C),
+               "involves the mediator `M`")
+  expect_error(fit_route(dat, formula_y = Y ~ X + I(M^2) + C, formula_m = M ~ X + C),
+               "involves the mediator `M`")
+  expect_error(fit_route(dat, formula_y = Y ~ X + C, formula_m = M ~ X + C),
+               "Mediator variable 'M' must be in formula_y")
+})
+
+test_that("oracle 1 through the fit route: NIE, NDE and TE within 3 SE of the truth", {
+  skip_if_not_installed("lme4")
+  skip_on_cran()
+  sim <- sim_cluster211(J = 200, sizes = 30, seed = 45)
+  o <- fit_route(sim$data, formula_y = Y ~ X + M, formula_m = M ~ X)
+  z <- cluster_z(o, true_cluster_effects(sim))
+  expect_true(all(z < 3), info = paste(round(z, 2), collapse = ", "))
 })
