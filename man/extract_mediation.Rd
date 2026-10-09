@@ -116,6 +116,28 @@ med_data <- extract_mediation(fit_m, model_y = fit_y,
                               treatment = "treatment", mediator = "mediator1")
 }
 
+\donttest{
+if (requireNamespace("lme4", quietly = TRUE)) {
+# Treatment assigned to whole clusters (needs lme4); formulas hold fixed
+# effects only, the engine adds the random cluster intercept
+set.seed(1)
+J <- 30
+id <- rep(seq_len(J), each = 6)
+cdat <- data.frame(school = factor(id), X = sample(rep(0:1, J / 2))[id])
+cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+# The outcome model carries the mediator as its within-cluster deviation
+# plus the observed cluster mean
+cdat$M_bar <- ave(cdat$M, cdat$school)
+cdat$M_w <- cdat$M - cdat$M_bar
+fit_m <- lme4::lmer(M ~ X + (1 | school), data = cdat)
+fit_y <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | school), data = cdat)
+cluster_med <- extract_mediation(fit_m, model_y = fit_y, treatment = "X",
+                                 mediator = "M", cluster = "school")
+nie(cluster_med)
+}
+}
+
 }
 \seealso{
 \link{MediationData}, \code{\link[=fit_mediation]{fit_mediation()}}, \code{\link[=bootstrap_mediation]{bootstrap_mediation()}}

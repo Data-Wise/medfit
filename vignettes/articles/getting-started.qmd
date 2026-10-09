@@ -330,6 +330,8 @@ glance(boot_result)
 - [Model Extraction](extraction.html) - Extract from lm, glm, lavaan models
 - [Bootstrap Inference](bootstrap.html) - Parametric and nonparametric bootstrap
 - [Methods and Formulas](methods.html) - Estimands, formulas, and standard errors
+- [Reference Card](refcard.html) - One-page lookup of calls, classes, and effects
+- [Cookbook](cookbook.html) - Ten task recipes, including cluster-randomized trials
 
 ## What medfit Covers
 

@@ -12,7 +12,7 @@
 #' mediator-by-mediator, three-way, covariate products, function-wrapped terms
 #' such as `I(X * M2)` -- is unsupported.
 #'
-#' @param hits `"<response>: <term>"` labels from [.find_product_terms()].
+#' @param hits `"<response>: <term>"` labels from `.find_product_terms()`.
 #' @param model_y Outcome model.
 #' @param treatment,mediators Variable names.
 #' @return `list(interactions = <mediators with a supported product, in
@@ -356,7 +356,7 @@
 
 #' Extract joint natural effects from lm/glm models (worker)
 #'
-#' Called by [.extract_mediation_lm_impl()] after [.check_joint_fit()] has
+#' Called by `.extract_mediation_lm_impl()` after `.check_joint_fit()` has
 #' validated the models. Evaluates the unit-contrast (0 -> 1) effects at the
 #' sample covariate means (VanderWeele and Vansteelandt 2014):
 #' NIE = \eqn{\sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{sum((t2i + t3i) * b1i*)},

@@ -102,7 +102,7 @@
 
 #' Locate a treatment-by-mediator interaction term in a model formula
 #'
-#' Formula-level counterpart of [.find_interaction_term()] (which inspects a
+#' Formula-level counterpart of `.find_interaction_term()` (which inspects a
 #' fitted model's coefficient names). Returns the term label of the `X:M`
 #' product term in `formula`, trying both orderings, or `NA_character_` when
 #' no such term is present. Used by the `"regmedint"` engine to decide between

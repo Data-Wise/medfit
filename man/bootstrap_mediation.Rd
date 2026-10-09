@@ -201,6 +201,31 @@ result_np <- bootstrap_mediation(
 print(result_np)
 }
 
+\donttest{
+if (requireNamespace("lme4", quietly = TRUE)) {
+# Treatment assigned to whole clusters (needs lme4); formulas hold fixed
+# effects only, the engine adds the random cluster intercept
+set.seed(1)
+J <- 30
+id <- rep(seq_len(J), each = 6)
+cdat <- data.frame(school = factor(id), X = sample(rep(0:1, J / 2))[id])
+cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+# Resample whole clusters. A refit that is singular or does not converge is
+# dropped, and the warning counts how many were
+nie_of <- function(d) {
+  unname(nie(fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X",
+                           mediator = "M", engine = "lmer",
+                           cluster = "school")))
+}
+result_cluster <- bootstrap_mediation(
+  nie_of, method = "nonparametric", data = cdat, cluster = "school",
+  n_boot = 20, seed = 1
+)
+print(result_cluster)
+}
+}
+
 }
 \seealso{
 \link{BootstrapResult}, \link{MediationData}, \code{\link[=fit_mediation]{fit_mediation()}}

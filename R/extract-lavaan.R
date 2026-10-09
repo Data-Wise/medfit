@@ -685,7 +685,7 @@ extract_mediation_lavaan <- function(object,
 #' Classify a multi-mediator lavaan structure as serial or parallel
 #'
 #' Conservative, backward-compatible inference for `structure = "auto"` on
-#' lavaan objects -- the SEM analogue of [.classify_multimediator_structure()]
+#' lavaan objects -- the SEM analogue of `.classify_multimediator_structure()`
 #' for lm/glm. Returns `"parallel"` only on POSITIVE evidence (no mediator is
 #' regressed on another); otherwise defaults to `"serial"` (the historical
 #' default for vector `mediator`). It never errors -- malformed inputs fall
@@ -737,7 +737,7 @@ extract_mediation_lavaan <- function(object,
 #'
 #' Internal worker for the parallel branch of [extract_mediation()] on lavaan
 #' objects (`X -> M_j -> Y` for k independent mediators). It is the SEM analogue
-#' of [.extract_parallel_mediation_lm()] and returns a `ParallelMediationData`
+#' of `.extract_parallel_mediation_lm()` and returns a `ParallelMediationData`
 #' object. Total indirect effect = `sum_j a_j * b_j`.
 #'
 #' @param object Fitted lavaan model.
@@ -984,7 +984,7 @@ extract_mediation_lavaan <- function(object,
 #' @description
 #' Internal worker for the four-way (VanderWeele 2014) branch of
 #' [extract_mediation()] on lavaan objects. The SEM analogue of
-#' [.extract_interaction_mediation_lm()]: it returns an `InteractionMediationData`
+#' `.extract_interaction_mediation_lm()`: it returns an `InteractionMediationData`
 #' object for continuous `Y` and `M` with binary treatment and reference level
 #' `m_star`.
 #'
