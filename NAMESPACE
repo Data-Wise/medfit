@@ -34,6 +34,7 @@ importFrom(generics,
   glance,
   tidy
 )
+importFrom(lifecycle,deprecated)
 importFrom(stats,
   coef,
   confint,
