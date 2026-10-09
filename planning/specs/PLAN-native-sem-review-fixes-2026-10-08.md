@@ -116,4 +116,6 @@ The earlier Codex finding on `R/extract-joint.R:162-167` (row names do not prove
 - J6 (L-BFGS for unconstrained fits) was the least reliable solver from random starts: 93.3% against 100% for nlminb and 98.5% for SLSQP. Flagged for the author, not changed.
 - The first Codex finding on `R/extract-joint.R:162-167` (row names do not prove shared subjects) concerns code already on `dev` (PR #76), is unverified, and is not part of this branch.
 
-**Still needs the author:** approval of the whole grammar spec (its status line says DRAFT), and the release assignment for Ext D versus native (both may claim 0.6.0).
+**Whole-spec approval:** given by the author on 2026-10-08; the grammar spec's status line now says APPROVED.
+
+**Still needs the author:** the release assignment for Ext D versus native (both may claim 0.6.0).
