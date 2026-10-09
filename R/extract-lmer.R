@@ -91,6 +91,15 @@
          "cluster vector in the same order (complete cases of both models); ",
          "they differ in `", cluster, "`", call. = FALSE)
   }
+  # Same count, same cluster order and same treatment values do not make the
+  # rows the same individuals: each fit may have dropped different members.
+  if (.lmer_rows_differ(.lmer_row_names(object), .lmer_row_names(model_y))) {
+    stop("The mediator and outcome models were fitted to different individuals: ",
+         "they have the same number of rows and the same cluster vector, but the ",
+         "rows each model kept are different (their data row names differ). Fit ",
+         "both models to the same rows, for example by dropping incomplete rows ",
+         "from the data once before fitting", call. = FALSE)
+  }
   x <- lapply(list(`mediator model` = object, `outcome model` = model_y),
               .lmer_treatment, treatment = treatment)
   if (!isTRUE(all.equal(x[[1]], x[[2]], check.attributes = FALSE))) {
@@ -104,6 +113,18 @@
   }
   list(cluster = cluster, ids = ids[[1]], x = x[[1]], treatment = treatment,
        mediator = mediator, se_type = se_type)
+}
+
+# Data row names the model frame kept: the only trace of which individuals a
+# fit used. Default names (1, 2, ..., n) carry no identity, since a rebuilt data
+# frame or a tibble resets them, so the check fires only when both fits kept
+# non-default names. It is best effort: it cannot see a mismatch between frames
+# whose row names were both reset.
+.lmer_row_names <- function(fit) rownames(stats::model.frame(fit))
+
+.lmer_rows_differ <- function(a, b) {
+  is_default <- function(r) identical(r, as.character(seq_along(r)))
+  !is_default(a) && !is_default(b) && !identical(a, b)
 }
 
 # Behavior 1: lmerMod and its subclasses; glmerMod gets the D7 error.
