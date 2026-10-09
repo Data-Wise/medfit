@@ -52,3 +52,14 @@ pnorm(a) - 0.5       = 0.4331928
 a^.5                 = 1.2247449
 TALLY accepted: 14 of 14 valid expressions evaluated; 14 equal R's own evaluation of the same text (tolerance 1e-14)
 R check: parse(-2^2) = -4  2^3^2 = 512 
+
+== result-domain guard: every evaluation must return one finite real double ==
+1/0            -> expression '1/0' did not evaluate to one finite real number (got Inf) at a = 1.5, b = 2.0
+0/0            -> expression '0/0' did not evaluate to one finite real number (got NaN) at a = 1.5, b = 2.0
+(-1)^.5        -> expression '(-1)^.5' did not evaluate to one finite real number (got NaN) at a = 1.5, b = 2.0
+log(-1)        -> expression 'log(-1)' did not evaluate to one finite real number (got NaN) at a = 1.5, b = 2.0
+sqrt(-1)       -> expression 'sqrt(-1)' did not evaluate to one finite real number (got NaN) at a = 1.5, b = 2.0
+exp(1000)      -> expression 'exp(1000)' did not evaluate to one finite real number (got Inf) at a = 1.5, b = 2.0
+qnorm(2)       -> expression 'qnorm(2)' did not evaluate to one finite real number (got NaN) at a = 1.5, b = 2.0
+1/(a - 1.5)    -> expression '1/(a - 1.5)' did not evaluate to one finite real number (got Inf) at a = 1.5, b = 2.0
+TALLY domain: 8 of 8 non-finite or non-real results rejected; 5 of 5 valid boundary expressions accepted

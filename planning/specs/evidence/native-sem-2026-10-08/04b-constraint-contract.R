@@ -10,12 +10,16 @@ tests <- list(`a*b`=function(x) x[1]*x[2], `a+b-0.5`=function(x) x[1]+x[2]-.5, `
 cat("== linearity test (q = 5 parameters) ==\n"); for (nm in names(tests)) cat(sprintf("%-10s linear: %s\n", nm, is_linear(tests[[nm]], 5)))
 # --- multistart on a*b == 0 ---
 h <- function(x) x[1]*x[2]; hj <- function(x) jac(h, x)
+# Acceptance (spec 4.5c): nloptr status in {1, 3, 4} (success, ftol reached, xtol reached) AND KKT stationarity <= 1e-3 (provisional; calibrated below) AND constraint residual <= 1e-6.
+kkt_measure <- function(x, h, hj) { gx <- g(x); J <- matrix(hj(x), nrow = 1)
+  lam <- tryCatch(qr.solve(t(J), -gx), error = function(e) 0)            # least-squares multiplier: J' lam = -g
+  r <- gx + as.vector(t(J) %*% lam); max(abs(r)) / max(1, max(abs(gx))) }  # stationarity residual, scaled by the objective gradient
 solve1 <- function(s) { o <- try(nloptr(s,f,g,eval_g_eq=h,eval_jac_g_eq=hj,opts=list(algorithm="NLOPT_LD_SLSQP",xtol_rel=1e-10,ftol_rel=1e-14,maxeval=2000)), silent=TRUE)
-  if (inherits(o,"try-error")) return(list(fm=Inf, res=Inf, th=s)); list(fm=o$objective, res=abs(h(o$solution)), th=o$solution) }
+  if (inherits(o,"try-error")) return(list(fm=Inf, res=Inf, th=s, status=NA, kkt=Inf)); list(fm=o$objective, res=abs(h(o$solution)), th=o$solution, status=o$status, kkt=kkt_measure(o$solution, h, hj)) }
 # Perturbed starts must be valid (positive-definite implied covariance, pd_ok in common.R): redraw up to 20 times, else reuse the user's start.
 perturb <- function(s) { for (j in 1:20) { p <- s + rnorm(length(s), 0, 0.5*pmax(abs(s), 1)); if (pd_ok(mod, p)) return(p) }; s }
 multistart <- function(s, k = 5, seed = 1, feas = 1e-6) { set.seed(seed); starts <- c(list(s), lapply(seq_len(k-1), function(i) perturb(s)))
-  r <- lapply(starts, solve1); fm <- vapply(r, `[[`, 0, "fm"); res <- vapply(r, `[[`, 0, "res"); ok <- res <= feas & is.finite(fm)
+  r <- lapply(starts, solve1); fm <- vapply(r, `[[`, 0, "fm"); res <- vapply(r, `[[`, 0, "res"); st <- vapply(r, function(z) isTRUE(z$status %in% c(1, 3, 4)), TRUE); kk <- vapply(r, `[[`, 0, "kkt"); ok <- res <= feas & is.finite(fm) & st & kk <= 1e-3
   if (!any(ok)) return(list(fm = NA, won = NA, spread = NA, feasible = FALSE))
   w <- which(ok)[which.min(fm[ok])]; list(fm = fm[w], won = w, spread = diff(range(fm[ok])), feasible = TRUE, n_feasible = sum(ok)) }
 BEST <- 0.095154
@@ -51,14 +55,14 @@ cat("A kink outside [-2, 2] that the old 3-point numeric check missed: ", syn_cl
 
 cat("\n== 4.5d warning rule: warn if any start is infeasible/failed OR spread > max(1e-6, 1e-6*|F_best|) ==\n")
 solve_cap <- function(h, hj, s, maxeval) { o <- try(nloptr(s, f, g, eval_g_eq = h, eval_jac_g_eq = hj, opts = list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-10, ftol_rel = 1e-14, maxeval = maxeval)), silent = TRUE)
-  if (inherits(o, "try-error")) return(list(fm = Inf, res = Inf)); list(fm = o$objective, res = max(abs(h(o$solution)))) }
+  if (inherits(o, "try-error")) return(list(fm = Inf, res = Inf, status = NA, kkt = Inf)); list(fm = o$objective, res = max(abs(h(o$solution))), status = o$status, kkt = kkt_measure(o$solution, h, hj)) }
 ms2 <- function(h, hj, s, k = 5, seed = 1, maxeval = 2000) { set.seed(seed)
   starts <- c(list(s), lapply(seq_len(k - 1), function(i) perturb(s)))
   r <- lapply(starts, solve_cap, h = h, hj = hj, maxeval = maxeval) ; fm <- vapply(r, `[[`, 0, "fm"); res <- vapply(r, `[[`, 0, "res")
-  ok <- res <= 1e-6 & is.finite(fm); if (!any(ok)) return(list(n_feasible = 0, warn = NA, spread = NA))
+  ok <- res <= 1e-6 & is.finite(fm) & vapply(r, function(z) isTRUE(z$status %in% c(1, 3, 4)) && z$kkt <= 1e-3, TRUE); if (!any(ok)) return(list(n_feasible = 0, warn = NA, spread = NA))
   best <- min(fm[ok]); spread <- diff(range(fm[ok])); thr <- max(1e-6, 1e-6 * abs(best))
   list(n_feasible = sum(ok), n_starts = k, best = best, spread = spread, threshold = thr, warn_infeasible = sum(ok) < k, warn_spread = spread > thr, warn = sum(ok) < k || spread > thr) }
-rep_ <- function(lbl, r) cat(sprintf("%-46s feasible %d/%d | best %.4f | spread %.2e (threshold %.1e) | warn: infeasible=%s spread=%s -> %s\n", lbl, r$n_feasible, r$n_starts, r$best, r$spread, r$threshold, r$warn_infeasible, r$warn_spread, r$warn))
+rep_ <- function(lbl, r) cat(sprintf("%-46s accepted %d/%d | best %.4f | spread %.2e (threshold %.1e) | warn: infeasible=%s spread=%s -> %s\n", lbl, r$n_feasible, r$n_starts, r$best, r$spread, r$threshold, r$warn_infeasible, r$warn_spread, r$warn))
 hp <- function(x) x[1]*x[2]; hpj <- function(x) jac(hp, x)
 rep_("a*b == 0, normal (two local solutions)", ms2(hp, hpj, c(.3,.3,.1,1,1)))
 he <- function(x) exp(x[1]) + x[2] - 1.5; hej <- function(x) jac(he, x)
@@ -80,3 +84,41 @@ cases <- list("negative variances (vm = vy = -0.5)" = c(0,0,0,-0.5,-0.5), "tiny 
 cat(sprintf("%-58s %12s | %-14s %-18s %-8s\n", "start", "objective", "is.finite(F)", "F < 1e9 (old script)", "pd_ok"))
 for (nm in names(cases)) { st <- cases[[nm]]; v <- f(st); cat(sprintf("%-58s %12.3g | %-14s %-18s %-8s\n", nm, v, is.finite(v), v < 1e9, pd_ok(mod, st))) }
 cat("is.finite(F) admits the negative-variance start (the sentinel 1e10 is finite); F < 1e9 rejects a genuinely positive-definite start whose objective is large; pd_ok decides both correctly.\n")
+
+# ======================================================================================================
+# Review round 4 (F3-c). Convergence criteria: nloptr termination status plus a KKT stationarity check.
+# ======================================================================================================
+cat("\n== 4.5c convergence: nloptr status + KKT stationarity of the Lagrangian (equality constraint a*b == 0) ==\n")
+run_one <- function(s) { o <- try(nloptr(s, f, g, eval_g_eq = hp, eval_jac_g_eq = hpj, opts = list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-10, ftol_rel = 1e-14, maxeval = 2000)), silent = TRUE)
+  if (inherits(o, "try-error")) return(data.frame(status = NA, F = NA, resid = NA, kkt = NA))
+  data.frame(status = o$status, F = o$objective, resid = abs(hp(o$solution)), kkt = kkt_measure(o$solution, hp, hpj)) }
+st_stall <- run_one(c(0,0,0,.5,.5)); cat(sprintf("stalled start (0,0,0,.5,.5): status %d, F = %.4f, |h| = %.1e, KKT stationarity = %.3g\n", st_stall$status, st_stall$F, st_stall$resid, st_stall$kkt))
+set.seed(11); U <- lapply(1:60, function(i) c(runif(2,-1,1), runif(1,-.5,.5), runif(2,.3,2)))
+R <- do.call(rbind, lapply(U, run_one)); R$class <- ifelse(is.na(R$F), "error", ifelse(R$F < BEST + 1e-6, "better (a = 0)", ifelse(R$F < 0.107, "other local (b = 0)", "stalled/poor")))
+cat("status codes over 60 random user starts:\n"); print(table(R$status, useNA = "ifany"))
+cat("KKT stationarity by solution class (n, min, median, max):\n")
+print(do.call(rbind, lapply(split(R, R$class), function(d) data.frame(n = nrow(d), min = signif(min(d$kkt, na.rm = TRUE), 3), median = signif(median(d$kkt, na.rm = TRUE), 3), max = signif(max(d$kkt, na.rm = TRUE), 3)))))
+
+cat("\n== stalled start under the acceptance rule (status + KKT + residual) ==\n")
+a1 <- multistart(c(0,0,0,.5,.5), k = 1); a5 <- multistart(c(0,0,0,.5,.5), k = 5)
+cat(sprintf("n_starts = 1: accepted = %s  -> the fit errors 'no start converged' instead of returning F = 1.029\n", a1$feasible))
+cat(sprintf("n_starts = 5: accepted = %s, n_accepted = %d, F = %.4f\n", a5$feasible, a5$n_feasible, a5$fm))
+cat("60 random user starts, reaches the better solution under the acceptance rule: 1 start", sum(vapply(U, function(s) { r <- multistart(s, 1, seed = 1); isTRUE(r$feasible) && r$fm < BEST + 1e-6 }, TRUE)), "/60 | 5 starts",
+    sum(vapply(seq_along(U), function(i) { r <- multistart(U[[i]], 5, seed = i); isTRUE(r$feasible) && r$fm < BEST + 1e-6 }, TRUE)), "/60\n")
+
+cat("\n== KKT threshold calibration (equality constraints; converged solutions vs a stalled start) ==\n")
+per_start <- function(h, hj, s, k = 5, seed = 1) { set.seed(seed); starts <- c(list(s), lapply(seq_len(k - 1), function(i) perturb(s)))
+  do.call(rbind, lapply(seq_along(starts), function(i) { o <- nloptr(starts[[i]], f, g, eval_g_eq = h, eval_jac_g_eq = hj, opts = list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-10, ftol_rel = 1e-14, maxeval = 2000))
+    data.frame(start = i, status = o$status, F = round(o$objective, 10), resid = signif(abs(h(o$solution)), 2), kkt = signif(kkt_measure(o$solution, h, hj), 3)) })) }
+cat("exp(a) + b == 1.5, five starts (all converged; the largest KKT is on an xtol-terminated start whose F equals the others to 1e-10):\n"); print(per_start(he, hej, c(.3,.3,.1,1,1)), row.names = FALSE)
+cat("Planted early stop: the same constraint with loose tolerances (does a successfully terminated but non-stationary feasible point exist?):\n")
+for (tol in c(1e-1, 1e-2, 1e-3)) { o <- nloptr(c(.3,.3,.1,1,1), f, g, eval_g_eq = he, eval_jac_g_eq = hej, opts = list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = tol, ftol_rel = tol, maxeval = 2000))
+  cat(sprintf("  xtol_rel = ftol_rel = %.0e: status %d, F = %.6f, |h| = %.1e, KKT = %.2e -> accepted by status+residual: %s, by KKT <= 1e-3: %s\n", tol, o$status, o$objective, abs(he(o$solution)), kkt_measure(o$solution, he, hej),
+      o$status %in% c(1,3,4) && abs(he(o$solution)) <= 1e-6, kkt_measure(o$solution, he, hej) <= 1e-3)) }
+
+cat("\n== 4.5c acceptance rule, unit level (stubbed solver results) ==\n")
+accept <- function(status, resid, kkt) { why <- c(if (!(status %in% c(1, 3, 4))) "status", if (!(resid <= 1e-6)) "residual", if (!(kkt <= 1e-3)) "KKT"); if (length(why)) paste("REJECT by", paste(why, collapse = " + ")) else "accept" }
+stubs <- list(list("converged (status 3, resid 1e-9, KKT 1e-8)", 3, 1e-9, 1e-8), list("xtol-terminated, still converged (status 4, KKT 2.8e-5)", 4, 4.3e-9, 2.83e-5),
+  list("max evaluations (status 5), feasible, stationary", 5, 0, 1e-9), list("roundoff-limited stall (status -4, resid 0, KKT 1.0): the real stalled start", -4, 0, 1),
+  list("stall mislabeled as success (status 4, resid 0, KKT 1.0): only KKT can catch it", 4, 0, 1), list("success but infeasible (status 3, resid 1e-3, KKT 1e-9)", 3, 1e-3, 1e-9))
+for (st in stubs) cat(sprintf("%-82s -> %s\n", st[[1]], accept(st[[2]], st[[3]], st[[4]])))

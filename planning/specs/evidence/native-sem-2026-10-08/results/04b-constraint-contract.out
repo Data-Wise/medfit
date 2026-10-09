@@ -7,7 +7,7 @@ a^2        linear: FALSE
 a*0+b      linear: TRUE
 abs(a)-b   linear: FALSE
 
-== stalled start (0,0,0,.5,.5): single solve F = 1.0290 (|h| = 0.0e+00) | 5 starts F = 0.0952, winner = start 5, spread = 0.9338 ==
+== stalled start (0,0,0,.5,.5): single solve F = 1.0290 (|h| = 0.0e+00) | 5 starts F = 0.0952, winner = start 5, spread = 0.0110 ==
 60 random user starts, reaches the better solution (F = 0.095154): 1 start 34/60 | 5 starts 56/60
 infeasible constraint set:  status -4, max |residual| 1.70 -> rejected by the 1e-6 gate: TRUE 
 
@@ -32,8 +32,8 @@ min(a, b)        nonlinear  PASS
 A kink outside [-2, 2] that the old 3-point numeric check missed:  nonlinear 
 
 == 4.5d warning rule: warn if any start is infeasible/failed OR spread > max(1e-6, 1e-6*|F_best|) ==
-a*b == 0, normal (two local solutions)         feasible 5/5 | best 0.0952 | spread 1.10e-02 (threshold 1.0e-06) | warn: infeasible=FALSE spread=TRUE -> TRUE
-exp(a) + b == 1.5, normal (unique optimum)     feasible 5/5 | best 0.0146 | spread 1.90e-11 (threshold 1.0e-06) | warn: infeasible=FALSE spread=FALSE -> FALSE
+a*b == 0, normal (two local solutions)         accepted 5/5 | best 0.0952 | spread 1.10e-02 (threshold 1.0e-06) | warn: infeasible=FALSE spread=TRUE -> TRUE
+exp(a) + b == 1.5, normal (unique optimum)     accepted 5/5 | best 0.0146 | spread 1.90e-11 (threshold 1.0e-06) | warn: infeasible=FALSE spread=FALSE -> FALSE
 
 == 4.5d rule, unit level (stubbed start results): warn if any start fails OR spread > max(1e-6, 1e-6*|F_best|) ==
 one feasible start of five, at a poor local solution (F = 1.03) old rule: silent  new rule: WARN
@@ -48,3 +48,40 @@ negative variances (vm = vy = -0.5)                               1e+10 | TRUE  
 tiny positive variances (vm = vy = 1e-9), positive definite     2.19e+09 | TRUE           FALSE              TRUE    
 ordinary start                                                   0.0115 | TRUE           TRUE               TRUE    
 is.finite(F) admits the negative-variance start (the sentinel 1e10 is finite); F < 1e9 rejects a genuinely positive-definite start whose objective is large; pd_ok decides both correctly.
+
+== 4.5c convergence: nloptr status + KKT stationarity of the Lagrangian (equality constraint a*b == 0) ==
+stalled start (0,0,0,.5,.5): status -4, F = 1.0290, |h| = 0.0e+00, KKT stationarity = 1
+status codes over 60 random user starts:
+
+ 3 
+60 
+KKT stationarity by solution class (n, min, median, max):
+                     n      min   median      max
+better (a = 0)      34 1.59e-11 1.65e-09 6.74e-08
+other local (b = 0) 26 1.64e-12 1.03e-09 4.05e-08
+
+== stalled start under the acceptance rule (status + KKT + residual) ==
+n_starts = 1: accepted = FALSE  -> the fit errors 'no start converged' instead of returning F = 1.029
+n_starts = 5: accepted = TRUE, n_accepted = 4, F = 0.0952
+60 random user starts, reaches the better solution under the acceptance rule: 1 start 34 /60 | 5 starts 56 /60
+
+== KKT threshold calibration (equality constraints; converged solutions vs a stalled start) ==
+exp(a) + b == 1.5, five starts (all converged; the largest KKT is on an xtol-terminated start whose F equals the others to 1e-10):
+ start status          F   resid      kkt
+     1      3 0.01461678 1.8e-13 1.51e-07
+     2      4 0.01461678 4.3e-09 2.83e-05
+     3      3 0.01461678 2.1e-12 1.27e-07
+     4      3 0.01461678 1.9e-11 3.43e-07
+     5      3 0.01461678 8.9e-16 1.81e-08
+Planted early stop: the same constraint with loose tolerances (does a successfully terminated but non-stationary feasible point exist?):
+  xtol_rel = ftol_rel = 1e-01: status 3, F = 0.014617, |h| = 3.6e-09, KKT = 4.25e-04 -> accepted by status+residual: TRUE, by KKT <= 1e-3: TRUE
+  xtol_rel = ftol_rel = 1e-02: status 3, F = 0.014617, |h| = 3.6e-09, KKT = 4.25e-04 -> accepted by status+residual: TRUE, by KKT <= 1e-3: TRUE
+  xtol_rel = ftol_rel = 1e-03: status 3, F = 0.014617, |h| = 3.6e-09, KKT = 4.25e-04 -> accepted by status+residual: TRUE, by KKT <= 1e-3: TRUE
+
+== 4.5c acceptance rule, unit level (stubbed solver results) ==
+converged (status 3, resid 1e-9, KKT 1e-8)                                         -> accept
+xtol-terminated, still converged (status 4, KKT 2.8e-5)                            -> accept
+max evaluations (status 5), feasible, stationary                                   -> REJECT by status
+roundoff-limited stall (status -4, resid 0, KKT 1.0): the real stalled start       -> REJECT by status + KKT
+stall mislabeled as success (status 4, resid 0, KKT 1.0): only KKT can catch it    -> REJECT by KKT
+success but infeasible (status 3, resid 1e-3, KKT 1e-9)                            -> REJECT by residual

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-08 |
-| **Status** | DRAFT. Written by the medfit session (K1). Section 9 items 1-3 were accepted as proposed on 2026-10-08 ("do recommended"); the author's final approval of the whole spec is still pending. Revised after the adversarial review: T1 (evaluator boundary, 4.2a) and T2 (full productions, 4.1 and 4.2b) done; T3 (nonlinear-constraint contract, 4.5a-f, K9) done. Review round 3 (1 medium: start validity must be positive definiteness, not a finite or bounded objective) addressed in 4.5b and 4.5f. Review round 2 (4 medium findings) addressed: `fname`, literal forms and hex (4.1, 4.2a), syntactic linearity (4.5a), valid starts and the failure-or-spread warning rule (4.5b, 4.5d), runner failure propagation (evidence `run-all.sh`). |
+| **Status** | DRAFT. Written by the medfit session (K1). Section 9 items 1-3 were accepted as proposed on 2026-10-08 ("do recommended"); the author's final approval of the whole spec is still pending. Revised after the adversarial review: T1 (evaluator boundary, 4.2a) and T2 (full productions, 4.1 and 4.2b) done; T3 (nonlinear-constraint contract, 4.5a-f, K9) done. Review round 4 (2 mediums: optimizer termination and stationarity not required, no result-domain guard on expressions) addressed in 4.2a step 4, 4.5c, 4.5d, 4.5f. Review round 3 (1 medium: start validity must be positive definiteness, not a finite or bounded objective) addressed in 4.5b and 4.5f. Review round 2 (4 medium findings) addressed: `fname`, literal forms and hex (4.1, 4.2a), syntactic linearity (4.5a), valid starts and the failure-or-spread warning rule (4.5b, 4.5d), runner failure propagation (evidence `run-all.sh`). |
 | **Task** | P0 grammar spec; precedes P1 (parser) and P2 (converters). |
 | **Inherits** | Handoff J13-J17 (missingmed `docs/specs/HANDOFF-medfit-native-sem-engine-2026-10-08.md`) and this repo's ledger [GRILL-native-sem-engine-medfit-2026-10-08.md](GRILL-native-sem-engine-medfit-2026-10-08.md): K1 (spec lives here), K2/K2b (any math expression, allowlist-checked), K4 (name), K5c (raw data only). |
 | **Evidence labels** | **[V]** verified by a command in this session; **[A]** assumed or proposed, needs the author's confirmation. |
@@ -83,6 +83,7 @@ letter_or_dot := letter | "."
 1. **Parse.** `parse(text = , keep.source = FALSE)` must yield exactly one expression; zero, several (`a; system("x")`), or a syntax error is rejected.
 2. **Validate the call tree before any evaluation.** Allowed nodes only: a finite double literal (`5L`, `1i`, `Inf` and `1e999` are rejected, and hexadecimal literals such as `0x10` are rejected by a pre-parse check that ignores names like `a0x1`); a symbol that is a declared label; a call whose head is a **bare symbol** in the allowlist below, with no named arguments and an argument count inside its arity. Everything else is rejected and the first offending construct is named: strings, `TRUE`/`NA`, `::`, `:::`, `$`, `@`, `[`, `[[`, `<-`, `=`, `function`, `if`, formulas, backtick names, calls whose head is not a bare symbol (`base::system(...)`, `get("system")(...)`, `(function() 1)()`), and a symbol that is an allowlisted function name used as a label.
 3. **Evaluate in a locked environment.** `env <- new.env(parent = emptyenv())`; bind each allowlisted function **explicitly to its `base`/`stats` object** (`exp = base::exp`, `pnorm = stats::pnorm`, ...); bind each label to a numeric value; `eval(expr, env)`. Never evaluate in, or inherit from, the caller, global, or package environment.
+4. **Guard the result (review round 4).** Every evaluation, whether of a constant subexpression at build time or at an optimizer iterate, must return **exactly one finite real double**. Anything else (`Inf`, `NaN`, a length other than one, a non-double) is an error naming the expression, the value returned and the label values, and the evaluation never reaches the optimizer or the Jacobian. R's own `NaNs produced` warnings are suppressed in favor of this error. [V] (`06`): `1/0`, `0/0`, `(-1)^.5`, `log(-1)`, `sqrt(-1)`, `exp(1000)`, `qnorm(2)` and `1/(a - 1.5)` at `a = 1.5` were all rejected (8 of 8); `log(1)`, `1/a`, `sqrt(b)`, `(-8)^2` and `0*a` were accepted (5 of 5). In R these operations return `NaN` and not a complex value; complex values arise only from the `1i` literal, which is already rejected.
 
 | Function | Arity |
 |---|---|
@@ -160,23 +161,35 @@ The rule errs in one direction only: an expression that is linear in fact but no
 
 `engine_args` may set `n_starts` (integer, at least 1). Among starts that satisfy 4.5c, the lowest objective wins.
 
-#### 4.5c Feasibility gate
+#### 4.5c Acceptance gate (review rounds 1-4: feasibility alone is not convergence)
 
-A start is **feasible** only if every equality has `abs(h(x)) <= 1e-6` and every inequality is satisfied to `1e-6` at its solution. If no start is feasible the fit reports non-convergence, naming the first violated constraint and its residual. (Verified [V]: the contradictory pair `a == 1`, `a == 2` returned nloptr status -4 with max residual 1.70 and is rejected by this gate.)
+A start is **accepted** only if **all three** hold at its solution:
+
+1. **Termination.** nloptr status is `1` (success), `3` (ftol reached) or `4` (xtol reached). Status `2` (`stopval`) is never requested; `5` (max evaluations), `6` (max time) and every negative code (`-1` failure, `-2` invalid arguments, `-3` out of memory, `-4` roundoff-limited, `-5` forced stop) are failures.
+2. **Feasibility.** Every equality has `abs(h(x)) <= 1e-6` and every inequality is satisfied to `1e-6`.
+3. **Stationarity.** `KKT <= 1e-3`, where `KKT = max|grad F + t(J) %*% lambda| / max(1, max|grad F|)`, `J` is the K3 central-difference Jacobian of the constraints and `lambda` the least-squares multiplier (`lambda = 0` when `J` is rank deficient, which makes the measure the full gradient).
+
+A start that errors or fails any condition is a **failed start**. If no start is accepted the fit errors, naming the strongest failure (status, residual, KKT) for the best attempt. [V] The contradictory pair `a == 1`, `a == 2` returned status `-4` with maximum residual 1.70 and is rejected.
+
+**Evidence and calibration** (`04b`; equality constraints only). Converged solutions: `a*b == 0`, 60 starts, all status 3, KKT between 1.6e-11 and 6.7e-8 for both genuine local solutions (`a` = 0 and `b` = 0); `exp(a) + b == 1.5`, 5 starts, status 3 or 4, KKT 1.8e-8 to **2.8e-5**, the largest on an xtol-terminated start whose objective equals the others to 1e-10. The stalled start (0, 0, 0, .5, .5) on `a*b == 0`: status **-4**, residual 0, F = 1.029, KKT **1.0**. The first draft used `1e-6` and wrongly rejected the 2.8e-5 start; `1e-3` sits 35 times above the largest converged value and 1000 times below the stall. **The threshold is provisional**, calibrated on two problems, and is to be re-checked in plan task N3 with the same discipline as the N5 SE tolerance (K10).
+
+**What each condition is shown to do.** Status alone catches the real stalled start (-4). I could **not** produce a feasible, successfully terminated, non-stationary point: SLSQP with loose tolerances (`1e-1` to `1e-3`) still landed at the right solution with KKT 4.3e-4. So the KKT condition is defense in depth whose independent value is demonstrated only on a stubbed result (a stall mislabeled as status 4), not on a real run. KKT also cannot tell a local solution from the global one: the `b = 0` solution passes it, and only the spread (4.5d) exposes that.
+
+**Not covered.** Inequality constraints: active inequalities (`abs(h) <= 1e-6`) should be treated as equalities with a nonnegative-multiplier condition; this is specified here but **not prototyped**.
 
 #### 4.5d Agreement diagnostics (attached to the fit)
 
 | Field | Content |
 |---|---|
-| `n_starts`, `n_feasible` | starts run and starts passing 4.5c |
+| `n_starts`, `n_accepted` | starts run and starts accepted by 4.5c |
 | `winner` | index of the winning start (1 is the user's) |
-| `objective_spread` | max minus min objective among feasible starts |
+| `objective_spread` | max minus min objective among accepted starts |
 
-**Warning rule** (review round 2, finding F3-b): the fit warns once if **either** (i) at least one start failed 4.5c or errored (`n_feasible < n_starts`), **or** (ii) `objective_spread > max(1e-6, 1e-6 * abs(F_best))`, where `F_best` is the winning objective. The message names which condition fired, the values, and "the reported fit is the best of `<n_feasible>`". If no start is feasible the fit errors (4.5c).
+**Warning rule** (review round 2, finding F3-b): the fit warns once if **either** (i) at least one start failed 4.5c or errored (`n_accepted < n_starts`), **or** (ii) `objective_spread > max(1e-6, 1e-6 * abs(F_best))`, where `F_best` is the winning objective. The message names which condition fired, the values, and "the reported fit is the best of `<n_accepted>`". If no start is feasible the fit errors (4.5c).
 
 Why both conditions: the spread alone is blind when a single start survives. [V] Rule-level cases (`04b`): one feasible start of five at a poor local solution (F = 1.03): the spread-only rule is silent, the new rule warns; four feasible and agreeing plus one failed: spread-only silent, new rule warns; five feasible and agreeing: silent under both; five feasible at two local solutions: warns under both. Integration runs: `a*b == 0` warns (five feasible, spread 1.1e-2); `exp(a) + b == 1.5` is silent (five feasible, spread 1.9e-11).
 
-The spread is also the only signal for a start that stalls **at a feasible point**: [V] the start (0, 0, 0, .5, .5) on `a*b == 0` returned F = 1.029 with residual 0.0 against the best F = 0.0952, so the feasibility gate alone cannot catch it. With `n_starts = 1` nothing can be compared, so only the one-time nonlinearity warning remains.
+A start that stalls **at a feasible point** is now a failed start under 4.5c rather than a candidate: [V] the start (0, 0, 0, .5, .5) on `a*b == 0` returned F = 1.029 with residual 0.0 (feasible) against the best F = 0.0952, status -4, KKT 1.0. With `n_starts = 1` it is rejected and the fit **errors** ("no start converged") instead of returning F = 1.029; with `n_starts = 5`, 4 of 5 are accepted, F = 0.0952 wins, and the failure warning fires. The spread still matters for the case KKT cannot see: starts that all converge to different local solutions.
 
 #### 4.5e What the multi-start does and does not guarantee
 
@@ -185,13 +198,15 @@ Measured [V] on `a*b == 0` (n = 300, observed three-variable model, 60 random us
 #### 4.5f Tests (planted defects, each must turn red when its mechanism is removed)
 
 1. **Linearity (4.5a):** the 16-expression table gives the stated classes. Planted defect: treating `e1 * e2` as linear when both sides contain labels must flip `a*b` and `(a-b)*(a+b)`; treating an unknown call as linear must flip `abs(a)-b` and `min(a, b)`.
-2. **Stalled start:** `a*b == 0` from (0, 0, 0, .5, .5) with `n_starts = 1` returns F near 1.03 and raises **no** spread or failure warning (a single start has nothing to compare; the one-time nonlinearity warning is the only signal). With `n_starts = 5` and the pinned seed it returns F within `1e-6` of 0.095154 (verified [V] with seed 1, where start 5 won) and the spread warning fires.
+2. **Stalled start:** `a*b == 0` from (0, 0, 0, .5, .5): with `n_starts = 1` the start is rejected (status -4, KKT 1.0) and the fit **errors** "no start converged" naming status and KKT; with `n_starts = 5` and the pinned seed 4 of 5 starts are accepted, F is within `1e-6` of 0.095154, and the failure warning fires (verified [V] with seed 1). Planted defect: replacing the acceptance gate by the residual-only gate must make the single-start fit return F = 1.029 silently.
 3. **Warning rule (4.5d), unit level:** the five stubbed cases above, each with its stated old-rule and new-rule outcome. Planted defect: restoring the spread-only rule must turn the "one feasible start" and "four feasible plus one failed" cases red.
-4. **Warning rule, integration:** `a*b == 0` warns on spread; `exp(a) + b == 1.5` is silent with `n_feasible = 5`.
+4. **Warning rule, integration:** `a*b == 0` warns on spread; `exp(a) + b == 1.5` is silent with `n_accepted = 5`.
 5. **Valid starts (4.5b):** a perturbation that yields a non-positive-definite implied covariance is redrawn; planted defects: removing the redraw must make a start fail with a negative variance on the evidence seed, and replacing the positive-definite test by `is.finite(F)` must admit the negative-variance start (F = 1e10) while replacing it by `F < 1e9` must reject the 1e-9-variance start (F = 2.19e9); the three-rule table in the `04b` output is the fixture.
 6. **Feasibility (4.5c):** `a == 1` with `a == 2` errors naming a constraint and the residual.
 7. **No-warning path:** a provably linear constraint produces no warning and runs one solve.
 8. **Reproducibility:** two runs of the same model give identical start perturbations and the same winner.
+9. **Acceptance gate (4.5c), unit level:** the six stubbed solver results: converged and xtol-terminated-converged are accepted; max-evaluations (status 5), the real stall (status -4, KKT 1.0), a stall mislabeled as status 4 (rejected by KKT only) and a successful but infeasible result (residual 1e-3) are rejected, each naming its reason. Planted defects: removing the status test must admit status 5; removing the KKT test must admit the mislabeled stall; the KKT threshold must keep the 2.8e-5 converged start (the first draft's `1e-6` rejected it).
+10. **Result-domain guard (4.2a step 4):** the eight non-finite or non-real expressions are rejected naming the expression, value and labels; the five valid boundary expressions are accepted. Planted defect: removing the guard must let `1/0` and `0/0` reach the optimizer.
 
 ## 5. The parameter table (J14)
 
@@ -256,7 +271,7 @@ Unsupported operators error **by name**, never silently: `<~`, `~*~`, `|~`, `:~`
 |---|---|---|
 | Core grammar (section 4) | `lavParseModelString()` on lavaan >= 0.7-3; compare `lhs, op, rhs, level (= block), fixed, label, start, lower, upper` and the constraint set after applying bound folding to both sides | the models in section 2, a simple mediation, serial and parallel mediation, latent mediator, equal-label constraints, `:=` indirect effects, two-level syntax |
 | Extensions (section 6) | own expected tables | comma expansion; `CONSTRAINT(...)` equivalence; **planted defect:** the oracle drops `y1` and our parser must not |
-| Safety (4.2a) | locked evaluator | every row of the section 7 rejection table; **planted defect (positive control):** a caller-side rebinding of `exp` must change the result of an `all.names()`-only implementation and must **not** change the locked evaluator's result or run the caller's function |
+| Safety (4.2a) | locked evaluator | every row of the section 7 rejection table; **planted defects (positive controls):** removing the result-domain guard must let `1/0` through; a caller-side rebinding of `exp` must change the result of an `all.names()`-only implementation and must **not** change the locked evaluator's result or run the caller's function |
 | Expression grammar (4.2b) | `parse(text = )` restricted to the 4.2a node types | `-2^2`, `2^3^2`, `2^-1`, `a*b`, `exp(a)/sqrt(b+1)`, `min(a, b, 3)`, `log(a, 2)`, `pnorm(a) - 0.5`, `1e-3*a`, `.5 + a`, `1. * a`, `1e3*a`, `2E-2*a`, `a^.5`: values equal R's own evaluation of the same text (14 of 14 verified [V]) |
 | Errors (section 7) | pinned regexes | every row of section 7 |
 | Level (section 4.3) | own | parses; fitting errors with the pinned message |

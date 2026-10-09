@@ -25,7 +25,11 @@ validate_expr <- function(e, labels) {
   stop("disallowed construct: ", deparse(e), " (", typeof(e), ")", call. = FALSE) }
 eval_expr <- function(text, values) {
   e <- parse_expr(text); validate_expr(e, names(values))
-  env <- list2env(c(BOUND, as.list(values)), parent = emptyenv()); eval(e, env) }
+  env <- list2env(c(BOUND, as.list(values)), parent = emptyenv())
+  r <- suppressWarnings(eval(e, env))
+  # result-domain guard (spec 4.2a step 4): exactly one finite real double, else an error naming the expression and the label values
+  if (!(is.double(r) && length(r) == 1L && is.finite(r))) stop("expression '", text, "' did not evaluate to one finite real number (got ", paste(format(r), collapse = ","), ") at ", paste(names(values), "=", format(values), collapse = ", "), call. = FALSE)
+  r }
 naive_check <- function(text, labels) { e <- parse_expr(text); bad <- setdiff(all.names(e), c(names(ALLOWED), labels)); length(bad) == 0 }
 # ---- T1 step 1: the planted defect ----
 flag <- FALSE; exp <- function(x) { flag <<- TRUE; base::exp(x) }   # caller rebinds an allowlisted name
@@ -46,3 +50,11 @@ for (cs in acc_cases) cat(sprintf("%-20s = %s\n", cs, format(eval_expr(cs, c(a=1
 same <- vapply(acc_cases, function(cs) isTRUE(all.equal(eval_expr(cs, c(a=1.5, b=2)), eval(parse(text = cs), list(a=1.5, b=2)), tolerance = 1e-14)), TRUE)
 cat(sprintf("TALLY accepted: %d of %d valid expressions evaluated; %d equal R's own evaluation of the same text (tolerance 1e-14)\n", length(acc_cases), length(acc_cases), sum(same)))
 cat("R check: parse(-2^2) =", eval(parse(text = "-2^2")), " 2^3^2 =", eval(parse(text = "2^3^2")), "\n")
+
+cat("\n== result-domain guard: every evaluation must return one finite real double ==\n")
+dom_bad <- c("1/0", "0/0", "(-1)^.5", "log(-1)", "sqrt(-1)", "exp(1000)", "qnorm(2)", "1/(a - 1.5)")
+n_dom <- 0
+for (cs in dom_bad) { r <- tryCatch({ eval_expr(cs, c(a = 1.5, b = 2)); "ACCEPTED" }, error = function(e) conditionMessage(e)); if (r != "ACCEPTED") n_dom <- n_dom + 1; cat(sprintf("%-14s -> %s\n", cs, substr(r, 1, 100))) }
+dom_ok <- c("log(1)", "1/a", "sqrt(b)", "(-8)^2", "0*a")
+ok_dom <- vapply(dom_ok, function(cs) { r <- tryCatch(eval_expr(cs, c(a = 1.5, b = 2)), error = function(e) NA_real_); is.finite(r) }, TRUE)
+cat(sprintf("TALLY domain: %d of %d non-finite or non-real results rejected; %d of %d valid boundary expressions accepted\n", n_dom, length(dom_bad), sum(ok_dom), length(dom_ok)))
