@@ -81,7 +81,7 @@ The spec is approved, so it is not edited here. Each item is resolved in the pla
 
 ### PR A: class, extraction, effects, methods (`feature/cluster-extract`)
 
-- [x] **T0: Preflight.** *(done 2026-10-08: lme4 2.0.6 and pbkrtest 0.5.5 installed, neither in `DESCRIPTION` until T10; the 10 s budget is in the Risks table; the canary result arrives with the first CI push)*
+- [x] **T0: Preflight.** *(done 2026-10-08: lme4 2.0.6 and pbkrtest 0.5.5 installed, neither in `DESCRIPTION` until T10; the 10 s budget is in the Risks table; canary RESOLVED on draft PR #90 (commit 5b37366): `skip_on_cran()` tests run on CI. ubuntu release/devel `[ FAIL 0 | WARN 0 | SKIP 3 | PASS 1837 ]`, equal to the local `NOT_CRAN=true` pass count; the noSuggests job `[ FAIL 0 | WARN 0 | SKIP 74 | PASS 1324 ]`, so the lme4 tests skip cleanly without lme4)*
   - Acceptance:
     - The always-on runtime budget (10 s) is recorded in this plan.
     - `lme4` and `pbkrtest` are confirmed available locally (lme4 2.0.6, pbkrtest 0.5.5 on this machine) and absent from the noSuggests job.
