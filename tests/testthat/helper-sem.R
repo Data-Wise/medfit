@@ -140,3 +140,20 @@ sem_start <- function(ram) {
     }
   }, numeric(1), USE.NAMES = FALSE)
 }
+
+# lavaan's estimates and SEs for a structure, reordered to the engine's parameter order.
+sem_lavaan_ref <- function(nm, information, n = 400, seed = 21) {
+  mod <- sem_models()[[nm]]
+  d <- sem_sim(mod, n, seed)
+  fit <- suppressWarnings(lavaan::sem(sem_lavaan_text(nm), d, fixed.x = FALSE, information = information))
+  norm <- function(x) {
+    vapply(strsplit(x, "~~", fixed = TRUE), function(p) {
+      if (length(p) == 2) paste(sort(p), collapse = "~~") else p
+    }, character(1))
+  }
+  pos <- match(norm(sem_lavaan_names(mod$ram$par_names, mod$loadings)), norm(names(lavaan::coef(fit))))
+  list(
+    mod = mod, smp = .sem_sample(d, mod$ram), # nolint: object_usage_linter.
+    theta = unname(lavaan::coef(fit))[pos], se = sqrt(diag(lavaan::vcov(fit)))[pos]
+  )
+}

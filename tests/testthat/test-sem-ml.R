@@ -155,3 +155,68 @@ test_that("planted defects are caught", {
   expect_error(no_guard(bad, mod$ram, smp, deriv = TRUE), "leading minor")
   expect_no_error(.sem_eval(bad, mod$ram, smp, deriv = TRUE))
 })
+
+# Information and vcov (plan S4) ------------------------------------------------
+
+test_that("the analytic Jacobian of the implied covariance matches central differences", {
+  for (nm in names(sem_models())) {
+    mod <- sem_models()[[nm]]
+    theta <- mod$theta * 1.1 + 0.02
+    ds <- .sem_dsigma(theta, mod$ram)
+    for (k in seq_len(mod$ram$q)) {
+      e <- numeric(mod$ram$q)
+      e[k] <- 1e-6
+      fd <- (.sem_implied(mod$ram, theta + e) - .sem_implied(mod$ram, theta - e)) / 2e-6
+      expect_lt(max(abs(ds[[k]] - fd)), 1e-8, label = paste(nm, mod$ram$par_names[k]))
+    }
+  }
+})
+
+test_that("expected and observed SEs match lavaan on all four structures", {
+  skip_if_not_installed("lavaan")
+  for (nm in names(sem_models())) {
+    ex <- sem_lavaan_ref(nm, "expected")
+    se_e <- sqrt(diag(.sem_vcov(ex$theta, ex$mod$ram, ex$smp, "expected")))
+    expect_lt(max(abs(se_e / ex$se - 1)), 1e-6, label = paste("expected", nm))
+    ob <- sem_lavaan_ref(nm, "observed")
+    se_o <- sqrt(diag(.sem_vcov(ob$theta, ob$mod$ram, ob$smp, "observed")))
+    expect_lt(max(abs(se_o / ob$se - 1)), 1e-5, label = paste("observed", nm))
+  }
+})
+
+test_that("observed equals expected information at the saturated solution", {
+  skip_if_not_installed("lavaan")
+  ref <- sem_lavaan_ref("observed", "expected")
+  io <- .sem_info_observed(ref$theta, ref$mod$ram, ref$smp)
+  ie <- .sem_info_expected(ref$theta, ref$mod$ram, ref$smp)
+  expect_lt(max(abs(io - ie)) / max(abs(ie)), 1e-6)
+})
+
+test_that("a singular information matrix gives NA SEs and one warning", {
+  a <- sem_rows(list("m1", "eta", "", 1), list("m2", "eta"))
+  s <- sem_rows(list("eta", "eta"), list("m1", "m1"), list("m2", "m2"))
+  ram <- .sem_ram(c("eta", "m1", "m2"), c("m1", "m2"), a, s)
+  d <- data.frame(m1 = c(1, 2, 3, 4, 6, 5, 7, 9), m2 = c(2, 1, 4, 3, 6, 8, 7, 9))
+  smp <- .sem_sample(d, ram)
+  # The observed information is singular only where S = Sigma(theta) (a stationary point), so use
+  # an exact-fit solution: loading 1, latent variance = cov(m1, m2), residuals take the rest.
+  v <- smp$s["m1", "m2"]
+  theta <- c(1, v, smp$s["m1", "m1"] - v, smp$s["m2", "m2"] - v)
+  expect_true(all(theta > 0))
+  expect_equal(.sem_fml(theta, ram, smp), 0, tolerance = 1e-10)
+  for (info in c("observed", "expected")) {
+    expect_warning(vc <- .sem_vcov(theta, ram, smp, info), "information matrix is singular", fixed = TRUE)
+    expect_true(all(is.na(vc)))
+    expect_identical(dimnames(vc), list(ram$par_names, ram$par_names))
+  }
+})
+
+test_that("a planted n - 1 scale in the information is caught", {
+  skip_if_not_installed("lavaan")
+  ref <- sem_lavaan_ref("observed", "expected")
+  bad <- sem_mutate(.sem_info_expected, "smp$n/2", "(smp$n - 1)/2")
+  vc_bad <- solve(bad(ref$theta, ref$mod$ram, ref$smp))
+  gap <- max(abs(sqrt(diag(vc_bad)) / ref$se - 1))
+  expect_gt(gap, 1e-4)
+  expect_lt(max(abs(sqrt(diag(.sem_vcov(ref$theta, ref$mod$ram, ref$smp, "expected"))) / ref$se - 1)), 1e-6)
+})

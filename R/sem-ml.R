@@ -167,3 +167,61 @@
   r <- .sem_eval(theta, ram, smp, deriv = TRUE)
   if (is.null(r)) numeric(ram$q) else r$g
 }
+
+# Jacobian of the implied covariance: a list of q matrices dSigma / d theta_k
+# (p x p each). Analytic: with B = (I - A)^-1 and Sigma_full = B S B',
+#   d/dA_rc:  B[, r] Sigma_full[c, ] + its transpose,
+#   d/dS_rc:  B[, r] B[, c]' + B[, c] B[, r]'   (once when r == c),
+# and equal labels sum over their entries.
+.sem_dsigma <- function(theta, ram) {
+  m <- .sem_ram_mats(ram, theta)
+  b <- solve(ram$eye - m$a)
+  full <- b %*% m$s %*% t(b)
+  nv <- ram$nv
+  out <- replicate(ram$q, matrix(0, nv, nv), simplify = FALSE)
+  for (i in seq_along(ram$pos_a)) {
+    r <- (ram$pos_a[i] - 1L) %% nv + 1L
+    cc <- (ram$pos_a[i] - 1L) %/% nv + 1L
+    mm <- tcrossprod(b[, r], full[cc, ])
+    k <- ram$k_a[i]
+    out[[k]] <- out[[k]] + mm + t(mm)
+  }
+  for (i in seq_along(ram$pos_s)) {
+    r <- (ram$pos_s[i] - 1L) %% nv + 1L
+    cc <- (ram$pos_s[i] - 1L) %/% nv + 1L
+    mm <- tcrossprod(b[, r], b[, cc])
+    k <- ram$k_s[i]
+    out[[k]] <- out[[k]] + if (r == cc) mm else mm + t(mm)
+  }
+  lapply(out, function(d) d[ram$obs_idx, ram$obs_idx, drop = FALSE])
+}
+
+# Expected information for the log likelihood: (n / 2) * J' (Sigma^-1 x Sigma^-1) J,
+# computed as (n / 2) * tr(Sigma^-1 dSigma_k Sigma^-1 dSigma_l).
+.sem_info_expected <- function(theta, ram, smp) {
+  sigma <- .sem_implied(ram, theta)
+  sigma_inv <- chol2inv(chol(sigma))
+  w <- lapply(.sem_dsigma(theta, ram), function(d) sigma_inv %*% d)
+  w_vec <- vapply(w, as.vector, numeric(smp$p^2))
+  wt_vec <- vapply(w, function(x) as.vector(t(x)), numeric(smp$p^2))
+  info <- smp$n / 2 * crossprod(w_vec, wt_vec)
+  dimnames(info) <- list(ram$par_names, ram$par_names)
+  (info + t(info)) / 2
+}
+
+# Observed information for the log likelihood: (n / 2) times the symmetrized
+# central-difference Jacobian of the analytic gradient of F, with the K3 step
+# eps^(1/3) * max(|x|, 1) and no extra dependency.
+.sem_info_observed <- function(theta, ram, smp) {
+  h <- .Machine$double.eps^(1 / 3) * pmax(abs(theta), 1)
+  hess <- vapply(seq_along(theta), function(j) {
+    up <- theta
+    dn <- theta
+    up[j] <- up[j] + h[j]
+    dn[j] <- dn[j] - h[j]
+    (.sem_grad(up, ram, smp) - .sem_grad(dn, ram, smp)) / (2 * h[j])
+  }, numeric(length(theta)))
+  info <- smp$n / 2 * (hess + t(hess)) / 2
+  dimnames(info) <- list(ram$par_names, ram$par_names)
+  info
+}
