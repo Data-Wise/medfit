@@ -44,7 +44,9 @@ needs \verb{cluster =} and returns a \link{ClusterMediationData}. The engine
 drops incomplete rows once, splits the mediator and each level-1
 covariate into its within-cluster deviation and observed cluster mean
 (\verb{<M>_cwc}, \verb{<M>_cm}), adds a random cluster intercept to both models,
-and fits by REML. It does not take \code{weights}, non-Gaussian families,
+and fits by REML. The formulas hold fixed effects only (a random-effect
+term such as \code{(1 | id)} is an error; random slopes go in
+\code{engine_args}). It does not take \code{weights}, non-Gaussian families,
 \code{se_type = "sandwich"}, or extra arguments.
 }}
 

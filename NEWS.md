@@ -52,6 +52,13 @@
   `cluster = NULL` (the default) resamples rows as before; `cluster` with the
   parametric or plugin methods is an error.
 
+* `fit_mediation(engine = "lmer")` now stops with a clear error when a formula
+  contains a random-effect term such as `(1 | id)`: the engine adds the random
+  cluster intercept itself, and the term used to reach `lmer()` as a fixed term
+  and fail with `Invalid grouping factor specification`. The message names the
+  formula and points to `engine_args` for random slopes. `I(a | b)` as a
+  covariate is not affected.
+
 # medfit 0.5.0
 
 Two fixes change results (marked **Behavior change** below): serial `te()`

@@ -38,6 +38,8 @@
          paste(names(list(...)), collapse = ", "),
          ". Use `engine_args` for random slopes and REML.", call. = FALSE)
   }
+  .assert_no_random_terms(formula_y, "formula_y", "random_y")
+  .assert_no_random_terms(formula_m, "formula_m", "random_m")
   .assert_pkg("lme4", "engine = \"lmer\"")
   checkmate::assert_string(cluster, .var.name = "cluster")
   checkmate::assert_choice(cluster, choices = names(data),
@@ -85,6 +87,40 @@
   fit_y <- lme4::lmer(fml_y, data = dat, REML = args$REML)
   extract_mediation(fit_m, model_y = fit_y, treatment = treatment,
                     mediator = mediator, cluster = cluster, se_type = se_type)
+}
+
+# Random-effect terms written lme4-style in a formula: `(... | ...)` and
+# `(... || ...)`, plus a bare top-level `|` on the right-hand side. Walked by
+# hand because lme4::findbars() is deprecated and also flags `I(a | b)`, a
+# legitimate logical-OR covariate.
+.formula_random_terms <- function(formula) {
+  is_bar <- function(e) {
+    is.call(e) && (identical(e[[1L]], as.name("|")) || identical(e[[1L]], as.name("||")))
+  }
+  walk <- function(e) {
+    if (!is.call(e)) return(character())
+    if (identical(e[[1L]], as.name("(")) && length(e) == 2L && is_bar(e[[2L]])) {
+      return(paste(deparse(e), collapse = " "))
+    }
+    as.character(unlist(lapply(as.list(e)[-1L], walk), use.names = FALSE))
+  }
+  rhs <- formula[[length(formula)]]
+  c(if (is_bar(rhs)) paste(deparse(rhs), collapse = " "), walk(rhs))
+}
+
+# fit_mediation() adds the random cluster intercept itself, so a formula that
+# already carries one would reach lmer() as a fixed term and fail there with a
+# message that names neither the cause nor the remedy.
+.assert_no_random_terms <- function(formula, what, slope_arg) {
+  if (!inherits(formula, "formula")) return(invisible(NULL))
+  re <- .formula_random_terms(formula)
+  if (length(re)) {
+    stop("`", what, "` contains the random-effect term `", re[1L], "`. ",
+         "engine = \"lmer\" adds the random cluster intercept itself; write fixed ",
+         "effects only (for example `Y ~ X + M`). For a random slope use ",
+         "`engine_args = list(", slope_arg, " = ~ M)`.", call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 # Validate `engine_args`: only random_y, random_m and REML are accepted.

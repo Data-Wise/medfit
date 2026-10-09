@@ -1220,3 +1220,33 @@ test_that("the fit_mediation() route and the extract route give the same object"
   expect_lt(abs(unname(nie(by_fit)) - 0.3), 3 * se_nie)
   expect_lt(abs(unname(nie(by_extract)) - 0.3), 3 * se_nie)
 })
+
+test_that("fit_mediation(engine = \"lmer\") rejects random-effect terms in the formulas", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 10, sizes = 5, seed = 1)$data
+  fit <- function(fy, fm) {
+    fit_mediation(fy, fm, data = dat, treatment = "X", mediator = "M",
+                  engine = "lmer", cluster = "cluster")
+  }
+  expect_error(fit(Y ~ X + M + (1 | cluster), M ~ X),
+               "`formula_y` contains the random-effect term `\\(1 \\| cluster\\)`.*random_y")
+  expect_error(fit(Y ~ X + M, M ~ X + (1 | cluster)),
+               "`formula_m` contains the random-effect term.*random_m")
+  expect_error(fit(Y ~ X + (M | cluster), M ~ X), "formula_y` contains")
+  expect_error(fit(Y ~ X + M + (1 + M || cluster), M ~ X), "formula_y` contains")
+  # The check runs before any model code: no stray lme4 or factor warning.
+  expect_no_warning(try(fit(Y ~ X + M + (1 | cluster), M ~ X), silent = TRUE))
+})
+
+test_that("the random-term detector has no false positive for I(a | b)", {
+  expect_identical(.formula_random_terms(Y ~ X + I(C > 0 | X == 1)), character())
+  expect_identical(.formula_random_terms(Y ~ X + M), character())
+  expect_identical(.formula_random_terms(M ~ X + (1 | school)), "(1 | school)")
+  expect_identical(.formula_random_terms(Y ~ X + 1 | school), "X + 1 | school")
+  # A valid call is unchanged by the check.
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 10, sizes = 5, seed = 1)$data
+  ok <- quiet_few(fit_mediation(Y ~ X + M, M ~ X, data = dat, treatment = "X",
+                                mediator = "M", engine = "lmer", cluster = "cluster"))
+  expect_true(is.finite(unclass(nie(ok)))[[1]])
+})
