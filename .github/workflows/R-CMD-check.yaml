@@ -13,6 +13,8 @@ permissions: read-all
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
+    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default.
+    timeout-minutes: 45
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
@@ -64,6 +66,8 @@ jobs:
   # bootstrap; see rforge docs/specs/PROPOSAL-cran-incoming-hardening.)
   noSuggests:
     runs-on: ubuntu-latest
+    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default.
+    timeout-minutes: 30
 
     name: ubuntu-latest (release, noSuggests)
 
