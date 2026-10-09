@@ -5,6 +5,7 @@ linters: linters_with_defaults(
   )
 exclusions: list(
     "inst/doc",
+    "tests/testthat/helper-frozen-extract-lavaan.R",
     "tests/sim/sem-reliability.R" = list(object_usage_linter = Inf, line_length_linter = Inf),
     "tests/sim/sem-se-gate.R" = list(object_usage_linter = Inf, line_length_linter = Inf)
   )
