@@ -14,6 +14,7 @@ bootstrap_mediation(
   parallel = FALSE,
   ncores = NULL,
   seed = NULL,
+  cluster = NULL,
   ...
 )
 }
@@ -53,6 +54,15 @@ rows (\code{m1_}, ..., \code{y_}) and the sample covariate means.}
 If NULL, uses \code{parallel::detectCores() - 1}}
 
 \item{seed}{Integer: random seed for reproducibility (optional but recommended)}
+
+\item{cluster}{Character string: name of a cluster variable in \code{data}, for
+\code{method = "nonparametric"} only (an error with the other methods). The
+resampling then draws whole clusters with replacement and gives each draw
+a fresh cluster id before \code{statistic_fn} sees the data, so a cluster drawn
+twice is refit as two clusters, not one bigger one. Singular fits and
+convergence warnings from a refit count as failures: they are excluded,
+their messages are suppressed, and their number is added to the warning.
+\code{NULL} (default) resamples rows as before.}
 
 \item{...}{Additional arguments (reserved for future use)}
 }
