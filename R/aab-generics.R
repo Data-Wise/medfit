@@ -95,6 +95,21 @@
 #' lavaan fit estimates all equations jointly, so for the same data the
 #' intervals can differ between engines.
 #'
+#' ## Coefficient names
+#'
+#' The simple single-mediator [MediationData] from lm/glm fits names three
+#' coefficients `m_<treatment>`, `y_<mediator>` and `y_<treatment>`
+#' (`m_X`, `y_M` and `y_X` for variables `X` and `M`), and code that looks
+#' coefficients up by name, such as the parametric bootstrap in probmed, relies on
+#' them. The lavaan method adds the same three names to `@estimates` and
+#' `@vcov` for an observed, continuous treatment, mediator and outcome. Each is
+#' a second name for the `a`, `b` or `c_prime` path, with the same estimate and
+#' covariances, appended after the existing rows. A lavaan fit with a latent or
+#' ordered treatment, mediator or outcome, and any extraction with
+#' `standardized = TRUE`, gets none of the three and works with the plugin
+#' estimators only. Serial, parallel and four-way objects are not
+#' affected.
+#'
 #' @examples
 #' \donttest{
 #' # Extract the mediation structure from fitted lm models, using the

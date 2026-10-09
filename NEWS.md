@@ -1,3 +1,22 @@
+# medfit (development version)
+
+## Behavior change
+
+* `extract_mediation()` on a lavaan fit of a simple single-mediator model now
+  appends the rows `m_<treatment>`, `y_<mediator>` and `y_<treatment>` to
+  `@estimates` and `@vcov` of the returned `MediationData`. These are the
+  names the lm/glm route already used, so code that resolves coefficients by
+  name, such as `probmed::pmed(method = "parametric_bootstrap")`, now works on
+  lavaan-derived objects instead of failing with a subscript-out-of-bounds
+  error. Each new row repeats the `a`, `b` or `c_prime` path with the same
+  estimate and covariances; every existing row keeps its name, value and
+  position. Code that indexes `@estimates` or `@vcov` by position past the
+  `a`, `b`, `c_prime` rows, or that counts their rows, sees three more. A
+  lavaan fit with a latent or ordered treatment, mediator or outcome, and
+  any `standardized = TRUE` extraction, gets none of the three rows and
+  supports the plugin estimators only. Serial, parallel and four-way objects
+  are unchanged (#106).
+
 # medfit 0.6.0
 
 ## New features
