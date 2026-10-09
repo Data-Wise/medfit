@@ -1,6 +1,6 @@
 # PLAN: clear error for random-effect terms in `fit_mediation(engine = "lmer")` formulas
 
-**Date:** 2026-10-08 · **Status:** DRAFT, awaiting author approval · **Branch:** `feature/lmer-formula-error` off `dev` (R code, so not on `dev`)
+**Date:** 2026-10-08 · **Status:** APPROVED 2026-10-08 (author) · **Branch:** `feature/lmer-formula-error` off `dev` (R code, so not on `dev`)
 **Origin:** the refcard's fresh-context trial (PR #94): an agent wrote `Y ~ X + M + (1 | school)` and got `Invalid grouping factor specification, 1 | school` plus a stray `'|' not meaningful for factors` warning.
 **Size:** one small PR, about 30 minutes.
 
