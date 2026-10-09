@@ -84,7 +84,7 @@ T4 (S17b) refers to workstream B by name only; it does not wait for B to merge.
     - Q2 and R9: the `model` argument captures glm's `model =` and partial-matches `mod =`; it is a behavior change in NEWS; `model` joins missingmed's reserved arguments (a note for its owner, not a write); R9 no longer says "additive only" and lists all six packages with the impact table.
     - S16 and S21: `fit_mediation(engine = "native", weights =, se_type = "sandwich")` routes to N6, one argument name on both front ends.
     - Section 2.4 reserves `level`, `block`, `group` columns (NA in 0.7.0) and states `cluster =` semantics for a later native two-level fit.
-    - R5 and S18: `lifecycle` experimental badges on `SEMFit` and `fit_sem()`, a NEWS line, and the rename cost.
+    - R5 and S18: an experimental label on `SEMFit` and `fit_sem()`, a NEWS line, and the rename cost. **Deviation found while editing:** `lifecycle` is not a dependency of medfit (absent from `DESCRIPTION`, `NAMESPACE`, `R/`), so the label is a prose "Lifecycle: experimental" line; adding the package for badges is an ask-first item left to the author.
   - Verify: grep `additive only` returns nothing; grep `lifecycle` finds R5 and S18.
   - Files: PLAN. Depends on: T4.
 - [ ] **T6: Seam coverage and the release gate (S). Fixes F12, F14.**
