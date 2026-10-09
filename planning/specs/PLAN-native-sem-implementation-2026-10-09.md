@@ -153,7 +153,7 @@ S1 review of 73c322a├─> PR 2: S7 parser -> S8 evaluator -> S9 linearity, fol
 | S21 | N6 | IPW with sandwich SEs | checkpoint B | M |
 | S22 | N7 | SEM MBCO by separate linear refits | checkpoint B | M |
 | S23 | N8 | Cookbook recipe, article polish, CLAUDE.md/README/AGENTS.md file lists | PR 7 (and PR 8/9 if in scope) | S |
-| S24 | N8 | Release: version bump, revdep check, release PR, tag, r-universe | S23 | S |
+| S24 | N8 | Release: version bump, dependents' test suites against the dev build, revdep check, release PR, tag, r-universe | S23 | S |
 | S25 | N3 | Nonlinear constraints: Jacobians, NNLS multiplier sign check (`73c322a` after S1), default `n_starts`, 4.5d diagnostics, KKT recalibration; PR 11, after checkpoint B, not gating the release | PR 7, S1 | M |
 
 ### 4.3 PR slicing
@@ -232,8 +232,8 @@ S1 review of 73c322a├─> PR 2: S7 parser -> S8 evaluator -> S9 linearity, fol
 
 #### PR 3: accessor seam (`feature/sem-extract-seam`, parallel with PR 1 and PR 2)
 
-- [ ] **S10: Seam refactor (N4 prerequisite).** Section 2.4. `R/extract-sem.R` holds `.sem_accessors_lavaan()`; the workers in `R/extract-lavaan.R` take the accessor list.
-  - Gate: the full suite unchanged (count quoted); `test-extract-seam.R` rebuilds every lavaan fixture object through the old code path (kept in the test as a frozen copy of the pre-refactor accessor calls) and through the seam and asserts `identical()` on all properties; planted defect: a seam that drops the `label` column fails the alias test.
+- [ ] **S10: Seam refactor (N4 prerequisite).** Section 2.4. `R/extract-sem.R` holds `.sem_accessors_lavaan()`; the workers in `R/extract-lavaan.R` take the accessor list. **Every** `lavaan::` call in `R/extract-lavaan.R` goes through the seam, not only the four workers: 31 non-comment calls [V grep in this session] sit in the entry function, the serial, parallel and interaction workers, and five helpers that the earlier text did not name (`.classify_multimediator_structure_lavaan`, `.find_interaction_term_lavaan`, `.find_product_terms_lavaan`, `.lavaan_alias_source_idx`, `.lavaan_n_obs`). The `requireNamespace("lavaan")` guard in the entry function (line 132 at the time of writing) moves behind the lavaan accessor, because lavaan is in Suggests and a native fit must extract with lavaan absent.
+  - Gate: the full suite unchanged (count quoted); `test-extract-seam.R` rebuilds every lavaan fixture object through the old code path (kept in the test as a frozen copy of the pre-refactor accessor calls) and through the seam and asserts `identical()` on all properties; planted defect: a seam that drops the `label` column fails the alias test. Mechanical completeness gate: a test in `test-extract-seam.R` greps `R/extract-lavaan.R` for `lavaan::` and requires zero hits outside the accessor file, so a leftover direct call in any helper fails the suite (planted defect: re-add one `lavaan::lavInspect()` call to `.lavaan_n_obs`). A second test replaces the lavaan accessor with a hand-built accessor list and extracts with every `lavaan::` function mocked to error. PR 6 adds the end-to-end version: the noSuggests job extracts a native fit with lavaan absent.
   - No NEWS entry (no user-visible change).
 
 #### PR 4: model completion and converters (`feature/sem-model`)
@@ -292,7 +292,7 @@ S1 review of 73c322a├─> PR 2: S7 parser -> S8 evaluator -> S9 linearity, fol
 #### PR 10 and release
 
 - [ ] **S23: Docs (N8).** Cookbook recipe 11 "Mediation with a latent mediator, native engine" in `vignettes/articles/cookbook.qmd`, and `test-cookbook-consistency.R` updated from `paste0(1:10, ".")` to `1:11` (the test pins ten recipes [V]); README quick start line; CLAUDE.md, AGENTS.md and README file lists (new `R/sem-*.R` files, `SEMFit`, the native engine row in the Engines table); `.STATUS`.
-- [ ] **S24: Release (N8).** Version 0.6.0 to 0.7.0 in `DESCRIPTION` and NEWS heading; grep for `0.6.0` leftovers; full revdepcheck (section 8); release PR `dev` -> `main` (merge commit), tag `v0.7.0`, GitHub release, r-universe check through the `/api/packages` list (the per-package endpoint 404s when healthy, memory note). **Ask before merging.**
+- [ ] **S24: Release (N8).** Version 0.6.0 to 0.7.0 in `DESCRIPTION` and NEWS heading; grep for `0.6.0` leftovers; the dependents' test suites against the dev build and the revdep check (section 8); release PR `dev` -> `main` (merge commit), tag `v0.7.0`, GitHub release, r-universe check through the `/api/packages` list (the per-package endpoint 404s when healthy, memory note). **Ask before merging.**
 
 #### PR 11: nonlinear constraints (`feature/sem-nonlinear`, after checkpoint B, grill-1)
 
@@ -415,7 +415,7 @@ E2E per PR: PR 1, a latent-mediator fit through the internal builder with estima
 | Version bump 0.6.0 to 0.7.0, NEWS heading, grep for leftovers | `DESCRIPTION`, `NEWS.md` | S24 |
 | Evidence README rows for `07-preflight.R` | `planning/specs/evidence/native-sem-2026-10-08/README.md` | S0 |
 
-**Release gates (S24):** full suite with `NOT_CRAN=true`; strict check (section 4.5); r-hub (S2 rerun on the release commit); full `revdepcheck::revdep_check()` because probmed Imports medfit (CLAUDE.md "Scale the reverse-dependency check": an Imports dependent warrants the full run), plus RMediation's suite against the dev build in a scratch library; the K10, J2 and reliability CSVs current; checkpoint B answered; `cran-comments.md` not touched unless the channel is CRAN. PR 11 (S25) ships in 0.7.0 only if it merges before S24; otherwise it ships in a later minor release (grill-1).
+**Release gates (S24):** full suite with `NOT_CRAN=true`; strict check (section 4.5); r-hub (S2 rerun on the release commit); **the dependents' own test suites against the dev build (F12):** install the dev build into a scratch library and run the test suites of probmed, missingmed, mediationverse and RMediation, quoting pass and fail counts per package, with the S17b probmed gate included (on CRAN medfit's only reverse dependency is RMediation, so `revdepcheck::revdep_check()` alone never reaches probmed, missingmed or mediationverse [reviewer, eco-review; not rerun here]); `revdepcheck::revdep_check()` stays as the CRAN-facing check (CLAUDE.md "Scale the reverse-dependency check": an Imports dependent warrants the full run); the K10, J2 and reliability CSVs current; checkpoint B answered; `cran-comments.md` not touched unless the channel is CRAN. PR 11 (S25) ships in 0.7.0 only if it merges before S24; otherwise it ships in a later minor release (grill-1).
 
 **Channel: GitHub and r-universe only (recommended, not an open question).** The 0.5.0 grill's policy settles it: the next CRAN submission is triggered by probmed's own CRAN need or a user report of the 0.3.2 bug, and neither has occurred [V `.STATUS`]. Also, 0.7.0 adds a compiled Imports dependency whose CRAN-farm behavior is unmeasured until S2, and the native API is experimental (R5). When a CRAN trigger fires, the release carrying it runs the CLAUDE.md "CRAN check practice" list fresh.
 
