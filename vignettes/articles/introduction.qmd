@@ -30,6 +30,7 @@ medfit defines S7 classes for each mediation structure: `MediationData`
 (simple), `InteractionMediationData` (simple with a treatment-by-mediator
 interaction), `SerialMediationData`, `ParallelMediationData`,
 `JointMediationData` (several mediators with treatment-by-mediator products),
+`ClusterMediationData` (treatment assigned to whole clusters, from `lmer` fits),
 and `BootstrapResult`. The three most common are introduced here; see
 [Model Extraction](extraction.html) for the others.
 
