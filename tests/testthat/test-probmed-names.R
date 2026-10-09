@@ -211,7 +211,7 @@ test_that("serial, parallel and four-way lavaan objects get no m_/y_ rows", {
 # residual variance divisor and Monte Carlo draws (observed gap about a tenth
 # of that), while a mixed-up coefficient moves P_med by more than the tolerance.
 probmed_routes <- function(lav_md_fun = extract_simple) {
-  d <- probmed_names_data()
+  d <- probmed_names_data() # nolint: object_usage_linter.
   glm_md <- fit_mediation(Y ~ X + M, M ~ X, data = d,
                           treatment = "X", mediator = "M")
   lav_md <- lav_md_fun(lavaan::sem("M ~ X\n Y ~ M + X", data = d))
