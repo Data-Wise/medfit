@@ -145,8 +145,10 @@
   if (grepl("=~|~~|~", rhs)) {
     .sem_syntax_error("more than one relation operator in a statement", st)
   }
+  # strsplit() drops a trailing empty element, so a dangling comma is checked first.
+  dangling <- grepl("(^|,)\\s*(,|$)", lhs)
   lhs <- trimws(strsplit(lhs, ",", fixed = TRUE)[[1L]])
-  if (!length(lhs) || !all(grepl(.sem_name_re, lhs))) {
+  if (dangling || !length(lhs) || !all(grepl(.sem_name_re, lhs))) {
     .sem_syntax_error(paste0("invalid left side of '", op, "'"), st)
   }
   tk <- .sem_tokens(rhs, st)
@@ -401,7 +403,11 @@
   for (i in seq_len(nrow(constraints))) {
     sides <- if (constraints$op[i] == ":=") constraints$rhs[i] else c(constraints$lhs[i], constraints$rhs[i])
     for (s in sides) {
-      .sem_expr_check(.sem_expr_parse(s), known)
+      e <- .sem_expr_parse(s)
+      .sem_expr_check(e, known)
+      if (!length(all.vars(e))) {
+        .sem_expr_value(e, numeric(), s) # constant side: the result guard applies at build time (spec 4.2a step 4)
+      }
     }
   }
   defs <- stats::setNames(constraints$rhs[constraints$op == ":="], dn)

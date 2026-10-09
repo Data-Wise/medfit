@@ -233,6 +233,12 @@ test_that("every row of the spec 7 syntax table has a pinned error", {
     "Y ~ " = "empty right side",
     "Y ~ X +" = "empty term",
     "~ X" = "invalid left side",
+    "y1, ~ X" = "invalid left side",
+    ", y1 ~ X" = "invalid left side",
+    "y1,, y2 ~ X" = "invalid left side",
+    "Y ~ a*X\na == 1/0" = "did not evaluate to one finite real number",
+    "Y ~ a*X\nd := log(-1)" = "did not evaluate to one finite real number",
+    "Y ~ a*X\nsqrt(-1) < a" = "did not evaluate to one finite real number",
     "y z ~ X" = "invalid left side",
     "level: x\nY ~ X" = "malformed level line",
     "level:\nY ~ X" = "malformed level line",
@@ -241,6 +247,10 @@ test_that("every row of the spec 7 syntax table has a pinned error", {
   for (i in seq_along(bad)) {
     expect_error(.sem_parse(names(bad)[i]), bad[[i]], info = gsub("\n", " | ", names(bad)[i]))
   }
+})
+
+test_that("a constant side that is finite passes the build-time guard", {
+  expect_no_error(.sem_parse("Y ~ a*X\na == 2/4\nd := log(1) + 3"))
 })
 
 test_that("defined-parameter cycles error", {
