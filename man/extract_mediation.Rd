@@ -35,7 +35,14 @@ The \code{extract_mediation()} generic provides methods for different model type
 \itemize{
 \item \strong{lm/glm}: Extract from linear and generalized linear models
 \item \strong{lavaan}: Extract from structural equation models
-\item \strong{lmerMod}: Extract from mixed-effects models (future)
+\item \strong{lmerMod}: Extract from two linear mixed models for a treatment assigned
+to whole clusters, as a \link{ClusterMediationData}: the mediator model is
+\code{object}, the outcome model is \code{model_y}, and \code{cluster} names the cluster
+variable. Both models must be fitted to the same rows; the cluster means
+must be computed on those rows, and a pair of fits that kept different
+individuals is an error (best effort: it compares the data row names the
+fits kept, so it cannot see a mismatch between frames whose row names were
+both reset)
 \item \strong{brmsfit}: Extract from Bayesian models (future)
 }
 

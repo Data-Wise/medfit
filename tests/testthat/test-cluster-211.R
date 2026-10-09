@@ -1250,3 +1250,120 @@ test_that("the random-term detector has no false positive for I(a | b)", {
                                 mediator = "M", engine = "lmer", cluster = "cluster"))
   expect_true(is.finite(unclass(nie(ok)))[[1]])
 })
+
+# --- Adversarial review (2026-10-09): row identity and input edge cases --------
+
+test_that("extraction rejects fits that kept different individuals in the same clusters", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_cluster211(J = 30, sizes = 8, seed = 4)$data)
+  drop_m <- seq(1, nrow(d), by = 8)  # first member of every cluster
+  drop_y <- seq(2, nrow(d), by = 8)  # second member of every cluster
+  fm <- lme4::lmer(M ~ X + (1 | cluster), data = d[-drop_m, ], REML = TRUE)
+  fy <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), data = d[-drop_y, ], REML = TRUE)
+  # The review's scenario: equal counts, equal cluster vector, equal treatment.
+  expect_identical(nrow(d) - length(drop_m), nrow(d) - length(drop_y))
+  expect_identical(as.character(lme4::getME(fm, "flist")$cluster),
+                   as.character(lme4::getME(fy, "flist")$cluster))
+  expect_error(
+    extract_mediation(fm, model_y = fy, treatment = "X", mediator = "M",
+                      cluster = "cluster"),
+    "fitted to different individuals"
+  )
+})
+
+test_that("the row-identity check has no false positives on matching fits", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 30, sizes = 8, seed = 4)$data
+  ok <- fit_cluster211(dat)
+  expect_true(is.finite(unclass(nie(ok))[[1]]))
+  # Same dropped rows in both fits: identical non-default row names pass.
+  # (the cluster means are recomputed on the kept rows, as a user must)
+  keep <- cluster_fit_data(dat[-seq(1, nrow(dat), by = 8), ])
+  fm <- lme4::lmer(M ~ X + (1 | cluster), data = keep, REML = TRUE)
+  fy <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), data = keep, REML = TRUE)
+  expect_no_error(quiet_few(extract_mediation(fm, model_y = fy, treatment = "X",
+                                              mediator = "M", cluster = "cluster")))
+})
+
+test_that("the row-identity helper treats default row names as no identity", {
+  n <- as.character(1:6)
+  expect_false(medfit:::.lmer_rows_differ(n, n))
+  expect_false(medfit:::.lmer_rows_differ(n, as.character(c(1, 2, 3, 5, 6, 7))))
+  expect_false(medfit:::.lmer_rows_differ(as.character(c(2, 3, 4, 5, 6, 7)), n))
+  expect_true(medfit:::.lmer_rows_differ(as.character(c(2, 3, 4, 5, 6, 7)),
+                                         as.character(c(1, 3, 4, 5, 6, 7))))
+  expect_false(medfit:::.lmer_rows_differ(as.character(c(2, 3, 4, 5, 6, 7)),
+                                          as.character(c(2, 3, 4, 5, 6, 7))))
+})
+
+test_that("cluster id type does not change the result", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 30, sizes = 8, seed = 4)$data
+  fit <- function(d) {
+    quiet_few(fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X",
+                            mediator = "M", engine = "lmer", cluster = "cluster"))
+  }
+  base <- unclass(nie(fit(dat)))[[1]]
+  d_int <- dat
+  d_int$cluster <- as.integer(d_int$cluster)
+  d_chr <- dat
+  d_chr$cluster <- as.character(d_chr$cluster)
+  expect_equal(unclass(nie(fit(d_int)))[[1]], base, tolerance = 1e-8)
+  expect_equal(unclass(nie(fit(d_chr)))[[1]], base, tolerance = 1e-8)
+})
+
+test_that("recoding the treatment 0/1 to -1/1 halves the NIE exactly", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 30, sizes = 8, seed = 4)$data
+  fit <- function(d) {
+    quiet_few(fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X",
+                            mediator = "M", engine = "lmer", cluster = "cluster"))
+  }
+  signed <- dat
+  signed$X <- dat$X * 2 - 1
+  # a is the mediator shift per unit of X, so doubling X's range halves a, and
+  # b_between does not move, so the NIE halves.
+  expect_equal(unclass(nie(fit(signed)))[[1]], unclass(nie(fit(dat)))[[1]] / 2,
+               tolerance = 1e-6)
+  # Planted defect: a wrong ratio is rejected by the same comparison.
+  expect_false(isTRUE(all.equal(unclass(nie(fit(signed)))[[1]],
+                                unclass(nie(fit(dat)))[[1]], tolerance = 1e-6)))
+})
+
+test_that("missing values are dropped once, so the result equals the pre-dropped fit", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 30, sizes = 8, seed = 4)$data
+  holes <- dat
+  holes$M[c(3, 50)] <- NA
+  holes$Y[c(7, 90)] <- NA
+  fit <- function(d) {
+    quiet_few(fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X",
+                            mediator = "M", engine = "lmer", cluster = "cluster"))
+  }
+  predropped <- holes[stats::complete.cases(holes[, c("X", "M", "Y", "cluster")]), ]
+  expect_equal(unclass(nie(fit(holes)))[[1]], unclass(nie(fit(predropped)))[[1]],
+               tolerance = 1e-8)
+  expect_identical(nobs(fit(holes)), nrow(predropped))
+})
+
+test_that("singleton clusters are kept and counted", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 30, sizes = 8, seed = 4)$data
+  pos <- stats::ave(seq_len(nrow(dat)), dat$cluster, FUN = seq_along)
+  thin <- dat[!(as.integer(dat$cluster) %in% 1:5) | pos == 1, ]
+  f <- quiet_few(fit_mediation(Y ~ X + M, M ~ X, data = thin, treatment = "X",
+                               mediator = "M", engine = "lmer", cluster = "cluster"))
+  expect_identical(nobs(f), nrow(thin))
+  expect_true(is.finite(unclass(nie(f))[[1]]))
+})
+
+test_that("a factor treatment is an error, not a silent mis-fit", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 30, sizes = 8, seed = 4)$data
+  dat$X <- factor(dat$X, labels = c("ctl", "trt"))
+  expect_error(
+    quiet_few(fit_mediation(Y ~ X + M, M ~ X, data = dat, treatment = "X",
+                            mediator = "M", engine = "lmer", cluster = "cluster")),
+    "not a fixed effect"
+  )
+})

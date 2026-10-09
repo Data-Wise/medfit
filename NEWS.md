@@ -52,6 +52,15 @@
   `cluster = NULL` (the default) resamples rows as before; `cluster` with the
   parametric or plugin methods is an error.
 
+* `extract_mediation()` on two `lmer` fits now stops when the fits kept different
+  individuals within the same clusters (the same number of rows, the same
+  cluster vector and the same treatment values, but different rows). It used to
+  fall through to a misleading "no cluster-mean term" error, and could pair rows
+  incorrectly if values coincided. The check compares the data row names the fits
+  kept, so it cannot see a mismatch between frames whose row names were both
+  reset (a tibble, for example). `?extract_mediation` no longer lists `lmerMod` as
+  future.
+
 * The 30 internal helper functions (names starting with a dot) no longer have Rd
   pages, so the package site stops publishing 30 unlisted `dot-*` reference pages.
   No user-facing function changes.

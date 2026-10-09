@@ -29,7 +29,14 @@
 #'
 #' - **lm/glm**: Extract from linear and generalized linear models
 #' - **lavaan**: Extract from structural equation models
-#' - **lmerMod**: Extract from mixed-effects models (future)
+#' - **lmerMod**: Extract from two linear mixed models for a treatment assigned
+#'   to whole clusters, as a [ClusterMediationData]: the mediator model is
+#'   `object`, the outcome model is `model_y`, and `cluster` names the cluster
+#'   variable. Both models must be fitted to the same rows; the cluster means
+#'   must be computed on those rows, and a pair of fits that kept different
+#'   individuals is an error (best effort: it compares the data row names the
+#'   fits kept, so it cannot see a mismatch between frames whose row names were
+#'   both reset)
 #' - **brmsfit**: Extract from Bayesian models (future)
 #'
 #' Note: OpenMx extraction is planned for a future release.
