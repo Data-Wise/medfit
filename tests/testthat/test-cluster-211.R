@@ -241,3 +241,166 @@ test_that("vcov_fun and se_type = 'kr' are refused on the lmer method (P1)", {
   expect_error(extract_pair(p, se_type = "kr"), "arrives with the fit engine")
   expect_error(extract_pair(p, se_type = "sandwich"), "should be one of")
 })
+
+
+# T4: term detection by values, R1, product and slope guards ------------------
+
+# nolint start: object_usage_linter.
+terms_for <- function(fml_y, dat, fml_m = M ~ X + (1 | cluster), d = NULL) {
+  if (is.null(d)) d <- cluster_fit_data(dat)
+  m <- suppressWarnings(suppressMessages(lme4::lmer(fml_m, data = d)))
+  y <- suppressWarnings(suppressMessages(lme4::lmer(fml_y, data = d)))
+  ctx <- .lmer_guard(m, y, "X", "M", NULL, "model", NULL)
+  list(t = .lmer_terms(m, y, ctx), y = y, m = m, ctx = ctx)
+}
+
+# (c_prime, b_within, b_between) and their vcov from a terms result.
+paths_of <- function(r) {
+  V <- as.matrix(stats::vcov(r$y))
+  list(est = drop(r$t$L %*% lme4::fixef(r$y)), vcov = r$t$L %*% V %*% t(r$t$L))
+}
+
+sim_c <- function(...) sim_cluster211(J = 24, sizes = 8, seed = 4, ...)
+# nolint end
+
+test_that("the cluster-mean term is found by value under rescaling (affine detection)", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_c()$data)
+  d$M_bar_gm <- d$M_bar - mean(d$M_bar)          # grand-mean centered
+  d$M_bar_sc <- as.numeric(scale(d$M_bar))       # scale()d
+  d$M_w_sc <- d$M_w * 3                          # rescaled within term
+  base <- paths_of(terms_for(Y ~ X + M_w + M_bar + (1 | cluster), NULL, d = d))
+  for (fml in list(Y ~ X + M_w + M_bar_gm + (1 | cluster),
+                   Y ~ X + M_w + M_bar_sc + (1 | cluster),
+                   Y ~ X + M_w_sc + M_bar_sc + (1 | cluster))) {
+    r <- terms_for(fml, NULL, d = d)
+    expect_identical(r$t$mean_term, setdiff(names(lme4::fixef(r$y)),
+                                            c("(Intercept)", "X", "M_w", "M_w_sc"))[1])
+    got <- paths_of(r)
+    expect_equal(got$est, base$est, tolerance = 1e-8)
+    expect_equal(got$vcov, base$vcov, tolerance = 1e-6)
+  }
+})
+
+test_that("R1: raw and within parameterizations give the same b_between and vcov", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_c(cov = "centered")$data)
+  within <- terms_for(Y ~ X + M_w + M_bar + C + (1 | cluster), NULL, d = d)
+  raw <- terms_for(Y ~ X + M + M_bar + C + (1 | cluster), NULL, d = d)
+  expect_identical(within$t$parameterization, "within")
+  expect_identical(raw$t$parameterization, "raw")
+  a <- paths_of(within)
+  b <- paths_of(raw)
+  expect_equal(b$est, a$est, tolerance = 1e-6)
+  expect_equal(b$vcov, a$vcov, tolerance = 1e-5)
+  # The raw kappa is b_between - b_within, so b_between needs the J transform.
+  kappa <- unname(lme4::fixef(raw$y)["M_bar"])
+  expect_equal(unname(b$est["b_between"] - b$est["b_within"]), kappa, tolerance = 1e-8)
+})
+
+test_that("a planted raw-read-as-within defect moves b_between by kappa", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_c()$data)
+  good <- paths_of(terms_for(Y ~ X + M + M_bar + (1 | cluster), NULL, d = d))
+  local_mocked_bindings(.raw_to_within = function(L) L)
+  bad <- paths_of(terms_for(Y ~ X + M + M_bar + (1 | cluster), NULL, d = d))
+  kappa <- good$est[["b_between"]] - good$est[["b_within"]]
+  expect_equal(bad$est[["b_between"]], kappa, tolerance = 1e-8)
+  expect_gt(abs(bad$est[["b_between"]] - good$est[["b_between"]]), 0.05)
+})
+
+test_that("a missing mean term errors with the corrected formula", {
+  skip_if_not_installed("lme4")
+  expect_error(terms_for(Y ~ X + M_w + (1 | cluster), sim_c()$data),
+               "no cluster-mean term for `M`.*ave\\(M, cluster\\)")
+  expect_error(terms_for(Y ~ X + M_bar + (1 | cluster), sim_c()$data),
+               "no within-cluster or raw mediator term")
+  d <- cluster_fit_data(sim_c()$data)
+  d$M2 <- d$M * 2
+  expect_error(terms_for(Y ~ X + M_w + M2 + M_bar + (1 | cluster), NULL, d = d),
+               "both a within-cluster term.*raw mediator term")
+  # The guard already refuses an outcome model without the treatment.
+  expect_error(terms_for(Y ~ M_w + M_bar + (1 | cluster), sim_c()$data),
+               "Treatment `X` is not a variable of the model")
+})
+
+test_that("a near-miss mean errors: constant within clusters, not affine in the mean", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_c()$data)
+  set.seed(5)
+  d$M_near <- d$M_bar + 0.01 * stats::rnorm(nlevels(d$cluster))[as.integer(d$cluster)]
+  expect_gt(abs(stats::cor(d$M_near, d$M_bar)), 0.99)
+  expect_error(terms_for(Y ~ X + M_w + M_near + (1 | cluster), NULL, d = d),
+               "cluster mean must be computed on the rows the models use")
+})
+
+test_that("treatment- and covariate-by-mediator products error naming the term", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_c(cov = "centered")$data)
+  expect_error(terms_for(Y ~ X + M_w + M_bar + X:M_w + C + (1 | cluster), NULL, d = d),
+               "product term `X:M_w`")
+  expect_error(terms_for(Y ~ X + M_w + M_bar + X:M_bar + C + (1 | cluster), NULL, d = d),
+               "product term `X:M_bar`")
+  expect_error(terms_for(Y ~ X + M_w + M_bar + M_w:C + (1 | cluster), NULL, d = d),
+               "product term `M_w:C`")
+  expect_error(terms_for(Y ~ X + M + M_bar + I(X * M) + (1 | cluster), NULL, d = d),
+               "product term `I\\(X \\* M\\)`")
+})
+
+test_that("random slopes: within accepted; raw, mean term and treatment error", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_c(slope_sd = 0.3)$data)
+  ok <- terms_for(Y ~ X + M_w + M_bar + (1 + M_w | cluster), NULL, d = d)
+  expect_identical(ok$t$parameterization, "within")
+  expect_error(terms_for(Y ~ X + M + M_bar + (1 + M | cluster), NULL, d = d),
+               "random slope on the raw mediator term")
+  expect_error(terms_for(Y ~ X + M_w + M_bar + (1 + M_bar | cluster), NULL, d = d),
+               "random slope on the cluster-mean term")
+  expect_error(terms_for(Y ~ X + M_w + M_bar + (1 + X | cluster), NULL, d = d),
+               "random slope on the treatment")
+  expect_error(terms_for(Y ~ X + M_w + M_bar + (1 | cluster), NULL, d = d,
+                         fml_m = M ~ X + (1 + X | cluster)),
+               "random slope on the treatment")
+})
+
+test_that("P6: equal cluster means error; a naive detector would return the intercept", {
+  skip_if_not_installed("lme4")
+  dat <- sim_c()$data
+  dat$M <- mean(dat$M) + (dat$M - stats::ave(dat$M, dat$cluster))
+  d <- cluster_fit_data(dat)
+  expect_lt(stats::sd(d$M_bar), 1e-12)
+  expect_error(terms_for(Y ~ X + M_w + M_bar + (1 | cluster), NULL, d = d),
+               "no between-cluster variation in the mediator `M`")
+  # A detector with neither the intercept exclusion nor a zero-variance skip
+  # accepts "(Intercept)": it is constant within clusters and an exact affine
+  # function of a constant cluster mean.
+  naive <- function(X, m, cl, tol = 1e-8) {
+    m_bar <- stats::ave(m, cl)
+    for (nm in colnames(X)) {
+      x <- X[, nm]
+      if (max(abs(x - stats::ave(x, cl))) > tol) next
+      fit <- stats::lm.fit(cbind(1, m_bar), x)
+      if (max(abs(fit$residuals)) < tol) return(nm)
+    }
+    NULL
+  }
+  Xd <- cbind(`(Intercept)` = 1, X = d$X)
+  expect_identical(naive(Xd, d$M, d$cluster), "(Intercept)")
+  expect_null(.find_cluster_mean_term(Xd, d$M, d$cluster, exclude = "X"))
+})
+
+test_that("covariates_centered follows cluster-mean centering (P10)", {
+  skip_if_not_installed("lme4")
+  d <- cluster_fit_data(sim_c(cov = "confounded")$data)
+  centered <- terms_for(Y ~ X + M_w + M_bar + C_w + C_bar + (1 | cluster), NULL, d = d)
+  expect_true(centered$t$covariates_centered)
+  companion <- terms_for(Y ~ X + M_w + M_bar + C + C_bar + (1 | cluster), NULL, d = d)
+  expect_true(companion$t$covariates_centered)
+  no_companion <- terms_for(Y ~ X + M_w + M_bar + C + (1 | cluster), NULL, d = d)
+  expect_false(no_companion$t$covariates_centered)
+  none <- terms_for(Y ~ X + M_w + M_bar + (1 | cluster), NULL, d = d)
+  expect_true(none$t$covariates_centered)
+  pre <- cluster_fit_data(sim_c(cov = "centered")$data)
+  pre_c <- terms_for(Y ~ X + M_w + M_bar + C + (1 | cluster), NULL, d = pre)
+  expect_true(pre_c$t$covariates_centered)
+})
