@@ -44,3 +44,11 @@ test_that("planted defect: a changed seed in the cookbook is caught", {
   expect_false(grepl("set.seed(2026)", broken, fixed = TRUE))
   expect_true(grepl("set.seed(2026)", cb, fixed = TRUE))
 })
+
+test_that("the introduction articles point at the refcard and the cookbook", {
+  for (a in c("getting-started.qmd", "introduction.qmd")) {
+    txt <- article_text(a)
+    expect_true(grepl("](refcard.html)", txt, fixed = TRUE), info = a)
+    expect_true(grepl("](cookbook.html)", txt, fixed = TRUE), info = a)
+  }
+})
