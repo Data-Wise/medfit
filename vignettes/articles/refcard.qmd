@@ -14,7 +14,8 @@ execute:
 
 Quick lookup for users who already know medfit. Explanations are in the
 [articles](getting-started.html); formulas are in
-[Methods and Formulas](methods.html).
+[Methods and Formulas](methods.html); task recipes are in the
+[Cookbook](cookbook.html).
 
 ## Start here
 

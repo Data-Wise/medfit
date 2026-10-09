@@ -85,8 +85,8 @@ Everything else found by the gap analysis is already fixed (the 2026-09-24 audit
 - [x] **T1: Refcard** *(done 2026-10-08 on `feature/refcard`: `refcard.qmd` (about 120 lines), navbar group. README link deferred to release prep (above). The E2E trial found a trap: `fit_mediation(engine = "lmer")` errors with an obscure lme4 message when the formulas contain `(1 | id)`; the card now says plain formulas. Follow-up candidate: a clear error in `fit_mediation()`.)* Write `refcard.qmd`, navbar entry. Gate: renders, one evaluated chunk passes, spell, URL, `check_pkgdown()`.
 - [x] **T2: Drift guard** *(done 2026-10-08: 5 expectations pass; mutation (rename `joint_effects` in the card) fails the test; the guard also caught a real gap on first run, `BootstrapResult` missing from the card, now added.)* The coverage test and its planted defect. Gate: passes; fails with a name removed (mutation check, restored after).
 - [ ] **T3: PR 1** with T1 and T2. Docs-tier evidence plus the strict CRAN check, as for #93.
-- [ ] **T4: Cookbook** (about 90 minutes). Ten recipes, evaluated at site build. Gate: every recipe prints without error or unexplained warning; the cluster recipe matches `methods.qmd` (NIE 0.2093).
-- [ ] **T5: PR 2** with T4 plus the navbar entry.
+- [x] **T4: Cookbook** *(done 2026-10-09 on `feature/cookbook`: ten recipes, all evaluated; numbers agree with the other articles (serial 0.0755 / 0.3674 / 0.5386, parallel NIE 0.4324, cluster NIE 0.2093 with CI [-0.0038, 0.5241], the same data as `methods.qmd`). Consistency test (13 expectations) fails when the cluster seed changes or a recipe is renumbered. The cluster bootstrap warning is shown, not suppressed.)* Ten recipes, evaluated at site build. Gate: every recipe prints without error or unexplained warning; the cluster recipe matches `methods.qmd` (NIE 0.2093).
+- [x] **T5: PR 2** *(PR #97: T4, navbar entry, refcard link to the cookbook.)*
 
 ## 6. Acceptance criteria
 
