@@ -17,7 +17,7 @@
 #' @param treatment,mediators Variable names.
 #' @return `list(interactions = <mediators with a supported product, in
 #'   mediator order>, unsupported = <labels>)`.
-#' @keywords internal
+#' @noRd
 .partition_joint_products <- function(hits, model_y, treatment, mediators) {
   resp_y <- deparse(stats::formula(model_y)[[2L]])
   prefix <- paste0(resp_y, ": ")
@@ -48,7 +48,7 @@
 #' Error on product terms the joint branch does not support
 #'
 #' @param hits Unsupported `"<response>: <term>"` labels.
-#' @keywords internal
+#' @noRd
 .stop_on_unsupported_joint_products <- function(hits) { # nolint: object_length_linter.
   if (length(hits) == 0L) return(invisible(NULL))
   stop(paste0(
@@ -94,7 +94,7 @@
 #' @param decomposition As supplied to [extract_mediation()].
 #' @param vcov_fun As supplied to [extract_mediation()].
 #' @return `"serial"` or `"parallel"`.
-#' @keywords internal
+#' @noRd
 .check_joint_fit <- function(med_models, model_y, treatment, mediators,
                              structure, decomposition, vcov_fun) {
   k <- length(mediators)
@@ -210,7 +210,7 @@
 #' @param m_star As supplied.
 #' @param interactions Mediators carrying a product, in mediator order.
 #' @param supplied Logical: was `m_star` given at the call site?
-#' @keywords internal
+#' @noRd
 .normalize_joint_m_star <- function(m_star, interactions, supplied) {
   if (!supplied) m_star <- 0
   checkmate::assert_numeric(m_star, any.missing = FALSE, finite = TRUE,
@@ -267,7 +267,7 @@
 #' @param x A JointMediationData object.
 #' @param covs Covariate coefficient names.
 #' @return Named numeric vector (length 0 when there are no covariates).
-#' @keywords internal
+#' @noRd
 .joint_covariate_means <- function(x, covs) {
   if (length(covs) == 0L) return(stats::setNames(numeric(0), character(0)))
   dat <- x@data
@@ -305,7 +305,7 @@
 #' @param d K x K strictly lower-triangular matrix: `d[i, j]` is the coefficient
 #'   of mediator j in the model for mediator i.
 #' @return `list(b0, b1, gamma)` of propagated coefficients.
-#' @keywords internal
+#' @noRd
 .propagate_mediator_means <- function(b0, b1, gamma, d) {
   k <- length(b0)
   for (i in seq_len(k)[-1L]) {
@@ -331,7 +331,7 @@
 #' @param models List of fitted lm/glm (Gaussian identity) models.
 #' @param prefixes Character prefixes for the stacked coefficient names.
 #' @return Named covariance matrix of the stacked coefficients.
-#' @keywords internal
+#' @noRd
 .stacked_ols_vcov <- function(models, prefixes) {
   info <- lapply(models, function(m) {
     r <- stats::residuals(m, type = "response")
@@ -378,7 +378,7 @@
 #' @param m_star Numeric vector named by `interactions`.
 #' @param data Optional data frame; defaults to the outcome model frame.
 #' @return A `JointMediationData` object.
-#' @keywords internal
+#' @noRd
 .extract_joint_mediation_lm <- function(med_models, model_y, treatment,
                                         mediators, structure, interactions,
                                         m_star, outcome = NULL, data = NULL) {

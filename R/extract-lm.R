@@ -211,7 +211,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #'
 #' @return MediationData object, or SerialMediationData when `mediator` is a
 #'   vector of length >= 2
-#' @keywords internal
+#' @noRd
 .extract_mediation_lm_impl <- function(
   model_m,
   model_y,
@@ -528,7 +528,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #'
 #' @param models List of fitted lm/glm models (`NULL` entries are skipped).
 #' @param vars Character vector: treatment and mediator names.
-#' @keywords internal
+#' @noRd
 .find_product_terms <- function(models, vars) {
   hits <- character(0)
   for (mod in models) {
@@ -560,7 +560,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param vars Character vector: treatment and mediator names.
 #' @param require_all Logical: flag only terms involving every name in `vars`.
 #' @return `"<response>: <term>"` labels, or `character(0)`.
-#' @keywords internal
+#' @noRd
 .find_wrapped_products <- function(models, vars, require_all = FALSE) {
   hits <- character(0)
   for (mod in models) {
@@ -590,7 +590,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #'
 #' @param hits Character vector of offending terms (from
 #'   [.find_product_terms()] or [.find_product_terms_lavaan()]).
-#' @keywords internal
+#' @noRd
 .stop_on_multimediator_products <- function(hits) {
   if (length(hits) == 0L) return(invisible(NULL))
   stop(paste0(
@@ -613,7 +613,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' argument was given at the call site, as in [fit_mediation()].
 #'
 #' @param treatment,mediator Variable names, used in the suggested formula.
-#' @keywords internal
+#' @noRd
 .stop_on_unused_m_star <- function(treatment, mediator) {
   stop(paste0(
     "`m_star` applies only when the outcome model has a treatment-by-mediator ",
@@ -630,7 +630,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' formula order determines which `lm()`/`glm()` emits). Returns `NA_character_`
 #' when no interaction term is present.
 #'
-#' @keywords internal
+#' @noRd
 .find_interaction_term <- function(model_y, treatment, mediator) {
   nms <- names(stats::coef(model_y))
   cand <- c(paste0(treatment, ":", mediator), paste0(mediator, ":", treatment))
@@ -666,7 +666,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #'   (default [stats::vcov()]), e.g. a sandwich estimator.
 #' @inheritParams .extract_serial_mediation_lm
 #' @return An `InteractionMediationData` object.
-#' @keywords internal
+#' @noRd
 .extract_interaction_mediation_lm <- function( # nolint: object_length_linter.
   model_m,
   model_y,
@@ -844,7 +844,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param w Optional case weights over the rows of `mm`; `NULL` for unweighted
 #'   means. A model frame's `(weights)` column is used when rebuilding.
 #' @return Named numeric vector over `covs`.
-#' @keywords internal
+#' @noRd
 .interaction_covariate_means <- function(dat, covs, mm = NULL, w = NULL) { # nolint: object_length_linter.
   if (length(covs) == 0L) return(stats::setNames(numeric(0), character(0)))
   col_means <- function(get) {
@@ -909,7 +909,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' covariance, so `cov(b, c')` is non-zero. See the `extract_mediation` lm
 #' method docs for the lm-vs-lavaan covariance divergence this implies.
 #'
-#' @keywords internal
+#' @noRd
 .extract_serial_mediation_lm <- function( # nolint: object_length_linter.
   object,
   mediator_models,
@@ -1161,7 +1161,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param treatment Treatment variable name.
 #' @param model_y The outcome model.
 #' @return `"serial"` or `"parallel"`.
-#' @keywords internal
+#' @noRd
 .classify_multimediator_structure <- function(med_models, mediators, treatment, model_y) {
   k <- length(mediators)
   # Model-count mismatch: defer to the serial worker's length validation.
@@ -1199,7 +1199,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #' @param model_y Outcome model (`Y ~ treatment + M1 + ... + Mk (+ C)`).
 #' @param treatment,mediators,outcome,data See [.extract_serial_mediation_lm()].
 #' @return A `ParallelMediationData` object.
-#' @keywords internal
+#' @noRd
 .extract_parallel_mediation_lm <- function( # nolint: object_length_linter.
   object,
   mediator_models,
@@ -1398,7 +1398,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #'
 #' @param model Fitted model object
 #' @return Character string: response variable name
-#' @keywords internal
+#' @noRd
 .get_response_var <- function(model) {
   formula_obj <- stats::formula(model)
   response <- all.vars(formula_obj)[1]
@@ -1410,7 +1410,7 @@ S7::method(extract_mediation, glm_class) <- function(
 #'
 #' @param model Fitted model object
 #' @return Numeric scalar or NULL
-#' @keywords internal
+#' @noRd
 .extract_sigma <- function(model) {
   if (inherits(model, "lm") && !inherits(model, "glm")) {
     # For lm, use sigma() or summary()$sigma
