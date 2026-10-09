@@ -26,7 +26,7 @@
 
 ### 2.1 Data flow
 
-```
+```text
 model text --S7 .sem_parse()--> parameters + constraints tables (spec 5)
            --S11 .sem_complete()--> completed table (lavaan sem() defaults, Q3 fixed.x)
            --S11 .sem_to_ram()--> RAM index vectors (A, S, F), free-parameter map, bounds
@@ -100,7 +100,7 @@ Sizes as in the earlier plans (XS 1 file, S 1-2, M 3-5). No hours are given (gri
 
 ### 4.1 Dependency order
 
-```
+```text
 S0 preflight (N0) ──┬─> PR 1: S3 RAM core -> S4 information -> S5 driver -> S6 K10 gate (unconstrained) + reliability study
                     │                                                          │  [CHECKPOINT A: SE tolerance frozen, J9 default kept or reverted, OD3 answered]
 S1 review of 73c322a├─> PR 2: S7 parser -> S8 evaluator -> S9 linearity, folding, errors      (parallel with PR 1)
@@ -171,7 +171,7 @@ S1 review of 73c322a├─> PR 2: S7 parser -> S8 evaluator -> S9 linearity, fol
 | 9 | `feature/sem-mbco` | S22 | checkpoint B | PR 8 | `test-sem-mbco.R` | no |
 | 10 | `feature/sem-docs` | S23 | PR 7 (PR 8, PR 9) | none | `test-cookbook-consistency.R` (edit) | no |
 | release | `dev` -> `main` | S24 | PR 10 | none | none | version only |
-| 11 | `feature/sem-nonlinear` | S25 | PR 7, S1, checkpoint B | PR 8-10, release | `test-sem-nonlinear.R` | no |
+| 11 | `feature/sem-nonlinear` | S1 (review, may run any time before), S25 | PR 7, S1, checkpoint B | PR 8-10, release | `test-sem-nonlinear.R` | no |
 
 **Riskiest first.** PR 1 holds the two results that can change the design: the K10 SE gate (it decides the J9 default) and the reliability study (it decides OD3). It builds models through an internal RAM builder, as the evidence scripts did, so it needs no parser. PR 1-5 export nothing, so no API is locked in before PR 6.
 
