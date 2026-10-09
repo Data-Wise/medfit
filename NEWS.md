@@ -52,6 +52,10 @@
   `cluster = NULL` (the default) resamples rows as before; `cluster` with the
   parametric or plugin methods is an error.
 
+* The 30 internal helper functions (names starting with a dot) no longer have Rd
+  pages, so the package site stops publishing 30 unlisted `dot-*` reference pages.
+  No user-facing function changes.
+
 * `fit_mediation(engine = "lmer")` now stops with a clear error when a formula
   contains a random-effect term such as `(1 | id)`: the engine adds the random
   cluster intercept itself, and the term used to reach `lmer()` as a fixed term

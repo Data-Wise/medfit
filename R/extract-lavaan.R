@@ -489,7 +489,7 @@ extract_mediation_lavaan <- function(object,
 #' via, for example, `vcov[c("a", "d1", "b"), c("a", "d1", "b")]` -- which is
 #' required for serial indirect-effect standard errors.
 #'
-#' @keywords internal
+#' @noRd
 .extract_serial_mediation_lavaan <- function( # nolint: object_length_linter.
   object,
   treatment,
@@ -705,7 +705,7 @@ extract_mediation_lavaan <- function(object,
 #'   used for detection are identical, but keeping it consistent avoids a second
 #'   solver call surprising the caller).
 #' @return `"serial"` or `"parallel"`.
-#' @keywords internal
+#' @noRd
 .classify_multimediator_structure_lavaan <- function(object, mediators, # nolint: object_length_linter.
                                                      standardized = FALSE) {
   param_table <- tryCatch(
@@ -763,7 +763,7 @@ extract_mediation_lavaan <- function(object,
 #' `cov(a_j, b_j)` and `cov(a_j, a_j')`). Downstream SEs therefore reflect the
 #' true joint covariance; tests must not hardcode any of these to zero.
 #'
-#' @keywords internal
+#' @noRd
 .extract_parallel_mediation_lavaan <- function( # nolint: object_length_linter.
   object,
   treatment,
@@ -935,7 +935,7 @@ extract_mediation_lavaan <- function(object,
 #' @param object A fitted lavaan object.
 #' @param vars Character vector: treatment and mediator names.
 #' @param interaction Optional character: product column name(s).
-#' @keywords internal
+#' @noRd
 .find_product_terms_lavaan <- function(object, vars, interaction = NULL) {
   pt <- tryCatch(lavaan::parameterTable(object), error = function(e) NULL)
   if (is.null(pt)) return(character(0))
@@ -957,7 +957,7 @@ extract_mediation_lavaan <- function(object,
 #' `interaction` argument and otherwise trying `treatment:mediator` /
 #' `mediator:treatment`. Returns `NA_character_` when none is found.
 #'
-#' @keywords internal
+#' @noRd
 .find_interaction_term_lavaan <- function(object, treatment, mediator, # nolint: object_length_linter.
                                           interaction = NULL,
                                           standardized = FALSE) {
@@ -1001,7 +1001,7 @@ extract_mediation_lavaan <- function(object,
 #' @param m_star Numeric scalar reference mediator level.
 #' @inheritParams .extract_serial_mediation_lavaan
 #' @return An `InteractionMediationData` object.
-#' @keywords internal
+#' @noRd
 .extract_interaction_mediation_lavaan <- function( # nolint: object_length_linter.
   object,
   treatment,
@@ -1189,7 +1189,7 @@ extract_mediation_lavaan <- function(object,
 #' This function is called from `.onLoad()` to register the S7 method
 #' for lavaan objects when the lavaan package is available.
 #'
-#' @keywords internal
+#' @noRd
 .register_lavaan_method <- function() {
   if (requireNamespace("lavaan", quietly = TRUE)) {
     # Get the lavaan S4 class
