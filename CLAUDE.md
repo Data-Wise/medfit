@@ -39,7 +39,7 @@ covr::package_coverage()          # Target: >90%
 ## About This Package
 
 **medfit** is the foundation package for the mediationverse ecosystem, providing:
-- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `BootstrapResult`
+- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`
 - **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan
 - **Fitting**: Formula-based `fit_mediation()` with the `glm` and `regmedint` engines, case `weights`, and `se_type = "sandwich"` (HC3)
 - **Inference**: delta-method effect SEs in `tidy()`/`confint()`; bootstrap (parametric, nonparametric, plugin)
@@ -74,19 +74,21 @@ R/
 ├── aaa-imports.R           # Package imports
 ├── aab-generics.R          # S7 generics (load before methods!)
 ├── medfit-package.R        # Package documentation
-├── classes.R               # S7 class definitions (all six classes)
+├── classes.R               # S7 class definitions (all seven classes)
 ├── data.R                  # mediation_demo documentation
 ├── fit-glm.R               # fit_mediation(), glm engine, weights/sandwich
 ├── fit-regmedint.R         # regmedint engine adapter
+├── fit-lmer.R              # lmer engine: cluster means, rewritten formulas, REML fits
 ├── extract-lm.R            # lm/glm extraction (simple, four-way, serial, parallel)
 ├── extract-joint.R         # JointMediationData worker, stacked-OLS vcov
 ├── extract-lavaan.R        # lavaan extraction
+├── extract-lmer.R          # ClusterMediationData from lme4 fits (term detection by value, KR)
 ├── generics-effects.R      # nie/nde/te/pm/paths/decompose
 ├── effect-se.R             # delta-method gradients, .effect_se(), .path_se()
 ├── methods-base.R          # print/summary/coef/vcov/confint/nobs
 ├── methods-tidy.R          # tidy()/glance()
 ├── med.R                   # med()/quick()
-├── bootstrap.R             # Bootstrap infrastructure
+├── bootstrap.R             # Bootstrap infrastructure (cluster resampling via cluster =)
 ├── utils.R                 # Utilities, serial path system (te() over all paths)
 └── zzz.R                   # .onLoad() for dispatch
 ```
@@ -195,6 +197,10 @@ MyClass <- S7::new_class(
 
 **JointMediationData** (several mediators with X × M products)
 - Joint NDE/NIE/CDE over the mediator block (VanderWeele & Vansteelandt 2014); stacked-OLS `@vcov`; `joint_effects()` for bootstrapping
+
+**ClusterMediationData** (treatment assigned to clusters, 2-1-1)
+- Paths `a_path`, `b_within`, `b_between`, `c_prime`; NIE = a × b_between, own a × b_within, spillover a × (b_between − b_within) (`decompose()`, labeled large-cluster approximation, D11 warning)
+- `extract_mediation()` on `lmer` fits finds the mean/within/raw terms by value; `fit_mediation(engine = "lmer", cluster = )`; `se_type = "kr"` for Kenward-Roger t intervals; `bootstrap_mediation(cluster = )` for cluster resampling
 
 **BootstrapResult**
 - Inference: `estimate`, `ci_lower`, `ci_upper`
@@ -330,6 +336,7 @@ tests/testthat/
 ├── helper-test-data.R, helper-joint.R   # Test data generators, joint oracles
 ├── test-classes*.R, test-validators.R   # S7 validation
 ├── test-extract-*.R                     # lm/glm, lavaan, serial, parallel, interaction, joint
+├── test-cluster-211.R, test-cluster-boot.R, helper-cluster.R   # cluster mediation: guards, oracles, KR, fit engine, cluster bootstrap, harness
 ├── test-effect-se.R, test-confint-paths.R, test-methods-*.R   # SEs, confint, tidy
 ├── test-serial-total-effect.R           # te() over every path
 ├── test-fit-*.R                         # glm, regmedint, m_star
@@ -456,6 +463,7 @@ version bump, and check dependents' usage first (decided 2026-09-24,
 | `SerialMediationData` | X → M1 → … → Mk → Y | chain a × d × … × b; total over every path via `nie(type = "total")` |
 | `ParallelMediationData` | X → M_j → Y | Σ a_j b_j |
 | `JointMediationData` | several mediators with X × M products | joint NIE over the block |
+| `ClusterMediationData` | cluster-level X → M → Y with mixed models | a × b_between (own a × b_within, spillover the rest) |
 
 **Why separate classes?** Clean separation, no over-engineering, extend without
 breaking existing code, type safety via S7 validators.
@@ -466,6 +474,7 @@ breaking existing code, type safety via S7 validators.
 |--------|---------|--------|--------|
 | `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
 | `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
+| `"lmer"` | lme4, pbkrtest (Suggests) | mixed models for cluster-level treatment; `cluster =`, `se_type = "kr"` | ✓ (no weights/sandwich/families) |
 | `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 

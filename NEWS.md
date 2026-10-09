@@ -25,6 +25,15 @@
   slopes on anything but the within term are errors. `lme4` is in
   `Suggests`.
 
+* `bootstrap_mediation()` gains `cluster =` for `method = "nonparametric"`: it
+  resamples whole clusters with replacement and gives each draw a fresh
+  cluster id before `statistic_fn` sees the data, so a cluster drawn twice is
+  refit as two clusters rather than one larger one. Singular fits and
+  convergence warnings from a refit count as failures: they are excluded, their
+  messages are suppressed, and their number is added to the existing warning.
+  `cluster = NULL` (the default) resamples rows as before; `cluster` with the
+  parametric or plugin methods is an error.
+
 # medfit 0.5.0
 
 Two fixes change results (marked **Behavior change** below): serial `te()`

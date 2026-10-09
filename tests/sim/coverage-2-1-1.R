@@ -66,6 +66,22 @@ for (nm in c("balanced", "unbalanced")) {
   add(nm, "te_oracle_max_abs_z", "te", max(abs(zs)), "< 3", max(abs(zs)) < 3)
 }
 
+# The same difference through bootstrap_mediation(cluster = ): the two cluster
+# bootstraps should agree on its SD (reported, not gated).
+for (nm in c("balanced", "unbalanced")) {
+  sim <- do.call(sim_cluster211, c(scenarios[[nm]]$args, list(seed = 5001L)))
+  dat <- sim$data
+  harness <- suppressWarnings(suppressMessages(te_oracle(dat, B = 200, seed = 1)))
+  diff_stat <- function(d) {
+    obj <- suppressWarnings(suppressMessages(fit_cluster211(d)))
+    unclass(te(obj))[[1]] - cluster_reduced_te(d)
+  }
+  via <- bootstrap_mediation(diff_stat, method = "nonparametric", data = dat,
+                             n_boot = 200L, seed = 2, cluster = "cluster")
+  add(nm, "te_bootstrap_sd_ratio", "te",
+      stats::sd(via@boot_estimates) / unname(harness["se_diff"]))
+}
+
 # --- Group 9: assumption claims at J = 100 -----------------------------------
 cat("[assumption claims] ...\n")
 R9 <- 200L
