@@ -1,0 +1,21 @@
+lavaan 0.7.3 
+ lhs op rhs block fixed label start lower upper
+   M =~  m1     1     1                        
+   M =~  m2     1          l2                  
+   M =~  m3     1                              
+   M  ~   X     1           a                 2
+   M  ~   C     1               0.2            
+   Y  ~   M     1           b                  
+   Y  ~   X     1          cp           0      
+   Y  ~   C     1                      -1      
+   Y ~~   Y     1                             5
+  m1 ~1         1     0                        
+constraints: ab := a*b | a == b 
+   lhs op rhs block
+ level  :   1     1
+     Y  ~   X     1
+ level  :   2     2
+     Y  ~   W     2
+comma:
+  lhs op rhs
+1  y2  ~   x
