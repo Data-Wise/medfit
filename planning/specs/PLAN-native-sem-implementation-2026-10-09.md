@@ -1,0 +1,437 @@
+# PLAN: native SEM engine implementation (medfit 0.7.0)
+
+| | |
+|---|---|
+| **Date** | 2026-10-09 |
+| **Status** | **DRAFT, revised after the grill of 2026-10-09** ([GRILL-native-sem-implementation-2026-10-09.md](GRILL-native-sem-implementation-2026-10-09.md), decisions cited here as grill-1 to grill-8, which are ledger rows D1-D8). OD1 and OD2 are closed; OD3 stays open until checkpoint A. No code exists. Nothing in this plan reopens the grammar spec. |
+| **Spec (contract)** | [SPEC-sem-grammar-2026-10-08.md](SPEC-sem-grammar-2026-10-08.md), APPROVED 2026-10-08 |
+| **Decisions** | Handoff J1-J17 (missingmed `docs/specs/HANDOFF-medfit-native-sem-engine-2026-10-08.md`, read-only); ledger [GRILL-native-sem-engine-medfit-2026-10-08.md](GRILL-native-sem-engine-medfit-2026-10-08.md) K1-K10, K2b/K2c, K5c, K7b |
+| **Review history** | [PLAN-native-sem-review-fixes-2026-10-08.md](PLAN-native-sem-review-fixes-2026-10-08.md), findings F1-F5 and the T6 close-out gaps (all carried in section 6) |
+| **Evidence** | `planning/specs/evidence/native-sem-2026-10-08/` (README there); scratchpad checks for this plan are labeled **[V-scratch]** and are re-run and committed by task S0 |
+| **Format template** | [PLAN-multilevel-mediation-2-1-1-2026-10-08.md](PLAN-multilevel-mediation-2-1-1-2026-10-08.md) |
+| **Release** | 0.7.0 (release assignment of 2026-10-08; see Discrepancy X2 for its ledger id). Ext D module 2 (1-1-1, random slopes) is a separate plan. |
+| **Labels** | **[V]** verified by a command (this session or the cited evidence); **[inferred]** read from code or docs and reasoned, not run; **[A]** proposed, needs the author |
+
+## 1. Scope, non-goals, and what "done" means
+
+**Done for 0.7.0 (one paragraph).** A user writes a mediation model in **medfit model syntax** (spec K4: lavaan-style core plus tagged medfit extensions), passes it with raw data to `fit_mediation(engine = "native", model = )` (or to the exported, experimental `fit_sem()`, grill-5), and gets back the same `MediationData`, `SerialMediationData`, `ParallelMediationData` or `InteractionMediationData` that the lavaan route returns today, with `nie()`, `tidy()`, `confint()` and `bootstrap_mediation()` working unchanged. The fit needs no lavaan or OpenMx at run time: it is normal-theory ML on the divisor-n covariance matrix, optimized by nloptr with an analytic gradient, with observed-information SEs by default (J9, provisional under K10), labels, fixed values, `start()/lower()/upper()`, equal-label equality, `:=` defined parameters, `==`, `<`, `>` constraints (linear in PR 5; nonlinear under the K9 contract in the separate PR 11, which the release does not wait on, grill-1), latent mediators (`=~`), listwise deletion reported once (K5c), and every failure mode (non-convergence, improper solutions, singular information, infeasible constraints, unsupported syntax) ending in an error or warning that names the cause. "Done" also means the J2 gate passed (OpenMx parity on at least 5 models at 1e-6 on estimates and the K10 SE gate) and the author said "go" at the N5 checkpoint.
+
+**In scope (v0 = handoff N0-N5 plus N8):** parser and parameter table (spec sections 3-7), model completion, RAM converter and lavaan ParTable converter, ML objective and gradient, expected and observed information, nloptr driver with the acceptance gate, retry from perturbed valid starts (Q9, Q11) and improper-solution diagnostics (the default `n_starts` of 5, the NNLS gate and the 4.5d agreement diagnostics are PR 11's), linear constraints and the spec 4.5c acceptance gate for active inequalities and bounds (spec 4.5a-c), extraction through the existing classes, OpenMx parity suite, docs and release.
+
+**In 0.7.0 behind checkpoint B (grill-6, OD2 closed):** N6 (IPW with sandwich SEs) and N7 (SEM MBCO by separate linear refits). **After checkpoint B, not gating the release (grill-1):** PR 11, nonlinear constraints with multi-start and the 4.5d diagnostics.
+
+**Non-goals (each errors by name where code can reach it):** two-level estimation (J16; `level:` parses, fitting errors with the pinned spec 4.3 message), mean structure with free intercepts (spec 7), covariance-matrix input (K5c defers it; `MediationData(data = NULL)` stays available), FIML, categorical indicators, multigroup, the sparse `Matrix` path (K7b), robust estimators other than the N6 sandwich, `standardized = TRUE` on native fits (no `standardizedSolution()` equivalent in v0; Q7), hand-written C++ (K7), RMediation's migration off OpenMx (J10, separate spec), and any change to missingmed (J8: missingmed adds its own pass-through in its own repo).
+
+## 2. Architecture
+
+### 2.1 Data flow
+
+```
+model text --S7 .sem_parse()--> parameters + constraints tables (spec 5)
+           --S11 .sem_complete()--> completed table (lavaan sem() defaults, Q3 fixed.x)
+           --S11 .sem_to_ram()--> RAM index vectors (A, S, F), free-parameter map, bounds
+           --S5/S13 .sem_optimize()--> theta-hat, acceptance record, multi-start diagnostics
+           --S4/S15 .sem_vcov()--> observed or expected information, constrained projection, := delta
+           --S16 SEMFit (or internal fit object, OD1)
+           --S10 accessor seam --> existing extract-lavaan.R workers --> MediationData family
+```
+
+### 2.2 Files
+
+| File | New/touched | Contents | PR |
+|---|---|---|---|
+| `R/sem-ml.R` | new | Scale: `F` is the full ML discrepancy, equal to `2 * lavaan fmin` and to `common.R::fml()` [V, read], so the spec's F values (0.095154, 1.029) and the 4.5d absolute spread floor `1e-6` are on this scale; with raw data and saturated means, `-2 log L` differences equal `n * (F_null - F_full)`. `.sem_implied()` (`F (I - A)^-1 S (I - A)^-T F'` with precomputed index vectors and `chol`, the vectorized form measured at 31 us per f+g in `05`), `.sem_fml()` (`log\|Sigma\| + tr(S Sigma^-1) - log\|S\| - p`, divisor-n `S`), the finite sentinel `1e10` for a non-positive-definite `Sigma` (smallest eigenvalue at most `1e-10`, spec 4.5b), `.sem_grad()` (analytic), `.sem_info_expected()`, `.sem_info_observed()` (central-difference Jacobian of the analytic gradient with the K3 step, symmetrized; Q4) | 1 |
+| `R/sem-optim.R` | new | `.sem_optimize()` (nloptr wrapper, `NLOPT_LD_SLSQP` and `NLOPT_LD_LBFGS`, J6/OD3), `.sem_start()` (moment-based starts: loadings 1, variances half the observed variance, paths 0), `.sem_accept()` (spec 4.5c three-part gate), `.sem_kkt()` and `.nnls()` (Lawson-Hanson, base R), `.sem_multistart()` (spec 4.5b perturbations, positive-definite redraw, model-derived seed, caller RNG restored with `on.exit()`), `.sem_improper()` (negative variances, non-PD latent covariance) | 1 (unconstrained, retry), 5 (linear constraints, acceptance gate), 11 (nonlinear, multi-start default) |
+| `R/sem-parse.R` | new | lexer and statement parser (spec 3, 4.1, 4.3, 4.4, 6, 7), `.sem_parse()` returning the two spec-5 data frames, reserved words, bound folding, comma shorthand, `CONSTRAINT(...)` | 2 |
+| `R/sem-expr.R` | new | `.sem_allowlist` (spec 4.2a table), `.sem_expr_validate()` (call-tree check before evaluation, hex pre-check), `.sem_expr_eval()` (locked `new.env(parent = emptyenv())`, functions bound to `base`/`stats` objects, result guard), `.sem_expr_linear()` (spec 4.5a), `.sem_jacobian()` (K3 central differences) | 2 |
+| `R/sem-model.R` | new | `.sem_complete()`, `.sem_to_ram()`, `.sem_to_partable()`, identification count (free parameters versus `p(p + 1)/2`), listwise deletion | 4 |
+| `R/sem-se.R` | new | `.sem_vcov()` (unconstrained inverse information at scale `n`; constrained `Z (Z' H Z)^-1 Z'` with `Z` the null space of the active-constraint Jacobian, Q5), `.sem_defined()` (`:=` values and delta-method SEs via `.sem_jacobian()`) | 1, 5 |
+| `R/extract-sem.R` | new | the accessor seam (Q6): `.sem_accessors_lavaan()` and `.sem_accessors_native()` returning one list shape | 3 (lavaan half), 6 (native half) |
+| `R/extract-lavaan.R` | touched | the four workers read through the seam instead of calling `lavaan::` directly; no behavior change | 3 |
+| `R/fit-sem.R` | new | `fit_sem()` (OD1) and `.fit_mediation_native()` | 6 |
+| `R/fit-glm.R` | touched | `engine` choices gain `"native"`; `model = NULL` appended before `...`; a native branch placed before the formula assertions (Q2) | 6 |
+| `R/classes.R`, `R/zzz.R`, `R/methods-base.R` | touched | `SEMFit` S7 class (OD1), `S4_register()`, `show`, `print.summary.SEMFit` registration, `print`/`summary`/`coef`/`vcov`/`nobs`/`logLik` methods | 6 |
+| `DESCRIPTION` | touched | `nloptr` to Imports (J3; the grill first chose Suggests, grill-2, and the author reversed it to Imports) and `OpenMx` to Suggests (J2/J7 test oracle), both in PR 1 | 1 only (plus the version bump at release) |
+| `tests/sim/sem-se-gate.R`, `tests/sim/sem-reliability.R`, `tests/sim/sem-parity-gate.R` | new | the K10 gate, the optimizer reliability study, the J2 gate (`^tests/sim$` is already in `.Rbuildignore` [V]) | 1, 5, 7 |
+
+### 2.3 Reuse and the one new class
+
+- **No new mediation class.** Native fits produce the existing classes through the existing extraction workers, so the alias-row `@vcov` convention (`.expand_vcov_with_aliases()`, `R/utils.R:45`), the effect gradients in `R/effect-se.R`, `tidy()`/`confint()`, and the bootstrap all apply unchanged. A Heywood residual variance already leaves `sigma_m`/`sigma_y` as `NULL` in the lavaan worker (`R/extract-lavaan.R:380`), so the `MediationData` validator (`sigma_m` must be non-negative) never sees a negative value [V].
+- **One new fit class, `SEMFit` (OD1).** Justification: the spec requires per-fit state that no mediation class can hold: the 4.5d agreement diagnostics (`n_starts`, `n_accepted`, `winner`, `objective_spread`), the acceptance record (status, residual, KKT), improper-solution flags, `:=` values with SEs, the parameter and constraint tables, the information type, and `-2 log L` for N7's likelihood-ratio statistic. It mirrors the lavaan route (fit object, then `extract_mediation()`), which is what the existing generic is designed for. Properties: `parameters` (completed table with `est`, `se`), `constraints`, `defined`, `theta`, `vcov`, `information`, `n_obs`, `n_dropped`, `data`, `minus2ll`, `fml`, `diagnostics` (list), `converged`, `improper`. The class is marked experimental in its roxygen (lifecycle prose, no new dependency).
+
+### 2.4 The accessor seam (Q6)
+
+The lavaan workers call eight lavaan functions [V]: `parameterEstimates` (6), `lavInspect` (9: `data`, `converged`, `nobs`), `standardizedSolution` (6), `coef` (4), `vcov` (4), `parTable` (1), `parameterTable` (1), `sem` (1, in an example). The seam replaces them with one list:
+
+| Field | lavaan source | native source |
+|---|---|---|
+| `param_table` | `parameterEstimates()`: columns `lhs`, `op`, `rhs`, `label`, `est`, `se` (S10 confirms by grep which columns the workers read [inferred]) | completed table with `est`, `se` |
+| `param_table_std` | `standardizedSolution()` | `NULL`; `standardized = TRUE` errors "standardized estimates are not available for engine = \"native\" in this version" (Q7) |
+| `coef`, `vcov` | `coef()`, `vcov()` | named `theta`, `vcov`; names follow lavaan's rule (label if non-empty, else `lhs op rhs`; a shared label appears once) so the alias lookup (`.lavaan_alias_source_idx()`) needs no branch |
+| `partable` | `parTable()` | completed table with lavaan column names (`.sem_to_partable()`) |
+| `data`, `converged`, `nobs` | `lavInspect()` | stored complete-case data, acceptance result, `n_obs` after listwise deletion |
+
+Gate for PR 3: zero behavior change, proven by the full existing lavaan suite and an identity test that serializes every object the lavaan tests build before and after the refactor (`identical()` on `S7::props()`).
+
+## 3. Decisions this plan makes where the spec and ledger are silent
+
+| # | Question | Plan decision | Why |
+|---|---|---|---|
+| Q1 | Task ids | Workstreams keep the handoff's ids with their meanings (N0 preflight, N1 RAM core, N2 parser and converters = handoff P1 + P2 = missingmed's N2, N3 fit driver, N4 extractor and `fit_mediation()`, N5 parity, N6 IPW, N7 MBCO, N8 docs and release). Concrete tasks are **S0-S24**; plan decisions Q, risks R, discrepancies X, open decisions OD. | The spec says "re-check in plan task N3" (4.5c) and the ledger says "N5 SE gate", "N6", "N7"; those references must land on the matching workstream. |
+| Q2 | How `fit_mediation()` takes syntax (J17: separate front ends, no formula bridge) | `model = NULL` appended after `cluster` and before `...` (positional calls unaffected). With `engine = "native"`: `model` required, `formula_y`/`formula_m` must be missing (error "engine = \"native\" takes `model =`, not formulas"), and the `treatment`/`mediator` `%in% names(data)` assertions are skipped because a latent mediator is not a column; the parser's table is checked instead. `model` with any other engine errors. `outcome` is auto-detected by the worker or passed as `engine_args$outcome`. | The current function asserts both formulas and `mediator %in% names(data)` before dispatch (`R/fit-glm.R:205-215`) [V], which a latent mediator fails. |
+| Q3 | Exogenous observed covariates (`fixed.x`) | Exogenous variances and covariances are **free parameters**, as OpenMx estimates them; lavaan oracle calls use `fixed.x = FALSE`. | J2/J7 make OpenMx the gate. Under normal ML with complete data the likelihood factorizes into `f(y \| x) f(x)`, so the other estimates and their SEs do not change [inferred]; S11 pins this with a lavaan `fixed.x = TRUE` versus `FALSE` identity test before anything relies on it. |
+| Q4 | Observed information without a new dependency | Central-difference Jacobian of the analytic gradient, K3 step, symmetrized `(H + H')/2`. | K3 rejected `numDeriv`; the P0 evidence (`02`) used `numDeriv::hessian()` (Richardson), so the P0 5.0e-6 figure does not transfer automatically. The K10 gate (S6) runs on the package's own Hessian; `tests/sim/` may use `numDeriv` as a reference only, since it is outside the package. |
+| Q5 | SEs with equality constraints and active inequalities | Equal labels collapse to one parameter (no constraint). Other equalities, and inequalities or bounds active at the solution, enter the null-space projection `Z (Z' H Z)^-1 Z'`; the print states which constraints were treated as active. | Standard constrained-ML covariance [inferred]; checked in S15 against an OpenMx reduced model (Q8). |
+| Q6 | Extraction for native fits | One accessor seam (section 2.4), refactored in its own PR with a zero-change gate, instead of a second copy of the workers. | Serial, parallel and four-way extraction then come for free; the 1,213-line lavaan extractor is not duplicated. |
+| Q7 | `standardized = TRUE` on native fits | Errors naming the feature in v0. | A standardized solution needs its own delta-method vcov; not in the handoff's v0. |
+| Q8 | Oracle for the K10 constrained cell | OpenMx with the constraint expressed **without** `mxConstraint`: `a == b` as a shared label, `a + b == c` by reparameterization, `a == 0` by fixing. | [V-scratch] OpenMx under `mxConstraint(A1 == 0)` on `memory_exp` reports `NA` for the constrained parameter and SEs for the others that differ from the equivalent fixed-parameter model by up to 4.1e-4 relative (`cp`: 0.443994 vs 0.443811), too close to the 1e-3 tolerance to serve as truth. K10 names "a == b or a + b == c", both expressible exactly, so the gate stays OpenMx-based and needs no author ruling. |
+| Q9 | Acceptance gate for unconstrained fits | The spec 4.5c gate (status 1, 3 or 4; scaled-gradient stationarity at most the KKT threshold) applies to **every** fit, not only nonlinear-constraint fits; an unconstrained fit that fails it is retried from up to `n_starts - 1` perturbed valid starts (N3 "multi-start retry") and warns that retries were used. | One acceptance rule; the J6 reliability gap (R3) is caught by the gate instead of trusted. In 0.7.0 the gate is status plus the reduced-gradient test (S5, S14); decided here for 0.7.0 (grill-8); the NNLS sign half arrives with S25 after the S1 review. A later change to the reduced-gradient rule is an experimental-API change recorded in NEWS (R5). |
+| Q10 | Bounds in the KKT active set (Discrepancy X5) | Folded `label < number` bounds and `lower()`/`upper()` modifiers are passed to nloptr as `lb`/`ub` **and** enter the 4.5c active set as rows `+e_i`/`-e_i` when active (within `1e-6`), with non-negative multipliers. | Without this, a fit with an active bound has a non-zero gradient and fails the 4.5c stationarity test. In 0.7.0 active bounds enter the reduced-gradient projection (S14), decided here and shipped before S1 (accepted risk: experimental API, R5). The sign half is S25's, and S1's question is whether bounds also enter the NNLS active set; if S1 disagrees it becomes OD5 and changes S25 only. |
+| Q11 | Reproducible multi-start without touching the user's RNG | Seed from a base-R hash of the canonical parameter table text (no `digest` dependency); `set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")` inside a function that saves and restores `.Random.seed` with `on.exit()`. | Spec 4.5b requires identical reruns; CLAUDE.md requires side effects cleaned up. |
+| Q12 | One PR touches `DESCRIPTION` at a time; parallel PRs use disjoint test files | Only PR 1 edits `DESCRIPTION` (nloptr to Imports, OpenMx to Suggests, since PR 1's SE gate already uses OpenMx); each PR owns its test files (section 4.3). | Ext D's P14 conflict is the precedent. |
+| Q13 | The 4.5e user message | Keep the advice ("solve `a == 0` and `b == 0` separately and keep the better"), drop the planning id "N7" from user-facing text, and add "(see `mbco` in the cookbook)" only when N7 ships. | A planning id is not user documentation (Discrepancy X6). |
+
+## 4. Task list
+
+Sizes as in the earlier plans (XS 1 file, S 1-2, M 3-5). No hours are given (grill-7; see section 9).
+
+### 4.1 Dependency order
+
+```
+S0 preflight (N0) ──┬─> PR 1: S3 RAM core -> S4 information -> S5 driver -> S6 K10 gate (unconstrained) + reliability study
+                    │                                                          │  [CHECKPOINT A: SE tolerance frozen, J9 default kept or reverted, OD3 answered]
+S1 review of 73c322a├─> PR 2: S7 parser -> S8 evaluator -> S9 linearity, folding, errors      (parallel with PR 1)
+(before PR 11)      └─> PR 3: S10 accessor seam (zero-change refactor)                         (parallel with PR 1, PR 2)
+                                  │
+            PR 1 + PR 2 ──> PR 4: S11 completion + converters -> S12 syntax-to-fit pipeline
+                                  │
+            PR 4 ──────> PR 5: S13 linear constraints -> S14 reduced-gradient acceptance gate (warn-only sign check, grill-8) -> S15 constrained SEs, :=, K10 constrained cell
+                                  │
+            PR 3 + PR 5 ──> PR 6: S16 SEMFit + fit_sem() + fit_mediation(engine = "native") -> S17 extraction -> S18 methods, docs
+                                  │
+                           PR 7: S19 J2 parity suite + MBCO known-answer -> S20 gate report
+                                  │
+                  [CHECKPOINT B = handoff "stop after N5": author go/no-go]
+                                  │
+                 ┌────────────────┴───────────────┐
+        PR 8: S21 N6 IPW sandwich       PR 9: S22 N7 SEM MBCO          (in 0.7.0 behind checkpoint B, grill-6; parallel)
+                 └────────────────┬───────────────┘
+                           PR 10: S23 docs, cookbook recipe -> S24 release PR dev -> main (0.7.0)
+```
+
+**PR 11 (grill-1), not drawn above:** `PR 7 + S1 ──> PR 11: S25 nonlinear constraints, NNLS sign check, nonlinear multi-start, 4.5d diagnostics`. It starts after checkpoint B, runs in parallel with PR 8-10, and the release does **not** wait on it; S24 ships with or without it. Until it lands, a nonlinear constraint errors by name.
+
+### 4.2 Tasks
+
+| Id | Workstream | Task | Depends on | Size |
+|---|---|---|---|---|
+| S0 | N0 | Preflight checks with decision rules (below) | none | S |
+| S1 | N3 | Independent review of the round-5 fix `73c322a` and of Q9/Q10 | none; gates PR 11 (S25), not PR 5 or the release (grill-1) | XS |
+| S2 | N8 | Platform canary for `nloptr` in Imports (r-hub) | S0 | XS |
+| S3 | N1 | RAM core: implied covariance, ML discrepancy, analytic gradient, sentinel | S0 | M |
+| S4 | N1 | Expected and observed information, unconstrained vcov | S3 | S |
+| S5 | N3 | nloptr driver (unconstrained and bounds), starts, acceptance gate (Q9), retry, improper-solution diagnostics | S4 | M |
+| S6 | N5 | K10 SE gate, unconstrained cells; reliability study; tolerance calibration | S5 | M |
+| S7 | N2 (P1) | Lexer, statement parser, parameter and constraint tables | none | M |
+| S8 | N2 (P1) | Locked evaluator, call-tree validation, result guard | S7 | S |
+| S9 | N2 (P1) | Linearity classifier, bound folding, comma shorthand, `CONSTRAINT(...)`, error table | S8 | S |
+| S10 | N4 | Accessor seam in the lavaan extractor, zero behavior change | none | S |
+| S11 | N2 (P2) | Model completion, table-to-RAM and table-to-ParTable converters, round trip | PR 1, PR 2 | M |
+| S12 | N3 | Syntax-to-fit pipeline: listwise deletion, identification count, singular `S` | S11 | S |
+| S13 | N3 | Linear equality and inequality constraints in SLSQP (constant Jacobians from the S9 classifier); nonlinear constraints error by name | S12 | S |
+| S14 | N3 | Reduced-gradient acceptance gate for linear constraints and bounds (warn-only multiplier sign check; the NNLS gate is S25's, grill-8); stationarity-threshold recalibration | S13 | S |
+| S15 | N1/N5 | Constrained SEs, `:=` delta method, K10 constrained cell | S14 | S |
+| S16 | N4 | `SEMFit`, `fit_sem()`, `fit_mediation(engine = "native", model = )` | PR 3, PR 5 | M |
+| S17 | N4 | Native accessor half; extraction to the four classes; RMediation smoke | S16 | S |
+| S18 | N4/N8 | Methods, print and summary; NEWS, refcard, `_pkgdown.yml`, methods article section, WORDLIST | S17 | M |
+| S19 | N5 | J2 parity suite against OpenMx (5+ models) and the MBCO known-answer | PR 6 | M |
+| S20 | N5 | Gate report and checkpoint B | S19 | XS |
+| S21 | N6 | IPW with sandwich SEs | checkpoint B | M |
+| S22 | N7 | SEM MBCO by separate linear refits | checkpoint B | M |
+| S23 | N8 | Cookbook recipe, article polish, CLAUDE.md/README/AGENTS.md file lists | PR 7 (and PR 8/9 if in scope) | S |
+| S24 | N8 | Release: version bump, revdep check, release PR, tag, r-universe | S23 | S |
+| S25 | N3 | Nonlinear constraints: Jacobians, NNLS multiplier sign check (`73c322a` after S1), default `n_starts`, 4.5d diagnostics, KKT recalibration; PR 11, after checkpoint B, not gating the release | PR 7, S1 | M |
+
+### 4.3 PR slicing
+
+| PR | Branch (created only on an explicit "make the branch") | Tasks | After | Parallel with | Owns test files | Touches `DESCRIPTION` |
+|---|---|---|---|---|---|---|
+| 1 | `feature/sem-core` | S0, S2, S3-S6 | `dev` | PR 2, PR 3 | `helper-sem.R`, `test-sem-ml.R`, `test-sem-optim.R` | yes (nloptr Imports, OpenMx Suggests) |
+| 2 | `feature/sem-parser` | S7-S9 | `dev` | PR 1, PR 3 | `test-sem-parse.R`, `test-sem-expr.R` | no |
+| 3 | `feature/sem-extract-seam` | S10 | `dev` | PR 1, PR 2 | `test-extract-seam.R` | no |
+| 4 | `feature/sem-model` | S11, S12 | PR 1, PR 2 | PR 3 | `test-sem-model.R` | no |
+| 5 | `feature/sem-constraints` | S13-S15 (linear constraints only) | PR 4 | PR 3 | `test-sem-constraints.R` | no |
+| 6 | `feature/sem-engine` | S16-S18 | PR 3, PR 5 | none | `test-fit-sem.R` | no |
+| 7 | `feature/sem-parity` | S19, S20 | PR 6 | none | `test-sem-parity.R` | no |
+| 8 | `feature/sem-ipw` | S21 | checkpoint B | PR 9 | `test-sem-ipw.R` | no |
+| 9 | `feature/sem-mbco` | S22 | checkpoint B | PR 8 | `test-sem-mbco.R` | no |
+| 10 | `feature/sem-docs` | S23 | PR 7 (PR 8, PR 9) | none | `test-cookbook-consistency.R` (edit) | no |
+| release | `dev` -> `main` | S24 | PR 10 | none | none | version only |
+| 11 | `feature/sem-nonlinear` | S25 | PR 7, S1, checkpoint B | PR 8-10, release | `test-sem-nonlinear.R` | no |
+
+**Riskiest first.** PR 1 holds the two results that can change the design: the K10 SE gate (it decides the J9 default) and the reliability study (it decides OD3). It builds models through an internal RAM builder, as the evidence scripts did, so it needs no parser. PR 1-5 export nothing, so no API is locked in before PR 6.
+
+**Shared hot spots.** `R/fit-glm.R` (PR 6 only), `R/classes.R`/`R/zzz.R` (PR 6 only), `NEWS.md` (PR 6, 8, 9, 10, 11; each appends under its own heading), `_pkgdown.yml` (PR 6, 9), `inst/WORDLIST` (insert in place; resolve by union). PR 8 and PR 9 stay disjoint: N6 adds `R/sem-sandwich.R`, N7 adds `R/sem-mbco.R`, and neither edits `R/sem-se.R`.
+
+### 4.4 Task acceptance
+
+#### PR 1: RAM core, driver, and the SE gate (`feature/sem-core`)
+
+- [ ] **S0: Preflight (N0).** Each check has a decision rule; outputs go in `planning/specs/evidence/native-sem-2026-10-08/` as `07-preflight.R` and `results/07-preflight.out`, with the README's script table extended.
+  - (a) **Mean structure versus diffLL.** [V-scratch] On RMediation's `memory_exp` (n = 369, complete), with the paths labeled as intended (`x -> repetition` = `a1`), OpenMx diffLL is identical with and without the `one` paths: 221.045546 for `a1 == 0`, 0.083100 for `b1 == 0`. Rule: equal to 1e-6, so J2's MBCO known-answer is reachable without a mean structure; if a re-run differs, stop and ask the author.
+  - (b) **OpenMx SEs under `mxConstraint`.** [V-scratch] `NA` for the constrained parameter and up to 4.1e-4 relative difference from the fixed-parameter model for the others. Rule: Q8 (no `mxConstraint` in SE oracles).
+  - (c) **The nonlinear MBCO trap.** [V-scratch] On the correctly labeled model, OpenMx's nonlinear `ind1 == 0` (`ind1 = a1*b1`) lands at `a1 = 0`, diffLL 221.045546, under both `mxRun()` and `mxTryHard(checkHess = FALSE)` (seeds 1-3 identical); the constrained optimum is `b1 = 0` with diffLL 0.083100. OpenMx's nonlinear solve is therefore not a valid oracle for the MBCO statistic. Rule: the J2 MBCO known-answer is `min(diffLL(a1 == 0), diffLL(b1 == 0))` from OpenMx's two linear solves (S19).
+  - (d) **RMediation's `mbco()` Rd example is mislabeled (X0).** [V-scratch] Its first `mxPath(from = "x", to = endVar, labels = c("a1", "a2", "cp"))` has `endVar` starting with `"x"`, so OpenMx drops the self-path and shifts the labels: `x -> repetition` is `a2`, `x -> imagery` is `cp`, `x -> recall` is `a1`. Its `ind1 = a1*b1` is therefore the direct path times `b1`. Run as written with `mxTryHard()`, `mxCompare()` gives diffLL 0.060332 (seeds 1-3), which equals the separate fixed-`a1` solve (0.060332, below fixed `b1` at 0.083100). Rule: S19 reproduces the example as written (literal J2) **and** the correctly labeled values in (a); the example defect is reported to the author for RMediation, which stays read-only here. **If the label shift does not reproduce** (the example is correctly labeled), the as-written value is the correct one: S19 then asserts only that value and drops the separate "correctly labeled" assertions.
+  - Commit (a)-(d) as `07-preflight.R`.
+  - (e) Versions: lavaan 0.7-2 locally [V]; install 0.7-3 into a scratch library for the constraint oracles (X4). OpenMx 2.22.11, nloptr 2.2.1 [V].
+  - (f) `NOT_CRAN` canary (`skip_on_cran()` test) on the first CI push of PR 1; record the SKIP summary, as Ext D T0 did.
+  - (g) Budgets recorded here: always-on runtime of each `test-sem-*.R` at most 10 s; one fit of a p <= 10 model under 5 ms median (`05b`: SLSQP 2.6 ms).
+  - Verify: the committed `07-preflight.out`; `run-all.sh` still exits 0.
+- [ ] **S2: nloptr platform canary (J3).** Run `.github/workflows/rhub.yaml` on PR 1's branch for linux, macos, macos-arm64, windows and an image without system nlopt (so the cmake path runs). Rule: all install and pass `R CMD check`; otherwise J3's fallback applies (move nloptr to Suggests, guard `fit_sem()` with `requireNamespace("nloptr")`, `skip_if_not_installed("nloptr")` in every native test, per CLAUDE.md), and the author is told before PR 1 merges. Mitigating fact [V]: lme4 2.0.6 Imports `nloptr (>= 1.0.4)`, so the CI matrix already installs it.
+- [ ] **S3: RAM core (N1).** `.sem_implied()`, `.sem_fml()`, `.sem_grad()`, sentinel.
+  - Oracles: (i) analytic gradient against a central-difference gradient computed in the test, max abs difference below 1e-8 (handoff N1; spike 1.9e-10); (ii) saturated observed path model: estimates equal `lm()` coefficients and residual variances equal `RSS/n` to 1e-8 (closed form, no lavaan); (iii) `.sem_fml()` equals `lavaan::fitMeasures(fit, "fmin") * 2` to 1e-8 (lavaan `fmin` is half the ML discrepancy, ledger research table).
+  - Planted defects: drop the factor 2 on the symmetric `S`-matrix gradient entries (gradient test fails); use divisor `n - 1` for `S` (variance known-answer fails by (n-1)/n); return `Inf` instead of the sentinel (a test that passes a negative-variance start through nloptr fails).
+  - Edge cases: non-PD implied covariance returns `1e10` without error; `S` singular (n <= p) errors "sample covariance matrix is singular (n = , p = )".
+  - Files: `R/sem-ml.R`, `tests/testthat/helper-sem.R` (simulators for the four unconstrained K10 structures; the constrained fifth is added in S15, a lavaan oracle wrapper with `fixed.x = FALSE`, an OpenMx oracle wrapper that feeds `S * n/(n - 1)`), `tests/testthat/test-sem-ml.R`.
+- [ ] **S4: Information and vcov (N1).** Expected `J' (Sigma^-1 x Sigma^-1) J / 2` scaled by n; observed per Q4.
+  - Oracles: expected-information SEs against lavaan `information = "expected"` to 1e-6 relative (spike: 2.1e-8); observed against lavaan `information = "observed"` to 1e-5 relative (both numeric Hessians [inferred], so the tolerance is looser); saturated model: observed equals expected to 1e-6 (P0: 3.4e-7).
+  - Planted defect: scale `n - 1` instead of `n` (P0 measured 2.1e-4 against OpenMx; the test must fail at 1e-5).
+  - Edge case: singular information (a latent factor with two indicators and nothing else) gives `NA` SEs and one warning "information matrix is singular; the model may not be identified", never an error mid-fit.
+- [ ] **S5: Fit driver (N3, unconstrained and bounds).**
+  - Acceptance: `.sem_optimize()` calls nloptr with the analytic gradient, `xtol_rel = 1e-10`, `ftol_rel = 1e-12`, `maxeval = 10000` (recorded, tunable through `engine_args$control`); the Q9 gate; retry from perturbed valid starts (spec 4.5b validity rule, `pd_ok()` logic from `common.R`); improper-solution warning, once per fit, naming each negative variance and each non-PD latent covariance block (handoff G2 policy: unbounded, flagged, never silently bounded); `converged` false and an error "no start converged" naming status and stationarity if every start fails.
+  - Oracles: estimates against lavaan to 1e-6 on the four unconstrained K10 structures at n = 200; a Heywood fixture (latent model at n = 50, seed pinned so lavaan reports a negative variance) gives the same negative estimate as lavaan to 1e-6 and the warning names it.
+  - Planted defects: removing the status test admits a stubbed status-5 result; removing the retry makes the pinned bad-start fixture return the non-accepted solution; removing the positive-definite start test lets a negative-variance perturbed start reach nloptr (spec 4.5f item 5, its three-rule table as fixture).
+  - Edge cases: bounds active at the solution (Q10, tested with `lower(0)*` on a variance that wants to go negative): the fit is accepted and the bound is reported as active; non-convergence at `maxeval = 5` errors by name; a perfectly collinear predictor gives the singular-`S` error.
+  - Files: `R/sem-optim.R`, `R/sem-se.R` (unconstrained part), `tests/testthat/test-sem-optim.R`, `DESCRIPTION` (`nloptr` in Imports, `OpenMx` in Suggests).
+- [ ] **S6: K10 SE gate (unconstrained cells) and reliability study (N5, carries G3, G4, G5 of section 6.1).**
+  - `tests/sim/sem-se-gate.R`: the K10 grid (observed path with covariates, latent mediator, parallel two-mediator, serial two-mediator; n of 50, 200, 1000; 20 seeds per cell, fixed in the script), oracle OpenMx with `S * n/(n - 1)`, both engines at the same optimum. Reports max relative SE difference per cell for observed and expected information; improper cells counted and listed, not dropped. Results in `tests/sim/results/sem-se-gate-<date>.csv` with package versions.
+  - **Tolerance freeze (G3):** if the observed maximum over proper cells is at most 3.3e-4, freeze 1e-3 (3x headroom); if it is in (3.3e-4, 1e-3], keep 1e-3 and record the narrow headroom in the ledger; if above 1e-3, K10 applies: the default reverts to `information = "expected"` until resolved, and the script reruns both Hessians against a Richardson reference (`numDeriv`, script-only) to locate the error.
+  - `tests/sim/sem-reliability.R` (G4, G5): the `03` grid with the vectorized objective, **100 datasets per cell** (one failure = 1 point), default and random starts, SLSQP and L-BFGS, each with and without the Q9 retry. Each mismatch with lavaan is classified: native objective above lavaan's by more than 1e-8 (native stalled), below (lavaan on a worse local solution), or equal with different estimates (flat or not identified).
+  - **Checkpoint A (author):** the frozen tolerance, the J9 default, and OD3 with the measured numbers.
+  - Testthat companion in `test-sem-optim.R`: one cell per structure at n = 200, 3 seeds, `skip_on_cran()` and `skip_if_not_installed("OpenMx")` (OpenMx is in Suggests from this PR, so the oracle wrapper in `helper-sem.R` is declared).
+
+#### PR 2: parser and evaluator (`feature/sem-parser`, parallel with PR 1)
+
+- [ ] **S7: Parser and tables (N2/P1; enforces F2).** `.sem_parse(model)` returns `list(parameters, constraints)` exactly as spec 5 (column names, types, `id` 1-based, `""` labels, `NA` fixed/start/lower/upper).
+  - Oracle: `lavaan::lavParseModelString(model, as.data.frame. = TRUE)` on every core test model of spec 8 (simple, serial, parallel, latent mediator, equal labels, `:=`, two-level syntax, the section 2 probe models), comparing `lhs, op, rhs, level (= block), fixed, label, start, lower, upper` and the constraint set after bound folding on both sides. Parser output was identical on lavaan 0.7-2 and 0.7-3 [V] (spec 2), so these tests need no version skip (X4).
+  - Planted defects: the oracle drops `y1` from `y1, y2 ~ x` and our parser must not (spec 6); removing bound folding turns the `a < 2` row red (spec 8).
+  - Edge cases: comments with `#` and `!`, continuation lines ending in `+`, `,`, `*` or `(`, `;` separators, `.5` and `1.` literals, `0*1` intercept row with `fixed = 0`, reserved-word labels, one-modifier-per-term rule.
+- [ ] **S8: Locked evaluator (N2/P1; enforces F1, K2b, K2c).** Spec 4.2a steps 1-4 and the allowlist table, ported from `06-evaluator-prototype.R`.
+  - Tests: all 28 rejection inputs rejected with the construct named; the 14 valid expressions equal R's own evaluation to 1e-14; the result guard rejects the 8 non-finite results and accepts the 5 boundary expressions; `-2^2 == -4`, `2^3^2 == 512`, `2^-1 == 0.5`.
+  - Planted defects (positive controls): a caller-side `exp <- function(x) { flag <<- TRUE; base::exp(x) }` changes the result of an `all.names()`-only implementation and does **not** run under the locked evaluator (`flag` stays `FALSE`); removing the result guard lets `1/0` and `0/0` through.
+- [ ] **S9: Linearity, folding, extensions, errors (N2/P1).**
+  - Tests: the 16-expression linearity table (spec 4.5f item 1) with its two planted defects; comma shorthand expansion; `CONSTRAINT(...)` equivalence with the bare form; every row of the spec 7 rejection table with a pinned regex; `<=`, `>=`, `!=` rejected by name; unsupported operators (`<~`, `~*~`, `|~`, `:~`, `|`, `%`, `group:`, `class:`, `block:`) rejected by name; `:=` cycles and duplicate `:=` names error.
+  - Files: `R/sem-parse.R`, `R/sem-expr.R`, `tests/testthat/test-sem-parse.R`, `tests/testthat/test-sem-expr.R`.
+
+#### PR 3: accessor seam (`feature/sem-extract-seam`, parallel with PR 1 and PR 2)
+
+- [ ] **S10: Seam refactor (N4 prerequisite).** Section 2.4. `R/extract-sem.R` holds `.sem_accessors_lavaan()`; the workers in `R/extract-lavaan.R` take the accessor list.
+  - Gate: the full suite unchanged (count quoted); `test-extract-seam.R` rebuilds every lavaan fixture object through the old code path (kept in the test as a frozen copy of the pre-refactor accessor calls) and through the seam and asserts `identical()` on all properties; planted defect: a seam that drops the `label` column fails the alias test.
+  - No NEWS entry (no user-visible change).
+
+#### PR 4: model completion and converters (`feature/sem-model`)
+
+- [ ] **S11: Completion and converters (N2/P2).** `.sem_complete()` mirrors `lavaan::sem()` defaults (marker loading fixed to 1, residual variances, latent exogenous covariances, `auto.cov.y`) except Q3; `.sem_to_ram()`; `.sem_to_partable()`.
+  - Oracles: round trip against `lavaan::lavaanify(model, fixed.x = FALSE, ...)` on every spec 8 model (row set and free-parameter numbering); RAM matrices reproduce lavaan's implied covariance at lavaan's estimates to 1e-10; the Q3 identity test (lavaan `fixed.x = TRUE` versus `FALSE`: structural estimates and SEs equal to 1e-8).
+  - Planted defect: a converter that skips the marker-loading rule makes the latent model unidentified, and the identification count must catch it before optimization.
+- [ ] **S12: Syntax-to-fit pipeline (N3).** Listwise deletion once on the model's observed variables (K5c), `n_dropped` stored and reported in one message, stored data has `nrow == n_obs`; identification check (`df < 0` errors with the count); a free intercept errors naming the mean-structure non-goal; `level:` models error with the spec 4.3 message.
+  - Tests: NA rows dropped and counted; the error rows; the four unconstrained structures fitted from syntax equal the PR 1 internal-builder fits to 1e-10.
+
+#### PR 5: linear constraints (`feature/sem-constraints`)
+
+- [ ] **S13: Linear constraints in the optimizer (N3).** Equalities via `eval_g_eq`, inequalities via `eval_g_ineq` normalized to `c(x) <= 0`, with constant Jacobians taken from the S9 linearity classifier (spec 4.5a); linear constraints are solved once with no warning (spec 4.5a, 4.5b). A constraint classified nonlinear errors by name: "nonlinear constraints are not supported in this version" (pinned regex, no planning ids, Q13). `n_starts` stays at the S5 retry behavior.
+  - Oracles: `a + b == 0.5` against lavaan >= 0.7-3 and against the OpenMx reparameterized model (Q8) to 1e-6; a linear constraint gives no warning and one solve (spec 4.5f item 7).
+  - Planted defect: a nonlinear constraint misclassified as linear (the spec 4.5f item 1 table's defects) is solved with a constant Jacobian and the K10 constrained cell must fail.
+- [ ] **S14: Acceptance for constrained fits, reduced-gradient form (N3; carries the stationarity half of G2).** Accept when nloptr status is 1, 3 or 4 (spec 4.5c), the constraint residual is at most 1e-6, and the scaled gradient projected onto the null space of the active-constraint Jacobian is at most the stationarity threshold. Active equalities, active linear inequalities (treated as equalities) and active bounds (Q10) enter the projection. The sign of each active inequality's multiplier gets a **warn-only** check in 0.7.0 (OD4 closed, grill-8): the least-squares multipliers of the active set are computed in base R (no NNLS), and a wrong-sign multiplier, with constraints normalized to `c(x) <= 0` and a tolerance set on the fixtures below [A], warns once naming the constraint ("constraint X is active, but moving into the feasible region would lower the objective; the solution may not be a local minimum"). The fit is not rejected. `summary()` lists active constraints with the sign of their multiplier. The NNLS acceptance gate stays S25's. On failure the Q9 retry applies.
+  - Oracles: stubbed nloptr results with active linear constraints (exact verdicts); a bounded fit (`lower(0)*` on a variance that wants to go negative) is accepted with the bound reported active. Sign-check fixtures from `evidence/native-sem-2026-10-08/04b-constraint-contract.R`: the wrong-sign point (the equality solution `a + b == 0.2` judged against `a + b >= 0.2`) must warn; the real active `<=` SLSQP output (`c_le`) must not, and a new real fit with an **active** `>=` constraint (a level above the unconstrained optimum of `a + b` read from `04b`, so it binds with a correct-sign multiplier) must not either. `c_ge` as recorded in `04b` is inactive (c(x) = -0.441), so it is not a negative control.
+  - Planted defects: testing the unprojected gradient rejects the correct bounded fit (positive control for the Q10 projection); dropping the status test admits a stubbed status-5 result; a flipped sign convention fails the `<=` or the active `>=` negative control.
+  - **G2, stationarity half:** the threshold is the named constant `1e-3`, pinned in the tests; S15 recalibrates it (below).
+- [ ] **S15: Constrained SEs, `:=`, K10 constrained cell (N1/N5).** Q5 projection; `:=` values and delta-method SEs.
+  - Oracles: SEs under `a == b` against OpenMx with a shared label, and under `a == 0` against the OpenMx fixed-parameter model, both at the frozen K10 tolerance; `:=` indirect effect `a*b` SE against the lavaan `:=` row (expected information) to 1e-6.
+  - Planted defect: skipping the projection (plain inverse Hessian with a free `a` and `b`) must fail the `a == b` SE test.
+  - `tests/sim/sem-se-gate.R` gains the constrained cell (n of 50, 200, 1000; 20 seeds).
+  - **Threshold calibration (G2, stationarity half):** record the scaled-gradient value of every accepted and every failed start across these cells and the `04b` problems. Keep `1e-3` if it sits at least 10x above the largest converged value and at least 10x below the smallest stall; otherwise change the named constant from S14 if the table makes the answer clear, or stop and ask the author with the table.
+  - Edge cases: infeasible pair `a == 1`, `a == 2` errors naming the constraint and residual 1.70 (spec 4.5f item 6). (The `a*b == 0` spread warning and Q13 advice move to S25.)
+
+#### PR 6: user API and extraction (`feature/sem-engine`)
+
+- [ ] **S16: Entry points (N4).** `SEMFit` (OD1), `fit_sem(model, data, information = c("observed", "expected"), n_starts = NULL, control = list())` [A: names follow OD1], and `fit_mediation(engine = "native", model = , treatment = , mediator = , data = , engine_args = )` per Q2; `weights` and `se_type = "sandwich"` error with "not supported by engine = \"native\" in this version" (no planning ids in user messages, Q13); `cluster` and `se_type = "kr"` error as they do for glm.
+- [ ] **S17: Extraction (N4).** `.sem_accessors_native()`; `extract_mediation()` method for `SEMFit` registered at source time (same package, no `requireNamespace()`).
+  - Oracles: for simple, serial, parallel and latent-mediator models, `extract_mediation(fit_sem(...))` equals `extract_mediation(lavaan::sem(..., fixed.x = FALSE, information = "observed"))` on `a_path`, `b_path`, `c_prime`, `@estimates` alias rows to 1e-6 and `@vcov` alias block to 1e-5; the four-way route with a product column agrees the same way (one test, not a K10 cell). The `:=` indirect-effect SE from S15 equals `.effect_se()` on the extracted `MediationData` to 1e-10 (two independent routes; moved here from S15 because extraction lands in PR 6).
+  - RMediation smoke (handoff N4 "done when"): in the E2E transcript only, `RMediation::ci_mediation_data()` (or the current exported name, checked then) runs on the native `MediationData`; RMediation is not added to `DESCRIPTION` (X7).
+- [ ] **S18: Methods and docs (N4/N8).** `print`, `summary` (with the 4.5d diagnostics, `n_dropped`, information type, improper flags, active constraints), `coef`, `vcov`, `nobs`, `logLik`; snapshot tests on a hand-built object (platform-independent, Ext D practice).
+  - Docs in this PR: NEWS "New features" entry (engine, syntax name per K4, raw data only, observed information provisional statement replaced by the checkpoint A outcome); `vignettes/articles/methods.qmd` section "Native SEM engine" (RAM form, ML discrepancy, gradient, both informations, constraint handling and the KKT gate, multi-start contract, `#|` chunk options); `vignettes/articles/refcard.qmd` names `fit_sem` and `SEMFit` (`test-refcard-coverage.R` fails otherwise); `_pkgdown.yml` reference index ("Model Fitting" gains `fit_sem`, "S7 Classes" gains `SEMFit`); a "medfit model syntax" help topic listing the two extensions under a "medfit extensions" heading, with the lavaan comma-shorthand warning (spec 6, K4); `inst/WORDLIST` entries inserted in place.
+  - Files: `R/fit-sem.R`, `R/fit-glm.R`, `R/classes.R`, `R/zzz.R`, `R/methods-base.R`, `R/extract-sem.R`, `tests/testthat/test-fit-sem.R`, `NEWS.md`, `_pkgdown.yml`, `vignettes/articles/methods.qmd`, `vignettes/articles/refcard.qmd`, `inst/WORDLIST`, `man/*.Rd`.
+
+#### PR 7: J2 parity gate (`feature/sem-parity`)
+
+- [ ] **S19: Parity suite (N5, J2/J7).** `tests/testthat/test-sem-parity.R` (every test `skip_if_not_installed("OpenMx")`; heavy ones `skip_on_cran()`) and `tests/sim/sem-parity-gate.R`.
+  - At least 5 models (the K10 four plus one constrained and one bounded, plus the `memory_exp` parallel model): estimates within 1e-6 of OpenMx (`S * n/(n - 1)` input), SEs within the frozen K10 tolerance.
+  - **MBCO known-answer (J2):** on `memory_exp` (stored as `tests/testthat/fixtures/memory_exp.rds` with provenance: RMediation, same author, GPL (>= 3); dummy `x` as in the `mbco()` example). If S0(d) reproduced X0, the correctly labeled model: native `n * (F_null - F_full)` for `a1 == 0` and `b1 == 0` equals OpenMx diffLL (221.045546, 0.083100 [V-scratch]) to 1e-6, and the MBCO statistic is the minimum, 0.083100. Example as written (labels shifted, S0 d): the minimum of the two separate solves equals RMediation's `mxCompare()` diffLL, 0.060332, to 1e-6. OpenMx's nonlinear `a1*b1 == 0` result on the correct model (221.05) is recorded beside it, not used as truth (S0 c).
+  - Planted defect: computing the statistic as `(n - 1) * dF` or `2 * n * dF` must miss the known answer at 1e-6; taking the nonlinear solve's diffLL (221.05) instead of the minimum must fail the minimum test.
+  - Always-on companions pin the native values to 1e-6 relative so the noSuggests job still checks them.
+- [ ] **S20: Gate report and checkpoint B (N5).** The PR body carries the J2 table (model x n: estimate and SE max differences), the K10 table, improper-cell counts, the reliability table and the KKT calibration table. **Stop: the author answers go or no-go before PR 8, PR 9 or the release.**
+
+#### PR 8 and PR 9: behind checkpoint B (both in 0.7.0, grill-6)
+
+- [ ] **S21: IPW with sandwich SEs (N6).** `fit_sem(sampling_weights = )`: weighted ML on the weighted covariance, sandwich `H^-1 B H^-1` with casewise scores. Oracle: point estimates equal `fit_mediation(engine = "glm", weights = )` to 1e-6 (handoff N6); SEs equal the glm route's HC sandwich [inferred: HC0 versus HC3 scaling must be matched; checked first] and `lavaan::sem(sampling.weights = )` to 1e-5. Planted defect: dropping the weights in the score matrix. Files: `R/sem-sandwich.R`, `tests/testthat/test-sem-ipw.R`.
+- [ ] **S22: SEM MBCO (N7).** An exported function (name [A] `mbco_sem()`; the author may rename it at review) that refits with `a == 0` and `b == 0` separately (linear, one solve each), reports both solves, both diffLL values and the minimum as the statistic with `df = 1` and its p-value. Oracle: the S19 known-answer; a latent-mediator case against lavaan >= 0.7-3 constrained fits. Planted defect: reporting the larger diffLL. Files: `R/sem-mbco.R`, `tests/testthat/test-sem-mbco.R`, NEWS, refcard, `_pkgdown.yml`.
+
+#### PR 10 and release
+
+- [ ] **S23: Docs (N8).** Cookbook recipe 11 "Mediation with a latent mediator, native engine" in `vignettes/articles/cookbook.qmd`, and `test-cookbook-consistency.R` updated from `paste0(1:10, ".")` to `1:11` (the test pins ten recipes [V]); README quick start line; CLAUDE.md, AGENTS.md and README file lists (new `R/sem-*.R` files, `SEMFit`, the native engine row in the Engines table); `.STATUS`.
+- [ ] **S24: Release (N8).** Version 0.6.0 to 0.7.0 in `DESCRIPTION` and NEWS heading; grep for `0.6.0` leftovers; full revdepcheck (section 8); release PR `dev` -> `main` (merge commit), tag `v0.7.0`, GitHub release, r-universe check through the `/api/packages` list (the per-package endpoint 404s when healthy, memory note). **Ask before merging.**
+
+#### PR 11: nonlinear constraints (`feature/sem-nonlinear`, after checkpoint B, grill-1)
+
+The release (S24) does not wait on this PR. If it merges before S24 it ships in 0.7.0; otherwise it ships in a later minor release and nonlinear constraints keep erroring by name.
+
+- [ ] **S1 (prerequisite for S25, may run any time before it; does not gate PR 5 or the release): independent review of `73c322a`.** `/codex:adversarial-review` on spec 4.5c, 4.5f item 11 and the `04b` NNLS code, with explicit questions: (i) are the inequality multiplier signs right; (ii) must folded bounds and `lower()`/`upper()` enter the active set (Q10); (iii) should the 4.5c gate govern unconstrained fits (Q9); (iv) what happens with degenerate active sets. Acceptance: no high finding; every medium fixed in this plan's tasks or recorded as a decision with its reason. A finding that needs spec text goes to the author as an errata note (the spec is approved and not edited by this plan).
+- [ ] **S25: Nonlinear constraints (N3; carries G1, the NNLS half of G2, and G6; enforces F3).** Needs S1 closed and PR 7 merged. Nonlinear `==`, `<`, `>` constraints with Jacobians by `.sem_jacobian()` (K3); spec 4.5b-d in full: default `n_starts` of 5 for nonlinear constraints, perturbation rules, model-derived seed (Q11), the 4.5c three-part gate with NNLS multiplier signs (this replaces S14's warn-only sign check with a gating one), the 4.5d diagnostics, the `a*b == 0` spread warning with the Q13 advice; then the spec 4.5f tests 2-6, 8, 9, 11, each with its planted defect as written there.
+  - **G1 on fitted models:** two simultaneously active linear inequalities on the three-variable model (`a + b < 0.2` and `a - b < 0.1`, both binding at the optimum on the pinned seed, checked first); a degenerate active set (`a + b < 0.2` with `2*a + 2*b < 0.4`): accepted, KKT at most the threshold, all multipliers non-negative, residual well defined; planted defect: free-sign multipliers accept the wrong-sign point (KKT 1.9e-9) that the NNLS rule rejects (0.43).
+  - **G2 recalibration:** record the KKT value of every accepted and every failed start across the S15 constrained gate cells and the `04b` problems. Rule: keep `1e-3` if it sits at least 10x above the largest converged value and at least 10x below the smallest stall; otherwise stop and ask the author with the table.
+  - **Code review:** a fresh-context reviewer (agent with no session history) gets `.sem_kkt()`, `.nnls()` and the planted cases, and must reproduce the 4.5c verdicts before PR 11 opens (CLAUDE.md "plant a defect the test must catch").
+  - Files: `R/sem-optim.R` (`.sem_kkt()`, `.nnls()`, `.sem_multistart()`), `tests/testthat/test-sem-nonlinear.R`, NEWS, `_pkgdown.yml` if a help topic is added.
+
+### 4.5 Gates every PR runs (in the worktree the PR ships from)
+
+| Gate | Command | Pass |
+|---|---|---|
+| Full suite | `NOT_CRAN=true Rscript -e 'devtools::test()'` | 0 failed, 0 errors; counts quoted |
+| Lint | install into a scratch library, then `lintr::lint_package()` with `LINTR_ERROR_ON_LINT=true` (as `.github/workflows/lint.yaml`) | 0 hits |
+| Spelling | `spelling::spell_check_package()` | clean, new terms added to `inst/WORDLIST` in place |
+| pkgdown | `pkgdown::check_pkgdown()` | no missing topics |
+| URLs | `urlchecker::url_check()` (github.com pages time out from this machine, `.STATUS`; CI covers it) | all correct, or the timeout recorded |
+| Strict check | `devtools::check(cran = TRUE, args = "--run-donttest", env_vars = c("_R_CHECK_DEPENDS_ONLY_" = "true", "_R_CHECK_SUGGESTS_ONLY_" = "true", "_R_CHECK_CRAN_INCOMING_" = "true", "_R_CHECK_CRAN_INCOMING_REMOTE_" = "true"))` | 0 errors, 0 warnings, only the Date NOTE |
+| Mutation | each planted defect named in the task, applied with `local_mocked_bindings()` or a temporary edit | each turns its test red; reverted edits leave `git diff` clean |
+| Runtime | `testthat::test_file()` timing of each owned file | always-on part at most 10 s |
+| E2E | fresh `Rscript` session on the installed package, transcript in the PR body | the task's E2E row (below) |
+| New tests | every new behavior has a test in the PR's own file | reviewer checks |
+
+E2E per PR: PR 1, a latent-mediator fit through the internal builder with estimates and SEs beside OpenMx and the gate table; PR 2, the rejection table run end to end plus the rebound-`exp` control; PR 3, a lavaan extraction before and after; PR 4, four models from syntax; PR 5, `a + b == 0.5` and `a == b` fits beside OpenMx plus a nonlinear constraint erroring by name; PR 11, `a*b == 0` from the stalled start with `n_starts = 1` (error) and `5` (warning, F = 0.095154); PR 6, `fit_mediation(engine = "native")` on `mediation_demo` and a latent-mediator model, `tidy()`, `bootstrap_mediation()`, RMediation CI; PR 7, the J2 table; PR 8/9, IPW and MBCO known answers; PR 10, the cookbook recipe rendered and served over http(s) with its consistency test; release, `pak::pak("data-wise/medfit")` in a clean library on the tag.
+
+**Ask before merging every PR** (feature-branch rule).
+
+## 5. Test and oracle plan (summary by layer)
+
+| Layer | Oracle (independent of the code) | Tolerance | Planted defect | Edge cases |
+|---|---|---|---|---|
+| Gradient | central differences in the test | 1e-8 abs | symmetric-entry factor | near-singular `Sigma` |
+| Point estimates | `lm()` closed form (saturated); lavaan; OpenMx | 1e-8; 1e-6; 1e-6 | divisor `n - 1` | Heywood (negative variance kept, flagged); `n` = 50 |
+| Information | lavaan expected/observed; OpenMx (K10) | 1e-6; 1e-5; frozen K10 | scale `n - 1` | singular information gives `NA` SEs plus warning |
+| Optimizer acceptance | stubbed nloptr results (spec 4.5f item 9) | exact verdicts | no status test; no KKT | status 5, -4, mislabeled 4, infeasible 1e-3 |
+| Parser | `lavParseModelString()` | exact table | no bound folding; dropping `y1` | comments, continuation, intercepts |
+| Evaluator | R's own `eval(parse())`; the locked-env control | 1e-14 | caller `exp`; no result guard | 28 rejections, 8 non-finite |
+| Constraints | lavaan >= 0.7-3; OpenMx without `mxConstraint` (Q8) | 1e-6 | residual-only gate; free-sign multipliers | infeasible pair; two active inequalities; degenerate active set; bounds (Q10) |
+| `:=` SEs | lavaan `:=`; `.effect_se()` | 1e-6; 1e-10 | no projection | defined of defined; cycle error |
+| Extraction | lavaan route through the same workers | 1e-6 est, 1e-5 vcov | seam drops `label` | latent mediator, serial, parallel, four-way |
+| MBCO | OpenMx diffLL on `memory_exp` | 1e-6 | `n - 1`; larger diffLL | nonlinear solve trap (S0 c) |
+| Missing data | hand count | exact | deletion per equation instead of once | all rows incomplete errors |
+| Small n | `n <= p` | error text | none | `n` = p + 1 fits or errors by name |
+
+## 6. Risk register
+
+### 6.1 Carried forward from the T6 close-out (each has an owner and a gate)
+
+| Id | Gap (T6 close-out) | Owner | Gate or accepted risk |
+|---|---|---|---|
+| G1 | Several simultaneous active inequalities and degenerate active sets checked only on random NNLS problems | S14 (reduced form), S25 | The fitted-model cases (two active inequalities, degenerate active set, free-sign planted defect) move to S25 (PR 11). In 0.7.0, linear fits with an active inequality or bound are accepted on the reduced-gradient test with a warn-only wrong-sign multiplier check (OD4 closed, grill-8; accepted residual risk: a wrong-sign point inside the warning tolerance) |
+| G2 | KKT threshold `1e-3` provisional, calibrated on two problems | S14 (stationarity), S25 (NNLS) | 10x-margin rule over every gate cell; outside it, the author decides with the table. Only the stationarity half touches 0.7.0 |
+| G3 | N5 SE tolerance `1e-3` a proposal | S6 (and S15 for the constrained cell) | Freeze rule in S6; failure reverts the default to expected information (K10) |
+| G4 | Reliability rests on 30 datasets per cell; "stalled" versus "lavaan on another local solution" not separated | S6 | 100 datasets per cell and the three-way mismatch classification in `tests/sim/sem-reliability.R` |
+| G5 | J6: L-BFGS least reliable from random starts (93.3% mean, worst cell 86.7%) | S6, OD3 | Measured with and without the Q9 retry; OD3 decided at checkpoint A. Mitigation regardless: the Q9 gate means a stalled L-BFGS start is retried, not returned |
+| G6 | Round-5 fix `73c322a` (inequality KKT signs) never re-reviewed | S1 | Independent review before S25 starts (no high, mediums fixed or decided), plus the fresh-context code review in S25. Does not gate PR 5 or 0.7.0 (grill-1) |
+| G7 | Parked: `R/extract-joint.R:162-167` (row names do not prove shared subjects) | none in this plan | Out of scope: code on `dev` since #76, unverified; belongs in its own GitHub issue. **Accepted risk** for 0.7.0 because native fits never reach `extract-joint.R` (no joint class in the native route) |
+
+### 6.2 Where the adversarial-review findings F1-F5 are enforced
+
+| Finding | Enforced in | Test file |
+|---|---|---|
+| F1 evaluator boundary | `R/sem-expr.R` `.sem_expr_validate()`, `.sem_expr_eval()` (S8) | `test-sem-expr.R`: rebound-`exp` control, 28 rejections, result guard |
+| F2 grammar completeness | `R/sem-parse.R` (S7, S9) | `test-sem-parse.R`: lavaan oracle, spec 7 table with pinned regexes, precedence cases |
+| F3 nonlinear-constraint contract | `R/sem-optim.R` `.sem_accept()`, `.sem_kkt()`, `.sem_multistart()` (S13, S14 for linear constraints; S25 for nonlinear) | `test-sem-constraints.R` (linear); `test-sem-nonlinear.R`: spec 4.5f items 2-11 with their planted defects (S25) |
+| F4 observed-information evidence | `tests/sim/sem-se-gate.R` (S6, S15) | `test-sem-optim.R` companion; `test-sem-parity.R` (PR 7) |
+| F5 reproducible benchmark claims | `tests/sim/sem-reliability.R` (S6), `07-preflight.R` (S0) | results CSVs with package versions and seeds |
+
+### 6.3 Other risks
+
+| Id | Risk | Mitigation or decision gate |
+|---|---|---|
+| R1 | Performance: R-level loops reintroduced (the spike's `mats()` was 23x slower) | S3 uses precomputed index vectors; S0 budget (5 ms per p <= 10 fit) checked in S5 with `bench`-free `system.time()` over 200 fits; multi-start at 5 starts multiplies cost by 5 only for nonlinear constraints and retries |
+| R2 | Dependency weight: nloptr in Imports is compiled, LGPL (>= 3), needs cmake without system nlopt [V] | S2 canary before PR 1 merges; fallback to Suggests plus guards (J3). Already installed by lme4 users [V] |
+| R3 | Cross-platform numerics: nloptr stopping points differ across BLAS and compilers | Tests compare to oracles at 1e-6, never to pinned optimizer paths; KKT and residual gates are tolerance-based; the CI matrix already covers macOS, Windows, ubuntu release, devel and oldrel-1 [V]; the S2 r-hub run adds macos-arm64 |
+| R4 | CRAN readiness: OpenMx in Suggests is large; runtime of parity tests | Every OpenMx test `skip_if_not_installed()` and heavy ones `skip_on_cran()`; the noSuggests job runs the always-on companions; 10 s budget per file |
+| R5 | API lock-in: `fit_sem()`, `SEMFit`, `model =`, `engine_args` names, the syntax name | OD1; PRs 1-5 export nothing; roxygen marks `SEMFit` experimental; NEWS says the native engine's API may change before 1.0 |
+| R6 | Three table representations drift (handoff risk) | S11 round trip against `lavaanify()` and implied-covariance identity |
+| R7 | Improper solutions are common at small n (21% at n = 50 in the spike) | Unbounded and flagged (handoff G2 policy); K10 reports improper cells separately |
+| R8 | The extraction seam changes lavaan behavior | PR 3 alone, zero-change identity gate |
+| R9 | Ecosystem: new exports and a new `fit_mediation()` argument | Additive only (no breaking change, so no 2-month notice, CLAUDE.md); probmed `Imports: medfit (>= 0.3.0)` and RMediation `Suggests: medfit (>= 0.2.0)` [V]; medrobust has no medfit entry in its `DESCRIPTION` [V] |
+| R10 | lavaan 0.7-2's constraint bug under `optim.parscale` (lavaan's own notes) | Constrained lavaan oracles `skip_if(packageVersion("lavaan") < "0.7.3")`; no Suggests floor raise (X4) |
+| R11 | Multi-start seeding changes the user's RNG stream | Q11 save-and-restore with a test that `.Random.seed` is unchanged after a nonlinear fit |
+
+## 7. Discrepancies found
+
+| Id | Where | Conflict | Resolution in this plan |
+|---|---|---|---|
+| X0 | Handoff J2 ("reproduce RMediation's OpenMx `mxCompare` diffLL on its MBCO test cases") vs RMediation itself | (i) RMediation's MBCO tests are stubs (`statistic` 5.2, `chisq` 10.5 in `test-s7-mbco.R`, `test-mbco-legacy.R`) or structure checks; the `mbco()` Rd example is the only real known-answer. (ii) That example is mislabeled (S0 d): its `ind1` is the direct path times `b1`, so its 0.060332 tests the wrong product. (iii) On the correctly labeled model, OpenMx's nonlinear solve gives 221.045546 where the constrained optimum is 0.083100 (S0 c) | S19 meets J2 literally (0.060332 reproduced) and also gates on the correctly labeled per-constraint OpenMx values. Report (ii) and (iii) to the author for RMediation and for J10's migration spec; RMediation is not edited |
+| X1 | Handoff "Target release 0.6.0" and missingmed J11 vs this repo | The handoff targets 0.6.0; the ledger, roadmap and `.STATUS` assign 0.7.0 | 0.7.0 (this repo's later decision). missingmed's documents are read-only here; the author may want to update J11 there |
+| X2 | Release decision id | The brief cites "K7" for the release assignment; in the ledger K7 is the speed rule. The release assignment is recorded as the "Open Questions" resolution ("Resolved 2026-10-08 (K7)") and in K6's consequence column, not as its own row | Treated as decided; cited as "release assignment of 2026-10-08" |
+| X3 | K6 "N4 gated on Ext D PR B" | PR B (#92) merged 2026-10-08 [V `.STATUS`] | N4 is unblocked, as the brief says |
+| X4 | Brief: "Oracle is lavaan"; handoff J2/J7: "OpenMx is the parity oracle; lavaan optional"; ledger K10: OpenMx for the SE gate | Both are used, for different layers | OpenMx gates estimates and SEs (J2, K10); lavaan is the oracle for the parser (J13), converters, extraction and constrained fits. lavaan 0.7-2 is installed locally [V] while spec 8 says ">= 0.7-3" for the parser oracle; parser output was identical on both [V], so only constrained numeric tests skip below 0.7-3 |
+| X5 | Spec 4.5c normalizes only constraint-table inequalities | Folded bounds and `lower()`/`upper()` modifiers are passed as box bounds but are not in the KKT active set, so an active bound would fail stationarity | Q10, proposed, put to the S1 review; becomes OD5 if the reviewer disagrees |
+| X6 | Spec 4.5e user message cites "(medfit MBCO, N7)" | Planning id in user-facing text; N7 may not ship in 0.7.0 | Q13 |
+| X7 | Handoff N4 "done when RMediation `ci_mediation_data()` runs on it" | RMediation is not a medfit dependency and its CRAN submission is on hold (J10) | Checked in the E2E transcript only; no test dependency |
+| X8 | `R/zzz.R` ends with "OpenMx integration postponed to future release" | OpenMx enters only as a test oracle (Suggests), not as an extraction target | Comment left alone; no `extract_mediation()` method for `MxModel` in this plan |
+| X9 | Missingmed plan section 3 says SEs are "expected information"; J9 says observed by default | J9 is the later decision, provisional under K10 | J9 with the K10 gate (S6) |
+| X10 | P0 evidence computed observed information with `numDeriv::hessian()`; K3 forbids `numDeriv` in the package | The P0 5.0e-6 agreement is for a Richardson Hessian, not the package's | Q4; the K10 gate runs on the package's Hessian |
+| X11 | Ledger research table: "F = 0.0952 (`a` = 0) and 0.1061 (`b` = 0), i.e. lavaan's fmin/2 values" | lavaan's `fmin` is half the ML discrepancy, so F on `common.R`'s scale is `2 * fmin`, not `fmin/2` [inferred, not run] | Wording only; S3 oracle (iii) pins the relation numerically |
+
+## 8. Documentation and release plan
+
+| Item | Where | Task |
+|---|---|---|
+| NEWS "New features": native engine, syntax, constraints, diagnostics | `NEWS.md` | S18 (S21, S22 append) |
+| Methods and Formulas section | `vignettes/articles/methods.qmd` | S18 |
+| Reference card rows for every new export and class | `vignettes/articles/refcard.qmd` | S18 (S22) |
+| Cookbook recipe 11 and the consistency test count | `vignettes/articles/cookbook.qmd`, `tests/testthat/test-cookbook-consistency.R` | S23 |
+| Reference index | `_pkgdown.yml` | S18 (S22) |
+| Syntax help topic ("medfit model syntax", extensions tagged) | `R/sem-parse.R` roxygen, `man/` | S18 |
+| WORDLIST (Heywood, KKT, nloptr, SLSQP, RAM, ...) | `inst/WORDLIST` | each PR |
+| CLAUDE.md, AGENTS.md, README file lists and Engines table | repo root | S23 |
+| Version bump 0.6.0 to 0.7.0, NEWS heading, grep for leftovers | `DESCRIPTION`, `NEWS.md` | S24 |
+| Evidence README rows for `07-preflight.R` | `planning/specs/evidence/native-sem-2026-10-08/README.md` | S0 |
+
+**Release gates (S24):** full suite with `NOT_CRAN=true`; strict check (section 4.5); r-hub (S2 rerun on the release commit); full `revdepcheck::revdep_check()` because probmed Imports medfit (CLAUDE.md "Scale the reverse-dependency check": an Imports dependent warrants the full run), plus RMediation's suite against the dev build in a scratch library; the K10, J2 and reliability CSVs current; checkpoint B answered; `cran-comments.md` not touched unless the channel is CRAN. PR 11 (S25) ships in 0.7.0 only if it merges before S24; otherwise it ships in a later minor release (grill-1).
+
+**Channel: GitHub and r-universe only (recommended, not an open question).** The 0.5.0 grill's policy settles it: the next CRAN submission is triggered by probmed's own CRAN need or a user report of the 0.3.2 bug, and neither has occurred [V `.STATUS`]. Also, 0.7.0 adds a compiled Imports dependency whose CRAN-farm behavior is unmeasured until S2, and the native API is experimental (R5). When a CRAN trigger fires, the release carrying it runs the CLAUDE.md "CRAN check practice" list fresh.
+
+**Ecosystem:** all changes are additive (new engine value, new argument at the end before `...`, new function and class). No `[BREAKING]` issue is needed. One ecosystem note in NEWS: dependents that install medfit from GitHub now compile nloptr (or already do through lme4). missingmed's pass-through engine is its own repo's work (J8); E1-style ecosystem rows in mediationverse are out of this plan.
+
+## 9. Effort (grill-7)
+
+No hours are given: the plan has no measured baseline for native-engine work. Size classes (XS 1 file, S 1-2, M 3-5) in section 4.2 are the unit. The one measured reference is Ext D module 1: its three feature PRs (#90-#92) merged about 3.5 hours of wall clock after its plan (#88) merged, with local gates, CI queue time and review turnaround included. It had no optimizer-acceptance or oracle-parity workstream, so treat it as a floor, not a forecast. Re-measure after PR 1 merges and record the actual in `.STATUS`.
+
+Schedule drivers, in order: checkpoint A (S6 results, OD3), checkpoint B (the J2 parity gate, author go/no-go), and S1 before PR 11. PRs 1-3 run in parallel; PRs 8-11 run in parallel after checkpoint B.
+
+## 10. Open decisions for the maintainer
+
+| # | Question | Status and recommendation | Reason |
+|---|---|---|---|
+| OD1 | User-facing surface | **Closed (grill-5):** export `fit_sem()` and an experimental `SEMFit` | Diagnostics, `:=` SEs and `-2 log L` need a visible fit object |
+| OD2 | N6 and N7 in 0.7.0? | **Closed (grill-6):** both, behind checkpoint B | Author's call |
+| OD3 | J6 (L-BFGS for unconstrained fits) given 93.3% random-start reliability against 98.5% for SLSQP | **Open.** Decide at checkpoint A from S6's numbers; default plan: SLSQP for all fits unless L-BFGS with the Q9 retry matches SLSQP's reliability | SLSQP costs about 2x (2.6 ms vs 1.6 ms per fit) and is the one path that also handles constraints; nlminb stays excluded as J6 says |
+| OD4 | Found while applying grill-1: with the NNLS sign check in PR 11, what does 0.7.0 do about multiplier signs for active linear inequalities and bounds? | **Closed (grill-8):** accept on the reduced-gradient test and add a warn-only least-squares sign check (S14), tested on the `04b` fixtures; the NNLS gate stays S25's | In `04b` the signed and free-sign rules agree on real SLSQP outputs; they differ only on a constructed wrong-sign point, which a least-squares multiplier detects without the unreviewed `73c322a` code |
+
+OD5 (bounds in the KKT active set) exists only if the S1 review rejects Q10.
+
+## 11. Checkpoints
+
+1. **A, after S6 (PR 1 open, not merged):** K10 unconstrained cells pass at the frozen tolerance (or the default reverts), the reliability table is in, and OD3 is answered.
+2. **After S1 and before S25 (PR 11):** the `73c322a` review is closed. It does not gate 0.7.0 (grill-1).
+3. **After PR 6:** a user can fit and extract a native model; nothing in the release is yet gated.
+4. **B, after S20 (the handoff's "stop after N5"):** J2 passed; the author says go or no-go. N6, N7 and the release wait for it.
+5. **After B:** PR 11 (S25) starts once S1 is closed; the release does not wait on it.
+
+## Not in this plan
+
+Ext D module 2 (1-1-1, random slopes); two-level SEM (J16); covariance-matrix input (K5c); the sparse path (K7b); RMediation's migration off OpenMx (J10); missingmed's pass-through engine (J8); the `extract-joint.R` finding (G7); a CRAN submission.
