@@ -39,8 +39,9 @@ medfit defines S7 classes for each mediation structure: `MediationData`
 (simple), `InteractionMediationData` (simple with a
 treatment-by-mediator interaction), `SerialMediationData`,
 `ParallelMediationData`, `JointMediationData` (several mediators with
-treatment-by-mediator products), and `BootstrapResult`. The three most
-common are introduced here; see [Model
+treatment-by-mediator products), `ClusterMediationData` (treatment
+assigned to whole clusters, from `lmer` fits), and `BootstrapResult`.
+The three most common are introduced here; see [Model
 Extraction](https://data-wise.github.io/medfit/articles/extraction.md)
 for the others.
 
@@ -432,8 +433,8 @@ summary(boot_result)
       Upper: 0.25
 
     Bootstrap Distribution Summary:
-       Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-    0.03542 0.12213 0.14801 0.14943 0.17852 0.26576 
+         Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
+    0.0007814 0.1244675 0.1524572 0.1518014 0.1780239 0.2712466 
 
 ## Main Functions
 
@@ -637,6 +638,10 @@ medfit serves as the foundation for specialized mediation packages:
   methods](https://data-wise.github.io/medfit/articles/bootstrap.md)
 - Read the [formulas behind every effect and standard
   error](https://data-wise.github.io/medfit/articles/methods.md)
+- Look up a call on the [reference
+  card](https://data-wise.github.io/medfit/articles/refcard.md), or
+  follow a task recipe in the
+  [cookbook](https://data-wise.github.io/medfit/articles/cookbook.md)
 - See the reference documentation for detailed API information
 
 See `NEWS.md` for the latest updates.

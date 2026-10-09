@@ -7,12 +7,12 @@ The
 function provides a standardized interface for extracting mediation
 structures from fitted models. It works with: - **lm/glm** models (base
 R) - implemented - **lavaan** SEM models - implemented - **lmer** mixed
-models (future)
+models (cluster-level treatment, 2-1-1) - implemented
 
 Extraction returns the S7 class that matches the structure:
 `MediationData`, `InteractionMediationData`, `SerialMediationData`,
-`ParallelMediationData`, or `JointMediationData`. All share one
-interface
+`ParallelMediationData`, `JointMediationData`, or
+`ClusterMediationData`. All share one interface
 ([`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
 [`confint()`](https://rdrr.io/r/stats/confint.html),
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html),
@@ -627,7 +627,7 @@ boot_nie <- bootstrap_mediation(
 c(boot_nie@ci_lower, boot_nie@ci_upper)
 ```
 
-    [1] 0.4483248 0.8930866
+    [1] 0.4400159 0.9092223
 
 The fit must meet a few requirements, and each violation errors with its
 cause: every model carries the same covariates (a medfit limitation),
@@ -642,6 +642,92 @@ and would be ignored silently, so write it in the formula. The
 identification assumptions are stated for the whole mediator vector; see
 [`?JointMediationData`](https://data-wise.github.io/medfit/reference/JointMediationData.md).
 
+## Extracting from lmer Models: Cluster-Level Treatment
+
+When the treatment is assigned to whole clusters (for example schools)
+and the mediator and outcome are measured on the individuals in them
+(the 2-1-1 design), fit two linear mixed models with
+[`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) and pass them
+to
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md).
+It returns a `ClusterMediationData` object. The outcome model must carry
+the mediator as its within-cluster deviation plus the observed cluster
+mean (or the raw mediator plus the cluster mean); medfit finds these
+terms by value, so grand-mean centering and
+[`scale()`](https://rdrr.io/r/base/scale.html) work.
+
+``` r
+set.seed(2026)
+J <- 40
+n <- 10
+cl <- rep(seq_len(J), each = n)
+x_j <- sample(rep(0:1, length.out = J))
+v <- rnorm(J, sd = 0.5)
+u <- rnorm(J, sd = 0.5)
+cdat <- data.frame(school = factor(cl), X = x_j[cl])
+cdat$M <- 0.5 * cdat$X + v[cl] + rnorm(J * n)
+cdat$M_bar <- ave(cdat$M, cdat$school)
+cdat$M_w <- cdat$M - cdat$M_bar
+cdat$Y <- 0.2 * cdat$X + 0.3 * cdat$M_w + 0.6 * cdat$M_bar + u[cl] + rnorm(J * n)
+
+fit_m <- lme4::lmer(M ~ X + (1 | school), data = cdat)
+fit_y <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | school), data = cdat)
+cluster_med <- extract_mediation(
+  fit_m, model_y = fit_y, treatment = "X", mediator = "M", cluster = "school"
+)
+cluster_med
+```
+
+    <ClusterMediationData>
+      X -> M -> Y  (clusters: school)
+      a = +0.2720   b_within = +0.3796   b_between = +0.7697   c' = +0.0772
+      NIE (a * b_between) = +0.2093
+      n = 400 in 40 clusters (sizes 10 to 10)   |   within outcome model, model SEs
+    Estimand and assumptions:
+      Design: treatment `X` assigned to 40 clusters (`school`, sizes 10 to 10); linear
+        mixed models with a random cluster intercept, mediator entering through the
+        observed cluster mean.
+      - All rows: linear models with no mediator-by-treatment or mediator-by-covariate
+        products; treatment randomized; clusters intact.
+      - Own (a * b_within): no unmeasured lower-level M-Y confounding; additive upper-level
+        confounders are allowed because level-1 covariates are cluster-mean centered.
+      - Spillover, NIE and NDE: also no unmeasured upper-level M-Y confounding.
+      - TE: no assumption beyond randomization of the treatment.
+      - Own/spillover split: a cross-world assumption across individuals in a cluster; no
+        treatment-induced M-Y confounding.
+      - Interference only through the observed cluster mean of the mediator and none
+        between clusters; members missing from the analysis rows are assumed not to drive
+        their peers' outcomes.
+
+The natural indirect effect is \\a \\ b_B\\ (the cluster-mean slope),
+and
+[`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
+splits it into an own-mediator part and a spillover part, labeled as the
+large-cluster approximation:
+
+``` r
+nie(cluster_med)
+```
+
+    Natural Indirect Effect (NIE): 0.2093
+
+``` r
+decompose(cluster_med)
+```
+
+          own spillover       nie
+    0.1032345 0.1061099 0.2093444
+    attr(,"label")
+    [1] "cluster-average, large-cluster approximation"
+
+`fit_mediation(engine = "lmer", cluster = )` builds the cluster means
+and both models for you, and `se_type = "kr"` adds Kenward-Roger degrees
+of freedom (needs `pbkrtest`). The few-cluster warnings, the assumptions
+each effect needs and the formulas are in [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.md); use
+`bootstrap_mediation(cluster = )` for intervals on the products
+([Bootstrap](https://data-wise.github.io/medfit/articles/bootstrap.md)).
+
 ## Extracting from lavaan Models
 
 ### Simple Mediation in SEM
@@ -650,7 +736,7 @@ identification assumptions are stated for the whole mediator vector; see
 library(lavaan)
 ```
 
-    This is lavaan 0.7-2
+    This is lavaan 0.7-3
     lavaan is FREE software! Please report any bugs.
 
 ``` r
@@ -1222,7 +1308,8 @@ se_indirect
 
 The extraction system is designed to accommodate future extensions:
 
-- **New model types**: Add methods for lmer, brms, etc.
+- **New model types**: Add methods for brms, glmer, etc. (`lmer` is
+  done)
 - **Complex mediation**: Moderated mediation
 - **Multiple treatments**: Comparative mediation analysis
 - **Latent variables**: SEM with measurement models
@@ -1441,12 +1528,13 @@ nobs(med_data)                # Sample size
 Model extraction is **complete**:
 
 - ✅ S7 class definitions (MediationData, InteractionMediationData,
-  SerialMediationData, ParallelMediationData, JointMediationData)
+  SerialMediationData, ParallelMediationData, JointMediationData,
+  ClusterMediationData)
 - ✅ lm/glm extraction with checkmate validation
 - ✅ lavaan extraction with checkmate validation
 - ✅ Effect extractors (nie, nde, te, pm, paths)
 - ✅ Tidyverse methods (tidy, glance)
 - ✅ Base R generics (coef, vcov, confint, nobs)
-- 📋 lmer extraction (future)
+- ✅ lmer extraction (`ClusterMediationData`, cluster-level treatment)
 
 See `NEWS.md` for updates.

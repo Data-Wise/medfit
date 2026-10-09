@@ -51,6 +51,8 @@ Core S7 class definitions for mediation data structures
   Interaction
 - [`JointMediationData()`](https://data-wise.github.io/medfit/reference/JointMediationData.md)
   : JointMediationData: Joint Natural Effects of Multiple Mediators
+- [`ClusterMediationData()`](https://data-wise.github.io/medfit/reference/ClusterMediationData.md)
+  : ClusterMediationData: Cluster-Level Treatment Mediation (2-1-1)
 - [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
 
@@ -76,6 +78,8 @@ Print and summary methods for medfit classes
   : Print Method for mediation_effect
 - [`print(`*`<summary.BootstrapResult>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.BootstrapResult.md)
   : Print Summary for BootstrapResult
+- [`print(`*`<summary.ClusterMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.ClusterMediationData.md)
+  : Print Summary for ClusterMediationData
 - [`print(`*`<summary.JointMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.JointMediationData.md)
   : Print Summary for JointMediationData
 - [`print(`*`<summary.MediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.MediationData.md)

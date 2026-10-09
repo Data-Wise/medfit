@@ -33,7 +33,7 @@ model types (lm, glm, lavaan, lmer, brms, etc.)."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,6 +46,10 @@ model types (lm, glm, lavaan, lmer, brms, etc.)."><meta property="og:image" cont
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Quick Reference</h6></li>
+    <li><a class="dropdown-item" href="../articles/refcard.html">Reference Card</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html">Cookbook</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Detailed Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
@@ -72,7 +76,7 @@ model types (lm, glm, lavaan, lmer, brms, etc.)."><meta property="og:image" cont
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Mediation Structure from Fitted Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.5.0/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
       <div class="d-none name"><code>extract_mediation.Rd</code></div>
     </div>
 
@@ -116,7 +120,14 @@ models), variable names, and the original data when available.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The <code>extract_mediation()</code> generic provides methods for different model types:</p><ul><li><p><strong>lm/glm</strong>: Extract from linear and generalized linear models</p></li>
 <li><p><strong>lavaan</strong>: Extract from structural equation models</p></li>
-<li><p><strong>lmerMod</strong>: Extract from mixed-effects models (future)</p></li>
+<li><p><strong>lmerMod</strong>: Extract from two linear mixed models for a treatment assigned
+to whole clusters, as a <a href="ClusterMediationData.html">ClusterMediationData</a>: the mediator model is
+<code>object</code>, the outcome model is <code>model_y</code>, and <code>cluster</code> names the cluster
+variable. Both models must be fitted to the same rows; the cluster means
+must be computed on those rows, and a pair of fits that kept different
+individuals is an error (best effort: it compares the data row names the
+fits kept, so it cannot see a mismatch between frames whose row names were
+both reset)</p></li>
 <li><p><strong>brmsfit</strong>: Extract from Bayesian models (future)</p></li>
 </ul><p>Note: OpenMx extraction is planned for a future release.</p>
 <p>The returned objects share one interface (<code><a href="nie.html">nie()</a></code>, <code><a href="nde.html">nde()</a></code>, <code><a href="te.html">te()</a></code>,
@@ -190,6 +201,29 @@ intervals can differ between engines.</p>
 <span class="r-in"><span>            data <span class="op">=</span> <span class="va">mediation_demo</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu">extract_mediation</span><span class="op">(</span><span class="va">fit_m</span>, model_y <span class="op">=</span> <span class="va">fit_y</span>,</span></span>
 <span class="r-in"><span>                              treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lme4"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co"># Treatment assigned to whole clusters (needs lme4); formulas hold fixed</span></span></span>
+<span class="r-in"><span><span class="co"># effects only, the engine adds the random cluster intercept</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">J</span> <span class="op">&lt;-</span> <span class="fl">30</span></span></span>
+<span class="r-in"><span><span class="va">id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cdat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>school <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span>, X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">J</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">id</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">[</span><span class="va">id</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cdat</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">[</span><span class="va">id</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># The outcome model carries the mediator as its within-cluster deviation</span></span></span>
+<span class="r-in"><span><span class="co"># plus the observed cluster mean</span></span></span>
+<span class="r-in"><span><span class="va">cdat</span><span class="op">$</span><span class="va">M_bar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span>, <span class="va">cdat</span><span class="op">$</span><span class="va">school</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cdat</span><span class="op">$</span><span class="va">M_w</span> <span class="op">&lt;-</span> <span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">-</span> <span class="va">cdat</span><span class="op">$</span><span class="va">M_bar</span></span></span>
+<span class="r-in"><span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu">lme4</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lmer</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">school</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">cdat</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu">lme4</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lmer</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M_w</span> <span class="op">+</span> <span class="va">M_bar</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">school</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">cdat</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cluster_med</span> <span class="op">&lt;-</span> <span class="fu">extract_mediation</span><span class="op">(</span><span class="va">fit_m</span>, model_y <span class="op">=</span> <span class="va">fit_y</span>, treatment <span class="op">=</span> <span class="st">"X"</span>,</span></span>
+<span class="r-in"><span>                                 mediator <span class="op">=</span> <span class="st">"M"</span>, cluster <span class="op">=</span> <span class="st">"school"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="nie.html">nie</a></span><span class="op">(</span><span class="va">cluster_med</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Natural Indirect Effect (NIE): 0.2927</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

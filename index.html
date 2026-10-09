@@ -54,7 +54,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,6 +69,10 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/getting-started.html">Getting Started</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Quick Reference</h6></li>
+    <li><a class="dropdown-item" href="articles/refcard.html">Reference Card</a></li>
+    <li><a class="dropdown-item" href="articles/cookbook.html">Cookbook</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Detailed Guides</h6></li>
     <li><a class="dropdown-item" href="articles/introduction.html">Introduction to medfit</a></li>
@@ -269,6 +273,33 @@
 <span><span class="fu"><a href="reference/nie.html">nie</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></code></pre></div>
 </div>
+<div class="section level3">
+<h3 id="cluster-randomized-trials">Cluster-Randomized Trials<a class="anchor" aria-label="anchor" href="#cluster-randomized-trials"></a>
+</h3>
+<p>When the treatment is assigned to whole clusters (such as schools), use the <code>lmer</code> engine (needs the suggested <code>lme4</code>; add <code>se_type = "kr"</code> with <code>pbkrtest</code> for few clusters):</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># 40 schools of 10 students, treatment assigned by school</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<span><span class="va">J</span> <span class="op">&lt;-</span> <span class="fl">40</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
+<span><span class="va">school</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">cdat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>school <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">school</span><span class="op">)</span>, X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">J</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">school</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">[</span><span class="va">school</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">cdat</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">[</span><span class="va">school</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">cdat</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  engine <span class="op">=</span> <span class="st">"lmer"</span>, cluster <span class="op">=</span> <span class="st">"school"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/nie.html">nie</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>        <span class="co"># a * b_between</span></span>
+<span><span class="fu"><a href="reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>  <span class="co"># own-mediator and spillover parts (large-cluster approximation)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; Natural Indirect Effect (NIE): 0.328</span></span>
+<span><span class="co">#&gt;        own  spillover        nie</span></span>
+<span><span class="co">#&gt; 0.25763321 0.07036432 0.32799753</span></span></code></pre>
+<p>See <a href="https://data-wise.github.io/medfit/articles/methods.html">Methods and Formulas</a> for the estimand and the assumptions each effect needs.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="core-components">Core Components<a class="anchor" aria-label="anchor" href="#core-components"></a>
@@ -299,6 +330,7 @@
 <li><p><strong><code>ParallelMediationData</code></strong>: Container for parallel mediators (indirect effect = sum of a_j * b_j)</p></li>
 <li><p><strong><code>InteractionMediationData</code></strong>: Simple mediation with a treatment-by-mediator interaction, carrying the four-way decomposition (CDE, INTref, INTmed, PIE)</p></li>
 <li><p><strong><code>JointMediationData</code></strong>: Joint natural effects of two or more mediators when the outcome model has treatment-by-mediator products</p></li>
+<li><p><strong><code>ClusterMediationData</code></strong>: Mediation for a treatment assigned to whole clusters (the 2-1-1 design), from <code>lme4</code> mixed models: natural indirect effect <code>a * b_between</code>, split into an own-mediator and a spillover part; Kenward-Roger intervals and a cluster bootstrap for few clusters</p></li>
 <li>
 <p><strong><code>BootstrapResult</code></strong>: Container for bootstrap inference results</p>
 <ul>
@@ -368,7 +400,7 @@
 </tr>
 </tbody>
 </table>
-<p>See <a href="https://github.com/data-wise/medfit/blob/main/planning/ECOSYSTEM.md" class="external-link">Ecosystem Coordination</a> for version compatibility and development guidelines.</p>
+<p>See <a href="https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md" class="external-link">Ecosystem Coordination</a> for version compatibility and development guidelines.</p>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
@@ -385,6 +417,10 @@
 <strong><a href="https://data-wise.github.io/medfit/articles/bootstrap.html">Bootstrap Inference</a></strong>: Parametric and nonparametric bootstrap methods</li>
 <li>
 <strong><a href="https://data-wise.github.io/medfit/articles/methods.html">Methods and Formulas</a></strong>: Estimands, formulas, covariance, and standard errors for every class</li>
+<li>
+<strong><a href="https://data-wise.github.io/medfit/articles/refcard.html">Reference Card</a></strong>: Every export and class on one page</li>
+<li>
+<strong><a href="https://data-wise.github.io/medfit/articles/cookbook.html">Cookbook</a></strong>: Ten task recipes, from a first mediation fit to cluster-randomized designs</li>
 </ul>
 </div>
 <div class="section level2">
@@ -398,7 +434,7 @@
 <li>
 <strong>Defensive Programming</strong>: checkmate for input validation, S7 validators for class integrity</li>
 <li>
-<strong>Testing</strong>: 1,400+ tests with testthat (&gt;90% coverage, enforced via codecov)</li>
+<strong>Testing</strong>: 1,900+ tests with testthat (&gt;90% coverage, enforced via codecov)</li>
 <li>
 <strong>CI/CD</strong>: R CMD check, lintr, coverage reporting via GitHub Actions</li>
 </ul>
@@ -433,7 +469,7 @@
 </h2>
 <p>If you use medfit in your research, please cite:</p>
 <pre><code>Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.5.0. https://data-wise.github.io/medfit/</code></pre>
+R package version 0.6.0. https://data-wise.github.io/medfit/</code></pre>
 <p>For the entry matching your installed version, run <code>citation("medfit")</code>.</p>
 </div>
 <div class="section level2">
@@ -443,7 +479,7 @@ R package version 0.5.0. https://data-wise.github.io/medfit/</code></pre>
 <li><a href="https://data-wise.github.io/medfit/">Package Documentation</a></li>
 <li><a href="https://github.com/data-wise/medfit/blob/main/CLAUDE.md" class="external-link">Development Guide</a></li>
 <li><a href="https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md" class="external-link">Roadmap</a></li>
-<li><a href="https://github.com/data-wise/medfit/blob/main/planning/ECOSYSTEM.md" class="external-link">Ecosystem Strategy</a></li>
+<li><a href="https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md" class="external-link">Ecosystem Strategy</a></li>
 </ul>
 </div>
 <div class="section level2">

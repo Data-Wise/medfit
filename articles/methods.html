@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,6 +67,10 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Quick Reference</h6></li>
+    <li><a class="dropdown-item" href="../articles/refcard.html">Reference Card</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html">Cookbook</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Detailed Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
@@ -104,7 +108,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.5.0/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -200,9 +204,16 @@ e_Y\)</span>, with a product term <span class="math inline">\(\theta_3 X M\)</sp
 <td><code>JointMediationData</code></td>
 <td>joint NIE through all mediators</td>
 </tr>
+<tr class="even">
+<td>treatment assigned to whole clusters, <code>lmer</code> fits</td>
+<td><code>ClusterMediationData</code></td>
+<td>
+<span class="math inline">\(a \, b_B\)</span>, split into own <span class="math inline">\(a \, b_W\)</span> and spillover <span class="math inline">\(a (b_B - b_W)\)</span>
+</td>
+</tr>
 </tbody>
 </table>
-<p><code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> chooses the class from the models; <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> fits single-mediator models and returns the first two.</p>
+<p><code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> chooses the class from the models; <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> fits single-mediator models and returns the first two, or, with <code>engine = "lmer"</code> and a <code>cluster</code>, the cluster class.</p>
 </section><section class="level2"><h2 id="simple-mediation">Simple mediation<a class="anchor" aria-label="anchor" href="#simple-mediation"></a>
 </h2>
 <p>With one mediator and no product term,</p>
@@ -269,6 +280,176 @@ Y = \theta_0 + \theta_1 X + \sum_i \theta_{2i} M_i
 <p><code>m_star</code> is a scalar or a vector named by the interacting mediators. With one mediator these are the four-way NDE, NIE and CDE above.</p>
 <p>The NIE is the effect through the mediators together; there is no per-mediator split, and no part of it is “the effect through <span class="math inline">\(M_1\)</span>”. The identifying assumptions are stated for the whole mediator vector: no unmeasured treatment–outcome, mediators–outcome or treatment–mediators confounding, and no mediator–outcome confounder affected by the treatment <strong>outside the mediator vector</strong>. Earlier mediators in a chain are affected by the treatment and confound later ones; that is allowed because they belong to the vector.</p>
 <p>medfit requires every model to carry the same covariates, Gaussian identity-link unweighted fits with intercepts on the same rows, every mediator in the outcome model, and mediators listed in causal order; each violation errors. A product written in the formula (<code>X * M1</code>, <code>X:M1</code>) is recognized; a product precomputed as a data column is not, and would be ignored silently.</p>
+</section><section class="level2"><h2 id="cluster-level-treatment-the-2-1-1-design">Cluster-level treatment: the 2-1-1 design<a class="anchor" aria-label="anchor" href="#cluster-level-treatment-the-2-1-1-design"></a>
+</h2>
+<p>When the treatment <span class="math inline">\(X_j\)</span> is assigned to whole clusters <span class="math inline">\(j = 1, \dots, J\)</span> (for example schools) and the mediator <span class="math inline">\(M_{ij}\)</span> and outcome <span class="math inline">\(Y_{ij}\)</span> are measured on the <span class="math inline">\(n_j\)</span> individuals in each, medfit uses the observed cluster mean <span class="math inline">\(\bar M_j\)</span> of the mediator over the analysis rows. With cluster-level covariates <span class="math inline">\(W_j\)</span> and level-1 covariates <span class="math inline">\(C_{ij}\)</span> (entered centered, with their cluster means),</p>
+<p><span class="math display">\[
+\begin{aligned}
+M_{ij} &amp;= \beta_0 + a X_j + \beta_2^\top C_{ij} + \beta_3^\top W_j + v_j + r_{ij}, \\
+Y_{ij} &amp;= \theta_0 + c' X_j + b_W (M_{ij} - \bar M_j) + b_B \bar M_j
+          + \theta_4^\top (C_{ij} - \bar C_j) + \theta_5^\top \bar C_j
+          + \theta_6^\top W_j + u_j + e_{ij},
+\end{aligned}
+\]</span></p>
+<p>with random cluster intercepts <span class="math inline">\(v_j\)</span> and <span class="math inline">\(u_j\)</span>. The raw parameterization writes <span class="math inline">\(b_W M_{ij} + \kappa \bar M_j\)</span> instead, so <span class="math inline">\(b_B = b_W + \kappa\)</span> (identity R1, a medfit-side derivation); medfit finds these terms <strong>by value</strong> (constant within clusters and an exact affine function of <span class="math inline">\(\bar M_j\)</span>, and so on), so grand-mean centering and <code><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale()</a></code> work, and maps the raw form to the within form with <span class="math inline">\(\hat\Sigma\)</span> transformed as <span class="math inline">\(J \hat\Sigma J^\top\)</span>.</p>
+<table class="table caption-top">
+<thead><tr class="header">
+<th>Effect</th>
+<th>Formula</th>
+<th>Accessor</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>NIE</td>
+<td><span class="math inline">\(a \, b_B\)</span></td>
+<td><code><a href="../reference/nie.html">nie()</a></code></td>
+</tr>
+<tr class="even">
+<td>NDE</td>
+<td><span class="math inline">\(c'\)</span></td>
+<td><code><a href="../reference/nde.html">nde()</a></code></td>
+</tr>
+<tr class="odd">
+<td>TE</td>
+<td><span class="math inline">\(a \, b_B + c'\)</span></td>
+<td><code><a href="../reference/te.html">te()</a></code></td>
+</tr>
+<tr class="even">
+<td>Own-mediator (within) indirect</td>
+<td><span class="math inline">\(a \, b_W\)</span></td>
+<td><code><a href="../reference/decompose.html">decompose()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Spillover (contextual) indirect</td>
+<td><span class="math inline">\(a (b_B - b_W)\)</span></td>
+<td><code><a href="../reference/decompose.html">decompose()</a></code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>The NIE needs no weighting.</strong> Changing <span class="math inline">\(X_j\)</span> shifts every member’s mediator by <span class="math inline">\(a\)</span>. The deviations <span class="math inline">\(M_{ij} - \bar M_j\)</span> do not change and <span class="math inline">\(\bar M_j\)</span> moves by <span class="math inline">\(a\)</span>, so <span class="math inline">\(Y\)</span> moves by <span class="math inline">\(a \, b_B\)</span> in every cluster. This holds with a random slope on the within term, because <span class="math inline">\(X\)</span> is constant within a cluster and <span class="math inline">\(\bar M_j\)</span> carries no slope (medfit’s argument).</p>
+<p><strong>The own/spillover split is an approximation.</strong> Shifting only individual <span class="math inline">\(i\)</span>’s mediator by <span class="math inline">\(a\)</span> moves <span class="math inline">\(\bar M_j\)</span> by <span class="math inline">\(a / n_j\)</span>, so with the observed cluster mean the exact effects in a cluster of <span class="math inline">\(n_j\)</span> members are</p>
+<p><span class="math display">\[
+\text{own} = a \Big[ b_W + \frac{b_B - b_W}{n_j} \Big], \qquad
+\text{spillover} = a (b_B - b_W) \frac{n_j - 1}{n_j},
+\]</span></p>
+<p>which add to <span class="math inline">\(a \, b_B\)</span> at every cluster size. Expanding the outcome model in the members’ mediators gives the derivation: member <span class="math inline">\(i\)</span>’s own mediator enters once in the deviation and once in the mean, with coefficient <span class="math inline">\(b_W + (b_B - b_W) / n_j\)</span>, and each of the <span class="math inline">\(n_j - 1\)</span> peers’ enters only through the mean, with coefficient <span class="math inline">\((b_B - b_W) / n_j\)</span>; every mediator moves by <span class="math inline">\(a\)</span>. medfit’s tests check the formulas against exact counterfactuals. <code><a href="../reference/decompose.html">decompose()</a></code> reports the large-cluster limits <span class="math inline">\(a \, b_W\)</span> and <span class="math inline">\(a (b_B - b_W)\)</span>, labeled the cluster-average, large-cluster approximation. The own estimate is off by <span class="math inline">\(a (b_B - b_W) / H\)</span> with equal cluster weights, <span class="math inline">\(H\)</span> the harmonic mean cluster size, and <code><a href="../reference/decompose.html">decompose()</a></code> warns when that gap exceeds half the own effect’s standard error; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> always prints it. Under the peer-mean model of Talloen et al. (2016, p. 364), whose outcome equation has a coefficient <span class="math inline">\(b_p\)</span> on the member’s own mediator and <span class="math inline">\(g\)</span> on the mean of the other members, a fixed cluster size <span class="math inline">\(N\)</span> gives <span class="math inline">\(b_W = b_p - g / (N - 1)\)</span> and <span class="math inline">\(b_B = b_p + g\)</span>. The exact own effect is then <span class="math inline">\(a \, b_p\)</span>, Talloen et al.’s own-mediator effect, while the reported <span class="math inline">\(a \, b_W\)</span> differs from it by <span class="math inline">\(a g / N\)</span> (not zero).</p>
+<p><strong>Covariance.</strong> Given <span class="math inline">\((X, M, C, W)\)</span> the outcome errors have mean zero under the model and <span class="math inline">\(\hat a\)</span> depends only on <span class="math inline">\((X, M, C, W)\)</span>, so <span class="math inline">\(\text{Cov}(\hat a,
+\hat b_B)\)</span> and <span class="math inline">\(\text{Cov}(\hat a, \hat c')\)</span> are zero to first order, and <code>@vcov</code> is block-diagonal between the mediator model and the outcome model (a simulation gate checks the cross-replication correlation of <span class="math inline">\(\hat a\)</span> and <span class="math inline">\(\hat b_B\)</span>). The argument fails under upper-level mediator–outcome confounding, the same condition that biases the NIE.</p>
+<p><strong>What the estimands need.</strong> In every row the models are linear with no mediator-by-treatment or mediator-by-covariate products, <span class="math inline">\(X\)</span> is randomized, and clusters are intact.</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Quantity</th>
+<th>Also needs</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Own <span class="math inline">\(a \, b_W\)</span>
+</td>
+<td>no unmeasured lower-level mediator–outcome confounding; unmeasured upper-level confounders are allowed if additive, <strong>provided level-1 covariates are cluster-mean centered</strong>
+</td>
+</tr>
+<tr class="even">
+<td>Spillover, NIE, NDE</td>
+<td>also no unmeasured upper-level mediator–outcome confounding; under it the direct and contextual estimators are biased while their sum <span class="math inline">\(c' + a \kappa\)</span> is not</td>
+</tr>
+<tr class="odd">
+<td>TE</td>
+<td>nothing beyond randomization</td>
+</tr>
+<tr class="even">
+<td>The own/spillover split</td>
+<td>a cross-world assumption across individuals in a cluster; no treatment-induced mediator–outcome confounding</td>
+</tr>
+<tr class="odd">
+<td>All</td>
+<td>interference only through the observed cluster mean, none between clusters; members missing from the analysis rows do not drive their peers’ outcomes (the observed cluster mean stands for the realized mean of every member; with a sample of each cluster it is a noisy stand-in and the contextual effect <span class="math inline">\(b_B - b_W\)</span> is biased toward zero, Lüdtke et al. 2008)</td>
+</tr>
+</tbody>
+</table>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> print this table, with the upper-level claim dropped when a level-1 covariate has no cluster-mean companion.</p>
+<p><strong>Estimation.</strong> Pass the mediator model and the outcome model, both fitted by <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code> on the same rows, to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, or let <code>fit_mediation(engine = "lmer", cluster = )</code> build them: it drops incomplete rows once, forms <code>&lt;M&gt;_cm</code> and <code>&lt;M&gt;_cwc</code> (and the same for each level-1 covariate) on the remaining rows, and fits both models by REML with a random cluster intercept. Standard errors are the delta-method standard errors of the section below, from lme4’s model-based covariance.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'medfit'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:stats':
+
+    decompose</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://generics.r-lib.org" class="external-link">generics</a></span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'generics'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
+    setequal, union</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="va">J</span> <span class="op">&lt;-</span> <span class="fl">40</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
+<span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">x_j</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, length.out <span class="op">=</span> <span class="va">J</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">cdat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>school <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span>, X <span class="op">=</span> <span class="va">x_j</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="va">v</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">mbar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span>, <span class="va">cdat</span><span class="op">$</span><span class="va">school</span><span class="op">)</span></span>
+<span><span class="va">cdat</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="op">(</span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">-</span> <span class="va">mbar</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="va">mbar</span> <span class="op">+</span> <span class="va">u</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">cdat</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  engine <span class="op">=</span> <span class="st">"lmer"</span>, cluster <span class="op">=</span> <span class="st">"school"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 5
+  term      estimate std.error conf.low conf.high
+  &lt;chr&gt;        &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 nie         0.209     0.127  -0.0397      0.458
+2 nde         0.0772    0.227  -0.368       0.522
+3 te          0.287     0.241  -0.186       0.760
+4 own         0.103     0.0543 -0.00323     0.210
+5 spillover   0.106     0.0886 -0.0675      0.280</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>      own spillover       nie
+0.1032345 0.1061099 0.2093444
+attr(,"label")
+[1] "cluster-average, large-cluster approximation"</code></pre>
+</div>
+</div>
+<p>With few clusters the model-based standard errors can be too small. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> warns when <span class="math inline">\(J &lt; 25\)</span> with model-based standard errors, and whatever the standard error type when <span class="math inline">\(J &lt; 10\)</span>. <code>se_type = "kr"</code> replaces each model’s covariance by the Kenward–Roger adjusted one (<code><a href="https://rdrr.io/pkg/pbkrtest/man/kr-vcovAdj.html" class="external-link">pbkrtest::vcovAdj()</a></code>, REML fits only) and stores a Kenward–Roger denominator degrees of freedom for each path; <code>confint(parm = "paths")</code> and <code>tidy(conf.int = TRUE)</code> then give <span class="math inline">\(t\)</span> intervals for the paths, while the intervals for the products (NIE, own, spillover, TE) stay normal. The Kenward–Roger adjustment changes the standard errors very little (ratios of 1.000 to 1.002 at <span class="math inline">\(J = 15\)</span>); its value is the degrees of freedom. The product intervals are the weak point at small <span class="math inline">\(J\)</span>. <code>bootstrap_mediation(cluster = )</code> needs no normal approximation for them; no few-cluster threshold is established, and the published evidence for resampling whole clusters is for treatment varying within clusters with 30 or more clusters (Falk et al. 2024), not for this design. The treatment’s effect on the mediator rests on <span class="math inline">\(J\)</span> cluster-level contrasts however many members each cluster has, so the number of clusters, not of members, is the sample size for it.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">fit_kr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">cdat</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>  engine <span class="op">=</span> <span class="st">"lmer"</span>, cluster <span class="op">=</span> <span class="st">"school"</span>, se_type <span class="op">=</span> <span class="st">"kr"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">fit_kr</span><span class="op">@</span><span class="va">kr_df</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>        a   c_prime  b_within b_between
+       38        37       359        37 </code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit_kr</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>                 2.5 %    97.5 %
+a         -0.008940371 0.5529108
+b_within   0.283502528 0.4756161
+b_between  0.257098644 1.2822819
+c_prime   -0.382891954 0.5373482</code></pre>
+</div>
+</div>
+<p>medfit does not support, in this design: treatment varying within clusters (1-1-1), non-Gaussian outcomes or mediators, treatment-by-mediator or covariate-by-mediator products, random slopes on anything but the within-cluster mediator term, or individual-average effects.</p>
 </section><section class="level2"><h2 id="covariance-of-the-estimates">Covariance of the estimates<a class="anchor" aria-label="anchor" href="#covariance-of-the-estimates"></a>
 </h2>
 <p>Every effect’s standard error comes from <span class="math inline">\(\hat\Sigma\)</span> (<code>@vcov</code>), whose rows are named by the model coefficients and by path aliases (<code>a</code>, <code>b</code>, <code>c_prime</code>, <code>d1</code>, <code>a1</code>, <code>b2</code>, <code>theta3</code>, …).</p>
@@ -361,6 +542,36 @@ Y = \theta_0 + \theta_1 X + \sum_i \theta_{2i} M_i
 <span class="math inline">\(1\)</span> on <span class="math inline">\(\theta_1\)</span>, <span class="math inline">\(\mu^*_{0i}\)</span> on <span class="math inline">\(\theta_{3i}\)</span>, <span class="math inline">\(\kappa_j\)</span> on <span class="math inline">\(\beta_{0j}\)</span>, <span class="math inline">\(\kappa_j \bar c\)</span> on <span class="math inline">\(\gamma_j\)</span>, <span class="math inline">\(\kappa_i \mu^*_{0j}\)</span> on <span class="math inline">\(d_{ij}\)</span>
 </td>
 </tr>
+<tr class="even">
+<td>Cluster</td>
+<td>NIE <span class="math inline">\(= a b_B\)</span>
+</td>
+<td>
+<span class="math inline">\(\partial/\partial a = b_B\)</span>, <span class="math inline">\(\partial/\partial b_B = a\)</span>
+</td>
+</tr>
+<tr class="odd">
+<td>Cluster</td>
+<td>own <span class="math inline">\(= a b_W\)</span>
+</td>
+<td>
+<span class="math inline">\(\partial/\partial a = b_W\)</span>, <span class="math inline">\(\partial/\partial b_W = a\)</span>
+</td>
+</tr>
+<tr class="even">
+<td>Cluster</td>
+<td>spillover <span class="math inline">\(= a (b_B - b_W)\)</span>
+</td>
+<td>
+<span class="math inline">\(b_B - b_W\)</span> on <span class="math inline">\(a\)</span>, <span class="math inline">\(a\)</span> on <span class="math inline">\(b_B\)</span>, <span class="math inline">\(-a\)</span> on <span class="math inline">\(b_W\)</span>
+</td>
+</tr>
+<tr class="odd">
+<td>Cluster</td>
+<td>NDE, TE</td>
+<td>
+<span class="math inline">\(1\)</span> on <span class="math inline">\(c'\)</span>; TE adds the NIE gradient</td>
+</tr>
 </tbody>
 </table>
 <p>For the joint effects the chain rule through the propagated terms is carried by backward recursions, <span class="math inline">\(\lambda_j = (\theta_{2j} + \theta_{3j}) + \sum_{i&gt;j}
@@ -377,6 +588,8 @@ d_{ij} \lambda_i\)</span> and <span class="math inline">\(\kappa_j = \theta_{3j}
 <strong>Nonparametric</strong>: resamples rows with replacement, refits the models, and recomputes the statistic. Slower; it needs no normality assumption and captures every covariance, including the covariate means.</li>
 <li>
 <strong>Plugin</strong>: evaluates the statistic at <span class="math inline">\(\hat\theta\)</span> only, with no interval.</li>
+<li>
+<strong>Cluster</strong> (<code>method = "nonparametric"</code> with <code>cluster =</code>): resamples whole clusters with replacement and gives each draw a fresh cluster id before the refit, so a cluster drawn twice is refit as two clusters, not one larger one. A refit that is singular or warns about convergence counts as a failure, is excluded, and is counted in the warning.</li>
 </ul>
 <p><code>statistic_fn</code> receives the named <code>@estimates</code> vector. For the simple, serial and parallel classes the aliases suffice (for example <code>function(theta) theta[["a"]] * theta[["b"]]</code>). The joint NDE also needs the intercept and covariate rows and <span class="math inline">\(\bar c\)</span>; use <code><a href="../reference/joint_effects.html">joint_effects()</a></code> as the statistic:</p>
 <div class="cell">
@@ -387,9 +600,13 @@ d_{ij} \lambda_i\)</span> and <span class="math inline">\(\kappa_j = \theta_{3j}
 </div>
 </section><section class="level2"><h2 id="fitting-engines">Fitting engines<a class="anchor" aria-label="anchor" href="#fitting-engines"></a>
 </h2>
-<p><code>fit_mediation(engine = "glm")</code> fits the mediator and outcome models with <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, so every formula above applies. <code>engine = "regmedint"</code> delegates to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code>, a closed-form regression-based implementation, and maps its point estimates and its own delta-method covariance of the effects onto <code>MediationData</code> or <code>InteractionMediationData</code>. The adapter requires a linear mediator model and a unit treatment contrast; see <code><a href="../reference/fit_mediation.html">?fit_mediation</a></code>. For a non-Gaussian outcome model the components are on that model’s link scale, as regmedint reports them.</p>
+<p><code>fit_mediation(engine = "glm")</code> fits the mediator and outcome models with <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, so every formula above applies. <code>engine = "regmedint"</code> delegates to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code>, a closed-form regression-based implementation, and maps its point estimates and its own delta-method covariance of the effects onto <code>MediationData</code> or <code>InteractionMediationData</code>. The adapter requires a linear mediator model and a unit treatment contrast; see <code><a href="../reference/fit_mediation.html">?fit_mediation</a></code>. For a non-Gaussian outcome model the components are on that model’s link scale, as regmedint reports them. <code>engine = "lmer"</code> fits the two linear mixed models of the cluster design above (REML, random cluster intercepts, the mediator and level-1 covariates split into within-cluster deviation and cluster mean) and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>; it returns a <code>ClusterMediationData</code>.</p>
 </section><section class="level2"><h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
+<p>Falk, C. F., Vogel, T. A., Hammami, S., &amp; Miočević, M. (2024). Multilevel mediation analysis in R: A comparison of bootstrap and Bayesian approaches. <em>Behavior Research Methods</em>, 56(2), 750–764. <a href="https://doi.org/10.3758/s13428-023-02079-4" class="external-link uri">https://doi.org/10.3758/s13428-023-02079-4</a></p>
+<p>Lüdtke, O., Marsh, H. W., Robitzsch, A., Trautwein, U., Asparouhov, T., &amp; Muthén, B. (2008). The multilevel latent covariate model: A new, more reliable approach to group-level effects in contextual studies. <em>Psychological Methods</em>, 13(3), 203–229. <a href="https://doi.org/10.1037/a0012869" class="external-link uri">https://doi.org/10.1037/a0012869</a></p>
+<p>Talloen, W., Moerkerke, B., Loeys, T., De Naeghel, J., Van Keer, H., &amp; Vansteelandt, S. (2016). Estimation of indirect effects in the presence of unmeasured confounding for the mediator–outcome relationship in a multilevel 2-1-1 mediation model. <em>Journal of Educational and Behavioral Statistics</em>, 41(4), 359–391. <a href="https://doi.org/10.3102/1076998616636855" class="external-link uri">https://doi.org/10.3102/1076998616636855</a></p>
+<p>VanderWeele, T. J. (2010). Direct and indirect effects for neighborhood-based clustered and longitudinal data. <em>Sociological Methods &amp; Research</em>, 38(4), 515–544. <a href="https://doi.org/10.1177/0049124110366236" class="external-link uri">https://doi.org/10.1177/0049124110366236</a></p>
 <p>VanderWeele, T. J. (2014). A unification of mediation and interaction: A 4-way decomposition. <em>Epidemiology</em>, 25(5), 749–761.</p>
 <p>VanderWeele, T. J., &amp; Vansteelandt, S. (2014). Mediation analysis with multiple mediators. <em>Epidemiologic Methods</em>, 2(1), 95–115. <a href="https://doi.org/10.1515/em-2012-0010" class="external-link uri">https://doi.org/10.1515/em-2012-0010</a></p>
 </section><script id="quarto-html-after-body" type="application/javascript">

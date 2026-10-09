@@ -17,9 +17,10 @@ fit_mediation(
   family_y = stats::gaussian(),
   family_m = stats::gaussian(),
   weights = NULL,
-  se_type = c("model", "sandwich"),
+  se_type = c("model", "sandwich", "kr"),
   engine_args = list(),
   m_star = 0,
+  cluster = NULL,
   ...
 )
 ```
@@ -56,6 +57,18 @@ fit_mediation(
     the suggested regmedint package (VanderWeele's regression approach,
     with optional treatment-mediator interaction)
 
+  - `"lmer"`: Linear mixed models for a treatment assigned to whole
+    clusters (the 2-1-1 design), via the suggested lme4 package; needs
+    `cluster =` and returns a
+    [ClusterMediationData](https://data-wise.github.io/medfit/reference/ClusterMediationData.md).
+    The engine drops incomplete rows once, splits the mediator and each
+    level-1 covariate into its within-cluster deviation and observed
+    cluster mean (`<M>_cwc`, `<M>_cm`), adds a random cluster intercept
+    to both models, and fits by REML. The formulas hold fixed effects
+    only (a random-effect term such as `(1 | id)` is an error; random
+    slopes go in `engine_args`). It does not take `weights`,
+    non-Gaussian families, `se_type = "sandwich"`, or extra arguments.
+
 - family_y:
 
   Family object for outcome model (default:
@@ -80,13 +93,20 @@ fit_mediation(
   `"sandwich"` (heteroskedasticity-consistent
   [`sandwich::vcovHC`](https://zeileis.codeberg.page/sandwich/reference/vcovHC.html),
   type HC3, recommended for IPW-weighted fits). The `"sandwich"` option
-  requires the suggested sandwich package.
+  requires the suggested sandwich package. With `engine = "lmer"` only,
+  `"kr"` uses the Kenward-Roger adjusted covariance and stores a degrees
+  of freedom for each path, so the path intervals are t intervals; it
+  needs REML fits and the suggested pbkrtest package.
 
 - engine_args:
 
   Named list of engine-specific overrides (default:
   [`list()`](https://rdrr.io/r/base/list.html), no overrides). Ignored
-  by `engine = "glm"`. For `engine = "regmedint"`, recognized names are
+  by `engine = "glm"`. For `engine = "lmer"`, recognized names are
+  `random_y` and `random_m` (one-sided formulas of level-1 terms that
+  get correlated random slopes; `~ M` in `random_y` is applied to the
+  within-cluster mediator term) and `REML` (default `TRUE`); any other
+  name is an error. For `engine = "regmedint"`, recognized names are
   `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`, and `c_cond`; each
   replaces the value the adapter would otherwise derive from the
   formulas, families, and data. The reference mediator level is set with
@@ -104,6 +124,11 @@ fit_mediation(
   call site, not on whether it differs from the default, so a wrapper
   that forwards `m_star` unconditionally will trigger it on two-way
   fits; forward it only when its own caller supplied one.
+
+- cluster:
+
+  Character string: name of the cluster variable in `data`. Required
+  with `engine = "lmer"`, an error with the other engines.
 
 - ...:
 
@@ -263,5 +288,29 @@ med_data_bin <- fit_mediation(
   mediator = "mediator1",
   family_y = binomial()
 )
+# }
+
+# \donttest{
+if (requireNamespace("lme4", quietly = TRUE)) {
+# Treatment assigned to whole clusters (needs lme4); formulas hold fixed
+# effects only, the engine adds the random cluster intercept
+set.seed(1)
+J <- 30
+id <- rep(seq_len(J), each = 6)
+cdat <- data.frame(school = factor(id), X = sample(rep(0:1, J / 2))[id])
+cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+cluster_fit <- fit_mediation(
+  Y ~ X + M, M ~ X, data = cdat,
+  treatment = "X", mediator = "M",
+  engine = "lmer", cluster = "school"
+)
+nie(cluster_fit)       # a * b_between
+decompose(cluster_fit) # own-mediator and spillover parts
+}
+#>        own  spillover        nie 
+#> 0.26012673 0.03260194 0.29272868 
+#> attr(,"label")
+#> [1] "cluster-average, large-cluster approximation"
 # }
 ```

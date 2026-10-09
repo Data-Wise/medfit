@@ -3,11 +3,13 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   articles/bootstrap: bootstrap.html
+  articles/cookbook: cookbook.html
   articles/extraction: extraction.html
   articles/getting-started: getting-started.html
   articles/introduction: introduction.html
   articles/methods: methods.html
-last_built: 2026-09-25T14:28Z
+  articles/refcard: refcard.html
+last_built: 2026-10-09T16:02Z
 urls:
   reference: https://data-wise.github.io/medfit/reference
   article: https://data-wise.github.io/medfit/articles

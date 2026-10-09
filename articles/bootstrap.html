@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,6 +67,10 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Quick Reference</h6></li>
+    <li><a class="dropdown-item" href="../articles/refcard.html">Reference Card</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html">Cookbook</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Detailed Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
@@ -104,7 +108,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.5.0/vignettes/articles/bootstrap.qmd" class="external-link"><code>vignettes/articles/bootstrap.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/bootstrap.qmd" class="external-link"><code>vignettes/articles/bootstrap.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -234,8 +238,8 @@ Estimate:   0.3328
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower:   0.2170
-  Upper:   0.4631</code></pre>
+  Lower:   0.2073
+  Upper:   0.4757</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
@@ -247,12 +251,12 @@ Estimate:  0.3327695
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower: 0.2170026
-  Upper: 0.4630625
+  Lower: 0.2073406
+  Upper: 0.475666
 
 Bootstrap Distribution Summary:
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
- 0.1375  0.2852  0.3264  0.3290  0.3675  0.5522 </code></pre>
+ 0.1336  0.2847  0.3288  0.3318  0.3738  0.5785 </code></pre>
 </div>
 </div>
 <section class="level3"><h3 id="how-it-works">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
@@ -331,8 +335,8 @@ Estimate:   0.3328
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower:   0.2057
-  Upper:   0.4694</code></pre>
+  Lower:   0.2051
+  Upper:   0.4739</code></pre>
 </div>
 </div>
 <section class="level3"><h3 id="how-it-works-1">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works-1"></a>
@@ -392,7 +396,56 @@ N bootstrap samples: 1000
 <span>  seed <span class="op">=</span> <span class="fl">123</span></span>
 <span><span class="op">)</span></span></code></pre>
 </div>
-</section></section><section class="level2"><h2 id="plugin-estimator">Plugin Estimator<a class="anchor" aria-label="anchor" href="#plugin-estimator"></a>
+</section></section><section class="level2"><h2 id="cluster-bootstrap">Cluster Bootstrap<a class="anchor" aria-label="anchor" href="#cluster-bootstrap"></a>
+</h2>
+<p>When the treatment is assigned to whole clusters, resample the clusters, not the rows. Pass <code>cluster =</code> with <code>method = "nonparametric"</code>: each draw takes clusters with replacement and gives every drawn cluster a fresh id before <code>statistic_fn</code> sees the data, so a cluster drawn twice is refit as two clusters, not one larger one. A refit that is singular or warns about convergence counts as a failure: it is excluded, and the number of failures is added to the warning.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="va">J</span> <span class="op">&lt;-</span> <span class="fl">40</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
+<span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">x_j</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, length.out <span class="op">=</span> <span class="va">J</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">cdat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>school <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span>, X <span class="op">=</span> <span class="va">x_j</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="va">v</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">mbar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span>, <span class="va">cdat</span><span class="op">$</span><span class="va">school</span><span class="op">)</span></span>
+<span><span class="va">cdat</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="op">(</span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">-</span> <span class="va">mbar</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="va">mbar</span> <span class="op">+</span> <span class="va">u</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">nie_of</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<span>    <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">d</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
+<span>    engine <span class="op">=</span> <span class="st">"lmer"</span>, cluster <span class="op">=</span> <span class="st">"school"</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">boot_cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">nie_of</span>, method <span class="op">=</span> <span class="st">"nonparametric"</span>, data <span class="op">=</span> <span class="va">cdat</span>, cluster <span class="op">=</span> <span class="st">"school"</span>,</span>
+<span>  n_boot <span class="op">=</span> <span class="fl">200</span>, ci_level <span class="op">=</span> <span class="fl">0.95</span>, seed <span class="op">=</span> <span class="fl">123</span></span>
+<span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in .bootstrap_nonparametric_cluster(data, statistic_fn, n_boot, : 3
+bootstrap samples failed and were excluded (3 of them singular or
+non-convergent refits)</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="va">boot_cl</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>BootstrapResult object
+======================
+
+Method:   nonparametric
+Estimate:   0.2093
+N bootstrap samples: 197
+
+95% Confidence Interval:
+  Lower:  -0.0038
+  Upper:   0.5241</code></pre>
+</div>
+</div>
+<p>The warning, when it appears, reports how many draws were dropped as singular or non-convergent refits (a cluster-level random intercept can collapse to zero in a resample); the interval uses the remaining draws, and <code>N bootstrap samples</code> in the print shows how many that is.</p>
+<p>Resampling members within their clusters instead (leaving out <code>cluster =</code>) breaks the dependence the mixed model is built on. The published evidence for resampling whole clusters is for treatment varying within clusters with 30 or more clusters; it is not established for this design or for fewer clusters (see <a href="methods.html">Methods and Formulas</a>).</p>
+</section><section class="level2"><h2 id="plugin-estimator">Plugin Estimator<a class="anchor" aria-label="anchor" href="#plugin-estimator"></a>
 </h2>
 <p>Point estimate only, no confidence interval:</p>
 <div class="cell">
@@ -471,7 +524,7 @@ Estimate:   0.3328
 <pre class="r cell-code"><code><span><span class="co"># 95% CI</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.2170026 0.4630625</code></pre>
+<pre><code>[1] 0.2073406 0.4756660</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># Change confidence level</span></span>
 <span><span class="va">boot_90</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
@@ -484,7 +537,7 @@ Estimate:   0.3328
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_90</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_90</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span> <span class="co"># Narrower</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.2345624 0.4418077</code></pre>
+<pre><code>[1] 0.2251035 0.4455627</code></pre>
 </div>
 </div>
 </section><section class="level3"><h3 id="statistical-significance">Statistical Significance<a class="anchor" aria-label="anchor" href="#statistical-significance"></a>
@@ -503,7 +556,7 @@ Estimate:   0.3328
 </div>
 </section></section><section class="level2"><h2 id="serial-mediation-bootstrap">Serial Mediation Bootstrap<a class="anchor" aria-label="anchor" href="#serial-mediation-bootstrap"></a>
 </h2>
-<p>For serial mediation (treatment -&gt; mediator1 -&gt; mediator2 -&gt; outcome), the indirect effect is the product of the chain’s paths, <span class="math inline">\(a \times d \times b\)</span>. The parametric and plugin methods accept a <code>SerialMediationData</code> object (and <code>ParallelMediationData</code>, <code>InteractionMediationData</code>, or <code>JointMediationData</code>) as well as <code>MediationData</code>. <code>statistic_fn</code> receives the named <code>@estimates</code> vector, which carries the chain’s path aliases <code>a</code>, <code>d1</code>, <code>b</code>, and <code>c_prime</code>:</p>
+<p>For serial mediation (treatment -&gt; mediator1 -&gt; mediator2 -&gt; outcome), the indirect effect is the product of the chain’s paths, <span class="math inline">\(a \times d \times b\)</span>. The parametric and plugin methods accept a <code>SerialMediationData</code> object (and <code>ParallelMediationData</code>, <code>InteractionMediationData</code>, <code>JointMediationData</code>, or <code>ClusterMediationData</code>) as well as <code>MediationData</code>. <code>statistic_fn</code> receives the named <code>@estimates</code> vector, which carries the chain’s path aliases <code>a</code>, <code>d1</code>, <code>b</code>, and <code>c_prime</code>:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="co"># Fit the chain: each model adjusts for the covariates and every upstream</span></span>
 <span><span class="co"># variable, so the outcome model includes mediator1 as well as mediator2</span></span>
@@ -545,8 +598,8 @@ Estimate:   0.0755
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower:   0.0371
-  Upper:   0.1248</code></pre>
+  Lower:   0.0397
+  Upper:   0.1194</code></pre>
 </div>
 </div>
 <p>The lm chain above estimates each equation separately, so its covariance matrix sets the covariances between equations to zero (see the Model Extraction article). To avoid that assumption, bootstrap nonparametrically by resampling the data and refitting all three models:</p>
@@ -659,9 +712,9 @@ N bootstrap samples: 1000
 <span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>         [,1]      [,2]
-1K  0.2170026 0.4630625
-5K  0.2136351 0.4654500
-10K 0.2132389 0.4661655</code></pre>
+1K  0.2073406 0.4756660
+5K  0.2134374 0.4685818
+10K 0.2113081 0.4674286</code></pre>
 </div>
 </div>
 <p>If CIs are similar, n_boot is sufficient.</p>
@@ -694,7 +747,7 @@ bootstrap_mediation() for robust inference.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>              2.5 %    97.5 %
 delta     0.2063564 0.4591826
-bootstrap 0.2170026 0.4630625</code></pre>
+bootstrap 0.2073406 0.4756660</code></pre>
 </div>
 </div>
 <p>Bootstrap is generally preferred because it: - Doesn’t assume normality of indirect effect - Handles skewness correctly - Provides better coverage</p>
@@ -744,7 +797,7 @@ Attaching package: 'generics'</code></pre>
 <pre><code># A tibble: 1 × 5
   term     estimate std.error conf.low conf.high
   &lt;chr&gt;       &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
-1 estimate    0.333    0.0612    0.217     0.463</code></pre>
+1 estimate    0.333    0.0675    0.207     0.476</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># One-row summary</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre>
@@ -773,19 +826,19 @@ Attaching package: 'generics'</code></pre>
 <pre class="r cell-code"><code><span><span class="co"># Stored percentile interval</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>             2.5 %    97.5 %
-estimate 0.2170026 0.4630625</code></pre>
+<pre><code>             2.5 %   97.5 %
+estimate 0.2073406 0.475666</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>    lower     upper
-0.2170026 0.4630625 </code></pre>
+0.2073406 0.4756660 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># A different level is recomputed from the stored bootstrap draws</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">boot_result</span>, level <span class="op">=</span> <span class="fl">0.90</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>               5 %      95 %
-estimate 0.2345624 0.4418077</code></pre>
+estimate 0.2251035 0.4455627</code></pre>
 </div>
 </div>
 </section></section><section class="level2"><h2 id="development-status">Development Status<a class="anchor" aria-label="anchor" href="#development-status"></a>

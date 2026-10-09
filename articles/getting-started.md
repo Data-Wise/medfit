@@ -598,6 +598,11 @@ glance(boot_result)
 - [Methods and
   Formulas](https://data-wise.github.io/medfit/articles/methods.md) -
   Estimands, formulas, and standard errors
+- [Reference
+  Card](https://data-wise.github.io/medfit/articles/refcard.md) -
+  One-page lookup of calls, classes, and effects
+- [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) -
+  Ten task recipes, including cluster-randomized trials
 
 ## What medfit Covers
 

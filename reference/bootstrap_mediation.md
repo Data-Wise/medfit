@@ -17,6 +17,7 @@ bootstrap_mediation(
   parallel = FALSE,
   ncores = NULL,
   seed = NULL,
+  cluster = NULL,
   ...
 )
 ```
@@ -86,6 +87,17 @@ bootstrap_mediation(
 - seed:
 
   Integer: random seed for reproducibility (optional but recommended)
+
+- cluster:
+
+  Character string: name of a cluster variable in `data`, for
+  `method = "nonparametric"` only (an error with the other methods). The
+  resampling then draws whole clusters with replacement and gives each
+  draw a fresh cluster id before `statistic_fn` sees the data, so a
+  cluster drawn twice is refit as two clusters, not one bigger one.
+  Singular fits and convergence warnings from a refit count as failures:
+  they are excluded, their messages are suppressed, and their number is
+  added to the warning. `NULL` (default) resamples rows as before.
 
 - ...:
 
@@ -268,5 +280,41 @@ print(result_np)
 #> 95% Confidence Interval:
 #>   Lower:   0.1956
 #>   Upper:   0.4865
+# }
+
+# \donttest{
+if (requireNamespace("lme4", quietly = TRUE)) {
+# Treatment assigned to whole clusters (needs lme4); formulas hold fixed
+# effects only, the engine adds the random cluster intercept
+set.seed(1)
+J <- 30
+id <- rep(seq_len(J), each = 6)
+cdat <- data.frame(school = factor(id), X = sample(rep(0:1, J / 2))[id])
+cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+# Resample whole clusters. A refit that is singular or does not converge is
+# dropped, and the warning counts how many were
+nie_of <- function(d) {
+  unname(nie(fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X",
+                           mediator = "M", engine = "lmer",
+                           cluster = "school")))
+}
+result_cluster <- bootstrap_mediation(
+  nie_of, method = "nonparametric", data = cdat, cluster = "school",
+  n_boot = 20, seed = 1
+)
+print(result_cluster)
+}
+#> Warning: 3 bootstrap samples failed and were excluded (3 of them singular or non-convergent refits)
+#> BootstrapResult object
+#> ======================
+#> 
+#> Method:   nonparametric
+#> Estimate:   0.2927
+#> N bootstrap samples: 17
+#> 
+#> 95% Confidence Interval:
+#>   Lower:   0.0631
+#>   Upper:   0.5778
 # }
 ```

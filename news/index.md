@@ -1,5 +1,118 @@
 # Changelog
 
+## medfit 0.6.0
+
+### New features
+
+- New `ClusterMediationData` class and an `lmer` method for
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md):
+  mediation for a treatment assigned to whole clusters (such as
+  schools), with the mediator and outcome measured on individuals (the
+  2-1-1 design). Pass the mediator model `M ~ X + ... + (1 | cluster)`
+  as `object` and the outcome model as `model_y`, both fitted with
+  [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) on the same
+  rows. The outcome model must carry the mediator as its within-cluster
+  deviation plus the **observed cluster mean**, or the raw mediator plus
+  the cluster mean (the within parameterization is recovered from it);
+  medfit finds these terms by value, so grand-mean centering and
+  [`scale()`](https://rdrr.io/r/base/scale.html) work. The natural
+  indirect effect is `a * b_between`;
+  [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
+  splits it into an own-mediator part `a * b_within` and a spillover
+  part `a * (b_between - b_within)`, labeled as the cluster-average,
+  large-cluster approximation, with a warning when the approximation
+  error exceeds half the own effect’s standard error.
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) end with an
+  “Estimand and assumptions” block.
+  [`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+  [`nde()`](https://data-wise.github.io/medfit/reference/nde.md),
+  [`te()`](https://data-wise.github.io/medfit/reference/te.md),
+  [`pm()`](https://data-wise.github.io/medfit/reference/pm.md),
+  [`paths()`](https://data-wise.github.io/medfit/reference/paths.md),
+  [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md),
+  [`coef()`](https://rdrr.io/r/stats/coef.html),
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html),
+  [`nobs()`](https://rdrr.io/r/stats/nobs.html),
+  [`confint()`](https://rdrr.io/r/stats/confint.html),
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html),
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) and
+  [`quick()`](https://data-wise.github.io/medfit/reference/quick.md)
+  support the class, and the parametric bootstrap accepts it. Standard
+  errors are delta-method SEs from lme4’s model-based covariance.
+  Treatment-by-mediator and covariate-by-mediator products, non-Gaussian
+  (`glmer`) fits and random slopes on anything but the within term are
+  errors. `lme4` is in `Suggests`.
+
+- `fit_mediation(engine = "lmer", cluster = )` fits the two linear mixed
+  models of the cluster design (REML, random cluster intercepts, the
+  mediator and any level-1 covariates split into a within-cluster
+  deviation and a cluster mean) and returns a `ClusterMediationData`.
+  `se_type = "kr"` applies the Kenward-Roger adjustment (`pbkrtest`, in
+  `Suggests`; REML fits only): each path gets a Kenward-Roger
+  denominator degrees of freedom in `@kr_df`, and
+  [`confint()`](https://rdrr.io/r/stats/confint.html) and
+  `tidy(conf.int = TRUE)` give t intervals for the paths while the
+  product effects keep normal intervals.
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  warns per call when there are fewer than 25 clusters with model-based
+  standard errors, and when there are fewer than 10 clusters with any
+  standard error type. The methods article has a new 2-1-1 section:
+  models, effects, the own/spillover approximation and its exact form,
+  the covariance argument and the assumptions table.
+
+- Fix: the
+  [`?ClusterMediationData`](https://data-wise.github.io/medfit/reference/ClusterMediationData.md)
+  reference now cites Talloen et al. (2016, *Journal of Educational and
+  Behavioral Statistics*) correctly; the entry in the development
+  version cited a different title and journal.
+
+- [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+  gains `cluster =` for `method = "nonparametric"`: it resamples whole
+  clusters with replacement and gives each draw a fresh cluster id
+  before `statistic_fn` sees the data, so a cluster drawn twice is refit
+  as two clusters rather than one larger one. Singular fits and
+  convergence warnings from a refit count as failures: they are
+  excluded, their messages are suppressed, and their number is added to
+  the existing warning. `cluster = NULL` (the default) resamples rows as
+  before; `cluster` with the parametric or plugin methods is an error.
+
+- [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  on two `lmer` fits now stops when the fits kept different individuals
+  within the same clusters (the same number of rows, the same cluster
+  vector and the same treatment values, but different rows). It used to
+  fall through to a misleading “no cluster-mean term” error, and could
+  pair rows incorrectly if values coincided. The check compares the data
+  row names the fits kept, so it cannot see a mismatch between frames
+  whose row names were both reset (a tibble, for example).
+  [`?extract_mediation`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  no longer lists `lmerMod` as future.
+
+- The 30 internal helper functions (names starting with a dot) no longer
+  have Rd pages, so the package site stops publishing 30 unlisted
+  `dot-*` reference pages. No user-facing function changes.
+
+- `fit_mediation(engine = "lmer")` now stops with a clear error when a
+  formula contains a random-effect term such as `(1 | id)`: the engine
+  adds the random cluster intercept itself, and the term used to reach
+  `lmer()` as a fixed term and fail with
+  `Invalid grouping factor specification`. The message names the formula
+  and points to `engine_args` for random slopes. `I(a | b)` as a
+  covariate is not affected.
+
+### Documentation
+
+- New “Reference Card” article listing every export and class on one
+  page, and a “Cookbook” article with ten task recipes (a first fit
+  through cluster designs). Both are linked from the site menu and
+  README; tests check that the card names every export and that each
+  recipe’s code and links resolve. The cluster examples on
+  [`?fit_mediation`](https://data-wise.github.io/medfit/reference/fit_mediation.md),
+  [`?bootstrap_mediation`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+  and
+  [`?extract_mediation`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  now run, and Getting Started and Introduction point to the new pages.
+
 ## medfit 0.5.0
 
 Two fixes change results (marked **Behavior change** below): serial
@@ -137,20 +250,26 @@ against this release. The same bugs are present in CRAN 0.3.2; see
 
 ### Bug fixes
 
+- [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  on a lavaan fit with sampling weights no longer fails with “Number of
+  rows in data must match n_obs”. lavaan normalizes the weights to sum
+  to N, so its `nobs` can read N - 1e-13 (355.99999999999994 for N =
+  356), and `n_obs` was truncated to N - 1. It is now rounded. This
+  affects the mediation, parallel, serial and interaction extractors.
+
 - **Behavior change:** `confint(parm = "paths")` now finds each path’s
   row of `@vcov` by name: the alias rows (`a`, `b`, `c_prime`; `d1`, …;
   `a1`, `b1`, …; `theta3`) first, then, for `MediationData`, the
   lm-style `m_<treatment>`, `y_<mediator>`, `y_<treatment>` rows. Names
-  come from `rownames(`[`@vcov`](https://github.com/vcov)`)`, or from
-  `names(`[`@estimates`](https://github.com/estimates)`)` when `@vcov`
-  has none. Previously `MediationData` looked only for the lm-style
-  names and otherwise warned and took the first three diagonal entries.
-  That gave wrong SEs for every lavaan-extracted object, where rows 1-3
-  are a, c’, b, so b and c’ swapped SEs. It was right for a hand-built
-  object with alias names only when those came first. The serial,
-  parallel, interaction and joint methods returned `NA` bounds for a
-  missing row. All five now error, naming the missing rows, when neither
-  set of names resolves.
+  come from `rownames(x@vcov)`, or from `names(x@estimates)` when
+  `x@vcov` has none. Previously `MediationData` looked only for the
+  lm-style names and otherwise warned and took the first three diagonal
+  entries. That gave wrong SEs for every lavaan-extracted object, where
+  rows 1-3 are a, c’, b, so b and c’ swapped SEs. It was right for a
+  hand-built object with alias names only when those came first. The
+  serial, parallel, interaction and joint methods returned `NA` bounds
+  for a missing row. All five now error, naming the missing rows, when
+  neither set of names resolves.
   [`tidy()`](https://generics.r-lib.org/reference/tidy.html) still
   reports `NA` there, as it is descriptive;
   [`confint()`](https://rdrr.io/r/stats/confint.html) is strict.
@@ -521,11 +640,9 @@ against this release. The same bugs are present in CRAN 0.3.2; see
 
 ### Internal
 
-- New internal helper
-  [`.find_interaction_term_formula()`](https://data-wise.github.io/medfit/reference/dot-find_interaction_term_formula.md)
-  (`R/utils.R`): the formula-level counterpart of
-  [`.find_interaction_term()`](https://data-wise.github.io/medfit/reference/dot-find_interaction_term.md),
-  used to choose the return class before any model is fitted.
+- New internal helper `.find_interaction_term_formula()` (`R/utils.R`):
+  the formula-level counterpart of `.find_interaction_term()`, used to
+  choose the return class before any model is fitted.
 
 ## medfit 0.3.2 (2026-07-23)
 
@@ -785,9 +902,8 @@ only (all changes forward-ported to 0.3.0).
 
 - Overall test coverage raised to \>90% (enforced via `codecov`), and
   all repo-wide `lintr` warnings cleared. A shared alias-vcov helper
-  ([`.expand_vcov_with_aliases()`](https://data-wise.github.io/medfit/reference/dot-expand_vcov_with_aliases.md))
-  now backs both the lm/glm and lavaan extractors so the two engines
-  cannot drift.
+  (`.expand_vcov_with_aliases()`) now backs both the lm/glm and lavaan
+  extractors so the two engines cannot drift.
 
 ## medfit 0.1.0 (2025-12-20)
 

@@ -45,11 +45,13 @@ on the outcome scale.
 | several mediators in a chain, no product | `SerialMediationData` | \\a \\ d_1 \cdots d\_{K-1} \\ b\\ (chain; `type = "total"` for all paths) |
 | several mediators, not chained, no product | `ParallelMediationData` | \\\sum_j a_j b_j\\ |
 | several mediators, \\X \times M_i\\ in the outcome | `JointMediationData` | joint NIE through all mediators |
+| treatment assigned to whole clusters, `lmer` fits | `ClusterMediationData` | \\a \\ b_B\\, split into own \\a \\ b_W\\ and spillover \\a (b_B - b_W)\\ |
 
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
 chooses the class from the models;
 [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
-fits single-mediator models and returns the first two.
+fits single-mediator models and returns the first two, or, with
+`engine = "lmer"` and a `cluster`, the cluster class.
 
 ## Simple mediation
 
@@ -196,6 +198,221 @@ each violation errors. A product written in the formula (`X * M1`,
 `X:M1`) is recognized; a product precomputed as a data column is not,
 and would be ignored silently.
 
+## Cluster-level treatment: the 2-1-1 design
+
+When the treatment \\X_j\\ is assigned to whole clusters \\j = 1, \dots,
+J\\ (for example schools) and the mediator \\M\_{ij}\\ and outcome
+\\Y\_{ij}\\ are measured on the \\n_j\\ individuals in each, medfit uses
+the observed cluster mean \\\bar M_j\\ of the mediator over the analysis
+rows. With cluster-level covariates \\W_j\\ and level-1 covariates
+\\C\_{ij}\\ (entered centered, with their cluster means),
+
+\\ \begin{aligned} M\_{ij} &= \beta_0 + a X_j + \beta_2^\top C\_{ij} +
+\beta_3^\top W_j + v_j + r\_{ij}, \\ Y\_{ij} &= \theta_0 + c' X_j + b_W
+(M\_{ij} - \bar M_j) + b_B \bar M_j + \theta_4^\top (C\_{ij} - \bar
+C_j) + \theta_5^\top \bar C_j + \theta_6^\top W_j + u_j + e\_{ij},
+\end{aligned} \\
+
+with random cluster intercepts \\v_j\\ and \\u_j\\. The raw
+parameterization writes \\b_W M\_{ij} + \kappa \bar M_j\\ instead, so
+\\b_B = b_W + \kappa\\ (identity R1, a medfit-side derivation); medfit
+finds these terms **by value** (constant within clusters and an exact
+affine function of \\\bar M_j\\, and so on), so grand-mean centering and
+[`scale()`](https://rdrr.io/r/base/scale.html) work, and maps the raw
+form to the within form with \\\hat\Sigma\\ transformed as \\J
+\hat\Sigma J^\top\\.
+
+| Effect | Formula | Accessor |
+|----|----|----|
+| NIE | \\a \\ b_B\\ | [`nie()`](https://data-wise.github.io/medfit/reference/nie.md) |
+| NDE | \\c'\\ | [`nde()`](https://data-wise.github.io/medfit/reference/nde.md) |
+| TE | \\a \\ b_B + c'\\ | [`te()`](https://data-wise.github.io/medfit/reference/te.md) |
+| Own-mediator (within) indirect | \\a \\ b_W\\ | [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md) |
+| Spillover (contextual) indirect | \\a (b_B - b_W)\\ | [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md) |
+
+**The NIE needs no weighting.** Changing \\X_j\\ shifts every member’s
+mediator by \\a\\. The deviations \\M\_{ij} - \bar M_j\\ do not change
+and \\\bar M_j\\ moves by \\a\\, so \\Y\\ moves by \\a \\ b_B\\ in every
+cluster. This holds with a random slope on the within term, because
+\\X\\ is constant within a cluster and \\\bar M_j\\ carries no slope
+(medfit’s argument).
+
+**The own/spillover split is an approximation.** Shifting only
+individual \\i\\’s mediator by \\a\\ moves \\\bar M_j\\ by \\a / n_j\\,
+so with the observed cluster mean the exact effects in a cluster of
+\\n_j\\ members are
+
+\\ \text{own} = a \Big\[ b_W + \frac{b_B - b_W}{n_j} \Big\], \qquad
+\text{spillover} = a (b_B - b_W) \frac{n_j - 1}{n_j}, \\
+
+which add to \\a \\ b_B\\ at every cluster size. Expanding the outcome
+model in the members’ mediators gives the derivation: member \\i\\’s own
+mediator enters once in the deviation and once in the mean, with
+coefficient \\b_W + (b_B - b_W) / n_j\\, and each of the \\n_j - 1\\
+peers’ enters only through the mean, with coefficient \\(b_B - b_W) /
+n_j\\; every mediator moves by \\a\\. medfit’s tests check the formulas
+against exact counterfactuals.
+[`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
+reports the large-cluster limits \\a \\ b_W\\ and \\a (b_B - b_W)\\,
+labeled the cluster-average, large-cluster approximation. The own
+estimate is off by \\a (b_B - b_W) / H\\ with equal cluster weights,
+\\H\\ the harmonic mean cluster size, and
+[`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
+warns when that gap exceeds half the own effect’s standard error;
+[`summary()`](https://rdrr.io/r/base/summary.html) always prints it.
+Under the peer-mean model of Talloen et al. (2016, p. 364), whose
+outcome equation has a coefficient \\b_p\\ on the member’s own mediator
+and \\g\\ on the mean of the other members, a fixed cluster size \\N\\
+gives \\b_W = b_p - g / (N - 1)\\ and \\b_B = b_p + g\\. The exact own
+effect is then \\a \\ b_p\\, Talloen et al.’s own-mediator effect, while
+the reported \\a \\ b_W\\ differs from it by \\a g / N\\ (not zero).
+
+**Covariance.** Given \\(X, M, C, W)\\ the outcome errors have mean zero
+under the model and \\\hat a\\ depends only on \\(X, M, C, W)\\, so
+\\\text{Cov}(\hat a, \hat b_B)\\ and \\\text{Cov}(\hat a, \hat c')\\ are
+zero to first order, and `@vcov` is block-diagonal between the mediator
+model and the outcome model (a simulation gate checks the
+cross-replication correlation of \\\hat a\\ and \\\hat b_B\\). The
+argument fails under upper-level mediator–outcome confounding, the same
+condition that biases the NIE.
+
+**What the estimands need.** In every row the models are linear with no
+mediator-by-treatment or mediator-by-covariate products, \\X\\ is
+randomized, and clusters are intact.
+
+| Quantity | Also needs |
+|----|----|
+| Own \\a \\ b_W\\ | no unmeasured lower-level mediator–outcome confounding; unmeasured upper-level confounders are allowed if additive, **provided level-1 covariates are cluster-mean centered** |
+| Spillover, NIE, NDE | also no unmeasured upper-level mediator–outcome confounding; under it the direct and contextual estimators are biased while their sum \\c' + a \kappa\\ is not |
+| TE | nothing beyond randomization |
+| The own/spillover split | a cross-world assumption across individuals in a cluster; no treatment-induced mediator–outcome confounding |
+| All | interference only through the observed cluster mean, none between clusters; members missing from the analysis rows do not drive their peers’ outcomes (the observed cluster mean stands for the realized mean of every member; with a sample of each cluster it is a noisy stand-in and the contextual effect \\b_B - b_W\\ is biased toward zero, Lüdtke et al. 2008) |
+
+[`print()`](https://rdrr.io/r/base/print.html) and
+[`summary()`](https://rdrr.io/r/base/summary.html) print this table,
+with the upper-level claim dropped when a level-1 covariate has no
+cluster-mean companion.
+
+**Estimation.** Pass the mediator model and the outcome model, both
+fitted by [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) on
+the same rows, to
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md),
+or let `fit_mediation(engine = "lmer", cluster = )` build them: it drops
+incomplete rows once, forms `<M>_cm` and `<M>_cwc` (and the same for
+each level-1 covariate) on the remaining rows, and fits both models by
+REML with a random cluster intercept. Standard errors are the
+delta-method standard errors of the section below, from lme4’s
+model-based covariance.
+
+``` r
+library(medfit)
+```
+
+
+    Attaching package: 'medfit'
+
+    The following object is masked from 'package:stats':
+
+        decompose
+
+``` r
+library(generics)
+```
+
+
+    Attaching package: 'generics'
+
+    The following objects are masked from 'package:base':
+
+        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
+        setequal, union
+
+``` r
+set.seed(2026)
+J <- 40
+n <- 10
+cl <- rep(seq_len(J), each = n)
+x_j <- sample(rep(0:1, length.out = J))
+v <- rnorm(J, sd = 0.5)
+u <- rnorm(J, sd = 0.5)
+cdat <- data.frame(school = factor(cl), X = x_j[cl])
+cdat$M <- 0.5 * cdat$X + v[cl] + rnorm(J * n)
+mbar <- ave(cdat$M, cdat$school)
+cdat$Y <- 0.2 * cdat$X + 0.3 * (cdat$M - mbar) + 0.6 * mbar + u[cl] + rnorm(J * n)
+
+fit <- fit_mediation(
+  Y ~ X + M, M ~ X, data = cdat, treatment = "X", mediator = "M",
+  engine = "lmer", cluster = "school"
+)
+tidy(fit, type = "effects", conf.int = TRUE)
+```
+
+    # A tibble: 5 × 5
+      term      estimate std.error conf.low conf.high
+      <chr>        <dbl>     <dbl>    <dbl>     <dbl>
+    1 nie         0.209     0.127  -0.0397      0.458
+    2 nde         0.0772    0.227  -0.368       0.522
+    3 te          0.287     0.241  -0.186       0.760
+    4 own         0.103     0.0543 -0.00323     0.210
+    5 spillover   0.106     0.0886 -0.0675      0.280
+
+``` r
+decompose(fit)
+```
+
+          own spillover       nie
+    0.1032345 0.1061099 0.2093444
+    attr(,"label")
+    [1] "cluster-average, large-cluster approximation"
+
+With few clusters the model-based standard errors can be too small.
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+warns when \\J \< 25\\ with model-based standard errors, and whatever
+the standard error type when \\J \< 10\\. `se_type = "kr"` replaces each
+model’s covariance by the Kenward–Roger adjusted one
+([`pbkrtest::vcovAdj()`](https://rdrr.io/pkg/pbkrtest/man/kr-vcovAdj.html),
+REML fits only) and stores a Kenward–Roger denominator degrees of
+freedom for each path; `confint(parm = "paths")` and
+`tidy(conf.int = TRUE)` then give \\t\\ intervals for the paths, while
+the intervals for the products (NIE, own, spillover, TE) stay normal.
+The Kenward–Roger adjustment changes the standard errors very little
+(ratios of 1.000 to 1.002 at \\J = 15\\); its value is the degrees of
+freedom. The product intervals are the weak point at small \\J\\.
+`bootstrap_mediation(cluster = )` needs no normal approximation for
+them; no few-cluster threshold is established, and the published
+evidence for resampling whole clusters is for treatment varying within
+clusters with 30 or more clusters (Falk et al. 2024), not for this
+design. The treatment’s effect on the mediator rests on \\J\\
+cluster-level contrasts however many members each cluster has, so the
+number of clusters, not of members, is the sample size for it.
+
+``` r
+fit_kr <- fit_mediation(
+  Y ~ X + M, M ~ X, data = cdat, treatment = "X", mediator = "M",
+  engine = "lmer", cluster = "school", se_type = "kr"
+)
+fit_kr@kr_df
+```
+
+            a   c_prime  b_within b_between
+           38        37       359        37 
+
+``` r
+confint(fit_kr)
+```
+
+                     2.5 %    97.5 %
+    a         -0.008940371 0.5529108
+    b_within   0.283502528 0.4756161
+    b_between  0.257098644 1.2822819
+    c_prime   -0.382891954 0.5373482
+
+medfit does not support, in this design: treatment varying within
+clusters (1-1-1), non-Gaussian outcomes or mediators,
+treatment-by-mediator or covariate-by-mediator products, random slopes
+on anything but the within-cluster mediator term, or individual-average
+effects.
+
 ## Covariance of the estimates
 
 Every effect’s standard error comes from \\\hat\Sigma\\ (`@vcov`), whose
@@ -257,6 +474,10 @@ exactly. The gradients are analytic:
 | Four-way | CDE, INT_(ref), INT_(med), PIE | in \\\theta_1, \theta_2, \theta_3, \beta_0, \beta_1\\ and the covariate coefficients (weighted by \\\bar c\\) |
 | Joint | NIE | \\\lambda_j\\ on \\\beta\_{1j}\\, \\\lambda_i \beta^\*\_{1j}\\ on \\d\_{ij}\\, \\\beta^\*\_{1i}\\ on \\\theta\_{2i}\\ and \\\theta\_{3i}\\ |
 | Joint | NDE | \\1\\ on \\\theta_1\\, \\\mu^\*\_{0i}\\ on \\\theta\_{3i}\\, \\\kappa_j\\ on \\\beta\_{0j}\\, \\\kappa_j \bar c\\ on \\\gamma_j\\, \\\kappa_i \mu^\*\_{0j}\\ on \\d\_{ij}\\ |
+| Cluster | NIE \\= a b_B\\ | \\\partial/\partial a = b_B\\, \\\partial/\partial b_B = a\\ |
+| Cluster | own \\= a b_W\\ | \\\partial/\partial a = b_W\\, \\\partial/\partial b_W = a\\ |
+| Cluster | spillover \\= a (b_B - b_W)\\ | \\b_B - b_W\\ on \\a\\, \\a\\ on \\b_B\\, \\-a\\ on \\b_W\\ |
+| Cluster | NDE, TE | \\1\\ on \\c'\\; TE adds the NIE gradient |
 
 For the joint effects the chain rule through the propagated terms is
 carried by backward recursions, \\\lambda_j = (\theta\_{2j} +
@@ -294,6 +515,12 @@ estimate and a **percentile** interval (the \\\alpha/2\\ and \\1 -
   and captures every covariance, including the covariate means.
 - **Plugin**: evaluates the statistic at \\\hat\theta\\ only, with no
   interval.
+- **Cluster** (`method = "nonparametric"` with `cluster =`): resamples
+  whole clusters with replacement and gives each draw a fresh cluster id
+  before the refit, so a cluster drawn twice is refit as two clusters,
+  not one larger one. A refit that is singular or warns about
+  convergence counts as a failure, is excluded, and is counted in the
+  warning.
 
 `statistic_fn` receives the named `@estimates` vector. For the simple,
 serial and parallel classes the aliases suffice (for example
@@ -322,9 +549,36 @@ estimates and its own delta-method covariance of the effects onto
 linear mediator model and a unit treatment contrast; see
 [`?fit_mediation`](https://data-wise.github.io/medfit/reference/fit_mediation.md).
 For a non-Gaussian outcome model the components are on that model’s link
-scale, as regmedint reports them.
+scale, as regmedint reports them. `engine = "lmer"` fits the two linear
+mixed models of the cluster design above (REML, random cluster
+intercepts, the mediator and level-1 covariates split into
+within-cluster deviation and cluster mean) and passes them to
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md);
+it returns a `ClusterMediationData`.
 
 ## References
+
+Falk, C. F., Vogel, T. A., Hammami, S., & Miočević, M. (2024).
+Multilevel mediation analysis in R: A comparison of bootstrap and
+Bayesian approaches. *Behavior Research Methods*, 56(2), 750–764.
+<https://doi.org/10.3758/s13428-023-02079-4>
+
+Lüdtke, O., Marsh, H. W., Robitzsch, A., Trautwein, U., Asparouhov, T.,
+& Muthén, B. (2008). The multilevel latent covariate model: A new, more
+reliable approach to group-level effects in contextual studies.
+*Psychological Methods*, 13(3), 203–229.
+<https://doi.org/10.1037/a0012869>
+
+Talloen, W., Moerkerke, B., Loeys, T., De Naeghel, J., Van Keer, H., &
+Vansteelandt, S. (2016). Estimation of indirect effects in the presence
+of unmeasured confounding for the mediator–outcome relationship in a
+multilevel 2-1-1 mediation model. *Journal of Educational and Behavioral
+Statistics*, 41(4), 359–391. <https://doi.org/10.3102/1076998616636855>
+
+VanderWeele, T. J. (2010). Direct and indirect effects for
+neighborhood-based clustered and longitudinal data. *Sociological
+Methods & Research*, 38(4), 515–544.
+<https://doi.org/10.1177/0049124110366236>
 
 VanderWeele, T. J. (2014). A unification of mediation and interaction: A
 4-way decomposition. *Epidemiology*, 25(5), 749–761.

@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,6 +67,10 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Quick Reference</h6></li>
+    <li><a class="dropdown-item" href="../articles/refcard.html">Reference Card</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html">Cookbook</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Detailed Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
@@ -104,7 +108,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.5.0/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -133,7 +137,7 @@
 <p>The package eliminates code duplication across mediation packages by providing shared infrastructure while allowing each package to focus on its unique methodological contributions.</p>
 </section><section class="level2"><h2 id="core-s7-classes">Core S7 Classes<a class="anchor" aria-label="anchor" href="#core-s7-classes"></a>
 </h2>
-<p>medfit defines S7 classes for each mediation structure: <code>MediationData</code> (simple), <code>InteractionMediationData</code> (simple with a treatment-by-mediator interaction), <code>SerialMediationData</code>, <code>ParallelMediationData</code>, <code>JointMediationData</code> (several mediators with treatment-by-mediator products), and <code>BootstrapResult</code>. The three most common are introduced here; see <a href="extraction.html">Model Extraction</a> for the others.</p>
+<p>medfit defines S7 classes for each mediation structure: <code>MediationData</code> (simple), <code>InteractionMediationData</code> (simple with a treatment-by-mediator interaction), <code>SerialMediationData</code>, <code>ParallelMediationData</code>, <code>JointMediationData</code> (several mediators with treatment-by-mediator products), <code>ClusterMediationData</code> (treatment assigned to whole clusters, from <code>lmer</code> fits), and <code>BootstrapResult</code>. The three most common are introduced here; see <a href="extraction.html">Model Extraction</a> for the others.</p>
 <section class="level3"><h3 id="mediationdata">MediationData<a class="anchor" aria-label="anchor" href="#mediationdata"></a>
 </h3>
 <p>Stores simple mediation models (X -&gt; M -&gt; Y):</p>
@@ -473,8 +477,8 @@ N bootstrap samples: 1000
   Upper: 0.25
 
 Bootstrap Distribution Summary:
-   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-0.03542 0.12213 0.14801 0.14943 0.17852 0.26576 </code></pre>
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
+0.0007814 0.1244675 0.1524572 0.1518014 0.1780239 0.2712466 </code></pre>
 </div>
 </div>
 </section></section><section class="level2"><h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
@@ -667,6 +671,8 @@ Bootstrap Distribution Summary:
 <li>Explore <a href="bootstrap.html">bootstrap inference methods</a>
 </li>
 <li>Read the <a href="methods.html">formulas behind every effect and standard error</a>
+</li>
+<li>Look up a call on the <a href="refcard.html">reference card</a>, or follow a task recipe in the <a href="cookbook.html">cookbook</a>
 </li>
 <li>See the reference documentation for detailed API information</li>
 </ul>

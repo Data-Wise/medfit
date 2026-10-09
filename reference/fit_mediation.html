@@ -31,7 +31,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,6 +44,10 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Quick Reference</h6></li>
+    <li><a class="dropdown-item" href="../articles/refcard.html">Reference Card</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html">Cookbook</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Detailed Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
@@ -70,7 +74,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit Mediation Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.5.0/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
       <div class="d-none name"><code>fit_mediation.Rd</code></div>
     </div>
 
@@ -92,9 +96,10 @@ mediator and outcome models simultaneously.</p>
 <span>  family_y <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  family_m <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  se_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"sandwich"</span><span class="op">)</span>,</span>
+<span>  se_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"sandwich"</span>, <span class="st">"kr"</span><span class="op">)</span>,</span>
 <span>  engine_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  m_star <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  cluster <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -128,6 +133,16 @@ mediator and outcome models simultaneously.</p>
 <li><p><code>"regmedint"</code>: Closed-form regression-based (in)direct effects via
 the suggested <span class="pkg">regmedint</span> package (VanderWeele's regression
 approach, with optional treatment-mediator interaction)</p></li>
+<li><p><code>"lmer"</code>: Linear mixed models for a treatment assigned to whole
+clusters (the 2-1-1 design), via the suggested <span class="pkg">lme4</span> package;
+needs <code>cluster =</code> and returns a <a href="ClusterMediationData.html">ClusterMediationData</a>. The engine
+drops incomplete rows once, splits the mediator and each level-1
+covariate into its within-cluster deviation and observed cluster mean
+(<code>&lt;M&gt;_cwc</code>, <code>&lt;M&gt;_cm</code>), adds a random cluster intercept to both models,
+and fits by REML. The formulas hold fixed effects only (a random-effect
+term such as <code>(1 | id)</code> is an error; random slopes go in
+<code>engine_args</code>). It does not take <code>weights</code>, non-Gaussian families,
+<code>se_type = "sandwich"</code>, or extra arguments.</p></li>
 </ul></dd>
 
 
@@ -149,12 +164,19 @@ inverse-probability weighting (IPW). <code>NULL</code> (default) fits unweighted
 <dd><p>Variance-covariance estimator for <code>@vcov</code>: <code>"model"</code> (default,
 model-based <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">stats::vcov</a></code>) or <code>"sandwich"</code> (heteroskedasticity-consistent
 <code><a href="https://zeileis.codeberg.page/sandwich/reference/vcovHC.html" class="external-link">sandwich::vcovHC</a></code>, type HC3, recommended for IPW-weighted fits). The
-<code>"sandwich"</code> option requires the suggested <span class="pkg">sandwich</span> package.</p></dd>
+<code>"sandwich"</code> option requires the suggested <span class="pkg">sandwich</span> package. With
+<code>engine = "lmer"</code> only, <code>"kr"</code> uses the Kenward-Roger adjusted covariance
+and stores a degrees of freedom for each path, so the path intervals are
+t intervals; it needs REML fits and the suggested <span class="pkg">pbkrtest</span> package.</p></dd>
 
 
 <dt id="arg-engine-args">engine_args<a class="anchor" aria-label="anchor" href="#arg-engine-args"></a></dt>
 <dd><p>Named list of engine-specific overrides (default:
 <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code>, no overrides). Ignored by <code>engine = "glm"</code>. For
+<code>engine = "lmer"</code>, recognized names are <code>random_y</code> and <code>random_m</code>
+(one-sided formulas of level-1 terms that get correlated random slopes;
+<code>~ M</code> in <code>random_y</code> is applied to the within-cluster mediator term) and
+<code>REML</code> (default <code>TRUE</code>); any other name is an error. For
 <code>engine = "regmedint"</code>, recognized names are <code>interaction</code>, <code>cvar</code>,
 <code>mreg</code>, <code>yreg</code>, <code>a0</code>, <code>a1</code>, and <code>c_cond</code>; each replaces the
 value the adapter would otherwise derive from the formulas, families, and
@@ -170,6 +192,11 @@ such term is an error rather than a silent no-op. That check keys on whether
 the argument was given at the call site, not on whether it differs from the
 default, so a wrapper that forwards <code>m_star</code> unconditionally will trigger it
 on two-way fits; forward it only when its own caller supplied one.</p></dd>
+
+
+<dt id="arg-cluster">cluster<a class="anchor" aria-label="anchor" href="#arg-cluster"></a></dt>
+<dd><p>Character string: name of the cluster variable in <code>data</code>.
+Required with <code>engine = "lmer"</code>, an error with the other engines.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -310,6 +337,30 @@ error, not a silent no-op.</p>
 <span class="r-in"><span>  mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span></span>
 <span class="r-in"><span>  family_y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lme4"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co"># Treatment assigned to whole clusters (needs lme4); formulas hold fixed</span></span></span>
+<span class="r-in"><span><span class="co"># effects only, the engine adds the random cluster intercept</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">J</span> <span class="op">&lt;-</span> <span class="fl">30</span></span></span>
+<span class="r-in"><span><span class="va">id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cdat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>school <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span>, X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">J</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">id</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">[</span><span class="va">id</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cdat</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">[</span><span class="va">id</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cluster_fit</span> <span class="op">&lt;-</span> <span class="fu">fit_mediation</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">cdat</span>,</span></span>
+<span class="r-in"><span>  treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>,</span></span>
+<span class="r-in"><span>  engine <span class="op">=</span> <span class="st">"lmer"</span>, cluster <span class="op">=</span> <span class="st">"school"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="nie.html">nie</a></span><span class="op">(</span><span class="va">cluster_fit</span><span class="op">)</span>       <span class="co"># a * b_between</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="decompose.html">decompose</a></span><span class="op">(</span><span class="va">cluster_fit</span><span class="op">)</span> <span class="co"># own-mediator and spillover parts</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        own  spillover        nie </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.26012673 0.03260194 0.29272868 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"label")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cluster-average, large-cluster approximation"</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

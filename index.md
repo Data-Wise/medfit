@@ -212,6 +212,41 @@ nie(med_data)
 tidy(med_data)
 ```
 
+### Cluster-Randomized Trials
+
+When the treatment is assigned to whole clusters (such as schools), use
+the `lmer` engine (needs the suggested `lme4`; add `se_type = "kr"` with
+`pbkrtest` for few clusters):
+
+``` r
+
+# 40 schools of 10 students, treatment assigned by school
+set.seed(123)
+J <- 40
+n <- 10
+school <- rep(seq_len(J), each = n)
+cdat <- data.frame(school = factor(school), X = sample(rep(0:1, J / 2))[school])
+cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[school] + rnorm(J * n)
+cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[school] + rnorm(J * n)
+
+fit <- fit_mediation(
+  Y ~ X + M, M ~ X, data = cdat,
+  treatment = "X", mediator = "M",
+  engine = "lmer", cluster = "school"
+)
+
+nie(fit)        # a * b_between
+decompose(fit)  # own-mediator and spillover parts (large-cluster approximation)
+```
+
+    #> Natural Indirect Effect (NIE): 0.328
+    #>        own  spillover        nie
+    #> 0.25763321 0.07036432 0.32799753
+
+See [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.html) for
+the estimand and the assumptions each effect needs.
+
 ## Core Components
 
 ### S7 Classes
@@ -246,6 +281,12 @@ tidy(med_data)
 
 - **`JointMediationData`**: Joint natural effects of two or more
   mediators when the outcome model has treatment-by-mediator products
+
+- **`ClusterMediationData`**: Mediation for a treatment assigned to
+  whole clusters (the 2-1-1 design), from `lme4` mixed models: natural
+  indirect effect `a * b_between`, split into an own-mediator and a
+  spillover part; Kenward-Roger intervals and a cluster bootstrap for
+  few clusters
 
 - **`BootstrapResult`**: Container for bootstrap inference results
 
@@ -308,7 +349,7 @@ medfit is the foundation for the **mediationverse** ecosystem:
 | [mediationverse](https://github.com/data-wise/mediationverse) | Meta-package | Ecosystem |
 
 See [Ecosystem
-Coordination](https://github.com/data-wise/medfit/blob/main/planning/ECOSYSTEM.md)
+Coordination](https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md)
 for version compatibility and development guidelines.
 
 ## Documentation
@@ -329,6 +370,12 @@ Comprehensive articles are available on the package website:
 - **[Methods and
   Formulas](https://data-wise.github.io/medfit/articles/methods.html)**:
   Estimands, formulas, covariance, and standard errors for every class
+- **[Reference
+  Card](https://data-wise.github.io/medfit/articles/refcard.html)**:
+  Every export and class on one page
+- **[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html)**:
+  Ten task recipes, from a first mediation fit to cluster-randomized
+  designs
 
 ## Development Status
 
@@ -340,7 +387,7 @@ contains.
 
 - **Defensive Programming**: checkmate for input validation, S7
   validators for class integrity
-- **Testing**: 1,400+ tests with testthat (\>90% coverage, enforced via
+- **Testing**: 1,900+ tests with testthat (\>90% coverage, enforced via
   codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
@@ -374,7 +421,7 @@ GPL (\>= 3)
 If you use medfit in your research, please cite:
 
     Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-    R package version 0.5.0. https://data-wise.github.io/medfit/
+    R package version 0.6.0. https://data-wise.github.io/medfit/
 
 For the entry matching your installed version, run `citation("medfit")`.
 
@@ -385,7 +432,7 @@ For the entry matching your installed version, run `citation("medfit")`.
   Guide](https://github.com/data-wise/medfit/blob/main/CLAUDE.md)
 - [Roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md)
 - [Ecosystem
-  Strategy](https://github.com/data-wise/medfit/blob/main/planning/ECOSYSTEM.md)
+  Strategy](https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md)
 
 ## Contact
 

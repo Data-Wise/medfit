@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,6 +67,10 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Quick Reference</h6></li>
+    <li><a class="dropdown-item" href="../articles/refcard.html">Reference Card</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html">Cookbook</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Detailed Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
@@ -104,7 +108,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.5.0/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -115,8 +119,8 @@
 
     <section class="level2"><h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>The <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> function provides a standardized interface for extracting mediation structures from fitted models. It works with: - <strong>lm/glm</strong> models (base R) - implemented - <strong>lavaan</strong> SEM models - implemented - <strong>lmer</strong> mixed models (future)</p>
-<p>Extraction returns the S7 class that matches the structure: <code>MediationData</code>, <code>InteractionMediationData</code>, <code>SerialMediationData</code>, <code>ParallelMediationData</code>, or <code>JointMediationData</code>. All share one interface (<code><a href="../reference/nie.html">nie()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code>, …) across modeling frameworks.</p>
+<p>The <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> function provides a standardized interface for extracting mediation structures from fitted models. It works with: - <strong>lm/glm</strong> models (base R) - implemented - <strong>lavaan</strong> SEM models - implemented - <strong>lmer</strong> mixed models (cluster-level treatment, 2-1-1) - implemented</p>
+<p>Extraction returns the S7 class that matches the structure: <code>MediationData</code>, <code>InteractionMediationData</code>, <code>SerialMediationData</code>, <code>ParallelMediationData</code>, <code>JointMediationData</code>, or <code>ClusterMediationData</code>. All share one interface (<code><a href="../reference/nie.html">nie()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code>, …) across modeling frameworks.</p>
 <p><strong>Note:</strong> For quick analysis, consider using <code><a href="../reference/med.html">med()</a></code> instead - it handles fitting and extraction in one step. Use <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> when you need more control or already have fitted models.</p>
 </section><section class="level2"><h2 id="quick-comparison-med-vs-extract_mediation">Quick Comparison: med() vs extract_mediation()<a class="anchor" aria-label="anchor" href="#quick-comparison-med-vs-extract_mediation"></a>
 </h2>
@@ -582,18 +586,79 @@ Attaching package: 'generics'</code></pre>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_nie</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_nie</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4483248 0.8930866</code></pre>
+<pre><code>[1] 0.4400159 0.9092223</code></pre>
 </div>
 </div>
 <p>The fit must meet a few requirements, and each violation errors with its cause: every model carries the same covariates (a medfit limitation), all models are Gaussian identity-link, unweighted, with an intercept, and fit to the same rows, every mediator appears in the outcome model, and the treatment is coded 0/1. Only outcome-model products written with <code>:</code> or <code>*</code> are supported; a product in a mediator model, between mediators, with a covariate, or inside <code><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I()</a></code> errors. A product <strong>precomputed as a data column</strong> cannot be recognized from the formula and would be ignored silently, so write it in the formula. The identification assumptions are stated for the whole mediator vector; see <code><a href="../reference/JointMediationData.html">?JointMediationData</a></code>.</p>
-</section></section><section class="level2"><h2 id="extracting-from-lavaan-models">Extracting from lavaan Models<a class="anchor" aria-label="anchor" href="#extracting-from-lavaan-models"></a>
+</section></section><section class="level2"><h2 id="extracting-from-lmer-models-cluster-level-treatment">Extracting from lmer Models: Cluster-Level Treatment<a class="anchor" aria-label="anchor" href="#extracting-from-lmer-models-cluster-level-treatment"></a>
+</h2>
+<p>When the treatment is assigned to whole clusters (for example schools) and the mediator and outcome are measured on the individuals in them (the 2-1-1 design), fit two linear mixed models with <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code> and pass them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>. It returns a <code>ClusterMediationData</code> object. The outcome model must carry the mediator as its within-cluster deviation plus the observed cluster mean (or the raw mediator plus the cluster mean); medfit finds these terms by value, so grand-mean centering and <code><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale()</a></code> work.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="va">J</span> <span class="op">&lt;-</span> <span class="fl">40</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
+<span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">x_j</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, length.out <span class="op">=</span> <span class="va">J</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">cdat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>school <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span>, X <span class="op">=</span> <span class="va">x_j</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="va">v</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">cdat</span><span class="op">$</span><span class="va">M_bar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">cdat</span><span class="op">$</span><span class="va">M</span>, <span class="va">cdat</span><span class="op">$</span><span class="va">school</span><span class="op">)</span></span>
+<span><span class="va">cdat</span><span class="op">$</span><span class="va">M_w</span> <span class="op">&lt;-</span> <span class="va">cdat</span><span class="op">$</span><span class="va">M</span> <span class="op">-</span> <span class="va">cdat</span><span class="op">$</span><span class="va">M_bar</span></span>
+<span><span class="va">cdat</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">M_w</span> <span class="op">+</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="va">cdat</span><span class="op">$</span><span class="va">M_bar</span> <span class="op">+</span> <span class="va">u</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu">lme4</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lmer</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">school</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">cdat</span><span class="op">)</span></span>
+<span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu">lme4</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lmer</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M_w</span> <span class="op">+</span> <span class="va">M_bar</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">school</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">cdat</span><span class="op">)</span></span>
+<span><span class="va">cluster_med</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="va">fit_m</span>, model_y <span class="op">=</span> <span class="va">fit_y</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>, cluster <span class="op">=</span> <span class="st">"school"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">cluster_med</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;ClusterMediationData&gt;
+  X -&gt; M -&gt; Y  (clusters: school)
+  a = +0.2720   b_within = +0.3796   b_between = +0.7697   c' = +0.0772
+  NIE (a * b_between) = +0.2093
+  n = 400 in 40 clusters (sizes 10 to 10)   |   within outcome model, model SEs
+Estimand and assumptions:
+  Design: treatment `X` assigned to 40 clusters (`school`, sizes 10 to 10); linear
+    mixed models with a random cluster intercept, mediator entering through the
+    observed cluster mean.
+  - All rows: linear models with no mediator-by-treatment or mediator-by-covariate
+    products; treatment randomized; clusters intact.
+  - Own (a * b_within): no unmeasured lower-level M-Y confounding; additive upper-level
+    confounders are allowed because level-1 covariates are cluster-mean centered.
+  - Spillover, NIE and NDE: also no unmeasured upper-level M-Y confounding.
+  - TE: no assumption beyond randomization of the treatment.
+  - Own/spillover split: a cross-world assumption across individuals in a cluster; no
+    treatment-induced M-Y confounding.
+  - Interference only through the observed cluster mean of the mediator and none
+    between clusters; members missing from the analysis rows are assumed not to drive
+    their peers' outcomes.</code></pre>
+</div>
+</div>
+<p>The natural indirect effect is <span class="math inline">\(a \, b_B\)</span> (the cluster-mean slope), and <code><a href="../reference/decompose.html">decompose()</a></code> splits it into an own-mediator part and a spillover part, labeled as the large-cluster approximation:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">cluster_med</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Indirect Effect (NIE): 0.2093</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">cluster_med</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>      own spillover       nie
+0.1032345 0.1061099 0.2093444
+attr(,"label")
+[1] "cluster-average, large-cluster approximation"</code></pre>
+</div>
+</div>
+<p><code>fit_mediation(engine = "lmer", cluster = )</code> builds the cluster means and both models for you, and <code>se_type = "kr"</code> adds Kenward-Roger degrees of freedom (needs <code>pbkrtest</code>). The few-cluster warnings, the assumptions each effect needs and the formulas are in <a href="methods.html">Methods and Formulas</a>; use <code>bootstrap_mediation(cluster = )</code> for intervals on the products (<a href="bootstrap.html">Bootstrap</a>).</p>
+</section><section class="level2"><h2 id="extracting-from-lavaan-models">Extracting from lavaan Models<a class="anchor" aria-label="anchor" href="#extracting-from-lavaan-models"></a>
 </h2>
 <section class="level3"><h3 id="simple-mediation-in-sem">Simple Mediation in SEM<a class="anchor" aria-label="anchor" href="#simple-mediation-in-sem"></a>
 </h3>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://lavaan.ugent.be" class="external-link">lavaan</a></span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stderr">
-<pre><code>This is lavaan 0.7-2
+<pre><code>This is lavaan 0.7-3
 lavaan is FREE software! Please report any bugs.</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># Define SEM model</span></span>
@@ -1043,7 +1108,7 @@ pie      0.19952257 0.4805126</code></pre>
 <p>The extraction system is designed to accommodate future extensions:</p>
 <ul>
 <li>
-<strong>New model types</strong>: Add methods for lmer, brms, etc.</li>
+<strong>New model types</strong>: Add methods for brms, glmer, etc. (<code>lmer</code> is done)</li>
 <li>
 <strong>Complex mediation</strong>: Moderated mediation</li>
 <li>
@@ -1228,13 +1293,13 @@ c_prime 0.02523057 0.3863659</code></pre>
 </h2>
 <p>Model extraction is <strong>complete</strong>:</p>
 <ul>
-<li>✅ S7 class definitions (MediationData, InteractionMediationData, SerialMediationData, ParallelMediationData, JointMediationData)</li>
+<li>✅ S7 class definitions (MediationData, InteractionMediationData, SerialMediationData, ParallelMediationData, JointMediationData, ClusterMediationData)</li>
 <li>✅ lm/glm extraction with checkmate validation</li>
 <li>✅ lavaan extraction with checkmate validation</li>
 <li>✅ Effect extractors (nie, nde, te, pm, paths)</li>
 <li>✅ Tidyverse methods (tidy, glance)</li>
 <li>✅ Base R generics (coef, vcov, confint, nobs)</li>
-<li>📋 lmer extraction (future)</li>
+<li>✅ lmer extraction (<code>ClusterMediationData</code>, cluster-level treatment)</li>
 </ul>
 <p>See <code>NEWS.md</code> for updates.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">

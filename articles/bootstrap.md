@@ -138,8 +138,8 @@ print(boot_result)
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.2170
-      Upper:   0.4631
+      Lower:   0.2073
+      Upper:   0.4757
 
 ``` r
 summary(boot_result)
@@ -153,12 +153,12 @@ summary(boot_result)
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower: 0.2170026
-      Upper: 0.4630625
+      Lower: 0.2073406
+      Upper: 0.475666
 
     Bootstrap Distribution Summary:
        Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-     0.1375  0.2852  0.3264  0.3290  0.3675  0.5522 
+     0.1336  0.2847  0.3288  0.3318  0.3738  0.5785 
 
 ### How It Works
 
@@ -229,8 +229,8 @@ print(boot_np)
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.2057
-      Upper:   0.4694
+      Lower:   0.2051
+      Upper:   0.4739
 
 ### How It Works
 
@@ -279,6 +279,74 @@ boot_np_par <- bootstrap_mediation(
   seed = 123
 )
 ```
+
+## Cluster Bootstrap
+
+When the treatment is assigned to whole clusters, resample the clusters,
+not the rows. Pass `cluster =` with `method = "nonparametric"`: each
+draw takes clusters with replacement and gives every drawn cluster a
+fresh id before `statistic_fn` sees the data, so a cluster drawn twice
+is refit as two clusters, not one larger one. A refit that is singular
+or warns about convergence counts as a failure: it is excluded, and the
+number of failures is added to the warning.
+
+``` r
+set.seed(2026)
+J <- 40
+n <- 10
+cl <- rep(seq_len(J), each = n)
+x_j <- sample(rep(0:1, length.out = J))
+v <- rnorm(J, sd = 0.5)
+u <- rnorm(J, sd = 0.5)
+cdat <- data.frame(school = factor(cl), X = x_j[cl])
+cdat$M <- 0.5 * cdat$X + v[cl] + rnorm(J * n)
+mbar <- ave(cdat$M, cdat$school)
+cdat$Y <- 0.2 * cdat$X + 0.3 * (cdat$M - mbar) + 0.6 * mbar + u[cl] + rnorm(J * n)
+
+nie_of <- function(d) {
+  fit <- fit_mediation(
+    Y ~ X + M, M ~ X, data = d, treatment = "X", mediator = "M",
+    engine = "lmer", cluster = "school"
+  )
+  unname(nie(fit))
+}
+
+boot_cl <- bootstrap_mediation(
+  nie_of, method = "nonparametric", data = cdat, cluster = "school",
+  n_boot = 200, ci_level = 0.95, seed = 123
+)
+```
+
+    Warning in .bootstrap_nonparametric_cluster(data, statistic_fn, n_boot, : 3
+    bootstrap samples failed and were excluded (3 of them singular or
+    non-convergent refits)
+
+``` r
+boot_cl
+```
+
+    BootstrapResult object
+    ======================
+
+    Method:   nonparametric
+    Estimate:   0.2093
+    N bootstrap samples: 197
+
+    95% Confidence Interval:
+      Lower:  -0.0038
+      Upper:   0.5241
+
+The warning, when it appears, reports how many draws were dropped as
+singular or non-convergent refits (a cluster-level random intercept can
+collapse to zero in a resample); the interval uses the remaining draws,
+and `N bootstrap samples` in the print shows how many that is.
+
+Resampling members within their clusters instead (leaving out
+`cluster =`) breaks the dependence the mixed model is built on. The
+published evidence for resampling whole clusters is for treatment
+varying within clusters with 30 or more clusters; it is not established
+for this design or for fewer clusters (see [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.md)).
 
 ## Plugin Estimator
 
@@ -360,7 +428,7 @@ The percentile bootstrap CI is computed as:
 c(boot_result@ci_lower, boot_result@ci_upper)
 ```
 
-    [1] 0.2170026 0.4630625
+    [1] 0.2073406 0.4756660
 
 ``` r
 # Change confidence level
@@ -375,7 +443,7 @@ boot_90 <- bootstrap_mediation(
 c(boot_90@ci_lower, boot_90@ci_upper) # Narrower
 ```
 
-    [1] 0.2345624 0.4418077
+    [1] 0.2251035 0.4455627
 
 ### Statistical Significance
 
@@ -399,9 +467,10 @@ For serial mediation (treatment -\> mediator1 -\> mediator2 -\>
 outcome), the indirect effect is the product of the chain’s paths, \\a
 \times d \times b\\. The parametric and plugin methods accept a
 `SerialMediationData` object (and `ParallelMediationData`,
-`InteractionMediationData`, or `JointMediationData`) as well as
-`MediationData`. `statistic_fn` receives the named `@estimates` vector,
-which carries the chain’s path aliases `a`, `d1`, `b`, and `c_prime`:
+`InteractionMediationData`, `JointMediationData`, or
+`ClusterMediationData`) as well as `MediationData`. `statistic_fn`
+receives the named `@estimates` vector, which carries the chain’s path
+aliases `a`, `d1`, `b`, and `c_prime`:
 
 ``` r
 # Fit the chain: each model adjusts for the covariates and every upstream
@@ -447,8 +516,8 @@ print(boot_serial_param)
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.0371
-      Upper:   0.1248
+      Lower:   0.0397
+      Upper:   0.1194
 
 The lm chain above estimates each equation separately, so its covariance
 matrix sets the covariances between equations to zero (see the Model
@@ -566,9 +635,9 @@ rbind(
 ```
 
              [,1]      [,2]
-    1K  0.2170026 0.4630625
-    5K  0.2136351 0.4654500
-    10K 0.2132389 0.4661655
+    1K  0.2073406 0.4756660
+    5K  0.2134374 0.4685818
+    10K 0.2113081 0.4674286
 
 If CIs are similar, n_boot is sufficient.
 
@@ -608,7 +677,7 @@ rbind(delta = ci_delta, bootstrap = ci_boot)
 
                   2.5 %    97.5 %
     delta     0.2063564 0.4591826
-    bootstrap 0.2170026 0.4630625
+    bootstrap 0.2073406 0.4756660
 
 Bootstrap is generally preferred because it: - Doesn’t assume normality
 of indirect effect - Handles skewness correctly - Provides better
@@ -666,7 +735,7 @@ tidy(boot_result)
     # A tibble: 1 × 5
       term     estimate std.error conf.low conf.high
       <chr>       <dbl>     <dbl>    <dbl>     <dbl>
-    1 estimate    0.333    0.0612    0.217     0.463
+    1 estimate    0.333    0.0675    0.207     0.476
 
 ``` r
 # One-row summary
@@ -704,15 +773,15 @@ boot_result@estimate
 confint(boot_result)
 ```
 
-                 2.5 %    97.5 %
-    estimate 0.2170026 0.4630625
+                 2.5 %   97.5 %
+    estimate 0.2073406 0.475666
 
 ``` r
 c(lower = boot_result@ci_lower, upper = boot_result@ci_upper)
 ```
 
         lower     upper
-    0.2170026 0.4630625 
+    0.2073406 0.4756660 
 
 ``` r
 # A different level is recomputed from the stored bootstrap draws
@@ -720,7 +789,7 @@ confint(boot_result, level = 0.90)
 ```
 
                    5 %      95 %
-    estimate 0.2345624 0.4418077
+    estimate 0.2251035 0.4455627
 
 ## Development Status
 
