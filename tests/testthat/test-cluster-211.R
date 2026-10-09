@@ -1199,3 +1199,24 @@ test_that("A2: two qualifying calls in one session each warn exactly once (P4)",
   # must not go through it.
   expect_false(isTRUE(medfit:::.medfit_state[["few_clusters"]]))
 })
+
+test_that("the fit_mediation() route and the extract route give the same object", {
+  skip_if_not_installed("lme4")
+  dgp <- sim_cluster211(J = 150, sizes = 8, a = 0.5, b_W = 0.3, b_B = 0.6,
+                        seed = 17)
+  by_extract <- fit_cluster211(dgp$data, route = "extract")
+  by_fit <- fit_cluster211(dgp$data, route = "fit")
+  eff <- function(f) {
+    # the D11 gap warning is expected at n_j = 8 and tested elsewhere
+    d <- suppressWarnings(decompose(f))
+    c(nie = unname(nie(f)), nde = unname(nde(f)), d[c("own", "spillover")])
+  }
+  expect_equal(unlist(eff(by_fit)), unlist(eff(by_extract)), tolerance = 1e-6)
+  expect_equal(unname(vcov(by_fit)[c("a", "b_between"), c("a", "b_between")]),
+               unname(vcov(by_extract)[c("a", "b_between"), c("a", "b_between")]),
+               tolerance = 1e-6)
+  # Known answer: NIE = a * b_B = 0.3, within 3 SE of it on both routes (coarse: SE is about 0.08).
+  se_nie <- tidy(by_fit, type = "effects")$std.error[1]
+  expect_lt(abs(unname(nie(by_fit)) - 0.3), 3 * se_nie)
+  expect_lt(abs(unname(nie(by_extract)) - 0.3), 3 * se_nie)
+})

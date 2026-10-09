@@ -25,6 +25,24 @@
   slopes on anything but the within term are errors. `lme4` is in
   `Suggests`.
 
+* `fit_mediation(engine = "lmer", cluster = )` fits the two linear mixed models
+  of the cluster design (REML, random cluster intercepts, the mediator and any
+  level-1 covariates split into a within-cluster deviation and a cluster mean)
+  and returns a `ClusterMediationData`. `se_type = "kr"` applies the
+  Kenward-Roger adjustment (`pbkrtest`, in `Suggests`; REML fits only): each
+  path gets a Kenward-Roger denominator degrees of freedom in `@kr_df`, and
+  `confint()` and `tidy(conf.int = TRUE)` give t intervals for the paths
+  while the product effects keep normal intervals. `extract_mediation()` warns
+  per call when there are fewer than 25 clusters with model-based standard
+  errors, and when there are fewer than 10 clusters with any standard error
+  type. The methods article has a new 2-1-1 section: models, effects, the
+  own/spillover approximation and its exact form, the covariance argument and
+  the assumptions table.
+
+* Fix: the `?ClusterMediationData` reference now cites Talloen et al. (2016,
+  *Journal of Educational and Behavioral Statistics*) correctly; the entry in
+  the development version cited a different title and journal.
+
 # medfit 0.5.0
 
 Two fixes change results (marked **Behavior change** below): serial `te()`

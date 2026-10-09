@@ -78,7 +78,24 @@ Y = t0 + c'*X + bW*(M - Mbar) + bB*Mbar + ...}
 and \eqn{a}{a} the effect of the treatment on the mediator, the natural
 indirect effect is \eqn{a b_B}{a*bB}. It splits into an own-mediator part
 \eqn{a b_W}{a*bW} and a spillover part \eqn{a (b_B - b_W)}{a*(bB - bW)}.
-The validator ties the alias rows \code{a}, \code{c_prime}, \code{b_within} and
+
+The split is the large-cluster, cluster-average approximation. With the
+observed cluster mean, moving only member \eqn{i}'s mediator by \eqn{a}
+also moves the mean by \eqn{a / n_j}, so the exact own-mediator effect is
+\eqn{a [b_W + (b_B - b_W) / n_j]}{a*(bW + (bB - bW)/nj)} and the exact
+spillover is \eqn{a (b_B - b_W)(n_j - 1) / n_j}{a*(bB - bW)*(nj - 1)/nj};
+they still sum to \eqn{a b_B}{a*bB}. \code{decompose()} warns when the
+approximation error exceeds half the own effect's standard error.
+
+The estimand assumes randomized treatment, intact clusters, no interference
+between clusters, linear models without mediator-by-treatment or
+mediator-by-covariate products, and interference through the observed
+cluster mean only; all members of a cluster must be in the analysis rows.
+The own effect also needs no unmeasured lower-level mediator-outcome
+confounding. The spillover, NIE and NDE need no unmeasured upper-level
+mediator-outcome confounding either; under it only the sum of the direct
+effect and \eqn{a (b_B - b_W)}{a*(bB - bW)} is identified. \code{print()} and
+\code{summary()} print this block. The validator ties the alias rows \code{a}, \code{c_prime}, \code{b_within} and
 \code{b_between} of \code{estimates} and \code{vcov} to the path properties, so an object
 with inconsistent numbers cannot be built.
 
@@ -103,7 +120,13 @@ cmd@a_path * cmd@b_between  # the NIE, 0.5 * 0.6
 
 }
 \references{
-Talloen, W., Loeys, T., Moerkerke, B., Vansteelandt, S., & Rosseel, Y.
-(2016). Mediation analysis in cluster randomized trials with interference.
-\emph{Statistics in Medicine}.
+Talloen, W., Moerkerke, B., Loeys, T., De Naeghel, J., Van Keer, H., &
+Vansteelandt, S. (2016). Estimation of indirect effects in the presence of
+unmeasured confounding for the mediator-outcome relationship in a multilevel
+2-1-1 mediation model. \emph{Journal of Educational and Behavioral Statistics},
+41(4), 359-391. \doi{10.3102/1076998616636855}
+
+VanderWeele, T. J. (2010). Direct and indirect effects for neighborhood-based
+clustered and longitudinal data. \emph{Sociological Methods & Research}, 38(4),
+515-544. \doi{10.1177/0049124110366236}
 }

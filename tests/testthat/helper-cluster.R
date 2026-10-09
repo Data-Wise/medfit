@@ -169,7 +169,7 @@ cluster_cov_terms <- function(dat) {
 }
 
 # Fit both models the way the tests share and return the ClusterMediationData.
-# route = "fit" needs the lmer engine of fit_mediation(), which arrives in PR B.
+# route = "fit" goes through fit_mediation(engine = "lmer") (no covariate override).
 # `cov_terms` overrides the covariate terms of the outcome model (for example
 # "C" alone, an uncentered level-1 covariate with no cluster-mean companion).
 fit_cluster211 <- function(dat, parameterization = c("within", "raw"),
@@ -178,8 +178,17 @@ fit_cluster211 <- function(dat, parameterization = c("within", "raw"),
   parameterization <- match.arg(parameterization)
   route <- match.arg(route)
   if (route == "fit") {
-    stop("route = \"fit\" needs the lmer engine of fit_mediation() (PR B)",
-         call. = FALSE)
+    if (parameterization != "within" || slope || !is.null(cov_terms)) {
+      stop("route = \"fit\" builds the within parameterization with a random ",
+           "intercept and its own covariate terms", call. = FALSE)
+    }
+    rhs <- paste(c("X", "M", if ("C" %in% names(dat)) "C"), collapse = " + ")
+    rhs_m <- paste(c("X", if ("C" %in% names(dat)) "C"), collapse = " + ")
+    return(quiet_few(fit_mediation(
+      stats::as.formula(paste("Y ~", rhs)), stats::as.formula(paste("M ~", rhs_m)),
+      data = dat, treatment = "X", mediator = "M", engine = "lmer",
+      cluster = "cluster", se_type = se_type
+    )))
   }
   if (slope && parameterization == "raw") {
     stop("a random slope is supported on the within term only", call. = FALSE)
