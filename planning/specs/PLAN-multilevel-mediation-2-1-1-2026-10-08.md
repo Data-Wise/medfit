@@ -45,6 +45,7 @@ may claim 0.6.0).
 | P6 | Behavior 6 detects the mean term by values (constant within clusters, exact affine function of the cluster mean), but when every cluster has the same mean of M the intercept meets that rule and the between effect is not identifiable; the spec has no guard (found by the second adversarial review) | `.find_cluster_mean_term()` never considers `(Intercept)`, requires `sd(cluster means) > 1e-8 * max(1, sd(M))` on the model rows and a matched column that is present and non-aliased in `fixef()` (lme4 drops rank-deficient columns), and otherwise errors "no between-cluster variation in the mediator, so the between-cluster effect is not identifiable" | A misleading NIE is worse than an error; the guard costs one variance check and one membership check |
 | P7 | The spec's harness table lists `effects_from()` as new, but `tests/testthat/helper-joint.R` already defines it, and it is generic (an object, or a planted-defect `effect_fn`); testthat sources helpers alphabetically, so a second definition would silently be replaced by the joint one | `helper-cluster.R` reuses the joint `effects_from()` and does not redefine it | One shared name is what the spec's group 8 assumes; the call happens at test time, so load order does not matter |
 | P8 | The spec gives `true_cluster_effects(dgp, seed)`, but its "same noise in every world" wording needs the noise of the simulated units | `sim_cluster211()` stores every noise draw in the object it returns and `true_cluster_effects(dgp, defect)` recomputes counterfactuals on those units; `seed` is dropped, and the `defect` hook plants a wrong truth for the self-tests | The truth is then exact (no Monte Carlo error), so the self-tests use 1e-10, a stronger check than the spec's tolerance |
+| P9 | The plan puts `lme4` in `DESCRIPTION` Suggests in T10, but T3's `R/extract-lmer.R` calls `lme4::` and `requireNamespace("lme4")`, and `R CMD check` reports "'::' or ':::' import not declared from: 'lme4'" (a WARNING) the moment that file exists | `lme4` moves to Suggests in T3; `pbkrtest` stays in T10, where KR first needs it | The check scans `R/`, not only `tests/` (T1's tests-only use passed); every push from T3 on would otherwise fail the r-lib check |
 | P3 | `tests/sim/` does not exist | T9 creates it with `^tests/sim$` in `.Rbuildignore` and `tests/sim/results/` for the CSVs | Spec project structure; heavy runs stay out of testthat and out of the tarball |
 
 ## Spec inconsistencies found while planning
@@ -99,7 +100,7 @@ The spec is approved, so it is not edited here. Each item is resolved in the pla
     - `S7::S4_register()` added in `.onLoad()` before `methods_register()`; `show` and `print.summary` registrations; roxygen with `@export`; `_pkgdown.yml` classes entry.
   - Verify: validator tests (a good object builds; each broken invariant fails with its message).
   - Files: `R/classes.R`, `R/zzz.R`, `_pkgdown.yml`, `tests/testthat/test-cluster-211.R`.
-- [ ] **T3: Routing and guards (Behavior 1–5).**
+- [x] **T3: Routing and guards (Behavior 1–5).** *(done 2026-10-08, 24 new tests in `test-cluster-211.R`; mutating the within-cluster, glmer and row-identity guards each fails a test. After the guards, `.extract_mediation_lmer()` stops with an internal "not implemented yet" until T4/T5. `lme4` moved into Suggests in this task, P9.)*
   - Acceptance: `R/extract-lmer.R` (new), `.extract_mediation_lmer()`, registered for `merMod` in `.onLoad()` behind `requireNamespace("lme4")`:
     - `glmerMod` gets the D7 error; `lmerMod` and subclasses dispatch.
     - `cluster` defaults to the single shared grouping factor; several or differing factors error asking for `cluster =`.
@@ -155,7 +156,7 @@ The spec is approved, so it is not edited here. Each item is resolved in the pla
   - Files: `tests/sim/coverage-2-1-1.R`, `tests/sim/results/`, `.Rbuildignore`, `tests/testthat/test-cluster-211.R`.
 - [ ] **T10: PR A gates and PR.**
   - Acceptance:
-    - NEWS "New features" entry stating the estimand and the observed-mean model; `inst/WORDLIST` additions inserted in place; `DESCRIPTION` gains `lme4` and `pbkrtest` in Suggests and drops the "future support for mixed models" line; `devtools::document()` with any roxygen churn reverted.
+    - NEWS "New features" entry stating the estimand and the observed-mean model; `inst/WORDLIST` additions inserted in place; `DESCRIPTION` gains `pbkrtest` in Suggests (`lme4` arrived in T3, P9) and drops the "future support for mixed models" line; `devtools::document()` with any roxygen churn reverted.
     - The always-on runtime of `test-cluster-211.R` measured against 10 s.
     - E2E transcript (fresh session, 40 clusters, n_j 5–25, a level-1 and a level-2 covariate, extract route): printed object with its assumptions block, `tidy()`, `decompose()` with its warning state, the oracle-1 comparison within 3 SE and the TE oracle result.
     - The T0 CI skip outcome recorded.

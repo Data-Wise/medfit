@@ -103,5 +103,14 @@
     })
   }
 
+  # Same for lme4's merMod (cluster-level mediation from mixed models)
+  if (requireNamespace("lme4", quietly = TRUE)) {
+    tryCatch({
+      .register_lmer_method()
+    }, error = function(e) {
+      invisible(NULL)
+    })
+  }
+
   # Note: OpenMx integration postponed to future release
 }

@@ -102,3 +102,142 @@ test_that("kr_df is present exactly when se_type is kr, and kr needs REML", {
   # numeric(0) behaves like NULL for the model route (the class_numeric|NULL pitfall)
   expect_no_error(cluster_fixture(kr_df = numeric(0)))
 })
+
+
+# T3: routing and design guards (test group 6) ---------------------------------
+# These need lme4; the noSuggests job skips them.
+
+# nolint start: object_usage_linter.
+lmer_pair <- function(dat = sim_cluster211(J = 10, sizes = 5, seed = 1)$data,
+                      fml_m = M ~ X + (1 | cluster),
+                      fml_y = Y ~ X + M_w + M_bar + (1 | cluster)) {
+  d <- cluster_fit_data(dat)
+  suppressMessages(list(m = lme4::lmer(fml_m, data = d),
+                        y = lme4::lmer(fml_y, data = d), d = d))
+}
+
+extract_pair <- function(p, ...) {
+  extract_mediation(p$m, model_y = p$y, treatment = "X", mediator = "M", ...)
+}
+
+# Guards pass when the next error is the T4 stub, not a guard message.
+expect_passes_guards <- function(p, ...) {
+  expect_error(extract_pair(p, ...), "not implemented yet")
+}
+# nolint end
+
+test_that("an lmerMod pair reaches the extraction body and reports the cluster", {
+  skip_if_not_installed("lme4")
+  expect_passes_guards(lmer_pair())
+  expect_passes_guards(lmer_pair(), cluster = "cluster")
+})
+
+test_that("a subclass of lmerMod dispatches through the merMod method", {
+  skip_if_not_installed("lme4")
+  setClass("localLmer", contains = "lmerMod")
+  on.exit(removeClass("localLmer"), add = TRUE)
+  p <- lmer_pair()
+  sub_m <- methods::as(p$m, "localLmer")
+  expect_s4_class(sub_m, "localLmer")
+  expect_error(
+    extract_mediation(sub_m, model_y = p$y, treatment = "X", mediator = "M"),
+    "not implemented yet"
+  )
+})
+
+test_that("glmerMod gets the D7 error, not S7's 'can't find method'", {
+  skip_if_not_installed("lme4")
+  p <- lmer_pair()
+  d <- p$d
+  d$Yb <- as.integer(d$Y > stats::median(d$Y))
+  g <- suppressWarnings(lme4::glmer(Yb ~ X + M_w + M_bar + (1 | cluster), data = d,
+                                    family = stats::binomial()))
+  expect_error(extract_pair(list(m = p$m, y = g)), "glmer fit")
+  expect_error(extract_pair(list(m = p$m, y = g)), "link scale")
+  expect_error(
+    extract_mediation(g, model_y = p$y, treatment = "X", mediator = "M"),
+    "mediator model.*glmer fit"
+  )
+})
+
+test_that("an outcome model that is not an lmer fit is named", {
+  skip_if_not_installed("lme4")
+  p <- lmer_pair()
+  bad <- list(m = p$m, y = stats::lm(Y ~ X + M, data = p$d))
+  expect_error(extract_pair(bad), "outcome model.*lme4::lmer")
+})
+
+test_that("two or differing grouping factors ask for cluster =", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 10, sizes = 6, seed = 2)$data
+  dat$site <- factor(rep(1:3, length.out = nrow(dat)))
+  d <- cluster_fit_data(dat)
+  two <- lme4::lmer(M ~ X + (1 | cluster) + (1 | site), data = d)
+  y <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), data = d)
+  expect_error(extract_pair(list(m = two, y = y)),
+               "Name it with `cluster =`")
+  expect_error(extract_pair(list(m = two, y = y)), "cluster, site")
+  # Naming the cluster resolves it, and a name the models lack still errors.
+  expect_passes_guards(list(m = two, y = y), cluster = "cluster")
+  expect_error(extract_pair(list(m = two, y = y), cluster = "site"),
+               "outcome model")
+  expect_error(extract_pair(list(m = two, y = y), cluster = "school"),
+               "not a grouping factor")
+  # Differing factors: no shared single choice.
+  y_site <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | site), data = d)
+  m1 <- lme4::lmer(M ~ X + (1 | cluster), data = d)
+  expect_error(extract_pair(list(m = m1, y = y_site)), "Name it with `cluster =`")
+})
+
+test_that("a missing cluster intercept errors with the corrected formula", {
+  skip_if_not_installed("lme4")
+  p <- lmer_pair()
+  slope_only <- lme4::lmer(Y ~ X + M_w + M_bar + (0 + M_w | cluster), data = p$d)
+  expect_error(extract_pair(list(m = p$m, y = slope_only)),
+               "outcome model has no random intercept for `cluster`.*\\(1 \\| cluster\\)")
+  m_slope <- lme4::lmer(M ~ X + (0 + X | cluster), data = p$d)
+  expect_error(extract_pair(list(m = m_slope, y = p$y)),
+               "mediator model has no random intercept")
+})
+
+test_that("treatment varying within a cluster is a 1-1-1 design and errors", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 10, sizes = 6, seed = 3)$data
+  dat$X <- rep(c(0, 1), length.out = nrow(dat))
+  p <- lmer_pair(dat)
+  expect_error(extract_pair(p), "varies within clusters; 1-1-1 designs")
+})
+
+test_that("different rows, cluster vectors or treatment vectors error (D12)", {
+  skip_if_not_installed("lme4")
+  p <- lmer_pair()
+  # Different number of rows: the outcome model drops a row with a missing Y.
+  d_na <- p$d
+  d_na$Y[3] <- NA
+  y_na <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), data = d_na)
+  expect_error(extract_pair(list(m = p$m, y = y_na)),
+               "same rows and the same cluster vector")
+  # Same number of rows, cluster ids in a different order.
+  d_perm <- p$d[c(2:nrow(p$d), 1), ]
+  y_perm <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), data = d_perm)
+  expect_error(extract_pair(list(m = p$m, y = y_perm)),
+               "same rows and the same cluster vector")
+  # Same clusters, a different treatment vector.
+  d_x <- p$d
+  d_x$X <- ifelse(as.integer(d_x$cluster) %% 2 == 0, 1 - d_x$X, d_x$X)
+  y_x <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | cluster), data = d_x)
+  expect_error(extract_pair(list(m = p$m, y = y_x)), "treatment `X` differs")
+  # The treatment column must exist in both models.
+  expect_error(
+    extract_mediation(p$m, model_y = p$y, treatment = "Z", mediator = "M"),
+    "Treatment `Z` is not a variable"
+  )
+})
+
+test_that("vcov_fun and se_type = 'kr' are refused on the lmer method (P1)", {
+  skip_if_not_installed("lme4")
+  p <- lmer_pair()
+  expect_error(extract_pair(p, vcov_fun = stats::vcov), "`vcov_fun` is not used")
+  expect_error(extract_pair(p, se_type = "kr"), "arrives with the fit engine")
+  expect_error(extract_pair(p, se_type = "sandwich"), "should be one of")
+})
