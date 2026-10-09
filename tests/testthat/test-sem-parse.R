@@ -9,7 +9,7 @@ par_cols <- c("lhs", "op", "rhs", "level", "fixed", "label", "start", "lower", "
 # lavaan's parse as our table: the `level:` rows dropped, character columns
 # numeric, then the same folding applied to its constraint list.
 sem_parse_oracle <- function(model) {
-  skip_if_not_installed("lavaan")
+  testthat::skip_if_not_installed("lavaan")
   lav <- lavaan::lavParseModelString(model, as.data.frame. = TRUE)
   lav <- lav[lav$op != ":", , drop = FALSE]
   num <- function(x) {
@@ -37,10 +37,10 @@ strip_ws <- function(x) gsub("\\s", "", x)
 expect_matches_lavaan <- function(model, info = NULL) {
   ours <- .sem_parse(model)
   ref <- sem_parse_oracle(model)
-  expect_equal(ours$parameters[, par_cols], ref$parameters[, par_cols], ignore_attr = TRUE, info = info)
-  expect_equal(strip_ws(ours$constraints$op), strip_ws(ref$constraints$op), info = info)
-  expect_equal(strip_ws(ours$constraints$lhs), strip_ws(ref$constraints$lhs), info = info)
-  expect_equal(strip_ws(ours$constraints$rhs), strip_ws(ref$constraints$rhs), info = info)
+  testthat::expect_equal(ours$parameters[, par_cols], ref$parameters[, par_cols], ignore_attr = TRUE, info = info)
+  testthat::expect_equal(strip_ws(ours$constraints$op), strip_ws(ref$constraints$op), info = info)
+  testthat::expect_equal(strip_ws(ours$constraints$lhs), strip_ws(ref$constraints$lhs), info = info)
+  testthat::expect_equal(strip_ws(ours$constraints$rhs), strip_ws(ref$constraints$rhs), info = info)
 }
 
 core_models <- list(
