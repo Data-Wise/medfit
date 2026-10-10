@@ -32,6 +32,15 @@
   standard errors with `sampling.weights` (to 1e-6 and 1e-5), so it is a few
   percent narrower than the glm engine's HC3 default at moderate n, a gap that
   shrinks like 1/n. `logLik()` is not defined for a weighted fit.
+* `mbco_sem(fit, a, b)` tests the indirect effect in a `fit_sem()` fit as the
+  minimum of two likelihood-ratio tests: it refits with `a == 0` and with
+  `b == 0` (two linear solves), takes the smaller diffLL as the statistic, and
+  refers it to chi-square with one degree of freedom. The result is an `htest`
+  that also carries both diffLL values. It reproduces OpenMx's diffLL on
+  RMediation's `memory_exp` to 1e-6 (221.045546 and 0.083100) and lavaan's
+  constrained fits on a latent-mediator model. A fit with sampling weights is
+  refused. The nonlinear `a*b == 0` is deliberately not solved: a nonlinear
+  solver can stop at the branch with the larger statistic.
 * Not yet supported by the native engine: mean structures (free intercepts), the four-way
   decomposition (it needs the mediator intercept; use `decomposition =
   "two_way"`), standardized estimates, multilevel models, and nonlinear

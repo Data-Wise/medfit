@@ -42,6 +42,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | IPW weights | `fit_mediation(weights = , se_type = "sandwich")` |
 | Model syntax and data (observed or latent variables, constraints, `:=`) | `fit_sem(model, data)`, a `SEMFit` |
 | Model syntax, mediator by name | `fit_mediation(engine = "native", model = , treatment = , mediator = )` |
+| Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")` |
 
 ## Which object
 
