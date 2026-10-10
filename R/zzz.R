@@ -48,6 +48,7 @@
   S7::S4_register(JointMediationData)
   S7::S4_register(ClusterMediationData)
   S7::S4_register(BootstrapResult)
+  S7::S4_register(SEMFit)
 
   # Register S7 methods for dispatch
   # This is required for methods on generics from other packages
