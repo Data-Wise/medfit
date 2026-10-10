@@ -113,10 +113,14 @@
 .sem_constraint_tol <- 1e-6
 .sem_sign_tol <- -1e-3
 
-.sem_gate_projected <- function(theta, status, ram, smp, lb, ub, cons) {
-  out <- list(accepted = FALSE, status = status, decrement = NA_real_, min_eig = NA_real_,
-              active = rep(FALSE, length(theta)), reason = "", multipliers = NULL, sign_check = "ok",
-              sign_warnings = character())
+# Everything the gate and the covariance need about the active set at `theta`,
+# in the solver's natural units x = theta / u. `z` is an orthonormal basis (in x
+# coordinates, over the coordinates not at a bound) of the directions that keep
+# every active constraint and bound; `z_theta` is the same basis embedded in the
+# full parameter vector and mapped back to theta units (zero rows for coordinates
+# at a bound). Bound-active coordinates are eliminated first, so a fit with
+# bounds only reduces to the coordinate subset the unconstrained gate uses.
+.sem_active_set <- function(theta, ram, smp, lb, ub, cons) {
   u <- .sem_step_floor(ram, smp)
   rows <- rbind(cons$eq$A, cons$ineq$A)
   bvec <- c(cons$eq$b, cons$ineq$b)
@@ -126,9 +130,35 @@
   len <- sqrt(rowSums(ax^2))
   cval <- as.vector(rows %*% theta) + bvec
   dist <- ifelse(is_eq, abs(cval), pmax(0, cval)) / len
-  violated <- if (length(dist) && any(dist > .sem_constraint_tol)) {
-    j <- which.max(dist)
-    sprintf("constraint '%s' is violated by %.2e in natural units", text[j], dist[j])
+  at_lb <- (theta - lb) / u <= .sem_bound_window
+  at_ub <- (ub - theta) / u <= .sem_bound_window
+  free <- !(at_lb | at_ub)
+  active_row <- is_eq | (cval / len >= -.sem_bound_window)
+
+  g_act <- ax[active_row, free, drop = FALSE]
+  g_act <- g_act[sqrt(rowSums(g_act^2)) > 1e-12, , drop = FALSE]
+  g_act <- g_act / sqrt(rowSums(g_act^2))
+  nf <- sum(free)
+  if (nrow(g_act) == 0L) {
+    z <- diag(nf)
+  } else {
+    sv <- svd(g_act, nu = 0L, nv = nf)
+    z <- sv$v[, seq_len(nf)[-seq_len(sum(sv$d > 1e-8))], drop = FALSE]
+  }
+  z_theta <- matrix(0, length(theta), ncol(z))
+  z_theta[free, ] <- z * u[free]
+  list(u = u, ax = ax, is_eq = is_eq, text = text, dist = dist, at_lb = at_lb, at_ub = at_ub, free = free,
+       active_row = active_row, z = z, z_theta = z_theta)
+}
+
+.sem_gate_projected <- function(theta, status, ram, smp, lb, ub, cons) {
+  out <- list(accepted = FALSE, status = status, decrement = NA_real_, min_eig = NA_real_,
+              active = rep(FALSE, length(theta)), reason = "", multipliers = NULL, sign_check = "ok",
+              sign_warnings = character())
+  act <- .sem_active_set(theta, ram, smp, lb, ub, cons)
+  violated <- if (length(act$dist) && any(act$dist > .sem_constraint_tol)) {
+    j <- which.max(act$dist)
+    sprintf("constraint '%s' is violated by %.2e in natural units", act$text[j], act$dist[j])
   }
   if (!isTRUE(status %in% .sem_ok_status)) {
     out$reason <- paste(c(sprintf("nloptr status %s is not a success code", status), violated), collapse = "; ")
@@ -143,44 +173,27 @@
     out$reason <- "implied covariance is not positive definite"
     return(out)
   }
-  at_lb <- (theta - lb) / u <= .sem_bound_window
-  at_ub <- (ub - theta) / u <= .sem_bound_window
-  out$active <- at_lb | at_ub
-  free <- !out$active
-  active_row <- is_eq | (cval / len >= -.sem_bound_window)
-
-  hx <- .sem_hess_f(theta, ram, smp) * outer(u, u)
-  gx <- r$g * u
+  out$active <- !act$free
+  hx <- .sem_hess_f(theta, ram, smp) * outer(act$u, act$u)
+  gx <- r$g * act$u
   if (!all(is.finite(hx))) {
     out$reason <- "the Hessian is not finite"
     return(out)
   }
-
-  # Null space of the active rows on the coordinates that are not at a bound.
-  g_act <- ax[active_row, free, drop = FALSE]
-  g_act <- g_act[sqrt(rowSums(g_act^2)) > 1e-12, , drop = FALSE]
-  g_act <- g_act / sqrt(rowSums(g_act^2))
-  nf <- sum(free)
-  if (nrow(g_act) == 0L) {
-    z <- diag(nf)
-    rank_act <- 0L
-  } else {
-    sv <- svd(g_act, nu = 0L, nv = nf)
-    rank_act <- sum(sv$d > 1e-8)
-    z <- sv$v[, seq_len(nf)[-seq_len(rank_act)], drop = FALSE]
-  }
-  if (ncol(z) == 0L) {
+  if (ncol(act$z) == 0L) {
     out$decrement <- 0
     out$accepted <- TRUE
   } else {
-    red <- .sem_reduced_stationarity(crossprod(z, hx[free, free, drop = FALSE] %*% z), crossprod(z, gx[free]))
+    free <- act$free
+    red <- .sem_reduced_stationarity(crossprod(act$z, hx[free, free, drop = FALSE] %*% act$z),
+                                     crossprod(act$z, gx[free]))
     out$min_eig <- red$min_eig
     out$decrement <- red$decrement
     out$reason <- red$reason
     out$accepted <- red$accepted
   }
   if (out$accepted) {
-    out <- .sem_sign_check(out, ax, active_row, is_eq, text, at_lb, at_ub, ram, hx, gx)
+    out <- .sem_sign_check(out, act$ax, act$active_row, act$is_eq, act$text, act$at_lb, act$at_ub, ram, hx, gx)
   }
   out
 }
