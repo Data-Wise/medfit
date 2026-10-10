@@ -73,7 +73,7 @@
     list(
       vcov = vc, defined = defined, constraints = parsed$constraints,
       active_constraints = act$text[act$active_row], information = information, ram = ram, table = conv$table,
-      par_map = conv$par_map, se_type = se_type, weights = smp$w,
+      par_map = conv$par_map, se_type = se_type, weights = smp$w, n_starts = n_starts, control = control,
       partable = .sem_to_partable(conv$table), data = x, n_obs = smp$n, n_dropped = n_dropped, df = df,
       eq_rank = eq_rank
     )
