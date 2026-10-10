@@ -231,6 +231,79 @@ test_that("fit_sem() accepts an equality beside an inequality", {
   expect_lte(unname(fit@theta[["b"]] + fit@theta[["cp"]]), 0.3 + 1e-6)
 })
 
+# --- Redundant equalities --------------------------------------------------------------
+# Linearly dependent equality rows (a duplicate, `a == b` with `b == a`, a transitive triple) made SLSQP stop
+# with status -4, so the fit failed although the constraints are consistent. The solver now gets an
+# independent subset of the equality rows; the acceptance gate and the covariance keep every row.
+
+redundant_cases <- c("a == b\na == b", "a == b\nb == a", "a == b\na - b == 0", "a == b\nb == cp\na == cp",
+                     "a == 0\nb == 0\na + b == 0")
+
+test_that("the independent subset keeps the first independent rows and drops the dependent ones", {
+  q <- 3L
+  eq <- function(...) {
+    rows <- list(...)
+    a <- do.call(rbind, lapply(rows, function(r) r / sqrt(sum(r^2))))
+    list(A = a, b = rep(0, length(rows)), text = paste0("row", seq_along(rows)))
+  }
+  keep <- function(e) .sem_independent_rows(e)$text
+  expect_identical(keep(eq(c(1, -1, 0))), "row1")
+  expect_identical(keep(eq(c(1, -1, 0), c(-1, 1, 0))), "row1")
+  expect_identical(keep(eq(c(1, -1, 0), c(0, 1, -1), c(1, 0, -1))), c("row1", "row2"))
+  expect_identical(keep(eq(c(1, 0, 0), c(0, 1, 0), c(1, 1, 0))), c("row1", "row2"))
+  # independent rows pass through unchanged, and so does the empty set
+  indep <- eq(c(1, 0, 0), c(0, 1, 0), c(0, 0, 1))
+  expect_identical(.sem_independent_rows(indep), indep)
+  none <- list(A = matrix(0, 0L, q), b = numeric(), text = character())
+  expect_identical(.sem_independent_rows(none), none)
+})
+
+test_that("the solver is handed one Jacobian row per independent equality", {
+  for (extra in redundant_cases) {
+    s <- cons_setup(extra)
+    nl <- .sem_nlopt_constraints(s$cons, rep(1, s$ram$q))
+    rank <- qr(t(s$cons$eq$A), tol = 1e-8)$rank
+    expect_identical(nrow(nl$eval_jac_g_eq(numeric(s$ram$q))), rank, info = extra)
+    expect_lt(rank, nrow(s$cons$eq$A))
+  }
+})
+
+test_that("a redundant set reaches the optimum of the equivalent independent set", {
+  # Same feasible region, so the same optimum. lavaan is not used as the oracle here: 0.7-2 does not converge
+  # on several of these shapes (for `a == 0, b == 0, a + b == 0` it returns its starting values), and 0.7-3
+  # reaches the same estimates but warns that the optimizer has not found a solution on four of the five.
+  same <- list(
+    c("a == b\na == b", "a == b"), c("a == b\nb == a", "a == b"), c("a == b\na - b == 0", "a == b"),
+    c("a == b\nb == cp\na == cp", "a == b\nb == cp"), c("a == 0\nb == 0\na + b == 0", "a == 0\nb == 0")
+  )
+  for (pair in same) {
+    redundant <- cons_solve(cons_setup(pair[1L]))
+    independent <- cons_solve(cons_setup(pair[2L]))
+    expect_equal(redundant, independent, tolerance = 1e-6, info = pair[1L])
+    expect_lt(max(.sem_constraint_residual(redundant, cons_setup(pair[1L])$cons)), 1e-6)
+  }
+})
+
+test_that("fit_sem() converges with a redundant pair of equalities", {
+  fit <- fit_sem(paste0(cons_model, "\na == b\nb == a"), cons_data())
+  expect_true(fit@converged)
+  expect_equal(unname(fit@theta[["a"]]), unname(fit@theta[["b"]]), tolerance = 1e-6)
+})
+
+test_that("contradictory dependent equalities still error naming the violated constraint", {
+  for (extra in c("a == 1\na == 2", "a == 0\nb == 0\na + b == 1")) {
+    s <- cons_setup(extra)
+    expect_error(.sem_optimize(s$ram, s$smp, s$start, constraints = s$cons),
+                 "no start converged.*constraint '[^']+' is violated by", info = extra)
+  }
+})
+
+test_that("planted defect: handing the solver every dependent row reproduces the status -4 failure", {
+  testthat::local_mocked_bindings(.sem_independent_rows = function(eq) eq)
+  s <- cons_setup("a == b\nb == a")
+  expect_error(.sem_optimize(s$ram, s$smp, s$start, constraints = s$cons), "status -4")
+})
+
 test_that("rows scale to the solver's coordinates when preconditioned", {
   s <- cons_setup("a + b == 0.5")
   scaled <- cons_data()
