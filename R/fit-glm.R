@@ -47,7 +47,9 @@
 #'   there, an error with any other engine). `treatment` and `mediator` name
 #'   variables in the syntax; a latent mediator need not be a column of `data`.
 #'   Because `model` is a named argument, an argument passed to [stats::glm()]
-#'   through `...` that partially matches it (`mod = FALSE`) now binds here.
+#'   through `...` that partially matches it (`mod = FALSE`) now binds here and
+#'   is an error with the glm engine; drop it, since `glm()`'s own `model`
+#'   argument cannot be passed through.
 #' @param family_y Family object for outcome model (default: `gaussian()`)
 #' @param family_m Family object for mediator model (default: `gaussian()`)
 #' @param weights Optional numeric vector of case weights (length `nrow(data)`),

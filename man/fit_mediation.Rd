@@ -110,7 +110,9 @@ Required with \code{engine = "lmer"}, an error with the other engines.}
 there, an error with any other engine). \code{treatment} and \code{mediator} name
 variables in the syntax; a latent mediator need not be a column of \code{data}.
 Because \code{model} is a named argument, an argument passed to \code{\link[stats:glm]{stats::glm()}}
-through \code{...} that partially matches it (\code{mod = FALSE}) now binds here.}
+through \code{...} that partially matches it (\code{mod = FALSE}) now binds here and
+is an error with the glm engine; drop it, since \code{glm()}'s own \code{model}
+argument cannot be passed through.}
 
 \item{...}{Additional arguments passed to the fitting function}
 }
