@@ -40,7 +40,7 @@ Every step marked **A#** needs an explicit go from the user; approval of one ste
 | F19 | Codex review, accepted: G11 compared failing test names only, so an already-failing test could gain failed assertions or new errors, and new skips or lost execution were invisible; the CSV omitted failure messages | G11 rewritten: assertion-level comparison, block on any worsening |
 | F20 | Codex review, accepted: G12 let a nonempty diff be "resolved" by rerunning gates against the old worktree and the old `lib-cand`, and lacked a fetch after the merge | G12 rewritten: record the tested tree, fetch, require tree equality, rebuild `lib-cand` from the release tree on any difference; same check again before the release PR |
 
-**Open decision D-fwd (user's call):** after F18, a user who needs `glm(model = FALSE)` through `fit_mediation()` has no route. Recommendation: do not implement forwarding in 0.7.0; correct the text and say so in the `[BREAKING]` issue, since D15 accepted the break and the grep (F11) found no direct caller. Alternative: add and test an explicit forwarding mechanism (code change, new tests, reruns every gate). Default until decided: text fix only.
+**Decided D-fwd (ledger R11, 2026-10-10): text fix only.** No forwarding mechanism in 0.7.0. The NEWS and roxygen correction lands on `fix/model-arg-advice` (`b10789b`), so the bump PR no longer carries it: strike the two checklist rows for NEWS l.66-69 and `R/fit-glm.R`/`man/fit_mediation.Rd` once that PR merges, and rebase the bump branch on the new `dev`.
 
 ## 1. Bump checklist (worktree `~/.git-worktrees/medfit/chore-release-0.7.0`)
 
