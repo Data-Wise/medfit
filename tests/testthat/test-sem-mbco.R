@@ -94,3 +94,15 @@ test_that("inputs the test cannot honor error by name", {
   w <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C", d, sampling_weights = rep(c(1, 2), 100), se_type = "sandwich")
   expect_error(mbco_sem(w, "a", "b"), "sampling weights")
 })
+
+test_that("a model that already has an inequality refits with the appended equality (inactive: same statistic)", {
+  set.seed(11)
+  d <- data.frame(X = stats::rnorm(300))
+  d$M <- 0.5 * d$X + stats::rnorm(300)
+  d$Y <- 0.4 * d$M + 0.2 * d$X + stats::rnorm(300)
+  base <- "M ~ a*X\nY ~ b*M + cp*X"
+  plain <- mbco_sem(fit_sem(base, d), "a", "b")
+  with_ineq <- mbco_sem(fit_sem(paste0(base, "\nb + cp < 5"), d), "a", "b")
+  expect_equal(unname(with_ineq$statistic), unname(plain$statistic), tolerance = 1e-5)
+  expect_equal(with_ineq$tests$diff_ll, plain$tests$diff_ll, tolerance = 1e-5)
+})
