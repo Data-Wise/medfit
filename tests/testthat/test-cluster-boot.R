@@ -157,3 +157,88 @@ test_that("group 8: no relabeling breaks the structural check and shrinks the SE
   expect_lt(mean(ratio_bad), 0.9)
   expect_true(all(ratio_bad < ratio_good))
 })
+
+# --- The few-cluster advisory is not a failed refit ----------------------------------
+# A refit through fit_mediation(engine = "lmer") warns below 25 clusters (model SEs) or below 10 (any SE type).
+# That advisory used to count as a failed refit, so every replicate was discarded and the bootstrap, which the
+# advisory itself recommends, errored.
+
+test_that("the few-cluster advisory carries its own condition class", {
+  expect_warning(medfit:::.warn_few_clusters(20L, "model"), class = "medfit_few_clusters")
+  expect_warning(medfit:::.warn_few_clusters(8L, "kr"), class = "medfit_few_clusters")
+  expect_no_warning(medfit:::.warn_few_clusters(30L, "model"))
+})
+
+test_that("a statistic that raises only the advisory keeps every replicate", {
+  d <- boot_data()
+  stat <- function(x) {
+    warning(warningCondition("advisory", class = "medfit_few_clusters"))
+    mean(x$Y)
+  }
+  # the point estimate on the original data is outside the resampling loop, so its advisory still reaches
+  # the user; no replicate is reported as failed
+  warned <- character()
+  res <- withCallingHandlers(
+    bootstrap_mediation(stat, method = "nonparametric", data = d, n_boot = 30L, seed = 1, cluster = "cluster"),
+    warning = function(w) {
+      warned <<- c(warned, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_identical(res@n_boot, 30L)
+  expect_identical(warned, "advisory")
+})
+
+test_that("any other warning still marks the refit as failed", {
+  d <- boot_data()
+  stat <- function(x) {
+    warning(warningCondition("advisory", class = "medfit_few_clusters"))
+    if (sample.int(2L, 1L) == 1L) warning("did not converge")
+    mean(x$Y)
+  }
+  expect_warning(
+    res <- withCallingHandlers(
+      bootstrap_mediation(stat, method = "nonparametric", data = d,
+                          n_boot = 60L, seed = 2, cluster = "cluster"),
+      medfit_few_clusters = function(w) invokeRestart("muffleWarning")
+    ),
+    "bootstrap samples failed and were excluded"
+  )
+  expect_lt(res@n_boot, 60L)
+  expect_gt(res@n_boot, 10L)
+})
+
+test_that("bootstrapping through fit_mediation() with 20 clusters works", {
+  skip_if_not_installed("lme4")
+  skip_on_cran()
+  set.seed(2026)
+  J <- 20L
+  n <- 10L
+  cl <- rep(seq_len(J), each = n)
+  x_j <- sample(rep(0:1, length.out = J))
+  d <- data.frame(school = factor(cl), X = x_j[cl])
+  d$M <- 0.5 * d$X + stats::rnorm(J, sd = 0.5)[cl] + stats::rnorm(J * n)
+  mbar <- stats::ave(d$M, d$school)
+  d$Y <- 0.2 * d$X + 0.3 * (d$M - mbar) + 0.6 * mbar + stats::rnorm(J, sd = 0.5)[cl] + stats::rnorm(J * n)
+  nie_of <- function(dd) {
+    unname(nie(fit_mediation(Y ~ X + M, M ~ X, data = dd, treatment = "X", mediator = "M",
+                             engine = "lmer", cluster = "school")))
+  }
+  # the point estimate's own advisory is not hidden: the direct fit still warns
+  expect_warning(nie_of(d), class = "medfit_few_clusters")
+  res <- NULL
+  warned <- character()
+  withCallingHandlers(
+    res <- bootstrap_mediation(nie_of, method = "nonparametric", data = d, n_boot = 30L, seed = 123,
+                               cluster = "school"),
+    warning = function(w) {
+      warned <<- c(warned, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  # replicates survive (a singular draw may drop a few), and the advisory is not what dropped them: it is
+  # seen once, from the point estimate on the original data, not once per replicate
+  expect_gte(res@n_boot, 25L)
+  expect_identical(sum(grepl("fewer than 25", warned)), 1L)
+  expect_true(is.finite(res@ci_lower) && is.finite(res@ci_upper))
+})

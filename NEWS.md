@@ -46,6 +46,18 @@
   "two_way"`), standardized estimates, multilevel models, and nonlinear
   constraints.
 
+## Bug fixes
+
+* `bootstrap_mediation(cluster = )` no longer discards every replicate when the
+  statistic refits through `fit_mediation(engine = "lmer")` with fewer than 25
+  clusters. The few-cluster warning (fewer than 25 clusters with model-based
+  standard errors, or fewer than 10 with any standard error) was counted as a
+  failed refit, so the bootstrap that the warning recommends stopped with "Too
+  many bootstrap samples failed". The warning now has the condition class
+  `medfit_few_clusters` and is not counted; the point estimate on the original
+  data still shows it once. In 0.6.0, `se_type = "kr"` with 10 or more clusters
+  avoids the warning and so avoids the failure.
+
 ## Behavior change
 
 * `fit_mediation()` has a new named argument `model`. An argument passed to

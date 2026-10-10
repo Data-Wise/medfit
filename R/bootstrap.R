@@ -478,6 +478,8 @@ bootstrap_mediation <- function(statistic_fn,
 #' only for resampling whole clusters), relabels them, and refits. A refit
 #' that is singular or warns about convergence counts as a failure (D14): it is
 #' excluded, its messages are suppressed, and the count goes into the warning.
+#' The few-cluster advisory (class `medfit_few_clusters`) is muffled without
+#' counting, since resampling a handful of clusters is what it recommends.
 #'
 #' @inheritParams .bootstrap_nonparametric
 #' @return BootstrapResult object
@@ -495,7 +497,9 @@ bootstrap_mediation <- function(statistic_fn,
     est <- withCallingHandlers(
       tryCatch(statistic_fn(boot_data), error = function(e) NA_real_),
       warning = function(w) {
-        flagged <<- TRUE
+        # The few-cluster advisory (extract-lmer.R) is not a failed refit: a cluster bootstrap exists
+        # because of it, and counting it would discard every replicate below 25 clusters.
+        if (!inherits(w, "medfit_few_clusters")) flagged <<- TRUE
         invokeRestart("muffleWarning")
       },
       message = function(m) {
