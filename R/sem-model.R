@@ -173,7 +173,7 @@
 }
 
 # Degrees of freedom of the covariance structure: observed moments minus free parameters.
-.sem_df <- function(ram) {
+.sem_df <- function(ram, eq_rank = 0L) {
   p <- length(ram$obs_idx)
-  p * (p + 1) / 2 - ram$q
+  p * (p + 1) / 2 - (ram$q - eq_rank)
 }

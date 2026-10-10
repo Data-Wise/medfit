@@ -83,6 +83,16 @@
   )
 }
 
+# Rank of the equality rows: how many free parameters the equalities remove. A dependent row (a duplicate,
+# `a == b` with `b == a`) removes none, so this is not the row count.
+.sem_rank_tol <- 1e-8
+.sem_eq_rank <- function(eq) {
+  if (is.null(eq) || nrow(eq$A) == 0L) {
+    return(0L)
+  }
+  qr(t(eq$A), tol = .sem_rank_tol)$rank
+}
+
 # The equality rows the solver can be given: an independent subset, in the original order. A linearly
 # dependent set (a duplicate, `a == b` with `b == a`, a transitive triple) gives SLSQP a rank-deficient
 # Jacobian and it stops with status -4, although the constraints are consistent. A dependent row dropped here
@@ -93,7 +103,7 @@
   if (nrow(eq$A) < 2L) {
     return(eq)
   }
-  dec <- qr(t(eq$A), tol = 1e-8)
+  dec <- qr(t(eq$A), tol = .sem_rank_tol)
   if (dec$rank == nrow(eq$A)) {
     return(eq)
   }

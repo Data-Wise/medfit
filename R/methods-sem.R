@@ -55,7 +55,13 @@ S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_lint
   ram <- object@internals$ram
   smp <- .sem_sample(object@data, ram)
   ll <- -0.5 * smp$n * (object@f + smp$logdet + smp$p + smp$p * log(2 * pi))
-  structure(ll, df = length(object@theta) + smp$p, nobs = smp$n, class = "logLik")
+  structure(ll, df = .sem_n_free(object) + smp$p, nobs = smp$n, class = "logLik")
+}
+
+# Effective number of free parameters: the parameter vector minus what the explicit equalities remove.
+# A fit stored before that rank was recorded counts every element of `theta`.
+.sem_n_free <- function(object) {
+  length(object@theta) - (object@internals$eq_rank %||% 0L)
 }
 
 # Row names for the parameter table: the label when there is one, otherwise `lhs op rhs`.
@@ -69,7 +75,7 @@ S7::method(print, SEMFit) <- function(x, ...) {
   cat(sprintf("  Observations:  %d", x@n_obs))
   if (x@n_dropped > 0L) cat(sprintf(" (%d dropped for missing values)", x@n_dropped))
   cat("\n")
-  cat(sprintf("  Parameters:    %d free, %s df\n", length(x@theta), format(x@df)))
+  cat(sprintf("  Parameters:    %d free, %s df\n", .sem_n_free(x), format(x@df)))
   cat(sprintf("  Information:   %s\n", x@information))
   if (!is.null(x@diagnostics$se_type)) {
     se_label <- if (x@diagnostics$se_type == "sandwich") "sandwich (robust)" else "model-based"
