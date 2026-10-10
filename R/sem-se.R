@@ -11,16 +11,30 @@
 # central difference limits the rank to about 1e-10). Provisional until S6.
 .sem_info_singular_tol <- 1e-8
 
-.sem_vcov <- function(theta, ram, smp, information = c("observed", "expected")) {
+# `cons` (from `.sem_constraint_rows()`) and the bounds `lb`, `ub` enter as the
+# active set at `theta`: the covariance is projected onto the directions that keep
+# every active equality, active inequality (as an equality) and active bound,
+# V = Z (Z' I Z)^-1 Z' with Z the null-space basis from `.sem_active_set()` (spec
+# Q5). With nothing active Z spans everything and the plain inverse is used, so an
+# unconstrained fit is unchanged. A pinned coordinate gets zero variance.
+.sem_vcov <- function(theta, ram, smp, information = c("observed", "expected"), cons = NULL,
+                      lb = rep(-Inf, ram$q), ub = rep(Inf, ram$q)) {
   information <- match.arg(information)
   info <- if (information == "observed") {
     .sem_info_observed(theta, ram, smp)
   } else {
     .sem_info_expected(theta, ram, smp)
   }
-  d <- if (all(is.finite(info))) 1 / sqrt(diag(info)) else NA_real_
-  vc <- if (all(is.finite(d)) && rcond(info * outer(d, d)) > .sem_info_singular_tol) {
-    tryCatch(solve(info), error = function(e) NULL)
+  act <- .sem_active_set(theta, ram, smp, lb, ub, if (is.null(cons)) .sem_no_cons(ram$q) else cons)
+  pinned <- !all(act$free) || any(act$active_row)
+  z <- if (pinned) act$z_theta else NULL
+  vc <- if (is.null(z)) {
+    .sem_invert_info(info)
+  } else if (ncol(z) == 0L) {
+    matrix(0, ram$q, ram$q)
+  } else {
+    red <- .sem_invert_info(crossprod(z, info %*% z))
+    if (is.null(red)) NULL else z %*% red %*% t(z)
   }
   if (is.null(vc)) {
     warning("information matrix is singular; the model may not be identified", call. = FALSE)
@@ -28,4 +42,54 @@
   }
   dimnames(vc) <- list(ram$par_names, ram$par_names)
   (vc + t(vc)) / 2
+}
+
+# Inverse of an information matrix, or NULL when it is not finite or singular
+# (Jacobi-scaled reciprocal condition number at or below `.sem_info_singular_tol`).
+.sem_invert_info <- function(info) {
+  d <- if (all(is.finite(info))) 1 / sqrt(diag(info)) else NA_real_
+  if (all(is.finite(d)) && rcond(info * outer(d, d)) > .sem_info_singular_tol) {
+    tryCatch(solve(info), error = function(e) NULL)
+  }
+}
+
+# Defined parameters (`:=`): value and delta-method standard error at the
+# estimates. Each definition has its other definitions substituted, is evaluated
+# at the labelled free parameters, and differentiated by central differences with
+# step eps^(1/3) * max(|x|, 1), SE = sqrt(g' V g). `V` is the covariance of the
+# estimates (projected when constraints are active). A definition that uses no
+# parameter has zero SE.
+.sem_defined <- function(constraints, theta, vcov) {
+  d <- constraints[constraints$op == ":=", , drop = FALSE]
+  out <- data.frame(name = d$lhs, expr = d$rhs, est = rep(NA_real_, nrow(d)), se = rep(NA_real_, nrow(d)),
+                    stringsAsFactors = FALSE)
+  if (!nrow(d)) {
+    return(out)
+  }
+  defs <- .sem_defs(stats::setNames(d$rhs, d$lhs))
+  for (i in seq_len(nrow(d))) {
+    tree <- .sem_expr_subst(defs[[i]], defs)
+    labels <- all.vars(tree)
+    unknown <- setdiff(labels, names(theta))
+    if (length(unknown)) {
+      stop("defined parameter '", d$lhs[i], "' refers to '", unknown[1L], "', which is not a free parameter",
+           call. = FALSE)
+    }
+    x <- theta[labels]
+    out$est[i] <- .sem_expr_value(tree, x, d$rhs[i])
+    if (!length(labels)) {
+      out$se[i] <- 0
+      next
+    }
+    g <- vapply(seq_along(labels), function(k) {
+      h <- .Machine$double.eps^(1 / 3) * max(abs(x[[k]]), 1)
+      up <- dn <- x
+      up[[k]] <- x[[k]] + h
+      dn[[k]] <- x[[k]] - h
+      (.sem_expr_value(tree, up, d$rhs[i]) - .sem_expr_value(tree, dn, d$rhs[i])) / (2 * h)
+    }, numeric(1))
+    v <- vcov[labels, labels, drop = FALSE]
+    out$se[i] <- if (anyNA(v)) NA_real_ else sqrt(max(0, as.numeric(crossprod(g, v %*% g))))
+  }
+  out
 }

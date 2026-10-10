@@ -64,6 +64,12 @@
   list(eq = pick(TRUE), ineq = pick(FALSE))
 }
 
+# The empty constraint set, for code that always wants a `cons` list.
+.sem_no_cons <- function(q) {
+  none <- list(A = matrix(0, 0L, q), b = numeric(), text = character())
+  list(eq = none, ineq = none)
+}
+
 # Residual of the constraints at `theta`: equalities in absolute value, inequalities
 # by how far they are violated (zero when satisfied). Rows are unit length, so the
 # residual is in parameter units.
