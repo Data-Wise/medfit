@@ -11,6 +11,8 @@
 # central difference limits the rank to about 1e-10). Provisional until S6.
 .sem_info_singular_tol <- 1e-8
 
+# `se_type = "sandwich"` replaces the bread-only inverse A^-1 by A^-1 B A^-1 with B from `.sem_scores()`
+# (robust to the weights and to misspecified normality; projected the same way, Z (Z'AZ)^-1 Z'BZ (Z'AZ)^-1 Z').
 # `cons` (from `.sem_constraint_rows()`) and the bounds `lb`, `ub` enter as the
 # active set at `theta`: the covariance is projected onto the directions that keep
 # every active equality, active inequality (as an equality) and active bound,
@@ -18,8 +20,9 @@
 # Q5). With nothing active Z spans everything and the plain inverse is used, so an
 # unconstrained fit is unchanged. A pinned coordinate gets zero variance.
 .sem_vcov <- function(theta, ram, smp, information = c("observed", "expected"), cons = NULL,
-                      lb = rep(-Inf, ram$q), ub = rep(Inf, ram$q)) {
+                      lb = rep(-Inf, ram$q), ub = rep(Inf, ram$q), se_type = c("model", "sandwich")) {
   information <- match.arg(information)
+  se_type <- match.arg(se_type)
   info <- if (information == "observed") {
     .sem_info_observed(theta, ram, smp)
   } else {
@@ -28,13 +31,21 @@
   act <- .sem_active_set(theta, ram, smp, lb, ub, if (is.null(cons)) .sem_no_cons(ram$q) else cons)
   pinned <- !all(act$free) || any(act$active_row)
   z <- if (pinned) act$z_theta else NULL
+  meat <- if (se_type == "sandwich") crossprod(.sem_scores(theta, ram, smp))
   vc <- if (is.null(z)) {
-    .sem_invert_info(info)
+    bread <- .sem_invert_info(info)
+    if (is.null(bread) || is.null(meat)) bread else bread %*% meat %*% bread
   } else if (ncol(z) == 0L) {
     matrix(0, ram$q, ram$q)
   } else {
-    red <- .sem_invert_info(crossprod(z, info %*% z))
-    if (is.null(red)) NULL else z %*% red %*% t(z)
+    bread <- .sem_invert_info(crossprod(z, info %*% z))
+    if (is.null(bread)) {
+      NULL
+    } else if (is.null(meat)) {
+      z %*% bread %*% t(z)
+    } else {
+      z %*% bread %*% crossprod(z, meat %*% z) %*% bread %*% t(z)
+    }
   }
   if (is.null(vc)) {
     warning("information matrix is singular; the model may not be identified", call. = FALSE)

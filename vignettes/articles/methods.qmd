@@ -529,6 +529,27 @@ A singular information matrix gives an `NA` covariance and one warning. Defined
 parameters (`:=`) get delta-method standard errors, $\sqrt{g^\top V g}$, with
 the gradient $g$ taken by central differences over the labels.
 
+**Sampling weights and the sandwich.** With case weights $w_i$ rescaled to sum
+to $n$, the fit minimizes $F_{ML}$ on the weighted mean and the weighted
+covariance (divisor $n$). The robust covariance of $\hat\theta$ is
+$A^{-1} B A^{-1}$, with $A$ the information above and
+$B = \sum_i s_i s_i^\top$ the cross product of the casewise scores
+
+$$
+s_{i,k} = w_i \, \frac{1}{2} \operatorname{tr}\left(\Sigma^{-1} (d_i d_i^\top - \Sigma) \Sigma^{-1} \partial_k \Sigma\right),
+\qquad d_i = x_i - \bar{x}_w .
+$$
+
+The means are free and do not involve $\theta$, so $A$ is block diagonal and only
+the $\theta$ block of $B$ enters. Under constraints the same projection applies,
+$Z (Z^\top A Z)^{-1} Z^\top B Z (Z^\top A Z)^{-1} Z^\top$. The estimator is
+invariant to the scale of the weights and has no leverage correction (HC0): it
+equals `sandwich::vcovHC(type = "HC0")` for each regression equation and
+lavaan's robust standard errors with `sampling.weights`, and is narrower than the
+HC3 default of `fit_mediation(engine = "glm", se_type = "sandwich")` by a factor
+that shrinks like $1/n$. The weighted likelihood is a pseudo likelihood, so
+`logLik()` is not defined for a weighted fit.
+
 **Constraints.** Equality and inequality constraints that are linear in the
 labels become rows $a^\top\theta + b$, normalized to unit length, with constant
 Jacobians for the optimizer (SLSQP through nloptr). A nonlinear constraint is

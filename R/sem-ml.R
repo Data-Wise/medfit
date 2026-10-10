@@ -96,7 +96,7 @@
 
 # Sample covariance object: divisor-n covariance of the observed variables, in
 # the order of `ram$obs`, with its log determinant.
-.sem_sample <- function(data, ram) {
+.sem_sample <- function(data, ram, weights = NULL) {
   checkmate::assert_data_frame(data, min.rows = 1, .var.name = "data")
   checkmate::assert_subset(ram$obs, names(data), .var.name = "obs")
   x <- as.matrix(data[, ram$obs, drop = FALSE])
@@ -105,12 +105,24 @@
   }
   n <- nrow(x)
   p <- ncol(x)
-  s_mat <- stats::cov(x) * (n - 1) / n
+  if (is.null(weights)) {
+    xc <- sweep(x, 2L, colMeans(x))
+    s_mat <- stats::cov(x) * (n - 1) / n
+  } else {
+    # Sampling weights, rescaled to sum to n (so `n` keeps its meaning and the information scales as before):
+    # the weighted mean and the weighted covariance with divisor sum(w), the moments the weighted ML fits.
+    weights <- weights * n / sum(weights)
+    xc <- sweep(x, 2L, colSums(weights * x) / n)
+    s_mat <- crossprod(xc * sqrt(weights)) / n
+    dimnames(s_mat) <- list(colnames(x), colnames(x))
+  }
   ld <- if (n > p && .sem_cov_full_rank(s_mat)) .sem_logdet(s_mat) else NA_real_
   if (is.na(ld)) {
     stop(sprintf("sample covariance matrix is singular (n = %d, p = %d)", n, p), call. = FALSE)
   }
-  list(s = s_mat, n = n, p = p, logdet = ld)
+  # `xc` (the centered observed data) and `w` (the rescaled weights, NULL when unweighted) feed the casewise
+  # scores of the sandwich covariance.
+  list(s = s_mat, n = n, p = p, logdet = ld, xc = xc, w = weights)
 }
 
 # Full rank judged on the correlation scale: the smallest eigenvalue of the

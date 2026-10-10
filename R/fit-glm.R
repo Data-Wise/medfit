@@ -27,7 +27,9 @@
 #'       model syntax given as `model` (see [fit_sem()]); the fit is then
 #'       extracted with [extract_mediation()]. Supports observed and latent
 #'       mediators, equality and inequality constraints, and `:=` parameters.
-#'       Not yet supported: `weights`, `se_type = "sandwich"`.
+#'       Case `weights` and `se_type = "sandwich"` map to [fit_sem()]'s
+#'       `sampling_weights` (weighted maximum likelihood) and its robust
+#'       sandwich covariance.
 #'     \item `"lmer"`: Linear mixed models for a treatment assigned to whole
 #'       clusters (the 2-1-1 design), via the suggested \pkg{lme4} package;
 #'       needs `cluster =` and returns a [ClusterMediationData]. The engine
@@ -58,6 +60,9 @@
 #'   `engine = "lmer"` only, `"kr"` uses the Kenward-Roger adjusted covariance
 #'   and stores a degrees of freedom for each path, so the path intervals are
 #'   t intervals; it needs REML fits and the suggested \pkg{pbkrtest} package.
+#'   With `engine = "native"`, `"sandwich"` is the HC0-type robust covariance
+#'   (see [fit_sem()]), which is smaller than the glm engine's HC3 by a factor
+#'   that shrinks like 1/n.
 #' @param engine_args Named list of engine-specific overrides (default:
 #'   `list()`, no overrides). Ignored by `engine = "glm"`. For
 #'   `engine = "native"`, recognized names are `information`, `n_starts` and
@@ -287,16 +292,9 @@ fit_mediation <- function(formula_y,
   # Nudge: model-based SEs are invalid under IPW. Fire once per session so tight
   # refit loops (e.g. bootstrap) are not spammed.
   if (!is.null(weights) && se_type == "model") {
-    .notify_once(
-      "ipw_model_se",
-      paste0(
-        "medfit: `weights` supplied with `se_type = \"model\"`. ",
-        "Model-based standard errors are not valid under inverse-probability ",
-        "weighting; pass `se_type = \"sandwich\"` for robust (HC) SEs. ",
-        "(Shown once per session.)"
-      )
-    )
+    .notify_ipw_model_se()
   }
+
 
   # Validate that treatment and mediator exist in data
   checkmate::assert_choice(treatment, choices = names(data),

@@ -48,6 +48,10 @@ S7::method(nobs, SEMFit) <- function(object, ...) {
 
 # -2 log L = n * (F + log|S| + p + p log(2 pi)), with S the ML covariance and F the minimized discrepancy.
 S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_linter.
+  if (!is.null(object@internals$weights)) {
+    stop("logLik() is not defined for a fit with sampling weights: the weighted likelihood is a pseudo likelihood",
+         call. = FALSE)
+  }
   ram <- object@internals$ram
   smp <- .sem_sample(object@data, ram)
   ll <- -0.5 * smp$n * (object@f + smp$logdet + smp$p + smp$p * log(2 * pi))
@@ -67,6 +71,10 @@ S7::method(print, SEMFit) <- function(x, ...) {
   cat("\n")
   cat(sprintf("  Parameters:    %d free, %s df\n", length(x@theta), format(x@df)))
   cat(sprintf("  Information:   %s\n", x@information))
+  if (!is.null(x@diagnostics$se_type)) {
+    se_label <- if (x@diagnostics$se_type == "sandwich") "sandwich (robust)" else "model-based"
+    cat(sprintf("  Std. errors:   %s%s\n", se_label, if (!is.null(x@internals$weights)) ", sampling weights" else ""))
+  }
   cat(sprintf("  Converged:     %s\n", ifelse(x@converged, "Yes", "No")))
   act <- c(x@diagnostics$active_bounds, x@diagnostics$active_constraints)
   if (length(act)) cat(sprintf("  Active:        %s\n", paste(act, collapse = ", ")))
@@ -115,6 +123,10 @@ print.summary.SEMFit <- function(x, ...) {
   cat("\n")
   cat(sprintf("Degrees of freedom: %s\n", format(x$df)))
   cat(sprintf("Information: %s\n", x$information))
+  if (!is.null(x$diagnostics$se_type)) {
+    cat(sprintf("Standard errors: %s\n",
+                if (x$diagnostics$se_type == "sandwich") "sandwich (robust)" else "model-based"))
+  }
   cat(sprintf("Converged: %s\n\n", ifelse(x$converged, "Yes", "No")))
   cat("Parameters:\n")
   out <- x$coefficients

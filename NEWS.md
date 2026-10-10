@@ -23,8 +23,16 @@
   the default. Under equality constraints and at active bounds the covariance
   is projected onto the feasible directions, so a constrained parameter has
   zero variance and `a == b` gives the standard error of the collapsed model.
-* Not yet supported by the native engine: sampling weights and
-  `se_type = "sandwich"`, mean structures (free intercepts), the four-way
+* Sampling weights and robust standard errors: `fit_sem(sampling_weights = ,
+  se_type = "sandwich")` fits weighted maximum likelihood on the weighted mean
+  and covariance with the sandwich covariance from casewise scores, and
+  `fit_mediation(engine = "native", weights = , se_type = "sandwich")` takes
+  the same two arguments the glm engine does. The native sandwich is HC0-type:
+  it equals `sandwich::vcovHC(type = "HC0")` per equation and lavaan's robust
+  standard errors with `sampling.weights` (to 1e-6 and 1e-5), so it is a few
+  percent narrower than the glm engine's HC3 default at moderate n, a gap that
+  shrinks like 1/n. `logLik()` is not defined for a weighted fit.
+* Not yet supported by the native engine: mean structures (free intercepts), the four-way
   decomposition (it needs the mediator intercept; use `decomposition =
   "two_way"`), standardized estimates, multilevel models, and nonlinear
   constraints.

@@ -9,7 +9,9 @@ fit_sem(
   data,
   information = c("observed", "expected"),
   n_starts = NULL,
-  control = list()
+  control = list(),
+  sampling_weights = NULL,
+  se_type = c("model", "sandwich")
 )
 }
 \arguments{
@@ -31,6 +33,20 @@ perturbed starts drawn under a fixed seed and never change the caller's
 random number stream.}
 
 \item{control}{List: options passed to the optimizer (\code{nloptr}).}
+
+\item{sampling_weights}{Optional numeric vector of non-negative case weights,
+one per row of \code{data} (\code{NULL}, the default, fits unweighted). The fit is
+weighted maximum likelihood on the weighted mean and covariance; the scale
+of the weights does not matter. Rows dropped for missing values drop their
+weights with them. Use with \code{se_type = "sandwich"}.}
+
+\item{se_type}{Character: \code{"model"} (default) takes the covariance of the
+estimates from the inverse information; \code{"sandwich"} uses the robust
+sandwich covariance \eqn{A^{-1} B A^{-1}}{A^-1 B A^-1} with casewise scores
+(HC0-type: it equals \code{sandwich::vcovHC(type = "HC0")} per equation and
+lavaan's robust standard errors with \code{sampling.weights}, and is smaller
+than the HC3 default of the glm route by a factor that shrinks like
+\eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.}
 }
 \value{
 A \link{SEMFit} object.
