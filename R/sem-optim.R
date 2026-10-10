@@ -119,7 +119,10 @@
 }
 
 # The acceptance gate for one solution (unconstrained fits with bounds).
-.sem_gate <- function(theta, status, ram, smp, lb, ub) {
+.sem_gate <- function(theta, status, ram, smp, lb, ub, cons = NULL) {
+  if (!is.null(cons)) {
+    return(.sem_gate_projected(theta, status, ram, smp, lb, ub, cons))
+  }
   out <- list(accepted = FALSE, status = status, decrement = NA_real_, min_eig = NA_real_,
               active = rep(FALSE, length(theta)), reason = "")
   if (!isTRUE(status %in% .sem_ok_status)) {
@@ -213,7 +216,7 @@
 # merged into the nloptr options. Errors "no start converged" when no start is
 # accepted, naming the best attempt's status and stationarity.
 .sem_optimize <- function(ram, smp, start, lb = rep(-Inf, ram$q), ub = rep(Inf, ram$q),
-                          n_starts = 5L, control = list(), precondition = TRUE) {
+                          n_starts = 5L, control = list(), precondition = TRUE, constraints = NULL) {
   checkmate::assert_numeric(start, len = ram$q, any.missing = FALSE, .var.name = "start")
   checkmate::assert_numeric(lb, len = ram$q, any.missing = FALSE, .var.name = "lb")
   checkmate::assert_numeric(ub, len = ram$q, any.missing = FALSE, .var.name = "ub")
@@ -230,13 +233,14 @@
   attempts <- vector("list", length(starts))
   win <- NA_integer_
   for (i in seq_along(starts)) {
-    res <- tryCatch(.sem_solve_one(starts[[i]], ram, smp, lb, ub, opts, precondition, obj), error = function(e) e)
+    res <- tryCatch(.sem_solve_one(starts[[i]], ram, smp, lb, ub, opts, precondition, obj, constraints),
+                    error = function(e) e)
     if (inherits(res, "error")) {
       attempts[[i]] <- list(accepted = FALSE, status = NA_integer_, decrement = NA_real_, f = Inf,
                             reason = paste("nloptr error:", conditionMessage(res)))
       next
     }
-    gate <- .sem_gate(res$solution, res$status, ram, smp, lb, ub)
+    gate <- .sem_gate(res$solution, res$status, ram, smp, lb, ub, constraints)
     gate$f <- res$objective
     gate$theta <- res$solution
     attempts[[i]] <- gate
@@ -263,10 +267,12 @@
   if (length(improper)) {
     warning("improper solution: ", paste(improper, collapse = "; "), call. = FALSE)
   }
+  for (w in fit$sign_warnings) warning(w, call. = FALSE)
   list(
     theta = stats::setNames(fit$theta, ram$par_names), f = fit$f, status = fit$status,
     decrement = fit$decrement, converged = TRUE, retries = win - 1L,
-    active_bounds = ram$par_names[fit$active], improper = improper, attempts = attempts
+    active_bounds = ram$par_names[fit$active], improper = improper, attempts = attempts,
+    multipliers = fit$multipliers, sign_check = if (is.null(fit$sign_check)) "ok" else fit$sign_check
   )
 }
 

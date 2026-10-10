@@ -155,3 +155,237 @@ test_that("rows scale to the solver's coordinates when preconditioned", {
   # coefficients are scale free, so the same constraint gives the same solution at x1000 data
   expect_equal(cons_solve(big)[c("a", "b", "cp")], cons_solve(s)[c("a", "b", "cp")], tolerance = 1e-5)
 })
+
+# --- S14: acceptance of constrained fits ----------------------------------------
+
+empty_cons <- function(q) {
+  none <- list(A = matrix(0, 0L, q), b = numeric(), text = character())
+  list(eq = none, ineq = none)
+}
+
+# Optimum of the model with `k` pinned at `value` (the others free), the point a stalled solver at a
+# bound would report.
+pin_at <- function(mod, smp, theta, k, value) {
+  q <- mod$ram$q
+  obj <- .sem_objective(mod$ram, smp)
+  fr <- setdiff(seq_len(q), k)
+  x <- theta
+  x[k] <- value
+  o <- stats::nlminb(x[fr], function(z) {
+    y <- x
+    y[fr] <- z
+    obj$f(y)
+  }, function(z) {
+    y <- x
+    y[fr] <- z
+    obj$g(y)[fr]
+  }, control = list(rel.tol = 1e-14))
+  x[fr] <- o$par
+  x
+}
+
+test_that("the projected gate accepts the constrained optimum, an active inequality, and reports the bound", {
+  s <- cons_setup("a + b == 0.5")
+  fit <- .sem_optimize(s$ram, s$smp, s$start, constraints = s$cons)
+  expect_true(fit$converged)
+  expect_lt(fit$decrement, .sem_stat_tol)
+  expect_equal(fit$theta[["a"]] + fit$theta[["b"]], 0.5, tolerance = 1e-8)
+  expect_identical(fit$sign_check, "ok")
+  # a real active <= : unconstrained a + b is 0.93, so a cap of 0.5 binds with a correct-sign multiplier
+  expect_no_warning(le <- .sem_optimize(cons_setup("a + b < 0.5")$ram, s$smp, s$start,
+                                        constraints = cons_setup("a + b < 0.5")$cons))
+  expect_gt(le$multipliers$lambda, 0)
+  expect_true(le$multipliers$signed)
+  # a real active >= : a - b is 0.128 unconstrained, so a floor of 0.2 binds with a correct-sign multiplier
+  ge_s <- cons_setup("a - b > 0.2")
+  expect_no_warning(ge <- .sem_optimize(ge_s$ram, ge_s$smp, ge_s$start, constraints = ge_s$cons))
+  expect_gt(ge$multipliers$lambda, 0)
+  expect_equal(ge$theta[["a"]] - ge$theta[["b"]], 0.2, tolerance = 1e-8)
+  # an inactive inequality is not in the multiplier table
+  inact <- cons_setup("a + b < 5")
+  expect_null(.sem_optimize(inact$ram, inact$smp, inact$start, constraints = inact$cons)$multipliers)
+})
+
+test_that("wrong-sign multiplier: the equality solution judged against the other side warns, not rejects", {
+  eq <- cons_setup("a + b == 0.5")
+  th <- .sem_optimize(eq$ram, eq$smp, eq$start, constraints = eq$cons)$theta
+  # a + b >= 0.5 is active at this point, but F falls toward the unconstrained optimum a + b = 0.93, which
+  # is feasible: moving into the feasible region lowers the objective.
+  ge <- cons_setup("a + b > 0.5")
+  g <- .sem_gate(th, 1L, ge$ram, ge$smp, rep(-Inf, ge$ram$q), rep(Inf, ge$ram$q), ge$cons)
+  expect_true(g$accepted)
+  expect_length(g$sign_warnings, 1L)
+  expect_match(
+    g$sign_warnings,
+    "constraint a \\+ b > 0.5 is active, but moving into the feasible region would lower the objective"
+  )
+  expect_lt(g$multipliers$scaled, .sem_sign_tol)
+  # through the optimizer the fit is kept and the warning is raised once
+  u <- .sem_step_floor(ge$ram, ge$smp)
+  testthat::local_mocked_bindings(
+    .sem_nlopt = function(x0, eval_f, eval_grad_f, lb, ub, opts, constraints = NULL) {
+      list(solution = unname(th) / u, status = 3L, objective = 0)
+    }
+  )
+  expect_warning(fit <- .sem_optimize(ge$ram, ge$smp, ge$start, constraints = ge$cons, n_starts = 1L),
+                 "moving into the feasible region would lower the objective")
+  expect_true(fit$converged)
+})
+
+test_that("planted defect: a flipped sign convention warns on a correct active inequality", {
+  s <- cons_setup("a + b < 0.5")
+  orig <- .sem_sign_check
+  testthat::local_mocked_bindings(
+    .sem_sign_check = function(out, ax, ...) orig(out, -ax, ...)
+  )
+  expect_warning(.sem_optimize(s$ram, s$smp, s$start, constraints = s$cons), "moving into the feasible region")
+})
+
+test_that("a rank-deficient active set skips the sign check and says so, with no warning and no error", {
+  s <- cons_setup("a + b < 0.2\n2*a + 2*b < 0.4")
+  expect_no_warning(fit <- .sem_optimize(s$ram, s$smp, s$start, constraints = s$cons))
+  expect_identical(fit$sign_check, "skipped: the active constraints are linearly dependent")
+  expect_null(fit$multipliers)
+  expect_lte(fit$theta[["a"]] + fit$theta[["b"]], 0.2 + 1e-8)
+})
+
+test_that("stubbed solver results get exact verdicts", {
+  s <- cons_setup("a + b == 0.5")
+  th <- .sem_optimize(s$ram, s$smp, s$start, constraints = s$cons)$theta
+  inf <- rep(Inf, s$ram$q)
+  gate <- function(theta, status = 1L) .sem_gate(theta, status, s$ram, s$smp, -inf, inf, s$cons)
+  for (st in c(1L, 3L, 4L)) expect_true(gate(th, st)$accepted, info = st)
+  five <- gate(th, 5L)
+  expect_false(five$accepted)
+  expect_match(five$reason, "nloptr status 5 is not a success code")
+  # a point 1e-3 off the constraint is rejected, naming the constraint
+  off <- th
+  off[["a"]] <- off[["a"]] + 1e-3
+  expect_match(gate(off)$reason, "constraint 'a \\+ b == 0.5' is violated by")
+  # feasible but not stationary: moved along the constraint
+  along <- th
+  along[["a"]] <- along[["a"]] + 0.05
+  along[["b"]] <- along[["b"]] - 0.05
+  moved <- gate(along)
+  expect_false(moved$accepted)
+  expect_match(moved$reason, "stationarity")
+  # an infeasible stall (status -4) names the constraint too
+  expect_match(gate(off, -4L)$reason, "status -4 is not a success code; constraint 'a \\+ b == 0.5' is violated")
+})
+
+test_that("planted defect: dropping the status test admits a status-5 result", {
+  s <- cons_setup("a + b == 0.5")
+  th <- .sem_optimize(s$ram, s$smp, s$start, constraints = s$cons)$theta
+  inf <- rep(Inf, s$ram$q)
+  expect_false(.sem_gate(th, 5L, s$ram, s$smp, -inf, inf, s$cons)$accepted)
+  testthat::local_mocked_bindings(.sem_ok_status = c(1L, 3L, 4L, 5L))
+  expect_true(.sem_gate(th, 5L, s$ram, s$smp, -inf, inf, s$cons)$accepted)
+})
+
+test_that("planted defect: testing the unprojected gradient rejects the correct constrained fit", {
+  s <- cons_setup("a + b == 0.5")
+  th <- .sem_optimize(s$ram, s$smp, s$start, constraints = s$cons)$theta
+  u <- .sem_step_floor(s$ram, s$smp)
+  r <- .sem_eval(th, s$ram, s$smp, deriv = TRUE)
+  hx <- .sem_hess_f(th, s$ram, s$smp) * outer(u, u)
+  plain <- .sem_reduced_stationarity(hx, r$g * u)
+  expect_false(plain$accepted)
+  expect_gt(plain$decrement, 100 * .sem_stat_tol)
+  expect_lt(.sem_optimize(s$ram, s$smp, s$start, constraints = s$cons)$decrement, .sem_stat_tol)
+})
+
+test_that("a bounded fit is accepted, its bound reported active, and the projected gate agrees with the plain gate", {
+  mod <- sem_model_heywood()
+  smp <- .sem_sample(sem_sim(mod, 50, 10), mod$ram)
+  q <- mod$ram$q
+  is_var <- vapply(strsplit(mod$ram$par_names, " ~~ ", fixed = TRUE),
+                   function(p) length(p) == 2 && p[1] == p[2], logical(1))
+  lb <- ifelse(is_var, 0, -Inf)
+  ub <- rep(Inf, q)
+  fit <- .sem_optimize(mod$ram, smp, pmax(sem_start(mod$ram), lb), lb = lb)
+  plain <- .sem_gate(fit$theta, 1L, mod$ram, smp, lb, ub)
+  proj <- .sem_gate(fit$theta, 1L, mod$ram, smp, lb, ub, empty_cons(q))
+  expect_true(plain$accepted && proj$accepted)
+  expect_identical(proj$active, plain$active)
+  expect_equal(proj$decrement, plain$decrement, tolerance = 1e-8)
+  expect_equal(proj$min_eig, plain$min_eig, tolerance = 1e-8)
+  expect_gt(sum(proj$active), 0)
+  expect_identical(proj$sign_check, "ok")
+  expect_length(proj$sign_warnings, 0L)
+})
+
+test_that("a wrong-side active bound warns in the projected gate (and is rejected in the plain one)", {
+  mod <- sem_model_observed()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  k <- match("Y ~ M", mod$ram$par_names)
+  lb_down <- rep(-Inf, q)
+  lb_down[k] <- fit$theta[k] - 0.3
+  pt <- pin_at(mod, smp, fit$theta, k, lb_down[k])
+  expect_false(.sem_gate(pt, 3L, mod$ram, smp, lb_down, rep(Inf, q))$accepted)
+  g <- .sem_gate(pt, 3L, mod$ram, smp, lb_down, rep(Inf, q), empty_cons(q))
+  expect_true(g$accepted)
+  expect_match(g$sign_warnings, "lower bound of Y ~ M is active")
+  # the true constrained optimum (bound above the unconstrained optimum) has the right sign: no warning
+  lb_up <- rep(-Inf, q)
+  lb_up[k] <- fit$theta[k] + 0.3
+  ok <- .sem_gate(pin_at(mod, smp, fit$theta, k, lb_up[k]), 3L, mod$ram, smp, lb_up, rep(Inf, q), empty_cons(q))
+  expect_true(ok$accepted)
+  expect_length(ok$sign_warnings, 0L)
+})
+
+test_that("planted defect: a wrong bound-row sign gives a false alarm on the correct bounded fit", {
+  mod <- sem_model_observed()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  k <- match("Y ~ M", mod$ram$par_names)
+  lb_up <- rep(-Inf, q)
+  lb_up[k] <- fit$theta[k] + 0.3
+  pt <- pin_at(mod, smp, fit$theta, k, lb_up[k])
+  good <- .sem_gate(pt, 3L, mod$ram, smp, lb_up, rep(Inf, q), empty_cons(q))
+  expect_length(good$sign_warnings, 0L)
+  src <- paste(deparse(.sem_sign_check), collapse = "\n")
+  mut <- sub("e[i] <- -1", "e[i] <- 1", src, fixed = TRUE)
+  expect_false(identical(mut, src))
+  testthat::local_mocked_bindings(.sem_sign_check = eval(parse(text = mut), environment(.sem_sign_check)))
+  bad <- .sem_gate(pt, 3L, mod$ram, smp, lb_up, rep(Inf, q), empty_cons(q))
+  expect_length(bad$sign_warnings, 1L)
+})
+
+test_that("gate verdicts and decrement are identical across data scales for a constrained fit", {
+  # a coefficient constraint (a + b == 0.5) is scale free; a homogeneous variance constraint (v1 == v2)
+  # moves with the variances, so the same row serves every scale
+  for (extra in c("a + b == 0.5", "v1 == v2")) {
+    model <- "M ~ a*X\nY ~ b*M + cp*X\nM ~~ v1*M\nY ~~ v2*Y"
+    s <- cons_setup(extra, model = model)
+    fit <- .sem_optimize(s$ram, s$smp, s$start, constraints = s$cons)
+    inf <- rep(Inf, s$ram$q)
+    decr <- vapply(c(0.01, 1, 100, 1000), function(sc) {
+      smp <- sem_scale_sample(s$smp, sc)
+      th <- fit$theta
+      th[s$ram$k_s] <- th[s$ram$k_s] * sc^2 # variances and covariances, by index (labels hide their names)
+      g <- .sem_gate(th, 1L, s$ram, smp, -inf, inf, s$cons)
+      expect_true(g$accepted, info = paste(extra, sc))
+      g$decrement
+    }, 0)
+    expect_lt(max(abs(decr - decr[2L])), 1e-6)
+  }
+})
+
+test_that("a constrained fit at x1000 data accepts and matches the unit-scale fit", {
+  s1 <- cons_setup("a + b == 0.5")
+  big <- cons_data()
+  big[] <- lapply(big, `*`, 1000)
+  sb <- cons_setup("a + b == 0.5", data = big)
+  f1 <- .sem_optimize(s1$ram, s1$smp, s1$start, constraints = s1$cons)
+  fb <- .sem_optimize(sb$ram, sb$smp, sb$start, constraints = sb$cons)
+  expect_equal(fb$theta[c("a", "b", "cp")], f1$theta[c("a", "b", "cp")], tolerance = 1e-5)
+})
+
+test_that("an infeasible pair errors naming a constraint", {
+  s <- cons_setup("a == 1\na == 2")
+  expect_error(.sem_optimize(s$ram, s$smp, s$start, constraints = s$cons),
+               "no start converged.*constraint 'a == [12]' is violated by")
+})
