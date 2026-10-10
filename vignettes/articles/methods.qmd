@@ -592,6 +592,31 @@ fit <- fit_sem(
 fit@defined
 ```
 
+### Testing the indirect effect: MBCO
+
+`mbco_sem(fit, a, b)` tests $H_0\colon ab = 0$ as the minimum of two
+likelihood-ratio tests (MBCO). It refits the model with $a = 0$ and with
+$b = 0$; each is a linear equality constraint, so each refit is one solve.
+With $F$ the minimized maximum-likelihood discrepancy and $n$ the number of
+rows used,
+
+$$
+D_a = n\,(F_{a=0} - F), \qquad D_b = n\,(F_{b=0} - F), \qquad
+T = \min(D_a, D_b),
+$$
+
+and $T$ is referred to $\chi^2_1$. The nonlinear constraint $ab = 0$ is not
+solved: a nonlinear solver can stop at the branch with the larger statistic
+(OpenMx's does on RMediation's `memory_exp`, reporting 221.05 where the
+minimum is 0.083). A fit with sampling weights is refused, since the weighted
+discrepancy is not a likelihood.
+
+```{r}
+#| label: native-sem-mbco
+#| echo: true
+mbco_sem(fit, "a", "b")
+```
+
 ## References
 
 Falk, C. F., Vogel, T. A., Hammami, S., & Miočević, M. (2024). Multilevel

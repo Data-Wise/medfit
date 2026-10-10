@@ -140,6 +140,7 @@ reference:
       - extract_mediation
       - fit_mediation
       - fit_sem
+      - mbco_sem
       - medfit-syntax
       - bootstrap_mediation
 
