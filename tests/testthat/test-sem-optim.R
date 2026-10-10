@@ -352,6 +352,7 @@ test_that(".sem_with_seed restores the caller's RNG kind and draws, with or with
     RNGkind("Mersenne-Twister", "Inversion", "Rejection")
     set.seed(NULL)
   })
+  # R-devel's RNGkind() adds a fourth element (the binomial generator); the helper restores the first three.
   kinds <- list(c("L'Ecuyer-CMRG", "Inversion", "Rejection"), c("Wichmann-Hill", "Box-Muller", "Rounding"))
   for (k in kinds) {
     # a seed exists
@@ -360,13 +361,13 @@ test_that(".sem_with_seed restores the caller's RNG kind and draws, with or with
     expected <- stats::runif(2)
     set.seed(5)
     invisible(.sem_with_seed(1L, stats::runif(3)))
-    expect_identical(RNGkind(), k)
+    expect_identical(RNGkind()[1:3], k)
     expect_identical(stats::runif(2), expected)
     # a kind chosen but no seed drawn yet
     suppressWarnings(RNGkind(k[1L], k[2L], k[3L]))
     rm(".Random.seed", envir = globalenv())
     invisible(.sem_with_seed(1L, stats::runif(3)))
-    expect_identical(RNGkind(), k)
+    expect_identical(RNGkind()[1:3], k)
     expect_false(exists(".Random.seed", envir = globalenv(), inherits = FALSE))
   }
 })
