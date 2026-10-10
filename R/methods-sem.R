@@ -47,7 +47,7 @@ S7::method(nobs, SEMFit) <- function(object, ...) {
 }
 
 # -2 log L = n * (F + log|S| + p + p log(2 pi)), with S the ML covariance and F the minimized discrepancy.
-S7::method(logLik, SEMFit) <- function(object, ...) {
+S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_linter.
   ram <- object@internals$ram
   smp <- .sem_sample(object@data, ram)
   ll <- -0.5 * smp$n * (object@f + smp$logdet + smp$p + smp$p * log(2 * pi))

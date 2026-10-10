@@ -18,13 +18,16 @@ fit_mediation(
   engine_args = list(),
   m_star = 0,
   cluster = NULL,
+  model = NULL,
   ...
 )
 }
 \arguments{
-\item{formula_y}{Formula for outcome model (e.g., \code{Y ~ X + M + C})}
+\item{formula_y}{Formula for outcome model (e.g., \code{Y ~ X + M + C}). Not used
+with \code{engine = "native"}, which takes \code{model} instead.}
 
-\item{formula_m}{Formula for mediator model (e.g., \code{M ~ X + C})}
+\item{formula_m}{Formula for mediator model (e.g., \code{M ~ X + C}). Not used
+with \code{engine = "native"}.}
 
 \item{data}{Data frame containing all variables}
 
@@ -38,6 +41,11 @@ fit_mediation(
 \item \code{"regmedint"}: Closed-form regression-based (in)direct effects via
 the suggested \pkg{regmedint} package (VanderWeele's regression
 approach, with optional treatment-mediator interaction)
+\item \code{"native"}: medfit's own maximum-likelihood SEM engine, fitted from
+model syntax given as \code{model} (see \code{\link[=fit_sem]{fit_sem()}}); the fit is then
+extracted with \code{\link[=extract_mediation]{extract_mediation()}}. Supports observed and latent
+mediators, equality and inequality constraints, and \verb{:=} parameters.
+Not yet supported: \code{weights}, \code{se_type = "sandwich"}.
 \item \code{"lmer"}: Linear mixed models for a treatment assigned to whole
 clusters (the 2-1-1 design), via the suggested \pkg{lme4} package;
 needs \verb{cluster =} and returns a \link{ClusterMediationData}. The engine
@@ -68,6 +76,10 @@ t intervals; it needs REML fits and the suggested \pkg{pbkrtest} package.}
 
 \item{engine_args}{Named list of engine-specific overrides (default:
 \code{list()}, no overrides). Ignored by \code{engine = "glm"}. For
+\code{engine = "native"}, recognized names are \code{information}, \code{n_starts} and
+\code{control} (passed to \code{\link[=fit_sem]{fit_sem()}}) and \code{outcome}, \code{structure},
+\code{decomposition}, \code{interaction}, \code{a_label}, \code{b_label} and \code{cp_label}
+(passed to \code{\link[=extract_mediation]{extract_mediation()}}); any other name is an error. For
 \code{engine = "lmer"}, recognized names are \code{random_y} and \code{random_m}
 (one-sided formulas of level-1 terms that get correlated random slopes;
 \code{~ M} in \code{random_y} is applied to the within-cluster mediator term) and
@@ -88,6 +100,12 @@ on two-way fits; forward it only when its own caller supplied one.}
 
 \item{cluster}{Character string: name of the cluster variable in \code{data}.
 Required with \code{engine = "lmer"}, an error with the other engines.}
+
+\item{model}{Character string: model syntax for \code{engine = "native"} (required
+there, an error with any other engine). \code{treatment} and \code{mediator} name
+variables in the syntax; a latent mediator need not be a column of \code{data}.
+Because \code{model} is a named argument, an argument passed to \code{\link[stats:glm]{stats::glm()}}
+through \code{...} that partially matches it (\code{mod = FALSE}) now binds here.}
 
 \item{...}{Additional arguments passed to the fitting function}
 }

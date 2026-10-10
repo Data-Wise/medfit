@@ -51,7 +51,6 @@
 .sem_accessors_native <- function(object) {
   checkmate::assert_class(object, "medfit::SEMFit", .var.name = "object")
   tab <- object@table
-  free <- tab[tab$free, , drop = FALSE]
   pm <- object@internals$par_map
   first <- vapply(seq_along(object@theta), function(k) which(pm == k)[1L], integer(1))
   has_label <- !is.na(tab$label[first]) & nzchar(tab$label[first])
