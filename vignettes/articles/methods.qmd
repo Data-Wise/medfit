@@ -608,8 +608,12 @@ $$
 and $T$ is referred to $\chi^2_1$. The nonlinear constraint $ab = 0$ is not
 solved: a nonlinear solver can stop at the branch with the larger statistic
 (OpenMx's does on RMediation's `memory_exp`, reporting 221.05 where the
-minimum is 0.083). A fit with sampling weights is refused, since the weighted
-discrepancy is not a likelihood.
+minimum is 0.083). A fit with sampling weights or one that did not converge is
+refused, since the weighted discrepancy is not a likelihood. If a bound or an
+inequality on the tested path is active at its refit (`a > 0` with the null at
+$a = 0$), the null lies on the boundary of the parameter space, the statistic
+is a mixture of chi-squares, and the function warns that the p-value is not
+valid.
 
 ```{r}
 #| label: native-sem-mbco

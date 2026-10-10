@@ -38,8 +38,11 @@
   refers it to chi-square with one degree of freedom. The result is an `htest`
   that also carries both diffLL values. It reproduces OpenMx's diffLL on
   RMediation's `memory_exp` to 1e-6 (221.045546 and 0.083100) and lavaan's
-  constrained fits on a latent-mediator model. A fit with sampling weights is
-  refused. The nonlinear `a*b == 0` is deliberately not solved: a nonlinear
+  constrained fits on a latent-mediator model. It tests a product of two
+  labeled regression paths, refuses a fit with sampling weights or one that did
+  not converge, has its refits inherit the fit's `n_starts` and `control`, and
+  warns when a bound or an inequality on the tested path puts the null on the
+  boundary of the parameter space. The nonlinear `a*b == 0` is deliberately not solved: a nonlinear
   solver can stop at the branch with the larger statistic.
 * Not yet supported by the native engine: mean structures (free intercepts), the four-way
   decomposition (it needs the mediator intercept; use `decomposition =

@@ -4,25 +4,30 @@
 \alias{mbco_sem}
 \title{Minimum-of-Two Likelihood-Ratio Test for an Indirect Effect (MBCO)}
 \usage{
-mbco_sem(fit, a, b, n_starts = NULL, control = list())
+mbco_sem(fit, a, b, n_starts = NULL, control = NULL)
 }
 \arguments{
 \item{fit}{A \link{SEMFit} from \code{\link[=fit_sem]{fit_sem()}}, fitted without sampling weights.}
 
-\item{a, b}{Character strings: the labels of the two free parameters whose
-product is the indirect effect (for example \code{"a"} and \code{"b"} in
-\code{"M ~ a*X"} and \code{"Y ~ b*M"}). They must be different.}
+\item{a, b}{Character strings: the labels of the two free regression paths
+whose product is the indirect effect (for example \code{"a"} and \code{"b"} in
+\code{"M ~ a*X"} and \code{"Y ~ b*M"}). They must be different, and each must be a
+labeled \code{~} row of the fit; a variance, a loading, an unlabeled path and a
+defined parameter are refused.}
 
 \item{n_starts, control}{Passed to the optimizer for the two refits, as in
-\code{\link[=fit_sem]{fit_sem()}}.}
+\code{\link[=fit_sem]{fit_sem()}}. \code{NULL}, the default, uses the settings \code{fit} was made with,
+so a better optimum in the full fit than in a refit cannot inflate the
+statistic; an explicit value overrides them.}
 }
 \value{
 An object of class \code{c("mbco_sem", "htest")}: \code{statistic} (the
 smaller diffLL), \code{parameter} (\code{df = 1}), \code{p.value}, \code{method},
 \code{data.name}, \code{n_obs}, and \code{tests}, a data frame with one row per refit
 (\code{constraint}, the minimized discrepancy \code{f}, \code{diff_ll} equal to
-\code{n_obs * (f - fit@f)}, and \code{converged}). It prints with the standard
-\code{htest} layout.
+\code{n_obs * (f - fit@f)}, and \code{converged}, always \code{TRUE} because a refit
+that does not converge is an error). It prints with the standard \code{htest}
+layout.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
@@ -39,8 +44,24 @@ statistic.
 }
 \details{
 A fit made with \code{sampling_weights} is refused: the weighted discrepancy is
-not a likelihood, so its difference is not chi-square. A refit that fails
-the acceptance gate of the optimizer is an error rather than a statistic.
+not a likelihood, so its difference is not chi-square. So is a fit that did
+not converge, since its discrepancy is the reference both refits are
+measured against. A refit that fails the acceptance gate of the optimizer is
+an error rather than a statistic.
+
+Inequality constraints in the model matter only when they put the null on
+the boundary of the parameter space. If a bound or an inequality that
+involves the tested parameter is active at its refit (\code{a > 0} with the null
+\code{a = 0}), the function warns that the statistic is a mixture of chi-squares,
+not chi-square(1), and that the p-value is not valid. A bound the null sits
+inside (\code{a < 0.2}), an inactive inequality and one on another parameter are
+not mentioned. A null the constraints rule out (\code{a > 0.3} with the null
+\code{a = 0}) is an error that says so.
+
+Only a product of two labeled paths is tested. A serial indirect effect
+(a product of three paths) or a sum of products is not. If \code{a} and \code{b} are
+tied by an equality (\code{a == b}), the two refits impose the same restriction
+and the two \code{diff_ll} values coincide.
 }
 \examples{
 \donttest{

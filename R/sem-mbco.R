@@ -21,23 +21,44 @@
 #' statistic.
 #'
 #' @param fit A [SEMFit] from [fit_sem()], fitted without sampling weights.
-#' @param a,b Character strings: the labels of the two free parameters whose
-#'   product is the indirect effect (for example `"a"` and `"b"` in
-#'   `"M ~ a*X"` and `"Y ~ b*M"`). They must be different.
+#' @param a,b Character strings: the labels of the two free regression paths
+#'   whose product is the indirect effect (for example `"a"` and `"b"` in
+#'   `"M ~ a*X"` and `"Y ~ b*M"`). They must be different, and each must be a
+#'   labeled `~` row of the fit; a variance, a loading, an unlabeled path and a
+#'   defined parameter are refused.
 #' @param n_starts,control Passed to the optimizer for the two refits, as in
-#'   [fit_sem()].
+#'   [fit_sem()]. `NULL`, the default, uses the settings `fit` was made with,
+#'   so a better optimum in the full fit than in a refit cannot inflate the
+#'   statistic; an explicit value overrides them.
 #'
 #' @return An object of class `c("mbco_sem", "htest")`: `statistic` (the
 #'   smaller diffLL), `parameter` (`df = 1`), `p.value`, `method`,
 #'   `data.name`, `n_obs`, and `tests`, a data frame with one row per refit
 #'   (`constraint`, the minimized discrepancy `f`, `diff_ll` equal to
-#'   `n_obs * (f - fit@f)`, and `converged`). It prints with the standard
-#'   `htest` layout.
+#'   `n_obs * (f - fit@f)`, and `converged`, always `TRUE` because a refit
+#'   that does not converge is an error). It prints with the standard `htest`
+#'   layout.
 #'
 #' @details
 #' A fit made with `sampling_weights` is refused: the weighted discrepancy is
-#' not a likelihood, so its difference is not chi-square. A refit that fails
-#' the acceptance gate of the optimizer is an error rather than a statistic.
+#' not a likelihood, so its difference is not chi-square. So is a fit that did
+#' not converge, since its discrepancy is the reference both refits are
+#' measured against. A refit that fails the acceptance gate of the optimizer is
+#' an error rather than a statistic.
+#'
+#' Inequality constraints in the model matter only when they put the null on
+#' the boundary of the parameter space. If a bound or an inequality that
+#' involves the tested parameter is active at its refit (`a > 0` with the null
+#' `a = 0`), the function warns that the statistic is a mixture of chi-squares,
+#' not chi-square(1), and that the p-value is not valid. A bound the null sits
+#' inside (`a < 0.2`), an inactive inequality and one on another parameter are
+#' not mentioned. A null the constraints rule out (`a > 0.3` with the null
+#' `a = 0`) is an error that says so.
+#'
+#' Only a product of two labeled paths is tested. A serial indirect effect
+#' (a product of three paths) or a sum of products is not. If `a` and `b` are
+#' tied by an equality (`a == b`), the two refits impose the same restriction
+#' and the two `diff_ll` values coincide.
 #'
 #' @examples
 #' \donttest{
@@ -50,18 +71,20 @@
 #'
 #' @seealso [fit_sem()], [SEMFit]
 #' @export
-mbco_sem <- function(fit, a, b, n_starts = NULL, control = list()) {
+mbco_sem <- function(fit, a, b, n_starts = NULL, control = NULL) {
   if (!S7::S7_inherits(fit, SEMFit)) {
     stop("`fit` must be a SEMFit from fit_sem().", call. = FALSE)
   }
   checkmate::assert_string(a, min.chars = 1L, .var.name = "a")
   checkmate::assert_string(b, min.chars = 1L, .var.name = "b")
   checkmate::assert_count(n_starts, positive = TRUE, null.ok = TRUE, .var.name = "n_starts")
-  checkmate::assert_list(control, .var.name = "control")
+  checkmate::assert_list(control, null.ok = TRUE, .var.name = "control")
+  tab <- fit@table
+  paths <- unique(tab$label[tab$free & tab$op == "~" & !is.na(tab$label) & nzchar(tab$label)])
   for (nm in c(a, b)) {
-    if (!(nm %in% names(fit@theta))) {
-      stop(sprintf("'%s' is not a free parameter label of the fit (free labels: %s)", nm,
-                   paste(names(fit@theta), collapse = ", ")), call. = FALSE)
+    if (!(nm %in% paths)) {
+      stop(sprintf("'%s' is not a labeled regression path of the fit (labeled regression paths: %s)", nm,
+                   if (length(paths)) paste(paths, collapse = ", ") else "none"), call. = FALSE)
     }
   }
   if (identical(a, b)) {
@@ -71,15 +94,28 @@ mbco_sem <- function(fit, a, b, n_starts = NULL, control = list()) {
     stop("MBCO is not available for a fit with sampling weights: the weighted discrepancy is not a ",
          "likelihood, so its difference is not chi-square.", call. = FALSE)
   }
+  if (!isTRUE(fit@converged)) {
+    stop("the fit did not converge, so the MBCO statistic is not available: its discrepancy is the ",
+         "reference both refits are measured against.", call. = FALSE)
+  }
+  # The refits use the optimizer settings of the fit, so a better optimum in the full fit than in a refit
+  # cannot inflate the statistic; an explicit argument overrides them.
+  n_starts <- n_starts %||% fit@internals$n_starts %||% 5L
+  control <- control %||% fit@internals$control %||% list()
   constraints <- c(paste(a, "== 0"), paste(b, "== 0"))
-  refit <- lapply(constraints, function(con) {
+  refit <- lapply(c(a, b), function(tested) {
+    con <- paste(tested, "== 0")
     # `fit@data` holds the rows the fit used, already free of missing values: no second deletion.
-    r <- .sem_fit_syntax(paste0(fit@model, "\n", con), fit@data, fit@information,
-                         n_starts = if (is.null(n_starts)) 5L else n_starts, control = control)
-    if (!isTRUE(r$converged)) {
-      stop(sprintf("the refit with `%s` did not converge, so the MBCO statistic is not available.", con),
-           call. = FALSE)
-    }
+    r <- tryCatch(
+      .sem_fit_syntax(paste0(fit@model, "\n", con), fit@data, fit@information, n_starts = n_starts,
+                      control = control),
+      error = function(e) {
+        stop(sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint on that ",
+                            "parameter, the null `%s` may lie outside the parameter space."),
+                     con, conditionMessage(e), con), call. = FALSE)
+      }
+    )
+    .mbco_warn_boundary(r, con, tested)
     r
   })
   f <- vapply(refit, function(r) r$f, numeric(1))
@@ -99,4 +135,34 @@ mbco_sem <- function(fit, a, b, n_starts = NULL, control = list()) {
     ),
     class = c("mbco_sem", "htest")
   )
+}
+
+# Warn when the null lies on the boundary of the parameter space: an inequality constraint that involves the
+# tested parameter is active at its null refit, or the tested parameter sits on a bound there (the parser folds
+# `a > 0` into a bound, so it is not an inequality row). The likelihood-ratio statistic is then a mixture of
+# chi-squares rather than chi-square(1). An inequality that is inactive, one on another parameter, or one that
+# leaves the null in the interior (`a < 0.2` with the null at 0) changes nothing here.
+.mbco_warn_boundary <- function(refit, con, labels) {
+  active <- character()
+  bounds <- intersect(refit$active_bounds, labels)
+  if (length(bounds)) {
+    active <- c(active, sprintf("a bound on %s", paste(bounds, collapse = ", ")))
+  }
+  rows <- .sem_constraint_rows(refit$constraints, refit$ram)
+  ineq <- if (is.null(rows)) NULL else rows$ineq
+  if (!is.null(ineq) && nrow(ineq$A)) {
+    idx <- match(labels, refit$ram$par_names)
+    value <- as.vector(ineq$A %*% refit$theta) + ineq$b
+    hit <- which(value > -1e-6 & rowSums(abs(ineq$A[, idx, drop = FALSE]) > 0) > 0)
+    if (length(hit)) {
+      active <- c(active, sprintf("the constraint '%s'", paste(ineq$text[hit], collapse = "', '")))
+    }
+  }
+  if (length(active)) {
+    warning(sprintf(paste0("%s is active at the refit with `%s`: the null lies on the boundary of the parameter ",
+                           "space, so the statistic is a mixture of chi-squares, not chi-square(1), and its ",
+                           "p-value is not valid."),
+                    paste(active, collapse = " and "), con), call. = FALSE)
+  }
+  invisible(NULL)
 }
