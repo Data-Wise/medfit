@@ -36,6 +36,11 @@ Every step marked **A#** needs an explicit go from the user; approval of one ste
 | F15 | Where E1 lives | R9: `mediation-planning/docs/ECOSYSTEM-COORDINATION.md`, drafted in medfit first |
 | F16 | DESCRIPTION `Description:` says "generalized linear models, with Bayesian methods planned" | R10: update in the bump PR; no local `aspell`, so G4 plus CI are the evidence; new jargon to `inst/WORDLIST`; state the risk in the PR body |
 | F17 | Merge to `main` deploys pkgdown and rebuilds r-universe; `test-sem-mbco` lavaan oracle skips locally (lavaan 0.7-2, needs 0.7-3) and runs on CI | Information only |
+| F18 | Codex review (2026-10-10), verified: the migration advice "spell out the `glm()` argument" is wrong. `R/fit-glm.R:223` declares `model` before `...`, so both `model = FALSE` and the partial `mod = FALSE` bind to it, and `R/fit-glm.R:238-239` then errors ``"`model` is only used with engine = \"native\"."`` for every non-NULL value on the glm engine. NEWS.md:66-69 and the roxygen `@param model` (`R/fit-glm.R:49-50`, `man/fit_mediation.Rd`) carry the same wrong advice | Correct NEWS, roxygen and the R5(a) issue text in the bump PR (blocks). Corrected advice: drop the argument; `glm()`'s `model` cannot be forwarded through `fit_mediation()` any more. Open decision D-fwd below |
+| F19 | Codex review, accepted: G11 compared failing test names only, so an already-failing test could gain failed assertions or new errors, and new skips or lost execution were invisible; the CSV omitted failure messages | G11 rewritten: assertion-level comparison, block on any worsening |
+| F20 | Codex review, accepted: G12 let a nonempty diff be "resolved" by rerunning gates against the old worktree and the old `lib-cand`, and lacked a fetch after the merge | G12 rewritten: record the tested tree, fetch, require tree equality, rebuild `lib-cand` from the release tree on any difference; same check again before the release PR |
+
+**Open decision D-fwd (user's call):** after F18, a user who needs `glm(model = FALSE)` through `fit_mediation()` has no route. Recommendation: do not implement forwarding in 0.7.0; correct the text and say so in the `[BREAKING]` issue, since D15 accepted the break and the grep (F11) found no direct caller. Alternative: add and test an explicit forwarding mechanism (code change, new tests, reruns every gate). Default until decided: text fix only.
 
 ## 1. Bump checklist (worktree `~/.git-worktrees/medfit/chore-release-0.7.0`)
 
@@ -47,6 +52,8 @@ Every step marked **A#** needs an explicit go from the user; approval of one ste
 | `NEWS.md` | Dependencies (l.86) | `nloptr (>= 1.0.4)` in Imports (compiled; `pak::pak("data-wise/medfit")` builds it unless lme4 already brought it; r-universe ships binaries); `OpenMx` in Suggests |
 | `NEWS.md` | after l.49 | Nonlinear constraints planned for a later release (S1 review, PR 11); until then they error by name |
 | `NEWS.md` | new `## Documentation` | Cookbook recipe 11, `?"medfit-syntax"`, native section of the methods article, refcard rows |
+| `NEWS.md` | Behavior change, l.66-69 | Replace "spell out the `glm()` argument or drop it" (wrong, F18) with: a `model` argument, in any spelling or abbreviation (`model`, `mod`), is now taken by `fit_mediation()` and is an error with the glm engine; drop it. `glm()`'s own `model` argument cannot be passed through `fit_mediation()` |
+| `R/fit-glm.R`, `man/fit_mediation.Rd` | roxygen `@param model` (l.49-50) | Same correction; run `devtools::document()` (G1) so the `.Rd` follows. Comment-only change in R code, but G2-G6 still rerun on the final tree |
 | `NEWS.md` | New features | After R1 passes: one clause that the probmed plugin and parametric bootstrap work on observed single-mediator native fits (#105). Rewrap l.45 |
 | `README.md` | l.364 | Citation `0.6.0` becomes `0.7.0` |
 | `CLAUDE.md`, `AGENTS.md` | l.548, l.551 | `Last Updated`; status paragraph: 0.7.0 on main, GitHub and r-universe (tag `v0.7.0`, contents #110-#124); 0.6.0 moves to history. Keep the two identical |
@@ -81,8 +88,9 @@ Grep: `git grep -nE '0\.6\.0(\.9000)?' -- ':!planning/specs' ':!tests/sim/result
 | G8 | `Rscript tests/sim/sem-parity-gate.R 2>&1 \| tee tests/sim/results/sem-parity-gate-$(date +%F).out` | D22 rule: SE line PASS (<= 1e-3); 0 failed and 0 improper in 420; any estimate gap over 1e-6 only in `latent.50` with `lav_gap` < 1e-6; `memory_exp` 221.045546 and 0.083100 within 1e-6. Anything else: stop and ask |
 | G9 | Scratch libraries (block below) | `lib-base` loads medfit 0.6.0, `lib-cand` loads 0.7.0; all four dependents load in both |
 | G10 (R1) | `R_LIBS=$S/lib-cand NOT_CRAN=true Rscript -e 'devtools::test(filter="sem-probmed")'` | 17 expectations, SKIP 0 (a skip means the gate did not run), FAIL 0 |
-| G11 (R1, R3) | Each dependent's suite in both arms | Per package, the failing tests by name in `cand` are a subset of those in `base`; probmed fully clean in `cand` |
-| G12 | After the bump PR is squash-merged: `git diff --stat chore/release-0.7.0 origin/dev` | Empty; otherwise rerun the affected gates |
+| G11 (R1, R3) | Each dependent's suite in both arms, saving the full testthat results (not just names) | Compared per package and per test, `cand` vs `base`: no new failing test; for every test failing in `base`, `cand` has no more failed assertions, no new error, and the same failure messages (first line, srcref stripped); no test present in `base` is missing or reduced in `cand` (`nb` not lower); no new skip without a stated reason. Only demonstrably identical baseline failures are exempt. probmed fully clean in `cand` (R1) |
+| G12 | After the bump PR is squash-merged: `git fetch origin`, then compare `git rev-parse origin/dev^{tree}` with the tested tree recorded in `$S/logs/tested-tree.txt` (written when the candidate was built, from `git rev-parse HEAD^{tree}` of the worktree) | Equal. If not equal: re-sync the candidate from `git archive origin/dev`, rebuild and reinstall `lib-cand` from that archive (never reuse the old install or worktree), rerun G1-G6 and G10-G11 (plus G7-G8 if anything under `R/` or `tests/sim` changed), re-record the tree. No cleanup, release PR, or tag until equality holds |
+| G12b | Immediately before A5, again `git fetch origin` and the same tree comparison | Equal; this also catches any `dev` push after the bump merge |
 
 G9/G11 commands (download of the four dependents from GitHub is granted by R6; `altdoc` is not):
 
@@ -94,10 +102,11 @@ R CMD INSTALL --library=$S/lib-base $S/src/medfit-0.6.0
 R CMD INSTALL --library=$S/lib-cand $S/medfit_0.7.0.tar.gz
 for p in rmediation probmed missingmed mediationverse; do git clone -b dev https://github.com/Data-Wise/$p.git $S/src/$p; done
 for L in base cand; do for p in rmediation probmed missingmed mediationverse; do R CMD INSTALL --library=$S/lib-$L $S/src/$p; done; done
-R_LIBS=$S/lib-$L NOT_CRAN=true Rscript -e 'cat(format(packageVersion("medfit")), find.package("medfit"), "\n"); r <- as.data.frame(testthat::test_local("<src/p>", reporter="silent", stop_on_failure=FALSE)); write.csv(r[c("file","test","nb","failed","skipped","error")], "<logs/p-L.csv>")'
+git -C ~/.git-worktrees/medfit/chore-release-0.7.0 rev-parse 'HEAD^{tree}' > $S/logs/tested-tree.txt
+R_LIBS=$S/lib-$L NOT_CRAN=true Rscript -e 'cat(format(packageVersion("medfit")), find.package("medfit"), "\n"); res <- testthat::test_local("<src/p>", reporter="silent", stop_on_failure=FALSE); saveRDS(res, "<logs/p-L.rds>"); d <- do.call(rbind, lapply(res, function(t) data.frame(file=t$file, test=t$test, nb=t$nb, failed=t$failed, skipped=t$skipped, error=t$error, msgs=paste(vapply(t$results, function(x) sub("\n.*", "", conditionMessage(x)), ""), collapse=" | ")))); write.csv(d, "<logs/p-L.csv>", row.names=FALSE)'
 ```
 
-Record each clone's SHA in the PR body. If R1, G8 or G11 fails, the release is blocked: triage, open a fix PR into `dev` (squash), re-gate.
+The `.rds` keeps every expectation; the CSV adds the first line of each result message so G11 can compare failures, not just names. Record each clone's SHA in the PR body. If R1, G8 or G11 fails, the release is blocked: triage, open a fix PR into `dev` (squash), then rebuild `lib-cand` from the new `dev` tree (G12 procedure) and re-gate; never rerun against the old install.
 
 ## 3. PR sequence
 
@@ -106,9 +115,9 @@ Record each clone's SHA in the PR body. If R1, G8 or G11 fails, the release is b
 3. Make the bump edits (section 1); run G0-G8.
 4. Run G9-G11 (download already granted for the four repos by R6).
 5. **A3:** commit bump and sim results (`chore(release): medfit 0.7.0`), push, `gh pr create --base dev`. Body carries the gate table (G2, G6, G7, G8 with the 2-of-420 note, G10, per-package G11, clone SHAs, the aspell exposure from R10).
-6. **A4:** user reports the PR's CI result (no polling by me); then `gh pr merge <n> --squash`; run G12; remove the worktree; delete the local and remote `chore/release-0.7.0`.
+6. **A4:** user reports the PR's CI result (no polling by me); then `gh pr merge <n> --squash`; run G12 (fetch, tree equality, rebuild on any difference); only after G12 holds, remove the worktree and delete the local branch (the remote branch is auto-deleted on merge; verify).
 7. **Freeze `dev`:** no `chore(status)` pushes until the release PR merges (a push changes the PR head and reruns CI).
-8. **A5:** `gh pr create --base main --head dev --title "Release: v0.7.0"`. Body: NEWS 0.7.0 summary, gate evidence, R2 statement (SE gate and reliability evidence stand on the 2026-10-09 run), `Closes #105, Closes #106` with S17b and probmed counts. #83 stays open.
+8. **A5:** run G12b first, then `gh pr create --base main --head dev --title "Release: v0.7.0"`. Body: NEWS 0.7.0 summary, gate evidence, R2 statement (SE gate and reliability evidence stand on the 2026-10-09 run), `Closes #105, Closes #106` with S17b and probmed counts. #83 stays open.
 9. **A6:** user confirms `ubuntu-latest (release)` is green; then `gh pr merge <n> --merge`. Never `--squash`, never `--delete-branch` (would delete `dev`), never `--auto`.
 
 ## 4. After the merge
@@ -136,7 +145,7 @@ Record each clone's SHA in the PR body. If R1, G8 or G11 fails, the release is b
 
 ## 6. Appendix: R5 items (after the tag; each needs its own explicit go)
 
-- **(a) `[BREAKING]` issue in medfit:** title "[BREAKING] fit_mediation() gains a named model argument (0.7.0)". Body: what binds now (`model = FALSE`, or `mod =` passed through `...` to `glm()`); migration (spell out the `glm()` argument or drop it); grep result (F11: no direct caller; missingmed forwards `...` and `fit_args`); D15 accepted the break with a NEWS note, so this issue serves as the notice.
+- **(a) `[BREAKING]` issue in medfit:** title "[BREAKING] fit_mediation() gains a named model argument (0.7.0)". Body: what binds now (`model = FALSE`, or `mod =` passed through `...` to `glm()`, both intercepted and an error with the glm engine); migration (drop the argument; `glm()`'s `model` cannot be forwarded through `fit_mediation()`, unless D-fwd adds a mechanism); grep result (F11: no direct caller; missingmed forwards `...` and `fit_args`); D15 accepted the break with a NEWS note, so this issue serves as the notice.
 - **(b) RMediation `mbco()` X0 report:** first draft `planning/specs/REPORT-rmediation-mbco-x0-<date>.md` in medfit (commit on `dev` with a go). Content: the Rd example's `mxPath(from="x", to=endVar, labels=c("a1","a2","cp"))` drops the self-path, so labels shift to `a2, cp, a1`; as written diffLL is 0.060332, correctly labeled 221.045546 for `a1 == 0` and 0.083100 for `b1 == 0`; reproduction `planning/specs/evidence/native-sem-2026-10-08/07-preflight.R`; suggested fix: drop `"x"` from `endVar` in that path. Filing in Data-Wise/rmediation is a cross-repo write, only on explicit request.
 - **(c) Ecosystem row E1 (R9):** draft the version-matrix row as text in a medfit planning file; apply to `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md` only on explicit request, on a branch the user picks (that repo is on `docs/missingmed-0.6.0` with an untracked `AGENTS.md`).
 - **Out of scope:** r-hub, full revdepcheck, medrobust's suite, S1/PR 11.
