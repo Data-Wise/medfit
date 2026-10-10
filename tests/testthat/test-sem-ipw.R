@@ -67,8 +67,15 @@ test_that("the sandwich is invariant to the scale of the weights", {
   d <- ipw_data()
   a <- fit_sem(ipw_syntax, d, sampling_weights = d$w, se_type = "sandwich")
   b <- fit_sem(ipw_syntax, d, sampling_weights = 7.3 * d$w, se_type = "sandwich")
-  expect_equal(a@vcov, b@vcov, tolerance = 1e-8)
-  expect_equal(a@theta, b@theta, tolerance = 1e-8)
+  # The two fits see the same rescaled weights up to rounding, so SLSQP stops at iterates that differ in the
+  # last digits (about 1e-8 on CI Linux, not 1e-8 exactly), which is the optimizer's tolerance, not the sandwich's.
+  expect_equal(a@theta, b@theta, tolerance = 1e-6)
+  expect_equal(a@vcov, b@vcov, tolerance = 1e-6)
+  # At one fixed estimate the sandwich itself is scale-free to rounding.
+  ram <- a@internals$ram
+  va <- .sem_vcov(a@theta, ram, .sem_sample(a@data, ram, weights = d$w), "observed", se_type = "sandwich")
+  vb <- .sem_vcov(a@theta, ram, .sem_sample(a@data, ram, weights = 7.3 * d$w), "observed", se_type = "sandwich")
+  expect_equal(va, vb, tolerance = 1e-10)
 })
 
 test_that("planted defect: scores computed without the weights miss the HC0 oracle", {
