@@ -7,7 +7,8 @@
 # `y_M` swapped with `y_X` (the plugin agreement must fail).
 
 probmed_data <- function(n = 500, seed = 3) {
-  sem_sim(sem_model_observed(), n, seed)[, c("X", "M", "Y")]
+  # helper-defined functions are looked up by name: CI lint does not source the helper files
+  match.fun("sem_sim")(match.fun("sem_model_observed")(), n, seed)[, c("X", "M", "Y")]
 }
 
 probmed_syntax <- "M ~ X\nY ~ M + X"
@@ -26,8 +27,8 @@ contract_problems <- function(med) {
 }
 
 skip_unless_probmed <- function() {
-  skip_if_not_installed("probmed")
-  skip_if_not_installed("lavaan")
+  testthat::skip_if_not_installed("probmed")
+  testthat::skip_if_not_installed("lavaan")
 }
 
 test_that("contract pre-check: the native MediationData carries the names probmed resolves", {

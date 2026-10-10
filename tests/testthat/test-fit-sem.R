@@ -19,10 +19,10 @@ ex_lavaan <- function(syntax, data) {
 # Two extractions agree on every estimate and covariance row they share, and
 # share the same rows.
 expect_same_extraction <- function(nat, lav, info) {
-  expect_setequal(names(nat@estimates), names(lav@estimates))
+  testthat::expect_setequal(names(nat@estimates), names(lav@estimates))
   common <- names(lav@estimates)
-  expect_equal(nat@estimates[common], lav@estimates[common], tolerance = 1e-6, info = info)
-  expect_equal(nat@vcov[common, common], lav@vcov[common, common], tolerance = 1e-5, info = info)
+  testthat::expect_equal(nat@estimates[common], lav@estimates[common], tolerance = 1e-6, info = info)
+  testthat::expect_equal(nat@vcov[common, common], lav@vcov[common, common], tolerance = 1e-5, info = info)
 }
 
 test_that("fit_sem returns a SEMFit with the table, covariance and diagnostics", {
