@@ -346,3 +346,27 @@ test_that("shared labels give the right information, Jacobian and step floor", {
   expect_lt(max(abs(ie - fd_info)), 1e-8)
   expect_true(all(is.finite(.sem_step_floor(ram, smp))) && all(.sem_step_floor(ram, smp) > 0))
 })
+
+test_that(".sem_with_seed restores the caller's RNG kind and draws, with or without a seed", {
+  on.exit({
+    RNGkind("Mersenne-Twister", "Inversion", "Rejection")
+    set.seed(NULL)
+  })
+  kinds <- list(c("L'Ecuyer-CMRG", "Inversion", "Rejection"), c("Wichmann-Hill", "Box-Muller", "Rounding"))
+  for (k in kinds) {
+    # a seed exists
+    suppressWarnings(RNGkind(k[1L], k[2L], k[3L]))
+    set.seed(5)
+    expected <- stats::runif(2)
+    set.seed(5)
+    invisible(.sem_with_seed(1L, stats::runif(3)))
+    expect_identical(RNGkind(), k)
+    expect_identical(stats::runif(2), expected)
+    # a kind chosen but no seed drawn yet
+    suppressWarnings(RNGkind(k[1L], k[2L], k[3L]))
+    rm(".Random.seed", envir = globalenv())
+    invisible(.sem_with_seed(1L, stats::runif(3)))
+    expect_identical(RNGkind(), k)
+    expect_false(exists(".Random.seed", envir = globalenv(), inherits = FALSE))
+  }
+})

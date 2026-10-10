@@ -249,6 +249,17 @@ S1 review of 73c322a├─> PR 2: S7 parser -> S8 evaluator -> S9 linearity, fol
 
 #### PR 5: linear constraints (`feature/sem-constraints`)
 
+**Review notes before S13 (2026-10-09, after PR 4).** Six clarifications; none changes the design.
+
+1. **S14 overlaps PR 1.** The S5 gate already projects out active bounds (free-coordinate reduced Hessian, the bound-sign check, a window relative to the parameter's unit), and `test-sem-optim.R` already pins the bound-sign and relative-window defects. S14 generalizes that code to a null-space form in which bounds are rows; the existing bound tests are its regression gate.
+2. **The transported-point test needs no constraint rescaling for coefficients.** `sem_transport()` multiplies only variances by s squared, so `a + b == 0.5` on path coefficients is unchanged across the four scales; only a constraint on variances is rescaled (by s squared). Test one of each.
+3. **A constraint with no parameters errors before the optimizer.** The parser accepts `1 < 2` and `1 == 2`; a zero-gradient row breaks the residual tolerance and the classifier. Message: "constraint contains no parameters".
+4. **Rank of the active set.** Normalize each active row to unit length, then `qr()` rank with tolerance 1e-8. Unit rows also make the residual tolerance and the multiplier sizes unit-free.
+5. **Oracle tolerance for estimates.** The plan's 1e-6 is not platform-stable (PR 4: the syntax route and the builders differed by 1e-9 on the noSuggests Linux job because parameter order changes SLSQP's iterates; constrained SLSQP converges looser). Pin estimates at 1e-5, record the measured values here, keep the K10 SE tolerance at the frozen 1e-3.
+6. **`:=` shares the table with `==`, `<`, `>`.** S13 separates them; `.sem_fit_syntax()` currently errors on any constraint. After substituting defined names, `ab := a*b` followed by `ab > 0` classifies nonlinear and gets the by-name error (test it); defined-parameter values and SEs stay in S15.
+
+Also fixed on this branch (Codex adversarial review of `dev`): `.sem_with_seed()` restored the caller's `.Random.seed` but not `RNGkind()`; with a non-default kind chosen and no seed drawn yet, a fit left Mersenne-Twister active. A saved seed already encodes the kind, so the report's wider claim does not hold (4 of 4 kinds restored with a seed). Test added; it fails without the fix.
+
 - [ ] **S13: Linear constraints in the optimizer (N3).** Equalities via `eval_g_eq`, inequalities via `eval_g_ineq` normalized to `c(x) <= 0`, with constant Jacobians taken from the S9 linearity classifier (spec 4.5a); linear constraints are solved once with no warning (spec 4.5a, 4.5b). A constraint classified nonlinear errors by name: "nonlinear constraints are not supported in this version" (pinned regex, no planning ids, Q13). `n_starts` stays at the S5 retry behavior.
   - Oracles: `a + b == 0.5` against lavaan >= 0.7-3 and against the OpenMx reparameterized model (Q8) to 1e-6; a linear constraint gives no warning and one solve (spec 4.5f item 7).
   - Planted defect: a nonlinear constraint misclassified as linear (the spec 4.5f item 1 table's defects) is solved with a constant Jacobian and the K10 constrained cell must fail.

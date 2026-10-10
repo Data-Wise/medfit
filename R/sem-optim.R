@@ -81,7 +81,11 @@
 .sem_with_seed <- function(seed, expr) {
   had <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
   if (had) old <- get(".Random.seed", envir = globalenv(), inherits = FALSE)
+  # A saved seed encodes the generator kind, but with no seed yet the caller's chosen kind lives only in
+  # RNGkind(), which set.seed(kind = ) below would overwrite.
+  kind <- RNGkind()
   on.exit({
+    suppressWarnings(RNGkind(kind[1L], kind[2L], kind[3L]))
     if (had) {
       assign(".Random.seed", old, envir = globalenv()) # nolint: object_name_linter.
     } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
