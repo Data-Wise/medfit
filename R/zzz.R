@@ -29,6 +29,20 @@
   invisible(TRUE)
 }
 
+# The IPW nudge, shared by the glm and native engines: model-based SEs are not valid under inverse-probability
+# weighting. Once per session so tight refit loops are not spammed.
+.notify_ipw_model_se <- function() {
+  .notify_once(
+    "ipw_model_se",
+    paste0(
+      "medfit: `weights` supplied with `se_type = \"model\"`. ",
+      "Model-based standard errors are not valid under inverse-probability ",
+      "weighting; pass `se_type = \"sandwich\"` for robust (HC) SEs. ",
+      "(Shown once per session.)"
+    )
+  )
+}
+
 # Show-method body for S7 classes whose `show` is registered in `.onLoad()`.
 # Kept as a named top-level function (not an inline body in `.onLoad`) so the
 # `print()` call is not seen as a startup message by R CMD check.

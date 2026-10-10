@@ -29,6 +29,18 @@
 #'   perturbed starts drawn under a fixed seed and never change the caller's
 #'   random number stream.
 #' @param control List: options passed to the optimizer (`nloptr`).
+#' @param sampling_weights Optional numeric vector of non-negative case weights,
+#'   one per row of `data` (`NULL`, the default, fits unweighted). The fit is
+#'   weighted maximum likelihood on the weighted mean and covariance; the scale
+#'   of the weights does not matter. Rows dropped for missing values drop their
+#'   weights with them. Use with `se_type = "sandwich"`.
+#' @param se_type Character: `"model"` (default) takes the covariance of the
+#'   estimates from the inverse information; `"sandwich"` uses the robust
+#'   sandwich covariance \eqn{A^{-1} B A^{-1}}{A^-1 B A^-1} with casewise scores
+#'   (HC0-type: it equals `sandwich::vcovHC(type = "HC0")` per equation and
+#'   lavaan's robust standard errors with `sampling.weights`, and is smaller
+#'   than the HC3 default of the glm route by a factor that shrinks like
+#'   \eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.
 #'
 #' @return A [SEMFit] object.
 #'
@@ -44,15 +56,19 @@
 #' @seealso [SEMFit], [fit_mediation()]
 #' @export
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
-                    control = list()) {
+                    control = list(), sampling_weights = NULL, se_type = c("model", "sandwich")) {
   checkmate::assert_character(model, min.len = 1L, any.missing = FALSE, .var.name = "model")
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
   information <- match.arg(information)
   checkmate::assert_count(n_starts, positive = TRUE, null.ok = TRUE, .var.name = "n_starts")
   checkmate::assert_list(control, .var.name = "control")
+  se_type <- match.arg(se_type)
+  if (!is.null(sampling_weights) && se_type == "model") {
+    .notify_ipw_model_se()
+  }
   model <- paste(model, collapse = "\n")
   fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
-                         control = control)
+                         control = control, weights = sampling_weights, se_type = se_type)
   .sem_as_semfit(fit, model, match.call())
 }
 
@@ -70,8 +86,8 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     n_obs = fit$n_obs, n_dropped = fit$n_dropped, df = fit$df, information = fit$information,
     converged = fit$converged, data = fit$data, model = model,
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
-                        "sign_check")],
-    internals = fit[c("ram", "par_map", "constraints", "partable")],
+                        "sign_check", "se_type")],
+    internals = fit[c("ram", "par_map", "constraints", "partable", "weights")],
     call = call
   )
 }
@@ -80,7 +96,8 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
 # extract the mediation structure through the shared workers. Reached before the
 # formula validation of the other engines, since the native route takes `model`,
 # not formulas, and a latent mediator is not a column of `data`. Every argument
-# the engine cannot honor errors, never silently ignored.
+# the engine cannot honor errors, never silently ignored. `weights` and `se_type` map to `fit_sem()`'s
+# `sampling_weights` and `se_type`.
 .fit_mediation_native <- function(model, data, treatment, mediator, given, weights, se_type, cluster,
                                   engine_args, m_star, dots) {
   if (given$formulas) {
@@ -95,10 +112,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   checkmate::assert_string(mediator, .var.name = "mediator")
   checkmate::assert_list(engine_args, names = "unique", .var.name = "engine_args")
   if (!is.null(weights)) {
-    stop("`weights` is not supported by engine = \"native\" in this version.", call. = FALSE)
-  }
-  if (se_type == "sandwich") {
-    stop("se_type = \"sandwich\" is not supported by engine = \"native\" in this version.", call. = FALSE)
+    checkmate::assert_numeric(weights, len = nrow(data), lower = 0, any.missing = FALSE, .var.name = "weights")
   }
   if (se_type == "kr") {
     stop("se_type = \"kr\" (Kenward-Roger) is only used with engine = \"lmer\".", call. = FALSE)
@@ -126,7 +140,11 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
       stop(sprintf("'%s' is not a variable in `model`", nm), call. = FALSE)
     }
   }
-  fit <- do.call(fit_sem, c(list(model = syntax, data = data), engine_args[intersect(names(engine_args), fit_args)]))
+  fit <- do.call(
+    fit_sem,
+    c(list(model = syntax, data = data, sampling_weights = weights, se_type = se_type),
+      engine_args[intersect(names(engine_args), fit_args)])
+  )
   extract_call <- c(
     list(object = fit, treatment = treatment, mediator = mediator),
     engine_args[intersect(names(engine_args), extract_args)],

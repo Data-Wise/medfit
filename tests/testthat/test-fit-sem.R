@@ -185,8 +185,8 @@ test_that("every native-route guard names its cause", {
   expect_error(call_native(), "needs `model`")
   expect_error(fit_mediation(Y ~ X + M, M ~ X, dat, "X", "M", engine = "native", model = mod),
                "takes `model =`, not formulas")
-  expect_error(call_native(model = mod, weights = rep(1, 100)), "`weights` is not supported by engine = \"native\"")
-  expect_error(call_native(model = mod, se_type = "sandwich"), "se_type = \"sandwich\" is not supported")
+  expect_error(call_native(model = mod, weights = rep(1, 99)), "weights")
+  expect_error(call_native(model = mod, weights = rep(-1, 100)), "weights")
   expect_error(call_native(model = mod, se_type = "kr"), "only used with engine = \"lmer\"")
   expect_error(call_native(model = mod, cluster = "C"), "`cluster` is only used with engine = \"lmer\"")
   expect_error(call_native(model = mod, family_y = stats::binomial()), "Gaussian")
@@ -198,8 +198,8 @@ test_that("every native-route guard names its cause", {
                "`model` is only used with engine = \"native\"")
   # no planning ids in user-facing text
   msgs <- c(
-    tryCatch(call_native(model = mod, weights = rep(1, 100)), error = conditionMessage),
-    tryCatch(call_native(model = mod, se_type = "sandwich"), error = conditionMessage)
+    tryCatch(call_native(model = mod, se_type = "kr"), error = conditionMessage),
+    tryCatch(call_native(model = mod, cluster = "C"), error = conditionMessage)
   )
   expect_false(any(grepl("\\b(S[0-9]+|N[0-9]+|PR [0-9]+)\\b", msgs)))
 })
