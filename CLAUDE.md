@@ -83,7 +83,7 @@ R/
 ├── extract-joint.R         # JointMediationData worker, stacked-OLS vcov
 ├── extract-lavaan.R        # lavaan extraction
 ├── extract-lmer.R          # ClusterMediationData from lme4 fits (term detection by value, KR)
-├── sem-*.R                 # native SEM engine internals: parse, expr, model, ml, optim, constraints, se, fit
+├── sem-*.R                 # native SEM engine internals: parse, expr, model, ml, optim, constraints, se, sandwich, fit, mbco (mbco_sem())
 ├── fit-sem.R               # fit_sem(), .fit_mediation_native()
 ├── extract-sem.R           # accessor seam (lavaan and native), extract_mediation() for SEMFit
 ├── methods-sem.R           # SEMFit print/summary/coef/vcov/nobs/logLik; sem-syntax-help.R is ?"medfit-syntax"
@@ -345,7 +345,7 @@ tests/testthat/
 ├── test-effect-se.R, test-confint-paths.R, test-methods-*.R   # SEs, confint, tidy
 ├── test-serial-total-effect.R           # te() over every path
 ├── test-fit-*.R                         # glm, regmedint, m_star, native (test-fit-sem.R)
-├── test-sem-*.R, helper-sem.R           # native SEM engine: parser, model, optimizer, constraints, SEs, methods, probmed gate
+├── test-sem-*.R, helper-sem.R           # native SEM engine: parser, model, optimizer, constraints, SEs, weights, MBCO, methods, probmed gate
 ├── test-bootstrap*.R                    # Bootstrap methods
 └── test-mediation-demo.R                # bundled data known answers
 ```
@@ -481,6 +481,7 @@ breaking existing code, type safety via S7 validators.
 | `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
 | `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
 | `"lmer"` | lme4, pbkrtest (Suggests) | mixed models for cluster-level treatment; `cluster =`, `se_type = "kr"` | ✓ (no weights/sandwich/families) |
+| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `); latent mediators, constraints, `weights`/`se_type = "sandwich"`; `mbco_sem()` | ✓ experimental (no four-way, no mean structure) |
 | `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 

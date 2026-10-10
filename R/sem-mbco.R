@@ -37,7 +37,7 @@
 #' @details
 #' A fit made with `sampling_weights` is refused: the weighted discrepancy is
 #' not a likelihood, so its difference is not chi-square. A refit that fails
-#' the optimizer's acceptance gate is an error rather than a statistic.
+#' the acceptance gate of the optimizer is an error rather than a statistic.
 #'
 #' @examples
 #' \donttest{

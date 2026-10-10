@@ -331,7 +331,7 @@ glance(boot_result)
 - [Bootstrap Inference](bootstrap.html) - Parametric and nonparametric bootstrap
 - [Methods and Formulas](methods.html) - Estimands, formulas, and standard errors
 - [Reference Card](refcard.html) - One-page lookup of calls, classes, and effects
-- [Cookbook](cookbook.html) - Ten task recipes, including cluster-randomized trials
+- [Cookbook](cookbook.html) - Eleven task recipes, including cluster-randomized trials and a latent mediator
 
 ## What medfit Covers
 

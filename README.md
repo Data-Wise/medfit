@@ -22,6 +22,7 @@
 - **Tidyverse Integration**: `tidy()` and `glance()` methods, with delta-method standard errors for the effects
 - **Unified Model Extraction**: Extract mediation structure from lm, glm, and lavaan fits
 - **Flexible Model Fitting**: `fit_mediation()` with the `glm` and `regmedint` engines, optional case weights (IPW), and sandwich (HC3) standard errors
+- **Native Model Syntax** (experimental): `fit_sem()` and `fit_mediation(engine = "native")` fit lavaan-style syntax with latent mediators, constraints, and defined parameters; `mbco_sem()` tests the indirect effect
 - **Bundled Example Data**: `mediation_demo`, a simulated dataset for every workflow
 - **Robust Bootstrap Inference**: Three bootstrap methods (parametric, nonparametric, plugin) with parallel processing
 - **Type-Safe S7 Classes**: Modern object-oriented design with `coef()`, `vcov()`, `confint()`, `nobs()` methods
@@ -201,6 +202,47 @@ decompose(fit)  # own-mediator and spillover parts (large-cluster approximation)
 See [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html)
 for the estimand and the assumptions each effect needs.
 
+### Latent Mediator (Native Engine)
+
+When the mediator is a construct measured by several indicators, write the model
+as syntax. The native maximum-likelihood engine is experimental and needs no
+other package:
+
+```r
+# a latent mediator `eta` with three indicators, simulated
+set.seed(11)
+n <- 400
+X <- rnorm(n)
+eta <- 0.5 * X + rnorm(n, sd = 0.9)
+ldat <- data.frame(
+  X = X,
+  m1 = eta + rnorm(n, sd = 0.7),
+  m2 = 0.8 * eta + rnorm(n, sd = 0.7),
+  m3 = 0.7 * eta + rnorm(n, sd = 0.8)
+)
+ldat$Y <- 0.4 * eta + 0.2 * X + rnorm(n, sd = 0.8)
+
+syntax <- "
+  eta =~ m1 + m2 + m3
+  eta ~ a * X
+  Y ~ b * eta + cp * X
+"
+fit <- fit_mediation(model = syntax, data = ldat, treatment = "X",
+                     mediator = "eta", engine = "native")
+nie(fit)
+
+mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tests
+```
+
+```
+#> Natural Indirect Effect (NIE): 0.1685
+#>
+#> 	Minimum-of-two likelihood-ratio tests (MBCO) for an indirect effect
+#>
+#> data:  a * b = 0
+#> MBCO = 46.753, df = 1, p-value = 8.054e-12
+```
+
 ## Core Components
 
 ### S7 Classes
@@ -252,7 +294,8 @@ for the estimand and the assumptions each effect needs.
 
 **Advanced:**
 - **`extract_mediation()`**: Extract from fitted lm/glm/lavaan models
-- **`fit_mediation()`**: Fit with formula interface (`glm` or `regmedint` engine)
+- **`fit_mediation()`**: Fit with formula interface (`glm` or `regmedint` engine) or model syntax (`engine = "native"`)
+- **`fit_sem()`**, **`mbco_sem()`**: Fit model syntax with the native engine; test the indirect effect (experimental)
 - **`bootstrap_mediation()`**: Bootstrap inference (parametric, nonparametric, plugin)
 
 ## Mediationverse Ecosystem
@@ -280,7 +323,7 @@ Comprehensive articles are available on the package website:
 - **[Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html)**: Parametric and nonparametric bootstrap methods
 - **[Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html)**: Estimands, formulas, covariance, and standard errors for every class
 - **[Reference Card](https://data-wise.github.io/medfit/articles/refcard.html)**: Every export and class on one page
-- **[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html)**: Ten task recipes, from a first mediation fit to cluster-randomized designs
+- **[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html)**: Eleven task recipes, from a first mediation fit to cluster-randomized designs and a latent mediator
 
 ## Development Status
 
