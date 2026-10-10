@@ -4,7 +4,8 @@
 # (named by the engine's parameter names) and the names of its latent variables.
 # Data come from the model-implied covariance at the true parameters, so a fit
 # can be checked against a known answer without a separate simulator per model.
-# The fifth, constrained K10 structure is added with the constrained gate (S15).
+# The fifth, constrained K10 structure (`sem_model_equal_paths()`, `sem_model_zero_path()`) serves the
+# constrained gate (S15): the oracle models for `a == b` (one shared label) and `a == 0` (a fixed value).
 # lavaan and OpenMx wrappers are oracles only: each test skips when the
 # package is absent.
 
@@ -31,6 +32,27 @@ sem_model_observed <- function() {
     s = sem_rows(list("X", "X"), list("C", "C"), list("X", "C"), list("M", "M"), list("Y", "Y")),
     theta = c("M ~ X" = .4, "M ~ C" = .3, "Y ~ M" = .5, "Y ~ X" = .2, "Y ~ C" = .1,
               "X ~~ X" = 1, "C ~~ C" = 1.2, "X ~~ C" = .3, "M ~~ M" = .8, "Y ~~ Y" = .7)
+  )
+}
+
+# Constrained K10 structure, oracle form for `a == b`: X -> M -> Y with the two mediation paths sharing the
+# label "a", plus the direct path. Data drawn from it satisfy the constraint.
+sem_model_equal_paths <- function() {
+  sem_model(
+    vars = c("X", "M", "Y"), obs = c("X", "M", "Y"),
+    a = sem_rows(list("M", "X", "a"), list("Y", "M", "a"), list("Y", "X")),
+    s = sem_rows(list("X", "X"), list("M", "M"), list("Y", "Y")),
+    theta = c("a" = .4, "Y ~ X" = .2, "X ~~ X" = 1, "M ~~ M" = .8, "Y ~~ Y" = .7)
+  )
+}
+
+# Constrained K10 structure, oracle form for `a == 0`: the path M <- X fixed at zero.
+sem_model_zero_path <- function() {
+  sem_model(
+    vars = c("X", "M", "Y"), obs = c("X", "M", "Y"),
+    a = sem_rows(list("M", "X", "", 0), list("Y", "M"), list("Y", "X")),
+    s = sem_rows(list("X", "X"), list("M", "M"), list("Y", "Y")),
+    theta = c("Y ~ M" = .4, "Y ~ X" = .2, "X ~~ X" = 1, "M ~~ M" = .8, "Y ~~ Y" = .7)
   )
 }
 

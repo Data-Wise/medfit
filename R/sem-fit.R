@@ -14,12 +14,6 @@
   if (any(parsed$parameters$level != 1L)) {
     stop("two-level estimation is not implemented: the model uses `level:` blocks", call. = FALSE)
   }
-  if (nrow(parsed$constraints)) {
-    stop(
-      "model constraints (==, <, > and :=) are not supported by the native engine yet: ",
-      paste(unique(parsed$constraints$op), collapse = ", "), call. = FALSE
-    )
-  }
   tab <- .sem_complete(parsed$parameters)
   .sem_check_scale(tab)
   conv <- .sem_to_ram(tab)
@@ -59,14 +53,19 @@
   start[given] <- conv$start[given]
   lb <- ifelse(is.na(conv$lower), -Inf, conv$lower)
   ub <- ifelse(is.na(conv$upper), Inf, conv$upper)
-  fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control)
-  vc <- .sem_vcov(fit$theta, ram, smp, information)
-  dimnames(vc) <- list(ram$par_names, ram$par_names)
+  cons <- .sem_constraint_rows(parsed$constraints, ram)
+  fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+  vc <- .sem_vcov(fit$theta, ram, smp, information, cons, lb, ub)
+  defined <- .sem_defined(parsed$constraints, fit$theta, vc)
+  act_cons <- if (is.null(cons)) .sem_no_cons(ram$q) else cons
+  act <- .sem_active_set(fit$theta, ram, smp, lb, ub, act_cons)
 
   c(
     fit,
     list(
-      vcov = vc, information = information, ram = ram, table = conv$table, par_map = conv$par_map,
+      vcov = vc, defined = defined, constraints = parsed$constraints,
+      active_constraints = act$text[act$active_row], information = information, ram = ram, table = conv$table,
+      par_map = conv$par_map,
       partable = .sem_to_partable(conv$table), data = x, n_obs = smp$n, n_dropped = n_dropped, df = df
     )
   )

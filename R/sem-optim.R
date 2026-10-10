@@ -18,8 +18,11 @@
 .sem_ok_status <- c(1L, 3L, 4L)
 
 # Thin wrapper so tests can stub the solver.
-.sem_nlopt <- function(x0, eval_f, eval_grad_f, lb, ub, opts) {
-  nloptr::nloptr(x0 = x0, eval_f = eval_f, eval_grad_f = eval_grad_f, lb = lb, ub = ub, opts = opts)
+.sem_nlopt <- function(x0, eval_f, eval_grad_f, lb, ub, opts, constraints = NULL) {
+  do.call(nloptr::nloptr, c(
+    list(x0 = x0, eval_f = eval_f, eval_grad_f = eval_grad_f, lb = lb, ub = ub, opts = opts),
+    constraints
+  ))
 }
 
 # Objective and gradient closures sharing one evaluation per parameter vector
@@ -55,9 +58,12 @@
 # the model, the start, the bounds and the acceptance gate stay in original
 # units. SLSQP stalls when parameters differ by orders of magnitude (variances
 # 1e6 beside paths of 1 when the data are in large units).
-.sem_solve_one <- function(start, ram, smp, lb, ub, opts, precondition = TRUE, obj = .sem_objective(ram, smp)) {
+.sem_solve_one <- function(start, ram, smp, lb, ub, opts, precondition = TRUE, obj = .sem_objective(ram, smp),
+                           cons = NULL) {
   u <- if (precondition) .sem_step_floor(ram, smp) else rep(1, ram$q)
-  res <- .sem_nlopt(start / u, function(x) obj$f(x * u), function(x) obj$g(x * u) * u, lb / u, ub / u, opts)
+  args <- list(start / u, function(x) obj$f(x * u), function(x) obj$g(x * u) * u, lb / u, ub / u, opts)
+  if (!is.null(cons)) args$constraints <- .sem_nlopt_constraints(cons, u)
+  res <- do.call(.sem_nlopt, args)
   res$solution <- res$solution * u
   res
 }
@@ -81,7 +87,11 @@
 .sem_with_seed <- function(seed, expr) {
   had <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
   if (had) old <- get(".Random.seed", envir = globalenv(), inherits = FALSE)
+  # A saved seed encodes the generator kind, but with no seed yet the caller's chosen kind lives only in
+  # RNGkind(), which set.seed(kind = ) below would overwrite.
+  kind <- RNGkind()
   on.exit({
+    suppressWarnings(RNGkind(kind[1L], kind[2L], kind[3L]))
     if (had) {
       assign(".Random.seed", old, envir = globalenv()) # nolint: object_name_linter.
     } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
@@ -109,7 +119,10 @@
 }
 
 # The acceptance gate for one solution (unconstrained fits with bounds).
-.sem_gate <- function(theta, status, ram, smp, lb, ub) {
+.sem_gate <- function(theta, status, ram, smp, lb, ub, cons = NULL) {
+  if (!is.null(cons)) {
+    return(.sem_gate_projected(theta, status, ram, smp, lb, ub, cons))
+  }
   out <- list(accepted = FALSE, status = status, decrement = NA_real_, min_eig = NA_real_,
               active = rep(FALSE, length(theta)), reason = "")
   if (!isTRUE(status %in% .sem_ok_status)) {
@@ -203,7 +216,7 @@
 # merged into the nloptr options. Errors "no start converged" when no start is
 # accepted, naming the best attempt's status and stationarity.
 .sem_optimize <- function(ram, smp, start, lb = rep(-Inf, ram$q), ub = rep(Inf, ram$q),
-                          n_starts = 5L, control = list(), precondition = TRUE) {
+                          n_starts = 5L, control = list(), precondition = TRUE, constraints = NULL) {
   checkmate::assert_numeric(start, len = ram$q, any.missing = FALSE, .var.name = "start")
   checkmate::assert_numeric(lb, len = ram$q, any.missing = FALSE, .var.name = "lb")
   checkmate::assert_numeric(ub, len = ram$q, any.missing = FALSE, .var.name = "ub")
@@ -220,13 +233,14 @@
   attempts <- vector("list", length(starts))
   win <- NA_integer_
   for (i in seq_along(starts)) {
-    res <- tryCatch(.sem_solve_one(starts[[i]], ram, smp, lb, ub, opts, precondition, obj), error = function(e) e)
+    res <- tryCatch(.sem_solve_one(starts[[i]], ram, smp, lb, ub, opts, precondition, obj, constraints),
+                    error = function(e) e)
     if (inherits(res, "error")) {
       attempts[[i]] <- list(accepted = FALSE, status = NA_integer_, decrement = NA_real_, f = Inf,
                             reason = paste("nloptr error:", conditionMessage(res)))
       next
     }
-    gate <- .sem_gate(res$solution, res$status, ram, smp, lb, ub)
+    gate <- .sem_gate(res$solution, res$status, ram, smp, lb, ub, constraints)
     gate$f <- res$objective
     gate$theta <- res$solution
     attempts[[i]] <- gate
@@ -253,10 +267,12 @@
   if (length(improper)) {
     warning("improper solution: ", paste(improper, collapse = "; "), call. = FALSE)
   }
+  for (w in fit$sign_warnings) warning(w, call. = FALSE)
   list(
     theta = stats::setNames(fit$theta, ram$par_names), f = fit$f, status = fit$status,
     decrement = fit$decrement, converged = TRUE, retries = win - 1L,
-    active_bounds = ram$par_names[fit$active], improper = improper, attempts = attempts
+    active_bounds = ram$par_names[fit$active], improper = improper, attempts = attempts,
+    multipliers = fit$multipliers, sign_check = if (is.null(fit$sign_check)) "ok" else fit$sign_check
   )
 }
 
