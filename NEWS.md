@@ -65,8 +65,10 @@
 
 * `fit_mediation()` has a new named argument `model`. An argument passed to
   `stats::glm()` through `...` that partially matches it, such as
-  `mod = FALSE`, now binds to `model` instead; spell out the `glm()`
-  argument or drop it.
+  `mod = FALSE`, now binds to `model` instead, and `model` is an error with
+  the glm engine. Spelling out `model = FALSE` does not help: drop the
+  argument. `glm()`'s own `model` argument cannot be passed through
+  `fit_mediation()`.
 
 * `extract_mediation()` on a lavaan fit of a simple single-mediator model now
   appends the rows `m_<treatment>`, `y_<mediator>` and `y_<treatment>` to

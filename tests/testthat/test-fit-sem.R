@@ -196,6 +196,12 @@ test_that("every native-route guard names its cause", {
                "'Q' is not a variable in `model`")
   expect_error(fit_mediation(Y ~ X + M, M ~ X, dat, "X", "M", model = mod),
                "`model` is only used with engine = \"native\"")
+  # a glm() argument spelled `model`, or partially matching it, binds to
+  # `model` and errors on the glm engine, so it cannot be forwarded
+  expect_error(fit_mediation(Y ~ X + M, M ~ X, dat, "X", "M", model = FALSE),
+               "`model` is only used with engine = \"native\"")
+  expect_error(fit_mediation(Y ~ X + M, M ~ X, dat, "X", "M", mod = FALSE),
+               "`model` is only used with engine = \"native\"")
   # no planning ids in user-facing text
   msgs <- c(
     tryCatch(call_native(model = mod, se_type = "kr"), error = conditionMessage),
