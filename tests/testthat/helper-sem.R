@@ -209,8 +209,9 @@ sem_scale_sample <- function(smp, s) {
 
 # OpenMx oracle for a model built by sem_model(): a RAM model on the covariance
 # matrix S * n / (n - 1) with numObs = n, labels p1..pq so the parameters line up.
-# Returns the fitted model; OpenMx's own numerical Hessian gives the SEs.
-sem_openmx <- function(mod, smp) {
+# `lbound` (named by parameter name) puts lower bounds on those parameters. Returns the fitted
+# model; OpenMx's own numerical Hessian gives the SEs.
+sem_openmx <- function(mod, smp, lbound = NULL) {
   ram <- mod$ram
   lab <- function(df, default) {
     key <- ifelse(nzchar(df$label), df$label, default)
@@ -219,13 +220,17 @@ sem_openmx <- function(mod, smp) {
   a_lab <- lab(mod$a, paste0(mod$a$row, " ~ ", mod$a$col))
   s_lab <- lab(mod$s, paste0(mod$s$row, " ~~ ", mod$s$col))
   start <- .sem_default_start(ram, smp) # nolint: object_usage_linter.
+  lower_for <- function(lbl) {
+    nm <- ram$par_names[as.integer(sub("^p", "", lbl))]
+    if (!is.na(lbl) && nm %in% names(lbound)) lbound[[nm]] else NA_real_
+  }
   paths <- list()
   for (i in seq_len(nrow(mod$a))) {
     free <- is.na(mod$a$value[i])
     paths[[length(paths) + 1L]] <- OpenMx::mxPath(
       from = mod$a$col[i], to = mod$a$row[i], arrows = 1, free = free,
       values = if (free) start[[as.integer(sub("^p", "", a_lab[i]))]] else mod$a$value[i],
-      labels = a_lab[i]
+      labels = a_lab[i], lbound = lower_for(a_lab[i])
     )
   }
   for (i in seq_len(nrow(mod$s))) {
@@ -233,11 +238,19 @@ sem_openmx <- function(mod, smp) {
     paths[[length(paths) + 1L]] <- OpenMx::mxPath(
       from = mod$s$row[i], to = if (mod$s$row[i] == mod$s$col[i]) NA else mod$s$col[i], arrows = 2, free = free,
       values = if (free) start[[as.integer(sub("^p", "", s_lab[i]))]] else mod$s$value[i],
-      labels = s_lab[i]
+      labels = s_lab[i], lbound = lower_for(s_lab[i])
     )
   }
   cv <- smp$s * smp$n / (smp$n - 1)
   dimnames(cv) <- list(ram$obs, ram$obs)
+  # OpenMx's default tolerances stop up to 5.5e-6 from the optimum (the native fit and lavaan with a tight
+  # tolerance agree to 4e-8 there; at 1e-12 OpenMx agrees to 6e-8), so the oracle is converged tightly.
+  old <- vapply(c("Optimality tolerance", "Feasibility tolerance", "Function precision"),
+                function(o) as.character(OpenMx::mxOption(NULL, o)), "")
+  OpenMx::mxOption(NULL, "Optimality tolerance", 1e-12)
+  OpenMx::mxOption(NULL, "Feasibility tolerance", 1e-12)
+  OpenMx::mxOption(NULL, "Function precision", 1e-15)
+  on.exit(for (o in names(old)) OpenMx::mxOption(NULL, o, if (old[[o]] == "Auto") "Auto" else as.numeric(old[[o]])))
   m <- do.call(OpenMx::mxModel, c(
     list("oracle", type = "RAM", manifestVars = ram$obs, latentVars = setdiff(ram$vars, ram$obs)),
     paths, list(OpenMx::mxData(observed = cv, type = "cov", numObs = smp$n))
