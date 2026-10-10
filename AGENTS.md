@@ -41,7 +41,7 @@ covr::package_coverage()          # Target: >90%
 **medfit** is the foundation package for the mediationverse ecosystem, providing:
 - **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`
 - **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan
-- **Fitting**: Formula-based `fit_mediation()` with the `glm` and `regmedint` engines, case `weights`, and `se_type = "sandwich"` (HC3)
+- **Fitting**: Formula-based `fit_mediation()` with the `glm` and `regmedint` engines, case `weights`, and `se_type = "sandwich"` (HC3); `fit_sem()` and `fit_mediation(engine = "native", model = )` fit medfit model syntax with the native ML engine (experimental, `SEMFit`)
 - **Inference**: delta-method effect SEs in `tidy()`/`confint()`; bootstrap (parametric, nonparametric, plugin)
 - **Data**: bundled simulated `mediation_demo` for every workflow
 - **Math**: every formula lives in `vignettes/articles/methods.qmd` (Methods and Formulas)
@@ -83,6 +83,10 @@ R/
 ├── extract-joint.R         # JointMediationData worker, stacked-OLS vcov
 ├── extract-lavaan.R        # lavaan extraction
 ├── extract-lmer.R          # ClusterMediationData from lme4 fits (term detection by value, KR)
+├── sem-*.R                 # native SEM engine internals: parse, expr, model, ml, optim, constraints, se, sandwich, fit, mbco (mbco_sem())
+├── fit-sem.R               # fit_sem(), .fit_mediation_native()
+├── extract-sem.R           # accessor seam (lavaan and native), extract_mediation() for SEMFit
+├── methods-sem.R           # SEMFit print/summary/coef/vcov/nobs/logLik; sem-syntax-help.R is ?"medfit-syntax"
 ├── generics-effects.R      # nie/nde/te/pm/paths/decompose
 ├── effect-se.R             # delta-method gradients, .effect_se(), .path_se()
 ├── methods-base.R          # print/summary/coef/vcov/confint/nobs
@@ -340,7 +344,8 @@ tests/testthat/
 ├── test-refcard-coverage.R, test-cookbook-consistency.R   # refcard names every export and class; cookbook recipes, links and cluster data match methods.qmd
 ├── test-effect-se.R, test-confint-paths.R, test-methods-*.R   # SEs, confint, tidy
 ├── test-serial-total-effect.R           # te() over every path
-├── test-fit-*.R                         # glm, regmedint, m_star
+├── test-fit-*.R                         # glm, regmedint, m_star, native (test-fit-sem.R)
+├── test-sem-*.R, helper-sem.R           # native SEM engine: parser, model, optimizer, constraints, SEs, weights, MBCO, methods, probmed gate
 ├── test-bootstrap*.R                    # Bootstrap methods
 └── test-mediation-demo.R                # bundled data known answers
 ```
@@ -476,6 +481,7 @@ breaking existing code, type safety via S7 validators.
 | `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
 | `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
 | `"lmer"` | lme4, pbkrtest (Suggests) | mixed models for cluster-level treatment; `cluster =`, `se_type = "kr"` | ✓ (no weights/sandwich/families) |
+| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `); latent mediators, constraints, `weights`/`se_type = "sandwich"`; `mbco_sem()` | ✓ experimental (no four-way, no mean structure) |
 | `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 
