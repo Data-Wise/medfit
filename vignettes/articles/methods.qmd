@@ -487,7 +487,89 @@ model the components are on that model's link scale, as regmedint reports
 them. `engine = "lmer"` fits the two linear mixed models of the cluster design
 above (REML, random cluster intercepts, the mediator and level-1 covariates
 split into within-cluster deviation and cluster mean) and passes them to
-`extract_mediation()`; it returns a `ClusterMediationData`.
+`extract_mediation()`; it returns a `ClusterMediationData`. `engine = "native"`
+fits model syntax with the engine described in the next section, then extracts
+the mediation structure through the same workers as the lavaan route.
+
+## Native SEM engine
+
+`fit_sem()` and `fit_mediation(engine = "native")` fit a model written in
+medfit model syntax (`?"medfit-syntax"`) by maximum likelihood to raw data.
+Rows with missing values in the model variables are dropped once (listwise
+deletion) and counted.
+
+**Model form.** The model is written in RAM form. With $A$ the matrix of
+directed paths, $S_{\text{ram}}$ the matrix of variances and covariances, and
+$F$ the selection matrix that picks the observed variables, the implied
+covariance of the observed variables is
+
+$$
+\Sigma(\theta) = F (I - A)^{-1} S_{\text{ram}} (I - A)^{-\top} F^\top .
+$$
+
+**Discrepancy.** With $S$ the sample covariance with divisor $n$ and $p$ the
+number of observed variables, the engine minimizes
+
+$$
+F_{ML}(\theta) = \log |\Sigma(\theta)| + \operatorname{tr}\left(S \Sigma(\theta)^{-1}\right) - \log |S| - p ,
+$$
+
+which is twice lavaan's `fmin`. With the means free,
+$-2 \log L = n \left(F_{ML} + \log |S| + p + p \log 2\pi\right)$, and
+`logLik()` reports this value. The gradient is analytic. A parameter vector
+whose implied covariance is not positive definite gets a large finite value
+and a zero gradient, so the optimizer can step back from it.
+
+**Standard errors.** The covariance of $\hat\theta$ is the inverse of the
+information for the log likelihood. The default, observed information, is
+$(n/2)$ times the central-difference Jacobian of the analytic gradient of
+$F_{ML}$ (step $\epsilon^{1/3} \max(|x|, 1)$). Expected information is
+$(n/2)\, \operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\, \Sigma^{-1} \partial_l \Sigma\right)$.
+A singular information matrix gives an `NA` covariance and one warning. Defined
+parameters (`:=`) get delta-method standard errors, $\sqrt{g^\top V g}$, with
+the gradient $g$ taken by central differences over the labels.
+
+**Constraints.** Equality and inequality constraints that are linear in the
+labels become rows $a^\top\theta + b$, normalized to unit length, with constant
+Jacobians for the optimizer (SLSQP through nloptr). A nonlinear constraint is
+an error. At the solution the active constraints and active bounds define a
+null-space basis $Z$ of the feasible directions, and the covariance is
+projected,
+
+$$
+V = Z \left(Z^\top I Z\right)^{-1} Z^\top ,
+$$
+
+so a parameter pinned by a constraint has zero variance and `a == b` returns
+the standard error of the model with `a` and `b` collapsed to one label.
+
+**Acceptance.** A solution is accepted only if the optimizer status is a
+success code, every constraint holds to $10^{-6}$ in the solver's natural
+units, and the Newton decrement $\sqrt{g_r^\top H_r^{-1} g_r}$ on the reduced
+gradient and Hessian of the active-constraint null space is at most
+$10^{-3}$, with a positive definite reduced Hessian. The decrement is scale
+free, so rescaling the data does not change the verdict. The sign of each
+active inequality's multiplier is checked and only warns: a wrong sign means
+the point may not be a local minimum, and the fit is not rejected for it.
+
+**Starts.** The first start is moment based. If it is not accepted, up to
+`n_starts - 1` retries use perturbed starts drawn under a fixed seed derived
+from the model, restoring the caller's random number state afterward, so a fit
+is reproducible and never changes a simulation around it. When no start is
+accepted the error names the best attempt's status and stationarity, and for an
+infeasible constraint set, the violated constraint.
+
+```{r}
+#| label: native-sem-example
+#| echo: true
+fit <- fit_sem(
+  "mediator1 ~ a*treatment + covariate1
+   outcome ~ b*mediator1 + treatment + covariate1
+   ab := a*b",
+  data = mediation_demo
+)
+fit@defined
+```
 
 ## References
 

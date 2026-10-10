@@ -48,6 +48,7 @@
   S7::S4_register(JointMediationData)
   S7::S4_register(ClusterMediationData)
   S7::S4_register(BootstrapResult)
+  S7::S4_register(SEMFit)
 
   # Register S7 methods for dispatch
   # This is required for methods on generics from other packages
@@ -65,6 +66,7 @@
   S7::method(show, InteractionMediationData) <- .show_via_print
   S7::method(show, JointMediationData) <- .show_via_print
   S7::method(show, ClusterMediationData) <- .show_via_print
+  S7::method(show, SEMFit) <- .show_via_print
 
   # Explicitly register the S3 print method for `mediation_effect`.
   #
@@ -92,6 +94,7 @@
   registerS3method("print", "summary.SerialMediationData", print.summary.SerialMediationData)
   registerS3method("print", "summary.JointMediationData", print.summary.JointMediationData)
   registerS3method("print", "summary.ClusterMediationData", print.summary.ClusterMediationData)
+  registerS3method("print", "summary.SEMFit", print.summary.SEMFit)
 
   # Register extraction methods for suggested packages (S4 classes)
   # lavaan is in Suggests, so we register dynamically if available

@@ -132,18 +132,22 @@ reference:
       - JointMediationData
       - ClusterMediationData
       - BootstrapResult
+      - SEMFit
 
   - title: "Model Fitting"
     desc: "Functions for fitting and extracting mediation models"
     contents:
       - extract_mediation
       - fit_mediation
+      - fit_sem
+      - medfit-syntax
       - bootstrap_mediation
 
   - title: "Methods"
     desc: "Print and summary methods for medfit classes"
     contents:
       - tidy.S7_object
+      - SEMFit-methods
       - starts_with("print")
 
 development:

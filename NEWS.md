@@ -1,6 +1,40 @@
 # medfit (development version)
 
+## New features
+
+* New native maximum-likelihood structural equation engine (experimental).
+  `fit_sem(model, data)` fits lavaan-style model syntax to raw data and
+  returns a `SEMFit` with `print()`, `summary()`, `coef()`, `vcov()`,
+  `nobs()` and `logLik()`. It handles observed and latent variables, labels,
+  fixed values, starts and bounds, linear equality and inequality constraints
+  (`==`, `<`, `>`), and defined parameters (`:=`) with delta-method standard
+  errors. The syntax is documented in `?"medfit-syntax"`, including the two
+  medfit extensions (comma shorthand and `CONSTRAINT(...)`).
+* `fit_mediation(engine = "native", model = , treatment = , mediator = )`
+  fits the syntax and returns the usual mediation objects, for observed
+  single, serial and parallel mediators and for a latent mediator, which need
+  not be a column of `data`. `extract_mediation()` has a method for `SEMFit`
+  that shares its workers with the lavaan route, so the aliases and covariance
+  rows are the same; its `source_package` is `"medfit"`.
+* Standard errors use observed information by default (`information =
+  "expected"` is available). Against OpenMx they agree to 1.6e-4 in the worst
+  of 240 simulated datasets; expected information for latent-variable models
+  differs from that reference by up to 11% at n = 50, which is why observed is
+  the default. Under equality constraints and at active bounds the covariance
+  is projected onto the feasible directions, so a constrained parameter has
+  zero variance and `a == b` gives the standard error of the collapsed model.
+* Not yet supported by the native engine: sampling weights and
+  `se_type = "sandwich"`, mean structures (free intercepts), the four-way
+  decomposition (it needs the mediator intercept; use `decomposition =
+  "two_way"`), standardized estimates, multilevel models, and nonlinear
+  constraints.
+
 ## Behavior change
+
+* `fit_mediation()` has a new named argument `model`. An argument passed to
+  `stats::glm()` through `...` that partially matches it, such as
+  `mod = FALSE`, now binds to `model` instead; spell out the `glm()`
+  argument or drop it.
 
 * `extract_mediation()` on a lavaan fit of a simple single-mediator model now
   appends the rows `m_<treatment>`, `y_<mediator>` and `y_<treatment>` to

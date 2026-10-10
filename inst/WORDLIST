@@ -16,6 +16,7 @@ coef
 confint
 confounder
 Dependabot
+Deprecations
 DOP
 EDE
 Epidemiologic
@@ -34,7 +35,10 @@ IPW
 JointMediationData
 Kenward
 lavaan
+lavaan's
 Lifecycle
+lifecycle
+listwise
 Loeys
 lintr
 lm
@@ -54,6 +58,7 @@ nde
 NDE
 nie
 NIE
+nloptr
 noSuggests
 nobs
 nonparametrically
@@ -80,8 +85,10 @@ Roadmap
 roxygen
 Roxygen
 SDs
+SEMFit
 SerialMediationData
 SEs
+SLSQP
 te
 testthat
 th

@@ -10,8 +10,10 @@
 #' provides a convenient formula-based interface for fitting both the
 #' mediator and outcome models simultaneously.
 #'
-#' @param formula_y Formula for outcome model (e.g., `Y ~ X + M + C`)
-#' @param formula_m Formula for mediator model (e.g., `M ~ X + C`)
+#' @param formula_y Formula for outcome model (e.g., `Y ~ X + M + C`). Not used
+#'   with `engine = "native"`, which takes `model` instead.
+#' @param formula_m Formula for mediator model (e.g., `M ~ X + C`). Not used
+#'   with `engine = "native"`.
 #' @param data Data frame containing all variables
 #' @param treatment Character string: name of treatment variable
 #' @param mediator Character string: name of mediator variable
@@ -21,6 +23,11 @@
 #'     \item `"regmedint"`: Closed-form regression-based (in)direct effects via
 #'       the suggested \pkg{regmedint} package (VanderWeele's regression
 #'       approach, with optional treatment-mediator interaction)
+#'     \item `"native"`: medfit's own maximum-likelihood SEM engine, fitted from
+#'       model syntax given as `model` (see [fit_sem()]); the fit is then
+#'       extracted with [extract_mediation()]. Supports observed and latent
+#'       mediators, equality and inequality constraints, and `:=` parameters.
+#'       Not yet supported: `weights`, `se_type = "sandwich"`.
 #'     \item `"lmer"`: Linear mixed models for a treatment assigned to whole
 #'       clusters (the 2-1-1 design), via the suggested \pkg{lme4} package;
 #'       needs `cluster =` and returns a [ClusterMediationData]. The engine
@@ -34,6 +41,11 @@
 #'   }
 #' @param cluster Character string: name of the cluster variable in `data`.
 #'   Required with `engine = "lmer"`, an error with the other engines.
+#' @param model Character string: model syntax for `engine = "native"` (required
+#'   there, an error with any other engine). `treatment` and `mediator` name
+#'   variables in the syntax; a latent mediator need not be a column of `data`.
+#'   Because `model` is a named argument, an argument passed to [stats::glm()]
+#'   through `...` that partially matches it (`mod = FALSE`) now binds here.
 #' @param family_y Family object for outcome model (default: `gaussian()`)
 #' @param family_m Family object for mediator model (default: `gaussian()`)
 #' @param weights Optional numeric vector of case weights (length `nrow(data)`),
@@ -48,6 +60,10 @@
 #'   t intervals; it needs REML fits and the suggested \pkg{pbkrtest} package.
 #' @param engine_args Named list of engine-specific overrides (default:
 #'   `list()`, no overrides). Ignored by `engine = "glm"`. For
+#'   `engine = "native"`, recognized names are `information`, `n_starts` and
+#'   `control` (passed to [fit_sem()]) and `outcome`, `structure`,
+#'   `decomposition`, `interaction`, `a_label`, `b_label` and `cp_label`
+#'   (passed to [extract_mediation()]); any other name is an error. For
 #'   `engine = "lmer"`, recognized names are `random_y` and `random_m`
 #'   (one-sided formulas of level-1 terms that get correlated random slopes;
 #'   `~ M` in `random_y` is applied to the within-cluster mediator term) and
@@ -199,15 +215,31 @@ fit_mediation <- function(formula_y,
                           engine_args = list(),
                           m_star = 0,
                           cluster = NULL,
+                          model = NULL,
                           ...) {
   se_type <- match.arg(se_type)
+  if (identical(engine, "native")) {
+    return(.fit_mediation_native(
+      model = model, data = data, treatment = treatment, mediator = mediator,
+      given = list(
+        formulas = !missing(formula_y) || !missing(formula_m),
+        family = !missing(family_y) || !missing(family_m),
+        m_star = !missing(m_star)
+      ),
+      weights = weights, se_type = se_type, cluster = cluster, engine_args = engine_args,
+      m_star = m_star, dots = list(...)
+    ))
+  }
+  if (!is.null(model)) {
+    stop("`model` is only used with engine = \"native\".", call. = FALSE)
+  }
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
   checkmate::assert_formula(formula_y, .var.name = "formula_y")
   checkmate::assert_formula(formula_m, .var.name = "formula_m")
   checkmate::assert_data_frame(data, min.rows = 1, .var.name = "data")
   checkmate::assert_string(treatment, .var.name = "treatment")
   checkmate::assert_string(mediator, .var.name = "mediator")
-  checkmate::assert_choice(engine, choices = c("glm", "regmedint", "lmer"),
+  checkmate::assert_choice(engine, choices = c("glm", "regmedint", "lmer", "native"),
                            .var.name = "engine")
   checkmate::assert_list(engine_args, names = "unique", .var.name = "engine_args")
   checkmate::assert_number(m_star, .var.name = "m_star")
