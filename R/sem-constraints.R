@@ -83,6 +83,24 @@
   )
 }
 
+# The equality rows the solver can be given: an independent subset, in the original order. A linearly
+# dependent set (a duplicate, `a == b` with `b == a`, a transitive triple) gives SLSQP a rank-deficient
+# Jacobian and it stops with status -4, although the constraints are consistent. A dependent row dropped here
+# is still checked by the acceptance gate, which uses every row, so contradictory constraints (`a == 1` with
+# `a == 2`) are still reported as violated. Rows are unit length, so the rank tolerance is in angle terms
+# and matches the one the sign check uses.
+.sem_independent_rows <- function(eq) {
+  if (nrow(eq$A) < 2L) {
+    return(eq)
+  }
+  dec <- qr(t(eq$A), tol = 1e-8)
+  if (dec$rank == nrow(eq$A)) {
+    return(eq)
+  }
+  keep <- sort(dec$pivot[seq_len(dec$rank)])
+  list(A = eq$A[keep, , drop = FALSE], b = eq$b[keep], text = eq$text[keep])
+}
+
 # nloptr arguments for the rows in the solver's coordinates x = theta / u: the
 # Jacobian is the row scaled by u, constant.
 .sem_nlopt_constraints <- function(cons, u) {
@@ -90,11 +108,12 @@
     return(NULL)
   }
   out <- list()
+  eq <- .sem_independent_rows(cons$eq)
   # One binding per block: the closures capture this environment, so a shared name would let the
   # inequality rows replace the equality Jacobian.
-  if (nrow(cons$eq$A)) {
-    jac_eq <- sweep(cons$eq$A, 2L, u, "*")
-    out$eval_g_eq <- function(x) as.vector(jac_eq %*% x) + cons$eq$b
+  if (nrow(eq$A)) {
+    jac_eq <- sweep(eq$A, 2L, u, "*")
+    out$eval_g_eq <- function(x) as.vector(jac_eq %*% x) + eq$b
     out$eval_jac_g_eq <- function(x) jac_eq
   }
   if (nrow(cons$ineq$A)) {
