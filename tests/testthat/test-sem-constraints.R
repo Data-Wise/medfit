@@ -147,6 +147,90 @@ test_that("planted defect: dropping the inequality negation flips a > constraint
   expect_lt(bad[["a"]] - bad[["b"]], 0.2 - 1e-3)
 })
 
+# --- Mixed equality and inequality constraints -------------------------------------
+# One equality beside one inequality was never tested, and both Jacobians used to share one binding, so the
+# equality callbacks read the inequality rows (the native fit then errored with the equality violated).
+
+mixed_cases <- c("a == 0\nb + cp < 1", "a == 0\nb + cp < 0.3", "a == 0\nb + cp < 1\ncp > -5",
+                 "a == 0\ncp == 0.1\nb + cp < 1")
+
+# TRUE when each callback pair of `fn(cons, u)` reproduces its own rows: the Jacobian is the row scaled by u and
+# the value is A (u * x) + b (computed independently of the sweep the engine uses).
+callbacks_follow_rows <- function(fn, cons, u, q) {
+  nl <- fn(cons, u)
+  x <- seq_len(q) / 10
+  ok <- TRUE
+  for (kind in c("eq", "ineq")) {
+    a <- cons[[kind]]$A
+    if (!nrow(a)) next
+    jac <- nl[[paste0("eval_jac_g_", kind)]](x)
+    val <- nl[[paste0("eval_g_", kind)]](x)
+    ok <- ok && isTRUE(all.equal(unname(jac), unname(sweep(a, 2L, u, "*")))) &&
+      isTRUE(all.equal(as.vector(val), as.vector(a %*% (u * x)) + cons[[kind]]$b))
+  }
+  ok
+}
+
+test_that("with both kinds of constraint, each callback pair uses its own rows", {
+  for (extra in mixed_cases) {
+    s <- cons_setup(extra)
+    q <- s$ram$q
+    for (u in list(rep(1, q), seq_len(q) * 0.7 + 0.2)) {
+      expect_true(callbacks_follow_rows(.sem_nlopt_constraints, s$cons, u, q), info = extra)
+    }
+  }
+})
+
+test_that("planted defect: one Jacobian binding shared by both callback pairs fails the callback check", {
+  # the original construction: `jac` is rebound by the inequality block, and the closures see the last value
+  shared <- function(cons, u) {
+    out <- list()
+    if (nrow(cons$eq$A)) {
+      jac <- sweep(cons$eq$A, 2L, u, "*")
+      out$eval_g_eq <- function(x) as.vector(jac %*% x) + cons$eq$b
+      out$eval_jac_g_eq <- function(x) jac
+    }
+    if (nrow(cons$ineq$A)) {
+      jac <- sweep(cons$ineq$A, 2L, u, "*")
+      out$eval_g_ineq <- function(x) as.vector(jac %*% x) + cons$ineq$b
+      out$eval_jac_g_ineq <- function(x) jac
+    }
+    out
+  }
+  s <- cons_setup("a == 0\nb + cp < 1")
+  u <- rep(1, s$ram$q)
+  expect_false(callbacks_follow_rows(shared, s$cons, u, s$ram$q))
+  # a single kind of constraint cannot show it, which is how it went unseen
+  expect_true(callbacks_follow_rows(shared, cons_setup("a == 0")$cons, u, s$ram$q))
+})
+
+# lavaan's default stopping rule leaves the active-inequality case about 3e-6 from its own tightly converged
+# solution (b = 0.299433 default, 0.2994357 at rel.tol 1e-12; ours 0.2994353), so the oracle here is tightened.
+lav_estimates_tight <- function(extra, data = cons_data()) {
+  fit <- lavaan::sem(paste0(cons_model, "\n", extra), data = data, fixed.x = FALSE,
+                     control = list(rel.tol = 1e-12, eval.max = 10000))
+  pe <- lavaan::parameterEstimates(fit)
+  pe$est[match(c("M ~ X", "Y ~ M", "Y ~ X"), paste(pe$lhs, pe$op, pe$rhs))]
+}
+
+test_that("mixed constraints match lavaan: an inactive and an active inequality, and two equalities", {
+  skip_if_not_installed("lavaan")
+  for (extra in mixed_cases) {
+    s <- cons_setup(extra)
+    ours <- cons_solve(s)
+    expect_equal(unname(ours[c("a", "b", "cp")]), lav_estimates_tight(extra), tolerance = 1e-5, info = extra)
+    expect_equal(ours[["a"]], 0, tolerance = 1e-6, info = extra)
+    expect_lt(max(.sem_constraint_residual(ours, s$cons)), 1e-6)
+  }
+})
+
+test_that("fit_sem() accepts an equality beside an inequality", {
+  fit <- fit_sem(paste0(cons_model, "\na == 0\nb + cp < 0.3"), cons_data())
+  expect_true(fit@converged)
+  expect_equal(unname(fit@theta[["a"]]), 0, tolerance = 1e-6)
+  expect_lte(unname(fit@theta[["b"]] + fit@theta[["cp"]]), 0.3 + 1e-6)
+})
+
 test_that("rows scale to the solver's coordinates when preconditioned", {
   s <- cons_setup("a + b == 0.5")
   scaled <- cons_data()

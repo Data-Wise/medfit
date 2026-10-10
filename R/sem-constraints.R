@@ -90,15 +90,17 @@
     return(NULL)
   }
   out <- list()
+  # One binding per block: the closures capture this environment, so a shared name would let the
+  # inequality rows replace the equality Jacobian.
   if (nrow(cons$eq$A)) {
-    jac <- sweep(cons$eq$A, 2L, u, "*")
-    out$eval_g_eq <- function(x) as.vector(jac %*% x) + cons$eq$b
-    out$eval_jac_g_eq <- function(x) jac
+    jac_eq <- sweep(cons$eq$A, 2L, u, "*")
+    out$eval_g_eq <- function(x) as.vector(jac_eq %*% x) + cons$eq$b
+    out$eval_jac_g_eq <- function(x) jac_eq
   }
   if (nrow(cons$ineq$A)) {
-    jac <- sweep(cons$ineq$A, 2L, u, "*")
-    out$eval_g_ineq <- function(x) as.vector(jac %*% x) + cons$ineq$b
-    out$eval_jac_g_ineq <- function(x) jac
+    jac_ineq <- sweep(cons$ineq$A, 2L, u, "*")
+    out$eval_g_ineq <- function(x) as.vector(jac_ineq %*% x) + cons$ineq$b
+    out$eval_jac_g_ineq <- function(x) jac_ineq
   }
   out
 }
