@@ -18,8 +18,11 @@
 .sem_ok_status <- c(1L, 3L, 4L)
 
 # Thin wrapper so tests can stub the solver.
-.sem_nlopt <- function(x0, eval_f, eval_grad_f, lb, ub, opts) {
-  nloptr::nloptr(x0 = x0, eval_f = eval_f, eval_grad_f = eval_grad_f, lb = lb, ub = ub, opts = opts)
+.sem_nlopt <- function(x0, eval_f, eval_grad_f, lb, ub, opts, constraints = NULL) {
+  do.call(nloptr::nloptr, c(
+    list(x0 = x0, eval_f = eval_f, eval_grad_f = eval_grad_f, lb = lb, ub = ub, opts = opts),
+    constraints
+  ))
 }
 
 # Objective and gradient closures sharing one evaluation per parameter vector
@@ -55,9 +58,12 @@
 # the model, the start, the bounds and the acceptance gate stay in original
 # units. SLSQP stalls when parameters differ by orders of magnitude (variances
 # 1e6 beside paths of 1 when the data are in large units).
-.sem_solve_one <- function(start, ram, smp, lb, ub, opts, precondition = TRUE, obj = .sem_objective(ram, smp)) {
+.sem_solve_one <- function(start, ram, smp, lb, ub, opts, precondition = TRUE, obj = .sem_objective(ram, smp),
+                           cons = NULL) {
   u <- if (precondition) .sem_step_floor(ram, smp) else rep(1, ram$q)
-  res <- .sem_nlopt(start / u, function(x) obj$f(x * u), function(x) obj$g(x * u) * u, lb / u, ub / u, opts)
+  args <- list(start / u, function(x) obj$f(x * u), function(x) obj$g(x * u) * u, lb / u, ub / u, opts)
+  if (!is.null(cons)) args$constraints <- .sem_nlopt_constraints(cons, u)
+  res <- do.call(.sem_nlopt, args)
   res$solution <- res$solution * u
   res
 }
