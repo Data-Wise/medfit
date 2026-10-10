@@ -99,3 +99,17 @@ test_that("a start, bound or fixed value in the syntax reaches the optimizer", {
   expect_false("M ~ X" %in% names(fixed$theta))
   expect_identical(fixed$df, 1)
 })
+
+test_that("table, par_map and partable stay aligned when a fixed-zero intercept row is dropped", {
+  set.seed(1)
+  d <- data.frame(x = stats::rnorm(200))
+  d$m <- 0.5 * d$x + stats::rnorm(200)
+  d$y <- 0.4 * d$m + stats::rnorm(200)
+  fit <- .sem_fit_syntax("m ~ 0*1\nm ~ x\ny ~ m", d)
+  expect_identical(length(fit$par_map), nrow(fit$table))
+  expect_identical(nrow(fit$partable), nrow(fit$table))
+  expect_false(any(fit$table$op == "~1"))
+  free <- !is.na(fit$par_map)
+  expect_identical(fit$table$lhs[free][fit$par_map[free] == match("m ~ x", names(fit$theta))], "m")
+  expect_identical(sum(free), length(fit$theta))
+})

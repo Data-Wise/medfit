@@ -66,8 +66,8 @@
   c(
     fit,
     list(
-      vcov = vc, information = information, ram = ram, table = tab, par_map = conv$par_map,
-      partable = .sem_to_partable(tab), data = x, n_obs = smp$n, n_dropped = n_dropped, df = df
+      vcov = vc, information = information, ram = ram, table = conv$table, par_map = conv$par_map,
+      partable = .sem_to_partable(conv$table), data = x, n_obs = smp$n, n_dropped = n_dropped, df = df
     )
   )
 }
