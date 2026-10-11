@@ -15,8 +15,8 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [x] T6 Accept consistent redundant inequality sets (F1)
 - [x] T7 Port the NNLS multiplier-sign gate (needs T1)
 - [x] T8 Unify the bound verdict (F4) + NEWS (needs T7) (#146)
-- [ ] T8b Close the F4 gap found by T9 (ledger G14, defects 1, 2, 5): the projected gate's bound test uses the plain gate's `abs(g_k)/sqrt(H_kk)` statistic and a positive-definite guard, and blames a bound only when its own statistic exceeds `.sem_stat_tol`; tests with an indefinite Hessian and a bound beside a wrong-sign inequality (needs T8)
-- [x] T9 Close S1 with a fresh-context review (needs T7, T8): review recorded as ledger G14; F4 stays open until T8b
+- [x] T8b Close the F4 gap found by T9 (ledger G14, defects 1, 2, 5): the projected gate's bound test uses the plain gate's `abs(g_k)/sqrt(H_kk)` statistic and a positive-definite guard, and blames a bound only when its own statistic exceeds `.sem_stat_tol`; tests with an indefinite Hessian and a bound beside a wrong-sign inequality (needs T8)
+- [x] T9 Close S1 with a fresh-context review (needs T7, T8): review recorded as ledger G14; F4 closed by T8b (#147)
 
 ### Checkpoint A
 - [ ] Full unit suite, lint, H-parity, H-constrained, strict `check` pass (counts reported)
