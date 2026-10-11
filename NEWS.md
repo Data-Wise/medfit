@@ -31,6 +31,12 @@
   says that CRAN 0.3.2 does not run the examples (it lacks `mediation_demo`,
   `fit_sem()`, `mbco_sem()` and the joint and cluster classes). Getting Started,
   the cookbook and the Reference Card state the version they need.
+* Getting Started and the Introduction now cover the cluster and native engines
+  (an engine table, the two classes, and a `fit_sem()` example), and the Model
+  Extraction article has a section on extracting from a `SEMFit`. `?extract_mediation`
+  lists the `SEMFit` method and the `ClusterMediationData` return, and no longer
+  names `brms` as a supported model type; it is still future work.
+* `?SEMFit`, `?SEMFit-methods` and `?"medfit-syntax"` now have examples that run.
 
 # medfit 0.7.0
 

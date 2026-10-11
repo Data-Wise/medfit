@@ -2188,6 +2188,17 @@ print.summary.ClusterMediationData <- function(x, ...) {
 #' SEMFit(theta, vcov, table, defined, f, n_obs, n_dropped, df, information,
 #'   converged, data, model, diagnostics, internals, call)
 #'
+#' @examples
+#' \donttest{
+#' fit <- fit_sem(
+#'   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+#'   data = mediation_demo
+#' )
+#' fit@table[fit@table$op == "~", c("lhs", "rhs", "est", "se")]
+#' fit@defined
+#' fit@converged
+#' }
+#'
 #' @seealso [fit_sem()]
 #' @export
 SEMFit <- S7::new_class(

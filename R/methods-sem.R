@@ -30,6 +30,18 @@
 #' @return `coef()` a named numeric vector; `vcov()` a matrix; `nobs()` an
 #'   integer; `logLik()` an object of class `"logLik"`; `summary()` an object of
 #'   class `"summary.SEMFit"`; `print()` invisibly returns its argument.
+#' @examples
+#' \donttest{
+#' fit <- fit_sem(
+#'   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+#'   data = mediation_demo
+#' )
+#' coef(fit)
+#' vcov(fit)[c("a", "b"), c("a", "b")]
+#' nobs(fit)
+#' summary(fit)
+#' }
+#'
 #' @name SEMFit-methods
 #' @seealso [fit_sem()], [SEMFit]
 NULL

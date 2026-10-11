@@ -754,6 +754,27 @@ returning an object whose numbers would disagree with `nie()`. `weights` and
 `regmedint` is a suggested package — install it with
 `install.packages("regmedint")`.
 
+## Extracting from a Native SEM Fit
+
+`fit_sem()` fits model syntax with the experimental native engine and returns a
+`SEMFit`. `extract_mediation()` accepts it with the same arguments as the lavaan
+method and returns the same classes:
+
+```{r}
+#| label: extract-native
+sem <- fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+  data = mediation_demo
+)
+x_sem <- extract_mediation(sem, treatment = "treatment", mediator = "mediator1")
+nie(x_sem)
+```
+
+The four-way decomposition needs a mediator intercept, which the native engine
+does not estimate, so a treatment-by-mediator model is not supported on this
+route; fit it with `lm`/`glm` or lavaan (`meanstructure = TRUE`) instead. See
+`?"medfit-syntax"` for the syntax.
+
 ## Compatibility with RMediation
 
 The extraction design is compatible with RMediation's lavaan extractor:
@@ -852,7 +873,7 @@ The extraction system is designed to accommodate future extensions:
 - **New model types**: Add methods for brms, glmer, etc. (`lmer` is done)
 - **Complex mediation**: Moderated mediation
 - **Multiple treatments**: Comparative mediation analysis
-- **Latent variables**: SEM with measurement models
+- **Latent variables**: SEM with measurement models (`fit_sem()` is the experimental native route; extend it)
 
 All classes share the same interface, so new model types plug into the same effects, intervals and bootstrap.
 
@@ -927,5 +948,6 @@ Model extraction is **complete**:
 - ✅ Tidyverse methods (tidy, glance)
 - ✅ Base R generics (coef, vcov, confint, nobs)
 - ✅ lmer extraction (`ClusterMediationData`, cluster-level treatment)
+- ✅ Native SEM extraction (`fit_sem()` to `SEMFit` to `extract_mediation()`, experimental)
 
 See `NEWS.md` for updates.

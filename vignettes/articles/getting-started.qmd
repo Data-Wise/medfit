@@ -279,7 +279,7 @@ supports neither `weights` nor `se_type = "sandwich"`.
 ### Choosing an Engine
 
 `fit_mediation()` defaults to `engine = "glm"`, which fits both models with
-`stats::glm()`. A second engine delegates to the suggested
+`stats::glm()`. The `regmedint` engine delegates to the suggested
 [regmedint](https://cran.r-project.org/package=regmedint) package for
 closed-form regression-based effects:
 
@@ -306,6 +306,20 @@ analytical standard errors in the regmedint case. The reference mediator level
 for the CDE is set with `m_star` (default `0`, on both engines); other
 engine-specific settings go through `engine_args`. See
 [Model Extraction](extraction.html) for the full mapping and its scope limits.
+
+### Cluster and Latent-Variable Engines
+
+Two more engines cover designs the formula interface above does not:
+
+| Engine | Use it when | Needs | Recipe |
+|---|---|---|---|
+| `"lmer"` | the treatment is assigned to whole clusters (schools, clinics) | `lme4` and `cluster = `; `pbkrtest` for `se_type = "kr"` | [Cookbook recipe 9](cookbook.html#cluster-randomized-trial) |
+| `"native"` | a latent mediator, constraints, or a model written as syntax | `model = ` in place of the formulas; experimental | [Cookbook recipe 11](cookbook.html#a-latent-mediator-native-engine) |
+
+The `lmer` engine returns a `ClusterMediationData` object, and the native
+engine's `fit_sem()` returns a `SEMFit`; `extract_mediation()` turns a `SEMFit`
+into the same classes as the other routes, so `nie()`, `tidy()` and the
+bootstrap work unchanged.
 
 ### Custom Bootstrap
 
@@ -347,8 +361,15 @@ glance(boot_result)
 - Serial and parallel mediators (`SerialMediationData`,
   `ParallelMediationData`), and joint natural effects of several mediators
   with treatment-by-mediator products (`JointMediationData`)
-- Extraction from lm/glm and lavaan fits; fitting with the `glm` and
-  `regmedint` engines, optional case weights and sandwich standard errors
+- Cluster-randomized trials: treatment assigned to whole clusters
+  (`ClusterMediationData`, `engine = "lmer"`), with Kenward-Roger intervals and
+  a cluster bootstrap
+- Latent mediators and constraints written as model syntax, fitted by the
+  experimental native engine (`fit_sem()`, `SEMFit`), with `mbco_sem()` for the
+  test of the indirect effect
+- Extraction from lm/glm, lavaan and lmer fits; fitting with the `glm`,
+  `regmedint`, `lmer` and native engines, optional case weights and sandwich
+  standard errors
 - Delta-method standard errors in `tidy()` and `confint()`, and parametric,
   nonparametric and plugin bootstrap
 - The [Methods and Formulas](methods.html) article gives the math behind

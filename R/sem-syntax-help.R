@@ -46,6 +46,27 @@
 #' `sin`, `cos`, `tan`, `pnorm` and `qnorm`. Anything else is
 #' rejected with the construct named.
 #'
+#' @examples
+#' \donttest{
+#' # Labeled paths and a defined parameter
+#' fit_sem(
+#'   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\nab := a*b",
+#'   data = mediation_demo
+#' )@defined
+#'
+#' # Comma shorthand: one left-hand side per name
+#' coef(fit_sem(
+#'   "mediator1, mediator2 ~ treatment\noutcome ~ mediator1 + mediator2 + treatment",
+#'   data = mediation_demo
+#' ))[1:3]
+#'
+#' # An equality constraint, written with the CONSTRAINT() keyword
+#' coef(fit_sem(
+#'   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nCONSTRAINT(a == b)",
+#'   data = mediation_demo
+#' ))[c("a", "b")]
+#' }
+#'
 #' @seealso [fit_sem()], [SEMFit]
 #' @name medfit-syntax
 #' @aliases medfit_syntax

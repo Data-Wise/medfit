@@ -33,6 +33,19 @@ degrees of freedom, retries, stationarity, active bounds and constraints,
 improper-solution flags and the multiplier sign check.
 }
 }
+\examples{
+\donttest{
+fit <- fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+  data = mediation_demo
+)
+coef(fit)
+vcov(fit)[c("a", "b"), c("a", "b")]
+nobs(fit)
+summary(fit)
+}
+
+}
 \seealso{
 \code{\link[=fit_sem]{fit_sem()}}, \link{SEMFit}
 }

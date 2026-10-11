@@ -53,6 +53,18 @@ maximum-likelihood engine (see \code{\link[=fit_sem]{fit_sem()}}): estimates, th
 the parameter table, defined parameters (\verb{:=}) with delta-method standard
 errors, and the diagnostics of the optimizer.
 }
+\examples{
+\donttest{
+fit <- fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+  data = mediation_demo
+)
+fit@table[fit@table$op == "~", c("lhs", "rhs", "est", "se")]
+fit@defined
+fit@converged
+}
+
+}
 \seealso{
 \code{\link[=fit_sem]{fit_sem()}}
 }
