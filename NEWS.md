@@ -13,6 +13,11 @@
   models you fitted yourself used different rows. The estimates are unchanged
   when the models already used the same rows; the native and lmer engines
   already counted correctly.
+* `fit_mediation()` applies `subset`, `weights`, `offset`, `etastart` and
+  `mustart` to the rows you passed, then drops incomplete rows. After #138 a
+  `subset` containing an incomplete row selected the next row instead, and a
+  vector `offset` stopped the fit with a length error. `n_obs` now counts the
+  rows the models used when `subset` is given.
 * `fit_mediation(engine = "lmer")` now stops with an error when either formula
   contains an `offset()`. The engine rebuilds both formulas from their terms,
   which exclude offsets, so the offset was dropped without a word and the fit
