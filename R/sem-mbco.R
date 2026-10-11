@@ -137,12 +137,13 @@ mbco_sem <- function(fit, a, b, n_starts = NULL, control = NULL) {
   )
 }
 
-# Warn when the null lies on the boundary of the parameter space: an inequality constraint that involves the
-# tested parameter is active at its null refit, or the tested parameter sits on a bound there (the parser folds
-# `a > 0` into a bound, so it is not an inequality row). The likelihood-ratio statistic is then a mixture of
-# chi-squares rather than chi-square(1). An inequality that is inactive, one on another parameter, or one that
-# leaves the null in the interior (`a < 0.2` with the null at 0) changes nothing here.
-.mbco_warn_boundary <- function(refit, con, labels) {
+# The boundary conditions at a fit, for the tested parameter labels: a bound on one of them that is active, or an
+# inequality constraint that involves one of them and is active (the parser folds `a > 0` into a bound, so it is
+# not an inequality row). When the null lies there, the likelihood-ratio statistic is a mixture of chi-squares
+# rather than chi-square(df). An inequality that is inactive, one on another parameter, or one that leaves the
+# null in the interior (`a < 0.2` with the null at 0) changes nothing here. `refit` is the engine's fit list
+# (`active_bounds`, `constraints`, `ram`, `theta`); returns one phrase per active condition, or character(0).
+.sem_boundary_active <- function(refit, labels) {
   active <- character()
   bounds <- intersect(refit$active_bounds, labels)
   if (length(bounds)) {
@@ -152,12 +153,19 @@ mbco_sem <- function(fit, a, b, n_starts = NULL, control = NULL) {
   ineq <- if (is.null(rows)) NULL else rows$ineq
   if (!is.null(ineq) && nrow(ineq$A)) {
     idx <- match(labels, refit$ram$par_names)
+    idx <- idx[!is.na(idx)]
     value <- as.vector(ineq$A %*% refit$theta) + ineq$b
     hit <- which(value > -1e-6 & rowSums(abs(ineq$A[, idx, drop = FALSE]) > 0) > 0)
     if (length(hit)) {
       active <- c(active, sprintf("the constraint '%s'", paste(ineq$text[hit], collapse = "', '")))
     }
   }
+  active
+}
+
+# Warn when the null lies on the boundary of the parameter space at a refit.
+.mbco_warn_boundary <- function(refit, con, labels) {
+  active <- .sem_boundary_active(refit, labels)
   if (length(active)) {
     warning(sprintf(paste0("%s is active at the refit with `%s`: the null lies on the boundary of the parameter ",
                            "space, so the statistic is a mixture of chi-squares, not chi-square(1), and its ",

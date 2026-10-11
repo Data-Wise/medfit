@@ -1,5 +1,20 @@
 # medfit (development version)
 
+## New features
+
+* `anova()` for `SEMFit`: the likelihood-ratio test for nested fits,
+  `anova(fit_full, fit_restricted)` or several fits in a chain. It reports each
+  fit's chi-square (n times the discrepancy), the difference, its degrees of
+  freedom and the p-value, and reproduces the per-refit statistics of
+  `mbco_sem()` (221.05 and 0.083 on RMediation's `memory_exp`). It compares fits
+  that were already made and never refits. Fits on different data or variables,
+  with sampling weights, that did not converge, with equal degrees of freedom, or
+  where the restricted fit frees a parameter the other leaves out are refused,
+  and a null on the boundary of the parameter space (an active bound or
+  inequality on a tested parameter) warns that the p-value is not valid, as
+  `mbco_sem()` does. Nesting is checked by parameter-table inclusion, which is
+  necessary and not sufficient.
+
 ## Bug fixes
 
 * `fit_sem()` now gives the same verdict on a wrong-side active bound whether or

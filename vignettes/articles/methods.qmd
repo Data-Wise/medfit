@@ -685,6 +685,44 @@ valid.
 mbco_sem(fit, "a", "b")
 ```
 
+### Comparing nested fits: `anova()`
+
+`anova(fit_full, fit_restricted)` is the general likelihood-ratio test for two
+fits that were already made; it never refits, so each restricted fit starts
+from the engine's own start values (starting a restricted fit from the full
+fit's estimates is how OpenMx lands on an infeasible point with a statistic of
+0). The statistic and its degrees of freedom are
+
+$$
+D = n\,(F_{r} - F_{f}), \qquad \text{df} = \text{df}_r - \text{df}_f,
+$$
+
+with $F$ the minimized discrepancy and $\text{df}$ the model degrees of
+freedom of each fit, which already count the equality constraints. $D$ is
+referred to $\chi^2_{\text{df}}$. `mbco_sem()` differences the same quantity
+for each of its two refits, so `anova()` reproduces its per-refit statistics
+(221.05 and 0.083 on `memory_exp`). Several fits give one row each, ordered by
+degrees of freedom, each tested against the row above it.
+
+Two fits are accepted only if they use the same observed variables and the same
+rows, neither has sampling weights, both converged, and the restricted fit
+frees no parameter the other leaves out and has more degrees of freedom. That
+parameter-table inclusion is necessary for nesting and not sufficient: two
+models with different latent structures but the same row labels pass, and
+whether they are nested in substance is the analyst's responsibility. A
+restricted fit with a smaller discrepancy than the model it restricts means one
+of the fits is not at its global optimum, and is an error. As in `mbco_sem()`, a
+bound or an inequality on a tested parameter that is active at the restricted
+fit puts the null on the boundary of the parameter space, so the statistic is a
+mixture of chi-squares and the function warns that the p-value is not valid.
+
+```{r}
+#| label: native-sem-anova
+#| echo: true
+fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)
+anova(fit, fit0)
+```
+
 ## References
 
 Falk, C. F., Vogel, T. A., Hammami, S., & Miočević, M. (2024). Multilevel
