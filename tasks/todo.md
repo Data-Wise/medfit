@@ -26,7 +26,7 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 ## Phase 2: `anova()` and SEMFit methods (W4)
 - [x] T10 `anova()` for nested `SEMFit`s with boundary-null guard (G9); refits start clean (refit-trap fixture) (#148)
 - [x] T11 `tidy()`, `glance()`, `confint()`; chi-square and df; decide `@converged` (#149: always TRUE for a returned fit, so `glance()` omits it)
-- [ ] T12 One naming convention; align arguments with deprecation (needs T11)
+- [x] T12 One naming convention; align arguments with deprecation (needs T11) (#150: lavaan's unspaced names, loadings `eta=~m2`; `weights`/`object` with `lifecycle` warnings)
 
 ### Checkpoint B
 - [ ] Unit, lint, strict `check` pass; `anova()` known answers and oracles green
