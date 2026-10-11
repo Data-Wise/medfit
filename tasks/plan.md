@@ -3,7 +3,7 @@
 **Date:** 2026-10-11 | **Branch of record:** `dev` | **Release channel:** GitHub only (G4)
 **Sources:** [BRAINSTORM](../planning/specs/BRAINSTORM-medfit-0-8-0-2026-10-11.md), [GRILL ledger G1-G13](../planning/specs/GRILL-medfit-0-8-0-2026-10-11.md) (authoritative where they differ), [FEASIBILITY](../planning/specs/FEASIBILITY-medfit-0-8-0-additions-2026-10-11.md), [RMediation handoff](../planning/specs/HANDOFF-rmediation-mbco-on-mbco_sem-2026-10-11.md).
 **Task list:** `tasks/todo.md` (checklist; task numbers match this file).
-**Status:** proposed; awaiting human review. No code changed by this plan.
+**Status:** APPROVED 2026-10-11 by the author (after the two Codex findings and two self-review fixes: harness pass rules now point to `tests/sim/gates.csv`; T3 resized S to M). No code changed by this plan.
 
 ## Overview
 
@@ -47,8 +47,8 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 | H-unit | `Rscript -e 'devtools::test(filter = "sem-")'` per task; full: `devtools::test()` | exists | all pass; report counts | per-task, see tasks | every PR |
 | H-lint | `Rscript -e 'devtools::load_all(); lintr::lint_package()'` (same process) | exists | 0 lints | n/a | every PR |
 | H-parity | `Rscript tests/sim/sem-parity-gate.R` | exists (420 runs) | SE within 1e-3 rel., estimates within 1e-6 in at least 418/420 (D22 baseline) | n/a (regression) | after T7, T8, T13-T16 |
-| H-constrained | `Rscript tests/sim/sem-constrained-gate.R` | exists | as recorded in its header | n/a (regression) | after T7, T8 |
-| H-reliab | `Rscript tests/sim/sem-reliability.R` | exists | as recorded in its header | n/a (regression) | after T15 (multi-start) |
+| H-constrained | `Rscript tests/sim/sem-constrained-gate.R` | exists | thresholds and expected cell count from `tests/sim/gates.csv` (seeded from the last committed results; see the verdict rule below) | n/a (regression) | after T7, T8 |
+| H-reliab | `Rscript tests/sim/sem-reliability.R` | exists | aggregate threshold defined in T3 and recorded in `tests/sim/gates.csv` (none exists today); worker errors count as failures | n/a (regression) | after T15 (multi-start) |
 | H-nonlinear | `Rscript tests/sim/sem-nonlinear-gate.R` | **new (T19)** | G6: never a worse objective than OpenMx's optimum minus 1e-8; estimates within 1e-5 when both reach the same branch; KKT gate passes; 0 improper; `a*b > k` best branch in at least 90% of cells with 5 starts; the sum-of-products hit rate is reported, not gated (G12); **standard errors** (Codex finding 2): the projected covariance is annihilated by the solution Jacobian (`|J V|` relative to `|V|` at most 1e-8) and the SEs match an independent oracle within 1e-3 relative (a reparameterized fit with the constraint solved out and delta-method SEs, plus a fixed-seed nonparametric bootstrap cross-check) | nonlinear row misclassified as linear; larger-branch pick; no Jacobian row dropping; covariance projection frozen at the starting Jacobian or omitted | after T13-T16 |
 | H-ksize | `Rscript tests/sim/sem-mbco-k-size.R` | **new (T18)** | size at or below alpha plus Monte Carlo error with one, two and three zero paths; power floor under a stated alternative | refer min to chi-square(2) (fails the oracle and power floor, not size) | after T17 |
 | H-oracle | testthat in `test-sem-mbco.R` / `test-sem-anova.R` | **new (T10, T17)** | statistic 4, alpha 0.05: p = 0.0455 (df 1, reject), 0.1353 (df 2, do not reject) | df = 2 mutation | with T10, T17 |
@@ -96,7 +96,7 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 **Verification:**
 - [ ] `Rscript tests/sim/run-gates.R --fast` on a clean tree passes
 - [ ] Each of the four "exits 0 but bad" fixtures makes the driver exit nonzero
-**Dependencies:** None | **Files:** `tests/sim/run-gates.R`, `tests/sim/results/` | **Scope:** S
+**Dependencies:** None | **Files:** `tests/sim/run-gates.R`, `tests/sim/gates.csv`, `tests/sim/fixtures/` (the four "exits 0 but bad" fixtures), `tests/sim/results/` | **Scope:** M
 
 ### Phase 1: Foundations (W1, W2)
 
@@ -332,3 +332,4 @@ Version bump, NEWS, `.STATUS`, CI green, tag, GitHub release, r-universe check. 
 ## Review log
 
 - **2026-10-11, Codex adversarial review of this plan (2 findings, both accepted, applied the same day):** (1) numerical failures must fail the harness: existing sim scripts print PASS/FAIL without a failing exit status (`sem-parity-gate.R`, `sem-constrained-gate.R`: no `quit()` or `stop()`; `sem-reliability.R`: errors excluded, no threshold), so T3 computes verdicts from results CSVs with committed thresholds and cell counts and adds four "exits 0 but bad" fixtures; (2) an independent nonlinear covariance oracle: T13 and H-nonlinear gain a Jacobian-annihilation check, an independent SE oracle and a frozen-Jacobian mutant. Evidence checked before accepting: `grep` of `quit(`/`stop(` in the three scripts found none that signal gate failure.
+- **2026-10-11, self-review before approval (2 fixes, applied):** the `H-constrained` and `H-reliab` pass rules said "as recorded in its header", contradicting the verdict-from-results rule, and now point to `tests/sim/gates.csv`; T3's scope was S and is now M (driver, thresholds file, four fixtures, mutants mode). The author then approved the plan.
