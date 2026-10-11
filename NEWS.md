@@ -33,9 +33,8 @@
   covariance is projected onto the null space of the Jacobian **at the
   solution**, and the degrees of freedom count the equalities' rank there. The
   fit matches OpenMx's constrained optimum to 1e-5 and the standard errors agree
-  with a reparameterized fit and a bootstrap. Nonlinear *inequalities* are still
-  an error (the message now says "nonlinear inequality constraints are not
-  supported in this version"). A product of labels set to zero (`a*b == 0`,
+  with a reparameterized fit and a bootstrap. Nonlinear inequalities are covered
+  in the next entry. A product of labels set to zero (`a*b == 0`,
   `b1*b2*b3 == 0`, also through a `:=` name) is not solved by the nonlinear route,
   whose Jacobian vanishes at the solution: it is `a == 0` or `b == 0`, so the model
   is refitted once per factor from the default start and the smallest discrepancy
@@ -50,6 +49,24 @@
   the old result (`mbco_sem(fit, "a", "b")` still works). The null is a union of
   k hypotheses, so the test is conservative; its size for three paths is checked
   by a simulation gate before the release.
+
+* Nonlinear inequality constraints in `fit_sem()`: `a*b > 0.1`, `a*b < 0.5`, and a
+  defined name inside a constraint (`ab := a*b` then `ab > 0`) are solved like the
+  nonlinear equalities, as rows `c(theta) <= 0` with a recomputed Jacobian. The
+  acceptance test for a curved constraint now uses the reduced Hessian of the
+  Lagrangian, the objective's Hessian plus each active nonlinear row's curvature
+  times its multiplier; the objective's Hessian alone can call a saddle of the
+  restricted problem a minimum (or the reverse). **`n_starts` changes meaning for a
+  model with a nonlinear constraint:** every start is tried and the best accepted
+  one is kept (before, the first accepted start was used), and a warning says when
+  the accepted starts reached different optima, because a nonlinear constraint can
+  leave several (`a*b > 0.1` is feasible for two positive or two negative paths).
+  Models without a nonlinear constraint behave as before.
+
+* A sum of products set to zero (`a1*b1 + a2*b2 == 0`) fits through the same
+  nonlinear route and is documented as best-effort: unlike a single product it has
+  no exact reduction, so the result is the best of the starts tried, and the
+  starts-disagree warning means a better optimum may exist (raise `n_starts`).
 
 ## Behavior changes
 

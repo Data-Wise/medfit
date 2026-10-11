@@ -577,10 +577,18 @@ labels become rows $a^\top\theta + b$, normalized to unit length, with constant
 Jacobians for the optimizer (SLSQP through nloptr). A nonlinear equality
 (`cp == a*b`) is a row whose value is $\text{lhs} - \text{rhs}$ and whose Jacobian
 is a central difference, both recomputed at every point; a nonlinear inequality is
-an error. A product of labels set to zero ($ab = 0$, $b_1 b_2 b_3 = 0$) is not
+the same row with the sign chosen so that it reads $c(\theta) \le 0$. A
+nonlinear row can bend away from its tangent plane, so the acceptance test uses
+the Hessian of the Lagrangian, $H + \sum_i \lambda_i \nabla^2 c_i$ over the active
+nonlinear rows (the multipliers from $\nabla F + \sum_i \lambda_i \nabla c_i = 0$),
+in the reduced Hessian; the objective's Hessian alone can call a saddle of the
+restricted problem a minimum. A model with a nonlinear constraint can have
+several local optima, so all `n_starts` starts are tried and the best accepted one
+is kept. A product of labels set to zero ($ab = 0$, $b_1 b_2 b_3 = 0$) is not
 solved this way, because its Jacobian vanishes at the solution: it holds exactly
 when one factor is zero, so the model is refitted once per factor from the default
-start and the smallest discrepancy is kept. At the solution the active constraints and active bounds define a
+start and the smallest discrepancy is kept. At the solution the active constraints
+and active bounds define a
 null-space basis $Z$ of the feasible directions, and the covariance is
 projected,
 

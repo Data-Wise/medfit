@@ -82,7 +82,6 @@ Examples on this site need medfit 0.7.0 or later. If `mediation_demo` or
 |---|---|---|
 | `unknown parameter label` | a label in `:=` or a constraint is not defined in the model | label the path first: `y ~ b * m` |
 | `mean structure is not supported` | the model has a free intercept (`y ~ 1`) | remove it; the engine fits covariance structures only |
-| `nonlinear inequality constraints are not supported in this version` | an inequality such as `a * b < 0.1` | use an inequality that is linear in the labels (a nonlinear equality is supported) |
 | `variables in the model are not columns of` | the syntax names a variable that is not in `data` | check the names against `names(data)` |
 | `Must have length 1` | `fit_mediation(engine = "native")` was given several mediators | fit with `fit_sem()` and call `extract_mediation()`; see [several mediators](model-native-multi.html) |
 

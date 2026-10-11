@@ -16,10 +16,6 @@ test_that("native engine messages quoted on the model pages exist", {
     "mean structure is not supported"
   )
   expect_error(
-    fit_sem(paste0(native_base, "a * b < 0.1"), mediation_demo),
-    "nonlinear inequality constraints are not supported in this version"
-  )
-  expect_error(
     fit_sem("eta =~ m1 + m2 + m3\neta ~ a * X\nY ~ b * eta", mediation_demo),
     "variables in the model are not columns of `data`"
   )
