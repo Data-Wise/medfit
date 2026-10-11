@@ -18,3 +18,4 @@ revdep/
 .claude/guard-session-counts
 .claude/settings.local.json
 tests/sim/results/gates-summary-*.txt
+tests/sim/results/gates-*.log

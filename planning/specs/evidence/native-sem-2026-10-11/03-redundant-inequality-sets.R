@@ -3,10 +3,11 @@
 # `a == b` with `a - b < 0` is consistent, and so is `a + b == 0.8` with `a + b > 0.8`: on the equality set the inequality row
 # has a constant value (0), so it is active at every feasible point and its gradient lies in the span of the equality
 # gradients. SLSQP then gets a rank-deficient active Jacobian, the same condition #122 fixed for duplicated equality rows.
-# This script (1) counts how often the 0.7.0 code fits each set over 12 seeded datasets, (2) repeats the count with a prototype
-# that drops an inequality row lying in the span of the equality rows when its constant value satisfies it, and checks the result
-# against the equivalent independent set to 1e-6, (3) checks that an inconsistent set still errors.
-# The prototype replaces .sem_nlopt_constraints() in the loaded namespace for the second pass only; nothing in R/ changes.
+# This script (1) counts how often the package code fits each set over 12 seeded datasets, (2) checks the result against the
+# equivalent independent set to 1e-6, (3) checks that an inconsistent set still errors, naming the violated constraint, and (4) runs the
+# near-dependence ladder. Since T6 the package drops an implied, satisfied inequality row from the solver's rows
+# (.sem_drop_implied_ineq()), so every coincident set must fit on all 12 seeds. Run against the 0.7.0/dev code before T6 the "fixed"
+# ASSERT fails (the coincident sets fit 5 to 7 of 12), which is the control that shows the script can fail.
 # Run from this directory: Rscript 03-redundant-inequality-sets.R. Exits nonzero if an ASSERT fails.
 suppressMessages(pkgload::load_all("../../../..", quiet = TRUE))
 failures <- 0L
@@ -35,41 +36,11 @@ fit1 <- function(extra, d) {
   tryCatch(suppressWarnings(.sem_fit_syntax(paste0(base, "\n", extra), d, "observed")), error = function(e) e)
 }
 
-# Prototype: drop an inequality row that lies in the span of the independent equality rows (residual below `implied_tol`, far
-# tighter than the 1e-8 equality rank tolerance: see the near-dependence ladder below) when it holds on the equality set.
-# A violated implied row is KEPT, so the acceptance gate reports it; the prototype never raises an up-front error.
-implied_tol <- 1e-12
-proto <- function(cons, u) {
-  if (is.null(cons)) {
-    return(NULL)
-  }
-  eq <- .sem_independent_rows(cons$eq)
-  ineq <- cons$ineq
-  if (nrow(eq$A) && nrow(ineq$A)) {
-    dec <- qr(t(eq$A), tol = .sem_rank_tol)
-    Q <- qr.Q(dec)[, seq_len(dec$rank), drop = FALSE]
-    resid <- ineq$A - (ineq$A %*% Q) %*% t(Q)
-    inspan <- sqrt(rowSums(resid^2)) < implied_tol
-    theta0 <- as.vector(t(eq$A) %*% solve(eq$A %*% t(eq$A), -eq$b)) # a point of the equality set
-    holds <- as.vector(ineq$A %*% theta0) + ineq$b <= 1e-8
-    drop <- inspan & holds
-    if (any(drop)) {
-      ineq <- list(A = ineq$A[!drop, , drop = FALSE], b = ineq$b[!drop], text = ineq$text[!drop])
-    }
-  }
-  out <- list()
-  if (nrow(eq$A)) {
-    je <- sweep(eq$A, 2L, u, "*")
-    out$eval_g_eq <- function(x) as.vector(je %*% x) + eq$b
-    out$eval_jac_g_eq <- function(x) je
-  }
-  if (nrow(ineq$A)) {
-    ji <- sweep(ineq$A, 2L, u, "*")
-    out$eval_g_ineq <- function(x) as.vector(ji %*% x) + ineq$b
-    out$eval_jac_g_ineq <- function(x) ji
-  }
-  out
-}
+# The rule under test (R/sem-constraints.R, .sem_drop_implied_ineq()): drop an inequality row whose gradient lies within
+# `.sem_implied_tol` (1e-12, far tighter than the 1e-8 equality rank tolerance: see the ladder below) of the span of the independent
+# equality rows when it holds on the equality set. A violated implied row is KEPT, so the acceptance gate reports it; the rule never
+# raises an up-front error.
+implied_tol <- if (exists(".sem_implied_tol", asNamespace("medfit"))) get(".sem_implied_tol", asNamespace("medfit")) else 1e-12 # pre-T6 code has none
 
 run_all <- function() {
   do.call(rbind, lapply(seq_len(nrow(cases)), function(i) {
@@ -95,34 +66,23 @@ summ <- function(R) {
   }))
 }
 
-cat("== 0.7.0 code ==\n")
-before <- run_all()
-sb <- summ(before)
-print(sb[, c("kind", "set", "fits", "of", "max_gap")], row.names = FALSE)
+cat("== package code ==\n")
+res <- run_all()
+sr <- summ(res)
+print(sr[, c("kind", "set", "fits", "of", "max_gap")], row.names = FALSE)
 cat("first error messages seen:\n")
-print(unique(before$msg[!before$ok & before$kind == "coincident"]))
+print(unique(res$msg[!res$ok]))
+utils::write.csv(cbind(code = "package", res), "results/03-redundant-inequality-sets.csv", row.names = FALSE)
 
-ns <- asNamespace("medfit")
-orig <- get(".sem_nlopt_constraints", ns)
-unlockBinding(".sem_nlopt_constraints", ns)
-assign(".sem_nlopt_constraints", proto, ns)
-cat("\n== prototype: implied inequality rows dropped ==\n")
-after <- run_all()
-assign(".sem_nlopt_constraints", orig, ns)
-sa <- summ(after)
-print(sa[, c("kind", "set", "fits", "of", "max_gap")], row.names = FALSE)
-utils::write.csv(rbind(cbind(code = "0.7.0", before), cbind(code = "prototype", after)), "results/03-redundant-inequality-sets.csv", row.names = FALSE)
-
-co <- sb$kind == "coincident"
-assert(sprintf("defect reproduces: every coincident set fails on some seed (fits %s of 12)", paste(sb$fits[co], collapse = ", ")), all(sb$fits[co] < 12))
-assert("controls: an inactive inequality and inequality-only redundancy fit on all 12 seeds with the 0.7.0 code",
-       all(sb$fits[sb$kind %in% c("inactive", "ineq-only")] == 12))
-assert("prototype: every consistent set fits on all 12 seeds", all(sa$fits[sa$kind != "inconsistent"] == 12))
-assert(sprintf("prototype matches the independent-set optimum to 1e-6 (max gap %.1e)", max(sa$max_gap, na.rm = TRUE)),
-       max(sa$max_gap, na.rm = TRUE) <= 1e-6)
-assert("an inconsistent set still errors with the 0.7.0 code and with the prototype, naming the violated constraint",
-       sb$fits[sb$kind == "inconsistent"] == 0 && sa$fits[sa$kind == "inconsistent"] == 0 &&
-         grepl("violated", sa$first_error[sa$kind == "inconsistent"]))
+co <- sr$kind == "coincident"
+assert(sprintf("fixed: every coincident set fits on all 12 seeds (fits %s of 12)", paste(sr$fits[co], collapse = ", ")), all(sr$fits[co] == 12))
+assert("controls: an inactive inequality and inequality-only redundancy fit on all 12 seeds", all(sr$fits[sr$kind %in% c("inactive", "ineq-only")] == 12))
+assert(sprintf("every consistent set matches the independent-set optimum to 1e-6 (max gap %.1e)", max(sr$max_gap, na.rm = TRUE)),
+       max(sr$max_gap, na.rm = TRUE) <= 1e-6)
+assert("an inconsistent set still errors, naming the violated constraint",
+       sr$fits[sr$kind == "inconsistent"] == 0 && grepl("violated", sr$first_error[sr$kind == "inconsistent"]))
+assert("a genuinely inconsistent equality pair (a == 1 ; a == 2) still errors",
+       inherits(fit1("a == 1\na == 2", data_for(1)), "error"))
 
 # ---- near-dependence ladder (Codex review, finding 3) -------------------------------------------------------------
 # `a == b` with `a - b + k*cp > 1e-7`. For k > 0 the row is NOT in the span of the equality row, and the set is feasible

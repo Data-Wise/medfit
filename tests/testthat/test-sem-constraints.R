@@ -546,3 +546,111 @@ test_that("an infeasible pair errors naming a constraint", {
   expect_error(.sem_optimize(s$ram, s$smp, s$start, constraints = s$cons),
                "no start converged.*constraint 'a == [12]' is violated by")
 })
+
+# ---- Redundant inequality rows that the equalities imply (audit F1, plan T6) ---------------------------------------
+# An inequality whose row lies in the span of the equality rows is constant on the equality set. When it holds there it
+# is active at every feasible point and gave SLSQP a rank-deficient active Jacobian. The seeds below failed on the 0.7.0
+# code (seeds 1, 2, 4, 6 and 8 fail for every coincident set; rows with code 0.7.0 in
+# planning/specs/evidence/native-sem-2026-10-11/results/03-redundant-inequality-sets-0.7.0-baseline.csv).
+
+redundant_data <- function(seed) {
+  set.seed(seed)
+  n <- 200
+  X <- stats::rnorm(n)
+  M <- 0.5 * X + stats::rnorm(n)
+  Y <- 0.4 * M + 0.1 * X + stats::rnorm(n)
+  data.frame(X, M, Y)
+}
+
+redundant_fit <- function(extra, seed) {
+  suppressWarnings(.sem_fit_syntax(paste0(cons_model, "\n", extra), redundant_data(seed), "observed"))
+}
+
+# Number of inequality rows the solver is given for a constraint line.
+solver_ineq_rows <- function(extra) {
+  s <- cons_setup(extra)
+  args <- .sem_nlopt_constraints(s$cons, rep(1, s$ram$q))
+  if (is.null(args$eval_g_ineq)) 0L else length(args$eval_g_ineq(rep(0, s$ram$q)))
+}
+
+test_that("a consistent inequality that repeats an equality fits and equals the independent set", {
+  sets <- list(
+    c("a == b\na - b < 0", "a == b"),
+    c("a == b\na - b > 0", "a == b"),
+    c("a + b == 0.8\na + b > 0.8", "a + b == 0.8"),
+    c("a + b == 0.8\na + b < 0.8", "a + b == 0.8"),
+    c("a + b == 0.2\na + b > 0.2", "a + b == 0.2")
+  )
+  for (set in sets) {
+    for (seed in c(1L, 4L)) {
+      fit <- redundant_fit(set[1L], seed)
+      ref <- redundant_fit(set[2L], seed)
+      expect_equal(fit$theta, ref$theta[names(fit$theta)], tolerance = 1e-6,
+                   info = paste(gsub("\n", " ; ", set[1L]), "seed", seed))
+    }
+  }
+})
+
+test_that("the solver is not given an implied satisfied inequality, and the gate still checks it", {
+  expect_equal(solver_ineq_rows("a == b\na - b < 0"), 0L)
+  expect_equal(solver_ineq_rows("a + b == 0.8\n2*a + 2*b > 1.6"), 0L) # a parallel row implies the same constant
+  s <- cons_setup("a == b\na - b < 0")
+  expect_equal(nrow(s$cons$ineq$A), 1L) # the gate's rows keep it
+  # an implied row that is strictly inactive on the equality set (constant -0.1) is also dropped: it never binds
+  expect_equal(solver_ineq_rows("a + b == 0.8\na + b < 0.9"), 0L)
+  # an inequality not in the span of the equalities stays with the solver
+  expect_equal(solver_ineq_rows("a == b\na + cp < 2"), 1L)
+  expect_equal(solver_ineq_rows("a + b == 0.8\na - b < 0.9"), 1L)
+  # inequality-only duplicates and parallel rows are unchanged
+  expect_equal(solver_ineq_rows("a + b < 0.2\na + b < 0.2"), 2L)
+  expect_equal(solver_ineq_rows("a + b < 0.2\n2*a + 2*b < 0.4"), 2L)
+})
+
+test_that("an implied inequality the equalities violate is kept and the gate reports it by name", {
+  expect_equal(solver_ineq_rows("a + b == 0.8\na + b < 0.5"), 1L)
+  expect_error(redundant_fit("a + b == 0.8\na + b < 0.5", 1L),
+               "no start converged.*constraint 'a \\+ b < 0.5' is violated")
+})
+
+test_that("the constant of an implied row is evaluated on a point of a multi-row equality set", {
+  # a == b and a + b == 0.8 fix a = b = 0.4, so every row in a and b is implied with a constant
+  two <- "a == b\na + b == 0.8"
+  expect_equal(solver_ineq_rows(paste0(two, "\n2*a - b < 0.4")), 0L) # value 0.4: constant 0, satisfied, dropped
+  expect_equal(solver_ineq_rows(paste0(two, "\n2*a - b < 0.5")), 0L) # constant -0.1, dropped
+  expect_equal(solver_ineq_rows(paste0(two, "\n2*a - b < 0.3")), 1L) # constant 0.1: violated, kept for the gate
+  expect_equal(solver_ineq_rows(paste0(two, "\n3*a + 2*b > 1.8")), 0L) # value 2.0 > 1.8: satisfied, dropped
+  expect_equal(solver_ineq_rows(paste0(two, "\n3*a + 2*b > 2.2")), 1L) # value 2.0 < 2.2: violated, kept
+})
+
+test_that("near-dependent inequality rows are never dropped or rejected before the solve (ladder)", {
+  for (k in c(1e-6, 1e-8, 1e-9, 1e-10, 1e-12, 1e-14)) {
+    # feasible for large cp, so the set is consistent although the row is almost in the span of `a == b`; the
+    # violated-constant form (a - b + k*cp > 1e-7) is always kept, and so is the satisfied-constant form (< 1e-7)
+    # down to the floating-point level
+    extra <- sprintf("a == b\na - b + %s*cp > 1e-7", format(k, scientific = TRUE))
+    expect_equal(solver_ineq_rows(extra), 1L, info = extra)
+    if (k >= 1e-10) {
+      extra <- sprintf("a == b\na - b + %s*cp < 1e-7", format(k, scientific = TRUE))
+      expect_equal(solver_ineq_rows(extra), 1L, info = extra)
+    }
+  }
+  # the exactly dependent row (residual at the floating-point level) is dropped: the contrast that fixes the tolerance
+  expect_equal(solver_ineq_rows("a == b\n2*a - 2*b < 0"), 0L)
+  # k = 1e-6 is feasible at cp > 0.1: the fit is not rejected up front
+  expect_no_error(redundant_fit("a == b\na - b + 1e-6*cp > 1e-7", 1L))
+  expect_no_error(redundant_fit("a == b\na - b + 1e-9*cp < 1e-7", 1L))
+})
+
+test_that("planted defect: an implied tolerance of 1e-8 drops near-dependent rows and turns the ladder red", {
+  extra <- "a == b\na - b + 1e-9*cp < 1e-7"
+  expect_equal(solver_ineq_rows(extra), 1L)
+  testthat::local_mocked_bindings(.sem_implied_tol = 1e-8)
+  expect_equal(solver_ineq_rows(extra), 0L) # a feasible near-dependent row is now lost to the solver
+})
+
+test_that("planted defect: never dropping an implied row brings the 0.7.0 solver rows back", {
+  extra <- "a == b\na - b < 0"
+  expect_equal(solver_ineq_rows(extra), 0L)
+  testthat::local_mocked_bindings(.sem_drop_implied_ineq = function(ineq, eq) ineq)
+  expect_equal(solver_ineq_rows(extra), 1L) # the rank-deficient active set the solver failed on (seeds 1, 2, 4, 6, 8)
+})

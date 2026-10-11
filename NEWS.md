@@ -13,6 +13,11 @@
   models you fitted yourself used different rows. The estimates are unchanged
   when the models already used the same rows; the native and lmer engines
   already counted correctly.
+* `fit_mediation()` applies `subset`, `weights`, `offset`, `etastart` and
+  `mustart` to the rows you passed, then drops incomplete rows. After #138 a
+  `subset` containing an incomplete row selected the next row instead, and a
+  vector `offset` stopped the fit with a length error. `n_obs` now counts the
+  rows the models used when `subset` is given.
 * `fit_mediation(engine = "lmer")` now stops with an error when either formula
   contains an `offset()`. The engine rebuilds both formulas from their terms,
   which exclude offsets, so the offset was dropped without a word and the fit
@@ -33,6 +38,16 @@
   appears twice in the RAM specification". Infeasible bounds (`a > 1` with
   `a < 0.5`) now stop with a message naming the parameter and both bounds instead
   of an internal assertion.
+* `fit_sem()` now accepts a consistent set whose inequality repeats an equality:
+  `a == b` with `a - b < 0`, or `a + b == 0.8` with `a + b > 0.8`. These sets
+  stopped with "no start converged" on 5 to 7 of 12 simulated datasets, because
+  the inequality is active at every feasible point and gave the optimizer a
+  rank-deficient active Jacobian. The optimizer now gets the rows without an
+  inequality that the equality rows imply and satisfy; the acceptance gate still
+  checks every row, so an implied inequality the equalities violate
+  (`a + b == 0.8` with `a + b < 0.5`) is still reported as violated. Behavior
+  change: sets that errored now fit, and the estimates equal those of the model
+  with the redundant inequality deleted.
 
 ## Documentation
 
