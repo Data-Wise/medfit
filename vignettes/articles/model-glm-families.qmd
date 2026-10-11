@@ -1,0 +1,102 @@
+---
+title: "Binary and non-normal outcomes or mediators"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+The default engine fits each model with `glm()`, so the outcome and the
+mediator can each take a family. Part of the [Models](models.html) collection.
+
+| | |
+|---|---|
+| **Structure** | X to M to Y, one model per variable |
+| **Class returned** | `MediationData` |
+| **Set with** | `family_y = ` and `family_m = ` in `fit_mediation()`, or fit the `glm()` yourself and extract |
+| **Scale** | `b` and `c'` are on the outcome's link scale; `a` is on the mediator's |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+d <- mediation_demo
+d$outcome_bin <- as.integer(d$outcome > median(d$outcome))
+d$mediator_bin <- as.integer(d$mediator1 > median(d$mediator1))
+```
+
+::: {.callout-warning}
+## Read this first
+With a non-identity link, `b` and `c'` are on the link scale, so the product
+`a * b` is **not** a natural indirect effect on the outcome scale. medfit
+reports the product; the interpretation is yours to defend. See
+[Methods and Formulas](methods.html).
+:::
+
+## Binary outcome
+
+```{r}
+#| label: binary-outcome
+fit_y <- fit_mediation(
+  outcome_bin ~ treatment + mediator1 + covariate1 + covariate2,
+  mediator1 ~ treatment + covariate1 + covariate2,
+  data = d, treatment = "treatment", mediator = "mediator1",
+  family_y = binomial()
+)
+paths(fit_y)
+```
+
+Here `b` and `c'` are log odds ratios and `a` is a change in the mediator.
+
+## Binary mediator
+
+```{r}
+#| label: binary-mediator
+fit_m <- fit_mediation(
+  outcome ~ treatment + mediator_bin + covariate1 + covariate2,
+  mediator_bin ~ treatment + covariate1 + covariate2,
+  data = d, treatment = "treatment", mediator = "mediator_bin",
+  family_m = binomial()
+)
+paths(fit_m)
+```
+
+Now `a` is a log odds ratio and `b` is a change in the outcome per unit of the
+mediator.
+
+## Other families
+
+Any `glm()` family works the same way, for example a count outcome:
+
+```{r}
+#| label: count-outcome
+set.seed(1)
+d$count <- rpois(nrow(d), exp(0.2 + 0.2 * d$mediator1))
+fit_c <- fit_mediation(
+  count ~ treatment + mediator1 + covariate1,
+  mediator1 ~ treatment + covariate1,
+  data = d, treatment = "treatment", mediator = "mediator1",
+  family_y = poisson()
+)
+class(fit_c)[1]
+```
+
+## Limits
+
+- The four-way and joint decompositions need Gaussian identity-link models and
+  stop with an informative error otherwise.
+- Intervals for the product still come from the delta method or a bootstrap;
+  see [Bootstrap Inference](bootstrap.html).
+- Fitted `glm()` pairs can be extracted instead of fitted here:
+  `extract_mediation(fit_m, model_y = fit_y, ...)`.
+
+## Related
+
+[Simple mediation](model-simple.html) | [Cookbook recipe 3](cookbook.html#binary-outcome) |
+[Methods and Formulas](methods.html)

@@ -1,0 +1,70 @@
+---
+title: "Models"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Every model medfit can run, in one place. Find yours in the first table, then
+open its page. For a one-page lookup of every function see the
+[Reference Card](refcard.html); for short task recipes see the
+[Cookbook](cookbook.html).
+
+## Find your model
+
+| I have | Page |
+|---|---|
+| One mediator, a continuous outcome | [Simple mediation](model-simple.html) |
+| A binary or count outcome, or a binary mediator | [Binary and non-normal variables](model-glm-families.html) |
+| An effect of the mediator that depends on the treatment | [Treatment-by-mediator interaction](model-interaction.html) |
+| Inverse-probability weights or case weights | [Weights and robust SEs](model-weights.html) |
+| The closed-form regression engine | [The regmedint engine](model-regmedint.html) |
+| Mediators in a chain (M1 drives M2) | [Serial mediation](model-serial.html) |
+| Mediators side by side | [Parallel mediation](model-parallel.html) |
+| Several mediators and treatment-by-mediator products | [Joint mediation](model-joint.html) |
+| Treatment assigned to whole clusters | [Cookbook recipe 9](cookbook.html#cluster-randomized-trial) |
+| A lavaan fit | [Cookbook recipe 10](cookbook.html#i-use-lavaan) |
+| A latent mediator, constraints, or syntax | [Cookbook recipe 11](cookbook.html#a-latent-mediator-native-engine) |
+
+## Capabilities at a glance
+
+| Model | Class | Engines and routes | Standard errors | Page |
+|---|---|---|---|---|
+| Simple | `MediationData` | `glm`, `regmedint`, `extract_mediation()` (`lm`/`glm`, lavaan), native | model, sandwich | [simple](model-simple.html) |
+| Binary or count variables | `MediationData` | `glm` families | model, sandwich | [glm families](model-glm-families.html) |
+| Treatment-by-mediator | `InteractionMediationData` | `glm`, `regmedint`, lavaan | model; closed form (`regmedint`) | [interaction](model-interaction.html) |
+| Weighted | `MediationData` | `glm`; native `sampling_weights` | sandwich (HC3; native HC0-type) | [weights](model-weights.html) |
+| Serial | `SerialMediationData` | `lm`/`glm` with `mediator_models`, lavaan, native via `fit_sem()` | model | [serial](model-serial.html) |
+| Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, native via `fit_sem()` | model | [parallel](model-parallel.html) |
+| Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](model-joint.html) |
+| Cluster-level treatment (2-1-1) | `ClusterMediationData` | `lmer` fits or `engine = "lmer"` | model, Kenward-Roger (`"kr"`) | [recipe 9](cookbook.html#cluster-randomized-trial) |
+| Latent mediator, constraints | `SEMFit`, then extracted | `fit_sem()`, `engine = "native"` (experimental) | model, sandwich | [recipe 11](cookbook.html#a-latent-mediator-native-engine) |
+
+Inference works on every row: delta-method intervals from `tidy()` and
+`confint()`, and the parametric, nonparametric and plugin bootstrap (see
+[Bootstrap Inference](bootstrap.html)).
+
+::: {.callout-note}
+## The native engine takes one mediator in `fit_mediation()`
+`fit_mediation(engine = "native", model = )` accepts a single mediator. For
+several mediators, fit the syntax with `fit_sem()` and then call
+`extract_mediation(fit, mediator = c(...), outcome = )`, with
+`structure = "parallel"` for side-by-side mediators.
+:::
+
+## What medfit does not run
+
+- Treatment varying within clusters (1-1-1), and non-Gaussian outcomes or
+  mediators in the cluster design.
+- Four-way or joint decompositions with non-Gaussian models.
+- Mean structures, and the four-way decomposition, on the native engine.
+- Bayesian fits through `brms` (planned).
+
+See [Methods and Formulas](methods.html) for the assumptions behind each model.

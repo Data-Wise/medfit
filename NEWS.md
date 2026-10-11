@@ -43,6 +43,14 @@
 * The Introduction counted `SEMFit` as the seventh class; it is the eighth. Its
   Package Ecosystem list now names probmed and medrobust, and the Reference Card
   gives `joint_effects()` its real argument names (`object`, `estimates`).
+* New **Models** menu and landing page, and a **Cookbook** menu in the top menu bar. The Models
+  page has a capability matrix and a "find your model" table; eight model pages cover
+  simple mediation, binary and non-normal variables, treatment-by-mediator interaction,
+  weights and robust standard errors, the `regmedint` engine, serial, parallel and joint
+  mediation. Articles are now grouped in an index. A test keeps every model page on the
+  landing page, in the index and in the menu, and every cookbook anchor real.
+* The Models page states that `fit_mediation(engine = "native")` takes one mediator;
+  for several, fit with `fit_sem()` and call `extract_mediation()`.
 * The bootstrap example in the README printed `NIE = 0.19 [0.08, 0.32] | NDE = 0.16 |
   PM = 55%`, which no longer matched the code or its own non-bootstrap fit on the
   same data; it now shows `NIE = 0.164  [0.0867, 0.256] | NDE = 0.293 | PM = 36 %`.

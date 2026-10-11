@@ -1,0 +1,119 @@
+---
+title: "Simple mediation"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+One treatment, one mediator, one outcome: the model behind most mediation
+analyses. This page runs it three ways and reads the result. Part of the
+[Models](models.html) collection; for a one-page lookup see the
+[Reference Card](refcard.html).
+
+| | |
+|---|---|
+| **Structure** | X to M to Y, with the direct path X to Y |
+| **Class returned** | `MediationData` |
+| **Indirect effect** | $a \, b$ |
+| **Routes** | `med()`, `fit_mediation()`, `extract_mediation()` on `lm`/`glm`, lavaan, or `fit_sem()` |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+covs <- c("covariate1", "covariate2")
+```
+
+## When to use it
+
+Use it when one mediator carries the effect of the treatment and you have no
+reason to expect a treatment-by-mediator interaction. If the mediator and the
+outcome interact with the treatment, see [interaction](model-interaction.html);
+for two or more mediators see [serial](model-serial.html) and
+[parallel](model-parallel.html).
+
+## Route 1: one line
+
+`med()` fits both models, extracts the structure and returns the result.
+
+```{r}
+#| label: route-med
+res <- med(mediation_demo, treatment = "treatment", mediator = "mediator1",
+           outcome = "outcome", covariates = covs)
+quick(res)
+```
+
+## Route 2: formulas
+
+`fit_mediation()` takes one formula per model, so each model can carry its own
+covariates.
+
+```{r}
+#| label: route-fit
+fit <- fit_mediation(
+  formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo, treatment = "treatment", mediator = "mediator1"
+)
+tidy(fit, type = "effects", conf.int = TRUE)
+```
+
+## Route 3: models you already fitted
+
+```{r}
+#| label: route-extract
+fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2, mediation_demo)
+fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+            mediation_demo)
+x <- extract_mediation(fit_m, model_y = fit_y,
+                       treatment = "treatment", mediator = "mediator1")
+paths(x)
+```
+
+The same object comes from a lavaan fit (`extract_mediation(lavaan_fit, ...)`)
+or from the native engine (`extract_mediation(fit_sem(...), ...)`); see
+[Cookbook recipe 10](cookbook.html#i-use-lavaan) and
+[recipe 11](cookbook.html#a-latent-mediator-native-engine).
+
+## Reading the result
+
+| Quantity | Call | Meaning |
+|---|---|---|
+| `a` | `paths(x)` | effect of the treatment on the mediator |
+| `b` | `paths(x)` | effect of the mediator on the outcome, holding the treatment fixed |
+| `c_prime` | `paths(x)`, `nde(x)` | direct effect of the treatment |
+| NIE | `nie(x)` | indirect effect, $a \, b$ |
+| TE | `te(x)` | total effect, NIE plus NDE |
+| PM | `pm(x)` | proportion mediated, NIE over TE |
+
+```{r}
+#| label: effects
+c(nie = unname(nie(x)), nde = unname(nde(x)), te = unname(te(x)),
+  pm = unname(pm(x)))
+```
+
+Intervals for the effects come from the delta method (`tidy()`, `confint()`).
+For a bootstrap interval see [Bootstrap Inference](bootstrap.html).
+
+## Assumptions and limits
+
+- The treatment is randomized, or the models adjust for every confounder of the
+  treatment-outcome, treatment-mediator and mediator-outcome relations.
+- The mediator-outcome confounders must be in **both** models; leaving a
+  covariate out of one biases that path.
+- A near-zero total effect makes the proportion mediated unstable.
+- The default `glm` engine is maximum likelihood on independent observations;
+  for clustered data see
+  [Cookbook recipe 9](cookbook.html#cluster-randomized-trial).
+
+## Related
+
+[Getting Started](getting-started.html) | [Model Extraction](extraction.html) |
+[Methods and Formulas](methods.html) | [Cookbook](cookbook.html)

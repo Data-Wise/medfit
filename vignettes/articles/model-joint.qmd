@@ -1,0 +1,75 @@
+---
+title: "Joint mediation with products"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Several mediators when the outcome model has treatment-by-mediator products.
+The result is the joint effect through the whole mediator block. Part of the
+[Models](models.html) collection.
+
+| | |
+|---|---|
+| **Structure** | X to (M1, M2, ...) to Y, with X by M terms |
+| **Class returned** | `JointMediationData` |
+| **Effects** | joint natural direct and indirect effects (VanderWeele and Vansteelandt, 2014) |
+| **Routes** | `extract_mediation()` on `lm` fits; `joint_effects()` for bootstrapping |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+```
+
+## Fit it
+
+```{r}
+#| label: fit
+fit_m1 <- lm(mediator1 ~ treatment + covariate1 + covariate2, mediation_demo)
+fit_m2 <- lm(mediator2 ~ treatment + mediator1 + covariate1 + covariate2,
+             mediation_demo)
+fit_y <- lm(outcome_int ~ treatment * mediator1 + mediator2 + covariate1 +
+              covariate2, mediation_demo)
+x <- extract_mediation(fit_m1, model_y = fit_y, treatment = "treatment",
+                       mediator = c("mediator1", "mediator2"),
+                       mediator_models = list(fit_m2))
+class(x)[1]
+tidy(x, type = "effects", conf.int = TRUE)
+```
+
+## Bootstrap the joint effect
+
+`joint_effects()` returns the effects at any parameter vector, so it plugs into
+`bootstrap_mediation()`.
+
+```{r}
+#| label: bootstrap
+boot <- bootstrap_mediation(
+  function(theta) joint_effects(x, theta)[["nie"]],
+  method = "parametric", mediation_data = x, n_boot = 500, seed = 1
+)
+c(estimate = unname(nie(x)), lower = boot@ci_lower, upper = boot@ci_upper)
+```
+
+## Requirements
+
+The fit must meet these; each violation errors with its cause.
+
+- Every model carries the same covariates.
+- All models are Gaussian identity-link, unweighted, with an intercept, and fit
+  to the same rows (medfit compares the values of the shared variables).
+- Every mediator appears in the outcome model, and the treatment is coded 0/1.
+- Only outcome-model products written with `:` or `*` are supported.
+
+## Related
+
+[Serial mediation](model-serial.html) | [Parallel mediation](model-parallel.html) |
+[Cookbook recipe 8](cookbook.html#many-mediators-with-products) | [Methods and Formulas](methods.html)

@@ -1,0 +1,66 @@
+---
+title: "Parallel mediation"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Two or more mediators that the treatment drives independently, with no path
+between them. Part of the [Models](models.html) collection.
+
+| | |
+|---|---|
+| **Structure** | X to M_j to Y, one path per mediator |
+| **Class returned** | `ParallelMediationData` |
+| **Indirect effect** | the sum $\sum_j a_j b_j$ |
+| **Routes** | `extract_mediation(..., structure = "parallel")` on `lm`/`glm`, or a lavaan fit |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+```
+
+## Fit it
+
+```{r}
+#| label: fit
+fit_m1 <- lm(mediator1 ~ treatment + covariate1 + covariate2, mediation_demo)
+fit_m3 <- lm(mediator3 ~ treatment + covariate1 + covariate2, mediation_demo)
+fit_y <- lm(outcome ~ treatment + mediator1 + mediator3 + covariate1 +
+              covariate2, mediation_demo)
+x <- extract_mediation(fit_m1, model_y = fit_y, treatment = "treatment",
+                       mediator = c("mediator1", "mediator3"),
+                       mediator_models = list(fit_m3), structure = "parallel")
+paths(x)
+nie(x)
+```
+
+## Read it
+
+| Quantity | Meaning |
+|---|---|
+| `a1`, `a2` | effect of the treatment on each mediator |
+| `b1`, `b2` | effect of each mediator on the outcome, both in the same model |
+| `nie(x)` | $a_1 b_1 + a_2 b_2$, the total through both mediators |
+
+## Limits
+
+- The mediator equations are fitted separately, so the stored covariance omits
+  Cov($a_j$, $a_{j'}$). When the mediators' errors are correlated, the
+  indirect-effect standard error can be off; a lavaan fit or a nonparametric
+  bootstrap captures it.
+- Each mediator must be driven by the treatment (and covariates) only. If one
+  mediator affects another, use [serial mediation](model-serial.html).
+
+## Related
+
+[Serial mediation](model-serial.html) | [Joint mediation](model-joint.html) |
+[Cookbook recipe 6](cookbook.html#two-mediators-side-by-side) | [Model Extraction](extraction.html)

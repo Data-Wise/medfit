@@ -1,0 +1,78 @@
+---
+title: "The regmedint engine"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+`engine = "regmedint"` computes the effects from the closed-form regression
+formulas of VanderWeele, with analytical standard errors. It needs the suggested
+`regmedint` package. Part of the [Models](models.html) collection.
+
+| | |
+|---|---|
+| **Structure** | one mediator, with or without an X by M term |
+| **Class returned** | `MediationData`, or `InteractionMediationData` with a product |
+| **Set with** | `engine = "regmedint"` in `fit_mediation()` |
+| **Needs** | a numeric 0/1 treatment and the same covariates in both formulas |
+
+```{r}
+#| label: setup
+#| eval: !expr requireNamespace("regmedint", quietly = TRUE)
+library(medfit)
+library(generics)
+```
+
+## Fit it
+
+```{r}
+#| label: fit
+#| eval: !expr requireNamespace("regmedint", quietly = TRUE)
+fit_rm <- fit_mediation(
+  outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo, treatment = "treatment", mediator = "mediator1",
+  engine = "regmedint"
+)
+nie(fit_rm)
+```
+
+## Compare with the default engine
+
+```{r}
+#| label: compare
+#| eval: !expr requireNamespace("regmedint", quietly = TRUE)
+fit_glm <- fit_mediation(
+  outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo, treatment = "treatment", mediator = "mediator1"
+)
+c(regmedint = unname(nie(fit_rm)), glm = unname(nie(fit_glm)))
+```
+
+## When to choose it
+
+| Choose `regmedint` when | Choose the default `glm` engine when |
+|---|---|
+| you want the closed-form standard errors for the four-way decomposition | you need weights or the sandwich covariance |
+| you already use `regmedint` and want the same numbers | you want the engine with the widest options |
+
+## Limits
+
+- No `weights` and no `se_type = "sandwich"`.
+- The treatment must be numeric 0/1 and both formulas must carry the same
+  covariates.
+- Engine-specific settings go through `engine_args`; the reference level of the
+  mediator for the controlled direct effect is `m_star`.
+
+## Related
+
+[Treatment-by-mediator interaction](model-interaction.html) | [Simple mediation](model-simple.html) |
+[Getting Started](getting-started.html)
