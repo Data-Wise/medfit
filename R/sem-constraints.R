@@ -328,12 +328,14 @@
   bound_rows <- NULL
   bound_names <- character()
   bound_par <- character()
+  bound_idx <- integer()
   for (i in which(at_lb & !at_ub)) {
     e <- numeric(q)
     e[i] <- -1
     bound_rows <- rbind(bound_rows, e)
     bound_names <- c(bound_names, paste0("lower bound of ", ram$par_names[i]))
     bound_par <- c(bound_par, ram$par_names[i])
+    bound_idx <- c(bound_idx, i)
   }
   for (i in which(at_ub & !at_lb)) {
     e <- numeric(q)
@@ -341,6 +343,7 @@
     bound_rows <- rbind(bound_rows, e)
     bound_names <- c(bound_names, paste0("upper bound of ", ram$par_names[i]))
     bound_par <- c(bound_par, ram$par_names[i])
+    bound_idx <- c(bound_idx, i)
   }
   m <- rbind(ax[active_row, , drop = FALSE], bound_rows)
   if (!nrow(m)) {
@@ -380,6 +383,18 @@
     lam_nn[idx[k]] <- lam_nn[idx[k]] + sgn[k] * nn[k]
   }
   r_span <- as.vector(u_k %*% crossprod(u_k, -gx - as.vector(crossprod(m, lam_nn))))
+  n_con <- nrow(m) - length(bound_names)
+  # A bound is judged by its own statistic, the unconstrained gate's measure |g_k| / sqrt(H_kk) (the slope by
+  # which flipping the bound row would lower the objective, over the root of the Hessian diagonal), so a model
+  # with a constraint line and one without it get the same verdict (T8b). It needs only H_kk, not H^-1, so an
+  # indefinite Hessian cannot hide a wrong-side bound; like the unconstrained gate, a non-positive H_kk rejects.
+  if (length(bound_names)) {
+    rows <- n_con + seq_along(bound_names)
+    slope <- -as.vector(m[rows, , drop = FALSE] %*% r_span) / len[rows]
+    hk <- diag(hx)[bound_idx]
+    wrong <- slope > 1e-12 & (!is.finite(hk) | hk <= 0 | slope / sqrt(pmax(hk, 0)) > .sem_stat_tol)
+    out$sign_bound <- bound_par[wrong]
+  }
   hinv_r <- tryCatch(solve(hx, r_span), error = function(e) NULL)
   if (is.null(hinv_r) || !all(is.finite(hinv_r))) {
     return(skipped())
@@ -399,11 +414,8 @@
     if (!length(bad) && length(held)) {
       bad <- held[which.min(cosine)]
     }
-    # the bound rows come after the active constraint rows (`active_row` indexes all constraint rows)
-    n_con <- nrow(m) - length(bound_names)
-    is_bound <- bad > n_con
-    out$sign_bound <- bound_par[bad[is_bound] - n_con]
-    bad <- bad[!is_bound]
+    # bound rows (after the active constraint rows) were judged above; only constraint rows are named here
+    bad <- bad[bad <= n_con]
     out$sign_warnings <- sprintf(
       paste0("constraint %s is active, but moving into the feasible region would lower the objective; ",
              "the solution may not be a local minimum"),

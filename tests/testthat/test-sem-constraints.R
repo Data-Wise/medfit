@@ -527,6 +527,96 @@ test_that("a wrong-side bound beside an active constraint is rejected; a wrong-s
   expect_match(g$reason, "active bound points into the interior (Y ~ M)", fixed = TRUE)
 })
 
+# T8b (ledger G14, T9 defects 1, 2 and 5): a bound is judged by its own statistic |g_k| / sqrt(H_kk), the
+# unconstrained gate's measure, so the verdict does not depend on the constraint lines.
+
+inactive_line <- function(mod, par = "M ~ X") {
+  cons <- empty_cons(mod$ram$q)
+  e <- numeric(mod$ram$q)
+  e[match(par, mod$ram$par_names)] <- 1
+  cons$ineq <- list(A = matrix(e, 1L), b = -100, text = paste(par, "< 100"))
+  cons
+}
+
+test_that("a wrong-side bound is rejected when the full Hessian is indefinite", {
+  mod <- sem_model_latent()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  u <- .sem_step_floor(mod$ram, smp)
+  k <- match("m1 ~~ m1", mod$ram$par_names)
+  lb <- rep(-Inf, q)
+  lb[k] <- fit$theta[k] - 10^-0.5 * u[k]
+  pt <- pin_at(mod, smp, fit$theta, k, lb[k])
+  # the precondition that made the 0.8.0 review's repro bite: the clamp on a negative (H^-1)_kk hid the violation
+  hess <- .sem_hess_f(pt, mod$ram, smp)
+  expect_lt(min(eigen(hess, symmetric = TRUE, only.values = TRUE)$values), 0)
+  expect_lt(solve(hess)[k, k], 0)
+  plain <- .sem_gate(pt, 3L, mod$ram, smp, lb, rep(Inf, q))
+  expect_false(plain$accepted)
+  for (cons in list(empty_cons(q), inactive_line(mod, "eta ~ X"))) {
+    g <- .sem_gate(pt, 3L, mod$ram, smp, lb, rep(Inf, q), cons)
+    expect_false(g$accepted)
+    expect_identical(g$reason, plain$reason)
+  }
+})
+
+test_that("the bound verdict agrees with the unconstrained gate across the stationarity threshold", {
+  mod <- sem_model_observed()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  u <- .sem_step_floor(mod$ram, smp)
+  ub <- rep(Inf, q)
+  inactive <- inactive_line(mod)
+  seen <- c(accepted = 0L, rejected = 0L)
+  for (par in c("Y ~ M", "Y ~ X", "M ~ X")) {
+    k <- match(par, mod$ram$par_names)
+    for (delta in 10^seq(-3.6, -1.6, length.out = 21)) {
+      lb <- rep(-Inf, q)
+      lb[k] <- fit$theta[k] - delta * u[k]
+      pt <- pin_at(mod, smp, fit$theta, k, lb[k])
+      want <- .sem_gate(pt, 3L, mod$ram, smp, lb, ub)$accepted
+      seen[if (want) "accepted" else "rejected"] <- seen[if (want) "accepted" else "rejected"] + 1L
+      for (cons in list(empty_cons(q), inactive)) {
+        expect_identical(.sem_gate(pt, 3L, mod$ram, smp, lb, ub, cons)$accepted, want,
+                         info = sprintf("%s, delta %.3g", par, delta))
+      }
+    }
+  }
+  # the grid straddles the threshold: both verdicts occur, so agreement is not vacuous
+  expect_gt(seen[["accepted"]], 0L)
+  expect_gt(seen[["rejected"]], 0L)
+})
+
+test_that("a negligible bound is not blamed for a wrong-sign inequality constraint", {
+  mod <- sem_model_observed()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  u <- .sem_step_floor(mod$ram, smp)
+  k <- match("Y ~ M", mod$ram$par_names)
+  j <- match("M ~ X", mod$ram$par_names)
+  # M ~ X < v with v above the optimum: active at the pinned point with a wrong-sign multiplier
+  e <- numeric(q)
+  e[j] <- 1
+  cons <- empty_cons(q)
+  v <- fit$theta[j] + 0.3
+  cons$ineq <- list(A = matrix(e, 1L), b = -v, text = "M ~ X < v")
+  for (eps in c(1e-9, 1e-7, 1e-6, 1e-5)) {
+    lb <- rep(-Inf, q)
+    lb[k] <- fit$theta[k] - eps * u[k]
+    pt <- pin_at(mod, smp, fit$theta, c(k, j), c(lb[k], v))
+    r <- .sem_eval(pt, mod$ram, smp, deriv = TRUE)
+    # the bound's own statistic is far below the threshold, so the bound is neither rejected nor named
+    expect_lt(abs(r$g[k]) / sqrt(.sem_hess_f(pt, mod$ram, smp)[k, k]), .sem_stat_tol / 10)
+    g <- .sem_gate(pt, 3L, mod$ram, smp, lb, rep(Inf, q), cons)
+    expect_true(g$accepted, info = sprintf("eps %.0e", eps))
+    expect_length(g$sign_warnings, 1L)
+    expect_match(g$sign_warnings, "constraint M ~ X < v")
+  }
+})
+
 test_that("planted defect: a wrong bound-row sign rejects the correct bounded fit", {
   mod <- sem_model_observed()
   smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)

@@ -7,7 +7,9 @@
   gradient pointing into the interior (a point that is not a local minimum) was
   rejected for a model without constraints but accepted with a warning once any
   `==`, `<` or `>` line was added, even one that never binds. It is now rejected
-  in both cases, and the next start is tried. A wrong-signed active inequality
+  in both cases, and the next start is tried; each bound is judged by the same
+  statistic, the gradient over the root of the Hessian diagonal, so an indefinite
+  Hessian cannot hide it. A wrong-signed active inequality
   constraint still warns and does not reject. Behavior change: a fit that
   returned with the warning "lower bound of ... is active, but moving into the
   feasible region would lower the objective" now errors or uses another start.

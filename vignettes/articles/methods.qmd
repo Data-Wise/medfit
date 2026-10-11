@@ -626,7 +626,10 @@ active inequality's or bound's multiplier is checked: a wrong sign means
 the point may not be a local minimum. A wrong-signed active bound rejects the
 solution, the same verdict the fit without constraints gives (the gradient at an
 active bound points into the interior), whether or not the model also has
-constraint lines; a wrong-signed active inequality constraint only warns. The
+constraint lines: each bound is judged by its own statistic
+$|g_k| / \sqrt{H_{kk}}$ against $10^{-3}$, which needs only the Hessian
+diagonal, so an indefinite Hessian cannot hide it. A wrong-signed active
+inequality constraint only warns. The
 check asks whether non-negative multipliers on the active inequalities and bounds
 (free-sign ones on the equalities) reproduce the gradient, using non-negative
 least squares, so linearly dependent active rows (an equality with a parallel
