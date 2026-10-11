@@ -74,3 +74,24 @@ test_that("the anchor check catches a planted broken anchor", {
   planted <- "see [x](cookbook.html#no-such-recipe) and [y](cookbook.html#binary-outcome)"
   expect_identical(setdiff(anchors_in(planted), ids), "no-such-recipe")
 })
+
+test_that("the home page and Getting Started link to real articles and cookbook anchors", {
+  skip_if_not(file.exists(root_path("README.md")), "README.md is not available (built package)")
+  arts <- root_path("vignettes", "articles")
+  skip_if_not(dir.exists(arts), "vignettes are not available (installed or built package)")
+  gs <- read_text(file.path(arts, "getting-started.qmd"))
+  rd <- read_text(root_path("README.md"))
+
+  # Getting Started uses relative links; the README uses absolute site links
+  rel <- unique(gsub("^\\]\\(|\\.html[#)]$", "",
+                     regmatches(gs, gregexpr("\\]\\(([a-z-]+)\\.html[#)]", gs))[[1]]))
+  site <- "https://data-wise\\.github\\.io/medfit/articles/[a-z-]+\\.html"
+  abs <- unique(sub("^.*/articles/([a-z-]+)\\.html.*$", "\\1", regmatches(rd, gregexpr(site, rd))[[1]]))
+  expect_gt(length(rel), 5L)
+  expect_gt(length(abs), 5L)
+  missing <- setdiff(c(rel, abs), sub("\\.qmd$", "", list.files(arts, pattern = "\\.qmd$")))
+  expect_identical(missing, character())
+
+  ids <- cookbook_ids()
+  expect_identical(setdiff(unique(c(anchors_in(gs), anchors_in(rd))), ids), character())
+})
