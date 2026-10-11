@@ -92,7 +92,7 @@ test_that("inputs the test cannot honor error by name", {
   expect_error(mbco_sem(fit, "a", "nope"), "'nope'.*labeled regression path")
   expect_error(mbco_sem(fit, "a", "a"), "different")
   expect_error(mbco_sem(fit, "a", 1), "string")
-  w <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C", d, sampling_weights = rep(c(1, 2), 100), se_type = "sandwich")
+  w <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C", d, weights = rep(c(1, 2), 100), se_type = "sandwich")
   expect_error(mbco_sem(w, "a", "b"), "sampling weights")
 })
 

@@ -56,7 +56,12 @@
   label <- c(a$label, s$label)
   value <- c(a$value, s$value)
   free <- is.na(value)
-  default_name <- c(paste0(a$row, " ~ ", a$col), paste0(s$row, " ~~ ", s$col))
+  # lavaan's coefficient convention: the label, else `lhs op rhs` without spaces. A caller that knows the
+  # source operator (a loading is `eta=~m2`, not a path into `m2`) passes the name; a bare RAM gets `row~col`.
+  default_name <- c(paste0(a$row, "~", a$col), paste0(s$row, "~~", s$col))
+  given <- c(if (is.null(a$name)) rep(NA_character_, nrow(a)) else a$name,
+             if (is.null(s$name)) rep(NA_character_, nrow(s)) else s$name)
+  default_name <- ifelse(is.na(given), default_name, given)
   key <- ifelse(nzchar(label), label, default_name)
   par_names <- unique(key[free])
   k <- ifelse(free, match(key, par_names), NA_integer_)

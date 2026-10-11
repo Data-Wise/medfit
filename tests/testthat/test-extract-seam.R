@@ -52,7 +52,7 @@ fixtures <- list(
     fit = function() {
       lavaan::sem(
         paste(
-          "mediator1 ~ treatment", "mediator2 ~ treatment", "mediator1 ~~ mediator2",
+          "mediator1~treatment", "mediator2~treatment", "mediator1~~mediator2",
           "outcome ~ mediator1 + mediator2 + treatment", sep = "\n"
         ),
         data = demo

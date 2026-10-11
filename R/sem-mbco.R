@@ -20,14 +20,14 @@
 #' solved, because a nonlinear solver can stop at the branch with the larger
 #' statistic.
 #'
-#' @param fit A [SEMFit] from [fit_sem()], fitted without sampling weights.
+#' @param object A [SEMFit] from [fit_sem()], fitted without `weights`.
 #' @param a,b Character strings: the labels of the two free regression paths
 #'   whose product is the indirect effect (for example `"a"` and `"b"` in
 #'   `"M ~ a*X"` and `"Y ~ b*M"`). They must be different, and each must be a
 #'   labeled `~` row of the fit; a variance, a loading, an unlabeled path and a
 #'   defined parameter are refused.
 #' @param n_starts,control Passed to the optimizer for the two refits, as in
-#'   [fit_sem()]. `NULL`, the default, uses the settings `fit` was made with,
+#'   [fit_sem()]. `NULL`, the default, uses the settings `object` was made with,
 #'   so a better optimum in the full fit than in a refit cannot inflate the
 #'   statistic; an explicit value overrides them.
 #'
@@ -40,7 +40,7 @@
 #'   layout.
 #'
 #' @details
-#' A fit made with `sampling_weights` is refused: the weighted discrepancy is
+#' A fit made with `weights` is refused: the weighted discrepancy is
 #' not a likelihood, so its difference is not chi-square. So is a fit that did
 #' not converge, since its discrepancy is the reference both refits are
 #' measured against. A refit that fails the acceptance gate of the optimizer is
@@ -71,10 +71,20 @@
 #'
 #' @seealso [fit_sem()], [SEMFit]
 #' @export
-mbco_sem <- function(fit, a, b, n_starts = NULL, control = NULL) {
-  if (!S7::S7_inherits(fit, SEMFit)) {
-    stop("`fit` must be a SEMFit from fit_sem().", call. = FALSE)
+mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecycle::deprecated()) {
+  if (lifecycle::is_present(fit)) {
+    lifecycle::deprecate_warn("0.8.0", "mbco_sem(fit)", "mbco_sem(object)")
+    # `mbco_sem(fit = f, "a", "b")` leaves the two names in the first slots: shift them back.
+    if (!missing(object) && missing(b)) {
+      b <- a
+      a <- object
+    }
+    object <- fit
   }
+  if (!S7::S7_inherits(object, SEMFit)) {
+    stop("`object` must be a SEMFit from fit_sem().", call. = FALSE)
+  }
+  fit <- object
   checkmate::assert_string(a, min.chars = 1L, .var.name = "a")
   checkmate::assert_string(b, min.chars = 1L, .var.name = "b")
   checkmate::assert_count(n_starts, positive = TRUE, null.ok = TRUE, .var.name = "n_starts")

@@ -33,7 +33,7 @@
 #'       extracted with [extract_mediation()]. Supports observed and latent
 #'       mediators, equality and inequality constraints, and `:=` parameters.
 #'       Case `weights` and `se_type = "sandwich"` map to [fit_sem()]'s
-#'       `sampling_weights` (weighted maximum likelihood) and its robust
+#'       `weights` (weighted maximum likelihood) and its robust
 #'       sandwich covariance.
 #'     \item `"lmer"`: Linear mixed models for a treatment assigned to whole
 #'       clusters (the 2-1-1 design), via the suggested \pkg{lme4} package;

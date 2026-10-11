@@ -45,17 +45,14 @@
 }
 
 # Accessor list for a native fit (`SEMFit`), with the same fields as the lavaan
-# one so the extraction workers are shared. Names follow lavaan's coefficient
-# convention, the label when a row has one and `lhs op rhs` without spaces
-# otherwise, because the workers locate a path's covariance row by that name.
+# one so the extraction workers are shared. Names are those of `coef()`, lavaan's
+# coefficient convention (the label when a row has one, else `lhs op rhs` without
+# spaces), because the workers locate a path's covariance row by that name.
 .sem_accessors_native <- function(object) {
   checkmate::assert_class(object, "medfit::SEMFit", .var.name = "object")
   tab <- object@table
-  pm <- object@internals$par_map
-  first <- vapply(seq_along(object@theta), function(k) which(pm == k)[1L], integer(1))
-  has_label <- !is.na(tab$label[first]) & nzchar(tab$label[first])
-  nm <- ifelse(has_label, tab$label[first], paste0(tab$lhs[first], tab$op[first], tab$rhs[first]))
-  coefs <- stats::setNames(unname(object@theta), nm)
+  nm <- names(object@theta)
+  coefs <- object@theta
   vc <- unname(object@vcov)
   dimnames(vc) <- list(nm, nm)
   ptab <- data.frame(

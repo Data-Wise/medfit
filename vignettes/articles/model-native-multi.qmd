@@ -21,7 +21,7 @@ of the [Models](models.html) collection; the last of four
 | **Structure** | serial (a chain) or parallel mediators written as syntax |
 | **Route** | `fit_sem()`, then `extract_mediation(fit, mediator = c(...), outcome = )` |
 | **Classes returned** | `SerialMediationData` or `ParallelMediationData` |
-| **Weights** | `fit_sem(sampling_weights = , se_type = "sandwich")` |
+| **Weights** | `fit_sem(weights = , se_type = "sandwich")` |
 
 ::: {.callout-warning}
 ## Not `fit_mediation(engine = "native")`
@@ -76,7 +76,7 @@ tidy(xp, type = "effects", conf.int = TRUE)
 
 ## Sampling weights
 
-`sampling_weights` gives weighted maximum likelihood; pair it with
+`weights` gives weighted maximum likelihood; pair it with
 `se_type = "sandwich"` for robust standard errors. The weights below are random,
 only to show the call:
 
@@ -89,7 +89,7 @@ wsyntax <- "
   outcome ~ b * mediator1 + cp * treatment + covariate1 + covariate2
   ab := a * b
 "
-wfit <- fit_sem(wsyntax, mediation_demo, sampling_weights = w, se_type = "sandwich")
+wfit <- fit_sem(wsyntax, mediation_demo, weights = w, se_type = "sandwich")
 wfit@defined
 ```
 

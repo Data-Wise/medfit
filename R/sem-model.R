@@ -150,12 +150,14 @@
   # `=~` is a path from the factor to its indicator; `~` from the predictor to the target.
   row <- ifelse(tab$op == "=~", tab$rhs, tab$lhs)
   col <- ifelse(tab$op == "=~", tab$lhs, tab$rhs)
+  # One name per row: the label, else `lhs op rhs` without spaces, as lavaan names its coefficients.
+  name <- ifelse(nzchar(tab$label), tab$label, paste0(tab$lhs, tab$op, tab$rhs))
   piece <- function(i) {
-    data.frame(row = row[i], col = col[i], label = tab$label[i], value = tab$fixed[i], stringsAsFactors = FALSE)
+    data.frame(row = row[i], col = col[i], label = tab$label[i], value = tab$fixed[i], name = name[i],
+               stringsAsFactors = FALSE)
   }
   ram <- .sem_ram(c(obs, latent), obs, piece(is_a), piece(!is_a))
 
-  name <- ifelse(nzchar(tab$label), tab$label, ifelse(is_a, paste0(row, " ~ ", col), paste0(row, " ~~ ", col)))
   par_map <- ifelse(is.na(tab$fixed), match(name, ram$par_names), NA_integer_)
   pick <- function(col_name) {
     out <- rep(NA_real_, ram$q)
