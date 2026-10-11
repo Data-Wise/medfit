@@ -4,6 +4,8 @@
 **Date:** 2026-10-11 | **From:** medfit 0.8.0 grill, decisions G3, G3b, G7 (`GRILL-medfit-0-8-0-2026-10-11.md`)
 **Basis:** read-only inspection of RMediation `dev` (clean at the time, HEAD `7c588d4`) and medfit `dev` (`67b6db8`). File and line facts below are from that read; re-verify before relying on them.
 
+> **REVISION 2026-10-11 (grill G10): this handoff is partly superseded and is now blocked.** RMediation will register `mbco()` on **(SEMFit, SEMFit)**, built on medfit's `anova()` (W4, G9) and W3's zero-product branch split, instead of the path-label route in section 1 item 1. Same `h0`/`h1` meaning as the OpenMx pair; `mbco_sem(fit, a, b)` stays a medfit convenience that RMediation does not call. **Do not start this work until `anova()` for `SEMFit` and W3 are merged in medfit dev**; the medfit session will say when. Sections 0, 2 (oracle and planted defects), 3 (release constraints) and 5 still apply. Parity test addition: `mbco(h0 = SEMFit fitted with `a1*b1 == 0`, h1 = full SEMFit)` on `memory_exp` must give 0.083100 (the min-of-two answer), and the same call without W3's branch split gives 221.05 (planted defect).
+
 ## 0. Decision the user must confirm first: the rebase is smaller than G3 assumed
 
 G3 said "rebase RMediation's MBCO on `mbco_sem()`", expecting to drop OpenMx and the hard lavaan import. Reading both sides shows the two functions are **not interchangeable**:
