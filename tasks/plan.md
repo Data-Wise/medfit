@@ -96,7 +96,7 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 **Verification:**
 - [ ] `Rscript tests/sim/run-gates.R --fast` on a clean tree passes
 - [ ] Each of the four "exits 0 but bad" fixtures makes the driver exit nonzero
-**Dependencies:** None | **Files:** `tests/sim/run-gates.R`, `tests/sim/gates.csv`, `tests/sim/fixtures/` (the four "exits 0 but bad" fixtures), `tests/sim/results/` | **Scope:** M
+**Dependencies:** None | **Files:** `tests/sim/run-gates.R`, `tests/sim/gates.csv`, `tests/sim/results/` (the four "exits 0 but bad" fixtures are built in memory by `--mutants`, not stored) | **Scope:** M
 
 ### Phase 1: Foundations (W1, W2)
 
