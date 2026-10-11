@@ -23,6 +23,7 @@ test_that("the four structures fitted from syntax equal the internal-builder fit
     fit <- .sem_fit_syntax(sem_syntax[[nm]], dat)
     smp <- .sem_sample(dat, mod$ram)
     ref <- .sem_optimize(mod$ram, smp, .sem_default_start(mod$ram, smp))
+    names(ref$theta) <- sem_lavaan_names(names(ref$theta), mod$loadings)
     expect_setequal(names(fit$theta), names(ref$theta))
     expect_equal(fit$theta[names(ref$theta)], ref$theta, tolerance = tol[[nm]], info = nm)
     expect_equal(fit$f, ref$f, tolerance = 1e-8, info = nm)
@@ -46,7 +47,7 @@ test_that("the fit list carries the estimates, covariance, table and bookkeeping
   expect_identical(nrow(fit$partable), nrow(fit$table))
   # the saturated path model reproduces lm()
   ols <- stats::coef(stats::lm(Y ~ M + X + C, data = dat))
-  expect_equal(unname(fit$theta[c("Y ~ M", "Y ~ X", "Y ~ C")]), unname(ols[c("M", "X", "C")]), tolerance = 1e-6)
+  expect_equal(unname(fit$theta[c("Y~M", "Y~X", "Y~C")]), unname(ols[c("M", "X", "C")]), tolerance = 1e-6)
 })
 
 test_that("incomplete rows are dropped once, counted, reported in one message, and only on model variables", {
@@ -93,10 +94,10 @@ test_that("every error row names its cause", {
 test_that("a start, bound or fixed value in the syntax reaches the optimizer", {
   dat <- sem_sim(sem_model_observed(), n = 400, seed = 5)
   fit <- .sem_fit_syntax("M ~ X + C\nY ~ lower(0.6)*M + X + C", dat)
-  expect_equal(fit$theta[["Y ~ M"]], 0.6, tolerance = 1e-8)
-  expect_true("Y ~ M" %in% fit$active_bounds)
+  expect_equal(fit$theta[["Y~M"]], 0.6, tolerance = 1e-8)
+  expect_true("Y~M" %in% fit$active_bounds)
   fixed <- .sem_fit_syntax("M ~ 0.3*X + C\nY ~ M + X + C", dat)
-  expect_false("M ~ X" %in% names(fixed$theta))
+  expect_false("M~X" %in% names(fixed$theta))
   expect_identical(fixed$df, 1)
 })
 
@@ -110,6 +111,6 @@ test_that("table, par_map and partable stay aligned when a fixed-zero intercept 
   expect_identical(nrow(fit$partable), nrow(fit$table))
   expect_false(any(fit$table$op == "~1"))
   free <- !is.na(fit$par_map)
-  expect_identical(fit$table$lhs[free][fit$par_map[free] == match("m ~ x", names(fit$theta))], "m")
+  expect_identical(fit$table$lhs[free][fit$par_map[free] == match("m~x", names(fit$theta))], "m")
   expect_identical(sum(free), length(fit$theta))
 })

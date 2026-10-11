@@ -51,7 +51,7 @@ model syntax given as \code{model} (see \code{\link[=fit_sem]{fit_sem()}}); the 
 extracted with \code{\link[=extract_mediation]{extract_mediation()}}. Supports observed and latent
 mediators, equality and inequality constraints, and \verb{:=} parameters.
 Case \code{weights} and \code{se_type = "sandwich"} map to \code{\link[=fit_sem]{fit_sem()}}'s
-\code{sampling_weights} (weighted maximum likelihood) and its robust
+\code{weights} (weighted maximum likelihood) and its robust
 sandwich covariance.
 \item \code{"lmer"}: Linear mixed models for a treatment assigned to whole
 clusters (the 2-1-1 design), via the suggested \pkg{lme4} package;

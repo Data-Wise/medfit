@@ -44,10 +44,10 @@ test_that("a saturated observed path model reproduces lm() coefficients and RSS/
   est <- stats::setNames(fit$par, mod$ram$par_names)
   m <- stats::lm(M ~ X + C, d)
   y <- stats::lm(Y ~ M + X + C, d)
-  expect_equal(unname(est[c("M ~ X", "M ~ C")]), unname(stats::coef(m)[c("X", "C")]), tolerance = 1e-8)
-  expect_equal(unname(est[c("Y ~ M", "Y ~ X", "Y ~ C")]), unname(stats::coef(y)[c("M", "X", "C")]), tolerance = 1e-8)
-  expect_equal(unname(est["M ~~ M"]), sum(stats::resid(m)^2) / nrow(d), tolerance = 1e-8)
-  expect_equal(unname(est["Y ~~ Y"]), sum(stats::resid(y)^2) / nrow(d), tolerance = 1e-8)
+  expect_equal(unname(est[c("M~X", "M~C")]), unname(stats::coef(m)[c("X", "C")]), tolerance = 1e-8)
+  expect_equal(unname(est[c("Y~M", "Y~X", "Y~C")]), unname(stats::coef(y)[c("M", "X", "C")]), tolerance = 1e-8)
+  expect_equal(unname(est["M~~M"]), sum(stats::resid(m)^2) / nrow(d), tolerance = 1e-8)
+  expect_equal(unname(est["Y~~Y"]), sum(stats::resid(y)^2) / nrow(d), tolerance = 1e-8)
   expect_lt(fit$objective, 1e-10)
 })
 
@@ -77,7 +77,7 @@ test_that("a non-positive-definite implied covariance gives the sentinel and a f
   mod <- sem_model_observed()
   smp <- .sem_sample(sem_sim(mod, 200, 3), mod$ram)
   bad <- mod$theta
-  bad["X ~~ X"] <- -0.5
+  bad["X~~X"] <- -0.5
   expect_identical(.sem_fml(bad, mod$ram, smp), 1e10)
   g <- expect_no_error(.sem_grad(bad, mod$ram, smp))
   expect_true(all(is.finite(g)))
@@ -85,8 +85,8 @@ test_that("a non-positive-definite implied covariance gives the sentinel and a f
   expect_identical(g, numeric(mod$ram$q))
   # An exactly singular implied covariance (zero variance) is also unusable.
   zero <- mod$theta
-  zero["X ~~ X"] <- 0
-  zero["X ~~ C"] <- 0
+  zero["X~~X"] <- 0
+  zero["X~~C"] <- 0
   expect_identical(.sem_fml(zero, mod$ram, smp), 1e10)
 })
 
@@ -143,11 +143,11 @@ test_that("planted defects are caught", {
   local({
     local_mocked_bindings(.sem_sentinel = Inf)
     bad <- mod$theta
-    bad["X ~~ X"] <- -0.5
+    bad["X~~X"] <- -0.5
     expect_false(is.finite(.sem_fml(bad, mod$ram, smp)))
   })
   bad <- mod$theta
-  bad["X ~~ X"] <- -0.5
+  bad["X~~X"] <- -0.5
   expect_true(is.finite(.sem_fml(bad, mod$ram, smp)))
 
   # (4) Remove the positive-definiteness guard: an indefinite start now errors.

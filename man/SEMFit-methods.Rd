@@ -20,8 +20,10 @@ Accessors and display for a \link{SEMFit} returned by \code{\link[=fit_sem]{fit_
 }
 \details{
 \itemize{
-\item \code{coef()} returns the free-parameter estimates, named as in the parameter
-table (the label when the row has one).
+\item \code{coef()} returns the free-parameter estimates, named as lavaan names its
+coefficients: the label when the row has one, else \verb{lhs op rhs} without
+spaces (\code{"M~X"}, \code{"X~~X"}, \code{"eta=~m2"}). \code{vcov()}, \code{tidy()} and the
+accessors \code{extract_mediation()} reads use the same names.
 \item \code{vcov()} returns their covariance, projected onto the active constraints
 and bounds; rows for a pinned parameter are zero.
 \item \code{nobs()} returns the number of rows used after listwise deletion.

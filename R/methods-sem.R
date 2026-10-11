@@ -15,8 +15,10 @@
 #' @param ... Additional arguments (ignored)
 #'
 #' @details
-#' * `coef()` returns the free-parameter estimates, named as in the parameter
-#'   table (the label when the row has one).
+#' * `coef()` returns the free-parameter estimates, named as lavaan names its
+#'   coefficients: the label when the row has one, else `lhs op rhs` without
+#'   spaces (`"M~X"`, `"X~~X"`, `"eta=~m2"`). `vcov()`, `tidy()` and the
+#'   accessors `extract_mediation()` reads use the same names.
 #' * `vcov()` returns their covariance, projected onto the active constraints
 #'   and bounds; rows for a pinned parameter are zero.
 #' * `nobs()` returns the number of rows used after listwise deletion.
@@ -268,7 +270,7 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
   if (!is.null(pm)) {
     return(tab$op[match(seq_along(x@theta), pm)])
   }
-  key <- ifelse(nzchar(tab$label) & !is.na(tab$label), tab$label, paste(tab$lhs, tab$op, tab$rhs))
+  key <- ifelse(nzchar(tab$label) & !is.na(tab$label), tab$label, paste0(tab$lhs, tab$op, tab$rhs))
   tab$op[match(names(x@theta), key)]
 }
 

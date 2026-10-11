@@ -10,7 +10,7 @@
         Parameters:    6 free, 1 df
         Information:   observed
         Converged:     Yes
-        Active:        M ~~ M
+        Active:        M~~M
       
       Defined parameters:
         ab              0.2000  (SE 0.0316)
@@ -45,7 +45,7 @@
       
       Diagnostics:
         Optimizer status: 4; stationarity 2.50e-08; retries 0
-        Active bounds: M ~~ M
+        Active bounds: M~~M
         Active constraints: none
         Improper solution: no
         Multiplier sign check: ok

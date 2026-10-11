@@ -113,7 +113,7 @@ test_that("it refuses fewer than two fits, a non-SEMFit, weights and a fit that 
   f <- anova_fits()
   expect_error(anova(f$full), "at least two fits")
   expect_error(anova(f$full, lm(1 ~ 1)), "not a SEMFit")
-  weighted <- fit_sem(paste0(anova_syntax, "\nb1 == 0"), f$d, sampling_weights = rep(1, nrow(f$d)),
+  weighted <- fit_sem(paste0(anova_syntax, "\nb1 == 0"), f$d, weights = rep(1, nrow(f$d)),
                       se_type = "sandwich")
   expect_error(anova(f$full, weighted), "sampling weights")
   bad <- f$b1

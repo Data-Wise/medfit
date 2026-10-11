@@ -5,7 +5,7 @@
 # summary's standard errors under an active constraint.
 
 hand_semfit <- function() {
-  theta <- c(a = 0.5, b = 0.4, `Y ~ X` = 0.2, `M ~~ M` = 0.8, `Y ~~ Y` = 0.7, `X ~~ X` = 1)
+  theta <- c(a = 0.5, b = 0.4, `Y~X` = 0.2, `M~~M` = 0.8, `Y~~Y` = 0.7, `X~~X` = 1)
   vc <- diag(c(0.0025, 0.0016, 0.0009, 0.01, 0.008, 0.012))
   dimnames(vc) <- list(names(theta), names(theta))
   tab <- data.frame(
@@ -19,7 +19,7 @@ hand_semfit <- function() {
     defined = data.frame(name = "ab", expr = "a*b", est = 0.2, se = 0.0316, stringsAsFactors = FALSE),
     f = 0.0123, n_obs = 20L, n_dropped = 2L, df = 1, information = "observed", converged = TRUE,
     data = dat, model = "M ~ a*X\nY ~ b*M + X\nab := a*b",
-    diagnostics = list(status = 4L, decrement = 2.5e-8, retries = 0L, active_bounds = "M ~~ M",
+    diagnostics = list(status = 4L, decrement = 2.5e-8, retries = 0L, active_bounds = "M~~M",
                        active_constraints = character(), improper = character(), sign_check = "ok"),
     internals = list(), call = NULL
   )
@@ -189,7 +189,7 @@ test_that("glance() has no converged column; a saturated fit has df 0, chi-squar
 })
 
 test_that("a weighted fit has a weighted discrepancy, not a likelihood: the likelihood columns are NA", {
-  w <- fit_sem(tg_syntax, mediation_demo, sampling_weights = rep(1, nrow(mediation_demo)), se_type = "sandwich")
+  w <- fit_sem(tg_syntax, mediation_demo, weights = rep(1, nrow(mediation_demo)), se_type = "sandwich")
   g <- generics::glance(w)
   expect_identical(g$nobs, 400L)
   expect_true(all(is.na(g[c("chisq", "p.value", "logLik", "AIC", "BIC")])))

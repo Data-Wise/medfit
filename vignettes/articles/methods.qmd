@@ -660,7 +660,7 @@ fit@defined
 
 ### Testing the indirect effect: MBCO
 
-`mbco_sem(fit, a, b)` tests $H_0\colon ab = 0$ as the minimum of two
+`mbco_sem(object, a, b)` tests $H_0\colon ab = 0$ as the minimum of two
 likelihood-ratio tests (MBCO). It refits the model with $a = 0$ and with
 $b = 0$; each is a linear equality constraint, so each refit is one solve.
 With $F$ the minimized maximum-likelihood discrepancy and $n$ the number of
