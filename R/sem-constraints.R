@@ -266,11 +266,18 @@
   res
 }
 
-# Warn-only multiplier sign check. Least-squares multipliers of the active rows
-# (constraints as c(x) <= 0, bounds as the Q10 rows: a lower bound is -e_i, an
-# upper bound +e_i); a multiplier of an inequality or a bound is judged by
-# lambda * sqrt(m' H^-1 m), the multiplier times the row's length in the Hessian
-# metric. Skipped, and said so, when the active rows are linearly dependent.
+# Warn-only multiplier sign check. The active rows (constraints as c(x) <= 0, bounds as
+# the Q10 rows: a lower bound is -e_i, an upper bound +e_i) must reproduce the negative
+# gradient with non-negative multipliers on the inequalities and bounds and free-sign
+# multipliers on the equalities. The verdict comes from a non-negative least squares fit
+# (.sem_nnls(); each equality enters as two columns, one per sign), so linearly dependent
+# active rows are judged like any others. The part of the residual that lies in the span of
+# the active rows, measured in the Hessian metric sqrt(r' H^-1 r), is compared with
+# -.sem_sign_tol: a larger residual means no admissible multipliers exist and the
+# solution may not be a local minimum. The rows named in the warning are the inequality
+# and bound rows held at zero whose sign, if flipped, would reduce that residual. The table
+# reports the minimum-norm least-squares multipliers, which for independent rows are the
+# unique ones, judged by lambda * sqrt(m' H^-1 m). Never rejects a fit (D8).
 .sem_sign_check <- function(out, ax, active_row, is_eq, text, at_lb, at_ub, ram, hx, gx) {
   q <- length(gx)
   bound_rows <- NULL
@@ -293,21 +300,57 @@
   }
   signed <- c(!is_eq[active_row], rep(TRUE, length(bound_names)))
   names_all <- c(text[active_row], bound_names)
-  if (qr(m / sqrt(rowSums(m^2)), tol = 1e-8)$rank < nrow(m)) {
-    out$sign_check <- "skipped: the active constraints are linearly dependent"
-    return(out)
-  }
-  lambda <- tryCatch(as.vector(solve(m %*% t(m), -m %*% gx)), error = function(e) NULL)
-  hinv_m <- tryCatch(solve(hx, t(m)), error = function(e) NULL)
-  if (is.null(lambda) || is.null(hinv_m)) {
+  skipped <- function() {
     out$sign_check <- "skipped: the multipliers could not be computed"
-    return(out)
+    out
+  }
+  if (!all(is.finite(m)) || !all(is.finite(gx))) {
+    return(skipped())
+  }
+  hinv_m <- tryCatch(solve(hx, t(m)), error = function(e) NULL)
+  # rank and minimum-norm multipliers on unit-length rows, so a row's length does not decide whether it counts
+  row_len <- sqrt(rowSums(m^2))
+  nz <- row_len > 0
+  len <- ifelse(nz, row_len, 1)
+  sv <- svd(t(m / len))
+  keep <- sv$d > 1e-8 * max(sv$d)
+  if (is.null(hinv_m) || !all(is.finite(hinv_m)) || !any(keep)) {
+    return(skipped())
+  }
+  u_k <- sv$u[, keep, drop = FALSE]
+  # minimum-norm least-squares multipliers, for the table (a zero row gets a zero multiplier)
+  lambda <- as.vector(sv$v[, keep, drop = FALSE] %*% (crossprod(u_k, -gx) / sv$d[keep])) / len
+  # admissible multipliers: one column per inequality or bound row, two (+/-) per equality row
+  idx <- c(seq_len(nrow(m)), which(!signed))
+  sgn <- c(rep(1, nrow(m)), rep(-1, sum(!signed)))
+  nn <- .sem_nnls(sweep(t(m[idx, , drop = FALSE]), 2, sgn, "*"), -gx)
+  if (!isTRUE(attr(nn, "converged"))) {
+    return(skipped())
+  }
+  lam_nn <- numeric(nrow(m))
+  for (k in seq_along(idx)) {
+    lam_nn[idx[k]] <- lam_nn[idx[k]] + sgn[k] * nn[k]
+  }
+  r_span <- as.vector(u_k %*% crossprod(u_k, -gx - as.vector(crossprod(m, lam_nn))))
+  hinv_r <- tryCatch(solve(hx, r_span), error = function(e) NULL)
+  if (is.null(hinv_r) || !all(is.finite(hinv_r))) {
+    return(skipped())
   }
   z <- lambda * sqrt(pmax(0, colSums(t(m) * hinv_m)))
   out$multipliers <- data.frame(constraint = names_all, lambda = lambda, scaled = z, signed = signed,
                                 stringsAsFactors = FALSE)
-  bad <- signed & z < .sem_sign_tol
-  if (any(bad)) {
+  if (sqrt(max(0, sum(r_span * hinv_r))) > -.sem_sign_tol) {
+    # an inequality or bound held at zero whose flipped sign would reduce the residual; when roundoff leaves
+    # every one a tiny positive weight, any non-zero signed row may be the one
+    held <- which(signed & nz & nn[seq_len(nrow(m))] <= 0)
+    if (!length(held)) {
+      held <- which(signed & nz)
+    }
+    cosine <- as.vector(m[held, , drop = FALSE] %*% r_span) / (len[held] * sqrt(sum(r_span^2)))
+    bad <- held[which(cosine < -1e-6)]
+    if (!length(bad) && length(held)) {
+      bad <- held[which.min(cosine)]
+    }
     out$sign_warnings <- sprintf(
       paste0("%s is active, but moving into the feasible region would lower the objective; ",
              "the solution may not be a local minimum"),
@@ -315,4 +358,97 @@
     )
   }
   out
+}
+
+# Lawson-Hanson non-negative least squares: minimize ||A x - b|| subject to x >= 0, for any A,
+# including rank-deficient ones (duplicated columns, a column that is a sum of others, an
+# equality entered with both signs). The textbook loop with an absolute tolerance divides 0 by 0
+# once data units make roundoff exceed the tolerance; here
+#   - each column of A and b are first scaled to unit length (zero columns are dropped), so the
+#     tolerance is relative: a weight counts only above tol * ||b|| of the scaled problem;
+#   - the step length is never formed from a zero or non-finite denominator: a column whose step
+#     cannot be taken (x and its least-squares value both zero) leaves the passive set;
+#   - the iteration count is capped.
+# Returns the non-negative, finite solution in the original units, with attributes `converged`
+# (the loop reached the optimality test inside the cap) and `iterations`. Never errors; on an
+# internal failure it returns zeros with converged = FALSE.
+.sem_nnls <- function(A, b, tol = 1e-10, maxit = NULL) {
+  A <- as.matrix(A)
+  b <- as.vector(b)
+  n <- ncol(A)
+  it <- 0L
+  fail <- function() structure(numeric(n), converged = FALSE, iterations = it)
+  if (!n || nrow(A) != length(b) || !all(is.finite(A)) || !all(is.finite(b))) {
+    return(fail())
+  }
+  tryCatch({
+    bn <- sqrt(sum(b^2))
+    cn <- sqrt(colSums(A^2))
+    use <- which(cn > .Machine$double.eps * max(cn))
+    if (!length(use) || bn == 0) {
+      return(structure(numeric(n), converged = TRUE, iterations = it))
+    }
+    a_s <- sweep(A[, use, drop = FALSE], 2, cn[use], "/")
+    b_s <- b / bn
+    k <- length(use)
+    if (is.null(maxit)) {
+      maxit <- 10L * k + 50L
+    }
+    thr <- tol * sqrt(sum(b_s^2))
+    x <- numeric(k)
+    passive <- logical(k)
+    weights <- function(x) as.vector(crossprod(a_s, b_s - a_s %*% x))
+    lsq <- function(passive) {
+      s <- numeric(k)
+      cf <- stats::lm.fit(a_s[, passive, drop = FALSE], b_s, tol = tol)$coefficients
+      cf[is.na(cf)] <- 0
+      s[passive] <- cf
+      s
+    }
+    w <- weights(x)
+    converged <- FALSE
+    while (it < maxit) {
+      cand <- which(!passive)
+      j <- cand[which.max(w[cand])]
+      if (!length(cand) || !(w[j] > thr)) {
+        converged <- TRUE
+        break
+      }
+      it <- it + 1L
+      passive[j] <- TRUE
+      for (inner in seq_len(k + 5L)) {
+        s <- lsq(passive)
+        if (all(s[passive] > 0)) {
+          x <- s
+          break
+        }
+        neg <- passive & s <= 0
+        den <- x - s
+        steppable <- neg & is.finite(den) & den > 0
+        before <- passive
+        if (any(steppable)) {
+          ratio <- x[steppable] / den[steppable]
+          alpha <- min(max(min(ratio), 0), 1)
+          x <- x + alpha * (s - x)
+          passive[which(steppable)[which.min(ratio)]] <- FALSE
+        }
+        passive <- passive & x > tol & !(neg & !steppable)
+        if (identical(before, passive)) {
+          passive[which(neg)[1L]] <- FALSE
+        }
+        x[!passive] <- 0
+        if (!any(passive)) {
+          break
+        }
+      }
+      w <- weights(x)
+    }
+    x <- pmax(x, 0)
+    out <- numeric(n)
+    out[use] <- x * bn / cn[use]
+    if (!all(is.finite(out))) {
+      return(fail())
+    }
+    structure(out, converged = converged, iterations = it)
+  }, error = function(e) fail())
 }
