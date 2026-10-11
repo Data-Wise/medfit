@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,7 +108,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.6.0/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -600,8 +600,65 @@ d_{ij} \lambda_i\)</span> and <span class="math inline">\(\kappa_j = \theta_{3j}
 </div>
 </section><section class="level2"><h2 id="fitting-engines">Fitting engines<a class="anchor" aria-label="anchor" href="#fitting-engines"></a>
 </h2>
-<p><code>fit_mediation(engine = "glm")</code> fits the mediator and outcome models with <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, so every formula above applies. <code>engine = "regmedint"</code> delegates to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code>, a closed-form regression-based implementation, and maps its point estimates and its own delta-method covariance of the effects onto <code>MediationData</code> or <code>InteractionMediationData</code>. The adapter requires a linear mediator model and a unit treatment contrast; see <code><a href="../reference/fit_mediation.html">?fit_mediation</a></code>. For a non-Gaussian outcome model the components are on that model’s link scale, as regmedint reports them. <code>engine = "lmer"</code> fits the two linear mixed models of the cluster design above (REML, random cluster intercepts, the mediator and level-1 covariates split into within-cluster deviation and cluster mean) and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>; it returns a <code>ClusterMediationData</code>.</p>
-</section><section class="level2"><h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+<p><code>fit_mediation(engine = "glm")</code> fits the mediator and outcome models with <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, so every formula above applies. <code>engine = "regmedint"</code> delegates to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code>, a closed-form regression-based implementation, and maps its point estimates and its own delta-method covariance of the effects onto <code>MediationData</code> or <code>InteractionMediationData</code>. The adapter requires a linear mediator model and a unit treatment contrast; see <code><a href="../reference/fit_mediation.html">?fit_mediation</a></code>. For a non-Gaussian outcome model the components are on that model’s link scale, as regmedint reports them. <code>engine = "lmer"</code> fits the two linear mixed models of the cluster design above (REML, random cluster intercepts, the mediator and level-1 covariates split into within-cluster deviation and cluster mean) and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>; it returns a <code>ClusterMediationData</code>. <code>engine = "native"</code> fits model syntax with the engine described in the next section, then extracts the mediation structure through the same workers as the lavaan route.</p>
+</section><section class="level2"><h2 id="native-sem-engine">Native SEM engine<a class="anchor" aria-label="anchor" href="#native-sem-engine"></a>
+</h2>
+<p><code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native")</code> fit a model written in medfit model syntax (<code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>) by maximum likelihood to raw data. Rows with missing values in the model variables are dropped once (listwise deletion) and counted.</p>
+<p><strong>Model form.</strong> The model is written in RAM form. With <span class="math inline">\(A\)</span> the matrix of directed paths, <span class="math inline">\(S_{\text{ram}}\)</span> the matrix of variances and covariances, and <span class="math inline">\(F\)</span> the selection matrix that picks the observed variables, the implied covariance of the observed variables is</p>
+<p><span class="math display">\[
+\Sigma(\theta) = F (I - A)^{-1} S_{\text{ram}} (I - A)^{-\top} F^\top .
+\]</span></p>
+<p><strong>Discrepancy.</strong> With <span class="math inline">\(S\)</span> the sample covariance with divisor <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span> the number of observed variables, the engine minimizes</p>
+<p><span class="math display">\[
+F_{ML}(\theta) = \log |\Sigma(\theta)| + \operatorname{tr}\left(S \Sigma(\theta)^{-1}\right) - \log |S| - p ,
+\]</span></p>
+<p>which is twice lavaan’s <code>fmin</code>. With the means free, <span class="math inline">\(-2 \log L = n \left(F_{ML} + \log |S| + p + p \log 2\pi\right)\)</span>, and <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> reports this value. The gradient is analytic. A parameter vector whose implied covariance is not positive definite gets a large finite value and a zero gradient, so the optimizer can step back from it.</p>
+<p><strong>Standard errors.</strong> The covariance of <span class="math inline">\(\hat\theta\)</span> is the inverse of the information for the log likelihood. The default, observed information, is <span class="math inline">\((n/2)\)</span> times the central-difference Jacobian of the analytic gradient of <span class="math inline">\(F_{ML}\)</span> (step <span class="math inline">\(\epsilon^{1/3} \max(|x|, 1)\)</span>). Expected information is <span class="math inline">\((n/2)\, \operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\, \Sigma^{-1} \partial_l \Sigma\right)\)</span>. A singular information matrix gives an <code>NA</code> covariance and one warning. Defined parameters (<code>:=</code>) get delta-method standard errors, <span class="math inline">\(\sqrt{g^\top V g}\)</span>, with the gradient <span class="math inline">\(g\)</span> taken by central differences over the labels.</p>
+<p><strong>Sampling weights and the sandwich.</strong> With case weights <span class="math inline">\(w_i\)</span> rescaled to sum to <span class="math inline">\(n\)</span>, the fit minimizes <span class="math inline">\(F_{ML}\)</span> on the weighted mean and the weighted covariance (divisor <span class="math inline">\(n\)</span>). The robust covariance of <span class="math inline">\(\hat\theta\)</span> is <span class="math inline">\(A^{-1} B A^{-1}\)</span>, with <span class="math inline">\(A\)</span> the information above and <span class="math inline">\(B = \sum_i s_i s_i^\top\)</span> the cross product of the casewise scores</p>
+<p><span class="math display">\[
+s_{i,k} = w_i \, \frac{1}{2} \operatorname{tr}\left(\Sigma^{-1} (d_i d_i^\top - \Sigma) \Sigma^{-1} \partial_k \Sigma\right),
+\qquad d_i = x_i - \bar{x}_w .
+\]</span></p>
+<p>The means are free and do not involve <span class="math inline">\(\theta\)</span>, so <span class="math inline">\(A\)</span> is block diagonal and only the <span class="math inline">\(\theta\)</span> block of <span class="math inline">\(B\)</span> enters. Under constraints the same projection applies, <span class="math inline">\(Z (Z^\top A Z)^{-1} Z^\top B Z (Z^\top A Z)^{-1} Z^\top\)</span>. The estimator is invariant to the scale of the weights and has no leverage correction (HC0): it equals <code>sandwich::vcovHC(type = "HC0")</code> for each regression equation and lavaan’s robust standard errors with <code>sampling.weights</code>, and is narrower than the HC3 default of <code>fit_mediation(engine = "glm", se_type = "sandwich")</code> by a factor that shrinks like <span class="math inline">\(1/n\)</span>. The weighted likelihood is a pseudo likelihood, so <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> is not defined for a weighted fit.</p>
+<p><strong>Constraints.</strong> Equality and inequality constraints that are linear in the labels become rows <span class="math inline">\(a^\top\theta + b\)</span>, normalized to unit length, with constant Jacobians for the optimizer (SLSQP through nloptr). A nonlinear constraint is an error. At the solution the active constraints and active bounds define a null-space basis <span class="math inline">\(Z\)</span> of the feasible directions, and the covariance is projected,</p>
+<p><span class="math display">\[
+V = Z \left(Z^\top I Z\right)^{-1} Z^\top ,
+\]</span></p>
+<p>so a parameter pinned by a constraint has zero variance and <code>a == b</code> returns the standard error of the model with <code>a</code> and <code>b</code> collapsed to one label.</p>
+<p><strong>Acceptance.</strong> A solution is accepted only if the optimizer status is a success code, every constraint holds to <span class="math inline">\(10^{-6}\)</span> in the solver’s natural units, and the Newton decrement <span class="math inline">\(\sqrt{g_r^\top H_r^{-1} g_r}\)</span> on the reduced gradient and Hessian of the active-constraint null space is at most <span class="math inline">\(10^{-3}\)</span>, with a positive definite reduced Hessian. The decrement is scale free, so rescaling the data does not change the verdict. The sign of each active inequality’s multiplier is checked and only warns: a wrong sign means the point may not be a local minimum, and the fit is not rejected for it.</p>
+<p><strong>Starts.</strong> The first start is moment based. If it is not accepted, up to <code>n_starts - 1</code> retries use perturbed starts drawn under a fixed seed derived from the model, restoring the caller’s random number state afterward, so a fit is reproducible and never changes a simulation around it. When no start is accepted the error names the best attempt’s status and stationarity, and for an infeasible constraint set, the violated constraint.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
+<span>  <span class="st">"mediator1 ~ a*treatment + covariate1</span></span>
+<span><span class="st">   outcome ~ b*mediator1 + treatment + covariate1</span></span>
+<span><span class="st">   ab := a*b"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">mediation_demo</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">fit</span><span class="op">@</span><span class="va">defined</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>  name expr       est         se
+1   ab  a*b 0.3331241 0.06436069</code></pre>
+</div>
+</div>
+<section class="level3"><h3 id="testing-the-indirect-effect-mbco">Testing the indirect effect: MBCO<a class="anchor" aria-label="anchor" href="#testing-the-indirect-effect-mbco"></a>
+</h3>
+<p><code>mbco_sem(fit, a, b)</code> tests <span class="math inline">\(H_0\colon ab = 0\)</span> as the minimum of two likelihood-ratio tests (MBCO). It refits the model with <span class="math inline">\(a = 0\)</span> and with <span class="math inline">\(b = 0\)</span>; each is a linear equality constraint, so each refit is one solve. With <span class="math inline">\(F\)</span> the minimized maximum-likelihood discrepancy and <span class="math inline">\(n\)</span> the number of rows used,</p>
+<p><span class="math display">\[
+D_a = n\,(F_{a=0} - F), \qquad D_b = n\,(F_{b=0} - F), \qquad
+T = \min(D_a, D_b),
+\]</span></p>
+<p>and <span class="math inline">\(T\)</span> is referred to <span class="math inline">\(\chi^2_1\)</span>. The nonlinear constraint <span class="math inline">\(ab = 0\)</span> is not solved: a nonlinear solver can stop at the branch with the larger statistic (OpenMx’s does on RMediation’s <code>memory_exp</code>, reporting 221.05 where the minimum is 0.083). A fit with sampling weights or one that did not converge is refused, since the weighted discrepancy is not a likelihood. If a bound or an inequality on the tested path is active at its refit (<code>a &gt; 0</code> with the null at <span class="math inline">\(a = 0\)</span>), the null lies on the boundary of the parameter space, the statistic is a mixture of chi-squares, and the function warns that the p-value is not valid.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/mbco_sem.html">mbco_sem</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Minimum-of-two likelihood-ratio tests (MBCO) for an indirect effect
+
+data:  a * b = 0
+MBCO = 33.353, df = 1, p-value = 7.685e-09</code></pre>
+</div>
+</div>
+</section></section><section class="level2"><h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <p>Falk, C. F., Vogel, T. A., Hammami, S., &amp; Miočević, M. (2024). Multilevel mediation analysis in R: A comparison of bootstrap and Bayesian approaches. <em>Behavior Research Methods</em>, 56(2), 750–764. <a href="https://doi.org/10.3758/s13428-023-02079-4" class="external-link uri">https://doi.org/10.3758/s13428-023-02079-4</a></p>
 <p>Lüdtke, O., Marsh, H. W., Robitzsch, A., Trautwein, U., Asparouhov, T., &amp; Muthén, B. (2008). The multilevel latent covariate model: A new, more reliable approach to group-level effects in contextual studies. <em>Psychological Methods</em>, 13(3), 203–229. <a href="https://doi.org/10.1037/a0012869" class="external-link uri">https://doi.org/10.1037/a0012869</a></p>

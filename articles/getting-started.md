@@ -602,7 +602,8 @@ glance(boot_result)
   Card](https://data-wise.github.io/medfit/articles/refcard.md) -
   One-page lookup of calls, classes, and effects
 - [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) -
-  Ten task recipes, including cluster-randomized trials
+  Eleven task recipes, including cluster-randomized trials and a latent
+  mediator
 
 ## What medfit Covers
 

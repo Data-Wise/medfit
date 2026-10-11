@@ -1,5 +1,152 @@
 # Changelog
 
+## medfit 0.7.0
+
+medfit 0.7.0 adds an experimental native maximum-likelihood structural
+equation engine. It is released on GitHub and r-universe only and is not
+submitted to CRAN.
+
+### New features
+
+- New native maximum-likelihood structural equation engine
+  (experimental). `fit_sem(model, data)` fits lavaan-style model syntax
+  to raw data and returns a `SEMFit` with
+  [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`coef()`](https://rdrr.io/r/stats/coef.html),
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html),
+  [`nobs()`](https://rdrr.io/r/stats/nobs.html) and
+  [`logLik()`](https://rdrr.io/r/stats/logLik.html). It handles observed
+  and latent variables, labels, fixed values, starts and bounds, linear
+  equality and inequality constraints (`==`, `<`, `>`), and defined
+  parameters (`:=`) with delta-method standard errors. The syntax is
+  documented in
+  [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md),
+  including the two medfit extensions (comma shorthand and
+  `CONSTRAINT(...)`).
+- `fit_mediation(engine = "native", model = , treatment = , mediator = )`
+  fits the syntax and returns the usual mediation objects, for observed
+  single, serial and parallel mediators and for a latent mediator, which
+  need not be a column of `data`.
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  has a method for `SEMFit` that shares its workers with the lavaan
+  route, so the aliases and covariance rows are the same; its
+  `source_package` is `"medfit"`. For an observed single mediator,
+  `probmed::pmed()` runs on the native route with the plugin estimator
+  and the parametric bootstrap, which agrees with the glm route within
+  Monte Carlo error; a latent mediator supports the plugin estimator
+  only ([\#105](https://github.com/data-wise/medfit/issues/105)).
+- Standard errors use observed information by default
+  (`information = "expected"` is available). Against OpenMx they agree
+  to 1.6e-4 in the worst of 240 simulated datasets; expected information
+  for latent-variable models differs from that reference by up to 11% at
+  n = 50, which is why observed is the default. Under equality
+  constraints and at active bounds the covariance is projected onto the
+  feasible directions, so a constrained parameter has zero variance and
+  `a == b` gives the standard error of the collapsed model.
+- Sampling weights and robust standard errors:
+  `fit_sem(sampling_weights = , se_type = "sandwich")` fits weighted
+  maximum likelihood on the weighted mean and covariance with the
+  sandwich covariance from casewise scores, and
+  `fit_mediation(engine = "native", weights = , se_type = "sandwich")`
+  takes the same two arguments the glm engine does. The native sandwich
+  is HC0-type: it equals `sandwich::vcovHC(type = "HC0")` per equation
+  and lavaan’s robust standard errors with `sampling.weights` (to 1e-6
+  and 1e-5), so it is a few percent narrower than the glm engine’s HC3
+  default at moderate n, a gap that shrinks like
+  1/n. [`logLik()`](https://rdrr.io/r/stats/logLik.html) is not defined
+  for a weighted fit.
+- `mbco_sem(fit, a, b)` tests the indirect effect in a
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  fit as the minimum of two likelihood-ratio tests: it refits with
+  `a == 0` and with `b == 0` (two linear solves), takes the smaller
+  diffLL as the statistic, and refers it to chi-square with one degree
+  of freedom. The result is an `htest` that also carries both diffLL
+  values. It reproduces OpenMx’s diffLL on RMediation’s `memory_exp` to
+  1e-6 (221.045546 and 0.083100) and lavaan’s constrained fits on a
+  latent-mediator model. It tests a product of two labeled regression
+  paths, refuses a fit with sampling weights or one that did not
+  converge, has its refits inherit the fit’s `n_starts` and `control`,
+  and warns when a bound or an inequality on the tested path puts the
+  null on the boundary of the parameter space. The nonlinear `a*b == 0`
+  is deliberately not solved: a nonlinear solver can stop at the branch
+  with the larger statistic.
+- Not yet supported by the native engine: mean structures (free
+  intercepts), the four-way decomposition (it needs the mediator
+  intercept; use `decomposition = "two_way"`), standardized estimates,
+  and multilevel models. Nonlinear constraints are planned for a later
+  release; until then a nonlinear constraint is an error that names the
+  constraint.
+
+### Bug fixes
+
+- `bootstrap_mediation(cluster = )` no longer discards every replicate
+  when the statistic refits through `fit_mediation(engine = "lmer")`
+  with fewer than 25 clusters. The few-cluster warning (fewer than 25
+  clusters with model-based standard errors, or fewer than 10 with any
+  standard error) was counted as a failed refit, so the bootstrap that
+  the warning recommends stopped with “Too many bootstrap samples
+  failed”. The warning now has the condition class `medfit_few_clusters`
+  and is not counted; the point estimate on the original data still
+  shows it once. In 0.6.0, `se_type = "kr"` with 10 or more clusters
+  avoids the warning and so avoids the failure.
+
+### Behavior change
+
+- [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  has a new named argument `model`. An argument passed to
+  [`stats::glm()`](https://rdrr.io/r/stats/glm.html) through `...` that
+  partially matches it, such as `mod = FALSE`, now binds to `model`
+  instead, and `model` is an error with the glm engine. Spelling out
+  `model = FALSE` does not help: drop the argument.
+  [`glm()`](https://rdrr.io/r/stats/glm.html)’s own `model` argument
+  cannot be passed through
+  [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md).
+
+- [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  on a lavaan fit of a simple single-mediator model now appends the rows
+  `m_<treatment>`, `y_<mediator>` and `y_<treatment>` to `@estimates`
+  and `@vcov` of the returned `MediationData`. These are the names the
+  lm/glm route already used, so code that resolves coefficients by name,
+  such as `probmed::pmed(method = "parametric_bootstrap")`, now works on
+  lavaan-derived objects instead of failing with a
+  subscript-out-of-bounds error. Each new row repeats the `a`, `b` or
+  `c_prime` path with the same estimate and covariances; every existing
+  row keeps its name, value and position. Code that indexes `@estimates`
+  or `@vcov` by position past the `a`, `b`, `c_prime` rows, or that
+  counts their rows, sees three more. A lavaan fit with a latent or
+  ordered treatment, mediator or outcome, and any `standardized = TRUE`
+  extraction, gets none of the three rows and supports the plugin
+  estimators only. Serial, parallel and four-way objects are unchanged
+  ([\#106](https://github.com/data-wise/medfit/issues/106)).
+
+### Documentation
+
+- The cookbook has an eleventh recipe, a latent mediator fitted with the
+  native engine and tested with
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md).
+  The model syntax is documented in
+  [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md),
+  the Methods and Formulas article has a section on the native engine
+  with a subsection on MBCO, and the Reference Card lists
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  and the `SEMFit` class.
+
+### Dependencies
+
+- `lifecycle` is now in `Imports`, and the lifecycle badge figures ship
+  in `man/figures/`. Deprecations and experimental features are marked
+  with it.
+- `nloptr (>= 1.0.4)` is now in `Imports`: the native engine uses its
+  SLSQP solver. It contains compiled code, so a source install from
+  GitHub (for example `pak::pak("data-wise/medfit")`) builds it unless
+  `lme4` already brought it in; the r-universe binaries need no
+  compiler.
+- `OpenMx` is now in `Suggests`. Only the tests use it, as the
+  independent reference for standard errors and for
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md).
+
 ## medfit 0.6.0
 
 ### New features

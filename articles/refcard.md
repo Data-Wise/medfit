@@ -62,17 +62,21 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Formulas, cluster treatment | `fit_mediation(engine = "lmer", cluster = )` with plain formulas, no `(1 \| id)` |
 | `lavaan` fit | `extract_mediation(lavaan_fit, ...)` |
 | IPW weights | `fit_mediation(weights = , se_type = "sandwich")` |
+| Model syntax and data (observed or latent variables, constraints, `:=`) | `fit_sem(model, data)`, a `SEMFit` |
+| Model syntax, mediator by name | `fit_mediation(engine = "native", model = , treatment = , mediator = )` |
+| Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")` |
 
 ## Which object
 
-| Structure                 | Class                      | NIE                  |
-|---------------------------|----------------------------|----------------------|
-| X to M to Y               | `MediationData`            | \\a \\ b\\           |
-| Chain X to M1 to M2 to Y  | `SerialMediationData`      | \\a \\ d \\ b\\      |
-| X to M_j to Y             | `ParallelMediationData`    | \\\sum a_j b_j\\     |
-| X by M term               | `InteractionMediationData` | INTmed + PIE         |
-| Several M with X by M     | `JointMediationData`       | joint over the block |
-| Cluster treatment, `lmer` | `ClusterMediationData`     | \\a \\ b_B\\         |
+| Structure | Class | NIE |
+|----|----|----|
+| X to M to Y | `MediationData` | \\a \\ b\\ |
+| Any model fitted from syntax by [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) | `SEMFit`, then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) | as extracted |
+| Chain X to M1 to M2 to Y | `SerialMediationData` | \\a \\ d \\ b\\ |
+| X to M_j to Y | `ParallelMediationData` | \\\sum a_j b_j\\ |
+| X by M term | `InteractionMediationData` | INTmed + PIE |
+| Several M with X by M | `JointMediationData` | joint over the block |
+| Cluster treatment, `lmer` | `ClusterMediationData` | \\a \\ b_B\\ |
 
 ## Effects
 

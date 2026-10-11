@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,7 +108,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.6.0/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -117,7 +117,7 @@
 
 
 
-    <p>Ten task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster recipe), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
+    <p>Eleven task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stderr">
@@ -289,7 +289,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4351678 0.8930074 </code></pre>
+0.6560315 0.4349603 0.8927176 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
@@ -383,6 +383,52 @@ N bootstrap samples: 197
 </div>
 </div>
 <p>More: <a href="extraction.html">Model Extraction</a>.</p>
+</section><section class="level2"><h2 id="a-latent-mediator-native-engine">11. A latent mediator, native engine<a class="anchor" aria-label="anchor" href="#a-latent-mediator-native-engine"></a>
+</h2>
+<p><em>When:</em> the mediator is a construct measured by several indicators, and you want its indirect effect without first averaging the indicators into a score. The mediator <code>eta</code> is not a column of the data; the model syntax defines it. The native engine is experimental.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">11</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">400</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">eta</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span>
+<span><span class="va">ldat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  X <span class="op">=</span> <span class="va">X</span>,</span>
+<span>  m1 <span class="op">=</span> <span class="va">eta</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span>,</span>
+<span>  m2 <span class="op">=</span> <span class="fl">0.8</span> <span class="op">*</span> <span class="va">eta</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span>,</span>
+<span>  m3 <span class="op">=</span> <span class="fl">0.7</span> <span class="op">*</span> <span class="va">eta</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">ldat</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">eta</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre>
+</div>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">syntax</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  eta =~ m1 + m2 + m3</span></span>
+<span><span class="st">  eta ~ a * X</span></span>
+<span><span class="st">  Y ~ b * eta + cp * X</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">xs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">syntax</span>, data <span class="op">=</span> <span class="va">ldat</span>, treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
+<span>                    mediator <span class="op">=</span> <span class="st">"eta"</span>, engine <span class="op">=</span> <span class="st">"native"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">xs</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 5
+  term  estimate std.error conf.low conf.high
+  &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 nie      0.169    0.0310    0.108     0.229
+2 nde      0.255    0.0487    0.159     0.350
+3 te       0.423    0.0445    0.336     0.510</code></pre>
+</div>
+</div>
+<p><code><a href="../reference/fit_sem.html">fit_sem()</a></code> fits the same syntax and returns the <code>SEMFit</code>. <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect as the minimum of two likelihood-ratio tests, refitting with <code>a == 0</code> and with <code>b == 0</code>:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/mbco_sem.html">mbco_sem</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax</span>, <span class="va">ldat</span><span class="op">)</span>, <span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Minimum-of-two likelihood-ratio tests (MBCO) for an indirect effect
+
+data:  a * b = 0
+MBCO = 46.753, df = 1, p-value = 8.054e-12</code></pre>
+</div>
+</div>
+<p>More: <a href="methods.html">Methods and Formulas</a>.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

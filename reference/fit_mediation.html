@@ -31,7 +31,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +74,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit Mediation Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.6.0/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
       <div class="d-none name"><code>fit_mediation.Rd</code></div>
     </div>
 
@@ -100,6 +100,7 @@ mediator and outcome models simultaneously.</p>
 <span>  engine_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  m_star <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  cluster <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  model <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -109,11 +110,13 @@ mediator and outcome models simultaneously.</p>
 
 
 <dl><dt id="arg-formula-y">formula_y<a class="anchor" aria-label="anchor" href="#arg-formula-y"></a></dt>
-<dd><p>Formula for outcome model (e.g., <code>Y ~ X + M + C</code>)</p></dd>
+<dd><p>Formula for outcome model (e.g., <code>Y ~ X + M + C</code>). Not used
+with <code>engine = "native"</code>, which takes <code>model</code> instead.</p></dd>
 
 
 <dt id="arg-formula-m">formula_m<a class="anchor" aria-label="anchor" href="#arg-formula-m"></a></dt>
-<dd><p>Formula for mediator model (e.g., <code>M ~ X + C</code>)</p></dd>
+<dd><p>Formula for mediator model (e.g., <code>M ~ X + C</code>). Not used
+with <code>engine = "native"</code>.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -133,6 +136,13 @@ mediator and outcome models simultaneously.</p>
 <li><p><code>"regmedint"</code>: Closed-form regression-based (in)direct effects via
 the suggested <span class="pkg">regmedint</span> package (VanderWeele's regression
 approach, with optional treatment-mediator interaction)</p></li>
+<li><p><code>"native"</code>: medfit's own maximum-likelihood SEM engine, fitted from
+model syntax given as <code>model</code> (see <code><a href="fit_sem.html">fit_sem()</a></code>); the fit is then
+extracted with <code><a href="extract_mediation.html">extract_mediation()</a></code>. Supports observed and latent
+mediators, equality and inequality constraints, and <code>:=</code> parameters.
+Case <code>weights</code> and <code>se_type = "sandwich"</code> map to <code><a href="fit_sem.html">fit_sem()</a></code>'s
+<code>sampling_weights</code> (weighted maximum likelihood) and its robust
+sandwich covariance.</p></li>
 <li><p><code>"lmer"</code>: Linear mixed models for a treatment assigned to whole
 clusters (the 2-1-1 design), via the suggested <span class="pkg">lme4</span> package;
 needs <code>cluster =</code> and returns a <a href="ClusterMediationData.html">ClusterMediationData</a>. The engine
@@ -167,12 +177,19 @@ model-based <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-li
 <code>"sandwich"</code> option requires the suggested <span class="pkg">sandwich</span> package. With
 <code>engine = "lmer"</code> only, <code>"kr"</code> uses the Kenward-Roger adjusted covariance
 and stores a degrees of freedom for each path, so the path intervals are
-t intervals; it needs REML fits and the suggested <span class="pkg">pbkrtest</span> package.</p></dd>
+t intervals; it needs REML fits and the suggested <span class="pkg">pbkrtest</span> package.
+With <code>engine = "native"</code>, <code>"sandwich"</code> is the HC0-type robust covariance
+(see <code><a href="fit_sem.html">fit_sem()</a></code>), which is smaller than the glm engine's HC3 by a factor
+that shrinks like 1/n.</p></dd>
 
 
 <dt id="arg-engine-args">engine_args<a class="anchor" aria-label="anchor" href="#arg-engine-args"></a></dt>
 <dd><p>Named list of engine-specific overrides (default:
 <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code>, no overrides). Ignored by <code>engine = "glm"</code>. For
+<code>engine = "native"</code>, recognized names are <code>information</code>, <code>n_starts</code> and
+<code>control</code> (passed to <code><a href="fit_sem.html">fit_sem()</a></code>) and <code>outcome</code>, <code>structure</code>,
+<code>decomposition</code>, <code>interaction</code>, <code>a_label</code>, <code>b_label</code> and <code>cp_label</code>
+(passed to <code><a href="extract_mediation.html">extract_mediation()</a></code>); any other name is an error. For
 <code>engine = "lmer"</code>, recognized names are <code>random_y</code> and <code>random_m</code>
 (one-sided formulas of level-1 terms that get correlated random slopes;
 <code>~ M</code> in <code>random_y</code> is applied to the within-cluster mediator term) and
@@ -197,6 +214,16 @@ on two-way fits; forward it only when its own caller supplied one.</p></dd>
 <dt id="arg-cluster">cluster<a class="anchor" aria-label="anchor" href="#arg-cluster"></a></dt>
 <dd><p>Character string: name of the cluster variable in <code>data</code>.
 Required with <code>engine = "lmer"</code>, an error with the other engines.</p></dd>
+
+
+<dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
+<dd><p>Character string: model syntax for <code>engine = "native"</code> (required
+there, an error with any other engine). <code>treatment</code> and <code>mediator</code> name
+variables in the syntax; a latent mediator need not be a column of <code>data</code>.
+Because <code>model</code> is a named argument, an argument passed to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code>
+through <code>...</code> that partially matches it (<code>mod = FALSE</code>) now binds here and
+is an error with the glm engine; drop it, since <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>'s own <code>model</code>
+argument cannot be passed through.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

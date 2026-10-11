@@ -21,6 +21,7 @@ fit_mediation(
   engine_args = list(),
   m_star = 0,
   cluster = NULL,
+  model = NULL,
   ...
 )
 ```
@@ -29,11 +30,13 @@ fit_mediation(
 
 - formula_y:
 
-  Formula for outcome model (e.g., `Y ~ X + M + C`)
+  Formula for outcome model (e.g., `Y ~ X + M + C`). Not used with
+  `engine = "native"`, which takes `model` instead.
 
 - formula_m:
 
-  Formula for mediator model (e.g., `M ~ X + C`)
+  Formula for mediator model (e.g., `M ~ X + C`). Not used with
+  `engine = "native"`.
 
 - data:
 
@@ -56,6 +59,18 @@ fit_mediation(
   - `"regmedint"`: Closed-form regression-based (in)direct effects via
     the suggested regmedint package (VanderWeele's regression approach,
     with optional treatment-mediator interaction)
+
+  - `"native"`: medfit's own maximum-likelihood SEM engine, fitted from
+    model syntax given as `model` (see
+    [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md));
+    the fit is then extracted with
+    [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md).
+    Supports observed and latent mediators, equality and inequality
+    constraints, and `:=` parameters. Case `weights` and
+    `se_type = "sandwich"` map to
+    [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)'s
+    `sampling_weights` (weighted maximum likelihood) and its robust
+    sandwich covariance.
 
   - `"lmer"`: Linear mixed models for a treatment assigned to whole
     clusters (the 2-1-1 design), via the suggested lme4 package; needs
@@ -96,19 +111,30 @@ fit_mediation(
   requires the suggested sandwich package. With `engine = "lmer"` only,
   `"kr"` uses the Kenward-Roger adjusted covariance and stores a degrees
   of freedom for each path, so the path intervals are t intervals; it
-  needs REML fits and the suggested pbkrtest package.
+  needs REML fits and the suggested pbkrtest package. With
+  `engine = "native"`, `"sandwich"` is the HC0-type robust covariance
+  (see
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)),
+  which is smaller than the glm engine's HC3 by a factor that shrinks
+  like 1/n.
 
 - engine_args:
 
   Named list of engine-specific overrides (default:
   [`list()`](https://rdrr.io/r/base/list.html), no overrides). Ignored
-  by `engine = "glm"`. For `engine = "lmer"`, recognized names are
-  `random_y` and `random_m` (one-sided formulas of level-1 terms that
-  get correlated random slopes; `~ M` in `random_y` is applied to the
-  within-cluster mediator term) and `REML` (default `TRUE`); any other
-  name is an error. For `engine = "regmedint"`, recognized names are
-  `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`, and `c_cond`; each
-  replaces the value the adapter would otherwise derive from the
+  by `engine = "glm"`. For `engine = "native"`, recognized names are
+  `information`, `n_starts` and `control` (passed to
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md))
+  and `outcome`, `structure`, `decomposition`, `interaction`, `a_label`,
+  `b_label` and `cp_label` (passed to
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md));
+  any other name is an error. For `engine = "lmer"`, recognized names
+  are `random_y` and `random_m` (one-sided formulas of level-1 terms
+  that get correlated random slopes; `~ M` in `random_y` is applied to
+  the within-cluster mediator term) and `REML` (default `TRUE`); any
+  other name is an error. For `engine = "regmedint"`, recognized names
+  are `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`, and `c_cond`;
+  each replaces the value the adapter would otherwise derive from the
   formulas, families, and data. The reference mediator level is set with
   `m_star`, not here.
 
@@ -129,6 +155,18 @@ fit_mediation(
 
   Character string: name of the cluster variable in `data`. Required
   with `engine = "lmer"`, an error with the other engines.
+
+- model:
+
+  Character string: model syntax for `engine = "native"` (required
+  there, an error with any other engine). `treatment` and `mediator`
+  name variables in the syntax; a latent mediator need not be a column
+  of `data`. Because `model` is a named argument, an argument passed to
+  [`stats::glm()`](https://rdrr.io/r/stats/glm.html) through `...` that
+  partially matches it (`mod = FALSE`) now binds here and is an error
+  with the glm engine; drop it, since
+  [`glm()`](https://rdrr.io/r/stats/glm.html)'s own `model` argument
+  cannot be passed through.
 
 - ...:
 

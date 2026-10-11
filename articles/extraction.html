@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,7 +108,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.6.0/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -586,7 +586,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_nie</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_nie</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4400159 0.9092223</code></pre>
+<pre><code>[1] 0.4483248 0.8930866</code></pre>
 </div>
 </div>
 <p>The fit must meet a few requirements, and each violation errors with its cause: every model carries the same covariates (a medfit limitation), all models are Gaussian identity-link, unweighted, with an intercept, and fit to the same rows, every mediator appears in the outcome model, and the treatment is coded 0/1. Only outcome-model products written with <code>:</code> or <code>*</code> are supported; a product in a mediator model, between mediators, with a covariate, or inside <code><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I()</a></code> errors. A product <strong>precomputed as a data column</strong> cannot be recognized from the formula and would be ignored silently, so write it in the formula. The identification assumptions are stated for the whole mediator vector; see <code><a href="../reference/JointMediationData.html">?JointMediationData</a></code>.</p>
@@ -711,6 +711,13 @@ Model info:
 Residual SDs:
   Mediator model:   0.9743
   Outcome model:    1.0360</code></pre>
+</div>
+</div>
+<p>Besides the parameter names lavaan assigns, the extracted <code>@estimates</code> and <code>@vcov</code> carry <code>m_&lt;treatment&gt;</code>, <code>y_&lt;mediator&gt;</code> and <code>y_&lt;treatment&gt;</code>, the names the lm/glm route gives these three coefficients, so code that looks them up by name (such as the parametric bootstrap in probmed) works on either route. A latent or ordered treatment, mediator or outcome, and any <code>standardized = TRUE</code> extraction, gets none of them.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grep</a></span><span class="op">(</span><span class="st">"^(m|y)_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">med_sem</span><span class="op">@</span><span class="va">estimates</span><span class="op">)</span>, value <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "m_treatment" "y_mediator1" "y_treatment"</code></pre>
 </div>
 </div>
 </section><section class="level3"><h3 id="serial-mediation-in-sem">Serial Mediation in SEM<a class="anchor" aria-label="anchor" href="#serial-mediation-in-sem"></a>

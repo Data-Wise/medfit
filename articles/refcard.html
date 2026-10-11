@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,7 +108,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.6.0/vignettes/articles/refcard.qmd" class="external-link"><code>vignettes/articles/refcard.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/refcard.qmd" class="external-link"><code>vignettes/articles/refcard.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -219,10 +219,29 @@ Residual SDs:
 <td>IPW weights</td>
 <td><code>fit_mediation(weights = , se_type = "sandwich")</code></td>
 </tr>
+<tr class="odd">
+<td>Model syntax and data (observed or latent variables, constraints, <code>:=</code>)</td>
+<td>
+<code>fit_sem(model, data)</code>, a <code>SEMFit</code>
+</td>
+</tr>
+<tr class="even">
+<td>Model syntax, mediator by name</td>
+<td><code>fit_mediation(engine = "native", model = , treatment = , mediator = )</code></td>
+</tr>
+<tr class="odd">
+<td>Test of the indirect effect on a <code>SEMFit</code> (MBCO)</td>
+<td><code>mbco_sem(fit, "a", "b")</code></td>
+</tr>
 </tbody>
 </table></section><section class="level2"><h2 id="which-object">Which object<a class="anchor" aria-label="anchor" href="#which-object"></a>
 </h2>
 <table class="table caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
 <thead><tr class="header">
 <th>Structure</th>
 <th>Class</th>
@@ -235,26 +254,34 @@ Residual SDs:
 <td><span class="math inline">\(a \, b\)</span></td>
 </tr>
 <tr class="even">
+<td>Any model fitted from syntax by <code><a href="../reference/fit_sem.html">fit_sem()</a></code>
+</td>
+<td>
+<code>SEMFit</code>, then <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>
+</td>
+<td>as extracted</td>
+</tr>
+<tr class="odd">
 <td>Chain X to M1 to M2 to Y</td>
 <td><code>SerialMediationData</code></td>
 <td><span class="math inline">\(a \, d \, b\)</span></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>X to M_j to Y</td>
 <td><code>ParallelMediationData</code></td>
 <td><span class="math inline">\(\sum a_j b_j\)</span></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>X by M term</td>
 <td><code>InteractionMediationData</code></td>
 <td>INTmed + PIE</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Several M with X by M</td>
 <td><code>JointMediationData</code></td>
 <td>joint over the block</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Cluster treatment, <code>lmer</code>
 </td>
 <td><code>ClusterMediationData</code></td>

@@ -49,6 +49,12 @@ analysis ecosystem, supporting
   [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
   with the `glm` and `regmedint` engines, optional case weights (IPW),
   and sandwich (HC3) standard errors
+- **Native Model Syntax** (experimental):
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  and `fit_mediation(engine = "native")` fit lavaan-style syntax with
+  latent mediators, constraints, and defined parameters;
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  tests the indirect effect
 - **Bundled Example Data**: `mediation_demo`, a simulated dataset for
   every workflow
 - **Robust Bootstrap Inference**: Three bootstrap methods (parametric,
@@ -247,6 +253,46 @@ See [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.html) for
 the estimand and the assumptions each effect needs.
 
+### Latent Mediator (Native Engine)
+
+When the mediator is a construct measured by several indicators, write
+the model as syntax. The native maximum-likelihood engine is
+experimental and needs no other package:
+
+``` r
+
+# a latent mediator `eta` with three indicators, simulated
+set.seed(11)
+n <- 400
+X <- rnorm(n)
+eta <- 0.5 * X + rnorm(n, sd = 0.9)
+ldat <- data.frame(
+  X = X,
+  m1 = eta + rnorm(n, sd = 0.7),
+  m2 = 0.8 * eta + rnorm(n, sd = 0.7),
+  m3 = 0.7 * eta + rnorm(n, sd = 0.8)
+)
+ldat$Y <- 0.4 * eta + 0.2 * X + rnorm(n, sd = 0.8)
+
+syntax <- "
+  eta =~ m1 + m2 + m3
+  eta ~ a * X
+  Y ~ b * eta + cp * X
+"
+fit <- fit_mediation(model = syntax, data = ldat, treatment = "X",
+                     mediator = "eta", engine = "native")
+nie(fit)
+
+mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tests
+```
+
+    #> Natural Indirect Effect (NIE): 0.1685
+    #>
+    #>  Minimum-of-two likelihood-ratio tests (MBCO) for an indirect effect
+    #>
+    #> data:  a * b = 0
+    #> MBCO = 46.753, df = 1, p-value = 8.054e-12
+
 ## Core Components
 
 ### S7 Classes
@@ -331,7 +377,12 @@ One-row model summary
 **[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)**:
 Extract from fitted lm/glm/lavaan models -
 **[`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)**:
-Fit with formula interface (`glm` or `regmedint` engine) -
+Fit with formula interface (`glm` or `regmedint` engine) or model syntax
+(`engine = "native"`) -
+**[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)**,
+**[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)**:
+Fit model syntax with the native engine; test the indirect effect
+(experimental) -
 **[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)**:
 Bootstrap inference (parametric, nonparametric, plugin)
 
@@ -374,8 +425,8 @@ Comprehensive articles are available on the package website:
   Card](https://data-wise.github.io/medfit/articles/refcard.html)**:
   Every export and class on one page
 - **[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html)**:
-  Ten task recipes, from a first mediation fit to cluster-randomized
-  designs
+  Eleven task recipes, from a first mediation fit to cluster-randomized
+  designs and a latent mediator
 
 ## Development Status
 
@@ -421,7 +472,7 @@ GPL (\>= 3)
 If you use medfit in your research, please cite:
 
     Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-    R package version 0.6.0. https://data-wise.github.io/medfit/
+    R package version 0.7.0. https://data-wise.github.io/medfit/
 
 For the entry matching your installed version, run `citation("medfit")`.
 
@@ -500,6 +551,8 @@ Core S7 class definitions for mediation data structures
   : ClusterMediationData: Cluster-Level Treatment Mediation (2-1-1)
 - [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
+- [`SEMFit()`](https://data-wise.github.io/medfit/reference/SEMFit.md)
+  **\[experimental\]** : SEMFit S7 Class
 
 ## Model Fitting
 
@@ -509,6 +562,15 @@ Functions for fitting and extracting mediation models
   : Extract Mediation Structure from Fitted Models
 - [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
   : Fit Mediation Models
+- [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  **\[experimental\]** : Fit a Structural Equation Model by Maximum
+  Likelihood
+- [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  **\[experimental\]** : Minimum-of-Two Likelihood-Ratio Test for an
+  Indirect Effect (MBCO)
+- [`medfit-syntax`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+  [`medfit_syntax`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+  **\[experimental\]** : medfit Model Syntax
 - [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
   : Perform Bootstrap Inference for Mediation Statistics
 
@@ -519,6 +581,8 @@ Print and summary methods for medfit classes
 - [`tidy(`*`<S7_object>`*`)`](https://data-wise.github.io/medfit/reference/tidy.S7_object.md)
   [`glance(`*`<S7_object>`*`)`](https://data-wise.github.io/medfit/reference/tidy.S7_object.md)
   : Tidy, Glance, and Inference Methods for medfit Objects
+- [`SEMFit-methods`](https://data-wise.github.io/medfit/reference/SEMFit-methods.md)
+  **\[experimental\]** : Methods for SEMFit objects
 - [`print(`*`<mediation_effect>`*`)`](https://data-wise.github.io/medfit/reference/print.mediation_effect.md)
   : Print Method for mediation_effect
 - [`print(`*`<summary.BootstrapResult>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.BootstrapResult.md)
@@ -529,6 +593,8 @@ Print and summary methods for medfit classes
   : Print Summary for JointMediationData
 - [`print(`*`<summary.MediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.MediationData.md)
   : Print Summary for MediationData
+- [`print(`*`<summary.SEMFit>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.SEMFit.md)
+  : Print Summary for SEMFit
 - [`print(`*`<summary.SerialMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.SerialMediationData.md)
   : Print Summary for SerialMediationData
 

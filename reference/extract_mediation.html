@@ -33,7 +33,7 @@ model types (lm, glm, lavaan, lmer, brms, etc.)."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@ model types (lm, glm, lavaan, lmer, brms, etc.)."><meta property="og:image" cont
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Mediation Structure from Fitted Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.6.0/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
       <div class="d-none name"><code>extract_mediation.Rd</code></div>
     </div>
 
@@ -182,6 +182,24 @@ parallel mediators it leaves out the covariance between their <code>a</code> pat
 <a href="JointMediationData.html">JointMediationData</a> stores the full stacked least-squares covariance, and a
 lavaan fit estimates all equations jointly, so for the same data the
 intervals can differ between engines.</p>
+</div>
+
+<div class="section">
+<h3 id="coefficient-names">Coefficient names<a class="anchor" aria-label="anchor" href="#coefficient-names"></a></h3>
+
+
+<p>The simple single-mediator <a href="MediationData.html">MediationData</a> from lm/glm fits names three
+coefficients <code>m_&lt;treatment&gt;</code>, <code>y_&lt;mediator&gt;</code> and <code>y_&lt;treatment&gt;</code>
+(<code>m_X</code>, <code>y_M</code> and <code>y_X</code> for variables <code>X</code> and <code>M</code>), and code that looks
+coefficients up by name, such as the parametric bootstrap in probmed, relies on
+them. The lavaan method adds the same three names to <code>@estimates</code> and
+<code>@vcov</code> for an observed, continuous treatment, mediator and outcome. Each is
+a second name for the <code>a</code>, <code>b</code> or <code>c_prime</code> path, with the same estimate and
+covariances, appended after the existing rows. A lavaan fit with a latent or
+ordered treatment, mediator or outcome, and any extraction with
+<code>standardized = TRUE</code>, gets none of the three and works with the plugin
+estimators only. Serial, parallel and four-way objects are not
+affected.</p>
 </div>
 
     </div>

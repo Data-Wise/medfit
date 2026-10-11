@@ -627,7 +627,7 @@ boot_nie <- bootstrap_mediation(
 c(boot_nie@ci_lower, boot_nie@ci_upper)
 ```
 
-    [1] 0.4400159 0.9092223
+    [1] 0.4483248 0.8930866
 
 The fit must meet a few requirements, and each violation errors with its
 cause: every model carries the same covariates (a medfit limitation),
@@ -791,6 +791,19 @@ print(med_sem)
     Residual SDs:
       Mediator model:   0.9743
       Outcome model:    1.0360
+
+Besides the parameter names lavaan assigns, the extracted `@estimates`
+and `@vcov` carry `m_<treatment>`, `y_<mediator>` and `y_<treatment>`,
+the names the lm/glm route gives these three coefficients, so code that
+looks them up by name (such as the parametric bootstrap in probmed)
+works on either route. A latent or ordered treatment, mediator or
+outcome, and any `standardized = TRUE` extraction, gets none of them.
+
+``` r
+grep("^(m|y)_", names(med_sem@estimates), value = TRUE)
+```
+
+    [1] "m_treatment" "y_mediator1" "y_treatment"
 
 ### Serial Mediation in SEM
 

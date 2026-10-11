@@ -1,8 +1,9 @@
 # medfit Cookbook
 
-Ten task-sized recipes. Each says when to use it, runs on
-`mediation_demo` (except the cluster recipe), and links to the article
-that explains it. For a one-page lookup see the [Reference
+Eleven task-sized recipes. Each says when to use it, runs on
+`mediation_demo` (except the cluster and latent-mediator recipes, which
+simulate their data), and links to the article that explains it. For a
+one-page lookup see the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
 ``` r
@@ -217,7 +218,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4351678 0.8930074 
+    0.6560315 0.4349603 0.8927176 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
@@ -332,3 +333,61 @@ tidy(xl, type = "effects", conf.int = TRUE)
 
 More: [Model
 Extraction](https://data-wise.github.io/medfit/articles/extraction.md).
+
+## 11. A latent mediator, native engine
+
+*When:* the mediator is a construct measured by several indicators, and
+you want its indirect effect without first averaging the indicators into
+a score. The mediator `eta` is not a column of the data; the model
+syntax defines it. The native engine is experimental.
+
+``` r
+set.seed(11)
+n <- 400
+X <- rnorm(n)
+eta <- 0.5 * X + rnorm(n, sd = 0.9)
+ldat <- data.frame(
+  X = X,
+  m1 = eta + rnorm(n, sd = 0.7),
+  m2 = 0.8 * eta + rnorm(n, sd = 0.7),
+  m3 = 0.7 * eta + rnorm(n, sd = 0.8)
+)
+ldat$Y <- 0.4 * eta + 0.2 * X + rnorm(n, sd = 0.8)
+```
+
+``` r
+syntax <- "
+  eta =~ m1 + m2 + m3
+  eta ~ a * X
+  Y ~ b * eta + cp * X
+"
+xs <- fit_mediation(model = syntax, data = ldat, treatment = "X",
+                    mediator = "eta", engine = "native")
+tidy(xs, type = "effects", conf.int = TRUE)
+```
+
+    # A tibble: 3 × 5
+      term  estimate std.error conf.low conf.high
+      <chr>    <dbl>     <dbl>    <dbl>     <dbl>
+    1 nie      0.169    0.0310    0.108     0.229
+    2 nde      0.255    0.0487    0.159     0.350
+    3 te       0.423    0.0445    0.336     0.510
+
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+fits the same syntax and returns the `SEMFit`.
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+tests the indirect effect as the minimum of two likelihood-ratio tests,
+refitting with `a == 0` and with `b == 0`:
+
+``` r
+mbco_sem(fit_sem(syntax, ldat), "a", "b")
+```
+
+
+        Minimum-of-two likelihood-ratio tests (MBCO) for an indirect effect
+
+    data:  a * b = 0
+    MBCO = 46.753, df = 1, p-value = 8.054e-12
+
+More: [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.md).

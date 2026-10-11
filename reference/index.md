@@ -55,6 +55,8 @@ Core S7 class definitions for mediation data structures
   : ClusterMediationData: Cluster-Level Treatment Mediation (2-1-1)
 - [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
+- [`SEMFit()`](https://data-wise.github.io/medfit/reference/SEMFit.md)
+  **\[experimental\]** : SEMFit S7 Class
 
 ## Model Fitting
 
@@ -64,6 +66,15 @@ Functions for fitting and extracting mediation models
   : Extract Mediation Structure from Fitted Models
 - [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
   : Fit Mediation Models
+- [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  **\[experimental\]** : Fit a Structural Equation Model by Maximum
+  Likelihood
+- [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  **\[experimental\]** : Minimum-of-Two Likelihood-Ratio Test for an
+  Indirect Effect (MBCO)
+- [`medfit-syntax`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+  [`medfit_syntax`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+  **\[experimental\]** : medfit Model Syntax
 - [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
   : Perform Bootstrap Inference for Mediation Statistics
 
@@ -74,6 +85,8 @@ Print and summary methods for medfit classes
 - [`tidy(`*`<S7_object>`*`)`](https://data-wise.github.io/medfit/reference/tidy.S7_object.md)
   [`glance(`*`<S7_object>`*`)`](https://data-wise.github.io/medfit/reference/tidy.S7_object.md)
   : Tidy, Glance, and Inference Methods for medfit Objects
+- [`SEMFit-methods`](https://data-wise.github.io/medfit/reference/SEMFit-methods.md)
+  **\[experimental\]** : Methods for SEMFit objects
 - [`print(`*`<mediation_effect>`*`)`](https://data-wise.github.io/medfit/reference/print.mediation_effect.md)
   : Print Method for mediation_effect
 - [`print(`*`<summary.BootstrapResult>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.BootstrapResult.md)
@@ -84,5 +97,7 @@ Print and summary methods for medfit classes
   : Print Summary for JointMediationData
 - [`print(`*`<summary.MediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.MediationData.md)
   : Print Summary for MediationData
+- [`print(`*`<summary.SEMFit>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.SEMFit.md)
+  : Print Summary for SEMFit
 - [`print(`*`<summary.SerialMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.SerialMediationData.md)
   : Print Summary for SerialMediationData

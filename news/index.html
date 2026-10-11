@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.6.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,9 +70,47 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.6.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.0" id="medfit-070">medfit 0.7.0<a class="anchor" aria-label="anchor" href="#medfit-070"></a></h2>
+<p>medfit 0.7.0 adds an experimental native maximum-likelihood structural equation engine. It is released on GitHub and r-universe only and is not submitted to CRAN.</p>
+<div class="section level3">
+<h3 id="new-features-0-7-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-7-0"></a></h3>
+<ul><li>New native maximum-likelihood structural equation engine (experimental). <code>fit_sem(model, data)</code> fits lavaan-style model syntax to raw data and returns a <code>SEMFit</code> with <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> and <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>. It handles observed and latent variables, labels, fixed values, starts and bounds, linear equality and inequality constraints (<code>==</code>, <code>&lt;</code>, <code>&gt;</code>), and defined parameters (<code>:=</code>) with delta-method standard errors. The syntax is documented in <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>, including the two medfit extensions (comma shorthand and <code>CONSTRAINT(...)</code>).</li>
+<li>
+<code>fit_mediation(engine = "native", model = , treatment = , mediator = )</code> fits the syntax and returns the usual mediation objects, for observed single, serial and parallel mediators and for a latent mediator, which need not be a column of <code>data</code>. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> has a method for <code>SEMFit</code> that shares its workers with the lavaan route, so the aliases and covariance rows are the same; its <code>source_package</code> is <code>"medfit"</code>. For an observed single mediator, <code>probmed::pmed()</code> runs on the native route with the plugin estimator and the parametric bootstrap, which agrees with the glm route within Monte Carlo error; a latent mediator supports the plugin estimator only (<a href="https://github.com/data-wise/medfit/issues/105" class="external-link">#105</a>).</li>
+<li>Standard errors use observed information by default (<code>information = "expected"</code> is available). Against OpenMx they agree to 1.6e-4 in the worst of 240 simulated datasets; expected information for latent-variable models differs from that reference by up to 11% at n = 50, which is why observed is the default. Under equality constraints and at active bounds the covariance is projected onto the feasible directions, so a constrained parameter has zero variance and <code>a == b</code> gives the standard error of the collapsed model.</li>
+<li>Sampling weights and robust standard errors: <code>fit_sem(sampling_weights = , se_type = "sandwich")</code> fits weighted maximum likelihood on the weighted mean and covariance with the sandwich covariance from casewise scores, and <code>fit_mediation(engine = "native", weights = , se_type = "sandwich")</code> takes the same two arguments the glm engine does. The native sandwich is HC0-type: it equals <code>sandwich::vcovHC(type = "HC0")</code> per equation and lavaan’s robust standard errors with <code>sampling.weights</code> (to 1e-6 and 1e-5), so it is a few percent narrower than the glm engine’s HC3 default at moderate n, a gap that shrinks like 1/n. <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> is not defined for a weighted fit.</li>
+<li>
+<code>mbco_sem(fit, a, b)</code> tests the indirect effect in a <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fit as the minimum of two likelihood-ratio tests: it refits with <code>a == 0</code> and with <code>b == 0</code> (two linear solves), takes the smaller diffLL as the statistic, and refers it to chi-square with one degree of freedom. The result is an <code>htest</code> that also carries both diffLL values. It reproduces OpenMx’s diffLL on RMediation’s <code>memory_exp</code> to 1e-6 (221.045546 and 0.083100) and lavaan’s constrained fits on a latent-mediator model. It tests a product of two labeled regression paths, refuses a fit with sampling weights or one that did not converge, has its refits inherit the fit’s <code>n_starts</code> and <code>control</code>, and warns when a bound or an inequality on the tested path puts the null on the boundary of the parameter space. The nonlinear <code>a*b == 0</code> is deliberately not solved: a nonlinear solver can stop at the branch with the larger statistic.</li>
+<li>Not yet supported by the native engine: mean structures (free intercepts), the four-way decomposition (it needs the mediator intercept; use <code>decomposition = "two_way"</code>), standardized estimates, and multilevel models. Nonlinear constraints are planned for a later release; until then a nonlinear constraint is an error that names the constraint.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-7-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-7-0"></a></h3>
+<ul><li>
+<code>bootstrap_mediation(cluster = )</code> no longer discards every replicate when the statistic refits through <code>fit_mediation(engine = "lmer")</code> with fewer than 25 clusters. The few-cluster warning (fewer than 25 clusters with model-based standard errors, or fewer than 10 with any standard error) was counted as a failed refit, so the bootstrap that the warning recommends stopped with “Too many bootstrap samples failed”. The warning now has the condition class <code>medfit_few_clusters</code> and is not counted; the point estimate on the original data still shows it once. In 0.6.0, <code>se_type = "kr"</code> with 10 or more clusters avoids the warning and so avoids the failure.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="behavior-change-0-7-0">Behavior change<a class="anchor" aria-label="anchor" href="#behavior-change-0-7-0"></a></h3>
+<ul><li><p><code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> has a new named argument <code>model</code>. An argument passed to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code> through <code>...</code> that partially matches it, such as <code>mod = FALSE</code>, now binds to <code>model</code> instead, and <code>model</code> is an error with the glm engine. Spelling out <code>model = FALSE</code> does not help: drop the argument. <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>’s own <code>model</code> argument cannot be passed through <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code>.</p></li>
+<li><p><code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a lavaan fit of a simple single-mediator model now appends the rows <code>m_&lt;treatment&gt;</code>, <code>y_&lt;mediator&gt;</code> and <code>y_&lt;treatment&gt;</code> to <code>@estimates</code> and <code>@vcov</code> of the returned <code>MediationData</code>. These are the names the lm/glm route already used, so code that resolves coefficients by name, such as <code>probmed::pmed(method = "parametric_bootstrap")</code>, now works on lavaan-derived objects instead of failing with a subscript-out-of-bounds error. Each new row repeats the <code>a</code>, <code>b</code> or <code>c_prime</code> path with the same estimate and covariances; every existing row keeps its name, value and position. Code that indexes <code>@estimates</code> or <code>@vcov</code> by position past the <code>a</code>, <code>b</code>, <code>c_prime</code> rows, or that counts their rows, sees three more. A lavaan fit with a latent or ordered treatment, mediator or outcome, and any <code>standardized = TRUE</code> extraction, gets none of the three rows and supports the plugin estimators only. Serial, parallel and four-way objects are unchanged (<a href="https://github.com/data-wise/medfit/issues/106" class="external-link">#106</a>).</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-7-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-7-0"></a></h3>
+<ul><li>The cookbook has an eleventh recipe, a latent mediator fitted with the native engine and tested with <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>. The model syntax is documented in <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>, the Methods and Formulas article has a section on the native engine with a subsection on MBCO, and the Reference Card lists <code><a href="../reference/fit_sem.html">fit_sem()</a></code>, <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and the <code>SEMFit</code> class.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="dependencies-0-7-0">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies-0-7-0"></a></h3>
+<ul><li>
+<code>lifecycle</code> is now in <code>Imports</code>, and the lifecycle badge figures ship in <code>man/figures/</code>. Deprecations and experimental features are marked with it.</li>
+<li>
+<code>nloptr (&gt;= 1.0.4)</code> is now in <code>Imports</code>: the native engine uses its SLSQP solver. It contains compiled code, so a source install from GitHub (for example <code>pak::pak("data-wise/medfit")</code>) builds it unless <code>lme4</code> already brought it in; the r-universe binaries need no compiler.</li>
+<li>
+<code>OpenMx</code> is now in <code>Suggests</code>. Only the tests use it, as the independent reference for standard errors and for <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.0" id="medfit-060">medfit 0.6.0<a class="anchor" aria-label="anchor" href="#medfit-060"></a></h2>
 <div class="section level3">
