@@ -24,7 +24,7 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [ ] Human review
 
 ## Phase 2: `anova()` and SEMFit methods (W4)
-- [ ] T10 `anova()` for nested `SEMFit`s with boundary-null guard (G9); refits start clean (refit-trap fixture)
+- [x] T10 `anova()` for nested `SEMFit`s with boundary-null guard (G9); refits start clean (refit-trap fixture) (#148)
 - [ ] T11 `tidy()`, `glance()`, `confint()`; chi-square and df; decide `@converged`
 - [ ] T12 One naming convention; align arguments with deprecation (needs T11)
 
