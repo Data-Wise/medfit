@@ -122,13 +122,18 @@ test_that("the full 500-seed families pass at every scale", {
 
 test_that("planted defect: without column scaling the dependent-column problems fail", {
   src <- paste(deparse(.sem_nnls), collapse = "\n")
-  mut <- sub("a_s <- sweep(A[, use, drop = FALSE], 2, cn[use], \"/\")", "a_s <- A[, use, drop = FALSE]", src,
-             fixed = TRUE)
-  mut <- sub("b_s <- b/bn", "b_s <- b", mut, fixed = TRUE)
-  mut <- sub("out[use] <- x * bn/cn[use]", "out[use] <- x", mut, fixed = TRUE)
-  expect_false(identical(mut, src))
-  lines <- strsplit(mut, "\n")[[1]]
-  expect_equal(sum(grepl("a_s <- A\\[, use, drop = FALSE\\]|b_s <- b$|out\\[use\\] <- x$", lines)), 3L)
+  # Each substitution must change the source: a pattern that silently stops matching would leave the
+  # scaling in place and make the test vacuous. Patterns tolerate a line break after a comma: covr
+  # instruments the function, which changes how deparse() wraps long lines.
+  swap <- function(x, from, to) {
+    y <- sub(from, to, x)
+    expect_false(identical(x, y), info = from)
+    y
+  }
+  sweep_pat <- "a_s <- sweep\\(A\\[, use, drop = FALSE\\], 2, cn\\[use\\],\\s*\"/\"\\)"
+  mut <- swap(src, sweep_pat, "a_s <- A[, use, drop = FALSE]")
+  mut <- swap(mut, "b_s <- b/bn", "b_s <- b")
+  mut <- swap(mut, "out\\[use\\] <- x \\* bn/cn\\[use\\]", "out[use] <- x")
   unscaled <- eval(parse(text = mut), environment(.sem_nnls))
   bad <- nnls_failures(unscaled, scales = c(1e4, 1e6), seeds = 1:60)
   expect_gt(sum(bad), 0)
