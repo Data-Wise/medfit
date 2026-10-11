@@ -1254,7 +1254,8 @@ test_that("fit_mediation(engine = \"lmer\") rejects offsets instead of dropping 
                "`formula_m` contains the offset `offset\\(O\\)`")
   expect_error(fit(Y ~ X + M + offset(2 * O), M ~ X), "contains the offset `offset\\(2 \\* O\\)`")
   # A formula without an offset is unchanged.
-  expect_s7_class(fit(Y ~ X + M, M ~ X), ClusterMediationData)
+  # (J = 10 clusters trips the few-cluster warning; it is not what is tested.)
+  expect_s7_class(suppressWarnings(fit(Y ~ X + M, M ~ X)), ClusterMediationData)
 })
 
 test_that("the random-term detector has no false positive for I(a | b)", {
