@@ -22,6 +22,24 @@
 #' * `nobs()` returns the number of rows used after listwise deletion.
 #' * `logLik()` returns the log likelihood with the means free; its `df`
 #'   attribute counts the free parameters plus one mean per observed variable.
+#' * `anova()` tests nested fits by the likelihood-ratio statistic
+#'   \eqn{n (F_r - F_f)}{n * (F_r - F_f)} on the difference in model degrees
+#'   of freedom: `anova(fit_full, fit_restricted)`, or several fits, each tested
+#'   against the one with fewer degrees of freedom. It compares fits that were
+#'   already made and never refits. The fits must use the same observed
+#'   variables and rows, and neither may have sampling weights or have failed to
+#'   converge. Nesting is checked by parameter-table inclusion: the restricted
+#'   fit may free no parameter the other leaves out and must have more degrees
+#'   of freedom. That is necessary for nesting, not sufficient; whether two
+#'   models are nested in substance is the analyst's responsibility. A
+#'   restricted fit with a smaller discrepancy than the model it restricts is an
+#'   error (one fit is not at its global optimum). When a bound or an
+#'   inequality on a tested parameter is active at the restricted fit, the null
+#'   lies on the boundary of the parameter space, the statistic is a mixture of
+#'   chi-squares, and the function warns that the p-value is not valid, as
+#'   [mbco_sem()] does. Returns an object of class `"anova"` with columns `Df`,
+#'   `Chisq` (n times the discrepancy), `Chisq diff`, `Df diff` and
+#'   `Pr(>Chisq)`. Name rows by naming the arguments after the first.
 #' * `summary()` collects the estimates, standard errors and z statistics, the
 #'   defined parameters, and the diagnostics: rows dropped, information type,
 #'   degrees of freedom, retries, stationarity, active bounds and constraints,
@@ -40,6 +58,10 @@
 #' vcov(fit)[c("a", "b"), c("a", "b")]
 #' nobs(fit)
 #' summary(fit)
+#'
+#' # a likelihood-ratio test of b = 0 against the fitted model
+#' fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)
+#' anova(fit, fit0)
 #' }
 #'
 #' @name SEMFit-methods
