@@ -1,0 +1,19 @@
+# rforge site-leak check (python3 -m lib.sitelint): files that pkgdown renders by
+# design. Entries are matched to the exact path; a bare name matches the package root only.
+site:
+  allowlist:
+    # CI deletes these two before the build (.github/workflows/pkgdown.yaml,
+    # "Hide agent-instruction docs from pkgdown"), so they never reach the site.
+    - AGENTS.md
+    - CLAUDE.md
+    # The site's articles and their Quarto config are intended pages and settings.
+    - vignettes/.gitignore
+    - vignettes/_quarto.yaml
+    - vignettes/articles/.gitignore
+    - vignettes/articles/bootstrap.qmd
+    - vignettes/articles/cookbook.qmd
+    - vignettes/articles/extraction.qmd
+    - vignettes/articles/getting-started.qmd
+    - vignettes/articles/introduction.qmd
+    - vignettes/articles/methods.qmd
+    - vignettes/articles/refcard.qmd
