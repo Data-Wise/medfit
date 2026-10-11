@@ -19,6 +19,7 @@ execute:
 - **Effect extractors**: `nie()`, `nde()`, `te()`, `pm()`, `paths()` for mediation effects
 - **Tidyverse integration**: `tidy()` and `glance()` methods for tibble workflows
 - **Base R generics**: `coef()`, `vcov()`, `confint()`, `nobs()` for S7 classes
+- **Native SEM engine** (experimental): `fit_sem()` fits model syntax with latent mediators and constraints; `mbco_sem()` tests the indirect effect
 - **S7-based classes** for standardized mediation data structures
 - **Foundation** for the mediation analysis ecosystem (RMediation, mediationverse)
 
@@ -31,8 +32,10 @@ medfit defines S7 classes for each mediation structure: `MediationData`
 interaction), `SerialMediationData`, `ParallelMediationData`,
 `JointMediationData` (several mediators with treatment-by-mediator products),
 `ClusterMediationData` (treatment assigned to whole clusters, from `lmer` fits),
-and `BootstrapResult`. The three most common are introduced here; see
-[Model Extraction](extraction.html) for the others.
+and `BootstrapResult`. A seventh class, `SEMFit`, holds a model fitted from
+syntax by the native engine (`fit_sem()`, experimental). The three most common
+classes are introduced here; see [Model Extraction](extraction.html) for the
+others.
 
 ### MediationData
 
@@ -285,6 +288,24 @@ med_data <- fit_mediation(
   mediator = "mediator1"
 )
 ```
+
+### `fit_sem()`
+
+Fit a model written as syntax with the native maximum-likelihood engine. It
+handles latent variables and constraints, and `:=` defines an effect with a
+delta-method standard error (experimental):
+
+```{r}
+#| label: fit-sem-generic
+sem <- fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+  data = mediation_demo
+)
+sem@defined
+```
+
+See `?"medfit-syntax"` for the syntax and the [Cookbook](cookbook.html) for a
+latent-mediator example.
 
 ### bootstrap_mediation()
 
