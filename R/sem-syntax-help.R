@@ -25,9 +25,12 @@
 #' every point; a model with one tries every start and keeps the best accepted
 #' solution, warning when the starts disagree. A product of labels set to zero
 #' (`a*b == 0`, `b1*b2*b3 == 0`) is instead solved exactly: one linear fit per
-#' factor (`a == 0`, `b == 0`), keeping the smallest discrepancy. Labels used in a
-#' constraint or a definition must be defined in the model. A constraint with no
-#' free parameter is an error. Exogenous variables are given free
+#' factor (`a == 0`, `b == 0`), keeping the smallest discrepancy. A sum of products
+#' (`a1*b1 + a2*b2 == 0`) has no exact reduction, so it is best-effort: the fit is
+#' the best of the starts tried, a disagreement warning means a better optimum may
+#' exist, and `n_starts` raises the number of starts. Labels used in a constraint
+#' or a definition must be defined in the model. A constraint with no free
+#' parameter is an error. Exogenous variables are given free
 #' variances and covariances, as lavaan does with `fixed.x = FALSE`. Mean
 #' structures (`y ~ 1`) are not supported, except that `y ~ 0*1` is accepted.
 #' A variable cannot appear on both sides of `~` or `=~` (`y ~ y`), and a path,

@@ -30,9 +30,12 @@ Constraints may be nonlinear in the labels (\code{cp == a*b}, \code{a*b == 0.1},
 every point; a model with one tries every start and keeps the best accepted
 solution, warning when the starts disagree. A product of labels set to zero
 (\code{a*b == 0}, \code{b1*b2*b3 == 0}) is instead solved exactly: one linear fit per
-factor (\code{a == 0}, \code{b == 0}), keeping the smallest discrepancy. Labels used in a
-constraint or a definition must be defined in the model. A constraint with no
-free parameter is an error. Exogenous variables are given free
+factor (\code{a == 0}, \code{b == 0}), keeping the smallest discrepancy. A sum of products
+(\code{a1*b1 + a2*b2 == 0}) has no exact reduction, so it is best-effort: the fit is
+the best of the starts tried, a disagreement warning means a better optimum may
+exist, and \code{n_starts} raises the number of starts. Labels used in a constraint
+or a definition must be defined in the model. A constraint with no free
+parameter is an error. Exogenous variables are given free
 variances and covariances, as lavaan does with \code{fixed.x = FALSE}. Mean
 structures (\code{y ~ 1}) are not supported, except that \code{y ~ 0*1} is accepted.
 A variable cannot appear on both sides of \code{~} or \verb{=~} (\code{y ~ y}), and a path,
