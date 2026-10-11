@@ -20,7 +20,7 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [ ] rhub result recorded; human review
 
 ## Phase 2: `anova()` and SEMFit methods (W4)
-- [ ] T10 `anova()` for nested `SEMFit`s with boundary-null guard (G9)
+- [ ] T10 `anova()` for nested `SEMFit`s with boundary-null guard (G9); refits start clean (refit-trap fixture)
 - [ ] T11 `tidy()`, `glance()`, `confint()`; chi-square and df; decide `@converged`
 - [ ] T12 One naming convention; align arguments with deprecation (needs T11)
 
@@ -30,7 +30,7 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 
 ## Phase 3: Nonlinear constraints (W3)
 - [ ] T13 Nonlinear equality `a*b == c` end to end (needs T9); includes the curved-constraint covariance oracle and a frozen-Jacobian mutant
-- [ ] T14 Exact k-branch split for zero products (needs T13)
+- [ ] T14 Exact k-branch split for zero products (needs T13); branch refits start clean (refit-trap fixture)
 - [ ] T15 Product inequalities, `:=` names, best-of-n multi-start + NEWS (needs T13)
 - [ ] T16 Sums of products, best-effort (needs T15)
 - [ ] T17 `mbco_sem()` for a product of k paths (needs T10)

@@ -72,3 +72,24 @@ Does not provide (in 0.8.0 as scoped today): bootstrap MBCO or conversion from a
 - Strict-flavor `devtools::check()` clean or with only pre-existing notes, counts reported.
 - No CRAN submission; the medfit-on-CRAN dependency recorded in `.STATUS`.
 - Report back to the medfit session with: branch name, commit, test counts, and any API mismatch found.
+
+## Results from the RMediation session (2026-10-11)
+
+The session started from this note, built the unblocked part, and was then directed by the user to fix what it found. Source: that session's transcript; verify against the PR before relying on it.
+
+**Fixture (done):** branch `feature/mbco-openmx-parity-fixture`, commit `d7d2b10`, pushed; test-only; 18 expectations in 5 tests, skips without OpenMx.
+- `a1 == 0` gives diffLL 221.045546 (df 1); `b1 == 0` gives 0.08309953 (against 0.083100, within 1e-6); the minimum is 0.083100. Control: the Rd example as written gives 0.06033240.
+- Planted defects: the shifted-label model fails 7 of 18 expectations; max instead of min fails 1 of 18.
+- This is the oracle the future `(SEMFit, SEMFit)` route is compared against (section 2).
+
+**Corrections to this note's facts:**
+1. The branch base was `origin/dev` at `7c218e6` (adds the pkgdown fix #32), not `7c588d4`.
+2. The lavaan call-site list in section 0 is incomplete: `confintMC.R:33` also calls `lav_matrix_vech_reverse`.
+3. `mbco()` rejected correctly built fitted RAM models: its class check `"MxModel" %in% class(h0)` is FALSE for `"MxRAMModel"`, so `mbco(null_model1, full_model)` as written in the Rd failed, and no test had ever called `mbco()` on a fitted model. Fixed in Data-Wise/rmediation#36 with `methods::is()`.
+4. The Rd example errored before fitting (the tibble `memory_exp` is rejected by `mxData()`) and used shifted labels; both fixed in #36. The example now fits `a1 == 0` and `b1 == 0` separately and reports the smaller statistic (0.0831).
+
+**New finding that affects medfit (refit trap):** adding `mxConstraint(b1 == 0)` to the already-fitted full OpenMx model returned an infeasible point (diffLL 0); building the null from the unfitted model gives 0.0830995. When medfit's `anova()` and branch split refit a constrained model (T10, T14), start the refit from a clean start, not from the full fit's estimates, and add a fixture for it.
+
+**Status of the RMediation side:** the session's work went past this note's scope at the user's direction (it edited `R/mbco.R` and the Rd example, which this note reserved). [Data-Wise/rmediation#36](https://github.com/Data-Wise/rmediation/pull/36) is open against `dev` with all checks green at the time of writing; NEWS goes under a new 1.7.1 heading; `DESCRIPTION` stays 1.7.0. Only `type = "asymp"` is verified on fitted RAM models; the two bootstrap types have never been run on one. Findings still tracked in rmediation#35.
+
+**Still blocked:** the `mbco()` method on (SEMFit, SEMFit) waits for medfit's `anova()` (T10) and W3 (T13-T16), as in the revision banner at the top.

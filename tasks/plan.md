@@ -166,6 +166,7 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 - [ ] On the `memory_exp` models it reproduces `mbco_sem()` per-refit diffLL (221.045546, 0.083100) to 1e-6
 - [ ] The H-oracle and H-boundary tests exist and their mutants fail
 - [ ] Nesting check method chosen (parameter-table inclusion or user assertion) and documented
+- [ ] Refit trap (RMediation session finding): any refit `anova()` or its helpers perform starts from a clean start, not from the full fit's estimates; fixture: the `b1 == 0` null on `memory_exp` gives diffLL 0.083100 (within 1e-6) from a clean start and never the infeasible-point value 0; planted defect: seed the refit from the full fit's estimates, the fixture must fail
 **Verification:**
 - [ ] `devtools::test(filter = "sem-anova|sem-mbco")`
 **Dependencies:** None (T8 helps for boundary logic) | **Files:** `R/methods-sem.R`, `R/aab-generics.R` if a generic is needed, `tests/testthat/test-sem-anova.R`, `NAMESPACE`/docs | **Scope:** M
@@ -211,6 +212,7 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 **Acceptance criteria:**
 - [ ] `a*b == 0` on `memory_exp` equals 0.083100 (not 221.045546)
 - [ ] A three-factor product fixture, including one with two factors near zero (vanishing Jacobian), returns the minimum branch
+- [ ] Refit trap: each branch refit starts clean; the `b1 == 0` branch on `memory_exp` returns 0.083100 (within 1e-6), not an infeasible-point result, and the same branch built from the full fit's estimates must not be what the code does (planted defect: warm-start the branch from the full fit, the fixture must fail)
 **Verification:**
 - [ ] `devtools::test(filter = "sem-constraints|sem-mbco")`; planted defect: take the larger branch, test must fail
 **Dependencies:** T13 | **Files:** `R/sem-constraints.R`, `R/sem-mbco.R`, tests | **Scope:** M
@@ -333,3 +335,4 @@ Version bump, NEWS, `.STATUS`, CI green, tag, GitHub release, r-universe check. 
 
 - **2026-10-11, Codex adversarial review of this plan (2 findings, both accepted, applied the same day):** (1) numerical failures must fail the harness: existing sim scripts print PASS/FAIL without a failing exit status (`sem-parity-gate.R`, `sem-constrained-gate.R`: no `quit()` or `stop()`; `sem-reliability.R`: errors excluded, no threshold), so T3 computes verdicts from results CSVs with committed thresholds and cell counts and adds four "exits 0 but bad" fixtures; (2) an independent nonlinear covariance oracle: T13 and H-nonlinear gain a Jacobian-annihilation check, an independent SE oracle and a frozen-Jacobian mutant. Evidence checked before accepting: `grep` of `quit(`/`stop(` in the three scripts found none that signal gate failure.
 - **2026-10-11, self-review before approval (2 fixes, applied):** the `H-constrained` and `H-reliab` pass rules said "as recorded in its header", contradicting the verdict-from-results rule, and now point to `tests/sim/gates.csv`; T3's scope was S and is now M (driver, thresholds file, four fixtures, mutants mode). The author then approved the plan.
+- **2026-10-11, RMediation session finding (refit trap), added to T10 and T14:** adding `mxConstraint(b1 == 0)` to an already-fitted OpenMx full model returned an infeasible point (diffLL 0) while the clean-start null gives 0.0830995; refits in `anova()` and the k-branch split therefore start clean, with a fixture and a planted defect each. Source: the results section of the RMediation handoff.
