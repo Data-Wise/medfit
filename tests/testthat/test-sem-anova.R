@@ -198,6 +198,21 @@ test_that("a null written by fixing the path in the syntax equals the one writte
   expect_equal(anova(full, fixed)[2, "Df diff"], 1)
 })
 
+test_that("a null written on a defined parameter is compared like any other", {
+  d <- boundary_data()
+  base <- paste0(boundary_base, "\ns := a + b")
+  full <- fit_sem(base, d)
+  via_def <- fit_sem(paste0(base, "\ns == 0.5"), d)
+  via_row <- fit_sem(paste0(boundary_base, "\na + b == 0.5"), d)
+  res <- anova(full, via_def)
+  expect_equal(res[2, "Df diff"], 1)
+  expect_equal(res[2, "Chisq diff"], anova(fit_sem(boundary_base, d), via_row)[2, "Chisq diff"], tolerance = 1e-6)
+  # a bound on a parameter inside the defined sum still marks the null as on the boundary
+  edge_full <- fit_sem(paste0(base, "\na > 0"), d)
+  edge_null <- fit_sem(paste0(base, "\na > 0\ns == 0.5\nb == 0.5"), d)
+  expect_warning(anova(edge_full, edge_null), "boundary")
+})
+
 test_that("planted defect: without the boundary check the on-the-edge null passes silently", {
   on_edge <- boundary_pair("a > 0")
   silent <- sem_mutate(.sem_anova, ".sem_anova_warn_boundary(restricted, tested, label)", "NULL")

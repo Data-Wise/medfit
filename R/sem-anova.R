@@ -144,7 +144,8 @@ S7::method(anova, SEMFit) <- function(object, ...) {
     return(character())
   }
   cons <- restricted@internals$constraints
-  keep <- cons[cons$op == "==" & paste(cons$lhs, cons$op, cons$rhs) %in% added, , drop = FALSE]
+  # the `:=` rows stay: an added equality may be written on a defined parameter (`s := a + b` with `s == 0.5`)
+  keep <- cons[cons$op == ":=" | (cons$op == "==" & paste(cons$lhs, cons$op, cons$rhs) %in% added), , drop = FALSE]
   rows <- .sem_constraint_rows(keep, restricted@internals$ram)
   idx <- which(colSums(abs(rows$eq$A)) > 0)
   restricted@internals$ram$par_names[idx]
