@@ -144,7 +144,9 @@ test_that("confint() selects by name or position, includes defined parameters, a
   expect_identical(rownames(confint(fit, "b")), "b")
   expect_identical(rownames(confint(fit, c(2, 1))), names(coef(fit))[c(2, 1)])
   expect_identical(colnames(confint(fit, level = 0.9)), c("5 %", "95 %"))
-  expect_error(confint(fit, "nope"), "unknown parameter")
+  expect_error(confint(fit, "nope"), "unknown parameter in `parm`: nope")
+  expect_error(confint(fit, 99), "positions out of range: 99")
+  expect_error(confint(fit, c(1, 99, 100)), "99, 100")
   expect_error(confint(fit, level = 1.5), "level")
 })
 
@@ -201,6 +203,18 @@ test_that("tidy() and confint() of a hand-built SEMFit read the object", {
   expect_equal(td$estimate, c(unname(fit@theta), 0.2))
   expect_equal(td$std.error[1:6], sqrt(diag(fit@vcov)), ignore_attr = TRUE)
   expect_equal(td$conf.low[1], 0.5 - stats::qnorm(0.975) * 0.05)
+})
+
+test_that("edge cases: no defined parameters, a shared label and a latent model", {
+  f0 <- fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", mediation_demo)
+  expect_identical(nrow(generics::tidy(f0, type = "defined")), 0L)
+  expect_identical(nrow(generics::tidy(f0)), length(coef(f0)))
+  expect_identical(dim(confint(f0)), c(length(coef(f0)), 2L))
+  # one label on two paths is one parameter: one row, and the count and df follow
+  shared <- fit_sem("mediator1 ~ a*treatment + a*covariate1\noutcome ~ mediator1 + treatment", mediation_demo)
+  expect_identical(sum(generics::tidy(shared)$term == "a"), 1L)
+  expect_identical(generics::glance(shared)$npar, length(coef(shared)))
+  expect_equal(generics::glance(shared)$df, shared@df)
 })
 
 test_that("planted defects: a one-sided p-value and a wrong interval level are caught", {

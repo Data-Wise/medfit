@@ -238,12 +238,20 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
   v <- .sem_est_se(object)
   pick <- names(v$est)
   if (!is.null(parm)) {
-    pick <- if (is.numeric(parm)) names(v$est)[parm] else parm
-    unknown <- setdiff(pick, names(v$est))
-    if (anyNA(pick) || length(unknown)) {
-      stop("unknown parameter in `parm`: ", paste(c(unknown, if (anyNA(pick)) "NA"), collapse = ", "),
-           ". Free parameters and defined parameters are available (see names(coef(fit)) and fit@defined$name).",
-           call. = FALSE)
+    avail <- "Free parameters and defined parameters are available (see names(coef(fit)) and fit@defined$name)."
+    if (is.numeric(parm)) {
+      bad <- parm[!(parm %in% seq_along(v$est))]
+      if (length(bad)) {
+        stop("`parm` positions out of range: ", paste(bad, collapse = ", "), ". There are ", length(v$est),
+             " parameters. ", avail, call. = FALSE)
+      }
+      pick <- names(v$est)[parm]
+    } else {
+      pick <- parm
+      unknown <- setdiff(pick, names(v$est))
+      if (length(unknown)) {
+        stop("unknown parameter in `parm`: ", paste(unknown, collapse = ", "), ". ", avail, call. = FALSE)
+      }
     }
   }
   w <- .sem_wald(v$est[pick], v$se[pick], level)
