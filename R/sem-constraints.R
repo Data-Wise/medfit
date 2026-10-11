@@ -268,6 +268,12 @@
   }
   if (out$accepted) {
     out <- .sem_sign_check(out, act$ax, act$active_row, act$is_eq, act$text, act$at_lb, act$at_ub, ram, hx, gx)
+    if (length(out$sign_bound)) {
+      # same verdict and wording as the unconstrained gate: the gradient at an active bound points inward
+      out$accepted <- FALSE
+      out$reason <- sprintf("the gradient at an active bound points into the interior (%s)",
+                            paste(out$sign_bound, collapse = ", "))
+    }
   }
   out
 }
@@ -314,22 +320,27 @@
 # solution may not be a local minimum. The rows named in the warning are the inequality
 # and bound rows held at zero whose sign, if flipped, would reduce that residual. The table
 # reports the minimum-norm least-squares multipliers, which for independent rows are the
-# unique ones, judged by lambda * sqrt(m' H^-1 m). Never rejects a fit (D8).
+# unique ones, judged by lambda * sqrt(m' H^-1 m). An active bound with a wrong-sign multiplier is
+# reported in `out$sign_bound` and rejects the fit in .sem_gate_projected(), the verdict the
+# unconstrained gate (.sem_gate()) already gives (T8, G1); a wrong-sign inequality constraint only warns.
 .sem_sign_check <- function(out, ax, active_row, is_eq, text, at_lb, at_ub, ram, hx, gx) {
   q <- length(gx)
   bound_rows <- NULL
   bound_names <- character()
+  bound_par <- character()
   for (i in which(at_lb & !at_ub)) {
     e <- numeric(q)
     e[i] <- -1
     bound_rows <- rbind(bound_rows, e)
     bound_names <- c(bound_names, paste0("lower bound of ", ram$par_names[i]))
+    bound_par <- c(bound_par, ram$par_names[i])
   }
   for (i in which(at_ub & !at_lb)) {
     e <- numeric(q)
     e[i] <- 1
     bound_rows <- rbind(bound_rows, e)
     bound_names <- c(bound_names, paste0("upper bound of ", ram$par_names[i]))
+    bound_par <- c(bound_par, ram$par_names[i])
   }
   m <- rbind(ax[active_row, , drop = FALSE], bound_rows)
   if (!nrow(m)) {
@@ -388,10 +399,15 @@
     if (!length(bad) && length(held)) {
       bad <- held[which.min(cosine)]
     }
+    # the bound rows come after the active constraint rows (`active_row` indexes all constraint rows)
+    n_con <- nrow(m) - length(bound_names)
+    is_bound <- bad > n_con
+    out$sign_bound <- bound_par[bad[is_bound] - n_con]
+    bad <- bad[!is_bound]
     out$sign_warnings <- sprintf(
-      paste0("%s is active, but moving into the feasible region would lower the objective; ",
+      paste0("constraint %s is active, but moving into the feasible region would lower the objective; ",
              "the solution may not be a local minimum"),
-      ifelse(grepl("bound of", names_all[bad], fixed = TRUE), names_all[bad], paste0("constraint ", names_all[bad]))
+      names_all[bad]
     )
   }
   out

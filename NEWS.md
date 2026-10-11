@@ -2,6 +2,17 @@
 
 ## Bug fixes
 
+* `fit_sem()` now gives the same verdict on a wrong-side active bound whether or
+  not the model has constraint lines. A solution sitting at a bound with the
+  gradient pointing into the interior (a point that is not a local minimum) was
+  rejected for a model without constraints but accepted with a warning once any
+  `==`, `<` or `>` line was added, even one that never binds. It is now rejected
+  in both cases, and the next start is tried. A wrong-signed active inequality
+  constraint still warns and does not reject. Behavior change: a fit that
+  returned with the warning "lower bound of ... is active, but moving into the
+  feasible region would lower the objective" now errors or uses another start.
+  `fit_sem()` is experimental and no dependent package uses it, so there is no
+  deprecation period.
 * `nobs()`, `@n_obs` and `med()` no longer overstate the sample size when the
   data have missing values on the model variables. The lm/glm extractors counted
   `nrow(data)` although `glm()` had dropped the incomplete rows, so a fit with 5
