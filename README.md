@@ -10,28 +10,26 @@
 [![r-universe](https://data-wise.r-universe.dev/badges/medfit)](https://data-wise.r-universe.dev/medfit)
 <!-- badges: end -->
 
-## Overview
 
-**medfit** provides unified S7-based infrastructure for fitting mediation models, extracting path coefficients, and performing bootstrap inference. It serves as the foundation package for the mediation analysis ecosystem, supporting [RMediation](https://github.com/data-wise/rmediation) and [mediationverse](https://github.com/data-wise/mediationverse).
+**medfit** fits mediation models, pulls out the paths, and gives you effects with
+intervals. One call to start; the same objects and functions work for every
+model, from one mediator to a latent variable.
 
-### Key Features
+> **In one line:** `med()` runs a mediation analysis, `quick()` prints it, and
+> `nie()`, `nde()`, `te()`, `pm()` and `tidy()` read it.
 
-- **ADHD-Friendly API**: Simple `med()` function for quick mediation analysis, `quick()` for instant results
-- **Mediation Structures**: simple, serial, and parallel mediators; a treatment-by-mediator interaction with VanderWeele's four-way decomposition (`decompose()`); joint natural effects of several mediators with treatment-by-mediator products (`joint_effects()`); and treatment assigned to whole clusters (the 2-1-1 design)
-- **Effect Extractors**: `nie()`, `nde()`, `te()`, `pm()`, `paths()` for extracting mediation effects
-- **Tidyverse Integration**: `tidy()` and `glance()` methods, with delta-method standard errors for the effects
-- **Unified Model Extraction**: Extract mediation structure from lm, glm, lmer, and lavaan fits, and from native `SEMFit` fits
-- **Flexible Model Fitting**: `fit_mediation()` with the `glm`, `regmedint` and `lmer` engines, optional case weights (IPW), and sandwich (HC3) standard errors
-- **Native Model Syntax** (experimental): `fit_sem()` and `fit_mediation(engine = "native")` fit lavaan-style syntax with latent mediators, constraints, and defined parameters; `mbco_sem()` tests the indirect effect
-- **Bundled Example Data**: `mediation_demo`, a simulated dataset for every workflow
-- **Robust Bootstrap Inference**: Three bootstrap methods (parametric, nonparametric, plugin) with parallel processing
-- **Type-Safe S7 Classes**: Modern object-oriented design with `coef()`, `vcov()`, `confint()`, `nobs()` methods
+## What's new
 
-## Installation
+| Version | What you get |
+|---|---|
+| **0.7.0** | A native maximum-likelihood SEM engine (experimental): latent mediators, constraints, defined parameters, `fit_sem()`, `mbco_sem()` |
+| **0.6.0** | Cluster-randomized designs (2-1-1) with `engine = "lmer"`, Kenward-Roger intervals, cluster bootstrap; the Reference Card and Cookbook |
+| **0.5.0** | Joint mediation (`JointMediationData`), the bundled `mediation_demo` data; two results fixed: serial `te()`/`pm()` sum every path, `confint()` path rows are found by name |
+| **0.4.0** | The `regmedint` engine, the four-way decomposition from `fit_mediation()`, and `m_star` |
 
-This site documents medfit 0.7.0. Install that version from the
-[Data-Wise r-universe](https://data-wise.r-universe.dev/medfit)
-(pre-built binaries — no compiler needed):
+Full list: [NEWS](https://data-wise.github.io/medfit/news/index.html).
+
+## Install
 
 ```r
 install.packages(
@@ -40,29 +38,15 @@ install.packages(
 )
 ```
 
-Or from GitHub (this compiles `nloptr` unless `lme4` already brought it in):
+That gives 0.7.0 as a pre-built binary, with no compiler. From GitHub instead:
+`pak::pak("data-wise/medfit")` (compiles `nloptr` unless `lme4` already brought it in).
 
-```r
-# install.packages("pak")
-pak::pak("data-wise/medfit")
-```
+> **CRAN has 0.3.2, which does not run the examples on this site.** It lacks
+> `mediation_demo`, `fit_sem()`, `mbco_sem()` and the joint and cluster classes.
+> Its two known issues, serial `te()`/`pm()` and `confint()` path rows, are fixed in
+> 0.7.0; see [#83](https://github.com/Data-Wise/medfit/issues/83).
 
-CRAN has an older version, 0.3.2:
-
-```r
-install.packages("medfit")
-```
-
-> **CRAN 0.3.2 does not run the examples on this site.** It lacks
-> `mediation_demo`, `fit_sem()`, `mbco_sem()` and the joint and cluster
-> mediation classes. Its known issues: serial `te()`/`pm()` omit paths that skip
-> a mediator, and `confint()` path intervals can use the wrong covariance rows.
-> Both are fixed in 0.7.0; see
-> [#83](https://github.com/Data-Wise/medfit/issues/83) for details and workarounds.
-
-## Quick Start
-
-### The Simplest Way: `med()` + `quick()`
+## Try it in 60 seconds
 
 ```r
 library(medfit)
@@ -74,31 +58,23 @@ mydata <- data.frame(X = rnorm(n))
 mydata$M <- 0.5 * mydata$X + rnorm(n)
 mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
 
-# Run mediation analysis in one line
-result <- med(
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y"
-)
-
-# One-line summary
+result <- med(data = mydata, treatment = "X", mediator = "M", outcome = "Y")
 quick(result)
 #> NIE = 0.164  | NDE = 0.293 | PM = 36 %
 ```
 
-### Extract Effects
+NIE is the indirect effect through the mediator, NDE the direct effect, PM the
+share mediated. Next: read the pieces, then add an interval.
 
 ```r
-# Individual effect extractors
-nie(result)   # Natural Indirect Effect (a * b)
-nde(result)   # Natural Direct Effect (c')
-te(result)    # Total Effect (nie + nde)
-pm(result)    # Proportion Mediated
-paths(result) # All path coefficients (a, b, c')
+nie(result)   # indirect effect (a * b)
+nde(result)   # direct effect (c')
+te(result)    # total effect
+pm(result)    # proportion mediated
+paths(result) # a, b, c'
 ```
 
-### Tidyverse Integration
+### Read it as a table
 
 ```r
 library(generics)
@@ -123,17 +99,7 @@ glance(result)
 #> 1 0.164 0.293 0.457 0.360   200 TRUE
 ```
 
-### Base R Methods
-
-```r
-coef(result)              # Path coefficients
-coef(result, "effects")   # NIE, NDE, TE
-vcov(result)              # Variance-covariance matrix
-confint(result)           # 95% confidence intervals
-nobs(result)              # Number of observations
-```
-
-### Bootstrap Inference
+### Add an interval
 
 ```r
 # With bootstrap CI
@@ -151,26 +117,38 @@ quick(result_boot)
 #> NIE = 0.164  [0.0867, 0.256] | NDE = 0.293 | PM = 36 %
 ```
 
-### Advanced: Extract from Fitted Models
+## Pick your model
+
+Find the row that matches your data, then open its page. All of them are on the
+[Models page](https://data-wise.github.io/medfit/articles/models.html).
+
+| I have | Start here |
+|---|---|
+| One mediator, a continuous outcome | [Simple mediation](https://data-wise.github.io/medfit/articles/model-simple.html) |
+| A binary or count variable | [Binary and non-normal variables](https://data-wise.github.io/medfit/articles/model-glm-families.html) |
+| An effect of the mediator that depends on treatment | [Treatment-by-mediator interaction](https://data-wise.github.io/medfit/articles/model-interaction.html) |
+| Inverse-probability or case weights | [Weights and robust SEs](https://data-wise.github.io/medfit/articles/model-weights.html) |
+| Mediators in a chain | [Serial mediation](https://data-wise.github.io/medfit/articles/model-serial.html) |
+| Mediators side by side | [Parallel mediation](https://data-wise.github.io/medfit/articles/model-parallel.html) |
+| Several mediators with products | [Joint mediation](https://data-wise.github.io/medfit/articles/model-joint.html) |
+| Treatment assigned to whole clusters | [Cookbook recipe 9](https://data-wise.github.io/medfit/articles/cookbook.html#cluster-randomized-trial) |
+| A lavaan fit | [Cookbook recipe 10](https://data-wise.github.io/medfit/articles/cookbook.html#i-use-lavaan) |
+| A latent mediator or constraints | [Cookbook recipe 11](https://data-wise.github.io/medfit/articles/cookbook.html#a-latent-mediator-native-engine) |
+
+Already have fitted `lm`, `glm`, `lmer` or lavaan models? `extract_mediation()`
+turns them into the same objects:
 
 ```r
-# If you already have fitted models
 fit_m <- lm(M ~ X, data = mydata)
 fit_y <- lm(Y ~ X + M, data = mydata)
-
-med_data <- extract_mediation(
-  fit_m,
-  model_y = fit_y,
-  treatment = "X",
-  mediator = "M"
-)
-
-# Same extractors work
+med_data <- extract_mediation(fit_m, model_y = fit_y, treatment = "X", mediator = "M")
 nie(med_data)
-tidy(med_data)
 ```
 
-### Cluster-Randomized Trials
+## More examples
+
+<details>
+<summary><b>Cluster-randomized trial</b> (treatment assigned to schools, clinics)</summary>
 
 When the treatment is assigned to whole clusters (such as schools), use the
 `lmer` engine (needs the suggested `lme4`; add `se_type = "kr"` with `pbkrtest`
@@ -205,7 +183,10 @@ decompose(fit)  # own-mediator and spillover parts (large-cluster approximation)
 See [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html)
 for the estimand and the assumptions each effect needs.
 
-### Latent Mediator (Native Engine)
+</details>
+
+<details>
+<summary><b>Latent mediator</b> (native engine, experimental)</summary>
 
 When the mediator is a construct measured by several indicators, write the model
 as syntax. The native maximum-likelihood engine is experimental and needs no
@@ -246,60 +227,32 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 #> MBCO = 46.753, df = 1, p-value = 8.054e-12
 ```
 
-## Core Components
+</details>
 
-### S7 Classes
+## What is in the box
 
-- **`MediationData`**: Standardized container for simple mediation (X -> M -> Y)
-  - Path coefficients (a, b, c')
-  - Parameter estimates and variance-covariance matrix
-  - Residual variances (for Gaussian models)
-  - Variable names and metadata
+| Class | Models |
+|---|---|
+| `MediationData` | Simple mediation: X to M to Y (paths a, b, c') |
+| `InteractionMediationData` | Treatment-by-mediator interaction, four-way decomposition (CDE, INTref, INTmed, PIE) |
+| `SerialMediationData` | A chain X to M1 to M2 to Y; `nie()` is the chain, `te()`/`pm()` count every path |
+| `ParallelMediationData` | Mediators side by side; indirect effect is the sum of a_j * b_j |
+| `JointMediationData` | Joint natural effects of several mediators with products |
+| `ClusterMediationData` | Treatment assigned to clusters (2-1-1): own-mediator and spillover parts |
+| `SEMFit` | A native-engine fit; `extract_mediation()` turns it into the classes above |
+| `BootstrapResult` | Point estimates, intervals and the bootstrap distribution |
 
-- **`SerialMediationData`**: Container for serial mediation (X -> M1 -> M2 -> ... -> Y)
-  - Supports product-of-three (2 mediators) and product-of-k (3+ mediators)
-  - `nie()` gives the chain effect; `nie(type = "total")`, `te()` and `pm()` count every path, including paths that skip a mediator
-  - Flexible design compatible with lavaan extraction patterns
-  - Extensible to complex mediation structures
+| You want to | Call |
+|---|---|
+| Run a mediation in one step | `med()`, `quick()` |
+| Read effects and paths | `nie()`, `nde()`, `te()`, `pm()`, `paths()`, `decompose()` |
+| Get a table | `tidy()`, `glance()`, `confint()`, `coef()`, `vcov()`, `nobs()` |
+| Fit with control | `fit_mediation()` (engines `glm`, `regmedint`, `lmer`, `native`) |
+| Use fitted models | `extract_mediation()` (lm, glm, lmer, lavaan, `SEMFit`) |
+| Write a model as syntax | `fit_sem()`, `mbco_sem()` (experimental) |
+| Bootstrap | `bootstrap_mediation()` (parametric, nonparametric, plugin) |
 
-- **`ParallelMediationData`**: Container for parallel mediators (indirect effect = sum of a_j * b_j)
-
-- **`InteractionMediationData`**: Simple mediation with a treatment-by-mediator interaction, carrying the four-way decomposition (CDE, INTref, INTmed, PIE)
-
-- **`JointMediationData`**: Joint natural effects of two or more mediators when the outcome model has treatment-by-mediator products
-
-- **`ClusterMediationData`**: Mediation for a treatment assigned to whole clusters (the 2-1-1 design), from `lme4` mixed models: natural indirect effect `a * b_between`, split into an own-mediator and a spillover part; Kenward-Roger intervals and a cluster bootstrap for few clusters
-
-- **`BootstrapResult`**: Container for bootstrap inference results
-  - Point estimates and confidence intervals
-  - Bootstrap distribution
-  - Method metadata
-
-### Main Functions
-
-**Quick Start:**
-- **`med()`**: One-function mediation analysis (recommended starting point)
-- **`quick()`**: One-line summary of results
-
-**Effect Extractors:**
-- **`nie()`**, **`nde()`**, **`te()`**: Natural indirect/direct and total effects
-- **`pm()`**: Proportion mediated
-- **`paths()`**: All path coefficients
-- **`decompose()`**: Four-way, joint or cluster (own-mediator and spillover) decomposition of the effects
-- **`joint_effects()`**: Joint effects at any parameter vector (for bootstrapping)
-
-**Tidyverse Methods:**
-- **`tidy()`**: Convert results to tidy tibble
-- **`glance()`**: One-row model summary
-
-**Base R Methods:**
-- **`coef()`**, **`vcov()`**, **`confint()`**, **`nobs()`**: Standard generics
-
-**Advanced:**
-- **`extract_mediation()`**: Extract from fitted lm/glm/lmer/lavaan models and native `SEMFit` fits
-- **`fit_mediation()`**: Fit with formula interface (`glm`, `regmedint` or `lmer` engine) or model syntax (`engine = "native"`)
-- **`fit_sem()`**, **`mbco_sem()`**: Fit model syntax with the native engine; test the indirect effect (experimental)
-- **`bootstrap_mediation()`**: Bootstrap inference (parametric, nonparametric, plugin)
+Every function is on the [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html).
 
 ## Mediationverse Ecosystem
 
@@ -318,15 +271,16 @@ See [Ecosystem Coordination](https://github.com/Data-Wise/mediation-planning/blo
 
 ## Documentation
 
-Comprehensive articles are available on the package website:
-
-- **[Get Started](https://data-wise.github.io/medfit/articles/getting-started.html)**: Quick introduction to medfit
-- **[Introduction](https://data-wise.github.io/medfit/articles/introduction.html)**: Detailed S7 class documentation
-- **[Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html)**: Extract from lm/glm/lmer/lavaan models and native fits
-- **[Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html)**: Parametric and nonparametric bootstrap methods
-- **[Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html)**: Estimands, formulas, covariance, and standard errors for every class
-- **[Reference Card](https://data-wise.github.io/medfit/articles/refcard.html)**: Every export and class on one page
-- **[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html)**: Eleven task recipes, from a first mediation fit to cluster-randomized designs and a latent mediator
+| If you want to | Read |
+|---|---|
+| Run your first model | [Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) |
+| Find the page for your model | [Models](https://data-wise.github.io/medfit/articles/models.html) |
+| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (eleven recipes) |
+| Look up a function or class | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) |
+| Understand the classes | [Introduction](https://data-wise.github.io/medfit/articles/introduction.html) |
+| Extract from fitted models | [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html) |
+| Choose an interval | [Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html) |
+| Check the math | [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html) |
 
 ## Development Status
 

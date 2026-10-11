@@ -49,6 +49,10 @@
   weights and robust standard errors, the `regmedint` engine, serial, parallel and joint
   mediation. Articles are now grouped in an index. A test keeps every model page on the
   landing page, in the index and in the menu, and every cookbook anchor real.
+* The home page and Getting Started are rewritten so they are quick to skim: a "What's new"
+  table, a 60-second start, a "pick your model" table, long examples folded away, and
+  Getting Started cut to four steps that link to the model pages. A test checks that
+  their article links and cookbook anchors are real.
 * The Models page states that `fit_mediation(engine = "native")` takes one mediator;
   for several, fit with `fit_sem()` and call `extract_mediation()`.
 * The bootstrap example in the README printed `NIE = 0.19 [0.08, 0.32] | NDE = 0.16 |
