@@ -43,6 +43,14 @@
 * The Introduction counted `SEMFit` as the seventh class; it is the eighth. Its
   Package Ecosystem list now names probmed and medrobust, and the Reference Card
   gives `joint_effects()` its real argument names (`object`, `estimates`).
+* New **Models** menu and landing page, and a **Cookbook** menu in the top menu bar. The Models
+  page has a capability matrix and a "find your model" table; eight model pages cover
+  simple mediation, binary and non-normal variables, treatment-by-mediator interaction,
+  weights and robust standard errors, the `regmedint` engine, serial, parallel and joint
+  mediation. Articles are now grouped in an index. A test keeps every model page on the
+  landing page, in the index and in the menu, and every cookbook anchor real.
+* The Models page states that `fit_mediation(engine = "native")` takes one mediator;
+  for several, fit with `fit_sem()` and call `extract_mediation()`.
 
 # medfit 0.7.0
 

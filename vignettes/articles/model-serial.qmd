@@ -1,0 +1,76 @@
+---
+title: "Serial mediation (a chain)"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Treatment, then mediator 1, then mediator 2, then the outcome. Part of the
+[Models](models.html) collection.
+
+| | |
+|---|---|
+| **Structure** | X to M1 to M2 to Y (a chain), plus every skip path |
+| **Class returned** | `SerialMediationData` |
+| **Indirect effect** | the chain $a \, d_1 \, b$; `nie(type = "total")` adds the paths that skip a mediator |
+| **Routes** | `extract_mediation(..., mediator = c(...), mediator_models = list(...))` on `lm`/`glm`, or a lavaan fit |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+```
+
+## Fit it
+
+One model per mediator plus the outcome model. Put every earlier mediator in
+each later model, and every mediator in the outcome model.
+
+```{r}
+#| label: fit
+fit_m1 <- lm(mediator1 ~ treatment + covariate1 + covariate2, mediation_demo)
+fit_m2 <- lm(mediator2 ~ treatment + mediator1 + covariate1 + covariate2,
+             mediation_demo)
+fit_y <- lm(outcome ~ treatment + mediator1 + mediator2 + covariate1 +
+              covariate2, mediation_demo)
+x <- extract_mediation(fit_m1, model_y = fit_y, treatment = "treatment",
+                       mediator = c("mediator1", "mediator2"),
+                       mediator_models = list(fit_m2))
+class(x)[1]
+```
+
+## Three effects, three meanings
+
+```{r}
+#| label: effects
+c(chain = unname(nie(x)), every_path = unname(nie(x, type = "total")),
+  total = unname(te(x)))
+```
+
+| Call | Counts |
+|---|---|
+| `nie(x)` | the full chain through both mediators only |
+| `nie(x, type = "total")` | every path through at least one mediator, including the ones that skip |
+| `te(x)`, `pm(x)` | every path (`te()` is the total effect, `pm()` the proportion mediated) |
+
+## Limits
+
+- The order of `mediator_models` is checked against the `mediator` vector; a
+  misordered list fails with an error.
+- The lm/glm route fits the equations separately, so the stored covariance sets
+  the covariances among the chain paths to zero; a lavaan fit or a
+  nonparametric bootstrap captures them. See [Model Extraction](extraction.html).
+- `tidy(x, type = "effects", conf.int = TRUE)` gives delta-method intervals for
+  the effects; for a bootstrap interval see [Bootstrap Inference](bootstrap.html).
+
+## Related
+
+[Parallel mediation](model-parallel.html) | [Joint mediation](model-joint.html) |
+[Cookbook recipe 5](cookbook.html#two-mediators-in-a-chain) | [Model Extraction](extraction.html)
