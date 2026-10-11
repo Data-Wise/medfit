@@ -31,3 +31,4 @@
 ^data-raw$
 ^tests/sim$
 ^\.rforge\.yaml$
+^tasks$
