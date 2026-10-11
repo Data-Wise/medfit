@@ -577,7 +577,10 @@ labels become rows $a^\top\theta + b$, normalized to unit length, with constant
 Jacobians for the optimizer (SLSQP through nloptr). A nonlinear equality
 (`cp == a*b`) is a row whose value is $\text{lhs} - \text{rhs}$ and whose Jacobian
 is a central difference, both recomputed at every point; a nonlinear inequality is
-an error. At the solution the active constraints and active bounds define a
+an error. A product of labels set to zero ($ab = 0$, $b_1 b_2 b_3 = 0$) is not
+solved this way, because its Jacobian vanishes at the solution: it holds exactly
+when one factor is zero, so the model is refitted once per factor from the default
+start and the smallest discrepancy is kept. At the solution the active constraints and active bounds define a
 null-space basis $Z$ of the feasible directions, and the covariance is
 projected,
 

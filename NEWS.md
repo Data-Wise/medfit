@@ -35,8 +35,14 @@
   fit matches OpenMx's constrained optimum to 1e-5 and the standard errors agree
   with a reparameterized fit and a bootstrap. Nonlinear *inequalities* are still
   an error (the message now says "nonlinear inequality constraints are not
-  supported in this version"). A product set to zero (`a*b == 0`) goes through
-  the nonlinear route here; its exact branch solution is planned.
+  supported in this version"). A product of labels set to zero (`a*b == 0`,
+  `b1*b2*b3 == 0`, also through a `:=` name) is not solved by the nonlinear route,
+  whose Jacobian vanishes at the solution: it is `a == 0` or `b == 0`, so the model
+  is refitted once per factor from the default start and the smallest discrepancy
+  wins (`fit@internals$branch` names the winning line). On RMediation's
+  `memory_exp` the `a1*b1 == 0` statistic is the exact 0.083100, where a nonlinear
+  solve lands on 221.05. Several zero-product lines give the cartesian product of
+  branches (at most 64).
 
 ## Behavior changes
 
