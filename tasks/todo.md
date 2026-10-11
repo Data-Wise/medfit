@@ -3,9 +3,9 @@
 Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification harness" in the plan. Update `.STATUS` at each checkpoint.
 
 ## Phase 0: Evidence and harness
-- [ ] T1 Re-derive the S1 findings as committed fixtures (`planning/specs/evidence/native-sem-2026-10-11/`)
+- [x] T1 Re-derive the S1 findings as committed fixtures (`planning/specs/evidence/native-sem-2026-10-11/`)
 - [ ] T2 Trigger `rhub.yaml` once; record the result in `.STATUS`
-- [ ] T3 Harness driver `tests/sim/run-gates.R` (`--fast`, `--sim`, `--mutants`); verdicts from results CSVs and `tests/sim/gates.csv`, four "exits 0 but bad" fixtures, a reliability threshold
+- [x] T3 Harness driver `tests/sim/run-gates.R` (`--fast`, `--sim`, `--mutants`); verdicts from results CSVs and `tests/sim/gates.csv`, four "exits 0 but bad" fixtures, a reliability threshold
 
 ## Phase 1: Foundations (W1, W2)
 - [ ] T4 Named errors for `Y ~ Y` and duplicate `Y ~ X`
