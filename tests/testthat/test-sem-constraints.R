@@ -398,11 +398,11 @@ test_that("planted defect: a flipped sign convention warns on a correct active i
   expect_warning(.sem_optimize(s$ram, s$smp, s$start, constraints = s$cons), "moving into the feasible region")
 })
 
-test_that("a rank-deficient active set skips the sign check and says so, with no warning and no error", {
+test_that("a rank-deficient active set gets a computed sign verdict, with no warning and no error", {
   s <- cons_setup("a + b < 0.2\n2*a + 2*b < 0.4")
   expect_no_warning(fit <- .sem_optimize(s$ram, s$smp, s$start, constraints = s$cons))
-  expect_identical(fit$sign_check, "skipped: the active constraints are linearly dependent")
-  expect_null(fit$multipliers)
+  expect_identical(fit$sign_check, "ok")
+  expect_false(is.null(fit$multipliers))
   expect_lte(fit$theta[["a"]] + fit$theta[["b"]], 0.2 + 1e-8)
 })
 
