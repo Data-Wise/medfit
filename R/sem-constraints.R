@@ -6,11 +6,9 @@
 # `a'theta + b <= 0` (a `>` constraint is negated). Rows are constant, so the
 # solver gets constant Jacobians and one solve suffices (spec 4.5a, 4.5b). A
 # nonlinear equality (`a*b == c`) becomes a closure over the validated call tree: its value is
-# `lhs - rhs` and its Jacobian a central difference, both recomputed at every point (`$nl`).
-# A nonlinear inequality errors by name; it arrives in a later version. Defined parameters (`:=`)
-# are substituted before the linearity walk.
-
-.sem_nonlinear_msg <- "nonlinear inequality constraints are not supported in this version"
+# `lhs - rhs` and its Jacobian a central difference, both recomputed at every point (`$nl`). A nonlinear
+# inequality (`a*b > 0.1`, `ab > 0` with `ab := a*b`) is the same closure with the sign chosen so that the
+# row reads `c(theta) <= 0` (`$nli`). Defined parameters (`:=`) are substituted before the linearity walk.
 
 # Rows for the constraints in `constraints` (the parser's table, `:=` rows
 # included as definitions). Returns NULL when there is nothing to enforce.
@@ -23,6 +21,7 @@
   defs <- .sem_defs(stats::setNames(defs$rhs, defs$lhs))
   rows <- vector("list", nrow(cons))
   nl <- list()
+  nli <- list()
   for (i in seq_len(nrow(cons))) {
     text <- paste(cons$lhs[i], cons$op[i], cons$rhs[i])
     tree <- .sem_expr_subst(.sem_expr_parse(paste0("(", cons$lhs[i], ") - (", cons$rhs[i], ")")), defs)
@@ -31,16 +30,15 @@
       stop("constraint contains no parameters: '", text, "'", call. = FALSE)
     }
     nonlinear <- !.sem_tree_linear(tree)
-    if (nonlinear && cons$op[i] != "==") {
-      stop(.sem_nonlinear_msg, ": '", text, "'", call. = FALSE)
-    }
     idx <- match(labels, ram$par_names)
     if (anyNA(idx)) {
       stop("constraint '", text, "' refers to '", labels[is.na(idx)][1L], "', which is not a free parameter",
            call. = FALSE)
     }
     if (nonlinear) {
-      nl[[length(nl) + 1L]] <- list(tree = tree, labels = labels, idx = idx, text = text)
+      # `lhs - rhs`: an equality as it is, `<` as it is (<= 0), `>` negated (the row reads c <= 0)
+      row <- list(tree = tree, labels = labels, idx = idx, text = text, sign = if (cons$op[i] == ">") -1 else 1)
+      if (cons$op[i] == "==") nl[[length(nl) + 1L]] <- row else nli[[length(nli) + 1L]] <- row
       next
     }
     zero <- stats::setNames(numeric(length(labels)), labels)
@@ -70,20 +68,34 @@
       text = vapply(keep, `[[`, "", "text")
     )
   }
-  list(eq = pick(TRUE), ineq = pick(FALSE), nl = .sem_nl_rows(nl, ram$q))
+  list(eq = pick(TRUE), ineq = pick(FALSE), nl = .sem_nl_rows(nl, ram$q), nli = .sem_nl_rows(nli, ram$q))
 }
 
-# The nonlinear equality rows as one object: `text`, `value(theta)` (the vector of `lhs - rhs`) and
-# `jac(theta, u)` (a row per constraint, a column per parameter, by central differences with step
-# eps^(1/3) * max(|theta_k|, u_k), u_k the parameter's natural unit; only the labels a row uses are
-# perturbed). Evaluation goes through the guarded evaluator, so a value that is not one finite real
-# number is an error naming the point, not a NaN inside the solver. NULL when there are none.
+# Nonlinear rows (equalities, or inequalities in the form c <= 0) as one object: `text`, `value(theta)` (the
+# vector of c), `jac(theta, u)` (a row per constraint, a column per parameter, by central differences with
+# step eps^(1/3) * max(|theta_k|, u_k), u_k the parameter's natural unit; only the labels a row uses are
+# perturbed) and `hess(theta, u)` (the list of the rows' second-derivative matrices, central differences of
+# the Jacobian, used for the curvature of the Lagrangian in the acceptance gate). Evaluation goes through the
+# guarded evaluator, so a value that is not one finite real number is an error naming the point, not a NaN
+# inside the solver. NULL when there are none.
 .sem_nl_rows <- function(nl, q) {
   if (!length(nl)) {
     return(NULL)
   }
   value_one <- function(row, theta) {
-    .sem_expr_value(row$tree, stats::setNames(theta[row$idx], row$labels), row$text)
+    row$sign * .sem_expr_value(row$tree, stats::setNames(theta[row$idx], row$labels), row$text)
+  }
+  step <- function(theta, u, k) .Machine$double.eps^(1 / 3) * max(abs(theta[k]), u[k])
+  jac_one <- function(row, theta, u) {
+    out <- numeric(q)
+    for (k in row$idx) {
+      h <- step(theta, u, k)
+      up <- dn <- theta
+      up[k] <- theta[k] + h
+      dn[k] <- theta[k] - h
+      out[k] <- (value_one(row, up) - value_one(row, dn)) / (2 * h)
+    }
+    out
   }
   list(
     text = vapply(nl, `[[`, "", "text"),
@@ -91,15 +103,22 @@
     jac = function(theta, u) {
       out <- matrix(0, length(nl), q)
       for (i in seq_along(nl)) {
-        for (k in nl[[i]]$idx) {
-          h <- .Machine$double.eps^(1 / 3) * max(abs(theta[k]), u[k])
+        out[i, ] <- jac_one(nl[[i]], theta, u)
+      }
+      out
+    },
+    hess = function(theta, u) {
+      lapply(nl, function(row) {
+        h2 <- matrix(0, q, q)
+        for (k in row$idx) {
+          h <- step(theta, u, k)
           up <- dn <- theta
           up[k] <- theta[k] + h
           dn[k] <- theta[k] - h
-          out[i, k] <- (value_one(nl[[i]], up) - value_one(nl[[i]], dn)) / (2 * h)
+          h2[, k] <- (jac_one(row, up, u) - jac_one(row, dn, u)) / (2 * h)
         }
-      }
-      out
+        (h2 + t(h2)) / 2
+      })
     }
   )
 }
@@ -172,7 +191,7 @@
 # The empty constraint set, for code that always wants a `cons` list.
 .sem_no_cons <- function(q) {
   none <- list(A = matrix(0, 0L, q), b = numeric(), text = character())
-  list(eq = none, ineq = none, nl = NULL)
+  list(eq = none, ineq = none, nl = NULL, nli = NULL)
 }
 
 # Residual of the constraints at `theta`: equalities in absolute value, inequalities
@@ -185,7 +204,8 @@
   c(
     if (nrow(cons$eq$A)) abs(as.vector(cons$eq$A %*% theta) + cons$eq$b),
     if (!is.null(cons$nl)) abs(cons$nl$value(theta)),
-    if (nrow(cons$ineq$A)) pmax(0, as.vector(cons$ineq$A %*% theta) + cons$ineq$b)
+    if (nrow(cons$ineq$A)) pmax(0, as.vector(cons$ineq$A %*% theta) + cons$ineq$b),
+    if (!is.null(cons$nli)) pmax(0, cons$nli$value(theta))
   )
 }
 
@@ -291,10 +311,11 @@
     out$eval_g_eq <- function(x) c(as.vector(jac_eq %*% x) + eq$b, if (!is.null(nl)) nl$value(x * u))
     out$eval_jac_g_eq <- function(x) rbind(jac_eq, if (!is.null(nl)) sweep(nl$jac(x * u, u), 2L, u, "*"))
   }
-  if (nrow(ineq$A)) {
+  nli <- cons$nli
+  if (nrow(ineq$A) || !is.null(nli)) {
     jac_ineq <- sweep(ineq$A, 2L, u, "*")
-    out$eval_g_ineq <- function(x) as.vector(jac_ineq %*% x) + ineq$b
-    out$eval_jac_g_ineq <- function(x) jac_ineq
+    out$eval_g_ineq <- function(x) c(as.vector(jac_ineq %*% x) + ineq$b, if (!is.null(nli)) nli$value(x * u))
+    out$eval_jac_g_ineq <- function(x) rbind(jac_ineq, if (!is.null(nli)) sweep(nli$jac(x * u, u), 2L, u, "*"))
   }
   out
 }
@@ -327,11 +348,15 @@
   # Linear equalities, then nonlinear equalities (their Jacobian and value at `theta`, so the null space
   # is that of the linearization at the point judged, the solution), then linear inequalities.
   nl <- cons$nl
-  rows <- rbind(cons$eq$A, if (!is.null(nl)) nl$jac(theta, u), cons$ineq$A)
+  nli <- cons$nli
+  rows <- rbind(cons$eq$A, if (!is.null(nl)) nl$jac(theta, u), cons$ineq$A, if (!is.null(nli)) nli$jac(theta, u))
   cval <- c(as.vector(cons$eq$A %*% theta) + cons$eq$b, if (!is.null(nl)) nl$value(theta),
-            as.vector(cons$ineq$A %*% theta) + cons$ineq$b)
-  is_eq <- c(rep(TRUE, nrow(cons$eq$A) + length(nl$text)), rep(FALSE, nrow(cons$ineq$A)))
-  text <- c(cons$eq$text, nl$text, cons$ineq$text)
+            as.vector(cons$ineq$A %*% theta) + cons$ineq$b, if (!is.null(nli)) nli$value(theta))
+  is_eq <- c(rep(TRUE, nrow(cons$eq$A) + length(nl$text)), rep(FALSE, nrow(cons$ineq$A) + length(nli$text)))
+  text <- c(cons$eq$text, nl$text, cons$ineq$text, nli$text)
+  # positions of the nonlinear rows among `rows`, for the curvature of the Lagrangian
+  nl_pos <- c(nrow(cons$eq$A) + seq_along(nl$text), nrow(cons$eq$A) + length(nl$text) + nrow(cons$ineq$A) +
+                seq_along(nli$text))
   ax <- sweep(rows, 2L, u, "*")
   len <- sqrt(rowSums(ax^2))
   dist <- ifelse(is_eq, abs(cval), pmax(0, cval)) / len
@@ -353,7 +378,7 @@
   z_theta <- matrix(0, length(theta), ncol(z))
   z_theta[free, ] <- z * u[free]
   list(u = u, ax = ax, is_eq = is_eq, text = text, dist = dist, at_lb = at_lb, at_ub = at_ub, free = free,
-       active_row = active_row, z = z, z_theta = z_theta)
+       active_row = active_row, z = z, z_theta = z_theta, nl_pos = nl_pos)
 }
 
 .sem_gate_projected <- function(theta, status, ram, smp, lb, ub, cons) {
@@ -390,7 +415,8 @@
     out$accepted <- TRUE
   } else {
     free <- act$free
-    red <- .sem_reduced_stationarity(crossprod(act$z, hx[free, free, drop = FALSE] %*% act$z),
+    hl <- .sem_lagrangian_hessian(hx, gx, act, cons, theta)
+    red <- .sem_reduced_stationarity(crossprod(act$z, hl[free, free, drop = FALSE] %*% act$z),
                                      crossprod(act$z, gx[free]))
     out$min_eig <- red$min_eig
     out$decrement <- red$decrement
@@ -407,6 +433,39 @@
     }
   }
   out
+}
+
+# The Hessian of the Lagrangian in the solver's natural units: the objective's Hessian plus, for each active
+# nonlinear row c_i, lambda_i times its curvature (a linear row has none). On a curved constraint the
+# reduced Hessian of the objective alone is not the second derivative of the objective along the constraint
+# (`a*b == c` bends away from its tangent plane), so it can call a saddle of the restricted problem a minimum
+# or a minimum a saddle. The multipliers solve g_free + M_free' lambda = 0 over the active rows (minimum-norm
+# least squares, as the sign check does; the bound-active coordinates carry their own multipliers and are left
+# out). With no active nonlinear row `hx` is returned unchanged.
+.sem_lagrangian_hessian <- function(hx, gx, act, cons, theta) {
+  hess <- c(if (!is.null(cons$nl)) cons$nl$hess(theta, act$u), if (!is.null(cons$nli)) cons$nli$hess(theta, act$u))
+  if (!length(hess)) {
+    return(hx)
+  }
+  rows <- which(act$active_row)
+  m <- act$ax[rows, act$free, drop = FALSE]
+  use <- sqrt(rowSums(m^2)) > 1e-12
+  if (!any(use) || !all(is.finite(m)) || !all(is.finite(gx))) {
+    return(hx)
+  }
+  sv <- svd(t(m[use, , drop = FALSE]))
+  keep <- sv$d > 1e-8 * max(sv$d)
+  lambda <- numeric(length(rows))
+  coef <- crossprod(sv$u[, keep, drop = FALSE], -gx[act$free]) / sv$d[keep]
+  lambda[use] <- as.vector(sv$v[, keep, drop = FALSE] %*% coef)
+  uu <- outer(act$u, act$u)
+  for (j in seq_along(hess)) {
+    lam <- lambda[match(act$nl_pos[j], rows)]
+    if (!is.na(lam) && lam != 0) {
+      hx <- hx + lam * hess[[j]] * uu
+    }
+  }
+  hx
 }
 
 # Positive definiteness, definiteness margin and Newton decrement of a reduced
