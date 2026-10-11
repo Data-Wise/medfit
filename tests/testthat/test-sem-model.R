@@ -240,9 +240,16 @@ test_that("intercepts: a fixed zero is dropped, anything else names the mean-str
   expect_error(.sem_to_ram(.sem_complete(.sem_parse("m ~ 2*1\nm ~ x")$parameters)), "nonzero")
 })
 
-test_that("a repeated path is rejected by the RAM builder", {
-  expect_error(.sem_to_ram(.sem_complete(.sem_parse("Y ~ X\nY ~ X")$parameters)), "a path appears twice")
-  expect_error(.sem_to_ram(.sem_complete(.sem_parse("Y ~ X\nY ~~ Y\nY ~~ Y")$parameters)), "appears twice")
+test_that("a repeated path is rejected by the RAM builder when the parser is bypassed", {
+  # The parser rejects a repeated row by name; the builder keeps its own check for tables built another way.
+  twice <- function(text, i) {
+    p <- .sem_parse(text)$parameters
+    p <- rbind(p, p[i, ])
+    p$id <- seq_len(nrow(p))
+    p
+  }
+  expect_error(.sem_to_ram(.sem_complete(twice("Y ~ X", 1L))), "a path appears twice")
+  expect_error(.sem_to_ram(.sem_complete(twice("Y ~ X\nY ~~ Y", 2L))), "appears twice")
 })
 
 # --- identification ------------------------------------------------------------

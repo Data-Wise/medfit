@@ -82,7 +82,7 @@ test_that("every error row names its cause", {
   expect_error(fit_err("M ~ 1\nY ~ M + X"), "mean structure is not supported.*free")
   expect_error(fit_err("M ~ a*X\nY ~ b*M\na == b^2"), "nonlinear constraints are not supported in this version")
   expect_error(fit_err("M ~ a*X\nY ~ b*M\na == 1\na == 2"), "no start converged.*constraint 'a == [12]' is violated")
-  expect_error(fit_err("Y ~ X\nY ~ X"), "a path appears twice")
+  expect_error(fit_err("Y ~ X\nY ~ X"), "'Y ~ X' is specified more than once")
   expect_error(fit_err("Y ~ X + Zzz"), "not columns of `data`: Zzz")
   expect_error(fit_err("Y ~ X", transform(dat, X = as.character(X))), "must be numeric: X")
   expect_error(fit_err("Y ~ X\nX ~ Y", dat), "more free parameters \\(4\\) than observed moments \\(3\\): df = -1")

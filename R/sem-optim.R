@@ -220,7 +220,13 @@
   checkmate::assert_numeric(start, len = ram$q, any.missing = FALSE, .var.name = "start")
   checkmate::assert_numeric(lb, len = ram$q, any.missing = FALSE, .var.name = "lb")
   checkmate::assert_numeric(ub, len = ram$q, any.missing = FALSE, .var.name = "ub")
-  checkmate::assert_true(all(lb <= ub), .var.name = "lb <= ub")
+  if (any(lb > ub)) {
+    j <- which(lb > ub)[1L]
+    stop(sprintf(
+      "parameter '%s' has infeasible bounds: the lower bound %s is above the upper bound %s",
+      ram$par_names[j], format(lb[j]), format(ub[j])
+    ), call. = FALSE)
+  }
   checkmate::assert_count(n_starts, positive = TRUE, .var.name = "n_starts")
   checkmate::assert_list(control, .var.name = "control")
   checkmate::assert_flag(precondition, .var.name = "precondition")

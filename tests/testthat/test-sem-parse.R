@@ -271,3 +271,29 @@ test_that("an empty model or one without parameters errors", {
 test_that("a character vector of lines parses like one string", {
   expect_identical(.sem_parse(c("M ~ a*X", "Y ~ b*M")), .sem_parse("M ~ a*X\nY ~ b*M"))
 })
+
+test_that("a variable on both sides of '~' or '=~' errors at parse time, naming the row (F-self)", {
+  expect_error(.sem_parse("M ~ X\nY ~ Y"), "'Y ~ Y' puts a variable on both sides of '~'")
+  expect_error(.sem_parse("f =~ f + y1"), "'f =~ f' puts a variable on both sides of '=~'")
+  # inside a longer statement the statement is named as well
+  expect_error(.sem_parse("Y ~ M + Y"), "'Y ~ Y' puts .* \\(in 'Y ~ M \\+ Y'\\)")
+  # positive controls: a variance is `Y ~~ Y`, and a name may appear on both sides of different rows
+  expect_no_error(.sem_parse("Y ~~ Y\nY ~ X"))
+})
+
+test_that("a repeated row errors by name in every spelling, and distinct rows are not mistaken for repeats", {
+  dup <- c(
+    "M ~ X\nY ~ M + X\nY ~ X" = "'Y ~ X' is specified more than once \\(rows 3 and 4\\)",
+    "Y ~ M + X + X" = "'Y ~ X' is specified more than once \\(rows 2 and 3\\)",
+    "Y ~ a*X\nY ~ b*X" = "'Y ~ X' is specified more than once",
+    "X ~~ Y\nY ~~ X" = "'Y ~~ X' is specified more than once \\(rows 1 and 2\\)",
+    "Y ~ 1\nY ~ 1" = "'Y ~ 1' is specified more than once",
+    "f =~ y1 + y2 + y1" = "'f =~ y1' is specified more than once"
+  )
+  for (i in seq_along(dup)) {
+    expect_error(.sem_parse(names(dup)[i]), dup[[i]], info = gsub("\n", " | ", names(dup)[i]))
+  }
+  # a regression and a covariance of the same pair are different rows; so are the same path at different levels
+  expect_no_error(.sem_parse("Y ~ X\nX ~~ Y"))
+  expect_no_error(.sem_parse("level: 1\nY ~ X\nlevel: 2\nY ~ X"))
+})

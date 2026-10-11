@@ -30,6 +30,9 @@ definition must be defined in the model. A constraint with no free parameter,
 or a nonlinear one, is an error. Exogenous variables are given free
 variances and covariances, as lavaan does with \code{fixed.x = FALSE}. Mean
 structures (\code{y ~ 1}) are not supported, except that \code{y ~ 0*1} is accepted.
+A variable cannot appear on both sides of \code{~} or \verb{=~} (\code{y ~ y}), and a path,
+a (co)variance or an intercept takes one row: a repeated \code{y ~ x} is an error,
+not a second row that competes for the label.
 }
 
 \section{medfit extensions}{

@@ -371,3 +371,26 @@ test_that(".sem_with_seed restores the caller's RNG kind and draws, with or with
     expect_false(exists(".Random.seed", envir = globalenv(), inherits = FALSE))
   }
 })
+
+test_that("infeasible bounds give a named error with the parameter and both bounds (F2)", {
+  set.seed(1)
+  d <- data.frame(X = rnorm(100))
+  d$M <- 0.4 * d$X + rnorm(100)
+  d$Y <- 0.3 * d$M + rnorm(100)
+  base <- "M ~ a*X\nY ~ b*M"
+  msg <- "parameter 'a' has infeasible bounds: the lower bound 1 is above the upper bound 0.5"
+  expect_error(.sem_fit_syntax(paste0(base, "\na > 1\na < 0.5"), d, "observed"), msg)
+  expect_error(.sem_fit_syntax(paste0(base, "\na < 0.5\na > 1"), d, "observed"), msg)
+  # the driver itself, with the bounds handed over directly
+  mod <- sem_models()[[1]]
+  smp <- .sem_sample(sem_sim(mod, 50, 3), mod$ram)
+  lb <- rep(-Inf, mod$ram$q)
+  ub <- rep(Inf, mod$ram$q)
+  lb[2] <- 1
+  ub[2] <- 0.5
+  expect_error(.sem_optimize(mod$ram, smp, sem_start(mod$ram), lb, ub),
+               sprintf("parameter '%s' has infeasible bounds", mod$ram$par_names[2]), fixed = TRUE)
+  # equal bounds are feasible (the parameter is pinned), not an error
+  ub[2] <- 1
+  expect_no_error(suppressWarnings(.sem_optimize(mod$ram, smp, sem_start(mod$ram), lb, ub)))
+})

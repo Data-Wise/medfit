@@ -8,8 +8,8 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [x] T3 Harness driver `tests/sim/run-gates.R` (`--fast`, `--sim`, `--mutants`); verdicts from results CSVs and `tests/sim/gates.csv`, four "exits 0 but bad" fixtures, a reliability threshold
 
 ## Phase 1: Foundations (W1, W2)
-- [ ] T4 Named errors for `Y ~ Y` and duplicate `Y ~ X`
-- [ ] T5 Named error for infeasible bounds (F2)
+- [x] T4 Named errors for `Y ~ Y` and duplicate `Y ~ X`
+- [x] T5 Named error for infeasible bounds (F2)
 - [ ] T6 Accept consistent redundant inequality sets (F1)
 - [ ] T7 Port the NNLS multiplier-sign gate (needs T1)
 - [ ] T8 Unify the bound verdict (F4) + NEWS (needs T7)

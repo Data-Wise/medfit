@@ -27,6 +27,12 @@
   joint covariance came back with `NA` blocks and `NA` effect intervals and no
   error, and the residual standard deviation of a Gaussian `glm()` stopped
   `extract_mediation()` with a missing-value error.
+* `fit_sem()` now rejects a self-regression (`Y ~ Y`) and a repeated row
+  (`Y ~ X` twice, or `X ~~ Y` and `Y ~~ X`) at parse time, naming the row. Before,
+  `Y ~ Y` failed late with "no start converged" and a repeated row with "a path
+  appears twice in the RAM specification". Infeasible bounds (`a > 1` with
+  `a < 0.5`) now stop with a message naming the parameter and both bounds instead
+  of an internal assertion.
 
 ## Documentation
 
