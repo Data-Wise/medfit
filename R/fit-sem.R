@@ -12,7 +12,7 @@
 #' Fits a model written in lavaan-style syntax to raw data with medfit's native
 #' maximum-likelihood engine, and returns a [SEMFit] object. The engine handles
 #' observed and latent variables, user labels, fixed values, starts and bounds,
-#' equality constraints (linear or nonlinear), linear inequality constraints (`<`, `>`), and defined
+#' equality and inequality constraints (`==`, `<`, `>`, linear or nonlinear), and defined
 #' parameters (`:=`) with delta-method standard errors.
 #'
 #' @param model Character: model syntax. Lines may use `~` (regression),
@@ -27,7 +27,10 @@
 #' @param n_starts Positive integer or `NULL`: number of optimizer starts
 #'   tried before the fit is declared failed (`NULL` uses 5). Retries use
 #'   perturbed starts drawn under a fixed seed and never change the caller's
-#'   random number stream.
+#'   random number stream. With a nonlinear constraint, which can leave several
+#'   local optima, every start is tried and the best accepted one is kept (a
+#'   warning says when the accepted starts disagree); otherwise the first
+#'   accepted start is used.
 #' @param control List: options passed to the optimizer (`nloptr`).
 #' @param weights Optional numeric vector of non-negative case weights,
 #'   one per row of `data` (`NULL`, the default, fits unweighted). The fit is

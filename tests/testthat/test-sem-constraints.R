@@ -73,9 +73,11 @@ test_that("defined parameters are substituted before the linearity walk", {
   expect_equal(chained$cons$ineq$A[1L, match(c("a", "b"), chained$ram$par_names)], rep(1 / sqrt(2), 2L))
 })
 
-test_that("nonlinear, parameter-free and unprovable constraints error by name", {
+test_that("nonlinear inequalities become closure rows; parameter-free constraints error by name", {
   for (extra in c("a*b > 0.1", "exp(a) < 1", "a*b - a*b + a < 1", "ab := a*b\nab > 0", "a/b < 1", "min(a, b) > 0")) {
-    expect_error(cons_setup(extra), "nonlinear inequality constraints are not supported in this version", info = extra)
+    s <- cons_setup(extra)
+    expect_false(is.null(s$cons$nli), info = extra)
+    expect_identical(nrow(s$cons$ineq$A), 0L, info = extra)
   }
   expect_error(cons_setup("1 == 2"), "constraint contains no parameters: '1 == 2'")
   expect_error(cons_setup("1 < 2"), "constraint contains no parameters")
@@ -128,7 +130,7 @@ test_that("a constraint on an equal-label pair and on variances is enforced too"
 })
 
 test_that("planted defect: a nonlinear constraint called linear is solved with a constant Jacobian", {
-  expect_error(cons_setup("a*b + a < 0.2"), "nonlinear inequality constraints are not supported")
+  expect_false(is.null(cons_setup("a*b + a < 0.2")$cons$nli))
   testthat::local_mocked_bindings(.sem_tree_linear = function(e) TRUE)
   s <- cons_setup("a*b + a == 0.2")
   th <- cons_solve(s)

@@ -58,6 +58,19 @@
   still work and warn once per session with `lifecycle`; positional calls are
   unaffected.
 
+* Nonlinear inequality constraints in `fit_sem()`: `a*b > 0.1`, `a*b < 0.5`, and a
+  defined name inside a constraint (`ab := a*b` then `ab > 0`) are solved like the
+  nonlinear equalities, as rows `c(theta) <= 0` with a recomputed Jacobian. The
+  acceptance test for a curved constraint now uses the reduced Hessian of the
+  Lagrangian, the objective's Hessian plus each active nonlinear row's curvature
+  times its multiplier; the objective's Hessian alone can call a saddle of the
+  restricted problem a minimum (or the reverse). **`n_starts` changes meaning for a
+  model with a nonlinear constraint:** every start is tried and the best accepted
+  one is kept (before, the first accepted start was used), and a warning says when
+  the accepted starts reached different optima, because a nonlinear constraint can
+  leave several (`a*b > 0.1` is feasible for two positive or two negative paths).
+  Models without a nonlinear constraint behave as before.
+
 ## Bug fixes
 
 * `fit_sem()` now gives the same verdict on a wrong-side active bound whether or

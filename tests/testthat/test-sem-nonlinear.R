@@ -205,8 +205,9 @@ test_that("nonlinear inequalities and unknown labels still error by name", {
   row <- function(lhs, op, rhs) {
     .sem_constraint_rows(data.frame(lhs = lhs, op = op, rhs = rhs, stringsAsFactors = FALSE), ram)
   }
-  expect_error(row("a*b", ">", "0.1"), "nonlinear inequality constraints are not supported in this version")
-  expect_error(row("a", "<", "b^2"), "nonlinear inequality constraints are not supported")
+  # an inequality is a row c(theta) <= 0: `a*b > 0.1` reads 0.1 - a*b, `a < b^2` reads a - b^2
+  expect_equal(row("a*b", ">", "0.1")$nli$value(c(0.5, 0.4, 0)), 0.1 - 0.5 * 0.4)
+  expect_equal(row("a", "<", "b^2")$nli$value(c(0.5, 0.4, 0)), 0.5 - 0.4^2)
   expect_error(row("a*z", "==", "b"), "'z', which is not a free parameter")
   expect_error(row("2*3", "==", "6"), "constraint contains no parameters")
 })

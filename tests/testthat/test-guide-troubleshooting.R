@@ -220,7 +220,6 @@ test_that("the guide also quotes the cluster and native messages tested elsewher
     "has no cluster-mean term for",
     "unknown parameter label",
     "mean structure is not supported",
-    "nonlinear inequality constraints are not supported in this version",
     "variables in the model are not columns of",
     "Must have length 1",
     "clusters: inference on the cluster-level paths is unreliable",

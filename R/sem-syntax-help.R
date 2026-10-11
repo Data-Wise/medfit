@@ -20,11 +20,11 @@
 #' | `a < b`, `a > 0` | inequality constraint; `label < number` is a bound |
 #' | `ab := a*b` | defined parameter, with a delta-method standard error |
 #'
-#' Inequality constraints must be linear in the labels; an equality may be
-#' nonlinear (`cp == a*b`, `a*b == 0.1`), solved with its Jacobian recomputed at
-#' every point. Labels used in a constraint or a definition must be defined in the
-#' model. A constraint with no free parameter, or a nonlinear inequality, is an
-#' error. Exogenous variables are given free
+#' Constraints may be nonlinear in the labels (`cp == a*b`, `a*b == 0.1`,
+#' `a*b > 0.1`, `ab > 0` with `ab := a*b`), solved with the Jacobian recomputed at
+#' every point; a model with one tries every start and keeps the best accepted
+#' solution, warning when the starts disagree. Labels used in a constraint or a definition must be defined in the
+#' model. A constraint with no free parameter is an error. Exogenous variables are given free
 #' variances and covariances, as lavaan does with `fixed.x = FALSE`. Mean
 #' structures (`y ~ 1`) are not supported, except that `y ~ 0*1` is accepted.
 #' A variable cannot appear on both sides of `~` or `=~` (`y ~ y`), and a path,
