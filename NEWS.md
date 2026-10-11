@@ -51,6 +51,11 @@
   landing page, in the index and in the menu, and every cookbook anchor real.
 * The Models page states that `fit_mediation(engine = "native")` takes one mediator;
   for several, fit with `fit_sem()` and call `extract_mediation()`.
+* The bootstrap example in the README printed `NIE = 0.19 [0.08, 0.32] | NDE = 0.16 |
+  PM = 55%`, which no longer matched the code or its own non-bootstrap fit on the
+  same data; it now shows `NIE = 0.164  [0.0867, 0.256] | NDE = 0.293 | PM = 36 %`.
+  Its feature list, function list and test count now include the `lmer` engine,
+  cluster decomposition and native fits.
 
 # medfit 0.7.0
 
