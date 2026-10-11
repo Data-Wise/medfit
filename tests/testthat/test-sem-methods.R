@@ -96,7 +96,8 @@ tg_fit <- local({
 })
 
 tg_lavaan <- function() {
-  lavaan::sem(tg_syntax, data = mediation_demo, fixed.x = FALSE, information = "observed", meanstructure = TRUE)
+  lavaan::sem(tg_syntax, data = medfit::mediation_demo, fixed.x = FALSE, information = "observed",
+              meanstructure = TRUE)
 }
 
 test_that("tidy() matches lavaan: estimate, standard error, z, p and the interval, defined parameters included", {
