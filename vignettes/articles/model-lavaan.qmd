@@ -1,0 +1,112 @@
+---
+title: "lavaan fits"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+You fitted the model as a structural equation model with lavaan and want the
+same effects and tables. Part of the [Models](models.html) collection.
+
+| | |
+|---|---|
+| **Structure** | simple, serial or parallel mediation, written as lavaan syntax |
+| **Class returned** | `MediationData`, `SerialMediationData` or `ParallelMediationData` |
+| **Route** | `extract_mediation(<lavaan fit>, treatment = , mediator = , outcome = )` |
+| **Needs** | `lavaan` |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+has_lavaan <- requireNamespace("lavaan", quietly = TRUE)
+covs <- "covariate1 + covariate2"
+```
+
+## Simple mediation
+
+Label the paths in the syntax, fit with `lavaan::sem()`, then extract:
+
+```{r}
+#| label: simple
+#| eval: !expr has_lavaan
+syntax <- paste0("
+  mediator1 ~ a * treatment + ", covs, "
+  outcome ~ b * mediator1 + c_prime * treatment + ", covs)
+fit <- lavaan::sem(syntax, data = mediation_demo)
+x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
+                       outcome = "outcome")
+class(x)[1]
+tidy(x, type = "effects", conf.int = TRUE)
+```
+
+Every function from the [simple mediation page](model-simple.html) works on `x`.
+
+## Serial mediation
+
+Give `mediator` two names, in chain order. The class follows the structure:
+
+```{r}
+#| label: serial
+#| eval: !expr has_lavaan
+syntax_s <- paste0("
+  mediator1 ~ a * treatment + ", covs, "
+  mediator2 ~ d * mediator1 + a2 * treatment + ", covs, "
+  outcome ~ b * mediator2 + b1 * mediator1 + c_prime * treatment + ", covs)
+xs <- extract_mediation(lavaan::sem(syntax_s, data = mediation_demo),
+                        treatment = "treatment",
+                        mediator = c("mediator1", "mediator2"),
+                        outcome = "outcome")
+class(xs)[1]
+tidy(xs, type = "effects", conf.int = TRUE)
+```
+
+The row `nie` is the chain through both mediators; `nie_total` adds the paths that
+skip a mediator. See [Serial mediation](model-serial.html).
+
+## Parallel mediation
+
+```{r}
+#| label: parallel
+#| eval: !expr has_lavaan
+syntax_p <- paste0("
+  mediator1 ~ a1 * treatment + ", covs, "
+  mediator3 ~ a2 * treatment + ", covs, "
+  outcome ~ b1 * mediator1 + b2 * mediator3 + c_prime * treatment + ", covs)
+xp <- extract_mediation(lavaan::sem(syntax_p, data = mediation_demo),
+                        treatment = "treatment",
+                        mediator = c("mediator1", "mediator3"),
+                        outcome = "outcome", structure = "parallel")
+class(xp)[1]
+nie(xp)
+```
+
+## Why use a lavaan fit
+
+The equations are fitted together, so the stored covariance includes the
+covariances among the paths. That matters most for serial chains, where the
+lm/glm route sets them to zero (see [Serial mediation](model-serial.html)).
+
+## Limits
+
+- **The regressions must name the variables.** `extract_mediation()` finds each
+  path by the variable names, so the model must contain `outcome ~ mediator1`;
+  if it does not, extraction stops with "Could not find b path (mediator ->
+  outcome)".
+- **Four-way effects** (a treatment-by-mediator product) need the mean structure
+  and a specific syntax; see [Model Extraction](extraction.html) for what is
+  supported before relying on it.
+- To write a model as syntax **without** lavaan, with latent mediators and
+  constraints, use the [native engine](model-native.html).
+
+## Related
+
+[Cookbook recipe 10](cookbook.html#i-use-lavaan) | [Model Extraction](extraction.html) |
+[Native engine](model-native.html)
