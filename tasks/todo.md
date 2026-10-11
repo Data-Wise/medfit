@@ -5,7 +5,7 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 ## Phase 0: Evidence and harness
 - [ ] T1 Re-derive the S1 findings as committed fixtures (`planning/specs/evidence/native-sem-2026-10-11/`)
 - [ ] T2 Trigger `rhub.yaml` once; record the result in `.STATUS`
-- [ ] T3 Harness driver `tests/sim/run-gates.R` (`--fast`, `--sim`, `--mutants`)
+- [ ] T3 Harness driver `tests/sim/run-gates.R` (`--fast`, `--sim`, `--mutants`); verdicts from results CSVs and `tests/sim/gates.csv`, four "exits 0 but bad" fixtures, a reliability threshold
 
 ## Phase 1: Foundations (W1, W2)
 - [ ] T4 Named errors for `Y ~ Y` and duplicate `Y ~ X`
@@ -29,13 +29,13 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [ ] Human review
 
 ## Phase 3: Nonlinear constraints (W3)
-- [ ] T13 Nonlinear equality `a*b == c` end to end (needs T9)
+- [ ] T13 Nonlinear equality `a*b == c` end to end (needs T9); includes the curved-constraint covariance oracle and a frozen-Jacobian mutant
 - [ ] T14 Exact k-branch split for zero products (needs T13)
 - [ ] T15 Product inequalities, `:=` names, best-of-n multi-start + NEWS (needs T13)
 - [ ] T16 Sums of products, best-effort (needs T15)
 - [ ] T17 `mbco_sem()` for a product of k paths (needs T10)
 - [ ] T18 Type I error gate `tests/sim/sem-mbco-k-size.R` (needs T17)
-- [ ] T19 Nonlinear parity gate `tests/sim/sem-nonlinear-gate.R` (needs T14-T16)
+- [ ] T19 Nonlinear parity gate `tests/sim/sem-nonlinear-gate.R` (needs T14-T16); reports SE agreement, exits nonzero on failure
 
 ### Checkpoint C
 - [ ] All gates in the harness table pass (counts reported); revdep run clean

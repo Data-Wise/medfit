@@ -49,7 +49,7 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 | H-parity | `Rscript tests/sim/sem-parity-gate.R` | exists (420 runs) | SE within 1e-3 rel., estimates within 1e-6 in at least 418/420 (D22 baseline) | n/a (regression) | after T7, T8, T13-T16 |
 | H-constrained | `Rscript tests/sim/sem-constrained-gate.R` | exists | as recorded in its header | n/a (regression) | after T7, T8 |
 | H-reliab | `Rscript tests/sim/sem-reliability.R` | exists | as recorded in its header | n/a (regression) | after T15 (multi-start) |
-| H-nonlinear | `Rscript tests/sim/sem-nonlinear-gate.R` | **new (T19)** | G6: never a worse objective than OpenMx's optimum minus 1e-8; estimates within 1e-5 when both reach the same branch; KKT gate passes; 0 improper; `a*b > k` best branch in at least 90% of cells with 5 starts; the sum-of-products hit rate is reported, not gated (G12) | nonlinear row misclassified as linear; larger-branch pick; no Jacobian row dropping | after T13-T16 |
+| H-nonlinear | `Rscript tests/sim/sem-nonlinear-gate.R` | **new (T19)** | G6: never a worse objective than OpenMx's optimum minus 1e-8; estimates within 1e-5 when both reach the same branch; KKT gate passes; 0 improper; `a*b > k` best branch in at least 90% of cells with 5 starts; the sum-of-products hit rate is reported, not gated (G12); **standard errors** (Codex finding 2): the projected covariance is annihilated by the solution Jacobian (`|J V|` relative to `|V|` at most 1e-8) and the SEs match an independent oracle within 1e-3 relative (a reparameterized fit with the constraint solved out and delta-method SEs, plus a fixed-seed nonparametric bootstrap cross-check) | nonlinear row misclassified as linear; larger-branch pick; no Jacobian row dropping; covariance projection frozen at the starting Jacobian or omitted | after T13-T16 |
 | H-ksize | `Rscript tests/sim/sem-mbco-k-size.R` | **new (T18)** | size at or below alpha plus Monte Carlo error with one, two and three zero paths; power floor under a stated alternative | refer min to chi-square(2) (fails the oracle and power floor, not size) | after T17 |
 | H-oracle | testthat in `test-sem-mbco.R` / `test-sem-anova.R` | **new (T10, T17)** | statistic 4, alpha 0.05: p = 0.0455 (df 1, reject), 0.1353 (df 2, do not reject) | df = 2 mutation | with T10, T17 |
 | H-boundary | testthat | **new (T10)** | `anova()` on a boundary null warns or refuses, same as `mbco_sem()` (`R/sem-mbco.R:140-165`) | delete the boundary check | with T10 |
@@ -58,6 +58,8 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 | H-revdep | install dev into a scratch library; run probmed and RMediation test suites | exists (manual) | no new failures vs CRAN medfit baseline | n/a | Checkpoint C, pre-release |
 
 `T3` adds a driver, `tests/sim/run-gates.R`, with `--fast` (unit + lint + oracles), `--sim` (all `tests/sim` gates) and `--mutants` (apply each planted defect through a test-time override and assert the owning gate fails), writing a one-page summary to `tests/sim/results/`. The driver is a convenience; each gate stays runnable alone.
+
+**Verdicts come from results, never from exit status** (Codex review of the plan, finding 1, 2026-10-11). The existing `sem-parity-gate.R` and `sem-constrained-gate.R` print PASS/FAIL lines and write their CSV without any `quit()` or `stop()`, and `sem-reliability.R` drops worker errors from its summary and states no aggregate threshold, so a script can exit 0 with failed numerical checks. The driver therefore reads each gate's results CSV and applies committed thresholds and expected cell counts (recorded in `tests/sim/gates.csv`, one row per gate: expected cells, tolerance, pass rule). It rejects: a tolerance failure, a missing or short cell count, a failed or errored run, and an unreadable or stale results file, whatever the exit status. The new gates (T18, T19) also end with `quit(status = 1)` on failure so they are safe to run alone.
 
 ## Task list
 
@@ -86,11 +88,14 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 **Description:** Add `tests/sim/run-gates.R` with `--fast`, `--sim`, `--mutants` modes and a results summary, wrapping the existing gates and the new ones as they land.
 **Acceptance criteria:**
 - [ ] `--fast` runs unit tests, lint and the oracles and prints pass/fail counts
+- [ ] Verdicts are computed from each gate's results CSV against thresholds and expected cell counts in `tests/sim/gates.csv`, not from the script's exit status
+- [ ] Fixtures where a script exits 0 but its CSV has (a) a tolerance failure, (b) missing cells, (c) a worker error or failed run, (d) a stale or unreadable file: the driver rejects each
+- [ ] An aggregate pass threshold is defined for `sem-reliability.R` (it has none today) and recorded in `gates.csv`
 - [ ] `--mutants` reports, per planted defect, that its gate failed (a mutant that passes is an error)
 - [ ] Summary written to `tests/sim/results/`
 **Verification:**
 - [ ] `Rscript tests/sim/run-gates.R --fast` on a clean tree passes
-- [ ] A deliberately broken gate (temporary) makes the driver exit nonzero
+- [ ] Each of the four "exits 0 but bad" fixtures makes the driver exit nonzero
 **Dependencies:** None | **Files:** `tests/sim/run-gates.R`, `tests/sim/results/` | **Scope:** S
 
 ### Phase 1: Foundations (W1, W2)
@@ -194,6 +199,8 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 **Description:** One complete path: parse a nonlinear equality, build a closure with the guarded evaluator, central-difference Jacobian (step eps^(1/3) * max(|x|, 1), columns scaled by u), solve with SLSQP, residual feasibility gate, SE projection from the Jacobian at the solution.
 **Acceptance criteria:**
 - [ ] `a*b == c` fits and matches OpenMx's constrained optimum on a fixed seed to 1e-5
+- [ ] Curved-constraint covariance oracle: the projected covariance is annihilated by the Jacobian at the **solution** (`|J V|` relative to `|V|` at most 1e-8), and SEs agree with an independent oracle (reparameterized fit with delta-method SEs; fixed-seed bootstrap cross-check) within 1e-3 relative
+- [ ] Planted defect: freeze the projection at the starting Jacobian, or omit it; the oracle test must fail
 - [ ] The old "nonlinear constraints are not supported" error is gone only for supported forms; others still error by name
 **Verification:**
 - [ ] `devtools::test(filter = "sem-constraints|sem-expr|sem-se")`; planted defect: classify the row as linear, test must fail
@@ -248,7 +255,8 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 **Description:** `tests/sim/sem-nonlinear-gate.R`: about 240 runs (4 problems x 3 models x 2 n x 10 seeds) against OpenMx with the pass rule in the harness table; one sum-of-products problem reports its hit rate without a threshold.
 **Acceptance criteria:**
 - [ ] Gate runs end to end and meets the pass rule, or its failures are listed and triaged
-- [ ] Planted defects (row misclassified as linear; larger-branch pick) make it fail
+- [ ] Planted defects (row misclassified as linear; larger-branch pick; covariance projection frozen at the start) make it fail
+- [ ] The gate reports SE agreement per cell and ends with `quit(status = 1)` on any failure
 **Verification:**
 - [ ] `Rscript tests/sim/sem-nonlinear-gate.R`; `--mutants` via T3
 **Dependencies:** T14, T15, T16 | **Files:** `tests/sim/sem-nonlinear-gate.R`, `tests/testthat/helper-sem.R` | **Scope:** M
@@ -320,3 +328,7 @@ Version bump, NEWS, `.STATUS`, CI green, tag, GitHub release, r-universe check. 
 - `anova()` details left in G9: nesting check method; df with active constraints; bootstrap LRT (default: later).
 - Exact fixtures for the nonlinear gate (G6): which four problems and three models.
 - Whether the new gates run in CI or only locally (default: locally, results committed under `tests/sim/results/`).
+
+## Review log
+
+- **2026-10-11, Codex adversarial review of this plan (2 findings, both accepted, applied the same day):** (1) numerical failures must fail the harness: existing sim scripts print PASS/FAIL without a failing exit status (`sem-parity-gate.R`, `sem-constrained-gate.R`: no `quit()` or `stop()`; `sem-reliability.R`: errors excluded, no threshold), so T3 computes verdicts from results CSVs with committed thresholds and cell counts and adds four "exits 0 but bad" fixtures; (2) an independent nonlinear covariance oracle: T13 and H-nonlinear gain a Jacobian-annihilation check, an independent SE oracle and a frozen-Jacobian mutant. Evidence checked before accepting: `grep` of `quit(`/`stop(` in the three scripts found none that signal gate failure.
