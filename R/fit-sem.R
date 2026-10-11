@@ -12,7 +12,7 @@
 #' Fits a model written in lavaan-style syntax to raw data with medfit's native
 #' maximum-likelihood engine, and returns a [SEMFit] object. The engine handles
 #' observed and latent variables, user labels, fixed values, starts and bounds,
-#' linear equality and inequality constraints (`==`, `<`, `>`), and defined
+#' equality constraints (linear or nonlinear), linear inequality constraints (`<`, `>`), and defined
 #' parameters (`:=`) with delta-method standard errors.
 #'
 #' @param model Character: model syntax. Lines may use `~` (regression),

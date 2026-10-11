@@ -26,6 +26,18 @@
   documented). A fit with sampling weights has no likelihood, so its chi-square,
   `logLik`, `AIC` and `BIC` are `NA`.
 
+* Nonlinear equality constraints in `fit_sem()` and `fit_mediation(engine =
+  "native")`: `cp == a*b`, `a*b == 0.1`, `exp(a) == 1` and any equality built from
+  the allowed functions are solved by SLSQP with the constraint's value and
+  Jacobian recomputed at every point (the Jacobian by central differences). The
+  covariance is projected onto the null space of the Jacobian **at the
+  solution**, and the degrees of freedom count the equalities' rank there. The
+  fit matches OpenMx's constrained optimum to 1e-5 and the standard errors agree
+  with a reparameterized fit and a bootstrap. Nonlinear *inequalities* are still
+  an error (the message now says "nonlinear inequality constraints are not
+  supported in this version"). A product set to zero (`a*b == 0`) goes through
+  the nonlinear route here; its exact branch solution is planned.
+
 ## Bug fixes
 
 * `fit_sem()` now gives the same verdict on a wrong-side active bound whether or
