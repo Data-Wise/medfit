@@ -24,7 +24,8 @@
 T1 evidence+fixtures ─┬─> T7 NNLS gate ──┬─> T8 bound verdict (F4) ──> T9 S1 close ──┐
 T2 rhub (parallel)     │                  │                                           │
 T3 harness driver ─────┘ (gates plug in as they land)                                  v
-T4 parse errors   T5 bound error   T6 redundant inequalities  (independent, W2)   [Checkpoint A]
+T3b harness hardening (needs T3)   T4 parse errors   T5 bound error   T6 redundant inequalities  (independent, W2)   [Checkpoint A]
+T5b glm row-level args (own branch, unreleased regression on dev; merges before the release PR, not a Checkpoint A item)
                                                                                        │
 T10 anova() + boundary guard ──> T11 SEMFit methods ──> T12 naming/args           [Checkpoint B] ──> unblock RMediation handoff (needs T10, T13-T16)
                                                                                        │
@@ -98,6 +99,18 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 - [ ] Each of the four "exits 0 but bad" fixtures makes the driver exit nonzero
 **Dependencies:** None | **Files:** `tests/sim/run-gates.R`, `tests/sim/gates.csv`, `tests/sim/results/` (the four "exits 0 but bad" fixtures are built in memory by `--mutants`, not stored) | **Scope:** M
 
+#### Task 3b: Harden the gate driver (Codex review findings 1 and 4)
+**Description:** Two holes in `tests/sim/run-gates.R` that let a failed run or a broken scale pass. Spec and measurements: `planning/specs/SPEC-gate-harness-hardening-2026-10-11.md`.
+**Acceptance criteria:**
+- [ ] `--sim` requires a zero child exit status and a results file modified at or after the child's start; the child's output goes to a gitignored log (option A of the spec; the isolated-directory option is deferred)
+- [ ] The stationarity verdict checks the acceptance threshold on both sides: largest accepted decrement `<= tol / 10`, smallest decrement of a truncated run far from the optimum `>= 10 * tol`, every finite truncated decrement `> tol`; `tol` and the distance cutoff live in `gates.csv`, and `--fast` fails if `tol` differs from `.sem_stat_tol`
+- [ ] `sem-constrained-gate.R` saves the distance in the stationarity CSV; the CSV is regenerated and committed (measured: accepted max 3.6e-8, far-run minimum 0.014, 73 far runs)
+- [ ] `--mutants` gains: a child that exits 1 beside an older passing CSV, a child that exits 0 but writes nothing, and all decrements x1e-6 and x1e6; each must fail, the stub that writes a passing CSV must pass
+**Verification:**
+- [ ] `Rscript tests/sim/run-gates.R --mutants` rejects every mutation; planted defects (drop the freshness check; drop the distance filter) turn the matching mutant or the control red
+- [ ] `Rscript tests/sim/run-gates.R --fast` and the default verdict mode pass
+**Dependencies:** T3 | **Files:** `tests/sim/run-gates.R`, `tests/sim/gates.csv`, `tests/sim/sem-constrained-gate.R`, `tests/sim/results/sem-constrained-stationarity-<date>.csv`, `.gitignore` | **Scope:** S
+
 ### Phase 1: Foundations (W1, W2)
 
 #### Task 4: Named errors for `Y ~ Y` and duplicate `Y ~ X` rows
@@ -116,6 +129,17 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 **Verification:**
 - [ ] New test in `test-sem-optim.R` fails before and passes after
 **Dependencies:** None | **Files:** `R/sem-optim.R`, `tests/testthat/test-sem-optim.R` | **Scope:** XS
+
+#### Task 5b: `fit_mediation()` applies row-level arguments to the original rows (Codex review finding 2)
+**Description:** #138 (merged to `dev` after 0.7.0, unreleased) drops incomplete rows before forwarding `...` to `glm()`, so `subset` indexes the filtered rows (`subset = 1:50` with row 1 incomplete fits rows 2:51 and changes the estimate), an expression subset changes meaning, and a vector `offset` errors. Resolve `subset`, `weights`, `offset`, `etastart` and `mustart` against the original data, apply one row mask, and do not forward `subset`. Spec and the before/after table: `planning/specs/SPEC-glm-observation-level-args-2026-10-11.md`. Own branch (`fix/glm-observation-level-args` from `dev`), own PR, merged before the 0.8.0 release PR; not part of Checkpoint A.
+**Acceptance criteria:**
+- [ ] `subset = 1:50` with an incomplete first row equals a direct `glm(subset = 1:50)` fit to 1e-10, with `n_obs` 49
+- [ ] Logical subset, vector `offset`, `etastart` and `weights` with a subset each equal the direct `glm()` fit; a wrong-length vector errors by name
+- [ ] Every test fails on `dev` before the change; a planted defect (filter before subset, today's order) turns the first test red
+- [ ] NEWS bug-fix entry; `man/fit_mediation.Rd` states that row-level arguments refer to the rows passed
+**Verification:**
+- [ ] `devtools::test(filter = "missing-data|fit-glm")` passes with counts; full suite and strict `check` before the PR
+**Dependencies:** None | **Files:** `R/fit-glm.R`, `tests/testthat/test-missing-data.R`, `NEWS.md`, `man/fit_mediation.Rd` | **Scope:** S
 
 #### Task 6: Consistent but redundant inequality sets are accepted (F1)
 **Description:** An inequality row that lies in the span of the equality rows has a constant value on the equality set; when it is satisfied (`a == b; a - b < 0`, `a + b == 0.8; a + b > 0.8`) it is active everywhere and gives SLSQP a rank-deficient active Jacobian, the degeneracy #122 fixed for equality rows. Measured (fixture 03, 12 seeds): 5 to 7 of 12 fits succeed on the 0.7.0 code (`no start converged`, solver status 3 at a non-stationary point, 5 or -1); the controls (inactive inequality, inequality-only duplicates) fit 12 of 12. Hand the solver the rows without the implied (residual below 1e-12), satisfied inequality, and keep every row in the acceptance gate; an implied row the equalities violate is kept and left to the gate. Design, precedent and the review that changed it: `planning/specs/RESEARCH-redundant-constraints-2026-10-11.md`.
@@ -157,7 +181,7 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 - [ ] No open S1 item in `.STATUS`
 **Dependencies:** T7, T8 | **Files:** `planning/specs/GRILL-medfit-0-8-0-2026-10-11.md`, `.STATUS` | **Scope:** S
 
-### Checkpoint A: after Tasks 1-9
+### Checkpoint A: after Tasks 1-9 (including T3b; T5b is tracked separately)
 - [ ] H-unit full suite, H-lint, H-parity, H-constrained, H-check pass (counts reported)
 - [ ] rhub result (T2) recorded; any failing flavor decided with evidence
 - [ ] Review with the human before Phase 2
@@ -313,7 +337,7 @@ Version bump, NEWS, `.STATUS`, CI green, tag, GitHub release, r-universe check. 
 
 ## Parallelization
 
-- Safe to run in parallel: T1 and T2 and T3; T4, T5, T6; T10 and T11 (after Phase 1 if the boundary logic wants T8); T20 and T22.
+- Safe to run in parallel: T1 and T2 and T3; T3b; T4, T5, T5b, T6; T10 and T11 (after Phase 1 if the boundary logic wants T8); T20 and T22.
 - Must be sequential: T7 then T8 then T9; T13 then T14/T15; T17 then T18.
 - Coordination: `R/sem-constraints.R` is touched by T6, T7, T8, T13-T16; do not run those in parallel branches.
 
@@ -338,6 +362,6 @@ Version bump, NEWS, `.STATUS`, CI green, tag, GitHub release, r-universe check. 
 ## Review log
 
 - **2026-10-11, Codex adversarial review of this plan (2 findings, both accepted, applied the same day):** (1) numerical failures must fail the harness: existing sim scripts print PASS/FAIL without a failing exit status (`sem-parity-gate.R`, `sem-constrained-gate.R`: no `quit()` or `stop()`; `sem-reliability.R`: errors excluded, no threshold), so T3 computes verdicts from results CSVs with committed thresholds and cell counts and adds four "exits 0 but bad" fixtures; (2) an independent nonlinear covariance oracle: T13 and H-nonlinear gain a Jacobian-annihilation check, an independent SE oracle and a frozen-Jacobian mutant. Evidence checked before accepting: `grep` of `quit(`/`stop(` in the three scripts found none that signal gate failure.
-- **2026-10-11, Codex adversarial review of the F1 research note and the T1-T5 work (4 findings, all reproduced):** (3) near-dependence is not infeasibility, so T6 is drop-only with `implied_tol = 1e-12` and no up-front error (applied: research note section 3, T6, methods article, CLAUDE.md, AGENTS.md, fixture 03 ladder); (1) `--sim` could pass on stale CSVs and (4) the stationarity check ignored `.sem_stat_tol` (both tracked as T3b in `tasks/todo.md`, not yet applied); (2) GLM complete-case filtering changes positional `subset` semantics in the merged #138 (`fit_mediation(subset = 1:50)` with an incomplete row 1 fits rows 2:51 and reports `n_obs` 199), outside the 0.8.0 plan and filed separately.
+- **2026-10-11, Codex adversarial review of the F1 research note and the T1-T5 work (4 findings, all reproduced):** (3) near-dependence is not infeasibility, so T6 is drop-only with `implied_tol = 1e-12` and no up-front error (applied: research note section 3, T6, methods article, CLAUDE.md, AGENTS.md, fixture 03 ladder); (1) `--sim` could pass on stale CSVs and (4) the stationarity check ignored `.sem_stat_tol` (both now T3b, specified in `SPEC-gate-harness-hardening-2026-10-11.md` with measured margins: accepted max 3.6e-8, far-run minimum 0.014; the ratio-only check passes every common rescaling, the two-margin check rejects x1e-6 and x1e6); (2) glm complete-case filtering reversed the order of `subset` and incomplete-row removal in #138 (`subset = 1:50` with an incomplete row 1 fits rows 2:51; `subset = X > 0` moves a from 0.7066 to 0.1794; a vector `offset` now errors; all three worked before #138), now T5b, specified in `SPEC-glm-observation-level-args-2026-10-11.md`, own branch, unreleased regression.
 - **2026-10-11, self-review before approval (2 fixes, applied):** the `H-constrained` and `H-reliab` pass rules said "as recorded in its header", contradicting the verdict-from-results rule, and now point to `tests/sim/gates.csv`; T3's scope was S and is now M (driver, thresholds file, four fixtures, mutants mode). The author then approved the plan.
 - **2026-10-11, RMediation session finding (refit trap), added to T10 and T14:** adding `mxConstraint(b1 == 0)` to an already-fitted OpenMx full model returned an infeasible point (diffLL 0) while the clean-start null gives 0.0830995; refits in `anova()` and the k-branch split therefore start clean, with a fixture and a planted defect each. Source: the results section of the RMediation handoff.
