@@ -586,6 +586,28 @@ $$
 so a parameter pinned by a constraint has zero variance and `a == b` returns
 the standard error of the model with `a` and `b` collapsed to one label.
 
+Redundant rows are handled in two layers. Equality rows that are linearly
+dependent (a duplicate, `a == b` with `b == a`) are reduced to an independent
+subset before the solve, because a rank-deficient Jacobian stops SLSQP although
+the constraints are consistent; the dropped rows are still checked by the
+acceptance gate, so contradictory equalities (`a == 1` with `a == 2`) are
+reported. This is the standard remedy: the linear independence constraint
+qualification (LICQ) fails when an active constraint is redundant, and solver
+presolve routines remove duplicate and dependent rows for that reason.
+
+An inequality whose row lies in the span of the equality rows has a constant
+value on the equality set. When that value satisfies it (`a == b` with
+`a - b < 0`, or `a + b == 0.8` with `a + b > 0.8`) the inequality is active at
+every feasible point and reproduces the same degeneracy. **In 0.7.0 such a fit
+fails on some datasets** with `no start converged`, often with solver status 3
+at a point the gate correctly rejects as not stationary; when it succeeds, it
+matches the model with the redundant inequality deleted to $10^{-6}$. Delete
+the redundant inequality as a workaround. Reducing these rows the same way is
+planned for 0.8.0, with a named error when the constant violates the inequality.
+An inequality that is inactive on the equality set (`a + b == 0.8` with
+`a + b < 0.9`), and parallel inequalities with no equality (`a + b < 0.2` with
+`2*a + 2*b < 0.4`), are not affected.
+
 ### Acceptance
 
 A solution is accepted only if the optimizer status is a

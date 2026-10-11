@@ -1,4 +1,4 @@
-# Evidence fixtures: S1 findings re-derived (2026-10-11)
+# Evidence fixtures: S1 findings re-derived and audit F1 reproduced (2026-10-11)
 
 Plan task T1 (`tasks/plan.md`, ledger G5). The 2026-10-09 `s1-review` scripts are gone from disk and from git, so nothing here is
 recovered: each S1 finding is re-derived from the surviving `../native-sem-2026-10-08/04b-constraint-contract.R` and
@@ -8,11 +8,11 @@ committed as a fixture that can fail. Exploratory code, not package code; nothin
 
 ```sh
 cd planning/specs/evidence/native-sem-2026-10-11
-./run-all.sh        # about 1 minute; writes results/<script>.out; deletes each old output first; exits nonzero if any ASSERT fails
+./run-all.sh        # about 3 minutes; writes results/<script>.out; deletes each old output first; exits nonzero if any ASSERT fails
 ```
 
 Each script runs from this directory (it sources `../native-sem-2026-10-08/common.R` and loads the package from the root four levels up).
-Both fixtures are seeded; two consecutive runs give byte-identical results apart from the warning lines and the R version line.
+The fixtures are seeded; two consecutive runs give byte-identical results apart from the warning lines and the R version line.
 
 ## Fixtures
 
@@ -25,8 +25,14 @@ Both fixtures are seeded; two consecutive runs give byte-identical results apart
 reference solution from bounded least squares on the column-normalized problem. The T7 port must return a non-negative solution
 whose squared residual on the normalized problem is within 1e-8 of that reference's, with no NaN and no error.
 
-Positive control for fixture 2: replacing the verbatim `nnls()` default `tol = 1e-12` with `1e6` (which never admits a column) makes
+Positive control for fixture 2 (run a patched copy from a scratch directory: the script writes `results/` relative to where it runs, and an earlier run of the patched copy here overwrote `02-nnls-cases.csv` with all-ok rows, which was caught and regenerated): replacing the verbatim `nnls()` default `tol = 1e-12` with `1e6` (which never admits a column) makes
 the "defect reproduces" ASSERT fail and the script exit nonzero.
+
+`03-redundant-inequality-sets.R` (audit F1, plan T6) is the third fixture: nine constraint sets by 12 seeded datasets on the 0.7.0 code and on
+a prototype that drops implied, satisfied inequality rows. ASSERTs: every coincident set fails on some seed (5 to 7 of 12 fit), the controls fit
+12 of 12, the prototype fits all consistent sets and matches the independent set to 1e-6, and an inconsistent set still errors naming the
+violated constraint. Background and design: `../../RESEARCH-redundant-constraints-2026-10-11.md`. Once T6 ships, the "defect reproduces"
+assertion is inverted to "fixed" and the prototype is deleted.
 
 ## What these fixtures do not claim
 

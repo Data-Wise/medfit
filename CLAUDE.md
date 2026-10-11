@@ -408,6 +408,18 @@ first, error instead of guessing).
 - Auto-detects cores
 - Set seed for reproducibility
 
+### Native SEM constraint pipeline (`R/sem-constraints.R`, `R/sem-optim.R`)
+
+Linear `==`, `<`, `>` constraints become unit-length rows `a'theta + b` (`.sem_constraint_rows()`); the
+solver (nloptr SLSQP) gets constant Jacobians in natural units `x = theta / u`; every solution passes the
+acceptance gate (status, constraint residual, Newton decrement on the active null space) with **all** rows.
+Redundancy rule: SLSQP stops on a rank-deficient active Jacobian (LICQ fails), so the solver is handed an
+independent subset of the equality rows (`.sem_independent_rows()`, #122), and the gate still checks every
+row, so contradictory sets error. An inequality row in the span of the equality rows, satisfied on the
+equality set, is the same degeneracy and fails some fits in 0.7.0 (audit F1); T6 drops it from the solver's rows
+and errors by name when its constant violates it. Background and evidence:
+`planning/specs/RESEARCH-redundant-constraints-2026-10-11.md`.
+
 ---
 
 ## Ecosystem Coordination

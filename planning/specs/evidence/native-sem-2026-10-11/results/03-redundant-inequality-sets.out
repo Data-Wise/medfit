@@ -1,0 +1,52 @@
+== 0.7.0 code ==
+         kind                           set fits of max_gap
+   coincident            a == b ; a - b < 0    5 12 1.4e-08
+   coincident            a == b ; a - b > 0    5 12 0.0e+00
+   coincident    a + b == 0.8 ; a + b > 0.8    7 12 1.0e-08
+   coincident    a + b == 0.8 ; a + b < 0.8    7 12 7.7e-09
+   coincident    a + b == 0.2 ; a + b > 0.2    5 12 4.3e-14
+     inactive    a + b == 0.8 ; a + b < 0.9   12 12 0.0e+00
+    ineq-only     a + b < 0.2 ; a + b < 0.2   12 12 0.0e+00
+    ineq-only a + b < 0.2 ; 2*a + 2*b < 0.4   12 12 0.0e+00
+ inconsistent    a + b == 0.8 ; a + b < 0.5    0 12      NA
+first error messages seen:
+ [1] "no start converged (5 tried); best attempt: status 3, stationarity 0.122; stationarity 1.22e-01 exceeds 1e-03" 
+ [2] "no start converged (5 tried); best attempt: status 5, stationarity NA; nloptr status 5 is not a success code"  
+ [3] "no start converged (5 tried); best attempt: status -1, stationarity NA; nloptr status -1 is not a success code"
+ [4] "no start converged (5 tried); best attempt: status 3, stationarity 0.103; stationarity 1.03e-01 exceeds 1e-03" 
+ [5] "no start converged (5 tried); best attempt: status 3, stationarity 0.144; stationarity 1.44e-01 exceeds 1e-03" 
+ [6] "no start converged (5 tried); best attempt: status 3, stationarity 0.198; stationarity 1.98e-01 exceeds 1e-03" 
+ [7] "no start converged (5 tried); best attempt: status 3, stationarity 0.602; stationarity 6.02e-01 exceeds 1e-03" 
+ [8] "no start converged (5 tried); best attempt: status 3, stationarity 0.229; stationarity 2.29e-01 exceeds 1e-03" 
+ [9] "no start converged (5 tried); best attempt: status 3, stationarity 0.453; stationarity 4.53e-01 exceeds 1e-03" 
+[10] "no start converged (5 tried); best attempt: status 3, stationarity 0.345; stationarity 3.45e-01 exceeds 1e-03" 
+[11] "no start converged (5 tried); best attempt: status 3, stationarity 0.145; stationarity 1.45e-01 exceeds 1e-03" 
+[12] "no start converged (5 tried); best attempt: status 3, stationarity 0.151; stationarity 1.51e-01 exceeds 1e-03" 
+[13] "no start converged (5 tried); best attempt: status 3, stationarity 0.118; stationarity 1.18e-01 exceeds 1e-03" 
+[14] "no start converged (5 tried); best attempt: status 3, stationarity 0.203; stationarity 2.03e-01 exceeds 1e-03" 
+[15] "no start converged (5 tried); best attempt: status 3, stationarity 0.0796; stationarity 7.96e-02 exceeds 1e-03"
+[16] "no start converged (5 tried); best attempt: status 3, stationarity 0.0518; stationarity 5.18e-02 exceeds 1e-03"
+[17] "no start converged (5 tried); best attempt: status 3, stationarity 0.0385; stationarity 3.85e-02 exceeds 1e-03"
+[18] "no start converged (5 tried); best attempt: status 3, stationarity 0.132; stationarity 1.32e-01 exceeds 1e-03" 
+[19] "no start converged (5 tried); best attempt: status 3, stationarity 0.0699; stationarity 6.99e-02 exceeds 1e-03"
+
+== prototype: implied inequality rows dropped ==
+         kind                           set fits of max_gap
+   coincident            a == b ; a - b < 0   12 12       0
+   coincident            a == b ; a - b > 0   12 12       0
+   coincident    a + b == 0.8 ; a + b > 0.8   12 12       0
+   coincident    a + b == 0.8 ; a + b < 0.8   12 12       0
+   coincident    a + b == 0.2 ; a + b > 0.2   12 12       0
+     inactive    a + b == 0.8 ; a + b < 0.9   12 12       0
+    ineq-only     a + b < 0.2 ; a + b < 0.2   12 12       0
+    ineq-only a + b < 0.2 ; 2*a + 2*b < 0.4   12 12       0
+ inconsistent    a + b == 0.8 ; a + b < 0.5    0 12      NA
+ASSERT PASS defect reproduces: every coincident set fails on some seed (fits 5, 5, 7, 7, 5 of 12)
+ASSERT PASS controls: an inactive inequality and inequality-only redundancy fit on all 12 seeds with the 0.7.0 code
+ASSERT PASS prototype: every consistent set fits on all 12 seeds
+ASSERT PASS prototype matches the independent-set optimum to 1e-6 (max gap 0.0e+00)
+ASSERT PASS an inconsistent set still errors with the 0.7.0 code and with the prototype, naming the violated constraint
+
+R 4.6.1; nloptr 2.2.1; medfit 0.7.0
+
+all assertions passed

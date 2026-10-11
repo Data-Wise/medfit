@@ -118,13 +118,16 @@ Existing gates are reused; new ones are added. Convention (already in the repo):
 **Dependencies:** None | **Files:** `R/sem-optim.R`, `tests/testthat/test-sem-optim.R` | **Scope:** XS
 
 #### Task 6: Consistent but redundant inequality sets are accepted (F1)
-**Description:** Dependent inequality rows (`a == b; a - b < 0`, `a+b == 0.8; a+b > 0.8`) currently fail ("status 5" or a stationarity failure) because only equality rows are reduced. Accept consistent sets and reach the optimum of the equivalent independent set (the #122 pattern).
+**Description:** An inequality row that lies in the span of the equality rows has a constant value on the equality set; when it is satisfied (`a == b; a - b < 0`, `a + b == 0.8; a + b > 0.8`) it is active everywhere and gives SLSQP a rank-deficient active Jacobian, the degeneracy #122 fixed for equality rows. Measured (fixture 03, 12 seeds): 5 to 7 of 12 fits succeed on the 0.7.0 code (`no start converged`, solver status 3 at a non-stationary point, 5 or -1); the controls (inactive inequality, inequality-only duplicates) fit 12 of 12. Hand the solver the rows without the implied, satisfied inequality, keep every row in the acceptance gate, and raise a named error before the solve when the constant violates the row. Design, precedent and the open decision: `planning/specs/RESEARCH-redundant-constraints-2026-10-11.md`.
 **Acceptance criteria:**
-- [ ] Both example sets fit and equal the independent-set optimum to 1e-6
-- [ ] A genuinely inconsistent set still errors by name
+- [ ] Both example sets and the three other coincident sets in fixture 03 fit on all 12 seeds and equal the independent-set optimum to 1e-6
+- [ ] An implied inequality violated on the equality set (`a + b == 0.8; a + b < 0.5`) errors by name, before the solve, naming both rows (author's call on up-front versus gate message: research note section 3)
+- [ ] Controls unchanged: an inactive inequality, inequality-only duplicates and parallel rows fit as before; a genuinely inconsistent equality pair still errors
+- [ ] A test that fails on the 0.7.0 code (the coincident sets on a seed that fails today) and a planted defect: skipping the span test must turn it red
+- [ ] `methods.qmd` "Constraints" loses the 0.7.0 limitation paragraph and states the behavior; the CLAUDE.md and AGENTS.md pipeline paragraph drops "fails some fits in 0.7.0"; NEWS entry (behavior change: sets that errored now fit)
 **Verification:**
-- [ ] `devtools::test(filter = "sem-constraints")`; H-constrained regression run
-**Dependencies:** None | **Files:** `R/sem-constraints.R`, `tests/testthat/test-sem-constraints.R` | **Scope:** M
+- [ ] `devtools::test(filter = "sem-constraints")`; `planning/specs/evidence/native-sem-2026-10-11/run-all.sh` with the "defect reproduces" assertion inverted to "fixed" (fixture 03 prototype becomes the package code); H-constrained regression run
+**Dependencies:** None | **Files:** `R/sem-constraints.R`, `tests/testthat/test-sem-constraints.R`, `vignettes/articles/methods.qmd`, `NEWS.md`, `CLAUDE.md`, `AGENTS.md` | **Scope:** M
 
 #### Task 7: Port the NNLS multiplier-sign gate
 **Description:** Replace the warn-only least-squares sign check with an NNLS gate that has column scaling, a relative tolerance and a step guard (the evidence script's version divided 0/0 on dependent columns), using the T1 fixtures.
