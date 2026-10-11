@@ -49,6 +49,7 @@ Oracle data: RMediation's `memory_exp` (the dataset medfit's own known answers u
 - Taking the **larger** diffLL (the wrong nonlinear branch): statistic 221.05 vs 0.0831.
 - The shifted-label model from the Rd example as written: `mxCompare` gives 0.060332, so the test also proves the labels are right.
 - A medfit older than 0.8.0 installed: the route must error informatively, not return a number.
+- A boundary null (Codex review, G9): `mbco(h0 = SEMFit with `a == 0`, h1 = SEMFit with `a > 0`)` must not return an ordinary chi-square p-value; it must warn that the statistic is a mixture of chi-squares or refuse, exactly as `mbco_sem()` does for an active bound at the null (`R/sem-mbco.R:140-165`). Planted defect: remove the boundary check in `anova()` and the test must turn red.
 
 Run the full parity test only when OpenMx and medfit >= 0.8.0 are installed (`skip_if_not_installed` for both), so CRAN-style checks skip it.
 
@@ -67,7 +68,7 @@ Does not provide (in 0.8.0 as scoped today): bootstrap MBCO or conversion from a
 ## 5. Definition of done
 
 - New route implemented, documented, NEWS entry; OpenMx path unchanged and its tests green.
-- Parity test above present, with the three planted defects demonstrably red when each mechanism is removed.
+- Parity test above present, with the four planted defects demonstrably red when each mechanism is removed.
 - Strict-flavor `devtools::check()` clean or with only pre-existing notes, counts reported.
 - No CRAN submission; the medfit-on-CRAN dependency recorded in `.STATUS`.
 - Report back to the medfit session with: branch name, commit, test counts, and any API mismatch found.

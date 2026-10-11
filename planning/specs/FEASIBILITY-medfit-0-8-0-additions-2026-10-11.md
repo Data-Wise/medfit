@@ -31,7 +31,7 @@ Main risk first: for question 1, medfit and RMediation both exporting a function
 
 **What medfit does under A (S):**
 - Generalize `mbco_sem(fit, a, b)` to `mbco_sem(fit, paths)` or keep `a`, `b` and add a `paths` form, so a product of k labeled paths is tested by the minimum of k linear refits (see 2). Keep the current signature working.
-- Ship `anova()` / two-model LRT for `SEMFit` (G9) as the general building block.
+- Ship `anova()` / two-model LRT for `SEMFit` (G9) as the general building block. It must detect boundary nulls (an active bound or inequality on a tested parameter) and refuse or warn instead of returning a chi-square p-value, as `mbco_sem()` does today (`R/sem-mbco.R:140-165`; Codex review, G9).
 - Do not export a function named `mbco` from medfit.
 
 ## 2. General nonlinear constraint such as `b1*b2*b3`
@@ -55,7 +55,7 @@ Main risk first: for question 1, medfit and RMediation both exporting a function
 
 **3a. Non-Gaussian families (binary, count, positive):**
 - **What exists [V]:** `fit_mediation()` with `family_y`/`family_m` fits any glm family; paths are on the **link scale**, where a*b is not a natural indirect effect on the outcome scale (the docs say so, `R/fit-glm.R:117-120`, `methods.qmd:42-46`). `engine = "regmedint"` gives closed-form effects, but only a linear mediator with a linear or logistic outcome (`R/fit-regmedint.R:293-294`). A treatment-by-mediator term needs Gaussian identity-link models (four-way formulas are linear).
-- **Joint test, feasible, S to M [R]:** for a recursive model with no correlated errors the likelihood factors by equation, so the min-of-two LRT reduces to the classic joint significance test (a = 0 from the mediator model, b = 0 from the outcome model, take the weaker). That is valid for any glm family and needs no SEM engine; check the reduction against `mbco_sem()` on Gaussian data before claiming it. It gives a test, not an effect size.
+- **Joint test, feasible, S to M [R]:** for a recursive model with no correlated errors the likelihood factors by equation, so the min-of-two LRT reduces to the classic joint significance test (a = 0 from the mediator model, b = 0 from the outcome model, take the weaker). That needs no SEM engine; check the reduction against `mbco_sem()` on Gaussian data before claiming it. It gives a test, not an effect size. **Family restriction (Codex review, G11):** a likelihood-ratio (chi-square) comparison is valid only for families with a likelihood and a known dispersion (`binomial`, `poisson`). `quasibinomial` and `quasipoisson` have no likelihood (`R/fit-glm.R:444-455` forwards them to `glm`), so their joint significance needs a separate Wald or F procedure; families with an estimated dispersion (`gaussian`, `Gamma`, `inverse.gaussian`) probably do too (unverified; confirm when the recipe is written). The recipe also needs finite, comparable likelihoods on the same rows.
 - **Condition:** interpretation stays on the link scale.
 
 **3b. Effects on the outcome scale (odds ratio, risk difference, counts):**
