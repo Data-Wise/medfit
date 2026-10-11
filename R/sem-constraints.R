@@ -104,6 +104,71 @@
   )
 }
 
+# Zero products (T14). `a*b == 0` is true exactly when `a == 0` or `b == 0`, so a product of labels set to
+# zero is solved as one linear refit per factor and the smallest discrepancy wins: no nonlinear solve, whose
+# Jacobian (b, a) vanishes at the solution and whose local optimum can be the larger branch (OpenMx lands at
+# 221.05 on `memory_exp` where the minimum is 0.083). A row qualifies when it is an equality with a literal 0
+# on one side and, on the other side (defined names substituted), a product of labels and constants that is
+# not already linear: `a*b`, `b1*b2*b3`, `-2*a*b`, `(a*b)*c`, `a*b/2`. Returns, per qualifying row of
+# `constraints`, its index and the distinct labels of the product, or an empty list.
+.sem_product_factors <- function(e) {
+  if (is.numeric(e) && length(e) == 1L) {
+    return(if (e == 0) NULL else character())
+  }
+  if (is.symbol(e)) {
+    return(as.character(e))
+  }
+  if (!is.call(e)) {
+    return(NULL)
+  }
+  a <- as.list(e)[-1L]
+  fac <- switch(as.character(e[[1L]]),
+    `(` = .sem_product_factors(a[[1L]]),
+    `-` = if (length(a) == 1L) .sem_product_factors(a[[1L]]),
+    `*` = {
+      parts <- lapply(a, .sem_product_factors)
+      if (!any(vapply(parts, is.null, TRUE))) unlist(parts)
+    },
+    `/` = if (length(all.vars(a[[2L]])) == 0L && .sem_product_nonzero(a[[2L]])) .sem_product_factors(a[[1L]])
+  )
+  if (is.null(fac)) NULL else as.character(fac)
+}
+
+# The value of a constant expression (no labels), or NA when it is not one finite number.
+.sem_constant_value <- function(e) {
+  if (length(all.vars(e))) {
+    return(NA_real_)
+  }
+  tryCatch(.sem_expr_value(e, numeric()), error = function(err) NA_real_)
+}
+
+.sem_product_nonzero <- function(e) {
+  v <- .sem_constant_value(e)
+  !is.na(v) && v != 0
+}
+
+.sem_zero_product_rows <- function(constraints) {
+  defs <- constraints[constraints$op == ":=", , drop = FALSE]
+  defs <- .sem_defs(stats::setNames(defs$rhs, defs$lhs))
+  out <- list()
+  for (i in which(constraints$op == "==")) {
+    zero <- function(x) identical(.sem_constant_value(.sem_expr_parse(x)), 0)
+    side <- if (zero(constraints$rhs[i])) constraints$lhs[i] else if (zero(constraints$lhs[i])) constraints$rhs[i]
+    if (is.null(side)) {
+      next
+    }
+    tree <- .sem_expr_subst(.sem_expr_parse(side), defs)
+    if (!is.call(tree) || .sem_tree_linear(tree)) {
+      next
+    }
+    fac <- .sem_product_factors(tree)
+    if (length(fac)) {
+      out[[length(out) + 1L]] <- list(row = i, factors = unique(fac))
+    }
+  }
+  out
+}
+
 # The empty constraint set, for code that always wants a `cons` list.
 .sem_no_cons <- function(q) {
   none <- list(A = matrix(0, 0L, q), b = numeric(), text = character())
