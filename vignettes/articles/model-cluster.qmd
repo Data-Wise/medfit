@@ -141,8 +141,11 @@ c(from_lmer_pair = unname(nie(x2)), from_engine = unname(nie(x)))
 - **The treatment must be constant within a cluster.** If it varies,
   `fit_mediation()` stops with "Treatment `X` varies within clusters; 1-1-1
   designs are not supported yet".
-- **No random slopes, no `glmer`.** The models are linear mixed models with a
-  random intercept.
+- **Gaussian linear mixed models only; no `glmer`.** The default is a random
+  intercept. A random slope on the within-cluster mediator term is accepted
+  (`engine_args = list(random_y = ~ M)`); a slope on the treatment, the cluster
+  mean or the raw mediator is not (for the treatment: "A random slope on the
+  treatment (`X`) is not supported: it is constant within clusters").
 - **An outcome model without the cluster-mean term fails** with a message that
   names the term to add (for example `M_cwc + M_cm`).
 - The own and spillover split is a large-cluster approximation, and the interval

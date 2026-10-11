@@ -70,3 +70,21 @@ test_that("the cluster-mean message names the term to add", {
     "has no cluster-mean term for `M`"
   )
 })
+
+test_that("a random slope on the treatment is rejected and one on the within term is accepted", {
+  skip_if_not_installed("lme4")
+  set.seed(3)
+  J <- 26
+  d <- data.frame(school = factor(rep(seq_len(J), each = 8)))
+  d$X <- rep(rep(0:1, length.out = J), each = 8)
+  d$M <- 0.5 * d$X + rnorm(J * 8)
+  d$Y <- 0.3 * d$M + rnorm(J * 8)
+  fit <- function(slope) {
+    suppressWarnings(suppressMessages(
+      fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X", mediator = "M",
+                    engine = "lmer", cluster = "school", engine_args = list(random_y = slope))
+    ))
+  }
+  expect_error(fit(~X), "A random slope on the treatment \\(`X`\\) is not supported: it is constant within clusters")
+  expect_s7_class(fit(~M), ClusterMediationData)
+})
