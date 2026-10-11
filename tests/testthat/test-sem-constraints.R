@@ -471,7 +471,43 @@ test_that("a bounded fit is accepted, its bound reported active, and the project
   expect_length(proj$sign_warnings, 0L)
 })
 
-test_that("a wrong-side active bound warns in the projected gate (and is rejected in the plain one)", {
+test_that("a wrong-side active bound is rejected by both gates, with or without an inactive constraint line", {
+  mod <- sem_model_observed()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  k <- match("Y ~ M", mod$ram$par_names)
+  lb_down <- rep(-Inf, q)
+  lb_down[k] <- fit$theta[k] - 0.3
+  ub <- rep(Inf, q)
+  pt <- pin_at(mod, smp, fit$theta, k, lb_down[k])
+  # a constraint line that never binds (M ~ X below 100) must not change the verdict (T8, audit F4)
+  inactive <- empty_cons(q)
+  e <- numeric(q)
+  e[match("M ~ X", mod$ram$par_names)] <- 1
+  inactive$ineq <- list(A = matrix(e, 1L), b = -100, text = "M ~ X < 100")
+  plain <- .sem_gate(pt, 3L, mod$ram, smp, lb_down, ub)
+  expect_false(plain$accepted)
+  expect_match(plain$reason, "active bound points into the interior (Y ~ M)", fixed = TRUE)
+  for (cons in list(empty_cons(q), inactive)) {
+    g <- .sem_gate(pt, 3L, mod$ram, smp, lb_down, ub, cons)
+    expect_false(g$accepted)
+    expect_identical(g$reason, plain$reason)
+    expect_length(g$sign_warnings, 0L)
+  }
+  # the true constrained optimum (bound above the unconstrained optimum) has the right sign: accepted, no warning
+  lb_up <- rep(-Inf, q)
+  lb_up[k] <- fit$theta[k] + 0.3
+  pt_up <- pin_at(mod, smp, fit$theta, k, lb_up[k])
+  expect_true(.sem_gate(pt_up, 3L, mod$ram, smp, lb_up, ub)$accepted)
+  for (cons in list(empty_cons(q), inactive)) {
+    ok <- .sem_gate(pt_up, 3L, mod$ram, smp, lb_up, ub, cons)
+    expect_true(ok$accepted)
+    expect_length(ok$sign_warnings, 0L)
+  }
+})
+
+test_that("a wrong-side bound beside an active constraint is rejected; a wrong-sign constraint alone still warns", {
   mod <- sem_model_observed()
   smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
   q <- mod$ram$q
@@ -480,19 +516,18 @@ test_that("a wrong-side active bound warns in the projected gate (and is rejecte
   lb_down <- rep(-Inf, q)
   lb_down[k] <- fit$theta[k] - 0.3
   pt <- pin_at(mod, smp, fit$theta, k, lb_down[k])
-  expect_false(.sem_gate(pt, 3L, mod$ram, smp, lb_down, rep(Inf, q))$accepted)
-  g <- .sem_gate(pt, 3L, mod$ram, smp, lb_down, rep(Inf, q), empty_cons(q))
-  expect_true(g$accepted)
-  expect_match(g$sign_warnings, "lower bound of Y ~ M is active")
-  # the true constrained optimum (bound above the unconstrained optimum) has the right sign: no warning
-  lb_up <- rep(-Inf, q)
-  lb_up[k] <- fit$theta[k] + 0.3
-  ok <- .sem_gate(pin_at(mod, smp, fit$theta, k, lb_up[k]), 3L, mod$ram, smp, lb_up, rep(Inf, q), empty_cons(q))
-  expect_true(ok$accepted)
-  expect_length(ok$sign_warnings, 0L)
+  # the unconstrained optimum of M ~ X is about 0.4: the line M ~ X >= its pinned value is active and right-signed
+  j <- match("M ~ X", mod$ram$par_names)
+  e <- numeric(q)
+  e[j] <- -1
+  act <- empty_cons(q)
+  act$ineq <- list(A = matrix(e, 1L), b = pt[j], text = "M ~ X > pinned")
+  g <- .sem_gate(pt, 3L, mod$ram, smp, lb_down, rep(Inf, q), act)
+  expect_false(g$accepted)
+  expect_match(g$reason, "active bound points into the interior (Y ~ M)", fixed = TRUE)
 })
 
-test_that("planted defect: a wrong bound-row sign gives a false alarm on the correct bounded fit", {
+test_that("planted defect: a wrong bound-row sign rejects the correct bounded fit", {
   mod <- sem_model_observed()
   smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
   q <- mod$ram$q
@@ -502,13 +537,15 @@ test_that("planted defect: a wrong bound-row sign gives a false alarm on the cor
   lb_up[k] <- fit$theta[k] + 0.3
   pt <- pin_at(mod, smp, fit$theta, k, lb_up[k])
   good <- .sem_gate(pt, 3L, mod$ram, smp, lb_up, rep(Inf, q), empty_cons(q))
+  expect_true(good$accepted)
   expect_length(good$sign_warnings, 0L)
   src <- paste(deparse(.sem_sign_check), collapse = "\n")
   mut <- sub("e[i] <- -1", "e[i] <- 1", src, fixed = TRUE)
   expect_false(identical(mut, src))
   testthat::local_mocked_bindings(.sem_sign_check = eval(parse(text = mut), environment(.sem_sign_check)))
   bad <- .sem_gate(pt, 3L, mod$ram, smp, lb_up, rep(Inf, q), empty_cons(q))
-  expect_length(bad$sign_warnings, 1L)
+  expect_false(bad$accepted)
+  expect_match(bad$reason, "active bound points into the interior (Y ~ M)", fixed = TRUE)
 })
 
 test_that("gate verdicts and decrement are identical across data scales for a constrained fit", {

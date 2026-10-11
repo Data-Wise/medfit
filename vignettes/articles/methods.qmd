@@ -622,8 +622,11 @@ units, and the Newton decrement $\sqrt{g_r^\top H_r^{-1} g_r}$ on the reduced
 gradient and Hessian of the active-constraint null space is at most
 $10^{-3}$, with a positive definite reduced Hessian. The decrement is scale
 free, so rescaling the data does not change the verdict. The sign of each
-active inequality's multiplier is checked and only warns: a wrong sign means
-the point may not be a local minimum, and the fit is not rejected for it. The
+active inequality's or bound's multiplier is checked: a wrong sign means
+the point may not be a local minimum. A wrong-signed active bound rejects the
+solution, the same verdict the fit without constraints gives (the gradient at an
+active bound points into the interior), whether or not the model also has
+constraint lines; a wrong-signed active inequality constraint only warns. The
 check asks whether non-negative multipliers on the active inequalities and bounds
 (free-sign ones on the equalities) reproduce the gradient, using non-negative
 least squares, so linearly dependent active rows (an equality with a parallel
