@@ -17,6 +17,21 @@
   error, and the residual standard deviation of a Gaussian `glm()` stopped
   `extract_mediation()` with a missing-value error.
 
+## Documentation
+
+* Every cookbook recipe from 1 to 8 now runs after the setup chunk alone. Recipes
+  3, 6, 7 and 8 used fitted models that only an earlier recipe created, which
+  running the page top to bottom hid; a test now runs each recipe in a fresh
+  environment.
+* The cookbook and Getting Started no longer present survey weights as covered
+  by `se_type = "sandwich"`: HC3 standard errors treat the observations as
+  independent, so they do not handle survey clusters, strata or replicate
+  weights.
+* The home page now leads with the r-universe and GitHub installs of 0.7.0 and
+  says that CRAN 0.3.2 does not run the examples (it lacks `mediation_demo`,
+  `fit_sem()`, `mbco_sem()` and the joint and cluster classes). Getting Started,
+  the cookbook and the Reference Card state the version they need.
+
 # medfit 0.7.0
 
 medfit 0.7.0 adds an experimental native maximum-likelihood structural
