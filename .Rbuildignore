@@ -32,3 +32,4 @@
 ^tests/sim$
 ^\.rforge\.yaml$
 ^tasks$
+^scripts$
