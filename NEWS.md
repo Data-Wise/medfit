@@ -71,6 +71,11 @@
   leave several (`a*b > 0.1` is feasible for two positive or two negative paths).
   Models without a nonlinear constraint behave as before.
 
+* A sum of products set to zero (`a1*b1 + a2*b2 == 0`) fits through the same
+  nonlinear route and is documented as best-effort: unlike a single product it has
+  no exact reduction, so the result is the best of the starts tried, and the
+  starts-disagree warning means a better optimum may exist (raise `n_starts`).
+
 ## Bug fixes
 
 * `fit_sem()` now gives the same verdict on a wrong-side active bound whether or

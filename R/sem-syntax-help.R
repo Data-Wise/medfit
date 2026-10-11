@@ -23,7 +23,11 @@
 #' Constraints may be nonlinear in the labels (`cp == a*b`, `a*b == 0.1`,
 #' `a*b > 0.1`, `ab > 0` with `ab := a*b`), solved with the Jacobian recomputed at
 #' every point; a model with one tries every start and keeps the best accepted
-#' solution, warning when the starts disagree. Labels used in a constraint or a definition must be defined in the
+#' solution, warning when the starts disagree. A sum of products
+#' (`a1*b1 + a2*b2 == 0`) has no exact reduction, unlike a single product set to
+#' zero, so it is best-effort: the fit is the best of the starts tried, a
+#' disagreement warning means a better optimum may exist, and `n_starts` raises
+#' the number of starts. Labels used in a constraint or a definition must be defined in the
 #' model. A constraint with no free parameter is an error. Exogenous variables are given free
 #' variances and covariances, as lavaan does with `fixed.x = FALSE`. Mean
 #' structures (`y ~ 1`) are not supported, except that `y ~ 0*1` is accepted.
