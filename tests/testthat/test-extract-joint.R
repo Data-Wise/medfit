@@ -140,6 +140,22 @@ test_that("the joint branch refuses fits outside the closed form", {
                       mediator_models = list(lm(M2 ~ X + M1 + C, d[-2, ]))),
     "same rows"
   )
+  # Same rows in a different order, with the row names reset to 1..n: the names
+  # agree, so only the values can tell. Parallel mediators with correlated errors
+  # make the cross-equation block nonzero, so mispairing the residuals is not
+  # harmless (serial chains have exactly zero cross blocks).
+  dpar <- sim_joint("parallel", "M2", n = 300)$data
+  par_call <- function(d1, d2, dy) {
+    extract_mediation(lm(M1 ~ X + C, d1), model_y = lm(Y ~ X * M2 + M1 + C, dy),
+                      treatment = "X", mediator = c("M1", "M2"),
+                      mediator_models = list(lm(M2 ~ X + C, d2)))
+  }
+  shuffled <- dpar[sample(nrow(dpar)), ]
+  rownames(shuffled) <- NULL
+  expect_error(par_call(dpar, shuffled, dpar), "same rows.*in the same order.*`X`")
+  expect_error(par_call(shuffled, dpar, dpar), "same rows")
+  # The guard does not reject a consistent reordering of every model.
+  expect_no_error(par_call(shuffled, shuffled, shuffled))
   # Reversed mediator order: M2's model regresses on M1, listed after it.
   expect_error(
     extract_mediation(lm(M2 ~ X + M1 + C, d), model_y = lm(Y ~ X * M2 + M1 + C, d),

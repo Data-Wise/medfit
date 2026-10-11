@@ -70,6 +70,34 @@
 }
 
 
+# First variable that two model frames share but hold with different values, or
+# NULL. A variable keeps its name only when it is the same expression, so equal
+# names must mean equal columns. Columns such as `(weights)` are not variables.
+.joint_shared_value_clash <- function(frames, labels) {
+  same <- function(a, b) {
+    if (is.factor(a) || is.factor(b) || is.character(a) || is.character(b)) {
+      return(identical(as.character(a), as.character(b)))
+    }
+    isTRUE(all.equal(unname(as.matrix(a)), unname(as.matrix(b)),
+                     tolerance = 0, check.attributes = FALSE))
+  }
+  for (i in seq_along(frames)[-1L]) {
+    nm <- names(frames[[i]])
+    for (v in nm[!startsWith(nm, "(")]) {
+      for (j in seq_len(i - 1L)) {
+        if (v %in% names(frames[[j]])) {
+          if (!same(frames[[j]][[v]], frames[[i]][[v]])) {
+            return(list(var = v, first = labels[j], second = labels[i]))
+          }
+          break
+        }
+      }
+    }
+  }
+  NULL
+}
+
+
 # Covariate terms of a model: term labels involving neither the treatment nor a
 # mediator.
 .joint_covariate_terms <- function(model, vars) {
@@ -164,6 +192,16 @@
   if (!all(vapply(rows[-1L], identical, logical(1), rows[[1L]]))) {
     .stop_joint("all models must be fit to the same rows (model-frame row ",
                 "names differ). Fit every model to the same complete cases.")
+  }
+  # Row names alone cannot tell a reordered frame whose names were reset to
+  # 1..n: the cross-equation covariance pairs the residuals by position, so a
+  # variable that two models share must hold the same values in the same order.
+  clash <- .joint_shared_value_clash(lapply(all_models, stats::model.frame), labels)
+  if (!is.null(clash)) {
+    .stop_joint("all models must be fit to the same rows in the same order (the ",
+                sprintf("shared variable `%s` has different values in the %s and %s ",
+                        clash$var, clash$first, clash$second),
+                "models). Fit every model to the same data frame.")
   }
 
   # Identical covariate sets.
