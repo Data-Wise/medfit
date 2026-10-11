@@ -168,8 +168,8 @@ The engine is `"glm"` by default. Others:
 |---|---|---|
 | `"glm"` | the default; continuous, binary or count variables | [Simple](model-simple.html), [glm families](model-glm-families.html) |
 | `"regmedint"` | you want the closed-form regression estimator | [regmedint](model-regmedint.html) |
-| `"lmer"` | the treatment is assigned to whole clusters | [Cookbook recipe 9](cookbook.html#cluster-randomized-trial) |
-| `"native"` | a latent mediator, constraints, or a model written as syntax (experimental) | [Cookbook recipe 11](cookbook.html#a-latent-mediator-native-engine) |
+| `"lmer"` | the treatment is assigned to whole clusters | [Cluster-randomized trials](model-cluster.html) |
+| `"native"` | a latent mediator, constraints, or a model written as syntax (experimental) | [Native engine](model-native.html) |
 
 ## Where next
 

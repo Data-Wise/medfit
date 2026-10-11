@@ -131,9 +131,11 @@ Find the row that matches your data, then open its page. All of them are on the
 | Mediators in a chain | [Serial mediation](https://data-wise.github.io/medfit/articles/model-serial.html) |
 | Mediators side by side | [Parallel mediation](https://data-wise.github.io/medfit/articles/model-parallel.html) |
 | Several mediators with products | [Joint mediation](https://data-wise.github.io/medfit/articles/model-joint.html) |
-| Treatment assigned to whole clusters | [Cookbook recipe 9](https://data-wise.github.io/medfit/articles/cookbook.html#cluster-randomized-trial) |
-| A lavaan fit | [Cookbook recipe 10](https://data-wise.github.io/medfit/articles/cookbook.html#i-use-lavaan) |
-| A latent mediator or constraints | [Cookbook recipe 11](https://data-wise.github.io/medfit/articles/cookbook.html#a-latent-mediator-native-engine) |
+| Treatment assigned to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.html) |
+| A lavaan fit | [lavaan fits](https://data-wise.github.io/medfit/articles/model-lavaan.html) |
+| A latent mediator | [Native: a latent mediator](https://data-wise.github.io/medfit/articles/model-native-latent.html) |
+| Constraints, or a test of the indirect effect | [Native: constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.html) |
+| Serial or parallel mediators written as syntax | [Native: several mediators and weights](https://data-wise.github.io/medfit/articles/model-native-multi.html) |
 
 Already have fitted `lm`, `glm`, `lmer` or lavaan models? `extract_mediation()`
 turns them into the same objects:

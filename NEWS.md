@@ -60,6 +60,11 @@
   weights and robust standard errors, the `regmedint` engine, serial, parallel and joint
   mediation. Articles are now grouped in an index. A test keeps every model page on the
   landing page, in the index and in the menu, and every cookbook anchor real.
+* Six more model pages: cluster-randomized trials (2-1-1), lavaan fits, and four on
+  the native engine (paths and defined parameters, a latent mediator, constraints and
+  the MBCO test, several mediators and weights). They join the Models menu, the
+  landing page and the articles index. A test triggers each error message the pages
+  quote, so a reworded message fails the tests before a page goes stale.
 * The home page and Getting Started are rewritten so they are quick to skim: a "What's new"
   table, a 60-second start, a "pick your model" table, long examples folded away, and
   Getting Started cut to four steps that link to the model pages. A test checks that

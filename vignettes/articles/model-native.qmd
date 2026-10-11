@@ -1,0 +1,119 @@
+---
+title: "Native engine: paths and defined parameters"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Write the model as syntax and fit it by maximum likelihood with no other package.
+This is the first of four pages on the native engine, which is experimental.
+Part of the [Models](models.html) collection.
+
+| | |
+|---|---|
+| **Structure** | any path model you can write as syntax; this page uses simple mediation |
+| **Class returned** | `SEMFit`, then `MediationData` from `extract_mediation()` |
+| **Routes** | `fit_sem(syntax, data)`, or `fit_mediation(model = syntax, engine = "native")` |
+| **Syntax** | `?"medfit-syntax"` lists every statement |
+
+The four pages: this one (paths and defined parameters),
+[a latent mediator](model-native-latent.html),
+[constraints and the MBCO test](model-native-constraints.html), and
+[several mediators and weights](model-native-multi.html).
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+```
+
+## Fit it
+
+Label a path with `name * variable`; `:=` defines a new quantity from labels and
+gives it a delta-method standard error.
+
+```{r}
+#| label: fit
+syntax <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + cp * treatment + covariate1 + covariate2
+  ab := a * b
+  total := cp + a * b
+"
+fit <- fit_sem(syntax, mediation_demo)
+fit
+```
+
+`fit_sem()` returns a `SEMFit`. Read the defined parameters straight from it:
+
+```{r}
+#| label: defined
+fit@defined
+```
+
+`summary(fit)` prints the full parameter table and the optimizer diagnostics.
+
+## Get the usual objects
+
+`extract_mediation()` turns the fit into a `MediationData`, so `nie()`, `tidy()`
+and the bootstrap work as on any other page:
+
+```{r}
+#| label: extract
+x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
+                       outcome = "outcome")
+class(x)[1]
+tidy(x, type = "effects", conf.int = TRUE)
+```
+
+For one mediator, `fit_mediation()` does both steps:
+
+```{r}
+#| label: fit-mediation
+x2 <- fit_mediation(model = syntax, data = mediation_demo,
+                    treatment = "treatment", mediator = "mediator1",
+                    engine = "native")
+nie(x2)
+```
+
+## Compared with the `glm` engine
+
+The two engines agree on the estimates and differ slightly in the standard
+errors, because the native engine uses maximum-likelihood (not least-squares)
+variances:
+
+```{r}
+#| label: compare
+glm_fit <- fit_mediation(
+  outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo, treatment = "treatment", mediator = "mediator1"
+)
+rbind(native = tidy(x, type = "effects")$std.error,
+      glm = tidy(glm_fit, type = "effects")$std.error)
+```
+
+## Limits
+
+- **No mean structure.** `y ~ 1` is not supported; the engine fits covariance
+  structures only. A model with a free intercept stops with "mean structure is not
+  supported".
+- **A label must be defined** before `:=` can use it; an unknown label stops with
+  "unknown parameter label".
+- **Exogenous variables get free variances and covariances**, as lavaan does with
+  `fixed.x = FALSE`, so they appear in the parameter table.
+- **No four-way decomposition** from the native engine.
+- `summary()` reports diagnostics, including an improper solution and any active
+  bound or constraint; read them before trusting a fit.
+
+## Related
+
+[Cookbook recipe 11](cookbook.html#a-latent-mediator-native-engine) |
+[Methods and Formulas](methods.html) | `?"medfit-syntax"`
