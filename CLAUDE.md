@@ -39,7 +39,7 @@ covr::package_coverage()          # Target: >90%
 ## About This Package
 
 **medfit** is the foundation package for the mediationverse ecosystem, providing:
-- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`
+- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`, `SEMFit` (native SEM fit, experimental)
 - **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan
 - **Fitting**: Formula-based `fit_mediation()` with the `glm` and `regmedint` engines, case `weights`, and `se_type = "sandwich"` (HC3); `fit_sem()` and `fit_mediation(engine = "native", model = )` fit medfit model syntax with the native ML engine (experimental, `SEMFit`)
 - **Inference**: delta-method effect SEs in `tidy()`/`confint()`; bootstrap (parametric, nonparametric, plugin)
@@ -74,7 +74,7 @@ R/
 ├── aaa-imports.R           # Package imports
 ├── aab-generics.R          # S7 generics (load before methods!)
 ├── medfit-package.R        # Package documentation
-├── classes.R               # S7 class definitions (all seven classes)
+├── classes.R               # S7 class definitions (all eight classes)
 ├── data.R                  # mediation_demo documentation
 ├── fit-glm.R               # fit_mediation(), glm engine, weights/sandwich
 ├── fit-regmedint.R         # regmedint engine adapter
@@ -106,7 +106,7 @@ R/
 **Arguments:**
 - `formula_y`, `formula_m` - Model specifications
 - `treatment`, `mediator`, `outcome` - Variable names
-- `engine` - "glm", "lmer", "brms"
+- `engine` - "glm", "lmer", "regmedint", "native" ("brms" is planned)
 - `method` - "parametric", "nonparametric", "plugin"
 - `n_boot`, `ci_level` - Bootstrap parameters
 
@@ -533,6 +533,7 @@ During `devtools::load_all()`:
 ### Planning Documents
 
 **Package:** `planning/medfit-roadmap.md`
+**Active plan:** `tasks/plan.md` and `tasks/todo.md` (0.8.0; `^tasks$` is Rbuildignored)
 **Ecosystem:** `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`
 
 ### Related Packages
@@ -549,7 +550,7 @@ During `devtools::load_all()`:
 **Last Updated**: 2026-10-11
 **Maintained by**: medfit development team
 
-**Current status** (2026-10-10): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.7.0** (released 2026-10-10, tag `v0.7.0`; GitHub-only, not submitted to CRAN). 0.7.0 ships the experimental native maximum-likelihood SEM engine (`fit_sem()`/`SEMFit`, `fit_mediation(engine = "native")`, sampling weights and the sandwich covariance, `mbco_sem()`, and the OpenMx parity and constrained gates; #110-#124) with its docs (`?"medfit-syntax"`, cookbook recipe 11, the native section of the methods article). Nonlinear constraints (S1, PR 11) are planned for a later release. 0.6.0 (2026-10-09) shipped Ext D module 1, 2-1-1 cluster mediation (`ClusterMediationData`, `engine = "lmer"`, `se_type = "kr"`, cluster bootstrap; #90-#92, #95, #100), the Reference Card and Cookbook articles (#94, #97), and 30 fewer published internal reference pages (#98). 0.5.0 (2026-09-25) changed two results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). The site documents 0.7.0 plus the unreleased docs overhaul (#134-#139: a Models menu with 14 model pages, a home page and Getting Started rewrite, and a Guides menu), deployed 2026-10-11 from `dev` with `gh workflow run pkgdown.yaml --ref dev`; `nobs()` now counts the rows the models used (#138). Articles evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`. 
+**Current status** (2026-10-11): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.7.0** (released 2026-10-10, tag `v0.7.0`; GitHub-only, not submitted to CRAN). 0.7.0 ships the experimental native maximum-likelihood SEM engine (`fit_sem()`/`SEMFit`, `fit_mediation(engine = "native")`, sampling weights and the sandwich covariance, `mbco_sem()`, and the OpenMx parity and constrained gates; #110-#124) with its docs (`?"medfit-syntax"`, cookbook recipe 11, the native section of the methods article). Nonlinear constraints (S1, PR 11) are planned for 0.8.0 together with `anova()` for `SEMFit` and a lavaan comparison article (plan `tasks/plan.md`, task list `tasks/todo.md`, decisions `planning/specs/GRILL-medfit-0-8-0-2026-10-11.md`). 0.6.0 (2026-10-09) shipped Ext D module 1, 2-1-1 cluster mediation (`ClusterMediationData`, `engine = "lmer"`, `se_type = "kr"`, cluster bootstrap; #90-#92, #95, #100), the Reference Card and Cookbook articles (#94, #97), and 30 fewer published internal reference pages (#98). 0.5.0 (2026-09-25) changed two results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). The site documents 0.7.0 plus the unreleased docs overhaul (#134-#139: a Models menu with 14 model pages, a home page and Getting Started rewrite, and a Guides menu), deployed 2026-10-11 from `dev` with `gh workflow run pkgdown.yaml --ref dev`; `nobs()` now counts the rows the models used (#138). Articles evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`. 
 
 ### CRAN check practice (learned 2026-06-10, extended 2026-07-20)
 
