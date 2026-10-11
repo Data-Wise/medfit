@@ -19,7 +19,10 @@ lm_y2 <- function() {
   lm(outcome ~ treatment + mediator1 + mediator2 + covariate1 + covariate2, mediation_demo)
 }
 
-case <- function(fragment, expr) list(fragment = fragment, expr = substitute(expr))
+# `pkg` names a Suggests package the case needs; the case is skipped when it is absent.
+case <- function(fragment, expr, pkg = NULL) {
+  list(fragment = fragment, expr = substitute(expr), pkg = pkg)
+}
 
 cases <- list(
   case(
@@ -45,11 +48,13 @@ cases <- list(
   case("is only used with engine = \"lmer\"", fit_glm(cluster = "covariate1")),
   case(
     "engine = \"regmedint\" does not support",
-    fit_glm(engine = "regmedint", weights = rep(1, nrow(mediation_demo)))
+    fit_glm(engine = "regmedint", weights = rep(1, nrow(mediation_demo))),
+    pkg = "regmedint"
   ),
   case(
     "supports se_type = \"model\" only",
-    fit_glm(engine = "regmedint", se_type = "sandwich")
+    fit_glm(engine = "regmedint", se_type = "sandwich"),
+    pkg = "regmedint"
   ),
   case(
     "must be a numeric 0/1 variable for engine = \"regmedint\"",
@@ -57,21 +62,24 @@ cases <- list(
       mediator1 ~ covariate1 + covariate2,
       data = mediation_demo,
       treatment = "covariate1", mediator = "mediator1", engine = "regmedint"
-    )
+    ),
+    pkg = "regmedint"
   ),
   case(
     "regmedint fits the mediator model with the same covariates as the outcome model",
     fit_mediation(outcome ~ treatment + mediator1 + covariate1, fm,
       data = mediation_demo, treatment = "treatment", mediator = "mediator1",
       engine = "regmedint"
-    )
+    ),
+    pkg = "regmedint"
   ),
   case(
     "contains the random-effect term",
     fit_mediation(outcome ~ treatment + mediator1 + (1 | covariate1), fm,
       data = mediation_demo, treatment = "treatment", mediator = "mediator1",
       engine = "lmer", cluster = "covariate1"
-    )
+    ),
+    pkg = "lme4"
   ),
   case(
     "must be in data",
@@ -146,6 +154,7 @@ cases <- list(
 
 test_that("every error the Troubleshooting guide quotes is real", {
   for (case in cases) {
+    if (!is.null(case$pkg) && !requireNamespace(case$pkg, quietly = TRUE)) next
     expect_error(eval(case$expr), case$fragment, fixed = TRUE, info = case$fragment)
   }
 })
