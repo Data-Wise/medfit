@@ -42,7 +42,7 @@ Main risk first: for question 1, medfit and RMediation both exporting a function
 
 | Piece | Size | Note |
 |---|---|---|
-| Zero-product branch split for k factors | S | `b1*b2*b3 == 0` is the union of three linear nulls (`b1 == 0`, `b2 == 0`, `b3 == 0`); solve each as a linear refit, keep the smallest discrepancy. Exact, no nonlinear solve; same idea as today's two-branch split **[R]** |
+| Zero-product branch split for k factors | S | `b1*b2*b3 == 0` is the union of three linear nulls (`b1 == 0`, `b2 == 0`, `b3 == 0`); solve each as a linear refit, keep the smallest discrepancy. Exact, no nonlinear solve; same idea as today's two-branch split **[R]**. Each refit must start clean, not from the full fit's estimates: an OpenMx null built from the fitted full model returned an infeasible point (diffLL 0 instead of 0.0830995) in the RMediation session **[V, by that session]**; see plan task T14 |
 | MBCO for a product of k paths | S | Minimum of k linear-refit LRTs referred to chi-square(1): an intersection-union test, whose size is at most alpha because the null is the union and rejection needs every component rejected **[R]**. Check against the literature before releasing |
 | Parity gate: add one three-product and one sum-of-products problem | S to M | Extends the ~240-run gate (G6) |
 | Sum of products (`a1*b1 + a2*b2 == 0`, parallel mediators) | M, **hard** | Not a union of linear nulls, so there is no exact split; falls back to best-of-n multi-start with the spread warning (G2 behavior). Label as best-effort |

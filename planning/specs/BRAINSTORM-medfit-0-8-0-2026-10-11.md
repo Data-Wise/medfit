@@ -126,7 +126,7 @@ of nloptr forces it. If nloptr fails CRAN checks the fallback is Suggests behind
 
 | Pkg | Move | Notes |
 |---|---|---|
-| RMediation | Add an `mbco()` method on (SEMFit, SEMFit) built on `anova()` and W3 (G10); keep the OpenMx path (it stays Suggests, and `mbco()` takes OpenMx models and has bootstrap types); separate tickets: `ci_medfit.R` reuse `.path_se()`, the hard lavaan Import (used for `lav_matrix_vech_reverse`, not MBCO) | additive, not a replacement; see the HANDOFF |
+| RMediation | Add an `mbco()` method on (SEMFit, SEMFit) built on `anova()` and W3 (G10); keep the OpenMx path (it stays Suggests, and `mbco()` takes OpenMx models and has bootstrap types); separate tickets: `ci_medfit.R` reuse `.path_se()`, the hard lavaan Import (used for `lav_matrix_vech_reverse`, not MBCO) | additive, not a replacement; see the HANDOFF. Oracle fixture and the `mbco()` class-check fix are in Data-Wise/rmediation#36 (2026-10-11); the method itself waits for `anova()` and W3 |
 | medsim | Delegate copied a/b fits, Sobel SE, Rubin variance, MBCO, MC CI to owners; `methods_pmed.R` mislabeled MBCO | largest duplication |
 | probmed | Bootstrap re-implements `bootstrap_mediation()`; depends on internal `m_<pred>`/`y_<pred>` names | MBCO there is a different estimand, blocked on W3 |
 | medfit | Export a sanctioned API: coefficient-name contract and a pooled-object constructor | replaces internals probmed and missingmed lean on (`pool.R:130-134` nulls `@data`/`@sigma_m` to pass the validator) |
