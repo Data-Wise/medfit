@@ -12,6 +12,12 @@ execute:
   echo: true
 ---
 
+::: {.callout-note}
+This site documents medfit 0.7.0 or later. CRAN has 0.3.2, which lacks
+`mediation_demo` and the native, joint and cluster functions; install from
+GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#installation)).
+:::
+
 ## What is medfit?
 
 **medfit** provides unified infrastructure for mediation analysis in R. It offers:
@@ -228,12 +234,13 @@ med_data@c_prime # treatment to outcome, the direct path
 
 ### Case Weights and Robust Standard Errors
 
-`weights` passes case weights (for example survey weights or
-inverse-probability weights) to both model fits. Model-based standard errors
-assume the weights are known precision weights, which inverse-probability
-weights are not, so pair them with `se_type = "sandwich"` for
-heteroskedasticity-consistent (HC3) standard errors; this needs the suggested
-sandwich package. The example builds stabilized inverse-probability weights
+`weights` passes case weights (for example inverse-probability weights) to both
+model fits. Model-based standard errors assume the weights are known precision
+weights, which inverse-probability weights are not, so pair them with
+`se_type = "sandwich"` for heteroskedasticity-consistent (HC3) standard errors;
+this needs the suggested sandwich package. HC3 treats the observations as
+independent, so it does not handle survey clusters, strata or replicate
+weights. The example builds stabilized inverse-probability weights
 for the treatment from the covariates. `mediation_demo`'s treatment is
 randomized, so the weights stay close to 1 and mainly illustrate the calls:
 

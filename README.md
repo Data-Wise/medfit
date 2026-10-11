@@ -29,25 +29,8 @@
 
 ## Installation
 
-Install the stable version from CRAN:
-
-```r
-install.packages("medfit")
-```
-
-> **Known issues in CRAN 0.3.2:** serial `te()`/`pm()` omit paths that skip a
-> mediator, and `confint()` path intervals can use the wrong covariance rows.
-> Both are fixed in the development version; see
-> [#83](https://github.com/Data-Wise/medfit/issues/83) for details and workarounds.
-
-Or install the development version from GitHub:
-
-```r
-# install.packages("pak")
-pak::pak("data-wise/medfit")
-```
-
-Or from the [Data-Wise r-universe](https://data-wise.r-universe.dev/medfit)
+This site documents medfit 0.7.0. Install that version from the
+[Data-Wise r-universe](https://data-wise.r-universe.dev/medfit)
 (pre-built binaries — no compiler needed):
 
 ```r
@@ -56,6 +39,26 @@ install.packages(
   repos = c("https://data-wise.r-universe.dev", "https://cloud.r-project.org")
 )
 ```
+
+Or from GitHub (this compiles `nloptr` unless `lme4` already brought it in):
+
+```r
+# install.packages("pak")
+pak::pak("data-wise/medfit")
+```
+
+CRAN has an older version, 0.3.2:
+
+```r
+install.packages("medfit")
+```
+
+> **CRAN 0.3.2 does not run the examples on this site.** It lacks
+> `mediation_demo`, `fit_sem()`, `mbco_sem()` and the joint and cluster
+> mediation classes. Its known issues: serial `te()`/`pm()` omit paths that skip
+> a mediator, and `confint()` path intervals can use the wrong covariance rows.
+> Both are fixed in 0.7.0; see
+> [#83](https://github.com/Data-Wise/medfit/issues/83) for details and workarounds.
 
 ## Quick Start
 

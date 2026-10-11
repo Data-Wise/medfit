@@ -52,3 +52,60 @@ test_that("the introduction articles point at the refcard and the cookbook", {
     expect_true(grepl("](cookbook.html)", txt, fixed = TRUE), info = a)
   }
 })
+
+# Each task recipe must run after the setup chunk alone, so a reader can jump to
+# any recipe. Running the page top to bottom hides a fit that only an earlier
+# recipe defines. The cluster, lavaan and native recipes (9-11) simulate their own
+# data and are slow, so recipes 1-8, which share fitted models, are checked here.
+cookbook_recipe_chunks <- function(cb_lines) {
+  heads <- grep("^## ", cb_lines)
+  bounds <- cbind(start = c(1L, heads), end = c(heads - 1L, length(cb_lines)))
+  chunks <- function(a, b) {
+    seg <- cb_lines[a:b]
+    out <- list()
+    i <- 1L
+    while (i <= length(seg)) {
+      if (grepl("^```\\{r", seg[i])) {
+        j <- i + 1L
+        while (!grepl("^```$", seg[j])) j <- j + 1L
+        body <- seg[(i + 1L):(j - 1L)]
+        out[[length(out) + 1L]] <- body[!grepl("^#\\|", body)]
+        i <- j
+      }
+      i <- i + 1L
+    }
+    out
+  }
+  lapply(seq_len(nrow(bounds)), function(k) chunks(bounds[k, "start"], bounds[k, "end"]))
+}
+
+run_cookbook_recipe <- function(setup, chunks) {
+  setup <- setup[!grepl("^library\\(medfit\\)", setup)]
+  env <- new.env(parent = asNamespace("medfit"))
+  tryCatch({
+    suppressMessages(suppressWarnings({
+      eval(parse(text = setup), env)
+      env$tidy <- generics::tidy
+      for (ch in chunks) eval(parse(text = ch), env)
+    }))
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+
+test_that("each cookbook recipe 1-8 runs after the setup chunk alone", {
+  article_text("cookbook.qmd") # skips when the vignettes are absent
+  parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
+  setup <- unlist(parsed[[1L]])
+  for (k in 1:8) {
+    err <- run_cookbook_recipe(setup, parsed[[k + 1L]])
+    expect_null(err, info = sprintf("recipe %d fails on its own: %s", k, err))
+  }
+})
+
+test_that("planted defect: a recipe that needs an earlier recipe's fit is caught", {
+  article_text("cookbook.qmd")
+  parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
+  setup <- unlist(parsed[[1L]])
+  err <- run_cookbook_recipe(setup, list("fit_defined_in_another_recipe <- 1", "xb <- fit_never_defined"))
+  expect_match(err, "fit_never_defined")
+})

@@ -12,7 +12,9 @@ execute:
   echo: true
 ---
 
-Quick lookup for users who already know medfit. Explanations are in the
+Quick lookup for users who already know medfit. Needs medfit 0.7.0 or later
+(CRAN has 0.3.2; install from GitHub or r-universe, see the
+[home page](https://data-wise.github.io/medfit/#installation)). Explanations are in the
 [articles](getting-started.html); formulas are in
 [Methods and Formulas](methods.html); task recipes are in the
 [Cookbook](cookbook.html).
