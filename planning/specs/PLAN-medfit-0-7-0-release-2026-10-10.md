@@ -40,7 +40,7 @@ Every step marked **A#** needs an explicit go from the user; approval of one ste
 | F19 | Codex review, accepted: G11 compared failing test names only, so an already-failing test could gain failed assertions or new errors, and new skips or lost execution were invisible; the CSV omitted failure messages | G11 rewritten: assertion-level comparison, block on any worsening |
 | F20 | Codex review, accepted: G12 let a nonempty diff be "resolved" by rerunning gates against the old worktree and the old `lib-cand`, and lacked a fetch after the merge | G12 rewritten: record the tested tree, fetch, require tree equality, rebuild `lib-cand` from the release tree on any difference; same check again before the release PR |
 
-**Decided D-fwd (ledger R11, 2026-10-10): text fix only.** No forwarding mechanism in 0.7.0. The NEWS and roxygen correction lands on `fix/model-arg-advice` (`b10789b`), so the bump PR no longer carries it: strike the two checklist rows for NEWS l.66-69 and `R/fit-glm.R`/`man/fit_mediation.Rd` once that PR merges, and rebase the bump branch on the new `dev`.
+**Decided D-fwd (ledger R11, 2026-10-10): text fix only.** No forwarding mechanism in 0.7.0. The NEWS and roxygen correction lands on `fix/model-arg-advice` (`b10789b`), so the bump PR no longer carries it. #125 merged as `fd86211` on 2026-10-10; the two checklist rows are struck below, and the bump branch cuts from `origin/dev` at or after `fd86211`.
 
 ## 1. Bump checklist (worktree `~/.git-worktrees/medfit/chore-release-0.7.0`)
 
@@ -52,8 +52,8 @@ Every step marked **A#** needs an explicit go from the user; approval of one ste
 | `NEWS.md` | Dependencies (l.86) | `nloptr (>= 1.0.4)` in Imports (compiled; `pak::pak("data-wise/medfit")` builds it unless lme4 already brought it; r-universe ships binaries); `OpenMx` in Suggests |
 | `NEWS.md` | after l.49 | Nonlinear constraints planned for a later release (S1 review, PR 11); until then they error by name |
 | `NEWS.md` | new `## Documentation` | Cookbook recipe 11, `?"medfit-syntax"`, native section of the methods article, refcard rows |
-| `NEWS.md` | Behavior change, l.66-69 | Replace "spell out the `glm()` argument or drop it" (wrong, F18) with: a `model` argument, in any spelling or abbreviation (`model`, `mod`), is now taken by `fit_mediation()` and is an error with the glm engine; drop it. `glm()`'s own `model` argument cannot be passed through `fit_mediation()` |
-| `R/fit-glm.R`, `man/fit_mediation.Rd` | roxygen `@param model` (l.49-50) | Same correction; run `devtools::document()` (G1) so the `.Rd` follows. Comment-only change in R code, but G2-G6 still rerun on the final tree |
+| ~~`NEWS.md`~~ | ~~Behavior change, l.66-69~~ | **Done** in #125 (squash `fd86211`, 2026-10-10): corrected to say `model` is an error with the glm engine and to drop it. Do not redo; the bump branch cuts from `origin/dev` after it |
+| ~~`R/fit-glm.R`, `man/fit_mediation.Rd`~~ | ~~roxygen `@param model`~~ | **Done** in #125 (`fd86211`), with a test pinning `model = FALSE` and `mod = FALSE`. The suite for that PR: 3320 passed, 0 failed, 3 skipped |
 | `NEWS.md` | New features | After R1 passes: one clause that the probmed plugin and parametric bootstrap work on observed single-mediator native fits (#105). Rewrap l.45 |
 | `README.md` | l.364 | Citation `0.6.0` becomes `0.7.0` |
 | `CLAUDE.md`, `AGENTS.md` | l.548, l.551 | `Last Updated`; status paragraph: 0.7.0 on main, GitHub and r-universe (tag `v0.7.0`, contents #110-#124); 0.6.0 moves to history. Keep the two identical |
