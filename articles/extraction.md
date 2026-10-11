@@ -5,9 +5,13 @@
 The
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
 function provides a standardized interface for extracting mediation
-structures from fitted models. It works with: - **lm/glm** models (base
-R) - implemented - **lavaan** SEM models - implemented - **lmer** mixed
-models (cluster-level treatment, 2-1-1) - implemented
+structures from fitted models. It works with:
+
+- **lm/glm** models (base R) - implemented
+- **lavaan** SEM models - implemented
+- **lmer** mixed models (cluster-level treatment, 2-1-1) - implemented
+- **[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)**
+  native SEM fits (experimental) - implemented
 
 Extraction returns the S7 class that matches the structure:
 `MediationData`, `InteractionMediationData`, `SerialMediationData`,
@@ -24,6 +28,16 @@ Extraction returns the S7 class that matches the structure:
 it handles fitting and extraction in one step. Use
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
 when you need more control or already have fitted models.
+
+### Which section do I need?
+
+| I have | Go to |
+|----|----|
+| Fitted `lm`/`glm` models, one mediator or several | [Extracting from lm/glm Models](#extracting-from-lmglm-models) |
+| A treatment-by-mediator term in the outcome model | [Four-way decomposition](#treatment-mediator-interaction-four-way-decomposition) |
+| Treatment assigned to whole clusters (`lmer` fits) | [Extracting from lmer Models](#extracting-from-lmer-models-cluster-level-treatment) |
+| A `lavaan` fit | [Extracting from lavaan Models](#extracting-from-lavaan-models) |
+| Model syntax with latent variables ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)) | [Extracting from a Native SEM Fit](#extracting-from-a-native-sem-fit) |
 
 ## Quick Comparison: med() vs extract_mediation()
 
@@ -369,19 +383,23 @@ te(med_serial_lm)
     Total Effect (TE): 0.5386
 
 Include the treatment and every earlier mediator in each downstream
-model, as the SEM version below does. Only `mediator2`’s coefficient
-becomes the `b` path, but `mediator1` also affects `outcome` directly in
-`mediation_demo`, so an outcome model without it
-(`outcome ~ treatment + mediator2 + ...`) confounds `b`: `mediator1` is
-a common cause of `mediator2` and `outcome`. The product `a * d1 * b` is
-then the effect through the full chain
-`treatment -> mediator1 -> mediator2 -> outcome` only; the direct
-`mediator1 -> outcome` path is not part of it. `nie(type = "total")`
-adds the paths that skip a mediator, and
-[`te()`](https://data-wise.github.io/medfit/reference/te.md) and
-[`pm()`](https://data-wise.github.io/medfit/reference/pm.md) use every
-path, so here the chain carries about 0.08 of a 0.37 total indirect
-effect.
+model, as the SEM version below does:
+
+- **Why:** only `mediator2`’s coefficient becomes the `b` path, but
+  `mediator1` also affects `outcome` directly in `mediation_demo`. An
+  outcome model without it (`outcome ~ treatment + mediator2 + ...`)
+  confounds `b`, because `mediator1` is a common cause of `mediator2`
+  and `outcome`.
+- **What [`nie()`](https://data-wise.github.io/medfit/reference/nie.md)
+  is:** the product `a * d1 * b`, the effect through the full chain
+  `treatment -> mediator1 -> mediator2 -> outcome` only. The direct
+  `mediator1 -> outcome` path is not part of it.
+- **Every path:** `nie(type = "total")` adds the paths that skip a
+  mediator, and
+  [`te()`](https://data-wise.github.io/medfit/reference/te.md) and
+  [`pm()`](https://data-wise.github.io/medfit/reference/pm.md) use every
+  path, so here the chain carries about 0.08 of a 0.37 total indirect
+  effect.
 
 The order of `mediator_models` is cross-checked against the `mediator`
 vector: each model’s response and predecessor are validated, so a
@@ -513,16 +531,20 @@ effect through `mediator2`; see
 for the reduced-form values.
 
 The mediator equations are fit separately, and the stored `@vcov` sets
-the covariances between their coefficients to zero. `cov(a_j, b_{j'})`
-is exactly zero for least squares, because the outcome equation contains
-every regressor of the mediator equations. `cov(a_j, a_{j'})` is not:
-when the mediators’ errors are correlated it is nonzero, and the
-block-diagonal `@vcov` omits it, so the indirect-effect SE can be off.
-The `b_j` (and `c'`) share the single outcome equation, so
-`cov(b_j, b_{j'})` and `cov(b_j, c')` are preserved. The
-[`confint()`](https://rdrr.io/r/stats/confint.html) indirect-effect SE
-uses the delta method over this `@vcov`, not a naive per-mediator sum. A
-lavaan fit, or a nonparametric bootstrap, captures the omitted
+the covariances between their coefficients to zero. What that does to
+each one:
+
+- `cov(a_j, b_{j'})` is exactly zero for least squares, because the
+  outcome equation contains every regressor of the mediator equations.
+- `cov(a_j, a_{j'})` is not zero when the mediators’ errors are
+  correlated, and the block-diagonal `@vcov` omits it, so the
+  indirect-effect SE can be off.
+- `cov(b_j, b_{j'})` and `cov(b_j, c')` are preserved, because the `b_j`
+  (and `c'`) share the single outcome equation.
+
+The [`confint()`](https://rdrr.io/r/stats/confint.html) indirect-effect
+SE uses the delta method over this `@vcov`, not a naive per-mediator
+sum. A lavaan fit, or a nonparametric bootstrap, captures the omitted
 covariance; see [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
 
@@ -629,17 +651,22 @@ c(boot_nie@ci_lower, boot_nie@ci_upper)
 
     [1] 0.4483248 0.8930866
 
-The fit must meet a few requirements, and each violation errors with its
-cause: every model carries the same covariates (a medfit limitation),
-all models are Gaussian identity-link, unweighted, with an intercept,
-and fit to the same rows, every mediator appears in the outcome model,
-and the treatment is coded 0/1. Only outcome-model products written with
-`:` or `*` are supported; a product in a mediator model, between
-mediators, with a covariate, or inside
-[`I()`](https://rdrr.io/r/base/AsIs.html) errors. A product
-**precomputed as a data column** cannot be recognized from the formula
-and would be ignored silently, so write it in the formula. The
-identification assumptions are stated for the whole mediator vector; see
+The fit must meet these requirements; each violation errors with its
+cause:
+
+- Every model carries the same covariates (a medfit limitation).
+- All models are Gaussian identity-link, unweighted, with an intercept,
+  and fit to the same rows.
+- Every mediator appears in the outcome model, and the treatment is
+  coded 0/1.
+- Only outcome-model products written with `:` or `*` are supported; a
+  product in a mediator model, between mediators, with a covariate, or
+  inside [`I()`](https://rdrr.io/r/base/AsIs.html) errors.
+- A product **precomputed as a data column** cannot be recognized from
+  the formula and would be ignored silently, so write it in the formula.
+
+The identification assumptions are stated for the whole mediator vector;
+see
 [`?JointMediationData`](https://data-wise.github.io/medfit/reference/JointMediationData.md).
 
 ## Extracting from lmer Models: Cluster-Level Treatment
@@ -1195,6 +1222,33 @@ would disagree with
 silently ignored. `regmedint` is a suggested package — install it with
 `install.packages("regmedint")`.
 
+## Extracting from a Native SEM Fit
+
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+fits model syntax with the experimental native engine and returns a
+`SEMFit`.
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+accepts it with the same arguments as the lavaan method and returns the
+same classes:
+
+``` r
+sem <- fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+  data = mediation_demo
+)
+x_sem <- extract_mediation(sem, treatment = "treatment", mediator = "mediator1")
+nie(x_sem)
+```
+
+    Natural Indirect Effect (NIE): 0.3253
+
+The four-way decomposition needs a mediator intercept, which the native
+engine does not estimate, so a treatment-by-mediator model is not
+supported on this route; fit it with `lm`/`glm` or lavaan
+(`meanstructure = TRUE`) instead. See
+[`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+for the syntax.
+
 ## Compatibility with RMediation
 
 The extraction design is compatible with RMediation’s lavaan extractor:
@@ -1326,23 +1380,11 @@ The extraction system is designed to accommodate future extensions:
 - **Complex mediation**: Moderated mediation
 - **Multiple treatments**: Comparative mediation analysis
 - **Latent variables**: SEM with measurement models
+  ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  is the experimental native route; extend it)
 
 All classes share the same interface, so new model types plug into the
 same effects, intervals and bootstrap.
-
-## Next Steps
-
-- Learn about [bootstrap
-  inference](https://data-wise.github.io/medfit/articles/bootstrap.md)
-  on extracted models
-- See the
-  [introduction](https://data-wise.github.io/medfit/articles/introduction.md)
-  for S7 class details
-- Read the [formulas behind every effect and standard
-  error](https://data-wise.github.io/medfit/articles/methods.md)
-- Check the reference documentation for
-  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
-  methods
 
 ## Working with Extracted Results
 
@@ -1549,5 +1591,24 @@ Model extraction is **complete**:
 - ✅ Tidyverse methods (tidy, glance)
 - ✅ Base R generics (coef, vcov, confint, nobs)
 - ✅ lmer extraction (`ClusterMediationData`, cluster-level treatment)
+- ✅ Native SEM extraction
+  ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  to `SEMFit` to
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md),
+  experimental)
 
 See `NEWS.md` for updates.
+
+## Next Steps
+
+- Learn about [bootstrap
+  inference](https://data-wise.github.io/medfit/articles/bootstrap.md)
+  on extracted models
+- See the
+  [introduction](https://data-wise.github.io/medfit/articles/introduction.md)
+  for S7 class details
+- Read the [formulas behind every effect and standard
+  error](https://data-wise.github.io/medfit/articles/methods.md)
+- Check the reference documentation for
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  methods

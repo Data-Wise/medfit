@@ -38,6 +38,53 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fas fa-home fa-lg"></span></a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models"><li><a class="dropdown-item" href="../articles/models.html">All models at a glance</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Single mediator</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-simple.html">Simple mediation</a></li>
+    <li><a class="dropdown-item" href="../articles/model-glm-families.html">Binary and non-normal variables</a></li>
+    <li><a class="dropdown-item" href="../articles/model-interaction.html">Treatment-by-mediator interaction</a></li>
+    <li><a class="dropdown-item" href="../articles/model-weights.html">Weights and robust SEs</a></li>
+    <li><a class="dropdown-item" href="../articles/model-regmedint.html">The regmedint engine</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Several mediators</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-serial.html">Serial (a chain)</a></li>
+    <li><a class="dropdown-item" href="../articles/model-parallel.html">Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/model-joint.html">Joint, with products</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Clusters and latent variables</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
+    <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-guides" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Guides</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-guides"><li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook"><li><a class="dropdown-item" href="../articles/cookbook.html">All recipes</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">1. One-line mediation</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#i-already-have-lm-fits">2. I already have lm fits</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#binary-outcome">3. Binary outcome</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#weights-and-robust-standard-errors">4. Weights and robust SEs</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-in-a-chain">5. Two mediators in a chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-side-by-side">6. Two mediators side by side</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#treatment-by-mediator-interaction">7. Treatment-by-mediator interaction</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#many-mediators-with-products">8. Many mediators with products</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
@@ -70,9 +117,38 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.7.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="medfit-development-version">medfit (development version)<a class="anchor" aria-label="anchor" href="#medfit-development-version"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>
+<code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code>, <code>@n_obs</code> and <code><a href="../reference/med.html">med()</a></code> no longer overstate the sample size when the data have missing values on the model variables. The lm/glm extractors counted <code>nrow(data)</code> although <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> had dropped the incomplete rows, so a fit with 5 missing treatment values reported 400 observations on 395 rows. <code>n_obs</code> now counts the rows the models used, and the stored <code>@data</code> drops the same rows, so the four-way covariate means use them too. <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> drops rows that are incomplete on any variable in either formula before fitting, so the mediator and outcome models share one sample; <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> warns when models you fitted yourself used different rows. The estimates are unchanged when the models already used the same rows; the native and lmer engines already counted correctly.</li>
+<li>
+<code>fit_mediation(engine = "lmer")</code> now stops with an error when either formula contains an <code><a href="https://rdrr.io/r/stats/offset.html" class="external-link">offset()</a></code>. The engine rebuilds both formulas from their terms, which exclude offsets, so the offset was dropped without a word and the fit was the same as without it.</li>
+<li>Joint mediation effects (several mediators with treatment-by-mediator products) now check that every variable two models share holds the same values in the same order, not only that the row names agree. A mediator model fitted to a reordered copy of the data with its row names reset used to pass, and the cross-equation covariance, and with it the joint effect intervals, was silently wrong.</li>
+<li>Fits made with <code>na.action = na.exclude</code> no longer break the extraction. The joint covariance came back with <code>NA</code> blocks and <code>NA</code> effect intervals and no error, and the residual standard deviation of a Gaussian <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> stopped <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> with a missing-value error.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
+<ul><li>Every cookbook recipe from 1 to 8 now runs after the setup chunk alone. Recipes 3, 6, 7 and 8 used fitted models that only an earlier recipe created, which running the page top to bottom hid; a test now runs each recipe in a fresh environment.</li>
+<li>The cookbook and Getting Started no longer present survey weights as covered by <code>se_type = "sandwich"</code>: HC3 standard errors treat the observations as independent, so they do not handle survey clusters, strata or replicate weights.</li>
+<li>The home page now leads with the r-universe and GitHub installs of 0.7.0 and says that CRAN 0.3.2 does not run the examples (it lacks <code>mediation_demo</code>, <code><a href="../reference/fit_sem.html">fit_sem()</a></code>, <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and the joint and cluster classes). Getting Started, the cookbook and the Reference Card state the version they need.</li>
+<li>Getting Started and the Introduction now cover the cluster and native engines (an engine table, the two classes, and a <code><a href="../reference/fit_sem.html">fit_sem()</a></code> example), and the Model Extraction article has a section on extracting from a <code>SEMFit</code>. <code><a href="../reference/extract_mediation.html">?extract_mediation</a></code> lists the <code>SEMFit</code> method and the <code>ClusterMediationData</code> return, and no longer names <code>brms</code> as a supported model type; it is still future work.</li>
+<li>
+<code><a href="../reference/SEMFit.html">?SEMFit</a></code>, <code>?SEMFit-methods</code> and <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> now have examples that run.</li>
+<li>The Model Extraction article has a “Which section do I need?” table at the top, ends on Next Steps, and sets three dense paragraphs as bullets. The Methods article’s cluster and native engine sections now have subheadings.</li>
+<li>The Introduction counted <code>SEMFit</code> as the seventh class; it is the eighth. Its Package Ecosystem list now names probmed and medrobust, and the Reference Card gives <code><a href="../reference/joint_effects.html">joint_effects()</a></code> its real argument names (<code>object</code>, <code>estimates</code>).</li>
+<li>New <strong>Models</strong> menu and landing page, and a <strong>Cookbook</strong> menu in the top menu bar. The Models page has a capability matrix and a “find your model” table; eight model pages cover simple mediation, binary and non-normal variables, treatment-by-mediator interaction, weights and robust standard errors, the <code>regmedint</code> engine, serial, parallel and joint mediation. Articles are now grouped in an index. A test keeps every model page on the landing page, in the index and in the menu, and every cookbook anchor real.</li>
+<li>Six more model pages: cluster-randomized trials (2-1-1), lavaan fits, and four on the native engine (paths and defined parameters, a latent mediator, constraints and the MBCO test, several mediators and weights). They join the Models menu, the landing page and the articles index. A test triggers each error message the pages quote, so a reworded message fails the tests before a page goes stale.</li>
+<li>A new “Guides” menu and group with four pages: What changed since CRAN 0.3.2 (the results that changed and the calls that now stop with an error), Troubleshooting (the errors and warnings a user is most likely to hit, each with its cause and fix), Which interval should I use?, and a Glossary of terms and symbols. Tests trigger every message the guides quote and check the known answers behind their claims.</li>
+<li>The home page and Getting Started are rewritten so they are quick to skim: a “What’s new” table, a 60-second start, a “pick your model” table, long examples folded away, and Getting Started cut to four steps that link to the model pages. A test checks that their article links and cookbook anchors are real.</li>
+<li>The Models page states that <code>fit_mediation(engine = "native")</code> takes one mediator; for several, fit with <code><a href="../reference/fit_sem.html">fit_sem()</a></code> and call <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>.</li>
+<li>The bootstrap example in the README printed <code>NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%</code>, which no longer matched the code or its own non-bootstrap fit on the same data; it now shows <code>NIE = 0.164  [0.0867, 0.256] | NDE = 0.293 | PM = 36 %</code>. Its feature list, function list and test count now include the <code>lmer</code> engine, cluster decomposition and native fits.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.0" id="medfit-070">medfit 0.7.0<a class="anchor" aria-label="anchor" href="#medfit-070"></a></h2>
 <p>medfit 0.7.0 adds an experimental native maximum-likelihood structural equation engine. It is released on GitHub and r-universe only and is not submitted to CRAN.</p>

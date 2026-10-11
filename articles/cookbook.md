@@ -6,6 +6,11 @@ simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
+These recipes need medfit 0.7.0 or later. CRAN has 0.3.2, which lacks
+`mediation_demo` and the native, joint and cluster functions; install
+from GitHub or r-universe (see the [home
+page](https://data-wise.github.io/medfit/#installation)).
+
 ``` r
 library(medfit)
 ```
@@ -79,6 +84,7 @@ Extraction](https://data-wise.github.io/medfit/articles/extraction.md).
 on the logit scale.
 
 ``` r
+fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2, mediation_demo)
 d <- mediation_demo
 d$outcome_bin <- as.integer(d$outcome > median(d$outcome))
 fit_yb <- glm(outcome_bin ~ treatment + mediator1 + covariate1 + covariate2,
@@ -96,9 +102,11 @@ Extraction](https://data-wise.github.io/medfit/articles/extraction.md).
 
 ## 4. Weights and robust standard errors
 
-*When:* inverse-probability or survey weights. Pair them with
-`se_type = "sandwich"`; model-based standard errors are not valid under
-inverse-probability weights.
+*When:* inverse-probability weights, or case weights for independent
+observations. Pair them with `se_type = "sandwich"`; model-based
+standard errors are not valid under inverse-probability weights. The
+sandwich (HC3) standard errors treat the observations as independent, so
+they do not handle survey clusters, strata or replicate weights.
 
 ``` r
 ps <- glm(treatment ~ covariate1 + covariate2, family = binomial(),
@@ -157,6 +165,7 @@ Extraction](https://data-wise.github.io/medfit/articles/extraction.md).
 other.
 
 ``` r
+fit_m1 <- lm(mediator1 ~ treatment + covariate1 + covariate2, mediation_demo)
 fit_m3 <- lm(mediator3 ~ treatment + covariate1 + covariate2, mediation_demo)
 fit_yp <- lm(outcome ~ treatment + mediator1 + mediator3 + covariate1 +
                covariate2, mediation_demo)
@@ -185,6 +194,7 @@ four-way decomposition (CDE, INTref, INTmed, PIE) at a reference
 mediator level `m_star`.
 
 ``` r
+fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2, mediation_demo)
 fit_yi <- lm(outcome_int ~ treatment * mediator1 + covariate1 + covariate2,
              mediation_demo)
 xi <- extract_mediation(fit_m, model_y = fit_yi, treatment = "treatment",
@@ -205,6 +215,9 @@ is the joint effect over the mediator block; bootstrap it with
 [`joint_effects()`](https://data-wise.github.io/medfit/reference/joint_effects.md).
 
 ``` r
+fit_m1 <- lm(mediator1 ~ treatment + covariate1 + covariate2, mediation_demo)
+fit_m2 <- lm(mediator2 ~ treatment + mediator1 + covariate1 + covariate2,
+             mediation_demo)
 fit_yj <- lm(outcome_int ~ treatment * mediator1 + mediator2 + covariate1 +
                covariate2, mediation_demo)
 xj <- extract_mediation(fit_m1, model_y = fit_yj, treatment = "treatment",

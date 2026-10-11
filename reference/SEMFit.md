@@ -86,3 +86,24 @@ A SEMFit S7 object
 ## See also
 
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+
+## Examples
+
+``` r
+# \donttest{
+fit <- fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+  data = mediation_demo
+)
+fit@table[fit@table$op == "~", c("lhs", "rhs", "est", "se")]
+#>         lhs       rhs        est         se
+#> 1 mediator1 treatment 0.45599612 0.10763360
+#> 2   outcome mediator1 0.71342873 0.05047202
+#> 3   outcome treatment 0.04057666 0.11106057
+fit@defined
+#>   name expr       est         se
+#> 1   ab  a*b 0.3253207 0.08016376
+fit@converged
+#> [1] TRUE
+# }
+```

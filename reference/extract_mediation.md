@@ -3,7 +3,8 @@
 Generic function to extract mediation structure (a, b, c' paths and
 variance-covariance matrices) from fitted models. This function provides
 a unified interface for extracting mediation information from various
-model types (lm, glm, lavaan, lmer, brms, etc.).
+model types (lm, glm, lavaan, lmer, and a native
+[SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)).
 
 ## Usage
 
@@ -15,7 +16,8 @@ extract_mediation(object, ...)
 
 - object:
 
-  Fitted model object (lm, glm, lavaan, etc.)
+  Fitted model object (lm, glm, lavaan, lmerMod, or a
+  [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md))
 
 - ...:
 
@@ -35,8 +37,9 @@ Details):
 [InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md),
 [SerialMediationData](https://data-wise.github.io/medfit/reference/SerialMediationData.md),
 [ParallelMediationData](https://data-wise.github.io/medfit/reference/ParallelMediationData.md),
+[JointMediationData](https://data-wise.github.io/medfit/reference/JointMediationData.md),
 or
-[JointMediationData](https://data-wise.github.io/medfit/reference/JointMediationData.md).
+[ClusterMediationData](https://data-wise.github.io/medfit/reference/ClusterMediationData.md).
 Each carries the path coefficients, the full parameter vector and its
 variance-covariance matrix, residual standard deviations (for Gaussian
 models), variable names, and the original data when available.
@@ -59,6 +62,13 @@ types:
   pair of fits that kept different individuals is an error (best effort:
   it compares the data row names the fits kept, so it cannot see a
   mismatch between frames whose row names were both reset)
+
+- **SEMFit**: Extract from a model fitted by
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  (the experimental native maximum-likelihood engine), with the same
+  arguments and structures as the lavaan method. The four-way
+  decomposition is not available: it needs a mediator intercept, which
+  the native engine does not estimate.
 
 - **brmsfit**: Extract from Bayesian models (future)
 

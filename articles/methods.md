@@ -200,6 +200,8 @@ and would be ignored silently.
 
 ## Cluster-level treatment: the 2-1-1 design
 
+### Model and effects
+
 When the treatment \\X_j\\ is assigned to whole clusters \\j = 1, \dots,
 J\\ (for example schools) and the mediator \\M\_{ij}\\ and outcome
 \\Y\_{ij}\\ are measured on the \\n_j\\ individuals in each, medfit uses
@@ -229,6 +231,8 @@ form to the within form with \\\hat\Sigma\\ transformed as \\J
 | TE | \\a \\ b_B + c'\\ | [`te()`](https://data-wise.github.io/medfit/reference/te.md) |
 | Own-mediator (within) indirect | \\a \\ b_W\\ | [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md) |
 | Spillover (contextual) indirect | \\a (b_B - b_W)\\ | [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md) |
+
+### Indirect effect and the own/spillover split
 
 **The NIE needs no weighting.** Changing \\X_j\\ shifts every member’s
 mediator by \\a\\. The deviations \\M\_{ij} - \bar M_j\\ do not change
@@ -267,6 +271,8 @@ gives \\b_W = b_p - g / (N - 1)\\ and \\b_B = b_p + g\\. The exact own
 effect is then \\a \\ b_p\\, Talloen et al.’s own-mediator effect, while
 the reported \\a \\ b_W\\ differs from it by \\a g / N\\ (not zero).
 
+### Covariance and assumptions
+
 **Covariance.** Given \\(X, M, C, W)\\ the outcome errors have mean zero
 under the model and \\\hat a\\ depends only on \\(X, M, C, W)\\, so
 \\\text{Cov}(\hat a, \hat b_B)\\ and \\\text{Cov}(\hat a, \hat c')\\ are
@@ -292,6 +298,8 @@ randomized, and clusters are intact.
 [`summary()`](https://rdrr.io/r/base/summary.html) print this table,
 with the upper-level claim dropped when a level-1 covariate has no
 cluster-mean companion.
+
+### Estimation
 
 **Estimation.** Pass the mediator model and the outcome model, both
 fitted by [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) on
@@ -365,6 +373,8 @@ decompose(fit)
     attr(,"label")
     [1] "cluster-average, large-cluster approximation"
 
+### Few clusters and Kenward–Roger
+
 With few clusters the model-based standard errors can be too small.
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
 warns when \\J \< 25\\ with model-based standard errors, and whatever
@@ -406,6 +416,8 @@ confint(fit_kr)
     b_within   0.283502528 0.4756161
     b_between  0.257098644 1.2822819
     c_prime   -0.382891954 0.5373482
+
+### What is not supported
 
 medfit does not support, in this design: treatment varying within
 clusters (1-1-1), non-Gaussian outcomes or mediators,
@@ -567,16 +579,20 @@ model syntax
 by maximum likelihood to raw data. Rows with missing values in the model
 variables are dropped once (listwise deletion) and counted.
 
-**Model form.** The model is written in RAM form. With \\A\\ the matrix
-of directed paths, \\S\_{\text{ram}}\\ the matrix of variances and
-covariances, and \\F\\ the selection matrix that picks the observed
-variables, the implied covariance of the observed variables is
+### Model form
+
+The model is written in RAM form. With \\A\\ the matrix of directed
+paths, \\S\_{\text{ram}}\\ the matrix of variances and covariances, and
+\\F\\ the selection matrix that picks the observed variables, the
+implied covariance of the observed variables is
 
 \\ \Sigma(\theta) = F (I - A)^{-1} S\_{\text{ram}} (I - A)^{-\top}
 F^\top . \\
 
-**Discrepancy.** With \\S\\ the sample covariance with divisor \\n\\ and
-\\p\\ the number of observed variables, the engine minimizes
+### Discrepancy
+
+With \\S\\ the sample covariance with divisor \\n\\ and \\p\\ the number
+of observed variables, the engine minimizes
 
 \\ F\_{ML}(\theta) = \log \|\Sigma(\theta)\| + \operatorname{tr}\left(S
 \Sigma(\theta)^{-1}\right) - \log \|S\| - p , \\
@@ -588,23 +604,25 @@ The gradient is analytic. A parameter vector whose implied covariance is
 not positive definite gets a large finite value and a zero gradient, so
 the optimizer can step back from it.
 
-**Standard errors.** The covariance of \\\hat\theta\\ is the inverse of
-the information for the log likelihood. The default, observed
-information, is \\(n/2)\\ times the central-difference Jacobian of the
-analytic gradient of \\F\_{ML}\\ (step \\\epsilon^{1/3} \max(\|x\|,
-1)\\). Expected information is \\(n/2)\\
-\operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\\ \Sigma^{-1}
-\partial_l \Sigma\right)\\. A singular information matrix gives an `NA`
-covariance and one warning. Defined parameters (`:=`) get delta-method
-standard errors, \\\sqrt{g^\top V g}\\, with the gradient \\g\\ taken by
-central differences over the labels.
+### Standard errors
 
-**Sampling weights and the sandwich.** With case weights \\w_i\\
-rescaled to sum to \\n\\, the fit minimizes \\F\_{ML}\\ on the weighted
-mean and the weighted covariance (divisor \\n\\). The robust covariance
-of \\\hat\theta\\ is \\A^{-1} B A^{-1}\\, with \\A\\ the information
-above and \\B = \sum_i s_i s_i^\top\\ the cross product of the casewise
-scores
+The covariance of \\\hat\theta\\ is the inverse of the information for
+the log likelihood. The default, observed information, is \\(n/2)\\
+times the central-difference Jacobian of the analytic gradient of
+\\F\_{ML}\\ (step \\\epsilon^{1/3} \max(\|x\|, 1)\\). Expected
+information is \\(n/2)\\ \operatorname{tr}\left(\Sigma^{-1} \partial_k
+\Sigma\\ \Sigma^{-1} \partial_l \Sigma\right)\\. A singular information
+matrix gives an `NA` covariance and one warning. Defined parameters
+(`:=`) get delta-method standard errors, \\\sqrt{g^\top V g}\\, with the
+gradient \\g\\ taken by central differences over the labels.
+
+### Sampling weights and the sandwich
+
+With case weights \\w_i\\ rescaled to sum to \\n\\, the fit minimizes
+\\F\_{ML}\\ on the weighted mean and the weighted covariance (divisor
+\\n\\). The robust covariance of \\\hat\theta\\ is \\A^{-1} B A^{-1}\\,
+with \\A\\ the information above and \\B = \sum_i s_i s_i^\top\\ the
+cross product of the casewise scores
 
 \\ s\_{i,k} = w_i \\ \frac{1}{2} \operatorname{tr}\left(\Sigma^{-1} (d_i
 d_i^\top - \Sigma) \Sigma^{-1} \partial_k \Sigma\right), \qquad d_i =
@@ -623,11 +641,13 @@ shrinks like \\1/n\\. The weighted likelihood is a pseudo likelihood, so
 [`logLik()`](https://rdrr.io/r/stats/logLik.html) is not defined for a
 weighted fit.
 
-**Constraints.** Equality and inequality constraints that are linear in
-the labels become rows \\a^\top\theta + b\\, normalized to unit length,
-with constant Jacobians for the optimizer (SLSQP through nloptr). A
-nonlinear constraint is an error. At the solution the active constraints
-and active bounds define a null-space basis \\Z\\ of the feasible
+### Constraints
+
+Equality and inequality constraints that are linear in the labels become
+rows \\a^\top\theta + b\\, normalized to unit length, with constant
+Jacobians for the optimizer (SLSQP through nloptr). A nonlinear
+constraint is an error. At the solution the active constraints and
+active bounds define a null-space basis \\Z\\ of the feasible
 directions, and the covariance is projected,
 
 \\ V = Z \left(Z^\top I Z\right)^{-1} Z^\top , \\
@@ -636,18 +656,22 @@ so a parameter pinned by a constraint has zero variance and `a == b`
 returns the standard error of the model with `a` and `b` collapsed to
 one label.
 
-**Acceptance.** A solution is accepted only if the optimizer status is a
-success code, every constraint holds to \\10^{-6}\\ in the solver’s
-natural units, and the Newton decrement \\\sqrt{g_r^\top H_r^{-1} g_r}\\
-on the reduced gradient and Hessian of the active-constraint null space
-is at most \\10^{-3}\\, with a positive definite reduced Hessian. The
-decrement is scale free, so rescaling the data does not change the
-verdict. The sign of each active inequality’s multiplier is checked and
-only warns: a wrong sign means the point may not be a local minimum, and
-the fit is not rejected for it.
+### Acceptance
 
-**Starts.** The first start is moment based. If it is not accepted, up
-to `n_starts - 1` retries use perturbed starts drawn under a fixed seed
+A solution is accepted only if the optimizer status is a success code,
+every constraint holds to \\10^{-6}\\ in the solver’s natural units, and
+the Newton decrement \\\sqrt{g_r^\top H_r^{-1} g_r}\\ on the reduced
+gradient and Hessian of the active-constraint null space is at most
+\\10^{-3}\\, with a positive definite reduced Hessian. The decrement is
+scale free, so rescaling the data does not change the verdict. The sign
+of each active inequality’s multiplier is checked and only warns: a
+wrong sign means the point may not be a local minimum, and the fit is
+not rejected for it.
+
+### Starts
+
+The first start is moment based. If it is not accepted, up to
+`n_starts - 1` retries use perturbed starts drawn under a fixed seed
 derived from the model, restoring the caller’s random number state
 afterward, so a fit is reproducible and never changes a simulation
 around it. When no start is accepted the error names the best attempt’s

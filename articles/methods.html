@@ -63,6 +63,59 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fas fa-home fa-lg"></span></a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models">
+<li><a class="dropdown-item" href="../articles/models.html">All models at a glance</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Single mediator</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-simple.html">Simple mediation</a></li>
+    <li><a class="dropdown-item" href="../articles/model-glm-families.html">Binary and non-normal variables</a></li>
+    <li><a class="dropdown-item" href="../articles/model-interaction.html">Treatment-by-mediator interaction</a></li>
+    <li><a class="dropdown-item" href="../articles/model-weights.html">Weights and robust SEs</a></li>
+    <li><a class="dropdown-item" href="../articles/model-regmedint.html">The regmedint engine</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Several mediators</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-serial.html">Serial (a chain)</a></li>
+    <li><a class="dropdown-item" href="../articles/model-parallel.html">Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/model-joint.html">Joint, with products</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Clusters and latent variables</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
+    <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-guides" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Guides</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-guides">
+<li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
+<li><a class="dropdown-item" href="../articles/cookbook.html">All recipes</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">1. One-line mediation</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#i-already-have-lm-fits">2. I already have lm fits</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#binary-outcome">3. Binary outcome</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#weights-and-robust-standard-errors">4. Weights and robust SEs</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-in-a-chain">5. Two mediators in a chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-side-by-side">6. Two mediators side by side</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#treatment-by-mediator-interaction">7. Treatment-by-mediator interaction</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#many-mediators-with-products">8. Many mediators with products</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+  </ul>
+</li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
@@ -108,7 +161,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.7.0/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -282,6 +335,8 @@ Y = \theta_0 + \theta_1 X + \sum_i \theta_{2i} M_i
 <p>medfit requires every model to carry the same covariates, Gaussian identity-link unweighted fits with intercepts on the same rows, every mediator in the outcome model, and mediators listed in causal order; each violation errors. A product written in the formula (<code>X * M1</code>, <code>X:M1</code>) is recognized; a product precomputed as a data column is not, and would be ignored silently.</p>
 </section><section class="level2"><h2 id="cluster-level-treatment-the-2-1-1-design">Cluster-level treatment: the 2-1-1 design<a class="anchor" aria-label="anchor" href="#cluster-level-treatment-the-2-1-1-design"></a>
 </h2>
+<section class="level3"><h3 id="model-and-effects">Model and effects<a class="anchor" aria-label="anchor" href="#model-and-effects"></a>
+</h3>
 <p>When the treatment <span class="math inline">\(X_j\)</span> is assigned to whole clusters <span class="math inline">\(j = 1, \dots, J\)</span> (for example schools) and the mediator <span class="math inline">\(M_{ij}\)</span> and outcome <span class="math inline">\(Y_{ij}\)</span> are measured on the <span class="math inline">\(n_j\)</span> individuals in each, medfit uses the observed cluster mean <span class="math inline">\(\bar M_j\)</span> of the mediator over the analysis rows. With cluster-level covariates <span class="math inline">\(W_j\)</span> and level-1 covariates <span class="math inline">\(C_{ij}\)</span> (entered centered, with their cluster means),</p>
 <p><span class="math display">\[
 \begin{aligned}
@@ -325,7 +380,8 @@ Y_{ij} &amp;= \theta_0 + c' X_j + b_W (M_{ij} - \bar M_j) + b_B \bar M_j
 <td><code><a href="../reference/decompose.html">decompose()</a></code></td>
 </tr>
 </tbody>
-</table>
+</table></section><section class="level3"><h3 id="indirect-effect-and-the-ownspillover-split">Indirect effect and the own/spillover split<a class="anchor" aria-label="anchor" href="#indirect-effect-and-the-ownspillover-split"></a>
+</h3>
 <p><strong>The NIE needs no weighting.</strong> Changing <span class="math inline">\(X_j\)</span> shifts every member’s mediator by <span class="math inline">\(a\)</span>. The deviations <span class="math inline">\(M_{ij} - \bar M_j\)</span> do not change and <span class="math inline">\(\bar M_j\)</span> moves by <span class="math inline">\(a\)</span>, so <span class="math inline">\(Y\)</span> moves by <span class="math inline">\(a \, b_B\)</span> in every cluster. This holds with a random slope on the within term, because <span class="math inline">\(X\)</span> is constant within a cluster and <span class="math inline">\(\bar M_j\)</span> carries no slope (medfit’s argument).</p>
 <p><strong>The own/spillover split is an approximation.</strong> Shifting only individual <span class="math inline">\(i\)</span>’s mediator by <span class="math inline">\(a\)</span> moves <span class="math inline">\(\bar M_j\)</span> by <span class="math inline">\(a / n_j\)</span>, so with the observed cluster mean the exact effects in a cluster of <span class="math inline">\(n_j\)</span> members are</p>
 <p><span class="math display">\[
@@ -333,6 +389,8 @@ Y_{ij} &amp;= \theta_0 + c' X_j + b_W (M_{ij} - \bar M_j) + b_B \bar M_j
 \text{spillover} = a (b_B - b_W) \frac{n_j - 1}{n_j},
 \]</span></p>
 <p>which add to <span class="math inline">\(a \, b_B\)</span> at every cluster size. Expanding the outcome model in the members’ mediators gives the derivation: member <span class="math inline">\(i\)</span>’s own mediator enters once in the deviation and once in the mean, with coefficient <span class="math inline">\(b_W + (b_B - b_W) / n_j\)</span>, and each of the <span class="math inline">\(n_j - 1\)</span> peers’ enters only through the mean, with coefficient <span class="math inline">\((b_B - b_W) / n_j\)</span>; every mediator moves by <span class="math inline">\(a\)</span>. medfit’s tests check the formulas against exact counterfactuals. <code><a href="../reference/decompose.html">decompose()</a></code> reports the large-cluster limits <span class="math inline">\(a \, b_W\)</span> and <span class="math inline">\(a (b_B - b_W)\)</span>, labeled the cluster-average, large-cluster approximation. The own estimate is off by <span class="math inline">\(a (b_B - b_W) / H\)</span> with equal cluster weights, <span class="math inline">\(H\)</span> the harmonic mean cluster size, and <code><a href="../reference/decompose.html">decompose()</a></code> warns when that gap exceeds half the own effect’s standard error; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> always prints it. Under the peer-mean model of Talloen et al. (2016, p. 364), whose outcome equation has a coefficient <span class="math inline">\(b_p\)</span> on the member’s own mediator and <span class="math inline">\(g\)</span> on the mean of the other members, a fixed cluster size <span class="math inline">\(N\)</span> gives <span class="math inline">\(b_W = b_p - g / (N - 1)\)</span> and <span class="math inline">\(b_B = b_p + g\)</span>. The exact own effect is then <span class="math inline">\(a \, b_p\)</span>, Talloen et al.’s own-mediator effect, while the reported <span class="math inline">\(a \, b_W\)</span> differs from it by <span class="math inline">\(a g / N\)</span> (not zero).</p>
+</section><section class="level3"><h3 id="covariance-and-assumptions">Covariance and assumptions<a class="anchor" aria-label="anchor" href="#covariance-and-assumptions"></a>
+</h3>
 <p><strong>Covariance.</strong> Given <span class="math inline">\((X, M, C, W)\)</span> the outcome errors have mean zero under the model and <span class="math inline">\(\hat a\)</span> depends only on <span class="math inline">\((X, M, C, W)\)</span>, so <span class="math inline">\(\text{Cov}(\hat a,
 \hat b_B)\)</span> and <span class="math inline">\(\text{Cov}(\hat a, \hat c')\)</span> are zero to first order, and <code>@vcov</code> is block-diagonal between the mediator model and the outcome model (a simulation gate checks the cross-replication correlation of <span class="math inline">\(\hat a\)</span> and <span class="math inline">\(\hat b_B\)</span>). The argument fails under upper-level mediator–outcome confounding, the same condition that biases the NIE.</p>
 <p><strong>What the estimands need.</strong> In every row the models are linear with no mediator-by-treatment or mediator-by-covariate products, <span class="math inline">\(X\)</span> is randomized, and clusters are intact.</p>
@@ -371,6 +429,8 @@ Y_{ij} &amp;= \theta_0 + c' X_j + b_W (M_{ij} - \bar M_j) + b_B \bar M_j
 </tbody>
 </table>
 <p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> print this table, with the upper-level claim dropped when a level-1 covariate has no cluster-mean companion.</p>
+</section><section class="level3"><h3 id="estimation">Estimation<a class="anchor" aria-label="anchor" href="#estimation"></a>
+</h3>
 <p><strong>Estimation.</strong> Pass the mediator model and the outcome model, both fitted by <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code> on the same rows, to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, or let <code>fit_mediation(engine = "lmer", cluster = )</code> build them: it drops incomplete rows once, forms <code>&lt;M&gt;_cm</code> and <code>&lt;M&gt;_cwc</code> (and the same for each level-1 covariate) on the remaining rows, and fits both models by REML with a random cluster intercept. Standard errors are the delta-method standard errors of the section below, from lme4’s model-based covariance.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
@@ -429,6 +489,8 @@ attr(,"label")
 [1] "cluster-average, large-cluster approximation"</code></pre>
 </div>
 </div>
+</section><section class="level3"><h3 id="few-clusters-and-kenwardroger">Few clusters and Kenward–Roger<a class="anchor" aria-label="anchor" href="#few-clusters-and-kenwardroger"></a>
+</h3>
 <p>With few clusters the model-based standard errors can be too small. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> warns when <span class="math inline">\(J &lt; 25\)</span> with model-based standard errors, and whatever the standard error type when <span class="math inline">\(J &lt; 10\)</span>. <code>se_type = "kr"</code> replaces each model’s covariance by the Kenward–Roger adjusted one (<code><a href="https://rdrr.io/pkg/pbkrtest/man/kr-vcovAdj.html" class="external-link">pbkrtest::vcovAdj()</a></code>, REML fits only) and stores a Kenward–Roger denominator degrees of freedom for each path; <code>confint(parm = "paths")</code> and <code>tidy(conf.int = TRUE)</code> then give <span class="math inline">\(t\)</span> intervals for the paths, while the intervals for the products (NIE, own, spillover, TE) stay normal. The Kenward–Roger adjustment changes the standard errors very little (ratios of 1.000 to 1.002 at <span class="math inline">\(J = 15\)</span>); its value is the degrees of freedom. The product intervals are the weak point at small <span class="math inline">\(J\)</span>. <code>bootstrap_mediation(cluster = )</code> needs no normal approximation for them; no few-cluster threshold is established, and the published evidence for resampling whole clusters is for treatment varying within clusters with 30 or more clusters (Falk et al. 2024), not for this design. The treatment’s effect on the mediator rests on <span class="math inline">\(J\)</span> cluster-level contrasts however many members each cluster has, so the number of clusters, not of members, is the sample size for it.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">fit_kr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
@@ -449,8 +511,10 @@ b_between  0.257098644 1.2822819
 c_prime   -0.382891954 0.5373482</code></pre>
 </div>
 </div>
+</section><section class="level3"><h3 id="what-is-not-supported">What is not supported<a class="anchor" aria-label="anchor" href="#what-is-not-supported"></a>
+</h3>
 <p>medfit does not support, in this design: treatment varying within clusters (1-1-1), non-Gaussian outcomes or mediators, treatment-by-mediator or covariate-by-mediator products, random slopes on anything but the within-cluster mediator term, or individual-average effects.</p>
-</section><section class="level2"><h2 id="covariance-of-the-estimates">Covariance of the estimates<a class="anchor" aria-label="anchor" href="#covariance-of-the-estimates"></a>
+</section></section><section class="level2"><h2 id="covariance-of-the-estimates">Covariance of the estimates<a class="anchor" aria-label="anchor" href="#covariance-of-the-estimates"></a>
 </h2>
 <p>Every effect’s standard error comes from <span class="math inline">\(\hat\Sigma\)</span> (<code>@vcov</code>), whose rows are named by the model coefficients and by path aliases (<code>a</code>, <code>b</code>, <code>c_prime</code>, <code>d1</code>, <code>a1</code>, <code>b2</code>, <code>theta3</code>, …).</p>
 <p><strong>lm/glm engines.</strong> Each equation’s block is its model’s <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> (or, with <code>fit_mediation(se_type = "sandwich")</code>, the HC3 sandwich estimator <code>sandwich::vcovHC(type = "HC3")</code>, recommended with inverse-probability <code>weights</code>). For ordinary least squares fits of several equations to the same rows, the covariance between two equations’ coefficients is</p>
@@ -604,29 +668,43 @@ d_{ij} \lambda_i\)</span> and <span class="math inline">\(\kappa_j = \theta_{3j}
 </section><section class="level2"><h2 id="native-sem-engine">Native SEM engine<a class="anchor" aria-label="anchor" href="#native-sem-engine"></a>
 </h2>
 <p><code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native")</code> fit a model written in medfit model syntax (<code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>) by maximum likelihood to raw data. Rows with missing values in the model variables are dropped once (listwise deletion) and counted.</p>
-<p><strong>Model form.</strong> The model is written in RAM form. With <span class="math inline">\(A\)</span> the matrix of directed paths, <span class="math inline">\(S_{\text{ram}}\)</span> the matrix of variances and covariances, and <span class="math inline">\(F\)</span> the selection matrix that picks the observed variables, the implied covariance of the observed variables is</p>
+<section class="level3"><h3 id="model-form">Model form<a class="anchor" aria-label="anchor" href="#model-form"></a>
+</h3>
+<p>The model is written in RAM form. With <span class="math inline">\(A\)</span> the matrix of directed paths, <span class="math inline">\(S_{\text{ram}}\)</span> the matrix of variances and covariances, and <span class="math inline">\(F\)</span> the selection matrix that picks the observed variables, the implied covariance of the observed variables is</p>
 <p><span class="math display">\[
 \Sigma(\theta) = F (I - A)^{-1} S_{\text{ram}} (I - A)^{-\top} F^\top .
 \]</span></p>
-<p><strong>Discrepancy.</strong> With <span class="math inline">\(S\)</span> the sample covariance with divisor <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span> the number of observed variables, the engine minimizes</p>
+</section><section class="level3"><h3 id="discrepancy">Discrepancy<a class="anchor" aria-label="anchor" href="#discrepancy"></a>
+</h3>
+<p>With <span class="math inline">\(S\)</span> the sample covariance with divisor <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span> the number of observed variables, the engine minimizes</p>
 <p><span class="math display">\[
 F_{ML}(\theta) = \log |\Sigma(\theta)| + \operatorname{tr}\left(S \Sigma(\theta)^{-1}\right) - \log |S| - p ,
 \]</span></p>
 <p>which is twice lavaan’s <code>fmin</code>. With the means free, <span class="math inline">\(-2 \log L = n \left(F_{ML} + \log |S| + p + p \log 2\pi\right)\)</span>, and <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> reports this value. The gradient is analytic. A parameter vector whose implied covariance is not positive definite gets a large finite value and a zero gradient, so the optimizer can step back from it.</p>
-<p><strong>Standard errors.</strong> The covariance of <span class="math inline">\(\hat\theta\)</span> is the inverse of the information for the log likelihood. The default, observed information, is <span class="math inline">\((n/2)\)</span> times the central-difference Jacobian of the analytic gradient of <span class="math inline">\(F_{ML}\)</span> (step <span class="math inline">\(\epsilon^{1/3} \max(|x|, 1)\)</span>). Expected information is <span class="math inline">\((n/2)\, \operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\, \Sigma^{-1} \partial_l \Sigma\right)\)</span>. A singular information matrix gives an <code>NA</code> covariance and one warning. Defined parameters (<code>:=</code>) get delta-method standard errors, <span class="math inline">\(\sqrt{g^\top V g}\)</span>, with the gradient <span class="math inline">\(g\)</span> taken by central differences over the labels.</p>
-<p><strong>Sampling weights and the sandwich.</strong> With case weights <span class="math inline">\(w_i\)</span> rescaled to sum to <span class="math inline">\(n\)</span>, the fit minimizes <span class="math inline">\(F_{ML}\)</span> on the weighted mean and the weighted covariance (divisor <span class="math inline">\(n\)</span>). The robust covariance of <span class="math inline">\(\hat\theta\)</span> is <span class="math inline">\(A^{-1} B A^{-1}\)</span>, with <span class="math inline">\(A\)</span> the information above and <span class="math inline">\(B = \sum_i s_i s_i^\top\)</span> the cross product of the casewise scores</p>
+</section><section class="level3"><h3 id="standard-errors">Standard errors<a class="anchor" aria-label="anchor" href="#standard-errors"></a>
+</h3>
+<p>The covariance of <span class="math inline">\(\hat\theta\)</span> is the inverse of the information for the log likelihood. The default, observed information, is <span class="math inline">\((n/2)\)</span> times the central-difference Jacobian of the analytic gradient of <span class="math inline">\(F_{ML}\)</span> (step <span class="math inline">\(\epsilon^{1/3} \max(|x|, 1)\)</span>). Expected information is <span class="math inline">\((n/2)\, \operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\, \Sigma^{-1} \partial_l \Sigma\right)\)</span>. A singular information matrix gives an <code>NA</code> covariance and one warning. Defined parameters (<code>:=</code>) get delta-method standard errors, <span class="math inline">\(\sqrt{g^\top V g}\)</span>, with the gradient <span class="math inline">\(g\)</span> taken by central differences over the labels.</p>
+</section><section class="level3"><h3 id="sampling-weights-and-the-sandwich">Sampling weights and the sandwich<a class="anchor" aria-label="anchor" href="#sampling-weights-and-the-sandwich"></a>
+</h3>
+<p>With case weights <span class="math inline">\(w_i\)</span> rescaled to sum to <span class="math inline">\(n\)</span>, the fit minimizes <span class="math inline">\(F_{ML}\)</span> on the weighted mean and the weighted covariance (divisor <span class="math inline">\(n\)</span>). The robust covariance of <span class="math inline">\(\hat\theta\)</span> is <span class="math inline">\(A^{-1} B A^{-1}\)</span>, with <span class="math inline">\(A\)</span> the information above and <span class="math inline">\(B = \sum_i s_i s_i^\top\)</span> the cross product of the casewise scores</p>
 <p><span class="math display">\[
 s_{i,k} = w_i \, \frac{1}{2} \operatorname{tr}\left(\Sigma^{-1} (d_i d_i^\top - \Sigma) \Sigma^{-1} \partial_k \Sigma\right),
 \qquad d_i = x_i - \bar{x}_w .
 \]</span></p>
 <p>The means are free and do not involve <span class="math inline">\(\theta\)</span>, so <span class="math inline">\(A\)</span> is block diagonal and only the <span class="math inline">\(\theta\)</span> block of <span class="math inline">\(B\)</span> enters. Under constraints the same projection applies, <span class="math inline">\(Z (Z^\top A Z)^{-1} Z^\top B Z (Z^\top A Z)^{-1} Z^\top\)</span>. The estimator is invariant to the scale of the weights and has no leverage correction (HC0): it equals <code>sandwich::vcovHC(type = "HC0")</code> for each regression equation and lavaan’s robust standard errors with <code>sampling.weights</code>, and is narrower than the HC3 default of <code>fit_mediation(engine = "glm", se_type = "sandwich")</code> by a factor that shrinks like <span class="math inline">\(1/n\)</span>. The weighted likelihood is a pseudo likelihood, so <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> is not defined for a weighted fit.</p>
-<p><strong>Constraints.</strong> Equality and inequality constraints that are linear in the labels become rows <span class="math inline">\(a^\top\theta + b\)</span>, normalized to unit length, with constant Jacobians for the optimizer (SLSQP through nloptr). A nonlinear constraint is an error. At the solution the active constraints and active bounds define a null-space basis <span class="math inline">\(Z\)</span> of the feasible directions, and the covariance is projected,</p>
+</section><section class="level3"><h3 id="constraints">Constraints<a class="anchor" aria-label="anchor" href="#constraints"></a>
+</h3>
+<p>Equality and inequality constraints that are linear in the labels become rows <span class="math inline">\(a^\top\theta + b\)</span>, normalized to unit length, with constant Jacobians for the optimizer (SLSQP through nloptr). A nonlinear constraint is an error. At the solution the active constraints and active bounds define a null-space basis <span class="math inline">\(Z\)</span> of the feasible directions, and the covariance is projected,</p>
 <p><span class="math display">\[
 V = Z \left(Z^\top I Z\right)^{-1} Z^\top ,
 \]</span></p>
 <p>so a parameter pinned by a constraint has zero variance and <code>a == b</code> returns the standard error of the model with <code>a</code> and <code>b</code> collapsed to one label.</p>
-<p><strong>Acceptance.</strong> A solution is accepted only if the optimizer status is a success code, every constraint holds to <span class="math inline">\(10^{-6}\)</span> in the solver’s natural units, and the Newton decrement <span class="math inline">\(\sqrt{g_r^\top H_r^{-1} g_r}\)</span> on the reduced gradient and Hessian of the active-constraint null space is at most <span class="math inline">\(10^{-3}\)</span>, with a positive definite reduced Hessian. The decrement is scale free, so rescaling the data does not change the verdict. The sign of each active inequality’s multiplier is checked and only warns: a wrong sign means the point may not be a local minimum, and the fit is not rejected for it.</p>
-<p><strong>Starts.</strong> The first start is moment based. If it is not accepted, up to <code>n_starts - 1</code> retries use perturbed starts drawn under a fixed seed derived from the model, restoring the caller’s random number state afterward, so a fit is reproducible and never changes a simulation around it. When no start is accepted the error names the best attempt’s status and stationarity, and for an infeasible constraint set, the violated constraint.</p>
+</section><section class="level3"><h3 id="acceptance">Acceptance<a class="anchor" aria-label="anchor" href="#acceptance"></a>
+</h3>
+<p>A solution is accepted only if the optimizer status is a success code, every constraint holds to <span class="math inline">\(10^{-6}\)</span> in the solver’s natural units, and the Newton decrement <span class="math inline">\(\sqrt{g_r^\top H_r^{-1} g_r}\)</span> on the reduced gradient and Hessian of the active-constraint null space is at most <span class="math inline">\(10^{-3}\)</span>, with a positive definite reduced Hessian. The decrement is scale free, so rescaling the data does not change the verdict. The sign of each active inequality’s multiplier is checked and only warns: a wrong sign means the point may not be a local minimum, and the fit is not rejected for it.</p>
+</section><section class="level3"><h3 id="starts">Starts<a class="anchor" aria-label="anchor" href="#starts"></a>
+</h3>
+<p>The first start is moment based. If it is not accepted, up to <code>n_starts - 1</code> retries use perturbed starts drawn under a fixed seed derived from the model, restoring the caller’s random number state afterward, so a fit is reproducible and never changes a simulation around it. When no start is accepted the error names the best attempt’s status and stationarity, and for an infeasible constraint set, the violated constraint.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
 <span>  <span class="st">"mediator1 ~ a*treatment + covariate1</span></span>
@@ -640,7 +718,7 @@ V = Z \left(Z^\top I Z\right)^{-1} Z^\top ,
 1   ab  a*b 0.3331241 0.06436069</code></pre>
 </div>
 </div>
-<section class="level3"><h3 id="testing-the-indirect-effect-mbco">Testing the indirect effect: MBCO<a class="anchor" aria-label="anchor" href="#testing-the-indirect-effect-mbco"></a>
+</section><section class="level3"><h3 id="testing-the-indirect-effect-mbco">Testing the indirect effect: MBCO<a class="anchor" aria-label="anchor" href="#testing-the-indirect-effect-mbco"></a>
 </h3>
 <p><code>mbco_sem(fit, a, b)</code> tests <span class="math inline">\(H_0\colon ab = 0\)</span> as the minimum of two likelihood-ratio tests (MBCO). It refits the model with <span class="math inline">\(a = 0\)</span> and with <span class="math inline">\(b = 0\)</span>; each is a linear equality constraint, so each refit is one solve. With <span class="math inline">\(F\)</span> the minimized maximum-likelihood discrepancy and <span class="math inline">\(n\)</span> the number of rows used,</p>
 <p><span class="math display">\[

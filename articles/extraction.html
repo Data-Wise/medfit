@@ -63,6 +63,59 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fas fa-home fa-lg"></span></a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models">
+<li><a class="dropdown-item" href="../articles/models.html">All models at a glance</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Single mediator</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-simple.html">Simple mediation</a></li>
+    <li><a class="dropdown-item" href="../articles/model-glm-families.html">Binary and non-normal variables</a></li>
+    <li><a class="dropdown-item" href="../articles/model-interaction.html">Treatment-by-mediator interaction</a></li>
+    <li><a class="dropdown-item" href="../articles/model-weights.html">Weights and robust SEs</a></li>
+    <li><a class="dropdown-item" href="../articles/model-regmedint.html">The regmedint engine</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Several mediators</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-serial.html">Serial (a chain)</a></li>
+    <li><a class="dropdown-item" href="../articles/model-parallel.html">Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/model-joint.html">Joint, with products</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Clusters and latent variables</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
+    <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-guides" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Guides</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-guides">
+<li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
+<li><a class="dropdown-item" href="../articles/cookbook.html">All recipes</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">1. One-line mediation</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#i-already-have-lm-fits">2. I already have lm fits</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#binary-outcome">3. Binary outcome</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#weights-and-robust-standard-errors">4. Weights and robust SEs</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-in-a-chain">5. Two mediators in a chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-side-by-side">6. Two mediators side by side</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#treatment-by-mediator-interaction">7. Treatment-by-mediator interaction</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#many-mediators-with-products">8. Many mediators with products</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+  </ul>
+</li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
@@ -108,7 +161,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.7.0/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -119,10 +172,49 @@
 
     <section class="level2"><h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>The <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> function provides a standardized interface for extracting mediation structures from fitted models. It works with: - <strong>lm/glm</strong> models (base R) - implemented - <strong>lavaan</strong> SEM models - implemented - <strong>lmer</strong> mixed models (cluster-level treatment, 2-1-1) - implemented</p>
+<p>The <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> function provides a standardized interface for extracting mediation structures from fitted models. It works with:</p>
+<ul>
+<li>
+<strong>lm/glm</strong> models (base R) - implemented</li>
+<li>
+<strong>lavaan</strong> SEM models - implemented</li>
+<li>
+<strong>lmer</strong> mixed models (cluster-level treatment, 2-1-1) - implemented</li>
+<li>
+<strong><code><a href="../reference/fit_sem.html">fit_sem()</a></code></strong> native SEM fits (experimental) - implemented</li>
+</ul>
 <p>Extraction returns the S7 class that matches the structure: <code>MediationData</code>, <code>InteractionMediationData</code>, <code>SerialMediationData</code>, <code>ParallelMediationData</code>, <code>JointMediationData</code>, or <code>ClusterMediationData</code>. All share one interface (<code><a href="../reference/nie.html">nie()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code>, …) across modeling frameworks.</p>
 <p><strong>Note:</strong> For quick analysis, consider using <code><a href="../reference/med.html">med()</a></code> instead - it handles fitting and extraction in one step. Use <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> when you need more control or already have fitted models.</p>
-</section><section class="level2"><h2 id="quick-comparison-med-vs-extract_mediation">Quick Comparison: med() vs extract_mediation()<a class="anchor" aria-label="anchor" href="#quick-comparison-med-vs-extract_mediation"></a>
+<section class="level3"><h3 id="which-section-do-i-need">Which section do I need?<a class="anchor" aria-label="anchor" href="#which-section-do-i-need"></a>
+</h3>
+<table class="table caption-top">
+<thead><tr class="header">
+<th>I have</th>
+<th>Go to</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Fitted <code>lm</code>/<code>glm</code> models, one mediator or several</td>
+<td><a href="#extracting-from-lmglm-models">Extracting from lm/glm Models</a></td>
+</tr>
+<tr class="even">
+<td>A treatment-by-mediator term in the outcome model</td>
+<td><a href="#treatment-mediator-interaction-four-way-decomposition">Four-way decomposition</a></td>
+</tr>
+<tr class="odd">
+<td>Treatment assigned to whole clusters (<code>lmer</code> fits)</td>
+<td><a href="#extracting-from-lmer-models-cluster-level-treatment">Extracting from lmer Models</a></td>
+</tr>
+<tr class="even">
+<td>A <code>lavaan</code> fit</td>
+<td><a href="#extracting-from-lavaan-models">Extracting from lavaan Models</a></td>
+</tr>
+<tr class="odd">
+<td>Model syntax with latent variables (<code><a href="../reference/fit_sem.html">fit_sem()</a></code>)</td>
+<td><a href="#extracting-from-a-native-sem-fit">Extracting from a Native SEM Fit</a></td>
+</tr>
+</tbody>
+</table></section></section><section class="level2"><h2 id="quick-comparison-med-vs-extract_mediation">Quick Comparison: med() vs extract_mediation()<a class="anchor" aria-label="anchor" href="#quick-comparison-med-vs-extract_mediation"></a>
 </h2>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
@@ -430,7 +522,15 @@ Residual SDs:
 <pre><code>Total Effect (TE): 0.5386</code></pre>
 </div>
 </div>
-<p>Include the treatment and every earlier mediator in each downstream model, as the SEM version below does. Only <code>mediator2</code>’s coefficient becomes the <code>b</code> path, but <code>mediator1</code> also affects <code>outcome</code> directly in <code>mediation_demo</code>, so an outcome model without it (<code>outcome ~ treatment + mediator2 + ...</code>) confounds <code>b</code>: <code>mediator1</code> is a common cause of <code>mediator2</code> and <code>outcome</code>. The product <code>a * d1 * b</code> is then the effect through the full chain <code>treatment -&gt; mediator1 -&gt; mediator2 -&gt; outcome</code> only; the direct <code>mediator1 -&gt; outcome</code> path is not part of it. <code>nie(type = "total")</code> adds the paths that skip a mediator, and <code><a href="../reference/te.html">te()</a></code> and <code><a href="../reference/pm.html">pm()</a></code> use every path, so here the chain carries about 0.08 of a 0.37 total indirect effect.</p>
+<p>Include the treatment and every earlier mediator in each downstream model, as the SEM version below does:</p>
+<ul>
+<li>
+<strong>Why:</strong> only <code>mediator2</code>’s coefficient becomes the <code>b</code> path, but <code>mediator1</code> also affects <code>outcome</code> directly in <code>mediation_demo</code>. An outcome model without it (<code>outcome ~ treatment + mediator2 + ...</code>) confounds <code>b</code>, because <code>mediator1</code> is a common cause of <code>mediator2</code> and <code>outcome</code>.</li>
+<li>
+<strong>What <code><a href="../reference/nie.html">nie()</a></code> is:</strong> the product <code>a * d1 * b</code>, the effect through the full chain <code>treatment -&gt; mediator1 -&gt; mediator2 -&gt; outcome</code> only. The direct <code>mediator1 -&gt; outcome</code> path is not part of it.</li>
+<li>
+<strong>Every path:</strong> <code>nie(type = "total")</code> adds the paths that skip a mediator, and <code><a href="../reference/te.html">te()</a></code> and <code><a href="../reference/pm.html">pm()</a></code> use every path, so here the chain carries about 0.08 of a 0.37 total indirect effect.</li>
+</ul>
 <p>The order of <code>mediator_models</code> is cross-checked against the <code>mediator</code> vector: each model’s response and predecessor are validated, so a misordered list fails fast with an informative error rather than silently producing wrong <code>d</code>-paths.</p>
 <div>
 <blockquote>
@@ -517,7 +617,16 @@ Attaching package: 'generics'</code></pre>
 </div>
 <p>The normal interval for <code>nie</code> treats a sum of coefficient products as normal; for inference on the indirect effect prefer <a href="bootstrap.html"><code>bootstrap_mediation()</code></a>.</p>
 <p>This model leaves out <code>mediator2</code>, a descendant of <code>mediator1</code>, so <code>mediator1</code>’s <code>b</code> path (about 0.55 in the population) includes its effect through <code>mediator2</code>; see <code><a href="../reference/mediation_demo.html">?mediation_demo</a></code> for the reduced-form values.</p>
-<p>The mediator equations are fit separately, and the stored <code>@vcov</code> sets the covariances between their coefficients to zero. <code>cov(a_j, b_{j'})</code> is exactly zero for least squares, because the outcome equation contains every regressor of the mediator equations. <code>cov(a_j, a_{j'})</code> is not: when the mediators’ errors are correlated it is nonzero, and the block-diagonal <code>@vcov</code> omits it, so the indirect-effect SE can be off. The <code>b_j</code> (and <code>c'</code>) share the single outcome equation, so <code>cov(b_j, b_{j'})</code> and <code>cov(b_j, c')</code> are preserved. The <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> indirect-effect SE uses the delta method over this <code>@vcov</code>, not a naive per-mediator sum. A lavaan fit, or a nonparametric bootstrap, captures the omitted covariance; see <a href="methods.html">Methods and Formulas</a>.</p>
+<p>The mediator equations are fit separately, and the stored <code>@vcov</code> sets the covariances between their coefficients to zero. What that does to each one:</p>
+<ul>
+<li>
+<code>cov(a_j, b_{j'})</code> is exactly zero for least squares, because the outcome equation contains every regressor of the mediator equations.</li>
+<li>
+<code>cov(a_j, a_{j'})</code> is not zero when the mediators’ errors are correlated, and the block-diagonal <code>@vcov</code> omits it, so the indirect-effect SE can be off.</li>
+<li>
+<code>cov(b_j, b_{j'})</code> and <code>cov(b_j, c')</code> are preserved, because the <code>b_j</code> (and <code>c'</code>) share the single outcome equation.</li>
+</ul>
+<p>The <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> indirect-effect SE uses the delta method over this <code>@vcov</code>, not a naive per-mediator sum. A lavaan fit, or a nonparametric bootstrap, captures the omitted covariance; see <a href="methods.html">Methods and Formulas</a>.</p>
 </section><section class="level3"><h3 id="several-mediators-with-a-treatment-by-mediator-product">Several Mediators with a Treatment-by-Mediator Product<a class="anchor" aria-label="anchor" href="#several-mediators-with-a-treatment-by-mediator-product"></a>
 </h3>
 <p>When the outcome model of a serial or parallel fit carries a treatment-by-mediator term, <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> returns a <code>JointMediationData</code> object with the <strong>joint</strong> natural effects of the mediators (VanderWeele and Vansteelandt 2014). The mediators are treated as one block: the NIE runs through every mediator and every path among them, and it has no per-mediator split. <code>outcome_int</code> carries a <code>treatment</code> by <code>mediator1</code> product, so it fits the serial chain from above:</p>
@@ -589,7 +698,15 @@ Attaching package: 'generics'</code></pre>
 <pre><code>[1] 0.4483248 0.8930866</code></pre>
 </div>
 </div>
-<p>The fit must meet a few requirements, and each violation errors with its cause: every model carries the same covariates (a medfit limitation), all models are Gaussian identity-link, unweighted, with an intercept, and fit to the same rows, every mediator appears in the outcome model, and the treatment is coded 0/1. Only outcome-model products written with <code>:</code> or <code>*</code> are supported; a product in a mediator model, between mediators, with a covariate, or inside <code><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I()</a></code> errors. A product <strong>precomputed as a data column</strong> cannot be recognized from the formula and would be ignored silently, so write it in the formula. The identification assumptions are stated for the whole mediator vector; see <code><a href="../reference/JointMediationData.html">?JointMediationData</a></code>.</p>
+<p>The fit must meet these requirements; each violation errors with its cause:</p>
+<ul>
+<li>Every model carries the same covariates (a medfit limitation).</li>
+<li>All models are Gaussian identity-link, unweighted, with an intercept, and fit to the same rows.</li>
+<li>Every mediator appears in the outcome model, and the treatment is coded 0/1.</li>
+<li>Only outcome-model products written with <code>:</code> or <code>*</code> are supported; a product in a mediator model, between mediators, with a covariate, or inside <code><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I()</a></code> errors.</li>
+<li>A product <strong>precomputed as a data column</strong> cannot be recognized from the formula and would be ignored silently, so write it in the formula.</li>
+</ul>
+<p>The identification assumptions are stated for the whole mediator vector; see <code><a href="../reference/JointMediationData.html">?JointMediationData</a></code>.</p>
 </section></section><section class="level2"><h2 id="extracting-from-lmer-models-cluster-level-treatment">Extracting from lmer Models: Cluster-Level Treatment<a class="anchor" aria-label="anchor" href="#extracting-from-lmer-models-cluster-level-treatment"></a>
 </h2>
 <p>When the treatment is assigned to whole clusters (for example schools) and the mediator and outcome are measured on the individuals in them (the 2-1-1 design), fit two linear mixed models with <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code> and pass them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>. It returns a <code>ClusterMediationData</code> object. The outcome model must carry the mediator as its within-cluster deviation plus the observed cluster mean (or the raw mediator plus the cluster mean); medfit finds these terms by value, so grand-mean centering and <code><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale()</a></code> work.</p>
@@ -1004,7 +1121,22 @@ pie      0.19952257 0.4805126</code></pre>
 </div>
 <p>Recognized names are <code>interaction</code>, <code>cvar</code>, <code>mreg</code>, <code>yreg</code>, <code>a0</code>, <code>a1</code>, and <code>c_cond</code>; each replaces a value the adapter would otherwise derive from the formulas, families, and data.</p>
 <p><strong>Scope.</strong> The regmedint engine needs a numeric 0/1 treatment and a linear (Gaussian) mediator model; the outcome may be Gaussian or binomial. Outside that range regmedint’s closed-form effects stop being the products of regression coefficients that <code>MediationData</code> and <code>InteractionMediationData</code> are defined in terms of, so the adapter raises an explicit error instead of returning an object whose numbers would disagree with <code><a href="../reference/nie.html">nie()</a></code>. <code>weights</code> and <code>se_type = "sandwich"</code> are likewise refused rather than silently ignored. <code>regmedint</code> is a suggested package — install it with <code>install.packages("regmedint")</code>.</p>
-</section></section></section><section class="level2"><h2 id="compatibility-with-rmediation">Compatibility with RMediation<a class="anchor" aria-label="anchor" href="#compatibility-with-rmediation"></a>
+</section></section></section><section class="level2"><h2 id="extracting-from-a-native-sem-fit">Extracting from a Native SEM Fit<a class="anchor" aria-label="anchor" href="#extracting-from-a-native-sem-fit"></a>
+</h2>
+<p><code><a href="../reference/fit_sem.html">fit_sem()</a></code> fits model syntax with the experimental native engine and returns a <code>SEMFit</code>. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> accepts it with the same arguments as the lavaan method and returns the same classes:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">sem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
+<span>  <span class="st">"mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">mediation_demo</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">x_sem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">sem</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">x_sem</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Indirect Effect (NIE): 0.3253</code></pre>
+</div>
+</div>
+<p>The four-way decomposition needs a mediator intercept, which the native engine does not estimate, so a treatment-by-mediator model is not supported on this route; fit it with <code>lm</code>/<code>glm</code> or lavaan (<code>meanstructure = TRUE</code>) instead. See <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> for the syntax.</p>
+</section><section class="level2"><h2 id="compatibility-with-rmediation">Compatibility with RMediation<a class="anchor" aria-label="anchor" href="#compatibility-with-rmediation"></a>
 </h2>
 <p>The extraction design is compatible with RMediation’s lavaan extractor:</p>
 <div class="cell">
@@ -1121,18 +1253,10 @@ pie      0.19952257 0.4805126</code></pre>
 <li>
 <strong>Multiple treatments</strong>: Comparative mediation analysis</li>
 <li>
-<strong>Latent variables</strong>: SEM with measurement models</li>
+<strong>Latent variables</strong>: SEM with measurement models (<code><a href="../reference/fit_sem.html">fit_sem()</a></code> is the experimental native route; extend it)</li>
 </ul>
 <p>All classes share the same interface, so new model types plug into the same effects, intervals and bootstrap.</p>
-</section><section class="level2"><h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
-</h2>
-<ul>
-<li>Learn about <a href="bootstrap.html">bootstrap inference</a> on extracted models</li>
-<li>See the <a href="introduction.html">introduction</a> for S7 class details</li>
-<li>Read the <a href="methods.html">formulas behind every effect and standard error</a>
-</li>
-<li>Check the reference documentation for <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> methods</li>
-</ul></section><section class="level2"><h2 id="working-with-extracted-results">Working with Extracted Results<a class="anchor" aria-label="anchor" href="#working-with-extracted-results"></a>
+</section><section class="level2"><h2 id="working-with-extracted-results">Working with Extracted Results<a class="anchor" aria-label="anchor" href="#working-with-extracted-results"></a>
 </h2>
 <p>Once you have a <code>MediationData</code> object, you can use all medfit functions:</p>
 <section class="level3"><h3 id="effect-extractors">Effect Extractors<a class="anchor" aria-label="anchor" href="#effect-extractors"></a>
@@ -1307,9 +1431,18 @@ c_prime 0.02523057 0.3863659</code></pre>
 <li>✅ Tidyverse methods (tidy, glance)</li>
 <li>✅ Base R generics (coef, vcov, confint, nobs)</li>
 <li>✅ lmer extraction (<code>ClusterMediationData</code>, cluster-level treatment)</li>
+<li>✅ Native SEM extraction (<code><a href="../reference/fit_sem.html">fit_sem()</a></code> to <code>SEMFit</code> to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, experimental)</li>
 </ul>
 <p>See <code>NEWS.md</code> for updates.</p>
-</section><script id="quarto-html-after-body" type="application/javascript">
+</section><section class="level2"><h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+</h2>
+<ul>
+<li>Learn about <a href="bootstrap.html">bootstrap inference</a> on extracted models</li>
+<li>See the <a href="introduction.html">introduction</a> for S7 class details</li>
+<li>Read the <a href="methods.html">formulas behind every effect and standard error</a>
+</li>
+<li>Check the reference documentation for <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> methods</li>
+</ul></section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);

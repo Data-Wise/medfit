@@ -1,11 +1,16 @@
 # medfit Reference Card
 
-Quick lookup for users who already know medfit. Explanations are in the
+Quick lookup for users who already know medfit. Needs medfit 0.7.0 or
+later (CRAN has 0.3.2; install from GitHub or r-universe, see the [home
+page](https://data-wise.github.io/medfit/#installation)). Explanations
+are in the
 [articles](https://data-wise.github.io/medfit/articles/getting-started.md);
 formulas are in [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md); task
 recipes are in the
-[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md).
+[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md); one
+page per model type is in
+[Models](https://data-wise.github.io/medfit/articles/models.md).
 
 ## Start here
 
@@ -80,16 +85,16 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 
 ## Effects
 
-| Call                      | Gives                                |
-|---------------------------|--------------------------------------|
-| `nie(x)`                  | Natural indirect effect              |
-| `nde(x)`                  | Natural direct effect                |
-| `te(x)`                   | Total effect                         |
-| `pm(x)`                   | Proportion mediated                  |
-| `paths(x)`                | Path coefficients                    |
-| `decompose(x)`            | Interaction, joint and cluster parts |
-| `nie(x, type = "total")`  | Every indirect path (serial)         |
-| `joint_effects(x, theta)` | Joint effects for bootstrapping      |
+| Call                               | Gives                                |
+|------------------------------------|--------------------------------------|
+| `nie(x)`                           | Natural indirect effect              |
+| `nde(x)`                           | Natural direct effect                |
+| `te(x)`                            | Total effect                         |
+| `pm(x)`                            | Proportion mediated                  |
+| `paths(x)`                         | Path coefficients                    |
+| `decompose(x)`                     | Interaction, joint and cluster parts |
+| `nie(x, type = "total")`           | Every indirect path (serial)         |
+| `joint_effects(object, estimates)` | Joint effects for bootstrapping      |
 
 ## Tables and intervals
 

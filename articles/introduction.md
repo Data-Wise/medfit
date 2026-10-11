@@ -25,6 +25,11 @@ It offers:
   [`vcov()`](https://rdrr.io/r/stats/vcov.html),
   [`confint()`](https://rdrr.io/r/stats/confint.html),
   [`nobs()`](https://rdrr.io/r/stats/nobs.html) for S7 classes
+- **Native SEM engine** (experimental):
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  fits model syntax with latent mediators and constraints;
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  tests the indirect effect
 - **S7-based classes** for standardized mediation data structures
 - **Foundation** for the mediation analysis ecosystem (RMediation,
   mediationverse)
@@ -40,8 +45,12 @@ medfit defines S7 classes for each mediation structure: `MediationData`
 treatment-by-mediator interaction), `SerialMediationData`,
 `ParallelMediationData`, `JointMediationData` (several mediators with
 treatment-by-mediator products), `ClusterMediationData` (treatment
-assigned to whole clusters, from `lmer` fits), and `BootstrapResult`.
-The three most common are introduced here; see [Model
+assigned to whole clusters, from `lmer` fits), and `BootstrapResult`. An
+eighth class, `SEMFit`, holds a model fitted from syntax by the native
+engine
+([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
+experimental). The three most common classes are introduced here; see
+[Model
 Extraction](https://data-wise.github.io/medfit/articles/extraction.md)
 for the others.
 
@@ -434,7 +443,7 @@ summary(boot_result)
 
     Bootstrap Distribution Summary:
         Min.  1st Qu.   Median     Mean  3rd Qu.     Max.
-    0.006269 0.121015 0.148585 0.149512 0.175643 0.302417 
+    0.009613 0.121718 0.149310 0.148958 0.174725 0.276019 
 
 ## Main Functions
 
@@ -565,6 +574,29 @@ med_data <- fit_mediation(
 )
 ```
 
+### `fit_sem()`
+
+Fit a model written as syntax with the native maximum-likelihood engine.
+It handles latent variables and constraints, and `:=` defines an effect
+with a delta-method standard error (experimental):
+
+``` r
+sem <- fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+  data = mediation_demo
+)
+sem@defined
+```
+
+      name expr       est         se
+    1   ab  a*b 0.3253207 0.08016376
+
+See
+[`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+for the syntax and the
+[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) for
+a latent-mediator example.
+
 ### bootstrap_mediation()
 
 Perform bootstrap inference on indirect effects:
@@ -617,6 +649,10 @@ medfit serves as the foundation for specialized mediation packages:
 - **mediationverse**: Meta-package for the ecosystem
   - Loads medfit and RMediation together
   - Provides unified documentation
+- **probmed**: Probabilistic mediation effect size (P_med)
+  - Uses medfit for fitting, extraction and bootstrap
+- **medrobust**: Sensitivity analysis
+  - Independent of medfit
 
 ## Design Principles
 

@@ -56,3 +56,54 @@ argument.
 
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
 [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)
+
+## Examples
+
+``` r
+# \donttest{
+fit <- fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+  data = mediation_demo
+)
+coef(fit)
+#>                      a                      b    outcome ~ treatment 
+#>             0.45599612             0.71342873             0.04057666 
+#> mediator1 ~~ mediator1     outcome ~~ outcome treatment ~~ treatment 
+#>             1.15847022             1.18044624             0.24999375 
+vcov(fit)[c("a", "b"), c("a", "b")]
+#>               a             b
+#> a  1.158499e-02 -3.349652e-14
+#> b -3.349652e-14  2.547425e-03
+nobs(fit)
+#> [1] 400
+summary(fit)
+#> Summary of SEMFit
+#> =================
+#> 
+#> Observations: 400
+#> Degrees of freedom: 0
+#> Information: observed
+#> Standard errors: model-based
+#> Converged: Yes
+#> 
+#> Parameters:
+#>                    name    est     se       z      p
+#>                       a 0.4560 0.1076  4.2366 <1e-04
+#>                       b 0.7134 0.0505 14.1351 <1e-04
+#>     outcome ~ treatment 0.0406 0.1111  0.3654  0.715
+#>  mediator1 ~~ mediator1 1.1585 0.0819 14.1421 <1e-04
+#>      outcome ~~ outcome 1.1804 0.0835 14.1421 <1e-04
+#>  treatment ~~ treatment 0.2500 0.0177 14.1421 <1e-04
+#> 
+#> Defined parameters:
+#>  name expr    est     se
+#>    ab  a*b 0.3253 0.0802
+#> 
+#> Diagnostics:
+#>   Optimizer status: 4; stationarity 1.22e-08; retries 0
+#>   Active bounds: none
+#>   Active constraints: none
+#>   Improper solution: no
+#>   Multiplier sign check: ok
+# }
+```

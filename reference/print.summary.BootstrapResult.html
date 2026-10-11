@@ -38,6 +38,53 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fas fa-home fa-lg"></span></a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models"><li><a class="dropdown-item" href="../articles/models.html">All models at a glance</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Single mediator</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-simple.html">Simple mediation</a></li>
+    <li><a class="dropdown-item" href="../articles/model-glm-families.html">Binary and non-normal variables</a></li>
+    <li><a class="dropdown-item" href="../articles/model-interaction.html">Treatment-by-mediator interaction</a></li>
+    <li><a class="dropdown-item" href="../articles/model-weights.html">Weights and robust SEs</a></li>
+    <li><a class="dropdown-item" href="../articles/model-regmedint.html">The regmedint engine</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Several mediators</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-serial.html">Serial (a chain)</a></li>
+    <li><a class="dropdown-item" href="../articles/model-parallel.html">Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/model-joint.html">Joint, with products</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Clusters and latent variables</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
+    <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-guides" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Guides</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-guides"><li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook"><li><a class="dropdown-item" href="../articles/cookbook.html">All recipes</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">1. One-line mediation</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#i-already-have-lm-fits">2. I already have lm fits</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#binary-outcome">3. Binary outcome</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#weights-and-robust-standard-errors">4. Weights and robust SEs</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-in-a-chain">5. Two mediators in a chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-side-by-side">6. Two mediators side by side</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#treatment-by-mediator-interaction">7. Treatment-by-mediator interaction</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#many-mediators-with-products">8. Many mediators with products</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
@@ -70,7 +117,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Print Summary for BootstrapResult</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.7.0/R/classes.R" class="external-link"><code>R/classes.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/classes.R" class="external-link"><code>R/classes.R</code></a></small>
       <div class="d-none name"><code>print.summary.BootstrapResult.Rd</code></div>
     </div>
 

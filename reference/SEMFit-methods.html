@@ -40,6 +40,53 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fas fa-home fa-lg"></span></a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-models"><li><a class="dropdown-item" href="../articles/models.html">All models at a glance</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Single mediator</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-simple.html">Simple mediation</a></li>
+    <li><a class="dropdown-item" href="../articles/model-glm-families.html">Binary and non-normal variables</a></li>
+    <li><a class="dropdown-item" href="../articles/model-interaction.html">Treatment-by-mediator interaction</a></li>
+    <li><a class="dropdown-item" href="../articles/model-weights.html">Weights and robust SEs</a></li>
+    <li><a class="dropdown-item" href="../articles/model-regmedint.html">The regmedint engine</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Several mediators</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-serial.html">Serial (a chain)</a></li>
+    <li><a class="dropdown-item" href="../articles/model-parallel.html">Parallel</a></li>
+    <li><a class="dropdown-item" href="../articles/model-joint.html">Joint, with products</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Clusters and latent variables</h6></li>
+    <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
+    <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-guides" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Guides</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-guides"><li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook"><li><a class="dropdown-item" href="../articles/cookbook.html">All recipes</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">1. One-line mediation</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#i-already-have-lm-fits">2. I already have lm fits</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#binary-outcome">3. Binary outcome</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#weights-and-robust-standard-errors">4. Weights and robust SEs</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-in-a-chain">5. Two mediators in a chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-side-by-side">6. Two mediators side by side</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#treatment-by-mediator-interaction">7. Treatment-by-mediator interaction</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#many-mediators-with-products">8. Many mediators with products</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
@@ -72,7 +119,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Methods for SEMFit objects</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.7.0/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
       <div class="d-none name"><code>SEMFit-methods.Rd</code></div>
     </div>
 
@@ -120,6 +167,57 @@ improper-solution flags and the multiplier sign check.</p></li>
     <div class="dont-index"><p><code><a href="fit_sem.html">fit_sem()</a></code>, <a href="SEMFit.html">SEMFit</a></p></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_sem.html">fit_sem</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b"</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      a                      b    outcome ~ treatment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             0.45599612             0.71342873             0.04057666 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mediator1 ~~ mediator1     outcome ~~ outcome treatment ~~ treatment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             1.15847022             1.18044624             0.24999375 </span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               a             b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a  1.158499e-02 -3.349652e-14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> b -3.349652e-14  2.547425e-03</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 400</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Summary of SEMFit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> =================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Observations: 400</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Degrees of freedom: 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Information: observed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Standard errors: model-based</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Converged: Yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Parameters:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    name    est     se       z      p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       a 0.4560 0.1076  4.2366 &lt;1e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       b 0.7134 0.0505 14.1351 &lt;1e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     outcome ~ treatment 0.0406 0.1111  0.3654  0.715</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  mediator1 ~~ mediator1 1.1585 0.0819 14.1421 &lt;1e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      outcome ~~ outcome 1.1804 0.0835 14.1421 &lt;1e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treatment ~~ treatment 0.2500 0.0177 14.1421 &lt;1e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Defined parameters:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  name expr    est     se</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    ab  a*b 0.3253 0.0802</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Diagnostics:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Optimizer status: 4; stationarity 1.22e-08; retries 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Active bounds: none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Active constraints: none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Improper solution: no</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Multiplier sign check: ok</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

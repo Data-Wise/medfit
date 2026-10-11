@@ -40,7 +40,11 @@ fit_mediation(
 
 - data:
 
-  Data frame containing all variables
+  Data frame containing all variables. With the `"glm"` engine, rows
+  with a missing value on any variable in either formula are dropped
+  before fitting, so both models share one sample;
+  [`nobs()`](https://rdrr.io/r/stats/nobs.html) and `@n_obs` count the
+  rows kept.
 
 - treatment:
 

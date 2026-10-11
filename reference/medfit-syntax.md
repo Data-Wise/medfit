@@ -57,3 +57,33 @@ rejected with the construct named.
 
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
 [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)
+
+## Examples
+
+``` r
+# \donttest{
+# Labeled paths and a defined parameter
+fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\nab := a*b",
+  data = mediation_demo
+)@defined
+#>   name expr       est         se
+#> 1   ab  a*b 0.3253207 0.08016376
+
+# Comma shorthand: one left-hand side per name
+coef(fit_sem(
+  "mediator1, mediator2 ~ treatment\noutcome ~ mediator1 + mediator2 + treatment",
+  data = mediation_demo
+))[1:3]
+#> mediator1 ~ treatment mediator2 ~ treatment   outcome ~ mediator1 
+#>             0.4559961             0.2879984             0.5202186 
+
+# An equality constraint, written with the CONSTRAINT() keyword
+coef(fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nCONSTRAINT(a == b)",
+  data = mediation_demo
+))[c("a", "b")]
+#>         a         b 
+#> 0.6673103 0.6673103 
+# }
+```

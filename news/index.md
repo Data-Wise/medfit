@@ -1,5 +1,119 @@
 # Changelog
 
+## medfit (development version)
+
+### Bug fixes
+
+- [`nobs()`](https://rdrr.io/r/stats/nobs.html), `@n_obs` and
+  [`med()`](https://data-wise.github.io/medfit/reference/med.md) no
+  longer overstate the sample size when the data have missing values on
+  the model variables. The lm/glm extractors counted `nrow(data)`
+  although [`glm()`](https://rdrr.io/r/stats/glm.html) had dropped the
+  incomplete rows, so a fit with 5 missing treatment values reported 400
+  observations on 395 rows. `n_obs` now counts the rows the models used,
+  and the stored `@data` drops the same rows, so the four-way covariate
+  means use them too.
+  [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  drops rows that are incomplete on any variable in either formula
+  before fitting, so the mediator and outcome models share one sample;
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  warns when models you fitted yourself used different rows. The
+  estimates are unchanged when the models already used the same rows;
+  the native and lmer engines already counted correctly.
+- `fit_mediation(engine = "lmer")` now stops with an error when either
+  formula contains an [`offset()`](https://rdrr.io/r/stats/offset.html).
+  The engine rebuilds both formulas from their terms, which exclude
+  offsets, so the offset was dropped without a word and the fit was the
+  same as without it.
+- Joint mediation effects (several mediators with treatment-by-mediator
+  products) now check that every variable two models share holds the
+  same values in the same order, not only that the row names agree. A
+  mediator model fitted to a reordered copy of the data with its row
+  names reset used to pass, and the cross-equation covariance, and with
+  it the joint effect intervals, was silently wrong.
+- Fits made with `na.action = na.exclude` no longer break the
+  extraction. The joint covariance came back with `NA` blocks and `NA`
+  effect intervals and no error, and the residual standard deviation of
+  a Gaussian [`glm()`](https://rdrr.io/r/stats/glm.html) stopped
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  with a missing-value error.
+
+### Documentation
+
+- Every cookbook recipe from 1 to 8 now runs after the setup chunk
+  alone. Recipes 3, 6, 7 and 8 used fitted models that only an earlier
+  recipe created, which running the page top to bottom hid; a test now
+  runs each recipe in a fresh environment.
+- The cookbook and Getting Started no longer present survey weights as
+  covered by `se_type = "sandwich"`: HC3 standard errors treat the
+  observations as independent, so they do not handle survey clusters,
+  strata or replicate weights.
+- The home page now leads with the r-universe and GitHub installs of
+  0.7.0 and says that CRAN 0.3.2 does not run the examples (it lacks
+  `mediation_demo`,
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  and the joint and cluster classes). Getting Started, the cookbook and
+  the Reference Card state the version they need.
+- Getting Started and the Introduction now cover the cluster and native
+  engines (an engine table, the two classes, and a
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  example), and the Model Extraction article has a section on extracting
+  from a `SEMFit`.
+  [`?extract_mediation`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  lists the `SEMFit` method and the `ClusterMediationData` return, and
+  no longer names `brms` as a supported model type; it is still future
+  work.
+- [`?SEMFit`](https://data-wise.github.io/medfit/reference/SEMFit.md),
+  `?SEMFit-methods` and
+  [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+  now have examples that run.
+- The Model Extraction article has a “Which section do I need?” table at
+  the top, ends on Next Steps, and sets three dense paragraphs as
+  bullets. The Methods article’s cluster and native engine sections now
+  have subheadings.
+- The Introduction counted `SEMFit` as the seventh class; it is the
+  eighth. Its Package Ecosystem list now names probmed and medrobust,
+  and the Reference Card gives
+  [`joint_effects()`](https://data-wise.github.io/medfit/reference/joint_effects.md)
+  its real argument names (`object`, `estimates`).
+- New **Models** menu and landing page, and a **Cookbook** menu in the
+  top menu bar. The Models page has a capability matrix and a “find your
+  model” table; eight model pages cover simple mediation, binary and
+  non-normal variables, treatment-by-mediator interaction, weights and
+  robust standard errors, the `regmedint` engine, serial, parallel and
+  joint mediation. Articles are now grouped in an index. A test keeps
+  every model page on the landing page, in the index and in the menu,
+  and every cookbook anchor real.
+- Six more model pages: cluster-randomized trials (2-1-1), lavaan fits,
+  and four on the native engine (paths and defined parameters, a latent
+  mediator, constraints and the MBCO test, several mediators and
+  weights). They join the Models menu, the landing page and the articles
+  index. A test triggers each error message the pages quote, so a
+  reworded message fails the tests before a page goes stale.
+- A new “Guides” menu and group with four pages: What changed since CRAN
+  0.3.2 (the results that changed and the calls that now stop with an
+  error), Troubleshooting (the errors and warnings a user is most likely
+  to hit, each with its cause and fix), Which interval should I use?,
+  and a Glossary of terms and symbols. Tests trigger every message the
+  guides quote and check the known answers behind their claims.
+- The home page and Getting Started are rewritten so they are quick to
+  skim: a “What’s new” table, a 60-second start, a “pick your model”
+  table, long examples folded away, and Getting Started cut to four
+  steps that link to the model pages. A test checks that their article
+  links and cookbook anchors are real.
+- The Models page states that `fit_mediation(engine = "native")` takes
+  one mediator; for several, fit with
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  and call
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md).
+- The bootstrap example in the README printed
+  `NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%`, which no longer
+  matched the code or its own non-bootstrap fit on the same data; it now
+  shows `NIE = 0.164 [0.0867, 0.256] | NDE = 0.293 | PM = 36 %`. Its
+  feature list, function list and test count now include the `lmer`
+  engine, cluster decomposition and native fits.
+
 ## medfit 0.7.0
 
 medfit 0.7.0 adds an experimental native maximum-likelihood structural

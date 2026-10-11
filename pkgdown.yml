@@ -6,10 +6,29 @@ articles:
   articles/cookbook: cookbook.html
   articles/extraction: extraction.html
   articles/getting-started: getting-started.html
+  articles/guide-changes: guide-changes.html
+  articles/guide-glossary: guide-glossary.html
+  articles/guide-intervals: guide-intervals.html
+  articles/guide-troubleshooting: guide-troubleshooting.html
   articles/introduction: introduction.html
   articles/methods: methods.html
+  articles/model-cluster: model-cluster.html
+  articles/model-glm-families: model-glm-families.html
+  articles/model-interaction: model-interaction.html
+  articles/model-joint: model-joint.html
+  articles/model-lavaan: model-lavaan.html
+  articles/model-native-constraints: model-native-constraints.html
+  articles/model-native-latent: model-native-latent.html
+  articles/model-native-multi: model-native-multi.html
+  articles/model-native: model-native.html
+  articles/model-parallel: model-parallel.html
+  articles/model-regmedint: model-regmedint.html
+  articles/model-serial: model-serial.html
+  articles/model-simple: model-simple.html
+  articles/model-weights: model-weights.html
+  articles/models: models.html
   articles/refcard: refcard.html
-last_built: 2026-10-11T01:37Z
+last_built: 2026-10-11T14:57Z
 urls:
   reference: https://data-wise.github.io/medfit/reference
   article: https://data-wise.github.io/medfit/articles
