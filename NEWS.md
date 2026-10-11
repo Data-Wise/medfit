@@ -1,3 +1,22 @@
+# medfit (development version)
+
+## Bug fixes
+
+* `fit_mediation(engine = "lmer")` now stops with an error when either formula
+  contains an `offset()`. The engine rebuilds both formulas from their terms,
+  which exclude offsets, so the offset was dropped without a word and the fit
+  was the same as without it.
+* Joint mediation effects (several mediators with treatment-by-mediator
+  products) now check that every variable two models share holds the same
+  values in the same order, not only that the row names agree. A mediator model
+  fitted to a reordered copy of the data with its row names reset used to pass,
+  and the cross-equation covariance, and with it the joint effect intervals,
+  was silently wrong.
+* Fits made with `na.action = na.exclude` no longer break the extraction. The
+  joint covariance came back with `NA` blocks and `NA` effect intervals and no
+  error, and the residual standard deviation of a Gaussian `glm()` stopped
+  `extract_mediation()` with a missing-value error.
+
 # medfit 0.7.0
 
 medfit 0.7.0 adds an experimental native maximum-likelihood structural

@@ -1418,8 +1418,10 @@ S7::method(extract_mediation, glm_class) <- function(
   } else if (inherits(model, "glm")) {
     # For glm, check if Gaussian family
     if (model$family$family == "gaussian") {
-      # For Gaussian GLM, sigma can be extracted
-      return(sqrt(sum(stats::residuals(model, type = "pearson")^2) / model$df.residual))
+      # For Gaussian GLM, sigma can be extracted. Under na.exclude the residuals
+      # come back padded with NA for the omitted rows; those rows were not fitted.
+      r <- stats::residuals(model, type = "pearson")
+      return(sqrt(sum(r[!is.na(r)]^2) / model$df.residual))
     } else {
       # For non-Gaussian GLMs, sigma doesn't apply in the same way
       return(NULL)
