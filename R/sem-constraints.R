@@ -111,6 +111,42 @@
   list(A = eq$A[keep, , drop = FALSE], b = eq$b[keep], text = eq$text[keep])
 }
 
+# An inequality row is implied by the equalities when its gradient lies in the span of the independent equality
+# gradients: the residual after projection onto that span is below `.sem_implied_tol`. Its value on the equality
+# set is then a constant. A row that holds there (constant at most `.sem_implied_slack`) is active at every
+# feasible point, so it hands SLSQP a rank-deficient active Jacobian (`a == b` with `a - b < 0`), the same
+# degeneracy `.sem_independent_rows()` removes for equality rows; it is dropped from the solver's rows and the
+# acceptance gate, which uses every row, still checks it. A row the equalities violate is KEPT: the solve
+# proceeds and the gate reports it, because near-dependence is not proof of infeasibility (`a - b + 1e-9*cp >
+# 1e-7` with `a == b` is feasible at large `cp`, so an up-front error could reject a feasible model). The
+# tolerance is far tighter than the 1e-8 equality rank tolerance, at the level of floating-point noise, so only
+# rows that are dependent to rounding (`2*a + 2*b`) are dropped. Rows are unit length; `eq` is the independent
+# subset from `.sem_independent_rows()`.
+.sem_implied_tol <- 1e-12
+.sem_implied_slack <- 1e-8
+.sem_drop_implied_ineq <- function(ineq, eq) {
+  if (!nrow(ineq$A) || !nrow(eq$A)) {
+    return(ineq)
+  }
+  dec <- qr(t(eq$A), tol = .sem_rank_tol)
+  r <- dec$rank
+  q_eq <- qr.Q(dec)[, seq_len(r), drop = FALSE]
+  resid <- ineq$A - (ineq$A %*% q_eq) %*% t(q_eq)
+  implied <- sqrt(rowSums(resid^2)) < .sem_implied_tol
+  if (!any(implied)) {
+    return(ineq)
+  }
+  # The minimum-norm point of the equality set, from the QR factors (t(A)[, piv] = Q R, so A[piv, ] = R' Q'):
+  # no normal equations, which would square the condition number of nearly dependent rows.
+  piv <- dec$pivot[seq_len(r)]
+  theta0 <- as.vector(q_eq %*% forwardsolve(t(qr.R(dec)[seq_len(r), seq_len(r), drop = FALSE]), -eq$b[piv]))
+  drop <- implied & (as.vector(ineq$A %*% theta0) + ineq$b <= .sem_implied_slack)
+  if (!any(drop)) {
+    return(ineq)
+  }
+  list(A = ineq$A[!drop, , drop = FALSE], b = ineq$b[!drop], text = ineq$text[!drop])
+}
+
 # nloptr arguments for the rows in the solver's coordinates x = theta / u: the
 # Jacobian is the row scaled by u, constant.
 .sem_nlopt_constraints <- function(cons, u) {
@@ -119,6 +155,7 @@
   }
   out <- list()
   eq <- .sem_independent_rows(cons$eq)
+  ineq <- .sem_drop_implied_ineq(cons$ineq, eq)
   # One binding per block: the closures capture this environment, so a shared name would let the
   # inequality rows replace the equality Jacobian.
   if (nrow(eq$A)) {
@@ -126,9 +163,9 @@
     out$eval_g_eq <- function(x) as.vector(jac_eq %*% x) + eq$b
     out$eval_jac_g_eq <- function(x) jac_eq
   }
-  if (nrow(cons$ineq$A)) {
-    jac_ineq <- sweep(cons$ineq$A, 2L, u, "*")
-    out$eval_g_ineq <- function(x) as.vector(jac_ineq %*% x) + cons$ineq$b
+  if (nrow(ineq$A)) {
+    jac_ineq <- sweep(ineq$A, 2L, u, "*")
+    out$eval_g_ineq <- function(x) as.vector(jac_ineq %*% x) + ineq$b
     out$eval_jac_g_ineq <- function(x) jac_ineq
   }
   out

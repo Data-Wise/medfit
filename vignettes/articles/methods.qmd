@@ -598,12 +598,18 @@ presolve routines remove duplicate and dependent rows for that reason.
 An inequality whose row lies in the span of the equality rows has a constant
 value on the equality set. When that value satisfies it (`a == b` with
 `a - b < 0`, or `a + b == 0.8` with `a + b > 0.8`) the inequality is active at
-every feasible point and reproduces the same degeneracy. **In 0.7.0 such a fit
-fails on some datasets** with `no start converged`, often with solver status 3
-at a point the gate correctly rejects as not stationary; when it succeeds, it
-matches the model with the redundant inequality deleted to $10^{-6}$. Delete
-the redundant inequality as a workaround. Reducing these rows the same way is
-planned for 0.8.0; an inequality the equality rows violate everywhere is still reported by the acceptance gate.
+every feasible point and would reproduce the same degeneracy, so it is dropped
+from the solver's rows too, and the acceptance gate still checks it. Such a row
+is detected when its gradient is within $10^{-12}$ of the span of the
+independent equality rows (rows have unit length), a distance that only rows
+dependent to rounding error meet; a row that is merely close to the span, such as `a - b + 1e-9*cp > 1e-7`
+with `a == b`, stays with the solver, because near-dependence does not show that
+the set is infeasible. An implied inequality that the equality rows violate
+(`a + b == 0.8` with `a + b < 0.5`) is kept, and the acceptance gate reports the
+violated row. The multiplier sign check skips a fit whose active constraints are
+linearly dependent, which includes a dropped row, since that row has no
+meaningful multiplier. The estimates equal those of the model with the redundant
+inequality deleted.
 An inequality that is inactive on the equality set (`a + b == 0.8` with
 `a + b < 0.9`), and parallel inequalities with no equality (`a + b < 0.2` with
 `2*a + 2*b < 0.4`), are not affected.

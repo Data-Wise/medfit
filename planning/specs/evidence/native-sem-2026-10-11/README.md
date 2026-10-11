@@ -28,12 +28,14 @@ whose squared residual on the normalized problem is within 1e-8 of that referenc
 Positive control for fixture 2 (run a patched copy from a scratch directory: the script writes `results/` relative to where it runs, and an earlier run of the patched copy here overwrote `02-nnls-cases.csv` with all-ok rows, which was caught and regenerated): replacing the verbatim `nnls()` default `tol = 1e-12` with `1e6` (which never admits a column) makes
 the "defect reproduces" ASSERT fail and the script exit nonzero.
 
-`03-redundant-inequality-sets.R` (audit F1, plan T6) is the third fixture: nine constraint sets by 12 seeded datasets on the 0.7.0 code and on
-a prototype that drops implied, satisfied inequality rows. ASSERTs: every coincident set fails on some seed (5 to 7 of 12 fit), the controls fit
-12 of 12, the prototype fits all consistent sets and matches the independent set to 1e-6, and an inconsistent set still errors naming the
-violated constraint. A near-dependence ladder (`a == b; a - b + k*cp > 1e-7`, k from 1e-6 to 1e-14) shows why the T6 rule drops an implied
-row but never raises an error before the solve: the 1e-8 error rule would reject 5 of the 6 feasible sets, the 1e-12 drop-only rule rejects none. Background and design: `../../RESEARCH-redundant-constraints-2026-10-11.md`. Once T6 ships, the "defect reproduces"
-assertion is inverted to "fixed" and the prototype is deleted.
+`03-redundant-inequality-sets.R` (audit F1, plan T6) is the third fixture: nine constraint sets by 12 seeded datasets on the package code. Before
+T6 the coincident sets fit 5 to 7 of 12 (the 0.7.0 rows are kept in `results/03-redundant-inequality-sets-0.7.0-baseline.csv`); T6 drops an implied,
+satisfied inequality row from the solver's rows (`.sem_drop_implied_ineq()`), so the ASSERTs now say "fixed": every coincident set fits on all 12
+seeds, the controls fit 12 of 12, every consistent set matches the independent set to 1e-6, and an inconsistent set (`a + b == 0.8` with `a + b < 0.5`,
+or `a == 1` with `a == 2`) still errors, naming the violated constraint. Run against the pre-T6 code the "fixed" ASSERT fails, which is the control. A
+near-dependence ladder (`a == b; a - b + k*cp > 1e-7`, k from 1e-6 to 1e-14) shows why the rule drops an implied row but never raises an error before
+the solve: the 1e-8 error rule would reject 5 of the 6 feasible sets, the 1e-12 drop-only rule rejects none. Background and design:
+`../../RESEARCH-redundant-constraints-2026-10-11.md`.
 
 ## What these fixtures do not claim
 
