@@ -2,6 +2,17 @@
 
 ## Bug fixes
 
+* `nobs()`, `@n_obs` and `med()` no longer overstate the sample size when the
+  data have missing values on the model variables. The lm/glm extractors counted
+  `nrow(data)` although `glm()` had dropped the incomplete rows, so a fit with 5
+  missing treatment values reported 400 observations on 395 rows. `n_obs` now
+  counts the rows the models used, and the stored `@data` drops the same rows, so
+  the four-way covariate means use them too. `fit_mediation()` drops rows that
+  are incomplete on any variable in either formula before fitting, so the
+  mediator and outcome models share one sample; `extract_mediation()` warns when
+  models you fitted yourself used different rows. The estimates are unchanged
+  when the models already used the same rows; the native and lmer engines
+  already counted correctly.
 * `fit_mediation(engine = "lmer")` now stops with an error when either formula
   contains an `offset()`. The engine rebuilds both formulas from their terms,
   which exclude offsets, so the offset was dropped without a word and the fit

@@ -14,7 +14,10 @@
 #'   with `engine = "native"`, which takes `model` instead.
 #' @param formula_m Formula for mediator model (e.g., `M ~ X + C`). Not used
 #'   with `engine = "native"`.
-#' @param data Data frame containing all variables
+#' @param data Data frame containing all variables. With the `"glm"` engine, rows
+#'   with a missing value on any variable in either formula are dropped before
+#'   fitting, so both models share one sample; `nobs()` and `@n_obs` count the
+#'   rows kept.
 #' @param treatment Character string: name of treatment variable
 #' @param mediator Character string: name of mediator variable
 #' @param engine Character string: modeling engine to use. Currently supports:
@@ -423,6 +426,20 @@ fit_mediation <- function(formula_y,
   # formula's environment (the caller's), not this frame. Adding `weights` only
   # when non-NULL keeps the unweighted path identical to an unweighted glm().
   dots <- list(...)
+
+  # Fit both models to the rows complete on every variable in either formula, so
+  # they share one sample and `@n_obs` and `@data` describe it. glm() alone would
+  # drop rows per model, and a variable in only one formula would leave the two
+  # models on different rows.
+  vars <- intersect(unique(c(all.vars(formula_y), all.vars(formula_m))), names(data))
+  keep <- stats::complete.cases(data[, vars, drop = FALSE])
+  if (!all(keep)) {
+    if (!any(keep)) {
+      stop("No complete rows remain after dropping missing values.", call. = FALSE)
+    }
+    data <- data[keep, , drop = FALSE]
+    if (!is.null(weights)) weights <- weights[keep]
+  }
 
   args_m <- c(list(formula = formula_m, data = data, family = family_m), dots)
   args_y <- c(list(formula = formula_y, data = data, family = family_y), dots)
