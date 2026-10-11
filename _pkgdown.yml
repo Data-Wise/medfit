@@ -85,11 +85,17 @@ navbar:
       - text: "─────────────"
       - text: "Clusters and latent variables"
       - text: "Cluster-randomized trial"
-        href: articles/cookbook.html#cluster-randomized-trial
+        href: articles/model-cluster.html
       - text: "lavaan fits"
-        href: articles/cookbook.html#i-use-lavaan
-      - text: "Latent mediator (native engine)"
-        href: articles/cookbook.html#a-latent-mediator-native-engine
+        href: articles/model-lavaan.html
+      - text: "Native: paths and defined parameters"
+        href: articles/model-native.html
+      - text: "Native: a latent mediator"
+        href: articles/model-native-latent.html
+      - text: "Native: constraints and MBCO"
+        href: articles/model-native-constraints.html
+      - text: "Native: several mediators and weights"
+        href: articles/model-native-multi.html
     guides:
       text: Guides
       menu:
@@ -247,6 +253,15 @@ articles:
       - '`articles/model-serial`'
       - '`articles/model-parallel`'
       - '`articles/model-joint`'
+  - title: "Models: clusters and structural equation models"
+    desc: "Treatment assigned to clusters, lavaan fits, and the native engine"
+    contents:
+      - '`articles/model-cluster`'
+      - '`articles/model-lavaan`'
+      - '`articles/model-native`'
+      - '`articles/model-native-latent`'
+      - '`articles/model-native-constraints`'
+      - '`articles/model-native-multi`'
   - title: "Guides"
     desc: "Upgrading, errors, intervals and terms"
     contents:

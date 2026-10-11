@@ -29,7 +29,10 @@ with \code{engine = "native"}, which takes \code{model} instead.}
 \item{formula_m}{Formula for mediator model (e.g., \code{M ~ X + C}). Not used
 with \code{engine = "native"}.}
 
-\item{data}{Data frame containing all variables}
+\item{data}{Data frame containing all variables. With the \code{"glm"} engine, rows
+with a missing value on any variable in either formula are dropped before
+fitting, so both models share one sample; \code{nobs()} and \verb{@n_obs} count the
+rows kept.}
 
 \item{treatment}{Character string: name of treatment variable}
 

@@ -1,0 +1,91 @@
+---
+title: "Native engine: constraints and the MBCO test"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Fix, bound or equate parameters, and test the indirect effect with one call.
+Part of the [Models](models.html) collection; the third of four
+[native engine](model-native.html) pages. The engine is experimental.
+
+| | |
+|---|---|
+| **What it does** | equality, inequality and fixed-value constraints on labeled paths; `mbco_sem()` for the indirect effect |
+| **Class returned** | `SEMFit` |
+| **Syntax** | `a == b`, `a + b == 1`, `a < 0.3`, `y ~ 0.5 * x`, `CONSTRAINT(a == b)` |
+| **Limit** | constraints must be linear in the labels |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+base <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + cp * treatment + covariate1 + covariate2
+"
+```
+
+## Equal paths
+
+Write the constraint on its own line, bare or inside `CONSTRAINT()`:
+
+```{r}
+#| label: equal
+free <- fit_sem(paste0(base, "ab := a * b"), mediation_demo)
+equal <- fit_sem(paste0(base, "CONSTRAINT(a == b)\nab := a * b"), mediation_demo)
+rbind(free = coef(free)[c("a", "b")], constrained = coef(equal)[c("a", "b")])
+```
+
+The constrained fit has one more degree of freedom, and `summary(equal)` lists
+the constraint as active under Diagnostics.
+
+## Bounds and fixed values
+
+```{r}
+#| label: bounds
+bounded <- fit_sem(paste0(base, "a < 0.3\nab := a * b"), mediation_demo)
+round(coef(bounded)[c("a", "b")], 4)
+
+fixed <- fit_sem(sub("cp \\*", "0 *", paste0(base, "ab := a * b")), mediation_demo)
+round(coef(fixed)[c("a", "b")], 4)
+```
+
+`a < 0.3` pushed `a` onto the bound, and `cp` was fixed at 0 in the second fit.
+A parameter that sits on a bound has a standard error of 0 in the table; read the
+"Active bounds" line of `summary()` before using it.
+
+## Test the indirect effect
+
+`mbco_sem()` is the minimum-of-two likelihood-ratio test (MBCO): it refits with
+`a` fixed at 0 and with `b` fixed at 0, and the smaller statistic tests
+$a \, b = 0$.
+
+```{r}
+#| label: mbco
+mbco_sem(free, "a", "b")
+```
+
+The result is an `htest`; the two component tests are in its `tests` element.
+
+## Limits
+
+- **Constraints must be linear in the labels.** `a + b == 1` is fine;
+  `a * b == 0.1` stops with "nonlinear constraints are not supported in this
+  version".
+- **A constraint needs a free parameter** and **labels must be defined** in the
+  model.
+- **Equal labels are one parameter.** Giving two paths the same label equates them
+  without a constraint line.
+
+## Related
+
+[Cookbook recipe 11](cookbook.html#a-latent-mediator-native-engine) |
+[Methods and Formulas](methods.html) | `?"medfit-syntax"`

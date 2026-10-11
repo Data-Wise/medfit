@@ -26,6 +26,12 @@ site:
     - vignettes/articles/model-serial.qmd
     - vignettes/articles/model-parallel.qmd
     - vignettes/articles/model-joint.qmd
+    - vignettes/articles/model-cluster.qmd
+    - vignettes/articles/model-lavaan.qmd
+    - vignettes/articles/model-native.qmd
+    - vignettes/articles/model-native-latent.qmd
+    - vignettes/articles/model-native-constraints.qmd
+    - vignettes/articles/model-native-multi.qmd
     - vignettes/articles/guide-changes.qmd
     - vignettes/articles/guide-troubleshooting.qmd
     - vignettes/articles/guide-intervals.qmd

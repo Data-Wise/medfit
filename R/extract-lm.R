@@ -36,7 +36,9 @@ glm_class <- S7::new_S3_class("glm")
 #'   Required whenever `mediator` has length >= 2 (serial or parallel); must
 #'   have length `length(mediator) - 1`.
 #' @param outcome Character: name of the outcome variable (optional, auto-detected)
-#' @param data Data frame: original data (optional, extracted from model if available)
+#' @param data Data frame: original data (optional, extracted from model if available).
+#'   Rows the models dropped for missing values are removed from the stored `@data`,
+#'   and `@n_obs` counts the rows the models used.
 #' @param ... Additional arguments (ignored)
 #'
 #' @return A [MediationData] object; an [InteractionMediationData] object when
@@ -455,21 +457,11 @@ S7::method(extract_mediation, glm_class) <- function(
 
   # --- Extract Data ---
 
-  if (is.null(data)) {
-    # Try to get data from model
-    data <- tryCatch(
-      stats::model.frame(model_m),
-      error = function(e) NULL
-    )
-  }
-
-  # Get sample size
-  n_obs <- if (!is.null(data)) {
-    nrow(data)
-  } else {
-    # Fall back to number of observations used in fitting
-    length(stats::residuals(model_m))
-  }
+  # Rows the models used, not rows supplied: `data` may hold incomplete rows
+  # that glm() dropped.
+  used <- .used_rows(list(model_m, model_y), data)
+  data <- used$data
+  n_obs <- used$n_obs
 
   # --- Get Predictor Names ---
 
@@ -804,7 +796,9 @@ S7::method(extract_mediation, glm_class) <- function(
   # --- Metadata ---
   sigma_m <- .extract_sigma(model_m)
   sigma_y <- .extract_sigma(model_y)
-  n_obs <- if (!is.null(data)) nrow(data) else length(stats::residuals(model_m))
+  used <- .used_rows(list(model_m, model_y), data)
+  data <- used$data
+  n_obs <- used$n_obs
   mediator_predictors <- names(coef_m)[names(coef_m) != "(Intercept)"]
   outcome_predictors <- names(coef_y)[names(coef_y) != "(Intercept)"]
   is_glm <- inherits(model_m, "glm") || inherits(model_y, "glm")
@@ -1106,12 +1100,11 @@ S7::method(extract_mediation, glm_class) <- function(
   outcome_predictors <- drop_intercept(names(coef_y))
 
   # --- Data, sample size, convergence ---
-  if (is.null(data)) {
-    data <- tryCatch(stats::model.frame(object), error = function(e) NULL)
-  }
-  n_obs <- if (!is.null(data)) nrow(data) else length(stats::residuals(object))
-
   all_models <- c(med_models, list(model_y))
+  used <- .used_rows(all_models, data)
+  data <- used$data
+  n_obs <- used$n_obs
+
   converged <- all(vapply(all_models, function(m) {
     if (inherits(m, "glm")) isTRUE(m$converged) else TRUE
   }, logical(1)))
@@ -1356,12 +1349,11 @@ S7::method(extract_mediation, glm_class) <- function(
   outcome_predictors <- drop_intercept(names(coef_y))
 
   # --- Data, sample size, convergence ---
-  if (is.null(data)) {
-    data <- tryCatch(stats::model.frame(object), error = function(e) NULL)
-  }
-  n_obs <- if (!is.null(data)) nrow(data) else length(stats::residuals(object))
-
   all_models <- c(med_models, list(model_y))
+  used <- .used_rows(all_models, data)
+  data <- used$data
+  n_obs <- used$n_obs
+
   converged <- all(vapply(all_models, function(m) {
     if (inherits(m, "glm")) isTRUE(m$converged) else TRUE
   }, logical(1)))
@@ -1391,6 +1383,52 @@ S7::method(extract_mediation, glm_class) <- function(
     converged = converged,
     source_package = source_package
   )
+}
+
+
+#' Rows the fitted models actually used
+#'
+#' `lm()`/`glm()` drop rows with missing values on the model variables, so
+#' `nrow(data)` overstates the sample size whenever `data` has any. This returns
+#' the rows every model kept, as `n_obs` and as the matching `@data`.
+#'
+#' With `data = NULL`, `@data` is the first model's model frame. With `data`
+#' supplied, rows any model dropped are removed from it, provided each model's
+#' kept plus dropped rows add up to `nrow(data)`; otherwise `data` cannot be
+#' tied to the models (a `subset`, or data other than the fitted data) and is
+#' kept as given with `n_obs = nrow(data)`. Models that dropped different rows
+#' fit different samples, so that warns.
+#'
+#' @param models List of fitted lm/glm models.
+#' @param data Data frame supplied by the caller, or `NULL`.
+#' @return List with `data` (data frame or `NULL`) and `n_obs`.
+#' @keywords internal
+#' @noRd
+.used_rows <- function(models, data) {
+  # nrow(model.frame()) is the rows the fit kept; length(residuals()) would be
+  # padded back to the full length under na.action = na.exclude.
+  kept <- vapply(models, function(m) nrow(stats::model.frame(m)), integer(1))
+  omitted <- lapply(models, function(m) as.integer(stats::na.action(m)))
+
+  if (length(unique(lapply(omitted, sort))) > 1L) {
+    warning(
+      "The mediator and outcome models were fitted to different sets of rows ",
+      "(missing values on variables that appear in only some of the formulas). ",
+      "The estimates combine different samples; drop the incomplete rows ",
+      "before fitting so every model uses the same rows.",
+      call. = FALSE
+    )
+  }
+
+  if (is.null(data)) {
+    data <- tryCatch(stats::model.frame(models[[1L]]), error = function(e) NULL)
+    return(list(data = data, n_obs = if (is.null(data)) kept[[1L]] else nrow(data)))
+  }
+
+  aligned <- all(kept + lengths(omitted) == nrow(data))
+  drop <- sort(unique(unlist(omitted)))
+  if (aligned && length(drop)) data <- data[-drop, , drop = FALSE]
+  list(data = data, n_obs = nrow(data))
 }
 
 

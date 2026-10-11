@@ -2,6 +2,17 @@
 
 ## Bug fixes
 
+* `nobs()`, `@n_obs` and `med()` no longer overstate the sample size when the
+  data have missing values on the model variables. The lm/glm extractors counted
+  `nrow(data)` although `glm()` had dropped the incomplete rows, so a fit with 5
+  missing treatment values reported 400 observations on 395 rows. `n_obs` now
+  counts the rows the models used, and the stored `@data` drops the same rows, so
+  the four-way covariate means use them too. `fit_mediation()` drops rows that
+  are incomplete on any variable in either formula before fitting, so the
+  mediator and outcome models share one sample; `extract_mediation()` warns when
+  models you fitted yourself used different rows. The estimates are unchanged
+  when the models already used the same rows; the native and lmer engines
+  already counted correctly.
 * `fit_mediation(engine = "lmer")` now stops with an error when either formula
   contains an `offset()`. The engine rebuilds both formulas from their terms,
   which exclude offsets, so the offset was dropped without a word and the fit
@@ -49,6 +60,11 @@
   weights and robust standard errors, the `regmedint` engine, serial, parallel and joint
   mediation. Articles are now grouped in an index. A test keeps every model page on the
   landing page, in the index and in the menu, and every cookbook anchor real.
+* Six more model pages: cluster-randomized trials (2-1-1), lavaan fits, and four on
+  the native engine (paths and defined parameters, a latent mediator, constraints and
+  the MBCO test, several mediators and weights). They join the Models menu, the
+  landing page and the articles index. A test triggers each error message the pages
+  quote, so a reworded message fails the tests before a page goes stale.
 * A new "Guides" menu and group with four pages: What changed since CRAN 0.3.2 (the
   results that changed and the calls that now stop with an error), Troubleshooting (the
   errors and warnings a user is most likely to hit, each with its cause and fix), Which
