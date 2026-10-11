@@ -342,6 +342,7 @@ tests/testthat/
 ├── test-extract-*.R                     # lm/glm, lavaan, serial, parallel, interaction, joint
 ├── test-cluster-211.R, test-cluster-boot.R, test-cluster-harness.R, helper-cluster.R   # cluster mediation: guards, oracles, KR, fit engine, cluster bootstrap, harness
 ├── test-refcard-coverage.R, test-cookbook-consistency.R   # refcard names every export and class; cookbook recipes, links and cluster data match methods.qmd
+├── test-model-pages*.R, test-guide-*.R   # every model page is on the landing page, index and menu; links and cookbook anchors resolve; each error message the pages and guides quote is triggered, and Suggests-dependent cases skip when the package is absent
 ├── test-effect-se.R, test-confint-paths.R, test-methods-*.R   # SEs, confint, tidy
 ├── test-serial-total-effect.R           # te() over every path
 ├── test-fit-*.R                         # glm, regmedint, m_star, native (test-fit-sem.R)
@@ -545,10 +546,10 @@ During `devtools::load_all()`:
 
 ---
 
-**Last Updated**: 2026-10-10
+**Last Updated**: 2026-10-11
 **Maintained by**: medfit development team
 
-**Current status** (2026-10-10): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.7.0** (released 2026-10-10, tag `v0.7.0`; GitHub-only, not submitted to CRAN). 0.7.0 ships the experimental native maximum-likelihood SEM engine (`fit_sem()`/`SEMFit`, `fit_mediation(engine = "native")`, sampling weights and the sandwich covariance, `mbco_sem()`, and the OpenMx parity and constrained gates; #110-#124) with its docs (`?"medfit-syntax"`, cookbook recipe 11, the native section of the methods article). Nonlinear constraints (S1, PR 11) are planned for a later release. 0.6.0 (2026-10-09) shipped Ext D module 1, 2-1-1 cluster mediation (`ClusterMediationData`, `engine = "lmer"`, `se_type = "kr"`, cluster bootstrap; #90-#92, #95, #100), the Reference Card and Cookbook articles (#94, #97), and 30 fewer published internal reference pages (#98). 0.5.0 (2026-09-25) changed two results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). Articles evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`. 
+**Current status** (2026-10-10): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.7.0** (released 2026-10-10, tag `v0.7.0`; GitHub-only, not submitted to CRAN). 0.7.0 ships the experimental native maximum-likelihood SEM engine (`fit_sem()`/`SEMFit`, `fit_mediation(engine = "native")`, sampling weights and the sandwich covariance, `mbco_sem()`, and the OpenMx parity and constrained gates; #110-#124) with its docs (`?"medfit-syntax"`, cookbook recipe 11, the native section of the methods article). Nonlinear constraints (S1, PR 11) are planned for a later release. 0.6.0 (2026-10-09) shipped Ext D module 1, 2-1-1 cluster mediation (`ClusterMediationData`, `engine = "lmer"`, `se_type = "kr"`, cluster bootstrap; #90-#92, #95, #100), the Reference Card and Cookbook articles (#94, #97), and 30 fewer published internal reference pages (#98). 0.5.0 (2026-09-25) changed two results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). The site documents 0.7.0 plus the unreleased docs overhaul (#134-#139: a Models menu with 14 model pages, a home page and Getting Started rewrite, and a Guides menu), deployed 2026-10-11 from `dev` with `gh workflow run pkgdown.yaml --ref dev`; `nobs()` now counts the rows the models used (#138). Articles evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`. 
 
 ### CRAN check practice (learned 2026-06-10, extended 2026-07-20)
 
