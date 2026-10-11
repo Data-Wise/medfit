@@ -23,6 +23,8 @@ heading_id <- function(h) {
 }
 
 cookbook_ids <- function() {
+  testthat::skip_if_not(dir.exists(root_path("vignettes", "articles")),
+                        "vignettes are not available (installed or built package)")
   cb <- readLines(root_path("vignettes", "articles", "cookbook.qmd"), warn = FALSE)
   heads <- sub("^## ", "", grep("^## ", cb, value = TRUE))
   vapply(heads, heading_id, character(1), USE.NAMES = FALSE)
