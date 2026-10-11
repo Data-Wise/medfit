@@ -1,6 +1,6 @@
 # Report for RMediation's author: `mbco()` example labels and a nonlinear-constraint optimum
 
-**Status:** DRAFT, not filed. Filing in Data-Wise/rmediation is a cross-repo write and needs an explicit go-ahead.
+**Status:** FILED 2026-10-10 as Data-Wise/rmediation#35 (title: "mbco() example: path labels shift when endVar includes x; nonlinear ind1 == 0 lands at the a1 = 0 branch"). The issue is the authoritative text; this report is the longer write-up it links to.
 **Date:** 2026-10-10 | **Found by:** medfit's native SEM work (PLAN-native-sem-implementation-2026-10-09.md, S0(c) and S0(d); ledger X0)
 **Checked against:** RMediation 1.6.1 (installed), OpenMx 2.22.11, nloptr 2.2.1, R 4.x on macOS
 **Reproduction:** `planning/specs/evidence/native-sem-2026-10-08/07-preflight.R`, stored output `results/07-preflight.out` (11 of 11 checks pass)
@@ -51,6 +51,10 @@ The MBCO statistic for `a1 * b1 == 0` is the minimum of the two linear likelihoo
 
 This is a solver outcome on one dataset, not a general claim. The three seeds agree with each other and with the `a1 == 0` solve, so more starts did not escape it. Worth a look at whether `mbco()` computes the statistic as the minimum of the two linear solves or from the nonlinear constraint.
 
+## Relation to rmediation#34
+
+Data-Wise/rmediation#34 (opened 2026-10-07, found after this report was drafted) concerns the same `mbco()` example and the same `mxConstraint(ind == 0)` pattern, but runs the other way: OpenMx's default feasibility tolerance (0.05) lets the null fit stop off the null set, so `-2LL(h0)` is too low and the MBCO statistic is understated. Finding 2 above is the null fit sitting exactly on the null set (|ab| about 1e-96) at the worse branch, so the statistic is overstated (221.05 vs the exact 0.0831). They are separate mechanisms. The remedy #34 proposes, fitting the two single-path nulls and taking the smaller `-2LL`, covers both. Finding 1 (shifted labels) is not in #34.
+
 ## What this was not
 
 - Not a defect in `mbco()`'s code path: the report concerns the Rd example and the nonlinear null on this model. I did not read `mbco()`'s source.
@@ -70,4 +74,4 @@ Rscript planning/specs/evidence/native-sem-2026-10-08/07-preflight.R
 
 ## Where to file
 
-Data-Wise/rmediation issue (the same author). Title suggestion: "mbco() example: labels shift when endVar includes x; nonlinear ind1 == 0 lands at a1 = 0". Attach nothing but the script path above (a link to the medfit commit once it is on `dev`).
+Filed: Data-Wise/rmediation#35, with links to the script and this report at medfit commit `443fd5e`.
