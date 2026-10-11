@@ -1,6 +1,6 @@
 # Research: redundant constraints in the native SEM engine (audit F1, plan T6)
 
-**Date:** 2026-10-11 | **Status:** research and design note; code change is task T6 in `tasks/plan.md`
+**Date:** 2026-10-11 (revised the same day after an adversarial review, section 5) | **Status:** research and design note; code change is task T6 in `tasks/plan.md`
 **Question:** an inequality row that coincides with the equality rows (`a == b` with `a - b < 0`) stops 0.7.0 fits. Why, is there
 precedent for the failure and its remedy, and what should medfit do?
 **Evidence:** `planning/specs/evidence/native-sem-2026-10-11/03-redundant-inequality-sets.R` (seeded; `./run-all.sh` reruns it).
@@ -66,34 +66,59 @@ Reading of the precedent:
    point; the SEM literature on inequality constraints concerns the null distribution (chi-bar-squared), not solver degeneracy.
    Treat this as an absence of evidence from one search, not a claim that none exists.
 
-## 3. Design for T6
+## 3. Design for T6 (revised after the adversarial review, section 5)
 
-An **inequality row is implied by the equalities** when its gradient lies in the span of the independent equality gradients
-(residual after projection below the rank tolerance, `.sem_rank_tol = 1e-8`, rows are unit length). On the equality set its value is a
+An **inequality row is implied by the equalities** when its gradient lies in the span of the independent equality gradients: the
+residual after projection onto that span is below `implied_tol = 1e-12` (rows are unit length). On the equality set its value is a
 constant `c`, computed at any point of that set (a least-squares solution of the equalities).
 
 | Case | Action |
 |---|---|
 | implied and `c <= 1e-8` (satisfied, on or inside the boundary) | drop from the solver's rows; keep in the acceptance gate, which already uses every row |
-| implied and `c > 1e-8` (violated everywhere on the equality set) | the set is inconsistent: raise a named error at fit time, before the solve, naming the two rows |
-| not implied | unchanged |
+| implied and `c > 1e-8` (violated everywhere on the equality set) | **keep** the row; the solve proceeds and the acceptance gate reports the violation, as it does today |
+| not implied (including near-dependent rows, residual above `1e-12`) | unchanged |
 
 Where: the filter belongs next to `.sem_independent_rows()` in the constructor of the solver's rows (`.sem_nlopt_constraints()`),
-so the unit-length rows, the tolerance and the "dropped rows are still gated" argument are shared with #122. The gate's
-sign check already reports `skipped: the active constraints are linearly dependent` in these fits; that stays correct (a
-dropped row has no meaningful multiplier), and the docs should say so.
+so the unit-length rows, the "dropped rows are still gated" argument and the gate's constraint tolerance are shared with #122. The
+gate's sign check already reports `skipped: the active constraints are linearly dependent` in these fits; that stays correct (a
+dropped row has no meaningful multiplier), and the docs say so.
+
+**Why drop-only, with no up-front error.** The first draft of this note raised a named error before the solve when an implied row's
+constant was positive. The review showed that near-dependence is not implication: for `a == b` with `a - b + 1e-9*cp > 1e-7` the
+projection residual is 7.1e-10 (below the 1e-8 rank tolerance) and the constant at the minimum-norm equality point is 7.1e-8, so the
+rule would call the set inconsistent, yet `(a, b, cp) = (0.5, 0.5, 200)` satisfies both constraints. Fixture 03's ladder shows the
+same for every coefficient from 1e-8 down to 1e-14. A *dropped* row cannot do that harm, because the gate still tests it against
+the actual solution; an *error* has no such backstop. Keeping the row when its constant is positive costs one worse error message (the
+gate leads with the solver status and then names the row) and buys never rejecting a feasible model.
+
+**Why 1e-12 and not the 1e-8 rank tolerance.** Equality rows use 1e-8 because a wrongly dropped equality row is caught by the gate. A
+wrongly dropped *inequality* row is also caught by the gate, but the result is a spurious rejection of a feasible fit, so the implied
+test is tightened to the level of floating-point noise: exactly dependent rows such as `2*a + 2*b` leave residuals near 1e-16, and
+anything a coefficient of 1e-12 or more away from the span stays with the solver. T6 calibrates this with the ladder of rescaled
+equivalents (coefficients 1e-6 to 1e-14, and a rescaled parameter) and fails if any feasible ladder set is rejected.
 
 **Not in scope.** Inequality-only dependence (`a + b < 0.2` with `2*a + 2*b < 0.4`) fit in all 12 seeds and needs no change; a
 dependent set of *simultaneously active* inequalities that the equalities do not imply (three rows through one point in two
 dimensions) is not covered by the sweep. If T6's tests find it failing, handle it as a separate finding rather than widening T6.
 
-**Open decision for the author.** Should the inconsistent case be detected up front with a named error (as designed above), or
-left to the acceptance gate (today's message: `no start converged (5 tried); best attempt: status -4 ...; constraint 'a + b < 0.5' is
-violated by 1.5e-01`)? Recommended: up front. The gate message names the row but leads with a solver status that is
-misleading, and up-front detection is one projection, already computed.
+**Decision closed (2026-10-11).** The earlier open question, up-front error versus gate message, is resolved in favor of the gate message
+by the review above. The improvement to that message (lead with the violated row, not the solver status) is a separate, optional
+change to `.sem_optimize()`'s error text.
 
 ## 4. Documentation placed with this note
 
 - `vignettes/articles/methods.qmd`, section "Constraints": the redundancy rules, the 0.7.0 limitation and its workaround.
 - `CLAUDE.md` and `AGENTS.md`: the constraint pipeline in one paragraph (rows, independent subset, implied-row rule, gate).
-- `tasks/plan.md`, task T6: root cause, design above, and the acceptance tests that follow from the table in section 1.
+- `tasks/plan.md`, task T6: root cause, the revised design above, and the acceptance tests that follow from section 1 and the ladder.
+
+## 5. Adversarial review of this note (Codex, 2026-10-11) and what changed
+
+Four findings, each reproduced before it was accepted. Only the third concerns this note; the others are recorded because they came
+from the same review and are tracked elsewhere.
+
+| # | Finding | Verdict | Change |
+|---|---|---|---|
+| 3 | Near-dependence does not establish infeasibility (medium) | Accepted. The note's up-front error would reject feasible models; the prototype never did, because it keeps a row whose constant violates it | Section 3 is drop-only; the tolerance is 1e-12; fixture 03 gains the ladder and three assertions (the old rule rejects 5 of 6 feasible ladder sets, the new rule rejects none); T6 and the three docs that stated the error design are corrected |
+| 1 | `--sim` can pass on stale CSVs (high) | Accepted, outside this note | Open: `tests/sim/run-gates.R` must require a zero child exit status and a fresh results file, plus a mutant where a child fails beside an old passing CSV |
+| 4 | Stationarity check ignores the acceptance threshold (medium) | Accepted, outside this note | Open: save the distance field in the stationarity CSV, check both margins against `.sem_stat_tol`, add a common-rescaling mutant. The committed truncated-run minimum is 1.96e-3, only 2x the threshold, so the check must use runs far from the optimum |
+| 2 | GLM complete-case filtering changes `subset` (high) | Accepted, outside this branch: merged in #138 | Open: with `subset = 1:50` and row 1 incomplete, `fit_mediation()` fits rows 2:51 (a = 0.4295, `n_obs` 199) where `glm()` fits rows 2:50 (a = 0.4281). A separate fix |

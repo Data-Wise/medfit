@@ -31,7 +31,8 @@ the "defect reproduces" ASSERT fail and the script exit nonzero.
 `03-redundant-inequality-sets.R` (audit F1, plan T6) is the third fixture: nine constraint sets by 12 seeded datasets on the 0.7.0 code and on
 a prototype that drops implied, satisfied inequality rows. ASSERTs: every coincident set fails on some seed (5 to 7 of 12 fit), the controls fit
 12 of 12, the prototype fits all consistent sets and matches the independent set to 1e-6, and an inconsistent set still errors naming the
-violated constraint. Background and design: `../../RESEARCH-redundant-constraints-2026-10-11.md`. Once T6 ships, the "defect reproduces"
+violated constraint. A near-dependence ladder (`a == b; a - b + k*cp > 1e-7`, k from 1e-6 to 1e-14) shows why the T6 rule drops an implied
+row but never raises an error before the solve: the 1e-8 error rule would reject 5 of the 6 feasible sets, the 1e-12 drop-only rule rejects none. Background and design: `../../RESEARCH-redundant-constraints-2026-10-11.md`. Once T6 ships, the "defect reproduces"
 assertion is inverted to "fixed" and the prototype is deleted.
 
 ## What these fixtures do not claim

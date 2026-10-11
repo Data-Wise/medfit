@@ -6,6 +6,7 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [x] T1 Re-derive the S1 findings as committed fixtures (`planning/specs/evidence/native-sem-2026-10-11/`)
 - [ ] T2 Trigger `rhub.yaml` once; record the result in `.STATUS`
 - [x] T3 Harness driver `tests/sim/run-gates.R` (`--fast`, `--sim`, `--mutants`); verdicts from results CSVs and `tests/sim/gates.csv`, four "exits 0 but bad" fixtures, a reliability threshold
+- [ ] T3b Harness follow-ups from the Codex review of 2026-10-11 (`tests/sim/run-gates.R`): `--sim` requires a zero child exit status and a results file written during the run (mutant: a child fails beside an older passing CSV); stationarity checks both margins against `.sem_stat_tol` on runs far from the optimum, with the distance saved in the CSV and a common-rescaling mutant that must fail
 
 ## Phase 1: Foundations (W1, W2)
 - [x] T4 Named errors for `Y ~ Y` and duplicate `Y ~ X`

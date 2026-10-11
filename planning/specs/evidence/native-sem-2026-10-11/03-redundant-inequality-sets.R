@@ -35,7 +35,10 @@ fit1 <- function(extra, d) {
   tryCatch(suppressWarnings(.sem_fit_syntax(paste0(base, "\n", extra), d, "observed")), error = function(e) e)
 }
 
-# Prototype: drop an inequality row that lies in the span of the independent equality rows when it holds on the equality set.
+# Prototype: drop an inequality row that lies in the span of the independent equality rows (residual below `implied_tol`, far
+# tighter than the 1e-8 equality rank tolerance: see the near-dependence ladder below) when it holds on the equality set.
+# A violated implied row is KEPT, so the acceptance gate reports it; the prototype never raises an up-front error.
+implied_tol <- 1e-12
 proto <- function(cons, u) {
   if (is.null(cons)) {
     return(NULL)
@@ -46,7 +49,7 @@ proto <- function(cons, u) {
     dec <- qr(t(eq$A), tol = .sem_rank_tol)
     Q <- qr.Q(dec)[, seq_len(dec$rank), drop = FALSE]
     resid <- ineq$A - (ineq$A %*% Q) %*% t(Q)
-    inspan <- sqrt(rowSums(resid^2)) < 1e-8
+    inspan <- sqrt(rowSums(resid^2)) < implied_tol
     theta0 <- as.vector(t(eq$A) %*% solve(eq$A %*% t(eq$A), -eq$b)) # a point of the equality set
     holds <- as.vector(ineq$A %*% theta0) + ineq$b <= 1e-8
     drop <- inspan & holds
@@ -120,6 +123,32 @@ assert(sprintf("prototype matches the independent-set optimum to 1e-6 (max gap %
 assert("an inconsistent set still errors with the 0.7.0 code and with the prototype, naming the violated constraint",
        sb$fits[sb$kind == "inconsistent"] == 0 && sa$fits[sa$kind == "inconsistent"] == 0 &&
          grepl("violated", sa$first_error[sa$kind == "inconsistent"]))
+
+# ---- near-dependence ladder (Codex review, finding 3) -------------------------------------------------------------
+# `a == b` with `a - b + k*cp > 1e-7`. For k > 0 the row is NOT in the span of the equality row, and the set is feasible
+# (take cp large). A rule that declares an up-front error when the projection residual is below 1e-8 and the constant at the
+# minimum-norm equality solution is positive would reject these feasible models; the drop-only rule keeps the row.
+cat("\n== near-dependence ladder: a == b ; a - b + k*cp > 1e-7 ==\n")
+ladder <- do.call(rbind, lapply(c(1e-6, 1e-8, 1e-9, 1e-10, 1e-12, 1e-14), function(k) {
+  Aeq <- matrix(c(1, -1, 0) / sqrt(2), 1)
+  r <- c(1, -1, k)
+  len <- sqrt(sum(r^2))
+  A <- -r / len
+  b <- 1e-7 / len
+  Q <- qr.Q(qr(t(Aeq)))
+  resid <- sqrt(sum((A - as.vector((A %*% Q) %*% t(Q)))^2))
+  c0 <- sum(A * rep(0, 3)) + b # value at the minimum-norm point (a, b, cp) = 0 of the equality set
+  cp_feasible <- 2e-7 / k # a point with a == b and a - b + k*cp = 2e-7 > 1e-7
+  feasible <- (sum(A * c(0.5, 0.5, cp_feasible)) + b) <= 0
+  data.frame(k = k, residual = signif(resid, 3), constant_at_min_norm = signif(c0, 3), feasible_point_exists = feasible,
+             old_rule_errors = resid < 1e-8 && c0 > 1e-8, drop_only_drops = resid < implied_tol && c0 <= 1e-8)
+}))
+print(ladder, row.names = FALSE)
+assert("every ladder set is feasible (a point with a == b satisfies the inequality)", all(ladder$feasible_point_exists))
+assert(sprintf("the 1e-8 up-front-error rule would reject %d feasible sets (k = %s)", sum(ladder$old_rule_errors),
+               paste(ladder$k[ladder$old_rule_errors], collapse = ", ")), any(ladder$old_rule_errors))
+assert("the drop-only rule with tolerance 1e-12 keeps every ladder row that is not numerically exact (k >= 1e-10), so none is rejected or lost",
+       !any(ladder$drop_only_drops[ladder$k >= 1e-10]))
 
 cat(sprintf("\nR %s; nloptr %s; medfit %s\n", getRversion(), utils::packageVersion("nloptr"), utils::packageVersion("medfit")))
 if (failures > 0L) {
