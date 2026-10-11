@@ -1,4 +1,8 @@
-# medfit (development version)
+# medfit 0.7.0
+
+medfit 0.7.0 adds an experimental native maximum-likelihood structural
+equation engine. It is released on GitHub and r-universe only and is not
+submitted to CRAN.
 
 ## New features
 
@@ -15,7 +19,11 @@
   single, serial and parallel mediators and for a latent mediator, which need
   not be a column of `data`. `extract_mediation()` has a method for `SEMFit`
   that shares its workers with the lavaan route, so the aliases and covariance
-  rows are the same; its `source_package` is `"medfit"`.
+  rows are the same; its `source_package` is `"medfit"`. For an observed
+  single mediator, `probmed::pmed()` runs on the native route with the plugin
+  estimator and the parametric bootstrap, which agrees with the glm route
+  within Monte Carlo error; a latent mediator supports the plugin estimator
+  only (#105).
 * Standard errors use observed information by default (`information =
   "expected"` is available). Against OpenMx they agree to 1.6e-4 in the worst
   of 240 simulated datasets; expected information for latent-variable models
@@ -42,12 +50,14 @@
   labeled regression paths, refuses a fit with sampling weights or one that did
   not converge, has its refits inherit the fit's `n_starts` and `control`, and
   warns when a bound or an inequality on the tested path puts the null on the
-  boundary of the parameter space. The nonlinear `a*b == 0` is deliberately not solved: a nonlinear
-  solver can stop at the branch with the larger statistic.
-* Not yet supported by the native engine: mean structures (free intercepts), the four-way
-  decomposition (it needs the mediator intercept; use `decomposition =
-  "two_way"`), standardized estimates, multilevel models, and nonlinear
-  constraints.
+  boundary of the parameter space. The nonlinear `a*b == 0` is deliberately
+  not solved: a nonlinear solver can stop at the branch with the larger
+  statistic.
+* Not yet supported by the native engine: mean structures (free intercepts),
+  the four-way decomposition (it needs the mediator intercept; use
+  `decomposition = "two_way"`), standardized estimates, and multilevel models.
+  Nonlinear constraints are planned for a later release; until then a
+  nonlinear constraint is an error that names the constraint.
 
 ## Bug fixes
 
@@ -85,10 +95,24 @@
   supports the plugin estimators only. Serial, parallel and four-way objects
   are unchanged (#106).
 
+## Documentation
+
+* The cookbook has an eleventh recipe, a latent mediator fitted with the
+  native engine and tested with `mbco_sem()`. The model syntax is documented in
+  `?"medfit-syntax"`, the Methods and Formulas article has a section on the
+  native engine with a subsection on MBCO, and the Reference Card lists
+  `fit_sem()`, `mbco_sem()` and the `SEMFit` class.
+
 ## Dependencies
 
 * `lifecycle` is now in `Imports`, and the lifecycle badge figures ship in
   `man/figures/`. Deprecations and experimental features are marked with it.
+* `nloptr (>= 1.0.4)` is now in `Imports`: the native engine uses its SLSQP
+  solver. It contains compiled code, so a source install from GitHub (for
+  example `pak::pak("data-wise/medfit")`) builds it unless `lme4` already
+  brought it in; the r-universe binaries need no compiler.
+* `OpenMx` is now in `Suggests`. Only the tests use it, as the independent
+  reference for standard errors and for `mbco_sem()`.
 
 # medfit 0.6.0
 
