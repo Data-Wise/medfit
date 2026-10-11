@@ -37,6 +37,9 @@
   lists the `SEMFit` method and the `ClusterMediationData` return, and no longer
   names `brms` as a supported model type; it is still future work.
 * `?SEMFit`, `?SEMFit-methods` and `?"medfit-syntax"` now have examples that run.
+* The Model Extraction article has a "Which section do I need?" table at the top, ends
+  on Next Steps, and sets three dense paragraphs as bullets. The Methods article's
+  cluster and native engine sections now have subheadings.
 
 # medfit 0.7.0
 
