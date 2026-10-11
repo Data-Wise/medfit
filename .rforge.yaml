@@ -32,3 +32,7 @@ site:
     - vignettes/articles/model-native-latent.qmd
     - vignettes/articles/model-native-constraints.qmd
     - vignettes/articles/model-native-multi.qmd
+    - vignettes/articles/guide-changes.qmd
+    - vignettes/articles/guide-troubleshooting.qmd
+    - vignettes/articles/guide-intervals.qmd
+    - vignettes/articles/guide-glossary.qmd

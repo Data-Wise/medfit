@@ -184,6 +184,9 @@ Pick the row that matches your data.
 | Two mediators side by side | [Parallel mediation](model-parallel.html) |
 | Several mediators with products | [Joint mediation](model-joint.html) |
 | Something else, or not sure | [Models](models.html), the full list |
+| An error or warning | [Troubleshooting](guide-troubleshooting.html) |
+| Which interval to report | [Which interval should I use?](guide-intervals.html) |
+| A term or symbol you do not know | [Glossary and symbols](guide-glossary.html) |
 
 For quick lookups: the [Reference Card](refcard.html) has every function on one
 page, and the [Cookbook](cookbook.html) has eleven short recipes. To understand

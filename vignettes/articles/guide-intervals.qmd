@@ -1,0 +1,127 @@
+---
+title: "Which interval should I use?"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+medfit gives several intervals. This page says which to reach for, shows them
+side by side on one dataset, and states what each one assumes. It makes no
+coverage claim beyond what the package's tests show.
+
+## Pick by situation
+
+| Your situation | Use | Why |
+|---|---|---|
+| A quick look, one mediator, a decent sample | `tidy(fit, conf.int = TRUE)` or `confint()` | delta method: instant, and assumes the estimate is roughly normal |
+| The indirect effect `a * b`, a final result | parametric bootstrap: `med(boot = TRUE)` | draws from the estimated normal distribution of the paths, so the skew of a product shows up |
+| You doubt that normality | nonparametric bootstrap | resamples rows and refits, so it does not rely on a normal approximation |
+| Serial mediators fitted from `lm` objects | nonparametric bootstrap, or a lavaan fit | the lm route sets the covariances among chain paths to zero; see [Serial mediation](model-serial.html) |
+| Weights | `se_type = "sandwich"` | robust (heteroskedasticity-consistent) standard errors; see [Weights and robust SEs](model-weights.html) |
+| Treatment assigned to clusters, 25 or more | model-based intervals for the paths | the engine warns below 25 clusters |
+| Treatment assigned to clusters, fewer than 25 | `se_type = "kr"` for the paths; `bootstrap_mediation(cluster = )` for the products | see [Cluster-randomized trials](model-cluster.html) |
+| A test that the indirect effect is zero | `mbco_sem()` (native engine) | minimum of two likelihood-ratio tests; see [constraints and MBCO](model-native-constraints.html) |
+| Only a point estimate | the plugin method | it has no interval; the bounds are `NA` |
+
+## The same fit, four ways
+
+One simple mediation on `mediation_demo`:
+
+```{r}
+#| label: fit
+library(medfit)
+library(generics)
+
+fy <- outcome ~ treatment + mediator1 + covariate1 + covariate2
+fm <- mediator1 ~ treatment + covariate1 + covariate2
+fit <- fit_mediation(fy, fm, data = mediation_demo,
+                     treatment = "treatment", mediator = "mediator1")
+```
+
+**Delta method** (the default in `tidy()`):
+
+```{r}
+#| label: delta
+tidy(fit, type = "effects", conf.int = TRUE)[1, ]
+```
+
+**Parametric bootstrap** (what `med(boot = TRUE)` runs). The statistic is the
+product of the two paths, named as `bootstrap_mediation()` sees them:
+
+```{r}
+#| label: parametric
+indirect <- function(theta) theta["m_treatment"] * theta["y_mediator1"]
+par_boot <- bootstrap_mediation(indirect, method = "parametric",
+                                mediation_data = fit, n_boot = 2000, seed = 1)
+c(lower = par_boot@ci_lower, upper = par_boot@ci_upper)
+```
+
+**Nonparametric bootstrap** (resamples rows and refits):
+
+```{r}
+#| label: nonparametric
+refit_nie <- function(d) {
+  unname(nie(fit_mediation(fy, fm, data = d, treatment = "treatment",
+                           mediator = "mediator1")))
+}
+np_boot <- bootstrap_mediation(refit_nie, method = "nonparametric",
+                               data = mediation_demo, n_boot = 1000, seed = 1)
+c(lower = np_boot@ci_lower, upper = np_boot@ci_upper)
+```
+
+**Plugin** (a point estimate only):
+
+```{r}
+#| label: plugin
+plug <- bootstrap_mediation(indirect, method = "plugin", mediation_data = fit)
+c(estimate = unname(plug@estimate), lower = plug@ci_lower, upper = plug@ci_upper)
+```
+
+On this dataset the three intervals agree to within about 0.01, which is what
+to expect when the sample is large and the model is simple. They part ways
+with small samples, skewed variables, weights or few clusters.
+
+## What each one assumes
+
+| Interval | Assumes | Cost |
+|---|---|---|
+| Delta method | the estimate is approximately normal, with the standard error from the model | none |
+| Parametric bootstrap | the path estimates are approximately jointly normal | fast; no refitting |
+| Nonparametric bootstrap | the rows are independent draws | slow; refits every time |
+| Plugin | nothing; it gives no interval | none |
+| Kenward-Roger | a linear mixed model with a random intercept | needs `pbkrtest` |
+| Cluster bootstrap | clusters are the independent units | refits every time; some refits may fail |
+
+All the bootstrap intervals are **percentile** intervals (the 2.5th and 97.5th
+percentiles for a 95% interval). BCa and studentized intervals are not
+implemented.
+
+## Two messages to expect
+
+`confint(fit, parm = "effects")` warns that the normal approximation for the
+indirect effect may be inaccurate. That is a nudge toward the bootstrap, not an
+error; `tidy()` gives the same delta-method interval without the warning.
+
+A bootstrap warns when refits fail and are dropped; see
+[Troubleshooting](guide-troubleshooting.html).
+
+## Limits
+
+- **No coverage claim.** This page shows intervals from one dataset; it does not
+  show that they cover 95% of the time. The evidence for the cluster bootstrap on
+  the 2-1-1 design is thin; [Methods and Formulas](methods.html) says so.
+- **Percentile intervals only.**
+- **Standard errors under weights** need `se_type = "sandwich"` (the sandwich
+  treats observations as independent).
+
+## Related
+
+[Bootstrap Inference](bootstrap.html) | [Methods and Formulas](methods.html) |
+[Troubleshooting](guide-troubleshooting.html)
