@@ -43,7 +43,7 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 
 ## Phase 4: Docs (W5)
 - [ ] T20 lavaan-vs-medfit article, executed at site build (needs T11, T13)
-- [ ] T21 Docs for nonlinear constraints and audit gaps (needs T13-T16) (CLAUDE.md eight classes and engines line done 2026-10-11; `AGENTS.md` still has both)
+- [ ] T21 Docs for nonlinear constraints and audit gaps (needs T13-T16) (class count and engines line done 2026-10-11 in CLAUDE.md and AGENTS.md)
 - [ ] T22 glm joint-significance recipe (G11)
 
 ### Checkpoint D

@@ -39,7 +39,7 @@ covr::package_coverage()          # Target: >90%
 ## About This Package
 
 **medfit** is the foundation package for the mediationverse ecosystem, providing:
-- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`
+- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`, `SEMFit` (native SEM fit, experimental)
 - **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan
 - **Fitting**: Formula-based `fit_mediation()` with the `glm` and `regmedint` engines, case `weights`, and `se_type = "sandwich"` (HC3); `fit_sem()` and `fit_mediation(engine = "native", model = )` fit medfit model syntax with the native ML engine (experimental, `SEMFit`)
 - **Inference**: delta-method effect SEs in `tidy()`/`confint()`; bootstrap (parametric, nonparametric, plugin)
@@ -74,7 +74,7 @@ R/
 ├── aaa-imports.R           # Package imports
 ├── aab-generics.R          # S7 generics (load before methods!)
 ├── medfit-package.R        # Package documentation
-├── classes.R               # S7 class definitions (all seven classes)
+├── classes.R               # S7 class definitions (all eight classes)
 ├── data.R                  # mediation_demo documentation
 ├── fit-glm.R               # fit_mediation(), glm engine, weights/sandwich
 ├── fit-regmedint.R         # regmedint engine adapter
@@ -106,7 +106,7 @@ R/
 **Arguments:**
 - `formula_y`, `formula_m` - Model specifications
 - `treatment`, `mediator`, `outcome` - Variable names
-- `engine` - "glm", "lmer", "brms"
+- `engine` - "glm", "lmer", "regmedint", "native" ("brms" is planned)
 - `method` - "parametric", "nonparametric", "plugin"
 - `n_boot`, `ci_level` - Bootstrap parameters
 
