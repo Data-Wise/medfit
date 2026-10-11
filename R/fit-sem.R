@@ -100,7 +100,8 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     converged = fit$converged, data = fit$data, model = model,
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
                         "sign_check", "se_type")],
-    internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control")],
+    internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
+                      "branch")],
     call = call
   )
 }
