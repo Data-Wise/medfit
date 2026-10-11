@@ -91,7 +91,7 @@ Examples on this site need medfit 0.7.0 or later. If `mediation_demo` or
 | You see | Meaning |
 |---|---|
 | `Model-based standard errors are not valid under inverse-probability weighting` | you gave `weights` with `se_type = "model"`. Shown once per session. Add `se_type = "sandwich"` |
-| the estimates use fewer rows than your data has | the model fits drop rows with missing values on their variables; remove them yourself with `complete.cases()` so you know which rows were used |
+| the estimates use fewer rows than your data has | the model fits drop rows with missing values on their variables. `nobs()` reports the rows used in the development version; 0.7.0 reported every row of `data`, so there, count them with `complete.cases()` |
 
 ## Still stuck?
 
