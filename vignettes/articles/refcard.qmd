@@ -69,7 +69,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | `paths(x)` | Path coefficients |
 | `decompose(x)` | Interaction, joint and cluster parts |
 | `nie(x, type = "total")` | Every indirect path (serial) |
-| `joint_effects(x, theta)` | Joint effects for bootstrapping |
+| `joint_effects(object, estimates)` | Joint effects for bootstrapping |
 
 ## Tables and intervals
 

@@ -40,6 +40,9 @@
 * The Model Extraction article has a "Which section do I need?" table at the top, ends
   on Next Steps, and sets three dense paragraphs as bullets. The Methods article's
   cluster and native engine sections now have subheadings.
+* The Introduction counted `SEMFit` as the seventh class; it is the eighth. Its
+  Package Ecosystem list now names probmed and medrobust, and the Reference Card
+  gives `joint_effects()` its real argument names (`object`, `estimates`).
 
 # medfit 0.7.0
 

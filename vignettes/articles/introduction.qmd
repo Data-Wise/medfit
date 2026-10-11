@@ -32,7 +32,7 @@ medfit defines S7 classes for each mediation structure: `MediationData`
 interaction), `SerialMediationData`, `ParallelMediationData`,
 `JointMediationData` (several mediators with treatment-by-mediator products),
 `ClusterMediationData` (treatment assigned to whole clusters, from `lmer` fits),
-and `BootstrapResult`. A seventh class, `SEMFit`, holds a model fitted from
+and `BootstrapResult`. An eighth class, `SEMFit`, holds a model fitted from
 syntax by the native engine (`fit_sem()`, experimental). The three most common
 classes are introduced here; see [Model Extraction](extraction.html) for the
 others.
@@ -347,10 +347,11 @@ medfit serves as the foundation for specialized mediation packages:
   - Loads medfit and RMediation together
   - Provides unified documentation
 
-<!-- Future packages (in development):
 - **probmed**: Probabilistic mediation effect size (P_med)
+  - Uses medfit for fitting, extraction and bootstrap
+
 - **medrobust**: Sensitivity analysis
--->
+  - Independent of medfit
 
 ## Design Principles
 
