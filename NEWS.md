@@ -49,6 +49,11 @@
   weights and robust standard errors, the `regmedint` engine, serial, parallel and joint
   mediation. Articles are now grouped in an index. A test keeps every model page on the
   landing page, in the index and in the menu, and every cookbook anchor real.
+* A new "Guides" menu and group with four pages: What changed since CRAN 0.3.2 (the
+  results that changed and the calls that now stop with an error), Troubleshooting (the
+  errors and warnings a user is most likely to hit, each with its cause and fix), Which
+  interval should I use?, and a Glossary of terms and symbols. Tests trigger every
+  message the guides quote and check the known answers behind their claims.
 * The home page and Getting Started are rewritten so they are quick to skim: a "What's new"
   table, a 60-second start, a "pick your model" table, long examples folded away, and
   Getting Started cut to four steps that link to the model pages. A test checks that

@@ -47,7 +47,7 @@ logo:
 
 navbar:
   structure:
-    left:  [home, reference, models, cookbook, articles, ecosystem, status, news]
+    left:  [home, reference, models, guides, cookbook, articles, ecosystem, status, news]
     right: [search, github]
   components:
     home:
@@ -90,6 +90,17 @@ navbar:
         href: articles/cookbook.html#i-use-lavaan
       - text: "Latent mediator (native engine)"
         href: articles/cookbook.html#a-latent-mediator-native-engine
+    guides:
+      text: Guides
+      menu:
+      - text: "What changed since CRAN 0.3.2"
+        href: articles/guide-changes.html
+      - text: "Troubleshooting"
+        href: articles/guide-troubleshooting.html
+      - text: "Which interval should I use?"
+        href: articles/guide-intervals.html
+      - text: "Glossary and symbols"
+        href: articles/guide-glossary.html
     cookbook:
       text: Cookbook
       menu:
@@ -236,6 +247,13 @@ articles:
       - '`articles/model-serial`'
       - '`articles/model-parallel`'
       - '`articles/model-joint`'
+  - title: "Guides"
+    desc: "Upgrading, errors, intervals and terms"
+    contents:
+      - '`articles/guide-changes`'
+      - '`articles/guide-troubleshooting`'
+      - '`articles/guide-intervals`'
+      - '`articles/guide-glossary`'
   - title: "Detailed guides"
     contents:
       - '`articles/introduction`'

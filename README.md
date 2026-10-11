@@ -279,8 +279,12 @@ See [Ecosystem Coordination](https://github.com/Data-Wise/mediation-planning/blo
 | Look up a function or class | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) |
 | Understand the classes | [Introduction](https://data-wise.github.io/medfit/articles/introduction.html) |
 | Extract from fitted models | [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html) |
-| Choose an interval | [Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html) |
+| Run a bootstrap | [Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html) |
 | Check the math | [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html) |
+| Upgrade from CRAN 0.3.2 | [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html) |
+| Fix an error or warning | [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html) |
+| Choose an interval | [Which interval should I use?](https://data-wise.github.io/medfit/articles/guide-intervals.html) |
+| Look up a term or symbol | [Glossary and symbols](https://data-wise.github.io/medfit/articles/guide-glossary.html) |
 
 ## Development Status
 

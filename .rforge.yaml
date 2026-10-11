@@ -26,3 +26,7 @@ site:
     - vignettes/articles/model-serial.qmd
     - vignettes/articles/model-parallel.qmd
     - vignettes/articles/model-joint.qmd
+    - vignettes/articles/guide-changes.qmd
+    - vignettes/articles/guide-troubleshooting.qmd
+    - vignettes/articles/guide-intervals.qmd
+    - vignettes/articles/guide-glossary.qmd
