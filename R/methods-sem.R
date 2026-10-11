@@ -40,6 +40,26 @@
 #'   [mbco_sem()] does. Returns an object of class `"anova"` with columns `Df`,
 #'   `Chisq` (n times the discrepancy), `Chisq diff`, `Df diff` and
 #'   `Pr(>Chisq)`. Name rows by naming the arguments after the first.
+#' * `confint()` returns Wald (normal) intervals for the free parameters and
+#'   the defined parameters, `confint(fit, parm, level = 0.95)`; `parm` takes
+#'   names or positions. A parameter pinned by a constraint or sitting on a
+#'   bound has a zero standard error and a point interval.
+#' * `tidy()` returns one row per free parameter, then per defined parameter:
+#'   `term` (the name `coef()` uses), `op` (the operator of its row in the
+#'   parameter table, `:=` for a defined parameter), `estimate`, `std.error`,
+#'   `statistic` (the z value, `NA` when the standard error is zero),
+#'   `p.value` (two-sided), and with `conf.int = TRUE` the interval
+#'   `confint()` returns (`conf.low`, `conf.high`, at `conf.level`). `type`
+#'   is `"all"` (default), `"parameters"` or `"defined"`.
+#' * `glance()` returns one row: `nobs`, `npar` (free parameters after the
+#'   equality constraints), `df`, `chisq` (n times the minimized discrepancy,
+#'   the test of the model against the saturated one), `p.value` (`NA` when
+#'   `df` is 0), `logLik`, `AIC` and `BIC` (with the means free, as `logLik()`
+#'   defines them). A fit with sampling weights has no likelihood, so its
+#'   `chisq`, `p.value`, `logLik`, `AIC` and `BIC` are `NA`. There is no
+#'   `converged` column: `fit_sem()` returns a fit only for a solution that
+#'   passed the acceptance gate and errors otherwise, so `@converged` is `TRUE`
+#'   for every `SEMFit` and would carry no information.
 #' * `summary()` collects the estimates, standard errors and z statistics, the
 #'   defined parameters, and the diagnostics: rows dropped, information type,
 #'   degrees of freedom, retries, stationarity, active bounds and constraints,
@@ -58,6 +78,8 @@
 #' vcov(fit)[c("a", "b"), c("a", "b")]
 #' nobs(fit)
 #' summary(fit)
+#' generics::tidy(fit, conf.int = TRUE)
+#' generics::glance(fit)
 #'
 #' # a likelihood-ratio test of b = 0 against the fitted model
 #' fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)
@@ -189,4 +211,105 @@ print.summary.SEMFit <- function(x, ...) {
   cat(sprintf("  Improper solution: %s\n", none(dg$improper, "no")))
   cat(sprintf("  Multiplier sign check: %s\n", dg$sign_check))
   invisible(x)
+}
+
+
+# Wald (normal) interval and test for estimates with standard errors; a zero or non-finite SE (a parameter pinned by
+# a constraint or sitting on a bound) gives a point interval and no test, never an infinite z.
+.sem_wald <- function(est, se, level) {
+  a <- (1 - level) / 2
+  z <- ifelse(is.finite(se) & se > 0, est / se, NA_real_)
+  q <- stats::qnorm(1 - a)
+  list(z = z, p = 2 * stats::pnorm(-abs(z)), low = est - q * se, high = est + q * se, probs = c(a, 1 - a))
+}
+
+# Estimates and standard errors of the free parameters, then the defined parameters, in one named list.
+.sem_est_se <- function(object) {
+  def <- object@defined
+  list(
+    est = c(object@theta, stats::setNames(def$est, def$name)),
+    se = c(sqrt(diag(object@vcov)), stats::setNames(def$se, def$name)),
+    defined = c(rep(FALSE, length(object@theta)), rep(TRUE, nrow(def)))
+  )
+}
+
+S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) {
+  checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
+  v <- .sem_est_se(object)
+  pick <- names(v$est)
+  if (!is.null(parm)) {
+    pick <- if (is.numeric(parm)) names(v$est)[parm] else parm
+    unknown <- setdiff(pick, names(v$est))
+    if (anyNA(pick) || length(unknown)) {
+      stop("unknown parameter in `parm`: ", paste(c(unknown, if (anyNA(pick)) "NA"), collapse = ", "),
+           ". Free parameters and defined parameters are available (see names(coef(fit)) and fit@defined$name).",
+           call. = FALSE)
+    }
+  }
+  w <- .sem_wald(v$est[pick], v$se[pick], level)
+  out <- cbind(w$low, w$high)
+  dimnames(out) <- list(pick, paste(format(100 * w$probs, trim = TRUE, scientific = FALSE, digits = 3), "%"))
+  out
+}
+
+# The operator of the parameter-table row behind each element of `theta`: through `par_map` when the engine
+# recorded it, else by matching the name to a row's label or to "lhs op rhs" (a hand-built object).
+.sem_theta_op <- function(x) {
+  tab <- x@table
+  pm <- x@internals$par_map
+  if (!is.null(pm)) {
+    return(tab$op[match(seq_along(x@theta), pm)])
+  }
+  key <- ifelse(nzchar(tab$label) & !is.na(tab$label), tab$label, paste(tab$lhs, tab$op, tab$rhs))
+  tab$op[match(names(x@theta), key)]
+}
+
+# One row per free parameter, then per defined parameter: estimate, standard error, z statistic and its two-sided
+# p-value, and with `conf.int` the Wald interval, the same numbers `confint()` returns. `term` is the name `coef()`
+# uses; `op` is the operator of the parameter's row in the parameter table (`:=` for a defined parameter).
+.tidy_semfit <- function(x, type = c("all", "parameters", "defined"), conf.int = FALSE, conf.level = 0.95, ...) {
+  type <- match.arg(type)
+  checkmate::assert_flag(conf.int, .var.name = "conf.int")
+  checkmate::assert_number(conf.level, lower = 0, upper = 1, .var.name = "conf.level")
+  v <- .sem_est_se(x)
+  op <- c(.sem_theta_op(x), rep(":=", nrow(x@defined)))
+  keep <- switch(type, all = rep(TRUE, length(v$est)), parameters = !v$defined, defined = v$defined)
+  w <- .sem_wald(v$est, v$se, conf.level)
+  out <- data.frame(
+    term = names(v$est), op = op, estimate = unname(v$est), std.error = unname(v$se), statistic = w$z,
+    p.value = w$p, stringsAsFactors = FALSE
+  )
+  if (conf.int) {
+    out$conf.low <- w$low
+    out$conf.high <- w$high
+  }
+  out <- out[keep, , drop = FALSE]
+  rownames(out) <- NULL
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    out <- tibble::as_tibble(out)
+  }
+  out
+}
+
+# One row: the sample size, the effective number of free parameters, the chi-square test of the model against the
+# saturated one (n times the discrepancy, its df and p-value) and the likelihood-based criteria. There is no
+# `converged` column: a SEMFit exists only for a solution that passed the acceptance gate (otherwise fit_sem()
+# errors), so `@converged` is TRUE for every fit and would carry no information. A fit with sampling weights has
+# a weighted discrepancy that is not a likelihood, so its chi-square, p-value, log likelihood, AIC and BIC are NA.
+.glance_semfit <- function(x, ...) {
+  weighted <- !is.null(x@internals$weights)
+  chisq <- if (weighted) NA_real_ else x@n_obs * x@f
+  if (!weighted && chisq < 0 && chisq > -1e-8) chisq <- 0 # a saturated fit's roundoff
+  ll <- if (weighted) NULL else stats::logLik(x)
+  out <- data.frame(
+    nobs = x@n_obs, npar = .sem_n_free(x), df = x@df, chisq = chisq,
+    p.value = if (!weighted && x@df > 0) stats::pchisq(chisq, df = x@df, lower.tail = FALSE) else NA_real_,
+    logLik = if (weighted) NA_real_ else as.numeric(ll),
+    AIC = if (weighted) NA_real_ else stats::AIC(ll), BIC = if (weighted) NA_real_ else stats::BIC(ll),
+    stringsAsFactors = FALSE
+  )
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    out <- tibble::as_tibble(out)
+  }
+  out
 }

@@ -15,6 +15,17 @@
   `mbco_sem()` does. Nesting is checked by parameter-table inclusion, which is
   necessary and not sufficient.
 
+* `tidy()`, `glance()` and `confint()` for `SEMFit`. `tidy()` returns one row per
+  free and defined parameter (`term`, `op`, `estimate`, `std.error`, `statistic`,
+  `p.value`, and the interval with `conf.int = TRUE`); `glance()` returns one
+  row with `nobs`, `npar`, `df`, the chi-square test against the saturated model,
+  `logLik`, `AIC` and `BIC`; `confint()` covers the defined parameters too. All
+  agree with lavaan on a shared model to about 1e-9. `glance()` has no
+  `converged` column: `fit_sem()` returns a fit only for an accepted solution, so
+  `@converged` is `TRUE` for every `SEMFit` and carries no information (now
+  documented). A fit with sampling weights has no likelihood, so its chi-square,
+  `logLik`, `AIC` and `BIC` are `NA`.
+
 ## Bug fixes
 
 * `fit_sem()` now gives the same verdict on a wrong-side active bound whether or

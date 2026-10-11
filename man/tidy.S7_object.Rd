@@ -11,8 +11,9 @@
 }
 \arguments{
 \item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
-\link{InteractionMediationData}, \link{JointMediationData}, or \link{BootstrapResult}
-object.}
+\link{InteractionMediationData}, \link{JointMediationData}, \link{ClusterMediationData},
+\link{BootstrapResult}, or \link{SEMFit} object (a \code{SEMFit} has its own columns; see
+\link{SEMFit-methods}).}
 
 \item{...}{Passed to the class method: \code{type} (\code{"all"}, \code{"paths"},
 \code{"effects"}, and for interaction objects \code{"components"}), \code{conf.int}

@@ -45,6 +45,26 @@ chi-squares, and the function warns that the p-value is not valid, as
 \code{\link[=mbco_sem]{mbco_sem()}} does. Returns an object of class \code{"anova"} with columns \code{Df},
 \code{Chisq} (n times the discrepancy), \verb{Chisq diff}, \verb{Df diff} and
 \verb{Pr(>Chisq)}. Name rows by naming the arguments after the first.
+\item \code{confint()} returns Wald (normal) intervals for the free parameters and
+the defined parameters, \code{confint(fit, parm, level = 0.95)}; \code{parm} takes
+names or positions. A parameter pinned by a constraint or sitting on a
+bound has a zero standard error and a point interval.
+\item \code{tidy()} returns one row per free parameter, then per defined parameter:
+\code{term} (the name \code{coef()} uses), \code{op} (the operator of its row in the
+parameter table, \verb{:=} for a defined parameter), \code{estimate}, \code{std.error},
+\code{statistic} (the z value, \code{NA} when the standard error is zero),
+\code{p.value} (two-sided), and with \code{conf.int = TRUE} the interval
+\code{confint()} returns (\code{conf.low}, \code{conf.high}, at \code{conf.level}). \code{type}
+is \code{"all"} (default), \code{"parameters"} or \code{"defined"}.
+\item \code{glance()} returns one row: \code{nobs}, \code{npar} (free parameters after the
+equality constraints), \code{df}, \code{chisq} (n times the minimized discrepancy,
+the test of the model against the saturated one), \code{p.value} (\code{NA} when
+\code{df} is 0), \code{logLik}, \code{AIC} and \code{BIC} (with the means free, as \code{logLik()}
+defines them). A fit with sampling weights has no likelihood, so its
+\code{chisq}, \code{p.value}, \code{logLik}, \code{AIC} and \code{BIC} are \code{NA}. There is no
+\code{converged} column: \code{fit_sem()} returns a fit only for a solution that
+passed the acceptance gate and errors otherwise, so \verb{@converged} is \code{TRUE}
+for every \code{SEMFit} and would carry no information.
 \item \code{summary()} collects the estimates, standard errors and z statistics, the
 defined parameters, and the diagnostics: rows dropped, information type,
 degrees of freedom, retries, stationarity, active bounds and constraints,
@@ -61,6 +81,8 @@ coef(fit)
 vcov(fit)[c("a", "b"), c("a", "b")]
 nobs(fit)
 summary(fit)
+generics::tidy(fit, conf.int = TRUE)
+generics::glance(fit)
 
 # a likelihood-ratio test of b = 0 against the fitted model
 fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)
