@@ -1,0 +1,36 @@
+J2 table (maximum over 20 seeds; estimates absolute, SEs relative):
+              runs failed improper active max_est_gap max_se_rel
+bounded.50      20      0        0      3    1.50e-07   4.18e-05
+equal.50        20      0        0     20    4.04e-07   1.03e-05
+latent.50       20      0        0      0    1.61e-06   1.62e-04
+observed.50     20      0        0      0    4.28e-07   1.43e-05
+parallel.50     20      0        0      0    6.10e-07   1.61e-05
+serial.50       20      0        0      0    2.39e-07   2.46e-05
+zero.50         20      0        0     20    2.78e-07   1.02e-05
+bounded.200     20      0        0      2    1.90e-07   2.89e-05
+equal.200       20      0        0     20    2.63e-07   9.65e-06
+latent.200      20      0        0      0    6.18e-07   8.19e-05
+observed.200    20      0        0      0    4.71e-07   1.64e-05
+parallel.200    20      0        0      0    7.56e-07   2.00e-05
+serial.200      20      0        0      0    2.24e-07   2.29e-05
+zero.200        20      0        0     20    4.14e-07   1.42e-05
+bounded.1000    20      0        0      0    6.07e-07   2.19e-05
+equal.1000      20      0        0     20    4.51e-07   9.29e-06
+latent.1000     20      0        0      0    8.69e-07   8.94e-05
+observed.1000   20      0        0      0    6.00e-07   1.44e-05
+parallel.1000   20      0        0      0    2.06e-07   1.81e-05
+serial.1000     20      0        0      0    4.83e-07   1.51e-05
+zero.1000       20      0        0     20    2.70e-07   1.11e-05
+
+Worst estimate gap 1.614e-06 (rule 1e-6): FAIL; worst SE difference 1.621e-04 (rule 1e-3): PASS
+Runs with an estimate gap above 1e-6: 2 of 420
+  (lav_gap: the native fit against lavaan converged tightly, an independent referee)
+      cell  n seed      est_gap      lav_gap
+65  latent 50    4 1.121297e-06 9.051464e-07
+317 latent 50   16 1.614204e-06 1.477918e-07
+Failed runs: 0 of 420; improper runs: 0
+[1] cell     n        seed     improper
+<0 rows> (or 0-length row.names)
+
+memory_exp (n = 369): n*dF a1 == 0 = 221.045546 (OpenMx 221.045546), b1 == 0 = 0.083100 (OpenMx 0.083100); minimum 0.083100
+absolute differences: 8.53e-08, 4.26e-07 (rule 1e-6 on OpenMx's printed decimals)
