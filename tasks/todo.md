@@ -4,16 +4,16 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 
 ## Phase 0: Evidence and harness
 - [x] T1 Re-derive the S1 findings as committed fixtures (`planning/specs/evidence/native-sem-2026-10-11/`)
-- [ ] T2 Trigger `rhub.yaml` once; record the result in `.STATUS`
+- [x] T2 Trigger `rhub.yaml` once; record the result in `.STATUS`
 - [x] T3 Harness driver `tests/sim/run-gates.R` (`--fast`, `--sim`, `--mutants`); verdicts from results CSVs and `tests/sim/gates.csv`, four "exits 0 but bad" fixtures, a reliability threshold
-- [ ] T3b Harden the gate driver (Codex findings 1 and 4): `--sim` needs exit status 0 and a results file written during the run; stationarity checks both margins against `.sem_stat_tol` on far runs (distance saved in the CSV); four new mutants (spec `planning/specs/SPEC-gate-harness-hardening-2026-10-11.md`)
+- [x] T3b Harden the gate driver (Codex findings 1 and 4): `--sim` needs exit status 0 and a results file written during the run; stationarity checks both margins against `.sem_stat_tol` on far runs (distance saved in the CSV); four new mutants (spec `planning/specs/SPEC-gate-harness-hardening-2026-10-11.md`)
 
 ## Phase 1: Foundations (W1, W2)
 - [x] T4 Named errors for `Y ~ Y` and duplicate `Y ~ X`
 - [x] T5 Named error for infeasible bounds (F2)
-- [ ] T5b `fit_mediation()` applies `subset`/`weights`/`offset`/`etastart`/`mustart` to the original rows (unreleased #138 regression on `dev`; own branch `fix/glm-observation-level-args`, merges before the release PR; spec `planning/specs/SPEC-glm-observation-level-args-2026-10-11.md`)
-- [ ] T6 Accept consistent redundant inequality sets (F1)
-- [ ] T7 Port the NNLS multiplier-sign gate (needs T1)
+- [x] T5b `fit_mediation()` applies `subset`/`weights`/`offset`/`etastart`/`mustart` to the original rows (unreleased #138 regression on `dev`; own branch `fix/glm-observation-level-args`, merges before the release PR; spec `planning/specs/SPEC-glm-observation-level-args-2026-10-11.md`)
+- [x] T6 Accept consistent redundant inequality sets (F1)
+- [x] T7 Port the NNLS multiplier-sign gate (needs T1)
 - [ ] T8 Unify the bound verdict (F4) + NEWS (needs T7)
 - [ ] T9 Close S1 with a fresh-context review (needs T7, T8)
 
