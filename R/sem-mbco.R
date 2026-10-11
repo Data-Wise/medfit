@@ -4,28 +4,35 @@
 # `a == 0` and with `b == 0` (each linear, one solve), take the smaller diffLL, refer it to chi-square with
 # one degree of freedom. The nonlinear solve of `a*b == 0` is not used: it can land at the wrong branch
 # (plan S0(c): OpenMx's lands at a1 = 0 with diffLL 221.05, the true constrained optimum is b1 = 0 at 0.083).
+# A product of k labeled paths (a serial indirect effect a*d*b) is the same test with k refits, one per path;
+# the statistic stays the smallest diffLL and the reference stays chi-square(1).
 
-#' Minimum-of-Two Likelihood-Ratio Test for an Indirect Effect (MBCO)
+#' Minimum-of-k Likelihood-Ratio Test for an Indirect Effect (MBCO)
 #'
 #' @description
 #' `r lifecycle::badge("experimental")`
 #'
-#' Tests the null hypothesis that the indirect effect \eqn{a b}{a*b} is zero
-#' in a model fitted by [fit_sem()]. The model is refitted twice, with
-#' \eqn{a = 0}{a = 0} and with \eqn{b = 0}{b = 0}; each is a linear equality
-#' constraint, so each refit is a single solve. The statistic is the smaller of
-#' the two likelihood-ratio statistics, referred to a chi-square distribution
-#' with one degree of freedom (the minimum-of-two LRTs; see the Methods and
-#' Formulas article). The nonlinear constraint \eqn{a b = 0}{a*b = 0} is never
-#' solved, because a nonlinear solver can stop at the branch with the larger
-#' statistic.
+#' Tests the null hypothesis that an indirect effect, the product of two or more
+#' labeled paths (\eqn{a b}{a*b}, or a serial \eqn{a d b}{a*d*b}), is zero in a
+#' model fitted by [fit_sem()]. The product is zero exactly when one factor is,
+#' so the model is refitted once per path with that path set to zero; each is a
+#' linear equality constraint, so each refit is a single solve. The statistic is
+#' the smallest of the likelihood-ratio statistics, referred to a chi-square
+#' distribution with one degree of freedom (the minimum-of-k LRTs; see the
+#' Methods and Formulas article). The nonlinear constraint \eqn{a b = 0}{a*b = 0}
+#' is never solved, because a nonlinear solver can stop at the branch with the
+#' larger statistic.
 #'
 #' @param object A [SEMFit] from [fit_sem()], fitted without `weights`.
 #' @param a,b Character strings: the labels of the two free regression paths
 #'   whose product is the indirect effect (for example `"a"` and `"b"` in
 #'   `"M ~ a*X"` and `"Y ~ b*M"`). They must be different, and each must be a
 #'   labeled `~` row of the fit; a variance, a loading, an unlabeled path and a
-#'   defined parameter are refused.
+#'   defined parameter are refused. For a product of more than two paths pass
+#'   them all as `paths`, or as a character vector in `a` with `b` missing.
+#' @param paths Character vector of two or more labels: the paths whose product
+#'   is the indirect effect (`c("a", "d", "b")`). `NULL`, the default, uses `a`
+#'   and `b`.
 #' @param n_starts,control Passed to the optimizer for the two refits, as in
 #'   [fit_sem()]. `NULL`, the default, uses the settings `object` was made with,
 #'   so a better optimum in the full fit than in a refit cannot inflate the
@@ -34,7 +41,7 @@
 #'   still works with a warning.
 #'
 #' @return An object of class `c("mbco_sem", "htest")`: `statistic` (the
-#'   smaller diffLL), `parameter` (`df = 1`), `p.value`, `method`,
+#'   smallest diffLL), `parameter` (`df = 1`), `p.value`, `method`,
 #'   `data.name`, `n_obs`, and `tests`, a data frame with one row per refit
 #'   (`constraint`, the minimized discrepancy `f`, `diff_ll` equal to
 #'   `n_obs * (f - fit@f)`, and `converged`, always `TRUE` because a refit
@@ -57,10 +64,12 @@
 #' not mentioned. A null the constraints rule out (`a > 0.3` with the null
 #' `a = 0`) is an error that says so.
 #'
-#' Only a product of two labeled paths is tested. A serial indirect effect
-#' (a product of three paths) or a sum of products is not. If `a` and `b` are
-#' tied by an equality (`a == b`), the two refits impose the same restriction
-#' and the two `diff_ll` values coincide.
+#' Only a product of labeled paths is tested; a sum of products (several
+#' parallel indirect effects together) is not. If two of the paths are tied by
+#' an equality (`a == b`), their refits impose the same restriction and their
+#' `diff_ll` values coincide. The test is conservative: under a null where only
+#' one factor is zero its size is at most the nominal level, and with more than
+#' one zero factor it is smaller still.
 #'
 #' @examples
 #' \donttest{
@@ -69,11 +78,20 @@
 #'   data = mediation_demo
 #' )
 #' mbco_sem(fit, "a", "b")
+#'
+#' # a serial indirect effect, the product of three paths
+#' serial <- fit_sem(
+#'   paste0("mediator1 ~ a*treatment\nmediator2 ~ d*mediator1 + treatment\n",
+#'          "outcome ~ b*mediator2 + treatment"),
+#'   data = mediation_demo
+#' )
+#' mbco_sem(serial, paths = c("a", "d", "b"))
 #' }
 #'
 #' @seealso [fit_sem()], [SEMFit]
 #' @export
-mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecycle::deprecated()) {
+mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecycle::deprecated(),
+                     paths = NULL) {
   if (lifecycle::is_present(fit)) {
     lifecycle::deprecate_warn("0.8.0", "mbco_sem(fit)", "mbco_sem(object)")
     # `mbco_sem(fit = f, "a", "b")` leaves the two names in the first slots: shift them back.
@@ -87,20 +105,35 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     stop("`object` must be a SEMFit from fit_sem().", call. = FALSE)
   }
   fit <- object
-  checkmate::assert_string(a, min.chars = 1L, .var.name = "a")
-  checkmate::assert_string(b, min.chars = 1L, .var.name = "b")
+  two_form <- is.null(paths) && !missing(b)
+  if (is.null(paths)) {
+    if (missing(a)) {
+      stop("give the paths of the indirect effect: `a` and `b`, or `paths`.", call. = FALSE)
+    }
+    # `mbco_sem(fit, c("a", "d", "b"))`: a vector in `a` with `b` missing is the list of paths
+    paths <- if (missing(b)) a else c(a, b)
+  } else if (!missing(a) || !missing(b)) {
+    stop("give either `paths` or `a` and `b`, not both.", call. = FALSE)
+  }
+  if (two_form) {
+    checkmate::assert_string(a, min.chars = 1L, .var.name = "a")
+    checkmate::assert_string(b, min.chars = 1L, .var.name = "b")
+  } else {
+    checkmate::assert_character(paths, min.chars = 1L, min.len = 2L, any.missing = FALSE, .var.name = "paths")
+  }
   checkmate::assert_count(n_starts, positive = TRUE, null.ok = TRUE, .var.name = "n_starts")
   checkmate::assert_list(control, null.ok = TRUE, .var.name = "control")
   tab <- fit@table
-  paths <- unique(tab$label[tab$free & tab$op == "~" & !is.na(tab$label) & nzchar(tab$label)])
-  for (nm in c(a, b)) {
-    if (!(nm %in% paths)) {
+  known <- unique(tab$label[tab$free & tab$op == "~" & !is.na(tab$label) & nzchar(tab$label)])
+  for (nm in paths) {
+    if (!(nm %in% known)) {
       stop(sprintf("'%s' is not a labeled regression path of the fit (labeled regression paths: %s)", nm,
-                   if (length(paths)) paste(paths, collapse = ", ") else "none"), call. = FALSE)
+                   if (length(known)) paste(known, collapse = ", ") else "none"), call. = FALSE)
     }
   }
-  if (identical(a, b)) {
-    stop("`a` and `b` must be different parameters.", call. = FALSE)
+  if (anyDuplicated(paths)) {
+    stop(if (two_form) "`a` and `b` must be different parameters." else "`paths` must be different parameters.",
+         call. = FALSE)
   }
   if (!is.null(fit@internals$weights)) {
     stop("MBCO is not available for a fit with sampling weights: the weighted discrepancy is not a ",
@@ -114,8 +147,8 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   # cannot inflate the statistic; an explicit argument overrides them.
   n_starts <- n_starts %||% fit@internals$n_starts %||% 5L
   control <- control %||% fit@internals$control %||% list()
-  constraints <- c(paste(a, "== 0"), paste(b, "== 0"))
-  refit <- lapply(c(a, b), function(tested) {
+  constraints <- paste(paths, "== 0")
+  refit <- lapply(paths, function(tested) {
     con <- paste(tested, "== 0")
     # `fit@data` holds the rows the fit used, already free of missing values: no second deletion.
     r <- tryCatch(
@@ -139,8 +172,9 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       statistic = c(MBCO = stat),
       parameter = c(df = 1),
       p.value = stats::pchisq(stat, df = 1, lower.tail = FALSE),
-      method = "Minimum-of-two likelihood-ratio tests (MBCO) for an indirect effect",
-      data.name = sprintf("%s * %s = 0", a, b),
+      method = sprintf("Minimum-of-%s likelihood-ratio tests (MBCO) for an indirect effect",
+                       if (length(paths) == 2L) "two" else length(paths)),
+      data.name = sprintf("%s = 0", paste(paths, collapse = " * ")),
       n_obs = n,
       tests = data.frame(constraint = constraints, f = f, diff_ll = diff_ll, converged = TRUE,
                          stringsAsFactors = FALSE)

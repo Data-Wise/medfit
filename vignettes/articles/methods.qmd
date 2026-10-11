@@ -674,7 +674,13 @@ D_a = n\,(F_{a=0} - F), \qquad D_b = n\,(F_{b=0} - F), \qquad
 T = \min(D_a, D_b),
 $$
 
-and $T$ is referred to $\chi^2_1$. The nonlinear constraint $ab = 0$ is not
+and $T$ is referred to $\chi^2_1$. A product of $k$ paths (a serial indirect
+effect $a\,d\,b = 0$, `mbco_sem(fit, paths = c("a", "d", "b"))`) is the same test
+with $k$ refits, one per path, $T = \min_j D_j$: the product is zero exactly when
+one factor is, so the null is a union of $k$ hypotheses, each tested by a
+$\chi^2_1$ likelihood-ratio statistic, and the minimum is conservative (at most
+the nominal size when one factor is zero, smaller when several are). The nonlinear
+constraint $ab = 0$ is not
 solved: a nonlinear solver can stop at the branch with the larger statistic
 (OpenMx's does on RMediation's `memory_exp`, reporting 221.05 where the
 minimum is 0.083). A fit with sampling weights or one that did not converge is
