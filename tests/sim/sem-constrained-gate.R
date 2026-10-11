@@ -11,7 +11,8 @@
 # S6 threshold sits at least 10x above the largest converged decrement and at least 10x below the
 # smallest stall. This script reports the table; it never changes the constant.
 # Run from the package root:  Rscript tests/sim/sem-constrained-gate.R
-# Results: tests/sim/results/sem-constrained-gate-<date>.csv and -stationarity-<date>.csv
+# Results: tests/sim/results/sem-constrained-gate-<date>.csv and -stationarity-<date>.csv; the latter
+# carries `dist` (largest scaled distance from the optimum, truncated runs only) for the driver's verdict
 
 suppressMessages({
   pkgload::load_all(quiet = TRUE)
@@ -104,7 +105,7 @@ cat(sprintf("\nWorst relative SE difference %.3e against the frozen tolerance 1e
 cat("\nStationarity re-check (Q14 decrement):\n")
 acc <- att$dec[att$kind == "accepted"]
 rej <- att$dec[att$kind == "rejected" & is.finite(att$dec)]
-far <- st[is.finite(st$dec) & st$dist > 1e-2, ]
+far <- st[is.finite(st$dec) & st$dist > 1e-2, ]  # keep 1e-2 equal to tol_se in tests/sim/gates.csv (stationarity)
 cat(sprintf("accepted starts: %d, largest decrement %.3e\n", length(acc), max(acc, na.rm = TRUE)))
 cat(sprintf("rejected-by-gate starts with a finite decrement: %d, smallest %s\n", length(rej),
             if (length(rej)) format(min(rej), digits = 3) else "none"))
@@ -121,6 +122,7 @@ ver <- sapply(c("OpenMx", "nloptr"), function(p) as.character(utils::packageVers
 res$versions <- paste(names(ver), ver, collapse = "; ")
 dir.create("tests/sim/results", showWarnings = FALSE)
 utils::write.csv(res, sprintf("tests/sim/results/sem-constrained-gate-%s.csv", Sys.Date()), row.names = FALSE)
-keep <- c("cell", "n", "seed", "kind", "dec")
+keep <- c("cell", "n", "seed", "kind", "dec", "dist")
+att$dist <- NA_real_  # distance to the optimum exists only for the truncated runs; run-gates.R filters on it
 utils::write.csv(rbind(att[, keep], st[, keep]),
                  sprintf("tests/sim/results/sem-constrained-stationarity-%s.csv", Sys.Date()), row.names = FALSE)
