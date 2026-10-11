@@ -19,8 +19,9 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [x] T9 Close S1 with a fresh-context review (needs T7, T8): review recorded as ledger G14; F4 closed by T8b (#147)
 
 ### Checkpoint A
-- [ ] Full unit suite, lint, H-parity, H-constrained, strict `check` pass (counts reported)
-- [ ] rhub result recorded; human review
+- [x] Full unit suite, lint, H-parity, H-constrained, strict `check` pass (counts reported; `.STATUS` progress_0_8_0, 2026-10-11)
+- [x] rhub result recorded (`.STATUS` rhub_0_8_0_t2)
+- [ ] Human review
 
 ## Phase 2: `anova()` and SEMFit methods (W4)
 - [ ] T10 `anova()` for nested `SEMFit`s with boundary-null guard (G9); refits start clean (refit-trap fixture)
