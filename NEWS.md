@@ -43,6 +43,11 @@
 * The Introduction counted `SEMFit` as the seventh class; it is the eighth. Its
   Package Ecosystem list now names probmed and medrobust, and the Reference Card
   gives `joint_effects()` its real argument names (`object`, `estimates`).
+* The bootstrap example in the README printed `NIE = 0.19 [0.08, 0.32] | NDE = 0.16 |
+  PM = 55%`, which no longer matched the code or its own non-bootstrap fit on the
+  same data; it now shows `NIE = 0.164  [0.0867, 0.256] | NDE = 0.293 | PM = 36 %`.
+  Its feature list, function list and test count now include the `lmer` engine,
+  cluster decomposition and native fits.
 
 # medfit 0.7.0
 
