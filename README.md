@@ -17,11 +17,11 @@
 ### Key Features
 
 - **ADHD-Friendly API**: Simple `med()` function for quick mediation analysis, `quick()` for instant results
-- **Mediation Structures**: simple, serial, and parallel mediators; a treatment-by-mediator interaction with VanderWeele's four-way decomposition (`decompose()`); and joint natural effects of several mediators with treatment-by-mediator products (`joint_effects()`)
+- **Mediation Structures**: simple, serial, and parallel mediators; a treatment-by-mediator interaction with VanderWeele's four-way decomposition (`decompose()`); joint natural effects of several mediators with treatment-by-mediator products (`joint_effects()`); and treatment assigned to whole clusters (the 2-1-1 design)
 - **Effect Extractors**: `nie()`, `nde()`, `te()`, `pm()`, `paths()` for extracting mediation effects
 - **Tidyverse Integration**: `tidy()` and `glance()` methods, with delta-method standard errors for the effects
-- **Unified Model Extraction**: Extract mediation structure from lm, glm, and lavaan fits
-- **Flexible Model Fitting**: `fit_mediation()` with the `glm` and `regmedint` engines, optional case weights (IPW), and sandwich (HC3) standard errors
+- **Unified Model Extraction**: Extract mediation structure from lm, glm, lmer, and lavaan fits, and from native `SEMFit` fits
+- **Flexible Model Fitting**: `fit_mediation()` with the `glm`, `regmedint` and `lmer` engines, optional case weights (IPW), and sandwich (HC3) standard errors
 - **Native Model Syntax** (experimental): `fit_sem()` and `fit_mediation(engine = "native")` fit lavaan-style syntax with latent mediators, constraints, and defined parameters; `mbco_sem()` tests the indirect effect
 - **Bundled Example Data**: `mediation_demo`, a simulated dataset for every workflow
 - **Robust Bootstrap Inference**: Three bootstrap methods (parametric, nonparametric, plugin) with parallel processing
@@ -148,7 +148,7 @@ result_boot <- med(
 )
 
 quick(result_boot)
-#> NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%
+#> NIE = 0.164  [0.0867, 0.256] | NDE = 0.293 | PM = 36 %
 ```
 
 ### Advanced: Extract from Fitted Models
@@ -285,7 +285,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 - **`nie()`**, **`nde()`**, **`te()`**: Natural indirect/direct and total effects
 - **`pm()`**: Proportion mediated
 - **`paths()`**: All path coefficients
-- **`decompose()`**: Four-way or joint decomposition of the total effect
+- **`decompose()`**: Four-way, joint or cluster (own-mediator and spillover) decomposition of the effects
 - **`joint_effects()`**: Joint effects at any parameter vector (for bootstrapping)
 
 **Tidyverse Methods:**
@@ -296,8 +296,8 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 - **`coef()`**, **`vcov()`**, **`confint()`**, **`nobs()`**: Standard generics
 
 **Advanced:**
-- **`extract_mediation()`**: Extract from fitted lm/glm/lavaan models
-- **`fit_mediation()`**: Fit with formula interface (`glm` or `regmedint` engine) or model syntax (`engine = "native"`)
+- **`extract_mediation()`**: Extract from fitted lm/glm/lmer/lavaan models and native `SEMFit` fits
+- **`fit_mediation()`**: Fit with formula interface (`glm`, `regmedint` or `lmer` engine) or model syntax (`engine = "native"`)
 - **`fit_sem()`**, **`mbco_sem()`**: Fit model syntax with the native engine; test the indirect effect (experimental)
 - **`bootstrap_mediation()`**: Bootstrap inference (parametric, nonparametric, plugin)
 
@@ -322,7 +322,7 @@ Comprehensive articles are available on the package website:
 
 - **[Get Started](https://data-wise.github.io/medfit/articles/getting-started.html)**: Quick introduction to medfit
 - **[Introduction](https://data-wise.github.io/medfit/articles/introduction.html)**: Detailed S7 class documentation
-- **[Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html)**: Extract from lm/glm/lavaan models
+- **[Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html)**: Extract from lm/glm/lmer/lavaan models and native fits
 - **[Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html)**: Parametric and nonparametric bootstrap methods
 - **[Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html)**: Estimands, formulas, covariance, and standard errors for every class
 - **[Reference Card](https://data-wise.github.io/medfit/articles/refcard.html)**: Every export and class on one page
@@ -336,7 +336,7 @@ on the `dev` branch; see `NEWS.md` for what each release contains.
 ### Code Quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
-- **Testing**: 1,900+ tests with testthat (>90% coverage, enforced via codecov)
+- **Testing**: 3,300+ tests with testthat (>90% coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See the [roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md) for the detailed development plan.
