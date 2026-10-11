@@ -16,13 +16,15 @@
 #' | `y ~ a*x` | label the path `a`; equal labels are one parameter |
 #' | `y ~ 0.5*x` | fix the path at 0.5 |
 #' | `y ~ start(0.3)*x`, `lower(0)*`, `upper(1)*` | starting value, lower and upper bound |
-#' | `a == b`, `a + b == 1` | equality constraint on labels |
+#' | `a == b`, `a + b == 1`, `cp == a*b` | equality constraint on labels; may be nonlinear |
 #' | `a < b`, `a > 0` | inequality constraint; `label < number` is a bound |
 #' | `ab := a*b` | defined parameter, with a delta-method standard error |
 #'
-#' Constraints must be linear in the labels. Labels used in a constraint or a
-#' definition must be defined in the model. A constraint with no free parameter,
-#' or a nonlinear one, is an error. Exogenous variables are given free
+#' Inequality constraints must be linear in the labels; an equality may be
+#' nonlinear (`cp == a*b`, `a*b == 0.1`), solved with its Jacobian recomputed at
+#' every point. Labels used in a constraint or a definition must be defined in the
+#' model. A constraint with no free parameter, or a nonlinear inequality, is an
+#' error. Exogenous variables are given free
 #' variances and covariances, as lavaan does with `fixed.x = FALSE`. Mean
 #' structures (`y ~ 1`) are not supported, except that `y ~ 0*1` is accepted.
 #' A variable cannot appear on both sides of `~` or `=~` (`y ~ y`), and a path,

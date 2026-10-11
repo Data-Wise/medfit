@@ -61,7 +61,7 @@ A \link{SEMFit} object.
 Fits a model written in lavaan-style syntax to raw data with medfit's native
 maximum-likelihood engine, and returns a \link{SEMFit} object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
-linear equality and inequality constraints (\code{==}, \code{<}, \code{>}), and defined
+equality constraints (linear or nonlinear), linear inequality constraints (\code{<}, \code{>}), and defined
 parameters (\verb{:=}) with delta-method standard errors.
 }
 \examples{

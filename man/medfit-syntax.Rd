@@ -19,15 +19,17 @@ The model syntax read by \code{\link[=fit_sem]{fit_sem()}} and by \code{fit_medi
    \code{y ~ a*x} \tab label the path \code{a}; equal labels are one parameter \cr
    \code{y ~ 0.5*x} \tab fix the path at 0.5 \cr
    \code{y ~ start(0.3)*x}, \verb{lower(0)*}, \verb{upper(1)*} \tab starting value, lower and upper bound \cr
-   \code{a == b}, \code{a + b == 1} \tab equality constraint on labels \cr
+   \code{a == b}, \code{a + b == 1}, \code{cp == a*b} \tab equality constraint on labels; may be nonlinear \cr
    \code{a < b}, \code{a > 0} \tab inequality constraint; \code{label < number} is a bound \cr
    \code{ab := a*b} \tab defined parameter, with a delta-method standard error \cr
 }
 
 
-Constraints must be linear in the labels. Labels used in a constraint or a
-definition must be defined in the model. A constraint with no free parameter,
-or a nonlinear one, is an error. Exogenous variables are given free
+Inequality constraints must be linear in the labels; an equality may be
+nonlinear (\code{cp == a*b}, \code{a*b == 0.1}), solved with its Jacobian recomputed at
+every point. Labels used in a constraint or a definition must be defined in the
+model. A constraint with no free parameter, or a nonlinear inequality, is an
+error. Exogenous variables are given free
 variances and covariances, as lavaan does with \code{fixed.x = FALSE}. Mean
 structures (\code{y ~ 1}) are not supported, except that \code{y ~ 0*1} is accepted.
 A variable cannot appear on both sides of \code{~} or \verb{=~} (\code{y ~ y}), and a path,

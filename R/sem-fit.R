@@ -48,7 +48,9 @@
   # The constraint rows come first: an equality removes a free parameter (by its rank, since a dependent
   # row removes none), so the df and the guard below count q - rank, not q.
   cons <- .sem_constraint_rows(parsed$constraints, ram)
-  eq_rank <- .sem_eq_rank(cons$eq)
+  u0 <- .sem_step_floor(ram, smp)
+  start <- .sem_default_start(ram, smp)
+  eq_rank <- if (is.null(cons$nl)) .sem_eq_rank(cons$eq) else .sem_eq_rank_at(cons, start, u0)
   df <- .sem_df(ram, eq_rank)
   if (df < 0) {
     stop(sprintf(
@@ -57,12 +59,16 @@
     ), call. = FALSE)
   }
 
-  start <- .sem_default_start(ram, smp)
   given <- !is.na(conv$start)
   start[given] <- conv$start[given]
   lb <- ifelse(is.na(conv$lower), -Inf, conv$lower)
   ub <- ifelse(is.na(conv$upper), Inf, conv$upper)
   fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+  if (!is.null(cons$nl)) {
+    # a nonlinear equality removes parameters where its gradient is: count them at the solution
+    eq_rank <- .sem_eq_rank_at(cons, fit$theta, u0)
+    df <- .sem_df(ram, eq_rank)
+  }
   vc <- .sem_vcov(fit$theta, ram, smp, information, cons, lb, ub, se_type)
   defined <- .sem_defined(parsed$constraints, fit$theta, vc)
   act_cons <- if (is.null(cons)) .sem_no_cons(ram$q) else cons

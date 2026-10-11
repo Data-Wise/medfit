@@ -77,9 +77,10 @@ The result is an `htest`; the two component tests are in its `tests` element.
 
 ## Limits
 
-- **Constraints must be linear in the labels.** `a + b == 1` is fine;
-  `a * b == 0.1` stops with "nonlinear constraints are not supported in this
-  version".
+- **Inequalities must be linear in the labels.** `a + b < 1` is fine;
+  `a * b < 0.1` stops with "nonlinear inequality constraints are not supported
+  in this version". A nonlinear equality such as `cp == a * b` is solved with its
+  Jacobian recomputed at every point.
 - **A constraint needs a free parameter** and **labels must be defined** in the
   model.
 - **Equal labels are one parameter.** Giving two paths the same label equates them

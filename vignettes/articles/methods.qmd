@@ -574,7 +574,9 @@ that shrinks like $1/n$. The weighted likelihood is a pseudo likelihood, so
 
 Equality and inequality constraints that are linear in the
 labels become rows $a^\top\theta + b$, normalized to unit length, with constant
-Jacobians for the optimizer (SLSQP through nloptr). A nonlinear constraint is
+Jacobians for the optimizer (SLSQP through nloptr). A nonlinear equality
+(`cp == a*b`) is a row whose value is $\text{lhs} - \text{rhs}$ and whose Jacobian
+is a central difference, both recomputed at every point; a nonlinear inequality is
 an error. At the solution the active constraints and active bounds define a
 null-space basis $Z$ of the feasible directions, and the covariance is
 projected,

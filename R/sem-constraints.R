@@ -1,14 +1,16 @@
-# Native SEM engine: linear constraints.
+# Native SEM engine: constraints.
 #
 # Internal. A constraint line (`==`, `<`, `>` from the parser's constraint table)
 # that is provably linear in the parameter labels becomes one row `a'theta + b`,
 # normalized to unit length: equalities `a'theta + b = 0` and inequalities
 # `a'theta + b <= 0` (a `>` constraint is negated). Rows are constant, so the
 # solver gets constant Jacobians and one solve suffices (spec 4.5a, 4.5b). A
-# nonlinear constraint errors by name; nonlinear constraints arrive in a later
-# version. Defined parameters (`:=`) are substituted before the linearity walk.
+# nonlinear equality (`a*b == c`) becomes a closure over the validated call tree: its value is
+# `lhs - rhs` and its Jacobian a central difference, both recomputed at every point (`$nl`).
+# A nonlinear inequality errors by name; it arrives in a later version. Defined parameters (`:=`)
+# are substituted before the linearity walk.
 
-.sem_nonlinear_msg <- "nonlinear constraints are not supported in this version"
+.sem_nonlinear_msg <- "nonlinear inequality constraints are not supported in this version"
 
 # Rows for the constraints in `constraints` (the parser's table, `:=` rows
 # included as definitions). Returns NULL when there is nothing to enforce.
@@ -20,6 +22,7 @@
   }
   defs <- .sem_defs(stats::setNames(defs$rhs, defs$lhs))
   rows <- vector("list", nrow(cons))
+  nl <- list()
   for (i in seq_len(nrow(cons))) {
     text <- paste(cons$lhs[i], cons$op[i], cons$rhs[i])
     tree <- .sem_expr_subst(.sem_expr_parse(paste0("(", cons$lhs[i], ") - (", cons$rhs[i], ")")), defs)
@@ -27,13 +30,18 @@
     if (!length(labels)) {
       stop("constraint contains no parameters: '", text, "'", call. = FALSE)
     }
-    if (!.sem_tree_linear(tree)) {
+    nonlinear <- !.sem_tree_linear(tree)
+    if (nonlinear && cons$op[i] != "==") {
       stop(.sem_nonlinear_msg, ": '", text, "'", call. = FALSE)
     }
     idx <- match(labels, ram$par_names)
     if (anyNA(idx)) {
       stop("constraint '", text, "' refers to '", labels[is.na(idx)][1L], "', which is not a free parameter",
            call. = FALSE)
+    }
+    if (nonlinear) {
+      nl[[length(nl) + 1L]] <- list(tree = tree, labels = labels, idx = idx, text = text)
+      next
     }
     zero <- stats::setNames(numeric(length(labels)), labels)
     b <- .sem_expr_value(tree, zero, text)
@@ -53,6 +61,7 @@
     }
     rows[[i]] <- list(a = a / len, b = b / len, op = cons$op[i], text = text)
   }
+  rows <- Filter(Negate(is.null), rows)
   pick <- function(eq) {
     keep <- Filter(function(r) (r$op == "==") == eq, rows)
     list(
@@ -61,24 +70,56 @@
       text = vapply(keep, `[[`, "", "text")
     )
   }
-  list(eq = pick(TRUE), ineq = pick(FALSE))
+  list(eq = pick(TRUE), ineq = pick(FALSE), nl = .sem_nl_rows(nl, ram$q))
+}
+
+# The nonlinear equality rows as one object: `text`, `value(theta)` (the vector of `lhs - rhs`) and
+# `jac(theta, u)` (a row per constraint, a column per parameter, by central differences with step
+# eps^(1/3) * max(|theta_k|, u_k), u_k the parameter's natural unit; only the labels a row uses are
+# perturbed). Evaluation goes through the guarded evaluator, so a value that is not one finite real
+# number is an error naming the point, not a NaN inside the solver. NULL when there are none.
+.sem_nl_rows <- function(nl, q) {
+  if (!length(nl)) {
+    return(NULL)
+  }
+  value_one <- function(row, theta) {
+    .sem_expr_value(row$tree, stats::setNames(theta[row$idx], row$labels), row$text)
+  }
+  list(
+    text = vapply(nl, `[[`, "", "text"),
+    value = function(theta) vapply(nl, value_one, numeric(1), theta = theta),
+    jac = function(theta, u) {
+      out <- matrix(0, length(nl), q)
+      for (i in seq_along(nl)) {
+        for (k in nl[[i]]$idx) {
+          h <- .Machine$double.eps^(1 / 3) * max(abs(theta[k]), u[k])
+          up <- dn <- theta
+          up[k] <- theta[k] + h
+          dn[k] <- theta[k] - h
+          out[i, k] <- (value_one(nl[[i]], up) - value_one(nl[[i]], dn)) / (2 * h)
+        }
+      }
+      out
+    }
+  )
 }
 
 # The empty constraint set, for code that always wants a `cons` list.
 .sem_no_cons <- function(q) {
   none <- list(A = matrix(0, 0L, q), b = numeric(), text = character())
-  list(eq = none, ineq = none)
+  list(eq = none, ineq = none, nl = NULL)
 }
 
 # Residual of the constraints at `theta`: equalities in absolute value, inequalities
-# by how far they are violated (zero when satisfied). Rows are unit length, so the
-# residual is in parameter units.
+# by how far they are violated (zero when satisfied). Linear rows are unit length, so
+# their residual is in parameter units; a nonlinear row's is the raw value of `lhs - rhs`.
 .sem_constraint_residual <- function(theta, cons) {
   if (is.null(cons)) {
     return(numeric())
   }
   c(
     if (nrow(cons$eq$A)) abs(as.vector(cons$eq$A %*% theta) + cons$eq$b),
+    if (!is.null(cons$nl)) abs(cons$nl$value(theta)),
     if (nrow(cons$ineq$A)) pmax(0, as.vector(cons$ineq$A %*% theta) + cons$ineq$b)
   )
 }
@@ -91,6 +132,25 @@
     return(0L)
   }
   qr(t(eq$A), tol = .sem_rank_tol)$rank
+}
+
+# The same count with the nonlinear equalities included: the rank of the stacked equality gradients at
+# `theta`, each row of unit length in the solver's natural units (a nonlinear row's gradient is that of the
+# linearization there, so its rank is the number of parameters the equalities remove locally). A start
+# or solution where a Jacobian vanishes (`a*b == c` at a = b = 0 still has the -1 for c; `a*b == 0` does not)
+# counts that row as removing nothing.
+.sem_eq_rank_at <- function(cons, theta, u) {
+  if (is.null(cons)) {
+    return(0L)
+  }
+  rows <- rbind(sweep(cons$eq$A, 2L, u, "*"),
+                if (!is.null(cons$nl)) sweep(cons$nl$jac(theta, u), 2L, u, "*"))
+  len <- sqrt(rowSums(rows^2))
+  rows <- rows[len > 1e-12, , drop = FALSE] / len[len > 1e-12]
+  if (!nrow(rows)) {
+    return(0L)
+  }
+  qr(t(rows), tol = .sem_rank_tol)$rank
 }
 
 # The equality rows the solver can be given: an independent subset, in the original order. A linearly
@@ -148,7 +208,8 @@
 }
 
 # nloptr arguments for the rows in the solver's coordinates x = theta / u: the
-# Jacobian is the row scaled by u, constant.
+# Jacobian of a linear row is the row scaled by u, constant; a nonlinear equality's is recomputed
+# at every point.
 .sem_nlopt_constraints <- function(cons, u) {
   if (is.null(cons)) {
     return(NULL)
@@ -158,10 +219,12 @@
   ineq <- .sem_drop_implied_ineq(cons$ineq, eq)
   # One binding per block: the closures capture this environment, so a shared name would let the
   # inequality rows replace the equality Jacobian.
-  if (nrow(eq$A)) {
+  nl <- cons$nl
+  if (nrow(eq$A) || !is.null(nl)) {
     jac_eq <- sweep(eq$A, 2L, u, "*")
-    out$eval_g_eq <- function(x) as.vector(jac_eq %*% x) + eq$b
-    out$eval_jac_g_eq <- function(x) jac_eq
+    # the linear rows first, then the nonlinear ones, in the solver's coordinates x = theta / u
+    out$eval_g_eq <- function(x) c(as.vector(jac_eq %*% x) + eq$b, if (!is.null(nl)) nl$value(x * u))
+    out$eval_jac_g_eq <- function(x) rbind(jac_eq, if (!is.null(nl)) sweep(nl$jac(x * u, u), 2L, u, "*"))
   }
   if (nrow(ineq$A)) {
     jac_ineq <- sweep(ineq$A, 2L, u, "*")
@@ -196,13 +259,16 @@
 # bounds only reduces to the coordinate subset the unconstrained gate uses.
 .sem_active_set <- function(theta, ram, smp, lb, ub, cons) {
   u <- .sem_step_floor(ram, smp)
-  rows <- rbind(cons$eq$A, cons$ineq$A)
-  bvec <- c(cons$eq$b, cons$ineq$b)
-  is_eq <- c(rep(TRUE, nrow(cons$eq$A)), rep(FALSE, nrow(cons$ineq$A)))
-  text <- c(cons$eq$text, cons$ineq$text)
+  # Linear equalities, then nonlinear equalities (their Jacobian and value at `theta`, so the null space
+  # is that of the linearization at the point judged, the solution), then linear inequalities.
+  nl <- cons$nl
+  rows <- rbind(cons$eq$A, if (!is.null(nl)) nl$jac(theta, u), cons$ineq$A)
+  cval <- c(as.vector(cons$eq$A %*% theta) + cons$eq$b, if (!is.null(nl)) nl$value(theta),
+            as.vector(cons$ineq$A %*% theta) + cons$ineq$b)
+  is_eq <- c(rep(TRUE, nrow(cons$eq$A) + length(nl$text)), rep(FALSE, nrow(cons$ineq$A)))
+  text <- c(cons$eq$text, nl$text, cons$ineq$text)
   ax <- sweep(rows, 2L, u, "*")
   len <- sqrt(rowSums(ax^2))
-  cval <- as.vector(rows %*% theta) + bvec
   dist <- ifelse(is_eq, abs(cval), pmax(0, cval)) / len
   at_lb <- (theta - lb) / u <= .sem_bound_window
   at_ub <- (ub - theta) / u <= .sem_bound_window
