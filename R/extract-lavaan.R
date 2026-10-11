@@ -128,11 +128,11 @@ extract_mediation_lavaan <- function(object,
                                      m_star = 0,
                                      ...) {
 
-  # --- Check lavaan is available ---
-  if (!requireNamespace("lavaan", quietly = TRUE)) {
-    stop("Package 'lavaan' is required for this method but is not installed.",
-         call. = FALSE)
-  }
+  # --- Accessors: every read of the fitted model goes through this list ---
+  # A lavaan fit is wrapped (and lavaan's availability checked) by the lavaan
+  # accessor; a ready-made accessor list passes through, so a native fit can be
+  # extracted with lavaan absent.
+  acc <- .sem_as_accessors(object)
 
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
 
@@ -156,15 +156,15 @@ extract_mediation_lavaan <- function(object,
   if (length(mediator) > 1L) {
     if (!missing(m_star)) .stop_on_unused_m_star(treatment, mediator[1L])
     .stop_on_multimediator_products(
-      .find_product_terms_lavaan(object, c(treatment, mediator), interaction)
+      .find_product_terms_lavaan(acc, c(treatment, mediator), interaction)
     )
     if (structure == "auto") {
-      structure <- .classify_multimediator_structure_lavaan(object, mediator,
+      structure <- .classify_multimediator_structure_lavaan(acc, mediator,
                                                             standardized)
     }
     if (structure == "serial") {
       return(.extract_serial_mediation_lavaan(
-        object,
+        acc,
         treatment    = treatment,
         mediators    = mediator,
         outcome      = outcome,
@@ -173,7 +173,7 @@ extract_mediation_lavaan <- function(object,
       ))
     }
     return(.extract_parallel_mediation_lavaan(
-      object,
+      acc,
       treatment    = treatment,
       mediators    = mediator,
       outcome      = outcome,
@@ -187,7 +187,7 @@ extract_mediation_lavaan <- function(object,
   # (a data column the user multiplies, e.g. Y ~ b*M + cp*X + t3*XM). Detect it
   # by the explicit `interaction` name or an X:M / M:X term, then route to the
   # four-way worker. Falls through to the standard simple path when absent.
-  int_term <- .find_interaction_term_lavaan(object, treatment, mediator,
+  int_term <- .find_interaction_term_lavaan(acc, treatment, mediator,
                                             interaction, standardized)
   if (decomposition == "four_way" && is.na(int_term)) {
     stop(
@@ -200,7 +200,7 @@ extract_mediation_lavaan <- function(object,
   }
   if (decomposition != "two_way" && !is.na(int_term)) {
     return(.extract_interaction_mediation_lavaan(
-      object,
+      acc,
       treatment    = treatment,
       mediator     = mediator,
       int_term     = int_term,
@@ -220,10 +220,10 @@ extract_mediation_lavaan <- function(object,
 
   # Get parameter estimates table
   if (standardized) {
-    param_table <- lavaan::standardizedSolution(object)
+    param_table <- acc$param_table(standardized = TRUE)
     est_col <- "est.std"
   } else {
-    param_table <- lavaan::parameterEstimates(object)
+    param_table <- acc$param_table(standardized = FALSE)
     est_col <- "est"
   }
 
@@ -308,10 +308,10 @@ extract_mediation_lavaan <- function(object,
   # --- Extract All Parameters and Variance-Covariance Matrix ---
 
   # Get all free parameter estimates
-  all_coef <- lavaan::coef(object)
+  all_coef <- acc$coef()
 
   # Get variance-covariance matrix
-  vcov_mat <- lavaan::vcov(object)
+  vcov_mat <- acc$vcov()
 
   # Create estimates vector with named elements
   estimates <- all_coef
@@ -334,6 +334,19 @@ extract_mediation_lavaan <- function(object,
   estimates["b"] <- b_path
   estimates["c_prime"] <- c_prime
 
+  # Name-based consumers (probmed's parametric bootstrap) look the three paths
+  # up as m_<treatment>, y_<mediator> and y_<treatment>, the names the glm
+  # route gives its coefficients. Each is a second name for a path already
+  # aliased above; they are appended after it, so no existing row moves.
+  probmed_names <- .lavaan_probmed_alias_names(
+    acc, treatment, mediator, outcome, standardized
+  )
+  aliases_to_add <- c(
+    aliases_to_add,
+    setdiff(unname(probmed_names), c(names(all_coef), aliases_to_add))
+  )
+  estimates[unname(probmed_names)] <- c(a = a_path, b = b_path, c_prime = c_prime)[names(probmed_names)]
+
   # --- Resolve each alias to its source parameter in the original vcov ---
   #
   # Mapping the alias to a source *index* lets us copy the FULL covariance
@@ -346,11 +359,15 @@ extract_mediation_lavaan <- function(object,
   # arguments: when the paths were found by label, those arguments need not
   # name the labeled paths. An absent c' row (zero rows) gives NA.
   source_idx <- .lavaan_alias_source_idx(
-    object,
+    acc,
     lhs = c(a = a_row$lhs[1], b = b_row$lhs[1], c_prime = cp_row$lhs[1]),
     rhs = c(a = a_row$rhs[1], b = b_row$rhs[1], c_prime = cp_row$rhs[1]),
     op = c(a_row$op[1], b_row$op[1], cp_row$op[1]),
     orig_names = names(all_coef)
+  )
+  source_idx <- c(
+    source_idx,
+    stats::setNames(source_idx[names(probmed_names)], unname(probmed_names))
   )
 
   # Expand vcov so each NEW alias carries the FULL covariance row/column of its
@@ -397,7 +414,7 @@ extract_mediation_lavaan <- function(object,
 
   # Try to get data from lavaan object
   data <- tryCatch({
-    d <- lavaan::lavInspect(object, "data")
+    d <- acc$data()
     # lavaan may return a matrix; convert to data.frame if possible
     if (is.matrix(d)) {
       as.data.frame(d)
@@ -413,7 +430,7 @@ extract_mediation_lavaan <- function(object,
 
   # Get sample size
   # Multiple groups: the total
-  n_obs <- .lavaan_n_obs(object)
+  n_obs <- .lavaan_n_obs(acc)
 
   # --- Get Predictor Names ---
 
@@ -427,7 +444,7 @@ extract_mediation_lavaan <- function(object,
 
   # --- Check Convergence ---
 
-  converged <- lavaan::lavInspect(object, "converged")
+  converged <- acc$converged()
 
   # --- Create MediationData Object ---
 
@@ -462,7 +479,7 @@ extract_mediation_lavaan <- function(object,
 #' character vector of length >= 2, and returns a [SerialMediationData] object
 #' describing the chain X -> M1 -> M2 -> ... -> Mk -> Y.
 #'
-#' @param object Fitted lavaan model object.
+#' @param acc Fitted lavaan model object.
 #' @param treatment Character scalar: treatment variable name.
 #' @param mediators Character vector (length >= 2): mediator names in causal
 #'   order (`M1 -> M2 -> ... -> Mk`).
@@ -491,7 +508,7 @@ extract_mediation_lavaan <- function(object,
 #'
 #' @noRd
 .extract_serial_mediation_lavaan <- function( # nolint: object_length_linter.
-  object,
+  acc,
   treatment,
   mediators,
   outcome = NULL,
@@ -506,14 +523,14 @@ extract_mediation_lavaan <- function(object,
 
   # --- Parameter table & raw coefficient vector ---
   if (standardized) {
-    param_table <- lavaan::standardizedSolution(object)
+    param_table <- acc$param_table(standardized = TRUE)
     est_col <- "est.std"
   } else {
-    param_table <- lavaan::parameterEstimates(object)
+    param_table <- acc$param_table(standardized = FALSE)
     est_col <- "est"
   }
-  all_coef <- lavaan::coef(object)
-  vcov_mat <- lavaan::vcov(object)
+  all_coef <- acc$coef()
+  vcov_mat <- acc$vcov()
 
   # Pull a single regression coefficient (`lhs ~ rhs`) from the parameter
   # table; return NA so callers decide whether the path is required.
@@ -616,7 +633,7 @@ extract_mediation_lavaan <- function(object,
   aliases_to_add <- names(alias_var)[!names(alias_var) %in% names(estimates)]
   for (al in names(alias_var)) estimates[al] <- alias_val[[al]]
 
-  source_idx <- .lavaan_alias_source_idx_from_names(object, alias_var, names(all_coef))
+  source_idx <- .lavaan_alias_source_idx_from_names(acc, alias_var, names(all_coef))
 
   # Same full-row/column alias expansion as the simple path and the lm/glm
   # extractor (shared helper), so the serial chain's off-diagonal covariances
@@ -651,13 +668,13 @@ extract_mediation_lavaan <- function(object,
 
   # --- Data, sample size, convergence ---
   data <- tryCatch({
-    d <- lavaan::lavInspect(object, "data")
+    d <- acc$data()
     if (is.matrix(d)) as.data.frame(d) else if (is.data.frame(d)) d else NULL
   }, error = function(e) NULL)
 
-  n_obs <- .lavaan_n_obs(object)
+  n_obs <- .lavaan_n_obs(acc)
 
-  converged <- lavaan::lavInspect(object, "converged")
+  converged <- acc$converged()
 
   # --- Assemble SerialMediationData ---
   SerialMediationData(
@@ -699,18 +716,18 @@ extract_mediation_lavaan <- function(object,
 #' equation. Anything else (e.g. one mediator missing from the outcome model)
 #' falls back to `"serial"`, preserving the historical vector-mediator behavior.
 #'
-#' @param object Fitted lavaan model.
+#' @param acc Fitted lavaan model.
 #' @param mediators Character vector of mediator names (length >= 2).
 #' @param standardized Logical: passed through for table selection (the rows
 #'   used for detection are identical, but keeping it consistent avoids a second
 #'   solver call surprising the caller).
 #' @return `"serial"` or `"parallel"`.
 #' @noRd
-.classify_multimediator_structure_lavaan <- function(object, mediators, # nolint: object_length_linter.
+.classify_multimediator_structure_lavaan <- function(acc, mediators, # nolint: object_length_linter.
                                                      standardized = FALSE) {
   param_table <- tryCatch(
-    if (standardized) lavaan::standardizedSolution(object)
-    else lavaan::parameterEstimates(object),
+    if (standardized) acc$param_table(standardized = TRUE)
+    else acc$param_table(standardized = FALSE),
     error = function(e) NULL
   )
   if (is.null(param_table)) return("serial")
@@ -740,7 +757,7 @@ extract_mediation_lavaan <- function(object,
 #' of `.extract_parallel_mediation_lm()` and returns a `ParallelMediationData`
 #' object. Total indirect effect = `sum_j a_j * b_j`.
 #'
-#' @param object Fitted lavaan model.
+#' @param acc Fitted lavaan model.
 #' @param treatment Character scalar: treatment variable name.
 #' @param mediators Character vector (length >= 2): mediator names (any order;
 #'   the `a_j`/`b_j` indices follow this vector).
@@ -765,7 +782,7 @@ extract_mediation_lavaan <- function(object,
 #'
 #' @noRd
 .extract_parallel_mediation_lavaan <- function( # nolint: object_length_linter.
-  object,
+  acc,
   treatment,
   mediators,
   outcome = NULL,
@@ -780,14 +797,14 @@ extract_mediation_lavaan <- function(object,
 
   # --- Parameter table & raw coefficient vector ---
   if (standardized) {
-    param_table <- lavaan::standardizedSolution(object)
+    param_table <- acc$param_table(standardized = TRUE)
     est_col <- "est.std"
   } else {
-    param_table <- lavaan::parameterEstimates(object)
+    param_table <- acc$param_table(standardized = FALSE)
     est_col <- "est"
   }
-  all_coef <- lavaan::coef(object)
-  vcov_mat <- lavaan::vcov(object)
+  all_coef <- acc$coef()
+  vcov_mat <- acc$vcov()
 
   # Pull a single regression coefficient (`lhs ~ rhs`) from the parameter table;
   # return NA so callers decide whether the path is required.
@@ -863,7 +880,7 @@ extract_mediation_lavaan <- function(object,
   aliases_to_add <- names(alias_var)[!names(alias_var) %in% names(estimates)]
   for (al in names(alias_var)) estimates[al] <- alias_val[[al]]
 
-  source_idx <- .lavaan_alias_source_idx_from_names(object, alias_var, names(all_coef))
+  source_idx <- .lavaan_alias_source_idx_from_names(acc, alias_var, names(all_coef))
 
   vcov_expanded <- .expand_vcov_with_aliases(
     vcov_mat,
@@ -895,13 +912,13 @@ extract_mediation_lavaan <- function(object,
 
   # --- Data, sample size, convergence ---
   data <- tryCatch({
-    d <- lavaan::lavInspect(object, "data")
+    d <- acc$data()
     if (is.matrix(d)) as.data.frame(d) else if (is.data.frame(d)) d else NULL
   }, error = function(e) NULL)
 
-  n_obs <- .lavaan_n_obs(object)
+  n_obs <- .lavaan_n_obs(acc)
 
-  converged <- lavaan::lavInspect(object, "converged")
+  converged <- acc$converged()
 
   # --- Assemble ParallelMediationData ---
   ParallelMediationData(
@@ -932,12 +949,12 @@ extract_mediation_lavaan <- function(object,
 #' product precomputed as a plain data column (e.g. `XM`) is only recognized
 #' when named through `interaction`.
 #'
-#' @param object A fitted lavaan object.
+#' @param acc A fitted lavaan object.
 #' @param vars Character vector: treatment and mediator names.
 #' @param interaction Optional character: product column name(s).
 #' @noRd
-.find_product_terms_lavaan <- function(object, vars, interaction = NULL) {
-  pt <- tryCatch(lavaan::parameterTable(object), error = function(e) NULL)
+.find_product_terms_lavaan <- function(acc, vars, interaction = NULL) {
+  pt <- tryCatch(acc$partable(), error = function(e) NULL)
   if (is.null(pt)) return(character(0))
   reg <- pt[pt$op == "~", , drop = FALSE]
   is_prod <- vapply(strsplit(reg$rhs, ":", fixed = TRUE),
@@ -958,12 +975,12 @@ extract_mediation_lavaan <- function(object,
 #' `mediator:treatment`. Returns `NA_character_` when none is found.
 #'
 #' @noRd
-.find_interaction_term_lavaan <- function(object, treatment, mediator, # nolint: object_length_linter.
+.find_interaction_term_lavaan <- function(acc, treatment, mediator, # nolint: object_length_linter.
                                           interaction = NULL,
                                           standardized = FALSE) {
   pt <- tryCatch(
-    if (standardized) lavaan::standardizedSolution(object)
-    else lavaan::parameterEstimates(object),
+    if (standardized) acc$param_table(standardized = TRUE)
+    else acc$param_table(standardized = FALSE),
     error = function(e) NULL
   )
   if (is.null(pt)) return(NA_character_)
@@ -1003,7 +1020,7 @@ extract_mediation_lavaan <- function(object,
 #' @return An `InteractionMediationData` object.
 #' @noRd
 .extract_interaction_mediation_lavaan <- function( # nolint: object_length_linter.
-  object,
+  acc,
   treatment,
   mediator,
   int_term,
@@ -1017,14 +1034,14 @@ extract_mediation_lavaan <- function(object,
   checkmate::assert_number(m_star, .var.name = "m_star")
 
   if (standardized) {
-    param_table <- lavaan::standardizedSolution(object)
+    param_table <- acc$param_table(standardized = TRUE)
     est_col <- "est.std"
   } else {
-    param_table <- lavaan::parameterEstimates(object)
+    param_table <- acc$param_table(standardized = FALSE)
     est_col <- "est"
   }
-  all_coef <- lavaan::coef(object)
-  vcov_mat <- lavaan::vcov(object)
+  all_coef <- acc$coef()
+  vcov_mat <- acc$vcov()
 
   get_path <- function(lhs, rhs) {
     row <- param_table[param_table$lhs == lhs & param_table$op == "~" &
@@ -1079,7 +1096,7 @@ extract_mediation_lavaan <- function(object,
   m_covs <- setdiff(param_table$rhs[param_table$lhs == mediator &
                                       param_table$op == "~"], treatment)
   data <- tryCatch({
-    d <- lavaan::lavInspect(object, "data")
+    d <- acc$data()
     if (is.matrix(d)) as.data.frame(d) else if (is.data.frame(d)) d else NULL
   }, error = function(e) NULL)
   m_ref <- beta0
@@ -1112,7 +1129,7 @@ extract_mediation_lavaan <- function(object,
   estimates <- all_coef
   aliases_to_add <- names(alias_var)[!names(alias_var) %in% names(estimates)]
   for (al in names(alias_var)) estimates[al] <- alias_val[[al]]
-  source_idx <- .lavaan_alias_source_idx_from_names(object, alias_var, names(all_coef))
+  source_idx <- .lavaan_alias_source_idx_from_names(acc, alias_var, names(all_coef))
   vcov_expanded <- .expand_vcov_with_aliases(
     vcov_mat, source_idx = source_idx, aliases_to_add = aliases_to_add
   )
@@ -1134,8 +1151,8 @@ extract_mediation_lavaan <- function(object,
                                            param_table$op == "~"]
   outcome_predictors <- param_table$rhs[param_table$lhs == outcome &
                                           param_table$op == "~"]
-  n_obs <- .lavaan_n_obs(object)
-  converged <- lavaan::lavInspect(object, "converged")
+  n_obs <- .lavaan_n_obs(acc)
+  converged <- acc$converged()
 
   InteractionMediationData(
     a_path = beta1, b_path = theta2, c_prime = theta1, interaction = theta3,
@@ -1159,8 +1176,8 @@ extract_mediation_lavaan <- function(object,
 # up in parTable() and use its label if non-empty. Returns an integer index
 # into `orig_names` per alias (NA when the path is absent or not free), for
 # .expand_vcov_with_aliases().
-.lavaan_alias_source_idx <- function(object, lhs, rhs, op = "~", orig_names) {
-  pt <- lavaan::parTable(object)
+.lavaan_alias_source_idx <- function(acc, lhs, rhs, op = "~", orig_names) {
+  pt <- acc$partable()
   op <- rep_len(op, length(lhs))
   idx <- vapply(seq_along(lhs), function(i) {
     row <- which(pt$lhs == lhs[[i]] & pt$op == op[[i]] & pt$rhs == rhs[[i]])
@@ -1172,11 +1189,41 @@ extract_mediation_lavaan <- function(object,
   stats::setNames(idx, names(lhs))
 }
 
+# Names under which name-based consumers (probmed) look up the simple path
+# coefficients: m_<treatment> (the a path), y_<mediator> (b), y_<treatment>
+# (c'). Returned named by the structural alias each one repeats ("a", "b",
+# "c_prime"). Only an observed, continuous treatment, mediator and outcome
+# get them: a latent variable has no column for a probmed bootstrap to
+# simulate, and an ordered one is not Gaussian, so those fits return
+# character(0) and stay plugin-only. So do standardized extractions: their
+# estimates are standardized but @vcov is lavaan's unstandardized covariance,
+# and a bootstrap drawing from that pair would mix scales.
+.lavaan_probmed_alias_names <- function(acc, treatment, mediator, outcome,
+                                        standardized = FALSE) {
+  checkmate::assert_class(acc, "sem_accessors", .var.name = "acc")
+  checkmate::assert_string(treatment, .var.name = "treatment")
+  checkmate::assert_string(mediator, .var.name = "mediator")
+  checkmate::assert_string(outcome, .var.name = "outcome")
+  checkmate::assert_flag(standardized, .var.name = "standardized")
+
+  if (standardized) return(character(0))
+  vars <- c(treatment, mediator, outcome)
+  observed <- all(vars %in% acc$names("ov"))
+  if (!observed || any(vars %in% acc$names("ov.ord"))) {
+    return(character(0))
+  }
+  c(
+    a = paste0("m_", treatment),
+    b = paste0("y_", mediator),
+    c_prime = paste0("y_", treatment)
+  )
+}
+
 # Same, for aliases given in "lhs~rhs" / "lhs~1" form (named character vector).
-.lavaan_alias_source_idx_from_names <- function(object, alias_var, orig_names) { # nolint: object_length_linter.
+.lavaan_alias_source_idx_from_names <- function(acc, alias_var, orig_names) { # nolint: object_length_linter.
   is_int <- grepl("~1$", alias_var)
   .lavaan_alias_source_idx(
-    object,
+    acc,
     lhs = stats::setNames(sub("~.*$", "", alias_var), names(alias_var)),
     rhs = ifelse(is_int, "", sub("^[^~]*~", "", alias_var)),
     op = ifelse(is_int, "~1", "~"),
@@ -1211,6 +1258,6 @@ extract_mediation_lavaan <- function(object,
 # 355.99999999999994); as.integer() would truncate that to N - 1 and the
 # MediationData validator would reject the object. Multiple groups: the total.
 #' @noRd
-.lavaan_n_obs <- function(object) {
-  as.integer(round(sum(lavaan::lavInspect(object, "nobs"))))
+.lavaan_n_obs <- function(acc) {
+  as.integer(round(sum(acc$nobs())))
 }

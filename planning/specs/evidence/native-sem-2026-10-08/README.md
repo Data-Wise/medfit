@@ -34,6 +34,7 @@ Machine: macOS, 18 cores (affects only the parallel timings). Timings vary by ab
 | `05-speed.R` | per-call cost, vectorized objective, dense vs sparse, parallel fits | research table, K7b |
 | `05b-optimizer-speed.R` | nloptr SLSQP/LBFGS vs nlminb with the vectorized objective | research table |
 | `06-evaluator-prototype.R` | locked constraint evaluator, planted caller-side `exp` defect, 28 rejection inputs (incl. `5L`, hex, `1i`, `Inf`), 14 valid expressions compared with R's own evaluation, and the result-domain guard (8 non-finite results rejected, 5 valid boundary expressions accepted); prints `TALLY` lines | spec 4.2a |
+| `07-preflight.R` | S0 preflight: mean structure vs diffLL (OpenMx, with and without means), `mxConstraint` SEs, the nonlinear MBCO trap (`ind1 == 0` lands at `a1 = 0`), and RMediation's `mbco()` example label shift (X0); every check prints PASS or FAIL and the script exits nonzero on any FAIL | PASS lines in `results/07-preflight.out` |
 
 ## Seeds
 

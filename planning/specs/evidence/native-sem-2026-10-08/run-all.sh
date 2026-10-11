@@ -15,7 +15,7 @@ run() {  # run <label> <output file> <command...>
     echo "FAILED: $label (see $out)"; echo "FAILED: exit status nonzero" >> "$out"; failed=$((failed + 1))
   fi
 }
-for f in 01-probe-lavaan 02-p0-openmx-information 03-bench-optimizers 04-constrained-solvers 04b-constraint-contract 05-speed 05b-optimizer-speed 06-evaluator-prototype; do
+for f in 01-probe-lavaan 02-p0-openmx-information 03-bench-optimizers 04-constrained-solvers 04b-constraint-contract 05-speed 05b-optimizer-speed 06-evaluator-prototype 07-preflight; do
   run "$f" "results/$f.out" Rscript "$f.R"
 done
 if [ -n "$LAVAAN_ALT_LIB" ]; then

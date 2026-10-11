@@ -1,0 +1,16 @@
+SE gate, constrained cells (maximum relative SE difference against OpenMx):
+           runs failed max_rel_se max_est_gap
+equal.50     20      0   1.03e-05    4.04e-07
+zero.50      20      0   1.39e-05    5.65e-07
+equal.200    20      0   9.65e-06    4.44e-07
+zero.200     20      0   9.93e-06    6.09e-07
+equal.1000   20      0   1.11e-05    4.51e-07
+zero.1000    20      0   1.46e-05    6.68e-07
+
+Worst relative SE difference 1.459e-05 against the frozen tolerance 1e-3: PASS
+
+Stationarity re-check (Q14 decrement):
+accepted starts: 120, largest decrement 3.600e-08
+rejected-by-gate starts with a finite decrement: 0, smallest none
+truncated runs more than 1e-2 (natural units) from the optimum: 73, smallest decrement 0.014
+threshold 1e-03: 27778.4x above the largest converged value, 14.0x below the smallest stall -> RULE MET

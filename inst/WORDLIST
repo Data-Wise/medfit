@@ -6,6 +6,7 @@ brm
 brms
 brmsfit
 callout
+casewise
 ClusterMediationData
 CDE
 CMD
@@ -16,6 +17,8 @@ coef
 confint
 confounder
 Dependabot
+Deprecations
+diffLL
 DOP
 EDE
 Epidemiologic
@@ -34,7 +37,10 @@ IPW
 JointMediationData
 Kenward
 lavaan
+lavaan's
 Lifecycle
+lifecycle
+listwise
 Loeys
 lintr
 lm
@@ -54,11 +60,13 @@ nde
 NDE
 nie
 NIE
+nloptr
 noSuggests
 nobs
 nonparametrically
 oldrel
 OpenMx
+OpenMx's
 ORCID
 packageStartupMessage
 ParallelMediationData
@@ -80,8 +88,10 @@ Roadmap
 roxygen
 Roxygen
 SDs
+SEMFit
 SerialMediationData
 SEs
+SLSQP
 te
 testthat
 th

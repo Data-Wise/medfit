@@ -2151,3 +2151,91 @@ print.summary.ClusterMediationData <- function(x, ...) {
   cat("Source:     ", x$source_package, "\n")
   invisible(x)
 }
+
+#' SEMFit S7 Class
+#'
+#' @description
+#' `r lifecycle::badge("experimental")`
+#'
+#' S7 class holding a structural equation model fitted by the native
+#' maximum-likelihood engine (see [fit_sem()]): estimates, their covariance,
+#' the parameter table, defined parameters (`:=`) with delta-method standard
+#' errors, and the diagnostics of the optimizer.
+#'
+#' @param theta Named numeric vector: free-parameter estimates
+#' @param vcov Numeric matrix: covariance of `theta` (projected onto the active
+#'   constraints and bounds; `NA` when the model is not identified)
+#' @param table Data frame: one row per parameter-table row with `lhs`, `op`,
+#'   `rhs`, `label`, `free`, `est` and `se`
+#' @param defined Data frame of `:=` parameters: `name`, `expr`, `est`, `se`
+#' @param f Numeric scalar: minimized maximum-likelihood discrepancy
+#' @param n_obs,n_dropped Integer scalars: rows used and rows dropped for
+#'   missing values (listwise deletion)
+#' @param df Numeric scalar: degrees of freedom
+#' @param information Character scalar: `"observed"` or `"expected"`
+#' @param converged Logical scalar: the acceptance gate passed
+#' @param data Data frame: the rows used, on the model's observed variables
+#' @param model Character scalar: the model syntax
+#' @param diagnostics List: optimizer diagnostics (`status`, `decrement`,
+#'   `retries`, `active_bounds`, `active_constraints`, `improper`,
+#'   `sign_check`)
+#' @param internals List: the internal index objects the engine needs
+#'   (`ram`, `par_map`, `constraints`); not part of the interface
+#' @param call Call object or NULL: the call that produced the fit
+#'
+#' @return A SEMFit S7 object
+#' @usage
+#' SEMFit(theta, vcov, table, defined, f, n_obs, n_dropped, df, information,
+#'   converged, data, model, diagnostics, internals, call)
+#'
+#' @seealso [fit_sem()]
+#' @export
+SEMFit <- S7::new_class(
+  "SEMFit",
+  package = "medfit",
+  properties = list(
+    theta = S7::class_numeric,
+    vcov = S7::new_S3_class("matrix"),
+    table = S7::class_data.frame,
+    defined = S7::class_data.frame,
+    f = S7::class_numeric,
+    n_obs = S7::class_integer,
+    n_dropped = S7::class_integer,
+    df = S7::class_numeric,
+    information = S7::class_character,
+    converged = S7::class_logical,
+    data = S7::class_data.frame,
+    model = S7::class_character,
+    diagnostics = S7::class_list,
+    internals = S7::class_list,
+    call = S7::class_call | NULL
+  ),
+  validator = function(self) {
+    q <- length(self@theta)
+    if (is.null(names(self@theta)) || anyNA(names(self@theta))) {
+      return("theta must be named")
+    }
+    if (!identical(dim(self@vcov), c(q, q))) {
+      return("vcov must be a square matrix with one row per element of theta")
+    }
+    if (!identical(rownames(self@vcov), names(self@theta))) {
+      return("vcov must be named like theta")
+    }
+    if (length(self@information) != 1L || !(self@information %in% c("observed", "expected"))) {
+      return("information must be 'observed' or 'expected'")
+    }
+    if (length(self@n_obs) != 1L || self@n_obs < 1L) {
+      return("n_obs must be a positive integer")
+    }
+    if (nrow(self@data) != self@n_obs) {
+      return("data must have n_obs rows")
+    }
+    if (!all(c("lhs", "op", "rhs", "est", "se") %in% names(self@table))) {
+      return("table must have columns lhs, op, rhs, est and se")
+    }
+    if (!all(c("name", "expr", "est", "se") %in% names(self@defined))) {
+      return("defined must have columns name, expr, est and se")
+    }
+    NULL
+  }
+)

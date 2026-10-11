@@ -34,7 +34,8 @@
 # Few-cluster warnings (A2), once per call: with fewer than 10 clusters, whatever
 # the SE type; with fewer than 25 and model-based SEs. warning(), not
 # .notify_once(): that helper is session-wide, and a second qualifying call in
-# the same session must warn again.
+# the same session must warn again. The condition class `medfit_few_clusters`
+# lets the cluster bootstrap tell this advisory from a failed refit.
 .warn_few_clusters <- function(J, se_type) {
   if (J < 10L) {
     fmt <- paste0(
@@ -42,7 +43,7 @@
       "bootstrap_mediation(cluster = ) is the safer interval for the products."
     )
     hint <- if (se_type == "model") " (consider se_type = \"kr\")" else ""
-    warning(sprintf(fmt, J, hint), call. = FALSE)
+    warning(warningCondition(sprintf(fmt, J, hint), class = "medfit_few_clusters"))
   } else if (J < 25L && se_type == "model") {
     fmt <- paste0(
       "%d clusters (fewer than 25) with model-based standard errors, which can ",
@@ -50,7 +51,7 @@
       "paths, and bootstrap_mediation(cluster = ) is the safer interval for ",
       "the products."
     )
-    warning(sprintf(fmt, J), call. = FALSE)
+    warning(warningCondition(sprintf(fmt, J), class = "medfit_few_clusters"))
   }
   invisible(NULL)
 }

@@ -29,6 +29,20 @@
   invisible(TRUE)
 }
 
+# The IPW nudge, shared by the glm and native engines: model-based SEs are not valid under inverse-probability
+# weighting. Once per session so tight refit loops are not spammed.
+.notify_ipw_model_se <- function() {
+  .notify_once(
+    "ipw_model_se",
+    paste0(
+      "medfit: `weights` supplied with `se_type = \"model\"`. ",
+      "Model-based standard errors are not valid under inverse-probability ",
+      "weighting; pass `se_type = \"sandwich\"` for robust (HC) SEs. ",
+      "(Shown once per session.)"
+    )
+  )
+}
+
 # Show-method body for S7 classes whose `show` is registered in `.onLoad()`.
 # Kept as a named top-level function (not an inline body in `.onLoad`) so the
 # `print()` call is not seen as a startup message by R CMD check.
@@ -48,6 +62,7 @@
   S7::S4_register(JointMediationData)
   S7::S4_register(ClusterMediationData)
   S7::S4_register(BootstrapResult)
+  S7::S4_register(SEMFit)
 
   # Register S7 methods for dispatch
   # This is required for methods on generics from other packages
@@ -65,6 +80,7 @@
   S7::method(show, InteractionMediationData) <- .show_via_print
   S7::method(show, JointMediationData) <- .show_via_print
   S7::method(show, ClusterMediationData) <- .show_via_print
+  S7::method(show, SEMFit) <- .show_via_print
 
   # Explicitly register the S3 print method for `mediation_effect`.
   #
@@ -92,6 +108,7 @@
   registerS3method("print", "summary.SerialMediationData", print.summary.SerialMediationData)
   registerS3method("print", "summary.JointMediationData", print.summary.JointMediationData)
   registerS3method("print", "summary.ClusterMediationData", print.summary.ClusterMediationData)
+  registerS3method("print", "summary.SEMFit", print.summary.SEMFit)
 
   # Register extraction methods for suggested packages (S4 classes)
   # lavaan is in Suggests, so we register dynamically if available

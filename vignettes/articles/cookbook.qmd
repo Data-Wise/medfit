@@ -12,8 +12,8 @@ execute:
   echo: true
 ---
 
-Ten task-sized recipes. Each says when to use it, runs on `mediation_demo`
-(except the cluster recipe), and links to the article that explains it. For a
+Eleven task-sized recipes. Each says when to use it, runs on `mediation_demo`
+(except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
 ```{r}
@@ -246,3 +246,48 @@ tidy(xl, type = "effects", conf.int = TRUE)
 ```
 
 More: [Model Extraction](extraction.html).
+
+## 11. A latent mediator, native engine
+
+*When:* the mediator is a construct measured by several indicators, and you want
+its indirect effect without first averaging the indicators into a score. The
+mediator `eta` is not a column of the data; the model syntax defines it. The
+native engine is experimental.
+
+```{r}
+#| label: r11-latent-data
+set.seed(11)
+n <- 400
+X <- rnorm(n)
+eta <- 0.5 * X + rnorm(n, sd = 0.9)
+ldat <- data.frame(
+  X = X,
+  m1 = eta + rnorm(n, sd = 0.7),
+  m2 = 0.8 * eta + rnorm(n, sd = 0.7),
+  m3 = 0.7 * eta + rnorm(n, sd = 0.8)
+)
+ldat$Y <- 0.4 * eta + 0.2 * X + rnorm(n, sd = 0.8)
+```
+
+```{r}
+#| label: r11-latent-fit
+syntax <- "
+  eta =~ m1 + m2 + m3
+  eta ~ a * X
+  Y ~ b * eta + cp * X
+"
+xs <- fit_mediation(model = syntax, data = ldat, treatment = "X",
+                    mediator = "eta", engine = "native")
+tidy(xs, type = "effects", conf.int = TRUE)
+```
+
+`fit_sem()` fits the same syntax and returns the `SEMFit`. `mbco_sem()` tests the
+indirect effect as the minimum of two likelihood-ratio tests, refitting with
+`a == 0` and with `b == 0`:
+
+```{r}
+#| label: r11-latent-mbco
+mbco_sem(fit_sem(syntax, ldat), "a", "b")
+```
+
+More: [Methods and Formulas](methods.html).

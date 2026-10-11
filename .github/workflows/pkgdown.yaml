@@ -19,6 +19,8 @@ permissions: read-all
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
+    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default.
+    timeout-minutes: 30
     # Only restrict concurrency for non-PR jobs
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
