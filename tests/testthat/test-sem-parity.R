@@ -18,7 +18,7 @@ parity_syntax <- c(
 # Estimates of an OpenMx fit and their standard errors, named by the engine's parameter names.
 parity_openmx <- function(om, mod) {
   sm <- summary(om)$parameters
-  nm <- mod$ram$par_names[as.integer(sub("^p", "", sm$name))]
+  nm <- sem_lavaan_names(mod$ram$par_names[as.integer(sub("^p", "", sm$name))], mod$loadings)
   list(est = stats::setNames(sm$Estimate, nm), se = stats::setNames(sm[["Std.Error"]], nm))
 }
 
