@@ -30,6 +30,8 @@
 #'   [fit_sem()]. `NULL`, the default, uses the settings `object` was made with,
 #'   so a better optimum in the full fit than in a refit cannot inflate the
 #'   statistic; an explicit value overrides them.
+#' @param fit `r lifecycle::badge("deprecated")` Renamed `object`; the old name
+#'   still works with a warning.
 #'
 #' @return An object of class `c("mbco_sem", "htest")`: `statistic` (the
 #'   smaller diffLL), `parameter` (`df = 1`), `p.value`, `method`,

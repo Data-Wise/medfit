@@ -26,6 +26,9 @@ defined parameter are refused.}
 \code{\link[=fit_sem]{fit_sem()}}. \code{NULL}, the default, uses the settings \code{object} was made with,
 so a better optimum in the full fit than in a refit cannot inflate the
 statistic; an explicit value overrides them.}
+
+\item{fit}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{object}; the old name
+still works with a warning.}
 }
 \value{
 An object of class \code{c("mbco_sem", "htest")}: \code{statistic} (the
