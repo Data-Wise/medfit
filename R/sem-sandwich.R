@@ -26,9 +26,9 @@
 # least one positive. Returns them as a plain numeric vector.
 .sem_check_weights <- function(weights, n_rows) {
   checkmate::assert_numeric(weights, len = n_rows, lower = 0, any.missing = FALSE, finite = TRUE,
-                            .var.name = "sampling_weights")
+                            .var.name = "weights")
   if (!any(weights > 0)) {
-    stop("`sampling_weights` must have at least one positive value", call. = FALSE)
+    stop("`weights` must have at least one positive value", call. = FALSE)
   }
   as.numeric(weights)
 }

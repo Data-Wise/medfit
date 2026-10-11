@@ -26,6 +26,26 @@
   documented). A fit with sampling weights has no likelihood, so its chi-square,
   `logLik`, `AIC` and `BIC` are `NA`.
 
+## Behavior changes
+
+* A `SEMFit` has one spelling for a parameter: its label, else `lhs op rhs`
+  without spaces, as lavaan names coefficients. `coef()`, `vcov()`, `tidy()`
+  and the accessors `extract_mediation()` reads now agree. Before, `coef()` of an
+  unlabeled parameter read `"M ~ X"` and `"X ~~ X"` (with spaces) while the
+  accessors read `"M~X"`, and a latent loading was named like a regression into
+  its indicator (`"m2 ~ eta"`, with `tidy()` reporting `op` as `=~`). Now the
+  names are `"M~X"`, `"X~~X"` and `"eta=~m2"`, and they equal
+  `names(lavaan::coef())` on a shared model. Code that indexed `coef(fit)` by an
+  unlabeled spaced name must drop the spaces; labeled parameters are unchanged.
+  The wrong names were never part of a release's documented interface
+  (`SEMFit` is experimental).
+
+* `fit_sem(weights = )` replaces `fit_sem(sampling_weights = )`, the name
+  `fit_mediation()` already uses, and `mbco_sem(object, a, b)` replaces
+  `mbco_sem(fit, a, b)`, the name the other `SEMFit` methods use. The old names
+  still work and warn once per session with `lifecycle`; positional calls are
+  unaffected.
+
 ## Bug fixes
 
 * `fit_sem()` now gives the same verdict on a wrong-side active bound whether or

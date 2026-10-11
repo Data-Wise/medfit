@@ -55,10 +55,10 @@ test_that("a == 0 matches the fixed-parameter model and pins the variance of a t
 test_that("an active bound is projected out like a fixed value", {
   bound <- .sem_fit_syntax("M ~ a*X\nY ~ lower(0.6)*M + cp*X", se_data(), information = "expected")
   fixed <- .sem_fit_syntax("M ~ a*X\nY ~ 0.6*M + cp*X", se_data(), information = "expected")
-  expect_true("Y ~ M" %in% bound$active_bounds)
+  expect_true("Y~M" %in% bound$active_bounds)
   rest <- rownames(fixed$vcov)
   expect_equal(bound$vcov[rest, rest], fixed$vcov, tolerance = 1e-5)
-  expect_equal(unname(bound$vcov["Y ~ M", ]), rep(0, nrow(bound$vcov)))
+  expect_equal(unname(bound$vcov["Y~M", ]), rep(0, nrow(bound$vcov)))
 })
 
 test_that("an inequality enters the covariance only when it is active", {
@@ -76,12 +76,12 @@ test_that("an inequality enters the covariance only when it is active", {
 test_that("constrained standard errors equal lavaan's", {
   skip_if_not_installed("lavaan")
   d <- se_data()
-  pick <- c(a = "M ~ X", b = "Y ~ M", cp = "Y ~ X")
+  pick <- c(a = "M~X", b = "Y~M", cp = "Y~X")
   for (extra in c("a == b", "a == 0.4", "a + b == 1")) {
     fit <- se_fit(extra, data = d)
     lav <- suppressWarnings(lavaan::sem(paste0(se_base, "\n", extra), d, fixed.x = FALSE, information = "expected"))
     pe <- lavaan::parameterEstimates(lav)
-    key <- paste(pe$lhs, pe$op, pe$rhs)
+    key <- paste0(pe$lhs, pe$op, pe$rhs)
     se <- pe$se[match(unname(pick), key)]
     expect_equal(unname(se_of(fit)[names(pick)]), se, tolerance = 1e-5, info = extra)
   }

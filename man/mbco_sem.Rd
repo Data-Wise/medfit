@@ -4,10 +4,17 @@
 \alias{mbco_sem}
 \title{Minimum-of-Two Likelihood-Ratio Test for an Indirect Effect (MBCO)}
 \usage{
-mbco_sem(fit, a, b, n_starts = NULL, control = NULL)
+mbco_sem(
+  object,
+  a,
+  b,
+  n_starts = NULL,
+  control = NULL,
+  fit = lifecycle::deprecated()
+)
 }
 \arguments{
-\item{fit}{A \link{SEMFit} from \code{\link[=fit_sem]{fit_sem()}}, fitted without sampling weights.}
+\item{object}{A \link{SEMFit} from \code{\link[=fit_sem]{fit_sem()}}, fitted without \code{weights}.}
 
 \item{a, b}{Character strings: the labels of the two free regression paths
 whose product is the indirect effect (for example \code{"a"} and \code{"b"} in
@@ -16,9 +23,12 @@ labeled \code{~} row of the fit; a variance, a loading, an unlabeled path and a
 defined parameter are refused.}
 
 \item{n_starts, control}{Passed to the optimizer for the two refits, as in
-\code{\link[=fit_sem]{fit_sem()}}. \code{NULL}, the default, uses the settings \code{fit} was made with,
+\code{\link[=fit_sem]{fit_sem()}}. \code{NULL}, the default, uses the settings \code{object} was made with,
 so a better optimum in the full fit than in a refit cannot inflate the
 statistic; an explicit value overrides them.}
+
+\item{fit}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{object}; the old name
+still works with a warning.}
 }
 \value{
 An object of class \code{c("mbco_sem", "htest")}: \code{statistic} (the
@@ -43,7 +53,7 @@ solved, because a nonlinear solver can stop at the branch with the larger
 statistic.
 }
 \details{
-A fit made with \code{sampling_weights} is refused: the weighted discrepancy is
+A fit made with \code{weights} is refused: the weighted discrepancy is
 not a likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are
 measured against. A refit that fails the acceptance gate of the optimizer is

@@ -77,7 +77,7 @@ tidy(fit, type = "effects", conf.int = TRUE)
 - HC3 treats the observations as independent. It does **not** handle survey
   clusters, strata or replicate weights.
 - The `regmedint` engine accepts neither `weights` nor `se_type = "sandwich"`.
-- The native engine takes weights too, as `sampling_weights` in `fit_sem()`,
+- The native engine takes weights too, in `fit_sem()`,
   with its own sandwich (HC0-type) covariance; see
   [Methods and Formulas](methods.html).
 
