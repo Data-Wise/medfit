@@ -40,6 +40,8 @@
   }
   .assert_no_random_terms(formula_y, "formula_y", "random_y")
   .assert_no_random_terms(formula_m, "formula_m", "random_m")
+  .assert_no_offset(formula_y, "formula_y")
+  .assert_no_offset(formula_m, "formula_m")
   .assert_pkg("lme4", "engine = \"lmer\"")
   checkmate::assert_string(cluster, .var.name = "cluster")
   checkmate::assert_choice(cluster, choices = names(data),
@@ -106,6 +108,21 @@
   }
   rhs <- formula[[length(formula)]]
   c(if (is_bar(rhs)) paste(deparse(rhs), collapse = " "), walk(rhs))
+}
+
+# The engine rebuilds both formulas from their term labels, and term labels
+# exclude offsets, so an offset would vanish without a word and change the fitted
+# model. The within/between split has no meaning for an offset either, so refuse.
+.assert_no_offset <- function(formula, what) {
+  if (!inherits(formula, "formula")) return(invisible(NULL))
+  tt <- stats::terms(formula)
+  off <- attr(tt, "offset")
+  if (length(off)) {
+    stop("`", what, "` contains the offset `", deparse(attr(tt, "variables")[[off[1L] + 1L]]),
+         "`, which engine = \"lmer\" does not support: it rebuilds the formulas ",
+         "from their terms and would drop it. Remove the offset.", call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 # fit_mediation() adds the random cluster intercept itself, so a formula that
