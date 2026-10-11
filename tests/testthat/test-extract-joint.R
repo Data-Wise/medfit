@@ -168,6 +168,28 @@ test_that("the joint branch refuses fits outside the closed form", {
                "same covariates; the Y and M1 models differ in: C2")
 })
 
+test_that("na.exclude fits give the same joint covariance as na.omit fits", {
+  # stats::residuals() pads the omitted rows with NA under na.exclude, while the
+  # model matrix keeps only the retained rows; the cross-equation covariance
+  # used to fill with NA and the effect intervals came back NA without an error.
+  d <- sim_joint("parallel", "M2", n = 300)$data
+  d$C[c(5, 17, 40)] <- NA
+  fit_na <- function(na) {
+    extract_mediation(lm(M1 ~ X + C, d, na.action = na),
+                      model_y = lm(Y ~ X * M2 + M1 + C, d, na.action = na),
+                      treatment = "X", mediator = c("M1", "M2"),
+                      mediator_models = list(lm(M2 ~ X + C, d, na.action = na)))
+  }
+  omit <- fit_na("na.omit")
+  excl <- fit_na("na.exclude")
+  expect_false(anyNA(excl@vcov))
+  expect_equal(excl@vcov, omit@vcov)
+  expect_equal(excl@estimates, omit@estimates)
+  ci <- suppressWarnings(stats::confint(excl, parm = "effects"))
+  expect_false(anyNA(ci))
+  expect_equal(ci, suppressWarnings(stats::confint(omit, parm = "effects")))
+})
+
 test_that("m_star on the joint branch follows the G3 naming rules", {
   d <- sim_joint("serial", "M2", n = 300)$data
   expect_error(joint_call(d, m_star = c(M1 = 1)),

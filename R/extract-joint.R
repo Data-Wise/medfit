@@ -372,10 +372,18 @@
 #' @noRd
 .stacked_ols_vcov <- function(models, prefixes) {
   info <- lapply(models, function(m) {
-    r <- stats::residuals(m, type = "response")
+    # The stored residuals cover the fitted rows only. stats::residuals() pads
+    # the omitted rows with NA under na.exclude, which would no longer line up
+    # with the model matrix and would turn every cross product into NA.
+    r <- unname(if (inherits(m, "glm")) m$y - m$fitted.values else m$residuals)
+    x <- stats::model.matrix(m)
+    if (length(r) != nrow(x)) {
+      stop("the residuals and the model matrix of a joint model have different ",
+           "numbers of rows (", length(r), " and ", nrow(x), ").", call. = FALSE)
+    }
     df <- m$df.residual
     v <- stats::vcov(m)
-    list(x = stats::model.matrix(m), r = r, df = df, v = v,
+    list(x = x, r = r, df = df, v = v,
          inv = v / (sum(r^2) / df))
   })
   nms <- unlist(Map(function(m, p) paste0(p, names(stats::coef(m))), models, prefixes))

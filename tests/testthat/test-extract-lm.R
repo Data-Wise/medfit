@@ -114,6 +114,29 @@ test_that("extract_mediation correctly counts observations", {
   expect_equal(med_data@n_obs, 150L)
 })
 
+test_that("na.exclude fits extract the same as na.omit fits, for lm and Gaussian glm", {
+  # stats::residuals() pads the omitted rows with NA under na.exclude; the
+  # Gaussian glm residual SD summed those NAs and the extraction stopped with
+  # "missing value where TRUE/FALSE needed".
+  data <- generate_mediation_data(n = 150)
+  data$M[c(4, 9, 30)] <- NA
+  fit <- function(engine, na) {
+    f <- function(fm) {
+      if (engine == "lm") lm(fm, data = data, na.action = na)
+      else glm(fm, data = data, family = stats::gaussian(), na.action = na)
+    }
+    extract_mediation(f(M ~ X), model_y = f(Y ~ X + M), treatment = "X", mediator = "M")
+  }
+  for (engine in c("lm", "glm")) {
+    omit <- fit(engine, "na.omit")
+    excl <- fit(engine, "na.exclude")
+    expect_equal(excl@n_obs, 147L)
+    expect_equal(excl@sigma_m, omit@sigma_m)
+    expect_equal(excl@sigma_y, omit@sigma_y)
+    expect_equal(excl@vcov, omit@vcov)
+  }
+})
+
 test_that("extract_mediation sets converged = TRUE for lm models", {
   data <- generate_mediation_data()
 
