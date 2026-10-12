@@ -1,3 +1,7 @@
+# medfit development version
+
+* Register nullable property types with S4 so medfit installs and loads with current development S7.
+
 # medfit 0.8.0
 
 ## New features

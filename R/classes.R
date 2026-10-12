@@ -11,6 +11,15 @@
 # - Extensible design allowing future addition of ParallelMediationData, ComplexMediationData
 # - Consistent interface across all classes (estimates, vcov, metadata)
 
+.register_s4_unions <- function() {
+  methods::setClassUnion("medfit_numeric_or_NULL", c("integer", "numeric", "NULL"))
+  methods::setClassUnion("medfit_list_or_NULL", c("list", "NULL"))
+  methods::setClassUnion("medfit_data_frame_or_NULL", c("data.frame", "NULL"))
+  methods::setClassUnion("medfit_call_or_NULL", c("call", "NULL"))
+}
+
+.register_s4_unions()
+
 #' MediationData S7 Class
 #'
 #' @description

@@ -51,6 +51,7 @@
 }
 
 .onLoad <- function(libname, pkgname) {
+  .register_s4_unions()
   # Register S7 classes with S4 system
   # This must happen before methods_register() to avoid
 
