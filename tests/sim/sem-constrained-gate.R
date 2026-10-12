@@ -63,9 +63,9 @@ one <- function(i) {
       se_o <- stats::setNames(sm[["Std.Error"]], nm)
       est_o <- stats::setNames(sm$Estimate, nm)
       se_n <- sqrt(diag(fit$vcov))
-      # native names a, b, cp; oracle names a, `Y ~ X`; map them
-      map <- c(cp = "Y ~ X", `X ~~ X` = "X ~~ X", `M ~~ M` = "M ~~ M", `Y ~~ Y` = "Y ~~ Y")
-      pairs <- if (g$cell == "equal") c(map, a = "a", b = "a") else c(map, b = "Y ~ M")
+      # native names a, b, cp; oracle names a, `Y~X`; map them
+      map <- c(cp = "Y~X", `X~~X` = "X~~X", `M~~M` = "M~~M", `Y~~Y` = "Y~~Y")
+      pairs <- if (g$cell == "equal") c(map, a = "a", b = "a") else c(map, b = "Y~M")
       row$rel_se <- max(abs(se_n[names(pairs)] / se_o[unname(pairs)] - 1))
       row$est_gap <- max(abs(fit$theta[names(pairs)] - est_o[unname(pairs)]))
     }
@@ -95,12 +95,12 @@ st <- do.call(rbind, lapply(out, `[[`, "st"))
 
 cat("SE gate, constrained cells (maximum relative SE difference against OpenMx):\n")
 print(do.call(rbind, lapply(split(res, list(res$cell, res$n), drop = TRUE), function(df) {
-  data.frame(runs = nrow(df), failed = sum(!df$native_ok | !df$omx_ok), max_rel_se = max(df$rel_se, na.rm = TRUE),
+  data.frame(runs = nrow(df), failed = sum(!df$native_ok | !df$omx_ok | is.na(df$rel_se)), max_rel_se = max(df$rel_se, na.rm = TRUE),
              max_est_gap = max(df$est_gap, na.rm = TRUE))
 })), digits = 3)
 worst <- max(res$rel_se, na.rm = TRUE)
 cat(sprintf("\nWorst relative SE difference %.3e against the frozen tolerance 1e-3: %s\n", worst,
-            if (worst <= 1e-3) "PASS" else "FAIL"))
+            if (is.finite(worst) && worst <= 1e-3) "PASS" else "FAIL"))
 
 cat("\nStationarity re-check (Q14 decrement):\n")
 acc <- att$dec[att$kind == "accepted"]
