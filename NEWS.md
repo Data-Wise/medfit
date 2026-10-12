@@ -43,6 +43,13 @@
   solve lands on 221.05. Several zero-product lines give the cartesian product of
   branches (at most 64).
 
+* `mbco_sem()` tests a product of k labeled paths: `mbco_sem(fit, paths = c("a",
+  "d", "b"))` (or a vector in `a` with `b` missing) refits once per path, keeps the
+  smallest diffLL and refers it to chi-square(1). With two paths it gives exactly
+  the old result (`mbco_sem(fit, "a", "b")` still works). The null is a union of
+  k hypotheses, so the test is conservative; its size for three paths is checked
+  by a simulation gate before the release.
+
 * Nonlinear inequality constraints in `fit_sem()`: `a*b > 0.1`, `a*b < 0.5`, and a
   defined name inside a constraint (`ab := a*b` then `ab > 0`) are solved like the
   nonlinear equalities, as rows `c(theta) <= 0` with a recomputed Jacobian. The
