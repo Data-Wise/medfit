@@ -1,0 +1,20 @@
+old nnls() on rank-deficient problems (failed = error or non-finite result):
+ family scale cases ncol rank failed
+    dup 1e+00   500    5    3      0
+   mult 1e+00   500    8    4      0
+    dup 1e+02   500    5    3    118
+   mult 1e+02   500    8    4    240
+    dup 1e+04   500    5    3    146
+   mult 1e+04   500    8    4    265
+    dup 1e+06   500    5    3    139
+   mult 1e+06   500    8    4    269
+ASSERT PASS every problem is rank deficient (rank < number of columns)
+ASSERT PASS control: no failure at scale 1 in either family
+ASSERT PASS defect reproduces: dup family fails in 146 of 500 cases at scale 1e4
+ASSERT PASS mechanism is 0/0: seed 13 scale 1e4, column 4 entered with weight 1.81e-08 (absolute tol 1e-12) and its step was 0/0
+fixture: dup seed 13 scale 10000; reference solution on the normalized problem: x = (0.07563, 0.2579, 0, 0.07563, 0), squared residual 9.253e-01
+ASSERT PASS the reference solution is non-negative and finite
+
+R 4.6.1
+
+all assertions passed

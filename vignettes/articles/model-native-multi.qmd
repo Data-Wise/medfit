@@ -1,0 +1,113 @@
+---
+title: "Native engine: several mediators and weights"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Serial and parallel mediators, and sampling weights, with the native engine. Part
+of the [Models](models.html) collection; the last of four
+[native engine](model-native.html) pages. The engine is experimental.
+
+| | |
+|---|---|
+| **Structure** | serial (a chain) or parallel mediators written as syntax |
+| **Route** | `fit_sem()`, then `extract_mediation(fit, mediator = c(...), outcome = )` |
+| **Classes returned** | `SerialMediationData` or `ParallelMediationData` |
+| **Weights** | `fit_sem(weights = , se_type = "sandwich")` |
+
+::: {.callout-warning}
+## Not `fit_mediation(engine = "native")`
+`fit_mediation(engine = "native")` takes **one** mediator and stops with "Must have
+length 1" for more. For several, fit with `fit_sem()` and extract.
+:::
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+covs <- "covariate1 + covariate2"
+```
+
+## Serial mediators
+
+```{r}
+#| label: serial
+serial_syntax <- paste0("
+  mediator1 ~ a * treatment + ", covs, "
+  mediator2 ~ d * mediator1 + a2 * treatment + ", covs, "
+  outcome ~ b * mediator2 + b1 * mediator1 + cp * treatment + ", covs)
+sfit <- fit_sem(serial_syntax, mediation_demo)
+xs <- extract_mediation(sfit, treatment = "treatment",
+                        mediator = c("mediator1", "mediator2"),
+                        outcome = "outcome")
+class(xs)[1]
+c(chain = unname(nie(xs)), every_path = unname(nie(xs, type = "total")),
+  total = unname(te(xs)))
+```
+
+With the default `structure = "auto"`, medfit classifies the mediators from the
+model: here it finds the path from `mediator1` to `mediator2` and returns the
+serial class. See [Serial mediation](model-serial.html) for what the three
+numbers mean.
+
+## Parallel mediators
+
+```{r}
+#| label: parallel
+parallel_syntax <- paste0("
+  mediator1 ~ a1 * treatment + ", covs, "
+  mediator2 ~ a2 * treatment + ", covs, "
+  outcome ~ b1 * mediator1 + b2 * mediator2 + cp * treatment + ", covs)
+pfit <- fit_sem(parallel_syntax, mediation_demo)
+xp <- extract_mediation(pfit, treatment = "treatment",
+                        mediator = c("mediator1", "mediator2"),
+                        outcome = "outcome", structure = "parallel")
+class(xp)[1]
+tidy(xp, type = "effects", conf.int = TRUE)
+```
+
+## Sampling weights
+
+`weights` gives weighted maximum likelihood; pair it with
+`se_type = "sandwich"` for robust standard errors. The weights below are random,
+only to show the call:
+
+```{r}
+#| label: weights
+set.seed(1)
+w <- runif(nrow(mediation_demo), 0.5, 2)
+wsyntax <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + cp * treatment + covariate1 + covariate2
+  ab := a * b
+"
+wfit <- fit_sem(wsyntax, mediation_demo, weights = w, se_type = "sandwich")
+wfit@defined
+```
+
+The scale of the weights does not matter. Supplying weights with the default
+`se_type = "model"` prints a once-per-session message that model-based standard
+errors are not valid under inverse-probability weighting.
+
+## Limits
+
+- **`fit_mediation(engine = "native")` takes one mediator** (see the warning above).
+- **No four-way decomposition and no mean structure** from the native engine.
+- **The native sandwich is the HC0 type**, with casewise scores; the `glm`
+  engine's sandwich is HC3. They are different estimators, so the standard errors
+  need not match.
+- **The sandwich treats observations as independent**, so it does not handle
+  survey clusters, strata or replicate weights.
+
+## Related
+
+[Serial mediation](model-serial.html) | [Parallel mediation](model-parallel.html) |
+[Weights and robust SEs](model-weights.html) | [Model Extraction](extraction.html)

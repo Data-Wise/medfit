@@ -7,7 +7,7 @@
 extract_mediation(object, ...)
 }
 \arguments{
-\item{object}{Fitted model object (lm, glm, lavaan, etc.)}
+\item{object}{Fitted model object (lm, glm, lavaan, lmerMod, or a \link{SEMFit})}
 
 \item{...}{Additional arguments passed to methods. Common arguments include:
 \itemize{
@@ -19,7 +19,8 @@ extract_mediation(object, ...)
 \value{
 An S7 object whose class depends on the mediation structure (see
 Details): \link{MediationData}, \link{InteractionMediationData},
-\link{SerialMediationData}, \link{ParallelMediationData}, or \link{JointMediationData}.
+\link{SerialMediationData}, \link{ParallelMediationData}, \link{JointMediationData}, or
+\link{ClusterMediationData}.
 Each carries the path coefficients, the full parameter vector and its
 variance-covariance matrix, residual standard deviations (for Gaussian
 models), variable names, and the original data when available.
@@ -28,7 +29,7 @@ models), variable names, and the original data when available.
 Generic function to extract mediation structure (a, b, c' paths and
 variance-covariance matrices) from fitted models. This function provides
 a unified interface for extracting mediation information from various
-model types (lm, glm, lavaan, lmer, brms, etc.).
+model types (lm, glm, lavaan, lmer, and a native \link{SEMFit}).
 }
 \details{
 The \code{extract_mediation()} generic provides methods for different model types:
@@ -43,6 +44,10 @@ must be computed on those rows, and a pair of fits that kept different
 individuals is an error (best effort: it compares the data row names the
 fits kept, so it cannot see a mismatch between frames whose row names were
 both reset)
+\item \strong{SEMFit}: Extract from a model fitted by \code{\link[=fit_sem]{fit_sem()}} (the experimental
+native maximum-likelihood engine), with the same arguments and structures as
+the lavaan method. The four-way decomposition is not available: it needs a
+mediator intercept, which the native engine does not estimate.
 \item \strong{brmsfit}: Extract from Bayesian models (future)
 }
 

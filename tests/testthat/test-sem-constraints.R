@@ -34,7 +34,7 @@ lav_estimates <- function(extra, data = cons_data()) {
   fit <- lavaan::sem(paste0(cons_model, "\n", extra), data = data, fixed.x = FALSE)
   pe <- lavaan::parameterEstimates(fit)
   stats::setNames(
-    pe$est[match(c("M ~ X", "Y ~ M", "Y ~ X"), paste(pe$lhs, pe$op, pe$rhs))],
+    pe$est[match(c("M~X", "Y~M", "Y~X"), paste0(pe$lhs, pe$op, pe$rhs))],
     c("a", "b", "cp")
   )
 }
@@ -73,9 +73,11 @@ test_that("defined parameters are substituted before the linearity walk", {
   expect_equal(chained$cons$ineq$A[1L, match(c("a", "b"), chained$ram$par_names)], rep(1 / sqrt(2), 2L))
 })
 
-test_that("nonlinear, parameter-free and unprovable constraints error by name", {
-  for (extra in c("a*b == 0.1", "exp(a) == 1", "a*b - a*b + a == 1", "ab := a*b\nab > 0", "a/b < 1", "min(a, b) > 0")) {
-    expect_error(cons_setup(extra), "nonlinear constraints are not supported in this version", info = extra)
+test_that("nonlinear inequalities become closure rows; parameter-free constraints error by name", {
+  for (extra in c("a*b > 0.1", "exp(a) < 1", "a*b - a*b + a < 1", "ab := a*b\nab > 0", "a/b < 1", "min(a, b) > 0")) {
+    s <- cons_setup(extra)
+    expect_false(is.null(s$cons$nli), info = extra)
+    expect_identical(nrow(s$cons$ineq$A), 0L, info = extra)
   }
   expect_error(cons_setup("1 == 2"), "constraint contains no parameters: '1 == 2'")
   expect_error(cons_setup("1 < 2"), "constraint contains no parameters")
@@ -128,7 +130,7 @@ test_that("a constraint on an equal-label pair and on variances is enforced too"
 })
 
 test_that("planted defect: a nonlinear constraint called linear is solved with a constant Jacobian", {
-  expect_error(cons_setup("a*b + a == 0.2"), "nonlinear constraints are not supported")
+  expect_false(is.null(cons_setup("a*b + a < 0.2")$cons$nli))
   testthat::local_mocked_bindings(.sem_tree_linear = function(e) TRUE)
   s <- cons_setup("a*b + a == 0.2")
   th <- cons_solve(s)
@@ -210,7 +212,7 @@ lav_estimates_tight <- function(extra, data = cons_data()) {
   fit <- lavaan::sem(paste0(cons_model, "\n", extra), data = data, fixed.x = FALSE,
                      control = list(rel.tol = 1e-12, eval.max = 10000))
   pe <- lavaan::parameterEstimates(fit)
-  pe$est[match(c("M ~ X", "Y ~ M", "Y ~ X"), paste(pe$lhs, pe$op, pe$rhs))]
+  pe$est[match(c("M~X", "Y~M", "Y~X"), paste0(pe$lhs, pe$op, pe$rhs))]
 }
 
 test_that("mixed constraints match lavaan: an inactive and an active inequality, and two equalities", {
@@ -398,11 +400,11 @@ test_that("planted defect: a flipped sign convention warns on a correct active i
   expect_warning(.sem_optimize(s$ram, s$smp, s$start, constraints = s$cons), "moving into the feasible region")
 })
 
-test_that("a rank-deficient active set skips the sign check and says so, with no warning and no error", {
+test_that("a rank-deficient active set gets a computed sign verdict, with no warning and no error", {
   s <- cons_setup("a + b < 0.2\n2*a + 2*b < 0.4")
   expect_no_warning(fit <- .sem_optimize(s$ram, s$smp, s$start, constraints = s$cons))
-  expect_identical(fit$sign_check, "skipped: the active constraints are linearly dependent")
-  expect_null(fit$multipliers)
+  expect_identical(fit$sign_check, "ok")
+  expect_false(is.null(fit$multipliers))
   expect_lte(fit$theta[["a"]] + fit$theta[["b"]], 0.2 + 1e-8)
 })
 
@@ -455,7 +457,7 @@ test_that("a bounded fit is accepted, its bound reported active, and the project
   mod <- sem_model_heywood()
   smp <- .sem_sample(sem_sim(mod, 50, 10), mod$ram)
   q <- mod$ram$q
-  is_var <- vapply(strsplit(mod$ram$par_names, " ~~ ", fixed = TRUE),
+  is_var <- vapply(strsplit(mod$ram$par_names, "~~", fixed = TRUE),
                    function(p) length(p) == 2 && p[1] == p[2], logical(1))
   lb <- ifelse(is_var, 0, -Inf)
   ub <- rep(Inf, q)
@@ -471,44 +473,171 @@ test_that("a bounded fit is accepted, its bound reported active, and the project
   expect_length(proj$sign_warnings, 0L)
 })
 
-test_that("a wrong-side active bound warns in the projected gate (and is rejected in the plain one)", {
+test_that("a wrong-side active bound is rejected by both gates, with or without an inactive constraint line", {
   mod <- sem_model_observed()
   smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
   q <- mod$ram$q
   fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
-  k <- match("Y ~ M", mod$ram$par_names)
+  k <- match("Y~M", mod$ram$par_names)
+  lb_down <- rep(-Inf, q)
+  lb_down[k] <- fit$theta[k] - 0.3
+  ub <- rep(Inf, q)
+  pt <- pin_at(mod, smp, fit$theta, k, lb_down[k])
+  # a constraint line that never binds (M ~ X below 100) must not change the verdict (T8, audit F4)
+  inactive <- empty_cons(q)
+  e <- numeric(q)
+  e[match("M~X", mod$ram$par_names)] <- 1
+  inactive$ineq <- list(A = matrix(e, 1L), b = -100, text = "M ~ X < 100")
+  plain <- .sem_gate(pt, 3L, mod$ram, smp, lb_down, ub)
+  expect_false(plain$accepted)
+  expect_match(plain$reason, "active bound points into the interior (Y~M)", fixed = TRUE)
+  for (cons in list(empty_cons(q), inactive)) {
+    g <- .sem_gate(pt, 3L, mod$ram, smp, lb_down, ub, cons)
+    expect_false(g$accepted)
+    expect_identical(g$reason, plain$reason)
+    expect_length(g$sign_warnings, 0L)
+  }
+  # the true constrained optimum (bound above the unconstrained optimum) has the right sign: accepted, no warning
+  lb_up <- rep(-Inf, q)
+  lb_up[k] <- fit$theta[k] + 0.3
+  pt_up <- pin_at(mod, smp, fit$theta, k, lb_up[k])
+  expect_true(.sem_gate(pt_up, 3L, mod$ram, smp, lb_up, ub)$accepted)
+  for (cons in list(empty_cons(q), inactive)) {
+    ok <- .sem_gate(pt_up, 3L, mod$ram, smp, lb_up, ub, cons)
+    expect_true(ok$accepted)
+    expect_length(ok$sign_warnings, 0L)
+  }
+})
+
+test_that("a wrong-side bound beside an active constraint is rejected; a wrong-sign constraint alone still warns", {
+  mod <- sem_model_observed()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  k <- match("Y~M", mod$ram$par_names)
   lb_down <- rep(-Inf, q)
   lb_down[k] <- fit$theta[k] - 0.3
   pt <- pin_at(mod, smp, fit$theta, k, lb_down[k])
-  expect_false(.sem_gate(pt, 3L, mod$ram, smp, lb_down, rep(Inf, q))$accepted)
-  g <- .sem_gate(pt, 3L, mod$ram, smp, lb_down, rep(Inf, q), empty_cons(q))
-  expect_true(g$accepted)
-  expect_match(g$sign_warnings, "lower bound of Y ~ M is active")
-  # the true constrained optimum (bound above the unconstrained optimum) has the right sign: no warning
-  lb_up <- rep(-Inf, q)
-  lb_up[k] <- fit$theta[k] + 0.3
-  ok <- .sem_gate(pin_at(mod, smp, fit$theta, k, lb_up[k]), 3L, mod$ram, smp, lb_up, rep(Inf, q), empty_cons(q))
-  expect_true(ok$accepted)
-  expect_length(ok$sign_warnings, 0L)
+  # the unconstrained optimum of M ~ X is about 0.4: the line M ~ X >= its pinned value is active and right-signed
+  j <- match("M~X", mod$ram$par_names)
+  e <- numeric(q)
+  e[j] <- -1
+  act <- empty_cons(q)
+  act$ineq <- list(A = matrix(e, 1L), b = pt[j], text = "M ~ X > pinned")
+  g <- .sem_gate(pt, 3L, mod$ram, smp, lb_down, rep(Inf, q), act)
+  expect_false(g$accepted)
+  expect_match(g$reason, "active bound points into the interior (Y~M)", fixed = TRUE)
 })
 
-test_that("planted defect: a wrong bound-row sign gives a false alarm on the correct bounded fit", {
+# T8b (ledger G14, T9 defects 1, 2 and 5): a bound is judged by its own statistic |g_k| / sqrt(H_kk), the
+# unconstrained gate's measure, so the verdict does not depend on the constraint lines.
+
+inactive_line <- function(mod, par = "M~X") {
+  cons <- empty_cons(mod$ram$q)
+  e <- numeric(mod$ram$q)
+  e[match(par, mod$ram$par_names)] <- 1
+  cons$ineq <- list(A = matrix(e, 1L), b = -100, text = paste(par, "< 100"))
+  cons
+}
+
+test_that("a wrong-side bound is rejected when the full Hessian is indefinite", {
+  mod <- sem_model_latent()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  u <- .sem_step_floor(mod$ram, smp)
+  k <- match("m1~~m1", mod$ram$par_names)
+  lb <- rep(-Inf, q)
+  lb[k] <- fit$theta[k] - 10^-0.5 * u[k]
+  pt <- pin_at(mod, smp, fit$theta, k, lb[k])
+  # the precondition that made the 0.8.0 review's repro bite: the clamp on a negative (H^-1)_kk hid the violation
+  hess <- .sem_hess_f(pt, mod$ram, smp)
+  expect_lt(min(eigen(hess, symmetric = TRUE, only.values = TRUE)$values), 0)
+  expect_lt(solve(hess)[k, k], 0)
+  plain <- .sem_gate(pt, 3L, mod$ram, smp, lb, rep(Inf, q))
+  expect_false(plain$accepted)
+  for (cons in list(empty_cons(q), inactive_line(mod, "eta~X"))) {
+    g <- .sem_gate(pt, 3L, mod$ram, smp, lb, rep(Inf, q), cons)
+    expect_false(g$accepted)
+    expect_identical(g$reason, plain$reason)
+  }
+})
+
+test_that("the bound verdict agrees with the unconstrained gate across the stationarity threshold", {
   mod <- sem_model_observed()
   smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
   q <- mod$ram$q
   fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
-  k <- match("Y ~ M", mod$ram$par_names)
+  u <- .sem_step_floor(mod$ram, smp)
+  ub <- rep(Inf, q)
+  inactive <- inactive_line(mod)
+  seen <- c(accepted = 0L, rejected = 0L)
+  for (par in c("Y~M", "Y~X", "M~X")) {
+    k <- match(par, mod$ram$par_names)
+    for (delta in 10^seq(-3.6, -1.6, length.out = 21)) {
+      lb <- rep(-Inf, q)
+      lb[k] <- fit$theta[k] - delta * u[k]
+      pt <- pin_at(mod, smp, fit$theta, k, lb[k])
+      want <- .sem_gate(pt, 3L, mod$ram, smp, lb, ub)$accepted
+      seen[if (want) "accepted" else "rejected"] <- seen[if (want) "accepted" else "rejected"] + 1L
+      for (cons in list(empty_cons(q), inactive)) {
+        expect_identical(.sem_gate(pt, 3L, mod$ram, smp, lb, ub, cons)$accepted, want,
+                         info = sprintf("%s, delta %.3g", par, delta))
+      }
+    }
+  }
+  # the grid straddles the threshold: both verdicts occur, so agreement is not vacuous
+  expect_gt(seen[["accepted"]], 0L)
+  expect_gt(seen[["rejected"]], 0L)
+})
+
+test_that("a negligible bound is not blamed for a wrong-sign inequality constraint", {
+  mod <- sem_model_observed()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  u <- .sem_step_floor(mod$ram, smp)
+  k <- match("Y~M", mod$ram$par_names)
+  j <- match("M~X", mod$ram$par_names)
+  # M ~ X < v with v above the optimum: active at the pinned point with a wrong-sign multiplier
+  e <- numeric(q)
+  e[j] <- 1
+  cons <- empty_cons(q)
+  v <- fit$theta[j] + 0.3
+  cons$ineq <- list(A = matrix(e, 1L), b = -v, text = "M ~ X < v")
+  for (eps in c(1e-9, 1e-7, 1e-6, 1e-5)) {
+    lb <- rep(-Inf, q)
+    lb[k] <- fit$theta[k] - eps * u[k]
+    pt <- pin_at(mod, smp, fit$theta, c(k, j), c(lb[k], v))
+    r <- .sem_eval(pt, mod$ram, smp, deriv = TRUE)
+    # the bound's own statistic is far below the threshold, so the bound is neither rejected nor named
+    expect_lt(abs(r$g[k]) / sqrt(.sem_hess_f(pt, mod$ram, smp)[k, k]), .sem_stat_tol / 10)
+    g <- .sem_gate(pt, 3L, mod$ram, smp, lb, rep(Inf, q), cons)
+    expect_true(g$accepted, info = sprintf("eps %.0e", eps))
+    expect_length(g$sign_warnings, 1L)
+    expect_match(g$sign_warnings, "constraint M ~ X < v")
+  }
+})
+
+test_that("planted defect: a wrong bound-row sign rejects the correct bounded fit", {
+  mod <- sem_model_observed()
+  smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
+  q <- mod$ram$q
+  fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
+  k <- match("Y~M", mod$ram$par_names)
   lb_up <- rep(-Inf, q)
   lb_up[k] <- fit$theta[k] + 0.3
   pt <- pin_at(mod, smp, fit$theta, k, lb_up[k])
   good <- .sem_gate(pt, 3L, mod$ram, smp, lb_up, rep(Inf, q), empty_cons(q))
+  expect_true(good$accepted)
   expect_length(good$sign_warnings, 0L)
   src <- paste(deparse(.sem_sign_check), collapse = "\n")
   mut <- sub("e[i] <- -1", "e[i] <- 1", src, fixed = TRUE)
   expect_false(identical(mut, src))
   testthat::local_mocked_bindings(.sem_sign_check = eval(parse(text = mut), environment(.sem_sign_check)))
   bad <- .sem_gate(pt, 3L, mod$ram, smp, lb_up, rep(Inf, q), empty_cons(q))
-  expect_length(bad$sign_warnings, 1L)
+  expect_false(bad$accepted)
+  expect_match(bad$reason, "active bound points into the interior (Y~M)", fixed = TRUE)
 })
 
 test_that("gate verdicts and decrement are identical across data scales for a constrained fit", {
@@ -545,4 +674,114 @@ test_that("an infeasible pair errors naming a constraint", {
   s <- cons_setup("a == 1\na == 2")
   expect_error(.sem_optimize(s$ram, s$smp, s$start, constraints = s$cons),
                "no start converged.*constraint 'a == [12]' is violated by")
+})
+
+# ---- Redundant inequality rows that the equalities imply (audit F1, plan T6) ---------------------------------------
+# An inequality whose row lies in the span of the equality rows is constant on the equality set. When it holds there it
+# is active at every feasible point and gave SLSQP a rank-deficient active Jacobian. The seeds below failed on the 0.7.0
+# code (seeds 1, 2, 4, 6 and 8 fail for every coincident set; rows with code 0.7.0 in
+# planning/specs/evidence/native-sem-2026-10-11/results/03-redundant-inequality-sets-0.7.0-baseline.csv).
+
+redundant_data <- function(seed) {
+  set.seed(seed)
+  n <- 200
+  X <- stats::rnorm(n)
+  M <- 0.5 * X + stats::rnorm(n)
+  Y <- 0.4 * M + 0.1 * X + stats::rnorm(n)
+  data.frame(X, M, Y)
+}
+
+redundant_fit <- function(extra, seed) {
+  suppressWarnings(.sem_fit_syntax(paste0(cons_model, "\n", extra), redundant_data(seed), "observed"))
+}
+
+# Number of inequality rows the solver is given for a constraint line.
+solver_ineq_rows <- function(extra) {
+  s <- cons_setup(extra)
+  args <- .sem_nlopt_constraints(s$cons, rep(1, s$ram$q))
+  if (is.null(args$eval_g_ineq)) 0L else length(args$eval_g_ineq(rep(0, s$ram$q)))
+}
+
+test_that("a consistent inequality that repeats an equality fits and equals the independent set", {
+  sets <- list(
+    c("a == b\na - b < 0", "a == b"),
+    c("a == b\na - b > 0", "a == b"),
+    c("a + b == 0.8\na + b > 0.8", "a + b == 0.8"),
+    c("a + b == 0.8\na + b < 0.8", "a + b == 0.8"),
+    c("a + b == 0.2\na + b > 0.2", "a + b == 0.2")
+  )
+  for (set in sets) {
+    for (seed in c(1L, 4L)) {
+      fit <- redundant_fit(set[1L], seed)
+      ref <- redundant_fit(set[2L], seed)
+      expect_equal(fit$theta, ref$theta[names(fit$theta)], tolerance = 1e-6,
+                   info = paste(gsub("\n", " ; ", set[1L]), "seed", seed))
+    }
+  }
+})
+
+test_that("the solver is not given an implied satisfied inequality, and the gate still checks it", {
+  expect_equal(solver_ineq_rows("a == b\na - b < 0"), 0L)
+  expect_equal(solver_ineq_rows("a + b == 0.8\n2*a + 2*b > 1.6"), 0L) # a parallel row implies the same constant
+  s <- cons_setup("a == b\na - b < 0")
+  expect_equal(nrow(s$cons$ineq$A), 1L) # the gate's rows keep it
+  # an implied row that is strictly inactive on the equality set (constant -0.1) is also dropped: it never binds
+  expect_equal(solver_ineq_rows("a + b == 0.8\na + b < 0.9"), 0L)
+  # an inequality not in the span of the equalities stays with the solver
+  expect_equal(solver_ineq_rows("a == b\na + cp < 2"), 1L)
+  expect_equal(solver_ineq_rows("a + b == 0.8\na - b < 0.9"), 1L)
+  # inequality-only duplicates and parallel rows are unchanged
+  expect_equal(solver_ineq_rows("a + b < 0.2\na + b < 0.2"), 2L)
+  expect_equal(solver_ineq_rows("a + b < 0.2\n2*a + 2*b < 0.4"), 2L)
+})
+
+test_that("an implied inequality the equalities violate is kept and the gate reports it by name", {
+  expect_equal(solver_ineq_rows("a + b == 0.8\na + b < 0.5"), 1L)
+  # The two lines contradict each other, so the best attempt ends between them and the gate blames whichever
+  # the seeded retry path leaves more violated (the seed hashes the parameter names): either is a named line.
+  expect_error(redundant_fit("a + b == 0.8\na + b < 0.5", 1L),
+               "no start converged.*constraint 'a \\+ b (<|==) 0\\.[58]' is violated")
+})
+
+test_that("the constant of an implied row is evaluated on a point of a multi-row equality set", {
+  # a == b and a + b == 0.8 fix a = b = 0.4, so every row in a and b is implied with a constant
+  two <- "a == b\na + b == 0.8"
+  expect_equal(solver_ineq_rows(paste0(two, "\n2*a - b < 0.4")), 0L) # value 0.4: constant 0, satisfied, dropped
+  expect_equal(solver_ineq_rows(paste0(two, "\n2*a - b < 0.5")), 0L) # constant -0.1, dropped
+  expect_equal(solver_ineq_rows(paste0(two, "\n2*a - b < 0.3")), 1L) # constant 0.1: violated, kept for the gate
+  expect_equal(solver_ineq_rows(paste0(two, "\n3*a + 2*b > 1.8")), 0L) # value 2.0 > 1.8: satisfied, dropped
+  expect_equal(solver_ineq_rows(paste0(two, "\n3*a + 2*b > 2.2")), 1L) # value 2.0 < 2.2: violated, kept
+})
+
+test_that("near-dependent inequality rows are never dropped or rejected before the solve (ladder)", {
+  for (k in c(1e-6, 1e-8, 1e-9, 1e-10, 1e-12, 1e-14)) {
+    # feasible for large cp, so the set is consistent although the row is almost in the span of `a == b`; the
+    # violated-constant form (a - b + k*cp > 1e-7) is always kept, and so is the satisfied-constant form (< 1e-7)
+    # down to the floating-point level
+    extra <- sprintf("a == b\na - b + %s*cp > 1e-7", format(k, scientific = TRUE))
+    expect_equal(solver_ineq_rows(extra), 1L, info = extra)
+    if (k >= 1e-10) {
+      extra <- sprintf("a == b\na - b + %s*cp < 1e-7", format(k, scientific = TRUE))
+      expect_equal(solver_ineq_rows(extra), 1L, info = extra)
+    }
+  }
+  # the exactly dependent row (residual at the floating-point level) is dropped: the contrast that fixes the tolerance
+  expect_equal(solver_ineq_rows("a == b\n2*a - 2*b < 0"), 0L)
+  # k = 1e-6 is feasible at cp > 0.1: the fit is not rejected up front
+  expect_no_error(redundant_fit("a == b\na - b + 1e-6*cp > 1e-7", 1L))
+  expect_no_error(redundant_fit("a == b\na - b + 1e-9*cp < 1e-7", 1L))
+})
+
+test_that("planted defect: an implied tolerance of 1e-8 drops near-dependent rows and turns the ladder red", {
+  extra <- "a == b\na - b + 1e-9*cp < 1e-7"
+  expect_equal(solver_ineq_rows(extra), 1L)
+  testthat::local_mocked_bindings(.sem_implied_tol = 1e-8)
+  expect_equal(solver_ineq_rows(extra), 0L) # a feasible near-dependent row is now lost to the solver
+})
+
+test_that("planted defect: never dropping an implied row brings the 0.7.0 solver rows back", {
+  extra <- "a == b\na - b < 0"
+  expect_equal(solver_ineq_rows(extra), 0L)
+  testthat::local_mocked_bindings(.sem_drop_implied_ineq = function(ineq, eq) ineq)
+  expect_equal(solver_ineq_rows(extra), 1L) # the rank-deficient active set the solver failed on (seeds 1, 2, 4, 6, 8)
 })

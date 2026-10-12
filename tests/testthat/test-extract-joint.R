@@ -140,6 +140,22 @@ test_that("the joint branch refuses fits outside the closed form", {
                       mediator_models = list(lm(M2 ~ X + M1 + C, d[-2, ]))),
     "same rows"
   )
+  # Same rows in a different order, with the row names reset to 1..n: the names
+  # agree, so only the values can tell. Parallel mediators with correlated errors
+  # make the cross-equation block nonzero, so mispairing the residuals is not
+  # harmless (serial chains have exactly zero cross blocks).
+  dpar <- sim_joint("parallel", "M2", n = 300)$data
+  par_call <- function(d1, d2, dy) {
+    extract_mediation(lm(M1 ~ X + C, d1), model_y = lm(Y ~ X * M2 + M1 + C, dy),
+                      treatment = "X", mediator = c("M1", "M2"),
+                      mediator_models = list(lm(M2 ~ X + C, d2)))
+  }
+  shuffled <- dpar[sample(nrow(dpar)), ]
+  rownames(shuffled) <- NULL
+  expect_error(par_call(dpar, shuffled, dpar), "same rows.*in the same order.*`X`")
+  expect_error(par_call(shuffled, dpar, dpar), "same rows")
+  # The guard does not reject a consistent reordering of every model.
+  expect_no_error(par_call(shuffled, shuffled, shuffled))
   # Reversed mediator order: M2's model regresses on M1, listed after it.
   expect_error(
     extract_mediation(lm(M2 ~ X + M1 + C, d), model_y = lm(Y ~ X * M2 + M1 + C, d),
@@ -150,6 +166,28 @@ test_that("the joint branch refuses fits outside the closed form", {
   d$C2 <- stats::rnorm(nrow(d))
   expect_error(joint_call(d, y = Y ~ X * M2 + M1 + C + C2),
                "same covariates; the Y and M1 models differ in: C2")
+})
+
+test_that("na.exclude fits give the same joint covariance as na.omit fits", {
+  # stats::residuals() pads the omitted rows with NA under na.exclude, while the
+  # model matrix keeps only the retained rows; the cross-equation covariance
+  # used to fill with NA and the effect intervals came back NA without an error.
+  d <- sim_joint("parallel", "M2", n = 300)$data
+  d$C[c(5, 17, 40)] <- NA
+  fit_na <- function(na) {
+    extract_mediation(lm(M1 ~ X + C, d, na.action = na),
+                      model_y = lm(Y ~ X * M2 + M1 + C, d, na.action = na),
+                      treatment = "X", mediator = c("M1", "M2"),
+                      mediator_models = list(lm(M2 ~ X + C, d, na.action = na)))
+  }
+  omit <- fit_na("na.omit")
+  excl <- fit_na("na.exclude")
+  expect_false(anyNA(excl@vcov))
+  expect_equal(excl@vcov, omit@vcov)
+  expect_equal(excl@estimates, omit@estimates)
+  ci <- suppressWarnings(stats::confint(excl, parm = "effects"))
+  expect_false(anyNA(ci))
+  expect_equal(ci, suppressWarnings(stats::confint(omit, parm = "effects")))
 })
 
 test_that("m_star on the joint branch follows the G3 naming rules", {

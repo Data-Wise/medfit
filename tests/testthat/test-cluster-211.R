@@ -1238,6 +1238,26 @@ test_that("fit_mediation(engine = \"lmer\") rejects random-effect terms in the f
   expect_no_warning(try(fit(Y ~ X + M + (1 | cluster), M ~ X), silent = TRUE))
 })
 
+test_that("fit_mediation(engine = \"lmer\") rejects offsets instead of dropping them", {
+  skip_if_not_installed("lme4")
+  dat <- sim_cluster211(J = 10, sizes = 5, seed = 1)$data
+  dat$O <- stats::rnorm(nrow(dat), sd = 2) # nolint: object_name_linter.
+  fit <- function(fy, fm) {
+    fit_mediation(fy, fm, data = dat, treatment = "X", mediator = "M",
+                  engine = "lmer", cluster = "cluster")
+  }
+  # The formulas are rebuilt from their term labels, which exclude offsets, so an
+  # offset used to vanish without a word and change the fitted model.
+  expect_error(fit(Y ~ X + M + offset(O), M ~ X),
+               "`formula_y` contains the offset `offset\\(O\\)`.*does not support")
+  expect_error(fit(Y ~ X + M, M ~ X + offset(O)),
+               "`formula_m` contains the offset `offset\\(O\\)`")
+  expect_error(fit(Y ~ X + M + offset(2 * O), M ~ X), "contains the offset `offset\\(2 \\* O\\)`")
+  # A formula without an offset is unchanged.
+  # (J = 10 clusters trips the few-cluster warning; it is not what is tested.)
+  expect_s7_class(suppressWarnings(fit(Y ~ X + M, M ~ X)), ClusterMediationData)
+})
+
 test_that("the random-term detector has no false positive for I(a | b)", {
   expect_identical(.formula_random_terms(Y ~ X + I(C > 0 | X == 1)), character())
   expect_identical(.formula_random_terms(Y ~ X + M), character())

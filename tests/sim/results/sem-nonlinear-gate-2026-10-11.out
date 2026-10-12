@@ -1,0 +1,70 @@
+   problem structure   n runs failed improper omx worse hit max_est_gap
+1       eq covariate 100   10      0        0  10     0   1    1.43e-05
+2     ineq covariate 100   10      0        0  10     0   1    2.31e-05
+3      sum covariate 100   10      0        0  10     0   1    1.53e-05
+4     zero covariate 100   10      0        0  10     0   1    1.66e-07
+5       eq    serial 100   10      0        0  10     0   1    7.87e-06
+6     ineq    serial 100   10      0        0  10     0   1    4.06e-05
+7      sum    serial 100   10      0        0  10     0   1    2.11e-05
+8     zero    serial 100   10      0        0  10     0   1    7.88e-08
+9       eq    simple 100   10      0        0  10     0   1    9.38e-06
+10    ineq    simple 100   10      0        0  10     0   1    2.57e-05
+11     sum    simple 100   10      0        0  10     0   1    1.41e-05
+12    zero    simple 100   10      0        0  10     0   1    3.26e-08
+13      eq covariate 400   10      0        0  10     0   1    5.91e-07
+14    ineq covariate 400   10      0        0  10     0   1    2.30e-05
+15     sum covariate 400   10      0        0  10     0   1    5.95e-06
+16    zero covariate 400   10      0        0  10     0   1    7.55e-08
+17      eq    serial 400   10      0        0  10     0   1    1.71e-07
+18    ineq    serial 400   10      0        0  10     0   1    3.22e-05
+19     sum    serial 400   10      0        0  10     0   1    9.65e-07
+20    zero    serial 400   10      0        0  10     0   1    1.19e-07
+21      eq    simple 400   10      0        0  10     0   1    8.16e-06
+22    ineq    simple 400   10      0        0  10     0   1    2.28e-05
+23     sum    simple 400   10      0        0  10     0   1    5.09e-06
+24    zero    simple 400   10      0        0  10     0   1    7.80e-08
+   max_ref_gap  max_ann se_runs max_se_rel max_infeas
+1     1.43e-05 4.86e-13      10   2.31e-05   2.76e-09
+2     2.31e-05 1.32e-12      10   3.53e-05  -1.48e-12
+3     1.53e-05 1.96e-12      10   1.37e-05   8.29e-09
+4         -Inf 0.00e+00       0       -Inf  2.03e-206
+5     7.87e-06 8.71e-13      10   2.09e-05   3.50e-09
+6     1.87e-05 1.67e-12       9   5.12e-05   0.00e+00
+7     2.11e-05 1.89e-12      10   1.91e-05   2.13e-09
+8         -Inf 0.00e+00       0       -Inf  1.50e-222
+9     9.38e-06 1.19e-12      10   2.24e-05   8.05e-09
+10    2.57e-05 3.11e-12      10   8.43e-05  -5.55e-17
+11    1.41e-05 1.86e-12      10   3.94e-05   9.97e-09
+12        -Inf 0.00e+00       0       -Inf   0.00e+00
+13    5.90e-07 5.23e-13      10   1.88e-06   3.43e-11
+14    2.30e-05 1.42e-12      10   4.64e-05  -5.03e-13
+15    5.96e-06 1.14e-12      10   1.42e-05   2.27e-09
+16        -Inf 0.00e+00       0       -Inf  8.52e-188
+17    1.53e-07 8.66e-13      10   6.07e-07   3.91e-12
+18    3.22e-05 7.88e-13      10   1.07e-04  -9.29e-11
+19    9.31e-07 1.26e-12      10   2.92e-06   1.94e-10
+20        -Inf 0.00e+00       0       -Inf  3.38e-191
+21    8.16e-06 7.71e-13      10   2.37e-05   9.87e-09
+22    2.27e-05 2.64e-12      10   9.42e-05  -2.18e-10
+23    5.10e-06 2.15e-12      10   4.48e-06   1.65e-09
+24        -Inf 0.00e+00       0       -Inf  7.09e-173
+
+bootstrap SE ratio (max |boot/fit - 1|): 0.078
+
+sum-of-products hit rate (reported, not gated): 1.000 over 60 runs
+ineq best-branch rate: 1.000 over 60 runs
+
+cells                    PASS
+native_fit               PASS
+no_improper              PASS
+feasible                 PASS
+oracle_ran               PASS
+never_worse_eq_zero      PASS
+ineq_best_branch         PASS
+estimates_vs_openmx      PASS
+estimates_vs_reparam     PASS
+jacobian_annihilates     PASS
+se_vs_reparameterized    PASS
+bootstrap                PASS
+
+RULE MET

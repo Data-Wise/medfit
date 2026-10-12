@@ -29,7 +29,12 @@ with \code{engine = "native"}, which takes \code{model} instead.}
 \item{formula_m}{Formula for mediator model (e.g., \code{M ~ X + C}). Not used
 with \code{engine = "native"}.}
 
-\item{data}{Data frame containing all variables}
+\item{data}{Data frame containing all variables. With the \code{"glm"} engine, rows
+with a missing value on any variable in either formula are dropped before
+fitting, so both models share one sample; \code{nobs()} and \verb{@n_obs} count the
+rows kept. Row-level arguments (\code{weights} and, in \code{...}, \code{subset}, \code{offset},
+\code{etastart} and \code{mustart}) refer to the rows of \code{data} as passed: they are
+applied to those rows first, then incomplete rows are dropped.}
 
 \item{treatment}{Character string: name of treatment variable}
 
@@ -46,7 +51,7 @@ model syntax given as \code{model} (see \code{\link[=fit_sem]{fit_sem()}}); the 
 extracted with \code{\link[=extract_mediation]{extract_mediation()}}. Supports observed and latent
 mediators, equality and inequality constraints, and \verb{:=} parameters.
 Case \code{weights} and \code{se_type = "sandwich"} map to \code{\link[=fit_sem]{fit_sem()}}'s
-\code{sampling_weights} (weighted maximum likelihood) and its robust
+\code{weights} (weighted maximum likelihood) and its robust
 sandwich covariance.
 \item \code{"lmer"}: Linear mixed models for a treatment assigned to whole
 clusters (the 2-1-1 design), via the suggested \pkg{lme4} package;
@@ -114,7 +119,12 @@ through \code{...} that partially matches it (\code{mod = FALSE}) now binds here
 is an error with the glm engine; drop it, since \code{glm()}'s own \code{model}
 argument cannot be passed through.}
 
-\item{...}{Additional arguments passed to the fitting function}
+\item{...}{Additional arguments passed to the fitting function. With the
+\code{"glm"} engine, \code{subset} (evaluated in the calling frame), \code{offset},
+\code{etastart} and \code{mustart} describe the rows of \code{data} as passed, so a vector
+must have length \code{nrow(data)}; incomplete rows are dropped after they are
+applied. Each is evaluated in the calling frame, not inside \code{data}, and is
+passed to both the mediator and outcome models.}
 }
 \value{
 A \link{MediationData} object containing the fitted mediation structure,

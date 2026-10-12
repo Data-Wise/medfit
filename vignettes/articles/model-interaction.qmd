@@ -1,0 +1,101 @@
+---
+title: "Treatment-by-mediator interaction"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+When the effect of the mediator depends on the treatment, the outcome model
+carries a `treatment * mediator` term and the effect splits into four parts.
+Part of the [Models](models.html) collection.
+
+| | |
+|---|---|
+| **Structure** | X to M to Y, with an X by M term in the outcome model |
+| **Class returned** | `InteractionMediationData` |
+| **Routes** | `fit_mediation()` (glm or `regmedint` engine), `extract_mediation()` on `lm`/`glm` or lavaan |
+| **Needs** | Gaussian identity-link models and a reference mediator level `m_star` |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+```
+
+## Fit it
+
+Write the product in the outcome formula; medfit recognizes it and returns the
+four-way class. `m_star` is the mediator level at which the controlled direct
+effect is evaluated (default 0).
+
+```{r}
+#| label: fit
+fit <- fit_mediation(
+  outcome_int ~ treatment * mediator1 + covariate1 + covariate2,
+  mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo, treatment = "treatment", mediator = "mediator1",
+  m_star = 0
+)
+class(fit)[1]
+decompose(fit)
+```
+
+## The four parts
+
+| Part | Name | Reads as |
+|---|---|---|
+| `cde` | controlled direct effect | effect of the treatment with the mediator held at `m_star` |
+| `int_ref` | reference interaction | interaction due to the mediator's level without the treatment |
+| `int_med` | mediated interaction | interaction that operates through the treatment's effect on the mediator |
+| `pie` | pure indirect effect | effect through the mediator with no interaction |
+
+```{r}
+#| label: sums
+parts <- decompose(fit)
+c(nde = unname(parts["cde"] + parts["int_ref"]),
+  nie = unname(parts["int_med"] + parts["pie"]),
+  total = unname(sum(parts[c("cde", "int_ref", "int_med", "pie")])))
+```
+
+The natural direct effect is `cde + int_ref`, the natural indirect effect is
+`int_med + pie`, and the four add to the total effect.
+
+## Same result from the closed-form engine
+
+`engine = "regmedint"` computes the same quantities from the closed-form
+regression formulas, with analytical standard errors (needs the suggested
+`regmedint` package).
+
+```{r}
+#| label: regmedint
+#| eval: !expr requireNamespace("regmedint", quietly = TRUE)
+fit_rm <- fit_mediation(
+  outcome_int ~ treatment * mediator1 + covariate1 + covariate2,
+  mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo, treatment = "treatment", mediator = "mediator1",
+  engine = "regmedint"
+)
+all.equal(decompose(fit_rm), decompose(fit))
+```
+
+## Limits
+
+- Only products written with `:` or `*` in the **outcome** model are
+  recognized. A product precomputed as a data column cannot be seen and would be
+  ignored, so write it in the formula.
+- Non-Gaussian outcomes or mediators error; see
+  [glm families](model-glm-families.html) for what is supported there.
+- The native engine does not support the four-way decomposition (it estimates no
+  mediator intercept).
+
+## Related
+
+[Simple mediation](model-simple.html) | [Cookbook recipe 7](cookbook.html#treatment-by-mediator-interaction) |
+[Model Extraction](extraction.html) | [Methods and Formulas](methods.html)

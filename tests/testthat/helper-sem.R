@@ -30,8 +30,8 @@ sem_model_observed <- function() {
     vars = c("X", "C", "M", "Y"), obs = c("X", "C", "M", "Y"),
     a = sem_rows(list("M", "X"), list("M", "C"), list("Y", "M"), list("Y", "X"), list("Y", "C")),
     s = sem_rows(list("X", "X"), list("C", "C"), list("X", "C"), list("M", "M"), list("Y", "Y")),
-    theta = c("M ~ X" = .4, "M ~ C" = .3, "Y ~ M" = .5, "Y ~ X" = .2, "Y ~ C" = .1,
-              "X ~~ X" = 1, "C ~~ C" = 1.2, "X ~~ C" = .3, "M ~~ M" = .8, "Y ~~ Y" = .7)
+    theta = c("M~X" = .4, "M~C" = .3, "Y~M" = .5, "Y~X" = .2, "Y~C" = .1,
+              "X~~X" = 1, "C~~C" = 1.2, "X~~C" = .3, "M~~M" = .8, "Y~~Y" = .7)
   )
 }
 
@@ -42,7 +42,7 @@ sem_model_equal_paths <- function() {
     vars = c("X", "M", "Y"), obs = c("X", "M", "Y"),
     a = sem_rows(list("M", "X", "a"), list("Y", "M", "a"), list("Y", "X")),
     s = sem_rows(list("X", "X"), list("M", "M"), list("Y", "Y")),
-    theta = c("a" = .4, "Y ~ X" = .2, "X ~~ X" = 1, "M ~~ M" = .8, "Y ~~ Y" = .7)
+    theta = c("a" = .4, "Y~X" = .2, "X~~X" = 1, "M~~M" = .8, "Y~~Y" = .7)
   )
 }
 
@@ -52,7 +52,7 @@ sem_model_zero_path <- function() {
     vars = c("X", "M", "Y"), obs = c("X", "M", "Y"),
     a = sem_rows(list("M", "X", "", 0), list("Y", "M"), list("Y", "X")),
     s = sem_rows(list("X", "X"), list("M", "M"), list("Y", "Y")),
-    theta = c("Y ~ M" = .4, "Y ~ X" = .2, "X ~~ X" = 1, "M ~~ M" = .8, "Y ~~ Y" = .7)
+    theta = c("Y~M" = .4, "Y~X" = .2, "X~~X" = 1, "M~~M" = .8, "Y~~Y" = .7)
   )
 }
 
@@ -64,9 +64,9 @@ sem_model_latent <- function() {
                  list("Y", "eta"), list("Y", "X")),
     s = sem_rows(list("X", "X"), list("eta", "eta"), list("m1", "m1"), list("m2", "m2"), list("m3", "m3"),
                  list("Y", "Y")),
-    theta = c("eta ~ X" = .5, "m2 ~ eta" = .8, "m3 ~ eta" = .7, "Y ~ eta" = .4, "Y ~ X" = .2,
-              "X ~~ X" = 1, "eta ~~ eta" = .9, "m1 ~~ m1" = .5, "m2 ~~ m2" = .6, "m3 ~~ m3" = .7, "Y ~~ Y" = .8),
-    latent = "eta", loadings = c("m2 ~ eta", "m3 ~ eta")
+    theta = c("eta~X" = .5, "m2~eta" = .8, "m3~eta" = .7, "Y~eta" = .4, "Y~X" = .2,
+              "X~~X" = 1, "eta~~eta" = .9, "m1~~m1" = .5, "m2~~m2" = .6, "m3~~m3" = .7, "Y~~Y" = .8),
+    latent = "eta", loadings = c("m2~eta", "m3~eta")
   )
 }
 
@@ -76,8 +76,8 @@ sem_model_parallel <- function() {
     vars = c("X", "M1", "M2", "Y"), obs = c("X", "M1", "M2", "Y"),
     a = sem_rows(list("M1", "X"), list("M2", "X"), list("Y", "M1"), list("Y", "M2"), list("Y", "X")),
     s = sem_rows(list("X", "X"), list("M1", "M1"), list("M2", "M2"), list("M1", "M2"), list("Y", "Y")),
-    theta = c("M1 ~ X" = .5, "M2 ~ X" = .4, "Y ~ M1" = .3, "Y ~ M2" = .4, "Y ~ X" = .2,
-              "X ~~ X" = 1, "M1 ~~ M1" = .8, "M2 ~~ M2" = .9, "M1 ~~ M2" = .2, "Y ~~ Y" = .7)
+    theta = c("M1~X" = .5, "M2~X" = .4, "Y~M1" = .3, "Y~M2" = .4, "Y~X" = .2,
+              "X~~X" = 1, "M1~~M1" = .8, "M2~~M2" = .9, "M1~~M2" = .2, "Y~~Y" = .7)
   )
 }
 
@@ -88,8 +88,8 @@ sem_model_serial <- function() {
     a = sem_rows(list("M1", "X"), list("M2", "M1"), list("M2", "X"), list("Y", "M2"), list("Y", "M1"),
                  list("Y", "X")),
     s = sem_rows(list("X", "X"), list("M1", "M1"), list("M2", "M2"), list("Y", "Y")),
-    theta = c("M1 ~ X" = .5, "M2 ~ M1" = .4, "M2 ~ X" = .1, "Y ~ M2" = .3, "Y ~ M1" = .1, "Y ~ X" = .2,
-              "X ~~ X" = 1, "M1 ~~ M1" = .8, "M2 ~~ M2" = .9, "Y ~~ Y" = .7)
+    theta = c("M1~X" = .5, "M2~M1" = .4, "M2~X" = .1, "Y~M2" = .3, "Y~M1" = .1, "Y~X" = .2,
+              "X~~X" = 1, "M1~~M1" = .8, "M2~~M2" = .9, "Y~~Y" = .7)
   )
 }
 
@@ -133,15 +133,15 @@ sem_mutate <- function(fn, pattern, replacement) {
   out
 }
 
-# lavaan parameter names for the engine's parameter names (oracle wrapper).
+# lavaan parameter names for a bare-RAM model's names (oracle wrapper): the names are lavaan's, except that a bare
+# RAM names a loading as the path into its indicator ("m2~eta"), where lavaan writes "eta=~m2".
 sem_lavaan_names <- function(par_names, loadings) {
   vapply(par_names, function(nm) {
-    if (grepl(" ~~ ", nm, fixed = TRUE)) {
-      parts <- strsplit(nm, " ~~ ", fixed = TRUE)[[1]]
-      return(paste(parts, collapse = "~~"))
+    if (nm %in% loadings) {
+      parts <- strsplit(nm, "~", fixed = TRUE)[[1]]
+      return(paste0(parts[2], "=~", parts[1]))
     }
-    parts <- strsplit(nm, " ~ ", fixed = TRUE)[[1]]
-    if (nm %in% loadings) paste0(parts[2], "=~", parts[1]) else paste0(parts[1], "~", parts[2])
+    nm
   }, character(1), USE.NAMES = FALSE)
 }
 
@@ -159,8 +159,8 @@ sem_lavaan_text <- function(name) {
 # A valid starting vector: variances 1, covariances 0, everything else 0.1.
 sem_start <- function(ram) {
   stats::setNames(vapply(ram$par_names, function(nm) {
-    if (grepl(" ~~ ", nm, fixed = TRUE)) {
-      parts <- strsplit(nm, " ~~ ", fixed = TRUE)[[1]]
+    if (grepl("~~", nm, fixed = TRUE)) {
+      parts <- strsplit(nm, "~~", fixed = TRUE)[[1]]
       if (parts[1] == parts[2]) 1 else 0
     } else {
       0.1
@@ -189,8 +189,8 @@ sem_lavaan_ref <- function(nm, information, n = 400, seed = 21) {
 # returns a negative variance (a Heywood case), the fixture for improper solutions.
 sem_model_heywood <- function() {
   mod <- sem_model_latent()
-  mod$theta["m1 ~~ m1"] <- 0.05
-  mod$theta["m2 ~~ m2"] <- 0.1
+  mod$theta["m1~~m1"] <- 0.05
+  mod$theta["m2~~m2"] <- 0.1
   mod
 }
 
@@ -198,7 +198,7 @@ sem_model_heywood <- function() {
 # observed and latent variable: (co)variances scale by s^2, paths and loadings
 # do not, and the discrepancy is unchanged.
 sem_transport <- function(theta, s) {
-  theta * ifelse(grepl(" ~~ ", names(theta), fixed = TRUE), s^2, 1)
+  theta * ifelse(grepl("~~", names(theta), fixed = TRUE), s^2, 1)
 }
 
 sem_scale_sample <- function(smp, s) {
@@ -211,15 +211,18 @@ sem_scale_sample <- function(smp, s) {
 # matrix S * n / (n - 1) with numObs = n, labels p1..pq so the parameters line up.
 # `lbound` (named by parameter name) puts lower bounds on those parameters. Returns the fitted
 # model; OpenMx's own numerical Hessian gives the SEs.
-sem_openmx <- function(mod, smp, lbound = NULL) {
+# `start` replaces the default start vector (native parameter order); `constraints` are strings in the oracle's
+# labels (`p<k>`, the k-th native parameter), e.g. "p3 - p1 * p2 == 0" or "p1 * p2 - 0.3 > 0", each becoming an
+# mxAlgebra and an mxConstraint.
+sem_openmx <- function(mod, smp, lbound = NULL, start = NULL, constraints = character()) {
   ram <- mod$ram
   lab <- function(df, default) {
     key <- ifelse(nzchar(df$label), df$label, default)
     ifelse(is.na(df$value), paste0("p", match(key, ram$par_names)), NA_character_)
   }
-  a_lab <- lab(mod$a, paste0(mod$a$row, " ~ ", mod$a$col))
-  s_lab <- lab(mod$s, paste0(mod$s$row, " ~~ ", mod$s$col))
-  start <- .sem_default_start(ram, smp) # nolint: object_usage_linter.
+  a_lab <- lab(mod$a, paste0(mod$a$row, "~", mod$a$col))
+  s_lab <- lab(mod$s, paste0(mod$s$row, "~~", mod$s$col))
+  if (is.null(start)) start <- .sem_default_start(ram, smp) # nolint: object_usage_linter.
   lower_for <- function(lbl) {
     nm <- ram$par_names[as.integer(sub("^p", "", lbl))]
     if (!is.na(lbl) && nm %in% names(lbound)) lbound[[nm]] else NA_real_
@@ -253,7 +256,13 @@ sem_openmx <- function(mod, smp, lbound = NULL) {
   on.exit(for (o in names(old)) OpenMx::mxOption(NULL, o, if (old[[o]] == "Auto") "Auto" else as.numeric(old[[o]])))
   m <- do.call(OpenMx::mxModel, c(
     list("oracle", type = "RAM", manifestVars = ram$obs, latentVars = setdiff(ram$vars, ram$obs)),
-    paths, list(OpenMx::mxData(observed = cv, type = "cov", numObs = smp$n))
+    paths, list(OpenMx::mxData(observed = cv, type = "cov", numObs = smp$n)),
+    unlist(lapply(seq_along(constraints), function(i) {
+      e <- str2lang(constraints[[i]])
+      nm <- paste0("g", i)
+      list(do.call(OpenMx::mxAlgebra, list(e[[2]], name = nm)),
+           do.call(OpenMx::mxConstraint, list(call(as.character(e[[1]]), as.name(nm), e[[3]]), name = paste0("k", i))))
+    }), recursive = FALSE)
   ))
   suppressMessages(OpenMx::mxRun(m, silent = TRUE))
 }

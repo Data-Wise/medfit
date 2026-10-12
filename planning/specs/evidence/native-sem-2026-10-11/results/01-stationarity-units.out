@@ -1,0 +1,66 @@
+== Part A: 04b table, a*b == 0, 61 starts (the stalled start plus 60 random) at three data scales ==
+ scale               class  n  old_min  old_max  dec_min  dec_max
+ 1e-02      better (a = 0) 14 2.36e-08 4.84e-04 2.43e-12 6.55e-08
+ 1e+00      better (a = 0) 34 1.97e-11 3.99e-08 1.84e-11 3.13e-08
+ 1e+02      better (a = 0) 33 6.03e-13 9.34e-08 4.50e-13 7.81e-08
+ 1e-02 other local (b = 0) 20 5.37e-09 6.13e-04 1.11e-12 6.87e-08
+ 1e+00 other local (b = 0) 26 1.65e-11 1.69e-08 1.46e-11 1.94e-08
+ 1e+02 other local (b = 0) 27 4.88e-12 6.47e-08 2.12e-11 7.67e-08
+ 1e-02        stalled/poor  1 1.00e+00 1.00e+00 1.01e+00 1.01e+00
+ 1e+00        stalled/poor  1 1.00e+00 1.00e+00 1.04e+00 1.04e+00
+ 1e+02        stalled/poor  1 1.00e+00 1.00e+00 1.04e+00 1.04e+00
+
+converged solutions: 51.3333 per scale on average; stalled/poor: 1 per scale on average
+ASSERT PASS scale 0.01  converged decrement max 6.87e-08 is >= 10x below 1e-3, stalled min 1.01 is >= 10x above
+ASSERT PASS scale 1     converged decrement max 3.13e-08 is >= 10x below 1e-3, stalled min 1.04 is >= 10x above
+ASSERT PASS scale 100   converged decrement max 7.81e-08 is >= 10x below 1e-3, stalled min 1.04 is >= 10x above
+converged maximum by scale (0.01, 1, 100): 04b measure 6.13e-04 3.99e-08 9.34e-08 | decrement 6.87e-08 3.13e-08 7.81e-08
+ASSERT PASS 04b measure depends on units: converged maximum moves 1.5e+04-fold across scales
+ASSERT PASS the decrement does not: converged maximum moves 2.5-fold across scales
+04b measure at scale 0.01  : converged max 6.13e-04, stalled min 1, ratio 1632; threshold 1e-3 accepts every converged solution
+04b measure at scale 1     : converged max 3.99e-08, stalled min 1, ratio 2.5e+07; threshold 1e-3 accepts every converged solution
+04b measure at scale 100   : converged max 9.34e-08, stalled min 1, ratio 10705550; threshold 1e-3 accepts every converged solution
+
+== Part B: 0.7.0 gate (.sem_fit_syntax, .sem_gate) on the 04b linear cells ==
+ cell scale           kind n  dec_min  dec_max
+   eq 1e-02            fit 1 1.12e-08 1.12e-08
+   gt 1e-02            fit 1 4.97e-10 4.97e-10
+   lt 1e-02            fit 1 1.12e-08 1.12e-08
+ none 1e-02            fit 1 4.97e-10 4.97e-10
+   eq 1e+00            fit 1 1.12e-08 1.12e-08
+   gt 1e+00            fit 1 1.07e-09 1.07e-09
+   lt 1e+00            fit 1 1.12e-08 1.12e-08
+ none 1e+00            fit 1 1.07e-09 1.07e-09
+   eq 1e+02            fit 1 1.12e-08 1.12e-08
+   gt 1e+02            fit 1 1.27e-08 1.27e-08
+   lt 1e+02            fit 1 1.12e-08 1.12e-08
+ none 1e+02            fit 1 1.27e-08 1.27e-08
+   eq 1e-02  truncated_far 2 2.29e-01 2.29e-01
+   gt 1e-02  truncated_far 3 7.40e-02 1.10e+00
+   lt 1e-02  truncated_far 2 2.29e-01 2.29e-01
+ none 1e-02  truncated_far 3 7.40e-02 1.10e+00
+   eq 1e+00  truncated_far 2 2.29e-01 2.29e-01
+   gt 1e+00  truncated_far 3 7.40e-02 1.10e+00
+   lt 1e+00  truncated_far 2 2.29e-01 2.29e-01
+ none 1e+00  truncated_far 3 7.40e-02 1.10e+00
+   eq 1e+02  truncated_far 2 2.29e-01 2.29e-01
+   gt 1e+02  truncated_far 3 7.40e-02 1.10e+00
+   lt 1e+02  truncated_far 2 2.29e-01 2.29e-01
+ none 1e+02  truncated_far 3 7.40e-02 1.10e+00
+   eq 1e-02 truncated_near 1 1.44e-02 1.44e-02
+   lt 1e-02 truncated_near 1 1.44e-02 1.44e-02
+   eq 1e+00 truncated_near 1 1.44e-02 1.44e-02
+   lt 1e+00 truncated_near 1 1.44e-02 1.44e-02
+   eq 1e+02 truncated_near 1 1.44e-02 1.44e-02
+   lt 1e+02 truncated_near 1 1.44e-02 1.44e-02
+ASSERT PASS every 0.7.0 fit is accepted (no fit_error) in every cell and scale
+ASSERT PASS 0.7.0 fit decrements are all <= 1e-6 (max 1.27e-08), at every scale
+ASSERT PASS cell eq  : path estimates a, b are identical across data scales (spread 2.6e-16)
+ASSERT PASS cell lt  : path estimates a, b are identical across data scales (spread 7.2e-16)
+ASSERT PASS cell gt  : path estimates a, b are identical across data scales (spread 1.7e-09)
+ASSERT PASS cell none: path estimates a, b are identical across data scales (spread 1.7e-09)
+ASSERT PASS truncated runs far from the optimum (30) have decrement >= 1e-2 (min 7.40e-02): 10x above the 1e-3 threshold
+
+R 4.6.1; nloptr 2.2.1; medfit 0.7.0
+
+all assertions passed

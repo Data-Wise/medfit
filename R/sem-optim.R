@@ -16,6 +16,9 @@
 .sem_singular_tol <- 1e-4
 .sem_bound_window <- 1e-6
 .sem_ok_status <- c(1L, 3L, 4L)
+# Accepted starts whose discrepancies differ by more than this reached different optima (the discrepancy is
+# scale free: it does not depend on the units of the data).
+.sem_spread_tol <- 1e-6
 
 # Thin wrapper so tests can stub the solver.
 .sem_nlopt <- function(x0, eval_f, eval_grad_f, lb, ub, opts, constraints = NULL) {
@@ -220,7 +223,13 @@
   checkmate::assert_numeric(start, len = ram$q, any.missing = FALSE, .var.name = "start")
   checkmate::assert_numeric(lb, len = ram$q, any.missing = FALSE, .var.name = "lb")
   checkmate::assert_numeric(ub, len = ram$q, any.missing = FALSE, .var.name = "ub")
-  checkmate::assert_true(all(lb <= ub), .var.name = "lb <= ub")
+  if (any(lb > ub)) {
+    j <- which(lb > ub)[1L]
+    stop(sprintf(
+      "parameter '%s' has infeasible bounds: the lower bound %s is above the upper bound %s",
+      ram$par_names[j], format(lb[j]), format(ub[j])
+    ), call. = FALSE)
+  }
   checkmate::assert_count(n_starts, positive = TRUE, .var.name = "n_starts")
   checkmate::assert_list(control, .var.name = "control")
   checkmate::assert_flag(precondition, .var.name = "precondition")
@@ -230,6 +239,10 @@
   starts <- c(list(start0), if (n_starts > 1L) .sem_perturbed_starts(start0, ram, smp, lb, ub, n_starts - 1L))
   obj <- .sem_objective(ram, smp)
 
+  # A model with a nonlinear constraint can have several local optima (`a*b > 0.1` is feasible on two
+  # disjoint pieces), so every start is tried and the best accepted one is kept; otherwise the first accepted
+  # start wins and the rest are retries.
+  best_of <- !is.null(constraints$nl) || !is.null(constraints$nli)
   attempts <- vector("list", length(starts))
   win <- NA_integer_
   for (i in seq_along(starts)) {
@@ -241,13 +254,22 @@
       next
     }
     gate <- .sem_gate(res$solution, res$status, ram, smp, lb, ub, constraints)
+    if (gate$accepted && !is.null(constraints)) {
+      pol <- .sem_polish_accept(res, gate, ram, smp, lb, ub, constraints)
+      res <- pol$res
+      gate <- pol$gate
+    }
     gate$f <- res$objective
     gate$theta <- res$solution
     attempts[[i]] <- gate
-    if (gate$accepted) {
+    if (gate$accepted && !best_of) {
       win <- i
       break
     }
+  }
+  accepted <- which(vapply(attempts, function(a) isTRUE(a$accepted), TRUE))
+  if (best_of && length(accepted)) {
+    win <- accepted[which.min(vapply(attempts[accepted], function(a) a$f, numeric(1)))]
   }
   if (is.na(win)) {
     best <- attempts[[which.min(vapply(attempts, function(a) a$f, numeric(1)))]]
@@ -257,7 +279,16 @@
     ), call. = FALSE)
   }
   fit <- attempts[[win]]
-  if (win > 1L) {
+  spread <- if (best_of && length(accepted) > 1L) diff(range(vapply(attempts[accepted], function(a) a$f, numeric(1))))
+  if (!is.null(spread) && spread > .sem_spread_tol) {
+    warning(sprintf(
+      paste0("the starts disagree: %d of %d reached accepted solutions with discrepancies from %s to %s; the ",
+             "lowest was kept, but the model may have a better optimum (more starts: `n_starts`)"),
+      length(accepted), length(starts), format(signif(fit$f, 6)),
+      format(signif(max(vapply(attempts[accepted], function(a) a$f, numeric(1))), 6))
+    ), call. = FALSE)
+  }
+  if (win > 1L && !best_of) {
     warning(sprintf(
       "the first start was not accepted (%s); the fit used perturbed start %d of %d",
       attempts[[1]]$reason, win - 1L, length(starts) - 1L

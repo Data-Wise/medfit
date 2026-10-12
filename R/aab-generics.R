@@ -9,9 +9,9 @@
 #' Generic function to extract mediation structure (a, b, c' paths and
 #' variance-covariance matrices) from fitted models. This function provides
 #' a unified interface for extracting mediation information from various
-#' model types (lm, glm, lavaan, lmer, brms, etc.).
+#' model types (lm, glm, lavaan, lmer, and a native [SEMFit]).
 #'
-#' @param object Fitted model object (lm, glm, lavaan, etc.)
+#' @param object Fitted model object (lm, glm, lavaan, lmerMod, or a [SEMFit])
 #' @param ... Additional arguments passed to methods. Common arguments include:
 #'   - `treatment`: Character string specifying treatment variable name
 #'   - `mediator`: Character string specifying mediator variable name
@@ -19,7 +19,8 @@
 #'
 #' @return An S7 object whose class depends on the mediation structure (see
 #'   Details): [MediationData], [InteractionMediationData],
-#'   [SerialMediationData], [ParallelMediationData], or [JointMediationData].
+#'   [SerialMediationData], [ParallelMediationData], [JointMediationData], or
+#'   [ClusterMediationData].
 #'   Each carries the path coefficients, the full parameter vector and its
 #'   variance-covariance matrix, residual standard deviations (for Gaussian
 #'   models), variable names, and the original data when available.
@@ -37,6 +38,10 @@
 #'   individuals is an error (best effort: it compares the data row names the
 #'   fits kept, so it cannot see a mismatch between frames whose row names were
 #'   both reset)
+#' - **SEMFit**: Extract from a model fitted by [fit_sem()] (the experimental
+#'   native maximum-likelihood engine), with the same arguments and structures as
+#'   the lavaan method. The four-way decomposition is not available: it needs a
+#'   mediator intercept, which the native engine does not estimate.
 #' - **brmsfit**: Extract from Bayesian models (future)
 #'
 #' Note: OpenMx extraction is planned for a future release.

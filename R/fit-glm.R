@@ -14,7 +14,12 @@
 #'   with `engine = "native"`, which takes `model` instead.
 #' @param formula_m Formula for mediator model (e.g., `M ~ X + C`). Not used
 #'   with `engine = "native"`.
-#' @param data Data frame containing all variables
+#' @param data Data frame containing all variables. With the `"glm"` engine, rows
+#'   with a missing value on any variable in either formula are dropped before
+#'   fitting, so both models share one sample; `nobs()` and `@n_obs` count the
+#'   rows kept. Row-level arguments (`weights` and, in `...`, `subset`, `offset`,
+#'   `etastart` and `mustart`) refer to the rows of `data` as passed: they are
+#'   applied to those rows first, then incomplete rows are dropped.
 #' @param treatment Character string: name of treatment variable
 #' @param mediator Character string: name of mediator variable
 #' @param engine Character string: modeling engine to use. Currently supports:
@@ -28,7 +33,7 @@
 #'       extracted with [extract_mediation()]. Supports observed and latent
 #'       mediators, equality and inequality constraints, and `:=` parameters.
 #'       Case `weights` and `se_type = "sandwich"` map to [fit_sem()]'s
-#'       `sampling_weights` (weighted maximum likelihood) and its robust
+#'       `weights` (weighted maximum likelihood) and its robust
 #'       sandwich covariance.
 #'     \item `"lmer"`: Linear mixed models for a treatment assigned to whole
 #'       clusters (the 2-1-1 design), via the suggested \pkg{lme4} package;
@@ -87,7 +92,12 @@
 #'   the argument was given at the call site, not on whether it differs from the
 #'   default, so a wrapper that forwards `m_star` unconditionally will trigger it
 #'   on two-way fits; forward it only when its own caller supplied one.
-#' @param ... Additional arguments passed to the fitting function
+#' @param ... Additional arguments passed to the fitting function. With the
+#'   `"glm"` engine, `subset` (evaluated in the calling frame), `offset`,
+#'   `etastart` and `mustart` describe the rows of `data` as passed, so a vector
+#'   must have length `nrow(data)`; incomplete rows are dropped after they are
+#'   applied. Each is evaluated in the calling frame, not inside `data`, and is
+#'   passed to both the mediator and outcome models.
 #'
 #' @return A [MediationData] object containing the fitted mediation structure,
 #'   or an [InteractionMediationData] object when `formula_y` contains a
@@ -424,6 +434,52 @@ fit_mediation <- function(formula_y,
   # when non-NULL keeps the unweighted path identical to an unweighted glm().
   dots <- list(...)
 
+  # Fit both models to the rows complete on every variable in either formula, so
+  # they share one sample and `@n_obs` and `@data` describe it. glm() alone would
+  # drop rows per model, and a variable in only one formula would leave the two
+  # models on different rows.
+  #
+  # `subset`, `weights`, `offset`, `etastart` and `mustart` describe the rows of
+  # `data` as passed, and glm() resolves them before it drops incomplete rows.
+  # So resolve all of them against the original rows, build one row mask, and
+  # apply it to the data and to each of these arguments. `subset` is consumed
+  # here (not forwarded): glm() then sees the final data and aligned vectors.
+  n_all <- nrow(data)
+  vars <- intersect(unique(c(all.vars(formula_y), all.vars(formula_m))), names(data))
+  complete <- stats::complete.cases(data[, vars, drop = FALSE])
+  for (arg in intersect(c("offset", "etastart", "mustart"), names(dots))) {
+    if (!is.null(dots[[arg]]) && length(dots[[arg]]) != n_all) {
+      stop(sprintf("'%s' has length %d but data has %d rows", arg, length(dots[[arg]]), n_all),
+           call. = FALSE)
+    }
+  }
+  # `rows` holds the original row numbers the models use. A repeated `subset`
+  # index repeats the row, as it does in glm().
+  has_subset <- !is.null(dots[["subset"]])
+  rows <- which(complete)
+  if (has_subset) {
+    selected <- .subset_rows(dots[["subset"]], data)
+    rows <- selected[complete[selected]]
+    dots[["subset"]] <- NULL
+  }
+  if (length(rows) == 0L) {
+    stop(
+      if (has_subset) {
+        "No rows remain after applying `subset` and dropping missing values."
+      } else {
+        "No complete rows remain after dropping missing values."
+      },
+      call. = FALSE
+    )
+  }
+  for (arg in intersect(c("offset", "etastart", "mustart"), names(dots))) {
+    if (!is.null(dots[[arg]])) dots[[arg]] <- dots[[arg]][rows]
+  }
+  if (has_subset || length(rows) < n_all) {
+    data <- data[rows, , drop = FALSE]
+    if (!is.null(weights)) weights <- weights[rows]
+  }
+
   args_m <- c(list(formula = formula_m, data = data, family = family_m), dots)
   args_y <- c(list(formula = formula_y, data = data, family = family_y), dots)
   if (!is.null(weights)) {
@@ -476,4 +532,24 @@ fit_mediation <- function(formula_y,
     m_star = m_star,
     vcov_fun = vcov_fun
   )
+}
+
+
+#' Row numbers selected by a glm `subset` argument
+#'
+#' Resolves `subset` against the rows of `data` by indexing them, as
+#' [stats::model.frame()] does (a logical, positive or negative integer, or
+#' row-name vector), and returns the selected row numbers in order. A repeated
+#' index repeats the row; `NA` entries and out-of-range indices select nothing.
+#'
+#' @param subset The evaluated `subset` argument.
+#' @param data Data frame the subset indexes.
+#' @return Integer vector of row numbers of `data`.
+#' @keywords internal
+#' @noRd
+.subset_rows <- function(subset, data) {
+  idx <- seq_len(nrow(data))
+  names(idx) <- rownames(data)
+  selected <- unname(idx[subset])
+  selected[!is.na(selected)]
 }

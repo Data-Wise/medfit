@@ -39,8 +39,8 @@ covr::package_coverage()          # Target: >90%
 ## About This Package
 
 **medfit** is the foundation package for the mediationverse ecosystem, providing:
-- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`
-- **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan
+- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`, `SEMFit` (native SEM fit, experimental)
+- **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan/lmer and `SEMFit` (native)
 - **Fitting**: Formula-based `fit_mediation()` with the `glm` and `regmedint` engines, case `weights`, and `se_type = "sandwich"` (HC3); `fit_sem()` and `fit_mediation(engine = "native", model = )` fit medfit model syntax with the native ML engine (experimental, `SEMFit`)
 - **Inference**: delta-method effect SEs in `tidy()`/`confint()`; bootstrap (parametric, nonparametric, plugin)
 - **Data**: bundled simulated `mediation_demo` for every workflow
@@ -74,7 +74,7 @@ R/
 ├── aaa-imports.R           # Package imports
 ├── aab-generics.R          # S7 generics (load before methods!)
 ├── medfit-package.R        # Package documentation
-├── classes.R               # S7 class definitions (all seven classes)
+├── classes.R               # S7 class definitions (all eight classes)
 ├── data.R                  # mediation_demo documentation
 ├── fit-glm.R               # fit_mediation(), glm engine, weights/sandwich
 ├── fit-regmedint.R         # regmedint engine adapter
@@ -106,7 +106,7 @@ R/
 **Arguments:**
 - `formula_y`, `formula_m` - Model specifications
 - `treatment`, `mediator`, `outcome` - Variable names
-- `engine` - "glm", "lmer", "brms"
+- `engine` - "glm", "lmer", "regmedint", "native" ("brms" is planned)
 - `method` - "parametric", "nonparametric", "plugin"
 - `n_boot`, `ci_level` - Bootstrap parameters
 
@@ -407,6 +407,30 @@ first, error instead of guessing).
 - Auto-detects cores
 - Set seed for reproducibility
 
+### Native SEM constraint pipeline (`R/sem-constraints.R`, `R/sem-optim.R`)
+
+Linear `==`, `<`, `>` constraints become unit-length rows `a'theta + b` (`.sem_constraint_rows()`); the
+solver (nloptr SLSQP) gets constant Jacobians in natural units `x = theta / u`; every solution passes the
+acceptance gate (status, constraint residual, Newton decrement on the active null space) with **all** rows.
+Redundancy rule: SLSQP stops on a rank-deficient active Jacobian (LICQ fails), so the solver is handed an
+independent subset of the equality rows (`.sem_independent_rows()`, #122), and the gate still checks every
+row, so contradictory sets error. An inequality row in the span of the equality rows (residual below 1e-12) has a
+constant value on the equality set; when it is satisfied it is active everywhere, the same degeneracy, so
+`.sem_drop_implied_ineq()` (T6) drops it from the solver's rows and the gate still checks it. A violated implied row
+is kept and left to the gate (no up-front error: near-dependence is not proof of infeasibility). Background and evidence:
+`planning/specs/RESEARCH-redundant-constraints-2026-10-11.md`.
+
+Nonlinear rows (`cp == a*b`, `a*b > k`, sums of products): `.sem_nl_rows()` builds closures over validated call trees
+(guarded evaluator `.sem_expr_value`), values and Jacobians by central differences recomputed at every point, `cons$nl`
+(equalities) and `cons$nli` (inequalities as `c <= 0`); the active set orders linear equalities, nonlinear equalities,
+linear then nonlinear inequalities, and the Jacobian for the gate and the covariance projection `Z (Z' I Z)^-1 Z'` is
+evaluated at the solution, not the start. The gate uses the Lagrangian Hessian (`.sem_lagrangian_hessian()`); with a
+nonlinear row every start is tried and the best accepted one kept (spread warning when optima differ). A product of
+labels set to zero is solved exactly by `.sem_fit_branches()` (one linear fit per factor, up to 64, clean start each).
+`.sem_polish()` takes Newton steps on the KKT system of the active set after SLSQP is accepted (SLSQP stops about
+3e-5 short along a flat tangent) and keeps the polished point only if the gate accepts it again. Evidence:
+`tests/sim/sem-nonlinear-gate.R` (240 runs, `MUTANT=` switches) and `tests/sim/sem-mbco-k-size.R`.
+
 ---
 
 ## Ecosystem Coordination
@@ -481,7 +505,7 @@ breaking existing code, type safety via S7 validators.
 | `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
 | `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
 | `"lmer"` | lme4, pbkrtest (Suggests) | mixed models for cluster-level treatment; `cluster =`, `se_type = "kr"` | ✓ (no weights/sandwich/families) |
-| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `); latent mediators, constraints, `weights`/`se_type = "sandwich"`; `mbco_sem()` | ✓ experimental (no four-way, no mean structure) |
+| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `, one mediator through `fit_mediation()`; serial and parallel through `fit_sem()` then `extract_mediation()`); latent mediators, linear and nonlinear constraints, `weights`/`se_type = "sandwich"`; `anova()`, `tidy()`/`glance()`; `mbco_sem()` (k paths) | ✓ experimental (no four-way, no mean structure) |
 | `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 
@@ -532,6 +556,7 @@ During `devtools::load_all()`:
 ### Planning Documents
 
 **Package:** `planning/medfit-roadmap.md`
+**Active plan:** `tasks/plan.md` and `tasks/todo.md` (0.8.0; `^tasks$` is Rbuildignored)
 **Ecosystem:** `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`
 
 ### Related Packages
@@ -548,7 +573,7 @@ During `devtools::load_all()`:
 **Last Updated**: 2026-10-10
 **Maintained by**: medfit development team
 
-**Current status** (2026-10-10): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.7.0** (released 2026-10-10, tag `v0.7.0`; GitHub-only, not submitted to CRAN). 0.7.0 ships the experimental native maximum-likelihood SEM engine (`fit_sem()`/`SEMFit`, `fit_mediation(engine = "native")`, sampling weights and the sandwich covariance, `mbco_sem()`, and the OpenMx parity and constrained gates; #110-#124) with its docs (`?"medfit-syntax"`, cookbook recipe 11, the native section of the methods article). Nonlinear constraints (S1, PR 11) are planned for a later release. 0.6.0 (2026-10-09) shipped Ext D module 1, 2-1-1 cluster mediation (`ClusterMediationData`, `engine = "lmer"`, `se_type = "kr"`, cluster bootstrap; #90-#92, #95, #100), the Reference Card and Cookbook articles (#94, #97), and 30 fewer published internal reference pages (#98). 0.5.0 (2026-09-25) changed two results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). Articles evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`. 
+**Current status** (2026-10-11): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.8.0** (GitHub-only, not submitted to CRAN, as 0.5.0 to 0.7.0; decisions `planning/specs/GRILL-0.8.0-release-2026-10-11.md`). 0.8.0 ships nonlinear constraints in the native engine (`cp == a*b`, `a*b > k`, the exact zero-product branch split, best-effort sums of products, a Newton polish), `mbco_sem(paths = )` for a product of k paths, `anova()`/`tidy()`/`glance()`/`confint()` for `SEMFit`, one lavaan-style naming convention, the lavaan comparison article and cookbook recipes 12 and 13 (#140-#163). 0.7.0 (released 2026-10-10, tag `v0.7.0`) shipped the experimental native maximum-likelihood SEM engine (`fit_sem()`/`SEMFit`, `fit_mediation(engine = "native")`, sampling weights and the sandwich covariance, `mbco_sem()`, and the OpenMx parity and constrained gates; #110-#124) with its docs (`?"medfit-syntax"`, cookbook recipe 11, the native section of the methods article). Plan and decisions for 0.8.0: `tasks/plan.md`, `tasks/todo.md`, `planning/specs/GRILL-medfit-0-8-0-2026-10-11.md`. 0.6.0 (2026-10-09) shipped Ext D module 1, 2-1-1 cluster mediation (`ClusterMediationData`, `engine = "lmer"`, `se_type = "kr"`, cluster bootstrap; #90-#92, #95, #100), the Reference Card and Cookbook articles (#94, #97), and 30 fewer published internal reference pages (#98). 0.5.0 (2026-09-25) changed two results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). The site documents 0.8.0, including the docs overhaul (#134-#139: a Models menu with 14 model pages, a home page and Getting Started rewrite, and a Guides menu); `main` deploys it, and `gh workflow run pkgdown.yaml --ref dev` publishes `dev` docs to the root while the Version has no `.9000`; `nobs()` now counts the rows the models used (#138). Articles evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`. 
 
 ### CRAN check practice (learned 2026-06-10, extended 2026-07-20)
 

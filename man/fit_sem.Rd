@@ -10,8 +10,9 @@ fit_sem(
   information = c("observed", "expected"),
   n_starts = NULL,
   control = list(),
-  sampling_weights = NULL,
-  se_type = c("model", "sandwich")
+  weights = NULL,
+  se_type = c("model", "sandwich"),
+  sampling_weights = lifecycle::deprecated()
 )
 }
 \arguments{
@@ -30,11 +31,14 @@ information for the standard errors.}
 \item{n_starts}{Positive integer or \code{NULL}: number of optimizer starts
 tried before the fit is declared failed (\code{NULL} uses 5). Retries use
 perturbed starts drawn under a fixed seed and never change the caller's
-random number stream.}
+random number stream. With a nonlinear constraint, which can leave several
+local optima, every start is tried and the best accepted one is kept (a
+warning says when the accepted starts disagree); otherwise the first
+accepted start is used.}
 
 \item{control}{List: options passed to the optimizer (\code{nloptr}).}
 
-\item{sampling_weights}{Optional numeric vector of non-negative case weights,
+\item{weights}{Optional numeric vector of non-negative case weights,
 one per row of \code{data} (\code{NULL}, the default, fits unweighted). The fit is
 weighted maximum likelihood on the weighted mean and covariance; the scale
 of the weights does not matter. Rows dropped for missing values drop their
@@ -47,6 +51,9 @@ sandwich covariance \eqn{A^{-1} B A^{-1}}{A^-1 B A^-1} with casewise scores
 lavaan's robust standard errors with \code{sampling.weights}, and is smaller
 than the HC3 default of the glm route by a factor that shrinks like
 \eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.}
+
+\item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name
+\code{\link[=fit_mediation]{fit_mediation()}} uses; the old name still works with a warning.}
 }
 \value{
 A \link{SEMFit} object.
@@ -57,7 +64,7 @@ A \link{SEMFit} object.
 Fits a model written in lavaan-style syntax to raw data with medfit's native
 maximum-likelihood engine, and returns a \link{SEMFit} object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
-linear equality and inequality constraints (\code{==}, \code{<}, \code{>}), and defined
+equality and inequality constraints (\code{==}, \code{<}, \code{>}, linear or nonlinear), and defined
 parameters (\verb{:=}) with delta-method standard errors.
 }
 \examples{

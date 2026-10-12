@@ -30,3 +30,6 @@
 ^ORCHESTRATE-.*\.md$
 ^data-raw$
 ^tests/sim$
+^\.rforge\.yaml$
+^tasks$
+^scripts$

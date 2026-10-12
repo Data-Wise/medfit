@@ -2,27 +2,43 @@
 % Please edit documentation in R/sem-mbco.R
 \name{mbco_sem}
 \alias{mbco_sem}
-\title{Minimum-of-Two Likelihood-Ratio Test for an Indirect Effect (MBCO)}
+\title{Minimum-of-k Likelihood-Ratio Test for an Indirect Effect (MBCO)}
 \usage{
-mbco_sem(fit, a, b, n_starts = NULL, control = NULL)
+mbco_sem(
+  object,
+  a,
+  b,
+  n_starts = NULL,
+  control = NULL,
+  fit = lifecycle::deprecated(),
+  paths = NULL
+)
 }
 \arguments{
-\item{fit}{A \link{SEMFit} from \code{\link[=fit_sem]{fit_sem()}}, fitted without sampling weights.}
+\item{object}{A \link{SEMFit} from \code{\link[=fit_sem]{fit_sem()}}, fitted without \code{weights}.}
 
 \item{a, b}{Character strings: the labels of the two free regression paths
 whose product is the indirect effect (for example \code{"a"} and \code{"b"} in
 \code{"M ~ a*X"} and \code{"Y ~ b*M"}). They must be different, and each must be a
 labeled \code{~} row of the fit; a variance, a loading, an unlabeled path and a
-defined parameter are refused.}
+defined parameter are refused. For a product of more than two paths pass
+them all as \code{paths}, or as a character vector in \code{a} with \code{b} missing.}
 
 \item{n_starts, control}{Passed to the optimizer for the two refits, as in
-\code{\link[=fit_sem]{fit_sem()}}. \code{NULL}, the default, uses the settings \code{fit} was made with,
+\code{\link[=fit_sem]{fit_sem()}}. \code{NULL}, the default, uses the settings \code{object} was made with,
 so a better optimum in the full fit than in a refit cannot inflate the
 statistic; an explicit value overrides them.}
+
+\item{fit}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{object}; the old name
+still works with a warning.}
+
+\item{paths}{Character vector of two or more labels: the paths whose product
+is the indirect effect (\code{c("a", "d", "b")}). \code{NULL}, the default, uses \code{a}
+and \code{b}.}
 }
 \value{
 An object of class \code{c("mbco_sem", "htest")}: \code{statistic} (the
-smaller diffLL), \code{parameter} (\code{df = 1}), \code{p.value}, \code{method},
+smallest diffLL), \code{parameter} (\code{df = 1}), \code{p.value}, \code{method},
 \code{data.name}, \code{n_obs}, and \code{tests}, a data frame with one row per refit
 (\code{constraint}, the minimized discrepancy \code{f}, \code{diff_ll} equal to
 \code{n_obs * (f - fit@f)}, and \code{converged}, always \code{TRUE} because a refit
@@ -32,18 +48,19 @@ layout.
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 
-Tests the null hypothesis that the indirect effect \eqn{a b}{a*b} is zero
-in a model fitted by \code{\link[=fit_sem]{fit_sem()}}. The model is refitted twice, with
-\eqn{a = 0}{a = 0} and with \eqn{b = 0}{b = 0}; each is a linear equality
-constraint, so each refit is a single solve. The statistic is the smaller of
-the two likelihood-ratio statistics, referred to a chi-square distribution
-with one degree of freedom (the minimum-of-two LRTs; see the Methods and
-Formulas article). The nonlinear constraint \eqn{a b = 0}{a*b = 0} is never
-solved, because a nonlinear solver can stop at the branch with the larger
-statistic.
+Tests the null hypothesis that an indirect effect, the product of two or more
+labeled paths (\eqn{a b}{a*b}, or a serial \eqn{a d b}{a*d*b}), is zero in a
+model fitted by \code{\link[=fit_sem]{fit_sem()}}. The product is zero exactly when one factor is,
+so the model is refitted once per path with that path set to zero; each is a
+linear equality constraint, so each refit is a single solve. The statistic is
+the smallest of the likelihood-ratio statistics, referred to a chi-square
+distribution with one degree of freedom (the minimum-of-k LRTs; see the
+Methods and Formulas article). The nonlinear constraint \eqn{a b = 0}{a*b = 0}
+is never solved, because a nonlinear solver can stop at the branch with the
+larger statistic.
 }
 \details{
-A fit made with \code{sampling_weights} is refused: the weighted discrepancy is
+A fit made with \code{weights} is refused: the weighted discrepancy is
 not a likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are
 measured against. A refit that fails the acceptance gate of the optimizer is
@@ -58,10 +75,12 @@ inside (\code{a < 0.2}), an inactive inequality and one on another parameter are
 not mentioned. A null the constraints rule out (\code{a > 0.3} with the null
 \code{a = 0}) is an error that says so.
 
-Only a product of two labeled paths is tested. A serial indirect effect
-(a product of three paths) or a sum of products is not. If \code{a} and \code{b} are
-tied by an equality (\code{a == b}), the two refits impose the same restriction
-and the two \code{diff_ll} values coincide.
+Only a product of labeled paths is tested; a sum of products (several
+parallel indirect effects together) is not. If two of the paths are tied by
+an equality (\code{a == b}), their refits impose the same restriction and their
+\code{diff_ll} values coincide. The test is conservative: under a null where only
+one factor is zero its size is at most the nominal level, and with more than
+one zero factor it is smaller still.
 }
 \examples{
 \donttest{
@@ -70,6 +89,14 @@ fit <- fit_sem(
   data = mediation_demo
 )
 mbco_sem(fit, "a", "b")
+
+# a serial indirect effect, the product of three paths
+serial <- fit_sem(
+  paste0("mediator1 ~ a*treatment\nmediator2 ~ d*mediator1 + treatment\n",
+         "outcome ~ b*mediator2 + treatment"),
+  data = mediation_demo
+)
+mbco_sem(serial, paths = c("a", "d", "b"))
 }
 
 }

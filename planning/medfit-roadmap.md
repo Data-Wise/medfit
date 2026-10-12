@@ -1853,7 +1853,7 @@ The original week-by-week plan is complete. Current next actions:
 
 1. ~~Release 0.6.0 (Ext D module 1)~~ — done 2026-10-09; see `planning/specs/PLAN-multilevel-mediation-2-1-1-2026-10-08.md` and `.STATUS`. Module 2 (1-1-1, random slopes) follows
 2. ~~Release 0.7.0 (native SEM engine)~~ — done 2026-10-10; see `planning/specs/PLAN-medfit-0-7-0-release-2026-10-10.md` and `.STATUS`.
-3. **Nonlinear constraints for the native engine (S1, PR 11)** — planned for a later release; see `planning/specs/PLAN-native-sem-implementation-2026-10-09.md`
+3. **0.8.0: native SEM hardening, nonlinear constraints (S1, PR 11, now W3), `anova()` for `SEMFit`, lavaan comparison** — planned 2026-10-11; see `tasks/plan.md` and `planning/specs/BRAINSTORM-medfit-0-8-0-2026-10-11.md`
 4. **Next CRAN release** — trigger still open (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
 5. **Ext C.1 (CMAverse)** — blocked; see `planning/EXTENSIONS-PLAN-2026-06-03.md`
 
@@ -1906,5 +1906,5 @@ The original week-by-week plan is complete. Current next actions:
 - Ext D module 2 (1-1-1, random slopes, sigma_ab) / Ext E (longitudinal) — brainstormed, not spec'd; Ext D module 1 is built (see Next Actions)
 - Phase 7b design (estimation-engine UI) has no standalone increment; `decompose()` shipped, no `Decomposition` class
 
-**Next Review**: After the 0.7.0 release
+**Next Review**: After the 0.8.0 release
 **Last Updated**: 2026-10-10

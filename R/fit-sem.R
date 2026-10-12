@@ -12,7 +12,7 @@
 #' Fits a model written in lavaan-style syntax to raw data with medfit's native
 #' maximum-likelihood engine, and returns a [SEMFit] object. The engine handles
 #' observed and latent variables, user labels, fixed values, starts and bounds,
-#' linear equality and inequality constraints (`==`, `<`, `>`), and defined
+#' equality and inequality constraints (`==`, `<`, `>`, linear or nonlinear), and defined
 #' parameters (`:=`) with delta-method standard errors.
 #'
 #' @param model Character: model syntax. Lines may use `~` (regression),
@@ -27,9 +27,12 @@
 #' @param n_starts Positive integer or `NULL`: number of optimizer starts
 #'   tried before the fit is declared failed (`NULL` uses 5). Retries use
 #'   perturbed starts drawn under a fixed seed and never change the caller's
-#'   random number stream.
+#'   random number stream. With a nonlinear constraint, which can leave several
+#'   local optima, every start is tried and the best accepted one is kept (a
+#'   warning says when the accepted starts disagree); otherwise the first
+#'   accepted start is used.
 #' @param control List: options passed to the optimizer (`nloptr`).
-#' @param sampling_weights Optional numeric vector of non-negative case weights,
+#' @param weights Optional numeric vector of non-negative case weights,
 #'   one per row of `data` (`NULL`, the default, fits unweighted). The fit is
 #'   weighted maximum likelihood on the weighted mean and covariance; the scale
 #'   of the weights does not matter. Rows dropped for missing values drop their
@@ -41,6 +44,8 @@
 #'   lavaan's robust standard errors with `sampling.weights`, and is smaller
 #'   than the HC3 default of the glm route by a factor that shrinks like
 #'   \eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.
+#' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
+#'   [fit_mediation()] uses; the old name still works with a warning.
 #'
 #' @return A [SEMFit] object.
 #'
@@ -56,19 +61,27 @@
 #' @seealso [SEMFit], [fit_mediation()]
 #' @export
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
-                    control = list(), sampling_weights = NULL, se_type = c("model", "sandwich")) {
+                    control = list(), weights = NULL, se_type = c("model", "sandwich"),
+                    sampling_weights = lifecycle::deprecated()) {
+  if (lifecycle::is_present(sampling_weights)) {
+    lifecycle::deprecate_warn("0.8.0", "fit_sem(sampling_weights)", "fit_sem(weights)")
+    if (!is.null(weights)) {
+      stop("pass `weights`, not both `weights` and the deprecated `sampling_weights`.", call. = FALSE)
+    }
+    weights <- sampling_weights
+  }
   checkmate::assert_character(model, min.len = 1L, any.missing = FALSE, .var.name = "model")
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
   information <- match.arg(information)
   checkmate::assert_count(n_starts, positive = TRUE, null.ok = TRUE, .var.name = "n_starts")
   checkmate::assert_list(control, .var.name = "control")
   se_type <- match.arg(se_type)
-  if (!is.null(sampling_weights) && se_type == "model") {
+  if (!is.null(weights) && se_type == "model") {
     .notify_ipw_model_se()
   }
   model <- paste(model, collapse = "\n")
   fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
-                         control = control, weights = sampling_weights, se_type = se_type)
+                         control = control, weights = weights, se_type = se_type)
   .sem_as_semfit(fit, model, match.call())
 }
 
@@ -87,7 +100,8 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     converged = fit$converged, data = fit$data, model = model,
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
                         "sign_check", "se_type")],
-    internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control")],
+    internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
+                      "branch")],
     call = call
   )
 }
@@ -96,8 +110,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
 # extract the mediation structure through the shared workers. Reached before the
 # formula validation of the other engines, since the native route takes `model`,
 # not formulas, and a latent mediator is not a column of `data`. Every argument
-# the engine cannot honor errors, never silently ignored. `weights` and `se_type` map to `fit_sem()`'s
-# `sampling_weights` and `se_type`.
+# the engine cannot honor errors, never silently ignored. `weights` and `se_type` pass to `fit_sem()`.
 .fit_mediation_native <- function(model, data, treatment, mediator, given, weights, se_type, cluster,
                                   engine_args, m_star, dots) {
   if (given$formulas) {
@@ -142,7 +155,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   }
   fit <- do.call(
     fit_sem,
-    c(list(model = syntax, data = data, sampling_weights = weights, se_type = se_type),
+    c(list(model = syntax, data = data, weights = weights, se_type = se_type),
       engine_args[intersect(names(engine_args), fit_args)])
   )
   extract_call <- c(

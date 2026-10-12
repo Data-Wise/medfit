@@ -19,17 +19,28 @@ The model syntax read by \code{\link[=fit_sem]{fit_sem()}} and by \code{fit_medi
    \code{y ~ a*x} \tab label the path \code{a}; equal labels are one parameter \cr
    \code{y ~ 0.5*x} \tab fix the path at 0.5 \cr
    \code{y ~ start(0.3)*x}, \verb{lower(0)*}, \verb{upper(1)*} \tab starting value, lower and upper bound \cr
-   \code{a == b}, \code{a + b == 1} \tab equality constraint on labels \cr
+   \code{a == b}, \code{a + b == 1}, \code{cp == a*b} \tab equality constraint on labels; may be nonlinear \cr
    \code{a < b}, \code{a > 0} \tab inequality constraint; \code{label < number} is a bound \cr
    \code{ab := a*b} \tab defined parameter, with a delta-method standard error \cr
 }
 
 
-Constraints must be linear in the labels. Labels used in a constraint or a
-definition must be defined in the model. A constraint with no free parameter,
-or a nonlinear one, is an error. Exogenous variables are given free
+Constraints may be nonlinear in the labels (\code{cp == a*b}, \code{a*b == 0.1},
+\code{a*b > 0.1}, \code{ab > 0} with \code{ab := a*b}), solved with the Jacobian recomputed at
+every point; a model with one tries every start and keeps the best accepted
+solution, warning when the starts disagree. A product of labels set to zero
+(\code{a*b == 0}, \code{b1*b2*b3 == 0}) is instead solved exactly: one linear fit per
+factor (\code{a == 0}, \code{b == 0}), keeping the smallest discrepancy. A sum of products
+(\code{a1*b1 + a2*b2 == 0}) has no exact reduction, so it is best-effort: the fit is
+the best of the starts tried, a disagreement warning means a better optimum may
+exist, and \code{n_starts} raises the number of starts. Labels used in a constraint
+or a definition must be defined in the model. A constraint with no free
+parameter is an error. Exogenous variables are given free
 variances and covariances, as lavaan does with \code{fixed.x = FALSE}. Mean
 structures (\code{y ~ 1}) are not supported, except that \code{y ~ 0*1} is accepted.
+A variable cannot appear on both sides of \code{~} or \verb{=~} (\code{y ~ y}), and a path,
+a (co)variance or an intercept takes one row: a repeated \code{y ~ x} is an error,
+not a second row that competes for the label.
 }
 
 \section{medfit extensions}{
@@ -58,6 +69,28 @@ numbers, and the functions \code{exp}, \code{log}, \code{log10}, \code{sqrt}, \c
 rejected with the construct named.
 }
 
+\examples{
+\donttest{
+# Labeled paths and a defined parameter
+fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\nab := a*b",
+  data = mediation_demo
+)@defined
+
+# Comma shorthand: one left-hand side per name
+coef(fit_sem(
+  "mediator1, mediator2 ~ treatment\noutcome ~ mediator1 + mediator2 + treatment",
+  data = mediation_demo
+))[1:3]
+
+# An equality constraint, written with the CONSTRAINT() keyword
+coef(fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nCONSTRAINT(a == b)",
+  data = mediation_demo
+))[c("a", "b")]
+}
+
+}
 \seealso{
 \code{\link[=fit_sem]{fit_sem()}}, \link{SEMFit}
 }

@@ -21,8 +21,9 @@
 #' mediation class; see Details.
 #'
 #' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
-#'   [InteractionMediationData], [JointMediationData], or [BootstrapResult]
-#'   object.
+#'   [InteractionMediationData], [JointMediationData], [ClusterMediationData],
+#'   [BootstrapResult], or [SEMFit] object (a `SEMFit` has its own columns; see
+#'   [SEMFit-methods]).
 #' @param ... Passed to the class method: `type` (`"all"`, `"paths"`,
 #'   `"effects"`, and for interaction objects `"components"`), `conf.int`
 #'   (logical, add `conf.low`/`conf.high`), and `conf.level` (default 0.95).
@@ -102,6 +103,9 @@ tidy.S7_object <- function(x, ...) {
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.tidy_bootstrap_result(x, ...))
   }
+  if (S7::S7_inherits(x, SEMFit)) {
+    return(.tidy_semfit(x, ...))
+  }
 
   stop("tidy() not implemented for this S7 object type.", call. = FALSE)
 }
@@ -130,6 +134,9 @@ glance.S7_object <- function(x, ...) {
   }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.glance_bootstrap_result(x, ...))
+  }
+  if (S7::S7_inherits(x, SEMFit)) {
+    return(.glance_semfit(x, ...))
   }
 
   stop("glance() not implemented for this S7 object type.", call. = FALSE)

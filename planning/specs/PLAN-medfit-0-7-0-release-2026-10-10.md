@@ -6,6 +6,7 @@
 | **Source** | Opus planning pass (read-only) on `dev` @ `579963c`, updated with ledger R6-R10 |
 | **Binding decisions** | `GRILL-medfit-0-7-0-release-2026-10-10.md` (R1-R10); the ledger wins over `PLAN-native-sem-implementation-2026-10-09.md` S24 |
 | **Channel** | GitHub and r-universe only; not CRAN (CRAN has 0.3.2) |
+| **Closed 2026-10-11** | 0.7.0 released 2026-10-10 (`.STATUS` release_0.7.0); post-tag items (c) E1 is done for 0.7.x (mediation-planning#13). Future work opens `tasks/plan.md`, not this file. |
 
 Every step marked **A#** needs an explicit go from the user; approval of one step does not carry to the next.
 

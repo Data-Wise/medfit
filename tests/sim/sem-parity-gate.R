@@ -1,7 +1,7 @@
 # J2 parity gate for the native SEM engine (plan S19, S20): native estimates and standard errors against OpenMx.
 #
 # Cells: the four K10 structures, `a == b` (shared label), `a == 0` (fixed value) and an active lower bound
-# (the Heywood latent model with `lower(0)` on `m1 ~~ m1`), each at n in {50, 200, 1000} x 20 seeds, plus
+# (the Heywood latent model with `lower(0)` on `m1~~m1`), each at n in {50, 200, 1000} x 20 seeds, plus
 # RMediation's memory_exp (one dataset, n = 369) with its MBCO known answers. The oracle is OpenMx on
 # S * n / (n - 1) with numObs = n. Estimates are compared in absolute terms (rule 1e-6), standard errors
 # relatively (frozen K10 tolerance 1e-3); the SE of a pinned parameter is not compared, and the SEs under an
@@ -32,14 +32,14 @@ oracle_model <- function(cell) {
 }
 omx_table <- function(om, mod) {
   sm <- summary(om)$parameters
-  nm <- mod$ram$par_names[as.integer(sub("^p", "", sm$name))]
+  nm <- sem_lavaan_names(mod$ram$par_names[as.integer(sub("^p", "", sm$name))], mod$loadings)
   list(est = stats::setNames(sm$Estimate, nm), se = stats::setNames(sm[["Std.Error"]], nm))
 }
 # native name -> oracle name, and the names whose SE is not compared
 cell_map <- function(cell, native) {
   m <- switch(cell,
-    equal = c(a = "a", b = "a", cp = "Y ~ X"),
-    zero = c(b = "Y ~ M", cp = "Y ~ X"),
+    equal = c(a = "a", b = "a", cp = "Y~X"),
+    zero = c(b = "Y~M", cp = "Y~X"),
     character()
   )
   out <- stats::setNames(native, native)
@@ -63,7 +63,7 @@ one <- function(i) {
   oracle_mod <- mod
   lb <- NULL
   if (g$cell == "bounded") {
-    lb <- c(`m1 ~~ m1` = 0)
+    lb <- c(`m1~~m1` = 0)
   }
   om <- tryCatch(sem_openmx(oracle_mod, .sem_sample(d, oracle_mod$ram), lbound = lb), error = function(e) NULL)
   if (is.null(om) || om$output$status$code > 1) return(row)
@@ -80,7 +80,7 @@ one <- function(i) {
     )
     if (!is.null(lav)) {
       pe <- lavaan::parameterEstimates(lav)
-      lv <- stats::setNames(pe$est, ifelse(pe$op == "=~", paste(pe$rhs, "~", pe$lhs), paste(pe$lhs, pe$op, pe$rhs)))
+      lv <- stats::setNames(pe$est, paste0(pe$lhs, pe$op, pe$rhs))
       row$lav_gap <- max(abs(fit@theta - lv[names(fit@theta)]))
     }
   }
@@ -90,7 +90,7 @@ one <- function(i) {
     fixed <- oracle_mod
     fixed$s$value[fixed$s$row == "m1" & fixed$s$col == "m1"] <- 0
     fixed <- sem_model(fixed$ram$vars, fixed$ram$obs, fixed$a, fixed$s,
-                       oracle_mod$theta[setdiff(names(oracle_mod$theta), "m1 ~~ m1")],
+                       oracle_mod$theta[setdiff(names(oracle_mod$theta), "m1~~m1")],
                        latent = "eta", loadings = oracle_mod$loadings)
     omf <- tryCatch(sem_openmx(fixed, .sem_sample(d, fixed$ram)), error = function(e) NULL)
     if (is.null(omf)) return(row)
@@ -102,7 +102,7 @@ one <- function(i) {
 res <- do.call(rbind, parallel::mclapply(seq_len(nrow(grid)), one, mc.cores = max(1L, parallel::detectCores() - 1L)))
 
 cell <- function(df) {
-  data.frame(runs = nrow(df), failed = sum(!df$native_ok | !df$omx_ok),
+  data.frame(runs = nrow(df), failed = sum(!df$native_ok | !df$omx_ok | is.na(df$est_gap)),
              improper = sum(!is.na(df$improper) & nzchar(df$improper)), active = sum(df$active > 0, na.rm = TRUE),
              max_est_gap = max(df$est_gap, na.rm = TRUE), max_se_rel = max(df$se_rel, na.rm = TRUE))
 }
@@ -111,7 +111,8 @@ print(do.call(rbind, lapply(split(res, list(res$cell, res$n), drop = TRUE), cell
 est_worst <- max(res$est_gap, na.rm = TRUE)
 se_worst <- max(res$se_rel, na.rm = TRUE)
 cat(sprintf("\nWorst estimate gap %.3e (rule 1e-6): %s; worst SE difference %.3e (rule 1e-3): %s\n",
-            est_worst, if (est_worst <= 1e-6) "PASS" else "FAIL", se_worst, if (se_worst <= 1e-3) "PASS" else "FAIL"))
+            est_worst, if (is.finite(est_worst) && est_worst <= 1e-6) "PASS" else "FAIL", se_worst,
+            if (is.finite(se_worst) && se_worst <= 1e-3) "PASS" else "FAIL"))
 over <- res[!is.na(res$est_gap) & res$est_gap > 1e-6, c("cell", "n", "seed", "est_gap", "lav_gap")]
 cat(sprintf("Runs with an estimate gap above 1e-6: %d of %d\n", nrow(over), nrow(res)))
 if (nrow(over)) {

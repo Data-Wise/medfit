@@ -20,18 +20,77 @@ Accessors and display for a \link{SEMFit} returned by \code{\link[=fit_sem]{fit_
 }
 \details{
 \itemize{
-\item \code{coef()} returns the free-parameter estimates, named as in the parameter
-table (the label when the row has one).
+\item \code{coef()} returns the free-parameter estimates, named as lavaan names its
+coefficients: the label when the row has one, else \verb{lhs op rhs} without
+spaces (\code{"M~X"}, \code{"X~~X"}, \code{"eta=~m2"}). \code{vcov()}, \code{tidy()} and the
+accessors \code{extract_mediation()} reads use the same names.
 \item \code{vcov()} returns their covariance, projected onto the active constraints
 and bounds; rows for a pinned parameter are zero.
 \item \code{nobs()} returns the number of rows used after listwise deletion.
 \item \code{logLik()} returns the log likelihood with the means free; its \code{df}
 attribute counts the free parameters plus one mean per observed variable.
+\item \code{anova()} tests nested fits by the likelihood-ratio statistic
+\eqn{n (F_r - F_f)}{n * (F_r - F_f)} on the difference in model degrees
+of freedom: \code{anova(fit_full, fit_restricted)}, or several fits, each tested
+against the one with fewer degrees of freedom. It compares fits that were
+already made and never refits. The fits must use the same observed
+variables and rows, and neither may have sampling weights or have failed to
+converge. Nesting is checked by parameter-table inclusion: the restricted
+fit may free no parameter the other leaves out and must have more degrees
+of freedom. That is necessary for nesting, not sufficient; whether two
+models are nested in substance is the analyst's responsibility. A
+restricted fit with a smaller discrepancy than the model it restricts is an
+error (one fit is not at its global optimum). When a bound or an
+inequality on a tested parameter is active at the restricted fit, the null
+lies on the boundary of the parameter space, the statistic is a mixture of
+chi-squares, and the function warns that the p-value is not valid, as
+\code{\link[=mbco_sem]{mbco_sem()}} does. Returns an object of class \code{"anova"} with columns \code{Df},
+\code{Chisq} (n times the discrepancy), \verb{Chisq diff}, \verb{Df diff} and
+\verb{Pr(>Chisq)}. Name rows by naming the arguments after the first.
+\item \code{confint()} returns Wald (normal) intervals for the free parameters and
+the defined parameters, \code{confint(fit, parm, level = 0.95)}; \code{parm} takes
+names or positions. A parameter pinned by a constraint or sitting on a
+bound has a zero standard error and a point interval.
+\item \code{tidy()} returns one row per free parameter, then per defined parameter:
+\code{term} (the name \code{coef()} uses), \code{op} (the operator of its row in the
+parameter table, \verb{:=} for a defined parameter), \code{estimate}, \code{std.error},
+\code{statistic} (the z value, \code{NA} when the standard error is zero),
+\code{p.value} (two-sided), and with \code{conf.int = TRUE} the interval
+\code{confint()} returns (\code{conf.low}, \code{conf.high}, at \code{conf.level}). \code{type}
+is \code{"all"} (default), \code{"parameters"} or \code{"defined"}.
+\item \code{glance()} returns one row: \code{nobs}, \code{npar} (free parameters after the
+equality constraints), \code{df}, \code{chisq} (n times the minimized discrepancy,
+the test of the model against the saturated one), \code{p.value} (\code{NA} when
+\code{df} is 0), \code{logLik}, \code{AIC} and \code{BIC} (with the means free, as \code{logLik()}
+defines them). A fit with sampling weights has no likelihood, so its
+\code{chisq}, \code{p.value}, \code{logLik}, \code{AIC} and \code{BIC} are \code{NA}. There is no
+\code{converged} column: \code{fit_sem()} returns a fit only for a solution that
+passed the acceptance gate and errors otherwise, so \verb{@converged} is \code{TRUE}
+for every \code{SEMFit} and would carry no information.
 \item \code{summary()} collects the estimates, standard errors and z statistics, the
 defined parameters, and the diagnostics: rows dropped, information type,
 degrees of freedom, retries, stationarity, active bounds and constraints,
 improper-solution flags and the multiplier sign check.
 }
+}
+\examples{
+\donttest{
+fit <- fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+  data = mediation_demo
+)
+coef(fit)
+vcov(fit)[c("a", "b"), c("a", "b")]
+nobs(fit)
+summary(fit)
+generics::tidy(fit, conf.int = TRUE)
+generics::glance(fit)
+
+# a likelihood-ratio test of b = 0 against the fitted model
+fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)
+anova(fit, fit0)
+}
+
 }
 \seealso{
 \code{\link[=fit_sem]{fit_sem()}}, \link{SEMFit}

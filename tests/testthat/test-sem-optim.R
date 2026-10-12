@@ -25,8 +25,8 @@ test_that("a Heywood case matches lavaan, warns, and names the negative variance
   neg <- pe[pe$op == "~~" & pe$lhs == pe$rhs & pe$est < 0, ]
   expect_gt(nrow(neg), 0)
   expect_warning(fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram)),
-                 paste0("negative variance: .*", neg$lhs[1], " ~~ ", neg$lhs[1]))
-  expect_lt(min(fit$theta[paste(neg$lhs[1], "~~", neg$lhs[1])]), 0)
+                 paste0("negative variance: .*", neg$lhs[1], "~~", neg$lhs[1]))
+  expect_lt(min(fit$theta[paste0(neg$lhs[1], "~~", neg$lhs[1])]), 0)
   est <- stats::setNames(pe$est, ifelse(pe$op == "=~", paste(pe$rhs, "~", pe$lhs), paste(pe$lhs, pe$op, pe$rhs)))
   est <- est[names(est) %in% names(fit$theta)]
   expect_lt(max(abs(fit$theta[names(est)] - est)), 1e-6)
@@ -35,7 +35,7 @@ test_that("a Heywood case matches lavaan, warns, and names the negative variance
 test_that("an active lower bound is accepted and reported", {
   mod <- sem_model_heywood()
   smp <- .sem_sample(sem_sim(mod, 50, 10), mod$ram)
-  is_var <- vapply(strsplit(mod$ram$par_names, " ~~ ", fixed = TRUE),
+  is_var <- vapply(strsplit(mod$ram$par_names, "~~", fixed = TRUE),
                    function(p) length(p) == 2 && p[1] == p[2], logical(1))
   lb <- ifelse(is_var, 0, -Inf)
   expect_no_warning(fit <- .sem_optimize(mod$ram, smp, pmax(sem_start(mod$ram), lb), lb = lb))
@@ -50,7 +50,7 @@ test_that("a start with an invalid covariance is retried, and a single start err
   smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
   good <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
   bad <- sem_start(mod$ram)
-  bad["X ~~ X"] <- -0.5
+  bad["X~~X"] <- -0.5
   expect_error(.sem_optimize(mod$ram, smp, bad, n_starts = 1),
                "no start converged \\(1 tried\\).*not positive definite")
   expect_warning(fit <- .sem_optimize(mod$ram, smp, bad, n_starts = 5), "perturbed start")
@@ -69,7 +69,7 @@ test_that("reruns are identical and the caller's random-number stream is untouch
   mod <- sem_model_latent()
   smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
   bad <- sem_start(mod$ram)
-  bad["X ~~ X"] <- -0.5
+  bad["X~~X"] <- -0.5
   set.seed(99)
   ref_draw <- stats::runif(1)
   set.seed(99)
@@ -86,7 +86,7 @@ test_that("the gate decision and the Newton decrement are invariant to the data 
   fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
   n <- mod$ram$q
   # Converged, mildly off, and clearly stalled points; status 3 so only the stationarity rule decides.
-  is_s <- grepl(" ~~ ", names(fit$theta), fixed = TRUE)
+  is_s <- grepl("~~", names(fit$theta), fixed = TRUE)
   off <- fit$theta
   off[is_s] <- off[is_s] * 1.001
   pts <- list(fit$theta, fit$theta + 0.0005 * seq_len(n), fit$theta * 1.02, off)
@@ -139,7 +139,7 @@ test_that("planted defects are caught", {
 
   # (2) Remove the positive-definite start test: an invalid perturbed start reaches nloptr.
   bad <- start
-  bad["X ~~ X"] <- -0.5
+  bad["X~~X"] <- -0.5
   seen <- function() {
     xs <- list()
     list(record = function(x0) xs[[length(xs) + 1L]] <<- x0, get = function() xs)
@@ -164,7 +164,7 @@ test_that("planted defects are caught", {
   # The bound sits on a path (not a variance), so such a start is still positive definite and
   # only the clamp keeps it inside the box.
   lb <- rep(-Inf, mod$ram$q)
-  lb[mod$ram$par_names == "Y ~ eta"] <- 0
+  lb[mod$ram$par_names == "Y~eta"] <- 0
   in_box <- function() {
     rec <- seen()
     local_mocked_bindings(.sem_nlopt = function(x0, eval_f, eval_grad_f, lb, ub, opts) {
@@ -173,7 +173,7 @@ test_that("planted defects are caught", {
     }, .env = parent.frame())
     # An invalid first start forces the retries whose perturbed starts the clamp must keep in the box.
     s0 <- bad
-    s0["Y ~ eta"] <- 0.01
+    s0["Y~eta"] <- 0.01
     suppressWarnings(try(.sem_optimize(mod$ram, smp, s0, lb = lb, n_starts = 6), silent = TRUE))
     vapply(rec$get(), function(x) all(x >= lb), logical(1))
   }
@@ -236,7 +236,7 @@ test_that("retries from an invalid first start converge at every data scale", {
   for (s in c(0.01, 1, 100, 1000)) {
     smp <- .sem_sample(d0 * s, mod$ram)
     bad <- .sem_default_start(mod$ram, smp)
-    bad["X ~~ X"] <- -0.5 * abs(bad[["X ~~ X"]])
+    bad["X~~X"] <- -0.5 * abs(bad[["X~~X"]])
     fit <- suppressWarnings(.sem_optimize(mod$ram, smp, bad, n_starts = 5))
     expect_true(fit$converged, label = paste("scale", s))
     expect_gt(fit$retries, 0)
@@ -265,7 +265,7 @@ test_that("the gate checks the gradient sign at an active bound", {
   smp <- .sem_sample(sem_sim(mod, 200, 7), mod$ram)
   q <- mod$ram$q
   fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram))
-  k <- match("Y ~ M", mod$ram$par_names)
+  k <- match("Y~M", mod$ram$par_names)
   obj <- .sem_objective(mod$ram, smp)
   pin <- function(value) {
     x <- fit$theta
@@ -312,7 +312,7 @@ test_that("the gate checks the gradient sign at an active bound", {
 test_that("the active-bound window does not depend on the data scale", {
   mod <- sem_model_latent()
   d0 <- sem_sim(mod, 200, 7)
-  is_var <- vapply(strsplit(mod$ram$par_names, " ~~ ", fixed = TRUE),
+  is_var <- vapply(strsplit(mod$ram$par_names, "~~", fixed = TRUE),
                    function(p) length(p) == 2 && p[1] == p[2], logical(1))
   for (s in c(1e-3, 1, 1000)) {
     smp <- .sem_sample(d0 * s, mod$ram)
@@ -370,4 +370,27 @@ test_that(".sem_with_seed restores the caller's RNG kind and draws, with or with
     expect_identical(RNGkind()[1:3], k)
     expect_false(exists(".Random.seed", envir = globalenv(), inherits = FALSE))
   }
+})
+
+test_that("infeasible bounds give a named error with the parameter and both bounds (F2)", {
+  set.seed(1)
+  d <- data.frame(X = rnorm(100))
+  d$M <- 0.4 * d$X + rnorm(100)
+  d$Y <- 0.3 * d$M + rnorm(100)
+  base <- "M ~ a*X\nY ~ b*M"
+  msg <- "parameter 'a' has infeasible bounds: the lower bound 1 is above the upper bound 0.5"
+  expect_error(.sem_fit_syntax(paste0(base, "\na > 1\na < 0.5"), d, "observed"), msg)
+  expect_error(.sem_fit_syntax(paste0(base, "\na < 0.5\na > 1"), d, "observed"), msg)
+  # the driver itself, with the bounds handed over directly
+  mod <- sem_models()[[1]]
+  smp <- .sem_sample(sem_sim(mod, 50, 3), mod$ram)
+  lb <- rep(-Inf, mod$ram$q)
+  ub <- rep(Inf, mod$ram$q)
+  lb[2] <- 1
+  ub[2] <- 0.5
+  expect_error(.sem_optimize(mod$ram, smp, sem_start(mod$ram), lb, ub),
+               sprintf("parameter '%s' has infeasible bounds", mod$ram$par_names[2]), fixed = TRUE)
+  # equal bounds are feasible (the parameter is pinned), not an error
+  ub[2] <- 1
+  expect_no_error(suppressWarnings(.sem_optimize(mod$ram, smp, sem_start(mod$ram), lb, ub)))
 })

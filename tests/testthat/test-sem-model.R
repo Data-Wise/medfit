@@ -9,7 +9,7 @@ sem_models_oracle <- c(
   simple = "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + cp*treatment + covariate1",
   serial = "mediator1 ~ treatment\nmediator2 ~ mediator1 + treatment\noutcome ~ mediator2 + mediator1 + treatment",
   parallel = paste(
-    "mediator1 ~ treatment", "mediator2 ~ treatment", "mediator1 ~~ mediator2",
+    "mediator1~treatment", "mediator2~treatment", "mediator1~~mediator2",
     "outcome ~ mediator1 + mediator2 + treatment", sep = "\n"
   ),
   latent = "eta =~ mediator1 + mediator2 + mediator3\neta ~ a*treatment\noutcome ~ b*eta + cp*treatment",
@@ -76,10 +76,10 @@ test_that("completion gives lavaan's row set on 200 random models", {
       lines <- c(lines, paste0(t, " ~ ", paste(pr, collapse = " + ")))
     }
     if (stats::runif(1) < 0.3) lines <- c(lines, "m ~~ 0.5*w")
-    if (stats::runif(1) < 0.2) lines <- c(lines, "x1 ~~ x2")
-    if (nl == 2 && stats::runif(1) < 0.3) lines <- c(lines, "F1 ~~ F2")
-    if (used >= 2 && stats::runif(1) < 0.25) lines <- c(lines, "y1 ~~ y2")
-    if (stats::runif(1) < 0.2) lines <- c(lines, "w ~~ w")
+    if (stats::runif(1) < 0.2) lines <- c(lines, "x1~~x2")
+    if (nl == 2 && stats::runif(1) < 0.3) lines <- c(lines, "F1~~F2")
+    if (used >= 2 && stats::runif(1) < 0.25) lines <- c(lines, "y1~~y2")
+    if (stats::runif(1) < 0.2) lines <- c(lines, "w~~w")
     paste(lines, collapse = "\n")
   }
   bad <- character()
@@ -143,8 +143,8 @@ test_that("completion details", {
   t4 <- tab("F =~ y1\nz ~ F")
   expect_equal(t4$fixed[t4$lhs == "y1" & t4$op == "~~"], 0)
   # user rows first, ids consecutive, auto rows flagged
-  expect_identical(tab("y ~ x")$id, 1:3)
-  expect_identical(tab("y ~ x")$user, c(1L, 0L, 0L))
+  expect_identical(tab("y~x")$id, 1:3)
+  expect_identical(tab("y~x")$user, c(1L, 0L, 0L))
   # exogenous variances and covariances are free (Q3)
   t5 <- tab("y ~ x1 + x2")
   expect_true(all(is.na(t5$fixed[t5$op == "~~"])))
@@ -219,9 +219,9 @@ test_that("par_map, starts and bounds follow the table", {
   conv <- .sem_to_ram(.sem_complete(.sem_parse(m)$parameters))
   expect_identical(length(conv$par_map), nrow(conv$table))
   expect_identical(conv$ram$par_names[conv$par_map[conv$table$label == "a"]], "a")
-  expect_equal(conv$start[["Y ~ Z"]], 0.5)
-  expect_equal(conv$lower[["M ~ X"]], 0)
-  expect_equal(conv$upper[["Y ~~ Y"]], 5)
+  expect_equal(conv$start[["Y~Z"]], 0.5)
+  expect_equal(conv$lower[["M~X"]], 0)
+  expect_equal(conv$upper[["Y~~Y"]], 5)
   expect_true(is.na(conv$start[["a"]]))
   expect_named(conv$start, conv$ram$par_names)
   # shared label: one parameter, bounds from whichever row carries them
@@ -240,9 +240,16 @@ test_that("intercepts: a fixed zero is dropped, anything else names the mean-str
   expect_error(.sem_to_ram(.sem_complete(.sem_parse("m ~ 2*1\nm ~ x")$parameters)), "nonzero")
 })
 
-test_that("a repeated path is rejected by the RAM builder", {
-  expect_error(.sem_to_ram(.sem_complete(.sem_parse("Y ~ X\nY ~ X")$parameters)), "a path appears twice")
-  expect_error(.sem_to_ram(.sem_complete(.sem_parse("Y ~ X\nY ~~ Y\nY ~~ Y")$parameters)), "appears twice")
+test_that("a repeated path is rejected by the RAM builder when the parser is bypassed", {
+  # The parser rejects a repeated row by name; the builder keeps its own check for tables built another way.
+  twice <- function(text, i) {
+    p <- .sem_parse(text)$parameters
+    p <- rbind(p, p[i, ])
+    p$id <- seq_len(nrow(p))
+    p
+  }
+  expect_error(.sem_to_ram(.sem_complete(twice("Y~X", 1L))), "a path appears twice")
+  expect_error(.sem_to_ram(.sem_complete(twice("Y ~ X\nY ~~ Y", 2L))), "appears twice")
 })
 
 # --- identification ------------------------------------------------------------

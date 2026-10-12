@@ -47,7 +47,7 @@ logo:
 
 navbar:
   structure:
-    left:  [home, reference, articles, ecosystem, status, news]
+    left:  [home, reference, models, guides, cookbook, articles, ecosystem, status, news]
     right: [search, github]
   components:
     home:
@@ -57,6 +57,90 @@ navbar:
     reference:
       text: Reference
       href: reference/index.html
+    models:
+      text: Models
+      menu:
+      - text: "All models at a glance"
+        href: articles/models.html
+      - text: "─────────────"
+      - text: "Single mediator"
+      - text: "Simple mediation"
+        href: articles/model-simple.html
+      - text: "Binary and non-normal variables"
+        href: articles/model-glm-families.html
+      - text: "Treatment-by-mediator interaction"
+        href: articles/model-interaction.html
+      - text: "Weights and robust SEs"
+        href: articles/model-weights.html
+      - text: "The regmedint engine"
+        href: articles/model-regmedint.html
+      - text: "─────────────"
+      - text: "Several mediators"
+      - text: "Serial (a chain)"
+        href: articles/model-serial.html
+      - text: "Parallel"
+        href: articles/model-parallel.html
+      - text: "Joint, with products"
+        href: articles/model-joint.html
+      - text: "─────────────"
+      - text: "Clusters and latent variables"
+      - text: "Cluster-randomized trial"
+        href: articles/model-cluster.html
+      - text: "lavaan fits"
+        href: articles/model-lavaan.html
+      - text: "Native: paths and defined parameters"
+        href: articles/model-native.html
+      - text: "Native: a latent mediator"
+        href: articles/model-native-latent.html
+      - text: "Native: constraints and MBCO"
+        href: articles/model-native-constraints.html
+      - text: "Native: several mediators and weights"
+        href: articles/model-native-multi.html
+    guides:
+      text: Guides
+      menu:
+      - text: "What changed since CRAN 0.3.2"
+        href: articles/guide-changes.html
+      - text: "Troubleshooting"
+        href: articles/guide-troubleshooting.html
+      - text: "Which interval should I use?"
+        href: articles/guide-intervals.html
+      - text: "Glossary and symbols"
+        href: articles/guide-glossary.html
+      - text: "lavaan and the native engine"
+        href: articles/lavaan-comparison.html
+    cookbook:
+      text: Cookbook
+      menu:
+      - text: "All recipes"
+        href: articles/cookbook.html
+      - text: "─────────────"
+      - text: "1. One-line mediation"
+        href: articles/cookbook.html#one-line-mediation
+      - text: "2. I already have lm fits"
+        href: articles/cookbook.html#i-already-have-lm-fits
+      - text: "3. Binary outcome"
+        href: articles/cookbook.html#binary-outcome
+      - text: "4. Weights and robust SEs"
+        href: articles/cookbook.html#weights-and-robust-standard-errors
+      - text: "5. Two mediators in a chain"
+        href: articles/cookbook.html#two-mediators-in-a-chain
+      - text: "6. Two mediators side by side"
+        href: articles/cookbook.html#two-mediators-side-by-side
+      - text: "7. Treatment-by-mediator interaction"
+        href: articles/cookbook.html#treatment-by-mediator-interaction
+      - text: "8. Many mediators with products"
+        href: articles/cookbook.html#many-mediators-with-products
+      - text: "9. Cluster-randomized trial"
+        href: articles/cookbook.html#cluster-randomized-trial
+      - text: "10. I use lavaan"
+        href: articles/cookbook.html#i-use-lavaan
+      - text: "11. A latent mediator"
+        href: articles/cookbook.html#a-latent-mediator-native-engine
+      - text: "12. A nonlinear constraint or a longer chain"
+        href: articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine
+      - text: "13. Joint significance for a glm"
+        href: articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome
     articles:
       text: Articles
       menu:
@@ -150,6 +234,54 @@ reference:
       - tidy.S7_object
       - SEMFit-methods
       - starts_with("print")
+
+articles:
+  - title: "Start here"
+    contents:
+      - '`articles/getting-started`'
+      - '`articles/refcard`'
+      - '`articles/cookbook`'
+  - title: "Models"
+    desc: "Every model medfit can run, in one place"
+    contents:
+      - '`articles/models`'
+  - title: "Models: single mediator"
+    desc: "One mediator: the basic model and its variations"
+    contents:
+      - '`articles/model-simple`'
+      - '`articles/model-glm-families`'
+      - '`articles/model-interaction`'
+      - '`articles/model-weights`'
+      - '`articles/model-regmedint`'
+  - title: "Models: several mediators"
+    desc: "A chain, side by side, or with products"
+    contents:
+      - '`articles/model-serial`'
+      - '`articles/model-parallel`'
+      - '`articles/model-joint`'
+  - title: "Models: clusters and structural equation models"
+    desc: "Treatment assigned to clusters, lavaan fits, and the native engine"
+    contents:
+      - '`articles/model-cluster`'
+      - '`articles/model-lavaan`'
+      - '`articles/model-native`'
+      - '`articles/model-native-latent`'
+      - '`articles/model-native-constraints`'
+      - '`articles/model-native-multi`'
+  - title: "Guides"
+    desc: "Upgrading, errors, intervals and terms"
+    contents:
+      - '`articles/guide-changes`'
+      - '`articles/guide-troubleshooting`'
+      - '`articles/guide-intervals`'
+      - '`articles/guide-glossary`'
+      - '`articles/lavaan-comparison`'
+  - title: "Detailed guides"
+    contents:
+      - '`articles/introduction`'
+      - '`articles/extraction`'
+      - '`articles/bootstrap`'
+      - '`articles/methods`'
 
 development:
   mode: auto

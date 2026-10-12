@@ -183,6 +183,13 @@
       if (!is_one[k] && !grepl(.sem_name_re, t$target)) {
         .sem_syntax_error(paste0("invalid variable name '", t$target, "'"), st)
       }
+      if (op %in% c("~", "=~") && identical(l, t$target)) {
+        row_text <- sprintf("%s %s %s", l, op, t$target)
+        .sem_syntax_error(
+          sprintf("'%s' puts a variable on both sides of '%s'", row_text, op),
+          if (!identical(trimws(st), row_text)) st
+        )
+      }
       rows[[length(rows) + 1L]] <- list(
         lhs = l, op = if (is_one[k]) "~1" else op, rhs = if (is_one[k]) "" else t$target,
         fixed = t$fixed, label = t$label, start = t$start, lower = t$lower, upper = t$upper
@@ -342,6 +349,14 @@
   invisible()
 }
 
+# `lhs op rhs` as the user would write it, for messages.
+.sem_row_text <- function(row) {
+  paste0(
+    row$lhs, " ", if (row$op == "~1") "~ 1" else row$op, if (nzchar(row$rhs)) paste0(" ", row$rhs),
+    if (row$level > 1L) paste0(" (level ", row$level, ")")
+  )
+}
+
 # Parse model syntax into `list(parameters, constraints)` (spec 5).
 .sem_parse <- function(model) {
   checkmate::assert_character(model, min.len = 1L, any.missing = FALSE, .var.name = "model")
@@ -384,6 +399,22 @@
   if (!length(cons)) {
     constraints <- constraints[0L, , drop = FALSE]
     constraints$level <- integer()
+  }
+  # A path, (co)variance or intercept takes one row: a second row would silently compete with the first for its
+  # label, start and bounds. `a ~~ b` and `b ~~ a` are the same covariance.
+  is_cov <- parameters$op == "~~"
+  pair <- ifelse(
+    is_cov, paste(pmin(parameters$lhs, parameters$rhs), pmax(parameters$lhs, parameters$rhs)),
+    paste(parameters$lhs, parameters$rhs)
+  )
+  key <- paste(parameters$level, parameters$op, pair)
+  if (anyDuplicated(key)) {
+    j <- anyDuplicated(key)
+    first <- match(key[j], key)
+    stop(sprintf(
+      "'%s' is specified more than once (rows %d and %d); give it one row, with its label, start and bounds on it",
+      .sem_row_text(parameters[j, ]), first, j
+    ), call. = FALSE)
   }
   labels <- unique(parameters$label[nzchar(parameters$label)])
   variables <- unique(c(parameters$lhs, parameters$rhs[nzchar(parameters$rhs)]))

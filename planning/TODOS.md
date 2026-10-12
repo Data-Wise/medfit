@@ -4,11 +4,11 @@ Active tasks, implementation plan, and progress tracking.
 
 ---
 
-## 🎯 Current Focus: Ext D (multilevel) — plan module 1
+## 🎯 Current Focus: 0.8.0 (native SEM hardening)
 
-**Status:** 0.3.2 on CRAN (2026-07-23); **0.5.0 on main/GitHub/r-universe** (tag `v0.5.0`, 2026-09-25)
-**Next:** Write the plan for the approved Ext D module-1 spec (2-1-1); decide the next CRAN trigger
-**Updated:** 2026-09-25
+**Status:** 0.3.2 on CRAN (2026-07-23); **0.7.0 on main/GitHub/r-universe** (tag `v0.7.0`, 2026-10-10)
+**Next:** Review `tasks/plan.md`, then start T1-T3. The live task list is `tasks/todo.md`; this file keeps history only. The next CRAN trigger is still open
+**Updated:** 2026-10-11
 
 > Decided 2026-09-24 (`specs/GRILL-0.5.0-release-2026-09-24.md`): 0.5.0 is **GitHub-only**;
 > #81/#82 are correctness fixes, exempt from the deprecation period. CRAN 0.3.2 users are

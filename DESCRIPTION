@@ -1,8 +1,8 @@
 Package: medfit
 Type: Package
 Title: Infrastructure for Mediation Model Fitting and Extraction
-Version: 0.7.0
-Date: 2026-10-10
+Version: 0.8.0
+Date: 2026-10-11
 Authors@R: person("Davood", "Tofighi",
     email = "dtofighi@gmail.com",
     role = c("aut", "cre", "cph"),
@@ -43,7 +43,8 @@ Suggests:
     regmedint,
     sandwich,
     testthat (>= 3.0.0),
-    tibble
+    tibble,
+    withr
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))

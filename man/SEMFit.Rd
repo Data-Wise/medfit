@@ -27,7 +27,9 @@ missing values (listwise deletion)}
 
 \item{information}{Character scalar: \code{"observed"} or \code{"expected"}}
 
-\item{converged}{Logical scalar: the acceptance gate passed}
+\item{converged}{Logical scalar: the acceptance gate passed. \code{fit_sem()} returns a
+fit only for an accepted solution (otherwise it errors), so this is \code{TRUE} for every
+fit it returns and \code{glance()} does not report it}
 
 \item{data}{Data frame: the rows used, on the model's observed variables}
 
@@ -52,6 +54,18 @@ S7 class holding a structural equation model fitted by the native
 maximum-likelihood engine (see \code{\link[=fit_sem]{fit_sem()}}): estimates, their covariance,
 the parameter table, defined parameters (\verb{:=}) with delta-method standard
 errors, and the diagnostics of the optimizer.
+}
+\examples{
+\donttest{
+fit <- fit_sem(
+  "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+  data = mediation_demo
+)
+fit@table[fit@table$op == "~", c("lhs", "rhs", "est", "se")]
+fit@defined
+fit@converged
+}
+
 }
 \seealso{
 \code{\link[=fit_sem]{fit_sem()}}

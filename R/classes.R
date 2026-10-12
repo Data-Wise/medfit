@@ -2173,7 +2173,9 @@ print.summary.ClusterMediationData <- function(x, ...) {
 #'   missing values (listwise deletion)
 #' @param df Numeric scalar: degrees of freedom
 #' @param information Character scalar: `"observed"` or `"expected"`
-#' @param converged Logical scalar: the acceptance gate passed
+#' @param converged Logical scalar: the acceptance gate passed. `fit_sem()` returns a
+#'   fit only for an accepted solution (otherwise it errors), so this is `TRUE` for every
+#'   fit it returns and `glance()` does not report it
 #' @param data Data frame: the rows used, on the model's observed variables
 #' @param model Character scalar: the model syntax
 #' @param diagnostics List: optimizer diagnostics (`status`, `decrement`,
@@ -2187,6 +2189,17 @@ print.summary.ClusterMediationData <- function(x, ...) {
 #' @usage
 #' SEMFit(theta, vcov, table, defined, f, n_obs, n_dropped, df, information,
 #'   converged, data, model, diagnostics, internals, call)
+#'
+#' @examples
+#' \donttest{
+#' fit <- fit_sem(
+#'   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
+#'   data = mediation_demo
+#' )
+#' fit@table[fit@table$op == "~", c("lhs", "rhs", "est", "se")]
+#' fit@defined
+#' fit@converged
+#' }
 #'
 #' @seealso [fit_sem()]
 #' @export

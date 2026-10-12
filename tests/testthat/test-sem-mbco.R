@@ -92,7 +92,7 @@ test_that("inputs the test cannot honor error by name", {
   expect_error(mbco_sem(fit, "a", "nope"), "'nope'.*labeled regression path")
   expect_error(mbco_sem(fit, "a", "a"), "different")
   expect_error(mbco_sem(fit, "a", 1), "string")
-  w <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C", d, sampling_weights = rep(c(1, 2), 100), se_type = "sandwich")
+  w <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C", d, weights = rep(c(1, 2), 100), se_type = "sandwich")
   expect_error(mbco_sem(w, "a", "b"), "sampling weights")
 })
 
@@ -188,4 +188,70 @@ test_that("an inequality that holds the null on the boundary warns; an interior 
 test_that("a null outside the region the model allows errors with a message about the constraint", {
   fit <- fit_sem(paste0(guard_base, "\na > 0.3"), guard_data())
   expect_error(mbco_sem(fit, "a", "b"), "`a == 0`.*constraint.*parameter space")
+})
+
+# --- A product of k paths (T17) ---------------------------------------------------------------------------
+# The same test with k refits, one per path: the statistic is the smallest diffLL, referred to chi-square(1).
+# Oracles: single-path constrained fits written out by hand, and the chi-square(1) tail at 4 (p = 0.0455).
+
+mbco_serial_syntax <- paste0(
+  "mediator1 ~ a*treatment\nmediator2 ~ d*mediator1 + treatment\n",
+  "outcome ~ b*mediator2 + treatment"
+)
+
+test_that("k = 2 gives the same result through a and b, a vector in a, or paths", {
+  f <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment", mediation_demo)
+  ref <- mbco_sem(f, "a", "b")
+  for (alt in list(mbco_sem(f, c("a", "b")), mbco_sem(f, paths = c("a", "b")))) {
+    expect_identical(alt$statistic, ref$statistic)
+    expect_identical(alt$p.value, ref$p.value)
+    expect_identical(alt$tests, ref$tests)
+    expect_identical(alt$data.name, ref$data.name)
+    expect_identical(alt$method, ref$method)
+  }
+  expect_identical(ref$data.name, "a * b = 0")
+  expect_identical(ref$method, "Minimum-of-two likelihood-ratio tests (MBCO) for an indirect effect")
+})
+
+test_that("a serial model returns the minimum of three diffLLs, each equal to a hand-written constrained fit", {
+  f <- fit_sem(mbco_serial_syntax, mediation_demo)
+  res <- mbco_sem(f, paths = c("a", "d", "b"))
+  by_hand <- vapply(c("a", "d", "b"), function(p) {
+    nrow(mediation_demo) * (fit_sem(paste0(mbco_serial_syntax, "\n", p, " == 0"), mediation_demo)@f - f@f)
+  }, numeric(1))
+  expect_identical(res$tests$constraint, c("a == 0", "d == 0", "b == 0"))
+  expect_equal(res$tests$diff_ll, unname(by_hand), tolerance = 1e-8)
+  expect_equal(unname(res$statistic), min(by_hand), tolerance = 1e-8)
+  expect_equal(res$p.value, stats::pchisq(min(by_hand), df = 1, lower.tail = FALSE))
+  expect_identical(res$data.name, "a * d * b = 0")
+  expect_match(res$method, "Minimum-of-3")
+  # the three refits differ, so a wrong pick (the largest) would change the statistic
+  expect_gt(max(by_hand) - min(by_hand), 1)
+})
+
+test_that("planted defect: the degrees of freedom do not match the chi-square(1) oracle at statistic 4", {
+  f <- fit_sem(mbco_serial_syntax, mediation_demo)
+  real <- .sem_fit_syntax
+  n <- f@n_obs
+  # every refit is shifted so that diffLL is exactly 4
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
+    r <- real(...)
+    r$f <- f@f + 4 / n
+    r
+  })
+  res <- mbco_sem(f, paths = c("a", "d", "b"))
+  expect_equal(unname(res$statistic), 4, tolerance = 1e-10)
+  expect_equal(res$p.value, 0.0455003, tolerance = 1e-6)
+  wrong <- sem_mutate(mbco_sem, "df = 1, lower.tail", "df = 2, lower.tail")
+  expect_gt(abs(wrong(f, paths = c("a", "d", "b"))$p.value - 0.0455003), 0.05)
+})
+
+test_that("paths must be two or more different labeled regression paths, and not mixed with a and b", {
+  f <- fit_sem(mbco_serial_syntax, mediation_demo)
+  expect_error(mbco_sem(f, paths = "a"), "paths")
+  expect_error(mbco_sem(f, paths = c("a", "a", "b")), "`paths` must be different parameters")
+  expect_error(mbco_sem(f, paths = c("a", "zz")), "'zz' is not a labeled regression path")
+  expect_error(mbco_sem(f, "a", "b", paths = c("a", "d")), "either `paths` or `a` and `b`")
+  expect_error(mbco_sem(f), "give the paths")
+  expect_error(mbco_sem(f, "a"), "paths")
 })
