@@ -1,6 +1,6 @@
 # medfit Reference Card
 
-Quick lookup for users who already know medfit. Needs medfit 0.7.0 or
+Quick lookup for users who already know medfit. Needs medfit 0.8.0 or
 later (CRAN has 0.3.2; install from GitHub or r-universe, see the [home
 page](https://data-wise.github.io/medfit/#installation)). Explanations
 are in the
@@ -69,7 +69,9 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | IPW weights | `fit_mediation(weights = , se_type = "sandwich")` |
 | Model syntax and data (observed or latent variables, constraints, `:=`) | `fit_sem(model, data)`, a `SEMFit` |
 | Model syntax, mediator by name | `fit_mediation(engine = "native", model = , treatment = , mediator = )` |
-| Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")` |
+| Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")`; `paths = c("a", "d", "b")` for a serial product |
+| Compare nested `SEMFit`s (likelihood-ratio test) | `anova(fit_full, fit_restricted)` |
+| Parameter table, one-row fit summary and intervals for a `SEMFit` | `tidy(fit)`, `glance(fit)`, `confint(fit)` |
 
 ## Which object
 

@@ -645,16 +645,67 @@ weighted fit.
 
 Equality and inequality constraints that are linear in the labels become
 rows \\a^\top\theta + b\\, normalized to unit length, with constant
-Jacobians for the optimizer (SLSQP through nloptr). A nonlinear
-constraint is an error. At the solution the active constraints and
-active bounds define a null-space basis \\Z\\ of the feasible
-directions, and the covariance is projected,
+Jacobians for the optimizer (SLSQP through nloptr). A nonlinear equality
+(`cp == a*b`) is a row whose value is \\\text{lhs} - \text{rhs}\\ and
+whose Jacobian is a central difference, both recomputed at every point;
+a nonlinear inequality is the same row with the sign chosen so that it
+reads \\c(\theta) \le 0\\. A nonlinear row can bend away from its
+tangent plane, so the acceptance test uses the Hessian of the
+Lagrangian, \\H + \sum_i \lambda_i \nabla^2 c_i\\ over the active
+nonlinear rows (the multipliers from \\\nabla F + \sum_i \lambda_i
+\nabla c_i = 0\\), in the reduced Hessian; the objective’s Hessian alone
+can call a saddle of the restricted problem a minimum. A model with a
+nonlinear constraint can have several local optima, so all `n_starts`
+starts are tried and the best accepted one is kept. SLSQP stops along a
+flat constraint tangent, up to about \\3\times10^{-5}\\ from the
+optimum, so an accepted fit with an active nonlinear row takes full
+Newton steps on the KKT system of the active set (using the same
+Lagrangian Hessian); the polished point replaces the solution only when
+the acceptance test accepts it again and the discrepancy does not rise.
+A product of labels set to zero (\\ab = 0\\, \\b_1 b_2 b_3 = 0\\) is not
+solved this way, because its Jacobian vanishes at the solution: it holds
+exactly when one factor is zero, so the model is refitted once per
+factor from the default start and the smallest discrepancy is kept. At
+the solution the active constraints and active bounds define a
+null-space basis \\Z\\ of the feasible directions, and the covariance is
+projected,
 
 \\ V = Z \left(Z^\top I Z\right)^{-1} Z^\top , \\
 
 so a parameter pinned by a constraint has zero variance and `a == b`
 returns the standard error of the model with `a` and `b` collapsed to
 one label.
+
+Redundant rows are handled in two layers. Equality rows that are
+linearly dependent (a duplicate, `a == b` with `b == a`) are reduced to
+an independent subset before the solve, because a rank-deficient
+Jacobian stops SLSQP although the constraints are consistent; the
+dropped rows are still checked by the acceptance gate, so contradictory
+equalities (`a == 1` with `a == 2`) are reported. This is the standard
+remedy: the linear independence constraint qualification (LICQ) fails
+when an active constraint is redundant, and solver presolve routines
+remove duplicate and dependent rows for that reason.
+
+An inequality whose row lies in the span of the equality rows has a
+constant value on the equality set. When that value satisfies it
+(`a == b` with `a - b < 0`, or `a + b == 0.8` with `a + b > 0.8`) the
+inequality is active at every feasible point and would reproduce the
+same degeneracy, so it is dropped from the solver’s rows too, and the
+acceptance gate still checks it. Such a row is detected when its
+gradient is within \\10^{-12}\\ of the span of the independent equality
+rows (rows have unit length), a distance that only rows dependent to
+rounding error meet; a row that is merely close to the span, such as
+`a - b + 1e-9*cp > 1e-7` with `a == b`, stays with the solver, because
+near-dependence does not show that the set is infeasible. An implied
+inequality that the equality rows violate (`a + b == 0.8` with
+`a + b < 0.5`) is kept, and the acceptance gate reports the violated
+row. The multiplier sign check skips a fit whose active constraints are
+linearly dependent, which includes a dropped row, since that row has no
+meaningful multiplier. The estimates equal those of the model with the
+redundant inequality deleted. An inequality that is inactive on the
+equality set (`a + b == 0.8` with `a + b < 0.9`), and parallel
+inequalities with no equality (`a + b < 0.2` with `2*a + 2*b < 0.4`),
+are not affected.
 
 ### Acceptance
 
@@ -664,9 +715,18 @@ the Newton decrement \\\sqrt{g_r^\top H_r^{-1} g_r}\\ on the reduced
 gradient and Hessian of the active-constraint null space is at most
 \\10^{-3}\\, with a positive definite reduced Hessian. The decrement is
 scale free, so rescaling the data does not change the verdict. The sign
-of each active inequality’s multiplier is checked and only warns: a
-wrong sign means the point may not be a local minimum, and the fit is
-not rejected for it.
+of each active inequality’s or bound’s multiplier is checked: a wrong
+sign means the point may not be a local minimum. A wrong-signed active
+bound rejects the solution, the same verdict the fit without constraints
+gives (the gradient at an active bound points into the interior),
+whether or not the model also has constraint lines: each bound is judged
+by its own statistic \\\|g_k\| / \sqrt{H\_{kk}}\\ against \\10^{-3}\\,
+which needs only the Hessian diagonal, so an indefinite Hessian cannot
+hide it. A wrong-signed active inequality constraint only warns. The
+check asks whether non-negative multipliers on the active inequalities
+and bounds (free-sign ones on the equalities) reproduce the gradient,
+using non-negative least squares, so linearly dependent active rows (an
+equality with a parallel inequality) get a verdict like any others.
 
 ### Starts
 
@@ -693,24 +753,31 @@ fit@defined
 
 ### Testing the indirect effect: MBCO
 
-`mbco_sem(fit, a, b)` tests \\H_0\colon ab = 0\\ as the minimum of two
-likelihood-ratio tests (MBCO). It refits the model with \\a = 0\\ and
-with \\b = 0\\; each is a linear equality constraint, so each refit is
-one solve. With \\F\\ the minimized maximum-likelihood discrepancy and
-\\n\\ the number of rows used,
+`mbco_sem(object, a, b)` tests \\H_0\colon ab = 0\\ as the minimum of
+two likelihood-ratio tests (MBCO). It refits the model with \\a = 0\\
+and with \\b = 0\\; each is a linear equality constraint, so each refit
+is one solve. With \\F\\ the minimized maximum-likelihood discrepancy
+and \\n\\ the number of rows used,
 
 \\ D_a = n\\(F\_{a=0} - F), \qquad D_b = n\\(F\_{b=0} - F), \qquad T =
 \min(D_a, D_b), \\
 
-and \\T\\ is referred to \\\chi^2_1\\. The nonlinear constraint \\ab =
-0\\ is not solved: a nonlinear solver can stop at the branch with the
-larger statistic (OpenMx’s does on RMediation’s `memory_exp`, reporting
-221.05 where the minimum is 0.083). A fit with sampling weights or one
-that did not converge is refused, since the weighted discrepancy is not
-a likelihood. If a bound or an inequality on the tested path is active
-at its refit (`a > 0` with the null at \\a = 0\\), the null lies on the
-boundary of the parameter space, the statistic is a mixture of
-chi-squares, and the function warns that the p-value is not valid.
+and \\T\\ is referred to \\\chi^2_1\\. A product of \\k\\ paths (a
+serial indirect effect \\a\\d\\b = 0\\,
+`mbco_sem(fit, paths = c("a", "d", "b"))`) is the same test with \\k\\
+refits, one per path, \\T = \min_j D_j\\: the product is zero exactly
+when one factor is, so the null is a union of \\k\\ hypotheses, each
+tested by a \\\chi^2_1\\ likelihood-ratio statistic, and the minimum is
+conservative (at most the nominal size when one factor is zero, smaller
+when several are). The nonlinear constraint \\ab = 0\\ is not solved: a
+nonlinear solver can stop at the branch with the larger statistic
+(OpenMx’s does on RMediation’s `memory_exp`, reporting 221.05 where the
+minimum is 0.083). A fit with sampling weights or one that did not
+converge is refused, since the weighted discrepancy is not a likelihood.
+If a bound or an inequality on the tested path is active at its refit
+(`a > 0` with the null at \\a = 0\\), the null lies on the boundary of
+the parameter space, the statistic is a mixture of chi-squares, and the
+function warns that the p-value is not valid.
 
 ``` r
 mbco_sem(fit, "a", "b")
@@ -721,6 +788,57 @@ mbco_sem(fit, "a", "b")
 
     data:  a * b = 0
     MBCO = 33.353, df = 1, p-value = 7.685e-09
+
+### Comparing nested fits: `anova()`
+
+`anova(fit_full, fit_restricted)` is the general likelihood-ratio test
+for two fits that were already made; it never refits, so each restricted
+fit starts from the engine’s own start values (starting a restricted fit
+from the full fit’s estimates is how OpenMx lands on an infeasible point
+with a statistic of 0). The statistic and its degrees of freedom are
+
+\\ D = n\\(F\_{r} - F\_{f}), \qquad \text{df} = \text{df}\_r -
+\text{df}\_f, \\
+
+with \\F\\ the minimized discrepancy and \\\text{df}\\ the model degrees
+of freedom of each fit, which already count the equality constraints.
+\\D\\ is referred to \\\chi^2\_{\text{df}}\\.
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+differences the same quantity for each of its two refits, so
+[`anova()`](https://rdrr.io/r/stats/anova.html) reproduces its per-refit
+statistics (221.05 and 0.083 on `memory_exp`). Several fits give one row
+each, ordered by degrees of freedom, each tested against the row above
+it.
+
+Two fits are accepted only if they use the same observed variables and
+the same rows, neither has sampling weights, both converged, and the
+restricted fit frees no parameter the other leaves out and has more
+degrees of freedom. That parameter-table inclusion is necessary for
+nesting and not sufficient: two models with different latent structures
+but the same row labels pass, and whether they are nested in substance
+is the analyst’s responsibility. A restricted fit with a smaller
+discrepancy than the model it restricts means one of the fits is not at
+its global optimum, and is an error. As in
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md),
+a bound or an inequality on a tested parameter that is active at the
+restricted fit puts the null on the boundary of the parameter space, so
+the statistic is a mixture of chi-squares and the function warns that
+the p-value is not valid.
+
+``` r
+fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)
+anova(fit, fit0)
+```
+
+    Likelihood-ratio (chi-square difference) test for SEMFit models
+
+    n = 400; Chisq is n times the minimized discrepancy
+
+         Df Chisq Chisq diff Df diff Pr(>Chisq)
+    fit   0   0.0
+    fit0  1 102.3      102.3       1  < 2.2e-16 ***
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ## References
 

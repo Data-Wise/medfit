@@ -9,12 +9,12 @@
 Fits a model written in lavaan-style syntax to raw data with medfit's native
 maximum-likelihood engine, and returns a SEMFit object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
-linear equality and inequality constraints (==, &amp;lt;, &amp;gt;), and defined
+equality and inequality constraints (==, &amp;lt;, &amp;gt;, linear or nonlinear), and defined
 parameters (:=) with delta-method standard errors."><meta property="og:description" content="
 Fits a model written in lavaan-style syntax to raw data with medfit's native
 maximum-likelihood engine, and returns a SEMFit object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
-linear equality and inequality constraints (==, &amp;lt;, &amp;gt;), and defined
+equality and inequality constraints (==, &amp;lt;, &amp;gt;, linear or nonlinear), and defined
 parameters (:=) with delta-method standard errors."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
 
 
@@ -37,7 +37,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,6 +77,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
@@ -93,6 +94,8 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -127,7 +130,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit a Structural Equation Model by Maximum Likelihood</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
       <div class="d-none name"><code>fit_sem.Rd</code></div>
     </div>
 
@@ -136,7 +139,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 <p>Fits a model written in lavaan-style syntax to raw data with medfit's native
 maximum-likelihood engine, and returns a <a href="SEMFit.html">SEMFit</a> object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
-linear equality and inequality constraints (<code>==</code>, <code>&lt;</code>, <code>&gt;</code>), and defined
+equality and inequality constraints (<code>==</code>, <code>&lt;</code>, <code>&gt;</code>, linear or nonlinear), and defined
 parameters (<code>:=</code>) with delta-method standard errors.</p>
     </div>
 
@@ -148,8 +151,9 @@ parameters (<code>:=</code>) with delta-method standard errors.</p>
 <span>  information <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"observed"</span>, <span class="st">"expected"</span><span class="op">)</span>,</span>
 <span>  n_starts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  sampling_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  se_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"sandwich"</span><span class="op">)</span></span>
+<span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  se_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"sandwich"</span><span class="op">)</span>,</span>
+<span>  sampling_weights <span class="op">=</span> <span class="fu">lifecycle</span><span class="fu">::</span><span class="fu"><a href="https://lifecycle.r-lib.org/reference/deprecated.html" class="external-link">deprecated</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -179,14 +183,17 @@ information for the standard errors.</p></dd>
 <dd><p>Positive integer or <code>NULL</code>: number of optimizer starts
 tried before the fit is declared failed (<code>NULL</code> uses 5). Retries use
 perturbed starts drawn under a fixed seed and never change the caller's
-random number stream.</p></dd>
+random number stream. With a nonlinear constraint, which can leave several
+local optima, every start is tried and the best accepted one is kept (a
+warning says when the accepted starts disagree); otherwise the first
+accepted start is used.</p></dd>
 
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
 <dd><p>List: options passed to the optimizer (<code>nloptr</code>).</p></dd>
 
 
-<dt id="arg-sampling-weights">sampling_weights<a class="anchor" aria-label="anchor" href="#arg-sampling-weights"></a></dt>
+<dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
 <dd><p>Optional numeric vector of non-negative case weights,
 one per row of <code>data</code> (<code>NULL</code>, the default, fits unweighted). The fit is
 weighted maximum likelihood on the weighted mean and covariance; the scale
@@ -202,6 +209,11 @@ sandwich covariance \(A^{-1} B A^{-1}\) with casewise scores
 lavaan's robust standard errors with <code>sampling.weights</code>, and is smaller
 than the HC3 default of the glm route by a factor that shrinks like
 \(1/n\)). Model-based standard errors are not valid under weights.</p></dd>
+
+
+<dt id="arg-sampling-weights">sampling_weights<a class="anchor" aria-label="anchor" href="#arg-sampling-weights"></a></dt>
+<dd><p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> Renamed <code>weights</code>, the name
+<code><a href="fit_mediation.html">fit_mediation()</a></code> uses; the old name still works with a warning.</p></dd>
 
 </dl></div>
     <div class="section level2">

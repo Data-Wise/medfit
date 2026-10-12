@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,6 +96,7 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -114,6 +115,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -161,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-weights.qmd" class="external-link"><code>vignettes/articles/model-weights.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-weights.qmd" class="external-link"><code>vignettes/articles/model-weights.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -292,7 +295,7 @@ Attaching package: 'generics'</code></pre>
 <ul>
 <li>HC3 treats the observations as independent. It does <strong>not</strong> handle survey clusters, strata or replicate weights.</li>
 <li>The <code>regmedint</code> engine accepts neither <code>weights</code> nor <code>se_type = "sandwich"</code>.</li>
-<li>The native engine takes weights too, as <code>sampling_weights</code> in <code><a href="../reference/fit_sem.html">fit_sem()</a></code>, with its own sandwich (HC0-type) covariance; see <a href="methods.html">Methods and Formulas</a>.</li>
+<li>The native engine takes weights too, in <code><a href="../reference/fit_sem.html">fit_sem()</a></code>, with its own sandwich (HC0-type) covariance; see <a href="methods.html">Methods and Formulas</a>.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
 <p><a href="model-simple.html">Simple mediation</a> | <a href="cookbook.html#weights-and-robust-standard-errors">Cookbook recipe 4</a> | <a href="getting-started.html">Getting Started</a></p>

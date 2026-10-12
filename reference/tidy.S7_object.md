@@ -32,9 +32,11 @@ glance(x, ...)
   [ParallelMediationData](https://data-wise.github.io/medfit/reference/ParallelMediationData.md),
   [InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md),
   [JointMediationData](https://data-wise.github.io/medfit/reference/JointMediationData.md),
-  or
-  [BootstrapResult](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
-  object.
+  [ClusterMediationData](https://data-wise.github.io/medfit/reference/ClusterMediationData.md),
+  [BootstrapResult](https://data-wise.github.io/medfit/reference/BootstrapResult.md),
+  or [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)
+  object (a `SEMFit` has its own columns; see
+  [SEMFit-methods](https://data-wise.github.io/medfit/reference/SEMFit-methods.md)).
 
 - ...:
 

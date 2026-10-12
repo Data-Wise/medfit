@@ -1,12 +1,12 @@
 # medfit Cookbook
 
-Eleven task-sized recipes. Each says when to use it, runs on
+Thirteen task-sized recipes. Each says when to use it, runs on
 `mediation_demo` (except the cluster and latent-mediator recipes, which
 simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
-These recipes need medfit 0.7.0 or later. CRAN has 0.3.2, which lacks
+These recipes need medfit 0.8.0 or later. CRAN has 0.3.2, which lacks
 `mediation_demo` and the native, joint and cluster functions; install
 from GitHub or r-universe (see the [home
 page](https://data-wise.github.io/medfit/#installation)).
@@ -231,7 +231,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4349603 0.8927176 
+    0.6560315 0.4351678 0.8930074 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
@@ -401,6 +401,86 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")
 
     data:  a * b = 0
     MBCO = 46.753, df = 1, p-value = 8.054e-12
+
+## 12. A nonlinear constraint or a longer chain, native engine
+
+*When:* you want to fix the direct effect at the indirect effect
+(`cp == a*b`), or test the indirect effect of a three-mediator-step
+chain, which is a product of three paths. Constraints may be nonlinear
+in the labels. The native engine is experimental.
+
+``` r
+base <- "
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + cp * treatment
+"
+free <- fit_sem(base, mediation_demo)
+tied <- fit_sem(paste0(base, "cp == a * b"), mediation_demo)
+rbind(free = coef(free)[c("a", "b", "cp")], tied = coef(tied)[c("a", "b", "cp")])
+```
+
+                 a         b         cp
+    free 0.4559961 0.7134287 0.04057666
+    tied 0.3381172 0.6831633 0.23098930
+
+The tied fit has one more degree of freedom and its standard errors
+respect the constraint. `anova(tied, free)` is the likelihood-ratio test
+of it. For a chain `a`, `d`, `b`,
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+takes the paths and returns the minimum of the single-path tests,
+referred to a chi-square with one degree of freedom (conservative when
+several paths are zero):
+
+``` r
+chain <- "
+  mediator1 ~ a * treatment
+  mediator2 ~ d * mediator1 + treatment
+  outcome ~ b * mediator2 + mediator1 + treatment
+"
+mbco_sem(fit_sem(chain, mediation_demo), paths = c("a", "d", "b"))
+```
+
+
+        Minimum-of-3 likelihood-ratio tests (MBCO) for an indirect effect
+
+    data:  a * d * b = 0
+    MBCO = 17.557, df = 1, p-value = 2.788e-05
+
+## 13. Joint significance for a binary or count outcome
+
+*When:* the outcome is binary or a count and you want to know whether
+the mediated path exists, without an outcome-scale effect. Test `a = 0`
+and `b = 0` separately and take the larger p-value (conservative). Each
+test is a likelihood-ratio test for a binomial or Poisson model and an F
+test for a Gaussian, Gamma or `quasi*` model, whose dispersion is
+estimated.
+
+``` r
+d <- mediation_demo
+d$outcome_bin <- as.integer(d$outcome > median(d$outcome))
+```
+
+``` r
+joint_test <- function(fit_a, term_a, fit_b, term_b) {
+  one <- function(fit, term) {
+    known <- fit$family$family %in% c("binomial", "poisson")
+    col <- if (known) "Pr(>Chi)" else "Pr(>F)"
+    drop1(fit, scope = term, test = if (known) "LRT" else "F")[term, col]
+  }
+  p <- c(a = one(fit_a, term_a), b = one(fit_b, term_b))
+  c(p, joint = max(p))
+}
+fit_a <- glm(mediator1 ~ treatment + covariate1 + covariate2, data = d)
+fit_b <- glm(outcome_bin ~ treatment + mediator1 + covariate1 + covariate2,
+             data = d, family = binomial())
+joint_test(fit_a, "treatment", fit_b, "mediator1")
+```
+
+               a            b        joint
+    8.096703e-09 2.024938e-12 8.096703e-09 
+
+More: [GLM
+families](https://data-wise.github.io/medfit/articles/model-glm-families.html#joint-significance-test-for-the-indirect-effect).
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).

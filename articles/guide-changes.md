@@ -1,6 +1,6 @@
 # What changed since CRAN 0.3.2
 
-CRAN has medfit 0.3.2; this site documents 0.7.0 (GitHub and
+CRAN has medfit 0.3.2; this site documents 0.8.0 (GitHub and
 r-universe). This page lists what a 0.3.2 user needs to know before
 upgrading: numbers that change, calls that now stop with an error, and
 what is new. The full record is
@@ -25,6 +25,7 @@ what is new. The full record is
 | 0.5.0 | `confint(parm = "paths")` | looked for lm-style row names only; on lavaan-extracted objects the `b` and `c'` standard errors were swapped | finds each path by name, and stops with an error naming the missing rows |
 | 0.5.0 | `confint(parm = "effects")` for a simple fit | the total-effect interval was too wide (it dropped the covariance of the indirect effect and `c'`) | full delta-method gradient; on the `mediation_demo` fit the total-effect SE is 0.119, not 0.127 |
 | 0.5.0 | four-way decomposition with factor or transformed covariates | the covariate means skipped them, so NDE, INTref and the total were wrong | means come from the mediator model’s design matrix; with weights, they are weighted |
+| 0.8.0 | the names in [`coef()`](https://rdrr.io/r/stats/coef.html), [`vcov()`](https://rdrr.io/r/stats/vcov.html) and [`tidy()`](https://generics.r-lib.org/reference/tidy.html) of a `SEMFit` | an unlabeled parameter was `"M ~ X"` or `"X ~~ X"` (with spaces) and a loading `"m2 ~ eta"` | `"M~X"`, `"X~~X"` and `"eta=~m2"`, the names `lavaan::coef()` uses; labeled parameters are unchanged (`SEMFit` is experimental) |
 | 0.5.0 | `se_type = "sandwich"` with a treatment-by-mediator term | returned the model-based covariance, with no warning | applies the sandwich estimator |
 | 0.5.0 | lavaan fits with custom path labels | the alias rows of `@vcov` were all zero, so a parametric bootstrap had a zero-width interval | the alias rows are filled from the labeled parameters |
 
@@ -70,11 +71,13 @@ path (0.5.0).
 | 0.5.0 | joint mediation ([page](https://data-wise.github.io/medfit/articles/model-joint.md)); the bundled `mediation_demo` data; delta-method standard errors in [`tidy()`](https://generics.r-lib.org/reference/tidy.html); [`confint()`](https://rdrr.io/r/stats/confint.html) and [`coef()`](https://rdrr.io/r/stats/coef.html) for bootstrap results |
 | 0.6.0 | cluster-randomized designs ([page](https://data-wise.github.io/medfit/articles/model-cluster.md)); the [Reference Card](https://data-wise.github.io/medfit/articles/refcard.md) and [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) |
 | 0.7.0 | the native maximum-likelihood engine ([page](https://data-wise.github.io/medfit/articles/model-native.md)), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md), and sampling weights with robust standard errors for it |
+| 0.8.0 | nonlinear constraints in the native engine ([page](https://data-wise.github.io/medfit/articles/model-native-constraints.md)), `mbco_sem(paths = )` for a product of k paths, [`anova()`](https://rdrr.io/r/stats/anova.html), [`tidy()`](https://generics.r-lib.org/reference/tidy.html)/[`glance()`](https://generics.r-lib.org/reference/glance.html)/[`confint()`](https://rdrr.io/r/stats/confint.html) for `SEMFit`, [lavaan and the native engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md), and cookbook recipes 12 and 13 |
 
 ## Dependencies
 
 0.7.0 adds `lifecycle` and `nloptr (>= 1.0.4)` to `Imports`, and
-`OpenMx` to `Suggests` (the tests use it as an independent check).
+`OpenMx` to `Suggests` (the tests use it as an independent check). 0.8.0
+adds `withr` to `Suggests` (tests only).
 
 ## Related
 

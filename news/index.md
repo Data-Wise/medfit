@@ -1,8 +1,156 @@
 # Changelog
 
-## medfit (development version)
+## medfit 0.8.0
+
+### New features
+
+- [`anova()`](https://rdrr.io/r/stats/anova.html) for `SEMFit`: the
+  likelihood-ratio test for nested fits,
+  `anova(fit_full, fit_restricted)` or several fits in a chain. It
+  reports each fit’s chi-square (n times the discrepancy), the
+  difference, its degrees of freedom and the p-value, and reproduces the
+  per-refit statistics of
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  (221.05 and 0.083 on RMediation’s `memory_exp`). It compares fits that
+  were already made and never refits. Fits on different data or
+  variables, with sampling weights, that did not converge, with equal
+  degrees of freedom, or where the restricted fit frees a parameter the
+  other leaves out are refused, and a null on the boundary of the
+  parameter space (an active bound or inequality on a tested parameter)
+  warns that the p-value is not valid, as
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  does. Nesting is checked by parameter-table inclusion, which is
+  necessary and not sufficient.
+
+- [`tidy()`](https://generics.r-lib.org/reference/tidy.html),
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) and
+  [`confint()`](https://rdrr.io/r/stats/confint.html) for `SEMFit`.
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) returns one
+  row per free and defined parameter (`term`, `op`, `estimate`,
+  `std.error`, `statistic`, `p.value`, and the interval with
+  `conf.int = TRUE`);
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) returns
+  one row with `nobs`, `npar`, `df`, the chi-square test against the
+  saturated model, `logLik`, `AIC` and `BIC`;
+  [`confint()`](https://rdrr.io/r/stats/confint.html) covers the defined
+  parameters too. All agree with lavaan on a shared model to about 1e-9.
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) has no
+  `converged` column:
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  returns a fit only for an accepted solution, so `@converged` is `TRUE`
+  for every `SEMFit` and carries no information (now documented). A fit
+  with sampling weights has no likelihood, so its chi-square, `logLik`,
+  `AIC` and `BIC` are `NA`.
+
+- Nonlinear equality constraints in
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  and `fit_mediation(engine = "native")`: `cp == a*b`, `a*b == 0.1`,
+  `exp(a) == 1` and any equality built from the allowed functions are
+  solved by SLSQP with the constraint’s value and Jacobian recomputed at
+  every point (the Jacobian by central differences). The covariance is
+  projected onto the null space of the Jacobian **at the solution**, and
+  the degrees of freedom count the equalities’ rank there. The fit
+  matches OpenMx’s constrained optimum to 1e-5 and the standard errors
+  agree with a reparameterized fit and a bootstrap. Nonlinear
+  inequalities are covered in the next entry. A product of labels set to
+  zero (`a*b == 0`, `b1*b2*b3 == 0`, also through a `:=` name) is not
+  solved by the nonlinear route, whose Jacobian vanishes at the
+  solution: it is `a == 0` or `b == 0`, so the model is refitted once
+  per factor from the default start and the smallest discrepancy wins
+  (`fit@internals$branch` names the winning line). On RMediation’s
+  `memory_exp` the `a1*b1 == 0` statistic is the exact 0.083100, where a
+  nonlinear solve lands on 221.05. Several zero-product lines give the
+  cartesian product of branches (at most 64).
+
+- [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  tests a product of k labeled paths:
+  `mbco_sem(fit, paths = c("a", "d", "b"))` (or a vector in `a` with `b`
+  missing) refits once per path, keeps the smallest diffLL and refers it
+  to chi-square(1). With two paths it gives exactly the old result
+  (`mbco_sem(fit, "a", "b")` still works). The null is a union of k
+  hypotheses, so the test is conservative. A simulation gate
+  (`tests/sim/sem-mbco-k-size.R`, 2000 replications per cell) found the
+  size at most 0.055 at alpha = 0.05 with one zero path and under 0.005
+  with two or three.
+
+- Nonlinear inequality constraints in
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md):
+  `a*b > 0.1`, `a*b < 0.5`, and a defined name inside a constraint
+  (`ab := a*b` then `ab > 0`) are solved like the nonlinear equalities,
+  as rows `c(theta) <= 0` with a recomputed Jacobian. The acceptance
+  test for a curved constraint now uses the reduced Hessian of the
+  Lagrangian, the objective’s Hessian plus each active nonlinear row’s
+  curvature times its multiplier; the objective’s Hessian alone can call
+  a saddle of the restricted problem a minimum (or the reverse).
+  **`n_starts` changes meaning for a model with a nonlinear
+  constraint:** every start is tried and the best accepted one is kept
+  (before, the first accepted start was used), and a warning says when
+  the accepted starts reached different optima, because a nonlinear
+  constraint can leave several (`a*b > 0.1` is feasible for two positive
+  or two negative paths). Models without a nonlinear constraint behave
+  as before.
+
+- A sum of products set to zero (`a1*b1 + a2*b2 == 0`) fits through the
+  same nonlinear route and is documented as best-effort: unlike a single
+  product it has no exact reduction, so the result is the best of the
+  starts tried, and the starts-disagree warning means a better optimum
+  may exist (raise `n_starts`).
+
+### Behavior changes
+
+- A `SEMFit` has one spelling for a parameter: its label, else
+  `lhs op rhs` without spaces, as lavaan names coefficients.
+  [`coef()`](https://rdrr.io/r/stats/coef.html),
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html),
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and the
+  accessors
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  reads now agree. Before, [`coef()`](https://rdrr.io/r/stats/coef.html)
+  of an unlabeled parameter read `"M ~ X"` and `"X ~~ X"` (with spaces)
+  while the accessors read `"M~X"`, and a latent loading was named like
+  a regression into its indicator (`"m2 ~ eta"`, with
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) reporting
+  `op` as `=~`). Now the names are `"M~X"`, `"X~~X"` and `"eta=~m2"`,
+  and they equal `names(lavaan::coef())` on a shared model. Code that
+  indexed `coef(fit)` by an unlabeled spaced name must drop the spaces;
+  labeled parameters are unchanged. The wrong names were never part of a
+  release’s documented interface (`SEMFit` is experimental).
+
+- `fit_sem(weights = )` replaces `fit_sem(sampling_weights = )`, the
+  name
+  [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  already uses, and `mbco_sem(object, a, b)` replaces
+  `mbco_sem(fit, a, b)`, the name the other `SEMFit` methods use. The
+  old names still work and warn once per session with `lifecycle`;
+  positional calls are unaffected.
 
 ### Bug fixes
+
+- Native SEM fits with an active nonlinear constraint (`cp == a*b`,
+  `a*b > k`, `a*b + cp == 0`) are polished after the solver is accepted.
+  SLSQP stops along a flat constraint tangent, so estimates could sit up
+  to 4e-5 from the exact optimum; a few Newton steps on the KKT system
+  (using the Lagrangian Hessian) now bring them within 1e-10 of a fit
+  with the constraint solved out. The acceptance gate is unchanged and
+  is re-run on the polished point, which replaces the accepted one only
+  if it is accepted again.
+
+- [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  now gives the same verdict on a wrong-side active bound whether or not
+  the model has constraint lines. A solution sitting at a bound with the
+  gradient pointing into the interior (a point that is not a local
+  minimum) was rejected for a model without constraints but accepted
+  with a warning once any `==`, `<` or `>` line was added, even one that
+  never binds. It is now rejected in both cases, and the next start is
+  tried; each bound is judged by the same statistic, the gradient over
+  the root of the Hessian diagonal, so an indefinite Hessian cannot hide
+  it. A wrong-signed active inequality constraint still warns and does
+  not reject. Behavior change: a fit that returned with the warning
+  “lower bound of … is active, but moving into the feasible region would
+  lower the objective” now errors or uses another start.
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  is experimental and no dependent package uses it, so there is no
+  deprecation period.
 
 - [`nobs()`](https://rdrr.io/r/stats/nobs.html), `@n_obs` and
   [`med()`](https://data-wise.github.io/medfit/reference/med.md) no
@@ -20,17 +168,28 @@
   warns when models you fitted yourself used different rows. The
   estimates are unchanged when the models already used the same rows;
   the native and lmer engines already counted correctly.
+
+- [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  applies `subset`, `weights`, `offset`, `etastart` and `mustart` to the
+  rows you passed, then drops incomplete rows. After
+  [\#138](https://github.com/data-wise/medfit/issues/138) a `subset`
+  containing an incomplete row selected the next row instead, and a
+  vector `offset` stopped the fit with a length error. `n_obs` now
+  counts the rows the models used when `subset` is given.
+
 - `fit_mediation(engine = "lmer")` now stops with an error when either
   formula contains an [`offset()`](https://rdrr.io/r/stats/offset.html).
   The engine rebuilds both formulas from their terms, which exclude
   offsets, so the offset was dropped without a word and the fit was the
   same as without it.
+
 - Joint mediation effects (several mediators with treatment-by-mediator
   products) now check that every variable two models share holds the
   same values in the same order, not only that the row names agree. A
   mediator model fitted to a reordered copy of the data with its row
   names reset used to pass, and the cross-equation covariance, and with
   it the joint effect intervals, was silently wrong.
+
 - Fits made with `na.action = na.exclude` no longer break the
   extraction. The joint covariance came back with `NA` blocks and `NA`
   effect intervals and no error, and the residual standard deviation of
@@ -38,16 +197,51 @@
   [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
   with a missing-value error.
 
+- [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  now rejects a self-regression (`Y ~ Y`) and a repeated row (`Y ~ X`
+  twice, or `X ~~ Y` and `Y ~~ X`) at parse time, naming the row.
+  Before, `Y ~ Y` failed late with “no start converged” and a repeated
+  row with “a path appears twice in the RAM specification”. Infeasible
+  bounds (`a > 1` with `a < 0.5`) now stop with a message naming the
+  parameter and both bounds instead of an internal assertion.
+
+- [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  now accepts a consistent set whose inequality repeats an equality:
+  `a == b` with `a - b < 0`, or `a + b == 0.8` with `a + b > 0.8`. These
+  sets stopped with “no start converged” on 5 to 7 of 12 simulated
+  datasets, because the inequality is active at every feasible point and
+  gave the optimizer a rank-deficient active Jacobian. The optimizer now
+  gets the rows without an inequality that the equality rows imply and
+  satisfy; the acceptance gate still checks every row, so an implied
+  inequality the equalities violate (`a + b == 0.8` with `a + b < 0.5`)
+  is still reported as violated. Behavior change: sets that errored now
+  fit, and the estimates equal those of the model with the redundant
+  inequality deleted.
+
 ### Documentation
+
+- Cookbook recipe 12 shows a nonlinear constraint (`cp == a*b`) and the
+  indirect effect of a three-path chain with `mbco_sem(paths = )`. The
+  0.7.0 entry for `fit_mediation(engine = "native")` no longer says it
+  handles serial and parallel mediators; it takes one mediator, and
+  `model-native-multi` already said so.
+
+- New article “lavaan and the native engine” (Guides menu): both engines
+  run on `mediation_demo` at site build, then a feature table lists what
+  each does with a status for every row. `test-lavaan-comparison.R`
+  computes each status from a live probe against lavaan, so a row cannot
+  change without the behavior changing.
 
 - Every cookbook recipe from 1 to 8 now runs after the setup chunk
   alone. Recipes 3, 6, 7 and 8 used fitted models that only an earlier
   recipe created, which running the page top to bottom hid; a test now
   runs each recipe in a fresh environment.
+
 - The cookbook and Getting Started no longer present survey weights as
   covered by `se_type = "sandwich"`: HC3 standard errors treat the
   observations as independent, so they do not handle survey clusters,
   strata or replicate weights.
+
 - The home page now leads with the r-universe and GitHub installs of
   0.7.0 and says that CRAN 0.3.2 does not run the examples (it lacks
   `mediation_demo`,
@@ -55,6 +249,7 @@
   [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
   and the joint and cluster classes). Getting Started, the cookbook and
   the Reference Card state the version they need.
+
 - Getting Started and the Introduction now cover the cluster and native
   engines (an engine table, the two classes, and a
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
@@ -64,19 +259,23 @@
   lists the `SEMFit` method and the `ClusterMediationData` return, and
   no longer names `brms` as a supported model type; it is still future
   work.
+
 - [`?SEMFit`](https://data-wise.github.io/medfit/reference/SEMFit.md),
   `?SEMFit-methods` and
   [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
   now have examples that run.
+
 - The Model Extraction article has a “Which section do I need?” table at
   the top, ends on Next Steps, and sets three dense paragraphs as
   bullets. The Methods article’s cluster and native engine sections now
   have subheadings.
+
 - The Introduction counted `SEMFit` as the seventh class; it is the
   eighth. Its Package Ecosystem list now names probmed and medrobust,
   and the Reference Card gives
   [`joint_effects()`](https://data-wise.github.io/medfit/reference/joint_effects.md)
   its real argument names (`object`, `estimates`).
+
 - New **Models** menu and landing page, and a **Cookbook** menu in the
   top menu bar. The Models page has a capability matrix and a “find your
   model” table; eight model pages cover simple mediation, binary and
@@ -85,28 +284,33 @@
   joint mediation. Articles are now grouped in an index. A test keeps
   every model page on the landing page, in the index and in the menu,
   and every cookbook anchor real.
+
 - Six more model pages: cluster-randomized trials (2-1-1), lavaan fits,
   and four on the native engine (paths and defined parameters, a latent
   mediator, constraints and the MBCO test, several mediators and
   weights). They join the Models menu, the landing page and the articles
   index. A test triggers each error message the pages quote, so a
   reworded message fails the tests before a page goes stale.
+
 - A new “Guides” menu and group with four pages: What changed since CRAN
   0.3.2 (the results that changed and the calls that now stop with an
   error), Troubleshooting (the errors and warnings a user is most likely
   to hit, each with its cause and fix), Which interval should I use?,
   and a Glossary of terms and symbols. Tests trigger every message the
   guides quote and check the known answers behind their claims.
+
 - The home page and Getting Started are rewritten so they are quick to
   skim: a “What’s new” table, a 60-second start, a “pick your model”
   table, long examples folded away, and Getting Started cut to four
   steps that link to the model pages. A test checks that their article
   links and cookbook anchors are real.
+
 - The Models page states that `fit_mediation(engine = "native")` takes
   one mediator; for several, fit with
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
   and call
   [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md).
+
 - The bootstrap example in the README printed
   `NIE = 0.19 [0.08, 0.32] | NDE = 0.16 | PM = 55%`, which no longer
   matched the code or its own non-bootstrap fit on the same data; it now
@@ -139,9 +343,14 @@ submitted to CRAN.
   including the two medfit extensions (comma shorthand and
   `CONSTRAINT(...)`).
 - `fit_mediation(engine = "native", model = , treatment = , mediator = )`
-  fits the syntax and returns the usual mediation objects, for observed
-  single, serial and parallel mediators and for a latent mediator, which
-  need not be a column of `data`.
+  fits the syntax and returns the usual mediation objects, for an
+  observed or a latent single mediator (which need not be a column of
+  `data`); serial and parallel mediators go through
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  and then `extract_mediation(fit, mediator = c(...), outcome = )`,
+  because
+  [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  takes one mediator.
   [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
   has a method for `SEMFit` that shares its workers with the lavaan
   route, so the aliases and covariance rows are the same; its

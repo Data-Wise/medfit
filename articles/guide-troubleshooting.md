@@ -6,7 +6,7 @@ package and checked by a test, so the wording matches what you see.
 
 > **First, check your version**
 >
-> Examples on this site need medfit 0.7.0 or later. If `mediation_demo`
+> Examples on this site need medfit 0.8.0 or later. If `mediation_demo`
 > or
 > [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 > is “not found”, you have CRAN’s 0.3.2. See [What changed since CRAN
@@ -71,7 +71,6 @@ package and checked by a test, so the wording matches what you see.
 |----|----|----|
 | `unknown parameter label` | a label in `:=` or a constraint is not defined in the model | label the path first: `y ~ b * m` |
 | `mean structure is not supported` | the model has a free intercept (`y ~ 1`) | remove it; the engine fits covariance structures only |
-| `nonlinear constraints are not supported in this version` | a constraint such as `a * b == 0.1` | use a constraint that is linear in the labels |
 | `variables in the model are not columns of` | the syntax names a variable that is not in `data` | check the names against `names(data)` |
 | `Must have length 1` | `fit_mediation(engine = "native")` was given several mediators | fit with [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) and call [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md); see [several mediators](https://data-wise.github.io/medfit/articles/model-native-multi.md) |
 

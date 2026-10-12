@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,6 +96,7 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -114,6 +115,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -161,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-glm-families.qmd" class="external-link"><code>vignettes/articles/model-glm-families.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-glm-families.qmd" class="external-link"><code>vignettes/articles/model-glm-families.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -278,6 +281,36 @@ Attaching package: 'generics'</code></pre>
 <pre><code>[1] "medfit::MediationData"</code></pre>
 </div>
 </div>
+</section><section class="level2"><h2 id="joint-significance-test-for-the-indirect-effect">Joint significance test for the indirect effect<a class="anchor" aria-label="anchor" href="#joint-significance-test-for-the-indirect-effect"></a>
+</h2>
+<p>With a binary or count outcome there is no outcome-scale indirect effect here, but you can still test whether the mediated path exists. For a recursive model with no correlated errors the likelihood factors by equation, so the test reduces to the joint significance test: test <code>a = 0</code> in the mediator model and <code>b = 0</code> in the outcome model, and take the larger p-value. The null is “a = 0 or b = 0”, so the test is conservative, like <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> on the native engine.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">joint_test</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">fit_a</span>, <span class="va">term_a</span>, <span class="va">fit_b</span>, <span class="va">term_b</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">one</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">fit</span>, <span class="va">term</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">known</span> <span class="op">&lt;-</span> <span class="va">fit</span><span class="op">$</span><span class="va">family</span><span class="op">$</span><span class="va">family</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"binomial"</span>, <span class="st">"poisson"</span><span class="op">)</span></span>
+<span>    <span class="va">col</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">known</span><span class="op">)</span> <span class="st">"Pr(&gt;Chi)"</span> <span class="kw">else</span> <span class="st">"Pr(&gt;F)"</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/add1.html" class="external-link">drop1</a></span><span class="op">(</span><span class="va">fit</span>, scope <span class="op">=</span> <span class="va">term</span>, test <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="va">known</span><span class="op">)</span> <span class="st">"LRT"</span> <span class="kw">else</span> <span class="st">"F"</span><span class="op">)</span><span class="op">[</span><span class="va">term</span>, <span class="va">col</span><span class="op">]</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fu">one</span><span class="op">(</span><span class="va">fit_a</span>, <span class="va">term_a</span><span class="op">)</span>, b <span class="op">=</span> <span class="fu">one</span><span class="op">(</span><span class="va">fit_b</span>, <span class="va">term_b</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">p</span>, joint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">fit_a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">mediator1</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
+<span><span class="va">fit_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">outcome_bin</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">mediator1</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span>
+<span>             data <span class="op">=</span> <span class="va">d</span>, family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">joint_test</span><span class="op">(</span><span class="va">fit_a</span>, <span class="st">"treatment"</span>, <span class="va">fit_b</span>, <span class="st">"mediator1"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>           a            b        joint
+8.096703e-09 2.024938e-12 8.096703e-09 </code></pre>
+</div>
+</div>
+<p>The test for each path depends on the family:</p>
+<ul>
+<li>
+<strong>Known dispersion</strong> (binomial, Poisson): a likelihood-ratio test, as above for the binary outcome.</li>
+<li>
+<strong>Estimated dispersion</strong> (Gaussian, Gamma, and every <code>quasi*</code> family): an F test. These families have no likelihood with the dispersion known, so a likelihood-ratio chi-square would be too liberal. The helper switches on the family; the mediator above is Gaussian and gets the F test.</li>
+</ul>
+<p>The result is on the link scale, like the paths; it says that the mediated path is detectable, not how large the effect is on the outcome scale. A function that also reports outcome-scale effects is planned.</p>
 </section><section class="level2"><h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
 </h2>
 <ul>
@@ -286,7 +319,7 @@ Attaching package: 'generics'</code></pre>
 <li>Fitted <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> pairs can be extracted instead of fitted here: <code>extract_mediation(fit_m, model_y = fit_y, ...)</code>.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
-<p><a href="model-simple.html">Simple mediation</a> | <a href="cookbook.html#binary-outcome">Cookbook recipe 3</a> | <a href="methods.html">Methods and Formulas</a></p>
+<p><a href="model-simple.html">Simple mediation</a> | <a href="cookbook.html#binary-outcome">Cookbook recipe 3</a> | <a href="cookbook.html#joint-significance-for-a-binary-or-count-outcome">Cookbook recipe 13</a> | <a href="methods.html">Methods and Formulas</a></p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

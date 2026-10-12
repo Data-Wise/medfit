@@ -29,7 +29,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,6 +69,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
@@ -85,6 +86,8 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -119,7 +122,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Methods for SEMFit objects</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
       <div class="d-none name"><code>SEMFit-methods.Rd</code></div>
     </div>
 
@@ -150,13 +153,53 @@ class <code>"summary.SEMFit"</code>; <code><a href="https://rdrr.io/r/base/print
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
 
-<ul><li><p><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> returns the free-parameter estimates, named as in the parameter
-table (the label when the row has one).</p></li>
+<ul><li><p><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> returns the free-parameter estimates, named as lavaan names its
+coefficients: the label when the row has one, else <code>lhs op rhs</code> without
+spaces (<code>"M~X"</code>, <code>"X~~X"</code>, <code>"eta=~m2"</code>). <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and the
+accessors <code><a href="extract_mediation.html">extract_mediation()</a></code> reads use the same names.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> returns their covariance, projected onto the active constraints
 and bounds; rows for a pinned parameter are zero.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> returns the number of rows used after listwise deletion.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> returns the log likelihood with the means free; its <code>df</code>
 attribute counts the free parameters plus one mean per observed variable.</p></li>
+<li><p><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> tests nested fits by the likelihood-ratio statistic
+\(n (F_r - F_f)\) on the difference in model degrees
+of freedom: <code>anova(fit_full, fit_restricted)</code>, or several fits, each tested
+against the one with fewer degrees of freedom. It compares fits that were
+already made and never refits. The fits must use the same observed
+variables and rows, and neither may have sampling weights or have failed to
+converge. Nesting is checked by parameter-table inclusion: the restricted
+fit may free no parameter the other leaves out and must have more degrees
+of freedom. That is necessary for nesting, not sufficient; whether two
+models are nested in substance is the analyst's responsibility. A
+restricted fit with a smaller discrepancy than the model it restricts is an
+error (one fit is not at its global optimum). When a bound or an
+inequality on a tested parameter is active at the restricted fit, the null
+lies on the boundary of the parameter space, the statistic is a mixture of
+chi-squares, and the function warns that the p-value is not valid, as
+<code><a href="mbco_sem.html">mbco_sem()</a></code> does. Returns an object of class <code>"anova"</code> with columns <code>Df</code>,
+<code>Chisq</code> (n times the discrepancy), <code>Chisq diff</code>, <code>Df diff</code> and
+<code>Pr(&gt;Chisq)</code>. Name rows by naming the arguments after the first.</p></li>
+<li><p><code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> returns Wald (normal) intervals for the free parameters and
+the defined parameters, <code>confint(fit, parm, level = 0.95)</code>; <code>parm</code> takes
+names or positions. A parameter pinned by a constraint or sitting on a
+bound has a zero standard error and a point interval.</p></li>
+<li><p><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> returns one row per free parameter, then per defined parameter:
+<code>term</code> (the name <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> uses), <code>op</code> (the operator of its row in the
+parameter table, <code>:=</code> for a defined parameter), <code>estimate</code>, <code>std.error</code>,
+<code>statistic</code> (the z value, <code>NA</code> when the standard error is zero),
+<code>p.value</code> (two-sided), and with <code>conf.int = TRUE</code> the interval
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> returns (<code>conf.low</code>, <code>conf.high</code>, at <code>conf.level</code>). <code>type</code>
+is <code>"all"</code> (default), <code>"parameters"</code> or <code>"defined"</code>.</p></li>
+<li><p><code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> returns one row: <code>nobs</code>, <code>npar</code> (free parameters after the
+equality constraints), <code>df</code>, <code>chisq</code> (n times the minimized discrepancy,
+the test of the model against the saturated one), <code>p.value</code> (<code>NA</code> when
+<code>df</code> is 0), <code>logLik</code>, <code>AIC</code> and <code>BIC</code> (with the means free, as <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>
+defines them). A fit with sampling weights has no likelihood, so its
+<code>chisq</code>, <code>p.value</code>, <code>logLik</code>, <code>AIC</code> and <code>BIC</code> are <code>NA</code>. There is no
+<code>converged</code> column: <code><a href="fit_sem.html">fit_sem()</a></code> returns a fit only for a solution that
+passed the acceptance gate and errors otherwise, so <code>@converged</code> is <code>TRUE</code>
+for every <code>SEMFit</code> and would carry no information.</p></li>
 <li><p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> collects the estimates, standard errors and z statistics, the
 defined parameters, and the diagnostics: rows dropped, information type,
 degrees of freedom, retries, stationarity, active bounds and constraints,
@@ -175,10 +218,10 @@ improper-solution flags and the multiplier sign check.</p></li>
 <span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      a                      b    outcome ~ treatment </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             0.45599612             0.71342873             0.04057666 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mediator1 ~~ mediator1     outcome ~~ outcome treatment ~~ treatment </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             1.15847022             1.18044624             0.24999375 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    a                    b    outcome~treatment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           0.45599612           0.71342873           0.04057666 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mediator1~~mediator1     outcome~~outcome treatment~~treatment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           1.15847022           1.18044624           0.24999375 </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               a             b</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> a  1.158499e-02 -3.349652e-14</span>
@@ -214,6 +257,35 @@ improper-solution flags and the multiplier sign check.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Active constraints: none</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Improper solution: no</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Multiplier sign check: ok</span>
+<span class="r-in"><span><span class="fu">generics</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 7 × 8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   term            op    estimate std.error statistic  p.value conf.low conf.high</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> a               ~       0.456     0.108      4.24  2.27<span style="color: #949494;">e</span><span style="color: #BB0000;">- 5</span>    0.245     0.667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> b               ~       0.713     0.050<span style="text-decoration: underline;">5</span>    14.1   2.31<span style="color: #949494;">e</span><span style="color: #BB0000;">-45</span>    0.615     0.812</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> outcome~treatm… ~       0.040<span style="text-decoration: underline;">6</span>    0.111      0.365 7.15<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>   -<span style="color: #BB0000;">0.177</span>     0.258</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> mediator1~~med… ~~      1.16      0.081<span style="text-decoration: underline;">9</span>    14.1   2.09<span style="color: #949494;">e</span><span style="color: #BB0000;">-45</span>    0.998     1.32 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> outcome~~outco… ~~      1.18      0.083<span style="text-decoration: underline;">5</span>    14.1   2.09<span style="color: #949494;">e</span><span style="color: #BB0000;">-45</span>    1.02      1.34 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> treatment~~tre… ~~      0.250     0.017<span style="text-decoration: underline;">7</span>    14.1   2.09<span style="color: #949494;">e</span><span style="color: #BB0000;">-45</span>    0.215     0.285</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> ab              :=      0.325     0.080<span style="text-decoration: underline;">2</span>     4.06  4.95<span style="color: #949494;">e</span><span style="color: #BB0000;">- 5</span>    0.168     0.482</span>
+<span class="r-in"><span><span class="fu">generics</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    nobs  npar    df chisq p.value logLik   AIC   BIC</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>   400     6     0     0      <span style="color: #BB0000;">NA</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">488.</span> <span style="text-decoration: underline;">2</span>994. <span style="text-decoration: underline;">3</span>030.</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># a likelihood-ratio test of b = 0 against the fitted model</span></span></span>
+<span class="r-in"><span><span class="va">fit0</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">fit</span><span class="op">@</span><span class="va">model</span>, <span class="st">"\nb == 0"</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">mediation_demo</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">fit0</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Likelihood-ratio (chi-square difference) test for SEMFit models</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> n = 400; Chisq is n times the minimized discrepancy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Df  Chisq Chisq diff Df diff Pr(&gt;Chisq)    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> fit   0   0.00                                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> fit0  1 162.05     162.05       1  &lt; 2.2e-16 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

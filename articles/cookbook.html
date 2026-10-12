@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,6 +96,7 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -114,6 +115,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -161,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -170,8 +173,8 @@
 
 
 
-    <p>Eleven task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
-<p>These recipes need medfit 0.7.0 or later. CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>).</p>
+    <p>Thirteen task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
+<p>These recipes need medfit 0.8.0 or later. CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>).</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stderr">
@@ -349,7 +352,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4349603 0.8927176 </code></pre>
+0.6560315 0.4351678 0.8930074 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
@@ -488,6 +491,66 @@ data:  a * b = 0
 MBCO = 46.753, df = 1, p-value = 8.054e-12</code></pre>
 </div>
 </div>
+</section><section class="level2"><h2 id="a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain, native engine<a class="anchor" aria-label="anchor" href="#a-nonlinear-constraint-or-a-longer-chain-native-engine"></a>
+</h2>
+<p><em>When:</em> you want to fix the direct effect at the indirect effect (<code>cp == a*b</code>), or test the indirect effect of a three-mediator-step chain, which is a product of three paths. Constraints may be nonlinear in the labels. The native engine is experimental.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">base</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a * treatment</span></span>
+<span><span class="st">  outcome ~ b * mediator1 + cp * treatment</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">base</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">tied</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">base</span>, <span class="st">"cp == a * b"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>free <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">free</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span>, tied <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">tied</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>             a         b         cp
+free 0.4559961 0.7134287 0.04057666
+tied 0.3381172 0.6831633 0.23098930</code></pre>
+</div>
+</div>
+<p>The tied fit has one more degree of freedom and its standard errors respect the constraint. <code>anova(tied, free)</code> is the likelihood-ratio test of it. For a chain <code>a</code>, <code>d</code>, <code>b</code>, <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> takes the paths and returns the minimum of the single-path tests, referred to a chi-square with one degree of freedom (conservative when several paths are zero):</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">chain</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a * treatment</span></span>
+<span><span class="st">  mediator2 ~ d * mediator1 + treatment</span></span>
+<span><span class="st">  outcome ~ b * mediator2 + mediator1 + treatment</span></span>
+<span><span class="st">"</span></span>
+<span><span class="fu"><a href="../reference/mbco_sem.html">mbco_sem</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">chain</span>, <span class="va">mediation_demo</span><span class="op">)</span>, paths <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"d"</span>, <span class="st">"b"</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Minimum-of-3 likelihood-ratio tests (MBCO) for an indirect effect
+
+data:  a * d * b = 0
+MBCO = 17.557, df = 1, p-value = 2.788e-05</code></pre>
+</div>
+</div>
+</section><section class="level2"><h2 id="joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a binary or count outcome<a class="anchor" aria-label="anchor" href="#joint-significance-for-a-binary-or-count-outcome"></a>
+</h2>
+<p><em>When:</em> the outcome is binary or a count and you want to know whether the mediated path exists, without an outcome-scale effect. Test <code>a = 0</code> and <code>b = 0</code> separately and take the larger p-value (conservative). Each test is a likelihood-ratio test for a binomial or Poisson model and an F test for a Gaussian, Gamma or <code>quasi*</code> model, whose dispersion is estimated.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="va">mediation_demo</span></span>
+<span><span class="va">d</span><span class="op">$</span><span class="va">outcome_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">outcome</span> <span class="op">&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">outcome</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+</div>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">joint_test</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">fit_a</span>, <span class="va">term_a</span>, <span class="va">fit_b</span>, <span class="va">term_b</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">one</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">fit</span>, <span class="va">term</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">known</span> <span class="op">&lt;-</span> <span class="va">fit</span><span class="op">$</span><span class="va">family</span><span class="op">$</span><span class="va">family</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"binomial"</span>, <span class="st">"poisson"</span><span class="op">)</span></span>
+<span>    <span class="va">col</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">known</span><span class="op">)</span> <span class="st">"Pr(&gt;Chi)"</span> <span class="kw">else</span> <span class="st">"Pr(&gt;F)"</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/add1.html" class="external-link">drop1</a></span><span class="op">(</span><span class="va">fit</span>, scope <span class="op">=</span> <span class="va">term</span>, test <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="va">known</span><span class="op">)</span> <span class="st">"LRT"</span> <span class="kw">else</span> <span class="st">"F"</span><span class="op">)</span><span class="op">[</span><span class="va">term</span>, <span class="va">col</span><span class="op">]</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fu">one</span><span class="op">(</span><span class="va">fit_a</span>, <span class="va">term_a</span><span class="op">)</span>, b <span class="op">=</span> <span class="fu">one</span><span class="op">(</span><span class="va">fit_b</span>, <span class="va">term_b</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">p</span>, joint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">fit_a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">mediator1</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
+<span><span class="va">fit_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">outcome_bin</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">mediator1</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span>
+<span>             data <span class="op">=</span> <span class="va">d</span>, family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">joint_test</span><span class="op">(</span><span class="va">fit_a</span>, <span class="st">"treatment"</span>, <span class="va">fit_b</span>, <span class="st">"mediator1"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>           a            b        joint
+8.096703e-09 2.024938e-12 8.096703e-09 </code></pre>
+</div>
+</div>
+<p>More: <a href="model-glm-families.html#joint-significance-test-for-the-indirect-effect">GLM families</a>.</p>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {

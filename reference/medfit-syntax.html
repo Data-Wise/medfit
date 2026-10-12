@@ -31,7 +31,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,6 +71,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
@@ -87,6 +88,8 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -121,7 +124,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>medfit Model Syntax</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
       <div class="d-none name"><code>medfit-syntax.Rd</code></div>
     </div>
 
@@ -135,11 +138,22 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
     <div class="section level2">
     <h2 id="core-statements">Core statements<a class="anchor" aria-label="anchor" href="#core-statements"></a></h2>
 
-<table class="table table"><tr><td>Statement</td><td>Meaning</td></tr><tr><td><code>y ~ x1 + x2</code></td><td>regression of <code>y</code> on <code>x1</code> and <code>x2</code></td></tr><tr><td><code>f =~ y1 + y2 + y3</code></td><td>latent variable <code>f</code> measured by the indicators</td></tr><tr><td><code>y1 ~~ y2</code></td><td>covariance; <code>y1 ~~ y1</code> a variance</td></tr><tr><td><code>y ~ a*x</code></td><td>label the path <code>a</code>; equal labels are one parameter</td></tr><tr><td><code>y ~ 0.5*x</code></td><td>fix the path at 0.5</td></tr><tr><td><code>y ~ start(0.3)*x</code>, <code>lower(0)*</code>, <code>upper(1)*</code></td><td>starting value, lower and upper bound</td></tr><tr><td><code>a == b</code>, <code>a + b == 1</code></td><td>equality constraint on labels</td></tr><tr><td><code>a &lt; b</code>, <code>a &gt; 0</code></td><td>inequality constraint; <code>label &lt; number</code> is a bound</td></tr><tr><td><code>ab := a*b</code></td><td>defined parameter, with a delta-method standard error</td></tr></table><p>Constraints must be linear in the labels. Labels used in a constraint or a
-definition must be defined in the model. A constraint with no free parameter,
-or a nonlinear one, is an error. Exogenous variables are given free
+<table class="table table"><tr><td>Statement</td><td>Meaning</td></tr><tr><td><code>y ~ x1 + x2</code></td><td>regression of <code>y</code> on <code>x1</code> and <code>x2</code></td></tr><tr><td><code>f =~ y1 + y2 + y3</code></td><td>latent variable <code>f</code> measured by the indicators</td></tr><tr><td><code>y1 ~~ y2</code></td><td>covariance; <code>y1 ~~ y1</code> a variance</td></tr><tr><td><code>y ~ a*x</code></td><td>label the path <code>a</code>; equal labels are one parameter</td></tr><tr><td><code>y ~ 0.5*x</code></td><td>fix the path at 0.5</td></tr><tr><td><code>y ~ start(0.3)*x</code>, <code>lower(0)*</code>, <code>upper(1)*</code></td><td>starting value, lower and upper bound</td></tr><tr><td><code>a == b</code>, <code>a + b == 1</code>, <code>cp == a*b</code></td><td>equality constraint on labels; may be nonlinear</td></tr><tr><td><code>a &lt; b</code>, <code>a &gt; 0</code></td><td>inequality constraint; <code>label &lt; number</code> is a bound</td></tr><tr><td><code>ab := a*b</code></td><td>defined parameter, with a delta-method standard error</td></tr></table><p>Constraints may be nonlinear in the labels (<code>cp == a*b</code>, <code>a*b == 0.1</code>,
+<code>a*b &gt; 0.1</code>, <code>ab &gt; 0</code> with <code>ab := a*b</code>), solved with the Jacobian recomputed at
+every point; a model with one tries every start and keeps the best accepted
+solution, warning when the starts disagree. A product of labels set to zero
+(<code>a*b == 0</code>, <code>b1*b2*b3 == 0</code>) is instead solved exactly: one linear fit per
+factor (<code>a == 0</code>, <code>b == 0</code>), keeping the smallest discrepancy. A sum of products
+(<code>a1*b1 + a2*b2 == 0</code>) has no exact reduction, so it is best-effort: the fit is
+the best of the starts tried, a disagreement warning means a better optimum may
+exist, and <code>n_starts</code> raises the number of starts. Labels used in a constraint
+or a definition must be defined in the model. A constraint with no free
+parameter is an error. Exogenous variables are given free
 variances and covariances, as lavaan does with <code>fixed.x = FALSE</code>. Mean
-structures (<code>y ~ 1</code>) are not supported, except that <code>y ~ 0*1</code> is accepted.</p>
+structures (<code>y ~ 1</code>) are not supported, except that <code>y ~ 0*1</code> is accepted.
+A variable cannot appear on both sides of <code>~</code> or <code>=~</code> (<code>y ~ y</code>), and a path,
+a (co)variance or an intercept takes one row: a repeated <code>y ~ x</code> is an error,
+not a second row that competes for the label.</p>
     </div>
     <div class="section level2">
     <h2 id="medfit-extensions">medfit extensions<a class="anchor" aria-label="anchor" href="#medfit-extensions"></a></h2>
@@ -188,8 +202,8 @@ rejected with the construct named.</p>
 <span class="r-in"><span>  <span class="st">"mediator1, mediator2 ~ treatment\noutcome ~ mediator1 + mediator2 + treatment"</span>,</span></span>
 <span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mediator1 ~ treatment mediator2 ~ treatment   outcome ~ mediator1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             0.4559961             0.2879984             0.5202186 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mediator1~treatment mediator2~treatment   outcome~mediator1 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           0.4559961           0.2879984           0.5202186 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># An equality constraint, written with the CONSTRAINT() keyword</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="fu"><a href="fit_sem.html">fit_sem</a></span><span class="op">(</span></span></span>

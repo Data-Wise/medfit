@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,6 +96,7 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -114,6 +115,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -161,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/getting-started.qmd" class="external-link"><code>vignettes/articles/getting-started.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/getting-started.qmd" class="external-link"><code>vignettes/articles/getting-started.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -173,7 +176,7 @@
     <div>
 <blockquote>
 <p><strong>Note</strong></p>
-<p>This site documents medfit 0.7.0 or later. CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>).</p>
+<p>This site documents medfit 0.8.0 or later. CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>).</p>
 </blockquote>
 </div>
 <p><strong>Four steps.</strong> By the end you will have fitted a mediation model, read its effects, and added an interval.</p>
@@ -466,7 +469,7 @@ Attaching package: 'generics'</code></pre>
 </tr>
 </tbody>
 </table>
-<p>For quick lookups: the <a href="refcard.html">Reference Card</a> has every function on one page, and the <a href="cookbook.html">Cookbook</a> has eleven short recipes. To understand the classes, read the <a href="introduction.html">Introduction</a>; for the math behind every effect and standard error, <a href="methods.html">Methods and Formulas</a>; for extraction from fitted models, <a href="extraction.html">Model Extraction</a>.</p>
+<p>For quick lookups: the <a href="refcard.html">Reference Card</a> has every function on one page, and the <a href="cookbook.html">Cookbook</a> has thirteen short recipes. To understand the classes, read the <a href="introduction.html">Introduction</a>; for the math behind every effect and standard error, <a href="methods.html">Methods and Formulas</a>; for extraction from fitted models, <a href="extraction.html">Model Extraction</a>.</p>
 <p>See <code>NEWS.md</code> for the latest updates.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {

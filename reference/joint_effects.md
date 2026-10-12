@@ -57,7 +57,7 @@ boot <- bootstrap_mediation(
   method = "parametric", mediation_data = fit, n_boot = 500, seed = 1
 )
 boot@ci_lower
-#> [1] 0.435042
+#> [1] 0.4210529
 boot@ci_upper
-#> [1] 0.9073042
+#> [1] 0.8812853
 ```

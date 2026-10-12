@@ -70,6 +70,8 @@ Upgrading, errors, intervals and terms
   use?](https://data-wise.github.io/medfit/articles/guide-intervals.md):
 - [Glossary and
   symbols](https://data-wise.github.io/medfit/articles/guide-glossary.md):
+- [lavaan and the native
+  engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
 
 ### Detailed guides
 

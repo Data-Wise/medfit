@@ -6,9 +6,9 @@ Fits a model written in lavaan-style syntax to raw data with medfit's
 native maximum-likelihood engine, and returns a
 [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md) object.
 The engine handles observed and latent variables, user labels, fixed
-values, starts and bounds, linear equality and inequality constraints
-(`==`, `<`, `>`), and defined parameters (`:=`) with delta-method
-standard errors.
+values, starts and bounds, equality and inequality constraints (`==`,
+`<`, `>`, linear or nonlinear), and defined parameters (`:=`) with
+delta-method standard errors.
 
 ## Usage
 
@@ -19,8 +19,9 @@ fit_sem(
   information = c("observed", "expected"),
   n_starts = NULL,
   control = list(),
-  sampling_weights = NULL,
-  se_type = c("model", "sandwich")
+  weights = NULL,
+  se_type = c("model", "sandwich"),
+  sampling_weights = lifecycle::deprecated()
 )
 ```
 
@@ -50,13 +51,16 @@ fit_sem(
   Positive integer or `NULL`: number of optimizer starts tried before
   the fit is declared failed (`NULL` uses 5). Retries use perturbed
   starts drawn under a fixed seed and never change the caller's random
-  number stream.
+  number stream. With a nonlinear constraint, which can leave several
+  local optima, every start is tried and the best accepted one is kept
+  (a warning says when the accepted starts disagree); otherwise the
+  first accepted start is used.
 
 - control:
 
   List: options passed to the optimizer (`nloptr`).
 
-- sampling_weights:
+- weights:
 
   Optional numeric vector of non-negative case weights, one per row of
   `data` (`NULL`, the default, fits unweighted). The fit is weighted
@@ -73,6 +77,12 @@ fit_sem(
   robust standard errors with `sampling.weights`, and is smaller than
   the HC3 default of the glm route by a factor that shrinks like
   \\1/n\\). Model-based standard errors are not valid under weights.
+
+- sampling_weights:
+
+  **\[deprecated\]** Renamed `weights`, the name
+  [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  uses; the old name still works with a warning.
 
 ## Value
 

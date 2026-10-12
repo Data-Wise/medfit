@@ -106,9 +106,14 @@ element.
 
 ## Limits
 
-- **Constraints must be linear in the labels.** `a + b == 1` is fine;
-  `a * b == 0.1` stops with “nonlinear constraints are not supported in
-  this version”.
+- **Nonlinear constraints are solved with their Jacobian recomputed at
+  every point.** `cp == a * b` and `a * b > 0.1` work; a nonlinear
+  inequality can be feasible on several disjoint pieces (`a * b > 0.1`
+  holds for two positive or two negative paths), so every start is tried
+  and the best one kept, with a warning when the starts disagree. A sum
+  of products such as `a1 * b1 + a2 * b2 == 0` is best-effort (no exact
+  reduction exists): treat the fit as the best of the starts, and raise
+  `n_starts` when the warning appears.
 - **A constraint needs a free parameter** and **labels must be defined**
   in the model.
 - **Equal labels are one parameter.** Giving two paths the same label
@@ -118,6 +123,8 @@ element.
 
 [Cookbook recipe
 11](https://data-wise.github.io/medfit/articles/cookbook.html#a-latent-mediator-native-engine)
+\| [Cookbook recipe
+12](https://data-wise.github.io/medfit/articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine)
 \| [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md) \|
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)

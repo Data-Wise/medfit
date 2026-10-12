@@ -92,7 +92,7 @@ tidy(fit, type = "effects", conf.int = TRUE)
   survey clusters, strata or replicate weights.
 - The `regmedint` engine accepts neither `weights` nor
   `se_type = "sandwich"`.
-- The native engine takes weights too, as `sampling_weights` in
+- The native engine takes weights too, in
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
   with its own sandwich (HC0-type) covariance; see [Methods and
   Formulas](https://data-wise.github.io/medfit/articles/methods.md).

@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,6 +96,7 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -114,6 +115,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -161,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-native-constraints.qmd" class="external-link"><code>vignettes/articles/model-native-constraints.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-native-constraints.qmd" class="external-link"><code>vignettes/articles/model-native-constraints.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -273,14 +276,14 @@ MBCO = 33.63, df = 1, p-value = 6.666e-09</code></pre>
 </h2>
 <ul>
 <li>
-<strong>Constraints must be linear in the labels.</strong> <code>a + b == 1</code> is fine; <code>a * b == 0.1</code> stops with “nonlinear constraints are not supported in this version”.</li>
+<strong>Nonlinear constraints are solved with their Jacobian recomputed at every point.</strong> <code>cp == a * b</code> and <code>a * b &gt; 0.1</code> work; a nonlinear inequality can be feasible on several disjoint pieces (<code>a * b &gt; 0.1</code> holds for two positive or two negative paths), so every start is tried and the best one kept, with a warning when the starts disagree. A sum of products such as <code>a1 * b1 + a2 * b2 == 0</code> is best-effort (no exact reduction exists): treat the fit as the best of the starts, and raise <code>n_starts</code> when the warning appears.</li>
 <li>
 <strong>A constraint needs a free parameter</strong> and <strong>labels must be defined</strong> in the model.</li>
 <li>
 <strong>Equal labels are one parameter.</strong> Giving two paths the same label equates them without a constraint line.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
-<p><a href="cookbook.html#a-latent-mediator-native-engine">Cookbook recipe 11</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>
+<p><a href="cookbook.html#a-latent-mediator-native-engine">Cookbook recipe 11</a> | <a href="cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">Cookbook recipe 12</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

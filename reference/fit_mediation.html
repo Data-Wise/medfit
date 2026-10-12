@@ -31,7 +31,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,6 +71,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
@@ -87,6 +88,8 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -121,7 +124,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit Mediation Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
       <div class="d-none name"><code>fit_mediation.Rd</code></div>
     </div>
 
@@ -170,7 +173,9 @@ with <code>engine = "native"</code>.</p></dd>
 <dd><p>Data frame containing all variables. With the <code>"glm"</code> engine, rows
 with a missing value on any variable in either formula are dropped before
 fitting, so both models share one sample; <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> and <code>@n_obs</code> count the
-rows kept.</p></dd>
+rows kept. Row-level arguments (<code>weights</code> and, in <code>...</code>, <code>subset</code>, <code>offset</code>,
+<code>etastart</code> and <code>mustart</code>) refer to the rows of <code>data</code> as passed: they are
+applied to those rows first, then incomplete rows are dropped.</p></dd>
 
 
 <dt id="arg-treatment">treatment<a class="anchor" aria-label="anchor" href="#arg-treatment"></a></dt>
@@ -191,7 +196,7 @@ model syntax given as <code>model</code> (see <code><a href="fit_sem.html">fit_s
 extracted with <code><a href="extract_mediation.html">extract_mediation()</a></code>. Supports observed and latent
 mediators, equality and inequality constraints, and <code>:=</code> parameters.
 Case <code>weights</code> and <code>se_type = "sandwich"</code> map to <code><a href="fit_sem.html">fit_sem()</a></code>'s
-<code>sampling_weights</code> (weighted maximum likelihood) and its robust
+<code>weights</code> (weighted maximum likelihood) and its robust
 sandwich covariance.</p></li>
 <li><p><code>"lmer"</code>: Linear mixed models for a treatment assigned to whole
 clusters (the 2-1-1 design), via the suggested <span class="pkg">lme4</span> package;
@@ -277,7 +282,12 @@ argument cannot be passed through.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments passed to the fitting function</p></dd>
+<dd><p>Additional arguments passed to the fitting function. With the
+<code>"glm"</code> engine, <code>subset</code> (evaluated in the calling frame), <code>offset</code>,
+<code>etastart</code> and <code>mustart</code> describe the rows of <code>data</code> as passed, so a vector
+must have length <code>nrow(data)</code>; incomplete rows are dropped after they are
+applied. Each is evaluated in the calling frame, not inside <code>data</code>, and is
+passed to both the mediator and outcome models.</p></dd>
 
 </dl></div>
     <div class="section level2">

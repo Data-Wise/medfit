@@ -12,7 +12,7 @@ pages. The engine is experimental.
 | **Structure** | serial (a chain) or parallel mediators written as syntax |
 | **Route** | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md), then `extract_mediation(fit, mediator = c(...), outcome = )` |
 | **Classes returned** | `SerialMediationData` or `ParallelMediationData` |
-| **Weights** | `fit_sem(sampling_weights = , se_type = "sandwich")` |
+| **Weights** | `fit_sem(weights = , se_type = "sandwich")` |
 
 > **Not `fit_mediation(engine = "native")`**
 >
@@ -70,7 +70,7 @@ c(chain = unname(nie(xs)), every_path = unname(nie(xs, type = "total")),
 ```
 
          chain every_path      total
-    0.07545039 0.36740438 0.53856776 
+    0.07545038 0.36740437 0.53856775 
 
 With the default `structure = "auto"`, medfit classifies the mediators
 from the model: here it finds the path from `mediator1` to `mediator2`
@@ -107,7 +107,7 @@ tidy(xp, type = "effects", conf.int = TRUE)
 
 ## Sampling weights
 
-`sampling_weights` gives weighted maximum likelihood; pair it with
+`weights` gives weighted maximum likelihood; pair it with
 `se_type = "sandwich"` for robust standard errors. The weights below are
 random, only to show the call:
 
@@ -119,7 +119,7 @@ wsyntax <- "
   outcome ~ b * mediator1 + cp * treatment + covariate1 + covariate2
   ab := a * b
 "
-wfit <- fit_sem(wsyntax, mediation_demo, sampling_weights = w, se_type = "sandwich")
+wfit <- fit_sem(wsyntax, mediation_demo, weights = w, se_type = "sandwich")
 wfit@defined
 ```
 

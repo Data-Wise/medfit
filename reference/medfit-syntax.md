@@ -19,16 +19,27 @@ per line (or separated by `;`).
 | `y ~ a*x` | label the path `a`; equal labels are one parameter |
 | `y ~ 0.5*x` | fix the path at 0.5 |
 | `y ~ start(0.3)*x`, `lower(0)*`, `upper(1)*` | starting value, lower and upper bound |
-| `a == b`, `a + b == 1` | equality constraint on labels |
+| `a == b`, `a + b == 1`, `cp == a*b` | equality constraint on labels; may be nonlinear |
 | `a < b`, `a > 0` | inequality constraint; `label < number` is a bound |
 | `ab := a*b` | defined parameter, with a delta-method standard error |
 
-Constraints must be linear in the labels. Labels used in a constraint or
-a definition must be defined in the model. A constraint with no free
-parameter, or a nonlinear one, is an error. Exogenous variables are
-given free variances and covariances, as lavaan does with
-`fixed.x = FALSE`. Mean structures (`y ~ 1`) are not supported, except
-that `y ~ 0*1` is accepted.
+Constraints may be nonlinear in the labels (`cp == a*b`, `a*b == 0.1`,
+`a*b > 0.1`, `ab > 0` with `ab := a*b`), solved with the Jacobian
+recomputed at every point; a model with one tries every start and keeps
+the best accepted solution, warning when the starts disagree. A product
+of labels set to zero (`a*b == 0`, `b1*b2*b3 == 0`) is instead solved
+exactly: one linear fit per factor (`a == 0`, `b == 0`), keeping the
+smallest discrepancy. A sum of products (`a1*b1 + a2*b2 == 0`) has no
+exact reduction, so it is best-effort: the fit is the best of the starts
+tried, a disagreement warning means a better optimum may exist, and
+`n_starts` raises the number of starts. Labels used in a constraint or a
+definition must be defined in the model. A constraint with no free
+parameter is an error. Exogenous variables are given free variances and
+covariances, as lavaan does with `fixed.x = FALSE`. Mean structures
+(`y ~ 1`) are not supported, except that `y ~ 0*1` is accepted. A
+variable cannot appear on both sides of `~` or `=~` (`y ~ y`), and a
+path, a (co)variance or an intercept takes one row: a repeated `y ~ x`
+is an error, not a second row that competes for the label.
 
 ## medfit extensions
 
@@ -75,8 +86,8 @@ coef(fit_sem(
   "mediator1, mediator2 ~ treatment\noutcome ~ mediator1 + mediator2 + treatment",
   data = mediation_demo
 ))[1:3]
-#> mediator1 ~ treatment mediator2 ~ treatment   outcome ~ mediator1 
-#>             0.4559961             0.2879984             0.5202186 
+#> mediator1~treatment mediator2~treatment   outcome~mediator1 
+#>           0.4559961           0.2879984           0.5202186 
 
 # An equality constraint, written with the CONSTRAINT() keyword
 coef(fit_sem(

@@ -55,7 +55,12 @@ SEMFit(theta, vcov, table, defined, f, n_obs, n_dropped, df, information,
 
 - converged:
 
-  Logical scalar: the acceptance gate passed
+  Logical scalar: the acceptance gate passed.
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  returns a fit only for an accepted solution (otherwise it errors), so
+  this is `TRUE` for every fit it returns and
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) does
+  not report it
 
 - data:
 

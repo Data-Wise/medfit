@@ -33,7 +33,7 @@ task recipes see the
 | Simple | `MediationData` | `glm`, `regmedint`, [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) (`lm`/`glm`, lavaan), native | model, sandwich | [simple](https://data-wise.github.io/medfit/articles/model-simple.md) |
 | Binary or count variables | `MediationData` | `glm` families | model, sandwich | [glm families](https://data-wise.github.io/medfit/articles/model-glm-families.md) |
 | Treatment-by-mediator | `InteractionMediationData` | `glm`, `regmedint`, lavaan | model; closed form (`regmedint`) | [interaction](https://data-wise.github.io/medfit/articles/model-interaction.md) |
-| Weighted | `MediationData` | `glm`; native `sampling_weights` | sandwich (HC3; native HC0-type) | [weights](https://data-wise.github.io/medfit/articles/model-weights.md) |
+| Weighted | `MediationData` | `glm`; native `weights` | sandwich (HC3; native HC0-type) | [weights](https://data-wise.github.io/medfit/articles/model-weights.md) |
 | Serial | `SerialMediationData` | `lm`/`glm` with `mediator_models`, lavaan, native via [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) | model | [serial](https://data-wise.github.io/medfit/articles/model-serial.md) |
 | Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, native via [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) | model | [parallel](https://data-wise.github.io/medfit/articles/model-parallel.md) |
 | Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](https://data-wise.github.io/medfit/articles/model-joint.md) |

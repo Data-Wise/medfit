@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,6 +96,7 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -114,6 +115,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -161,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -170,7 +173,7 @@
 
 
 
-    <p>CRAN has medfit 0.3.2; this site documents 0.7.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
+    <p>CRAN has medfit 0.3.2; this site documents 0.8.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
 <div>
 <blockquote>
 <p><strong>The short version</strong></p>
@@ -227,13 +230,22 @@
 <td>means come from the mediator model’s design matrix; with weights, they are weighted</td>
 </tr>
 <tr class="odd">
+<td>0.8.0</td>
+<td>the names in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> of a <code>SEMFit</code>
+</td>
+<td>an unlabeled parameter was <code>"M ~ X"</code> or <code>"X ~~ X"</code> (with spaces) and a loading <code>"m2 ~ eta"</code>
+</td>
+<td>
+<code>"M~X"</code>, <code>"X~~X"</code> and <code>"eta=~m2"</code>, the names <code>lavaan::coef()</code> uses; labeled parameters are unchanged (<code>SEMFit</code> is experimental)</td>
+</tr>
+<tr class="even">
 <td>0.5.0</td>
 <td>
 <code>se_type = "sandwich"</code> with a treatment-by-mediator term</td>
 <td>returned the model-based covariance, with no warning</td>
 <td>applies the sandwich estimator</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>0.5.0</td>
 <td>lavaan fits with custom path labels</td>
 <td>the alias rows of <code>@vcov</code> were all zero, so a parametric bootstrap had a zero-width interval</td>
@@ -346,10 +358,14 @@
 <td>0.7.0</td>
 <td>the native maximum-likelihood engine (<a href="model-native.html">page</a>), <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>, and sampling weights with robust standard errors for it</td>
 </tr>
+<tr class="odd">
+<td>0.8.0</td>
+<td>nonlinear constraints in the native engine (<a href="model-native-constraints.html">page</a>), <code>mbco_sem(paths = )</code> for a product of k paths, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>/<code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>/<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> for <code>SEMFit</code>, <a href="lavaan-comparison.html">lavaan and the native engine</a>, and cookbook recipes 12 and 13</td>
+</tr>
 </tbody>
 </table></section><section class="level2"><h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>
 </h2>
-<p>0.7.0 adds <code>lifecycle</code> and <code>nloptr (&gt;= 1.0.4)</code> to <code>Imports</code>, and <code>OpenMx</code> to <code>Suggests</code> (the tests use it as an independent check).</p>
+<p>0.7.0 adds <code>lifecycle</code> and <code>nloptr (&gt;= 1.0.4)</code> to <code>Imports</code>, and <code>OpenMx</code> to <code>Suggests</code> (the tests use it as an independent check). 0.8.0 adds <code>withr</code> to <code>Suggests</code> (tests only).</p>
 </section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
 <p><a href="guide-troubleshooting.html">Troubleshooting</a> | <a href="models.html">Models</a> | <a href="methods.html">Methods and Formulas</a></p>

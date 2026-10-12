@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.7.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,6 +96,7 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -114,6 +115,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -161,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-native-multi.qmd" class="external-link"><code>vignettes/articles/model-native-multi.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-native-multi.qmd" class="external-link"><code>vignettes/articles/model-native-multi.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -195,7 +198,7 @@
 </tr>
 <tr class="even">
 <td><strong>Weights</strong></td>
-<td><code>fit_sem(sampling_weights = , se_type = "sandwich")</code></td>
+<td><code>fit_sem(weights = , se_type = "sandwich")</code></td>
 </tr>
 </tbody>
 </table>
@@ -248,7 +251,7 @@ Attaching package: 'generics'</code></pre>
 <span>  total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/te.html">te</a></span><span class="op">(</span><span class="va">xs</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>     chain every_path      total
-0.07545039 0.36740438 0.53856776 </code></pre>
+0.07545038 0.36740437 0.53856775 </code></pre>
 </div>
 </div>
 <p>With the default <code>structure = "auto"</code>, medfit classifies the mediators from the model: here it finds the path from <code>mediator1</code> to <code>mediator2</code> and returns the serial class. See <a href="model-serial.html">Serial mediation</a> for what the three numbers mean.</p>
@@ -279,7 +282,7 @@ Attaching package: 'generics'</code></pre>
 </div>
 </section><section class="level2"><h2 id="sampling-weights">Sampling weights<a class="anchor" aria-label="anchor" href="#sampling-weights"></a>
 </h2>
-<p><code>sampling_weights</code> gives weighted maximum likelihood; pair it with <code>se_type = "sandwich"</code> for robust standard errors. The weights below are random, only to show the call:</p>
+<p><code>weights</code> gives weighted maximum likelihood; pair it with <code>se_type = "sandwich"</code> for robust standard errors. The weights below are random, only to show the call:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">mediation_demo</span><span class="op">)</span>, <span class="fl">0.5</span>, <span class="fl">2</span><span class="op">)</span></span>
@@ -288,7 +291,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="st">  outcome ~ b * mediator1 + cp * treatment + covariate1 + covariate2</span></span>
 <span><span class="st">  ab := a * b</span></span>
 <span><span class="st">"</span></span>
-<span><span class="va">wfit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">wsyntax</span>, <span class="va">mediation_demo</span>, sampling_weights <span class="op">=</span> <span class="va">w</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span><span class="op">)</span></span>
+<span><span class="va">wfit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">wsyntax</span>, <span class="va">mediation_demo</span>, weights <span class="op">=</span> <span class="va">w</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span><span class="op">)</span></span>
 <span><span class="va">wfit</span><span class="op">@</span><span class="va">defined</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>  name  expr       est         se

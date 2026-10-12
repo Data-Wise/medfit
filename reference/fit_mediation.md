@@ -44,7 +44,10 @@ fit_mediation(
   with a missing value on any variable in either formula are dropped
   before fitting, so both models share one sample;
   [`nobs()`](https://rdrr.io/r/stats/nobs.html) and `@n_obs` count the
-  rows kept.
+  rows kept. Row-level arguments (`weights` and, in `...`, `subset`,
+  `offset`, `etastart` and `mustart`) refer to the rows of `data` as
+  passed: they are applied to those rows first, then incomplete rows are
+  dropped.
 
 - treatment:
 
@@ -73,8 +76,8 @@ fit_mediation(
     constraints, and `:=` parameters. Case `weights` and
     `se_type = "sandwich"` map to
     [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)'s
-    `sampling_weights` (weighted maximum likelihood) and its robust
-    sandwich covariance.
+    `weights` (weighted maximum likelihood) and its robust sandwich
+    covariance.
 
   - `"lmer"`: Linear mixed models for a treatment assigned to whole
     clusters (the 2-1-1 design), via the suggested lme4 package; needs
@@ -174,7 +177,12 @@ fit_mediation(
 
 - ...:
 
-  Additional arguments passed to the fitting function
+  Additional arguments passed to the fitting function. With the `"glm"`
+  engine, `subset` (evaluated in the calling frame), `offset`,
+  `etastart` and `mustart` describe the rows of `data` as passed, so a
+  vector must have length `nrow(data)`; incomplete rows are dropped
+  after they are applied. Each is evaluated in the calling frame, not
+  inside `data`, and is passed to both the mediator and outcome models.
 
 ## Value
 
