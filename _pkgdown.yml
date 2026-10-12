@@ -137,6 +137,8 @@ navbar:
         href: articles/cookbook.html#i-use-lavaan
       - text: "11. A latent mediator"
         href: articles/cookbook.html#a-latent-mediator-native-engine
+      - text: "12. A nonlinear constraint or a longer chain"
+        href: articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine
     articles:
       text: Articles
       menu:

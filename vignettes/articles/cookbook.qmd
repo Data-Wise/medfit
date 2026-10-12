@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-Eleven task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Twelve task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
@@ -300,6 +300,40 @@ indirect effect as the minimum of two likelihood-ratio tests, refitting with
 ```{r}
 #| label: r11-latent-mbco
 mbco_sem(fit_sem(syntax, ldat), "a", "b")
+```
+
+## 12. A nonlinear constraint or a longer chain, native engine
+
+*When:* you want to fix the direct effect at the indirect effect (`cp == a*b`), or
+test the indirect effect of a three-mediator-step chain, which is a product of
+three paths. Constraints may be nonlinear in the labels. The native engine is
+experimental.
+
+```{r}
+#| label: r12-nonlinear
+base <- "
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + cp * treatment
+"
+free <- fit_sem(base, mediation_demo)
+tied <- fit_sem(paste0(base, "cp == a * b"), mediation_demo)
+rbind(free = coef(free)[c("a", "b", "cp")], tied = coef(tied)[c("a", "b", "cp")])
+```
+
+The tied fit has one more degree of freedom and its standard errors respect the
+constraint. `anova(tied, free)` is the likelihood-ratio test of it. For a chain
+`a`, `d`, `b`, `mbco_sem()` takes the paths and returns the minimum of the single-path
+tests, referred to a chi-square with one degree of freedom (conservative when
+several paths are zero):
+
+```{r}
+#| label: r12-chain
+chain <- "
+  mediator1 ~ a * treatment
+  mediator2 ~ d * mediator1 + treatment
+  outcome ~ b * mediator2 + mediator1 + treatment
+"
+mbco_sem(fit_sem(chain, mediation_demo), paths = c("a", "d", "b"))
 ```
 
 More: [Methods and Formulas](methods.html).

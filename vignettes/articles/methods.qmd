@@ -584,7 +584,11 @@ nonlinear rows (the multipliers from $\nabla F + \sum_i \lambda_i \nabla c_i = 0
 in the reduced Hessian; the objective's Hessian alone can call a saddle of the
 restricted problem a minimum. A model with a nonlinear constraint can have
 several local optima, so all `n_starts` starts are tried and the best accepted one
-is kept. A product of labels set to zero ($ab = 0$, $b_1 b_2 b_3 = 0$) is not
+is kept. SLSQP stops along a flat constraint tangent, up to about $3\times10^{-5}$
+from the optimum, so an accepted fit with an active nonlinear row takes full Newton
+steps on the KKT system of the active set (using the same Lagrangian Hessian); the
+polished point replaces the solution only when the acceptance test accepts it again
+and the discrepancy does not rise. A product of labels set to zero ($ab = 0$, $b_1 b_2 b_3 = 0$) is not
 solved this way, because its Jacobian vanishes at the solution: it holds exactly
 when one factor is zero, so the model is refitted once per factor from the default
 start and the smallest discrepancy is kept. At the solution the active constraints
