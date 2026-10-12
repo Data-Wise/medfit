@@ -46,9 +46,9 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [ ] Tell the RMediation session `anova()` and W3 are in dev; human review
 
 ## Phase 4: Docs (W5)
-- [ ] T20 lavaan-vs-medfit article, executed at site build (needs T11, T13)
-- [ ] T21 Docs for nonlinear constraints and audit gaps (needs T13-T16) (class count and engines line done 2026-10-11 in CLAUDE.md and AGENTS.md)
-- [ ] T22 glm joint-significance recipe (G11)
+- [x] T20 lavaan-vs-medfit article, executed at site build (needs T11, T13) (#161: article, 18-row table checked by live probes)
+- [x] T21 Docs for nonlinear constraints and audit gaps (needs T13-T16) (class count and engines line done 2026-10-11 in CLAUDE.md and AGENTS.md) (#162: cookbook recipe 12, polish in methods, 0.7.0 native-route wording fixed, CLAUDE.md and AGENTS.md)
+- [x] T22 glm joint-significance recipe (G11) (#163: joint_test(), recipe 13, LRT for known dispersion and F otherwise)
 
 ### Checkpoint D
 - [ ] Docs tests and strict `check` pass; site builds; human review
