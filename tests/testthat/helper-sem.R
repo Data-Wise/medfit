@@ -211,7 +211,10 @@ sem_scale_sample <- function(smp, s) {
 # matrix S * n / (n - 1) with numObs = n, labels p1..pq so the parameters line up.
 # `lbound` (named by parameter name) puts lower bounds on those parameters. Returns the fitted
 # model; OpenMx's own numerical Hessian gives the SEs.
-sem_openmx <- function(mod, smp, lbound = NULL) {
+# `start` replaces the default start vector (native parameter order); `constraints` are strings in the oracle's
+# labels (`p<k>`, the k-th native parameter), e.g. "p3 - p1 * p2 == 0" or "p1 * p2 - 0.3 > 0", each becoming an
+# mxAlgebra and an mxConstraint.
+sem_openmx <- function(mod, smp, lbound = NULL, start = NULL, constraints = character()) {
   ram <- mod$ram
   lab <- function(df, default) {
     key <- ifelse(nzchar(df$label), df$label, default)
@@ -219,7 +222,7 @@ sem_openmx <- function(mod, smp, lbound = NULL) {
   }
   a_lab <- lab(mod$a, paste0(mod$a$row, "~", mod$a$col))
   s_lab <- lab(mod$s, paste0(mod$s$row, "~~", mod$s$col))
-  start <- .sem_default_start(ram, smp) # nolint: object_usage_linter.
+  if (is.null(start)) start <- .sem_default_start(ram, smp) # nolint: object_usage_linter.
   lower_for <- function(lbl) {
     nm <- ram$par_names[as.integer(sub("^p", "", lbl))]
     if (!is.na(lbl) && nm %in% names(lbound)) lbound[[nm]] else NA_real_
@@ -253,7 +256,13 @@ sem_openmx <- function(mod, smp, lbound = NULL) {
   on.exit(for (o in names(old)) OpenMx::mxOption(NULL, o, if (old[[o]] == "Auto") "Auto" else as.numeric(old[[o]])))
   m <- do.call(OpenMx::mxModel, c(
     list("oracle", type = "RAM", manifestVars = ram$obs, latentVars = setdiff(ram$vars, ram$obs)),
-    paths, list(OpenMx::mxData(observed = cv, type = "cov", numObs = smp$n))
+    paths, list(OpenMx::mxData(observed = cv, type = "cov", numObs = smp$n)),
+    unlist(lapply(seq_along(constraints), function(i) {
+      e <- str2lang(constraints[[i]])
+      nm <- paste0("g", i)
+      list(do.call(OpenMx::mxAlgebra, list(e[[2]], name = nm)),
+           do.call(OpenMx::mxConstraint, list(call(as.character(e[[1]]), as.name(nm), e[[3]]), name = paste0("k", i))))
+    }), recursive = FALSE)
   ))
   suppressMessages(OpenMx::mxRun(m, silent = TRUE))
 }
