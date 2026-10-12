@@ -43,7 +43,8 @@ Suggests:
     regmedint,
     sandwich,
     testthat (>= 3.0.0),
-    tibble
+    tibble,
+    withr
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))

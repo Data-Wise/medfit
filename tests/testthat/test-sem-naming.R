@@ -50,7 +50,7 @@ test_that("a planted spaced default name is caught by the name checks", {
 })
 
 test_that("fit_sem(sampling_weights =) still works and warns; weights = is the name", {
-  rlang::local_options(lifecycle_verbosity = "warning")
+  withr::local_options(lifecycle_verbosity = "warning")
   w <- seq_len(nrow(mediation_demo)) %% 3 + 1
   new <- fit_sem(naming_syntax[["observed"]], mediation_demo, weights = w, se_type = "sandwich")
   expect_warning(
@@ -75,7 +75,7 @@ test_that("fit_mediation(engine = 'native', weights =) passes the weights to fit
 })
 
 test_that("mbco_sem(object =) is the name; fit = still works with a warning in every call form", {
-  rlang::local_options(lifecycle_verbosity = "warning")
+  withr::local_options(lifecycle_verbosity = "warning")
   fit <- fit_sem(naming_syntax[["labeled"]], mediation_demo)
   ref <- mbco_sem(fit, "a", "b")
   expect_equal(mbco_sem(object = fit, a = "a", b = "b")$statistic, ref$statistic)
