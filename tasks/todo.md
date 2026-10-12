@@ -51,8 +51,8 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [x] T22 glm joint-significance recipe (G11) (#163: joint_test(), recipe 13, LRT for known dispersion and F otherwise)
 
 ### Checkpoint D
-- [ ] Docs tests and strict `check` pass; site builds; human review
+- [x] Docs tests and strict `check` pass (2026-10-11, dev 743d9e8: 0/0/0); site builds (pkgdown job green on #161-#163); human review waived (GRILL-0.8.0-release R2)
 
 ## Phase 5: Release
-- [ ] T23 0.8.0 release grill
+- [x] T23 0.8.0 release grill (planning/specs/GRILL-0.8.0-release-2026-10-11.md: GitHub only, release on the evidence, 0.8.0)
 - [ ] T24 Release PR (release engineering); E1 matrix row only on explicit request
