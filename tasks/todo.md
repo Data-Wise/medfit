@@ -55,4 +55,4 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 
 ## Phase 5: Release
 - [x] T23 0.8.0 release grill (planning/specs/GRILL-0.8.0-release-2026-10-11.md: GitHub only, release on the evidence, 0.8.0)
-- [ ] T24 Release PR (release engineering); E1 matrix row only on explicit request
+- [x] T24 Release PR (release engineering): #164 bump, #165 release merge commit 37171ec, tag v0.8.0, GitHub release; r-universe pending (STATUS release_0.8.0); E1 matrix row only on explicit request
