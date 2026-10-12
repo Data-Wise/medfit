@@ -111,7 +111,8 @@ print(do.call(rbind, lapply(split(res, list(res$cell, res$n), drop = TRUE), cell
 est_worst <- max(res$est_gap, na.rm = TRUE)
 se_worst <- max(res$se_rel, na.rm = TRUE)
 cat(sprintf("\nWorst estimate gap %.3e (rule 1e-6): %s; worst SE difference %.3e (rule 1e-3): %s\n",
-            est_worst, if (is.finite(est_worst) && est_worst <= 1e-6) "PASS" else "FAIL", se_worst, if (is.finite(se_worst) && se_worst <= 1e-3) "PASS" else "FAIL"))
+            est_worst, if (is.finite(est_worst) && est_worst <= 1e-6) "PASS" else "FAIL", se_worst,
+            if (is.finite(se_worst) && se_worst <= 1e-3) "PASS" else "FAIL"))
 over <- res[!is.na(res$est_gap) & res$est_gap > 1e-6, c("cell", "n", "seed", "est_gap", "lav_gap")]
 cat(sprintf("Runs with an estimate gap above 1e-6: %d of %d\n", nrow(over), nrow(res)))
 if (nrow(over)) {

@@ -95,7 +95,8 @@ st <- do.call(rbind, lapply(out, `[[`, "st"))
 
 cat("SE gate, constrained cells (maximum relative SE difference against OpenMx):\n")
 print(do.call(rbind, lapply(split(res, list(res$cell, res$n), drop = TRUE), function(df) {
-  data.frame(runs = nrow(df), failed = sum(!df$native_ok | !df$omx_ok | is.na(df$rel_se)), max_rel_se = max(df$rel_se, na.rm = TRUE),
+  data.frame(runs = nrow(df), failed = sum(!df$native_ok | !df$omx_ok | is.na(df$rel_se)),
+             max_rel_se = max(df$rel_se, na.rm = TRUE),
              max_est_gap = max(df$est_gap, na.rm = TRUE))
 })), digits = 3)
 worst <- max(res$rel_se, na.rm = TRUE)
