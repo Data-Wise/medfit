@@ -254,6 +254,11 @@
       next
     }
     gate <- .sem_gate(res$solution, res$status, ram, smp, lb, ub, constraints)
+    if (gate$accepted && !is.null(constraints)) {
+      pol <- .sem_polish_accept(res, gate, ram, smp, lb, ub, constraints)
+      res <- pol$res
+      gate <- pol$gate
+    }
     gate$f <- res$objective
     gate$theta <- res$solution
     attempts[[i]] <- gate

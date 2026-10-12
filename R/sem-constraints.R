@@ -378,7 +378,7 @@
   z_theta <- matrix(0, length(theta), ncol(z))
   z_theta[free, ] <- z * u[free]
   list(u = u, ax = ax, is_eq = is_eq, text = text, dist = dist, at_lb = at_lb, at_ub = at_ub, free = free,
-       active_row = active_row, z = z, z_theta = z_theta, nl_pos = nl_pos)
+       active_row = active_row, z = z, z_theta = z_theta, nl_pos = nl_pos, cval = cval)
 }
 
 .sem_gate_projected <- function(theta, status, ram, smp, lb, ub, cons) {
@@ -433,6 +433,99 @@
     }
   }
   out
+}
+
+# Newton polish of an accepted solution that has an active nonlinear row. SLSQP stops along a flat
+# constraint tangent, where the objective moves by less than its `ftol_rel`, so an accepted point can sit
+# 1e-5 from the optimum (the stationarity gate allows a decrement of 1e-3). The polish takes full Newton
+# steps on the KKT system of the active set, fixed at the accepted point (active rows as equalities,
+# coordinates at a bound held),
+#   [H_L  M'] [dx]   [-g]
+#   [M    0 ] [mu] = [-c],
+# in the solver's natural units, with H_L the Lagrangian Hessian (`.sem_lagrangian_hessian()`): on a curved
+# row the Hessian of the objective alone is the wrong curvature. An iterate is kept only while the KKT
+# merit (the norm of the gradient projected onto the null space of the active rows plus the distance to the
+# active rows) falls. Returns the polished `theta`, or NULL when there is nothing to polish or the polish is
+# not trustworthy: no active nonlinear row, a vanishing or dependent active row (`a*b == 0` at a = b = 0), a
+# singular KKT matrix, an active set that changes, an iterate outside the bounds or a step longer than
+# `.sem_polish_reach`. The caller re-runs the acceptance gate on the result.
+.sem_polish_maxit <- 8L
+.sem_polish_reach <- 1e-2
+.sem_polish_rcond <- 1e-13
+.sem_polish <- function(theta, ram, smp, lb, ub, cons) {
+  act0 <- .sem_active_set(theta, ram, smp, lb, ub, cons)
+  if (!any(act0$active_row[act0$nl_pos])) {
+    return(NULL)
+  }
+  kkt <- function(th) {
+    act <- .sem_active_set(th, ram, smp, lb, ub, cons)
+    r <- .sem_eval(th, ram, smp, deriv = TRUE)
+    if (is.null(r) || !identical(act$active_row, act0$active_row) || !identical(act$free, act0$free)) {
+      return(NULL)
+    }
+    free <- act$free
+    m <- act$ax[act$active_row, free, drop = FALSE]
+    cval <- act$cval[act$active_row]
+    hx <- .sem_hess_f(th, ram, smp) * outer(act$u, act$u)
+    gx <- r$g * act$u
+    if (!nrow(m) || any(sqrt(rowSums(m^2)) <= 1e-12) || !all(is.finite(c(m, cval, hx, gx)))) {
+      return(NULL)
+    }
+    hl <- .sem_lagrangian_hessian(hx, gx, act, cons, th)[free, free, drop = FALSE]
+    k <- nrow(m)
+    mat <- rbind(cbind(hl, t(m)), cbind(m, matrix(0, k, k)))
+    rc <- tryCatch(rcond(mat), error = function(e) 0)
+    if (!is.finite(rc) || rc < .sem_polish_rcond) {
+      return(NULL)
+    }
+    sol <- solve(mat, c(-gx[free], -cval))
+    qrm <- qr(t(m))
+    proj <- gx[free] - qr.fitted(qrm, gx[free])
+    list(step = sol[seq_len(sum(free))], free = free, u = act$u,
+         merit = sqrt(sum(proj^2)) + sqrt(sum((cval / sqrt(rowSums(m^2)))^2)))
+  }
+  cur <- kkt(theta)
+  if (is.null(cur)) {
+    return(NULL)
+  }
+  th <- theta
+  for (it in seq_len(.sem_polish_maxit)) {
+    cand <- th
+    cand[cur$free] <- th[cur$free] + cur$step * cur$u[cur$free]
+    if (any(cand < lb | cand > ub)) {
+      break
+    }
+    nxt <- kkt(cand)
+    if (is.null(nxt) || nxt$merit >= cur$merit) {
+      break
+    }
+    th <- cand
+    cur <- nxt
+  }
+  if (identical(th, theta) || max(abs(th - theta) / cur$u) > .sem_polish_reach) {
+    return(NULL)
+  }
+  th
+}
+
+# The polished solution replaces the accepted one only if the acceptance gate accepts it again and the
+# discrepancy has not risen by more than `.sem_polish_f_slack` (the point it leaves may sit a little off the
+# constraint, which lowers the discrepancy by about the multiplier times the violation, so a small rise is
+# the polish removing that).
+.sem_polish_f_slack <- 1e-8
+.sem_polish_accept <- function(res, gate, ram, smp, lb, ub, cons) {
+  pol <- .sem_polish(res$solution, ram, smp, lb, ub, cons)
+  if (is.null(pol)) {
+    return(list(res = res, gate = gate))
+  }
+  r <- .sem_eval(pol, ram, smp, deriv = FALSE)
+  g2 <- .sem_gate(pol, res$status, ram, smp, lb, ub, cons)
+  if (is.null(r) || !g2$accepted || r$f > res$objective + .sem_polish_f_slack) {
+    return(list(res = res, gate = gate))
+  }
+  res$solution <- pol
+  res$objective <- r$f
+  list(res = res, gate = g2)
 }
 
 # The Hessian of the Lagrangian in the solver's natural units: the objective's Hessian plus, for each active

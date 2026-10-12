@@ -91,6 +91,14 @@
 
 ## Bug fixes
 
+* Native SEM fits with an active nonlinear constraint (`cp == a*b`, `a*b > k`,
+  `a*b + cp == 0`) are polished after the solver is accepted. SLSQP stops along a
+  flat constraint tangent, so estimates could sit up to 4e-5 from the exact
+  optimum; a few Newton steps on the KKT system (using the Lagrangian Hessian)
+  now bring them within 1e-10 of a fit with the constraint solved out. The
+  acceptance gate is unchanged and is re-run on the polished point, which
+  replaces the accepted one only if it is accepted again.
+
 * `fit_sem()` now gives the same verdict on a wrong-side active bound whether or
   not the model has constraint lines. A solution sitting at a bound with the
   gradient pointing into the interior (a point that is not a local minimum) was

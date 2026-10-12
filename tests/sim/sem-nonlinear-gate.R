@@ -13,17 +13,20 @@
 # native objective is compared at the same parameterization by evaluating `.sem_eval()` at OpenMx's solution.
 #   objective   native f is not worse than OpenMx's best optimum by more than 1e-8 (eq, zero: every run; ineq: at
 #               least 90% of runs, the best-branch rate; sum: reported only)
-#   estimates   within 1e-4 of OpenMx when the two objectives agree to 1e-8 (same optimum), and within 1e-4 of the
-#               reparameterized fit. The plan's rule was 1e-5; measured at 240 runs the native estimates sit up to
-#               3.3e-5 from BOTH oracles (which agree with each other to 1e-7) in all four problems: SLSQP stops
-#               along a flat constraint tangent where the objective moves by less than ftol_rel. Statistically
-#               negligible (SEs agree to 1.1e-4) but short of 1e-5; a Newton polish after acceptance would close it
+#   estimates   within 1e-5 of the reparameterized fit (the exact optimum: a fit with the constraint solved out,
+#               in one parameter fewer) in every run, and within 1e-4 of OpenMx when the two objectives agree to 1e-8
+#               (same optimum). The plan's rule was 1e-5 for both. Before the Newton polish of `.sem_optimize()` the
+#               native estimates sat up to 4.1e-5 from both oracles, because SLSQP stops along a flat constraint
+#               tangent; now they sit within 6e-11 of the reparameterized fit. OpenMx is looser: in 4 of 240 runs (the
+#               active inequality, serial structure) its own estimates are up to 4.1e-5 from the exact optimum (its
+#               objective up to 4.6e-9 above it), so 1e-5 against OpenMx cannot be met by any correct solver there
 #   feasible    the constraint holds to 1e-6; no improper solution
 #   covariance  the Jacobian annihilates the covariance, |J V| / |V| <= 1e-8, for an active constraint
 #   SEs         within 1e-3 (relative) of a reparameterized fit with the constraint solved out and delta-method
 #               standard errors, when that fit reaches the same optimum; plus one fixed-seed bootstrap check
 # `MUTANT=<name>` plants a defect and the gate must then exit 1; names: linear (the row classified as linear),
-# larger (the larger-objective branch is kept), stale (Jacobian frozen at a fixed point), noproj (projection omitted).
+# larger (the larger-objective branch is kept), estoff (the OpenMx estimate gap inflated by 1e-3), stale (Jacobian
+# frozen at a fixed point), noproj (projection omitted).
 # Run from the package root:  Rscript tests/sim/sem-nonlinear-gate.R   (SEEDS=10 by default)
 # Results: tests/sim/results/sem-nonlinear-gate-<date>.csv (a mutant run writes to the temporary directory)
 
@@ -37,7 +40,8 @@ mxOption(NULL, "Number of Threads", 1)
 seeds <- seq_len(as.integer(Sys.getenv("SEEDS", "10")))
 mutant <- Sys.getenv("MUTANT", "")
 f_tol <- 1e-8
-est_tol <- 1e-4
+est_tol <- 1e-5
+omx_tol <- 1e-4
 feas_tol <- 1e-6
 ann_tol <- 1e-8
 se_tol <- 1e-3
@@ -186,8 +190,8 @@ one <- function(i) {
   set.seed(1e4L * g$seed + g$n + 7L * i %% 97L)
   d <- st$sim(g$n, pr$truth)
   row <- data.frame(g, native_ok = FALSE, improper = NA, feas = NA_real_, active = NA, omx_ok = FALSE,
-                    f_gap = NA_real_, same = NA, est_gap = NA_real_, ref_gap = NA_real_, ann = NA_real_,
-                    se_rel = NA_real_, se_oracle = FALSE)
+                    f_gap = NA_real_, same = NA, est_gap = NA_real_, ref_gap = NA_real_,
+                    ann = NA_real_, se_rel = NA_real_, se_oracle = FALSE)
   fit <- tryCatch(suppressWarnings(fit_sem(paste0(st$syntax, "\n", pr$text), d, n_starts = 5L)),
                   error = function(e) NULL)
   if (is.null(fit)) return(row)
@@ -207,7 +211,7 @@ one <- function(i) {
     row$omx_ok <- TRUE
     row$f_gap <- fit@f - best$f
     row$same <- abs(row$f_gap) <= f_tol
-    if (row$same) row$est_gap <- max(abs(th - best$theta))
+    if (row$same) row$est_gap <- max(abs(th - best$theta)) + if (mutant == "estoff") 1e-3 else 0
   }
   # covariance annihilated by the Jacobian of an active constraint
   if (row$active) {
@@ -318,7 +322,7 @@ checks <- c(
   oracle_ran = mean(runs$omx_ok[gated]) >= 0.9,
   never_worse_eq_zero = all(eqz$f_gap <= f_tol),
   ineq_best_branch = mean(ineq$f_gap <= f_tol) >= ineq_rate,
-  estimates_vs_openmx = all(runs$est_gap <= est_tol, na.rm = TRUE),
+  estimates_vs_openmx = all(runs$est_gap <= omx_tol, na.rm = TRUE),
   estimates_vs_reparam = all(runs$ref_gap <= est_tol, na.rm = TRUE),
   jacobian_annihilates = nrow(act_runs) > 0L && all(act_runs$ann <= ann_tol),
   se_vs_reparameterized = nrow(se_runs) >= 0.5 * sum(runs$problem %in% c("eq", "ineq")) &&
