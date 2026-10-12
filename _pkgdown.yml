@@ -107,6 +107,10 @@ navbar:
         href: articles/guide-intervals.html
       - text: "Glossary and symbols"
         href: articles/guide-glossary.html
+      - text: "Native engine in five minutes"
+        href: articles/native-quickstart.html
+      - text: "The native engine guide"
+        href: articles/native-guide.html
       - text: "lavaan and the native engine"
         href: articles/lavaan-comparison.html
     cookbook:
@@ -141,6 +145,14 @@ navbar:
         href: articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine
       - text: "13. Joint significance for a glm"
         href: articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome
+      - text: "14. Compare two native models"
+        href: articles/cookbook.html#compare-two-native-models
+      - text: "15. A defined parameter and its interval"
+        href: articles/cookbook.html#a-defined-parameter-and-its-interval
+      - text: "16. Bound a variance or fix a path"
+        href: articles/cookbook.html#bound-a-variance-or-fix-a-path
+      - text: "17. Check a native fit before trusting it"
+        href: articles/cookbook.html#check-a-native-fit-before-trusting-it
     articles:
       text: Articles
       menu:
@@ -275,6 +287,8 @@ articles:
       - '`articles/guide-troubleshooting`'
       - '`articles/guide-intervals`'
       - '`articles/guide-glossary`'
+      - '`articles/native-quickstart`'
+      - '`articles/native-guide`'
       - '`articles/lavaan-comparison`'
   - title: "Detailed guides"
     contents:
