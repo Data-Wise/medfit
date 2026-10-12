@@ -22,6 +22,7 @@ model, from one mediator to a latent variable.
 
 | Version | What you get |
 |---|---|
+| **0.8.0** | Nonlinear constraints (`cp == a*b`, `a*b > k`), `mbco_sem(paths = )` for a product of k paths, `anova()`, `tidy()` and `glance()` for `SEMFit`, one lavaan-style naming convention; the lavaan comparison article and cookbook recipes 12 and 13 |
 | **0.7.0** | A native maximum-likelihood SEM engine (experimental): latent mediators, constraints, defined parameters, `fit_sem()`, `mbco_sem()` |
 | **0.6.0** | Cluster-randomized designs (2-1-1) with `engine = "lmer"`, Kenward-Roger intervals, cluster bootstrap; the Reference Card and Cookbook |
 | **0.5.0** | Joint mediation (`JointMediationData`), the bundled `mediation_demo` data; two results fixed: serial `te()`/`pm()` sum every path, `confint()` path rows are found by name |
@@ -38,7 +39,7 @@ install.packages(
 )
 ```
 
-That gives 0.7.0 as a pre-built binary, with no compiler. From GitHub instead:
+That gives 0.8.0 as a pre-built binary, with no compiler. From GitHub instead:
 `pak::pak("data-wise/medfit")` (compiles `nloptr` unless `lme4` already brought it in).
 
 > **CRAN has 0.3.2, which does not run the examples on this site.** It lacks
@@ -324,7 +325,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.7.0. https://data-wise.github.io/medfit/
+R package version 0.8.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.
