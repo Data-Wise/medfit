@@ -172,10 +172,10 @@ test_that("recipes 14-17 run after the setup chunk alone and say what they claim
   expect_gt(stats::anova(reduced, full)$`Pr(>Chisq)`[2], 0.5)
 })
 
-test_that("the native quickstart and guide exist, are indexed, and their links resolve", {
+test_that("the native quickstart, tutorial and guide exist, are indexed, and their links resolve", {
   pk <- article_text("cookbook.qmd") # skips without vignettes
   pkg <- paste(readLines(testthat::test_path("..", "..", "_pkgdown.yml"), warn = FALSE), collapse = "\n")
-  for (a in c("native-quickstart", "native-guide")) {
+  for (a in c("native-quickstart", "native-tutorial", "native-guide")) {
     expect_true(grepl(paste0("articles/", a, "`"), pkg, fixed = TRUE), info = a)
     expect_true(grepl(paste0("articles/", a, ".html"), pkg, fixed = TRUE), info = a)
     txt <- article_text(paste0(a, ".qmd"))
