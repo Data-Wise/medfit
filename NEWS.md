@@ -6,7 +6,12 @@
   minutes" (write, fit, read, test, constrain, extract) and "The native engine
   guide" (syntax, fitting and reading, standard errors and weights, constraints and
   how each kind is solved, model comparison and the MBCO test, diagnostics, the route
-  to the mediation objects, limits).
+  to the mediation objects, limits). A third page, "Native engine, step by step",
+  walks the same path in eight checked steps, including a chain of three paths.
+
+* The constraints page and the introduction no longer say native constraints must
+  be linear: nonlinear constraints, `anova()` for nested fits and
+  `mbco_sem(paths = )` are described there.
 * Cookbook recipes 14 to 17: compare two native models with `anova()`, a defined
   parameter with its interval, a bound or a fixed path with the diagnostics, and
   checking a native fit before trusting it. The cookbook now has seventeen recipes.
