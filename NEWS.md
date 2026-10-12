@@ -47,8 +47,9 @@
   "d", "b"))` (or a vector in `a` with `b` missing) refits once per path, keeps the
   smallest diffLL and refers it to chi-square(1). With two paths it gives exactly
   the old result (`mbco_sem(fit, "a", "b")` still works). The null is a union of
-  k hypotheses, so the test is conservative; its size for three paths is checked
-  by a simulation gate before the release.
+  k hypotheses, so the test is conservative. A simulation gate
+  (`tests/sim/sem-mbco-k-size.R`, 2000 replications per cell) found the size at
+  most 0.055 at alpha = 0.05 with one zero path and under 0.005 with two or three.
 
 * Nonlinear inequality constraints in `fit_sem()`: `a*b > 0.1`, `a*b < 0.5`, and a
   defined name inside a constraint (`ab := a*b` then `ab > 0`) are solved like the
