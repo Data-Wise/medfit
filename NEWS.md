@@ -161,6 +161,11 @@
 
 ## Documentation
 
+* New article "lavaan and the native engine" (Guides menu): both engines run on
+  `mediation_demo` at site build, then a feature table lists what each does with a
+  status for every row. `test-lavaan-comparison.R` computes each status from a live
+  probe against lavaan, so a row cannot change without the behavior changing.
+
 * Every cookbook recipe from 1 to 8 now runs after the setup chunk alone. Recipes
   3, 6, 7 and 8 used fitted models that only an earlier recipe created, which
   running the page top to bottom hid; a test now runs each recipe in a fresh
