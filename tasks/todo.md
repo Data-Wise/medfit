@@ -33,16 +33,16 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [ ] Human review
 
 ## Phase 3: Nonlinear constraints (W3)
-- [ ] T13 Nonlinear equality `a*b == c` end to end (needs T9); includes the curved-constraint covariance oracle and a frozen-Jacobian mutant
-- [ ] T14 Exact k-branch split for zero products (needs T13); branch refits start clean (refit-trap fixture)
-- [ ] T15 Product inequalities, `:=` names, best-of-n multi-start + NEWS (needs T13)
-- [ ] T16 Sums of products, best-effort (needs T15)
-- [ ] T17 `mbco_sem()` for a product of k paths (needs T10)
-- [ ] T18 Type I error gate `tests/sim/sem-mbco-k-size.R` (needs T17)
-- [ ] T19 Nonlinear parity gate `tests/sim/sem-nonlinear-gate.R` (needs T14-T16); reports SE agreement, exits nonzero on failure
+- [x] T13 Nonlinear equality `a*b == c` end to end (needs T9); includes the curved-constraint covariance oracle and a frozen-Jacobian mutant (#151: closures over validated call trees, central-difference Jacobian, projected covariance)
+- [x] T14 Exact k-branch split for zero products (needs T13); branch refits start clean (refit-trap fixture) (#152: up to 64 branches, clean default start each, `internals$branch`)
+- [x] T15 Product inequalities, `:=` names, best-of-n multi-start + NEWS (needs T13) (#153: `a*b > k`, Lagrangian-Hessian gate, best-of-n with spread warning)
+- [x] T16 Sums of products, best-effort (needs T15) (#154: best-effort, documented)
+- [x] T17 `mbco_sem()` for a product of k paths (needs T10) (#155: `mbco_sem(fit, paths = )`, minimum of k refits against chi-square(1))
+- [x] T18 Type I error gate `tests/sim/sem-mbco-k-size.R` (needs T17) (#156: size at most 0.055 at alpha 0.05, power 0.838, chi-square(2) mutant fails)
+- [x] T19 Nonlinear parity gate `tests/sim/sem-nonlinear-gate.R` (needs T14-T16); reports SE agreement, exits nonzero on failure (#157: 240 runs, four planted defects fail; #160 Newton polish: estimates within 1e-5 of the exact optimum, 5.5e-11 observed)
 
 ### Checkpoint C
-- [ ] All gates in the harness table pass (counts reported); revdep run clean
+- [x] All gates in the harness table pass (counts reported); revdep run clean (2026-10-11, see .STATUS progress_0_8_0_phase3)
 - [ ] Tell the RMediation session `anova()` and W3 are in dev; human review
 
 ## Phase 4: Docs (W5)
