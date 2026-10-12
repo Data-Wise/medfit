@@ -23,7 +23,7 @@ lc_err <- function(expr) inherits(try(expr, silent = TRUE), "try-error")
 lc_se <- function(x) sqrt(diag(if (inherits(x, "lavaan")) lavaan::vcov(x) else vcov(x)))
 
 lc_probes <- function() {
-  d <- mediation_demo
+  d <- medfit::mediation_demo
   lab <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"
   over <- "mediator1 ~ treatment\nmediator2 ~ treatment\noutcome ~ mediator1 + mediator2"
   m <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1"
