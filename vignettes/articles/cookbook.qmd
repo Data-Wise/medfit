@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-Twelve task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Thirteen task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
@@ -335,5 +335,38 @@ chain <- "
 "
 mbco_sem(fit_sem(chain, mediation_demo), paths = c("a", "d", "b"))
 ```
+
+## 13. Joint significance for a binary or count outcome
+
+*When:* the outcome is binary or a count and you want to know whether the mediated
+path exists, without an outcome-scale effect. Test `a = 0` and `b = 0` separately
+and take the larger p-value (conservative). Each test is a likelihood-ratio test
+for a binomial or Poisson model and an F test for a Gaussian, Gamma or `quasi*`
+model, whose dispersion is estimated.
+
+```{r}
+#| label: r13-setup
+d <- mediation_demo
+d$outcome_bin <- as.integer(d$outcome > median(d$outcome))
+```
+
+```{r}
+#| label: r13-joint
+joint_test <- function(fit_a, term_a, fit_b, term_b) {
+  one <- function(fit, term) {
+    known <- fit$family$family %in% c("binomial", "poisson")
+    col <- if (known) "Pr(>Chi)" else "Pr(>F)"
+    drop1(fit, scope = term, test = if (known) "LRT" else "F")[term, col]
+  }
+  p <- c(a = one(fit_a, term_a), b = one(fit_b, term_b))
+  c(p, joint = max(p))
+}
+fit_a <- glm(mediator1 ~ treatment + covariate1 + covariate2, data = d)
+fit_b <- glm(outcome_bin ~ treatment + mediator1 + covariate1 + covariate2,
+             data = d, family = binomial())
+joint_test(fit_a, "treatment", fit_b, "mediator1")
+```
+
+More: [GLM families](model-glm-families.html#joint-significance-test-for-the-indirect-effect).
 
 More: [Methods and Formulas](methods.html).

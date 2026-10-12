@@ -139,6 +139,8 @@ navbar:
         href: articles/cookbook.html#a-latent-mediator-native-engine
       - text: "12. A nonlinear constraint or a longer chain"
         href: articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine
+      - text: "13. Joint significance for a glm"
+        href: articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome
     articles:
       text: Articles
       menu:

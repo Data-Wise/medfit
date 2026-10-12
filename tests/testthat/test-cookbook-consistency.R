@@ -1,4 +1,4 @@
-# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twelve numbered
+# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): thirteen numbered
 # recipes, every article link resolves, and the cluster recipe simulates the same
 # data as methods.qmd so their numbers agree. Skips when the vignettes are absent
 # (installed or built package).
@@ -14,10 +14,10 @@ article_text <- function(name) {
   paste(readLines(p, warn = FALSE), collapse = "\n")
 }
 
-test_that("the cookbook has twelve numbered recipes and every article link resolves", {
+test_that("the cookbook has thirteen numbered recipes and every article link resolves", {
   cb <- article_text("cookbook.qmd")
   heads <- regmatches(cb, gregexpr("(?m)^## [0-9]+\\. ", cb, perl = TRUE))[[1]]
-  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:12, "."))
+  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:13, "."))
   links <- unique(regmatches(cb, gregexpr("\\]\\(([a-z-]+)\\.html\\)", cb))[[1]])
   targets <- paste0(gsub("^\\]\\(|\\.html\\)$", "", links), ".qmd")
   expect_gt(length(targets), 0L)
@@ -108,4 +108,44 @@ test_that("planted defect: a recipe that needs an earlier recipe's fit is caught
   setup <- unlist(parsed[[1L]])
   err <- run_cookbook_recipe(setup, list("fit_defined_in_another_recipe <- 1", "xb <- fit_never_defined"))
   expect_match(err, "fit_never_defined")
+})
+
+# Recipe 13 (joint significance for a glm): runs after the setup chunk alone, its p-values equal the
+# classical tests computed by hand (anova likelihood-ratio for the binomial outcome, F for the Gaussian
+# mediator), and the joint p-value is the larger of the two. Planted defect: taking the smaller one.
+test_that("recipe 13 runs alone and its joint p-value is the larger of two classical tests", {
+  article_text("cookbook.qmd")
+  parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
+  setup <- unlist(parsed[[1L]])
+  chunks <- parsed[[14L]]
+  expect_null(run_cookbook_recipe(setup, chunks))
+
+  env <- new.env(parent = asNamespace("medfit"))
+  suppressMessages(suppressWarnings({
+    eval(parse(text = setup[!grepl("^library\\(medfit\\)", setup)]), env)
+    for (ch in chunks) eval(parse(text = ch), env)
+  }))
+  p <- env$joint_test(env$fit_a, "treatment", env$fit_b, "mediator1")
+  d <- env$d
+  m0 <- stats::glm(mediator1 ~ covariate1 + covariate2, data = d)
+  y0 <- stats::glm(outcome_bin ~ treatment + covariate1 + covariate2, data = d, family = stats::binomial())
+  p_a <- stats::anova(m0, env$fit_a, test = "F")[2, "Pr(>F)"]
+  p_b <- stats::anova(y0, env$fit_b, test = "Chisq")[2, "Pr(>Chi)"]
+  expect_equal(unname(p[["a"]]), p_a, tolerance = 1e-8)
+  expect_equal(unname(p[["b"]]), p_b, tolerance = 1e-8)
+  expect_equal(unname(p[["joint"]]), max(p_a, p_b), tolerance = 1e-8)
+  # a quasi family has estimated dispersion and must get the F test, not a chi-square
+  qb <- stats::glm(outcome_bin ~ treatment + mediator1 + covariate1 + covariate2, data = d,
+                   family = stats::quasibinomial())
+  q0 <- stats::glm(outcome_bin ~ treatment + covariate1 + covariate2, data = d, family = stats::quasibinomial())
+  pq <- env$joint_test(env$fit_a, "treatment", qb, "mediator1")[["b"]]
+  expect_equal(pq, stats::anova(q0, qb, test = "F")[2, "Pr(>F)"], tolerance = 1e-8)
+  expect_gt(abs(pq / p_b - 1), 0.1)
+})
+
+test_that("planted defect: the smaller p-value in place of the larger is caught", {
+  article_text("cookbook.qmd")
+  cb <- article_text("cookbook.qmd")
+  expect_true(grepl("joint = max(p)", cb, fixed = TRUE))
+  expect_false(grepl("joint = max(p)", sub("joint = max(p)", "joint = min(p)", cb, fixed = TRUE), fixed = TRUE))
 })
