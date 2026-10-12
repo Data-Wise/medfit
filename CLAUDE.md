@@ -313,7 +313,7 @@ usethis::use_pkgdown_github_pages()  # Creates gh-pages, workflow, config
 - List ALL exported topics in `reference:`
 - Use `starts_with()` for method patterns
 - Enable MathJax: `template: math-rendering: mathjax`
-- Website builds to `docs/`
+- Local builds go to `docs/`; the site is published by the `pkgdown.yaml` workflow to `gh-pages`
 
 **Vignette dependencies:**
 - Add to DESCRIPTION `Suggests` OR
@@ -343,6 +343,7 @@ tests/testthat/
 ├── test-cluster-211.R, test-cluster-boot.R, test-cluster-harness.R, helper-cluster.R   # cluster mediation: guards, oracles, KR, fit engine, cluster bootstrap, harness
 ├── test-refcard-coverage.R, test-cookbook-consistency.R   # refcard names every export and class; cookbook recipes, links and cluster data match methods.qmd
 ├── test-model-pages*.R, test-guide-*.R   # every model page is on the landing page, index and menu; links and cookbook anchors resolve; each error message the pages and guides quote is triggered, and Suggests-dependent cases skip when the package is absent
+├── test-lavaan-comparison.R             # the lavaan comparison article's feature table: each row's status is probed live against lavaan
 ├── test-effect-se.R, test-confint-paths.R, test-methods-*.R   # SEs, confint, tidy
 ├── test-serial-total-effect.R           # te() over every path
 ├── test-fit-*.R                         # glm, regmedint, m_star, native (test-fit-sem.R)
