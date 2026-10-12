@@ -160,7 +160,9 @@ omx_best <- function(pr, mod, smp, ram, base) {
     start <- base
     if (!is.null(st)) start[match(names(st), ram$par_names)] <- st
     om <- tryCatch(
-      sem_openmx(mod, smp, start = start, constraints = omx_constraint(pr$text, ram$par_names)),
+      sem_openmx( # nolint: object_usage_linter.
+        mod, smp, start = start, constraints = omx_constraint(pr$text, ram$par_names)
+      ),
       error = function(e) NULL
     )
     if (is.null(om) || !(om$output$status$code %in% c(0, 1, 6))) next
