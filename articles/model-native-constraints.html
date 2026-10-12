@@ -96,6 +96,9 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
+    <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -117,6 +120,10 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#compare-two-native-models">14. Compare two native models</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -164,7 +171,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.8.0/vignettes/articles/model-native-constraints.qmd" class="external-link"><code>vignettes/articles/model-native-constraints.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-native-constraints.qmd" class="external-link"><code>vignettes/articles/model-native-constraints.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -182,7 +189,7 @@
 <tbody>
 <tr class="odd">
 <td><strong>What it does</strong></td>
-<td>equality, inequality and fixed-value constraints on labeled paths; <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> for the indirect effect</td>
+<td>equality, inequality and fixed-value constraints on labeled paths, linear or nonlinear; <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> for the indirect effect; <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> for nested fits</td>
 </tr>
 <tr class="even">
 <td><strong>Class returned</strong></td>
@@ -196,7 +203,7 @@
 </tr>
 <tr class="even">
 <td><strong>Limit</strong></td>
-<td>constraints must be linear in the labels</td>
+<td>a sum of products such as <code>a1 * b1 + a2 * b2 == 0</code> is best-effort (see Limits)</td>
 </tr>
 </tbody>
 </table>
@@ -271,7 +278,33 @@ data:  a * b = 0
 MBCO = 33.63, df = 1, p-value = 6.666e-09</code></pre>
 </div>
 </div>
-<p>The result is an <code>htest</code>; the two component tests are in its <code>tests</code> element.</p>
+<p>The result is an <code>htest</code>; the two component tests are in its <code>tests</code> element. For a chain, name every path: <code>mbco_sem(fit, paths = c("a", "d", "b"))</code> is the minimum of the single-path tests for <span class="math inline">\(a \, d \, b = 0\)</span>, referred to a chi-square with 1 degree of freedom.</p>
+</section><section class="level2"><h2 id="nonlinear-constraints">Nonlinear constraints<a class="anchor" aria-label="anchor" href="#nonlinear-constraints"></a>
+</h2>
+<p>A constraint may be nonlinear in the labels. Setting <code>cp</code> equal to the indirect effect is one:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">tied</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">base</span>, <span class="st">"CONSTRAINT(cp == a * b)\nab := a * b"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">tied</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">4</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>     a      b     cp
+0.5443 0.5481 0.2984 </code></pre>
+</div>
+</div>
+</section><section class="level2"><h2 id="compare-nested-fits">Compare nested fits<a class="anchor" aria-label="anchor" href="#compare-nested-fits"></a>
+</h2>
+<p><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> is the likelihood-ratio test for two nested <code>SEMFit</code>s and refits nothing; you vouch that the restriction is nested in substance.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">tied</span>, <span class="va">free</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Likelihood-ratio (chi-square difference) test for SEMFit models
+
+n = 400; Chisq is n times the minimized discrepancy
+
+     Df Chisq Chisq diff Df diff Pr(&gt;Chisq)
+free  0 0.000
+tied  1 0.911    0.91097       1     0.3399</code></pre>
+</div>
+</div>
 </section><section class="level2"><h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
 </h2>
 <ul>

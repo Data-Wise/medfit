@@ -9,10 +9,10 @@ pages. The engine is experimental.
 
 |  |  |
 |----|----|
-| **What it does** | equality, inequality and fixed-value constraints on labeled paths; [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) for the indirect effect |
+| **What it does** | equality, inequality and fixed-value constraints on labeled paths, linear or nonlinear; [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) for the indirect effect; [`anova()`](https://rdrr.io/r/stats/anova.html) for nested fits |
 | **Class returned** | `SEMFit` |
 | **Syntax** | `a == b`, `a + b == 1`, `a < 0.3`, `y ~ 0.5 * x`, `CONSTRAINT(a == b)` |
-| **Limit** | constraints must be linear in the labels |
+| **Limit** | a sum of products such as `a1 * b1 + a2 * b2 == 0` is best-effort (see Limits) |
 
 ``` r
 library(medfit)
@@ -102,7 +102,41 @@ mbco_sem(free, "a", "b")
     MBCO = 33.63, df = 1, p-value = 6.666e-09
 
 The result is an `htest`; the two component tests are in its `tests`
-element.
+element. For a chain, name every path:
+`mbco_sem(fit, paths = c("a", "d", "b"))` is the minimum of the
+single-path tests for \\a \\ d \\ b = 0\\, referred to a chi-square with
+1 degree of freedom.
+
+## Nonlinear constraints
+
+A constraint may be nonlinear in the labels. Setting `cp` equal to the
+indirect effect is one:
+
+``` r
+tied <- fit_sem(paste0(base, "CONSTRAINT(cp == a * b)\nab := a * b"), mediation_demo)
+round(coef(tied)[c("a", "b", "cp")], 4)
+```
+
+         a      b     cp
+    0.5443 0.5481 0.2984 
+
+## Compare nested fits
+
+[`anova()`](https://rdrr.io/r/stats/anova.html) is the likelihood-ratio
+test for two nested `SEMFit`s and refits nothing; you vouch that the
+restriction is nested in substance.
+
+``` r
+anova(tied, free)
+```
+
+    Likelihood-ratio (chi-square difference) test for SEMFit models
+
+    n = 400; Chisq is n times the minimized discrepancy
+
+         Df Chisq Chisq diff Df diff Pr(>Chisq)
+    free  0 0.000
+    tied  1 0.911    0.91097       1     0.3399
 
 ## Limits
 

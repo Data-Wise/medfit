@@ -27,9 +27,15 @@ It offers:
   [`nobs()`](https://rdrr.io/r/stats/nobs.html) for S7 classes
 - **Native SEM engine** (experimental):
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-  fits model syntax with latent mediators and constraints;
+  fits model syntax with latent mediators and linear or nonlinear
+  constraints;
   [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
-  tests the indirect effect
+  tests the indirect effect,
+  [`anova()`](https://rdrr.io/r/stats/anova.html) compares nested fits,
+  and [`tidy()`](https://generics.r-lib.org/reference/tidy.html),
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) and
+  [`confint()`](https://rdrr.io/r/stats/confint.html) summarize a
+  `SEMFit`
 - **S7-based classes** for standardized mediation data structures
 - **Foundation** for the mediation analysis ecosystem (RMediation,
   mediationverse)
@@ -443,7 +449,7 @@ summary(boot_result)
 
     Bootstrap Distribution Summary:
        Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-    0.02798 0.12247 0.14844 0.14887 0.17571 0.27297 
+    0.02625 0.12674 0.15224 0.15207 0.17917 0.29152 
 
 ## Main Functions
 

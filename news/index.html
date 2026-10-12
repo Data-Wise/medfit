@@ -67,6 +67,9 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
+    <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -86,6 +89,10 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#compare-two-native-models">14. Compare two native models</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -120,9 +127,18 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.8.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="medfit-development-version">medfit (development version)<a class="anchor" aria-label="anchor" href="#medfit-development-version"></a></h2>
+<div class="section level3">
+<h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
+<ul><li><p>Two new pages for the native engine, in the Guides menu: “Native engine in five minutes” (write, fit, read, test, constrain, extract) and “The native engine guide” (syntax, fitting and reading, standard errors and weights, constraints and how each kind is solved, model comparison and the MBCO test, diagnostics, the route to the mediation objects, limits). A third page, “Native engine, step by step”, walks the same path in eight checked steps, including a chain of three paths.</p></li>
+<li><p>The constraints page and the introduction no longer say native constraints must be linear: nonlinear constraints, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> for nested fits and <code>mbco_sem(paths = )</code> are described there.</p></li>
+<li><p>Cookbook recipes 14 to 17: compare two native models with <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, a defined parameter with its interval, a bound or a fixed path with the diagnostics, and checking a native fit before trusting it. The cookbook now has seventeen recipes.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8.0" id="medfit-080">medfit 0.8.0<a class="anchor" aria-label="anchor" href="#medfit-080"></a></h2>
 <div class="section level3">

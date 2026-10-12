@@ -649,7 +649,7 @@ boot_nie <- bootstrap_mediation(
 c(boot_nie@ci_lower, boot_nie@ci_upper)
 ```
 
-    [1] 0.4400159 0.9092223
+    [1] 0.4483248 0.8930866
 
 The fit must meet these requirements; each violation errors with its
 cause:

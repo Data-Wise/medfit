@@ -294,7 +294,7 @@ for version compatibility and development guidelines.
 |----|----|
 | Run your first model | [Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) |
 | Find the page for your model | [Models](https://data-wise.github.io/medfit/articles/models.html) |
-| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (thirteen recipes) |
+| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (seventeen recipes) |
 | Look up a function or class | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) |
 | Understand the classes | [Introduction](https://data-wise.github.io/medfit/articles/introduction.html) |
 | Extract from fitted models | [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html) |
@@ -547,6 +547,12 @@ Upgrading, errors, intervals and terms
   use?](https://data-wise.github.io/medfit/articles/guide-intervals.md):
 - [Glossary and
   symbols](https://data-wise.github.io/medfit/articles/guide-glossary.md):
+- [Native engine in five
+  minutes](https://data-wise.github.io/medfit/articles/native-quickstart.md):
+- [Native engine, step by
+  step](https://data-wise.github.io/medfit/articles/native-tutorial.md):
+- [The native engine
+  guide](https://data-wise.github.io/medfit/articles/native-guide.md):
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
 

@@ -96,6 +96,9 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
+    <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -117,6 +120,10 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#compare-two-native-models">14. Compare two native models</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -164,7 +171,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.8.0/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -186,7 +193,8 @@
 <li>
 <strong>Base R generics</strong>: <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> for S7 classes</li>
 <li>
-<strong>Native SEM engine</strong> (experimental): <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fits model syntax with latent mediators and constraints; <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect</li>
+<strong>Native SEM engine</strong> (experimental): <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fits model syntax with latent mediators and linear or nonlinear constraints; <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> compares nested fits, and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> summarize a <code>SEMFit</code>
+</li>
 <li>
 <strong>S7-based classes</strong> for standardized mediation data structures</li>
 <li>
@@ -536,7 +544,7 @@ N bootstrap samples: 1000
 
 Bootstrap Distribution Summary:
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-0.02798 0.12247 0.14844 0.14887 0.17571 0.27297 </code></pre>
+0.02625 0.12674 0.15224 0.15207 0.17917 0.29152 </code></pre>
 </div>
 </div>
 </section></section><section class="level2"><h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>

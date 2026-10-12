@@ -96,6 +96,9 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
+    <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -117,6 +120,10 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#compare-two-native-models">14. Compare two native models</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -164,7 +171,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.8.0/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -173,7 +180,7 @@
 
 
 
-    <p>Thirteen task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
+    <p>Seventeen task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
 <p>These recipes need medfit 0.8.0 or later. CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>).</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
@@ -352,7 +359,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4351678 0.8930074 </code></pre>
+0.6560315 0.4349603 0.8927176 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
@@ -551,6 +558,118 @@ MBCO = 17.557, df = 1, p-value = 2.788e-05</code></pre>
 </div>
 </div>
 <p>More: <a href="model-glm-families.html#joint-significance-test-for-the-indirect-effect">GLM families</a>.</p>
+</section><section class="level2"><h2 id="compare-two-native-models">14. Compare two native models<a class="anchor" aria-label="anchor" href="#compare-two-native-models"></a>
+</h2>
+<p><em>When:</em> you want to know whether a path or a constraint is needed, on the native engine. <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> is the likelihood-ratio test for nested <code>SEMFit</code>s; it refits nothing. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> gives AIC and BIC side by side.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">full</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a * treatment</span></span>
+<span><span class="st">  outcome ~ b * mediator1 + cp * treatment</span></span>
+<span><span class="st">"</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">reduced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a * treatment</span></span>
+<span><span class="st">  outcome ~ b * mediator1</span></span>
+<span><span class="st">"</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">reduced</span>, <span class="va">full</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Likelihood-ratio (chi-square difference) test for SEMFit models
+
+n = 400; Chisq is n times the minimized discrepancy
+
+        Df  Chisq Chisq diff Df diff Pr(&gt;Chisq)
+full     0 0.0000
+reduced  1 0.1335    0.13346       1     0.7149</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>reduced <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">reduced</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"chisq"</span>, <span class="st">"AIC"</span>, <span class="st">"BIC"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>      full <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">full</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"chisq"</span>, <span class="st">"AIC"</span>, <span class="st">"BIC"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 4
+   npar chisq   AIC   BIC
+* &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1     5 0.133 2992. 3024.
+2     6 0     2994. 3030.</code></pre>
+</div>
+</div>
+<p>The restricted model is the one with more degrees of freedom. A small chi-square difference says dropping <code>cp</code> costs little.</p>
+</section><section class="level2"><h2 id="a-defined-parameter-and-its-interval">15. A defined parameter and its interval<a class="anchor" aria-label="anchor" href="#a-defined-parameter-and-its-interval"></a>
+</h2>
+<p><em>When:</em> you want the indirect effect, the total effect or the proportion mediated with a standard error and an interval, from one fit. Define each with <code>:=</code>; the delta method gives the standard error.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">dfit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a * treatment + covariate1</span></span>
+<span><span class="st">  outcome ~ b * mediator1 + cp * treatment + covariate1</span></span>
+<span><span class="st">  ab := a * b</span></span>
+<span><span class="st">  total := cp + a * b</span></span>
+<span><span class="st">  pm := ab / total</span></span>
+<span><span class="st">"</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">dfit</span><span class="op">@</span><span class="va">defined</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>   name       expr       est         se
+1    ab      a * b 0.3331241 0.06436069
+2 total cp + a * b 0.5373844 0.11890026
+3    pm ab / total 0.6198991 0.13949633</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">dfit</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ab"</span>, <span class="st">"total"</span>, <span class="st">"pm"</span><span class="op">)</span>, <span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>          2.5 %    97.5 %
+ab    0.2069795 0.4592688
+total 0.3043441 0.7704246
+pm    0.3464914 0.8933069</code></pre>
+</div>
+</div>
+<p>The interval for <code>pm</code> is wide because a ratio is unstable when the total is small; <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> on the extracted object is the alternative.</p>
+</section><section class="level2"><h2 id="bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path<a class="anchor" aria-label="anchor" href="#bound-a-variance-or-fix-a-path"></a>
+</h2>
+<p><em>When:</em> a variance should not go below a floor, or a path is known. Write the bound or the value in the syntax and read the diagnostics: an active bound means the estimate sits on the edge.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">bounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a * treatment</span></span>
+<span><span class="st">  outcome ~ b * mediator1 + 0 * treatment</span></span>
+<span><span class="st">  outcome ~~ lower(2) * outcome</span></span>
+<span><span class="st">"</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">bounded</span><span class="op">@</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">active_bounds</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "outcome~~outcome"</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">bounded</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>    a     b
+0.456 0.717 </code></pre>
+</div>
+</div>
+<p><code>lower(2)</code> is above the variance the data want (about 1.2), so the bound binds and is reported. <code>0 * treatment</code> fixes the direct effect at zero.</p>
+</section><section class="level2"><h2 id="check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it<a class="anchor" aria-label="anchor" href="#check-a-native-fit-before-trusting-it"></a>
+</h2>
+<p><em>When:</em> before you report a native fit. Read the diagnostics, then ask whether the model fits when it has restrictions (<code>df &gt; 0</code>).</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">chk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ treatment</span></span>
+<span><span class="st">  mediator2 ~ treatment</span></span>
+<span><span class="st">  outcome ~ mediator1 + mediator2</span></span>
+<span><span class="st">"</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">chk</span><span class="op">@</span><span class="va">diagnostics</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"status"</span>, <span class="st">"active_bounds"</span>, <span class="st">"improper"</span>, <span class="st">"sign_check"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>$status
+[1] 3
+
+$active_bounds
+character(0)
+
+$improper
+character(0)
+
+$sign_check
+[1] "ok"</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">chk</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"p.value"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+     df chisq  p.value
+  &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;
+1     2  138. 9.35e-31</code></pre>
+</div>
+</div>
+<p>No active bound, no improper solution and a passing sign check mean the optimizer is fine. The chi-square on 2 degrees of freedom is large, so the model leaves out something the data contain (here, the covariance of the two mediators’ residuals): the fit converged, and the model is still wrong.</p>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {

@@ -1,6 +1,6 @@
 # medfit Cookbook
 
-Thirteen task-sized recipes. Each says when to use it, runs on
+Seventeen task-sized recipes. Each says when to use it, runs on
 `mediation_demo` (except the cluster and latent-mediator recipes, which
 simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference
@@ -231,7 +231,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4351678 0.8930074 
+    0.6560315 0.4349603 0.8927176 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
@@ -481,6 +481,152 @@ joint_test(fit_a, "treatment", fit_b, "mediator1")
 
 More: [GLM
 families](https://data-wise.github.io/medfit/articles/model-glm-families.html#joint-significance-test-for-the-indirect-effect).
+
+## 14. Compare two native models
+
+*When:* you want to know whether a path or a constraint is needed, on
+the native engine. [`anova()`](https://rdrr.io/r/stats/anova.html) is
+the likelihood-ratio test for nested `SEMFit`s; it refits nothing.
+[`glance()`](https://generics.r-lib.org/reference/glance.html) gives AIC
+and BIC side by side.
+
+``` r
+full <- fit_sem("
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + cp * treatment
+", mediation_demo)
+reduced <- fit_sem("
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1
+", mediation_demo)
+anova(reduced, full)
+```
+
+    Likelihood-ratio (chi-square difference) test for SEMFit models
+
+    n = 400; Chisq is n times the minimized discrepancy
+
+            Df  Chisq Chisq diff Df diff Pr(>Chisq)
+    full     0 0.0000
+    reduced  1 0.1335    0.13346       1     0.7149
+
+``` r
+rbind(reduced = glance(reduced)[, c("npar", "chisq", "AIC", "BIC")],
+      full = glance(full)[, c("npar", "chisq", "AIC", "BIC")])
+```
+
+    # A tibble: 2 × 4
+       npar chisq   AIC   BIC
+    * <int> <dbl> <dbl> <dbl>
+    1     5 0.133 2992. 3024.
+    2     6 0     2994. 3030.
+
+The restricted model is the one with more degrees of freedom. A small
+chi-square difference says dropping `cp` costs little.
+
+## 15. A defined parameter and its interval
+
+*When:* you want the indirect effect, the total effect or the proportion
+mediated with a standard error and an interval, from one fit. Define
+each with `:=`; the delta method gives the standard error.
+
+``` r
+dfit <- fit_sem("
+  mediator1 ~ a * treatment + covariate1
+  outcome ~ b * mediator1 + cp * treatment + covariate1
+  ab := a * b
+  total := cp + a * b
+  pm := ab / total
+", mediation_demo)
+dfit@defined
+```
+
+       name       expr       est         se
+    1    ab      a * b 0.3331241 0.06436069
+    2 total cp + a * b 0.5373844 0.11890026
+    3    pm ab / total 0.6198991 0.13949633
+
+``` r
+confint(dfit)[c("ab", "total", "pm"), ]
+```
+
+              2.5 %    97.5 %
+    ab    0.2069795 0.4592688
+    total 0.3043441 0.7704246
+    pm    0.3464914 0.8933069
+
+The interval for `pm` is wide because a ratio is unstable when the total
+is small;
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+on the extracted object is the alternative.
+
+## 16. Bound a variance or fix a path
+
+*When:* a variance should not go below a floor, or a path is known.
+Write the bound or the value in the syntax and read the diagnostics: an
+active bound means the estimate sits on the edge.
+
+``` r
+bounded <- fit_sem("
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + 0 * treatment
+  outcome ~~ lower(2) * outcome
+", mediation_demo)
+bounded@diagnostics$active_bounds
+```
+
+    [1] "outcome~~outcome"
+
+``` r
+round(coef(bounded)[c("a", "b")], 3)
+```
+
+        a     b
+    0.456 0.717 
+
+`lower(2)` is above the variance the data want (about 1.2), so the bound
+binds and is reported. `0 * treatment` fixes the direct effect at zero.
+
+## 17. Check a native fit before trusting it
+
+*When:* before you report a native fit. Read the diagnostics, then ask
+whether the model fits when it has restrictions (`df > 0`).
+
+``` r
+chk <- fit_sem("
+  mediator1 ~ treatment
+  mediator2 ~ treatment
+  outcome ~ mediator1 + mediator2
+", mediation_demo)
+chk@diagnostics[c("status", "active_bounds", "improper", "sign_check")]
+```
+
+    $status
+    [1] 3
+
+    $active_bounds
+    character(0)
+
+    $improper
+    character(0)
+
+    $sign_check
+    [1] "ok"
+
+``` r
+glance(chk)[, c("df", "chisq", "p.value")]
+```
+
+    # A tibble: 1 × 3
+         df chisq  p.value
+      <dbl> <dbl>    <dbl>
+    1     2  138. 9.35e-31
+
+No active bound, no improper solution and a passing sign check mean the
+optimizer is fine. The chi-square on 2 degrees of freedom is large, so
+the model leaves out something the data contain (here, the covariance of
+the two mediators’ residuals): the fit converged, and the model is still
+wrong.
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).

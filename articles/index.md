@@ -70,6 +70,12 @@ Upgrading, errors, intervals and terms
   use?](https://data-wise.github.io/medfit/articles/guide-intervals.md):
 - [Glossary and
   symbols](https://data-wise.github.io/medfit/articles/guide-glossary.md):
+- [Native engine in five
+  minutes](https://data-wise.github.io/medfit/articles/native-quickstart.md):
+- [Native engine, step by
+  step](https://data-wise.github.io/medfit/articles/native-tutorial.md):
+- [The native engine
+  guide](https://data-wise.github.io/medfit/articles/native-guide.md):
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
 
