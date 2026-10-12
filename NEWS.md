@@ -161,6 +161,11 @@
 
 ## Documentation
 
+* Cookbook recipe 12 shows a nonlinear constraint (`cp == a*b`) and the indirect
+  effect of a three-path chain with `mbco_sem(paths = )`. The 0.7.0 entry for
+  `fit_mediation(engine = "native")` no longer says it handles serial and parallel
+  mediators; it takes one mediator, and `model-native-multi` already said so.
+
 * New article "lavaan and the native engine" (Guides menu): both engines run on
   `mediation_demo` at site build, then a feature table lists what each does with a
   status for every row. `test-lavaan-comparison.R` computes each status from a live
@@ -235,9 +240,10 @@ submitted to CRAN.
   errors. The syntax is documented in `?"medfit-syntax"`, including the two
   medfit extensions (comma shorthand and `CONSTRAINT(...)`).
 * `fit_mediation(engine = "native", model = , treatment = , mediator = )`
-  fits the syntax and returns the usual mediation objects, for observed
-  single, serial and parallel mediators and for a latent mediator, which need
-  not be a column of `data`. `extract_mediation()` has a method for `SEMFit`
+  fits the syntax and returns the usual mediation objects, for an observed or a
+  latent single mediator (which need not be a column of `data`); serial and
+  parallel mediators go through `fit_sem()` and then `extract_mediation(fit,
+  mediator = c(...), outcome = )`, because `fit_mediation()` takes one mediator. `extract_mediation()` has a method for `SEMFit`
   that shares its workers with the lavaan route, so the aliases and covariance
   rows are the same; its `source_package` is `"medfit"`. For an observed
   single mediator, `probmed::pmed()` runs on the native route with the plugin

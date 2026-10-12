@@ -40,7 +40,7 @@ covr::package_coverage()          # Target: >90%
 
 **medfit** is the foundation package for the mediationverse ecosystem, providing:
 - **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`, `SEMFit` (native SEM fit, experimental)
-- **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan
+- **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan/lmer and `SEMFit` (native)
 - **Fitting**: Formula-based `fit_mediation()` with the `glm` and `regmedint` engines, case `weights`, and `se_type = "sandwich"` (HC3); `fit_sem()` and `fit_mediation(engine = "native", model = )` fit medfit model syntax with the native ML engine (experimental, `SEMFit`)
 - **Inference**: delta-method effect SEs in `tidy()`/`confint()`; bootstrap (parametric, nonparametric, plugin)
 - **Data**: bundled simulated `mediation_demo` for every workflow
@@ -421,6 +421,17 @@ constant value on the equality set; when it is satisfied it is active everywhere
 is kept and left to the gate (no up-front error: near-dependence is not proof of infeasibility). Background and evidence:
 `planning/specs/RESEARCH-redundant-constraints-2026-10-11.md`.
 
+Nonlinear rows (`cp == a*b`, `a*b > k`, sums of products): `.sem_nl_rows()` builds closures over validated call trees
+(guarded evaluator `.sem_expr_value`), values and Jacobians by central differences recomputed at every point, `cons$nl`
+(equalities) and `cons$nli` (inequalities as `c <= 0`); the active set orders linear equalities, nonlinear equalities,
+linear then nonlinear inequalities, and the Jacobian for the gate and the covariance projection `Z (Z' I Z)^-1 Z'` is
+evaluated at the solution, not the start. The gate uses the Lagrangian Hessian (`.sem_lagrangian_hessian()`); with a
+nonlinear row every start is tried and the best accepted one kept (spread warning when optima differ). A product of
+labels set to zero is solved exactly by `.sem_fit_branches()` (one linear fit per factor, up to 64, clean start each).
+`.sem_polish()` takes Newton steps on the KKT system of the active set after SLSQP is accepted (SLSQP stops about
+3e-5 short along a flat tangent) and keeps the polished point only if the gate accepts it again. Evidence:
+`tests/sim/sem-nonlinear-gate.R` (240 runs, `MUTANT=` switches) and `tests/sim/sem-mbco-k-size.R`.
+
 ---
 
 ## Ecosystem Coordination
@@ -495,7 +506,7 @@ breaking existing code, type safety via S7 validators.
 | `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
 | `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
 | `"lmer"` | lme4, pbkrtest (Suggests) | mixed models for cluster-level treatment; `cluster =`, `se_type = "kr"` | ✓ (no weights/sandwich/families) |
-| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `); latent mediators, constraints, `weights`/`se_type = "sandwich"`; `mbco_sem()` | ✓ experimental (no four-way, no mean structure) |
+| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `, one mediator through `fit_mediation()`; serial and parallel through `fit_sem()` then `extract_mediation()`); latent mediators, linear and nonlinear constraints, `weights`/`se_type = "sandwich"`; `anova()`, `tidy()`/`glance()`; `mbco_sem()` (k paths) | ✓ experimental (no four-way, no mean structure) |
 | `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 

@@ -92,4 +92,5 @@ The result is an `htest`; the two component tests are in its `tests` element.
 ## Related
 
 [Cookbook recipe 11](cookbook.html#a-latent-mediator-native-engine) |
+[Cookbook recipe 12](cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine) |
 [Methods and Formulas](methods.html) | `?"medfit-syntax"`
