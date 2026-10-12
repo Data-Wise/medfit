@@ -1,0 +1,97 @@
+---
+title: "lavaan and the native engine"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+medfit's native engine fits covariance-structure models from lavaan-style syntax.
+It is not a replacement for lavaan: it covers the path models behind mediation
+analysis and stops there. This page runs both on the same data, then lists what
+each does, with a status for every feature that a test checks against a live
+probe on each build. The native engine is experimental.
+
+| | |
+|---|---|
+| **Use medfit native when** | you want the indirect effect, `mbco_sem()`, or a nonlinear constraint such as `cp == a*b` on a path model |
+| **Use lavaan when** | you need means, groups, categorical outcomes, other estimators, FIML, or fit indices |
+| **Both** | read the same `~`, `=~`, `~~`, `:=` and constraint syntax, and agree to about 1e-6 where both apply |
+
+## The same model in both
+
+```{r}
+#| label: both
+library(medfit)
+library(generics)
+library(lavaan)
+model <- "
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + cp * treatment
+  ab := a * b
+"
+native <- tidy(fit_sem(model, mediation_demo))
+ref <- parameterEstimates(sem(model, mediation_demo, fixed.x = FALSE))
+rows <- native[native$term %in% c("a", "b", "cp", "ab"), ]
+i <- match(rows$term, ref$label)
+data.frame(term = rows$term, native = rows$estimate, lavaan = ref$est[i],
+           se_native = rows$std.error, se_lavaan = ref$se[i])
+```
+
+`fixed.x = FALSE` matters: lavaan fixes exogenous covariates by default, the
+native engine always estimates their variances and covariances. The standard
+errors, including the delta-method error of `ab`, agree as well.
+
+## Where they differ by design
+
+The default information matrix is observed in medfit and expected in lavaan.
+They agree for a well-fitting model and separate when the model is
+misspecified; `information = "expected"` reproduces lavaan:
+
+```{r}
+#| label: information
+bad <- "mediator1 ~ treatment\nmediator2 ~ treatment\noutcome ~ mediator1 + mediator2"
+rbind(
+  native_observed = sqrt(diag(vcov(fit_sem(bad, mediation_demo))))[3],
+  native_expected = sqrt(diag(vcov(fit_sem(bad, mediation_demo, information = "expected"))))[3],
+  lavaan = sqrt(diag(vcov(sem(bad, mediation_demo, fixed.x = FALSE))))[3]
+)
+```
+
+## Feature table
+
+Status is one of **Supported** (matches lavaan where lavaan has it),
+**Partial** (a subset), **Different by design** (both exist and differ on
+purpose) and **Unsupported** (use lavaan). Each row is checked by
+`tests/testthat/test-lavaan-comparison.R`; editing a status without changing
+the behavior makes that test fail.
+
+| Feature | lavaan | medfit native | Status |
+|---|---|---|---|
+| Paths, covariances, labels, fixed values, bounds | yes | yes | Supported |
+| Several modifiers on one term | yes | one per term | Unsupported |
+| Means and intercepts | yes | covariance structures only | Unsupported |
+| Multiple groups | yes | no | Unsupported |
+| Estimators other than ML | yes | ML, plus the HC0 sandwich | Partial |
+| Missing data | FIML | listwise deletion | Partial |
+| Categorical outcomes | WLSMV and others | numeric variables only; use lavaan (WLSMV) | Unsupported |
+| Information matrix | expected | observed by default | Different by design |
+| Robust standard errors | yes | `se_type = "sandwich"` equals lavaan's huber.white | Supported |
+| Linear constraints | yes | yes | Supported |
+| Nonlinear constraints | yes | yes, including `a*b > k` and sums of products | Supported |
+| Defined parameters | `:=` | `:=` with delta-method errors | Supported |
+| Chi-square and df | yes | `glance()` | Supported |
+| CFI, RMSEA, SRMR | yes | not reported | Unsupported |
+| logLik, AIC, BIC | yes | logLik equal; AIC and BIC count the means | Different by design |
+| Standardized estimates, modification indices, fitted values, residuals | yes | no | Unsupported |
+| Nested model comparison | `lavTestLRT()` | `anova()` | Supported |
+| Mediation effects and the MBCO test | no | `extract_mediation()`, `mbco_sem()` | Supported |
+
+The first column names the feature; the probe for a row is in the test, not
+here, so the table cannot drift from the code without a failing test.

@@ -107,6 +107,8 @@ navbar:
         href: articles/guide-intervals.html
       - text: "Glossary and symbols"
         href: articles/guide-glossary.html
+      - text: "lavaan and the native engine"
+        href: articles/lavaan-comparison.html
     cookbook:
       text: Cookbook
       menu:
@@ -269,6 +271,7 @@ articles:
       - '`articles/guide-troubleshooting`'
       - '`articles/guide-intervals`'
       - '`articles/guide-glossary`'
+      - '`articles/lavaan-comparison`'
   - title: "Detailed guides"
     contents:
       - '`articles/introduction`'
