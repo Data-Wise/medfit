@@ -95,7 +95,8 @@
     pos_a = pos_a[free_a], k_a = k_a[free_a],
     pos_s = pos_s[free_s], pos_s2 = pos_s2[free_s], k_s = k_s[free_s],
     s_weight = ifelse(s_row[free_s] == s_col[free_s], 1, 2),
-    gmap = gmap
+    gmap = gmap,
+    has_mean = FALSE
   )
 }
 
@@ -127,7 +128,7 @@
   }
   # `xc` (the centered observed data) and `w` (the rescaled weights, NULL when unweighted) feed the casewise
   # scores of the sandwich covariance.
-  list(s = s_mat, n = n, p = p, logdet = ld, xc = xc, w = weights)
+  list(s = s_mat, n = n, p = p, logdet = ld, xc = xc, w = weights, has_mean = FALSE)
 }
 
 # Full rank judged on the correlation scale: the smallest eigenvalue of the

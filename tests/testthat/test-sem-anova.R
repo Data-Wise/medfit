@@ -227,3 +227,67 @@ test_that("print uses the anova layout with a heading", {
   expect_match(out, "Pr(>Chisq)", fixed = TRUE)
   expect_match(out, "n = 369", fixed = TRUE)
 })
+
+# Nesting must hold for the constraints and fixed values of the larger model, not only for the free rows.
+nest_model <- function(tail) {
+  fit_sem(paste0("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\n", tail), medfit::mediation_demo)
+}
+
+test_that("a restricted model that breaks the larger model's equality is not nested in it", {
+  full <- nest_model("a == b")
+  broken <- nest_model("a == 0\nb == 0.5")
+  expect_error(anova(full, broken), "not nested")
+})
+
+test_that("a restricted model that implies the larger model's equality is nested in it", {
+  full <- nest_model("a == b")
+  zero <- nest_model("a == 0\nb == 0")
+  half <- nest_model("a == 0.5\nb == 0.5")
+  res <- anova(full, zero)
+  expect_equal(res$Df, c(full@df, zero@df))
+  expect_no_error(anova(full, half))
+})
+
+test_that("a fixed value of the larger model must be kept", {
+  full <- fit_sem("mediator1 ~ a*treatment\noutcome ~ 0.5*mediator1 + treatment", mediation_demo)
+  same <- fit_sem("mediator1 ~ 0*treatment\noutcome ~ 0.5*mediator1 + treatment", mediation_demo)
+  moved <- fit_sem("mediator1 ~ 0*treatment\noutcome ~ 0.4*mediator1 + treatment", mediation_demo)
+  expect_no_error(anova(full, same))
+  expect_error(anova(full, moved), "not nested")
+})
+
+test_that("a nonlinear or inequality constraint of the larger model must appear in the restricted one", {
+  full <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\ncp == a*b", mediation_demo)
+  drop <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\ncp == 0\nb == 0", mediation_demo)
+  expect_error(anova(full, drop), "not nested")
+})
+
+test_that("planted defect: without the constraint check the broken pair returns a p-value", {
+  full <- nest_model("a == b")
+  broken <- nest_model("a == 0\nb == 0.5")
+  silent <- sem_mutate(.sem_anova_nested, "kept <- .sem_anova_kept(full, restricted)", "kept <- NULL")
+  expect_no_error(silent(full, broken, c("full", "broken")))
+})
+
+test_that("a bound of the larger model must be kept by the restricted model", {
+  fit_b <- function(m) fit_sem(paste0(m, "\noutcome ~ mediator1 + treatment"), mediation_demo)
+  bounded <- fit_b("mediator1 ~ lower(0)*treatment")
+  expect_error(anova(bounded, fit_b("mediator1 ~ -1*treatment")), "not nested")
+  expect_no_error(anova(bounded, fit_b("mediator1 ~ 0*treatment")))
+})
+
+test_that("a single-label inequality of the larger model is a bound and must be kept", {
+  base <- "mediator1 ~ a1*treatment\noutcome ~ b1*mediator1 + a2*treatment\n"
+  full <- fit_sem(paste0(base, "a1 > 0.1"), mediation_demo)
+  expect_error(anova(full, fit_sem(paste0(base, "a2 == 0"), mediation_demo)), "not nested")
+  expect_no_error(anova(full, fit_sem(paste0(base, "a1 > 0.1\na2 == 0"), mediation_demo)))
+})
+
+test_that("planted defect: without the bound check the dropped bound returns a p-value", {
+  base <- "mediator1 ~ a1*treatment\noutcome ~ b1*mediator1 + a2*treatment\n"
+  full <- fit_sem(paste0(base, "a1 > 0.1"), mediation_demo)
+  rest <- fit_sem(paste0(base, "a2 == 0"), mediation_demo)
+  silent <- sem_mutate(.sem_anova_kept, "out <- c(out, .sem_anova_bounds_kept(full, restricted))", "NULL")
+  expect_length(silent(full, rest), 0L)
+  expect_length(.sem_anova_kept(full, rest), 1L)
+})
