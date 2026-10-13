@@ -122,12 +122,125 @@ S7::method(anova, SEMFit) <- function(object, ...) {
                         "Fit the restricted model by constraining or fixing parameters of the larger one."),
                  label[2L], label[1L], paste(extra, collapse = ", ")), call. = FALSE)
   }
+  kept <- .sem_anova_kept(full, restricted)
+  if (length(kept)) {
+    stop(sprintf(paste0("'%s' is not nested in '%s': it does not keep %s. A restricted model must satisfy every ",
+                        "constraint and fixed value of the larger one."),
+                 label[2L], label[1L], paste(kept, collapse = "; ")), call. = FALSE)
+  }
   dropped <- setdiff(key(full), key(restricted))
   tab <- full@table
   dropped_labels <- ifelse(nzchar(tab$label) & !is.na(tab$label), tab$label, paste(tab$lhs, tab$op, tab$rhs))[
     paste(tab$lhs, tab$op, tab$rhs) %in% dropped & tab$free
   ]
   c(dropped_labels, .sem_anova_added(full, restricted))
+}
+
+# What `full` enforces that `restricted` does not keep: fixed values that differ, and constraints the restricted
+# model does not imply. A linear equality `a'theta + b = 0` of `full` is implied when it is a combination of the
+# restricted model's equalities and of its fixed values (restricted parameters pinned to a value, written in the
+# parameter space of `full`); a nonlinear equality or an inequality must appear verbatim. Anything that cannot
+# be established is reported, so no p-value rests on an unchecked nesting. Returns the texts not kept.
+.sem_anova_kept <- function(full, restricted) {
+  ptab <- function(m) {
+    tab <- m@table
+    name <- ifelse(nzchar(tab$label) & !is.na(tab$label), tab$label, paste0(tab$lhs, tab$op, tab$rhs))
+    data.frame(key = paste(tab$lhs, tab$op, tab$rhs), name = name, free = tab$free, est = tab$est,
+               stringsAsFactors = FALSE)
+  }
+  pf <- ptab(full)
+  pr <- ptab(restricted)
+  both <- merge(pf[!pf$free, c("key", "est")], pr[!pr$free, c("key", "est")], by = "key")
+  moved <- both$key[abs(both$est.x - both$est.y) > 1e-8]
+  out <- if (length(moved)) paste0("the fixed value of ", moved) else character()
+  out <- c(out, .sem_anova_bounds_kept(full, restricted))
+  cf <- full@internals$constraints
+  cf <- if (is.null(cf)) cf else cf[cf$op %in% c("==", "<", ">"), , drop = FALSE]
+  if (is.null(cf) || !nrow(cf)) {
+    return(out)
+  }
+  cr <- restricted@internals$constraints
+  text <- function(cons) if (is.null(cons)) character() else paste(cons$lhs, cons$op, cons$rhs)
+  rows_f <- .sem_constraint_rows(full@internals$constraints, full@internals$ram)
+  verbatim <- c(rows_f$ineq$text, rows_f$nl$text, rows_f$nli$text)
+  miss <- setdiff(verbatim, text(cr))
+  out <- c(out, if (length(miss)) paste0("the constraint '", miss, "'"))
+  if (!length(rows_f$eq$A)) {
+    return(out)
+  }
+  pnames <- full@internals$ram$par_names
+  # restricted knowledge in the parameter space of `full`: its linear equalities, and its fixed parameters
+  know_a <- list()
+  know_b <- numeric()
+  rows_r <- if (is.null(cr)) NULL else .sem_constraint_rows(cr, restricted@internals$ram)
+  unknown <- character()
+  if (length(rows_r$eq$A)) {
+    rn <- restricted@internals$ram$par_names
+    for (i in seq_len(nrow(rows_r$eq$A))) {
+      nz <- which(abs(rows_r$eq$A[i, ]) > 0)
+      if (!all(rn[nz] %in% pnames)) {
+        unknown <- c(unknown, rows_r$eq$text[i])
+        next
+      }
+      v <- numeric(length(pnames))
+      v[match(rn[nz], pnames)] <- rows_r$eq$A[i, nz]
+      know_a[[length(know_a) + 1L]] <- v
+      know_b <- c(know_b, rows_r$eq$b[i])
+    }
+  }
+  rfree <- restricted@internals$ram$par_names
+  for (p in setdiff(pnames, rfree)) {
+    hit <- pr[pr$name == p & !pr$free, , drop = FALSE]
+    if (nrow(hit)) {
+      v <- numeric(length(pnames))
+      v[match(p, pnames)] <- 1
+      know_a[[length(know_a) + 1L]] <- v
+      know_b <- c(know_b, -hit$est[1L])
+    }
+  }
+  K <- if (length(know_a)) do.call(rbind, know_a) else matrix(0, 0L, length(pnames))
+  for (i in seq_len(nrow(rows_f$eq$A))) {
+    a <- rows_f$eq$A[i, ]
+    ok <- FALSE
+    if (nrow(K)) {
+      lambda <- tryCatch(qr.solve(t(K), a), error = function(e) NULL)
+      ok <- !is.null(lambda) && sqrt(sum((drop(t(K) %*% lambda) - a)^2)) < 1e-6 &&
+        abs(sum(lambda * know_b) - rows_f$eq$b[i]) < 1e-6
+    }
+    if (!ok) {
+      out <- c(out, paste0("the constraint '", rows_f$eq$text[i], "'"))
+    }
+  }
+  out
+}
+
+# Bounds of `full` (`lower(0)*x`, and single-label inequalities such as `a > 0.1`, which the parser stores as
+# bounds in the parameter table, not as constraint rows). A restricted model keeps a bound when its estimate or
+# fixed value lies inside it and, for a parameter it leaves free, its own bound is at least as tight.
+.sem_anova_bounds_kept <- function(full, restricted) {
+  tab <- function(m) {
+    pt <- m@internals$partable
+    data.frame(key = paste(pt$lhs, pt$op, pt$rhs), free = m@table$free, est = m@table$est,
+               lower = pt$lower, upper = pt$upper, stringsAsFactors = FALSE)
+  }
+  pf <- tab(full)
+  pr <- tab(restricted)
+  lo <- function(x) ifelse(is.na(x), -Inf, x)
+  up <- function(x) ifelse(is.na(x), Inf, x)
+  tol <- 1e-8
+  out <- character()
+  for (i in which(!is.na(pf$lower) | !is.na(pf$upper))) {
+    j <- match(pf$key[i], pr$key)
+    if (is.na(j)) {
+      next
+    }
+    inside <- pr$est[j] >= lo(pf$lower[i]) - tol && pr$est[j] <= up(pf$upper[i]) + tol
+    tight <- !pr$free[j] || (lo(pr$lower[j]) >= lo(pf$lower[i]) && up(pr$upper[j]) <= up(pf$upper[i]))
+    if (!inside || !tight) {
+      out <- c(out, paste0("the bound on ", pf$key[i]))
+    }
+  }
+  out
 }
 
 # Parameters in the equality constraints that `restricted` has and `full` does not.
