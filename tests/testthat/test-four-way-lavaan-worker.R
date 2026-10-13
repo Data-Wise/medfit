@@ -23,9 +23,12 @@ fw_data <- function(n = 2000, seed = 11, covariate = TRUE) {
 fw_oracle <- function(d, covariate = TRUE, m_star = 0, weights = NULL) {
   cbar <- if (is.null(weights)) mean(d$c1) else stats::weighted.mean(d$c1, d$w)
   m_eq <- if (covariate) "m ~ pa*x + pg*c1 + b0*1" else "m ~ pa*x + b0*1"
-  mean_m <- if (covariate) sprintf("(b0 + pg*%.17g - %.17g)", cbar, m_star)
-            else sprintf("(b0 - %.17g)", m_star)
-  syn <- paste(
+  mean_m <- if (covariate) {
+    sprintf("(b0 + pg*%.17g - %.17g)", cbar, m_star)
+  } else {
+    sprintf("(b0 - %.17g)", m_star)
+  }
+  syn_lines <- c(
     m_eq,
     "y ~ cp*x + pb*m + t3*xm + ph*c1",
     sprintf("cde := cp + t3*%.17g", m_star),
@@ -34,8 +37,9 @@ fw_oracle <- function(d, covariate = TRUE, m_star = 0, weights = NULL) {
     "pie := pb*pa",
     sprintf("nde := cp + t3*%.17g + t3*%s", m_star, mean_m),
     sprintf("nie := t3*pa + pb*pa"),
-    sprintf("te := cp + t3*%.17g + t3*%s + t3*pa + pb*pa", m_star, mean_m),
-    sep = "\n")
+    sprintf("te := cp + t3*%.17g + t3*%s + t3*pa + pb*pa", m_star, mean_m)
+  )
+  syn <- paste(syn_lines, collapse = "\n")
   fit <- if (is.null(weights)) {
     lavaan::sem(syn, d, meanstructure = TRUE)
   } else {
@@ -87,10 +91,9 @@ test_that("F1: a model with no mediator covariate still matches `:=`", {
 test_that("F1: the covariate alias row is in @vcov and @estimates", {
   o <- fw_extract(fw_data())
   expect_true("m_c1" %in% rownames(o@vcov))
-  expect_equal(unname(o@estimates[["m_c1"]]),
-               unname(lavaan::coef(lavaan::sem(
-                 "m ~ x + c1\ny ~ x + m + xm + c1", fw_data(),
-                 meanstructure = TRUE))[["m~c1"]]))
+  ref <- lavaan::sem("m ~ x + c1\ny ~ x + m + xm + c1", fw_data(),
+                     meanstructure = TRUE)
+  expect_equal(unname(o@estimates[["m_c1"]]), unname(lavaan::coef(ref)[["m~c1"]]))
 })
 
 # ==============================================================================
