@@ -193,3 +193,77 @@ test_that("F5: weighted four-way SEs match `:=` with the weighted mean", {
   expect_equal(fw_se(fw_extract(d, weights = TRUE)),
                fw_oracle(d, weights = TRUE), tolerance = 1e-6)
 })
+
+# ==============================================================================
+# Review follow-ups: unusable covariates, weighted multi-group, product probe
+# ==============================================================================
+
+test_that("a mediator covariate missing from the data errors instead of being skipped", {
+  d <- fw_data()
+  fit <- lavaan::sem("m ~ x + c1\ny ~ x + m + xm + c1", d, meanstructure = TRUE)
+  acc <- .sem_accessors_lavaan(fit)
+  acc$data <- function() d[, setdiff(names(d), "c1"), drop = FALSE]
+  expect_error(extract_mediation_lavaan(acc, treatment = "x", mediator = "m",
+                                        interaction = "xm"),
+               "Cannot compute the covariate means.*c1")
+})
+
+test_that("a non-numeric mediator covariate errors instead of being skipped", {
+  d <- fw_data()
+  fit <- lavaan::sem("m ~ x + c1\ny ~ x + m + xm + c1", d, meanstructure = TRUE)
+  acc <- .sem_accessors_lavaan(fit)
+  acc$data <- function() {
+    out <- d
+    out$c1 <- as.character(out$c1)
+    out
+  }
+  expect_error(extract_mediation_lavaan(acc, treatment = "x", mediator = "m",
+                                        interaction = "xm"),
+               "Cannot compute the covariate means.*c1")
+})
+
+test_that("a weighted multi-group fit errors rather than using unweighted means", {
+  d <- fw_data(n = 1600)
+  d$g <- rep(1:2, each = 800)
+  fit <- lavaan::sem("m ~ x + c1\ny ~ x + m + xm + c1", d, meanstructure = TRUE,
+                     sampling.weights = "w", group = "g")
+  expect_error(extract_mediation(fit, treatment = "x", mediator = "m",
+                                 interaction = "xm"),
+               "multi-group.*not supported")
+})
+
+test_that("the product probe still finds a hand-built product among many columns", {
+  d <- fw_data()
+  d$w2 <- rnorm(nrow(d))
+  d$xw <- d$x * d$w2
+  set.seed(3)
+  decoys <- as.data.frame(matrix(rnorm(nrow(d) * 60), ncol = 60))
+  names(decoys) <- paste0("z", seq_len(60))
+  # The matching column sits after 60 decoys, so the probe must reject them all.
+  dd <- cbind(decoys, d)
+  fit <- lavaan::sem("m ~ x + w2 + xw\ny ~ x + m + xm + c1", dd,
+                     meanstructure = TRUE)
+  expect_error(extract_mediation(fit, treatment = "x", mediator = "m",
+                                 interaction = "xm"), "mediator equation")
+})
+
+test_that("the product probe handles a continuous treatment and an uncorrelated covariate", {
+  set.seed(8)
+  n <- 1200
+  d <- data.frame(x = rnorm(n), c1 = rnorm(n, 2), w2 = rnorm(n))
+  d$xw <- d$x * d$w2
+  d$m <- 0.3 + 0.5 * d$x + 0.8 * d$c1 + 0.4 * d$xw + rnorm(n)
+  d$xm <- d$x * d$m
+  d$y <- 0.2 * d$x + 0.4 * d$m + 0.3 * d$xm + 0.5 * d$c1 + rnorm(n)
+  # The model's data holds only the model variables, so the second factor (w2)
+  # must be in the model for a hand-built product to be recognized.
+  bad <- lavaan::sem("m ~ x + c1 + w2 + xw\ny ~ x + m + xm + c1", d,
+                     meanstructure = TRUE)
+  expect_error(extract_mediation(bad, treatment = "x", mediator = "m",
+                                 interaction = "xm"), "mediator equation")
+  # Without the xw column, w2 is not a treatment product, so it is accepted.
+  ok <- lavaan::sem("m ~ x + c1 + w2\ny ~ x + m + xm + c1", d,
+                    meanstructure = TRUE)
+  expect_no_error(extract_mediation(ok, treatment = "x", mediator = "m",
+                                    interaction = "xm"))
+})
