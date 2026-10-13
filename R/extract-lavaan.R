@@ -1004,7 +1004,10 @@ extract_mediation_lavaan <- function(object,
 #' report without changing any coefficient it reads: with `m ~ x + w + x:w` the
 #' `x` coefficient is the effect at `w = 0`, not the average `a` path. A product
 #' is recognized by name (`x:w`) or, for a product column built by hand (`xw`),
-#' by equality with the treatment times another column of the data.
+#' by equality (to 1e-12) with the treatment times another column of the data.
+#' A covariate that equals such a product exactly is indistinguishable from one
+#' and is rejected too. Only variables in the model are in `data`, so a
+#' hand-built product whose second factor is not in the model is not recognized.
 #'
 #' @param param_table Parameter table (`lhs`, `op`, `rhs`).
 #' @param data Data frame of the model variables, or `NULL`.
@@ -1020,11 +1023,18 @@ extract_mediation_lavaan <- function(object,
     p <- data[[pred]]
     x <- data[[treatment]]
     if (!is.numeric(p) || !is.numeric(x) || length(unique(p)) < 2L) return(FALSE)
+    # A product x * z is nonzero only where x is, so a handful of such rows
+    # rejects nearly every candidate column before the full comparison.
+    nz <- which(is.finite(x) & x != 0)
+    probe <- nz[seq_len(min(length(nz), 25L))]
     for (z in setdiff(names(data), c(pred, treatment))) {
-      if (is.numeric(data[[z]]) && isTRUE(all.equal(p, x * data[[z]],
-                                                    tolerance = 1e-12))) {
-        return(TRUE)
+      zz <- data[[z]]
+      if (!is.numeric(zz)) next
+      if (length(probe) && !isTRUE(all.equal(p[probe], x[probe] * zz[probe],
+                                             tolerance = 1e-12))) {
+        next
       }
+      if (isTRUE(all.equal(p, x * zz, tolerance = 1e-12))) return(TRUE)
     }
     FALSE
   }

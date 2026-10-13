@@ -34,6 +34,10 @@
       data = function() lavaan::lavInspect(object, "data"),
       weights = function() {
         w <- object@Data@weights
+        if (length(w) > 1L && !all(vapply(w, is.null, logical(1)))) {
+          stop("sampling weights in a multi-group lavaan fit are not supported ",
+               "by the four-way decomposition", call. = FALSE)
+        }
         if (length(w) == 1L) w[[1L]] else NULL
       },
       converged = function() lavaan::lavInspect(object, "converged"),

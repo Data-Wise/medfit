@@ -15,8 +15,14 @@
   - With sampling weights, INTref used unweighted covariate means, so it
     differed from the lm/glm route (1.16 against 1.46 on one data set). It now
     uses the weighted means.
-  Point estimates change only for the weighted case. The effects are the
-  treatment contrast 0 to 1, as on the lm/glm route.
+  - Related: a mediator predictor that is not a numeric column of the model data (for
+    example a latent variable) is now an error ("Cannot compute the covariate
+    means for E[M | X = 0]"); it used to be skipped, which dropped its
+    contribution from INTref without a message. A weighted multi-group fit is
+    an error as well.
+  Point estimates change only for the weighted case and for covariates that
+  used to be skipped. The effects are the treatment contrast 0 to 1, as on the
+  lm/glm route.
 
 ## Documentation
 
