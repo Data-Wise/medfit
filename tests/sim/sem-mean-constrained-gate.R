@@ -80,9 +80,13 @@ for (sname in names(structures)) {
           fit <- tryCatch(suppressWarnings(fit_sem(syn, d)), error = function(e) NULL)
           ok <- !is.null(fit) && isTRUE(fit@converged) && !anyNA(fit@vcov)
           th <- if (ok) fit@theta else NULL
-          feas <- if (!ok) NA_real_ else switch(pname,
-            eq = abs(th[["cp"]] - th[["a"]] * th[["b"]]), zero = abs(th[["a"]] * th[["b"]]),
-            icpt = abs(th[["i_m"]] - th[["i_y"]]))
+          feas <- NA_real_
+          if (ok) {
+            feas <- switch(pname,
+                           eq = abs(th[["cp"]] - th[["a"]] * th[["b"]]),
+                           zero = abs(th[["a"]] * th[["b"]]),
+                           icpt = abs(th[["i_m"]] - th[["i_y"]]))
+          }
           rows[[length(rows) + 1L]] <- list(structure = sname, n = n, seed = seed, shift = shift, problem = pname,
                                             ok = ok, feas = feas, fit = fit)
         }
@@ -99,8 +103,10 @@ lav_n <- 0L
 for (i in seq_along(rows)) {
   r <- rows[[i]]
   if (!r$ok || r$shift == 0 || r$problem == "icpt") next
-  base <- Filter(function(q) q$structure == r$structure && q$n == r$n && q$seed == r$seed && q$shift == 0 &&
-                   q$problem == r$problem, rows)[[1L]]
+  same_cell <- function(q) {
+    q$structure == r$structure && q$n == r$n && q$seed == r$seed && q$shift == 0 && q$problem == r$problem
+  }
+  base <- Filter(same_cell, rows)[[1L]]
   if (!base$ok) next
   est <- max(abs(r$fit@theta[keep] - base$fit@theta[keep]))
   sb <- sqrt(diag(base$fit@vcov))[keep]
