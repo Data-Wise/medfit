@@ -1,8 +1,9 @@
 # Freeze the native SEM engine's v0.8.0 numbers for the 0.9.0 mean-structure gate (T1, G3).
 # Run against the v0.8.0 tag, NOT a tree with the has_mean edits:
 #   git archive v0.8.0 | tar -x -C <empty dir>; (cd <dir>; Rscript <this file> <out.rds>)
-# Stores, per case: the data, the model, F / gradient / expected and observed information at the
-# fitted theta (through the internal evaluators), and the fitted estimates and vcov.
+# Stores, per case: the data, the model, F / gradient / expected and observed information at a point
+# off the optimum (`theta_eval` = 1.1 * fitted theta; the gradient at the optimum is ~0, so a relative
+# tolerance there compares noise) through the internal evaluators, and the fitted estimates and vcov.
 suppressMessages(devtools::load_all("."))
 out <- commandArgs(TRUE)[1]
 
@@ -27,9 +28,10 @@ frozen <- lapply(cases, function(k) {
   ram <- fit@internals$ram
   smp <- .sem_sample(fit@data, ram, fit@internals$weights)
   th <- fit@theta
+  te <- th * 1.1
   c(k, list(
-    theta = th, f = .sem_fml(th, ram, smp), grad = .sem_grad(th, ram, smp),
-    info_expected = .sem_info_expected(th, ram, smp), info_observed = .sem_info_observed(th, ram, smp),
+    theta = th, theta_eval = te, f = .sem_fml(te, ram, smp), grad = .sem_grad(te, ram, smp),
+    info_expected = .sem_info_expected(te, ram, smp), info_observed = .sem_info_observed(te, ram, smp),
     vcov = fit@vcov
   ))
 })
