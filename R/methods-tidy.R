@@ -628,7 +628,8 @@ glance_s7_object <- function(x, ...) {
 # `conf.int` and `conf.level` became `conf_int` and `conf_level` (0.9.0); the old names keep working with a warning.
 .rename_dotted_tidy_args <- function(args) {
   hit <- intersect(c("conf.int", "conf.level"), names(args))
-  lifecycle::deprecate_warn("0.9.0", paste0("tidy(", hit[1L], ")"), paste0("tidy(", gsub(".", "_", hit[1L], fixed = TRUE), ")"))
+  new <- gsub(".", "_", hit[1L], fixed = TRUE)
+  lifecycle::deprecate_warn("0.9.0", paste0("tidy(", hit[1L], ")"), paste0("tidy(", new, ")"))
   names(args)[names(args) %in% hit] <- gsub(".", "_", names(args)[names(args) %in% hit], fixed = TRUE)
   args
 }

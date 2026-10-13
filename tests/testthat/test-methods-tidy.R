@@ -528,7 +528,10 @@ test_that("glance() works for InteractionMediationData", {
 })
 
 test_that("the dotted tidy() argument names still work and warn", {
-  fit <- fit_mediation(formula_y = outcome ~ treatment + mediator1, formula_m = mediator1 ~ treatment, data = mediation_demo, treatment = "treatment", mediator = "mediator1")
+  fit <- fit_mediation(
+    formula_y = outcome ~ treatment + mediator1, formula_m = mediator1 ~ treatment,
+    data = mediation_demo, treatment = "treatment", mediator = "mediator1"
+  )
   new <- generics::tidy(fit, conf_int = TRUE, conf_level = 0.9)
   lifecycle::expect_deprecated(old <- generics::tidy(fit, conf.int = TRUE, conf.level = 0.9))
   expect_equal(old, new)
