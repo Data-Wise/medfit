@@ -22,9 +22,9 @@ Numbering is kept stable because the 0.10.0 plan and its GRILL cite T2, T3, T5 a
 ## Tasks
 
 ### T1: Flag and fixture freeze (S) (M2)
-- [ ] Add `has_mean` to the RAM spec and sample list, default `FALSE`; no behavior change.
-- [ ] **Create the frozen values; they do not exist yet.** `tests/testthat/fixtures/` holds only `memory_exp.rds` and `lavaan-simple-before-aliases.rds`; the pinned estimates in `test-sem-parity.R:128-145` are at 1e-6, and OpenMx is a live oracle that skips when absent. Generate from the **v0.8.0 tag** (not after the `has_mean` edit) and store: F, gradient and expected information at a stored theta to **1e-12**; observed-information SEs to about **1e-9**; fitted estimates to **1e-6** (a 2-ulp change in theta moves observed-information SEs by 1.8e-11, reversing row order moves theta by 1.1e-7, and `test-sem-ipw.R:70-71` already records about 1e-8 drift on the CI matrix). Include a **weighted sandwich case and a constrained case**, so the gate actually exercises `.sem_scores`/`.sem_sample` and the constraint path.
-- [ ] Test: with `has_mean = FALSE` every frozen value is reproduced (G3 gate), written first and **red against a deliberately perturbed `.sem_eval`**.
+- [x] Add `has_mean` to the RAM spec and sample list, default `FALSE`; no behavior change.
+- [x] **Create the frozen values; they do not exist yet.** `tests/testthat/fixtures/` holds only `memory_exp.rds` and `lavaan-simple-before-aliases.rds`; the pinned estimates in `test-sem-parity.R:128-145` are at 1e-6, and OpenMx is a live oracle that skips when absent. Generate from the **v0.8.0 tag** (not after the `has_mean` edit) and store: F, gradient and expected information at a stored theta to **1e-12**; observed-information SEs to about **1e-9**; fitted estimates to **1e-6** (a 2-ulp change in theta moves observed-information SEs by 1.8e-11, reversing row order moves theta by 1.1e-7, and `test-sem-ipw.R:70-71` already records about 1e-8 drift on the CI matrix). Include a **weighted sandwich case and a constrained case**, so the gate actually exercises `.sem_scores`/`.sem_sample` and the constraint path.
+- [x] Test: with `has_mean = FALSE` every frozen value is reproduced (G3 gate), written first and **red against a deliberately perturbed `.sem_eval`**.
 - Files: `R/sem-ml.R`, `tests/testthat/test-sem-*.R`, `helper-sem.R`, new fixtures.
 
 ### T2: Parser, table, and the flag everywhere (S) (H1, M7, M8, L)
