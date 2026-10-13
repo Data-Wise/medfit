@@ -140,11 +140,62 @@ test_that("planted defect: adding p to a mean-structure fit double counts the me
   expect_equal(broken(sat, 3L) - .sem_loglik_df(sat, 3L), 3)
 })
 
-test_that("anova refuses to compare a mean structure with a covariance-only fit until that is implemented", {
+test_that("anova compares a covariance-only fit with a fixed intercept: one degree of freedom, both argument orders", {
   cov_only <- fit_sem(mean_syntax, mediation_demo)
   restricted <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo)
-  expect_error(anova(cov_only, restricted), "mean structure")
-  expect_error(anova(restricted, cov_only), "mean structure")
+  expect_equal(restricted@df - cov_only@df, 1)
+  a1 <- anova(cov_only, restricted)
+  a2 <- anova(restricted, cov_only)
+  expect_equal(unname(a1[2L, "Df diff"]), 1)
+  expect_equal(unname(a1[2L, "Chisq diff"]), unname(a2[2L, "Chisq diff"]))
+  # oracle: the other equations are untouched, so the statistic is n log(RSS0 / RSS1) for the outcome regression
+  d <- mediation_demo
+  rss1 <- sum(stats::resid(stats::lm(outcome ~ mediator1 + treatment, d))^2)
+  rss0 <- sum(stats::resid(stats::lm(outcome ~ 0 + mediator1 + treatment, d))^2)
+  expect_equal(unname(a1[2L, "Chisq diff"]), nrow(d) * log(rss0 / rss1), tolerance = 1e-5)
+  skip_if_not_installed("lavaan")
+  lav <- lavaan::sem(paste0(mean_syntax, "\noutcome ~ 0*1"), d, meanstructure = TRUE, fixed.x = FALSE)
+  full <- lavaan::sem(mean_syntax, d, meanstructure = TRUE, fixed.x = FALSE)
+  expect_equal(unname(a1[2L, "Chisq diff"]), lavaan::lavTestLRT(full, lav)[2L, "Chisq diff"], tolerance = 1e-5)
+})
+
+test_that("anova keeps its checks across mean-structure status", {
+  cov_only <- fit_sem(mean_syntax, mediation_demo)
+  all_free <- fit_sem(mean_syntax, mediation_demo, meanstructure = TRUE)
+  expect_error(anova(cov_only, all_free), "same degrees of freedom")
+  restricted <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo)
   both <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1\nmediator1 ~ 0*1"), mediation_demo)
   expect_no_error(anova(restricted, both))
+  expect_no_error(anova(all_free, restricted))
+  expect_no_error(anova(cov_only, restricted, both))
+})
+
+test_that("planted defect: without the implicit intercepts the tested parameter set misses the restricted intercept", {
+  cov_only <- fit_sem(mean_syntax, mediation_demo)
+  restricted <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo)
+  expect_identical(.sem_anova_nested(cov_only, restricted, c("full", "restricted")), "outcome ~1 ")
+  broken <- sem_mutate(.sem_anova_table, "isTRUE(ram$has_mean)", "TRUE")
+  expect_identical(nrow(broken(cov_only)), nrow(cov_only@table))
+  expect_gt(nrow(.sem_anova_table(cov_only)), nrow(cov_only@table))
+})
+
+test_that("intended change from 0.8.0: a fixed `y ~ 0*1` is a restriction, one degree of freedom, not a dropped row", {
+  without <- fit_sem(mean_syntax, mediation_demo)
+  fixed <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo)
+  # 0.8.0 dropped the row and returned the covariance-only fit (same df and statistic); 0.9.0 tests it
+  expect_identical(without@df, 0)
+  expect_identical(fixed@df, 1)
+  expect_gt(fixed@f, without@f)
+  expect_identical(unname(fixed@theta[names(without@theta)]) |> length(), length(without@theta))
+})
+
+test_that("an intercept and a path may share a label (G12), and the shared value is estimated once", {
+  fit <- fit_sem("outcome ~ s*1 + s*treatment\nmediator1 ~ treatment", mediation_demo)
+  expect_true(fit@converged)
+  tab <- fit@table
+  rows <- tab[tab$lhs == "outcome" & tab$op %in% c("~1", "~"), ]
+  expect_equal(rows$est[rows$op == "~1"], rows$est[rows$op == "~"], tolerance = 1e-8)
+  free <- fit_sem("outcome ~ 1 + treatment\nmediator1 ~ treatment", mediation_demo)
+  expect_equal(length(fit@theta), length(free@theta) - 1L)
+  expect_gt(unname(fit@f), unname(free@f) - 1e-10)
 })
