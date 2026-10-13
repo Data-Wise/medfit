@@ -230,7 +230,7 @@ test_that("print uses the anova layout with a heading", {
 
 # Nesting must hold for the constraints and fixed values of the larger model, not only for the free rows.
 nest_model <- function(tail) {
-  fit_sem(paste0("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\n", tail), mediation_demo)
+  fit_sem(paste0("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\n", tail), medfit::mediation_demo)
 }
 
 test_that("a restricted model that breaks the larger model's equality is not nested in it", {
