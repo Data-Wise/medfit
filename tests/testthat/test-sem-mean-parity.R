@@ -12,7 +12,7 @@ mean_variants <- c(free = "", restricted = "outcome ~ 0*1", constrained = "cp ==
 
 test_that("native estimates, SEs, df and chi-square equal lavaan's on every form and variant", {
   skip_if_not_installed("lavaan")
-  d <- mediation_demo
+  d <- medfit::mediation_demo
   for (form in names(mean_forms)) {
     for (variant in names(mean_variants)) {
       syn <- paste(c(mean_forms[[form]], mean_variants[[variant]]), collapse = "\n")

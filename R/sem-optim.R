@@ -204,7 +204,9 @@
   # T^-1 = I - C, so the multiplier is the theta gradient and the curvature along that column.
   tinv <- if (is.null(ctr)) NULL else diag(ram$q) - ctr$c
   if (any(push)) {
-    hk <- if (is.null(tinv)) diag(hess_all)[push] else {
+    hk <- if (is.null(tinv)) {
+      diag(hess_all)[push]
+    } else {
       vapply(which(push), function(k) drop(crossprod(tinv[, k], hess_all %*% tinv[, k])), numeric(1))
     }
     gk <- abs(r$g[push])

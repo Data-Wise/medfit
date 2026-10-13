@@ -97,7 +97,7 @@ test_that("the lavaan oracle agrees on the saturated mean structure and a restri
 })
 
 test_that("the sandwich with a mean structure equals HC0 for the intercept and slopes of each equation", {
-  d <- mediation_demo
+  d <- medfit::mediation_demo
   fit <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), d, se_type = "sandwich")
   hc <- function(form, nm) {
     m <- stats::lm(form, d)
@@ -115,7 +115,7 @@ test_that("the sandwich with a mean structure equals HC0 for the intercept and s
 })
 
 test_that("weighted sandwich with means: unit weights equal the unweighted sandwich, scale of weights is irrelevant", {
-  d <- mediation_demo
+  d <- medfit::mediation_demo
   syn <- paste0(mean_syntax, "\noutcome ~ 1")
   a <- fit_sem(syn, d, se_type = "sandwich")
   b <- fit_sem(syn, d, se_type = "sandwich", weights = rep(3, nrow(d)))
@@ -193,7 +193,7 @@ test_that("anova compares a covariance-only fit with a fixed intercept: one degr
   expect_equal(unname(a1[2L, "Df diff"]), 1)
   expect_equal(unname(a1[2L, "Chisq diff"]), unname(a2[2L, "Chisq diff"]))
   # oracle: the other equations are untouched, so the statistic is n log(RSS0 / RSS1) for the outcome regression
-  d <- mediation_demo
+  d <- medfit::mediation_demo
   rss1 <- sum(stats::resid(stats::lm(outcome ~ mediator1 + treatment, d))^2)
   rss0 <- sum(stats::resid(stats::lm(outcome ~ 0 + mediator1 + treatment, d))^2)
   expect_equal(unname(a1[2L, "Chisq diff"]), nrow(d) * log(rss0 / rss1), tolerance = 1e-5)

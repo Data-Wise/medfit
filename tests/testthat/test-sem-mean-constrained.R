@@ -4,7 +4,7 @@ con_base <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\noutc
 
 # the demo data moved far from zero: same model, intercepts change, everything else must not
 far_data <- function(shift, scale = 1) {
-  d <- mediation_demo
+  d <- medfit::mediation_demo
   d$outcome <- d$outcome * scale + shift
   d$mediator1 <- d$mediator1 * scale + shift
   d
@@ -39,7 +39,7 @@ test_that("a nonlinear constraint with free intercepts is invariant to the locat
 test_that("an active bound on an intercept equals the fixed-intercept regression (bound in theta units)", {
   bounded <- fit_sem(paste0(con_base, "\ni1 > 0.4"), mediation_demo)
   expect_equal(unname(bounded@theta["i1"]), 0.4, tolerance = 1e-8)
-  d <- mediation_demo
+  d <- medfit::mediation_demo
   ols <- stats::lm(I(outcome - 0.4) ~ 0 + mediator1 + treatment, d)
   expect_equal(unname(bounded@theta[c("b", "cp")]), unname(stats::coef(ols)), tolerance = 1e-5)
   se <- sqrt(diag(bounded@vcov))
