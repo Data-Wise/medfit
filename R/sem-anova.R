@@ -153,7 +153,7 @@ S7::method(anova, SEMFit) <- function(object, ...) {
   both <- merge(pf[!pf$free, c("key", "est")], pr[!pr$free, c("key", "est")], by = "key")
   moved <- both$key[abs(both$est.x - both$est.y) > 1e-8]
   out <- if (length(moved)) paste0("the fixed value of ", moved) else character()
-  out <- c(out, .sem_anova_bounds_kept(full, restricted))
+  out <- c(out, .sem_anova_bounds_kept(full, restricted), .sem_anova_ties_kept(full, restricted))
   cf <- full@internals$constraints
   cf <- if (is.null(cf)) cf else cf[cf$op %in% c("==", "<", ">"), , drop = FALSE]
   if (is.null(cf) || !nrow(cf)) {
@@ -212,6 +212,68 @@ S7::method(anova, SEMFit) <- function(object, ...) {
     }
   }
   out
+}
+
+# Equalities that repeated labels impose in `full` (`M ~ a*X`, `Y ~ a*M`: one parameter on two rows, which the
+# parameter table collapses). The restricted model keeps a tie when its two rows are the same parameter, are
+# fixed at equal values, or are equal by its own equality constraints (the row-space test used for constraints,
+# in the restricted parameter space). A tied row the restricted model lacks cannot be established and is reported.
+.sem_anova_ties_kept <- function(full, restricted) {
+  describe <- function(m) {
+    tab <- m@table
+    name <- ifelse(nzchar(tab$label) & !is.na(tab$label), tab$label, paste0(tab$lhs, tab$op, tab$rhs))
+    data.frame(key = paste(tab$lhs, tab$op, tab$rhs), name = name, label = ifelse(is.na(tab$label), "", tab$label),
+               free = tab$free, est = tab$est, stringsAsFactors = FALSE)
+  }
+  pf <- describe(full)
+  pr <- describe(restricted)
+  groups <- split(pf$key[pf$free & nzchar(pf$label)], pf$label[pf$free & nzchar(pf$label)])
+  groups <- groups[lengths(groups) > 1L]
+  if (!length(groups)) {
+    return(character())
+  }
+  cr <- restricted@internals$constraints
+  rows_r <- if (is.null(cr)) NULL else .sem_constraint_rows(cr, restricted@internals$ram)
+  rn <- restricted@internals$ram$par_names
+  know <- if (length(rows_r$eq$A)) rows_r$eq$A else matrix(0, 0L, length(rn))
+  know_b <- if (length(rows_r$eq$A)) rows_r$eq$b else numeric()
+  vec <- function(j) {
+    a <- numeric(length(rn))
+    if (pr$free[j]) {
+      a[match(pr$name[j], rn)] <- 1
+      list(a = a, b = 0)
+    } else {
+      list(a = a, b = pr$est[j])
+    }
+  }
+  out <- character()
+  for (label in names(groups)) {
+    keys <- groups[[label]]
+    idx <- match(keys, pr$key)
+    if (anyNA(idx)) {
+      out <- c(out, paste0("the shared label '", label, "'"))
+      next
+    }
+    for (k in idx[-1L]) {
+      u <- vec(idx[1L])
+      v <- vec(k)
+      a <- u$a - v$a
+      b <- u$b - v$b
+      ok <- if (all(a == 0)) {
+        abs(b) < 1e-8
+      } else if (nrow(know)) {
+        lambda <- tryCatch(qr.solve(t(know), a), error = function(e) NULL)
+        !is.null(lambda) && sqrt(sum((drop(t(know) %*% lambda) - a)^2)) < 1e-6 && abs(sum(lambda * know_b) - b) < 1e-6
+      } else {
+        FALSE
+      }
+      if (!ok) {
+        out <- c(out, paste0("the shared label '", label, "'"))
+        break
+      }
+    }
+  }
+  unique(out)
 }
 
 # Bounds of `full` (`lower(0)*x`, and single-label inequalities such as `a > 0.1`, which the parser stores as

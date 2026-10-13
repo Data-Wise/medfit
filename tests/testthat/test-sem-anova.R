@@ -287,7 +287,49 @@ test_that("planted defect: without the bound check the dropped bound returns a p
   base <- "mediator1 ~ a1*treatment\noutcome ~ b1*mediator1 + a2*treatment\n"
   full <- fit_sem(paste0(base, "a1 > 0.1"), mediation_demo)
   rest <- fit_sem(paste0(base, "a2 == 0"), mediation_demo)
-  silent <- sem_mutate(.sem_anova_kept, "out <- c(out, .sem_anova_bounds_kept(full, restricted))", "NULL")
+  silent <- sem_mutate(.sem_anova_kept, ".sem_anova_bounds_kept(full, restricted), ", "")
   expect_length(silent(full, rest), 0L)
   expect_length(.sem_anova_kept(full, rest), 1L)
+})
+
+test_that("a shared label of the larger model is an equality the restricted model must keep", {
+  full <- fit_sem("mediator1 ~ a*treatment + g*mediator2\noutcome ~ a*mediator1 + cp*treatment", mediation_demo)
+  released <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ b*mediator1 + 0*treatment", mediation_demo)
+  expect_error(anova(full, released), "not nested")
+  kept <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ a*mediator1 + 0*treatment", mediation_demo)
+  expect_no_error(anova(full, kept))
+  # the same tie written as an explicit equality is kept as well
+  tied <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ b*mediator1 + 0*treatment\na == b", mediation_demo)
+  expect_no_error(anova(full, tied))
+})
+
+test_that("planted defect: without the tie check the released shared label returns a p-value", {
+  full <- fit_sem("mediator1 ~ a*treatment + g*mediator2\noutcome ~ a*mediator1 + cp*treatment", mediation_demo)
+  released <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ b*mediator1 + 0*treatment", mediation_demo)
+  expect_gt(length(.sem_anova_kept(full, released)), 0L)
+  silent <- sem_mutate(.sem_anova_kept, ", .sem_anova_ties_kept(full, restricted))", ")")
+  expect_length(silent(full, released), 0L)
+})
+
+test_that("an active nonlinear inequality at the restricted fit warns that the null is on the boundary", {
+  base <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\n"
+  full <- fit_sem(paste0(base, "a*b > 0"), mediation_demo)
+  null <- fit_sem(paste0(base, "a*b > 0\nb == 0"), mediation_demo)
+  expect_warning(anova(full, null), "a\\*b > 0")
+})
+
+test_that("planted defect: without the nonlinear branch the boundary guard stays silent", {
+  base <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\n"
+  null <- fit_sem(paste0(base, "a*b > 0\nb == 0"), mediation_demo)
+  state <- list(active_bounds = null@diagnostics$active_bounds, constraints = null@internals$constraints,
+                ram = null@internals$ram, theta = null@theta)
+  expect_length(.sem_boundary_active(state, "b"), 1L)
+  silent <- sem_mutate(.sem_boundary_active, "nli <- rows$nli", "nli <- NULL")
+  expect_length(silent(state, "b"), 0L)
+})
+
+test_that("mbco_sem warns on an active nonlinear inequality too", {
+  fit <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\na*b > 0", mediation_demo)
+  warned <- testthat::capture_warnings(mbco_sem(fit, a = "a", b = "b"))
+  expect_true(any(grepl("boundary", warned)))
 })
