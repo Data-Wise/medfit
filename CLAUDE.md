@@ -558,7 +558,7 @@ During `devtools::load_all()`:
 ### Planning Documents
 
 **Package:** `planning/medfit-roadmap.md`
-**Active plan:** `tasks/plan.md` and `tasks/todo.md` (0.8.0; `^tasks$` is Rbuildignored)
+**Active plans:** `planning/specs/PLAN-native-mean-structure-2026-10-12.md` (0.9.0) and `planning/specs/PLAN-native-four-way-2026-10-12.md` (0.10.0); keep new plans under `planning/` (`^planning$` is Rbuildignored, `tasks/` is not covered by that rule). `tasks/plan.md` and `tasks/todo.md` are the closed 0.8.0 plan.
 **Ecosystem:** `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`
 
 ### Related Packages
