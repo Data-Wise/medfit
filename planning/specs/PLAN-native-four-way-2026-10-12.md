@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-12 (revised same day after an Opus adversarial review; the review's findings are numbered F1-F11 below) | **Branch:** `feature/native-four-way` (not created; branching waits for your request)
 **Inputs:** [SPEC amendment (approved)](SPEC-sem-grammar-amendment-product-2026-10-12.md), [GRILL](GRILL-native-mean-structure-2026-10-12.md) G4-G6, [SPEC-interaction-fourway-2026-06-03.md](SPEC-interaction-fourway-2026-06-03.md) (decomposition contract), [PLAN 0.9.0](PLAN-native-mean-structure-2026-10-12.md)
-**Depends on:** 0.9.0 tasks T3 (likelihood), T5 (counts), T7 (methods/extraction) merged, **and U0 below merged**. **U1 and later start only after 0.9.0 T2 merges** (shared files `R/sem-model.R`, `R/fit-sem.R`; [GRILL H8](GRILL-native-four-way-2026-10-12.md)). Only U0 runs in parallel. Grill decisions H1-H8 are applied below.
+**Depends on:** 0.9.0 tasks T3 (likelihood and counts), T5 (logLik/anova), T7 (methods/extraction and the four-way refusal) merged, **and U0 below merged**. **U1 and later start only after 0.9.0 T2 merges** (shared files `R/sem-model.R`, `R/fit-sem.R`; [GRILL H8](GRILL-native-four-way-2026-10-12.md)). Only U0 runs in parallel. Grill decisions H1-H8 are applied below.
 **Out of scope:** latent means and latent products (0.11.0), three-way products.
 
 Sizes: XS/S/M, no hour estimates (0.7.0 grill D7). Checkpoints: **A** after U4, **B** after U8, **C** before release.
