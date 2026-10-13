@@ -206,6 +206,18 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       active <- c(active, sprintf("the constraint '%s'", paste(ineq$text[hit], collapse = "', '")))
     }
   }
+  # nonlinear inequalities (`a*b > 0`): active when the row is at 0 and a tested parameter moves it
+  nli <- rows$nli
+  if (!is.null(nli)) {
+    idx <- match(labels, refit$ram$par_names)
+    idx <- idx[!is.na(idx)]
+    value <- nli$value(refit$theta)
+    jac <- nli$jac(refit$theta, rep(1, length(refit$theta)))
+    hit <- which(value > -1e-6 & rowSums(abs(jac[, idx, drop = FALSE])) > 1e-10)
+    if (length(hit)) {
+      active <- c(active, sprintf("the constraint '%s'", paste(nli$text[hit], collapse = "', '")))
+    }
+  }
   active
 }
 
