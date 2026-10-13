@@ -50,6 +50,13 @@ S7::method(anova, SEMFit) <- function(object, ...) {
   models <- models[order(df, seq_along(df))]
   df <- sort(df)
   .sem_anova_same_data(models)
+  has_mean <- vapply(models, function(m) isTRUE(m@internals$ram$has_mean), TRUE)
+  if (length(unique(has_mean)) > 1L) {
+    stop(sprintf(paste0("'%s' fits a mean structure and '%s' does not: comparing a mean structure with a ",
+                        "covariance-only fit is not supported yet (planned with the 0.9.0 mean-structure ",
+                        "work). Refit both with `meanstructure = TRUE`."),
+                 names(models)[which(has_mean)[1L]], names(models)[which(!has_mean)[1L]]), call. = FALSE)
+  }
   n <- models[[1L]]@n_obs
   rows <- vector("list", length(models))
   rows[[1L]] <- list(df = df[[1L]], chisq = n * models[[1L]]@f, chisq_diff = NA_real_, df_diff = NA_real_, p = NA_real_)

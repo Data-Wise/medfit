@@ -105,6 +105,8 @@ S7::method(nobs, SEMFit) <- function(object, ...) {
 }
 
 # -2 log L = n * (F + log|S| + p + p log(2 pi)), with S the ML covariance and F the minimized discrepancy.
+# A covariance-only fit leaves the means saturated, so its parameter count adds the p means; a mean-structure
+# fit already has its free intercepts in `theta`, and fixed ones are not parameters.
 S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_linter.
   if (!is.null(object@internals$weights)) {
     stop("logLik() is not defined for a fit with sampling weights: the weighted likelihood is a pseudo likelihood",
@@ -113,7 +115,12 @@ S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_lint
   ram <- object@internals$ram
   smp <- .sem_sample(object@data, ram)
   ll <- -0.5 * smp$n * (object@f + smp$logdet + smp$p + smp$p * log(2 * pi))
-  structure(ll, df = .sem_n_free(object) + smp$p, nobs = smp$n, class = "logLik")
+  structure(ll, df = .sem_loglik_df(object, smp$p), nobs = smp$n, class = "logLik")
+}
+
+# Parameter count behind AIC and BIC (see logLik above).
+.sem_loglik_df <- function(object, p) {
+  .sem_n_free(object) + p * !isTRUE(object@internals$ram$has_mean)
 }
 
 # Effective number of free parameters: the parameter vector minus what the explicit equalities remove.

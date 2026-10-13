@@ -120,3 +120,31 @@ test_that("planted defect: an information without dmu/dA gives wrong intercept S
   no_a <- sem_mutate(.sem_dmu, "out[, ram$k_a[i]] <- out[, ram$k_a[i]] + bo[, r] * bm[cc]", "NULL")
   expect_gt(abs(se_of(no_a) / oracle - 1), 0.05)
 })
+
+test_that("logLik counts the means once: a saturated mean structure has the covariance-only AIC and BIC", {
+  cov_only <- fit_sem(mean_syntax, mediation_demo)
+  sat <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo)
+  expect_equal(attr(logLik(sat), "df"), attr(logLik(cov_only), "df"))
+  expect_equal(as.numeric(logLik(sat)), as.numeric(logLik(cov_only)), tolerance = 1e-6)
+  expect_equal(AIC(sat), AIC(cov_only), tolerance = 1e-6)
+  expect_equal(BIC(sat), BIC(cov_only), tolerance = 1e-6)
+  # a fixed intercept is not a parameter
+  restricted <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo)
+  expect_equal(attr(logLik(restricted), "df"), length(restricted@theta))
+  expect_equal(attr(logLik(sat), "df") - attr(logLik(restricted), "df"), 1)
+})
+
+test_that("planted defect: adding p to a mean-structure fit double counts the means", {
+  sat <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo)
+  broken <- sem_mutate(.sem_loglik_df, "p * !isTRUE(object@internals$ram$has_mean)", "p")
+  expect_equal(broken(sat, 3L) - .sem_loglik_df(sat, 3L), 3)
+})
+
+test_that("anova refuses to compare a mean structure with a covariance-only fit until that is implemented", {
+  cov_only <- fit_sem(mean_syntax, mediation_demo)
+  restricted <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo)
+  expect_error(anova(cov_only, restricted), "mean structure")
+  expect_error(anova(restricted, cov_only), "mean structure")
+  both <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1\nmediator1 ~ 0*1"), mediation_demo)
+  expect_no_error(anova(restricted, both))
+})
