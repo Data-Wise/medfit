@@ -1,9 +1,9 @@
-# SPEC AMENDMENT (DRAFT): intercept as a term in a regression, `y ~ 1 + x`
+# SPEC AMENDMENT (APPROVED): intercept as a term in a regression, `y ~ 1 + x`
 
 | | |
 |---|---|
 | **Date** | 2026-10-13 |
-| **Status** | **DRAFT, awaiting the author's approval.** No parser work (0.9.0 T2) starts before approval. |
+| **Status** | **APPROVED 2026-10-13** by the author, in chat ("approved"), as a whole with the recommended defaults: D1 `y ~ 1 + 1 + x` is an error, D2 either position of the `1` is accepted. Not reviewed by an adversarial pass (small, ten-line parser change); 0.9.0 T2 may implement it. |
 | **Amends** | `SPEC-sem-grammar-2026-10-08.md` section 4.1 (`intercept`, `relation`), the lexical rule on a number on the right side, and the error text at `R/sem-parse.R:173-177` |
 | **Origin** | [GRILL-native-mean-structure-2026-10-12.md](GRILL-native-mean-structure-2026-10-12.md) G11; Opus review M-A of [PLAN-native-mean-structure-2026-10-12.md](PLAN-native-mean-structure-2026-10-12.md) |
 | **Evidence labels** | **[V]** verified by a command this session; **[A]** proposed, needs the author's decision |
@@ -49,8 +49,8 @@ Rules:
 
 ## 4. Decisions needed from the author
 
-- **D1 (recommended: error).** `y ~ 1 + 1 + x`: error, or collapse silently as lavaan does? An error is consistent with the engine's rule that a repeated parameter row is a mistake (`y ~ x` twice errors today), and the repeated `1` can only be a typo.
-- **D2 (recommended: accept).** Accept the intercept-first and intercept-last orders alike (lavaan does). Restricting to one position adds a rule with no benefit.
+- **D1 (decided: error, 2026-10-13).** `y ~ 1 + 1 + x`: error, or collapse silently as lavaan does? An error is consistent with the engine's rule that a repeated parameter row is a mistake (`y ~ x` twice errors today), and the repeated `1` can only be a typo.
+- **D2 (decided: accept, 2026-10-13).** Accept the intercept-first and intercept-last orders alike (lavaan does). Restricting to one position adds a rule with no benefit.
 
 ## 5. Impact
 

@@ -11,6 +11,11 @@
   `p.value`, because it returns a base-R `htest`. Update code that reads the
   old column names.
 
+* `anova()` and `mbco_sem()` for `SEMFit` close two more gaps in their guards. The nesting check now also keeps the
+  equalities that repeated labels impose in the larger model (`M ~ a*X`, `Y ~ a*M`): releasing the shared label no
+  longer returns a chi-square p-value. The boundary warning now covers an active nonlinear inequality (`a*b > 0`
+  at the restricted fit), which it missed before.
+
 * `anova()` for `SEMFit` no longer reports a p-value for a restricted model that is not nested in the larger one
   through constraints. The nesting check compared only the free parameters, so `a == b` against
   `a == 0` and `b == 0.5` (the second breaks the first) returned a chi-square p-value. The restricted model must now keep every
