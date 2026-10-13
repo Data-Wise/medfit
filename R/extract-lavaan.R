@@ -1031,11 +1031,10 @@ extract_mediation_lavaan <- function(object,
   check <- function(eq, preds, what) {
     hit <- preds[vapply(preds, is_trt_product, logical(1))]
     if (length(hit)) {
-      fmt <- paste0(
-        "The four-way decomposition does not support a treatment product in ",
-        "the %s equation (%s ~ %s): it changes the effects without changing a ",
-        "coefficient the decomposition reads. Remove it, or fit the model ",
-        "without the four-way decomposition.")
+      fmt <- "The four-way decomposition does not support a treatment product "
+      fmt <- paste0(fmt, "in the %s equation (%s ~ %s): it changes the effects ")
+      fmt <- paste0(fmt, "without changing a coefficient the decomposition reads. ")
+      fmt <- paste0(fmt, "Remove it, or fit the model without the four-way decomposition.")
       msg <- sprintf(fmt, what, eq, hit[1L])
       stop(msg, call. = FALSE)
     }
