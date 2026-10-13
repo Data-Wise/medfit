@@ -3,8 +3,9 @@
 # Internal. With sampling weights w_i (rescaled to sum to n) the fit minimizes the ML discrepancy on the
 # weighted mean and covariance. The robust covariance of the estimates is the sandwich A^-1 B A^-1, with A
 # the information (observed or expected) and B the cross product of the casewise scores of the weighted
-# pseudo log likelihood. With a mean structure the means are functions of theta, so the scores carry a mean part and A is
-# the full information; without one the means are free and unrelated to theta. The sandwich is invariant to the scale of the weights.
+# pseudo log likelihood. With a mean structure the means are functions of theta, so the scores carry a mean
+# part and A is the full information; without one the means are free and unrelated to theta. The sandwich
+# is invariant to the scale of the weights.
 
 # Casewise scores, an n x q matrix: row i is w_i * d/dtheta of the normal log likelihood of case i with the
 # means at their weighted estimates,
