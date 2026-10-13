@@ -134,7 +134,7 @@
       Treatment-by-mediator products: M2 (m* = 0.5)
       
       Effects (unit contrast 0 -> 1, covariates at their means):
-                  estimate std.error conf.low conf.high
+                  estimate std_error conf_low conf_high
       CDE           0.2205    0.1035   0.0178    0.4233
       NDE           0.1339    0.1095  -0.0807    0.3485
       NIE (joint)   0.5422    0.1087   0.3292    0.7553

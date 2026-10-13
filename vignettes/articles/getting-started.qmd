@@ -91,7 +91,7 @@ Add confidence intervals, and ask for only the paths or only the effects:
 
 ```{r}
 #| label: tidy-ci
-tidy(result, type = "effects", conf.int = TRUE)
+tidy(result, type = "effects", conf_int = TRUE)
 ```
 
 The base R generics work too: `coef()`, `vcov()`, `confint()` and `nobs()`.

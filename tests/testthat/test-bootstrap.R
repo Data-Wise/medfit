@@ -704,7 +704,7 @@ test_that("summary method works for BootstrapResult", {
 
   summ <- summary(result)
 
-  expect_s3_class(summ, "summary.BootstrapResult")
+  expect_s3_class(summ, "summary_BootstrapResult")
   expect_equal(summ$method, "parametric")
   expect_true("estimate" %in% names(summ))
   expect_true("ci" %in% names(summ))

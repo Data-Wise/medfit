@@ -90,7 +90,7 @@ lc_probes <- function() {
       tn <- tn[tn$term == "ab", ]
       pe <- lavaan::parameterEstimates(l)
       pe <- pe[pe$label == "ab", ]
-      ok <- close(tn$estimate, pe$est) && close(tn$std.error, pe$se)
+      ok <- close(tn$estimate, pe$est) && close(tn$std_error, pe$se)
       if (ok) "Supported" else "Unsupported"
     },
     "Chi-square and df" = function() {

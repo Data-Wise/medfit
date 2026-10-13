@@ -2,6 +2,15 @@
 
 ## Behavior changes
 
+* Names without dots. Everything medfit names now uses snake_case: `tidy()` and
+  `glance()` columns `std.error`, `p.value`, `conf.low` and `conf.high` became
+  `std_error`, `p_value`, `conf_low` and `conf_high`, and the `tidy()` arguments
+  `conf.int` and `conf.level` became `conf_int` and `conf_level`; the old
+  argument names still work and warn. The S3 classes of `summary()` results are
+  now `summary_MediationData`, `summary_SEMFit` and so on. `mbco_sem()` keeps
+  `p.value`, because it returns a base-R `htest`. Update code that reads the
+  old column names.
+
 * Four-way decomposition from a lavaan fit (`extract_mediation()` with an
   `x:m` or `interaction =` product) gave wrong results in three cases, now fixed:
   - The standard errors of INTref, NDE and TE left out the mediator-covariate

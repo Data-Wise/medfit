@@ -269,7 +269,7 @@ test_that("SerialMediationData paths() handles multiple mediators", {
 })
 
 
-test_that("print.mediation_effect formats output correctly", {
+test_that("print_mediation_effect formats output correctly", {
   set.seed(123)
   n <- 100
   mydata <- data.frame(X = rnorm(n))
@@ -295,7 +295,7 @@ test_that("print.mediation_effect formats output correctly", {
   expect_true(grepl("Proportion Mediated", output[1]))
 })
 
-test_that("print.mediation_effect dispatches via generic print(), not default", {
+test_that("print_mediation_effect dispatches via generic print(), not default", {
   # Regression guard for the .onLoad registerS3method() fix. Because
   # `mediation_effect` is layered on the base `numeric` type, a generic print()
   # call can silently fall back to print.default unless the method is explicitly

@@ -51,7 +51,7 @@ fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
             mediation_demo)
 x <- extract_mediation(fit_m, model_y = fit_y,
                        treatment = "treatment", mediator = "mediator1")
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
 More: [Model Extraction](extraction.html).
@@ -96,7 +96,7 @@ xw <- fit_mediation(
   data = mediation_demo, treatment = "treatment", mediator = "mediator1",
   weights = ipw, se_type = "sandwich"
 )
-tidy(xw, type = "effects", conf.int = TRUE)
+tidy(xw, type = "effects", conf_int = TRUE)
 ```
 
 More: [Getting Started](getting-started.html).
@@ -212,7 +212,7 @@ cdat$Y <- 0.2 * cdat$X + 0.3 * (cdat$M - mbar) + 0.6 * mbar + u[cl] + rnorm(J * 
 #| eval: !expr requireNamespace("lme4", quietly = TRUE)
 xc <- fit_mediation(Y ~ X + M, M ~ X, data = cdat, treatment = "X",
                     mediator = "M", engine = "lmer", cluster = "school")
-tidy(xc, type = "effects", conf.int = TRUE)
+tidy(xc, type = "effects", conf_int = TRUE)
 decompose(xc)
 ```
 
@@ -254,7 +254,7 @@ syntax <- "
 sem_fit <- lavaan::sem(syntax, data = mediation_demo)
 xl <- extract_mediation(sem_fit, treatment = "treatment",
                         mediator = "mediator1", outcome = "outcome")
-tidy(xl, type = "effects", conf.int = TRUE)
+tidy(xl, type = "effects", conf_int = TRUE)
 ```
 
 More: [Model Extraction](extraction.html).
@@ -290,7 +290,7 @@ syntax <- "
 "
 xs <- fit_mediation(model = syntax, data = ldat, treatment = "X",
                     mediator = "eta", engine = "native")
-tidy(xs, type = "effects", conf.int = TRUE)
+tidy(xs, type = "effects", conf_int = TRUE)
 ```
 
 `fit_sem()` fits the same syntax and returns the `SEMFit`. `mbco_sem()` tests the
@@ -448,7 +448,7 @@ chk <- fit_sem("
   outcome ~ mediator1 + mediator2
 ", mediation_demo)
 chk@diagnostics[c("status", "active_bounds", "improper", "sign_check")]
-glance(chk)[, c("df", "chisq", "p.value")]
+glance(chk)[, c("df", "chisq", "p_value")]
 ```
 
 No active bound, no improper solution and a passing sign check mean the optimizer

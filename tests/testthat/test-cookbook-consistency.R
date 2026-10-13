@@ -165,7 +165,7 @@ test_that("recipes 14-17 run after the setup chunk alone and say what they claim
   chk <- fit_sem("mediator1 ~ treatment\nmediator2 ~ treatment\noutcome ~ mediator1 + mediator2", mediation_demo)
   g <- generics::glance(chk)
   expect_equal(g$df, 2)
-  expect_lt(g$p.value, 1e-10)
+  expect_lt(g$p_value, 1e-10)
   # recipe 14: the restricted model has more degrees of freedom, and the test is not significant
   full <- fit_sem("mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment", mediation_demo)
   reduced <- fit_sem("mediator1 ~ a * treatment\noutcome ~ b * mediator1", mediation_demo)

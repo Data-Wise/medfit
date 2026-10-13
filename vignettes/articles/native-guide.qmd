@@ -69,13 +69,13 @@ summary(fit)
 |---|---|
 | free-parameter estimates | `coef(fit)`; names are the label, else `lhs op rhs` without spaces (`M~X`, `eta=~m2`), as `lavaan::coef()` |
 | the covariance matrix | `vcov(fit)` |
-| a table with intervals | `tidy(fit, conf.int = TRUE)`; `confint(fit)` for the matrix |
+| a table with intervals | `tidy(fit, conf_int = TRUE)`; `confint(fit)` for the matrix |
 | defined parameters | `fit@defined`, or the `:=` rows of `tidy()` and `confint()` |
 | chi-square, df, logLik, AIC, BIC | `glance(fit)`; `logLik(fit)`, `nobs(fit)` |
 
 ```{r}
 #| label: tidy
-tidy(fit, conf.int = TRUE)[, c("term", "estimate", "std.error", "conf.low", "conf.high")]
+tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
 glance(fit)
 ```
 

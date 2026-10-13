@@ -11,7 +11,7 @@
 \value{
 \code{coef()} a named numeric vector; \code{vcov()} a matrix; \code{nobs()} an
 integer; \code{logLik()} an object of class \code{"logLik"}; \code{summary()} an object of
-class \code{"summary.SEMFit"}; \code{print()} invisibly returns its argument.
+class \code{"summary_SEMFit"}; \code{print()} invisibly returns its argument.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
@@ -53,17 +53,17 @@ names or positions. A parameter pinned by a constraint or sitting on a
 bound has a zero standard error and a point interval.
 \item \code{tidy()} returns one row per free parameter, then per defined parameter:
 \code{term} (the name \code{coef()} uses), \code{op} (the operator of its row in the
-parameter table, \verb{:=} for a defined parameter), \code{estimate}, \code{std.error},
+parameter table, \verb{:=} for a defined parameter), \code{estimate}, \code{std_error},
 \code{statistic} (the z value, \code{NA} when the standard error is zero),
-\code{p.value} (two-sided), and with \code{conf.int = TRUE} the interval
-\code{confint()} returns (\code{conf.low}, \code{conf.high}, at \code{conf.level}). \code{type}
+\code{p_value} (two-sided), and with \code{conf_int = TRUE} the interval
+\code{confint()} returns (\code{conf_low}, \code{conf_high}, at \code{conf_level}). \code{type}
 is \code{"all"} (default), \code{"parameters"} or \code{"defined"}.
 \item \code{glance()} returns one row: \code{nobs}, \code{npar} (free parameters after the
 equality constraints), \code{df}, \code{chisq} (n times the minimized discrepancy,
-the test of the model against the saturated one), \code{p.value} (\code{NA} when
+the test of the model against the saturated one), \code{p_value} (\code{NA} when
 \code{df} is 0), \code{logLik}, \code{AIC} and \code{BIC} (with the means free, as \code{logLik()}
 defines them). A fit with sampling weights has no likelihood, so its
-\code{chisq}, \code{p.value}, \code{logLik}, \code{AIC} and \code{BIC} are \code{NA}. There is no
+\code{chisq}, \code{p_value}, \code{logLik}, \code{AIC} and \code{BIC} are \code{NA}. There is no
 \code{converged} column: \code{fit_sem()} returns a fit only for a solution that
 passed the acceptance gate and errors otherwise, so \verb{@converged} is \code{TRUE}
 for every \code{SEMFit} and would carry no information.
@@ -83,7 +83,7 @@ coef(fit)
 vcov(fit)[c("a", "b"), c("a", "b")]
 nobs(fit)
 summary(fit)
-generics::tidy(fit, conf.int = TRUE)
+generics::tidy(fit, conf_int = TRUE)
 generics::glance(fit)
 
 # a likelihood-ratio test of b = 0 against the fitted model
