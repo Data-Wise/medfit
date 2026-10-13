@@ -5,8 +5,8 @@ mean_model <- function() {
   # X -> M -> Y with the direct path, intercepts on M and Y, the exogenous mean of X free
   sem_model_obs <- .sem_ram(
     vars = c("X", "M", "Y"), obs = c("X", "M", "Y"),
-    a = sem_rows(list("M", "X"), list("Y", "M"), list("Y", "X")),
-    s = sem_rows(list("X", "X"), list("M", "M"), list("Y", "Y")),
+    a = sem_rows(list("M", "X"), list("Y", "M"), list("Y", "X")), # nolint: object_usage_linter.
+    s = sem_rows(list("X", "X"), list("M", "M"), list("Y", "Y")), # nolint: object_usage_linter.
     m = data.frame(row = c("X", "M", "Y"), label = "", value = NA_real_, name = c("X~1", "M~1", "Y~1"),
                    stringsAsFactors = FALSE)
   )

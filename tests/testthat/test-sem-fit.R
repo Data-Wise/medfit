@@ -80,7 +80,8 @@ test_that("every error row names its cause", {
   fit_err <- function(m, d = dat) .sem_fit_syntax(m, d)
   expect_error(fit_err("level: 1\nY ~ X\nlevel: 2\nY ~ M"), "two-level estimation is not implemented")
   expect_error(fit_err("level: 2\nY ~ X"), "two-level estimation is not implemented")
-  expect_error(.sem_fit_syntax("M ~ 1\nY ~ M + X", dat, meanstructure = FALSE), "meanstructure = FALSE.*writes an intercept")
+  expect_error(.sem_fit_syntax("M ~ 1\nY ~ M + X", dat, meanstructure = FALSE),
+               "meanstructure = FALSE.*writes an intercept")
   expect_error(fit_err("M ~ a*X\nY ~ b*M\na == 1\na == 2"), "no start converged.*constraint 'a == [12]' is violated")
   expect_error(fit_err("Y ~ X\nY ~ X"), "'Y ~ X' is specified more than once")
   expect_error(fit_err("Y ~ X + Zzz"), "not columns of `data`: Zzz")
