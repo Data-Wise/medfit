@@ -10,7 +10,7 @@ Plan: `tasks/plan.md`. Spec plan: `planning/specs/PLAN-native-mean-structure-202
 - [x] S1: observed intercepts end to end (parse `y ~ 1 + x`, tri-state `meanstructure`, likelihood, counts, SEs, messages)
 - [x] S2: scale robustness, centered gate, sweep to 1e5 (**Checkpoint A**)
 - [x] S3: `~0*1` restriction, logLik fix, `anova()` across status, shared labels
-- [ ] S4: weights and sandwich
+- [x] S4: weights and sandwich
 - [ ] S5: constraints, MBCO, re-fit plumbing, lavaan parity (**Checkpoint B**)
 - [ ] S6: methods, extraction, four-way refusal, OpenMx, worked example
 - [ ] S7: docs and close-out (**Checkpoint C**)

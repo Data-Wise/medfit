@@ -36,9 +36,6 @@
   pinned <- !all(act$free) || any(act$active_row)
   z <- if (pinned) act$z_theta else NULL
   meat <- if (se_type == "sandwich") crossprod(.sem_scores(theta, ram, smp))
-  if (!is.null(tmat) && !is.null(meat)) {
-    stop("the sandwich covariance with a mean structure is not implemented yet", call. = FALSE)
-  }
   vc <- if (is.null(z)) {
     bread <- .sem_invert_info(info)
     if (!is.null(bread) && !is.null(tmat)) bread <- tmat %*% bread %*% t(tmat)

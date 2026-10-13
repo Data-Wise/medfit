@@ -96,9 +96,53 @@ test_that("the lavaan oracle agrees on the saturated mean structure and a restri
                tolerance = 1e-4)
 })
 
-test_that("the sandwich is refused with a mean structure until it is implemented", {
-  expect_error(fit_sem(mean_syntax, mediation_demo, meanstructure = TRUE, weights = rep(1, nrow(mediation_demo)),
-                       se_type = "sandwich"), "not implemented yet")
+test_that("the sandwich with a mean structure equals HC0 for the intercept and slopes of each equation", {
+  d <- mediation_demo
+  fit <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), d, se_type = "sandwich")
+  hc <- function(form, nm) {
+    m <- stats::lm(form, d)
+    x <- stats::model.matrix(m)
+    r <- stats::resid(m)
+    bread <- solve(crossprod(x))
+    v <- bread %*% crossprod(x * r) %*% bread
+    stats::setNames(sqrt(diag(v)), nm)
+  }
+  se <- sqrt(diag(fit@vcov))
+  o <- hc(outcome ~ mediator1 + treatment, c("outcome ~1 ", "b", "cp"))
+  expect_equal(unname(se[c("b", "cp")]), unname(o[c("b", "cp")]), tolerance = 1e-6)
+  expect_equal(unname(se["outcome~1"]), unname(o[1L]), tolerance = 1e-6)
+  expect_false(isTRUE(all.equal(se, sqrt(diag(fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), d)@vcov)))))
+})
+
+test_that("weighted sandwich with means: unit weights equal the unweighted sandwich, scale of weights is irrelevant", {
+  d <- mediation_demo
+  syn <- paste0(mean_syntax, "\noutcome ~ 1")
+  a <- fit_sem(syn, d, se_type = "sandwich")
+  b <- fit_sem(syn, d, se_type = "sandwich", weights = rep(3, nrow(d)))
+  expect_equal(a@vcov, b@vcov, tolerance = 1e-8)
+  set.seed(1)
+  w <- stats::runif(nrow(d), 0.5, 2)
+  w1 <- fit_sem(syn, d, se_type = "sandwich", weights = w)
+  w2 <- fit_sem(syn, d, se_type = "sandwich", weights = 10 * w)
+  expect_equal(w1@vcov, w2@vcov, tolerance = 1e-8)
+  # weighted least squares oracle for the outcome intercept
+  m <- stats::lm(outcome ~ mediator1 + treatment, d, weights = w)
+  expect_equal(unname(w1@theta["b"]), unname(stats::coef(m)["mediator1"]), tolerance = 1e-6)
+  x <- stats::model.matrix(m)
+  r <- stats::resid(m)
+  bread <- solve(crossprod(x * sqrt(w)))
+  v <- bread %*% crossprod(x * w * r) %*% bread
+  expect_equal(unname(sqrt(diag(w1@vcov))["b"]), unname(sqrt(diag(v))["mediator1"]), tolerance = 1e-6)
+})
+
+test_that("planted defect: scores without the mean part give the wrong sandwich", {
+  fit <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo, se_type = "sandwich")
+  ram <- fit@internals$ram
+  smp <- .sem_sample(fit@data, ram)
+  good <- .sem_scores(fit@theta, ram, smp)
+  expect_lt(max(abs(colSums(good))), 1e-4)
+  broken <- sem_mutate(.sem_scores, "sc <- sc + drop(z %*% dmu[, k])", "sc <- sc")
+  expect_gt(max(abs(broken(fit@theta, ram, smp) - good)), 0.1)
 })
 
 test_that("planted defect: an information without dmu/dA gives wrong intercept SEs the OLS oracle catches", {

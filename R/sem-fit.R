@@ -30,9 +30,6 @@
   .sem_check_scale(tab)
   conv <- .sem_to_ram(tab)
   ram <- conv$ram
-  if (ram$has_mean && se_type == "sandwich") {
-    stop("`se_type = \"sandwich\"` with a mean structure is not implemented yet (planned in 0.9.0)", call. = FALSE)
-  }
 
   absent <- setdiff(ram$obs, names(data))
   if (length(absent)) {
