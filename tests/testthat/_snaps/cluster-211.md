@@ -35,7 +35,7 @@
       X -> M -> Y, clusters `school`
       
       Effects (unit contrast 0 -> 1):
-                       estimate std.error conf.low conf.high
+                       estimate std_error conf_low conf_high
       NIE                  0.30    0.0857   0.1320    0.4680
       NDE                  0.20    0.1414  -0.0772    0.4772
       Total                0.50    0.1669   0.1729    0.8271
@@ -107,7 +107,7 @@
       X -> M -> Y, clusters `school`
       
       Effects (unit contrast 0 -> 1):
-                       estimate std.error conf.low conf.high
+                       estimate std_error conf_low conf_high
       NIE                  0.30    0.0857   0.1320    0.4680
       NDE                  0.20    0.1414  -0.0772    0.4772
       Total                0.50    0.1669   0.1729    0.8271

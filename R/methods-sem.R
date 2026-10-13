@@ -48,17 +48,17 @@
 #'   bound has a zero standard error and a point interval.
 #' * `tidy()` returns one row per free parameter, then per defined parameter:
 #'   `term` (the name `coef()` uses), `op` (the operator of its row in the
-#'   parameter table, `:=` for a defined parameter), `estimate`, `std.error`,
+#'   parameter table, `:=` for a defined parameter), `estimate`, `std_error`,
 #'   `statistic` (the z value, `NA` when the standard error is zero),
-#'   `p.value` (two-sided), and with `conf.int = TRUE` the interval
-#'   `confint()` returns (`conf.low`, `conf.high`, at `conf.level`). `type`
+#'   `p_value` (two-sided), and with `conf_int = TRUE` the interval
+#'   `confint()` returns (`conf_low`, `conf_high`, at `conf_level`). `type`
 #'   is `"all"` (default), `"parameters"` or `"defined"`.
 #' * `glance()` returns one row: `nobs`, `npar` (free parameters after the
 #'   equality constraints), `df`, `chisq` (n times the minimized discrepancy,
-#'   the test of the model against the saturated one), `p.value` (`NA` when
+#'   the test of the model against the saturated one), `p_value` (`NA` when
 #'   `df` is 0), `logLik`, `AIC` and `BIC` (with the means free, as `logLik()`
 #'   defines them). A fit with sampling weights has no likelihood, so its
-#'   `chisq`, `p.value`, `logLik`, `AIC` and `BIC` are `NA`. There is no
+#'   `chisq`, `p_value`, `logLik`, `AIC` and `BIC` are `NA`. There is no
 #'   `converged` column: `fit_sem()` returns a fit only for a solution that
 #'   passed the acceptance gate and errors otherwise, so `@converged` is `TRUE`
 #'   for every `SEMFit` and would carry no information.
@@ -69,7 +69,7 @@
 #'
 #' @return `coef()` a named numeric vector; `vcov()` a matrix; `nobs()` an
 #'   integer; `logLik()` an object of class `"logLik"`; `summary()` an object of
-#'   class `"summary.SEMFit"`; `print()` invisibly returns its argument.
+#'   class `"summary_SEMFit"`; `print()` invisibly returns its argument.
 #' @examples
 #' \donttest{
 #' fit <- fit_sem(
@@ -80,7 +80,7 @@
 #' vcov(fit)[c("a", "b"), c("a", "b")]
 #' nobs(fit)
 #' summary(fit)
-#' generics::tidy(fit, conf.int = TRUE)
+#' generics::tidy(fit, conf_int = TRUE)
 #' generics::glance(fit)
 #'
 #' # a likelihood-ratio test of b = 0 against the fitted model
@@ -168,18 +168,18 @@ S7::method(summary, SEMFit) <- function(object, ...) {
       df = object@df, information = object@information, converged = object@converged, f = object@f,
       diagnostics = object@diagnostics
     ),
-    class = "summary.SEMFit"
+    class = "summary_SEMFit"
   )
 }
 
 #' Print Summary for SEMFit
 #'
-#' @param x A summary.SEMFit object
+#' @param x A summary_SEMFit object
 #' @param ... Additional arguments (ignored)
 #' @return Invisibly returns `x`. Called for its side effect of printing the
 #'   formatted summary to the console.
-#' @export
-print.summary.SEMFit <- function(x, ...) {
+#' @noRd
+print_summary_semfit <- function(x, ...) {
   cat("Summary of SEMFit\n")
   cat("=================\n\n")
   cat(sprintf("Observations: %d", x$n_obs))
@@ -275,23 +275,23 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
 }
 
 # One row per free parameter, then per defined parameter: estimate, standard error, z statistic and its two-sided
-# p-value, and with `conf.int` the Wald interval, the same numbers `confint()` returns. `term` is the name `coef()`
+# p-value, and with `conf_int` the Wald interval, the same numbers `confint()` returns. `term` is the name `coef()`
 # uses; `op` is the operator of the parameter's row in the parameter table (`:=` for a defined parameter).
-.tidy_semfit <- function(x, type = c("all", "parameters", "defined"), conf.int = FALSE, conf.level = 0.95, ...) {
+.tidy_semfit <- function(x, type = c("all", "parameters", "defined"), conf_int = FALSE, conf_level = 0.95, ...) {
   type <- match.arg(type)
-  checkmate::assert_flag(conf.int, .var.name = "conf.int")
-  checkmate::assert_number(conf.level, lower = 0, upper = 1, .var.name = "conf.level")
+  checkmate::assert_flag(conf_int, .var.name = "conf_int")
+  checkmate::assert_number(conf_level, lower = 0, upper = 1, .var.name = "conf_level")
   v <- .sem_est_se(x)
   op <- c(.sem_theta_op(x), rep(":=", nrow(x@defined)))
   keep <- switch(type, all = rep(TRUE, length(v$est)), parameters = !v$defined, defined = v$defined)
-  w <- .sem_wald(v$est, v$se, conf.level)
+  w <- .sem_wald(v$est, v$se, conf_level)
   out <- data.frame(
-    term = names(v$est), op = op, estimate = unname(v$est), std.error = unname(v$se), statistic = w$z,
-    p.value = w$p, stringsAsFactors = FALSE
+    term = names(v$est), op = op, estimate = unname(v$est), std_error = unname(v$se), statistic = w$z,
+    p_value = w$p, stringsAsFactors = FALSE
   )
-  if (conf.int) {
-    out$conf.low <- w$low
-    out$conf.high <- w$high
+  if (conf_int) {
+    out$conf_low <- w$low
+    out$conf_high <- w$high
   }
   out <- out[keep, , drop = FALSE]
   rownames(out) <- NULL
@@ -313,7 +313,7 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
   ll <- if (weighted) NULL else stats::logLik(x)
   out <- data.frame(
     nobs = x@n_obs, npar = .sem_n_free(x), df = x@df, chisq = chisq,
-    p.value = if (!weighted && x@df > 0) stats::pchisq(chisq, df = x@df, lower.tail = FALSE) else NA_real_,
+    p_value = if (!weighted && x@df > 0) stats::pchisq(chisq, df = x@df, lower.tail = FALSE) else NA_real_,
     logLik = if (weighted) NA_real_ else as.numeric(ll),
     AIC = if (weighted) NA_real_ else stats::AIC(ll), BIC = if (weighted) NA_real_ else stats::BIC(ll),
     stringsAsFactors = FALSE

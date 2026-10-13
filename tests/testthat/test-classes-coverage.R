@@ -64,7 +64,7 @@ make_serial <- function(n_med = 2) {
 # MediationData: summary -> print.summary, and show
 # ==============================================================================
 
-test_that("print.summary.MediationData prints all sections incl. residual SDs", {
+test_that("print_summary_mediation_data prints all sections incl. residual SDs", {
   out <- capture.output(print(summary(make_med())))
   expect_true(any(grepl("Summary of MediationData", out)))
   expect_true(any(grepl("Residual Standard Deviations", out)))
@@ -73,12 +73,12 @@ test_that("print.summary.MediationData prints all sections incl. residual SDs", 
   expect_true(any(grepl("Variance-Covariance", out)))
 })
 
-test_that("print.summary.MediationData omits residual SDs when both are NULL", {
+test_that("print_summary_mediation_data omits residual SDs when both are NULL", {
   out <- capture.output(print(summary(make_med(sigma_m = NULL, sigma_y = NULL))))
   expect_false(any(grepl("Residual Standard Deviations", out)))
 })
 
-test_that("print.summary.MediationData reports non-convergence", {
+test_that("print_summary_mediation_data reports non-convergence", {
   out <- capture.output(print(summary(make_med(converged = FALSE))))
   expect_true(any(grepl("Converged:\\s*No", out)))
 })
@@ -91,14 +91,14 @@ test_that("show(MediationData) prints the object", {
 # BootstrapResult: summary -> print.summary (parametric vs plugin), and show
 # ==============================================================================
 
-test_that("print.summary.BootstrapResult prints CI + distribution for parametric", {
+test_that("print_summary_bootstrap_result prints CI + distribution for parametric", {
   out <- capture.output(print(summary(make_boot("parametric"))))
   expect_true(any(grepl("Summary of BootstrapResult", out)))
   expect_true(any(grepl("Confidence Interval", out)))
   expect_true(any(grepl("Bootstrap Distribution", out)))
 })
 
-test_that("print.summary.BootstrapResult omits CI for the plugin method", {
+test_that("print_summary_bootstrap_result omits CI for the plugin method", {
   out <- capture.output(print(summary(make_boot("plugin"))))
   expect_false(any(grepl("Confidence Interval", out)))
 })
@@ -111,13 +111,13 @@ test_that("show(BootstrapResult) prints the object", {
 # SerialMediationData: summary -> print.summary (2 and 3 mediators)
 # ==============================================================================
 
-test_that("print.summary.SerialMediationData prints for a 2-mediator chain", {
+test_that("print_summary_serial_mediation_data prints for a 2-mediator chain", {
   out <- capture.output(print(summary(make_serial(2))))
   expect_true(length(out) > 0)
   expect_true(any(grepl("Serial", out)))
 })
 
-test_that("print.summary.SerialMediationData prints for a 3-mediator chain", {
+test_that("print_summary_serial_mediation_data prints for a 3-mediator chain", {
   out <- capture.output(print(summary(make_serial(3))))
   expect_true(length(out) > 0)
   expect_true(any(grepl("Serial", out)))

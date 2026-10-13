@@ -70,7 +70,7 @@ table lists loadings only for `m2` and `m3`.
 ```{r}
 #| label: extract
 x <- extract_mediation(fit, treatment = "X", mediator = "eta", outcome = "Y")
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
 ## Why not average the indicators

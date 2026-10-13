@@ -70,7 +70,7 @@ and the bootstrap work as on any other page:
 x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
                        outcome = "outcome")
 class(x)[1]
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
 For one mediator, `fit_mediation()` does both steps:
@@ -96,8 +96,8 @@ glm_fit <- fit_mediation(
   mediator1 ~ treatment + covariate1 + covariate2,
   data = mediation_demo, treatment = "treatment", mediator = "mediator1"
 )
-rbind(native = tidy(x, type = "effects")$std.error,
-      glm = tidy(glm_fit, type = "effects")$std.error)
+rbind(native = tidy(x, type = "effects")$std_error,
+      glm = tidy(glm_fit, type = "effects")$std_error)
 ```
 
 ## Limits

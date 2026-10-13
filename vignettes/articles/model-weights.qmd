@@ -61,7 +61,7 @@ fit <- fit_mediation(
   data = mediation_demo, treatment = "treatment", mediator = "mediator1",
   weights = ipw, se_type = "sandwich"
 )
-tidy(fit, type = "effects", conf.int = TRUE)
+tidy(fit, type = "effects", conf_int = TRUE)
 ```
 
 ## What each choice does

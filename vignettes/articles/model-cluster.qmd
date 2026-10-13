@@ -71,7 +71,7 @@ whole clusters.
 ```{r}
 #| label: effects
 #| eval: !expr has_lme4
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 decompose(x)
 ```
 

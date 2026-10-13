@@ -78,7 +78,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Call | Gives |
 |---|---|
 | `tidy(x, type = "effects")` | Effects with delta-method SEs |
-| `tidy(x, type = "paths", conf.int = TRUE)` | Paths with intervals |
+| `tidy(x, type = "paths", conf_int = TRUE)` | Paths with intervals |
 | `glance(x)` | One-row summary |
 | `confint(x, parm = "effects")` | Effect intervals |
 | `confint(x, parm = "paths")` | Path intervals |

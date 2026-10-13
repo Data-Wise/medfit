@@ -288,7 +288,7 @@ intervals, and `glance()` gives a one-row summary:
 ```{r}
 #| label: lm-parallel-tidy
 library(generics)
-tidy(med_parallel_lm, type = "effects", conf.int = TRUE)
+tidy(med_parallel_lm, type = "effects", conf_int = TRUE)
 
 glance(med_parallel_lm)
 ```
@@ -338,7 +338,7 @@ med_joint <- extract_mediation(
 )
 med_joint
 
-generics::tidy(med_joint, type = "effects", conf.int = TRUE)
+generics::tidy(med_joint, type = "effects", conf_int = TRUE)
 ```
 
 `a*` is each mediator's **total** treatment effect: for `mediator2` it includes the
@@ -625,7 +625,7 @@ coefficient and `m_star`:
 ```{r}
 #| label: lm-interaction-tidy
 library(generics)
-tidy(med_int, type = "components", conf.int = TRUE)
+tidy(med_int, type = "components", conf_int = TRUE)
 
 tidy(med_int, type = "effects")
 
@@ -932,7 +932,7 @@ tidy(med_data, type = "paths")
 tidy(med_data, type = "effects")
 
 # With confidence intervals
-tidy(med_data, conf.int = TRUE)
+tidy(med_data, conf_int = TRUE)
 
 # One-row summary
 glance(med_data)

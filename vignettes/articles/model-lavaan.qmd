@@ -44,7 +44,7 @@ fit <- lavaan::sem(syntax, data = mediation_demo)
 x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
                        outcome = "outcome")
 class(x)[1]
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
 Every function from the [simple mediation page](model-simple.html) works on `x`.
@@ -65,7 +65,7 @@ xs <- extract_mediation(lavaan::sem(syntax_s, data = mediation_demo),
                         mediator = c("mediator1", "mediator2"),
                         outcome = "outcome")
 class(xs)[1]
-tidy(xs, type = "effects", conf.int = TRUE)
+tidy(xs, type = "effects", conf_int = TRUE)
 ```
 
 The row `nie` is the chain through both mediators; `nie_total` adds the paths that

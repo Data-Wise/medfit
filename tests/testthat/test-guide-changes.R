@@ -39,7 +39,7 @@ test_that("the simple-fit total-effect SE is 0.119, not the old 0.127", {
     mediator1 ~ treatment + covariate1 + covariate2,
     data = mediation_demo, treatment = "treatment", mediator = "mediator1"
   )
-  se_te <- tidy(fit, type = "effects")$std.error[3]
+  se_te <- tidy(fit, type = "effects")$std_error[3]
   expect_equal(round(se_te, 3), 0.119)
 })
 

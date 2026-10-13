@@ -41,7 +41,7 @@ ref <- parameterEstimates(sem(model, mediation_demo, fixed.x = FALSE))
 rows <- native[native$term %in% c("a", "b", "cp", "ab"), ]
 i <- match(rows$term, ref$label)
 data.frame(term = rows$term, native = rows$estimate, lavaan = ref$est[i],
-           se_native = rows$std.error, se_lavaan = ref$se[i])
+           se_native = rows$std_error, se_lavaan = ref$se[i])
 ```
 
 `fixed.x = FALSE` matters: lavaan fixes exogenous covariates by default, the

@@ -71,7 +71,7 @@ xp <- extract_mediation(pfit, treatment = "treatment",
                         mediator = c("mediator1", "mediator2"),
                         outcome = "outcome", structure = "parallel")
 class(xp)[1]
-tidy(xp, type = "effects", conf.int = TRUE)
+tidy(xp, type = "effects", conf_int = TRUE)
 ```
 
 ## Sampling weights

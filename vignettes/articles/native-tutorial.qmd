@@ -59,7 +59,7 @@ Check: `Converged: Yes`, and `ab` appears with a standard error.
 
 ```{r}
 #| label: read
-tidy(fit, conf.int = TRUE)[, c("term", "estimate", "std.error", "conf.low", "conf.high")]
+tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
 ```
 
 `confint(fit)` gives the same intervals on their own. Parameter names follow
@@ -70,7 +70,7 @@ lavaan: a label if you gave one, otherwise `lhs~rhs`, `X~~X` for a variance and
 
 ```{r}
 #| label: glance
-glance(fit)[, c("npar", "df", "chisq", "p.value", "AIC", "BIC")]
+glance(fit)[, c("npar", "df", "chisq", "p_value", "AIC", "BIC")]
 ```
 
 A model with no restriction has 0 degrees of freedom, so there is nothing to
@@ -123,7 +123,7 @@ mbco_sem(fit_sem(chain, mediation_demo), paths = c("a", "d", "b"))
 #| label: extract
 x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
                        outcome = "outcome")
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
 From here `nie()`, `confint()` and `bootstrap_mediation()` work as on any other

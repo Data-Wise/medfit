@@ -38,7 +38,7 @@ test_that("the interval guide's numbers and statements hold", {
   fit <- fit_mediation(fy, fm, data = mediation_demo, treatment = "treatment", mediator = "mediator1")
   indirect <- function(theta) theta["m_treatment"] * theta["y_mediator1"]
 
-  delta <- tidy(fit, type = "effects", conf.int = TRUE)
+  delta <- tidy(fit, type = "effects", conf_int = TRUE)
   par_boot <- bootstrap_mediation(indirect,
     method = "parametric", mediation_data = fit,
     n_boot = 2000, seed = 1
@@ -51,8 +51,8 @@ test_that("the interval guide's numbers and statements hold", {
     n_boot = 300, seed = 1
   )
   # "agree to within about 0.01" on this dataset (0.02 allows the smaller bootstrap here)
-  expect_lt(abs(delta$conf.low[1] - par_boot@ci_lower), 0.02)
-  expect_lt(abs(delta$conf.high[1] - par_boot@ci_upper), 0.02)
+  expect_lt(abs(delta$conf_low[1] - par_boot@ci_lower), 0.02)
+  expect_lt(abs(delta$conf_high[1] - par_boot@ci_upper), 0.02)
   expect_lt(abs(np_boot@ci_lower - par_boot@ci_lower), 0.03)
   expect_lt(abs(np_boot@ci_upper - par_boot@ci_upper), 0.03)
 
@@ -61,9 +61,9 @@ test_that("the interval guide's numbers and statements hold", {
   expect_true(is.na(plug@ci_upper))
 
   expect_warning(confint(fit, parm = "effects"), "Normal approximation for NIE may be inaccurate")
-  expect_silent(tidy(fit, type = "effects", conf.int = TRUE))
+  expect_silent(tidy(fit, type = "effects", conf_int = TRUE))
   ci <- suppressWarnings(confint(fit, parm = "effects"))
-  expect_equal(unname(ci["nie", ]), c(delta$conf.low[1], delta$conf.high[1]), tolerance = 1e-6)
+  expect_equal(unname(ci["nie", ]), c(delta$conf_low[1], delta$conf_high[1]), tolerance = 1e-6)
 })
 
 test_that("a planted dangling link in a guide would be caught", {

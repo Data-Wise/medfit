@@ -860,22 +860,22 @@ test_that("coef(), vcov() and nobs() read the object", {
   expect_identical(nobs(o), 400L)
 })
 
-test_that("confint() equals tidy(conf.int = TRUE) to 1e-12", {
+test_that("confint() equals tidy(conf_int = TRUE) to 1e-12", {
   o <- snap_object()
-  td <- tidy(o, conf.int = TRUE)
+  td <- tidy(o, conf_int = TRUE)
   for (parm in c("paths", "effects")) {
     ci <- confint(o, parm = parm)
     rows <- td[td$term %in% rownames(ci), ]
     expect_identical(rows$term, rownames(ci))
-    expect_equal(unname(ci[, 1]), rows$conf.low, tolerance = 1e-12)
-    expect_equal(unname(ci[, 2]), rows$conf.high, tolerance = 1e-12)
+    expect_equal(unname(ci[, 1]), rows$conf_low, tolerance = 1e-12)
+    expect_equal(unname(ci[, 2]), rows$conf_high, tolerance = 1e-12)
   }
   expect_identical(tidy(o, type = "paths")$term,
                    c("a", "b_within", "b_between", "c_prime"))
   expect_identical(tidy(o, type = "effects")$term,
                    c("nie", "nde", "te", "own", "spillover"))
   # The tidy SEs are the delta-method SEs.
-  expect_equal(tidy(o, type = "effects")$std.error,
+  expect_equal(tidy(o, type = "effects")$std_error,
                unname(.effect_se(o, c("nie", "nde", "te", "own", "spillover"))),
                tolerance = 1e-12)
 })
@@ -895,9 +895,9 @@ test_that("quick() works and med() still refuses cluster =", {
                    cluster = "covariate1"), "only used with engine")
 })
 
-test_that("print.summary is registered for S3 dispatch", {
-  expect_true(is.function(utils::getS3method("print", "summary.ClusterMediationData")))
-  expect_s3_class(summary(snap_object()), "summary.ClusterMediationData")
+test_that("print_summary is registered for S3 dispatch", {
+  expect_true(is.function(utils::getS3method("print", "summary_ClusterMediationData")))
+  expect_s3_class(summary(snap_object()), "summary_ClusterMediationData")
 })
 
 
@@ -1108,12 +1108,12 @@ test_that("KR path intervals are t intervals; effect intervals stay normal (D10)
   expect_equal(unname(ci[, 2]), unname(est + q * se), tolerance = 1e-12)
   expect_true(all(q > stats::qnorm(0.975)))
   # tidy agrees with confint, for the paths and the effects.
-  td <- tidy(o, conf.int = TRUE)
+  td <- tidy(o, conf_int = TRUE)
   for (parm in c("paths", "effects")) {
     cm <- confint(o, parm = parm)
     rows <- td[td$term %in% rownames(cm), ]
-    expect_equal(unname(cm[, 1]), rows$conf.low, tolerance = 1e-12)
-    expect_equal(unname(cm[, 2]), rows$conf.high, tolerance = 1e-12)
+    expect_equal(unname(cm[, 1]), rows$conf_low, tolerance = 1e-12)
+    expect_equal(unname(cm[, 2]), rows$conf_high, tolerance = 1e-12)
   }
   eff <- confint(o, parm = "effects")
   e_se <- .effect_se(o, rownames(eff))
@@ -1216,7 +1216,7 @@ test_that("the fit_mediation() route and the extract route give the same object"
                unname(vcov(by_extract)[c("a", "b_between"), c("a", "b_between")]),
                tolerance = 1e-6)
   # Known answer: NIE = a * b_B = 0.3, within 3 SE of it on both routes (coarse: SE is about 0.08).
-  se_nie <- tidy(by_fit, type = "effects")$std.error[1]
+  se_nie <- tidy(by_fit, type = "effects")$std_error[1]
   expect_lt(abs(unname(nie(by_fit)) - 0.3), 3 * se_nie)
   expect_lt(abs(unname(nie(by_extract)) - 0.3), 3 * se_nie)
 })

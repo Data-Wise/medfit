@@ -57,7 +57,7 @@ error are the first things to read.
 
 ```{r}
 #| label: read
-tidy(fit, conf.int = TRUE)[, c("term", "estimate", "std.error", "conf.low", "conf.high")]
+tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
 ```
 
 `summary(fit)` adds the optimizer diagnostics (active bounds, improper solution);
@@ -91,7 +91,7 @@ anova(tied, fit)
 #| label: extract
 x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
                        outcome = "outcome")
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
 From here `nie()`, `confint()` and `bootstrap_mediation()` work as on any other

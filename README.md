@@ -83,7 +83,7 @@ library(generics)
 # Tidy tibble of all effects
 tidy(result)
 #> # A tibble: 6 × 3
-#>   term    estimate std.error
+#>   term    estimate std_error
 #>   <chr>      <dbl>     <dbl>
 #> 1 a          0.471    0.0750
 #> 2 b          0.349    0.0689
