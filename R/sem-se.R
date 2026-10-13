@@ -43,7 +43,14 @@
   } else if (ncol(z) == 0L) {
     matrix(0, ram$q, ram$q)
   } else {
-    zc <- if (is.null(tmat)) z else solve(tmat, z)
+    zc <- z
+    if (!is.null(tmat)) {
+      # an orthonormal basis of the same subspace in the centered coordinates: the basis from the active set is in
+      # theta units, where a tangent along a path also moves its intercept by the mean, and that inflates the
+      # condition number of Z' I Z by the square of mean/sd
+      zc <- qr.Q(qr(solve(tmat, z)))[, seq_len(ncol(z)), drop = FALSE]
+      z <- tmat %*% zc
+    }
     bread <- .sem_invert_info(crossprod(zc, info %*% zc))
     if (is.null(bread)) {
       NULL

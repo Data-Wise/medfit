@@ -71,7 +71,20 @@
   start[given] <- conv$start[given]
   lb <- ifelse(is.na(conv$lower), -Inf, conv$lower)
   ub <- ifelse(is.na(conv$upper), Inf, conv$upper)
-  fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+  shift <- .sem_shift_ok(ram, smp, parsed$constraints, lb, ub, given)
+  if (shift) {
+    # Constraints that leave every intercept free act on A and S alone, which a shift of the data by its mean does
+    # not change: optimize on the centered data (the intercepts are then the centered coordinates phi, free of
+    # the mean/sd conditioning problem) and map the solution back, theta = T (phi + c0).
+    smp_opt <- .sem_sample(as.data.frame(sweep(as.matrix(x[, ram$obs, drop = FALSE]), 2L, smp$xbar)), ram, weights)
+    start <- .sem_default_start(ram, smp_opt)
+    start[given] <- conv$start[given]
+    fit <- .sem_optimize(ram, smp_opt, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+    ctr <- .sem_center_map(ram, smp)
+    fit$theta <- stats::setNames(as.vector(ctr$t %*% (fit$theta + ctr$c0)), ram$par_names)
+  } else {
+    fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+  }
   if (!is.null(cons$nl)) {
     # a nonlinear equality removes parameters where its gradient is: count them at the solution
     eq_rank <- .sem_eq_rank_at(cons, fit$theta, u0)
@@ -92,6 +105,26 @@
       eq_rank = eq_rank, branch = character()
     )
   )
+}
+
+# Whether the fit can run on mean-centered data: a mean structure whose intercepts are all free, unbounded,
+# unshared and absent from every constraint and from the user's starting values, with a centering map to
+# undo (a free intercept on a variable that has a path entry). Anything else keeps the plain coordinates.
+.sem_shift_ok <- function(ram, smp, constraints, lb, ub, given) {
+  if (!isTRUE(ram$has_mean) || is.null(.sem_center_map(ram, smp))) {
+    return(FALSE)
+  }
+  if (length(unique(ram$k_m)) != length(ram$k_m) || any(ram$k_m %in% which(given)) ||
+        any(is.finite(c(lb[ram$k_m], ub[ram$k_m])))) {
+    return(FALSE)
+  }
+  if (!all(ram$obs_idx %in% ram$pos_m) || any(ram$k_m %in% ram$k_a)) {
+    return(FALSE)
+  }
+  used <- if (is.null(constraints)) character() else unlist(lapply(c(constraints$lhs, constraints$rhs), function(e) {
+    tryCatch(all.vars(str2lang(e)), error = function(err) character())
+  }))
+  !any(ram$par_names[ram$k_m] %in% used)
 }
 
 # A model with zero-product constraints (`a*b == 0`, `b1*b2*b3 == 0`): one fit per way of setting a factor of

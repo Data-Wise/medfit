@@ -146,7 +146,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   if (length(dots)) {
     stop("unused arguments for engine = \"native\": ", paste(names(dots), collapse = ", "), call. = FALSE)
   }
-  fit_args <- c("information", "n_starts", "control")
+  fit_args <- c("information", "n_starts", "control", "meanstructure")
   extract_args <- c("outcome", "structure", "decomposition", "interaction", "a_label", "b_label", "cp_label")
   unknown <- setdiff(names(engine_args), c(fit_args, extract_args))
   if (length(unknown)) {

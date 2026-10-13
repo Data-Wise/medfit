@@ -200,9 +200,14 @@
   # KKT sign at an active bound: moving into the interior must not lower F. The gradient is judged in
   # the unit-free scale g / sqrt(H_kk) against the stationarity threshold.
   push <- (at_lb & !at_ub & r$g < 0) | (at_ub & !at_lb & r$g > 0)
+  # A bound is on a theta coordinate. In the centered coordinates the unit move of theta_k is the column of
+  # T^-1 = I - C, so the multiplier is the theta gradient and the curvature along that column.
+  tinv <- if (is.null(ctr)) NULL else diag(ram$q) - ctr$c
   if (any(push)) {
-    hk <- diag(hess_all)[push]
-    gk <- abs(g_all[push])
+    hk <- if (is.null(tinv)) diag(hess_all)[push] else {
+      vapply(which(push), function(k) drop(crossprod(tinv[, k], hess_all %*% tinv[, k])), numeric(1))
+    }
+    gk <- abs(r$g[push])
     bad <- !is.finite(hk) | hk <= 0 | gk / sqrt(pmax(hk, 0)) > .sem_stat_tol
     if (any(bad)) {
       out$reason <- sprintf("the gradient at an active bound points into the interior (%s)",
@@ -215,7 +220,15 @@
     out$accepted <- TRUE
     return(out)
   }
-  hess <- hess_all[free, free, drop = FALSE]
+  if (is.null(tinv) || all(free)) {
+    hess <- hess_all[free, free, drop = FALSE]
+    g_red <- g_all[free]
+  } else {
+    # the free theta directions, as an orthonormal basis of their span in the centered coordinates
+    zb <- qr.Q(qr(tinv[, free, drop = FALSE]))[, seq_len(sum(free)), drop = FALSE]
+    hess <- crossprod(zb, hess_all %*% zb)
+    g_red <- as.vector(crossprod(zb, g_all))
+  }
   # Definiteness is judged on the Jacobi-scaled matrix (the same verdict, but not blind to a small
   # negative diagonal entry beside entries of size 1e12, where raw eigenvalues are only accurate
   # to about 1e-4).
@@ -237,7 +250,7 @@
     return(out)
   }
   # The decrement is solved in the Jacobi-scaled coordinates (the same number, better conditioned).
-  g <- g_all[free] * d
+  g <- g_red * d
   out$decrement <- sqrt(sum(g * solve(scaled, g)))
   if (out$decrement > .sem_stat_tol) {
     out$reason <- sprintf("stationarity %.2e exceeds %.0e", out$decrement, .sem_stat_tol)
