@@ -5,7 +5,7 @@
 | **Date** | 2026-10-12 |
 | **Target** | [SPEC-native-mean-structure-2026-10-12.md](SPEC-native-mean-structure-2026-10-12.md) (draft) |
 | **Brainstorm** | [BRAINSTORM-native-mean-structure-2026-10-12.md](BRAINSTORM-native-mean-structure-2026-10-12.md) |
-| **Status** | 12 decisions (G1 pre-answered from the code; G2-G6 asked; G7 verified; G8-G12 added 2026-10-13 after a second Opus and a Codex review). The SPEC body is not rewritten; the errata and the changed scope below supersede it where they differ, and the plan must carry them. |
+| **Status** | 13 decisions (G1 pre-answered from the code; G2-G6 asked; G7 verified; G8-G13 added 2026-10-13 after a second Opus and a Codex review). The SPEC body is not rewritten; the errata and the changed scope below supersede it where they differ, and the plan must carry them. |
 
 ## Decision Ledger
 
@@ -23,6 +23,7 @@
 | G10 (2026-10-13, H-C) | A fixed `y ~ 0*1` is dropped by 0.8.0 (df 0) and a restriction under 0.9.0 (df 1) | **Announced correctness change.** NEWS behavior-change entry (CLAUDE.md correctness exemption: minor bump), `meanstructure` tri-state (`NULL`: on when any `~1` is written; `FALSE` with a free `~1` errors), a frozen intended-change fixture, and the tests and help text that encode the old behavior listed in T2. |
 | G11 (2026-10-13, M-A) | Parser: accept lavaan's `y ~ 1 + x`? | **Accept it in 0.9.0.** The native parser rejects it today ("an intercept must be its own statement"), so the lavaan-comparison row could never flip. This amends the frozen grammar: a SPEC amendment, review and approval come before T2's parser work. |
 | G12 (2026-10-13) | Shared label between an intercept and a path | **Allowed** (reverses the plan's refusal). The refusal's reason (`gmap` has only A and S columns) is weak because `gmap` gains mean columns anyway. The step-floor concern becomes a test (mixed-scale shared parameter), not an error. |
+| G13 (2026-10-13) | `fixed_x` (RMediation request) and the "experimental" label | **Build `fixed_x` (Option C: `FALSE`, `TRUE` or variable names), 0.9.1 after 0.9.0 T5, default `FALSE`**; plan: [PLAN-native-fixed-x](PLAN-native-fixed-x-2026-10-13.md). **Target 0.11.0 for dropping "experimental"** (told to RMediation; the criteria, and whether `fixed_x` counts toward it, are not defined). medfit stays GitHub-only until a CRAN decision is made separately. |
 
 ## Open Questions
 
