@@ -1,5 +1,23 @@
 # medfit (development version)
 
+## Behavior changes
+
+* Four-way decomposition from a lavaan fit (`extract_mediation()` with an
+  `x:m` or `interaction =` product) gave wrong results in three cases, now fixed:
+  - The standard errors of INTref, NDE and TE left out the mediator-covariate
+    term (`g * cbar` and its covariance with the mediator intercept), so they
+    were too small when the mediator equation has a covariate (INTref SE 0.037
+    against lavaan's `:=` 0.095 in one check). They now match lavaan's `:=`.
+  - A treatment product in the mediator equation (`m ~ x + w + x:w`), or a
+    treatment-by-covariate product in the outcome equation, returned a wrong
+    decomposition without a message. Both are now errors that name the
+    equation.
+  - With sampling weights, INTref used unweighted covariate means, so it
+    differed from the lm/glm route (1.16 against 1.46 on one data set). It now
+    uses the weighted means.
+  Point estimates change only for the weighted case. The effects are the
+  treatment contrast 0 to 1, as on the lm/glm route.
+
 ## Documentation
 
 * Two new pages for the native engine, in the Guides menu: "Native engine in five
