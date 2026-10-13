@@ -36,14 +36,15 @@ test_that("a nonlinear constraint with free intercepts is invariant to the locat
   expect_equal(unname(far@theta["i2"]), unname(near@theta["i2"] + 1e4 * (1 - near@theta["a"] * 0)), tolerance = 1e-3)
 })
 
-test_that("an active bound on an intercept equals the fixed-intercept regression (centered gate, bound in theta units)", {
+test_that("an active bound on an intercept equals the fixed-intercept regression (bound in theta units)", {
   bounded <- fit_sem(paste0(con_base, "\ni1 > 0.4"), mediation_demo)
   expect_equal(unname(bounded@theta["i1"]), 0.4, tolerance = 1e-8)
   d <- mediation_demo
   ols <- stats::lm(I(outcome - 0.4) ~ 0 + mediator1 + treatment, d)
   expect_equal(unname(bounded@theta[c("b", "cp")]), unname(stats::coef(ols)), tolerance = 1e-5)
   se <- sqrt(diag(bounded@vcov))
-  expect_equal(unname(se[c("b", "cp")]), unname(sqrt(diag(stats::vcov(ols)) * (nrow(d) - 2) / nrow(d))), tolerance = 1e-4)
+  ols_se <- sqrt(diag(stats::vcov(ols)) * (nrow(d) - 2) / nrow(d))
+  expect_equal(unname(se[c("b", "cp")]), unname(ols_se), tolerance = 1e-4)
   slack <- fit_sem(paste0(con_base, "\ni1 > -5"), mediation_demo)
   expect_equal(unname(slack@theta["i1"]), unname(fit_sem(con_base, mediation_demo)@theta["i1"]), tolerance = 1e-6)
   zero <- fit_sem(paste0(con_base, "\na*b == 0"), mediation_demo)
@@ -95,4 +96,25 @@ test_that("zero-product branches keep the flag", {
                  meanstructure = TRUE)
   expect_true(fit@internals$ram$has_mean)
   expect_gt(length(fit@theta), 6L)
+})
+
+test_that("an intercept equality converges at a location of 1e3 (centered projected gate) and is location-invariant", {
+  syn <- "mediator1 ~ a*treatment + i2*1\noutcome ~ b*mediator1 + cp*treatment + i1*1\ni1 == i2"
+  near <- fit_sem(syn, mediation_demo)
+  far <- fit_sem(syn, far_data(1e3))
+  expect_true(far@converged)
+  expect_false(anyNA(far@vcov))
+  expect_equal(unname(far@theta["i1"]), unname(far@theta["i2"]), tolerance = 1e-9)
+  # moving both variables by 1e3 changes the model once the intercepts are equated, so compare the fit to lavaan
+  skip_if_not_installed("lavaan")
+  ref <- lavaan::sem(syn, far_data(1e3), meanstructure = TRUE, fixed.x = FALSE)
+  expect_equal(unname(far@f * far@n_obs), unname(lavaan::fitMeasures(ref, "chisq")), tolerance = 1e-4)
+  expect_equal(unname(far@theta[c("a", "b", "cp")]), unname(lavaan::coef(ref)[c("a", "b", "cp")]), tolerance = 1e-4)
+})
+
+test_that("planted defect: with no centered coordinates a nonlinear constraint at a location of 1e4 is rejected", {
+  syn <- paste0(con_base, "\ncp == a*b")
+  expect_true(fit_sem(syn, far_data(1e4))@converged)
+  testthat::local_mocked_bindings(.sem_center_map = function(ram, smp) NULL, .sem_shift_ok = function(...) FALSE)
+  expect_error(fit_sem(syn, far_data(1e4)), "no start converged")
 })

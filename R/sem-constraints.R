@@ -404,8 +404,18 @@
     return(out)
   }
   out$active <- !act$free
-  hx <- .sem_hess_f(theta, ram, smp) * outer(act$u, act$u)
+  ctr <- .sem_center_map(ram, smp)
   gx <- r$g * act$u
+  if (is.null(ctr)) {
+    hx <- .sem_hess_f(theta, ram, smp) * outer(act$u, act$u)
+  } else {
+    # With a mean structure the curvature is built in the centered coordinates phi (see `.sem_center_map()`),
+    # where x = Tx xphi + const in the solver's natural units; the plain Hessian is only formed for the sign check.
+    tx <- (ctr$t * outer(1 / act$u, act$u))
+    hphi <- .sem_hess_f_phi(theta, ram, smp, ctr) * outer(act$u, act$u)
+    txi <- solve(tx)
+    hx <- crossprod(txi, hphi %*% txi)
+  }
   if (!all(is.finite(hx))) {
     out$reason <- "the Hessian is not finite"
     return(out)
@@ -415,9 +425,18 @@
     out$accepted <- TRUE
   } else {
     free <- act$free
-    hl <- .sem_lagrangian_hessian(hx, gx, act, cons, theta)
-    red <- .sem_reduced_stationarity(crossprod(act$z, hl[free, free, drop = FALSE] %*% act$z),
-                                     crossprod(act$z, gx[free]))
+    if (is.null(ctr)) {
+      hl <- .sem_lagrangian_hessian(hx, gx, act, cons, theta)
+      red <- .sem_reduced_stationarity(crossprod(act$z, hl[free, free, drop = FALSE] %*% act$z),
+                                       crossprod(act$z, gx[free]))
+    } else {
+      hc <- .sem_lagrangian_hessian(matrix(0, length(theta), length(theta)), gx, act, cons, theta)
+      hl <- hphi + crossprod(tx, hc %*% tx)
+      zf <- matrix(0, length(theta), ncol(act$z))
+      zf[free, ] <- act$z
+      zq <- qr.Q(qr(solve(tx, zf)))[, seq_len(ncol(zf)), drop = FALSE]
+      red <- .sem_reduced_stationarity(crossprod(zq, hl %*% zq), crossprod(zq, crossprod(tx, gx)))
+    }
     out$min_eig <- red$min_eig
     out$decrement <- red$decrement
     out$reason <- red$reason
