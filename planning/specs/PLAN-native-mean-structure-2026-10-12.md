@@ -21,7 +21,7 @@ T1 -> T2 -> T3 (A) -> T4 -> T5 -> T6 (B) -> T7 -> T8 -> T9 (C)
 ### T2: Parser and table (S)
 - [ ] `.sem_to_ram()` (`R/sem-model.R:136`): accept free and fixed `~1` on observed variables; latent `~1` still errors, naming the variable and "planned for a later release".
 - [ ] `meanstructure` argument on `fit_sem()`; auto-on when `~1` appears; `meanstructure = FALSE` with a free `~1` errors naming the term; `meanstructure = TRUE` adds saturated free intercepts.
-- [ ] Coefficient names `y~1`; intercepts take labels and constraints like any parameter.
+- [ ] Coefficient names `y~1`; intercepts take labels and constraints like any parameter. (0.10.0 rule 9 will forbid fixed, shared, or constrained `~1` rows in models that contain a product, because they move the slopes and `b0` away from OLS; nothing to enforce in 0.9.0, but do not make the table shape depend on it.)
 - [ ] Update `R/fit-sem.R:21` roxygen.
 - Test: error messages by name; fixed-zero intercept still dropped; labels shared across an intercept and a path.
 
@@ -52,7 +52,7 @@ T1 -> T2 -> T3 (A) -> T4 -> T5 -> T6 (B) -> T7 -> T8 -> T9 (C)
 
 ### T7: Methods and extraction (S)
 - [ ] `coef`, `vcov`, `tidy`, `glance`, `confint` include intercept rows; `SEMFit` carries the flag.
-- [ ] `extract_mediation(<SEMFit>)` returns the same effects as the covariance-only fit; intercept rows never enter `.path_se()` or effect SEs.
+- [ ] `extract_mediation(<SEMFit>)` returns the same effects as the covariance-only fit; intercept rows never enter `.path_se()` or the effect SEs of two-way effects. **Exception (0.10.0 review F7):** the four-way INTref gradient needs the mediator intercept `b0` (`R/effect-se.R:268`, guarded by `if ("b0" %in% rownames(vc))`), so the `m~1` row and its covariances with the path rows must stay in `vcov` and reach that gradient; add a test that the `b0` terms are present once four-way exists.
 - Tests: extraction equality (paths, NIE, SEs) with and without a saturated mean structure.
 
 ### T8: Parity oracles (M)
