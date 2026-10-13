@@ -2,6 +2,8 @@
 
 Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification harness" in the plan. Update `.STATUS` at each checkpoint.
 
+**Closeout (2026-10-12):** T1-T24 and implementation gates are complete; 0.8.0 is published on GitHub and r-universe. Review dispositions below preserve what was waived versus performed. The RMediation notification and explicitly requested E1 matrix update remain follow-ups, not release gates.
+
 ## Phase 0: Evidence and harness
 - [x] T1 Re-derive the S1 findings as committed fixtures (`planning/specs/evidence/native-sem-2026-10-11/`)
 - [x] T2 Trigger `rhub.yaml` once; record the result in `.STATUS`
@@ -21,7 +23,7 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 ### Checkpoint A
 - [x] Full unit suite, lint, H-parity, H-constrained, strict `check` pass (counts reported; `.STATUS` progress_0_8_0, 2026-10-11)
 - [x] rhub result recorded (`.STATUS` rhub_0_8_0_t2)
-- [ ] Human review
+- [x] Human review release gate waived; review not recorded as performed (GRILL-0.8.0-release R2)
 
 ## Phase 2: `anova()` and SEMFit methods (W4)
 - [x] T10 `anova()` for nested `SEMFit`s with boundary-null guard (G9); refits start clean (refit-trap fixture) (#148)
@@ -29,8 +31,8 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 - [x] T12 One naming convention; align arguments with deprecation (needs T11) (#150: lavaan's unspaced names, loadings `eta=~m2`; `weights`/`object` with `lifecycle` warnings)
 
 ### Checkpoint B
-- [ ] Unit, lint, strict `check` pass; `anova()` known answers and oracles green
-- [ ] Human review
+- [x] Unit, lint, strict `check` pass; `anova()` known answers and oracles green (release evidence: `.STATUS` release_0.8.0; T10/T11 evidence: progress_0_8_0)
+- [ ] Human review not recorded as performed; no longer a release blocker (release proceeded on evidence, GRILL-0.8.0-release R2)
 
 ## Phase 3: Nonlinear constraints (W3)
 - [x] T13 Nonlinear equality `a*b == c` end to end (needs T9); includes the curved-constraint covariance oracle and a frozen-Jacobian mutant (#151: closures over validated call trees, central-difference Jacobian, projected covariance)
@@ -43,7 +45,8 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 
 ### Checkpoint C
 - [x] All gates in the harness table pass (counts reported); revdep run clean (2026-10-11, see .STATUS progress_0_8_0_phase3)
-- [ ] Tell the RMediation session `anova()` and W3 are in dev; human review
+- [x] Human review release gate waived; review not recorded as performed (GRILL-0.8.0-release R2)
+- [ ] Tell the RMediation session `anova()` and W3 are released in 0.8.0 (notification not recorded as sent)
 
 ## Phase 4: Docs (W5)
 - [x] T20 lavaan-vs-medfit article, executed at site build (needs T11, T13) (#161: article, 18-row table checked by live probes)
@@ -55,4 +58,4 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 
 ## Phase 5: Release
 - [x] T23 0.8.0 release grill (planning/specs/GRILL-0.8.0-release-2026-10-11.md: GitHub only, release on the evidence, 0.8.0)
-- [x] T24 Release PR (release engineering): #164 bump, #165 release merge commit 37171ec, tag v0.8.0, GitHub release; r-universe pending (STATUS release_0.8.0); E1 matrix row only on explicit request
+- [x] T24 Release PR (release engineering): #164 bump, #165 release merge commit 37171ec, tag v0.8.0, GitHub release; r-universe verified 2026-10-12: 0.8.0, release SHA 37171ec, status success (`.STATUS` release_0.8.0); E1 matrix row only on explicit request

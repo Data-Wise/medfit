@@ -5,6 +5,8 @@
 **Task list:** `tasks/todo.md` (checklist; task numbers match this file).
 **Status:** APPROVED 2026-10-11 by the author (after the two Codex findings and two self-review fixes: harness pass rules now point to `tests/sim/gates.csv`; T3 resized S to M). No code changed by this plan.
 
+**Closeout (2026-10-12):** Implementation and release complete (#165, tag `v0.8.0`); r-universe serves 0.8.0 at `37171ec` with status success. See `tasks/todo.md` for final gate dispositions and remaining follow-ups. The original acceptance checkboxes below are the approved specification, not the current task tracker.
+
 ## Overview
 
 0.8.0 hardens the experimental native ML SEM engine and adds constrained nonlinear optimization (via the nloptr already in `Imports`), an `anova()` likelihood-ratio test for nested `SEMFit`s, `SEMFit` methods that match `MediationData`, and an executed lavaan-vs-medfit article. It ships on top of the unreleased dev fixes (#128, #138, docs overhaul #129-#139). No separate SEM package (survey and G-ledger agree); consolidation in dependents is medfit-side API plus one RMediation route in a separate session.
