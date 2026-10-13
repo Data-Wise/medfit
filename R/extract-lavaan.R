@@ -996,6 +996,56 @@ extract_mediation_lavaan <- function(object,
 }
 
 
+#' Reject treatment products the four-way worker cannot represent
+#'
+#' The four-way formulas use one `a` path (the treatment coefficient in the
+#' mediator equation) and one X x M product in the outcome equation. A product
+#' involving the treatment anywhere else changes the effects the worker would
+#' report without changing any coefficient it reads: with `m ~ x + w + x:w` the
+#' `x` coefficient is the effect at `w = 0`, not the average `a` path. A product
+#' is recognized by name (`x:w`) or, for a product column built by hand (`xw`),
+#' by equality with the treatment times another column of the data.
+#'
+#' @param param_table Parameter table (`lhs`, `op`, `rhs`).
+#' @param data Data frame of the model variables, or `NULL`.
+#' @param int_term The X x M product accepted in the outcome equation.
+#' @noRd
+.stop_on_four_way_products <- function(param_table, data, treatment, mediator, # nolint: object_length_linter.
+                                       outcome, int_term) {
+  reg <- param_table[param_table$op == "~", , drop = FALSE]
+  is_trt_product <- function(pred) {
+    parts <- strsplit(pred, ":", fixed = TRUE)[[1L]]
+    if (length(parts) > 1L && treatment %in% parts) return(TRUE)
+    if (is.null(data) || !all(c(pred, treatment) %in% names(data))) return(FALSE)
+    p <- data[[pred]]
+    x <- data[[treatment]]
+    if (!is.numeric(p) || !is.numeric(x) || length(unique(p)) < 2L) return(FALSE)
+    for (z in setdiff(names(data), c(pred, treatment))) {
+      if (is.numeric(data[[z]]) && isTRUE(all.equal(p, x * data[[z]],
+                                                    tolerance = 1e-12))) {
+        return(TRUE)
+      }
+    }
+    FALSE
+  }
+  check <- function(eq, preds, what) {
+    hit <- preds[vapply(preds, is_trt_product, logical(1))]
+    if (length(hit)) {
+      stop(sprintf(paste0(
+        "The four-way decomposition does not support a treatment product in ",
+        "the %s equation (%s ~ %s): it changes the effects without changing a ",
+        "coefficient the decomposition reads. Remove it, or fit the model ",
+        "without the four-way decomposition."), what, eq, hit[1L]),
+        call. = FALSE)
+    }
+  }
+  check(mediator, setdiff(reg$rhs[reg$lhs == mediator], treatment), "mediator")
+  check(outcome, setdiff(reg$rhs[reg$lhs == outcome],
+                         c(treatment, mediator, int_term)), "outcome")
+  invisible(NULL)
+}
+
+
 #' Extract Treatment-Mediator Interaction Structure from a lavaan Model
 #'
 #' @description
@@ -1012,6 +1062,13 @@ extract_mediation_lavaan <- function(object,
 #' delta-method standard errors reflect the joint estimation. The mediator
 #' intercept `beta0` (needed for INTref) is read from the `~1` row, so the model
 #' must be fit with `meanstructure = TRUE`.
+#'
+#' The effects are for the treatment contrast 0 to 1, whatever the coding of
+#' the treatment (as on the lm/glm route). The covariate part of
+#' \eqn{E[M \mid X = 0]}{E[M | X = 0]} uses sample means, case-weighted when
+#' the fit has sampling weights, and the standard errors are conditional on
+#' them. A treatment product in the mediator equation, or a
+#' treatment-by-covariate product in the outcome equation, is an error.
 #'
 #' @param int_term Character: the interaction (product) coefficient name in the
 #'   outcome equation.
@@ -1091,22 +1148,42 @@ extract_mediation_lavaan <- function(object,
   }
   beta0 <- b0_row[[est_col]][1]
 
-  # Covariate contribution to E[M | X=0]: mediator predictors other than the
-  # treatment, evaluated at their sample means.
-  m_covs <- setdiff(param_table$rhs[param_table$lhs == mediator &
-                                      param_table$op == "~"], treatment)
   data <- tryCatch({
     d <- acc$data()
     if (is.matrix(d)) as.data.frame(d) else if (is.data.frame(d)) d else NULL
   }, error = function(e) NULL)
+  .stop_on_four_way_products(param_table, data, treatment, mediator, outcome,
+                             int_term)
+
+  # Covariate contribution to E[M | X=0]: mediator predictors other than the
+  # treatment, evaluated at their (case-weighted, when the fit has weights)
+  # sample means, as the lm/glm route does.
+  m_covs <- setdiff(param_table$rhs[param_table$lhs == mediator &
+                                      param_table$op == "~"], treatment)
   m_ref <- beta0
-  if (length(m_covs) && !is.null(data)) {
+  cov_est <- numeric(0)
+  if (length(m_covs)) {
+    w <- if (is.function(acc$weights)) acc$weights() else NULL
+    if (is.null(data) || !all(m_covs %in% names(data)) ||
+          !all(vapply(m_covs, function(cv) is.numeric(data[[cv]]), logical(1)))) {
+      stop("Cannot compute the covariate means for E[M | X = 0] (four-way ",
+           "decomposition) for: ", paste(m_covs, collapse = ", "), ".",
+           call. = FALSE)
+    }
+    if (!is.null(w) && length(w) != nrow(data)) {
+      stop("The sampling weights do not match the rows of the model data.",
+           call. = FALSE)
+    }
+    c_bar <- vapply(m_covs, function(cv) {
+      if (is.null(w)) mean(data[[cv]]) else sum(data[[cv]] * w) / sum(w)
+    }, numeric(1))
     for (cv in m_covs) {
       cf <- get_path(mediator, cv)
-      if (!is.na(cf) && cv %in% names(data) && is.numeric(data[[cv]])) {
-        m_ref <- m_ref + cf * mean(data[[cv]], na.rm = TRUE)
-      }
+      cov_est[paste0("m_", cv)] <- cf
+      m_ref <- m_ref + cf * c_bar[[cv]]
     }
+    # Keep the exact means with @data so the delta-method gradients reuse them.
+    attr(data, "medfit_covariate_means") <- c_bar
   }
 
   cde     <- theta1 + theta3 * m_star
@@ -1126,6 +1203,12 @@ extract_mediation_lavaan <- function(object,
     b0 = paste0(mediator, "~1")
   )
   alias_val <- c(a = beta1, b = theta2, c_prime = theta1, theta3 = theta3, b0 = beta0)
+  # Mediator-covariate coefficients: the gradient of INTref, NDE and TE has a
+  # g * cbar term and cov(g, b0) that need these rows.
+  if (length(cov_est)) {
+    alias_var[names(cov_est)] <- paste0(mediator, "~", sub("^m_", "", names(cov_est)))
+    alias_val[names(cov_est)] <- cov_est
+  }
   estimates <- all_coef
   aliases_to_add <- names(alias_var)[!names(alias_var) %in% names(estimates)]
   for (al in names(alias_var)) estimates[al] <- alias_val[[al]]

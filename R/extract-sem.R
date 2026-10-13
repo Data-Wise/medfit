@@ -12,6 +12,7 @@
 #   coef(), vcov()             free-parameter estimates and their covariance
 #   partable()                 parameter table with the label column
 #   data()                     the model's data (matrix or data.frame)
+#   weights()                  case weights over the rows of data(), or NULL
 #   converged()                logical convergence flag
 #   nobs()                     sample size (per group)
 #   names(type)                variable names of a type ("ov", "ov.ord")
@@ -31,6 +32,10 @@
       vcov = function() lavaan::vcov(object),
       partable = function() lavaan::parTable(object),
       data = function() lavaan::lavInspect(object, "data"),
+      weights = function() {
+        w <- object@Data@weights
+        if (length(w) == 1L) w[[1L]] else NULL
+      },
       converged = function() lavaan::lavInspect(object, "converged"),
       nobs = function() lavaan::lavInspect(object, "nobs"),
       names = function(type) lavaan::lavNames(object, type)
@@ -72,6 +77,7 @@
       vcov = function() vc,
       partable = function() ptab,
       data = function() object@data,
+      weights = function() object@internals$weights,
       converged = function() object@converged,
       nobs = function() object@n_obs,
       names = function(type) if (identical(type, "ov")) obs else character()
