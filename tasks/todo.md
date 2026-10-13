@@ -2,7 +2,7 @@
 
 Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification harness" in the plan. Update `.STATUS` at each checkpoint.
 
-**Closeout (2026-10-12):** T1-T24 and implementation gates are complete; 0.8.0 is published on GitHub and r-universe. Review dispositions below preserve what was waived versus performed. The RMediation notification and explicitly requested E1 matrix update remain follow-ups, not release gates.
+**Closeout (2026-10-12):** T1-T24 and implementation gates are complete; 0.8.0 is published on GitHub and r-universe. Review dispositions below preserve what was waived versus performed. The RMediation notification remains a follow-up, not a release gate. E1 matrix update merged as mediation-planning#14 (7b33893, 2026-10-13 UTC).
 
 ## Phase 0: Evidence and harness
 - [x] T1 Re-derive the S1 findings as committed fixtures (`planning/specs/evidence/native-sem-2026-10-11/`)
@@ -58,4 +58,4 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 
 ## Phase 5: Release
 - [x] T23 0.8.0 release grill (planning/specs/GRILL-0.8.0-release-2026-10-11.md: GitHub only, release on the evidence, 0.8.0)
-- [x] T24 Release PR (release engineering): #164 bump, #165 release merge commit 37171ec, tag v0.8.0, GitHub release; r-universe verified 2026-10-12: 0.8.0, release SHA 37171ec, status success (`.STATUS` release_0.8.0); E1 matrix row only on explicit request
+- [x] T24 Release PR (release engineering): #164 bump, #165 release merge commit 37171ec, tag v0.8.0, GitHub release; r-universe verified 2026-10-12: 0.8.0, release SHA 37171ec, status success (`.STATUS` release_0.8.0); E1 matrix row merged as mediation-planning#14 (7b33893, 2026-10-13 UTC)
