@@ -2,7 +2,7 @@
 
 Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification harness" in the plan. Update `.STATUS` at each checkpoint.
 
-**Closeout (2026-10-12):** T1-T24 and implementation gates are complete; 0.8.0 is published on GitHub and r-universe. Review dispositions below preserve what was waived versus performed. The RMediation notification was sent 2026-10-13 UTC to task 01a12cca-b931-7112-9cef-fe722ef46123; receipt and downstream implementation are not yet confirmed. E1 matrix update merged as mediation-planning#14 (7b33893, 2026-10-13 UTC).
+**Closeout (2026-10-12):** T1-T24 and implementation gates are complete; 0.8.0 is published on GitHub and r-universe. Review dispositions below preserve what was waived versus performed. The RMediation notification was sent 2026-10-13 UTC to task 01a12cca-b931-7112-9cef-fe722ef46123; receipt confirmed in the completed destination turn (checked 2026-10-13 UTC); downstream implementation still awaits authorization. E1 matrix update merged as mediation-planning#14 (7b33893, 2026-10-13 UTC).
 
 ## Phase 0: Evidence and harness
 - [x] T1 Re-derive the S1 findings as committed fixtures (`planning/specs/evidence/native-sem-2026-10-11/`)
@@ -46,7 +46,7 @@ Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification ha
 ### Checkpoint C
 - [x] All gates in the harness table pass (counts reported); revdep run clean (2026-10-11, see .STATUS progress_0_8_0_phase3)
 - [x] Human review release gate waived; review not recorded as performed (GRILL-0.8.0-release R2)
-- [x] Tell the RMediation session `anova()` and W3 are released in 0.8.0 (sent 2026-10-13 UTC to task 01a12cca-b931-7112-9cef-fe722ef46123; continuing CRAN hold and clean-start refit requirement included; receipt not yet confirmed)
+- [x] Tell the RMediation session `anova()` and W3 are released in 0.8.0 (sent 2026-10-13 UTC to task 01a12cca-b931-7112-9cef-fe722ef46123; continuing CRAN hold and clean-start refit requirement included; receipt confirmed in the completed destination turn, checked 2026-10-13 UTC)
 
 ## Phase 4: Docs (W5)
 - [x] T20 lavaan-vs-medfit article, executed at site build (needs T11, T13) (#161: article, 18-row table checked by live probes)
