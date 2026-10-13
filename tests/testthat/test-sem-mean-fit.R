@@ -117,7 +117,7 @@ test_that("planted defect: an information without dmu/dA gives wrong intercept S
   ols <- stats::lm(outcome ~ mediator1 + treatment, mediation_demo)
   oracle <- summary(ols)$coefficients[1, 2] * sqrt((nrow(mediation_demo) - 3) / nrow(mediation_demo))
   expect_equal(se_of(.sem_dmu), oracle, tolerance = 1e-3)
-  no_a <- sem_mutate(.sem_dmu, "out[, ram$k_a[i]] <- out[, ram$k_a[i]] + bo[, r] * bm[cc]", "NULL")
+  no_a <- sem_mutate(.sem_dmu, "out[, ram$k_a[i]] <- out[, ram$k_a[i]] + bo[, r] * (bm[cc] - shift)", "NULL")
   expect_gt(abs(se_of(no_a) / oracle - 1), 0.05)
 })
 

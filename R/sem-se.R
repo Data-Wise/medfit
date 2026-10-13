@@ -23,22 +23,31 @@
                       lb = rep(-Inf, ram$q), ub = rep(Inf, ram$q), se_type = c("model", "sandwich")) {
   information <- match.arg(information)
   se_type <- match.arg(se_type)
+  ctr <- .sem_center_map(ram, smp)
+  # With a mean structure the information is built, inverted and checked in the centered coordinates (see
+  # `.sem_center_map()`) and mapped back exactly: V = T V_phi T', since I = T^-T I_phi T^-1.
   info <- if (information == "observed") {
-    .sem_info_observed(theta, ram, smp)
+    .sem_info_observed(theta, ram, smp, ctr)
   } else {
-    .sem_info_expected(theta, ram, smp)
+    .sem_info_expected(theta, ram, smp, ctr)
   }
+  tmat <- if (is.null(ctr)) NULL else ctr$t
   act <- .sem_active_set(theta, ram, smp, lb, ub, if (is.null(cons)) .sem_no_cons(ram$q) else cons)
   pinned <- !all(act$free) || any(act$active_row)
   z <- if (pinned) act$z_theta else NULL
   meat <- if (se_type == "sandwich") crossprod(.sem_scores(theta, ram, smp))
+  if (!is.null(tmat) && !is.null(meat)) {
+    stop("the sandwich covariance with a mean structure is not implemented yet", call. = FALSE)
+  }
   vc <- if (is.null(z)) {
     bread <- .sem_invert_info(info)
+    if (!is.null(bread) && !is.null(tmat)) bread <- tmat %*% bread %*% t(tmat)
     if (is.null(bread) || is.null(meat)) bread else bread %*% meat %*% bread
   } else if (ncol(z) == 0L) {
     matrix(0, ram$q, ram$q)
   } else {
-    bread <- .sem_invert_info(crossprod(z, info %*% z))
+    zc <- if (is.null(tmat)) z else solve(tmat, z)
+    bread <- .sem_invert_info(crossprod(zc, info %*% zc))
     if (is.null(bread)) {
       NULL
     } else if (is.null(meat)) {

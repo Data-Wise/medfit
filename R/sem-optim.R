@@ -121,6 +121,56 @@
   }))
 }
 
+# Newton polish in the centered coordinates (see `.sem_center_map()`) for a fit with a mean structure and no
+# constraints. SLSQP works in (A, m) units and stalls where an intercept and its paths are tied by a distant
+# mean (mean/sd of about 1e5); a few Newton steps on the well-conditioned centered Hessian finish the job. A
+# step is kept only when it lowers F (halved up to four times) and stays inside the bounds; the polish stops
+# at an active bound or an indefinite Hessian and leaves the verdict to the acceptance gate.
+.sem_polish_centered_maxit <- 8L
+.sem_polish_centered <- function(theta, ram, smp, lb, ub) {
+  ctr <- .sem_center_map(ram, smp)
+  if (is.null(ctr)) {
+    return(theta)
+  }
+  u <- .sem_step_floor(ram, smp)
+  for (it in seq_len(.sem_polish_centered_maxit)) {
+    r <- .sem_eval(theta, ram, smp, deriv = TRUE)
+    if (is.null(r) || any((theta - lb) / u <= .sem_bound_window | (ub - theta) / u <= .sem_bound_window)) {
+      break
+    }
+    hess <- .sem_hess_f_phi(theta, ram, smp, ctr)
+    g <- as.vector(crossprod(ctr$t, r$g))
+    if (!all(is.finite(hess)) || any(diag(hess) <= 0)) {
+      break
+    }
+    d <- 1 / sqrt(diag(hess))
+    step <- tryCatch(-d * solve(hess * outer(d, d), g * d), error = function(e) NULL)
+    if (is.null(step) || !all(is.finite(step))) {
+      break
+    }
+    move <- as.vector(ctr$t %*% step)
+    f0 <- r$f
+    t_len <- 1
+    moved <- FALSE
+    for (half in 0:4) {
+      cand <- theta + t_len * move
+      if (all(cand >= lb & cand <= ub)) {
+        fc <- .sem_fml(cand, ram, smp)
+        if (is.finite(fc) && fc <= f0 + 1e-14 * max(1, abs(f0))) {
+          theta <- cand
+          moved <- TRUE
+          break
+        }
+      }
+      t_len <- t_len / 2
+    }
+    if (!moved || max(abs(t_len * move) / u) < 1e-12) {
+      break
+    }
+  }
+  theta
+}
+
 # The acceptance gate for one solution (unconstrained fits with bounds).
 .sem_gate <- function(theta, status, ram, smp, lb, ub, cons = NULL) {
   if (!is.null(cons)) {
@@ -143,13 +193,16 @@
   at_ub <- (ub - theta) / u <= .sem_bound_window
   out$active <- at_lb | at_ub
   free <- !out$active
-  hess_all <- .sem_hess_f(theta, ram, smp)
+  ctr <- .sem_center_map(ram, smp)
+  hess_all <- if (is.null(ctr)) .sem_hess_f(theta, ram, smp) else .sem_hess_f_phi(theta, ram, smp, ctr)
+  # the reduced Hessian and the decrement live in the centered coordinates when there is a mean structure
+  g_all <- if (is.null(ctr)) r$g else as.vector(crossprod(ctr$t, r$g))
   # KKT sign at an active bound: moving into the interior must not lower F. The gradient is judged in
   # the unit-free scale g / sqrt(H_kk) against the stationarity threshold.
   push <- (at_lb & !at_ub & r$g < 0) | (at_ub & !at_lb & r$g > 0)
   if (any(push)) {
     hk <- diag(hess_all)[push]
-    gk <- abs(r$g[push])
+    gk <- abs(g_all[push])
     bad <- !is.finite(hk) | hk <= 0 | gk / sqrt(pmax(hk, 0)) > .sem_stat_tol
     if (any(bad)) {
       out$reason <- sprintf("the gradient at an active bound points into the interior (%s)",
@@ -184,7 +237,7 @@
     return(out)
   }
   # The decrement is solved in the Jacobi-scaled coordinates (the same number, better conditioned).
-  g <- r$g[free] * d
+  g <- g_all[free] * d
   out$decrement <- sqrt(sum(g * solve(scaled, g)))
   if (out$decrement > .sem_stat_tol) {
     out$reason <- sprintf("stationarity %.2e exceeds %.0e", out$decrement, .sem_stat_tol)
@@ -252,6 +305,10 @@
       attempts[[i]] <- list(accepted = FALSE, status = NA_integer_, decrement = NA_real_, f = Inf,
                             reason = paste("nloptr error:", conditionMessage(res)))
       next
+    }
+    if (is.null(constraints) && isTRUE(res$status %in% .sem_ok_status) && ram$has_mean) {
+      res$solution <- .sem_polish_centered(res$solution, ram, smp, lb, ub)
+      res$objective <- .sem_fml(res$solution, ram, smp)
     }
     gate <- .sem_gate(res$solution, res$status, ram, smp, lb, ub, constraints)
     if (gate$accepted && !is.null(constraints)) {

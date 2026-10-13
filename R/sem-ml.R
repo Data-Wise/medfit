@@ -289,9 +289,49 @@
   lapply(out, function(d) d[ram$obs_idx, ram$obs_idx, drop = FALSE])
 }
 
+# Centered coordinates for the intercepts (GRILL G9). An intercept moves with the paths: raising a path A_rc by
+# dA shifts the implied mean of r by mean_c * dA, so with distant means (mean/sd of 100 or more) the Hessian
+# in (A, m) is ill conditioned although the model is fine. In the coordinates phi = (A, S, m~) with
+# m~_v = m_v - (x_v - sum_c A_vc x_c), where x is the sample mean (0 for a latent variable), the curvature of
+# the paths and the intercepts decouples at the optimum. The map theta = T phi + c0 is affine, so T is
+# constant, `T = I + C` with C[k_m(v), k_a(e)] = -x_c for a free path entry e = (v, c) of a variable v that
+# has a free intercept parameter (the first variable of a shared label). Returns NULL when there is no such
+# entry (a covariance structure, or no free intercept or path), and the identity map would change nothing.
+.sem_center_map <- function(ram, smp) {
+  if (!isTRUE(ram$has_mean) || !length(ram$k_m) || !length(ram$pos_a)) {
+    return(NULL)
+  }
+  nv <- ram$nv
+  xfull <- numeric(nv)
+  xfull[ram$obs_idx] <- smp$xbar
+  first <- !duplicated(ram$k_m)
+  km_of <- integer(nv)
+  km_of[ram$pos_m[first]] <- ram$k_m[first]
+  r <- (ram$pos_a - 1L) %% nv + 1L
+  cc <- (ram$pos_a - 1L) %/% nv + 1L
+  hit <- km_of[r] > 0L
+  if (!any(hit)) {
+    return(NULL)
+  }
+  cmat <- matrix(0, ram$q, ram$q)
+  for (i in which(hit)) {
+    cmat[km_of[r[i]], ram$k_a[i]] <- cmat[km_of[r[i]], ram$k_a[i]] - xfull[cc[i]]
+  }
+  c0 <- numeric(ram$q)
+  c0[ram$k_m[first]] <- xfull[ram$pos_m[first]]
+  list(t = diag(ram$q) + cmat, c = cmat, c0 = c0, xfull = xfull, km_of = km_of)
+}
+
+# phi for a theta: the centered intercepts m~ = m - (C theta + c0) on the intercept rows, theta elsewhere.
+.sem_to_phi <- function(theta, ctr) {
+  as.vector(theta - ctr$c %*% theta - ctr$c0)
+}
+
 # Jacobian of the implied means: a p x q matrix, d mu / d theta_k. With B = (I - A)^-1 and m the intercept
-# vector: d/dm_j = B[, j] and d/dA_rc = B[, r] (B m)_c (observed rows), equal labels summed.
-.sem_dmu <- function(theta, ram) {
+# vector: d/dm_j = B[, j] and d/dA_rc = B[, r] (B m)_c (observed rows), equal labels summed. With `ctr` (from
+# `.sem_center_map()`) the columns are those of the centered coordinates phi: a path entry of a variable that
+# has a free intercept uses (B m)_c - x_c = -(xbar - mu)_c, small at the optimum.
+.sem_dmu <- function(theta, ram, ctr = NULL) {
   m <- .sem_ram_mats(ram, theta)
   b <- solve(ram$eye - m$a)
   bm <- as.vector(b %*% .sem_ram_m(ram, theta))
@@ -301,7 +341,8 @@
   for (i in seq_along(ram$pos_a)) {
     r <- (ram$pos_a[i] - 1L) %% nv + 1L
     cc <- (ram$pos_a[i] - 1L) %/% nv + 1L
-    out[, ram$k_a[i]] <- out[, ram$k_a[i]] + bo[, r] * bm[cc]
+    shift <- if (!is.null(ctr) && ctr$km_of[r] > 0L) ctr$xfull[cc] else 0
+    out[, ram$k_a[i]] <- out[, ram$k_a[i]] + bo[, r] * (bm[cc] - shift)
   }
   for (i in seq_along(ram$pos_m)) {
     out[, ram$k_m[i]] <- out[, ram$k_m[i]] + bo[, ram$pos_m[i]]
@@ -312,7 +353,7 @@
 # Expected information for the log likelihood: (n / 2) * J' (Sigma^-1 x Sigma^-1) J,
 # computed as (n / 2) * tr(Sigma^-1 dSigma_k Sigma^-1 dSigma_l). With a mean structure the mean term is
 # added (the information is additive, G1): n * (dmu)' Sigma^-1 (dmu).
-.sem_info_expected <- function(theta, ram, smp) {
+.sem_info_expected <- function(theta, ram, smp, ctr = NULL) {
   sigma <- .sem_implied(ram, theta)
   sigma_inv <- chol2inv(chol(sigma))
   w <- lapply(.sem_dsigma(theta, ram), function(d) sigma_inv %*% d)
@@ -320,7 +361,7 @@
   wt_vec <- vapply(w, function(x) as.vector(t(x)), numeric(smp$p^2))
   info <- smp$n / 2 * crossprod(w_vec, wt_vec)
   if (ram$has_mean) {
-    dmu <- .sem_dmu(theta, ram)
+    dmu <- .sem_dmu(theta, ram, ctr)
     info <- info + smp$n * crossprod(dmu, sigma_inv %*% dmu)
   }
   dimnames(info) <- list(ram$par_names, ram$par_names)
@@ -330,8 +371,8 @@
 # Observed information for the log likelihood: (n / 2) times the symmetrized
 # central-difference Jacobian of the analytic gradient of F, with the K3 step
 # eps^(1/3) * max(|x|, 1) and no extra dependency.
-.sem_info_observed <- function(theta, ram, smp) {
-  info <- smp$n / 2 * .sem_hess_f(theta, ram, smp)
+.sem_info_observed <- function(theta, ram, smp, ctr = NULL) {
+  info <- smp$n / 2 * (if (is.null(ctr)) .sem_hess_f(theta, ram, smp) else .sem_hess_f_phi(theta, ram, smp, ctr))
   dimnames(info) <- list(ram$par_names, ram$par_names)
   info
 }
@@ -349,6 +390,22 @@
     up[j] <- up[j] + h[j]
     dn[j] <- dn[j] - h[j]
     (.sem_grad(up, ram, smp) - .sem_grad(dn, ram, smp)) / (2 * h[j])
+  }, numeric(length(theta)))
+  (hess + t(hess)) / 2
+}
+
+# Hessian of F in the centered coordinates phi (see `.sem_center_map()`): the central-difference Jacobian of
+# the gradient in phi, g_phi = T' g, along the columns of T. Along a path direction the intercept moves with it,
+# so the implied mean stays put and the difference is small where the plain one is of size mean^2 (no
+# cancellation). The step is the K3 step eps^(1/3) * max(|phi_j|, u_j), with phi_j = m~ on the intercepts.
+.sem_hess_f_phi <- function(theta, ram, smp, ctr) {
+  phi <- .sem_to_phi(theta, ctr)
+  h <- .Machine$double.eps^(1 / 3) * pmax(abs(phi), .sem_step_floor(ram, smp))
+  tt <- ctr$t
+  hess <- vapply(seq_along(theta), function(j) {
+    up <- theta + h[j] * tt[, j]
+    dn <- theta - h[j] * tt[, j]
+    as.vector(crossprod(tt, .sem_grad(up, ram, smp) - .sem_grad(dn, ram, smp))) / (2 * h[j])
   }, numeric(length(theta)))
   (hess + t(hess)) / 2
 }
