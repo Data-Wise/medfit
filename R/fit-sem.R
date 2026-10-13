@@ -18,7 +18,8 @@
 #' @param model Character: model syntax. Lines may use `~` (regression),
 #'   `=~` (latent variable), `~~` (variance or covariance), `label*variable`
 #'   modifiers, `start()`, `lower()` and `upper()`, and the constraint
-#'   operators `==`, `<`, `>` and `:=`. Mean structures are not supported.
+#'   operators `==`, `<`, `>` and `:=`. An intercept is written `y ~ 1` (alone or with other terms, as
+#'   in `y ~ 1 + x`) and turns on the mean structure.
 #' @param data A data frame with the model's observed variables as numeric
 #'   columns. Rows with missing values in those columns are dropped once
 #'   (listwise deletion) and counted in `n_dropped`.
@@ -44,6 +45,11 @@
 #'   lavaan's robust standard errors with `sampling.weights`, and is smaller
 #'   than the HC3 default of the glm route by a factor that shrinks like
 #'   \eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.
+#' @param meanstructure Logical or `NULL`. `NULL` (default) fits a mean structure when the model writes
+#'   an intercept (`y ~ 1`, free or fixed); `TRUE` fits one regardless; `FALSE` fits covariances only and
+#'   errors if an intercept is written. With a mean structure every observed variable whose intercept is
+#'   not written has a free one, so a model with only free intercepts has the same estimates and
+#'   standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
@@ -62,7 +68,7 @@
 #' @export
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
                     control = list(), weights = NULL, se_type = c("model", "sandwich"),
-                    sampling_weights = lifecycle::deprecated()) {
+                    meanstructure = NULL, sampling_weights = lifecycle::deprecated()) {
   if (lifecycle::is_present(sampling_weights)) {
     lifecycle::deprecate_warn("0.8.0", "fit_sem(sampling_weights)", "fit_sem(weights)")
     if (!is.null(weights)) {
@@ -75,13 +81,14 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   information <- match.arg(information)
   checkmate::assert_count(n_starts, positive = TRUE, null.ok = TRUE, .var.name = "n_starts")
   checkmate::assert_list(control, .var.name = "control")
+  checkmate::assert_flag(meanstructure, null.ok = TRUE, .var.name = "meanstructure")
   se_type <- match.arg(se_type)
   if (!is.null(weights) && se_type == "model") {
     .notify_ipw_model_se()
   }
   model <- paste(model, collapse = "\n")
   fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
-                         control = control, weights = weights, se_type = se_type)
+                         control = control, weights = weights, se_type = se_type, meanstructure = meanstructure)
   .sem_as_semfit(fit, model, match.call())
 }
 

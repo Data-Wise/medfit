@@ -7,7 +7,7 @@ Plan: `tasks/plan.md`. Spec plan: `planning/specs/PLAN-native-mean-structure-202
 - [x] `anova()` nesting fixes (#171, #173); `y ~ 1 + x` amendment approved
 
 ## Slices
-- [ ] S1: observed intercepts end to end (parse `y ~ 1 + x`, tri-state `meanstructure`, likelihood, counts, SEs, messages)
+- [x] S1: observed intercepts end to end (parse `y ~ 1 + x`, tri-state `meanstructure`, likelihood, counts, SEs, messages)
 - [ ] S2: scale robustness, centered gate, sweep to 1e5 (**Checkpoint A**)
 - [ ] S3: `~0*1` restriction, logLik fix, `anova()` across status, shared labels
 - [ ] S4: weights and sandwich

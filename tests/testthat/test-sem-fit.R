@@ -80,7 +80,7 @@ test_that("every error row names its cause", {
   fit_err <- function(m, d = dat) .sem_fit_syntax(m, d)
   expect_error(fit_err("level: 1\nY ~ X\nlevel: 2\nY ~ M"), "two-level estimation is not implemented")
   expect_error(fit_err("level: 2\nY ~ X"), "two-level estimation is not implemented")
-  expect_error(fit_err("M ~ 1\nY ~ M + X"), "mean structure is not supported.*free")
+  expect_error(.sem_fit_syntax("M ~ 1\nY ~ M + X", dat, meanstructure = FALSE), "meanstructure = FALSE.*writes an intercept")
   expect_error(fit_err("M ~ a*X\nY ~ b*M\na == 1\na == 2"), "no start converged.*constraint 'a == [12]' is violated")
   expect_error(fit_err("Y ~ X\nY ~ X"), "'Y ~ X' is specified more than once")
   expect_error(fit_err("Y ~ X + Zzz"), "not columns of `data`: Zzz")
@@ -100,7 +100,7 @@ test_that("a start, bound or fixed value in the syntax reaches the optimizer", {
   expect_identical(fixed$df, 1)
 })
 
-test_that("table, par_map and partable stay aligned when a fixed-zero intercept row is dropped", {
+test_that("table, par_map and partable stay aligned when a fixed-zero intercept row is a restriction", {
   set.seed(1)
   d <- data.frame(x = stats::rnorm(200))
   d$m <- 0.5 * d$x + stats::rnorm(200)
@@ -108,7 +108,8 @@ test_that("table, par_map and partable stay aligned when a fixed-zero intercept 
   fit <- .sem_fit_syntax("m ~ 0*1\nm ~ x\ny ~ m", d)
   expect_identical(length(fit$par_map), nrow(fit$table))
   expect_identical(nrow(fit$partable), nrow(fit$table))
-  expect_false(any(fit$table$op == "~1"))
+  expect_true(any(fit$table$op == "~1" & !is.na(fit$table$fixed)))
+  expect_identical(fit$df, 2) # one from the covariances, one from the restricted intercept
   free <- !is.na(fit$par_map)
   expect_identical(fit$table$lhs[free][fit$par_map[free] == match("m~x", names(fit$theta))], "m")
   expect_identical(sum(free), length(fit$theta))

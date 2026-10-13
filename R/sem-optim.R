@@ -318,5 +318,14 @@
   var_k <- ram$k_s[ram$s_weight == 1]
   start[ram$k_s[ram$s_weight == 2]] <- 0
   start[var_k] <- 0.5 * u[var_k]
+  if (ram$has_mean && length(ram$k_m)) {
+    # intercept starts match the sample means: m_v = xbar_v - (A xbar)_v with the start paths
+    a <- ram$a0
+    a[ram$pos_a] <- start[ram$k_a]
+    ao <- a[ram$obs_idx, ram$obs_idx, drop = FALSE]
+    mv <- numeric(ram$nv)
+    mv[ram$obs_idx] <- smp$xbar - as.vector(ao %*% smp$xbar)
+    start[ram$k_m] <- mv[ram$pos_m]
+  }
   stats::setNames(start, ram$par_names)
 }

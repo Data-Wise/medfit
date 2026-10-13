@@ -7,7 +7,7 @@
 # estimates them (`fixed.x = FALSE`). Row order follows lavaan so the two
 # tables can be compared row for row. `.sem_to_partable()` and `.sem_to_ram()`
 # convert the completed table to lavaan's column layout and to the RAM
-# specification of sem-ml.R. No mean structure is fitted (spec 7).
+# specification of sem-ml.R. A `~1` row (or `meanstructure = TRUE`) adds a mean structure over the observed variables.
 
 # Observed and latent variable roles, from a parsed parameter table.
 .sem_roles <- function(p) {
@@ -30,10 +30,18 @@
   )
 }
 
-.sem_complete <- function(parameters) {
+.sem_complete <- function(parameters, meanstructure = NULL) {
   p <- parameters[, c("lhs", "op", "rhs", "level", "fixed", "label", "start", "lower", "upper")]
   p$user <- 1L
   r <- .sem_roles(p)
+  written <- p$op == "~1"
+  if (identical(meanstructure, FALSE) && any(written)) {
+    stop("`meanstructure = FALSE`, but the model writes an intercept ('", p$lhs[written][1L], " ~ 1'); ",
+         "drop the intercept statement or leave `meanstructure` unset", call. = FALSE)
+  }
+  # Mean structure is on when asked for, or when any intercept statement is written (free or fixed, as in
+  # lavaan): then every observed variable whose intercept the user did not write gets a free one.
+  mean_on <- isTRUE(meanstructure) || any(written)
 
   # Marker loading: the first indicator of each latent variable is fixed to 1
   # unless the user fixed it.
@@ -90,6 +98,14 @@
       if (r$ov_x[i] %in% paired && r$ov_x[j] %in% paired) add(r$ov_x[i], r$ov_x[j])
     }
   }
+  if (mean_on) {
+    for (v in setdiff(r$obs, p$lhs[written])) {
+      new[[length(new) + 1L]] <- data.frame(
+        lhs = v, op = "~1", rhs = "", level = 1L, fixed = NA_real_, label = "", start = NA_real_,
+        lower = NA_real_, upper = NA_real_, user = 0L, stringsAsFactors = FALSE
+      )
+    }
+  }
   p <- rbind(p, do.call(rbind, c(list(p[0L, ]), new)))
   p$id <- seq_len(nrow(p))
   rownames(p) <- NULL
@@ -131,22 +147,25 @@
   invisible(tab)
 }
 
-# Completed table to a RAM specification. Fixed intercepts of zero are dropped;
-# any other intercept is a mean structure, which is not fitted.
+# Completed table to a RAM specification. Intercept rows (`~1`) make a mean structure: the observed ones
+# become the RAM's intercept vector. A latent variable's mean is fixed at 0 (lavaan's default, GRILL G7), so
+# a latent `~ 0*1` is accepted and dropped, and any other latent intercept is an error until latent means ship.
 .sem_to_ram <- function(tab) {
-  icpt <- tab$op == "~1"
-  if (any(icpt & (is.na(tab$fixed) | tab$fixed != 0))) {
-    bad <- tab[icpt & (is.na(tab$fixed) | tab$fixed != 0), ][1L, ]
-    stop(
-      "mean structure is not supported: the intercept of '", bad$lhs, "' is ",
-      if (is.na(bad$fixed)) "free" else "fixed to a nonzero value",
-      "; the native engine fits covariance structures only", call. = FALSE
-    )
-  }
-  tab <- tab[!icpt, , drop = FALSE]
   latent <- unique(tab$lhs[tab$op == "=~"])
+  icpt <- tab$op == "~1"
+  lat_icpt <- icpt & tab$lhs %in% latent
+  bad <- lat_icpt & (is.na(tab$fixed) | tab$fixed != 0)
+  if (any(bad)) {
+    stop("the mean of latent variable '", tab$lhs[bad][1L], "' is ",
+         if (is.na(tab$fixed[bad][1L])) "free" else "fixed to a nonzero value",
+         ": latent means are planned for a later release (a latent mean of 0 is the default)", call. = FALSE)
+  }
+  tab <- tab[!lat_icpt, , drop = FALSE]
+  icpt <- tab$op == "~1"
   obs <- setdiff(unique(as.vector(rbind(tab$lhs, tab$rhs))), c(latent, ""))
   is_a <- tab$op %in% c("=~", "~")
+  is_s <- tab$op == "~~"
+  is_m <- tab$op == "~1"
   # `=~` is a path from the factor to its indicator; `~` from the predictor to the target.
   row <- ifelse(tab$op == "=~", tab$rhs, tab$lhs)
   col <- ifelse(tab$op == "=~", tab$lhs, tab$rhs)
@@ -156,7 +175,8 @@
     data.frame(row = row[i], col = col[i], label = tab$label[i], value = tab$fixed[i], name = name[i],
                stringsAsFactors = FALSE)
   }
-  ram <- .sem_ram(c(obs, latent), obs, piece(is_a), piece(!is_a))
+  m_piece <- if (any(is_m)) piece(is_m) else NULL
+  ram <- .sem_ram(c(obs, latent), obs, piece(is_a), piece(is_s), m_piece)
 
   par_map <- ifelse(is.na(tab$fixed), match(name, ram$par_names), NA_integer_)
   pick <- function(col_name) {
@@ -174,8 +194,13 @@
   list(ram = ram, par_map = par_map, start = pick("start"), lower = pick("lower"), upper = pick("upper"), table = tab)
 }
 
-# Degrees of freedom of the covariance structure: observed moments minus free parameters.
-.sem_df <- function(ram, eq_rank = 0L) {
+# Observed moments: the covariances, plus the means when the model has a mean structure.
+.sem_moments <- function(ram) {
   p <- length(ram$obs_idx)
-  p * (p + 1) / 2 - (ram$q - eq_rank)
+  p * (p + 1) / 2 + if (isTRUE(ram$has_mean)) p else 0
+}
+
+# Degrees of freedom: observed moments minus free parameters.
+.sem_df <- function(ram, eq_rank = 0L) {
+  .sem_moments(ram) - (ram$q - eq_rank)
 }

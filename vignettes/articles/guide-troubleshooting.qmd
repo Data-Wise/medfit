@@ -81,7 +81,7 @@ Examples on this site need medfit 0.8.0 or later. If `mediation_demo` or
 | You see | Cause | Fix |
 |---|---|---|
 | `unknown parameter label` | a label in `:=` or a constraint is not defined in the model | label the path first: `y ~ b * m` |
-| `mean structure is not supported` | the model has a free intercept (`y ~ 1`) | remove it; the engine fits covariance structures only |
+| `meanstructure = FALSE, but the model writes an intercept` | `meanstructure = FALSE` was given with an intercept statement (`y ~ 1`) | drop the statement, or leave `meanstructure` unset |
 | `variables in the model are not columns of` | the syntax names a variable that is not in `data` | check the names against `names(data)` |
 | `Must have length 1` | `fit_mediation(engine = "native")` was given several mediators | fit with `fit_sem()` and call `extract_mediation()`; see [several mediators](model-native-multi.html) |
 

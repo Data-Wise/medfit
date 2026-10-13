@@ -7,7 +7,8 @@
 # `fit_mediation(engine = "native")` (plan N4).
 
 .sem_fit_syntax <- function(model, data, information = c("observed", "expected"), n_starts = 5L,
-                            control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL) {
+                            control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL,
+                            meanstructure = NULL) {
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
   information <- match.arg(information)
   se_type <- match.arg(se_type)
@@ -18,16 +19,20 @@
     parsed <- .sem_parse(model)
     products <- .sem_zero_product_rows(parsed$constraints)
     if (length(products)) {
-      return(.sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type))
+      return(.sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
+                               meanstructure))
     }
   }
   if (any(parsed$parameters$level != 1L)) {
     stop("two-level estimation is not implemented: the model uses `level:` blocks", call. = FALSE)
   }
-  tab <- .sem_complete(parsed$parameters)
+  tab <- .sem_complete(parsed$parameters, meanstructure)
   .sem_check_scale(tab)
   conv <- .sem_to_ram(tab)
   ram <- conv$ram
+  if (ram$has_mean && se_type == "sandwich") {
+    stop("`se_type = \"sandwich\"` with a mean structure is not implemented yet (planned in 0.9.0)", call. = FALSE)
+  }
 
   absent <- setdiff(ram$obs, names(data))
   if (length(absent)) {
@@ -61,7 +66,7 @@
   if (df < 0) {
     stop(sprintf(
       "the model has more free parameters (%d) than observed moments (%d): df = %d",
-      ram$q - eq_rank, length(ram$obs) * (length(ram$obs) + 1L) / 2, df
+      ram$q - eq_rank, .sem_moments(ram), df
     ), call. = FALSE)
   }
 
@@ -98,7 +103,8 @@
 # with the smallest discrepancy wins. A branch that fails the acceptance gate is skipped; when none succeeds
 # the error lists each. Messages and warnings of the losing branches are dropped, those of the winner are
 # passed on. The returned fit keeps the user's constraints; `branch` names the lines the winner used.
-.sem_fit_branches <- function(parsed, products, data, information, n_starts, control, weights, se_type) {
+.sem_fit_branches <- function(parsed, products, data, information, n_starts, control, weights, se_type,
+                              meanstructure = NULL) {
   grid <- do.call(expand.grid, c(lapply(products, `[[`, "factors"), stringsAsFactors = FALSE))
   if (nrow(grid) > 64L) {
     stop(sprintf("the zero-product constraints give %d branches to fit; at most 64 are supported", nrow(grid)),
@@ -119,7 +125,8 @@
     res <- tryCatch(
       withCallingHandlers(
         .sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
-                        parsed = list(parameters = parsed$parameters, constraints = cons)),
+                        parsed = list(parameters = parsed$parameters, constraints = cons),
+                        meanstructure = meanstructure),
         message = function(m) {
           held$messages[[length(held$messages) + 1L]] <<- m
           invokeRestart("muffleMessage")
