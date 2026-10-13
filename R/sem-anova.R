@@ -153,6 +153,7 @@ S7::method(anova, SEMFit) <- function(object, ...) {
   both <- merge(pf[!pf$free, c("key", "est")], pr[!pr$free, c("key", "est")], by = "key")
   moved <- both$key[abs(both$est.x - both$est.y) > 1e-8]
   out <- if (length(moved)) paste0("the fixed value of ", moved) else character()
+  out <- c(out, .sem_anova_bounds_kept(full, restricted))
   cf <- full@internals$constraints
   cf <- if (is.null(cf)) cf else cf[cf$op %in% c("==", "<", ">"), , drop = FALSE]
   if (is.null(cf) || !nrow(cf)) {
@@ -208,6 +209,35 @@ S7::method(anova, SEMFit) <- function(object, ...) {
     }
     if (!ok) {
       out <- c(out, paste0("the constraint '", rows_f$eq$text[i], "'"))
+    }
+  }
+  out
+}
+
+# Bounds of `full` (`lower(0)*x`, and single-label inequalities such as `a > 0.1`, which the parser stores as
+# bounds in the parameter table, not as constraint rows). A restricted model keeps a bound when its estimate or
+# fixed value lies inside it and, for a parameter it leaves free, its own bound is at least as tight.
+.sem_anova_bounds_kept <- function(full, restricted) {
+  tab <- function(m) {
+    pt <- m@internals$partable
+    data.frame(key = paste(pt$lhs, pt$op, pt$rhs), free = m@table$free, est = m@table$est,
+               lower = pt$lower, upper = pt$upper, stringsAsFactors = FALSE)
+  }
+  pf <- tab(full)
+  pr <- tab(restricted)
+  lo <- function(x) ifelse(is.na(x), -Inf, x)
+  up <- function(x) ifelse(is.na(x), Inf, x)
+  tol <- 1e-8
+  out <- character()
+  for (i in which(!is.na(pf$lower) | !is.na(pf$upper))) {
+    j <- match(pf$key[i], pr$key)
+    if (is.na(j)) {
+      next
+    }
+    inside <- pr$est[j] >= lo(pf$lower[i]) - tol && pr$est[j] <= up(pf$upper[i]) + tol
+    tight <- !pr$free[j] || (lo(pr$lower[j]) >= lo(pf$lower[i]) && up(pr$upper[j]) <= up(pf$upper[i]))
+    if (!inside || !tight) {
+      out <- c(out, paste0("the bound on ", pf$key[i]))
     }
   }
   out

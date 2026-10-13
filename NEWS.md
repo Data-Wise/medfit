@@ -5,7 +5,7 @@
 * `anova()` for `SEMFit` no longer reports a p-value for a restricted model that is not nested in the larger one
   through constraints. The nesting check compared only the free parameters, so `a == b` against
   `a == 0` and `b == 0.5` (the second breaks the first) returned a chi-square p-value. The restricted model must now keep every
-  fixed value and constraint of the larger one: a linear equality must follow from the restricted model's
+  fixed value, bound and constraint of the larger one (a bound includes a single-label inequality such as `a > 0.1`): a linear equality must follow from the restricted model's
   equalities and fixed values, and a nonlinear equality or an inequality must appear verbatim. Comparisons that
   are not nested now stop with "not nested".
 

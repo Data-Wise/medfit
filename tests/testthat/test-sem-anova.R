@@ -268,3 +268,26 @@ test_that("planted defect: without the constraint check the broken pair returns 
   silent <- sem_mutate(.sem_anova_nested, "kept <- .sem_anova_kept(full, restricted)", "kept <- NULL")
   expect_no_error(silent(full, broken, c("full", "broken")))
 })
+
+test_that("a bound of the larger model must be kept by the restricted model", {
+  fit_b <- function(m) fit_sem(paste0(m, "\noutcome ~ mediator1 + treatment"), mediation_demo)
+  bounded <- fit_b("mediator1 ~ lower(0)*treatment")
+  expect_error(anova(bounded, fit_b("mediator1 ~ -1*treatment")), "not nested")
+  expect_no_error(anova(bounded, fit_b("mediator1 ~ 0*treatment")))
+})
+
+test_that("a single-label inequality of the larger model is a bound and must be kept", {
+  base <- "mediator1 ~ a1*treatment\noutcome ~ b1*mediator1 + a2*treatment\n"
+  full <- fit_sem(paste0(base, "a1 > 0.1"), mediation_demo)
+  expect_error(anova(full, fit_sem(paste0(base, "a2 == 0"), mediation_demo)), "not nested")
+  expect_no_error(anova(full, fit_sem(paste0(base, "a1 > 0.1\na2 == 0"), mediation_demo)))
+})
+
+test_that("planted defect: without the bound check the dropped bound returns a p-value", {
+  base <- "mediator1 ~ a1*treatment\noutcome ~ b1*mediator1 + a2*treatment\n"
+  full <- fit_sem(paste0(base, "a1 > 0.1"), mediation_demo)
+  rest <- fit_sem(paste0(base, "a2 == 0"), mediation_demo)
+  silent <- sem_mutate(.sem_anova_kept, "out <- c(out, .sem_anova_bounds_kept(full, restricted))", "NULL")
+  expect_length(silent(full, rest), 0L)
+  expect_length(.sem_anova_kept(full, rest), 1L)
+})
