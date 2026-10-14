@@ -95,19 +95,16 @@
 # conventions cannot drift from the lavaan route. Registered at source time (the
 # class lives in this package).
 S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, ...) {
-  out <- tryCatch(
-    extract_mediation_lavaan(.sem_accessors_native(object), treatment = treatment, mediator = mediator, ...),
-    error = function(e) {
-      # The four-way decomposition reads the mediator intercept, which the native engine does not estimate
-      # (free intercepts are outside this version); the lavaan wording would send the user to a lavaan option.
-      if (grepl("meanstructure", conditionMessage(e), fixed = TRUE)) {
-        stop("the four-way decomposition needs the mediator intercept, which engine = \"native\" does not ",
-             "estimate in this version; use `decomposition = \"two_way\"`, or fit with a lavaan model that has ",
-             "`meanstructure = TRUE`.", call. = FALSE)
-      }
-      stop(e)
-    }
-  )
+  args <- list(...)
+  # The four-way decomposition is refused by name, with or without a mean structure: it needs the
+  # treatment-by-mediator product, which the native grammar cannot write until the `:` operator (0.10.0), and a
+  # product precomputed as a data column would be fitted as an ordinary variable.
+  if (identical(args$decomposition, "four_way") || !is.null(args$interaction)) {
+    stop("the four-way decomposition is not available for a native fit in this version: it needs the ",
+         "treatment-by-mediator product, which the native syntax cannot write yet (planned for 0.10.0). Use ",
+         "`decomposition = \"two_way\"`, or fit the model with lm/glm or lavaan.", call. = FALSE)
+  }
+  out <- extract_mediation_lavaan(.sem_accessors_native(object), treatment = treatment, mediator = mediator, ...)
   out@source_package <- "medfit"
   out
 }

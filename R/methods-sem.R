@@ -131,7 +131,7 @@ S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_lint
 
 # Row names for the parameter table: the label when there is one, otherwise `lhs op rhs`.
 .sem_row_names <- function(tab) {
-  ifelse(!is.na(tab$label) & nzchar(tab$label), tab$label, paste(tab$lhs, tab$op, tab$rhs))
+  ifelse(!is.na(tab$label) & nzchar(tab$label), tab$label, trimws(paste(tab$lhs, tab$op, tab$rhs)))
 }
 
 S7::method(print, SEMFit) <- function(x, ...) {

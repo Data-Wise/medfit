@@ -91,7 +91,7 @@ test_that("extraction from a native fit equals the lavaan route for the four str
   }
 })
 
-test_that("the four-way route needs the mediator intercept, so a native fit says so", {
+test_that("the four-way route is refused by name for a native fit, with or without a mean structure", {
   set.seed(8)
   n <- 300
   x <- stats::rnorm(n)
@@ -99,9 +99,19 @@ test_that("the four-way route needs the mediator intercept, so a native fit says
   y <- 0.3 * m + 0.2 * x + 0.15 * x * m + stats::rnorm(n)
   dat <- data.frame(X = x, M = m, Y = y, XM = x * m)
   fit <- fit_sem("M ~ X\nY ~ M + X + XM", dat)
+  refusal <- "four-way decomposition is not available for a native fit.*0\\.10\\.0"
   expect_error(
-    extract_mediation(fit, treatment = "X", mediator = "M", outcome = "Y", interaction = "XM"),
-    "needs the mediator intercept.*does not estimate in this version"
+    extract_mediation(fit, treatment = "X", mediator = "M", outcome = "Y", interaction = "XM"), refusal
+  )
+  expect_error(
+    extract_mediation(fit, treatment = "X", mediator = "M", outcome = "Y", decomposition = "four_way"), refusal
+  )
+  with_mean <- fit_sem("M ~ X\nY ~ M + X + XM", dat, meanstructure = TRUE)
+  expect_error(
+    extract_mediation(with_mean, treatment = "X", mediator = "M", outcome = "Y", interaction = "XM"), refusal
+  )
+  expect_error(
+    extract_mediation(with_mean, treatment = "X", mediator = "M", outcome = "Y", decomposition = "four_way"), refusal
   )
   expect_no_error(
     extract_mediation(fit, treatment = "X", mediator = "M", outcome = "Y", decomposition = "two_way")

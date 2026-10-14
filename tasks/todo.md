@@ -12,7 +12,7 @@ Plan: `tasks/plan.md`. Spec plan: `planning/specs/PLAN-native-mean-structure-202
 - [x] S3: `~0*1` restriction, logLik fix, `anova()` across status, shared labels
 - [x] S4: weights and sandwich
 - [x] S5: constraints, MBCO, re-fit plumbing, lavaan parity (**Checkpoint B**)
-- [ ] S6: methods, extraction, four-way refusal, OpenMx, worked example
+- [x] S6: methods, extraction, four-way refusal, OpenMx, worked example
 - [ ] S7: docs and close-out (**Checkpoint C**)
 
 ## Follow-ups from T1

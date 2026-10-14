@@ -40,8 +40,9 @@
 #'   both reset)
 #' - **SEMFit**: Extract from a model fitted by [fit_sem()] (the experimental
 #'   native maximum-likelihood engine), with the same arguments and structures as
-#'   the lavaan method. The four-way decomposition is not available: it needs a
-#'   mediator intercept, which the native engine does not estimate.
+#'   the lavaan method. The four-way decomposition is not available: the native
+#'   syntax has no treatment-by-mediator product yet (planned for 0.10.0), so
+#'   `decomposition = "four_way"` and `interaction =` are refused by name.
 #' - **brmsfit**: Extract from Bayesian models (future)
 #'
 #' Note: OpenMx extraction is planned for a future release.
