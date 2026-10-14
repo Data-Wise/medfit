@@ -45,6 +45,8 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Model syntax and data (observed or latent variables, constraints, `:=`) | `fit_sem(model, data)`, a `SEMFit` |
 | Model syntax, mediator by name | `fit_mediation(engine = "native", model = , treatment = , mediator = )` |
 | Many exogenous covariates on a native fit | `fit_sem(model, data, fixed_x = TRUE)`; `glance(fit)$fixed_x` lists what was fixed |
+| Intercepts and means on a native fit | `y ~ 1` in the syntax (frees every unwritten observed intercept), or `fit_sem(model, data, meanstructure = TRUE)`; `y ~ 0*1` restricts one |
+| Log likelihood, AIC and BIC of a `SEMFit` | `logLik(fit)`, `AIC(fit1, fit2)`, `BIC(fit1, fit2)`; `AIC()` of a fit with a product term and one without are not comparable |
 | Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")`; `paths = c("a", "d", "b")` for a serial product |
 | Compare nested `SEMFit`s (likelihood-ratio test) | `anova(fit_full, fit_restricted)` |
 | Parameter table, one-row fit summary and intervals for a `SEMFit` | `tidy(fit)`, `glance(fit)`, `confint(fit)` |
@@ -124,3 +126,6 @@ Every call returns a `BootstrapResult`: use `print()`, `summary()`, `coef()`, `c
 | Bootstrap samples failed | Check the count, interval uses the rest |
 | Normal approximation for the indirect effect | Prefer `bootstrap_mediation()` |
 | Total effect near zero | Proportion mediated undefined |
+| Native fit: the model test is not valid for this model | A product factor is a regression target or the exogenous block is restricted: `glance()` reports `NA`, and `anova()` and `mbco_sem()` refuse |
+| Native fit: the starts disagree | Several accepted optima: the lowest was kept; raise `n_starts` |
+| Native `anova()`: not nested | The restricted model frees or drops something the larger one does not: constrain or fix parameters of the larger model instead |
