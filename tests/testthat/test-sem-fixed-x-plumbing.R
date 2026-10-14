@@ -15,13 +15,32 @@ test_that("zero-product branches and the MBCO refit keep fixed_x", {
   d <- fx_data()
   fit <- fit_sem(paste0(fx_syntax, "\na*b == 0"), d, fixed_x = TRUE)
   expect_setequal(fit@internals$fixed_x, fx_exo)
-  seen <- NULL
+  # build the fits first: a mock installed earlier would record fit_sem()'s own call and pass vacuously
+  subset_fit <- fit_sem(fx_syntax, d, fixed_x = "covariate1")
+  free_fit <- fit_sem(fx_syntax, d)
+  seen <- list()
   testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
-    seen <<- c(seen, list(list(...)$fixed_x))
+    seen[[length(seen) + 1L]] <<- list(...)$fixed_x
     stop("stop after capturing")
   })
-  try(mbco_sem(fit_sem(fx_syntax, d, fixed_x = "covariate1"), "a", "b"), silent = TRUE)
+  try(mbco_sem(subset_fit, "a", "b"), silent = TRUE)
   expect_true(length(seen) > 0L && all(vapply(seen, identical, TRUE, "covariate1")))
+  seen <- list()
+  try(mbco_sem(free_fit, "a", "b"), silent = TRUE)
+  expect_true(length(seen) > 0L && all(vapply(seen, isFALSE, TRUE)))
+})
+
+test_that("planted defect: an MBCO refit that drops fixed_x is caught", {
+  fx_skip_covr()
+  subset_fit <- fit_sem(fx_syntax, fx_data(), fixed_x = "covariate1")
+  bad <- sem_mutate(mbco_sem, "fixed_x = fixed_x)", "fixed_x = FALSE)")
+  seen <- list()
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
+    seen[[length(seen) + 1L]] <<- list(...)$fixed_x
+    stop("stop after capturing")
+  })
+  try(bad(subset_fit, "a", "b"), silent = TRUE)
+  expect_true(length(seen) > 0L && !any(vapply(seen, identical, TRUE, "covariate1")))
 })
 
 test_that("tidy and summary list the fixed rows, flagged, with no standard error", {

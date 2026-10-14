@@ -148,12 +148,15 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   n_starts <- n_starts %||% fit@internals$n_starts %||% 5L
   control <- control %||% fit@internals$control %||% list()
   constraints <- paste(paths, "== 0")
+  # a fit with `fixed_x` is refit with the same fixed set, so the refits keep the fit's likelihood
+  fixed_x <- if (length(fit@internals$fixed_x)) fit@internals$fixed_x else FALSE
   refit <- lapply(paths, function(tested) {
     con <- paste(tested, "== 0")
     # `fit@data` holds the rows the fit used, already free of missing values: no second deletion.
     r <- tryCatch(
       .sem_fit_syntax(paste0(fit@model, "\n", con), fit@data, fit@information, n_starts = n_starts,
-                      control = control, meanstructure = if (isTRUE(fit@internals$ram$has_mean)) TRUE),
+                      control = control, meanstructure = if (isTRUE(fit@internals$ram$has_mean)) TRUE,
+                      fixed_x = fixed_x),
       error = function(e) {
         stop(sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint on that ",
                             "parameter, the null `%s` may lie outside the parameter space."),
