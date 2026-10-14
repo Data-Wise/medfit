@@ -270,8 +270,11 @@ fwo_route_glm <- function(d, covs, weights = NULL, m_star = 0, se_type = "model"
   fwo_out(fit)
 }
 
-# The native route through the `:` product term. Written against the plan (U7); it is exercised only once the
-# `:` token exists. `fwo_native_available()` probes for it with a tiny model.
+# The native route: `fit_sem()` with the `:` product term (a product of two observed regressors, saturated mean
+# structure on by the product), then `extract_mediation()` (the four-way decomposition on a SEMFit, U7). `information`
+# is observed: the SEs equal OLS at the ML scale (rule-9 class), and with an endogenous product factor the expected
+# information would be wrong (plan F4). `se_type` "model" is the unweighted route, "sandwich" the weighted one.
+# `fwo_native_available()` probes for the `:` term with a tiny model (the sim gate skips its native route without it).
 fwo_native_available <- function() {
   d <- fwo_data(200, 1)
   ok <- tryCatch({
@@ -341,7 +344,9 @@ fwo_kat_run <- function(fit_fun, design, truth, m_star = 0, reps = 500, seed0 = 
   est <- se <- matrix(NA_real_, reps, length(fwo_keys), dimnames = list(NULL, fwo_keys))
   for (r in seq_len(reps)) {
     d <- fwo_kat_draw(design, truth, seed0 + r)
-    o <- fit_fun(d, design$covs, design$w, m_star)
+    # a failed fit is an unfitted replication (NA row), counted in `reps_ok`, never an aborted run
+    o <- tryCatch(fit_fun(d, design$covs, design$w, m_star), error = function(e) NULL)
+    if (is.null(o)) next
     est[r, ] <- o$est[fwo_keys]
     se[r, ] <- o$se[fwo_keys]
   }

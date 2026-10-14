@@ -1,0 +1,5 @@
+"xdist","config","path","expect","df","reject05","reject01","mean_chisq","reps","reps_ok","mutant"
+"norm","free","colon","calibrated",2,0.055,0.011,2.00178220018863,1000,1000,""
+"norm","dropcov","colon","miscalibrated",7,0.249,0.135,10.8840372414178,1000,1000,""
+"exp","free","colon","calibrated",2,0.056,0.01,2.04808022708788,1000,1000,""
+"exp","dropcov","colon","miscalibrated",7,0.693,0.567,27.5670837128098,1000,1000,""
