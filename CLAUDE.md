@@ -347,7 +347,7 @@ tests/testthat/
 ├── test-effect-se.R, test-confint-paths.R, test-methods-*.R   # SEs, confint, tidy
 ├── test-serial-total-effect.R           # te() over every path
 ├── test-fit-*.R                         # glm, regmedint, m_star, native (test-fit-sem.R)
-├── test-sem-*.R, helper-sem.R           # native SEM engine: parser, model, optimizer, constraints, SEs, weights, MBCO, methods, probmed gate
+├── test-sem-*.R, helper-sem.R           # native SEM engine: parser, model, optimizer, constraints, SEs, weights, MBCO, methods, probmed gate, product term (`test-sem-product-*.R`: token, table, materialize, rules, mean, modeltest, extract; `test-four-way-oracle-*.R` with `helper-four-way-oracle.R`)
 ├── test-bootstrap*.R                    # Bootstrap methods
 └── test-mediation-demo.R                # bundled data known answers
 ```
@@ -442,8 +442,23 @@ gates work in centered coordinates `phi` (`.sem_center_map()`, `theta = T (phi +
 differences, `V = T V_phi T'`); a fit whose intercepts are all free and absent from constraints, bounds and starts
 runs on mean-centered data and maps back (`.sem_shift_ok()`). Intercept constraints keep the plain solver coordinates
 with a centered gate: checked to mean/sd 1e3, not 1e5. `anova()` treats a covariance-only fit as having free implicit
-intercepts (`.sem_anova_table()`). Four-way on a `SEMFit` is refused by name until the `:` operator (0.10.0). Gates:
+intercepts (`.sem_anova_table()`). Four-way on a `SEMFit` needs the `:` product (below); a product turns the mean structure on. Gates:
 `tests/sim/sem-mean-constrained-gate.R` (`MUTANT=badshift|nocenter`), the OLS oracle in `test-sem-mean-*.R`.
+
+### Native product term and four-way (`R/sem-parse.R`, `R/sem-model.R`, `R/sem-fit.R`, `R/sem-anova.R`, `R/extract-sem.R`)
+
+`x:m` on a regression's right side is an observed exogenous column `x * m`, built by `.sem_materialize_products()` after
+listwise deletion; `.sem_product_name(a, b)` (C-locale sort, `m:x` for `x`, `m`) is the one name every consumer uses. A
+product turns the mean structure on (`meanstructure = FALSE` errors). Supported class (`.sem_check_product_parsed()`,
+`.sem_check_product_completed()`): recursive, rule 8 (no factor that is the target or a descendant), no outcome residual
+covariance (the auto-added pure-outcome one is fixed at 0 with one note, GRILL H6), no shared, fixed, bounded or constrained
+coefficient, free unshared intercepts; each rejection message is tabulated in `?"medfit-syntax"` and the native model
+page. `.sem_product_modeltest()` marks the global test invalid when a product factor is a regression target or the exogenous
+block is restricted: `glance()` chi-square/df/p are `NA` with a note, `anova()` and `mbco_sem()` refuse
+(`.sem_check_modeltest()`), `information = "expected"` is refused for an endogenous factor; `.sem_chisq()` is the raw statistic (`glance()` reads it for valid fits, the gates read it when the verdict is `NA`).
+`extract_mediation(<SEMFit>)` returns `InteractionMediationData` when the outcome equation carries the
+treatment-by-mediator product (names carry the canonical `m:x`); another product on the treatment or mediator is refused.
+Plan and evidence: `planning/specs/PLAN-native-four-way-2026-10-12.md`.
 
 ---
 
@@ -519,7 +534,7 @@ breaking existing code, type safety via S7 validators.
 | `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
 | `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
 | `"lmer"` | lme4, pbkrtest (Suggests) | mixed models for cluster-level treatment; `cluster =`, `se_type = "kr"` | ✓ (no weights/sandwich/families) |
-| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `, one mediator through `fit_mediation()`; serial and parallel through `fit_sem()` then `extract_mediation()`); latent mediators, linear and nonlinear constraints, `weights`/`se_type = "sandwich"`; `anova()`, `tidy()`/`glance()`; `mbco_sem()` (k paths) | ✓ experimental (observed intercepts and means, `meanstructure =`; no latent means, no four-way) |
+| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `, one mediator through `fit_mediation()`; serial and parallel through `fit_sem()` then `extract_mediation()`); latent mediators, linear and nonlinear constraints, `weights`/`se_type = "sandwich"`; `anova()`, `tidy()`/`glance()`; `mbco_sem()` (k paths) | ✓ experimental (observed intercepts and means, `meanstructure =`, the `:` product term with four-way through `extract_mediation()` in a supported class; no latent means, no latent products) |
 | `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 

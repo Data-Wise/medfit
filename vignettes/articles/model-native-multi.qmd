@@ -100,8 +100,10 @@ errors are not valid under inverse-probability weighting.
 ## Limits
 
 - **`fit_mediation(engine = "native")` takes one mediator** (see the warning above).
-- **No four-way decomposition** from the native engine (the syntax has no product operator
-  yet). Intercepts are estimated; see [the native model page](model-native.html#intercepts).
+- **Four-way decomposition** needs one mediator and a treatment-by-mediator product (`x:m`) in the
+  outcome equation, and a model with a product cannot have a residual covariance between the
+  mediators (parallel mediators with `m1 ~~ m2` and a product are not supported; see
+  [product terms](model-native.html#product-terms)). Intercepts are estimated; see [the native model page](model-native.html#intercepts).
 - **The native sandwich is the HC0 type**, with casewise scores; the `glm`
   engine's sandwich is HC3. They are different estimators, so the standard errors
   need not match.
