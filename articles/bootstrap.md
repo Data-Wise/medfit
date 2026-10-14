@@ -229,8 +229,8 @@ print(boot_np)
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.2077
-      Upper:   0.4816
+      Lower:   0.2105
+      Upper:   0.4740
 
 ### How It Works
 
