@@ -1,5 +1,7 @@
 # Todo: `fixed_x` (bundled into 0.9.0)
 
+**Status (2026-10-13):** merged to `dev` as #175 (`1023520`, with the 0.9.0 mean structure, #174 `8681083`); unreleased, DESCRIPTION still 0.8.0. Open below: the F-C doc-currency report, the 0.9.0 release gate R1 and the release decision.
+
 Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/SPEC-native-fixed-x-2026-10-13.md) | Branch `feature/native-fixed-x` is created only on request. Test-first: write the failing test, then the code. After any edit to `.sem_eval`, `.sem_df`, `logLik` or `.sem_complete`, rerun the frozen gate (`test-sem-frozen-v080.R`).
 
 ## Phase 0: groundwork
@@ -50,22 +52,24 @@ Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/S
   - Acceptance: `fit_mediation(engine_args = list(fixed_x = ))` reaches the fit; `.sem_fit_branches()` and the `mbco_sem()` refit carry it; `extract_mediation()` unchanged; `tidy()`/`summary()` show fixed rows (flag, est, se NA)
   - Verify: `devtools::test(filter = "sem-fixed-x-plumbing")` (mocked-binding capture of the refit call)
   - Files: `R/fit-glm.R`, `R/sem-fit.R`, `R/sem-mbco.R`, `R/methods-tidy.R`, `tests/testthat/test-sem-fixed-x-plumbing.R`
-- [ ] **Checkpoint F-B**
-  - [ ] S1-S10 each covered by a passing test
-  - [ ] the five planted defects each fail the right test
-  - [ ] full suite, lint (120 columns), strict `R CMD check` clean; review with you
+  - Open item (found 2026-10-13, not blocking): the `mbco_sem()` refit does not pass `fixed_x` (`R/sem-mbco.R:155-156` passes `meanstructure` only) and the plumbing test's mock sees `fit_sem()`'s own call first (`test-sem-fixed-x-plumbing.R:14-25`), so it cannot catch this. The statistic is unchanged (`test-sem-fixed-x-compare.R:16`).
+- [x] **Checkpoint F-B** (merged with #175; PR body: six planted defects, not five, each exit 1)
+  - [x] S1-S10 each covered by a passing test
+  - [x] the planted defects each fail the right test
+  - [x] full suite, lint (120 columns), strict `R CMD check` clean (PR #175: full suite 0 failures, strict check 0/0/0, CI 10/10)
 
 ## Phase 4: evidence and docs
 - [x] **V9** Gate script, timing table, OpenMx (OpenMx subset check: `test-sem-fixed-x-compare.R`, estimates 1e-4, SEs 1e-3)
   - Acceptance: `tests/sim/sem-fixed-x-gate.R` RULE MET; each `MUTANT` exits 1; OpenMx agrees on a subset; 30-covariate timing table (n, hardware, free parameters before/after) recorded
   - Verify: `Rscript tests/sim/sem-fixed-x-gate.R`; `MUTANT=<name> ...` for each defect
   - Files: `tests/sim/sem-fixed-x-gate.R`, `planning/specs/evidence/native-fixed-x-2026-10-13/`
-- [ ] **V10** Docs, NEWS and close-out
+- [x] **V10** Docs, NEWS and close-out (done in #175: NEWS, `?fit_sem`, `?"medfit-syntax"`, `model-native.qmd`, `native-guide.qmd`, the lavaan-comparison row, CLAUDE.md Engines row, `.STATUS`; strict check 0/0/0 and spelling clean per the PR body; the doc-currency run and `urlchecker` are not recorded there)
   - Acceptance: NEWS (behavior note, measured ratio only), `?fit_sem`, `?"medfit-syntax"`, `model-native.qmd`, `native-guide.qmd`, lavaan-comparison row, CLAUDE.md Engines row, `.STATUS`; doc-currency check run
   - Verify: `devtools::document()`; spelling and urlchecker clean; strict check 0/0/0
   - Files: `NEWS.md`, `R/fit-sem.R`, `R/sem-syntax-help.R`, `vignettes/articles/*.qmd`, `CLAUDE.md` (grouped; split if any exceeds 5 files)
-- [ ] **Checkpoint F-C**
-  - [ ] doc-currency report; CI green; merge decision with you
+- [ ] **Checkpoint F-C** (CI green and merged; open: the doc-currency report, not evidenced)
+  - [x] CI green (10/10); merge decision made (#175 merged to `dev`)
+  - [ ] doc-currency report (not recorded in the PR body)
 
 ## 0.9.0 release gates (carried from the archived plan)
 - [ ] **R1** Say whether the 1e-12 frozen tolerance is relative; confirm the fixture on the ubuntu CI BLAS

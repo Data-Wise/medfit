@@ -1,6 +1,6 @@
 # SPEC: Mean structure for the native SEM engine
 
-**Status:** draft | **Date:** 2026-10-12 | **Target:** 0.9.0 (GitHub-only, like 0.5.0 to 0.8.0)
+**Status:** merged (#174, `8681083`, on `dev`, unreleased; the GRILL and plan amend it where they differ) | **Date:** 2026-10-12 | **Target:** 0.9.0 (GitHub-only, like 0.5.0 to 0.8.0)
 **Source:** [BRAINSTORM-native-mean-structure-2026-10-12.md](BRAINSTORM-native-mean-structure-2026-10-12.md)
 
 ## User story
