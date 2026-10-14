@@ -40,3 +40,17 @@ test_that("the mean-structure flag is off in the RAM spec and the sample", {
   expect_false(ram$has_mean)
   expect_false(.sem_sample(fit@data, ram)$has_mean)
 })
+
+test_that("the retry seed ignores the mean structure, so a covariance-only fit keeps its 0.8.0 starts (R2)", {
+  fx_skip_covr()
+  syn <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
+  ram <- fit_sem(syn, mediation_demo)@internals$ram
+  expect_identical(.sem_seed(ram), 1782989507L) # the value 0.8.0 gives for this model
+  moved <- ram
+  moved$m0[] <- 7
+  moved$has_mean <- TRUE
+  expect_identical(.sem_seed(moved), .sem_seed(ram))
+  # planted defect: hashing the intercept vector would change the seed of a flag-off fit
+  bad <- sem_mutate(.sem_seed, "as.character(ram$s0))", "as.character(ram$s0), as.character(ram$m0))")
+  expect_false(identical(bad(moved), bad(ram)))
+})

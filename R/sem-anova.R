@@ -45,6 +45,7 @@ S7::method(anova, SEMFit) <- function(object, ...) {
       stop(sprintf("'%s' did not converge, so its discrepancy cannot be compared.", names(models)[i]), call. = FALSE)
     }
   }
+  .sem_check_comparable(models)
   # Least restricted first (smallest df), the order lavaan's lavTestLRT() uses; each row is tested against the previous.
   df <- vapply(models, function(m) m@df, numeric(1))
   models <- models[order(df, seq_along(df))]

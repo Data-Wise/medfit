@@ -43,6 +43,14 @@ lc_probes <- function() {
     "Means and intercepts" = function() {
       if (lc_err(fit_sem("outcome ~ 1 + treatment", d))) "Unsupported" else "Supported"
     },
+    "Fixed exogenous covariates" = function() {
+      native <- fit_sem(lab, d, fixed_x = TRUE)
+      ref <- suppressWarnings(lavaan::sem(lab, d, fixed.x = TRUE))
+      same <- native@df == lavaan::fitMeasures(ref, "df") &&
+        close(native@n_obs * native@f, lavaan::fitMeasures(ref, "chisq"), 1e-5)
+      guarded <- lc_err(fit_sem(paste0(lab, "\ntreatment ~~ treatment"), d, fixed_x = TRUE))
+      if (same && guarded && !identical(formals(fit_sem)$fixed_x, TRUE)) "Different by design" else "Supported"
+    },
     "Multiple groups" = function() {
       if ("group" %in% names(formals(fit_sem))) "Supported" else "Unsupported"
     },

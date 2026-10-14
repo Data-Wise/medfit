@@ -143,7 +143,11 @@ rbind(native = tidy(x, type = "effects")$std_error,
 - **A label must be defined** before `:=` can use it; an unknown label stops with
   "unknown parameter label".
 - **Exogenous variables get free variances and covariances**, as lavaan does with
-  `fixed.x = FALSE`, so they appear in the parameter table.
+  `fixed.x = FALSE`, so they appear in the parameter table. `fixed_x = TRUE` (or a
+  vector of names) fixes the selected ones at the sample moments, as `fixed.x = TRUE`
+  does: the structural estimates, their standard errors and the degrees of freedom do
+  not change, the parameter count falls, and `logLik()`, AIC and BIC become conditional
+  on the fixed variables, so fits with different fixed sets cannot be compared.
 - **No four-way decomposition** from the native engine.
 - `summary()` reports diagnostics, including an improper solution and any active
   bound or constraint; read them before trusting a fit.

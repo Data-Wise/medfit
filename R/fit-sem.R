@@ -50,6 +50,16 @@
 #'   errors if an intercept is written. With a mean structure every observed variable whose intercept is
 #'   not written has a free one, so a model with only free intercepts has the same estimates and
 #'   standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
+#' @param fixed_x `FALSE` (default), `TRUE`, or a character vector of exogenous observed variable names. The
+#'   selected variables (`TRUE`: every exogenous observed variable, product columns included) have their mean (with
+#'   a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
+#'   the estimation sample (weighted when `weights` are given) and removed from estimation, as lavaan does with
+#'   `fixed.x = TRUE`. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
+#'   not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
+#'   conditional on the fixed variables, and `glance()$fixed_x` lists them. Models whose `fixed_x` sets or data differ
+#'   cannot be compared with [anova()], [mbco_sem()], `AIC()` or `BIC()`. A (co)variance or intercept statement on a
+#'   selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+#'   (`fixed_x` column, no standard error) but not in `coef()` or `vcov()`.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
@@ -68,7 +78,7 @@
 #' @export
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
                     control = list(), weights = NULL, se_type = c("model", "sandwich"),
-                    meanstructure = NULL, sampling_weights = lifecycle::deprecated()) {
+                    meanstructure = NULL, fixed_x = FALSE, sampling_weights = lifecycle::deprecated()) {
   if (lifecycle::is_present(sampling_weights)) {
     lifecycle::deprecate_warn("0.8.0", "fit_sem(sampling_weights)", "fit_sem(weights)")
     if (!is.null(weights)) {
@@ -82,13 +92,19 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   checkmate::assert_count(n_starts, positive = TRUE, null.ok = TRUE, .var.name = "n_starts")
   checkmate::assert_list(control, .var.name = "control")
   checkmate::assert_flag(meanstructure, null.ok = TRUE, .var.name = "meanstructure")
+  checkmate::assert(
+    checkmate::check_flag(fixed_x),
+    checkmate::check_character(fixed_x, any.missing = FALSE, min.len = 1L, unique = TRUE),
+    .var.name = "fixed_x"
+  )
   se_type <- match.arg(se_type)
   if (!is.null(weights) && se_type == "model") {
     .notify_ipw_model_se()
   }
   model <- paste(model, collapse = "\n")
   fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
-                         control = control, weights = weights, se_type = se_type, meanstructure = meanstructure)
+                         control = control, weights = weights, se_type = se_type, meanstructure = meanstructure,
+                         fixed_x = fixed_x)
   .sem_as_semfit(fit, model, match.call())
 }
 
@@ -99,7 +115,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   se <- ifelse(free, sqrt(diag(fit$vcov))[pmax(fit$par_map, 1L)], NA_real_)
   table <- data.frame(
     lhs = tab$lhs, op = tab$op, rhs = tab$rhs, label = tab$label, free = free,
-    est = unname(est), se = unname(se), stringsAsFactors = FALSE
+    est = unname(est), se = unname(se), fixed_x = tab$fixed_x, stringsAsFactors = FALSE
   )
   SEMFit(
     theta = fit$theta, vcov = fit$vcov, table = table, defined = fit$defined, f = fit$f,
@@ -108,7 +124,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
                         "sign_check", "se_type")],
     internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
-                      "branch")],
+                      "branch", "fixed_x")],
     call = call
   )
 }
@@ -146,7 +162,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   if (length(dots)) {
     stop("unused arguments for engine = \"native\": ", paste(names(dots), collapse = ", "), call. = FALSE)
   }
-  fit_args <- c("information", "n_starts", "control", "meanstructure")
+  fit_args <- c("information", "n_starts", "control", "meanstructure", "fixed_x")
   extract_args <- c("outcome", "structure", "decomposition", "interaction", "a_label", "b_label", "cp_label")
   unknown <- setdiff(names(engine_args), c(fit_args, extract_args))
   if (length(unknown)) {

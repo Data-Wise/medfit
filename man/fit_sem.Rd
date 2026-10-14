@@ -13,6 +13,7 @@ fit_sem(
   weights = NULL,
   se_type = c("model", "sandwich"),
   meanstructure = NULL,
+  fixed_x = FALSE,
   sampling_weights = lifecycle::deprecated()
 )
 }
@@ -59,6 +60,17 @@ an intercept (\code{y ~ 1}, free or fixed); \code{TRUE} fits one regardless; \co
 errors if an intercept is written. With a mean structure every observed variable whose intercept is
 not written has a free one, so a model with only free intercepts has the same estimates and
 standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.}
+
+\item{fixed_x}{\code{FALSE} (default), \code{TRUE}, or a character vector of exogenous observed variable names. The
+selected variables (\code{TRUE}: every exogenous observed variable, product columns included) have their mean (with
+a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
+the estimation sample (weighted when \code{weights} are given) and removed from estimation, as lavaan does with
+\code{fixed.x = TRUE}. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
+not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
+conditional on the fixed variables, and \code{glance()$fixed_x} lists them. Models whose \code{fixed_x} sets or data differ
+cannot be compared with \code{\link[=anova]{anova()}}, \code{\link[=mbco_sem]{mbco_sem()}}, \code{AIC()} or \code{BIC()}. A (co)variance or intercept statement on a
+selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+(\code{fixed_x} column, no standard error) but not in \code{coef()} or \code{vcov()}.}
 
 \item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name
 \code{\link[=fit_mediation]{fit_mediation()}} uses; the old name still works with a warning.}

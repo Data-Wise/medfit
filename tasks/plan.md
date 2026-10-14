@@ -1,5 +1,7 @@
 # Implementation Plan: `fixed_x` for the native SEM engine (bundled into 0.9.0)
 
+**Status:** spec and plan approved by the author 2026-10-13; V1-V9 done, V10 docs written (PR #175).
+
 **Spec:** [planning/specs/SPEC-native-fixed-x-2026-10-13.md](../planning/specs/SPEC-native-fixed-x-2026-10-13.md) (draft; rules S1-S10) | **Decisions:** [GRILL-native-fixed-x](../planning/specs/GRILL-native-fixed-x-2026-10-13.md) F-G1 to F-G7 | **Older plan:** [PLAN-native-fixed-x](../planning/specs/PLAN-native-fixed-x-2026-10-13.md)
 **Archived:** the finished S1-S7 plan, `planning/archive/PLAN-0.9.0-mean-structure-closed-2026-10-13.md` (+ its todo). Its two unchecked T1 follow-ups are carried below as release gates R1 and R2.
 **Branch:** `feature/native-fixed-x` from `dev` (`f36658b`), created only when you ask. Squash-merge to `dev`, then the 0.9.0 release decision (release engineering bumps the version).

@@ -31,6 +31,8 @@ importFrom(generics,
 )
 importFrom(lifecycle,deprecated)
 importFrom(stats,
+  AIC,
+  BIC,
   anova,
   coef,
   confint,

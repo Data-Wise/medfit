@@ -28,7 +28,14 @@ accessors \code{extract_mediation()} reads use the same names.
 and bounds; rows for a pinned parameter are zero.
 \item \code{nobs()} returns the number of rows used after listwise deletion.
 \item \code{logLik()} returns the log likelihood with the means free; its \code{df}
-attribute counts the free parameters plus one mean per observed variable.
+attribute counts the free parameters plus one mean per observed variable
+that is not fixed. With \code{fixed_x} it is conditional on the fixed variables
+(lavaan's value), so \code{AIC()} and \code{BIC()} of fits with different fixed sets
+or data stop instead of ranking them; the same holds for \code{anova()} and
+\code{\link[=mbco_sem]{mbco_sem()}}. A \code{fixed_x} fit also lists its fixed moments after the free
+parameters in \code{tidy()} (\code{fixed_x} column \code{TRUE}, no standard error) and in
+\code{summary()}; \code{coef()} and \code{vcov()} leave them out. \code{print()} and \code{summary()}
+say what the log likelihood is conditional on.
 \item \code{anova()} tests nested fits by the likelihood-ratio statistic
 \eqn{n (F_r - F_f)}{n * (F_r - F_f)} on the difference in model degrees
 of freedom: \code{anova(fit_full, fit_restricted)}, or several fits, each tested
@@ -51,7 +58,8 @@ chi-squares, and the function warns that the p-value is not valid, as
 the defined parameters, \code{confint(fit, parm, level = 0.95)}; \code{parm} takes
 names or positions. A parameter pinned by a constraint or sitting on a
 bound has a zero standard error and a point interval.
-\item \code{tidy()} returns one row per free parameter, then per defined parameter:
+\item \code{tidy()} returns one row per free parameter, then the moments \code{fixed_x} fixed (a \code{fixed_x}
+column, only when something is fixed), then per defined parameter:
 \code{term} (the name \code{coef()} uses), \code{op} (the operator of its row in the
 parameter table, \verb{:=} for a defined parameter), \code{estimate}, \code{std_error},
 \code{statistic} (the z value, \code{NA} when the standard error is zero),
@@ -62,7 +70,8 @@ is \code{"all"} (default), \code{"parameters"} or \code{"defined"}.
 equality constraints), \code{df}, \code{chisq} (n times the minimized discrepancy,
 the test of the model against the saturated one), \code{p_value} (\code{NA} when
 \code{df} is 0), \code{logLik}, \code{AIC} and \code{BIC} (with the means free, as \code{logLik()}
-defines them). A fit with sampling weights has no likelihood, so its
+defines them) and \code{fixed_x}, the names the fit holds at their sample moments,
+comma-joined (\code{""} when none). A fit with sampling weights has no likelihood, so its
 \code{chisq}, \code{p_value}, \code{logLik}, \code{AIC} and \code{BIC} are \code{NA}. There is no
 \code{converged} column: \code{fit_sem()} returns a fit only for a solution that
 passed the acceptance gate and errors otherwise, so \verb{@converged} is \code{TRUE}

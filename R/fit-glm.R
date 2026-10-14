@@ -72,7 +72,7 @@
 #'   that shrinks like 1/n.
 #' @param engine_args Named list of engine-specific overrides (default:
 #'   `list()`, no overrides). Ignored by `engine = "glm"`. For
-#'   `engine = "native"`, recognized names are `information`, `n_starts`, `meanstructure` and
+#'   `engine = "native"`, recognized names are `information`, `n_starts`, `meanstructure`, `fixed_x` and
 #'   `control` (passed to [fit_sem()]) and `outcome`, `structure`,
 #'   `decomposition`, `interaction`, `a_label`, `b_label` and `cp_label`
 #'   (passed to [extract_mediation()]); any other name is an error. For

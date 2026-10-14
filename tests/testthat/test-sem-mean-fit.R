@@ -180,7 +180,9 @@ test_that("logLik counts the means once: a saturated mean structure has the cova
 
 test_that("planted defect: adding p to a mean-structure fit double counts the means", {
   sat <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo)
-  broken <- sem_mutate(.sem_loglik_df, "p * !isTRUE(object@internals$ram$has_mean)", "p")
+  broken <- sem_mutate(
+    .sem_loglik_df, "(p - length(object@internals$fixed_x)) * !isTRUE(object@internals$ram$has_mean)", "p"
+  )
   expect_equal(broken(sat, 3L) - .sem_loglik_df(sat, 3L), 3)
 })
 
