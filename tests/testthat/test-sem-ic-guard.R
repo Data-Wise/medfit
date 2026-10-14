@@ -64,7 +64,7 @@ test_that("the observed-variable refusal comes before the fixed_x refusal when b
   expect_error(stats::AIC(free, ic_fit(ic_base, fixed_x = TRUE)), "different `fixed_x` sets")
 })
 
-test_that("a SEMFit with fixed_x still cannot be compared with another class, and a plain mix is delegated", {
+test_that("a SEMFit with fixed_x still cannot be compared with a model of another class", {
   fixed <- ic_fit(ic_base, fixed_x = TRUE)
   expect_error(stats::AIC(fixed, stats::lm(outcome ~ treatment, medfit::mediation_demo)), "another class")
 })
