@@ -249,3 +249,111 @@ test_that("the guide also quotes the cluster and native messages tested elsewher
     expect_true(grepl(frag, txt, fixed = TRUE), info = frag)
   }
 })
+
+# ---- native engine: products, anova(), starts and constraints (messages quoted in the guide) ----
+
+nt_syn <- paste0("mediator1 ~ a1*treatment\nmediator2 ~ a2*treatment\n",
+                 "outcome ~ cp*treatment + b1*mediator1 + b2*mediator2")
+nt_prod <- "mediator1 ~ treatment\noutcome ~ mediator1 + treatment + treatment:mediator1"
+nt_bounds <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
+nt_nonlinear_data <- function() {
+  set.seed(3)
+  x <- stats::rnorm(300)
+  m <- 0.5 * x + stats::rnorm(300, sd = 0.8)
+  data.frame(X = x, M = m, Y = 0.4 * m + 0.2 * x + stats::rnorm(300, sd = 0.7))
+}
+
+# Each entry: fragment, kind ("error" or "warning"), and a function that triggers it.
+nt_cases <- function() {
+  d <- mediation_demo
+  list(
+    list("a product ':' needs a variable name on each side", "error",
+         function() fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment :mediator1", d)),
+    list("(rule 8: no outcome-derived regressors)", "error",
+         function() fit_sem("mediator1 ~ treatment\noutcome ~ treatment + treatment:outcome", d)),
+    list("has a fixed coefficient (rule 9)", "error",
+         function() fit_sem("mediator1 ~ treatment\noutcome ~ 0.3*treatment + mediator1 + treatment:mediator1", d)),
+    list("cannot have a residual covariance (rule 9)", "error",
+         function() {
+           syn <- paste0("mediator1 ~ treatment\nmediator2 ~ treatment\n",
+                         "outcome ~ mediator1 + mediator2 + treatment:mediator1\n",
+                         "mediator1 ~~ mediator2")
+           fit_sem(syn, d)
+         }),
+    list("names the coefficient label", "error",
+         function() fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment:mediator1\na == b", d)),
+    list("latent means are planned for a later release", "error",
+         function() fit_sem("eta =~ 1*mediator1 + mediator2 + mediator3\neta ~ treatment\neta ~ 1", d)),
+    list("no start converged", "error",
+         function() fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1\na == 1\na == 2", d)),
+    list("is violated by", "error",
+         function() fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1\na == 1\na == 2", d)),
+    list("the starts disagree", "warning",
+         function() fit_sem("M ~ a*X\nY ~ b*M + cp*X\na*b > 0.4", nt_nonlinear_data())),
+    list("is not nested in", "error", function() {
+      full <- fit_sem(nt_syn, d)
+      other <- fit_sem(paste0("mediator1 ~ a1*treatment\noutcome ~ b1*mediator1 + b2*mediator2\n",
+                              "mediator2 ~~ mediator1\nmediator2 ~ 0*treatment"), d)
+      anova(full, other)
+    }),
+    list("the null lies on the boundary of the parameter space", "warning", function() {
+      anova(fit_sem(paste0(nt_bounds, "\na > 0"), d), fit_sem(paste0(nt_bounds, "\na > 0\na == 0"), d))
+    }),
+    list("the model test is not valid for this model", "warning",
+         function() fit_sem(nt_prod, d, se_type = "sandwich")),
+    list("model-based standard errors assume normality, which a product violates", "warning",
+         function() fit_sem(nt_prod, d))
+  )
+}
+
+# All warnings a call raises (a native fit can raise two), so one quoted fragment is found among them.
+nt_warnings <- function(expr) {
+  out <- character()
+  withCallingHandlers(expr, warning = function(w) {
+    out <<- c(out, conditionMessage(w))
+    invokeRestart("muffleWarning")
+  })
+  out
+}
+
+test_that("every native error and warning the Troubleshooting guide quotes is real", {
+  for (cs in nt_cases()) {
+    trigger <- cs[[3]]
+    if (cs[[2]] == "error") {
+      expect_error(trigger(), cs[[1]], fixed = TRUE, info = cs[[1]])
+    } else {
+      expect_true(any(grepl(cs[[1]], nt_warnings(trigger()), fixed = TRUE)), info = cs[[1]])
+    }
+  }
+})
+
+test_that("the guide quotes every native fragment this test triggers", {
+  skip_if_not(file.exists(guide_path()), "vignettes are not available (installed or built package)")
+  txt <- paste(readLines(guide_path(), warn = FALSE), collapse = " ")
+  for (cs in nt_cases()) {
+    expect_true(grepl(cs[[1]], txt, fixed = TRUE), info = cs[[1]])
+  }
+})
+
+test_that("planted: a reworded boundary warning fails the guide's trigger", {
+  fx_skip_covr()
+  d <- mediation_demo
+  null <- fit_sem(paste0(nt_bounds, "\na > 0\na == 0"), d)
+  full <- fit_sem(paste0(nt_bounds, "\na > 0"), d)
+  frag <- "the null lies on the boundary of the parameter space"
+  expect_true(any(grepl(frag, nt_warnings(anova(full, null)), fixed = TRUE)))
+  reworded <- sem_mutate(.sem_anova_warn_boundary, frag, "the null sits on the edge of the parameter space")
+  local_mocked_bindings(.sem_anova_warn_boundary = reworded)
+  expect_false(any(grepl(frag, nt_warnings(anova(full, null)), fixed = TRUE)))
+})
+
+test_that("planted: a reworded model-test warning fails the guide's trigger", {
+  fx_skip_covr()
+  d <- mediation_demo
+  frag <- "the model test is not valid for this model"
+  expect_true(any(grepl(frag, nt_warnings(fit_sem(nt_prod, d, se_type = "sandwich")), fixed = TRUE)))
+  reworded <- sem_mutate(.sem_product_warn, "the model test is not valid for this model: ",
+                         "the model test is unavailable: ")
+  local_mocked_bindings(.sem_product_warn = reworded)
+  expect_false(any(grepl(frag, nt_warnings(fit_sem(nt_prod, d, se_type = "sandwich")), fixed = TRUE)))
+})

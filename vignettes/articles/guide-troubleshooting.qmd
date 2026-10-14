@@ -87,6 +87,18 @@ Examples on this site need medfit 0.10.0 or later. If `mediation_demo` or
 | `have different `fixed_x` sets` | `AIC()`, `BIC()`, `anova()` or `mbco_sem()` got fits whose fixed sets differ, so their likelihoods condition on different variables | refit with the same `fixed_x`, or compare only fits that share it |
 | `variables in the model are not columns of` | the syntax names a variable that is not in `data` | check the names against `names(data)` |
 | `Must have length 1` | `fit_mediation(engine = "native")` was given several mediators | fit with `fit_sem()` and call `extract_mediation()`; see [several mediators](model-native-multi.html) |
+| `latent means are planned for a later release` | a latent variable has a free or nonzero mean (`eta ~ 1`, `eta ~ 2*1`) | leave the latent mean at its default of 0 (`eta ~ 0*1` is accepted) |
+| `no start converged` | no start satisfied the gates; the tail of the message says why, such as `is violated by` when two constraints contradict each other | read the tail; remove or correct the contradicting constraint, or check the scale of the data |
+| `the starts disagree` (a warning) | a model with a nonlinear inequality such as `a*b > 0.4` has more than one local optimum, and the starts reached different ones | the lowest discrepancy is kept; raise `n_starts` to search further |
+| `is not nested in` | `anova()` got a restricted model that frees a parameter the larger model leaves out, or does not keep one of its constraints | fit the restricted model by constraining or fixing parameters of the larger one |
+| `the null lies on the boundary of the parameter space` (a warning) | `anova()` or `mbco_sem()` tested a null that sits on an active bound or inequality, so the statistic is a mixture of chi-squares | do not read the p-value as chi-square(df); bootstrap, or compare on a model without the bound |
+| `a product ':' needs a variable name on each side` | a space around the colon in a product (`x :m`) | write the product without spaces: `x:m` |
+| `(rule 8: no outcome-derived regressors)` | a product has a factor that is its own outcome or downstream of it (`y ~ x + x:y`) | build the product from variables that are not outcomes of that equation |
+| `cannot have a residual covariance (rule 9)` | a model with a product has `m1 ~~ m2` between outcomes | drop the residual covariance, or fit without the product |
+| `has a fixed coefficient (rule 9)` | a regression in a model with a product has a fixed value (`0.3*x`, `0*x`); the same rule covers bounds, shared labels and loops | free the coefficient; the full list is in the table in [the native model page](model-native.html#product-terms) |
+| `names the coefficient label` | `==`, `<` or `>` in a model with a product names a coefficient label (`a == b`) | constrain a defined parameter (`:=`) instead, or fit without the product |
+| `the model test is not valid for this model` (a warning) | a product has a factor that is itself an outcome, so the chi-square is not valid | the test is reported as NA and `anova()` and `mbco_sem()` refuse; the coefficients and the sandwich standard errors are unaffected |
+| `model-based standard errors assume normality, which a product violates` (a warning) | a model with a product was fitted without `se_type = "sandwich"` | add `se_type = "sandwich"` |
 
 ## Messages that are not errors
 
