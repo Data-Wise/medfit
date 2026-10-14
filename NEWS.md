@@ -1,4 +1,4 @@
-# medfit (development version)
+# medfit 0.10.0
 
 ## New features
 
