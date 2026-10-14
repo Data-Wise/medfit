@@ -31,7 +31,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,6 +74,11 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -132,7 +137,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>medfit Model Syntax</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
       <div class="d-none name"><code>medfit-syntax.Rd</code></div>
     </div>
 
@@ -146,7 +151,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
     <div class="section level2">
     <h2 id="core-statements">Core statements<a class="anchor" aria-label="anchor" href="#core-statements"></a></h2>
 
-<table class="table table"><tr><td>Statement</td><td>Meaning</td></tr><tr><td><code>y ~ x1 + x2</code></td><td>regression of <code>y</code> on <code>x1</code> and <code>x2</code></td></tr><tr><td><code>f =~ y1 + y2 + y3</code></td><td>latent variable <code>f</code> measured by the indicators</td></tr><tr><td><code>y1 ~~ y2</code></td><td>covariance; <code>y1 ~~ y1</code> a variance</td></tr><tr><td><code>y ~ a*x</code></td><td>label the path <code>a</code>; equal labels are one parameter</td></tr><tr><td><code>y ~ 0.5*x</code></td><td>fix the path at 0.5</td></tr><tr><td><code>y ~ start(0.3)*x</code>, <code>lower(0)*</code>, <code>upper(1)*</code></td><td>starting value, lower and upper bound</td></tr><tr><td><code>a == b</code>, <code>a + b == 1</code>, <code>cp == a*b</code></td><td>equality constraint on labels; may be nonlinear</td></tr><tr><td><code>a &lt; b</code>, <code>a &gt; 0</code></td><td>inequality constraint; <code>label &lt; number</code> is a bound</td></tr><tr><td><code>ab := a*b</code></td><td>defined parameter, with a delta-method standard error</td></tr></table><p>Constraints may be nonlinear in the labels (<code>cp == a*b</code>, <code>a*b == 0.1</code>,
+<table class="table table"><tr><td>Statement</td><td>Meaning</td></tr><tr><td><code>y ~ x1 + x2</code></td><td>regression of <code>y</code> on <code>x1</code> and <code>x2</code></td></tr><tr><td><code>f =~ y1 + y2 + y3</code></td><td>latent variable <code>f</code> measured by the indicators</td></tr><tr><td><code>y1 ~~ y2</code></td><td>covariance; <code>y1 ~~ y1</code> a variance</td></tr><tr><td><code>y ~ x + m + x:m</code></td><td>product term: the observed variable <code>x * m</code> as a regressor (see Product terms)</td></tr><tr><td><code>y ~ a*x</code></td><td>label the path <code>a</code>; equal labels are one parameter</td></tr><tr><td><code>y ~ 0.5*x</code></td><td>fix the path at 0.5</td></tr><tr><td><code>y ~ start(0.3)*x</code>, <code>lower(0)*</code>, <code>upper(1)*</code></td><td>starting value, lower and upper bound</td></tr><tr><td><code>a == b</code>, <code>a + b == 1</code>, <code>cp == a*b</code></td><td>equality constraint on labels; may be nonlinear</td></tr><tr><td><code>a &lt; b</code>, <code>a &gt; 0</code></td><td>inequality constraint; <code>label &lt; number</code> is a bound</td></tr><tr><td><code>ab := a*b</code></td><td>defined parameter, with a delta-method standard error</td></tr></table><p>Constraints may be nonlinear in the labels (<code>cp == a*b</code>, <code>a*b == 0.1</code>,
 <code>a*b &gt; 0.1</code>, <code>ab &gt; 0</code> with <code>ab := a*b</code>), solved with the Jacobian recomputed at
 every point; a model with one tries every start and keeps the best accepted
 solution, warning when the starts disagree. A product of labels set to zero
@@ -166,12 +171,50 @@ selected variable's moments. Any
 intercept statement (<code>y ~ 1</code>, or <code>1</code> as a term: <code>y ~ 1 + x</code>) turns the mean structure
 on and frees every observed intercept the model does not write, as lavaan does;
 <code>y ~ 0*1</code> then restricts the mean of <code>y</code> to 0 (one degree of freedom), and
-<code>meanstructure = TRUE</code> in <code><a href="fit_sem.html">fit_sem()</a></code> turns it on without any statement. A
+<code>meanstructure = TRUE</code> in <code><a href="fit_sem.html">fit_sem()</a></code> turns it on without any statement, and a product term
+(<code>x:m</code>, see Product terms) always turns it on. A
 latent variable's mean is fixed at 0; a free latent <code>~1</code> is an error. A repeated <code>1</code> for one
 variable is an error.
 A variable cannot appear on both sides of <code>~</code> or <code>=~</code> (<code>y ~ y</code>), and a path,
 a (co)variance or an intercept takes one row: a repeated <code>y ~ x</code> is an error,
 not a second row that competes for the label.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="product-terms">Product terms<a class="anchor" aria-label="anchor" href="#product-terms"></a></h2>
+
+
+<p><code>x:m</code> is the product of two observed variables, written with no spaces, on the
+right side of a regression (<code>y ~ x + m + x:m</code>). As in lavaan, the product is an
+observed exogenous variable: the engine builds the column <code>x * m</code> from <code>data</code>
+after listwise deletion, with a free variance, free covariances with the other
+exogenous variables and (the mean structure is on) a free mean. The likelihood
+does not change. <code>x:m</code> and <code>m:x</code> are one term, stored and printed under the
+canonical name, the two names sorted in the C locale (<code>m:x</code>); the coefficient is
+named <code>y~m:x</code>, or by its label (<code>b*x:m</code> labels the whole product).
+<code><a href="extract_mediation.html">extract_mediation()</a></code> finds the treatment-by-mediator product through the same
+name and returns the four-way decomposition; centering the mediator moves the
+split between the controlled direct effect and the reference interaction, not
+the natural effects.</p>
+<p>A column in <code>data</code> named <code>m:x</code> or <code>x:m</code> is used only if it equals <code>x * m</code> on the
+rows kept; otherwise the fit stops. A product term turns the mean structure on,
+and <code>meanstructure = FALSE</code> is then an error. A coefficient equals the
+equation-wise least-squares estimate inside the class below, and the sandwich
+covariance (<code>se_type = "sandwich"</code>) is the standard-error choice, because a
+product is not normal; the engine warns once when it is not used. <code>fixed_x</code>
+includes the product columns.</p><table class="table table"><tr><td>Limit</td><td>Message (starts with, or contains)</td></tr><tr><td>A space around <code>:</code></td><td>"a product ':' needs a variable name on each side, written without spaces (x:m)"</td></tr><tr><td><code>x:x</code></td><td>"of a variable with itself is not supported"</td></tr><tr><td><code>x:m:w</code></td><td>"a three-way or higher product"</td></tr><tr><td>Product as a left side (<code>x:m ~ y</code>, <code>x:m ~~ y</code>)</td><td>"cannot be a left side"</td></tr><tr><td>Product in <code>=~</code></td><td>"is only valid on the right side of a regression"</td></tr><tr><td>Product inside a constraint or <code>:=</code></td><td>"not inside the expression"</td></tr><tr><td>A latent variable in a product</td><td>"products with latent variables are not supported in this version"</td></tr><tr><td><code>y ~ x:m + m:x</code> (one product twice in an equation)</td><td>"are the same product (canonical name"</td></tr><tr><td>A factor that is the target or downstream of it (<code>y ~ x + x:y</code>)</td><td>"(rule 8: no outcome-derived regressors)"</td></tr><tr><td>A loop of regressions</td><td>"The model is not recursive"</td></tr><tr><td>A residual covariance between outcomes (<code>m1 ~~ m2</code>)</td><td>"cannot have a residual covariance (rule 9)"</td></tr><tr><td>A label shared by two rows</td><td>"is used on more than one parameter"</td></tr><tr><td>A fixed coefficient (<code>0.3*x</code>, <code>0*x</code>)</td><td>"has a fixed coefficient (rule 9)"</td></tr><tr><td>A bound (<code>lower(0)*x</code>)</td><td>"has a bound (rule 9"</td></tr><tr><td><code>==</code>, <code>&lt;</code> or <code>&gt;</code> naming a coefficient label</td><td>"names the coefficient label"</td></tr><tr><td>A fixed, shared or constrained intercept</td><td>"(rule 9, intercept clause"</td></tr><tr><td><code>meanstructure = FALSE</code> with a product</td><td>"<code>meanstructure = FALSE</code>, but the model has a product term"</td></tr><tr><td>A column <code>m:x</code> in <code>data</code> that is not <code>x * m</code></td><td>"is not the product of"</td></tr><tr><td>A non-numeric factor</td><td>"needs numeric variables"</td></tr><tr><td><code>information = "expected"</code>, endogenous factor</td><td>"with a product of an endogenous variable"</td></tr><tr><td><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> or <code><a href="mbco_sem.html">mbco_sem()</a></code> on such a fit</td><td>"is not available for ... a model with a product term"</td></tr><tr><td>Another product on the treatment or mediator, in <code><a href="extract_mediation.html">extract_mediation()</a></code></td><td>"does not support the product"</td></tr></table><p>Rules 8 and 9 are checked on the parsed table, so they need no data. Rule 8
+rejects a regressor built from the outcome (it is correlated with the equation's
+error); rule 9 names what is not yet supported with products, and the same
+model works without the product. The covariance that completion would add
+between two pure outcomes is fixed at 0 in a product model, with one note.
+Products of observed variables only: a product with a latent variable, <code>x:x</code> and
+three-way products are not supported.</p>
+<p>The global chi-square is not valid when a factor of a product is itself a
+regression target (the model treats the product as exogenous although it is a
+function of that variable) or when the exogenous (co)variance block is
+restricted. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> then reports chi-square, df and p-value as <code>NA</code> with a
+note, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="mbco_sem.html">mbco_sem()</a></code> refuse, and expected information is refused for
+an endogenous product; <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC stay defined. A product of
+exogenous variables with the block free keeps the ordinary test.</p>
     </div>
     <div class="section level2">
     <h2 id="medfit-extensions">medfit extensions<a class="anchor" aria-label="anchor" href="#medfit-extensions"></a></h2>

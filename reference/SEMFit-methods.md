@@ -66,6 +66,33 @@ argument.
   [`summary()`](https://rdrr.io/r/base/summary.html) say what the log
   likelihood is conditional on.
 
+- **Model test with a product term.** The global chi-square is not valid
+  when a factor of a product term (`x:m`) is itself a regression target,
+  because the model then treats the product as exogenous although it is
+  a function of `m`; nor when the variances and covariances of the
+  exogenous variables (every product included) are restricted (fixed,
+  labeled, bounded, or left out because a `~~` statement names one of
+  them; a `fixed_x` moment is not a restriction).
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  then warns once,
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) reports
+  `chisq`, `df` and `p_value` as `NA` (with the reason in
+  `attr(, "note")`), [`summary()`](https://rdrr.io/r/base/summary.html)
+  prints the reason, and [`anova()`](https://rdrr.io/r/stats/anova.html)
+  and
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  stop naming the product. The coefficients equal equation-wise least
+  squares and the sandwich standard errors are unaffected, but only with
+  observed information: `fit_sem(information = "expected")` stops for a
+  product with an endogenous factor, because its standard errors (the
+  sandwich built on them included) are wrong there.
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  also warns once for any product term fitted without
+  `se_type = "sandwich"`.
+  [`logLik()`](https://rdrr.io/r/stats/logLik.html),
+  [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+  [`BIC()`](https://rdrr.io/r/stats/AIC.html) stay defined.
+
 - [`anova()`](https://rdrr.io/r/stats/anova.html) tests nested fits by
   the likelihood-ratio statistic \\n (F_r - F_f)\\ on the difference in
   model degrees of freedom: `anova(fit_full, fit_restricted)`, or

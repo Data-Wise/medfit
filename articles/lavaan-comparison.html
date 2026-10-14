@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,11 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -172,7 +177,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -388,16 +393,24 @@ lavaan                 0.04715465</code></pre>
 <td>
 <code>fixed.x = TRUE</code> is the default</td>
 <td>
-<code>fixed_x = TRUE</code> or names, default <code>FALSE</code>; a statement on a selected variable is an error</td>
+<code>fixed_x = TRUE</code> or names, default <code>FALSE</code>; product columns are fixed with the rest; a statement on a selected variable is an error</td>
 <td>Different by design</td>
 </tr>
 <tr class="even">
+<td>Product terms (<code>x:m</code>) and four-way effects</td>
+<td>
+<code>x:m</code> is an observed exogenous column, kept as written; no mediation effects</td>
+<td>
+<code>x:m</code> stored as <code>m:x</code>; coefficients and sandwich standard errors equal lavaan’s; <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> gives the four-way parts; chi-square, df and p-value are <code>NA</code> and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse when a factor is a regression target; a supported class only</td>
+<td>Partial</td>
+</tr>
+<tr class="odd">
 <td>Nested model comparison</td>
 <td><code><a href="https://rdrr.io/pkg/lavaan/man/lavTestLRT.html" class="external-link">lavTestLRT()</a></code></td>
 <td><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code></td>
 <td>Supported</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Mediation effects and the MBCO test</td>
 <td>no</td>
 <td>
@@ -408,7 +421,31 @@ lavaan                 0.04715465</code></pre>
 </tbody>
 </table>
 <p>The first column names the feature; the probe for a row is in the test, not here, so the table cannot drift from the code without a failing test.</p>
-</section><script id="quarto-html-after-body" type="application/javascript">
+<section class="level3"><h3 id="products-in-both">Products, in both<a class="anchor" aria-label="anchor" href="#products-in-both"></a>
+</h3>
+<p>lavaan reads <code>x:m</code> as an observed exogenous column and so does medfit, so the coefficients and the sandwich standard errors agree, with <code>fixed.x = TRUE</code> as well as with <code>fixed.x = FALSE</code> (the product column is fixed with the other exogenous variables):</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">prod_model</span> <span class="op">&lt;-</span> <span class="st">"mediator1 ~ treatment</span></span>
+<span><span class="st">               outcome_int ~ mediator1 + treatment + treatment:mediator1"</span></span>
+<span><span class="va">nat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">prod_model</span>, <span class="va">mediation_demo</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">lav</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">prod_model</span>, <span class="va">mediation_demo</span>, fixed.x <span class="op">=</span> <span class="cn">FALSE</span>, se <span class="op">=</span> <span class="st">"robust.huber.white"</span><span class="op">)</span></span>
+<span><span class="va">nat_fx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">prod_model</span>, <span class="va">mediation_demo</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span>, fixed_x <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">lav_fx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">prod_model</span>, <span class="va">mediation_demo</span>, fixed.x <span class="op">=</span> <span class="cn">TRUE</span>, se <span class="op">=</span> <span class="st">"robust.huber.white"</span><span class="op">)</span></span>
+<span><span class="va">paths</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  max_diff_estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">nat</span><span class="op">)</span><span class="op">[</span><span class="va">paths</span><span class="op">]</span> <span class="op">-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu">coef</span><span class="op">(</span><span class="va">lav</span><span class="op">)</span><span class="op">[</span><span class="va">paths</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  max_diff_se <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">nat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">paths</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu">lavaan</span><span class="fu">::</span><span class="fu">vcov</span><span class="op">(</span><span class="va">lav</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">paths</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  max_diff_estimate_fixed_x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">nat_fx</span><span class="op">)</span><span class="op">[</span><span class="va">paths</span><span class="op">]</span> <span class="op">-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu">coef</span><span class="op">(</span><span class="va">lav_fx</span><span class="op">)</span><span class="op">[</span><span class="va">paths</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                  [,1]
+max_diff_estimate         2.220446e-16
+max_diff_se               2.254825e-11
+max_diff_estimate_fixed_x 2.220446e-16</code></pre>
+</div>
+</div>
+<p>They differ in what follows. lavaan reports a chi-square for this model; medfit reports <code>NA</code>, because the product contains a regression target (<code>mediator1</code>) and the model treats it as exogenous, which makes the global test invalid (see <a href="model-native.html#product-terms">the native model page</a>). lavaan stores the product under the spelling you wrote (<code>treatment:mediator1</code>); medfit stores <code>mediator1:treatment</code>, whichever order you write. A model medfit rejects (a residual covariance between outcomes, a shared or fixed coefficient, a constraint on a coefficient, a bound) is still fitted by lavaan.</p>
+</section></section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);

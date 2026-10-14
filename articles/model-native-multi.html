@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,11 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -172,7 +177,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/vignettes/articles/model-native-multi.qmd" class="external-link"><code>vignettes/articles/model-native-multi.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-native-multi.qmd" class="external-link"><code>vignettes/articles/model-native-multi.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -259,7 +264,7 @@ Attaching package: 'generics'</code></pre>
 <span>  total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/te.html">te</a></span><span class="op">(</span><span class="va">xs</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>     chain every_path      total
-0.07545038 0.36740437 0.53856775 </code></pre>
+0.07545039 0.36740438 0.53856776 </code></pre>
 </div>
 </div>
 <p>With the default <code>structure = "auto"</code>, medfit classifies the mediators from the model: here it finds the path from <code>mediator1</code> to <code>mediator2</code> and returns the serial class. See <a href="model-serial.html">Serial mediation</a> for what the three numbers mean.</p>
@@ -313,7 +318,7 @@ Attaching package: 'generics'</code></pre>
 <li>
 <strong><code>fit_mediation(engine = "native")</code> takes one mediator</strong> (see the warning above).</li>
 <li>
-<strong>No four-way decomposition</strong> from the native engine (the syntax has no product operator yet). Intercepts are estimated; see <a href="model-native.html#intercepts">the native model page</a>.</li>
+<strong>Four-way decomposition</strong> needs one mediator and a treatment-by-mediator product (<code>x:m</code>) in the outcome equation, and a model with a product cannot have a residual covariance between the mediators (parallel mediators with <code>m1 ~~ m2</code> and a product are not supported; see <a href="model-native.html#product-terms">product terms</a>). Intercepts are estimated; see <a href="model-native.html#intercepts">the native model page</a>.</li>
 <li>
 <strong>The native sandwich is the HC0 type</strong>, with casewise scores; the <code>glm</code> engine’s sandwich is HC3. They are different estimators, so the standard errors need not match.</li>
 <li>

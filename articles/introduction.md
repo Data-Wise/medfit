@@ -449,7 +449,7 @@ summary(boot_result)
 
     Bootstrap Distribution Summary:
        Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-    0.02413 0.11879 0.14598 0.14770 0.17435 0.27213 
+    0.02954 0.12546 0.15078 0.15105 0.17681 0.26815 
 
 ## Main Functions
 

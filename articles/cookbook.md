@@ -6,9 +6,10 @@ simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
-These recipes need medfit 0.8.0 or later (recipe 18 needs 0.9.0). CRAN
-has 0.3.2, which lacks `mediation_demo` and the native, joint and
-cluster functions; install from GitHub or r-universe (see the [home
+These recipes need medfit 0.8.0 or later (recipe 18 needs 0.9.0, and the
+native route in recipe 7 needs 0.10.0). CRAN has 0.3.2, which lacks
+`mediation_demo` and the native, joint and cluster functions; install
+from GitHub or r-universe (see the [home
 page](https://data-wise.github.io/medfit/#installation)).
 
 ``` r
@@ -205,8 +206,28 @@ decompose(xi)
            cde    int_ref    int_med        pie        nde        nie      total
     0.21521278 0.04353909 0.27709549 0.34001758 0.25875187 0.61711307 0.87586495 
 
+The native engine gives the same parts from model syntax (0.10.0 or
+later): write the product as `treatment:mediator1`. The fit warns once
+that the global model test is not available for a product of a
+regression target.
+
+``` r
+sem_i <- suppressWarnings(fit_sem(
+  "mediator1 ~ treatment + covariate1 + covariate2
+   outcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate1 + covariate2",
+  mediation_demo, se_type = "sandwich"
+))
+decompose(extract_mediation(sem_i, treatment = "treatment", mediator = "mediator1",
+                            outcome = "outcome_int"))
+```
+
+           cde    int_ref    int_med        pie        nde        nie      total
+    0.21521278 0.04353909 0.27709549 0.34001758 0.25875187 0.61711307 0.87586495 
+
 More: [Model
-Extraction](https://data-wise.github.io/medfit/articles/extraction.md).
+Extraction](https://data-wise.github.io/medfit/articles/extraction.md),
+[the native product
+term](https://data-wise.github.io/medfit/articles/model-native.html#product-terms).
 
 ## 8. Many mediators with products
 
@@ -231,7 +252,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4351678 0.8930074 
+    0.6560315 0.4349603 0.8927176 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).

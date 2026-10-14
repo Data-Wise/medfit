@@ -1,6 +1,6 @@
 # What changed since CRAN 0.3.2
 
-CRAN has medfit 0.3.2; this site documents 0.9.0 (GitHub and
+CRAN has medfit 0.3.2; this site documents 0.10.0 (GitHub and
 r-universe). This page lists what a 0.3.2 user needs to know before
 upgrading: numbers that change, calls that now stop with an error, and
 what is new. The full record is
@@ -28,6 +28,7 @@ what is new. The full record is
 | 0.8.0 | the names in [`coef()`](https://rdrr.io/r/stats/coef.html), [`vcov()`](https://rdrr.io/r/stats/vcov.html) and [`tidy()`](https://generics.r-lib.org/reference/tidy.html) of a `SEMFit` | an unlabeled parameter was `"M ~ X"` or `"X ~~ X"` (with spaces) and a loading `"m2 ~ eta"` | `"M~X"`, `"X~~X"` and `"eta=~m2"`, the names `lavaan::coef()` uses; labeled parameters are unchanged (`SEMFit` is experimental) |
 | 0.9.0 | a fixed intercept, `y ~ 0*1`, in the native engine | the row was dropped and the covariance-only fit returned | a restriction (“the mean of `y` is 0”): one degree of freedom, a changed discrepancy, comparable with [`anova()`](https://rdrr.io/r/stats/anova.html); any `y ~ 1` row turns the mean structure on |
 | 0.9.0 | [`logLik()`](https://rdrr.io/r/stats/logLik.html), [`AIC()`](https://rdrr.io/r/stats/AIC.html), [`BIC()`](https://rdrr.io/r/stats/AIC.html) of a native fit with `fixed_x` | (new argument) | conditional on the fixed variables; [`anova()`](https://rdrr.io/r/stats/anova.html), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) and multi-fit [`AIC()`](https://rdrr.io/r/stats/AIC.html)/[`BIC()`](https://rdrr.io/r/stats/AIC.html) stop when fixed sets or data differ; [`glance()`](https://generics.r-lib.org/reference/glance.html) gains a `fixed_x` column |
+| 0.10.0 | `extract_mediation(<SEMFit>, decomposition = "four_way")` | refused by name until the `:` operator existed | returns the four-way decomposition when the outcome equation carries the treatment-by-mediator product; refused with a message that says to add `x:m` when it does not |
 | 0.5.0 | `se_type = "sandwich"` with a treatment-by-mediator term | returned the model-based covariance, with no warning | applies the sandwich estimator |
 | 0.5.0 | lavaan fits with custom path labels | the alias rows of `@vcov` were all zero, so a parametric bootstrap had a zero-width interval | the alias rows are filled from the labeled parameters |
 
@@ -75,6 +76,7 @@ path (0.5.0).
 | 0.7.0 | the native maximum-likelihood engine ([page](https://data-wise.github.io/medfit/articles/model-native.md)), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md), and sampling weights with robust standard errors for it |
 | 0.8.0 | nonlinear constraints in the native engine ([page](https://data-wise.github.io/medfit/articles/model-native-constraints.md)), `mbco_sem(paths = )` for a product of k paths, [`anova()`](https://rdrr.io/r/stats/anova.html), [`tidy()`](https://generics.r-lib.org/reference/tidy.html)/[`glance()`](https://generics.r-lib.org/reference/glance.html)/[`confint()`](https://rdrr.io/r/stats/confint.html) for `SEMFit`, [lavaan and the native engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md), and cookbook recipes 12 and 13 |
 | 0.9.0 | observed intercepts and means in the native engine (`y ~ 1`, `meanstructure =`), `fixed_x` ([page](https://data-wise.github.io/medfit/articles/model-native.md)), cookbook recipe 18 and step 9 of the [native tutorial](https://data-wise.github.io/medfit/articles/native-tutorial.md) |
+| 0.10.0 | the product term `x:m` in native syntax and the four-way decomposition from a native fit ([`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) fit), a supported-class table, and a worked example in the [interaction page](https://data-wise.github.io/medfit/articles/model-interaction.md) |
 
 ## Dependencies
 

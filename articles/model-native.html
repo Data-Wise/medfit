@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,11 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -172,7 +177,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -341,7 +346,7 @@ zero  1 8.8141     8.8141       1   0.002989 **
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 </div>
-<p>Equating two intercepts works the same way (<code>i1 == i2</code> with labels <code>i1</code> and <code>i2</code>). <code>meanstructure = TRUE</code> turns the mean structure on without writing any intercept, and <code>meanstructure = FALSE</code> fits covariances only. A latent variable’s mean is fixed at 0, and a free latent intercept stops with “latent means are planned for a later release”. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> reads the paths exactly as before; the four-way decomposition is not available on this route yet.</p>
+<p>Equating two intercepts works the same way (<code>i1 == i2</code> with labels <code>i1</code> and <code>i2</code>). <code>meanstructure = TRUE</code> turns the mean structure on without writing any intercept, and <code>meanstructure = FALSE</code> fits covariances only. A latent variable’s mean is fixed at 0, and a free latent intercept stops with “latent means are planned for a later release”. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> reads the paths exactly as before; add a product term and it returns the four-way decomposition (<a href="#product-terms">below</a>).</p>
 </section><section class="level2"><h2 id="compared-with-the-glm-engine">Compared with the <code>glm</code> engine<a class="anchor" aria-label="anchor" href="#compared-with-the-glm-engine"></a>
 </h2>
 <p>The two engines agree on the estimates and differ slightly in the standard errors, because the native engine uses maximum-likelihood (not least-squares) variances:</p>
@@ -359,6 +364,137 @@ native 0.06415544 0.1090891 0.1187313
 glm    0.06449767 0.1097774 0.1194466</code></pre>
 </div>
 </div>
+</section><section class="level2"><h2 id="product-terms">Product terms<a class="anchor" aria-label="anchor" href="#product-terms"></a>
+</h2>
+<p><code>x:m</code> (the colon, no spaces) on the right side of a regression is the product of two observed variables, as in lavaan. The engine builds the column <code>x * m</code> from <code>data</code> after listwise deletion and treats it as an observed exogenous variable, so the likelihood, the constraints and the mean structure are the same as for any other regressor. <code>x:m</code> and <code>m:x</code> are one term, stored under the canonical name (the two names sorted in the C locale, <code>m:x</code>), and a label (<code>b*x:m</code>) names the coefficient. A product turns the mean structure on. Writing the treatment-by-mediator product in the outcome equation makes <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> return the four-way decomposition; the <a href="model-interaction.html#the-native-engine">interaction page</a> runs a worked example, including why centering the mediator matters.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">four</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
+<span>  <span class="st">"mediator1 ~ treatment</span></span>
+<span><span class="st">   outcome_int ~ treatment + mediator1 + mediator1:treatment"</span>,</span>
+<span>  <span class="va">mediation_demo</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span></span>
+<span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: the model test is not valid for this model: the product
+'mediator1:treatment' has an endogenous factor ('mediator1'). `glance()` and
+`summary()` report the chi-square, df and p-value as NA, and `anova()` and
+`mbco_sem()` refuse. The coefficients equal equation-wise OLS, and the sandwich
+standard errors (observed information) are unaffected.</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">four</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 3
+  term                            estimate std_error
+  &lt;chr&gt;                              &lt;dbl&gt;     &lt;dbl&gt;
+1 mediator1~treatment               0.456     0.108
+2 outcome_int~treatment             0.0405    0.119
+3 outcome_int~mediator1             0.713     0.0699
+4 outcome_int~mediator1:treatment   0.500     0.102 </code></pre>
+</div>
+</div>
+<p>The warning above says the global model test is not available for this model, because the product contains the mediator, which is a regression target (details below). The coefficients and the sandwich standard errors are unaffected.</p>
+<p>A product is fitted only in the class below. Anything else stops, naming the feature, with a message that says it is not yet supported with products; the same model works without the product. Each row gives the limit and the start of its message.</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Limit</th>
+<th style="text-align: left;">Message (starts with, or contains)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">A space around <code>:</code>
+</td>
+<td style="text-align: left;">“a product ‘:’ needs a variable name on each side, written without spaces (x:m)”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">
+<code>x:x</code>, <code>x:m:w</code>
+</td>
+<td style="text-align: left;">“of a variable with itself is not supported”, “a three-way or higher product”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">A product as a left side (<code>x:m ~ y</code>, <code>x:m ~~ y</code>)</td>
+<td style="text-align: left;">“cannot be a left side”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">A product in <code>=~</code> or in a constraint expression</td>
+<td style="text-align: left;">“is only valid on the right side of a regression”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">A latent variable in a product</td>
+<td style="text-align: left;">“products with latent variables are not supported in this version”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">One product twice in an equation</td>
+<td style="text-align: left;">“are the same product (canonical name”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">A factor that is the target or downstream of it (<code>y ~ x + x:y</code>)</td>
+<td style="text-align: left;">“(rule 8: no outcome-derived regressors)”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">A loop of regressions</td>
+<td style="text-align: left;">“The model is not recursive”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">A residual covariance between outcomes</td>
+<td style="text-align: left;">“A product model cannot have a residual covariance (rule 9)”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">A label shared by two rows</td>
+<td style="text-align: left;">“is used on more than one parameter”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">A fixed coefficient</td>
+<td style="text-align: left;">“has a fixed coefficient (rule 9)”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">An inline bound on a coefficient or intercept (<code>lower(0)*x</code>)</td>
+<td style="text-align: left;">“has a bound (rule 9”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">
+<code>==</code>, <code>&lt;</code> or <code>&gt;</code> naming a coefficient label (<code>a &lt; 1</code> too)</td>
+<td style="text-align: left;">“names the coefficient label”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">A fixed, shared or constrained intercept</td>
+<td style="text-align: left;">“(rule 9, intercept clause”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>meanstructure = FALSE</code></td>
+<td style="text-align: left;">“<code>meanstructure = FALSE</code>, but the model has a product term”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">A data column <code>m:x</code> that is not <code>x * m</code>
+</td>
+<td style="text-align: left;">“is not the product of”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">A non-numeric factor</td>
+<td style="text-align: left;">“needs numeric variables”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">
+<code>information = "expected"</code>, endogenous factor</td>
+<td style="text-align: left;">“is not available for a model with a product of an endogenous variable”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">
+<code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> or <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>, endogenous factor</td>
+<td style="text-align: left;">“is not available for” … “a model with a product term”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">
+<code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> with another product on the treatment or mediator</td>
+<td style="text-align: left;">“the native extraction does not support the product”</td>
+</tr>
+</tbody>
+</table>
+<p>Two more facts are not errors. The covariance that completion would add between two pure outcomes is fixed at 0 in a product model, with one note; and <code><a href="../reference/fit_sem.html">fit_sem()</a></code> warns once when a product is fitted without <code>se_type = "sandwich"</code>, which is the standard-error choice because a product is not normal. <code>fixed_x = TRUE</code> fixes the product columns with the other exogenous variables.</p>
+<p>The global chi-square is not valid when a factor of the product is itself a regression target (the model treats the product as exogenous although it is a function of that variable), or when the exogenous (co)variance block is restricted. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> then reports chi-square, df and p-value as <code>NA</code> with a note, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse. A product of exogenous variables with a free block keeps the ordinary test. <a href="methods.html#products-and-observed-information">Methods and Formulas</a> gives the reason.</p>
 </section><section class="level2"><h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
 </h2>
 <ul>
@@ -371,7 +507,7 @@ glm    0.06449767 0.1097774 0.1194466</code></pre>
 <li>
 <strong>Exogenous variables get free variances and covariances</strong>, as lavaan does with <code>fixed.x = FALSE</code>, so they appear in the parameter table. <code>fixed_x = TRUE</code> (or a vector of names) fixes the selected ones at the sample moments, as <code>fixed.x = TRUE</code> does: the structural estimates, their standard errors and the degrees of freedom do not change, the parameter count falls, and <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC become conditional on the fixed variables, so fits with different fixed sets cannot be compared.</li>
 <li>
-<strong>No four-way decomposition</strong> from the native engine.</li>
+<strong>Products</strong> are limited to two observed variables inside the class in the table above; latent products, <code>x:x</code> and three-way products stop with the messages listed there.</li>
 <li>
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports diagnostics, including an improper solution and any active bound or constraint; read them before trusting a fit.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>

@@ -76,6 +76,16 @@ Upgrading, errors, intervals and terms
   step](https://data-wise.github.io/medfit/articles/native-tutorial.md):
 - [The native engine
   guide](https://data-wise.github.io/medfit/articles/native-guide.md):
+- [Native engine book, chapter 1: the mean
+  structure](https://data-wise.github.io/medfit/articles/native-book-1-mean-structure.md):
+- [Native engine book, chapter 2: scale and
+  conditioning](https://data-wise.github.io/medfit/articles/native-book-2-scale.md):
+- [Native engine book, chapter 3: constrained
+  estimation](https://data-wise.github.io/medfit/articles/native-book-3-constraints.md):
+- [Native engine book, chapter 4: fixed exogenous
+  variables](https://data-wise.github.io/medfit/articles/native-book-4-fixed-x.md):
+- [Native engine book, chapter 5:
+  inference](https://data-wise.github.io/medfit/articles/native-book-5-inference.md):
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
 

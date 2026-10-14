@@ -70,7 +70,7 @@ c(chain = unname(nie(xs)), every_path = unname(nie(xs, type = "total")),
 ```
 
          chain every_path      total
-    0.07545038 0.36740437 0.53856775 
+    0.07545039 0.36740438 0.53856776 
 
 With the default `structure = "auto"`, medfit classifies the mediators
 from the model: here it finds the path from `mediator1` to `mediator2`
@@ -135,9 +135,13 @@ weighting.
 
 - **`fit_mediation(engine = "native")` takes one mediator** (see the
   warning above).
-- **No four-way decomposition** from the native engine (the syntax has
-  no product operator yet). Intercepts are estimated; see [the native
-  model
+- **Four-way decomposition** needs one mediator and a
+  treatment-by-mediator product (`x:m`) in the outcome equation, and a
+  model with a product cannot have a residual covariance between the
+  mediators (parallel mediators with `m1 ~~ m2` and a product are not
+  supported; see [product
+  terms](https://data-wise.github.io/medfit/articles/model-native.html#product-terms)).
+  Intercepts are estimated; see [the native model
   page](https://data-wise.github.io/medfit/articles/model-native.html#intercepts).
 - **The native sandwich is the HC0 type**, with casewise scores; the
   `glm` engine’s sandwich is HC3. They are different estimators, so the

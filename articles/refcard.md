@@ -1,6 +1,6 @@
 # medfit Reference Card
 
-Quick lookup for users who already know medfit. Needs medfit 0.9.0 or
+Quick lookup for users who already know medfit. Needs medfit 0.10.0 or
 later (CRAN has 0.3.2; install from GitHub or r-universe, see the [home
 page](https://data-wise.github.io/medfit/#installation)). Explanations
 are in the
@@ -62,7 +62,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Formulas and data | `fit_mediation(formula_y, formula_m, data, treatment, mediator)` |
 | Several mediators (chain) | `extract_mediation(..., mediator = c(...), mediator_models = list(...))` |
 | Several mediators (side by side) | same call with `structure = "parallel"` |
-| Treatment-by-mediator term | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on an outcome with `X * M` |
+| Treatment-by-mediator term | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on an outcome with `X * M`; from syntax, [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with `x:m` in the outcome equation, then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) |
 | `lmer` pair, cluster treatment | `extract_mediation(..., cluster = )` |
 | Formulas, cluster treatment | `fit_mediation(engine = "lmer", cluster = )` with plain formulas, no `(1 \| id)` |
 | `lavaan` fit | `extract_mediation(lavaan_fit, ...)` |

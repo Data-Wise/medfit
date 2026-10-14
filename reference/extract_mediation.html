@@ -33,7 +33,7 @@ model types (lm, glm, lavaan, lmer, and a native SEMFit)."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,6 +76,11 @@ model types (lm, glm, lavaan, lmer, and a native SEMFit)."><meta property="og:im
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -134,7 +139,7 @@ model types (lm, glm, lavaan, lmer, and a native SEMFit)."><meta property="og:im
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Mediation Structure from Fitted Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
       <div class="d-none name"><code>extract_mediation.Rd</code></div>
     </div>
 
@@ -189,9 +194,10 @@ fits kept, so it cannot see a mismatch between frames whose row names were
 both reset)</p></li>
 <li><p><strong>SEMFit</strong>: Extract from a model fitted by <code><a href="fit_sem.html">fit_sem()</a></code> (the experimental
 native maximum-likelihood engine), with the same arguments and structures as
-the lavaan method. The four-way decomposition is not available: the native
-syntax has no treatment-by-mediator product yet (planned for 0.10.0), so
-<code>decomposition = "four_way"</code> and <code>interaction =</code> are refused by name.</p></li>
+the lavaan method. A treatment-by-mediator product written <code>x:m</code> (or <code>m:x</code>)
+in the outcome equation gives the four-way decomposition, stored under the
+canonical name <code>m:x</code>; without it <code>decomposition = "four_way"</code> is refused
+by name. <code>interaction =</code> takes that product written with <code>:</code>.</p></li>
 <li><p><strong>brmsfit</strong>: Extract from Bayesian models (future)</p></li>
 </ul><p>Note: OpenMx extraction is planned for a future release.</p>
 <p>The returned objects share one interface (<code><a href="nie.html">nie()</a></code>, <code><a href="nde.html">nde()</a></code>, <code><a href="te.html">te()</a></code>,

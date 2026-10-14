@@ -54,7 +54,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -101,6 +101,11 @@
     <li><a class="dropdown-item" href="articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -194,6 +199,10 @@
 </tr></thead>
 <tbody>
 <tr>
+<td><strong>0.10.0</strong></td>
+<td>The product term <code>x:m</code> in native syntax and the four-way decomposition from a native fit (<code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on a <code><a href="reference/fit_sem.html">fit_sem()</a></code> fit), inside a documented supported class; the model test is <code>NA</code> when a product factor is a regression target; a native route in cookbook recipe 7</td>
+</tr>
+<tr>
 <td><strong>0.9.0</strong></td>
 <td>Observed intercepts and means in the native engine (<code>y ~ 1</code>, <code>meanstructure =</code>), with centered coordinates for data far from zero; <code>fixed_x</code> to fix exogenous moments at the sample values (lavaan’s <code>fixed.x = TRUE</code>); the tutorial’s step 9 and cookbook recipe 18</td>
 </tr>
@@ -231,7 +240,7 @@
 <span>  <span class="st">"medfit"</span>,</span>
 <span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://data-wise.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>That gives 0.9.0 as a pre-built binary, with no compiler. From GitHub instead: <code>pak::pak("data-wise/medfit")</code> (compiles <code>nloptr</code> unless <code>lme4</code> already brought it in).</p>
+<p>That gives 0.10.0 as a pre-built binary, with no compiler. From GitHub instead: <code>pak::pak("data-wise/medfit")</code> (compiles <code>nloptr</code> unless <code>lme4</code> already brought it in).</p>
 <blockquote>
 <p><strong>CRAN has 0.3.2, which does not run the examples on this site.</strong> It lacks <code>mediation_demo</code>, <code><a href="reference/fit_sem.html">fit_sem()</a></code>, <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> and the joint and cluster classes. Its two known issues, serial <code><a href="reference/te.html">te()</a></code>/<code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> path rows, are fixed in 0.7.0; see <a href="https://github.com/Data-Wise/medfit/issues/83" class="external-link">#83</a>.</p>
 </blockquote>
@@ -696,7 +705,7 @@
 </h2>
 <p>If you use medfit in your research, please cite:</p>
 <pre><code>Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.9.0. https://data-wise.github.io/medfit/</code></pre>
+R package version 0.10.0. https://data-wise.github.io/medfit/</code></pre>
 <p>For the entry matching your installed version, run <code>citation("medfit")</code>.</p>
 </div>
 <div class="section level2">

@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,11 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -172,7 +177,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -182,7 +187,7 @@
 
 
     <p>Eighteen task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
-<p>These recipes need medfit 0.8.0 or later (recipe 18 needs 0.9.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>).</p>
+<p>These recipes need medfit 0.8.0 or later (recipe 18 needs 0.9.0, and the native route in recipe 7 needs 0.10.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>).</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stderr">
@@ -340,7 +345,21 @@ Attaching package: 'generics'</code></pre>
 0.21521278 0.04353909 0.27709549 0.34001758 0.25875187 0.61711307 0.87586495 </code></pre>
 </div>
 </div>
-<p>More: <a href="extraction.html">Model Extraction</a>.</p>
+<p>The native engine gives the same parts from model syntax (0.10.0 or later): write the product as <code>treatment:mediator1</code>. The fit warns once that the global model test is not available for a product of a regression target.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">sem_i</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
+<span>  <span class="st">"mediator1 ~ treatment + covariate1 + covariate2</span></span>
+<span><span class="st">   outcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate1 + covariate2"</span>,</span>
+<span>  <span class="va">mediation_demo</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">sem_i</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span>
+<span>                            outcome <span class="op">=</span> <span class="st">"outcome_int"</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>       cde    int_ref    int_med        pie        nde        nie      total
+0.21521278 0.04353909 0.27709549 0.34001758 0.25875187 0.61711307 0.87586495 </code></pre>
+</div>
+</div>
+<p>More: <a href="extraction.html">Model Extraction</a>, <a href="model-native.html#product-terms">the native product term</a>.</p>
 </section><section class="level2"><h2 id="many-mediators-with-products">8. Many mediators with products<a class="anchor" aria-label="anchor" href="#many-mediators-with-products"></a>
 </h2>
 <p><em>When:</em> several mediators and a treatment-by-mediator term. The result is the joint effect over the mediator block; bootstrap it with <code><a href="../reference/joint_effects.html">joint_effects()</a></code>.</p>
@@ -360,7 +379,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4351678 0.8930074 </code></pre>
+0.6560315 0.4349603 0.8927176 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>

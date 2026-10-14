@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,11 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -172,7 +177,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/vignettes/articles/refcard.qmd" class="external-link"><code>vignettes/articles/refcard.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/refcard.qmd" class="external-link"><code>vignettes/articles/refcard.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -181,7 +186,7 @@
 
 
 
-    <p>Quick lookup for users who already know medfit. Needs medfit 0.9.0 or later (CRAN has 0.3.2; install from GitHub or r-universe, see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>). Explanations are in the <a href="getting-started.html">articles</a>; formulas are in <a href="methods.html">Methods and Formulas</a>; task recipes are in the <a href="cookbook.html">Cookbook</a>; one page per model type is in <a href="models.html">Models</a>.</p>
+    <p>Quick lookup for users who already know medfit. Needs medfit 0.10.0 or later (CRAN has 0.3.2; install from GitHub or r-universe, see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>). Explanations are in the <a href="getting-started.html">articles</a>; formulas are in <a href="methods.html">Methods and Formulas</a>; task recipes are in the <a href="cookbook.html">Cookbook</a>; one page per model type is in <a href="models.html">Models</a>.</p>
 <section class="level2"><h2 id="start-here">Start here<a class="anchor" aria-label="anchor" href="#start-here"></a>
 </h2>
 <div class="cell">
@@ -260,7 +265,7 @@ Residual SDs:
 <tr class="even">
 <td>Treatment-by-mediator term</td>
 <td>
-<code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on an outcome with <code>X * M</code>
+<code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on an outcome with <code>X * M</code>; from syntax, <code><a href="../reference/fit_sem.html">fit_sem()</a></code> with <code>x:m</code> in the outcome equation, then <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>
 </td>
 </tr>
 <tr class="odd">

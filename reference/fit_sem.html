@@ -37,7 +37,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,6 +80,11 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -138,7 +143,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit a Structural Equation Model by Maximum Likelihood</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
       <div class="d-none name"><code>fit_sem.Rd</code></div>
     </div>
 
@@ -176,7 +181,9 @@ parameters (<code>:=</code>) with delta-method standard errors.</p>
 <code>=~</code> (latent variable), <code>~~</code> (variance or covariance), <code>label*variable</code>
 modifiers, <code><a href="https://rdrr.io/r/stats/start.html" class="external-link">start()</a></code>, <code>lower()</code> and <code>upper()</code>, and the constraint
 operators <code>==</code>, <code>&lt;</code>, <code>&gt;</code> and <code>:=</code>. An intercept is written <code>y ~ 1</code> (alone or with other terms, as
-in <code>y ~ 1 + x</code>) and turns on the mean structure.</p></dd>
+in <code>y ~ 1 + x</code>) and turns on the mean structure. A product of two observed variables is written
+<code>x:m</code> on the right side of a regression (canonical name <code>m:x</code>); <code><a href="medfit-syntax.html">?"medfit-syntax"</a></code> lists the
+supported class and each limit.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -187,7 +194,9 @@ columns. Rows with missing values in those columns are dropped once
 
 <dt id="arg-information">information<a class="anchor" aria-label="anchor" href="#arg-information"></a></dt>
 <dd><p>Character: <code>"observed"</code> (default) or <code>"expected"</code>
-information for the standard errors.</p></dd>
+information for the standard errors. <code>"expected"</code> is an error for a model with a product term
+that has an endogenous factor (the product is a function of another variable, so the expected
+information gives wrong standard errors); use the default with <code>se_type = "sandwich"</code>.</p></dd>
 
 
 <dt id="arg-n-starts">n_starts<a class="anchor" aria-label="anchor" href="#arg-n-starts"></a></dt>
@@ -227,7 +236,9 @@ than the HC3 default of the glm route by a factor that shrinks like
 an intercept (<code>y ~ 1</code>, free or fixed); <code>TRUE</code> fits one regardless; <code>FALSE</code> fits covariances only and
 errors if an intercept is written. With a mean structure every observed variable whose intercept is
 not written has a free one, so a model with only free intercepts has the same estimates and
-standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.</p></dd>
+standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
+A model with a product term (<code>y ~ x + m + x:m</code>) always fits the mean structure (it needs the mediator
+intercept for the four-way decomposition), so with a product <code>meanstructure = FALSE</code> is an error.</p></dd>
 
 
 <dt id="arg-fixed-x">fixed_x<a class="anchor" aria-label="anchor" href="#arg-fixed-x"></a></dt>
@@ -250,7 +261,9 @@ selected variable is an error (lavaan would silently keep it free). The fixed ro
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <a href="SEMFit.html">SEMFit</a> object.</p>
+    <p>A <a href="SEMFit.html">SEMFit</a> object. With a product term whose factor is a regression target (<code>x:m</code> with
+<code>m</code> regressed on <code>x</code>), <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> reports the chi-square, df and p-value as <code>NA</code> with a note, and
+<code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="mbco_sem.html">mbco_sem()</a></code> refuse; see <a href="SEMFit-methods.html">SEMFit-methods</a>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -267,6 +280,17 @@ selected variable is an error (lavaan would silently keep it free). The fixed ro
 <span class="r-in"><span><span class="va">fit</span><span class="op">@</span><span class="va">defined</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   name expr       est         se</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1   ab  a*b 0.3253207 0.08016376</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A treatment-by-mediator product: the four-way decomposition</span></span></span>
+<span class="r-in"><span><span class="va">fit4</span> <span class="op">&lt;-</span> <span class="fu">fit_sem</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"mediator1 ~ treatment\noutcome_int ~ treatment + mediator1 + treatment:mediator1"</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>the model test is not valid for this model: the product 'mediator1:treatment' has an endogenous factor ('mediator1'). `glance()` and `summary()` report the chi-square, df and p-value as NA, and `anova()` and `mbco_sem()` refuse. The coefficients equal equation-wise OLS, and the sandwich standard errors (observed information) are unaffected.</span>
+<span class="r-in"><span><span class="fu"><a href="decompose.html">decompose</a></span><span class="op">(</span><span class="fu"><a href="extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit4</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span></span>
+<span class="r-in"><span>                            outcome <span class="op">=</span> <span class="st">"outcome_int"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        cde    int_ref    int_med        pie        nde        nie      total </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.04048833 0.07763088 0.22810575 0.32526471 0.11811921 0.55337046 0.67148967 </span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,11 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -172,7 +177,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -706,7 +711,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_nie</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_nie</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4400159 0.9092223</code></pre>
+<pre><code>[1] 0.4483248 0.8930866</code></pre>
 </div>
 </div>
 <p>The fit must meet these requirements; each violation errors with its cause:</p>
@@ -1146,7 +1151,26 @@ pie      0.19952257 0.4805126</code></pre>
 <pre><code>Natural Indirect Effect (NIE): 0.3253</code></pre>
 </div>
 </div>
-<p>The four-way decomposition is not available on this route yet: the native syntax has no product operator (planned for 0.10.0), so <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> refuses <code>decomposition = "four_way"</code> and <code>interaction =</code> by name. Fit a treatment-by-mediator model with <code>lm</code>/<code>glm</code> or lavaan (<code>meanstructure = TRUE</code>) instead. See <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> for the syntax.</p>
+<p>A treatment-by-mediator product in the outcome equation gives the four-way decomposition on this route. Write it in the model syntax as <code>treatment:mediator1</code> (the colon, no spaces); the engine builds the column, turns the mean structure on, and stores the term under the canonical name <code>mediator1:treatment</code>, whichever order you write it in:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">sem4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
+<span>  <span class="st">"mediator1 ~ treatment</span></span>
+<span><span class="st">   outcome_int ~ treatment + mediator1 + treatment:mediator1"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">mediation_demo</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">x4</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">sem4</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span>
+<span>                        outcome <span class="op">=</span> <span class="st">"outcome_int"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x4</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "medfit::InteractionMediationData"</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">x4</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>       cde    int_ref    int_med        pie        nde        nie      total
+0.04048833 0.07763088 0.22810575 0.32526471 0.11811921 0.55337046 0.67148967 </code></pre>
+</div>
+</div>
+<p>Without the product, <code>decomposition = "four_way"</code> and <code>interaction =</code> are refused by name, and the message says to add the product. A precomputed product column is fitted as an ordinary variable, so write the product in the syntax. A model with a product must stay inside a supported class (see <a href="model-native.html#product-terms">the native model page</a>), and the global chi-square is <code>NA</code> when a product factor is a regression target. See <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> for the syntax.</p>
 </section><section class="level2"><h2 id="compatibility-with-rmediation">Compatibility with RMediation<a class="anchor" aria-label="anchor" href="#compatibility-with-rmediation"></a>
 </h2>
 <p>The extraction design is compatible with RMediation’s lavaan extractor:</p>

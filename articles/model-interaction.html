@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,11 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -172,7 +177,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/vignettes/articles/model-interaction.qmd" class="external-link"><code>vignettes/articles/model-interaction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-interaction.qmd" class="external-link"><code>vignettes/articles/model-interaction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -199,7 +204,7 @@
 <tr class="odd">
 <td><strong>Routes</strong></td>
 <td>
-<code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> (glm or <code>regmedint</code> engine), <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on <code>lm</code>/<code>glm</code> or lavaan</td>
+<code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> (glm or <code>regmedint</code> engine), <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on <code>lm</code>/<code>glm</code>, lavaan or a native <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fit</td>
 </tr>
 <tr class="even">
 <td><strong>Needs</strong></td>
@@ -314,12 +319,76 @@ Attaching package: 'generics'</code></pre>
 <pre><code>[1] TRUE</code></pre>
 </div>
 </div>
+</section><section class="level2"><h2 id="the-native-engine">The native engine<a class="anchor" aria-label="anchor" href="#the-native-engine"></a>
+</h2>
+<p><code><a href="../reference/fit_sem.html">fit_sem()</a></code> reads the product as <code>treatment:mediator1</code> (the colon, no spaces) and fits it by maximum likelihood with no other package. A product turns the mean structure on, because the four-way parts need the mediator intercept. The sandwich covariance is the standard-error choice for a product, and the fit warns once when the global model test is not available (here the product contains the mediator, which is itself a regression target).</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">syntax</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ treatment + covariate1 + covariate2</span></span>
+<span><span class="st">  outcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate1 + covariate2</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">sem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax</span>, <span class="va">mediation_demo</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: the model test is not valid for this model: the product
+'mediator1:treatment' has an endogenous factor ('mediator1'). `glance()` and
+`summary()` report the chi-square, df and p-value as NA, and `anova()` and
+`mbco_sem()` refuse. The coefficients equal equation-wise OLS, and the sandwich
+standard errors (observed information) are unaffected.</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="va">x_sem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">sem</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span>
+<span>                           outcome <span class="op">=</span> <span class="st">"outcome_int"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">x_sem</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "medfit::InteractionMediationData"</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">x_sem</span><span class="op">)</span>, <span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<p>The parts equal the <code>lm</code>/<code>glm</code> route, since each coefficient equals its equation-wise least-squares estimate. <code>m:x</code> is the stored name whichever order you write the product in (<code>treatment:mediator1</code> and <code>mediator1:treatment</code> are one term), so <code>tidy(sem)</code> shows <code>outcome_int~mediator1:treatment</code>.</p>
+<p><strong>Centering matters.</strong> The reference level <code>m_star = 0</code> and the mediator mean at <code>treatment = 0</code> depend on where the mediator is centered. The natural direct and indirect effects and the total do not; the split of the direct effect between CDE and INTref does. Center the mediator at the mean (or another meaningful value) before you read CDE:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="va">mediation_demo</span></span>
+<span><span class="va">d</span><span class="op">$</span><span class="va">m_c</span> <span class="op">&lt;-</span> <span class="va">d</span><span class="op">$</span><span class="va">mediator1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">mediator1</span><span class="op">)</span></span>
+<span><span class="va">sem_c</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
+<span>  <span class="st">"m_c ~ treatment + covariate1 + covariate2</span></span>
+<span><span class="st">   outcome_int ~ treatment + m_c + treatment:m_c + covariate1 + covariate2"</span>,</span>
+<span>  <span class="va">d</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">x_c</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">sem_c</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"m_c"</span>,</span>
+<span>                         outcome <span class="op">=</span> <span class="st">"outcome_int"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>raw <span class="op">=</span> <span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">x_sem</span><span class="op">)</span>, centered <span class="op">=</span> <span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">x_c</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>               cde     int_ref   int_med       pie       nde       nie
+raw      0.2152128  0.04353909 0.2770955 0.3400176 0.2587519 0.6171131
+centered 0.3979924 -0.13924048 0.2770955 0.3400176 0.2587519 0.6171131
+             total
+raw      0.8758649
+centered 0.8758649</code></pre>
+</div>
+</div>
+<p>CDE and INTref move with the centering; NDE, NIE and the total stay put.</p>
+<p>The chi-square, df and p-value are <code>NA</code> for this fit, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse, and <code>information = "expected"</code> is refused, because the product contains a regression target; <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC stay defined. The <a href="model-native.html#product-terms">supported class and each limit</a> lists what else a product model cannot contain, with the message for each.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">sem</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chisq"</span>, <span class="st">"df"</span>, <span class="st">"p_value"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  chisq    df p_value
+  &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+1    NA    NA      NA</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">sem</span>, <span class="va">sem</span><span class="op">)</span>, error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "anova() is not available for 'sem', a model with a product term: the product 'mediator1:treatment' has an endogenous factor ('mediator1'). The model test and a likelihood-ratio contrast against another fit are not chi-square there. The coefficients and the sandwich standard errors (`se_type = \"sandwich\"`, observed information) are unaffected."</code></pre>
+</div>
+</div>
 </section><section class="level2"><h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
 </h2>
 <ul>
 <li>Only products written with <code>:</code> or <code>*</code> in the <strong>outcome</strong> model are recognized. A product precomputed as a data column cannot be seen and would be ignored, so write it in the formula.</li>
 <li>Non-Gaussian outcomes or mediators error; see <a href="model-glm-families.html">glm families</a> for what is supported there.</li>
-<li>The native engine does not support the four-way decomposition yet: its syntax has no product operator (planned for 0.10.0), so <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fit refuses <code>decomposition = "four_way"</code> and <code>interaction =</code> by name.</li>
+<li>The native route reads a product written in the model syntax (<code>treatment:mediator1</code>), not a precomputed data column, and only inside the <a href="model-native.html#product-terms">supported class</a>: recursive, no residual covariance between outcomes, free coefficients and intercepts, none shared. Without the product, <code>decomposition = "four_way"</code> is refused with a message that says to add it.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
 <p><a href="model-simple.html">Simple mediation</a> | <a href="cookbook.html#treatment-by-mediator-interaction">Cookbook recipe 7</a> | <a href="extraction.html">Model Extraction</a> | <a href="methods.html">Methods and Formulas</a></p>

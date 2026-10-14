@@ -13,7 +13,7 @@ quickstart](https://data-wise.github.io/medfit/articles/native-quickstart.md).
 | **Entry points** | `fit_sem(syntax, data)`; `fit_mediation(model = syntax, engine = "native")` for one mediator |
 | **Class returned** | `SEMFit`, then `MediationData`, `SerialMediationData` or `ParallelMediationData` from [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) |
 | **Syntax reference** | [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md) |
-| **Not covered** | latent means, the four-way decomposition, groups, categorical outcomes, other estimators; see [the limits](#limits) |
+| **Not covered** | latent means, latent products, groups, categorical outcomes, other estimators; see [the limits](#limits) |
 
 ``` r
 library(medfit)
@@ -106,7 +106,7 @@ summary(fit)
      total cp + a * b 0.5374 0.1189
 
     Diagnostics:
-      Optimizer status: 3; stationarity 1.27e-08; retries 0
+      Optimizer status: 4; stationarity 1.43e-08; retries 0
       Active bounds: none
       Active constraints: none
       Improper solution: no
@@ -290,7 +290,11 @@ a chain gives a `SerialMediationData`, mediators side by side a
   only**.
 - **ML only**, plus the HC0 sandwich; no robust chi-square, no fit
   indices beyond the chi-square, AIC and BIC.
-- **No four-way decomposition** from the native route.
+- **Products** (`x:m`, which give the four-way decomposition) work for
+  two observed variables inside a supported class; the table of limits
+  and messages is on [the native model
+  page](https://data-wise.github.io/medfit/articles/model-native.html#product-terms).
+  The model test is `NA` when a product factor is a regression target.
 - For latent means, groups, categorical outcomes or fit indices use
   lavaan; the extraction route accepts a `lavaan` fit as well. See
   [lavaan and the native

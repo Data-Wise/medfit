@@ -28,6 +28,7 @@ functions work for every model, from one mediator to a latent variable.
 
 | Version | What you get |
 |----|----|
+| **0.10.0** | The product term `x:m` in native syntax and the four-way decomposition from a native fit ([`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) fit), inside a documented supported class; the model test is `NA` when a product factor is a regression target; a native route in cookbook recipe 7 |
 | **0.9.0** | Observed intercepts and means in the native engine (`y ~ 1`, `meanstructure =`), with centered coordinates for data far from zero; `fixed_x` to fix exogenous moments at the sample values (lavaan’s `fixed.x = TRUE`); the tutorial’s step 9 and cookbook recipe 18 |
 | **0.8.0** | Nonlinear constraints (`cp == a*b`, `a*b > k`), `mbco_sem(paths = )` for a product of k paths, [`anova()`](https://rdrr.io/r/stats/anova.html), [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and [`glance()`](https://generics.r-lib.org/reference/glance.html) for `SEMFit`, one lavaan-style naming convention; the lavaan comparison article and cookbook recipes 12 and 13 |
 | **0.7.0** | A native maximum-likelihood SEM engine (experimental): latent mediators, constraints, defined parameters, [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) |
@@ -47,7 +48,7 @@ install.packages(
 )
 ```
 
-That gives 0.9.0 as a pre-built binary, with no compiler. From GitHub
+That gives 0.10.0 as a pre-built binary, with no compiler. From GitHub
 instead: `pak::pak("data-wise/medfit")` (compiles `nloptr` unless `lme4`
 already brought it in).
 
@@ -350,7 +351,7 @@ GPL (\>= 3)
 If you use medfit in your research, please cite:
 
     Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-    R package version 0.9.0. https://data-wise.github.io/medfit/
+    R package version 0.10.0. https://data-wise.github.io/medfit/
 
 For the entry matching your installed version, run `citation("medfit")`.
 
@@ -540,6 +541,16 @@ Upgrading, errors, intervals and terms
   step](https://data-wise.github.io/medfit/articles/native-tutorial.md):
 - [The native engine
   guide](https://data-wise.github.io/medfit/articles/native-guide.md):
+- [Native engine book, chapter 1: the mean
+  structure](https://data-wise.github.io/medfit/articles/native-book-1-mean-structure.md):
+- [Native engine book, chapter 2: scale and
+  conditioning](https://data-wise.github.io/medfit/articles/native-book-2-scale.md):
+- [Native engine book, chapter 3: constrained
+  estimation](https://data-wise.github.io/medfit/articles/native-book-3-constraints.md):
+- [Native engine book, chapter 4: fixed exogenous
+  variables](https://data-wise.github.io/medfit/articles/native-book-4-fixed-x.md):
+- [Native engine book, chapter 5:
+  inference](https://data-wise.github.io/medfit/articles/native-book-5-inference.md):
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
 

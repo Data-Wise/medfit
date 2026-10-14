@@ -36,7 +36,11 @@ fit_sem(
   [`start()`](https://rdrr.io/r/stats/start.html), `lower()` and
   `upper()`, and the constraint operators `==`, `<`, `>` and `:=`. An
   intercept is written `y ~ 1` (alone or with other terms, as in
-  `y ~ 1 + x`) and turns on the mean structure.
+  `y ~ 1 + x`) and turns on the mean structure. A product of two
+  observed variables is written `x:m` on the right side of a regression
+  (canonical name `m:x`);
+  [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+  lists the supported class and each limit.
 
 - data:
 
@@ -47,7 +51,10 @@ fit_sem(
 - information:
 
   Character: `"observed"` (default) or `"expected"` information for the
-  standard errors.
+  standard errors. `"expected"` is an error for a model with a product
+  term that has an endogenous factor (the product is a function of
+  another variable, so the expected information gives wrong standard
+  errors); use the default with `se_type = "sandwich"`.
 
 - n_starts:
 
@@ -89,7 +96,10 @@ fit_sem(
   is written. With a mean structure every observed variable whose
   intercept is not written has a free one, so a model with only free
   intercepts has the same estimates and standard errors as the
-  covariance-only fit. A latent variable's mean is fixed at 0.
+  covariance-only fit. A latent variable's mean is fixed at 0. A model
+  with a product term (`y ~ x + m + x:m`) always fits the mean structure
+  (it needs the mediator intercept for the four-way decomposition), so
+  with a product `meanstructure = FALSE` is an error.
 
 - fixed_x:
 
@@ -124,7 +134,14 @@ fit_sem(
 ## Value
 
 A [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)
-object.
+object. With a product term whose factor is a regression target (`x:m`
+with `m` regressed on `x`),
+[`glance()`](https://generics.r-lib.org/reference/glance.html) reports
+the chi-square, df and p-value as `NA` with a note, and
+[`anova()`](https://rdrr.io/r/stats/anova.html) and
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+refuse; see
+[SEMFit-methods](https://data-wise.github.io/medfit/reference/SEMFit-methods.md).
 
 ## See also
 
@@ -142,5 +159,16 @@ fit <- fit_sem(
 fit@defined
 #>   name expr       est         se
 #> 1   ab  a*b 0.3253207 0.08016376
+
+# A treatment-by-mediator product: the four-way decomposition
+fit4 <- fit_sem(
+  "mediator1 ~ treatment\noutcome_int ~ treatment + mediator1 + treatment:mediator1",
+  data = mediation_demo, se_type = "sandwich"
+)
+#> Warning: the model test is not valid for this model: the product 'mediator1:treatment' has an endogenous factor ('mediator1'). `glance()` and `summary()` report the chi-square, df and p-value as NA, and `anova()` and `mbco_sem()` refuse. The coefficients equal equation-wise OLS, and the sandwich standard errors (observed information) are unaffected.
+decompose(extract_mediation(fit4, treatment = "treatment", mediator = "mediator1",
+                            outcome = "outcome_int"))
+#>        cde    int_ref    int_med        pie        nde        nie      total 
+#> 0.04048833 0.07763088 0.22810575 0.32526471 0.11811921 0.55337046 0.67148967 
 # }
 ```

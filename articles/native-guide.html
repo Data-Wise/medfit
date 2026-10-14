@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,11 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -172,7 +177,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -200,7 +205,7 @@
 </tr>
 <tr class="even">
 <td><strong>Not covered</strong></td>
-<td>latent means, the four-way decomposition, groups, categorical outcomes, other estimators; see <a href="#limits">the limits</a>
+<td>latent means, latent products, groups, categorical outcomes, other estimators; see <a href="#limits">the limits</a>
 </td>
 </tr>
 </tbody></table>
@@ -324,7 +329,7 @@ Defined parameters:
  total cp + a * b 0.5374 0.1189
 
 Diagnostics:
-  Optimizer status: 3; stationarity 1.27e-08; retries 0
+  Optimizer status: 4; stationarity 1.43e-08; retries 0
   Active bounds: none
   Active constraints: none
   Improper solution: no
@@ -573,7 +578,7 @@ MBCO = 33.353, df = 1, p-value = 7.685e-09</code></pre>
 <li>
 <strong>ML only</strong>, plus the HC0 sandwich; no robust chi-square, no fit indices beyond the chi-square, AIC and BIC.</li>
 <li>
-<strong>No four-way decomposition</strong> from the native route.</li>
+<strong>Products</strong> (<code>x:m</code>, which give the four-way decomposition) work for two observed variables inside a supported class; the table of limits and messages is on <a href="model-native.html#product-terms">the native model page</a>. The model test is <code>NA</code> when a product factor is a regression target.</li>
 <li>For latent means, groups, categorical outcomes or fit indices use lavaan; the extraction route accepts a <code>lavaan</code> fit as well. See <a href="lavaan-comparison.html">lavaan and the native engine</a>.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>

@@ -649,7 +649,7 @@ boot_nie <- bootstrap_mediation(
 c(boot_nie@ci_lower, boot_nie@ci_upper)
 ```
 
-    [1] 0.4400159 0.9092223
+    [1] 0.4483248 0.8930866
 
 The fit must meet these requirements; each violation errors with its
 cause:
@@ -1242,12 +1242,40 @@ nie(x_sem)
 
     Natural Indirect Effect (NIE): 0.3253
 
-The four-way decomposition is not available on this route yet: the
-native syntax has no product operator (planned for 0.10.0), so
-[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
-refuses `decomposition = "four_way"` and `interaction =` by name. Fit a
-treatment-by-mediator model with `lm`/`glm` or lavaan
-(`meanstructure = TRUE`) instead. See
+A treatment-by-mediator product in the outcome equation gives the
+four-way decomposition on this route. Write it in the model syntax as
+`treatment:mediator1` (the colon, no spaces); the engine builds the
+column, turns the mean structure on, and stores the term under the
+canonical name `mediator1:treatment`, whichever order you write it in:
+
+``` r
+sem4 <- suppressWarnings(fit_sem(
+  "mediator1 ~ treatment
+   outcome_int ~ treatment + mediator1 + treatment:mediator1",
+  data = mediation_demo, se_type = "sandwich"
+))
+x4 <- extract_mediation(sem4, treatment = "treatment", mediator = "mediator1",
+                        outcome = "outcome_int")
+class(x4)[1]
+```
+
+    [1] "medfit::InteractionMediationData"
+
+``` r
+decompose(x4)
+```
+
+           cde    int_ref    int_med        pie        nde        nie      total
+    0.04048833 0.07763088 0.22810575 0.32526471 0.11811921 0.55337046 0.67148967 
+
+Without the product, `decomposition = "four_way"` and `interaction =`
+are refused by name, and the message says to add the product. A
+precomputed product column is fitted as an ordinary variable, so write
+the product in the syntax. A model with a product must stay inside a
+supported class (see [the native model
+page](https://data-wise.github.io/medfit/articles/model-native.html#product-terms)),
+and the global chi-square is `NA` when a product factor is a regression
+target. See
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
 for the syntax.
 

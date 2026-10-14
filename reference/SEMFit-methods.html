@@ -29,7 +29,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,6 +72,11 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -130,7 +135,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Methods for SEMFit objects</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
       <div class="d-none name"><code>SEMFit-methods.Rd</code></div>
     </div>
 
@@ -177,6 +182,22 @@ or data stop instead of ranking them; the same holds for <code><a href="https://
 parameters in <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> (<code>fixed_x</code> column <code>TRUE</code>, no standard error) and in
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>; <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> and <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> leave them out. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
 say what the log likelihood is conditional on.</p></li>
+<li><p><strong>Model test with a product term.</strong> The global chi-square is not valid when
+a factor of a product term (<code>x:m</code>) is itself a regression target, because
+the model then treats the product as exogenous although it is a function of
+<code>m</code>; nor when the variances and covariances of the exogenous variables
+(every product included) are restricted (fixed, labeled, bounded, or left
+out because a <code>~~</code> statement names one of them; a <code>fixed_x</code> moment is not a
+restriction). <code><a href="fit_sem.html">fit_sem()</a></code> then warns once, <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> reports <code>chisq</code>, <code>df</code>
+and <code>p_value</code> as <code>NA</code> (with the reason in <code>attr(, "note")</code>), <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
+prints the reason, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="mbco_sem.html">mbco_sem()</a></code> stop naming the product.
+The coefficients equal equation-wise least squares and the sandwich
+standard errors are unaffected, but only with observed information:
+<code>fit_sem(information = "expected")</code> stops for a product with an endogenous
+factor, because its standard errors (the sandwich built on them included)
+are wrong there. <code><a href="fit_sem.html">fit_sem()</a></code> also warns once for any product term fitted
+without <code>se_type = "sandwich"</code>. <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> stay
+defined.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> tests nested fits by the likelihood-ratio statistic
 \(n (F_r - F_f)\) on the difference in model degrees
 of freedom: <code>anova(fit_full, fit_restricted)</code>, or several fits, each tested

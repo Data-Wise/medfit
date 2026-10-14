@@ -2,9 +2,9 @@
 
 > **Note**
 >
-> This site documents medfit 0.9.0 or later. CRAN has 0.3.2, which lacks
-> `mediation_demo` and the native, joint and cluster functions; install
-> from GitHub or r-universe (see the [home
+> This site documents medfit 0.10.0 or later. CRAN has 0.3.2, which
+> lacks `mediation_demo` and the native, joint and cluster functions;
+> install from GitHub or r-universe (see the [home
 > page](https://data-wise.github.io/medfit/#installation)).
 
 **Four steps.** By the end you will have fitted a mediation model, read

@@ -6,7 +6,7 @@ package and checked by a test, so the wording matches what you see.
 
 > **First, check your version**
 >
-> Examples on this site need medfit 0.9.0 or later. If `mediation_demo`
+> Examples on this site need medfit 0.10.0 or later. If `mediation_demo`
 > or
 > [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 > is “not found”, you have CRAN’s 0.3.2. See [What changed since CRAN

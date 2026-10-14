@@ -182,8 +182,8 @@ writing any intercept, and `meanstructure = FALSE` fits covariances
 only. A latent variable’s mean is fixed at 0, and a free latent
 intercept stops with “latent means are planned for a later release”.
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
-reads the paths exactly as before; the four-way decomposition is not
-available on this route yet.
+reads the paths exactly as before; add a product term and it returns the
+four-way decomposition ([below](#product-terms)).
 
 ## Compared with the `glm` engine
 
@@ -205,6 +205,103 @@ rbind(native = tidy(x, type = "effects")$std_error,
     native 0.06415544 0.1090891 0.1187313
     glm    0.06449767 0.1097774 0.1194466
 
+## Product terms
+
+`x:m` (the colon, no spaces) on the right side of a regression is the
+product of two observed variables, as in lavaan. The engine builds the
+column `x * m` from `data` after listwise deletion and treats it as an
+observed exogenous variable, so the likelihood, the constraints and the
+mean structure are the same as for any other regressor. `x:m` and `m:x`
+are one term, stored under the canonical name (the two names sorted in
+the C locale, `m:x`), and a label (`b*x:m`) names the coefficient. A
+product turns the mean structure on. Writing the treatment-by-mediator
+product in the outcome equation makes
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+return the four-way decomposition; the [interaction
+page](https://data-wise.github.io/medfit/articles/model-interaction.html#the-native-engine)
+runs a worked example, including why centering the mediator matters.
+
+``` r
+four <- fit_sem(
+  "mediator1 ~ treatment
+   outcome_int ~ treatment + mediator1 + mediator1:treatment",
+  mediation_demo, se_type = "sandwich"
+)
+```
+
+    Warning: the model test is not valid for this model: the product
+    'mediator1:treatment' has an endogenous factor ('mediator1'). `glance()` and
+    `summary()` report the chi-square, df and p-value as NA, and `anova()` and
+    `mbco_sem()` refuse. The coefficients equal equation-wise OLS, and the sandwich
+    standard errors (observed information) are unaffected.
+
+``` r
+tidy(four)[1:4, c("term", "estimate", "std_error")]
+```
+
+    # A tibble: 4 × 3
+      term                            estimate std_error
+      <chr>                              <dbl>     <dbl>
+    1 mediator1~treatment               0.456     0.108
+    2 outcome_int~treatment             0.0405    0.119
+    3 outcome_int~mediator1             0.713     0.0699
+    4 outcome_int~mediator1:treatment   0.500     0.102 
+
+The warning above says the global model test is not available for this
+model, because the product contains the mediator, which is a regression
+target (details below). The coefficients and the sandwich standard
+errors are unaffected.
+
+A product is fitted only in the class below. Anything else stops, naming
+the feature, with a message that says it is not yet supported with
+products; the same model works without the product. Each row gives the
+limit and the start of its message.
+
+| Limit | Message (starts with, or contains) |
+|:---|:---|
+| A space around `:` | “a product ‘:’ needs a variable name on each side, written without spaces (x:m)” |
+| `x:x`, `x:m:w` | “of a variable with itself is not supported”, “a three-way or higher product” |
+| A product as a left side (`x:m ~ y`, `x:m ~~ y`) | “cannot be a left side” |
+| A product in `=~` or in a constraint expression | “is only valid on the right side of a regression” |
+| A latent variable in a product | “products with latent variables are not supported in this version” |
+| One product twice in an equation | “are the same product (canonical name” |
+| A factor that is the target or downstream of it (`y ~ x + x:y`) | “(rule 8: no outcome-derived regressors)” |
+| A loop of regressions | “The model is not recursive” |
+| A residual covariance between outcomes | “A product model cannot have a residual covariance (rule 9)” |
+| A label shared by two rows | “is used on more than one parameter” |
+| A fixed coefficient | “has a fixed coefficient (rule 9)” |
+| An inline bound on a coefficient or intercept (`lower(0)*x`) | “has a bound (rule 9” |
+| `==`, `<` or `>` naming a coefficient label (`a < 1` too) | “names the coefficient label” |
+| A fixed, shared or constrained intercept | “(rule 9, intercept clause” |
+| `meanstructure = FALSE` | “`meanstructure = FALSE`, but the model has a product term” |
+| A data column `m:x` that is not `x * m` | “is not the product of” |
+| A non-numeric factor | “needs numeric variables” |
+| `information = "expected"`, endogenous factor | “is not available for a model with a product of an endogenous variable” |
+| [`anova()`](https://rdrr.io/r/stats/anova.html) or [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md), endogenous factor | “is not available for” … “a model with a product term” |
+| [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) with another product on the treatment or mediator | “the native extraction does not support the product” |
+
+Two more facts are not errors. The covariance that completion would add
+between two pure outcomes is fixed at 0 in a product model, with one
+note; and
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+warns once when a product is fitted without `se_type = "sandwich"`,
+which is the standard-error choice because a product is not normal.
+`fixed_x = TRUE` fixes the product columns with the other exogenous
+variables.
+
+The global chi-square is not valid when a factor of the product is
+itself a regression target (the model treats the product as exogenous
+although it is a function of that variable), or when the exogenous
+(co)variance block is restricted.
+[`glance()`](https://generics.r-lib.org/reference/glance.html) then
+reports chi-square, df and p-value as `NA` with a note, and
+[`anova()`](https://rdrr.io/r/stats/anova.html) and
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+refuse. A product of exogenous variables with a free block keeps the
+ordinary test. [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.html#products-and-observed-information)
+gives the reason.
+
 ## Limits
 
 - **Observed means only.** A free latent mean or intercept stops with
@@ -225,7 +322,9 @@ rbind(native = tidy(x, type = "effects")$std_error,
   [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC become
   conditional on the fixed variables, so fits with different fixed sets
   cannot be compared.
-- **No four-way decomposition** from the native engine.
+- **Products** are limited to two observed variables inside the class in
+  the table above; latent products, `x:x` and three-way products stop
+  with the messages listed there.
 - [`summary()`](https://rdrr.io/r/base/summary.html) reports
   diagnostics, including an improper solution and any active bound or
   constraint; read them before trusting a fit.

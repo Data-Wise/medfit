@@ -117,10 +117,49 @@ changing the behavior makes that test fail.
 | CFI, RMSEA, SRMR | yes | not reported | Unsupported |
 | logLik, AIC, BIC | yes | logLik equal; AIC and BIC count the means | Different by design |
 | Standardized estimates, modification indices, fitted values, residuals | yes | no | Unsupported |
-| Fixed exogenous covariates | `fixed.x = TRUE` is the default | `fixed_x = TRUE` or names, default `FALSE`; a statement on a selected variable is an error | Different by design |
+| Fixed exogenous covariates | `fixed.x = TRUE` is the default | `fixed_x = TRUE` or names, default `FALSE`; product columns are fixed with the rest; a statement on a selected variable is an error | Different by design |
+| Product terms (`x:m`) and four-way effects | `x:m` is an observed exogenous column, kept as written; no mediation effects | `x:m` stored as `m:x`; coefficients and sandwich standard errors equal lavaan’s; [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) gives the four-way parts; chi-square, df and p-value are `NA` and [`anova()`](https://rdrr.io/r/stats/anova.html), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) refuse when a factor is a regression target; a supported class only | Partial |
 | Nested model comparison | [`lavTestLRT()`](https://rdrr.io/pkg/lavaan/man/lavTestLRT.html) | [`anova()`](https://rdrr.io/r/stats/anova.html) | Supported |
 | Mediation effects and the MBCO test | no | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) | Supported |
 
 The first column names the feature; the probe for a row is in the test,
 not here, so the table cannot drift from the code without a failing
 test.
+
+### Products, in both
+
+lavaan reads `x:m` as an observed exogenous column and so does medfit,
+so the coefficients and the sandwich standard errors agree, with
+`fixed.x = TRUE` as well as with `fixed.x = FALSE` (the product column
+is fixed with the other exogenous variables):
+
+``` r
+prod_model <- "mediator1 ~ treatment
+               outcome_int ~ mediator1 + treatment + treatment:mediator1"
+nat <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich"))
+lav <- sem(prod_model, mediation_demo, fixed.x = FALSE, se = "robust.huber.white")
+nat_fx <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich", fixed_x = TRUE))
+lav_fx <- sem(prod_model, mediation_demo, fixed.x = TRUE, se = "robust.huber.white")
+paths <- 1:4
+rbind(
+  max_diff_estimate = max(abs(coef(nat)[paths] - lavaan::coef(lav)[paths])),
+  max_diff_se = max(abs(sqrt(diag(vcov(nat)))[paths] - sqrt(diag(lavaan::vcov(lav)))[paths])),
+  max_diff_estimate_fixed_x = max(abs(coef(nat_fx)[paths] - lavaan::coef(lav_fx)[paths]))
+)
+```
+
+                                      [,1]
+    max_diff_estimate         2.220446e-16
+    max_diff_se               2.254825e-11
+    max_diff_estimate_fixed_x 2.220446e-16
+
+They differ in what follows. lavaan reports a chi-square for this model;
+medfit reports `NA`, because the product contains a regression target
+(`mediator1`) and the model treats it as exogenous, which makes the
+global test invalid (see [the native model
+page](https://data-wise.github.io/medfit/articles/model-native.html#product-terms)).
+lavaan stores the product under the spelling you wrote
+(`treatment:mediator1`); medfit stores `mediator1:treatment`, whichever
+order you write. A model medfit rejects (a residual covariance between
+outcomes, a shared or fixed coefficient, a constraint on a coefficient,
+a bound) is still fitted by lavaan.

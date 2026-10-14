@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,6 +70,11 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -128,9 +133,24 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.9.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.10.0" id="medfit-0100">medfit 0.10.0<a class="anchor" aria-label="anchor" href="#medfit-0100"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-10-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-10-0"></a></h3>
+<ul><li><p>The native engine reads a product term, <code>:</code>, in a regression: <code>y ~ x + m + x:m</code> (<code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native", model = )</code>). The product is an observed exogenous variable whose column <code>x * m</code> the engine builds from <code>data</code> after listwise deletion, as lavaan does, so the likelihood, the constraints and the mean structure are unchanged. <code>x:m</code> and <code>m:x</code> are one term; the table, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and the extraction use the canonical name, the two factor names sorted in the C locale (<code>m:x</code> for <code>x</code> and <code>m</code>), and a label (<code>b*x:m</code>) names the coefficient. Writing both spellings in one equation is an error that names both. A product term always turns the mean structure on (<code>meanstructure = FALSE</code> with a product is an error), because the four-way decomposition needs the mediator intercept. A column already in <code>data</code> under either spelling is used only if it equals <code>x * m</code> on the rows kept, and otherwise stops with a message that names the column; with <code>fixed_x = TRUE</code> the product column is fixed at its sample moments with the other exogenous variables.</p></li>
+<li><p><code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a <code>SEMFit</code> now returns the four-way decomposition (<code>InteractionMediationData</code>) when the outcome equation carries the treatment-by-mediator product; <code>decomposition = "four_way"</code> and <code>interaction =</code> (the product written with <code>:</code>) work, and without the product <code>decomposition = "four_way"</code> is refused with a message that says to add <code>x:m</code>. This replaces the 0.9.0 refusal. On a simple model the four-way parts equal the <code>glm</code> route to the printed digits, and on <code>mediation_demo</code> the native and lavaan coefficients and sandwich standard errors agree to the printed digits. The estimate names and <code>outcome_predictors</code> carry the canonical <code>m:x</code>; the lavaan route keeps the spelling you wrote. Any other product involving the treatment or the mediator is refused on this route. Centering matters: the reference level <code>m_star = 0</code> and <code>E[M | X = 0]</code> depend on where the mediator is centered, so CDE and INTref move with centering while NDE, NIE and the total do not (the native four-way article shows this).</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="supported-class-for-a-product-limits-0-10-0">Supported class for a product (limits)<a class="anchor" aria-label="anchor" href="#supported-class-for-a-product-limits-0-10-0"></a></h3>
+<p>A model with a product is fitted only inside the class below; anything else is an error that names the feature and says it is not yet supported with products. A model without a product keeps every 0.9.0 capability.</p>
+<ul><li><p>Recursive models; no residual covariance between observed outcomes (a <code>~~</code> between outcomes, or a free one; the covariance that completion would add between pure outcomes is fixed at 0 with one note, and the same model without the product estimates it); no shared label, fixed coefficient, bound, or <code>==</code>, <code>&lt;</code>, <code>&gt;</code> constraint on a coefficient; intercepts free, not shared and unconstrained; no outcome-derived regressor (a product factor that is the target or one of its descendants). <code>:=</code> parameters are allowed. Exogenous products and products of two exogenous variables (<code>x:w</code>) are inside the class; latent products, <code>x:x</code> and three-way products are not supported.</p></li>
+<li><p>Model tests. When a product factor is itself a regression target, or the exogenous (co)variance block is restricted, the global chi-square is not valid, so <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> reports chi-square, df and p-value as <code>NA</code> with a note, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> show the note, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse naming the product, and <code>information = "expected"</code> is refused for a product with an endogenous factor (use the default observed information with <code>se_type = "sandwich"</code>). <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC stay defined. <code><a href="../reference/fit_sem.html">fit_sem()</a></code> warns once when the model test is unavailable and once when a product is fitted without <code>se_type = "sandwich"</code>. A product of exogenous variables with a free exogenous block keeps the ordinary test (null simulation, 1000 replications, n = 500: rejection 0.055 and 0.056 at nominal 0.05 for normal and centered-exponential factors).</p></li>
+<li><p>The product depends on the 0.9.0 mean structure (a product turns it on) and on <code>fixed_x</code> (a fixed set includes the product columns). The native four-way read uses the shared worker, so it carries the corrections shipped in 0.9.0 (standard errors that include the mediator-covariate term, an error for a treatment product in the mediator equation, weighted covariate means in INTref; see “Behavior changes” under 0.9.0 below).</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0" id="medfit-090">medfit 0.9.0<a class="anchor" aria-label="anchor" href="#medfit-090"></a></h2>
 <div class="section level3">
