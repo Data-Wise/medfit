@@ -115,12 +115,31 @@ S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_lint
   ram <- object@internals$ram
   smp <- .sem_sample(object@data, ram)
   ll <- -0.5 * smp$n * (object@f + smp$logdet + smp$p + smp$p * log(2 * pi))
+  # With `fixed_x` the likelihood is conditional on the fixed block: drop that block's marginal normal term, which
+  # is evaluated at its fixed (sample) moments and does not depend on the model (lavaan's fixed.x = TRUE value).
+  fx <- object@internals$fixed_x
+  if (length(fx)) {
+    k <- length(fx)
+    sx <- smp$s[match(fx, ram$obs), match(fx, ram$obs), drop = FALSE]
+    ll <- ll + 0.5 * smp$n * (as.numeric(determinant(sx, logarithm = TRUE)$modulus) + k + k * log(2 * pi))
+  }
   structure(ll, df = .sem_loglik_df(object, smp$p), nobs = smp$n, class = "logLik")
 }
 
-# Parameter count behind AIC and BIC (see logLik above).
+# Parameter count behind AIC and BIC (see logLik above). Without a mean structure the means of the variables that
+# are not fixed are saturated parameters; a fixed variable's mean is fixed, so it adds none.
 .sem_loglik_df <- function(object, p) {
-  .sem_n_free(object) + p * !isTRUE(object@internals$ram$has_mean)
+  .sem_n_free(object) + (p - length(object@internals$fixed_x)) * !isTRUE(object@internals$ram$has_mean)
+}
+
+# Rows of a parameter table that `fixed_x` fixed; a table built without the flag column (a hand-built fit) has none.
+.sem_fixed_rows <- function(tab) {
+  if ("fixed_x" %in% names(tab)) tab$fixed_x %in% TRUE else rep(FALSE, nrow(tab))
+}
+
+# One line for print() and summary(): what the likelihood is conditional on, or NULL when nothing is fixed.
+.sem_fixed_x_note <- function(fixed_x) {
+  if (length(fixed_x)) paste0("logLik is conditional on: ", paste(fixed_x, collapse = ", ")) else NULL
 }
 
 # Effective number of free parameters: the parameter vector minus what the explicit equalities remove.
@@ -147,6 +166,8 @@ S7::method(print, SEMFit) <- function(x, ...) {
     cat(sprintf("  Std. errors:   %s%s\n", se_label, if (!is.null(x@internals$weights)) ", sampling weights" else ""))
   }
   cat(sprintf("  Converged:     %s\n", ifelse(x@converged, "Yes", "No")))
+  note <- .sem_fixed_x_note(x@internals$fixed_x)
+  if (!is.null(note)) cat(sprintf("  %s\n", note))
   act <- c(x@diagnostics$active_bounds, x@diagnostics$active_constraints)
   if (length(act)) cat(sprintf("  Active:        %s\n", paste(act, collapse = ", ")))
   if (length(x@diagnostics$improper)) {
@@ -163,15 +184,18 @@ S7::method(print, SEMFit) <- function(x, ...) {
 }
 
 S7::method(summary, SEMFit) <- function(object, ...) {
-  tab <- object@table[object@table$free, , drop = FALSE]
+  fx <- .sem_fixed_rows(object@table)
+  tab <- object@table[object@table$free | fx, , drop = FALSE]
   coefs <- data.frame(
     name = .sem_row_names(tab), est = tab$est, se = tab$se, z = tab$est / tab$se,
     stringsAsFactors = FALSE
   )
   coefs$p <- 2 * stats::pnorm(-abs(coefs$z))
+  if (any(fx)) coefs$fixed_x <- tab$fixed_x %in% TRUE
   structure(
     list(
-      coefficients = coefs, defined = object@defined, n_obs = object@n_obs, n_dropped = object@n_dropped,
+      fixed_x = object@internals$fixed_x, coefficients = coefs, defined = object@defined, n_obs = object@n_obs,
+      n_dropped = object@n_dropped,
       df = object@df, information = object@information, converged = object@converged, f = object@f,
       diagnostics = object@diagnostics
     ),
@@ -198,12 +222,15 @@ print_summary_semfit <- function(x, ...) {
     cat(sprintf("Standard errors: %s\n",
                 if (x$diagnostics$se_type == "sandwich") "sandwich (robust)" else "model-based"))
   }
-  cat(sprintf("Converged: %s\n\n", ifelse(x$converged, "Yes", "No")))
-  cat("Parameters:\n")
+  cat(sprintf("Converged: %s\n", ifelse(x$converged, "Yes", "No")))
+  note <- .sem_fixed_x_note(x$fixed_x)
+  if (!is.null(note)) cat(note, "\n", sep = "")
+  cat("\nParameters:\n")
   out <- x$coefficients
   out[c("est", "se", "z")] <- lapply(out[c("est", "se", "z")], function(v) round(v, 4))
   out$p <- format.pval(x$coefficients$p, digits = 3, eps = 1e-4)
-  print(out, row.names = FALSE)
+  out$p[is.na(x$coefficients$p)] <- ""
+  print(out, row.names = FALSE, na.print = "")
   if (nrow(x$defined)) {
     cat("\nDefined parameters:\n")
     d <- x$defined[c("name", "expr", "est", "se")]
@@ -300,7 +327,24 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
     out$conf_low <- w$low
     out$conf_high <- w$high
   }
-  out <- out[keep, , drop = FALSE]
+  nm <- if (conf_int) c("conf_low", "conf_high") else character()
+  out$fixed_x <- FALSE
+  # Moments fixed by `fixed_x` are shown after the free parameters (estimate = the sample moment, no SE).
+  fx <- x@table[.sem_fixed_rows(x@table), , drop = FALSE]
+  if (nrow(fx) && type != "defined") {
+    fixed_rows <- data.frame(
+      term = paste0(fx$lhs, fx$op, ifelse(fx$op == "~1", "", fx$rhs)), op = fx$op, estimate = fx$est,
+      std_error = NA_real_, statistic = NA_real_, p_value = NA_real_, stringsAsFactors = FALSE
+    )
+    for (col in nm) fixed_rows[[col]] <- NA_real_
+    fixed_rows$fixed_x <- TRUE
+    free_part <- out[keep & !v$defined, , drop = FALSE]
+    def_part <- out[keep & v$defined, , drop = FALSE]
+    out <- rbind(free_part, fixed_rows, def_part)
+  } else {
+    out <- out[keep, , drop = FALSE]
+    out$fixed_x <- NULL
+  }
   rownames(out) <- NULL
   if (requireNamespace("tibble", quietly = TRUE)) {
     out <- tibble::as_tibble(out)
@@ -323,7 +367,7 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
     p_value = if (!weighted && x@df > 0) stats::pchisq(chisq, df = x@df, lower.tail = FALSE) else NA_real_,
     logLik = if (weighted) NA_real_ else as.numeric(ll),
     AIC = if (weighted) NA_real_ else stats::AIC(ll), BIC = if (weighted) NA_real_ else stats::BIC(ll),
-    stringsAsFactors = FALSE
+    fixed_x = paste(x@internals$fixed_x, collapse = ", "), stringsAsFactors = FALSE
   )
   if (requireNamespace("tibble", quietly = TRUE)) {
     out <- tibble::as_tibble(out)

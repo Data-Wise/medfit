@@ -40,6 +40,8 @@ test_that("planted defect: AIC across fixed sets must not just return a number",
   d <- fx_data()
   free <- fit_sem(fx_syntax, d)
   fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE)
-  expect_error(AIC(fixed, free))
-  expect_error(AIC(free, fixed))
+  expect_error(AIC(fixed, free), "fixed")
+  bad <- sem_mutate(.sem_check_comparable, "!all(vapply(sets[-1L], identical, logical(1), sets[[1L]]))", "FALSE")
+  testthat::local_mocked_bindings(.sem_check_comparable = bad)
+  expect_s3_class(AIC(fixed, free), "data.frame") # the defect: a ranking of incompatible likelihoods
 })

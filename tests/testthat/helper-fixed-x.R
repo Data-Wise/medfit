@@ -11,9 +11,12 @@ fx_exo <- c("treatment", "covariate1", "covariate2")
 
 fx_data <- function() medfit::mediation_demo
 
-# Estimates and standard errors of the parameters two fits share (the fixed rows leave the second one).
-fx_shared <- function(free, fixed) {
+# Estimates and standard errors of the structural parameters two fits share. The exogenous (co)variances and means
+# are left out: a still-free one has a conditional SE once its neighbors are fixed, which is not the claim.
+fx_shared <- function(free, fixed, exo = fx_exo) {
   shared <- intersect(names(free@theta), names(fixed@theta))
+  alt <- paste(exo, collapse = "|")
+  shared <- shared[!grepl(paste0("^(", alt, ")(~~(", alt, ")|~1)$"), shared)]
   list(
     names = shared,
     est = list(free@theta[shared], fixed@theta[shared]),
@@ -26,5 +29,5 @@ fx_shared <- function(free, fixed) {
 fx_n_removed <- function(selected, exo = fx_exo, mean = FALSE) {
   k <- length(selected)
   others <- length(setdiff(exo, selected))
-  k + k * (k - 1) / 2 + k * others + if (mean) k else 0
+  as.integer(k + k * (k - 1) / 2 + k * others + if (mean) k else 0)
 }

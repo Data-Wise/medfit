@@ -61,7 +61,8 @@ test_that("planted defect: counting the fixed moments as restrictions moves df",
   free <- fit_sem(fx_syntax, fx_data())
   ram <- fixed@internals$ram
   expect_identical(.sem_df(ram, 0L), free@df)
-  # emulate the defect: the moment count ignores the fixed block, so df grows by the number fixed
-  ram$n_fixed_x <- 0L
+  # the moment count ignores the fixed block, so df grows by the number fixed
+  bad <- sem_mutate(.sem_moments, "(ram$n_fixed_x %||% 0L)", "0L")
+  testthat::local_mocked_bindings(.sem_moments = bad)
   expect_equal(.sem_df(ram, 0L), free@df + fx_n_removed(fx_exo))
 })

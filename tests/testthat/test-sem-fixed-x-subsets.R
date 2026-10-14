@@ -24,7 +24,9 @@ test_that("a pair among the unselected variables stays free even when an explici
   syn <- paste0(fx_syntax, "\ncovariate1 ~~ v*covariate1")
   fixed <- fit_sem(syn, d, fixed_x = "treatment")
   free <- fit_sem(syn, d)
-  expect_true(any(fixed@table$lhs == "covariate2" & fixed@table$op == "~~" & fixed@table$rhs == "treatment"))
+  pair <- fixed@table$op == "~~" & ((fixed@table$lhs == "covariate2" & fixed@table$rhs == "treatment") |
+                                      (fixed@table$lhs == "treatment" & fixed@table$rhs == "covariate2"))
+  expect_true(any(pair))
   keep <- fixed@table[fixed@table$free & fixed@table$op == "~~" & fixed@table$lhs != fixed@table$rhs &
                         fixed@table$lhs %in% c("covariate1", "covariate2") &
                         fixed@table$rhs %in% c("covariate1", "covariate2"), ]
@@ -46,16 +48,20 @@ test_that("a precomputed product column is an ordinary exogenous variable and ca
   expect_identical(only_tm@internals$fixed_x, "tm")
   for (fit in list(all_x, only_tm)) {
     expect_equal(fit@df, free@df)
-    sh <- fx_shared(free, fit)
-    expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-8)
+    sh <- fx_shared(free, fit, exo = c("treatment", "tm"))
+    # a product column makes the fit nonlinear in the data: the optimizer's tolerance shows at about 1e-8
+    expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-6)
     expect_equal(unname(sh$se[[2L]]), unname(sh$se[[1L]]), tolerance = 1e-6)
   }
 })
 
 test_that("planted defect: dropping the free pairs among unselected variables changes the parameter count", {
   d <- fx_data()
+  free <- fit_sem(fx_syntax, d)
   fixed <- fit_sem(fx_syntax, d, fixed_x = "treatment")
-  pairs <- fixed@table[fixed@table$op == "~~" & fixed@table$free & fixed@table$lhs == "covariate1" &
-                         fixed@table$rhs == "covariate2", ]
-  expect_identical(nrow(pairs), 1L)
+  expect_equal(fixed@df, free@df)
+  bad <- sem_mutate(.sem_complete, "if (r$ov_x[i] %in% paired && r$ov_x[j] %in% paired)", "if (FALSE)")
+  testthat::local_mocked_bindings(.sem_complete = bad)
+  dropped <- fit_sem(fx_syntax, d, fixed_x = "treatment")
+  expect_gt(dropped@df, free@df)
 })

@@ -40,5 +40,5 @@ test_that("missing rows are dropped once and the fixed values come from the rows
   expect_equal(v, mean((d$treatment[keep] - mean(d$treatment[keep]))^2), tolerance = 1e-12)
   expect_identical(fixed@n_obs, free@n_obs)
   sh <- fx_shared(free, fixed)
-  expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-8)
+  expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-6)
 })

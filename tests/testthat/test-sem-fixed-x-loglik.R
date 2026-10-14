@@ -19,10 +19,12 @@ test_that("logLik, AIC and BIC are conditional and equal lavaan's fixed.x = TRUE
   d <- fx_data()
   for (ms in c(FALSE, TRUE)) {
     fixed <- fit_sem(fx_syntax, d, meanstructure = ms, fixed_x = TRUE, information = "expected")
-    ref <- lavaan::sem(fx_syntax, d, meanstructure = ms, fixed.x = TRUE)
-    expect_equal(as.numeric(logLik(fixed)), as.numeric(lavaan::logLik(ref)), tolerance = 1e-6, info = ms)
-    expect_equal(AIC(fixed), AIC(ref), tolerance = 1e-6, info = ms)
-    expect_equal(BIC(fixed), BIC(ref), tolerance = 1e-6, info = ms)
+    # the likelihood does not depend on the `meanstructure` flag; lavaan counts no mean parameters when it is
+    # FALSE, so the reference is always its mean-structure fit (the conditional intercepts are parameters)
+    ref <- lavaan::sem(fx_syntax, d, meanstructure = TRUE, fixed.x = TRUE)
+    expect_equal(as.numeric(logLik(fixed)), as.numeric(lavaan::logLik(ref)), tolerance = 1e-6, info = as.character(ms))
+    expect_equal(AIC(fixed), AIC(ref), tolerance = 1e-6, info = as.character(ms))
+    expect_equal(BIC(fixed), BIC(ref), tolerance = 1e-6, info = as.character(ms))
   }
 })
 
@@ -30,7 +32,9 @@ test_that("the conditional logLik differs from the joint one by the exogenous bl
   d <- fx_data()
   free <- fit_sem(fx_syntax, d, meanstructure = TRUE)
   fixed <- fit_sem(fx_syntax, d, meanstructure = TRUE, fixed_x = TRUE)
-  expect_gt(as.numeric(logLik(free)), as.numeric(logLik(fixed)))
+  sx <- stats::cov(d[fx_exo]) * (nrow(d) - 1) / nrow(d)
+  llx <- -0.5 * nrow(d) * (log(det(sx)) + length(fx_exo) * (1 + log(2 * pi)))
+  expect_equal(as.numeric(logLik(fixed)) - as.numeric(logLik(free)), -llx, tolerance = 1e-8)
   expect_equal(attr(logLik(fixed), "df"), glance(fixed)$npar)
 })
 
@@ -49,7 +53,9 @@ test_that("glance and the print note say what is fixed, and only when something 
 test_that("planted defect: a joint logLik for a fixed_x fit is caught by the lavaan comparison", {
   skip_if_not_installed("lavaan")
   d <- fx_data()
-  joint <- fit_sem(fx_syntax, d, meanstructure = TRUE)
-  ref <- lavaan::sem(fx_syntax, d, meanstructure = TRUE, fixed.x = TRUE)
-  expect_gt(abs(as.numeric(logLik(joint)) - as.numeric(lavaan::logLik(ref))), 1)
+  fixed <- fit_sem(fx_syntax, d, meanstructure = TRUE, fixed_x = TRUE)
+  ref <- as.numeric(lavaan::logLik(lavaan::sem(fx_syntax, d, meanstructure = TRUE, fixed.x = TRUE)))
+  expect_lt(abs(as.numeric(logLik(fixed)) - ref), 1e-6)
+  joint <- sem_mutate(utils::getS3method("logLik", "medfit::SEMFit"), "if (length(fx)) {", "if (FALSE) {")
+  expect_gt(abs(as.numeric(joint(fixed)) - ref), 1)
 })

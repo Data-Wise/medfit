@@ -166,7 +166,7 @@ test_that("glance() matches lavaan: chi-square, df, p, log likelihood, AIC, BIC 
   fit <- tg_fit()
   g <- generics::glance(fit)
   fm <- lavaan::fitMeasures(tg_lavaan(), c("chisq", "df", "pvalue", "logl", "aic", "bic", "npar"))
-  expect_named(g, c("nobs", "npar", "df", "chisq", "p_value", "logLik", "AIC", "BIC"))
+  expect_named(g, c("nobs", "npar", "df", "chisq", "p_value", "logLik", "AIC", "BIC", "fixed_x"))
   expect_identical(g$nobs, 400L)
   expect_equal(g$chisq, unname(fm[["chisq"]]), tolerance = 1e-6)
   expect_equal(g$df, unname(fm[["df"]]))

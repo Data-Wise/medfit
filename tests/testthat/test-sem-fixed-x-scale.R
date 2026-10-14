@@ -1,7 +1,7 @@
 # V5: the scale protection survives fixed_x (spec S10). Locations from mean/sd 0 to 1e5.
 
 fx_far <- function(shift) {
-  d <- fx_data()
+  d <- medfit::mediation_demo
   for (v in c("mediator1", "outcome", "covariate1", "covariate2")) d[[v]] <- d[[v]] + shift
   d
 }
@@ -27,4 +27,15 @@ test_that("the shifted route is still taken when intercept rows are fixed_x", {
   smp <- .sem_sample(fit@data, ram)
   none <- rep(FALSE, ram$q)
   expect_true(.sem_shift_ok(ram, smp, NULL, rep(-Inf, ram$q), rep(Inf, ram$q), none))
+})
+
+test_that("planted defect: a fixed mean left at its raw value in the shifted fit is caught by the logLik", {
+  base <- fit_sem(fx_syntax, fx_data(), meanstructure = TRUE, fixed_x = TRUE)
+  far <- fit_sem(fx_syntax, fx_far(1e3), meanstructure = TRUE, fixed_x = TRUE)
+  expect_equal(as.numeric(logLik(far)), as.numeric(logLik(base)), tolerance = 1e-6)
+  bad <- sem_mutate(.sem_fit_syntax, "ram_opt$m0[ram$fixed_x_mean] <- 0",
+                    "ram_opt$m0[ram$fixed_x_mean] <- ram$m0[ram$fixed_x_mean]")
+  testthat::local_mocked_bindings(.sem_fit_syntax = bad)
+  wrong <- tryCatch(fit_sem(fx_syntax, fx_far(1e3), meanstructure = TRUE, fixed_x = TRUE), error = function(e) NULL)
+  expect_true(is.null(wrong) || abs(as.numeric(logLik(wrong)) - as.numeric(logLik(base))) > 1e-3)
 })

@@ -3,18 +3,24 @@
 #
 # Cells: 2 sample sizes (100, 400) x SEEDS seeds (5 by default) x every subset of {x, c1, c2} (7), model-based and
 # sandwich standard errors (the sandwich also with weights). Per run the rule (a failing run fails the gate):
-#   invariant   estimates of the parameters the fixed and free fits share agree to 1e-8, SEs to 1e-6 (relative)
+#   invariant   estimates of the parameters the fixed and free fits share agree to 1e-6, SEs to 1e-6 (relative; the
+#               two fits stop at separate SLSQP solutions, so about 1e-8 to 1e-7 of disagreement is the optimizer's)
 #   counts      df equals the free fit's; the parameter count falls by the number of exogenous moments fixed
 #   lavaan      fixed_x = TRUE: npar, df and chi-square equal lavaan fixed.x = TRUE (1e-5), estimates 1e-4
-#   scale       fixed_x = TRUE and one subset, location shifts 1e2, 1e3, 1e5: accepted, paths within 1e-5 of shift 0
+#   scale       fixed_x = TRUE and one subset, location shifts 1e2, 1e3, 1e5: accepted, paths within 1e-5 of shift 0,
+#               logLik within 1e-6 (relative) of shift 0 (it does not depend on the location)
+#   likelihood  logLik of a fixed_x = TRUE fit equals lavaan's fixed.x = TRUE value (1e-6)
+#   guards      a non-exogenous name is refused; AIC across different fixed sets is refused
 # The timing table (30 covariates) is printed and written, never gated.
 # `MUTANT=<name>` plants a defect and the gate must then exit 1: countrestrict (fixed moments counted as
-# restrictions), noshift (the shifted route refused under fixed_x). Wired at later tasks: droppair (V3), jointlik
-# (V4), acceptbad (V1), aicwarnonly (V7).
+# restrictions), noshift (the shifted fit keeps a fixed mean at its raw value), droppair (the free pairs among
+# unselected variables dropped), jointlik (joint instead of conditional logLik), acceptbad (a non-exogenous name
+# accepted), aicwarnonly (AIC across fixed sets returns a number).
 # Run from the package root:  Rscript tests/sim/sem-fixed-x-gate.R   (SEEDS=5 by default)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/testthat/helper-fixed-x.R")
+source("tests/testthat/helper-sem.R") # provides sem_mutate
 seeds <- seq_len(as.integer(Sys.getenv("SEEDS", "5")))
 mutant <- Sys.getenv("MUTANT", "")
 ns <- asNamespace("medfit")
@@ -29,9 +35,22 @@ if (mutant == "countrestrict") {
     orig(ram)
   })
 } else if (mutant == "noshift") {
-  swap(".sem_shift_ok", function(...) FALSE)
+  # the shifted fit keeps a fixed exogenous mean at its raw value although the data is centered
+  swap(".sem_fit_syntax", sem_mutate(get(".sem_fit_syntax", ns), "ram_opt$m0[ram$fixed_x_mean] <- 0",
+                                     "ram_opt$m0[ram$fixed_x_mean] <- ram$m0[ram$fixed_x_mean]"))
+} else if (mutant == "droppair") {
+  swap(".sem_complete", sem_mutate(get(".sem_complete", ns), "if (r$ov_x[i] %in% paired && r$ov_x[j] %in% paired)",
+                                   "if (FALSE)"))
+} else if (mutant == "jointlik") {
+  registerS3method("logLik", "medfit::SEMFit",
+                   sem_mutate(utils::getS3method("logLik", "medfit::SEMFit"), "if (length(fx)) {", "if (FALSE) {"))
+} else if (mutant == "acceptbad") {
+  swap(".sem_resolve_fixed_x", sem_mutate(get(".sem_resolve_fixed_x", ns), "if (length(bad)) {", "if (FALSE) {"))
+} else if (mutant == "aicwarnonly") {
+  swap(".sem_check_comparable", sem_mutate(get(".sem_check_comparable", ns),
+                                           "!all(vapply(sets[-1L], identical, logical(1), sets[[1L]]))", "FALSE"))
 } else if (nzchar(mutant)) {
-  stop("mutant '", mutant, "' is wired at a later task", call. = FALSE)
+  stop("unknown mutant '", mutant, "'", call. = FALSE)
 }
 
 sim <- function(n, seed) {
@@ -46,7 +65,8 @@ sim <- function(n, seed) {
 subsets <- unlist(lapply(1:3, function(k) utils::combn(fx_exo, k, simplify = FALSE)), recursive = FALSE)
 
 bad <- character()
-note <- function(tag) bad <<- c(bad, tag)
+worst <- 0
+note <- function(tag) bad <<- c(bad, tag) # nolint: assignment_linter.
 for (n in c(100L, 400L)) {
   for (seed in seeds) {
     d <- sim(n, seed)
@@ -64,8 +84,9 @@ for (n in c(100L, 400L)) {
             next
           }
           sh <- fx_shared(free, fixed)
-          est_tol <- 1e-8 * max(1, max(abs(sh$est[[1L]])))
-          if (max(abs(sh$est[[2L]] - sh$est[[1L]])) > est_tol) note(paste(tag, "estimates"))
+          est_dev <- max(abs(sh$est[[2L]] - sh$est[[1L]])) / max(1, max(abs(sh$est[[1L]])))
+          worst <- max(worst, est_dev)
+          if (est_dev > 1e-6) note(paste(tag, "estimates"))
           if (max(abs(sh$se[[2L]] / sh$se[[1L]] - 1)) > 1e-6) note(paste(tag, "SEs"))
           if (fixed@df != free@df) note(paste(tag, "df"))
           if (length(fixed@theta) != length(free@theta) - fx_n_removed(sel)) note(paste(tag, "npar"))
@@ -94,7 +115,21 @@ for (shift in c(1e2, 1e3, 1e5)) {
     note(sprintf("scale %g not accepted", shift))
   } else if (max(abs(fit@theta[c("a", "b", "cp")] - base@theta[c("a", "b", "cp")])) > 1e-5) {
     note(sprintf("scale %g paths", shift))
+  } else if (abs(as.numeric(logLik(fit)) / as.numeric(logLik(base)) - 1) > 1e-6) {
+    note(sprintf("scale %g logLik", shift))
   }
+}
+
+# likelihood parity and guards
+if (requireNamespace("lavaan", quietly = TRUE)) {
+  ref <- as.numeric(lavaan::logLik(lavaan::sem(fx_syntax, d0, meanstructure = TRUE, fixed.x = TRUE)))
+  if (abs(as.numeric(logLik(base)) - ref) > 1e-6) note("logLik differs from lavaan's conditional value")
+}
+if (!inherits(try(fit_sem(fx_syntax, d0, fixed_x = "outcome"), silent = TRUE), "try-error")) {
+  note("a non-exogenous fixed_x name was accepted")
+}
+if (!inherits(try(AIC(fit_sem(fx_syntax, d0), base), silent = TRUE), "try-error")) {
+  note("AIC across different fixed sets returned a value")
 }
 
 # timing table (reported, not gated): p covariates, free parameters and wall time, fixed vs free
@@ -121,6 +156,7 @@ if (!nzchar(mutant)) {
   utils::write.csv(timing, "planning/specs/evidence/native-fixed-x-2026-10-13/timing.csv", row.names = FALSE)
 }
 
+cat(sprintf("\nworst relative estimate deviation (fixed vs free): %.2e\n", worst))
 cat(sprintf("\nviolations: %d\n", length(bad)))
 if (length(bad)) {
   print(utils::head(bad, 15L))

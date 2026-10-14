@@ -86,7 +86,7 @@ that shrinks like 1/n.}
 
 \item{engine_args}{Named list of engine-specific overrides (default:
 \code{list()}, no overrides). Ignored by \code{engine = "glm"}. For
-\code{engine = "native"}, recognized names are \code{information}, \code{n_starts}, \code{meanstructure} and
+\code{engine = "native"}, recognized names are \code{information}, \code{n_starts}, \code{meanstructure}, \code{fixed_x} and
 \code{control} (passed to \code{\link[=fit_sem]{fit_sem()}}) and \code{outcome}, \code{structure},
 \code{decomposition}, \code{interaction}, \code{a_label}, \code{b_label} and \code{cp_label}
 (passed to \code{\link[=extract_mediation]{extract_mediation()}}); any other name is an error. For

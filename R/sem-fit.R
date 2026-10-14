@@ -8,7 +8,7 @@
 
 .sem_fit_syntax <- function(model, data, information = c("observed", "expected"), n_starts = 5L,
                             control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL,
-                            meanstructure = NULL) {
+                            meanstructure = NULL, fixed_x = FALSE) {
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
   information <- match.arg(information)
   se_type <- match.arg(se_type)
@@ -20,14 +20,19 @@
     products <- .sem_zero_product_rows(parsed$constraints)
     if (length(products)) {
       return(.sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
-                               meanstructure))
+                               meanstructure, fixed_x))
     }
   }
   if (any(parsed$parameters$level != 1L)) {
     stop("two-level estimation is not implemented: the model uses `level:` blocks", call. = FALSE)
   }
-  tab <- .sem_complete(parsed$parameters, meanstructure)
+  tab <- .sem_complete(parsed$parameters, meanstructure, fixed_x)
   .sem_check_scale(tab)
+  fixed_set <- attr(tab, "fixed_x")
+  if (length(fixed_set)) {
+    # the fixed values are moments of the rows the fit will use, so the rows are chosen before the RAM is built
+    tab <- .sem_assign_fixed_x(tab, data, weights)
+  }
   conv <- .sem_to_ram(tab)
   ram <- conv$ram
 
@@ -77,9 +82,12 @@
     # not change: optimize on the centered data (the intercepts are then the centered coordinates phi, free of
     # the mean/sd conditioning problem) and map the solution back, theta = T (phi + c0).
     smp_opt <- .sem_sample(as.data.frame(sweep(as.matrix(x[, ram$obs, drop = FALSE]), 2L, smp$xbar)), ram, weights)
-    start <- .sem_default_start(ram, smp_opt)
+    # a fixed exogenous mean is the sample mean, which is 0 on the centered data
+    ram_opt <- ram
+    ram_opt$m0[ram$fixed_x_mean] <- 0
+    start <- .sem_default_start(ram_opt, smp_opt)
     start[given] <- conv$start[given]
-    fit <- .sem_optimize(ram, smp_opt, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+    fit <- .sem_optimize(ram_opt, smp_opt, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
     ctr <- .sem_center_map(ram, smp)
     fit$theta <- stats::setNames(as.vector(ctr$t %*% (fit$theta + ctr$c0)), ram$par_names)
   } else {
@@ -102,7 +110,7 @@
       active_constraints = act$text[act$active_row], information = information, ram = ram, table = conv$table,
       par_map = conv$par_map, se_type = se_type, weights = smp$w, n_starts = n_starts, control = control,
       partable = .sem_to_partable(conv$table), data = x, n_obs = smp$n, n_dropped = n_dropped, df = df,
-      eq_rank = eq_rank, branch = character()
+      eq_rank = eq_rank, branch = character(), fixed_x = fixed_set
     )
   )
 }
@@ -118,7 +126,7 @@
         any(is.finite(c(lb[ram$k_m], ub[ram$k_m])))) {
     return(FALSE)
   }
-  if (!all(ram$obs_idx %in% ram$pos_m) || any(ram$k_m %in% ram$k_a)) {
+  if (!all(ram$obs_idx %in% c(ram$pos_m, ram$fixed_x_mean)) || any(ram$k_m %in% ram$k_a)) {
     return(FALSE)
   }
   # The back-mapping carries the shift through the free paths of variables with a free intercept. A fixed nonzero
@@ -141,7 +149,7 @@
 # the error lists each. Messages and warnings of the losing branches are dropped, those of the winner are
 # passed on. The returned fit keeps the user's constraints; `branch` names the lines the winner used.
 .sem_fit_branches <- function(parsed, products, data, information, n_starts, control, weights, se_type,
-                              meanstructure = NULL) {
+                              meanstructure = NULL, fixed_x = FALSE) {
   grid <- do.call(expand.grid, c(lapply(products, `[[`, "factors"), stringsAsFactors = FALSE))
   if (nrow(grid) > 64L) {
     stop(sprintf("the zero-product constraints give %d branches to fit; at most 64 are supported", nrow(grid)),
@@ -163,7 +171,7 @@
       withCallingHandlers(
         .sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
                         parsed = list(parameters = parsed$parameters, constraints = cons),
-                        meanstructure = meanstructure),
+                        meanstructure = meanstructure, fixed_x = fixed_x),
         message = function(m) {
           held$messages[[length(held$messages) + 1L]] <<- m
           invokeRestart("muffleMessage")
