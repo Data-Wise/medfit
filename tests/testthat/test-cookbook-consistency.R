@@ -1,4 +1,4 @@
-# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): nineteen numbered
+# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twenty numbered
 # recipes, every article link resolves, and the cluster recipe simulates the same
 # data as methods.qmd so their numbers agree. Skips when the vignettes are absent
 # (installed or built package).
@@ -14,10 +14,10 @@ article_text <- function(name) {
   paste(readLines(p, warn = FALSE), collapse = "\n")
 }
 
-test_that("the cookbook has nineteen numbered recipes and every article link resolves", {
+test_that("the cookbook has twenty numbered recipes and every article link resolves", {
   cb <- article_text("cookbook.qmd")
   heads <- regmatches(cb, gregexpr("(?m)^## [0-9]+\\. ", cb, perl = TRUE))[[1]]
-  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:19, "."))
+  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:20, "."))
   links <- unique(regmatches(cb, gregexpr("\\]\\(([a-z-]+)\\.html\\)", cb))[[1]])
   targets <- paste0(gsub("^\\]\\(|\\.html\\)$", "", links), ".qmd")
   expect_gt(length(targets), 0L)
@@ -150,11 +150,11 @@ test_that("planted defect: the smaller p-value in place of the larger is caught"
   expect_false(grepl("joint = max(p)", sub("joint = max(p)", "joint = min(p)", cb, fixed = TRUE), fixed = TRUE))
 })
 
-test_that("recipes 14-19 run after the setup chunk alone and say what they claim", {
+test_that("recipes 14-20 run after the setup chunk alone and say what they claim", {
   article_text("cookbook.qmd")
   parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
   setup <- unlist(parsed[[1L]])
-  for (k in 14:19) {
+  for (k in 14:20) {
     err <- run_cookbook_recipe(setup, parsed[[k + 1L]])
     expect_null(err, info = sprintf("recipe %d fails on its own: %s", k, err))
   }
@@ -240,4 +240,33 @@ test_that("recipe 19: intercepts match lm(), the zero restriction costs one df a
   expect_equal(coef(ms)[names(coef(free))], coef(free), tolerance = 1e-6)
   # planted defect: the zero-intercept fit does not reproduce the lm intercept or the free direct effect
   expect_gt(abs(unname(coef(zero)["cp"]) - unname(stats::coef(lm_y)[3L])), 0.1)
+})
+
+# Recipe 20 (four-way decomposition from a native fit): the four components equal the per-equation OLS hand oracle
+# (helper-four-way-oracle.R) on the same columns renamed, the sandwich SEs equal the stacked-score HC0 oracle, the
+# intervals are estimate +- qnorm(0.975) * SE, and the bootstrap interval brackets the estimate. Planted defect: the
+# oracle at the wrong reference level cannot match.
+test_that("recipe 20: components and sandwich SEs equal the hand OLS oracle, intervals are Wald", {
+  skip_if_not_installed("sandwich")
+  cb <- article_text("cookbook.qmd")
+  parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
+  expect_null(run_cookbook_recipe(unlist(parsed[[1L]]), parsed[[21L]]))
+  expect_true(grepl("conditional on the", cb, fixed = TRUE))
+  expect_true(grepl("method = \"nonparametric\"", cb, fixed = TRUE))
+  d <- mediation_demo
+  names(d)[match(c("treatment", "mediator1", "outcome_int", "covariate2"), names(d))] <- c("x", "m", "y", "c1")
+  fit <- suppressWarnings(fit_sem(
+    "mediator1 ~ treatment + covariate2\noutcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate2",
+    mediation_demo, se_type = "sandwich"
+  ))
+  fw <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1", decomposition = "four_way")
+  tt <- generics::tidy(fw, type = "components", conf_int = TRUE)
+  h <- fwo_hand(d, "c1", vcov_type = "hc0_joint")
+  keys <- c("cde", "int_ref", "int_med", "pie")
+  expect_identical(tt$term, keys)
+  expect_equal(tt$estimate, unname(h$est[keys]), tolerance = 1e-6)
+  expect_equal(tt$std_error, unname(h$se[keys]), tolerance = 1e-5)
+  expect_equal(tt$conf_high - tt$conf_low, 2 * stats::qnorm(0.975) * tt$std_error, tolerance = 1e-8)
+  bad <- fwo_hand(d, "c1", m_star = 0.7, vcov_type = "hc0_joint")
+  expect_gt(max(abs(tt$estimate - unname(bad$est[keys]))), 1e-3)
 })

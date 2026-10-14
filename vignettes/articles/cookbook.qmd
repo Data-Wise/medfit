@@ -12,11 +12,11 @@ execute:
   echo: true
 ---
 
-Nineteen task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Twenty task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
-These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, and the native route in recipe 7 needs 0.10.0). CRAN has 0.3.2, which lacks
+These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, and recipe 20 and the native route in recipe 7 need 0.10.0). CRAN has 0.3.2, which lacks
 `mediation_demo` and the native, joint and cluster functions; install from
 GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 
@@ -558,3 +558,48 @@ The test rejects zero, and the restricted model has the larger AIC. A fit with
 the mean structure off has no intercepts to restrict.
 
 More: [Native engine, intercepts](model-native.html#intercepts).
+
+## 20. Four-way decomposition from a native fit
+
+*When:* the outcome depends on the treatment, the mediator and their product, and you want
+the controlled direct effect, the two interaction terms and the pure indirect effect. Write
+the product as `treatment:mediator1` in the outcome equation, fit with `fit_sem()`, and
+extract. A product turns the mean structure on, so the covariate in the mediator equation
+enters the reference interaction through its sample mean. The fit warns that the global
+test is not valid with a product and recommends the sandwich covariance; the chunk
+silences the warning and asks for the sandwich.
+
+```{r}
+#| label: r20-fit
+four_way <- "
+  mediator1 ~ treatment + covariate2
+  outcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate2
+"
+fit20 <- suppressWarnings(fit_sem(four_way, mediation_demo, se_type = "sandwich"))
+fw20 <- extract_mediation(fit20, treatment = "treatment", mediator = "mediator1",
+                          decomposition = "four_way")
+tidy(fw20, type = "components", conf_int = TRUE)
+```
+
+The components sum to the natural direct and indirect effects, and `m_star` moves the
+reference level of the mediator (default 0), which shifts weight between the controlled
+direct effect and the reference interaction.
+
+The standard errors treat the covariate mean as fixed, so they are conditional on the
+observed covariates and slightly too small for a population average. The alternative is the
+nonparametric bootstrap, which refits the model on each resample:
+
+```{r}
+#| label: r20-boot
+int_ref_stat <- function(dat) {
+  f <- suppressWarnings(fit_sem(four_way, dat))
+  extract_mediation(f, treatment = "treatment", mediator = "mediator1",
+                    decomposition = "four_way")@int_ref
+}
+boot20 <- bootstrap_mediation(int_ref_stat, method = "nonparametric",
+                              data = mediation_demo, n_boot = 200, seed = 1)
+c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
+```
+
+More: [Native book, the four-way decomposition](native-book-7-four-way.html),
+[Native engine, product term](model-native.html).
