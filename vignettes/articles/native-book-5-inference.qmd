@@ -1,0 +1,673 @@
+---
+title: "Native engine book, chapter 5: inference"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+The first four chapters built the estimates. This chapter builds everything that comes with them: standard errors from
+the information matrix (expected and observed), standard errors of defined parameters (the delta method), robust standard
+errors for weighted data (the sandwich), the test of an indirect effect (MBCO), and the general likelihood-ratio test
+(`anova()`). Each is derived, computed by hand from the matrices of the earlier chapters, and checked against the
+engine and, where they offer the same quantity, against lavaan or OpenMx. The engine is experimental.
+
+| | |
+|---|---|
+| **You need** | Chapters 1 to 4; the idea of a likelihood-ratio test |
+| **You get** | the covariance of the estimates from either information matrix and why the two differ, the delta method and the sandwich derived and rebuilt by hand, the MBCO test derived with its size argument, and `anova()` with its refusals |
+| **Time** | about 55 minutes |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+rd <- function(x, d = 4) round(x, d)
+d <- mediation_demo
+n <- nrow(d)
+
+# a well-fitting model: the usual mediation model, just identified (as many free parameters as
+# moments, df = 0), so it reproduces the sample covariance exactly
+full <- "
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + cp * treatment
+  ab := a * b
+"
+# a badly fitting model: two mediators whose residuals are not allowed to correlate
+parallel <- "
+  mediator1 ~ treatment
+  mediator2 ~ treatment
+  outcome ~ mediator1 + mediator2
+"
+```
+
+## 1. The covariance of the estimates
+
+Maximum likelihood theory says that, in large samples, $\hat\theta$ is approximately normal around the truth with
+covariance $I(\theta)^{-1}$, where $I$ is the **information matrix** of the log likelihood $\ell$. Every standard
+error below is a square root of a diagonal entry of an estimate of that inverse. The engine's discrepancy $F_{ML}$
+and the log likelihood are tied by $\ell = -\tfrac n2 (F_{ML} + \text{constant})$ (Chapter 1), so
+
+$$
+-\nabla^2 \ell = \frac n2\, \nabla^2 F_{ML} .
+$$
+
+There are two ways to turn $I$ into a number you can compute from a fit.
+
+### Expected information
+
+The **expected information** is $I_E(\theta) = \operatorname{E}\bigl[-\nabla^2 \ell\bigr]$, the average of the
+curvature over repeated samples from the model. For the covariance part of the discrepancy it has a closed form; we derive it.
+
+**Step 1: the gradient.** With $S$ the sample covariance and $W = \Sigma^{-1} - \Sigma^{-1} S\, \Sigma^{-1}$ (Chapter 1,
+without a mean structure), $\partial_k F_{ML} = \operatorname{tr}(W\,\partial_k\Sigma)$.
+
+**Step 2: differentiate again.** $\partial_l\partial_k F_{ML} = \operatorname{tr}(\partial_l W\,\partial_k\Sigma) + \operatorname{tr}(W\,\partial_l\partial_k\Sigma)$,
+by the product rule.
+
+**Step 3: take the expectation.** In large samples $\operatorname{E}(S) \approx \Sigma$ when the model holds. Then
+$\operatorname{E}(W) \approx \Sigma^{-1} - \Sigma^{-1}\Sigma\Sigma^{-1} = 0$, so the second trace, which carries the
+second derivative of $\Sigma$ and is the hard part, vanishes. In the first, differentiating $W$ gives
+$\partial_l W = -\Sigma^{-1}\partial_l\Sigma\,\Sigma^{-1} + \Sigma^{-1}\partial_l\Sigma\,\Sigma^{-1} S\,\Sigma^{-1} + \Sigma^{-1} S\,\Sigma^{-1}\partial_l\Sigma\,\Sigma^{-1}$
+(using $\partial\Sigma^{-1} = -\Sigma^{-1}(\partial\Sigma)\Sigma^{-1}$), which at $S = \Sigma$ is
+$\Sigma^{-1}\partial_l\Sigma\,\Sigma^{-1}$. So
+
+$$
+\operatorname{E}\bigl[\partial_l\partial_k F_{ML}\bigr] \approx \operatorname{tr}\bigl(\Sigma^{-1}\partial_l\Sigma\,\Sigma^{-1}\partial_k\Sigma\bigr),
+\qquad
+I_E = \frac n2 \operatorname{tr}\bigl(\Sigma^{-1}\partial_k\Sigma\,\Sigma^{-1}\partial_l\Sigma\bigr),
+$$
+
+which is the covariance part of the formula of Chapter 1 (Section 8); with a mean structure the mean part
+$n\,(\partial_k\mu)^\top\Sigma^{-1}(\partial_l\mu)$ is added. The engine evaluates it at $\hat\theta$. Build it by hand for
+the badly fitting two-mediator model (no means, so only the covariance part) and compare:
+
+```{r}
+#| label: expected
+fit_e <- fit_sem(parallel, d, information = "expected")
+fit_o <- fit_sem(parallel, d, information = "observed")
+ram <- fit_e@internals$ram
+smp <- medfit:::.sem_sample(fit_e@data, ram)
+theta <- fit_e@theta
+sigma_inv <- solve(medfit:::.sem_implied(ram, theta))
+dsig <- medfit:::.sem_dsigma(theta, ram)
+q <- length(theta)
+info_expected_by_hand <- 0.5 * n * outer(seq_len(q), seq_len(q), Vectorize(function(k, l) {
+  sum(diag(sigma_inv %*% dsig[[k]] %*% sigma_inv %*% dsig[[l]]))
+}))
+info_expected <- medfit:::.sem_info_expected(theta, ram, smp, NULL)
+c(difference = max(abs(info_expected_by_hand - info_expected)), largest_entry = max(abs(info_expected)))
+```
+
+```{r}
+#| label: expected-check
+#| include: false
+stopifnot(max(abs(info_expected_by_hand - info_expected)) < 1e-10 * max(abs(info_expected)))
+```
+
+### Observed information
+
+The **observed information** is the curvature of this one sample's log likelihood at the estimate,
+$I_O = -\nabla^2\ell(\hat\theta) = \tfrac n2\nabla^2 F_{ML}(\hat\theta)$. It needs no expectation and
+no assumption that the model holds. The engine computes the Hessian of $F_{ML}$ by central differences of the
+analytic gradient: column $j$ is
+
+$$
+\frac{\nabla F(\hat\theta + h_j e_j) - \nabla F(\hat\theta - h_j e_j)}{2 h_j}, \qquad h_j = \epsilon^{1/3}\max(|\hat\theta_j|, u_j),
+$$
+
+with $\epsilon$ the machine precision and $u_j$ the parameter's natural unit (Chapter 3), then symmetrizes the matrix
+and multiplies by $n/2$. The step $\epsilon^{1/3}$ balances truncation and rounding error of a central difference.
+
+```{r}
+#| label: observed
+unit <- medfit:::.sem_step_floor(ram, smp)
+h <- .Machine$double.eps^(1 / 3) * pmax(abs(theta), unit)
+hess <- vapply(seq_len(q), function(j) {
+  up <- dn <- theta
+  up[j] <- up[j] + h[j]
+  dn[j] <- dn[j] - h[j]
+  (medfit:::.sem_grad(up, ram, smp) - medfit:::.sem_grad(dn, ram, smp)) / (2 * h[j])
+}, numeric(q))
+info_observed_by_hand <- n / 2 * (hess + t(hess)) / 2
+info_observed <- medfit:::.sem_info_observed(theta, ram, smp, NULL)
+c(difference = max(abs(info_observed_by_hand - info_observed)))
+```
+
+```{r}
+#| label: observed-check
+#| include: false
+stopifnot(max(abs(info_observed_by_hand - info_observed)) < 1e-8 * max(abs(info_observed)))
+```
+
+### Why the two differ
+
+Step 3 replaced $S$ by $\Sigma$, that is set $W$ to zero, in two places: the second trace, and inside $\partial_l W$. Keep
+$S$ instead. Writing $\Sigma^{-1} S \Sigma^{-1} = \Sigma^{-1} - W$ in the expression for $\partial_l W$ gives
+$\partial_l W = \Sigma^{-1}\partial_l\Sigma\,\Sigma^{-1} - \Sigma^{-1}\partial_l\Sigma\, W - W\,\partial_l\Sigma\,\Sigma^{-1}$, so
+the exact second derivative, times $n/2$, differs from the expected information by
+
+$$
+I_O - I_E = \frac n2 \Bigl[\operatorname{tr}\bigl(W\,\partial_l\partial_k\Sigma\bigr)
+- \operatorname{tr}\bigl(\Sigma^{-1}\partial_l\Sigma\, W\, \partial_k\Sigma\bigr)
+- \operatorname{tr}\bigl(W\, \partial_l\Sigma\, \Sigma^{-1}\partial_k\Sigma\bigr)\Bigr].
+$$
+
+Every term is linear in $W$, which is zero exactly when the model reproduces $S$. So the better the model fits, the
+closer the two matrices. Check the formula on the badly fitting model, with the second derivatives of $\Sigma$ taken by
+central differences of the engine's analytic first derivatives:
+
+```{r}
+#| label: obs-exp-formula
+w_mat <- sigma_inv - sigma_inv %*% smp$s %*% sigma_inv
+h2 <- 1e-5
+d2sig <- function(k, l) {
+  up <- dn <- theta
+  up[l] <- up[l] + h2
+  dn[l] <- dn[l] - h2
+  (medfit:::.sem_dsigma(up, ram)[[k]] - medfit:::.sem_dsigma(dn, ram)[[k]]) / (2 * h2)
+}
+gap_formula <- n / 2 * outer(seq_len(q), seq_len(q), Vectorize(function(k, l) {
+  sum(diag(w_mat %*% d2sig(k, l))) - sum(diag(sigma_inv %*% dsig[[l]] %*% w_mat %*% dsig[[k]])) -
+    sum(diag(w_mat %*% dsig[[l]] %*% sigma_inv %*% dsig[[k]]))
+}))
+gap_engine <- info_observed - info_expected
+c(largest_entry_of_the_gap = max(abs(gap_engine)), formula_vs_engine = max(abs(gap_formula - gap_engine)))
+```
+
+```{r}
+#| label: obs-exp-formula-check
+#| include: false
+stopifnot(max(abs(gap_engine)) > 1, max(abs(gap_formula - gap_engine)) < 1e-3 * max(abs(gap_engine)))
+```
+
+Now compare a model that fits exactly with one that fits badly:
+
+```{r}
+#| label: obs-vs-exp
+rel_diff <- function(text) {
+  fe <- fit_sem(text, d, information = "expected")
+  r <- fe@internals$ram
+  s <- medfit:::.sem_sample(fe@data, r)
+  ie <- medfit:::.sem_info_expected(fe@theta, r, s, NULL)
+  io <- medfit:::.sem_info_observed(fe@theta, r, s, NULL)
+  c(df = fe@df, chisq = fe@n_obs * fe@f, relative_difference_of_the_matrices = max(abs(io - ie)) / max(abs(ie)))
+}
+obs_exp <- rbind(`mediation model (just identified)` = rel_diff(full),
+                 `two mediators, correlated errors omitted` = rel_diff(parallel))
+obs_exp
+```
+
+```{r}
+#| label: obs-vs-exp-check
+#| include: false
+stopifnot(obs_exp[1, "relative_difference_of_the_matrices"] < 1e-6,
+          obs_exp[2, "relative_difference_of_the_matrices"] > 0.01)
+```
+
+For the exactly fitting model the two information matrices agree to numerical precision; for the model that fits badly they
+differ by a visible fraction, and the standard errors follow:
+
+```{r}
+#| label: se-compare
+se <- cbind(observed = sqrt(diag(fit_o@vcov)), expected = sqrt(diag(fit_e@vcov)))
+se_ratio <- se[, "observed"] / se[, "expected"]
+rd(cbind(se, ratio = se_ratio), 4)
+```
+
+```{r}
+#| label: se-compare-check
+#| include: false
+b_paths <- c("outcome~mediator1", "outcome~mediator2")
+stopifnot(all(se_ratio[b_paths] > 1.05), max(abs(se_ratio[setdiff(names(se_ratio), b_paths)] - 1)) < 1e-3)
+```
+
+The two disagree only for the paths from the mediators to the outcome, the parameters the omitted residual correlation
+bears on. The engine's default is the observed information (`information = "observed"`); the expected information is
+available with `information = "expected"`.
+
+### Cross-checks
+
+lavaan offers both. OpenMx computes its standard errors from a numerical Hessian, which corresponds to the observed
+information. Match the setting on each side:
+
+```{r}
+#| label: se-lavaan
+#| eval: !expr requireNamespace("lavaan", quietly = TRUE)
+lv_obs <- lavaan::sem(parallel, d, fixed.x = FALSE, information = "observed")
+lv_exp <- lavaan::sem(parallel, d, fixed.x = FALSE, information = "expected")
+nm <- names(theta)
+c(observed_vs_lavaan = max(abs(sqrt(diag(fit_o@vcov)) - sqrt(diag(lavaan::vcov(lv_obs)))[nm])),
+  expected_vs_lavaan = max(abs(sqrt(diag(fit_e@vcov)) - sqrt(diag(lavaan::vcov(lv_exp)))[nm])))
+```
+
+```{r}
+#| label: se-lavaan-check
+#| include: false
+#| eval: !expr requireNamespace("lavaan", quietly = TRUE)
+stopifnot(max(abs(sqrt(diag(fit_o@vcov)) - sqrt(diag(lavaan::vcov(lv_obs)))[nm])) < 1e-6,
+          max(abs(sqrt(diag(fit_e@vcov)) - sqrt(diag(lavaan::vcov(lv_exp)))[nm])) < 1e-6)
+```
+
+```{r}
+#| label: se-openmx
+#| eval: !expr requireNamespace("OpenMx", quietly = TRUE)
+suppressMessages(library(OpenMx))
+mxOption(NULL, "Number of Threads", 1)
+dat <- d[, c("mediator1", "mediator2", "treatment", "outcome")]
+vars <- names(dat)
+mod <- mxModel("parallel", type = "RAM", manifestVars = vars,
+  mxPath(from = "treatment", to = c("mediator1", "mediator2"), values = 0.4, labels = c("a1", "a2")),
+  mxPath(from = c("mediator1", "mediator2"), to = "outcome", values = 0.5, labels = c("b1", "b2")),
+  mxPath(from = vars, arrows = 2, values = 1, labels = paste0("v_", vars)),
+  mxPath(from = "one", to = vars, values = 0, labels = paste0("m_", vars)),
+  mxData(dat, type = "raw"))
+mx_pt <- summary(mxRun(mod, silent = TRUE))$parameters
+se_mx <- stats::setNames(mx_pt$Std.Error, mx_pt$name)
+map <- c("mediator1~treatment" = "a1", "mediator2~treatment" = "a2", "outcome~mediator1" = "b1",
+         "outcome~mediator2" = "b2", "mediator1~~mediator1" = "v_mediator1", "mediator2~~mediator2" = "v_mediator2",
+         "outcome~~outcome" = "v_outcome", "treatment~~treatment" = "v_treatment")
+c(observed_vs_OpenMx = max(abs(sqrt(diag(fit_o@vcov))[names(map)] - se_mx[map])))
+```
+
+```{r}
+#| label: se-openmx-check
+#| include: false
+#| eval: !expr requireNamespace("OpenMx", quietly = TRUE)
+stopifnot(max(abs(sqrt(diag(fit_o@vcov))[names(map)] - se_mx[map])) < 1e-4)
+```
+
+The native engine's observed standard errors agree with lavaan's observed ones and OpenMx's, and the expected ones with
+lavaan's expected ones. The two kinds differ by the misfit term above, not by an error on either side.
+
+## 2. Defined parameters: the delta method
+
+A defined parameter such as `ab := a * b` is a function $g(\theta)$ of the estimates. Its standard error comes from
+the **delta method**. Expand $g$ around the truth to first order, $g(\hat\theta) \approx g(\theta) + \nabla g^\top(\hat\theta - \theta)$.
+Then $\operatorname{Var}\,g(\hat\theta) \approx \nabla g^\top V \nabla g$, because the variance of a linear function
+$c^\top\hat\theta$ is $c^\top V c$. For $g = ab$ the gradient is $(b, a)$ in the two labels. The engine takes the gradient by
+central differences (step $\epsilon^{1/3}\max(|x|, 1)$); here the analytic one is easy:
+
+```{r}
+#| label: delta
+fit <- fit_sem(full, d)
+g <- c(coef(fit)[["b"]], coef(fit)[["a"]])
+v_ab <- fit@vcov[c("a", "b"), c("a", "b")]
+c(by_hand = sqrt(drop(t(g) %*% v_ab %*% g)), engine = fit@defined$se)
+```
+
+```{r}
+#| label: delta-check
+#| include: false
+stopifnot(abs(sqrt(drop(t(g) %*% v_ab %*% g)) - fit@defined$se) < 1e-6)
+```
+
+The product $ab$ is the indirect effect of the treatment on the outcome through the mediator, and its
+standard error is `r rd(fit@defined$se, 4)`.
+
+## 3. The sandwich: robust standard errors
+
+The inverse information is the right covariance only if the model, including the normal distribution, is correct and
+the data are unweighted. The **sandwich** estimator drops that assumption. We derive it in three steps.
+
+**Step 1: the estimating equation.** Let $s_i(\theta)$ be the **score** of row $i$: the gradient of its (weighted)
+log density. The estimate solves $\sum_i s_i(\hat\theta) = 0$.
+
+**Step 2: expand.** Take a first-order Taylor expansion of the estimating equation around the truth $\theta_0$:
+$0 = \sum_i s_i(\hat\theta) \approx \sum_i s_i(\theta_0) + \bigl[\sum_i \nabla s_i(\theta_0)\bigr](\hat\theta - \theta_0)$.
+The bracket is the Hessian of the (weighted) log density summed over rows, $-A$ with $A$ the information (here $A$
+and $B$ are the usual names for the sandwich's bread and meat, not the RAM matrices). Solve:
+$\hat\theta - \theta_0 \approx A^{-1}\sum_i s_i(\theta_0)$.
+
+**Step 3: the variance.** The rows are independent, so $\operatorname{Var}\bigl(\sum_i s_i\bigr) = \sum_i \operatorname{Var}(s_i)$,
+estimated by $B = \sum_i s_i s_i^\top$ (each $s_i$ has mean zero at the truth). Then
+
+$$
+V_{\text{sandwich}} = A^{-1} B\, A^{-1}.
+$$
+
+When the model is correct and the weights are absent, $B$ converges to $A$ and the sandwich reduces to $A^{-1}$.
+
+### The scores
+
+For a covariance structure with the means unrelated to $\theta$, row $i$ has deviation $r_i = x_i - \bar x$ from the (weighted)
+sample mean and score
+
+$$
+s_{i,k} = w_i\,\tfrac12\,\Bigl[(\Sigma^{-1} r_i)^\top \partial_k\Sigma\,(\Sigma^{-1} r_i) - \operatorname{tr}(\Sigma^{-1}\partial_k\Sigma)\Bigr],
+$$
+
+with $w_i$ the weight (1 when there are none). This is the derivative of the log density of Chapter 1 with respect to the
+covariance parameters (Section 8 of that chapter). With a mean structure the deviation is $d_i = x_i - \mu(\theta)$, and the score gains the
+mean part $w_i\,(\partial_k\mu)^\top\Sigma^{-1} d_i$. Weights enter in two places: the weighted mean and covariance replace $\bar x$ and $S$
+in the discrepancy, and the weights multiply the scores. The engine rescales the weights to sum to $n$, so the result does not depend on their scale.
+
+We build the sandwich by hand for a weighted fit and compare it with the engine. The weights are random, but
+fixed by a seed:
+
+```{r}
+#| label: sandwich
+set.seed(4)
+w <- rexp(n) + 0.3
+fit_w <- fit_sem(full, d, weights = w, se_type = "sandwich")
+ram_w <- fit_w@internals$ram
+smp_w <- medfit:::.sem_sample(fit_w@data, ram_w, weights = w)
+theta_w <- fit_w@theta
+
+# Step 1: scores, built from the formula above
+w_scaled <- w * n / sum(w)
+sigma_w <- medfit:::.sem_implied(ram_w, theta_w)
+sigma_w_inv <- solve(sigma_w)
+dsig_w <- medfit:::.sem_dsigma(theta_w, ram_w)
+r_mat <- sweep(as.matrix(fit_w@data[, ram_w$obs]), 2, colSums(w_scaled * as.matrix(fit_w@data[, ram_w$obs])) / n)
+z <- r_mat %*% sigma_w_inv
+scores <- vapply(seq_along(theta_w), function(k) {
+  w_scaled * 0.5 * (rowSums((z %*% dsig_w[[k]]) * z) - sum(sigma_w_inv * dsig_w[[k]]))
+}, numeric(n))
+c(scores_by_hand_vs_engine = max(abs(scores - medfit:::.sem_scores(theta_w, ram_w, smp_w))),
+  largest_column_sum = max(abs(colSums(scores))))
+```
+
+```{r}
+#| label: sandwich-check
+#| include: false
+stopifnot(max(abs(scores - medfit:::.sem_scores(theta_w, ram_w, smp_w))) < 1e-10, max(abs(colSums(scores))) < 1e-4)
+```
+
+The second number checks Step 1: the scores sum to zero at the estimate, which is the estimating equation.
+
+```{r}
+#| label: sandwich-assemble
+# Steps 2 and 3: A^-1 B A^-1, with A the observed information of the weighted discrepancy
+bread <- solve(medfit:::.sem_info_observed(theta_w, ram_w, smp_w, NULL))
+meat <- crossprod(scores)
+v_sandwich <- bread %*% meat %*% bread
+model_based <- fit_sem(full, d, weights = w, se_type = "model")@vcov
+c(sandwich_by_hand_vs_engine = max(abs(v_sandwich - fit_w@vcov)), largest_entry = max(abs(fit_w@vcov)))
+rd(cbind(sandwich = sqrt(diag(fit_w@vcov)), model_based = sqrt(diag(model_based)))[1:5, ], 4)
+```
+
+```{r}
+#| label: sandwich-assemble-check
+#| include: false
+stopifnot(max(abs(v_sandwich - fit_w@vcov)) < 1e-10,
+          all(sqrt(diag(fit_w@vcov))[1:3] > sqrt(diag(model_based))[1:3]))
+```
+
+The sandwich standard errors of the paths are larger than the model-based ones here: the weights vary, which the
+model-based formula ignores. (The last parameter, the variance of the binary `treatment`, is omitted from the table.)
+
+With **no mean structure**, as here, the means are free and unrelated to $\theta$: the information is
+block diagonal and only the $\theta$ block of $B$ enters. With a **mean structure**, the means are functions of $\theta$
+(Chapter 1), the scores carry the mean part, and the full information is used. The engine's code handles the two cases
+in one function, so the check is to run both against lavaan's robust standard errors with sampling weights:
+
+```{r}
+#| label: sandwich-lavaan
+#| eval: !expr requireNamespace("lavaan", quietly = TRUE)
+dw <- d
+dw$w <- w
+fit_wm <- fit_sem(full, d, weights = w, se_type = "sandwich", meanstructure = TRUE)
+lv_w <- suppressWarnings(lavaan::sem(full, dw, fixed.x = FALSE, sampling.weights = "w"))
+lv_wm <- suppressWarnings(lavaan::sem(full, dw, fixed.x = FALSE, sampling.weights = "w", meanstructure = TRUE))
+nm_w <- names(theta_w)
+nm_wm <- names(fit_wm@theta)
+c(covariance_structure = max(abs(sqrt(diag(fit_w@vcov)) - sqrt(diag(lavaan::vcov(lv_w)))[nm_w])),
+  mean_structure = max(abs(sqrt(diag(fit_wm@vcov)) - sqrt(diag(lavaan::vcov(lv_wm)))[nm_wm])))
+```
+
+```{r}
+#| label: sandwich-lavaan-check
+#| include: false
+#| eval: !expr requireNamespace("lavaan", quietly = TRUE)
+stopifnot(max(abs(sqrt(diag(fit_w@vcov)) - sqrt(diag(lavaan::vcov(lv_w)))[nm_w])) < 1e-6,
+          max(abs(sqrt(diag(fit_wm@vcov)) - sqrt(diag(lavaan::vcov(lv_wm)))[nm_wm])) < 1e-6)
+```
+
+Without weights the sandwich is the Huber-White estimator. For a regression equation it equals the heteroskedasticity-consistent
+estimator HC0 (the one with no leverage correction), which gives something to check when the `sandwich` package is installed:
+
+```{r}
+#| label: hc0
+#| eval: !expr requireNamespace("sandwich", quietly = TRUE)
+fit_u <- fit_sem(full, d, se_type = "sandwich")
+eq1 <- stats::lm(mediator1 ~ treatment, d)
+eq2 <- stats::lm(outcome ~ mediator1 + treatment, d)
+hc0 <- c(a = sqrt(diag(sandwich::vcovHC(eq1, type = "HC0")))[["treatment"]],
+         b = sqrt(diag(sandwich::vcovHC(eq2, type = "HC0")))[["mediator1"]],
+         cp = sqrt(diag(sandwich::vcovHC(eq2, type = "HC0")))[["treatment"]])
+rbind(HC0 = hc0, native_sandwich = sqrt(diag(fit_u@vcov))[c("a", "b", "cp")])
+```
+
+```{r}
+#| label: hc0-check
+#| include: false
+#| eval: !expr requireNamespace("sandwich", quietly = TRUE)
+stopifnot(max(abs(hc0 - sqrt(diag(fit_u@vcov))[c("a", "b", "cp")])) < 1e-6)
+```
+
+A weighted discrepancy is not a likelihood, so the quantities built on a likelihood are undefined for a weighted
+fit, and the engine refuses them:
+
+```{r}
+#| label: weighted-refusals
+say <- function(expr) tryCatch({ expr; "no error" }, error = function(e) conditionMessage(e))
+restricted_w <- fit_sem(paste0(full, "a == 0\n"), d, weights = w, se_type = "sandwich")
+msgs <- c(
+  logLik = say(logLik(fit_w)),
+  mbco_sem = say(mbco_sem(fit_w, "a", "b")),
+  anova = say(anova(restricted_w, fit_w))
+)
+cat(sprintf("%s:\n  %s\n", names(msgs), msgs), sep = "\n")
+```
+
+```{r}
+#| label: weighted-refusals-check
+#| include: false
+stopifnot(!any(msgs == "no error"))
+```
+
+## 4. MBCO: testing an indirect effect
+
+The indirect effect $ab$ is zero when either factor is. A test of $H_0\colon ab = 0$ cannot use the usual delta-method $z$:
+under $H_0$ the gradient $(b, a)$ is zero when both are, so the standard error is zero there. MBCO (the minimum of
+likelihood-ratio tests, "model-based constrained optimization") replaces it by a likelihood-ratio test per factor.
+
+**The statistics.** Refit the model with $a = 0$ and with $b = 0$; each is a linear constraint (one solve, Chapter 3). With
+$F$ the minimized discrepancy of the full model and $n$ the number of rows,
+
+$$
+D_a = n\,(F_{a=0} - F), \qquad D_b = n\,(F_{b=0} - F), \qquad T = \min(D_a, D_b).
+$$
+
+**The null distribution.** $H_0$ is the union of two hypotheses, $a = 0$ and $b = 0$. Three cases, all asymptotic.
+If only $a = 0$ is true, $D_a$ is a likelihood-ratio statistic for a true restriction and has a $\chi^2_1$ distribution,
+while $D_b$ grows without bound with $n$ (the restriction $b = 0$ is false), so $T = D_a \sim \chi^2_1$. Symmetrically if
+only $b = 0$. If both are true, $T \le D_a$ always, so $P(T > c) \le P(D_a > c) = P(\chi^2_1 > c)$. In every case,
+$P(T > c) \le P(\chi^2_1 > c)$: referring $T$ to $\chi^2_1$ gives a test whose size is at most the nominal level. It is
+conservative, and exactly right when one factor is zero and the other is not.
+
+**Why not solve $ab = 0$ directly?** The set where $ab = 0$ holds is two lines, $a = 0$ and $b = 0$, that cross at
+$a = b = 0$, where the constraint's gradient $(b, a)$ vanishes. A local solver follows whichever branch is near its start
+and can stop on the worse one, and near the crossing it has no usable gradient at all. Chapter 3 showed the rule the
+engine uses instead: one linear fit per factor, keeping the one with the smaller discrepancy. That is exactly $T$'s
+smaller refit.
+
+```{r}
+#| label: mbco
+fit_full <- fit_sem(full, d)
+mb <- mbco_sem(fit_full, "a", "b")
+mb
+refit_a <- fit_sem(paste0(full, "a == 0\n"), d)
+refit_b <- fit_sem(paste0(full, "b == 0\n"), d)
+by_hand <- c(D_a = n * (refit_a@f - fit_full@f), D_b = n * (refit_b@f - fit_full@f))
+c(by_hand, T = min(by_hand), p_value = stats::pchisq(min(by_hand), df = 1, lower.tail = FALSE))
+mb$tests
+```
+
+```{r}
+#| label: mbco-check
+#| include: false
+stopifnot(max(abs(by_hand - mb$tests$diff_ll)) < 1e-6, abs(min(by_hand) - mb$statistic) < 1e-6)
+```
+
+The test table, the hand computation and the printed test agree: here $D_a$ is the smaller, so the null that $a = 0$ is the one
+the data come closest to, and $T = D_a$. Two further checks. The engine's rule for the constraint `a*b == 0` fits the model once per factor and keeps the
+smaller discrepancy, so that is the smaller of the two refits:
+
+```{r}
+#| label: zero-product
+fit_zero_product <- fit_sem(paste0(full, "a*b == 0\n"), d)
+fit_zero_product@internals$branch
+c(discrepancy = fit_zero_product@f, smaller_refit = min(refit_a@f, refit_b@f))
+```
+
+```{r}
+#| label: zero-product-check
+#| include: false
+stopifnot(abs(fit_zero_product@f - min(refit_a@f, refit_b@f)) < 1e-10)
+```
+
+And lavaan and OpenMx give the same two likelihood-ratio statistics:
+
+```{r}
+#| label: mbco-lavaan
+#| eval: !expr requireNamespace("lavaan", quietly = TRUE) && requireNamespace("OpenMx", quietly = TRUE)
+lv_full <- lavaan::sem(full, d, fixed.x = FALSE)
+lv_a <- lavaan::sem(paste0(full, "a == 0\n"), d, fixed.x = FALSE)
+lv_b <- lavaan::sem(paste0(full, "b == 0\n"), d, fixed.x = FALSE)
+
+suppressMessages(library(OpenMx))
+dat3 <- d[, c("mediator1", "treatment", "outcome")]
+vars3 <- names(dat3)
+mx_full <- function(fix_a = FALSE, fix_b = FALSE) {
+  mxModel("m", type = "RAM", manifestVars = vars3,
+    mxPath(from = "treatment", to = "mediator1", values = if (fix_a) 0 else 0.4, free = !fix_a, labels = "a"),
+    mxPath(from = "mediator1", to = "outcome", values = if (fix_b) 0 else 0.5, free = !fix_b, labels = "b"),
+    mxPath(from = "treatment", to = "outcome", values = 0.2, labels = "cp"),
+    mxPath(from = vars3, arrows = 2, values = 1, labels = paste0("v_", vars3)),
+    mxPath(from = "one", to = vars3, values = 0, labels = paste0("m_", vars3)),
+    mxData(dat3, type = "raw"))
+}
+m2ll <- function(m) summary(mxRun(m, silent = TRUE))$Minus2LogLikelihood
+mx_stat <- c(a = m2ll(mx_full(fix_a = TRUE)) - m2ll(mx_full()), b = m2ll(mx_full(fix_b = TRUE)) - m2ll(mx_full()))
+data.frame(
+  test = c("a = 0", "b = 0"),
+  medfit = mb$tests$diff_ll,
+  lavaan = c(lavaan::fitMeasures(lv_a, "chisq") - lavaan::fitMeasures(lv_full, "chisq"),
+             lavaan::fitMeasures(lv_b, "chisq") - lavaan::fitMeasures(lv_full, "chisq")),
+  OpenMx = unname(mx_stat)
+)
+```
+
+```{r}
+#| label: mbco-lavaan-check
+#| include: false
+#| eval: !expr requireNamespace("lavaan", quietly = TRUE) && requireNamespace("OpenMx", quietly = TRUE)
+stopifnot(max(abs(mb$tests$diff_ll - c(lavaan::fitMeasures(lv_a, "chisq") - lavaan::fitMeasures(lv_full, "chisq"),
+                                       lavaan::fitMeasures(lv_b, "chisq") - lavaan::fitMeasures(lv_full, "chisq")))) < 1e-5,
+          max(abs(mb$tests$diff_ll - mx_stat)) < 1e-3)
+```
+
+
+
+## 5. `anova()`: the general likelihood-ratio test
+
+MBCO is a special case. For two fits to the same data, one a restriction of the other, the likelihood-ratio statistic is
+
+$$
+D = n\,(F_r - F_f), \qquad \text{df} = \text{df}_r - \text{df}_f, \qquad D \sim \chi^2_{\text{df}}\ \text{under the restriction},
+$$
+
+with $F_f$ and $F_r$ the minimized discrepancies and $\text{df}$ each model's degrees of freedom (which already count the
+equality constraints, Chapter 3). The reason: $n F_{ML}$ is $-2\log L$ up to a constant common to both models
+(Chapter 1), so $D$ is $-2\log$ of the likelihood ratio, Wilks' statistic. `anova()` never refits: it compares the fits
+you give it, each fitted from its own start, so the statistic does not depend on where a refit would begin. With
+several fits it orders them by degrees of freedom and tests each against the previous one:
+
+```{r}
+#| label: anova
+fit_a0 <- fit_sem(paste0(full, "a == 0\n"), d)
+fit_a0b0 <- fit_sem(paste0(full, "a == 0\nb == 0\n"), d)
+anova(fit_full, fit_a0, fit_a0b0)
+c(MBCO_D_a = mb$tests$diff_ll[1], anova_first_difference = anova(fit_a0, fit_full)$`Chisq diff`[2])
+```
+
+```{r}
+#| label: anova-check
+#| include: false
+stopifnot(abs(mb$tests$diff_ll[1] - anova(fit_a0, fit_full)$`Chisq diff`[2]) < 1e-6)
+```
+
+The first difference equals the first refit statistic of MBCO to every digit printed, and the second tests the
+`b == 0` restriction added to a model that already has `a == 0`. The engine checks, before it computes anything, that the pair can
+be nested: the same observed variables and rows, more degrees of freedom for the restricted model, and no parameter
+freed in the restricted model that the other leaves out (parameter-table inclusion). These are necessary conditions, not a proof of nesting. Three refusals:
+
+```{r}
+#| label: anova-refusals
+say <- function(expr) tryCatch({ expr; "no error" }, error = function(e) conditionMessage(e))
+fit_more <- fit_sem("mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment + covariate1", d)
+fit_b0 <- fit_sem(paste0(full, "b == 0\n"), d)
+msgs <- c(
+  `different variables` = say(anova(fit_a0, fit_more)),
+  `same degrees of freedom` = say(anova(fit_a0, fit_b0)),
+  `a single fit` = say(anova(fit_full))
+)
+cat(sprintf("%s:\n  %s\n", names(msgs), msgs), sep = "\n")
+```
+
+```{r}
+#| label: anova-refusals-check
+#| include: false
+stopifnot(!any(msgs == "no error"))
+```
+
+A fit where the data sit on the boundary of the parameter space gets a warning instead of an error. If a bound or an
+inequality on a tested parameter is active at the restricted fit (`a > 0` together with the null `a = 0`), the null is on the boundary,
+the statistic is a mixture of chi-squares and not $\chi^2_1$, and the p-value is not valid:
+
+```{r}
+#| label: boundary
+bounded <- fit_sem(paste0(full, "a > 0\n"), d)
+bounded_null <- fit_sem(paste0(full, "a > 0\na == 0\n"), d)
+boundary_warning <- tryCatch(anova(bounded_null, bounded), warning = function(w) conditionMessage(w))
+boundary_warning
+```
+
+```{r}
+#| label: boundary-check
+#| include: false
+stopifnot(is.character(boundary_warning), grepl("boundary", boundary_warning))
+```
+
+## What the five chapters built
+
+| Chapter | The new object | The check that can fail |
+|---|---|---|
+| 1 | $A$, $S_{\text{ram}}$, $F$, $m$; $\mu$ and $\Sigma$; $F_{ML}$ and its gradient | hand matrices against `.sem_implied()`, gradient against finite differences, `logLik()` against lavaan and OpenMx |
+| 2 | the centered coordinates $T$, $c_0$ and $V = T V_\phi T^\top$ | standard errors unchanged under a shift of the data; lavaan and OpenMx fail where the engine does not |
+| 3 | constraint rows, SLSQP, the gate, the Newton polish | the gate rejects each planted bad solution; the polish matches a hand Newton iteration |
+| 4 | fixed moments and the conditional likelihood | equal estimates and standard errors; the cross block of the information is zero; `logLik()` against lavaan |
+| 5 | $I_E$, $I_O$, the delta method, the sandwich, MBCO, `anova()` | each rebuilt by hand; standard errors, the sandwich and MBCO matched to lavaan and OpenMx |
+
+## Check yourself
+
+1. For which model is the observed information equal to the expected information at the estimate? (Answer: when the
+   model reproduces the sample covariance, $S = \Sigma$, the matrix $W$ is zero and the dropped term vanishes: the
+   just-identified model of Section 1.)
+2. Why does MBCO refer $T = \min(D_a, D_b)$ to $\chi^2_1$ and not to something with smaller critical values, since $T \le D_a$? (Answer: when only
+   one factor is zero, $T$ is asymptotically $\chi^2_1$ itself, so smaller critical values would reject a true null too often.)
+3. A weighted fit has no `logLik()`. What would you need to compare two weighted models? (Answer: a likelihood; the weighted
+   discrepancy is a pseudo-likelihood, so use a robust test built for it. The engine offers none and refuses the chi-square.)
+
+## Where next
+
+The [native engine guide](native-guide.html) lists the syntax, the options and the limits in one place, and
+[lavaan and the native engine](lavaan-comparison.html) states what the engine does and does not do compared with lavaan.
