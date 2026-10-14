@@ -155,6 +155,8 @@ navbar:
         href: articles/cookbook.html#bound-a-variance-or-fix-a-path
       - text: "17. Check a native fit before trusting it"
         href: articles/cookbook.html#check-a-native-fit-before-trusting-it
+      - text: "18. Fix exogenous covariates (fixed_x)"
+        href: articles/cookbook.html#fix-exogenous-covariates-fixed_x
     articles:
       text: Articles
       menu:

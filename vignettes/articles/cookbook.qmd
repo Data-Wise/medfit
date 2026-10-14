@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-Seventeen task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Eighteen task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
@@ -457,3 +457,50 @@ something the data contain (here, the covariance of the two mediators' residuals
 the fit converged, and the model is still wrong.
 
 More: [Methods and Formulas](methods.html).
+
+## 18. Fix exogenous covariates (`fixed_x`)
+
+*When:* a native model with many covariates is slow or has too many parameters, and you
+want the structural results lavaan reports with `fixed.x = TRUE`. `fixed_x = TRUE` fixes
+the means, variances and covariances of the exogenous observed variables at their sample
+values instead of estimating them.
+
+```{r}
+#| label: r18-fit
+syntax <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + covariate1 + covariate2
+  ab := a * b
+"
+free <- fit_sem(syntax, mediation_demo)
+fixed <- fit_sem(syntax, mediation_demo, fixed_x = TRUE)
+rbind(free = coef(free)[c("a", "b")], fixed_x = coef(fixed)[c("a", "b")])
+rbind(free = sqrt(diag(vcov(free)))[c("a", "b")], fixed_x = sqrt(diag(vcov(fixed)))[c("a", "b")])
+rbind(free = free@defined[, c("est", "se")], fixed_x = fixed@defined[, c("est", "se")])
+```
+
+The estimates, standard errors and the defined parameter `ab` agree to the digits shown.
+What changes is how many parameters the optimizer carries:
+
+```{r}
+#| label: r18-glance
+cbind(fit = c("free", "fixed_x"), rbind(glance(free), glance(fixed))[, c("npar", "df", "chisq", "fixed_x")])
+```
+
+The parameter count falls from 14 to 8 while `df` and `chisq` stay put. `glance()$fixed_x`
+lists what is fixed (`""` when nothing is). With `fixed_x`, the fixed rows stay in `tidy()` flagged
+`fixed_x = TRUE`, with no standard error, and the log likelihood, `AIC()` and `BIC()` become
+conditional on the fixed variables, so they differ from the free fit's.
+
+```{r}
+#| label: r18-compare
+tf <- tidy(fixed)
+tf[tf$fixed_x, c("term", "estimate", "std_error")]
+tryCatch(anova(free, fixed), error = function(e) cat(conditionMessage(e), "\n"))
+```
+
+Compare fits only when they fix the same variables. `anova()`, `mbco_sem()` and `AIC()`/`BIC()`
+across several fits stop when the fixed sets differ, as above. Pass a character vector (for
+example `fixed_x = "treatment"`) to fix a subset.
+
+More: [Methods and Formulas](methods.html), [the native engine guide](native-guide.html).
