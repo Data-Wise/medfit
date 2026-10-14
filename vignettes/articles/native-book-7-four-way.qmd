@@ -76,8 +76,9 @@ where the **controlled direct effect** (CDE) holds the mediator at $m^*$, the **
 mediator with the treatment held at 0, and the two interaction terms collect what is left: the **reference interaction**
 $\text{INT}_{\text{ref}} = E\bigl[\{Y(1, M(0)) - Y(0, M(0))\} - \{Y(1, m^*) - Y(0, m^*)\}\bigr]$, the part of the direct
 effect due to the mediator being at its untreated value rather than at $m^*$, and the **mediated interaction**
-$\text{INT}_{\text{med}} = \text{NIE} - \text{PIE}$, the part of the indirect effect that exists only because the
-treatment also changes how the mediator acts. The natural direct and indirect effects are
+$\text{INT}_{\text{med}} = \text{NIE} - \text{PIE}$ (with the natural indirect effect NIE defined next), the part of
+the indirect effect that exists only because the treatment also changes how the mediator acts. The natural direct and
+indirect effects are
 $\text{NDE} = E[Y(1, M(0)) - Y(0, M(0))] = \text{CDE} + \text{INT}_{\text{ref}}$ and
 $\text{NIE} = E[Y(1, M(1)) - Y(1, M(0))] = \text{INT}_{\text{med}} + \text{PIE}$. Identifying these from data needs the
 usual assumptions of mediation analysis (no unmeasured treatment-outcome, mediator-outcome or treatment-mediator
@@ -86,7 +87,11 @@ first two.
 
 ### Derivation under the two regressions
 
-Take the models of Chapter 6, with covariate $c$:
+Take the models of Chapter 6, with covariate $c$. Under consistency ($Y = Y(x, m)$ and $M = M(x)$ for the values a
+unit actually has) and the confounding assumptions (the first two for the outcome, the third for the mediator), the
+counterfactual means equal the regressions of the
+observed variables, $E[Y(x, m) \mid c] = E[Y \mid x, m, c]$ and $E[M(x) \mid c] = E[M \mid x, c]$, so the two
+equations of the fit describe them:
 
 $$
 E[M(x) \mid c] = \beta_0 + \beta_1 x + \gamma c, \qquad
@@ -287,9 +292,9 @@ treatment's own contrast.
 
 ### The gradients
 
-Each component is a smooth function $g(\vartheta)$ of the coefficients $\vartheta = (\beta_0, \beta_1, \gamma,
+Each component is a smooth function $g(\kappa)$ of the coefficients $\kappa = (\beta_0, \beta_1, \gamma,
 \theta_1, \theta_2, \theta_3)$, so its standard error is $\sqrt{\nabla g^\top V \nabla g}$ with $V$ the covariance of
-$\hat\vartheta$ (Chapter 5). Differentiating the formulas of Step 3, with $\bar c$ a constant:
+$\hat\kappa$ (Chapter 5). Differentiating the formulas of Step 3, with $\bar c$ a constant:
 
 | Component | $\beta_0$ | $\beta_1$ | $\gamma$ | $\theta_1$ | $\theta_2$ | $\theta_3$ |
 |---|---|---|---|---|---|---|
@@ -300,8 +305,9 @@ $\hat\vartheta$ (Chapter 5). Differentiating the formulas of Step 3, with $\bar 
 
 The NDE, NIE and TE gradients are the sums of their parts' rows. The $\gamma$ entry of INT<sub>ref</sub> (and so of the
 NDE and the TE) is the **covariate term**. It matters twice: through $\operatorname{Var}(\hat\gamma)$, and through
-$\operatorname{Cov}(\hat\beta_0, \hat\gamma)$, which is large and negative when $\bar c$ is far from zero, because the
-intercept and the slope of a regression are then estimated against each other.
+$\operatorname{Cov}(\hat\beta_0, \hat\gamma)$, which is opposite in sign to $\bar c$ and large when $\bar c$ is far from
+zero, because the intercept and the slope of a regression are then estimated against each other; the product
+$\bar c\,\operatorname{Cov}(\hat\beta_0, \hat\gamma)$ is negative.
 
 By Chapter 6 (Steps 1 and 2 of the theorem), the model-based covariance is block diagonal across the two equations,
 and each block is least squares at the ML scale, $\hat\sigma^2 (Z^\top Z)^{-1}$ with $\hat\sigma^2 = \text{RSS}/n$.
@@ -319,15 +325,14 @@ dimnames(v_hand) <- rep(list(c("beta0", "beta1", "gamma", "theta1", "theta2", "t
 v_hand <- v_hand[1:6, 1:6]
 gradients <- function(m_star = 0, covariate_term = TRUE,
                       par = c(b0 = b0, b1 = b1, g = g, t2 = t2, t3 = t3, c_bar = c_bar)) {
-  with(as.list(par), {
-    grad <- rbind(
-      cde = c(0, 0, 0, 1, 0, m_star),
-      int_ref = c(t3, 0, if (covariate_term) t3 * c_bar else 0, 0, 0, b0 + g * c_bar - m_star),
-      int_med = c(0, t3, 0, 0, 0, b1),
-      pie = c(0, t2, 0, 0, b1, 0)
-    )
-    rbind(grad, nde = grad["cde", ] + grad["int_ref", ], nie = grad["int_med", ] + grad["pie", ], te = colSums(grad))
-  })
+  p <- as.list(par)
+  grad <- rbind(
+    cde = c(0, 0, 0, 1, 0, m_star),
+    int_ref = c(p$t3, 0, if (covariate_term) p$t3 * p$c_bar else 0, 0, 0, p$b0 + p$g * p$c_bar - m_star),
+    int_med = c(0, p$t3, 0, 0, 0, p$b1),
+    pie = c(0, p$t2, 0, 0, p$b1, 0)
+  )
+  rbind(grad, nde = grad["cde", ] + grad["int_ref", ], nie = grad["int_med", ] + grad["pie", ], te = colSums(grad))
 }
 delta_se <- function(grad, v) sqrt(diag(grad %*% v %*% t(grad)))
 engine_se <- function(x) {
@@ -359,9 +364,9 @@ covariate term dropped. It changes the INT<sub>ref</sub>, NDE and TE standard er
 is what the gradient table predicts. Here it makes them **larger**: the dropped terms are $\theta_3^2 \bar c^2
 \operatorname{Var}(\hat\gamma) + 2\theta_3^2 \bar c \operatorname{Cov}(\hat\beta_0, \hat\gamma)$, and with the strong
 negative correlation printed above their sum is negative. With other data the sum is positive and the defect makes the
-standard error too small, so its direction cannot be trusted either way. This was a real bug: before 0.9.0 (task U0, PR #168) the four-way extraction of a
+standard error too small, so its direction cannot be trusted either way. This was a real bug: before 0.9.0 (PR #168) the four-way extraction of a
 lavaan fit, which the native engine shares, left the mediator-covariate coefficients out of the covariance it passed
-to the delta method, and in the reviewer's example (`m ~ x + c1; y ~ x + m + xm + c1`, $n = 2000$) reported an
+to the delta method, and in the reviewer's example quoted in that PR (not rerun here) (`m ~ x + c1; y ~ x + m + xm + c1`, $n = 2000$) reported an
 INT<sub>ref</sub> standard error of 0.0366 where lavaan's own `:=` gave 0.095. The
 [known-answer gate](#cross-checks) now catches the defect if it returns.
 
@@ -411,9 +416,12 @@ from the gradient (`MUTANT=nocovgrad`) it fails.
 
 ## 5. The sandwich
 
-With `se_type = "sandwich"` the bread is still block diagonal but the meat is not: a row's scores in the two equations,
-$e_{m,i} z_{m,i}$ and $e_{y,i} z_{y,i}$, are correlated (the product contains $m$, whose error is in the first). So $V$
-is the **stacked** HC0 covariance, with cross-equation blocks:
+With `se_type = "sandwich"` the bread is still block diagonal, and the meat is the sum of the outer products of each
+row's stacked scores $e_{m,i} z_{m,i}$ and $e_{y,i} z_{y,i}$. Its cross-equation block has expectation zero when the
+outcome equation's mean is right: $e_{m,i} z_{m,i}$ is a function of $(x_i, c_i, m_i)$, which are regressors of the
+outcome equation, so $E[e_{y,i} \mid x_i, c_i, m_i, p_i] = 0$ makes $E[e_{m,i} e_{y,i} z_{m,i} z_{y,i}^\top] = 0$. The
+engine keeps the block anyway, as the **stacked** HC0 covariance does, so the standard errors stay valid when that mean
+is wrong (a sandwich is meant for exactly that case):
 
 $$
 V = \begin{pmatrix} (Z_m^\top Z_m)^{-1} & 0 \\ 0 & (Z_y^\top Z_y)^{-1} \end{pmatrix}
@@ -458,8 +466,9 @@ stopifnot(max(abs(sw_compare["stacked_hc0", ] / sw_compare["engine", ] - 1)) < 1
           max(abs(sw_compare["block_diagonal_hc0", ] / sw_compare["engine", ] - 1)) > 1e-3)
 ```
 
-The engine's sandwich is the stacked HC0, cross-equation blocks included; dropping them changes the standard errors of
-the components that combine both equations. The estimates are the same as before: the sandwich changes only $V$.
+The engine's sandwich is the stacked HC0, cross-equation blocks included. In this sample dropping them moves the
+standard errors of the components that combine both equations by a few percent; with a correctly specified outcome mean
+that difference vanishes as $n$ grows. The estimates are the same as before: the sandwich changes only $V$.
 
 ## 6. Case weights and the covariate means
 
@@ -562,10 +571,17 @@ handles some of them through prediction); the native extraction refuses them.
 3. Why does dropping $\operatorname{Cov}(\hat\beta_0, \hat\gamma)$ make the INT<sub>ref</sub> standard error wrong, even
    though $\gamma$ is "just a covariate coefficient"? (Answer: INT<sub>ref</sub> depends on $\beta_0 + \gamma\bar c$, and
    the variance of that sum is $\operatorname{Var}(\hat\beta_0) + \bar c^2\operatorname{Var}(\hat\gamma) + 2\bar c
-   \operatorname{Cov}(\hat\beta_0, \hat\gamma)$; with $\bar c$ away from zero the last term is large and negative.)
-4. Why do the sandwich standard errors need the cross-equation blocks while the model-based ones do not? (Answer: the
-   model-based $V$ is the inverse of a block-diagonal information; the sandwich's meat is the covariance of the stacked
-   scores, and the scores of the two equations are correlated in the data.)
+   \operatorname{Cov}(\hat\beta_0, \hat\gamma)$; with $\bar c$ away from zero the last term is large, and its sign is that of $\bar c\,\operatorname{Cov}(\hat\beta_0,
+   \hat\gamma)$, which is negative.)
+4. Why does the model-based $V$ have no cross-equation blocks while the engine's sandwich keeps them? (Answer: the
+   model-based $V$ is the inverse of a block-diagonal information. The sandwich's meat is the sample covariance of the
+   stacked scores; its cross block has expectation zero only if the outcome mean is right, and the sandwich is meant to
+   hold when the model is wrong, so it is not assumed away.)
+
+## References
+
+VanderWeele, T. J. (2014). A unification of mediation and interaction: A 4-way decomposition. *Epidemiology*, 25(5),
+749-761.
 
 ## Where next
 

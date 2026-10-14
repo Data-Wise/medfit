@@ -103,8 +103,8 @@ depend on where the model was fitted. The C locale makes the name a function of 
 The column of `x:m` is $x_i m_i$ and the column of `m:x` is $m_i x_i$, the same numbers (floating-point multiplication
 is commutative). Two spellings in one equation would put two identical columns in the data, and the sample
 covariance matrix would be singular. lavaan, which keeps the spelling as written, then stops with a message about a
-covariance matrix that is not positive definite, which does not name the cause. Because the parser canonicalizes
-first, the duplicate is visible in the parameter table, and the engine names it:
+covariance matrix that is not positive definite, which does not name the cause. Because the parser rewrites each product
+to its canonical name first, the duplicate is visible in the parameter table, and the engine names it:
 
 ```{r}
 #| label: duplicate
@@ -204,7 +204,8 @@ fixed_tab <- fit_na@table[fit_na@table$fixed_x, c("lhs", "op", "rhs", "est")]
 c(rows_used = fit_na@n_obs,
   product_mean_fixed = fixed_tab$est[fixed_tab$lhs == "mediator1:treatment" & fixed_tab$op == "~1"],
   product_mean_of_kept_rows = mean(p_kept),
-  product_variance_fixed = fixed_tab$est[fixed_tab$lhs == "mediator1:treatment" & fixed_tab$rhs == "mediator1:treatment"],
+  product_variance_fixed = fixed_tab$est[fixed_tab$lhs == "mediator1:treatment" &
+                                           fixed_tab$rhs == "mediator1:treatment"],
   product_variance_of_kept_rows = mean((p_kept - mean(p_kept))^2))
 ```
 
@@ -301,10 +302,11 @@ all of them, and lavaan does not do it either.
 
 ### Theorem: the path estimates are equation-wise least squares
 
-Take a model that satisfies rules 8 and 9 (Section 4): recursive, no residual covariance between outcomes, every
+Take a model that satisfies the engine's validity rules 8 and 9 for products (numbered in the grammar amendment;
+Section 4 states them): recursive, no residual covariance between outcomes, every
 regression coefficient and intercept free and used once, the exogenous block (variances, covariances and means of the
 exogenous observed variables, products included) free. Write $z$ for the exogenous observed variables ($x$, $c$, $p$),
-$\eta$ for their moments, and $\psi_m = (\beta_0, \beta_1, \gamma, \sigma^2_m)$, $\psi_y = (\theta_0, \ldots, \delta,
+$\eta$ for their moments, and $\psi_m = (\beta_0, \beta_1, \gamma, \sigma^2_m)$, $\psi_y = (\theta_0, \cdots, \delta,
 \sigma^2_y)$ for the parameters of the two equations.
 
 **Step 1: the model's density factors.** In the RAM, $e_m$ and $e_y$ are independent of each other and of $z$ (no
@@ -457,8 +459,8 @@ stopifnot(all(grepl("rule 8", rule8, fixed = TRUE)))
 
 Such a regressor is a function of the equation's error, so it is correlated with it, and Step 3's least squares is
 then inconsistent; no standard error repairs that. A worked case: $y = 0.3x + e$ with $x \sim N(2, 1)$ and $e \sim
-N(0, 1)$ independent, and the regression $y \sim x + xy$. The true coefficient of $xy$ is 0, but
-$\operatorname{Cov}(xy, e) = \operatorname{Cov}(0.3x^2 + xe, e) = E[x]\operatorname{Var}(e) = 2$:
+N(0, 1)$ independent, and the regression $y \sim x + x\,y$. The true coefficient of $x\,y$ is 0, but
+$\operatorname{Cov}(x\,y, e) = \operatorname{Cov}(0.3x^2 + x\,e, e) = E[x]\operatorname{Var}(e) = 2$:
 
 ```{r}
 #| label: rule8-sim
@@ -482,14 +484,16 @@ The least-squares coefficient of $x$ is far from 0.3 at $n = 20000$: the bias do
 ### Rule 9, recursion
 
 The factorization of Step 1 follows the order of a recursive model. In a model with a loop ($m_2 \sim m_1$ and $m_1
-\sim m_2$) no such order exists: the density of the endogenous block carries the Jacobian $\log|I - B|$ of the
-system, which involves the coefficients of both equations, so the log likelihood no longer splits by equation. The
+\sim m_2$) no such order exists: the density of the endogenous block carries the Jacobian term $\log|I - A|$ of the
+system (from the change of variables $y = (I - A)^{-1}(m + e)$), which involves the coefficients of both equations, so
+the log likelihood no longer splits by equation. In a recursive model the variables can be ordered so that $A$ is
+strictly triangular, $|I - A| = 1$, and the term vanishes; that is the step Step 1 relies on. The
 engine refuses a loop anywhere in a product model:
 
 ```{r}
 #| label: rule9-loop
-loop_error <- say(fit_sem("mediator1 ~ treatment + mediator2\nmediator2 ~ mediator1\noutcome ~ mediator1 + treatment:covariate1",
-                          d))
+loop_model <- "mediator1 ~ treatment + mediator2\nmediator2 ~ mediator1\noutcome ~ mediator1 + treatment:covariate1"
+loop_error <- say(fit_sem(loop_model, d))
 cat(loop_error)
 ```
 
@@ -503,7 +507,8 @@ stopifnot(grepl("not recursive", loop_error, fixed = TRUE))
 
 With a free residual covariance between $e_{m_1}$ and $e_{m_2}$, the two equations share a parameter and Step 2
 fails: the joint maximum likelihood estimator is then seemingly unrelated regression (SUR, a generalized least squares
-estimator), which equals equation-wise least squares only when the regressor sets are identical or nested. The gate
+estimator), which equals equation-wise least squares only when the regressor sets are identical (with nested sets only the
+equation with the smaller set keeps its least-squares estimates). The gate
 `tests/sim/product-correlated-residuals.R` measures the gap. One of its replications (the gate's first seed, $n =
 500$, residual correlation 0.8), with the product as a precomputed column:
 
@@ -523,16 +528,17 @@ d9 <- data.frame(x = x9, cv, c2, m1, m2, y = y9, p)
 sur_gap <- function(m2_rhs, residual_cov) {
   syn <- paste0("m1 ~ x + cv\nm2 ~ ", m2_rhs, "\ny ~ m1 + m2 + x + p", if (residual_cov) "\nm1 ~~ m2" else "")
   f <- quiet(fit_sem(syn, d9))
-  ols <- c(coef(lm(m1 ~ x + cv, d9))[["x"]], coef(lm(reformulate(strsplit(m2_rhs, " + ", fixed = TRUE)[[1]], "m2"),
-                                                       d9))[["x"]],
+  m2_formula <- reformulate(strsplit(m2_rhs, " + ", fixed = TRUE)[[1]], "m2")
+  ols <- c(coef(lm(m1 ~ x + cv, d9))[["x"]], coef(lm(m2_formula, d9))[["x"]],
            coef(lm(y ~ m1 + m2 + x + p, d9))[c("m1", "m2", "p")])
   max(abs(coef(f)[c("m1~x", "m2~x", "y~m1", "y~m2", "y~p")] - ols))
 }
 sur <- data.frame(
-  regressors = c("identical", "identical", "non-nested", "non-nested"),
-  residual_covariance = c("fixed at 0", "free", "fixed at 0", "free"),
+  regressors = c("identical", "identical", "non-nested", "non-nested", "nested"),
+  residual_covariance = c("fixed at 0", "free", "fixed at 0", "free", "free"),
   largest_gap_to_least_squares = signif(c(sur_gap("x + cv", FALSE), sur_gap("x + cv", TRUE),
-                                          sur_gap("x + c2", FALSE), sur_gap("x + c2", TRUE)), 2)
+                                          sur_gap("x + c2", FALSE), sur_gap("x + c2", TRUE),
+                                          sur_gap("x + cv + c2", TRUE)), 2)
 )
 sur
 ```
@@ -540,10 +546,11 @@ sur
 ```{r}
 #| label: sur-check
 #| include: false
-stopifnot(all(sur$largest_gap_to_least_squares[1:3] < 1e-5), sur$largest_gap_to_least_squares[4] > 1e-4)
+stopifnot(all(sur$largest_gap_to_least_squares[1:3] < 1e-5), all(sur$largest_gap_to_least_squares[4:5] > 1e-4))
 ```
 
-Only the last row, non-nested regressors with a free residual covariance, departs from least squares. Over the gate's
+Only the rows with a free residual covariance and different regressor sets depart from least squares (in the
+nested row, `m2 ~ x + cv + c2` contains the regressors of `m1`, and the larger equation moves). Over the gate's
 10 seeds the departure is between $10^{-4}$ and $2.8 \times 10^{-3}$ in every seed, and the match rows stay below
 $5.2 \times 10^{-7}$ (`tests/sim/gates.csv`, row `product-corr`, run of 2026-10-14). Small, but not zero, and one
 design is not a proof, so the product model refuses the covariance. Written with `x:m1`, the same model stops:
@@ -560,9 +567,10 @@ cat(sur_refused)
 stopifnot(grepl("residual covariance (rule 9)", sur_refused, fixed = TRUE))
 ```
 
-**The note (GRILL decision H6).** Completion (Chapter 1) adds a free residual covariance between outcomes that no
-equation uses as a predictor. In a product model that row would be a residual covariance, so completion fixes it at 0
-and says so once. The same model without the product estimates it:
+**The note.** *Completion* is the step in which the engine adds the rows the user did not write (`.sem_complete()`):
+residual variances, the variances, covariances and means of the exogenous variables, and a free residual covariance
+between each pair of outcomes that no equation uses as a predictor (lavaan does the same). In a product model that row would be a residual covariance, so completion fixes it at 0
+and says so once (a design decision of 0.10.0). The same model without the product estimates it:
 
 ```{r}
 #| label: h6
@@ -571,7 +579,9 @@ h6_message <- tryCatch(suppressWarnings(fit_sem(h6, d)), message = function(m) c
 cat(h6_message)
 h6_fit <- quiet(fit_sem(h6, d))
 twin <- quiet(fit_sem(sub(" + treatment:mediator1", "", h6, fixed = TRUE), d, meanstructure = TRUE))
-row_of <- function(f) f@table[f@table$lhs == "outcome" & f@table$rhs == "mediator2", c("lhs", "op", "rhs", "free", "est")]
+row_of <- function(f) {
+  f@table[f@table$lhs == "outcome" & f@table$rhs == "mediator2", c("lhs", "op", "rhs", "free", "est")]
+}
 rbind(product_model = row_of(h6_fit), without_the_product = row_of(twin))
 ```
 
@@ -587,16 +597,16 @@ stopifnot(grepl("fixed at 0", h6_message), !row_of(h6_fit)$free, row_of(h6_fit)$
 A label on two regression rows makes the two coefficients one parameter; a fixed coefficient or a constraint (`==`,
 `<`, `>`, or a bound) takes a coefficient out of its equation's free set. In each case Step 2 fails: the parameters of
 the equations are no longer disjoint, or an equation's coefficients are no longer free, and the maximizer is no longer
-least squares. With the product as a column, the label `a` on the covariate's path in the mediator equation and on the treatment's path in the outcome
-equation gives one compromise
+least squares. With the product as a column, the label `a` on the path from the covariate in the mediator equation and on the path from the treatment in the
+outcome equation gives one compromise
 value that is neither equation's least-squares coefficient:
 
 ```{r}
 #| label: shared
 d_col <- d
 d_col$p <- d$treatment * d$mediator1
-shared_fit <- quiet(fit_sem("mediator1 ~ treatment + a*covariate1\noutcome_int ~ mediator1 + a*treatment + p + covariate1",
-                            d_col))
+shared_model <- "mediator1 ~ treatment + a*covariate1\noutcome_int ~ mediator1 + a*treatment + p + covariate1"
+shared_fit <- quiet(fit_sem(shared_model, d_col))
 c(shared_a = coef(shared_fit)[["a"]], least_squares_mediator1_on_covariate1 = coef(lm_m)[["covariate1"]],
   least_squares_outcome_on_treatment = coef(lm_y)[["treatment"]])
 rule9 <- c(
@@ -627,13 +637,14 @@ product as a column, the native fit matches `lm()` without an intercept, not wit
 
 ```{r}
 #| label: intercept
-fixed_int <- quiet(fit_sem("mediator1 ~ treatment + covariate1\nmediator1 ~ 0*1\noutcome_int ~ mediator1 + treatment + p",
-                           d_col))
+fixed_int_model <- "mediator1 ~ treatment + covariate1\nmediator1 ~ 0*1\noutcome_int ~ mediator1 + treatment + p"
+fixed_int <- quiet(fit_sem(fixed_int_model, d_col))
 c(native_slope = coef(fixed_int)[["mediator1~treatment"]],
   lm_without_intercept = coef(lm(mediator1 ~ 0 + treatment + covariate1, d))[["treatment"]],
   lm_with_intercept = coef(lm_m)[["treatment"]])
 intercept_rule <- c(
-  `fixed intercept` = say(fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment:mediator1\noutcome ~ 0*1", d)),
+  `fixed intercept` = say(fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment:mediator1\noutcome ~ 0*1",
+                                  d)),
   `shared intercept label` = say(fit_sem("mediator1 ~ k*1 + treatment\noutcome ~ k*1 + mediator1 + treatment:mediator1",
                                          d))
 )
@@ -702,7 +713,7 @@ stopifnot(abs(coef(fit_base)[["a"]] - lavaan::coef(lv_base)[["a"]]) < 1e-6,
 
 Where it goes wrong is visible in the centered coordinates of Chapter 2. That chapter's map $\theta = T(\phi + c_0)$
 with $T = I + C$ relies on $C^2 = 0$ ($C$ has nonzero rows only at intercepts and nonzero columns only at paths, so
-$T^{-1} = I - C$). When an intercept and a path are one parameter, $C$ has a nonzero **diagonal** entry, $C^2 \ne 0$,
+$T^{-1} = I - C$). When an intercept and a path are one parameter, $C$ has a nonzero **diagonal** entry, $C^2 \neq 0$,
 and the round trip $\theta \to \phi \to \theta$ through the helper `.sem_to_phi()` (which applies $I - C$) no longer
 returns $\theta$:
 
@@ -736,24 +747,24 @@ above).
 
 The covariance of the estimates comes from the information (Chapter 5). By Steps 1 and 2 the Hessian of $\ell$ is block
 diagonal across $\eta$, $\psi_m$ and $\psi_y$ for any data, so the standard errors of the outcome equation come from
-the $\psi_y$ block alone. Differentiate $\ell_y$ twice in the coefficients $\vartheta = (\theta_0, \theta_2, \theta_1,
-\delta, \theta_3)$ with regressor vector $z_i = (1, m_i, x_i, c_i, p_i)$:
+the $\psi_y$ block alone. Differentiate $\ell_y$ twice in the coefficients $\kappa = (\theta_0, \theta_2, \theta_1,
+\delta, \theta_3)$ with regressor vector $r_i = (1, m_i, x_i, c_i, p_i)$:
 
 $$
--\frac{\partial^2 \ell_y}{\partial\vartheta\,\partial\vartheta^\top} = \frac{1}{\sigma^2_y}\sum_i z_i z_i^\top,
+-\frac{\partial^2 \ell_y}{\partial\kappa\,\partial\kappa^\top} = \frac{1}{\sigma^2_y}\sum_i r_i r_i^\top,
 \qquad
--\frac{\partial^2 \ell_y}{\partial\vartheta\,\partial\sigma^2_y} = \frac{1}{\sigma^4_y}\sum_i z_i e_{y,i} .
+-\frac{\partial^2 \ell_y}{\partial\kappa\,\partial\sigma^2_y} = \frac{1}{\sigma^4_y}\sum_i r_i e_{y,i} .
 $$
 
 The cross term is zero at the least-squares solution (the residuals are orthogonal to every regressor). So
 
-- the **observed** information is $\frac{n}{\hat\sigma^2_y} \cdot \frac1n \sum_i z_i z_i^\top$, the sample second moments,
-  and its inverse is the least-squares covariance at the ML scale, $\hat\sigma^2_y (Z^\top Z)^{-1}$ with $\hat\sigma^2_y =
+- the **observed** information is $\frac{n}{\hat\sigma^2_y} \cdot \frac1n \sum_i r_i r_i^\top$, the sample second moments,
+  and its inverse is the least-squares covariance at the ML scale, $\hat\sigma^2_y (R^\top R)^{-1}$ with $\hat\sigma^2_y =
   \text{RSS}/n$;
-- the **expected** information replaces $\frac1n \sum_i z_i z_i^\top$ by its expectation **under the model**,
-  $E_{\text{model}}[z z^\top] = \Sigma_{zz} + \mu_z \mu_z^\top$ with the implied $\Sigma$ and $\mu$.
+- the **expected** information replaces $\frac1n \sum_i r_i r_i^\top$ by its expectation **under the model**,
+  $E_{\text{model}}[r r^\top] = \Sigma_r + \mu_r \mu_r^\top$ with the implied $\Sigma$ and $\mu$.
 
-The two agree when the implied moments of $z$ equal the sample ones. With an endogenous factor they do not: the
+The two agree when the implied moments of $r$ equal the sample ones. With an endogenous factor they do not: the
 $(m, p)$ entry is the misfit of Section 3. Compute both by hand and compare with the engine's matrices,
 `.sem_info_observed()` and `.sem_info_expected()` (the fit refuses `information = "expected"`, so the expected matrix
 is built from the observed fit, as in Chapter 5):
@@ -795,7 +806,8 @@ st <- data.frame(
 )
 stopifnot(max(abs(st$ob / st$oe - 1)) < 1e-4, max(abs(st$ob / st$ls - 1)) < 1e-6, max(abs(st$eb / st$ee - 1)) < 1e-6,
           max(abs(st$eb / st$ob - 1)) > 0.05,
-          max(abs(info_e[y_par, setdiff(rownames(info_e), c(y_par, "outcome_int~~outcome_int"))])) < 1e-8 * max(abs(info_e)))
+          max(abs(info_e[y_par, setdiff(rownames(info_e), c(y_par, "outcome_int~~outcome_int"))])) <
+            1e-8 * max(abs(info_e)))
 ```
 
 The observed information reproduces least squares; the expected information gives other standard errors, because it
@@ -819,7 +831,7 @@ stopifnot(grepl("is not available for a model with a product of an endogenous va
 The product is not normal even when its factors are, so the model-based standard errors lean on an assumption the
 data cannot meet; the fit warns and recommends `se_type = "sandwich"`. With the observed information as bread, the
 sandwich of Chapter 5 is $A^{-1} B A^{-1}$ with $A$ block diagonal across equations. Its coefficient block for the
-outcome equation is $(Z^\top Z)^{-1} \bigl(\sum_i e_{y,i}^2 z_i z_i^\top\bigr) (Z^\top Z)^{-1}$, which is the HC0
+outcome equation is $(R^\top R)^{-1} \bigl(\sum_i e_{y,i}^2 r_i r_i^\top\bigr) (R^\top R)^{-1}$, which is the HC0
 heteroskedasticity-consistent covariance of `lm()` (the cross term with $\sigma^2_y$ in $A$ is zero, as above).
 With the expected information as bread the block is something else, which is why the refusal covers the sandwich too:
 
@@ -884,7 +896,9 @@ is far in the tail of $\chi^2$ on `r fit_lab@df` df.)
 
 The test is not refused for every product. When both factors are exogenous and the exogenous block is free (no
 statement on any exogenous variance or covariance), the model makes no false restriction, and asymptotic-robustness
-theory says the normal-theory test stays calibrated although the product is not normal. The engine reports it. In
+theory (Browne and Shapiro 1988; Satorra and Bentler 1990) says the normal-theory test stays calibrated although the
+product is not normal, provided the errors are independent of the exogenous variables and the exogenous moments are
+free parameters. The engine reports it. In
 this model the one restriction is the missing path from the product `treatment:covariate1` to the mediator, so the test
 (df 1) is a test of that path:
 
@@ -916,7 +930,7 @@ reported as `NA` there too.
 ### The null simulation
 
 "Stays calibrated" is a claim that can fail, so the gate `tests/sim/exo-product-null-colon.R` tests it: the true model
-$m = 0.7x + e$, $y = 0.4m + 0.3x + 0.3w + 0.2xw + e'$ is fitted as `m ~ x; y ~ m + x + w + x:w` (df 2, $n = 500$, 1000
+$m = 0.7x + e$, $y = 0.4m + 0.3x + 0.3w + 0.2x\,w + e'$ is fitted as `m ~ x; y ~ m + x + w + x:w` (df 2, $n = 500$, 1000
 replications, factors normal or centered exponential, a skewed distribution with kurtosis 9). Under a calibrated test
 about 5% of the replications reject at the 0.05 level. The **planted defect** fits the product $x\,m$ instead, an
 endogenous factor, where the test must not be calibrated. The code below is the gate's generator, run here with the
@@ -963,7 +977,7 @@ stopifnot(all(null_sim$fitted == 1000), all(abs(null_sim$reject_05[1:2] - 0.05) 
 
 The exogenous product rejects 5.5% and 5.6% of the time, within the gate's band of $0.05 \pm 0.02$ (the Monte Carlo
 standard error of a rate near 0.05 over 1000 replications is 0.007), with a mean chi-square near its df of 2. The
-endogenous product rejects about three times as often at the same sample size, although its regressions are correct.
+endogenous product rejects two to three times as often at the same sample size, although its regressions are correct.
 These are the gate's recorded values (`tests/sim/gates.csv`, rows `product-null-colon`, run of 2026-10-14). The
 companion gate `exo-product-fixed-var.R` records the restricted-block cases: rejection rates of 0.249 (normal factors,
 covariances dropped by the pairing rule), 0.383 (skewed factors, variances fixed) and 0.693 (skewed, both), which
@@ -973,11 +987,11 @@ is why a restricted exogenous block also reports `NA`.
 
 | Question | Answer | The check on this page |
 |---|---|---|
-| What does `x:m` mean? | the column $x\,m$, under the canonical name `m:x` (C-locale order) | the parser's table; the duplicate refused |
+| What does `x:m` mean? | the column $x\,m$, under the canonical name `m:x` (C-locale order) | the parsed table; the duplicate refused |
 | When is the column built? | before `fixed_x` and listwise deletion; a user's column is compared after deletion | the unassigned fixed rows; a column differing on a dropped row accepted |
 | What is it in the likelihood? | an exogenous observed variable with free moments | its zero row of $A$ and its five parameters |
 | Why are the paths least squares? | the density factors by equation with disjoint parameters (rules 8 and 9) | `lm()` equation by equation |
-| What breaks outside the class? | an outcome-derived regressor is biased; a residual covariance gives SUR; shared or fixed coefficients tie equations | the $xy$ regression; the SUR gap; the shared-label compromise |
+| What breaks outside the class? | an outcome-derived regressor is biased; a residual covariance gives SUR; shared or fixed coefficients tie equations | the $x\,y$ regression; the SUR gap; the shared-label compromise |
 | Which information? | observed (least squares); expected uses the false implied $E[m\,p]$ | both rebuilt by hand; the sandwich equals HC0 |
 | The model test? | `NA` with an endogenous factor or a restricted exogenous block; reported otherwise | the null simulation with its planted defect |
 
@@ -989,13 +1003,21 @@ is why a restricted exogenous block also reports `NA`.
    contains no error of the model.)
 2. Section 3's proof never used that $p = x\,m$. Where would it fail if $p$ were built from the **outcome** $y$? (Answer:
    nowhere in the algebra, which is why rule 8 is needed: the factorization still gives least squares, but least squares
-   of $y$ on a function of $y$ is inconsistent, as the $xy$ example showed.)
+   of $y$ on a function of $y$ is inconsistent, as the $x\,y$ example showed.)
 3. Why may a product appear in two equations but not twice in one? (Answer: in one equation the two columns would be
    identical, so the sample covariance is singular; in two equations each coefficient is a separate free parameter that
    reads the same column.)
 4. The observed and expected information agree for the just-identified mediation model of Chapter 5. Why do they not
-   agree here, although the regressions are right? (Answer: the expected information uses the model's $E[z z^\top]$, and
+   agree here, although the regressions are right? (Answer: the expected information uses the model's $E[r r^\top]$, and
    the model's $E[m\,p]$ is wrong, since the joint model misfits exactly at $(m, p)$.)
+
+## References
+
+Browne, M. W., & Shapiro, A. (1988). Robustness of normal theory methods in the analysis of linear latent variate
+models. *British Journal of Mathematical and Statistical Psychology*, 41, 193-208.
+
+Satorra, A., & Bentler, P. M. (1990). Model conditions for asymptotic robustness in the analysis of linear relations.
+*Computational Statistics & Data Analysis*, 10, 235-249.
 
 ## Where next
 
