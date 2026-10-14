@@ -2,7 +2,7 @@
 # A product with an endogenous factor (`x:m` with `m ~ x`), or a restricted exogenous (co)variance block, makes the
 # global chi-square invalid. The fit warns once, `glance()` and `summary()` report the test as NA with a note,
 # `anova()` and `mbco_sem()` refuse naming the product, and `information = "expected"` is refused for an endogenous
-# product. The population gate reads the statistic through the test-only `.sem_chisq()`.
+# product. The population gate reads the statistic through the internal `.sem_chisq()`.
 
 # Codex's counterexample (amendment section 2a): m = .7 x + e, y = .4 m + .3 x + .2 x m + e', X uncentered.
 pmt_data <- function(n = 600L, seed = 17L, xmean = 2) {
@@ -33,7 +33,7 @@ test_that("population gate: coefficients equal equation-wise OLS, the chi-square
   expect_equal(unname(coef(fit)["y~m"]), unname(ols_y["m"]), tolerance = tol)
   expect_equal(unname(coef(fit)["y~x"]), unname(ols_y["x"]), tolerance = tol)
   expect_equal(unname(coef(fit)["y~m:x"]), unname(ols_y["I(x * m)"]), tolerance = tol)
-  # the global test is far from chi-square: read through the test-only accessor, since glance() reports NA
+  # the global test is far from chi-square: read through the internal accessor, since glance() reports NA
   chisq <- .sem_chisq(fit)
   expect_gt(chisq, 100 * stats::qchisq(0.95, fit@df))
   expect_true(is.na(generics::glance(fit)$chisq))
