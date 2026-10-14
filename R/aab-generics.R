@@ -102,6 +102,15 @@
 #' lavaan fit estimates all equations jointly, so for the same data the
 #' intervals can differ between engines.
 #'
+#' The four-way effects that contain a covariate mean (`int_ref`, the NDE and
+#' the total effect) treat that mean as a fixed constant, so their standard
+#' errors and intervals are conditional on the observed covariates. They omit
+#' the sampling variance of the estimated mean, `theta3 * gamma` times the
+#' variance of the covariate mean, so they can understate the uncertainty of a
+#' population-average effect. CDE, `int_med`, PIE and the NIE do not depend on
+#' the mean. For a population-average interval resample rows with
+#' [bootstrap_mediation()] (`method = "nonparametric"`).
+#'
 #' ## Coefficient names
 #'
 #' The simple single-mediator [MediationData] from lm/glm fits names three
