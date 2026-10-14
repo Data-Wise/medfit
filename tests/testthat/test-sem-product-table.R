@@ -80,6 +80,7 @@ test_that("the parsed and completed tables do not depend on data", {
 })
 
 test_that("planted defect: skipping canonicalization lets two spellings of one product through", {
+  fx_skip_covr()
   # without the canonical name the reversed spelling is a different column name, so no duplicate is seen:
   # the model would reach the fit with two identical columns (lavaan: a singular-covariance failure)
   bad <- sem_mutate(.sem_product_name, "sort(c(a, b), method = \"radix\")", "c(a, b)")
@@ -90,6 +91,7 @@ test_that("planted defect: skipping canonicalization lets two spellings of one p
 })
 
 test_that("planted defect: dropping the duplicate check, the specific error turns into the generic one or none", {
+  fx_skip_covr()
   bad <- sem_mutate(.sem_parse, "which(is_prod & duplicated(pkey))", "integer()")
   testthat::local_mocked_bindings(.sem_parse = bad)
   # only the generic duplicate check is left: it stops the pair, but names neither spelling nor the canonical name,
@@ -102,12 +104,14 @@ test_that("planted defect: dropping the duplicate check, the specific error turn
 })
 
 test_that("planted defect: dropping the latent-product check lets `eta:x` through", {
+  fx_skip_covr()
   bad <- sem_mutate(.sem_parse, "if (any(latent_hit))", "if (FALSE)")
   testthat::local_mocked_bindings(.sem_parse = bad)
   expect_no_error(.sem_parse("eta =~ m1 + m2 + m3\ny ~ eta:x"))
 })
 
 test_that("planted defect: a consumer that hard-codes the written spelling disagrees with the table", {
+  fx_skip_covr()
   tab <- .sem_to_ram(.sem_complete(.sem_parse("y ~ x:m")$parameters))$ram
   expect_true(.sem_product_name("x", "m") %in% sub("^y~", "", tab$par_names))
   expect_false("x:m" %in% sub("^y~", "", tab$par_names))

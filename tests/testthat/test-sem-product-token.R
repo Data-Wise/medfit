@@ -142,6 +142,7 @@ test_that("models without a product parse exactly as before", {
 })
 
 test_that("planted defect: skipping the sort in the canonical name turns the identity test red", {
+  fx_skip_covr()
   bad <- sem_mutate(.sem_product_name, "sort(c(a, b), method = \"radix\")", "c(a, b)")
   expect_identical(bad("m", "x"), "m:x")
   expect_false(identical(bad("x", "m"), bad("m", "x")))
@@ -152,6 +153,7 @@ test_that("planted defect: skipping the sort in the canonical name turns the ide
 })
 
 test_that("planted defect: sorting in the session locale instead of C turns the C-locale test red", {
+  fx_skip_covr()
   bad <- sem_mutate(.sem_product_name, "method = \"radix\"", "method = \"shell\"")
   old <- Sys.getlocale("LC_COLLATE")
   on.exit(Sys.setlocale("LC_COLLATE", old), add = TRUE)
@@ -161,6 +163,7 @@ test_that("planted defect: sorting in the session locale instead of C turns the 
 })
 
 test_that("planted defect: dropping the product branch of the tokenizer turns `x:m` into an error", {
+  fx_skip_covr()
   bad <- sem_mutate(.sem_tokens, "startsWith(s, \":\")", "FALSE")
   testthat::local_mocked_bindings(.sem_tokens = bad)
   expect_error(.sem_parse("y ~ x:m"), "unexpected character ':'")
