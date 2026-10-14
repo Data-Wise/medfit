@@ -52,9 +52,9 @@ factor, because its standard errors (the sandwich built on them included)
 are wrong there. \code{fit_sem()} also warns once for any product term fitted
 without \code{se_type = "sandwich"}. \code{logLik()}, \code{AIC()} and \code{BIC()} stay
 defined, but the values of a fit with a product are not comparable with
-those of a fit without one (the product column enters the likelihood), and
-\code{AIC(fit_a, fit_b)} does not check; \code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse such
-a pair.
+those of a fit without one (the product column enters the likelihood), so
+\code{AIC(fit_a, fit_b)}, \code{BIC()}, \code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse such a
+pair.
 \item \code{anova()} tests nested fits by the likelihood-ratio statistic
 \eqn{n (F_r - F_f)}{n * (F_r - F_f)} on the difference in model degrees
 of freedom: \code{anova(fit_full, fit_restricted)}, or several fits, each tested

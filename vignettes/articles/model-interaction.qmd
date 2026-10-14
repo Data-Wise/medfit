@@ -137,7 +137,7 @@ CDE and INTref move with the centering; NDE, NIE and the total stay put.
 The chi-square, df and p-value are `NA` for this fit, `anova()` and `mbco_sem()`
 refuse, and `information = "expected"` is refused, because the product contains a
 regression target; `logLik()`, AIC and BIC stay defined, but those of a fit with the product are not
-comparable with those of a fit without it, and `AIC(fit_a, fit_b)` does not check. The
+comparable with those of a fit without it, so `AIC(fit_a, fit_b)` and `BIC()` refuse such a pair. The
 [supported class and each limit](model-native.html#product-terms) lists what else a product
 model cannot contain, with the message for each.
 

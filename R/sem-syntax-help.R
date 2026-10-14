@@ -110,8 +110,8 @@
 #' restricted. `glance()` then reports chi-square, df and p-value as `NA` with a
 #' note, `anova()` and [mbco_sem()] refuse, and expected information is refused for
 #' an endogenous product; `logLik()`, AIC and BIC stay defined, but those of a fit with a
-#' product are not comparable with those of a fit without one, and `AIC(fit_a, fit_b)` does not
-#' check. A product of
+#' product are not comparable with those of a fit without one, so `AIC(fit_a, fit_b)`, `BIC()`, `anova()` and
+#' [mbco_sem()] refuse such a pair. A product of
 #' exogenous variables with the block free keeps the ordinary test.
 #'
 #' @section medfit extensions:

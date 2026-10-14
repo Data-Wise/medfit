@@ -190,7 +190,7 @@ mediator works through the same call.
   supported class; the table of limits and messages is on [the native model page](model-native.html#product-terms).
   The model test is `NA` when a product factor is a regression target.
 - **AIC and BIC of a fit with a product are not comparable** with those of a fit without one (the product
-  column enters the likelihood), and `AIC(fit_a, fit_b)` does not check; see
+  column enters the likelihood), so `AIC(fit_a, fit_b)` and `BIC()` refuse such a pair; see
   [the native model page](model-native.html#limits).
 - For latent means, groups, categorical outcomes or fit indices use lavaan; the extraction
   route accepts a `lavaan` fit as well. See
