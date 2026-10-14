@@ -32,7 +32,7 @@ the numbers against lavaan and OpenMx. Each chapter runs on its own.
 
 | | |
 |---|---|
-| **You need** | the development version of medfit (the 0.9.0 line, on the `dev` branch); matrix algebra and the normal likelihood at the level of a first course in multivariate statistics |
+| **You need** | medfit 0.9.0 or later; matrix algebra and the normal likelihood at the level of a first course in multivariate statistics |
 | **You get** | the RAM matrices of a fitted model, the implied mean and covariance computed by hand, the discrepancy and its gradient derived and checked, and the moment and degrees-of-freedom count |
 | **Time** | about 40 minutes |
 

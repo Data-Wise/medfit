@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-CRAN has medfit 0.3.2; this site documents 0.9.0 (GitHub and r-universe).
+CRAN has medfit 0.3.2; this site documents 0.10.0 (GitHub and r-universe).
 This page lists what a 0.3.2 user needs to know before upgrading: numbers that
 change, calls that now stop with an error, and what is new. The full record is
 [NEWS](https://data-wise.github.io/medfit/news/index.html).
@@ -39,6 +39,7 @@ change, calls that now stop with an error, and what is new. The full record is
 | 0.8.0 | the names in `coef()`, `vcov()` and `tidy()` of a `SEMFit` | an unlabeled parameter was `"M ~ X"` or `"X ~~ X"` (with spaces) and a loading `"m2 ~ eta"` | `"M~X"`, `"X~~X"` and `"eta=~m2"`, the names `lavaan::coef()` uses; labeled parameters are unchanged (`SEMFit` is experimental) |
 | 0.9.0 | a fixed intercept, `y ~ 0*1`, in the native engine | the row was dropped and the covariance-only fit returned | a restriction ("the mean of `y` is 0"): one degree of freedom, a changed discrepancy, comparable with `anova()`; any `y ~ 1` row turns the mean structure on |
 | 0.9.0 | `logLik()`, `AIC()`, `BIC()` of a native fit with `fixed_x` | (new argument) | conditional on the fixed variables; `anova()`, `mbco_sem()` and multi-fit `AIC()`/`BIC()` stop when fixed sets or data differ; `glance()` gains a `fixed_x` column |
+| 0.10.0 | `extract_mediation(<SEMFit>, decomposition = "four_way")` | refused by name until the `:` operator existed | returns the four-way decomposition when the outcome equation carries the treatment-by-mediator product; refused with a message that says to add `x:m` when it does not |
 | 0.5.0 | `se_type = "sandwich"` with a treatment-by-mediator term | returned the model-based covariance, with no warning | applies the sandwich estimator |
 | 0.5.0 | lavaan fits with custom path labels | the alias rows of `@vcov` were all zero, so a parametric bootstrap had a zero-width interval | the alias rows are filled from the labeled parameters |
 
@@ -81,6 +82,7 @@ reuses one of medfit's alias names for a different path (0.5.0).
 | 0.7.0 | the native maximum-likelihood engine ([page](model-native.html)), `mbco_sem()`, and sampling weights with robust standard errors for it |
 | 0.8.0 | nonlinear constraints in the native engine ([page](model-native-constraints.html)), `mbco_sem(paths = )` for a product of k paths, `anova()`, `tidy()`/`glance()`/`confint()` for `SEMFit`, [lavaan and the native engine](lavaan-comparison.html), and cookbook recipes 12 and 13 |
 | 0.9.0 | observed intercepts and means in the native engine (`y ~ 1`, `meanstructure =`), `fixed_x` ([page](model-native.html)), cookbook recipe 18 and step 9 of the [native tutorial](native-tutorial.html) |
+| 0.10.0 | the product term `x:m` in native syntax and the four-way decomposition from a native fit (`extract_mediation()` on a `fit_sem()` fit), a supported-class table, and a worked example in the [interaction page](model-interaction.html) |
 
 ## Dependencies
 

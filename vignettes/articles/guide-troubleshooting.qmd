@@ -18,7 +18,7 @@ test, so the wording matches what you see.
 
 ::: {.callout-tip}
 ## First, check your version
-Examples on this site need medfit 0.9.0 or later. If `mediation_demo` or
+Examples on this site need medfit 0.10.0 or later. If `mediation_demo` or
 `fit_sem()` is "not found", you have CRAN's 0.3.2. See
 [What changed since CRAN 0.3.2](guide-changes.html).
 :::
