@@ -246,9 +246,13 @@ two fits. `fixed_x` also takes a character vector, such as
   guide](https://data-wise.github.io/medfit/articles/native-guide.md):
   syntax, inference, constraints, diagnostics and limits in one place.
 - [Cookbook recipes 11 to
-  18](https://data-wise.github.io/medfit/articles/cookbook.md): a latent
+  20](https://data-wise.github.io/medfit/articles/cookbook.md): a latent
   mediator, a nonlinear constraint, comparing models, defined
-  parameters, bounds, checks and fixed covariates.
+  parameters, bounds, checks, fixed covariates and intercepts.
+- [Native engine
+  book](https://data-wise.github.io/medfit/articles/native-book-1-mean-structure.md):
+  seven chapters on the mean structure, scale, constraints, `fixed_x`,
+  inference, the product term and the four-way decomposition.
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
   what the native engine does and does not do compared with lavaan.

@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-ADHD-friendly entry points for rapid analysis
+Short entry points for rapid analysis
 
 - [`med()`](https://data-wise.github.io/medfit/reference/med.md) :
   Simple Mediation Analysis
@@ -80,7 +80,8 @@ Functions for fitting and extracting mediation models
 
 ## Methods
 
-Print and summary methods for medfit classes
+tidy() and glance() for medfit classes; print, summary, anova, confint
+and logLik methods for SEMFit
 
 - [`tidy_s7_object()`](https://data-wise.github.io/medfit/reference/tidy_s7_object.md)
   [`glance_s7_object()`](https://data-wise.github.io/medfit/reference/tidy_s7_object.md)

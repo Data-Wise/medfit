@@ -649,7 +649,7 @@ boot_nie <- bootstrap_mediation(
 c(boot_nie@ci_lower, boot_nie@ci_upper)
 ```
 
-    [1] 0.4483248 0.8930866
+    [1] 0.4400159 0.9092223
 
 The fit must meet these requirements; each violation errors with its
 cause:
@@ -1046,9 +1046,11 @@ glance(med_int)
 
 The four-way formulas (continuous `Y` and `M`) are `CDE = θ₁ + θ₃·m*`,
 `INTref = θ₃·(E[M|X=0] − m*)`, `INTmed = θ₃·β₁`, and `PIE = θ₂·β₁`,
-where `θ₃` is the interaction coefficient and `β₁` the `a` path.
-Non-Gaussian outcomes are not yet supported and raise an informative
-error.
+where `θ₃` is the interaction coefficient and `β₁` the `a` path. The
+decomposition needs Gaussian mediator and outcome models with the
+identity link. A non-Gaussian family stops with an informative error,
+and a non-identity link stops with
+`Four-way decomposition requires the identity link`.
 
 ### Interaction with lavaan
 
@@ -1403,15 +1405,16 @@ se_indirect
 
 ## Design for Extensibility
 
-The extraction system is designed to accommodate future extensions:
+The extraction system is designed to accommodate further extensions:
 
-- **New model types**: Add methods for brms, glmer, etc. (`lmer` is
-  done)
-- **Complex mediation**: Moderated mediation
-- **Multiple treatments**: Comparative mediation analysis
-- **Latent variables**: SEM with measurement models
-  ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-  is the experimental native route; extend it)
+- **New model types**: methods for brms, glmer and similar fits can be
+  added (`lmer` is supported).
+- **Moderated mediation**: the treatment-by-mediator decomposition is
+  supported (above); other moderators are not.
+- **Multiple treatments**: comparative mediation analysis is not
+  supported.
+- **Latent variables**: supported through the experimental native route,
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md).
 
 All classes share the same interface, so new model types plug into the
 same effects, intervals and bootstrap.

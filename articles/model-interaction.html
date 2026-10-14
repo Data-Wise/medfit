@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/model-interaction.qmd" class="external-link"><code>vignettes/articles/model-interaction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-interaction.qmd" class="external-link"><code>vignettes/articles/model-interaction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -369,7 +373,7 @@ centered 0.8758649</code></pre>
 </div>
 </div>
 <p>CDE and INTref move with the centering; NDE, NIE and the total stay put.</p>
-<p>The chi-square, df and p-value are <code>NA</code> for this fit, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse, and <code>information = "expected"</code> is refused, because the product contains a regression target; <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC stay defined. The <a href="model-native.html#product-terms">supported class and each limit</a> lists what else a product model cannot contain, with the message for each.</p>
+<p>The chi-square, df and p-value are <code>NA</code> for this fit, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse, and <code>information = "expected"</code> is refused, because the product contains a regression target; <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC stay defined, but those of a fit with the product are not comparable with those of a fit without it, so <code>AIC(fit_a, fit_b)</code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> refuse such a pair. The <a href="model-native.html#product-terms">supported class and each limit</a> lists what else a product model cannot contain, with the message for each.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">sem</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chisq"</span>, <span class="st">"df"</span>, <span class="st">"p_value"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">

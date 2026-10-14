@@ -501,8 +501,13 @@ carried by backward recursions, \\\lambda_j = (\theta\_{2j} +
 
 The covariate means \\\bar c\\ are treated as fixed, so standard errors
 that involve them (the four-way INT_(ref) and the joint NDE) are
-conditional on the observed covariates; they slightly understate the
+conditional on the observed covariates; they omit the sampling variance
+of the estimated mean (the derivative of INT_(ref) with respect to
+\\\bar c\\ is \\\theta_3\gamma\\), so they can understate the
 uncertainty of a population-average effect.
+`options(medfit.covariate_mean_variance = TRUE)` adds the omitted
+variance, \\(\theta_3\gamma)^2 \operatorname{Var}(c)/n\\, to INT_(ref),
+the NDE and the TE.
 
 **Intervals.** [`confint()`](https://rdrr.io/r/stats/confint.html) and
 `tidy(conf_int = TRUE)` report normal intervals, \\\hat g \pm

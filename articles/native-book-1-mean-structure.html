@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/native-book-1-mean-structure.qmd" class="external-link"><code>vignettes/articles/native-book-1-mean-structure.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-book-1-mean-structure.qmd" class="external-link"><code>vignettes/articles/native-book-1-mean-structure.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -186,7 +190,7 @@
 
 
 
-    <p>This is the first of five chapters that open the native engine and show every matrix it works with. The engine is experimental. The chapters, in order:</p>
+    <p>This is the first of seven chapters that open the native engine and show every matrix it works with. The engine is experimental. The chapters, in order:</p>
 <ol type="1">
 <li>
 <strong>The mean structure</strong> (this chapter): the RAM form, the implied means, the discrepancy and its gradient, and the moment count.</li>
@@ -198,6 +202,10 @@
 <a href="native-book-4-fixed-x.html">Fixed exogenous variables</a>: <code>fixed_x</code>, the conditional likelihood and the comparison refusals.</li>
 <li>
 <a href="native-book-5-inference.html">Inference</a>: information, the sandwich, MBCO and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>.</li>
+<li>
+<a href="native-book-6-product-term.html">The product term</a>: <code>x:m</code>, its column, why the paths are least squares, rules 8 and 9 and the model test.</li>
+<li>
+<a href="native-book-7-four-way.html">The four-way decomposition</a>: CDE, INTref, INTmed and PIE derived, with their delta-method standard errors.</li>
 </ol>
 <p>Each chapter fits real models to the bundled <code>mediation_demo</code> data, prints the matrices the engine builds, derives the formulas that produce them, and checks the numbers against lavaan and OpenMx. Each chapter runs on its own.</p>
 <table class="table caption-top">
@@ -561,14 +569,14 @@ F_{ML}(\theta) = \log|\Sigma| + \operatorname{tr}(\Sigma^{-1} S) - \log|S| - p
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>sigma <span class="op">=</span> <span class="va">err_sigma</span>, mu <span class="op">=</span> <span class="va">err_mu</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">`rownames&lt;-`</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">th0</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>                       sigma      mu
-a                    7.8e-11 4.6e-11
-b                    5.7e-11 3.1e-11
-cp                   6.4e-11 2.9e-11
+a                    3.3e-11 4.6e-11
+b                    5.4e-11 3.3e-12
+cp                   4.9e-11 8.2e-13
 mediator1~~mediator1 8.2e-11 0.0e+00
 outcome~~outcome     8.2e-11 0.0e+00
-treatment~~treatment 9.3e-11 0.0e+00
-mediator1~1          0.0e+00 6.9e-12
-treatment~1          0.0e+00 3.6e-11</code></pre>
+treatment~~treatment 1.8e-11 0.0e+00
+mediator1~1          0.0e+00 2.7e-11
+treatment~1          0.0e+00 2.9e-11</code></pre>
 </div>
 </div>
 <p>Each row is a free parameter and each entry is the largest absolute discrepancy between the analytic derivative and the finite difference, so a wrong derivative would show as a number near the size of the derivative itself. Now the whole gradient. At the optimum it must vanish. At another point it must match a finite difference of <span class="math inline">\(F_{ML}\)</span> itself, so we test it at the engine’s starting value, where the gradient is large:</p>
@@ -611,7 +619,7 @@ treatment~1          -1.027e-17            0.0000  4.524e-17</code></pre>
 <span>  at_optimum <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu">grad_formula</span><span class="op">(</span><span class="va">th0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>at_start_vs_fd     at_optimum
-  1.019632e-09   4.024558e-16 </code></pre>
+  1.019632e-09   8.803902e-16 </code></pre>
 </div>
 </div>
 <p>The three columns agree. The last two rows, the intercepts of <code>mediator1</code> and <code>treatment</code>, are zero for a reason worth seeing. The default start sets these two intercepts so that the implied means of <code>mediator1</code> and <code>treatment</code> equal their sample means, which leaves a gap only in the outcome: <span class="math inline">\(d = d_y e_y\)</span>. With every variable observed, <span class="math inline">\(\Sigma^{-1} = (I - A)^\top S_{\text{ram}}^{-1} (I - A)\)</span>. The outcome causes nothing, so <span class="math inline">\((I - A) e_y = e_y\)</span>, and its residual is uncorrelated with the others, so <span class="math inline">\(S_{\text{ram}}^{-1} e_y = e_y / s_y\)</span> with <span class="math inline">\(s_y\)</span> its residual variance. Hence <span class="math inline">\(\Sigma^{-1} d = (d_y / s_y)(I - A)^\top e_y\)</span>, and the gradient of intercept <span class="math inline">\(m_j\)</span>, which is <span class="math inline">\(-2\,(B e_j)^\top \Sigma^{-1} d\)</span> by Step 2 and Step 4, equals <span class="math inline">\(-2\,(d_y / s_y)\, e_j^\top B^\top (I - A)^\top e_y = -2\,(d_y/s_y)\, e_j^\top e_y = 0\)</span> for every <span class="math inline">\(j\)</span> other than the outcome. At the optimum every component of the gradient is numerically zero: the fit sits at a stationary point.</p>
@@ -691,7 +699,7 @@ logl    logLik -1492.467976 -1492.467976</code></pre>
 <span>  largest_absolute_difference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">est_lv</span><span class="op">[</span><span class="va">common</span><span class="op">]</span> <span class="op">-</span> <span class="va">est_mf</span><span class="op">[</span><span class="va">common</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>      coefficients_compared largest_absolute_difference
-               8.000000e+00                5.694416e-10 </code></pre>
+               8.000000e+00                5.694413e-10 </code></pre>
 </div>
 </div>
 <p>The second result is the largest absolute difference over the coefficients the two fits share.</p>
@@ -764,7 +772,7 @@ s_k = \underbrace{(\partial_k\mu)^\top \Sigma^{-1} u}_{\text{mean part, linear i
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>difference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">info_hand</span> <span class="op">-</span> <span class="va">info_engine</span><span class="op">)</span><span class="op">)</span>, largest_entry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">info_engine</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>   difference largest_entry
- 4.547474e-13  3.200160e+03 </code></pre>
+ 9.094947e-13  3.200160e+03 </code></pre>
 </div>
 </div>
 <p>The hand-built information matches the engine’s. Its inverse estimates the covariance matrix of the estimates; the engine’s default uses the observed information instead (Chapter 5 compares the two), and Chapter 2 shows why the inverse needs a change of coordinates when the means are large.</p>

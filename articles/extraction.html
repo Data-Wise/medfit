@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -711,7 +715,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_nie</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_nie</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4483248 0.8930866</code></pre>
+<pre><code>[1] 0.4400159 0.9092223</code></pre>
 </div>
 </div>
 <p>The fit must meet these requirements; each violation errors with its cause:</p>
@@ -1026,7 +1030,7 @@ pie      0.19952257 0.4805126</code></pre>
 1 0.617 0.259 0.876 0.705       0.476      0   400 TRUE     </code></pre>
 </div>
 </div>
-<p>The four-way formulas (continuous <code>Y</code> and <code>M</code>) are <code>CDE = θ₁ + θ₃·m*</code>, <code>INTref = θ₃·(E[M|X=0] − m*)</code>, <code>INTmed = θ₃·β₁</code>, and <code>PIE = θ₂·β₁</code>, where <code>θ₃</code> is the interaction coefficient and <code>β₁</code> the <code>a</code> path. Non-Gaussian outcomes are not yet supported and raise an informative error.</p>
+<p>The four-way formulas (continuous <code>Y</code> and <code>M</code>) are <code>CDE = θ₁ + θ₃·m*</code>, <code>INTref = θ₃·(E[M|X=0] − m*)</code>, <code>INTmed = θ₃·β₁</code>, and <code>PIE = θ₂·β₁</code>, where <code>θ₃</code> is the interaction coefficient and <code>β₁</code> the <code>a</code> path. The decomposition needs Gaussian mediator and outcome models with the identity link. A non-Gaussian family stops with an informative error, and a non-identity link stops with <code>Four-way decomposition requires the identity link</code>.</p>
 </section><section class="level3"><h3 id="interaction-with-lavaan">Interaction with lavaan<a class="anchor" aria-label="anchor" href="#interaction-with-lavaan"></a>
 </h3>
 <p>In lavaan the interaction enters as a <strong>product variable</strong> (a column you create), and the model must be fit with <code>meanstructure = TRUE</code> so the mediator intercept (needed for INTref) is estimated. Name the product term via <code>interaction</code>:</p>
@@ -1279,16 +1283,16 @@ pie      0.19952257 0.4805126</code></pre>
 </div>
 </section></section><section class="level2"><h2 id="design-for-extensibility">Design for Extensibility<a class="anchor" aria-label="anchor" href="#design-for-extensibility"></a>
 </h2>
-<p>The extraction system is designed to accommodate future extensions:</p>
+<p>The extraction system is designed to accommodate further extensions:</p>
 <ul>
 <li>
-<strong>New model types</strong>: Add methods for brms, glmer, etc. (<code>lmer</code> is done)</li>
+<strong>New model types</strong>: methods for brms, glmer and similar fits can be added (<code>lmer</code> is supported).</li>
 <li>
-<strong>Complex mediation</strong>: Moderated mediation</li>
+<strong>Moderated mediation</strong>: the treatment-by-mediator decomposition is supported (above); other moderators are not.</li>
 <li>
-<strong>Multiple treatments</strong>: Comparative mediation analysis</li>
+<strong>Multiple treatments</strong>: comparative mediation analysis is not supported.</li>
 <li>
-<strong>Latent variables</strong>: SEM with measurement models (<code><a href="../reference/fit_sem.html">fit_sem()</a></code> is the experimental native route; extend it)</li>
+<strong>Latent variables</strong>: supported through the experimental native route, <code><a href="../reference/fit_sem.html">fit_sem()</a></code>.</li>
 </ul>
 <p>All classes share the same interface, so new model types plug into the same effects, intervals and bootstrap.</p>
 </section><section class="level2"><h2 id="working-with-extracted-results">Working with Extracted Results<a class="anchor" aria-label="anchor" href="#working-with-extracted-results"></a>

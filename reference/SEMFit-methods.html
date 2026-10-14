@@ -77,6 +77,8 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -101,6 +103,8 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -135,7 +139,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Methods for SEMFit objects</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
       <div class="d-none name"><code>SEMFit-methods.Rd</code></div>
     </div>
 
@@ -197,7 +201,10 @@ standard errors are unaffected, but only with observed information:
 factor, because its standard errors (the sandwich built on them included)
 are wrong there. <code><a href="fit_sem.html">fit_sem()</a></code> also warns once for any product term fitted
 without <code>se_type = "sandwich"</code>. <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> stay
-defined.</p></li>
+defined, but the values of a fit with a product are not comparable with
+those of a fit without one (the product column enters the likelihood), so
+<code>AIC(fit_a, fit_b)</code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code>, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="mbco_sem.html">mbco_sem()</a></code> refuse such a
+pair.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> tests nested fits by the likelihood-ratio statistic
 \(n (F_r - F_f)\) on the difference in model degrees
 of freedom: <code>anova(fit_full, fit_restricted)</code>, or several fits, each tested

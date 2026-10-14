@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/bootstrap.qmd" class="external-link"><code>vignettes/articles/bootstrap.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/bootstrap.qmd" class="external-link"><code>vignettes/articles/bootstrap.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -307,8 +311,8 @@ Estimate:   0.3328
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower:   0.2170
-  Upper:   0.4631</code></pre>
+  Lower:   0.2073
+  Upper:   0.4757</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
@@ -320,12 +324,12 @@ Estimate:  0.3327695
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower: 0.2170026
-  Upper: 0.4630625
+  Lower: 0.2073406
+  Upper: 0.475666
 
 Bootstrap Distribution Summary:
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
- 0.1375  0.2852  0.3264  0.3290  0.3675  0.5522 </code></pre>
+ 0.1336  0.2847  0.3288  0.3318  0.3738  0.5785 </code></pre>
 </div>
 </div>
 <section class="level3"><h3 id="how-it-works">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
@@ -404,8 +408,8 @@ Estimate:   0.3328
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower:   0.2105
-  Upper:   0.4740</code></pre>
+  Lower:   0.2107
+  Upper:   0.4694</code></pre>
 </div>
 </div>
 <section class="level3"><h3 id="how-it-works-1">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works-1"></a>
@@ -593,7 +597,7 @@ Estimate:   0.3328
 <pre class="r cell-code"><code><span><span class="co"># 95% CI</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.2170026 0.4630625</code></pre>
+<pre><code>[1] 0.2073406 0.4756660</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># Change confidence level</span></span>
 <span><span class="va">boot_90</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
@@ -606,7 +610,7 @@ Estimate:   0.3328
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_90</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_90</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span> <span class="co"># Narrower</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.2345624 0.4418077</code></pre>
+<pre><code>[1] 0.2251035 0.4455627</code></pre>
 </div>
 </div>
 </section><section class="level3"><h3 id="statistical-significance">Statistical Significance<a class="anchor" aria-label="anchor" href="#statistical-significance"></a>
@@ -667,8 +671,8 @@ Estimate:   0.0755
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower:   0.0371
-  Upper:   0.1248</code></pre>
+  Lower:   0.0397
+  Upper:   0.1194</code></pre>
 </div>
 </div>
 <p>The lm chain above estimates each equation separately, so its covariance matrix sets the covariances between equations to zero (see the Model Extraction article). To avoid that assumption, bootstrap nonparametrically by resampling the data and refitting all three models:</p>
@@ -781,9 +785,9 @@ N bootstrap samples: 1000
 <span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>         [,1]      [,2]
-1K  0.2170026 0.4630625
-5K  0.2136351 0.4654500
-10K 0.2132389 0.4661655</code></pre>
+1K  0.2073406 0.4756660
+5K  0.2134374 0.4685818
+10K 0.2113081 0.4674286</code></pre>
 </div>
 </div>
 <p>If CIs are similar, n_boot is sufficient.</p>
@@ -816,7 +820,7 @@ bootstrap_mediation() for robust inference.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>              2.5 %    97.5 %
 delta     0.2063564 0.4591826
-bootstrap 0.2170026 0.4630625</code></pre>
+bootstrap 0.2073406 0.4756660</code></pre>
 </div>
 </div>
 <p>Bootstrap is generally preferred because it: - Doesn’t assume normality of indirect effect - Handles skewness correctly - Provides better coverage</p>
@@ -866,7 +870,7 @@ Attaching package: 'generics'</code></pre>
 <pre><code># A tibble: 1 × 5
   term     estimate std_error conf_low conf_high
   &lt;chr&gt;       &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
-1 estimate    0.333    0.0612    0.217     0.463</code></pre>
+1 estimate    0.333    0.0675    0.207     0.476</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># One-row summary</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre>
@@ -895,38 +899,31 @@ Attaching package: 'generics'</code></pre>
 <pre class="r cell-code"><code><span><span class="co"># Stored percentile interval</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>             2.5 %    97.5 %
-estimate 0.2170026 0.4630625</code></pre>
+<pre><code>             2.5 %   97.5 %
+estimate 0.2073406 0.475666</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>    lower     upper
-0.2170026 0.4630625 </code></pre>
+0.2073406 0.4756660 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># A different level is recomputed from the stored bootstrap draws</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">boot_result</span>, level <span class="op">=</span> <span class="fl">0.90</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>               5 %      95 %
-estimate 0.2345624 0.4418077</code></pre>
+estimate 0.2251035 0.4455627</code></pre>
 </div>
 </div>
-</section></section><section class="level2"><h2 id="development-status">Development Status<a class="anchor" aria-label="anchor" href="#development-status"></a>
+</section></section><section class="level2"><h2 id="what-the-bootstrap-covers">What the bootstrap covers<a class="anchor" aria-label="anchor" href="#what-the-bootstrap-covers"></a>
 </h2>
-<p>Bootstrap infrastructure is <strong>complete</strong>:</p>
 <ul>
-<li>✅ S7 class for BootstrapResult</li>
-<li>✅ Parametric bootstrap</li>
-<li>✅ Nonparametric bootstrap</li>
-<li>✅ Plugin estimator</li>
-<li>✅ Parallel processing support</li>
-<li>✅ Seed-based reproducibility</li>
-<li>✅ Integration with <code><a href="../reference/med.html">med()</a></code> via <code>boot = TRUE</code>
-</li>
-<li>✅ Tidyverse methods (tidy, glance)</li>
-<li>✅ Base R methods (<code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>)</li>
-<li>✅ Serial, parallel, and interaction data in the parametric and plugin methods</li>
-<li>✅ Direct property access (<code>@estimate</code>, <code>@ci_lower</code>, <code>@ci_upper</code>)</li>
-<li>📋 BCa confidence intervals (future)</li>
+<li>The <code>BootstrapResult</code> class with direct property access (<code>@estimate</code>, <code>@ci_lower</code>, <code>@ci_upper</code>).</li>
+<li>Parametric, nonparametric and plugin methods, with seed-based reproducibility and parallel processing.</li>
+<li>Cluster resampling for nonparametric bootstrap (<code>cluster =</code>, see the <a href="cookbook.html">Cookbook</a>).</li>
+<li>Integration with <code><a href="../reference/med.html">med()</a></code> through <code>boot = TRUE</code>.</li>
+<li>Tidyverse methods (<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>) and base R methods (<code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>).</li>
+<li>Serial, parallel and interaction data in the parametric and plugin methods.</li>
+<li>Percentile intervals only; BCa intervals are not implemented.</li>
 </ul>
 <p>See <code>NEWS.md</code> for updates.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">

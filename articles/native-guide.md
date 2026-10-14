@@ -106,7 +106,7 @@ summary(fit)
      total cp + a * b 0.5374 0.1189
 
     Diagnostics:
-      Optimizer status: 4; stationarity 1.43e-08; retries 0
+      Optimizer status: 3; stationarity 1.27e-08; retries 0
       Active bounds: none
       Active constraints: none
       Improper solution: no
@@ -295,6 +295,11 @@ a chain gives a `SerialMediationData`, mediators side by side a
   and messages is on [the native model
   page](https://data-wise.github.io/medfit/articles/model-native.html#product-terms).
   The model test is `NA` when a product factor is a regression target.
+- **AIC and BIC of a fit with a product are not comparable** with those
+  of a fit without one (the product column enters the likelihood), so
+  `AIC(fit_a, fit_b)` and [`BIC()`](https://rdrr.io/r/stats/AIC.html)
+  refuse such a pair; see [the native model
+  page](https://data-wise.github.io/medfit/articles/model-native.html#limits).
 - For latent means, groups, categorical outcomes or fit indices use
   lavaan; the extraction route accepts a `lavaan` fit as well. See
   [lavaan and the native
@@ -307,6 +312,8 @@ a chain gives a `SerialMediationData`, mediators side by side a
 engine](https://data-wise.github.io/medfit/articles/model-native.md) \|
 [Constraints and the MBCO
 test](https://data-wise.github.io/medfit/articles/model-native-constraints.md)
+\| [Native engine
+book](https://data-wise.github.io/medfit/articles/native-book-1-mean-structure.md)
 \| [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md)
 \| [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md) \|

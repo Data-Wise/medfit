@@ -158,6 +158,25 @@ stores the full stacked least-squares covariance, and a lavaan fit
 estimates all equations jointly, so for the same data the intervals can
 differ between engines.
 
+The four-way effects that contain a covariate mean (`int_ref`, the NDE
+and the total effect) treat that mean as a fixed constant, so their
+standard errors and intervals are conditional on the observed
+covariates. They omit the sampling variance of the estimated mean,
+`theta3 * gamma` times the variance of the covariate mean, so they can
+understate the uncertainty of a population-average effect. CDE,
+`int_med`, PIE and the NIE do not depend on the mean. For
+population-average standard errors set
+`options(medfit.covariate_mean_variance = TRUE)`:
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
+[`confint()`](https://rdrr.io/r/stats/confint.html) then add the
+variance of the estimated covariate mean, `(theta3 * gamma)^2` times the
+variance of the covariate mean (case-weighted when the fit has weights),
+to `int_ref`, the NDE and the total effect; the default stays
+conditional, as lavaan's `:=` and the glm route are. Or resample rows
+with
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+(`method = "nonparametric"`).
+
 ### Coefficient names
 
 The simple single-mediator

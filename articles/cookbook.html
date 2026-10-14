@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -186,8 +190,8 @@
 
 
 
-    <p>Eighteen task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
-<p>These recipes need medfit 0.8.0 or later (recipe 18 needs 0.9.0, and the native route in recipe 7 needs 0.10.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>).</p>
+    <p>Twenty task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
+<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, and recipe 20 and the native route in recipe 7 need 0.10.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stderr">
@@ -379,7 +383,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4349603 0.8927176 </code></pre>
+0.6560315 0.4351678 0.8930074 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
@@ -752,6 +756,111 @@ fixed_x 0.3493645 0.06609875</code></pre>
 </div>
 <p>Compare fits only when they fix the same variables. <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>/<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> across several fits stop when the fixed sets differ, as above. Pass a character vector (for example <code>fixed_x = "treatment"</code>) to fix a subset.</p>
 <p>More: <a href="methods.html">Methods and Formulas</a>, <a href="native-guide.html">the native engine guide</a>.</p>
+</section><section class="level2"><h2 id="observed-intercepts-and-means">19. Observed intercepts and means<a class="anchor" aria-label="anchor" href="#observed-intercepts-and-means"></a>
+</h2>
+<p><em>When:</em> you want the intercepts of a native model, or a test of whether an intercept is zero. Writing any intercept (<code>outcome ~ 1</code>) turns the mean structure on and frees an intercept for every observed variable you did not mention, as lavaan does; <code>meanstructure = TRUE</code> does the same without writing one. The paths and their standard errors do not change.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">paths</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a * treatment</span></span>
+<span><span class="st">  outcome ~ b * mediator1 + cp * treatment</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">paths</span>, <span class="st">"outcome ~ 1"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">tf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">free</span><span class="op">)</span></span>
+<span><span class="va">tf</span><span class="op">[</span><span class="va">tf</span><span class="op">$</span><span class="va">op</span> <span class="op">==</span> <span class="st">"~1"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  term        estimate std_error
+  &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;
+1 outcome~1      0.231    0.0774
+2 mediator1~1    0.155    0.0763
+3 treatment~1    0.502    0.0250</code></pre>
+</div>
+</div>
+<p>The outcome and mediator intercepts equal the <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> intercepts of the same equations, and the exogenous mean is the sample mean of <code>treatment</code>. <code>fit_sem(paths, mediation_demo, meanstructure = TRUE)</code> returns the same fit.</p>
+<p>A fixed intercept is a restriction. <code>outcome ~ 0*1</code> costs one degree of freedom and changes the other estimates, so <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> can test it:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">zero</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">paths</span>, <span class="st">"outcome ~ 0*1"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>free <span class="op">=</span> <span class="va">free</span><span class="op">@</span><span class="va">theta</span><span class="op">[[</span><span class="st">"cp"</span><span class="op">]</span><span class="op">]</span>, fixed_at_zero <span class="op">=</span> <span class="va">zero</span><span class="op">@</span><span class="va">theta</span><span class="op">[[</span><span class="st">"cp"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>         free fixed_at_zero
+        0.041         0.262 </code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">free</span>, <span class="va">zero</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Likelihood-ratio (chi-square difference) test for SEMFit models
+
+n = 400; Chisq is n times the minimized discrepancy
+
+     Df  Chisq Chisq diff Df diff Pr(&gt;Chisq)
+free  0 0.0000
+zero  1 8.8141     8.8141       1   0.002989 **
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC</a></span><span class="op">(</span><span class="va">free</span>, <span class="va">zero</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>     df      AIC
+free  9 2994.122
+zero  8 3000.936</code></pre>
+</div>
+</div>
+<p>The test rejects zero, and the restricted model has the larger AIC. A fit with the mean structure off has no intercepts to restrict.</p>
+<p>More: <a href="model-native.html#intercepts">Native engine, intercepts</a>.</p>
+</section><section class="level2"><h2 id="four-way-decomposition-from-a-native-fit">20. Four-way decomposition from a native fit<a class="anchor" aria-label="anchor" href="#four-way-decomposition-from-a-native-fit"></a>
+</h2>
+<p><em>When:</em> the outcome depends on the treatment, the mediator and their product, and you want the controlled direct effect, the two interaction terms and the pure indirect effect. Write the product as <code>treatment:mediator1</code> in the outcome equation, fit with <code><a href="../reference/fit_sem.html">fit_sem()</a></code>, and extract. A product turns the mean structure on, so the covariate in the mediator equation enters the reference interaction through its sample mean. The fit warns that the global test is not valid with a product and recommends the sandwich covariance; the chunk silences the warning and asks for the sandwich.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">four_way</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ treatment + covariate2</span></span>
+<span><span class="st">  outcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate2</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">fit20</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">four_way</span>, <span class="va">mediation_demo</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fw20</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit20</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span>
+<span>                          decomposition <span class="op">=</span> <span class="st">"four_way"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fw20</span>, type <span class="op">=</span> <span class="st">"components"</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 5
+  term    estimate std_error conf_low conf_high
+  &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 cde       0.0423    0.119  -0.191       0.275
+2 int_ref   0.0769    0.0415 -0.00442     0.158
+3 int_med   0.228     0.0707  0.0891      0.366
+4 pie       0.326     0.0850  0.160       0.493</code></pre>
+</div>
+</div>
+<p>The components sum to the natural direct and indirect effects, and <code>m_star</code> moves the reference level of the mediator (default 0), which shifts weight between the controlled direct effect and the reference interaction.</p>
+<p>The standard errors treat the covariate mean as fixed, so they are conditional on the observed covariates and slightly too small for a population average. To add the variance of the estimated covariate mean to INT<sub>ref</sub>, the NDE and the TE, set the option below (the default stays conditional, as lavaan’s <code>:=</code> is); the other components do not change:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>medfit.covariate_mean_variance <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fw20</span>, type <span class="op">=</span> <span class="st">"components"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 2
+  term    std_error
+  &lt;chr&gt;       &lt;dbl&gt;
+1 cde        0.119
+2 int_ref    0.0415
+3 int_med    0.0707
+4 pie        0.0850</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre>
+</div>
+<p>On <code>mediation_demo</code> the added term is about 0.08% of the INT<sub>ref</sub> standard error, so the table matches the one above to the digits shown; it matters when the interaction and the effect of the covariate on the mediator are both large (chapter 7 has a simulated case: 0.0995 becomes 0.1516 against a bootstrap SD of 0.1568).</p>
+<p>The other route is the nonparametric bootstrap, which refits the model on each resample:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">int_ref_stat</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">dat</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">four_way</span>, <span class="va">dat</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">f</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span>
+<span>                    decomposition <span class="op">=</span> <span class="st">"four_way"</span><span class="op">)</span><span class="op">@</span><span class="va">int_ref</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">boot20</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">int_ref_stat</span>, method <span class="op">=</span> <span class="st">"nonparametric"</span>,</span>
+<span>                              data <span class="op">=</span> <span class="va">mediation_demo</span>, n_boot <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="va">boot20</span><span class="op">@</span><span class="va">estimate</span>, lower <span class="op">=</span> <span class="va">boot20</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot20</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>    estimate        lower        upper
+ 0.076915831 -0.003651384  0.160267019 </code></pre>
+</div>
+</div>
+<p>More: <a href="native-book-7-four-way.html">Native book, the four-way decomposition</a>, <a href="model-native.html">Native engine, product term</a>.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

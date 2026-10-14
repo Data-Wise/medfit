@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -484,6 +488,77 @@
 <td>fit with <code><a href="../reference/fit_sem.html">fit_sem()</a></code> and call <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>; see <a href="model-native-multi.html">several mediators</a>
 </td>
 </tr>
+<tr class="even">
+<td><code>latent means are planned for a later release</code></td>
+<td>a latent variable has a free or nonzero mean (<code>eta ~ 1</code>, <code>eta ~ 2*1</code>)</td>
+<td>leave the latent mean at its default of 0 (<code>eta ~ 0*1</code> is accepted)</td>
+</tr>
+<tr class="odd">
+<td><code>no start converged</code></td>
+<td>no start satisfied the gates; the tail of the message says why, such as <code>is violated by</code> when two constraints contradict each other</td>
+<td>read the tail; remove or correct the contradicting constraint, or check the scale of the data</td>
+</tr>
+<tr class="even">
+<td>
+<code>the starts disagree</code> (a warning)</td>
+<td>a model with a nonlinear inequality such as <code>a*b &gt; 0.4</code> has more than one local optimum, and the starts reached different ones</td>
+<td>the lowest discrepancy is kept; raise <code>n_starts</code> to search further</td>
+</tr>
+<tr class="odd">
+<td><code>is not nested in</code></td>
+<td>
+<code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> got a restricted model that frees a parameter the larger model leaves out, or does not keep one of its constraints</td>
+<td>fit the restricted model by constraining or fixing parameters of the larger one</td>
+</tr>
+<tr class="even">
+<td>
+<code>the null lies on the boundary of the parameter space</code> (a warning)</td>
+<td>
+<code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> or <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tested a null that sits on an active bound or inequality, so the statistic is a mixture of chi-squares</td>
+<td>do not read the p-value as chi-square(df); bootstrap, or compare on a model without the bound</td>
+</tr>
+<tr class="odd">
+<td><code>a product ':' needs a variable name on each side</code></td>
+<td>a space around the colon in a product (<code>x :m</code>)</td>
+<td>write the product without spaces: <code>x:m</code>
+</td>
+</tr>
+<tr class="even">
+<td><code>(rule 8: no outcome-derived regressors)</code></td>
+<td>a product has a factor that is its own outcome or downstream of it (<code>y ~ x + x:y</code>)</td>
+<td>build the product from variables that are not outcomes of that equation</td>
+</tr>
+<tr class="odd">
+<td><code>cannot have a residual covariance (rule 9)</code></td>
+<td>a model with a product has <code>m1 ~~ m2</code> between outcomes</td>
+<td>drop the residual covariance, or fit without the product</td>
+</tr>
+<tr class="even">
+<td><code>has a fixed coefficient (rule 9)</code></td>
+<td>a regression in a model with a product has a fixed value (<code>0.3*x</code>, <code>0*x</code>); the same rule covers bounds, shared labels and loops</td>
+<td>free the coefficient; the full list is in the table in <a href="model-native.html#product-terms">the native model page</a>
+</td>
+</tr>
+<tr class="odd">
+<td><code>names the coefficient label</code></td>
+<td>
+<code>==</code>, <code>&lt;</code> or <code>&gt;</code> in a model with a product names a coefficient label (<code>a == b</code>)</td>
+<td>constrain a defined parameter (<code>:=</code>) instead, or fit without the product</td>
+</tr>
+<tr class="even">
+<td>
+<code>the model test is not valid for this model</code> (a warning)</td>
+<td>a product has a factor that is itself an outcome, so the chi-square is not valid</td>
+<td>the test is reported as NA and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse; the coefficients and the sandwich standard errors are unaffected</td>
+</tr>
+<tr class="odd">
+<td>
+<code>model-based standard errors assume normality, which a product violates</code> (a warning)</td>
+<td>a model with a product was fitted without <code>se_type = "sandwich"</code>
+</td>
+<td>add <code>se_type = "sandwich"</code>
+</td>
+</tr>
 </tbody>
 </table></section><section class="level2"><h2 id="messages-that-are-not-errors">Messages that are not errors<a class="anchor" aria-label="anchor" href="#messages-that-are-not-errors"></a>
 </h2>
@@ -504,7 +579,7 @@
 </tr>
 <tr class="even">
 <td>the estimates use fewer rows than your data has</td>
-<td>the model fits drop rows with missing values on their variables. <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> reports the rows used in the development version; 0.7.0 reported every row of <code>data</code>, so there, count them with <code><a href="https://rdrr.io/r/stats/complete.cases.html" class="external-link">complete.cases()</a></code>
+<td>the model fits drop rows with missing values on their variables. Since 0.8.0 <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> and <code>n_obs</code> report the rows used; 0.7.0 and earlier reported every row of <code>data</code>, so there, count them with <code><a href="https://rdrr.io/r/stats/complete.cases.html" class="external-link">complete.cases()</a></code>
 </td>
 </tr>
 </tbody>

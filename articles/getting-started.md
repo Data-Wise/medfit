@@ -5,7 +5,7 @@
 > This site documents medfit 0.10.0 or later. CRAN has 0.3.2, which
 > lacks `mediation_demo` and the native, joint and cluster functions;
 > install from GitHub or r-universe (see the [home
-> page](https://data-wise.github.io/medfit/#installation)).
+> page](https://data-wise.github.io/medfit/#install)).
 
 **Four steps.** By the end you will have fitted a mediation model, read
 its effects, and added an interval.
@@ -268,6 +268,9 @@ Pick the row that matches your data.
 | Two mediators in a chain | [Serial mediation](https://data-wise.github.io/medfit/articles/model-serial.md) |
 | Two mediators side by side | [Parallel mediation](https://data-wise.github.io/medfit/articles/model-parallel.md) |
 | Several mediators with products | [Joint mediation](https://data-wise.github.io/medfit/articles/model-joint.md) |
+| A treatment given to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.md) |
+| A `lavaan` fit | [lavaan models](https://data-wise.github.io/medfit/articles/model-lavaan.md) |
+| Model syntax, a latent mediator, constraints, intercepts or a product term | [Native engine](https://data-wise.github.io/medfit/articles/model-native.md) |
 | Something else, or not sure | [Models](https://data-wise.github.io/medfit/articles/models.md), the full list |
 | An error or warning | [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.md) |
 | Which interval to report | [Which interval should I use?](https://data-wise.github.io/medfit/articles/guide-intervals.md) |
@@ -277,7 +280,7 @@ For quick lookups: the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md) has every
 function on one page, and the
 [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) has
-eighteen short recipes. To understand the classes, read the
+twenty short recipes. To understand the classes, read the
 [Introduction](https://data-wise.github.io/medfit/articles/introduction.md);
 for the math behind every effect and standard error, [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md); for

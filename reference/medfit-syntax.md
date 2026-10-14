@@ -126,8 +126,13 @@ reports chi-square, df and p-value as `NA` with a note,
 [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
 refuse, and expected information is refused for an endogenous product;
 [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC stay
-defined. A product of exogenous variables with the block free keeps the
-ordinary test.
+defined, but those of a fit with a product are not comparable with those
+of a fit without one, so `AIC(fit_a, fit_b)`,
+[`BIC()`](https://rdrr.io/r/stats/AIC.html),
+[`anova()`](https://rdrr.io/r/stats/anova.html) and
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+refuse such a pair. A product of exogenous variables with the block free
+keeps the ordinary test.
 
 ## medfit extensions
 

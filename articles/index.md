@@ -86,6 +86,10 @@ Upgrading, errors, intervals and terms
   variables](https://data-wise.github.io/medfit/articles/native-book-4-fixed-x.md):
 - [Native engine book, chapter 5:
   inference](https://data-wise.github.io/medfit/articles/native-book-5-inference.md):
+- [Native engine book, chapter 6: the product
+  term](https://data-wise.github.io/medfit/articles/native-book-6-product-term.md):
+- [Native engine book, chapter 7: the four-way
+  decomposition](https://data-wise.github.io/medfit/articles/native-book-7-four-way.md):
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
 

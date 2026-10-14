@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -329,7 +333,7 @@ Defined parameters:
  total cp + a * b 0.5374 0.1189
 
 Diagnostics:
-  Optimizer status: 4; stationarity 1.43e-08; retries 0
+  Optimizer status: 3; stationarity 1.27e-08; retries 0
   Active bounds: none
   Active constraints: none
   Improper solution: no
@@ -579,10 +583,12 @@ MBCO = 33.353, df = 1, p-value = 7.685e-09</code></pre>
 <strong>ML only</strong>, plus the HC0 sandwich; no robust chi-square, no fit indices beyond the chi-square, AIC and BIC.</li>
 <li>
 <strong>Products</strong> (<code>x:m</code>, which give the four-way decomposition) work for two observed variables inside a supported class; the table of limits and messages is on <a href="model-native.html#product-terms">the native model page</a>. The model test is <code>NA</code> when a product factor is a regression target.</li>
+<li>
+<strong>AIC and BIC of a fit with a product are not comparable</strong> with those of a fit without one (the product column enters the likelihood), so <code>AIC(fit_a, fit_b)</code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> refuse such a pair; see <a href="model-native.html#limits">the native model page</a>.</li>
 <li>For latent means, groups, categorical outcomes or fit indices use lavaan; the extraction route accepts a <code>lavaan</code> fit as well. See <a href="lavaan-comparison.html">lavaan and the native engine</a>.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
-<p><a href="native-quickstart.html">Quickstart</a> | <a href="model-native.html">Models: native engine</a> | <a href="model-native-constraints.html">Constraints and the MBCO test</a> | <a href="cookbook.html">Cookbook</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>
+<p><a href="native-quickstart.html">Quickstart</a> | <a href="model-native.html">Models: native engine</a> | <a href="model-native-constraints.html">Constraints and the MBCO test</a> | <a href="native-book-1-mean-structure.html">Native engine book</a> | <a href="cookbook.html">Cookbook</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

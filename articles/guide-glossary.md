@@ -93,7 +93,7 @@ The own and spillover split is a large-cluster approximation.
 | **plugin** | the point estimate only, with no interval | [Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.md) |
 | **percentile interval** | the 2.5th and 97.5th percentiles of the bootstrap draws, for a 95% interval | [Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.md) |
 | **sandwich** | a robust standard error, used with weights (`se_type = "sandwich"`); HC3 for the `glm` engine, HC0-type for the native engine | [Weights and robust SEs](https://data-wise.github.io/medfit/articles/model-weights.md) |
-| **MBCO** | the minimum of two likelihood-ratio tests, for the hypothesis that an indirect effect is zero ([`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)) | [constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.md) |
+| **MBCO** | the minimum over the paths of the likelihood-ratio tests (two or k paths), for the hypothesis that an indirect effect is zero ([`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)) | [constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.md) |
 
 ## The native engine
 
@@ -104,6 +104,13 @@ The own and spillover split is a large-cluster approximation.
 | **defined parameter** (`:=`) | a quantity defined from labels, such as `ab := a * b`, with a delta-method standard error | [Native engine](https://data-wise.github.io/medfit/articles/model-native.md) |
 | **latent variable** (`=~`) | a variable measured by indicators, as in `eta =~ m1 + m2 + m3` | [a latent mediator](https://data-wise.github.io/medfit/articles/model-native-latent.md) |
 | **constraint** | an equality or inequality on labels, such as `a == b` | [constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.md) |
+| **mean structure** | the observed means modeled together with the covariances: intercepts (`y ~ 1`) are estimated; any `~1` statement turns it on and frees every unwritten observed intercept | [Intercepts](https://data-wise.github.io/medfit/articles/model-native.html#intercepts) |
+| **intercept** | the mean of an observed variable that its equation leaves unexplained, written `y ~ 1` or `y ~ 1 + x`; `y ~ 0*1` fixes it at 0 and is a restriction | [Intercepts](https://data-wise.github.io/medfit/articles/model-native.html#intercepts) |
+| **`fixed_x`** | fixes the mean, variances and covariances of exogenous observed variables at their sample values, as lavaan’s `fixed.x = TRUE`; the structural estimates and standard errors do not change | [Fix exogenous covariates](https://data-wise.github.io/medfit/articles/cookbook.html#fix-exogenous-covariates-fixed_x) |
+| **product term** | `x:m` on the right side of a regression, an observed column equal to `x * m`; it gives the four-way decomposition and turns the mean structure on | [Product terms](https://data-wise.github.io/medfit/articles/model-native.html#product-terms) |
+| **canonical name** (`m:x`) | the one name a product is stored under: the two variable names sorted in the C locale, so `x:m` and `m:x` are the same term | [Product terms](https://data-wise.github.io/medfit/articles/model-native.html#product-terms) |
+| **nested comparison** ([`anova()`](https://rdrr.io/r/stats/anova.html)) | the likelihood-ratio test of a restricted fit against a fuller one; it refits nothing and refuses fits that are not nested | [Compare nested fits](https://data-wise.github.io/medfit/articles/model-native-constraints.html#compare-nested-fits) |
+| **conditional log likelihood** | the log likelihood given the fixed variables under `fixed_x`, so [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC of fits with different fixed sets cannot be compared | [Limits](https://data-wise.github.io/medfit/articles/model-native.html#limits) |
 
 ## Related
 

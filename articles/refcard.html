@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/refcard.qmd" class="external-link"><code>vignettes/articles/refcard.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/refcard.qmd" class="external-link"><code>vignettes/articles/refcard.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -186,7 +190,7 @@
 
 
 
-    <p>Quick lookup for users who already know medfit. Needs medfit 0.10.0 or later (CRAN has 0.3.2; install from GitHub or r-universe, see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>). Explanations are in the <a href="getting-started.html">articles</a>; formulas are in <a href="methods.html">Methods and Formulas</a>; task recipes are in the <a href="cookbook.html">Cookbook</a>; one page per model type is in <a href="models.html">Models</a>.</p>
+    <p>Quick lookup for users who already know medfit. Needs medfit 0.10.0 or later (CRAN has 0.3.2; install from GitHub or r-universe, see the <a href="https://data-wise.github.io/medfit/#install">home page</a>). Explanations are in the <a href="getting-started.html">articles</a>; formulas are in <a href="methods.html">Methods and Formulas</a>; task recipes are in the <a href="cookbook.html">Cookbook</a>; one page per model type is in <a href="models.html">Models</a>.</p>
 <section class="level2"><h2 id="start-here">Start here<a class="anchor" aria-label="anchor" href="#start-here"></a>
 </h2>
 <div class="cell">
@@ -269,50 +273,66 @@ Residual SDs:
 </td>
 </tr>
 <tr class="odd">
+<td>Population-average four-way SEs (INTref, NDE, TE)</td>
+<td>
+<code>options(medfit.covariate_mean_variance = TRUE)</code>, then <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> or <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>; default is conditional on the covariates</td>
+</tr>
+<tr class="even">
 <td>
 <code>lmer</code> pair, cluster treatment</td>
 <td><code>extract_mediation(..., cluster = )</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Formulas, cluster treatment</td>
 <td>
 <code>fit_mediation(engine = "lmer", cluster = )</code> with plain formulas, no <code>(1 \| id)</code>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>
 <code>lavaan</code> fit</td>
 <td><code>extract_mediation(lavaan_fit, ...)</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>IPW weights</td>
 <td><code>fit_mediation(weights = , se_type = "sandwich")</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Model syntax and data (observed or latent variables, constraints, <code>:=</code>)</td>
 <td>
 <code>fit_sem(model, data)</code>, a <code>SEMFit</code>
 </td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Model syntax, mediator by name</td>
 <td><code>fit_mediation(engine = "native", model = , treatment = , mediator = )</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Many exogenous covariates on a native fit</td>
 <td>
 <code>fit_sem(model, data, fixed_x = TRUE)</code>; <code>glance(fit)$fixed_x</code> lists what was fixed</td>
 </tr>
+<tr class="odd">
+<td>Intercepts and means on a native fit</td>
+<td>
+<code>y ~ 1</code> in the syntax (frees every unwritten observed intercept), or <code>fit_sem(model, data, meanstructure = TRUE)</code>; <code>y ~ 0*1</code> restricts one</td>
+</tr>
 <tr class="even">
+<td>Log likelihood, AIC and BIC of a <code>SEMFit</code>
+</td>
+<td>
+<code>logLik(fit)</code>, <code>AIC(fit1, fit2)</code>, <code>BIC(fit1, fit2)</code>; <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> of a fit with a product term and one without are not comparable</td>
+</tr>
+<tr class="odd">
 <td>Test of the indirect effect on a <code>SEMFit</code> (MBCO)</td>
 <td>
 <code>mbco_sem(fit, "a", "b")</code>; <code>paths = c("a", "d", "b")</code> for a serial product</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Compare nested <code>SEMFit</code>s (likelihood-ratio test)</td>
 <td><code>anova(fit_full, fit_restricted)</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Parameter table, one-row fit summary and intervals for a <code>SEMFit</code>
 </td>
 <td>
@@ -568,6 +588,19 @@ Residual SDs:
 <tr class="even">
 <td>Total effect near zero</td>
 <td>Proportion mediated undefined</td>
+</tr>
+<tr class="odd">
+<td>Native fit: the model test is not valid for this model</td>
+<td>A product factor is a regression target or the exogenous block is restricted: <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> reports <code>NA</code>, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse</td>
+</tr>
+<tr class="even">
+<td>Native fit: the starts disagree</td>
+<td>Several accepted optima: the lowest was kept; raise <code>n_starts</code>
+</td>
+</tr>
+<tr class="odd">
+<td>Native <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>: not nested</td>
+<td>The restricted model frees or drops something the larger one does not: constrain or fix parameters of the larger model instead</td>
 </tr>
 </tbody>
 </table></section><script id="quarto-html-after-body" type="application/javascript">

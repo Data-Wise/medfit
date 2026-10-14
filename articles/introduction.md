@@ -5,7 +5,7 @@
 **medfit** provides unified infrastructure for mediation analysis in R.
 It offers:
 
-- **ADHD-friendly API**:
+- **Short entry points**:
   [`med()`](https://data-wise.github.io/medfit/reference/med.md) for
   quick analysis,
   [`quick()`](https://data-wise.github.io/medfit/reference/quick.md) for
@@ -35,7 +35,10 @@ It offers:
   and [`tidy()`](https://generics.r-lib.org/reference/tidy.html),
   [`glance()`](https://generics.r-lib.org/reference/glance.html) and
   [`confint()`](https://rdrr.io/r/stats/confint.html) summarize a
-  `SEMFit`
+  `SEMFit`; observed intercepts and means (`y ~ 1`), `fixed_x` and the
+  `x:m` product term (with the four-way decomposition through
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md))
+  are supported inside documented limits
 - **S7-based classes** for standardized mediation data structures
 - **Foundation** for the mediation analysis ecosystem (RMediation,
   mediationverse)
@@ -448,8 +451,8 @@ summary(boot_result)
       Upper: 0.25
 
     Bootstrap Distribution Summary:
-         Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
-    -0.006637  0.120876  0.149608  0.148646  0.174983  0.306117 
+       Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+    0.01237 0.11804 0.14626 0.14684 0.17570 0.28092 
 
 ## Main Functions
 

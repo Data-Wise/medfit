@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/guide-glossary.qmd" class="external-link"><code>vignettes/articles/guide-glossary.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-glossary.qmd" class="external-link"><code>vignettes/articles/guide-glossary.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -451,7 +455,7 @@
 </tr>
 <tr class="odd">
 <td><strong>MBCO</strong></td>
-<td>the minimum of two likelihood-ratio tests, for the hypothesis that an indirect effect is zero (<code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>)</td>
+<td>the minimum over the paths of the likelihood-ratio tests (two or k paths), for the hypothesis that an indirect effect is zero (<code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>)</td>
 <td><a href="model-native-constraints.html">constraints and MBCO</a></td>
 </tr>
 </tbody>
@@ -492,6 +496,44 @@
 <td>an equality or inequality on labels, such as <code>a == b</code>
 </td>
 <td><a href="model-native-constraints.html">constraints and MBCO</a></td>
+</tr>
+<tr class="even">
+<td><strong>mean structure</strong></td>
+<td>the observed means modeled together with the covariances: intercepts (<code>y ~ 1</code>) are estimated; any <code>~1</code> statement turns it on and frees every unwritten observed intercept</td>
+<td><a href="model-native.html#intercepts">Intercepts</a></td>
+</tr>
+<tr class="odd">
+<td><strong>intercept</strong></td>
+<td>the mean of an observed variable that its equation leaves unexplained, written <code>y ~ 1</code> or <code>y ~ 1 + x</code>; <code>y ~ 0*1</code> fixes it at 0 and is a restriction</td>
+<td><a href="model-native.html#intercepts">Intercepts</a></td>
+</tr>
+<tr class="even">
+<td><strong><code>fixed_x</code></strong></td>
+<td>fixes the mean, variances and covariances of exogenous observed variables at their sample values, as lavaan’s <code>fixed.x = TRUE</code>; the structural estimates and standard errors do not change</td>
+<td><a href="cookbook.html#fix-exogenous-covariates-fixed_x">Fix exogenous covariates</a></td>
+</tr>
+<tr class="odd">
+<td><strong>product term</strong></td>
+<td>
+<code>x:m</code> on the right side of a regression, an observed column equal to <code>x * m</code>; it gives the four-way decomposition and turns the mean structure on</td>
+<td><a href="model-native.html#product-terms">Product terms</a></td>
+</tr>
+<tr class="even">
+<td>
+<strong>canonical name</strong> (<code>m:x</code>)</td>
+<td>the one name a product is stored under: the two variable names sorted in the C locale, so <code>x:m</code> and <code>m:x</code> are the same term</td>
+<td><a href="model-native.html#product-terms">Product terms</a></td>
+</tr>
+<tr class="odd">
+<td>
+<strong>nested comparison</strong> (<code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>)</td>
+<td>the likelihood-ratio test of a restricted fit against a fuller one; it refits nothing and refuses fits that are not nested</td>
+<td><a href="model-native-constraints.html#compare-nested-fits">Compare nested fits</a></td>
+</tr>
+<tr class="even">
+<td><strong>conditional log likelihood</strong></td>
+<td>the log likelihood given the fixed variables under <code>fixed_x</code>, so <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC of fits with different fixed sets cannot be compared</td>
+<td><a href="model-native.html#limits">Limits</a></td>
 </tr>
 </tbody>
 </table></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>

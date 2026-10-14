@@ -85,6 +85,8 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -109,6 +111,8 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -143,7 +147,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit a Structural Equation Model by Maximum Likelihood</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
       <div class="d-none name"><code>fit_sem.Rd</code></div>
     </div>
 
@@ -249,8 +253,8 @@ the estimation sample (weighted when <code>weights</code> are given) and removed
 <code>fixed.x = TRUE</code>. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
 not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
 conditional on the fixed variables, and <code>glance()$fixed_x</code> lists them. Models whose <code>fixed_x</code> sets or data differ
-cannot be compared with <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="mbco_sem.html">mbco_sem()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> or <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code>. A (co)variance or intercept statement on a
-selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+cannot be compared with <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">stats::anova()</a></code>, <code><a href="mbco_sem.html">mbco_sem()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> or <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code>. A (co)variance or intercept statement
+on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
 (<code>fixed_x</code> column, no standard error) but not in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> or <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>.</p></dd>
 
 

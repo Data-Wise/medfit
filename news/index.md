@@ -1,5 +1,37 @@
 # Changelog
 
+## medfit (development version)
+
+### New features
+
+- Four-way standard errors can be population-average:
+  `options(medfit.covariate_mean_variance = TRUE)` adds the sampling
+  variance of the estimated covariate mean,
+  `(theta3 * gamma)^2 * Var(c) / n` (case-weighted when the fit has
+  weights), to INTref, the NDE and the TE in
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
+  [`confint()`](https://rdrr.io/r/stats/confint.html). The default is
+  unchanged (conditional on the observed covariates, as lavaan’s `:=`
+  and the glm route). On simulated data with a strong covariate effect
+  on the mediator, the conditional SE of INTref, 0.0995, becomes 0.1516
+  against a bootstrap SD of 0.1568; on `mediation_demo` the term is
+  about 0.08% of the SE.
+
+### Bug fixes
+
+- [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+  [`BIC()`](https://rdrr.io/r/stats/AIC.html) with several `SEMFit` fits
+  now stop when the fits do not share their observed variables, and name
+  the variables that differ. A product term (`x:m`) adds a column to the
+  joint likelihood, so a fit with a product and the same model without
+  it describe different data; before, the two were ranked anyway (on
+  `mediation_demo`, the same outcome gave AIC 3934.7 with the product
+  and 2994.1 without). [`anova()`](https://rdrr.io/r/stats/anova.html)
+  and
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  already refused such a pair
+  ([\#206](https://github.com/data-wise/medfit/issues/206)).
+
 ## medfit 0.10.0
 
 ### New features

@@ -1,16 +1,16 @@
 # medfit Cookbook
 
-Eighteen task-sized recipes. Each says when to use it, runs on
+Twenty task-sized recipes. Each says when to use it, runs on
 `mediation_demo` (except the cluster and latent-mediator recipes, which
 simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
-These recipes need medfit 0.8.0 or later (recipe 18 needs 0.9.0, and the
-native route in recipe 7 needs 0.10.0). CRAN has 0.3.2, which lacks
-`mediation_demo` and the native, joint and cluster functions; install
-from GitHub or r-universe (see the [home
-page](https://data-wise.github.io/medfit/#installation)).
+These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0,
+and recipe 20 and the native route in recipe 7 need 0.10.0). CRAN has
+0.3.2, which lacks `mediation_demo` and the native, joint and cluster
+functions; install from GitHub or r-universe (see the [home
+page](https://data-wise.github.io/medfit/#install)).
 
 ``` r
 library(medfit)
@@ -252,7 +252,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4349603 0.8927176 
+    0.6560315 0.4351678 0.8930074 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
@@ -745,3 +745,163 @@ More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md), [the
 native engine
 guide](https://data-wise.github.io/medfit/articles/native-guide.md).
+
+## 19. Observed intercepts and means
+
+*When:* you want the intercepts of a native model, or a test of whether
+an intercept is zero. Writing any intercept (`outcome ~ 1`) turns the
+mean structure on and frees an intercept for every observed variable you
+did not mention, as lavaan does; `meanstructure = TRUE` does the same
+without writing one. The paths and their standard errors do not change.
+
+``` r
+paths <- "
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + cp * treatment
+"
+free <- fit_sem(paste0(paths, "outcome ~ 1"), mediation_demo)
+tf <- tidy(free)
+tf[tf$op == "~1", c("term", "estimate", "std_error")]
+```
+
+    # A tibble: 3 × 3
+      term        estimate std_error
+      <chr>          <dbl>     <dbl>
+    1 outcome~1      0.231    0.0774
+    2 mediator1~1    0.155    0.0763
+    3 treatment~1    0.502    0.0250
+
+The outcome and mediator intercepts equal the
+[`lm()`](https://rdrr.io/r/stats/lm.html) intercepts of the same
+equations, and the exogenous mean is the sample mean of `treatment`.
+`fit_sem(paths, mediation_demo, meanstructure = TRUE)` returns the same
+fit.
+
+A fixed intercept is a restriction. `outcome ~ 0*1` costs one degree of
+freedom and changes the other estimates, so
+[`anova()`](https://rdrr.io/r/stats/anova.html) can test it:
+
+``` r
+zero <- fit_sem(paste0(paths, "outcome ~ 0*1"), mediation_demo)
+round(c(free = free@theta[["cp"]], fixed_at_zero = zero@theta[["cp"]]), 3)
+```
+
+             free fixed_at_zero
+            0.041         0.262 
+
+``` r
+anova(free, zero)
+```
+
+    Likelihood-ratio (chi-square difference) test for SEMFit models
+
+    n = 400; Chisq is n times the minimized discrepancy
+
+         Df  Chisq Chisq diff Df diff Pr(>Chisq)
+    free  0 0.0000
+    zero  1 8.8141     8.8141       1   0.002989 **
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+AIC(free, zero)
+```
+
+         df      AIC
+    free  9 2994.122
+    zero  8 3000.936
+
+The test rejects zero, and the restricted model has the larger AIC. A
+fit with the mean structure off has no intercepts to restrict.
+
+More: [Native engine,
+intercepts](https://data-wise.github.io/medfit/articles/model-native.html#intercepts).
+
+## 20. Four-way decomposition from a native fit
+
+*When:* the outcome depends on the treatment, the mediator and their
+product, and you want the controlled direct effect, the two interaction
+terms and the pure indirect effect. Write the product as
+`treatment:mediator1` in the outcome equation, fit with
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
+and extract. A product turns the mean structure on, so the covariate in
+the mediator equation enters the reference interaction through its
+sample mean. The fit warns that the global test is not valid with a
+product and recommends the sandwich covariance; the chunk silences the
+warning and asks for the sandwich.
+
+``` r
+four_way <- "
+  mediator1 ~ treatment + covariate2
+  outcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate2
+"
+fit20 <- suppressWarnings(fit_sem(four_way, mediation_demo, se_type = "sandwich"))
+fw20 <- extract_mediation(fit20, treatment = "treatment", mediator = "mediator1",
+                          decomposition = "four_way")
+tidy(fw20, type = "components", conf_int = TRUE)
+```
+
+    # A tibble: 4 × 5
+      term    estimate std_error conf_low conf_high
+      <chr>      <dbl>     <dbl>    <dbl>     <dbl>
+    1 cde       0.0423    0.119  -0.191       0.275
+    2 int_ref   0.0769    0.0415 -0.00442     0.158
+    3 int_med   0.228     0.0707  0.0891      0.366
+    4 pie       0.326     0.0850  0.160       0.493
+
+The components sum to the natural direct and indirect effects, and
+`m_star` moves the reference level of the mediator (default 0), which
+shifts weight between the controlled direct effect and the reference
+interaction.
+
+The standard errors treat the covariate mean as fixed, so they are
+conditional on the observed covariates and slightly too small for a
+population average. To add the variance of the estimated covariate mean
+to INT_(ref), the NDE and the TE, set the option below (the default
+stays conditional, as lavaan’s `:=` is); the other components do not
+change:
+
+``` r
+op <- options(medfit.covariate_mean_variance = TRUE)
+tidy(fw20, type = "components")[, c("term", "std_error")]
+```
+
+    # A tibble: 4 × 2
+      term    std_error
+      <chr>       <dbl>
+    1 cde        0.119
+    2 int_ref    0.0415
+    3 int_med    0.0707
+    4 pie        0.0850
+
+``` r
+options(op)
+```
+
+On `mediation_demo` the added term is about 0.08% of the INT_(ref)
+standard error, so the table matches the one above to the digits shown;
+it matters when the interaction and the effect of the covariate on the
+mediator are both large (chapter 7 has a simulated case: 0.0995 becomes
+0.1516 against a bootstrap SD of 0.1568).
+
+The other route is the nonparametric bootstrap, which refits the model
+on each resample:
+
+``` r
+int_ref_stat <- function(dat) {
+  f <- suppressWarnings(fit_sem(four_way, dat))
+  extract_mediation(f, treatment = "treatment", mediator = "mediator1",
+                    decomposition = "four_way")@int_ref
+}
+boot20 <- bootstrap_mediation(int_ref_stat, method = "nonparametric",
+                              data = mediation_demo, n_boot = 200, seed = 1)
+c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
+```
+
+        estimate        lower        upper
+     0.076915831 -0.003651384  0.160267019 
+
+More: [Native book, the four-way
+decomposition](https://data-wise.github.io/medfit/articles/native-book-7-four-way.md),
+[Native engine, product
+term](https://data-wise.github.io/medfit/articles/model-native.md).

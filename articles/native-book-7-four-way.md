@@ -1,0 +1,734 @@
+# Native engine book, chapter 7: the four-way decomposition
+
+With a treatment-by-mediator product in the outcome equation ([Chapter
+6](https://data-wise.github.io/medfit/articles/native-book-6-product-term.md)),
+the effect of a binary treatment is no longer one indirect path and one
+direct path. VanderWeele (2014) splits the total effect into four parts:
+the controlled direct effect, the reference interaction, the mediated
+interaction and the pure indirect effect. This chapter derives the four
+parts from the two regressions, shows where the mediator’s intercept and
+the covariate means enter, proves which parts move when a variable is
+centered, derives the delta-method standard errors (including the
+covariate term whose omission was a bug fixed in 0.9.0), and checks
+every number against a hand computation from
+[`lm()`](https://rdrr.io/r/stats/lm.html), against lavaan’s `:=` defined
+parameters, and against the engine’s
+`extract_mediation(fit, decomposition = "four_way")`. The engine is
+experimental.
+
+|  |  |
+|----|----|
+| **You need** | Chapter 6 (the product term, why the paths are least squares, observed information); Chapter 5 (the delta method); the idea of a potential outcome |
+| **You get** | the four components derived from the counterfactual definitions, the role of \\E\[M \mid X = 0\]\\ and of the reference level \\m^\*\\, a proof of what centering changes, the gradient of each component and the standard errors rebuilt by hand (model-based and sandwich), the weighted covariate means, and the extraction’s refusals |
+| **Time** | about 50 minutes |
+
+``` r
+library(medfit)
+```
+
+
+    Attaching package: 'medfit'
+
+    The following object is masked from 'package:stats':
+
+        decompose
+
+``` r
+library(generics)
+```
+
+
+    Attaching package: 'generics'
+
+    The following objects are masked from 'package:base':
+
+        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
+        setequal, union
+
+``` r
+rd <- function(x, d = 4) round(x, d)
+quiet <- function(expr) suppressWarnings(suppressMessages(expr))
+say <- function(expr) {
+  tryCatch({
+    expr
+    "no error"
+  }, error = function(e) conditionMessage(e))
+}
+d <- mediation_demo
+n <- nrow(d)
+
+# treatment (0/1) -> mediator1 -> outcome_int, with a treatment-by-mediator product and the covariate covariate2
+# (a 0/1 variable with mean near 0.5, so the covariate's term in E[M | X = 0] is far from zero)
+four_way <- "
+  mediator1 ~ treatment + covariate2
+  outcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate2
+"
+fit <- quiet(fit_sem(four_way, d))
+fw <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1", decomposition = "four_way")
+fw
+```
+
+    <InteractionMediationData>
+      treatment -> mediator1 -> outcome_int   (with treatment x mediator1 interaction)
+      Paths:  a (b1) = +0.4573   b (t2) = +0.7135   c' (t1) = +0.0423   t3 = +0.4978
+      Four-way (m* = 0):
+        CDE = +0.0423   INTref = +0.0769   INTmed = +0.2276   PIE = +0.3263
+      NDE = +0.1192   NIE = +0.5539   Total = +0.6731   |   n = 400
+
+The fit warns twice (Chapter 6: the model test is not valid with an
+endogenous factor, and the sandwich is recommended); `quiet()` hides the
+warnings here. Model-based standard errors are used first because they
+have the simplest hand oracle; Section 5 does the sandwich.
+
+## 1. The four components
+
+### Definitions
+
+Write \\Y(x, m)\\ for the outcome a unit would have with treatment \\x\\
+and mediator value \\m\\, and \\M(x)\\ for the mediator it would have
+with treatment \\x\\. The treatment contrast is from \\x = 0\\ to \\x =
+1\\. With a reference mediator level \\m^\*\\ (the argument `m_star`,
+default 0), VanderWeele’s decomposition is
+
+\\ \underbrace{E\[Y(1, M(1)) - Y(0, M(0))\]}\_{\text{TE}} =
+\underbrace{E\[Y(1, m^\*) - Y(0, m^\*)\]}\_{\text{CDE}} +
+\text{INT}\_{\text{ref}} + \text{INT}\_{\text{med}} +
+\underbrace{E\[Y(0, M(1)) - Y(0, M(0))\]}\_{\text{PIE}} , \\
+
+where the **controlled direct effect** (CDE) holds the mediator at
+\\m^\*\\, the **pure indirect effect** (PIE) moves the mediator with the
+treatment held at 0, and the two interaction terms collect what is left:
+the **reference interaction** \\\text{INT}\_{\text{ref}} =
+E\bigl\[\\Y(1, M(0)) - Y(0, M(0))\\ - \\Y(1, m^\*) - Y(0,
+m^\*)\\\bigr\]\\, the part of the direct effect due to the mediator
+being at its untreated value rather than at \\m^\*\\, and the **mediated
+interaction** \\\text{INT}\_{\text{med}} = \text{NIE} - \text{PIE}\\
+(with the natural indirect effect NIE defined next), the part of the
+indirect effect that exists only because the treatment also changes how
+the mediator acts. The natural direct and indirect effects are
+\\\text{NDE} = E\[Y(1, M(0)) - Y(0, M(0))\] = \text{CDE} +
+\text{INT}\_{\text{ref}}\\ and \\\text{NIE} = E\[Y(1, M(1)) - Y(1,
+M(0))\] = \text{INT}\_{\text{med}} + \text{PIE}\\. Identifying these
+from data needs the usual assumptions of mediation analysis (no
+unmeasured treatment-outcome, mediator-outcome or treatment-mediator
+confounding given the covariates, and no mediator-outcome confounder
+affected by the treatment); the CDE needs only the first two.
+
+### Derivation under the two regressions
+
+Take the models of Chapter 6, with covariate \\c\\. Under consistency
+(\\Y = Y(x, m)\\ and \\M = M(x)\\ for the values a unit actually has)
+and the confounding assumptions (the first two for the outcome, the
+third for the mediator), the counterfactual means equal the regressions
+of the observed variables, \\E\[Y(x, m) \mid c\] = E\[Y \mid x, m, c\]\\
+and \\E\[M(x) \mid c\] = E\[M \mid x, c\]\\, so the two equations of the
+fit describe them:
+
+\\ E\[M(x) \mid c\] = \beta_0 + \beta_1 x + \gamma c, \qquad E\[Y(x, m)
+\mid c\] = \theta_0 + \theta_1 x + \theta_2 m + \theta_3 x m + \delta c
+. \\
+
+**Step 1: the mean of \\Y(x, M(x'))\\.** The outcome mean is linear in
+\\m\\, so averaging over \\M(x')\\ (independent of \\Y(x, m)\\ given
+\\c\\, which is the cross-world assumption behind the natural effects)
+replaces \\m\\ by its mean \\\mu(x') = \beta_0 + \beta_1 x' + \gamma
+c\\:
+
+\\ E\[Y(x, M(x')) \mid c\] = \theta_0 + \theta_1 x + (\theta_2 +
+\theta_3 x)\\\mu(x') + \delta c . \\
+
+**Step 2: the four contrasts.** Subtract the expressions of Step 1 (the
+\\\theta_0\\ and \\\delta c\\ terms cancel each time):
+
+- CDE: \\E\[Y(1, m^\*) - Y(0, m^\*)\] = \theta_1 + \theta_3 m^\*\\.
+- NDE: \\E\[Y(1, M(0)) - Y(0, M(0))\] = \theta_1 + \theta_3 \mu(0)\\, so
+  \\\text{INT}\_{\text{ref}} = \text{NDE} - \text{CDE} =
+  \theta_3\\(\mu(0) - m^\*)\\.
+- PIE: \\E\[Y(0, M(1)) - Y(0, M(0))\] = \theta_2\\(\mu(1) - \mu(0)) =
+  \theta_2 \beta_1\\.
+- NIE: \\E\[Y(1, M(1)) - Y(1, M(0))\] = (\theta_2 +
+  \theta_3)\\\beta_1\\, so \\\text{INT}\_{\text{med}} = \text{NIE} -
+  \text{PIE} = \theta_3 \beta_1\\.
+
+**Step 3: the covariates.** Every component is linear in \\c\\ (only
+through \\\mu(0) = \beta_0 + \gamma c\\, inside
+\\\text{INT}\_{\text{ref}}\\), so averaging over the covariate
+distribution replaces \\c\\ by its mean, estimated by the sample mean
+\\\bar c\\ (the weighted mean when the fit has case weights, Section 6).
+The engine’s formulas are therefore
+
+\\ \text{CDE} = \theta_1 + \theta_3 m^\*, \quad \text{INT}\_{\text{ref}}
+= \theta_3\\(\beta_0 + \gamma \bar c - m^\*), \quad
+\text{INT}\_{\text{med}} = \theta_3 \beta_1, \quad \text{PIE} = \theta_2
+\beta_1 , \\
+
+and they sum to \\\text{TE} = \theta_1 + \theta_2\beta_1 +
+\theta_3(\beta_0 + \beta_1 + \gamma\bar c)\\, the difference of the two
+Step 1 means at \\(1, 1)\\ and \\(0, 0)\\, as they must.
+
+### Checked against the engine
+
+The coefficients are the native estimates (equation-wise least squares,
+Chapter 6); the components are computed from them by the formulas above:
+
+``` r
+cf <- coef(fit)
+b0 <- cf[["mediator1~1"]]
+b1 <- cf[["mediator1~treatment"]]
+g <- cf[["mediator1~covariate2"]]
+t1 <- cf[["outcome_int~treatment"]]
+t2 <- cf[["outcome_int~mediator1"]]
+t3 <- cf[["outcome_int~mediator1:treatment"]]
+c_bar <- mean(d$covariate2)
+four_parts <- function(m_star = 0) {
+  cde <- t1 + t3 * m_star
+  int_ref <- t3 * (b0 + g * c_bar - m_star)
+  int_med <- t3 * b1
+  pie <- t2 * b1
+  c(cde = cde, int_ref = int_ref, int_med = int_med, pie = pie, nde = cde + int_ref, nie = int_med + pie,
+    te = cde + int_ref + int_med + pie)
+}
+engine_parts <- function(x) {
+  c(cde = x@cde, int_ref = x@int_ref, int_med = x@int_med, pie = x@pie, nde = x@nde, nie = x@nie,
+    te = x@total_effect)
+}
+rbind(by_hand = four_parts(), engine = engine_parts(fw))
+```
+
+                  cde    int_ref   int_med       pie       nde       nie        te
+    by_hand 0.0422575 0.07691583 0.2276355 0.3263118 0.1191733 0.5539473 0.6731206
+    engine  0.0422575 0.07691583 0.2276355 0.3263118 0.1191733 0.5539473 0.6731206
+
+``` r
+c(te_by_hand_from_step_3 = t1 + t2 * b1 + t3 * (b0 + b1 + g * c_bar))
+```
+
+    te_by_hand_from_step_3
+                 0.6731206 
+
+The total effect has a second, independent oracle. Averaging Step 1 over
+the covariate gives the total effect as the difference of the mean
+outcome predicted under \\x = 1\\ and \\x = 0\\, with the mediator
+predicted from its own equation. Least squares does that directly:
+predict \\M\\ for every row at \\x = 1\\ and at \\x = 0\\, then \\Y\\
+from those predictions, and average the difference.
+
+``` r
+lm_m <- lm(mediator1 ~ treatment + covariate2, d)
+lm_y <- lm(outcome_int ~ treatment + mediator1 + I(treatment * mediator1) + covariate2, d)
+predict_y <- function(x) {
+  nd <- transform(d, treatment = x)
+  nd$mediator1 <- predict(lm_m, nd)
+  predict(lm_y, nd)
+}
+c(average_prediction_difference = mean(predict_y(1) - predict_y(0)), engine_total = fw@total_effect)
+```
+
+    average_prediction_difference                  engine_total
+                        0.6731206                     0.6731206 
+
+(The prediction uses the fitted mediator mean, not a draw, which is
+exactly Step 1’s replacement of \\m\\ by \\\mu(x)\\.)
+
+### The reference level
+
+Only the split of the NDE into CDE and INT_(ref) depends on \\m^\*\\: by
+Step 2, raising \\m^\*\\ by \\\Delta\\ adds \\\theta_3\Delta\\ to the
+CDE and subtracts it from INT_(ref). Check with \\m^\* = 1\\:
+
+``` r
+fw1 <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1", decomposition = "four_way", m_star = 1)
+rbind(m_star_0 = engine_parts(fw), m_star_1 = engine_parts(fw1), difference = engine_parts(fw1) - engine_parts(fw))
+```
+
+                     cde     int_ref   int_med       pie          nde       nie
+    m_star_0   0.0422575  0.07691583 0.2276355 0.3263118 1.191733e-01 0.5539473
+    m_star_1   0.5400182 -0.42084491 0.2276355 0.3263118 1.191733e-01 0.5539473
+    difference 0.4977607 -0.49776074 0.0000000 0.0000000 4.163336e-17 0.0000000
+                      te
+    m_star_0   0.6731206
+    m_star_1   0.6731206
+    difference 0.0000000
+
+``` r
+c(theta3 = t3)
+```
+
+       theta3
+    0.4977607 
+
+## 2. The mediator intercept: \\E\[M \mid X = 0\]\\
+
+INT_(ref) is the only component that needs a mean: \\\mu(0) = \beta_0 +
+\gamma\bar c\\, the expected mediator of an untreated unit with average
+covariates. This is why a product model always carries the mean
+structure (Chapter 6): \\\beta_0\\ is the mediator’s intercept. Without
+the covariate term, \\\beta_0\\ alone is the mean at \\c = 0\\, which
+here is a different population (units with `covariate2` = 0):
+
+``` r
+c(beta0 = b0, gamma_times_c_bar = g * c_bar, mu0 = b0 + g * c_bar,
+  mean_of_untreated_mediator_predictions = mean(predict(lm_m, transform(d, treatment = 0))))
+```
+
+                                     beta0                      gamma_times_c_bar
+                                0.08955838                             0.06496532
+                                       mu0 mean_of_untreated_mediator_predictions
+                                0.15452370                             0.15452370 
+
+## 3. Centering
+
+The decomposition is computed on the scale of the variables as given, so
+it is fair to ask what moves when a variable is shifted. The answer
+differs by variable.
+
+**Centering the mediator.** Replace \\m\\ by \\m' = m - k\\. Write the
+outcome equation in \\m'\\: \\\theta_1 x + \theta_2 (m' + k) + \theta_3
+x (m' + k) = \theta_2 k + (\theta_1 + \theta_3 k)\\x + \theta_2 m' +
+\theta_3 x m'\\. Least squares on the shifted data therefore returns
+\\\theta_1' = \theta_1 + \theta_3 k\\, the same \\\theta_2\\ and
+\\\theta_3\\, and an intercept that absorbs \\\theta_2 k\\; the mediator
+equation returns \\\beta_0' = \beta_0 - k\\ and the same slopes (the
+product column changes with \\m\\, which is why it must be rebuilt from
+the centered mediator, as `x:m` does automatically). Substitute in Step
+3 with the default \\m^\* = 0\\:
+
+\\ \text{CDE}' = \theta_1 + \theta_3 k = \text{CDE}(m^\* = k), \qquad
+\text{INT}\_{\text{ref}}' = \theta_3(\beta_0 - k + \gamma\bar c) =
+\text{INT}\_{\text{ref}}(m^\* = k), \\
+
+while \\\text{INT}\_{\text{med}}' = \theta_3\beta_1\\ and \\\text{PIE}'
+= \theta_2\beta_1\\ do not change, and so neither do \\\text{NDE}' =
+\theta_1 + \theta_3(\beta_0 + \gamma\bar c)\\, the NIE and the TE.
+Centering the mediator is the same as choosing \\m^\* = k\\ on the
+original scale: it moves CDE and INT_(ref) in opposite directions by
+\\\theta_3 k\\.
+
+**Centering a covariate.** Replace \\c\\ by \\c - k\\: then \\\beta_0' =
+\beta_0 + \gamma k\\ and \\\bar c' = \bar c - k\\, so \\\beta_0' +
+\gamma\bar c' = \beta_0 + \gamma\bar c\\, and the outcome equation’s
+\\\theta_1\\, \\\theta_2\\, \\\theta_3\\ do not change. Nothing moves.
+
+Refit both on shifted data and compare with the original and with \\m^\*
+= \bar m\\:
+
+``` r
+m_bar <- mean(d$mediator1)
+d_mc <- transform(d, mediator1 = mediator1 - m_bar)
+d_cc <- transform(d, covariate2 = covariate2 - mean(covariate2))
+extract_fw <- function(data, ...) {
+  f <- quiet(fit_sem(four_way, data))
+  engine_parts(extract_mediation(f, treatment = "treatment", mediator = "mediator1", decomposition = "four_way", ...))
+}
+centered <- rbind(
+  original = engine_parts(fw),
+  mediator_centered = extract_fw(d_mc),
+  original_with_m_star_m_bar = extract_fw(d, m_star = m_bar),
+  covariate_centered = extract_fw(d_cc)
+)
+rd(centered, 5)
+```
+
+                                   cde  int_ref int_med     pie     nde     nie
+    original                   0.04226  0.07692 0.22764 0.32631 0.11917 0.55395
+    mediator_centered          0.23356 -0.11439 0.22764 0.32631 0.11917 0.55395
+    original_with_m_star_m_bar 0.23356 -0.11439 0.22764 0.32631 0.11917 0.55395
+    covariate_centered         0.04226  0.07692 0.22764 0.32631 0.11917 0.55395
+                                    te
+    original                   0.67312
+    mediator_centered          0.67312
+    original_with_m_star_m_bar 0.67312
+    covariate_centered         0.67312
+
+The treatment is not centered: the formulas compute the contrast from
+\\x = 0\\ to \\x = 1\\, which is the binary treatment’s own contrast.
+
+## 4. Standard errors by the delta method
+
+### The gradients
+
+Each component is a smooth function \\g(\kappa)\\ of the coefficients
+\\\kappa = (\beta_0, \beta_1, \gamma, \theta_1, \theta_2, \theta_3)\\,
+so its standard error is \\\sqrt{\nabla g^\top V \nabla g}\\ with \\V\\
+the covariance of \\\hat\kappa\\ (Chapter 5). Differentiating the
+formulas of Step 3, with \\\bar c\\ a constant:
+
+| Component | \\\beta_0\\ | \\\beta_1\\ | \\\gamma\\ | \\\theta_1\\ | \\\theta_2\\ | \\\theta_3\\ |
+|----|----|----|----|----|----|----|
+| CDE | 0 | 0 | 0 | 1 | 0 | \\m^\*\\ |
+| INT_(ref) | \\\theta_3\\ | 0 | \\\theta_3 \bar c\\ | 0 | 0 | \\\beta_0 + \gamma\bar c - m^\*\\ |
+| INT_(med) | 0 | \\\theta_3\\ | 0 | 0 | 0 | \\\beta_1\\ |
+| PIE | 0 | \\\theta_2\\ | 0 | 0 | \\\beta_1\\ | 0 |
+
+The NDE, NIE and TE gradients are the sums of their parts’ rows. The
+\\\gamma\\ entry of INT_(ref) (and so of the NDE and the TE) is the
+**covariate term**. It matters twice: through
+\\\operatorname{Var}(\hat\gamma)\\, and through
+\\\operatorname{Cov}(\hat\beta_0, \hat\gamma)\\, which is opposite in
+sign to \\\bar c\\ and large when \\\bar c\\ is far from zero, because
+the intercept and the slope of a regression are then estimated against
+each other; the product \\\bar c\\\operatorname{Cov}(\hat\beta_0,
+\hat\gamma)\\ is negative.
+
+By Chapter 6 (Steps 1 and 2 of the theorem), the model-based covariance
+is block diagonal across the two equations, and each block is least
+squares at the ML scale, \\\hat\sigma^2 (Z^\top Z)^{-1}\\ with
+\\\hat\sigma^2 = \text{RSS}/n\\. Build \\V\\ that way, apply the
+gradients, and compare with the engine’s standard errors:
+
+``` r
+ml_vcov <- function(f) vcov(f) * df.residual(f) / nobs(f)
+v_hand <- matrix(0, 7, 7)
+v_hand[1:3, 1:3] <- ml_vcov(lm_m)
+v_hand[4:7, 4:7] <- ml_vcov(lm_y)[c("treatment", "mediator1", "I(treatment * mediator1)", "covariate2"),
+                                  c("treatment", "mediator1", "I(treatment * mediator1)", "covariate2")]
+# order: beta0, beta1, gamma, theta1, theta2, theta3, delta (delta enters no component)
+dimnames(v_hand) <- rep(list(c("beta0", "beta1", "gamma", "theta1", "theta2", "theta3", "delta")), 2)
+v_hand <- v_hand[1:6, 1:6]
+gradients <- function(m_star = 0, covariate_term = TRUE,
+                      par = c(b0 = b0, b1 = b1, g = g, t2 = t2, t3 = t3, c_bar = c_bar)) {
+  p <- as.list(par)
+  grad <- rbind(
+    cde = c(0, 0, 0, 1, 0, m_star),
+    int_ref = c(p$t3, 0, if (covariate_term) p$t3 * p$c_bar else 0, 0, 0, p$b0 + p$g * p$c_bar - m_star),
+    int_med = c(0, p$t3, 0, 0, 0, p$b1),
+    pie = c(0, p$t2, 0, 0, p$b1, 0)
+  )
+  rbind(grad, nde = grad["cde", ] + grad["int_ref", ], nie = grad["int_med", ] + grad["pie", ], te = colSums(grad))
+}
+delta_se <- function(grad, v) sqrt(diag(grad %*% v %*% t(grad)))
+engine_se <- function(x) {
+  td <- tidy(x)
+  setNames(td$std_error, td$term)[c("cde", "int_ref", "int_med", "pie", "nde", "nie", "te")]
+}
+se_compare <- rbind(by_hand = delta_se(gradients(), v_hand), engine = engine_se(fw),
+                    without_covariate_term = delta_se(gradients(covariate_term = FALSE), v_hand))
+signif(se_compare, 4)
+```
+
+                              cde int_ref int_med     pie    nde   nie     te
+    by_hand                0.1174 0.04101 0.07074 0.08358 0.1195 0.134 0.1522
+    engine                 0.1174 0.04101 0.07074 0.08358 0.1195 0.134 0.1522
+    without_covariate_term 0.1174 0.04860 0.07074 0.08358 0.1223 0.134 0.1543
+
+``` r
+c(cov_beta0_gamma = v_hand["beta0", "gamma"],
+  correlation = v_hand["beta0", "gamma"] / sqrt(v_hand["beta0", "beta0"] * v_hand["gamma", "gamma"]))
+```
+
+    cov_beta0_gamma     correlation
+       -0.005632195    -0.566847407 
+
+### What these standard errors condition on
+
+The gradient table treats \\\bar c\\ as a constant, so these are
+standard errors *conditional on the observed covariates*. Every
+component is defined by averaging over the covariate distribution, and
+\\\bar c\\ is estimated: it is the sample mean (the weighted mean under
+case weights), a random quantity with variance
+\\\operatorname{Var}(c)/n\\. A population-average standard error would
+add the derivative of each component with respect to \\\bar c\\. That
+derivative is \\\theta_3\gamma\\ for INT_(ref), and so also for the NDE
+and the TE; the other components do not contain \\\bar c\\. Under the
+model the coefficient estimates are conditionally unbiased given the
+covariates, so they are uncorrelated with \\\bar c\\, and the omitted
+variance simply adds: \\\operatorname{Var}\_{\text{population}} \approx
+\operatorname{Var}\_{\text{conditional}} + (\theta_3\gamma)^2
+\operatorname{Var}(c)/n\\. The engine does not include the second term.
+How much it matters depends on \\\theta_3\gamma\\:
+
+``` r
+omitted_sd <- abs(t3 * g) * sd(d$covariate2) / sqrt(n)
+cond_se <- se_compare["engine", c("int_ref", "nde", "te")]
+rbind(conditional_se = cond_se,
+      omitted_term_sd = omitted_sd,
+      population_se = sqrt(cond_se^2 + omitted_sd^2),
+      relative_increase = sqrt(cond_se^2 + omitted_sd^2) / cond_se - 1) |> signif(3)
+```
+
+                       int_ref      nde       te
+    conditional_se    0.041000 1.19e-01 1.52e-01
+    omitted_term_sd   0.001680 1.68e-03 1.68e-03
+    population_se     0.041000 1.19e-01 1.52e-01
+    relative_increase 0.000835 9.84e-05 6.06e-05
+
+Here \\\theta_3\gamma\\ is small, so the omitted term is a fraction of a
+percent of the standard error and the two readings agree to the digits
+shown. With a larger interaction or a stronger covariate effect on the
+mediator the term grows with \\(\theta_3\gamma)^2\\. Read the intervals
+for INT_(ref), the NDE and the TE as intervals for the effect in *this*
+covariate sample, not for the effect in the population the sample came
+from. CDE, INT_(med), PIE and the NIE do not depend on \\\bar c\\, so
+for them the two readings agree. For population-average standard errors
+set `options(medfit.covariate_mean_variance = TRUE)`: the term
+\\(\theta_3\gamma)^2 \operatorname{Var}(c)/n\\ (with case weights,
+\\\sum w_i^2 (z_i - \bar z_w)^2 / (\sum w_i)^2\\ for \\z_i =
+\theta_3\gamma' c_i\\) is added to INT_(ref), the NDE and the TE, and
+the default stays conditional so it keeps matching lavaan’s `:=`. Or
+resample rows with `bootstrap_mediation(method = "nonparametric")`, with
+a statistic that refits the model and extracts the effect, which
+estimates \\\bar c\\ again in every draw. On simulated data with a
+strong covariate effect on the mediator (conditional SE 0.0995 for
+INT_(ref)) the option gives 0.1516 against a bootstrap SD of 0.1568.
+
+The hand computation and the engine agree. The third row is the
+**planted defect**: the same delta method with the covariate term
+dropped. It changes the INT_(ref), NDE and TE standard errors and leaves
+the others alone, which is what the gradient table predicts. Here it
+makes them **larger**: the dropped terms are \\\theta_3^2 \bar c^2
+\operatorname{Var}(\hat\gamma) + 2\theta_3^2 \bar c
+\operatorname{Cov}(\hat\beta_0, \hat\gamma)\\, and with the strong
+negative correlation printed above their sum is negative. With other
+data the sum is positive and the defect makes the standard error too
+small, so its direction cannot be trusted either way. This was a real
+bug: before 0.9.0 (PR \#168) the four-way extraction of a lavaan fit,
+which the native engine shares, left the mediator-covariate coefficients
+out of the covariance it passed to the delta method, so its INT_(ref),
+NDE and TE standard errors were those of the third row above. The
+[known-answer gate](#cross-checks) now catches the defect if it returns.
+
+### Cross-checks
+
+Two independent oracles. lavaan computes the same seven components as
+`:=` defined parameters from its own fit, with the product supplied as a
+data column and the observed information (lavaan’s default for this
+model is the expected information, which Chapter 6 showed is wrong with
+an endogenous product factor):
+
+``` r
+lit <- function(x) sprintf("%.17g", x)
+lv_model <- paste0("
+  mediator1 ~ b0*1 + b1*treatment + g*covariate2
+  outcome_int ~ t1*treatment + t2*mediator1 + t3*tm + covariate2
+  cde := t1
+  int_ref := t3*(b0 + g*", lit(c_bar), ")
+  int_med := t3*b1
+  pie := t2*b1
+  nde := t1 + t3*(b0 + g*", lit(c_bar), ")
+  nie := t3*b1 + t2*b1
+  te := t1 + t3*(b0 + g*", lit(c_bar), ") + t3*b1 + t2*b1
+")
+lv <- lavaan::sem(lv_model, transform(d, tm = treatment * mediator1), meanstructure = TRUE, information = "observed")
+pe <- lavaan::parameterEstimates(lv)
+pe <- pe[pe$op == ":=", ]
+lavaan_rows <- rbind(lavaan_estimate = setNames(pe$est, pe$lhs), engine_estimate = engine_parts(fw),
+                     lavaan_se = setNames(pe$se, pe$lhs), engine_se = engine_se(fw))
+signif(lavaan_rows, 5)
+```
+
+                         cde  int_ref  int_med      pie     nde     nie      te
+    lavaan_estimate 0.042257 0.076916 0.227640 0.326310 0.11917 0.55395 0.67312
+    engine_estimate 0.042257 0.076916 0.227640 0.326310 0.11917 0.55395 0.67312
+    lavaan_se       0.117410 0.041009 0.070745 0.083582 0.11948 0.13404 0.15225
+    engine_se       0.117410 0.041009 0.070745 0.083582 0.11948 0.13404 0.15225
+
+The second oracle is a simulation with a known answer.
+`tests/sim/four-way-known-answer.R` draws data from known \\a\\, \\b\\,
+\\c'\\ and \\\theta_3\\, in three designs (one covariate in the mediator
+equation; two covariates with case weights; no covariate), fits each
+design 1000 times through four routes (the hand oracle,
+[`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md),
+lavaan and the native engine), and requires every component’s mean to
+lie within four Monte Carlo standard errors of the truth and every
+reported standard error to lie within 12% of the empirical standard
+deviation; with the covariate term dropped from the gradient
+(`MUTANT=nocovgrad`) it fails.
+
+## 5. The sandwich
+
+With `se_type = "sandwich"` the bread is still block diagonal, and the
+meat is the sum of the outer products of each row’s stacked scores
+\\e\_{m,i} z\_{m,i}\\ and \\e\_{y,i} z\_{y,i}\\. Its cross-equation
+block has expectation zero when the outcome equation’s mean is right:
+\\e\_{m,i} z\_{m,i}\\ is a function of \\(x_i, c_i, m_i)\\, which are
+regressors of the outcome equation, so \\E\[e\_{y,i} \mid x_i, c_i, m_i,
+p_i\] = 0\\ makes \\E\[e\_{m,i} e\_{y,i} z\_{m,i} z\_{y,i}^\top\] = 0\\.
+The engine keeps the block anyway, as the **stacked** HC0 covariance
+does, so the standard errors stay valid when that mean is wrong (a
+sandwich is meant for exactly that case):
+
+\\ V = \begin{pmatrix} (Z_m^\top Z_m)^{-1} & 0 \\ 0 & (Z_y^\top
+Z_y)^{-1} \end{pmatrix} \Bigl(\sum_i s_i s_i^\top\Bigr) \begin{pmatrix}
+(Z_m^\top Z_m)^{-1} & 0 \\ 0 & (Z_y^\top Z_y)^{-1} \end{pmatrix}, \qquad
+s_i = \begin{pmatrix} e\_{m,i}\\ z\_{m,i} \\ e\_{y,i}\\ z\_{y,i}
+\end{pmatrix}. \\
+
+Per-equation HC0 (block diagonal) would drop those blocks. Build both:
+
+``` r
+stacked_hc0 <- function(fm, fy, w = rep(1, nobs(fm))) {
+  zm <- model.matrix(fm)
+  zy <- model.matrix(fy)
+  bread <- matrix(0, ncol(zm) + ncol(zy), ncol(zm) + ncol(zy))
+  im <- seq_len(ncol(zm))
+  bread[im, im] <- solve(crossprod(zm, w * zm))
+  bread[-im, -im] <- solve(crossprod(zy, w * zy))
+  s <- cbind(w * residuals(fm) * zm, w * residuals(fy) * zy)
+  v <- bread %*% crossprod(s) %*% bread
+  dimnames(v) <- rep(list(c(paste0("m:", colnames(zm)), paste0("y:", colnames(zy)))), 2)
+  keep <- c("m:(Intercept)", "m:treatment", "m:covariate2", "y:treatment", "y:mediator1", "y:I(treatment * mediator1)")
+  v[keep, keep]
+}
+v_stacked <- stacked_hc0(lm_m, lm_y)
+v_block <- v_stacked
+v_block[1:3, 4:6] <- 0
+v_block[4:6, 1:3] <- 0
+fit_sw <- quiet(fit_sem(four_way, d, se_type = "sandwich"))
+fw_sw <- extract_mediation(fit_sw, treatment = "treatment", mediator = "mediator1", decomposition = "four_way")
+sw_compare <- rbind(stacked_hc0 = delta_se(gradients(), v_stacked), engine = engine_se(fw_sw),
+                    block_diagonal_hc0 = delta_se(gradients(), v_block))
+signif(sw_compare, 4)
+```
+
+                         cde int_ref int_med     pie    nde    nie     te
+    stacked_hc0        0.119  0.0415 0.07069 0.08497 0.1212 0.1361 0.1526
+    engine             0.119  0.0415 0.07069 0.08497 0.1212 0.1361 0.1526
+    block_diagonal_hc0 0.119  0.0406 0.07107 0.08300 0.1211 0.1345 0.1527
+
+The engine’s sandwich is the stacked HC0, cross-equation blocks
+included. In this sample dropping them moves the standard errors of the
+components that combine both equations by a few percent; with a
+correctly specified outcome mean that difference vanishes as \\n\\
+grows. The estimates are the same as before: the sandwich changes only
+\\V\\.
+
+## 6. Case weights and the covariate means
+
+With case weights \\w_i\\ the coefficients are weighted least squares
+(the weighted likelihood of Chapter 5 factors by equation exactly as in
+Chapter 6), and Step 3’s average over the covariates is a weighted
+average, so \\\bar c = \sum_i w_i c_i / \sum_i w_i\\. Using the
+unweighted mean was the second bug fixed in 0.9.0 (PR \#168: the lavaan
+route used it while the `glm` route used the weighted mean). Weights
+that depend on the covariate make the two means differ:
+
+``` r
+set.seed(7)
+w <- runif(n, 0.4, 2.5) * exp(0.8 * d$covariate2)
+fit_w <- quiet(fit_sem(four_way, d, weights = w, se_type = "sandwich"))
+fw_w <- extract_mediation(fit_w, treatment = "treatment", mediator = "mediator1", decomposition = "four_way")
+wm <- lm(mediator1 ~ treatment + covariate2, d, weights = w)
+wy <- lm(outcome_int ~ treatment + mediator1 + I(treatment * mediator1) + covariate2, d, weights = w)
+c_bar_w <- weighted.mean(d$covariate2, w)
+wcf <- c(coef(wm), coef(wy))
+int_ref_w <- function(cb) wcf[["I(treatment * mediator1)"]] * (wcf[[1]] + wcf[["covariate2"]] * cb)
+c(unweighted_mean = c_bar, weighted_mean = c_bar_w,
+  int_ref_engine = fw_w@int_ref, int_ref_weighted_mean = int_ref_w(c_bar_w), int_ref_unweighted_mean = int_ref_w(c_bar))
+```
+
+            unweighted_mean           weighted_mean          int_ref_engine
+                 0.48250000              0.66884472              0.09027357
+      int_ref_weighted_mean int_ref_unweighted_mean
+                 0.09027357              0.07670519 
+
+The standard errors follow the same recipe with weighted scores, \\w_i
+e_i z_i\\, and bread \\(Z^\top W Z)^{-1}\\; the gradient uses the
+weighted coefficients and \\\bar c_w\\:
+
+``` r
+grad_w <- gradients(par = c(b0 = wcf[[1]], b1 = wcf[["treatment"]], g = wcf[["covariate2"]], t2 = wcf[["mediator1"]],
+                            t3 = wcf[["I(treatment * mediator1)"]], c_bar = c_bar_w))
+w_compare <- rbind(stacked_weighted_hc0 = delta_se(grad_w, stacked_hc0(wm, wy, w)), engine = engine_se(fw_w))
+signif(w_compare, 4)
+```
+
+                            cde int_ref int_med     pie    nde    nie     te
+    stacked_weighted_hc0 0.1366 0.05288 0.09586 0.09454 0.1404 0.1686 0.1747
+    engine               0.1366 0.05288 0.09586 0.09454 0.1404 0.1686 0.1747
+
+## 7. What the extraction refuses
+
+The four formulas read \\\beta_0, \beta_1, \gamma, \theta_1, \theta_2,
+\theta_3\\ and nothing else. A model in which the effects depend on
+another coefficient would get wrong components with no error, so the
+extraction refuses it:
+
+``` r
+refusals <- c(
+  `no treatment:mediator product` = say(extract_mediation(
+    quiet(fit_sem("mediator1 ~ treatment\noutcome_int ~ treatment + mediator1", d)),
+    treatment = "treatment", mediator = "mediator1", decomposition = "four_way"
+  )),
+  `another product with the treatment` = say(extract_mediation(
+    quiet(fit_sem(paste0(four_way, "outcome_int ~ treatment:covariate2\n"), d)),
+    treatment = "treatment", mediator = "mediator1", decomposition = "four_way"
+  )),
+  `a treatment product in the mediator equation` = say(extract_mediation(
+    quiet(fit_sem(paste0(four_way, "mediator1 ~ treatment:covariate2\n"), d)),
+    treatment = "treatment", mediator = "mediator1", decomposition = "four_way"
+  ))
+)
+cat(sprintf("%s:\n  %s\n", names(refusals), refusals), sep = "\n")
+```
+
+    no treatment:mediator product:
+      the four-way decomposition of a native fit needs the treatment-by-mediator product in the outcome equation: add `treatment:mediator1` to it, for example `y ~ treatment + mediator1 + treatment:mediator1`. Native products are written in the model syntax, not as a precomputed data column.
+
+    another product with the treatment:
+      the native extraction does not support the product 'covariate2:treatment': a product involving the treatment or the mediator other than 'mediator1:treatment' changes the effects without changing a coefficient the extraction reads. Remove it, or fit the model with lm/glm.
+
+    a treatment product in the mediator equation:
+      the native extraction does not support the product 'covariate2:treatment': a product involving the treatment or the mediator other than 'mediator1:treatment' changes the effects without changing a coefficient the extraction reads. Remove it, or fit the model with lm/glm.
+
+A product `treatment:covariate2` in the outcome equation makes the
+direct effect depend on the covariate, and in the mediator equation it
+makes \\\beta_1\\ depend on it, so \\\theta_1\\ and \\\beta_1\\ alone no
+longer describe the effects. Such models need the counterfactual
+formulas worked out for them (or
+[`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+with the `glm` engine, which handles some of them through prediction);
+the native extraction refuses them.
+
+## Summary
+
+| Quantity | Formula | Checked against |
+|----|----|----|
+| CDE | \\\theta_1 + \theta_3 m^\*\\ | hand, engine, lavaan `:=`; moves with \\m^\*\\ and with centering of \\M\\ |
+| INT_(ref) | \\\theta_3(\beta_0 + \gamma\bar c - m^\*)\\ | same; the only component with the intercept and \\\bar c\\ |
+| INT_(med), PIE | \\\theta_3\beta_1\\, \\\theta_2\beta_1\\ | same; unaffected by \\m^\*\\ and centering |
+| NDE, NIE, TE | sums of the above | the average-prediction oracle for the TE |
+| SEs | \\\sqrt{\nabla g^\top V \nabla g}\\, \\V\\ block diagonal at the ML scale or stacked HC0 | hand delta method, lavaan `:=`, the planted covariate-term defect |
+| weighted \\\bar c\\ | \\\sum w_i c_i / \sum w_i\\ | weighted least squares, with the unweighted mean as the defect |
+
+## Check yourself
+
+1.  With \\\theta_3 = 0\\, what do the four components reduce to?
+    (Answer: CDE \\= \theta_1\\, INT_(ref)\\=\\ INT_(med)\\= 0\\, PIE
+    \\= \theta_2\beta_1\\: the direct effect \\c'\\ and the indirect
+    effect \\ab\\ of simple mediation.)
+2.  A colleague centers the mediator at its mean and reports a CDE that
+    differs from yours. Who is right? (Answer: both; the centered CDE is
+    the CDE at \\m^\* = \bar m\\ on the original scale. The NDE, NIE and
+    TE agree.)
+3.  Why does dropping \\\operatorname{Cov}(\hat\beta_0, \hat\gamma)\\
+    make the INT_(ref) standard error wrong, even though \\\gamma\\ is
+    “just a covariate coefficient”? (Answer: INT_(ref) depends on
+    \\\beta_0 + \gamma\bar c\\, and the variance of that sum is
+    \\\operatorname{Var}(\hat\beta_0) + \bar
+    c^2\operatorname{Var}(\hat\gamma) + 2\bar c
+    \operatorname{Cov}(\hat\beta_0, \hat\gamma)\\; with \\\bar c\\ away
+    from zero the last term is large, and its sign is that of \\\bar
+    c\\\operatorname{Cov}(\hat\beta_0, \hat\gamma)\\, which is
+    negative.)
+4.  Why does the model-based \\V\\ have no cross-equation blocks while
+    the engine’s sandwich keeps them? (Answer: the model-based \\V\\ is
+    the inverse of a block-diagonal information. The sandwich’s meat is
+    the sample covariance of the stacked scores; its cross block has
+    expectation zero only if the outcome mean is right, and the sandwich
+    is meant to hold when the model is wrong, so it is not assumed
+    away.)
+
+## References
+
+VanderWeele, T. J. (2014). A unification of mediation and interaction: A
+4-way decomposition. *Epidemiology*, 25(5), 749-761.
+
+## Where next
+
+The [native engine
+guide](https://data-wise.github.io/medfit/articles/native-guide.md)
+lists the syntax, options and limits, the [interaction model
+page](https://data-wise.github.io/medfit/articles/model-interaction.md)
+shows the four-way decomposition through the `glm` route, and [Methods
+and Formulas](https://data-wise.github.io/medfit/articles/methods.md)
+collects every formula of the package.

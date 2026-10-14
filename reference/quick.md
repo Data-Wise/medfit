@@ -1,7 +1,7 @@
 # Quick Summary of Mediation Results
 
 Print a one-line summary of mediation results, perfect for quick checks
-or ADHD-friendly workflows.
+or a compact report line.
 
 ## Usage
 

@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/native-book-5-inference.qmd" class="external-link"><code>vignettes/articles/native-book-5-inference.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-book-5-inference.qmd" class="external-link"><code>vignettes/articles/native-book-5-inference.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -282,7 +286,7 @@ I_E = \frac n2 \operatorname{tr}\bigl(\Sigma^{-1}\partial_k\Sigma\,\Sigma^{-1}\p
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>difference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">info_expected_by_hand</span> <span class="op">-</span> <span class="va">info_expected</span><span class="op">)</span><span class="op">)</span>, largest_entry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">info_expected</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>   difference largest_entry
- 3.410605e-13  3.200160e+03 </code></pre>
+ 2.842171e-13  3.200160e+03 </code></pre>
 </div>
 </div>
 </section><section class="level3"><h3 id="observed-information">Observed information<a class="anchor" aria-label="anchor" href="#observed-information"></a>
@@ -335,7 +339,7 @@ I_O - I_E = \frac n2 \Bigl[\operatorname{tr}\bigl(W\,\partial_l\partial_k\Sigma\
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>largest_entry_of_the_gap <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">gap_engine</span><span class="op">)</span><span class="op">)</span>, formula_vs_engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">gap_formula</span> <span class="op">-</span> <span class="va">gap_engine</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>largest_entry_of_the_gap        formula_vs_engine
-            2.593267e+02             3.519880e-07 </code></pre>
+            2.593267e+02             2.415070e-07 </code></pre>
 </div>
 </div>
 <p>Now compare a model that fits exactly with one that fits badly. The mediation model is <strong>just identified</strong>: it has as many free parameters as moments (df = 0), so it reproduces <span class="math inline">\(S\)</span> and <span class="math inline">\(W = 0\)</span>.</p>
@@ -389,7 +393,7 @@ treatment~~treatment   0.0177   0.0177 1.0000</code></pre>
 <span>  expected_vs_lavaan <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_e</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu">lavaan</span><span class="fu">::</span><span class="fu">vcov</span><span class="op">(</span><span class="va">lv_exp</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">nm</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>observed_vs_lavaan expected_vs_lavaan
-      6.913308e-10       3.436773e-10 </code></pre>
+      6.921905e-10       3.436773e-10 </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -471,7 +475,7 @@ s_{i,k} = w_i\,\tfrac12\,\Bigl[(\Sigma^{-1} r_i)^\top \partial_k\Sigma\,(\Sigma^
 <span>  largest_column_sum <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>scores_by_hand_vs_engine       largest_column_sum
-            1.065814e-14             1.594862e-07 </code></pre>
+            8.881784e-15             1.594837e-07 </code></pre>
 </div>
 </div>
 <p>The second number checks Step 1: the scores sum to zero at the estimate, which is the estimating equation.</p>
@@ -487,7 +491,7 @@ s_{i,k} = w_i\,\tfrac12\,\Bigl[(\Sigma^{-1} r_i)^\top \partial_k\Sigma\,(\Sigma^
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sandwich_by_hand_vs_engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">v_sandwich</span> <span class="op">-</span> <span class="va">fit_w</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span>, largest_entry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">fit_w</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>sandwich_by_hand_vs_engine              largest_entry
-              1.734723e-17               2.710643e-02 </code></pre>
+              3.469447e-17               2.710643e-02 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu">rd</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>sandwich <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_w</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span>, model_based <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">model_based</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span>, <span class="fl">4</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
@@ -513,7 +517,7 @@ outcome~~outcome       0.1275      0.0903</code></pre>
 <span>  mean_structure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_wm</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu">lavaan</span><span class="fu">::</span><span class="fu">vcov</span><span class="op">(</span><span class="va">lv_wm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">nm_wm</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>covariance_structure       mean_structure
-        1.860607e-10         5.039283e-11 </code></pre>
+        1.874922e-10         5.800585e-11 </code></pre>
 </div>
 </div>
 <p>Without weights the sandwich is the Huber-White estimator. For a regression equation it equals the heteroskedasticity-consistent estimator HC0 (the one with no leverage correction), which gives something to check when the <code>sandwich</code> package is installed:</p>
@@ -706,7 +710,7 @@ a single fit:
 <pre><code>[1] "a bound on a is active at 'bounded_null': the null lies on the boundary of the parameter space, so the statistic is a mixture of chi-squares, not chi-square(df), and its p-value is not valid."</code></pre>
 </div>
 </div>
-</section><section class="level2"><h2 id="what-the-five-chapters-built">What the five chapters built<a class="anchor" aria-label="anchor" href="#what-the-five-chapters-built"></a>
+</section><section class="level2"><h2 id="what-the-first-five-chapters-built">What the first five chapters built<a class="anchor" aria-label="anchor" href="#what-the-first-five-chapters-built"></a>
 </h2>
 <table class="table caption-top">
 <colgroup>
@@ -758,7 +762,7 @@ a single fit:
 <li>A weighted fit has no <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>. What would you need to compare two weighted models? (Answer: a likelihood; the weighted discrepancy is a pseudo-likelihood, so use a robust test built for it. The engine offers none and refuses the chi-square.)</li>
 </ol></section><section class="level2"><h2 id="where-next">Where next<a class="anchor" aria-label="anchor" href="#where-next"></a>
 </h2>
-<p>The <a href="native-guide.html">native engine guide</a> lists the syntax, the options and the limits in one place, and <a href="lavaan-comparison.html">lavaan and the native engine</a> states what the engine does and does not do compared with lavaan.</p>
+<p><a href="native-book-6-product-term.html">Chapter 6</a> adds the product term <code>x:m</code>: how the engine builds it, why the paths stay least squares, and why the expected information and the model test give way. The <a href="native-guide.html">native engine guide</a> lists the syntax, the options and the limits in one place, and <a href="lavaan-comparison.html">lavaan and the native engine</a> states what the engine does and does not do compared with lavaan.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

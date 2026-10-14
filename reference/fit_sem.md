@@ -115,7 +115,7 @@ fit_sem(
   likelihood (and so AIC and BIC) is conditional on the fixed variables,
   and `glance()$fixed_x` lists them. Models whose `fixed_x` sets or data
   differ cannot be compared with
-  [`anova()`](https://rdrr.io/r/stats/anova.html),
+  [`stats::anova()`](https://rdrr.io/r/stats/anova.html),
   [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md),
   [`AIC()`](https://rdrr.io/r/stats/AIC.html) or
   [`BIC()`](https://rdrr.io/r/stats/AIC.html). A (co)variance or

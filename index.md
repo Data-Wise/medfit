@@ -59,7 +59,7 @@ already brought it in).
 > and the joint and cluster classes. Its two known issues, serial
 > [`te()`](https://data-wise.github.io/medfit/reference/te.md)/[`pm()`](https://data-wise.github.io/medfit/reference/pm.md)
 > and [`confint()`](https://rdrr.io/r/stats/confint.html) path rows, are
-> fixed in 0.7.0; see
+> fixed in 0.5.0; see
 > [\#83](https://github.com/Data-Wise/medfit/issues/83).
 
 ## Try it in 60 seconds
@@ -296,7 +296,7 @@ for version compatibility and development guidelines.
 |----|----|
 | Run your first model | [Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) |
 | Find the page for your model | [Models](https://data-wise.github.io/medfit/articles/models.html) |
-| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (eighteen recipes) |
+| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty recipes) |
 | Look up a function or class | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) |
 | Understand the classes | [Introduction](https://data-wise.github.io/medfit/articles/introduction.html) |
 | Extract from fitted models | [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html) |
@@ -317,13 +317,12 @@ contains.
 
 - **Defensive Programming**: checkmate for input validation, S7
   validators for class integrity
-- **Testing**: 3,300+ tests with testthat (\>90% coverage, enforced via
-  codecov)
+- **Testing**: 5,700+ testthat expectations in 1,200+ test blocks (\>90%
+  coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
-See the
-[roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md)
-for the detailed development plan.
+See the [NEWS](https://data-wise.github.io/medfit/news/index.html) for
+what changed in each release.
 
 ## Contributing
 
@@ -360,7 +359,7 @@ For the entry matching your installed version, run `citation("medfit")`.
 - [Package Documentation](https://data-wise.github.io/medfit/)
 - [Development
   Guide](https://github.com/data-wise/medfit/blob/main/CLAUDE.md)
-- [Roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md)
+- [NEWS](https://data-wise.github.io/medfit/news/index.html)
 - [Ecosystem
   Strategy](https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md)
 

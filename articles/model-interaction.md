@@ -180,7 +180,10 @@ The chi-square, df and p-value are `NA` for this fit,
 refuse, and `information = "expected"` is refused, because the product
 contains a regression target;
 [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC stay
-defined. The [supported class and each
+defined, but those of a fit with the product are not comparable with
+those of a fit without it, so `AIC(fit_a, fit_b)` and
+[`BIC()`](https://rdrr.io/r/stats/AIC.html) refuse such a pair. The
+[supported class and each
 limit](https://data-wise.github.io/medfit/articles/model-native.html#product-terms)
 lists what else a product model cannot contain, with the message for
 each.

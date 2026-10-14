@@ -79,6 +79,8 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -103,6 +105,8 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -137,7 +141,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>medfit Model Syntax</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
       <div class="d-none name"><code>medfit-syntax.Rd</code></div>
     </div>
 
@@ -213,7 +217,9 @@ regression target (the model treats the product as exogenous although it is a
 function of that variable) or when the exogenous (co)variance block is
 restricted. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> then reports chi-square, df and p-value as <code>NA</code> with a
 note, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="mbco_sem.html">mbco_sem()</a></code> refuse, and expected information is refused for
-an endogenous product; <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC stay defined. A product of
+an endogenous product; <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC stay defined, but those of a fit with a
+product are not comparable with those of a fit without one, so <code>AIC(fit_a, fit_b)</code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code>, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and
+<code><a href="mbco_sem.html">mbco_sem()</a></code> refuse such a pair. A product of
 exogenous variables with the block free keeps the ordinary test.</p>
     </div>
     <div class="section level2">

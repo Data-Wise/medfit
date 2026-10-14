@@ -106,6 +106,8 @@
     <li><a class="dropdown-item" href="articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -132,6 +134,8 @@
     <li><a class="dropdown-item" href="articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -242,7 +246,7 @@
 <span><span class="op">)</span></span></code></pre></div>
 <p>That gives 0.10.0 as a pre-built binary, with no compiler. From GitHub instead: <code>pak::pak("data-wise/medfit")</code> (compiles <code>nloptr</code> unless <code>lme4</code> already brought it in).</p>
 <blockquote>
-<p><strong>CRAN has 0.3.2, which does not run the examples on this site.</strong> It lacks <code>mediation_demo</code>, <code><a href="reference/fit_sem.html">fit_sem()</a></code>, <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> and the joint and cluster classes. Its two known issues, serial <code><a href="reference/te.html">te()</a></code>/<code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> path rows, are fixed in 0.7.0; see <a href="https://github.com/Data-Wise/medfit/issues/83" class="external-link">#83</a>.</p>
+<p><strong>CRAN has 0.3.2, which does not run the examples on this site.</strong> It lacks <code>mediation_demo</code>, <code><a href="reference/fit_sem.html">fit_sem()</a></code>, <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> and the joint and cluster classes. Its two known issues, serial <code><a href="reference/te.html">te()</a></code>/<code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> path rows, are fixed in 0.5.0; see <a href="https://github.com/Data-Wise/medfit/issues/83" class="external-link">#83</a>.</p>
 </blockquote>
 </div>
 <div class="section level2">
@@ -618,7 +622,7 @@
 <tr>
 <td>Copy a short recipe</td>
 <td>
-<a href="https://data-wise.github.io/medfit/articles/cookbook.html">Cookbook</a> (eighteen recipes)</td>
+<a href="https://data-wise.github.io/medfit/articles/cookbook.html">Cookbook</a> (twenty recipes)</td>
 </tr>
 <tr>
 <td>Look up a function or class</td>
@@ -670,11 +674,11 @@
 <li>
 <strong>Defensive Programming</strong>: checkmate for input validation, S7 validators for class integrity</li>
 <li>
-<strong>Testing</strong>: 3,300+ tests with testthat (&gt;90% coverage, enforced via codecov)</li>
+<strong>Testing</strong>: 5,700+ testthat expectations in 1,200+ test blocks (&gt;90% coverage, enforced via codecov)</li>
 <li>
 <strong>CI/CD</strong>: R CMD check, lintr, coverage reporting via GitHub Actions</li>
 </ul>
-<p>See the <a href="https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md" class="external-link">roadmap</a> for the detailed development plan.</p>
+<p>See the <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a> for what changed in each release.</p>
 </div>
 </div>
 <div class="section level2">
@@ -714,7 +718,7 @@ R package version 0.10.0. https://data-wise.github.io/medfit/</code></pre>
 <ul>
 <li><a href="https://data-wise.github.io/medfit/">Package Documentation</a></li>
 <li><a href="https://github.com/data-wise/medfit/blob/main/CLAUDE.md" class="external-link">Development Guide</a></li>
-<li><a href="https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md" class="external-link">Roadmap</a></li>
+<li><a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a></li>
 <li><a href="https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md" class="external-link">Ecosystem Strategy</a></li>
 </ul>
 </div>

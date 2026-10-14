@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -191,7 +195,7 @@
 <p><strong>medfit</strong> provides unified infrastructure for mediation analysis in R. It offers:</p>
 <ul>
 <li>
-<strong>ADHD-friendly API</strong>: <code><a href="../reference/med.html">med()</a></code> for quick analysis, <code><a href="../reference/quick.html">quick()</a></code> for instant results</li>
+<strong>Short entry points</strong>: <code><a href="../reference/med.html">med()</a></code> for quick analysis, <code><a href="../reference/quick.html">quick()</a></code> for instant results</li>
 <li>
 <strong>Effect extractors</strong>: <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/te.html">te()</a></code>, <code><a href="../reference/pm.html">pm()</a></code>, <code><a href="../reference/paths.html">paths()</a></code> for mediation effects</li>
 <li>
@@ -199,8 +203,7 @@
 <li>
 <strong>Base R generics</strong>: <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> for S7 classes</li>
 <li>
-<strong>Native SEM engine</strong> (experimental): <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fits model syntax with latent mediators and linear or nonlinear constraints; <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> compares nested fits, and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> summarize a <code>SEMFit</code>
-</li>
+<strong>Native SEM engine</strong> (experimental): <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fits model syntax with latent mediators and linear or nonlinear constraints; <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> compares nested fits, and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> summarize a <code>SEMFit</code>; observed intercepts and means (<code>y ~ 1</code>), <code>fixed_x</code> and the <code>x:m</code> product term (with the four-way decomposition through <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>) are supported inside documented limits</li>
 <li>
 <strong>S7-based classes</strong> for standardized mediation data structures</li>
 <li>
@@ -549,8 +552,8 @@ N bootstrap samples: 1000
   Upper: 0.25
 
 Bootstrap Distribution Summary:
-     Min.   1st Qu.    Median      Mean   3rd Qu.      Max.
--0.006637  0.120876  0.149608  0.148646  0.174983  0.306117 </code></pre>
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+0.01237 0.11804 0.14626 0.14684 0.17570 0.28092 </code></pre>
 </div>
 </div>
 </section></section><section class="level2"><h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>

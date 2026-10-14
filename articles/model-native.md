@@ -322,6 +322,15 @@ gives the reason.
   [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC become
   conditional on the fixed variables, so fits with different fixed sets
   cannot be compared.
+- **AIC and BIC across product and no-product fits are not comparable.**
+  The product column is an extra observed variable in the joint
+  likelihood, so a fit with `x:m` and the same model without it describe
+  different data (on `mediation_demo`, the same outcome gives AIC 3934.7
+  with the product and 2994.1 without). `AIC(fit_a, fit_b)`,
+  `BIC(fit_a, fit_b)`, [`anova()`](https://rdrr.io/r/stats/anova.html)
+  and
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  refuse such a pair, naming the observed variables that differ.
 - **Products** are limited to two observed variables inside the class in
   the table above; latent products, `x:x` and three-way products stop
   with the messages listed there.
@@ -333,6 +342,12 @@ gives the reason.
 
 [Cookbook recipe
 11](https://data-wise.github.io/medfit/articles/cookbook.html#a-latent-mediator-native-engine)
+\| [Cookbook recipe
+19](https://data-wise.github.io/medfit/articles/cookbook.html#observed-intercepts-and-means)
+\| [Cookbook recipe
+20](https://data-wise.github.io/medfit/articles/cookbook.html#four-way-decomposition-from-a-native-fit)
+\| [Native engine
+book](https://data-wise.github.io/medfit/articles/native-book-1-mean-structure.md)
 \| [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md) \|
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)

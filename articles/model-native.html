@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -507,12 +511,14 @@ standard errors (observed information) are unaffected.</code></pre>
 <li>
 <strong>Exogenous variables get free variances and covariances</strong>, as lavaan does with <code>fixed.x = FALSE</code>, so they appear in the parameter table. <code>fixed_x = TRUE</code> (or a vector of names) fixes the selected ones at the sample moments, as <code>fixed.x = TRUE</code> does: the structural estimates, their standard errors and the degrees of freedom do not change, the parameter count falls, and <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC become conditional on the fixed variables, so fits with different fixed sets cannot be compared.</li>
 <li>
+<strong>AIC and BIC across product and no-product fits are not comparable.</strong> The product column is an extra observed variable in the joint likelihood, so a fit with <code>x:m</code> and the same model without it describe different data (on <code>mediation_demo</code>, the same outcome gives AIC 3934.7 with the product and 2994.1 without). <code>AIC(fit_a, fit_b)</code>, <code>BIC(fit_a, fit_b)</code>, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse such a pair, naming the observed variables that differ.</li>
+<li>
 <strong>Products</strong> are limited to two observed variables inside the class in the table above; latent products, <code>x:x</code> and three-way products stop with the messages listed there.</li>
 <li>
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports diagnostics, including an improper solution and any active bound or constraint; read them before trusting a fit.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
-<p><a href="cookbook.html#a-latent-mediator-native-engine">Cookbook recipe 11</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>
+<p><a href="cookbook.html#a-latent-mediator-native-engine">Cookbook recipe 11</a> | <a href="cookbook.html#observed-intercepts-and-means">Cookbook recipe 19</a> | <a href="cookbook.html#four-way-decomposition-from-a-native-fit">Cookbook recipe 20</a> | <a href="native-book-1-mean-structure.html">Native engine book</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

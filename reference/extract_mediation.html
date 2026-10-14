@@ -81,6 +81,8 @@ model types (lm, glm, lavaan, lmer, and a native SEMFit)."><meta property="og:im
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -105,6 +107,8 @@ model types (lm, glm, lavaan, lmer, and a native SEMFit)."><meta property="og:im
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -139,7 +143,7 @@ model types (lm, glm, lavaan, lmer, and a native SEMFit)."><meta property="og:im
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Mediation Structure from Fitted Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
       <div class="d-none name"><code>extract_mediation.Rd</code></div>
     </div>
 
@@ -252,6 +256,19 @@ parallel mediators it leaves out the covariance between their <code>a</code> pat
 <a href="JointMediationData.html">JointMediationData</a> stores the full stacked least-squares covariance, and a
 lavaan fit estimates all equations jointly, so for the same data the
 intervals can differ between engines.</p>
+<p>The four-way effects that contain a covariate mean (<code>int_ref</code>, the NDE and
+the total effect) treat that mean as a fixed constant, so their standard
+errors and intervals are conditional on the observed covariates. They omit
+the sampling variance of the estimated mean, <code>theta3 * gamma</code> times the
+variance of the covariate mean, so they can understate the uncertainty of a
+population-average effect. CDE, <code>int_med</code>, PIE and the NIE do not depend on
+the mean. For population-average standard errors set
+<code>options(medfit.covariate_mean_variance = TRUE)</code>: <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> then add the
+variance of the estimated covariate mean,
+<code>(theta3 * gamma)^2</code> times the variance of the covariate mean (case-weighted
+when the fit has weights), to <code>int_ref</code>, the NDE and the total effect; the
+default stays conditional, as lavaan's <code>:=</code> and the glm route are. Or
+resample rows with <code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code> (<code>method = "nonparametric"</code>).</p>
 </div>
 
 <div class="section">

@@ -2,8 +2,8 @@
 
 Quick lookup for users who already know medfit. Needs medfit 0.10.0 or
 later (CRAN has 0.3.2; install from GitHub or r-universe, see the [home
-page](https://data-wise.github.io/medfit/#installation)). Explanations
-are in the
+page](https://data-wise.github.io/medfit/#install)). Explanations are in
+the
 [articles](https://data-wise.github.io/medfit/articles/getting-started.md);
 formulas are in [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md); task
@@ -63,6 +63,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Several mediators (chain) | `extract_mediation(..., mediator = c(...), mediator_models = list(...))` |
 | Several mediators (side by side) | same call with `structure = "parallel"` |
 | Treatment-by-mediator term | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on an outcome with `X * M`; from syntax, [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with `x:m` in the outcome equation, then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) |
+| Population-average four-way SEs (INTref, NDE, TE) | `options(medfit.covariate_mean_variance = TRUE)`, then [`tidy()`](https://generics.r-lib.org/reference/tidy.html) or [`confint()`](https://rdrr.io/r/stats/confint.html); default is conditional on the covariates |
 | `lmer` pair, cluster treatment | `extract_mediation(..., cluster = )` |
 | Formulas, cluster treatment | `fit_mediation(engine = "lmer", cluster = )` with plain formulas, no `(1 \| id)` |
 | `lavaan` fit | `extract_mediation(lavaan_fit, ...)` |
@@ -70,6 +71,8 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Model syntax and data (observed or latent variables, constraints, `:=`) | `fit_sem(model, data)`, a `SEMFit` |
 | Model syntax, mediator by name | `fit_mediation(engine = "native", model = , treatment = , mediator = )` |
 | Many exogenous covariates on a native fit | `fit_sem(model, data, fixed_x = TRUE)`; `glance(fit)$fixed_x` lists what was fixed |
+| Intercepts and means on a native fit | `y ~ 1` in the syntax (frees every unwritten observed intercept), or `fit_sem(model, data, meanstructure = TRUE)`; `y ~ 0*1` restricts one |
+| Log likelihood, AIC and BIC of a `SEMFit` | `logLik(fit)`, `AIC(fit1, fit2)`, `BIC(fit1, fit2)`; [`AIC()`](https://rdrr.io/r/stats/AIC.html) of a fit with a product term and one without are not comparable |
 | Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")`; `paths = c("a", "d", "b")` for a serial product |
 | Compare nested `SEMFit`s (likelihood-ratio test) | `anova(fit_full, fit_restricted)` |
 | Parameter table, one-row fit summary and intervals for a `SEMFit` | `tidy(fit)`, `glance(fit)`, `confint(fit)` |
@@ -154,3 +157,6 @@ Every call returns a `BootstrapResult`: use
 | Bootstrap samples failed | Check the count, interval uses the rest |
 | Normal approximation for the indirect effect | Prefer [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md) |
 | Total effect near zero | Proportion mediated undefined |
+| Native fit: the model test is not valid for this model | A product factor is a regression target or the exogenous block is restricted: [`glance()`](https://generics.r-lib.org/reference/glance.html) reports `NA`, and [`anova()`](https://rdrr.io/r/stats/anova.html) and [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) refuse |
+| Native fit: the starts disagree | Several accepted optima: the lowest was kept; raise `n_starts` |
+| Native [`anova()`](https://rdrr.io/r/stats/anova.html): not nested | The restricted model frees or drops something the larger one does not: constrain or fix parameters of the larger model instead |

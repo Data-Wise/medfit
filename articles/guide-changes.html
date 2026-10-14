@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -196,7 +200,7 @@
 <li>
 <strong>Several silent mistakes now stop with an error.</strong> If code that ran before fails now, check the second table.</li>
 <li>
-<strong>Install</strong> from r-universe or GitHub; see the <a href="https://data-wise.github.io/medfit/#installation">home page</a>.</li>
+<strong>Install</strong> from r-universe or GitHub; see the <a href="https://data-wise.github.io/medfit/#install">home page</a>.</li>
 </ul>
 </blockquote>
 </div>
@@ -244,6 +248,25 @@
 </tr>
 <tr class="odd">
 <td>0.8.0</td>
+<td>
+<code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code>, <code>@n_obs</code> and <code><a href="../reference/med.html">med()</a></code> when the data have missing values on a model variable</td>
+<td>counted <code>nrow(data)</code> although <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> had dropped the incomplete rows: 5 missing treatment values in 400 rows gave 400</td>
+<td>count the rows the models used (395 in that example); <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> drops rows that are incomplete on any variable in either formula before fitting, so both models share one sample</td>
+</tr>
+<tr class="even">
+<td>0.9.0</td>
+<td>standard errors of INTref, NDE and the total effect from <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> of a lavaan four-way fit when the mediator equation has a covariate</td>
+<td>left out the covariate-mean term, so they were too small: INTref SE 0.022 against 0.069 from lavaan’s own <code>:=</code> (measured on 0.8.0; 0.3.2 has no <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> for these objects)</td>
+<td>equal lavaan’s <code>:=</code> (0.069)</td>
+</tr>
+<tr class="odd">
+<td>0.9.0</td>
+<td>INTref from a lavaan four-way fit with sampling weights</td>
+<td>used unweighted covariate means, so it differed from the lm/glm route: 0.726 against 0.841 on the check data</td>
+<td>uses the weighted means and equals the lm/glm route (0.841)</td>
+</tr>
+<tr class="even">
+<td>0.8.0</td>
 <td>the names in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> of a <code>SEMFit</code>
 </td>
 <td>an unlabeled parameter was <code>"M ~ X"</code> or <code>"X ~~ X"</code> (with spaces) and a loading <code>"m2 ~ eta"</code>
@@ -251,13 +274,13 @@
 <td>
 <code>"M~X"</code>, <code>"X~~X"</code> and <code>"eta=~m2"</code>, the names <code>lavaan::coef()</code> uses; labeled parameters are unchanged (<code>SEMFit</code> is experimental)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>0.9.0</td>
 <td>a fixed intercept, <code>y ~ 0*1</code>, in the native engine</td>
 <td>the row was dropped and the covariance-only fit returned</td>
 <td>a restriction (“the mean of <code>y</code> is 0”): one degree of freedom, a changed discrepancy, comparable with <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>; any <code>y ~ 1</code> row turns the mean structure on</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>0.9.0</td>
 <td>
 <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> of a native fit with <code>fixed_x</code>
@@ -265,20 +288,20 @@
 <td>(new argument)</td>
 <td>conditional on the fixed variables; <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and multi-fit <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>/<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> stop when fixed sets or data differ; <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> gains a <code>fixed_x</code> column</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>0.10.0</td>
 <td><code>extract_mediation(&lt;SEMFit&gt;, decomposition = "four_way")</code></td>
 <td>refused by name until the <code>:</code> operator existed</td>
 <td>returns the four-way decomposition when the outcome equation carries the treatment-by-mediator product; refused with a message that says to add <code>x:m</code> when it does not</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>0.5.0</td>
 <td>
 <code>se_type = "sandwich"</code> with a treatment-by-mediator term</td>
 <td>returned the model-based covariance, with no warning</td>
 <td>applies the sandwich estimator</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>0.5.0</td>
 <td>lavaan fits with custom path labels</td>
 <td>the alias rows of <code>@vcov</code> were all zero, so a parametric bootstrap had a zero-width interval</td>
@@ -288,7 +311,60 @@
 </table>
 <p>What did <strong>not</strong> change: <code><a href="../reference/nie.html">nie()</a></code> for serial objects still returns the chain effect by default. The new <code>nie(x, type = "total")</code> returns the total indirect effect.</p>
 <p>If you stored serial <code><a href="../reference/te.html">te()</a></code> or <code><a href="../reference/pm.html">pm()</a></code> values from 0.4.0 or earlier, rerun them.</p>
-</section><section class="level2"><h2 id="calls-that-now-stop-with-an-error">Calls that now stop with an error<a class="anchor" aria-label="anchor" href="#calls-that-now-stop-with-an-error"></a>
+</section><section class="level2"><h2 id="names-that-changed">Names that changed<a class="anchor" aria-label="anchor" href="#names-that-changed"></a>
+</h2>
+<p>Code that reads a result by column name, or passes an argument by name, breaks silently when the name changes. These two renames are the ones to search your scripts for.</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead><tr class="header">
+<th>Version</th>
+<th>What</th>
+<th>Before</th>
+<th>Now</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>0.9.0</td>
+<td>
+<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> columns</td>
+<td>
+<code>std.error</code>, <code>conf.low</code>, <code>conf.high</code> (and <code>p.value</code> for a <code>SEMFit</code>, which exists from 0.7.0)</td>
+<td>
+<code>std_error</code>, <code>conf_low</code>, <code>conf_high</code>, <code>p_value</code>; <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> of a <code>SEMFit</code> has <code>p_value</code> too; <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> keeps <code>p.value</code> because it returns a base-R <code>htest</code>
+</td>
+</tr>
+<tr class="even">
+<td>0.9.0</td>
+<td>
+<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> arguments</td>
+<td>
+<code>conf.int = TRUE</code>, <code>conf.level = 0.9</code>
+</td>
+<td>
+<code>conf_int = TRUE</code>, <code>conf_level = 0.9</code>; the dotted names still work and warn (<code>is deprecated as of medfit 0.9.0</code>)</td>
+</tr>
+<tr class="odd">
+<td>0.9.0</td>
+<td>class of a <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> result</td>
+<td><code>summary.MediationData</code></td>
+<td>
+<code>summary_MediationData</code> (likewise <code>summary_SEMFit</code> and the other classes)</td>
+</tr>
+<tr class="even">
+<td>0.8.0</td>
+<td>
+<code>fit_sem(sampling_weights = )</code>, only for code written against 0.7.0</td>
+<td>the argument name in 0.7.0</td>
+<td>
+<code>fit_sem(weights = )</code>, the name <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> uses; the old name still works and warns once per session</td>
+</tr>
+</tbody>
+</table></section><section class="level2"><h2 id="calls-that-now-stop-with-an-error">Calls that now stop with an error<a class="anchor" aria-label="anchor" href="#calls-that-now-stop-with-an-error"></a>
 </h2>
 <p>Each of these was accepted before and gave a wrong or ignored result.</p>
 <table class="table caption-top">
@@ -334,6 +410,12 @@
 <td><code>is only used with engine = "native"</code></td>
 <td>drop the argument; <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>’s own <code>model</code> cannot be passed through <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code>
 </td>
+</tr>
+<tr class="even">
+<td>0.9.0</td>
+<td>a lavaan four-way fit that has a product of the treatment with a covariate in the mediator or the outcome equation (<code>m ~ x + xc</code>)</td>
+<td><code>does not support a treatment product</code></td>
+<td>it changed the effects without changing a coefficient the decomposition reads, and 0.8.0 returned a decomposition without a message; remove the product, or fit without the four-way decomposition</td>
 </tr>
 </tbody>
 </table>

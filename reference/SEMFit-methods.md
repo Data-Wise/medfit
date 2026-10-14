@@ -91,7 +91,13 @@ argument.
   `se_type = "sandwich"`.
   [`logLik()`](https://rdrr.io/r/stats/logLik.html),
   [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
-  [`BIC()`](https://rdrr.io/r/stats/AIC.html) stay defined.
+  [`BIC()`](https://rdrr.io/r/stats/AIC.html) stay defined, but the
+  values of a fit with a product are not comparable with those of a fit
+  without one (the product column enters the likelihood), so
+  `AIC(fit_a, fit_b)`, [`BIC()`](https://rdrr.io/r/stats/AIC.html),
+  [`anova()`](https://rdrr.io/r/stats/anova.html) and
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  refuse such a pair.
 
 - [`anova()`](https://rdrr.io/r/stats/anova.html) tests nested fits by
   the likelihood-ratio statistic \\n (F_r - F_f)\\ on the difference in

@@ -104,6 +104,8 @@
     <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
+    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
   </ul>
 </li>
@@ -130,6 +132,8 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -177,7 +181,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.10.0/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -656,7 +660,7 @@ c_prime   -0.382891954 0.5373482</code></pre>
 </table>
 <p>For the joint effects the chain rule through the propagated terms is carried by backward recursions, <span class="math inline">\(\lambda_j = (\theta_{2j} + \theta_{3j}) + \sum_{i&gt;j}
 d_{ij} \lambda_i\)</span> and <span class="math inline">\(\kappa_j = \theta_{3j} + \sum_{i&gt;j} d_{ij} \kappa_i\)</span>.</p>
-<p>The covariate means <span class="math inline">\(\bar c\)</span> are treated as fixed, so standard errors that involve them (the four-way INT<sub>ref</sub> and the joint NDE) are conditional on the observed covariates; they slightly understate the uncertainty of a population-average effect.</p>
+<p>The covariate means <span class="math inline">\(\bar c\)</span> are treated as fixed, so standard errors that involve them (the four-way INT<sub>ref</sub> and the joint NDE) are conditional on the observed covariates; they omit the sampling variance of the estimated mean (the derivative of INT<sub>ref</sub> with respect to <span class="math inline">\(\bar c\)</span> is <span class="math inline">\(\theta_3\gamma\)</span>), so they can understate the uncertainty of a population-average effect. <code>options(medfit.covariate_mean_variance = TRUE)</code> adds the omitted variance, <span class="math inline">\((\theta_3\gamma)^2 \operatorname{Var}(c)/n\)</span>, to INT<sub>ref</sub>, the NDE and the TE.</p>
 <p><strong>Intervals.</strong> <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> and <code>tidy(conf_int = TRUE)</code> report normal intervals, <span class="math inline">\(\hat g \pm z_{1-\alpha/2}\, \widehat{\text{SE}}\)</span>. The sampling distribution of a product of coefficients is skewed, so these can be inaccurate for indirect effects; <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> warns about this for effects, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> stays silent. Prefer a bootstrap for inference on an indirect effect.</p>
 </section><section class="level2"><h2 id="bootstrap">Bootstrap<a class="anchor" aria-label="anchor" href="#bootstrap"></a>
 </h2>
