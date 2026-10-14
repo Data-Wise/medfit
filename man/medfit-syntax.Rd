@@ -36,8 +36,13 @@ the best of the starts tried, a disagreement warning means a better optimum may
 exist, and \code{n_starts} raises the number of starts. Labels used in a constraint
 or a definition must be defined in the model. A constraint with no free
 parameter is an error. Exogenous variables are given free
-variances and covariances, as lavaan does with \code{fixed.x = FALSE}. Mean
-structures (\code{y ~ 1}) are not supported, except that \code{y ~ 0*1} is accepted.
+variances and covariances, as lavaan does with \code{fixed.x = FALSE}. Any
+intercept statement (\code{y ~ 1}, or \code{1} as a term: \code{y ~ 1 + x}) turns the mean structure
+on and frees every observed intercept the model does not write, as lavaan does;
+\code{y ~ 0*1} then restricts the mean of \code{y} to 0 (one degree of freedom), and
+\code{meanstructure = TRUE} in \code{\link[=fit_sem]{fit_sem()}} turns it on without any statement. A
+latent variable's mean is fixed at 0; a free latent \code{~1} is an error. A repeated \code{1} for one
+variable is an error.
 A variable cannot appear on both sides of \code{~} or \verb{=~} (\code{y ~ y}), and a path,
 a (co)variance or an intercept takes one row: a repeated \code{y ~ x} is an error,
 not a second row that competes for the label.

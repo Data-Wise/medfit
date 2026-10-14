@@ -219,7 +219,7 @@ test_that("the guide also quotes the cluster and native messages tested elsewher
     "varies within clusters; 1-1-1 designs are not supported yet",
     "has no cluster-mean term for",
     "unknown parameter label",
-    "mean structure is not supported",
+    "meanstructure = FALSE, but the model writes an intercept",
     "variables in the model are not columns of",
     "Must have length 1",
     "clusters: inference on the cluster-level paths is unreliable",

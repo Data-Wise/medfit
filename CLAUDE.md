@@ -433,6 +433,18 @@ labels set to zero is solved exactly by `.sem_fit_branches()` (one linear fit pe
 3e-5 short along a flat tangent) and keeps the polished point only if the gate accepts it again. Evidence:
 `tests/sim/sem-nonlinear-gate.R` (240 runs, `MUTANT=` switches) and `tests/sim/sem-mbco-k-size.R`.
 
+### Native mean structure (`R/sem-ml.R`, `R/sem-fit.R`, `R/sem-optim.R`, `R/sem-constraints.R`)
+
+Any `~1` row (also `y ~ 1 + x`) turns `ram$has_mean` on and frees every unwritten observed intercept (lavaan parity);
+`y ~ 0*1` is a restriction (df + 1), a free latent `~1` errors, `meanstructure` is tri-state. The mean term is additive
+in F, the information and the sandwich scores (no cross block). Scale rule (G9): the information, its inverse and the
+gates work in centered coordinates `phi` (`.sem_center_map()`, `theta = T (phi + c0)`, Hessian by directional finite
+differences, `V = T V_phi T'`); a fit whose intercepts are all free and absent from constraints, bounds and starts
+runs on mean-centered data and maps back (`.sem_shift_ok()`). Intercept constraints keep the plain solver coordinates
+with a centered gate: checked to mean/sd 1e3, not 1e5. `anova()` treats a covariance-only fit as having free implicit
+intercepts (`.sem_anova_table()`). Four-way on a `SEMFit` is refused by name until the `:` operator (0.10.0). Gates:
+`tests/sim/sem-mean-constrained-gate.R` (`MUTANT=badshift|nocenter`), the OLS oracle in `test-sem-mean-*.R`.
+
 ---
 
 ## Ecosystem Coordination
@@ -507,7 +519,7 @@ breaking existing code, type safety via S7 validators.
 | `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
 | `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
 | `"lmer"` | lme4, pbkrtest (Suggests) | mixed models for cluster-level treatment; `cluster =`, `se_type = "kr"` | ✓ (no weights/sandwich/families) |
-| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `, one mediator through `fit_mediation()`; serial and parallel through `fit_sem()` then `extract_mediation()`); latent mediators, linear and nonlinear constraints, `weights`/`se_type = "sandwich"`; `anova()`, `tidy()`/`glance()`; `mbco_sem()` (k paths) | ✓ experimental (no four-way, no mean structure) |
+| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `, one mediator through `fit_mediation()`; serial and parallel through `fit_sem()` then `extract_mediation()`); latent mediators, linear and nonlinear constraints, `weights`/`se_type = "sandwich"`; `anova()`, `tidy()`/`glance()`; `mbco_sem()` (k paths) | ✓ experimental (observed intercepts and means, `meanstructure =`; no latent means, no four-way) |
 | `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 

@@ -178,7 +178,8 @@ mediator works through the same call.
 
 ## Limits {#limits}
 
-- **No mean structure** (`y ~ 1` stops with "mean structure is not supported").
+- **Observed means only.** Intercepts (`y ~ 1`, `y ~ 1 + x`) are estimated for observed variables;
+  a free latent mean or intercept stops with "latent means are planned for a later release".
 - **One group**, listwise deletion for missing data, **numeric variables only**.
 - **ML only**, plus the HC0 sandwich; no robust chi-square, no fit indices beyond
   the chi-square, AIC and BIC.

@@ -46,8 +46,9 @@ fits kept, so it cannot see a mismatch between frames whose row names were
 both reset)
 \item \strong{SEMFit}: Extract from a model fitted by \code{\link[=fit_sem]{fit_sem()}} (the experimental
 native maximum-likelihood engine), with the same arguments and structures as
-the lavaan method. The four-way decomposition is not available: it needs a
-mediator intercept, which the native engine does not estimate.
+the lavaan method. The four-way decomposition is not available: the native
+syntax has no treatment-by-mediator product yet (planned for 0.10.0), so
+\code{decomposition = "four_way"} and \verb{interaction =} are refused by name.
 \item \strong{brmsfit}: Extract from Bayesian models (future)
 }
 

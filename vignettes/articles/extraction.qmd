@@ -793,9 +793,10 @@ x_sem <- extract_mediation(sem, treatment = "treatment", mediator = "mediator1")
 nie(x_sem)
 ```
 
-The four-way decomposition needs a mediator intercept, which the native engine
-does not estimate, so a treatment-by-mediator model is not supported on this
-route; fit it with `lm`/`glm` or lavaan (`meanstructure = TRUE`) instead. See
+The four-way decomposition is not available on this route yet: the native syntax
+has no product operator (planned for 0.10.0), so `extract_mediation()` refuses
+`decomposition = "four_way"` and `interaction =` by name. Fit a treatment-by-mediator
+model with `lm`/`glm` or lavaan (`meanstructure = TRUE`) instead. See
 `?"medfit-syntax"` for the syntax.
 
 ## Compatibility with RMediation

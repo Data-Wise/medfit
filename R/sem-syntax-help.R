@@ -31,8 +31,13 @@
 #' exist, and `n_starts` raises the number of starts. Labels used in a constraint
 #' or a definition must be defined in the model. A constraint with no free
 #' parameter is an error. Exogenous variables are given free
-#' variances and covariances, as lavaan does with `fixed.x = FALSE`. Mean
-#' structures (`y ~ 1`) are not supported, except that `y ~ 0*1` is accepted.
+#' variances and covariances, as lavaan does with `fixed.x = FALSE`. Any
+#' intercept statement (`y ~ 1`, or `1` as a term: `y ~ 1 + x`) turns the mean structure
+#' on and frees every observed intercept the model does not write, as lavaan does;
+#' `y ~ 0*1` then restricts the mean of `y` to 0 (one degree of freedom), and
+#' `meanstructure = TRUE` in [fit_sem()] turns it on without any statement. A
+#' latent variable's mean is fixed at 0; a free latent `~1` is an error. A repeated `1` for one
+#' variable is an error.
 #' A variable cannot appear on both sides of `~` or `=~` (`y ~ y`), and a path,
 #' a (co)variance or an intercept takes one row: a repeated `y ~ x` is an error,
 #' not a second row that competes for the label.

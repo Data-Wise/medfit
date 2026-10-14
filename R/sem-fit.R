@@ -7,7 +7,8 @@
 # `fit_mediation(engine = "native")` (plan N4).
 
 .sem_fit_syntax <- function(model, data, information = c("observed", "expected"), n_starts = 5L,
-                            control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL) {
+                            control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL,
+                            meanstructure = NULL) {
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
   information <- match.arg(information)
   se_type <- match.arg(se_type)
@@ -18,13 +19,14 @@
     parsed <- .sem_parse(model)
     products <- .sem_zero_product_rows(parsed$constraints)
     if (length(products)) {
-      return(.sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type))
+      return(.sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
+                               meanstructure))
     }
   }
   if (any(parsed$parameters$level != 1L)) {
     stop("two-level estimation is not implemented: the model uses `level:` blocks", call. = FALSE)
   }
-  tab <- .sem_complete(parsed$parameters)
+  tab <- .sem_complete(parsed$parameters, meanstructure)
   .sem_check_scale(tab)
   conv <- .sem_to_ram(tab)
   ram <- conv$ram
@@ -61,7 +63,7 @@
   if (df < 0) {
     stop(sprintf(
       "the model has more free parameters (%d) than observed moments (%d): df = %d",
-      ram$q - eq_rank, length(ram$obs) * (length(ram$obs) + 1L) / 2, df
+      ram$q - eq_rank, .sem_moments(ram), df
     ), call. = FALSE)
   }
 
@@ -69,7 +71,20 @@
   start[given] <- conv$start[given]
   lb <- ifelse(is.na(conv$lower), -Inf, conv$lower)
   ub <- ifelse(is.na(conv$upper), Inf, conv$upper)
-  fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+  shift <- .sem_shift_ok(ram, smp, parsed$constraints, lb, ub, given)
+  if (shift) {
+    # Constraints that leave every intercept free act on A and S alone, which a shift of the data by its mean does
+    # not change: optimize on the centered data (the intercepts are then the centered coordinates phi, free of
+    # the mean/sd conditioning problem) and map the solution back, theta = T (phi + c0).
+    smp_opt <- .sem_sample(as.data.frame(sweep(as.matrix(x[, ram$obs, drop = FALSE]), 2L, smp$xbar)), ram, weights)
+    start <- .sem_default_start(ram, smp_opt)
+    start[given] <- conv$start[given]
+    fit <- .sem_optimize(ram, smp_opt, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+    ctr <- .sem_center_map(ram, smp)
+    fit$theta <- stats::setNames(as.vector(ctr$t %*% (fit$theta + ctr$c0)), ram$par_names)
+  } else {
+    fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+  }
   if (!is.null(cons$nl)) {
     # a nonlinear equality removes parameters where its gradient is: count them at the solution
     eq_rank <- .sem_eq_rank_at(cons, fit$theta, u0)
@@ -92,13 +107,41 @@
   )
 }
 
+# Whether the fit can run on mean-centered data: a mean structure whose intercepts are all free, unbounded,
+# unshared and absent from every constraint and from the user's starting values, with a centering map to
+# undo (a free intercept on a variable that has a path entry). Anything else keeps the plain coordinates.
+.sem_shift_ok <- function(ram, smp, constraints, lb, ub, given) {
+  if (!isTRUE(ram$has_mean) || is.null(.sem_center_map(ram, smp))) {
+    return(FALSE)
+  }
+  if (length(unique(ram$k_m)) != length(ram$k_m) || any(ram$k_m %in% which(given)) ||
+        any(is.finite(c(lb[ram$k_m], ub[ram$k_m])))) {
+    return(FALSE)
+  }
+  if (!all(ram$obs_idx %in% ram$pos_m) || any(ram$k_m %in% ram$k_a)) {
+    return(FALSE)
+  }
+  # The back-mapping carries the shift through the free paths of variables with a free intercept. A fixed nonzero
+  # path, or a path into a latent variable (whose mean is fixed at 0 and cannot absorb the shift), breaks it.
+  nv <- ram$nv
+  row_of <- (ram$pos_a - 1L) %% nv + 1L
+  if (any(ram$a0 != 0) || any(!(row_of %in% ram$obs_idx))) {
+    return(FALSE)
+  }
+  used <- if (is.null(constraints)) character() else unlist(lapply(c(constraints$lhs, constraints$rhs), function(e) {
+    tryCatch(all.vars(str2lang(e)), error = function(err) character())
+  }))
+  !any(ram$par_names[ram$k_m] %in% used)
+}
+
 # A model with zero-product constraints (`a*b == 0`, `b1*b2*b3 == 0`): one fit per way of setting a factor of
 # each product to zero, every branch a linear model fitted from the default start (never from another
 # branch's or the full model's estimates, so a branch cannot inherit an infeasible point), and the branch
 # with the smallest discrepancy wins. A branch that fails the acceptance gate is skipped; when none succeeds
 # the error lists each. Messages and warnings of the losing branches are dropped, those of the winner are
 # passed on. The returned fit keeps the user's constraints; `branch` names the lines the winner used.
-.sem_fit_branches <- function(parsed, products, data, information, n_starts, control, weights, se_type) {
+.sem_fit_branches <- function(parsed, products, data, information, n_starts, control, weights, se_type,
+                              meanstructure = NULL) {
   grid <- do.call(expand.grid, c(lapply(products, `[[`, "factors"), stringsAsFactors = FALSE))
   if (nrow(grid) > 64L) {
     stop(sprintf("the zero-product constraints give %d branches to fit; at most 64 are supported", nrow(grid)),
@@ -119,7 +162,8 @@
     res <- tryCatch(
       withCallingHandlers(
         .sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
-                        parsed = list(parameters = parsed$parameters, constraints = cons)),
+                        parsed = list(parameters = parsed$parameters, constraints = cons),
+                        meanstructure = meanstructure),
         message = function(m) {
           held$messages[[length(held$messages) + 1L]] <<- m
           invokeRestart("muffleMessage")

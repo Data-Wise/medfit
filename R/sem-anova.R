@@ -108,12 +108,30 @@ S7::method(anova, SEMFit) <- function(object, ...) {
   invisible(TRUE)
 }
 
+# The parameter table, with the intercepts a covariance-only fit leaves implicit written out. A fit without a mean
+# structure is the saturated-mean model: every observed variable has a free intercept, so a mean-structure fit that
+# fixes or constrains one of them restricts it (`y ~ 0*1` is one degree of freedom), and a covariance-only fit
+# never restricts a mean-structure fit that frees them all (equal degrees of freedom).
+.sem_anova_table <- function(m) {
+  tab <- m@table
+  ram <- m@internals$ram
+  if (isTRUE(ram$has_mean)) {
+    return(tab)
+  }
+  extra <- tab[rep(1L, length(ram$obs)), , drop = FALSE]
+  extra[] <- lapply(extra, function(col) if (is.character(col)) rep("", length(col)) else rep(NA, length(col)))
+  extra$lhs <- ram$obs
+  extra$op <- "~1"
+  extra$free <- TRUE
+  rbind(tab, extra)
+}
+
 # Parameter-table inclusion. `restricted` must free no parameter that `full` leaves out; returns the tested
 # parameters: those `full` frees and `restricted` does not, and those in the equality constraints `restricted`
 # adds, named as in the parameter vectors.
 .sem_anova_nested <- function(full, restricted, label) {
   key <- function(m) {
-    tab <- m@table
+    tab <- .sem_anova_table(m)
     paste(tab$lhs, tab$op, tab$rhs)[tab$free]
   }
   extra <- setdiff(key(restricted), key(full))
@@ -129,7 +147,7 @@ S7::method(anova, SEMFit) <- function(object, ...) {
                  label[2L], label[1L], paste(kept, collapse = "; ")), call. = FALSE)
   }
   dropped <- setdiff(key(full), key(restricted))
-  tab <- full@table
+  tab <- .sem_anova_table(full)
   dropped_labels <- ifelse(nzchar(tab$label) & !is.na(tab$label), tab$label, paste(tab$lhs, tab$op, tab$rhs))[
     paste(tab$lhs, tab$op, tab$rhs) %in% dropped & tab$free
   ]

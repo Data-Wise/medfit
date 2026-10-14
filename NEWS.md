@@ -2,6 +2,12 @@
 
 ## Behavior changes
 
+* A fixed intercept, `y ~ 0*1`, is now a restriction in the native engine. 0.8.0 dropped the row and
+  returned the covariance-only fit; 0.9.0 reads it as "the mean of `y` is 0", which costs one degree of freedom,
+  changes the discrepancy, and can be compared with `anova()` against the fit that frees it. Any `y ~ 1` row
+  (free, fixed or labeled) now turns the mean structure on and frees every unwritten observed intercept, as lavaan
+  does; `meanstructure = FALSE` with an intercept is an error. A model without `~1` rows is unchanged.
+
 * Names without dots. Everything medfit names now uses snake_case: `tidy()` and
   `glance()` columns `std.error`, `p.value`, `conf.low` and `conf.high` became
   `std_error`, `p_value`, `conf_low` and `conf_high`, and the `tidy()` arguments

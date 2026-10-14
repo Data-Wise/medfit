@@ -226,7 +226,6 @@ test_that("every row of the spec 7 syntax table has a pinned error", {
     "Y ~ 0x10*X" = "malformed number",
     "Y ~ 1e*X" = "malformed number",
     "Y ~ @X" = "unexpected character '@'",
-    "Y ~ 1 + X" = "an intercept must be its own statement",
     "Y ~ 2" = "only valid as the intercept",
     "Y ~~ 1" = "only valid as the intercept",
     "Y ~ X ~ Z" = "more than one relation operator",
@@ -288,6 +287,8 @@ test_that("a repeated row errors by name in every spelling, and distinct rows ar
     "Y ~ a*X\nY ~ b*X" = "'Y ~ X' is specified more than once",
     "X ~~ Y\nY ~~ X" = "'Y ~~ X' is specified more than once \\(rows 1 and 2\\)",
     "Y ~ 1\nY ~ 1" = "'Y ~ 1' is specified more than once",
+    "Y ~ 1 + 1 + X" = "'Y ~ 1' is specified more than once",
+    "Y ~ 1 + X\nY ~ 1" = "'Y ~ 1' is specified more than once",
     "f =~ y1 + y2 + y1" = "'f =~ y1' is specified more than once"
   )
   for (i in seq_along(dup)) {

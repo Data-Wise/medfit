@@ -92,8 +92,9 @@ all.equal(decompose(fit_rm), decompose(fit))
   ignored, so write it in the formula.
 - Non-Gaussian outcomes or mediators error; see
   [glm families](model-glm-families.html) for what is supported there.
-- The native engine does not support the four-way decomposition (it estimates no
-  mediator intercept).
+- The native engine does not support the four-way decomposition yet: its syntax has no
+  product operator (planned for 0.10.0), so `extract_mediation()` on a `fit_sem()` fit refuses
+  `decomposition = "four_way"` and `interaction =` by name.
 
 ## Related
 

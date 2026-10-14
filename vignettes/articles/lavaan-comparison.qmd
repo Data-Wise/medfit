@@ -21,7 +21,7 @@ probe on each build. The native engine is experimental.
 | | |
 |---|---|
 | **Use medfit native when** | you want the indirect effect, `mbco_sem()`, or a nonlinear constraint such as `cp == a*b` on a path model |
-| **Use lavaan when** | you need means, groups, categorical outcomes, other estimators, FIML, or fit indices |
+| **Use lavaan when** | you need latent means, groups, categorical outcomes, other estimators, FIML, or fit indices |
 | **Both** | read the same `~`, `=~`, `~~`, `:=` and constraint syntax, and agree to about 1e-6 where both apply |
 
 ## The same model in both
@@ -76,7 +76,7 @@ the behavior makes that test fail.
 |---|---|---|---|
 | Paths, covariances, labels, fixed values, bounds | yes | yes | Supported |
 | Several modifiers on one term | yes | one per term | Unsupported |
-| Means and intercepts | yes | covariance structures only | Unsupported |
+| Means and intercepts | yes | observed intercepts and means (`y ~ 1`, `y ~ 1 + x`); latent means are planned | Supported |
 | Multiple groups | yes | no | Unsupported |
 | Estimators other than ML | yes | ML, plus the HC0 sandwich | Partial |
 | Missing data | FIML | listwise deletion | Partial |

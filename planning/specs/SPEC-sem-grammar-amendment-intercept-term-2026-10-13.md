@@ -43,7 +43,7 @@ Rules:
 
 1. `1` is valid only as a term of `~`. On `~~`, `=~` and in a product the existing errors stay; the message for a number other than `1` is unchanged ("a number on the right side is only valid as the intercept '~ 1'").
 2. A modifier before `1` applies to the intercept row alone; a modifier before another term applies to that term.
-3. Several left sides (`y1 + y2 ~ 1 + x`) give one intercept row per left side, like the other terms.
+3. Several left sides (medfit writes them as a comma list, `y1, y2 ~ 1 + x`; lavaan writes `y1 + y2`) give one intercept row per left side, like the other terms.
 4. A second `1` for the same left side, in this statement or another, is an error (the existing "a second row would compete" rule at `R/sem-parse.R:403`), not lavaan's silent collapse [A, decision D1].
 5. The right side `1` alone is the existing case and parses as before.
 

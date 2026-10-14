@@ -7,13 +7,13 @@ Plan: `tasks/plan.md`. Spec plan: `planning/specs/PLAN-native-mean-structure-202
 - [x] `anova()` nesting fixes (#171, #173); `y ~ 1 + x` amendment approved
 
 ## Slices
-- [ ] S1: observed intercepts end to end (parse `y ~ 1 + x`, tri-state `meanstructure`, likelihood, counts, SEs, messages)
-- [ ] S2: scale robustness, centered gate, sweep to 1e5 (**Checkpoint A**)
-- [ ] S3: `~0*1` restriction, logLik fix, `anova()` across status, shared labels
-- [ ] S4: weights and sandwich
-- [ ] S5: constraints, MBCO, re-fit plumbing, lavaan parity (**Checkpoint B**)
-- [ ] S6: methods, extraction, four-way refusal, OpenMx, worked example
-- [ ] S7: docs and close-out (**Checkpoint C**)
+- [x] S1: observed intercepts end to end (parse `y ~ 1 + x`, tri-state `meanstructure`, likelihood, counts, SEs, messages)
+- [x] S2: scale robustness, centered gate, sweep to 1e5 (**Checkpoint A**)
+- [x] S3: `~0*1` restriction, logLik fix, `anova()` across status, shared labels
+- [x] S4: weights and sandwich
+- [x] S5: constraints, MBCO, re-fit plumbing, lavaan parity (**Checkpoint B**)
+- [x] S6: methods, extraction, four-way refusal, OpenMx, worked example
+- [x] S7: docs and close-out (**Checkpoint C**)
 
 ## Follow-ups from T1
 - [ ] Tolerance and platform: say whether 1e-12 is relative; confirm the fixture on the ubuntu CI BLAS before Checkpoint A

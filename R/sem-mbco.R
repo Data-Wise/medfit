@@ -153,7 +153,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     # `fit@data` holds the rows the fit used, already free of missing values: no second deletion.
     r <- tryCatch(
       .sem_fit_syntax(paste0(fit@model, "\n", con), fit@data, fit@information, n_starts = n_starts,
-                      control = control),
+                      control = control, meanstructure = if (isTRUE(fit@internals$ram$has_mean)) TRUE),
       error = function(e) {
         stop(sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint on that ",
                             "parameter, the null `%s` may lie outside the parameter space."),
