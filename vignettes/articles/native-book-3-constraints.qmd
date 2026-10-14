@@ -68,8 +68,8 @@ its expression evaluator, then divides $a$ and $b$ by the length of $a$. After t
 unit length, so the value of the row at $\theta$ is the signed distance from $\theta$ to the
 constraint's hyperplane, and the tolerances that act on the rows themselves (the rank of the
 equality rows, and the test for implied inequalities in Section 5) mean the same thing for every
-constraint, however it was written. (The acceptance gate of Section 3 measures the same distance in
-natural units, rescaling each row again.)
+constraint, however it was written. (The acceptance gate of Section 3 measures the distance in natural
+units instead, rescaling each row again.)
 
 ```{r}
 #| label: linear-rows
@@ -254,8 +254,8 @@ signif(tr[c(1:6, nrow(tr) - 3:0), ], 3)
 stopifnot(run$status %in% c(1L, 3L, 4L), tr[nrow(tr), "violation"] < 1e-10, tr[1, "violation"] > 0.1)
 ```
 
-Rows that repeat one another are repeated evaluations at the same point (NLopt evaluates the start and the
-trial steps more than once). The trace starts at a point that violates the constraint (`violation` is
+Rows that repeat one another are repeated evaluations at the same point (the `nloptr` wrapper evaluates
+the start once to check the objective's return type, and the solver evaluates some points twice). The trace starts at a point that violates the constraint (`violation` is
 $|cp - ab|$), the violation falls by many orders of magnitude over the last evaluations, and the
 objective settles at `r signif(tr[nrow(tr), "objective"], 6)`. The run ended with NLopt status
 `r run$status`; the engine treats the codes 1 (generic success), 3 (the objective stopped changing,

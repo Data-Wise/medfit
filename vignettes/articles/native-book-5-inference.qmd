@@ -187,7 +187,8 @@ c(largest_entry_of_the_gap = max(abs(gap_engine)), formula_vs_engine = max(abs(g
 stopifnot(max(abs(gap_engine)) > 1, max(abs(gap_formula - gap_engine)) < 1e-3 * max(abs(gap_engine)))
 ```
 
-Now compare a model that fits exactly with one that fits badly:
+Now compare a model that fits exactly with one that fits badly. The mediation model is **just identified**: it
+has as many free parameters as moments (df = 0), so it reproduces $S$ and $W = 0$.
 
 ```{r}
 #| label: obs-vs-exp
@@ -655,7 +656,7 @@ stopifnot(is.character(boundary_warning), grepl("boundary", boundary_warning))
 | 2 | the centered coordinates $T$, $c_0$ and $V = T V_\phi T^\top$ | standard errors unchanged under a shift of the data; lavaan and OpenMx fail where the engine does not |
 | 3 | constraint rows, SLSQP, the gate, the Newton polish | the gate rejects each planted bad solution; the polish matches a hand Newton iteration |
 | 4 | fixed moments and the conditional likelihood | equal estimates and standard errors; the cross block of the information is zero; `logLik()` against lavaan |
-| 5 | $I_E$, $I_O$, the delta method, the sandwich, MBCO, `anova()` | each rebuilt by hand; standard errors, the sandwich and MBCO matched to lavaan and OpenMx |
+| 5 | $I_E$, $I_O$, the delta method, the sandwich, MBCO, `anova()` | each rebuilt by hand; the path and variance standard errors, the sandwich and MBCO matched to lavaan and OpenMx |
 
 ## Check yourself
 

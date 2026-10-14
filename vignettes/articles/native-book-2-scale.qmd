@@ -467,8 +467,8 @@ stopifnot(max(abs(back - fit_big@theta)) < 1e-8,
 
 The intercepts on the centered data are zero, and the mapped-back solution equals `fit_big`.
 That comparison only shows that we reproduced the engine's route, since `fit_big` itself came
-out of the shifted path. The independent check is the next one, which fits the same data
-without the shift.
+out of the shifted path. The independent check is the refused-shift comparison below, which fits
+the same data without the shift.
 
 ### When the shift is allowed
 
@@ -534,8 +534,8 @@ intercepts to profile, and the answer is `FALSE`.
 
 A refusal does not mean failure. The engine then optimizes in the original
 coordinates, with the same **acceptance gate** (the engine's test, applied to every solution,
-that the solver really stopped at a minimum; Chapter 3 derives it) (which still uses the centered Hessian when
-a mean structure is present) and, for a model without constraints, a Newton polish in the
+that the solver really stopped at a minimum; Chapter 3 derives it, and it still uses the centered
+Hessian when a mean structure is present) and, for a model without constraints, a Newton polish in the
 centered coordinates after the solver stops (`.sem_polish_centered()`, which takes a few
 Newton steps on the centered Hessian). To see it, give the
 `mediator1` intercept a start value (an innocuous request that condition 2 refuses) and
