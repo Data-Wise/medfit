@@ -1,6 +1,7 @@
 ADHD
 Asparouhov
 BCa
+Bentler
 Bigl
 Bigr
 BootstrapResult
@@ -64,6 +65,8 @@ SEMFit
 SEs
 SLSQP
 SRMR
+SUR
+Satorra
 SerialMediationData
 Talloen
 Tidyverse

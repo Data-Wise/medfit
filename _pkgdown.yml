@@ -123,6 +123,10 @@ navbar:
         href: articles/native-book-4-fixed-x.html
       - text: "Native book 5: inference"
         href: articles/native-book-5-inference.html
+      - text: "Native book 6: the product term"
+        href: articles/native-book-6-product-term.html
+      - text: "Native book 7: the four-way decomposition"
+        href: articles/native-book-7-four-way.html
       - text: "lavaan and the native engine"
         href: articles/lavaan-comparison.html
     cookbook:
@@ -309,6 +313,8 @@ articles:
       - '`articles/native-book-3-constraints`'
       - '`articles/native-book-4-fixed-x`'
       - '`articles/native-book-5-inference`'
+      - '`articles/native-book-6-product-term`'
+      - '`articles/native-book-7-four-way`'
       - '`articles/lavaan-comparison`'
   - title: "Detailed guides"
     contents:
