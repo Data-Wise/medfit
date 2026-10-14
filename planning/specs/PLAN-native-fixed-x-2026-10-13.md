@@ -1,6 +1,6 @@
 # PLAN: `fixed_x` for the native SEM engine (bundled into 0.9.0)
 
-**Date:** 2026-10-13 | **Branch:** `feature/native-fixed-x` (not created; branching waits for your request) | **Status:** decided; grilled 2026-10-13 ([GRILL-native-fixed-x](GRILL-native-fixed-x-2026-10-13.md), F-G1 to F-G7, which supersede this plan where they differ); not started
+**Date:** 2026-10-13 | **Branch:** `feature/native-fixed-x` (merged and removed) | **Status:** decided; grilled 2026-10-13 ([GRILL-native-fixed-x](GRILL-native-fixed-x-2026-10-13.md), F-G1 to F-G7, which supersede this plan where they differ); merged (#175, `1023520`, on `dev`, unreleased)
 **Inputs:** RMediation's proposal and grill (read-only, `~/projects/r-packages/active/rmediation/planning/PROPOSAL-medfit-fixed_x-2026-10-13.md`, `GRILL-...`, `RESEARCH-...`); this repo's [GRILL](GRILL-native-mean-structure-2026-10-12.md) G13; [PLAN-native-mean-structure](PLAN-native-mean-structure-2026-10-12.md).
 **Decision (author, 2026-10-13, chat "build fixed_x"):** build Option C. Placement (F-G1, author's choice over 0.9.1): bundled into 0.9.0, so the 0.9.0 tag waits for checkpoints F-A and F-B. 0.9.0 T2-T5 are merged (#174), so the dependency is met. Default `FALSE` at every entry point (F-G6).
 
