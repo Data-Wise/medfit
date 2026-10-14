@@ -1,6 +1,6 @@
 # Todo: `fixed_x` (bundled into 0.9.0)
 
-**Status (2026-10-13):** merged to `dev` as #175 (`1023520`, with the 0.9.0 mean structure, #174 `8681083`); unreleased, DESCRIPTION still 0.8.0. Open below: the F-C doc-currency report, the 0.9.0 release gate R1 and the release decision.
+**Status (2026-10-13):** merged to `dev` as #175 (`1023520`, with the 0.9.0 mean structure, #174 `8681083`); released in 0.9.0 (2026-10-14, release PR #185, tag v0.9.0). Closed; any unchecked items below were not carried into the release.
 
 Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/SPEC-native-fixed-x-2026-10-13.md) | Branch `feature/native-fixed-x` is created only on request. Test-first: write the failing test, then the code. After any edit to `.sem_eval`, `.sem_df`, `logLik` or `.sem_complete`, rerun the frozen gate (`test-sem-frozen-v080.R`).
 
