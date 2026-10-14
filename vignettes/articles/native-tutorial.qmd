@@ -133,7 +133,7 @@ fit.
 
 - [The native engine guide](native-guide.html): syntax, inference, constraints,
   diagnostics and limits in one place.
-- [Cookbook recipes 11 to 17](cookbook.html): a latent mediator, a nonlinear
-  constraint, comparing models, defined parameters, bounds and checks.
+- [Cookbook recipes 11 to 18](cookbook.html): a latent mediator, a nonlinear
+  constraint, comparing models, defined parameters, bounds, checks and fixed covariates.
 - [lavaan and the native engine](lavaan-comparison.html): what the native engine
   does and does not do compared with lavaan.
