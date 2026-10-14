@@ -10,6 +10,16 @@
 .sem_name_re <- "^[A-Za-z.][A-Za-z0-9._]*$"
 .sem_reserved <- c(.sem_fnames, "start", "lower", "upper", "level", "CONSTRAINT")
 
+# Canonical name of the product of two observed variables (amendment rule 7): the two names sorted in the C locale,
+# so `x:m` and `m:x` are one product whatever the user wrote, and the name never depends on the data. One helper
+# serves the parser, the materializer and every consumer; nothing else spells a product name.
+# Unrelated to the zero-product constraint helpers `.sem_product_factors`/`.sem_product_nonzero` (sem-constraints.R).
+.sem_product_name <- function(a, b) {
+  checkmate::assert_string(a, min.chars = 1L, .var.name = "a")
+  checkmate::assert_string(b, min.chars = 1L, .var.name = "b")
+  paste(sort(c(a, b), method = "radix"), collapse = ":")
+}
+
 .sem_syntax_error <- function(msg, stmt = NULL) {
   if (!is.null(stmt)) {
     msg <- paste0(msg, " (in '", stmt, "')")
@@ -51,8 +61,9 @@
   stmts
 }
 
-# Tokens: numbers (unsigned), names, and the symbols ( ) * + - ,. A number
-# glued to a name character (`5L`, `0x10`, `1e`) is malformed.
+# Tokens: numbers (unsigned), names, and the symbols ( ) * + - , and `:`. A number
+# glued to a name character (`5L`, `0x10`, `1e`) is malformed. `:` is the product operator (amendment section 3): it
+# joins two names with no whitespace around it (`x:m`); `:=` and `level:` are split off before tokenizing.
 .sem_is_num <- function(tk) grepl("^([0-9]|\\.[0-9])", tk)
 
 .sem_tokens <- function(s, stmt) {
@@ -60,6 +71,7 @@
   nm <- "^[A-Za-z.][A-Za-z0-9._]*"
   out <- character()
   s <- trimws(s)
+  glued <- FALSE # no whitespace between the previous token and the start of `s`
   while (nzchar(s)) {
     m <- regexpr(num, s)
     if (m > 0L) {
@@ -73,12 +85,19 @@
         len <- attr(m, "match.length")
       } else if (grepl("^[()*+,-]", s)) {
         len <- 1L
+      } else if (startsWith(s, ":")) {
+        if (!(glued && length(out) && grepl(.sem_name_re, out[length(out)]) && grepl("^:[A-Za-z.]", s))) {
+          .sem_syntax_error("a product ':' needs a variable name on each side, written without spaces (x:m)", stmt)
+        }
+        len <- 1L
       } else {
         .sem_syntax_error(paste0("unexpected character '", substr(s, 1L, 1L), "'"), stmt)
       }
     }
     out <- c(out, substr(s, 1L, len))
-    s <- trimws(substring(s, len + 1L))
+    rest <- substring(s, len + 1L)
+    glued <- !grepl("^\\s", rest)
+    s <- trimws(rest)
   }
   out
 }
@@ -92,8 +111,9 @@
   if (length(tk) == 1L && .sem_is_num(tk)) sgn * as.numeric(tk) else NULL
 }
 
-# One term of a relation: `[modifier *] target`. Returns the target and the
-# fields the modifier sets.
+# One term of a relation: `[modifier *] operand`, where the operand is a name or a two-way product `a:b`. Returns the
+# target (a product's canonical name), the product as written (empty for a plain name) and the fields the modifier
+# sets.
 .sem_term <- function(tk, stmt) {
   star <- which(tk == "*")
   if (length(star) > 1L) {
@@ -101,6 +121,27 @@
   }
   mod <- if (length(star)) tk[seq_len(star - 1L)] else character()
   target <- if (length(star)) tk[-seq_len(star)] else tk
+  written <- ""
+  if (":" %in% target) {
+    factors <- target[target != ":"]
+    if (sum(target == ":") > 1L) {
+      .sem_syntax_error(
+        paste0("a three-way or higher product ('", paste(factors, collapse = ":"), "') is not supported; ",
+               "products have exactly two observed variables"), stmt
+      )
+    }
+    if (length(target) != 3L || any(.sem_is_num(factors))) {
+      .sem_syntax_error("malformed product; expected two variable names, as in 'x:m'", stmt)
+    }
+    if (factors[1L] == factors[2L]) {
+      .sem_syntax_error(
+        paste0("the product '", paste(factors, collapse = ":"), "' of a variable with itself is not supported; ",
+               "products join two different variables"), stmt
+      )
+    }
+    written <- paste(factors, collapse = ":")
+    target <- .sem_product_name(factors[1L], factors[2L])
+  }
   if (length(target) != 1L) {
     .sem_syntax_error("malformed term; expected [modifier*]name", stmt)
   }
@@ -134,7 +175,7 @@
       .sem_syntax_error(paste0("malformed modifier '", paste(mod, collapse = ""), "'"), stmt)
     }
   }
-  c(list(target = target), set)
+  c(list(target = target, written = written), set)
 }
 
 .sem_relation <- function(st) {
@@ -147,6 +188,12 @@
   }
   # strsplit() drops a trailing empty element, so a dangling comma is checked first.
   dangling <- grepl("(^|,)\\s*(,|$)", lhs)
+  if (grepl(":", lhs, fixed = TRUE)) {
+    .sem_syntax_error(
+      paste0("a product term ':' cannot be a left side ('", lhs, "'); products are right-side terms of a regression"),
+      st
+    )
+  }
   lhs <- trimws(strsplit(lhs, ",", fixed = TRUE)[[1L]])
   if (dangling || !length(lhs) || !all(grepl(.sem_name_re, lhs))) {
     .sem_syntax_error(paste0("invalid left side of '", op, "'"), st)
@@ -167,6 +214,13 @@
     .sem_syntax_error("empty term on the right side", st)
   }
   terms <- lapply(groups, .sem_term, stmt = st)
+  is_prod <- vapply(terms, function(t) nzchar(t$written), TRUE)
+  if (any(is_prod) && op != "~") {
+    .sem_syntax_error(
+      paste0("a product term ('", terms[is_prod][[1L]]$written, "') is only valid on the right side of a regression ",
+             "('~'), not of '", op, "'"), st
+    )
+  }
   is_one <- vapply(terms, function(t) .sem_is_num(t$target), TRUE)
   if (any(is_one)) {
     if (op != "~" || any(vapply(terms[is_one], function(t) as.numeric(t$target) != 1, TRUE))) {
@@ -177,7 +231,7 @@
   for (l in lhs) {
     for (k in seq_along(terms)) {
       t <- terms[[k]]
-      if (!is_one[k] && !grepl(.sem_name_re, t$target)) {
+      if (!is_one[k] && !is_prod[k] && !grepl(.sem_name_re, t$target)) {
         .sem_syntax_error(paste0("invalid variable name '", t$target, "'"), st)
       }
       if (op %in% c("~", "=~") && identical(l, t$target)) {
@@ -189,7 +243,7 @@
       }
       rows[[length(rows) + 1L]] <- list(
         lhs = l, op = if (is_one[k]) "~1" else op, rhs = if (is_one[k]) "" else t$target,
-        fixed = t$fixed, label = t$label, start = t$start, lower = t$lower, upper = t$upper
+        fixed = t$fixed, label = t$label, start = t$start, lower = t$lower, upper = t$upper, written = t$written
       )
     }
   }
@@ -388,6 +442,30 @@
     start = col("start", 1), lower = col("lower", 1), upper = col("upper", 1),
     stringsAsFactors = FALSE
   )
+  # Product terms (`rhs` is the canonical name, `written` the spelling the user used): a latent factor cannot enter one
+  # (v1), and two spellings of one product in one equation are a duplicate, named by both spellings and the canonical
+  # name (amendment rule 7). Both checks read the table only, so they do not depend on the data.
+  written <- col("written", "")
+  is_prod <- nzchar(written)
+  factors <- unique(unlist(strsplit(parameters$rhs[is_prod], ":", fixed = TRUE)))
+  latent <- parameters$lhs[parameters$op == "=~"]
+  latent_hit <- is_prod & vapply(strsplit(parameters$rhs, ":", fixed = TRUE), function(f) any(f %in% latent), TRUE)
+  if (any(latent_hit)) {
+    stop(sprintf(
+      "the product '%s' involves a latent variable; products with latent variables are not supported in this version",
+      written[which(latent_hit)[1L]]
+    ), call. = FALSE)
+  }
+  pkey <- paste(parameters$level, parameters$lhs, parameters$rhs)
+  pdup <- which(is_prod & duplicated(pkey))
+  if (length(pdup)) {
+    j <- pdup[1L]
+    first <- which(is_prod & pkey == pkey[j])[1L]
+    stop(sprintf(
+      "'%s' and '%s' in the equation for '%s' are the same product (canonical name '%s'); keep one term per product",
+      written[first], written[j], parameters$lhs[j], parameters$rhs[j]
+    ), call. = FALSE)
+  }
   ccol <- function(f, type) vapply(cons, function(r) r[[f]], type)
   constraints <- data.frame(
     op = ccol("op", ""), lhs = ccol("lhs", ""), rhs = ccol("rhs", ""), level = ccol("level", 1L),
@@ -414,7 +492,7 @@
     ), call. = FALSE)
   }
   labels <- unique(parameters$label[nzchar(parameters$label)])
-  variables <- unique(c(parameters$lhs, parameters$rhs[nzchar(parameters$rhs)]))
+  variables <- unique(c(parameters$lhs, parameters$rhs[nzchar(parameters$rhs)], factors))
   clash <- intersect(labels, variables)
   if (length(clash)) {
     stop("label '", clash[1L], "' is also a variable name; labels and variables need different names", call. = FALSE)
@@ -431,6 +509,10 @@
   for (i in seq_len(nrow(constraints))) {
     sides <- if (constraints$op[i] == ":=") constraints$rhs[i] else c(constraints$lhs[i], constraints$rhs[i])
     for (s in sides) {
+      if (grepl("(?<!:):(?![:=])", s, perl = TRUE)) {
+        stop("a product term ':' is only valid on the right side of a regression, not inside the expression '", s,
+             "'", call. = FALSE)
+      }
       e <- .sem_expr_parse(s)
       .sem_expr_check(e, known)
       if (!length(all.vars(e))) {
