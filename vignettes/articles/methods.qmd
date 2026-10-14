@@ -564,7 +564,7 @@ intercept free: its discrepancy, estimates and standard errors are those of the 
 **Conditioning.** The path entries of a variable with a free intercept change that intercept by the
 mean times the path, so in the raw parameters the information is nearly singular when the mean is large
 relative to the standard deviation. The gate, the information and its inverse are computed in centered
-coordinates $\tilde m_v = m_v - (\bar x_v - \sum_c A_{vc} \bar x_c)$ (an affine map $\theta = T(\phi + c_0)$,
+coordinates $\tilde m_v = m_v - (\bar x_v - \sum_c A_{v,c} \bar x_c)$ (an affine map $\theta = T(\phi + c_0)$,
 with the Hessian taken directly in $\phi$), and the covariance is mapped back as $V = T V_\phi T^\top$.
 When no constraint, bound or starting value touches an intercept, the whole fit runs on mean-centered data and
 the solution is mapped back.
