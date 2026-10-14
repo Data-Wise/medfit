@@ -56,7 +56,7 @@ Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/S
   - [ ] full suite, lint (120 columns), strict `R CMD check` clean; review with you
 
 ## Phase 4: evidence and docs
-- [x] **V9** Gate script, timing table, OpenMx
+- [x] **V9** Gate script, timing table, OpenMx (OpenMx subset check: `test-sem-fixed-x-compare.R`, estimates 1e-4, SEs 1e-3)
   - Acceptance: `tests/sim/sem-fixed-x-gate.R` RULE MET; each `MUTANT` exits 1; OpenMx agrees on a subset; 30-covariate timing table (n, hardware, free parameters before/after) recorded
   - Verify: `Rscript tests/sim/sem-fixed-x-gate.R`; `MUTANT=<name> ...` for each defect
   - Files: `tests/sim/sem-fixed-x-gate.R`, `planning/specs/evidence/native-fixed-x-2026-10-13/`

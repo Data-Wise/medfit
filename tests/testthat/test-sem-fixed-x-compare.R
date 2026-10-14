@@ -45,3 +45,47 @@ test_that("planted defect: AIC across fixed sets must not just return a number",
   testthat::local_mocked_bindings(.sem_check_comparable = bad)
   expect_s3_class(AIC(fixed, free), "data.frame") # the defect: a ranking of incompatible likelihoods
 })
+
+test_that("OpenMx with the same exogenous moments held at their sample values gives the same structural fit", {
+  skip_if_not_installed("OpenMx")
+  suppressMessages(library(OpenMx))
+  mxOption(NULL, "Number of Threads", 1)
+  d <- fx_data()[c("treatment", "covariate1", "covariate2", "mediator1", "outcome")]
+  n <- nrow(d)
+  s <- stats::cov(d) * (n - 1) / n
+  mu <- colMeans(d)
+  vars <- names(d)
+  fixed <- "treatment"
+  # structural paths, with the same labels as the model text
+  paths <- list(
+    mxPath("treatment", "mediator1", values = 0.4, labels = "a"),
+    mxPath(c("covariate1", "covariate2"), "mediator1", values = 0.1, labels = c("m_c1", "m_c2")),
+    mxPath("mediator1", "outcome", values = 0.4, labels = "b"),
+    mxPath("treatment", "outcome", values = 0.2, labels = "cp"),
+    mxPath(c("covariate1", "covariate2"), "outcome", values = 0.1, labels = c("y_c1", "y_c2")),
+    mxPath(c("mediator1", "outcome"), arrows = 2, values = 1, labels = c("vm", "vy"), lbound = 1e-6)
+  )
+  # exogenous moments: the selected variable's variance, covariances and mean fixed, the others free
+  exo <- c("treatment", "covariate1", "covariate2")
+  for (i in seq_along(exo)) {
+    for (j in i:length(exo)) {
+      is_fixed <- exo[i] %in% fixed || exo[j] %in% fixed
+      paths[[length(paths) + 1L]] <- mxPath(exo[i], exo[j], arrows = 2, free = !is_fixed,
+                                            values = s[exo[i], exo[j]])
+    }
+    paths[[length(paths) + 1L]] <- mxPath("one", exo[i], free = !(exo[i] %in% fixed), values = mu[[exo[i]]])
+  }
+  paths[[length(paths) + 1L]] <- mxPath("one", c("mediator1", "outcome"), values = 0.2, labels = c("i_m", "i_y"))
+  mod <- mxModel("ref", type = "RAM", manifestVars = vars, mxData(d, type = "raw"), paths)
+  old <- vapply(c("Optimality tolerance"), function(o) as.character(mxOption(NULL, o)), "")
+  mxOption(NULL, "Optimality tolerance", 1e-12)
+  on.exit(mxOption(NULL, "Optimality tolerance", old), add = TRUE)
+  run <- mxRun(mod, silent = TRUE)
+  fit <- fit_sem(fx_syntax, d, meanstructure = TRUE, fixed_x = fixed, information = "expected")
+  est <- stats::coef(run)
+  lab <- c("a", "b", "cp")
+  expect_equal(unname(fit@theta[lab]), unname(est[lab]), tolerance = 1e-4)
+  pt <- summary(run)$parameters
+  se <- stats::setNames(pt$Std.Error, pt$name)
+  expect_equal(unname(sqrt(diag(fit@vcov))[lab]), unname(se[lab]), tolerance = 1e-3)
+})
