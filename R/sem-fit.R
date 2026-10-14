@@ -29,10 +29,15 @@
   tab <- .sem_complete(parsed$parameters, meanstructure, fixed_x)
   .sem_check_scale(tab)
   fixed_set <- attr(tab, "fixed_x")
+  # Product columns are built before anything reads the model's columns: `.sem_assign_fixed_x()` returns early
+  # when one is absent, which would leave every fixed row unassigned. NA propagates through `*`, so building
+  # before listwise deletion is safe; the check of a user-supplied column waits until after it.
+  mat <- .sem_materialize_products(tab, data)
   if (length(fixed_set)) {
     # the fixed values are moments of the rows the fit will use, so the rows are chosen before the RAM is built
-    tab <- .sem_assign_fixed_x(tab, data, weights)
+    tab <- .sem_assign_fixed_x(tab, mat$data, weights)
   }
+  data <- mat$data
   conv <- .sem_to_ram(tab)
   ram <- conv$ram
 
@@ -55,6 +60,7 @@
     ))
   }
   x <- x[keep, , drop = FALSE]
+  .sem_check_product_columns(mat$checks, keep)
   weights <- weights[keep]
   smp <- .sem_sample(x, ram, weights)
 
@@ -200,4 +206,43 @@
   out <- fits[[win]]$fit
   out$constraints <- parsed$constraints
   out
+}
+
+# Product materialization (amendment rule 7, plan U3). Every `a:b` term in the completed table is an observed
+# exogenous variable whose column is `a * b`, named by the canonical `.sem_product_name()`. A column already in
+# `data` under either spelling is used only if it equals the product on the rows the fit keeps (checked after
+# listwise deletion, where the comparison is NA-free). Returns the data with the canonical column and the
+# user-supplied columns to check. A factor absent from `data` is left alone: the fit reports the absent column.
+.sem_materialize_products <- function(tab, data) {
+  prods <- unique(tab$rhs[tab$op == "~" & grepl(":", tab$rhs, fixed = TRUE)])
+  checks <- list()
+  for (nm in prods) {
+    f <- strsplit(nm, ":", fixed = TRUE)[[1L]]
+    if (!all(f %in% names(data))) {
+      next
+    }
+    bad <- f[!vapply(data[f], is.numeric, TRUE)]
+    if (length(bad)) {
+      stop("the product '", nm, "' needs numeric variables, but ", paste(bad, collapse = ", "),
+           " is not numeric", call. = FALSE)
+    }
+    built <- as.numeric(data[[f[1L]]]) * as.numeric(data[[f[2L]]]) # numeric: integer columns cannot overflow to NA
+    for (alt in intersect(unique(c(nm, paste(f, collapse = ":"), paste(rev(f), collapse = ":"))), names(data))) {
+      checks[[length(checks) + 1L]] <- list(column = alt, product = nm, given = data[[alt]], built = built)
+    }
+    data[[.sem_product_name(f[1L], f[2L])]] <- built
+  }
+  list(data = data, checks = checks)
+}
+
+.sem_check_product_columns <- function(checks, keep) {
+  for (ck in checks) {
+    given <- ck$given[keep]
+    built <- ck$built[keep]
+    if (!(is.numeric(given) && isTRUE(all(given == built)))) {
+      stop("the column `", ck$column, "` in `data` is not the product of ", gsub(":", " and ", ck$product),
+           " on the rows used: rename it, or drop it so medfit builds the product", call. = FALSE)
+    }
+  }
+  invisible(TRUE)
 }
