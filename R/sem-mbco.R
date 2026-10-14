@@ -105,6 +105,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     stop("`object` must be a SEMFit from fit_sem().", call. = FALSE)
   }
   fit <- object
+  .sem_check_modeltest(list(fit), "mbco_sem()")
   two_form <- is.null(paths) && !missing(b)
   if (is.null(paths)) {
     if (missing(a)) {

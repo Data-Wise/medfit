@@ -22,14 +22,18 @@ fit_sem(
 \verb{=~} (latent variable), \verb{~~} (variance or covariance), \code{label*variable}
 modifiers, \code{start()}, \code{lower()} and \code{upper()}, and the constraint
 operators \code{==}, \code{<}, \code{>} and \verb{:=}. An intercept is written \code{y ~ 1} (alone or with other terms, as
-in \code{y ~ 1 + x}) and turns on the mean structure.}
+in \code{y ~ 1 + x}) and turns on the mean structure. A product of two observed variables is written
+\code{x:m} on the right side of a regression (canonical name \code{m:x}); \code{?"medfit-syntax"} lists the
+supported class and each limit.}
 
 \item{data}{A data frame with the model's observed variables as numeric
 columns. Rows with missing values in those columns are dropped once
 (listwise deletion) and counted in \code{n_dropped}.}
 
 \item{information}{Character: \code{"observed"} (default) or \code{"expected"}
-information for the standard errors.}
+information for the standard errors. \code{"expected"} is an error for a model with a product term
+that has an endogenous factor (the product is a function of another variable, so the expected
+information gives wrong standard errors); use the default with \code{se_type = "sandwich"}.}
 
 \item{n_starts}{Positive integer or \code{NULL}: number of optimizer starts
 tried before the fit is declared failed (\code{NULL} uses 5). Retries use
@@ -59,7 +63,9 @@ than the HC3 default of the glm route by a factor that shrinks like
 an intercept (\code{y ~ 1}, free or fixed); \code{TRUE} fits one regardless; \code{FALSE} fits covariances only and
 errors if an intercept is written. With a mean structure every observed variable whose intercept is
 not written has a free one, so a model with only free intercepts has the same estimates and
-standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.}
+standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
+A model with a product term (\code{y ~ x + m + x:m}) always fits the mean structure (it needs the mediator
+intercept for the four-way decomposition), so with a product \code{meanstructure = FALSE} is an error.}
 
 \item{fixed_x}{\code{FALSE} (default), \code{TRUE}, or a character vector of exogenous observed variable names. The
 selected variables (\code{TRUE}: every exogenous observed variable, product columns included) have their mean (with
@@ -76,7 +82,9 @@ selected variable is an error (lavaan would silently keep it free). The fixed ro
 \code{\link[=fit_mediation]{fit_mediation()}} uses; the old name still works with a warning.}
 }
 \value{
-A \link{SEMFit} object.
+A \link{SEMFit} object. With a product term whose factor is a regression target (\code{x:m} with
+\code{m} regressed on \code{x}), \code{glance()} reports the chi-square, df and p-value as \code{NA} with a note, and
+\code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse; see \link{SEMFit-methods}.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
@@ -94,6 +102,14 @@ fit <- fit_sem(
   data = mediation_demo
 )
 fit@defined
+
+# A treatment-by-mediator product: the four-way decomposition
+fit4 <- fit_sem(
+  "mediator1 ~ treatment\noutcome_int ~ treatment + mediator1 + treatment:mediator1",
+  data = mediation_demo, se_type = "sandwich"
+)
+decompose(extract_mediation(fit4, treatment = "treatment", mediator = "mediator1",
+                            outcome = "outcome_int"))
 }
 
 }

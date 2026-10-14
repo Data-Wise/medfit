@@ -24,7 +24,7 @@ objects. It is experimental. For a first look, read
 | **Entry points** | `fit_sem(syntax, data)`; `fit_mediation(model = syntax, engine = "native")` for one mediator |
 | **Class returned** | `SEMFit`, then `MediationData`, `SerialMediationData` or `ParallelMediationData` from `extract_mediation()` |
 | **Syntax reference** | `?"medfit-syntax"` |
-| **Not covered** | latent means, the four-way decomposition, groups, categorical outcomes, other estimators; see [the limits](#limits) |
+| **Not covered** | latent means, latent products, groups, categorical outcomes, other estimators; see [the limits](#limits) |
 
 ```{r}
 #| label: setup
@@ -186,7 +186,9 @@ mediator works through the same call.
 - **One group**, listwise deletion for missing data, **numeric variables only**.
 - **ML only**, plus the HC0 sandwich; no robust chi-square, no fit indices beyond
   the chi-square, AIC and BIC.
-- **No four-way decomposition** from the native route.
+- **Products** (`x:m`, which give the four-way decomposition) work for two observed variables inside a
+  supported class; the table of limits and messages is on [the native model page](model-native.html#product-terms).
+  The model test is `NA` when a product factor is a regression target.
 - For latent means, groups, categorical outcomes or fit indices use lavaan; the extraction
   route accepts a `lavaan` fit as well. See
   [lavaan and the native engine](lavaan-comparison.html).

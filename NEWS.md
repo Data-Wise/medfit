@@ -1,3 +1,55 @@
+# medfit 0.10.0
+
+## New features
+
+* The native engine reads a product term, `:`, in a regression: `y ~ x + m + x:m` (`fit_sem()` and
+  `fit_mediation(engine = "native", model = )`). The product is an observed exogenous variable whose column
+  `x * m` the engine builds from `data` after listwise deletion, as lavaan does, so the likelihood, the constraints and the
+  mean structure are unchanged. `x:m` and `m:x` are one term; the table, `tidy()` and the extraction use the
+  canonical name, the two factor names sorted in the C locale (`m:x` for `x` and `m`), and a label
+  (`b*x:m`) names the coefficient. Writing both spellings in one equation is an error that names both. A product
+  term always turns the mean structure on (`meanstructure = FALSE` with a product is an error), because the
+  four-way decomposition needs the mediator intercept. A column already in `data` under either spelling is used
+  only if it equals `x * m` on the rows kept, and otherwise stops with a message that names the column; with
+  `fixed_x = TRUE` the product column is fixed at its sample moments with the other exogenous variables.
+
+* `extract_mediation()` on a `SEMFit` now returns the four-way decomposition (`InteractionMediationData`) when
+  the outcome equation carries the treatment-by-mediator product; `decomposition = "four_way"` and `interaction =`
+  (the product written with `:`) work, and without the product `decomposition = "four_way"` is refused with a
+  message that says to add `x:m`. This replaces the 0.9.0 refusal. On a simple model the four-way parts equal the `glm`
+  route to the printed digits, and on `mediation_demo` the native and lavaan coefficients and sandwich standard
+  errors agree to the printed digits. The estimate names and `outcome_predictors` carry the canonical `m:x`; the
+  lavaan route keeps the spelling you wrote. Any other product involving the treatment or the mediator is
+  refused on this route. Centering matters: the reference level `m_star = 0` and `E[M | X = 0]` depend on where the
+  mediator is centered, so CDE and INTref move with centering while NDE, NIE and the total do not (the native
+  four-way article shows this).
+
+## Supported class for a product (limits)
+
+A model with a product is fitted only inside the class below; anything else is an error that names the
+feature and says it is not yet supported with products. A model without a product keeps every 0.9.0 capability.
+
+* Recursive models; no residual covariance between observed outcomes (a `~~` between outcomes, or a free one;
+  the covariance that completion would add between pure outcomes is fixed at 0 with one note, and the same model
+  without the product estimates it); no shared label, fixed coefficient, bound, or `==`, `<`, `>` constraint on a
+  coefficient; intercepts free, not shared and unconstrained; no outcome-derived regressor (a product factor that is the
+  target or one of its descendants). `:=` parameters are allowed. Exogenous products and products of two
+  exogenous variables (`x:w`) are inside the class; latent products, `x:x` and three-way products are not supported.
+
+* Model tests. When a product factor is itself a regression target, or the exogenous (co)variance block is
+  restricted, the global chi-square is not valid, so `glance()` reports chi-square, df and p-value as `NA` with a
+  note, `summary()` and `print()` show the note, `anova()` and `mbco_sem()` refuse naming the product, and
+  `information = "expected"` is refused for a product with an endogenous factor (use the default observed
+  information with `se_type = "sandwich"`). `logLik()`, AIC and BIC stay defined. `fit_sem()` warns once when the
+  model test is unavailable and once when a product is fitted without `se_type = "sandwich"`. A product of
+  exogenous variables with a free exogenous block keeps the ordinary test (null simulation, 1000 replications,
+  n = 500: rejection 0.055 and 0.056 at nominal 0.05 for normal and centered-exponential factors).
+
+* The product depends on the 0.9.0 mean structure (a product turns it on) and on `fixed_x` (a fixed set
+  includes the product columns). The native four-way read uses the shared worker, so it carries the corrections
+  shipped in 0.9.0 (standard errors that include the mediator-covariate term, an error for a treatment product
+  in the mediator equation, weighted covariate means in INTref; see "Behavior changes" under 0.9.0 below).
+
 # medfit 0.9.0
 
 ## New features

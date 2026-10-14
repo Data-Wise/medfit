@@ -793,11 +793,29 @@ x_sem <- extract_mediation(sem, treatment = "treatment", mediator = "mediator1")
 nie(x_sem)
 ```
 
-The four-way decomposition is not available on this route yet: the native syntax
-has no product operator (planned for 0.10.0), so `extract_mediation()` refuses
-`decomposition = "four_way"` and `interaction =` by name. Fit a treatment-by-mediator
-model with `lm`/`glm` or lavaan (`meanstructure = TRUE`) instead. See
-`?"medfit-syntax"` for the syntax.
+A treatment-by-mediator product in the outcome equation gives the four-way decomposition
+on this route. Write it in the model syntax as `treatment:mediator1` (the colon, no spaces);
+the engine builds the column, turns the mean structure on, and stores the term under the
+canonical name `mediator1:treatment`, whichever order you write it in:
+
+```{r}
+#| label: extract-native-fourway
+sem4 <- suppressWarnings(fit_sem(
+  "mediator1 ~ treatment
+   outcome_int ~ treatment + mediator1 + treatment:mediator1",
+  data = mediation_demo, se_type = "sandwich"
+))
+x4 <- extract_mediation(sem4, treatment = "treatment", mediator = "mediator1",
+                        outcome = "outcome_int")
+class(x4)[1]
+decompose(x4)
+```
+
+Without the product, `decomposition = "four_way"` and `interaction =` are refused by name, and
+the message says to add the product. A precomputed product column is fitted as an ordinary
+variable, so write the product in the syntax. A model with a product must stay inside a supported
+class (see [the native model page](model-native.html#product-terms)), and the global chi-square is
+`NA` when a product factor is a regression target. See `?"medfit-syntax"` for the syntax.
 
 ## Compatibility with RMediation
 

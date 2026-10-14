@@ -347,7 +347,7 @@ tests/testthat/
 ├── test-effect-se.R, test-confint-paths.R, test-methods-*.R   # SEs, confint, tidy
 ├── test-serial-total-effect.R           # te() over every path
 ├── test-fit-*.R                         # glm, regmedint, m_star, native (test-fit-sem.R)
-├── test-sem-*.R, helper-sem.R           # native SEM engine: parser, model, optimizer, constraints, SEs, weights, MBCO, methods, probmed gate
+├── test-sem-*.R, helper-sem.R           # native SEM engine: parser, model, optimizer, constraints, SEs, weights, MBCO, methods, probmed gate, product term (`test-sem-product-*.R`: token, table, materialize, rules, mean, modeltest, extract; `test-four-way-oracle-*.R` with `helper-four-way-oracle.R`)
 ├── test-bootstrap*.R                    # Bootstrap methods
 └── test-mediation-demo.R                # bundled data known answers
 ```
@@ -442,8 +442,23 @@ gates work in centered coordinates `phi` (`.sem_center_map()`, `theta = T (phi +
 differences, `V = T V_phi T'`); a fit whose intercepts are all free and absent from constraints, bounds and starts
 runs on mean-centered data and maps back (`.sem_shift_ok()`). Intercept constraints keep the plain solver coordinates
 with a centered gate: checked to mean/sd 1e3, not 1e5. `anova()` treats a covariance-only fit as having free implicit
-intercepts (`.sem_anova_table()`). Four-way on a `SEMFit` is refused by name until the `:` operator (0.10.0). Gates:
+intercepts (`.sem_anova_table()`). Four-way on a `SEMFit` needs the `:` product (below); a product turns the mean structure on. Gates:
 `tests/sim/sem-mean-constrained-gate.R` (`MUTANT=badshift|nocenter`), the OLS oracle in `test-sem-mean-*.R`.
+
+### Native product term and four-way (`R/sem-parse.R`, `R/sem-model.R`, `R/sem-fit.R`, `R/sem-anova.R`, `R/extract-sem.R`)
+
+`x:m` on a regression's right side is an observed exogenous column `x * m`, built by `.sem_materialize_products()` after
+listwise deletion; `.sem_product_name(a, b)` (C-locale sort, `m:x` for `x`, `m`) is the one name every consumer uses. A
+product turns the mean structure on (`meanstructure = FALSE` errors). Supported class (`.sem_check_product_parsed()`,
+`.sem_check_product_completed()`): recursive, rule 8 (no factor that is the target or a descendant), no outcome residual
+covariance (the auto-added pure-outcome one is fixed at 0 with one note, GRILL H6), no shared, fixed, bounded or constrained
+coefficient, free unshared intercepts; each rejection message is tabulated in `?"medfit-syntax"` and the native model
+page. `.sem_product_modeltest()` marks the global test invalid when a product factor is a regression target or the exogenous
+block is restricted: `glance()` chi-square/df/p are `NA` with a note, `anova()` and `mbco_sem()` refuse
+(`.sem_check_modeltest()`), `information = "expected"` is refused for an endogenous factor; `.sem_chisq()` is the raw statistic (`glance()` reads it for valid fits, the gates read it when the verdict is `NA`).
+`extract_mediation(<SEMFit>)` returns `InteractionMediationData` when the outcome equation carries the
+treatment-by-mediator product (names carry the canonical `m:x`); another product on the treatment or mediator is refused.
+Plan and evidence: `planning/specs/PLAN-native-four-way-2026-10-12.md`.
 
 ---
 
@@ -519,7 +534,7 @@ breaking existing code, type safety via S7 validators.
 | `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
 | `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
 | `"lmer"` | lme4, pbkrtest (Suggests) | mixed models for cluster-level treatment; `cluster =`, `se_type = "kr"` | ✓ (no weights/sandwich/families) |
-| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `, one mediator through `fit_mediation()`; serial and parallel through `fit_sem()` then `extract_mediation()`); latent mediators, linear and nonlinear constraints, `weights`/`se_type = "sandwich"`; `anova()`, `tidy()`/`glance()`; `mbco_sem()` (k paths) | ✓ experimental (observed intercepts and means, `meanstructure =`; no latent means, no four-way) |
+| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `, one mediator through `fit_mediation()`; serial and parallel through `fit_sem()` then `extract_mediation()`); latent mediators, linear and nonlinear constraints, `weights`/`se_type = "sandwich"`; `anova()`, `tidy()`/`glance()`; `mbco_sem()` (k paths) | ✓ experimental (observed intercepts and means, `meanstructure =`, the `:` product term with four-way through `extract_mediation()` in a supported class; no latent means, no latent products) |
 | `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 
@@ -570,7 +585,7 @@ During `devtools::load_all()`:
 ### Planning Documents
 
 **Package:** `planning/medfit-roadmap.md`
-**Active plan:** `planning/specs/PLAN-native-four-way-2026-10-12.md` (0.10.0; the 0.9.0 mean-structure and `fixed_x` plans are closed, see `planning/specs/`); keep new plans under `planning/` (`^planning$` is Rbuildignored, `tasks/` is not covered by that rule). `tasks/plan.md` and `tasks/todo.md` are the closed `fixed_x` plan (0.9.0).
+**Active plan:** `planning/specs/PLAN-native-four-way-2026-10-12.md` (0.10.0, closed: U1-U9 merged, released as 0.10.0; the 0.9.0 mean-structure and `fixed_x` plans are closed too, see `planning/specs/`); keep new plans under `planning/` (`^planning$` is Rbuildignored, `tasks/` is not covered by that rule). `tasks/plan.md` and `tasks/todo.md` are the closed `fixed_x` plan (0.9.0).
 **Ecosystem:** `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`
 
 ### Related Packages
@@ -584,10 +599,10 @@ During `devtools::load_all()`:
 
 ---
 
-**Last Updated**: 2026-10-13
+**Last Updated**: 2026-10-14
 **Maintained by**: medfit development team
 
-**Current status** (2026-10-13): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.9.0** (GitHub-only, not submitted to CRAN, as 0.5.0 to 0.8.0). 0.9.0 ships observed intercepts and means in the native engine (centered coordinates, intercept constraints, `anova()` across mean status; #174) and `fixed_x` (#175, lavaan's `fixed.x = TRUE`: same structural results, conditional logLik; plan `tasks/plan.md`), with cookbook recipe 18 and step 9 of the native tutorial (#176-#180). 0.8.0 shipped nonlinear constraints in the native engine (`cp == a*b`, `a*b > k`, the exact zero-product branch split, best-effort sums of products, a Newton polish), `mbco_sem(paths = )` for a product of k paths, `anova()`/`tidy()`/`glance()`/`confint()` for `SEMFit`, one lavaan-style naming convention, the lavaan comparison article and cookbook recipes 12 and 13 (#140-#163). 0.7.0 (released 2026-10-10, tag `v0.7.0`) shipped the experimental native maximum-likelihood SEM engine (`fit_sem()`/`SEMFit`, `fit_mediation(engine = "native")`, sampling weights and the sandwich covariance, `mbco_sem()`, and the OpenMx parity and constrained gates; #110-#124) with its docs (`?"medfit-syntax"`, cookbook recipe 11, the native section of the methods article). Plan and decisions for 0.8.0: `tasks/plan.md`, `tasks/todo.md`, `planning/specs/GRILL-medfit-0-8-0-2026-10-11.md`. 0.6.0 (2026-10-09) shipped Ext D module 1, 2-1-1 cluster mediation (`ClusterMediationData`, `engine = "lmer"`, `se_type = "kr"`, cluster bootstrap; #90-#92, #95, #100), the Reference Card and Cookbook articles (#94, #97), and 30 fewer published internal reference pages (#98). 0.5.0 (2026-09-25) changed two results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). The site documents 0.8.0, including the docs overhaul (#134-#139: a Models menu with 14 model pages, a home page and Getting Started rewrite, and a Guides menu); `main` deploys it, and `gh workflow run pkgdown.yaml --ref dev` publishes `dev` docs to the root while the Version has no `.9000`; `nobs()` now counts the rows the models used (#138). Articles evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`. 
+**Current status** (2026-10-14): CRAN has **0.3.2** (accepted 2026-07-23). `main`, GitHub and r-universe are at **0.10.0** (GitHub-only, not submitted to CRAN, as 0.5.0 to 0.9.0). 0.10.0 ships the `:` product term in native syntax and the four-way decomposition from a native fit through `extract_mediation()`, inside a documented supported class (rules 8 and 9; a product turns the mean structure on; chi-square is `NA` and `anova()`/`mbco_sem()` refuse when a product factor is a regression target; #181, #187-#193), with the native oracles and colon-path gates (`tests/sim/`) and the native mini-book (#183). 0.9.0 shipped observed intercepts and means in the native engine (centered coordinates, intercept constraints, `anova()` across mean status; #174) and `fixed_x` (#175, lavaan's `fixed.x = TRUE`: same structural results, conditional logLik; plan `tasks/plan.md`), with cookbook recipe 18 and step 9 of the native tutorial (#176-#180). 0.8.0 shipped nonlinear constraints in the native engine (`cp == a*b`, `a*b > k`, the exact zero-product branch split, best-effort sums of products, a Newton polish), `mbco_sem(paths = )` for a product of k paths, `anova()`/`tidy()`/`glance()`/`confint()` for `SEMFit`, one lavaan-style naming convention, the lavaan comparison article and cookbook recipes 12 and 13 (#140-#163). 0.7.0 (released 2026-10-10, tag `v0.7.0`) shipped the experimental native maximum-likelihood SEM engine (`fit_sem()`/`SEMFit`, `fit_mediation(engine = "native")`, sampling weights and the sandwich covariance, `mbco_sem()`, and the OpenMx parity and constrained gates; #110-#124) with its docs (`?"medfit-syntax"`, cookbook recipe 11, the native section of the methods article). Plan and decisions for 0.8.0: `tasks/plan.md`, `tasks/todo.md`, `planning/specs/GRILL-medfit-0-8-0-2026-10-11.md`. 0.6.0 (2026-10-09) shipped Ext D module 1, 2-1-1 cluster mediation (`ClusterMediationData`, `engine = "lmer"`, `se_type = "kr"`, cluster bootstrap; #90-#92, #95, #100), the Reference Card and Cookbook articles (#94, #97), and 30 fewer published internal reference pages (#98). 0.5.0 (2026-09-25) changed two results: serial `te()`/`pm()` now sum every path (#81), and `confint(parm = "paths")` finds rows by name and errors instead of guessing (#82, which also fixed wrong lavaan path SEs). The site documents 0.10.0, including the docs overhaul (#134-#139: a Models menu with 14 model pages, a home page and Getting Started rewrite, and a Guides menu); `main` deploys it, and `gh workflow run pkgdown.yaml --ref dev` publishes `dev` docs to the root while the Version has no `.9000`; `nobs()` now counts the rows the models used (#138). Articles evaluate their code at site build, and the pkgdown workflow runs on PRs to `dev`. Per-PR detail lives in `.STATUS`. 
 
 ### CRAN check practice (learned 2026-06-10, extended 2026-07-20)
 
