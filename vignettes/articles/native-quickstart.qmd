@@ -99,7 +99,7 @@ fit.
 
 ## Where next
 
-- [Native engine, step by step](native-tutorial.html): the same path in eight
+- [Native engine, step by step](native-tutorial.html): the same path in nine
   checked steps, with a chain of three paths.
 - [The native engine guide](native-guide.html): syntax, inference, constraints,
   diagnostics and limits in one place.

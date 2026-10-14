@@ -12,7 +12,8 @@ execute:
   echo: true
 ---
 
-medfit's native engine fits covariance-structure models from lavaan-style syntax.
+medfit's native engine fits covariance-structure models, with observed intercepts and means, from
+lavaan-style syntax.
 It is not a replacement for lavaan: it covers the path models behind mediation
 analysis and stops there. This page runs both on the same data, then lists what
 each does, with a status for every feature that a test checks against a live
