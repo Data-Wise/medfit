@@ -49,9 +49,18 @@
     stop("`meanstructure = FALSE`, but the model writes an intercept ('", p$lhs[written][1L], " ~ 1'); ",
          "drop the intercept statement or leave `meanstructure` unset", call. = FALSE)
   }
-  # Mean structure is on when asked for, or when any intercept statement is written (free or fixed, as in
-  # lavaan): then every observed variable whose intercept the user did not write gets a free one.
-  mean_on <- isTRUE(meanstructure) || any(written)
+  # A product model needs the saturated mean structure (the four-way decomposition needs E[M | X = 0]),
+  # whatever the extraction asks for later, so `meanstructure = FALSE` cannot be honored.
+  if (product_model && identical(meanstructure, FALSE)) {
+    stop("`meanstructure = FALSE`, but the model has a product term ('",
+         p$rhs[p$op == "~" & grepl(":", p$rhs, fixed = TRUE)][1L], "'); product models need the mean structure ",
+         "(the four-way decomposition needs the mediator intercept E[M | X = 0]); leave `meanstructure` unset ",
+         "or use `TRUE`", call. = FALSE)
+  }
+  # Mean structure is on when asked for, when any product term is present, or when any intercept statement is
+  # written (free or fixed, as in lavaan): then every observed variable whose intercept the user did not write gets
+  # a free one.
+  mean_on <- isTRUE(meanstructure) || product_model || any(written)
 
   # Marker loading: the first indicator of each latent variable is fixed to 1
   # unless the user fixed it.

@@ -88,7 +88,8 @@ test_that("weights work with a product term", {
   w <- runif(nrow(d), 0.5, 1.5)
   fit <- fit_sem(pm_model, d, weights = w, se_type = "sandwich")
   d$xm <- d$x * d$m
-  ref <- fit_sem("y ~ x + m + xm\nm ~ x", d, weights = w, se_type = "sandwich")
+  # the product model fits the mean structure (U5), so the precomputed-column reference does too
+  ref <- fit_sem("y ~ x + m + xm\nm ~ x", d, weights = w, se_type = "sandwich", meanstructure = TRUE)
   expect_equal(unname(coef(fit)), unname(coef(ref)), tolerance = 1e-6)
   expect_identical(gsub("m:x", "xm", names(coef(fit)), fixed = TRUE), names(coef(ref)))
 })

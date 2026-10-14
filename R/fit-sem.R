@@ -50,6 +50,8 @@
 #'   errors if an intercept is written. With a mean structure every observed variable whose intercept is
 #'   not written has a free one, so a model with only free intercepts has the same estimates and
 #'   standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
+#'   A model with a product term (`y ~ x + m + x:m`) always fits the mean structure (it needs the mediator
+#'   intercept for the four-way decomposition), so with a product `meanstructure = FALSE` is an error.
 #' @param fixed_x `FALSE` (default), `TRUE`, or a character vector of exogenous observed variable names. The
 #'   selected variables (`TRUE`: every exogenous observed variable, product columns included) have their mean (with
 #'   a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
