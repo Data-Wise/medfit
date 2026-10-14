@@ -72,6 +72,6 @@ Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/S
   - [ ] doc-currency report (not recorded in the PR body)
 
 ## 0.9.0 release gates (carried from the archived plan)
-- [ ] **R1** Say whether the 1e-12 frozen tolerance is relative; confirm the fixture on the ubuntu CI BLAS
+- [x] **R1** (done 2026-10-14: `expect_equal(tolerance = )` under testthat 3e is waldo's relative difference, absolute only near zero; the frozen fixture `test-sem-frozen-v080.R` passes on ubuntu release, devel and oldrel in CI on every merge since 0.9.0, so it holds on the CI BLAS) Say whether the 1e-12 frozen tolerance is relative; confirm the fixture on the ubuntu CI BLAS
 - [x] **R2** (done: `.sem_seed()` never hashed `m`, identical to 0.8.0; pinned by a test) `.sem_seed()` must not hash the `m` vector when the mean flag is off; add a frozen retry case
-- [ ] **Release decision** (version bump and tag are release engineering's)
+- [x] **Release decision** (0.9.0 released 2026-10-14, release PR #185, tag v0.9.0)
