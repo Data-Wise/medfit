@@ -1,3 +1,13 @@
+# medfit (development version)
+
+## Bug fixes
+
+* `AIC()` and `BIC()` with several `SEMFit` fits now stop when the fits do not share their observed variables, and
+  name the variables that differ. A product term (`x:m`) adds a column to the joint likelihood, so a fit with a
+  product and the same model without it describe different data; before, the two were ranked anyway (on
+  `mediation_demo`, the same outcome gave AIC 3934.7 with the product and 2994.1 without). `anova()` and
+  `mbco_sem()` already refused such a pair (#206).
+
 # medfit 0.10.0
 
 ## New features
