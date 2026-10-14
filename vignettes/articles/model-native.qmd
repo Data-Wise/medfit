@@ -214,6 +214,11 @@ the reason.
   does: the structural estimates, their standard errors and the degrees of freedom do
   not change, the parameter count falls, and `logLik()`, AIC and BIC become conditional
   on the fixed variables, so fits with different fixed sets cannot be compared.
+- **AIC and BIC across product and no-product fits are not comparable.** The product column is an
+  extra observed variable in the joint likelihood, so a fit with `x:m` and the same model without it
+  describe different data. `AIC(fit_a, fit_b)` and `BIC(fit_a, fit_b)` do not check this and rank them
+  anyway (on `mediation_demo`, the same outcome gives AIC 3934.7 with the product and 2994.1 without);
+  `anova()` and `mbco_sem()` refuse such a pair.
 - **Products** are limited to two observed variables inside the class in the table above; latent
   products, `x:x` and three-way products stop with the messages listed there.
 - `summary()` reports diagnostics, including an improper solution and any active
