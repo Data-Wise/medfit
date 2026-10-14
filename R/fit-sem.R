@@ -172,7 +172,8 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
          ". Recognized: ", paste(c(fit_args, extract_args), collapse = ", "), ".", call. = FALSE)
   }
   syntax <- paste(model, collapse = "\n")
-  vars <- unique(unlist(.sem_parse(syntax)$parameters[c("lhs", "rhs")]))
+  # A product term (`m:x`) names two variables; a treatment that only appears inside one is still in the model.
+  vars <- unique(unlist(strsplit(unlist(.sem_parse(syntax)$parameters[c("lhs", "rhs")]), ":", fixed = TRUE)))
   for (nm in c(treatment = treatment, mediator = mediator)) {
     if (!(nm %in% vars)) {
       stop(sprintf("'%s' is not a variable in `model`", nm), call. = FALSE)

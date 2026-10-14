@@ -90,21 +90,71 @@
   )
 }
 
+# Canonical name of the treatment-by-mediator product in a native fit's regressions, or NA when the model has none.
+# `interaction` (optional) must be a product written with `:`; either order resolves to the stored `m:x` name.
+.sem_native_interaction <- function(object, treatment, mediator, interaction = NULL) {
+  checkmate::assert_string(interaction, null.ok = TRUE, .var.name = "interaction")
+  tab <- object@table
+  stored <- tab$rhs[tab$op == "~" & grepl(":", tab$rhs, fixed = TRUE)]
+  canon <- .sem_product_name(treatment, mediator)
+  if (!is.null(interaction)) {
+    parts <- strsplit(interaction, ":", fixed = TRUE)[[1L]]
+    if (length(parts) != 2L || !all(nzchar(parts))) {
+      stop("`interaction` for a native fit must be the product written with `:`, as in '", treatment, ":", mediator,
+           "'; a precomputed data column is fitted as an ordinary variable.", call. = FALSE)
+    }
+    if (!identical(.sem_product_name(parts[1L], parts[2L]), canon)) {
+      stop("`interaction` ('", interaction, "') is not the product of the treatment '", treatment,
+           "' and the mediator '", mediator, "'.", call. = FALSE)
+    }
+  }
+  if (canon %in% stored) canon else NA_character_
+}
+
+# A product other than treatment:mediator that involves the treatment or the mediator changes the effects without
+# changing a coefficient the a, b, c' and four-way formulas read, so it is refused on every single-mediator route.
+.sem_stop_other_products <- function(object, treatment, mediator) {
+  tab <- object@table
+  prod <- unique(tab$rhs[tab$op == "~" & grepl(":", tab$rhs, fixed = TRUE)])
+  prod <- setdiff(prod, .sem_product_name(treatment, mediator))
+  hit <- prod[vapply(strsplit(prod, ":", fixed = TRUE), function(f) any(f %in% c(treatment, mediator)), logical(1))]
+  if (length(hit)) {
+    stop("the native extraction does not support the product '", hit[1L], "': a product involving the treatment ",
+         "or the mediator other than '", .sem_product_name(treatment, mediator), "' changes the effects without ",
+         "changing a coefficient the extraction reads. Remove it, or fit the model with lm/glm.", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
 # `extract_mediation()` for a native fit: the shared lavaan-route workers read the
 # fit through the native accessor list, so the structures, aliases and name
 # conventions cannot drift from the lavaan route. Registered at source time (the
 # class lives in this package).
 S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, ...) {
   args <- list(...)
-  # The four-way decomposition is refused by name, with or without a mean structure: it needs the
-  # treatment-by-mediator product, which the native grammar cannot write until the `:` operator (0.10.0), and a
-  # product precomputed as a data column would be fitted as an ordinary variable.
-  if (identical(args$decomposition, "four_way") || !is.null(args$interaction)) {
-    stop("the four-way decomposition is not available for a native fit in this version: it needs the ",
-         "treatment-by-mediator product, which the native syntax cannot write yet (planned for 0.10.0). Use ",
-         "`decomposition = \"two_way\"`, or fit the model with lm/glm or lavaan.", call. = FALSE)
+  # Four-way route: a treatment-by-mediator product in the outcome equation, written `x:m` and stored under its
+  # canonical name (`x:m` and `m:x` are one term), is read through the accessor seam by the shared worker. Estimate
+  # names, `outcome_predictors` and `source_package` therefore carry the canonical `m:x` where the lavaan route
+  # keeps the spelling the user wrote.
+  if (length(mediator) == 1L) {
+    checkmate::assert_string(treatment, .var.name = "treatment")
+    checkmate::assert_string(mediator, .var.name = "mediator")
+    asked <- args$interaction
+    decomposition <- match.arg(args$decomposition, c("auto", "four_way", "two_way"))
+    int <- .sem_native_interaction(object, treatment, mediator, asked)
+    .sem_stop_other_products(object, treatment, mediator)
+    args$interaction <- if (is.null(asked)) NULL else int
+    if (is.na(int) && (identical(decomposition, "four_way") || !is.null(asked))) {
+      stop("the four-way decomposition of a native fit needs the treatment-by-mediator product in the outcome ",
+           "equation: add `", treatment, ":", mediator, "` to it, for example `y ~ ", treatment, " + ", mediator,
+           " + ", treatment, ":", mediator, "`. Native products are written in the model syntax, not as a ",
+           "precomputed data column.", call. = FALSE)
+    }
+  } else if (!is.null(args$interaction)) {
+    stop("`interaction` applies to a single mediator.", call. = FALSE)
   }
-  out <- extract_mediation_lavaan(.sem_accessors_native(object), treatment = treatment, mediator = mediator, ...)
+  out <- do.call(extract_mediation_lavaan,
+                 c(list(.sem_accessors_native(object), treatment = treatment, mediator = mediator), args))
   out@source_package <- "medfit"
   out
 }
