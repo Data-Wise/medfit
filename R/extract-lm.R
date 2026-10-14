@@ -746,7 +746,14 @@ S7::method(extract_mediation, glm_class) <- function(
   # Keep the exact means with @data so the delta-method gradients reuse them:
   # caller-supplied data (fit_mediation() passes the raw data) is not a model
   # frame and may hold rows the mediator model did not use.
-  if (!is.null(data)) attr(data, "medfit_covariate_means") <- c_bar
+  if (!is.null(data)) {
+    attr(data, "medfit_covariate_means") <- c_bar
+    # The covariate design rows and weights, for the opt-in covariate-mean variance (`.cov_mean_variance()`).
+    if (!is.null(mm_m) && all(m_covs %in% colnames(mm_m))) {
+      attr(data, "medfit_covariate_rows") <- mm_m[, m_covs, drop = FALSE]
+      attr(data, "medfit_weights") <- w_m
+    }
+  }
 
   # --- Four-way components (continuous Y, M; binary X) ---
   cde     <- theta1 + theta3 * m_star

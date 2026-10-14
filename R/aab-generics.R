@@ -108,8 +108,13 @@
 #' the sampling variance of the estimated mean, `theta3 * gamma` times the
 #' variance of the covariate mean, so they can understate the uncertainty of a
 #' population-average effect. CDE, `int_med`, PIE and the NIE do not depend on
-#' the mean. For a population-average interval resample rows with
-#' [bootstrap_mediation()] (`method = "nonparametric"`).
+#' the mean. For population-average standard errors set
+#' `options(medfit.covariate_mean_variance = TRUE)`: `tidy()` and `confint()` then add the
+#' variance of the estimated covariate mean,
+#' `(theta3 * gamma)^2` times the variance of the covariate mean (case-weighted
+#' when the fit has weights), to `int_ref`, the NDE and the total effect; the
+#' default stays conditional, as lavaan's `:=` and the glm route are. Or
+#' resample rows with [bootstrap_mediation()] (`method = "nonparametric"`).
 #'
 #' ## Coefficient names
 #'
