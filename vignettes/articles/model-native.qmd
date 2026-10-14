@@ -83,6 +83,38 @@ x2 <- fit_mediation(model = syntax, data = mediation_demo,
 nie(x2)
 ```
 
+## Intercepts {#intercepts}
+
+Writing any intercept (`y ~ 1`, or `1` as a term, `y ~ 1 + x`) turns the mean structure on
+and frees an intercept for every observed variable you did not mention, as lavaan does.
+The paths, variances and their standard errors are then the same as without it; the fit
+also reports the intercepts and the mean of each exogenous variable.
+
+```{r}
+#| label: intercepts-free
+paths <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"
+free <- fit_sem(paste0(paths, "\noutcome ~ 1"), mediation_demo)
+tidy(free)[tidy(free)$op == "~1", c("term", "estimate", "std_error")]
+```
+
+An intercept you fix or constrain is a restriction, so it can change the other estimates.
+Fixing the outcome intercept at 0 costs one degree of freedom, and `anova()` compares the
+two fits:
+
+```{r}
+#| label: intercepts-fixed
+zero <- fit_sem(paste0(paths, "\noutcome ~ 0*1"), mediation_demo)
+c(free = free@theta[["cp"]], fixed_at_zero = zero@theta[["cp"]])
+anova(free, zero)
+```
+
+Equating two intercepts works the same way (`i1 == i2` with labels `i1` and `i2`).
+`meanstructure = TRUE` turns the mean structure on without writing any intercept, and
+`meanstructure = FALSE` fits covariances only. A latent variable's mean is fixed at 0, and
+a free latent intercept stops with "latent means are planned for a later release".
+`extract_mediation()` reads the paths exactly as before; the four-way decomposition is
+not available on this route yet.
+
 ## Compared with the `glm` engine
 
 The two engines agree on the estimates and differ slightly in the standard
@@ -102,9 +134,12 @@ rbind(native = tidy(x, type = "effects")$std_error,
 
 ## Limits
 
-- **No mean structure.** `y ~ 1` is not supported; the engine fits covariance
-  structures only. A model with a free intercept stops with "mean structure is not
-  supported".
+- **Observed means only.** A free latent mean or intercept stops with "latent means are
+  planned for a later release"; the latent variable's mean is fixed at 0 (see
+  [Intercepts](#intercepts)).
+- **Constraints on an intercept** are checked up to a data mean about 1,000 times the standard
+  deviation; beyond that the fit may stop with "no start converged". Constraints that leave
+  every intercept free have no such limit.
 - **A label must be defined** before `:=` can use it; an unknown label stops with
   "unknown parameter label".
 - **Exogenous variables get free variances and covariances**, as lavaan does with

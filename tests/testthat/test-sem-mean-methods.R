@@ -83,3 +83,14 @@ test_that("OpenMx reaches the same optimum on a constrained-intercept model", {
   expect_equal(unname(est["i_m"]), unname(est["i_y"]), tolerance = 1e-6)
   expect_equal(-2 * as.numeric(logLik(fit)), run$output$Minus2LogLikelihood, tolerance = 1e-6)
 })
+
+test_that("the worked example on the native model page holds: a fixed intercept moves cp and anova rejects it", {
+  paths <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"
+  free <- fit_sem(paste0(paths, "\noutcome ~ 1"), medfit::mediation_demo)
+  zero <- fit_sem(paste0(paths, "\noutcome ~ 0*1"), medfit::mediation_demo)
+  expect_equal(unname(free@theta["cp"]), 0.0406, tolerance = 1e-2)
+  expect_equal(unname(zero@theta["cp"]), 0.2624, tolerance = 1e-3)
+  tab <- anova(free, zero)
+  expect_equal(unname(tab[2L, "Df diff"]), 1)
+  expect_lt(unname(tab[2L, "Pr(>Chisq)"]), 0.01)
+})

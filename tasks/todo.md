@@ -13,7 +13,7 @@ Plan: `tasks/plan.md`. Spec plan: `planning/specs/PLAN-native-mean-structure-202
 - [x] S4: weights and sandwich
 - [x] S5: constraints, MBCO, re-fit plumbing, lavaan parity (**Checkpoint B**)
 - [x] S6: methods, extraction, four-way refusal, OpenMx, worked example
-- [ ] S7: docs and close-out (**Checkpoint C**)
+- [x] S7: docs and close-out (**Checkpoint C**)
 
 ## Follow-ups from T1
 - [ ] Tolerance and platform: say whether 1e-12 is relative; confirm the fixture on the ubuntu CI BLAS before Checkpoint A

@@ -536,6 +536,39 @@ $-2 \log L = n \left(F_{ML} + \log |S| + p + p \log 2\pi\right)$, and
 whose implied covariance is not positive definite gets a large finite value
 and a zero gradient, so the optimizer can step back from it.
 
+### Mean structure
+
+An intercept statement adds the vector $m$ of intercepts to the RAM form, and the implied means are
+
+$$
+\mu(\theta) = F (I - A)^{-1} m ,
+$$
+
+with a latent variable's entry of $m$ fixed at 0. With $\bar x$ the sample mean (weighted when weights
+are used) and $\Sigma$ as above, the discrepancy gains the term
+
+$$
+F_{ML}(\theta) = \log |\Sigma| + \operatorname{tr}\left(S \Sigma^{-1}\right) - \log |S| - p
++ (\bar x - \mu)^\top \Sigma^{-1} (\bar x - \mu) .
+$$
+
+Under normality the information has no cross term between the mean and covariance parts: it is the sum
+$I_{kl} = n\, \partial_k \mu^\top \Sigma^{-1} \partial_l \mu + (n/2)\operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\, \Sigma^{-1} \partial_l \Sigma\right)$,
+and the casewise scores of the sandwich gain the mean part
+$w_i\, \partial_k \mu^\top \Sigma^{-1} (x_i - \mu)$, with $d_i = x_i - \mu(\theta)$ in the covariance part.
+The degrees of freedom count $p(p+1)/2 + p$ moments, so a fixed intercept (`y ~ 0*1`) is a
+restriction that costs one. A fit without any intercept statement is the same model with every observed
+intercept free: its discrepancy, estimates and standard errors are those of the covariance-only fit, and
+`anova()` treats it that way.
+
+**Conditioning.** The path entries of a variable with a free intercept change that intercept by the
+mean times the path, so in the raw parameters the information is nearly singular when the mean is large
+relative to the standard deviation. The gate, the information and its inverse are computed in centered
+coordinates $\tilde m_v = m_v - (\bar x_v - \sum_c A_{vc} \bar x_c)$ (an affine map $\theta = T(\phi + c_0)$,
+with the Hessian taken directly in $\phi$), and the covariance is mapped back as $V = T V_\phi T^\top$.
+When no constraint, bound or starting value touches an intercept, the whole fit runs on mean-centered data and
+the solution is mapped back.
+
 ### Standard errors
 
 The covariance of $\hat\theta$ is the inverse of the
