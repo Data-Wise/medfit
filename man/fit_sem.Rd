@@ -59,7 +59,9 @@ than the HC3 default of the glm route by a factor that shrinks like
 an intercept (\code{y ~ 1}, free or fixed); \code{TRUE} fits one regardless; \code{FALSE} fits covariances only and
 errors if an intercept is written. With a mean structure every observed variable whose intercept is
 not written has a free one, so a model with only free intercepts has the same estimates and
-standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.}
+standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
+A model with a product term (\code{y ~ x + m + x:m}) always fits the mean structure (it needs the mediator
+intercept for the four-way decomposition), so with a product \code{meanstructure = FALSE} is an error.}
 
 \item{fixed_x}{\code{FALSE} (default), \code{TRUE}, or a character vector of exogenous observed variable names. The
 selected variables (\code{TRUE}: every exogenous observed variable, product columns included) have their mean (with

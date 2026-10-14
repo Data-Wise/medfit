@@ -45,7 +45,8 @@ selected variable's moments. Any
 intercept statement (\code{y ~ 1}, or \code{1} as a term: \code{y ~ 1 + x}) turns the mean structure
 on and frees every observed intercept the model does not write, as lavaan does;
 \code{y ~ 0*1} then restricts the mean of \code{y} to 0 (one degree of freedom), and
-\code{meanstructure = TRUE} in \code{\link[=fit_sem]{fit_sem()}} turns it on without any statement. A
+\code{meanstructure = TRUE} in \code{\link[=fit_sem]{fit_sem()}} turns it on without any statement, and a product term
+(\code{x:m}) always turns it on. A
 latent variable's mean is fixed at 0; a free latent \code{~1} is an error. A repeated \code{1} for one
 variable is an error.
 A variable cannot appear on both sides of \code{~} or \verb{=~} (\code{y ~ y}), and a path,

@@ -8,7 +8,7 @@ pr_ok <- function(syntax, ...) {
   .sem_complete(.sem_parse(syntax)$parameters, ...)
 }
 pr_err <- function(syntax, pattern, ...) {
-  expect_error(pr_ok(syntax, ...), pattern)
+  expect_error(pr_ok(syntax, ...), pattern) # nolint: object_usage_linter.
 }
 
 test_that("rule 8: a product factor that is the target or downstream of it is rejected", {
