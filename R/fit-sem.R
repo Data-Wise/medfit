@@ -63,8 +63,8 @@
 #'   `fixed.x = TRUE`. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
 #'   not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
 #'   conditional on the fixed variables, and `glance()$fixed_x` lists them. Models whose `fixed_x` sets or data differ
-#'   cannot be compared with [anova()], [mbco_sem()], `AIC()` or `BIC()`. A (co)variance or intercept statement on a
-#'   selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+#'   cannot be compared with [stats::anova()], [mbco_sem()], `AIC()` or `BIC()`. A (co)variance or intercept statement
+#'   on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
 #'   (`fixed_x` column, no standard error) but not in `coef()` or `vcov()`.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.

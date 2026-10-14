@@ -74,8 +74,8 @@ the estimation sample (weighted when \code{weights} are given) and removed from 
 \code{fixed.x = TRUE}. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
 not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
 conditional on the fixed variables, and \code{glance()$fixed_x} lists them. Models whose \code{fixed_x} sets or data differ
-cannot be compared with \code{\link[=anova]{anova()}}, \code{\link[=mbco_sem]{mbco_sem()}}, \code{AIC()} or \code{BIC()}. A (co)variance or intercept statement on a
-selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+cannot be compared with \code{\link[stats:anova]{stats::anova()}}, \code{\link[=mbco_sem]{mbco_sem()}}, \code{AIC()} or \code{BIC()}. A (co)variance or intercept statement
+on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
 (\code{fixed_x} column, no standard error) but not in \code{coef()} or \code{vcov()}.}
 
 \item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name

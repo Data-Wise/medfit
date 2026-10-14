@@ -116,7 +116,9 @@ regression target (the model treats the product as exogenous although it is a
 function of that variable) or when the exogenous (co)variance block is
 restricted. \code{glance()} then reports chi-square, df and p-value as \code{NA} with a
 note, \code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse, and expected information is refused for
-an endogenous product; \code{logLik()}, AIC and BIC stay defined. A product of
+an endogenous product; \code{logLik()}, AIC and BIC stay defined, but those of a fit with a
+product are not comparable with those of a fit without one, and \code{AIC(fit_a, fit_b)} does not
+check. A product of
 exogenous variables with the block free keeps the ordinary test.
 }
 
