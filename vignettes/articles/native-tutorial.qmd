@@ -12,13 +12,13 @@ execute:
   echo: true
 ---
 
-Eight steps from a model written as syntax to a tested, constrained and extracted
+Nine steps from a model written as syntax to a tested, constrained and extracted
 mediation result. It sits between [the five-minute quickstart](native-quickstart.html)
 and [the native engine guide](native-guide.html). The native engine is experimental.
 
 | | |
 |---|---|
-| **You need** | medfit 0.8.0 or later; the bundled `mediation_demo` data |
+| **You need** | medfit 0.8.0 or later (step 9 needs 0.9.0 or later); the bundled `mediation_demo` data |
 | **You get** | a `SEMFit`, a test of the indirect effect, a constrained comparison, a `MediationData` |
 | **Time** | about 20 minutes |
 
@@ -128,6 +128,30 @@ tidy(x, type = "effects", conf_int = TRUE)
 
 From here `nie()`, `confint()` and `bootstrap_mediation()` work as on any other
 fit.
+
+## Step 9. Fix exogenous covariates
+
+Needs medfit 0.9.0 or later. With many covariates, most parameters are the
+exogenous variances and covariances (and the means, when the model has a mean
+structure). `fixed_x = TRUE` fixes them at their sample values, as lavaan's
+`fixed.x = TRUE` does, and leaves the structural paths alone. The restricted
+model of Step 6 shows that the test does not move either:
+
+```{r}
+#| label: fixed-x
+tied_fx <- fit_sem(paste0(syntax, "cp == a * b\n"), mediation_demo, fixed_x = TRUE)
+round(coef(tied_fx)[c("a", "b", "cp")], 3)
+rbind(
+  free  = glance(tied)[, c("npar", "df", "chisq", "logLik", "fixed_x")],
+  fixed = glance(tied_fx)[, c("npar", "df", "chisq", "logLik", "fixed_x")]
+)
+```
+
+Check: `a`, `b` and `cp` match Step 6, and `df` and `chisq` are the same, but
+`npar` is smaller. The log likelihood is conditional on the fixed variables, so
+it is not comparable with the free fit's, and `anova()` refuses to compare the
+two fits. `fixed_x` also takes a character vector, such as
+`fixed_x = "covariate1"`, to fix only some of the exogenous variables.
 
 ## Where next
 
