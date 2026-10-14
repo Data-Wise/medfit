@@ -36,6 +36,22 @@ or data stop instead of ranking them; the same holds for \code{anova()} and
 parameters in \code{tidy()} (\code{fixed_x} column \code{TRUE}, no standard error) and in
 \code{summary()}; \code{coef()} and \code{vcov()} leave them out. \code{print()} and \code{summary()}
 say what the log likelihood is conditional on.
+\item \strong{Model test with a product term.} The global chi-square is not valid when
+a factor of a product term (\code{x:m}) is itself a regression target, because
+the model then treats the product as exogenous although it is a function of
+\code{m}; nor when the variances and covariances of the exogenous variables
+(every product included) are restricted (fixed, labeled, bounded, or left
+out because a \verb{~~} statement names one of them; a \code{fixed_x} moment is not a
+restriction). \code{fit_sem()} then warns once, \code{glance()} reports \code{chisq}, \code{df}
+and \code{p_value} as \code{NA} (with the reason in \code{attr(, "note")}), \code{summary()}
+prints the reason, and \code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} stop naming the product.
+The coefficients equal equation-wise least squares and the sandwich
+standard errors are unaffected, but only with observed information:
+\code{fit_sem(information = "expected")} stops for a product with an endogenous
+factor, because its standard errors (the sandwich built on them included)
+are wrong there. \code{fit_sem()} also warns once for any product term fitted
+without \code{se_type = "sandwich"}. \code{logLik()}, \code{AIC()} and \code{BIC()} stay
+defined.
 \item \code{anova()} tests nested fits by the likelihood-ratio statistic
 \eqn{n (F_r - F_f)}{n * (F_r - F_f)} on the difference in model degrees
 of freedom: \code{anova(fit_full, fit_restricted)}, or several fits, each tested

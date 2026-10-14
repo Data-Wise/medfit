@@ -116,6 +116,7 @@ verdict_gate <- function(gate, d, s) {
     stationarity = c("kind", "dec", "dist"),
     reliability = c("algo", "precond", "mode", "class", "gate_accepts", "match"),
     "product-null" = c("xdist", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
+    "product-null-colon" = c("xdist", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
     "product-fixed-var" = c("xdist", "config", "expect", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
     "product-corr" = c("design", "cvf", "path", "expect", "gap"),
     "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok")
@@ -269,13 +270,13 @@ mutate <- function(gate, kind, d) {
     }
   }
   if (kind == "tolerance") {
-    if (gate == "product-null") d$reject05[1] <- 0.5
+    if (gate %in% c("product-null", "product-null-colon")) d$reject05[1] <- 0.5
     if (gate == "product-fixed-var") d$reject05[which(d$expect == "calibrated")[1]] <- 0.5
     if (gate == "product-corr") d$gap[which(d$expect == "match")[1:3]] <- 1e-2
     if (gate == "four-way-kat") d$bias_z[1:3] <- 9
   }
   if (kind == "failed") {
-    if (gate %in% c("product-null", "product-fixed-var", "four-way-kat")) d$reps_ok[1] <- 0
+    if (gate %in% c("product-null", "product-null-colon", "product-fixed-var", "four-way-kat")) d$reps_ok[1] <- 0
     if (gate == "product-corr") d$gap[1] <- NA_real_
   }
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
@@ -447,7 +448,8 @@ scripts <- c(
   parity = "tests/sim/sem-parity-gate.R", constrained = "tests/sim/sem-constrained-gate.R",
   se = "tests/sim/sem-se-gate.R", stationarity = "tests/sim/sem-constrained-gate.R",
   reliability = "tests/sim/sem-reliability.R",
-  "product-null" = "tests/sim/exo-product-null.R", "product-fixed-var" = "tests/sim/exo-product-fixed-var.R",
+  "product-null" = "tests/sim/exo-product-null.R", "product-null-colon" = "tests/sim/exo-product-null-colon.R",
+  "product-fixed-var" = "tests/sim/exo-product-fixed-var.R",
   "product-corr" = "tests/sim/product-correlated-residuals.R", "four-way-kat" = "tests/sim/four-way-known-answer.R"
 )
 

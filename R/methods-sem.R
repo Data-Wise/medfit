@@ -31,6 +31,22 @@
 #'   parameters in `tidy()` (`fixed_x` column `TRUE`, no standard error) and in
 #'   `summary()`; `coef()` and `vcov()` leave them out. `print()` and `summary()`
 #'   say what the log likelihood is conditional on.
+#' * **Model test with a product term.** The global chi-square is not valid when
+#'   a factor of a product term (`x:m`) is itself a regression target, because
+#'   the model then treats the product as exogenous although it is a function of
+#'   `m`; nor when the variances and covariances of the exogenous variables
+#'   (every product included) are restricted (fixed, labeled, bounded, or left
+#'   out because a `~~` statement names one of them; a `fixed_x` moment is not a
+#'   restriction). `fit_sem()` then warns once, `glance()` reports `chisq`, `df`
+#'   and `p_value` as `NA` (with the reason in `attr(, "note")`), `summary()`
+#'   prints the reason, and `anova()` and [mbco_sem()] stop naming the product.
+#'   The coefficients equal equation-wise least squares and the sandwich
+#'   standard errors are unaffected, but only with observed information:
+#'   `fit_sem(information = "expected")` stops for a product with an endogenous
+#'   factor, because its standard errors (the sandwich built on them included)
+#'   are wrong there. `fit_sem()` also warns once for any product term fitted
+#'   without `se_type = "sandwich"`. `logLik()`, `AIC()` and `BIC()` stay
+#'   defined.
 #' * `anova()` tests nested fits by the likelihood-ratio statistic
 #'   \eqn{n (F_r - F_f)}{n * (F_r - F_f)} on the difference in model degrees
 #'   of freedom: `anova(fit_full, fit_restricted)`, or several fits, each tested
@@ -175,6 +191,8 @@ S7::method(print, SEMFit) <- function(x, ...) {
     cat(sprintf("  Std. errors:   %s%s\n", se_label, if (!is.null(x@internals$weights)) ", sampling weights" else ""))
   }
   cat(sprintf("  Converged:     %s\n", ifelse(x@converged, "Yes", "No")))
+  reason <- .sem_modeltest_reason(x)
+  if (!is.null(reason)) cat(sprintf("  Note:          %s\n", .sem_modeltest_note(reason)))
   note <- .sem_fixed_x_note(x@internals$fixed_x)
   if (!is.null(note)) cat(sprintf("  %s\n", note))
   act <- c(x@diagnostics$active_bounds, x@diagnostics$active_constraints)
@@ -201,11 +219,13 @@ S7::method(summary, SEMFit) <- function(object, ...) {
   )
   coefs$p <- 2 * stats::pnorm(-abs(coefs$z))
   if (any(fx)) coefs$fixed_x <- tab$fixed_x %in% TRUE
+  reason <- .sem_modeltest_reason(object)
   structure(
     list(
       fixed_x = object@internals$fixed_x, coefficients = coefs, defined = object@defined, n_obs = object@n_obs,
-      n_dropped = object@n_dropped,
-      df = object@df, information = object@information, converged = object@converged, f = object@f,
+      n_dropped = object@n_dropped, model_test_note = if (!is.null(reason)) .sem_modeltest_note(reason),
+      df = if (is.null(reason)) object@df else NA_real_, information = object@information,
+      converged = object@converged, f = object@f,
       diagnostics = object@diagnostics
     ),
     class = "summary_SEMFit"
@@ -226,6 +246,7 @@ print_summary_semfit <- function(x, ...) {
   if (x$n_dropped > 0L) cat(sprintf(" (%d dropped for missing values, listwise deletion)", x$n_dropped))
   cat("\n")
   cat(sprintf("Degrees of freedom: %s\n", format(x$df)))
+  if (!is.null(x$model_test_note)) cat("Note: ", x$model_test_note, "\n", sep = "")
   cat(sprintf("Information: %s\n", x$information))
   if (!is.null(x$diagnostics$se_type)) {
     cat(sprintf("Standard errors: %s\n",
@@ -368,12 +389,14 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
 # a weighted discrepancy that is not a likelihood, so its chi-square, p-value, log likelihood, AIC and BIC are NA.
 .glance_semfit <- function(x, ...) {
   weighted <- !is.null(x@internals$weights)
-  chisq <- if (weighted) NA_real_ else x@n_obs * x@f
-  if (!weighted && chisq < 0 && chisq > -1e-8) chisq <- 0 # a saturated fit's roundoff
+  # a product term can make the global test invalid: chi-square, df and p-value are then NA, with a note
+  note <- .sem_modeltest_reason(x)
+  invalid <- !is.null(note)
+  chisq <- if (weighted || invalid) NA_real_ else .sem_chisq(x)
   ll <- if (weighted) NULL else stats::logLik(x)
   out <- data.frame(
-    nobs = x@n_obs, npar = .sem_n_free(x), df = x@df, chisq = chisq,
-    p_value = if (!weighted && x@df > 0) stats::pchisq(chisq, df = x@df, lower.tail = FALSE) else NA_real_,
+    nobs = x@n_obs, npar = .sem_n_free(x), df = if (invalid) NA_real_ else x@df, chisq = chisq,
+    p_value = if (!weighted && !invalid && x@df > 0) stats::pchisq(chisq, df = x@df, lower.tail = FALSE) else NA_real_,
     logLik = if (weighted) NA_real_ else as.numeric(ll),
     AIC = if (weighted) NA_real_ else stats::AIC(ll), BIC = if (weighted) NA_real_ else stats::BIC(ll),
     fixed_x = paste(x@internals$fixed_x, collapse = ", "), stringsAsFactors = FALSE
@@ -381,5 +404,12 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
   if (requireNamespace("tibble", quietly = TRUE)) {
     out <- tibble::as_tibble(out)
   }
+  if (invalid) attr(out, "note") <- .sem_modeltest_note(note)
   out
+}
+
+# The note `glance()` carries as attribute "note" and `summary()` prints when the model test is unavailable.
+.sem_modeltest_note <- function(reason) {
+  paste0("model test not valid with a product of an endogenous variable or a restricted exogenous block (", reason,
+         ")")
 }
