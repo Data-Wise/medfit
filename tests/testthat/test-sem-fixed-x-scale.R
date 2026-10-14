@@ -30,6 +30,7 @@ test_that("the shifted route is still taken when intercept rows are fixed_x", {
 })
 
 test_that("planted defect: a fixed mean left at its raw value in the shifted fit is caught by the logLik", {
+  fx_skip_covr()
   base <- fit_sem(fx_syntax, fx_data(), meanstructure = TRUE, fixed_x = TRUE)
   far <- fit_sem(fx_syntax, fx_far(1e3), meanstructure = TRUE, fixed_x = TRUE)
   expect_equal(as.numeric(logLik(far)), as.numeric(logLik(base)), tolerance = 1e-6)

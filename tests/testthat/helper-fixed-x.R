@@ -9,6 +9,11 @@ fx_syntax <- paste0(
 )
 fx_exo <- c("treatment", "covariate1", "covariate2")
 
+# covr rewrites the package code a mutation test edits, so those tests run outside coverage only.
+fx_skip_covr <- function() {
+  testthat::skip_if(identical(Sys.getenv("R_COVR"), "true"), "covr instruments the code the mutation edits")
+}
+
 fx_data <- function() medfit::mediation_demo
 
 # Estimates and standard errors of the structural parameters two fits share. The exogenous (co)variances and means

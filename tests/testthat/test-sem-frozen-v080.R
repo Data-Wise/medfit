@@ -42,6 +42,7 @@ test_that("the mean-structure flag is off in the RAM spec and the sample", {
 })
 
 test_that("the retry seed ignores the mean structure, so a covariance-only fit keeps its 0.8.0 starts (R2)", {
+  fx_skip_covr()
   syn <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
   ram <- fit_sem(syn, mediation_demo)@internals$ram
   expect_identical(.sem_seed(ram), 1782989507L) # the value 0.8.0 gives for this model

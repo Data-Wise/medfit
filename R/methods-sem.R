@@ -23,7 +23,14 @@
 #'   and bounds; rows for a pinned parameter are zero.
 #' * `nobs()` returns the number of rows used after listwise deletion.
 #' * `logLik()` returns the log likelihood with the means free; its `df`
-#'   attribute counts the free parameters plus one mean per observed variable.
+#'   attribute counts the free parameters plus one mean per observed variable
+#'   that is not fixed. With `fixed_x` it is conditional on the fixed variables
+#'   (lavaan's value), so `AIC()` and `BIC()` of fits with different fixed sets
+#'   or data stop instead of ranking them; the same holds for `anova()` and
+#'   [mbco_sem()]. A `fixed_x` fit also lists its fixed moments after the free
+#'   parameters in `tidy()` (`fixed_x` column `TRUE`, no standard error) and in
+#'   `summary()`; `coef()` and `vcov()` leave them out. `print()` and `summary()`
+#'   say what the log likelihood is conditional on.
 #' * `anova()` tests nested fits by the likelihood-ratio statistic
 #'   \eqn{n (F_r - F_f)}{n * (F_r - F_f)} on the difference in model degrees
 #'   of freedom: `anova(fit_full, fit_restricted)`, or several fits, each tested
@@ -46,7 +53,8 @@
 #'   the defined parameters, `confint(fit, parm, level = 0.95)`; `parm` takes
 #'   names or positions. A parameter pinned by a constraint or sitting on a
 #'   bound has a zero standard error and a point interval.
-#' * `tidy()` returns one row per free parameter, then per defined parameter:
+#' * `tidy()` returns one row per free parameter, then the moments `fixed_x` fixed (a `fixed_x`
+#'   column, only when something is fixed), then per defined parameter:
 #'   `term` (the name `coef()` uses), `op` (the operator of its row in the
 #'   parameter table, `:=` for a defined parameter), `estimate`, `std_error`,
 #'   `statistic` (the z value, `NA` when the standard error is zero),
@@ -57,7 +65,8 @@
 #'   equality constraints), `df`, `chisq` (n times the minimized discrepancy,
 #'   the test of the model against the saturated one), `p_value` (`NA` when
 #'   `df` is 0), `logLik`, `AIC` and `BIC` (with the means free, as `logLik()`
-#'   defines them). A fit with sampling weights has no likelihood, so its
+#'   defines them) and `fixed_x`, the names the fit holds at their sample moments,
+#'   comma-joined (`""` when none). A fit with sampling weights has no likelihood, so its
 #'   `chisq`, `p_value`, `logLik`, `AIC` and `BIC` are `NA`. There is no
 #'   `converged` column: `fit_sem()` returns a fit only for a solution that
 #'   passed the acceptance gate and errors otherwise, so `@converged` is `TRUE`

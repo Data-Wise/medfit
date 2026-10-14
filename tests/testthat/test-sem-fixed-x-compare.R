@@ -37,6 +37,7 @@ test_that("multi-fit AIC and BIC error across fixed sets or data and name the di
 })
 
 test_that("planted defect: AIC across fixed sets must not just return a number", {
+  fx_skip_covr()
   d <- fx_data()
   free <- fit_sem(fx_syntax, d)
   fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE)

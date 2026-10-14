@@ -51,6 +51,7 @@ test_that("glance and the print note say what is fixed, and only when something 
 })
 
 test_that("planted defect: a joint logLik for a fixed_x fit is caught by the lavaan comparison", {
+  fx_skip_covr()
   skip_if_not_installed("lavaan")
   d <- fx_data()
   fixed <- fit_sem(fx_syntax, d, meanstructure = TRUE, fixed_x = TRUE)

@@ -56,6 +56,7 @@ test_that("a precomputed product column is an ordinary exogenous variable and ca
 })
 
 test_that("planted defect: dropping the free pairs among unselected variables changes the parameter count", {
+  fx_skip_covr()
   d <- fx_data()
   free <- fit_sem(fx_syntax, d)
   fixed <- fit_sem(fx_syntax, d, fixed_x = "treatment")

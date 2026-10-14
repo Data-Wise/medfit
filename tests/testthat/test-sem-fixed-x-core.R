@@ -57,6 +57,7 @@ test_that("lavaan fixed.x = TRUE agrees: rows, parameter count, df and chi-squar
 })
 
 test_that("planted defect: counting the fixed moments as restrictions moves df", {
+  fx_skip_covr()
   fixed <- fit_sem(fx_syntax, fx_data(), fixed_x = TRUE)
   free <- fit_sem(fx_syntax, fx_data())
   ram <- fixed@internals$ram

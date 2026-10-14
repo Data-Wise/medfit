@@ -32,9 +32,9 @@
 
 .sem_ic_table <- function(object, dots, exprs, penalty) {
   models <- c(list(object), dots)
-  nm <- vapply(exprs, function(e) paste(deparse(e), collapse = ""), character(1))
-  # a call that passes the fits by value (do.call) deparses every name alike; number them instead
-  if (anyDuplicated(nm) || any(startsWith(nm, "<"))) nm <- paste0("model", seq_along(models))
+  nm <- vapply(exprs, function(e) if (is.language(e)) paste(deparse(e), collapse = "") else NA_character_, "")
+  # a call that passes the fits by value (do.call) has no expression to name them by; number them instead
+  if (anyNA(nm) || anyDuplicated(nm)) nm <- paste0("model", seq_along(models))
   names(models) <- nm
   sem <- vapply(models, function(m) S7::S7_inherits(m, SEMFit), logical(1))
   if (any(vapply(models[sem], function(m) length(.sem_fixed_signature(m)) > 0L, logical(1))) && !all(sem)) {

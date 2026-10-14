@@ -82,6 +82,9 @@ Examples on this site need medfit 0.8.0 or later. If `mediation_demo` or
 |---|---|---|
 | `unknown parameter label` | a label in `:=` or a constraint is not defined in the model | label the path first: `y ~ b * m` |
 | `meanstructure = FALSE, but the model writes an intercept` | `meanstructure = FALSE` was given with an intercept statement (`y ~ 1`) | drop the statement, or leave `meanstructure` unset |
+| `` `fixed_x` names variables that are not exogenous observed variables `` | `fixed_x` named a variable that is an outcome, a mediator or a latent variable | name only variables that appear as predictors and are never outcomes |
+| `` `fixed_x` fixes the moments of the selected variables, but the model has a statement on them `` | the model writes `x ~~ x` or `x ~ 1` for a selected variable (lavaan would keep it free) | remove the statement, or leave that variable out of `fixed_x` |
+| `have different `fixed_x` sets` | `AIC()`, `BIC()`, `anova()` or `mbco_sem()` got fits whose fixed sets differ, so their likelihoods condition on different variables | refit with the same `fixed_x`, or compare only fits that share it |
 | `variables in the model are not columns of` | the syntax names a variable that is not in `data` | check the names against `names(data)` |
 | `Must have length 1` | `fit_mediation(engine = "native")` was given several mediators | fit with `fit_sem()` and call `extract_mediation()`; see [several mediators](model-native-multi.html) |
 
