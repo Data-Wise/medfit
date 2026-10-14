@@ -446,7 +446,8 @@ involve them (the four-way INT<sub>ref</sub> and the joint NDE) are
 conditional on the observed covariates; they omit the sampling variance of
 the estimated mean (the derivative of INT<sub>ref</sub> with respect to $\bar c$ is
 $\theta_3\gamma$), so they can understate the uncertainty of a population-average
-effect by an amount not measured here.
+effect. `options(medfit.covariate_mean_variance = TRUE)` adds the omitted variance,
+$(\theta_3\gamma)^2 \operatorname{Var}(c)/n$, to INT<sub>ref</sub>, the NDE and the TE.
 
 **Intervals.** `confint()` and `tidy(conf_int = TRUE)` report normal
 intervals, $\hat g \pm z_{1-\alpha/2}\, \widehat{\text{SE}}$. The sampling

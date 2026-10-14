@@ -1194,6 +1194,8 @@ extract_mediation_lavaan <- function(object,
     }
     # Keep the exact means with @data so the delta-method gradients reuse them.
     attr(data, "medfit_covariate_means") <- c_bar
+    attr(data, "medfit_covariate_rows") <- as.matrix(data[, m_covs, drop = FALSE])
+    attr(data, "medfit_weights") <- w
   }
 
   cde     <- theta1 + theta3 * m_star

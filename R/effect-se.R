@@ -20,7 +20,47 @@
   checkmate::assert_character(terms, min.len = 1, .var.name = "terms")
   checkmate::assert_subset(terms, names(grads), .var.name = "terms")
   vc <- x@vcov
-  vapply(terms, function(k) sqrt(.gradient_var(grads[[k]], vc)), numeric(1))
+  extra <- .cov_mean_variance(x)
+  vapply(terms, function(k) {
+    sqrt(.gradient_var(grads[[k]], vc) + if (k %in% c("int_ref", "nde", "te")) extra else 0)
+  }, numeric(1))
+}
+
+
+#' Variance From the Estimated Covariate Mean (Opt-In, Four-Way)
+#'
+#' INTref, NDE and TE of an `InteractionMediationData` contain the covariate mean `cbar` (through
+#' `E[M | X = 0]`), whose derivative is `theta3 * gamma`. The delta method in `.effect_gradients_interaction()` holds
+#' `cbar` fixed, so the SEs are conditional on the observed covariates. With
+#' `options(medfit.covariate_mean_variance = TRUE)` the sampling variance of the estimated mean is added:
+#' `Var(delta' cbar)` with `delta = theta3 * gamma`, estimated by `sum(w^2 (z - zbar_w)^2) / (sum w)^2` for
+#' `z = delta' c_i` (which is `delta' S delta / n` without weights). Under the model the coefficient estimates are
+#' conditionally unbiased given the covariates, so they are uncorrelated with `cbar` and the variances add.
+#'
+#' @param x An InteractionMediationData object.
+#' @return A non-negative scalar, `0` when the option is off, the object is not an `InteractionMediationData`, the
+#'   covariate rows are not stored, or the effects do not depend on a covariate mean.
+#' @keywords internal
+#' @noRd
+.cov_mean_variance <- function(x) {
+  if (!isTRUE(getOption("medfit.covariate_mean_variance")) || !S7::S7_inherits(x, InteractionMediationData)) {
+    return(0)
+  }
+  rows <- attr(x@data, "medfit_covariate_rows")
+  if (is.null(rows) || nrow(rows) < 2L) {
+    return(0)
+  }
+  gamma <- x@estimates[paste0("m_", colnames(rows))]
+  if (anyNA(gamma)) {
+    return(0)
+  }
+  z <- as.numeric(rows %*% (x@interaction * unname(gamma)))
+  w <- attr(x@data, "medfit_weights")
+  if (is.null(w)) {
+    w <- rep(1, length(z))
+  }
+  z_bar <- sum(w * z) / sum(w)
+  sum(w^2 * (z - z_bar)^2) / sum(w)^2
 }
 
 
@@ -45,12 +85,13 @@
   }
   checkmate::assert_subset(terms, names(grads), .var.name = "terms")
   vc <- x@vcov
+  extra <- .cov_mean_variance(x)
   vapply(terms, function(k) {
     g <- grads[[k]]
     if (is.null(rownames(vc)) || !all(names(g) %in% rownames(vc))) {
       return(NA_real_)
     }
-    sqrt(.gradient_var(g, vc))
+    sqrt(.gradient_var(g, vc) + if (k %in% c("int_ref", "nde", "te")) extra else 0)
   }, numeric(1))
 }
 

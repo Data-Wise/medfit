@@ -116,8 +116,13 @@ errors and intervals are conditional on the observed covariates. They omit
 the sampling variance of the estimated mean, \code{theta3 * gamma} times the
 variance of the covariate mean, so they can understate the uncertainty of a
 population-average effect. CDE, \code{int_med}, PIE and the NIE do not depend on
-the mean. For a population-average interval resample rows with
-\code{\link[=bootstrap_mediation]{bootstrap_mediation()}} (\code{method = "nonparametric"}).
+the mean. For population-average standard errors set
+\code{options(medfit.covariate_mean_variance = TRUE)}: \code{tidy()} and \code{confint()} then add the
+variance of the estimated covariate mean,
+\code{(theta3 * gamma)^2} times the variance of the covariate mean (case-weighted
+when the fit has weights), to \code{int_ref}, the NDE and the total effect; the
+default stays conditional, as lavaan's \verb{:=} and the glm route are. Or
+resample rows with \code{\link[=bootstrap_mediation]{bootstrap_mediation()}} (\code{method = "nonparametric"}).
 }
 
 \subsection{Coefficient names}{

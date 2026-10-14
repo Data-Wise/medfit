@@ -1,5 +1,14 @@
 # medfit (development version)
 
+## New features
+
+* Four-way standard errors can be population-average: `options(medfit.covariate_mean_variance = TRUE)` adds the
+  sampling variance of the estimated covariate mean, `(theta3 * gamma)^2 * Var(c) / n` (case-weighted when the
+  fit has weights), to INTref, the NDE and the TE in `tidy()` and `confint()`. The default is
+  unchanged (conditional on the observed covariates, as lavaan's `:=` and the glm route). On simulated data with
+  a strong covariate effect on the mediator, the conditional SE of INTref, 0.0995, becomes 0.1516 against a bootstrap
+  SD of 0.1568; on `mediation_demo` the term is about 0.08% of the SE.
+
 ## Bug fixes
 
 * `AIC()` and `BIC()` with several `SEMFit` fits now stop when the fits do not share their observed variables, and

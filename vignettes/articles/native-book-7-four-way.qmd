@@ -392,9 +392,13 @@ Here $\theta_3\gamma$ is small, so the omitted term is a fraction of a percent o
 agree to the digits shown. With a larger interaction or a stronger covariate effect on the mediator the term grows with
 $(\theta_3\gamma)^2$. Read the intervals for INT<sub>ref</sub>, the NDE and the TE as intervals for the effect in
 *this* covariate sample, not for the effect in the population the sample came from. CDE, INT<sub>med</sub>, PIE and the
-NIE do not depend on $\bar c$, so for them the two readings agree. For a population-average interval, resample rows
+NIE do not depend on $\bar c$, so for them the two readings agree. For population-average standard errors set
+`options(medfit.covariate_mean_variance = TRUE)`: the term $(\theta_3\gamma)^2 \operatorname{Var}(c)/n$ (with case
+weights, $\sum w_i^2 (z_i - \bar z_w)^2 / (\sum w_i)^2$ for $z_i = \theta_3\gamma' c_i$) is added to INT<sub>ref</sub>,
+the NDE and the TE, and the default stays conditional so it keeps matching lavaan's `:=`. Or resample rows
 with `bootstrap_mediation(method = "nonparametric")`, with a statistic that refits the model and extracts the effect,
-which estimates $\bar c$ again in every draw.
+which estimates $\bar c$ again in every draw. On simulated data with a strong covariate effect on the mediator
+(conditional SE 0.0995 for INT<sub>ref</sub>) the option gives 0.1516 against a bootstrap SD of 0.1568.
 
 The hand computation and the engine agree. The third row is the **planted defect**: the same delta method with the
 covariate term dropped. It changes the INT<sub>ref</sub>, NDE and TE standard errors and leaves the others alone, which
