@@ -1,4 +1,4 @@
-# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): eighteen numbered
+# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): nineteen numbered
 # recipes, every article link resolves, and the cluster recipe simulates the same
 # data as methods.qmd so their numbers agree. Skips when the vignettes are absent
 # (installed or built package).
@@ -14,10 +14,10 @@ article_text <- function(name) {
   paste(readLines(p, warn = FALSE), collapse = "\n")
 }
 
-test_that("the cookbook has eighteen numbered recipes and every article link resolves", {
+test_that("the cookbook has nineteen numbered recipes and every article link resolves", {
   cb <- article_text("cookbook.qmd")
   heads <- regmatches(cb, gregexpr("(?m)^## [0-9]+\\. ", cb, perl = TRUE))[[1]]
-  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:18, "."))
+  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:19, "."))
   links <- unique(regmatches(cb, gregexpr("\\]\\(([a-z-]+)\\.html\\)", cb))[[1]])
   targets <- paste0(gsub("^\\]\\(|\\.html\\)$", "", links), ".qmd")
   expect_gt(length(targets), 0L)
@@ -150,11 +150,11 @@ test_that("planted defect: the smaller p-value in place of the larger is caught"
   expect_false(grepl("joint = max(p)", sub("joint = max(p)", "joint = min(p)", cb, fixed = TRUE), fixed = TRUE))
 })
 
-test_that("recipes 14-18 run after the setup chunk alone and say what they claim", {
+test_that("recipes 14-19 run after the setup chunk alone and say what they claim", {
   article_text("cookbook.qmd")
   parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
   setup <- unlist(parsed[[1L]])
-  for (k in 14:18) {
+  for (k in 14:19) {
     err <- run_cookbook_recipe(setup, parsed[[k + 1L]])
     expect_null(err, info = sprintf("recipe %d fails on its own: %s", k, err))
   }
@@ -210,4 +210,34 @@ test_that("the native quickstart, tutorial and guide exist, are indexed, and the
     targets <- paste0(gsub("^\\]\\(|\\.html[#)]$", "", links), ".qmd")
     expect_identical(targets[is.na(vapply(targets, article_path, character(1)))], character(), info = a)
   }
+})
+
+# Recipe 19 (observed intercepts and means): the intercepts equal the lm() intercepts of the same equations and the
+# exogenous mean is the sample mean (known answers); the paths do not move; `~0*1` costs exactly one df and
+# anova() rejects it; meanstructure = TRUE equals the free fit. Planted defect: the lm oracle must differ from a
+# fit with the intercept fixed at zero.
+test_that("recipe 19: intercepts match lm(), the zero restriction costs one df and is tested by anova()", {
+  article_text("cookbook.qmd")
+  parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
+  expect_null(run_cookbook_recipe(unlist(parsed[[1L]]), parsed[[20L]]))
+  paths <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment\n"
+  free <- fit_sem(paste0(paths, "outcome ~ 1"), mediation_demo)
+  zero <- fit_sem(paste0(paths, "outcome ~ 0*1"), mediation_demo)
+  th <- coef(free)
+  lm_y <- stats::lm(outcome ~ mediator1 + treatment, mediation_demo)
+  lm_m <- stats::lm(mediator1 ~ treatment, mediation_demo)
+  expect_equal(unname(th["outcome~1"]), unname(stats::coef(lm_y)[1L]), tolerance = 1e-5)
+  expect_equal(unname(th["mediator1~1"]), unname(stats::coef(lm_m)[1L]), tolerance = 1e-5)
+  expect_equal(unname(th["treatment~1"]), mean(mediation_demo$treatment), tolerance = 1e-8)
+  expect_equal(unname(th[c("a", "b", "cp")]), unname(c(stats::coef(lm_m)[2L], stats::coef(lm_y)[2:3])),
+               tolerance = 1e-5)
+  expect_equal(generics::glance(free)$df, 0)
+  expect_equal(generics::glance(zero)$df, 1)
+  tab <- stats::anova(free, zero)
+  expect_equal(tab$`Df diff`[2L], 1)
+  expect_lt(tab$`Pr(>Chisq)`[2L], 0.01)
+  ms <- fit_sem(trimws(paths), mediation_demo, meanstructure = TRUE)
+  expect_equal(coef(ms)[names(coef(free))], coef(free), tolerance = 1e-6)
+  # planted defect: the zero-intercept fit does not reproduce the lm intercept or the free direct effect
+  expect_gt(abs(unname(coef(zero)["cp"]) - unname(stats::coef(lm_y)[3L])), 0.1)
 })

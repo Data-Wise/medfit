@@ -157,7 +157,8 @@ two fits. `fixed_x` also takes a character vector, such as
 
 - [The native engine guide](native-guide.html): syntax, inference, constraints,
   diagnostics and limits in one place.
-- [Cookbook recipes 11 to 18](cookbook.html): a latent mediator, a nonlinear
-  constraint, comparing models, defined parameters, bounds, checks and fixed covariates.
+- [Cookbook recipes 11 to 19](cookbook.html): a latent mediator, a nonlinear
+  constraint, comparing models, defined parameters, bounds, checks, fixed covariates and intercepts.
+- [Native engine book](native-book-1-mean-structure.html): seven chapters on the mean structure, scale, constraints, `fixed_x`, inference, the product term and the four-way decomposition.
 - [lavaan and the native engine](lavaan-comparison.html): what the native engine
   does and does not do compared with lavaan.

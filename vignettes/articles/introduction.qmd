@@ -15,11 +15,11 @@ execute:
 
 **medfit** provides unified infrastructure for mediation analysis in R. It offers:
 
-- **ADHD-friendly API**: `med()` for quick analysis, `quick()` for instant results
+- **Short entry points**: `med()` for quick analysis, `quick()` for instant results
 - **Effect extractors**: `nie()`, `nde()`, `te()`, `pm()`, `paths()` for mediation effects
 - **Tidyverse integration**: `tidy()` and `glance()` methods for tibble workflows
 - **Base R generics**: `coef()`, `vcov()`, `confint()`, `nobs()` for S7 classes
-- **Native SEM engine** (experimental): `fit_sem()` fits model syntax with latent mediators and linear or nonlinear constraints; `mbco_sem()` tests the indirect effect, `anova()` compares nested fits, and `tidy()`, `glance()` and `confint()` summarize a `SEMFit`
+- **Native SEM engine** (experimental): `fit_sem()` fits model syntax with latent mediators and linear or nonlinear constraints; `mbco_sem()` tests the indirect effect, `anova()` compares nested fits, and `tidy()`, `glance()` and `confint()` summarize a `SEMFit`; observed intercepts and means (`y ~ 1`), `fixed_x` and the `x:m` product term (with the four-way decomposition through `extract_mediation()`) are supported inside documented limits
 - **S7-based classes** for standardized mediation data structures
 - **Foundation** for the mediation analysis ecosystem (RMediation, mediationverse)
 
