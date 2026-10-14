@@ -35,9 +35,9 @@
 if (!exists("MEDFIT_GATE_SOURCE_ONLY")) {
   suppressMessages(pkgload::load_all(quiet = TRUE))
 }
-source("tests/testthat/helper-four-way-oracle.R")
-source("tests/testthat/helper-sem.R") # provides sem_mutate
-source("tests/sim/product-gate-common.R")
+source("tests/testthat/helper-four-way-oracle.R", local = TRUE)
+source("tests/testthat/helper-sem.R", local = TRUE) # provides sem_mutate
+source("tests/sim/product-gate-common.R", local = TRUE)
 # nolint start: object_usage_linter. (helpers come from the sourced files)
 
 kat_scenarios <- list(

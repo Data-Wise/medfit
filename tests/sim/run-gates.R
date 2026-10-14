@@ -201,7 +201,7 @@ verdict_gate <- function(gate, d, s) {
       )
     },
     # product-term and four-way gates: the rules live in tests/sim/product-gate-common.R
-    product_gate_rules[[gate]](d, s)
+    product_gate_rules[[gate]](d, s) # nolint: object_usage_linter.
   )
 }
 
@@ -282,7 +282,8 @@ mutate <- function(gate, kind, d) {
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
   if (kind == "missing") {
     # the product-term and four-way gates have 2 to 63 rows: drop the last one, so only the row-count check can reject
-    d <- if (gate %in% names(product_gate_rules)) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
+    new_gate <- gate %in% names(product_gate_rules) # nolint: object_usage_linter.
+    d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
   }
   if (kind == "failed") {
     if (gate %in% c("parity", "constrained", "se")) d$native_ok[1] <- FALSE

@@ -136,7 +136,7 @@ test_that("product path helpers: column keeps `p`, colon writes the factors and 
 test_that("the gate scripts take a model-fitting function and route the product through the chosen path", {
   skip_if_not_installed("withr")
   withr::local_dir(root)
-  genv <- new.env(parent = globalenv())
+  genv <- new.env(parent = asNamespace("medfit"))
   genv$MEDFIT_GATE_SOURCE_ONLY <- TRUE
   for (f in c("exo-product-null.R", "exo-product-fixed-var.R", "product-correlated-residuals.R")) {
     sys.source(file.path("tests", "sim", f), envir = genv)
@@ -178,7 +178,7 @@ test_that("the gate scripts take a model-fitting function and route the product 
 test_that("the column path runs end to end through fit_sem() and reports a frame with the gate's columns", {
   skip_if_not_installed("withr")
   withr::local_dir(root)
-  genv <- new.env(parent = globalenv())
+  genv <- new.env(parent = asNamespace("medfit"))
   genv$MEDFIT_GATE_SOURCE_ONLY <- TRUE
   sys.source(file.path("tests", "sim", "exo-product-null.R"), envir = genv)
   res <- genv$gate_product_null(fit_sem, "column", reps = 6, n = 200, cores = 1)

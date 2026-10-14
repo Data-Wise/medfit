@@ -29,7 +29,7 @@
 if (!exists("MEDFIT_GATE_SOURCE_ONLY")) {
   suppressMessages(pkgload::load_all(quiet = TRUE))
 }
-source("tests/sim/product-gate-common.R")
+source("tests/sim/product-gate-common.R", local = TRUE)
 # nolint start: object_usage_linter. (helpers come from the sourced files)
 
 corr_truth <- c(a1 = 0.7, a2 = 0.5, b1 = 0.4, b2 = 0.3, bp = 0.2)

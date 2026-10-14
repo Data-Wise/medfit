@@ -21,7 +21,7 @@
 if (!exists("MEDFIT_GATE_SOURCE_ONLY")) {
   suppressMessages(pkgload::load_all(quiet = TRUE))
 }
-source("tests/sim/product-gate-common.R")
+source("tests/sim/product-gate-common.R", local = TRUE)
 # nolint start: object_usage_linter. (helpers come from the sourced files)
 
 null_template <- "m ~ x\ny ~ m + x + w + P"
