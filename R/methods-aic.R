@@ -30,6 +30,23 @@
   invisible(TRUE)
 }
 
+# Refuse a model test (`anova()`, `mbco_sem()`) for a fit whose global test is invalid because of a product term
+# (see `.sem_product_modeltest()`). `what` names the refused function in the message.
+.sem_check_modeltest <- function(models, what) {
+  for (i in seq_along(models)) {
+    reason <- .sem_modeltest_reason(models[[i]])
+    if (!is.null(reason)) {
+      nm <- names(models)[i]
+      who <- if (length(nm) && !is.na(nm) && nzchar(nm)) paste0("'", nm, "', ") else ""
+      stop(what, " is not available for ", who, "a model with a product term: ", reason, ". The model test and a ",
+           "likelihood-ratio contrast against another fit are not chi-square there. The coefficients and the ",
+           "sandwich standard errors (`se_type = \"sandwich\"`, observed information) are unaffected.",
+           call. = FALSE)
+    }
+  }
+  invisible(TRUE)
+}
+
 .sem_ic_table <- function(object, dots, exprs, penalty) {
   models <- c(list(object), dots)
   nm <- vapply(exprs, function(e) if (is.language(e)) paste(deparse(e), collapse = "") else NA_character_, "")

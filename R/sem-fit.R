@@ -28,6 +28,8 @@
   }
   tab <- .sem_complete(parsed$parameters, meanstructure, fixed_x)
   .sem_check_scale(tab)
+  modeltest <- .sem_product_modeltest(tab)
+  .sem_product_refuse(modeltest, information)
   fixed_set <- attr(tab, "fixed_x")
   # Product columns are built before anything reads the model's columns: `.sem_assign_fixed_x()` returns early
   # when one is absent, which would leave every fixed row unassigned. NA propagates through `*`, so building
@@ -40,6 +42,7 @@
   data <- mat$data
   conv <- .sem_to_ram(tab)
   ram <- conv$ram
+  ram$modeltest <- modeltest # NULL (no entry) unless a product invalidates the model test
 
   absent <- setdiff(ram$obs, names(data))
   if (length(absent)) {
@@ -108,6 +111,7 @@
   defined <- .sem_defined(parsed$constraints, fit$theta, vc)
   act_cons <- if (is.null(cons)) .sem_no_cons(ram$q) else cons
   act <- .sem_active_set(fit$theta, ram, smp, lb, ub, act_cons)
+  .sem_product_warn(tab, modeltest, se_type)
 
   c(
     fit,
@@ -119,6 +123,43 @@
       eq_rank = eq_rank, branch = character(), fixed_x = fixed_set
     )
   )
+}
+
+# Fit-time policy for a product term (0.10.0 plan U6, F4). `modeltest` is the verdict of `.sem_product_modeltest()`.
+#  * expected information is refused when a product has an endogenous factor: the expected information assumes the
+#    model's implied moments, which the product violates, so its SEs are wrong (the sandwich built on it included);
+#    observed information with the sandwich is the safe route (amendment section 2a);
+#  * one warning when the model test is unavailable, and one when a product is fitted without `se_type = "sandwich"`.
+.sem_product_refuse <- function(modeltest, information) {
+  if (length(modeltest$endogenous) && identical(information, "expected")) {
+    stop("`information = \"expected\"` is not available for a model with a product of an endogenous variable (",
+         paste(modeltest$endogenous, collapse = "; "), "): the expected information assumes the product is not a ",
+         "function of the other variables, so its standard errors are wrong, the sandwich ones included. Use ",
+         "`information = \"observed\"` (the default) with `se_type = \"sandwich\"`.", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+# The warnings are raised after the fit succeeds, so a call that then errors (a missing column, no convergence)
+# reports only its error.
+.sem_product_warn <- function(tab, modeltest, se_type) {
+  prods <- unique(tab$rhs[tab$op == "~" & grepl(":", tab$rhs, fixed = TRUE)])
+  if (!length(prods)) {
+    return(invisible(NULL))
+  }
+  reasons <- .sem_modeltest_text(modeltest)
+  if (!is.null(reasons)) {
+    warning("the model test is not valid for this model: ", reasons,
+            ". `glance()` and `summary()` report the chi-square, df and p-value as NA, and `anova()` and `mbco_sem()` ",
+            "refuse. The coefficients equal equation-wise OLS, and the sandwich standard errors (observed ",
+            "information) are unaffected.", call. = FALSE)
+  }
+  if (!identical(se_type, "sandwich")) {
+    warning("the model has a product term (", paste(prods, collapse = ", "), ") and `se_type = \"", se_type,
+            "\"`: model-based standard errors assume normality, which a product violates. ",
+            "`se_type = \"sandwich\"` is recommended.", call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 # Whether the fit can run on mean-centered data: a mean structure whose intercepts are all free, unbounded,
