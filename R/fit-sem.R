@@ -19,12 +19,16 @@
 #'   `=~` (latent variable), `~~` (variance or covariance), `label*variable`
 #'   modifiers, `start()`, `lower()` and `upper()`, and the constraint
 #'   operators `==`, `<`, `>` and `:=`. An intercept is written `y ~ 1` (alone or with other terms, as
-#'   in `y ~ 1 + x`) and turns on the mean structure.
+#'   in `y ~ 1 + x`) and turns on the mean structure. A product of two observed variables is written
+#'   `x:m` on the right side of a regression (canonical name `m:x`); `?"medfit-syntax"` lists the
+#'   supported class and each limit.
 #' @param data A data frame with the model's observed variables as numeric
 #'   columns. Rows with missing values in those columns are dropped once
 #'   (listwise deletion) and counted in `n_dropped`.
 #' @param information Character: `"observed"` (default) or `"expected"`
-#'   information for the standard errors.
+#'   information for the standard errors. `"expected"` is an error for a model with a product term
+#'   that has an endogenous factor (the product is a function of another variable, so the expected
+#'   information gives wrong standard errors); use the default with `se_type = "sandwich"`.
 #' @param n_starts Positive integer or `NULL`: number of optimizer starts
 #'   tried before the fit is declared failed (`NULL` uses 5). Retries use
 #'   perturbed starts drawn under a fixed seed and never change the caller's
@@ -65,7 +69,9 @@
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
-#' @return A [SEMFit] object.
+#' @return A [SEMFit] object. With a product term whose factor is a regression target (`x:m` with
+#'   `m` regressed on `x`), `glance()` reports the chi-square, df and p-value as `NA` with a note, and
+#'   `anova()` and [mbco_sem()] refuse; see [SEMFit-methods].
 #'
 #' @examples
 #' \donttest{
@@ -74,6 +80,14 @@
 #'   data = mediation_demo
 #' )
 #' fit@defined
+#'
+#' # A treatment-by-mediator product: the four-way decomposition
+#' fit4 <- fit_sem(
+#'   "mediator1 ~ treatment\noutcome_int ~ treatment + mediator1 + treatment:mediator1",
+#'   data = mediation_demo, se_type = "sandwich"
+#' )
+#' decompose(extract_mediation(fit4, treatment = "treatment", mediator = "mediator1",
+#'                             outcome = "outcome_int"))
 #' }
 #'
 #' @seealso [SEMFit], [fit_mediation()]

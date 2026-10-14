@@ -37,7 +37,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Formulas and data | `fit_mediation(formula_y, formula_m, data, treatment, mediator)` |
 | Several mediators (chain) | `extract_mediation(..., mediator = c(...), mediator_models = list(...))` |
 | Several mediators (side by side) | same call with `structure = "parallel"` |
-| Treatment-by-mediator term | `extract_mediation()` on an outcome with `X * M` |
+| Treatment-by-mediator term | `extract_mediation()` on an outcome with `X * M`; from syntax, `fit_sem()` with `x:m` in the outcome equation, then `extract_mediation()` |
 | `lmer` pair, cluster treatment | `extract_mediation(..., cluster = )` |
 | Formulas, cluster treatment | `fit_mediation(engine = "lmer", cluster = )` with plain formulas, no `(1 \| id)` |
 | `lavaan` fit | `extract_mediation(lavaan_fit, ...)` |

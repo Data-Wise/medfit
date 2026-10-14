@@ -22,6 +22,7 @@ model, from one mediator to a latent variable.
 
 | Version | What you get |
 |---|---|
+| **Development** | The product term `x:m` in native syntax and the four-way decomposition from a native fit (`extract_mediation()` on a `fit_sem()` fit), inside a documented supported class; the model test is `NA` when a product factor is a regression target; a native route in cookbook recipe 7 |
 | **0.9.0** | Observed intercepts and means in the native engine (`y ~ 1`, `meanstructure =`), with centered coordinates for data far from zero; `fixed_x` to fix exogenous moments at the sample values (lavaan's `fixed.x = TRUE`); the tutorial's step 9 and cookbook recipe 18 |
 | **0.8.0** | Nonlinear constraints (`cp == a*b`, `a*b > k`), `mbco_sem(paths = )` for a product of k paths, `anova()`, `tidy()` and `glance()` for `SEMFit`, one lavaan-style naming convention; the lavaan comparison article and cookbook recipes 12 and 13 |
 | **0.7.0** | A native maximum-likelihood SEM engine (experimental): latent mediators, constraints, defined parameters, `fit_sem()`, `mbco_sem()` |
