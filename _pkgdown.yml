@@ -113,6 +113,16 @@ navbar:
         href: articles/native-tutorial.html
       - text: "The native engine guide"
         href: articles/native-guide.html
+      - text: "Native book 1: the mean structure"
+        href: articles/native-book-1-mean-structure.html
+      - text: "Native book 2: scale and conditioning"
+        href: articles/native-book-2-scale.html
+      - text: "Native book 3: constraints"
+        href: articles/native-book-3-constraints.html
+      - text: "Native book 4: fixed exogenous moments"
+        href: articles/native-book-4-fixed-x.html
+      - text: "Native book 5: inference"
+        href: articles/native-book-5-inference.html
       - text: "lavaan and the native engine"
         href: articles/lavaan-comparison.html
     cookbook:
@@ -294,6 +304,11 @@ articles:
       - '`articles/native-quickstart`'
       - '`articles/native-tutorial`'
       - '`articles/native-guide`'
+      - '`articles/native-book-1-mean-structure`'
+      - '`articles/native-book-2-scale`'
+      - '`articles/native-book-3-constraints`'
+      - '`articles/native-book-4-fixed-x`'
+      - '`articles/native-book-5-inference`'
       - '`articles/lavaan-comparison`'
   - title: "Detailed guides"
     contents:
