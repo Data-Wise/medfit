@@ -620,13 +620,15 @@ suppressMessages(library(OpenMx))
 mxOption(NULL, "Number of Threads", 1)
 dat <- mediation_demo[, c("mediator1", "treatment", "outcome")]
 vars <- names(dat)
-mod <- mxModel("restricted", type = "RAM", manifestVars = vars,
+mod <- mxModel(
+  "restricted", type = "RAM", manifestVars = vars,
   mxPath(from = "treatment", to = "mediator1", values = 0.4, labels = "a"),
   mxPath(from = c("mediator1", "treatment"), to = "outcome", values = 0.5, labels = c("b", "cp")),
   mxPath(from = vars, arrows = 2, values = 1, labels = paste0("v_", vars)),
   mxPath(from = "one", to = c("mediator1", "treatment"), values = 0, labels = c("m_m", "m_t")),
   mxPath(from = "one", to = "outcome", free = FALSE, values = 0),
-  mxData(dat, type = "raw"))
+  mxData(dat, type = "raw")
+)
 run <- mxRun(mod, silent = TRUE)
 smry <- summary(run)
 est_mx <- stats::setNames(smry$parameters$Estimate, smry$parameters$name)

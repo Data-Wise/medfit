@@ -100,12 +100,14 @@ cat("lavaan warning:", trimws(gsub("\\s+", " ", lav_warn)), "\n\n")
 suppressMessages(library(OpenMx))
 mxOption(NULL, "Number of Threads", 1)
 vars <- names(big)
-mod <- mxModel("big", type = "RAM", manifestVars = vars,
+mod <- mxModel(
+  "big", type = "RAM", manifestVars = vars,
   mxPath(from = "treatment", to = "mediator1", values = 0.4, labels = "a"),
   mxPath(from = c("mediator1", "treatment"), to = "outcome", values = 0.5, labels = c("b", "cp")),
   mxPath(from = vars, arrows = 2, values = 1, labels = paste0("v_", vars)),
   mxPath(from = "one", to = vars, values = colMeans(big), labels = paste0("m_", vars)),
-  mxData(big, type = "raw"))
+  mxData(big, type = "raw")
+)
 run <- suppressWarnings(mxRun(mod, silent = TRUE))
 pt <- summary(run)$parameters
 cat("OpenMx optimizer status code:", run$output$status$code, "(0 is success)\n")
@@ -353,12 +355,14 @@ lv_exp <- lavaan::sem(syntax, mid, meanstructure = TRUE, fixed.x = FALSE, inform
 lv_obs <- lavaan::sem(syntax, mid, meanstructure = TRUE, fixed.x = FALSE, information = "observed")
 
 vars <- names(mid)
-mod_mid <- mxModel("mid", type = "RAM", manifestVars = vars,
+mod_mid <- mxModel(
+  "mid", type = "RAM", manifestVars = vars,
   mxPath(from = "treatment", to = "mediator1", values = 0.4, labels = "a"),
   mxPath(from = c("mediator1", "treatment"), to = "outcome", values = 0.5, labels = c("b", "cp")),
   mxPath(from = vars, arrows = 2, values = 1, labels = paste0("v_", vars)),
   mxPath(from = "one", to = vars, values = colMeans(mid), labels = paste0("m_", vars)),
-  mxData(mid, type = "raw"))
+  mxData(mid, type = "raw")
+)
 run_mid <- mxRun(mod_mid, silent = TRUE)
 pt_mid <- summary(run_mid)$parameters
 se_mx <- stats::setNames(pt_mid$Std.Error, pt_mid$name)

@@ -67,12 +67,12 @@ error, because they are no longer estimates; the engine keeps them in its parame
 #| label: fixed-values
 exo <- c("treatment", "covariate1")
 xm <- as.matrix(d[, exo])
-S_ff <- cov(xm) * (n - 1) / n
+s_ff <- cov(xm) * (n - 1) / n
 tab <- fx@table
 fixed_tab <- tab[tab$fixed_x, c("lhs", "op", "rhs", "est")]
 fixed_tab$sample_value <- vapply(seq_len(nrow(fixed_tab)), function(i) {
   row <- fixed_tab[i, ]
-  if (row$op == "~1") colMeans(xm)[[row$lhs]] else S_ff[row$lhs, row$rhs]
+  if (row$op == "~1") colMeans(xm)[[row$lhs]] else s_ff[row$lhs, row$rhs]
 }, numeric(1))
 c(largest_difference = max(abs(fixed_tab$est - fixed_tab$sample_value)))
 fixed_tab[, c("est", "sample_value")] <- rd(fixed_tab[, c("est", "sample_value")], 6)
@@ -120,7 +120,9 @@ data.frame(
 #| include: false
 stopifnot(all(vapply(fits, function(f) f@df, numeric(1)) == 1),
           diff(range(vapply(fits, function(f) f@n_obs * f@f, numeric(1)))) < 1e-6,
-          all(vapply(fits, function(f) medfit:::.sem_moments(f@internals$ram) - (length(f@theta) - f@internals$eq_rank) == f@df, NA)))
+          all(vapply(fits, function(f) {
+            medfit:::.sem_moments(f@internals$ram) - (length(f@theta) - f@internals$eq_rank) == f@df
+          }, NA)))
 ```
 
 With three variances and covariances fixed (covariance structure) the parameter count falls by 3 and the
@@ -269,15 +271,15 @@ variance of `covariate1` given `treatment`, over $n$:
 ```{r}
 #| label: subset-mean
 se_mean <- function(f) sqrt(diag(f@vcov))[["covariate1~1"]]
-c(free_fit = se_mean(free), by_hand_free = sqrt(S_ff[2, 2] / n),
-  subset_fit = se_mean(subset_fit), by_hand_subset = sqrt((S_ff[2, 2] - S_ff[1, 2]^2 / S_ff[1, 1]) / n))
+c(free_fit = se_mean(free), by_hand_free = sqrt(s_ff[2, 2] / n),
+  subset_fit = se_mean(subset_fit), by_hand_subset = sqrt((s_ff[2, 2] - s_ff[1, 2]^2 / s_ff[1, 1]) / n))
 ```
 
 ```{r}
 #| label: subset-mean-check
 #| include: false
-stopifnot(abs(se_mean(free) - sqrt(S_ff[2, 2] / n)) < 1e-6,
-          abs(se_mean(subset_fit) - sqrt((S_ff[2, 2] - S_ff[1, 2]^2 / S_ff[1, 1]) / n)) < 1e-6)
+stopifnot(abs(se_mean(free) - sqrt(s_ff[2, 2] / n)) < 1e-6,
+          abs(se_mean(subset_fit) - sqrt((s_ff[2, 2] - s_ff[1, 2]^2 / s_ff[1, 1]) / n)) < 1e-6)
 ```
 
 The structural block still has no cross term with any exogenous moment, so Step 3 holds for it unchanged.
@@ -307,7 +309,7 @@ fit, against a direct computation of the conditional density from the RAM matric
 ```{r}
 #| label: conditional
 k <- length(exo)
-marginal <- -0.5 * n * (as.numeric(determinant(S_ff, logarithm = TRUE)$modulus) + k + k * log(2 * pi))
+marginal <- -0.5 * n * (as.numeric(determinant(s_ff, logarithm = TRUE)$modulus) + k + k * log(2 * pi))
 c(joint_logLik_free_fit = as.numeric(logLik(free)),
   conditional_logLik_fixed_fit = as.numeric(logLik(fx)),
   difference_of_the_two = as.numeric(logLik(fx)) - as.numeric(logLik(free)),
@@ -327,17 +329,17 @@ row given its fixed variables is $c + \Gamma x_i$ and the covariance is $\Psi$. 
 #| label: conditional-by-hand
 mats <- medfit:::.sem_ram_mats(fx@internals$ram, fx@theta)
 A <- mats$a
-S_ram <- mats$s
+s_ram <- mats$s
 m <- medfit:::.sem_ram_m(fx@internals$ram, fx@theta)
 vars <- fx@internals$ram$vars
 endo <- c("mediator1", "outcome")
 iy <- match(endo, vars)
 ix <- match(exo, vars)
-B_yy <- solve(diag(length(endo)) - A[iy, iy])
-Psi <- B_yy %*% S_ram[iy, iy] %*% t(B_yy)
+b_yy <- solve(diag(length(endo)) - A[iy, iy])
+Psi <- b_yy %*% s_ram[iy, iy] %*% t(b_yy)
 data_mat <- as.matrix(d[, c(endo, exo)])
 ll_by_hand <- sum(vapply(seq_len(n), function(i) {
-  mu_i <- drop(B_yy %*% (m[iy] + A[iy, ix] %*% data_mat[i, exo]))
+  mu_i <- drop(b_yy %*% (m[iy] + A[iy, ix] %*% data_mat[i, exo]))
   e <- data_mat[i, endo] - mu_i
   -0.5 * (length(endo) * log(2 * pi) + log(det(Psi)) + drop(t(e) %*% solve(Psi) %*% e))
 }, numeric(1)))
@@ -438,19 +440,21 @@ suppressMessages(library(OpenMx))
 mxOption(NULL, "Number of Threads", 1)
 dat <- d[, c("mediator1", "treatment", "covariate1", "outcome")]
 mu_s <- colMeans(dat)
-S_s <- cov(dat) * (n - 1) / n
-mod <- mxModel("fixedx", type = "RAM", manifestVars = names(dat),
+s_s <- cov(dat) * (n - 1) / n
+mod <- mxModel(
+  "fixedx", type = "RAM", manifestVars = names(dat),
   mxPath("treatment", "mediator1", values = 0.4, labels = "a"),
   mxPath("covariate1", "mediator1", values = 0.1, labels = "m_c"),
   mxPath("mediator1", "outcome", values = 0.4, labels = "b"),
   mxPath("covariate1", "outcome", values = 0.1, labels = "y_c"),
   mxPath(c("mediator1", "outcome"), arrows = 2, values = 1, labels = c("vm", "vy")),
-  mxPath("treatment", arrows = 2, free = FALSE, values = S_s["treatment", "treatment"]),
-  mxPath("covariate1", arrows = 2, free = FALSE, values = S_s["covariate1", "covariate1"]),
-  mxPath("treatment", "covariate1", arrows = 2, free = FALSE, values = S_s["treatment", "covariate1"]),
+  mxPath("treatment", arrows = 2, free = FALSE, values = s_s["treatment", "treatment"]),
+  mxPath("covariate1", arrows = 2, free = FALSE, values = s_s["covariate1", "covariate1"]),
+  mxPath("treatment", "covariate1", arrows = 2, free = FALSE, values = s_s["treatment", "covariate1"]),
   mxPath("one", c("treatment", "covariate1"), free = FALSE, values = mu_s[c("treatment", "covariate1")]),
   mxPath("one", c("mediator1", "outcome"), values = 0, labels = c("i_m", "i_y")),
-  mxData(dat, type = "raw"))
+  mxData(dat, type = "raw")
+)
 mx_run <- mxRun(mod, silent = TRUE)
 data.frame(
   quantity = c("OpenMx -2 log L (joint, moments held)", "medfit free fit, -2 log L (joint)",
@@ -478,7 +482,12 @@ messages (captured with `tryCatch` so the page keeps rendering):
 
 ```{r}
 #| label: refusals
-say <- function(expr) tryCatch({ expr; "no error" }, error = function(e) conditionMessage(e))
+say <- function(expr) {
+  tryCatch({
+    expr
+    "no error"
+  }, error = function(e) conditionMessage(e))
+}
 fixed_full <- fit_sem(full, d, fixed_x = TRUE)
 fixed_restricted <- fit_sem(restricted, d, fixed_x = TRUE)
 free_restricted <- fit_sem(restricted, d)
@@ -516,7 +525,9 @@ anova(free_full, free_restricted)
 ```{r}
 #| label: allowed-check
 #| include: false
-stopifnot(abs(anova(fixed_full, fixed_restricted)$`Chisq diff`[2] - anova(free_full, free_restricted)$`Chisq diff`[2]) < 1e-6)
+diff_fixed <- anova(fixed_full, fixed_restricted)$`Chisq diff`[2]
+diff_free <- anova(free_full, free_restricted)$`Chisq diff`[2]
+stopifnot(abs(diff_fixed - diff_free) < 1e-6)
 ```
 
 The two tables are the same test: the chi-square difference of a nested pair does not depend on whether the exogenous

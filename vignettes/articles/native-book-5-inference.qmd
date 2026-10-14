@@ -263,12 +263,14 @@ suppressMessages(library(OpenMx))
 mxOption(NULL, "Number of Threads", 1)
 dat <- d[, c("mediator1", "mediator2", "treatment", "outcome")]
 vars <- names(dat)
-mod <- mxModel("parallel", type = "RAM", manifestVars = vars,
+mod <- mxModel(
+  "parallel", type = "RAM", manifestVars = vars,
   mxPath(from = "treatment", to = c("mediator1", "mediator2"), values = 0.4, labels = c("a1", "a2")),
   mxPath(from = c("mediator1", "mediator2"), to = "outcome", values = 0.5, labels = c("b1", "b2")),
   mxPath(from = vars, arrows = 2, values = 1, labels = paste0("v_", vars)),
   mxPath(from = "one", to = vars, values = 0, labels = paste0("m_", vars)),
-  mxData(dat, type = "raw"))
+  mxData(dat, type = "raw")
+)
 mx_pt <- summary(mxRun(mod, silent = TRUE))$parameters
 se_mx <- stats::setNames(mx_pt$Std.Error, mx_pt$name)
 map <- c("mediator1~treatment" = "a1", "mediator2~treatment" = "a2", "outcome~mediator1" = "b1",
@@ -458,7 +460,12 @@ fit, and the engine refuses them:
 
 ```{r}
 #| label: weighted-refusals
-say <- function(expr) tryCatch({ expr; "no error" }, error = function(e) conditionMessage(e))
+say <- function(expr) {
+  tryCatch({
+    expr
+    "no error"
+  }, error = function(e) conditionMessage(e))
+}
 restricted_w <- fit_sem(paste0(full, "a == 0\n"), d, weights = w, se_type = "sandwich")
 msgs <- c(
   logLik = say(logLik(fit_w)),
@@ -548,13 +555,15 @@ suppressMessages(library(OpenMx))
 dat3 <- d[, c("mediator1", "treatment", "outcome")]
 vars3 <- names(dat3)
 mx_full <- function(fix_a = FALSE, fix_b = FALSE) {
-  mxModel("m", type = "RAM", manifestVars = vars3,
+  mxModel(
+    "m", type = "RAM", manifestVars = vars3,
     mxPath(from = "treatment", to = "mediator1", values = if (fix_a) 0 else 0.4, free = !fix_a, labels = "a"),
     mxPath(from = "mediator1", to = "outcome", values = if (fix_b) 0 else 0.5, free = !fix_b, labels = "b"),
     mxPath(from = "treatment", to = "outcome", values = 0.2, labels = "cp"),
     mxPath(from = vars3, arrows = 2, values = 1, labels = paste0("v_", vars3)),
     mxPath(from = "one", to = vars3, values = 0, labels = paste0("m_", vars3)),
-    mxData(dat3, type = "raw"))
+    mxData(dat3, type = "raw")
+  )
 }
 m2ll <- function(m) summary(mxRun(m, silent = TRUE))$Minus2LogLikelihood
 mx_stat <- c(a = m2ll(mx_full(fix_a = TRUE)) - m2ll(mx_full()), b = m2ll(mx_full(fix_b = TRUE)) - m2ll(mx_full()))
@@ -571,8 +580,9 @@ data.frame(
 #| label: mbco-lavaan-check
 #| include: false
 #| eval: !expr requireNamespace("lavaan", quietly = TRUE) && requireNamespace("OpenMx", quietly = TRUE)
-stopifnot(max(abs(mb$tests$diff_ll - c(lavaan::fitMeasures(lv_a, "chisq") - lavaan::fitMeasures(lv_full, "chisq"),
-                                       lavaan::fitMeasures(lv_b, "chisq") - lavaan::fitMeasures(lv_full, "chisq")))) < 1e-5,
+lv_stat <- c(lavaan::fitMeasures(lv_a, "chisq"), lavaan::fitMeasures(lv_b, "chisq")) -
+  lavaan::fitMeasures(lv_full, "chisq")
+stopifnot(max(abs(mb$tests$diff_ll - lv_stat)) < 1e-5,
           max(abs(mb$tests$diff_ll - mx_stat)) < 1e-3)
 ```
 
@@ -613,7 +623,12 @@ freed in the restricted model that the other leaves out (parameter-table inclusi
 
 ```{r}
 #| label: anova-refusals
-say <- function(expr) tryCatch({ expr; "no error" }, error = function(e) conditionMessage(e))
+say <- function(expr) {
+  tryCatch({
+    expr
+    "no error"
+  }, error = function(e) conditionMessage(e))
+}
 fit_more <- fit_sem("mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment + covariate1", d)
 fit_b0 <- fit_sem(paste0(full, "b == 0\n"), d)
 msgs <- c(

@@ -133,7 +133,9 @@ cat("row text:", nl$text, "\n")
 rbind(
   central_difference = nl$jac(theta, unit)[1, 1:3],
   analytic = c(-theta[["b"]], -theta[["a"]], 1)
-) |> `colnames<-`(c("a", "b", "cp")) |> rd(6)
+) |>
+  `colnames<-`(c("a", "b", "cp")) |>
+  rd(6)
 c(value_at_solution = nl$value(theta))
 ```
 
@@ -232,17 +234,18 @@ ub <- rep(Inf, ram$q)
 start <- medfit:::.sem_default_start(ram, smp)
 obj <- medfit:::.sem_objective(ram, smp)
 opts <- list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-10, ftol_rel = 1e-12, maxeval = 10000L)
-trace_rows <- list()
+trace_env <- new.env()
+trace_env$rows <- list()
 f_traced <- function(x) {
   value <- obj$f(x * unit)
-  trace_rows[[length(trace_rows) + 1L]] <<- c(objective = value, violation = abs(cons$nl$value(x * unit)))
+  trace_env$rows[[length(trace_env$rows) + 1L]] <- c(objective = value, violation = abs(cons$nl$value(x * unit)))
   value
 }
 run <- medfit:::.sem_nlopt(
   start / unit, f_traced, function(x) obj$g(x * unit) * unit, lb / unit, ub / unit, opts,
   constraints = medfit:::.sem_nlopt_constraints(cons, unit)
 )
-tr <- do.call(rbind, trace_rows)
+tr <- do.call(rbind, trace_env$rows)
 solution <- run$solution * unit
 cat("status", run$status, "after", run$iterations, "iterations and", nrow(tr), "evaluations\n")
 signif(tr[c(1:6, nrow(tr) - 3:0), ], 3)
@@ -366,7 +369,7 @@ rbind(objective_hessian_only = eigen(crossprod(act$z, x_hess %*% act$z))$values,
 stopifnot(sqrt(sum(reduced_gradient^2)) < 1e-8, abs(multiplier) > 1e-3,
           all(eigen(crossprod(act$z, lagrangian %*% act$z))$values > 0),
           max(abs(eigen(crossprod(act$z, x_hess %*% act$z))$values -
-                  eigen(crossprod(act$z, lagrangian %*% act$z))$values)) > 1e-3)
+                    eigen(crossprod(act$z, lagrangian %*% act$z))$values)) > 1e-3)
 ```
 
 At the optimum the reduced gradient is zero (the Lagrange condition holds with a nonzero multiplier,
@@ -705,7 +708,8 @@ suppressMessages(library(OpenMx))
 mxOption(NULL, "Number of Threads", 1)
 dat <- d[, c("mediator1", "treatment", "outcome")]
 vars <- names(dat)
-mod <- mxModel("constrained", type = "RAM", manifestVars = vars,
+mod <- mxModel(
+  "constrained", type = "RAM", manifestVars = vars,
   mxPath(from = "treatment", to = "mediator1", values = 0.3, labels = "a"),
   mxPath(from = "mediator1", to = "outcome", values = 0.6, labels = "b"),
   mxPath(from = "treatment", to = "outcome", values = 0.2, labels = "cp"),
@@ -713,7 +717,8 @@ mod <- mxModel("constrained", type = "RAM", manifestVars = vars,
   mxPath(from = "one", to = vars, values = 0, labels = paste0("m_", vars)),
   mxAlgebra(a * b, name = "ab"),
   mxConstraint(cp == ab, name = "k"),
-  mxData(dat, type = "raw"))
+  mxData(dat, type = "raw")
+)
 run_mx <- mxRun(mod, silent = TRUE)
 est_mx <- stats::setNames(summary(run_mx)$parameters$Estimate, summary(run_mx)$parameters$name)
 fit_mean <- fit_sem(txt, d, meanstructure = TRUE)
