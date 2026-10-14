@@ -524,5 +524,9 @@
   if (length(defs)) {
     .sem_check_defined_cycles(defs)
   }
-  .sem_fold_bounds(parameters, constraints)
+  # Rules 8 and 9 for product terms need the constraints before bounds are folded away; they run in `.sem_complete()`
+  # (no data needed), which reads them from this attribute.
+  out <- .sem_fold_bounds(parameters, constraints)
+  attr(out$parameters, "all_constraints") <- constraints
+  out
 }

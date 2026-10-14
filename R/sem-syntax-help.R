@@ -40,7 +40,8 @@
 #' intercept statement (`y ~ 1`, or `1` as a term: `y ~ 1 + x`) turns the mean structure
 #' on and frees every observed intercept the model does not write, as lavaan does;
 #' `y ~ 0*1` then restricts the mean of `y` to 0 (one degree of freedom), and
-#' `meanstructure = TRUE` in [fit_sem()] turns it on without any statement. A
+#' `meanstructure = TRUE` in [fit_sem()] turns it on without any statement, and a product term
+#' (`x:m`) always turns it on. A
 #' latent variable's mean is fixed at 0; a free latent `~1` is an error. A repeated `1` for one
 #' variable is an error.
 #' A variable cannot appear on both sides of `~` or `=~` (`y ~ y`), and a path,
