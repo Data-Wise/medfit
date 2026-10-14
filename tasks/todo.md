@@ -3,7 +3,7 @@
 Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/SPEC-native-fixed-x-2026-10-13.md) | Branch `feature/native-fixed-x` is created only on request. Test-first: write the failing test, then the code. After any edit to `.sem_eval`, `.sem_df`, `logLik` or `.sem_complete`, rerun the frozen gate (`test-sem-frozen-v080.R`).
 
 ## Phase 0: groundwork
-- [ ] **R0** Probe lavaan 0.7.2: explicit `x ~~ x` under `fixed.x = TRUE`
+- [x] **R0** (done 2026-10-13: lavaan keeps an explicit statement free and its df moves; medfit errors, see the GRILL) Probe lavaan 0.7.2: explicit `x ~~ x` under `fixed.x = TRUE`
   - Acceptance: result (error / override / stays free) written to the GRILL open questions
   - Verify: a 10-line script in `planning/specs/evidence/native-fixed-x-2026-10-13/` and its output
   - Files: that script, `GRILL-native-fixed-x-2026-10-13.md`
