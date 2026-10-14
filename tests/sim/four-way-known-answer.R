@@ -16,12 +16,12 @@
 #           weighted), so the oracle itself is checked against the truth rather than trusted
 #   glm     fit_mediation() on the glm engine (model-based SEs; HC3 per equation when weighted)
 #   lavaan  extract_mediation() of a lavaan fit (observed information; lavaan's robust sandwich when weighted)
-#   native  OPTIONAL (ROUTES=hand,glm,lavaan,native): fit_sem() with the `:` product term. Not part of the committed
-#   baseline;
-#           it is skipped with a message while the `:` token does not parse (0.10.0 plan U1-U3 and U7), and the route's
-#           code in the helper is written against the plan, to be adjusted to the shipped API.
+#   native  fit_sem() with the `:` product term and extract_mediation() (observed information; model SEs, or the
+#           sandwich when weighted). Part of the default routes since U8 (ROUTES= overrides; the gate stops with a
+#           message in a build whose `:` term does not parse).
 #
-# Rule (gates.csv row "four-way-kat", implemented in tests/sim/product-gate-common.R): |bias_z| <= 4, |se_ratio - 1|
+# Rule (gates.csv row "four-way-kat", 4 routes x 3 scenarios x 7 components = 84 rows, implemented in
+# tests/sim/product-gate-common.R): |bias_z| <= 4, |se_ratio - 1|
 # <= 0.12 for
 # every row (derivation in that file), at least 99% of the replications fitted.
 # `MUTANT=<name>` plants a defect and the gate must then exit 1:
@@ -84,12 +84,13 @@ kat_plant <- function(mutant) {
 
 gate_four_way_kat <- function(reps = as.integer(Sys.getenv("REPS", "1000")), n = 400L,
                               mutant = Sys.getenv("MUTANT", ""),
-                              route_names = strsplit(Sys.getenv("ROUTES", "hand,glm,lavaan"), ",", fixed = TRUE)[[1]],
+                              route_names = strsplit(Sys.getenv("ROUTES", "hand,glm,lavaan,native"), ",",
+                                                     fixed = TRUE)[[1]],
                               scenarios = kat_scenarios) {
   stopifnot(mutant %in% c("", "nocovgrad", "unwtd_glm", "unwtd_lavaan", "oracle", "wrongtruth"))
   if ("native" %in% route_names && !fwo_native_available()) {
-    message("native route skipped: the `:` product term does not parse in this build")
-    route_names <- setdiff(route_names, "native")
+    stop("the native route was requested but the `:` product term does not parse in this build; ",
+         "pass ROUTES=hand,glm,lavaan to run without it (the gate then fails its row count)", call. = FALSE)
   }
   restore <- kat_plant(mutant)
   on.exit(restore(), add = TRUE)

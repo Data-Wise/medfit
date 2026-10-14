@@ -1,7 +1,7 @@
 # The gate harness (0.10.0 plan U8): the pass rules in tests/sim/product-gate-common.R, the product-path plumbing the
-# gate scripts use (precomputed column now, `:` later), and the scripts' model-fitting-function argument. The gates
-# themselves are run by tests/sim/run-gates.R and the scripts; these tests pin the rules and the plumbing, with
-# planted defects: every rule must reject a frame that violates it.
+# gate scripts use (a precomputed column, or the `:` term; each product gate has a `-colon` twin), and the scripts'
+# model-fitting-function argument. The gates themselves are run by tests/sim/run-gates.R and the scripts; these tests
+# pin the rules and the plumbing, with planted defects: every rule must reject a frame that violates it.
 
 common <- test_path("..", "sim", "product-gate-common.R")
 skip_if_not(file.exists(common), "tests/sim is not shipped with the installed tests")
@@ -15,7 +15,8 @@ spec_of <- function(gate) {
 failed <- function(v) v$check[!v$pass]
 
 test_that("every new gate has exactly one gates.csv row and a rule", {
-  for (g in c("product-null", "product-fixed-var", "product-corr", "four-way-kat")) {
+  for (g in c("product-null", "product-null-colon", "product-fixed-var", "product-fixed-var-colon", "product-corr",
+              "product-corr-colon", "four-way-kat")) {
     expect_equal(nrow(spec_of(g)), 1L, info = g)
     expect_true(is.function(env$product_gate_rules[[g]]), info = g)
   }
@@ -59,6 +60,24 @@ test_that("product-fixed-var rule: calibrated rows stay calibrated, documented-m
   expect_equal(failed(env$rule_product_fixed_var(bad, s)), "calibrated rows: mean chi-square")
 })
 
+test_that("product-fixed-var-colon rule: four rows (no `fixvar` on a product), same calibration rules", {
+  s <- spec_of("product-fixed-var-colon")
+  expect_equal(s$expected_rows, 4)
+  ok <- data.frame(
+    xdist = rep(c("norm", "exp"), each = 2), config = rep(c("free", "dropcov"), 2), path = "colon",
+    expect = rep(c("calibrated", "miscalibrated"), 2), df = rep(c(2, 7), 2), reject05 = c(0.055, 0.249, 0.056, 0.693),
+    mean_chisq = c(2.0, 10.88, 2.05, 27.57), reps = 1000, reps_ok = 1000
+  )
+  expect_true(all(env$rule_product_fixed_var(ok, s)$pass))
+  expect_equal(failed(env$rule_product_fixed_var(ok[-4, ], s)), "rows")
+  bad <- ok
+  bad$reject05[1] <- 0.2
+  expect_true("calibrated rows: rejection at .05" %in% failed(env$rule_product_fixed_var(bad, s)))
+  bad <- ok
+  bad$reject05[4] <- 0.05
+  expect_equal(failed(env$rule_product_fixed_var(bad, s)), "miscalibrated rows stay miscalibrated")
+})
+
 test_that("product-corr rule: match rows within the optimizer's accuracy, leak rows leak, rule 9 refusals pass", {
   s <- spec_of("product-corr")
   ok <- data.frame(
@@ -75,20 +94,37 @@ test_that("product-corr rule: match rows within the optimizer's accuracy, leak r
   bad <- ok
   bad$gap[5] <- NA
   expect_equal(failed(env$rule_product_corr(bad, s)), "fitted runs")
+  # colon path: rule 9 refuses every free residual covariance; the leak is read from the column-path gap
   colon <- ok
   colon$path <- "colon"
-  colon$gap[colon$cvf] <- NA # rule 9 refuses a free residual covariance on the colon path
+  colon$gap_column <- ifelse(colon$cvf & colon$expect == "leak", 2e-3, NA)
+  colon$gap[colon$cvf] <- NA
   colon$err <- ifelse(colon$cvf, "a product model cannot have a residual covariance (rule 9)", "")
   expect_true(all(env$rule_product_corr(colon, s)$pass))
+  # the refused fits stopped leaking (the `nocorr` mutant): the colon gate fails on the column-path gap
+  bad <- colon
+  bad$gap_column[!is.na(bad$gap_column)] <- 1e-7
+  expect_equal(failed(env$rule_product_corr(bad, s)), "leak rows: SEM differs from OLS")
+  # the column fit of a refused leak row is missing: not silently skipped
+  bad <- colon
+  bad$gap_column[which(!is.na(bad$gap_column))[1]] <- NA
+  expect_equal(failed(env$rule_product_corr(bad, s)), "leak rows: SEM differs from OLS")
+  # a free residual covariance that was NOT refused on the colon path breaks the refusal check
+  bad <- colon
+  bad$gap[which(bad$cvf)[1]] <- 1e-7
+  bad$err[which(bad$cvf)[1]] <- ""
+  expect_true("rule 9 refuses every free residual covariance" %in% failed(env$rule_product_corr(bad, s)))
   # an unrelated failure is not a refusal: the gate must not read it as rule 9 working
-  colon$err[colon$cvf] <- "could not parse x:m1"
-  expect_equal(failed(env$rule_product_corr(colon, s)), c("fitted runs", "leak rows: SEM differs from OLS"))
+  bad <- colon
+  bad$err[bad$cvf] <- "could not parse x:m1"
+  expect_true(all(c("fitted runs", "rule 9 refuses every free residual covariance") %in%
+                    failed(env$rule_product_corr(bad, s))))
 })
 
 test_that("four-way-kat rule: bias and SE ratio bounds, replication count, missing values", {
   s <- spec_of("four-way-kat")
-  ok <- data.frame(scenario = "A", route = "hand", component = rep(c("cde", "te"), length.out = 63),
-                   bias_z = rep(c(-1.5, 2), length.out = 63), se_ratio = rep(c(0.96, 1.05), length.out = 63),
+  ok <- data.frame(scenario = "A", route = "hand", component = rep(c("cde", "te"), length.out = 84),
+                   bias_z = rep(c(-1.5, 2), length.out = 84), se_ratio = rep(c(0.96, 1.05), length.out = 84),
                    reps = 1000, reps_ok = 1000)
   expect_true(all(env$rule_four_way_kat(ok, s)$pass))
   bad <- ok
@@ -111,10 +147,12 @@ test_that("the gate's KAT tolerance in gates.csv is the helper's derivation roun
 })
 
 test_that("the committed baselines pass their rules (control for the mutation tests above)", {
-  for (g in c("product-null", "product-fixed-var", "product-corr", "four-way-kat")) {
+  for (g in c("product-null", "product-null-colon", "product-fixed-var", "product-fixed-var-colon", "product-corr",
+              "product-corr-colon", "four-way-kat")) {
     s <- spec_of(g)
     files <- sort(list.files(file.path(root, "tests", "sim", "results"),
-                             pattern = paste0("^", s$results_prefix, "-.*\\.csv$"), full.names = TRUE))
+                             pattern = paste0("^", s$results_prefix, "-[0-9]{4}-[0-9]{2}-[0-9]{2}\\.csv$"),
+                             full.names = TRUE))
     skip_if(!length(files), "no committed baseline yet")
     expect_true(all(env$product_gate_rules[[g]](utils::read.csv(files[length(files)]), s)$pass), info = g)
   }
@@ -164,14 +202,28 @@ test_that("the gate scripts take a model-fitting function and route the product 
   res <- genv$gate_product_fixed_var(spy, "colon", reps = 1, n = 50, mutant = "", cores = 1)
   expect_setequal(unique(res$config), c("free", "dropcov"))
   expect_false(any(grepl("~~ x:w|x:w ~~", vapply(seen, `[[`, "", "syntax"))))
+  expect_equal(env$product_path_suffix("colon"), "-colon")
+  expect_equal(env$product_path_suffix("column"), "")
+  # the colon path has no `fixvar` configuration to corrupt: `wrongvar` restricts the `free` block instead
+  seen <- list()
+  genv$gate_product_fixed_var(spy, "colon", reps = 1, n = 50, mutant = "wrongvar", cores = 1)
+  syn <- vapply(seen, `[[`, "", "syntax")
+  expect_true(any(grepl("y ~ m + x + w + x:w\nx ~~ 2*x\nw ~~ 2*w", syn, fixed = TRUE)))
+  seen <- list()
+  genv$gate_product_fixed_var(spy, "colon", reps = 1, n = 50, mutant = "", cores = 1)
+  expect_false(any(grepl("2*x", vapply(seen, `[[`, "", "syntax"), fixed = TRUE)))
   seen <- list()
   genv$gate_product_fixed_var(spy, "column", reps = 1, n = 50, mutant = "wrongvar", cores = 1)
   expect_true(any(grepl("x ~~ 2*x", vapply(seen, `[[`, "", "syntax"), fixed = TRUE)))
-  # correlated-residuals gate: the endogenous product is m1:x on the colon path
+  # correlated-residuals gate: the product is x:m1 on the colon path (the free-covariance fits also fit the column
+  # path, `p`, for the leak evidence)
   seen <- list()
   res <- genv$gate_product_corr(spy, "colon", seeds = 1, n = 50)
-  expect_true(all(grepl("y ~ m1 + m2 + x + x:m1", vapply(seen, `[[`, "", "syntax"), fixed = TRUE)))
+  syn <- vapply(seen, `[[`, "", "syntax")
+  expect_true(all(grepl("y ~ m1 + m2 + x + x:m1", syn, fixed = TRUE) | grepl("y ~ m1 + m2 + x + p", syn, fixed = TRUE)))
+  expect_equal(sum(grepl("x + p", syn, fixed = TRUE)), 1L) # only the (diff, cvf = TRUE) leak row
   expect_true(all(is.na(res$gap)))
+  expect_true("gap_column" %in% names(res))
   expect_error(genv$gate_product_null(spy, "colon", reps = 1, n = 50, mutant = "bogus", cores = 1))
 })
 

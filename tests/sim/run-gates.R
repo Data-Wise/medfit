@@ -118,7 +118,9 @@ verdict_gate <- function(gate, d, s) {
     "product-null" = c("xdist", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
     "product-null-colon" = c("xdist", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
     "product-fixed-var" = c("xdist", "config", "expect", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
+    "product-fixed-var-colon" = c("xdist", "config", "expect", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
     "product-corr" = c("design", "cvf", "path", "expect", "gap"),
+    "product-corr-colon" = c("design", "cvf", "path", "expect", "gap", "gap_column", "err"),
     "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok")
   )
   if (is.null(needs[[gate]])) {
@@ -271,18 +273,23 @@ mutate <- function(gate, kind, d) {
   }
   if (kind == "tolerance") {
     if (gate %in% c("product-null", "product-null-colon")) d$reject05[1] <- 0.5
-    if (gate == "product-fixed-var") d$reject05[which(d$expect == "calibrated")[1]] <- 0.5
-    if (gate == "product-corr") d$gap[which(d$expect == "match")[1:3]] <- 1e-2
+    if (gate %in% c("product-fixed-var", "product-fixed-var-colon")) {
+      d$reject05[which(d$expect == "calibrated")[1]] <- 0.5
+    }
+    if (gate %in% c("product-corr", "product-corr-colon")) d$gap[which(d$expect == "match")[1:3]] <- 1e-2
     if (gate == "four-way-kat") d$bias_z[1:3] <- 9
   }
   if (kind == "failed") {
-    if (gate %in% c("product-null", "product-null-colon", "product-fixed-var", "four-way-kat")) d$reps_ok[1] <- 0
-    if (gate == "product-corr") d$gap[1] <- NA_real_
+    if (gate %in% c("product-null", "product-null-colon", "product-fixed-var", "product-fixed-var-colon",
+                    "four-way-kat")) {
+      d$reps_ok[1] <- 0
+    }
+    if (gate %in% c("product-corr", "product-corr-colon")) d$gap[1] <- NA_real_
   }
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
   if (kind == "missing") {
-    # the product-term and four-way gates have 2 to 63 rows: drop the last one, so only the row-count check can reject
+    # the product-term and four-way gates have 2 to 84 rows: drop the last one, so only the row-count check can reject
     new_gate <- gate %in% names(product_gate_rules) # nolint: object_usage_linter.
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
   }
@@ -450,7 +457,10 @@ scripts <- c(
   reliability = "tests/sim/sem-reliability.R",
   "product-null" = "tests/sim/exo-product-null.R", "product-null-colon" = "tests/sim/exo-product-null-colon.R",
   "product-fixed-var" = "tests/sim/exo-product-fixed-var.R",
-  "product-corr" = "tests/sim/product-correlated-residuals.R", "four-way-kat" = "tests/sim/four-way-known-answer.R"
+  "product-fixed-var-colon" = "tests/sim/exo-product-fixed-var-colon.R",
+  "product-corr" = "tests/sim/product-correlated-residuals.R",
+  "product-corr-colon" = "tests/sim/product-correlated-residuals-colon.R",
+  "four-way-kat" = "tests/sim/four-way-known-answer.R"
 )
 
 # ---- main ----

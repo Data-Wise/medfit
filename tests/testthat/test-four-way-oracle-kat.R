@@ -72,12 +72,28 @@ test_that("the known-answer tolerance shrinks with the number of replications an
   expect_gt(fwo_kat_tolerance(1e6)$se, 0.03)
 })
 
-test_that("native route known answer: components and SEs through the `:` term", {
-  skip_if_not(fwo_native_available(), "the `:` product term does not parse in this build (0.10.0 plan U1-U3)")
+test_that("native route known answer: components and SEs through the `:` term, unweighted and weighted", {
+  expect_true(fwo_native_available())
   truth <- fwo_kat_truth()
-  des <- fwo_kat_design(400, 7, "c1", FALSE)
-  r <- fwo_kat_run(function(d, covs, w, ms) fwo_route_native(d, covs, w, ms), des, truth, 0.5, 150)
-  tol <- fwo_kat_tolerance(150)
-  expect_lt(max(abs(r$bias_z)), tol$z)
-  expect_lt(max(abs(r$se_ratio - 1)), tol$se)
+  for (wt in c(FALSE, TRUE)) {
+    des <- fwo_kat_design(400, if (wt) 8 else 7, "c1", wt)
+    reps <- 200
+    se_type <- if (wt) "sandwich" else "model"
+    r <- fwo_kat_run(function(d, covs, w, ms) fwo_route_native(d, covs, w, ms, se_type = se_type), des, truth, 0.5,
+                     reps)
+    tol <- fwo_kat_tolerance(reps)
+    expect_equal(r$reps_ok, rep(reps, 7))
+    expect_lt(max(abs(r$bias_z)), tol$z)
+    expect_lt(max(abs(r$se_ratio - 1)), tol$se)
+  }
+})
+
+test_that("planted: the known-answer rule fails the native route for dropped weights", {
+  truth <- fwo_kat_truth()
+  des <- fwo_kat_design(400, 8, "c1", TRUE)
+  reps <- 200
+  tol <- fwo_kat_tolerance(reps)
+  # an unweighted native fit on weighted data (covariate-dependent weights) is biased for the weighted truth
+  bad <- fwo_kat_run(function(d, covs, w, ms) fwo_route_native(d, covs, NULL, ms), des, truth, 0.3, reps)
+  expect_failure(expect_lt(max(abs(bad$bias_z)), tol$z))
 })

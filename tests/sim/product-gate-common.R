@@ -4,8 +4,11 @@
 # PATH. The gates reach the product through a precomputed data column (`PRODUCT_PATH=column`, the default): the model
 # writes `p` and the data holds `p = x * w`. The model-fitting function is an argument of each gate
 # (`fit_fun(syntax, data)`, default `fit_sem()`), and `PRODUCT_PATH=colon` writes the product as `x:w` and drops the
-# column from the data, so the same gates run through the `:` path (the null gate does, as gates.csv row
-# "product-null-colon").
+# column from the data, so the same gates run through the `:` path. Each of the three exogenous/endogenous product
+# gates has a `-colon` twin (gates.csv rows "product-null-colon", "product-fixed-var-colon", "product-corr-colon";
+# entry scripts exo-product-null-colon.R, exo-product-fixed-var-colon.R, product-correlated-residuals-colon.R) that
+# writes results under its own prefix; the column-path rows stay as the control (they carry the evidence the colon
+# path cannot reproduce: the `fixvar` configuration and the SUR leak of a free residual covariance).
 
 # Product term as written in a model: the column name, or the `:` spelling of its factors.
 product_term <- function(path, a, b) if (identical(path, "colon")) paste0(a, ":", b) else "p"
@@ -14,6 +17,9 @@ product_term <- function(path, a, b) if (identical(path, "colon")) paste0(a, ":"
 product_name <- function(path, a, b) {
   if (identical(path, "colon")) paste(sort(c(a, b), method = "radix"), collapse = ":") else "p"
 }
+
+# Gate name and results prefix for a path: the `:` path writes under "<base>-colon".
+product_path_suffix <- function(path) if (identical(path, "colon")) "-colon" else ""
 
 # Substitute the product term for the placeholder `P` in a model template.
 product_syntax <- function(template, term) gsub("\\bP\\b", term, template)
@@ -99,10 +105,10 @@ rule_product_fixed_var <- function(d, s) {
   }
   cal <- d$expect == "calibrated"
   mis <- d$expect == "miscalibrated"
-  # the colon path cannot write the `fixvar` configuration (no `~~` statement on a product), so it has two rows fewer
-  n_exp <- s$expected_rows - if ("path" %in% names(d) && all(d$path == "colon")) 2L else 0L
+  # the colon path cannot write the `fixvar` configuration (no `~~` statement on a product), so its gates.csv row
+  # ("product-fixed-var-colon") expects two rows fewer than the column row
   rbind(
-    .pg_chk("rows", nrow(d) == n_exp, sprintf("%d rows, expected %d", nrow(d), n_exp)),
+    .pg_chk("rows", nrow(d) == s$expected_rows, sprintf("%d rows, expected %d", nrow(d), s$expected_rows)),
     .pg_chk("fitted replications", all(d$reps_ok >= 0.99 * d$reps),
             sprintf("smallest fraction %s, need at least 0.99", .pg_fmt(min(d$reps_ok / d$reps)))),
     .pg_chk("calibrated rows: rejection at .05", all(abs(d$reject05[cal] - 0.05) <= s$tol_est),
@@ -130,21 +136,34 @@ rule_product_corr <- function(d, s) {
   # On the colon path rule 9 refuses a model with a free residual covariance: a NA gap there is the rule working, but
   # only when the recorded error names the feature (an unrelated failure is a failed run, not a refusal).
   err <- if ("err" %in% names(d)) as.character(d$err) else rep("", nrow(d))
-  refused <- d$path == "colon" & d$cvf & is.na(d$gap) & grepl("residual covariance", err, ignore.case = TRUE)
+  colon <- d$path == "colon"
+  refused <- colon & d$cvf & is.na(d$gap) & grepl("residual covariance", err, ignore.case = TRUE)
   match_rows <- d$expect == "match" & !is.na(d$gap)
-  leak <- d$expect == "leak" & !refused
-  share <- if (any(leak)) mean(d$gap[leak] >= s$tol_se, na.rm = TRUE) else 1
-  rbind(
+  # A refused row has no colon-path gap; when the frame carries `gap_column` (the same fit through the precomputed
+  # column, which has no rule 9) the leak is judged on that, so the refusal is shown to be warranted and a gate whose
+  # data no longer leaks (the `nocorr` mutant) still fails on the colon path.
+  gap_leak <- if ("gap_column" %in% names(d)) ifelse(refused, d$gap_column, d$gap) else ifelse(refused, NA, d$gap)
+  leak <- d$expect == "leak" & !is.na(gap_leak)
+  leak_missing <- d$expect == "leak" & is.na(gap_leak) & (!refused | "gap_column" %in% names(d))
+  share <- if (any(leak)) mean(gap_leak[leak] >= s$tol_se) else 1
+  out <- rbind(
     .pg_chk("rows", nrow(d) == s$expected_rows, sprintf("%d rows, expected %d", nrow(d), s$expected_rows)),
     .pg_chk("fitted runs", !anyNA(d$gap[!refused]),
             sprintf("%d runs without a gap, %d refused by rule 9", sum(is.na(d$gap[!refused])), sum(refused))),
     .pg_chk("match rows: SEM equals OLS", any(match_rows) && isTRUE(max(d$gap[match_rows]) <= s$tol_est),
             sprintf("%d rows, max gap %s, limit %s", sum(match_rows),
                     if (any(match_rows)) .pg_fmt(max(d$gap[match_rows])) else "none", .pg_fmt(s$tol_est))),
-    .pg_chk("leak rows: SEM differs from OLS", isTRUE(share >= s$min_pass),
+    .pg_chk("leak rows: SEM differs from OLS", isTRUE(share >= s$min_pass) && !any(leak_missing),
             sprintf("%.0f%% of %d rows at or above %s, need at least %.0f%%", 100 * share, sum(leak),
                     .pg_fmt(s$tol_se), 100 * s$min_pass))
   )
+  if (any(colon)) {
+    # every free residual covariance on the colon path must be refused by rule 9, and by nothing else
+    cvf <- colon & d$cvf
+    out <- rbind(out, .pg_chk("rule 9 refuses every free residual covariance", any(cvf) && all(refused[cvf]),
+                              sprintf("%d of %d refused", sum(refused[cvf]), sum(cvf))))
+  }
+  out
 }
 
 # gate "four-way-kat": rows scenario x route x component. bias_z = (mean estimate - truth) / (SD / sqrt(reps));
@@ -171,8 +190,8 @@ rule_four_way_kat <- function(d, s) {
 
 product_gate_rules <- list(
   "product-null" = rule_product_null, "product-null-colon" = rule_product_null,
-  "product-fixed-var" = rule_product_fixed_var,
-  "product-corr" = rule_product_corr, "four-way-kat" = rule_four_way_kat
+  "product-fixed-var" = rule_product_fixed_var, "product-fixed-var-colon" = rule_product_fixed_var,
+  "product-corr" = rule_product_corr, "product-corr-colon" = rule_product_corr, "four-way-kat" = rule_four_way_kat
 )
 
 # Used by each script: print its verdict from its own results and return the exit status (0 met, 1 not met).
