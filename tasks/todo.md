@@ -69,5 +69,5 @@ Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/S
 
 ## 0.9.0 release gates (carried from the archived plan)
 - [ ] **R1** Say whether the 1e-12 frozen tolerance is relative; confirm the fixture on the ubuntu CI BLAS
-- [ ] **R2** `.sem_seed()` must not hash the `m` vector when the mean flag is off; add a frozen retry case
+- [x] **R2** (done: `.sem_seed()` never hashed `m`, identical to 0.8.0; pinned by a test) `.sem_seed()` must not hash the `m` vector when the mean flag is off; add a frozen retry case
 - [ ] **Release decision** (version bump and tag are release engineering's)
