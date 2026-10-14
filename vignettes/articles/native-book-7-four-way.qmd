@@ -359,6 +359,43 @@ stopifnot(max(abs(se_compare["by_hand", ] / se_compare["engine", ] - 1)) < 1e-4,
                     se_compare["engine", c("cde", "int_med", "pie", "nie")])) < 1e-6)
 ```
 
+### What these standard errors condition on
+
+The gradient table treats $\bar c$ as a constant, so these are standard errors *conditional on the observed
+covariates*. Every component is defined by averaging over the covariate distribution, and $\bar c$ is estimated: it is
+the sample mean (the weighted mean under case weights), a random quantity with variance $\operatorname{Var}(c)/n$. A
+population-average standard error would add the derivative of each component with respect to $\bar c$. That derivative
+is $\theta_3\gamma$ for INT<sub>ref</sub>, and so also for the NDE and the TE; the other components do not contain
+$\bar c$. Under the model the coefficient estimates are conditionally unbiased given the covariates, so they are
+uncorrelated with $\bar c$, and the omitted variance simply adds:
+$\operatorname{Var}_{\text{population}} \approx \operatorname{Var}_{\text{conditional}} + (\theta_3\gamma)^2 \operatorname{Var}(c)/n$. The
+engine does not include the second term. How much it matters depends on $\theta_3\gamma$:
+
+```{r}
+#| label: conditional-se
+omitted_sd <- abs(t3 * g) * sd(d$covariate2) / sqrt(n)
+cond_se <- se_compare["engine", c("int_ref", "nde", "te")]
+rbind(conditional_se = cond_se,
+      omitted_term_sd = omitted_sd,
+      population_se = sqrt(cond_se^2 + omitted_sd^2),
+      relative_increase = sqrt(cond_se^2 + omitted_sd^2) / cond_se - 1) |> signif(3)
+```
+
+```{r}
+#| label: conditional-se-check
+#| include: false
+stopifnot(is.finite(omitted_sd), omitted_sd > 0, omitted_sd < 0.1 * cond_se[["int_ref"]],
+          sqrt(cond_se[["int_ref"]]^2 + omitted_sd^2) / cond_se[["int_ref"]] - 1 < 0.01)
+```
+
+Here $\theta_3\gamma$ is small, so the omitted term is a fraction of a percent of the standard error and the two readings
+agree to the digits shown. With a larger interaction or a stronger covariate effect on the mediator the term grows with
+$(\theta_3\gamma)^2$. Read the intervals for INT<sub>ref</sub>, the NDE and the TE as intervals for the effect in
+*this* covariate sample, not for the effect in the population the sample came from. CDE, INT<sub>med</sub>, PIE and the
+NIE do not depend on $\bar c$, so for them the two readings agree. For a population-average interval, resample rows
+with `bootstrap_mediation(method = "nonparametric")`, with a statistic that refits the model and extracts the effect,
+which estimates $\bar c$ again in every draw.
+
 The hand computation and the engine agree. The third row is the **planted defect**: the same delta method with the
 covariate term dropped. It changes the INT<sub>ref</sub>, NDE and TE standard errors and leaves the others alone, which
 is what the gradient table predicts. Here it makes them **larger**: the dropped terms are $\theta_3^2 \bar c^2
