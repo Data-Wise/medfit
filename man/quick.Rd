@@ -19,7 +19,7 @@ Invisibly returns x
 }
 \description{
 Print a one-line summary of mediation results, perfect for quick checks
-or ADHD-friendly workflows.
+or a compact report line.
 }
 \details{
 Prints a compact one-line summary showing:

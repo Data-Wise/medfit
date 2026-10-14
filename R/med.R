@@ -176,7 +176,7 @@ med <- function(data,
 #'
 #' @description
 #' Print a one-line summary of mediation results, perfect for quick checks
-#' or ADHD-friendly workflows.
+#' or a compact report line.
 #'
 #' @param x A [MediationData] or [SerialMediationData] object (or result from
 #'   [med()]). Other classes error; use `print()` or `summary()` for them.
