@@ -7,7 +7,7 @@
 # PATH: PRODUCT_PATH=column (the default) reaches the product through a PRECOMPUTED DATA COLUMN (`p = x * w`);
 # PRODUCT_PATH=colon writes `x:w` in the model and drops the column, so the product goes through the `:` path (U6
 # null gate; `tests/sim/exo-product-null-colon.R` sets it for tests/sim/run-gates.R). The model-fitting function is
-# an argument (`fit_fun`, default `fit_sem()`). The chi-square is read with the test-only `.sem_chisq()`, never
+# an argument (`fit_fun`, default `fit_sem()`). The chi-square is read with the internal `.sem_chisq()`, never
 # `glance()`, which reports NA for a model whose test is invalid (so the endogenous mutant is measured, not hidden).
 #
 # Rule (tests/sim/gates.csv rows "product-null" and "product-null-colon", implemented once in
