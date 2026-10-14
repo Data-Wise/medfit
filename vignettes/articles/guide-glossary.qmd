@@ -101,7 +101,7 @@ is a large-cluster approximation.
 | **plugin** | the point estimate only, with no interval | [Bootstrap Inference](bootstrap.html) |
 | **percentile interval** | the 2.5th and 97.5th percentiles of the bootstrap draws, for a 95% interval | [Bootstrap Inference](bootstrap.html) |
 | **sandwich** | a robust standard error, used with weights (`se_type = "sandwich"`); HC3 for the `glm` engine, HC0-type for the native engine | [Weights and robust SEs](model-weights.html) |
-| **MBCO** | the minimum of two likelihood-ratio tests, for the hypothesis that an indirect effect is zero (`mbco_sem()`) | [constraints and MBCO](model-native-constraints.html) |
+| **MBCO** | the minimum over the paths of the likelihood-ratio tests (two or k paths), for the hypothesis that an indirect effect is zero (`mbco_sem()`) | [constraints and MBCO](model-native-constraints.html) |
 
 ## The native engine
 
