@@ -47,9 +47,9 @@
 #'   are wrong there. `fit_sem()` also warns once for any product term fitted
 #'   without `se_type = "sandwich"`. `logLik()`, `AIC()` and `BIC()` stay
 #'   defined, but the values of a fit with a product are not comparable with
-#'   those of a fit without one (the product column enters the likelihood), and
-#'   `AIC(fit_a, fit_b)` does not check; `anova()` and [mbco_sem()] refuse such
-#'   a pair.
+#'   those of a fit without one (the product column enters the likelihood), so
+#'   `AIC(fit_a, fit_b)`, `BIC()`, `anova()` and [mbco_sem()] refuse such a
+#'   pair.
 #' * `anova()` tests nested fits by the likelihood-ratio statistic
 #'   \eqn{n (F_r - F_f)}{n * (F_r - F_f)} on the difference in model degrees
 #'   of freedom: `anova(fit_full, fit_restricted)`, or several fits, each tested

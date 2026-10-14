@@ -1,6 +1,6 @@
 # Native limits and glossary statements (docs audit batch 3):
-# - AIC()/BIC() of a fit with a product are not comparable with a fit without one, and multi-fit AIC() does not check
-#   (documented in five places; the numbers below are the probe the docs quote);
+# - AIC()/BIC() refuse a fit with a product against a fit without one (observed variables differ; documented in
+#   five places);
 # - the glossary entries for the native mean structure, `fixed_x`, products and `anova()` are true and link to
 #   headings that exist.
 
@@ -12,29 +12,38 @@ limits_syntax <- function(extra = "") {
 
 limits_fit <- function(model) suppressWarnings(fit_sem(model, medfit::mediation_demo))
 
-test_that("AIC/BIC of a product fit are not comparable with a no-product fit, and multi-fit AIC() does not refuse", {
+test_that("AIC/BIC refuse a product fit against a no-product fit; a comparable pair still works", {
   with_x <- limits_fit(limits_syntax(" + treatment:mediator1"))
   without <- limits_fit(limits_syntax())
-  # Same outcome, same data rows: only the product column differs.
-  expect_no_error(aic <- stats::AIC(with_x, without))
-  expect_no_error(bic <- stats::BIC(with_x, without))
-  penalty <- 2 * (aic$df[1] - aic$df[2])
-  gap <- aic$AIC[1] - aic$AIC[2]
-  # The product column adds a variable to the joint likelihood, so the gap is far from the parameter penalty
-  # (the docs quote 3934.7 against 2994.1 for the same outcome on the demo data).
-  expect_gt(gap - penalty, 500)
-  expect_gt(bic$BIC[1] - bic$BIC[2], 500)
-  # Positive control: a comparable pair (one more path among variables already in the model) stays near the penalty.
+  # Same outcome, same data rows: only the product column differs (the docs quote AIC 3934.7 against 2994.1).
+  expect_error(stats::AIC(with_x, without), "different observed variables")
+  expect_error(stats::BIC(with_x, without), "treatment:mediator1|mediator1:treatment")
+  expect_error(stats::AIC(without, with_x), "different observed variables")
+  expect_error(anova(without, with_x))
+  # Positive control: a pair over the same observed variables (one more path among variables already in the model)
+  # is compared, and its gap stays near the parameter penalty.
   comparable <- limits_fit(limits_syntax("\noutcome ~ covariate1"))
   aic_c <- stats::AIC(comparable, without)
   expect_lt(abs(aic_c$AIC[1] - aic_c$AIC[2] - 2 * (aic_c$df[1] - aic_c$df[2])), 100)
-  # anova() refuses the pair, as the docs say.
-  expect_error(anova(without, with_x))
+  expect_no_error(stats::BIC(comparable, without))
 })
 
-test_that("the not-comparable sentence is in the five documented places, and the check can fail", {
+test_that("planted: without the observed-variable guard the incomparable AIC is returned", {
+  fx_skip_covr()
+  with_x <- limits_fit(limits_syntax(" + treatment:mediator1"))
+  without <- limits_fit(limits_syntax())
+  mutated <- sem_mutate(.sem_check_same_observed, "if (!all(vapply(obs[-1L], identical, logical(1), obs[[1L]]))) {",
+                        "if (FALSE) {")
+  local_mocked_bindings(.sem_check_same_observed = mutated)
+  aic <- stats::AIC(with_x, without)
+  expect_gt(aic$AIC[1] - aic$AIC[2] - 2 * (aic$df[1] - aic$df[2]), 500)
+})
+
+test_that("the refusal sentence is in the five documented places, and the check can fail", {
   has_sentence <- function(txt) {
-    any(grepl("not comparable", txt, fixed = TRUE)) && any(grepl("AIC(fit_a, fit_b)", txt, fixed = TRUE))
+    all(vapply(c("not comparable", "refuse such a pair", "AIC(fit_a, fit_b)"), function(p) {
+      any(grepl(p, txt, fixed = TRUE))
+    }, logical(1)))
   }
   files <- c(
     root_path("vignettes", "articles", "model-native.qmd"),
@@ -46,10 +55,10 @@ test_that("the not-comparable sentence is in the five documented places, and the
   testthat::skip_if_not(all(file.exists(files)), "source files are not available (installed or built package)")
   for (f in files) {
     txt <- paste(readLines(f, warn = FALSE), collapse = " ")
-    txt <- gsub("(^|\\s)#'\\s", " ", txt)
+    txt <- gsub("\\s+", " ", gsub("(^|\\s)#'\\s", " ", txt))
     expect_true(has_sentence(txt), info = f)
     # Planted defect: with the sentence removed the check fails.
-    expect_false(has_sentence(gsub("not comparable", "comparable", txt, fixed = TRUE)), info = f)
+    expect_false(has_sentence(gsub("refuse such a pair", "rank such a pair", txt, fixed = TRUE)), info = f)
   }
 })
 

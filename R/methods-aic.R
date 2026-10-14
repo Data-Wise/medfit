@@ -1,9 +1,10 @@
 # AIC() and BIC() for SEMFit.
 #
-# A fit with `fixed_x` has a likelihood that is conditional on its fixed block, so two such values are comparable
-# only when the fixed sets and the estimation data agree. Base R's `AIC()`/`BIC()` reach `logLik()` through their
-# default methods and would rank incompatible likelihoods; these methods refuse instead. They dispatch on the first
-# argument only (a base-R limit): `AIC(lm_fit, sem_fit)` never reaches this code.
+# Two values are comparable only when the fits share their observed variables (a product term adds a column to the
+# likelihood). A fit with `fixed_x` has a likelihood that is conditional on its fixed block, so two such values are
+# comparable only when the fixed sets and the estimation data agree. Base R's `AIC()`/`BIC()` reach `logLik()`
+# through their default methods and would rank incompatible likelihoods; these methods refuse instead. They dispatch
+# on the first argument only (a base-R limit): `AIC(lm_fit, sem_fit)` never reaches this code.
 
 # The fixed set of a fit, sorted: what its likelihood conditions on.
 .sem_fixed_signature <- function(fit) {
@@ -47,6 +48,22 @@
   invisible(TRUE)
 }
 
+# AIC() and BIC() only: fits over different observed variables (a product column is one) have likelihoods of
+# different data, so they would rank incomparable values. (`anova()` has its own message for this.)
+.sem_check_same_observed <- function(models) {
+  if (length(models) < 2L) {
+    return(invisible(TRUE))
+  }
+  obs <- lapply(models, function(m) sort(m@internals$ram$obs))
+  if (!all(vapply(obs[-1L], identical, logical(1), obs[[1L]]))) {
+    stop("the fits use different observed variables (",
+         paste(sprintf("%s: %s", names(models), vapply(obs, paste, character(1), collapse = ", ")), collapse = "; "),
+         "): their likelihoods describe different data (a product term adds a column), so AIC and BIC cannot be ",
+         "compared", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 .sem_ic_table <- function(object, dots, exprs, penalty) {
   models <- c(list(object), dots)
   nm <- vapply(exprs, function(e) if (is.language(e)) paste(deparse(e), collapse = "") else NA_character_, "")
@@ -58,6 +75,7 @@
     stop("a SEMFit with `fixed_x` has a conditional likelihood and cannot be compared with a model of another class: ",
          paste(names(models)[!sem], collapse = ", "), call. = FALSE)
   }
+  .sem_check_same_observed(models[sem])
   .sem_check_comparable(models[sem])
   lls <- lapply(models, stats::logLik)
   df <- vapply(lls, attr, numeric(1), "df")
