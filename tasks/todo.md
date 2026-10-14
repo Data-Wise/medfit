@@ -7,7 +7,7 @@ Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/S
   - Acceptance: result (error / override / stays free) written to the GRILL open questions
   - Verify: a 10-line script in `planning/specs/evidence/native-fixed-x-2026-10-13/` and its output
   - Files: that script, `GRILL-native-fixed-x-2026-10-13.md`
-- [ ] **V1** `fixed_x` argument, validation and errors (S1, S5)
+- [ ] **V1** (harness written 2026-10-13: tests fail for the intended reason) `fixed_x` argument, validation and errors (S1, S5)
   - Acceptance: `FALSE` unchanged; `TRUE`/names resolve against `ram$ov_x`; a non-exogenous name, an explicit statement or a tie to a structural parameter errors naming the term; resolved set stored in `SEMFit@internals`
   - Verify: `devtools::test(filter = "sem-fixed-x-args")`; frozen gate
   - Files: `R/fit-sem.R`, `R/sem-fit.R`, `R/sem-model.R`, `tests/testthat/test-sem-fixed-x-args.R`
