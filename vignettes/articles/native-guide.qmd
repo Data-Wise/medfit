@@ -47,7 +47,9 @@ d <- mediation_demo
 | `y1, y2 ~ x` | comma shorthand (a medfit extension; lavaan reads it differently) |
 
 Exogenous variables get free variances and covariances, as lavaan does with
-`fixed.x = FALSE`. Both sides of a constraint and the right side of a definition
+`fixed.x = FALSE`; `fixed_x = TRUE` in `fit_sem()` fixes them at the sample moments
+instead (fewer parameters, the same structural estimates, a conditional log likelihood).
+Both sides of a constraint and the right side of a definition
 are arithmetic expressions in the labels (`+ - * / ^`, parentheses, `exp`, `log`,
 `sqrt`, `abs`, `min`, `max`, `pnorm`, `qnorm`, and a few more).
 

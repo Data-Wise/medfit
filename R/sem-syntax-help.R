@@ -31,7 +31,12 @@
 #' exist, and `n_starts` raises the number of starts. Labels used in a constraint
 #' or a definition must be defined in the model. A constraint with no free
 #' parameter is an error. Exogenous variables are given free
-#' variances and covariances, as lavaan does with `fixed.x = FALSE`. Any
+#' variances and covariances, as lavaan does with `fixed.x = FALSE`; `fixed_x = TRUE`
+#' (or a vector of names) in [fit_sem()] fixes the moments of the selected ones at the
+#' sample values instead, as `fixed.x = TRUE` does. Unlike lavaan, which keeps an
+#' explicit `x ~~ x` or `x ~ 1` free under `fixed.x = TRUE` and lets the degrees of
+#' freedom move, medfit stops with an error when the model has a statement on a
+#' selected variable's moments. Any
 #' intercept statement (`y ~ 1`, or `1` as a term: `y ~ 1 + x`) turns the mean structure
 #' on and frees every observed intercept the model does not write, as lavaan does;
 #' `y ~ 0*1` then restricts the mean of `y` to 0 (one degree of freedom), and

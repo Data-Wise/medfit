@@ -1,6 +1,24 @@
 # medfit (development version)
 
+## New features
+
+* `fit_sem(fixed_x = )` (and `fit_mediation(engine = "native", engine_args = list(fixed_x = ))`) fixes the mean,
+  variance and covariances of exogenous observed variables at their sample values, as lavaan's `fixed.x = TRUE`
+  does. `TRUE` selects every exogenous observed variable (product columns included) and a character vector selects
+  any subset; the default stays `FALSE`. The structural estimates, their standard errors (model-based and
+  sandwich), the degrees of freedom and the chi-square do not change; the parameter count falls, and the
+  fixed rows stay in `@table`, `tidy()` and `summary()` with a `fixed_x` flag and no standard error. On one
+  simulated model with 30 covariates (n = 400, Apple M5 Pro) the fit went from 561 to 65 parameters and from
+  about 5 seconds to about 0.2 seconds; your timing will differ.
+
 ## Behavior changes
+
+* With `fixed_x`, `logLik()`, `AIC()` and `BIC()` are conditional on the fixed variables (lavaan's value), so
+  `anova()`, `mbco_sem()` and multi-fit `AIC()`/`BIC()` now stop when the fits' fixed sets or data differ. A
+  `(co)variance` or intercept statement on a selected variable is an error; lavaan keeps such a statement free and
+  lets the degrees of freedom move. `glance()` for a `SEMFit` gains a `fixed_x` column (`""` when nothing is
+  fixed), and `print()` and `summary()` say what the log likelihood is conditional on. `fixed_x = FALSE` results
+  are unchanged.
 
 * A fixed intercept, `y ~ 0*1`, is now a restriction in the native engine. 0.8.0 dropped the row and
   returned the covariance-only fit; 0.9.0 reads it as "the mean of `y` is 0", which costs one degree of freedom,
