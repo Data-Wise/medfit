@@ -20,7 +20,7 @@ coverage claim beyond what the package's tests show.
 
 | Your situation | Use | Why |
 |---|---|---|
-| A quick look, one mediator, a decent sample | `tidy(fit, conf.int = TRUE)` or `confint()` | delta method: instant, and assumes the estimate is roughly normal |
+| A quick look, one mediator, a decent sample | `tidy(fit, conf_int = TRUE)` or `confint()` | delta method: instant, and assumes the estimate is roughly normal |
 | The indirect effect `a * b`, a final result | parametric bootstrap: `med(boot = TRUE)` | draws from the estimated normal distribution of the paths, so the skew of a product shows up |
 | You doubt that normality | nonparametric bootstrap | resamples rows and refits, so it does not rely on a normal approximation |
 | Serial mediators fitted from `lm` objects | nonparametric bootstrap, or a lavaan fit | the lm route sets the covariances among chain paths to zero; see [Serial mediation](model-serial.html) |
@@ -49,7 +49,7 @@ fit <- fit_mediation(fy, fm, data = mediation_demo,
 
 ```{r}
 #| label: delta
-tidy(fit, type = "effects", conf.int = TRUE)[1, ]
+tidy(fit, type = "effects", conf_int = TRUE)[1, ]
 ```
 
 **Parametric bootstrap** (what `med(boot = TRUE)` runs). The statistic is the

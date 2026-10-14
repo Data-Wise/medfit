@@ -1,58 +1,77 @@
-# medfit 0.8.0 task list
+# Todo: `fixed_x` (bundled into 0.9.0)
 
-Plan: `tasks/plan.md` (task numbers match). Gates and commands: "Verification harness" in the plan. Update `.STATUS` at each checkpoint.
+**Status (2026-10-13):** merged to `dev` as #175 (`1023520`, with the 0.9.0 mean structure, #174 `8681083`); unreleased, DESCRIPTION still 0.8.0. Open below: the F-C doc-currency report, the 0.9.0 release gate R1 and the release decision.
 
-## Phase 0: Evidence and harness
-- [x] T1 Re-derive the S1 findings as committed fixtures (`planning/specs/evidence/native-sem-2026-10-11/`)
-- [x] T2 Trigger `rhub.yaml` once; record the result in `.STATUS`
-- [x] T3 Harness driver `tests/sim/run-gates.R` (`--fast`, `--sim`, `--mutants`); verdicts from results CSVs and `tests/sim/gates.csv`, four "exits 0 but bad" fixtures, a reliability threshold
-- [x] T3b Harden the gate driver (Codex findings 1 and 4): `--sim` needs exit status 0 and a results file written during the run; stationarity checks both margins against `.sem_stat_tol` on far runs (distance saved in the CSV); four new mutants (spec `planning/specs/SPEC-gate-harness-hardening-2026-10-11.md`)
+Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/SPEC-native-fixed-x-2026-10-13.md) | Branch `feature/native-fixed-x` is created only on request. Test-first: write the failing test, then the code. After any edit to `.sem_eval`, `.sem_df`, `logLik` or `.sem_complete`, rerun the frozen gate (`test-sem-frozen-v080.R`).
 
-## Phase 1: Foundations (W1, W2)
-- [x] T4 Named errors for `Y ~ Y` and duplicate `Y ~ X`
-- [x] T5 Named error for infeasible bounds (F2)
-- [x] T5b `fit_mediation()` applies `subset`/`weights`/`offset`/`etastart`/`mustart` to the original rows (unreleased #138 regression on `dev`; own branch `fix/glm-observation-level-args`, merges before the release PR; spec `planning/specs/SPEC-glm-observation-level-args-2026-10-11.md`)
-- [x] T6 Accept consistent redundant inequality sets (F1)
-- [x] T7 Port the NNLS multiplier-sign gate (needs T1)
-- [x] T8 Unify the bound verdict (F4) + NEWS (needs T7) (#146)
-- [x] T8b Close the F4 gap found by T9 (ledger G14, defects 1, 2, 5): the projected gate's bound test uses the plain gate's `abs(g_k)/sqrt(H_kk)` statistic and a positive-definite guard, and blames a bound only when its own statistic exceeds `.sem_stat_tol`; tests with an indefinite Hessian and a bound beside a wrong-sign inequality (needs T8)
-- [x] T9 Close S1 with a fresh-context review (needs T7, T8): review recorded as ledger G14; F4 closed by T8b (#147)
+## Phase 0: groundwork
+- [x] **R0** (done 2026-10-13: lavaan keeps an explicit statement free and its df moves; medfit errors, see the GRILL) Probe lavaan 0.7.2: explicit `x ~~ x` under `fixed.x = TRUE`
+  - Acceptance: result (error / override / stays free) written to the GRILL open questions
+  - Verify: a 10-line script in `planning/specs/evidence/native-fixed-x-2026-10-13/` and its output
+  - Files: that script, `GRILL-native-fixed-x-2026-10-13.md`
+- [x] **V1** (harness written 2026-10-13: tests fail for the intended reason) `fixed_x` argument, validation and errors (S1, S5)
+  - Acceptance: `FALSE` unchanged; `TRUE`/names resolve against `ram$ov_x`; a non-exogenous name, an explicit statement or a tie to a structural parameter errors naming the term; resolved set stored in `SEMFit@internals`
+  - Verify: `devtools::test(filter = "sem-fixed-x-args")`; frozen gate
+  - Files: `R/fit-sem.R`, `R/sem-fit.R`, `R/sem-model.R`, `tests/testthat/test-sem-fixed-x-args.R`
 
-### Checkpoint A
-- [x] Full unit suite, lint, H-parity, H-constrained, strict `check` pass (counts reported; `.STATUS` progress_0_8_0, 2026-10-11)
-- [x] rhub result recorded (`.STATUS` rhub_0_8_0_t2)
-- [ ] Human review
+## Phase 1: the core path
+- [x] **V2** `fixed_x = TRUE`, covariance-only, simple model, end to end (S2, S3, S6)
+  - Acceptance: flagged fixed rows in `@table`; values from the listwise sample after `.sem_sample()`; `ram$n_fixed_x` leaves `.sem_moments()` and `ram$q`; df equals the free fit's; structural estimates and SEs equal the free fit (1e-8 / 1e-6); `theta`/`vcov`/`coef()`/npar exclude fixed rows
+  - Verify: `devtools::test(filter = "sem-fixed-x-core")`; frozen gate
+  - Files: `R/sem-model.R`, `R/sem-fit.R`, `R/sem-ml.R`, `R/methods-sem.R`, `tests/testthat/test-sem-fixed-x-core.R`
+- [x] **Checkpoint F-A** (passed 2026-10-13)
+  - [x] lavaan `fixed.x = TRUE` parity: rows, npar, df 1, chi-square 9.188694 (reference model)
+  - [x] frozen gate bit-identical with `fixed_x = FALSE`
+  - [x] planted defect `countrestrict` fails the df test
+  - [ ] full suite green; review with you before Phase 2
 
-## Phase 2: `anova()` and SEMFit methods (W4)
-- [x] T10 `anova()` for nested `SEMFit`s with boundary-null guard (G9); refits start clean (refit-trap fixture) (#148)
-- [x] T11 `tidy()`, `glance()`, `confint()`; chi-square and df; decide `@converged` (#149: always TRUE for a returned fit, so `glance()` omits it)
-- [x] T12 One naming convention; align arguments with deprecation (needs T11) (#150: lavaan's unspaced names, loadings `eta=~m2`; `weights`/`object` with `lifecycle` warnings)
+## Phase 2: breadth (V3, V4, V5 independent)
+- [x] **V3** Subsets and pairing (S1, S4)
+  - Acceptance: every subset of {x, c1, c2} equals the free fit; `c1 ~~ c2` survives with explicit `~~` rows elsewhere; a product column selectable by name
+  - Verify: `devtools::test(filter = "sem-fixed-x-subsets")`; defect `droppair` fails
+  - Files: `R/sem-model.R`, `tests/testthat/test-sem-fixed-x-subsets.R`
+- [x] **V4** Mean structure and conditional logLik (S7)
+  - Acceptance: fixed means follow S2; logLik conditional and equal to lavaan's `fixed.x = TRUE`; `glance()$fixed_x` lists names; print/summary note present only when something is fixed
+  - Verify: `devtools::test(filter = "sem-fixed-x-loglik")`; defect `jointlik` fails
+  - Files: `R/methods-sem.R`, `R/sem-ml.R`, `tests/testthat/test-sem-fixed-x-loglik.R`
+- [x] **V5** Scale (S10)
+  - Acceptance: `.sem_shift_ok()` allows fixed-x intercept rows; fits with `TRUE` and a subset accepted at location mean/sd 0, 1e2, 1e3, 1e5 with estimates equal to location 0
+  - Verify: sweep test; defect `noshift` fails
+  - Files: `R/sem-fit.R`, `tests/testthat/test-sem-fixed-x-scale.R`
 
-### Checkpoint B
-- [ ] Unit, lint, strict `check` pass; `anova()` known answers and oracles green
-- [ ] Human review
+## Phase 3: robustness and guards
+- [x] **V6** Weights, sandwich, missing rows
+  - Acceptance: weighted moments (ML denominator); subset invariance for model-based and sandwich SEs, weighted and with missing rows
+  - Verify: `devtools::test(filter = "sem-fixed-x-weights")`
+  - Files: `R/sem-fit.R`, `R/sem-ml.R`, `tests/testthat/test-sem-fixed-x-weights.R`
+- [x] **V7** Comparisons refused (S8)
+  - Acceptance: `.sem_fixed_signature()`; `anova()`, `mbco_sem()` and multi-fit `AIC()`/`BIC()` error across different fixed sets or data naming the difference; same set compares; single-fit `AIC()` unchanged
+  - Verify: `devtools::test(filter = "sem-fixed-x-compare")`; defect `aicwarnonly` fails
+  - Files: `R/sem-anova.R`, `R/sem-mbco.R`, `R/methods-aic.R` (new), `NAMESPACE`/`R/zzz.R`, `tests/testthat/test-sem-fixed-x-compare.R`
+- [x] **V8** Plumbing and visibility (S6, S9)
+  - Acceptance: `fit_mediation(engine_args = list(fixed_x = ))` reaches the fit; `.sem_fit_branches()` and the `mbco_sem()` refit carry it; `extract_mediation()` unchanged; `tidy()`/`summary()` show fixed rows (flag, est, se NA)
+  - Verify: `devtools::test(filter = "sem-fixed-x-plumbing")` (mocked-binding capture of the refit call)
+  - Files: `R/fit-glm.R`, `R/sem-fit.R`, `R/sem-mbco.R`, `R/methods-tidy.R`, `tests/testthat/test-sem-fixed-x-plumbing.R`
+  - Open item (found 2026-10-13, not blocking): the `mbco_sem()` refit does not pass `fixed_x` (`R/sem-mbco.R:155-156` passes `meanstructure` only) and the plumbing test's mock sees `fit_sem()`'s own call first (`test-sem-fixed-x-plumbing.R:14-25`), so it cannot catch this. The statistic is unchanged (`test-sem-fixed-x-compare.R:16`).
+- [x] **Checkpoint F-B** (merged with #175; PR body: six planted defects, not five, each exit 1)
+  - [x] S1-S10 each covered by a passing test
+  - [x] the planted defects each fail the right test
+  - [x] full suite, lint (120 columns), strict `R CMD check` clean (PR #175: full suite 0 failures, strict check 0/0/0, CI 10/10)
 
-## Phase 3: Nonlinear constraints (W3)
-- [x] T13 Nonlinear equality `a*b == c` end to end (needs T9); includes the curved-constraint covariance oracle and a frozen-Jacobian mutant (#151: closures over validated call trees, central-difference Jacobian, projected covariance)
-- [x] T14 Exact k-branch split for zero products (needs T13); branch refits start clean (refit-trap fixture) (#152: up to 64 branches, clean default start each, `internals$branch`)
-- [x] T15 Product inequalities, `:=` names, best-of-n multi-start + NEWS (needs T13) (#153: `a*b > k`, Lagrangian-Hessian gate, best-of-n with spread warning)
-- [x] T16 Sums of products, best-effort (needs T15) (#154: best-effort, documented)
-- [x] T17 `mbco_sem()` for a product of k paths (needs T10) (#155: `mbco_sem(fit, paths = )`, minimum of k refits against chi-square(1))
-- [x] T18 Type I error gate `tests/sim/sem-mbco-k-size.R` (needs T17) (#156: size at most 0.055 at alpha 0.05, power 0.838, chi-square(2) mutant fails)
-- [x] T19 Nonlinear parity gate `tests/sim/sem-nonlinear-gate.R` (needs T14-T16); reports SE agreement, exits nonzero on failure (#157: 240 runs, four planted defects fail; #160 Newton polish: estimates within 1e-5 of the exact optimum, 5.5e-11 observed)
+## Phase 4: evidence and docs
+- [x] **V9** Gate script, timing table, OpenMx (OpenMx subset check: `test-sem-fixed-x-compare.R`, estimates 1e-4, SEs 1e-3)
+  - Acceptance: `tests/sim/sem-fixed-x-gate.R` RULE MET; each `MUTANT` exits 1; OpenMx agrees on a subset; 30-covariate timing table (n, hardware, free parameters before/after) recorded
+  - Verify: `Rscript tests/sim/sem-fixed-x-gate.R`; `MUTANT=<name> ...` for each defect
+  - Files: `tests/sim/sem-fixed-x-gate.R`, `planning/specs/evidence/native-fixed-x-2026-10-13/`
+- [x] **V10** Docs, NEWS and close-out (done in #175: NEWS, `?fit_sem`, `?"medfit-syntax"`, `model-native.qmd`, `native-guide.qmd`, the lavaan-comparison row, CLAUDE.md Engines row, `.STATUS`; strict check 0/0/0 and spelling clean per the PR body; the doc-currency run and `urlchecker` are not recorded there)
+  - Acceptance: NEWS (behavior note, measured ratio only), `?fit_sem`, `?"medfit-syntax"`, `model-native.qmd`, `native-guide.qmd`, lavaan-comparison row, CLAUDE.md Engines row, `.STATUS`; doc-currency check run
+  - Verify: `devtools::document()`; spelling and urlchecker clean; strict check 0/0/0
+  - Files: `NEWS.md`, `R/fit-sem.R`, `R/sem-syntax-help.R`, `vignettes/articles/*.qmd`, `CLAUDE.md` (grouped; split if any exceeds 5 files)
+- [ ] **Checkpoint F-C** (CI green and merged; open: the doc-currency report, not evidenced)
+  - [x] CI green (10/10); merge decision made (#175 merged to `dev`)
+  - [ ] doc-currency report (not recorded in the PR body)
 
-### Checkpoint C
-- [x] All gates in the harness table pass (counts reported); revdep run clean (2026-10-11, see .STATUS progress_0_8_0_phase3)
-- [ ] Tell the RMediation session `anova()` and W3 are in dev; human review
-
-## Phase 4: Docs (W5)
-- [x] T20 lavaan-vs-medfit article, executed at site build (needs T11, T13) (#161: article, 18-row table checked by live probes)
-- [x] T21 Docs for nonlinear constraints and audit gaps (needs T13-T16) (class count and engines line done 2026-10-11 in CLAUDE.md and AGENTS.md) (#162: cookbook recipe 12, polish in methods, 0.7.0 native-route wording fixed, CLAUDE.md and AGENTS.md)
-- [x] T22 glm joint-significance recipe (G11) (#163: joint_test(), recipe 13, LRT for known dispersion and F otherwise)
-
-### Checkpoint D
-- [x] Docs tests and strict `check` pass (2026-10-11, dev 743d9e8: 0/0/0); site builds (pkgdown job green on #161-#163); human review waived (GRILL-0.8.0-release R2)
-
-## Phase 5: Release
-- [x] T23 0.8.0 release grill (planning/specs/GRILL-0.8.0-release-2026-10-11.md: GitHub only, release on the evidence, 0.8.0)
-- [ ] T24 Release PR (release engineering); E1 matrix row only on explicit request
+## 0.9.0 release gates (carried from the archived plan)
+- [ ] **R1** Say whether the 1e-12 frozen tolerance is relative; confirm the fixture on the ubuntu CI BLAS
+- [x] **R2** (done: `.sem_seed()` never hashed `m`, identical to 0.8.0; pinned by a test) `.sem_seed()` must not hash the `m` vector when the mean flag is off; add a frozen retry case
+- [ ] **Release decision** (version bump and tag are release engineering's)

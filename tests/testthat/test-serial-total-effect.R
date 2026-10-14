@@ -60,9 +60,9 @@ test_that("serial effects are additive and pm() is total indirect over total", {
   eff <- coef(s, type = "effects")
   expect_equal(unname(eff["indirect_total"] + eff["direct"]), unname(eff["total"]))
 
-  td <- generics::tidy(s, type = "effects", conf.int = TRUE)
+  td <- generics::tidy(s, type = "effects", conf_int = TRUE)
   expect_equal(td$term, c("nie", "nie_total", "nde", "te"))
-  expect_true(all(is.finite(td$std.error)))
+  expect_true(all(is.finite(td$std_error)))
   gl <- generics::glance(s)
   expect_equal(gl$nie_total + gl$nde, gl$te)
 })

@@ -172,9 +172,6 @@
     if (op != "~" || any(vapply(terms[is_one], function(t) as.numeric(t$target) != 1, TRUE))) {
       .sem_syntax_error("a number on the right side is only valid as the intercept '~ 1'", st)
     }
-    if (length(terms) > 1L) {
-      .sem_syntax_error("an intercept must be its own statement (e.g. 'y ~ 1')", st)
-    }
   }
   rows <- list()
   for (l in lhs) {

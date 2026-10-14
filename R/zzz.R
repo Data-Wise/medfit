@@ -87,28 +87,32 @@
   # `mediation_effect` is a lightweight S3 class layered on top of `numeric`
   # (objects returned by nie()/nde()/te()/pm()). Because `print` is an
   # internal generic and the object's implicit class includes the base
-  # `numeric` type, S3 dispatch to `print.mediation_effect` can fail to find
+  # `numeric` type, S3 dispatch to `print_mediation_effect` can fail to find
   # the method via the package's own method table -- `print()` then silently
   # falls back to `print.default`, showing the bare numeric value and the
   # raw class/type attributes instead of the formatted label.
   #
   # Registering the method here, into the standard S3 dispatch table,
-  # guarantees `print()` reaches `print.mediation_effect` regardless of how
+  # guarantees `print()` reaches `print_mediation_effect` regardless of how
   # the package is loaded (installed or via load_all()).
-  registerS3method("print", "mediation_effect", print.mediation_effect)
+  registerS3method("print", "mediation_effect", print_mediation_effect)
 
   # Same issue for the `summary.*` print methods. `summary()` on the S7 data
-  # objects returns a plain S3-classed list (e.g. class "summary.MediationData"),
+  # objects returns a plain S3-classed list (e.g. class "summary_MediationData"),
   # but the `S3method(print, summary.*)` NAMESPACE directives are not activated
   # once `print` participates in S7 dispatch -- `print(summary(x))` then falls
   # back to `print.default` and dumps the raw list instead of the formatted
   # summary. Registering them here restores dispatch (installed or load_all()).
-  registerS3method("print", "summary.MediationData", print.summary.MediationData)
-  registerS3method("print", "summary.BootstrapResult", print.summary.BootstrapResult)
-  registerS3method("print", "summary.SerialMediationData", print.summary.SerialMediationData)
-  registerS3method("print", "summary.JointMediationData", print.summary.JointMediationData)
-  registerS3method("print", "summary.ClusterMediationData", print.summary.ClusterMediationData)
-  registerS3method("print", "summary.SEMFit", print.summary.SEMFit)
+  registerS3method("print", "summary_MediationData", print_summary_mediation_data)
+  registerS3method("print", "summary_BootstrapResult", print_summary_bootstrap_result)
+  registerS3method("print", "summary_SerialMediationData", print_summary_serial_mediation_data)
+  registerS3method("print", "summary_JointMediationData", print_summary_joint_mediation_data)
+  registerS3method("print", "summary_ClusterMediationData", print_summary_cluster_mediation_data)
+  registerS3method("print", "summary_SEMFit", print_summary_semfit)
+
+  # tidy()/glance() methods for S7 objects (function names avoid dots, so NAMESPACE directives cannot register them)
+  registerS3method("tidy", "S7_object", tidy_s7_object, envir = asNamespace("generics"))
+  registerS3method("glance", "S7_object", glance_s7_object, envir = asNamespace("generics"))
 
   # Register extraction methods for suggested packages (S4 classes)
   # lavaan is in Suggests, so we register dynamically if available

@@ -1,0 +1,15 @@
+auto, fixed.x = TRUE -> npar 7 df 0 
+  lhs op rhs free   est
+8   x ~~   x    0 0.926
+explicit x ~~ x, fixed.x = TRUE -> npar 8 df 1 
+  lhs op rhs free   est
+6   x ~~   x    6 0.926
+explicit x ~~ v*x, fixed.x = TRUE -> npar 8 df 1 
+  lhs op rhs free   est
+6   x ~~   x    6 0.926
+explicit x ~~ c1, fixed.x = TRUE -> npar 10 df 0 
+  lhs op rhs free   est
+9   x ~~   x    9 0.926
+explicit x ~ 1, fixed.x = TRUE, meanstructure -> npar 11 df 1 
+  lhs op rhs free   est
+9   x ~~   x    9 0.926

@@ -31,8 +31,10 @@
 # `label` ("" for none) and `value` (NA = free parameter). For `a`, `row` is the
 # target and `col` the source of a one-headed path; for `s` the pair is a
 # symmetric (co)variance and may be given in either order. Free entries with
-# the same non-empty label share one parameter.
-.sem_ram <- function(vars, obs, a, s) {
+# the same non-empty label share one parameter. `m` (NULL for a covariance structure) is the optional
+# intercept vector: rows `row` (a variable), `label`, `value` and `name`, in the same convention; its
+# presence turns the mean structure on (`has_mean`), and a variable without a row has intercept 0.
+.sem_ram <- function(vars, obs, a, s, m = NULL) {
   checkmate::assert_character(vars, any.missing = FALSE, unique = TRUE, min.len = 1, .var.name = "vars")
   checkmate::assert_subset(obs, vars, empty.ok = FALSE, .var.name = "obs")
   nv <- length(vars)
@@ -50,17 +52,24 @@
   pos_a <- (a_col - 1L) * nv + a_row
   pos_s <- (s_col - 1L) * nv + s_row
   pos_s2 <- (s_row - 1L) * nv + s_col
+  has_mean <- !is.null(m)
+  if (!has_mean) {
+    m <- data.frame(row = character(), label = character(), value = numeric(), stringsAsFactors = FALSE)
+  }
+  m_row <- idx(m$row)
+  if (anyDuplicated(m_row)) stop("an intercept appears twice in the RAM specification", call. = FALSE)
   if (anyDuplicated(pos_a)) stop("a path appears twice in the RAM specification", call. = FALSE)
   if (anyDuplicated(pmin(pos_s, pos_s2))) stop("a (co)variance appears twice in the RAM specification", call. = FALSE)
 
-  label <- c(a$label, s$label)
-  value <- c(a$value, s$value)
+  label <- c(a$label, s$label, m$label)
+  value <- c(a$value, s$value, m$value)
   free <- is.na(value)
   # lavaan's coefficient convention: the label, else `lhs op rhs` without spaces. A caller that knows the
   # source operator (a loading is `eta=~m2`, not a path into `m2`) passes the name; a bare RAM gets `row~col`.
-  default_name <- c(paste0(a$row, "~", a$col), paste0(s$row, "~~", s$col))
+  default_name <- c(paste0(a$row, "~", a$col), paste0(s$row, "~~", s$col), paste0(m$row, "~1"))
   given <- c(if (is.null(a$name)) rep(NA_character_, nrow(a)) else a$name,
-             if (is.null(s$name)) rep(NA_character_, nrow(s)) else s$name)
+             if (is.null(s$name)) rep(NA_character_, nrow(s)) else s$name,
+             if (is.null(m$name)) rep(NA_character_, nrow(m)) else m$name)
   default_name <- ifelse(is.na(given), default_name, given)
   key <- ifelse(nzchar(label), label, default_name)
   par_names <- unique(key[free])
@@ -72,21 +81,29 @@
   k_s <- k[na + seq_len(ns)]
   free_a <- free[seq_len(na)]
   free_s <- free[na + seq_len(ns)]
+  nm <- nrow(m)
+  k_m <- k[na + ns + seq_len(nm)]
+  free_m <- free[na + ns + seq_len(nm)]
   v_a <- value[seq_len(na)]
   v_s <- value[na + seq_len(ns)]
+  v_m <- value[na + ns + seq_len(nm)]
 
   a0 <- matrix(0, nv, nv)
   a0[pos_a[!free_a]] <- v_a[!free_a]
   s0 <- matrix(0, nv, nv)
   s0[pos_s[!free_s]] <- v_s[!free_s]
   s0[pos_s2[!free_s]] <- v_s[!free_s]
+  m0 <- numeric(nv)
+  m0[m_row[!free_m]] <- v_m[!free_m]
 
   # Gradient map: free entry -> parameter index, so equal labels accumulate.
   n_fa <- sum(free_a)
   n_fs <- sum(free_s)
-  gmap <- matrix(0, q, n_fa + n_fs)
+  n_fm <- sum(free_m)
+  gmap <- matrix(0, q, n_fa + n_fs + n_fm)
   gmap[cbind(k_a[free_a], seq_len(n_fa))] <- 1
   gmap[cbind(k_s[free_s], n_fa + seq_len(n_fs))] <- 1
+  gmap[cbind(k_m[free_m], n_fa + n_fs + seq_len(n_fm))] <- 1
 
   list(
     vars = vars, obs = vars[match(obs, vars)], obs_idx = match(obs, vars), nv = nv, q = q,
@@ -95,7 +112,9 @@
     pos_a = pos_a[free_a], k_a = k_a[free_a],
     pos_s = pos_s[free_s], pos_s2 = pos_s2[free_s], k_s = k_s[free_s],
     s_weight = ifelse(s_row[free_s] == s_col[free_s], 1, 2),
-    gmap = gmap
+    gmap = gmap,
+    m0 = m0, pos_m = m_row[free_m], k_m = k_m[free_m],
+    has_mean = has_mean
   )
 }
 
@@ -111,13 +130,15 @@
   n <- nrow(x)
   p <- ncol(x)
   if (is.null(weights)) {
-    xc <- sweep(x, 2L, colMeans(x))
+    xbar <- colMeans(x)
+    xc <- sweep(x, 2L, xbar)
     s_mat <- stats::cov(x) * (n - 1) / n
   } else {
     # Sampling weights, rescaled to sum to n (so `n` keeps its meaning and the information scales as before):
     # the weighted mean and the weighted covariance with divisor sum(w), the moments the weighted ML fits.
     weights <- weights * n / sum(weights)
-    xc <- sweep(x, 2L, colSums(weights * x) / n)
+    xbar <- colSums(weights * x) / n
+    xc <- sweep(x, 2L, xbar)
     s_mat <- crossprod(xc * sqrt(weights)) / n
     dimnames(s_mat) <- list(colnames(x), colnames(x))
   }
@@ -127,7 +148,8 @@
   }
   # `xc` (the centered observed data) and `w` (the rescaled weights, NULL when unweighted) feed the casewise
   # scores of the sandwich covariance.
-  list(s = s_mat, n = n, p = p, logdet = ld, xc = xc, w = weights)
+  list(s = s_mat, n = n, p = p, logdet = ld, xc = xc, w = weights, has_mean = isTRUE(ram$has_mean),
+       xbar = unname(xbar), x = x)
 }
 
 # Full rank judged on the correlation scale: the smallest eigenvalue of the
@@ -155,6 +177,20 @@
   list(a = a, s = s)
 }
 
+# Intercept vector of the RAM (zeros where none) and the model-implied means of the observed variables.
+.sem_ram_m <- function(ram, theta) {
+  mv <- ram$m0
+  mv[ram$pos_m] <- theta[ram$k_m]
+  mv
+}
+
+.sem_implied_mean <- function(ram, theta) {
+  m <- .sem_ram_mats(ram, theta)
+  b <- solve(ram$eye - m$a)
+  mu <- as.vector(b %*% .sem_ram_m(ram, theta))[ram$obs_idx]
+  stats::setNames(mu, ram$obs)
+}
+
 # Model-implied covariance of the observed variables.
 .sem_implied <- function(ram, theta) {
   m <- .sem_ram_mats(ram, theta)
@@ -180,14 +216,34 @@
   ch <- chol(sigma)
   sigma_inv <- chol2inv(ch)
   f <- 2 * sum(log(diag(ch))) + sum(smp$s * sigma_inv) - smp$logdet - smp$p
+  s_eff <- smp$s
+  if (ram$has_mean) {
+    # F adds (xbar - mu)' Sigma^-1 (xbar - mu), and the covariance gradient sees S + d d'.
+    bm <- as.vector(b %*% .sem_ram_m(ram, theta))
+    d <- smp$xbar - bm[ram$obs_idx]
+    sinv_d <- as.vector(sigma_inv %*% d)
+    f <- f + sum(d * sinv_d)
+    s_eff <- smp$s + tcrossprod(d)
+  }
   out <- list(f = f)
   if (deriv) {
-    w <- sigma_inv - sigma_inv %*% smp$s %*% sigma_inv
+    w <- sigma_inv - sigma_inv %*% s_eff %*% sigma_inv
     pm <- matrix(0, ram$nv, ram$nv)
     pm[ram$obs_idx, ram$obs_idx] <- w
     g_a <- 2 * t(bs %*% t(b) %*% pm %*% b)
     g_s <- crossprod(b, pm %*% b)
     vals <- c(g_a[ram$pos_a], ram$s_weight * g_s[ram$pos_s])
+    if (ram$has_mean) {
+      # d/dtheta of d' Sigma^-1 d through mu: -2 (dmu/dtheta)' Sigma^-1 d, with
+      # dmu/dm_j = F B e_j and dmu/dA_rc = F B[, r] (B m)_c.
+      bo <- b[ram$obs_idx, , drop = FALSE]
+      sbo <- as.vector(sinv_d %*% bo)
+      nv <- ram$nv
+      cc <- (ram$pos_a - 1L) %/% nv + 1L
+      r <- (ram$pos_a - 1L) %% nv + 1L
+      vals[seq_along(ram$pos_a)] <- vals[seq_along(ram$pos_a)] - 2 * sbo[r] * bm[cc]
+      vals <- c(vals, -2 * sbo[ram$pos_m])
+    }
     out$g <- as.vector(ram$gmap %*% vals)
   }
   out
@@ -233,15 +289,81 @@
   lapply(out, function(d) d[ram$obs_idx, ram$obs_idx, drop = FALSE])
 }
 
+# Centered coordinates for the intercepts (GRILL G9). An intercept moves with the paths: raising a path A_rc by
+# dA shifts the implied mean of r by mean_c * dA, so with distant means (mean/sd of 100 or more) the Hessian
+# in (A, m) is ill conditioned although the model is fine. In the coordinates phi = (A, S, m~) with
+# m~_v = m_v - (x_v - sum_c A_vc x_c), where x is the sample mean (0 for a latent variable), the curvature of
+# the paths and the intercepts decouples at the optimum. The map theta = T phi + c0 is affine, so T is
+# constant, `T = I + C` with C[k_m(v), k_a(e)] = -x_c for a free path entry e = (v, c) of a variable v that
+# has a free intercept parameter (the first variable of a shared label). Returns NULL when there is no such
+# entry (a covariance structure, or no free intercept or path), and the identity map would change nothing.
+.sem_center_map <- function(ram, smp) {
+  if (!isTRUE(ram$has_mean) || !length(ram$k_m) || !length(ram$pos_a)) {
+    return(NULL)
+  }
+  nv <- ram$nv
+  xfull <- numeric(nv)
+  xfull[ram$obs_idx] <- smp$xbar
+  first <- !duplicated(ram$k_m)
+  km_of <- integer(nv)
+  km_of[ram$pos_m[first]] <- ram$k_m[first]
+  r <- (ram$pos_a - 1L) %% nv + 1L
+  cc <- (ram$pos_a - 1L) %/% nv + 1L
+  hit <- km_of[r] > 0L
+  if (!any(hit)) {
+    return(NULL)
+  }
+  cmat <- matrix(0, ram$q, ram$q)
+  for (i in which(hit)) {
+    cmat[km_of[r[i]], ram$k_a[i]] <- cmat[km_of[r[i]], ram$k_a[i]] - xfull[cc[i]]
+  }
+  c0 <- numeric(ram$q)
+  c0[ram$k_m[first]] <- xfull[ram$pos_m[first]]
+  list(t = diag(ram$q) + cmat, c = cmat, c0 = c0, xfull = xfull, km_of = km_of)
+}
+
+# phi for a theta: the centered intercepts m~ = m - (C theta + c0) on the intercept rows, theta elsewhere.
+.sem_to_phi <- function(theta, ctr) {
+  as.vector(theta - ctr$c %*% theta - ctr$c0)
+}
+
+# Jacobian of the implied means: a p x q matrix, d mu / d theta_k. With B = (I - A)^-1 and m the intercept
+# vector: d/dm_j = B[, j] and d/dA_rc = B[, r] (B m)_c (observed rows), equal labels summed. With `ctr` (from
+# `.sem_center_map()`) the columns are those of the centered coordinates phi: a path entry of a variable that
+# has a free intercept uses (B m)_c - x_c = -(xbar - mu)_c, small at the optimum.
+.sem_dmu <- function(theta, ram, ctr = NULL) {
+  m <- .sem_ram_mats(ram, theta)
+  b <- solve(ram$eye - m$a)
+  bm <- as.vector(b %*% .sem_ram_m(ram, theta))
+  bo <- b[ram$obs_idx, , drop = FALSE]
+  out <- matrix(0, length(ram$obs_idx), ram$q)
+  nv <- ram$nv
+  for (i in seq_along(ram$pos_a)) {
+    r <- (ram$pos_a[i] - 1L) %% nv + 1L
+    cc <- (ram$pos_a[i] - 1L) %/% nv + 1L
+    shift <- if (!is.null(ctr) && ctr$km_of[r] > 0L) ctr$xfull[cc] else 0
+    out[, ram$k_a[i]] <- out[, ram$k_a[i]] + bo[, r] * (bm[cc] - shift)
+  }
+  for (i in seq_along(ram$pos_m)) {
+    out[, ram$k_m[i]] <- out[, ram$k_m[i]] + bo[, ram$pos_m[i]]
+  }
+  out
+}
+
 # Expected information for the log likelihood: (n / 2) * J' (Sigma^-1 x Sigma^-1) J,
-# computed as (n / 2) * tr(Sigma^-1 dSigma_k Sigma^-1 dSigma_l).
-.sem_info_expected <- function(theta, ram, smp) {
+# computed as (n / 2) * tr(Sigma^-1 dSigma_k Sigma^-1 dSigma_l). With a mean structure the mean term is
+# added (the information is additive, G1): n * (dmu)' Sigma^-1 (dmu).
+.sem_info_expected <- function(theta, ram, smp, ctr = NULL) {
   sigma <- .sem_implied(ram, theta)
   sigma_inv <- chol2inv(chol(sigma))
   w <- lapply(.sem_dsigma(theta, ram), function(d) sigma_inv %*% d)
   w_vec <- vapply(w, as.vector, numeric(smp$p^2))
   wt_vec <- vapply(w, function(x) as.vector(t(x)), numeric(smp$p^2))
   info <- smp$n / 2 * crossprod(w_vec, wt_vec)
+  if (ram$has_mean) {
+    dmu <- .sem_dmu(theta, ram, ctr)
+    info <- info + smp$n * crossprod(dmu, sigma_inv %*% dmu)
+  }
   dimnames(info) <- list(ram$par_names, ram$par_names)
   (info + t(info)) / 2
 }
@@ -249,8 +371,8 @@
 # Observed information for the log likelihood: (n / 2) times the symmetrized
 # central-difference Jacobian of the analytic gradient of F, with the K3 step
 # eps^(1/3) * max(|x|, 1) and no extra dependency.
-.sem_info_observed <- function(theta, ram, smp) {
-  info <- smp$n / 2 * .sem_hess_f(theta, ram, smp)
+.sem_info_observed <- function(theta, ram, smp, ctr = NULL) {
+  info <- smp$n / 2 * (if (is.null(ctr)) .sem_hess_f(theta, ram, smp) else .sem_hess_f_phi(theta, ram, smp, ctr))
   dimnames(info) <- list(ram$par_names, ram$par_names)
   info
 }
@@ -272,6 +394,22 @@
   (hess + t(hess)) / 2
 }
 
+# Hessian of F in the centered coordinates phi (see `.sem_center_map()`): the central-difference Jacobian of
+# the gradient in phi, g_phi = T' g, along the columns of T. Along a path direction the intercept moves with it,
+# so the implied mean stays put and the difference is small where the plain one is of size mean^2 (no
+# cancellation). The step is the K3 step eps^(1/3) * max(|phi_j|, u_j), with phi_j = m~ on the intercepts.
+.sem_hess_f_phi <- function(theta, ram, smp, ctr) {
+  phi <- .sem_to_phi(theta, ctr)
+  h <- .Machine$double.eps^(1 / 3) * pmax(abs(phi), .sem_step_floor(ram, smp))
+  tt <- ctr$t
+  hess <- vapply(seq_along(theta), function(j) {
+    up <- theta + h[j] * tt[, j]
+    dn <- theta - h[j] * tt[, j]
+    as.vector(crossprod(tt, .sem_grad(up, ram, smp) - .sem_grad(dn, ram, smp))) / (2 * h[j])
+  }, numeric(length(theta)))
+  (hess + t(hess)) / 2
+}
+
 # Natural unit of each parameter: sd(to) / sd(from) for a path and sd(r) * sd(c)
 # for a (co)variance, with a latent variable's sd taken as the mean observed sd.
 # Under a rescaling of the observed variables the floor scales like the parameter.
@@ -285,5 +423,7 @@
   # Assigned in reverse so that, for a shared label, the first entry wins.
   fl[rev(ram$k_s)] <- rev(sd_all[rs[, 1]] * sd_all[rs[, 2]])
   fl[rev(ram$k_a)] <- rev(sd_all[ra[, 1]] / sd_all[ra[, 2]])
+  # an intercept moves in the units of its variable
+  fl[rev(ram$k_m)] <- rev(sd_all[ram$pos_m])
   fl
 }

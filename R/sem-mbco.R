@@ -148,12 +148,15 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   n_starts <- n_starts %||% fit@internals$n_starts %||% 5L
   control <- control %||% fit@internals$control %||% list()
   constraints <- paste(paths, "== 0")
+  # a fit with `fixed_x` is refit with the same fixed set, so the refits keep the fit's likelihood
+  fixed_x <- if (length(fit@internals$fixed_x)) fit@internals$fixed_x else FALSE
   refit <- lapply(paths, function(tested) {
     con <- paste(tested, "== 0")
     # `fit@data` holds the rows the fit used, already free of missing values: no second deletion.
     r <- tryCatch(
       .sem_fit_syntax(paste0(fit@model, "\n", con), fit@data, fit@information, n_starts = n_starts,
-                      control = control),
+                      control = control, meanstructure = if (isTRUE(fit@internals$ram$has_mean)) TRUE,
+                      fixed_x = fixed_x),
       error = function(e) {
         stop(sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint on that ",
                             "parameter, the null `%s` may lie outside the parameter space."),
@@ -204,6 +207,18 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     hit <- which(value > -1e-6 & rowSums(abs(ineq$A[, idx, drop = FALSE]) > 0) > 0)
     if (length(hit)) {
       active <- c(active, sprintf("the constraint '%s'", paste(ineq$text[hit], collapse = "', '")))
+    }
+  }
+  # nonlinear inequalities (`a*b > 0`): active when the row is at 0 and a tested parameter moves it
+  nli <- rows$nli
+  if (!is.null(nli)) {
+    idx <- match(labels, refit$ram$par_names)
+    idx <- idx[!is.na(idx)]
+    value <- nli$value(refit$theta)
+    jac <- nli$jac(refit$theta, rep(1, length(refit$theta)))
+    hit <- which(value > -1e-6 & rowSums(abs(jac[, idx, drop = FALSE])) > 1e-10)
+    if (length(hit)) {
+      active <- c(active, sprintf("the constraint '%s'", paste(nli$text[hit], collapse = "', '")))
     }
   }
   active

@@ -231,7 +231,7 @@ test_that("MediationData summary method works", {
   )
 
   summ <- summary(med_data)
-  expect_s3_class(summ, "summary.MediationData")
+  expect_s3_class(summ, "summary_MediationData")
   expect_equal(unname(summ$paths["a"]), 0.5)
   expect_equal(unname(summ$paths["b"]), 0.3)
   expect_equal(unname(summ$paths["indirect"]), 0.15)
@@ -406,7 +406,7 @@ test_that("BootstrapResult summary method works", {
   )
 
   summ <- summary(boot_result)
-  expect_s3_class(summ, "summary.BootstrapResult")
+  expect_s3_class(summ, "summary_BootstrapResult")
   expect_equal(summ$method, "parametric")
   expect_equal(summ$estimate, 0.15)
   expect_equal(unname(summ$ci["lower"]), 0.10)
@@ -809,7 +809,7 @@ test_that("SerialMediationData summary method works", {
   )
 
   summ <- summary(serial_data)
-  expect_s3_class(summ, "summary.SerialMediationData")
+  expect_s3_class(summ, "summary_SerialMediationData")
   expect_equal(unname(summ$paths["a"]), 0.5)
   expect_equal(unname(summ$paths["d"]), 0.4)
   expect_equal(unname(summ$paths["b"]), 0.3)

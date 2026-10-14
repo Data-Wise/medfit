@@ -1,3 +1,100 @@
+# medfit 0.9.0
+
+## New features
+
+* The native engine fits observed intercepts and means. Any `y ~ 1` row (or `meanstructure = TRUE` in `fit_sem()`
+  and `engine_args = list(meanstructure = TRUE)` in `fit_mediation()`) turns the mean structure on and frees every
+  observed intercept the model does not write, as lavaan does. The fit works in mean-centered coordinates, so data
+  far from zero (checked to a mean of 1e5 standard deviations) no longer ruins the information matrix; intercepts
+  can be constrained or bounded (checked to a mean of 1e3 standard deviations). Weights, the sandwich covariance,
+  linear and nonlinear constraints, `anova()` (a covariance-only fit counts as having free intercepts), `mbco_sem()`
+  and `fit_mediation(engine = "native")` all work with it. The four-way decomposition on a native fit is refused by
+  name until the `:` operator arrives (planned for 0.10.0).
+
+* `fit_sem(fixed_x = )` (and `fit_mediation(engine = "native", engine_args = list(fixed_x = ))`) fixes the mean,
+  variance and covariances of exogenous observed variables at their sample values, as lavaan's `fixed.x = TRUE`
+  does. `TRUE` selects every exogenous observed variable (product columns included) and a character vector selects
+  any subset; the default stays `FALSE`. The structural estimates, their standard errors (model-based and
+  sandwich), the degrees of freedom and the chi-square do not change; the parameter count falls, and the
+  fixed rows stay in `@table`, `tidy()` and `summary()` with a `fixed_x` flag and no standard error. On one
+  simulated model with 30 covariates (n = 400, Apple M5 Pro) the fit went from 561 to 65 parameters and from
+  about 5 seconds to about 0.2 seconds; your timing will differ.
+
+## Behavior changes
+
+* With `fixed_x`, `logLik()`, `AIC()` and `BIC()` are conditional on the fixed variables (lavaan's value), so
+  `anova()`, `mbco_sem()` and multi-fit `AIC()`/`BIC()` now stop when the fits' fixed sets or data differ. A
+  `(co)variance` or intercept statement on a selected variable is an error; lavaan keeps such a statement free and
+  lets the degrees of freedom move. `glance()` for a `SEMFit` gains a `fixed_x` column (`""` when nothing is
+  fixed), and `print()` and `summary()` say what the log likelihood is conditional on. `fixed_x = FALSE` results
+  are unchanged.
+
+* A fixed intercept, `y ~ 0*1`, is now a restriction in the native engine. 0.8.0 dropped the row and
+  returned the covariance-only fit; 0.9.0 reads it as "the mean of `y` is 0", which costs one degree of freedom,
+  changes the discrepancy, and can be compared with `anova()` against the fit that frees it. Any `y ~ 1` row
+  (free, fixed or labeled) now turns the mean structure on and frees every unwritten observed intercept, as lavaan
+  does; `meanstructure = FALSE` with an intercept is an error. A model without `~1` rows is unchanged.
+
+* Names without dots. Everything medfit names now uses snake_case: `tidy()` and
+  `glance()` columns `std.error`, `p.value`, `conf.low` and `conf.high` became
+  `std_error`, `p_value`, `conf_low` and `conf_high`, and the `tidy()` arguments
+  `conf.int` and `conf.level` became `conf_int` and `conf_level`; the old
+  argument names still work and warn. The S3 classes of `summary()` results are
+  now `summary_MediationData`, `summary_SEMFit` and so on. `mbco_sem()` keeps
+  `p.value`, because it returns a base-R `htest`. Update code that reads the
+  old column names.
+
+* `anova()` and `mbco_sem()` for `SEMFit` close two more gaps in their guards. The nesting check now also keeps the
+  equalities that repeated labels impose in the larger model (`M ~ a*X`, `Y ~ a*M`): releasing the shared label no
+  longer returns a chi-square p-value. The boundary warning now covers an active nonlinear inequality (`a*b > 0`
+  at the restricted fit), which it missed before.
+
+* `anova()` for `SEMFit` no longer reports a p-value for a restricted model that is not nested in the larger one
+  through constraints. The nesting check compared only the free parameters, so `a == b` against
+  `a == 0` and `b == 0.5` (the second breaks the first) returned a chi-square p-value. The restricted model must now keep every
+  fixed value, bound and constraint of the larger one (a bound includes a single-label inequality such as `a > 0.1`): a linear equality must follow from the restricted model's
+  equalities and fixed values, and a nonlinear equality or an inequality must appear verbatim. Comparisons that
+  are not nested now stop with "not nested".
+
+* Four-way decomposition from a lavaan fit (`extract_mediation()` with an
+  `x:m` or `interaction =` product) gave wrong results in three cases, now fixed:
+  - The standard errors of INTref, NDE and TE left out the mediator-covariate
+    term (`g * cbar` and its covariance with the mediator intercept), so they
+    were too small when the mediator equation has a covariate (INTref SE 0.037
+    against lavaan's `:=` 0.095 in one check). They now match lavaan's `:=`.
+  - A treatment product in the mediator equation (`m ~ x + w + x:w`), or a
+    treatment-by-covariate product in the outcome equation, returned a wrong
+    decomposition without a message. Both are now errors that name the
+    equation.
+  - With sampling weights, INTref used unweighted covariate means, so it
+    differed from the lm/glm route (1.16 against 1.46 on one data set). It now
+    uses the weighted means.
+  - Related: a mediator predictor that is not a numeric column of the model data (for
+    example a latent variable) is now an error ("Cannot compute the covariate
+    means for E[M | X = 0]"); it used to be skipped, which dropped its
+    contribution from INTref without a message. A weighted multi-group fit is
+    an error as well.
+  Point estimates change only for the weighted case and for covariates that
+  used to be skipped. The effects are the treatment contrast 0 to 1, as on the
+  lm/glm route.
+
+## Documentation
+
+* Two new pages for the native engine, in the Guides menu: "Native engine in five
+  minutes" (write, fit, read, test, constrain, extract) and "The native engine
+  guide" (syntax, fitting and reading, standard errors and weights, constraints and
+  how each kind is solved, model comparison and the MBCO test, diagnostics, the route
+  to the mediation objects, limits). A third page, "Native engine, step by step",
+  walks the same path in nine checked steps, including a chain of three paths and, in the last step, `fixed_x`.
+
+* The constraints page and the introduction no longer say native constraints must
+  be linear: nonlinear constraints, `anova()` for nested fits and
+  `mbco_sem(paths = )` are described there.
+* Cookbook recipes 14 to 17: compare two native models with `anova()`, a defined
+  parameter with its interval, a bound or a fixed path with the diagnostics, and
+  checking a native fit before trusting it. Recipe 18 fixes the exogenous covariates with `fixed_x`. The cookbook now
+  has eighteen recipes.
+
 # medfit 0.8.0
 
 ## New features

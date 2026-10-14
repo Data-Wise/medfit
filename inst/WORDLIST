@@ -46,6 +46,7 @@ ORCID
 OpenMx
 OpenMx's
 ParallelMediationData
+Quickstart
 README
 RMSEA
 RMediation
@@ -133,9 +134,11 @@ pre
 presolve
 probmed
 qquad
+quickstart
 regmedint
 regmedint's
 reindented
+respecify
 resubmission
 roadmap
 roxygen

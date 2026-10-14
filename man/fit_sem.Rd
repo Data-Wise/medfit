@@ -12,6 +12,8 @@ fit_sem(
   control = list(),
   weights = NULL,
   se_type = c("model", "sandwich"),
+  meanstructure = NULL,
+  fixed_x = FALSE,
   sampling_weights = lifecycle::deprecated()
 )
 }
@@ -19,7 +21,8 @@ fit_sem(
 \item{model}{Character: model syntax. Lines may use \code{~} (regression),
 \verb{=~} (latent variable), \verb{~~} (variance or covariance), \code{label*variable}
 modifiers, \code{start()}, \code{lower()} and \code{upper()}, and the constraint
-operators \code{==}, \code{<}, \code{>} and \verb{:=}. Mean structures are not supported.}
+operators \code{==}, \code{<}, \code{>} and \verb{:=}. An intercept is written \code{y ~ 1} (alone or with other terms, as
+in \code{y ~ 1 + x}) and turns on the mean structure.}
 
 \item{data}{A data frame with the model's observed variables as numeric
 columns. Rows with missing values in those columns are dropped once
@@ -51,6 +54,23 @@ sandwich covariance \eqn{A^{-1} B A^{-1}}{A^-1 B A^-1} with casewise scores
 lavaan's robust standard errors with \code{sampling.weights}, and is smaller
 than the HC3 default of the glm route by a factor that shrinks like
 \eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.}
+
+\item{meanstructure}{Logical or \code{NULL}. \code{NULL} (default) fits a mean structure when the model writes
+an intercept (\code{y ~ 1}, free or fixed); \code{TRUE} fits one regardless; \code{FALSE} fits covariances only and
+errors if an intercept is written. With a mean structure every observed variable whose intercept is
+not written has a free one, so a model with only free intercepts has the same estimates and
+standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.}
+
+\item{fixed_x}{\code{FALSE} (default), \code{TRUE}, or a character vector of exogenous observed variable names. The
+selected variables (\code{TRUE}: every exogenous observed variable, product columns included) have their mean (with
+a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
+the estimation sample (weighted when \code{weights} are given) and removed from estimation, as lavaan does with
+\code{fixed.x = TRUE}. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
+not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
+conditional on the fixed variables, and \code{glance()$fixed_x} lists them. Models whose \code{fixed_x} sets or data differ
+cannot be compared with \code{\link[=anova]{anova()}}, \code{\link[=mbco_sem]{mbco_sem()}}, \code{AIC()} or \code{BIC()}. A (co)variance or intercept statement on a
+selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+(\code{fixed_x} column, no standard error) but not in \code{coef()} or \code{vcov()}.}
 
 \item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name
 \code{\link[=fit_mediation]{fit_mediation()}} uses; the old name still works with a warning.}

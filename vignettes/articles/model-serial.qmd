@@ -67,7 +67,7 @@ c(chain = unname(nie(x)), every_path = unname(nie(x, type = "total")),
 - The lm/glm route fits the equations separately, so the stored covariance sets
   the covariances among the chain paths to zero; a lavaan fit or a
   nonparametric bootstrap captures them. See [Model Extraction](extraction.html).
-- `tidy(x, type = "effects", conf.int = TRUE)` gives delta-method intervals for
+- `tidy(x, type = "effects", conf_int = TRUE)` gives delta-method intervals for
   the effects; for a bootstrap interval see [Bootstrap Inference](bootstrap.html).
 
 ## Related

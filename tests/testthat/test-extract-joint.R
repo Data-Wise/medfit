@@ -511,7 +511,7 @@ test_that("print() and summary() label the joint NIE and the products", {
   expect_output(print(objs$serial), "Joint NIE \\(all paths through M1, M2\\)")
   expect_output(print(objs$serial), "Products: X x M2 \\(m\\* = 0.5\\)")
   expect_output(print(summary(objs$parallel)), "no per-mediator split")
-  expect_s3_class(summary(objs$serial), "summary.JointMediationData")
+  expect_s3_class(summary(objs$serial), "summary_JointMediationData")
   expect_snapshot(print(objs$serial))
   expect_snapshot(print(objs$parallel))
   expect_snapshot(print(summary(objs$serial)))
@@ -521,21 +521,21 @@ test_that("tidy() is silent and carries numeric SEs for paths and effects", {
   obj <- methods_fixtures()$serial
   expect_silent(td <- generics::tidy(obj))
   expect_identical(td$term, c(names(paths(obj)), "cde", "nde", "nie", "te"))
-  expect_false(anyNA(td$std.error))
+  expect_false(anyNA(td$std_error))
   eff <- generics::tidy(obj, type = "effects")
-  expect_equal(eff$std.error, unname(.effect_se(obj, c("cde", "nde", "nie", "te"))),
+  expect_equal(eff$std_error, unname(.effect_se(obj, c("cde", "nde", "nie", "te"))),
                tolerance = 1e-12)
   expect_identical(generics::tidy(obj, type = "paths")$term, names(paths(obj)))
 })
 
-test_that("confint() warns for effects and equals tidy(conf.int = TRUE)", {
+test_that("confint() warns for effects and equals tidy(conf_int = TRUE)", {
   obj <- methods_fixtures()$parallel
   expect_warning(ci <- confint(obj, parm = "effects"), "Normal \\(delta-method\\)")
-  td <- generics::tidy(obj, type = "effects", conf.int = TRUE)
-  expect_equal(unname(ci), unname(cbind(td$conf.low, td$conf.high)), tolerance = 1e-12)
+  td <- generics::tidy(obj, type = "effects", conf_int = TRUE)
+  expect_equal(unname(ci), unname(cbind(td$conf_low, td$conf_high)), tolerance = 1e-12)
   expect_silent(cp <- confint(obj, parm = "paths", level = 0.9))
-  tp <- generics::tidy(obj, type = "paths", conf.int = TRUE, conf.level = 0.9)
-  expect_equal(unname(cp), unname(cbind(tp$conf.low, tp$conf.high)), tolerance = 1e-12)
+  tp <- generics::tidy(obj, type = "paths", conf_int = TRUE, conf_level = 0.9)
+  expect_equal(unname(cp), unname(cbind(tp$conf_low, tp$conf_high)), tolerance = 1e-12)
   expect_error(confint(obj, method = "boot"), "joint_effects")
 })
 
@@ -583,15 +583,15 @@ test_that("hand-built objects get NA effect SEs from tidy() and summary()", {
   # Alias-only estimates: the gradients cannot be formed.
   hb <- make_joint_obj()
   expect_silent(td <- generics::tidy(hb, type = "effects"))
-  expect_true(all(is.na(td$std.error)))
-  expect_true(all(is.na(summary(hb)$effects$std.error)))
+  expect_true(all(is.na(td$std_error)))
+  expect_true(all(is.na(summary(hb)$effects$std_error)))
   expect_error(suppressWarnings(confint(hb, parm = "effects")),
                "no per-equation source rows")
   # Extracted object with @data dropped: covariate means are unavailable.
   obj <- methods_fixtures()$serial
   nodata <- obj
   nodata@data <- NULL
-  expect_true(all(is.na(generics::tidy(nodata, type = "effects")$std.error)))
+  expect_true(all(is.na(generics::tidy(nodata, type = "effects")$std_error)))
   expect_error(suppressWarnings(confint(nodata, parm = "effects")), "no @data")
 })
 
@@ -627,8 +627,8 @@ test_that("caller-supplied data with factor and poly() covariates gives the same
     expect_true(all(is.finite(.effect_se(usr, keys))))
     # User-facing path: tidy() turns a failed SE into NA rather than erroring.
     td_usr <- generics::tidy(usr, type = "effects")
-    expect_true(all(is.finite(td_usr$std.error)))
-    expect_equal(td_usr$std.error, generics::tidy(ref, type = "effects")$std.error)
+    expect_true(all(is.finite(td_usr$std_error)))
+    expect_equal(td_usr$std_error, generics::tidy(ref, type = "effects")$std_error)
     expect_equal(suppressWarnings(confint(usr, parm = "effects")),
                  suppressWarnings(confint(ref, parm = "effects")))
   }

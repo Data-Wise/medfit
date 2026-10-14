@@ -1,0 +1,163 @@
+---
+title: "Native engine, step by step"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Nine steps from a model written as syntax to a tested, constrained and extracted
+mediation result. It sits between [the five-minute quickstart](native-quickstart.html)
+and [the native engine guide](native-guide.html). The native engine is experimental.
+
+| | |
+|---|---|
+| **You need** | medfit 0.8.0 or later (step 9 needs 0.9.0 or later); the bundled `mediation_demo` data |
+| **You get** | a `SEMFit`, a test of the indirect effect, a constrained comparison, a `MediationData` |
+| **Time** | about 20 minutes |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+```
+
+## Step 1. Write the model
+
+One statement per line. `name * variable` labels a path, and `:=` defines a
+quantity computed from labels:
+
+```{r}
+#| label: syntax
+syntax <- "
+  mediator1 ~ a * treatment + covariate1
+  outcome ~ b * mediator1 + cp * treatment + covariate1
+  ab := a * b
+"
+```
+
+Check: the labels `a`, `b` and `cp` are the three paths; `ab` is the indirect
+effect.
+
+## Step 2. Fit it
+
+```{r}
+#| label: fit
+fit <- fit_sem(syntax, mediation_demo)
+fit
+```
+
+Check: `Converged: Yes`, and `ab` appears with a standard error.
+
+## Step 3. Read the estimates
+
+```{r}
+#| label: read
+tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
+```
+
+`confint(fit)` gives the same intervals on their own. Parameter names follow
+lavaan: a label if you gave one, otherwise `lhs~rhs`, `X~~X` for a variance and
+`eta=~m2` for a loading.
+
+## Step 4. Check the fit
+
+```{r}
+#| label: glance
+glance(fit)[, c("npar", "df", "chisq", "p_value", "AIC", "BIC")]
+```
+
+A model with no restriction has 0 degrees of freedom, so there is nothing to
+reject yet. Step 6 adds a restriction and a test.
+
+## Step 5. Test the indirect effect
+
+The product `a * b` is zero if either factor is, so a plain test of `ab` is
+unreliable. `mbco_sem()` refits with `a == 0` and with `b == 0` and uses the
+smaller likelihood-ratio statistic:
+
+```{r}
+#| label: mbco
+mbco_sem(fit, "a", "b")
+```
+
+## Step 6. Constrain a path and compare
+
+Add a line to the syntax. Setting the direct effect equal to the indirect
+effect is a nonlinear constraint:
+
+```{r}
+#| label: constrain
+tied <- fit_sem(paste0(syntax, "cp == a * b\n"), mediation_demo)
+round(coef(tied)[c("a", "b", "cp")], 3)
+anova(tied, fit)
+```
+
+`anova()` refits nothing; it compares the two fits' chi-squares. A large
+p-value means the data do not reject the restriction.
+
+## Step 7. A chain of three paths
+
+For a serial model, the indirect effect is a product of three paths, and
+`mbco_sem()` takes all of them:
+
+```{r}
+#| label: chain
+chain <- "
+  mediator1 ~ a * treatment
+  mediator2 ~ d * mediator1 + treatment
+  outcome ~ b * mediator2 + mediator1 + treatment
+"
+mbco_sem(fit_sem(chain, mediation_demo), paths = c("a", "d", "b"))
+```
+
+## Step 8. Get the usual mediation object
+
+```{r}
+#| label: extract
+x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
+                       outcome = "outcome")
+tidy(x, type = "effects", conf_int = TRUE)
+```
+
+From here `nie()`, `confint()` and `bootstrap_mediation()` work as on any other
+fit.
+
+## Step 9. Fix exogenous covariates
+
+Needs medfit 0.9.0 or later. With many covariates, most parameters are the
+exogenous variances and covariances (and the means, when the model has a mean
+structure). `fixed_x = TRUE` fixes them at their sample values, as lavaan's
+`fixed.x = TRUE` does, and leaves the structural paths alone. The restricted
+model of Step 6 shows that the test does not move either:
+
+```{r}
+#| label: fixed-x
+tied_fx <- fit_sem(paste0(syntax, "cp == a * b\n"), mediation_demo, fixed_x = TRUE)
+round(coef(tied_fx)[c("a", "b", "cp")], 3)
+rbind(
+  free  = glance(tied)[, c("npar", "df", "chisq", "logLik", "fixed_x")],
+  fixed = glance(tied_fx)[, c("npar", "df", "chisq", "logLik", "fixed_x")]
+)
+```
+
+Check: `a`, `b` and `cp` match Step 6, and `df` and `chisq` are the same, but
+`npar` is smaller. The log likelihood is conditional on the fixed variables, so
+it is not comparable with the free fit's, and `anova()` refuses to compare the
+two fits. `fixed_x` also takes a character vector, such as
+`fixed_x = "covariate1"`, to fix only some of the exogenous variables.
+
+## Where next
+
+- [The native engine guide](native-guide.html): syntax, inference, constraints,
+  diagnostics and limits in one place.
+- [Cookbook recipes 11 to 18](cookbook.html): a latent mediator, a nonlinear
+  constraint, comparing models, defined parameters, bounds, checks and fixed covariates.
+- [lavaan and the native engine](lavaan-comparison.html): what the native engine
+  does and does not do compared with lavaan.

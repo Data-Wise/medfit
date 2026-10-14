@@ -14,11 +14,11 @@ page_names <- function() {
 read_text <- function(p) paste(readLines(p, warn = FALSE), collapse = "\n")
 
 # The id pandoc gives a heading: leading number dropped, lowercased, punctuation
-# removed, spaces to hyphens.
+# removed (underscores, hyphens and periods stay), spaces to hyphens.
 heading_id <- function(h) {
   h <- sub("^[0-9]+\\.\\s*", "", h)
   h <- gsub("`", "", tolower(h))
-  h <- gsub("[^a-z0-9 -]", "", h)
+  h <- gsub("[^a-z0-9 _.-]", "", h)
   gsub(" +", "-", trimws(h))
 }
 
@@ -31,7 +31,7 @@ cookbook_ids <- function() {
 }
 
 anchors_in <- function(txt) {
-  m <- regmatches(txt, gregexpr("cookbook\\.html#[a-z0-9-]+", txt))[[1]]
+  m <- regmatches(txt, gregexpr("cookbook\\.html#[a-z0-9_-]+", txt))[[1]]
   unique(sub("^cookbook\\.html#", "", m))
 }
 
@@ -60,7 +60,7 @@ test_that("every article link on the model pages resolves", {
 
 test_that("every cookbook anchor used by the model pages and the navbar is a real recipe", {
   ids <- cookbook_ids()
-  expect_length(ids, 13L)
+  expect_length(ids, 18L)
   txt <- c(vapply(c("models", page_names()), function(f) {
     read_text(root_path("vignettes", "articles", paste0(f, ".qmd")))
   }, character(1)), read_text(root_path("_pkgdown.yml")))

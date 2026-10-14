@@ -22,6 +22,7 @@ model, from one mediator to a latent variable.
 
 | Version | What you get |
 |---|---|
+| **0.9.0** | Observed intercepts and means in the native engine (`y ~ 1`, `meanstructure =`), with centered coordinates for data far from zero; `fixed_x` to fix exogenous moments at the sample values (lavaan's `fixed.x = TRUE`); the tutorial's step 9 and cookbook recipe 18 |
 | **0.8.0** | Nonlinear constraints (`cp == a*b`, `a*b > k`), `mbco_sem(paths = )` for a product of k paths, `anova()`, `tidy()` and `glance()` for `SEMFit`, one lavaan-style naming convention; the lavaan comparison article and cookbook recipes 12 and 13 |
 | **0.7.0** | A native maximum-likelihood SEM engine (experimental): latent mediators, constraints, defined parameters, `fit_sem()`, `mbco_sem()` |
 | **0.6.0** | Cluster-randomized designs (2-1-1) with `engine = "lmer"`, Kenward-Roger intervals, cluster bootstrap; the Reference Card and Cookbook |
@@ -39,7 +40,7 @@ install.packages(
 )
 ```
 
-That gives 0.8.0 as a pre-built binary, with no compiler. From GitHub instead:
+That gives 0.9.0 as a pre-built binary, with no compiler. From GitHub instead:
 `pak::pak("data-wise/medfit")` (compiles `nloptr` unless `lme4` already brought it in).
 
 > **CRAN has 0.3.2, which does not run the examples on this site.** It lacks
@@ -83,7 +84,7 @@ library(generics)
 # Tidy tibble of all effects
 tidy(result)
 #> # A tibble: 6 × 3
-#>   term    estimate std.error
+#>   term    estimate std_error
 #>   <chr>      <dbl>     <dbl>
 #> 1 a          0.471    0.0750
 #> 2 b          0.349    0.0689
@@ -278,7 +279,7 @@ See [Ecosystem Coordination](https://github.com/Data-Wise/mediation-planning/blo
 |---|---|
 | Run your first model | [Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) |
 | Find the page for your model | [Models](https://data-wise.github.io/medfit/articles/models.html) |
-| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (thirteen recipes) |
+| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (eighteen recipes) |
 | Look up a function or class | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) |
 | Understand the classes | [Introduction](https://data-wise.github.io/medfit/articles/introduction.html) |
 | Extract from fitted models | [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html) |
@@ -325,7 +326,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.8.0. https://data-wise.github.io/medfit/
+R package version 0.9.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.

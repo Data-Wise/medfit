@@ -12,8 +12,8 @@ test_that("native engine messages quoted on the model pages exist", {
     "unknown parameter label"
   )
   expect_error(
-    fit_sem("outcome ~ mediator1\nmediator1 ~ 1", mediation_demo),
-    "mean structure is not supported"
+    fit_sem("outcome ~ mediator1\nmediator1 ~ 1", mediation_demo, meanstructure = FALSE),
+    "meanstructure = FALSE.*writes an intercept"
   )
   expect_error(
     fit_sem("eta =~ m1 + m2 + m3\neta ~ a * X\nY ~ b * eta", mediation_demo),

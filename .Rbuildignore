@@ -33,3 +33,4 @@
 ^\.rforge\.yaml$
 ^tasks$
 ^scripts$
+^\.codex$
