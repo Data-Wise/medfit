@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-13 |
-| **Status** | DRAFT for approval (written from the locked decisions; no code yet) |
+| **Status** | APPROVED by the author 2026-10-13 (implemented on `feature/native-fixed-x`, PR #175) |
 | **Inputs** | [PLAN-native-fixed-x-2026-10-13.md](PLAN-native-fixed-x-2026-10-13.md), [GRILL-native-fixed-x-2026-10-13.md](GRILL-native-fixed-x-2026-10-13.md) (F-G1 to F-G7), RMediation's proposal (read-only) |
 | **Release** | bundled into 0.9.0 (F-G1); the 0.9.0 tag waits for checkpoints F-A and F-B |
 | **Evidence labels** | **[V]** verified by a command in this repo; **[A]** assumption, correct me |
