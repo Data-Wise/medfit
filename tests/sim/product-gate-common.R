@@ -50,7 +50,7 @@ exo_product_chisq <- function(fit_fun, path, template, n, seed, xdist, endogenou
     syn <- product_syntax(template, product_term(path, fac[1], fac[2]))
     f <- suppressWarnings(fit_fun(syn, product_data(d, path)))
     # `glance()` reports chi-square as NA for a model whose test is invalid (an endogenous product, a restricted
-    # exogenous block); the gates must see the number, so they read the test-only accessor (plan F10).
+    # exogenous block); the gates must see the number, so they read the internal accessor (plan F10).
     c(.sem_chisq(f), f@df) # nolint: object_usage_linter.
   }, error = function(e) c(NA_real_, NA_real_))
 }

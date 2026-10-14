@@ -441,10 +441,11 @@ S7::method(anova, SEMFit) <- function(object, ...) {
 
 .sem_modeltest_reason <- function(fit) .sem_modeltest_text(fit@internals$ram$modeltest)
 
-# Chi-square (n times the minimized discrepancy) of a fit, whatever the model-test policy says. TEST-ONLY: the gates
-# in tests/sim and the population tests read the statistic that `glance()` reports as NA for a model with a product
-# of an endogenous variable, to show that it is far from chi-square there. It is not exported and not for analysis:
-# for such a fit the number is not a valid test statistic. NA for a fit with sampling weights.
+# Chi-square (n times the minimized discrepancy) of a fit: the internal accessor that bypasses the model-test NA
+# policy. `glance()` calls it once its own checks (sampling weights, invalid model test) have passed; the gates in
+# tests/sim and the population tests call it directly to read the statistic that `glance()` reports as NA for a model
+# with a product of an endogenous variable, to show that it is far from chi-square there. It is not exported and not
+# for analysis: for such a fit the number is not a valid test statistic. NA for a fit with sampling weights.
 .sem_chisq <- function(fit) {
   if (!is.null(fit@internals$weights)) {
     return(NA_real_)
