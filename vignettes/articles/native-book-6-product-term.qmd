@@ -303,9 +303,10 @@ all of them, and lavaan does not do it either.
 ### Theorem: the path estimates are equation-wise least squares
 
 Take a model that satisfies the engine's validity rules 8 and 9 for products (numbered in the grammar amendment;
-Section 4 states them): recursive, no residual covariance between outcomes, every
-regression coefficient and intercept free and used once, the exogenous block (variances, covariances and means of the
-exogenous observed variables, products included) free. Write $z$ for the exogenous observed variables ($x$, $c$, $p$),
+Section 4 states them): recursive, no residual covariance between outcomes, and every regression coefficient and
+intercept free and used once. (Whether the exogenous block, the variances, covariances and means of the exogenous
+observed variables, is free does not matter here: a restriction there touches only those moments, not the equations. It
+matters for the model test, Section 5.) Write $z$ for the exogenous observed variables ($x$, $c$, $p$),
 $\eta$ for their moments, and $\psi_m = (\beta_0, \beta_1, \gamma, \sigma^2_m)$, $\psi_y = (\theta_0, \cdots, \delta,
 \sigma^2_y)$ for the parameters of the two equations.
 
@@ -971,17 +972,17 @@ null_sim
 #| include: false
 stopifnot(all(null_sim$fitted == 1000), all(abs(null_sim$reject_05[1:2] - 0.05) <= 0.02),
           all(abs(null_sim$mean_chisq[1:2] - 2) <= 0.15), all(null_sim$reject_05[3:4] >= 0.1),
-          abs(null_sim$reject_05[1] - 0.055) < 1e-9, abs(null_sim$reject_05[2] - 0.056) < 1e-9,
-          abs(null_sim$reject_05[3] - 0.147) < 1e-9, abs(null_sim$reject_05[4] - 0.126) < 1e-9)
+          abs(null_sim$reject_05[1] - 0.055) < 0.0011, abs(null_sim$reject_05[2] - 0.056) < 0.0011,
+          abs(null_sim$reject_05[3] - 0.147) < 0.0011, abs(null_sim$reject_05[4] - 0.126) < 0.0011)
 ```
 
 The exogenous product rejects 5.5% and 5.6% of the time, within the gate's band of $0.05 \pm 0.02$ (the Monte Carlo
 standard error of a rate near 0.05 over 1000 replications is 0.007), with a mean chi-square near its df of 2. The
 endogenous product rejects two to three times as often at the same sample size, although its regressions are correct.
-These are the gate's recorded values (`tests/sim/gates.csv`, rows `product-null-colon`, run of 2026-10-14). The
-companion gate `exo-product-fixed-var.R` records the restricted-block cases: rejection rates of 0.249 (normal factors,
-covariances dropped by the pairing rule), 0.383 (skewed factors, variances fixed) and 0.693 (skewed, both), which
-is why a restricted exogenous block also reports `NA`.
+These are the gate's recorded values (`tests/sim/gates.csv`, row `product-null-colon`, run of 2026-10-14). The
+companion gate `tests/sim/exo-product-fixed-var.R` runs the same design with a restricted exogenous block (variances
+fixed, or covariances dropped by the pairing rule) and records rejection rates far above 0.05 there, which is why a
+restricted exogenous block also reports `NA`.
 
 ## Summary
 

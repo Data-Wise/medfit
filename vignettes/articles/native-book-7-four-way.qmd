@@ -366,8 +366,7 @@ is what the gradient table predicts. Here it makes them **larger**: the dropped 
 negative correlation printed above their sum is negative. With other data the sum is positive and the defect makes the
 standard error too small, so its direction cannot be trusted either way. This was a real bug: before 0.9.0 (PR #168) the four-way extraction of a
 lavaan fit, which the native engine shares, left the mediator-covariate coefficients out of the covariance it passed
-to the delta method, and in the reviewer's example quoted in that PR (not rerun here) (`m ~ x + c1; y ~ x + m + xm + c1`, $n = 2000$) reported an
-INT<sub>ref</sub> standard error of 0.0366 where lavaan's own `:=` gave 0.095. The
+to the delta method, so its INT<sub>ref</sub>, NDE and TE standard errors were those of the third row above. The
 [known-answer gate](#cross-checks) now catches the defect if it returns.
 
 ### Cross-checks
@@ -474,7 +473,7 @@ that difference vanishes as $n$ grows. The estimates are the same as before: the
 
 With case weights $w_i$ the coefficients are weighted least squares (the weighted likelihood of Chapter 5 factors by
 equation exactly as in Chapter 6), and Step 3's average over the covariates is a weighted average, so $\bar c =
-\sum_i w_i c_i / \sum_i w_i$. Using the unweighted mean was the second bug fixed in 0.9.0 (U0, the lavaan route used it
+\sum_i w_i c_i / \sum_i w_i$. Using the unweighted mean was the second bug fixed in 0.9.0 (PR #168: the lavaan route used it
 while the `glm` route used the weighted mean). Weights that depend on the covariate make the two means differ:
 
 ```{r}
