@@ -12,25 +12,36 @@
 
 # Error when the fits do not share a fixed set, or (when anything is fixed) the estimation data.
 .sem_check_comparable <- function(models) {
+  if (length(models) < 2L) {
+    return(invisible(TRUE))
+  }
   sets <- lapply(models, .sem_fixed_signature)
   if (!all(vapply(sets[-1L], identical, logical(1), sets[[1L]]))) {
     desc <- vapply(sets, function(s) if (length(s)) paste(s, collapse = ", ") else "none", character(1))
     stop("the fits have different `fixed_x` sets (", paste(sprintf("%s: %s", names(models), desc), collapse = "; "),
          "): their likelihoods condition on different variables, so they cannot be compared", call. = FALSE)
   }
-  if (length(sets[[1L]])) .sem_anova_same_data(models)
+  if (length(sets[[1L]])) {
+    tryCatch(.sem_anova_same_data(models), error = function(e) {
+      stop(conditionMessage(e), " With `fixed_x` the likelihood conditions on the data's fixed block.",
+           call. = FALSE)
+    })
+  }
   invisible(TRUE)
 }
 
 .sem_ic_table <- function(object, dots, exprs, penalty) {
   models <- c(list(object), dots)
-  names(models) <- vapply(exprs, function(e) paste(deparse(e), collapse = ""), character(1))
-  ok <- vapply(models, function(m) S7::S7_inherits(m, SEMFit), logical(1))
-  if (!all(ok)) {
-    stop("every fit passed to AIC()/BIC() with a SEMFit must be a SEMFit: ", paste(names(models)[!ok], collapse = ", "),
-         call. = FALSE)
+  nm <- vapply(exprs, function(e) paste(deparse(e), collapse = ""), character(1))
+  # a call that passes the fits by value (do.call) deparses every name alike; number them instead
+  if (anyDuplicated(nm) || any(startsWith(nm, "<"))) nm <- paste0("model", seq_along(models))
+  names(models) <- nm
+  sem <- vapply(models, function(m) S7::S7_inherits(m, SEMFit), logical(1))
+  if (any(vapply(models[sem], function(m) length(.sem_fixed_signature(m)) > 0L, logical(1))) && !all(sem)) {
+    stop("a SEMFit with `fixed_x` has a conditional likelihood and cannot be compared with a model of another class: ",
+         paste(names(models)[!sem], collapse = ", "), call. = FALSE)
   }
-  .sem_check_comparable(models)
+  .sem_check_comparable(models[sem])
   lls <- lapply(models, stats::logLik)
   df <- vapply(lls, attr, numeric(1), "df")
   val <- -2 * vapply(lls, as.numeric, numeric(1)) + penalty(lls) * df

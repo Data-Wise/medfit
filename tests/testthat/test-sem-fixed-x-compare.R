@@ -89,3 +89,14 @@ test_that("OpenMx with the same exogenous moments held at their sample values gi
   se <- stats::setNames(pt$Std.Error, pt$name)
   expect_equal(unname(sqrt(diag(fit@vcov))[lab]), unname(se[lab]), tolerance = 1e-3)
 })
+
+test_that("AIC and BIC keep working for fits passed by value and for mixed classes when nothing is fixed", {
+  d <- fx_data()
+  a <- fit_sem(fx_syntax, d)
+  b <- fit_sem(paste0(fx_syntax, "\ncp == 0"), d)
+  out <- do.call(AIC, list(a, b))
+  expect_identical(rownames(out), c("model1", "model2"))
+  expect_identical(nrow(AIC(a, a)), 2L)
+  expect_identical(nrow(AIC(a, stats::lm(outcome ~ treatment, d))), 2L)
+  expect_error(AIC(fit_sem(fx_syntax, d, fixed_x = TRUE), stats::lm(outcome ~ treatment, d)), "another class")
+})
