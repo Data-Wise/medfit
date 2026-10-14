@@ -121,6 +121,13 @@
   if (!all(ram$obs_idx %in% ram$pos_m) || any(ram$k_m %in% ram$k_a)) {
     return(FALSE)
   }
+  # The back-mapping carries the shift through the free paths of variables with a free intercept. A fixed nonzero
+  # path, or a path into a latent variable (whose mean is fixed at 0 and cannot absorb the shift), breaks it.
+  nv <- ram$nv
+  row_of <- (ram$pos_a - 1L) %% nv + 1L
+  if (any(ram$a0 != 0) || any(!(row_of %in% ram$obs_idx))) {
+    return(FALSE)
+  }
   used <- if (is.null(constraints)) character() else unlist(lapply(c(constraints$lhs, constraints$rhs), function(e) {
     tryCatch(all.vars(str2lang(e)), error = function(err) character())
   }))

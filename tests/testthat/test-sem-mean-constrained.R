@@ -118,3 +118,30 @@ test_that("planted defect: with no centered coordinates a nonlinear constraint a
   testthat::local_mocked_bindings(.sem_center_map = function(ram, smp) NULL, .sem_shift_ok = function(...) FALSE)
   expect_error(fit_sem(syn, far_data(1e4)), "no start converged")
 })
+
+test_that("the centered route is refused for a fixed nonzero path and for a path into a latent variable", {
+  set.seed(1)
+  n <- 300
+  x <- stats::rnorm(n, 50, 2)
+  eta <- 0.5 * (x - 50) + stats::rnorm(n)
+  lat <- data.frame(x = x, y1 = 10 + eta + stats::rnorm(n), y2 = 20 + 0.8 * eta + stats::rnorm(n))
+  fixed_w <- data.frame(x = stats::rnorm(n, 50, 2), w = stats::rnorm(n, 80, 3))
+  fixed_w$y <- 5 + 0.5 * fixed_w$x + fixed_w$w + stats::rnorm(n)
+  cases <- list(
+    latent = list(syn = "eta =~ y1 + y2\neta ~ x\ny1 ~ 1\ny2 ~ 1\nx ~ 1", data = lat),
+    fixed = list(syn = "y ~ x + 1*w\ny ~ 1\nx ~ 1\nw ~ 1", data = fixed_w)
+  )
+  for (nm in names(cases)) {
+    fit <- suppressWarnings(fit_sem(cases[[nm]]$syn, cases[[nm]]$data))
+    ram <- fit@internals$ram
+    smp <- .sem_sample(fit@data, ram)
+    # stationarity at the returned estimates: the mapped solution must be a minimum of F in the raw coordinates
+    grad <- .sem_eval(fit@theta, ram, smp, deriv = TRUE)$g
+    expect_lt(max(abs(grad)), 1e-4, label = paste("gradient at the solution,", nm))
+    expect_false(.sem_shift_ok(ram, smp, NULL, rep(-Inf, ram$q), rep(Inf, ram$q), rep(FALSE, ram$q)), label = nm)
+    skip_if_not_installed("lavaan")
+    ref <- suppressWarnings(lavaan::sem(cases[[nm]]$syn, cases[[nm]]$data, meanstructure = TRUE, fixed.x = FALSE))
+    ints <- grep("~1$", names(fit@theta), value = TRUE)
+    expect_equal(unname(fit@theta[ints]), unname(lavaan::coef(ref)[ints]), tolerance = 1e-4, info = nm)
+  }
+})
