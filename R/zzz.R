@@ -67,7 +67,11 @@
 
   # Register S7 methods for dispatch
   # This is required for methods on generics from other packages
-  S7::methods_register()
+  if ("S7_on_load" %in% getNamespaceExports("S7")) {
+    S7::S7_on_load()
+  } else {
+    S7::methods_register()
+  }
 
   # `show` is an S4 generic; registering an S7 method for it requires the class
   # to be S4-registered first, so it cannot live at source time in classes.R
@@ -132,4 +136,14 @@
   }
 
   # Note: OpenMx integration postponed to future release
+}
+
+.onUnload <- function(libpath) {
+  if ("S7_on_unload" %in% getNamespaceExports("S7")) {
+    S7::S7_on_unload()
+  }
+}
+
+if ("S7_on_build" %in% getNamespaceExports("S7")) {
+  S7::S7_on_build()
 }
