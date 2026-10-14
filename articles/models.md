@@ -62,7 +62,9 @@ Inference](https://data-wise.github.io/medfit/articles/bootstrap.md)).
 - Treatment varying within clusters (1-1-1), and non-Gaussian outcomes
   or mediators in the cluster design.
 - Four-way or joint decompositions with non-Gaussian models.
-- Mean structures, and the four-way decomposition, on the native engine.
+- Latent means (a free latent mean or intercept), and the four-way
+  decomposition, on the native engine. Observed intercepts and means are
+  supported (`y ~ 1`, `meanstructure =`).
 - Bayesian fits through `brms` (planned).
 
 See [Methods and

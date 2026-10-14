@@ -29,7 +29,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,6 +95,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -129,7 +130,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Methods for SEMFit objects</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
       <div class="d-none name"><code>SEMFit-methods.Rd</code></div>
     </div>
 
@@ -155,7 +156,7 @@ Accessors and display for a SEMFit returned by fit_sem()."><meta property="og:im
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> a named numeric vector; <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> a matrix; <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> an
 integer; <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> an object of class <code>"logLik"</code>; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> an object of
-class <code>"summary.SEMFit"</code>; <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> invisibly returns its argument.</p>
+class <code>"summary_SEMFit"</code>; <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> invisibly returns its argument.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -168,7 +169,14 @@ accessors <code><a href="extract_mediation.html">extract_mediation()</a></code> 
 and bounds; rows for a pinned parameter are zero.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> returns the number of rows used after listwise deletion.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> returns the log likelihood with the means free; its <code>df</code>
-attribute counts the free parameters plus one mean per observed variable.</p></li>
+attribute counts the free parameters plus one mean per observed variable
+that is not fixed. With <code>fixed_x</code> it is conditional on the fixed variables
+(lavaan's value), so <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> of fits with different fixed sets
+or data stop instead of ranking them; the same holds for <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and
+<code><a href="mbco_sem.html">mbco_sem()</a></code>. A <code>fixed_x</code> fit also lists its fixed moments after the free
+parameters in <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> (<code>fixed_x</code> column <code>TRUE</code>, no standard error) and in
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>; <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> and <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> leave them out. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
+say what the log likelihood is conditional on.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> tests nested fits by the likelihood-ratio statistic
 \(n (F_r - F_f)\) on the difference in model degrees
 of freedom: <code>anova(fit_full, fit_restricted)</code>, or several fits, each tested
@@ -191,19 +199,21 @@ chi-squares, and the function warns that the p-value is not valid, as
 the defined parameters, <code>confint(fit, parm, level = 0.95)</code>; <code>parm</code> takes
 names or positions. A parameter pinned by a constraint or sitting on a
 bound has a zero standard error and a point interval.</p></li>
-<li><p><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> returns one row per free parameter, then per defined parameter:
+<li><p><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> returns one row per free parameter, then the moments <code>fixed_x</code> fixed (a <code>fixed_x</code>
+column, only when something is fixed), then per defined parameter:
 <code>term</code> (the name <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> uses), <code>op</code> (the operator of its row in the
-parameter table, <code>:=</code> for a defined parameter), <code>estimate</code>, <code>std.error</code>,
+parameter table, <code>:=</code> for a defined parameter), <code>estimate</code>, <code>std_error</code>,
 <code>statistic</code> (the z value, <code>NA</code> when the standard error is zero),
-<code>p.value</code> (two-sided), and with <code>conf.int = TRUE</code> the interval
-<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> returns (<code>conf.low</code>, <code>conf.high</code>, at <code>conf.level</code>). <code>type</code>
+<code>p_value</code> (two-sided), and with <code>conf_int = TRUE</code> the interval
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> returns (<code>conf_low</code>, <code>conf_high</code>, at <code>conf_level</code>). <code>type</code>
 is <code>"all"</code> (default), <code>"parameters"</code> or <code>"defined"</code>.</p></li>
 <li><p><code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> returns one row: <code>nobs</code>, <code>npar</code> (free parameters after the
 equality constraints), <code>df</code>, <code>chisq</code> (n times the minimized discrepancy,
-the test of the model against the saturated one), <code>p.value</code> (<code>NA</code> when
+the test of the model against the saturated one), <code>p_value</code> (<code>NA</code> when
 <code>df</code> is 0), <code>logLik</code>, <code>AIC</code> and <code>BIC</code> (with the means free, as <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>
-defines them). A fit with sampling weights has no likelihood, so its
-<code>chisq</code>, <code>p.value</code>, <code>logLik</code>, <code>AIC</code> and <code>BIC</code> are <code>NA</code>. There is no
+defines them) and <code>fixed_x</code>, the names the fit holds at their sample moments,
+comma-joined (<code>""</code> when none). A fit with sampling weights has no likelihood, so its
+<code>chisq</code>, <code>p_value</code>, <code>logLik</code>, <code>AIC</code> and <code>BIC</code> are <code>NA</code>. There is no
 <code>converged</code> column: <code><a href="fit_sem.html">fit_sem()</a></code> returns a fit only for a solution that
 passed the acceptance gate and errors otherwise, so <code>@converged</code> is <code>TRUE</code>
 for every <code>SEMFit</code> and would carry no information.</p></li>
@@ -264,9 +274,9 @@ improper-solution flags and the multiplier sign check.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Active constraints: none</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Improper solution: no</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Multiplier sign check: ok</span>
-<span class="r-in"><span><span class="fu">generics</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">generics</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 7 × 8</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   term            op    estimate std.error statistic  p.value conf.low conf.high</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   term            op    estimate std_error statistic  p_value conf_low conf_high</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> a               ~       0.456     0.108      4.24  2.27<span style="color: #949494;">e</span><span style="color: #BB0000;">- 5</span>    0.245     0.667</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> b               ~       0.713     0.050<span style="text-decoration: underline;">5</span>    14.1   2.31<span style="color: #949494;">e</span><span style="color: #BB0000;">-45</span>    0.615     0.812</span>
@@ -276,10 +286,10 @@ improper-solution flags and the multiplier sign check.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> treatment~~tre… ~~      0.250     0.017<span style="text-decoration: underline;">7</span>    14.1   2.09<span style="color: #949494;">e</span><span style="color: #BB0000;">-45</span>    0.215     0.285</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> ab              :=      0.325     0.080<span style="text-decoration: underline;">2</span>     4.06  4.95<span style="color: #949494;">e</span><span style="color: #BB0000;">- 5</span>    0.168     0.482</span>
 <span class="r-in"><span><span class="fu">generics</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 8</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    nobs  npar    df chisq p.value logLik   AIC   BIC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>   400     6     0     0      <span style="color: #BB0000;">NA</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">488.</span> <span style="text-decoration: underline;">2</span>994. <span style="text-decoration: underline;">3</span>030.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    nobs  npar    df chisq p_value logLik   AIC   BIC fixed_x</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>   400     6     0     0      <span style="color: #BB0000;">NA</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">488.</span> <span style="text-decoration: underline;">2</span>994. <span style="text-decoration: underline;">3</span>030. <span style="color: #949494;">""</span>     </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># a likelihood-ratio test of b = 0 against the fitted model</span></span></span>
 <span class="r-in"><span><span class="va">fit0</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">fit</span><span class="op">@</span><span class="va">model</span>, <span class="st">"\nb == 0"</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">mediation_demo</span><span class="op">)</span></span></span>

@@ -109,11 +109,11 @@ so the table lists loadings only for `m2` and `m3`.
 
 ``` r
 x <- extract_mediation(fit, treatment = "X", mediator = "eta", outcome = "Y")
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.169    0.0310    0.108     0.229
     2 nde      0.255    0.0487    0.159     0.350

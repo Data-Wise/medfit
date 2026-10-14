@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,6 +124,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -171,7 +172,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -180,7 +181,7 @@
 
 
 
-    <p>CRAN has medfit 0.3.2; this site documents 0.8.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
+    <p>CRAN has medfit 0.3.2; this site documents 0.9.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
 <div>
 <blockquote>
 <p><strong>The short version</strong></p>
@@ -244,6 +245,20 @@
 </td>
 <td>
 <code>"M~X"</code>, <code>"X~~X"</code> and <code>"eta=~m2"</code>, the names <code>lavaan::coef()</code> uses; labeled parameters are unchanged (<code>SEMFit</code> is experimental)</td>
+</tr>
+<tr class="even">
+<td>0.9.0</td>
+<td>a fixed intercept, <code>y ~ 0*1</code>, in the native engine</td>
+<td>the row was dropped and the covariance-only fit returned</td>
+<td>a restriction (“the mean of <code>y</code> is 0”): one degree of freedom, a changed discrepancy, comparable with <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>; any <code>y ~ 1</code> row turns the mean structure on</td>
+</tr>
+<tr class="odd">
+<td>0.9.0</td>
+<td>
+<code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> of a native fit with <code>fixed_x</code>
+</td>
+<td>(new argument)</td>
+<td>conditional on the fixed variables; <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and multi-fit <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>/<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> stop when fixed sets or data differ; <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> gains a <code>fixed_x</code> column</td>
 </tr>
 <tr class="even">
 <td>0.5.0</td>
@@ -368,6 +383,11 @@
 <tr class="odd">
 <td>0.8.0</td>
 <td>nonlinear constraints in the native engine (<a href="model-native-constraints.html">page</a>), <code>mbco_sem(paths = )</code> for a product of k paths, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>/<code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>/<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> for <code>SEMFit</code>, <a href="lavaan-comparison.html">lavaan and the native engine</a>, and cookbook recipes 12 and 13</td>
+</tr>
+<tr class="even">
+<td>0.9.0</td>
+<td>observed intercepts and means in the native engine (<code>y ~ 1</code>, <code>meanstructure =</code>), <code>fixed_x</code> (<a href="model-native.html">page</a>), cookbook recipe 18 and step 9 of the <a href="native-tutorial.html">native tutorial</a>
+</td>
 </tr>
 </tbody>
 </table></section><section class="level2"><h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>

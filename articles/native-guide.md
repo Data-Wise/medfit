@@ -1,10 +1,11 @@
 # The native engine guide
 
-The native engine fits covariance-structure models from lavaan-style
-syntax by maximum likelihood. This guide covers the whole workflow in
-one place: syntax, fitting, inference, constraints, model comparison,
-diagnostics and the route to the mediation objects. It is experimental.
-For a first look, read [the five-minute
+The native engine fits models from lavaan-style syntax by maximum
+likelihood, with a covariance structure and, when you write intercepts,
+observed means. This guide covers the whole workflow in one place:
+syntax, fitting, inference, constraints, model comparison, diagnostics
+and the route to the mediation objects. It is experimental. For a first
+look, read [the five-minute
 quickstart](https://data-wise.github.io/medfit/articles/native-quickstart.md).
 
 |  |  |
@@ -12,7 +13,7 @@ quickstart](https://data-wise.github.io/medfit/articles/native-quickstart.md).
 | **Entry points** | `fit_sem(syntax, data)`; `fit_mediation(model = syntax, engine = "native")` for one mediator |
 | **Class returned** | `SEMFit`, then `MediationData`, `SerialMediationData` or `ParallelMediationData` from [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) |
 | **Syntax reference** | [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md) |
-| **Not covered** | means, groups, categorical outcomes, other estimators; see [the limits](#limits) |
+| **Not covered** | latent means, the four-way decomposition, groups, categorical outcomes, other estimators; see [the limits](#limits) |
 
 ``` r
 library(medfit)
@@ -56,10 +57,13 @@ d <- mediation_demo
 | `y1, y2 ~ x` | comma shorthand (a medfit extension; lavaan reads it differently) |
 
 Exogenous variables get free variances and covariances, as lavaan does
-with `fixed.x = FALSE`. Both sides of a constraint and the right side of
-a definition are arithmetic expressions in the labels (`+ - * / ^`,
-parentheses, `exp`, `log`, `sqrt`, `abs`, `min`, `max`, `pnorm`,
-`qnorm`, and a few more).
+with `fixed.x = FALSE`; `fixed_x = TRUE` in
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+fixes them at the sample moments instead (fewer parameters, the same
+structural estimates, a conditional log likelihood). Both sides of a
+constraint and the right side of a definition are arithmetic expressions
+in the labels (`+ - * / ^`, parentheses, `exp`, `log`, `sqrt`, `abs`,
+`min`, `max`, `pnorm`, `qnorm`, and a few more).
 
 ## 2. Fit and read
 
@@ -112,16 +116,16 @@ summary(fit)
 |----|----|
 | free-parameter estimates | `coef(fit)`; names are the label, else `lhs op rhs` without spaces (`M~X`, `eta=~m2`), as `lavaan::coef()` |
 | the covariance matrix | `vcov(fit)` |
-| a table with intervals | `tidy(fit, conf.int = TRUE)`; `confint(fit)` for the matrix |
+| a table with intervals | `tidy(fit, conf_int = TRUE)`; `confint(fit)` for the matrix |
 | defined parameters | `fit@defined`, or the `:=` rows of [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and [`confint()`](https://rdrr.io/r/stats/confint.html) |
 | chi-square, df, logLik, AIC, BIC | `glance(fit)`; `logLik(fit)`, `nobs(fit)` |
 
 ``` r
-tidy(fit, conf.int = TRUE)[, c("term", "estimate", "std.error", "conf.low", "conf.high")]
+tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
 ```
 
     # A tibble: 12 × 5
-       term                   estimate std.error conf.low conf.high
+       term                   estimate std_error conf_low conf_high
        <chr>                     <dbl>     <dbl>    <dbl>     <dbl>
      1 a                        0.581     0.0986  0.388      0.775
      2 mediator1~covariate1     0.448     0.0483  0.353      0.543
@@ -140,10 +144,10 @@ tidy(fit, conf.int = TRUE)[, c("term", "estimate", "std.error", "conf.low", "con
 glance(fit)
 ```
 
-    # A tibble: 1 × 8
-       nobs  npar    df chisq p.value logLik   AIC   BIC
-      <int> <int> <dbl> <dbl>   <dbl>  <dbl> <dbl> <dbl>
-    1   400    10     0     0      NA -2002. 4032. 4088.
+    # A tibble: 1 × 9
+       nobs  npar    df chisq p_value logLik   AIC   BIC fixed_x
+      <int> <int> <dbl> <dbl>   <dbl>  <dbl> <dbl> <dbl> <chr>
+    1   400    10     0     0      NA -2002. 4032. 4088. ""     
 
 The chi-square is \\n\\ times the minimized discrepancy and has `df`
 degrees of freedom. A saturated model (here `df = 0`) fits perfectly by
@@ -279,16 +283,17 @@ a chain gives a `SerialMediationData`, mediators side by side a
 
 ## Limits
 
-- **No mean structure** (`y ~ 1` stops with “mean structure is not
-  supported”).
+- **Observed means only.** Intercepts (`y ~ 1`, `y ~ 1 + x`) are
+  estimated for observed variables; a free latent mean or intercept
+  stops with “latent means are planned for a later release”.
 - **One group**, listwise deletion for missing data, **numeric variables
   only**.
 - **ML only**, plus the HC0 sandwich; no robust chi-square, no fit
   indices beyond the chi-square, AIC and BIC.
 - **No four-way decomposition** from the native route.
-- For means, groups, categorical outcomes or fit indices use lavaan; the
-  extraction route accepts a `lavaan` fit as well. See [lavaan and the
-  native
+- For latent means, groups, categorical outcomes or fit indices use
+  lavaan; the extraction route accepts a `lavaan` fit as well. See
+  [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md).
 
 ## Related

@@ -109,8 +109,12 @@ all.equal(decompose(fit_rm), decompose(fit))
 - Non-Gaussian outcomes or mediators error; see [glm
   families](https://data-wise.github.io/medfit/articles/model-glm-families.md)
   for what is supported there.
-- The native engine does not support the four-way decomposition (it
-  estimates no mediator intercept).
+- The native engine does not support the four-way decomposition yet: its
+  syntax has no product operator (planned for 0.10.0), so
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  on a
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  fit refuses `decomposition = "four_way"` and `interaction =` by name.
 
 ## Related
 

@@ -352,11 +352,11 @@ fit <- fit_mediation(
   Y ~ X + M, M ~ X, data = cdat, treatment = "X", mediator = "M",
   engine = "lmer", cluster = "school"
 )
-tidy(fit, type = "effects", conf.int = TRUE)
+tidy(fit, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 5 × 5
-      term      estimate std.error conf.low conf.high
+      term      estimate std_error conf_low conf_high
       <chr>        <dbl>     <dbl>    <dbl>     <dbl>
     1 nie         0.209     0.127  -0.0397      0.458
     2 nde         0.0772    0.227  -0.368       0.522
@@ -383,7 +383,7 @@ model’s covariance by the Kenward–Roger adjusted one
 ([`pbkrtest::vcovAdj()`](https://rdrr.io/pkg/pbkrtest/man/kr-vcovAdj.html),
 REML fits only) and stores a Kenward–Roger denominator degrees of
 freedom for each path; `confint(parm = "paths")` and
-`tidy(conf.int = TRUE)` then give \\t\\ intervals for the paths, while
+`tidy(conf_int = TRUE)` then give \\t\\ intervals for the paths, while
 the intervals for the products (NIE, own, spillover, TE) stay normal.
 The Kenward–Roger adjustment changes the standard errors very little
 (ratios of 1.000 to 1.002 at \\J = 15\\); its value is the degrees of
@@ -502,7 +502,7 @@ conditional on the observed covariates; they slightly understate the
 uncertainty of a population-average effect.
 
 **Intervals.** [`confint()`](https://rdrr.io/r/stats/confint.html) and
-`tidy(conf.int = TRUE)` report normal intervals, \\\hat g \pm
+`tidy(conf_int = TRUE)` report normal intervals, \\\hat g \pm
 z\_{1-\alpha/2}\\ \widehat{\text{SE}}\\. The sampling distribution of a
 product of coefficients is skewed, so these can be inaccurate for
 indirect effects; [`confint()`](https://rdrr.io/r/stats/confint.html)
@@ -603,6 +603,68 @@ which is twice lavaan’s `fmin`. With the means free, \\-2 \log L = n
 The gradient is analytic. A parameter vector whose implied covariance is
 not positive definite gets a large finite value and a zero gradient, so
 the optimizer can step back from it.
+
+### Mean structure
+
+An intercept statement adds the vector \\m\\ of intercepts to the RAM
+form, and the implied means are
+
+\\ \mu(\theta) = F (I - A)^{-1} m , \\
+
+with a latent variable’s entry of \\m\\ fixed at 0. With \\\bar x\\ the
+sample mean (weighted when weights are used) and \\\Sigma\\ as above,
+the discrepancy gains the term
+
+\\ F\_{ML}(\theta) = \log \|\Sigma\| + \operatorname{tr}\left(S
+\Sigma^{-1}\right) - \log \|S\| - p + (\bar x - \mu)^\top \Sigma^{-1}
+(\bar x - \mu) . \\
+
+Under normality the information has no cross term between the mean and
+covariance parts: it is the sum \\I\_{kl} = n\\ \partial_k \mu^\top
+\Sigma^{-1} \partial_l \mu + (n/2)\operatorname{tr}\left(\Sigma^{-1}
+\partial_k \Sigma\\ \Sigma^{-1} \partial_l \Sigma\right)\\, and the
+casewise scores of the sandwich gain the mean part \\w_i\\ \partial_k
+\mu^\top \Sigma^{-1} (x_i - \mu)\\, with \\d_i = x_i - \mu(\theta)\\ in
+the covariance part. The degrees of freedom count \\p(p+1)/2 + p\\
+moments, so a fixed intercept (`y ~ 0*1`) is a restriction that costs
+one. A fit without any intercept statement is the same model with every
+observed intercept free: its discrepancy, estimates and standard errors
+are those of the covariance-only fit, and
+[`anova()`](https://rdrr.io/r/stats/anova.html) treats it that way.
+
+**Conditioning.** The path entries of a variable with a free intercept
+change that intercept by the mean times the path, so in the raw
+parameters the information is nearly singular when the mean is large
+relative to the standard deviation. The gate, the information and its
+inverse are computed in centered coordinates \\\tilde m_v = m_v - (\bar
+x_v - \sum_c A\_{v,c} \bar x_c)\\ (an affine map \\\theta = T(\phi +
+c_0)\\, with the Hessian taken directly in \\\phi\\), and the covariance
+is mapped back as \\V = T V\_\phi T^\top\\. When no constraint, bound or
+starting value touches an intercept, the whole fit runs on mean-centered
+data and the solution is mapped back.
+
+### Fixed exogenous moments
+
+With `fixed_x`, the selected exogenous variables \\x_f\\ keep their mean
+\\\bar x_f\\, variance and covariances at the sample values (divisor
+\\n\\, weighted when weights are used), so those entries of \\\Sigma\\
+and \\\mu\\ are constants, not parameters. They leave the parameter
+count and the moment count together, so the degrees of freedom and the
+chi-square do not change, and the estimates and standard errors of the
+remaining parameters equal the free fit’s: the expected information has
+no cross block between the fixed moments and the rest at the solution.
+The log likelihood is conditional on \\x_f\\, the joint value minus the
+marginal normal term of the fixed block,
+
+\\ \log L\_{\mid x_f} = \log L - \left\[ -\frac{n}{2} \left( \log
+\|S\_{ff}\| + k + k \log 2\pi \right) \right\] , \\
+
+with \\S\_{ff}\\ the sample covariance (divisor \\n\\) of the \\k\\
+fixed variables; this is lavaan’s `fixed.x = TRUE` value. Without a mean
+structure, the likelihood counts one saturated mean for each of the
+\\p - k\\ variables that are not fixed. Because \\\log L\_{\mid x_f}\\
+conditions on different variables for different fixed sets, fits compare
+only when their fixed sets and data agree.
 
 ### Standard errors
 

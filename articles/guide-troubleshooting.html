@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,6 +124,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -171,7 +172,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -184,7 +185,7 @@
 <div>
 <blockquote>
 <p><strong>First, check your version</strong></p>
-<p>Examples on this site need medfit 0.8.0 or later. If <code>mediation_demo</code> or <code><a href="../reference/fit_sem.html">fit_sem()</a></code> is “not found”, you have CRAN’s 0.3.2. See <a href="guide-changes.html">What changed since CRAN 0.3.2</a>.</p>
+<p>Examples on this site need medfit 0.9.0 or later. If <code>mediation_demo</code> or <code><a href="../reference/fit_sem.html">fit_sem()</a></code> is “not found”, you have CRAN’s 0.3.2. See <a href="guide-changes.html">What changed since CRAN 0.3.2</a>.</p>
 </blockquote>
 </div>
 <section class="level2"><h2 id="fitting-with-fit_mediation-and-med">Fitting with <code>fit_mediation()</code> and <code>med()</code>
@@ -439,18 +440,39 @@
 </td>
 </tr>
 <tr class="even">
-<td><code>mean structure is not supported</code></td>
-<td>the model has a free intercept (<code>y ~ 1</code>)</td>
-<td>remove it; the engine fits covariance structures only</td>
+<td><code>meanstructure = FALSE, but the model writes an intercept</code></td>
+<td>
+<code>meanstructure = FALSE</code> was given with an intercept statement (<code>y ~ 1</code>)</td>
+<td>drop the statement, or leave <code>meanstructure</code> unset</td>
 </tr>
 <tr class="odd">
+<td><code>`fixed_x` names variables that are not exogenous observed variables</code></td>
+<td>
+<code>fixed_x</code> named a variable that is an outcome, a mediator or a latent variable</td>
+<td>name only variables that appear as predictors and are never outcomes</td>
+</tr>
+<tr class="even">
+<td><code>`fixed_x` fixes the moments of the selected variables, but the model has a statement on them</code></td>
+<td>the model writes <code>x ~~ x</code> or <code>x ~ 1</code> for a selected variable (lavaan would keep it free)</td>
+<td>remove the statement, or leave that variable out of <code>fixed_x</code>
+</td>
+</tr>
+<tr class="odd">
+<td>
+<code>have different</code>fixed_x<code>sets</code>
+</td>
+<td>
+<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code>, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> or <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> got fits whose fixed sets differ, so their likelihoods condition on different variables</td>
+<td>refit with the same <code>fixed_x</code>, or compare only fits that share it</td>
+</tr>
+<tr class="even">
 <td><code>variables in the model are not columns of</code></td>
 <td>the syntax names a variable that is not in <code>data</code>
 </td>
 <td>check the names against <code>names(data)</code>
 </td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>Must have length 1</code></td>
 <td>
 <code>fit_mediation(engine = "native")</code> was given several mediators</td>

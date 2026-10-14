@@ -25,7 +25,7 @@ returned by
 [`nobs()`](https://rdrr.io/r/stats/nobs.html) an integer;
 [`logLik()`](https://rdrr.io/r/stats/logLik.html) an object of class
 `"logLik"`; [`summary()`](https://rdrr.io/r/base/summary.html) an object
-of class `"summary.SEMFit"`;
+of class `"summary_SEMFit"`;
 [`print()`](https://rdrr.io/r/base/print.html) invisibly returns its
 argument.
 
@@ -49,7 +49,22 @@ argument.
 
 - [`logLik()`](https://rdrr.io/r/stats/logLik.html) returns the log
   likelihood with the means free; its `df` attribute counts the free
-  parameters plus one mean per observed variable.
+  parameters plus one mean per observed variable that is not fixed. With
+  `fixed_x` it is conditional on the fixed variables (lavaan's value),
+  so [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+  [`BIC()`](https://rdrr.io/r/stats/AIC.html) of fits with different
+  fixed sets or data stop instead of ranking them; the same holds for
+  [`anova()`](https://rdrr.io/r/stats/anova.html) and
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md).
+  A `fixed_x` fit also lists its fixed moments after the free parameters
+  in [`tidy()`](https://generics.r-lib.org/reference/tidy.html)
+  (`fixed_x` column `TRUE`, no standard error) and in
+  [`summary()`](https://rdrr.io/r/base/summary.html);
+  [`coef()`](https://rdrr.io/r/stats/coef.html) and
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html) leave them out.
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) say what the log
+  likelihood is conditional on.
 
 - [`anova()`](https://rdrr.io/r/stats/anova.html) tests nested fits by
   the likelihood-ratio statistic \\n (F_r - F_f)\\ on the difference in
@@ -79,24 +94,27 @@ argument.
   standard error and a point interval.
 
 - [`tidy()`](https://generics.r-lib.org/reference/tidy.html) returns one
-  row per free parameter, then per defined parameter: `term` (the name
-  [`coef()`](https://rdrr.io/r/stats/coef.html) uses), `op` (the
-  operator of its row in the parameter table, `:=` for a defined
-  parameter), `estimate`, `std.error`, `statistic` (the z value, `NA`
-  when the standard error is zero), `p.value` (two-sided), and with
-  `conf.int = TRUE` the interval
+  row per free parameter, then the moments `fixed_x` fixed (a `fixed_x`
+  column, only when something is fixed), then per defined parameter:
+  `term` (the name [`coef()`](https://rdrr.io/r/stats/coef.html) uses),
+  `op` (the operator of its row in the parameter table, `:=` for a
+  defined parameter), `estimate`, `std_error`, `statistic` (the z value,
+  `NA` when the standard error is zero), `p_value` (two-sided), and with
+  `conf_int = TRUE` the interval
   [`confint()`](https://rdrr.io/r/stats/confint.html) returns
-  (`conf.low`, `conf.high`, at `conf.level`). `type` is `"all"`
+  (`conf_low`, `conf_high`, at `conf_level`). `type` is `"all"`
   (default), `"parameters"` or `"defined"`.
 
 - [`glance()`](https://generics.r-lib.org/reference/glance.html) returns
   one row: `nobs`, `npar` (free parameters after the equality
   constraints), `df`, `chisq` (n times the minimized discrepancy, the
-  test of the model against the saturated one), `p.value` (`NA` when
+  test of the model against the saturated one), `p_value` (`NA` when
   `df` is 0), `logLik`, `AIC` and `BIC` (with the means free, as
-  [`logLik()`](https://rdrr.io/r/stats/logLik.html) defines them). A fit
-  with sampling weights has no likelihood, so its `chisq`, `p.value`,
-  `logLik`, `AIC` and `BIC` are `NA`. There is no `converged` column:
+  [`logLik()`](https://rdrr.io/r/stats/logLik.html) defines them) and
+  `fixed_x`, the names the fit holds at their sample moments,
+  comma-joined (`""` when none). A fit with sampling weights has no
+  likelihood, so its `chisq`, `p_value`, `logLik`, `AIC` and `BIC` are
+  `NA`. There is no `converged` column:
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
   returns a fit only for a solution that passed the acceptance gate and
   errors otherwise, so `@converged` is `TRUE` for every `SEMFit` and
@@ -161,9 +179,9 @@ summary(fit)
 #>   Active constraints: none
 #>   Improper solution: no
 #>   Multiplier sign check: ok
-generics::tidy(fit, conf.int = TRUE)
+generics::tidy(fit, conf_int = TRUE)
 #> # A tibble: 7 × 8
-#>   term            op    estimate std.error statistic  p.value conf.low conf.high
+#>   term            op    estimate std_error statistic  p_value conf_low conf_high
 #>   <chr>           <chr>    <dbl>     <dbl>     <dbl>    <dbl>    <dbl>     <dbl>
 #> 1 a               ~       0.456     0.108      4.24  2.27e- 5    0.245     0.667
 #> 2 b               ~       0.713     0.0505    14.1   2.31e-45    0.615     0.812
@@ -173,10 +191,10 @@ generics::tidy(fit, conf.int = TRUE)
 #> 6 treatment~~tre… ~~      0.250     0.0177    14.1   2.09e-45    0.215     0.285
 #> 7 ab              :=      0.325     0.0802     4.06  4.95e- 5    0.168     0.482
 generics::glance(fit)
-#> # A tibble: 1 × 8
-#>    nobs  npar    df chisq p.value logLik   AIC   BIC
-#>   <int> <int> <dbl> <dbl>   <dbl>  <dbl> <dbl> <dbl>
-#> 1   400     6     0     0      NA -1488. 2994. 3030.
+#> # A tibble: 1 × 9
+#>    nobs  npar    df chisq p_value logLik   AIC   BIC fixed_x
+#>   <int> <int> <dbl> <dbl>   <dbl>  <dbl> <dbl> <dbl> <chr>  
+#> 1   400     6     0     0      NA -1488. 2994. 3030. ""     
 
 # a likelihood-ratio test of b = 0 against the fitted model
 fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)

@@ -130,7 +130,8 @@ fit_mediation(
   Named list of engine-specific overrides (default:
   [`list()`](https://rdrr.io/r/base/list.html), no overrides). Ignored
   by `engine = "glm"`. For `engine = "native"`, recognized names are
-  `information`, `n_starts` and `control` (passed to
+  `information`, `n_starts`, `meanstructure`, `fixed_x` and `control`
+  (passed to
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md))
   and `outcome`, `structure`, `decomposition`, `interaction`, `a_label`,
   `b_label` and `cp_label` (passed to

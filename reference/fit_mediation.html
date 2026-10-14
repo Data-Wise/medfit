@@ -31,7 +31,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,6 +97,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -131,7 +132,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit Mediation Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
       <div class="d-none name"><code>fit_mediation.Rd</code></div>
     </div>
 
@@ -248,7 +249,7 @@ that shrinks like 1/n.</p></dd>
 <dt id="arg-engine-args">engine_args<a class="anchor" aria-label="anchor" href="#arg-engine-args"></a></dt>
 <dd><p>Named list of engine-specific overrides (default:
 <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code>, no overrides). Ignored by <code>engine = "glm"</code>. For
-<code>engine = "native"</code>, recognized names are <code>information</code>, <code>n_starts</code> and
+<code>engine = "native"</code>, recognized names are <code>information</code>, <code>n_starts</code>, <code>meanstructure</code>, <code>fixed_x</code> and
 <code>control</code> (passed to <code><a href="fit_sem.html">fit_sem()</a></code>) and <code>outcome</code>, <code>structure</code>,
 <code>decomposition</code>, <code>interaction</code>, <code>a_label</code>, <code>b_label</code> and <code>cp_label</code>
 (passed to <code><a href="extract_mediation.html">extract_mediation()</a></code>); any other name is an error. For

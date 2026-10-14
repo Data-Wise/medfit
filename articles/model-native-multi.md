@@ -95,11 +95,11 @@ class(xp)[1]
     [1] "medfit::ParallelMediationData"
 
 ``` r
-tidy(xp, type = "effects", conf.int = TRUE)
+tidy(xp, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.367    0.0604   0.249      0.486
     2 nde      0.171    0.106   -0.0366     0.379
@@ -135,8 +135,10 @@ weighting.
 
 - **`fit_mediation(engine = "native")` takes one mediator** (see the
   warning above).
-- **No four-way decomposition and no mean structure** from the native
-  engine.
+- **No four-way decomposition** from the native engine (the syntax has
+  no product operator yet). Intercepts are estimated; see [the native
+  model
+  page](https://data-wise.github.io/medfit/articles/model-native.html#intercepts).
 - **The native sandwich is the HC0 type**, with casewise scores; the
   `glm` engine’s sandwich is HC3. They are different estimators, so the
   standard errors need not match.

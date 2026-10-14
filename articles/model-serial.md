@@ -77,7 +77,7 @@ c(chain = unname(nie(x)), every_path = unname(nie(x, type = "total")),
   covariance sets the covariances among the chain paths to zero; a
   lavaan fit or a nonparametric bootstrap captures them. See [Model
   Extraction](https://data-wise.github.io/medfit/articles/extraction.md).
-- `tidy(x, type = "effects", conf.int = TRUE)` gives delta-method
+- `tidy(x, type = "effects", conf_int = TRUE)` gives delta-method
   intervals for the effects; for a bootstrap interval see [Bootstrap
   Inference](https://data-wise.github.io/medfit/articles/bootstrap.md).
 

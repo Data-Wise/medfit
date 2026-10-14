@@ -15,11 +15,9 @@ for every mediation class; see Details.
 ## Usage
 
 ``` r
-# S3 method for class 'S7_object'
-tidy(x, ...)
+tidy_s7_object(x, ...)
 
-# S3 method for class 'S7_object'
-glance(x, ...)
+glance_s7_object(x, ...)
 ```
 
 ## Arguments
@@ -41,14 +39,14 @@ glance(x, ...)
 - ...:
 
   Passed to the class method: `type` (`"all"`, `"paths"`, `"effects"`,
-  and for interaction objects `"components"`), `conf.int` (logical, add
-  `conf.low`/`conf.high`), and `conf.level` (default 0.95).
+  and for interaction objects `"components"`), `conf_int` (logical, add
+  `conf_low`/`conf_high`), and `conf_level` (default 0.95).
 
 ## Value
 
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html): a tibble (a
 data frame if tibble is not installed) with columns `term`, `estimate`,
-`std.error`, and, when `conf.int = TRUE`, `conf.low` and `conf.high`.
+`std_error`, and, when `conf_int = TRUE`, `conf_low` and `conf_high`.
 
 [`glance()`](https://generics.r-lib.org/reference/glance.html): a
 one-row tibble with `nie`, `nde`, `te`, `pm`, `nobs`, and `converged`;
@@ -61,7 +59,7 @@ Path standard errors are the square roots of the diagonal of `@vcov`.
 Effect standard errors (NIE, NDE, TE, and for interaction objects the
 four-way components) use the delta method over the full `@vcov`, the
 same computation as `confint(parm = "effects")`, so
-`tidy(conf.int = TRUE)` reproduces
+`tidy(conf_int = TRUE)` reproduces
 [`confint()`](https://rdrr.io/r/stats/confint.html) exactly. Intervals
 are normal approximations (\\\hat{\theta} \pm z \\ SE\\); the sampling
 distribution of a product of coefficients is skewed, so for inference on
@@ -113,7 +111,7 @@ med_data <- fit_mediation(
 # tidy() is the generic from the generics package (also re-exported by broom)
 generics::tidy(med_data)
 #> # A tibble: 6 × 3
-#>   term    estimate std.error
+#>   term    estimate std_error
 #>   <chr>      <dbl>     <dbl>
 #> 1 a          0.583    0.0989
 #> 2 b          0.571    0.0535
@@ -121,9 +119,9 @@ generics::tidy(med_data)
 #> 4 nie        0.333    0.0645
 #> 5 nde        0.206    0.110 
 #> 6 te         0.539    0.119 
-generics::tidy(med_data, type = "effects", conf.int = TRUE)
+generics::tidy(med_data, type = "effects", conf_int = TRUE)
 #> # A tibble: 3 × 5
-#>   term  estimate std.error conf.low conf.high
+#>   term  estimate std_error conf_low conf_high
 #>   <chr>    <dbl>     <dbl>    <dbl>     <dbl>
 #> 1 nie      0.333    0.0645  0.206       0.459
 #> 2 nde      0.206    0.110  -0.00936     0.421

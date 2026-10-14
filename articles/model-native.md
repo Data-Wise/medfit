@@ -105,11 +105,11 @@ class(x)[1]
     [1] "medfit::MediationData"
 
 ``` r
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.333    0.0642  0.207       0.459
     2 nde      0.206    0.109  -0.00801     0.420
@@ -128,6 +128,63 @@ nie(x2)
 
     Natural Indirect Effect (NIE): 0.3328
 
+## Intercepts
+
+Writing any intercept (`y ~ 1`, or `1` as a term, `y ~ 1 + x`) turns the
+mean structure on and frees an intercept for every observed variable you
+did not mention, as lavaan does. The paths, variances and their standard
+errors are then the same as without it; the fit also reports the
+intercepts and the mean of each exogenous variable.
+
+``` r
+paths <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"
+free <- fit_sem(paste0(paths, "\noutcome ~ 1"), mediation_demo)
+tidy(free)[tidy(free)$op == "~1", c("term", "estimate", "std_error")]
+```
+
+    # A tibble: 3 × 3
+      term        estimate std_error
+      <chr>          <dbl>     <dbl>
+    1 outcome~1      0.231    0.0774
+    2 mediator1~1    0.155    0.0763
+    3 treatment~1    0.502    0.0250
+
+An intercept you fix or constrain is a restriction, so it can change the
+other estimates. Fixing the outcome intercept at 0 costs one degree of
+freedom, and [`anova()`](https://rdrr.io/r/stats/anova.html) compares
+the two fits:
+
+``` r
+zero <- fit_sem(paste0(paths, "\noutcome ~ 0*1"), mediation_demo)
+c(free = free@theta[["cp"]], fixed_at_zero = zero@theta[["cp"]])
+```
+
+             free fixed_at_zero
+       0.04057665    0.26236776 
+
+``` r
+anova(free, zero)
+```
+
+    Likelihood-ratio (chi-square difference) test for SEMFit models
+
+    n = 400; Chisq is n times the minimized discrepancy
+
+         Df  Chisq Chisq diff Df diff Pr(>Chisq)
+    free  0 0.0000
+    zero  1 8.8141     8.8141       1   0.002989 **
+    ---
+    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Equating two intercepts works the same way (`i1 == i2` with labels `i1`
+and `i2`). `meanstructure = TRUE` turns the mean structure on without
+writing any intercept, and `meanstructure = FALSE` fits covariances
+only. A latent variable’s mean is fixed at 0, and a free latent
+intercept stops with “latent means are planned for a later release”.
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+reads the paths exactly as before; the four-way decomposition is not
+available on this route yet.
+
 ## Compared with the `glm` engine
 
 The two engines agree on the estimates and differ slightly in the
@@ -140,8 +197,8 @@ glm_fit <- fit_mediation(
   mediator1 ~ treatment + covariate1 + covariate2,
   data = mediation_demo, treatment = "treatment", mediator = "mediator1"
 )
-rbind(native = tidy(x, type = "effects")$std.error,
-      glm = tidy(glm_fit, type = "effects")$std.error)
+rbind(native = tidy(x, type = "effects")$std_error,
+      glm = tidy(glm_fit, type = "effects")$std_error)
 ```
 
                  [,1]      [,2]      [,3]
@@ -150,13 +207,24 @@ rbind(native = tidy(x, type = "effects")$std.error,
 
 ## Limits
 
-- **No mean structure.** `y ~ 1` is not supported; the engine fits
-  covariance structures only. A model with a free intercept stops with
-  “mean structure is not supported”.
+- **Observed means only.** A free latent mean or intercept stops with
+  “latent means are planned for a later release”; the latent variable’s
+  mean is fixed at 0 (see [Intercepts](#intercepts)).
+- **Constraints on an intercept** are checked up to a data mean about
+  1,000 times the standard deviation; beyond that the fit may stop with
+  “no start converged”. Constraints that leave every intercept free have
+  no such limit.
 - **A label must be defined** before `:=` can use it; an unknown label
   stops with “unknown parameter label”.
 - **Exogenous variables get free variances and covariances**, as lavaan
   does with `fixed.x = FALSE`, so they appear in the parameter table.
+  `fixed_x = TRUE` (or a vector of names) fixes the selected ones at the
+  sample moments, as `fixed.x = TRUE` does: the structural estimates,
+  their standard errors and the degrees of freedom do not change, the
+  parameter count falls, and
+  [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC become
+  conditional on the fixed variables, so fits with different fixed sets
+  cannot be compared.
 - **No four-way decomposition** from the native engine.
 - [`summary()`](https://rdrr.io/r/base/summary.html) reports
   diagnostics, including an improper solution and any active bound or

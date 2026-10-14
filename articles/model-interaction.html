@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,6 +124,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -171,7 +172,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-interaction.qmd" class="external-link"><code>vignettes/articles/model-interaction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-interaction.qmd" class="external-link"><code>vignettes/articles/model-interaction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -318,7 +319,7 @@ Attaching package: 'generics'</code></pre>
 <ul>
 <li>Only products written with <code>:</code> or <code>*</code> in the <strong>outcome</strong> model are recognized. A product precomputed as a data column cannot be seen and would be ignored, so write it in the formula.</li>
 <li>Non-Gaussian outcomes or mediators error; see <a href="model-glm-families.html">glm families</a> for what is supported there.</li>
-<li>The native engine does not support the four-way decomposition (it estimates no mediator intercept).</li>
+<li>The native engine does not support the four-way decomposition yet: its syntax has no product operator (planned for 0.10.0), so <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fit refuses <code>decomposition = "four_way"</code> and <code>interaction =</code> by name.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
 <p><a href="model-simple.html">Simple mediation</a> | <a href="cookbook.html#treatment-by-mediator-interaction">Cookbook recipe 7</a> | <a href="extraction.html">Model Extraction</a> | <a href="methods.html">Methods and Formulas</a></p>

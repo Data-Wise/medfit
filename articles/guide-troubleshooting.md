@@ -6,7 +6,7 @@ package and checked by a test, so the wording matches what you see.
 
 > **First, check your version**
 >
-> Examples on this site need medfit 0.8.0 or later. If `mediation_demo`
+> Examples on this site need medfit 0.9.0 or later. If `mediation_demo`
 > or
 > [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 > is “not found”, you have CRAN’s 0.3.2. See [What changed since CRAN
@@ -70,7 +70,10 @@ package and checked by a test, so the wording matches what you see.
 | You see | Cause | Fix |
 |----|----|----|
 | `unknown parameter label` | a label in `:=` or a constraint is not defined in the model | label the path first: `y ~ b * m` |
-| `mean structure is not supported` | the model has a free intercept (`y ~ 1`) | remove it; the engine fits covariance structures only |
+| `meanstructure = FALSE, but the model writes an intercept` | `meanstructure = FALSE` was given with an intercept statement (`y ~ 1`) | drop the statement, or leave `meanstructure` unset |
+| `` `fixed_x` names variables that are not exogenous observed variables `` | `fixed_x` named a variable that is an outcome, a mediator or a latent variable | name only variables that appear as predictors and are never outcomes |
+| `` `fixed_x` fixes the moments of the selected variables, but the model has a statement on them `` | the model writes `x ~~ x` or `x ~ 1` for a selected variable (lavaan would keep it free) | remove the statement, or leave that variable out of `fixed_x` |
+| `have different`fixed_x`sets` | [`AIC()`](https://rdrr.io/r/stats/AIC.html), [`BIC()`](https://rdrr.io/r/stats/AIC.html), [`anova()`](https://rdrr.io/r/stats/anova.html) or [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) got fits whose fixed sets differ, so their likelihoods condition on different variables | refit with the same `fixed_x`, or compare only fits that share it |
 | `variables in the model are not columns of` | the syntax names a variable that is not in `data` | check the names against `names(data)` |
 | `Must have length 1` | `fit_mediation(engine = "native")` was given several mediators | fit with [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) and call [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md); see [several mediators](https://data-wise.github.io/medfit/articles/model-native-multi.md) |
 

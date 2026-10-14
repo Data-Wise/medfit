@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,6 +124,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -171,7 +172,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -180,7 +181,7 @@
 
 
 
-    <p>The native engine fits covariance-structure models from lavaan-style syntax by maximum likelihood. This guide covers the whole workflow in one place: syntax, fitting, inference, constraints, model comparison, diagnostics and the route to the mediation objects. It is experimental. For a first look, read <a href="native-quickstart.html">the five-minute quickstart</a>.</p>
+    <p>The native engine fits models from lavaan-style syntax by maximum likelihood, with a covariance structure and, when you write intercepts, observed means. This guide covers the whole workflow in one place: syntax, fitting, inference, constraints, model comparison, diagnostics and the route to the mediation objects. It is experimental. For a first look, read <a href="native-quickstart.html">the five-minute quickstart</a>.</p>
 <table class="table caption-top"><tbody>
 <tr class="odd">
 <td><strong>Entry points</strong></td>
@@ -199,7 +200,7 @@
 </tr>
 <tr class="even">
 <td><strong>Not covered</strong></td>
-<td>means, groups, categorical outcomes, other estimators; see <a href="#limits">the limits</a>
+<td>latent means, the four-way decomposition, groups, categorical outcomes, other estimators; see <a href="#limits">the limits</a>
 </td>
 </tr>
 </tbody></table>
@@ -282,7 +283,7 @@ Attaching package: 'generics'</code></pre>
 </tr>
 </tbody>
 </table>
-<p>Exogenous variables get free variances and covariances, as lavaan does with <code>fixed.x = FALSE</code>. Both sides of a constraint and the right side of a definition are arithmetic expressions in the labels (<code>+ - * / ^</code>, parentheses, <code>exp</code>, <code>log</code>, <code>sqrt</code>, <code>abs</code>, <code>min</code>, <code>max</code>, <code>pnorm</code>, <code>qnorm</code>, and a few more).</p>
+<p>Exogenous variables get free variances and covariances, as lavaan does with <code>fixed.x = FALSE</code>; <code>fixed_x = TRUE</code> in <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fixes them at the sample moments instead (fewer parameters, the same structural estimates, a conditional log likelihood). Both sides of a constraint and the right side of a definition are arithmetic expressions in the labels (<code>+ - * / ^</code>, parentheses, <code>exp</code>, <code>log</code>, <code>sqrt</code>, <code>abs</code>, <code>min</code>, <code>max</code>, <code>pnorm</code>, <code>qnorm</code>, and a few more).</p>
 </section><section class="level2"><h2 id="fit-and-read">2. Fit and read<a class="anchor" aria-label="anchor" href="#fit-and-read"></a>
 </h2>
 <div class="cell">
@@ -353,7 +354,7 @@ Diagnostics:
 <tr class="odd">
 <td>a table with intervals</td>
 <td>
-<code>tidy(fit, conf.int = TRUE)</code>; <code>confint(fit)</code> for the matrix</td>
+<code>tidy(fit, conf_int = TRUE)</code>; <code>confint(fit)</code> for the matrix</td>
 </tr>
 <tr class="even">
 <td>defined parameters</td>
@@ -370,10 +371,10 @@ Diagnostics:
 </tbody>
 </table>
 <div class="cell">
-<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std.error"</span>, <span class="st">"conf.low"</span>, <span class="st">"conf.high"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span>, <span class="st">"conf_low"</span>, <span class="st">"conf_high"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 12 × 5
-   term                   estimate std.error conf.low conf.high
+   term                   estimate std_error conf_low conf_high
    &lt;chr&gt;                     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
  1 a                        0.581     0.0986  0.388      0.775
  2 mediator1~covariate1     0.448     0.0483  0.353      0.543
@@ -390,10 +391,10 @@ Diagnostics:
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 8
-   nobs  npar    df chisq p.value logLik   AIC   BIC
-  &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1   400    10     0     0      NA -2002. 4032. 4088.</code></pre>
+<pre><code># A tibble: 1 × 9
+   nobs  npar    df chisq p_value logLik   AIC   BIC fixed_x
+  &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;
+1   400    10     0     0      NA -2002. 4032. 4088. ""     </code></pre>
 </div>
 </div>
 <p>The chi-square is <span class="math inline">\(n\)</span> times the minimized discrepancy and has <code>df</code> degrees of freedom. A saturated model (here <code>df = 0</code>) fits perfectly by construction, so the test only means something when there are restrictions.</p>
@@ -566,14 +567,14 @@ MBCO = 33.353, df = 1, p-value = 7.685e-09</code></pre>
 </h2>
 <ul>
 <li>
-<strong>No mean structure</strong> (<code>y ~ 1</code> stops with “mean structure is not supported”).</li>
+<strong>Observed means only.</strong> Intercepts (<code>y ~ 1</code>, <code>y ~ 1 + x</code>) are estimated for observed variables; a free latent mean or intercept stops with “latent means are planned for a later release”.</li>
 <li>
 <strong>One group</strong>, listwise deletion for missing data, <strong>numeric variables only</strong>.</li>
 <li>
 <strong>ML only</strong>, plus the HC0 sandwich; no robust chi-square, no fit indices beyond the chi-square, AIC and BIC.</li>
 <li>
 <strong>No four-way decomposition</strong> from the native route.</li>
-<li>For means, groups, categorical outcomes or fit indices use lavaan; the extraction route accepts a <code>lavaan</code> fit as well. See <a href="lavaan-comparison.html">lavaan and the native engine</a>.</li>
+<li>For latent means, groups, categorical outcomes or fit indices use lavaan; the extraction route accepts a <code>lavaan</code> fit as well. See <a href="lavaan-comparison.html">lavaan and the native engine</a>.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
 <p><a href="native-quickstart.html">Quickstart</a> | <a href="model-native.html">Models: native engine</a> | <a href="model-native-constraints.html">Constraints and the MBCO test</a> | <a href="cookbook.html">Cookbook</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>

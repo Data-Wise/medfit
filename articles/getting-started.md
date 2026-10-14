@@ -2,7 +2,7 @@
 
 > **Note**
 >
-> This site documents medfit 0.8.0 or later. CRAN has 0.3.2, which lacks
+> This site documents medfit 0.9.0 or later. CRAN has 0.3.2, which lacks
 > `mediation_demo` and the native, joint and cluster functions; install
 > from GitHub or r-universe (see the [home
 > page](https://data-wise.github.io/medfit/#installation)).
@@ -126,7 +126,7 @@ tidy(result)
 ```
 
     # A tibble: 6 × 3
-      term    estimate std.error
+      term    estimate std_error
       <chr>      <dbl>     <dbl>
     1 a          0.583    0.0989
     2 b          0.571    0.0535
@@ -148,11 +148,11 @@ Add confidence intervals, and ask for only the paths or only the
 effects:
 
 ``` r
-tidy(result, type = "effects", conf.int = TRUE)
+tidy(result, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.333    0.0645  0.206       0.459
     2 nde      0.206    0.110  -0.00936     0.421
@@ -277,7 +277,7 @@ For quick lookups: the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md) has every
 function on one page, and the
 [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) has
-seventeen short recipes. To understand the classes, read the
+eighteen short recipes. To understand the classes, read the
 [Introduction](https://data-wise.github.io/medfit/articles/introduction.md);
 for the math behind every effect and standard error, [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md); for

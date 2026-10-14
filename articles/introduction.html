@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,6 +124,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -171,7 +172,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -353,7 +354,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 3
-  term    estimate std.error
+  term    estimate std_error
   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;
 1 a           0.5         NA
 2 b           0.3         NA
@@ -365,7 +366,7 @@ Attaching package: 'generics'</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_data</span>, type <span class="op">=</span> <span class="st">"paths"</span><span class="op">)</span>    <span class="co"># Just a, b, c'</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 3
-  term    estimate std.error
+  term    estimate std_error
   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;
 1 a            0.5        NA
 2 b            0.3        NA
@@ -374,7 +375,7 @@ Attaching package: 'generics'</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_data</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span>  <span class="co"># Just nie, nde, te</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 3
-  term  estimate std.error
+  term  estimate std_error
   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 nie       0.15        NA
 2 nde       0.2         NA
@@ -544,7 +545,7 @@ N bootstrap samples: 1000
 
 Bootstrap Distribution Summary:
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-0.02625 0.12674 0.15224 0.15207 0.17917 0.29152 </code></pre>
+0.02175 0.12123 0.14842 0.14878 0.17580 0.30124 </code></pre>
 </div>
 </div>
 </section></section><section class="level2"><h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
@@ -696,7 +697,7 @@ Bootstrap Distribution Summary:
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 5
-  term     estimate std.error conf.low conf.high
+  term     estimate std_error conf_low conf_high
   &lt;chr&gt;       &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 estimate    0.333    0.0658    0.216     0.467</code></pre>
 </div>

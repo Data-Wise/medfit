@@ -1,6 +1,6 @@
 # Native engine, step by step
 
-Eight steps from a model written as syntax to a tested, constrained and
+Nine steps from a model written as syntax to a tested, constrained and
 extracted mediation result. It sits between [the five-minute
 quickstart](https://data-wise.github.io/medfit/articles/native-quickstart.md)
 and [the native engine
@@ -9,7 +9,7 @@ native engine is experimental.
 
 |  |  |
 |----|----|
-| **You need** | medfit 0.8.0 or later; the bundled `mediation_demo` data |
+| **You need** | medfit 0.8.0 or later (step 9 needs 0.9.0 or later); the bundled `mediation_demo` data |
 | **You get** | a `SEMFit`, a test of the indirect effect, a constrained comparison, a `MediationData` |
 | **Time** | about 20 minutes |
 
@@ -78,11 +78,11 @@ Check: `Converged: Yes`, and `ab` appears with a standard error.
 ## Step 3. Read the estimates
 
 ``` r
-tidy(fit, conf.int = TRUE)[, c("term", "estimate", "std.error", "conf.low", "conf.high")]
+tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
 ```
 
     # A tibble: 11 × 5
-       term                   estimate std.error conf.low conf.high
+       term                   estimate std_error conf_low conf_high
        <chr>                     <dbl>     <dbl>    <dbl>     <dbl>
      1 a                        0.581     0.0986  0.388      0.775
      2 mediator1~covariate1     0.448     0.0483  0.353      0.543
@@ -103,11 +103,11 @@ a variance and `eta=~m2` for a loading.
 ## Step 4. Check the fit
 
 ``` r
-glance(fit)[, c("npar", "df", "chisq", "p.value", "AIC", "BIC")]
+glance(fit)[, c("npar", "df", "chisq", "p_value", "AIC", "BIC")]
 ```
 
     # A tibble: 1 × 6
-       npar    df chisq p.value   AIC   BIC
+       npar    df chisq p_value   AIC   BIC
       <int> <dbl> <dbl>   <dbl> <dbl> <dbl>
     1    10     0     0      NA 4032. 4088.
 
@@ -187,11 +187,11 @@ mbco_sem(fit_sem(chain, mediation_demo), paths = c("a", "d", "b"))
 ``` r
 x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
                        outcome = "outcome")
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.333    0.0644  0.207       0.459
     2 nde      0.204    0.109  -0.00954     0.418
@@ -203,15 +203,52 @@ From here
 [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
 work as on any other fit.
 
+## Step 9. Fix exogenous covariates
+
+Needs medfit 0.9.0 or later. With many covariates, most parameters are
+the exogenous variances and covariances (and the means, when the model
+has a mean structure). `fixed_x = TRUE` fixes them at their sample
+values, as lavaan’s `fixed.x = TRUE` does, and leaves the structural
+paths alone. The restricted model of Step 6 shows that the test does not
+move either:
+
+``` r
+tied_fx <- fit_sem(paste0(syntax, "cp == a * b\n"), mediation_demo, fixed_x = TRUE)
+round(coef(tied_fx)[c("a", "b", "cp")], 3)
+```
+
+        a     b    cp
+    0.542 0.550 0.298 
+
+``` r
+rbind(
+  free  = glance(tied)[, c("npar", "df", "chisq", "logLik", "fixed_x")],
+  fixed = glance(tied_fx)[, c("npar", "df", "chisq", "logLik", "fixed_x")]
+)
+```
+
+    # A tibble: 2 × 5
+       npar    df chisq logLik fixed_x
+    * <int> <dbl> <dbl>  <dbl> <chr>
+    1     9     1 0.938 -2002. ""
+    2     6     1 0.938 -1140. "treatment, covariate1"
+
+Check: `a`, `b` and `cp` match Step 6, and `df` and `chisq` are the
+same, but `npar` is smaller. The log likelihood is conditional on the
+fixed variables, so it is not comparable with the free fit’s, and
+[`anova()`](https://rdrr.io/r/stats/anova.html) refuses to compare the
+two fits. `fixed_x` also takes a character vector, such as
+`fixed_x = "covariate1"`, to fix only some of the exogenous variables.
+
 ## Where next
 
 - [The native engine
   guide](https://data-wise.github.io/medfit/articles/native-guide.md):
   syntax, inference, constraints, diagnostics and limits in one place.
 - [Cookbook recipes 11 to
-  17](https://data-wise.github.io/medfit/articles/cookbook.md): a latent
+  18](https://data-wise.github.io/medfit/articles/cookbook.md): a latent
   mediator, a nonlinear constraint, comparing models, defined
-  parameters, bounds and checks.
+  parameters, bounds, checks and fixed covariates.
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
   what the native engine does and does not do compared with lavaan.

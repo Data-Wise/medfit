@@ -68,11 +68,11 @@ fit <- fit_mediation(
   data = mediation_demo, treatment = "treatment", mediator = "mediator1",
   weights = ipw, se_type = "sandwich"
 )
-tidy(fit, type = "effects", conf.int = TRUE)
+tidy(fit, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.335    0.0657   0.206      0.463
     2 nde      0.208    0.115   -0.0180     0.433

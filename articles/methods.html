@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,6 +124,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -171,7 +172,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -480,10 +481,10 @@ Attaching package: 'generics'</code></pre>
 <span>  <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">cdat</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
 <span>  engine <span class="op">=</span> <span class="st">"lmer"</span>, cluster <span class="op">=</span> <span class="st">"school"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 5 × 5
-  term      estimate std.error conf.low conf.high
+  term      estimate std_error conf_low conf_high
   &lt;chr&gt;        &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 nie         0.209     0.127  -0.0397      0.458
 2 nde         0.0772    0.227  -0.368       0.522
@@ -501,7 +502,7 @@ attr(,"label")
 </div>
 </section><section class="level3"><h3 id="few-clusters-and-kenwardroger">Few clusters and Kenward–Roger<a class="anchor" aria-label="anchor" href="#few-clusters-and-kenwardroger"></a>
 </h3>
-<p>With few clusters the model-based standard errors can be too small. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> warns when <span class="math inline">\(J &lt; 25\)</span> with model-based standard errors, and whatever the standard error type when <span class="math inline">\(J &lt; 10\)</span>. <code>se_type = "kr"</code> replaces each model’s covariance by the Kenward–Roger adjusted one (<code><a href="https://rdrr.io/pkg/pbkrtest/man/kr-vcovAdj.html" class="external-link">pbkrtest::vcovAdj()</a></code>, REML fits only) and stores a Kenward–Roger denominator degrees of freedom for each path; <code>confint(parm = "paths")</code> and <code>tidy(conf.int = TRUE)</code> then give <span class="math inline">\(t\)</span> intervals for the paths, while the intervals for the products (NIE, own, spillover, TE) stay normal. The Kenward–Roger adjustment changes the standard errors very little (ratios of 1.000 to 1.002 at <span class="math inline">\(J = 15\)</span>); its value is the degrees of freedom. The product intervals are the weak point at small <span class="math inline">\(J\)</span>. <code>bootstrap_mediation(cluster = )</code> needs no normal approximation for them; no few-cluster threshold is established, and the published evidence for resampling whole clusters is for treatment varying within clusters with 30 or more clusters (Falk et al. 2024), not for this design. The treatment’s effect on the mediator rests on <span class="math inline">\(J\)</span> cluster-level contrasts however many members each cluster has, so the number of clusters, not of members, is the sample size for it.</p>
+<p>With few clusters the model-based standard errors can be too small. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> warns when <span class="math inline">\(J &lt; 25\)</span> with model-based standard errors, and whatever the standard error type when <span class="math inline">\(J &lt; 10\)</span>. <code>se_type = "kr"</code> replaces each model’s covariance by the Kenward–Roger adjusted one (<code><a href="https://rdrr.io/pkg/pbkrtest/man/kr-vcovAdj.html" class="external-link">pbkrtest::vcovAdj()</a></code>, REML fits only) and stores a Kenward–Roger denominator degrees of freedom for each path; <code>confint(parm = "paths")</code> and <code>tidy(conf_int = TRUE)</code> then give <span class="math inline">\(t\)</span> intervals for the paths, while the intervals for the products (NIE, own, spillover, TE) stay normal. The Kenward–Roger adjustment changes the standard errors very little (ratios of 1.000 to 1.002 at <span class="math inline">\(J = 15\)</span>); its value is the degrees of freedom. The product intervals are the weak point at small <span class="math inline">\(J\)</span>. <code>bootstrap_mediation(cluster = )</code> needs no normal approximation for them; no few-cluster threshold is established, and the published evidence for resampling whole clusters is for treatment varying within clusters with 30 or more clusters (Falk et al. 2024), not for this design. The treatment’s effect on the mediator rests on <span class="math inline">\(J\)</span> cluster-level contrasts however many members each cluster has, so the number of clusters, not of members, is the sample size for it.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">fit_kr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
 <span>  <span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, <span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">cdat</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
@@ -651,7 +652,7 @@ c_prime   -0.382891954 0.5373482</code></pre>
 <p>For the joint effects the chain rule through the propagated terms is carried by backward recursions, <span class="math inline">\(\lambda_j = (\theta_{2j} + \theta_{3j}) + \sum_{i&gt;j}
 d_{ij} \lambda_i\)</span> and <span class="math inline">\(\kappa_j = \theta_{3j} + \sum_{i&gt;j} d_{ij} \kappa_i\)</span>.</p>
 <p>The covariate means <span class="math inline">\(\bar c\)</span> are treated as fixed, so standard errors that involve them (the four-way INT<sub>ref</sub> and the joint NDE) are conditional on the observed covariates; they slightly understate the uncertainty of a population-average effect.</p>
-<p><strong>Intervals.</strong> <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> and <code>tidy(conf.int = TRUE)</code> report normal intervals, <span class="math inline">\(\hat g \pm z_{1-\alpha/2}\, \widehat{\text{SE}}\)</span>. The sampling distribution of a product of coefficients is skewed, so these can be inaccurate for indirect effects; <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> warns about this for effects, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> stays silent. Prefer a bootstrap for inference on an indirect effect.</p>
+<p><strong>Intervals.</strong> <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> and <code>tidy(conf_int = TRUE)</code> report normal intervals, <span class="math inline">\(\hat g \pm z_{1-\alpha/2}\, \widehat{\text{SE}}\)</span>. The sampling distribution of a product of coefficients is skewed, so these can be inaccurate for indirect effects; <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> warns about this for effects, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> stays silent. Prefer a bootstrap for inference on an indirect effect.</p>
 </section><section class="level2"><h2 id="bootstrap">Bootstrap<a class="anchor" aria-label="anchor" href="#bootstrap"></a>
 </h2>
 <p><code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> has three methods, each returning a <code>BootstrapResult</code> with the point estimate and a <strong>percentile</strong> interval (the <span class="math inline">\(\alpha/2\)</span> and <span class="math inline">\(1 - \alpha/2\)</span> quantiles of the bootstrap distribution).</p>
@@ -691,6 +692,26 @@ d_{ij} \lambda_i\)</span> and <span class="math inline">\(\kappa_j = \theta_{3j}
 F_{ML}(\theta) = \log |\Sigma(\theta)| + \operatorname{tr}\left(S \Sigma(\theta)^{-1}\right) - \log |S| - p ,
 \]</span></p>
 <p>which is twice lavaan’s <code>fmin</code>. With the means free, <span class="math inline">\(-2 \log L = n \left(F_{ML} + \log |S| + p + p \log 2\pi\right)\)</span>, and <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> reports this value. The gradient is analytic. A parameter vector whose implied covariance is not positive definite gets a large finite value and a zero gradient, so the optimizer can step back from it.</p>
+</section><section class="level3"><h3 id="mean-structure">Mean structure<a class="anchor" aria-label="anchor" href="#mean-structure"></a>
+</h3>
+<p>An intercept statement adds the vector <span class="math inline">\(m\)</span> of intercepts to the RAM form, and the implied means are</p>
+<p><span class="math display">\[
+\mu(\theta) = F (I - A)^{-1} m ,
+\]</span></p>
+<p>with a latent variable’s entry of <span class="math inline">\(m\)</span> fixed at 0. With <span class="math inline">\(\bar x\)</span> the sample mean (weighted when weights are used) and <span class="math inline">\(\Sigma\)</span> as above, the discrepancy gains the term</p>
+<p><span class="math display">\[
+F_{ML}(\theta) = \log |\Sigma| + \operatorname{tr}\left(S \Sigma^{-1}\right) - \log |S| - p
++ (\bar x - \mu)^\top \Sigma^{-1} (\bar x - \mu) .
+\]</span></p>
+<p>Under normality the information has no cross term between the mean and covariance parts: it is the sum <span class="math inline">\(I_{kl} = n\, \partial_k \mu^\top \Sigma^{-1} \partial_l \mu + (n/2)\operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\, \Sigma^{-1} \partial_l \Sigma\right)\)</span>, and the casewise scores of the sandwich gain the mean part <span class="math inline">\(w_i\, \partial_k \mu^\top \Sigma^{-1} (x_i - \mu)\)</span>, with <span class="math inline">\(d_i = x_i - \mu(\theta)\)</span> in the covariance part. The degrees of freedom count <span class="math inline">\(p(p+1)/2 + p\)</span> moments, so a fixed intercept (<code>y ~ 0*1</code>) is a restriction that costs one. A fit without any intercept statement is the same model with every observed intercept free: its discrepancy, estimates and standard errors are those of the covariance-only fit, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> treats it that way.</p>
+<p><strong>Conditioning.</strong> The path entries of a variable with a free intercept change that intercept by the mean times the path, so in the raw parameters the information is nearly singular when the mean is large relative to the standard deviation. The gate, the information and its inverse are computed in centered coordinates <span class="math inline">\(\tilde m_v = m_v - (\bar x_v - \sum_c A_{v,c} \bar x_c)\)</span> (an affine map <span class="math inline">\(\theta = T(\phi + c_0)\)</span>, with the Hessian taken directly in <span class="math inline">\(\phi\)</span>), and the covariance is mapped back as <span class="math inline">\(V = T V_\phi T^\top\)</span>. When no constraint, bound or starting value touches an intercept, the whole fit runs on mean-centered data and the solution is mapped back.</p>
+</section><section class="level3"><h3 id="fixed-exogenous-moments">Fixed exogenous moments<a class="anchor" aria-label="anchor" href="#fixed-exogenous-moments"></a>
+</h3>
+<p>With <code>fixed_x</code>, the selected exogenous variables <span class="math inline">\(x_f\)</span> keep their mean <span class="math inline">\(\bar x_f\)</span>, variance and covariances at the sample values (divisor <span class="math inline">\(n\)</span>, weighted when weights are used), so those entries of <span class="math inline">\(\Sigma\)</span> and <span class="math inline">\(\mu\)</span> are constants, not parameters. They leave the parameter count and the moment count together, so the degrees of freedom and the chi-square do not change, and the estimates and standard errors of the remaining parameters equal the free fit’s: the expected information has no cross block between the fixed moments and the rest at the solution. The log likelihood is conditional on <span class="math inline">\(x_f\)</span>, the joint value minus the marginal normal term of the fixed block,</p>
+<p><span class="math display">\[
+\log L_{\mid x_f} = \log L - \left[ -\frac{n}{2} \left( \log |S_{ff}| + k + k \log 2\pi \right) \right] ,
+\]</span></p>
+<p>with <span class="math inline">\(S_{ff}\)</span> the sample covariance (divisor <span class="math inline">\(n\)</span>) of the <span class="math inline">\(k\)</span> fixed variables; this is lavaan’s <code>fixed.x = TRUE</code> value. Without a mean structure, the likelihood counts one saturated mean for each of the <span class="math inline">\(p - k\)</span> variables that are not fixed. Because <span class="math inline">\(\log L_{\mid x_f}\)</span> conditions on different variables for different fixed sets, fits compare only when their fixed sets and data agree.</p>
 </section><section class="level3"><h3 id="standard-errors">Standard errors<a class="anchor" aria-label="anchor" href="#standard-errors"></a>
 </h3>
 <p>The covariance of <span class="math inline">\(\hat\theta\)</span> is the inverse of the information for the log likelihood. The default, observed information, is <span class="math inline">\((n/2)\)</span> times the central-difference Jacobian of the analytic gradient of <span class="math inline">\(F_{ML}\)</span> (step <span class="math inline">\(\epsilon^{1/3} \max(|x|, 1)\)</span>). Expected information is <span class="math inline">\((n/2)\, \operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\, \Sigma^{-1} \partial_l \Sigma\right)\)</span>. A singular information matrix gives an <code>NA</code> covariance and one warning. Defined parameters (<code>:=</code>) get delta-method standard errors, <span class="math inline">\(\sqrt{g^\top V g}\)</span>, with the gradient <span class="math inline">\(g\)</span> taken by central differences over the labels.</p>

@@ -85,11 +85,11 @@ the treatment moves whole clusters.
 ## Read it
 
 ``` r
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 5 × 5
-      term      estimate std.error conf.low conf.high
+      term      estimate std_error conf_low conf_high
       <chr>        <dbl>     <dbl>    <dbl>     <dbl>
     1 nie         0.209     0.127  -0.0397      0.458
     2 nde         0.0772    0.227  -0.368       0.522

@@ -1,14 +1,14 @@
 # medfit Cookbook
 
-Seventeen task-sized recipes. Each says when to use it, runs on
+Eighteen task-sized recipes. Each says when to use it, runs on
 `mediation_demo` (except the cluster and latent-mediator recipes, which
 simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
-These recipes need medfit 0.8.0 or later. CRAN has 0.3.2, which lacks
-`mediation_demo` and the native, joint and cluster functions; install
-from GitHub or r-universe (see the [home
+These recipes need medfit 0.8.0 or later (recipe 18 needs 0.9.0). CRAN
+has 0.3.2, which lacks `mediation_demo` and the native, joint and
+cluster functions; install from GitHub or r-universe (see the [home
 page](https://data-wise.github.io/medfit/#installation)).
 
 ``` r
@@ -64,11 +64,11 @@ fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
             mediation_demo)
 x <- extract_mediation(fit_m, model_y = fit_y,
                        treatment = "treatment", mediator = "mediator1")
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.333    0.0645  0.206       0.459
     2 nde      0.206    0.110  -0.00936     0.421
@@ -120,11 +120,11 @@ xw <- fit_mediation(
   data = mediation_demo, treatment = "treatment", mediator = "mediator1",
   weights = ipw, se_type = "sandwich"
 )
-tidy(xw, type = "effects", conf.int = TRUE)
+tidy(xw, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.335    0.0657   0.206      0.463
     2 nde      0.208    0.115   -0.0180     0.433
@@ -259,11 +259,11 @@ cdat$Y <- 0.2 * cdat$X + 0.3 * (cdat$M - mbar) + 0.6 * mbar + u[cl] + rnorm(J * 
 ``` r
 xc <- fit_mediation(Y ~ X + M, M ~ X, data = cdat, treatment = "X",
                     mediator = "M", engine = "lmer", cluster = "school")
-tidy(xc, type = "effects", conf.int = TRUE)
+tidy(xc, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 5 × 5
-      term      estimate std.error conf.low conf.high
+      term      estimate std_error conf_low conf_high
       <chr>        <dbl>     <dbl>    <dbl>     <dbl>
     1 nie         0.209     0.127  -0.0397      0.458
     2 nde         0.0772    0.227  -0.368       0.522
@@ -334,11 +334,11 @@ syntax <- "
 sem_fit <- lavaan::sem(syntax, data = mediation_demo)
 xl <- extract_mediation(sem_fit, treatment = "treatment",
                         mediator = "mediator1", outcome = "outcome")
-tidy(xl, type = "effects", conf.int = TRUE)
+tidy(xl, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.333    0.0642  0.207       0.459
     2 nde      0.206    0.109  -0.00801     0.420
@@ -376,11 +376,11 @@ syntax <- "
 "
 xs <- fit_mediation(model = syntax, data = ldat, treatment = "X",
                     mediator = "eta", engine = "native")
-tidy(xs, type = "effects", conf.int = TRUE)
+tidy(xs, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.169    0.0310    0.108     0.229
     2 nde      0.255    0.0487    0.159     0.350
@@ -614,11 +614,11 @@ chk@diagnostics[c("status", "active_bounds", "improper", "sign_check")]
     [1] "ok"
 
 ``` r
-glance(chk)[, c("df", "chisq", "p.value")]
+glance(chk)[, c("df", "chisq", "p_value")]
 ```
 
     # A tibble: 1 × 3
-         df chisq  p.value
+         df chisq  p_value
       <dbl> <dbl>    <dbl>
     1     2  138. 9.35e-31
 
@@ -630,3 +630,97 @@ wrong.
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
+
+## 18. Fix exogenous covariates (`fixed_x`)
+
+*When:* a native model with many covariates is slow or has too many
+parameters, and you want the structural results lavaan reports with
+`fixed.x = TRUE`. `fixed_x = TRUE` fixes the means, variances and
+covariances of the exogenous observed variables at their sample values
+instead of estimating them.
+
+``` r
+syntax <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + covariate1 + covariate2
+  ab := a * b
+"
+free <- fit_sem(syntax, mediation_demo)
+fixed <- fit_sem(syntax, mediation_demo, fixed_x = TRUE)
+rbind(free = coef(free)[c("a", "b")], fixed_x = coef(fixed)[c("a", "b")])
+```
+
+                    a         b
+    free    0.5826425 0.5996207
+    fixed_x 0.5826425 0.5996207
+
+``` r
+rbind(free = sqrt(diag(vcov(free)))[c("a", "b")], fixed_x = sqrt(diag(vcov(fixed)))[c("a", "b")])
+```
+
+                     a          b
+    free    0.09836669 0.05120516
+    fixed_x 0.09836669 0.05120516
+
+``` r
+rbind(free = free@defined[, c("est", "se")], fixed_x = fixed@defined[, c("est", "se")])
+```
+
+                  est         se
+    free    0.3493645 0.06609875
+    fixed_x 0.3493645 0.06609875
+
+The estimates, standard errors and the defined parameter `ab` agree to
+the digits shown. What changes is how many parameters the optimizer
+carries:
+
+``` r
+cbind(fit = c("free", "fixed_x"), rbind(glance(free), glance(fixed))[, c("npar", "df", "chisq", "fixed_x")])
+```
+
+          fit npar df    chisq                           fixed_x
+    1    free   14  1 3.543201
+    2 fixed_x    8  1 3.543201 treatment, covariate1, covariate2
+
+The parameter count falls from 14 to 8 while `df` and `chisq` stay put.
+`glance()$fixed_x` lists what is fixed (`""` when nothing is). With
+`fixed_x`, the fixed rows stay in
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) flagged
+`fixed_x = TRUE`, with no standard error, and the log likelihood,
+[`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+[`BIC()`](https://rdrr.io/r/stats/AIC.html) become conditional on the
+fixed variables, so they differ from the free fit’s.
+
+``` r
+tf <- tidy(fixed)
+tf[tf$fixed_x, c("term", "estimate", "std_error")]
+```
+
+    # A tibble: 6 × 3
+      term                   estimate std_error
+      <chr>                     <dbl>     <dbl>
+    1 treatment~~treatment    0.250          NA
+    2 treatment~~covariate1  -0.0700         NA
+    3 treatment~~covariate2  -0.00246        NA
+    4 covariate1~~covariate1  1.04           NA
+    5 covariate1~~covariate2  0.00266        NA
+    6 covariate2~~covariate2  0.250          NA
+
+``` r
+tryCatch(anova(free, fixed), error = function(e) cat(conditionMessage(e), "\n"))
+```
+
+    the fits have different `fixed_x` sets (free: none; fixed: covariate1, covariate2, treatment): their likelihoods condition on different variables, so they cannot be compared 
+
+Compare fits only when they fix the same variables.
+[`anova()`](https://rdrr.io/r/stats/anova.html),
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+and
+[`AIC()`](https://rdrr.io/r/stats/AIC.html)/[`BIC()`](https://rdrr.io/r/stats/AIC.html)
+across several fits stop when the fixed sets differ, as above. Pass a
+character vector (for example `fixed_x = "treatment"`) to fix a subset.
+
+More: [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.md), [the
+native engine
+guide](https://data-wise.github.io/medfit/articles/native-guide.md).

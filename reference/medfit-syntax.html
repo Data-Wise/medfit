@@ -31,7 +31,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,6 +97,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -131,7 +132,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>medfit Model Syntax</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
       <div class="d-none name"><code>medfit-syntax.Rd</code></div>
     </div>
 
@@ -156,8 +157,18 @@ the best of the starts tried, a disagreement warning means a better optimum may
 exist, and <code>n_starts</code> raises the number of starts. Labels used in a constraint
 or a definition must be defined in the model. A constraint with no free
 parameter is an error. Exogenous variables are given free
-variances and covariances, as lavaan does with <code>fixed.x = FALSE</code>. Mean
-structures (<code>y ~ 1</code>) are not supported, except that <code>y ~ 0*1</code> is accepted.
+variances and covariances, as lavaan does with <code>fixed.x = FALSE</code>; <code>fixed_x = TRUE</code>
+(or a vector of names) in <code><a href="fit_sem.html">fit_sem()</a></code> fixes the moments of the selected ones at the
+sample values instead, as <code>fixed.x = TRUE</code> does. Unlike lavaan, which keeps an
+explicit <code>x ~~ x</code> or <code>x ~ 1</code> free under <code>fixed.x = TRUE</code> and lets the degrees of
+freedom move, medfit stops with an error when the model has a statement on a
+selected variable's moments. Any
+intercept statement (<code>y ~ 1</code>, or <code>1</code> as a term: <code>y ~ 1 + x</code>) turns the mean structure
+on and frees every observed intercept the model does not write, as lavaan does;
+<code>y ~ 0*1</code> then restricts the mean of <code>y</code> to 0 (one degree of freedom), and
+<code>meanstructure = TRUE</code> in <code><a href="fit_sem.html">fit_sem()</a></code> turns it on without any statement. A
+latent variable's mean is fixed at 0; a free latent <code>~1</code> is an error. A repeated <code>1</code> for one
+variable is an error.
 A variable cannot appear on both sides of <code>~</code> or <code>=~</code> (<code>y ~ y</code>), and a path,
 a (co)variance or an intercept takes one row: a repeated <code>y ~ x</code> is an error,
 not a second row that competes for the label.</p>

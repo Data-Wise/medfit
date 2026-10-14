@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,6 +124,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -171,7 +172,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -608,10 +609,10 @@ Attaching package: 'generics'</code></pre>
     as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
     setequal, union</code></pre>
 </div>
-<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_parallel_lm</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_parallel_lm</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 5
-  term  estimate std.error conf.low conf.high
+  term  estimate std_error conf_low conf_high
   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 nie      0.432    0.0716    0.292     0.573
 2 nde      0.106    0.110    -0.109     0.322
@@ -662,10 +663,10 @@ Attaching package: 'generics'</code></pre>
   Joint NIE (all paths through mediator1, mediator2) = +0.6560
   Total = +0.8757   |   n = 400</code></pre>
 </div>
-<pre class="r cell-code"><code><span><span class="fu">generics</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_joint</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<pre class="r cell-code"><code><span><span class="fu">generics</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_joint</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 4 × 5
-  term  estimate std.error conf.low conf.high
+  term  estimate std_error conf_low conf_high
   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 cde      0.175     0.113 -0.0468      0.396
 2 nde      0.220     0.116 -0.00710     0.447
@@ -993,10 +994,10 @@ pie      0.19952257 0.4805126</code></pre>
 <p><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> reports the four components with <code>type = "components"</code> and the natural effects with <code>type = "effects"</code>; <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> adds the interaction coefficient and <code>m_star</code>:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://generics.r-lib.org" class="external-link">generics</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_int</span>, type <span class="op">=</span> <span class="st">"components"</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_int</span>, type <span class="op">=</span> <span class="st">"components"</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 4 × 5
-  term    estimate std.error conf.low conf.high
+  term    estimate std_error conf_low conf_high
   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 cde       0.215     0.116   -0.0124     0.443
 2 int_ref   0.0435    0.0343  -0.0238     0.111
@@ -1006,7 +1007,7 @@ pie      0.19952257 0.4805126</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_int</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 3
-  term  estimate std.error
+  term  estimate std_error
   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 nie      0.617     0.113
 2 nde      0.259     0.118
@@ -1145,7 +1146,7 @@ pie      0.19952257 0.4805126</code></pre>
 <pre><code>Natural Indirect Effect (NIE): 0.3253</code></pre>
 </div>
 </div>
-<p>The four-way decomposition needs a mediator intercept, which the native engine does not estimate, so a treatment-by-mediator model is not supported on this route; fit it with <code>lm</code>/<code>glm</code> or lavaan (<code>meanstructure = TRUE</code>) instead. See <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> for the syntax.</p>
+<p>The four-way decomposition is not available on this route yet: the native syntax has no product operator (planned for 0.10.0), so <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> refuses <code>decomposition = "four_way"</code> and <code>interaction =</code> by name. Fit a treatment-by-mediator model with <code>lm</code>/<code>glm</code> or lavaan (<code>meanstructure = TRUE</code>) instead. See <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> for the syntax.</p>
 </section><section class="level2"><h2 id="compatibility-with-rmediation">Compatibility with RMediation<a class="anchor" aria-label="anchor" href="#compatibility-with-rmediation"></a>
 </h2>
 <p>The extraction design is compatible with RMediation’s lavaan extractor:</p>
@@ -1305,7 +1306,7 @@ pie      0.19952257 0.4805126</code></pre>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 3
-  term    estimate std.error
+  term    estimate std_error
   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;
 1 a          0.583    0.0989
 2 b          0.571    0.0535
@@ -1318,7 +1319,7 @@ pie      0.19952257 0.4805126</code></pre>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_data</span>, type <span class="op">=</span> <span class="st">"paths"</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 3
-  term    estimate std.error
+  term    estimate std_error
   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;
 1 a          0.583    0.0989
 2 b          0.571    0.0535
@@ -1327,17 +1328,17 @@ pie      0.19952257 0.4805126</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_data</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 3
-  term  estimate std.error
+  term  estimate std_error
   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 nie      0.333    0.0645
 2 nde      0.206    0.110
 3 te       0.539    0.119 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># With confidence intervals</span></span>
-<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_data</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">med_data</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 5
-  term    estimate std.error conf.low conf.high
+  term    estimate std_error conf_low conf_high
   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 a          0.583    0.0989  0.389       0.776
 2 b          0.571    0.0535  0.466       0.676

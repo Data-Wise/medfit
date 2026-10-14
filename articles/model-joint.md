@@ -53,11 +53,11 @@ class(x)[1]
     [1] "medfit::JointMediationData"
 
 ``` r
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 4 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 cde      0.175     0.113 -0.0468      0.396
     2 nde      0.220     0.116 -0.00710     0.447

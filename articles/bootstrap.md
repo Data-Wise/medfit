@@ -229,8 +229,8 @@ print(boot_np)
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.2098
-      Upper:   0.4730
+      Lower:   0.2063
+      Upper:   0.4745
 
 ### How It Works
 
@@ -733,7 +733,7 @@ tidy(boot_result)
 ```
 
     # A tibble: 1 × 5
-      term     estimate std.error conf.low conf.high
+      term     estimate std_error conf_low conf_high
       <chr>       <dbl>     <dbl>    <dbl>     <dbl>
     1 estimate    0.333    0.0612    0.217     0.463
 

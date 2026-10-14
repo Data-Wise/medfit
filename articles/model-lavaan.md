@@ -59,11 +59,11 @@ class(x)[1]
     [1] "medfit::MediationData"
 
 ``` r
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.333    0.0642  0.207       0.459
     2 nde      0.206    0.109  -0.00801     0.420
@@ -93,11 +93,11 @@ class(xs)[1]
     [1] "medfit::SerialMediationData"
 
 ``` r
-tidy(xs, type = "effects", conf.int = TRUE)
+tidy(xs, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 4 × 5
-      term      estimate std.error conf.low conf.high
+      term      estimate std_error conf_low conf_high
       <chr>        <dbl>     <dbl>    <dbl>     <dbl>
     1 nie         0.0755    0.0211   0.0342     0.117
     2 nie_total   0.367     0.0690   0.232      0.503

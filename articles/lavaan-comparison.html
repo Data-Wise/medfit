@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,6 +124,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -171,7 +172,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -180,7 +181,7 @@
 
 
 
-    <p>medfit’s native engine fits covariance-structure models from lavaan-style syntax. It is not a replacement for lavaan: it covers the path models behind mediation analysis and stops there. This page runs both on the same data, then lists what each does, with a status for every feature that a test checks against a live probe on each build. The native engine is experimental.</p>
+    <p>medfit’s native engine fits covariance-structure models, with observed intercepts and means, from lavaan-style syntax. It is not a replacement for lavaan: it covers the path models behind mediation analysis and stops there. This page runs both on the same data, then lists what each does, with a status for every feature that a test checks against a live probe on each build. The native engine is experimental.</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -193,7 +194,7 @@
 </tr>
 <tr class="even">
 <td><strong>Use lavaan when</strong></td>
-<td>you need means, groups, categorical outcomes, other estimators, FIML, or fit indices</td>
+<td>you need latent means, groups, categorical outcomes, other estimators, FIML, or fit indices</td>
 </tr>
 <tr class="odd">
 <td><strong>Both</strong></td>
@@ -240,7 +241,7 @@ lavaan is FREE software! Please report any bugs.</code></pre>
 <span><span class="va">rows</span> <span class="op">&lt;-</span> <span class="va">native</span><span class="op">[</span><span class="va">native</span><span class="op">$</span><span class="va">term</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span>, <span class="st">"ab"</span><span class="op">)</span>, <span class="op">]</span></span>
 <span><span class="va">i</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">rows</span><span class="op">$</span><span class="va">term</span>, <span class="va">ref</span><span class="op">$</span><span class="va">label</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>term <span class="op">=</span> <span class="va">rows</span><span class="op">$</span><span class="va">term</span>, native <span class="op">=</span> <span class="va">rows</span><span class="op">$</span><span class="va">estimate</span>, lavaan <span class="op">=</span> <span class="va">ref</span><span class="op">$</span><span class="va">est</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,</span>
-<span>           se_native <span class="op">=</span> <span class="va">rows</span><span class="op">$</span><span class="va">std.error</span>, se_lavaan <span class="op">=</span> <span class="va">ref</span><span class="op">$</span><span class="va">se</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span></code></pre>
+<span>           se_native <span class="op">=</span> <span class="va">rows</span><span class="op">$</span><span class="va">std_error</span>, se_lavaan <span class="op">=</span> <span class="va">ref</span><span class="op">$</span><span class="va">se</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>  term     native     lavaan  se_native  se_lavaan
 1    a 0.45599612 0.45599612 0.10763360 0.10763360
@@ -249,7 +250,7 @@ lavaan is FREE software! Please report any bugs.</code></pre>
 4   ab 0.32532073 0.32532073 0.08016376 0.08016376</code></pre>
 </div>
 </div>
-<p><code>fixed.x = FALSE</code> matters: lavaan fixes exogenous covariates by default, the native engine always estimates their variances and covariances. The standard errors, including the delta-method error of <code>ab</code>, agree as well.</p>
+<p><code>fixed.x = FALSE</code> matters: lavaan fixes exogenous covariates by default, the native engine estimates their variances and covariances unless <code>fixed_x = TRUE</code> (or a vector of names) asks for lavaan’s behavior. The standard errors, including the delta-method error of <code>ab</code>, agree as well.</p>
 </section><section class="level2"><h2 id="where-they-differ-by-design">Where they differ by design<a class="anchor" aria-label="anchor" href="#where-they-differ-by-design"></a>
 </h2>
 <p>The default information matrix is observed in medfit and expected in lavaan. They agree for a well-fitting model and separate when the model is misspecified; <code>information = "expected"</code> reproduces lavaan:</p>
@@ -299,8 +300,8 @@ lavaan                 0.04715465</code></pre>
 <tr class="odd">
 <td>Means and intercepts</td>
 <td>yes</td>
-<td>covariance structures only</td>
-<td>Unsupported</td>
+<td>observed intercepts and means (<code>y ~ 1</code>, <code>y ~ 1 + x</code>); latent means are planned</td>
+<td>Supported</td>
 </tr>
 <tr class="even">
 <td>Multiple groups</td>
@@ -383,12 +384,20 @@ lavaan                 0.04715465</code></pre>
 <td>Unsupported</td>
 </tr>
 <tr class="odd">
+<td>Fixed exogenous covariates</td>
+<td>
+<code>fixed.x = TRUE</code> is the default</td>
+<td>
+<code>fixed_x = TRUE</code> or names, default <code>FALSE</code>; a statement on a selected variable is an error</td>
+<td>Different by design</td>
+</tr>
+<tr class="even">
 <td>Nested model comparison</td>
 <td><code><a href="https://rdrr.io/pkg/lavaan/man/lavTestLRT.html" class="external-link">lavTestLRT()</a></code></td>
 <td><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code></td>
 <td>Supported</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Mediation effects and the MBCO test</td>
 <td>no</td>
 <td>

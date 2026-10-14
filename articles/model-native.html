@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,6 +124,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -171,7 +172,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -283,10 +284,10 @@ Use summary() for the parameter table and diagnostics.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "medfit::MediationData"</code></pre>
 </div>
-<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 5
-  term  estimate std.error conf.low conf.high
+  term  estimate std_error conf_low conf_high
   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 nie      0.333    0.0642  0.207       0.459
 2 nde      0.206    0.109  -0.00801     0.420
@@ -303,6 +304,44 @@ Use summary() for the parameter table and diagnostics.</code></pre>
 <pre><code>Natural Indirect Effect (NIE): 0.3328</code></pre>
 </div>
 </div>
+</section><section class="level2"><h2 id="intercepts">Intercepts<a class="anchor" aria-label="anchor" href="#intercepts"></a>
+</h2>
+<p>Writing any intercept (<code>y ~ 1</code>, or <code>1</code> as a term, <code>y ~ 1 + x</code>) turns the mean structure on and frees an intercept for every observed variable you did not mention, as lavaan does. The paths, variances and their standard errors are then the same as without it; the fit also reports the intercepts and the mean of each exogenous variable.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">paths</span> <span class="op">&lt;-</span> <span class="st">"mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"</span></span>
+<span><span class="va">free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">paths</span>, <span class="st">"\noutcome ~ 1"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">free</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">free</span><span class="op">)</span><span class="op">$</span><span class="va">op</span> <span class="op">==</span> <span class="st">"~1"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  term        estimate std_error
+  &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;
+1 outcome~1      0.231    0.0774
+2 mediator1~1    0.155    0.0763
+3 treatment~1    0.502    0.0250</code></pre>
+</div>
+</div>
+<p>An intercept you fix or constrain is a restriction, so it can change the other estimates. Fixing the outcome intercept at 0 costs one degree of freedom, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> compares the two fits:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">zero</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">paths</span>, <span class="st">"\noutcome ~ 0*1"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>free <span class="op">=</span> <span class="va">free</span><span class="op">@</span><span class="va">theta</span><span class="op">[[</span><span class="st">"cp"</span><span class="op">]</span><span class="op">]</span>, fixed_at_zero <span class="op">=</span> <span class="va">zero</span><span class="op">@</span><span class="va">theta</span><span class="op">[[</span><span class="st">"cp"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>         free fixed_at_zero
+   0.04057665    0.26236776 </code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">free</span>, <span class="va">zero</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Likelihood-ratio (chi-square difference) test for SEMFit models
+
+n = 400; Chisq is n times the minimized discrepancy
+
+     Df  Chisq Chisq diff Df diff Pr(&gt;Chisq)
+free  0 0.0000
+zero  1 8.8141     8.8141       1   0.002989 **
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>Equating two intercepts works the same way (<code>i1 == i2</code> with labels <code>i1</code> and <code>i2</code>). <code>meanstructure = TRUE</code> turns the mean structure on without writing any intercept, and <code>meanstructure = FALSE</code> fits covariances only. A latent variable’s mean is fixed at 0, and a free latent intercept stops with “latent means are planned for a later release”. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> reads the paths exactly as before; the four-way decomposition is not available on this route yet.</p>
 </section><section class="level2"><h2 id="compared-with-the-glm-engine">Compared with the <code>glm</code> engine<a class="anchor" aria-label="anchor" href="#compared-with-the-glm-engine"></a>
 </h2>
 <p>The two engines agree on the estimates and differ slightly in the standard errors, because the native engine uses maximum-likelihood (not least-squares) variances:</p>
@@ -312,8 +351,8 @@ Use summary() for the parameter table and diagnostics.</code></pre>
 <span>  <span class="va">mediator1</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">mediation_demo</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>native <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span><span class="op">$</span><span class="va">std.error</span>,</span>
-<span>      glm <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">glm_fit</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span><span class="op">$</span><span class="va">std.error</span><span class="op">)</span></span></code></pre>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>native <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span><span class="op">$</span><span class="va">std_error</span>,</span>
+<span>      glm <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">glm_fit</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span><span class="op">$</span><span class="va">std_error</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>             [,1]      [,2]      [,3]
 native 0.06415544 0.1090891 0.1187313
@@ -324,11 +363,13 @@ glm    0.06449767 0.1097774 0.1194466</code></pre>
 </h2>
 <ul>
 <li>
-<strong>No mean structure.</strong> <code>y ~ 1</code> is not supported; the engine fits covariance structures only. A model with a free intercept stops with “mean structure is not supported”.</li>
+<strong>Observed means only.</strong> A free latent mean or intercept stops with “latent means are planned for a later release”; the latent variable’s mean is fixed at 0 (see <a href="#intercepts">Intercepts</a>).</li>
+<li>
+<strong>Constraints on an intercept</strong> are checked up to a data mean about 1,000 times the standard deviation; beyond that the fit may stop with “no start converged”. Constraints that leave every intercept free have no such limit.</li>
 <li>
 <strong>A label must be defined</strong> before <code>:=</code> can use it; an unknown label stops with “unknown parameter label”.</li>
 <li>
-<strong>Exogenous variables get free variances and covariances</strong>, as lavaan does with <code>fixed.x = FALSE</code>, so they appear in the parameter table.</li>
+<strong>Exogenous variables get free variances and covariances</strong>, as lavaan does with <code>fixed.x = FALSE</code>, so they appear in the parameter table. <code>fixed_x = TRUE</code> (or a vector of names) fixes the selected ones at the sample moments, as <code>fixed.x = TRUE</code> does: the structural estimates, their standard errors and the degrees of freedom do not change, the parameter count falls, and <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC become conditional on the fixed variables, so fits with different fixed sets cannot be compared.</li>
 <li>
 <strong>No four-way decomposition</strong> from the native engine.</li>
 <li>

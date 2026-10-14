@@ -33,7 +33,7 @@ model types (lm, glm, lavaan, lmer, and a native SEMFit)."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,7 @@ model types (lm, glm, lavaan, lmer, and a native SEMFit)."><meta property="og:im
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -133,7 +134,7 @@ model types (lm, glm, lavaan, lmer, and a native SEMFit)."><meta property="og:im
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Mediation Structure from Fitted Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/aab-generics.R" class="external-link"><code>R/aab-generics.R</code></a></small>
       <div class="d-none name"><code>extract_mediation.Rd</code></div>
     </div>
 
@@ -188,8 +189,9 @@ fits kept, so it cannot see a mismatch between frames whose row names were
 both reset)</p></li>
 <li><p><strong>SEMFit</strong>: Extract from a model fitted by <code><a href="fit_sem.html">fit_sem()</a></code> (the experimental
 native maximum-likelihood engine), with the same arguments and structures as
-the lavaan method. The four-way decomposition is not available: it needs a
-mediator intercept, which the native engine does not estimate.</p></li>
+the lavaan method. The four-way decomposition is not available: the native
+syntax has no treatment-by-mediator product yet (planned for 0.10.0), so
+<code>decomposition = "four_way"</code> and <code>interaction =</code> are refused by name.</p></li>
 <li><p><strong>brmsfit</strong>: Extract from Bayesian models (future)</p></li>
 </ul><p>Note: OpenMx extraction is planned for a future release.</p>
 <p>The returned objects share one interface (<code><a href="nie.html">nie()</a></code>, <code><a href="nde.html">nde()</a></code>, <code><a href="te.html">te()</a></code>,

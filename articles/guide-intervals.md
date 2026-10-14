@@ -8,7 +8,7 @@ makes no coverage claim beyond what the package’s tests show.
 
 | Your situation | Use | Why |
 |----|----|----|
-| A quick look, one mediator, a decent sample | `tidy(fit, conf.int = TRUE)` or [`confint()`](https://rdrr.io/r/stats/confint.html) | delta method: instant, and assumes the estimate is roughly normal |
+| A quick look, one mediator, a decent sample | `tidy(fit, conf_int = TRUE)` or [`confint()`](https://rdrr.io/r/stats/confint.html) | delta method: instant, and assumes the estimate is roughly normal |
 | The indirect effect `a * b`, a final result | parametric bootstrap: `med(boot = TRUE)` | draws from the estimated normal distribution of the paths, so the skew of a product shows up |
 | You doubt that normality | nonparametric bootstrap | resamples rows and refits, so it does not rely on a normal approximation |
 | Serial mediators fitted from `lm` objects | nonparametric bootstrap, or a lavaan fit | the lm route sets the covariances among chain paths to zero; see [Serial mediation](https://data-wise.github.io/medfit/articles/model-serial.md) |
@@ -56,11 +56,11 @@ fit <- fit_mediation(fy, fm, data = mediation_demo,
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html)):
 
 ``` r
-tidy(fit, type = "effects", conf.int = TRUE)[1, ]
+tidy(fit, type = "effects", conf_int = TRUE)[1, ]
 ```
 
     # A tibble: 1 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.333    0.0645    0.206     0.459
 

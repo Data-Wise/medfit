@@ -82,22 +82,8 @@ Functions for fitting and extracting mediation models
 
 Print and summary methods for medfit classes
 
-- [`tidy(`*`<S7_object>`*`)`](https://data-wise.github.io/medfit/reference/tidy.S7_object.md)
-  [`glance(`*`<S7_object>`*`)`](https://data-wise.github.io/medfit/reference/tidy.S7_object.md)
+- [`tidy_s7_object()`](https://data-wise.github.io/medfit/reference/tidy_s7_object.md)
+  [`glance_s7_object()`](https://data-wise.github.io/medfit/reference/tidy_s7_object.md)
   : Tidy, Glance, and Inference Methods for medfit Objects
 - [`SEMFit-methods`](https://data-wise.github.io/medfit/reference/SEMFit-methods.md)
   **\[experimental\]** : Methods for SEMFit objects
-- [`print(`*`<mediation_effect>`*`)`](https://data-wise.github.io/medfit/reference/print.mediation_effect.md)
-  : Print Method for mediation_effect
-- [`print(`*`<summary.BootstrapResult>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.BootstrapResult.md)
-  : Print Summary for BootstrapResult
-- [`print(`*`<summary.ClusterMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.ClusterMediationData.md)
-  : Print Summary for ClusterMediationData
-- [`print(`*`<summary.JointMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.JointMediationData.md)
-  : Print Summary for JointMediationData
-- [`print(`*`<summary.MediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.MediationData.md)
-  : Print Summary for MediationData
-- [`print(`*`<summary.SEMFit>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.SEMFit.md)
-  : Print Summary for SEMFit
-- [`print(`*`<summary.SerialMediationData>`*`)`](https://data-wise.github.io/medfit/reference/print.summary.SerialMediationData.md)
-  : Print Summary for SerialMediationData

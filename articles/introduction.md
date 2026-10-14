@@ -230,7 +230,7 @@ tidy(med_data)
 ```
 
     # A tibble: 6 × 3
-      term    estimate std.error
+      term    estimate std_error
       <chr>      <dbl>     <dbl>
     1 a           0.5         NA
     2 b           0.3         NA
@@ -244,7 +244,7 @@ tidy(med_data, type = "paths")    # Just a, b, c'
 ```
 
     # A tibble: 3 × 3
-      term    estimate std.error
+      term    estimate std_error
       <chr>      <dbl>     <dbl>
     1 a            0.5        NA
     2 b            0.3        NA
@@ -255,7 +255,7 @@ tidy(med_data, type = "effects")  # Just nie, nde, te
 ```
 
     # A tibble: 3 × 3
-      term  estimate std.error
+      term  estimate std_error
       <chr>    <dbl>     <dbl>
     1 nie       0.15        NA
     2 nde       0.2         NA
@@ -449,7 +449,7 @@ summary(boot_result)
 
     Bootstrap Distribution Summary:
        Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-    0.02625 0.12674 0.15224 0.15207 0.17917 0.29152 
+    0.02175 0.12123 0.14842 0.14878 0.17580 0.30124 
 
 ## Main Functions
 
@@ -628,7 +628,7 @@ tidy(boot_result)
 ```
 
     # A tibble: 1 × 5
-      term     estimate std.error conf.low conf.high
+      term     estimate std_error conf_low conf_high
       <chr>       <dbl>     <dbl>    <dbl>     <dbl>
     1 estimate    0.333    0.0658    0.216     0.467
 

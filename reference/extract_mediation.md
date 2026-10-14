@@ -67,8 +67,9 @@ types:
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
   (the experimental native maximum-likelihood engine), with the same
   arguments and structures as the lavaan method. The four-way
-  decomposition is not available: it needs a mediator intercept, which
-  the native engine does not estimate.
+  decomposition is not available: the native syntax has no
+  treatment-by-mediator product yet (planned for 0.10.0), so
+  `decomposition = "four_way"` and `interaction =` are refused by name.
 
 - **brmsfit**: Extract from Bayesian models (future)
 

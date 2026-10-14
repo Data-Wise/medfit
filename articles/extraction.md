@@ -501,11 +501,11 @@ library(generics)
         setequal, union
 
 ``` r
-tidy(med_parallel_lm, type = "effects", conf.int = TRUE)
+tidy(med_parallel_lm, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 3 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 nie      0.432    0.0716    0.292     0.573
     2 nde      0.106    0.110    -0.109     0.322
@@ -584,11 +584,11 @@ med_joint
       Total = +0.8757   |   n = 400
 
 ``` r
-generics::tidy(med_joint, type = "effects", conf.int = TRUE)
+generics::tidy(med_joint, type = "effects", conf_int = TRUE)
 ```
 
     # A tibble: 4 × 5
-      term  estimate std.error conf.low conf.high
+      term  estimate std_error conf_low conf_high
       <chr>    <dbl>     <dbl>    <dbl>     <dbl>
     1 cde      0.175     0.113 -0.0468      0.396
     2 nde      0.220     0.116 -0.00710     0.447
@@ -1013,11 +1013,11 @@ interaction coefficient and `m_star`:
 
 ``` r
 library(generics)
-tidy(med_int, type = "components", conf.int = TRUE)
+tidy(med_int, type = "components", conf_int = TRUE)
 ```
 
     # A tibble: 4 × 5
-      term    estimate std.error conf.low conf.high
+      term    estimate std_error conf_low conf_high
       <chr>      <dbl>     <dbl>    <dbl>     <dbl>
     1 cde       0.215     0.116   -0.0124     0.443
     2 int_ref   0.0435    0.0343  -0.0238     0.111
@@ -1029,7 +1029,7 @@ tidy(med_int, type = "effects")
 ```
 
     # A tibble: 3 × 3
-      term  estimate std.error
+      term  estimate std_error
       <chr>    <dbl>     <dbl>
     1 nie      0.617     0.113
     2 nde      0.259     0.118
@@ -1242,9 +1242,11 @@ nie(x_sem)
 
     Natural Indirect Effect (NIE): 0.3253
 
-The four-way decomposition needs a mediator intercept, which the native
-engine does not estimate, so a treatment-by-mediator model is not
-supported on this route; fit it with `lm`/`glm` or lavaan
+The four-way decomposition is not available on this route yet: the
+native syntax has no product operator (planned for 0.10.0), so
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+refuses `decomposition = "four_way"` and `interaction =` by name. Fit a
+treatment-by-mediator model with `lm`/`glm` or lavaan
 (`meanstructure = TRUE`) instead. See
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
 for the syntax.
@@ -1436,7 +1438,7 @@ tidy(med_data)
 ```
 
     # A tibble: 6 × 3
-      term    estimate std.error
+      term    estimate std_error
       <chr>      <dbl>     <dbl>
     1 a          0.583    0.0989
     2 b          0.571    0.0535
@@ -1451,7 +1453,7 @@ tidy(med_data, type = "paths")
 ```
 
     # A tibble: 3 × 3
-      term    estimate std.error
+      term    estimate std_error
       <chr>      <dbl>     <dbl>
     1 a          0.583    0.0989
     2 b          0.571    0.0535
@@ -1462,7 +1464,7 @@ tidy(med_data, type = "effects")
 ```
 
     # A tibble: 3 × 3
-      term  estimate std.error
+      term  estimate std_error
       <chr>    <dbl>     <dbl>
     1 nie      0.333    0.0645
     2 nde      0.206    0.110
@@ -1470,11 +1472,11 @@ tidy(med_data, type = "effects")
 
 ``` r
 # With confidence intervals
-tidy(med_data, conf.int = TRUE)
+tidy(med_data, conf_int = TRUE)
 ```
 
     # A tibble: 6 × 5
-      term    estimate std.error conf.low conf.high
+      term    estimate std_error conf_low conf_high
       <chr>      <dbl>     <dbl>    <dbl>     <dbl>
     1 a          0.583    0.0989  0.389       0.776
     2 b          0.571    0.0535  0.466       0.676

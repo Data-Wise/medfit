@@ -21,6 +21,8 @@ fit_sem(
   control = list(),
   weights = NULL,
   se_type = c("model", "sandwich"),
+  meanstructure = NULL,
+  fixed_x = FALSE,
   sampling_weights = lifecycle::deprecated()
 )
 ```
@@ -32,8 +34,9 @@ fit_sem(
   Character: model syntax. Lines may use `~` (regression), `=~` (latent
   variable), `~~` (variance or covariance), `label*variable` modifiers,
   [`start()`](https://rdrr.io/r/stats/start.html), `lower()` and
-  `upper()`, and the constraint operators `==`, `<`, `>` and `:=`. Mean
-  structures are not supported.
+  `upper()`, and the constraint operators `==`, `<`, `>` and `:=`. An
+  intercept is written `y ~ 1` (alone or with other terms, as in
+  `y ~ 1 + x`) and turns on the mean structure.
 
 - data:
 
@@ -77,6 +80,40 @@ fit_sem(
   robust standard errors with `sampling.weights`, and is smaller than
   the HC3 default of the glm route by a factor that shrinks like
   \\1/n\\). Model-based standard errors are not valid under weights.
+
+- meanstructure:
+
+  Logical or `NULL`. `NULL` (default) fits a mean structure when the
+  model writes an intercept (`y ~ 1`, free or fixed); `TRUE` fits one
+  regardless; `FALSE` fits covariances only and errors if an intercept
+  is written. With a mean structure every observed variable whose
+  intercept is not written has a free one, so a model with only free
+  intercepts has the same estimates and standard errors as the
+  covariance-only fit. A latent variable's mean is fixed at 0.
+
+- fixed_x:
+
+  `FALSE` (default), `TRUE`, or a character vector of exogenous observed
+  variable names. The selected variables (`TRUE`: every exogenous
+  observed variable, product columns included) have their mean (with a
+  mean structure), variance and every covariance with another exogenous
+  variable fixed at the sample moments of the estimation sample
+  (weighted when `weights` are given) and removed from estimation, as
+  lavaan does with `fixed.x = TRUE`. The structural estimates, their
+  standard errors, the degrees of freedom and the chi-square do not
+  change; the parameter count and the log likelihood do: the log
+  likelihood (and so AIC and BIC) is conditional on the fixed variables,
+  and `glance()$fixed_x` lists them. Models whose `fixed_x` sets or data
+  differ cannot be compared with
+  [`anova()`](https://rdrr.io/r/stats/anova.html),
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md),
+  [`AIC()`](https://rdrr.io/r/stats/AIC.html) or
+  [`BIC()`](https://rdrr.io/r/stats/AIC.html). A (co)variance or
+  intercept statement on a selected variable is an error (lavaan would
+  silently keep it free). The fixed rows stay in the parameter table
+  (`fixed_x` column, no standard error) but not in
+  [`coef()`](https://rdrr.io/r/stats/coef.html) or
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html).
 
 - sampling_weights:
 

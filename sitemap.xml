@@ -60,15 +60,8 @@
 <url><loc>https://data-wise.github.io/medfit/reference/nie.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/paths.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/pm.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/reference/print.mediation_effect.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/reference/print.summary.BootstrapResult.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/reference/print.summary.ClusterMediationData.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/reference/print.summary.JointMediationData.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/reference/print.summary.MediationData.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/reference/print.summary.SEMFit.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/reference/print.summary.SerialMediationData.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/quick.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/te.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/reference/tidy.S7_object.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/reference/tidy_s7_object.html</loc></url>
 </urlset>
 

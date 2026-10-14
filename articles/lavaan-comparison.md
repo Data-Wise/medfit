@@ -1,16 +1,16 @@
 # lavaan and the native engine
 
-medfit’s native engine fits covariance-structure models from
-lavaan-style syntax. It is not a replacement for lavaan: it covers the
-path models behind mediation analysis and stops there. This page runs
-both on the same data, then lists what each does, with a status for
-every feature that a test checks against a live probe on each build. The
-native engine is experimental.
+medfit’s native engine fits covariance-structure models, with observed
+intercepts and means, from lavaan-style syntax. It is not a replacement
+for lavaan: it covers the path models behind mediation analysis and
+stops there. This page runs both on the same data, then lists what each
+does, with a status for every feature that a test checks against a live
+probe on each build. The native engine is experimental.
 
 |  |  |
 |----|----|
 | **Use medfit native when** | you want the indirect effect, [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md), or a nonlinear constraint such as `cp == a*b` on a path model |
-| **Use lavaan when** | you need means, groups, categorical outcomes, other estimators, FIML, or fit indices |
+| **Use lavaan when** | you need latent means, groups, categorical outcomes, other estimators, FIML, or fit indices |
 | **Both** | read the same `~`, `=~`, `~~`, `:=` and constraint syntax, and agree to about 1e-6 where both apply |
 
 ## The same model in both
@@ -56,7 +56,7 @@ ref <- parameterEstimates(sem(model, mediation_demo, fixed.x = FALSE))
 rows <- native[native$term %in% c("a", "b", "cp", "ab"), ]
 i <- match(rows$term, ref$label)
 data.frame(term = rows$term, native = rows$estimate, lavaan = ref$est[i],
-           se_native = rows$std.error, se_lavaan = ref$se[i])
+           se_native = rows$std_error, se_lavaan = ref$se[i])
 ```
 
       term     native     lavaan  se_native  se_lavaan
@@ -66,7 +66,8 @@ data.frame(term = rows$term, native = rows$estimate, lavaan = ref$est[i],
     4   ab 0.32532073 0.32532073 0.08016376 0.08016376
 
 `fixed.x = FALSE` matters: lavaan fixes exogenous covariates by default,
-the native engine always estimates their variances and covariances. The
+the native engine estimates their variances and covariances unless
+`fixed_x = TRUE` (or a vector of names) asks for lavaan’s behavior. The
 standard errors, including the delta-method error of `ab`, agree as
 well.
 
@@ -102,7 +103,7 @@ changing the behavior makes that test fail.
 |----|----|----|----|
 | Paths, covariances, labels, fixed values, bounds | yes | yes | Supported |
 | Several modifiers on one term | yes | one per term | Unsupported |
-| Means and intercepts | yes | covariance structures only | Unsupported |
+| Means and intercepts | yes | observed intercepts and means (`y ~ 1`, `y ~ 1 + x`); latent means are planned | Supported |
 | Multiple groups | yes | no | Unsupported |
 | Estimators other than ML | yes | ML, plus the HC0 sandwich | Partial |
 | Missing data | FIML | listwise deletion | Partial |
@@ -116,6 +117,7 @@ changing the behavior makes that test fail.
 | CFI, RMSEA, SRMR | yes | not reported | Unsupported |
 | logLik, AIC, BIC | yes | logLik equal; AIC and BIC count the means | Different by design |
 | Standardized estimates, modification indices, fitted values, residuals | yes | no | Unsupported |
+| Fixed exogenous covariates | `fixed.x = TRUE` is the default | `fixed_x = TRUE` or names, default `FALSE`; a statement on a selected variable is an error | Different by design |
 | Nested model comparison | [`lavTestLRT()`](https://rdrr.io/pkg/lavaan/man/lavTestLRT.html) | [`anova()`](https://rdrr.io/r/stats/anova.html) | Supported |
 | Mediation effects and the MBCO test | no | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) | Supported |
 

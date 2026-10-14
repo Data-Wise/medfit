@@ -37,7 +37,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,6 +103,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -137,7 +138,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit a Structural Equation Model by Maximum Likelihood</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
       <div class="d-none name"><code>fit_sem.Rd</code></div>
     </div>
 
@@ -160,6 +161,8 @@ parameters (<code>:=</code>) with delta-method standard errors.</p>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  se_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"sandwich"</span><span class="op">)</span>,</span>
+<span>  meanstructure <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  fixed_x <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  sampling_weights <span class="op">=</span> <span class="fu">lifecycle</span><span class="fu">::</span><span class="fu"><a href="https://lifecycle.r-lib.org/reference/deprecated.html" class="external-link">deprecated</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -172,7 +175,8 @@ parameters (<code>:=</code>) with delta-method standard errors.</p>
 <dd><p>Character: model syntax. Lines may use <code>~</code> (regression),
 <code>=~</code> (latent variable), <code>~~</code> (variance or covariance), <code>label*variable</code>
 modifiers, <code><a href="https://rdrr.io/r/stats/start.html" class="external-link">start()</a></code>, <code>lower()</code> and <code>upper()</code>, and the constraint
-operators <code>==</code>, <code>&lt;</code>, <code>&gt;</code> and <code>:=</code>. Mean structures are not supported.</p></dd>
+operators <code>==</code>, <code>&lt;</code>, <code>&gt;</code> and <code>:=</code>. An intercept is written <code>y ~ 1</code> (alone or with other terms, as
+in <code>y ~ 1 + x</code>) and turns on the mean structure.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -216,6 +220,27 @@ sandwich covariance \(A^{-1} B A^{-1}\) with casewise scores
 lavaan's robust standard errors with <code>sampling.weights</code>, and is smaller
 than the HC3 default of the glm route by a factor that shrinks like
 \(1/n\)). Model-based standard errors are not valid under weights.</p></dd>
+
+
+<dt id="arg-meanstructure">meanstructure<a class="anchor" aria-label="anchor" href="#arg-meanstructure"></a></dt>
+<dd><p>Logical or <code>NULL</code>. <code>NULL</code> (default) fits a mean structure when the model writes
+an intercept (<code>y ~ 1</code>, free or fixed); <code>TRUE</code> fits one regardless; <code>FALSE</code> fits covariances only and
+errors if an intercept is written. With a mean structure every observed variable whose intercept is
+not written has a free one, so a model with only free intercepts has the same estimates and
+standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.</p></dd>
+
+
+<dt id="arg-fixed-x">fixed_x<a class="anchor" aria-label="anchor" href="#arg-fixed-x"></a></dt>
+<dd><p><code>FALSE</code> (default), <code>TRUE</code>, or a character vector of exogenous observed variable names. The
+selected variables (<code>TRUE</code>: every exogenous observed variable, product columns included) have their mean (with
+a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
+the estimation sample (weighted when <code>weights</code> are given) and removed from estimation, as lavaan does with
+<code>fixed.x = TRUE</code>. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
+not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
+conditional on the fixed variables, and <code>glance()$fixed_x</code> lists them. Models whose <code>fixed_x</code> sets or data differ
+cannot be compared with <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="mbco_sem.html">mbco_sem()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> or <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code>. A (co)variance or intercept statement on a
+selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+(<code>fixed_x</code> column, no standard error) but not in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> or <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>.</p></dd>
 
 
 <dt id="arg-sampling-weights">sampling_weights<a class="anchor" aria-label="anchor" href="#arg-sampling-weights"></a></dt>

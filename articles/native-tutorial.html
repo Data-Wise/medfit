@@ -52,7 +52,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.8.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,6 +124,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -171,7 +172,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-tutorial.qmd" class="external-link"><code>vignettes/articles/native-tutorial.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-tutorial.qmd" class="external-link"><code>vignettes/articles/native-tutorial.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -180,7 +181,7 @@
 
 
 
-    <p>Eight steps from a model written as syntax to a tested, constrained and extracted mediation result. It sits between <a href="native-quickstart.html">the five-minute quickstart</a> and <a href="native-guide.html">the native engine guide</a>. The native engine is experimental.</p>
+    <p>Nine steps from a model written as syntax to a tested, constrained and extracted mediation result. It sits between <a href="native-quickstart.html">the five-minute quickstart</a> and <a href="native-guide.html">the native engine guide</a>. The native engine is experimental.</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -189,7 +190,7 @@
 <tbody>
 <tr class="odd">
 <td><strong>You need</strong></td>
-<td>medfit 0.8.0 or later; the bundled <code>mediation_demo</code> data</td>
+<td>medfit 0.8.0 or later (step 9 needs 0.9.0 or later); the bundled <code>mediation_demo</code> data</td>
 </tr>
 <tr class="even">
 <td><strong>You get</strong></td>
@@ -261,10 +262,10 @@ Use summary() for the parameter table and diagnostics.</code></pre>
 </section><section class="level2"><h2 id="step-3--read-the-estimates">Step 3. Read the estimates<a class="anchor" aria-label="anchor" href="#step-3--read-the-estimates"></a>
 </h2>
 <div class="cell">
-<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std.error"</span>, <span class="st">"conf.low"</span>, <span class="st">"conf.high"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span>, <span class="st">"conf_low"</span>, <span class="st">"conf_high"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 11 × 5
-   term                   estimate std.error conf.low conf.high
+   term                   estimate std_error conf_low conf_high
    &lt;chr&gt;                     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
  1 a                        0.581     0.0986  0.388      0.775
  2 mediator1~covariate1     0.448     0.0483  0.353      0.543
@@ -283,10 +284,10 @@ Use summary() for the parameter table and diagnostics.</code></pre>
 </section><section class="level2"><h2 id="step-4--check-the-fit">Step 4. Check the fit<a class="anchor" aria-label="anchor" href="#step-4--check-the-fit"></a>
 </h2>
 <div class="cell">
-<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"p.value"</span>, <span class="st">"AIC"</span>, <span class="st">"BIC"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"p_value"</span>, <span class="st">"AIC"</span>, <span class="st">"BIC"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 6
-   npar    df chisq p.value   AIC   BIC
+   npar    df chisq p_value   AIC   BIC
   &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
 1    10     0     0      NA 4032. 4088.</code></pre>
 </div>
@@ -350,10 +351,10 @@ MBCO = 17.557, df = 1, p-value = 2.788e-05</code></pre>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span>
 <span>                       outcome <span class="op">=</span> <span class="st">"outcome"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 5
-  term  estimate std.error conf.low conf.high
+  term  estimate std_error conf_low conf_high
   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 nie      0.333    0.0644  0.207       0.459
 2 nde      0.204    0.109  -0.00954     0.418
@@ -361,13 +362,36 @@ MBCO = 17.557, df = 1, p-value = 2.788e-05</code></pre>
 </div>
 </div>
 <p>From here <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> and <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> work as on any other fit.</p>
+</section><section class="level2"><h2 id="step-9--fix-exogenous-covariates">Step 9. Fix exogenous covariates<a class="anchor" aria-label="anchor" href="#step-9--fix-exogenous-covariates"></a>
+</h2>
+<p>Needs medfit 0.9.0 or later. With many covariates, most parameters are the exogenous variances and covariances (and the means, when the model has a mean structure). <code>fixed_x = TRUE</code> fixes them at their sample values, as lavaan’s <code>fixed.x = TRUE</code> does, and leaves the structural paths alone. The restricted model of Step 6 shows that the test does not move either:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">tied_fx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">syntax</span>, <span class="st">"cp == a * b\n"</span><span class="op">)</span>, <span class="va">mediation_demo</span>, fixed_x <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">tied_fx</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>    a     b    cp
+0.542 0.550 0.298 </code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  free  <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">tied</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"logLik"</span>, <span class="st">"fixed_x"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  fixed <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">tied_fx</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"logLik"</span>, <span class="st">"fixed_x"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 5
+   npar    df chisq logLik fixed_x
+* &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;
+1     9     1 0.938 -2002. ""
+2     6     1 0.938 -1140. "treatment, covariate1"</code></pre>
+</div>
+</div>
+<p>Check: <code>a</code>, <code>b</code> and <code>cp</code> match Step 6, and <code>df</code> and <code>chisq</code> are the same, but <code>npar</code> is smaller. The log likelihood is conditional on the fixed variables, so it is not comparable with the free fit’s, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> refuses to compare the two fits. <code>fixed_x</code> also takes a character vector, such as <code>fixed_x = "covariate1"</code>, to fix only some of the exogenous variables.</p>
 </section><section class="level2"><h2 id="where-next">Where next<a class="anchor" aria-label="anchor" href="#where-next"></a>
 </h2>
 <ul>
 <li>
 <a href="native-guide.html">The native engine guide</a>: syntax, inference, constraints, diagnostics and limits in one place.</li>
 <li>
-<a href="cookbook.html">Cookbook recipes 11 to 17</a>: a latent mediator, a nonlinear constraint, comparing models, defined parameters, bounds and checks.</li>
+<a href="cookbook.html">Cookbook recipes 11 to 18</a>: a latent mediator, a nonlinear constraint, comparing models, defined parameters, bounds, checks and fixed covariates.</li>
 <li>
 <a href="lavaan-comparison.html">lavaan and the native engine</a>: what the native engine does and does not do compared with lavaan.</li>
 </ul></section><script id="quarto-html-after-body" type="application/javascript">
