@@ -4,7 +4,7 @@ State at start: `dev` = `main` + docs audit + AIC/BIC guard (#206) + NEWS bullet
 
 ## Quick Wins (< 30 min)
 
-1. **`mbco_sem()` refit passes `fixed_x`** — closes the V8 open item in `tasks/todo.md` (the refit at `R/sem-mbco.R:155-156` passes only `meanstructure`; the statistic is unchanged today, so this is hygiene plus a test that sees the refit call).
+1. ~~`mbco_sem()` refit passes `fixed_x`~~ **already shipped** (`2d991da`, #178: `R/sem-mbco.R:152-160` passes the fit's fixed set to every refit). The V8 open-item note in `tasks/todo.md` was stale and is corrected in this revision. Revision per the Codex review (2026-10-14).
 2. **Stamp the 0.10.1 header** in NEWS and DESCRIPTION at release prep (the #210 bullet sits under "development version").
 3. **Triage the 3 skipped tests and 42 warnings** from the audit (Q9): list each, mark expected vs not. Read-only.
 4. **Track the pandoc `--mathjax` deprecation** (Q6): one line in `.STATUS`; a future pandoc could break math site-wide.
@@ -33,10 +33,10 @@ State at start: `dev` = `main` + docs audit + AIC/BIC guard (#206) + NEWS bullet
 
 ## Recommended Next Step
 
-→ **Do Quick Win 1 (`mbco_sem()` refit passes `fixed_x`) together with option A (covariate-mean term, opt-in)** as one 0.10.1 branch: both are native-engine correctness items with independent oracles (a mocked refit capture; the bootstrap), neither changes any default result, and together they make a coherent patch release. Leave factor expansion for 0.11.0 unless you want the UX fix now.
+→ **Option A (covariate-mean term, opt-in) as the 0.10.1 content**, with the oracle the nonparametric bootstrap and no default result changed. On its own it is a thin patch release, so the real question is open question 2 below: tag 0.10.1 for this alone, or batch it with the next feature. Leave factor expansion for 0.11.0 unless you want the UX fix now.
 
 ## Open questions for the author
 
 1. Opt-in argument name and default for the covariate-mean term (A vs B)?
-2. Is a patch release worth tagging for this alone, or batch it into 0.11.0?
+2. Is a patch release worth tagging for the covariate-mean term alone (the `mbco_sem()` item is already shipped), or batch it into the next feature release?
 3. Factor covariates: expand automatically, or keep the error plus the recipe?

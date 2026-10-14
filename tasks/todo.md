@@ -52,7 +52,7 @@ Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/S
   - Acceptance: `fit_mediation(engine_args = list(fixed_x = ))` reaches the fit; `.sem_fit_branches()` and the `mbco_sem()` refit carry it; `extract_mediation()` unchanged; `tidy()`/`summary()` show fixed rows (flag, est, se NA)
   - Verify: `devtools::test(filter = "sem-fixed-x-plumbing")` (mocked-binding capture of the refit call)
   - Files: `R/fit-glm.R`, `R/sem-fit.R`, `R/sem-mbco.R`, `R/methods-tidy.R`, `tests/testthat/test-sem-fixed-x-plumbing.R`
-  - Open item (found 2026-10-13, not blocking): the `mbco_sem()` refit does not pass `fixed_x` (`R/sem-mbco.R:155-156` passes `meanstructure` only) and the plumbing test's mock sees `fit_sem()`'s own call first (`test-sem-fixed-x-plumbing.R:14-25`), so it cannot catch this. The statistic is unchanged (`test-sem-fixed-x-compare.R:16`).
+  - Open item closed: the `mbco_sem()` refit now passes `fixed_x` (`2d991da`, #178; `R/sem-mbco.R:152-160`).
 - [x] **Checkpoint F-B** (merged with #175; PR body: six planted defects, not five, each exit 1)
   - [x] S1-S10 each covered by a passing test
   - [x] the planted defects each fail the right test

@@ -10,17 +10,17 @@ Nothing below is decided. Inputs: `planning/specs/BRAINSTORM-native-mean-structu
 
 ## The honest question first: what would latent means buy?
 
-In a **single-group** mediation model, freeing a latent mean while fixing a marker indicator's intercept is a re-parametrization: the fit, the paths and the SEs do not change. The payoff would be (a) constraints or tests that name a latent mean (`eta ~ 1` equals a value), and (b) groups or time, which medfit does not have. So the demand check from 0.10.0 (a concrete consumer) applies again.
+In a **single-group** mediation model, the pair (latent mean 0, all indicator intercepts free) and the pair (latent mean free, one marker intercept fixed) are two parametrizations of one model: the fit, the paths and the SEs do not change. That equivalence holds only when the latent mean is *freed at the same time*; with today's engine (latent mean fixed at 0) fixing an indicator intercept restricts the model. The payoff would be (a) constraints or tests that name a latent mean (`eta ~ 1` equals a value), and (b) groups or time, which medfit does not have. So the demand check from 0.10.0 (a concrete consumer) applies again.
 
 ## Quick Wins (< 30 min)
 
 1. **Demand check**: ask whether probmed, RMediation or any user needs a named latent mean; write the answer in a GRILL file. If nobody does, defer the whole release.
-2. **Improve the error text** (no new feature): tell the user the single-group equivalent (fix a marker indicator's intercept, write the latent loading structure) instead of "planned for a later release".
+2. **Improve the error text** (no new feature) *without* suggesting a workaround: say what the engine does today (the latent mean is fixed at 0 and every indicator intercept is free, which is the identified single-group parametrization) and that a separately estimated latent mean is not available yet. Revision per the Codex review: fixing a marker indicator's intercept in the current engine does **not** reparameterize a free latent mean (the latent mean stays at 0), it constrains the indicator's mean and gives a different, restricted fit, so the error must not offer it as an equivalent.
 3. **Re-run the G7 probe** on the current lavaan to confirm it still holds.
 
 ## Medium Effort (1-2 hrs)
 
-- [ ] **Identification check at table completion**: a free latent `~1` needs exactly one fixed or constrained indicator intercept per latent variable; the error names the latent variable (the intercept analogue of `.sem_check_scale()`).
+- [ ] **Identification check at table completion**: check the **rank of the mean-parameter Jacobian** (free latent mean plus indicator intercepts after constraints), with "one fixed indicator intercept per latent variable" only as a sufficient fast path. Two fixed indicator intercepts are a valid, identified model that adds a testable mean restriction (df up by one), and an equality constraint on an intercept anchors the latent mean only if it removes the location freedom; the error names the latent variable. Tests: two fixed intercepts accepted with the extra df; an ineffective equality constraint rejected (revision per the Codex review).
 - [ ] **RAM and information**: latent mean entries in `m0`/`pos_m`, extended centered coordinates (`.sem_center_map()`), df and the moment count (latent means add parameters, not moments).
 - [ ] **Oracle gate**: a 3-indicator latent mediator with a free `M ~ 1` and the marker intercept fixed; compare estimates, SEs, logLik against lavaan and OpenMx (the gate pattern from the constrained and mean-structure gates, with `MUTANT=` switches).
 
@@ -46,4 +46,4 @@ In a **single-group** mediation model, freeing a latent mean while fixing a mark
 
 1. Is there a concrete consumer of a named latent mean today (probmed, RMediation, you)?
 2. If not, should 0.11.0 be something else (factor covariates, a bootstrap helper), and latent means move to 1.0?
-3. Marker-indicator form only, or also the lavaan "fixed latent variance, free all intercepts and means" form?
+3. Marker-indicator form only, or also the lavaan "fixed latent variance, free all intercepts and means" form? The identification check should be the Jacobian rank either way.
