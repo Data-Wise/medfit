@@ -12,11 +12,11 @@ execute:
   echo: true
 ---
 
-Eighteen task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Nineteen task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
-These recipes need medfit 0.8.0 or later (recipe 18 needs 0.9.0, and the native route in recipe 7 needs 0.10.0). CRAN has 0.3.2, which lacks
+These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, and the native route in recipe 7 needs 0.10.0). CRAN has 0.3.2, which lacks
 `mediation_demo` and the native, joint and cluster functions; install from
 GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 
@@ -519,3 +519,42 @@ across several fits stop when the fixed sets differ, as above. Pass a character 
 example `fixed_x = "treatment"`) to fix a subset.
 
 More: [Methods and Formulas](methods.html), [the native engine guide](native-guide.html).
+
+## 19. Observed intercepts and means
+
+*When:* you want the intercepts of a native model, or a test of whether an intercept is
+zero. Writing any intercept (`outcome ~ 1`) turns the mean structure on and frees an
+intercept for every observed variable you did not mention, as lavaan does;
+`meanstructure = TRUE` does the same without writing one. The paths and their standard
+errors do not change.
+
+```{r}
+#| label: r19-free
+paths <- "
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + cp * treatment
+"
+free <- fit_sem(paste0(paths, "outcome ~ 1"), mediation_demo)
+tf <- tidy(free)
+tf[tf$op == "~1", c("term", "estimate", "std_error")]
+```
+
+The outcome and mediator intercepts equal the `lm()` intercepts of the same equations,
+and the exogenous mean is the sample mean of `treatment`.
+`fit_sem(paths, mediation_demo, meanstructure = TRUE)` returns the same fit.
+
+A fixed intercept is a restriction. `outcome ~ 0*1` costs one degree of freedom and
+changes the other estimates, so `anova()` can test it:
+
+```{r}
+#| label: r19-zero
+zero <- fit_sem(paste0(paths, "outcome ~ 0*1"), mediation_demo)
+round(c(free = free@theta[["cp"]], fixed_at_zero = zero@theta[["cp"]]), 3)
+anova(free, zero)
+AIC(free, zero)
+```
+
+The test rejects zero, and the restricted model has the larger AIC. A fit with
+the mean structure off has no intercepts to restrict.
+
+More: [Native engine, intercepts](model-native.html#intercepts).

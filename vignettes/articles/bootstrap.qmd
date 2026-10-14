@@ -606,21 +606,14 @@ c(lower = boot_result@ci_lower, upper = boot_result@ci_upper)
 confint(boot_result, level = 0.90)
 ```
 
-## Development Status
+## What the bootstrap covers
 
-Bootstrap infrastructure is **complete**:
-
-- ✅ S7 class for BootstrapResult
-- ✅ Parametric bootstrap
-- ✅ Nonparametric bootstrap
-- ✅ Plugin estimator
-- ✅ Parallel processing support
-- ✅ Seed-based reproducibility
-- ✅ Integration with `med()` via `boot = TRUE`
-- ✅ Tidyverse methods (tidy, glance)
-- ✅ Base R methods (`coef()`, `confint()`)
-- ✅ Serial, parallel, and interaction data in the parametric and plugin methods
-- ✅ Direct property access (`@estimate`, `@ci_lower`, `@ci_upper`)
-- 📋 BCa confidence intervals (future)
+- The `BootstrapResult` class with direct property access (`@estimate`, `@ci_lower`, `@ci_upper`).
+- Parametric, nonparametric and plugin methods, with seed-based reproducibility and parallel processing.
+- Cluster resampling for nonparametric bootstrap (`cluster =`, see the [Cookbook](cookbook.html)).
+- Integration with `med()` through `boot = TRUE`.
+- Tidyverse methods (`tidy()`, `glance()`) and base R methods (`coef()`, `confint()`).
+- Serial, parallel and interaction data in the parametric and plugin methods.
+- Percentile intervals only; BCa intervals are not implemented.
 
 See `NEWS.md` for updates.

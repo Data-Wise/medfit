@@ -227,4 +227,6 @@ the reason.
 ## Related
 
 [Cookbook recipe 11](cookbook.html#a-latent-mediator-native-engine) |
+[Cookbook recipe 19](cookbook.html#observed-intercepts-and-means) |
+[Native engine book](native-book-1-mean-structure.html) |
 [Methods and Formulas](methods.html) | `?"medfit-syntax"`

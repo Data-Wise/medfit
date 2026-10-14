@@ -171,6 +171,8 @@ navbar:
         href: articles/cookbook.html#check-a-native-fit-before-trusting-it
       - text: "18. Fix exogenous covariates (fixed_x)"
         href: articles/cookbook.html#fix-exogenous-covariates-fixed_x
+      - text: "19. Observed intercepts and means"
+        href: articles/cookbook.html#observed-intercepts-and-means
     articles:
       text: Articles
       menu:
@@ -215,7 +217,7 @@ navbar:
 
 reference:
   - title: "Quick Start"
-    desc: "ADHD-friendly entry points for rapid analysis"
+    desc: "Short entry points for rapid analysis"
     contents:
       - med
       - quick
@@ -259,7 +261,7 @@ reference:
       - bootstrap_mediation
 
   - title: "Methods"
-    desc: "Print and summary methods for medfit classes"
+    desc: "tidy() and glance() for medfit classes; print, summary, anova, confint and logLik methods for SEMFit"
     contents:
       - tidy_s7_object
       - SEMFit-methods
