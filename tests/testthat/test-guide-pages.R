@@ -73,3 +73,81 @@ test_that("a planted dangling link in a guide would be caught", {
   existing <- c("guide-intervals.qmd")
   expect_identical(targets[!targets %in% existing], "guide-nope.qmd")
 })
+
+# Absolute links to the published site (https://data-wise.github.io/medfit/...) are not relative
+# `](x.html)` links, so the tests above never see them. A dead `#installation` anchor shipped on four
+# pages that way. These helpers resolve each such link to its source file and heading ids offline.
+site_root <- "https://data-wise.github.io/medfit/"
+
+site_link_pattern <- "https://data-wise\\.github\\.io/medfit/[^)\\s\"'>]*"
+
+# Pandoc's auto identifier for a heading: lower case, drop punctuation except `_-.`, spaces to hyphens,
+# strip anything before the first letter. An explicit `{#id}` wins.
+heading_ids <- function(lines) {
+  is_fence <- grepl("^\\s*(```|~~~)", lines)
+  in_code <- cumsum(is_fence) %% 2L == 1L | is_fence
+  h <- lines[!in_code & grepl("^#{1,6}\\s+\\S", lines)]
+  explicit <- regmatches(h, regexpr("\\{[^}]*#[A-Za-z0-9_.:-]+[^}]*\\}", h))
+  explicit <- sub("^.*#([A-Za-z0-9_.:-]+).*$", "\\1", explicit)
+  txt <- sub("\\s*\\{[^}]*\\}\\s*$", "", sub("^#{1,6}\\s+", "", h))
+  txt <- gsub("\\[([^]]*)\\]\\([^)]*\\)", "\\1", txt)
+  txt <- gsub("[`*]", "", txt)
+  auto <- tolower(txt)
+  auto <- gsub("[^a-z0-9_ .-]", "", auto)
+  auto <- gsub("\\s+", "-", auto)
+  auto <- sub("^[^a-z]+", "", auto)
+  unique(c(explicit, auto))
+}
+
+# Source file for a site URL: the home page is README.md, an article is vignettes/articles/<name>.qmd.
+site_source <- function(url) {
+  path <- sub("#.*$", "", sub(site_root, "", url, fixed = TRUE))
+  if (path %in% c("", "index.html")) return(root_path("README.md"))
+  m <- regmatches(path, regexec("^articles/([A-Za-z0-9_-]+)\\.html$", path))[[1]]
+  if (length(m) == 2L) return(root_path("vignettes", "articles", paste0(m[2], ".qmd")))
+  NA_character_
+}
+
+# Broken site links in `lines`: the page or the fragment has no source heading.
+broken_site_links <- function(lines) {
+  urls <- unique(unlist(regmatches(lines, gregexpr(site_link_pattern, lines, perl = TRUE))))
+  urls <- sub("[.,;:]+$", "", urls)
+  bad <- character()
+  for (u in urls) {
+    src <- site_source(u)
+    if (is.na(src)) next # reference pages, news and other generated pages have no source here
+    if (!file.exists(src)) {
+      bad <- c(bad, u)
+      next
+    }
+    frag <- sub("^[^#]*#?", "", u)
+    if (nzchar(frag) && !frag %in% heading_ids(readLines(src, warn = FALSE))) bad <- c(bad, u)
+  }
+  bad
+}
+
+test_that("every absolute site link on the articles and README resolves to a page and a heading", {
+  skip_on_cran()
+  d <- root_path("vignettes", "articles")
+  skip_if_not(dir.exists(d), "vignettes are not available (installed or built package)")
+  files <- c(list.files(d, pattern = "\\.qmd$", full.names = TRUE), root_path("README.md"))
+  skip_if_not(all(file.exists(files)), "README.md is not available")
+  for (f in files) {
+    lines <- readLines(f, warn = FALSE)
+    expect_identical(broken_site_links(lines), character(), info = basename(f))
+    expect_false(any(grepl("medfit/#installation", lines, fixed = TRUE)), info = basename(f))
+  }
+})
+
+test_that("a planted dead site anchor would be caught, and a live one passes", {
+  skip_on_cran()
+  skip_if_not(file.exists(root_path("README.md")), "README.md is not available")
+  expect_true("install" %in% heading_ids(readLines(root_path("README.md"), warn = FALSE)))
+  planted <- paste0(
+    "see [home](https://data-wise.github.io/medfit/#installation) ",
+    "and [x](https://data-wise.github.io/medfit/#install)"
+  )
+  expect_identical(broken_site_links(planted), "https://data-wise.github.io/medfit/#installation")
+  gone <- "[y](https://data-wise.github.io/medfit/articles/no-such-page.html#top)"
+  expect_identical(broken_site_links(gone), "https://data-wise.github.io/medfit/articles/no-such-page.html#top")
+})
