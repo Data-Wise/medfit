@@ -598,8 +598,8 @@ options(op)
 ```
 
 On `mediation_demo` the added term is about 0.08% of the INT~ref~ standard error, so the table
-matches the one above to the digits shown; it matters when the interaction and the covariate's
-effect on the mediator are both large (chapter 7 has a simulated case: 0.0995 becomes 0.1516
+matches the one above to the digits shown; it matters when the interaction and the effect of the covariate
+on the mediator are both large (chapter 7 has a simulated case: 0.0995 becomes 0.1516
 against a bootstrap SD of 0.1568).
 
 The other route is the nonparametric bootstrap, which refits the model on each resample:
