@@ -1,6 +1,15 @@
-# medfit (development version)
+# medfit 0.9.0
 
 ## New features
+
+* The native engine fits observed intercepts and means. Any `y ~ 1` row (or `meanstructure = TRUE` in `fit_sem()`
+  and `engine_args = list(meanstructure = TRUE)` in `fit_mediation()`) turns the mean structure on and frees every
+  observed intercept the model does not write, as lavaan does. The fit works in mean-centered coordinates, so data
+  far from zero (checked to a mean of 1e5 standard deviations) no longer ruins the information matrix; intercepts
+  can be constrained or bounded (checked to a mean of 1e3 standard deviations). Weights, the sandwich covariance,
+  linear and nonlinear constraints, `anova()` (a covariance-only fit counts as having free intercepts), `mbco_sem()`
+  and `fit_mediation(engine = "native")` all work with it. The four-way decomposition on a native fit is refused by
+  name until the `:` operator arrives (planned for 0.10.0).
 
 * `fit_sem(fixed_x = )` (and `fit_mediation(engine = "native", engine_args = list(fixed_x = ))`) fixes the mean,
   variance and covariances of exogenous observed variables at their sample values, as lavaan's `fixed.x = TRUE`
@@ -76,14 +85,15 @@
   guide" (syntax, fitting and reading, standard errors and weights, constraints and
   how each kind is solved, model comparison and the MBCO test, diagnostics, the route
   to the mediation objects, limits). A third page, "Native engine, step by step",
-  walks the same path in eight checked steps, including a chain of three paths.
+  walks the same path in nine checked steps, including a chain of three paths and, in the last step, `fixed_x`.
 
 * The constraints page and the introduction no longer say native constraints must
   be linear: nonlinear constraints, `anova()` for nested fits and
   `mbco_sem(paths = )` are described there.
 * Cookbook recipes 14 to 17: compare two native models with `anova()`, a defined
   parameter with its interval, a bound or a fixed path with the diagnostics, and
-  checking a native fit before trusting it. The cookbook now has seventeen recipes.
+  checking a native fit before trusting it. Recipe 18 fixes the exogenous covariates with `fixed_x`. The cookbook now
+  has eighteen recipes.
 
 # medfit 0.8.0
 
