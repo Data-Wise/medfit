@@ -34,6 +34,15 @@
   p <- parameters[, c("lhs", "op", "rhs", "level", "fixed", "label", "start", "lower", "upper")]
   p$user <- 1L
   r <- .sem_roles(p)
+  product_model <- .sem_has_product(p)
+  if (product_model) {
+    cons <- attr(parameters, "all_constraints")
+    if (is.null(cons)) {
+      stop("internal error: a product model needs the parsed constraint table (`all_constraints` attribute) to ",
+           "check rule 9; pass `.sem_parse()$parameters` unchanged", call. = FALSE)
+    }
+    .sem_check_product_parsed(p, cons)
+  }
   fixed_set <- .sem_resolve_fixed_x(fixed_x, r, p)
   written <- p$op == "~1"
   if (identical(meanstructure, FALSE) && any(written)) {
@@ -65,13 +74,13 @@
       )
     }
   }
-  pairs <- function(v) {
+  pairs <- function(v, fixed = NA_real_) {
     if (length(v) < 2L) {
       return(invisible())
     }
     for (i in seq_len(length(v) - 1L)) {
       for (j in (i + 1L):length(v)) {
-        add(v[i], v[j])
+        add(v[i], v[j], fixed)
       }
     }
   }
@@ -88,7 +97,9 @@
     add(v, v)
   }
   pairs(r$lv_x)
-  pairs(c(r$pure_lv_y, r$pure_ov_y))
+  # In a product model the supported class has no residual covariance (rule 9, GRILL H6): the pairing of pure
+  # outcomes is fixed at 0 instead of free, and one note says so below.
+  pairs(c(r$pure_lv_y, r$pure_ov_y), fixed = if (product_model) 0 else NA_real_)
   # Exogenous observed variables: free variances and covariances (Q3). A variable
   # that already has a (co)variance statement is left out of the pairing, as in
   # lavaan with fixed.x = FALSE.
@@ -121,6 +132,9 @@
     )
   }
   p <- p[, c("id", "lhs", "op", "rhs", "level", "fixed", "label", "start", "lower", "upper", "user", "fixed_x")]
+  if (product_model) {
+    .sem_check_product_completed(p, r)
+  }
   attr(p, "fixed_x") <- fixed_set
   p
 }
@@ -270,4 +284,145 @@
 # Degrees of freedom: observed moments minus free parameters.
 .sem_df <- function(ram, eq_rank = 0L) {
   .sem_moments(ram) - (ram$q - eq_rank)
+}
+
+# Product terms (amendment rules 8 and 9, 0.10.0 U4). A product is a regression row whose rhs is `f:g` (the parser's
+# canonical name); variable names cannot contain `:`. Everything below reads tables only, so it needs no data.
+.sem_has_product <- function(p) {
+  any(p$op == "~" & grepl(":", p$rhs, fixed = TRUE))
+}
+
+# Rule 8 is a validity rule (such a regressor is built from the outcome); rule 9 names what is not yet supported.
+.sem_product_stop <- function(msg, rule = 9L) {
+  stop(msg, if (rule == 9L) " This is not yet supported with products; it works without the product.", call. = FALSE)
+}
+
+# Directed graph of the whole parsed table (rule 8): `a -> b` for each plain regressor in `b ~ a`, `f -> b` for each
+# factor of a product in `b ~ f:g` (the product column is not a node), `eta -> indicator` for `eta =~ indicator`.
+.sem_edges <- function(p) {
+  reg <- p$op == "~"
+  from <- strsplit(p$rhs[reg], ":", fixed = TRUE)
+  to <- rep(p$lhs[reg], lengths(from))
+  ld <- p$op == "=~"
+  data.frame(from = c(unlist(from), p$lhs[ld]), to = c(to, p$rhs[ld]), stringsAsFactors = FALSE)
+}
+
+# Nodes reachable from `start` along the edges (`start` itself only when a cycle returns to it).
+.sem_reach <- function(edges, start) {
+  seen <- character()
+  frontier <- start
+  while (length(frontier)) {
+    frontier <- setdiff(unique(edges$to[edges$from %in% frontier]), seen)
+    seen <- c(seen, frontier)
+  }
+  seen
+}
+
+# Rules 8 and 9 on the parsed parameter table `p` and the constraint table `cons` (before bounds are folded, kept by
+# `.sem_parse()` as an attribute of its parameter table; run from `.sem_complete()`). The
+# checks on residual covariances and fixed intercepts need the completed table (`.sem_check_product_completed()`).
+.sem_check_product_parsed <- function(p, cons) {
+  edges <- .sem_edges(p)
+  # Rule 8: a product factor may not be the equation's target or one of its descendants.
+  for (i in which(p$op == "~" & grepl(":", p$rhs, fixed = TRUE))) {
+    target <- p$lhs[i]
+    f <- strsplit(p$rhs[i], ":", fixed = TRUE)[[1L]]
+    hit <- f[f == target | f %in% .sem_reach(edges, target)]
+    if (length(hit)) {
+      how <- if (hit[1L] == target) {
+        "the target of its own equation"
+      } else {
+        sprintf("downstream of the target '%s'", target)
+      }
+      .sem_product_stop(sprintf(
+        "In the equation for '%s', the product '%s' uses '%s', which is %s (rule 8: no outcome-derived regressors).",
+        target, p$rhs[i], hit[1L], how
+      ), rule = 8L)
+    }
+  }
+  # Rule 9: recursive, no shared or fixed regression coefficient, no constraint on a regression label.
+  for (n in unique(c(edges$from, edges$to))) {
+    if (n %in% .sem_reach(edges, n)) {
+      .sem_product_stop(sprintf("The model is not recursive: '%s' is part of a loop of regressions (rule 9).", n))
+    }
+  }
+  reg <- p$op == "~"
+  # a regression label may appear on no other row of the table (a loading or variance would tie the coefficient)
+  lab <- p$label[reg & nzchar(p$label)]
+  shared <- lab[vapply(lab, function(l) sum(p$label == l) > 1L, TRUE)]
+  if (length(shared)) {
+    .sem_product_stop(sprintf("The label '%s' is used on more than one parameter, a regression among them (rule 9).",
+                              shared[1L]))
+  }
+  fx <- which(reg & !is.na(p$fixed))
+  if (length(fx)) {
+    .sem_product_stop(sprintf("The regression '%s' has a fixed coefficient (rule 9).", .sem_row_text(p[fx[1L], ])))
+  }
+  # Labels named by an `==`, `<` or `>` constraint, directly or through a defined parameter.
+  defs <- stats::setNames(cons$rhs[cons$op == ":="], cons$lhs[cons$op == ":="])
+  used <- character()
+  for (i in which(cons$op %in% c("==", "<", ">"))) {
+    used <- c(used, .sem_expr_labels(cons$lhs[i]), .sem_expr_labels(cons$rhs[i]))
+  }
+  for (k in seq_along(defs)) {
+    used <- unique(c(used, unlist(lapply(intersect(used, names(defs)), function(d) .sem_expr_labels(defs[[d]])))))
+  }
+  hit <- reg & nzchar(p$label) & p$label %in% used
+  if (any(hit)) {
+    .sem_product_stop(sprintf("A constraint (==, < or >) names the coefficient label '%s' (rule 9).", p$label[hit][1L]))
+  }
+  # Rule 9, intercept clause: a `~1` row is free, unlabeled or uniquely labeled, and in no constraint.
+  for (i in which(p$op == "~1" & nzchar(p$label))) {
+    if (sum(p$label == p$label[i]) > 1L) {
+      .sem_product_stop(sprintf(
+        paste("The intercept '%s' shares the label '%s' with another row",
+              "(rule 9, intercept clause: intercepts must be free and unshared)."),
+        .sem_row_text(p[i, ]), p$label[i]
+      ))
+    }
+    if (p$label[i] %in% used) {
+      .sem_product_stop(sprintf(
+        "The intercept '%s' is in a constraint (rule 9, intercept clause: intercepts must be free and unconstrained).",
+        .sem_row_text(p[i, ])
+      ))
+    }
+  }
+  # an inline bound (`lower(0)*m`, `upper(1)*1`, or one folded from `a < 1`) constrains a coefficient or an intercept
+  bnd <- which((reg | p$op == "~1") & (!is.na(p$lower) | !is.na(p$upper)))
+  if (length(bnd)) {
+    .sem_product_stop(sprintf("The row '%s' has a bound (rule 9: coefficients and intercepts are unconstrained).",
+                              .sem_row_text(p[bnd[1L], ])))
+  }
+  invisible(p)
+}
+
+# Rule 9 on the completed table `p`: no residual covariance between two observed endogenous variables (a user
+# statement, or a free row), and no user-fixed intercept. A row flagged `fixed_x` is not a user row and stays
+# allowed (it fixes a moment at its sample value, so structural estimates do not change). The auto-added pure-outcome
+# covariances arrive fixed at 0 (GRILL H6); one note says so.
+.sem_check_product_completed <- function(p, r) {
+  cv <- which(p$op == "~~" & p$lhs != p$rhs & p$lhs %in% r$ov_y & p$rhs %in% r$ov_y & (p$user == 1L | is.na(p$fixed)))
+  if (length(cv)) {
+    .sem_product_stop(sprintf(
+      "A product model cannot have a residual covariance (rule 9): '%s' relates two outcomes.",
+      .sem_row_text(p[cv[1L], ])
+    ))
+  }
+  fx <- which(p$op == "~1" & p$user == 1L & !is.na(p$fixed))
+  if (length(fx)) {
+    .sem_product_stop(sprintf(
+      "The intercept '%s' is fixed (rule 9, intercept clause: intercepts must be free and unconstrained).",
+      .sem_row_text(p[fx[1L], ])
+    ))
+  }
+  auto <- which(p$op == "~~" & p$lhs != p$rhs & p$user == 0L & !is.na(p$fixed) & p$fixed == 0 & !p$lhs %in% r$ov_x)
+  if (length(auto)) {
+    message(
+      "This model has a product term, so the residual covariance between outcomes (",
+      paste(paste(p$lhs[auto], "~~", p$rhs[auto]), collapse = ", "),
+      ") is fixed at 0 (rule 9: products need no residual covariances). The same model without the product ",
+      "estimates it."
+    )
+  }
+  invisible(p)
 }
