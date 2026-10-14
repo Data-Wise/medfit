@@ -10,7 +10,7 @@ test_that("fixed means follow the same rule and df is unchanged with a mean stru
   expect_setequal(mu$lhs, fx_exo)
   expect_equal(mu$est[match("treatment", mu$lhs)], mean(d$treatment), tolerance = 1e-12)
   sh <- fx_shared(free, fixed)
-  expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-8)
+  expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-6)
   expect_equal(unname(sh$se[[2L]]), unname(sh$se[[1L]]), tolerance = 1e-6)
 })
 

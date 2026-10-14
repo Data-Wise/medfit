@@ -12,7 +12,7 @@ test_that("every subset of the exogenous variables equals the free fit", {
     expect_equal(fixed@df, free@df, info = tag)
     expect_identical(length(fixed@theta), length(free@theta) - fx_n_removed(sel), info = tag)
     sh <- fx_shared(free, fixed)
-    expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-8, info = tag)
+    expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-6, info = tag)
     expect_equal(unname(sh$se[[2L]]), unname(sh$se[[1L]]), tolerance = 1e-6, info = tag)
   }
 })

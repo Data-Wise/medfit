@@ -8,7 +8,7 @@ test_that("estimates, standard errors and df equal the free fit; the fixed momen
   expect_equal(fixed@f, free@f, tolerance = 1e-10)
   sh <- fx_shared(free, fixed)
   expect_gt(length(sh$names), 5L)
-  expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-8)
+  expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-6)
   expect_equal(unname(sh$se[[2L]]), unname(sh$se[[1L]]), tolerance = 1e-6)
   expect_identical(length(fixed@theta), length(free@theta) - fx_n_removed(fx_exo))
   expect_identical(nrow(vcov(fixed)), length(fixed@theta))

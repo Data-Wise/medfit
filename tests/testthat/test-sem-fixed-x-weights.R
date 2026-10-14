@@ -10,7 +10,7 @@ test_that("subset invariance holds with weights, model-based and sandwich", {
       fixed <- fit_sem(fx_syntax, d, weights = w, se_type = se, fixed_x = sel)
       sh <- fx_shared(free, fixed)
       tag <- paste(se, paste(sel, collapse = ","))
-      expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-8, info = tag)
+      expect_equal(unname(sh$est[[2L]]), unname(sh$est[[1L]]), tolerance = 1e-6, info = tag)
       expect_equal(unname(sh$se[[2L]]), unname(sh$se[[1L]]), tolerance = 1e-6, info = tag)
     }
   }

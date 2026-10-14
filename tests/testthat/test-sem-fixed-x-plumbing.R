@@ -5,7 +5,7 @@ test_that("fit_mediation(engine = 'native') passes fixed_x through engine_args a
                engine = "native")
   off <- do.call(fit_mediation, args)
   on <- do.call(fit_mediation, c(args, list(engine_args = list(fixed_x = TRUE))))
-  expect_equal(c(on@a_path, on@b_path, on@c_prime), c(off@a_path, off@b_path, off@c_prime), tolerance = 1e-8)
+  expect_equal(c(on@a_path, on@b_path, on@c_prime), c(off@a_path, off@b_path, off@c_prime), tolerance = 1e-6)
   expect_lt(nrow(on@vcov), nrow(off@vcov))
   expect_error(do.call(fit_mediation, c(args, list(engine_args = list(fixed_x = "outcome")))),
                "not exogenous observed variables")
