@@ -109,6 +109,15 @@ parallel mediators it leaves out the covariance between their \code{a} paths.
 \link{JointMediationData} stores the full stacked least-squares covariance, and a
 lavaan fit estimates all equations jointly, so for the same data the
 intervals can differ between engines.
+
+The four-way effects that contain a covariate mean (\code{int_ref}, the NDE and
+the total effect) treat that mean as a fixed constant, so their standard
+errors and intervals are conditional on the observed covariates. They omit
+the sampling variance of the estimated mean, \code{theta3 * gamma} times the
+variance of the covariate mean, so they can understate the uncertainty of a
+population-average effect. CDE, \code{int_med}, PIE and the NIE do not depend on
+the mean. For a population-average interval resample rows with
+\code{\link[=bootstrap_mediation]{bootstrap_mediation()}} (\code{method = "nonparametric"}).
 }
 
 \subsection{Coefficient names}{

@@ -47,7 +47,7 @@ That gives 0.10.0 as a pre-built binary, with no compiler. From GitHub instead:
 > **CRAN has 0.3.2, which does not run the examples on this site.** It lacks
 > `mediation_demo`, `fit_sem()`, `mbco_sem()` and the joint and cluster classes.
 > Its two known issues, serial `te()`/`pm()` and `confint()` path rows, are fixed in
-> 0.7.0; see [#83](https://github.com/Data-Wise/medfit/issues/83).
+> 0.5.0; see [#83](https://github.com/Data-Wise/medfit/issues/83).
 
 ## Try it in 60 seconds
 
@@ -299,10 +299,10 @@ on the `dev` branch; see `NEWS.md` for what each release contains.
 ### Code Quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
-- **Testing**: 3,300+ tests with testthat (>90% coverage, enforced via codecov)
+- **Testing**: 5,700+ testthat expectations in 1,200+ test blocks (>90% coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
-See the [roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md) for the detailed development plan.
+See the [NEWS](https://data-wise.github.io/medfit/news/index.html) for what changed in each release.
 
 ## Contributing
 
@@ -336,7 +336,7 @@ For the entry matching your installed version, run `citation("medfit")`.
 
 - [Package Documentation](https://data-wise.github.io/medfit/)
 - [Development Guide](https://github.com/data-wise/medfit/blob/main/CLAUDE.md)
-- [Roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md)
+- [NEWS](https://data-wise.github.io/medfit/news/index.html)
 - [Ecosystem Strategy](https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md)
 
 ## Contact

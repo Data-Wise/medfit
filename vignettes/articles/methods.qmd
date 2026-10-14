@@ -443,8 +443,10 @@ d_{ij} \lambda_i$ and $\kappa_j = \theta_{3j} + \sum_{i>j} d_{ij} \kappa_i$.
 
 The covariate means $\bar c$ are treated as fixed, so standard errors that
 involve them (the four-way INT<sub>ref</sub> and the joint NDE) are
-conditional on the observed covariates; they slightly understate the
-uncertainty of a population-average effect.
+conditional on the observed covariates; they omit the sampling variance of
+the estimated mean (the derivative of INT<sub>ref</sub> with respect to $\bar c$ is
+$\theta_3\gamma$), so they can understate the uncertainty of a population-average
+effect by an amount not measured here.
 
 **Intervals.** `confint()` and `tidy(conf_int = TRUE)` report normal
 intervals, $\hat g \pm z_{1-\alpha/2}\, \widehat{\text{SE}}$. The sampling

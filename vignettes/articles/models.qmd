@@ -42,7 +42,7 @@ open its page. For a one-page lookup of every function see the
 |---|---|---|---|---|
 | Simple | `MediationData` | `glm`, `regmedint`, `extract_mediation()` (`lm`/`glm`, lavaan), native | model, sandwich | [simple](model-simple.html) |
 | Binary or count variables | `MediationData` | `glm` families | model, sandwich | [glm families](model-glm-families.html) |
-| Treatment-by-mediator | `InteractionMediationData` | `glm`, `regmedint`, lavaan | model; closed form (`regmedint`) | [interaction](model-interaction.html) |
+| Treatment-by-mediator | `InteractionMediationData` | `glm`, `regmedint`, lavaan, native (`fit_sem()` with `x:m`) | model; closed form (`regmedint`) | [interaction](model-interaction.html) |
 | Weighted | `MediationData` | `glm`; native `weights` | sandwich (HC3; native HC0-type) | [weights](model-weights.html) |
 | Serial | `SerialMediationData` | `lm`/`glm` with `mediator_models`, lavaan, native via `fit_sem()` | model | [serial](model-serial.html) |
 | Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, native via `fit_sem()` | model | [parallel](model-parallel.html) |
