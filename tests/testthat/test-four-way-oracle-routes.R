@@ -1,7 +1,7 @@
 # The existing four-way routes against the independent oracles (0.10.0 plan U8 preparation): the lavaan route
 # (`extract_mediation()` of a lavaan fit, defects fixed by U0) and the glm route (`fit_mediation()`), with a
 # covariate in the mediator equation in every model and one no-covariate model for the simple case. The same
-# helpers later take the native route (`fwo_route_native()`), skipped until the `:` term exists.
+# helpers take the native route (`fwo_route_native()`) in test-four-way-native-oracles.R.
 
 skip_if_not_installed("lavaan")
 skip_if_not_installed("sandwich")
@@ -90,16 +90,4 @@ test_that("with two covariates the covariate gradient has one term per coefficie
   h <- fwo_hand(d, c("c1", "c2"))
   expect_equal(unname(h$grad["int_ref", c("m:c1", "m:c2")]),
                unname(h$par[["y:xm"]] * h$cbar[c("c1", "c2")]), tolerance = fwo_tol_arithmetic)
-})
-
-test_that("native route: same oracles through the `:` product term", {
-  skip_if_not(fwo_native_available(), "the `:` product term does not parse in this build (0.10.0 plan U1-U3)")
-  for (nm in names(fwo_cases)) {
-    covs <- fwo_cases[[nm]]
-    d <- fwo_data(2000, 28, covs)
-    r <- fwo_route_native(d, covs, m_star = 0.4)
-    h <- fwo_hand(d, covs, m_star = 0.4, vcov_type = "ml")
-    expect_lt(max(abs(r$est - h$est)), fwo_tol_optimizer)
-    expect_lt(fwo_rel_gap(r$se, h$se), fwo_tol_optimizer)
-  }
 })
