@@ -1,91 +1,86 @@
-# Implementation Plan: medfit 0.9.0 (native observed mean structure)
+# Implementation Plan: `fixed_x` for the native SEM engine (bundled into 0.9.0)
 
-**Date:** 2026-10-13 | **Branch of record:** `dev`; work on `feature/native-mean-structure` (not created; branching waits for the author's request) | **Release channel:** GitHub only
-**Source of truth:** [PLAN-native-mean-structure-2026-10-12.md](../planning/specs/PLAN-native-mean-structure-2026-10-12.md) (task numbers T1-T9, review findings, semantics 1-7), [GRILL](../planning/specs/GRILL-native-mean-structure-2026-10-12.md) G1-G13, [grammar amendment](../planning/specs/SPEC-sem-grammar-amendment-intercept-term-2026-10-13.md) (APPROVED). **This file restates the spec plan as vertical slices; it adds no new scope.** Where the two differ, the spec plan wins. The closed 0.8.0 plan is `planning/archive/PLAN-0.8.0-closed-2026-10-12.md`.
-**Task list:** `tasks/todo.md` (checklist; slice numbers match this file).
+**Spec:** [planning/specs/SPEC-native-fixed-x-2026-10-13.md](../planning/specs/SPEC-native-fixed-x-2026-10-13.md) (draft; rules S1-S10) | **Decisions:** [GRILL-native-fixed-x](../planning/specs/GRILL-native-fixed-x-2026-10-13.md) F-G1 to F-G7 | **Older plan:** [PLAN-native-fixed-x](../planning/specs/PLAN-native-fixed-x-2026-10-13.md)
+**Archived:** the finished S1-S7 plan, `planning/archive/PLAN-0.9.0-mean-structure-closed-2026-10-13.md` (+ its todo). Its two unchecked T1 follow-ups are carried below as release gates R1 and R2.
+**Branch:** `feature/native-fixed-x` from `dev` (`f36658b`), created only when you ask. Squash-merge to `dev`, then the 0.9.0 release decision (release engineering bumps the version).
 
-## Goal
+## Overview
 
-The native SEM engine fits observed intercepts and exogenous means (`y ~ 1`, `meanstructure =`), with covariance-only fits unchanged to 1e-12. Out of scope: latent means (0.11.0), the `:` operator and four-way (0.10.0), `fixed_x` (0.9.1, its own plan).
+Add `fixed_x = FALSE | TRUE | <names>` to `fit_sem()` and, through `engine_args`, `fit_mediation(engine = "native")`. Selected exogenous observed variables have mean, variance and covariances fixed at the sample moments and leave estimation; structural estimates, SEs, df, chi-square stay the same; logLik/AIC/BIC become conditional; comparisons across fixed sets or data are refused. Ships inside 0.9.0, so the 0.9.0 tag waits for this plan's checkpoints and R1-R2.
 
-## Already done
+## Architecture decisions
 
-- **T1** (merged, #170): `has_mean` flag and frozen v0.8.0 values. Two follow-ups stay open (tolerance/platform, seed).
-- The `anova()` nesting fixes (#171, #173) and the `y ~ 1 + x` amendment approval.
+- **One RAM, fixed entries.** A fixed-x row becomes a *fixed value* in the RAM (`s0`, `m0`), not a free parameter, flagged `fixed_x` in the parameter table (separate from a user `0*`, which stays a restriction). `ram$q` shrinks, so the optimizer, information and gates see fewer parameters; that is where the speed comes from.
+- **Moments leave with the parameters (T-1).** `.sem_moments(ram)` subtracts the number of exogenous moment parameters that became fixed (`ram$n_fixed_x`), so `.sem_df()` is unchanged. Cross-covariances between an exogenous and an endogenous variable are not parameters and are not touched.
+- **Values come late.** The exogenous set is known from the completed table; the values need the listwise-complete sample. Flag the rows in `.sem_complete()` (no data needed), assign the values after `.sem_sample()` in `.sem_fit_syntax()`. This keeps `.sem_complete()` data-free, and `fixed_x = FALSE` takes the old path untouched (frozen gate).
+- **Exogenous set from the completed model** (`ram$ov_x`), so product columns qualify and 0.10.0's `:` term inherits the rule.
+- **Visibility:** table/tidy/summary show fixed rows (est = sample moment, se NA); `theta`, `vcov`, `coef()`, npar, df exclude them.
+- **Comparisons:** one helper, `.sem_fixed_signature(fit)` (sorted fixed names + a data fingerprint), used by `anova()`, `mbco_sem()` and new `AIC()`/`BIC()` S3 methods for `medfit::SEMFit`.
+- **Scale:** the shifted route (`.sem_shift_ok()`) keeps allowing fixed-x intercept rows (value maps to 0 on centered data).
 
 ## Dependency graph
 
 ```
-S1 observed intercepts, end to end (parse -> likelihood -> counts -> SEs)
-   -> S2 scale robustness (centered gate)                      == Checkpoint A
-        -> S3 restrictions and anova across status
-        -> S4 weights and sandwich
-              -> S5 constraints, MBCO, re-fit plumbing, lavaan parity   == Checkpoint B
-                    -> S6 methods and extraction
-                          -> S7 docs and close-out                      == Checkpoint C
+R0 lavaan probe ──────────────┐
+V1 argument + errors (S1,S5) ─┼─> V2 TRUE, covariance-only, end to end (S2-S4,S6 partial) ──> CHECKPOINT F-A
+                              │        │
+                              │        ├─> V3 subsets + pairing (S1,S4)
+                              │        ├─> V4 mean structure + conditional logLik (S7)
+                              │        └─> V5 scale sweep (S10)         [V3-V5 independent of each other]
+                              │                 │
+                              └─────────────────┴─> V6 weights, sandwich, missing rows
+                                                    V7 comparisons refused (S8)
+                                                    V8 plumbing + visibility (fit_mediation, branches, MBCO refit, S6)
+                                                    ──> CHECKPOINT F-B
+                                                    V9 evidence gate, timing table, OpenMx, mutants
+                                                    V10 docs + NEWS + strict check ──> CHECKPOINT F-C ──> R1, R2 ──> 0.9.0 release decision
 ```
 
-S3 and S4 are independent of each other once S2 passes. Spec-plan mapping: S1 = T2 (parser/flag/messages) + T3 (core likelihood, counts); S2 = T3 (scale, sweep); S3 = T2 (`~0*1` meaning) + T5; S4 = T4; S5 = T6 + T8a + T2 plumbing; S6 = T7 + T8b; S7 = T9.
+## Task list
 
-## Slices
+### Phase 0: groundwork
+- **R0 (XS)** Probe lavaan 0.7.2 for `y ~ x + ... ; x ~~ x` with `fixed.x = TRUE` (error, override or keep free); record the answer in the GRILL open questions. Resolves spec open question 1.
+- **V1 (S)** `fixed_x` argument: `fit_sem()` signature + roxygen, `.sem_resolve_fixed_x()` (logical or names; non-exogenous names error naming them), explicit-statement error (S5), tie-to-structural error; the resolved set stored in `SEMFit@internals`; `fixed_x = FALSE` changes nothing.
 
-### S1: One observed-intercept model works end to end (M)
-Vertical path: `fit_sem("m ~ a*x\ny ~ b*m + cp*x\nm ~ 1 + x" ...)` style input, through parser, RAM, ML, counts and SEs, to a printed fit.
-- Parse `y ~ 1 + x` in either order (D1: a repeated `1` errors; D2: either position); `meanstructure` tri-state (`NULL`/`TRUE`/`FALSE`) on `fit_sem()`; any `~1` row turns mean structure on and frees every unwritten observed intercept.
-- `m` vector in the RAM, `mu = F (I - A)^-1 m`; F adds the mean term; gradient, expected and observed information gain the additive mean term (G1); `.sem_sample()` keeps `xbar`; `.sem_df()` counts `p(p+1)/2 + p` moments; the df-error text and the "mean structure is not supported" messages and their tests change in this slice.
-- **Acceptance:** a saturated-mean fit reproduces the covariance-only estimates, SEs, df and chi-square to 1e-6; its AIC equals the covariance-only AIC; `y ~ 1` alone frees the other observed intercepts (npar and logLik equal lavaan's); no-`~1` fits still match every frozen value (T1 gate) to the stated tolerance.
-- **Verify:** `devtools::test(".", filter = "sem")` plus the T1 frozen test; intercept SEs against the always-on OLS oracle (SE = OLS SE x sqrt((n-k)/n)); planted defects, each named and failing the right test: gradient without `dmu`, information without the mean term, information with `dmu/dA` dropped.
-- Files: `R/sem-parse.R` (the 176 error), `R/sem-model.R` (`.sem_complete`, `.sem_to_ram`, `.sem_df`), `R/sem-ml.R`, `R/sem-fit.R`, `R/fit-sem.R`, tests.
+### Phase 1: the core path
+- **V2 (M)** `fixed_x = TRUE`, covariance-only, simple model, end to end: completion adds flagged fixed rows, values assigned after `.sem_sample()`, `.sem_to_ram()` fixes them, `.sem_moments()` subtracts `n_fixed_x`, table/theta/vcov/npar per S6. Estimates and SEs equal the free fit; df equals the free fit's.
+- **Checkpoint F-A:** lavaan `fixed.x = TRUE` parity (table rows, npar, df 1, chi-square 9.188694, reference model); frozen gate bit-identical with `fixed_x = FALSE`; planted defect `countrestrict` fails; full suite green.
 
-### S2: Scale robustness (S) — Checkpoint A
-- Centered gate: run the information, its inversion (`.sem_invert_info`) and the identification check in implied-mean coordinates; map back with `V = J V_phi J'`; same centering in `.sem_gate_projected` and `.sem_active_set`; define the map for fixed or constrained intercepts; sd floor and sample-mean starts for scale (G9).
-- **Acceptance:** a mean/sd sweep to 1e5 gives accepted fits with non-NA vcov equal to the OLS values; every non-mean case is unchanged.
-- **Verify:** the sweep test; the gradient finite-difference test at `d = xbar - mu != 0`; the T1 frozen gate rerun.
-- **Checkpoint A (go/no-go on S3-S7):** frozen-value gate, saturated-regression gate, intercept-SE oracle, sweep all pass; full `devtools::test()` with counts.
+### Phase 2: breadth (V3, V4, V5 independent; any order)
+- **V3 (S)** Subsets and pairing: names select any subset (incl. a product column); free pairs among unselected variables added even with explicit `~~` rows (T-2); every subset of {x, c1, c2} equals the free fit. Planted defect `droppair`.
+- **V4 (M)** Mean structure: fixed means; logLik conditional on the fixed block; `glance()$fixed_x`; print/summary note "logLik is conditional on: ...". Planted defect `jointlik`; lavaan conditional logLik parity.
+- **V5 (S)** Scale: `.sem_shift_ok()` allows fixed-x intercept rows; location sweep (mean/sd 0 to 1e5) with `TRUE` and with a subset. Planted defect `noshift`.
 
-### S3: Restrictions and comparison across mean-structure status (M)
-- A fixed `y ~ 0*1` is a restriction (df 1, chi-square and logLik equal lavaan's on the review's model; `meanstructure = TRUE` plus a user-fixed `0*` keeps it); `meanstructure = FALSE` with any `~1` errors naming the term; the old behavior's tests and help text updated (`test-sem-fit.R:108-111`, `test-sem-model.R:234-235`, `test-sem-parse.R:58`, `R/sem-syntax-help.R:35`); NEWS behavior-change entry; a frozen intended-change fixture.
-- logLik no longer double counts the means (`R/methods-sem.R:116`); `anova()` across status: a covariance-only fit gets implicit free `v ~1` keys before the nesting check; shared labels between an intercept and a path allowed (G12).
-- **Acceptance:** `anova(cov_only, fit_y0)` gives df 1 and the lavaan chi-square difference, both argument orders; equal-df comparisons still error; AIC/BIC cases (saturated, one fixed, one equality) correct.
-- **Verify:** tests named above plus the planted defect "fixed intercept dropped".
+### Phase 3: robustness and guards
+- **V6 (M)** Weights (weighted moments), sandwich SEs, missing rows (listwise): subset invariance holds for model-based and sandwich SEs, weighted and unweighted.
+- **V7 (M)** Comparisons refused (S8): `.sem_fixed_signature()`; `anova()` and `mbco_sem()` error across different fixed sets or data; new `R/methods-aic.R` with `AIC()`/`BIC()` S3 methods registered for `medfit::SEMFit` (multi-fit calls error naming the difference; single fit unchanged); documented dispatch limit. Negative tests for both causes, positive for the same set; planted defect `aicwarnonly`.
+- **V8 (S)** Plumbing and visibility: `fit_mediation(engine_args = list(fixed_x = ))`, `.sem_fit_branches()` (pass by name), `mbco_sem()` refit, `extract_mediation()` unchanged; `tidy()`/`summary()` fixed-row display (S6).
+- **Checkpoint F-B:** all of S1-S10 covered by a passing test; the five planted defects each fail the right test; full suite and lint green; strict check clean.
 
-### S4: Weights and the sandwich (M)
-- `.sem_scores()` adds the mean score with uncentered data; the sandwich header comment updated.
-- **Acceptance:** saturated weighted sandwich equals the covariance-only sandwich; sandwich SEs match lavaan `sampling.weights` with `meanstructure = TRUE, fixed.x = FALSE`.
-- **Verify:** restricted-intercept model at an off-optimum theta (the case where a scores defect shows); planted defect: centered scores.
+### Phase 4: evidence and docs
+- **V9 (M)** `tests/sim/sem-fixed-x-gate.R` (subset invariance, lavaan parity, scale, OpenMx) with `MUTANT` switches; the 30-covariate timing table on the real build (reported, not gated); `acceptbad` defect.
+- **V10 (S)** Docs: NEWS (behavior note + measured ratio only), `?fit_sem`, `?"medfit-syntax"` (incl. R0's lavaan difference), `model-native.qmd`, `native-guide.qmd`, `lavaan-comparison.qmd` row, CLAUDE.md Engines row, `.STATUS`; doc-currency check; spelling, urlchecker, strict `R CMD check`.
+- **Checkpoint F-C:** doc-currency report; strict check 0/0/0; CI green; merge decision with you.
 
-### S5: Constraints, MBCO and re-fits (M) — Checkpoint B
-- Intercept rows in linear and nonlinear `==`, `<`, `>`, `:=` and the redundancy rule; `mbco_sem()` refits, `.sem_fit_branches` and `fit_mediation(engine = "native", meanstructure = )` carry the flag (pass by name); `SEMFit@internals` stores it, read with `isTRUE()` so old objects load.
-- T8a lavaan parity (simple, serial, parallel, latent mediator in the G7 case-A form).
-- **Acceptance:** intercept variants of `tests/sim/sem-nonlinear-gate.R` pass, including one that drops the flag on refit and must fail; parity to 1e-4 on all four forms.
-- **Checkpoint B (go/no-go on S6-S7):** nonlinear gate, parity and the intercept-SE oracle pass; full suite.
+### 0.9.0 release gates (carried from the archived plan)
+- **R1 (S)** Say whether the 1e-12 frozen tolerance is relative; confirm the fixture on the ubuntu CI BLAS.
+- **R2 (S)** `.sem_seed()` must not hash the `m` vector when the mean flag is off; add a frozen retry case.
 
-### S6: Methods, extraction and the worked example (S)
-- `coef`, `vcov`, `tidy`, `glance`, `confint`, `summary` include intercept rows (summary row name `y~1` without the trailing space); `extract_mediation(<SEMFit>)` equals the covariance-only effects; `b0` and its covariances stay in `vcov`; four-way on a SEMFit refused by name for `"auto"` and for an explicit `"four_way"`.
-- OpenMx independent optimum on a constrained-intercept model (`skip_if_not_installed`); one worked example where an intercept constraint changes a result.
-- **Acceptance:** extraction equality with and without a saturated mean structure; the refusal tests.
+## Risks and mitigations
 
-### S7: Docs and close-out (S) — Checkpoint C
-- NEWS (honest benefit statement; the lavaan-route four-way corrections first), the vignette and help text that say native cannot estimate intercepts, `?"medfit-syntax"`, `man/fit_sem.Rd`, the lavaan-comparison row (the `y ~ 1 + x` probe flips to Supported), `methods.qmd`, CLAUDE.md Engines row and file/testing sections, `.STATUS`.
-- **Acceptance:** doc currency check; `test-refcard-coverage.R`, cookbook and link tests green; full suite with counts; `R CMD check --as-cran` and the strict-flavor check; `urlchecker`, `spelling`; US English.
-- **Checkpoint C:** release decision (the version bump is release engineering's).
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Fixed moments counted as restrictions (df moves) | High | `n_fixed_x` in `.sem_moments()`; df equality test on every V; planted defect `countrestrict` |
+| Pairing rule silently drops `c1 ~~ c2` | High | V3 test with explicit `~~` rows; `droppair` defect |
+| Frozen values change for `fixed_x = FALSE` | High | T1 gate rerun after every edit to `.sem_eval`, `.sem_df`, `logLik`, `.sem_complete` |
+| Scale protection lost under `fixed_x = TRUE` | Med | V5 sweep, `noshift` defect |
+| AIC across fixed sets returns a number | Med | V7 S3 methods + negative tests; dispatch limit documented |
+| Values depend on data, completion is data-free | Med | flag early, assign after `.sem_sample()`; decided in V2 against the frozen gate |
+| Speed claim does not reproduce | Low | measured table only; no promise in NEWS until measured |
+| Explicit-statement behavior differs from lavaan | Low | R0 probe; error regardless (S5) |
 
-## Risks
+## Open questions
 
-| Risk | Caught in |
-|---|---|
-| Silent change to existing fits | T1 frozen gate, rerun after every edit to `.sem_eval`/`.sem_scores`/`.sem_sample` (every slice) |
-| Information or scores missing the mean term | S1 intercept-SE oracle and planted defects; S4 off-optimum scores test |
-| Acceptance gate rejects realistic data (distant means) | S2 sweep |
-| `meanstructure` lost on a re-fit | S5 tests |
-| A fixed `~0*1` changes meaning versus 0.8.0 | S3 NEWS and intended-change fixture |
-| Four-way reached through a buggy worker | S6 refusal |
-
-## Verification baseline
-
-Before S1: `devtools::test()` on `dev` gives FAIL 0, WARN 1 (the existing `test-sem-optim` and Heywood warnings), SKIP 3, about 4316 passes. Each slice states its own pass count against that baseline.
-
-## Open items for the author
-
-- Create `feature/native-mean-structure` (or a worktree) to start S1.
-- Release channel stays GitHub-only; the 0.11.0 "experimental" target and `fixed_x` (0.9.1) are tracked in GRILL G13.
+- R0's answer (lavaan with an explicit `x ~~ x` under `fixed.x = TRUE`).
+- Exact wording of the S8 refusal message (set in V7).
+- Whether V3-V5 run as one session or three (they are independent; the harness comes first, see the spec's testing table).
