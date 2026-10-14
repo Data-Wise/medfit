@@ -4,11 +4,14 @@
 # exogenous variables, so the fitted model `m ~ x; y ~ m + x + w + P` is correct and its global chi-square must
 # be calibrated although P is non-normal (normal and centered-exponential factors, n = 500, REPS = 1000).
 #
-# PATH: this script reaches the product through a PRECOMPUTED DATA COLUMN (`p = x * w`, PRODUCT_PATH=column, the
-# default) because the `:` token does not exist yet. The model-fitting function is an argument (`fit_fun`, default
-# `fit_sem()`); PRODUCT_PATH=colon writes `x:w` and drops the column, for use once the `:` path lands.
+# PATH: PRODUCT_PATH=column (the default) reaches the product through a PRECOMPUTED DATA COLUMN (`p = x * w`);
+# PRODUCT_PATH=colon writes `x:w` in the model and drops the column, so the product goes through the `:` path (U6
+# null gate; `tests/sim/exo-product-null-colon.R` sets it for tests/sim/run-gates.R). The model-fitting function is
+# an argument (`fit_fun`, default `fit_sem()`). The chi-square is read with the test-only `.sem_chisq()`, never
+# `glance()`, which reports NA for a model whose test is invalid (so the endogenous mutant is measured, not hidden).
 #
-# Rule (tests/sim/gates.csv row "product-null", implemented once in tests/sim/product-gate-common.R): per factor
+# Rule (tests/sim/gates.csv rows "product-null" and "product-null-colon", implemented once in
+# tests/sim/product-gate-common.R): per factor
 # distribution, rejection at .05 within 0.05 +/- 0.02 and |mean chi-square - df| <= 0.15, with at least 99% of the
 # replications fitted.
 #
@@ -42,7 +45,10 @@ gate_product_null <- function(fit_fun = fit_sem, path = Sys.getenv("PRODUCT_PATH
 if (!exists("MEDFIT_GATE_SOURCE_ONLY")) {
   res <- gate_product_null()
   print(res, digits = 3, row.names = FALSE)
-  if (!nzchar(Sys.getenv("MUTANT", ""))) product_write_results(res, "exo-product-null")
-  quit(status = product_gate_status("product-null", res, product_gate_spec("product-null")))
+  gate <- if (identical(Sys.getenv("PRODUCT_PATH", "column"), "colon")) "product-null-colon" else "product-null"
+  if (!nzchar(Sys.getenv("MUTANT", ""))) {
+    product_write_results(res, if (gate == "product-null") "exo-product-null" else "exo-product-null-colon")
+  }
+  quit(status = product_gate_status(gate, res, product_gate_spec(gate)))
 }
 # nolint end

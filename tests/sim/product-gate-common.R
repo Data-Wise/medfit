@@ -1,11 +1,11 @@
 # Shared by the product-term gates (exo-product-null.R, exo-product-fixed-var.R, product-correlated-residuals.R,
 # four-way-known-answer.R) and by tests/sim/run-gates.R, so the pass rule has exactly one implementation.
 #
-# PATH. Until the `:` token exists (0.10.0 plan U1-U3) the gates reach the product through a precomputed data
-# column (`PRODUCT_PATH=column`, the default): the model writes `p` and the data holds `p = x * w`. The model-fitting
-# function is an argument of each gate (`fit_fun(syntax, data)`, default `fit_sem()`), and `PRODUCT_PATH=colon`
-# writes the product as `x:w` and drops the column from the data, so the same gates run through the `:` path once
-# it lands. Nothing here claims the colon path works; it is exercised by those later tasks.
+# PATH. The gates reach the product through a precomputed data column (`PRODUCT_PATH=column`, the default): the model
+# writes `p` and the data holds `p = x * w`. The model-fitting function is an argument of each gate
+# (`fit_fun(syntax, data)`, default `fit_sem()`), and `PRODUCT_PATH=colon` writes the product as `x:w` and drops the
+# column from the data, so the same gates run through the `:` path (the null gate does, as gates.csv row
+# "product-null-colon").
 
 # Product term as written in a model: the column name, or the `:` spelling of its factors.
 product_term <- function(path, a, b) if (identical(path, "colon")) paste0(a, ":", b) else "p"
@@ -43,8 +43,9 @@ exo_product_chisq <- function(fit_fun, path, template, n, seed, xdist, endogenou
     d <- data.frame(x, w, m, y, p)
     syn <- product_syntax(template, product_term(path, fac[1], fac[2]))
     f <- suppressWarnings(fit_fun(syn, product_data(d, path)))
-    g <- as.data.frame(glance(f))
-    c(g$chisq, g$df)
+    # `glance()` reports chi-square as NA for a model whose test is invalid (an endogenous product, a restricted
+    # exogenous block); the gates must see the number, so they read the test-only accessor (plan F10).
+    c(.sem_chisq(f), f@df) # nolint: object_usage_linter.
   }, error = function(e) c(NA_real_, NA_real_))
 }
 
@@ -169,7 +170,8 @@ rule_four_way_kat <- function(d, s) {
 }
 
 product_gate_rules <- list(
-  "product-null" = rule_product_null, "product-fixed-var" = rule_product_fixed_var,
+  "product-null" = rule_product_null, "product-null-colon" = rule_product_null,
+  "product-fixed-var" = rule_product_fixed_var,
   "product-corr" = rule_product_corr, "four-way-kat" = rule_four_way_kat
 )
 
