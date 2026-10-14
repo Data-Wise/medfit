@@ -54,7 +54,7 @@ test_that("a precomputed product column cannot reach the four-way route through 
   d$xm <- d$treatment * d$mediator1
   fit <- fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment + xm", d, meanstructure = TRUE)
   expect_error(extract_mediation(fit, treatment = "treatment", mediator = "mediator1", interaction = "xm"),
-               "four-way decomposition is not available")
+               "written with `:`")
 })
 
 test_that("OpenMx reaches the same optimum on a constrained-intercept model", {
