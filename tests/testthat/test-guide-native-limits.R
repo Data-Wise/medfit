@@ -33,8 +33,9 @@ test_that("AIC/BIC of a product fit are not comparable with a no-product fit, an
 })
 
 test_that("the not-comparable sentence is in the five documented places, and the check can fail", {
-  has_sentence <- function(txt) any(grepl("not comparable", txt, fixed = TRUE)) &&
-    any(grepl("AIC(fit_a, fit_b)", txt, fixed = TRUE))
+  has_sentence <- function(txt) {
+    any(grepl("not comparable", txt, fixed = TRUE)) && any(grepl("AIC(fit_a, fit_b)", txt, fixed = TRUE))
+  }
   files <- c(
     root_path("vignettes", "articles", "model-native.qmd"),
     root_path("vignettes", "articles", "native-guide.qmd"),
