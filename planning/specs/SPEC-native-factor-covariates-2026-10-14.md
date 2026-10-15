@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | DRAFT, grill in progress (D1-D5 decided 2026-10-14); nothing implemented |
+| **Status** | DRAFT, APPROVED by the author 2026-10-14 (D1-D9); Codex adversarial review pending; nothing implemented |
 | **Origin** | [PROPOSAL-0.10.1-2026-10-14.md](../PROPOSAL-0.10.1-2026-10-14.md) (advice: its own spec, not a patch); the `fit_sem()` error "model variables must be numeric: g" (`R/sem-fit.R:54`) |
 | **Evidence labels** | **[V]** verified in this repo; **[A]** assumption, correct me |
 
@@ -85,11 +85,11 @@ vignettes/articles/  model-native.qmd limits, cookbook recipe 20 note, ?"medfit-
 | D3 | F5: factor in a product | **Expand to one product per dummy** (`g_b:m`, `g_c:m`), each through the canonical name and rules 8 and 9, as `lm()` does; messages name the dummy product. |
 | D4 | Four-way with a `g:m` product | **Keep refusing**, with a message that says the effects differ by `g` and averaging over `g` is not supported. A group-averaged decomposition is a new estimand (its SE would carry the sampling variance of the group proportions) and needs its own spec. |
 | D5 | F3: dummy names | **`<factor>_<level>`** (`site_B`). A clash with an existing column is an error naming both; a level that is not a valid name (space, symbol) is an error asking the user to rename the level, never a silent rewrite. The name is fixed once released: it appears in users' labels and `:=` formulas. |
+| D6 | Character columns | **Accepted**; converted to a factor with levels sorted in the C locale (locale-independent, as `.sem_product_name()`). |
+| D7 | Ordered factors | **Error** (polynomial contrasts are not dummies); the message tells the user to use `factor(x, ordered = FALSE)`. |
+| D8 | Release | **0.11.0 headline** (latent means deferred to 1.0 unless a consumer appears). |
+| D9 | Two-level factor as treatment or mediator | **Keep the numeric error**; effects need one column named in `extract_mediation()`. |
 
 ## 8. Open questions for the author
 
-1. ~~Name scheme~~ decided, D5.
-2. **Character columns**: accept with C-locale levels (recommended) or error and ask for a factor?
-3. **Ordered factors**: error (recommended) or treat as unordered with a warning?
-4. **Release**: 0.11.0 headline (recommended, since latent means are deferred) or batch into the next release with the covariate-mean option?
-5. **Treatment or mediator as a two-level factor**: keep the numeric error (recommended) or expand with a 0/1 rule?
+None: D1-D9 settled 2026-10-14. Next: Codex adversarial review of this spec, then a plan and a feature branch.
