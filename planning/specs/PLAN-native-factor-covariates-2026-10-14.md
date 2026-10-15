@@ -26,7 +26,7 @@ Run the pre-pass **right after the parse and before the branch dispatch**, on `p
 | T3 | Labels and fixed values (F4, D1): `b*g` errors, `b*g_b` works; message names the dummy | `R/sem-model.R` or the pre-pass, tests | Error text exact; label on one dummy fits | `test-sem-factor-rules.R` |
 | T4 | `fixed_x` at fit level (F6): `TRUE`, `"g"`, `c("x", "g")`, a dummy name; see "T4 detail" | `R/sem-factor.R` (only if a test finds a gap), tests, gate | Fixed rows, df, logLik and `glance()$fixed_x` equal the hand-coded twin | `test-sem-factor-fixedx.R`; gate cells `fx` |
 | T4b | Fit-statistic parity for `fixed_x` (Codex review of T4): the lavaan test and the gate also compare parameter count and chi-square; see "T4b" | `tests/testthat/test-sem-factor-fixedx.R`, `tests/sim/sem-factor-gate.R` | npar, df and chi-square equal lavaan `fixed.x = TRUE` (1e-5) and, for the free fit, lavaan `fixed.x = FALSE`; all finite | test file; gate (`chisq` column) |
-| T5 | Missing data (F7, D2): dummies from the full column before deletion; see "T5 detail" | `R/sem-factor.R`, `R/sem-fit.R` (only if a test finds a gap), tests, gate | Row count equals `complete.cases` on the twin; an all-zero dummy is reported by name | `test-sem-factor-missing.R`; gate cells `miss` |
+| T5 | Missing data (F7, D2): dummies from the full column before deletion; one new check, `.sem_check_dummy_support()`; see "T5 detail" and "T5 implementation and harness" | `R/sem-factor.R`, `R/sem-fit.R` (only if a test finds a gap), tests, gate | Row count equals `complete.cases` on the twin; an all-zero dummy is reported by name | `test-sem-factor-missing.R`; gate cells `miss` |
 | T6 | Products (F5, D3, D4), the largest slice; see "T6 detail" | `R/sem-factor.R`, `R/sem-fit.R`, `R/extract-sem.R`, tests, gate | `g:m` fits and equals the hand-coded product twin and lavaan; refusals and the four-way message as specified | `test-sem-factor-product.R`; gate product cells |
 | T7 | Stored contract (F8, F10, D11, D12): factor map in `fit@internals`; `mbco_sem()` and branch refits; `@data` has no original factor | `R/fit-sem.R`, `R/sem-mbco.R`, `R/sem-fit.R`, tests | `mbco_sem()` on a factor fit (with and without `fixed_x`, with `g_b:m`, and a zero-product branch fit) equals the twin | `test-sem-factor-refit.R` |
 | T8 | Extraction (F9, D9): four-way with a factor covariate in the mediator equation equals the glm route; a factor treatment or mediator keeps a numeric error whose text names the factor and the rule | `R/extract-sem.R`, tests | Agreement to 1e-8 | `test-sem-factor-extract.R` |
@@ -59,6 +59,18 @@ Run the pre-pass **right after the parse and before the branch dispatch**, on `p
 | an unused factor level (declared, never observed) | `factor(x, levels = c("a","b","c"))` with no `c` | same error, never a silent drop |
 | weights | weighted fit vs weighted twin | equal; weights are not affected by the expansion |
 | dummies come from the full column, not the kept rows | planted defect (`sem_mutate()` on `.sem_add_dummies`/the call site) | the "only in dropped rows" case changes its result and the test fails |
+
+### T5 implementation and harness (revised 2026-10-14, after probing the current behavior)
+
+**Probe (2026-10-14, 150 rows, `m ~ x + g; y ~ m + g`):** works already: NA in the factor (10 rows dropped once, message correct), NA in the outcome, sampling weights. **Fails with an unnamed error** (`sample covariance matrix is singular (n = 109, p = 5)`): a level present only in dropped rows, a declared level no row has, a dummy that is 1 in every kept row, a constant logical. So T5's `R/` change is one check, not a rewrite.
+
+**Design:** `.sem_check_dummy_support(map, data, x)` in `R/sem-factor.R`, called from `.sem_fit_syntax()` right after listwise deletion and before `.sem_sample()`. For every generated dummy in `ram$obs`: zero variance in the kept rows is an error naming the dummy, its level and factor, and the cause, read from the full-column dummy (pre-deletion `data`): the sum is 0 ("no row has this level"), positive and the kept column is all 0 ("the level occurs only in rows dropped for missing values"), or the kept column is all 1 ("every row the fit uses has this level"). Hand-coded dummies are not generated, so they keep today's message.
+
+**Tests (`test-sem-factor-missing.R`, red first; written 2026-10-14, 6 of 11 red as expected):** NA in the factor, NA in the outcome, NAs on different rows (counted once), weights, level only in dropped rows, unused level, all-1 dummy, constant logical, an `mbco_sem()` refit after deletion, and the planted defect `afterdelete` (a character column, the pre-pass run on the complete rows only: the level disappears silently, so the test expecting the named error would fail). Test-design fix recorded: `logLik()` is undefined for a weighted fit, so the weighted case compares estimates, SEs and counts only.
+
+**Harness (`sem-factor-gate.R`, new `lost` cell family):** per cell a character column whose last level occurs only where the outcome is NA, and a factor with a declared unused level; n in {100, 400} x K in {3, 5} x SEEDS. Rule: the fit errors and the message names the dummy (`g_<level>`) and contains the cause text; a run that fits is a failure. New mutant `afterdelete` (the pre-pass on the complete rows only) must exit 1 on the character-column cells; unit-level `nolevelcheck` (the support check returns nothing) must exit 1 on all `lost` cells.
+
+**Agent skills:** `test-driven-development` (red first, one behavior per test, a planted defect), `incremental-implementation` (one check, one commit), `test-engineer` agent on the finished test file and gate cells, `code-reviewer` agent on the diff, a Codex adversarial review at the slice boundary.
 
 ### Verification harness: `tests/sim/sem-factor-gate.R`
 
@@ -99,6 +111,7 @@ A gate script in the style of `sem-fixed-x-gate.R` (suppressMessages `pkgload::l
 | T3 code | `mbco_sem()` cannot refit a factor fit (high) | Confirmed; was T7 | Fixed in `d6ca3c2` (factor map in `internals$factors`) |
 | T3 code | `y ~ g + b*g_b` duplicates a path (medium) | Confirmed | Fixed in `d6ca3c2` (D14/F3b) |
 | T4 results | `g:m` rejected instead of expanded (high) | **Known, scheduled as T6, not a regression**: the pre-pass skips colon terms on purpose, and the user sees `the product 'g:m' needs numeric variables, but g is not numeric` | No PR until T6 lands; T6 detail below. The interim message is accurate but does not point to the rule; T6 replaces it |
+| T4b | `g:m` still fails (high), now noted for a model with **no bare `g` term** | **Repeat of the T4 finding, still scheduled as T6.** One new detail the T6 plan did not state: a factor that appears only inside a product (`y ~ m + g:m`) is not found by the pre-pass, which skips colon names when it detects categorical columns | T6 detail gains the product-only case and a test for it; the "no PR until T6" rule stands |
 | T4 results | lavaan check omits npar and chi-square (medium) | **Confirmed.** The T4 detail table promised "npar, df, chi-square 1e-5"; the test checks df and regression estimates only, and the gate checks estimates and SEs | T4b (next, before T5) |
 
 ## T4b (fit-statistic parity)
@@ -109,11 +122,12 @@ A gate script in the style of `sem-fixed-x-gate.R` (suppressMessages `pkgload::l
 
 ## T6 detail (factor products)
 
+- **Detection:** categorical columns are also found inside product names (`g:m`, `m:g`, `g_b:m`), so a factor that has no bare term (`y ~ m + g:m`) still expands. Only the two sides of a product are split at the colon; any other colon is a parse error already.
 - **Pre-pass:** a product rhs `a:b` where one side is a categorical column (or a `<column>_<level>` reference) expands to one product per dummy, each rewritten through `.sem_product_name()` (`g_b:m`, `g_c:m`); the product-materialization step then builds numeric columns as today. Both sides categorical (`g:h`, `g:g`) is an error naming both (D3).
 - **Order:** expansion happens before `.sem_complete()` with the rest of the pre-pass; rules 8 and 9 (`.sem_check_product_parsed()`/`_completed()`) see only numeric product names, and their messages name the dummy product.
 - **Stored map:** a product row expanded from a factor is recorded so `mbco_sem()` refits rewrite it (the T7 contract extends to product rows); `fixed_x` naming a factor also fixes the dummies that appear only in products.
 - **Four-way (D4):** `extract_mediation(<SEMFit>, decomposition = "four_way")` with a `g:m` product keeps refusing, with a message that says the effects differ by `g`.
-- **Tests (red first):** hand-coded product twin (estimates, SEs, logLik); lavaan on the twin; `g:m` in the mediator and in the outcome equation; `m:g` spelling equals `g:m`; both-sides-categorical error; `g:h` error; the model test is `NA` for an endogenous product factor exactly as for hand-coded dummies (`glance()`); `mbco_sem()` refuses as for hand-coded; planted defect: product expanded without the canonical name (a duplicate `m:g_b` and `g_b:m`).
+- **Tests (red first):** hand-coded product twin (estimates, SEs, logLik); lavaan on the twin; `g:m` in the mediator and in the outcome equation; **`g:m` with no bare `g` term** (and with it); `m:g` spelling equals `g:m`; both-sides-categorical error; `g:h` error; the model test is `NA` for an endogenous product factor exactly as for hand-coded dummies (`glance()`); `mbco_sem()` refuses as for hand-coded; planted defect: product expanded without the canonical name (a duplicate `m:g_b` and `g_b:m`).
 - **Gate:** product cells (a `g:m` model against the twin, 2 and 3 levels, one missingness pattern) with a mutant that skips the canonical name.
 - **Skills:** the same loop as T4: `agent-skills:test-driven-development`, `test-engineer` review of the tests, `code-reviewer` on the diff, a Codex adversarial review at the slice boundary.
 
