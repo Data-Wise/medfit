@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | T1-T4, T4b and T7 done on `feature/factor-covariates`; T4b (fit-statistic parity) done; T5, T6, T8-T10 pending. **No PR until T6**: factor products are in the spec (F5, D3) and unbuilt |
+| **Status** | T1-T5 (T5 done 2026-10-14), T4b and T7 done on `feature/factor-covariates`; T4b (fit-statistic parity) done; T6, T8-T10 pending. **No PR until T6**: factor products are in the spec (F5, D3) and unbuilt |
 | **Spec** | [SPEC-native-factor-covariates-2026-10-14.md](SPEC-native-factor-covariates-2026-10-14.md) (D1-D12, F1-F10) |
 | **Branch** | `feature/factor-covariates` (worktree `~/.git-worktrees/medfit/feature-factor-covariates`); one PR to `dev` (squash) |
 
@@ -71,6 +71,8 @@ Run the pre-pass **right after the parse and before the branch dispatch**, on `p
 **Harness (`sem-factor-gate.R`, new `lost` cell family):** per cell a character column whose last level occurs only where the outcome is NA, and a factor with a declared unused level; n in {100, 400} x K in {3, 5} x SEEDS. Rule: the fit errors and the message names the dummy (`g_<level>`) and contains the cause text; a run that fits is a failure. New mutant `afterdelete` (the pre-pass on the complete rows only) must exit 1 on the character-column cells; unit-level `nolevelcheck` (the support check returns nothing) must exit 1 on all `lost` cells.
 
 **Agent skills:** `test-driven-development` (red first, one behavior per test, a planted defect), `incremental-implementation` (one check, one commit), `test-engineer` agent on the finished test file and gate cells, `code-reviewer` agent on the diff, a Codex adversarial review at the slice boundary.
+
+**T5 as built (2026-10-14), after the test-engineer and code-reviewer agents:** the check also runs once before the zero-product branch grid (the grid swallows errors into "no branch converged") and honors weights (a level whose rows all have zero weight is named: "occurs only in rows with zero weight"); a zero-row result skips the check so the existing error stands. Scope limit, stated: **only generated dummies are checked**; a hand-coded constant 0/1 column keeps today's unnamed "sample covariance matrix is singular". Gate: 400 runs (360 main + 40 `lost` cells), seven mutants exit 1 (`afterdelete` fails exactly the character-column cells, `nolevelcheck` all `lost` cells).
 
 ### Verification harness: `tests/sim/sem-factor-gate.R`
 

@@ -26,6 +26,11 @@
     factors <- expanded$map
     products <- .sem_zero_product_rows(parsed$constraints)
     if (length(products)) {
+      # one check before the branch grid, which would swallow it into "no branch converged"
+      vars <- intersect(unique(c(parsed$parameters$lhs, parsed$parameters$rhs)), names(data))
+      rows <- stats::complete.cases(data[, vars, drop = FALSE])
+      .sem_check_dummy_support(factors, data, data[rows, vars, drop = FALSE],
+                               if (!is.null(weights)) weights[rows])
       out <- .sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
                                meanstructure, fixed_x)
       out$factors <- factors
@@ -72,6 +77,7 @@
     ))
   }
   x <- x[keep, , drop = FALSE]
+  .sem_check_dummy_support(factors, data, x, weights[keep])
   .sem_check_product_columns(mat$checks, keep)
   weights <- weights[keep]
   smp <- .sem_sample(x, ram, weights)

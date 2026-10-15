@@ -9,17 +9,23 @@
 #            same dummies (and the same dummies fixed); n_obs equals the complete cases
 #   names    the dummies and the reference level follow the documented rule (reference = first level, `g_<level>`)
 #   lavaan   regression estimates 1e-5 (scaled by max(1, |estimate|): lavaan stops near 1e-5 absolute; two of 180
-#            runs sat at 1.08e-5 relative on a near-zero coefficient) and SEs 1e-3 (relative) against lavaan on the twin (fixed.x matched)
+#            runs sat at 1.08e-5 relative on a near-zero coefficient) and SEs 1e-3 (relative) against lavaan on
+#            the twin (fixed.x matched)
 #   moments  with fixed_x, every fixed ~~ row equals the ML moment of the rows the fit used, computed in base R (1e-8)
 #   fitstats npar, df and chi-square equal lavaan's (chi-square 1e-5 relative); the model has no x -> y path, so df = 1
 #            and the chi-square is not trivially zero; lavaan runs without a mean structure (medfit's has none)
 #   refit    mbco_sem(paths = c("a", "b")) statistic equals the twin's (1e-6, relative): a refit works from the stored
 #            data and factor map
+# `lost` cells (T5): per n in {100, 400} x K in {3, 5} x seed, a character column whose last level occurs only where the
+# outcome is NA, and a factor with a declared level no row has. The rule: the fit errors, the message names the dummy
+# (`g_<level>`) and its cause; a run that fits fails. Dummies come from the full column before listwise deletion.
 # `MUTANT=<name>` plants a defect and the gate must then exit 1: wrongref (the reference is the last level), nofix
-# (fixed_x names stay as the factor), halffix (a factor in fixed_x fixes only its first dummy), nomap (a refit loses
-# the stored factor map), dropdummy (the last dummy is left out of the table). A dummy built from the kept rows only
-# (a level present only in dropped rows) needs a purpose-built data set: it is a unit test, `test-sem-factor-missing.R`.
-# lavaan's `fixed.x` is logical, so the lavaan rule runs for fixed_x = FALSE and TRUE only (other cells count as skipped).
+# (fixed_x names stay as the factor), afterdelete (the pre-pass sees only the complete rows, so a level present only in
+# dropped rows vanishes silently), nolevelcheck (the constant-dummy check returns nothing), halffix (a factor in
+# fixed_x fixes only its first dummy), nomap (a refit loses
+# the stored factor map), dropdummy (the last dummy is left out of the table).
+# lavaan's `fixed.x` is logical, so the lavaan rule runs for fixed_x = FALSE and TRUE only (other cells count as
+# skipped).
 # Run from the package root:  Rscript tests/sim/sem-factor-gate.R   (SEEDS=5 by default; SEEDS=1 is a smoke run)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
@@ -50,6 +56,14 @@ if (mutant == "halffix") {
     unlist(lapply(fixed_x, function(v) if (v %in% names(map)) map[[v]]$dummies[1L] else v), use.names = FALSE)
   })
 }
+if (mutant == "afterdelete") {
+  orig_e <- get(".sem_expand_factors", ns)
+  swap(".sem_expand_factors", function(tab, data, fixed_x, factors = NULL) {
+    vars <- intersect(c(tab$lhs, tab$rhs), names(data))
+    orig_e(tab, data[stats::complete.cases(data[, vars, drop = FALSE]), , drop = FALSE], fixed_x, factors)
+  })
+}
+if (mutant == "nolevelcheck") swap(".sem_check_dummy_support", function(map, data, x) invisible(NULL))
 if (mutant == "nomap") swap(".sem_stored_factors", function(factors, data) list())
 if (mutant == "dropdummy") {
   orig_t <- get(".sem_expand_table", ns)
@@ -134,20 +148,59 @@ cells <- expand.grid(n = c(100L, 400L), k = c(2L, 3L, 5L), seed = seeds, miss = 
 out <- do.call(rbind, lapply(seq_len(nrow(cells)), function(i) {
   do.call(one_run, as.list(cells[i, c("n", "k", "seed", "miss", "fxmode")]))
 }))
+# lost-level cells: the fit must error naming the dummy and the cause
+lost_run <- function(n, k, seed, kind) {
+  set.seed(seed)
+  lev <- letters[seq_len(k)]
+  g <- sample(lev, n, replace = TRUE)
+  x <- rnorm(n)
+  m <- 0.5 * x + rnorm(n)
+  y <- 0.4 * m + rnorm(n)
+  last <- lev[k]
+  if (kind == "dropped") {
+    y[g == last] <- NA
+    g[which(g == last)[1L]] <- NA_character_ # the level also has an NA row: still only in dropped rows
+    d <- data.frame(y = y, m = m, x = x, g = g, stringsAsFactors = FALSE)
+    want <- paste0("`g_", last, "`.*only in rows dropped for missing values")
+  } else {
+    d <- data.frame(y = y, m = m, x = x, g = factor(g, levels = c(lev, "zz")))
+    want <- "`g_zz`.*no row has this level"
+  }
+  msg <- tryCatch({
+    suppressMessages(fit_sem("m ~ x + g\ny ~ m + g", d))
+    NA_character_
+  }, error = function(e) conditionMessage(e))
+  data.frame(n = n, k = k, seed = seed, miss = kind, fxmode = "lost", twin = NA, names = NA, lavaan = NA,
+             fitstats = NA, moments = NA, refit = NA, lost = !is.na(msg) && grepl(want, msg),
+             err = "", stringsAsFactors = FALSE, msg = msg)
+}
+lost_cells <- expand.grid(n = c(100L, 400L), k = c(3L, 5L), seed = seeds, kind = c("dropped", "unused"),
+                          stringsAsFactors = FALSE)
+lost <- do.call(rbind, lapply(seq_len(nrow(lost_cells)), function(i) do.call(lost_run, as.list(lost_cells[i, ]))))
 ok <- function(x) x %in% TRUE
 lav_ran <- out$fxmode %in% c("free", "all") & requireNamespace("lavaan", quietly = TRUE)
-pass <- ok(out$twin) & ok(out$names) & (ok(out$lavaan) | !lav_ran) & (ok(out$fitstats) | !lav_ran) & ok(out$moments) & ok(out$refit) & !nzchar(out$err)
-out$pass <- pass
+out$pass <- ok(out$twin) & ok(out$names) & (ok(out$lavaan) | !lav_ran) & (ok(out$fitstats) | !lav_ran) &
+  ok(out$moments) & ok(out$refit) & !nzchar(out$err)
+lost$pass <- ok(lost$lost)
+# a failing cell keeps what went wrong: the wrong message, or that the fit succeeded
+lost$err <- ifelse(lost$pass, "", ifelse(is.na(lost$msg), "fitted without an error", substr(lost$msg, 1L, 120L)))
+lost$msg <- NULL
+out$lost <- NA
 dir.create("tests/sim/results", showWarnings = FALSE)
 tag <- if (nzchar(mutant)) paste0("-", mutant) else ""
 f_out <- file.path("tests/sim/results", paste0("sem-factor-gate-", Sys.Date(), tag, ".csv"))
-utils::write.csv(out, f_out, row.names = FALSE)
+all_rows <- rbind(out, lost[, names(out)])
+utils::write.csv(all_rows, f_out, row.names = FALSE)
+n_pass <- sum(out$pass) + sum(lost$pass)
+n_run <- nrow(out) + nrow(lost)
 cat(sprintf("factor gate%s: %d runs, %d pass, %d fail\n", if (nzchar(mutant)) paste0(" (MUTANT=", mutant, ")") else "",
-            nrow(out), sum(pass), sum(!pass)))
+            n_run, n_pass, n_run - n_pass))
 for (col in c("twin", "names", "moments", "refit")) {
   cat(sprintf("  %-7s fail %d\n", col, sum(!ok(out[[col]]))))
 }
 cat(sprintf("  lavaan  fail %d, fitstats fail %d, of %d run (%d skipped)\n", sum(lav_ran & !ok(out$lavaan)),
             sum(lav_ran & !ok(out$fitstats)), sum(lav_ran), sum(!lav_ran)))
-if (any(nzchar(out$err))) cat("  errors, first:", out$err[nzchar(out$err)][1L], "\n")
-quit(status = if (all(pass)) 0L else 1L)
+cat(sprintf("  lost    fail %d of %d cells\n", sum(!lost$pass), nrow(lost)))
+errs <- c(out$err[nzchar(out$err)], lost$err[nzchar(lost$err)])
+if (length(errs)) cat("  errors, first:", errs[1L], "\n")
+quit(status = if (n_pass == n_run) 0L else 1L)

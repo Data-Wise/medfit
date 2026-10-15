@@ -203,3 +203,37 @@
   }
   unique(unlist(lapply(fixed_x, function(v) if (v %in% names(map)) map[[v]]$dummies else v), use.names = FALSE))
 }
+
+# A generated dummy with no variation in the rows the fit uses would only surface as an unnamed "sample covariance
+# matrix is singular"; name it and say why. `data` is the full column (before listwise deletion), `x` the kept rows,
+# `weights` the weights of those rows (a zero weight removes a row from the likelihood without dropping it).
+.sem_check_dummy_support <- function(map, data, x, weights = NULL) {
+  if (!length(map) || nrow(x) == 0L) {
+    return(invisible(NULL))
+  }
+  use <- if (is.null(weights)) rep(TRUE, nrow(x)) else weights > 0
+  for (v in names(map)) {
+    info <- map[[v]]
+    for (d in intersect(info$dummies, names(x))) {
+      kept <- x[[d]][use]
+      if (length(unique(kept)) > 1L) {
+        next
+      }
+      lev <- if (info$logical) "TRUE" else info$levels[match(d, info$all) + 1L]
+      why <- if (all(kept == 0)) {
+        if (sum(data[[d]], na.rm = TRUE) == 0) {
+          "no row has this level (an unused factor level: drop it with droplevels())"
+        } else if (length(unique(x[[d]])) > 1L) {
+          "the level occurs only in rows with zero weight"
+        } else {
+          "the level occurs only in rows dropped for missing values"
+        }
+      } else {
+        "every row the fit uses has this level"
+      }
+      stop("dummy `", d, "` (level '", lev, "' of `", v, "`) is constant in the rows the fit uses: ", why,
+           call. = FALSE)
+    }
+  }
+  invisible(NULL)
+}
