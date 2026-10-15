@@ -11,6 +11,8 @@
 #   lavaan   regression estimates 1e-5 (scaled by max(1, |estimate|): lavaan stops near 1e-5 absolute; two of 180
 #            runs sat at 1.08e-5 relative on a near-zero coefficient) and SEs 1e-3 (relative) against lavaan on the twin (fixed.x matched)
 #   moments  with fixed_x, every fixed ~~ row equals the ML moment of the rows the fit used, computed in base R (1e-8)
+#   fitstats npar, df and chi-square equal lavaan's (chi-square 1e-5 relative); the model has no x -> y path, so df = 1
+#            and the chi-square is not trivially zero; lavaan runs without a mean structure (medfit's has none)
 #   refit    mbco_sem(paths = c("a", "b")) statistic equals the twin's (1e-6, relative): a refit works from the stored
 #            data and factor map
 # `MUTANT=<name>` plants a defect and the gate must then exit 1: wrongref (the reference is the last level), nofix
@@ -80,12 +82,12 @@ scaled <- function(a, b) max(abs(a - b) / pmax(abs(b), 1))
 one_run <- function(n, k, seed, miss, fxmode) {
   d <- gen(n, k, seed, miss)
   dum <- d$dummies
-  mod_f <- "m ~ a*x + g\ny ~ b*m + cp*x + g"
-  mod_t <- paste0("m ~ a*x + ", paste(dum, collapse = " + "), "\ny ~ b*m + cp*x + ", paste(dum, collapse = " + "))
+  mod_f <- "m ~ a*x + g\ny ~ b*m + g"
+  mod_t <- paste0("m ~ a*x + ", paste(dum, collapse = " + "), "\ny ~ b*m + ", paste(dum, collapse = " + "))
   fx_f <- switch(fxmode, free = FALSE, g = "g", all = TRUE, xg = c("x", "g"))
   fx_t <- switch(fxmode, free = FALSE, g = dum, all = TRUE, xg = c("x", dum))
   row <- data.frame(n = n, k = k, seed = seed, miss = miss, fxmode = fxmode, twin = NA, names = NA, lavaan = NA,
-                    moments = NA, refit = NA, err = "", stringsAsFactors = FALSE)
+                    fitstats = NA, moments = NA, refit = NA, err = "", stringsAsFactors = FALSE)
   res <- tryCatch({
     f <- suppressMessages(fit_sem(mod_f, d$factor, fixed_x = fx_f))
     ft <- suppressMessages(fit_sem(mod_t, d$twin, fixed_x = fx_t))
@@ -106,6 +108,11 @@ one_run <- function(n, k, seed, miss, fxmode) {
     }
     if (fxmode %in% c("free", "all") && requireNamespace("lavaan", quietly = TRUE)) {
       l <- lavaan::sem(mod_t, d$twin, meanstructure = TRUE, fixed.x = fxmode == "all", information = "observed")
+      l0 <- lavaan::sem(mod_t, d$twin, meanstructure = FALSE, fixed.x = fxmode == "all", information = "observed")
+      ref <- lavaan::fitMeasures(l0, c("npar", "df", "chisq"))
+      gl <- generics::glance(f)
+      row$fitstats <- gl$df > 0 && is.finite(gl$chisq) && gl$chisq > 0 && gl$npar == ref[["npar"]] &&
+        gl$df == ref[["df"]] && abs(gl$chisq - ref[["chisq"]]) <= 1e-5 * max(1, ref[["chisq"]])
       pe <- lavaan::parameterEstimates(l)
       pe <- pe[pe$op == "~", ]
       est <- f@table[f@table$op == "~", ]
@@ -129,7 +136,7 @@ out <- do.call(rbind, lapply(seq_len(nrow(cells)), function(i) {
 }))
 ok <- function(x) x %in% TRUE
 lav_ran <- out$fxmode %in% c("free", "all") & requireNamespace("lavaan", quietly = TRUE)
-pass <- ok(out$twin) & ok(out$names) & (ok(out$lavaan) | !lav_ran) & ok(out$moments) & ok(out$refit) & !nzchar(out$err)
+pass <- ok(out$twin) & ok(out$names) & (ok(out$lavaan) | !lav_ran) & (ok(out$fitstats) | !lav_ran) & ok(out$moments) & ok(out$refit) & !nzchar(out$err)
 out$pass <- pass
 dir.create("tests/sim/results", showWarnings = FALSE)
 tag <- if (nzchar(mutant)) paste0("-", mutant) else ""
@@ -140,6 +147,7 @@ cat(sprintf("factor gate%s: %d runs, %d pass, %d fail\n", if (nzchar(mutant)) pa
 for (col in c("twin", "names", "moments", "refit")) {
   cat(sprintf("  %-7s fail %d\n", col, sum(!ok(out[[col]]))))
 }
-cat(sprintf("  lavaan  fail %d of %d run (%d skipped)\n", sum(lav_ran & !ok(out$lavaan)), sum(lav_ran), sum(!lav_ran)))
+cat(sprintf("  lavaan  fail %d, fitstats fail %d, of %d run (%d skipped)\n", sum(lav_ran & !ok(out$lavaan)),
+            sum(lav_ran & !ok(out$fitstats)), sum(lav_ran), sum(!lav_ran)))
 if (any(nzchar(out$err))) cat("  errors, first:", out$err[nzchar(out$err)][1L], "\n")
 quit(status = if (all(pass)) 0L else 1L)

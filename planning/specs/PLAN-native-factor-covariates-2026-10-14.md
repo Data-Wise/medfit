@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | T1-T4 and T7 done on `feature/factor-covariates` (`e88996f`); T4b (fit-statistic parity) added after the T4 Codex review; T5, T6, T8-T10 pending. **No PR until T6**: factor products are in the spec (F5, D3) and unbuilt |
+| **Status** | T1-T4, T4b and T7 done on `feature/factor-covariates`; T4b (fit-statistic parity) done; T5, T6, T8-T10 pending. **No PR until T6**: factor products are in the spec (F5, D3) and unbuilt |
 | **Spec** | [SPEC-native-factor-covariates-2026-10-14.md](SPEC-native-factor-covariates-2026-10-14.md) (D1-D12, F1-F10) |
 | **Branch** | `feature/factor-covariates` (worktree `~/.git-worktrees/medfit/feature-factor-covariates`); one PR to `dev` (squash) |
 
@@ -121,7 +121,7 @@ A gate script in the style of `sem-fixed-x-gate.R` (suppressMessages `pkgload::l
 
 - **After T2:** frozen fixture bit-identical, parity with the hand-coded fit. Stop and review if parity fails; every later slice builds on it.
 - **After T7 (reached 2026-10-14):** refit contract works.
-- **Before any PR:** T6 done (the spec headline needs factor products) and T4b done (a release gate must not omit fit statistics). This is the Codex-flagged risk, so review before T8-T10.
+- **Before any PR:** T6 done (the spec headline needs factor products). T4b is done (2026-10-14). This is the Codex-flagged risk, so review before T8-T10.
 - **Close-out (pre-PR, per the e2e rule):** one live exercise that can fail, with transcript in the PR body: factor-covariate fit versus the hand-coded twin and lavaan, plus an `mbco_sem()` refit. Full suite counts, lint at 120 columns, strict `R CMD check` 0/0/0 (run before any release, not for the feature PR alone).
 
 ## Risks

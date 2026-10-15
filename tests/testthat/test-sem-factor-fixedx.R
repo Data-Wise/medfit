@@ -144,3 +144,40 @@ test_that("planted defect: fixed_x names left as the factor are caught", {
   testthat::local_mocked_bindings(.sem_expand_fixed_x = bad)
   expect_error(fit_sem(fxf_model, fxf_data()$factor, fixed_x = "g"), "not exogenous observed variables.*g")
 })
+
+test_that("fit statistics equal lavaan on an over-identified model, free and fixed.x (npar, df, chi-square)", {
+  skip_if_not_installed("lavaan")
+  d <- fxf_data(n = 300L, seed = 21L)
+  # no x -> y path, so df = 1 and the chi-square is not trivially zero (a saturated model would make it vacuous)
+  mod_f <- "m ~ a*x + g\ny ~ b*m + g"
+  mod_t <- "m ~ a*x + g_b + g_c\ny ~ b*m + g_b + g_c"
+  for (fx in c(FALSE, TRUE)) {
+    f <- fit_sem(mod_f, d$factor, fixed_x = fx)
+    ft <- fit_sem(mod_t, d$twin, fixed_x = fx)
+    # no mean structure on either side (medfit's has none without a `~1` row), so the parameter counts compare
+    l <- lavaan::sem(mod_t, d$twin, meanstructure = FALSE, fixed.x = fx, information = "observed")
+    ref <- lavaan::fitMeasures(l, c("npar", "df", "chisq"))
+    gl <- generics::glance(f)
+    info <- paste("fixed_x =", fx)
+    expect_true(is.finite(gl$chisq) && gl$chisq > 0, info = info)
+    expect_gt(gl$df, 0)
+    expect_equal(gl$npar, unname(ref["npar"]), info = info)
+    expect_equal(gl$df, unname(ref["df"]), info = info)
+    expect_equal(gl$chisq, unname(ref["chisq"]), tolerance = 1e-5, info = info)
+    # and the twin agrees with the factor fit on the same three numbers
+    glt <- generics::glance(ft)
+    expect_equal(c(gl$npar, gl$df, gl$chisq), c(glt$npar, glt$df, glt$chisq), tolerance = 1e-8, info = info)
+  }
+})
+
+test_that("planted defect: a wrong dummy set changes the chi-square the lavaan comparison reads", {
+  fx_skip_covr()
+  skip_if_not_installed("lavaan")
+  d <- fxf_data(n = 300L, seed = 21L)
+  bad <- sem_mutate(.sem_expand_table, "d <- setdiff(map[[r$rhs]]$dummies", "d <- setdiff(map[[r$rhs]]$dummies[1L]")
+  testthat::local_mocked_bindings(.sem_expand_table = bad)
+  f <- fit_sem("m ~ a*x + g\ny ~ b*m + g", d$factor)
+  l <- lavaan::sem("m ~ a*x + g_b + g_c\ny ~ b*m + g_b + g_c", d$twin, meanstructure = FALSE, fixed.x = FALSE,
+                   information = "observed")
+  expect_gt(abs(generics::glance(f)$chisq - lavaan::fitMeasures(l, "chisq")), 1e-3)
+})
