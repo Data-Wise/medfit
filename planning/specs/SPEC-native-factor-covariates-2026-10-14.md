@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | DRAFT, grill in progress (D1-D4 decided 2026-10-14); nothing implemented |
+| **Status** | DRAFT, grill in progress (D1-D5 decided 2026-10-14); nothing implemented |
 | **Origin** | [PROPOSAL-0.10.1-2026-10-14.md](../PROPOSAL-0.10.1-2026-10-14.md) (advice: its own spec, not a patch); the `fit_sem()` error "model variables must be numeric: g" (`R/sem-fit.R:54`) |
 | **Evidence labels** | **[V]** verified in this repo; **[A]** assumption, correct me |
 
@@ -84,10 +84,11 @@ vignettes/articles/  model-native.qmd limits, cookbook recipe 20 note, ?"medfit-
 | D2 | F7: when dummies are built | **From the full column, before listwise deletion.** A level only in dropped rows gives an all-zero dummy that the singularity checks report by name; the coefficient set never depends on the missingness pattern. |
 | D3 | F5: factor in a product | **Expand to one product per dummy** (`g_b:m`, `g_c:m`), each through the canonical name and rules 8 and 9, as `lm()` does; messages name the dummy product. |
 | D4 | Four-way with a `g:m` product | **Keep refusing**, with a message that says the effects differ by `g` and averaging over `g` is not supported. A group-averaged decomposition is a new estimand (its SE would carry the sampling variance of the group proportions) and needs its own spec. |
+| D5 | F3: dummy names | **`<factor>_<level>`** (`site_B`). A clash with an existing column is an error naming both; a level that is not a valid name (space, symbol) is an error asking the user to rename the level, never a silent rewrite. The name is fixed once released: it appears in users' labels and `:=` formulas. |
 
 ## 8. Open questions for the author
 
-1. **Name scheme** `g_b` (recommended: readable, valid in the grammar, no clash with `:`) vs a lavaan-like `gb` (collision-prone).
+1. ~~Name scheme~~ decided, D5.
 2. **Character columns**: accept with C-locale levels (recommended) or error and ask for a factor?
 3. **Ordered factors**: error (recommended) or treat as unordered with a warning?
 4. **Release**: 0.11.0 headline (recommended, since latent means are deferred) or batch into the next release with the covariate-mean option?
