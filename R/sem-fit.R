@@ -17,6 +17,12 @@
   }
   if (is.null(parsed)) {
     parsed <- .sem_parse(model)
+    # factors become dummies before completion sees the table; branch fits re-enter with `parsed` and the
+    # expanded data, so this runs once
+    expanded <- .sem_expand_factors(parsed$parameters, data, fixed_x)
+    parsed$parameters <- expanded$table
+    data <- expanded$data
+    fixed_x <- expanded$fixed_x
     products <- .sem_zero_product_rows(parsed$constraints)
     if (length(products)) {
       return(.sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,

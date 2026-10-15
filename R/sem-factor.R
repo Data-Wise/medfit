@@ -6,7 +6,8 @@
 
 .sem_expand_factors <- function(tab, data, fixed_x) {
   rhs_names <- unique(tab$rhs[tab$op == "~"])
-  cand <- rhs_names[rhs_names %in% names(data)]
+  # a name with a colon is a product term, handled with the product rules (never a factor column here)
+  cand <- rhs_names[rhs_names %in% names(data) & !grepl(":", rhs_names, fixed = TRUE)]
   is_cat <- vapply(cand, function(v) is.factor(data[[v]]) || is.character(data[[v]]) || is.logical(data[[v]]), TRUE)
   cats <- cand[is_cat]
   if (!length(cats)) {
@@ -52,8 +53,14 @@
     lev <- if (map[[v]]$logical) "TRUE" else map[[v]]$levels[-1L]
     bad <- dummies[[v]][make.names(dummies[[v]]) != dummies[[v]]]
     if (length(bad)) {
-      stop("level '", lev[dummies[[v]] == bad[1L]], "' of `", v, "` makes the invalid name `", bad[1L],
-           "`: rename the level", call. = FALSE)
+      lv <- lev[dummies[[v]] == bad[1L]]
+      hint <- if (!anyNA(suppressWarnings(as.numeric(lev)))) {
+        paste0(" (the levels look numeric: is `", v, "` a number stored as text? convert it with as.numeric())")
+      } else {
+        ""
+      }
+      stop("level '", lv, "' of `", v, "` makes the invalid name `", bad[1L], "`: rename the level", hint,
+           call. = FALSE)
     }
     hit <- intersect(dummies[[v]], existing)
     if (length(hit)) {

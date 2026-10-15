@@ -69,14 +69,16 @@ test_that("a 0/1 dummy covariate in the mediator equation enters through its pro
   expect_gt(abs(moved[["int_ref"]] - r$est[["int_ref"]]), 1e-3)
 })
 
-test_that("a factor covariate in the mediator equation is refused by name; its dummy-coded twin fits and matches", {
+test_that("a factor covariate in the mediator equation fits as its dummy-coded twin does; the twin matches the references", {
   d <- fwo_data(1500, 64, "c1")
-  d$g <- factor(ifelse(d$c1 > 2, "hi", "lo"))
+  d$g <- factor(ifelse(d$c1 > 2, "hi", "lo"), levels = c("lo", "hi"))
   d$gd <- as.numeric(d$g == "hi")
   d$m <- d$m + 0.7 * d$gd
   d$y <- d$y + 0.4 * d$gd
   d$xm <- d$x * d$m
-  expect_error(fit_sem("m ~ x + g\ny ~ x + m + x:m + g", d), "model variables must be numeric: g")
+  f <- suppressWarnings(fit_sem("m ~ x + g\ny ~ x + m + x:m + g", d))
+  f_twin <- suppressWarnings(fit_sem("m ~ x + gd\ny ~ x + m + x:m + gd", d))
+  expect_equal(unname(f@table$est), unname(f_twin@table$est), tolerance = 1e-8)
   r <- fwo_route_native(d, "gd")
   edge_close(r, fwo_hand(d, "gd", vcov_type = "ml"))
   edge_close(r, fwo_lavaan_defined(d, "gd"))
