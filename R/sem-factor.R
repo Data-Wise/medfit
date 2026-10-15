@@ -4,7 +4,33 @@
 # column named on a regression's right side is replaced by numeric dummy columns before `.sem_complete()` runs, so
 # completion, the checks and the RAM only ever see numeric observed variables (spec F1-F3, F6).
 
-.sem_expand_factors <- function(tab, data, fixed_x) {
+.sem_expand_factors <- function(tab, data, fixed_x, factors = NULL) {
+  # A refit (`mbco_sem()`) re-parses the stored model text against the stored data, which holds the dummies and not
+  # the factor column: the stored map rewrites the factor's rows to its dummies instead of expanding again.
+  stored <- .sem_stored_factors(factors, data)
+  if (length(stored)) {
+    tab <- .sem_expand_table(tab, stored)
+    fixed_x <- .sem_expand_fixed_x(fixed_x, stored)
+  }
+  out <- .sem_expand_new_factors(tab, data, fixed_x)
+  out$map <- c(stored, out$map)
+  out
+}
+
+# Stored factors whose column is absent from `data`; every dummy must be present.
+.sem_stored_factors <- function(factors, data) {
+  use <- factors[setdiff(names(factors), names(data))]
+  for (v in names(use)) {
+    miss <- setdiff(use[[v]]$dummies, names(data))
+    if (length(miss)) {
+      stop("the refit needs the dummy columns of `", v, "`, absent from `data`: ", paste(miss, collapse = ", "),
+           call. = FALSE)
+    }
+  }
+  use
+}
+
+.sem_expand_new_factors <- function(tab, data, fixed_x) {
   # a name with a colon is a product term, handled with the product rules (never a factor column here)
   rhs_names <- unique(tab$rhs[tab$op == "~" & !grepl(":", tab$rhs, fixed = TRUE)])
   is_cat <- function(v) is.factor(data[[v]]) || is.character(data[[v]]) || is.logical(data[[v]])
@@ -148,12 +174,16 @@
   data
 }
 
-# Each regression row naming a factor becomes one row per dummy, other properties kept.
+# Each regression row naming a factor becomes one row per dummy, other properties kept. A dummy the same equation
+# already names explicitly (`y ~ g + b*g_b`) keeps its explicit row, with its label, and is not generated twice.
 .sem_expand_table <- function(tab, map) {
   rows <- lapply(seq_len(nrow(tab)), function(i) {
     r <- tab[i, , drop = FALSE]
     if (r$op == "~" && r$rhs %in% names(map)) {
-      d <- map[[r$rhs]]$dummies
+      d <- setdiff(map[[r$rhs]]$dummies, tab$rhs[tab$op == "~" & tab$lhs == r$lhs])
+      if (!length(d)) {
+        return(r[0L, , drop = FALSE])
+      }
       r <- r[rep(1L, length(d)), , drop = FALSE]
       r$rhs <- d
     }

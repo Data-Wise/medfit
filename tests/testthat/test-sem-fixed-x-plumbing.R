@@ -33,7 +33,7 @@ test_that("zero-product branches and the MBCO refit keep fixed_x", {
 test_that("planted defect: an MBCO refit that drops fixed_x is caught", {
   fx_skip_covr()
   subset_fit <- fit_sem(fx_syntax, fx_data(), fixed_x = "covariate1")
-  bad <- sem_mutate(mbco_sem, "fixed_x = fixed_x)", "fixed_x = FALSE)")
+  bad <- sem_mutate(mbco_sem, "fixed_x = fixed_x,", "fixed_x = FALSE,")
   seen <- list()
   testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
     seen[[length(seen) + 1L]] <<- list(...)$fixed_x

@@ -157,7 +157,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     r <- tryCatch(
       .sem_fit_syntax(paste0(fit@model, "\n", con), fit@data, fit@information, n_starts = n_starts,
                       control = control, meanstructure = if (isTRUE(fit@internals$ram$has_mean)) TRUE,
-                      fixed_x = fixed_x),
+                      fixed_x = fixed_x, factors = fit@internals$factors),
       error = function(e) {
         stop(sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint on that ",
                             "parameter, the null `%s` may lie outside the parameter space."),

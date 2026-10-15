@@ -8,7 +8,7 @@
 
 .sem_fit_syntax <- function(model, data, information = c("observed", "expected"), n_starts = 5L,
                             control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL,
-                            meanstructure = NULL, fixed_x = FALSE) {
+                            meanstructure = NULL, fixed_x = FALSE, factors = NULL) {
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
   information <- match.arg(information)
   se_type <- match.arg(se_type)
@@ -19,14 +19,17 @@
     parsed <- .sem_parse(model)
     # factors become dummies before completion sees the table; branch fits re-enter with `parsed` and the
     # expanded data, so this runs once
-    expanded <- .sem_expand_factors(parsed$parameters, data, fixed_x)
+    expanded <- .sem_expand_factors(parsed$parameters, data, fixed_x, factors)
     parsed$parameters <- expanded$table
     data <- expanded$data
     fixed_x <- expanded$fixed_x
+    factors <- expanded$map
     products <- .sem_zero_product_rows(parsed$constraints)
     if (length(products)) {
-      return(.sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
-                               meanstructure, fixed_x))
+      out <- .sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
+                               meanstructure, fixed_x)
+      out$factors <- factors
+      return(out)
     }
   }
   if (any(parsed$parameters$level != 1L)) {
@@ -126,7 +129,7 @@
       active_constraints = act$text[act$active_row], information = information, ram = ram, table = conv$table,
       par_map = conv$par_map, se_type = se_type, weights = smp$w, n_starts = n_starts, control = control,
       partable = .sem_to_partable(conv$table), data = x, n_obs = smp$n, n_dropped = n_dropped, df = df,
-      eq_rank = eq_rank, branch = character(), fixed_x = fixed_set
+      eq_rank = eq_rank, branch = character(), fixed_x = fixed_set, factors = factors
     )
   )
 }
