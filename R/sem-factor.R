@@ -5,23 +5,56 @@
 # completion, the checks and the RAM only ever see numeric observed variables (spec F1-F3, F6).
 
 .sem_expand_factors <- function(tab, data, fixed_x) {
-  rhs_names <- unique(tab$rhs[tab$op == "~"])
   # a name with a colon is a product term, handled with the product rules (never a factor column here)
-  cand <- rhs_names[rhs_names %in% names(data) & !grepl(":", rhs_names, fixed = TRUE)]
-  is_cat <- vapply(cand, function(v) is.factor(data[[v]]) || is.character(data[[v]]) || is.logical(data[[v]]), TRUE)
-  cats <- cand[is_cat]
+  rhs_names <- unique(tab$rhs[tab$op == "~" & !grepl(":", tab$rhs, fixed = TRUE)])
+  is_cat <- function(v) is.factor(data[[v]]) || is.character(data[[v]]) || is.logical(data[[v]])
+  bare <- rhs_names[rhs_names %in% names(data)]
+  bare <- bare[vapply(bare, is_cat, TRUE)]
+  refs <- .sem_resolve_dummy_refs(setdiff(rhs_names, names(data)), data, is_cat)
+  cats <- union(bare, names(refs))
   if (!length(cats)) {
     return(list(table = tab, data = data, fixed_x = fixed_x, map = list()))
   }
   map <- stats::setNames(lapply(cats, function(v) .sem_factor_levels(v, data[[v]])), cats)
-  dummies <- lapply(cats, function(v) .sem_factor_dummy_names(v, map[[v]]))
-  names(dummies) <- cats
-  .sem_check_dummy_names(map, dummies, names(data))
   for (v in cats) {
-    map[[v]]$dummies <- dummies[[v]]
+    all_d <- .sem_factor_dummy_names(v, map[[v]])
+    map[[v]]$dummies <- if (v %in% bare) all_d else all_d[match(refs[[v]], all_d)]
+    map[[v]]$all <- all_d
+  }
+  dummies <- lapply(map, function(m) m$dummies)
+  .sem_check_dummy_names(map, dummies, names(data))
+  .sem_check_factor_modifiers(tab, dummies[intersect(names(dummies), bare)])
+  for (v in cats) {
     data <- .sem_add_dummies(data, v, map[[v]])
   }
-  list(table = .sem_expand_table(tab, map), data = data, fixed_x = .sem_expand_fixed_x(fixed_x, map), map = map)
+  list(table = .sem_expand_table(tab, map[intersect(names(map), bare)]), data = data,
+       fixed_x = .sem_expand_fixed_x(fixed_x, map), map = map)
+}
+
+# A model name `<column>_<level>` that is not a column of `data` but names a non-reference level of a categorical
+# column refers to that one dummy, so a label or constraint can sit on a single dummy (`b*g_b`). Returns a list
+# keyed by the column, each element the referenced dummy names.
+.sem_resolve_dummy_refs <- function(missing_names, data, is_cat) {
+  cat_cols <- names(data)[vapply(names(data), is_cat, TRUE)]
+  out <- list()
+  for (nm in missing_names) {
+    hits <- cat_cols[startsWith(nm, paste0(cat_cols, "_"))]
+    if (!length(hits)) {
+      next
+    }
+    if (length(hits) > 1L) {
+      stop("`", nm, "` could be a dummy of more than one column (", paste(hits, collapse = ", "),
+           "): rename a column", call. = FALSE)
+    }
+    info <- .sem_factor_levels(hits, data[[hits]])
+    if (nm == paste0(hits, "_", info$reference)) {
+      stop("`", nm, "` is the reference level of `", hits, "`, which has no dummy", call. = FALSE)
+    }
+    if (nm %in% .sem_factor_dummy_names(hits, info)) {
+      out[[hits]] <- union(out[[hits]], nm)
+    }
+  }
+  out
 }
 
 # Levels and reference of one categorical column. A character column is sorted in the C locale so results do not
@@ -53,7 +86,7 @@
     lev <- if (map[[v]]$logical) "TRUE" else map[[v]]$levels[-1L]
     bad <- dummies[[v]][make.names(dummies[[v]]) != dummies[[v]]]
     if (length(bad)) {
-      lv <- lev[dummies[[v]] == bad[1L]]
+      lv <- lev[map[[v]]$all == bad[1L]]
       hint <- if (!anyNA(suppressWarnings(as.numeric(lev)))) {
         paste0(" (the levels look numeric: is `", v, "` a number stored as text? convert it with as.numeric())")
       } else {
@@ -78,6 +111,29 @@
   invisible(NULL)
 }
 
+# A label, fixed value, start or bound on a factor term would have to name several coefficients (a shared label is a
+# hidden equality constraint), so it is an error; the user puts the modifier on one dummy.
+.sem_check_factor_modifiers <- function(tab, dummies) {
+  for (i in which(tab$op == "~" & tab$rhs %in% names(dummies))) {
+    r <- tab[i, ]
+    has <- nzchar(r$label) || !is.na(r$fixed) || !is.na(r$start) || !is.na(r$lower) || !is.na(r$upper)
+    if (has) {
+      shown <- if (nzchar(r$label)) {
+        paste0(r$label, "*", r$rhs)
+      } else if (!is.na(r$fixed)) {
+        paste0(format(r$fixed), "*", r$rhs)
+      } else {
+        r$rhs
+      }
+      d <- dummies[[r$rhs]]
+      stop("`", shown, "`: `", r$rhs, "` expands to ", length(d), " dummies (", paste(d, collapse = ", "),
+           "), so a label, fixed value, start or bound would name several coefficients; label one dummy, e.g. `",
+           if (nzchar(r$label)) r$label else "b", "*", d[1L], "`", call. = FALSE)
+    }
+  }
+  invisible(NULL)
+}
+
 # Dummies come from the full column, before listwise deletion; NA in the factor gives NA in every dummy.
 .sem_add_dummies <- function(data, name, info) {
   x <- data[[name]]
@@ -86,8 +142,8 @@
     return(data)
   }
   x <- as.character(x)
-  for (i in seq_along(info$dummies)) {
-    data[[info$dummies[i]]] <- as.numeric(x == info$levels[i + 1L])
+  for (d in info$dummies) {
+    data[[d]] <- as.numeric(x == info$levels[match(d, info$all) + 1L])
   }
   data
 }
