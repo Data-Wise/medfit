@@ -9,7 +9,7 @@ fr_data <- function(n = 120L) {
 }
 
 test_that("a label on a factor term is an error that names the dummies and the fix", {
-  expect_error(fit_sem("y ~ x + b*g", fr_data()), "`b\\*g`.*g_b, g_c.*label one dummy, e.g. `b\\*g_b`")
+  expect_error(fit_sem("y ~ x + b*g", fr_data()), "`b\\*g`.*g_b, g_c.*label one, e.g. `b\\*g_b`")
 })
 
 test_that("a fixed value on a factor term is an error", {

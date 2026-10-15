@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | T1-T5 (T5 and T5b done 2026-10-14), T4b and T7 done on `feature/factor-covariates`; T4b (fit-statistic parity) done; T6, T8-T10 pending. **No PR until T6**: factor products are in the spec (F5, D3) and unbuilt |
+| **Status** | T1-T6 (T6 done 2026-10-14), T4b, T5b and T7 done on `feature/factor-covariates`; T4b (fit-statistic parity) done; T8-T10 pending; no PR until the final Codex review. **No PR until T6**: factor products are in the spec (F5, D3) and unbuilt |
 | **Spec** | [SPEC-native-factor-covariates-2026-10-14.md](SPEC-native-factor-covariates-2026-10-14.md) (D1-D12, F1-F10) |
 | **Branch** | `feature/factor-covariates` (worktree `~/.git-worktrees/medfit/feature-factor-covariates`); one PR to `dev` (squash) |
 
@@ -119,6 +119,12 @@ A gate script in the style of `sem-fixed-x-gate.R` (suppressMessages `pkgload::l
 | T5 | `nolevelcheck` mutant failed for the wrong reason (medium) | **Confirmed.** The replacement had three arguments, the call four, so every cell died on "unused argument". The mutant proved nothing about the check | **T5b:** the mutant takes `weights = NULL`; `swap()` now refuses a replacement whose argument names differ from the original (harness guard, demonstrated); verified the mutant now fails only the lost cells with the unnamed "singular" error |
 | T4b | `g:m` still fails (high), now noted for a model with **no bare `g` term** | **Repeat of the T4 finding, still scheduled as T6.** One new detail the T6 plan did not state: a factor that appears only inside a product (`y ~ m + g:m`) is not found by the pre-pass, which skips colon names when it detects categorical columns | T6 detail gains the product-only case and a test for it; the "no PR until T6" rule stands |
 | T4 results | lavaan check omits npar and chi-square (medium) | **Confirmed.** The T4 detail table promised "npar, df, chi-square 1e-5"; the test checks df and regression estimates only, and the gate checks estimates and SEs | T4b (next, before T5) |
+
+## T6 as built (2026-10-14)
+
+`.sem_row_expansion(rhs, map)` (new) is the single place a row's categorical sides become terms: `g` gives its dummies, `g:m` one canonical product per dummy (`.sem_product_name(d, other)`), two categorical sides is an error that suggests the dummy-reference form (`g_b:h_v`). The table expansion, the modifier check and the stored-map rewrite all use it. Detection splits every right-hand name at the colon, so a product-only factor (`g:x`, no bare `g`) is found; such a factor is flagged `product_only` in the map: its dummies are not model variables, so the stored-map check skips them (the product columns are in the stored data), and `fixed_x = "g"` gets a message that says so. `.sem_check_dummy_support()` now reads the dummies from the full column at the kept rows (it takes `keep`, not the model columns), so a product-only dummy made constant by an NA in the other side, or by zero weights, is named. A latent named like a dummy is a collision error. D4: `extract_mediation()` on a factor product refuses with "the effects differ by `g`".
+
+Reviews: test-engineer and code-reviewer agents, both flagged the product-only path (constant check skipped, `mbco_sem()` refit failing with a misleading missing-dummy message, `fixed_x` message), plus loose regexes, a non-independent OLS oracle in the gate, missing dummy-reference, reversed-spelling, logical and stored-map-direct tests: all fixed. Gate: 680 runs (360 main, 80 lost incl. `productonly`, 240 `prod` incl. the product-only form `go`, a `refit` rule and an OLS oracle built from the expected terms); nine mutants exit 1 (`noncanon`, `oneprod` new). Old tests whose behavior changed on purpose were updated (a factor in a product no longer errors; modifier wording).
 
 ## T4b (fit-statistic parity)
 

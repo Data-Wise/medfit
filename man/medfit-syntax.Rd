@@ -96,7 +96,7 @@ includes the product columns.\tabular{ll}{
    A fixed, shared or constrained intercept \tab "(rule 9, intercept clause" \cr
    \code{meanstructure = FALSE} with a product \tab "\code{meanstructure = FALSE}, but the model has a product term" \cr
    A column \code{m:x} in \code{data} that is not \code{x * m} \tab "is not the product of" \cr
-   A non-numeric factor \tab "needs numeric variables" \cr
+   A product input that is not numeric, factor, character or logical (a date) \tab "needs numeric variables" \cr
    \code{information = "expected"}, endogenous factor \tab "with a product of an endogenous variable" \cr
    \code{anova()} or \code{mbco_sem()} on such a fit \tab "is not available for ... a model with a product term" \cr
    Another product on the treatment or mediator, in \code{extract_mediation()} \tab "does not support the product" \cr

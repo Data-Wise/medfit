@@ -119,11 +119,28 @@
   prod <- setdiff(prod, .sem_product_name(treatment, mediator))
   hit <- prod[vapply(strsplit(prod, ":", fixed = TRUE), function(f) any(f %in% c(treatment, mediator)), logical(1))]
   if (length(hit)) {
+    fac <- .sem_factor_of_product(object@internals$factors, hit[1L])
+    if (!is.null(fac)) {
+      stop("the native extraction does not support the product '", hit[1L], "': it comes from the factor `", fac,
+           "`, so the effects differ by `", fac, "` and averaging over `", fac, "` is not supported. Fit the model ",
+           "without the product, or compute the effects within each level of `", fac, "`.", call. = FALSE)
+    }
     stop("the native extraction does not support the product '", hit[1L], "': a product involving the treatment ",
          "or the mediator other than '", .sem_product_name(treatment, mediator), "' changes the effects without ",
          "changing a coefficient the extraction reads. Remove it, or fit the model with lm/glm.", call. = FALSE)
   }
   invisible(NULL)
+}
+
+# The factor a product term was expanded from (one of its sides is a generated dummy), or NULL.
+.sem_factor_of_product <- function(factors, product) {
+  sides <- strsplit(product, ":", fixed = TRUE)[[1L]]
+  for (v in names(factors)) {
+    if (any(sides %in% factors[[v]]$dummies)) {
+      return(v)
+    }
+  }
+  NULL
 }
 
 # `extract_mediation()` for a native fit: the shared lavaan-route workers read the

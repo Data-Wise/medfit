@@ -21,6 +21,10 @@
 .sem_stored_factors <- function(factors, data) {
   use <- factors[setdiff(names(factors), names(data))]
   for (v in names(use)) {
+    # a product-only factor has no dummy columns in the stored data: its product columns are there instead
+    if (isTRUE(use[[v]]$product_only)) {
+      next
+    }
     miss <- setdiff(use[[v]]$dummies, names(data))
     if (length(miss)) {
       stop("the refit needs the dummy columns of `", v, "`, absent from `data`: ", paste(miss, collapse = ", "),
@@ -31,8 +35,9 @@
 }
 
 .sem_expand_new_factors <- function(tab, data, fixed_x) {
-  # a name with a colon is a product term, handled with the product rules (never a factor column here)
-  rhs_names <- unique(tab$rhs[tab$op == "~" & !grepl(":", tab$rhs, fixed = TRUE)])
+  # the names a regression's right side uses: a product is split at the colon, so a factor that appears only inside
+  # a product (`y ~ m + g:m`) is found too
+  rhs_names <- unique(unlist(strsplit(tab$rhs[tab$op == "~"], ":", fixed = TRUE)))
   is_cat <- function(v) is.factor(data[[v]]) || is.character(data[[v]]) || is.logical(data[[v]])
   bare <- rhs_names[rhs_names %in% names(data)]
   bare <- bare[vapply(bare, is_cat, TRUE)]
@@ -46,10 +51,13 @@
     all_d <- .sem_factor_dummy_names(v, map[[v]])
     map[[v]]$dummies <- if (v %in% bare) all_d else all_d[match(refs[[v]], all_d)]
     map[[v]]$all <- all_d
+    # a factor that only appears inside products: its dummies are not model variables (only the product columns are)
+    map[[v]]$product_only <- v %in% bare && !(v %in% tab$rhs[tab$op == "~"])
   }
   dummies <- lapply(map, function(m) m$dummies)
-  .sem_check_dummy_names(map, dummies, names(data))
-  .sem_check_factor_modifiers(tab, dummies[intersect(names(dummies), bare)])
+  latent <- tab$lhs[tab$op == "=~"]
+  .sem_check_dummy_names(map, dummies, c(names(data), latent))
+  .sem_check_factor_modifiers(tab, map[intersect(names(map), bare)])
   for (v in cats) {
     data <- .sem_add_dummies(data, v, map[[v]])
   }
@@ -139,11 +147,12 @@
 
 # A label, fixed value, start or bound on a factor term would have to name several coefficients (a shared label is a
 # hidden equality constraint), so it is an error; the user puts the modifier on one dummy.
-.sem_check_factor_modifiers <- function(tab, dummies) {
-  for (i in which(tab$op == "~" & tab$rhs %in% names(dummies))) {
+.sem_check_factor_modifiers <- function(tab, map) {
+  for (i in which(tab$op == "~")) {
     r <- tab[i, ]
+    d <- .sem_row_expansion(r$rhs, map)
     has <- nzchar(r$label) || !is.na(r$fixed) || !is.na(r$start) || !is.na(r$lower) || !is.na(r$upper)
-    if (has) {
+    if (!is.null(d) && has) {
       shown <- if (nzchar(r$label)) {
         paste0(r$label, "*", r$rhs)
       } else if (!is.na(r$fixed)) {
@@ -151,13 +160,33 @@
       } else {
         r$rhs
       }
-      d <- dummies[[r$rhs]]
-      stop("`", shown, "`: `", r$rhs, "` expands to ", length(d), " dummies (", paste(d, collapse = ", "),
-           "), so a label, fixed value, start or bound would name several coefficients; label one dummy, e.g. `",
+      stop("`", shown, "`: `", r$rhs, "` expands to ", length(d), " terms (", paste(d, collapse = ", "),
+           "), so a label, fixed value, start or bound would name several coefficients; label one, e.g. `",
            if (nzchar(r$label)) r$label else "b", "*", d[1L], "`", call. = FALSE)
     }
   }
   invisible(NULL)
+}
+
+# The terms a regression row's right side expands to when a side is a categorical column of `map`: the dummies for
+# `g`, one canonical product per dummy for `g:m`; NULL when no side is categorical. A product of two categorical
+# columns is not supported (write the dummy products you need, for example `g_b:h_v`).
+.sem_row_expansion <- function(rhs, map) {
+  sides <- strsplit(rhs, ":", fixed = TRUE)[[1L]]
+  hit <- sides %in% names(map)
+  if (!any(hit)) {
+    return(NULL)
+  }
+  if (all(hit) && length(sides) == 2L) {
+    stop("the product `", rhs, "`: both sides are categorical columns, which is not supported; write the dummy ",
+         "products you need, for example `", map[[sides[1L]]]$dummies[1L], ":", map[[sides[2L]]]$dummies[1L], "`",
+         call. = FALSE)
+  }
+  if (length(sides) == 1L) {
+    return(map[[sides]]$dummies)
+  }
+  other <- sides[!hit]
+  vapply(map[[sides[hit]]]$dummies, function(d) .sem_product_name(d, other), "", USE.NAMES = FALSE)
 }
 
 # Dummies come from the full column, before listwise deletion; NA in the factor gives NA in every dummy.
@@ -174,13 +203,15 @@
   data
 }
 
-# Each regression row naming a factor becomes one row per dummy, other properties kept. A dummy the same equation
-# already names explicitly (`y ~ g + b*g_b`) keeps its explicit row, with its label, and is not generated twice.
+# Each regression row naming a factor (alone or in a product) becomes one row per dummy term, other properties kept.
+# A term the same equation already names explicitly (`y ~ g + b*g_b`, `g:m + b*g_b:m`) keeps its explicit row, with
+# its label, and is not generated twice.
 .sem_expand_table <- function(tab, map) {
   rows <- lapply(seq_len(nrow(tab)), function(i) {
     r <- tab[i, , drop = FALSE]
-    if (r$op == "~" && r$rhs %in% names(map)) {
-      d <- setdiff(map[[r$rhs]]$dummies, tab$rhs[tab$op == "~" & tab$lhs == r$lhs])
+    d <- if (r$op == "~") .sem_row_expansion(r$rhs, map)
+    if (!is.null(d)) {
+      d <- setdiff(d, tab$rhs[tab$op == "~" & tab$lhs == r$lhs])
       if (!length(d)) {
         return(r[0L, , drop = FALSE])
       }
@@ -201,29 +232,41 @@
   if (!is.character(fixed_x)) {
     return(fixed_x)
   }
+  only <- intersect(fixed_x, names(map)[vapply(map, function(m) isTRUE(m$product_only), TRUE)])
+  if (length(only)) {
+    stop("`fixed_x` names `", only[1L], "`, which appears only inside products: its dummies are not model ",
+         "variables. Name the other variable of the product, or add `", only[1L], "` to the regression as a main ",
+         "effect.", call. = FALSE)
+  }
   unique(unlist(lapply(fixed_x, function(v) if (v %in% names(map)) map[[v]]$dummies else v), use.names = FALSE))
 }
 
 # A generated dummy with no variation in the rows the fit uses would only surface as an unnamed "sample covariance
-# matrix is singular"; name it and say why. `data` is the full column (before listwise deletion), `x` the kept rows,
-# `weights` the weights of those rows (a zero weight removes a row from the likelihood without dropping it).
-.sem_check_dummy_support <- function(map, data, x, weights = NULL) {
-  if (!length(map) || nrow(x) == 0L) {
+# matrix is singular"; name it and say why. `data` is the full column (before listwise deletion), `keep` the rows the
+# fit uses, `weights` their weights (a zero weight removes a row from the likelihood without dropping it). Read from
+# `data`, not from the model's columns: a factor that appears only in products has no dummy among them.
+.sem_check_dummy_support <- function(map, data, keep, weights = NULL) {
+  if (!length(map) || !any(keep)) {
     return(invisible(NULL))
   }
-  use <- if (is.null(weights)) rep(TRUE, nrow(x)) else weights > 0
+  use <- if (is.null(weights)) rep(TRUE, sum(keep)) else weights > 0
   for (v in names(map)) {
     info <- map[[v]]
-    for (d in intersect(info$dummies, names(x))) {
-      kept <- x[[d]][use]
+    for (d in info$dummies) {
+      full <- data[[d]]
+      if (is.null(full)) {
+        next
+      }
+      rows <- full[keep]
+      kept <- rows[use]
       if (length(unique(kept)) > 1L) {
         next
       }
       lev <- if (info$logical) "TRUE" else info$levels[match(d, info$all) + 1L]
       why <- if (all(kept == 0)) {
-        if (sum(data[[d]], na.rm = TRUE) == 0) {
+        if (sum(full, na.rm = TRUE) == 0) {
           "no row has this level (an unused factor level: drop it with droplevels())"
-        } else if (length(unique(x[[d]])) > 1L) {
+        } else if (length(unique(rows)) > 1L) {
           "the level occurs only in rows with zero weight"
         } else {
           "the level occurs only in rows dropped for missing values"

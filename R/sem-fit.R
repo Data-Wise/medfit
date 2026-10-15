@@ -30,10 +30,10 @@
       # a product's inputs are split at the colon: its rows go at materialization, like any other model variable
       sides <- unlist(strsplit(c(parsed$parameters$lhs, parsed$parameters$rhs), ":", fixed = TRUE))
       latent <- parsed$parameters$lhs[parsed$parameters$op == "=~"]
-      vars <- setdiff(intersect(unique(sides), names(data)), latent) # a latent is not a column, even when one shares its name
+      # a latent is not a column, even when one shares its name
+      vars <- setdiff(intersect(unique(sides), names(data)), latent)
       rows <- stats::complete.cases(data[, vars, drop = FALSE])
-      .sem_check_dummy_support(factors, data, data[rows, vars, drop = FALSE],
-                               if (!is.null(weights)) weights[rows])
+      .sem_check_dummy_support(factors, data, rows, if (!is.null(weights)) weights[rows])
       out <- .sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
                                meanstructure, fixed_x)
       out$factors <- factors
@@ -80,7 +80,7 @@
     ))
   }
   x <- x[keep, , drop = FALSE]
-  .sem_check_dummy_support(factors, data, x, weights[keep])
+  .sem_check_dummy_support(factors, data, keep, weights[keep])
   .sem_check_product_columns(mat$checks, keep)
   weights <- weights[keep]
   smp <- .sem_sample(x, ram, weights)

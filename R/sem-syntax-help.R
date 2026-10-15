@@ -91,7 +91,7 @@
 #' | A fixed, shared or constrained intercept | "(rule 9, intercept clause" |
 #' | `meanstructure = FALSE` with a product | "`meanstructure = FALSE`, but the model has a product term" |
 #' | A column `m:x` in `data` that is not `x * m` | "is not the product of" |
-#' | A non-numeric factor | "needs numeric variables" |
+#' | A product input that is not numeric, factor, character or logical (a date) | "needs numeric variables" |
 #' | `information = "expected"`, endogenous factor | "with a product of an endogenous variable" |
 #' | `anova()` or `mbco_sem()` on such a fit | "is not available for ... a model with a product term" |
 #' | Another product on the treatment or mediator, in `extract_mediation()` | "does not support the product" |

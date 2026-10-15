@@ -174,8 +174,8 @@ test_that("planted defect: a wrong dummy set changes the chi-square the lavaan c
   fx_skip_covr()
   skip_if_not_installed("lavaan")
   d <- fxf_data(n = 300L, seed = 21L)
-  bad <- sem_mutate(.sem_expand_table, "d <- setdiff(map[[r$rhs]]$dummies", "d <- setdiff(map[[r$rhs]]$dummies[1L]")
-  testthat::local_mocked_bindings(.sem_expand_table = bad)
+  bad <- sem_mutate(.sem_row_expansion, "map[[sides]]$dummies", "map[[sides]]$dummies[1L]")
+  testthat::local_mocked_bindings(.sem_row_expansion = bad)
   f <- fit_sem("m ~ a*x + g\ny ~ b*m + g", d$factor)
   l <- lavaan::sem("m ~ a*x + g_b + g_c\ny ~ b*m + g_b + g_c", d$twin, meanstructure = FALSE, fixed.x = FALSE,
                    information = "observed")
