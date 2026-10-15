@@ -184,5 +184,35 @@ test_that("the zero-product precheck sees product inputs: a level lost to an NA 
   d$w <- rnorm(nrow(d))
   d$z[d$g == "c"] <- NA # z occurs only inside the product z:w, so the rows go at materialization
   mod <- "m ~ a*x + g + z:w\ny ~ b*m + g\na*b == 0"
-  expect_error(suppressMessages(fit_sem(mod, d)), "`g_c`.*only in rows dropped for missing values")
+  # anchored: the precheck's purpose is the named error itself, not the "no branch converged" wrapper around it
+  expect_error(suppressMessages(fit_sem(mod, d)), "^dummy `g_c`.*only in rows dropped for missing values")
+})
+
+test_that("the precheck rows match the fit's: a latent that shares a name with a data column is not an input", {
+  set.seed(12)
+  n <- 220L
+  g <- factor(sample(c("a", "b", "c"), n, replace = TRUE))
+  eta <- rnorm(n)
+  d <- data.frame(x1 = eta + rnorm(n, sd = 0.5), x2 = 0.8 * eta + rnorm(n, sd = 0.5),
+                  x3 = 0.7 * eta + rnorm(n, sd = 0.5), g = g)
+  d$m <- 0.5 * eta + 0.4 * (g == "b") + rnorm(n)
+  d$y <- 0.4 * d$m + 0.3 * (g == "c") + rnorm(n)
+  d$L <- NA_real_ # a data column named like the latent, unrelated to it, NA where g == "c"
+  d$L[g != "c"] <- 0
+  mod <- "L =~ x1 + x2 + x3\nm ~ a*L + g\ny ~ b*m + g\na*b == 0"
+  expect_s7_class(suppressWarnings(suppressMessages(fit_sem(mod, d))), SEMFit)
+})
+
+test_that("the named zero-product error holds with a product input also used elsewhere, weights, and fixed_x", {
+  d <- fm_data()
+  set.seed(9)
+  d$z <- rnorm(nrow(d))
+  d$w <- rnorm(nrow(d))
+  d$z[d$g == "c"] <- NA
+  other <- "m ~ a*x + g + z:w\ny ~ b*m + g + z\na*b == 0"
+  expect_error(suppressMessages(fit_sem(other, d)), "^dummy `g_c`.*dropped for missing values")
+  mod <- "m ~ a*x + g + z:w\ny ~ b*m + g\na*b == 0"
+  expect_error(suppressMessages(fit_sem(mod, d, weights = runif(nrow(d), 0.5, 2), se_type = "sandwich")),
+               "^dummy `g_c`")
+  expect_error(suppressMessages(fit_sem(mod, d, fixed_x = "g")), "^dummy `g_c`")
 })

@@ -36,8 +36,8 @@ ns <- asNamespace("medfit")
 # A mutant replaces an internal function: it must keep the original's argument list, otherwise the gate turns red
 # from an "unused argument" error (the wrong reason) and the mutant proves nothing (Codex review of T5).
 swap <- function(name, fn) {
-  if (!identical(names(formals(get(name, ns))), names(formals(fn)))) {
-    stop("MUTANT ", mutant, ": the replacement of ", name, " changes the argument list (",
+  if (!identical(formals(get(name, ns)), formals(fn))) {
+    stop("MUTANT ", mutant, ": the replacement of ", name, " changes the argument list or its defaults (",
          paste(names(formals(get(name, ns))), collapse = ", "), "), so it would fail for the wrong reason")
   }
   unlockBinding(name, ns)
@@ -125,7 +125,8 @@ one_run <- function(n, k, seed, miss, fxmode) {
     row$moments <- if (fxmode == "free") {
       nrow(fixed) == 0L
     } else {
-      nrow(fixed) > 0L && max(abs(fixed$est - mapply(function(a, b) sm[a, b], fixed$lhs, fixed$rhs))) <= 1e-8
+      nrow(fixed) > 0L && all(c(fixed$lhs, fixed$rhs) %in% colnames(sm)) &&
+        max(abs(fixed$est - mapply(function(a, b) sm[a, b], fixed$lhs, fixed$rhs))) <= 1e-8
     }
     if (fxmode %in% c("free", "all") && requireNamespace("lavaan", quietly = TRUE)) {
       l <- lavaan::sem(mod_t, d$twin, meanstructure = TRUE, fixed.x = fxmode == "all", information = "observed")
@@ -176,7 +177,7 @@ lost_run <- function(n, k, seed, kind) {
     z[g == last] <- NA
     d <- data.frame(y = y, m = m, x = x, w = rnorm(n), z = z, g = g, stringsAsFactors = FALSE)
     mod <- "m ~ a*x + g + z:w\ny ~ b*m + g\na*b == 0"
-    want <- paste0("`g_", last, "`.*only in rows dropped for missing values")
+    want <- paste0("^dummy `g_", last, "`.*only in rows dropped for missing values") # not the branch wrapper
   } else {
     d <- data.frame(y = y, m = m, x = x, g = factor(g, levels = c(lev, "zz")))
     want <- "`g_zz`.*no row has this level"

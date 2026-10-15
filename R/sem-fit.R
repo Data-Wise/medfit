@@ -29,7 +29,8 @@
       # one check before the branch grid, which would swallow it into "no branch converged"
       # a product's inputs are split at the colon: its rows go at materialization, like any other model variable
       sides <- unlist(strsplit(c(parsed$parameters$lhs, parsed$parameters$rhs), ":", fixed = TRUE))
-      vars <- intersect(unique(sides), names(data))
+      latent <- parsed$parameters$lhs[parsed$parameters$op == "=~"]
+      vars <- setdiff(intersect(unique(sides), names(data)), latent) # a latent is not a column, even when one shares its name
       rows <- stats::complete.cases(data[, vars, drop = FALSE])
       .sem_check_dummy_support(factors, data, data[rows, vars, drop = FALSE],
                                if (!is.null(weights)) weights[rows])
