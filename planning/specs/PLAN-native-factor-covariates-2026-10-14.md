@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | T1-T6 (T6 done 2026-10-14), T4b, T5b and T7 done on `feature/factor-covariates`; T4b (fit-statistic parity) done; T8-T10 pending; no PR until the final Codex review. **No PR until T6**: factor products are in the spec (F5, D3) and unbuilt |
+| **Status** | T1-T8, T4b, T5b done on `feature/factor-covariates` (T8 `b2ab509`, 2026-10-15; Codex T6 review: approve); T9 (unit-level planted defects) and T10 (docs, NEWS, gate registration) pending; no PR until the final whole-branch Codex review |
 | **Spec** | [SPEC-native-factor-covariates-2026-10-14.md](SPEC-native-factor-covariates-2026-10-14.md) (D1-D12, F1-F10) |
 | **Branch** | `feature/factor-covariates` (worktree `~/.git-worktrees/medfit/feature-factor-covariates`); one PR to `dev` (squash) |
 
