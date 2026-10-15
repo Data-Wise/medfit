@@ -3,14 +3,14 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | DRAFT, APPROVED by the author 2026-10-14 (D1-D9); Codex adversarial review pending; nothing implemented |
+| **Status** | APPROVED by the author 2026-10-14 (D1-D9); revised 2026-10-14 per the Codex adversarial review (D10-D12: expansion before completion, stored-data contract); nothing implemented |
 | **Origin** | [PROPOSAL-0.10.1-2026-10-14.md](../PROPOSAL-0.10.1-2026-10-14.md) (advice: its own spec, not a patch); the `fit_sem()` error "model variables must be numeric: g" (`R/sem-fit.R:54`) |
 | **Evidence labels** | **[V]** verified in this repo; **[A]** assumption, correct me |
 
 ## Assumptions
 
 1. **[V]** A factor, character or logical column in `data` that the model names stops the fit at `R/sem-fit.R:54`; users dummy-code by hand (cookbook recipe 20 note; edge test in #209).
-2. **[V]** The fit pipeline is: parse, `.sem_complete()`, product materialization (`.sem_materialize_products()`, `R/sem-fit.R:257`), `.sem_assign_fixed_x()`, `.sem_to_ram()`, numeric check, listwise deletion, `.sem_sample()`. Dummies are observed exogenous numeric columns, so every downstream stage already handles them.
+2. **[V]** The fit pipeline is: parse, `.sem_complete()`, product materialization (`.sem_materialize_products()`, `R/sem-fit.R:257`), `.sem_assign_fixed_x()`, `.sem_to_ram()`, numeric check, listwise deletion, `.sem_sample()`. Dummies are observed exogenous numeric columns, so every downstream stage already handles them **provided they exist before `.sem_complete()`**: completion is data-free and adds variance, covariance and mean rows for every exogenous name it sees, and resolves `fixed_x` names, so a factor left in the table would reach the numeric check as an observed variable (Codex finding 1). `.sem_fit_syntax()` is re-entered by `mbco_sem()` (`R/sem-mbco.R:156`, from `fit@data`) and by the zero-product branch fits, so the expansion must also be safe on a re-entry (Codex finding 2).
 3. **[A]** Only a factor on the **right side of a regression** (a covariate or a product factor) is expanded. A factor as an outcome, an indicator, a treatment or a mediator named to `extract_mediation()` keeps the numeric error, because the effects need a single column.
 4. **[A]** Dummies are exogenous and not Gaussian, as a binary treatment already is; the model-test policy for a product (chi-square `NA` when a product factor is a regression target) is unchanged and applies per dummy.
 
@@ -24,14 +24,15 @@ Let a factor covariate appear in a native model by name, e.g. `outcome ~ x + m +
 
 | Rule | Statement |
 |---|---|
-| F1 expansion | A name on a regression's right side that is a factor, character or logical column of `data` is replaced, in the completed table, by one numeric dummy per non-reference level, each with the original row's other properties. Logical gives one 0/1 column, no reference. |
+| F1 expansion | A name on a regression's right side that is a factor, character or logical column of `data` is replaced by one numeric dummy per non-reference level, each with the original row's other properties. Logical gives one 0/1 column, no reference. **Timing (D10):** this is a data-aware pre-pass `.sem_expand_factors(parsed$parameters, data, fixed_x)` that runs on the parsed table **before** `.sem_complete()`, so completion, role classification, scale and product checks, `fixed_x` resolution and RAM construction see only numeric names. It returns the rewritten table, the data with the dummy columns, `fixed_x` with factor names replaced by their dummy names, and the factor map (F10). |
 | F2 reference and order | The reference level is `levels(x)[1]`; a character column is converted with levels sorted in the C locale (the rule `.sem_product_name()` uses), so results do not depend on the session locale. An ordered factor is an error (polynomial contrasts are not dummies). A factor with one level is an error. |
 | F3 names | A dummy is named `<factor>_<level>`. A collision with an existing column or another dummy is an error naming both. A level that makes an invalid name is an error (the user renames it). |
 | F4 labels and fixed values | A label (`b*g`) or a fixed value on a factor term is an error: it cannot name several coefficients. A label on one dummy (`b*g_b`) is allowed. |
 | F5 products | `g:m` expands to `g_b:m`, `g_c:m` (each through the canonical product name and the existing rules 8 and 9). A factor on both sides of a product is an error (as `x:x` is). |
-| F6 `fixed_x` | `fixed_x = TRUE` includes the dummies; `fixed_x = "g"` selects all of the factor's dummies; a dummy name selects one. |
+| F6 `fixed_x` | `fixed_x = TRUE` includes the dummies; `fixed_x = "g"` selects all of the factor's dummies; a dummy name selects one. Resolved inside the F1 pre-pass (the names are rewritten before completion sees them), so `.sem_assign_fixed_x()` is unchanged. |
 | F7 data | Dummies are built from the full column **before** listwise deletion, so the dummy set does not depend on which rows survive; a level present only in dropped rows gives an all-zero column, which the existing singularity checks report. A missing value in the factor gives NA in every dummy (the row is dropped once, by listwise deletion). Weights are unaffected. |
-| F8 output | `tidy()`, `summary()` and the table show the dummy rows by their names; `@data` keeps the original columns and the dummies. |
+| F8 output | `tidy()`, `summary()` and the table show the dummy rows by their names. `@data` holds the **modeled** columns only (numeric columns and the dummies), never the original factor: keeping both would make F3's collision rule fail on a refit (Codex finding 2). |
+| F10 refit contract (D11) | The fit stores the factor map (factor, levels, reference, dummy names). A refit from `@data` (`mbco_sem()`, the zero-product branch fits) finds the factor name absent from `data` and its dummies present, so the pre-pass **rewrites the model text/table through the stored map instead of re-expanding**; with no map it errors as today. A column that is already a dummy of the same factor and identical to what the expansion would build is not a collision. `mbco_sem()` constraint text that names the factor is rewritten through the same map (a label on one dummy needs no rewrite). |
 | F9 extraction | In `extract_mediation()` a factor in the mediator equation enters the covariate means through its dummies (the `m_<dummy>` rows, as the lm/glm route already handles factor dummies). |
 
 ## 3. Commands
@@ -45,8 +46,10 @@ NOT_CRAN=true Rscript -e 'devtools::test(reporter = "summary")'
 ## 4. Project structure
 
 ```
-R/sem-fit.R          .sem_expand_factors(tab, data) before .sem_materialize_products(); dummy columns added to `data`
-R/sem-model.R        .sem_assign_fixed_x(): factor selection by name; F4 label errors
+R/sem-fit.R          .sem_expand_factors(tab, data, fixed_x) BEFORE .sem_complete(); returns table, data, fixed_x, factor map
+R/sem-model.R        F4 label errors (factor term with a label or fixed value)
+R/fit-sem.R          stores the factor map on the SEMFit
+R/sem-mbco.R         refit rewrites factor names through the stored map (F10)
 R/extract-sem.R      F9 covariate means over dummy columns
 tests/testthat/test-sem-factor-*.R   rules F1-F9, the frozen no-op, planted defects
 vignettes/articles/  model-native.qmd limits, cookbook recipe 20 note, ?"medfit-syntax"; NEWS
@@ -58,10 +61,12 @@ vignettes/articles/  model-native.qmd limits, cookbook recipe 20 note, ?"medfit-
 |---|---|---|
 | Parity | `outcome ~ x + m + g` equals the same fit with hand-coded dummies, estimates, SEs, logLik | the hand-coded fit; `lm()` per equation for a recursive model; lavaan with the same dummies |
 | Rules | F2 ordered/one-level/character-locale; F3 collision and bad names; F4 labels; F5 factor products; F6 `fixed_x` | error messages, exact values |
+| Order | the completed table and `ram$obs` contain the dummies and not the factor; `fixed_x = "g"` and `fixed_x = TRUE` give the same rows as the hand-coded twin | table and RAM equality with the hand-coded fit |
+| Refit | `mbco_sem()` on a factor-covariate fit (with and without `fixed_x`, with a `g_b:m` product) equals `mbco_sem()` on the hand-coded twin; a branch-split refit works | the hand-coded twin |
 | Missing | NA in a factor drops the row once; a level only in dropped rows | listwise count |
 | Extraction | four-way with a factor covariate in the mediator equation equals the glm route with the same factor | `fit_mediation(engine = "glm")` four-way |
 | Frozen | numeric-only models bit-identical | the T1 fixture |
-| Planted defects | wrong reference level; dummies built after listwise deletion; label on a factor accepted | each fails the right test |
+| Planted defects | wrong reference level; dummies built after listwise deletion; label on a factor accepted; expansion moved after completion; refit without the map | each fails the right test |
 
 ## 6. Boundaries
 
@@ -90,6 +95,16 @@ vignettes/articles/  model-native.qmd limits, cookbook recipe 20 note, ?"medfit-
 | D8 | Release | **0.11.0 headline** (latent means deferred to 1.0 unless a consumer appears). |
 | D9 | Two-level factor as treatment or mediator | **Keep the numeric error**; effects need one column named in `extract_mediation()`. |
 
+## 7c. Codex adversarial review (2026-10-14) and revisions
+
+Verdict: do not ship as written. Both high findings confirmed against the code and applied above.
+
+| # | Finding | Verification | Decision |
+|---|---|---|---|
+| D10 | Expansion after `.sem_complete()` is too late: completion is data-free (`R/sem-fit.R:29`), adds rows for the factor and resolves `fixed_x` before dummies exist, so the numeric check (`R/sem-fit.R:54`) still fires | Confirmed | **Pre-pass before completion** (F1, F6); product and rule 8/9 checks need no change |
+| D11 | `mbco_sem()` refits from `fit@data` (`R/sem-mbco.R:156`); F8 kept the factor and the dummies, so F3 would collide | Confirmed, with a correction: the stored data holds only the modeled columns, so the actual failure is a refit text that still names `g`; keeping both columns is what would create the collision | **`@data` holds modeled columns; the fit stores a factor map; refits rewrite through it** (F8, F10) |
+| D12 | The zero-product branch fits (`.sem_fit_branches()`) re-enter `.sem_fit_syntax()` too | Same contract | The pre-pass is a no-op on an already-expanded table and data; tested |
+
 ## 8. Open questions for the author
 
-None: D1-D9 settled 2026-10-14. Next: Codex adversarial review of this spec, then a plan and a feature branch.
+None: D1-D12 settled 2026-10-14. Next: an implementation plan (`tasks/plan.md`) and a feature branch on request.
