@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | T1-T3 and T7 done on `feature/factor-covariates` (`d6ca3c2`); T4 and T5 revised 2026-10-14 (harness, checks, agent skills); T6, T8-T10 pending |
+| **Status** | T1-T4 and T7 done on `feature/factor-covariates` (`e88996f`); T4b (fit-statistic parity) added after the T4 Codex review; T5, T6, T8-T10 pending. **No PR until T6**: factor products are in the spec (F5, D3) and unbuilt |
 | **Spec** | [SPEC-native-factor-covariates-2026-10-14.md](SPEC-native-factor-covariates-2026-10-14.md) (D1-D12, F1-F10) |
 | **Branch** | `feature/factor-covariates` (worktree `~/.git-worktrees/medfit/feature-factor-covariates`); one PR to `dev` (squash) |
 
@@ -25,8 +25,9 @@ Run the pre-pass **right after the parse and before the branch dispatch**, on `p
 | T2 | Wire into `.sem_fit_syntax()` before the branch dispatch; fit equals the hand-coded twin (estimates 1e-8, SEs 1e-6, logLik); lavaan parity on the twin | `R/sem-fit.R`, `tests/testthat/test-sem-factor-parity.R` | `outcome ~ x + m + g` fits; completed table and `ram$obs` hold dummies, not `g` (the Order row) | parity file; full suite |
 | T3 | Labels and fixed values (F4, D1): `b*g` errors, `b*g_b` works; message names the dummy | `R/sem-model.R` or the pre-pass, tests | Error text exact; label on one dummy fits | `test-sem-factor-rules.R` |
 | T4 | `fixed_x` at fit level (F6): `TRUE`, `"g"`, `c("x", "g")`, a dummy name; see "T4 detail" | `R/sem-factor.R` (only if a test finds a gap), tests, gate | Fixed rows, df, logLik and `glance()$fixed_x` equal the hand-coded twin | `test-sem-factor-fixedx.R`; gate cells `fx` |
+| T4b | Fit-statistic parity for `fixed_x` (Codex review of T4): the lavaan test and the gate also compare parameter count and chi-square; see "T4b" | `tests/testthat/test-sem-factor-fixedx.R`, `tests/sim/sem-factor-gate.R` | npar, df and chi-square equal lavaan `fixed.x = TRUE` (1e-5) and, for the free fit, lavaan `fixed.x = FALSE`; all finite | test file; gate (`chisq` column) |
 | T5 | Missing data (F7, D2): dummies from the full column before deletion; see "T5 detail" | `R/sem-factor.R`, `R/sem-fit.R` (only if a test finds a gap), tests, gate | Row count equals `complete.cases` on the twin; an all-zero dummy is reported by name | `test-sem-factor-missing.R`; gate cells `miss` |
-| T6 | Products (F5, D3, D4): `g:m` becomes `g_b:m`, `g_c:m` through the canonical product name and rules 8 and 9; `g` on both sides errors; four-way keeps refusing a `g:m` product with the new message | `R/sem-fit.R`, `R/extract-sem.R`, tests | Fit equals the hand-coded product twin; refusal message says the effects differ by `g` | `test-sem-factor-product.R` |
+| T6 | Products (F5, D3, D4), the largest slice; see "T6 detail" | `R/sem-factor.R`, `R/sem-fit.R`, `R/extract-sem.R`, tests, gate | `g:m` fits and equals the hand-coded product twin and lavaan; refusals and the four-way message as specified | `test-sem-factor-product.R`; gate product cells |
 | T7 | Stored contract (F8, F10, D11, D12): factor map in `fit@internals`; `mbco_sem()` and branch refits; `@data` has no original factor | `R/fit-sem.R`, `R/sem-mbco.R`, `R/sem-fit.R`, tests | `mbco_sem()` on a factor fit (with and without `fixed_x`, with `g_b:m`, and a zero-product branch fit) equals the twin | `test-sem-factor-refit.R` |
 | T8 | Extraction (F9, D9): four-way with a factor covariate in the mediator equation equals the glm route; a factor treatment or mediator keeps a numeric error whose text names the factor and the rule | `R/extract-sem.R`, tests | Agreement to 1e-8 | `test-sem-factor-extract.R` |
 | T9 | Planted defects: wrong reference level, dummies after deletion, label accepted, expansion after completion, refit without the map (`sem_mutate()` with `fx_skip_covr()`) | `tests/testthat/test-sem-factor-defects.R` | Each fails the intended test | defect file |
@@ -91,10 +92,36 @@ A gate script in the style of `sem-fixed-x-gate.R` (suppressMessages `pkgload::l
 
 **Vacuous-assertion rule (new, from T7):** every equality test also asserts the compared value is non-NULL and finite, or compares against a literal that cannot be NULL.
 
+## Review log (Codex adversarial reviews on the branch)
+
+| Review | Finding | Verdict | Action |
+|---|---|---|---|
+| T3 code | `mbco_sem()` cannot refit a factor fit (high) | Confirmed; was T7 | Fixed in `d6ca3c2` (factor map in `internals$factors`) |
+| T3 code | `y ~ g + b*g_b` duplicates a path (medium) | Confirmed | Fixed in `d6ca3c2` (D14/F3b) |
+| T4 results | `g:m` rejected instead of expanded (high) | **Known, scheduled as T6, not a regression**: the pre-pass skips colon terms on purpose, and the user sees `the product 'g:m' needs numeric variables, but g is not numeric` | No PR until T6 lands; T6 detail below. The interim message is accurate but does not point to the rule; T6 replaces it |
+| T4 results | lavaan check omits npar and chi-square (medium) | **Confirmed.** The T4 detail table promised "npar, df, chi-square 1e-5"; the test checks df and regression estimates only, and the gate checks estimates and SEs | T4b (next, before T5) |
+
+## T4b (fit-statistic parity)
+
+1. Test: for `fixed_x = TRUE` and for the free fit, compare `length(f@theta)`, `f@df` and `glance(f)$statistic`/chi-square with lavaan (`fitMeasures(l, c("npar","df","chisq"))`, 1e-5 relative); assert each is finite (non-NULL rule).
+2. Gate: a `fitstats` column on the lavaan-run cells (free and all modes), same tolerance, in the pass rule; confirm the clean run and that `wrongref`/`dropdummy` still exit 1.
+3. Check what the fixed-x gate already proves for lavaan chi-square (`sem-fixed-x-gate.R`, "lavaan" rule) so the new rule does not weaken it.
+
+## T6 detail (factor products)
+
+- **Pre-pass:** a product rhs `a:b` where one side is a categorical column (or a `<column>_<level>` reference) expands to one product per dummy, each rewritten through `.sem_product_name()` (`g_b:m`, `g_c:m`); the product-materialization step then builds numeric columns as today. Both sides categorical (`g:h`, `g:g`) is an error naming both (D3).
+- **Order:** expansion happens before `.sem_complete()` with the rest of the pre-pass; rules 8 and 9 (`.sem_check_product_parsed()`/`_completed()`) see only numeric product names, and their messages name the dummy product.
+- **Stored map:** a product row expanded from a factor is recorded so `mbco_sem()` refits rewrite it (the T7 contract extends to product rows); `fixed_x` naming a factor also fixes the dummies that appear only in products.
+- **Four-way (D4):** `extract_mediation(<SEMFit>, decomposition = "four_way")` with a `g:m` product keeps refusing, with a message that says the effects differ by `g`.
+- **Tests (red first):** hand-coded product twin (estimates, SEs, logLik); lavaan on the twin; `g:m` in the mediator and in the outcome equation; `m:g` spelling equals `g:m`; both-sides-categorical error; `g:h` error; the model test is `NA` for an endogenous product factor exactly as for hand-coded dummies (`glance()`); `mbco_sem()` refuses as for hand-coded; planted defect: product expanded without the canonical name (a duplicate `m:g_b` and `g_b:m`).
+- **Gate:** product cells (a `g:m` model against the twin, 2 and 3 levels, one missingness pattern) with a mutant that skips the canonical name.
+- **Skills:** the same loop as T4: `agent-skills:test-driven-development`, `test-engineer` review of the tests, `code-reviewer` on the diff, a Codex adversarial review at the slice boundary.
+
 ## Checkpoints
 
 - **After T2:** frozen fixture bit-identical, parity with the hand-coded fit. Stop and review if parity fails; every later slice builds on it.
-- **After T7 (reached 2026-10-14):** refit contract works. This is the Codex-flagged risk, so review before T8-T10.
+- **After T7 (reached 2026-10-14):** refit contract works.
+- **Before any PR:** T6 done (the spec headline needs factor products) and T4b done (a release gate must not omit fit statistics). This is the Codex-flagged risk, so review before T8-T10.
 - **Close-out (pre-PR, per the e2e rule):** one live exercise that can fail, with transcript in the PR body: factor-covariate fit versus the hand-coded twin and lavaan, plus an `mbco_sem()` refit. Full suite counts, lint at 120 columns, strict `R CMD check` 0/0/0 (run before any release, not for the feature PR alone).
 
 ## Risks
