@@ -27,7 +27,9 @@
     products <- .sem_zero_product_rows(parsed$constraints)
     if (length(products)) {
       # one check before the branch grid, which would swallow it into "no branch converged"
-      vars <- intersect(unique(c(parsed$parameters$lhs, parsed$parameters$rhs)), names(data))
+      # a product's inputs are split at the colon: its rows go at materialization, like any other model variable
+      sides <- unlist(strsplit(c(parsed$parameters$lhs, parsed$parameters$rhs), ":", fixed = TRUE))
+      vars <- intersect(unique(sides), names(data))
       rows <- stats::complete.cases(data[, vars, drop = FALSE])
       .sem_check_dummy_support(factors, data, data[rows, vars, drop = FALSE],
                                if (!is.null(weights)) weights[rows])

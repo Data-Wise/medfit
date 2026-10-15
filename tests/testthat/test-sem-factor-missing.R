@@ -176,3 +176,13 @@ test_that("planted defect: dummies built after listwise deletion lose the level 
   expect_true("g_b" %in% f@table$rhs)
   expect_equal(f@n_obs, sum(!is.na(d$y)))
 })
+
+test_that("the zero-product precheck sees product inputs: a level lost to an NA in a product factor is named", {
+  d <- fm_data()
+  set.seed(9)
+  d$z <- rnorm(nrow(d))
+  d$w <- rnorm(nrow(d))
+  d$z[d$g == "c"] <- NA # z occurs only inside the product z:w, so the rows go at materialization
+  mod <- "m ~ a*x + g + z:w\ny ~ b*m + g\na*b == 0"
+  expect_error(suppressMessages(fit_sem(mod, d)), "`g_c`.*only in rows dropped for missing values")
+})

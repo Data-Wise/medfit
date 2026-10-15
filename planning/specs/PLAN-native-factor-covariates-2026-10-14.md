@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | T1-T5 (T5 done 2026-10-14), T4b and T7 done on `feature/factor-covariates`; T4b (fit-statistic parity) done; T6, T8-T10 pending. **No PR until T6**: factor products are in the spec (F5, D3) and unbuilt |
+| **Status** | T1-T5 (T5 and T5b done 2026-10-14), T4b and T7 done on `feature/factor-covariates`; T4b (fit-statistic parity) done; T6, T8-T10 pending. **No PR until T6**: factor products are in the spec (F5, D3) and unbuilt |
 | **Spec** | [SPEC-native-factor-covariates-2026-10-14.md](SPEC-native-factor-covariates-2026-10-14.md) (D1-D12, F1-F10) |
 | **Branch** | `feature/factor-covariates` (worktree `~/.git-worktrees/medfit/feature-factor-covariates`); one PR to `dev` (squash) |
 
@@ -74,6 +74,8 @@ Run the pre-pass **right after the parse and before the branch dispatch**, on `p
 
 **T5 as built (2026-10-14), after the test-engineer and code-reviewer agents:** the check also runs once before the zero-product branch grid (the grid swallows errors into "no branch converged") and honors weights (a level whose rows all have zero weight is named: "occurs only in rows with zero weight"); a zero-row result skips the check so the existing error stands. Scope limit, stated: **only generated dummies are checked**; a hand-coded constant 0/1 column keeps today's unnamed "sample covariance matrix is singular". Gate: 400 runs (360 main + 40 `lost` cells), seven mutants exit 1 (`afterdelete` fails exactly the character-column cells, `nolevelcheck` all `lost` cells).
 
+**T5b (2026-10-14, from the Codex T5 review):** precheck rows use split product inputs; the harness gets a mutant-signature guard (a replacement function must keep the original's argument names) and a third lost-level kind, `branchprod` (zero-product constraint plus a product input that is NA exactly where the last level lives): gate 420 runs (360 main + 60 lost), all seven mutants exit 1, `nolevelcheck` fails only the 12 lost cells. A test-engineer agent reviewed the harness changes.
+
 ### Verification harness: `tests/sim/sem-factor-gate.R`
 
 A gate script in the style of `sem-fixed-x-gate.R` (suppressMessages `pkgload::load_all`, `swap()` for namespace mutants, `SEEDS` env, a CSV in `tests/sim/results/`, exit status 1 on any failed run).
@@ -113,6 +115,8 @@ A gate script in the style of `sem-fixed-x-gate.R` (suppressMessages `pkgload::l
 | T3 code | `mbco_sem()` cannot refit a factor fit (high) | Confirmed; was T7 | Fixed in `d6ca3c2` (factor map in `internals$factors`) |
 | T3 code | `y ~ g + b*g_b` duplicates a path (medium) | Confirmed | Fixed in `d6ca3c2` (D14/F3b) |
 | T4 results | `g:m` rejected instead of expanded (high) | **Known, scheduled as T6, not a regression**: the pre-pass skips colon terms on purpose, and the user sees `the product 'g:m' needs numeric variables, but g is not numeric` | No PR until T6 lands; T6 detail below. The interim message is accurate but does not point to the rule; T6 replaces it |
+| T5 | Zero-product precheck missed product inputs (medium) | **Confirmed by reproduction** (the new test failed with "no branch ... converged" before the fix). The precheck chose complete rows from `lhs`/`rhs` names; `z:w` contributed neither `z` nor `w`, so a level lost to an NA in `z` passed the check, and branch fits carry no factor map | **T5b:** names split at the colon in the precheck; test `the zero-product precheck sees product inputs`; gate cell kind `branchprod` |
+| T5 | `nolevelcheck` mutant failed for the wrong reason (medium) | **Confirmed.** The replacement had three arguments, the call four, so every cell died on "unused argument". The mutant proved nothing about the check | **T5b:** the mutant takes `weights = NULL`; `swap()` now refuses a replacement whose argument names differ from the original (harness guard, demonstrated); verified the mutant now fails only the lost cells with the unnamed "singular" error |
 | T4b | `g:m` still fails (high), now noted for a model with **no bare `g` term** | **Repeat of the T4 finding, still scheduled as T6.** One new detail the T6 plan did not state: a factor that appears only inside a product (`y ~ m + g:m`) is not found by the pre-pass, which skips colon names when it detects categorical columns | T6 detail gains the product-only case and a test for it; the "no PR until T6" rule stands |
 | T4 results | lavaan check omits npar and chi-square (medium) | **Confirmed.** The T4 detail table promised "npar, df, chi-square 1e-5"; the test checks df and regression estimates only, and the gate checks estimates and SEs | T4b (next, before T5) |
 

@@ -17,7 +17,8 @@
 #   refit    mbco_sem(paths = c("a", "b")) statistic equals the twin's (1e-6, relative): a refit works from the stored
 #            data and factor map
 # `lost` cells (T5): per n in {100, 400} x K in {3, 5} x seed, a character column whose last level occurs only where the
-# outcome is NA, and a factor with a declared level no row has. The rule: the fit errors, the message names the dummy
+# outcome is NA, a factor with a declared level no row has, and (branchprod) a zero-product constraint with a product
+# input that is NA exactly where the last level lives. The rule: the fit errors, the message names the dummy
 # (`g_<level>`) and its cause; a run that fits fails. Dummies come from the full column before listwise deletion.
 # `MUTANT=<name>` plants a defect and the gate must then exit 1: wrongref (the reference is the last level), nofix
 # (fixed_x names stay as the factor), afterdelete (the pre-pass sees only the complete rows, so a level present only in
@@ -32,7 +33,13 @@ suppressMessages(pkgload::load_all(quiet = TRUE))
 seeds <- seq_len(as.integer(Sys.getenv("SEEDS", "5")))
 mutant <- Sys.getenv("MUTANT", "")
 ns <- asNamespace("medfit")
+# A mutant replaces an internal function: it must keep the original's argument list, otherwise the gate turns red
+# from an "unused argument" error (the wrong reason) and the mutant proves nothing (Codex review of T5).
 swap <- function(name, fn) {
+  if (!identical(names(formals(get(name, ns))), names(formals(fn)))) {
+    stop("MUTANT ", mutant, ": the replacement of ", name, " changes the argument list (",
+         paste(names(formals(get(name, ns))), collapse = ", "), "), so it would fail for the wrong reason")
+  }
   unlockBinding(name, ns)
   assign(name, fn, envir = ns)
 }
@@ -63,7 +70,7 @@ if (mutant == "afterdelete") {
     orig_e(tab, data[stats::complete.cases(data[, vars, drop = FALSE]), , drop = FALSE], fixed_x, factors)
   })
 }
-if (mutant == "nolevelcheck") swap(".sem_check_dummy_support", function(map, data, x) invisible(NULL))
+if (mutant == "nolevelcheck") swap(".sem_check_dummy_support", function(map, data, x, weights = NULL) invisible(NULL))
 if (mutant == "nomap") swap(".sem_stored_factors", function(factors, data) list())
 if (mutant == "dropdummy") {
   orig_t <- get(".sem_expand_table", ns)
@@ -150,6 +157,7 @@ out <- do.call(rbind, lapply(seq_len(nrow(cells)), function(i) {
 }))
 # lost-level cells: the fit must error naming the dummy and the cause
 lost_run <- function(n, k, seed, kind) {
+  mod <- "m ~ x + g\ny ~ m + g"
   set.seed(seed)
   lev <- letters[seq_len(k)]
   g <- sample(lev, n, replace = TRUE)
@@ -162,19 +170,26 @@ lost_run <- function(n, k, seed, kind) {
     g[which(g == last)[1L]] <- NA_character_ # the level also has an NA row: still only in dropped rows
     d <- data.frame(y = y, m = m, x = x, g = g, stringsAsFactors = FALSE)
     want <- paste0("`g_", last, "`.*only in rows dropped for missing values")
+  } else if (kind == "branchprod") {
+    # a zero-product constraint (branch fits) and a product whose input is NA exactly where the last level lives
+    z <- rnorm(n)
+    z[g == last] <- NA
+    d <- data.frame(y = y, m = m, x = x, w = rnorm(n), z = z, g = g, stringsAsFactors = FALSE)
+    mod <- "m ~ a*x + g + z:w\ny ~ b*m + g\na*b == 0"
+    want <- paste0("`g_", last, "`.*only in rows dropped for missing values")
   } else {
     d <- data.frame(y = y, m = m, x = x, g = factor(g, levels = c(lev, "zz")))
     want <- "`g_zz`.*no row has this level"
   }
   msg <- tryCatch({
-    suppressMessages(fit_sem("m ~ x + g\ny ~ m + g", d))
+    suppressMessages(fit_sem(mod, d))
     NA_character_
   }, error = function(e) conditionMessage(e))
   data.frame(n = n, k = k, seed = seed, miss = kind, fxmode = "lost", twin = NA, names = NA, lavaan = NA,
              fitstats = NA, moments = NA, refit = NA, lost = !is.na(msg) && grepl(want, msg),
              err = "", stringsAsFactors = FALSE, msg = msg)
 }
-lost_cells <- expand.grid(n = c(100L, 400L), k = c(3L, 5L), seed = seeds, kind = c("dropped", "unused"),
+lost_cells <- expand.grid(n = c(100L, 400L), k = c(3L, 5L), seed = seeds, kind = c("dropped", "unused", "branchprod"),
                           stringsAsFactors = FALSE)
 lost <- do.call(rbind, lapply(seq_len(nrow(lost_cells)), function(i) do.call(lost_run, as.list(lost_cells[i, ]))))
 ok <- function(x) x %in% TRUE
