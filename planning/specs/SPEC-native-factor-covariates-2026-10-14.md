@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | DRAFT for the author's review; nothing implemented |
+| **Status** | DRAFT, grill in progress (D1-D4 decided 2026-10-14); nothing implemented |
 | **Origin** | [PROPOSAL-0.10.1-2026-10-14.md](../PROPOSAL-0.10.1-2026-10-14.md) (advice: its own spec, not a patch); the `fit_sem()` error "model variables must be numeric: g" (`R/sem-fit.R:54`) |
 | **Evidence labels** | **[V]** verified in this repo; **[A]** assumption, correct me |
 
@@ -75,6 +75,15 @@ vignettes/articles/  model-native.qmd limits, cookbook recipe 20 note, ?"medfit-
 2. The frozen fixture is bit-identical; the full suite has 0 failures; strict `R CMD check` 0/0/0.
 3. Each F-rule has a passing test and each planted defect a failing one.
 4. Docs: `?"medfit-syntax"`, `model-native.qmd`, recipe 20, NEWS; the error "must be numeric" is rewritten to name the factor and point to the rule.
+
+## 7b. Grill decisions (2026-10-14, author)
+
+| # | Question | Decision |
+|---|---|---|
+| D1 | F4: `b*g` on a factor term | **Error**; label a single dummy (`b*g_b`). A label names one coefficient, and sharing it would add a hidden equality constraint (df + k - 2). |
+| D2 | F7: when dummies are built | **From the full column, before listwise deletion.** A level only in dropped rows gives an all-zero dummy that the singularity checks report by name; the coefficient set never depends on the missingness pattern. |
+| D3 | F5: factor in a product | **Expand to one product per dummy** (`g_b:m`, `g_c:m`), each through the canonical name and rules 8 and 9, as `lm()` does; messages name the dummy product. |
+| D4 | Four-way with a `g:m` product | **Keep refusing**, with a message that says the effects differ by `g` and averaging over `g` is not supported. A group-averaged decomposition is a new estimand (its SE would carry the sampling variance of the group proportions) and needs its own spec. |
 
 ## 8. Open questions for the author
 
