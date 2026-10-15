@@ -149,6 +149,15 @@
 # class lives in this package).
 S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, ...) {
   args <- list(...)
+  # a factor was expanded to dummies, so the effects have no single column to read (D9)
+  as_factor <- intersect(c(treatment, mediator), names(object@internals$factors))
+  if (length(as_factor)) {
+    f <- as_factor[1L]
+    dummies <- paste(object@internals$factors[[f]]$dummies, collapse = ", ")
+    stop("`", f, "` is a factor in the model (expanded to ", dummies, "): the effects need a single numeric ",
+         "column. For a two-level factor, recode it as a 0/1 numeric variable and name that column in the model and ",
+         "here.", call. = FALSE)
+  }
   # Four-way route: a treatment-by-mediator product in the outcome equation, written `x:m` and stored under its
   # canonical name (`x:m` and `m:x` are one term), is read through the accessor seam by the shared worker. Estimate
   # names, `outcome_predictors` and `source_package` therefore carry the canonical `m:x` where the lavaan route
