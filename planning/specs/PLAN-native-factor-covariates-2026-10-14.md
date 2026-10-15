@@ -65,7 +65,8 @@ A gate script in the style of `sem-fixed-x-gate.R` (suppressMessages `pkgload::l
 
 - **Cells:** n in {100, 400} x SEEDS (5) x factor levels in {2, 3, 5} x missingness {none, 10% in the factor, 10% in the outcome} x `fixed_x` in {FALSE, `"g"`}.
 - **Per-run rule (a failing run fails the gate):** `twin` (estimates 1e-8, SEs 1e-6, logLik 1e-8, `n_obs` equals `complete.cases`), `lavaan` (estimates 1e-5, SEs 1e-3; `fixed.x` matched to the cell), `refit` (`mbco_sem(paths = c("a","b"))` statistic equals the twin's, 1e-6), `names` (dummy names and reference level equal the documented rule).
-- **Planted defects (`MUTANT=`, each must exit 1):** `wrongref` (reference is the last level), `afterdelete` (dummies built from the kept rows), `nofix` (`.sem_expand_fixed_x` returns its input), `nomap` (`.sem_stored_factors` returns nothing, so refits lose the factor), `dropdummy` (the last dummy omitted from the table).
+- **Planted defects (`MUTANT=`, each must exit 1):** `wrongref` (reference is the last level), `nofix` (`.sem_expand_fixed_x` returns its input), `halffix` (a factor in `fixed_x` fixes only its first dummy), `nomap` (`.sem_stored_factors` returns nothing, so refits lose the factor), `dropdummy` (the last dummy omitted from the table).
+- **`afterdelete` is a unit test, not a gate mutant** (review finding): a level present only in dropped rows needs a purpose-built data set, so it lives in `test-sem-factor-missing.R` (T5). The gate's `fixed_x` dimension is {FALSE, `"g"`, `TRUE`, `c("x","g")`}; lavaan runs for FALSE and TRUE only (its `fixed.x` is logical), and the gate also checks the fixed `~~` rows against base-R ML moments.
 - **Registration:** script-only first (as `sem-fixed-x-gate.R`, which is not in `gates.csv`). Registering in `run-gates.R` needs a verdict function and a `gates.csv` row; decide at close-out (T10), not now.
 
 ### Checks run per slice (T4 and T5), in this order

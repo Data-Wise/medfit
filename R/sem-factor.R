@@ -201,5 +201,5 @@
   if (!is.character(fixed_x)) {
     return(fixed_x)
   }
-  unlist(lapply(fixed_x, function(v) if (v %in% names(map)) map[[v]]$dummies else v), use.names = FALSE)
+  unique(unlist(lapply(fixed_x, function(v) if (v %in% names(map)) map[[v]]$dummies else v), use.names = FALSE))
 }

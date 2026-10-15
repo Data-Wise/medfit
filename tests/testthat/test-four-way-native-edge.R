@@ -69,7 +69,7 @@ test_that("a 0/1 dummy covariate in the mediator equation enters through its pro
   expect_gt(abs(moved[["int_ref"]] - r$est[["int_ref"]]), 1e-3)
 })
 
-test_that("a factor covariate in the mediator equation fits as its dummy-coded twin does; the twin matches the references", {
+test_that("a factor covariate in the mediator equation fits as its dummy-coded twin does", {
   d <- fwo_data(1500, 64, "c1")
   d$g <- factor(ifelse(d$c1 > 2, "hi", "lo"), levels = c("lo", "hi"))
   d$gd <- as.numeric(d$g == "hi")
