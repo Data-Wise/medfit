@@ -119,11 +119,28 @@
   prod <- setdiff(prod, .sem_product_name(treatment, mediator))
   hit <- prod[vapply(strsplit(prod, ":", fixed = TRUE), function(f) any(f %in% c(treatment, mediator)), logical(1))]
   if (length(hit)) {
+    fac <- .sem_factor_of_product(object@internals$factors, hit[1L])
+    if (!is.null(fac)) {
+      stop("the native extraction does not support the product '", hit[1L], "': it comes from the factor `", fac,
+           "`, so the effects differ by `", fac, "` and averaging over `", fac, "` is not supported. Fit the model ",
+           "without the product, or compute the effects within each level of `", fac, "`.", call. = FALSE)
+    }
     stop("the native extraction does not support the product '", hit[1L], "': a product involving the treatment ",
          "or the mediator other than '", .sem_product_name(treatment, mediator), "' changes the effects without ",
          "changing a coefficient the extraction reads. Remove it, or fit the model with lm/glm.", call. = FALSE)
   }
   invisible(NULL)
+}
+
+# The factor a product term was expanded from (one of its sides is a generated dummy), or NULL.
+.sem_factor_of_product <- function(factors, product) {
+  sides <- strsplit(product, ":", fixed = TRUE)[[1L]]
+  for (v in names(factors)) {
+    if (any(sides %in% factors[[v]]$dummies)) {
+      return(v)
+    }
+  }
+  NULL
 }
 
 # `extract_mediation()` for a native fit: the shared lavaan-route workers read the
@@ -132,6 +149,15 @@
 # class lives in this package).
 S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, ...) {
   args <- list(...)
+  # a factor was expanded to dummies, so the effects have no single column to read (D9)
+  as_factor <- intersect(c(treatment, mediator), names(object@internals$factors))
+  if (length(as_factor)) {
+    f <- as_factor[1L]
+    dummies <- paste(object@internals$factors[[f]]$dummies, collapse = ", ")
+    stop("`", f, "` is a factor in the model (expanded to ", dummies, "): the effects need a single numeric ",
+         "column. For a two-level factor, recode it as a 0/1 numeric variable and name that column in the model and ",
+         "here.", call. = FALSE)
+  }
   # Four-way route: a treatment-by-mediator product in the outcome equation, written `x:m` and stored under its
   # canonical name (`x:m` and `m:x` are one term), is read through the accessor seam by the shared worker. Estimate
   # names, `outcome_predictors` and `source_package` therefore carry the canonical `m:x` where the lavaan route

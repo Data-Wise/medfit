@@ -55,6 +55,40 @@ a (co)variance or an intercept takes one row: a repeated \code{y ~ x} is an erro
 not a second row that competes for the label.
 }
 
+\section{Factor covariates}{
+
+A factor, character or logical column named on a regression's right side is replaced by
+one 0/1 dummy per non-reference level, named \verb{<column>_<level>} (\code{g} with levels \code{a}, \code{b},
+\code{c} gives \code{g_b} and \code{g_c}). The reference level is the first factor level; a character
+column sorts in the C locale, so the result does not depend on the session locale. A
+logical column gives one dummy, \verb{<column>_TRUE}. Dummies are built from the full column
+before rows with missing values are dropped, and a missing value in the factor drops the
+row once. \code{tidy()} and the parameter table show the dummies by name, and the fit's data
+holds the dummies, not the factor.\tabular{ll}{
+   Limit \tab Message (starts with, or contains) \cr
+   An ordered factor \tab "is an ordered factor" \cr
+   A factor with one level \tab "has only one level" \cr
+   A level that makes an invalid name \tab "makes the invalid name" \cr
+   A dummy that is already a column \tab "is already a column of \code{data}" \cr
+   A label, fixed value, start or bound on a factor (\code{b*g}) \tab "expands to" \cr
+   A constraint that names the factor (\code{g == 0}) \tab "is a categorical column" \cr
+   A product of two factors \tab "both sides are categorical columns" \cr
+   A dummy with no variation in the rows used \tab "is constant in the rows the fit uses" \cr
+   A factor as the outcome or a mediator \tab "must be numeric" \cr
+   A factor as treatment or mediator in \code{extract_mediation()} \tab "is a factor in the model" \cr
+}
+
+
+A label goes on one dummy: \code{b*g_b} works, \code{b*g} stops, and a constraint names the label
+(\code{b == 0}), never the factor. A bootstrap that refits from raw data re-expands the factor in each
+resample, so a level missing from a character column's resample changes the reference level.
+\code{g:m} expands to \code{g_b:m} and \code{g_c:m}, each a product term under the rules below. \code{fixed_x = "g"} fixes every dummy of
+\code{g}, and a dummy name fixes one. A factor covariate in the mediator equation enters the
+four-way covariate means through its dummies; a factor treatment or mediator is not
+supported (recode a two-level factor as a 0/1 numeric column), and the four-way route
+refuses a \code{g:m} product because its effects differ by level.
+}
+
 \section{Product terms}{
 
 \code{x:m} is the product of two observed variables, written with no spaces, on the
@@ -96,7 +130,7 @@ includes the product columns.\tabular{ll}{
    A fixed, shared or constrained intercept \tab "(rule 9, intercept clause" \cr
    \code{meanstructure = FALSE} with a product \tab "\code{meanstructure = FALSE}, but the model has a product term" \cr
    A column \code{m:x} in \code{data} that is not \code{x * m} \tab "is not the product of" \cr
-   A non-numeric factor \tab "needs numeric variables" \cr
+   A product input that is not numeric, factor, character or logical (a date) \tab "needs numeric variables" \cr
    \code{information = "expected"}, endogenous factor \tab "with a product of an endogenous variable" \cr
    \code{anova()} or \code{mbco_sem()} on such a fit \tab "is not available for ... a model with a product term" \cr
    Another product on the treatment or mediator, in \code{extract_mediation()} \tab "does not support the product" \cr

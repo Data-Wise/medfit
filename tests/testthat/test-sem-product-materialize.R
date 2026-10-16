@@ -56,10 +56,13 @@ test_that("a mismatched pre-existing column errors, naming the column and both o
   expect_error(fit_sem(pm_model, d3), "is not the product")
 })
 
-test_that("a factor must be numeric, and an absent factor keeps the absent-column error", {
+test_that("a non-numeric non-categorical column must be numeric, and an absent one keeps the absent-column error", {
   d <- pm_data()
-  d$m <- factor(sample(c("a", "b"), nrow(d), TRUE))
+  d$m <- as.Date("2026-01-01") + seq_len(nrow(d))
   expect_error(fit_sem("y ~ x + x:m", d), "needs numeric variables, but m is not numeric")
+  # a factor or character column in a product is expanded to dummy products (see test-sem-factor-product.R)
+  d$m <- factor(sample(c("a", "b"), nrow(d), TRUE))
+  expect_true("m_b:x" %in% suppressMessages(suppressWarnings(fit_sem("y ~ x + x:m", d)))@table$rhs)
   d <- pm_data()
   d$m <- NULL
   expect_error(fit_sem("y ~ x + x:m", d), "not columns of `data`: m:x")

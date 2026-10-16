@@ -57,7 +57,7 @@ pmsg_cases <- function() {
     }),
     list("needs numeric variables", function() {
       d <- pmsg_data()
-      d$m <- factor(rep(c("a", "b"), length.out = nrow(d)))
+      d$m <- as.Date("2026-01-01") + seq_len(nrow(d)) # a factor, character or logical column is expanded instead
       fit_sem("y ~ x + x:m", d)
     }),
     list("with a product of an endogenous variable", pmsg_expected),

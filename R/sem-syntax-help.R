@@ -49,6 +49,38 @@
 #' a (co)variance or an intercept takes one row: a repeated `y ~ x` is an error,
 #' not a second row that competes for the label.
 #'
+#' @section Factor covariates:
+#' A factor, character or logical column named on a regression's right side is replaced by
+#' one 0/1 dummy per non-reference level, named `<column>_<level>` (`g` with levels `a`, `b`,
+#' `c` gives `g_b` and `g_c`). The reference level is the first factor level; a character
+#' column sorts in the C locale, so the result does not depend on the session locale. A
+#' logical column gives one dummy, `<column>_TRUE`. Dummies are built from the full column
+#' before rows with missing values are dropped, and a missing value in the factor drops the
+#' row once. `tidy()` and the parameter table show the dummies by name, and the fit's data
+#' holds the dummies, not the factor.
+#'
+#' | Limit | Message (starts with, or contains) |
+#' |:--|:--|
+#' | An ordered factor | "is an ordered factor" |
+#' | A factor with one level | "has only one level" |
+#' | A level that makes an invalid name | "makes the invalid name" |
+#' | A dummy that is already a column | "is already a column of `data`" |
+#' | A label, fixed value, start or bound on a factor (`b*g`) | "expands to" |
+#' | A constraint that names the factor (`g == 0`) | "is a categorical column" |
+#' | A product of two factors | "both sides are categorical columns" |
+#' | A dummy with no variation in the rows used | "is constant in the rows the fit uses" |
+#' | A factor as the outcome or a mediator | "must be numeric" |
+#' | A factor as treatment or mediator in `extract_mediation()` | "is a factor in the model" |
+#'
+#' A label goes on one dummy: `b*g_b` works, `b*g` stops, and a constraint names the label
+#' (`b == 0`), never the factor. A bootstrap that refits from raw data re-expands the factor in each
+#' resample, so a level missing from a character column's resample changes the reference level.
+#' `g:m` expands to `g_b:m` and `g_c:m`, each a product term under the rules below. `fixed_x = "g"` fixes every dummy of
+#' `g`, and a dummy name fixes one. A factor covariate in the mediator equation enters the
+#' four-way covariate means through its dummies; a factor treatment or mediator is not
+#' supported (recode a two-level factor as a 0/1 numeric column), and the four-way route
+#' refuses a `g:m` product because its effects differ by level.
+#'
 #' @section Product terms:
 #' `x:m` is the product of two observed variables, written with no spaces, on the
 #' right side of a regression (`y ~ x + m + x:m`). As in lavaan, the product is an
@@ -91,7 +123,7 @@
 #' | A fixed, shared or constrained intercept | "(rule 9, intercept clause" |
 #' | `meanstructure = FALSE` with a product | "`meanstructure = FALSE`, but the model has a product term" |
 #' | A column `m:x` in `data` that is not `x * m` | "is not the product of" |
-#' | A non-numeric factor | "needs numeric variables" |
+#' | A product input that is not numeric, factor, character or logical (a date) | "needs numeric variables" |
 #' | `information = "expected"`, endogenous factor | "with a product of an endogenous variable" |
 #' | `anova()` or `mbco_sem()` on such a fit | "is not available for ... a model with a product term" |
 #' | Another product on the treatment or mediator, in `extract_mediation()` | "does not support the product" |
