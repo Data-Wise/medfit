@@ -192,7 +192,7 @@ Pick the row that matches your data.
 | A term or symbol you do not know | [Glossary and symbols](guide-glossary.html) |
 
 For quick lookups: the [Reference Card](refcard.html) has every function on one
-page, and the [Cookbook](cookbook.html) has twenty short recipes. To understand
+page, and the [Cookbook](cookbook.html) has twenty-one short recipes. To understand
 the classes, read the [Introduction](introduction.html); for the math behind
 every effect and standard error, [Methods and Formulas](methods.html); for
 extraction from fitted models, [Model Extraction](extraction.html).

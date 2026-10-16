@@ -12,11 +12,11 @@ execute:
   echo: true
 ---
 
-Twenty task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Twenty-one task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
-These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, and recipe 20 and the native route in recipe 7 need 0.10.0). CRAN has 0.3.2, which lacks
+These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, and recipe 21 needs the development version, 0.11.0). CRAN has 0.3.2, which lacks
 `mediation_demo` and the native, joint and cluster functions; install from
 GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 
@@ -620,3 +620,56 @@ c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
 
 More: [Native book, the four-way decomposition](native-book-7-four-way.html),
 [Native engine, product term](model-native.html).
+
+## 21. A categorical covariate in a native fit
+
+*When:* a covariate is a factor, character or logical column (a group, a site, a yes/no flag).
+Write the column name where a numeric covariate would go. The engine replaces it with one 0/1 dummy per
+non-reference level, named `<column>_<level>`; the reference is the first factor level (a character column
+sorts in the C locale). The rows of the fit are named `mediator1~group_mid`, so read them like any other
+path. The chunk cuts `covariate1` into three groups to have a factor to use.
+
+```{r}
+#| label: r21-fit
+dat21 <- transform(mediation_demo,
+                   group = cut(covariate1, c(-Inf, -0.5, 0.5, Inf), labels = c("low", "mid", "high")))
+fit21 <- fit_sem("
+  mediator1 ~ a*treatment + group
+  outcome ~ b*mediator1 + cp*treatment + group
+  ind := a*b
+", dat21)
+tidy(fit21)[1:7, ]
+```
+
+The estimates equal a fit with the dummies written by hand (`group_mid`, `group_high`), and `a`, `b` and
+`ind` keep their usual meaning. A label goes on one dummy, never on the factor: `b*group` stops with a
+message that names the dummies. To test one dummy, label it and constrain the label:
+
+```{r}
+#| label: r21-label
+fit21b <- fit_sem("
+  mediator1 ~ a*treatment + group
+  outcome ~ b*mediator1 + cp*treatment + group + z*group_mid
+  z == 0
+", dat21)
+tidy(fit21b)[grepl("group", tidy(fit21b)$term, fixed = TRUE), ]
+```
+
+`fixed_x = "group"` fixes every dummy of the factor at its sample moments, and a dummy name fixes one:
+
+```{r}
+#| label: r21-fixed
+fit21c <- fit_sem("
+  mediator1 ~ a*treatment + group
+  outcome ~ b*mediator1 + cp*treatment + group
+", dat21, fixed_x = "group")
+generics::glance(fit21c)$fixed_x
+```
+
+Limits: a factor as an outcome or a mediator, an ordered factor, and a product of two factors are refused
+with a message that says why; `group:mediator1` expands to one product per dummy. A bootstrap that refits from
+raw data re-expands the factor in each resample, so a level missing from a character column's resample
+changes the reference level.
+
+More: [Native engine, paths and defined parameters](model-native.html), `?"medfit-syntax"`
+(section Factor covariates).

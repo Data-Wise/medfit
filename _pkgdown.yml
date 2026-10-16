@@ -175,6 +175,8 @@ navbar:
         href: articles/cookbook.html#observed-intercepts-and-means
       - text: "20. Four-way decomposition (native)"
         href: articles/cookbook.html#four-way-decomposition-from-a-native-fit
+      - text: "21. Categorical covariate (native)"
+        href: articles/cookbook.html#a-categorical-covariate-in-a-native-fit
     articles:
       text: Articles
       menu:
