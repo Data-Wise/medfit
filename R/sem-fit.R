@@ -68,7 +68,9 @@
   x <- data[, ram$obs, drop = FALSE]
   nonnum <- ram$obs[!vapply(x, is.numeric, TRUE)]
   if (length(nonnum)) {
-    stop("model variables must be numeric: ", paste(nonnum, collapse = ", "), call. = FALSE)
+    stop("model variables must be numeric: ", paste(nonnum, collapse = ", "),
+         ". A factor, character or logical column is expanded to dummies only on a regression's right side; ",
+         "as an outcome or mediator, or for any other type (a date), convert it to a numeric column", call. = FALSE)
   }
   # Listwise deletion once, on the model's observed variables only.
   keep <- stats::complete.cases(x)

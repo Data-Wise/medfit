@@ -221,6 +221,10 @@ the reason.
   observed variables that differ.
 - **Products** are limited to two observed variables inside the class in the table above; latent
   products, `x:x` and three-way products stop with the messages listed there.
+- **Factor covariates** (a factor, character or logical column on a regression's right side) become
+  0/1 dummies named `g_b`, `g_c` (reference: the first level), as `lm()` builds them. A label on the
+  factor (`b*g`) stops; label one dummy (`b*g_b`). A factor as an outcome, a mediator or a four-way
+  treatment is not supported, and `g:m` expands to one product per dummy (see `?"medfit-syntax"`).
 - `summary()` reports diagnostics, including an improper solution and any active
   bound or constraint; read them before trusting a fit.
 

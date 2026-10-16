@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Date** | 2026-10-14 |
-| **Status** | T1-T8, T4b, T5b done on `feature/factor-covariates` (T8 `b2ab509`, 2026-10-15; Codex T6 review: approve); T9 (unit-level planted defects) and T10 (docs, NEWS, gate registration) pending; no PR until the final whole-branch Codex review |
+| **Status** | T1-T8, T4b, T5b done on `feature/factor-covariates` (T8 `b2ab509`, 2026-10-15; Codex T6 review: approve); T9 (`584e75e`, planted defects) and T10 (docs, NEWS; gate stays script-only, as `sem-fixed-x-gate.R`, decided 2026-10-16) done; next is the whole-branch Codex review, then the pre-PR end-to-end run; no PR before that |
 | **Spec** | [SPEC-native-factor-covariates-2026-10-14.md](SPEC-native-factor-covariates-2026-10-14.md) (D1-D12, F1-F10) |
 | **Branch** | `feature/factor-covariates` (worktree `~/.git-worktrees/medfit/feature-factor-covariates`); one PR to `dev` (squash) |
 

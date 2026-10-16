@@ -567,7 +567,9 @@ the product as `treatment:mediator1` in the outcome equation, fit with `fit_sem(
 extract. A product turns the mean structure on, so the covariate in the mediator equation
 enters the reference interaction through its sample mean. The fit warns that the global
 test is not valid with a product and recommends the sandwich covariance; the chunk
-silences the warning and asks for the sandwich.
+silences the warning and asks for the sandwich. A factor covariate (for example a `group` column in
+the mediator equation) is expanded to dummies and enters the same way; a factor treatment or
+mediator is not supported, so recode a two-level factor as 0/1 first.
 
 ```{r}
 #| label: r20-fit
