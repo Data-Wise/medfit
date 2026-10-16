@@ -25,12 +25,12 @@
 #'   [BootstrapResult], or [SEMFit] object (a `SEMFit` has its own columns; see
 #'   [SEMFit-methods]).
 #' @param ... Passed to the class method: `type` (`"all"`, `"paths"`,
-#'   `"effects"`, and for interaction objects `"components"`), `conf.int`
-#'   (logical, add `conf.low`/`conf.high`), and `conf.level` (default 0.95).
+#'   `"effects"`, and for interaction objects `"components"`), `conf_int`
+#'   (logical, add `conf_low`/`conf_high`), and `conf_level` (default 0.95).
 #'
 #' @return `tidy()`: a tibble (a data frame if tibble is not installed) with
-#'   columns `term`, `estimate`, `std.error`, and, when `conf.int = TRUE`,
-#'   `conf.low` and `conf.high`.
+#'   columns `term`, `estimate`, `std_error`, and, when `conf_int = TRUE`,
+#'   `conf_low` and `conf_high`.
 #'
 #'   `glance()`: a one-row tibble with `nie`, `nde`, `te`, `pm`, `nobs`, and
 #'   `converged`; interaction objects add `interaction` and `m_star`, and
@@ -41,7 +41,7 @@
 #' Path standard errors are the square roots of the diagonal of `@vcov`.
 #' Effect standard errors (NIE, NDE, TE, and for interaction objects the
 #' four-way components) use the delta method over the full `@vcov`, the same
-#' computation as `confint(parm = "effects")`, so `tidy(conf.int = TRUE)`
+#' computation as `confint(parm = "effects")`, so `tidy(conf_int = TRUE)`
 #' reproduces `confint()` exactly. Intervals are normal approximations
 #' (\eqn{\hat{\theta} \pm z \, SE}{estimate +/- z * SE}); the sampling
 #' distribution of a product of coefficients is skewed, so for inference on
@@ -77,11 +77,13 @@
 #' )
 #' # tidy() is the generic from the generics package (also re-exported by broom)
 #' generics::tidy(med_data)
-#' generics::tidy(med_data, type = "effects", conf.int = TRUE)
+#' generics::tidy(med_data, type = "effects", conf_int = TRUE)
 #'
 #' @seealso [bootstrap_mediation()], [MediationData]
-#' @export
-tidy.S7_object <- function(x, ...) {
+tidy_s7_object <- function(x, ...) {
+  if (any(c("conf.int", "conf.level") %in% ...names())) {
+    return(do.call(tidy_s7_object, c(list(x), .rename_dotted_tidy_args(list(...)))))
+  }
   if (S7::S7_inherits(x, MediationData)) {
     return(.tidy_mediation_data(x, ...))
   }
@@ -111,9 +113,8 @@ tidy.S7_object <- function(x, ...) {
 }
 
 
-#' @rdname tidy.S7_object
-#' @export
-glance.S7_object <- function(x, ...) {
+#' @rdname tidy_s7_object
+glance_s7_object <- function(x, ...) {
   if (S7::S7_inherits(x, MediationData)) {
     return(.glance_mediation_data(x, ...))
   }
@@ -155,17 +156,17 @@ glance.S7_object <- function(x, ...) {
 #'     \item `"paths"`: Only path coefficients (a, b, c')
 #'     \item `"effects"`: Only mediation effects (NIE, NDE, TE)
 #'   }
-#' @param conf.int Logical: include confidence intervals? (default: FALSE)
-#' @param conf.level Confidence level for intervals (default: 0.95)
+#' @param conf_int Logical: include confidence intervals? (default: FALSE)
+#' @param conf_level Confidence level for intervals (default: 0.95)
 #' @param ... Additional arguments (ignored)
 #'
 #' @return A tibble with columns:
 #'   \itemize{
 #'     \item `term`: Name of the coefficient or effect
 #'     \item `estimate`: Point estimate
-#'     \item `std.error`: Standard error (if available)
-#'     \item `conf.low`: Lower CI bound (if conf.int = TRUE)
-#'     \item `conf.high`: Upper CI bound (if conf.int = TRUE)
+#'     \item `std_error`: Standard error (if available)
+#'     \item `conf_low`: Lower CI bound (if conf_int = TRUE)
+#'     \item `conf_high`: Upper CI bound (if conf_int = TRUE)
 #'   }
 #'
 #' @examples
@@ -184,17 +185,17 @@ glance.S7_object <- function(x, ...) {
 #' tidy(result, type = "effects")
 #'
 #' # With confidence intervals
-#' tidy(result, conf.int = TRUE)
+#' tidy(result, conf_int = TRUE)
 #'
 #' @noRd
 .tidy_mediation_data <- function(x, type = c("all", "paths", "effects"),
-                                 conf.int = FALSE, conf.level = 0.95, ...) {
+                                 conf_int = FALSE, conf_level = 0.95, ...) {
   type <- match.arg(type)
   path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL      # a, b, c_prime
   effect_vec <- if (type %in% c("all", "effects")) {
     c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)), te = as.numeric(te(x)))
   }
-  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+  .tidy_paths_effects(x, path_vec, effect_vec, conf_int, conf_level)
 }
 
 
@@ -256,7 +257,7 @@ glance.S7_object <- function(x, ...) {
 #'
 #' @noRd
 .tidy_serial_mediation_data <- function(x, type = c("all", "paths", "effects"),
-                                        conf.int = FALSE, conf.level = 0.95, ...) {
+                                        conf_int = FALSE, conf_level = 0.95, ...) {
   type <- match.arg(type)
   path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
   # paths() names the d paths by mediator pair (d, or d21, d32, ...);
@@ -271,7 +272,7 @@ glance.S7_object <- function(x, ...) {
     c(nie = as.numeric(nie(x)), nie_total = te_val - nde_val,
       nde = nde_val, te = te_val)
   }
-  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level,
+  .tidy_paths_effects(x, path_vec, effect_vec, conf_int, conf_level,
                       path_alias = path_alias)
 }
 
@@ -313,7 +314,7 @@ glance.S7_object <- function(x, ...) {
 #' Shared body for every mediation tidier. Path rows get standard errors from
 #' the diagonal of `@vcov` (the path names, or `path_alias`, are aliases in it);
 #' effect rows get delta-method standard errors from the same helper
-#' `confint()` uses, so `tidy(conf.int = TRUE)` and `confint()` agree. An
+#' `confint()` uses, so `tidy(conf_int = TRUE)` and `confint()` agree. An
 #' object without the alias rows gets `NA` SEs rather than an error. No
 #' warning is raised here (GRILL D3).
 #'
@@ -321,11 +322,11 @@ glance.S7_object <- function(x, ...) {
 #' @param path_vec Named numeric vector of path coefficients (or `NULL`)
 #' @param effect_vec Named numeric vector of effects (or `NULL`); names must be
 #'   canonical `.effect_se()` keys
-#' @param conf.int,conf.level As in `.tidy_mediation_data()`
+#' @param conf_int,conf_level As in `.tidy_mediation_data()`
 #' @param path_alias `@vcov` row names for `path_vec`, when they differ from
 #'   `names(path_vec)` (serial d paths)
 #' @noRd
-.tidy_paths_effects <- function(x, path_vec, effect_vec, conf.int, conf.level,
+.tidy_paths_effects <- function(x, path_vec, effect_vec, conf_int, conf_level,
                                 path_alias = names(path_vec), path_df = NULL) {
   vc <- x@vcov
   # match() gives NA (not an error) for a path name missing from @vcov
@@ -335,20 +336,20 @@ glance.S7_object <- function(x, ...) {
   result <- data.frame(
     term = c(names(path_vec), names(effect_vec)),
     estimate = unname(c(path_vec, effect_vec)),
-    std.error = unname(c(path_se, effect_se)),
+    std_error = unname(c(path_se, effect_se)),
     stringsAsFactors = FALSE
   )
 
-  if (conf.int) {
+  if (conf_int) {
     # Normal quantile, or a t quantile per path row when `path_df` is given
     # (Kenward-Roger df); effect rows stay normal.
-    q <- rep(stats::qnorm(1 - (1 - conf.level) / 2), nrow(result))
+    q <- rep(stats::qnorm(1 - (1 - conf_level) / 2), nrow(result))
     if (!is.null(path_df)) {
       i <- match(names(path_vec), result$term)
-      q[i] <- stats::qt(1 - (1 - conf.level) / 2, df = path_df[names(path_vec)])
+      q[i] <- stats::qt(1 - (1 - conf_level) / 2, df = path_df[names(path_vec)])
     }
-    result$conf.low <- result$estimate - q * result$std.error
-    result$conf.high <- result$estimate + q * result$std.error
+    result$conf_low <- result$estimate - q * result$std_error
+    result$conf_high <- result$estimate + q * result$std_error
   }
 
   if (requireNamespace("tibble", quietly = TRUE)) {
@@ -364,21 +365,21 @@ glance.S7_object <- function(x, ...) {
 #' @param x A ParallelMediationData object
 #' @param type `"all"` (default), `"paths"` (a1, b1, ..., c_prime), or
 #'   `"effects"` (nie, nde, te)
-#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
-#' @param conf.level Confidence level (default 0.95)
+#' @param conf_int Logical: add normal-approximation CIs from `std_error`?
+#' @param conf_level Confidence level (default 0.95)
 #' @param ... Additional arguments (ignored)
-#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
-#'   `conf.high` when `conf.int = TRUE`)
+#' @return A tibble with `term`, `estimate`, `std_error` (and `conf_low`,
+#'   `conf_high` when `conf_int = TRUE`)
 #' @noRd
 .tidy_parallel_mediation_data <- function(x, type = c("all", "paths", "effects"),
-                                          conf.int = FALSE, conf.level = 0.95,
+                                          conf_int = FALSE, conf_level = 0.95,
                                           ...) {
   type <- match.arg(type)
   path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
   effect_vec <- if (type %in% c("all", "effects")) {
     c(nie = as.numeric(nie(x)), nde = as.numeric(nde(x)), te = as.numeric(te(x)))
   }
-  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+  .tidy_paths_effects(x, path_vec, effect_vec, conf_int, conf_level)
 }
 
 
@@ -413,16 +414,16 @@ glance.S7_object <- function(x, ...) {
 #' @param x An InteractionMediationData object
 #' @param type `"all"` (default), `"paths"` (a, b, c_prime, theta3),
 #'   `"components"` (cde, int_ref, int_med, pie), or `"effects"` (nie, nde, te)
-#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
-#' @param conf.level Confidence level (default 0.95)
+#' @param conf_int Logical: add normal-approximation CIs from `std_error`?
+#' @param conf_level Confidence level (default 0.95)
 #' @param ... Additional arguments (ignored)
-#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
-#'   `conf.high` when `conf.int = TRUE`)
+#' @return A tibble with `term`, `estimate`, `std_error` (and `conf_low`,
+#'   `conf_high` when `conf_int = TRUE`)
 #' @noRd
 .tidy_interaction_mediation_data <- function(x,
                                              type = c("all", "paths",
                                                       "components", "effects"),
-                                             conf.int = FALSE, conf.level = 0.95,
+                                             conf_int = FALSE, conf_level = 0.95,
                                              ...) {
   type <- match.arg(type)
   path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
@@ -436,7 +437,7 @@ glance.S7_object <- function(x, ...) {
     components = components,
     effects = effects
   )
-  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+  .tidy_paths_effects(x, path_vec, effect_vec, conf_int, conf_level)
 }
 
 
@@ -473,21 +474,21 @@ glance.S7_object <- function(x, ...) {
 #' @param x A JointMediationData object
 #' @param type `"all"` (default), `"paths"` (a1..aK, dij, b1..bK,
 #'   theta3_<mediator>, c_prime), or `"effects"` (cde, nde, nie, te)
-#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
-#' @param conf.level Confidence level (default 0.95)
+#' @param conf_int Logical: add normal-approximation CIs from `std_error`?
+#' @param conf_level Confidence level (default 0.95)
 #' @param ... Additional arguments (ignored)
-#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
-#'   `conf.high` when `conf.int = TRUE`)
+#' @return A tibble with `term`, `estimate`, `std_error` (and `conf_low`,
+#'   `conf_high` when `conf_int = TRUE`)
 #' @noRd
 .tidy_joint_mediation_data <- function(x, type = c("all", "paths", "effects"),
-                                       conf.int = FALSE, conf.level = 0.95,
+                                       conf_int = FALSE, conf_level = 0.95,
                                        ...) {
   type <- match.arg(type)
   path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
   effect_vec <- if (type %in% c("all", "effects")) {
     c(cde = x@cde, nde = x@nde, nie = x@nie, te = x@total_effect)
   }
-  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level)
+  .tidy_paths_effects(x, path_vec, effect_vec, conf_int, conf_level)
 }
 
 
@@ -527,20 +528,20 @@ glance.S7_object <- function(x, ...) {
 #' @param x A ClusterMediationData object
 #' @param type `"all"` (default), `"paths"` (a, b_within, b_between, c_prime),
 #'   or `"effects"` (nie, nde, te, own, spillover)
-#' @param conf.int Logical: add normal-approximation CIs from `std.error`?
-#' @param conf.level Confidence level (default 0.95)
+#' @param conf_int Logical: add normal-approximation CIs from `std_error`?
+#' @param conf_level Confidence level (default 0.95)
 #' @param ... Additional arguments (ignored)
-#' @return A tibble with `term`, `estimate`, `std.error` (and `conf.low`,
-#'   `conf.high` when `conf.int = TRUE`)
+#' @return A tibble with `term`, `estimate`, `std_error` (and `conf_low`,
+#'   `conf_high` when `conf_int = TRUE`)
 #' @noRd
 .tidy_cluster_mediation_data <- function(x, type = c("all", "paths", "effects"),
-                                         conf.int = FALSE, conf.level = 0.95,
+                                         conf_int = FALSE, conf_level = 0.95,
                                          ...) {
   type <- match.arg(type)
   path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
   effect_vec <- if (type %in% c("all", "effects")) .cluster_effect_vec(x)
   path_df <- if (identical(x@se_type, "kr")) x@kr_df
-  .tidy_paths_effects(x, path_vec, effect_vec, conf.int, conf.level,
+  .tidy_paths_effects(x, path_vec, effect_vec, conf_int, conf_level,
                       path_df = path_df)
 }
 
@@ -583,9 +584,9 @@ glance.S7_object <- function(x, ...) {
   result <- data.frame(
     term = "estimate",
     estimate = x@estimate,
-    std.error = if (x@method != "plugin") stats::sd(x@boot_estimates) else NA_real_,
-    conf.low = x@ci_lower,
-    conf.high = x@ci_upper,
+    std_error = if (x@method != "plugin") stats::sd(x@boot_estimates) else NA_real_,
+    conf_low = x@ci_lower,
+    conf_high = x@ci_upper,
     stringsAsFactors = FALSE
   )
 
@@ -621,4 +622,14 @@ glance.S7_object <- function(x, ...) {
   }
 
   result
+}
+
+
+# `conf.int` and `conf.level` became `conf_int` and `conf_level` (0.9.0); the old names keep working with a warning.
+.rename_dotted_tidy_args <- function(args) {
+  hit <- intersect(c("conf.int", "conf.level"), names(args))
+  new <- gsub(".", "_", hit[1L], fixed = TRUE)
+  lifecycle::deprecate_warn("0.9.0", paste0("tidy(", hit[1L], ")"), paste0("tidy(", new, ")"))
+  names(args)[names(args) %in% hit] <- gsub(".", "_", names(args)[names(args) %in% hit], fixed = TRUE)
+  args
 }

@@ -12,11 +12,11 @@ execute:
   echo: true
 ---
 
-Thirteen task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Eighteen task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
-These recipes need medfit 0.8.0 or later. CRAN has 0.3.2, which lacks
+These recipes need medfit 0.8.0 or later (recipe 18 needs 0.9.0, and the native route in recipe 7 needs 0.10.0). CRAN has 0.3.2, which lacks
 `mediation_demo` and the native, joint and cluster functions; install from
 GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#installation)).
 
@@ -51,7 +51,7 @@ fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
             mediation_demo)
 x <- extract_mediation(fit_m, model_y = fit_y,
                        treatment = "treatment", mediator = "mediator1")
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
 More: [Model Extraction](extraction.html).
@@ -96,7 +96,7 @@ xw <- fit_mediation(
   data = mediation_demo, treatment = "treatment", mediator = "mediator1",
   weights = ipw, se_type = "sandwich"
 )
-tidy(xw, type = "effects", conf.int = TRUE)
+tidy(xw, type = "effects", conf_int = TRUE)
 ```
 
 More: [Getting Started](getting-started.html).
@@ -159,7 +159,22 @@ xi <- extract_mediation(fit_m, model_y = fit_yi, treatment = "treatment",
 decompose(xi)
 ```
 
-More: [Model Extraction](extraction.html).
+The native engine gives the same parts from model syntax (0.10.0 or later): write the
+product as `treatment:mediator1`. The fit warns once that the global model test is
+not available for a product of a regression target.
+
+```{r}
+#| label: r7-native
+sem_i <- suppressWarnings(fit_sem(
+  "mediator1 ~ treatment + covariate1 + covariate2
+   outcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate1 + covariate2",
+  mediation_demo, se_type = "sandwich"
+))
+decompose(extract_mediation(sem_i, treatment = "treatment", mediator = "mediator1",
+                            outcome = "outcome_int"))
+```
+
+More: [Model Extraction](extraction.html), [the native product term](model-native.html#product-terms).
 
 ## 8. Many mediators with products
 
@@ -212,7 +227,7 @@ cdat$Y <- 0.2 * cdat$X + 0.3 * (cdat$M - mbar) + 0.6 * mbar + u[cl] + rnorm(J * 
 #| eval: !expr requireNamespace("lme4", quietly = TRUE)
 xc <- fit_mediation(Y ~ X + M, M ~ X, data = cdat, treatment = "X",
                     mediator = "M", engine = "lmer", cluster = "school")
-tidy(xc, type = "effects", conf.int = TRUE)
+tidy(xc, type = "effects", conf_int = TRUE)
 decompose(xc)
 ```
 
@@ -254,7 +269,7 @@ syntax <- "
 sem_fit <- lavaan::sem(syntax, data = mediation_demo)
 xl <- extract_mediation(sem_fit, treatment = "treatment",
                         mediator = "mediator1", outcome = "outcome")
-tidy(xl, type = "effects", conf.int = TRUE)
+tidy(xl, type = "effects", conf_int = TRUE)
 ```
 
 More: [Model Extraction](extraction.html).
@@ -290,7 +305,7 @@ syntax <- "
 "
 xs <- fit_mediation(model = syntax, data = ldat, treatment = "X",
                     mediator = "eta", engine = "native")
-tidy(xs, type = "effects", conf.int = TRUE)
+tidy(xs, type = "effects", conf_int = TRUE)
 ```
 
 `fit_sem()` fits the same syntax and returns the `SEMFit`. `mbco_sem()` tests the
@@ -369,4 +384,138 @@ joint_test(fit_a, "treatment", fit_b, "mediator1")
 
 More: [GLM families](model-glm-families.html#joint-significance-test-for-the-indirect-effect).
 
+## 14. Compare two native models
+
+*When:* you want to know whether a path or a constraint is needed, on the native
+engine. `anova()` is the likelihood-ratio test for nested `SEMFit`s; it refits
+nothing. `glance()` gives AIC and BIC side by side.
+
+```{r}
+#| label: r14-compare
+full <- fit_sem("
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + cp * treatment
+", mediation_demo)
+reduced <- fit_sem("
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1
+", mediation_demo)
+anova(reduced, full)
+rbind(reduced = glance(reduced)[, c("npar", "chisq", "AIC", "BIC")],
+      full = glance(full)[, c("npar", "chisq", "AIC", "BIC")])
+```
+
+The restricted model is the one with more degrees of freedom. A small chi-square
+difference says dropping `cp` costs little.
+
+## 15. A defined parameter and its interval
+
+*When:* you want the indirect effect, the total effect or the proportion mediated
+with a standard error and an interval, from one fit. Define each with `:=`; the
+delta method gives the standard error.
+
+```{r}
+#| label: r15-defined
+dfit <- fit_sem("
+  mediator1 ~ a * treatment + covariate1
+  outcome ~ b * mediator1 + cp * treatment + covariate1
+  ab := a * b
+  total := cp + a * b
+  pm := ab / total
+", mediation_demo)
+dfit@defined
+confint(dfit)[c("ab", "total", "pm"), ]
+```
+
+The interval for `pm` is wide because a ratio is unstable when the total is small;
+`bootstrap_mediation()` on the extracted object is the alternative.
+
+## 16. Bound a variance or fix a path
+
+*When:* a variance should not go below a floor, or a path is known. Write the
+bound or the value in the syntax and read the diagnostics: an active bound means
+the estimate sits on the edge.
+
+```{r}
+#| label: r16-bound
+bounded <- fit_sem("
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + 0 * treatment
+  outcome ~~ lower(2) * outcome
+", mediation_demo)
+bounded@diagnostics$active_bounds
+round(coef(bounded)[c("a", "b")], 3)
+```
+
+`lower(2)` is above the variance the data want (about 1.2), so the bound binds and
+is reported. `0 * treatment` fixes the direct effect at zero.
+
+## 17. Check a native fit before trusting it
+
+*When:* before you report a native fit. Read the diagnostics, then ask whether the
+model fits when it has restrictions (`df > 0`).
+
+```{r}
+#| label: r17-check
+chk <- fit_sem("
+  mediator1 ~ treatment
+  mediator2 ~ treatment
+  outcome ~ mediator1 + mediator2
+", mediation_demo)
+chk@diagnostics[c("status", "active_bounds", "improper", "sign_check")]
+glance(chk)[, c("df", "chisq", "p_value")]
+```
+
+No active bound, no improper solution and a passing sign check mean the optimizer
+is fine. The chi-square on 2 degrees of freedom is large, so the model leaves out
+something the data contain (here, the covariance of the two mediators' residuals):
+the fit converged, and the model is still wrong.
+
 More: [Methods and Formulas](methods.html).
+
+## 18. Fix exogenous covariates (`fixed_x`)
+
+*When:* a native model with many covariates is slow or has too many parameters, and you
+want the structural results lavaan reports with `fixed.x = TRUE`. `fixed_x = TRUE` fixes
+the means, variances and covariances of the exogenous observed variables at their sample
+values instead of estimating them.
+
+```{r}
+#| label: r18-fit
+syntax <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + covariate1 + covariate2
+  ab := a * b
+"
+free <- fit_sem(syntax, mediation_demo)
+fixed <- fit_sem(syntax, mediation_demo, fixed_x = TRUE)
+rbind(free = coef(free)[c("a", "b")], fixed_x = coef(fixed)[c("a", "b")])
+rbind(free = sqrt(diag(vcov(free)))[c("a", "b")], fixed_x = sqrt(diag(vcov(fixed)))[c("a", "b")])
+rbind(free = free@defined[, c("est", "se")], fixed_x = fixed@defined[, c("est", "se")])
+```
+
+The estimates, standard errors and the defined parameter `ab` agree to the digits shown.
+What changes is how many parameters the optimizer carries:
+
+```{r}
+#| label: r18-glance
+cbind(fit = c("free", "fixed_x"), rbind(glance(free), glance(fixed))[, c("npar", "df", "chisq", "fixed_x")])
+```
+
+The parameter count falls from 14 to 8 while `df` and `chisq` stay put. `glance()$fixed_x`
+lists what is fixed (`""` when nothing is). With `fixed_x`, the fixed rows stay in `tidy()` flagged
+`fixed_x = TRUE`, with no standard error, and the log likelihood, `AIC()` and `BIC()` become
+conditional on the fixed variables, so they differ from the free fit's.
+
+```{r}
+#| label: r18-compare
+tf <- tidy(fixed)
+tf[tf$fixed_x, c("term", "estimate", "std_error")]
+tryCatch(anova(free, fixed), error = function(e) cat(conditionMessage(e), "\n"))
+```
+
+Compare fits only when they fix the same variables. `anova()`, `mbco_sem()` and `AIC()`/`BIC()`
+across several fits stop when the fixed sets differ, as above. Pass a character vector (for
+example `fixed_x = "treatment"`) to fix a subset.
+
+More: [Methods and Formulas](methods.html), [the native engine guide](native-guide.html).

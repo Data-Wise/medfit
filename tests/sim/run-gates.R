@@ -35,6 +35,7 @@ has <- function(flag) flag %in% args
 results_dir <- opt("--dir", "tests/sim/results")
 max_age <- as.numeric(opt("--max-age", "14"))
 only <- if (!is.null(opt("--only"))) strsplit(opt("--only"), ",", fixed = TRUE)[[1]] else NULL
+source("tests/sim/product-gate-common.R") # pass rules of the product-term and four-way gates (one implementation)
 spec_all <- utils::read.csv("tests/sim/gates.csv", stringsAsFactors = FALSE, na.strings = c("NA", ""))
 spec <- spec_all
 if (!is.null(only)) spec <- spec[spec$gate %in% only, , drop = FALSE]
@@ -113,7 +114,14 @@ verdict_gate <- function(gate, d, s) {
     constrained = c("native_ok", "omx_ok", "est_gap", "rel_se"),
     se = c("native_ok", "omx_ok", "improper", "rel_obs"),
     stationarity = c("kind", "dec", "dist"),
-    reliability = c("algo", "precond", "mode", "class", "gate_accepts", "match")
+    reliability = c("algo", "precond", "mode", "class", "gate_accepts", "match"),
+    "product-null" = c("xdist", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
+    "product-null-colon" = c("xdist", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
+    "product-fixed-var" = c("xdist", "config", "expect", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
+    "product-fixed-var-colon" = c("xdist", "config", "expect", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
+    "product-corr" = c("design", "cvf", "path", "expect", "gap"),
+    "product-corr-colon" = c("design", "cvf", "path", "expect", "gap", "gap_column", "err"),
+    "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -194,7 +202,9 @@ verdict_gate <- function(gate, d, s) {
         chk("gate-accepted stalled fits (shipped config)", stalled == 0, sprintf("%d", stalled)),
         chk("no_start_converged (shipped config)", nsc == 0, sprintf("%d", nsc))
       )
-    }
+    },
+    # product-term and four-way gates: the rules live in tests/sim/product-gate-common.R
+    product_gate_rules[[gate]](d, s) # nolint: object_usage_linter.
   )
 }
 
@@ -261,9 +271,28 @@ mutate <- function(gate, kind, d) {
       d$match[ship[1:60]] <- FALSE
     }
   }
+  if (kind == "tolerance") {
+    if (gate %in% c("product-null", "product-null-colon")) d$reject05[1] <- 0.5
+    if (gate %in% c("product-fixed-var", "product-fixed-var-colon")) {
+      d$reject05[which(d$expect == "calibrated")[1]] <- 0.5
+    }
+    if (gate %in% c("product-corr", "product-corr-colon")) d$gap[which(d$expect == "match")[1:3]] <- 1e-2
+    if (gate == "four-way-kat") d$bias_z[1:3] <- 9
+  }
+  if (kind == "failed") {
+    if (gate %in% c("product-null", "product-null-colon", "product-fixed-var", "product-fixed-var-colon",
+                    "four-way-kat")) {
+      d$reps_ok[1] <- 0
+    }
+    if (gate %in% c("product-corr", "product-corr-colon")) d$gap[1] <- NA_real_
+  }
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
-  if (kind == "missing") d <- d[-(1:7), , drop = FALSE]
+  if (kind == "missing") {
+    # the product-term and four-way gates have 2 to 84 rows: drop the last one, so only the row-count check can reject
+    new_gate <- gate %in% names(product_gate_rules) # nolint: object_usage_linter.
+    d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
+  }
   if (kind == "failed") {
     if (gate %in% c("parity", "constrained", "se")) d$native_ok[1] <- FALSE
     if (gate == "stationarity") d$dec[d$kind == "accepted"][1] <- NA_real_
@@ -425,7 +454,13 @@ run_fast <- function() {
 scripts <- c(
   parity = "tests/sim/sem-parity-gate.R", constrained = "tests/sim/sem-constrained-gate.R",
   se = "tests/sim/sem-se-gate.R", stationarity = "tests/sim/sem-constrained-gate.R",
-  reliability = "tests/sim/sem-reliability.R"
+  reliability = "tests/sim/sem-reliability.R",
+  "product-null" = "tests/sim/exo-product-null.R", "product-null-colon" = "tests/sim/exo-product-null-colon.R",
+  "product-fixed-var" = "tests/sim/exo-product-fixed-var.R",
+  "product-fixed-var-colon" = "tests/sim/exo-product-fixed-var-colon.R",
+  "product-corr" = "tests/sim/product-correlated-residuals.R",
+  "product-corr-colon" = "tests/sim/product-correlated-residuals-colon.R",
+  "four-way-kat" = "tests/sim/four-way-known-answer.R"
 )
 
 # ---- main ----

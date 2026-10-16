@@ -230,14 +230,19 @@ test_that("par_map, starts and bounds follow the table", {
   expect_identical(sum(conv$par_map == match("a", conv$ram$par_names), na.rm = TRUE), 2L)
 })
 
-test_that("intercepts: a fixed zero is dropped, anything else names the mean-structure limit", {
+test_that("intercepts: observed ones are the RAM's intercept vector, latent means stay at zero", {
   conv <- .sem_to_ram(.sem_complete(.sem_parse("m ~ 0*1\nm ~ x")$parameters))
-  expect_false(any(conv$table$op == "~1"))
-  expect_error(
-    .sem_to_ram(.sem_complete(.sem_parse("m ~ 1\nm ~ x")$parameters)),
-    "mean structure is not supported.*free"
-  )
-  expect_error(.sem_to_ram(.sem_complete(.sem_parse("m ~ 2*1\nm ~ x")$parameters)), "nonzero")
+  expect_true(conv$ram$has_mean)
+  expect_identical(sum(conv$table$op == "~1"), 2L) # m is written (fixed), x is saturated
+  expect_setequal(conv$ram$par_names[conv$ram$k_m], "x~1")
+  expect_equal(conv$ram$m0[match("m", conv$ram$vars)], 0)
+  free <- .sem_to_ram(.sem_complete(.sem_parse("m ~ 1\nm ~ x")$parameters))
+  expect_setequal(free$ram$par_names[free$ram$k_m], c("m~1", "x~1"))
+  # latent: a mean of zero is the default and accepted, anything else waits for 0.11.0
+  lat <- "eta =~ 1*m1 + m2\neta ~ x"
+  expect_no_error(.sem_to_ram(.sem_complete(.sem_parse(paste0(lat, "\neta ~ 0*1"))$parameters)))
+  expect_error(.sem_to_ram(.sem_complete(.sem_parse(paste0(lat, "\neta ~ 1"))$parameters)), "latent means are planned")
+  expect_error(.sem_to_ram(.sem_complete(.sem_parse(paste0(lat, "\neta ~ 2*1"))$parameters)), "nonzero")
 })
 
 test_that("a repeated path is rejected by the RAM builder when the parser is bypassed", {

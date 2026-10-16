@@ -1,6 +1,6 @@
 # Tests for Tidyverse Methods (tidy, glance)
 
-test_that("tidy.S7_object works for MediationData", {
+test_that("tidy_s7_object works for MediationData", {
   set.seed(123)
   n <- 100
   mydata <- data.frame(X = rnorm(n))
@@ -40,7 +40,7 @@ test_that("tidy() type='paths' returns only path coefficients", {
   tidy_paths <- generics::tidy(result, type = "paths")
   expect_equal(nrow(tidy_paths), 3)  # a, b, c_prime
   expect_true(all(c("a", "b", "c_prime") %in% tidy_paths$term))
-  expect_true("std.error" %in% names(tidy_paths))
+  expect_true("std_error" %in% names(tidy_paths))
 })
 
 
@@ -64,7 +64,7 @@ test_that("tidy() type='effects' returns only mediation effects", {
 })
 
 
-test_that("tidy() conf.int=TRUE adds confidence intervals", {
+test_that("tidy() conf_int=TRUE adds confidence intervals", {
   set.seed(123)
   n <- 100
   mydata <- data.frame(X = rnorm(n))
@@ -78,18 +78,18 @@ test_that("tidy() conf.int=TRUE adds confidence intervals", {
     outcome = "Y"
   )
 
-  tidy_ci <- generics::tidy(result, conf.int = TRUE)
-  expect_true("conf.low" %in% names(tidy_ci))
-  expect_true("conf.high" %in% names(tidy_ci))
+  tidy_ci <- generics::tidy(result, conf_int = TRUE)
+  expect_true("conf_low" %in% names(tidy_ci))
+  expect_true("conf_high" %in% names(tidy_ci))
 
   # CIs for paths should be numeric (not NA)
   paths_rows <- which(tidy_ci$term %in% c("a", "b", "c_prime"))
-  expect_false(any(is.na(tidy_ci$conf.low[paths_rows])))
-  expect_false(any(is.na(tidy_ci$conf.high[paths_rows])))
+  expect_false(any(is.na(tidy_ci$conf_low[paths_rows])))
+  expect_false(any(is.na(tidy_ci$conf_high[paths_rows])))
 })
 
 
-test_that("tidy() conf.level parameter works", {
+test_that("tidy() conf_level parameter works", {
   set.seed(123)
   n <- 100
   mydata <- data.frame(X = rnorm(n))
@@ -103,17 +103,17 @@ test_that("tidy() conf.level parameter works", {
     outcome = "Y"
   )
 
-  tidy_95 <- generics::tidy(result, type = "paths", conf.int = TRUE, conf.level = 0.95)
-  tidy_90 <- generics::tidy(result, type = "paths", conf.int = TRUE, conf.level = 0.90)
+  tidy_95 <- generics::tidy(result, type = "paths", conf_int = TRUE, conf_level = 0.95)
+  tidy_90 <- generics::tidy(result, type = "paths", conf_int = TRUE, conf_level = 0.90)
 
   # the ninety percent interval should be narrower than the ninety-five percent interval
-  width_95 <- tidy_95$conf.high[1] - tidy_95$conf.low[1]
-  width_90 <- tidy_90$conf.high[1] - tidy_90$conf.low[1]
+  width_95 <- tidy_95$conf_high[1] - tidy_95$conf_low[1]
+  width_90 <- tidy_90$conf_high[1] - tidy_90$conf_low[1]
   expect_true(width_90 < width_95)
 })
 
 
-test_that("glance.S7_object works for MediationData", {
+test_that("glance_s7_object works for MediationData", {
   set.seed(123)
   n <- 100
   mydata <- data.frame(X = rnorm(n))
@@ -140,7 +140,7 @@ test_that("glance.S7_object works for MediationData", {
 })
 
 
-test_that("tidy.S7_object works for SerialMediationData", {
+test_that("tidy_s7_object works for SerialMediationData", {
   serial_data <- SerialMediationData(
     a_path = 0.5,
     d_path = 0.4,
@@ -222,13 +222,13 @@ test_that("tidy() for SerialMediationData gives NA CIs, silently, without vcov a
 
   # This hand-built object has an unnamed vcov (no alias rows), so no SE can
   # be located: tidy() reports NA instead of erroring, and no longer warns
-  expect_silent(td <- generics::tidy(serial_data, conf.int = TRUE))
-  expect_true(all(is.na(td$std.error)))
-  expect_true(all(is.na(td$conf.low)))
+  expect_silent(td <- generics::tidy(serial_data, conf_int = TRUE))
+  expect_true(all(is.na(td$std_error)))
+  expect_true(all(is.na(td$conf_low)))
 })
 
 
-test_that("glance.S7_object works for SerialMediationData", {
+test_that("glance_s7_object works for SerialMediationData", {
   serial_data <- SerialMediationData(
     a_path = 0.5,
     d_path = 0.4,
@@ -261,7 +261,7 @@ test_that("glance.S7_object works for SerialMediationData", {
 })
 
 
-test_that("tidy.S7_object works for BootstrapResult", {
+test_that("tidy_s7_object works for BootstrapResult", {
   boot_result <- BootstrapResult(
     estimate = 0.2,
     ci_lower = 0.1,
@@ -275,16 +275,16 @@ test_that("tidy.S7_object works for BootstrapResult", {
   tidy_boot <- generics::tidy(boot_result)
   expect_s3_class(tidy_boot, "data.frame")
   expect_equal(nrow(tidy_boot), 1)
-  expect_true(all(c("term", "estimate", "std.error", "conf.low", "conf.high") %in%
+  expect_true(all(c("term", "estimate", "std_error", "conf_low", "conf_high") %in%
                     names(tidy_boot)))
 
   expect_equal(tidy_boot$estimate, 0.2)
-  expect_equal(tidy_boot$conf.low, 0.1)
-  expect_equal(tidy_boot$conf.high, 0.3)
+  expect_equal(tidy_boot$conf_low, 0.1)
+  expect_equal(tidy_boot$conf_high, 0.3)
 })
 
 
-test_that("glance.S7_object works for BootstrapResult", {
+test_that("glance_s7_object works for BootstrapResult", {
   boot_result <- BootstrapResult(
     estimate = 0.2,
     ci_lower = 0.1,
@@ -306,7 +306,7 @@ test_that("glance.S7_object works for BootstrapResult", {
 })
 
 
-test_that("tidy.S7_object errors for unknown S7 object", {
+test_that("tidy_s7_object errors for unknown S7 object", {
   # Create a custom S7 class that isn't supported
   TestClass <- S7::new_class("TestClass", properties = list(x = class_numeric))
   test_obj <- TestClass(x = 1)
@@ -318,7 +318,7 @@ test_that("tidy.S7_object errors for unknown S7 object", {
 })
 
 
-test_that("glance.S7_object errors for unknown S7 object", {
+test_that("glance_s7_object errors for unknown S7 object", {
   TestClass <- S7::new_class("TestClass", properties = list(x = class_numeric))
   test_obj <- TestClass(x = 1)
 
@@ -460,20 +460,20 @@ test_that("tidy() works for ParallelMediationData", {
   expect_equal(td$estimate[1:5], unname(paths(p)))
   expect_equal(td$estimate[td$term == "nie"], sum(p@a_paths * p@b_paths))
   # Path SEs come from the vcov diagonal (aliases); effects use the delta method
-  expect_equal(td$std.error[1:5], unname(sqrt(diag(p@vcov)[names(paths(p))])))
-  expect_equal(td$std.error[6:8], unname(.effect_se(p, c("nie", "nde", "te"))))
+  expect_equal(td$std_error[1:5], unname(sqrt(diag(p@vcov)[names(paths(p))])))
+  expect_equal(td$std_error[6:8], unname(.effect_se(p, c("nie", "nde", "te"))))
 
   expect_identical(generics::tidy(p, type = "paths")$term,
                    c("a1", "b1", "a2", "b2", "c_prime"))
   expect_identical(generics::tidy(p, type = "effects")$term, c("nie", "nde", "te"))
 })
 
-test_that("tidy(conf.int = TRUE) on ParallelMediationData matches confint() for paths", {
+test_that("tidy(conf_int = TRUE) on ParallelMediationData matches confint() for paths", {
   p <- tidy_parallel_fixture()
-  td <- generics::tidy(p, type = "paths", conf.int = TRUE, conf.level = 0.9)
+  td <- generics::tidy(p, type = "paths", conf_int = TRUE, conf_level = 0.9)
   ci <- confint(p, parm = "paths", level = 0.9)
-  expect_equal(td$conf.low, unname(ci[, 1]))
-  expect_equal(td$conf.high, unname(ci[, 2]))
+  expect_equal(td$conf_low, unname(ci[, 1]))
+  expect_equal(td$conf_high, unname(ci[, 2]))
 })
 
 test_that("glance() works for ParallelMediationData", {
@@ -496,8 +496,8 @@ test_that("tidy() works for InteractionMediationData", {
   expect_equal(td$estimate[td$term == "te"], as.numeric(te(imd)))
   expect_equal(sum(td$estimate[td$term %in% c("cde", "int_ref", "int_med", "pie")]),
                as.numeric(te(imd)))
-  expect_equal(td$std.error[1:4], unname(sqrt(diag(imd@vcov)[names(paths(imd))])))
-  expect_equal(td$std.error[5:11],
+  expect_equal(td$std_error[1:4], unname(sqrt(diag(imd@vcov)[names(paths(imd))])))
+  expect_equal(td$std_error[5:11],
                unname(.effect_se(imd, c("cde", "int_ref", "int_med", "pie",
                                         "nie", "nde", "te"))))
 
@@ -508,12 +508,12 @@ test_that("tidy() works for InteractionMediationData", {
                    c("a", "b", "c_prime", "theta3"))
 })
 
-test_that("tidy(conf.int = TRUE) on InteractionMediationData matches confint() for paths", {
+test_that("tidy(conf_int = TRUE) on InteractionMediationData matches confint() for paths", {
   imd <- tidy_interaction_fixture()
-  td <- generics::tidy(imd, type = "paths", conf.int = TRUE)
+  td <- generics::tidy(imd, type = "paths", conf_int = TRUE)
   ci <- confint(imd, parm = "paths")
-  expect_equal(td$conf.low, unname(ci[, 1]))
-  expect_equal(td$conf.high, unname(ci[, 2]))
+  expect_equal(td$conf_low, unname(ci[, 1]))
+  expect_equal(td$conf_high, unname(ci[, 2]))
 })
 
 test_that("glance() works for InteractionMediationData", {
@@ -525,4 +525,15 @@ test_that("glance() works for InteractionMediationData", {
   expect_equal(gl$interaction, imd@interaction)
   expect_equal(gl$m_star, imd@m_star)
   expect_equal(gl$nobs, nobs(imd))
+})
+
+test_that("the dotted tidy() argument names still work and warn", {
+  fit <- fit_mediation(
+    formula_y = outcome ~ treatment + mediator1, formula_m = mediator1 ~ treatment,
+    data = mediation_demo, treatment = "treatment", mediator = "mediator1"
+  )
+  new <- generics::tidy(fit, conf_int = TRUE, conf_level = 0.9)
+  lifecycle::expect_deprecated(old <- generics::tidy(fit, conf.int = TRUE, conf.level = 0.9))
+  expect_equal(old, new)
+  expect_true(all(c("std_error", "conf_low", "conf_high") %in% names(new)))
 })

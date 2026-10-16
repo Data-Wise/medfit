@@ -376,23 +376,23 @@ test_that("tidy() effect CIs equal confint(parm = 'effects') for all classes", {
                   parallel = c("indirect", "direct", "total"),
                   interaction = c("nie", "nde", "total"))
   for (nm in names(objs)) {
-    tt <- tidy_rows(generics::tidy(objs[[nm]], conf.int = TRUE), c("nie", "nde", "te"))
+    tt <- tidy_rows(generics::tidy(objs[[nm]], conf_int = TRUE), c("nie", "nde", "te"))
     ci <- quiet_confint(objs[[nm]], parm = "effects")[ci_rows[[nm]], , drop = FALSE]
-    expect_equal(tt$conf.low, unname(ci[, 1]), tolerance = 1e-12, info = nm)
-    expect_equal(tt$conf.high, unname(ci[, 2]), tolerance = 1e-12, info = nm)
+    expect_equal(tt$conf_low, unname(ci[, 1]), tolerance = 1e-12, info = nm)
+    expect_equal(tt$conf_high, unname(ci[, 2]), tolerance = 1e-12, info = nm)
   }
   comp <- c("cde", "int_ref", "int_med", "pie")
-  tt <- tidy_rows(generics::tidy(objs$interaction, conf.int = TRUE), comp)
+  tt <- tidy_rows(generics::tidy(objs$interaction, conf_int = TRUE), comp)
   ci <- quiet_confint(objs$interaction, parm = "components")
-  expect_equal(tt$conf.low, unname(ci[comp, 1]), tolerance = 1e-12)
+  expect_equal(tt$conf_low, unname(ci[comp, 1]), tolerance = 1e-12)
 })
 
 test_that("tidy() is silent and reports numeric SEs for every row", {
   for (obj in all_demo_objects()) {
     expect_silent(tt <- generics::tidy(obj))
-    expect_silent(generics::tidy(obj, conf.int = TRUE))
-    expect_true(is.numeric(tt$std.error))
-    expect_false(anyNA(tt$std.error))
+    expect_silent(generics::tidy(obj, conf_int = TRUE))
+    expect_true(is.numeric(tt$std_error))
+    expect_false(anyNA(tt$std_error))
     expect_false("pm" %in% tt$term)
   }
 })
@@ -401,7 +401,7 @@ test_that("tidy() serial path SEs use the vcov aliases", {
   med <- serial3_lm()
   tt <- generics::tidy(med, type = "paths")
   expect_identical(tt$term, names(paths(med)))
-  expect_equal(tt$std.error,
+  expect_equal(tt$std_error,
                unname(sqrt(diag(med@vcov)[c("a", "d1", "d2", "b", "c_prime")])),
                tolerance = 1e-12)
 })
@@ -416,7 +416,7 @@ test_that("tidy() gives SEs for lavaan-extracted MediationData", {
   med <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
                            outcome = "outcome")
   tt <- generics::tidy(med)
-  expect_false(anyNA(tt$std.error))
+  expect_false(anyNA(tt$std_error))
 })
 
 test_that("glance() output is unchanged in shape", {

@@ -202,6 +202,24 @@ test_that("the few-clusters warnings and the dropped-draws warning are real", {
   )
 })
 
+test_that("the native fixed_x errors the guide quotes are real", {
+  d <- mediation_demo
+  syn <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
+  expect_error(fit_sem(syn, d, fixed_x = "outcome"),
+               "`fixed_x` names variables that are not exogenous observed variables", fixed = TRUE)
+  expect_error(fit_sem(paste0(syn, "\ntreatment ~~ treatment"), d, fixed_x = TRUE),
+               "`fixed_x` fixes the moments of the selected variables, but the model has a statement on them",
+               fixed = TRUE)
+  expect_error(AIC(fit_sem(syn, d), fit_sem(syn, d, fixed_x = TRUE)), "have different `fixed_x` sets", fixed = TRUE)
+  skip_if_not(file.exists(guide_path()), "vignettes are not available (installed or built package)")
+  txt <- paste(readLines(guide_path(), warn = FALSE), collapse = " ")
+  for (frag in c("`fixed_x` names variables that are not exogenous observed variables",
+                 "`fixed_x` fixes the moments of the selected variables, but the model has a statement on them",
+                 "have different `fixed_x` sets")) {
+    expect_true(grepl(frag, txt, fixed = TRUE), info = frag)
+  }
+})
+
 test_that("the inverse-probability weighting note is shown for weights with model SEs", {
   state <- utils::getFromNamespace(".medfit_state", "medfit")
   state[["ipw_model_se"]] <- NULL
@@ -219,7 +237,7 @@ test_that("the guide also quotes the cluster and native messages tested elsewher
     "varies within clusters; 1-1-1 designs are not supported yet",
     "has no cluster-mean term for",
     "unknown parameter label",
-    "mean structure is not supported",
+    "meanstructure = FALSE, but the model writes an intercept",
     "variables in the model are not columns of",
     "Must have length 1",
     "clusters: inference on the cluster-level paths is unreliable",

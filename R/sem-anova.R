@@ -45,6 +45,8 @@ S7::method(anova, SEMFit) <- function(object, ...) {
       stop(sprintf("'%s' did not converge, so its discrepancy cannot be compared.", names(models)[i]), call. = FALSE)
     }
   }
+  .sem_check_modeltest(models, "anova()")
+  .sem_check_comparable(models)
   # Least restricted first (smallest df), the order lavaan's lavTestLRT() uses; each row is tested against the previous.
   df <- vapply(models, function(m) m@df, numeric(1))
   models <- models[order(df, seq_along(df))]
@@ -108,12 +110,30 @@ S7::method(anova, SEMFit) <- function(object, ...) {
   invisible(TRUE)
 }
 
+# The parameter table, with the intercepts a covariance-only fit leaves implicit written out. A fit without a mean
+# structure is the saturated-mean model: every observed variable has a free intercept, so a mean-structure fit that
+# fixes or constrains one of them restricts it (`y ~ 0*1` is one degree of freedom), and a covariance-only fit
+# never restricts a mean-structure fit that frees them all (equal degrees of freedom).
+.sem_anova_table <- function(m) {
+  tab <- m@table
+  ram <- m@internals$ram
+  if (isTRUE(ram$has_mean)) {
+    return(tab)
+  }
+  extra <- tab[rep(1L, length(ram$obs)), , drop = FALSE]
+  extra[] <- lapply(extra, function(col) if (is.character(col)) rep("", length(col)) else rep(NA, length(col)))
+  extra$lhs <- ram$obs
+  extra$op <- "~1"
+  extra$free <- TRUE
+  rbind(tab, extra)
+}
+
 # Parameter-table inclusion. `restricted` must free no parameter that `full` leaves out; returns the tested
 # parameters: those `full` frees and `restricted` does not, and those in the equality constraints `restricted`
 # adds, named as in the parameter vectors.
 .sem_anova_nested <- function(full, restricted, label) {
   key <- function(m) {
-    tab <- m@table
+    tab <- .sem_anova_table(m)
     paste(tab$lhs, tab$op, tab$rhs)[tab$free]
   }
   extra <- setdiff(key(restricted), key(full))
@@ -122,12 +142,187 @@ S7::method(anova, SEMFit) <- function(object, ...) {
                         "Fit the restricted model by constraining or fixing parameters of the larger one."),
                  label[2L], label[1L], paste(extra, collapse = ", ")), call. = FALSE)
   }
+  kept <- .sem_anova_kept(full, restricted)
+  if (length(kept)) {
+    stop(sprintf(paste0("'%s' is not nested in '%s': it does not keep %s. A restricted model must satisfy every ",
+                        "constraint and fixed value of the larger one."),
+                 label[2L], label[1L], paste(kept, collapse = "; ")), call. = FALSE)
+  }
   dropped <- setdiff(key(full), key(restricted))
-  tab <- full@table
+  tab <- .sem_anova_table(full)
   dropped_labels <- ifelse(nzchar(tab$label) & !is.na(tab$label), tab$label, paste(tab$lhs, tab$op, tab$rhs))[
     paste(tab$lhs, tab$op, tab$rhs) %in% dropped & tab$free
   ]
   c(dropped_labels, .sem_anova_added(full, restricted))
+}
+
+# What `full` enforces that `restricted` does not keep: fixed values that differ, and constraints the restricted
+# model does not imply. A linear equality `a'theta + b = 0` of `full` is implied when it is a combination of the
+# restricted model's equalities and of its fixed values (restricted parameters pinned to a value, written in the
+# parameter space of `full`); a nonlinear equality or an inequality must appear verbatim. Anything that cannot
+# be established is reported, so no p-value rests on an unchecked nesting. Returns the texts not kept.
+.sem_anova_kept <- function(full, restricted) {
+  ptab <- function(m) {
+    tab <- m@table
+    name <- ifelse(nzchar(tab$label) & !is.na(tab$label), tab$label, paste0(tab$lhs, tab$op, tab$rhs))
+    data.frame(key = paste(tab$lhs, tab$op, tab$rhs), name = name, free = tab$free, est = tab$est,
+               stringsAsFactors = FALSE)
+  }
+  pf <- ptab(full)
+  pr <- ptab(restricted)
+  both <- merge(pf[!pf$free, c("key", "est")], pr[!pr$free, c("key", "est")], by = "key")
+  moved <- both$key[abs(both$est.x - both$est.y) > 1e-8]
+  out <- if (length(moved)) paste0("the fixed value of ", moved) else character()
+  out <- c(out, .sem_anova_bounds_kept(full, restricted), .sem_anova_ties_kept(full, restricted))
+  cf <- full@internals$constraints
+  cf <- if (is.null(cf)) cf else cf[cf$op %in% c("==", "<", ">"), , drop = FALSE]
+  if (is.null(cf) || !nrow(cf)) {
+    return(out)
+  }
+  cr <- restricted@internals$constraints
+  text <- function(cons) if (is.null(cons)) character() else paste(cons$lhs, cons$op, cons$rhs)
+  rows_f <- .sem_constraint_rows(full@internals$constraints, full@internals$ram)
+  verbatim <- c(rows_f$ineq$text, rows_f$nl$text, rows_f$nli$text)
+  miss <- setdiff(verbatim, text(cr))
+  out <- c(out, if (length(miss)) paste0("the constraint '", miss, "'"))
+  if (!length(rows_f$eq$A)) {
+    return(out)
+  }
+  pnames <- full@internals$ram$par_names
+  # restricted knowledge in the parameter space of `full`: its linear equalities, and its fixed parameters
+  know_a <- list()
+  know_b <- numeric()
+  rows_r <- if (is.null(cr)) NULL else .sem_constraint_rows(cr, restricted@internals$ram)
+  unknown <- character()
+  if (length(rows_r$eq$A)) {
+    rn <- restricted@internals$ram$par_names
+    for (i in seq_len(nrow(rows_r$eq$A))) {
+      nz <- which(abs(rows_r$eq$A[i, ]) > 0)
+      if (!all(rn[nz] %in% pnames)) {
+        unknown <- c(unknown, rows_r$eq$text[i])
+        next
+      }
+      v <- numeric(length(pnames))
+      v[match(rn[nz], pnames)] <- rows_r$eq$A[i, nz]
+      know_a[[length(know_a) + 1L]] <- v
+      know_b <- c(know_b, rows_r$eq$b[i])
+    }
+  }
+  rfree <- restricted@internals$ram$par_names
+  for (p in setdiff(pnames, rfree)) {
+    hit <- pr[pr$name == p & !pr$free, , drop = FALSE]
+    if (nrow(hit)) {
+      v <- numeric(length(pnames))
+      v[match(p, pnames)] <- 1
+      know_a[[length(know_a) + 1L]] <- v
+      know_b <- c(know_b, -hit$est[1L])
+    }
+  }
+  K <- if (length(know_a)) do.call(rbind, know_a) else matrix(0, 0L, length(pnames))
+  for (i in seq_len(nrow(rows_f$eq$A))) {
+    a <- rows_f$eq$A[i, ]
+    ok <- FALSE
+    if (nrow(K)) {
+      lambda <- tryCatch(qr.solve(t(K), a), error = function(e) NULL)
+      ok <- !is.null(lambda) && sqrt(sum((drop(t(K) %*% lambda) - a)^2)) < 1e-6 &&
+        abs(sum(lambda * know_b) - rows_f$eq$b[i]) < 1e-6
+    }
+    if (!ok) {
+      out <- c(out, paste0("the constraint '", rows_f$eq$text[i], "'"))
+    }
+  }
+  out
+}
+
+# Equalities that repeated labels impose in `full` (`M ~ a*X`, `Y ~ a*M`: one parameter on two rows, which the
+# parameter table collapses). The restricted model keeps a tie when its two rows are the same parameter, are
+# fixed at equal values, or are equal by its own equality constraints (the row-space test used for constraints,
+# in the restricted parameter space). A tied row the restricted model lacks cannot be established and is reported.
+.sem_anova_ties_kept <- function(full, restricted) {
+  describe <- function(m) {
+    tab <- m@table
+    name <- ifelse(nzchar(tab$label) & !is.na(tab$label), tab$label, paste0(tab$lhs, tab$op, tab$rhs))
+    data.frame(key = paste(tab$lhs, tab$op, tab$rhs), name = name, label = ifelse(is.na(tab$label), "", tab$label),
+               free = tab$free, est = tab$est, stringsAsFactors = FALSE)
+  }
+  pf <- describe(full)
+  pr <- describe(restricted)
+  groups <- split(pf$key[pf$free & nzchar(pf$label)], pf$label[pf$free & nzchar(pf$label)])
+  groups <- groups[lengths(groups) > 1L]
+  if (!length(groups)) {
+    return(character())
+  }
+  cr <- restricted@internals$constraints
+  rows_r <- if (is.null(cr)) NULL else .sem_constraint_rows(cr, restricted@internals$ram)
+  rn <- restricted@internals$ram$par_names
+  know <- if (length(rows_r$eq$A)) rows_r$eq$A else matrix(0, 0L, length(rn))
+  know_b <- if (length(rows_r$eq$A)) rows_r$eq$b else numeric()
+  vec <- function(j) {
+    a <- numeric(length(rn))
+    if (pr$free[j]) {
+      a[match(pr$name[j], rn)] <- 1
+      list(a = a, b = 0)
+    } else {
+      list(a = a, b = pr$est[j])
+    }
+  }
+  out <- character()
+  for (label in names(groups)) {
+    keys <- groups[[label]]
+    idx <- match(keys, pr$key)
+    if (anyNA(idx)) {
+      out <- c(out, paste0("the shared label '", label, "'"))
+      next
+    }
+    for (k in idx[-1L]) {
+      u <- vec(idx[1L])
+      v <- vec(k)
+      a <- u$a - v$a
+      b <- u$b - v$b
+      ok <- if (all(a == 0)) {
+        abs(b) < 1e-8
+      } else if (nrow(know)) {
+        lambda <- tryCatch(qr.solve(t(know), a), error = function(e) NULL)
+        !is.null(lambda) && sqrt(sum((drop(t(know) %*% lambda) - a)^2)) < 1e-6 && abs(sum(lambda * know_b) - b) < 1e-6
+      } else {
+        FALSE
+      }
+      if (!ok) {
+        out <- c(out, paste0("the shared label '", label, "'"))
+        break
+      }
+    }
+  }
+  unique(out)
+}
+
+# Bounds of `full` (`lower(0)*x`, and single-label inequalities such as `a > 0.1`, which the parser stores as
+# bounds in the parameter table, not as constraint rows). A restricted model keeps a bound when its estimate or
+# fixed value lies inside it and, for a parameter it leaves free, its own bound is at least as tight.
+.sem_anova_bounds_kept <- function(full, restricted) {
+  tab <- function(m) {
+    pt <- m@internals$partable
+    data.frame(key = paste(pt$lhs, pt$op, pt$rhs), free = m@table$free, est = m@table$est,
+               lower = pt$lower, upper = pt$upper, stringsAsFactors = FALSE)
+  }
+  pf <- tab(full)
+  pr <- tab(restricted)
+  lo <- function(x) ifelse(is.na(x), -Inf, x)
+  up <- function(x) ifelse(is.na(x), Inf, x)
+  tol <- 1e-8
+  out <- character()
+  for (i in which(!is.na(pf$lower) | !is.na(pf$upper))) {
+    j <- match(pf$key[i], pr$key)
+    if (is.na(j)) {
+      next
+    }
+    inside <- pr$est[j] >= lo(pf$lower[i]) - tol && pr$est[j] <= up(pf$upper[i]) + tol
+    tight <- !pr$free[j] || (lo(pr$lower[j]) >= lo(pf$lower[i]) && up(pr$upper[j]) <= up(pf$upper[i]))
+    if (!inside || !tight) {
+      out <- c(out, paste0("the bound on ", pf$key[i]))
+    }
+  }
+  out
 }
 
 # Parameters in the equality constraints that `restricted` has and `full` does not.
@@ -165,4 +360,97 @@ S7::method(anova, SEMFit) <- function(object, ...) {
                     paste(active, collapse = " and "), label[2L]), call. = FALSE)
   }
   invisible(NULL)
+}
+
+# Model-test validity for a product term (0.10.0 plan U6, amendment section 2a). The global chi-square of a model
+# with a product is invalid in two cases, both read off the completed parameter table:
+#   (i)  a factor of a product is itself a regression target (`m` in `x:m`): the product is a function of `m`, but the
+#        model treats it as exogenous and so implies Cov(e_m, x:m) = 0, which the data violate;
+#   (ii) the variance/covariance block of the exogenous observed variables (every product column included) is
+#        restricted: a variance or covariance is fixed, labeled, bounded, or missing (the pairing rule of
+#        `.sem_complete()` leaves a covariance out when either variable has a `~~` statement). The normal-theory test
+#        is then miscalibrated for the non-normal product. A row flagged `fixed_x` is not a restriction: it sits at
+#        its sample moment, which is the unrestricted ML value.
+# Returns NULL when the model has no product or neither case holds; otherwise a list with the product names and one
+# phrase per case. The result is stored in `fit@internals$ram$modeltest`, so a later `anova()`, `mbco_sem()` or
+# `glance()` reads the verdict made at fit time.
+.sem_product_modeltest <- function(tab) {
+  prods <- unique(tab$rhs[tab$op == "~" & grepl(":", tab$rhs, fixed = TRUE)])
+  if (!length(prods)) {
+    return(NULL)
+  }
+  r <- .sem_roles(tab)
+  # an indicator of a latent variable is generated by it, so it is endogenous too
+  endo <- c(r$ov_y, r$lv_y, r$ind)
+  endogenous <- character()
+  for (nm in prods) {
+    hit <- intersect(strsplit(nm, ":", fixed = TRUE)[[1L]], endo)
+    if (length(hit)) {
+      endogenous <- c(endogenous, sprintf("the product '%s' has an endogenous factor ('%s')", nm, hit[1L]))
+    }
+  }
+  restricted <- .sem_exo_block_restriction(tab, r$ov_x)
+  if (!length(endogenous) && !length(restricted)) {
+    return(NULL)
+  }
+  list(products = prods, endogenous = endogenous, restricted = restricted)
+}
+
+# The first restriction found in the (co)variance block of the exogenous observed variables, as a phrase, or
+# character(0). Reads every unordered pair, the diagonal included.
+.sem_exo_block_restriction <- function(tab, ov_x) {
+  cov_rows <- tab[tab$op == "~~", , drop = FALSE]
+  fx <- if ("fixed_x" %in% names(tab)) cov_rows$fixed_x %in% TRUE else rep(FALSE, nrow(cov_rows))
+  for (i in seq_along(ov_x)) {
+    for (j in i:length(ov_x)) {
+      a <- ov_x[i]
+      b <- ov_x[j]
+      term <- sprintf("%s ~~ %s", a, b)
+      k <- which((cov_rows$lhs == a & cov_rows$rhs == b) | (cov_rows$lhs == b & cov_rows$rhs == a))[1L]
+      if (is.na(k)) {
+        return(paste0("the exogenous (co)variance '", term, "' is missing (the pairing rule leaves a covariance out ",
+                      "once either variable has a '~~' statement)"))
+      }
+      if (fx[k]) {
+        next
+      }
+      why <- if (!is.na(cov_rows$fixed[k])) {
+        "fixed"
+      } else if (!is.na(cov_rows$label[k]) && nzchar(cov_rows$label[k])) {
+        "labeled"
+      } else if (is.finite(cov_rows$lower[k]) || is.finite(cov_rows$upper[k])) {
+        "bounded"
+      }
+      if (!is.null(why)) {
+        return(sprintf("the exogenous (co)variance '%s' is %s", term, why))
+      }
+    }
+  }
+  character()
+}
+
+# The reason a verdict of `.sem_product_modeltest()` makes the model test unavailable (one phrase per cause, joined),
+# or NULL when it is available. The one place the string is built: the fit-time warning, `glance()`, `summary()` and
+# the refusals all quote it.
+.sem_modeltest_text <- function(mt) {
+  if (is.null(mt) || !(length(mt$endogenous) || length(mt$restricted))) {
+    return(NULL)
+  }
+  paste(c(mt$endogenous, mt$restricted), collapse = "; ")
+}
+
+.sem_modeltest_reason <- function(fit) .sem_modeltest_text(fit@internals$ram$modeltest)
+
+# Chi-square (n times the minimized discrepancy) of a fit: the internal accessor that bypasses the model-test NA
+# policy. `glance()` calls it once its own checks (sampling weights, invalid model test) have passed; the gates in
+# tests/sim and the population tests call it directly to read the statistic that `glance()` reports as NA for a model
+# with a product of an endogenous variable, to show that it is far from chi-square there. It is not exported and not
+# for analysis: for such a fit the number is not a valid test statistic. NA for a fit with sampling weights.
+.sem_chisq <- function(fit) {
+  if (!is.null(fit@internals$weights)) {
+    return(NA_real_)
+  }
+  chisq <- fit@n_obs * fit@f
+  if (chisq < 0 && chisq > -1e-8) chisq <- 0 # a saturated fit's roundoff
+  chisq
 }

@@ -40,7 +40,7 @@ test_that("coef, vcov and nobs read the object", {
 
 test_that("summary reports z and two-sided p from the estimates and standard errors", {
   s <- summary(hand_semfit())
-  expect_s3_class(s, "summary.SEMFit")
+  expect_s3_class(s, "summary_SEMFit")
   expect_equal(s$coefficients$z, s$coefficients$est / s$coefficients$se)
   expect_equal(s$coefficients$p, 2 * stats::pnorm(-abs(s$coefficients$z)))
   expect_identical(s$coefficients$name[1:2], c("a", "b"))
@@ -103,7 +103,7 @@ tg_lavaan <- function() {
 test_that("tidy() matches lavaan: estimate, standard error, z, p and the interval, defined parameters included", {
   skip_if_not_installed("lavaan")
   fit <- tg_fit()
-  td <- generics::tidy(fit, conf.int = TRUE)
+  td <- generics::tidy(fit, conf_int = TRUE)
   pe <- lavaan::parameterEstimates(tg_lavaan(), ci = TRUE, level = 0.95)
   pe <- pe[pe$op %in% c("~", "~~", ":="), ]
   tab <- fit@table[!is.na(fit@internals$par_map), ]
@@ -112,11 +112,11 @@ test_that("tidy() matches lavaan: estimate, standard error, z, p and the interva
   expect_setequal(key_fit, key_lav)
   pe <- pe[match(key_fit, key_lav), ]
   expect_equal(td$estimate, pe$est, tolerance = 1e-6)
-  expect_equal(td$std.error, pe$se, tolerance = 1e-6)
+  expect_equal(td$std_error, pe$se, tolerance = 1e-6)
   expect_equal(td$statistic, pe$z, tolerance = 1e-6)
-  expect_equal(td$conf.low, pe$ci.lower, tolerance = 1e-6)
-  expect_equal(td$conf.high, pe$ci.upper, tolerance = 1e-6)
-  expect_lt(max(abs(td$p.value - pe$pvalue)), 1e-8)
+  expect_equal(td$conf_low, pe$ci.lower, tolerance = 1e-6)
+  expect_equal(td$conf_high, pe$ci.upper, tolerance = 1e-6)
+  expect_lt(max(abs(td$p_value - pe$pvalue)), 1e-8)
   expect_identical(td$term, c(names(coef(fit)), "ab"))
   expect_identical(td$op[c(1L, nrow(td) - 1L, nrow(td))], c("~", "~~", ":="))
 })
@@ -124,14 +124,14 @@ test_that("tidy() matches lavaan: estimate, standard error, z, p and the interva
 test_that("tidy() columns, type, and the interval equal confint()", {
   fit <- tg_fit()
   td <- generics::tidy(fit)
-  expect_named(td, c("term", "op", "estimate", "std.error", "statistic", "p.value"))
-  expect_equal(td$statistic, td$estimate / td$std.error)
-  expect_equal(td$p.value, 2 * stats::pnorm(-abs(td$statistic)))
+  expect_named(td, c("term", "op", "estimate", "std_error", "statistic", "p_value"))
+  expect_equal(td$statistic, td$estimate / td$std_error)
+  expect_equal(td$p_value, 2 * stats::pnorm(-abs(td$statistic)))
   expect_identical(nrow(generics::tidy(fit, type = "parameters")), length(coef(fit)))
   expect_identical(generics::tidy(fit, type = "defined")$term, "ab")
-  ci <- generics::tidy(fit, conf.int = TRUE, conf.level = 0.9)
-  expect_equal(unname(as.matrix(ci[c("conf.low", "conf.high")])), unname(confint(fit, level = 0.9)))
-  expect_error(generics::tidy(fit, conf.level = 2), "conf.level")
+  ci <- generics::tidy(fit, conf_int = TRUE, conf_level = 0.9)
+  expect_equal(unname(as.matrix(ci[c("conf_low", "conf_high")])), unname(confint(fit, level = 0.9)))
+  expect_error(generics::tidy(fit, conf_level = 2), "conf_level")
 })
 
 test_that("confint() selects by name or position, includes defined parameters, and rejects unknown names", {
@@ -153,12 +153,12 @@ test_that("confint() selects by name or position, includes defined parameters, a
 
 test_that("a parameter pinned by a constraint has a point interval and no test", {
   fit <- fit_sem(paste0(tg_syntax, "\nb == 0"), mediation_demo)
-  td <- generics::tidy(fit, conf.int = TRUE)
+  td <- generics::tidy(fit, conf_int = TRUE)
   row <- td[td$term == "b", ]
   expect_equal(row$estimate, 0, tolerance = 1e-8)
-  expect_equal(row$std.error, 0, tolerance = 1e-8)
-  expect_true(is.na(row$statistic) && is.na(row$p.value))
-  expect_equal(row$conf.low, row$conf.high)
+  expect_equal(row$std_error, 0, tolerance = 1e-8)
+  expect_true(is.na(row$statistic) && is.na(row$p_value))
+  expect_equal(row$conf_low, row$conf_high)
 })
 
 test_that("glance() matches lavaan: chi-square, df, p, log likelihood, AIC, BIC and the parameter count", {
@@ -166,11 +166,11 @@ test_that("glance() matches lavaan: chi-square, df, p, log likelihood, AIC, BIC 
   fit <- tg_fit()
   g <- generics::glance(fit)
   fm <- lavaan::fitMeasures(tg_lavaan(), c("chisq", "df", "pvalue", "logl", "aic", "bic", "npar"))
-  expect_named(g, c("nobs", "npar", "df", "chisq", "p.value", "logLik", "AIC", "BIC"))
+  expect_named(g, c("nobs", "npar", "df", "chisq", "p_value", "logLik", "AIC", "BIC", "fixed_x"))
   expect_identical(g$nobs, 400L)
   expect_equal(g$chisq, unname(fm[["chisq"]]), tolerance = 1e-6)
   expect_equal(g$df, unname(fm[["df"]]))
-  expect_equal(g$p.value, unname(fm[["pvalue"]]), tolerance = 1e-6)
+  expect_equal(g$p_value, unname(fm[["pvalue"]]), tolerance = 1e-6)
   expect_equal(g$logLik, unname(fm[["logl"]]), tolerance = 1e-6)
   expect_equal(g$AIC, unname(fm[["aic"]]), tolerance = 1e-6)
   expect_equal(g$BIC, unname(fm[["bic"]]), tolerance = 1e-6)
@@ -183,7 +183,7 @@ test_that("glance() has no converged column; a saturated fit has df 0, chi-squar
   expect_false("converged" %in% names(g0))
   expect_identical(g0$df, 0)
   expect_equal(g0$chisq, 0)
-  expect_true(is.na(g0$p.value))
+  expect_true(is.na(g0$p_value))
   # every returned fit has converged = TRUE, which is why the column carries no information
   expect_true(tg_fit()@converged)
 })
@@ -192,18 +192,18 @@ test_that("a weighted fit has a weighted discrepancy, not a likelihood: the like
   w <- fit_sem(tg_syntax, mediation_demo, weights = rep(1, nrow(mediation_demo)), se_type = "sandwich")
   g <- generics::glance(w)
   expect_identical(g$nobs, 400L)
-  expect_true(all(is.na(g[c("chisq", "p.value", "logLik", "AIC", "BIC")])))
+  expect_true(all(is.na(g[c("chisq", "p_value", "logLik", "AIC", "BIC")])))
   expect_true(all(is.finite(unlist(g[c("npar", "df")]))))
 })
 
 test_that("tidy() and confint() of a hand-built SEMFit read the object", {
   fit <- hand_semfit()
-  td <- generics::tidy(fit, conf.int = TRUE)
+  td <- generics::tidy(fit, conf_int = TRUE)
   expect_identical(td$term, c(names(fit@theta), "ab"))
   expect_identical(td$op, c("~", "~", "~", "~~", "~~", "~~", ":="))
   expect_equal(td$estimate, c(unname(fit@theta), 0.2))
-  expect_equal(td$std.error[1:6], sqrt(diag(fit@vcov)), ignore_attr = TRUE)
-  expect_equal(td$conf.low[1], 0.5 - stats::qnorm(0.975) * 0.05)
+  expect_equal(td$std_error[1:6], sqrt(diag(fit@vcov)), ignore_attr = TRUE)
+  expect_equal(td$conf_low[1], 0.5 - stats::qnorm(0.975) * 0.05)
 })
 
 test_that("edge cases: no defined parameters, a shared label and a latent model", {

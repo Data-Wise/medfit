@@ -16,6 +16,7 @@ The model syntax read by \code{\link[=fit_sem]{fit_sem()}} and by \code{fit_medi
    \code{y ~ x1 + x2} \tab regression of \code{y} on \code{x1} and \code{x2} \cr
    \code{f =~ y1 + y2 + y3} \tab latent variable \code{f} measured by the indicators \cr
    \code{y1 ~~ y2} \tab covariance; \code{y1 ~~ y1} a variance \cr
+   \code{y ~ x + m + x:m} \tab product term: the observed variable \code{x * m} as a regressor (see Product terms) \cr
    \code{y ~ a*x} \tab label the path \code{a}; equal labels are one parameter \cr
    \code{y ~ 0.5*x} \tab fix the path at 0.5 \cr
    \code{y ~ start(0.3)*x}, \verb{lower(0)*}, \verb{upper(1)*} \tab starting value, lower and upper bound \cr
@@ -36,11 +37,87 @@ the best of the starts tried, a disagreement warning means a better optimum may
 exist, and \code{n_starts} raises the number of starts. Labels used in a constraint
 or a definition must be defined in the model. A constraint with no free
 parameter is an error. Exogenous variables are given free
-variances and covariances, as lavaan does with \code{fixed.x = FALSE}. Mean
-structures (\code{y ~ 1}) are not supported, except that \code{y ~ 0*1} is accepted.
+variances and covariances, as lavaan does with \code{fixed.x = FALSE}; \code{fixed_x = TRUE}
+(or a vector of names) in \code{\link[=fit_sem]{fit_sem()}} fixes the moments of the selected ones at the
+sample values instead, as \code{fixed.x = TRUE} does. Unlike lavaan, which keeps an
+explicit \code{x ~~ x} or \code{x ~ 1} free under \code{fixed.x = TRUE} and lets the degrees of
+freedom move, medfit stops with an error when the model has a statement on a
+selected variable's moments. Any
+intercept statement (\code{y ~ 1}, or \code{1} as a term: \code{y ~ 1 + x}) turns the mean structure
+on and frees every observed intercept the model does not write, as lavaan does;
+\code{y ~ 0*1} then restricts the mean of \code{y} to 0 (one degree of freedom), and
+\code{meanstructure = TRUE} in \code{\link[=fit_sem]{fit_sem()}} turns it on without any statement, and a product term
+(\code{x:m}, see Product terms) always turns it on. A
+latent variable's mean is fixed at 0; a free latent \code{~1} is an error. A repeated \code{1} for one
+variable is an error.
 A variable cannot appear on both sides of \code{~} or \verb{=~} (\code{y ~ y}), and a path,
 a (co)variance or an intercept takes one row: a repeated \code{y ~ x} is an error,
 not a second row that competes for the label.
+}
+
+\section{Product terms}{
+
+\code{x:m} is the product of two observed variables, written with no spaces, on the
+right side of a regression (\code{y ~ x + m + x:m}). As in lavaan, the product is an
+observed exogenous variable: the engine builds the column \code{x * m} from \code{data}
+after listwise deletion, with a free variance, free covariances with the other
+exogenous variables and (the mean structure is on) a free mean. The likelihood
+does not change. \code{x:m} and \code{m:x} are one term, stored and printed under the
+canonical name, the two names sorted in the C locale (\code{m:x}); the coefficient is
+named \code{y~m:x}, or by its label (\code{b*x:m} labels the whole product).
+\code{extract_mediation()} finds the treatment-by-mediator product through the same
+name and returns the four-way decomposition; centering the mediator moves the
+split between the controlled direct effect and the reference interaction, not
+the natural effects.
+
+A column in \code{data} named \code{m:x} or \code{x:m} is used only if it equals \code{x * m} on the
+rows kept; otherwise the fit stops. A product term turns the mean structure on,
+and \code{meanstructure = FALSE} is then an error. A coefficient equals the
+equation-wise least-squares estimate inside the class below, and the sandwich
+covariance (\code{se_type = "sandwich"}) is the standard-error choice, because a
+product is not normal; the engine warns once when it is not used. \code{fixed_x}
+includes the product columns.\tabular{ll}{
+   Limit \tab Message (starts with, or contains) \cr
+   A space around \code{:} \tab "a product ':' needs a variable name on each side, written without spaces (x:m)" \cr
+   \code{x:x} \tab "of a variable with itself is not supported" \cr
+   \code{x:m:w} \tab "a three-way or higher product" \cr
+   Product as a left side (\code{x:m ~ y}, \code{x:m ~~ y}) \tab "cannot be a left side" \cr
+   Product in \verb{=~} \tab "is only valid on the right side of a regression" \cr
+   Product inside a constraint or \verb{:=} \tab "not inside the expression" \cr
+   A latent variable in a product \tab "products with latent variables are not supported in this version" \cr
+   \code{y ~ x:m + m:x} (one product twice in an equation) \tab "are the same product (canonical name" \cr
+   A factor that is the target or downstream of it (\code{y ~ x + x:y}) \tab "(rule 8: no outcome-derived regressors)" \cr
+   A loop of regressions \tab "The model is not recursive" \cr
+   A residual covariance between outcomes (\code{m1 ~~ m2}) \tab "cannot have a residual covariance (rule 9)" \cr
+   A label shared by two rows \tab "is used on more than one parameter" \cr
+   A fixed coefficient (\code{0.3*x}, \code{0*x}) \tab "has a fixed coefficient (rule 9)" \cr
+   A bound (\code{lower(0)*x}) \tab "has a bound (rule 9" \cr
+   \code{==}, \code{<} or \code{>} naming a coefficient label \tab "names the coefficient label" \cr
+   A fixed, shared or constrained intercept \tab "(rule 9, intercept clause" \cr
+   \code{meanstructure = FALSE} with a product \tab "\code{meanstructure = FALSE}, but the model has a product term" \cr
+   A column \code{m:x} in \code{data} that is not \code{x * m} \tab "is not the product of" \cr
+   A non-numeric factor \tab "needs numeric variables" \cr
+   \code{information = "expected"}, endogenous factor \tab "with a product of an endogenous variable" \cr
+   \code{anova()} or \code{mbco_sem()} on such a fit \tab "is not available for ... a model with a product term" \cr
+   Another product on the treatment or mediator, in \code{extract_mediation()} \tab "does not support the product" \cr
+}
+
+
+Rules 8 and 9 are checked on the parsed table, so they need no data. Rule 8
+rejects a regressor built from the outcome (it is correlated with the equation's
+error); rule 9 names what is not yet supported with products, and the same
+model works without the product. The covariance that completion would add
+between two pure outcomes is fixed at 0 in a product model, with one note.
+Products of observed variables only: a product with a latent variable, \code{x:x} and
+three-way products are not supported.
+
+The global chi-square is not valid when a factor of a product is itself a
+regression target (the model treats the product as exogenous although it is a
+function of that variable) or when the exogenous (co)variance block is
+restricted. \code{glance()} then reports chi-square, df and p-value as \code{NA} with a
+note, \code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse, and expected information is refused for
+an endogenous product; \code{logLik()}, AIC and BIC stay defined. A product of
+exogenous variables with the block free keeps the ordinary test.
 }
 
 \section{medfit extensions}{

@@ -1,4 +1,4 @@
-# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): thirteen numbered
+# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): eighteen numbered
 # recipes, every article link resolves, and the cluster recipe simulates the same
 # data as methods.qmd so their numbers agree. Skips when the vignettes are absent
 # (installed or built package).
@@ -14,10 +14,10 @@ article_text <- function(name) {
   paste(readLines(p, warn = FALSE), collapse = "\n")
 }
 
-test_that("the cookbook has thirteen numbered recipes and every article link resolves", {
+test_that("the cookbook has eighteen numbered recipes and every article link resolves", {
   cb <- article_text("cookbook.qmd")
   heads <- regmatches(cb, gregexpr("(?m)^## [0-9]+\\. ", cb, perl = TRUE))[[1]]
-  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:13, "."))
+  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:18, "."))
   links <- unique(regmatches(cb, gregexpr("\\]\\(([a-z-]+)\\.html\\)", cb))[[1]])
   targets <- paste0(gsub("^\\]\\(|\\.html\\)$", "", links), ".qmd")
   expect_gt(length(targets), 0L)
@@ -148,4 +148,66 @@ test_that("planted defect: the smaller p-value in place of the larger is caught"
   cb <- article_text("cookbook.qmd")
   expect_true(grepl("joint = max(p)", cb, fixed = TRUE))
   expect_false(grepl("joint = max(p)", sub("joint = max(p)", "joint = min(p)", cb, fixed = TRUE), fixed = TRUE))
+})
+
+test_that("recipes 14-18 run after the setup chunk alone and say what they claim", {
+  article_text("cookbook.qmd")
+  parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
+  setup <- unlist(parsed[[1L]])
+  for (k in 14:18) {
+    err <- run_cookbook_recipe(setup, parsed[[k + 1L]])
+    expect_null(err, info = sprintf("recipe %d fails on its own: %s", k, err))
+  }
+  # recipe 16: the lower bound binds; recipe 17: the model is misspecified (large chi-square on 2 df)
+  b <- fit_sem("mediator1 ~ a * treatment\noutcome ~ b * mediator1 + 0 * treatment\noutcome ~~ lower(2) * outcome",
+               mediation_demo)
+  expect_length(b@diagnostics$active_bounds, 1L)
+  chk <- fit_sem("mediator1 ~ treatment\nmediator2 ~ treatment\noutcome ~ mediator1 + mediator2", mediation_demo)
+  g <- generics::glance(chk)
+  expect_equal(g$df, 2)
+  expect_lt(g$p_value, 1e-10)
+  # recipe 14: the restricted model has more degrees of freedom, and the test is not significant
+  full <- fit_sem("mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment", mediation_demo)
+  reduced <- fit_sem("mediator1 ~ a * treatment\noutcome ~ b * mediator1", mediation_demo)
+  expect_gt(stats::anova(reduced, full)$`Pr(>Chisq)`[2], 0.5)
+})
+
+# Recipe 18 (fixed_x): the structural estimates and SEs equal the free fit's, the parameter count falls from 14 to
+# 8 (the numbers its prose quotes), df and chi-square do not move, glance() lists the fixed names, and comparing
+# fits with different fixed sets errors (a subset of the fixed names counts as a different set).
+test_that("recipe 18: fixed_x leaves the structure alone, drops the parameter count and refuses mixed comparisons", {
+  cb <- article_text("cookbook.qmd")
+  syntax <- paste("mediator1 ~ a * treatment + covariate1 + covariate2",
+                  "outcome ~ b * mediator1 + covariate1 + covariate2",
+                  "ab := a * b", sep = "\n")
+  free <- fit_sem(syntax, mediation_demo)
+  fixed <- fit_sem(syntax, mediation_demo, fixed_x = TRUE)
+  expect_equal(coef(fixed)[c("a", "b")], coef(free)[c("a", "b")], tolerance = 1e-6)
+  se <- function(f) sqrt(diag(vcov(f)))[c("a", "b")]
+  expect_equal(se(fixed), se(free), tolerance = 1e-5)
+  gf <- generics::glance(free)
+  gx <- generics::glance(fixed)
+  expect_identical(c(gf$npar, gx$npar), c(14L, 8L))
+  expect_true(grepl(sprintf("from %d to %d", gf$npar, gx$npar), cb, fixed = TRUE))
+  expect_equal(gx$df, gf$df)
+  expect_equal(gx$chisq, gf$chisq, tolerance = 1e-6)
+  expect_identical(gf$fixed_x, "")
+  expect_setequal(strsplit(gx$fixed_x, ", ")[[1L]], c("treatment", "covariate1", "covariate2"))
+  expect_error(stats::anova(free, fixed), "different `fixed_x` sets")
+  subset_fit <- fit_sem(syntax, mediation_demo, fixed_x = "treatment")
+  expect_error(stats::anova(fixed, subset_fit), "different `fixed_x` sets")
+  expect_error(stats::AIC(free, fixed), "different `fixed_x` sets")
+})
+
+test_that("the native quickstart, tutorial and guide exist, are indexed, and their links resolve", {
+  pk <- article_text("cookbook.qmd") # skips without vignettes
+  pkg <- paste(readLines(testthat::test_path("..", "..", "_pkgdown.yml"), warn = FALSE), collapse = "\n")
+  for (a in c("native-quickstart", "native-tutorial", "native-guide")) {
+    expect_true(grepl(paste0("articles/", a, "`"), pkg, fixed = TRUE), info = a)
+    expect_true(grepl(paste0("articles/", a, ".html"), pkg, fixed = TRUE), info = a)
+    txt <- article_text(paste0(a, ".qmd"))
+    links <- unique(regmatches(txt, gregexpr("\\]\\(([a-z-]+)\\.html[#)]", txt))[[1]])
+    targets <- paste0(gsub("^\\]\\(|\\.html[#)]$", "", links), ".qmd")
+    expect_identical(targets[is.na(vapply(targets, article_path, character(1)))], character(), info = a)
+  }
 })

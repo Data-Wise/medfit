@@ -62,7 +62,7 @@ fit <- fit_mediation(
   formula_m = mediator1 ~ treatment + covariate1 + covariate2,
   data = mediation_demo, treatment = "treatment", mediator = "mediator1"
 )
-tidy(fit, type = "effects", conf.int = TRUE)
+tidy(fit, type = "effects", conf_int = TRUE)
 ```
 
 ## Route 3: models you already fitted

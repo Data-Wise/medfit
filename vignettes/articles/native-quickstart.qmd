@@ -1,0 +1,109 @@
+---
+title: "Native engine in five minutes"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Fit a path model from syntax, read it, test it, and turn it into a mediation
+object, with no package besides medfit. The native engine is experimental. For
+the full picture see [the native engine guide](native-guide.html).
+
+| | |
+|---|---|
+| **You need** | medfit 0.8.0 or later; the bundled `mediation_demo` data |
+| **You get** | a `SEMFit`, then a `MediationData` |
+| **Time** | five minutes |
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+```
+
+## 1. Write the model
+
+One statement per line. Label a path with `name * variable`, and define a new
+quantity with `:=`:
+
+```{r}
+#| label: syntax
+syntax <- "
+  mediator1 ~ a * treatment + covariate1
+  outcome ~ b * mediator1 + cp * treatment + covariate1
+  ab := a * b
+"
+```
+
+## 2. Fit it
+
+```{r}
+#| label: fit
+fit <- fit_sem(syntax, mediation_demo)
+fit
+```
+
+`Converged: Yes` and the defined parameter `ab` with its delta-method standard
+error are the first things to read.
+
+## 3. Read the estimates
+
+```{r}
+#| label: read
+tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
+```
+
+`summary(fit)` adds the optimizer diagnostics (active bounds, improper solution);
+`glance(fit)` gives the chi-square, AIC and BIC.
+
+## 4. Test the indirect effect
+
+`mbco_sem()` refits with `a == 0` and with `b == 0` and takes the smaller
+likelihood-ratio statistic:
+
+```{r}
+#| label: mbco
+mbco_sem(fit, "a", "b")
+```
+
+## 5. Constrain something
+
+Add a line, and the engine solves the constrained problem. Setting the direct
+effect equal to the indirect effect is a nonlinear constraint:
+
+```{r}
+#| label: constrain
+tied <- fit_sem(paste0(syntax, "cp == a * b\n"), mediation_demo)
+round(coef(tied)[c("a", "b", "cp")], 3)
+anova(tied, fit)
+```
+
+## 6. Get the usual mediation object
+
+```{r}
+#| label: extract
+x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
+                       outcome = "outcome")
+tidy(x, type = "effects", conf_int = TRUE)
+```
+
+From here `nie()`, `confint()` and `bootstrap_mediation()` work as on any other
+fit.
+
+## Where next
+
+- [Native engine, step by step](native-tutorial.html): the same path in nine
+  checked steps, with a chain of three paths.
+- [The native engine guide](native-guide.html): syntax, inference, constraints,
+  diagnostics and limits in one place.
+- [Cookbook recipes 11 to 18](cookbook.html): a latent mediator, a nonlinear
+  constraint, comparing models, defined parameters, bounds, checks and fixed covariates.
+- [lavaan and the native engine](lavaan-comparison.html): what the native engine
+  does and does not do compared with lavaan.

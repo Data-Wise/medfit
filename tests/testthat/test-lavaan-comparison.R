@@ -43,6 +43,37 @@ lc_probes <- function() {
     "Means and intercepts" = function() {
       if (lc_err(fit_sem("outcome ~ 1 + treatment", d))) "Unsupported" else "Supported"
     },
+    "Fixed exogenous covariates" = function() {
+      native <- fit_sem(lab, d, fixed_x = TRUE)
+      ref <- suppressWarnings(lavaan::sem(lab, d, fixed.x = TRUE))
+      same <- native@df == lavaan::fitMeasures(ref, "df") &&
+        close(native@n_obs * native@f, lavaan::fitMeasures(ref, "chisq"), 1e-5)
+      guarded <- lc_err(fit_sem(paste0(lab, "\ntreatment ~~ treatment"), d, fixed_x = TRUE))
+      if (same && guarded && !identical(formals(fit_sem)$fixed_x, TRUE)) "Different by design" else "Supported"
+    },
+    "Product terms (`x:m`) and four-way effects" = function() {
+      pm <- "mediator1 ~ a*treatment\noutcome_int ~ b*mediator1 + treatment + treatment:mediator1"
+      nat <- suppressWarnings(fit_sem(pm, d, se_type = "sandwich"))
+      ref <- suppressWarnings(lavaan::sem(pm, d, fixed.x = FALSE, se = "robust.huber.white"))
+      pn <- sub("treatment:mediator1", "mediator1:treatment", names(lavaan::coef(ref))[1:4], fixed = TRUE)
+      same <- identical(names(coef(nat)[1:4]), pn) &&
+        close(coef(nat)[1:4], lavaan::coef(ref)[1:4]) && close(lc_se(nat)[1:4], lc_se(ref)[1:4])
+      fx <- suppressWarnings(fit_sem(pm, d, se_type = "sandwich", fixed_x = TRUE))
+      same <- same && close(coef(fx)[1:4], lavaan::coef(ref)[1:4])
+      refuses <- function(expr) {
+        msg <- tryCatch({
+          expr
+          ""
+        }, error = conditionMessage)
+        grepl("product", msg, fixed = TRUE)
+      }
+      no_test <- is.na(generics::glance(nat)$chisq) && refuses(anova(nat, nat)) && refuses(mbco_sem(nat, "a", "b"))
+      four <- inherits(
+        extract_mediation(nat, treatment = "treatment", mediator = "mediator1", outcome = "outcome_int"),
+        "medfit::InteractionMediationData"
+      )
+      if (same && four && no_test) "Partial" else if (same && four) "Supported" else "Unsupported"
+    },
     "Multiple groups" = function() {
       if ("group" %in% names(formals(fit_sem))) "Supported" else "Unsupported"
     },
@@ -90,7 +121,7 @@ lc_probes <- function() {
       tn <- tn[tn$term == "ab", ]
       pe <- lavaan::parameterEstimates(l)
       pe <- pe[pe$label == "ab", ]
-      ok <- close(tn$estimate, pe$est) && close(tn$std.error, pe$se)
+      ok <- close(tn$estimate, pe$est) && close(tn$std_error, pe$se)
       if (ok) "Supported" else "Unsupported"
     },
     "Chi-square and df" = function() {

@@ -717,19 +717,19 @@ S7::method(summary, MediationData) <- function(object, ...) {
       sigma_m = object@sigma_m,
       sigma_y = object@sigma_y
     ),
-    class = "summary.MediationData"
+    class = "summary_MediationData"
   )
 }
 
 
 #' Print Summary for MediationData
 #'
-#' @param x A summary.MediationData object
+#' @param x A summary_MediationData object
 #' @param ... Additional arguments (ignored)
-#' @return Invisibly returns `x` (the `summary.MediationData` object). Called
+#' @return Invisibly returns `x` (the `summary_MediationData` object). Called
 #'   for its side effect of printing the formatted summary to the console.
-#' @export
-print.summary.MediationData <- function(x, ...) {
+#' @noRd
+print_summary_mediation_data <- function(x, ...) {
   cat("Summary of MediationData\n")
   cat("========================\n\n")
 
@@ -788,18 +788,18 @@ S7::method(summary, BootstrapResult) <- function(object, ...) {
     boot_summary$boot_dist <- summary(object@boot_estimates)
   }
 
-  structure(boot_summary, class = "summary.BootstrapResult")
+  structure(boot_summary, class = "summary_BootstrapResult")
 }
 
 
 #' Print Summary for BootstrapResult
 #'
-#' @param x A summary.BootstrapResult object
+#' @param x A summary_BootstrapResult object
 #' @param ... Additional arguments (ignored)
-#' @return Invisibly returns `x` (the `summary.BootstrapResult` object). Called
+#' @return Invisibly returns `x` (the `summary_BootstrapResult` object). Called
 #'   for its side effect of printing the formatted summary to the console.
-#' @export
-print.summary.BootstrapResult <- function(x, ...) {
+#' @noRd
+print_summary_bootstrap_result <- function(x, ...) {
   cat("Summary of BootstrapResult\n")
   cat("==========================\n\n")
 
@@ -957,19 +957,19 @@ S7::method(summary, SerialMediationData) <- function(object, ...) {
       sigma_mediators = object@sigma_mediators,
       sigma_y = object@sigma_y
     ),
-    class = "summary.SerialMediationData"
+    class = "summary_SerialMediationData"
   )
 }
 
 
 #' Print Summary for SerialMediationData
 #'
-#' @param x A summary.SerialMediationData object
+#' @param x A summary_SerialMediationData object
 #' @param ... Additional arguments (ignored)
-#' @return Invisibly returns `x` (the `summary.SerialMediationData` object).
+#' @return Invisibly returns `x` (the `summary_SerialMediationData` object).
 #'   Called for its side effect of printing the formatted summary to the console.
-#' @export
-print.summary.SerialMediationData <- function(x, ...) {
+#' @noRd
+print_summary_serial_mediation_data <- function(x, ...) {
   cat("Summary of SerialMediationData\n")
   cat("==============================\n\n")
 
@@ -1713,9 +1713,9 @@ S7::method(summary, JointMediationData) <- function(object, level = 0.95, ...) {
   est <- c(object@cde, object@nde, object@nie, object@total_effect)
   se <- .effect_se_or_na(object, keys)
   z <- stats::qnorm(1 - (1 - level) / 2)
-  effects <- data.frame(estimate = est, std.error = unname(se),
-                        conf.low = est - z * unname(se),
-                        conf.high = est + z * unname(se),
+  effects <- data.frame(estimate = est, std_error = unname(se),
+                        conf_low = est - z * unname(se),
+                        conf_high = est + z * unname(se),
                         row.names = c("CDE", "NDE", "NIE (joint)", "Total"))
   structure(
     list(
@@ -1732,19 +1732,19 @@ S7::method(summary, JointMediationData) <- function(object, level = 0.95, ...) {
       converged = object@converged,
       source_package = object@source_package
     ),
-    class = "summary.JointMediationData"
+    class = "summary_JointMediationData"
   )
 }
 
 
 #' Print Summary for JointMediationData
 #'
-#' @param x A summary.JointMediationData object
+#' @param x A summary_JointMediationData object
 #' @param ... Additional arguments (ignored)
-#' @return Invisibly returns `x` (the `summary.JointMediationData` object).
+#' @return Invisibly returns `x` (the `summary_JointMediationData` object).
 #'   Called for its side effect of printing the formatted summary to the console.
-#' @export
-print.summary.JointMediationData <- function(x, ...) {
+#' @noRd
+print_summary_joint_mediation_data <- function(x, ...) {
   sep <- if (x$structure == "serial") " -> " else ", "
   cat("Summary of JointMediationData\n")
   cat("=============================\n\n")
@@ -2100,9 +2100,9 @@ S7::method(summary, ClusterMediationData) <- function(object, level = 0.95, ...)
   est <- .cluster_effect_vec(object)[keys]
   se <- .effect_se_or_na(object, keys)
   z <- stats::qnorm(1 - (1 - level) / 2)
-  effects <- data.frame(estimate = unname(est), std.error = unname(se),
-                        conf.low = unname(est - z * se),
-                        conf.high = unname(est + z * se),
+  effects <- data.frame(estimate = unname(est), std_error = unname(se),
+                        conf_low = unname(est - z * se),
+                        conf_high = unname(est + z * se),
                         row.names = c("NIE", "NDE", "Total", "Own (a*b_within)",
                                       "Spillover"))
   structure(
@@ -2121,19 +2121,19 @@ S7::method(summary, ClusterMediationData) <- function(object, level = 0.95, ...)
       se_type = object@se_type,
       source_package = object@source_package
     ),
-    class = "summary.ClusterMediationData"
+    class = "summary_ClusterMediationData"
   )
 }
 
 
 #' Print Summary for ClusterMediationData
 #'
-#' @param x A summary.ClusterMediationData object
+#' @param x A summary_ClusterMediationData object
 #' @param ... Additional arguments (ignored)
-#' @return Invisibly returns `x` (the `summary.ClusterMediationData` object).
+#' @return Invisibly returns `x` (the `summary_ClusterMediationData` object).
 #'   Called for its side effect of printing the formatted summary to the console.
-#' @export
-print.summary.ClusterMediationData <- function(x, ...) {
+#' @noRd
+print_summary_cluster_mediation_data <- function(x, ...) {
   cat("Summary of ClusterMediationData\n")
   cat("===============================\n\n")
   cat(sprintf("%s -> %s -> %s, clusters `%s`\n", x$variables["treatment"],

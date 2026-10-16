@@ -288,7 +288,7 @@ intervals, and `glance()` gives a one-row summary:
 ```{r}
 #| label: lm-parallel-tidy
 library(generics)
-tidy(med_parallel_lm, type = "effects", conf.int = TRUE)
+tidy(med_parallel_lm, type = "effects", conf_int = TRUE)
 
 glance(med_parallel_lm)
 ```
@@ -338,7 +338,7 @@ med_joint <- extract_mediation(
 )
 med_joint
 
-generics::tidy(med_joint, type = "effects", conf.int = TRUE)
+generics::tidy(med_joint, type = "effects", conf_int = TRUE)
 ```
 
 `a*` is each mediator's **total** treatment effect: for `mediator2` it includes the
@@ -625,7 +625,7 @@ coefficient and `m_star`:
 ```{r}
 #| label: lm-interaction-tidy
 library(generics)
-tidy(med_int, type = "components", conf.int = TRUE)
+tidy(med_int, type = "components", conf_int = TRUE)
 
 tidy(med_int, type = "effects")
 
@@ -793,10 +793,29 @@ x_sem <- extract_mediation(sem, treatment = "treatment", mediator = "mediator1")
 nie(x_sem)
 ```
 
-The four-way decomposition needs a mediator intercept, which the native engine
-does not estimate, so a treatment-by-mediator model is not supported on this
-route; fit it with `lm`/`glm` or lavaan (`meanstructure = TRUE`) instead. See
-`?"medfit-syntax"` for the syntax.
+A treatment-by-mediator product in the outcome equation gives the four-way decomposition
+on this route. Write it in the model syntax as `treatment:mediator1` (the colon, no spaces);
+the engine builds the column, turns the mean structure on, and stores the term under the
+canonical name `mediator1:treatment`, whichever order you write it in:
+
+```{r}
+#| label: extract-native-fourway
+sem4 <- suppressWarnings(fit_sem(
+  "mediator1 ~ treatment
+   outcome_int ~ treatment + mediator1 + treatment:mediator1",
+  data = mediation_demo, se_type = "sandwich"
+))
+x4 <- extract_mediation(sem4, treatment = "treatment", mediator = "mediator1",
+                        outcome = "outcome_int")
+class(x4)[1]
+decompose(x4)
+```
+
+Without the product, `decomposition = "four_way"` and `interaction =` are refused by name, and
+the message says to add the product. A precomputed product column is fitted as an ordinary
+variable, so write the product in the syntax. A model with a product must stay inside a supported
+class (see [the native model page](model-native.html#product-terms)), and the global chi-square is
+`NA` when a product factor is a regression target. See `?"medfit-syntax"` for the syntax.
 
 ## Compatibility with RMediation
 
@@ -932,7 +951,7 @@ tidy(med_data, type = "paths")
 tidy(med_data, type = "effects")
 
 # With confidence intervals
-tidy(med_data, conf.int = TRUE)
+tidy(med_data, conf_int = TRUE)
 
 # One-row summary
 glance(med_data)

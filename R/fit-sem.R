@@ -18,12 +18,17 @@
 #' @param model Character: model syntax. Lines may use `~` (regression),
 #'   `=~` (latent variable), `~~` (variance or covariance), `label*variable`
 #'   modifiers, `start()`, `lower()` and `upper()`, and the constraint
-#'   operators `==`, `<`, `>` and `:=`. Mean structures are not supported.
+#'   operators `==`, `<`, `>` and `:=`. An intercept is written `y ~ 1` (alone or with other terms, as
+#'   in `y ~ 1 + x`) and turns on the mean structure. A product of two observed variables is written
+#'   `x:m` on the right side of a regression (canonical name `m:x`); `?"medfit-syntax"` lists the
+#'   supported class and each limit.
 #' @param data A data frame with the model's observed variables as numeric
 #'   columns. Rows with missing values in those columns are dropped once
 #'   (listwise deletion) and counted in `n_dropped`.
 #' @param information Character: `"observed"` (default) or `"expected"`
-#'   information for the standard errors.
+#'   information for the standard errors. `"expected"` is an error for a model with a product term
+#'   that has an endogenous factor (the product is a function of another variable, so the expected
+#'   information gives wrong standard errors); use the default with `se_type = "sandwich"`.
 #' @param n_starts Positive integer or `NULL`: number of optimizer starts
 #'   tried before the fit is declared failed (`NULL` uses 5). Retries use
 #'   perturbed starts drawn under a fixed seed and never change the caller's
@@ -44,10 +49,29 @@
 #'   lavaan's robust standard errors with `sampling.weights`, and is smaller
 #'   than the HC3 default of the glm route by a factor that shrinks like
 #'   \eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.
+#' @param meanstructure Logical or `NULL`. `NULL` (default) fits a mean structure when the model writes
+#'   an intercept (`y ~ 1`, free or fixed); `TRUE` fits one regardless; `FALSE` fits covariances only and
+#'   errors if an intercept is written. With a mean structure every observed variable whose intercept is
+#'   not written has a free one, so a model with only free intercepts has the same estimates and
+#'   standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
+#'   A model with a product term (`y ~ x + m + x:m`) always fits the mean structure (it needs the mediator
+#'   intercept for the four-way decomposition), so with a product `meanstructure = FALSE` is an error.
+#' @param fixed_x `FALSE` (default), `TRUE`, or a character vector of exogenous observed variable names. The
+#'   selected variables (`TRUE`: every exogenous observed variable, product columns included) have their mean (with
+#'   a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
+#'   the estimation sample (weighted when `weights` are given) and removed from estimation, as lavaan does with
+#'   `fixed.x = TRUE`. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
+#'   not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
+#'   conditional on the fixed variables, and `glance()$fixed_x` lists them. Models whose `fixed_x` sets or data differ
+#'   cannot be compared with [anova()], [mbco_sem()], `AIC()` or `BIC()`. A (co)variance or intercept statement on a
+#'   selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+#'   (`fixed_x` column, no standard error) but not in `coef()` or `vcov()`.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
-#' @return A [SEMFit] object.
+#' @return A [SEMFit] object. With a product term whose factor is a regression target (`x:m` with
+#'   `m` regressed on `x`), `glance()` reports the chi-square, df and p-value as `NA` with a note, and
+#'   `anova()` and [mbco_sem()] refuse; see [SEMFit-methods].
 #'
 #' @examples
 #' \donttest{
@@ -56,13 +80,21 @@
 #'   data = mediation_demo
 #' )
 #' fit@defined
+#'
+#' # A treatment-by-mediator product: the four-way decomposition
+#' fit4 <- fit_sem(
+#'   "mediator1 ~ treatment\noutcome_int ~ treatment + mediator1 + treatment:mediator1",
+#'   data = mediation_demo, se_type = "sandwich"
+#' )
+#' decompose(extract_mediation(fit4, treatment = "treatment", mediator = "mediator1",
+#'                             outcome = "outcome_int"))
 #' }
 #'
 #' @seealso [SEMFit], [fit_mediation()]
 #' @export
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
                     control = list(), weights = NULL, se_type = c("model", "sandwich"),
-                    sampling_weights = lifecycle::deprecated()) {
+                    meanstructure = NULL, fixed_x = FALSE, sampling_weights = lifecycle::deprecated()) {
   if (lifecycle::is_present(sampling_weights)) {
     lifecycle::deprecate_warn("0.8.0", "fit_sem(sampling_weights)", "fit_sem(weights)")
     if (!is.null(weights)) {
@@ -75,13 +107,20 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   information <- match.arg(information)
   checkmate::assert_count(n_starts, positive = TRUE, null.ok = TRUE, .var.name = "n_starts")
   checkmate::assert_list(control, .var.name = "control")
+  checkmate::assert_flag(meanstructure, null.ok = TRUE, .var.name = "meanstructure")
+  checkmate::assert(
+    checkmate::check_flag(fixed_x),
+    checkmate::check_character(fixed_x, any.missing = FALSE, min.len = 1L, unique = TRUE),
+    .var.name = "fixed_x"
+  )
   se_type <- match.arg(se_type)
   if (!is.null(weights) && se_type == "model") {
     .notify_ipw_model_se()
   }
   model <- paste(model, collapse = "\n")
   fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
-                         control = control, weights = weights, se_type = se_type)
+                         control = control, weights = weights, se_type = se_type, meanstructure = meanstructure,
+                         fixed_x = fixed_x)
   .sem_as_semfit(fit, model, match.call())
 }
 
@@ -92,7 +131,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   se <- ifelse(free, sqrt(diag(fit$vcov))[pmax(fit$par_map, 1L)], NA_real_)
   table <- data.frame(
     lhs = tab$lhs, op = tab$op, rhs = tab$rhs, label = tab$label, free = free,
-    est = unname(est), se = unname(se), stringsAsFactors = FALSE
+    est = unname(est), se = unname(se), fixed_x = tab$fixed_x, stringsAsFactors = FALSE
   )
   SEMFit(
     theta = fit$theta, vcov = fit$vcov, table = table, defined = fit$defined, f = fit$f,
@@ -101,7 +140,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
                         "sign_check", "se_type")],
     internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
-                      "branch")],
+                      "branch", "fixed_x")],
     call = call
   )
 }
@@ -139,7 +178,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   if (length(dots)) {
     stop("unused arguments for engine = \"native\": ", paste(names(dots), collapse = ", "), call. = FALSE)
   }
-  fit_args <- c("information", "n_starts", "control")
+  fit_args <- c("information", "n_starts", "control", "meanstructure", "fixed_x")
   extract_args <- c("outcome", "structure", "decomposition", "interaction", "a_label", "b_label", "cp_label")
   unknown <- setdiff(names(engine_args), c(fit_args, extract_args))
   if (length(unknown)) {
@@ -147,7 +186,8 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
          ". Recognized: ", paste(c(fit_args, extract_args), collapse = ", "), ".", call. = FALSE)
   }
   syntax <- paste(model, collapse = "\n")
-  vars <- unique(unlist(.sem_parse(syntax)$parameters[c("lhs", "rhs")]))
+  # A product term (`m:x`) names two variables; a treatment that only appears inside one is still in the model.
+  vars <- unique(unlist(strsplit(unlist(.sem_parse(syntax)$parameters[c("lhs", "rhs")]), ":", fixed = TRUE)))
   for (nm in c(treatment = treatment, mediator = mediator)) {
     if (!(nm %in% vars)) {
       stop(sprintf("'%s' is not a variable in `model`", nm), call. = FALSE)

@@ -18,10 +18,10 @@ Part of the [Models](models.html) collection; the third of four
 
 | | |
 |---|---|
-| **What it does** | equality, inequality and fixed-value constraints on labeled paths; `mbco_sem()` for the indirect effect |
+| **What it does** | equality, inequality and fixed-value constraints on labeled paths, linear or nonlinear; `mbco_sem()` for the indirect effect; `anova()` for nested fits |
 | **Class returned** | `SEMFit` |
 | **Syntax** | `a == b`, `a + b == 1`, `a < 0.3`, `y ~ 0.5 * x`, `CONSTRAINT(a == b)` |
-| **Limit** | constraints must be linear in the labels |
+| **Limit** | a sum of products such as `a1 * b1 + a2 * b2 == 0` is best-effort (see Limits) |
 
 ```{r}
 #| label: setup
@@ -74,6 +74,30 @@ mbco_sem(free, "a", "b")
 ```
 
 The result is an `htest`; the two component tests are in its `tests` element.
+For a chain, name every path: `mbco_sem(fit, paths = c("a", "d", "b"))` is the
+minimum of the single-path tests for $a \, d \, b = 0$, referred to a
+chi-square with 1 degree of freedom.
+
+## Nonlinear constraints
+
+A constraint may be nonlinear in the labels. Setting `cp` equal to the indirect
+effect is one:
+
+```{r}
+#| label: nonlinear
+tied <- fit_sem(paste0(base, "CONSTRAINT(cp == a * b)\nab := a * b"), mediation_demo)
+round(coef(tied)[c("a", "b", "cp")], 4)
+```
+
+## Compare nested fits
+
+`anova()` is the likelihood-ratio test for two nested `SEMFit`s and refits
+nothing; you vouch that the restriction is nested in substance.
+
+```{r}
+#| label: anova
+anova(tied, free)
+```
 
 ## Limits
 

@@ -12,6 +12,8 @@ fit_sem(
   control = list(),
   weights = NULL,
   se_type = c("model", "sandwich"),
+  meanstructure = NULL,
+  fixed_x = FALSE,
   sampling_weights = lifecycle::deprecated()
 )
 }
@@ -19,14 +21,19 @@ fit_sem(
 \item{model}{Character: model syntax. Lines may use \code{~} (regression),
 \verb{=~} (latent variable), \verb{~~} (variance or covariance), \code{label*variable}
 modifiers, \code{start()}, \code{lower()} and \code{upper()}, and the constraint
-operators \code{==}, \code{<}, \code{>} and \verb{:=}. Mean structures are not supported.}
+operators \code{==}, \code{<}, \code{>} and \verb{:=}. An intercept is written \code{y ~ 1} (alone or with other terms, as
+in \code{y ~ 1 + x}) and turns on the mean structure. A product of two observed variables is written
+\code{x:m} on the right side of a regression (canonical name \code{m:x}); \code{?"medfit-syntax"} lists the
+supported class and each limit.}
 
 \item{data}{A data frame with the model's observed variables as numeric
 columns. Rows with missing values in those columns are dropped once
 (listwise deletion) and counted in \code{n_dropped}.}
 
 \item{information}{Character: \code{"observed"} (default) or \code{"expected"}
-information for the standard errors.}
+information for the standard errors. \code{"expected"} is an error for a model with a product term
+that has an endogenous factor (the product is a function of another variable, so the expected
+information gives wrong standard errors); use the default with \code{se_type = "sandwich"}.}
 
 \item{n_starts}{Positive integer or \code{NULL}: number of optimizer starts
 tried before the fit is declared failed (\code{NULL} uses 5). Retries use
@@ -52,11 +59,32 @@ lavaan's robust standard errors with \code{sampling.weights}, and is smaller
 than the HC3 default of the glm route by a factor that shrinks like
 \eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.}
 
+\item{meanstructure}{Logical or \code{NULL}. \code{NULL} (default) fits a mean structure when the model writes
+an intercept (\code{y ~ 1}, free or fixed); \code{TRUE} fits one regardless; \code{FALSE} fits covariances only and
+errors if an intercept is written. With a mean structure every observed variable whose intercept is
+not written has a free one, so a model with only free intercepts has the same estimates and
+standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
+A model with a product term (\code{y ~ x + m + x:m}) always fits the mean structure (it needs the mediator
+intercept for the four-way decomposition), so with a product \code{meanstructure = FALSE} is an error.}
+
+\item{fixed_x}{\code{FALSE} (default), \code{TRUE}, or a character vector of exogenous observed variable names. The
+selected variables (\code{TRUE}: every exogenous observed variable, product columns included) have their mean (with
+a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
+the estimation sample (weighted when \code{weights} are given) and removed from estimation, as lavaan does with
+\code{fixed.x = TRUE}. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
+not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
+conditional on the fixed variables, and \code{glance()$fixed_x} lists them. Models whose \code{fixed_x} sets or data differ
+cannot be compared with \code{\link[=anova]{anova()}}, \code{\link[=mbco_sem]{mbco_sem()}}, \code{AIC()} or \code{BIC()}. A (co)variance or intercept statement on a
+selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+(\code{fixed_x} column, no standard error) but not in \code{coef()} or \code{vcov()}.}
+
 \item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name
 \code{\link[=fit_mediation]{fit_mediation()}} uses; the old name still works with a warning.}
 }
 \value{
-A \link{SEMFit} object.
+A \link{SEMFit} object. With a product term whose factor is a regression target (\code{x:m} with
+\code{m} regressed on \code{x}), \code{glance()} reports the chi-square, df and p-value as \code{NA} with a note, and
+\code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse; see \link{SEMFit-methods}.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
@@ -74,6 +102,14 @@ fit <- fit_sem(
   data = mediation_demo
 )
 fit@defined
+
+# A treatment-by-mediator product: the four-way decomposition
+fit4 <- fit_sem(
+  "mediator1 ~ treatment\noutcome_int ~ treatment + mediator1 + treatment:mediator1",
+  data = mediation_demo, se_type = "sandwich"
+)
+decompose(extract_mediation(fit4, treatment = "treatment", mediator = "mediator1",
+                            outcome = "outcome_int"))
 }
 
 }

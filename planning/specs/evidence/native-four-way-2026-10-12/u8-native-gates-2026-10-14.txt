@@ -1,0 +1,611 @@
+# U8 gates through the native `:` path, 2026-10-14. Plain runs, planted-defect (MUTANT=) runs, then run-gates.R.
+# Plain-run sections: the product gates run on both paths (column control, colon), the known-answer gate on four routes.
+=== exo-product-null (plain)
+ xdist   path df reject05 reject01 mean_chisq reps reps_ok mutant
+  norm column  2    0.055    0.011       2.00 1000    1000       
+   exp column  2    0.056    0.010       2.05 1000    1000       
+  ok   rows                                     2 rows, expected 2
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   rejection at .05                         range 0.055 to 0.056, band 0.05 +/- 0.02
+  ok   mean chi-square                          max |mean - df| 0.0481, limit 0.15
+
+RULE MET
+exit=0
+=== exo-product-null-colon (plain)
+ xdist  path df reject05 reject01 mean_chisq reps reps_ok mutant
+  norm colon  2    0.055    0.011       2.00 1000    1000       
+   exp colon  2    0.056    0.010       2.05 1000    1000       
+  ok   rows                                     2 rows, expected 2
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   rejection at .05                         range 0.055 to 0.056, band 0.05 +/- 0.02
+  ok   mean chi-square                          max |mean - df| 0.0481, limit 0.15
+
+RULE MET
+exit=0
+=== exo-product-fixed-var (plain)
+ xdist  config   path        expect df reject05 reject01 mean_chisq reps
+  norm    free column    calibrated  2    0.055    0.011       2.00 1000
+  norm  fixvar column    calibrated  4    0.051    0.014       3.96 1000
+  norm dropcov column miscalibrated  7    0.249    0.135      10.88 1000
+   exp    free column    calibrated  2    0.056    0.010       2.05 1000
+   exp  fixvar column miscalibrated  4    0.383    0.220       9.54 1000
+   exp dropcov column miscalibrated  7    0.693    0.567      27.57 1000
+ reps_ok mutant
+    1000       
+    1000       
+    1000       
+    1000       
+    1000       
+    1000       
+  ok   rows                                     6 rows, expected 6
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   calibrated rows: rejection at .05        3 rows, range 0.051 to 0.056, band 0.05 +/- 0.02
+  ok   calibrated rows: mean chi-square         max relative gap 0.024, limit 0.1
+  ok   miscalibrated rows stay miscalibrated    3 rows, smallest rejection 0.249, need at least 0.15
+
+RULE MET
+exit=0
+=== exo-product-fixed-var-colon (plain)
+ xdist  config  path        expect df reject05 reject01 mean_chisq reps reps_ok
+  norm    free colon    calibrated  2    0.055    0.011       2.00 1000    1000
+  norm dropcov colon miscalibrated  7    0.249    0.135      10.88 1000    1000
+   exp    free colon    calibrated  2    0.056    0.010       2.05 1000    1000
+   exp dropcov colon miscalibrated  7    0.693    0.567      27.57 1000    1000
+ mutant
+       
+       
+       
+       
+  ok   rows                                     4 rows, expected 4
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   calibrated rows: rejection at .05        2 rows, range 0.055 to 0.056, band 0.05 +/- 0.02
+  ok   calibrated rows: mean chi-square         max relative gap 0.024, limit 0.1
+  ok   miscalibrated rows stay miscalibrated    2 rows, smallest rejection 0.249, need at least 0.15
+
+RULE MET
+exit=0
+=== product-correlated-residuals (plain)
+  design   cvf      gap gap_truth
+1   diff FALSE 4.17e-07     0.141
+2   same FALSE 5.22e-07     0.141
+3   diff  TRUE 2.84e-03     0.141
+4   same  TRUE 9.49e-08     0.141
+  ok   rows                                     40 rows, expected 40
+  ok   fitted runs                              0 runs without a gap, 0 refused by rule 9
+  ok   match rows: SEM equals OLS               30 rows, max gap 0.000000522, limit 0.00001
+  ok   leak rows: SEM differs from OLS          100% of 10 rows at or above 0.0001, need at least 80%
+
+RULE MET
+exit=0
+=== product-correlated-residuals-colon (plain)
+  design   cvf      gap gap_truth
+1   diff FALSE 8.72e-15     0.141
+2   same FALSE 8.33e-15     0.141
+  ok   rows                                     40 rows, expected 40
+  ok   fitted runs                              0 runs without a gap, 20 refused by rule 9
+  ok   match rows: SEM equals OLS               20 rows, max gap 0.00000000000000872, limit 0.00001
+  ok   leak rows: SEM differs from OLS          100% of 10 rows at or above 0.0001, need at least 80%
+  ok   rule 9 refuses every free residual covariance 20 of 20 refused
+
+RULE MET
+exit=0
+=== four-way-known-answer (plain)
+ scenario  route component truth mean_est  bias_z sd_est rms_se se_ratio
+        A   hand       cde  0.62    0.622  0.2954 0.2206 0.2267    1.028
+        A   hand   int_ref  1.19    1.187 -0.2007 0.1880 0.1848    0.983
+        A   hand   int_med  0.30    0.298 -0.9982 0.0752 0.0761    1.012
+        A   hand       pie  0.20    0.199 -0.7356 0.0547 0.0530    0.969
+        A   hand       nde  1.81    1.809  0.2504 0.1096 0.1137    1.038
+        A   hand       nie  0.50    0.496 -1.0860 0.1062 0.1057    0.995
+        A   hand        te  2.31    2.305 -0.6931 0.1268 0.1255    0.990
+        A    glm       cde  0.62    0.622  0.2954 0.2206 0.2282    1.034
+        A    glm   int_ref  1.19    1.187 -0.2007 0.1880 0.1860    0.989
+        A    glm   int_med  0.30    0.298 -0.9982 0.0752 0.0764    1.016
+        A    glm       pie  0.20    0.199 -0.7356 0.0547 0.0533    0.974
+        A    glm       nde  1.81    1.809  0.2504 0.1096 0.1144    1.044
+        A    glm       nie  0.50    0.496 -1.0860 0.1062 0.1061    1.000
+        A    glm        te  2.31    2.305 -0.6931 0.1268 0.1262    0.995
+        A lavaan       cde  0.62    0.622  0.2954 0.2206 0.2267    1.028
+        A lavaan   int_ref  1.19    1.187 -0.2007 0.1880 0.1848    0.983
+        A lavaan   int_med  0.30    0.298 -0.9982 0.0752 0.0761    1.012
+        A lavaan       pie  0.20    0.199 -0.7356 0.0547 0.0530    0.969
+        A lavaan       nde  1.81    1.809  0.2504 0.1096 0.1137    1.038
+        A lavaan       nie  0.50    0.496 -1.0860 0.1062 0.1057    0.995
+        A lavaan        te  2.31    2.305 -0.6931 0.1268 0.1255    0.990
+        A native       cde  0.62    0.622  0.2954 0.2206 0.2267    1.028
+        A native   int_ref  1.19    1.187 -0.2007 0.1880 0.1848    0.983
+        A native   int_med  0.30    0.298 -0.9982 0.0752 0.0761    1.012
+        A native       pie  0.20    0.199 -0.7356 0.0547 0.0530    0.969
+        A native       nde  1.81    1.809  0.2504 0.1096 0.1137    1.038
+        A native       nie  0.50    0.496 -1.0860 0.1062 0.1057    0.995
+        A native        te  2.31    2.305 -0.6931 0.1268 0.1255    0.990
+        B   hand       cde  0.38    0.379 -0.1143 0.3924 0.3734    0.951
+        B   hand   int_ref  1.94    1.940 -0.3159 0.3698 0.3500    0.946
+        B   hand   int_med  0.30    0.302  0.7027 0.0886 0.0917    1.035
+        B   hand       pie  0.20    0.203  1.5712 0.0663 0.0636    0.959
+        B   hand       nde  2.32    2.319 -1.1896 0.1359 0.1316    0.968
+        B   hand       nie  0.50    0.505  1.3329 0.1249 0.1270    1.017
+        B   hand        te  2.82    2.824  0.0309 0.1558 0.1504    0.966
+        B    glm       cde  0.38    0.379 -0.1143 0.3924 0.3941    1.004
+        B    glm   int_ref  1.94    1.940 -0.3159 0.3698 0.3723    1.007
+        B    glm   int_med  0.30    0.302  0.7027 0.0886 0.0953    1.076
+        B    glm       pie  0.20    0.203  1.5712 0.0663 0.0661    0.996
+        B    glm       nde  2.32    2.319 -1.1896 0.1359 0.1356    0.998
+        B    glm       nie  0.50    0.505  1.3329 0.1249 0.1309    1.048
+        B    glm        te  2.82    2.824  0.0309 0.1558 0.1551    0.996
+        B lavaan       cde  0.38    0.379 -0.1143 0.3924 0.3734    0.951
+        B lavaan   int_ref  1.94    1.940 -0.3159 0.3698 0.3500    0.946
+        B lavaan   int_med  0.30    0.302  0.7027 0.0886 0.0917    1.035
+        B lavaan       pie  0.20    0.203  1.5712 0.0663 0.0636    0.959
+        B lavaan       nde  2.32    2.319 -1.1896 0.1359 0.1316    0.968
+        B lavaan       nie  0.50    0.505  1.3329 0.1249 0.1270    1.017
+        B lavaan        te  2.82    2.824  0.0309 0.1558 0.1504    0.966
+        B native       cde  0.38    0.379 -0.1143 0.3924 0.3734    0.951
+        B native   int_ref  1.94    1.940 -0.3159 0.3698 0.3500    0.946
+        B native   int_med  0.30    0.302  0.7027 0.0886 0.0917    1.035
+        B native       pie  0.20    0.203  1.5712 0.0663 0.0636    0.959
+        B native       nde  2.32    2.319 -1.1896 0.1359 0.1316    0.968
+        B native       nie  0.50    0.505  1.3329 0.1249 0.1270    1.017
+        B native        te  2.82    2.824  0.0309 0.1558 0.1504    0.966
+        C   hand       cde  0.20    0.193 -2.0397 0.1155 0.1166    1.010
+        C   hand   int_ref  0.18    0.181  0.6910 0.0546 0.0531    0.972
+        C   hand   int_med  0.30    0.299 -0.5748 0.0799 0.0792    0.992
+        C   hand       pie  0.20    0.197 -1.7432 0.0545 0.0540    0.990
+        C   hand       nde  0.38    0.374 -1.7478 0.1132 0.1142    1.009
+        C   hand       nie  0.50    0.496 -1.3081 0.1077 0.1062    0.986
+        C   hand        te  0.88    0.869 -2.6783 0.1265 0.1254    0.991
+        C    glm       cde  0.20    0.193 -2.0397 0.1155 0.1172    1.015
+        C    glm   int_ref  0.18    0.181  0.6910 0.0546 0.0532    0.976
+        C    glm   int_med  0.30    0.299 -0.5748 0.0799 0.0795    0.995
+        C    glm       pie  0.20    0.197 -1.7432 0.0545 0.0542    0.994
+        C    glm       nde  0.38    0.374 -1.7478 0.1132 0.1148    1.014
+        C    glm       nie  0.50    0.496 -1.3081 0.1077 0.1065    0.989
+        C    glm        te  0.88    0.869 -2.6783 0.1265 0.1259    0.995
+        C lavaan       cde  0.20    0.193 -2.0397 0.1155 0.1166    1.010
+        C lavaan   int_ref  0.18    0.181  0.6910 0.0546 0.0531    0.972
+        C lavaan   int_med  0.30    0.299 -0.5748 0.0799 0.0792    0.992
+        C lavaan       pie  0.20    0.197 -1.7432 0.0545 0.0540    0.990
+        C lavaan       nde  0.38    0.374 -1.7478 0.1132 0.1142    1.009
+        C lavaan       nie  0.50    0.496 -1.3081 0.1077 0.1062    0.986
+        C lavaan        te  0.88    0.869 -2.6783 0.1265 0.1254    0.991
+        C native       cde  0.20    0.193 -2.0397 0.1155 0.1166    1.010
+        C native   int_ref  0.18    0.181  0.6910 0.0546 0.0531    0.972
+        C native   int_med  0.30    0.299 -0.5748 0.0799 0.0792    0.992
+        C native       pie  0.20    0.197 -1.7432 0.0545 0.0540    0.990
+        C native       nde  0.38    0.374 -1.7478 0.1132 0.1142    1.009
+        C native       nie  0.50    0.496 -1.3081 0.1077 0.1062    0.986
+        C native        te  0.88    0.869 -2.6783 0.1265 0.1254    0.991
+  ok   rows                                     84 rows, expected 84
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   missing statistics                       0 NA bias_z, 0 NA se_ratio
+  ok   bias (Monte Carlo SEs)                   max |bias_z| 2.68, limit 4
+  ok   standard errors vs empirical SD          max |se_ratio - 1| 0.0755, limit 0.12
+
+RULE MET
+exit=0
+
+=== exo-product-null-colon MUTANT=endogenous
+ xdist  path df reject05 reject01 mean_chisq reps reps_ok     mutant
+  norm colon  2    0.147    0.058       3.06 1000    1000 endogenous
+   exp colon  2    0.126    0.048       2.92 1000    1000 endogenous
+  ok   rows                                     2 rows, expected 2
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  FAIL rejection at .05                         range 0.126 to 0.147, band 0.05 +/- 0.02
+  FAIL mean chi-square                          max |mean - df| 1.06, limit 0.15
+
+RULE NOT MET
+exit=1
+=== exo-product-null-colon MUTANT=wrongdf
+ xdist  path df reject05 reject01 mean_chisq reps reps_ok  mutant
+  norm colon  2    0.019    0.003       2.00 1000    1000 wrongdf
+   exp colon  2    0.020    0.001       2.05 1000    1000 wrongdf
+  ok   rows                                     2 rows, expected 2
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  FAIL rejection at .05                         range 0.019 to 0.02, band 0.05 +/- 0.02
+  ok   mean chi-square                          max |mean - df| 0.0481, limit 0.15
+
+RULE NOT MET
+exit=1
+=== exo-product-fixed-var-colon MUTANT=wrongvar
+ xdist  config  path        expect df reject05 reject01 mean_chisq reps reps_ok
+  norm    free colon    calibrated  7    1.000    1.000      204.9 1000    1000
+  norm dropcov colon miscalibrated  7    0.249    0.135       10.9 1000    1000
+   exp    free colon    calibrated  7    1.000    1.000      224.3 1000    1000
+   exp dropcov colon miscalibrated  7    0.693    0.567       27.6 1000    1000
+   mutant
+ wrongvar
+ wrongvar
+ wrongvar
+ wrongvar
+  ok   rows                                     4 rows, expected 4
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  FAIL calibrated rows: rejection at .05        2 rows, range 1 to 1, band 0.05 +/- 0.02
+  FAIL calibrated rows: mean chi-square         max relative gap 31, limit 0.1
+  ok   miscalibrated rows stay miscalibrated    2 rows, smallest rejection 0.249, need at least 0.15
+
+RULE NOT MET
+exit=1
+=== exo-product-fixed-var-colon MUTANT=wrongdf
+ xdist  config  path        expect df reject05 reject01 mean_chisq reps reps_ok
+  norm    free colon    calibrated  2    0.019    0.003       2.00 1000    1000
+  norm dropcov colon miscalibrated  7    0.190    0.098      10.88 1000    1000
+   exp    free colon    calibrated  2    0.020    0.001       2.05 1000    1000
+   exp dropcov colon miscalibrated  7    0.654    0.527      27.57 1000    1000
+  mutant
+ wrongdf
+ wrongdf
+ wrongdf
+ wrongdf
+  ok   rows                                     4 rows, expected 4
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  FAIL calibrated rows: rejection at .05        2 rows, range 0.019 to 0.02, band 0.05 +/- 0.02
+  ok   calibrated rows: mean chi-square         max relative gap 0.024, limit 0.1
+  ok   miscalibrated rows stay miscalibrated    2 rows, smallest rejection 0.19, need at least 0.15
+
+RULE NOT MET
+exit=1
+=== product-correlated-residuals-colon MUTANT=nocorr
+  design   cvf      gap gap_truth
+1   diff FALSE 7.05e-15     0.149
+2   same FALSE 8.16e-15     0.149
+  ok   rows                                     40 rows, expected 40
+  ok   fitted runs                              0 runs without a gap, 20 refused by rule 9
+  ok   match rows: SEM equals OLS               20 rows, max gap 0.00000000000000816, limit 0.00001
+  FAIL leak rows: SEM differs from OLS          20% of 10 rows at or above 0.0001, need at least 80%
+  ok   rule 9 refuses every free residual covariance 20 of 20 refused
+
+RULE NOT MET
+exit=1
+=== product-correlated-residuals-colon MUTANT=olsdrop
+  design   cvf    gap gap_truth
+1   diff FALSE 0.0437     0.141
+2   same FALSE 0.0437     0.141
+  ok   rows                                     40 rows, expected 40
+  ok   fitted runs                              0 runs without a gap, 20 refused by rule 9
+  FAIL match rows: SEM equals OLS               20 rows, max gap 0.0437, limit 0.00001
+  ok   leak rows: SEM differs from OLS          100% of 10 rows at or above 0.0001, need at least 80%
+  ok   rule 9 refuses every free residual covariance 20 of 20 refused
+
+RULE NOT MET
+exit=1
+=== exo-product-null MUTANT=endogenous
+ xdist   path df reject05 reject01 mean_chisq reps reps_ok     mutant
+  norm column  2    0.147    0.058       3.06 1000    1000 endogenous
+   exp column  2    0.126    0.048       2.92 1000    1000 endogenous
+  ok   rows                                     2 rows, expected 2
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  FAIL rejection at .05                         range 0.126 to 0.147, band 0.05 +/- 0.02
+  FAIL mean chi-square                          max |mean - df| 1.06, limit 0.15
+
+RULE NOT MET
+exit=1
+=== exo-product-null MUTANT=wrongdf
+ xdist   path df reject05 reject01 mean_chisq reps reps_ok  mutant
+  norm column  2    0.019    0.003       2.00 1000    1000 wrongdf
+   exp column  2    0.020    0.001       2.05 1000    1000 wrongdf
+  ok   rows                                     2 rows, expected 2
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  FAIL rejection at .05                         range 0.019 to 0.02, band 0.05 +/- 0.02
+  ok   mean chi-square                          max |mean - df| 0.0481, limit 0.15
+
+RULE NOT MET
+exit=1
+=== exo-product-fixed-var MUTANT=wrongvar
+ xdist  config   path        expect df reject05 reject01 mean_chisq reps
+  norm    free column    calibrated  2    0.055    0.011       2.00 1000
+  norm  fixvar column    calibrated  4    1.000    1.000     194.08 1000
+  norm dropcov column miscalibrated  7    0.249    0.135      10.88 1000
+   exp    free column    calibrated  2    0.056    0.010       2.05 1000
+   exp  fixvar column miscalibrated  4    1.000    1.000     201.48 1000
+   exp dropcov column miscalibrated  7    0.693    0.567      27.57 1000
+ reps_ok   mutant
+    1000 wrongvar
+    1000 wrongvar
+    1000 wrongvar
+    1000 wrongvar
+    1000 wrongvar
+    1000 wrongvar
+  ok   rows                                     6 rows, expected 6
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  FAIL calibrated rows: rejection at .05        3 rows, range 0.055 to 1, band 0.05 +/- 0.02
+  FAIL calibrated rows: mean chi-square         max relative gap 47.5, limit 0.1
+  ok   miscalibrated rows stay miscalibrated    3 rows, smallest rejection 0.249, need at least 0.15
+
+RULE NOT MET
+exit=1
+=== exo-product-fixed-var MUTANT=wrongdf
+ xdist  config   path        expect df reject05 reject01 mean_chisq reps
+  norm    free column    calibrated  2    0.019    0.003       2.00 1000
+  norm  fixvar column    calibrated  4    0.027    0.008       3.96 1000
+  norm dropcov column miscalibrated  7    0.190    0.098      10.88 1000
+   exp    free column    calibrated  2    0.020    0.001       2.05 1000
+   exp  fixvar column miscalibrated  4    0.313    0.172       9.54 1000
+   exp dropcov column miscalibrated  7    0.654    0.527      27.57 1000
+ reps_ok  mutant
+    1000 wrongdf
+    1000 wrongdf
+    1000 wrongdf
+    1000 wrongdf
+    1000 wrongdf
+    1000 wrongdf
+  ok   rows                                     6 rows, expected 6
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  FAIL calibrated rows: rejection at .05        3 rows, range 0.019 to 0.027, band 0.05 +/- 0.02
+  ok   calibrated rows: mean chi-square         max relative gap 0.024, limit 0.1
+  ok   miscalibrated rows stay miscalibrated    3 rows, smallest rejection 0.19, need at least 0.15
+
+RULE NOT MET
+exit=1
+=== product-correlated-residuals MUTANT=nocorr
+  design   cvf      gap gap_truth
+1   diff FALSE 2.97e-07     0.149
+2   same FALSE 5.48e-08     0.149
+3   diff  TRUE 2.74e-04     0.149
+4   same  TRUE 1.68e-07     0.149
+  ok   rows                                     40 rows, expected 40
+  ok   fitted runs                              0 runs without a gap, 0 refused by rule 9
+  ok   match rows: SEM equals OLS               30 rows, max gap 0.000000297, limit 0.00001
+  FAIL leak rows: SEM differs from OLS          20% of 10 rows at or above 0.0001, need at least 80%
+
+RULE NOT MET
+exit=1
+=== product-correlated-residuals MUTANT=olsdrop
+  design   cvf    gap gap_truth
+1   diff FALSE 0.0437     0.141
+2   same FALSE 0.0437     0.141
+3   diff  TRUE 0.0415     0.141
+4   same  TRUE 0.0437     0.141
+  ok   rows                                     40 rows, expected 40
+  ok   fitted runs                              0 runs without a gap, 0 refused by rule 9
+  FAIL match rows: SEM equals OLS               30 rows, max gap 0.0437, limit 0.00001
+  ok   leak rows: SEM differs from OLS          100% of 10 rows at or above 0.0001, need at least 80%
+
+RULE NOT MET
+exit=1
+
+=== four-way-known-answer ROUTES=native MUTANT=nocovgrad
+        C native        te  0.88    0.869 -2.6783 0.1265 0.1254    0.991
+  FAIL rows                                     21 rows, expected 84
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   missing statistics                       0 NA bias_z, 0 NA se_ratio
+  ok   bias (Monte Carlo SEs)                   max |bias_z| 2.68, limit 4
+  FAIL standard errors vs empirical SD          max |se_ratio - 1| 0.999, limit 0.12
+
+RULE NOT MET
+exit=1
+=== four-way-known-answer ROUTES=native MUTANT=unwtd_lavaan
+        C native        te  0.88    0.869  -2.678 0.1265 0.1254    0.991
+  FAIL rows                                     21 rows, expected 84
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   missing statistics                       0 NA bias_z, 0 NA se_ratio
+  FAIL bias (Monte Carlo SEs)                   max |bias_z| 32, limit 4
+  ok   standard errors vs empirical SD          max |se_ratio - 1| 0.0538, limit 0.12
+
+RULE NOT MET
+exit=1
+=== four-way-known-answer MUTANT=nocovgrad
+        C native        te  0.88    0.869 -2.6783 0.1265 0.1254    0.991
+  ok   rows                                     84 rows, expected 84
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   missing statistics                       0 NA bias_z, 0 NA se_ratio
+  ok   bias (Monte Carlo SEs)                   max |bias_z| 2.68, limit 4
+  FAIL standard errors vs empirical SD          max |se_ratio - 1| 1.12, limit 0.12
+
+RULE NOT MET
+exit=1
+=== four-way-known-answer MUTANT=oracle
+        C native        te  0.88    0.869 -2.6783 0.1265 0.1254    0.991
+  ok   rows                                     84 rows, expected 84
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   missing statistics                       0 NA bias_z, 0 NA se_ratio
+  ok   bias (Monte Carlo SEs)                   max |bias_z| 2.68, limit 4
+  FAIL standard errors vs empirical SD          max |se_ratio - 1| 0.999, limit 0.12
+
+RULE NOT MET
+exit=1
+=== four-way-known-answer MUTANT=unwtd_glm
+        C native        te  0.88    0.869  -2.6783 0.1265 0.1254    0.991
+  ok   rows                                     84 rows, expected 84
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   missing statistics                       0 NA bias_z, 0 NA se_ratio
+  FAIL bias (Monte Carlo SEs)                   max |bias_z| 32, limit 4
+  ok   standard errors vs empirical SD          max |se_ratio - 1| 0.0755, limit 0.12
+
+RULE NOT MET
+exit=1
+=== four-way-known-answer MUTANT=unwtd_lavaan
+        C native        te  0.88    0.869  -2.6783 0.1265 0.1254    0.991
+  ok   rows                                     84 rows, expected 84
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   missing statistics                       0 NA bias_z, 0 NA se_ratio
+  FAIL bias (Monte Carlo SEs)                   max |bias_z| 32, limit 4
+  ok   standard errors vs empirical SD          max |se_ratio - 1| 0.0755, limit 0.12
+
+RULE NOT MET
+exit=1
+=== four-way-known-answer MUTANT=wrongtruth
+        C native        te  0.88    0.869 -2.678 0.1265 0.1254    0.991
+  ok   rows                                     84 rows, expected 84
+  ok   fitted replications                      smallest fraction 1, need at least 0.99
+  ok   missing statistics                       0 NA bias_z, 0 NA se_ratio
+  FAIL bias (Monte Carlo SEs)                   max |bias_z| 30.3, limit 4
+  ok   standard errors vs empirical SD          max |se_ratio - 1| 0.0755, limit 0.12
+
+RULE NOT MET
+exit=1
+
+=== Rscript tests/sim/run-gates.R
+
+parity        PASS  [sem-parity-gate-2026-10-11.csv]
+  ok   rows                                         420 rows, expected 420
+  ok   failed runs                                  0 failed or missing
+  ok   improper runs                                0 improper
+  ok   estimates                                    418 within 1e-06, need at least 418 (D22 baseline)
+  ok   missing estimates                            0 NA est_gap
+  ok   standard errors                              max 1.62e-04, limit 1e-03, 0 NA
+
+constrained   PASS  [sem-constrained-gate-2026-10-11.csv]
+  ok   rows                                         120 rows, expected 120
+  ok   failed runs                                  0 failed or missing
+  ok   estimates                                    max 4.51e-07, limit 1e-06, 0 NA
+  ok   standard errors                              max 1.42e-05, limit 1e-03, 0 NA
+
+se            PASS  [sem-se-gate-2026-10-09.csv]
+  ok   rows                                         240 rows, expected 240
+  ok   failed runs                                  0 failed or missing
+  ok   improper runs                                0 improper
+  ok   standard errors                              max 1.62e-04, limit 1e-03, 0 NA
+
+stationarity  PASS  [sem-constrained-stationarity-2026-10-11.csv]
+  ok   rows                                         720 rows, expected 720
+  ok   accepted decrements                          120 accepted rows, 0 non-finite
+  ok   separation                                   smallest finite non-accepted / largest accepted = 5.46e+04, need at least 10
+  ok   accepted margin                              largest accepted 3.6e-08, need at most tol / 10 = 1e-04
+  ok   far-run margin                               73 truncated runs beyond distance 1e-02, smallest 1.4e-02, need at least 10 * tol = 1e-02; 0 without distance
+  ok   truncated above tol                          80 finite truncated runs, 0 at or below tol = 1e-03
+
+reliability   PASS  [sem-reliability-2026-10-09.csv.gz]
+  ok   rows                                         76800 rows, expected 76800 (REPS=100)
+  ok   worker errors                                0 class = error rows
+  ok   match rate (shipped config, retry)           1.0000, need at least 0.999 over 9600 runs
+  ok   gate-accepted stalled fits (shipped config)  0
+  ok   no_start_converged (shipped config)          0
+
+product-null  PASS  [exo-product-null-2026-10-14.csv]
+  ok   rows                                         2 rows, expected 2
+  ok   fitted replications                          smallest fraction 1, need at least 0.99
+  ok   rejection at .05                             range 0.055 to 0.056, band 0.05 +/- 0.02
+  ok   mean chi-square                              max |mean - df| 0.0481, limit 0.15
+
+product-null-colon PASS  [exo-product-null-colon-2026-10-14.csv]
+  ok   rows                                         2 rows, expected 2
+  ok   fitted replications                          smallest fraction 1, need at least 0.99
+  ok   rejection at .05                             range 0.055 to 0.056, band 0.05 +/- 0.02
+  ok   mean chi-square                              max |mean - df| 0.0481, limit 0.15
+
+product-fixed-var PASS  [exo-product-fixed-var-2026-10-14.csv]
+  ok   rows                                         6 rows, expected 6
+  ok   fitted replications                          smallest fraction 1, need at least 0.99
+  ok   calibrated rows: rejection at .05            3 rows, range 0.051 to 0.056, band 0.05 +/- 0.02
+  ok   calibrated rows: mean chi-square             max relative gap 0.024, limit 0.1
+  ok   miscalibrated rows stay miscalibrated        3 rows, smallest rejection 0.249, need at least 0.15
+
+product-fixed-var-colon PASS  [exo-product-fixed-var-colon-2026-10-14.csv]
+  ok   rows                                         4 rows, expected 4
+  ok   fitted replications                          smallest fraction 1, need at least 0.99
+  ok   calibrated rows: rejection at .05            2 rows, range 0.055 to 0.056, band 0.05 +/- 0.02
+  ok   calibrated rows: mean chi-square             max relative gap 0.024, limit 0.1
+  ok   miscalibrated rows stay miscalibrated        2 rows, smallest rejection 0.249, need at least 0.15
+
+product-corr  PASS  [product-correlated-residuals-2026-10-14.csv]
+  ok   rows                                         40 rows, expected 40
+  ok   fitted runs                                  0 runs without a gap, 0 refused by rule 9
+  ok   match rows: SEM equals OLS                   30 rows, max gap 0.000000522, limit 0.00001
+  ok   leak rows: SEM differs from OLS              100% of 10 rows at or above 0.0001, need at least 80%
+
+product-corr-colon PASS  [product-correlated-residuals-colon-2026-10-14.csv]
+  ok   rows                                         40 rows, expected 40
+  ok   fitted runs                                  0 runs without a gap, 20 refused by rule 9
+  ok   match rows: SEM equals OLS                   20 rows, max gap 0.00000000000000872, limit 0.00001
+  ok   leak rows: SEM differs from OLS              100% of 10 rows at or above 0.0001, need at least 80%
+  ok   rule 9 refuses every free residual covariance 20 of 20 refused
+
+four-way-kat  PASS  [four-way-known-answer-2026-10-14.csv]
+  ok   rows                                         84 rows, expected 84
+  ok   fitted replications                          smallest fraction 1, need at least 0.99
+  ok   missing statistics                           0 NA bias_z, 0 NA se_ratio
+  ok   bias (Monte Carlo SEs)                       max |bias_z| 2.68, limit 4
+  ok   standard errors vs empirical SD              max |se_ratio - 1| 0.0755, limit 0.12
+
+OVERALL: PASS (57 of 57 checks pass)
+summary: tests/sim/results/gates-summary-2026-10-14.txt
+
+=== Rscript tests/sim/run-gates.R --mutants
+Driver self-test: results that a script would write with exit status 0 but that are bad
+
+parity        control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (estimates; standard errors)
+              missing    mutation rejected (rows; estimates)
+              failed     mutation rejected (failed runs)
+              unreadable mutation rejected
+              stale      mutation rejected
+constrained   control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (estimates)
+              missing    mutation rejected (rows)
+              failed     mutation rejected (failed runs)
+              unreadable mutation rejected
+              stale      mutation rejected
+se            control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (standard errors)
+              missing    mutation rejected (rows)
+              failed     mutation rejected (failed runs)
+              unreadable mutation rejected
+              stale      mutation rejected
+stationarity  control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (separation; accepted margin)
+              missing    mutation rejected (rows)
+              failed     mutation rejected (accepted decrements; separation; accepted margin)
+              scale_down mutation rejected (far-run margin; truncated above tol)
+              scale_up   mutation rejected (accepted margin)
+              unreadable mutation rejected
+              stale      mutation rejected
+reliability   control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (match rate (shipped config, retry))
+              missing    mutation rejected (rows)
+              failed     mutation rejected (worker errors)
+              unreadable mutation rejected
+              stale      mutation rejected
+product-null  control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (rejection at .05)
+              missing    mutation rejected (rows)
+              failed     mutation rejected (fitted replications)
+              unreadable mutation rejected
+              stale      mutation rejected
+product-null-colon control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (rejection at .05)
+              missing    mutation rejected (rows)
+              failed     mutation rejected (fitted replications)
+              unreadable mutation rejected
+              stale      mutation rejected
+product-fixed-var control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (calibrated rows: rejection at .05)
+              missing    mutation rejected (rows)
+              failed     mutation rejected (fitted replications)
+              unreadable mutation rejected
+              stale      mutation rejected
+product-fixed-var-colon control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (calibrated rows: rejection at .05)
+              missing    mutation rejected (rows)
+              failed     mutation rejected (fitted replications)
+              unreadable mutation rejected
+              stale      mutation rejected
+product-corr  control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (match rows: SEM equals OLS)
+              missing    mutation rejected (rows)
+              failed     mutation rejected (fitted runs)
+              unreadable mutation rejected
+              stale      mutation rejected
+product-corr-colon control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (match rows: SEM equals OLS; rule 9 refuses every free residual covariance)
+              missing    mutation rejected (rows)
+              failed     mutation rejected (fitted runs)
+              unreadable mutation rejected
+              stale      mutation rejected
+four-way-kat  control (unmutated committed results) passes, as it must
+              tolerance  mutation rejected (bias (Monte Carlo SEs))
+              missing    mutation rejected (rows)
+              failed     mutation rejected (fitted replications)
+              unreadable mutation rejected
+              stale      mutation rejected
+
+--sim path (stub gate scripts; the se gate's committed baseline is the passing CSV):
+running /var/folders/xn/dn01tdjd78q6mxfmq6c4_jqc0000gn/T//RtmpQNKxBi/gates-stub-14fa176e42b64/crash/stub-gate.R ...
+              crash      rejected (script exit status; results file)
+running /var/folders/xn/dn01tdjd78q6mxfmq6c4_jqc0000gn/T//RtmpQNKxBi/gates-stub-14fa176e42b64/silent/stub-gate.R ...
+              silent     rejected (results file)
+running /var/folders/xn/dn01tdjd78q6mxfmq6c4_jqc0000gn/T//RtmpQNKxBi/gates-stub-14fa176e42b64/control/stub-gate.R ...
+              control    passes, as it must
+
+Gate-owned mutants (planted defects inside the engine, for example the covariance-projection freeze): none registered yet; each gate task registers its own.
+
+MUTANTS: every mutation rejected, every control passes

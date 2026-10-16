@@ -42,7 +42,7 @@ x <- extract_mediation(fit_m1, model_y = fit_y, treatment = "treatment",
                        mediator = c("mediator1", "mediator2"),
                        mediator_models = list(fit_m2))
 class(x)[1]
-tidy(x, type = "effects", conf.int = TRUE)
+tidy(x, type = "effects", conf_int = TRUE)
 ```
 
 ## Bootstrap the joint effect
