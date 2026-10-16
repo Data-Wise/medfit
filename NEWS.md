@@ -1,3 +1,7 @@
+# medfit development version
+
+* Updates for compatibility with S7 > 0.2.2.
+
 # medfit 0.10.0
 
 ## New features
