@@ -55,6 +55,29 @@ test_that("the reference is levels(x)[1] and a character column sorts in the C l
   expect_equal(out$map$g$reference, "A")
 })
 
+test_that("the character order does not depend on the session collation", {
+  old <- Sys.getlocale("LC_COLLATE")
+  on.exit(Sys.setlocale("LC_COLLATE", old), add = TRUE)
+  d <- fc_data()
+  d$g <- c("b", "B", "a", "A")[rep(1:4, length.out = nrow(d))]
+  seen <- character()
+  for (loc in c("C", "en_US.UTF-8", "sv_SE.UTF-8")) {
+    if (nzchar(Sys.setlocale("LC_COLLATE", loc))) {
+      seen <- c(seen, loc)
+      expect_equal(.sem_expand_factors(fc_tab("y ~ g"), d, FALSE)$map$g$levels, c("A", "B", "a", "b"))
+    }
+  }
+  expect_true("C" %in% seen)
+})
+
+test_that("a numeric-looking level makes a valid dummy name", {
+  d <- fc_data()
+  d$g <- factor(ifelse(d$g == "a", "ref", "2"), levels = c("ref", "2"))
+  out <- .sem_expand_factors(fc_tab("y ~ g"), d, FALSE)
+  expect_equal(out$map$g$dummies, "g_2")
+  expect_equal(out$data$g_2, as.numeric(d$g == "2"))
+})
+
 test_that("a logical column gives one 0/1 dummy and no reference", {
   d <- fc_data()
   d$g <- rep(c(TRUE, FALSE), length.out = nrow(d))

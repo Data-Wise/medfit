@@ -66,12 +66,15 @@
 #' | A level that makes an invalid name | "makes the invalid name" |
 #' | A dummy that is already a column | "is already a column of `data`" |
 #' | A label, fixed value, start or bound on a factor (`b*g`) | "expands to" |
+#' | A constraint that names the factor (`g == 0`) | "is a categorical column" |
 #' | A product of two factors | "both sides are categorical columns" |
 #' | A dummy with no variation in the rows used | "is constant in the rows the fit uses" |
 #' | A factor as the outcome or a mediator | "must be numeric" |
 #' | A factor as treatment or mediator in `extract_mediation()` | "is a factor in the model" |
 #'
-#' A label goes on one dummy: `b*g_b` works, `b*g` stops. `g:m` expands to `g_b:m` and
+#' A label goes on one dummy: `b*g_b` works, `b*g` stops, and a constraint names the label
+#' (`b == 0`), never the factor. A bootstrap that refits from raw data re-expands the factor in each
+#' resample, so a level missing from a character column's resample changes the reference level. `g:m` expands to `g_b:m` and
 #' `g_c:m`, each a product term under the rules below. `fixed_x = "g"` fixes every dummy of
 #' `g`, and a dummy name fixes one. A factor covariate in the mediator equation enters the
 #' four-way covariate means through its dummies; a factor treatment or mediator is not

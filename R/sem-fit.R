@@ -16,7 +16,10 @@
     weights <- .sem_check_weights(weights, nrow(data))
   }
   if (is.null(parsed)) {
-    parsed <- .sem_parse(model)
+    parsed <- tryCatch(.sem_parse(model), error = function(e) {
+      hint <- .sem_factor_label_hint(conditionMessage(e), data)
+      stop(if (is.null(hint)) conditionMessage(e) else hint, call. = FALSE)
+    })
     # factors become dummies before completion sees the table; branch fits re-enter with `parsed` and the
     # expanded data, so this runs once
     expanded <- .sem_expand_factors(parsed$parameters, data, fixed_x, factors)

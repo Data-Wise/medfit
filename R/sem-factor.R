@@ -65,6 +65,25 @@
        fixed_x = .sem_expand_fixed_x(fixed_x, map), map = map)
 }
 
+# The parser rejects a constraint that names a factor column ("unknown parameter label 'g'") before the pre-pass
+# runs; a factor expands to several dummies, so say that instead. `msg` is the parse error's message.
+.sem_factor_label_hint <- function(msg, data) {
+  nm <- sub("^unknown parameter label '(.*)'$", "\\1", msg)
+  if (identical(nm, msg) || !nm %in% names(data)) {
+    return(NULL)
+  }
+  x <- data[[nm]]
+  if (!(is.factor(x) || is.character(x) || is.logical(x))) {
+    return(NULL)
+  }
+  d <- tryCatch(.sem_factor_dummy_names(nm, .sem_factor_levels(nm, x)), error = function(e) character())
+  one <- if (length(d)) d[1L] else paste0(nm, "_<level>")
+  paste0("`", nm, "` is a categorical column, which a regression expands to dummies", if (length(d)) {
+    paste0(" (", paste(d, collapse = ", "), ")")
+  }, ", so a constraint cannot name it: label one dummy and constrain the label, for example `b*", one,
+    "` in the regression and `b == 0`")
+}
+
 # A model name `<column>_<level>` that is not a column of `data` but names a non-reference level of a categorical
 # column refers to that one dummy, so a label or constraint can sit on a single dummy (`b*g_b`). Returns a list
 # keyed by the column, each element the referenced dummy names.

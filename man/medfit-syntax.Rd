@@ -71,6 +71,7 @@ holds the dummies, not the factor.\tabular{ll}{
    A level that makes an invalid name \tab "makes the invalid name" \cr
    A dummy that is already a column \tab "is already a column of \code{data}" \cr
    A label, fixed value, start or bound on a factor (\code{b*g}) \tab "expands to" \cr
+   A constraint that names the factor (\code{g == 0}) \tab "is a categorical column" \cr
    A product of two factors \tab "both sides are categorical columns" \cr
    A dummy with no variation in the rows used \tab "is constant in the rows the fit uses" \cr
    A factor as the outcome or a mediator \tab "must be numeric" \cr
@@ -78,7 +79,9 @@ holds the dummies, not the factor.\tabular{ll}{
 }
 
 
-A label goes on one dummy: \code{b*g_b} works, \code{b*g} stops. \code{g:m} expands to \code{g_b:m} and
+A label goes on one dummy: \code{b*g_b} works, \code{b*g} stops, and a constraint names the label
+(\code{b == 0}), never the factor. A bootstrap that refits from raw data re-expands the factor in each
+resample, so a level missing from a character column's resample changes the reference level. \code{g:m} expands to \code{g_b:m} and
 \code{g_c:m}, each a product term under the rules below. \code{fixed_x = "g"} fixes every dummy of
 \code{g}, and a dummy name fixes one. A factor covariate in the mediator equation enters the
 four-way covariate means through its dummies; a factor treatment or mediator is not

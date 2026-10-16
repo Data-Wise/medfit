@@ -54,3 +54,23 @@ test_that("a bare factor expands to every non-reference dummy, once", {
   f <- fit_sem("y ~ x + g", fr_data())
   expect_equal(f@table$rhs[f@table$op == "~"], c("x", "g_b", "g_c"))
 })
+
+test_that("a constraint naming the factor says it expands to dummies; the label route on one dummy works", {
+  d <- fr_data()
+  expect_error(fit_sem("y ~ x + g\ng == 0", d), "`g` is a categorical column.*g_b, g_c.*`b\\*g_b`.*`b == 0`")
+  expect_error(fit_sem("y ~ x + g\nd := 2*g", d), "`g` is a categorical column")
+  # the route the message names: label one dummy, constrain the label
+  f <- fit_sem("y ~ x + g + b*g_b\nb == 0", d)
+  est_b <- f@table$est[f@table$op == "~" & f@table$rhs == "g_b"]
+  expect_length(est_b, 1L)
+  expect_equal(unname(est_b), 0, tolerance = 1e-6)
+  # a name that is not a column keeps the generic message
+  expect_error(fit_sem("y ~ x + g\nzz == 0", d), "unknown parameter label 'zz'")
+})
+
+test_that("rule 8 refuses a factor product that uses the equation's own outcome (g:y in the y equation)", {
+  d <- fr_data()
+  expect_error(fit_sem("y ~ x + g:y", d), "product 'g_b:y' uses 'y'.*rule 8")
+  # positive control: the same product on another variable is accepted
+  expect_no_error(suppressWarnings(fit_sem("y ~ x + g:x", d)))
+})
