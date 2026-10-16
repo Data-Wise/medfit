@@ -13,7 +13,7 @@ execute:
 ---
 
 Write the model as syntax and fit it by maximum likelihood with no other package.
-This is the first of four pages on the native engine, which is experimental.
+This is the first of five pages on the native engine, which is experimental.
 Part of the [Models](models.html) collection.
 
 | | |
@@ -23,10 +23,11 @@ Part of the [Models](models.html) collection.
 | **Routes** | `fit_sem(syntax, data)`, or `fit_mediation(model = syntax, engine = "native")` |
 | **Syntax** | `?"medfit-syntax"` lists every statement |
 
-The four pages: this one (paths and defined parameters),
+The five pages: this one (paths and defined parameters),
 [a latent mediator](model-native-latent.html),
 [constraints and the MBCO test](model-native-constraints.html), and
-[several mediators and weights](model-native-multi.html).
+[several mediators and weights](model-native-multi.html), and
+[categorical covariates](model-native-factors.html).
 
 ```{r}
 #| label: setup

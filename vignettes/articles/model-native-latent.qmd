@@ -14,7 +14,7 @@ execute:
 
 The mediator is a construct measured by several indicators, and you want its
 indirect effect without first averaging the indicators into a score. Part of the
-[Models](models.html) collection; the second of four
+[Models](models.html) collection; the second of five
 [native engine](model-native.html) pages. The engine is experimental.
 
 | | |
