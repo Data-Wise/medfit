@@ -134,6 +134,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -517,6 +518,18 @@
 <td>
 <code>x:m</code> on the right side of a regression, an observed column equal to <code>x * m</code>; it gives the four-way decomposition and turns the mean structure on</td>
 <td><a href="model-native.html#product-terms">Product terms</a></td>
+</tr>
+<tr class="even">
+<td>
+<strong>dummy</strong> (<code>group_mid</code>)</td>
+<td>the 0/1 column a categorical covariate becomes in a native fit, one per non-reference level, named <code>&lt;column&gt;_&lt;level&gt;</code>
+</td>
+<td><a href="cookbook.html#a-categorical-covariate-in-a-native-fit">Cookbook recipe 21</a></td>
+</tr>
+<tr class="odd">
+<td><strong>reference level</strong></td>
+<td>the first level of a categorical covariate, which gets no dummy; the other levels are read against it</td>
+<td><a href="cookbook.html#a-categorical-covariate-in-a-native-fit">Cookbook recipe 21</a></td>
 </tr>
 <tr class="even">
 <td>

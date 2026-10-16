@@ -117,6 +117,7 @@ draws bootstrap_mediation() passes to statistic_fn are named like
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -211,9 +212,9 @@ missing source row is an error, not a zero.</p></dd>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"parametric"</span>, mediation_data <span class="op">=</span> <span class="va">fit</span>, n_boot <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">boot</span><span class="op">@</span><span class="va">ci_lower</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.4210529</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.435042</span>
 <span class="r-in"><span><span class="va">boot</span><span class="op">@</span><span class="va">ci_upper</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8812853</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.9073042</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -275,7 +275,7 @@ limit and the start of its message.
 | A fixed, shared or constrained intercept | “(rule 9, intercept clause” |
 | `meanstructure = FALSE` | “`meanstructure = FALSE`, but the model has a product term” |
 | A data column `m:x` that is not `x * m` | “is not the product of” |
-| A non-numeric factor | “needs numeric variables” |
+| A product input that is not numeric, factor, character or logical (a date) | “needs numeric variables” |
 | `information = "expected"`, endogenous factor | “is not available for a model with a product of an endogenous variable” |
 | [`anova()`](https://rdrr.io/r/stats/anova.html) or [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md), endogenous factor | “is not available for” … “a model with a product term” |
 | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) with another product on the treatment or mediator | “the native extraction does not support the product” |
@@ -334,6 +334,14 @@ gives the reason.
 - **Products** are limited to two observed variables inside the class in
   the table above; latent products, `x:x` and three-way products stop
   with the messages listed there.
+- **Factor covariates** (a factor, character or logical column on a
+  regression’s right side) become 0/1 dummies named `g_b`, `g_c`
+  (reference: the first level), as
+  [`lm()`](https://rdrr.io/r/stats/lm.html) builds them. A label on the
+  factor (`b*g`) stops; label one dummy (`b*g_b`). A factor as an
+  outcome, a mediator or a four-way treatment is not supported, and
+  `g:m` expands to one product per dummy (see
+  [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)).
 - [`summary()`](https://rdrr.io/r/base/summary.html) reports
   diagnostics, including an improper solution and any active bound or
   constraint; read them before trusting a fit.

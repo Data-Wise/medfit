@@ -106,7 +106,7 @@ summary(fit)
      total cp + a * b 0.5374 0.1189
 
     Diagnostics:
-      Optimizer status: 3; stationarity 1.27e-08; retries 0
+      Optimizer status: 4; stationarity 1.43e-08; retries 0
       Active bounds: none
       Active constraints: none
       Improper solution: no

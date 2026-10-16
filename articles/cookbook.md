@@ -1,15 +1,16 @@
 # medfit Cookbook
 
-Twenty task-sized recipes. Each says when to use it, runs on
+Twenty-one task-sized recipes. Each says when to use it, runs on
 `mediation_demo` (except the cluster and latent-mediator recipes, which
 simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
 These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0,
-and recipe 20 and the native route in recipe 7 need 0.10.0). CRAN has
-0.3.2, which lacks `mediation_demo` and the native, joint and cluster
-functions; install from GitHub or r-universe (see the [home
+recipe 20 and the native route in recipe 7 need 0.10.0, and recipe 21
+needs the development version, 0.11.0). CRAN has 0.3.2, which lacks
+`mediation_demo` and the native, joint and cluster functions; install
+from GitHub or r-universe (see the [home
 page](https://data-wise.github.io/medfit/#install)).
 
 ``` r
@@ -252,7 +253,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4351678 0.8930074 
+    0.6560315 0.4349603 0.8927176 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
@@ -828,7 +829,10 @@ and extract. A product turns the mean structure on, so the covariate in
 the mediator equation enters the reference interaction through its
 sample mean. The fit warns that the global test is not valid with a
 product and recommends the sandwich covariance; the chunk silences the
-warning and asks for the sandwich.
+warning and asks for the sandwich. A factor covariate (for example a
+`group` column in the mediator equation) is expanded to dummies and
+enters the same way; a factor treatment or mediator is not supported, so
+recode a two-level factor as 0/1 first.
 
 ``` r
 four_way <- "
@@ -905,3 +909,86 @@ More: [Native book, the four-way
 decomposition](https://data-wise.github.io/medfit/articles/native-book-7-four-way.md),
 [Native engine, product
 term](https://data-wise.github.io/medfit/articles/model-native.md).
+
+## 21. A categorical covariate in a native fit
+
+*When:* a covariate is a factor, character or logical column (a group, a
+site, a yes/no flag). Write the column name where a numeric covariate
+would go. The engine replaces it with one 0/1 dummy per non-reference
+level, named `<column>_<level>`; the reference is the first factor level
+(a character column sorts in the C locale). The rows of the fit are
+named `mediator1~group_mid`, so read them like any other path. The chunk
+cuts `covariate1` into three groups to have a factor to use.
+
+``` r
+dat21 <- transform(mediation_demo,
+                   group = cut(covariate1, c(-Inf, -0.5, 0.5, Inf), labels = c("low", "mid", "high")))
+fit21 <- fit_sem("
+  mediator1 ~ a*treatment + group
+  outcome ~ b*mediator1 + cp*treatment + group
+  ind := a*b
+", dat21)
+tidy(fit21)[1:7, ]
+```
+
+    # A tibble: 7 × 6
+      term                 op    estimate std_error statistic  p_value
+      <chr>                <chr>    <dbl>     <dbl>     <dbl>    <dbl>
+    1 a                    ~        0.549    0.102       5.40 6.76e- 8
+    2 mediator1~group_mid  ~        0.328    0.125       2.63 8.56e- 3
+    3 mediator1~group_high ~        0.948    0.124       7.65 1.98e-14
+    4 b                    ~        0.618    0.0524     11.8  3.37e-32
+    5 cp                   ~        0.128    0.110       1.16 2.47e- 1
+    6 outcome~group_mid    ~        0.463    0.132       3.52 4.38e- 4
+    7 outcome~group_high   ~        0.729    0.139       5.25 1.53e- 7
+
+The estimates equal a fit with the dummies written by hand (`group_mid`,
+`group_high`), and `a`, `b` and `ind` keep their usual meaning. A label
+goes on one dummy, never on the factor: `b*group` stops with a message
+that names the dummies. To test one dummy, label it and constrain the
+label:
+
+``` r
+fit21b <- fit_sem("
+  mediator1 ~ a*treatment + group
+  outcome ~ b*mediator1 + cp*treatment + group + z*group_mid
+  z == 0
+", dat21)
+tidy(fit21b)[grepl("group", tidy(fit21b)$term, fixed = TRUE), ]
+```
+
+    # A tibble: 8 × 6
+      term                   op    estimate std_error statistic  p_value
+      <chr>                  <chr>    <dbl>     <dbl>     <dbl>    <dbl>
+    1 mediator1~group_mid    ~       0.328     0.125       2.63 8.56e- 3
+    2 mediator1~group_high   ~       0.948     0.124       7.65 1.98e-14
+    3 outcome~group_high     ~       0.474     0.120       3.94 8.11e- 5
+    4 treatment~~group_mid   ~~      0.0329    0.0119      2.76 5.83e- 3
+    5 treatment~~group_high  ~~     -0.0359    0.0121     -2.98 2.93e- 3
+    6 group_mid~~group_mid   ~~      0.224     0.0158     14.1  2.09e-45
+    7 group_mid~~group_high  ~~     -0.118     0.0127     -9.28 1.71e-20
+    8 group_high~~group_high ~~      0.228     0.0161     14.1  2.09e-45
+
+`fixed_x = "group"` fixes every dummy of the factor at its sample
+moments, and a dummy name fixes one:
+
+``` r
+fit21c <- fit_sem("
+  mediator1 ~ a*treatment + group
+  outcome ~ b*mediator1 + cp*treatment + group
+", dat21, fixed_x = "group")
+generics::glance(fit21c)$fixed_x
+```
+
+    [1] "group_mid, group_high"
+
+Limits: a factor as an outcome or a mediator, an ordered factor, and a
+product of two factors are refused with a message that says why;
+`group:mediator1` expands to one product per dummy. A bootstrap that
+refits from raw data re-expands the factor in each resample, so a level
+missing from a character column’s resample changes the reference level.
+
+More: [Native engine, paths and defined
+parameters](https://data-wise.github.io/medfit/articles/model-native.md),
+[`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+(section Factor covariates).

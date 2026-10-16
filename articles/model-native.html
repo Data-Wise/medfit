@@ -134,6 +134,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -477,7 +478,7 @@ standard errors (observed information) are unaffected.</code></pre>
 <td style="text-align: left;">“is not the product of”</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">A non-numeric factor</td>
+<td style="text-align: left;">A product input that is not numeric, factor, character or logical (a date)</td>
 <td style="text-align: left;">“needs numeric variables”</td>
 </tr>
 <tr class="even">
@@ -514,6 +515,8 @@ standard errors (observed information) are unaffected.</code></pre>
 <strong>AIC and BIC across product and no-product fits are not comparable.</strong> The product column is an extra observed variable in the joint likelihood, so a fit with <code>x:m</code> and the same model without it describe different data (on <code>mediation_demo</code>, the same outcome gives AIC 3934.7 with the product and 2994.1 without). <code>AIC(fit_a, fit_b)</code>, <code>BIC(fit_a, fit_b)</code>, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse such a pair, naming the observed variables that differ.</li>
 <li>
 <strong>Products</strong> are limited to two observed variables inside the class in the table above; latent products, <code>x:x</code> and three-way products stop with the messages listed there.</li>
+<li>
+<strong>Factor covariates</strong> (a factor, character or logical column on a regression’s right side) become 0/1 dummies named <code>g_b</code>, <code>g_c</code> (reference: the first level), as <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> builds them. A label on the factor (<code>b*g</code>) stops; label one dummy (<code>b*g_b</code>). A factor as an outcome, a mediator or a four-way treatment is not supported, and <code>g:m</code> expands to one product per dummy (see <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>).</li>
 <li>
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports diagnostics, including an improper solution and any active bound or constraint; read them before trusting a fit.</li>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>

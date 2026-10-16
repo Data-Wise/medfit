@@ -241,14 +241,14 @@ fw1 <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1", d
 rbind(m_star_0 = engine_parts(fw), m_star_1 = engine_parts(fw1), difference = engine_parts(fw1) - engine_parts(fw))
 ```
 
-                     cde     int_ref   int_med       pie          nde       nie
-    m_star_0   0.0422575  0.07691583 0.2276355 0.3263118 1.191733e-01 0.5539473
-    m_star_1   0.5400182 -0.42084491 0.2276355 0.3263118 1.191733e-01 0.5539473
-    difference 0.4977607 -0.49776074 0.0000000 0.0000000 4.163336e-17 0.0000000
-                      te
-    m_star_0   0.6731206
-    m_star_1   0.6731206
-    difference 0.0000000
+                     cde     int_ref   int_med       pie           nde       nie
+    m_star_0   0.0422575  0.07691583 0.2276355 0.3263118  1.191733e-01 0.5539473
+    m_star_1   0.5400182 -0.42084491 0.2276355 0.3263118  1.191733e-01 0.5539473
+    difference 0.4977607 -0.49776074 0.0000000 0.0000000 -5.551115e-17 0.0000000
+                          te
+    m_star_0    6.731206e-01
+    m_star_1    6.731206e-01
+    difference -1.110223e-16
 
 ``` r
 c(theta3 = t3)

@@ -134,6 +134,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -190,8 +191,8 @@
 
 
 
-    <p>Twenty task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
-<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, and recipe 20 and the native route in recipe 7 need 0.10.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
+    <p>Twenty-one task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
+<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, and recipe 21 needs the development version, 0.11.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stderr">
@@ -383,7 +384,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4351678 0.8930074 </code></pre>
+0.6560315 0.4349603 0.8927176 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
@@ -808,7 +809,7 @@ zero  8 3000.936</code></pre>
 <p>More: <a href="model-native.html#intercepts">Native engine, intercepts</a>.</p>
 </section><section class="level2"><h2 id="four-way-decomposition-from-a-native-fit">20. Four-way decomposition from a native fit<a class="anchor" aria-label="anchor" href="#four-way-decomposition-from-a-native-fit"></a>
 </h2>
-<p><em>When:</em> the outcome depends on the treatment, the mediator and their product, and you want the controlled direct effect, the two interaction terms and the pure indirect effect. Write the product as <code>treatment:mediator1</code> in the outcome equation, fit with <code><a href="../reference/fit_sem.html">fit_sem()</a></code>, and extract. A product turns the mean structure on, so the covariate in the mediator equation enters the reference interaction through its sample mean. The fit warns that the global test is not valid with a product and recommends the sandwich covariance; the chunk silences the warning and asks for the sandwich.</p>
+<p><em>When:</em> the outcome depends on the treatment, the mediator and their product, and you want the controlled direct effect, the two interaction terms and the pure indirect effect. Write the product as <code>treatment:mediator1</code> in the outcome equation, fit with <code><a href="../reference/fit_sem.html">fit_sem()</a></code>, and extract. A product turns the mean structure on, so the covariate in the mediator equation enters the reference interaction through its sample mean. The fit warns that the global test is not valid with a product and recommends the sandwich covariance; the chunk silences the warning and asks for the sandwich. A factor covariate (for example a <code>group</code> column in the mediator equation) is expanded to dummies and enters the same way; a factor treatment or mediator is not supported, so recode a two-level factor as 0/1 first.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">four_way</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
 <span><span class="st">  mediator1 ~ treatment + covariate2</span></span>
@@ -861,6 +862,66 @@ zero  8 3000.936</code></pre>
 </div>
 </div>
 <p>More: <a href="native-book-7-four-way.html">Native book, the four-way decomposition</a>, <a href="model-native.html">Native engine, product term</a>.</p>
+</section><section class="level2"><h2 id="a-categorical-covariate-in-a-native-fit">21. A categorical covariate in a native fit<a class="anchor" aria-label="anchor" href="#a-categorical-covariate-in-a-native-fit"></a>
+</h2>
+<p><em>When:</em> a covariate is a factor, character or logical column (a group, a site, a yes/no flag). Write the column name where a numeric covariate would go. The engine replaces it with one 0/1 dummy per non-reference level, named <code>&lt;column&gt;_&lt;level&gt;</code>; the reference is the first factor level (a character column sorts in the C locale). The rows of the fit are named <code>mediator1~group_mid</code>, so read them like any other path. The chunk cuts <code>covariate1</code> into three groups to have a factor to use.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">dat21</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">mediation_demo</span>,</span>
+<span>                   group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cut.html" class="external-link">cut</a></span><span class="op">(</span><span class="va">covariate1</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="cn">Inf</span>, <span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="cn">Inf</span><span class="op">)</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fit21</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a*treatment + group</span></span>
+<span><span class="st">  outcome ~ b*mediator1 + cp*treatment + group</span></span>
+<span><span class="st">  ind := a*b</span></span>
+<span><span class="st">"</span>, <span class="va">dat21</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit21</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">7</span>, <span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 6
+  term                 op    estimate std_error statistic  p_value
+  &lt;chr&gt;                &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+1 a                    ~        0.549    0.102       5.40 6.76e- 8
+2 mediator1~group_mid  ~        0.328    0.125       2.63 8.56e- 3
+3 mediator1~group_high ~        0.948    0.124       7.65 1.98e-14
+4 b                    ~        0.618    0.0524     11.8  3.37e-32
+5 cp                   ~        0.128    0.110       1.16 2.47e- 1
+6 outcome~group_mid    ~        0.463    0.132       3.52 4.38e- 4
+7 outcome~group_high   ~        0.729    0.139       5.25 1.53e- 7</code></pre>
+</div>
+</div>
+<p>The estimates equal a fit with the dummies written by hand (<code>group_mid</code>, <code>group_high</code>), and <code>a</code>, <code>b</code> and <code>ind</code> keep their usual meaning. A label goes on one dummy, never on the factor: <code>b*group</code> stops with a message that names the dummies. To test one dummy, label it and constrain the label:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">fit21b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a*treatment + group</span></span>
+<span><span class="st">  outcome ~ b*mediator1 + cp*treatment + group + z*group_mid</span></span>
+<span><span class="st">  z == 0</span></span>
+<span><span class="st">"</span>, <span class="va">dat21</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit21b</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit21b</span><span class="op">)</span><span class="op">$</span><span class="va">term</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 6
+  term                   op    estimate std_error statistic  p_value
+  &lt;chr&gt;                  &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+1 mediator1~group_mid    ~       0.328     0.125       2.63 8.56e- 3
+2 mediator1~group_high   ~       0.948     0.124       7.65 1.98e-14
+3 outcome~group_high     ~       0.474     0.120       3.94 8.11e- 5
+4 treatment~~group_mid   ~~      0.0329    0.0119      2.76 5.83e- 3
+5 treatment~~group_high  ~~     -0.0359    0.0121     -2.98 2.93e- 3
+6 group_mid~~group_mid   ~~      0.224     0.0158     14.1  2.09e-45
+7 group_mid~~group_high  ~~     -0.118     0.0127     -9.28 1.71e-20
+8 group_high~~group_high ~~      0.228     0.0161     14.1  2.09e-45</code></pre>
+</div>
+</div>
+<p><code>fixed_x = "group"</code> fixes every dummy of the factor at its sample moments, and a dummy name fixes one:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">fit21c</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a*treatment + group</span></span>
+<span><span class="st">  outcome ~ b*mediator1 + cp*treatment + group</span></span>
+<span><span class="st">"</span>, <span class="va">dat21</span>, fixed_x <span class="op">=</span> <span class="st">"group"</span><span class="op">)</span></span>
+<span><span class="fu">generics</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit21c</span><span class="op">)</span><span class="op">$</span><span class="va">fixed_x</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "group_mid, group_high"</code></pre>
+</div>
+</div>
+<p>Limits: a factor as an outcome or a mediator, an ordered factor, and a product of two factors are refused with a message that says why; <code>group:mediator1</code> expands to one product per dummy. A bootstrap that refits from raw data re-expands the factor in each resample, so a level missing from a character column’s resample changes the reference level.</p>
+<p>More: <a href="model-native.html">Native engine, paths and defined parameters</a>, <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> (section Factor covariates).</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

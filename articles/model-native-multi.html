@@ -134,6 +134,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -268,7 +269,7 @@ Attaching package: 'generics'</code></pre>
 <span>  total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/te.html">te</a></span><span class="op">(</span><span class="va">xs</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>     chain every_path      total
-0.07545038 0.36740437 0.53856775 </code></pre>
+0.07545039 0.36740438 0.53856776 </code></pre>
 </div>
 </div>
 <p>With the default <code>structure = "auto"</code>, medfit classifies the mediators from the model: here it finds the path from <code>mediator1</code> to <code>mediator2</code> and returns the serial class. See <a href="model-serial.html">Serial mediation</a> for what the three numbers mean.</p>

@@ -134,6 +134,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -313,26 +314,31 @@ Residual SDs:
 <code>fit_sem(model, data, fixed_x = TRUE)</code>; <code>glance(fit)$fixed_x</code> lists what was fixed</td>
 </tr>
 <tr class="odd">
+<td>Factor, character or logical covariates on a native fit</td>
+<td>Name the column on a regression’s right side: it becomes dummies <code>g_b</code>, <code>g_c</code> (reference: first level); label one dummy (<code>b*g_b</code>), not <code>g</code>
+</td>
+</tr>
+<tr class="even">
 <td>Intercepts and means on a native fit</td>
 <td>
 <code>y ~ 1</code> in the syntax (frees every unwritten observed intercept), or <code>fit_sem(model, data, meanstructure = TRUE)</code>; <code>y ~ 0*1</code> restricts one</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Log likelihood, AIC and BIC of a <code>SEMFit</code>
 </td>
 <td>
 <code>logLik(fit)</code>, <code>AIC(fit1, fit2)</code>, <code>BIC(fit1, fit2)</code>; <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> of a fit with a product term and one without are not comparable</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Test of the indirect effect on a <code>SEMFit</code> (MBCO)</td>
 <td>
 <code>mbco_sem(fit, "a", "b")</code>; <code>paths = c("a", "d", "b")</code> for a serial product</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Compare nested <code>SEMFit</code>s (likelihood-ratio test)</td>
 <td><code>anova(fit_full, fit_restricted)</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Parameter table, one-row fit summary and intervals for a <code>SEMFit</code>
 </td>
 <td>

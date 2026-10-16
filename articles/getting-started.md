@@ -280,7 +280,7 @@ For quick lookups: the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md) has every
 function on one page, and the
 [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) has
-twenty short recipes. To understand the classes, read the
+twenty-one short recipes. To understand the classes, read the
 [Introduction](https://data-wise.github.io/medfit/articles/introduction.md);
 for the math behind every effect and standard error, [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md); for

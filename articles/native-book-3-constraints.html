@@ -134,6 +134,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -411,8 +412,8 @@ mediator1~~mediator1     outcome~~outcome treatment~~treatment
  [6,]    0.4240  3.19e-01
  [7,]    0.0105  1.19e-09
  [8,]    0.0105  2.99e-12
- [9,]    0.0105  6.19e-15
-[10,]    0.0105  0.00e+00</code></pre>
+ [9,]    0.0105  6.25e-15
+[10,]    0.0105  2.78e-17</code></pre>
 </div>
 </div>
 <p>Rows that repeat one another are repeated evaluations at the same point (the <code>nloptr</code> wrapper evaluates the start once to check the objective’s return type, and the solver evaluates some points twice). The trace starts at a point that violates the constraint (<code>violation</code> is <span class="math inline">\(|cp - ab|\)</span>), the violation falls by many orders of magnitude over the last evaluations, and the objective settles at 0.0104708. The run ended with NLopt status 3; the engine treats the codes 1 (generic success), 3 (the objective stopped changing, <code>ftol_rel</code>) and 4 (the parameters stopped moving, <code>xtol_rel</code>) as successes.</p>
@@ -427,14 +428,14 @@ mediator1~~mediator1     outcome~~outcome treatment~~treatment
 <span><span class="va">attempts</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>  start status accepted discrepancy decrement
-1     1      3     TRUE  0.01047077   8.3e-16
-2     2      3     TRUE  0.01047077   5.4e-16
-3     3      3     TRUE  0.01047077   5.5e-15
-4     4      3     TRUE  0.01047077   7.1e-15
-5     5      3     TRUE  0.01047077   5.5e-14</code></pre>
+1     1      3     TRUE  0.01047077   9.1e-16
+2     2      3     TRUE  0.01047077   6.8e-14
+3     3      3     TRUE  0.01047077   5.7e-15
+4     4      3     TRUE  0.01047077   1.0e-13
+5     5      3     TRUE  0.01047077   4.3e-15</code></pre>
 </div>
 </div>
-<p>All 5 starts are accepted and reach the same discrepancy (the largest spread is 4.4e-16), so no warning is raised.</p>
+<p>All 5 starts are accepted and reach the same discrepancy (the largest spread is 8.9e-16), so no warning is raised.</p>
 </section><section class="level2"><h2 id="the-acceptance-gate">3. The acceptance gate<a class="anchor" aria-label="anchor" href="#the-acceptance-gate"></a>
 </h2>
 <p>A solver can stop for reasons that have nothing to do with having found the optimum. The engine therefore accepts a solution only if it passes three checks, in this order (besides guards against a non-finite Hessian, an implied covariance that is not positive definite, and a nearly singular reduced Hessian):</p>
@@ -480,7 +481,7 @@ mediator1~~mediator1     outcome~~outcome treatment~~treatment
 <pre class="r cell-code"><code><span><span class="va">reduced_gradient</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">crossprod</a></span><span class="op">(</span><span class="va">act</span><span class="op">$</span><span class="va">z</span>, <span class="va">x_grad</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"size of the reduced gradient:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">reduced_gradient</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>size of the reduced gradient: 1.07e-15 </code></pre>
+<pre><code>size of the reduced gradient: 1.04e-14 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>objective_hessian_only <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/eigen.html" class="external-link">eigen</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">crossprod</a></span><span class="op">(</span><span class="va">act</span><span class="op">$</span><span class="va">z</span>, <span class="va">x_hess</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">act</span><span class="op">$</span><span class="va">z</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">values</span>,</span>
 <span>      with_lagrangian_term <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/eigen.html" class="external-link">eigen</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">crossprod</a></span><span class="op">(</span><span class="va">act</span><span class="op">$</span><span class="va">z</span>, <span class="va">lagrangian</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">act</span><span class="op">$</span><span class="va">z</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">values</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">rd</span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span></code></pre>
@@ -512,7 +513,7 @@ with_lagrangian_term   3.408 2.360 1.999 1.075    1</code></pre>
 <span><span class="va">verdicts</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>                      accepted decrement
-optimum                   TRUE  8.29e-16
+optimum                   TRUE  5.69e-15
 feasible, not optimal    FALSE  3.96e-02
 infeasible               FALSE        NA
 bad solver status        FALSE        NA
@@ -592,9 +593,9 @@ bad solver status                              nloptr status -4 is not a success
 <pre><code>  iteration constraint_violation decrement distance_from_exact_optimum
 1         0             1.19e-09  8.80e-06                    8.10e-06
 2         1             3.28e-12  1.07e-10                    1.18e-10
-3         2             2.78e-17  1.01e-13                    1.95e-13
-4         3             2.78e-17  9.44e-14                    1.20e-13
-5         4             5.55e-17  6.98e-15                    4.77e-15</code></pre>
+3         2             2.78e-17  1.14e-13                    1.05e-13
+4         3             2.78e-17  8.11e-15                    9.18e-14
+5         4             2.78e-17  9.06e-16                    1.02e-13</code></pre>
 </div>
 </div>
 <p>The distance from the optimum falls from 8.1e-06 to 1.2e-10 in one step and to rounding error in the next, and the constraint violation and the decrement fall with it: Newton’s method converges quadratically near a solution, so the error is roughly squared at each step until it reaches rounding error. The engine’s own polish, <code>.sem_polish()</code>, adds safeguards (it takes at most 8 steps, keeps a step only while a merit function falls, refuses to move more than <span class="math inline">\(10^{-2}\)</span> natural units, and gives up if the active set changes or the KKT matrix is singular), and its result is accepted only if the gate accepts it again and the discrepancy does not rise by more than <span class="math inline">\(10^{-8}\)</span>. It lands where our bare iteration does:</p>
@@ -606,7 +607,7 @@ bad solver status                              nloptr status -4 is not a success
 <span>  discrepancy_after <span class="op">=</span> <span class="fu">medfit</span><span class="fu">:::</span><span class="fu">.sem_fml</span><span class="op">(</span><span class="va">polished</span>, <span class="va">ram</span>, <span class="va">smp</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>polish_vs_my_iteration   polish_vs_engine_fit     discrepancy_before
-          4.773959e-15           0.000000e+00           1.047077e-02
+          0.000000e+00           1.021960e-13           1.047077e-02
      discrepancy_after
           1.047077e-02 </code></pre>
 </div>
@@ -675,7 +676,7 @@ largest_estimate_difference
 <pre class="r cell-code"><code><span><span class="va">violated</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">model</span>, <span class="st">"a + b == 0.8\na + b &lt; 0.5\n"</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span>, error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">violated</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "no start converged (5 tried); best attempt: status -4, stationarity NA; nloptr status -4 is not a success code; constraint 'a + b &lt; 0.5' is violated by 1.19e-01 in natural units"</code></pre>
+<pre><code>[1] "no start converged (5 tried); best attempt: status 5, stationarity NA; nloptr status 5 is not a success code; constraint 'a + b &lt; 0.5' is violated by 1.35e-01 in natural units"</code></pre>
 </div>
 </div>
 </section><section class="level2"><h2 id="the-covariance-of-a-constrained-fit">6. The covariance of a constrained fit<a class="anchor" aria-label="anchor" href="#the-covariance-of-a-constrained-fit"></a>
@@ -694,7 +695,7 @@ V = Z\,(Z^\top I\, Z)^{-1} Z^\top ,
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>difference_from_engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">v_hand</span> <span class="op">-</span> <span class="va">fit_exp</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span>, largest_entry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">v_hand</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>difference_from_engine          largest_entry
-          1.084202e-19           8.211061e-03 </code></pre>
+          8.673617e-19           8.211061e-03 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"rank of V:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/qr.html" class="external-link">qr</a></span><span class="op">(</span><span class="va">fit_exp</span><span class="op">@</span><span class="va">vcov</span>, tol <span class="op">=</span> <span class="fl">1e-10</span><span class="op">)</span><span class="op">$</span><span class="va">rank</span>, <span class="st">"of"</span>, <span class="va">ram</span><span class="op">$</span><span class="va">q</span>, <span class="st">"parameters\n"</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
@@ -737,9 +738,9 @@ df          df 1.000000 1.000000</code></pre>
 <span>  se_difference_observed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_obs</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu">lavaan</span><span class="fu">::</span><span class="fu">vcov</span><span class="op">(</span><span class="va">lv_obs</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">nm</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>largest_estimate_difference      se_difference_expected
-               3.408639e-07                2.410271e-08
+               3.583168e-07                2.533682e-08
      se_difference_observed
-               4.750646e-08 </code></pre>
+               5.012964e-08 </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -770,7 +771,7 @@ df          df 1.000000 1.000000</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>largest_estimate_difference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">est_mx</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span> <span class="op">-</span> <span class="va">fit</span><span class="op">@</span><span class="va">theta</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code><span><span class="va">largest_estimate_difference</span></span>
-<span>               <span class="fl">8.959098e-08</span> </span></code></pre>
+<span>                <span class="fl">8.95911e-08</span> </span></code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">run_mx</span><span class="op">)</span><span class="op">$</span><span class="va">parameters</span><span class="op">$</span><span class="va">Std.Error</span>, <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">run_mx</span><span class="op">)</span><span class="op">$</span><span class="va">parameters</span><span class="op">$</span><span class="va">name</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">

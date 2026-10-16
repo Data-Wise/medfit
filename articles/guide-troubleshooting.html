@@ -134,6 +134,7 @@
     <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -558,6 +559,56 @@
 </td>
 <td>add <code>se_type = "sandwich"</code>
 </td>
+</tr>
+<tr class="even">
+<td><code>is an ordered factor</code></td>
+<td>a categorical covariate is an ordered factor; polynomial contrasts are not dummies</td>
+<td>recode it with <code>factor(x, ordered = FALSE)</code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>has only one level</code></td>
+<td>a categorical covariate has a single level, so it carries no information</td>
+<td>drop it from the model</td>
+</tr>
+<tr class="even">
+<td><code>makes the invalid name</code></td>
+<td>a level gives a dummy name that is not valid (a space, a leading digit)</td>
+<td>rename the level; the message shows the dummy name</td>
+</tr>
+<tr class="odd">
+<td><code>is already a column of</code></td>
+<td>
+<code>data</code> already has a column named like a dummy (<code>group_mid</code>)</td>
+<td>rename that column or the level</td>
+</tr>
+<tr class="even">
+<td><code>expands to 2 terms</code></td>
+<td>a label, fixed value, start or bound sits on a categorical covariate (<code>b*group</code>)</td>
+<td>put it on one dummy: <code>b*group_mid</code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>is a categorical column, which a regression expands to dummies</code></td>
+<td>a constraint names the categorical covariate (<code>group == 0</code>)</td>
+<td>label one dummy (<code>z*group_mid</code>) and constrain the label (<code>z == 0</code>)</td>
+</tr>
+<tr class="even">
+<td><code>both sides are categorical columns</code></td>
+<td>a product of two categorical columns (<code>group:site</code>)</td>
+<td>write the dummy products you need, such as <code>group_mid:site_s</code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>is constant in the rows the fit uses</code></td>
+<td>a dummy has no variation: an unused factor level, or a level only in rows dropped for missing values</td>
+<td>
+<code><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels()</a></code> the column, or check the missing values</td>
+</tr>
+<tr class="even">
+<td><code>must be numeric: group</code></td>
+<td>a categorical column is an outcome or a mediator (only a covariate on a right side is expanded), or a column is a date or another type</td>
+<td>recode it as a numeric column</td>
 </tr>
 </tbody>
 </table></section><section class="level2"><h2 id="messages-that-are-not-errors">Messages that are not errors<a class="anchor" aria-label="anchor" href="#messages-that-are-not-errors"></a>

@@ -580,14 +580,14 @@ signif(cbind(sigma = err_sigma, mu = err_mu), 2) |> `rownames<-`(names(th0))
 ```
 
                            sigma      mu
-    a                    3.3e-11 4.6e-11
-    b                    5.4e-11 3.3e-12
-    cp                   4.9e-11 8.2e-13
+    a                    7.8e-11 4.6e-11
+    b                    5.7e-11 3.1e-11
+    cp                   6.4e-11 2.9e-11
     mediator1~~mediator1 8.2e-11 0.0e+00
     outcome~~outcome     8.2e-11 0.0e+00
-    treatment~~treatment 1.8e-11 0.0e+00
-    mediator1~1          0.0e+00 2.7e-11
-    treatment~1          0.0e+00 2.9e-11
+    treatment~~treatment 9.3e-11 0.0e+00
+    mediator1~1          0.0e+00 6.9e-12
+    treatment~1          0.0e+00 3.6e-11
 
 Each row is a free parameter and each entry is the largest absolute
 discrepancy between the analytic derivative and the finite difference,
@@ -637,7 +637,7 @@ c(at_start_vs_fd = max(abs(grad_formula(start) - fd)),
 ```
 
     at_start_vs_fd     at_optimum
-      1.019632e-09   8.803902e-16 
+      1.019632e-09   4.024558e-16 
 
 The three columns agree. The last two rows, the intercepts of
 `mediator1` and `treatment`, are zero for a reason worth seeing. The
@@ -759,7 +759,7 @@ c(coefficients_compared = length(common),
 ```
 
           coefficients_compared largest_absolute_difference
-                   8.000000e+00                5.694413e-10 
+                   8.000000e+00                5.694416e-10 
 
 The second result is the largest absolute difference over the
 coefficients the two fits share.
@@ -876,7 +876,7 @@ c(difference = max(abs(info_hand - info_engine)), largest_entry = max(abs(info_e
 ```
 
        difference largest_entry
-     9.094947e-13  3.200160e+03 
+     4.547474e-13  3.200160e+03 
 
 The hand-built information matches the engine’s. Its inverse estimates
 the covariance matrix of the estimates; the engine’s default uses the

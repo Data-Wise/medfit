@@ -248,7 +248,7 @@ c(estimates = max(abs(free@theta[shared] - fx@theta[shared])),
 ```
 
           estimates standard_errors
-       4.440892e-16    2.498002e-16 
+       4.440892e-16    2.220446e-16 
 
 The estimates and standard errors agree to rounding. Step 3 is the claim
 that the information has no cross block; look at the free fit’s
@@ -275,15 +275,15 @@ cross_table
 ```
 
       information cross_block_largest_entry largest_entry_of_the_matrix
-    1    expected              1.011261e-13                    3324.189
-    2    observed              9.436680e-09                    3324.189
+    1    expected               7.82067e-14                    3324.189
+    2    observed               1.23445e-08                    3324.189
       orders_of_magnitude_below
-    1                      16.5
-    2                      11.5
+    1                      16.6
+    2                      11.4
 
-The cross block has 5 \\\times\\ 9 entries. Its largest entry is 16.5
+The cross block has 5 \\\times\\ 9 entries. Its largest entry is 16.6
 orders of magnitude below the largest entry of the matrix for the
-expected information and 11.5 for the observed one (which the engine
+expected information and 11.4 for the observed one (which the engine
 computes by finite differences of the gradient, so it carries a
 numerical error that the expected one does not). Both are zero to
 numerical precision, as Step 3 says.
@@ -307,9 +307,9 @@ c(structural_estimates = max(abs(subset_fit@theta[structural] - free@theta[struc
 ```
 
            structural_estimates  structural_standard_errors
-                   6.661338e-16                2.081668e-16
+                   3.330669e-16                2.081668e-16
     covariate1_moment_estimates
-                   2.220446e-16 
+                   1.387779e-17 
 
 ``` r
 signif(se_change[own_moments], 3)

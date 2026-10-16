@@ -4,6 +4,21 @@
 
 ### New features
 
+- Factor, character and logical covariates in the native engine. A
+  column of that kind named on a regression’s right side of
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  or `fit_mediation(engine = "native")` is expanded to 0/1 dummies named
+  `<column>_<level>` (reference: the first level; character columns sort
+  in the C locale), built before rows with missing values are dropped.
+  `g:m` expands to one product per dummy, `fixed_x = "g"` fixes every
+  dummy,
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  refits through a stored factor map, and four-way extraction accepts a
+  factor covariate in the mediator equation. A label or fixed value on
+  the factor (`b*g`) stops, as do ordered factors, a product of two
+  factors, and a factor treatment or mediator; the numeric-only error
+  now says where factors are accepted. Numeric-only models are
+  unchanged.
 - Four-way standard errors can be population-average:
   `options(medfit.covariate_mean_variance = TRUE)` adds the sampling
   variance of the estimated covariate mean,
