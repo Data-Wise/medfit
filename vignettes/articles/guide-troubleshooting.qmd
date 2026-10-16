@@ -99,6 +99,15 @@ Examples on this site need medfit 0.10.0 or later. If `mediation_demo` or
 | `names the coefficient label` | `==`, `<` or `>` in a model with a product names a coefficient label (`a == b`) | constrain a defined parameter (`:=`) instead, or fit without the product |
 | `the model test is not valid for this model` (a warning) | a product has a factor that is itself an outcome, so the chi-square is not valid | the test is reported as NA and `anova()` and `mbco_sem()` refuse; the coefficients and the sandwich standard errors are unaffected |
 | `model-based standard errors assume normality, which a product violates` (a warning) | a model with a product was fitted without `se_type = "sandwich"` | add `se_type = "sandwich"` |
+| `is an ordered factor` | a categorical covariate is an ordered factor; polynomial contrasts are not dummies | recode it with `factor(x, ordered = FALSE)` |
+| `has only one level` | a categorical covariate has a single level, so it carries no information | drop it from the model |
+| `makes the invalid name` | a level gives a dummy name that is not valid (a space, a leading digit) | rename the level; the message shows the dummy name |
+| `is already a column of` | `data` already has a column named like a dummy (`group_mid`) | rename that column or the level |
+| `expands to 2 terms` | a label, fixed value, start or bound sits on a categorical covariate (`b*group`) | put it on one dummy: `b*group_mid` |
+| `is a categorical column, which a regression expands to dummies` | a constraint names the categorical covariate (`group == 0`) | label one dummy (`z*group_mid`) and constrain the label (`z == 0`) |
+| `both sides are categorical columns` | a product of two categorical columns (`group:site`) | write the dummy products you need, such as `group_mid:site_s` |
+| `is constant in the rows the fit uses` | a dummy has no variation: an unused factor level, or a level only in rows dropped for missing values | `droplevels()` the column, or check the missing values |
+| `must be numeric: group` | a categorical column is an outcome or a mediator (only a covariate on a right side is expanded), or a column is a date or another type | recode it as a numeric column |
 
 ## Messages that are not errors
 

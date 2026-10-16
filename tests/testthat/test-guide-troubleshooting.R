@@ -264,6 +264,16 @@ nt_nonlinear_data <- function() {
 }
 
 # Each entry: fragment, kind ("error" or "warning"), and a function that triggers it.
+nt_grp <- rep(c("low", "mid", "high"), length.out = nrow(mediation_demo))
+nt_site <- rep(c("n", "s"), length.out = nrow(mediation_demo))
+nt_fac <- "mediator1 ~ treatment + group\noutcome ~ mediator1 + treatment + group"
+nt_fac_data <- function(group = nt_grp, ...) {
+  out <- transform(mediation_demo, group = group)
+  extra <- list(...)
+  for (nm in names(extra)) out[[nm]] <- extra[[nm]]
+  out
+}
+
 nt_cases <- function() {
   d <- mediation_demo
   list(
@@ -302,7 +312,21 @@ nt_cases <- function() {
     list("the model test is not valid for this model", "warning",
          function() fit_sem(nt_prod, d, se_type = "sandwich")),
     list("model-based standard errors assume normality, which a product violates", "warning",
-         function() fit_sem(nt_prod, d))
+         function() fit_sem(nt_prod, d)),
+    list("is an ordered factor", "error", function() fit_sem(nt_fac, nt_fac_data(group = ordered(nt_grp)))),
+    list("has only one level", "error", function() fit_sem(nt_fac, nt_fac_data(group = "a"))),
+    list("makes the invalid name", "error",
+         function() fit_sem(nt_fac, nt_fac_data(group = ifelse(nt_grp == "mid", "mid x", "low")))),
+    list("is already a column of", "error", function() fit_sem(nt_fac, nt_fac_data(group_mid = 1))),
+    list("expands to 2 terms", "error",
+         function() fit_sem(sub("group", "b*group", nt_fac, fixed = TRUE), nt_fac_data())),
+    list("is a categorical column, which a regression expands to dummies", "error",
+         function() fit_sem(paste0(nt_fac, "\ngroup == 0"), nt_fac_data())),
+    list("both sides are categorical columns", "error",
+         function() fit_sem(paste0(nt_fac, " + group:site"), nt_fac_data(site = nt_site))),
+    list("is constant in the rows the fit uses", "error",
+         function() fit_sem(nt_fac, nt_fac_data(group = factor(nt_grp, levels = c("low", "mid", "high", "unused"))))),
+    list("must be numeric: group", "error", function() fit_sem("group ~ treatment\noutcome ~ group", nt_fac_data()))
   )
 }
 

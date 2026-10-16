@@ -1,4 +1,4 @@
-# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twenty numbered
+# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twenty-one numbered
 # recipes, every article link resolves, and the cluster recipe simulates the same
 # data as methods.qmd so their numbers agree. Skips when the vignettes are absent
 # (installed or built package).
@@ -14,10 +14,10 @@ article_text <- function(name) {
   paste(readLines(p, warn = FALSE), collapse = "\n")
 }
 
-test_that("the cookbook has twenty numbered recipes and every article link resolves", {
+test_that("the cookbook has twenty-one numbered recipes and every article link resolves", {
   cb <- article_text("cookbook.qmd")
   heads <- regmatches(cb, gregexpr("(?m)^## [0-9]+\\. ", cb, perl = TRUE))[[1]]
-  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:20, "."))
+  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:21, "."))
   links <- unique(regmatches(cb, gregexpr("\\]\\(([a-z-]+)\\.html\\)", cb))[[1]])
   targets <- paste0(gsub("^\\]\\(|\\.html\\)$", "", links), ".qmd")
   expect_gt(length(targets), 0L)
@@ -150,11 +150,11 @@ test_that("planted defect: the smaller p-value in place of the larger is caught"
   expect_false(grepl("joint = max(p)", sub("joint = max(p)", "joint = min(p)", cb, fixed = TRUE), fixed = TRUE))
 })
 
-test_that("recipes 14-20 run after the setup chunk alone and say what they claim", {
+test_that("recipes 14-21 run after the setup chunk alone and say what they claim", {
   article_text("cookbook.qmd")
   parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
   setup <- unlist(parsed[[1L]])
-  for (k in 14:20) {
+  for (k in 14:21) {
     err <- run_cookbook_recipe(setup, parsed[[k + 1L]])
     expect_null(err, info = sprintf("recipe %d fails on its own: %s", k, err))
   }
@@ -269,4 +269,32 @@ test_that("recipe 20: components and sandwich SEs equal the hand OLS oracle, int
   expect_equal(tt$conf_high - tt$conf_low, 2 * stats::qnorm(0.975) * tt$std_error, tolerance = 1e-8)
   bad <- fwo_hand(d, "c1", m_star = 0.7, vcov_type = "hc0_joint")
   expect_gt(max(abs(tt$estimate - unname(bad$est[keys]))), 1e-3)
+})
+
+# Recipe 21 (a categorical covariate in a native fit): the factor fit equals the hand-coded dummy twin, the labeled
+# dummy is pinned at 0 by `z == 0`, `fixed_x = "group"` fixes both dummies, and `b*group` is refused. Planted defect:
+# the twin with the reference level moved cannot match.
+test_that("recipe 21: the factor fit equals the hand-coded dummies, the label route and fixed_x work", {
+  cb <- article_text("cookbook.qmd")
+  parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
+  expect_null(run_cookbook_recipe(unlist(parsed[[1L]]), parsed[[22L]]))
+  expect_true(grepl("b*group", cb, fixed = TRUE))
+  d <- transform(mediation_demo,
+                 group = cut(covariate1, c(-Inf, -0.5, 0.5, Inf), labels = c("low", "mid", "high")))
+  twin <- transform(d, group_mid = as.numeric(group == "mid"), group_high = as.numeric(group == "high"))
+  f <- fit_sem("mediator1 ~ a*treatment + group\noutcome ~ b*mediator1 + cp*treatment + group", d)
+  ft <- fit_sem(paste0("mediator1 ~ a*treatment + group_mid + group_high\n",
+                       "outcome ~ b*mediator1 + cp*treatment + group_mid + group_high"), twin)
+  expect_true(all(is.finite(f@table$est)))
+  expect_equal(unname(f@table$est), unname(ft@table$est), tolerance = 1e-8)
+  wrong <- transform(twin, group_mid = as.numeric(group == "low"))
+  fw <- fit_sem(paste0("mediator1 ~ a*treatment + group_mid + group_high\n",
+                       "outcome ~ b*mediator1 + cp*treatment + group_mid + group_high"), wrong)
+  expect_gt(max(abs(f@table$est - fw@table$est)), 1e-3)
+  fz <- fit_sem(paste0("mediator1 ~ a*treatment + group\n",
+                       "outcome ~ b*mediator1 + cp*treatment + group + z*group_mid\nz == 0"), d)
+  expect_equal(unname(fz@table$est[fz@table$label == "z"]), 0, tolerance = 1e-6)
+  expect_equal(generics::glance(fit_sem("mediator1 ~ treatment + group\noutcome ~ mediator1 + group", d,
+                                        fixed_x = "group"))$fixed_x, "group_mid, group_high")
+  expect_error(fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + b*group", d), "expands to 2 terms")
 })
