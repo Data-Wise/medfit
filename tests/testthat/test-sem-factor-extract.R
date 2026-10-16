@@ -40,6 +40,8 @@ test_that("native four-way with a factor covariate equals the glm route with the
 })
 
 test_that("a weighted native four-way with a factor covariate equals the weighted twin and the weighted glm route", {
+  # the glm route's sandwich covariance needs the Suggests-only package
+  skip_if_not_installed("sandwich")
   d <- fe_data()
   set.seed(6)
   w <- runif(nrow(d$factor), 0.5, 2)
