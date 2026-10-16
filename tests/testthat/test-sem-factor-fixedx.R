@@ -18,20 +18,20 @@ fxf_model <- "m ~ a*x + g\ny ~ b*m + cp*x + g"
 fxf_twin <- "m ~ a*x + g_b + g_c\ny ~ b*m + cp*x + g_b + g_c"
 
 fxf_same <- function(f, ft, info = NULL) {
-  expect_true(all(is.finite(f@table$est)), info = info)
-  expect_true(is.finite(as.numeric(logLik(f))), info = info)
-  expect_equal(f@table$fixed_x, ft@table$fixed_x, info = info)
-  expect_equal(unname(f@table$est), unname(ft@table$est), tolerance = 1e-8, info = info)
-  expect_equal(unname(f@table$se), unname(ft@table$se), tolerance = 1e-6, info = info)
-  expect_equal(as.numeric(logLik(f)), as.numeric(logLik(ft)), tolerance = 1e-8, info = info)
-  expect_equal(f@df, ft@df, info = info)
-  expect_equal(length(f@theta), length(ft@theta), info = info)
+  testthat::expect_true(all(is.finite(f@table$est)), info = info)
+  testthat::expect_true(is.finite(as.numeric(logLik(f))), info = info)
+  testthat::expect_equal(f@table$fixed_x, ft@table$fixed_x, info = info)
+  testthat::expect_equal(unname(f@table$est), unname(ft@table$est), tolerance = 1e-8, info = info)
+  testthat::expect_equal(unname(f@table$se), unname(ft@table$se), tolerance = 1e-6, info = info)
+  testthat::expect_equal(as.numeric(logLik(f)), as.numeric(logLik(ft)), tolerance = 1e-8, info = info)
+  testthat::expect_equal(f@df, ft@df, info = info)
+  testthat::expect_equal(length(f@theta), length(ft@theta), info = info)
 }
 
 # The fixed ~~ rows must be the ML moments of the rows the fit used, computed in base R (independent of the engine).
 fxf_moment_gap <- function(f, used) {
   fixed <- f@table[f@table$fixed_x %in% TRUE & f@table$op == "~~", ]
-  expect_gt(nrow(fixed), 0L)
+  testthat::expect_gt(nrow(fixed), 0L)
   n <- nrow(used)
   s <- stats::cov(used) * (n - 1) / n
   max(abs(fixed$est - mapply(function(a, b) s[a, b], fixed$lhs, fixed$rhs)))

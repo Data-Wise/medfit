@@ -11,7 +11,11 @@ fd_data <- function(n = 160L, seed = 17L) {
   y <- 0.4 * m + 0.3 * (g == "c") + rnorm(n)
   data.frame(y = y, m = m, x = x, g = g)
 }
-fd_twin <- function(d) transform(d, g_b = as.numeric(g == "b"), g_c = as.numeric(g == "c"))
+fd_twin <- function(d) {
+  d$g_b <- as.numeric(d$g == "b")
+  d$g_c <- as.numeric(d$g == "c")
+  d
+}
 fd_model <- "m ~ x + g\ny ~ m + g"
 fd_twin_model <- "m ~ x + g_b + g_c\ny ~ m + g_b + g_c"
 

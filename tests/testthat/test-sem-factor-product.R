@@ -13,12 +13,12 @@ fp2_data <- function(n = 260L, seed = 41L) {
   list(factor = d, twin = transform(d, g_b = as.numeric(g == "b"), g_c = as.numeric(g == "c")))
 }
 fp2_same <- function(f, ft, info = NULL) {
-  expect_true(all(is.finite(f@table$est)), info = info)
-  expect_equal(f@table$rhs, ft@table$rhs, info = info)
-  expect_equal(unname(f@table$est), unname(ft@table$est), tolerance = 1e-8, info = info)
-  expect_equal(unname(f@table$se), unname(ft@table$se), tolerance = 1e-6, info = info)
-  expect_equal(as.numeric(logLik(f)), as.numeric(logLik(ft)), tolerance = 1e-8, info = info)
-  expect_equal(f@df, ft@df, info = info)
+  testthat::expect_true(all(is.finite(f@table$est)), info = info)
+  testthat::expect_equal(f@table$rhs, ft@table$rhs, info = info)
+  testthat::expect_equal(unname(f@table$est), unname(ft@table$est), tolerance = 1e-8, info = info)
+  testthat::expect_equal(unname(f@table$se), unname(ft@table$se), tolerance = 1e-6, info = info)
+  testthat::expect_equal(as.numeric(logLik(f)), as.numeric(logLik(ft)), tolerance = 1e-8, info = info)
+  testthat::expect_equal(f@df, ft@df, info = info)
 }
 fp2_fit <- function(model, d) suppressMessages(suppressWarnings(fit_sem(model, d)))
 

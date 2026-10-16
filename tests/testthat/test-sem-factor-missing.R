@@ -10,7 +10,11 @@ fm_data <- function(n = 160L, seed = 31L) {
   y <- 0.4 * m + 0.3 * (g == "c") + rnorm(n)
   data.frame(y = y, m = m, x = x, g = g)
 }
-fm_twin <- function(d) transform(d, g_b = as.numeric(g == "b"), g_c = as.numeric(g == "c"))
+fm_twin <- function(d) {
+  d$g_b <- as.numeric(d$g == "b")
+  d$g_c <- as.numeric(d$g == "c")
+  d
+}
 fm_model <- "m ~ a*x + g\ny ~ b*m + g"
 fm_twin_model <- "m ~ a*x + g_b + g_c\ny ~ b*m + g_b + g_c"
 fm_msgs <- function(expr) {
@@ -22,14 +26,14 @@ fm_msgs <- function(expr) {
   list(value = val, messages = msgs)
 }
 fm_same <- function(f, ft, loglik = TRUE) {
-  expect_true(all(is.finite(f@table$est)))
-  expect_equal(unname(f@table$est), unname(ft@table$est), tolerance = 1e-8)
-  expect_equal(unname(f@table$se), unname(ft@table$se), tolerance = 1e-6)
+  testthat::expect_true(all(is.finite(f@table$est)))
+  testthat::expect_equal(unname(f@table$est), unname(ft@table$est), tolerance = 1e-8)
+  testthat::expect_equal(unname(f@table$se), unname(ft@table$se), tolerance = 1e-6)
   if (loglik) {
-    expect_equal(as.numeric(logLik(f)), as.numeric(logLik(ft)), tolerance = 1e-8)
+    testthat::expect_equal(as.numeric(logLik(f)), as.numeric(logLik(ft)), tolerance = 1e-8)
   }
-  expect_equal(f@n_obs, ft@n_obs)
-  expect_equal(f@n_dropped, ft@n_dropped)
+  testthat::expect_equal(f@n_obs, ft@n_obs)
+  testthat::expect_equal(f@n_dropped, ft@n_dropped)
 }
 
 test_that("an NA in the factor drops the row once; the fit and the message equal the twin's", {

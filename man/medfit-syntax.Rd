@@ -81,8 +81,8 @@ holds the dummies, not the factor.\tabular{ll}{
 
 A label goes on one dummy: \code{b*g_b} works, \code{b*g} stops, and a constraint names the label
 (\code{b == 0}), never the factor. A bootstrap that refits from raw data re-expands the factor in each
-resample, so a level missing from a character column's resample changes the reference level. \code{g:m} expands to \code{g_b:m} and
-\code{g_c:m}, each a product term under the rules below. \code{fixed_x = "g"} fixes every dummy of
+resample, so a level missing from a character column's resample changes the reference level.
+\code{g:m} expands to \code{g_b:m} and \code{g_c:m}, each a product term under the rules below. \code{fixed_x = "g"} fixes every dummy of
 \code{g}, and a dummy name fixes one. A factor covariate in the mediator equation enters the
 four-way covariate means through its dummies; a factor treatment or mediator is not
 supported (recode a two-level factor as a 0/1 numeric column), and the four-way route

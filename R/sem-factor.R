@@ -81,7 +81,7 @@
   paste0("`", nm, "` is a categorical column, which a regression expands to dummies", if (length(d)) {
     paste0(" (", paste(d, collapse = ", "), ")")
   }, ", so a constraint cannot name it: label one dummy and constrain the label, for example `b*", one,
-    "` in the regression and `b == 0`")
+  "` in the regression and `b == 0`")
 }
 
 # A model name `<column>_<level>` that is not a column of `data` but names a non-reference level of a categorical
