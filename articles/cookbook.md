@@ -253,7 +253,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4349603 0.8927176 
+    0.6560315 0.4351678 0.8930074 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).

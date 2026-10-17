@@ -87,6 +87,7 @@
     <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
     <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
     <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -429,7 +430,7 @@ product_variance_of_kept_rows
 <span>  standard_errors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_free</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">shared</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_fx</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">shared</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>      estimates standard_errors
-   9.992007e-16    2.769951e-12 </code></pre>
+   6.661338e-16    1.935591e-12 </code></pre>
 </div>
 </div>
 <p>The nine fixed rows are the three means, three variances and three covariances of <code>treatment</code>, <code>covariate1</code> and the product.</p>
@@ -507,7 +508,7 @@ f(z_i, m_i, y_i) = f(z_i;\, \eta)\; f(m_i \mid z_i;\, \psi_m)\; f(y_i \mid z_i, 
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>largest_difference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">sem</span> <span class="op">-</span> <span class="va">ols</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code><span><span class="va">largest_difference</span></span>
-<span>      <span class="fl">4.440892e-16</span> </span></code></pre>
+<span>      <span class="fl">1.554312e-15</span> </span></code></pre>
 </div>
 </div>
 </section><section class="level3"><h3 id="what-the-product-changes-the-joint-model">What the product changes: the joint model<a class="anchor" aria-label="anchor" href="#what-the-product-changes-the-joint-model"></a>

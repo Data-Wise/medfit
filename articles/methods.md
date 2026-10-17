@@ -257,8 +257,9 @@ model in the members’ mediators gives the derivation: member \\i\\’s own
 mediator enters once in the deviation and once in the mean, with
 coefficient \\b_W + (b_B - b_W) / n_j\\, and each of the \\n_j - 1\\
 peers’ enters only through the mean, with coefficient \\(b_B - b_W) /
-n_j\\; every mediator moves by \\a\\. medfit’s tests check the formulas
-against exact counterfactuals.
+n_j\\; every mediator moves by \\a\\.
+
+medfit’s tests check the formulas against exact counterfactuals.
 [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
 reports the large-cluster limits \\a \\ b_W\\ and \\a (b_B - b_W)\\,
 labeled the cluster-average, large-cluster approximation. The own
@@ -267,6 +268,7 @@ estimate is off by \\a (b_B - b_W) / H\\ with equal cluster weights,
 [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
 warns when that gap exceeds half the own effect’s standard error;
 [`summary()`](https://rdrr.io/r/base/summary.html) always prints it.
+
 Under the peer-mean model of Talloen et al. (2016, p. 364), whose
 outcome equation has a coefficient \\b_p\\ on the member’s own mediator
 and \\g\\ on the mean of the other members, a fixed cluster size \\N\\
@@ -391,6 +393,7 @@ the intervals for the products (NIE, own, spillover, TE) stay normal.
 The Kenward–Roger adjustment changes the standard errors very little
 (ratios of 1.000 to 1.002 at \\J = 15\\); its value is the degrees of
 freedom. The product intervals are the weak point at small \\J\\.
+
 `bootstrap_mediation(cluster = )` needs no normal approximation for
 them; no few-cluster threshold is established, and the published
 evidence for resampling whole clusters is for treatment varying within
@@ -771,17 +774,20 @@ Jacobians for the optimizer (SLSQP through nloptr). A nonlinear equality
 (`cp == a*b`) is a row whose value is \\\text{lhs} - \text{rhs}\\ and
 whose Jacobian is a central difference, both recomputed at every point;
 a nonlinear inequality is the same row with the sign chosen so that it
-reads \\c(\theta) \le 0\\. A nonlinear row can bend away from its
-tangent plane, so the acceptance test uses the Hessian of the
-Lagrangian, \\H + \sum_i \lambda_i \nabla^2 c_i\\ over the active
-nonlinear rows (the multipliers from \\\nabla F + \sum_i \lambda_i
-\nabla c_i = 0\\), in the reduced Hessian; the objective’s Hessian alone
-can call a saddle of the restricted problem a minimum. A model with a
-nonlinear constraint can have several local optima, so all `n_starts`
-starts are tried and the best accepted one is kept. SLSQP stops along a
-flat constraint tangent, up to about \\3\times10^{-5}\\ from the
-optimum, so an accepted fit with an active nonlinear row takes full
-Newton steps on the KKT system of the active set (using the same
+reads \\c(\theta) \le 0\\.
+
+A nonlinear row can bend away from its tangent plane, so the acceptance
+test uses the Hessian of the Lagrangian, \\H + \sum_i \lambda_i \nabla^2
+c_i\\ over the active nonlinear rows (the multipliers from \\\nabla F +
+\sum_i \lambda_i \nabla c_i = 0\\), in the reduced Hessian; the
+objective’s Hessian alone can call a saddle of the restricted problem a
+minimum.
+
+A model with a nonlinear constraint can have several local optima, so
+all `n_starts` starts are tried and the best accepted one is kept. SLSQP
+stops along a flat constraint tangent, up to about \\3\times10^{-5}\\
+from the optimum, so an accepted fit with an active nonlinear row takes
+full Newton steps on the KKT system of the active set (using the same
 Lagrangian Hessian); the polished point replaces the solution only when
 the acceptance test accepts it again and the discrepancy does not rise.
 A product of labels set to zero (\\ab = 0\\, \\b_1 b_2 b_3 = 0\\) is not
@@ -813,21 +819,24 @@ constant value on the equality set. When that value satisfies it
 (`a == b` with `a - b < 0`, or `a + b == 0.8` with `a + b > 0.8`) the
 inequality is active at every feasible point and would reproduce the
 same degeneracy, so it is dropped from the solver’s rows too, and the
-acceptance gate still checks it. Such a row is detected when its
-gradient is within \\10^{-12}\\ of the span of the independent equality
-rows (rows have unit length), a distance that only rows dependent to
-rounding error meet; a row that is merely close to the span, such as
-`a - b + 1e-9*cp > 1e-7` with `a == b`, stays with the solver, because
-near-dependence does not show that the set is infeasible. An implied
-inequality that the equality rows violate (`a + b == 0.8` with
-`a + b < 0.5`) is kept, and the acceptance gate reports the violated
-row. The multiplier sign check skips a fit whose active constraints are
-linearly dependent, which includes a dropped row, since that row has no
-meaningful multiplier. The estimates equal those of the model with the
-redundant inequality deleted. An inequality that is inactive on the
-equality set (`a + b == 0.8` with `a + b < 0.9`), and parallel
-inequalities with no equality (`a + b < 0.2` with `2*a + 2*b < 0.4`),
-are not affected.
+acceptance gate still checks it.
+
+Such a row is detected when its gradient is within \\10^{-12}\\ of the
+span of the independent equality rows (rows have unit length), a
+distance that only rows dependent to rounding error meet; a row that is
+merely close to the span, such as `a - b + 1e-9*cp > 1e-7` with
+`a == b`, stays with the solver, because near-dependence does not show
+that the set is infeasible.
+
+An implied inequality that the equality rows violate (`a + b == 0.8`
+with `a + b < 0.5`) is kept, and the acceptance gate reports the
+violated row. The multiplier sign check skips a fit whose active
+constraints are linearly dependent, which includes a dropped row, since
+that row has no meaningful multiplier. The estimates equal those of the
+model with the redundant inequality deleted. An inequality that is
+inactive on the equality set (`a + b == 0.8` with `a + b < 0.9`), and
+parallel inequalities with no equality (`a + b < 0.2` with
+`2*a + 2*b < 0.4`), are not affected.
 
 ### Acceptance
 
@@ -836,19 +845,22 @@ every constraint holds to \\10^{-6}\\ in the solver’s natural units, and
 the Newton decrement \\\sqrt{g_r^\top H_r^{-1} g_r}\\ on the reduced
 gradient and Hessian of the active-constraint null space is at most
 \\10^{-3}\\, with a positive definite reduced Hessian. The decrement is
-scale free, so rescaling the data does not change the verdict. The sign
-of each active inequality’s or bound’s multiplier is checked: a wrong
-sign means the point may not be a local minimum. A wrong-signed active
-bound rejects the solution, the same verdict the fit without constraints
-gives (the gradient at an active bound points into the interior),
-whether or not the model also has constraint lines: each bound is judged
-by its own statistic \\\|g_k\| / \sqrt{H\_{kk}}\\ against \\10^{-3}\\,
-which needs only the Hessian diagonal, so an indefinite Hessian cannot
-hide it. A wrong-signed active inequality constraint only warns. The
-check asks whether non-negative multipliers on the active inequalities
-and bounds (free-sign ones on the equalities) reproduce the gradient,
-using non-negative least squares, so linearly dependent active rows (an
-equality with a parallel inequality) get a verdict like any others.
+scale free, so rescaling the data does not change the verdict.
+
+The sign of each active inequality’s or bound’s multiplier is checked: a
+wrong sign means the point may not be a local minimum.
+
+A wrong-signed active bound rejects the solution, the same verdict the
+fit without constraints gives (the gradient at an active bound points
+into the interior), whether or not the model also has constraint lines:
+each bound is judged by its own statistic \\\|g_k\| / \sqrt{H\_{kk}}\\
+against \\10^{-3}\\, which needs only the Hessian diagonal, so an
+indefinite Hessian cannot hide it. A wrong-signed active inequality
+constraint only warns. The check asks whether non-negative multipliers
+on the active inequalities and bounds (free-sign ones on the equalities)
+reproduce the gradient, using non-negative least squares, so linearly
+dependent active rows (an equality with a parallel inequality) get a
+verdict like any others.
 
 ### Starts
 

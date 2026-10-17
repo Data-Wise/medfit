@@ -87,6 +87,7 @@
     <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
     <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
     <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -256,6 +257,10 @@
 <td>Serial or parallel mediators, or weights, in syntax</td>
 <td><a href="model-native-multi.html">Native: several mediators and weights</a></td>
 </tr>
+<tr class="odd">
+<td>A factor, character or logical covariate in syntax</td>
+<td><a href="model-native-factors.html">Native: categorical covariates</a></td>
+</tr>
 </tbody>
 </table></section><section class="level2"><h2 id="capabilities-at-a-glance">Capabilities at a glance<a class="anchor" aria-label="anchor" href="#capabilities-at-a-glance"></a>
 </h2>
@@ -346,6 +351,15 @@
 <td>
 <a href="model-native.html">native</a>, <a href="model-native-latent.html">latent</a>
 </td>
+</tr>
+<tr class="even">
+<td>Categorical covariates (development version)</td>
+<td>
+<code>SEMFit</code>, then extracted</td>
+<td>
+<code><a href="../reference/fit_sem.html">fit_sem()</a></code> with a factor, character or logical column</td>
+<td>model, sandwich</td>
+<td><a href="model-native-factors.html">categorical covariates</a></td>
 </tr>
 </tbody>
 </table>

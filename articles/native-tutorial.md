@@ -1,6 +1,6 @@
 # Native engine, step by step
 
-Nine steps from a model written as syntax to a tested, constrained and
+Ten steps from a model written as syntax to a tested, constrained and
 extracted mediation result. It sits between [the five-minute
 quickstart](https://data-wise.github.io/medfit/articles/native-quickstart.md)
 and [the native engine
@@ -9,7 +9,7 @@ native engine is experimental.
 
 |  |  |
 |----|----|
-| **You need** | medfit 0.8.0 or later (step 9 needs 0.9.0 or later); the bundled `mediation_demo` data |
+| **You need** | medfit 0.8.0 or later (step 9 needs 0.9.0 or later, and step 10 the development version, 0.11.0); the bundled `mediation_demo` data |
 | **You get** | a `SEMFit`, a test of the indirect effect, a constrained comparison, a `MediationData` |
 | **Time** | about 20 minutes |
 
@@ -240,15 +240,56 @@ fixed variables, so it is not comparable with the free fit’s, and
 two fits. `fixed_x` also takes a character vector, such as
 `fixed_x = "covariate1"`, to fix only some of the exogenous variables.
 
+## Step 10. Add a categorical covariate
+
+Needs the development version (0.11.0). A covariate that is a factor,
+character or logical column goes into the syntax by name; the engine
+replaces it with one 0/1 dummy per non-reference level. The bundled data
+has no factor, so the chunk cuts `covariate1` into three groups first:
+
+``` r
+dat10 <- transform(mediation_demo,
+                   group = cut(covariate1, c(-Inf, -0.5, 0.5, Inf), labels = c("low", "mid", "high")))
+syntax10 <- "
+  mediator1 ~ a * treatment + group
+  outcome ~ b * mediator1 + cp * treatment + group
+  ab := a * b
+"
+fit10 <- fit_sem(syntax10, dat10)
+tidy(fit10)[1:7, c("term", "estimate", "std_error")]
+```
+
+    # A tibble: 7 × 3
+      term                 estimate std_error
+      <chr>                   <dbl>     <dbl>
+    1 a                       0.549    0.102
+    2 mediator1~group_mid     0.328    0.125
+    3 mediator1~group_high    0.948    0.124
+    4 b                       0.618    0.0524
+    5 cp                      0.128    0.110
+    6 outcome~group_mid       0.463    0.132
+    7 outcome~group_high      0.729    0.139 
+
+Check: `group` is gone from the rows, replaced by `group_mid` and
+`group_high`, each read against the reference level `low` (the first
+factor level). `a`, `b` and `ab` keep their usual meaning, and
+`mbco_sem(fit10, paths = c("a", "b"))` tests the indirect effect as in
+Step 5. A label goes on one dummy (`z * group_mid`), never on `group`
+itself. The [categorical covariates
+page](https://data-wise.github.io/medfit/articles/model-native-factors.md)
+covers constraints, missing values, products and the four-way
+decomposition.
+
 ## Where next
 
 - [The native engine
   guide](https://data-wise.github.io/medfit/articles/native-guide.md):
   syntax, inference, constraints, diagnostics and limits in one place.
 - [Cookbook recipes 11 to
-  20](https://data-wise.github.io/medfit/articles/cookbook.md): a latent
+  21](https://data-wise.github.io/medfit/articles/cookbook.md): a latent
   mediator, a nonlinear constraint, comparing models, defined
-  parameters, bounds, checks, fixed covariates and intercepts.
+  parameters, bounds, checks, fixed covariates, intercepts, the four-way
+  decomposition and a categorical covariate.
 - [Native engine
   book](https://data-wise.github.io/medfit/articles/native-book-1-mean-structure.md):
   seven chapters on the mean structure, scale, constraints, `fixed_x`,

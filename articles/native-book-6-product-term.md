@@ -322,7 +322,7 @@ c(estimates = max(abs(fit_free@theta[shared] - fit_fx@theta[shared])),
 ```
 
           estimates standard_errors
-       9.992007e-16    2.769951e-12 
+       6.661338e-16    1.935591e-12 
 
 The nine fixed rows are the three means, three variances and three
 covariances of `treatment`, `covariate1` and the product.
@@ -455,7 +455,7 @@ c(largest_difference = max(abs(sem - ols)))
 ```
 
     largest_difference
-          4.440892e-16 
+          1.554312e-15 
 
 ### What the product changes: the joint model
 

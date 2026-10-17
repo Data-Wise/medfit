@@ -313,8 +313,8 @@ signif(tr[c(1:6, nrow(tr) - 3:0), ], 3)
      [6,]    0.4240  3.19e-01
      [7,]    0.0105  1.19e-09
      [8,]    0.0105  2.99e-12
-     [9,]    0.0105  6.25e-15
-    [10,]    0.0105  2.78e-17
+     [9,]    0.0105  6.19e-15
+    [10,]    0.0105  0.00e+00
 
 Rows that repeat one another are repeated evaluations at the same point
 (the `nloptr` wrapper evaluates the start once to check the objective’s
@@ -345,14 +345,14 @@ attempts
 ```
 
       start status accepted discrepancy decrement
-    1     1      3     TRUE  0.01047077   9.1e-16
-    2     2      3     TRUE  0.01047077   6.8e-14
-    3     3      3     TRUE  0.01047077   5.7e-15
-    4     4      3     TRUE  0.01047077   1.0e-13
-    5     5      3     TRUE  0.01047077   4.3e-15
+    1     1      3     TRUE  0.01047077   8.3e-16
+    2     2      3     TRUE  0.01047077   5.4e-16
+    3     3      3     TRUE  0.01047077   5.5e-15
+    4     4      3     TRUE  0.01047077   7.1e-15
+    5     5      3     TRUE  0.01047077   5.5e-14
 
 All 5 starts are accepted and reach the same discrepancy (the largest
-spread is 8.9e-16), so no warning is raised.
+spread is 4.4e-16), so no warning is raised.
 
 ## 3. The acceptance gate
 
@@ -457,7 +457,7 @@ reduced_gradient <- crossprod(act$z, x_grad)
 cat("size of the reduced gradient:", signif(sqrt(sum(reduced_gradient^2)), 3), "\n")
 ```
 
-    size of the reduced gradient: 1.04e-14 
+    size of the reduced gradient: 1.07e-15 
 
 ``` r
 rbind(objective_hessian_only = eigen(crossprod(act$z, x_hess %*% act$z))$values,
@@ -503,7 +503,7 @@ verdicts
 ```
 
                           accepted decrement
-    optimum                   TRUE  5.69e-15
+    optimum                   TRUE  8.29e-16
     feasible, not optimal    FALSE  3.96e-02
     infeasible               FALSE        NA
     bad solver status        FALSE        NA
@@ -623,9 +623,9 @@ newton
       iteration constraint_violation decrement distance_from_exact_optimum
     1         0             1.19e-09  8.80e-06                    8.10e-06
     2         1             3.28e-12  1.07e-10                    1.18e-10
-    3         2             2.78e-17  1.14e-13                    1.05e-13
-    4         3             2.78e-17  8.11e-15                    9.18e-14
-    5         4             2.78e-17  9.06e-16                    1.02e-13
+    3         2             2.78e-17  1.01e-13                    1.95e-13
+    4         3             2.78e-17  9.44e-14                    1.20e-13
+    5         4             5.55e-17  6.98e-15                    4.77e-15
 
 The distance from the optimum falls from 8.1e-06 to 1.2e-10 in one step
 and to rounding error in the next, and the constraint violation and the
@@ -648,7 +648,7 @@ c(polish_vs_my_iteration = max(abs(polished - path[[5]])),
 ```
 
     polish_vs_my_iteration   polish_vs_engine_fit     discrepancy_before
-              0.000000e+00           1.021960e-13           1.047077e-02
+              4.773959e-15           0.000000e+00           1.047077e-02
          discrepancy_after
               1.047077e-02 
 
@@ -754,7 +754,7 @@ violated <- tryCatch(fit_sem(paste0(model, "a + b == 0.8\na + b < 0.5\n"), d), e
 violated
 ```
 
-    [1] "no start converged (5 tried); best attempt: status 5, stationarity NA; nloptr status 5 is not a success code; constraint 'a + b < 0.5' is violated by 1.35e-01 in natural units"
+    [1] "no start converged (5 tried); best attempt: status -4, stationarity NA; nloptr status -4 is not a success code; constraint 'a + b < 0.5' is violated by 1.19e-01 in natural units"
 
 ## 6. The covariance of a constrained fit
 
@@ -783,7 +783,7 @@ c(difference_from_engine = max(abs(v_hand - fit_exp@vcov)), largest_entry = max(
 ```
 
     difference_from_engine          largest_entry
-              8.673617e-19           8.211061e-03 
+              1.084202e-19           8.211061e-03 
 
 ``` r
 cat("rank of V:", qr(fit_exp@vcov, tol = 1e-10)$rank, "of", ram$q, "parameters\n")
@@ -841,9 +841,9 @@ c(largest_estimate_difference = max(abs(fit@theta - lavaan::coef(lv)[nm])),
 ```
 
     largest_estimate_difference      se_difference_expected
-                   3.583168e-07                2.533682e-08
+                   3.408639e-07                2.410271e-08
          se_difference_observed
-                   5.012964e-08 
+                   4.750646e-08 
 
 ``` r
 suppressMessages(library(OpenMx))
@@ -876,7 +876,7 @@ c(largest_estimate_difference = max(abs(est_mx[c("a", "b", "cp")] - fit@theta[c(
 ```
 
     largest_estimate_difference
-                    8.95911e-08 
+                   8.959098e-08 
 
 ``` r
 stats::setNames(summary(run_mx)$parameters$Std.Error, summary(run_mx)$parameters$name)[c("a", "b", "cp")]

@@ -4,7 +4,7 @@ The mediator is a construct measured by several indicators, and you want
 its indirect effect without first averaging the indicators into a score.
 Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
-collection; the second of four [native
+collection; the second of five [native
 engine](https://data-wise.github.io/medfit/articles/model-native.md)
 pages. The engine is experimental.
 

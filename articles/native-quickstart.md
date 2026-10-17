@@ -161,7 +161,7 @@ work as on any other fit.
 
 - [Native engine, step by
   step](https://data-wise.github.io/medfit/articles/native-tutorial.md):
-  the same path in nine checked steps, with a chain of three paths.
+  the same path in ten checked steps, with a chain of three paths.
 - [The native engine
   guide](https://data-wise.github.io/medfit/articles/native-guide.md):
   syntax, inference, constraints, diagnostics and limits in one place.

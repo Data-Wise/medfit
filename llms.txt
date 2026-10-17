@@ -522,6 +522,8 @@ Treatment assigned to clusters, lavaan fits, and the native engine
   test](https://data-wise.github.io/medfit/articles/model-native-constraints.md):
 - [Native engine: several mediators and
   weights](https://data-wise.github.io/medfit/articles/model-native-multi.md):
+- [Native engine: categorical
+  covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md):
 
 ### Guides
 

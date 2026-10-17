@@ -87,6 +87,7 @@
     <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
     <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
     <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -418,6 +419,13 @@
 <td><code>does not support a treatment product</code></td>
 <td>it changed the effects without changing a coefficient the decomposition reads, and 0.8.0 returned a decomposition without a message; remove the product, or fit without the four-way decomposition</td>
 </tr>
+<tr class="odd">
+<td>0.11.0</td>
+<td>
+<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> or <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> of several <code>SEMFit</code>s over different observed variables, such as a fit with a product term and one without</td>
+<td><code>different observed variables</code></td>
+<td>the likelihoods describe different data, so they are not comparable; compare fits over the same variables (<code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse the same pair)</td>
+</tr>
 </tbody>
 </table>
 <p>Two more stop in situations 0.3.2 could not reach: two <code>lmer</code> fits that kept different individuals within the same clusters (0.6.0), and a lavaan label that reuses one of medfit’s alias names for a different path (0.5.0).</p>
@@ -487,6 +495,10 @@
 <td>0.10.0</td>
 <td>the product term <code>x:m</code> in native syntax and the four-way decomposition from a native fit (<code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fit), a supported-class table, and a worked example in the <a href="model-interaction.html">interaction page</a>
 </td>
+</tr>
+<tr class="even">
+<td>0.11.0 (development)</td>
+<td>categorical covariates in native syntax (<a href="model-native-factors.html">page</a>, <a href="cookbook.html#a-categorical-covariate-in-a-native-fit">recipe 21</a>); <code>options(medfit.covariate_mean_variance = TRUE)</code> for population-average four-way standard errors (default unchanged); <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>/<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> refuse fits over different observed variables</td>
 </tr>
 </tbody>
 </table></section><section class="level2"><h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>

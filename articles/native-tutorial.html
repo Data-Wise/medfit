@@ -87,6 +87,7 @@
     <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
     <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
     <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -191,7 +192,7 @@
 
 
 
-    <p>Nine steps from a model written as syntax to a tested, constrained and extracted mediation result. It sits between <a href="native-quickstart.html">the five-minute quickstart</a> and <a href="native-guide.html">the native engine guide</a>. The native engine is experimental.</p>
+    <p>Ten steps from a model written as syntax to a tested, constrained and extracted mediation result. It sits between <a href="native-quickstart.html">the five-minute quickstart</a> and <a href="native-guide.html">the native engine guide</a>. The native engine is experimental.</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -200,7 +201,7 @@
 <tbody>
 <tr class="odd">
 <td><strong>You need</strong></td>
-<td>medfit 0.8.0 or later (step 9 needs 0.9.0 or later); the bundled <code>mediation_demo</code> data</td>
+<td>medfit 0.8.0 or later (step 9 needs 0.9.0 or later, and step 10 the development version, 0.11.0); the bundled <code>mediation_demo</code> data</td>
 </tr>
 <tr class="even">
 <td><strong>You get</strong></td>
@@ -395,13 +396,40 @@ MBCO = 17.557, df = 1, p-value = 2.788e-05</code></pre>
 </div>
 </div>
 <p>Check: <code>a</code>, <code>b</code> and <code>cp</code> match Step 6, and <code>df</code> and <code>chisq</code> are the same, but <code>npar</code> is smaller. The log likelihood is conditional on the fixed variables, so it is not comparable with the free fit’s, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> refuses to compare the two fits. <code>fixed_x</code> also takes a character vector, such as <code>fixed_x = "covariate1"</code>, to fix only some of the exogenous variables.</p>
+</section><section class="level2"><h2 id="step-10--add-a-categorical-covariate">Step 10. Add a categorical covariate<a class="anchor" aria-label="anchor" href="#step-10--add-a-categorical-covariate"></a>
+</h2>
+<p>Needs the development version (0.11.0). A covariate that is a factor, character or logical column goes into the syntax by name; the engine replaces it with one 0/1 dummy per non-reference level. The bundled data has no factor, so the chunk cuts <code>covariate1</code> into three groups first:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">dat10</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">mediation_demo</span>,</span>
+<span>                   group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cut.html" class="external-link">cut</a></span><span class="op">(</span><span class="va">covariate1</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="cn">Inf</span>, <span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="cn">Inf</span><span class="op">)</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">syntax10</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a * treatment + group</span></span>
+<span><span class="st">  outcome ~ b * mediator1 + cp * treatment + group</span></span>
+<span><span class="st">  ab := a * b</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">fit10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax10</span>, <span class="va">dat10</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit10</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">7</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 3
+  term                 estimate std_error
+  &lt;chr&gt;                   &lt;dbl&gt;     &lt;dbl&gt;
+1 a                       0.549    0.102
+2 mediator1~group_mid     0.328    0.125
+3 mediator1~group_high    0.948    0.124
+4 b                       0.618    0.0524
+5 cp                      0.128    0.110
+6 outcome~group_mid       0.463    0.132
+7 outcome~group_high      0.729    0.139 </code></pre>
+</div>
+</div>
+<p>Check: <code>group</code> is gone from the rows, replaced by <code>group_mid</code> and <code>group_high</code>, each read against the reference level <code>low</code> (the first factor level). <code>a</code>, <code>b</code> and <code>ab</code> keep their usual meaning, and <code>mbco_sem(fit10, paths = c("a", "b"))</code> tests the indirect effect as in Step 5. A label goes on one dummy (<code>z * group_mid</code>), never on <code>group</code> itself. The <a href="model-native-factors.html">categorical covariates page</a> covers constraints, missing values, products and the four-way decomposition.</p>
 </section><section class="level2"><h2 id="where-next">Where next<a class="anchor" aria-label="anchor" href="#where-next"></a>
 </h2>
 <ul>
 <li>
 <a href="native-guide.html">The native engine guide</a>: syntax, inference, constraints, diagnostics and limits in one place.</li>
 <li>
-<a href="cookbook.html">Cookbook recipes 11 to 20</a>: a latent mediator, a nonlinear constraint, comparing models, defined parameters, bounds, checks, fixed covariates and intercepts.</li>
+<a href="cookbook.html">Cookbook recipes 11 to 21</a>: a latent mediator, a nonlinear constraint, comparing models, defined parameters, bounds, checks, fixed covariates, intercepts, the four-way decomposition and a categorical covariate.</li>
 <li>
 <a href="native-book-1-mean-structure.html">Native engine book</a>: seven chapters on the mean structure, scale, constraints, <code>fixed_x</code>, inference, the product term and the four-way decomposition.</li>
 <li>

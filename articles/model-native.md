@@ -1,7 +1,7 @@
 # Native engine: paths and defined parameters
 
 Write the model as syntax and fit it by maximum likelihood with no other
-package. This is the first of four pages on the native engine, which is
+package. This is the first of five pages on the native engine, which is
 experimental. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
 collection.
@@ -13,12 +13,14 @@ collection.
 | **Routes** | `fit_sem(syntax, data)`, or `fit_mediation(model = syntax, engine = "native")` |
 | **Syntax** | [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md) lists every statement |
 
-The four pages: this one (paths and defined parameters), [a latent
+The five pages: this one (paths and defined parameters), [a latent
 mediator](https://data-wise.github.io/medfit/articles/model-native-latent.md),
 [constraints and the MBCO
 test](https://data-wise.github.io/medfit/articles/model-native-constraints.md),
 and [several mediators and
-weights](https://data-wise.github.io/medfit/articles/model-native-multi.md).
+weights](https://data-wise.github.io/medfit/articles/model-native-multi.md),
+and [categorical
+covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md).
 
 ``` r
 library(medfit)

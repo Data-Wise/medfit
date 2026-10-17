@@ -87,6 +87,7 @@
     <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
     <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
     <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -191,7 +192,7 @@
 
 
 
-    <p>Serial and parallel mediators, and sampling weights, with the native engine. Part of the <a href="models.html">Models</a> collection; the last of four <a href="model-native.html">native engine</a> pages. The engine is experimental.</p>
+    <p>Serial and parallel mediators, and sampling weights, with the native engine. Part of the <a href="models.html">Models</a> collection; the fourth of five <a href="model-native.html">native engine</a> pages. The engine is experimental.</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -269,7 +270,7 @@ Attaching package: 'generics'</code></pre>
 <span>  total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/te.html">te</a></span><span class="op">(</span><span class="va">xs</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>     chain every_path      total
-0.07545039 0.36740438 0.53856776 </code></pre>
+0.07545038 0.36740437 0.53856775 </code></pre>
 </div>
 </div>
 <p>With the default <code>structure = "auto"</code>, medfit classifies the mediators from the model: here it finds the path from <code>mediator1</code> to <code>mediator2</code> and returns the serial class. See <a href="model-serial.html">Serial mediation</a> for what the three numbers mean.</p>

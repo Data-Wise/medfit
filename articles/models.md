@@ -25,6 +25,7 @@ task recipes see the
 | A latent mediator | [Native: a latent mediator](https://data-wise.github.io/medfit/articles/model-native-latent.md) |
 | Constraints, or a test of the indirect effect | [Native: constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.md) |
 | Serial or parallel mediators, or weights, in syntax | [Native: several mediators and weights](https://data-wise.github.io/medfit/articles/model-native-multi.md) |
+| A factor, character or logical covariate in syntax | [Native: categorical covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md) |
 
 ## Capabilities at a glance
 
@@ -39,6 +40,7 @@ task recipes see the
 | Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](https://data-wise.github.io/medfit/articles/model-joint.md) |
 | Cluster-level treatment (2-1-1) | `ClusterMediationData` | `lmer` fits or `engine = "lmer"` | model, Kenward-Roger (`"kr"`) | [cluster](https://data-wise.github.io/medfit/articles/model-cluster.md) |
 | Latent mediator, constraints | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md), `engine = "native"` (experimental) | model, sandwich | [native](https://data-wise.github.io/medfit/articles/model-native.md), [latent](https://data-wise.github.io/medfit/articles/model-native-latent.md) |
+| Categorical covariates (development version) | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with a factor, character or logical column | model, sandwich | [categorical covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md) |
 
 Inference works on every row: delta-method intervals from
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
