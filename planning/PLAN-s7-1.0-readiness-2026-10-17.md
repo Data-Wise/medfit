@@ -40,7 +40,7 @@ Checkpoint 2. The unknown "does the suite pass on S7 1.0 development" is answere
 killed mid-run when launched as a bare `&` job (no result line); the rerun under a tracked background task completed. Not
 covered: S7 changes after today (S5), and the `method<-` probe (S3).
 
-## S3 result (2026-10-17, PARTIAL: a dispatch smoke test, not the planned probe; S3 stays OPEN)
+## S3 and S3b results (2026-10-17; S3 smoke test, then S3b the registry probe: DONE)
 
 Fresh R process, medfit installed from `dev`, objects of five classes (MediationData, SEMFit, BootstrapResult,
 ParallelMediationData, SerialMediationData; fit from `mediation_demo`), 15 generics each (75 calls: print, show, summary,
@@ -65,13 +65,30 @@ run it in a fresh process on S7 0.2.2 and on S7 `main`, with medfit loaded fresh
 tables), then diff the tables. Done when the 8 x N tables are identical across S7 versions and across reload, or every
 difference is a recorded finding. Needs no fixtures, so Interaction, Joint and Cluster are covered. Size S, 1 h.
 
+**S3b result (2026-10-17, DONE).** 8 classes x 19 generics = 152 pairs, four tables (S7 0.2.2 and S7 0.2.2.9000, each
+fresh and after unload and reload): **identical in all four; 90 pairs resolved, 62 absent; 0 differences between S7
+versions; 0 between fresh and reload.** Checks by generic kind: medfit's own S7 generics (`nie`, `nde`, `te`, `pm`,
+`paths`, `decompose`) with `S7::method()`; external S3 generics (`print`, `summary`, `coef`, `vcov`, `nobs`, `confint`,
+`logLik`, `AIC`, `BIC`, `anova`, `tidy`, `glance`) with `utils::getS3method(<generic>, "medfit::<Class>")`; the S4
+generic `show` with `methods::existsMethod()`. The absent pairs show the real shape (for example `AIC`, `BIC` and `anova`
+exist only for SEMFit; the effect generics have no SEMFit or BootstrapResult method; `show` is registered for the five
+classes whose print goes through `.onLoad`). Limits: the probe has no planted defect of its own (the mixed X and dot
+table shows it can report both states, and it flagged the same 10 absences the smoke test did); a pair absent on both
+versions is not examined here (whether SEMFit should have `nie` is a design question).
+
+**Lesson from the first S3b draft.** It called `S7::method()` on base and S4 generics, which errors for anything that is
+not an `S7_generic`, so 102 of 136 pairs read "absent" and the diff was 0: a probe that cannot see the thing it
+probes agrees with itself. Caught by looking at why `print` on MediationData read absent, and fixed by using the check
+that fits each generic kind. Same family as the vacuous Heywood test (T6a): check the count of what was matched, not just
+the difference.
+
 ## Tasks
 
 | # | Task | Done when | Size |
 |---|---|---|---|
 | S1 (DONE 2026-10-17, 6397/0) | Run the full suite on `S7@main` in a scratch library (installed medfit, not `load_all()`), triage every failure against the S7 0.2.2 baseline | pass/fail counts quoted; each new failure is a medfit bug, an S7 bug (issue filed upstream) or a test that assumed 0.2.2 | S, 1 h |
 | S2 | If S1 is green, add the full-suite run as an optional `--sim` step of the lifecycle gate (skips never count: a missing S7@main is a failed row, as now); if S1 finds failures, fix and add a red test per failure | gate row exists, planted defect exits 1 | S-M |
-| S3 (OPEN: partial smoke test done 2026-10-17; S3b is the real probe) | Probe the not-audited row: unload medfit, reload, and call every `method<-` generic on one object per class under `S7@main` | one transcript, 8 classes, 0 errors | S, 1 h |
+| S3, S3b (DONE 2026-10-17: smoke test, then the registry probe, identical on both S7 versions) | Probe the not-audited row: unload medfit, reload, and call every `method<-` generic on one object per class under `S7@main` | one transcript, 8 classes, 0 errors | S, 1 h |
 | S4 | Check probmed and RMediation against `S7@main` (their suites, medfit installed from `dev`) | counts quoted, or an issue in each repo | S, 1 h each; cross-repo writes need the author's go |
 | S5 | Watch trigger: when CRAN's S7 page shows 1.0.0 (or a CRAN mail names medfit), rerun S1 and S3 on the released version within 3 days and decide 0.3.3 versus submitting the current medfit | decision recorded in `.STATUS` | at trigger |
 | S6 | Decide the DESCRIPTION floor: `S7 (>= 0.1.0)` is untested below 0.2.2; either test the floor or raise it | floor tested or raised, NEWS note if raised | S |
