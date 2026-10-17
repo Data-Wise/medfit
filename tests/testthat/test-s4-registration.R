@@ -1,6 +1,8 @@
 # S7 compatibility (PR #214, T1 of the 0.11.0 plan): the nullable property unions are registered with S4 before the
 # classes use them, so the package loads under development S7 (> 0.2.2) as well as 0.2.2. Contributed in PR #214 by
-# t-kalinowski; the load-level checks below run the package in a fresh R process.
+# t-kalinowski. These checks read the registry of the running test process; the installed-package lifecycle
+# (install, load, use, unload, reload, under S7 0.2.2 and `RConsortium/S7@main`) is `tests/sim/s7-lifecycle-gate.R`,
+# registered in `tests/sim/gates.csv`.
 
 test_that("S4 show handles nullable bootstrap metadata", {
   result <- BootstrapResult(
