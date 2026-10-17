@@ -266,3 +266,15 @@ test_that("the guide quotes the message fragments this test file checks", {
     expect_true(grepl(frag, txt, fixed = TRUE), info = frag)
   }
 })
+
+test_that("the 0.11.0 AIC/BIC refusal the guide lists is real, and the guide quotes it", {
+  skip_if_not(file.exists(guide_path()), "vignettes are not available (installed or built package)")
+  base <- "mediator1 ~ treatment\noutcome ~ mediator1 + treatment"
+  with_x <- suppressWarnings(fit_sem(paste0(base, " + treatment:mediator1"), medfit::mediation_demo))
+  without <- suppressWarnings(fit_sem(base, medfit::mediation_demo))
+  expect_error(stats::AIC(with_x, without), "different observed variables")
+  txt <- paste(readLines(guide_path(), warn = FALSE), collapse = "\n")
+  expect_true(grepl("different observed variables", txt, fixed = TRUE))
+  expect_true(grepl("covariate_mean_variance", txt, fixed = TRUE))
+  expect_true(grepl("model-native-factors.html", txt, fixed = TRUE))
+})

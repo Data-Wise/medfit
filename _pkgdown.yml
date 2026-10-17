@@ -96,6 +96,8 @@ navbar:
         href: articles/model-native-constraints.html
       - text: "Native: several mediators and weights"
         href: articles/model-native-multi.html
+      - text: "Native: categorical covariates"
+        href: articles/model-native-factors.html
     guides:
       text: Guides
       menu:
@@ -304,6 +306,7 @@ articles:
       - '`articles/model-native-latent`'
       - '`articles/model-native-constraints`'
       - '`articles/model-native-multi`'
+      - '`articles/model-native-factors`'
   - title: "Guides"
     desc: "Upgrading, errors, intervals and terms"
     contents:

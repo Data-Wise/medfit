@@ -298,3 +298,24 @@ test_that("recipe 21: the factor fit equals the hand-coded dummies, the label ro
                                         fixed_x = "group"))$fixed_x, "group_mid, group_high")
   expect_error(fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + b*group", d), "expands to 2 terms")
 })
+
+test_that("tutorial step 10 runs after the earlier setup and the factor is expanded, not carried", {
+  txt <- article_text("native-tutorial.qmd")
+  expect_true(grepl("## Step 10. Add a categorical covariate", txt, fixed = TRUE))
+  lines <- strsplit(txt, "\n", fixed = TRUE)[[1L]]
+  open <- grep("^```\\{r", lines)
+  chunk <- function(label) {
+    i <- open[grepl(paste0("label: ", label), lines[open + 1L], fixed = TRUE)]
+    j <- i + 1L
+    while (!grepl("^```$", lines[j])) j <- j + 1L
+    body <- lines[(i + 1L):(j - 1L)]
+    body[!grepl("^#\\|", body)]
+  }
+  env <- new.env(parent = asNamespace("medfit"))
+  assign("tidy", generics::tidy, env)
+  eval(parse(text = chunk("factor")), env)
+  tt <- generics::tidy(env$fit10)
+  expect_true(all(c("mediator1~group_mid", "mediator1~group_high", "outcome~group_mid") %in% tt$term))
+  expect_false(any(tt$term %in% c("mediator1~group", "outcome~group")))
+  expect_true(all(is.finite(tt$estimate)))
+})
