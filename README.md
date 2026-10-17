@@ -41,8 +41,10 @@ install.packages(
 )
 ```
 
-That gives 0.10.0 as a pre-built binary, with no compiler. From GitHub instead:
-`pak::pak("data-wise/medfit")` (compiles `nloptr` unless `lme4` already brought it in).
+This installs the current r-universe release (0.10.0). Binaries are available
+for supported R/platform combinations; a source installation can require a
+compiler for dependencies such as `nloptr`. From GitHub instead:
+`pak::pak("data-wise/medfit")`.
 
 > **CRAN has 0.3.2, which does not run the examples on this site.** It lacks
 > `mediation_demo`, `fit_sem()`, `mbco_sem()` and the joint and cluster classes.

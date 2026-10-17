@@ -42,6 +42,12 @@
   `mediation_demo`, the same outcome gave AIC 3934.7 with the product and 2994.1 without). `anova()` and
   `mbco_sem()` already refused such a pair (#206).
 
+## Documentation
+
+* Removed a literal header file path and a literal `Version {version}` footer placeholder that the website printed;
+  mathematics uses the built-in MathJax support in pkgdown. README installation guidance now distinguishes available
+  binaries from source installation.
+
 # medfit 0.10.0
 
 ## New features
