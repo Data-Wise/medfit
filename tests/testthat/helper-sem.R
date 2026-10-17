@@ -185,6 +185,24 @@ sem_lavaan_ref <- function(nm, information, n = 400, seed = 21) {
   )
 }
 
+# Largest absolute gap between an engine estimate vector and a lavaan fit, parameter by parameter. It stops when a
+# parameter has no lavaan counterpart: a name mismatch once made a comparison compare nothing (max() of an empty set is
+# -Inf, which passes any upper bound), so the match must be complete.
+sem_lavaan_gap <- function(theta, lav_fit, mod) {
+  norm <- function(x) {
+    vapply(strsplit(x, "~~", fixed = TRUE), function(p) {
+      if (length(p) == 2) paste(sort(p), collapse = "~~") else p
+    }, character(1))
+  }
+  co <- lavaan::coef(lav_fit)
+  pos <- match(norm(sem_lavaan_names(mod$ram$par_names, mod$loadings)), norm(names(co)))
+  if (anyNA(pos) || length(pos) != length(theta)) {
+    stop("sem_lavaan_gap: ", sum(is.na(pos)), " of ", length(pos), " parameters have no lavaan counterpart",
+         call. = FALSE)
+  }
+  max(abs(unname(theta) - unname(co)[pos]))
+}
+
 # Latent-mediator model with small indicator residuals; at n = 50 and seed 10 lavaan
 # returns a negative variance (a Heywood case), the fixture for improper solutions.
 sem_model_heywood <- function() {
@@ -265,4 +283,15 @@ sem_openmx <- function(mod, smp, lbound = NULL, start = NULL, constraints = char
     }), recursive = FALSE)
   ))
   suppressMessages(OpenMx::mxRun(m, silent = TRUE))
+}
+
+# Two advisories fit_sem() raises on purpose for a product model (an `se_type = "model"` note, and "the model test is
+# not valid" for an endogenous product factor). Tests that fit such models for another purpose wrap their body in this,
+# so the run stays readable; a test that asserts one of them still sees it, because expect_warning() catches it first.
+quiet_product_advisories <- function(code) {
+  withCallingHandlers(code, warning = function(w) {
+    if (grepl("^the model has a product term|^the model test is not valid for this model", conditionMessage(w))) {
+      invokeRestart("muffleWarning")
+    }
+  })
 }

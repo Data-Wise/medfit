@@ -27,9 +27,13 @@ test_that("a Heywood case matches lavaan, warns, and names the negative variance
   expect_warning(fit <- .sem_optimize(mod$ram, smp, sem_start(mod$ram)),
                  paste0("negative variance: .*", neg$lhs[1], "~~", neg$lhs[1]))
   expect_lt(min(fit$theta[paste0(neg$lhs[1], "~~", neg$lhs[1])]), 0)
-  est <- stats::setNames(pe$est, ifelse(pe$op == "=~", paste(pe$rhs, "~", pe$lhs), paste(pe$lhs, pe$op, pe$rhs)))
-  est <- est[names(est) %in% names(fit$theta)]
-  expect_lt(max(abs(fit$theta[names(est)] - est)), 1e-6)
+  # every parameter is compared (sem_lavaan_gap stops on an unmatched one), and the comparison can fail
+  expect_lt(sem_lavaan_gap(fit$theta, lav, mod), 1e-6)
+  shifted <- fit$theta
+  shifted[1L] <- shifted[1L] + 1e-3
+  expect_gt(sem_lavaan_gap(shifted, lav, mod), 1e-6)
+  no_match <- list(ram = list(par_names = paste0("zz", seq_along(fit$theta))), loadings = character())
+  expect_error(sem_lavaan_gap(fit$theta, lav, no_match), "no lavaan counterpart")
 })
 
 test_that("an active lower bound is accepted and reported", {

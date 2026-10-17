@@ -606,43 +606,8 @@ test_that("bootstrap_mediation errors when statistic_fn is not a function", {
 # CI Coverage Properties (Simulation-Based)
 # ==============================================================================
 
-test_that("parametric bootstrap achieves nominal CI coverage", {
-
-  skip("Simulation test - run separately for CI coverage validation")
-
-  # This test runs a simulation to verify that 95% CIs contain
-  # the true parameter about 95% of the time
-
-  n_sim <- 100  # Number of simulations (use 1000+ for real validation)
-  true_indirect <- 0.5 * 0.3  # True indirect effect
-  coverage_count <- 0
-
-  for (i in 1:n_sim) {
-    data <- generate_mediation_data(seed = 1000 + i)
-    med_data <- create_test_mediation_data(data)
-
-    result <- bootstrap_mediation(
-      statistic_fn = indirect_effect,
-      method = "parametric",
-      mediation_data = med_data,
-      n_boot = 1000,
-      ci_level = 0.95,
-      seed = 2000 + i
-    )
-
-    # Check if CI contains true value
-    if (result@ci_lower <= true_indirect && true_indirect <= result@ci_upper) {
-      coverage_count <- coverage_count + 1
-    }
-  }
-
-  coverage_rate <- coverage_count / n_sim
-
-  # Coverage should be close to 0.95 (allow some sampling variation)
-  # With n_sim=100, 95% CI for coverage is roughly (0.91, 0.99)
-  expect_true(coverage_rate >= 0.85)  # Conservative lower bound
-  expect_true(coverage_rate <= 1.00)
-})
+# The coverage of the parametric bootstrap interval is a simulation gate, tests/sim/bootstrap-coverage.R (registered in
+# tests/sim/gates.csv); the test that used to sit here was an unconditional skip() that nothing ran.
 
 
 # ==============================================================================
