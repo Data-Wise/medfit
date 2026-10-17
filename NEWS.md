@@ -18,6 +18,11 @@
 
 ## Bug fixes
 
+* `fit_sem()` no longer fails when a supplied start sits in a bad basin. The retries are perturbations of that start, so
+  every attempt could stall; with `n_starts >= 3` the last attempt is now the model's own moment-based start. Found by
+  the reliability gate (latent structure, n = 50, one replicate: 4 of 9600 shipped-configuration fits ended with `no start
+  converged`; now 0). A start that was accepted before is unchanged, and models with nonlinear constraints keep their
+  starts.
 * medfit installs and loads with development S7 (versions after 0.2.2). The nullable property types
   (`S7::class_numeric | NULL` and the list, data frame and call equivalents) and plain `S7::class_numeric` are
   registered as S4 unions before the classes use them, in `.onLoad()` as well as at build time, and the package calls

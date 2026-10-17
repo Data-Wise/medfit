@@ -383,7 +383,17 @@
     lb[floored] <- pmax(lb[floored], .sem_var_floor * .sem_step_floor(ram, smp)[floored])
   }
   start0 <- .sem_clamp(start, lb, ub)
-  starts <- c(list(start0), if (n_starts > 1L) .sem_perturbed_starts(start0, ram, smp, lb, ub, n_starts - 1L))
+  # The perturbed retries are drawn around the supplied start, so a start in a bad basin gives only bad attempts.
+  # Where the budget allows (n_starts >= 3) the last attempt is the model's own default start instead of one more
+  # perturbation; it is reached only after every earlier attempt failed, and a model that tries every start
+  # (nonlinear rows) keeps its starts as they were.
+  dflt <- if (!best_of && n_starts >= 3L) .sem_clamp(.sem_default_start(ram, smp), lb, ub) else NULL
+  if (!is.null(dflt) && (!.sem_start_valid(dflt, ram) || isTRUE(all.equal(dflt, start0, tolerance = 0)))) {
+    dflt <- NULL
+  }
+  n_perturbed <- n_starts - 1L - !is.null(dflt)
+  starts <- c(list(start0), if (n_perturbed > 0L) .sem_perturbed_starts(start0, ram, smp, lb, ub, n_perturbed),
+              if (!is.null(dflt)) list(dflt))
   if (!is.null(ref)) {
     starts <- c(.sem_reference_starts(ref$theta, ram, nl_idx, lb, ub), starts)
   }
@@ -461,10 +471,13 @@
     ), call. = FALSE)
   }
   if (win > 1L && !best_of) {
-    warning(sprintf(
-      "the first start was not accepted (%s); the fit used perturbed start %d of %d",
-      attempts[[1]]$reason, win - 1L, length(starts) - 1L
-    ), call. = FALSE)
+    used <- if (!is.null(dflt) && win == length(starts)) {
+      "the default start"
+    } else {
+      sprintf("perturbed start %d of %d", win - 1L, n_perturbed)
+    }
+    warning(sprintf("the first start was not accepted (%s); the fit used %s", attempts[[1]]$reason, used),
+            call. = FALSE)
   }
   if (!is.null(ref) && fit$f < ref$f - .sem_spread_tol) {
     warning(sprintf(
