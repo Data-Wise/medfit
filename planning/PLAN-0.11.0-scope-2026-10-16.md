@@ -57,7 +57,9 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
    `tests/sim/s7-compat-gate.R`: `R CMD INSTALL` the working tree into a scratch library, run each step in a fresh
    `Rscript` against S7 0.2.2 and `RConsortium/S7@main` (both in scratch libraries, skip with a message if `main` is
    not installable offline), exit 1 on any step failure; register it in `run-gates.R` and `gates.csv`; `MUTANT=nounion`
-   (omit `medfit_numeric`) and `MUTANT=nohook` (skip the `S7_on_load` branch) must exit 1 on dev S7. Fix the false
+   (omit `medfit_numeric`) and `MUTANT=noonload` (skip the `.onLoad()` union call) must exit 1 on dev S7. Built on
+   `feature/s7-lifecycle-gate`: a `nohook` mutant (skip the `S7_on_load` branch) was tried and NOT caught on S7@main,
+   so that branch is not load-bearing for this flow and no claim is made about it. Fix the false
    "fresh R process" sentence in the header of `test-s4-registration.R` (the gate is the fresh-process check; the
    testthat file checks the registry only). Size: S, 2-3 h; do before T2 so every later checkpoint includes it.
 2. **T2 #213 red tests (built, `feature/issue-213-variance`):** `test-sem-nonlinear-variance.R`: seed 1 (errors,
@@ -105,7 +107,7 @@ rows in `tests/sim/gates.csv` run by `tests/sim/run-gates.R`; no gate is "run by
 
 | Task | testthat (fast, in the suite) | Harness gate (`tests/sim/`) | Planted defect | Evidence in PR |
 |---|---|---|---|---|
-| T1 S7 compat (merged #219; gate = T1b) | `test-s4-registration.R`: unions registered, `show()` with `call = NULL`, hooks all-or-none; `.register_s4_unions()` idempotent (guard each `setClassUnion` with `isClassUnion()`, so a second call is safe and covered for codecov) | `s7-compat-gate.R`: install the built tarball into a scratch library, then load, unload, reload and `fit_sem()` once under S7 0.2.2 and under `RConsortium/S7@main`; exit 1 on any load error | drop the `medfit_numeric` line; remove the `S7_on_load` branch | two-version transcript |
+| T1 S7 compat (merged #219; gate = T1b) | `test-s4-registration.R`: unions registered, `show()` with `call = NULL`, hooks all-or-none; `.register_s4_unions()` idempotent (guard each `setClassUnion` with `isClassUnion()`, so a second call is safe and covered for codecov) | `s7-compat-gate.R`: install the built tarball into a scratch library, then load, unload, reload and `fit_sem()` once under S7 0.2.2 and under `RConsortium/S7@main`; exit 1 on any load error | drop the `medfit_numeric` line; skip the `.onLoad()` union call | two-version transcript |
 | T2 #213 red tests | the issue's two seeds (LR near 0 at the unconstrained estimate) fail first; frozen unconstrained fixture (bit-identical) | none yet (T3 adds it) | n/a (red phase) | red output quoted |
 | T3 #213 fix | seeds green; non-convergence flag on a far status-3 stop; unconstrained fixture still bit-identical | `sem-mbco-213-gate.R`: 30-case profile inversion agrees to about 2.5e-7; reuses `sem-nonlinear-gate.R` helpers; also asserts the full existing nonlinear and constrained gates stay green | remove the floor; weaken the status-3 flag | gate transcript, before and after counts |
 | T4 factor gate | `test-run-gates.R`-style check that the gate is listed and its verdict function returns FALSE on a mutant | register `sem-factor-gate.R` in `run-gates.R` and `gates.csv` | existing `MUTANT=` set in the gate | `run-gates.R` summary table |
