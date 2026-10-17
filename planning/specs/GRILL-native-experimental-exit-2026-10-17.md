@@ -9,7 +9,7 @@ drops at the first release where every criterion below holds and the author says
 | Id | Criterion | Evidence |
 |---|---|---|
 | C1 | No open correctness issue on the native engine | `gh issue list --label correctness --state open` is empty. At decision time #213 is the only engine issue; its fix merged (#221) and it closes with the 0.11.0 release. |
-| C2 | Every native gate registered and green | The 17 native gates in `tests/sim/gates.csv`; `Rscript tests/sim/run-gates.R` passes. `s7-lifecycle` is a package check, not a native gate. |
+| C2 | Every native gate registered and green | The 17 native gates in `tests/sim/gates.csv`; `Rscript tests/sim/run-gates.R` passes. `s7-lifecycle` (a package check) and `bootstrap-coverage` (the parametric bootstrap, added by T6c) are not native gates. |
 | C3a | lavaan parity | `parity`, `fixed-x`, `factor` |
 | C3b | OpenMx parity | `constrained`, `nonlinear-parity`, `nonlinear-profile` |
 | C4a | API freeze, signatures | `fit_sem()`, `mbco_sem()`, `SEMFit` (properties), `extract_mediation(<SEMFit>)` |
