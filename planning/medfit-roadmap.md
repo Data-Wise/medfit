@@ -1853,9 +1853,19 @@ The original week-by-week plan is complete. Current next actions:
 
 1. ~~Release 0.6.0 (Ext D module 1)~~ — done 2026-10-09; see `planning/specs/PLAN-multilevel-mediation-2-1-1-2026-10-08.md` and `.STATUS`. Module 2 (1-1-1, random slopes) follows
 2. ~~Release 0.7.0 (native SEM engine)~~ — done 2026-10-10; see `planning/specs/PLAN-medfit-0-7-0-release-2026-10-10.md` and `.STATUS`.
-3. **0.8.0: native SEM hardening, nonlinear constraints (S1, PR 11, now W3), `anova()` for `SEMFit`, lavaan comparison** — planned 2026-10-11; see `tasks/plan.md` and `planning/specs/BRAINSTORM-medfit-0-8-0-2026-10-11.md`
+3. ~~0.8.0 to 0.10.0 (native SEM hardening, nonlinear constraints, mean structure and `fixed_x`, the `:` product term and four-way)~~ — done 2026-10-11 to 2026-10-14; see `.STATUS`.
+3b. **0.11.0 (in progress, 2026-10-17):** factor covariates, S7 compatibility, the #213 fix, the native gates in `tests/sim/run-gates.R`, and dropping the "experimental" label; see `planning/PLAN-0.11.0-scope-2026-10-16.md`. Release, T5e and the T6 hygiene are open.
 4. **Next CRAN release** — trigger still open (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
 5. **Ext C.1 (CMAverse)** — blocked; see `planning/EXTENSIONS-PLAN-2026-06-03.md`
+6. **Categorical variables (backlog, added 2026-10-17, none scheduled; each needs a named consumer and an independent oracle before it starts):**
+
+| Item | Today | Why it is its own piece of work | Size |
+|---|---|---|---|
+| B1 Treatment with k > 2 levels | refused with a numeric error (D9 in `planning/specs/SPEC-native-factor-covariates-2026-10-14.md`); two levels at a time as a 0/1 column | k − 1 `a` paths, so NIE, NDE and PM are defined per contrast against the reference level (relative indirect effects); new classes or a contrast argument on the effect generics; gates against hand-coded dummies and the glm route. The most requested of the three; start with a GRILL on the contrast definition | M-L |
+| B2 Categorical mediator | refused, same D9 | the same, on the `b` side, and the interaction and four-way decompositions need a definition for a dummy mediator block | M-L |
+| B3 Binary or ordinal endogenous variables in the native engine | the native engine is Gaussian ML; binary and count variables go through `fit_mediation(engine = "glm")`; ordinal is supported by no engine | a different estimator (thresholds, probit or polychoric likelihood, WLSMV-style standard errors): a new likelihood, information and gate layer, with lavaan `ordered =` and OpenMx as oracles | L, weeks |
+
+   Adding B1 to B3 later is additive: each turns a refusal into a feature, so none breaks the API frozen when the label dropped. Documented workarounds: `vignettes/articles/model-native-factors.qmd` (Limits).
 
 ---
 

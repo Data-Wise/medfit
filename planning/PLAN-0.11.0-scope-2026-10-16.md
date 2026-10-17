@@ -76,6 +76,7 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
 | F8 | Latent means | L, 5+ d | med-high | none named |
 | F9 | Ext D module 2 (1-1-1) / Ext E | L, weeks | high | none named |
 | F10 | Hygiene: close #130, refresh roadmap Next Actions | S, 1 h | none | none |
+| F11-F13 | Categorical variables: k-level treatment (B1), categorical mediator (B2), native binary and ordinal endogenous variables (B3). Out of 0.11.0; recorded in the roadmap's Next Actions item 6 with sizes and the supported routes (added 2026-10-17) | M-L, M-L, L | med-high | none named |
 
 ## Options
 

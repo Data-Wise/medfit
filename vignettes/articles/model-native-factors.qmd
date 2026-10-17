@@ -128,9 +128,16 @@ tidy(extract_mediation(fw, treatment = "treatment", mediator = "mediator1",
 
 ## Limits
 
-- **A categorical outcome, mediator or treatment** is not supported: only a covariate on a
-  regression's right side is expanded. Recode a two-level factor as a 0/1 numeric column
-  to use it as the treatment or mediator.
+- **A categorical outcome, mediator or treatment** is not supported in the native engine: only a covariate on a
+  regression's right side is expanded. The supported routes today:
+  - *A two-level treatment or mediator:* recode it as a 0/1 numeric column.
+  - *A treatment with more than two levels:* compare two levels at a time. Keep the rows of those two levels
+    and code the pair 0/1; each comparison is one ordinary fit. There is no single set of effects for all levels
+    yet.
+  - *A binary or count outcome or mediator:* use [`fit_mediation(engine = "glm")`](model-glm-families.html) with
+    a `binomial` or `poisson` family. Ordinal variables are not supported by any medfit engine.
+
+  These are on the roadmap as separate items, not scheduled.
 - **A label, fixed value, start or bound on the factor** stops (`b*group`); put it on one
   dummy. A **constraint** names the label, never the factor or a bare dummy.
 - **Ordered factors, a one-level factor, a level that makes an invalid name, and a product
