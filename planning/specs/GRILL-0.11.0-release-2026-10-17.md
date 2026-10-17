@@ -19,7 +19,7 @@ passed. One question at a time; the author's answers are the decisions. Recommen
 
 ## Open Questions
 
-- Work implied by G1-G5, all before the 0.11.0 tag (none is in the plan's task list yet):
+- Work implied by G1-G5, all before the 0.11.0 tag (now tasks R1-R4 in step 8c of the plan, 2026-10-17):
   1. **R1** freeze list: a "reserved additive extensions" paragraph (where: NEWS Lifecycle entry and the native model page)
      plus a test pinning the current canonical names (`m:x` rows, `SEMFit` property names, syntax-help grammar tokens).
   2. **R2** CI job on PRs to `main` (and `workflow_dispatch`) running `Rscript tests/sim/run-gates.R --sim`, installing

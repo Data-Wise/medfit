@@ -24,7 +24,7 @@ whether probmed adopted `fit_sem()` for P_med MBCO or only evaluated it.
 | Plan updates | merged | #228, #230 |
 | T6d, T6g, T6h | open (T6d watch-only; T6g at the release; T6h the author's `git branch -D`) | below |
 | Checkpoint 2 | **PASSED 2026-10-17 on `dev` `047a90f`** | below |
-| Checkpoint 3 (Codex review of the real release scope), D1, release | open | below |
+| R1 to R3 (pre-tag work from the grill), Checkpoint 3 (R4), release, soak and CRAN | open | step 8c, 8b, 9, 10 |
 
 **T5b, what happened.** The first full `run-gates.R --sim` on current code was not green: the reliability gate had 4 of
 9600 shipped-configuration fits ending `no start converged` (latent, n = 50, replicate 4, random start, the same dataset
@@ -203,9 +203,31 @@ repetition: see Checkpoint 3.
    the 0.11.0 diff (the optimizer fallback #226, the label and criteria #225/#227, the gates #229/#231, CI #224) and not
    whatever the main checkout has checked out. Disposition each finding in this plan as for T5e; a finding that reproduces
    on `dev` blocks the release PR. Not run yet; the three earlier reviews do not count toward it.
+8c. **Pre-tag work from the 2026-10-17 grill** (ledger `planning/specs/GRILL-0.11.0-release-2026-10-17.md`, G1 to G9; order R1,
+   R2, R3, then 8b, then the bump; each its own PR to `dev`, red test or planted defect first where behavior is claimed):
+   - **R1 freeze reservation (G3), S, 1 h:** a "reserved additive extensions" paragraph in the NEWS Lifecycle entry and the
+     native model page (new syntax may be added; existing names, rows and properties never change meaning), plus a test
+     pinning the current canonical names (`m:x` rows, `SEMFit` property names, `?medfit-syntax` grammar tokens). Done when
+     renaming a pinned name fails the test (planted defect).
+   - **R2 gate in CI (G2, G6), M, 2-3 h:** a workflow running `Rscript tests/sim/run-gates.R --sim` on PRs to `main` and
+     `workflow_dispatch`, installing lavaan, OpenMx and nloptr. Non-required first; required status check on `main` only
+     after two consecutive green Linux runs (fix Linux-only drift by tolerance, seed or fixture, with evidence, before
+     requiring it). Done when it is required and a planted defect (`MUTANT=`) turns the run red.
+   - **R3 S7 watch (G4), S-M, 2 h:** a weekly scheduled workflow that runs the `s7-lifecycle` gate on S7@main and compares
+     CRAN's S7 version with the last seen one, opening an issue on a change; allowed to fail. Done when a manual dispatch
+     passes and a forced version change opens an issue.
+   - **R4 Checkpoint 3 (G9):** one focused Codex run after R1-R3 land, from a `dev` worktree; focus text names the start
+     fallback (`R/sem-optim.R`), the gate verdicts (`tests/sim/run-gates.R`), the label drop and the two workflows. Pass
+     rule: every finding is reproduced on `dev` before it counts; a reproduced finding on the 0.11.0 code blocks the tag.
 9. **Release:** bump to 0.11.0; NEWS header; `.STATUS` and CLAUDE.md "Current status"; grep for "0.10.0" leftovers;
    `dev` to `main` merge-commit PR with the evidence summary; CI green on `main`; tag `v0.11.0`; GitHub release;
    r-universe via the packages list (allow about 2 h, no manual dispatch); pkgdown deploys from `main`; back-merge.
+10. **Soak, then CRAN (G1, G7, G8):** the soak ends when probmed's suite and RMediation's suite pass against the tag
+   (read-only runs), the r-universe build is green and the CI gate is green on `main`; it may end in 2 to 3 days. Then the
+   CRAN routine (strict checks, `urlchecker`, spelling, `cran-comments.md` resynced from a fresh run, maintainer-manual
+   `submit_cran()`). RMediation does not submit its SEMFit-pair feature until medfit 0.11.0 is accepted; send RMediation
+   the "experimental dropped" message now (the author pastes it). Update `.STATUS` ("CRAN submission remains on hold") and
+   the R1 triggers of `GRILL-medfit-0-8-0-2026-10-11.md`.
 
 ## Harness and test matrix (added 2026-10-16)
 
