@@ -1,6 +1,6 @@
 # PLAN: medfit 0.11.0 scope (2026-10-16)
 
-**Status:** proposal for the author's decision; nothing implemented. Produced by a read-only Plan agent (Opus) from
+**Status:** APPROVED 2026-10-16 by the author (Option B; D2 floor only with nonlinear constraints, D3 keep experimental, D4 no F7, D5 latent means 1.0; D1 still open: confirm the S7 date and any CRAN mail). T1 started on `feature/s7-compat`. Produced by a read-only Plan agent (Opus) from
 `.STATUS`, the two 0.10.1/0.11.0 proposals, the roadmap, the specs, NEWS, and open issues and PRs. Two claims were
 re-checked by hand: PR #214 and issue #213 exist as described. Not verified: that CRAN 0.3.2 fails under development
 S7 (inferred from the shared nullable-union pattern), the S7 1.0 CRAN date, whether #214 passes medfit's suite, and
