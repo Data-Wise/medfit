@@ -1,0 +1,55 @@
+# Simulation gates (tests/sim/run-gates.R) as a mechanical release check (0.11.0 plan R2, grill G2 and G6).
+# Runs the full --sim set and the driver's own --mutants self-test on Linux for PRs to main and on request.
+# Rollout (G6): NOT a required status check at first; make it required (branch protection on main) only after two
+# consecutive green runs on Linux, because the gate tolerances were calibrated on macOS (SLSQP output differs
+# from Linux at about 1e-9). TRIAL trigger: pushes to feature/gates-ci also run it; remove that trigger when this
+# workflow is merged.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  push:
+    branches: [feature/gates-ci]
+
+name: gates
+
+permissions: read-all
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    # The full --sim run takes about 8 minutes on a laptop; leave room for slower runners and the dependency install.
+    timeout-minutes: 75
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # the s7-lifecycle gate installs RConsortium/S7@main from GitHub; the token avoids rate limits
+      NOT_CRAN: "true"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # Suggests included: the native gates compare against lavaan and OpenMx and a missing one is a failed gate
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"all"'
+          extra-packages: any::remotes, any::devtools
+
+      - name: Driver self-test (mutants)
+        run: Rscript tests/sim/run-gates.R --mutants
+
+      - name: Run every gate (--sim)
+        run: Rscript tests/sim/run-gates.R --sim
+
+      - name: Upload results and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-results
+          path: |
+            tests/sim/results/gates-*.log
+            tests/sim/results/gates-summary-*.txt
+          if-no-files-found: warn
