@@ -11,6 +11,26 @@
 # - Extensible design allowing future addition of ParallelMediationData, ComplexMediationData
 # - Consistent interface across all classes (estimates, vcov, metadata)
 
+# Nullable property types (`S7::class_numeric | NULL` and friends) are S7 unions; development S7 requires each
+# union to be registered with S4 before a class that uses it is defined. Run at source time (so the class
+# definitions below can use the unions) and again in `.onLoad()` (a union registered while the package is built
+# is not carried into the installed namespace).
+#
+# `S7::class_numeric` (a union of integer and double, no NULL) is special-cased in development S7 by an `identical()`
+# test against its own runtime object; when that test does not match, S7 looks for an S4 union with the same members
+# and stops if there is none. `medfit_numeric` is that union. Without it the installed package (not `load_all()`)
+# failed in `.onLoad()` with "Class union has not been registered with S4"; the cause of the difference between the
+# two was not traced further.
+.register_s4_unions <- function() {
+  methods::setClassUnion("medfit_numeric", c("integer", "numeric"))
+  methods::setClassUnion("medfit_numeric_or_NULL", c("integer", "numeric", "NULL"))
+  methods::setClassUnion("medfit_list_or_NULL", c("list", "NULL"))
+  methods::setClassUnion("medfit_data_frame_or_NULL", c("data.frame", "NULL"))
+  methods::setClassUnion("medfit_call_or_NULL", c("call", "NULL"))
+}
+
+.register_s4_unions()
+
 #' MediationData S7 Class
 #'
 #' @description

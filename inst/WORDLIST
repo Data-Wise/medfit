@@ -116,6 +116,7 @@ heteroskedasticity
 huber
 ij
 invertible
+kalinowski
 kk
 lavaan
 lavaan's
@@ -146,6 +147,7 @@ nie
 nloptr
 noSuggests
 nonparametrically
+nullable
 odot
 operatorname
 packageStartupMessage

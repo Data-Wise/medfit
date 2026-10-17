@@ -18,6 +18,13 @@
 
 ## Bug fixes
 
+* medfit installs and loads with development S7 (versions after 0.2.2). The nullable property types
+  (`S7::class_numeric | NULL` and the list, data frame and call equivalents) and plain `S7::class_numeric` are
+  registered as S4 unions before the classes use them, in `.onLoad()` as well as at build time, and the package calls
+  S7's `S7_on_load()`, `S7_on_unload()` and `S7_on_build()` hooks when the installed S7 has them (S7 0.2.2 and
+  earlier still use `methods_register()`). Reported and first fixed by t-kalinowski (PR #214); the plain-numeric
+  union was added because the installed package failed to load under development S7 although `load_all()` worked.
+  No change for users of S7 0.2.2.
 * `AIC()` and `BIC()` with several `SEMFit` fits now stop when the fits do not share their observed variables, and
   name the variables that differ. A product term (`x:m`) adds a column to the joint likelihood, so a fit with a
   product and the same model without it describe different data; before, the two were ranked anyway (on
