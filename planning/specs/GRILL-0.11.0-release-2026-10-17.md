@@ -15,6 +15,7 @@ passed. One question at a time; the author's answers are the decisions. Recommen
 | G6 | Riskiest assumption (inside G2) | Gate tolerances and baselines were calibrated on macOS; CI Linux differs at about 1e-9 on SLSQP output | Ship the CI gate job non-required, make it a required check after two consecutive green Linux runs (recommended) | Two extra CI runs of about 8 min and a later branch-protection edit; a Linux-only failure is fixed (tolerance, seed or fixture) before it can block a release; if drift appears the tag waits (G5) |
 | G7 | Benefit honesty | The one-week soak in G1 has no exit criterion and almost nobody consumes the GitHub tag | Soak = a four-item checklist that may end early: probmed suite and RMediation suite against the tag (read-only), r-universe build green, CI gate green on `main` (recommended) | Running two dependent suites against the tag (cross-repo reads, no writes) and waiting out r-universe's roughly 2 h build; the soak can finish in 2 to 3 days |
 | G8 | Blast radius | RMediation's SEMFit-pair feature (its dev, PR #41) needs medfit's native engine, which CRAN lacks | medfit 0.11.0's CRAN acceptance gates RMediation's submission of that feature; the "experimental dropped" message goes to RMediation now (the author pastes it) (recommended) | RMediation's CRAN release waits for medfit's review (days to weeks); no cross-repo write from medfit sessions |
+| G9 | Benefit honesty | Four Codex runs found one real code issue; three reviewed a stale branch | Checkpoint 3 stays, as one focused run after R1-R3 land, with a written pass rule: every finding is reproduced on `dev` before it counts, and a reproduced finding on the 0.11.0 code blocks the tag; focus text names the start fallback, the gate verdicts, the label drop and the workflows (recommended) | Runs late, so a block delays the tag; a few minutes of review plus triage |
 
 ## Open Questions
 
@@ -30,6 +31,7 @@ passed. One question at a time; the author's answers are the decisions. Recommen
      items rerun on the release commit (R2 supplies the gate run).
   5. **G1 follow-up** after the tag: one-week soak, then the CRAN routine (strict checks, `cran-comments.md` resync,
      maintainer-manual `submit_cran()`); update `.STATUS` "CRAN submission remains on hold" and the GRILL-0.8.0 R1 triggers.
-- Not asked (the grill stopped at five branches): the RMediation message about dropping "experimental" (still unsent, the
-  author pastes it); S4 (probmed and RMediation against S7 main); S6 (the `S7 (>= 0.1.0)` floor); whether SEMFit should have
+- Settled after the first milestone: G6 to G9 (see the table). R2 is non-required until two green Linux runs; the soak
+  checklist (G7) includes the probmed and RMediation suites; the RMediation message goes now (G8).
+- Not asked: S4 beyond G7's two suites; S6 (the `S7 (>= 0.1.0)` floor); whether SEMFit should have
   `nie`/`te` (the absent-pairs table from S3b).
