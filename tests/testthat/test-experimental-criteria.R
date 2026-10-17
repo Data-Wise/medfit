@@ -6,7 +6,10 @@
 root <- normalizePath(test_path("..", ".."))
 crit_file <- file.path(root, "planning", "specs", "CRITERIA-native-experimental-exit-2026-10-17.csv")
 gates_file <- file.path(root, "tests", "sim", "gates.csv")
-skip_if_not(file.exists(crit_file) && file.exists(gates_file), "planning/ and tests/sim are not shipped with the installed tests")
+skip_if_not(
+  file.exists(crit_file) && file.exists(gates_file),
+  "planning/ and tests/sim are not shipped with the installed tests"
+)
 
 # gates that are not native-engine gates (a package-level check): excluded from the C2 set comparison
 non_native <- "s7-lifecycle"
