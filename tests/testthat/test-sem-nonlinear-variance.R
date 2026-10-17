@@ -60,6 +60,18 @@ test_that("#213 default n_starts: both cases fit and reproduce the unconstrained
   }
 })
 
+test_that("#213 q = 0: the standardized row reproduces the better of the two null models (seed 101)", {
+  # the review found that `a*b/sqrt(...) == 0` is not routed to the zero-product split and errors today
+  d <- nv_data(101, 2.5, 1.5, 2)
+  h1 <- fit_sem(nv_model, d)
+  h0 <- suppressWarnings(fit_sem(paste0(nv_model, "\na*b/sqrt(2*(b^2*Vm+Vy)) == 0"), d, n_starts = 8))
+  best_null <- min(
+    nv_lr(h1, fit_sem(paste0(nv_model, "\na == 0"), d)),
+    nv_lr(h1, fit_sem(paste0(nv_model, "\nb == 0"), d))
+  )
+  expect_equal(nv_lr(h1, h0), best_null, tolerance = 1e-5)
+})
+
 test_that("frozen: the unconstrained fit is unchanged", {
   h1 <- fit_sem(nv_model, nv_data(1, 1.5, 1, 1))
   expect_equal(

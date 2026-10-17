@@ -69,24 +69,22 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
    `tolerance = 1e-9` (cross-platform), not bit identity, so T3 must also compare `identical()` on the real outputs
    locally; only one constraint form (`a*b/sqrt(2*(b^2*Vm+Vy)) == q`) and no inequality, `mbco_sem()` or zero-product
    branch case is covered yet (added to T3a).
-3a. **T3a diagnose before choosing the fix (added by the adverse review):** the issue's mechanism (a step to a negative
-   variance) explains seed 1 (NaN at `Vy = -1.985`) but NOT seed 101: its far-off solution has positive variances
-   (a = -9.74, b = -1.02, Vm = 16.6, Vy = 5.5), a decrement of 9e-11 and status 3 after 7 retries, so it is a genuine
-   spurious stationary point of the constrained problem that the acceptance gate accepts. A variance floor works as a
-   workaround, but the mechanism is not established, so a floor could pass these seeds for the wrong reason. Compare
-   on the two seeds plus the 30-case set before building: (A) a variance floor (relative to the sample variance, not
-   the issue's fixed 1e-4, which is scale dependent) only with nonlinear rows; (B) the unconstrained ML estimate,
-   projected onto the constraints, as one extra start (the constraint holds at it in these cases, so LR = 0 by
-   construction; it also helps inequality rows); (C) rejecting any step with a non-positive variance. Record the
-   choice and the rejected alternatives in the GRILL. Open design points: the "status-3 stop far above the optimum"
-   flag needs an optimum the fit does not have (the unconstrained fit is a lower bound; no threshold is defined), so
-   specify it as a comparison with the unconstrained objective or drop it; a floor must not bind at a true boundary
-   solution (double-null cases), so a floor that is active at the solution must warn.
-3. **T3 #213 fix:** the option T3a selects; the oracle is an independent profile-likelihood inversion over a 30-case
-   set (double null, near-null, b = 0, a = 0, near boundary). The issue reports the set but not the script, so T3a
-   writes the generator and the oracle first (`tests/sim/sem-nonlinear-profile-gate.R`, registered in `gates.csv`) and
-   reports the agreement against the issue's 2.5e-7; planted defect (remove the fix, the gate must fail);
-   NEWS behavior note; e2e with the reproducer.
+3a. **T3a diagnose (DONE 2026-10-16; report `planning/REPORT-213-investigation-2026-10-16.md`):** prototypes plus a
+   ChatGPT answer and an Opus review that ran R. Findings: seed 1 is a negative-variance step (NaN in the constraint
+   value at the SLSQP iterate); seed 101 is a strict local minimum on the opposite sign branch (reduced Lagrangian Hessian
+   eigenvalues 150, 20.5, 6.1, 0.48), so no gate can reject it. No single fix works at `n_starts = 5`: floor alone 4 of
+   480 silent wrong fits, reference start alone 28 of 384 failures (q mirrored or +-0.5). Decision pending the author's
+   GRILL on the improper-solution policy; recommended design in T3.
+3. **T3 #213 fix (nonlinear rows only):** (1) a floor relative to the data scale (`1e-4 * .sem_step_floor()` unit) on the
+   variances in a nonlinear row, with a warning and `floor_active` when it binds; (2) the unconstrained (relaxed) fit as
+   first start and as an incumbent; (3) sign-flipped copies of it (all patterns for k <= 3 path labels, else the joint
+   flip); (4) a dominance rule (never return an accepted fit worse than a feasible reference) and a lower-bound
+   warning. Replaces the "status-3 flag" (status 3 is medfit's routine stop). Oracle: `planning/oracle213.R`
+   (independent profile inversion, executed; compare at the achieved q, not the nominal one, because the 2.5e-7 target
+   is below the constraint-residual effect of about 2.7e-6). Gate `tests/sim/sem-nonlinear-profile-gate.R` with the 30
+   fixtures in the review (section 4.4) and seven planted defects; `identical()` checks on every legacy path; rerun the
+   672 emulated cases against the real code; NEWS behavior note; e2e with the reproducer. Cost about 2x for nonlinear
+   fits.
 4. **Checkpoint 1:** adversarial review of T3; if any unconstrained fit changes, narrow the fix.
 5. **T4 factor gate registration:** verdict function, `gates.csv` row, `MUTANT=` defects exit 1.
 6. **T5 experimental-exit GRILL:** criteria (no open correctness issue on the engine, every native gate registered and
