@@ -281,6 +281,69 @@
   msgs
 }
 
+# The floor for the variances in a nonlinear row (#213), relative to the parameter's natural unit so that it does not
+# depend on the data scale (an absolute 1e-4 bound binds on data in units of 1e-3).
+.sem_var_floor <- 1e-4
+
+# Free variance parameters (diagonal S entries) among `idx` whose floor is below the upper bound.
+.sem_floor_ids <- function(ram, smp, idx, ub) {
+  ids <- intersect(idx, unique(ram$k_s[ram$s_weight == 1]))
+  ids[.sem_var_floor * .sem_step_floor(ram, smp)[ids] < ub[ids]]
+}
+
+# The fit without the nonlinear rows (linear rows and the user's bounds kept, no floor), or NULL when it fails. Its
+# objective is a lower bound for the constrained discrepancy, and its estimate satisfies the nonlinear rows whenever
+# the constraint value is the one at the unconstrained optimum.
+.sem_reference_fit <- function(ram, smp, start, lb, ub, n_starts, control, precondition, constraints) {
+  constraints$nl <- NULL
+  constraints$nli <- NULL
+  # no linear rows left: the plain unconstrained path, as for a model written without constraints
+  if (!nrow(constraints$eq$A) && !nrow(constraints$ineq$A)) {
+    constraints <- NULL
+  }
+  tryCatch(
+    suppressWarnings(.sem_optimize(ram, smp, start, lb, ub, n_starts, control, precondition, constraints)),
+    error = function(e) NULL
+  )
+}
+
+# Starts built from the reference estimate: itself, then copies with the signs of the regression paths in the
+# nonlinear rows flipped (every nonempty subset for up to three paths, otherwise the joint flip). The sign of a
+# product constraint cannot change along the constraint surface, so each sign pattern is a separate branch.
+.sem_reference_starts <- function(theta, ram, idx, lb, ub) {
+  paths <- intersect(idx, ram$k_a)
+  subs <- if (length(paths) == 0L) {
+    list()
+  } else if (length(paths) <= 3L) {
+    unlist(lapply(seq_along(paths), function(m) utils::combn(seq_along(paths), m, simplify = FALSE)),
+           recursive = FALSE)
+  } else {
+    list(seq_along(paths))
+  }
+  out <- list(.sem_clamp(theta, lb, ub))
+  for (sub in subs) {
+    cand <- theta
+    cand[paths[sub]] <- -cand[paths[sub]]
+    cand <- .sem_clamp(cand, lb, ub)
+    if (.sem_start_valid(cand, ram)) {
+      out[[length(out) + 1L]] <- cand
+    }
+  }
+  out
+}
+
+# Whether `theta` satisfies the nonlinear rows (within the constraint tolerance) and the box.
+.sem_ref_feasible <- function(theta, cons, lb, ub) {
+  if (any(theta < lb) || any(theta > ub)) {
+    return(FALSE)
+  }
+  ok <- tryCatch({
+    (is.null(cons$nl) || all(abs(cons$nl$value(theta)) <= .sem_constraint_tol)) &&
+      (is.null(cons$nli) || all(cons$nli$value(theta) <= .sem_constraint_tol))
+  }, error = function(e) FALSE)
+  isTRUE(ok)
+}
+
 # Fit by maximum likelihood. `start` is the user's start; `n_starts` is the
 # total attempt budget (the first start plus up to n_starts - 1 perturbed
 # retries, used only when the earlier ones are not accepted). `control` is
@@ -303,14 +366,28 @@
   checkmate::assert_flag(precondition, .var.name = "precondition")
   opts <- list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-10, ftol_rel = 1e-12, maxeval = 10000L)
   opts[names(control)] <- control
-  start0 <- .sem_clamp(start, lb, ub)
-  starts <- c(list(start0), if (n_starts > 1L) .sem_perturbed_starts(start0, ram, smp, lb, ub, n_starts - 1L))
-  obj <- .sem_objective(ram, smp)
-
   # A model with a nonlinear constraint can have several local optima (`a*b > 0.1` is feasible on two
   # disjoint pieces), so every start is tried and the best accepted one is kept; otherwise the first accepted
   # start wins and the rest are retries.
   best_of <- !is.null(constraints$nl) || !is.null(constraints$nli)
+  # Nonlinear rows only (#213): the variances in the rows get a floor relative to the data scale (the solver
+  # may step to a negative variance, where the row is not defined), the model without the nonlinear rows is
+  # fitted first (its estimate is an incumbent and a start), and its sign-flipped copies are extra starts.
+  # Every other fit takes none of these steps.
+  ref <- NULL
+  floored <- integer()
+  if (best_of) {
+    nl_idx <- sort(unique(c(constraints$nl$idx, constraints$nli$idx)))
+    floored <- .sem_floor_ids(ram, smp, nl_idx, ub)
+    ref <- .sem_reference_fit(ram, smp, start, lb, ub, n_starts, control, precondition, constraints)
+    lb[floored] <- pmax(lb[floored], .sem_var_floor * .sem_step_floor(ram, smp)[floored])
+  }
+  start0 <- .sem_clamp(start, lb, ub)
+  starts <- c(list(start0), if (n_starts > 1L) .sem_perturbed_starts(start0, ram, smp, lb, ub, n_starts - 1L))
+  if (!is.null(ref)) {
+    starts <- c(.sem_reference_starts(ref$theta, ram, nl_idx, lb, ub), starts)
+  }
+  obj <- .sem_objective(ram, smp)
   attempts <- vector("list", length(starts))
   win <- NA_integer_
   for (i in seq_along(starts)) {
@@ -343,6 +420,24 @@
   if (best_of && length(accepted)) {
     win <- accepted[which.min(vapply(attempts[accepted], function(a) a$f, numeric(1)))]
   }
+  # Dominance (#213): a feasible reference estimate is never beaten by a worse accepted fit. When the constraint
+  # already holds at the unconstrained estimate, that estimate is the constrained optimum.
+  eps_f <- if (is.null(ref)) 0 else 1e-10 * max(1, abs(ref$f))
+  ref_ok <- !is.null(ref) && .sem_ref_feasible(ref$theta, constraints, lb, ub)
+  if (ref_ok && (is.na(win) || attempts[[win]]$f > ref$f + eps_f)) {
+    g <- .sem_gate(ref$theta, ref$status, ram, smp, lb, ub, constraints)
+    if (!g$accepted) {
+      stop(sprintf(
+        paste0("optimization incomplete: a feasible point with a lower discrepancy exists (the fit without the ",
+               "nonlinear rows satisfies them), but it was not accepted (%s)"), g$reason
+      ), call. = FALSE)
+    }
+    g$f <- ref$f
+    g$theta <- ref$theta
+    attempts <- c(attempts, list(g))
+    win <- length(attempts)
+    accepted <- c(accepted, win)
+  }
   if (is.na(win)) {
     best <- attempts[[which.min(vapply(attempts, function(a) a$f, numeric(1)))]]
     stop(sprintf(
@@ -351,7 +446,12 @@
     ), call. = FALSE)
   }
   fit <- attempts[[win]]
-  spread <- if (best_of && length(accepted) > 1L) diff(range(vapply(attempts[accepted], function(a) a$f, numeric(1))))
+  # A fit that reaches a feasible reference estimate is the constrained optimum (the reference is a lower bound), so
+  # worse optima on other branches are not worth a note.
+  certified <- ref_ok && fit$f <= ref$f + .sem_spread_tol
+  spread <- if (best_of && !certified && length(accepted) > 1L) {
+    diff(range(vapply(attempts[accepted], function(a) a$f, numeric(1))))
+  }
   if (!is.null(spread) && spread > .sem_spread_tol) {
     warning(sprintf(
       paste0("the starts disagree: %d of %d reached accepted solutions with discrepancies from %s to %s; the ",
@@ -366,6 +466,21 @@
       attempts[[1]]$reason, win - 1L, length(starts) - 1L
     ), call. = FALSE)
   }
+  if (!is.null(ref) && fit$f < ref$f - .sem_spread_tol) {
+    warning(sprintf(
+      paste0("the fit without the nonlinear rows (discrepancy %s) is not the global optimum: the constrained fit ",
+             "found a lower one (%s), so a likelihood-ratio statistic against it is not certified"),
+      format(signif(ref$f, 6)), format(signif(fit$f, 6))
+    ), call. = FALSE)
+  }
+  floor_active <- ram$par_names[intersect(floored, which(fit$active))]
+  if (length(floor_active)) {
+    warning(sprintf(
+      paste0("variance %s is at the solver floor (%s x its natural unit); the constrained optimum may be improper ",
+             "or on the boundary, so the likelihood-ratio statistic and the standard errors treat it as a bound"),
+      paste(floor_active, collapse = ", "), format(.sem_var_floor)
+    ), call. = FALSE)
+  }
   improper <- .sem_improper(fit$theta, ram)
   if (length(improper)) {
     warning("improper solution: ", paste(improper, collapse = "; "), call. = FALSE)
@@ -375,6 +490,7 @@
     theta = stats::setNames(fit$theta, ram$par_names), f = fit$f, status = fit$status,
     decrement = fit$decrement, converged = TRUE, retries = win - 1L,
     active_bounds = ram$par_names[fit$active], improper = improper, attempts = attempts,
+    floor_active = floor_active, reference_f = if (is.null(ref)) NA_real_ else ref$f,
     multipliers = fit$multipliers, sign_check = if (is.null(fit$sign_check)) "ok" else fit$sign_check
   )
 }

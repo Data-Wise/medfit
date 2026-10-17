@@ -62,11 +62,31 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
    so that branch is not load-bearing for this flow and no claim is made about it. Fix the false
    "fresh R process" sentence in the header of `test-s4-registration.R` (the gate is the fresh-process check; the
    testthat file checks the registry only). Size: S, 2-3 h; do before T2 so every later checkpoint includes it.
-2. **T2 #213 red tests:** the issue's two seeds (LR about 0 at the unconstrained estimate) plus one unconstrained fit
-   that must stay bit-identical (frozen fixture).
-3. **T3 #213 fix:** floor or step rejection when nonlinear rows exist; non-convergence flag on a far status-3 stop;
-   oracle is the issue's 30-case profile-inversion agreement (about 2.5e-7); planted defect (remove the floor, the test
-   must fail); NEWS behavior note; e2e with the reproducer.
+2. **T2 #213 red tests (built, `feature/issue-213-variance`):** `test-sem-nonlinear-variance.R`: seed 1 (errors,
+   "no start converged"), seed 101 (a = 2.5, b = 1.5, sigma_Y^2 = 2; LR 1458.9, NaN SEs, `converged` TRUE), the same two
+   at the default `n_starts` (both error today), a positivity check, and two frozen fits (unconstrained, linear
+   constrained). Adverse review 2026-10-16, run by hand: the repro is deterministic; the issue's workaround turns every
+   case green (LR 0, finite SEs), so the tests are satisfiable; the first draft's `expect_no_warning` also forbade the
+   legitimate "starts disagree" note and was replaced by a NaN-only check. Known limits: frozen fits use
+   `tolerance = 1e-9` (cross-platform), not bit identity, so T3 must also compare `identical()` on the real outputs
+   locally; only one constraint form (`a*b/sqrt(2*(b^2*Vm+Vy)) == q`) and no inequality, `mbco_sem()` or zero-product
+   branch case is covered yet (added to T3a).
+3a. **T3a diagnose (DONE 2026-10-16; report `planning/REPORT-213-investigation-2026-10-16.md`):** prototypes plus a
+   ChatGPT answer and an Opus review that ran R. Findings: seed 1 is a negative-variance step (NaN in the constraint
+   value at the SLSQP iterate); seed 101 is a strict local minimum on the opposite sign branch (reduced Lagrangian Hessian
+   eigenvalues 150, 20.5, 6.1, 0.48), so no gate can reject it. No single fix works at `n_starts = 5`: floor alone 4 of
+   480 silent wrong fits, reference start alone 28 of 384 failures (q mirrored or +-0.5). Decision pending the author's
+   GRILL on the improper-solution policy; recommended design in T3.
+3. **T3 #213 fix (nonlinear rows only):** (1) a floor relative to the data scale (`1e-4 * .sem_step_floor()` unit) on the
+   variances in a nonlinear row, with a warning and `floor_active` when it binds; (2) the unconstrained (relaxed) fit as
+   first start and as an incumbent; (3) sign-flipped copies of it (all patterns for k <= 3 path labels, else the joint
+   flip); (4) a dominance rule (never return an accepted fit worse than a feasible reference) and a lower-bound
+   warning. Replaces the "status-3 flag" (status 3 is medfit's routine stop). Oracle: `tests/sim/oracle213.R`
+   (independent profile inversion, executed; compare at the achieved q, not the nominal one, because the 2.5e-7 target
+   is below the constraint-residual effect of about 2.7e-6). Gate `tests/sim/sem-nonlinear-profile-gate.R` with the 30
+   fixtures in the review (section 4.4) and seven planted defects; `identical()` checks on every legacy path; rerun the
+   672 emulated cases against the real code; NEWS behavior note; e2e with the reproducer. Cost about 2x for nonlinear
+   fits.
 4. **Checkpoint 1:** adversarial review of T3; if any unconstrained fit changes, narrow the fix.
 5. **T4 factor gate registration:** verdict function, `gates.csv` row, `MUTANT=` defects exit 1.
 6. **T5 experimental-exit GRILL:** criteria (no open correctness issue on the engine, every native gate registered and

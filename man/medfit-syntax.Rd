@@ -29,7 +29,16 @@ The model syntax read by \code{\link[=fit_sem]{fit_sem()}} and by \code{fit_medi
 Constraints may be nonlinear in the labels (\code{cp == a*b}, \code{a*b == 0.1},
 \code{a*b > 0.1}, \code{ab > 0} with \code{ab := a*b}), solved with the Jacobian recomputed at
 every point; a model with one tries every start and keeps the best accepted
-solution, warning when the starts disagree. A product of labels set to zero
+solution, warning when the starts disagree. For such a model the residual
+variances that appear in a nonlinear row get a lower bound of \code{1e-4} times their
+natural unit (the variable's variance), because a step to a negative variance is
+outside the row's domain; the fit warns when a bound is active, and a residual
+variance below that bound (an R-squared above 0.9999) is not fitted exactly. The
+model without the nonlinear rows is fitted first: its estimate, and copies of it
+with the signs of the regression paths in the rows flipped (a product constraint
+cannot change sign along its surface, so each sign pattern is its own branch),
+are extra starts, and a feasible reference estimate is never replaced by a worse
+accepted fit. Models without a nonlinear row are not affected. A product of labels set to zero
 (\code{a*b == 0}, \code{b1*b2*b3 == 0}) is instead solved exactly: one linear fit per
 factor (\code{a == 0}, \code{b == 0}), keeping the smallest discrepancy. A sum of products
 (\code{a1*b1 + a2*b2 == 0}) has no exact reduction, so it is best-effort: the fit is

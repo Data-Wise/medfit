@@ -122,7 +122,8 @@ verdict_gate <- function(gate, d, s) {
     "product-corr" = c("design", "cvf", "path", "expect", "gap"),
     "product-corr-colon" = c("design", "cvf", "path", "expect", "gap", "gap_column", "err"),
     "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok"),
-    "s7-lifecycle" = c("s7", "s7_version", "step", "ok")
+    "s7-lifecycle" = c("s7", "s7_version", "step", "ok"),
+    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "gap")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -223,6 +224,15 @@ verdict_gate <- function(gate, d, s) {
         )
       )
     },
+    "nonlinear-profile" = {
+      # T3 (#213): every fit reaches the independent oracle's constrained optimum (the gate script applies the
+      # per-run rule; the driver re-checks the counts and the largest gap)
+      rbind(
+        rows_chk(d, s), failed_chk(d),
+        max_chk("oracle gap", d$gap, s$tol_est),
+        chk("floor cases warn", all(d$native_ok[d$fixture %in% "var-1e6-1e-6"] %in% TRUE), "var-1e6-1e-6 rows")
+      )
+    },
     # product-term and four-way gates: the rules live in tests/sim/product-gate-common.R
     product_gate_rules[[gate]](d, s) # nolint: object_usage_linter.
   )
@@ -299,6 +309,7 @@ mutate <- function(gate, kind, d) {
     if (gate %in% c("product-corr", "product-corr-colon")) d$gap[which(d$expect == "match")[1:3]] <- 1e-2
     if (gate == "four-way-kat") d$bias_z[1:3] <- 9
     if (gate == "s7-lifecycle") d$s7_version[d$s7 == "main"] <- d$s7_version[d$s7 == "release"][1]
+    if (gate == "nonlinear-profile") d$gap[1:3] <- 1
   }
   if (kind == "failed") {
     if (gate %in% c("product-null", "product-null-colon", "product-fixed-var", "product-fixed-var-colon",
@@ -307,12 +318,15 @@ mutate <- function(gate, kind, d) {
     }
     if (gate %in% c("product-corr", "product-corr-colon")) d$gap[1] <- NA_real_
     if (gate == "s7-lifecycle") d$ok[1] <- FALSE
+    if (gate == "nonlinear-profile") d$native_ok[1] <- FALSE
   }
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
   if (kind == "missing") {
     # the product-term and four-way gates have 2 to 84 rows: drop the last one, so only the row-count check can reject
-    new_gate <- gate %in% c(names(product_gate_rules), "s7-lifecycle") # nolint: object_usage_linter.
+    # nolint start: object_usage_linter.
+    new_gate <- gate %in% c(names(product_gate_rules), "s7-lifecycle", "nonlinear-profile")
+    # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
   }
   if (kind == "failed") {
@@ -483,7 +497,8 @@ scripts <- c(
   "product-corr" = "tests/sim/product-correlated-residuals.R",
   "product-corr-colon" = "tests/sim/product-correlated-residuals-colon.R",
   "four-way-kat" = "tests/sim/four-way-known-answer.R",
-  "s7-lifecycle" = "tests/sim/s7-lifecycle-gate.R"
+  "s7-lifecycle" = "tests/sim/s7-lifecycle-gate.R",
+  "nonlinear-profile" = "tests/sim/sem-nonlinear-profile-gate.R"
 )
 
 # ---- main ----

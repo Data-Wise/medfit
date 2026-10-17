@@ -77,7 +77,7 @@
 # perturbed) and `hess(theta, u)` (the list of the rows' second-derivative matrices, central differences of
 # the Jacobian, used for the curvature of the Lagrangian in the acceptance gate). Evaluation goes through the
 # guarded evaluator, so a value that is not one finite real number is an error naming the point, not a NaN
-# inside the solver. NULL when there are none.
+# inside the solver. `idx` lists the parameters the rows use. NULL when there are none.
 .sem_nl_rows <- function(nl, q) {
   if (!length(nl)) {
     return(NULL)
@@ -99,6 +99,8 @@
   }
   list(
     text = vapply(nl, `[[`, "", "text"),
+    # the parameters (indices) the rows use: the solver floors the variances among them (#213)
+    idx = sort(unique(unlist(lapply(nl, `[[`, "idx")))),
     value = function(theta) vapply(nl, value_one, numeric(1), theta = theta),
     jac = function(theta, u) {
       out <- matrix(0, length(nl), q)
