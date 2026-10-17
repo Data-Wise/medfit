@@ -126,6 +126,7 @@ verdict_gate <- function(gate, d, s) {
     "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "gap"),
     "nonlinear-parity" = c("problem", "structure", "n", "seed", "native_ok", "improper", "feas", "omx_ok", "f_gap",
                            "est_gap", "ref_gap", "ann", "se_rel", "se_oracle"),
+    "bootstrap-coverage" = c("sim", "lower", "upper", "hit"),
     "fixed-x" = c("tag", "check", "pass"),
     "mean-constrained" = c("structure", "n", "seed", "shift", "problem", "ok", "feas", "invariance", "lavaan_ok"),
     factor = c("n", "k", "seed", "miss", "pass", "err", "fxmode", "lavaan", "fitstats")
@@ -227,6 +228,20 @@ verdict_gate <- function(gate, d, s) {
             vers != main_vers,
           sprintf("release %s, main %s", paste(vers, collapse = ","), paste(main_vers, collapse = ","))
         )
+      )
+    },
+    "bootstrap-coverage" = {
+      # 0.11.0 T6c: the coverage of the 95% parametric-bootstrap interval lies in [min_pass, tol_est] (the nominal 0.95
+      # plus or minus four Monte Carlo SEs at 2000 data sets); the script applies the same band
+      cov <- mean(d$hit %in% TRUE)
+      rbind(
+        rows_chk(d, s),
+        chk(
+          "no missing interval", !anyNA(d$lower) && !anyNA(d$upper) && !anyNA(d$hit),
+          sprintf("%d NA hit", sum(is.na(d$hit)))
+        ),
+        chk("coverage in band", cov >= s$min_pass && cov <= s$tol_est,
+            sprintf("%.4f, band [%s, %s]", cov, s$min_pass, s$tol_est))
       )
     },
     "fixed-x" = {
@@ -412,6 +427,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "nonlinear-profile") d$gap[1:3] <- 1
     if (gate == "nonlinear-parity") d$ref_gap[which(d$problem == "eq")[1:3]] <- 1e-3
     if (gate == "fixed-x") d$pass[which(d$check == "estimates")[1:3]] <- FALSE
+    if (gate == "bootstrap-coverage") d$hit[1:200] <- FALSE
     if (gate == "mean-constrained") d$invariance[which(!is.na(d$invariance))[1:3]] <- 5
     if (gate == "factor") d$pass[1:3] <- FALSE
   }
@@ -434,6 +450,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "nonlinear-profile") d$native_ok[1] <- FALSE
     if (gate == "nonlinear-parity") d$native_ok[which(d$problem == "eq")[1]] <- FALSE
     if (gate == "fixed-x") d$pass[which(d$check == "fit")[1]] <- FALSE
+    if (gate == "bootstrap-coverage") d$hit[1] <- NA
     if (gate == "mean-constrained") d$ok[1] <- FALSE
     if (gate == "factor") d$err[1] <- "fit failed"
   }
@@ -444,7 +461,7 @@ mutate <- function(gate, kind, d) {
     # nolint start: object_usage_linter.
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
-      "mean-constrained", "factor"
+      "mean-constrained", "factor", "bootstrap-coverage"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -622,6 +639,7 @@ scripts <- c(
   "s7-lifecycle" = "tests/sim/s7-lifecycle-gate.R",
   "nonlinear-profile" = "tests/sim/sem-nonlinear-profile-gate.R",
   "nonlinear-parity" = "tests/sim/sem-nonlinear-gate.R",
+  "bootstrap-coverage" = "tests/sim/bootstrap-coverage.R",
   "fixed-x" = "tests/sim/sem-fixed-x-gate.R",
   "mean-constrained" = "tests/sim/sem-mean-constrained-gate.R",
   factor = "tests/sim/sem-factor-gate.R"

@@ -112,21 +112,23 @@ test_that("rule 9 intercept clause: fixed, shared-label and constrained intercep
 })
 
 test_that("rule 9: a fixed_x row is allowed, a user-fixed intercept still is not", {
-  syn <- "y ~ x + m + x:m\nm ~ x"
-  tab <- pr_ok(syn, fixed_x = TRUE)
-  expect_true(any(tab$fixed_x))
-  expect_true(all(tab$user[tab$fixed_x] == 0L))
-  expect_error(pr_ok(paste0(syn, "\ny ~ 0*1"), fixed_x = TRUE), "intercept.*fixed")
-  # end to end: the fit runs, and the structural estimates equal the free-moment fit
-  set.seed(8)
-  n <- 400L
-  x <- rnorm(n)
-  m <- 0.5 * x + rnorm(n)
-  d <- data.frame(y = 0.3 * x + 0.4 * m + 0.25 * x * m + rnorm(n), x = x, m = m)
-  fixed <- fit_sem(syn, d, fixed_x = TRUE, meanstructure = TRUE)
-  free <- fit_sem(syn, d, meanstructure = TRUE)
-  keep <- c("y~x", "y~m", "y~m:x", "m~x")
-  expect_equal(coef(fixed)[keep], coef(free)[keep], tolerance = 1e-5)
+  quiet_product_advisories({
+    syn <- "y ~ x + m + x:m\nm ~ x"
+    tab <- pr_ok(syn, fixed_x = TRUE)
+    expect_true(any(tab$fixed_x))
+    expect_true(all(tab$user[tab$fixed_x] == 0L))
+    expect_error(pr_ok(paste0(syn, "\ny ~ 0*1"), fixed_x = TRUE), "intercept.*fixed")
+    # end to end: the fit runs, and the structural estimates equal the free-moment fit
+    set.seed(8)
+    n <- 400L
+    x <- rnorm(n)
+    m <- 0.5 * x + rnorm(n)
+    d <- data.frame(y = 0.3 * x + 0.4 * m + 0.25 * x * m + rnorm(n), x = x, m = m)
+    fixed <- fit_sem(syn, d, fixed_x = TRUE, meanstructure = TRUE)
+    free <- fit_sem(syn, d, meanstructure = TRUE)
+    keep <- c("y~x", "y~m", "y~m:x", "m~x")
+    expect_equal(coef(fixed)[keep], coef(free)[keep], tolerance = 1e-5)
+  })
 })
 
 test_that("the no-product model and every fixed_x = FALSE fit are untouched", {
@@ -166,4 +168,10 @@ test_that("planted defect (c): no intercept clause lets a fixed intercept throug
   mutant <- sem_mutate(.sem_check_product_completed, "length(fx)", "0L")
   local_mocked_bindings(.sem_check_product_completed = mutant)
   expect_no_error(pr_ok(syn))
+})
+
+test_that("quiet_product_advisories mutes the two product advisories and nothing else", {
+  expect_no_warning(quiet_product_advisories(warning("the model has a product term (m:x) and `se_type = \"model\"`")))
+  expect_no_warning(quiet_product_advisories(warning("the model test is not valid for this model: the product")))
+  expect_warning(quiet_product_advisories(warning("a different warning")), "a different warning")
 })

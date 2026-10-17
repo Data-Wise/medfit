@@ -11,8 +11,9 @@ skip_if_not(
   "planning/ and tests/sim are not shipped with the installed tests"
 )
 
-# gates that are not native-engine gates (a package-level check): excluded from the C2 set comparison
-non_native <- "s7-lifecycle"
+# gates that are not native-engine gates (a package-level check, and the bootstrap coverage study): excluded from the C2
+# set comparison
+non_native <- c("s7-lifecycle", "bootstrap-coverage")
 
 criteria_failures <- function(crit, gates, exports, root) {
   out <- character()
@@ -60,7 +61,7 @@ test_that("planted defects are caught", {
   expect_match(criteria_failures(crit, rbind(gates, extra), exports, root), "not in the criteria: brand-new-gate",
                all = FALSE)
   # a package-level gate does not need listing
-  expect_identical(non_native, "s7-lifecycle")
+  expect_identical(non_native, c("s7-lifecycle", "bootstrap-coverage"))
   # a missing export
   no_mbco <- setdiff(exports, "mbco_sem")
   expect_match(criteria_failures(crit, gates, no_mbco, root), "not exported: mbco_sem", all = FALSE)
