@@ -109,14 +109,6 @@ q_of <- function(tag, qh) {
   switch(tag, qhat = qh, `qhat-0.1` = qh - 0.1, `qhat+0.05` = qh + 0.05, `qhat+0.2` = qh + 0.2, `-qhat` = -qh, zero = 0)
 }
 
-.glog <- NULL
-.gate_orig <- get(".sem_gate", ns)
-swap(".sem_gate", function(theta, status, ram, smp, lb, ub, constraints) {
-  g <- .gate_orig(theta, status, ram, smp, lb, ub, constraints)
-  .glog[[length(.glog) + 1L]] <<- data.frame(acc = isTRUE(g$accepted), status = status, dec = signif(g$decrement, 3),
-                                              reason = substr(paste(g$reason, collapse = ";"), 1, 70))
-  g
-})
 rows <- list()
 for (f in fx) {
   d <- f$data
@@ -130,7 +122,6 @@ for (f in fx) {
     syn <- paste0(model, "\na*b/sqrt(2*(b^2*Vm+Vy)) == ", format(q_fit, digits = 17))
     wmsg <- character()
     if (nzchar(Sys.getenv("SEED"))) set.seed(as.integer(Sys.getenv("SEED")) + match(tag, q_set))
-    .glog <- NULL
     h2 <- tryCatch(
       withCallingHandlers(fit_sem(syn, d, n_starts = 5), warning = function(w) {
         wmsg <<- c(wmsg, conditionMessage(w))
@@ -140,7 +131,6 @@ for (f in fx) {
     )
     if (is.character(h2)) {
       cat(sprintf("%-10s ERROR: %s\n", tag, substr(h2, 1, 200)))
-      print(do.call(rbind, .glog)); .glog <- NULL
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = FALSE, omx_ok = TRUE,
                                               lr = NA_real_, lr_oracle = NA_real_, gap = NA_real_, improper = "",
                                               note = substr(h2, 1, 80), stringsAsFactors = FALSE)
@@ -149,7 +139,6 @@ for (f in fx) {
     cf <- stats::coef(h2)
     q_ach <- unname(cf["a"] * cf["b"] / sqrt(2 * (cf["b"]^2 * cf["Vm"] + cf["Vy"])))
     if (length(h2@diagnostics$active_bounds) == 0L) { cat("  DIAGNOSTICS for", tag, "\n"); print(utils::str(h2@diagnostics, max.level = 2, give.attr = FALSE)); print(utils::str(h2@internals[setdiff(names(h2@internals), c("ram", "smp", "data"))], max.level = 2, give.attr = FALSE)); cat("  theta:", paste(names(stats::coef(h2)), signif(stats::coef(h2), 6), sep = "=", collapse = " "), "\n"); cat("  h1 theta:", paste(names(stats::coef(h1)), signif(stats::coef(h1), 6), sep = "=", collapse = " "), "\n") }
-    cat("  attempts for", tag, ":\n"); print(do.call(rbind, .glog)); .glog <- NULL
     cat(sprintf("%-10s q=%+.6f q_ach=%+.8f diff=%.2e | bounds=[%s] | warn=[%s] | lr=%.4f\n", tag, q, q_ach, q_ach - q, paste(h2@diagnostics$active_bounds, collapse=","), paste(substr(wmsg,1,40), collapse=" | "), 2 * (as.numeric(stats::logLik(h1)) - as.numeric(stats::logLik(h2)))))
     lr <- 2 * (as.numeric(stats::logLik(h1)) - as.numeric(stats::logLik(h2)))
     lr_or <- or213_lr(d, if (tag == "zero") 0 else q_ach)
