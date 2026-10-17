@@ -17,6 +17,8 @@
 # unselected variables dropped), jointlik (joint instead of conditional logLik), acceptbad (a non-exogenous name
 # accepted), aicwarnonly (AIC across fixed sets returns a number).
 # Run from the package root:  Rscript tests/sim/sem-fixed-x-gate.R   (SEEDS=5 by default)
+# Results: tests/sim/results/sem-fixed-x-gate-<date>.csv, one row per check (tag, check, pass); a mutant run writes to
+# the temporary directory
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/testthat/helper-fixed-x.R")
@@ -66,7 +68,13 @@ subsets <- unlist(lapply(1:3, function(k) utils::combn(fx_exo, k, simplify = FAL
 
 bad <- character()
 worst <- 0
-note <- function(tag) bad <<- c(bad, tag) # nolint: assignment_linter.
+ck <- list() # one row per check made, pass or fail, for the driver (tests/sim/run-gates.R)
+check <- function(tag, what, ok) {
+  ok <- isTRUE(ok)
+  ck[[length(ck) + 1L]] <<- data.frame(tag = tag, check = what, pass = ok) # nolint: assignment_linter.
+  if (!ok) bad <<- c(bad, paste(tag, what)) # nolint: assignment_linter.
+  invisible(ok)
+}
 for (n in c(100L, 400L)) {
   for (seed in seeds) {
     d <- sim(n, seed)
@@ -79,17 +87,15 @@ for (n in c(100L, 400L)) {
         for (sel in subsets) {
           tag <- sprintf("n=%d seed=%d %s%s {%s}", n, seed, se, if (weighted) " w" else "", paste(sel, collapse = ","))
           fixed <- tryCatch(suppressWarnings(do.call(fit_sem, c(args, list(fixed_x = sel)))), error = function(e) NULL)
-          if (is.null(fixed)) {
-            note(paste(tag, "fit failed"))
-            next
-          }
+          check(tag, "fit", !is.null(fixed))
+          if (is.null(fixed)) next
           sh <- fx_shared(free, fixed)
           est_dev <- max(abs(sh$est[[2L]] - sh$est[[1L]])) / max(1, max(abs(sh$est[[1L]])))
           worst <- max(worst, est_dev)
-          if (est_dev > 1e-6) note(paste(tag, "estimates"))
-          if (max(abs(sh$se[[2L]] / sh$se[[1L]] - 1)) > 1e-6) note(paste(tag, "SEs"))
-          if (fixed@df != free@df) note(paste(tag, "df"))
-          if (length(fixed@theta) != length(free@theta) - fx_n_removed(sel)) note(paste(tag, "npar"))
+          check(tag, "estimates", est_dev <= 1e-6)
+          check(tag, "SEs", max(abs(sh$se[[2L]] / sh$se[[1L]] - 1)) <= 1e-6)
+          check(tag, "df", fixed@df == free@df)
+          check(tag, "npar", length(fixed@theta) == length(free@theta) - fx_n_removed(sel))
         }
       }
     }
@@ -97,9 +103,9 @@ for (n in c(100L, 400L)) {
       fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE, information = "expected")
       ref <- lavaan::sem(fx_syntax, d, fixed.x = TRUE)
       tag <- sprintf("lavaan n=%d seed=%d", n, seed)
-      if (length(fixed@theta) != lavaan::fitMeasures(ref, "npar")) note(paste(tag, "npar"))
-      if (fixed@df != lavaan::fitMeasures(ref, "df")) note(paste(tag, "df"))
-      if (abs(fixed@f * fixed@n_obs - lavaan::fitMeasures(ref, "chisq")) > 1e-5) note(paste(tag, "chisq"))
+      check(tag, "npar", length(fixed@theta) == lavaan::fitMeasures(ref, "npar"))
+      check(tag, "df", fixed@df == lavaan::fitMeasures(ref, "df"))
+      check(tag, "chisq", abs(fixed@f * fixed@n_obs - lavaan::fitMeasures(ref, "chisq")) <= 1e-5)
     }
   }
 }
@@ -111,26 +117,24 @@ for (shift in c(1e2, 1e3, 1e5)) {
   for (v in c("mediator1", "outcome", "covariate1", "covariate2")) far[[v]] <- far[[v]] + shift
   fit <- tryCatch(suppressWarnings(fit_sem(fx_syntax, far, meanstructure = TRUE, fixed_x = TRUE)),
                   error = function(e) NULL)
-  if (is.null(fit) || anyNA(fit@vcov)) {
-    note(sprintf("scale %g not accepted", shift))
-  } else if (max(abs(fit@theta[c("a", "b", "cp")] - base@theta[c("a", "b", "cp")])) > 1e-5) {
-    note(sprintf("scale %g paths", shift))
-  } else if (abs(as.numeric(logLik(fit)) / as.numeric(logLik(base)) - 1) > 1e-6) {
-    note(sprintf("scale %g logLik", shift))
+  tag <- sprintf("scale %g", shift)
+  accepted <- !is.null(fit) && !anyNA(fit@vcov)
+  check(tag, "accepted", accepted)
+  if (accepted) {
+    check(tag, "paths", max(abs(fit@theta[c("a", "b", "cp")] - base@theta[c("a", "b", "cp")])) <= 1e-5)
+    check(tag, "logLik", abs(as.numeric(logLik(fit)) / as.numeric(logLik(base)) - 1) <= 1e-6)
   }
 }
 
 # likelihood parity and guards
 if (requireNamespace("lavaan", quietly = TRUE)) {
   ref <- as.numeric(lavaan::logLik(lavaan::sem(fx_syntax, d0, meanstructure = TRUE, fixed.x = TRUE)))
-  if (abs(as.numeric(logLik(base)) - ref) > 1e-6) note("logLik differs from lavaan's conditional value")
+  check("lavaan", "logLik", abs(as.numeric(logLik(base)) - ref) <= 1e-6)
 }
-if (!inherits(try(fit_sem(fx_syntax, d0, fixed_x = "outcome"), silent = TRUE), "try-error")) {
-  note("a non-exogenous fixed_x name was accepted")
-}
-if (!inherits(try(AIC(fit_sem(fx_syntax, d0), base), silent = TRUE), "try-error")) {
-  note("AIC across different fixed sets returned a value")
-}
+check("guard", "non-exogenous fixed_x name refused",
+      inherits(try(fit_sem(fx_syntax, d0, fixed_x = "outcome"), silent = TRUE), "try-error"))
+check("guard", "AIC across different fixed sets refused",
+      inherits(try(AIC(fit_sem(fx_syntax, d0), base), silent = TRUE), "try-error"))
 
 # timing table (reported, not gated): p covariates, free parameters and wall time, fixed vs free
 timing <- NULL
@@ -156,6 +160,10 @@ if (!nzchar(mutant)) {
   utils::write.csv(timing, "planning/specs/evidence/native-fixed-x-2026-10-13/timing.csv", row.names = FALSE)
 }
 
+ck <- do.call(rbind, ck)
+out_dir <- if (nzchar(mutant)) tempdir() else "tests/sim/results"
+dir.create(out_dir, showWarnings = FALSE)
+utils::write.csv(ck, file.path(out_dir, sprintf("sem-fixed-x-gate-%s.csv", Sys.Date())), row.names = FALSE)
 cat(sprintf("\nworst relative estimate deviation (fixed vs free): %.2e\n", worst))
 cat(sprintf("\nviolations: %d\n", length(bad)))
 if (length(bad)) {
