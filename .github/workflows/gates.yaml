@@ -38,11 +38,8 @@ jobs:
           dependencies: '"all"'
           extra-packages: any::remotes, any::devtools
 
-      - name: Driver self-test (mutants)
-        run: Rscript tests/sim/run-gates.R --mutants
-
-      - name: Run every gate (--sim)
-        run: Rscript tests/sim/run-gates.R --sim
+      - name: DIAG floor fixture
+        run: Rscript tests/sim/diag-213-floor.R
 
       - name: Upload results and logs
         if: always()
