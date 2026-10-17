@@ -7,8 +7,6 @@
 #' Methods for SEMFit objects
 #'
 #' @description
-#' `r lifecycle::badge("experimental")`
-#'
 #' Accessors and display for a [SEMFit] returned by [fit_sem()].
 #'
 #' @param object,x A [SEMFit] object

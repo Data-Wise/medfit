@@ -1,8 +1,6 @@
 #' medfit Model Syntax
 #'
 #' @description
-#' `r lifecycle::badge("experimental")`
-#'
 #' The model syntax read by [fit_sem()] and by `fit_mediation(engine =
 #' "native")`. It is a lavaan-style core plus two extensions, each marked
 #' "medfit extension" below. One statement per line (or separated by `;`).

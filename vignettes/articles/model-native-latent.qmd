@@ -15,7 +15,7 @@ execute:
 The mediator is a construct measured by several indicators, and you want its
 indirect effect without first averaging the indicators into a score. Part of the
 [Models](models.html) collection; the second of five
-[native engine](model-native.html) pages. The engine is experimental.
+[native engine](model-native.html) pages.
 
 | | |
 |---|---|
@@ -96,8 +96,6 @@ One simulated dataset shows the direction, not the size of the difference.
 - **One latent mediator per `fit_mediation(engine = "native")` call**, as with
   any single mediator; for several, use `fit_sem()` and
   [extract](model-native-multi.html) the structure.
-- **Experimental.** The syntax and the printed diagnostics may change before the
-  engine is stable.
 
 ## Related
 

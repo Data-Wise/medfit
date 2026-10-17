@@ -7,8 +7,6 @@
 #' Fit a Structural Equation Model by Maximum Likelihood
 #'
 #' @description
-#' `r lifecycle::badge("experimental")`
-#'
 #' Fits a model written in lavaan-style syntax to raw data with medfit's native
 #' maximum-likelihood engine, and returns a [SEMFit] object. The engine handles
 #' observed and latent variables, user labels, fixed values, starts and bounds,

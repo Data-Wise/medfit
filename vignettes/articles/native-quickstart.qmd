@@ -13,7 +13,7 @@ execute:
 ---
 
 Fit a path model from syntax, read it, test it, and turn it into a mediation
-object, with no package besides medfit. The native engine is experimental. For
+object, with no package besides medfit. For
 the full picture see [the native engine guide](native-guide.html).
 
 | | |

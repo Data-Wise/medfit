@@ -49,7 +49,7 @@ open its page. For a one-page lookup of every function see the
 | Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, native via `fit_sem()` | model | [parallel](model-parallel.html) |
 | Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](model-joint.html) |
 | Cluster-level treatment (2-1-1) | `ClusterMediationData` | `lmer` fits or `engine = "lmer"` | model, Kenward-Roger (`"kr"`) | [cluster](model-cluster.html) |
-| Latent mediator, constraints | `SEMFit`, then extracted | `fit_sem()`, `engine = "native"` (experimental) | model, sandwich | [native](model-native.html), [latent](model-native-latent.html) |
+| Latent mediator, constraints | `SEMFit`, then extracted | `fit_sem()`, `engine = "native"` | model, sandwich | [native](model-native.html), [latent](model-native-latent.html) |
 | Categorical covariates (development version) | `SEMFit`, then extracted | `fit_sem()` with a factor, character or logical column | model, sandwich | [categorical covariates](model-native-factors.html) |
 
 Inference works on every row: delta-method intervals from `tidy()` and

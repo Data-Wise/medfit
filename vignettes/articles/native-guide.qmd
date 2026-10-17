@@ -16,7 +16,7 @@ The native engine fits models from lavaan-style syntax by maximum likelihood,
 with a covariance structure and, when you write intercepts, observed means. This
 guide covers the whole workflow in one place: syntax, fitting, inference,
 constraints, model comparison, diagnostics and the route to the mediation
-objects. It is experimental. For a first look, read
+objects. For a first look, read
 [the five-minute quickstart](native-quickstart.html).
 
 | | |

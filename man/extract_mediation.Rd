@@ -44,8 +44,8 @@ must be computed on those rows, and a pair of fits that kept different
 individuals is an error (best effort: it compares the data row names the
 fits kept, so it cannot see a mismatch between frames whose row names were
 both reset)
-\item \strong{SEMFit}: Extract from a model fitted by \code{\link[=fit_sem]{fit_sem()}} (the experimental
-native maximum-likelihood engine), with the same arguments and structures as
+\item \strong{SEMFit}: Extract from a model fitted by \code{\link[=fit_sem]{fit_sem()}} (the native
+maximum-likelihood engine), with the same arguments and structures as
 the lavaan method. A treatment-by-mediator product written \code{x:m} (or \code{m:x})
 in the outcome equation gives the four-way decomposition, stored under the
 canonical name \code{m:x}; without it \code{decomposition = "four_way"} is refused

@@ -19,7 +19,7 @@ estimating them and holds them at their sample values, as lavaan's `fixed.x = TR
 chapter shows exactly what that changes (the parameter count and the likelihood) and what it
 does not (the estimates and standard errors of the structural parameters, that is the paths, the
 residual variances and the intercepts of the other variables; the degrees of freedom; and the
-chi-square), proves why, and shows which comparisons the engine then refuses. The engine is experimental.
+chi-square), proves why, and shows which comparisons the engine then refuses.
 
 | | |
 |---|---|

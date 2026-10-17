@@ -18,7 +18,7 @@ product is how a treatment-by-mediator interaction enters the model, and it is w
 reads it, how the engine builds its column, why the likelihood can treat it as an ordinary exogenous variable,
 which models the engine therefore accepts and why each exclusion exists, and what happens to the standard errors and
 the model test. Every claim is checked against least squares, against a hand computation or against a simulation
-whose result could have come out the other way. The engine is experimental.
+whose result could have come out the other way.
 
 | | |
 |---|---|

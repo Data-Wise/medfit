@@ -17,7 +17,7 @@ Chapters [1](native-book-1-mean-structure.html) and
 chapter adds constraints such as `a + b == 1.2` or `cp == a*b` and follows one fit
 through every stage the engine runs: turning a constraint into a row, handing the rows
 to the solver, judging the solution with the acceptance gate, polishing it, and
-handling rows that repeat each other. The engine is experimental.
+handling rows that repeat each other.
 
 | | |
 |---|---|

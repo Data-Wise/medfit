@@ -18,7 +18,7 @@ The `extract_mediation()` function provides a standardized interface for extract
 - **lm/glm** models (base R) - implemented
 - **lavaan** SEM models - implemented
 - **lmer** mixed models (cluster-level treatment, 2-1-1) - implemented
-- **`fit_sem()`** native SEM fits (experimental) - implemented
+- **`fit_sem()`** native SEM fits - implemented
 
 Extraction returns the S7 class that matches the structure: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, or `ClusterMediationData`. All share one interface (`nie()`, `confint()`, `tidy()`, `bootstrap_mediation()`, ...) across modeling frameworks.
 
@@ -781,7 +781,7 @@ returning an object whose numbers would disagree with `nie()`. `weights` and
 
 ## Extracting from a Native SEM Fit
 
-`fit_sem()` fits model syntax with the experimental native engine and returns a
+`fit_sem()` fits model syntax with the native engine and returns a
 `SEMFit`. `extract_mediation()` accepts it with the same arguments as the lavaan
 method and returns the same classes:
 
@@ -917,7 +917,7 @@ The extraction system is designed to accommodate further extensions:
 - **New model types**: methods for brms, glmer and similar fits can be added (`lmer` is supported).
 - **Moderated mediation**: the treatment-by-mediator decomposition is supported (above); other moderators are not.
 - **Multiple treatments**: comparative mediation analysis is not supported.
-- **Latent variables**: supported through the experimental native route, `fit_sem()`.
+- **Latent variables**: supported through the native route, `fit_sem()`.
 
 All classes share the same interface, so new model types plug into the same effects, intervals and bootstrap.
 
@@ -985,7 +985,7 @@ Model extraction is **complete**:
 - ✅ Tidyverse methods (tidy, glance)
 - ✅ Base R generics (coef, vcov, confint, nobs)
 - ✅ lmer extraction (`ClusterMediationData`, cluster-level treatment)
-- ✅ Native SEM extraction (`fit_sem()` to `SEMFit` to `extract_mediation()`, experimental)
+- ✅ Native SEM extraction (`fit_sem()` to `SEMFit` to `extract_mediation()`)
 
 See `NEWS.md` for updates.
 
