@@ -8,6 +8,7 @@ passed. One question at a time; the author's answers are the decisions. Recommen
 | # | Branch | Question | Decision | Consequence accepted |
 |---|---|---|---|---|
 | G1 | Weakest recommendation | CRAN 0.3.2 still ships results earlier releases fixed as wrong (#81, #82) and the hold's triggers are passive | Submit 0.11.0 to CRAN after a one-week soak (recommended) | A CRAN review of a much larger package (native engine, nloptr Imports, OpenMx Suggests) and the strict-check and cran-comments routine; fixes the wrong results on CRAN and unblocks probmed's `medfit (>= 0.3.0)` gate |
+| G2 | Riskiest assumption | `run-gates.R` is the single release gate but nothing enforces it; T5b showed a gate sit red unseen | CI job running `run-gates.R --sim` on PRs to `main` (recommended) | About 8 min of runner time per release PR, a workflow that installs lavaan, OpenMx and nloptr, and a decision on making it a required check |
 
 ## Open Questions
 
