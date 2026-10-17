@@ -1,6 +1,6 @@
 # PLAN: medfit 0.11.0 scope (2026-10-16)
 
-**Status:** APPROVED 2026-10-16 by the author (Option B; D2 floor only with nonlinear constraints, D3 keep experimental, D4 no F7, D5 latent means 1.0; D1 still open: confirm the S7 date and any CRAN mail). T1 started on `feature/s7-compat`. Produced by a read-only Plan agent (Opus) from
+**Status:** APPROVED 2026-10-16, revised 2026-10-16 (harness and test matrix added) by the author (Option B; D2 floor only with nonlinear constraints, D3 keep experimental, D4 no F7, D5 latent means 1.0; D1 still open: confirm the S7 date and any CRAN mail). T1 started on `feature/s7-compat`. Produced by a read-only Plan agent (Opus) from
 `.STATUS`, the two 0.10.1/0.11.0 proposals, the roadmap, the specs, NEWS, and open issues and PRs. Two claims were
 re-checked by hand: PR #214 and issue #213 exist as described. Not verified: that CRAN 0.3.2 fails under development
 S7 (inferred from the shared nullable-union pattern), the S7 1.0 CRAN date, whether #214 passes medfit's suite, and
@@ -66,6 +66,32 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
 9. **Release:** bump to 0.11.0; NEWS header; `.STATUS` and CLAUDE.md "Current status"; grep for "0.10.0" leftovers;
    `dev` to `main` merge-commit PR with the evidence summary; CI green on `main`; tag `v0.11.0`; GitHub release;
    r-universe via the packages list (allow about 2 h, no manual dispatch); pkgdown deploys from `main`; back-merge.
+
+## Harness and test matrix (added 2026-10-16)
+
+Every task ships a red test, a registered harness gate where behavior is numeric or environment-dependent, and a
+planted defect (`MUTANT=` in `tests/sim/`, `sem_mutate()` in testthat) that must make the gate exit 1. Gates are
+rows in `tests/sim/gates.csv` run by `tests/sim/run-gates.R`; no gate is "run by hand".
+
+| Task | testthat (fast, in the suite) | Harness gate (`tests/sim/`) | Planted defect | Evidence in PR |
+|---|---|---|---|---|
+| T1 S7 compat | `test-s4-registration.R`: unions registered, `show()` with `call = NULL`, hooks all-or-none; `.register_s4_unions()` idempotent (guard each `setClassUnion` with `isClassUnion()`, so a second call is safe and covered for codecov) | `s7-compat-gate.R`: install the built tarball into a scratch library, then load, unload, reload and `fit_sem()` once under S7 0.2.2 and under `RConsortium/S7@main`; exit 1 on any load error | drop the `medfit_numeric` line; remove the `S7_on_load` branch | two-version transcript |
+| T2 #213 red tests | the issue's two seeds (LR near 0 at the unconstrained estimate) fail first; frozen unconstrained fixture (bit-identical) | none yet (T3 adds it) | n/a (red phase) | red output quoted |
+| T3 #213 fix | seeds green; non-convergence flag on a far status-3 stop; unconstrained fixture still bit-identical | `sem-mbco-213-gate.R`: 30-case profile inversion agrees to about 2.5e-7; reuses `sem-nonlinear-gate.R` helpers; also asserts the full existing nonlinear and constrained gates stay green | remove the floor; weaken the status-3 flag | gate transcript, before and after counts |
+| T4 factor gate | `test-run-gates.R`-style check that the gate is listed and its verdict function returns FALSE on a mutant | register `sem-factor-gate.R` in `run-gates.R` and `gates.csv` | existing `MUTANT=` set in the gate | `run-gates.R` summary table |
+| T5 exit criteria | `test-experimental-criteria.R`: each criterion names a gate id that exists in `gates.csv` and a docs page that exists | the criteria are the gate list: all native gates in `gates.csv` pass | delete a gate row; the test must fail | criteria file and the passing run |
+| T6 hygiene | none beyond the triage notes | none | none | `.STATUS` notes |
+
+Cross-cutting:
+
+- **Harness registry:** after T1, T3 and T4, `Rscript tests/sim/run-gates.R` is the single release gate; Checkpoint 2
+  runs it in full (not a subset) next to the strict check.
+- **Environment matrix:** the S7 job runs on S7 0.2.2 (CRAN) and `RConsortium/S7@main`; the dev-S7 job is allowed to
+  fail CI until S7 1.0 is released and is run locally in the meantime (scratch library, as in T1's transcript).
+- **Coverage:** load-time code (class unions, `.onLoad` branches) needs a callable, idempotent function to be
+  measured; codecov ignores `R/zzz.R`, so logic goes in the covered file and `zzz.R` only calls it.
+- **No new test without an oracle:** numeric claims use an independent oracle (profile inversion, lavaan, OpenMx, hand
+  calculation); a test with no failure mode does not count.
 
 ## Decisions for the author
 
