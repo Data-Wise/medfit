@@ -40,6 +40,10 @@
 # Run from the package root:  Rscript tests/sim/sem-factor-gate.R   (SEEDS=5 by default; SEEDS=1 is a smoke run)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
+if (!requireNamespace("lavaan", quietly = TRUE)) {
+  stop("this gate needs lavaan (Suggests): without it the parity checks would be skipped, not failed",
+       call. = FALSE)
+}
 seeds <- seq_len(as.integer(Sys.getenv("SEEDS", "5")))
 mutant <- Sys.getenv("MUTANT", "")
 ns <- asNamespace("medfit")
@@ -158,7 +162,7 @@ one_run <- function(n, k, seed, miss, fxmode) {
       nrow(fixed) > 0L && all(c(fixed$lhs, fixed$rhs) %in% colnames(sm)) &&
         max(abs(fixed$est - mapply(function(a, b) sm[a, b], fixed$lhs, fixed$rhs))) <= 1e-8
     }
-    if (fxmode %in% c("free", "all") && requireNamespace("lavaan", quietly = TRUE)) {
+    if (fxmode %in% c("free", "all")) {
       l <- lavaan::sem(mod_t, d$twin, meanstructure = TRUE, fixed.x = fxmode == "all", information = "observed")
       l0 <- lavaan::sem(mod_t, d$twin, meanstructure = FALSE, fixed.x = fxmode == "all", information = "observed")
       ref <- lavaan::fitMeasures(l0, c("npar", "df", "chisq"))
@@ -296,7 +300,7 @@ prod_cells <- expand.grid(n = c(100L, 400L), k = c(2L, 3L), seed = seeds, miss =
 prod <- do.call(rbind, lapply(seq_len(nrow(prod_cells)), function(i) do.call(prod_run, as.list(prod_cells[i, ]))))
 ok <- function(x) x %in% TRUE
 prod$pass <- ok(prod$twin) & ok(prod$ols) & ok(prod$verdict) & ok(prod$refit) & ok(prod$names) & !nzchar(prod$err)
-lav_ran <- out$fxmode %in% c("free", "all") & requireNamespace("lavaan", quietly = TRUE)
+lav_ran <- out$fxmode %in% c("free", "all") # the lavaan and fit-statistic rules apply to these cells, always
 out$pass <- ok(out$twin) & ok(out$names) & (ok(out$lavaan) | !lav_ran) & (ok(out$fitstats) | !lav_ran) &
   ok(out$moments) & ok(out$refit) & !nzchar(out$err)
 lost$pass <- ok(lost$lost)
