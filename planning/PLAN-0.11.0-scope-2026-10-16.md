@@ -16,10 +16,10 @@ whether probmed adopted `fit_sem()` for P_med MBCO or only evaluated it.
 | T4 factor gate registration | merged | #222 `b909a7f` |
 | T5 exit criteria | merged: criteria file `planning/specs/CRITERIA-native-experimental-exit-2026-10-17.csv`, decisions in `GRILL-native-experimental-exit-2026-10-17.md`, `test-experimental-criteria.R`; three more native gates registered (`nonlinear-parity`, `fixed-x`, `mean-constrained`; 18 gates in `gates.csv`) | #225 `7169d08` |
 | T5b reliability regression (unplanned) | merged | #226 `41d97d4` |
-| T5c drop the label (D3 reversed) | open, checks running | #227 |
+| T5c drop the label (D3 reversed) | merged | #227 `0d1a732` |
 | T5d CI: R-CMD-check on `main` only, dev gated locally (unplanned) | merged | #224 `d40e171` |
-| T5e gate hardening from the Codex adversarial review | open, not started | below |
-| T6 hygiene | open | below |
+| T5e gate hardening from the Codex adversarial review | merged | #229 `5a1f127` |
+| T6 hygiene | open, triaged 2026-10-17 | below |
 | Checkpoint 2, release | open | below |
 
 **T5b, what happened.** The first full `run-gates.R --sim` on current code was not green: the reliability gate had 4 of
@@ -39,13 +39,21 @@ criteria were checked, not assumed: C2 to C4 hold after #226; C1 is the open-iss
 change notice, #83 the CRAN 0.3.2 issues), because the repo has no `correctness` label to query. #227 carries the
 change and the evidence; NEWS states the freeze.
 
-**T5e, Codex adversarial review (2026-10-17, medium).** `tests/sim/sem-factor-gate.R` passes a run when `lavaan` is not
+**T5e, Codex adversarial review (2026-10-17, medium; DONE, #229).** `tests/sim/sem-factor-gate.R` passes a run when `lavaan` is not
 installed (`(ok(out$lavaan) | !lav_ran)`), and the driver checks only `pass` and `err`, so the 680-run gate can succeed
 with every lavaan and fit-statistic parity check skipped. Verified in the source. The 2026-10-17 baseline ran with lavaan
 installed, so the evidence stands, but the criterion C3a ("lavaan parity") is not enforced where lavaan is absent.
-Task: make a missing `lavaan` fail the factor gate (or write a `lavaan_ran` column and have the verdict require it),
-add a driver fixture for the unavailable-lavaan case, and audit the other registered gates for the same
-skip-tolerance (`requireNamespace` in `tests/sim/`). Size S, 1-2 h; before the release PR.
+Done in #229: the factor, fixed-x and mean-constrained scripts stop without lavaan (the three `requireNamespace`
+conditionals in `tests/sim/` were the only skip-tolerant spots; parity, constrained, se and nonlinear-parity call
+`library(OpenMx)` or `lavaan::` unguarded and already error); the driver requires the lavaan checks to have run and
+has a `no_lavaan` mutation for all three (each rejected); each script run with lavaan stubbed out exits 1.
+
+**Second Codex adversarial review (2026-10-17, "the PRs"; no new finding).** It reviewed the local branch
+`feature/factor-gate-registration` (`dd42073`, the T4 branch in the main checkout, 295 files against `main`), which
+predates #229, and repeated the same finding at `sem-factor-gate.R:299-301`, now rated high. Disposition: already
+fixed on `dev`. What it did not do: review the other PRs it was pointed at (#224 to #228, the optimizer fallback in
+#226, the label change in #227), because its target was the stale checkout. A review of those needs `--base dev` from a
+branch that contains them, or a review run inside the worktree of each PR; not run, and not claimed.
 
 ## Recommendation: Option B (middle), about 3-4 working days
 
@@ -134,7 +142,34 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
 6. **T5 experimental-exit GRILL (DONE, #225; the label itself is T5c, #227):** criteria (no open correctness issue on the engine, every native gate registered and
    green, lavaan and OpenMx parity green, an API freeze list); record the decision; the author pastes the RMediation
    message.
-7. **T6 hygiene:** triage notes in `.STATUS` (its `next:` field still describes the 0.10.0 release and the RMediation #41 merge, `d29685f`, is not recorded); roadmap Next Actions refresh (stale since 2026-10-10); close #130 at release; triage the 2 skips and the pandoc `--mathjax` deprecation.
+7. **T6 hygiene (triaged 2026-10-17 against `dev` at `0d1a732`; full suite 6392 passed, 0 failed, 2 skipped, 42 warnings):**
+   - **T6a Vacuous Heywood assertion (a real test defect, found by the warning triage).** In `test-sem-optim.R` ("a Heywood
+     case matches lavaan, warns, and names the negative variance") the lavaan names are built with spaces
+     (`m2 ~ eta`) but `theta` is named without them (`m2~eta`) since the T12 renaming, so `names(est) %in% names(fit$theta)`
+     matches 0 of 11, `max()` of nothing is `-Inf` (the one non-product warning) and `expect_lt(-Inf, 1e-6)` passes. The
+     test has compared no estimate with lavaan since 2026-10-11. Fix: build the lavaan names the way the package names
+     them, assert the number matched equals `length(fit$theta)`, and plant the defect (shift one estimate) to see it fail.
+     Then grep the tests for the same pattern (`%in% names(` followed by `max(abs(`) and require a nonzero match count
+     where one is expected. Size S, 1 h; this is the only T6 item that could hide a regression.
+   - **T6b 41 of the 42 warnings** are two intended user-facing advisories raised by tests that fit product models for
+     another purpose (`test-sem-product-materialize.R` 29, `-mean.R` 8, `-rules.R` 4): the `se_type = "model"` advisory
+     for a product, and "the model test is not valid" for an endogenous product factor. Wrap those fits in one helper that
+     suppresses exactly these two messages and keep the tests that assert them. Size S, 1 h; no behavior change.
+   - **T6c the 2 skips:** `test-bootstrap.R` ("parametric bootstrap achieves nominal CI coverage") is an unconditional
+     `skip("Simulation test - run separately for CI coverage validation")` with no gate behind it: register it as a gate
+     or delete it (a skipped test is not evidence). `test-extract-lavaan.R` ("errors without lavaan installed") skips
+     whenever lavaan is installed, which is by design.
+   - **T6d pandoc `--mathjax` deprecation:** raised by the pkgdown build (`math-rendering: mathjax`), rendering succeeds.
+     Upstream, not fixable in the package short of switching the renderer; record as watch-only, not a release blocker.
+   - **T6e `.STATUS`:** the `next:` field still describes the 0.10.0 release, the RMediation #41 merge (`d29685f`) is not
+     recorded, and `release_0_11_0` stops at T4. Rewrite it from this plan's progress table (once, not repeated in
+     CLAUDE.md or memory).
+   - **T6f roadmap:** Next Actions refreshed in #228; nothing further.
+   - **T6g issues at release:** #213 closes with the release PR (its fix is #221); #130 closes (the `[BREAKING]` notice, no
+     work left); #214 gets a closing comment (ported to `dev` as #219, the contributor was asked to retarget); #83 stays
+     open until the CRAN decision (D1).
+   - **T6h local cleanup:** eight worktrees under `~/.git-worktrees/medfit/` and their merged branches; several need the
+     author's `git branch -D` because branch-guard blocks the agent.
 8. **Checkpoint 2 (release gate):** full suite, `lintr` after `load_all()`, strict check (CLAUDE.md recipe),
    `urlchecker::url_check()`, `spelling::spell_check_package()`, and `Rscript tests/sim/run-gates.R --sim` in full on the
    release commit (after T5e). R-CMD-check no longer runs on `dev` PRs (#224), so the strict check and
