@@ -31,11 +31,20 @@ CRAN action today). This plan is the watch-and-verify work so that stays true. N
    OK on all 13 flavors today).
 3. Whether probmed and RMediation (Suggests/Imports of medfit's classes) have their own S7 1.0 exposure.
 
+## S1 result (2026-10-17, DONE)
+
+Full suite on `S7@main` (version 0.2.2.9000, `S7_on_build` exported), medfit installed from `dev` (`047a90f` plus docs) into a
+scratch library, `testthat::test_dir(package = "medfit", load_package = "installed")`, `NOT_CRAN=true`: **6397 passed,
+0 failed, 0 errors, 1 skipped (the lavaan-absence test, by design), 0 warnings**, identical to the S7 0.2.2 count at
+Checkpoint 2. The unknown "does the suite pass on S7 1.0 development" is answered for today's `main`. A first attempt was
+killed mid-run when launched as a bare `&` job (no result line); the rerun under a tracked background task completed. Not
+covered: S7 changes after today (S5), and the `method<-` probe (S3).
+
 ## Tasks
 
 | # | Task | Done when | Size |
 |---|---|---|---|
-| S1 | Run the full suite on `S7@main` in a scratch library (installed medfit, not `load_all()`), triage every failure against the S7 0.2.2 baseline | pass/fail counts quoted; each new failure is a medfit bug, an S7 bug (issue filed upstream) or a test that assumed 0.2.2 | S, 1 h |
+| S1 (DONE 2026-10-17, 6397/0) | Run the full suite on `S7@main` in a scratch library (installed medfit, not `load_all()`), triage every failure against the S7 0.2.2 baseline | pass/fail counts quoted; each new failure is a medfit bug, an S7 bug (issue filed upstream) or a test that assumed 0.2.2 | S, 1 h |
 | S2 | If S1 is green, add the full-suite run as an optional `--sim` step of the lifecycle gate (skips never count: a missing S7@main is a failed row, as now); if S1 finds failures, fix and add a red test per failure | gate row exists, planted defect exits 1 | S-M |
 | S3 | Probe the not-audited row: unload medfit, reload, and call every `method<-` generic on one object per class under `S7@main` | one transcript, 8 classes, 0 errors | S, 1 h |
 | S4 | Check probmed and RMediation against `S7@main` (their suites, medfit installed from `dev`) | counts quoted, or an issue in each repo | S, 1 h each; cross-repo writes need the author's go |
