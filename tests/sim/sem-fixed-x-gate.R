@@ -22,7 +22,8 @@
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
 if (!requireNamespace("lavaan", quietly = TRUE)) {
-  stop("this gate needs lavaan (Suggests): without it the lavaan parity checks would be skipped, not failed", call. = FALSE)
+  stop("this gate needs lavaan (Suggests): without it the parity checks would be skipped, not failed",
+       call. = FALSE)
 }
 source("tests/testthat/helper-fixed-x.R")
 source("tests/testthat/helper-sem.R") # provides sem_mutate
@@ -130,10 +131,8 @@ for (shift in c(1e2, 1e3, 1e5)) {
 }
 
 # likelihood parity and guards
-{
-  ref <- as.numeric(lavaan::logLik(lavaan::sem(fx_syntax, d0, meanstructure = TRUE, fixed.x = TRUE)))
-  check("lavaan", "logLik", abs(as.numeric(logLik(base)) - ref) <= 1e-6)
-}
+ref <- as.numeric(lavaan::logLik(lavaan::sem(fx_syntax, d0, meanstructure = TRUE, fixed.x = TRUE)))
+check("lavaan", "logLik", abs(as.numeric(logLik(base)) - ref) <= 1e-6)
 check("guard", "non-exogenous fixed_x name refused",
       inherits(try(fit_sem(fx_syntax, d0, fixed_x = "outcome"), silent = TRUE), "try-error"))
 check("guard", "AIC across different fixed sets refused",

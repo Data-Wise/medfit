@@ -41,7 +41,8 @@
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
 if (!requireNamespace("lavaan", quietly = TRUE)) {
-  stop("this gate needs lavaan (Suggests): without it the lavaan parity checks would be skipped, not failed", call. = FALSE)
+  stop("this gate needs lavaan (Suggests): without it the parity checks would be skipped, not failed",
+       call. = FALSE)
 }
 seeds <- seq_len(as.integer(Sys.getenv("SEEDS", "5")))
 mutant <- Sys.getenv("MUTANT", "")

@@ -25,7 +25,8 @@
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
 if (!requireNamespace("lavaan", quietly = TRUE)) {
-  stop("this gate needs lavaan (Suggests): without it the lavaan parity checks would be skipped, not failed", call. = FALSE)
+  stop("this gate needs lavaan (Suggests): without it the parity checks would be skipped, not failed",
+       call. = FALSE)
 }
 seeds <- seq_len(as.integer(Sys.getenv("SEEDS", "5")))
 mutant <- Sys.getenv("MUTANT", "")
@@ -124,29 +125,27 @@ for (i in seq_along(rows)) {
     cat(r$structure, r$n, r$seed, r$problem, "est", est, "se", se, "\n")
   }
 }
-{
-  for (ri in seq_along(rows)) {
-    r <- rows[[ri]]
-    if (!r$ok || r$shift != 0 || r$problem == "zero") next
-    st <- structures[[r$structure]]
-    syn <- paste0(st$syntax, "\n", problems[[r$problem]])
-    d <- NULL
-    set.seed(1000L * r$seed + r$n)
-    d <- st$sim(r$n)
-    ref <- tryCatch(suppressWarnings(lavaan::sem(syn, d, meanstructure = TRUE, fixed.x = FALSE)),
-                    error = function(e) NULL)
-    if (is.null(ref) || !lavaan::lavInspect(ref, "converged")) next
-    lav_n <- lav_n + 1L
-    chi <- unname(lavaan::fitMeasures(ref, "chisq"))
-    nat <- r$fit@f * r$fit@n_obs
-    same <- abs(nat - chi) < 1e-3
-    est_ok <- !same || max(abs(r$fit@theta[keep] - lavaan::coef(ref)[keep]), na.rm = TRUE) < 5e-4
-    lav_row[ri] <- !(nat > chi + 1e-4 || !est_ok)
-    if (nat > chi + 1e-4 || !est_ok) {
-      lav_bad <- lav_bad + 1L
-      if (nzchar(Sys.getenv("DEBUG"))) {
-        cat("lavaan", r$structure, r$n, r$seed, r$problem, "native", nat, "lav", chi, "\n")
-      }
+for (ri in seq_along(rows)) {
+  r <- rows[[ri]]
+  if (!r$ok || r$shift != 0 || r$problem == "zero") next
+  st <- structures[[r$structure]]
+  syn <- paste0(st$syntax, "\n", problems[[r$problem]])
+  d <- NULL
+  set.seed(1000L * r$seed + r$n)
+  d <- st$sim(r$n)
+  ref <- tryCatch(suppressWarnings(lavaan::sem(syn, d, meanstructure = TRUE, fixed.x = FALSE)),
+                  error = function(e) NULL)
+  if (is.null(ref) || !lavaan::lavInspect(ref, "converged")) next
+  lav_n <- lav_n + 1L
+  chi <- unname(lavaan::fitMeasures(ref, "chisq"))
+  nat <- r$fit@f * r$fit@n_obs
+  same <- abs(nat - chi) < 1e-3
+  est_ok <- !same || max(abs(r$fit@theta[keep] - lavaan::coef(ref)[keep]), na.rm = TRUE) < 5e-4
+  lav_row[ri] <- !(nat > chi + 1e-4 || !est_ok)
+  if (nat > chi + 1e-4 || !est_ok) {
+    lav_bad <- lav_bad + 1L
+    if (nzchar(Sys.getenv("DEBUG"))) {
+      cat("lavaan", r$structure, r$n, r$seed, r$problem, "native", nat, "lav", chi, "\n")
     }
   }
 }
