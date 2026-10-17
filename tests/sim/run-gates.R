@@ -127,7 +127,8 @@ verdict_gate <- function(gate, d, s) {
     "nonlinear-parity" = c("problem", "structure", "n", "seed", "native_ok", "improper", "feas", "omx_ok", "f_gap",
                            "est_gap", "ref_gap", "ann", "se_rel", "se_oracle"),
     "fixed-x" = c("tag", "check", "pass"),
-    "mean-constrained" = c("structure", "n", "seed", "shift", "problem", "ok", "feas", "invariance", "lavaan_ok")
+    "mean-constrained" = c("structure", "n", "seed", "shift", "problem", "ok", "feas", "invariance", "lavaan_ok"),
+    factor = c("n", "k", "seed", "miss", "pass", "err")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -300,6 +301,16 @@ verdict_gate <- function(gate, d, s) {
         )
       )
     },
+    factor = {
+      # T4: the factor gate applies its own per-run rule (twin, names, lavaan, fitstats, moments, refit, lost cells,
+      # product cells) and writes one `pass` per run; the driver re-checks the count, every pass and every error
+      errs <- sum(nzchar(ifelse(is.na(d$err), "", as.character(d$err))))
+      rbind(
+        rows_chk(d, s),
+        chk("passing runs", all(d$pass %in% TRUE), sprintf("%d of %d fail", sum(!(d$pass %in% TRUE)), nrow(d))),
+        chk("errors", errs == 0, sprintf("%d runs with an error message", errs))
+      )
+    },
     "nonlinear-profile" = {
       # T3 (#213): every fit reaches the independent oracle's constrained optimum (the gate script applies the
       # per-run rule; the driver re-checks the counts and the largest gap)
@@ -389,6 +400,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "nonlinear-parity") d$ref_gap[which(d$problem == "eq")[1:3]] <- 1e-3
     if (gate == "fixed-x") d$pass[which(d$check == "estimates")[1:3]] <- FALSE
     if (gate == "mean-constrained") d$invariance[which(!is.na(d$invariance))[1:3]] <- 5
+    if (gate == "factor") d$pass[1:3] <- FALSE
   }
   if (kind == "failed") {
     if (gate %in% c("product-null", "product-null-colon", "product-fixed-var", "product-fixed-var-colon",
@@ -401,6 +413,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "nonlinear-parity") d$native_ok[which(d$problem == "eq")[1]] <- FALSE
     if (gate == "fixed-x") d$pass[which(d$check == "fit")[1]] <- FALSE
     if (gate == "mean-constrained") d$ok[1] <- FALSE
+    if (gate == "factor") d$err[1] <- "fit failed"
   }
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
@@ -408,7 +421,8 @@ mutate <- function(gate, kind, d) {
     # the product-term and four-way gates have 2 to 84 rows: drop the last one, so only the row-count check can reject
     # nolint start: object_usage_linter.
     new_gate <- gate %in% c(
-      names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x", "mean-constrained"
+      names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
+      "mean-constrained", "factor"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -585,7 +599,8 @@ scripts <- c(
   "nonlinear-profile" = "tests/sim/sem-nonlinear-profile-gate.R",
   "nonlinear-parity" = "tests/sim/sem-nonlinear-gate.R",
   "fixed-x" = "tests/sim/sem-fixed-x-gate.R",
-  "mean-constrained" = "tests/sim/sem-mean-constrained-gate.R"
+  "mean-constrained" = "tests/sim/sem-mean-constrained-gate.R",
+  factor = "tests/sim/sem-factor-gate.R"
 )
 
 # ---- main ----
