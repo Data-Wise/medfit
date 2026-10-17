@@ -324,7 +324,9 @@ mutate <- function(gate, kind, d) {
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
   if (kind == "missing") {
     # the product-term and four-way gates have 2 to 84 rows: drop the last one, so only the row-count check can reject
-    new_gate <- gate %in% c(names(product_gate_rules), "s7-lifecycle", "nonlinear-profile") # nolint: object_usage_linter.
+    # nolint start: object_usage_linter.
+    new_gate <- gate %in% c(names(product_gate_rules), "s7-lifecycle", "nonlinear-profile")
+    # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
   }
   if (kind == "failed") {

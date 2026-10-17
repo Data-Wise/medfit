@@ -128,7 +128,7 @@ test_that("dominance: a worse accepted fit never replaces a feasible reference e
   expect_lt(abs(nv_lr(h1, h2)), 1e-6)
 })
 
-test_that("dominance: when the reference is feasible but not accepted, the fit stops instead of returning a worse one", {
+test_that("dominance: a feasible reference that is not accepted stops the fit instead of a worse one winning", {
   d <- nv_data(101, 2.5, 1.5, 2)
   h1 <- fit_sem(nv_model, d)
   st <- nv_stub_wrong_branch(gate_accepts_ref = FALSE)
