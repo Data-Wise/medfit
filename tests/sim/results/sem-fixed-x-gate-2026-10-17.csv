@@ -1,0 +1,1078 @@
+"tag","check","pass"
+"n=100 seed=1 model {treatment}","fit",TRUE
+"n=100 seed=1 model {treatment}","estimates",TRUE
+"n=100 seed=1 model {treatment}","SEs",TRUE
+"n=100 seed=1 model {treatment}","df",TRUE
+"n=100 seed=1 model {treatment}","npar",TRUE
+"n=100 seed=1 model {covariate1}","fit",TRUE
+"n=100 seed=1 model {covariate1}","estimates",TRUE
+"n=100 seed=1 model {covariate1}","SEs",TRUE
+"n=100 seed=1 model {covariate1}","df",TRUE
+"n=100 seed=1 model {covariate1}","npar",TRUE
+"n=100 seed=1 model {covariate2}","fit",TRUE
+"n=100 seed=1 model {covariate2}","estimates",TRUE
+"n=100 seed=1 model {covariate2}","SEs",TRUE
+"n=100 seed=1 model {covariate2}","df",TRUE
+"n=100 seed=1 model {covariate2}","npar",TRUE
+"n=100 seed=1 model {treatment,covariate1}","fit",TRUE
+"n=100 seed=1 model {treatment,covariate1}","estimates",TRUE
+"n=100 seed=1 model {treatment,covariate1}","SEs",TRUE
+"n=100 seed=1 model {treatment,covariate1}","df",TRUE
+"n=100 seed=1 model {treatment,covariate1}","npar",TRUE
+"n=100 seed=1 model {treatment,covariate2}","fit",TRUE
+"n=100 seed=1 model {treatment,covariate2}","estimates",TRUE
+"n=100 seed=1 model {treatment,covariate2}","SEs",TRUE
+"n=100 seed=1 model {treatment,covariate2}","df",TRUE
+"n=100 seed=1 model {treatment,covariate2}","npar",TRUE
+"n=100 seed=1 model {covariate1,covariate2}","fit",TRUE
+"n=100 seed=1 model {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=1 model {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=1 model {covariate1,covariate2}","df",TRUE
+"n=100 seed=1 model {covariate1,covariate2}","npar",TRUE
+"n=100 seed=1 model {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=1 model {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=1 model {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=1 model {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=1 model {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=1 sandwich {treatment}","fit",TRUE
+"n=100 seed=1 sandwich {treatment}","estimates",TRUE
+"n=100 seed=1 sandwich {treatment}","SEs",TRUE
+"n=100 seed=1 sandwich {treatment}","df",TRUE
+"n=100 seed=1 sandwich {treatment}","npar",TRUE
+"n=100 seed=1 sandwich {covariate1}","fit",TRUE
+"n=100 seed=1 sandwich {covariate1}","estimates",TRUE
+"n=100 seed=1 sandwich {covariate1}","SEs",TRUE
+"n=100 seed=1 sandwich {covariate1}","df",TRUE
+"n=100 seed=1 sandwich {covariate1}","npar",TRUE
+"n=100 seed=1 sandwich {covariate2}","fit",TRUE
+"n=100 seed=1 sandwich {covariate2}","estimates",TRUE
+"n=100 seed=1 sandwich {covariate2}","SEs",TRUE
+"n=100 seed=1 sandwich {covariate2}","df",TRUE
+"n=100 seed=1 sandwich {covariate2}","npar",TRUE
+"n=100 seed=1 sandwich {treatment,covariate1}","fit",TRUE
+"n=100 seed=1 sandwich {treatment,covariate1}","estimates",TRUE
+"n=100 seed=1 sandwich {treatment,covariate1}","SEs",TRUE
+"n=100 seed=1 sandwich {treatment,covariate1}","df",TRUE
+"n=100 seed=1 sandwich {treatment,covariate1}","npar",TRUE
+"n=100 seed=1 sandwich {treatment,covariate2}","fit",TRUE
+"n=100 seed=1 sandwich {treatment,covariate2}","estimates",TRUE
+"n=100 seed=1 sandwich {treatment,covariate2}","SEs",TRUE
+"n=100 seed=1 sandwich {treatment,covariate2}","df",TRUE
+"n=100 seed=1 sandwich {treatment,covariate2}","npar",TRUE
+"n=100 seed=1 sandwich {covariate1,covariate2}","fit",TRUE
+"n=100 seed=1 sandwich {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=1 sandwich {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=1 sandwich {covariate1,covariate2}","df",TRUE
+"n=100 seed=1 sandwich {covariate1,covariate2}","npar",TRUE
+"n=100 seed=1 sandwich {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=1 sandwich {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=1 sandwich {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=1 sandwich {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=1 sandwich {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=1 sandwich w {treatment}","fit",TRUE
+"n=100 seed=1 sandwich w {treatment}","estimates",TRUE
+"n=100 seed=1 sandwich w {treatment}","SEs",TRUE
+"n=100 seed=1 sandwich w {treatment}","df",TRUE
+"n=100 seed=1 sandwich w {treatment}","npar",TRUE
+"n=100 seed=1 sandwich w {covariate1}","fit",TRUE
+"n=100 seed=1 sandwich w {covariate1}","estimates",TRUE
+"n=100 seed=1 sandwich w {covariate1}","SEs",TRUE
+"n=100 seed=1 sandwich w {covariate1}","df",TRUE
+"n=100 seed=1 sandwich w {covariate1}","npar",TRUE
+"n=100 seed=1 sandwich w {covariate2}","fit",TRUE
+"n=100 seed=1 sandwich w {covariate2}","estimates",TRUE
+"n=100 seed=1 sandwich w {covariate2}","SEs",TRUE
+"n=100 seed=1 sandwich w {covariate2}","df",TRUE
+"n=100 seed=1 sandwich w {covariate2}","npar",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate1}","fit",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate1}","estimates",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate1}","SEs",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate1}","df",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate1}","npar",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate2}","fit",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate2}","estimates",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate2}","SEs",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate2}","df",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate2}","npar",TRUE
+"n=100 seed=1 sandwich w {covariate1,covariate2}","fit",TRUE
+"n=100 seed=1 sandwich w {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=1 sandwich w {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=1 sandwich w {covariate1,covariate2}","df",TRUE
+"n=100 seed=1 sandwich w {covariate1,covariate2}","npar",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=1 sandwich w {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=2 model {treatment}","fit",TRUE
+"n=100 seed=2 model {treatment}","estimates",TRUE
+"n=100 seed=2 model {treatment}","SEs",TRUE
+"n=100 seed=2 model {treatment}","df",TRUE
+"n=100 seed=2 model {treatment}","npar",TRUE
+"n=100 seed=2 model {covariate1}","fit",TRUE
+"n=100 seed=2 model {covariate1}","estimates",TRUE
+"n=100 seed=2 model {covariate1}","SEs",TRUE
+"n=100 seed=2 model {covariate1}","df",TRUE
+"n=100 seed=2 model {covariate1}","npar",TRUE
+"n=100 seed=2 model {covariate2}","fit",TRUE
+"n=100 seed=2 model {covariate2}","estimates",TRUE
+"n=100 seed=2 model {covariate2}","SEs",TRUE
+"n=100 seed=2 model {covariate2}","df",TRUE
+"n=100 seed=2 model {covariate2}","npar",TRUE
+"n=100 seed=2 model {treatment,covariate1}","fit",TRUE
+"n=100 seed=2 model {treatment,covariate1}","estimates",TRUE
+"n=100 seed=2 model {treatment,covariate1}","SEs",TRUE
+"n=100 seed=2 model {treatment,covariate1}","df",TRUE
+"n=100 seed=2 model {treatment,covariate1}","npar",TRUE
+"n=100 seed=2 model {treatment,covariate2}","fit",TRUE
+"n=100 seed=2 model {treatment,covariate2}","estimates",TRUE
+"n=100 seed=2 model {treatment,covariate2}","SEs",TRUE
+"n=100 seed=2 model {treatment,covariate2}","df",TRUE
+"n=100 seed=2 model {treatment,covariate2}","npar",TRUE
+"n=100 seed=2 model {covariate1,covariate2}","fit",TRUE
+"n=100 seed=2 model {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=2 model {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=2 model {covariate1,covariate2}","df",TRUE
+"n=100 seed=2 model {covariate1,covariate2}","npar",TRUE
+"n=100 seed=2 model {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=2 model {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=2 model {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=2 model {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=2 model {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=2 sandwich {treatment}","fit",TRUE
+"n=100 seed=2 sandwich {treatment}","estimates",TRUE
+"n=100 seed=2 sandwich {treatment}","SEs",TRUE
+"n=100 seed=2 sandwich {treatment}","df",TRUE
+"n=100 seed=2 sandwich {treatment}","npar",TRUE
+"n=100 seed=2 sandwich {covariate1}","fit",TRUE
+"n=100 seed=2 sandwich {covariate1}","estimates",TRUE
+"n=100 seed=2 sandwich {covariate1}","SEs",TRUE
+"n=100 seed=2 sandwich {covariate1}","df",TRUE
+"n=100 seed=2 sandwich {covariate1}","npar",TRUE
+"n=100 seed=2 sandwich {covariate2}","fit",TRUE
+"n=100 seed=2 sandwich {covariate2}","estimates",TRUE
+"n=100 seed=2 sandwich {covariate2}","SEs",TRUE
+"n=100 seed=2 sandwich {covariate2}","df",TRUE
+"n=100 seed=2 sandwich {covariate2}","npar",TRUE
+"n=100 seed=2 sandwich {treatment,covariate1}","fit",TRUE
+"n=100 seed=2 sandwich {treatment,covariate1}","estimates",TRUE
+"n=100 seed=2 sandwich {treatment,covariate1}","SEs",TRUE
+"n=100 seed=2 sandwich {treatment,covariate1}","df",TRUE
+"n=100 seed=2 sandwich {treatment,covariate1}","npar",TRUE
+"n=100 seed=2 sandwich {treatment,covariate2}","fit",TRUE
+"n=100 seed=2 sandwich {treatment,covariate2}","estimates",TRUE
+"n=100 seed=2 sandwich {treatment,covariate2}","SEs",TRUE
+"n=100 seed=2 sandwich {treatment,covariate2}","df",TRUE
+"n=100 seed=2 sandwich {treatment,covariate2}","npar",TRUE
+"n=100 seed=2 sandwich {covariate1,covariate2}","fit",TRUE
+"n=100 seed=2 sandwich {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=2 sandwich {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=2 sandwich {covariate1,covariate2}","df",TRUE
+"n=100 seed=2 sandwich {covariate1,covariate2}","npar",TRUE
+"n=100 seed=2 sandwich {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=2 sandwich {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=2 sandwich {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=2 sandwich {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=2 sandwich {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=2 sandwich w {treatment}","fit",TRUE
+"n=100 seed=2 sandwich w {treatment}","estimates",TRUE
+"n=100 seed=2 sandwich w {treatment}","SEs",TRUE
+"n=100 seed=2 sandwich w {treatment}","df",TRUE
+"n=100 seed=2 sandwich w {treatment}","npar",TRUE
+"n=100 seed=2 sandwich w {covariate1}","fit",TRUE
+"n=100 seed=2 sandwich w {covariate1}","estimates",TRUE
+"n=100 seed=2 sandwich w {covariate1}","SEs",TRUE
+"n=100 seed=2 sandwich w {covariate1}","df",TRUE
+"n=100 seed=2 sandwich w {covariate1}","npar",TRUE
+"n=100 seed=2 sandwich w {covariate2}","fit",TRUE
+"n=100 seed=2 sandwich w {covariate2}","estimates",TRUE
+"n=100 seed=2 sandwich w {covariate2}","SEs",TRUE
+"n=100 seed=2 sandwich w {covariate2}","df",TRUE
+"n=100 seed=2 sandwich w {covariate2}","npar",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate1}","fit",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate1}","estimates",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate1}","SEs",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate1}","df",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate1}","npar",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate2}","fit",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate2}","estimates",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate2}","SEs",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate2}","df",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate2}","npar",TRUE
+"n=100 seed=2 sandwich w {covariate1,covariate2}","fit",TRUE
+"n=100 seed=2 sandwich w {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=2 sandwich w {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=2 sandwich w {covariate1,covariate2}","df",TRUE
+"n=100 seed=2 sandwich w {covariate1,covariate2}","npar",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=2 sandwich w {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=3 model {treatment}","fit",TRUE
+"n=100 seed=3 model {treatment}","estimates",TRUE
+"n=100 seed=3 model {treatment}","SEs",TRUE
+"n=100 seed=3 model {treatment}","df",TRUE
+"n=100 seed=3 model {treatment}","npar",TRUE
+"n=100 seed=3 model {covariate1}","fit",TRUE
+"n=100 seed=3 model {covariate1}","estimates",TRUE
+"n=100 seed=3 model {covariate1}","SEs",TRUE
+"n=100 seed=3 model {covariate1}","df",TRUE
+"n=100 seed=3 model {covariate1}","npar",TRUE
+"n=100 seed=3 model {covariate2}","fit",TRUE
+"n=100 seed=3 model {covariate2}","estimates",TRUE
+"n=100 seed=3 model {covariate2}","SEs",TRUE
+"n=100 seed=3 model {covariate2}","df",TRUE
+"n=100 seed=3 model {covariate2}","npar",TRUE
+"n=100 seed=3 model {treatment,covariate1}","fit",TRUE
+"n=100 seed=3 model {treatment,covariate1}","estimates",TRUE
+"n=100 seed=3 model {treatment,covariate1}","SEs",TRUE
+"n=100 seed=3 model {treatment,covariate1}","df",TRUE
+"n=100 seed=3 model {treatment,covariate1}","npar",TRUE
+"n=100 seed=3 model {treatment,covariate2}","fit",TRUE
+"n=100 seed=3 model {treatment,covariate2}","estimates",TRUE
+"n=100 seed=3 model {treatment,covariate2}","SEs",TRUE
+"n=100 seed=3 model {treatment,covariate2}","df",TRUE
+"n=100 seed=3 model {treatment,covariate2}","npar",TRUE
+"n=100 seed=3 model {covariate1,covariate2}","fit",TRUE
+"n=100 seed=3 model {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=3 model {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=3 model {covariate1,covariate2}","df",TRUE
+"n=100 seed=3 model {covariate1,covariate2}","npar",TRUE
+"n=100 seed=3 model {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=3 model {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=3 model {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=3 model {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=3 model {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=3 sandwich {treatment}","fit",TRUE
+"n=100 seed=3 sandwich {treatment}","estimates",TRUE
+"n=100 seed=3 sandwich {treatment}","SEs",TRUE
+"n=100 seed=3 sandwich {treatment}","df",TRUE
+"n=100 seed=3 sandwich {treatment}","npar",TRUE
+"n=100 seed=3 sandwich {covariate1}","fit",TRUE
+"n=100 seed=3 sandwich {covariate1}","estimates",TRUE
+"n=100 seed=3 sandwich {covariate1}","SEs",TRUE
+"n=100 seed=3 sandwich {covariate1}","df",TRUE
+"n=100 seed=3 sandwich {covariate1}","npar",TRUE
+"n=100 seed=3 sandwich {covariate2}","fit",TRUE
+"n=100 seed=3 sandwich {covariate2}","estimates",TRUE
+"n=100 seed=3 sandwich {covariate2}","SEs",TRUE
+"n=100 seed=3 sandwich {covariate2}","df",TRUE
+"n=100 seed=3 sandwich {covariate2}","npar",TRUE
+"n=100 seed=3 sandwich {treatment,covariate1}","fit",TRUE
+"n=100 seed=3 sandwich {treatment,covariate1}","estimates",TRUE
+"n=100 seed=3 sandwich {treatment,covariate1}","SEs",TRUE
+"n=100 seed=3 sandwich {treatment,covariate1}","df",TRUE
+"n=100 seed=3 sandwich {treatment,covariate1}","npar",TRUE
+"n=100 seed=3 sandwich {treatment,covariate2}","fit",TRUE
+"n=100 seed=3 sandwich {treatment,covariate2}","estimates",TRUE
+"n=100 seed=3 sandwich {treatment,covariate2}","SEs",TRUE
+"n=100 seed=3 sandwich {treatment,covariate2}","df",TRUE
+"n=100 seed=3 sandwich {treatment,covariate2}","npar",TRUE
+"n=100 seed=3 sandwich {covariate1,covariate2}","fit",TRUE
+"n=100 seed=3 sandwich {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=3 sandwich {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=3 sandwich {covariate1,covariate2}","df",TRUE
+"n=100 seed=3 sandwich {covariate1,covariate2}","npar",TRUE
+"n=100 seed=3 sandwich {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=3 sandwich {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=3 sandwich {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=3 sandwich {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=3 sandwich {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=3 sandwich w {treatment}","fit",TRUE
+"n=100 seed=3 sandwich w {treatment}","estimates",TRUE
+"n=100 seed=3 sandwich w {treatment}","SEs",TRUE
+"n=100 seed=3 sandwich w {treatment}","df",TRUE
+"n=100 seed=3 sandwich w {treatment}","npar",TRUE
+"n=100 seed=3 sandwich w {covariate1}","fit",TRUE
+"n=100 seed=3 sandwich w {covariate1}","estimates",TRUE
+"n=100 seed=3 sandwich w {covariate1}","SEs",TRUE
+"n=100 seed=3 sandwich w {covariate1}","df",TRUE
+"n=100 seed=3 sandwich w {covariate1}","npar",TRUE
+"n=100 seed=3 sandwich w {covariate2}","fit",TRUE
+"n=100 seed=3 sandwich w {covariate2}","estimates",TRUE
+"n=100 seed=3 sandwich w {covariate2}","SEs",TRUE
+"n=100 seed=3 sandwich w {covariate2}","df",TRUE
+"n=100 seed=3 sandwich w {covariate2}","npar",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate1}","fit",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate1}","estimates",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate1}","SEs",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate1}","df",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate1}","npar",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate2}","fit",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate2}","estimates",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate2}","SEs",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate2}","df",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate2}","npar",TRUE
+"n=100 seed=3 sandwich w {covariate1,covariate2}","fit",TRUE
+"n=100 seed=3 sandwich w {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=3 sandwich w {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=3 sandwich w {covariate1,covariate2}","df",TRUE
+"n=100 seed=3 sandwich w {covariate1,covariate2}","npar",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=3 sandwich w {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=4 model {treatment}","fit",TRUE
+"n=100 seed=4 model {treatment}","estimates",TRUE
+"n=100 seed=4 model {treatment}","SEs",TRUE
+"n=100 seed=4 model {treatment}","df",TRUE
+"n=100 seed=4 model {treatment}","npar",TRUE
+"n=100 seed=4 model {covariate1}","fit",TRUE
+"n=100 seed=4 model {covariate1}","estimates",TRUE
+"n=100 seed=4 model {covariate1}","SEs",TRUE
+"n=100 seed=4 model {covariate1}","df",TRUE
+"n=100 seed=4 model {covariate1}","npar",TRUE
+"n=100 seed=4 model {covariate2}","fit",TRUE
+"n=100 seed=4 model {covariate2}","estimates",TRUE
+"n=100 seed=4 model {covariate2}","SEs",TRUE
+"n=100 seed=4 model {covariate2}","df",TRUE
+"n=100 seed=4 model {covariate2}","npar",TRUE
+"n=100 seed=4 model {treatment,covariate1}","fit",TRUE
+"n=100 seed=4 model {treatment,covariate1}","estimates",TRUE
+"n=100 seed=4 model {treatment,covariate1}","SEs",TRUE
+"n=100 seed=4 model {treatment,covariate1}","df",TRUE
+"n=100 seed=4 model {treatment,covariate1}","npar",TRUE
+"n=100 seed=4 model {treatment,covariate2}","fit",TRUE
+"n=100 seed=4 model {treatment,covariate2}","estimates",TRUE
+"n=100 seed=4 model {treatment,covariate2}","SEs",TRUE
+"n=100 seed=4 model {treatment,covariate2}","df",TRUE
+"n=100 seed=4 model {treatment,covariate2}","npar",TRUE
+"n=100 seed=4 model {covariate1,covariate2}","fit",TRUE
+"n=100 seed=4 model {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=4 model {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=4 model {covariate1,covariate2}","df",TRUE
+"n=100 seed=4 model {covariate1,covariate2}","npar",TRUE
+"n=100 seed=4 model {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=4 model {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=4 model {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=4 model {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=4 model {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=4 sandwich {treatment}","fit",TRUE
+"n=100 seed=4 sandwich {treatment}","estimates",TRUE
+"n=100 seed=4 sandwich {treatment}","SEs",TRUE
+"n=100 seed=4 sandwich {treatment}","df",TRUE
+"n=100 seed=4 sandwich {treatment}","npar",TRUE
+"n=100 seed=4 sandwich {covariate1}","fit",TRUE
+"n=100 seed=4 sandwich {covariate1}","estimates",TRUE
+"n=100 seed=4 sandwich {covariate1}","SEs",TRUE
+"n=100 seed=4 sandwich {covariate1}","df",TRUE
+"n=100 seed=4 sandwich {covariate1}","npar",TRUE
+"n=100 seed=4 sandwich {covariate2}","fit",TRUE
+"n=100 seed=4 sandwich {covariate2}","estimates",TRUE
+"n=100 seed=4 sandwich {covariate2}","SEs",TRUE
+"n=100 seed=4 sandwich {covariate2}","df",TRUE
+"n=100 seed=4 sandwich {covariate2}","npar",TRUE
+"n=100 seed=4 sandwich {treatment,covariate1}","fit",TRUE
+"n=100 seed=4 sandwich {treatment,covariate1}","estimates",TRUE
+"n=100 seed=4 sandwich {treatment,covariate1}","SEs",TRUE
+"n=100 seed=4 sandwich {treatment,covariate1}","df",TRUE
+"n=100 seed=4 sandwich {treatment,covariate1}","npar",TRUE
+"n=100 seed=4 sandwich {treatment,covariate2}","fit",TRUE
+"n=100 seed=4 sandwich {treatment,covariate2}","estimates",TRUE
+"n=100 seed=4 sandwich {treatment,covariate2}","SEs",TRUE
+"n=100 seed=4 sandwich {treatment,covariate2}","df",TRUE
+"n=100 seed=4 sandwich {treatment,covariate2}","npar",TRUE
+"n=100 seed=4 sandwich {covariate1,covariate2}","fit",TRUE
+"n=100 seed=4 sandwich {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=4 sandwich {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=4 sandwich {covariate1,covariate2}","df",TRUE
+"n=100 seed=4 sandwich {covariate1,covariate2}","npar",TRUE
+"n=100 seed=4 sandwich {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=4 sandwich {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=4 sandwich {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=4 sandwich {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=4 sandwich {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=4 sandwich w {treatment}","fit",TRUE
+"n=100 seed=4 sandwich w {treatment}","estimates",TRUE
+"n=100 seed=4 sandwich w {treatment}","SEs",TRUE
+"n=100 seed=4 sandwich w {treatment}","df",TRUE
+"n=100 seed=4 sandwich w {treatment}","npar",TRUE
+"n=100 seed=4 sandwich w {covariate1}","fit",TRUE
+"n=100 seed=4 sandwich w {covariate1}","estimates",TRUE
+"n=100 seed=4 sandwich w {covariate1}","SEs",TRUE
+"n=100 seed=4 sandwich w {covariate1}","df",TRUE
+"n=100 seed=4 sandwich w {covariate1}","npar",TRUE
+"n=100 seed=4 sandwich w {covariate2}","fit",TRUE
+"n=100 seed=4 sandwich w {covariate2}","estimates",TRUE
+"n=100 seed=4 sandwich w {covariate2}","SEs",TRUE
+"n=100 seed=4 sandwich w {covariate2}","df",TRUE
+"n=100 seed=4 sandwich w {covariate2}","npar",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate1}","fit",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate1}","estimates",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate1}","SEs",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate1}","df",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate1}","npar",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate2}","fit",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate2}","estimates",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate2}","SEs",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate2}","df",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate2}","npar",TRUE
+"n=100 seed=4 sandwich w {covariate1,covariate2}","fit",TRUE
+"n=100 seed=4 sandwich w {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=4 sandwich w {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=4 sandwich w {covariate1,covariate2}","df",TRUE
+"n=100 seed=4 sandwich w {covariate1,covariate2}","npar",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=4 sandwich w {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=5 model {treatment}","fit",TRUE
+"n=100 seed=5 model {treatment}","estimates",TRUE
+"n=100 seed=5 model {treatment}","SEs",TRUE
+"n=100 seed=5 model {treatment}","df",TRUE
+"n=100 seed=5 model {treatment}","npar",TRUE
+"n=100 seed=5 model {covariate1}","fit",TRUE
+"n=100 seed=5 model {covariate1}","estimates",TRUE
+"n=100 seed=5 model {covariate1}","SEs",TRUE
+"n=100 seed=5 model {covariate1}","df",TRUE
+"n=100 seed=5 model {covariate1}","npar",TRUE
+"n=100 seed=5 model {covariate2}","fit",TRUE
+"n=100 seed=5 model {covariate2}","estimates",TRUE
+"n=100 seed=5 model {covariate2}","SEs",TRUE
+"n=100 seed=5 model {covariate2}","df",TRUE
+"n=100 seed=5 model {covariate2}","npar",TRUE
+"n=100 seed=5 model {treatment,covariate1}","fit",TRUE
+"n=100 seed=5 model {treatment,covariate1}","estimates",TRUE
+"n=100 seed=5 model {treatment,covariate1}","SEs",TRUE
+"n=100 seed=5 model {treatment,covariate1}","df",TRUE
+"n=100 seed=5 model {treatment,covariate1}","npar",TRUE
+"n=100 seed=5 model {treatment,covariate2}","fit",TRUE
+"n=100 seed=5 model {treatment,covariate2}","estimates",TRUE
+"n=100 seed=5 model {treatment,covariate2}","SEs",TRUE
+"n=100 seed=5 model {treatment,covariate2}","df",TRUE
+"n=100 seed=5 model {treatment,covariate2}","npar",TRUE
+"n=100 seed=5 model {covariate1,covariate2}","fit",TRUE
+"n=100 seed=5 model {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=5 model {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=5 model {covariate1,covariate2}","df",TRUE
+"n=100 seed=5 model {covariate1,covariate2}","npar",TRUE
+"n=100 seed=5 model {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=5 model {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=5 model {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=5 model {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=5 model {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=5 sandwich {treatment}","fit",TRUE
+"n=100 seed=5 sandwich {treatment}","estimates",TRUE
+"n=100 seed=5 sandwich {treatment}","SEs",TRUE
+"n=100 seed=5 sandwich {treatment}","df",TRUE
+"n=100 seed=5 sandwich {treatment}","npar",TRUE
+"n=100 seed=5 sandwich {covariate1}","fit",TRUE
+"n=100 seed=5 sandwich {covariate1}","estimates",TRUE
+"n=100 seed=5 sandwich {covariate1}","SEs",TRUE
+"n=100 seed=5 sandwich {covariate1}","df",TRUE
+"n=100 seed=5 sandwich {covariate1}","npar",TRUE
+"n=100 seed=5 sandwich {covariate2}","fit",TRUE
+"n=100 seed=5 sandwich {covariate2}","estimates",TRUE
+"n=100 seed=5 sandwich {covariate2}","SEs",TRUE
+"n=100 seed=5 sandwich {covariate2}","df",TRUE
+"n=100 seed=5 sandwich {covariate2}","npar",TRUE
+"n=100 seed=5 sandwich {treatment,covariate1}","fit",TRUE
+"n=100 seed=5 sandwich {treatment,covariate1}","estimates",TRUE
+"n=100 seed=5 sandwich {treatment,covariate1}","SEs",TRUE
+"n=100 seed=5 sandwich {treatment,covariate1}","df",TRUE
+"n=100 seed=5 sandwich {treatment,covariate1}","npar",TRUE
+"n=100 seed=5 sandwich {treatment,covariate2}","fit",TRUE
+"n=100 seed=5 sandwich {treatment,covariate2}","estimates",TRUE
+"n=100 seed=5 sandwich {treatment,covariate2}","SEs",TRUE
+"n=100 seed=5 sandwich {treatment,covariate2}","df",TRUE
+"n=100 seed=5 sandwich {treatment,covariate2}","npar",TRUE
+"n=100 seed=5 sandwich {covariate1,covariate2}","fit",TRUE
+"n=100 seed=5 sandwich {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=5 sandwich {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=5 sandwich {covariate1,covariate2}","df",TRUE
+"n=100 seed=5 sandwich {covariate1,covariate2}","npar",TRUE
+"n=100 seed=5 sandwich {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=5 sandwich {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=5 sandwich {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=5 sandwich {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=5 sandwich {treatment,covariate1,covariate2}","npar",TRUE
+"n=100 seed=5 sandwich w {treatment}","fit",TRUE
+"n=100 seed=5 sandwich w {treatment}","estimates",TRUE
+"n=100 seed=5 sandwich w {treatment}","SEs",TRUE
+"n=100 seed=5 sandwich w {treatment}","df",TRUE
+"n=100 seed=5 sandwich w {treatment}","npar",TRUE
+"n=100 seed=5 sandwich w {covariate1}","fit",TRUE
+"n=100 seed=5 sandwich w {covariate1}","estimates",TRUE
+"n=100 seed=5 sandwich w {covariate1}","SEs",TRUE
+"n=100 seed=5 sandwich w {covariate1}","df",TRUE
+"n=100 seed=5 sandwich w {covariate1}","npar",TRUE
+"n=100 seed=5 sandwich w {covariate2}","fit",TRUE
+"n=100 seed=5 sandwich w {covariate2}","estimates",TRUE
+"n=100 seed=5 sandwich w {covariate2}","SEs",TRUE
+"n=100 seed=5 sandwich w {covariate2}","df",TRUE
+"n=100 seed=5 sandwich w {covariate2}","npar",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate1}","fit",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate1}","estimates",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate1}","SEs",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate1}","df",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate1}","npar",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate2}","fit",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate2}","estimates",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate2}","SEs",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate2}","df",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate2}","npar",TRUE
+"n=100 seed=5 sandwich w {covariate1,covariate2}","fit",TRUE
+"n=100 seed=5 sandwich w {covariate1,covariate2}","estimates",TRUE
+"n=100 seed=5 sandwich w {covariate1,covariate2}","SEs",TRUE
+"n=100 seed=5 sandwich w {covariate1,covariate2}","df",TRUE
+"n=100 seed=5 sandwich w {covariate1,covariate2}","npar",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate1,covariate2}","fit",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate1,covariate2}","estimates",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate1,covariate2}","SEs",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate1,covariate2}","df",TRUE
+"n=100 seed=5 sandwich w {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=1 model {treatment}","fit",TRUE
+"n=400 seed=1 model {treatment}","estimates",TRUE
+"n=400 seed=1 model {treatment}","SEs",TRUE
+"n=400 seed=1 model {treatment}","df",TRUE
+"n=400 seed=1 model {treatment}","npar",TRUE
+"n=400 seed=1 model {covariate1}","fit",TRUE
+"n=400 seed=1 model {covariate1}","estimates",TRUE
+"n=400 seed=1 model {covariate1}","SEs",TRUE
+"n=400 seed=1 model {covariate1}","df",TRUE
+"n=400 seed=1 model {covariate1}","npar",TRUE
+"n=400 seed=1 model {covariate2}","fit",TRUE
+"n=400 seed=1 model {covariate2}","estimates",TRUE
+"n=400 seed=1 model {covariate2}","SEs",TRUE
+"n=400 seed=1 model {covariate2}","df",TRUE
+"n=400 seed=1 model {covariate2}","npar",TRUE
+"n=400 seed=1 model {treatment,covariate1}","fit",TRUE
+"n=400 seed=1 model {treatment,covariate1}","estimates",TRUE
+"n=400 seed=1 model {treatment,covariate1}","SEs",TRUE
+"n=400 seed=1 model {treatment,covariate1}","df",TRUE
+"n=400 seed=1 model {treatment,covariate1}","npar",TRUE
+"n=400 seed=1 model {treatment,covariate2}","fit",TRUE
+"n=400 seed=1 model {treatment,covariate2}","estimates",TRUE
+"n=400 seed=1 model {treatment,covariate2}","SEs",TRUE
+"n=400 seed=1 model {treatment,covariate2}","df",TRUE
+"n=400 seed=1 model {treatment,covariate2}","npar",TRUE
+"n=400 seed=1 model {covariate1,covariate2}","fit",TRUE
+"n=400 seed=1 model {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=1 model {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=1 model {covariate1,covariate2}","df",TRUE
+"n=400 seed=1 model {covariate1,covariate2}","npar",TRUE
+"n=400 seed=1 model {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=1 model {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=1 model {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=1 model {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=1 model {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=1 sandwich {treatment}","fit",TRUE
+"n=400 seed=1 sandwich {treatment}","estimates",TRUE
+"n=400 seed=1 sandwich {treatment}","SEs",TRUE
+"n=400 seed=1 sandwich {treatment}","df",TRUE
+"n=400 seed=1 sandwich {treatment}","npar",TRUE
+"n=400 seed=1 sandwich {covariate1}","fit",TRUE
+"n=400 seed=1 sandwich {covariate1}","estimates",TRUE
+"n=400 seed=1 sandwich {covariate1}","SEs",TRUE
+"n=400 seed=1 sandwich {covariate1}","df",TRUE
+"n=400 seed=1 sandwich {covariate1}","npar",TRUE
+"n=400 seed=1 sandwich {covariate2}","fit",TRUE
+"n=400 seed=1 sandwich {covariate2}","estimates",TRUE
+"n=400 seed=1 sandwich {covariate2}","SEs",TRUE
+"n=400 seed=1 sandwich {covariate2}","df",TRUE
+"n=400 seed=1 sandwich {covariate2}","npar",TRUE
+"n=400 seed=1 sandwich {treatment,covariate1}","fit",TRUE
+"n=400 seed=1 sandwich {treatment,covariate1}","estimates",TRUE
+"n=400 seed=1 sandwich {treatment,covariate1}","SEs",TRUE
+"n=400 seed=1 sandwich {treatment,covariate1}","df",TRUE
+"n=400 seed=1 sandwich {treatment,covariate1}","npar",TRUE
+"n=400 seed=1 sandwich {treatment,covariate2}","fit",TRUE
+"n=400 seed=1 sandwich {treatment,covariate2}","estimates",TRUE
+"n=400 seed=1 sandwich {treatment,covariate2}","SEs",TRUE
+"n=400 seed=1 sandwich {treatment,covariate2}","df",TRUE
+"n=400 seed=1 sandwich {treatment,covariate2}","npar",TRUE
+"n=400 seed=1 sandwich {covariate1,covariate2}","fit",TRUE
+"n=400 seed=1 sandwich {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=1 sandwich {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=1 sandwich {covariate1,covariate2}","df",TRUE
+"n=400 seed=1 sandwich {covariate1,covariate2}","npar",TRUE
+"n=400 seed=1 sandwich {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=1 sandwich {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=1 sandwich {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=1 sandwich {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=1 sandwich {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=1 sandwich w {treatment}","fit",TRUE
+"n=400 seed=1 sandwich w {treatment}","estimates",TRUE
+"n=400 seed=1 sandwich w {treatment}","SEs",TRUE
+"n=400 seed=1 sandwich w {treatment}","df",TRUE
+"n=400 seed=1 sandwich w {treatment}","npar",TRUE
+"n=400 seed=1 sandwich w {covariate1}","fit",TRUE
+"n=400 seed=1 sandwich w {covariate1}","estimates",TRUE
+"n=400 seed=1 sandwich w {covariate1}","SEs",TRUE
+"n=400 seed=1 sandwich w {covariate1}","df",TRUE
+"n=400 seed=1 sandwich w {covariate1}","npar",TRUE
+"n=400 seed=1 sandwich w {covariate2}","fit",TRUE
+"n=400 seed=1 sandwich w {covariate2}","estimates",TRUE
+"n=400 seed=1 sandwich w {covariate2}","SEs",TRUE
+"n=400 seed=1 sandwich w {covariate2}","df",TRUE
+"n=400 seed=1 sandwich w {covariate2}","npar",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate1}","fit",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate1}","estimates",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate1}","SEs",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate1}","df",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate1}","npar",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate2}","fit",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate2}","estimates",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate2}","SEs",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate2}","df",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate2}","npar",TRUE
+"n=400 seed=1 sandwich w {covariate1,covariate2}","fit",TRUE
+"n=400 seed=1 sandwich w {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=1 sandwich w {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=1 sandwich w {covariate1,covariate2}","df",TRUE
+"n=400 seed=1 sandwich w {covariate1,covariate2}","npar",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=1 sandwich w {treatment,covariate1,covariate2}","npar",TRUE
+"lavaan n=400 seed=1","npar",TRUE
+"lavaan n=400 seed=1","df",TRUE
+"lavaan n=400 seed=1","chisq",TRUE
+"n=400 seed=2 model {treatment}","fit",TRUE
+"n=400 seed=2 model {treatment}","estimates",TRUE
+"n=400 seed=2 model {treatment}","SEs",TRUE
+"n=400 seed=2 model {treatment}","df",TRUE
+"n=400 seed=2 model {treatment}","npar",TRUE
+"n=400 seed=2 model {covariate1}","fit",TRUE
+"n=400 seed=2 model {covariate1}","estimates",TRUE
+"n=400 seed=2 model {covariate1}","SEs",TRUE
+"n=400 seed=2 model {covariate1}","df",TRUE
+"n=400 seed=2 model {covariate1}","npar",TRUE
+"n=400 seed=2 model {covariate2}","fit",TRUE
+"n=400 seed=2 model {covariate2}","estimates",TRUE
+"n=400 seed=2 model {covariate2}","SEs",TRUE
+"n=400 seed=2 model {covariate2}","df",TRUE
+"n=400 seed=2 model {covariate2}","npar",TRUE
+"n=400 seed=2 model {treatment,covariate1}","fit",TRUE
+"n=400 seed=2 model {treatment,covariate1}","estimates",TRUE
+"n=400 seed=2 model {treatment,covariate1}","SEs",TRUE
+"n=400 seed=2 model {treatment,covariate1}","df",TRUE
+"n=400 seed=2 model {treatment,covariate1}","npar",TRUE
+"n=400 seed=2 model {treatment,covariate2}","fit",TRUE
+"n=400 seed=2 model {treatment,covariate2}","estimates",TRUE
+"n=400 seed=2 model {treatment,covariate2}","SEs",TRUE
+"n=400 seed=2 model {treatment,covariate2}","df",TRUE
+"n=400 seed=2 model {treatment,covariate2}","npar",TRUE
+"n=400 seed=2 model {covariate1,covariate2}","fit",TRUE
+"n=400 seed=2 model {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=2 model {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=2 model {covariate1,covariate2}","df",TRUE
+"n=400 seed=2 model {covariate1,covariate2}","npar",TRUE
+"n=400 seed=2 model {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=2 model {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=2 model {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=2 model {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=2 model {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=2 sandwich {treatment}","fit",TRUE
+"n=400 seed=2 sandwich {treatment}","estimates",TRUE
+"n=400 seed=2 sandwich {treatment}","SEs",TRUE
+"n=400 seed=2 sandwich {treatment}","df",TRUE
+"n=400 seed=2 sandwich {treatment}","npar",TRUE
+"n=400 seed=2 sandwich {covariate1}","fit",TRUE
+"n=400 seed=2 sandwich {covariate1}","estimates",TRUE
+"n=400 seed=2 sandwich {covariate1}","SEs",TRUE
+"n=400 seed=2 sandwich {covariate1}","df",TRUE
+"n=400 seed=2 sandwich {covariate1}","npar",TRUE
+"n=400 seed=2 sandwich {covariate2}","fit",TRUE
+"n=400 seed=2 sandwich {covariate2}","estimates",TRUE
+"n=400 seed=2 sandwich {covariate2}","SEs",TRUE
+"n=400 seed=2 sandwich {covariate2}","df",TRUE
+"n=400 seed=2 sandwich {covariate2}","npar",TRUE
+"n=400 seed=2 sandwich {treatment,covariate1}","fit",TRUE
+"n=400 seed=2 sandwich {treatment,covariate1}","estimates",TRUE
+"n=400 seed=2 sandwich {treatment,covariate1}","SEs",TRUE
+"n=400 seed=2 sandwich {treatment,covariate1}","df",TRUE
+"n=400 seed=2 sandwich {treatment,covariate1}","npar",TRUE
+"n=400 seed=2 sandwich {treatment,covariate2}","fit",TRUE
+"n=400 seed=2 sandwich {treatment,covariate2}","estimates",TRUE
+"n=400 seed=2 sandwich {treatment,covariate2}","SEs",TRUE
+"n=400 seed=2 sandwich {treatment,covariate2}","df",TRUE
+"n=400 seed=2 sandwich {treatment,covariate2}","npar",TRUE
+"n=400 seed=2 sandwich {covariate1,covariate2}","fit",TRUE
+"n=400 seed=2 sandwich {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=2 sandwich {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=2 sandwich {covariate1,covariate2}","df",TRUE
+"n=400 seed=2 sandwich {covariate1,covariate2}","npar",TRUE
+"n=400 seed=2 sandwich {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=2 sandwich {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=2 sandwich {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=2 sandwich {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=2 sandwich {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=2 sandwich w {treatment}","fit",TRUE
+"n=400 seed=2 sandwich w {treatment}","estimates",TRUE
+"n=400 seed=2 sandwich w {treatment}","SEs",TRUE
+"n=400 seed=2 sandwich w {treatment}","df",TRUE
+"n=400 seed=2 sandwich w {treatment}","npar",TRUE
+"n=400 seed=2 sandwich w {covariate1}","fit",TRUE
+"n=400 seed=2 sandwich w {covariate1}","estimates",TRUE
+"n=400 seed=2 sandwich w {covariate1}","SEs",TRUE
+"n=400 seed=2 sandwich w {covariate1}","df",TRUE
+"n=400 seed=2 sandwich w {covariate1}","npar",TRUE
+"n=400 seed=2 sandwich w {covariate2}","fit",TRUE
+"n=400 seed=2 sandwich w {covariate2}","estimates",TRUE
+"n=400 seed=2 sandwich w {covariate2}","SEs",TRUE
+"n=400 seed=2 sandwich w {covariate2}","df",TRUE
+"n=400 seed=2 sandwich w {covariate2}","npar",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate1}","fit",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate1}","estimates",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate1}","SEs",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate1}","df",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate1}","npar",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate2}","fit",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate2}","estimates",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate2}","SEs",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate2}","df",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate2}","npar",TRUE
+"n=400 seed=2 sandwich w {covariate1,covariate2}","fit",TRUE
+"n=400 seed=2 sandwich w {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=2 sandwich w {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=2 sandwich w {covariate1,covariate2}","df",TRUE
+"n=400 seed=2 sandwich w {covariate1,covariate2}","npar",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=2 sandwich w {treatment,covariate1,covariate2}","npar",TRUE
+"lavaan n=400 seed=2","npar",TRUE
+"lavaan n=400 seed=2","df",TRUE
+"lavaan n=400 seed=2","chisq",TRUE
+"n=400 seed=3 model {treatment}","fit",TRUE
+"n=400 seed=3 model {treatment}","estimates",TRUE
+"n=400 seed=3 model {treatment}","SEs",TRUE
+"n=400 seed=3 model {treatment}","df",TRUE
+"n=400 seed=3 model {treatment}","npar",TRUE
+"n=400 seed=3 model {covariate1}","fit",TRUE
+"n=400 seed=3 model {covariate1}","estimates",TRUE
+"n=400 seed=3 model {covariate1}","SEs",TRUE
+"n=400 seed=3 model {covariate1}","df",TRUE
+"n=400 seed=3 model {covariate1}","npar",TRUE
+"n=400 seed=3 model {covariate2}","fit",TRUE
+"n=400 seed=3 model {covariate2}","estimates",TRUE
+"n=400 seed=3 model {covariate2}","SEs",TRUE
+"n=400 seed=3 model {covariate2}","df",TRUE
+"n=400 seed=3 model {covariate2}","npar",TRUE
+"n=400 seed=3 model {treatment,covariate1}","fit",TRUE
+"n=400 seed=3 model {treatment,covariate1}","estimates",TRUE
+"n=400 seed=3 model {treatment,covariate1}","SEs",TRUE
+"n=400 seed=3 model {treatment,covariate1}","df",TRUE
+"n=400 seed=3 model {treatment,covariate1}","npar",TRUE
+"n=400 seed=3 model {treatment,covariate2}","fit",TRUE
+"n=400 seed=3 model {treatment,covariate2}","estimates",TRUE
+"n=400 seed=3 model {treatment,covariate2}","SEs",TRUE
+"n=400 seed=3 model {treatment,covariate2}","df",TRUE
+"n=400 seed=3 model {treatment,covariate2}","npar",TRUE
+"n=400 seed=3 model {covariate1,covariate2}","fit",TRUE
+"n=400 seed=3 model {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=3 model {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=3 model {covariate1,covariate2}","df",TRUE
+"n=400 seed=3 model {covariate1,covariate2}","npar",TRUE
+"n=400 seed=3 model {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=3 model {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=3 model {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=3 model {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=3 model {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=3 sandwich {treatment}","fit",TRUE
+"n=400 seed=3 sandwich {treatment}","estimates",TRUE
+"n=400 seed=3 sandwich {treatment}","SEs",TRUE
+"n=400 seed=3 sandwich {treatment}","df",TRUE
+"n=400 seed=3 sandwich {treatment}","npar",TRUE
+"n=400 seed=3 sandwich {covariate1}","fit",TRUE
+"n=400 seed=3 sandwich {covariate1}","estimates",TRUE
+"n=400 seed=3 sandwich {covariate1}","SEs",TRUE
+"n=400 seed=3 sandwich {covariate1}","df",TRUE
+"n=400 seed=3 sandwich {covariate1}","npar",TRUE
+"n=400 seed=3 sandwich {covariate2}","fit",TRUE
+"n=400 seed=3 sandwich {covariate2}","estimates",TRUE
+"n=400 seed=3 sandwich {covariate2}","SEs",TRUE
+"n=400 seed=3 sandwich {covariate2}","df",TRUE
+"n=400 seed=3 sandwich {covariate2}","npar",TRUE
+"n=400 seed=3 sandwich {treatment,covariate1}","fit",TRUE
+"n=400 seed=3 sandwich {treatment,covariate1}","estimates",TRUE
+"n=400 seed=3 sandwich {treatment,covariate1}","SEs",TRUE
+"n=400 seed=3 sandwich {treatment,covariate1}","df",TRUE
+"n=400 seed=3 sandwich {treatment,covariate1}","npar",TRUE
+"n=400 seed=3 sandwich {treatment,covariate2}","fit",TRUE
+"n=400 seed=3 sandwich {treatment,covariate2}","estimates",TRUE
+"n=400 seed=3 sandwich {treatment,covariate2}","SEs",TRUE
+"n=400 seed=3 sandwich {treatment,covariate2}","df",TRUE
+"n=400 seed=3 sandwich {treatment,covariate2}","npar",TRUE
+"n=400 seed=3 sandwich {covariate1,covariate2}","fit",TRUE
+"n=400 seed=3 sandwich {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=3 sandwich {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=3 sandwich {covariate1,covariate2}","df",TRUE
+"n=400 seed=3 sandwich {covariate1,covariate2}","npar",TRUE
+"n=400 seed=3 sandwich {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=3 sandwich {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=3 sandwich {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=3 sandwich {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=3 sandwich {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=3 sandwich w {treatment}","fit",TRUE
+"n=400 seed=3 sandwich w {treatment}","estimates",TRUE
+"n=400 seed=3 sandwich w {treatment}","SEs",TRUE
+"n=400 seed=3 sandwich w {treatment}","df",TRUE
+"n=400 seed=3 sandwich w {treatment}","npar",TRUE
+"n=400 seed=3 sandwich w {covariate1}","fit",TRUE
+"n=400 seed=3 sandwich w {covariate1}","estimates",TRUE
+"n=400 seed=3 sandwich w {covariate1}","SEs",TRUE
+"n=400 seed=3 sandwich w {covariate1}","df",TRUE
+"n=400 seed=3 sandwich w {covariate1}","npar",TRUE
+"n=400 seed=3 sandwich w {covariate2}","fit",TRUE
+"n=400 seed=3 sandwich w {covariate2}","estimates",TRUE
+"n=400 seed=3 sandwich w {covariate2}","SEs",TRUE
+"n=400 seed=3 sandwich w {covariate2}","df",TRUE
+"n=400 seed=3 sandwich w {covariate2}","npar",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate1}","fit",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate1}","estimates",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate1}","SEs",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate1}","df",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate1}","npar",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate2}","fit",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate2}","estimates",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate2}","SEs",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate2}","df",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate2}","npar",TRUE
+"n=400 seed=3 sandwich w {covariate1,covariate2}","fit",TRUE
+"n=400 seed=3 sandwich w {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=3 sandwich w {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=3 sandwich w {covariate1,covariate2}","df",TRUE
+"n=400 seed=3 sandwich w {covariate1,covariate2}","npar",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=3 sandwich w {treatment,covariate1,covariate2}","npar",TRUE
+"lavaan n=400 seed=3","npar",TRUE
+"lavaan n=400 seed=3","df",TRUE
+"lavaan n=400 seed=3","chisq",TRUE
+"n=400 seed=4 model {treatment}","fit",TRUE
+"n=400 seed=4 model {treatment}","estimates",TRUE
+"n=400 seed=4 model {treatment}","SEs",TRUE
+"n=400 seed=4 model {treatment}","df",TRUE
+"n=400 seed=4 model {treatment}","npar",TRUE
+"n=400 seed=4 model {covariate1}","fit",TRUE
+"n=400 seed=4 model {covariate1}","estimates",TRUE
+"n=400 seed=4 model {covariate1}","SEs",TRUE
+"n=400 seed=4 model {covariate1}","df",TRUE
+"n=400 seed=4 model {covariate1}","npar",TRUE
+"n=400 seed=4 model {covariate2}","fit",TRUE
+"n=400 seed=4 model {covariate2}","estimates",TRUE
+"n=400 seed=4 model {covariate2}","SEs",TRUE
+"n=400 seed=4 model {covariate2}","df",TRUE
+"n=400 seed=4 model {covariate2}","npar",TRUE
+"n=400 seed=4 model {treatment,covariate1}","fit",TRUE
+"n=400 seed=4 model {treatment,covariate1}","estimates",TRUE
+"n=400 seed=4 model {treatment,covariate1}","SEs",TRUE
+"n=400 seed=4 model {treatment,covariate1}","df",TRUE
+"n=400 seed=4 model {treatment,covariate1}","npar",TRUE
+"n=400 seed=4 model {treatment,covariate2}","fit",TRUE
+"n=400 seed=4 model {treatment,covariate2}","estimates",TRUE
+"n=400 seed=4 model {treatment,covariate2}","SEs",TRUE
+"n=400 seed=4 model {treatment,covariate2}","df",TRUE
+"n=400 seed=4 model {treatment,covariate2}","npar",TRUE
+"n=400 seed=4 model {covariate1,covariate2}","fit",TRUE
+"n=400 seed=4 model {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=4 model {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=4 model {covariate1,covariate2}","df",TRUE
+"n=400 seed=4 model {covariate1,covariate2}","npar",TRUE
+"n=400 seed=4 model {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=4 model {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=4 model {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=4 model {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=4 model {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=4 sandwich {treatment}","fit",TRUE
+"n=400 seed=4 sandwich {treatment}","estimates",TRUE
+"n=400 seed=4 sandwich {treatment}","SEs",TRUE
+"n=400 seed=4 sandwich {treatment}","df",TRUE
+"n=400 seed=4 sandwich {treatment}","npar",TRUE
+"n=400 seed=4 sandwich {covariate1}","fit",TRUE
+"n=400 seed=4 sandwich {covariate1}","estimates",TRUE
+"n=400 seed=4 sandwich {covariate1}","SEs",TRUE
+"n=400 seed=4 sandwich {covariate1}","df",TRUE
+"n=400 seed=4 sandwich {covariate1}","npar",TRUE
+"n=400 seed=4 sandwich {covariate2}","fit",TRUE
+"n=400 seed=4 sandwich {covariate2}","estimates",TRUE
+"n=400 seed=4 sandwich {covariate2}","SEs",TRUE
+"n=400 seed=4 sandwich {covariate2}","df",TRUE
+"n=400 seed=4 sandwich {covariate2}","npar",TRUE
+"n=400 seed=4 sandwich {treatment,covariate1}","fit",TRUE
+"n=400 seed=4 sandwich {treatment,covariate1}","estimates",TRUE
+"n=400 seed=4 sandwich {treatment,covariate1}","SEs",TRUE
+"n=400 seed=4 sandwich {treatment,covariate1}","df",TRUE
+"n=400 seed=4 sandwich {treatment,covariate1}","npar",TRUE
+"n=400 seed=4 sandwich {treatment,covariate2}","fit",TRUE
+"n=400 seed=4 sandwich {treatment,covariate2}","estimates",TRUE
+"n=400 seed=4 sandwich {treatment,covariate2}","SEs",TRUE
+"n=400 seed=4 sandwich {treatment,covariate2}","df",TRUE
+"n=400 seed=4 sandwich {treatment,covariate2}","npar",TRUE
+"n=400 seed=4 sandwich {covariate1,covariate2}","fit",TRUE
+"n=400 seed=4 sandwich {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=4 sandwich {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=4 sandwich {covariate1,covariate2}","df",TRUE
+"n=400 seed=4 sandwich {covariate1,covariate2}","npar",TRUE
+"n=400 seed=4 sandwich {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=4 sandwich {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=4 sandwich {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=4 sandwich {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=4 sandwich {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=4 sandwich w {treatment}","fit",TRUE
+"n=400 seed=4 sandwich w {treatment}","estimates",TRUE
+"n=400 seed=4 sandwich w {treatment}","SEs",TRUE
+"n=400 seed=4 sandwich w {treatment}","df",TRUE
+"n=400 seed=4 sandwich w {treatment}","npar",TRUE
+"n=400 seed=4 sandwich w {covariate1}","fit",TRUE
+"n=400 seed=4 sandwich w {covariate1}","estimates",TRUE
+"n=400 seed=4 sandwich w {covariate1}","SEs",TRUE
+"n=400 seed=4 sandwich w {covariate1}","df",TRUE
+"n=400 seed=4 sandwich w {covariate1}","npar",TRUE
+"n=400 seed=4 sandwich w {covariate2}","fit",TRUE
+"n=400 seed=4 sandwich w {covariate2}","estimates",TRUE
+"n=400 seed=4 sandwich w {covariate2}","SEs",TRUE
+"n=400 seed=4 sandwich w {covariate2}","df",TRUE
+"n=400 seed=4 sandwich w {covariate2}","npar",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate1}","fit",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate1}","estimates",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate1}","SEs",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate1}","df",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate1}","npar",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate2}","fit",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate2}","estimates",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate2}","SEs",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate2}","df",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate2}","npar",TRUE
+"n=400 seed=4 sandwich w {covariate1,covariate2}","fit",TRUE
+"n=400 seed=4 sandwich w {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=4 sandwich w {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=4 sandwich w {covariate1,covariate2}","df",TRUE
+"n=400 seed=4 sandwich w {covariate1,covariate2}","npar",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=4 sandwich w {treatment,covariate1,covariate2}","npar",TRUE
+"lavaan n=400 seed=4","npar",TRUE
+"lavaan n=400 seed=4","df",TRUE
+"lavaan n=400 seed=4","chisq",TRUE
+"n=400 seed=5 model {treatment}","fit",TRUE
+"n=400 seed=5 model {treatment}","estimates",TRUE
+"n=400 seed=5 model {treatment}","SEs",TRUE
+"n=400 seed=5 model {treatment}","df",TRUE
+"n=400 seed=5 model {treatment}","npar",TRUE
+"n=400 seed=5 model {covariate1}","fit",TRUE
+"n=400 seed=5 model {covariate1}","estimates",TRUE
+"n=400 seed=5 model {covariate1}","SEs",TRUE
+"n=400 seed=5 model {covariate1}","df",TRUE
+"n=400 seed=5 model {covariate1}","npar",TRUE
+"n=400 seed=5 model {covariate2}","fit",TRUE
+"n=400 seed=5 model {covariate2}","estimates",TRUE
+"n=400 seed=5 model {covariate2}","SEs",TRUE
+"n=400 seed=5 model {covariate2}","df",TRUE
+"n=400 seed=5 model {covariate2}","npar",TRUE
+"n=400 seed=5 model {treatment,covariate1}","fit",TRUE
+"n=400 seed=5 model {treatment,covariate1}","estimates",TRUE
+"n=400 seed=5 model {treatment,covariate1}","SEs",TRUE
+"n=400 seed=5 model {treatment,covariate1}","df",TRUE
+"n=400 seed=5 model {treatment,covariate1}","npar",TRUE
+"n=400 seed=5 model {treatment,covariate2}","fit",TRUE
+"n=400 seed=5 model {treatment,covariate2}","estimates",TRUE
+"n=400 seed=5 model {treatment,covariate2}","SEs",TRUE
+"n=400 seed=5 model {treatment,covariate2}","df",TRUE
+"n=400 seed=5 model {treatment,covariate2}","npar",TRUE
+"n=400 seed=5 model {covariate1,covariate2}","fit",TRUE
+"n=400 seed=5 model {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=5 model {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=5 model {covariate1,covariate2}","df",TRUE
+"n=400 seed=5 model {covariate1,covariate2}","npar",TRUE
+"n=400 seed=5 model {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=5 model {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=5 model {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=5 model {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=5 model {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=5 sandwich {treatment}","fit",TRUE
+"n=400 seed=5 sandwich {treatment}","estimates",TRUE
+"n=400 seed=5 sandwich {treatment}","SEs",TRUE
+"n=400 seed=5 sandwich {treatment}","df",TRUE
+"n=400 seed=5 sandwich {treatment}","npar",TRUE
+"n=400 seed=5 sandwich {covariate1}","fit",TRUE
+"n=400 seed=5 sandwich {covariate1}","estimates",TRUE
+"n=400 seed=5 sandwich {covariate1}","SEs",TRUE
+"n=400 seed=5 sandwich {covariate1}","df",TRUE
+"n=400 seed=5 sandwich {covariate1}","npar",TRUE
+"n=400 seed=5 sandwich {covariate2}","fit",TRUE
+"n=400 seed=5 sandwich {covariate2}","estimates",TRUE
+"n=400 seed=5 sandwich {covariate2}","SEs",TRUE
+"n=400 seed=5 sandwich {covariate2}","df",TRUE
+"n=400 seed=5 sandwich {covariate2}","npar",TRUE
+"n=400 seed=5 sandwich {treatment,covariate1}","fit",TRUE
+"n=400 seed=5 sandwich {treatment,covariate1}","estimates",TRUE
+"n=400 seed=5 sandwich {treatment,covariate1}","SEs",TRUE
+"n=400 seed=5 sandwich {treatment,covariate1}","df",TRUE
+"n=400 seed=5 sandwich {treatment,covariate1}","npar",TRUE
+"n=400 seed=5 sandwich {treatment,covariate2}","fit",TRUE
+"n=400 seed=5 sandwich {treatment,covariate2}","estimates",TRUE
+"n=400 seed=5 sandwich {treatment,covariate2}","SEs",TRUE
+"n=400 seed=5 sandwich {treatment,covariate2}","df",TRUE
+"n=400 seed=5 sandwich {treatment,covariate2}","npar",TRUE
+"n=400 seed=5 sandwich {covariate1,covariate2}","fit",TRUE
+"n=400 seed=5 sandwich {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=5 sandwich {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=5 sandwich {covariate1,covariate2}","df",TRUE
+"n=400 seed=5 sandwich {covariate1,covariate2}","npar",TRUE
+"n=400 seed=5 sandwich {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=5 sandwich {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=5 sandwich {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=5 sandwich {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=5 sandwich {treatment,covariate1,covariate2}","npar",TRUE
+"n=400 seed=5 sandwich w {treatment}","fit",TRUE
+"n=400 seed=5 sandwich w {treatment}","estimates",TRUE
+"n=400 seed=5 sandwich w {treatment}","SEs",TRUE
+"n=400 seed=5 sandwich w {treatment}","df",TRUE
+"n=400 seed=5 sandwich w {treatment}","npar",TRUE
+"n=400 seed=5 sandwich w {covariate1}","fit",TRUE
+"n=400 seed=5 sandwich w {covariate1}","estimates",TRUE
+"n=400 seed=5 sandwich w {covariate1}","SEs",TRUE
+"n=400 seed=5 sandwich w {covariate1}","df",TRUE
+"n=400 seed=5 sandwich w {covariate1}","npar",TRUE
+"n=400 seed=5 sandwich w {covariate2}","fit",TRUE
+"n=400 seed=5 sandwich w {covariate2}","estimates",TRUE
+"n=400 seed=5 sandwich w {covariate2}","SEs",TRUE
+"n=400 seed=5 sandwich w {covariate2}","df",TRUE
+"n=400 seed=5 sandwich w {covariate2}","npar",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate1}","fit",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate1}","estimates",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate1}","SEs",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate1}","df",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate1}","npar",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate2}","fit",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate2}","estimates",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate2}","SEs",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate2}","df",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate2}","npar",TRUE
+"n=400 seed=5 sandwich w {covariate1,covariate2}","fit",TRUE
+"n=400 seed=5 sandwich w {covariate1,covariate2}","estimates",TRUE
+"n=400 seed=5 sandwich w {covariate1,covariate2}","SEs",TRUE
+"n=400 seed=5 sandwich w {covariate1,covariate2}","df",TRUE
+"n=400 seed=5 sandwich w {covariate1,covariate2}","npar",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate1,covariate2}","fit",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate1,covariate2}","estimates",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate1,covariate2}","SEs",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate1,covariate2}","df",TRUE
+"n=400 seed=5 sandwich w {treatment,covariate1,covariate2}","npar",TRUE
+"lavaan n=400 seed=5","npar",TRUE
+"lavaan n=400 seed=5","df",TRUE
+"lavaan n=400 seed=5","chisq",TRUE
+"scale 100","accepted",TRUE
+"scale 100","paths",TRUE
+"scale 100","logLik",TRUE
+"scale 1000","accepted",TRUE
+"scale 1000","paths",TRUE
+"scale 1000","logLik",TRUE
+"scale 100000","accepted",TRUE
+"scale 100000","paths",TRUE
+"scale 100000","logLik",TRUE
+"lavaan","logLik",TRUE
+"guard","non-exogenous fixed_x name refused",TRUE
+"guard","AIC across different fixed sets refused",TRUE

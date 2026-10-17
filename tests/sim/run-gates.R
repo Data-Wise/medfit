@@ -123,7 +123,11 @@ verdict_gate <- function(gate, d, s) {
     "product-corr-colon" = c("design", "cvf", "path", "expect", "gap", "gap_column", "err"),
     "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok"),
     "s7-lifecycle" = c("s7", "s7_version", "step", "ok"),
-    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "gap")
+    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "gap"),
+    "nonlinear-parity" = c("problem", "structure", "n", "seed", "native_ok", "improper", "feas", "omx_ok", "f_gap",
+                           "est_gap", "ref_gap", "ann", "se_rel", "se_oracle"),
+    "fixed-x" = c("tag", "check", "pass"),
+    "mean-constrained" = c("structure", "n", "seed", "shift", "problem", "ok", "feas", "invariance", "lavaan_ok")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -224,6 +228,78 @@ verdict_gate <- function(gate, d, s) {
         )
       )
     },
+    "fixed-x" = {
+      # 0.9.0 V9: every check the script makes is a row; each must pass, and each kind of check must have run
+      kinds <- c("fit", "estimates", "SEs", "df", "npar", "chisq", "accepted", "paths", "logLik",
+                 "non-exogenous fixed_x name refused", "AIC across different fixed sets refused")
+      missing_kind <- setdiff(kinds, d$check)
+      rbind(
+        rows_chk(d, s),
+        chk("checks pass", all(d$pass %in% TRUE), sprintf("%d of %d fail", bool_fail(d$pass), nrow(d))),
+        chk("every kind ran", !length(missing_kind),
+            if (length(missing_kind)) paste("missing:", paste(missing_kind, collapse = ", ")) else "all 11 kinds")
+      )
+    },
+    "mean-constrained" = {
+      # 0.9.0 S5 (Checkpoint B): the rule of tests/sim/sem-mean-constrained-gate.R re-applied to its CSV
+      inv <- d$invariance[!is.na(d$invariance)]
+      lav <- d$lavaan_ok[!is.na(d$lavaan_ok)]
+      rbind(
+        rows_chk(d, s),
+        chk("converged", all(d$ok %in% TRUE), sprintf("%d of %d fits fail", bool_fail(d$ok), nrow(d))),
+        max_chk("feasibility", d$feas[!is.na(d$feas)], 1e-6),
+        chk("location invariance", length(inv) > 0 && all(inv <= 1),
+            sprintf("%d pairs, worst ratio %s (limit 1)", length(inv), fmt(num_max(inv)))),
+        chk("lavaan parity", length(lav) > 0 && all(lav %in% TRUE),
+            sprintf("%d runs compared, %d bad", length(lav), sum(!(lav %in% TRUE))))
+      )
+    },
+    "nonlinear-parity" = {
+      # T19 (G6): the rule of tests/sim/sem-nonlinear-gate.R re-applied to its CSV. The `sum` problem is best-effort
+      # (its hit rate is reported, never gated, G12); the script's bootstrap SE cross-check is not in the CSV, so
+      # --sim covers it through the child's exit status.
+      g <- d[d$problem != "sum", , drop = FALSE]
+      ran <- g$omx_ok %in% TRUE
+      eqz <- g[g$problem %in% c("eq", "zero") & ran, , drop = FALSE]
+      ineq <- g[g$problem == "ineq" & ran, , drop = FALSE]
+      se_all <- d[d$problem %in% c("eq", "ineq"), , drop = FALSE]
+      se_runs <- se_all[se_all$se_oracle %in% TRUE, , drop = FALSE]
+      act <- g[!is.na(g$ann), , drop = FALSE]
+      rbind(
+        rows_chk(d, s),
+        chk(
+          "native fits", all(g$native_ok %in% TRUE),
+          sprintf("%d of %d gated runs failed", bool_fail(g$native_ok), nrow(g))
+        ),
+        chk("improper runs", !any(g$improper %in% TRUE), sprintf("%d improper", sum(g$improper %in% TRUE))),
+        max_chk("feasibility", g$feas, 1e-6),
+        chk(
+          "oracle ran", mean(ran) >= s$min_pass,
+          sprintf("%.3f of gated runs, need %s", mean(ran), s$min_pass)
+        ),
+        chk(
+          "never worse (eq, zero)", nrow(eqz) > 0 && all(eqz$f_gap <= 1e-8),
+          sprintf("max f_gap %s over %d runs", fmt(num_max(eqz$f_gap)), nrow(eqz))
+        ),
+        chk(
+          "ineq best branch", nrow(ineq) > 0 && mean(ineq$f_gap <= 1e-8) >= s$min_pass,
+          sprintf("%.3f over %d runs", mean(ineq$f_gap <= 1e-8), nrow(ineq))
+        ),
+        max_chk("estimates vs OpenMx", g$est_gap[!is.na(g$est_gap)], 1e-4),
+        max_chk("estimates vs reparameterized fit", g$ref_gap[!is.na(g$ref_gap)], s$tol_est),
+        chk(
+          "Jacobian annihilates covariance", nrow(act) > 0 && all(act$ann <= 1e-8),
+          sprintf("max %s over %d active runs", fmt(num_max(act$ann)), nrow(act))
+        ),
+        chk(
+          "SEs vs reparameterized fit", nrow(se_runs) >= 0.5 * nrow(se_all) && all(se_runs$se_rel <= s$tol_se),
+          sprintf(
+            "%d of %d runs compared, max %s, limit %s",
+            nrow(se_runs), nrow(se_all), fmt(num_max(se_runs$se_rel)), fmt(s$tol_se)
+          )
+        )
+      )
+    },
     "nonlinear-profile" = {
       # T3 (#213): every fit reaches the independent oracle's constrained optimum (the gate script applies the
       # per-run rule; the driver re-checks the counts and the largest gap)
@@ -310,6 +386,9 @@ mutate <- function(gate, kind, d) {
     if (gate == "four-way-kat") d$bias_z[1:3] <- 9
     if (gate == "s7-lifecycle") d$s7_version[d$s7 == "main"] <- d$s7_version[d$s7 == "release"][1]
     if (gate == "nonlinear-profile") d$gap[1:3] <- 1
+    if (gate == "nonlinear-parity") d$ref_gap[which(d$problem == "eq")[1:3]] <- 1e-3
+    if (gate == "fixed-x") d$pass[which(d$check == "estimates")[1:3]] <- FALSE
+    if (gate == "mean-constrained") d$invariance[which(!is.na(d$invariance))[1:3]] <- 5
   }
   if (kind == "failed") {
     if (gate %in% c("product-null", "product-null-colon", "product-fixed-var", "product-fixed-var-colon",
@@ -319,13 +398,18 @@ mutate <- function(gate, kind, d) {
     if (gate %in% c("product-corr", "product-corr-colon")) d$gap[1] <- NA_real_
     if (gate == "s7-lifecycle") d$ok[1] <- FALSE
     if (gate == "nonlinear-profile") d$native_ok[1] <- FALSE
+    if (gate == "nonlinear-parity") d$native_ok[which(d$problem == "eq")[1]] <- FALSE
+    if (gate == "fixed-x") d$pass[which(d$check == "fit")[1]] <- FALSE
+    if (gate == "mean-constrained") d$ok[1] <- FALSE
   }
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
   if (kind == "missing") {
     # the product-term and four-way gates have 2 to 84 rows: drop the last one, so only the row-count check can reject
     # nolint start: object_usage_linter.
-    new_gate <- gate %in% c(names(product_gate_rules), "s7-lifecycle", "nonlinear-profile")
+    new_gate <- gate %in% c(
+      names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x", "mean-constrained"
+    )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
   }
@@ -498,7 +582,10 @@ scripts <- c(
   "product-corr-colon" = "tests/sim/product-correlated-residuals-colon.R",
   "four-way-kat" = "tests/sim/four-way-known-answer.R",
   "s7-lifecycle" = "tests/sim/s7-lifecycle-gate.R",
-  "nonlinear-profile" = "tests/sim/sem-nonlinear-profile-gate.R"
+  "nonlinear-profile" = "tests/sim/sem-nonlinear-profile-gate.R",
+  "nonlinear-parity" = "tests/sim/sem-nonlinear-gate.R",
+  "fixed-x" = "tests/sim/sem-fixed-x-gate.R",
+  "mean-constrained" = "tests/sim/sem-mean-constrained-gate.R"
 )
 
 # ---- main ----
