@@ -1,10 +1,51 @@
 # PLAN: medfit 0.11.0 scope (2026-10-16)
 
-**Status:** APPROVED 2026-10-16, revised 2026-10-16 (harness and test matrix added) by the author (Option B; D2 floor only with nonlinear constraints, D3 keep experimental, D4 no F7, D5 latent means 1.0; D1 still open: confirm the S7 date and any CRAN mail). T1 merged to `dev` (PR #219, `d869dc1`); its install/load/unload/reload gate is NOT built yet (T1b). Produced by a read-only Plan agent (Opus) from
+**Status:** APPROVED 2026-10-16, revised 2026-10-16 (harness and test matrix added) and 2026-10-17 (progress, the reliability regression, the label decision) by the author (Option B; D2 floor only with nonlinear constraints, D3 reversed 2026-10-17: drop the label when tested enough, D4 no F7, D5 latent means 1.0; D1 still open: confirm the S7 date and any CRAN mail). Produced by a read-only Plan agent (Opus) from
 `.STATUS`, the two 0.10.1/0.11.0 proposals, the roadmap, the specs, NEWS, and open issues and PRs. Two claims were
 re-checked by hand: PR #214 and issue #213 exist as described. Not verified: that CRAN 0.3.2 fails under development
 S7 (inferred from the shared nullable-union pattern), the S7 1.0 CRAN date, whether #214 passes medfit's suite, and
 whether probmed adopted `fit_sem()` for P_med MBCO or only evaluated it.
+
+## Progress (2026-10-17)
+
+| Task | State | Where |
+|---|---|---|
+| T1 S7 compatibility | merged | #219 `d869dc1` |
+| T1b S7 lifecycle gate | merged | #220 `c2ad36c` |
+| T2, T3 #213 red tests and fix | merged; #213 stays open until the release | #221 `ecc241c` |
+| T4 factor gate registration | merged | #222 `b909a7f` |
+| T5 exit criteria | merged: criteria file `planning/specs/CRITERIA-native-experimental-exit-2026-10-17.csv`, decisions in `GRILL-native-experimental-exit-2026-10-17.md`, `test-experimental-criteria.R`; three more native gates registered (`nonlinear-parity`, `fixed-x`, `mean-constrained`; 18 gates in `gates.csv`) | #225 `7169d08` |
+| T5b reliability regression (unplanned) | merged | #226 `41d97d4` |
+| T5c drop the label (D3 reversed) | open, checks running | #227 |
+| T5d CI: R-CMD-check on `main` only, dev gated locally (unplanned) | merged | #224 `d40e171` |
+| T5e gate hardening from the Codex adversarial review | open, not started | below |
+| T6 hygiene | open | below |
+| Checkpoint 2, release | open | below |
+
+**T5b, what happened.** The first full `run-gates.R --sim` on current code was not green: the reliability gate had 4 of
+9600 shipped-configuration fits ending `no start converged` (latent, n = 50, replicate 4, random start, the same dataset
+at four data scales; 0 at the 2026-10-09 baseline). Bisect: first bad commit 054c702 (T12 renaming), which changed the
+parameter order and so the random draw; the 10-09 pass was luck of the draw, not a property of the engine. Cause: the
+retries are perturbations of the supplied start, so a start in a bad basin gives five bad attempts (attempt 1 stalled at
+f 0.338 against the optimum 0.231 with a non-PD reduced Hessian; the rest hit maxeval). Production `fit_sem()` with the
+default start converged on the same data. Fix in #226: with `n_starts >= 3` the last attempt is the model's own default
+start; nonlinear-row models keep their starts. Gate 6 of 6, match rate 1.0000. Lesson for the plan: **baselines older
+than the code are not evidence**; the 10-09 to 10-11 baselines of parity, constrained, se and reliability had not been
+rerun after the mean-structure, product, factor and #213 work until this run. Every gate was rerun on 2026-10-17 on the
+rebased branch of #227 (18 of 18 PASS, 105 of 105 checks).
+
+**T5c, the label.** The author reversed D3 on 2026-10-17 ("drop the experimental if it's been tested enough"). The
+criteria were checked, not assumed: C2 to C4 hold after #226; C1 is the open-issue list (#213 fixed, #130 a breaking
+change notice, #83 the CRAN 0.3.2 issues), because the repo has no `correctness` label to query. #227 carries the
+change and the evidence; NEWS states the freeze.
+
+**T5e, Codex adversarial review (2026-10-17, medium).** `tests/sim/sem-factor-gate.R` passes a run when `lavaan` is not
+installed (`(ok(out$lavaan) | !lav_ran)`), and the driver checks only `pass` and `err`, so the 680-run gate can succeed
+with every lavaan and fit-statistic parity check skipped. Verified in the source. The 2026-10-17 baseline ran with lavaan
+installed, so the evidence stands, but the criterion C3a ("lavaan parity") is not enforced where lavaan is absent.
+Task: make a missing `lavaan` fail the factor gate (or write a `lavaan_ran` column and have the verdict require it),
+add a driver fixture for the unavailable-lavaan case, and audit the other registered gates for the same
+skip-tolerance (`requireNamespace` in `tests/sim/`). Size S, 1-2 h; before the release PR.
 
 ## Recommendation: Option B (middle), about 3-4 working days
 
@@ -35,6 +76,7 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
 | F8 | Latent means | L, 5+ d | med-high | none named |
 | F9 | Ext D module 2 (1-1-1) / Ext E | L, weeks | high | none named |
 | F10 | Hygiene: close #130, refresh roadmap Next Actions | S, 1 h | none | none |
+| F11-F13 | Categorical variables: k-level treatment (B1), categorical mediator (B2), native binary and ordinal endogenous variables (B3). Out of 0.11.0; recorded in the roadmap's Next Actions item 6 with sizes and the supported routes (added 2026-10-17) | M-L, M-L, L | med-high | none named |
 
 ## Options
 
@@ -50,7 +92,7 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
 1. **T1 S7 compatibility:** port #214 onto a `dev` branch (or ask the contributor to retarget it to `dev`; never
    `main`); fold its NEWS bullet into the development section; red test `test-s4-registration.R`; suite on S7 0.2.2 and
    `RConsortium/S7@main`; e2e transcript (install, load, unload, reload).
-1b. **T1b S7 lifecycle gate (added after the Codex review of T1, 2026-10-16; blocks Checkpoint 2):** the review found
+1b. **T1b S7 lifecycle gate (DONE, #220; added after the Codex review of T1, 2026-10-16; blocks Checkpoint 2):** the review found
    that T1's tests run in the existing test process, so they cannot catch the failure that was reported (it appeared
    only in an installed package). The two-version install, load, unload, reload and `fit_sem()` transcript from #219 was
    run by hand (`/private/tmp/.../e2e-s7.R`), never as a gate, and `tests/sim/gates.csv` has no S7 row. Build
@@ -89,12 +131,14 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
    fits.
 4. **Checkpoint 1:** adversarial review of T3; if any unconstrained fit changes, narrow the fix.
 5. **T4 factor gate registration:** verdict function, `gates.csv` row, `MUTANT=` defects exit 1.
-6. **T5 experimental-exit GRILL:** criteria (no open correctness issue on the engine, every native gate registered and
+6. **T5 experimental-exit GRILL (DONE, #225; the label itself is T5c, #227):** criteria (no open correctness issue on the engine, every native gate registered and
    green, lavaan and OpenMx parity green, an API freeze list); record the decision; the author pastes the RMediation
    message.
-7. **T6 hygiene:** triage notes in `.STATUS`; roadmap refresh; close #130 at release.
+7. **T6 hygiene:** triage notes in `.STATUS` (its `next:` field still describes the 0.10.0 release and the RMediation #41 merge, `d29685f`, is not recorded); roadmap Next Actions refresh (stale since 2026-10-10); close #130 at release; triage the 2 skips and the pandoc `--mathjax` deprecation.
 8. **Checkpoint 2 (release gate):** full suite, `lintr` after `load_all()`, strict check (CLAUDE.md recipe),
-   `urlchecker::url_check()`, `spelling::spell_check_package()`.
+   `urlchecker::url_check()`, `spelling::spell_check_package()`, and `Rscript tests/sim/run-gates.R --sim` in full on the
+   release commit (after T5e). R-CMD-check no longer runs on `dev` PRs (#224), so the strict check and
+   `scripts/check-local.sh` here, plus R-CMD-check on the `dev` to `main` PR, are the only R CMD check evidence.
 9. **Release:** bump to 0.11.0; NEWS header; `.STATUS` and CLAUDE.md "Current status"; grep for "0.10.0" leftovers;
    `dev` to `main` merge-commit PR with the evidence summary; CI green on `main`; tag `v0.11.0`; GitHub release;
    r-universe via the packages list (allow about 2 h, no manual dispatch); pkgdown deploys from `main`; back-merge.
@@ -131,7 +175,7 @@ Cross-cutting:
 |---|---|---|
 | D1 | Does S7 1.0 force CRAN action, and how: a 0.3.3 patch from the v0.3.2 tag, or submit 0.11.0? | Confirm the S7 date and any CRAN mail first. If forced, submit 0.11.0 (it also fixes the #83 bugs and unblocks probmed's `medfit (>= 0.3.0)` gate); fall back to 0.3.3 only if the deadline is under 2 weeks |
 | D2 | #213 scope: floor only with nonlinear constraints, or always | Only with nonlinear constraints (an always-on floor changes every fit) |
-| D3 | Drop "experimental" in 0.11.0 | No: write the criteria now, drop the label at the first release that meets them |
+| D3 | Drop "experimental" in 0.11.0 | REVERSED 2026-10-17 by the author: drop it when tested enough. The criteria are met after #226 (18 of 18 gates PASS); #227 removes the label |
 | D4 | Include F7 | No, recipe 20 covers it |
 | D5 | Latent means | 1.0, or later if no consumer appears; record in the roadmap |
 
@@ -142,3 +186,8 @@ Cross-cutting:
 - The #213 fix may move optimizer paths in existing constrained fits; frozen fixtures and gates are the guard.
 - `mediation-planning/PROJECT-HUB.md` is stale (lists medfit 0.2.1); the roadmap's Next Actions is stale (2026-10-10).
 - RMediation's own "mature" trigger is undefined (its `.STATUS`, 2026-10-13 hold).
+- The label now promises a frozen API (signatures, `SEMFit` properties, the `?medfit-syntax` grammar). Numerical output of
+  SEMFit methods, the `medfit.*` options and condition classes are not frozen; a reader may assume they are.
+- Gates that depend on Suggests (lavaan, OpenMx) can pass or skip silently in a lean environment (T5e).
+- A random-start gate is sensitive to the draw (T5b): any change to parameter order or naming can move it; rerun the
+  reliability gate after such a change.
