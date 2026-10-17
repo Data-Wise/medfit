@@ -786,7 +786,10 @@ inequality) get a verdict like any others.
 The first start is moment based. If it is not accepted, up to
 `n_starts - 1` retries use perturbed starts drawn under a fixed seed derived
 from the model, restoring the caller's random number state afterward, so a fit
-is reproducible and never changes a simulation around it. When no start is
+is reproducible and never changes a simulation around it. With 3 or more
+starts the last attempt is the model's own moment-based start instead of a
+perturbation, so a supplied start in a bad basin, which makes every perturbation
+bad too, does not end the fit. When no start is
 accepted the error names the best attempt's status and stationarity, and for an
 infeasible constraint set, the violated constraint.
 

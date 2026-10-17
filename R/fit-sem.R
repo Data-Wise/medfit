@@ -32,7 +32,9 @@
 #' @param n_starts Positive integer or `NULL`: number of optimizer starts
 #'   tried before the fit is declared failed (`NULL` uses 5). Retries use
 #'   perturbed starts drawn under a fixed seed and never change the caller's
-#'   random number stream. With a nonlinear constraint, which can leave several
+#'   random number stream; with 3 or more starts the last attempt is the model's
+#'   own moment-based start, so a start in a bad basin does not end the fit.
+#'   With a nonlinear constraint, which can leave several
 #'   local optima, every start is tried and the best accepted one is kept (a
 #'   warning says when the accepted starts disagree); otherwise the first
 #'   accepted start is used.
