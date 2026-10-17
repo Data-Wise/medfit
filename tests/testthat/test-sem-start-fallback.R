@@ -4,8 +4,8 @@
 # start is now the last attempt (it replaces the fifth perturbation), reached only after the others failed.
 
 latent_case <- function() {
-  mod <- sem_models()[["latent"]]
-  d <- sem_sim(mod, 50L, 100000L * 4L + 50L)
+  mod <- sem_models()[["latent"]] # nolint: object_usage_linter. (helper-sem.R)
+  d <- sem_sim(mod, 50L, 100000L * 4L + 50L) # nolint: object_usage_linter.
   smp <- .sem_sample(d, mod$ram)
   bad <- stats::setNames(
     c(-0.281003038623678, -0.185190417714988, -0.346372090895406, -0.17753822723853, -0.298466603458729,
