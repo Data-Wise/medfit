@@ -31,15 +31,16 @@ test_that("the canonical product name is pinned: x:m and m:x are the one name 'm
 })
 
 test_that("every statement kind of ?medfit-syntax still parses", {
-  model <- paste(
+  statements <- c(
     "f =~ y1 + y2 + y3",                       # measurement
     "m ~ a*x + start(0.3)*w",                  # label, starting value
     "y ~ b*m + 0.5*x + lower(0)*w + x:m",      # label, fixed value, bound, product term
     "m ~~ y", "x ~~ x",                        # covariance, variance
     "y ~ 1",                                   # intercept
     "a == b", "a < 3",                         # equality, inequality
-    "ab := a*b",                               # defined parameter
-    sep = "\n")
+    "ab := a*b"                                # defined parameter
+  )
+  model <- paste(statements, collapse = "\n")
   parsed <- .sem_parse(model)
   expect_named(parsed, c("parameters", "constraints"))
   expect_gt(nrow(parsed$parameters), 0)
