@@ -60,11 +60,33 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
    (omit `medfit_numeric`) and `MUTANT=nohook` (skip the `S7_on_load` branch) must exit 1 on dev S7. Fix the false
    "fresh R process" sentence in the header of `test-s4-registration.R` (the gate is the fresh-process check; the
    testthat file checks the registry only). Size: S, 2-3 h; do before T2 so every later checkpoint includes it.
-2. **T2 #213 red tests:** the issue's two seeds (LR about 0 at the unconstrained estimate) plus one unconstrained fit
-   that must stay bit-identical (frozen fixture).
-3. **T3 #213 fix:** floor or step rejection when nonlinear rows exist; non-convergence flag on a far status-3 stop;
-   oracle is the issue's 30-case profile-inversion agreement (about 2.5e-7); planted defect (remove the floor, the test
-   must fail); NEWS behavior note; e2e with the reproducer.
+2. **T2 #213 red tests (built, `feature/issue-213-variance`):** `test-sem-nonlinear-variance.R`: seed 1 (errors,
+   "no start converged"), seed 101 (a = 2.5, b = 1.5, sigma_Y^2 = 2; LR 1458.9, NaN SEs, `converged` TRUE), the same two
+   at the default `n_starts` (both error today), a positivity check, and two frozen fits (unconstrained, linear
+   constrained). Adverse review 2026-10-16, run by hand: the repro is deterministic; the issue's workaround turns every
+   case green (LR 0, finite SEs), so the tests are satisfiable; the first draft's `expect_no_warning` also forbade the
+   legitimate "starts disagree" note and was replaced by a NaN-only check. Known limits: frozen fits use
+   `tolerance = 1e-9` (cross-platform), not bit identity, so T3 must also compare `identical()` on the real outputs
+   locally; only one constraint form (`a*b/sqrt(2*(b^2*Vm+Vy)) == q`) and no inequality, `mbco_sem()` or zero-product
+   branch case is covered yet (added to T3a).
+3a. **T3a diagnose before choosing the fix (added by the adverse review):** the issue's mechanism (a step to a negative
+   variance) explains seed 1 (NaN at `Vy = -1.985`) but NOT seed 101: its far-off solution has positive variances
+   (a = -9.74, b = -1.02, Vm = 16.6, Vy = 5.5), a decrement of 9e-11 and status 3 after 7 retries, so it is a genuine
+   spurious stationary point of the constrained problem that the acceptance gate accepts. A variance floor works as a
+   workaround, but the mechanism is not established, so a floor could pass these seeds for the wrong reason. Compare
+   on the two seeds plus the 30-case set before building: (A) a variance floor (relative to the sample variance, not
+   the issue's fixed 1e-4, which is scale dependent) only with nonlinear rows; (B) the unconstrained ML estimate,
+   projected onto the constraints, as one extra start (the constraint holds at it in these cases, so LR = 0 by
+   construction; it also helps inequality rows); (C) rejecting any step with a non-positive variance. Record the
+   choice and the rejected alternatives in the GRILL. Open design points: the "status-3 stop far above the optimum"
+   flag needs an optimum the fit does not have (the unconstrained fit is a lower bound; no threshold is defined), so
+   specify it as a comparison with the unconstrained objective or drop it; a floor must not bind at a true boundary
+   solution (double-null cases), so a floor that is active at the solution must warn.
+3. **T3 #213 fix:** the option T3a selects; the oracle is an independent profile-likelihood inversion over a 30-case
+   set (double null, near-null, b = 0, a = 0, near boundary). The issue reports the set but not the script, so T3a
+   writes the generator and the oracle first (`tests/sim/sem-nonlinear-profile-gate.R`, registered in `gates.csv`) and
+   reports the agreement against the issue's 2.5e-7; planted defect (remove the fix, the gate must fail);
+   NEWS behavior note; e2e with the reproducer.
 4. **Checkpoint 1:** adversarial review of T3; if any unconstrained fit changes, narrow the fix.
 5. **T4 factor gate registration:** verdict function, `gates.csv` row, `MUTANT=` defects exit 1.
 6. **T5 experimental-exit GRILL:** criteria (no open correctness issue on the engine, every native gate registered and

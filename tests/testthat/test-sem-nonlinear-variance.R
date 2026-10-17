@@ -23,6 +23,17 @@ nv_constrained <- function(d, h1, ...) {
 
 nv_lr <- function(h1, h2) 2 * (as.numeric(stats::logLik(h1)) - as.numeric(stats::logLik(h2)))
 
+# Warnings other than the multi-start spread note: the fix is about NaN standard errors and a far-off stop, and a
+# "starts disagree" note is legitimate for a nonlinear row (CLAUDE.md), so it must not decide these tests.
+nv_nan_warnings <- function(expr) {
+  w <- character()
+  value <- withCallingHandlers(expr, warning = function(c) {
+    w <<- c(w, conditionMessage(c))
+    invokeRestart("muffleWarning")
+  })
+  list(value = value, nan = grep("NaN", w, value = TRUE))
+}
+
 test_that("#213 seed 1: the constrained fit at the unconstrained MLE reproduces it (LR about 0)", {
   d <- nv_data(1, 1.5, 1, 1)
   h1 <- fit_sem(nv_model, d)
@@ -34,8 +45,19 @@ test_that("#213 seed 1: the constrained fit at the unconstrained MLE reproduces 
 test_that("#213 seed 101 (a = 2.5, b = 1.5, sigma_Y^2 = 2): no far-off stop and no NaN standard errors", {
   d <- nv_data(101, 2.5, 1.5, 2)
   h1 <- fit_sem(nv_model, d)
-  expect_no_warning(h2 <- nv_constrained(d, h1, n_starts = 8))
-  expect_lt(abs(nv_lr(h1, h2)), 1e-3)
+  r <- nv_nan_warnings(nv_constrained(d, h1, n_starts = 8))
+  expect_length(r$nan, 0)
+  expect_lt(abs(nv_lr(h1, r$value)), 1e-3)
+  expect_true(all(stats::coef(r$value)[c("Vm", "Vy")] > 0))
+})
+
+test_that("#213 default n_starts: both cases fit and reproduce the unconstrained fit", {
+  for (args in list(c(1, 1.5, 1, 1), c(101, 2.5, 1.5, 2))) {
+    d <- nv_data(args[1], args[2], args[3], args[4])
+    h1 <- fit_sem(nv_model, d)
+    h2 <- suppressWarnings(nv_constrained(d, h1))
+    expect_lt(abs(nv_lr(h1, h2)), 1e-3)
+  }
 })
 
 test_that("frozen: the unconstrained fit is unchanged", {
