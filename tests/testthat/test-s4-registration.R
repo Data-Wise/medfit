@@ -45,8 +45,21 @@ test_that("the S7 hooks are used only when the installed S7 exports them", {
 
 test_that("planted: dropping the plain numeric union (the one S7 cannot find in an installed package) is caught", {
   fx_skip_covr()
-  real <- paste(deparse(.register_s4_unions), collapse = "\n")
-  expect_true(grepl('setClassUnion("medfit_numeric", c("integer", "numeric"))', real, fixed = TRUE))
-  bad <- sem_mutate(.register_s4_unions, 'methods::setClassUnion("medfit_numeric", c("integer", "numeric"))', "NULL")
-  expect_false(grepl("medfit_numeric\"", paste(deparse(bad), collapse = "\n"), fixed = TRUE))
+  expect_true("medfit_numeric" %in% .register_s4_unions())
+  bad <- sem_mutate(.register_s4_unions, 'medfit_numeric = c("integer", "numeric"),', "")
+  expect_false("medfit_numeric" %in% bad())
+})
+
+test_that("registering the unions again is harmless and leaves them registered", {
+  nms <- medfit:::.register_s4_unions()
+  expect_setequal(nms, c(
+    "medfit_numeric", "medfit_numeric_or_NULL", "medfit_list_or_NULL",
+    "medfit_data_frame_or_NULL", "medfit_call_or_NULL"
+  ))
+  expect_true(all(vapply(nms, methods::isClassUnion, logical(1))))
+  expect_no_error(BootstrapResult(
+    estimate = 1, ci_lower = 0, ci_upper = 2, ci_level = 0.95,
+    boot_estimates = c(0.5, 1.5), n_boot = 2L, method = "plugin",
+    call = NULL
+  ))
 })

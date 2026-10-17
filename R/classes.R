@@ -22,11 +22,20 @@
 # failed in `.onLoad()` with "Class union has not been registered with S4"; the cause of the difference between the
 # two was not traced further.
 .register_s4_unions <- function() {
-  methods::setClassUnion("medfit_numeric", c("integer", "numeric"))
-  methods::setClassUnion("medfit_numeric_or_NULL", c("integer", "numeric", "NULL"))
-  methods::setClassUnion("medfit_list_or_NULL", c("list", "NULL"))
-  methods::setClassUnion("medfit_data_frame_or_NULL", c("data.frame", "NULL"))
-  methods::setClassUnion("medfit_call_or_NULL", c("call", "NULL"))
+  unions <- list(
+    medfit_numeric = c("integer", "numeric"),
+    medfit_numeric_or_NULL = c("integer", "numeric", "NULL"),
+    medfit_list_or_NULL = c("list", "NULL"),
+    medfit_data_frame_or_NULL = c("data.frame", "NULL"),
+    medfit_call_or_NULL = c("call", "NULL")
+  )
+  for (name in names(unions)) {
+    # Registering again is a no-op: the namespace is sealed once loaded, so setClassUnion() would error
+    if (!methods::isClassUnion(name)) {
+      methods::setClassUnion(name, unions[[name]])
+    }
+  }
+  invisible(names(unions))
 }
 
 .register_s4_unions()
