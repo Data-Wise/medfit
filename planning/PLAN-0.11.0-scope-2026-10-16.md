@@ -1,6 +1,6 @@
 # PLAN: medfit 0.11.0 scope (2026-10-16)
 
-**Status:** APPROVED 2026-10-16, revised 2026-10-16 (harness and test matrix added) and 2026-10-17 (progress, the reliability regression, the label decision, Checkpoint 2 result) by the author (Option B; D2 floor only with nonlinear constraints, D3 reversed 2026-10-17: drop the label when tested enough, D4 no F7, D5 latent means 1.0; D1 still open: confirm the S7 date and any CRAN mail). Produced by a read-only Plan agent (Opus) from
+**Status:** APPROVED 2026-10-16, revised 2026-10-16 (harness and test matrix added) and 2026-10-17 (progress, the reliability regression, the label decision, Checkpoint 2 result) by the author (Option B; D2 floor only with nonlinear constraints, D3 reversed 2026-10-17: drop the label when tested enough, D4 no F7, D5 latent means 1.0; D1 closed 2026-10-17: not forced). Produced by a read-only Plan agent (Opus) from
 `.STATUS`, the two 0.10.1/0.11.0 proposals, the roadmap, the specs, NEWS, and open issues and PRs. Two claims were
 re-checked by hand: PR #214 and issue #213 exist as described. Not verified: that CRAN 0.3.2 fails under development
 S7 (inferred from the shared nullable-union pattern), the S7 1.0 CRAN date, whether #214 passes medfit's suite, and
@@ -231,7 +231,7 @@ Cross-cutting:
 
 | # | Decision | Recommended |
 |---|---|---|
-| D1 | Does S7 1.0 force CRAN action, and how: a 0.3.3 patch from the v0.3.2 tag, or submit 0.11.0? | Confirm the S7 date and any CRAN mail first. If forced, submit 0.11.0 (it also fixes the #83 bugs and unblocks probmed's `medfit (>= 0.3.0)` gate); fall back to 0.3.3 only if the deadline is under 2 weeks |
+| D1 | Does S7 1.0 force CRAN action, and how: a 0.3.3 patch from the v0.3.2 tag, or submit 0.11.0? | **CLOSED 2026-10-17: not forced.** S7 1.0.0 is unreleased (CRAN has 0.2.2, 2026-04-22; `NEWS.md` on `main` has a 1.0.0 section, no date); no CRAN mail about S7 or medfit since the 2026-08-12 maintainer check; CRAN checks of 0.3.2 are OK on 13 of 13 flavors. Release 0.11.0 GitHub-only; re-check when CRAN's S7 page shows 1.0.0 or a CRAN mail arrives. Original guidance, kept for that trigger: confirm the S7 date and any CRAN mail first. If forced, submit 0.11.0 (it also fixes the #83 bugs and unblocks probmed's `medfit (>= 0.3.0)` gate); fall back to 0.3.3 only if the deadline is under 2 weeks |
 | D2 | #213 scope: floor only with nonlinear constraints, or always | Only with nonlinear constraints (an always-on floor changes every fit) |
 | D3 | Drop "experimental" in 0.11.0 | REVERSED 2026-10-17 by the author: drop it when tested enough. The criteria are met after #226 (18 of 18 gates PASS); #227 removes the label |
 | D4 | Include F7 | No, recipe 20 covers it |
