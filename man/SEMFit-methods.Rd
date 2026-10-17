@@ -14,8 +14,6 @@ integer; \code{logLik()} an object of class \code{"logLik"}; \code{summary()} an
 class \code{"summary_SEMFit"}; \code{print()} invisibly returns its argument.
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-
 Accessors and display for a \link{SEMFit} returned by \code{\link[=fit_sem]{fit_sem()}}.
 }
 \details{

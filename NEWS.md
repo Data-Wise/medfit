@@ -47,6 +47,15 @@
   `mediation_demo`, the same outcome gave AIC 3934.7 with the product and 2994.1 without). `anova()` and
   `mbco_sem()` already refused such a pair (#206).
 
+## Lifecycle
+
+* The native maximum-likelihood engine (`fit_sem()`, `mbco_sem()`, `SEMFit`, `fit_mediation(engine = "native")`) is no
+  longer marked experimental. It met the written exit criteria in
+  `planning/specs/CRITERIA-native-experimental-exit-2026-10-17.csv`: all 17 native simulation gates re-run green on
+  this code (`tests/sim/run-gates.R`), lavaan and OpenMx parity hold, and no correctness issue is open. From now on
+  the exported signatures, the `SEMFit` properties and the model-syntax grammar in `?medfit-syntax` change only through
+  a deprecation; numerical fixes are not breaking changes.
+
 ## Documentation
 
 * Removed a literal header file path and a literal `Version {version}` footer placeholder that the website printed;

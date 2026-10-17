@@ -5,8 +5,6 @@
 \alias{medfit_syntax}
 \title{medfit Model Syntax}
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-
 The model syntax read by \code{\link[=fit_sem]{fit_sem()}} and by \code{fit_mediation(engine = "native")}. It is a lavaan-style core plus two extensions, each marked
 "medfit extension" below. One statement per line (or separated by \verb{;}).
 }

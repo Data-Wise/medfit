@@ -16,7 +16,7 @@ The first four chapters built the estimates. This chapter builds everything that
 the information matrix (expected and observed), standard errors of defined parameters (the delta method), robust standard
 errors for weighted data (the sandwich), the test of an indirect effect (MBCO), and the general likelihood-ratio test
 (`anova()`). Each is derived, computed by hand from the matrices of the earlier chapters, and checked against the
-engine and, where they offer the same quantity, against lavaan or OpenMx. The engine is experimental.
+engine and, where they offer the same quantity, against lavaan or OpenMx.
 
 | | |
 |---|---|

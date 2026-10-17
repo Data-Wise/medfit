@@ -2184,8 +2184,6 @@ print_summary_cluster_mediation_data <- function(x, ...) {
 #' SEMFit S7 Class
 #'
 #' @description
-#' `r lifecycle::badge("experimental")`
-#'
 #' S7 class holding a structural equation model fitted by the native
 #' maximum-likelihood engine (see [fit_sem()]): estimates, their covariance,
 #' the parameter table, defined parameters (`:=`) with delta-method standard

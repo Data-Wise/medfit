@@ -14,7 +14,7 @@ execute:
 
 Ten steps from a model written as syntax to a tested, constrained and extracted
 mediation result. It sits between [the five-minute quickstart](native-quickstart.html)
-and [the native engine guide](native-guide.html). The native engine is experimental.
+and [the native engine guide](native-guide.html).
 
 | | |
 |---|---|

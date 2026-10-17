@@ -48,8 +48,6 @@ fit it returns and \code{glance()} does not report it}
 A SEMFit S7 object
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-
 S7 class holding a structural equation model fitted by the native
 maximum-likelihood engine (see \code{\link[=fit_sem]{fit_sem()}}): estimates, their covariance,
 the parameter table, defined parameters (\verb{:=}) with delta-method standard

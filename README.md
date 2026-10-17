@@ -25,7 +25,7 @@ model, from one mediator to a latent variable.
 | **0.10.0** | The product term `x:m` in native syntax and the four-way decomposition from a native fit (`extract_mediation()` on a `fit_sem()` fit), inside a documented supported class; the model test is `NA` when a product factor is a regression target; a native route in cookbook recipe 7 |
 | **0.9.0** | Observed intercepts and means in the native engine (`y ~ 1`, `meanstructure =`), with centered coordinates for data far from zero; `fixed_x` to fix exogenous moments at the sample values (lavaan's `fixed.x = TRUE`); the tutorial's step 9 and cookbook recipe 18 |
 | **0.8.0** | Nonlinear constraints (`cp == a*b`, `a*b > k`), `mbco_sem(paths = )` for a product of k paths, `anova()`, `tidy()` and `glance()` for `SEMFit`, one lavaan-style naming convention; the lavaan comparison article and cookbook recipes 12 and 13 |
-| **0.7.0** | A native maximum-likelihood SEM engine (experimental): latent mediators, constraints, defined parameters, `fit_sem()`, `mbco_sem()` |
+| **0.7.0** | A native maximum-likelihood SEM engine: latent mediators, constraints, defined parameters, `fit_sem()`, `mbco_sem()` |
 | **0.6.0** | Cluster-randomized designs (2-1-1) with `engine = "lmer"`, Kenward-Roger intervals, cluster bootstrap; the Reference Card and Cookbook |
 | **0.5.0** | Joint mediation (`JointMediationData`), the bundled `mediation_demo` data; two results fixed: serial `te()`/`pm()` sum every path, `confint()` path rows are found by name |
 | **0.4.0** | The `regmedint` engine, the four-way decomposition from `fit_mediation()`, and `m_star` |
@@ -193,10 +193,10 @@ for the estimand and the assumptions each effect needs.
 </details>
 
 <details>
-<summary><b>Latent mediator</b> (native engine, experimental)</summary>
+<summary><b>Latent mediator</b> (native engine)</summary>
 
 When the mediator is a construct measured by several indicators, write the model
-as syntax. The native maximum-likelihood engine is experimental and needs no
+as syntax. The native maximum-likelihood engine needs no
 other package:
 
 ```r
@@ -256,7 +256,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 | Get a table | `tidy()`, `glance()`, `confint()`, `coef()`, `vcov()`, `nobs()` |
 | Fit with control | `fit_mediation()` (engines `glm`, `regmedint`, `lmer`, `native`) |
 | Use fitted models | `extract_mediation()` (lm, glm, lmer, lavaan, `SEMFit`) |
-| Write a model as syntax | `fit_sem()`, `mbco_sem()` (experimental) |
+| Write a model as syntax | `fit_sem()`, `mbco_sem()` |
 | Bootstrap | `bootstrap_mediation()` (parametric, nonparametric, plugin) |
 
 Every function is on the [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html).

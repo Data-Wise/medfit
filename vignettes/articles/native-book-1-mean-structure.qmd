@@ -13,7 +13,7 @@ execute:
 ---
 
 This is the first of seven chapters that open the native engine and show every
-matrix it works with. The engine is experimental. The chapters, in order:
+matrix it works with. The chapters, in order:
 
 1. **The mean structure** (this chapter): the RAM form, the implied means,
    the discrepancy and its gradient, and the moment count.

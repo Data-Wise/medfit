@@ -19,7 +19,7 @@ effect. This chapter derives the four parts from the two regressions, shows wher
 covariate means enter, proves which parts move when a variable is centered, derives the delta-method standard errors
 (including the covariate term whose omission was a bug fixed in 0.9.0), and checks every number against a hand
 computation from `lm()`, against lavaan's `:=` defined parameters, and against the engine's
-`extract_mediation(fit, decomposition = "four_way")`. The engine is experimental.
+`extract_mediation(fit, decomposition = "four_way")`.
 
 | | |
 |---|---|

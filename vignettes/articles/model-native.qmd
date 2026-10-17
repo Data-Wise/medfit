@@ -13,7 +13,7 @@ execute:
 ---
 
 Write the model as syntax and fit it by maximum likelihood with no other package.
-This is the first of five pages on the native engine, which is experimental.
+This is the first of five pages on the native engine.
 Part of the [Models](models.html) collection.
 
 | | |

@@ -10,8 +10,6 @@
 #' Minimum-of-k Likelihood-Ratio Test for an Indirect Effect (MBCO)
 #'
 #' @description
-#' `r lifecycle::badge("experimental")`
-#'
 #' Tests the null hypothesis that an indirect effect, the product of two or more
 #' labeled paths (\eqn{a b}{a*b}, or a serial \eqn{a d b}{a*d*b}), is zero in a
 #' model fitted by [fit_sem()]. The product is zero exactly when one factor is,

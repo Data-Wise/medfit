@@ -89,8 +89,6 @@ A \link{SEMFit} object. With a product term whose factor is a regression target 
 \code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse; see \link{SEMFit-methods}.
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-
 Fits a model written in lavaan-style syntax to raw data with medfit's native
 maximum-likelihood engine, and returns a \link{SEMFit} object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,

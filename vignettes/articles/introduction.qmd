@@ -19,7 +19,7 @@ execute:
 - **Effect extractors**: `nie()`, `nde()`, `te()`, `pm()`, `paths()` for mediation effects
 - **Tidyverse integration**: `tidy()` and `glance()` methods for tibble workflows
 - **Base R generics**: `coef()`, `vcov()`, `confint()`, `nobs()` for S7 classes
-- **Native SEM engine** (experimental): `fit_sem()` fits model syntax with latent mediators and linear or nonlinear constraints; `mbco_sem()` tests the indirect effect, `anova()` compares nested fits, and `tidy()`, `glance()` and `confint()` summarize a `SEMFit`; observed intercepts and means (`y ~ 1`), `fixed_x` and the `x:m` product term (with the four-way decomposition through `extract_mediation()`) are supported inside documented limits
+- **Native SEM engine**: `fit_sem()` fits model syntax with latent mediators and linear or nonlinear constraints; `mbco_sem()` tests the indirect effect, `anova()` compares nested fits, and `tidy()`, `glance()` and `confint()` summarize a `SEMFit`; observed intercepts and means (`y ~ 1`), `fixed_x` and the `x:m` product term (with the four-way decomposition through `extract_mediation()`) are supported inside documented limits
 - **S7-based classes** for standardized mediation data structures
 - **Foundation** for the mediation analysis ecosystem (RMediation, mediationverse)
 
@@ -33,7 +33,7 @@ interaction), `SerialMediationData`, `ParallelMediationData`,
 `JointMediationData` (several mediators with treatment-by-mediator products),
 `ClusterMediationData` (treatment assigned to whole clusters, from `lmer` fits),
 and `BootstrapResult`. An eighth class, `SEMFit`, holds a model fitted from
-syntax by the native engine (`fit_sem()`, experimental). The three most common
+syntax by the native engine (`fit_sem()`). The three most common
 classes are introduced here; see [Model Extraction](extraction.html) for the
 others.
 
@@ -293,7 +293,7 @@ med_data <- fit_mediation(
 
 Fit a model written as syntax with the native maximum-likelihood engine. It
 handles latent variables and constraints, and `:=` defines an effect with a
-delta-method standard error (experimental):
+delta-method standard error:
 
 ```{r}
 #| label: fit-sem-generic

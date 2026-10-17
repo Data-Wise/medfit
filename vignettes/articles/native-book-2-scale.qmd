@@ -16,7 +16,7 @@ execute:
 chapter asks what happens when the variables sit far from zero relative to their
 spread, a common situation (a test score near 500 with a spread of 10, a year near
 2000), and shows the change of coordinates the engine uses so that the answer does
-not depend on where the data sit. The engine is experimental.
+not depend on where the data sit.
 
 | | |
 |---|---|
