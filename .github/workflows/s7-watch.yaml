@@ -19,8 +19,6 @@ on:
         description: "Run the lifecycle gate with MUTANT=nounion so it fails (tests the issue path)"
         type: boolean
         default: false
-  push:
-    branches: [feature/s7-watch]
 
 name: s7-watch
 
