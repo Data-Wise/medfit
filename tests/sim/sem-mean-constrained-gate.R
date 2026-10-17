@@ -24,6 +24,9 @@
 # passes) and the lavaan verdict where a comparison was made (a mutant run writes to the temporary directory)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
+if (!requireNamespace("lavaan", quietly = TRUE)) {
+  stop("this gate needs lavaan (Suggests): without it the lavaan parity checks would be skipped, not failed", call. = FALSE)
+}
 seeds <- seq_len(as.integer(Sys.getenv("SEEDS", "5")))
 mutant <- Sys.getenv("MUTANT", "")
 if (mutant %in% c("badshift", "noshift", "nocenter")) {
@@ -121,7 +124,7 @@ for (i in seq_along(rows)) {
     cat(r$structure, r$n, r$seed, r$problem, "est", est, "se", se, "\n")
   }
 }
-if (requireNamespace("lavaan", quietly = TRUE)) {
+{
   for (ri in seq_along(rows)) {
     r <- rows[[ri]]
     if (!r$ok || r$shift != 0 || r$problem == "zero") next

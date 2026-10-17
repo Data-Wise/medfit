@@ -128,7 +128,7 @@ verdict_gate <- function(gate, d, s) {
                            "est_gap", "ref_gap", "ann", "se_rel", "se_oracle"),
     "fixed-x" = c("tag", "check", "pass"),
     "mean-constrained" = c("structure", "n", "seed", "shift", "problem", "ok", "feas", "invariance", "lavaan_ok"),
-    factor = c("n", "k", "seed", "miss", "pass", "err")
+    factor = c("n", "k", "seed", "miss", "pass", "err", "fxmode", "lavaan", "fitstats")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -234,9 +234,13 @@ verdict_gate <- function(gate, d, s) {
       kinds <- c("fit", "estimates", "SEs", "df", "npar", "chisq", "accepted", "paths", "logLik",
                  "non-exogenous fixed_x name refused", "AIC across different fixed sets refused")
       missing_kind <- setdiff(kinds, d$check)
+      # T5e: the lavaan-only checks (chi-square, the conditional logLik) must be present, not skipped
+      lav_rows <- d[d$check == "chisq" | d$tag == "lavaan", , drop = FALSE]
       rbind(
         rows_chk(d, s),
         chk("checks pass", all(d$pass %in% TRUE), sprintf("%d of %d fail", bool_fail(d$pass), nrow(d))),
+        chk("lavaan checks ran", nrow(lav_rows) > 0 && any(d$tag == "lavaan") && all(lav_rows$pass %in% TRUE),
+            sprintf("%d lavaan rows", nrow(lav_rows))),
         chk("every kind ran", !length(missing_kind),
             if (length(missing_kind)) paste("missing:", paste(missing_kind, collapse = ", ")) else "all 11 kinds")
       )
@@ -305,10 +309,19 @@ verdict_gate <- function(gate, d, s) {
       # T4: the factor gate applies its own per-run rule (twin, names, lavaan, fitstats, moments, refit, lost cells,
       # product cells) and writes one `pass` per run; the driver re-checks the count, every pass and every error
       errs <- sum(nzchar(ifelse(is.na(d$err), "", as.character(d$err))))
+      lav_cells <- d[d$fxmode %in% c("free", "all"), , drop = FALSE]
       rbind(
         rows_chk(d, s),
         chk("passing runs", all(d$pass %in% TRUE), sprintf("%d of %d fail", sum(!(d$pass %in% TRUE)), nrow(d))),
-        chk("errors", errs == 0, sprintf("%d runs with an error message", errs))
+        chk("errors", errs == 0, sprintf("%d runs with an error message", errs)),
+        # T5e (Codex review): a run that skipped lavaan has NA here and must not count as parity
+        chk(
+          "lavaan checks ran", nrow(lav_cells) > 0 && all(lav_cells$lavaan %in% TRUE & lav_cells$fitstats %in% TRUE),
+          sprintf(
+            "%d free/all cells, %d without a passing lavaan and fit-statistic check", nrow(lav_cells),
+            sum(!(lav_cells$lavaan %in% TRUE & lav_cells$fitstats %in% TRUE))
+          )
+        )
       )
     },
     "nonlinear-profile" = {
@@ -402,6 +415,15 @@ mutate <- function(gate, kind, d) {
     if (gate == "mean-constrained") d$invariance[which(!is.na(d$invariance))[1:3]] <- 5
     if (gate == "factor") d$pass[1:3] <- FALSE
   }
+  if (kind == "no_lavaan") {
+    # T5e: what a run without lavaan used to write: its lavaan-only checks absent or NA, everything else passing
+    if (gate == "factor") {
+      d$lavaan[d$fxmode %in% c("free", "all")] <- NA
+      d$fitstats[d$fxmode %in% c("free", "all")] <- NA
+    }
+    if (gate == "fixed-x") d <- d[!(d$check == "chisq" | d$tag == "lavaan"), , drop = FALSE]
+    if (gate == "mean-constrained") d$lavaan_ok <- NA
+  }
   if (kind == "failed") {
     if (gate %in% c("product-null", "product-null-colon", "product-fixed-var", "product-fixed-var-colon",
                     "four-way-kat")) {
@@ -453,6 +475,8 @@ run_mutants <- function() {
     # a common rescaling of every decrement keeps the accepted/non-accepted ratio, so only the threshold
     # checks can reject it
     if (s$gate == "stationarity") kinds <- c(kinds, "scale_down", "scale_up")
+    # the gates whose scripts need lavaan: a run that skipped its lavaan checks must be rejected (T5e)
+    if (s$gate %in% c("factor", "fixed-x", "mean-constrained")) kinds <- c(kinds, "no_lavaan")
     for (kind in kinds) {
       v <- verdict_gate(s$gate, mutate(s$gate, kind, ld$data), s)
       rejected <- !all(v$pass)

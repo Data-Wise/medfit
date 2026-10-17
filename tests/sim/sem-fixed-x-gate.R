@@ -21,6 +21,9 @@
 # the temporary directory
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
+if (!requireNamespace("lavaan", quietly = TRUE)) {
+  stop("this gate needs lavaan (Suggests): without it the lavaan parity checks would be skipped, not failed", call. = FALSE)
+}
 source("tests/testthat/helper-fixed-x.R")
 source("tests/testthat/helper-sem.R") # provides sem_mutate
 seeds <- seq_len(as.integer(Sys.getenv("SEEDS", "5")))
@@ -99,7 +102,7 @@ for (n in c(100L, 400L)) {
         }
       }
     }
-    if (requireNamespace("lavaan", quietly = TRUE) && n == 400L) {
+    if (n == 400L) {
       fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE, information = "expected")
       ref <- lavaan::sem(fx_syntax, d, fixed.x = TRUE)
       tag <- sprintf("lavaan n=%d seed=%d", n, seed)
@@ -127,7 +130,7 @@ for (shift in c(1e2, 1e3, 1e5)) {
 }
 
 # likelihood parity and guards
-if (requireNamespace("lavaan", quietly = TRUE)) {
+{
   ref <- as.numeric(lavaan::logLik(lavaan::sem(fx_syntax, d0, meanstructure = TRUE, fixed.x = TRUE)))
   check("lavaan", "logLik", abs(as.numeric(logLik(base)) - ref) <= 1e-6)
 }
