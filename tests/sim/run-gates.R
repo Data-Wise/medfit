@@ -121,7 +121,8 @@ verdict_gate <- function(gate, d, s) {
     "product-fixed-var-colon" = c("xdist", "config", "expect", "df", "reject05", "mean_chisq", "reps", "reps_ok"),
     "product-corr" = c("design", "cvf", "path", "expect", "gap"),
     "product-corr-colon" = c("design", "cvf", "path", "expect", "gap", "gap_column", "err"),
-    "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok")
+    "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok"),
+    "s7-lifecycle" = c("s7", "s7_version", "step", "ok")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -203,6 +204,25 @@ verdict_gate <- function(gate, d, s) {
         chk("no_start_converged (shipped config)", nsc == 0, sprintf("%d", nsc))
       )
     },
+    "s7-lifecycle" = {
+      # T1b: install, load, use, unload and reload in a fresh process against each S7 library; no step may fail
+      bad <- d$step[!(d$ok %in% TRUE)]
+      vers <- unique(d$s7_version[d$s7 == "release"])
+      main_vers <- unique(d$s7_version[d$s7 == "main"])
+      rbind(
+        rows_chk(d, s),
+        chk(
+          "steps", length(bad) == 0 && !anyNA(d$ok),
+          sprintf("%d failed or missing: %s", length(bad), paste(unique(bad), collapse = ", "))
+        ),
+        chk("both S7 libraries", setequal(d$s7, c("release", "main")), paste(unique(d$s7), collapse = ", ")),
+        chk(
+          "two different S7 versions", length(vers) == 1 && length(main_vers) == 1 && !anyNA(c(vers, main_vers)) &&
+            vers != main_vers,
+          sprintf("release %s, main %s", paste(vers, collapse = ","), paste(main_vers, collapse = ","))
+        )
+      )
+    },
     # product-term and four-way gates: the rules live in tests/sim/product-gate-common.R
     product_gate_rules[[gate]](d, s) # nolint: object_usage_linter.
   )
@@ -278,6 +298,7 @@ mutate <- function(gate, kind, d) {
     }
     if (gate %in% c("product-corr", "product-corr-colon")) d$gap[which(d$expect == "match")[1:3]] <- 1e-2
     if (gate == "four-way-kat") d$bias_z[1:3] <- 9
+    if (gate == "s7-lifecycle") d$s7_version[d$s7 == "main"] <- d$s7_version[d$s7 == "release"][1]
   }
   if (kind == "failed") {
     if (gate %in% c("product-null", "product-null-colon", "product-fixed-var", "product-fixed-var-colon",
@@ -285,12 +306,13 @@ mutate <- function(gate, kind, d) {
       d$reps_ok[1] <- 0
     }
     if (gate %in% c("product-corr", "product-corr-colon")) d$gap[1] <- NA_real_
+    if (gate == "s7-lifecycle") d$ok[1] <- FALSE
   }
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
   if (kind == "missing") {
     # the product-term and four-way gates have 2 to 84 rows: drop the last one, so only the row-count check can reject
-    new_gate <- gate %in% names(product_gate_rules) # nolint: object_usage_linter.
+    new_gate <- gate %in% c(names(product_gate_rules), "s7-lifecycle") # nolint: object_usage_linter.
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
   }
   if (kind == "failed") {
@@ -460,7 +482,8 @@ scripts <- c(
   "product-fixed-var-colon" = "tests/sim/exo-product-fixed-var-colon.R",
   "product-corr" = "tests/sim/product-correlated-residuals.R",
   "product-corr-colon" = "tests/sim/product-correlated-residuals-colon.R",
-  "four-way-kat" = "tests/sim/four-way-known-answer.R"
+  "four-way-kat" = "tests/sim/four-way-known-answer.R",
+  "s7-lifecycle" = "tests/sim/s7-lifecycle-gate.R"
 )
 
 # ---- main ----
