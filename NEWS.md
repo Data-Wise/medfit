@@ -55,6 +55,10 @@
   this code (`tests/sim/run-gates.R`), lavaan and OpenMx parity hold, and no correctness issue is open. From now on
   the exported signatures, the `SEMFit` properties and the model-syntax grammar in `?medfit-syntax` change only through
   a deprecation; numerical fixes are not breaking changes.
+  New syntax and new properties are added without changing what an existing name means: the planned categorical
+  mediators, outcomes and treatments will arrive as additions (the dummy names such as `g_b` and the product name
+  `m:x` stay), and `tests/testthat/test-api-freeze.R` pins the current names, argument order and grammar so a rename
+  fails the suite.
 
 ## Documentation
 

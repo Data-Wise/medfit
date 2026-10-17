@@ -229,6 +229,15 @@ the reason.
 - `summary()` reports diagnostics, including an improper solution and any active
   bound or constraint; read them before trusting a fit.
 
+## Stability {#stability}
+
+The exported signatures of `fit_sem()` and `mbco_sem()`, the `SEMFit` properties and the model syntax in
+`?"medfit-syntax"` change only through a deprecation. New syntax and new properties can be added: a name,
+a table row or a property that exists today keeps its meaning. This matters for the features listed under
+Limits (a categorical mediator or outcome, for example): they will arrive as additions, not as a rename of
+`g_b`-style dummy names or of the `m:x` product name. A test (`test-api-freeze.R`) pins the current names.
+Numerical fixes are not breaking changes.
+
 ## Related
 
 [Cookbook recipe 11](cookbook.html#a-latent-mediator-native-engine) |
