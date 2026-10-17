@@ -10,14 +10,17 @@
 # unconstrained MLE, so the constrained optimum is the MLE there).
 # Per run the rule (a failing run fails the gate):
 #   fit      the fit returns (no "no start converged" error) and has no NaN standard errors
+#   request  the constraint value at the fitted parameters is the requested q: |q_achieved - q| <= 1e-5 * max(1, |q|)
+#            (the oracle is evaluated at q_achieved, so without this check a fit that solved a different q would pass)
 #   oracle   |LR - LR_oracle(q_achieved)| <= 1e-6 * max(1, LR), q_achieved the constraint value at the fitted
 #            parameters (the fit meets the constraint to 1e-6, which moves LR by lambda * residual, up to about 3e-6
 #            at the nominal q)
 #   mle      at q = q_hat, |LR| <= 1e-6
 #   null     at q = 0 the oracle is the exact union of the two linear nulls (a = 0, b = 0): |LR - LR_oracle(0)| <= 1e-5
 # The fixture var-1e6-1e-6 (R^2 of Y about 1 - 1e-6) is a floor case: the true Vy is below the floor (1e-4 x the natural
-# unit), so the floor binds and the constrained optimum is the floored model's. The rule there is that the fit warns
-# "solver floor" (the documented limit of the floor), not oracle agreement.
+# unit), so the floor binds and the constrained optimum is the floored model's. The rule there is not oracle
+# agreement but the documented floor contract: the fit warns "solver floor", the floored variance (Vy) is an active
+# bound, the discrepancy is finite and the requested q is met.
 # `MUTANT=<name>` plants a defect and the gate must then exit 1:
 #   noref      the reference fit (and so the reference start, its sign flips and the dominance rule) is dropped
 #   noflips    the sign-flipped copies of the reference start are dropped
@@ -25,6 +28,7 @@
 #   absfloor   an absolute floor of 1e-4 replaces the relative one
 #   oracle1    the oracle searches only the positive sign branch
 #   oracle0    the q = 0 oracle uses only the a = 0 null
+#   halfq      the fit is asked for q / 2 while the gate checks q (the request check must fail)
 # Run from the package root:  Rscript tests/sim/sem-nonlinear-profile-gate.R   (FAST=1 runs 8 fixtures x 3 q's)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
@@ -60,6 +64,9 @@ if (mutant == "noref") {
   mutate_body("or213_fit", "neg <- or213_branch(-1, q, cr)", "neg <- list()", globalenv())
 } else if (mutant == "oracle0") {
   mutate_body("or213_fit", "min(a0, b0)", "a0", globalenv())
+} else if (mutant == "halfq") {
+  # the defect is applied where the fit is requested (q_fit below); nothing to patch in the package
+  invisible(NULL)
 } else if (nzchar(mutant)) {
   stop("unknown MUTANT: ", mutant)
 }
@@ -109,7 +116,8 @@ for (f in fx) {
   qh <- or213_qhat(d)
   for (tag in q_set) {
     q <- q_of(tag, qh)
-    syn <- paste0(model, "\na*b/sqrt(2*(b^2*Vm+Vy)) == ", format(q, digits = 17))
+    q_fit <- if (mutant == "halfq") q / 2 else q
+    syn <- paste0(model, "\na*b/sqrt(2*(b^2*Vm+Vy)) == ", format(q_fit, digits = 17))
     wmsg <- character()
     h2 <- tryCatch(
       withCallingHandlers(fit_sem(syn, d, n_starts = 5), warning = function(w) {
@@ -128,21 +136,31 @@ for (f in fx) {
     q_ach <- unname(cf["a"] * cf["b"] / sqrt(2 * (cf["b"]^2 * cf["Vm"] + cf["Vy"])))
     lr <- 2 * (as.numeric(stats::logLik(h1)) - as.numeric(stats::logLik(h2)))
     lr_or <- or213_lr(d, if (tag == "zero") 0 else q_ach)
+    request_ok <- abs(q_ach - q) <= 1e-5 * max(1, abs(q))
     if (isTRUE(f$floor_case)) {
       warned <- any(grepl("solver floor", wmsg, fixed = TRUE))
-      rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = warned, omx_ok = TRUE,
+      at_floor <- "Vy" %in% h2@diagnostics$active_bounds
+      ok <- warned && at_floor && is.finite(lr) && request_ok
+      rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = ok, omx_ok = TRUE,
                                               lr = lr, lr_oracle = NA_real_, gap = 0, improper = "",
-                                              note = if (warned) "" else "no solver-floor warning",
+                                              note = if (ok) "" else "floor contract not met",
                                               stringsAsFactors = FALSE)
       next
     }
     se_ok <- !anyNA(suppressWarnings(sqrt(diag(stats::vcov(h2)))))
     gap <- abs(lr - lr_or) / max(1, lr_or)
     tol <- if (tag == "zero") 1e-5 else 1e-6
-    ok <- se_ok && gap <= tol && (tag != "qhat" || abs(lr) <= 1e-6)
+    ok <- se_ok && request_ok && gap <= tol && (tag != "qhat" || abs(lr) <= 1e-6)
     rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = ok, omx_ok = TRUE, lr = lr,
                                             lr_oracle = lr_or, gap = gap, improper = "",
-                                            note = if (!se_ok) "NaN standard errors" else "", stringsAsFactors = FALSE)
+                                            note = if (!request_ok) {
+                                              "requested q not met"
+                                            } else if (!se_ok) {
+                                              "NaN standard errors"
+                                            } else {
+                                              ""
+                                            },
+                                            stringsAsFactors = FALSE)
   }
 }
 res <- do.call(rbind, rows)
