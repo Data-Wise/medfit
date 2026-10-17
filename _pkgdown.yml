@@ -4,8 +4,6 @@ template:
   bootstrap: 5
   bootswatch: litera
   math-rendering: mathjax
-  includes:
-    in_header: pkgdown/mathjax-config.html
   bslib:
     # A deeper, more "academic" blue for primary actions
     primary: "#0054AD"
@@ -344,10 +342,9 @@ authors:
 
 footer:
   structure:
-    left: [developed_by, built_with]
-    right: [package_version]
+    left: [developed_by]
+    right: [built_with]
   components:
-    package_version: "Version {version}"
     developed_by: |
       Developed by [Davood Tofighi](https://orcid.org/0000-0001-8523-7776)
     built_with: |
