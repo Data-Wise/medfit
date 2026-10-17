@@ -1,6 +1,6 @@
 # PLAN: medfit 0.11.0 scope (2026-10-16)
 
-**Status:** APPROVED 2026-10-16, revised 2026-10-16 (harness and test matrix added) and 2026-10-17 (progress, the reliability regression, the label decision) by the author (Option B; D2 floor only with nonlinear constraints, D3 reversed 2026-10-17: drop the label when tested enough, D4 no F7, D5 latent means 1.0; D1 still open: confirm the S7 date and any CRAN mail). Produced by a read-only Plan agent (Opus) from
+**Status:** APPROVED 2026-10-16, revised 2026-10-16 (harness and test matrix added) and 2026-10-17 (progress, the reliability regression, the label decision, Checkpoint 2 result) by the author (Option B; D2 floor only with nonlinear constraints, D3 reversed 2026-10-17: drop the label when tested enough, D4 no F7, D5 latent means 1.0; D1 closed 2026-10-17: not forced). Produced by a read-only Plan agent (Opus) from
 `.STATUS`, the two 0.10.1/0.11.0 proposals, the roadmap, the specs, NEWS, and open issues and PRs. Two claims were
 re-checked by hand: PR #214 and issue #213 exist as described. Not verified: that CRAN 0.3.2 fails under development
 S7 (inferred from the shared nullable-union pattern), the S7 1.0 CRAN date, whether #214 passes medfit's suite, and
@@ -19,8 +19,12 @@ whether probmed adopted `fit_sem()` for P_med MBCO or only evaluated it.
 | T5c drop the label (D3 reversed) | merged | #227 `0d1a732` |
 | T5d CI: R-CMD-check on `main` only, dev gated locally (unplanned) | merged | #224 `d40e171` |
 | T5e gate hardening from the Codex adversarial review | merged | #229 `5a1f127` |
-| T6 hygiene | open, triaged 2026-10-17 | below |
-| Checkpoint 2, release | open | below |
+| T6a to T6c vacuous Heywood test, product-test warnings, unconditional skip replaced by the `bootstrap-coverage` gate (19 gates in `gates.csv`) | merged | #231 `28fd907` |
+| T6e `.STATUS` | merged | #232 `047a90f` |
+| Plan updates | merged | #228, #230 |
+| T6d, T6g, T6h | open (T6d watch-only; T6g at the release; T6h the author's `git branch -D`) | below |
+| Checkpoint 2 | **PASSED 2026-10-17 on `dev` `047a90f`** | below |
+| R1 to R3 (pre-tag work from the grill), Checkpoint 3 (R4), release, soak and CRAN | open | step 8c, 8b, 9, 10 |
 
 **T5b, what happened.** The first full `run-gates.R --sim` on current code was not green: the reliability gate had 4 of
 9600 shipped-configuration fits ending `no start converged` (latent, n = 50, replicate 4, random start, the same dataset
@@ -95,6 +99,12 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
 | Slips | nothing | F3 if it changes unconstrained fits | F8 (identification, parity gates) |
 | Downside | ships a known probmed bug | slightly later | feature with no consumer |
 
+**Third Codex adversarial review (2026-10-17, empty arguments; no new finding).** Same stale target again: the checkout
+is on `feature/factor-gate-registration` (`dd42073`, 295 files against `main`), and with no `--base` the review takes
+the checked-out branch. Same finding, `sem-factor-gate.R:299-301`, already fixed by #229. Three runs have now reviewed
+one merged T4 branch; none has reviewed #224 to #228, #231 or the 0.11.0 diff as a whole. Fix the cause, not the
+repetition: see Checkpoint 3.
+
 ## Tasks for B (feature branch from `dev`, squash to `dev`, red tests first, suite green after each)
 
 1. **T1 S7 compatibility:** port #214 onto a `dev` branch (or ask the contributor to retarget it to `dev`; never
@@ -142,7 +152,7 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
 6. **T5 experimental-exit GRILL (DONE, #225; the label itself is T5c, #227):** criteria (no open correctness issue on the engine, every native gate registered and
    green, lavaan and OpenMx parity green, an API freeze list); record the decision; the author pastes the RMediation
    message.
-7. **T6 hygiene (triaged 2026-10-17 against `dev` at `0d1a732`; full suite 6392 passed, 0 failed, 2 skipped, 42 warnings):**
+7. **T6 hygiene (T6a to T6c, T6e DONE in #231 and #232; triaged 2026-10-17 against `dev` at `0d1a732`; full suite 6392 passed, 0 failed, 2 skipped, 42 warnings):**
    - **T6a Vacuous Heywood assertion (a real test defect, found by the warning triage).** In `test-sem-optim.R` ("a Heywood
      case matches lavaan, warns, and names the negative variance") the lavaan names are built with spaces
      (`m2 ~ eta`) but `theta` is named without them (`m2~eta`) since the T12 renaming, so `names(est) %in% names(fit$theta)`
@@ -169,14 +179,55 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
      work left); #214 gets a closing comment (ported to `dev` as #219, the contributor was asked to retarget); #83 stays
      open until the CRAN decision (D1).
    - **T6h local cleanup:** eight worktrees under `~/.git-worktrees/medfit/` and their merged branches; several need the
-     author's `git branch -D` because branch-guard blocks the agent.
+     author's `git branch -D` because branch-guard blocks the agent. Add the main checkout itself: it sits on the merged
+     `feature/factor-gate-registration`, which is what pointed three Codex reviews at a stale branch; moving it to `dev`
+     is the author's call.
 8. **Checkpoint 2 (release gate):** full suite, `lintr` after `load_all()`, strict check (CLAUDE.md recipe),
    `urlchecker::url_check()`, `spelling::spell_check_package()`, and `Rscript tests/sim/run-gates.R --sim` in full on the
    release commit (after T5e). R-CMD-check no longer runs on `dev` PRs (#224), so the strict check and
    `scripts/check-local.sh` here, plus R-CMD-check on the `dev` to `main` PR, are the only R CMD check evidence.
+   **Result (2026-10-17, scratch worktree at `dev` `047a90f`, nothing changed):** suite 6397 passed, 0 failed, 1 skipped
+   (lavaan-absence test, by design), 0 warnings; `lintr` 0 lints; spelling 0; `urlchecker` 45 URLs all correct; strict
+   check (`--run-donttest` plus the four `_R_CHECK_*` variables) 0 errors, 0 warnings, 0 notes; `run-gates.R --sim` 19 of 19
+   PASS, 111 of 111 checks (7 min 25 s); `scripts/check-local.sh` PASS. The release commit differs from `047a90f` by the
+   version bump, NEWS and status files, so rerun the cheap items (suite, lintr, `check-local.sh`) on it; the 7-minute gate
+   run only if `R/` or `tests/sim/` change.
+8b. **Checkpoint 3 (Codex review of the actual scope, before the release PR; first run 2026-10-17, one finding, coverage thin):**
+   Run once from the `dev`-based worktree `docs-plan-checkpoint2` against `main` (323 files, 0.11.0 scope plus plan docs).
+   Its one finding is accepted: S3 of the S7 plan was marked DONE on a weaker test than the one it names (corrected in
+   that plan; S3b is open). It raised no code finding, but its transcript shows only two diff reads (the factor gate
+   files and the S7 plan), so absence of findings is not evidence the 0.11.0 code was reviewed. Before the release PR,
+   rerun with focus text naming the code (`R/sem-optim.R` start fallback, the gate verdicts in `tests/sim/run-gates.R`,
+   the label drop, `.github/workflows/R-CMD-check.yaml`) and treat that second run as the checkpoint. Original spec: from a worktree of `dev` run
+   `/codex:adversarial-review --base v0.10.0 --background`, or `--base main` once the bump commit exists, so the target is
+   the 0.11.0 diff (the optimizer fallback #226, the label and criteria #225/#227, the gates #229/#231, CI #224) and not
+   whatever the main checkout has checked out. Disposition each finding in this plan as for T5e; a finding that reproduces
+   on `dev` blocks the release PR. Not run yet; the three earlier reviews do not count toward it.
+8c. **Pre-tag work from the 2026-10-17 grill** (ledger `planning/specs/GRILL-0.11.0-release-2026-10-17.md`, G1 to G9; order R1,
+   R2, R3, then 8b, then the bump; each its own PR to `dev`, red test or planted defect first where behavior is claimed):
+   - **R1 freeze reservation (G3), S, 1 h:** a "reserved additive extensions" paragraph in the NEWS Lifecycle entry and the
+     native model page (new syntax may be added; existing names, rows and properties never change meaning), plus a test
+     pinning the current canonical names (`m:x` rows, `SEMFit` property names, `?medfit-syntax` grammar tokens). Done when
+     renaming a pinned name fails the test (planted defect).
+   - **R2 gate in CI (G2, G6), M, 2-3 h:** a workflow running `Rscript tests/sim/run-gates.R --sim` on PRs to `main` and
+     `workflow_dispatch`, installing lavaan, OpenMx and nloptr. Non-required first; required status check on `main` only
+     after two consecutive green Linux runs (fix Linux-only drift by tolerance, seed or fixture, with evidence, before
+     requiring it). Done when it is required and a planted defect (`MUTANT=`) turns the run red.
+   - **R3 S7 watch (G4), S-M, 2 h:** a weekly scheduled workflow that runs the `s7-lifecycle` gate on S7@main and compares
+     CRAN's S7 version with the last seen one, opening an issue on a change; allowed to fail. Done when a manual dispatch
+     passes and a forced version change opens an issue.
+   - **R4 Checkpoint 3 (G9):** one focused Codex run after R1-R3 land, from a `dev` worktree; focus text names the start
+     fallback (`R/sem-optim.R`), the gate verdicts (`tests/sim/run-gates.R`), the label drop and the two workflows. Pass
+     rule: every finding is reproduced on `dev` before it counts; a reproduced finding on the 0.11.0 code blocks the tag.
 9. **Release:** bump to 0.11.0; NEWS header; `.STATUS` and CLAUDE.md "Current status"; grep for "0.10.0" leftovers;
    `dev` to `main` merge-commit PR with the evidence summary; CI green on `main`; tag `v0.11.0`; GitHub release;
    r-universe via the packages list (allow about 2 h, no manual dispatch); pkgdown deploys from `main`; back-merge.
+10. **Soak, then CRAN (G1, G7, G8):** the soak ends when probmed's suite and RMediation's suite pass against the tag
+   (read-only runs), the r-universe build is green and the CI gate is green on `main`; it may end in 2 to 3 days. Then the
+   CRAN routine (strict checks, `urlchecker`, spelling, `cran-comments.md` resynced from a fresh run, maintainer-manual
+   `submit_cran()`). RMediation does not submit its SEMFit-pair feature until medfit 0.11.0 is accepted; send RMediation
+   the "experimental dropped" message now (the author pastes it). Update `.STATUS` ("CRAN submission remains on hold") and
+   the R1 triggers of `GRILL-medfit-0-8-0-2026-10-11.md`.
 
 ## Harness and test matrix (added 2026-10-16)
 
@@ -208,7 +259,7 @@ Cross-cutting:
 
 | # | Decision | Recommended |
 |---|---|---|
-| D1 | Does S7 1.0 force CRAN action, and how: a 0.3.3 patch from the v0.3.2 tag, or submit 0.11.0? | Confirm the S7 date and any CRAN mail first. If forced, submit 0.11.0 (it also fixes the #83 bugs and unblocks probmed's `medfit (>= 0.3.0)` gate); fall back to 0.3.3 only if the deadline is under 2 weeks |
+| D1 | Does S7 1.0 force CRAN action, and how: a 0.3.3 patch from the v0.3.2 tag, or submit 0.11.0? | **CLOSED 2026-10-17: not forced.** S7 1.0.0 is unreleased (CRAN has 0.2.2, 2026-04-22; `NEWS.md` on `main` has a 1.0.0 section, no date); no CRAN mail about S7 or medfit since the 2026-08-12 maintainer check; CRAN checks of 0.3.2 are OK on 13 of 13 flavors. Release 0.11.0 GitHub-only; re-check when CRAN's S7 page shows 1.0.0 or a CRAN mail arrives. Original guidance, kept for that trigger: confirm the S7 date and any CRAN mail first. If forced, submit 0.11.0 (it also fixes the #83 bugs and unblocks probmed's `medfit (>= 0.3.0)` gate); fall back to 0.3.3 only if the deadline is under 2 weeks |
 | D2 | #213 scope: floor only with nonlinear constraints, or always | Only with nonlinear constraints (an always-on floor changes every fit) |
 | D3 | Drop "experimental" in 0.11.0 | REVERSED 2026-10-17 by the author: drop it when tested enough. The criteria are met after #226 (18 of 18 gates PASS); #227 removes the label |
 | D4 | Include F7 | No, recipe 20 covers it |
@@ -223,6 +274,10 @@ Cross-cutting:
 - RMediation's own "mature" trigger is undefined (its `.STATUS`, 2026-10-13 hold).
 - The label now promises a frozen API (signatures, `SEMFit` properties, the `?medfit-syntax` grammar). Numerical output of
   SEMFit methods, the `medfit.*` options and condition classes are not frozen; a reader may assume they are.
-- Gates that depend on Suggests (lavaan, OpenMx) can pass or skip silently in a lean environment (T5e).
+- Gates that depend on Suggests (lavaan, OpenMx) could pass or skip silently in a lean environment: fixed for the three
+  skip-tolerant scripts in #229 (they stop, with a driver mutation); a new gate added later can reintroduce it, so a
+  gate script must `stop()` on a missing dependency, never skip. The one remaining skip in the suite is by design.
+- Review targeting: `/codex:adversarial-review` with no `--base` reviews the checked-out branch. A stale checkout gives a
+  review of old code (three times so far); name the base and run it from the worktree under review.
 - A random-start gate is sensitive to the draw (T5b): any change to parameter order or naming can move it; rerun the
   reliability gate after such a change.
