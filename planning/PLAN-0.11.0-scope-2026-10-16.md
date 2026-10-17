@@ -192,7 +192,13 @@ repetition: see Checkpoint 3.
    PASS, 111 of 111 checks (7 min 25 s); `scripts/check-local.sh` PASS. The release commit differs from `047a90f` by the
    version bump, NEWS and status files, so rerun the cheap items (suite, lintr, `check-local.sh`) on it; the 7-minute gate
    run only if `R/` or `tests/sim/` change.
-8b. **Checkpoint 3 (Codex review of the actual scope, before the release PR):** from a worktree of `dev` run
+8b. **Checkpoint 3 (Codex review of the actual scope, before the release PR; first run 2026-10-17, one finding, coverage thin):**
+   Run once from the `dev`-based worktree `docs-plan-checkpoint2` against `main` (323 files, 0.11.0 scope plus plan docs).
+   Its one finding is accepted: S3 of the S7 plan was marked DONE on a weaker test than the one it names (corrected in
+   that plan; S3b is open). It raised no code finding, but its transcript shows only two diff reads (the factor gate
+   files and the S7 plan), so absence of findings is not evidence the 0.11.0 code was reviewed. Before the release PR,
+   rerun with focus text naming the code (`R/sem-optim.R` start fallback, the gate verdicts in `tests/sim/run-gates.R`,
+   the label drop, `.github/workflows/R-CMD-check.yaml`) and treat that second run as the checkpoint. Original spec: from a worktree of `dev` run
    `/codex:adversarial-review --base v0.10.0 --background`, or `--base main` once the bump commit exists, so the target is
    the 0.11.0 diff (the optimizer fallback #226, the label and criteria #225/#227, the gates #229/#231, CI #224) and not
    whatever the main checkout has checked out. Disposition each finding in this plan as for T5e; a finding that reproduces

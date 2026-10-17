@@ -40,7 +40,7 @@ Checkpoint 2. The unknown "does the suite pass on S7 1.0 development" is answere
 killed mid-run when launched as a bare `&` job (no result line); the rerun under a tracked background task completed. Not
 covered: S7 changes after today (S5), and the `method<-` probe (S3).
 
-## S3 result (2026-10-17, DONE for 5 of 8 classes)
+## S3 result (2026-10-17, PARTIAL: a dispatch smoke test, not the planned probe; S3 stays OPEN)
 
 Fresh R process, medfit installed from `dev`, objects of five classes (MediationData, SEMFit, BootstrapResult,
 ParallelMediationData, SerialMediationData; fit from `mediation_demo`), 15 generics each (75 calls: print, show, summary,
@@ -53,13 +53,25 @@ design (effect generics exist for the extracted data classes; a SEMFit goes thro
 from the same registration code and the green full suite on S7 `main` exercises them; a probe needs their fixtures).
 Script: not committed (scratch); the shape is in this paragraph.
 
+**Correction after the Codex review (Checkpoint 3, finding accepted).** This was first marked DONE. It should not have
+been: S3's criterion is "every `method<-` generic on 8 classes, 0 errors", and what ran is a different, weaker thing. It
+called ordinary generics on instances of 5 classes, which shows dispatch works after a reload; it does not show that the
+registrations themselves resolve the same way under S7 1.0, which is the audit's open row (S7 1.0 expands `method<-` on
+unions into one registration per class). The 10 "no method" cases are real absences, now stated rather than waved off as
+design: the effect generics have no method for SEMFit or BootstrapResult (whether that is intended is a separate question
+for the author, not an S7 matter). **What remains (S3b):** an instance-free registry probe. For every (generic, class)
+pair in the 8 classes x the generics medfit registers, `tryCatch(S7::method(generic, class))` and record resolved or not;
+run it in a fresh process on S7 0.2.2 and on S7 `main`, with medfit loaded fresh and after unload and reload (four
+tables), then diff the tables. Done when the 8 x N tables are identical across S7 versions and across reload, or every
+difference is a recorded finding. Needs no fixtures, so Interaction, Joint and Cluster are covered. Size S, 1 h.
+
 ## Tasks
 
 | # | Task | Done when | Size |
 |---|---|---|---|
 | S1 (DONE 2026-10-17, 6397/0) | Run the full suite on `S7@main` in a scratch library (installed medfit, not `load_all()`), triage every failure against the S7 0.2.2 baseline | pass/fail counts quoted; each new failure is a medfit bug, an S7 bug (issue filed upstream) or a test that assumed 0.2.2 | S, 1 h |
 | S2 | If S1 is green, add the full-suite run as an optional `--sim` step of the lifecycle gate (skips never count: a missing S7@main is a failed row, as now); if S1 finds failures, fix and add a red test per failure | gate row exists, planted defect exits 1 | S-M |
-| S3 (DONE 2026-10-17, 5 of 8 classes) | Probe the not-audited row: unload medfit, reload, and call every `method<-` generic on one object per class under `S7@main` | one transcript, 8 classes, 0 errors | S, 1 h |
+| S3 (OPEN: partial smoke test done 2026-10-17; S3b is the real probe) | Probe the not-audited row: unload medfit, reload, and call every `method<-` generic on one object per class under `S7@main` | one transcript, 8 classes, 0 errors | S, 1 h |
 | S4 | Check probmed and RMediation against `S7@main` (their suites, medfit installed from `dev`) | counts quoted, or an issue in each repo | S, 1 h each; cross-repo writes need the author's go |
 | S5 | Watch trigger: when CRAN's S7 page shows 1.0.0 (or a CRAN mail names medfit), rerun S1 and S3 on the released version within 3 days and decide 0.3.3 versus submitting the current medfit | decision recorded in `.STATUS` | at trigger |
 | S6 | Decide the DESCRIPTION floor: `S7 (>= 0.1.0)` is untested below 0.2.2; either test the floor or raise it | floor tested or raised, NEWS note if raised | S |
