@@ -37,7 +37,9 @@ nv_nan_warnings <- function(expr) {
 test_that("#213 seed 1: the constrained fit at the unconstrained MLE reproduces it (LR about 0)", {
   d <- nv_data(1, 1.5, 1, 1)
   h1 <- fit_sem(nv_model, d)
-  h2 <- nv_constrained(d, h1, n_starts = 8)
+  r <- nv_nan_warnings(nv_constrained(d, h1, n_starts = 8))
+  h2 <- r$value
+  expect_length(r$nan, 0)
   expect_lt(abs(nv_lr(h1, h2)), 1e-3)
   expect_equal(stats::coef(h2)[names(stats::coef(h1))], stats::coef(h1), tolerance = 1e-4)
 })
@@ -90,4 +92,46 @@ test_that("frozen: a linear-constrained fit is unchanged", {
     c(0.5, 0.33389304371404077, 1.1022904446383688, 1.3317334916166899, 1.1235229427205182, 0.24998399967914409),
     tolerance = 1e-7
   )
+})
+
+# Dominance (#213): the optimizer is stubbed to return the accepted wrong-branch point of seed 101 for every
+# constrained start; the fit without the nonlinear rows is feasible and has a much lower discrepancy.
+nv_stub_wrong_branch <- function(gate_accepts_ref) {
+  orig_solve <- .sem_solve_one # nolint: object_usage_linter.
+  orig_gate <- .sem_gate # nolint: object_usage_linter.
+  wrong <- c(a = -9.7448, cp = 7.16, b = -1.0168, Vm = 16.6053, Vy = 5.4965, `X~~X` = 0.24998)
+  list(
+    solve = function(start, ram, smp, lb, ub, opts, precondition = TRUE, obj = NULL, cons = NULL) {
+      if (is.null(cons)) {
+        return(orig_solve(start, ram, smp, lb, ub, opts, precondition, obj, cons))
+      }
+      list(solution = unname(wrong), objective = 1e3, status = 3L)
+    },
+    gate = function(theta, status, ram, smp, lb, ub, cons = NULL) {
+      if (is.null(cons)) {
+        return(orig_gate(theta, status, ram, smp, lb, ub, cons))
+      }
+      is_wrong <- isTRUE(all.equal(unname(theta), unname(wrong)))
+      list(accepted = is_wrong || gate_accepts_ref, status = status, decrement = 0, min_eig = 1,
+           active = rep(FALSE, length(theta)), reason = if (is_wrong || gate_accepts_ref) "" else "stub rejects it")
+    },
+    polish = function(res, gate, ram, smp, lb, ub, cons) list(res = res, gate = gate)
+  )
+}
+
+test_that("dominance: a worse accepted fit never replaces a feasible reference estimate", {
+  d <- nv_data(101, 2.5, 1.5, 2)
+  h1 <- fit_sem(nv_model, d)
+  st <- nv_stub_wrong_branch(gate_accepts_ref = TRUE)
+  testthat::local_mocked_bindings(.sem_solve_one = st$solve, .sem_gate = st$gate, .sem_polish_accept = st$polish)
+  h2 <- suppressWarnings(nv_constrained(d, h1, n_starts = 3))
+  expect_lt(abs(nv_lr(h1, h2)), 1e-6)
+})
+
+test_that("dominance: when the reference is feasible but not accepted, the fit stops instead of returning a worse one", {
+  d <- nv_data(101, 2.5, 1.5, 2)
+  h1 <- fit_sem(nv_model, d)
+  st <- nv_stub_wrong_branch(gate_accepts_ref = FALSE)
+  testthat::local_mocked_bindings(.sem_solve_one = st$solve, .sem_gate = st$gate, .sem_polish_accept = st$polish)
+  expect_error(suppressWarnings(nv_constrained(d, h1, n_starts = 3)), "optimization incomplete")
 })

@@ -79,7 +79,7 @@ Ship everything on `dev`, plus **#214** (S7 compatibility), a **narrow fix for #
    variances in a nonlinear row, with a warning and `floor_active` when it binds; (2) the unconstrained (relaxed) fit as
    first start and as an incumbent; (3) sign-flipped copies of it (all patterns for k <= 3 path labels, else the joint
    flip); (4) a dominance rule (never return an accepted fit worse than a feasible reference) and a lower-bound
-   warning. Replaces the "status-3 flag" (status 3 is medfit's routine stop). Oracle: `planning/oracle213.R`
+   warning. Replaces the "status-3 flag" (status 3 is medfit's routine stop). Oracle: `tests/sim/oracle213.R`
    (independent profile inversion, executed; compare at the achieved q, not the nominal one, because the 2.5e-7 target
    is below the constraint-residual effect of about 2.7e-6). Gate `tests/sim/sem-nonlinear-profile-gate.R` with the 30
    fixtures in the review (section 4.4) and seven planted defects; `identical()` checks on every legacy path; rerun the

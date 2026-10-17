@@ -203,6 +203,15 @@ verdict_gate <- function(gate, d, s) {
         chk("no_start_converged (shipped config)", nsc == 0, sprintf("%d", nsc))
       )
     },
+    "nonlinear-profile" = {
+      # T3 (#213): every fit reaches the independent oracle's constrained optimum (the gate script applies the
+      # per-run rule; the driver re-checks the counts and the largest gap)
+      rbind(
+        rows_chk(d, s), failed_chk(d),
+        max_chk("oracle gap", d$gap, s$tol_est),
+        chk("floor cases warn", all(d$native_ok[d$fixture %in% "var-1e6-1e-6"] %in% TRUE), "var-1e6-1e-6 rows")
+      )
+    },
     # product-term and four-way gates: the rules live in tests/sim/product-gate-common.R
     product_gate_rules[[gate]](d, s) # nolint: object_usage_linter.
   )

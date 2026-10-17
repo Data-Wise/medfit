@@ -25,6 +25,17 @@
   earlier still use `methods_register()`). Reported and first fixed by t-kalinowski (PR #214); the plain-numeric
   union was added because the installed package failed to load under development S7 although `load_all()` worked.
   No change for users of S7 0.2.2.
+* Nonlinear equality and inequality constraints in the native engine no longer land on a wrong point (#213).
+  A fit such as `a*b/sqrt(2*(b^2*Vm+Vy)) == q` used to step to a negative variance (no start converged), or stop
+  on the wrong sign branch of the constraint and report `converged` with a likelihood-ratio statistic of 1459
+  where 0 is right. Behavior change, for fits with a nonlinear row only (every other fit is bit-identical):
+  the variances that appear in a nonlinear row get a lower bound of `1e-4` times their natural unit (the variable's
+  variance, so it does not depend on the data scale), and the fit warns when a bound is active; the model without
+  the nonlinear rows is fitted first, and its estimate and sign-flipped copies of it are extra starts; a feasible
+  reference estimate is never replaced by a worse accepted fit, and a fit that reaches it no longer warns that the
+  starts disagree. Checked against an independent profile-likelihood oracle on 24 fixtures at 6 constraint values
+  (`tests/sim/sem-nonlinear-profile-gate.R`). A residual variance below `1e-4` of the variable's variance (an
+  R-squared above 0.9999) is outside what a nonlinear row can fit and is reported by the floor warning.
 * `AIC()` and `BIC()` with several `SEMFit` fits now stop when the fits do not share their observed variables, and
   name the variables that differ. A product term (`x:m`) adds a column to the joint likelihood, so a fit with a
   product and the same model without it describe different data; before, the two were ranked anyway (on

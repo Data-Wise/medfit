@@ -80,7 +80,7 @@ Cost: about 2x baseline (672 cases in 2.5 min).
 ## 6. Verification plan for T3
 
 - **Gate:** `tests/sim/sem-nonlinear-profile-gate.R`, registered in `gates.csv`, using the oracle (preserved at
-  `planning/oracle213.R`). 30 fixtures: the review kept most of the answer's list, added the mirrored-q regime and the q = 0
+  `tests/sim/oracle213.R`). 30 fixtures: the review kept most of the answer's list, added the mirrored-q regime and the q = 0
   standardized form, dropped near-duplicates (details in the review, section 4.4).
 - **Acceptance:** `abs(LR - LR_oracle(q_achieved)) <= 1e-6 * max(1, LR)` (1e-5 at the nominal q); `abs(LR) <= 1e-7` at q = MLE
   value; constraint residual within `.sem_constraint_tol`; no accepted fit above a feasible incumbent; legacy outputs
@@ -108,5 +108,5 @@ Cost: about 2x baseline (672 cases in 2.5 min).
 | `planning/PROMPT-research-213-2026-10-16.md` | the prompt sent to ChatGPT |
 | `planning/RESPONSE-chatgpt-213-2026-10-16.md` | its answer, verbatim, unreviewed |
 | `planning/REVIEW-chatgpt-213-2026-10-16.md` | Opus review with evidence and full T3 design |
-| `planning/oracle213.R` | the corrected, executed oracle |
+| `tests/sim/oracle213.R` | the corrected, executed oracle |
 | `planning/PLAN-0.11.0-scope-2026-10-16.md` | T2, T3a, T3 updated |
