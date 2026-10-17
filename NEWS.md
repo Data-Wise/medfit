@@ -47,6 +47,13 @@
   `mediation_demo`, the same outcome gave AIC 3934.7 with the product and 2994.1 without). `anova()` and
   `mbco_sem()` already refused such a pair (#206).
 
+* A fit with nonlinear constraints that found exactly one optimum among its starts (every other start failed or was
+  rejected) was returned without a note, although the failed starts are often the sign-flipped ones that would have
+  found another branch. It now warns "only 1 of N starts reached an accepted solution". Found by running the
+  simulation gates on a Linux runner with the reference BLAS, where the `#213` floor fixture at an extreme data scale
+  (R-squared of 1 - 1e-6) kept a wrong-branch optimum silently; that fixture's underlying instability at the floor
+  is tracked separately.
+
 ## Lifecycle
 
 * The native maximum-likelihood engine (`fit_sem()`, `mbco_sem()`, `SEMFit`, `fit_mediation(engine = "native")`) is no
