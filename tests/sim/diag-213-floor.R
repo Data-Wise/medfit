@@ -121,7 +121,6 @@ for (f in fx) {
     q_fit <- if (mutant == "halfq") q / 2 else q
     syn <- paste0(model, "\na*b/sqrt(2*(b^2*Vm+Vy)) == ", format(q_fit, digits = 17))
     wmsg <- character()
-    if (nzchar(Sys.getenv("SEED"))) set.seed(as.integer(Sys.getenv("SEED")) + match(tag, q_set))
     h2 <- tryCatch(
       withCallingHandlers(fit_sem(syn, d, n_starts = 5), warning = function(w) {
         wmsg <<- c(wmsg, conditionMessage(w))
@@ -138,7 +137,6 @@ for (f in fx) {
     }
     cf <- stats::coef(h2)
     q_ach <- unname(cf["a"] * cf["b"] / sqrt(2 * (cf["b"]^2 * cf["Vm"] + cf["Vy"])))
-    if (length(h2@diagnostics$active_bounds) == 0L) { cat("  DIAGNOSTICS for", tag, "\n"); print(utils::str(h2@diagnostics, max.level = 2, give.attr = FALSE)); print(utils::str(h2@internals[setdiff(names(h2@internals), c("ram", "smp", "data"))], max.level = 2, give.attr = FALSE)); cat("  theta:", paste(names(stats::coef(h2)), signif(stats::coef(h2), 6), sep = "=", collapse = " "), "\n"); cat("  h1 theta:", paste(names(stats::coef(h1)), signif(stats::coef(h1), 6), sep = "=", collapse = " "), "\n") }
     cat(sprintf("%-10s q=%+.6f q_ach=%+.8f diff=%.2e | bounds=[%s] | warn=[%s] | lr=%.4f\n", tag, q, q_ach, q_ach - q, paste(h2@diagnostics$active_bounds, collapse=","), paste(substr(wmsg,1,40), collapse=" | "), 2 * (as.numeric(stats::logLik(h1)) - as.numeric(stats::logLik(h2)))))
     lr <- 2 * (as.numeric(stats::logLik(h1)) - as.numeric(stats::logLik(h2)))
     lr_or <- or213_lr(d, if (tag == "zero") 0 else q_ach)
