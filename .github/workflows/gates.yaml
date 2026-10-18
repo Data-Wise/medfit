@@ -1,15 +1,13 @@
 # Simulation gates (tests/sim/run-gates.R) as a mechanical release check (0.11.0 plan R2, grill G2 and G6).
 # Runs the full --sim set and the driver's own --mutants self-test on Linux for PRs to main and on request.
-# Rollout (G6): NOT a required status check at first; make it required (branch protection on main) only after two
-# consecutive green runs on Linux, because the gate tolerances were calibrated on macOS (SLSQP output differs
-# from Linux at about 1e-9). TRIAL trigger: pushes to feature/gates-ci also run it; remove that trigger when this
-# workflow is merged.
+# Rollout (G6): NOT a required status check yet. Two consecutive green runs on Linux were recorded before merge
+# (2026-10-17/18, both shards, about 23 minutes each); make `gates (reliability)` and `gates (rest)` required on main
+# when the author decides. The gate tolerances were calibrated on macOS and the runner's reference BLAS differs
+# (issue #238), so one extreme-scale fixture is report-only here (MEDFIT_FLOOR_REPORT_ONLY below).
 on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-  push:
-    branches: [feature/gates-ci]
 
 name: gates
 
