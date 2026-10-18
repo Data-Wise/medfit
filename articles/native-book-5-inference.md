@@ -8,7 +8,7 @@ sandwich), the test of an indirect effect (MBCO), and the general
 likelihood-ratio test ([`anova()`](https://rdrr.io/r/stats/anova.html)).
 Each is derived, computed by hand from the matrices of the earlier
 chapters, and checked against the engine and, where they offer the same
-quantity, against lavaan or OpenMx. The engine is experimental.
+quantity, against lavaan or OpenMx.
 
 |  |  |
 |----|----|
@@ -132,7 +132,7 @@ c(difference = max(abs(info_expected_by_hand - info_expected)), largest_entry = 
 ```
 
        difference largest_entry
-     2.842171e-13  3.200160e+03 
+     3.410605e-13  3.200160e+03 
 
 ### Observed information
 
@@ -208,7 +208,7 @@ c(largest_entry_of_the_gap = max(abs(gap_engine)), formula_vs_engine = max(abs(g
 ```
 
     largest_entry_of_the_gap        formula_vs_engine
-                2.593267e+02             2.415070e-07 
+                2.593267e+02             3.519880e-07 
 
 Now compare a model that fits exactly with one that fits badly. The
 mediation model is **just identified**: it has as many free parameters
@@ -275,7 +275,7 @@ c(observed_vs_lavaan = max(abs(sqrt(diag(fit_o@vcov)) - sqrt(diag(lavaan::vcov(l
 ```
 
     observed_vs_lavaan expected_vs_lavaan
-          6.921905e-10       3.436773e-10 
+          6.913308e-10       3.436773e-10 
 
 ``` r
 suppressMessages(library(OpenMx))
@@ -407,7 +407,7 @@ c(scores_by_hand_vs_engine = max(abs(scores - medfit:::.sem_scores(theta_w, ram_
 ```
 
     scores_by_hand_vs_engine       largest_column_sum
-                8.881784e-15             1.594837e-07 
+                1.065814e-14             1.594862e-07 
 
 The second number checks Step 1: the scores sum to zero at the estimate,
 which is the estimating equation.
@@ -427,7 +427,7 @@ c(sandwich_by_hand_vs_engine = max(abs(v_sandwich - fit_w@vcov)), largest_entry 
 ```
 
     sandwich_by_hand_vs_engine              largest_entry
-                  3.469447e-17               2.710643e-02 
+                  1.734723e-17               2.710643e-02 
 
 ``` r
 rd(cbind(sandwich = sqrt(diag(fit_w@vcov)), model_based = sqrt(diag(model_based)))[1:5, ], 4)
@@ -466,7 +466,7 @@ c(covariance_structure = max(abs(sqrt(diag(fit_w@vcov)) - sqrt(diag(lavaan::vcov
 ```
 
     covariance_structure       mean_structure
-            1.874922e-10         5.800585e-11 
+            1.860607e-10         5.039283e-11 
 
 Without weights the sandwich is the Huber-White estimator. For a
 regression equation it equals the heteroskedasticity-consistent

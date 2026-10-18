@@ -1,7 +1,5 @@
 # SEMFit S7 Class
 
-**\[experimental\]**
-
 S7 class holding a structural equation model fitted by the native
 maximum-likelihood engine (see
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)):

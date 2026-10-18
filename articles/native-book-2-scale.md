@@ -6,7 +6,7 @@ built the mean structure. This chapter asks what happens when the
 variables sit far from zero relative to their spread, a common situation
 (a test score near 500 with a spread of 10, a year near 2000), and shows
 the change of coordinates the engine uses so that the answer does not
-depend on where the data sit. The engine is experimental.
+depend on where the data sit.
 
 |  |  |
 |----|----|
@@ -86,7 +86,7 @@ c(largest_difference_in_the_six_path_and_variance_SEs = max(abs(se_big - se_base
 ```
 
     largest_difference_in_the_six_path_and_variance_SEs
-                                              1.181e-14 
+                                           1.183775e-14 
 
 The six path and variance standard errors do not move. The last three
 entries of each row are the intercepts, and two of their standard errors
@@ -215,7 +215,7 @@ c(mid_raw = rcond_scaled(info_raw), big_raw = rcond_scaled(info_raw_b),
 ```
 
              mid_raw          big_raw big_raw_unscaled engine_threshold
-        3.878401e-06     1.930635e-09     1.099791e-16     1.000000e-08 
+        3.947868e-06     2.016914e-09     1.099791e-16     1.000000e-08 
 
 At `mid` scale the raw matrix is poorly conditioned but still above the
 threshold. At `big` scale it is below it, and without the Jacobi scaling
@@ -362,7 +362,7 @@ c(raw = rcond_scaled(info_raw), centered = rcond_scaled(info_phi))
 ```
 
              raw     centered
-    3.878401e-06 6.566856e-01 
+    3.947868e-06 6.566856e-01 
 
 ``` r
 v_phi <- solve(info_phi)
@@ -375,7 +375,7 @@ c(
 ```
 
             chain_rule V_equals_T_Vphi_Tt        engine_vcov
-          3.306390e-13       1.363694e-11       2.188549e-19 
+          3.002781e-13       1.363772e-11       3.644666e-35 
 
 The centered information is well conditioned, the chain rule holds to
 rounding, and the covariance the engine reports equals \\T V\_\phi
@@ -391,7 +391,7 @@ c(raw = rcond_scaled(info_raw_b),
 ```
 
              raw     centered
-    1.930635e-09 6.566856e-01 
+    2.016914e-09 7.919246e-01 
 
 ### The same comparison against lavaan and OpenMx
 
@@ -431,9 +431,9 @@ c(
 ```
 
     expected: medfit vs lavaan observed: medfit vs lavaan
-                  8.396606e-12               1.293906e-09
+                  8.396106e-12               1.860648e-09
     observed: medfit vs OpenMx
-                  7.111497e-05 
+                  7.111496e-05 
 
 Each entry is the largest relative difference over the nine standard
 errors.
@@ -493,7 +493,7 @@ c(F_covariance_only = fit_cov@f, F_with_means = fit_ms@f,
                          F_covariance_only                           F_with_means
                               3.336570e-04                           3.336570e-04
     largest_difference_in_shared_estimates                 mean_gap_xbar_minus_mu
-                              1.097049e-10                           0.000000e+00 
+                              4.356765e-24                           0.000000e+00 
 
 The two discrepancies are the same nonzero number, the shared estimates
 agree, and the mean gap \\\bar x - \mu\\ is zero (to the tolerance of
@@ -526,7 +526,7 @@ c(largest_difference_after_mapping_back = max(abs(back - fit_big@theta)))
 ```
 
     largest_difference_after_mapping_back
-                             2.220446e-16 
+                             4.440892e-16 
 
 The intercepts on the centered data are zero, and the mapped-back
 solution equals `fit_big`. That comparison only shows that we reproduced
@@ -635,8 +635,8 @@ refused
 ```
 
         shift_allowed_default shift_allowed_with_start largest_estimate_difference
-    mid                  TRUE                    FALSE                1.421085e-14
-    big                  TRUE                    FALSE                1.455192e-11
+    mid                  TRUE                    FALSE                3.552714e-14
+    big                  TRUE                    FALSE                2.775558e-16
 
 The two routes return the same estimates, so the shift is an
 optimization and not a requirement. What it buys is a better-behaved
@@ -667,9 +667,9 @@ runs
 
                  nlopt_status iterations accepted newton_decrement
     mid_original            4         64     TRUE          6.9e-11
-    mid_centered            4         31     TRUE          1.2e-08
-    big_original            4         85     TRUE          3.3e-11
-    big_centered            4         34     TRUE          1.2e-08
+    mid_centered            4         31     TRUE          3.0e-10
+    big_original            4         86     TRUE          1.2e-08
+    big_centered            4         35     TRUE          9.2e-09
 
 All four runs are accepted. The Newton decrement is the gate’s measure
 of how far the solution is from a stationary point (the gradient

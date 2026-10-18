@@ -55,8 +55,8 @@ Core S7 class definitions for mediation data structures
   : ClusterMediationData: Cluster-Level Treatment Mediation (2-1-1)
 - [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
-- [`SEMFit()`](https://data-wise.github.io/medfit/reference/SEMFit.md)
-  **\[experimental\]** : SEMFit S7 Class
+- [`SEMFit()`](https://data-wise.github.io/medfit/reference/SEMFit.md) :
+  SEMFit S7 Class
 
 ## Model Fitting
 
@@ -67,14 +67,12 @@ Functions for fitting and extracting mediation models
 - [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
   : Fit Mediation Models
 - [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-  **\[experimental\]** : Fit a Structural Equation Model by Maximum
-  Likelihood
+  : Fit a Structural Equation Model by Maximum Likelihood
 - [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
-  **\[experimental\]** : Minimum-of-k Likelihood-Ratio Test for an
-  Indirect Effect (MBCO)
+  : Minimum-of-k Likelihood-Ratio Test for an Indirect Effect (MBCO)
 - [`medfit-syntax`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
   [`medfit_syntax`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
-  **\[experimental\]** : medfit Model Syntax
+  : medfit Model Syntax
 - [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
   : Perform Bootstrap Inference for Mediation Statistics
 
@@ -87,4 +85,4 @@ and logLik methods for SEMFit
   [`glance_s7_object()`](https://data-wise.github.io/medfit/reference/tidy_s7_object.md)
   : Tidy, Glance, and Inference Methods for medfit Objects
 - [`SEMFit-methods`](https://data-wise.github.io/medfit/reference/SEMFit-methods.md)
-  **\[experimental\]** : Methods for SEMFit objects
+  : Methods for SEMFit objects

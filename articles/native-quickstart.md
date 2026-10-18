@@ -1,8 +1,8 @@
 # Native engine in five minutes
 
 Fit a path model from syntax, read it, test it, and turn it into a
-mediation object, with no package besides medfit. The native engine is
-experimental. For the full picture see [the native engine
+mediation object, with no package besides medfit. For the full picture
+see [the native engine
 guide](https://data-wise.github.io/medfit/articles/native-guide.md).
 
 |              |                                                          |

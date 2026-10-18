@@ -30,21 +30,6 @@
 <meta property="og:image" content="https://data-wise.github.io/medfit/logo.png">
 </head>
 <body>
-<p>
-
-
-
-
-
-
-
-
-
-  pkgdown/mathjax-config.html
-
-  
-
-  </p>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -52,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,6 +93,7 @@
     <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -183,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -192,7 +178,7 @@
 
 
 
-    <p>medfit’s native engine fits covariance-structure models, with observed intercepts and means, from lavaan-style syntax. It is not a replacement for lavaan: it covers the path models behind mediation analysis and stops there. This page runs both on the same data, then lists what each does, with a status for every feature that a test checks against a live probe on each build. The native engine is experimental.</p>
+    <p>medfit’s native engine fits covariance-structure models, with observed intercepts and means, from lavaan-style syntax. It is not a replacement for lavaan: it covers the path models behind mediation analysis and stops there. This page runs both on the same data, then lists what each does, with a status for every feature that a test checks against a live probe on each build.</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -445,9 +431,9 @@ lavaan                 0.04715465</code></pre>
 <span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>                                  [,1]
-max_diff_estimate         4.996004e-16
-max_diff_se               2.155350e-11
-max_diff_estimate_fixed_x 1.665335e-16</code></pre>
+max_diff_estimate         2.220446e-16
+max_diff_se               2.254825e-11
+max_diff_estimate_fixed_x 2.220446e-16</code></pre>
 </div>
 </div>
 <p>They differ in what follows. lavaan reports a chi-square for this model; medfit reports <code>NA</code>, because the product contains a regression target (<code>mediator1</code>) and the model treats it as exogenous, which makes the global test invalid (see <a href="model-native.html#product-terms">the native model page</a>). lavaan stores the product under the spelling you wrote (<code>treatment:mediator1</code>); medfit stores <code>mediator1:treatment</code>, whichever order you write. A model medfit rejects (a residual covariance between outcomes, a shared or fixed coefficient, a constraint on a coefficient, a bound) is still fitted by lavaan.</p>
@@ -540,11 +526,11 @@ max_diff_estimate_fixed_x 1.665335e-16</code></pre>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a> Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
+  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a></p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Version {version}</p>
+  <p>Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
 </div>
 
     </footer>
@@ -554,6 +540,5 @@ max_diff_estimate_fixed_x 1.665335e-16</code></pre>
 
 
 
-  
-</body>
+  </body>
 </html>

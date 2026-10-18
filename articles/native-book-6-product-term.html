@@ -30,21 +30,6 @@
 <meta property="og:image" content="https://data-wise.github.io/medfit/logo.png">
 </head>
 <body>
-<p>
-
-
-
-
-
-
-
-
-
-  pkgdown/mathjax-config.html
-
-  
-
-  </p>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -52,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,6 +93,7 @@
     <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -183,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-book-6-product-term.qmd" class="external-link"><code>vignettes/articles/native-book-6-product-term.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-book-6-product-term.qmd" class="external-link"><code>vignettes/articles/native-book-6-product-term.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -192,7 +178,7 @@
 
 
 
-    <p>Since 0.10.0 the native engine accepts a <strong>product term</strong> on the right side of a regression: <code>y ~ x + m + x:m</code>. The product is how a treatment-by-mediator interaction enters the model, and it is what the four-way decomposition of <a href="native-book-7-four-way.html">Chapter 7</a> reads. This chapter follows a product through the engine: how the parser reads it, how the engine builds its column, why the likelihood can treat it as an ordinary exogenous variable, which models the engine therefore accepts and why each exclusion exists, and what happens to the standard errors and the model test. Every claim is checked against least squares, against a hand computation or against a simulation whose result could have come out the other way. The engine is experimental.</p>
+    <p>Since 0.10.0 the native engine accepts a <strong>product term</strong> on the right side of a regression: <code>y ~ x + m + x:m</code>. The product is how a treatment-by-mediator interaction enters the model, and it is what the four-way decomposition of <a href="native-book-7-four-way.html">Chapter 7</a> reads. This chapter follows a product through the engine: how the parser reads it, how the engine builds its column, why the likelihood can treat it as an ordinary exogenous variable, which models the engine therefore accepts and why each exclusion exists, and what happens to the standard errors and the model test. Every claim is checked against least squares, against a hand computation or against a simulation whose result could have come out the other way.</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -430,7 +416,7 @@ product_variance_of_kept_rows
 <span>  standard_errors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_free</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">shared</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_fx</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">shared</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>      estimates standard_errors
-   6.661338e-16    1.935591e-12 </code></pre>
+   9.992007e-16    2.769951e-12 </code></pre>
 </div>
 </div>
 <p>The nine fixed rows are the three means, three variances and three covariances of <code>treatment</code>, <code>covariate1</code> and the product.</p>
@@ -508,7 +494,7 @@ f(z_i, m_i, y_i) = f(z_i;\, \eta)\; f(m_i \mid z_i;\, \psi_m)\; f(y_i \mid z_i, 
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>largest_difference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">sem</span> <span class="op">-</span> <span class="va">ols</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code><span><span class="va">largest_difference</span></span>
-<span>      <span class="fl">1.554312e-15</span> </span></code></pre>
+<span>      <span class="fl">4.440892e-16</span> </span></code></pre>
 </div>
 </div>
 </section><section class="level3"><h3 id="what-the-product-changes-the-joint-model">What the product changes: the joint model<a class="anchor" aria-label="anchor" href="#what-the-product-changes-the-joint-model"></a>
@@ -1155,11 +1141,11 @@ mbco_sem:
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a> Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
+  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a></p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Version {version}</p>
+  <p>Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
 </div>
 
     </footer>
@@ -1169,6 +1155,5 @@ mbco_sem:
 
 
 
-  
-</body>
+  </body>
 </html>

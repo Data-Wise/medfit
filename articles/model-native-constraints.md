@@ -5,7 +5,7 @@ call. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
 collection; the third of five [native
 engine](https://data-wise.github.io/medfit/articles/model-native.md)
-pages. The engine is experimental.
+pages.
 
 |  |  |
 |----|----|

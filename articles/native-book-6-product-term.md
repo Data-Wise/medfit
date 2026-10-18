@@ -11,7 +11,7 @@ it as an ordinary exogenous variable, which models the engine therefore
 accepts and why each exclusion exists, and what happens to the standard
 errors and the model test. Every claim is checked against least squares,
 against a hand computation or against a simulation whose result could
-have come out the other way. The engine is experimental.
+have come out the other way.
 
 |  |  |
 |----|----|
@@ -322,7 +322,7 @@ c(estimates = max(abs(fit_free@theta[shared] - fit_fx@theta[shared])),
 ```
 
           estimates standard_errors
-       6.661338e-16    1.935591e-12 
+       9.992007e-16    2.769951e-12 
 
 The nine fixed rows are the three means, three variances and three
 covariances of `treatment`, `covariate1` and the product.
@@ -455,7 +455,7 @@ c(largest_difference = max(abs(sem - ols)))
 ```
 
     largest_difference
-          1.554312e-15 
+          4.440892e-16 
 
 ### What the product changes: the joint model
 

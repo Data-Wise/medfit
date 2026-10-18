@@ -30,21 +30,6 @@
 <meta property="og:image" content="https://data-wise.github.io/medfit/logo.png">
 </head>
 <body>
-<p>
-
-
-
-
-
-
-
-
-
-  pkgdown/mathjax-config.html
-
-  
-
-  </p>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -52,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,6 +93,7 @@
     <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -183,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -203,7 +189,7 @@
 <li>
 <strong>lmer</strong> mixed models (cluster-level treatment, 2-1-1) - implemented</li>
 <li>
-<strong><code><a href="../reference/fit_sem.html">fit_sem()</a></code></strong> native SEM fits (experimental) - implemented</li>
+<strong><code><a href="../reference/fit_sem.html">fit_sem()</a></code></strong> native SEM fits - implemented</li>
 </ul>
 <p>Extraction returns the S7 class that matches the structure: <code>MediationData</code>, <code>InteractionMediationData</code>, <code>SerialMediationData</code>, <code>ParallelMediationData</code>, <code>JointMediationData</code>, or <code>ClusterMediationData</code>. All share one interface (<code><a href="../reference/nie.html">nie()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code>, …) across modeling frameworks.</p>
 <p><strong>Note:</strong> For quick analysis, consider using <code><a href="../reference/med.html">med()</a></code> instead - it handles fitting and extraction in one step. Use <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> when you need more control or already have fitted models.</p>
@@ -717,7 +703,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_nie</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_nie</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4400159 0.9092223</code></pre>
+<pre><code>[1] 0.4483248 0.8930866</code></pre>
 </div>
 </div>
 <p>The fit must meet these requirements; each violation errors with its cause:</p>
@@ -1145,7 +1131,7 @@ pie      0.19952257 0.4805126</code></pre>
 <p><strong>Scope.</strong> The regmedint engine needs a numeric 0/1 treatment and a linear (Gaussian) mediator model; the outcome may be Gaussian or binomial. Outside that range regmedint’s closed-form effects stop being the products of regression coefficients that <code>MediationData</code> and <code>InteractionMediationData</code> are defined in terms of, so the adapter raises an explicit error instead of returning an object whose numbers would disagree with <code><a href="../reference/nie.html">nie()</a></code>. <code>weights</code> and <code>se_type = "sandwich"</code> are likewise refused rather than silently ignored. <code>regmedint</code> is a suggested package — install it with <code>install.packages("regmedint")</code>.</p>
 </section></section></section><section class="level2"><h2 id="extracting-from-a-native-sem-fit">Extracting from a Native SEM Fit<a class="anchor" aria-label="anchor" href="#extracting-from-a-native-sem-fit"></a>
 </h2>
-<p><code><a href="../reference/fit_sem.html">fit_sem()</a></code> fits model syntax with the experimental native engine and returns a <code>SEMFit</code>. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> accepts it with the same arguments as the lavaan method and returns the same classes:</p>
+<p><code><a href="../reference/fit_sem.html">fit_sem()</a></code> fits model syntax with the native engine and returns a <code>SEMFit</code>. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> accepts it with the same arguments as the lavaan method and returns the same classes:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">sem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
 <span>  <span class="st">"mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b"</span>,</span>
@@ -1294,7 +1280,7 @@ pie      0.19952257 0.4805126</code></pre>
 <li>
 <strong>Multiple treatments</strong>: comparative mediation analysis is not supported.</li>
 <li>
-<strong>Latent variables</strong>: supported through the experimental native route, <code><a href="../reference/fit_sem.html">fit_sem()</a></code>.</li>
+<strong>Latent variables</strong>: supported through the native route, <code><a href="../reference/fit_sem.html">fit_sem()</a></code>.</li>
 </ul>
 <p>All classes share the same interface, so new model types plug into the same effects, intervals and bootstrap.</p>
 </section><section class="level2"><h2 id="working-with-extracted-results">Working with Extracted Results<a class="anchor" aria-label="anchor" href="#working-with-extracted-results"></a>
@@ -1472,7 +1458,7 @@ c_prime 0.02523057 0.3863659</code></pre>
 <li>✅ Tidyverse methods (tidy, glance)</li>
 <li>✅ Base R generics (coef, vcov, confint, nobs)</li>
 <li>✅ lmer extraction (<code>ClusterMediationData</code>, cluster-level treatment)</li>
-<li>✅ Native SEM extraction (<code><a href="../reference/fit_sem.html">fit_sem()</a></code> to <code>SEMFit</code> to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, experimental)</li>
+<li>✅ Native SEM extraction (<code><a href="../reference/fit_sem.html">fit_sem()</a></code> to <code>SEMFit</code> to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>)</li>
 </ul>
 <p>See <code>NEWS.md</code> for updates.</p>
 </section><section class="level2"><h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
@@ -1572,11 +1558,11 @@ c_prime 0.02523057 0.3863659</code></pre>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a> Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
+  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a></p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Version {version}</p>
+  <p>Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
 </div>
 
     </footer>
@@ -1586,6 +1572,5 @@ c_prime 0.02523057 0.3863659</code></pre>
 
 
 
-  
-</body>
+  </body>
 </html>

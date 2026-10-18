@@ -30,21 +30,6 @@
 <meta property="og:image" content="https://data-wise.github.io/medfit/logo.png">
 </head>
 <body>
-<p>
-
-
-
-
-
-
-
-
-
-  pkgdown/mathjax-config.html
-
-  
-
-  </p>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -52,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,6 +93,7 @@
     <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -183,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/introduction.qmd" class="external-link"><code>vignettes/articles/introduction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -205,7 +191,7 @@
 <li>
 <strong>Base R generics</strong>: <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> for S7 classes</li>
 <li>
-<strong>Native SEM engine</strong> (experimental): <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fits model syntax with latent mediators and linear or nonlinear constraints; <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> compares nested fits, and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> summarize a <code>SEMFit</code>; observed intercepts and means (<code>y ~ 1</code>), <code>fixed_x</code> and the <code>x:m</code> product term (with the four-way decomposition through <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>) are supported inside documented limits</li>
+<strong>Native SEM engine</strong>: <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fits model syntax with latent mediators and linear or nonlinear constraints; <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> compares nested fits, and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> summarize a <code>SEMFit</code>; observed intercepts and means (<code>y ~ 1</code>), <code>fixed_x</code> and the <code>x:m</code> product term (with the four-way decomposition through <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>) are supported inside documented limits</li>
 <li>
 <strong>S7-based classes</strong> for standardized mediation data structures</li>
 <li>
@@ -214,7 +200,7 @@
 <p>The package eliminates code duplication across mediation packages by providing shared infrastructure while allowing each package to focus on its unique methodological contributions.</p>
 </section><section class="level2"><h2 id="core-s7-classes">Core S7 Classes<a class="anchor" aria-label="anchor" href="#core-s7-classes"></a>
 </h2>
-<p>medfit defines S7 classes for each mediation structure: <code>MediationData</code> (simple), <code>InteractionMediationData</code> (simple with a treatment-by-mediator interaction), <code>SerialMediationData</code>, <code>ParallelMediationData</code>, <code>JointMediationData</code> (several mediators with treatment-by-mediator products), <code>ClusterMediationData</code> (treatment assigned to whole clusters, from <code>lmer</code> fits), and <code>BootstrapResult</code>. An eighth class, <code>SEMFit</code>, holds a model fitted from syntax by the native engine (<code><a href="../reference/fit_sem.html">fit_sem()</a></code>, experimental). The three most common classes are introduced here; see <a href="extraction.html">Model Extraction</a> for the others.</p>
+<p>medfit defines S7 classes for each mediation structure: <code>MediationData</code> (simple), <code>InteractionMediationData</code> (simple with a treatment-by-mediator interaction), <code>SerialMediationData</code>, <code>ParallelMediationData</code>, <code>JointMediationData</code> (several mediators with treatment-by-mediator products), <code>ClusterMediationData</code> (treatment assigned to whole clusters, from <code>lmer</code> fits), and <code>BootstrapResult</code>. An eighth class, <code>SEMFit</code>, holds a model fitted from syntax by the native engine (<code><a href="../reference/fit_sem.html">fit_sem()</a></code>). The three most common classes are introduced here; see <a href="extraction.html">Model Extraction</a> for the others.</p>
 <section class="level3"><h3 id="mediationdata">MediationData<a class="anchor" aria-label="anchor" href="#mediationdata"></a>
 </h3>
 <p>Stores simple mediation models (X -&gt; M -&gt; Y):</p>
@@ -555,7 +541,7 @@ N bootstrap samples: 1000
 
 Bootstrap Distribution Summary:
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-0.01682 0.12134 0.15085 0.15052 0.17689 0.28349 </code></pre>
+0.02727 0.12348 0.15081 0.15146 0.17871 0.31862 </code></pre>
 </div>
 </div>
 </section></section><section class="level2"><h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
@@ -671,7 +657,7 @@ Bootstrap Distribution Summary:
 </section><section class="level3"><h3 id="fit_sem">
 <code>fit_sem()</code><a class="anchor" aria-label="anchor" href="#fit_sem"></a>
 </h3>
-<p>Fit a model written as syntax with the native maximum-likelihood engine. It handles latent variables and constraints, and <code>:=</code> defines an effect with a delta-method standard error (experimental):</p>
+<p>Fit a model written as syntax with the native maximum-likelihood engine. It handles latent variables and constraints, and <code>:=</code> defines an effect with a delta-method standard error:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">sem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
 <span>  <span class="st">"mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b"</span>,</span>
@@ -867,11 +853,11 @@ Bootstrap Distribution Summary:
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a> Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
+  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a></p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Version {version}</p>
+  <p>Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
 </div>
 
     </footer>
@@ -881,6 +867,5 @@ Bootstrap Distribution Summary:
 
 
 
-  
-</body>
+  </body>
 </html>

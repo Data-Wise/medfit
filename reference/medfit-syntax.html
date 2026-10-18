@@ -5,25 +5,9 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="medfit Model Syntax — medfit-syntax"><meta name="description" content='
-The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It is a lavaan-style core plus two extensions, each marked
-"medfit extension" below. One statement per line (or separated by ;).'><meta property="og:description" content='
-The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It is a lavaan-style core plus two extensions, each marked
-"medfit extension" below. One statement per line (or separated by ;).'><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
-
-
-
-
-
-
-
-
-
-  pkgdown/mathjax-config.html
-
-  
-
-  </p>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="medfit Model Syntax — medfit-syntax"><meta name="description" content='The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It is a lavaan-style core plus two extensions, each marked
+"medfit extension" below. One statement per line (or separated by ;).'><meta property="og:description" content='The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It is a lavaan-style core plus two extensions, each marked
+"medfit extension" below. One statement per line (or separated by ;).'><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -31,7 +15,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,6 +67,7 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
     <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
@@ -143,13 +128,12 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>medfit Model Syntax</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
       <div class="d-none name"><code>medfit-syntax.Rd</code></div>
     </div>
 
     <div class="ref-description section level2">
-    <p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="figures/lifecycle-experimental.svg" alt="[Experimental]"></a></p>
-<p>The model syntax read by <code><a href="fit_sem.html">fit_sem()</a></code> and by <code>fit_mediation(engine = "native")</code>. It is a lavaan-style core plus two extensions, each marked
+    <p>The model syntax read by <code><a href="fit_sem.html">fit_sem()</a></code> and by <code>fit_mediation(engine = "native")</code>. It is a lavaan-style core plus two extensions, each marked
 "medfit extension" below. One statement per line (or separated by <code>;</code>).</p>
     </div>
 
@@ -160,7 +144,16 @@ The model syntax read by fit_sem() and by fit_mediation(engine = "native"). It i
 <table class="table table"><tr><td>Statement</td><td>Meaning</td></tr><tr><td><code>y ~ x1 + x2</code></td><td>regression of <code>y</code> on <code>x1</code> and <code>x2</code></td></tr><tr><td><code>f =~ y1 + y2 + y3</code></td><td>latent variable <code>f</code> measured by the indicators</td></tr><tr><td><code>y1 ~~ y2</code></td><td>covariance; <code>y1 ~~ y1</code> a variance</td></tr><tr><td><code>y ~ x + m + x:m</code></td><td>product term: the observed variable <code>x * m</code> as a regressor (see Product terms)</td></tr><tr><td><code>y ~ a*x</code></td><td>label the path <code>a</code>; equal labels are one parameter</td></tr><tr><td><code>y ~ 0.5*x</code></td><td>fix the path at 0.5</td></tr><tr><td><code>y ~ start(0.3)*x</code>, <code>lower(0)*</code>, <code>upper(1)*</code></td><td>starting value, lower and upper bound</td></tr><tr><td><code>a == b</code>, <code>a + b == 1</code>, <code>cp == a*b</code></td><td>equality constraint on labels; may be nonlinear</td></tr><tr><td><code>a &lt; b</code>, <code>a &gt; 0</code></td><td>inequality constraint; <code>label &lt; number</code> is a bound</td></tr><tr><td><code>ab := a*b</code></td><td>defined parameter, with a delta-method standard error</td></tr></table><p>Constraints may be nonlinear in the labels (<code>cp == a*b</code>, <code>a*b == 0.1</code>,
 <code>a*b &gt; 0.1</code>, <code>ab &gt; 0</code> with <code>ab := a*b</code>), solved with the Jacobian recomputed at
 every point; a model with one tries every start and keeps the best accepted
-solution, warning when the starts disagree. A product of labels set to zero
+solution, warning when the starts disagree. For such a model the residual
+variances that appear in a nonlinear row get a lower bound of <code>1e-4</code> times their
+natural unit (the variable's variance), because a step to a negative variance is
+outside the row's domain; the fit warns when a bound is active, and a residual
+variance below that bound (an R-squared above 0.9999) is not fitted exactly. The
+model without the nonlinear rows is fitted first: its estimate, and copies of it
+with the signs of the regression paths in the rows flipped (a product constraint
+cannot change sign along its surface, so each sign pattern is its own branch),
+are extra starts, and a feasible reference estimate is never replaced by a worse
+accepted fit. Models without a nonlinear row are not affected. A product of labels set to zero
 (<code>a*b == 0</code>, <code>b1*b2*b3 == 0</code>) is instead solved exactly: one linear fit per
 factor (<code>a == 0</code>, <code>b == 0</code>), keeping the smallest discrepancy. A sum of products
 (<code>a1*b1 + a2*b2 == 0</code>) has no exact reduction, so it is best-effort: the fit is
@@ -310,11 +303,11 @@ rejected with the construct named.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a> Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
+  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a></p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Version {version}</p>
+  <p>Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
 </div>
 
     </footer></div>
@@ -323,6 +316,5 @@ rejected with the construct named.</p>
 
 
 
-  
-</body></html>
+  </body></html>
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## medfit (development version)
+## medfit 0.11.0
 
 ### New features
 
@@ -19,6 +19,13 @@
   factors, and a factor treatment or mediator; the numeric-only error
   now says where factors are accepted. Numeric-only models are
   unchanged.
+- A worked example article, “Worked example: study hours, engagement and
+  GPA” (`vignettes/articles/example-gpa.qmd`): a simulated mediation
+  analysis with known truth, with the delta-method and Sobel formulas
+  written out and a table of 26 pass/fail checks (against the truth,
+  `lm`, lavaan, the native engine, a bootstrap and a Monte Carlo
+  coverage study). The page stops its own build if a check fails, and
+  `tests/testthat/test-example-gpa.R` runs the same code.
 - Four-way standard errors can be population-average:
   `options(medfit.covariate_mean_variance = TRUE)` adds the sampling
   variance of the estimated covariate mean,
@@ -34,6 +41,50 @@
 
 ### Bug fixes
 
+- [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  no longer fails when a supplied start sits in a bad basin. The retries
+  are perturbations of that start, so every attempt could stall; with
+  `n_starts >= 3` the last attempt is now the model’s own moment-based
+  start. Found by the reliability gate (latent structure, n = 50, one
+  replicate: 4 of 9600 shipped-configuration fits ended with
+  `no start converged`; now 0). A start that was accepted before is
+  unchanged, and models with nonlinear constraints keep their starts.
+
+- medfit installs and loads with development S7 (versions after 0.2.2).
+  The nullable property types (`S7::class_numeric | NULL` and the list,
+  data frame and call equivalents) and plain
+  [`S7::class_numeric`](https://rconsortium.github.io/S7/reference/base_classes.html)
+  are registered as S4 unions before the classes use them, in
+  `.onLoad()` as well as at build time, and the package calls S7’s
+  `S7_on_load()`, `S7_on_unload()` and `S7_on_build()` hooks when the
+  installed S7 has them (S7 0.2.2 and earlier still use
+  `methods_register()`). Reported and first fixed by t-kalinowski (PR
+  [\#214](https://github.com/data-wise/medfit/issues/214)); the
+  plain-numeric union was added because the installed package failed to
+  load under development S7 although `load_all()` worked. No change for
+  users of S7 0.2.2.
+
+- Nonlinear equality and inequality constraints in the native engine no
+  longer land on a wrong point
+  ([\#213](https://github.com/data-wise/medfit/issues/213)). A fit such
+  as `a*b/sqrt(2*(b^2*Vm+Vy)) == q` used to step to a negative variance
+  (no start converged), or stop on the wrong sign branch of the
+  constraint and report `converged` with a likelihood-ratio statistic of
+  1459 where 0 is right. Behavior change, for fits with a nonlinear row
+  only (every other fit is bit-identical): the variances that appear in
+  a nonlinear row get a lower bound of `1e-4` times their natural unit
+  (the variable’s variance, so it does not depend on the data scale),
+  and the fit warns when a bound is active; the model without the
+  nonlinear rows is fitted first, and its estimate and sign-flipped
+  copies of it are extra starts; a feasible reference estimate is never
+  replaced by a worse accepted fit, and a fit that reaches it no longer
+  warns that the starts disagree. Checked against an independent
+  profile-likelihood oracle on 24 fixtures at 6 constraint values
+  (`tests/sim/sem-nonlinear-profile-gate.R`). A residual variance below
+  `1e-4` of the variable’s variance (an R-squared above 0.9999) is
+  outside what a nonlinear row can fit and is reported by the floor
+  warning.
+
 - [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
   [`BIC()`](https://rdrr.io/r/stats/AIC.html) with several `SEMFit` fits
   now stop when the fits do not share their observed variables, and name
@@ -46,6 +97,43 @@
   [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
   already refused such a pair
   ([\#206](https://github.com/data-wise/medfit/issues/206)).
+
+- A fit with nonlinear constraints that found exactly one optimum among
+  its starts (every other start failed or was rejected) was returned
+  without a note, although the failed starts are often the sign-flipped
+  ones that would have found another branch. It now warns “only 1 of N
+  starts reached an accepted solution”. Found by running the simulation
+  gates on a Linux runner with the reference BLAS, where the `#213`
+  floor fixture at an extreme data scale (R-squared of 1 - 1e-6) kept a
+  wrong-branch optimum silently; that fixture’s underlying instability
+  at the floor is tracked separately.
+
+### Lifecycle
+
+- The native maximum-likelihood engine
+  ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md),
+  `SEMFit`, `fit_mediation(engine = "native")`) is no longer marked
+  experimental. It met the written exit criteria in
+  `planning/specs/CRITERIA-native-experimental-exit-2026-10-17.csv`: all
+  17 native simulation gates re-run green on this code
+  (`tests/sim/run-gates.R`), lavaan and OpenMx parity hold, and no
+  correctness issue is open. From now on the exported signatures, the
+  `SEMFit` properties and the model-syntax grammar in `?medfit-syntax`
+  change only through a deprecation; numerical fixes are not breaking
+  changes. New syntax and new properties are added without changing what
+  an existing name means: the planned categorical mediators, outcomes
+  and treatments will arrive as additions (the dummy names such as `g_b`
+  and the product name `m:x` stay), and
+  `tests/testthat/test-api-freeze.R` pins the current names, argument
+  order and grammar so a rename fails the suite.
+
+### Documentation
+
+- Removed a literal header file path and a literal `Version {version}`
+  footer placeholder that the website printed; mathematics uses the
+  built-in MathJax support in pkgdown. README installation guidance now
+  distinguishes available binaries from source installation.
 
 ## medfit 0.10.0
 

@@ -25,7 +25,7 @@ It offers:
   [`vcov()`](https://rdrr.io/r/stats/vcov.html),
   [`confint()`](https://rdrr.io/r/stats/confint.html),
   [`nobs()`](https://rdrr.io/r/stats/nobs.html) for S7 classes
-- **Native SEM engine** (experimental):
+- **Native SEM engine**:
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
   fits model syntax with latent mediators and linear or nonlinear
   constraints;
@@ -57,9 +57,8 @@ treatment-by-mediator products), `ClusterMediationData` (treatment
 assigned to whole clusters, from `lmer` fits), and `BootstrapResult`. An
 eighth class, `SEMFit`, holds a model fitted from syntax by the native
 engine
-([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
-experimental). The three most common classes are introduced here; see
-[Model
+([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)).
+The three most common classes are introduced here; see [Model
 Extraction](https://data-wise.github.io/medfit/articles/extraction.md)
 for the others.
 
@@ -452,7 +451,7 @@ summary(boot_result)
 
     Bootstrap Distribution Summary:
        Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-    0.01682 0.12134 0.15085 0.15052 0.17689 0.28349 
+    0.02727 0.12348 0.15081 0.15146 0.17871 0.31862 
 
 ## Main Functions
 
@@ -587,7 +586,7 @@ med_data <- fit_mediation(
 
 Fit a model written as syntax with the native maximum-likelihood engine.
 It handles latent variables and constraints, and `:=` defines an effect
-with a delta-method standard error (experimental):
+with a delta-method standard error:
 
 ``` r
 sem <- fit_sem(

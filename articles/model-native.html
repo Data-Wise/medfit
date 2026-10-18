@@ -30,21 +30,6 @@
 <meta property="og:image" content="https://data-wise.github.io/medfit/logo.png">
 </head>
 <body>
-<p>
-
-
-
-
-
-
-
-
-
-  pkgdown/mathjax-config.html
-
-  
-
-  </p>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -52,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,6 +93,7 @@
     <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -183,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -192,7 +178,7 @@
 
 
 
-    <p>Write the model as syntax and fit it by maximum likelihood with no other package. This is the first of five pages on the native engine, which is experimental. Part of the <a href="models.html">Models</a> collection.</p>
+    <p>Write the model as syntax and fit it by maximum likelihood with no other package. This is the first of five pages on the native engine. Part of the <a href="models.html">Models</a> collection.</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -520,7 +506,10 @@ standard errors (observed information) are unaffected.</code></pre>
 <strong>Factor covariates</strong> (a factor, character or logical column on a regression’s right side) become 0/1 dummies named <code>g_b</code>, <code>g_c</code> (reference: the first level), as <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> builds them. A label on the factor (<code>b*g</code>) stops; label one dummy (<code>b*g_b</code>). A factor as an outcome, a mediator or a four-way treatment is not supported, and <code>g:m</code> expands to one product per dummy (see <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>).</li>
 <li>
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports diagnostics, including an improper solution and any active bound or constraint; read them before trusting a fit.</li>
-</ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
+</ul></section><section class="level2"><h2 id="stability">Stability<a class="anchor" aria-label="anchor" href="#stability"></a>
+</h2>
+<p>The exported signatures of <code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>, the <code>SEMFit</code> properties and the model syntax in <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> change only through a deprecation. New syntax and new properties can be added: a name, a table row or a property that exists today keeps its meaning. This matters for the features listed under Limits (a categorical mediator or outcome, for example): they will arrive as additions, not as a rename of <code>g_b</code>-style dummy names or of the <code>m:x</code> product name. A test (<code>test-api-freeze.R</code>) pins the current names. Numerical fixes are not breaking changes.</p>
+</section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
 <p><a href="cookbook.html#a-latent-mediator-native-engine">Cookbook recipe 11</a> | <a href="cookbook.html#observed-intercepts-and-means">Cookbook recipe 19</a> | <a href="cookbook.html#four-way-decomposition-from-a-native-fit">Cookbook recipe 20</a> | <a href="native-book-1-mean-structure.html">Native engine book</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>
 </section><script id="quarto-html-after-body" type="application/javascript">
@@ -612,11 +601,11 @@ standard errors (observed information) are unaffected.</code></pre>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a> Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
+  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a></p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Version {version}</p>
+  <p>Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
 </div>
 
     </footer>
@@ -626,6 +615,5 @@ standard errors (observed information) are unaffected.</code></pre>
 
 
 
-  
-</body>
+  </body>
 </html>

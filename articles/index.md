@@ -94,6 +94,8 @@ Upgrading, errors, intervals and terms
   decomposition](https://data-wise.github.io/medfit/articles/native-book-7-four-way.md):
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
+- [Worked example: study hours, engagement and
+  GPA](https://data-wise.github.io/medfit/articles/example-gpa.md):
 
 ### Detailed guides
 

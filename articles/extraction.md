@@ -11,7 +11,7 @@ structures from fitted models. It works with:
 - **lavaan** SEM models - implemented
 - **lmer** mixed models (cluster-level treatment, 2-1-1) - implemented
 - **[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)**
-  native SEM fits (experimental) - implemented
+  native SEM fits - implemented
 
 Extraction returns the S7 class that matches the structure:
 `MediationData`, `InteractionMediationData`, `SerialMediationData`,
@@ -649,7 +649,7 @@ boot_nie <- bootstrap_mediation(
 c(boot_nie@ci_lower, boot_nie@ci_upper)
 ```
 
-    [1] 0.4400159 0.9092223
+    [1] 0.4483248 0.8930866
 
 The fit must meet these requirements; each violation errors with its
 cause:
@@ -1227,8 +1227,7 @@ silently ignored. `regmedint` is a suggested package — install it with
 ## Extracting from a Native SEM Fit
 
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-fits model syntax with the experimental native engine and returns a
-`SEMFit`.
+fits model syntax with the native engine and returns a `SEMFit`.
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
 accepts it with the same arguments as the lavaan method and returns the
 same classes:
@@ -1413,7 +1412,7 @@ The extraction system is designed to accommodate further extensions:
   supported (above); other moderators are not.
 - **Multiple treatments**: comparative mediation analysis is not
   supported.
-- **Latent variables**: supported through the experimental native route,
+- **Latent variables**: supported through the native route,
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md).
 
 All classes share the same interface, so new model types plug into the
@@ -1627,8 +1626,7 @@ Model extraction is **complete**:
 - ✅ Native SEM extraction
   ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
   to `SEMFit` to
-  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md),
-  experimental)
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md))
 
 See `NEWS.md` for updates.
 

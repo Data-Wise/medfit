@@ -4,8 +4,8 @@ The native engine fits models from lavaan-style syntax by maximum
 likelihood, with a covariance structure and, when you write intercepts,
 observed means. This guide covers the whole workflow in one place:
 syntax, fitting, inference, constraints, model comparison, diagnostics
-and the route to the mediation objects. It is experimental. For a first
-look, read [the five-minute
+and the route to the mediation objects. For a first look, read [the
+five-minute
 quickstart](https://data-wise.github.io/medfit/articles/native-quickstart.md).
 
 |  |  |
@@ -106,7 +106,7 @@ summary(fit)
      total cp + a * b 0.5374 0.1189
 
     Diagnostics:
-      Optimizer status: 3; stationarity 1.27e-08; retries 0
+      Optimizer status: 4; stationarity 1.43e-08; retries 0
       Active bounds: none
       Active constraints: none
       Improper solution: no

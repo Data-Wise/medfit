@@ -65,12 +65,12 @@ types:
 
 - **SEMFit**: Extract from a model fitted by
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-  (the experimental native maximum-likelihood engine), with the same
-  arguments and structures as the lavaan method. A treatment-by-mediator
-  product written `x:m` (or `m:x`) in the outcome equation gives the
-  four-way decomposition, stored under the canonical name `m:x`; without
-  it `decomposition = "four_way"` is refused by name. `interaction =`
-  takes that product written with `:`.
+  (the native maximum-likelihood engine), with the same arguments and
+  structures as the lavaan method. A treatment-by-mediator product
+  written `x:m` (or `m:x`) in the outcome equation gives the four-way
+  decomposition, stored under the canonical name `m:x`; without it
+  `decomposition = "four_way"` is refused by name. `interaction =` takes
+  that product written with `:`.
 
 - **brmsfit**: Extract from Bayesian models (future)
 

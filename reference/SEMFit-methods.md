@@ -1,7 +1,5 @@
 # Methods for SEMFit objects
 
-**\[experimental\]**
-
 Accessors and display for a
 [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)
 returned by

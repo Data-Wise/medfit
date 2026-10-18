@@ -39,7 +39,7 @@ task recipes see the
 | Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, native via [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) | model | [parallel](https://data-wise.github.io/medfit/articles/model-parallel.md) |
 | Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](https://data-wise.github.io/medfit/articles/model-joint.md) |
 | Cluster-level treatment (2-1-1) | `ClusterMediationData` | `lmer` fits or `engine = "lmer"` | model, Kenward-Roger (`"kr"`) | [cluster](https://data-wise.github.io/medfit/articles/model-cluster.md) |
-| Latent mediator, constraints | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md), `engine = "native"` (experimental) | model, sandwich | [native](https://data-wise.github.io/medfit/articles/model-native.md), [latent](https://data-wise.github.io/medfit/articles/model-native-latent.md) |
+| Latent mediator, constraints | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md), `engine = "native"` | model, sandwich | [native](https://data-wise.github.io/medfit/articles/model-native.md), [latent](https://data-wise.github.io/medfit/articles/model-native-latent.md) |
 | Categorical covariates (development version) | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with a factor, character or logical column | model, sandwich | [categorical covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md) |
 
 Inference works on every row: delta-method intervals from

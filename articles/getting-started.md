@@ -254,7 +254,7 @@ The engine is `"glm"` by default. Others:
 | `"glm"` | the default; continuous, binary or count variables | [Simple](https://data-wise.github.io/medfit/articles/model-simple.md), [glm families](https://data-wise.github.io/medfit/articles/model-glm-families.md) |
 | `"regmedint"` | you want the closed-form regression estimator | [regmedint](https://data-wise.github.io/medfit/articles/model-regmedint.md) |
 | `"lmer"` | the treatment is assigned to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.md) |
-| `"native"` | a latent mediator, constraints, or a model written as syntax (experimental) | [Native engine](https://data-wise.github.io/medfit/articles/model-native.md) |
+| `"native"` | a latent mediator, constraints, or a model written as syntax | [Native engine](https://data-wise.github.io/medfit/articles/model-native.md) |
 
 ## Where next
 

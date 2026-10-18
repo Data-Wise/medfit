@@ -4,8 +4,7 @@ Ten steps from a model written as syntax to a tested, constrained and
 extracted mediation result. It sits between [the five-minute
 quickstart](https://data-wise.github.io/medfit/articles/native-quickstart.md)
 and [the native engine
-guide](https://data-wise.github.io/medfit/articles/native-guide.md). The
-native engine is experimental.
+guide](https://data-wise.github.io/medfit/articles/native-guide.md).
 
 |  |  |
 |----|----|

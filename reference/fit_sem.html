@@ -5,31 +5,15 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Fit a Structural Equation Model by Maximum Likelihood — fit_sem"><meta name="description" content="
-Fits a model written in lavaan-style syntax to raw data with medfit's native
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Fit a Structural Equation Model by Maximum Likelihood — fit_sem"><meta name="description" content="Fits a model written in lavaan-style syntax to raw data with medfit's native
 maximum-likelihood engine, and returns a SEMFit object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
 equality and inequality constraints (==, &amp;lt;, &amp;gt;, linear or nonlinear), and defined
-parameters (:=) with delta-method standard errors."><meta property="og:description" content="
-Fits a model written in lavaan-style syntax to raw data with medfit's native
+parameters (:=) with delta-method standard errors."><meta property="og:description" content="Fits a model written in lavaan-style syntax to raw data with medfit's native
 maximum-likelihood engine, and returns a SEMFit object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
 equality and inequality constraints (==, &amp;lt;, &amp;gt;, linear or nonlinear), and defined
-parameters (:=) with delta-method standard errors."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body><p>
-
-
-
-
-
-
-
-
-
-  pkgdown/mathjax-config.html
-
-  
-
-  </p>
+parameters (:=) with delta-method standard errors."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -37,7 +21,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,6 +73,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
     <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
@@ -149,13 +134,12 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit a Structural Equation Model by Maximum Likelihood</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
       <div class="d-none name"><code>fit_sem.Rd</code></div>
     </div>
 
     <div class="ref-description section level2">
-    <p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="figures/lifecycle-experimental.svg" alt="[Experimental]"></a></p>
-<p>Fits a model written in lavaan-style syntax to raw data with medfit's native
+    <p>Fits a model written in lavaan-style syntax to raw data with medfit's native
 maximum-likelihood engine, and returns a <a href="SEMFit.html">SEMFit</a> object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
 equality and inequality constraints (<code>==</code>, <code>&lt;</code>, <code>&gt;</code>, linear or nonlinear), and defined
@@ -209,7 +193,9 @@ information gives wrong standard errors); use the default with <code>se_type = "
 <dd><p>Positive integer or <code>NULL</code>: number of optimizer starts
 tried before the fit is declared failed (<code>NULL</code> uses 5). Retries use
 perturbed starts drawn under a fixed seed and never change the caller's
-random number stream. With a nonlinear constraint, which can leave several
+random number stream; with 3 or more starts the last attempt is the model's
+own moment-based start, so a start in a bad basin does not end the fit.
+With a nonlinear constraint, which can leave several
 local optima, every start is tried and the best accepted one is kept (a
 warning says when the accepted starts disagree); otherwise the first
 accepted start is used.</p></dd>
@@ -306,11 +292,11 @@ on a selected variable is an error (lavaan would silently keep it free). The fix
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a> Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
+  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a></p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Version {version}</p>
+  <p>Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
 </div>
 
     </footer></div>
@@ -319,6 +305,5 @@ on a selected variable is an error (lavaan would silently keep it free). The fix
 
 
 
-  
-</body></html>
+  </body></html>
 

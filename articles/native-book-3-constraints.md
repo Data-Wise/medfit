@@ -8,8 +8,7 @@ minimized the discrepancy over all parameters. This chapter adds
 constraints such as `a + b == 1.2` or `cp == a*b` and follows one fit
 through every stage the engine runs: turning a constraint into a row,
 handing the rows to the solver, judging the solution with the acceptance
-gate, polishing it, and handling rows that repeat each other. The engine
-is experimental.
+gate, polishing it, and handling rows that repeat each other.
 
 |  |  |
 |----|----|
@@ -313,8 +312,8 @@ signif(tr[c(1:6, nrow(tr) - 3:0), ], 3)
      [6,]    0.4240  3.19e-01
      [7,]    0.0105  1.19e-09
      [8,]    0.0105  2.99e-12
-     [9,]    0.0105  6.19e-15
-    [10,]    0.0105  0.00e+00
+     [9,]    0.0105  6.25e-15
+    [10,]    0.0105  2.78e-17
 
 Rows that repeat one another are repeated evaluations at the same point
 (the `nloptr` wrapper evaluates the start once to check the objective’s
@@ -344,15 +343,23 @@ attempts <- do.call(rbind, lapply(seq_along(o$attempts), function(i) {
 attempts
 ```
 
-      start status accepted discrepancy decrement
-    1     1      3     TRUE  0.01047077   8.3e-16
-    2     2      3     TRUE  0.01047077   5.4e-16
-    3     3      3     TRUE  0.01047077   5.5e-15
-    4     4      3     TRUE  0.01047077   7.1e-15
-    5     5      3     TRUE  0.01047077   5.5e-14
+       start status accepted discrepancy decrement
+    1      1      3     TRUE  0.01047077   6.1e-14
+    2      2      3     TRUE  0.01047077   6.3e-14
+    3      3      3     TRUE  0.01047077   3.4e-14
+    4      4      3     TRUE  0.01047077   3.7e-14
+    5      5      3     TRUE  0.01047077   8.9e-14
+    6      6      3     TRUE  0.01047077   1.1e-14
+    7      7      3     TRUE  0.01047077   1.1e-13
+    8      8      3     TRUE  0.01047077   6.4e-14
+    9      9      3     TRUE  0.01047077   9.1e-16
+    10    10      3     TRUE  0.01047077   6.8e-14
+    11    11      3     TRUE  0.01047077   5.7e-15
+    12    12      3     TRUE  0.01047077   1.0e-13
+    13    13      3     TRUE  0.01047077   4.3e-15
 
-All 5 starts are accepted and reach the same discrepancy (the largest
-spread is 4.4e-16), so no warning is raised.
+All 13 starts are accepted and reach the same discrepancy (the largest
+spread is 8.9e-16), so no warning is raised.
 
 ## 3. The acceptance gate
 
@@ -457,7 +464,7 @@ reduced_gradient <- crossprod(act$z, x_grad)
 cat("size of the reduced gradient:", signif(sqrt(sum(reduced_gradient^2)), 3), "\n")
 ```
 
-    size of the reduced gradient: 1.07e-15 
+    size of the reduced gradient: 9.58e-14 
 
 ``` r
 rbind(objective_hessian_only = eigen(crossprod(act$z, x_hess %*% act$z))$values,
@@ -503,7 +510,7 @@ verdicts
 ```
 
                           accepted decrement
-    optimum                   TRUE  8.29e-16
+    optimum                   TRUE  6.28e-14
     feasible, not optimal    FALSE  3.96e-02
     infeasible               FALSE        NA
     bad solver status        FALSE        NA
@@ -623,9 +630,9 @@ newton
       iteration constraint_violation decrement distance_from_exact_optimum
     1         0             1.19e-09  8.80e-06                    8.10e-06
     2         1             3.28e-12  1.07e-10                    1.18e-10
-    3         2             2.78e-17  1.01e-13                    1.95e-13
-    4         3             2.78e-17  9.44e-14                    1.20e-13
-    5         4             5.55e-17  6.98e-15                    4.77e-15
+    3         2             2.78e-17  1.14e-13                    8.32e-14
+    4         3             2.78e-17  8.11e-15                    6.98e-14
+    5         4             2.78e-17  9.06e-16                    8.02e-14
 
 The distance from the optimum falls from 8.1e-06 to 1.2e-10 in one step
 and to rounding error in the next, and the constraint violation and the
@@ -648,7 +655,7 @@ c(polish_vs_my_iteration = max(abs(polished - path[[5]])),
 ```
 
     polish_vs_my_iteration   polish_vs_engine_fit     discrepancy_before
-              4.773959e-15           0.000000e+00           1.047077e-02
+              0.000000e+00           8.021361e-14           1.047077e-02
          discrepancy_after
               1.047077e-02 
 
@@ -754,7 +761,7 @@ violated <- tryCatch(fit_sem(paste0(model, "a + b == 0.8\na + b < 0.5\n"), d), e
 violated
 ```
 
-    [1] "no start converged (5 tried); best attempt: status -4, stationarity NA; nloptr status -4 is not a success code; constraint 'a + b < 0.5' is violated by 1.19e-01 in natural units"
+    [1] "no start converged (5 tried); best attempt: status 5, stationarity NA; nloptr status 5 is not a success code; constraint 'a + b < 0.5' is violated by 1.35e-01 in natural units"
 
 ## 6. The covariance of a constrained fit
 
@@ -841,9 +848,9 @@ c(largest_estimate_difference = max(abs(fit@theta - lavaan::coef(lv)[nm])),
 ```
 
     largest_estimate_difference      se_difference_expected
-                   3.408639e-07                2.410271e-08
+                   3.583168e-07                2.533682e-08
          se_difference_observed
-                   4.750646e-08 
+                   5.013028e-08 
 
 ``` r
 suppressMessages(library(OpenMx))
@@ -876,7 +883,7 @@ c(largest_estimate_difference = max(abs(est_mx[c("a", "b", "cp")] - fit@theta[c(
 ```
 
     largest_estimate_difference
-                   8.959098e-08 
+                   8.959108e-08 
 
 ``` r
 stats::setNames(summary(run_mx)$parameters$Std.Error, summary(run_mx)$parameters$name)[c("a", "b", "cp")]

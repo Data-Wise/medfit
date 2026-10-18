@@ -253,7 +253,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4351678 0.8930074 
+    0.6560315 0.4349603 0.8927176 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
@@ -374,7 +374,7 @@ Extraction](https://data-wise.github.io/medfit/articles/extraction.md).
 *When:* the mediator is a construct measured by several indicators, and
 you want its indirect effect without first averaging the indicators into
 a score. The mediator `eta` is not a column of the data; the model
-syntax defines it. The native engine is experimental.
+syntax defines it.
 
 ``` r
 set.seed(11)
@@ -429,7 +429,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")
 *When:* you want to fix the direct effect at the indirect effect
 (`cp == a*b`), or test the indirect effect of a three-mediator-step
 chain, which is a product of three paths. Constraints may be nonlinear
-in the labels. The native engine is experimental.
+in the labels.
 
 ``` r
 base <- "

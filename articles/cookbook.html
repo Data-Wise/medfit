@@ -30,21 +30,6 @@
 <meta property="og:image" content="https://data-wise.github.io/medfit/logo.png">
 </head>
 <body>
-<p>
-
-
-
-
-
-
-
-
-
-  pkgdown/mathjax-config.html
-
-  
-
-  </p>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -52,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,6 +93,7 @@
     <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -183,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -385,7 +371,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4351678 0.8930074 </code></pre>
+0.6560315 0.4349603 0.8927176 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
@@ -481,7 +467,7 @@ N bootstrap samples: 197
 <p>More: <a href="extraction.html">Model Extraction</a>.</p>
 </section><section class="level2"><h2 id="a-latent-mediator-native-engine">11. A latent mediator, native engine<a class="anchor" aria-label="anchor" href="#a-latent-mediator-native-engine"></a>
 </h2>
-<p><em>When:</em> the mediator is a construct measured by several indicators, and you want its indirect effect without first averaging the indicators into a score. The mediator <code>eta</code> is not a column of the data; the model syntax defines it. The native engine is experimental.</p>
+<p><em>When:</em> the mediator is a construct measured by several indicators, and you want its indirect effect without first averaging the indicators into a score. The mediator <code>eta</code> is not a column of the data; the model syntax defines it.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">11</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">400</span></span>
@@ -526,7 +512,7 @@ MBCO = 46.753, df = 1, p-value = 8.054e-12</code></pre>
 </div>
 </section><section class="level2"><h2 id="a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain, native engine<a class="anchor" aria-label="anchor" href="#a-nonlinear-constraint-or-a-longer-chain-native-engine"></a>
 </h2>
-<p><em>When:</em> you want to fix the direct effect at the indirect effect (<code>cp == a*b</code>), or test the indirect effect of a three-mediator-step chain, which is a product of three paths. Constraints may be nonlinear in the labels. The native engine is experimental.</p>
+<p><em>When:</em> you want to fix the direct effect at the indirect effect (<code>cp == a*b</code>), or test the indirect effect of a three-mediator-step chain, which is a product of three paths. Constraints may be nonlinear in the labels.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">base</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
 <span><span class="st">  mediator1 ~ a * treatment</span></span>
@@ -1012,11 +998,11 @@ zero  8 3000.936</code></pre>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a> Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
+  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a></p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Version {version}</p>
+  <p>Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
 </div>
 
     </footer>
@@ -1026,6 +1012,5 @@ zero  8 3000.936</code></pre>
 
 
 
-  
-</body>
+  </body>
 </html>

@@ -1,7 +1,5 @@
 # medfit Model Syntax
 
-**\[experimental\]**
-
 The model syntax read by
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 and by `fit_mediation(engine = "native")`. It is a lavaan-style core
@@ -27,17 +25,27 @@ per line (or separated by `;`).
 Constraints may be nonlinear in the labels (`cp == a*b`, `a*b == 0.1`,
 `a*b > 0.1`, `ab > 0` with `ab := a*b`), solved with the Jacobian
 recomputed at every point; a model with one tries every start and keeps
-the best accepted solution, warning when the starts disagree. A product
-of labels set to zero (`a*b == 0`, `b1*b2*b3 == 0`) is instead solved
-exactly: one linear fit per factor (`a == 0`, `b == 0`), keeping the
-smallest discrepancy. A sum of products (`a1*b1 + a2*b2 == 0`) has no
-exact reduction, so it is best-effort: the fit is the best of the starts
-tried, a disagreement warning means a better optimum may exist, and
-`n_starts` raises the number of starts. Labels used in a constraint or a
-definition must be defined in the model. A constraint with no free
-parameter is an error. Exogenous variables are given free variances and
-covariances, as lavaan does with `fixed.x = FALSE`; `fixed_x = TRUE` (or
-a vector of names) in
+the best accepted solution, warning when the starts disagree. For such a
+model the residual variances that appear in a nonlinear row get a lower
+bound of `1e-4` times their natural unit (the variable's variance),
+because a step to a negative variance is outside the row's domain; the
+fit warns when a bound is active, and a residual variance below that
+bound (an R-squared above 0.9999) is not fitted exactly. The model
+without the nonlinear rows is fitted first: its estimate, and copies of
+it with the signs of the regression paths in the rows flipped (a product
+constraint cannot change sign along its surface, so each sign pattern is
+its own branch), are extra starts, and a feasible reference estimate is
+never replaced by a worse accepted fit. Models without a nonlinear row
+are not affected. A product of labels set to zero (`a*b == 0`,
+`b1*b2*b3 == 0`) is instead solved exactly: one linear fit per factor
+(`a == 0`, `b == 0`), keeping the smallest discrepancy. A sum of
+products (`a1*b1 + a2*b2 == 0`) has no exact reduction, so it is
+best-effort: the fit is the best of the starts tried, a disagreement
+warning means a better optimum may exist, and `n_starts` raises the
+number of starts. Labels used in a constraint or a definition must be
+defined in the model. A constraint with no free parameter is an error.
+Exogenous variables are given free variances and covariances, as lavaan
+does with `fixed.x = FALSE`; `fixed_x = TRUE` (or a vector of names) in
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 fixes the moments of the selected ones at the sample values instead, as
 `fixed.x = TRUE` does. Unlike lavaan, which keeps an explicit `x ~~ x`

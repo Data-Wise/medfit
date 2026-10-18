@@ -6,7 +6,7 @@ Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
 collection; the second of five [native
 engine](https://data-wise.github.io/medfit/articles/model-native.md)
-pages. The engine is experimental.
+pages.
 
 |  |  |
 |----|----|
@@ -148,8 +148,6 @@ difference.
   and
   [extract](https://data-wise.github.io/medfit/articles/model-native-multi.md)
   the structure.
-- **Experimental.** The syntax and the printed diagnostics may change
-  before the engine is stable.
 
 ## Related
 

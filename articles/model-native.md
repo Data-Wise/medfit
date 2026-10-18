@@ -1,9 +1,8 @@
 # Native engine: paths and defined parameters
 
 Write the model as syntax and fit it by maximum likelihood with no other
-package. This is the first of five pages on the native engine, which is
-experimental. Part of the
-[Models](https://data-wise.github.io/medfit/articles/models.md)
+package. This is the first of five pages on the native engine. Part of
+the [Models](https://data-wise.github.io/medfit/articles/models.md)
 collection.
 
 |  |  |
@@ -347,6 +346,22 @@ gives the reason.
 - [`summary()`](https://rdrr.io/r/base/summary.html) reports
   diagnostics, including an improper solution and any active bound or
   constraint; read them before trusting a fit.
+
+## Stability
+
+The exported signatures of
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+and
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md),
+the `SEMFit` properties and the model syntax in
+[`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+change only through a deprecation. New syntax and new properties can be
+added: a name, a table row or a property that exists today keeps its
+meaning. This matters for the features listed under Limits (a
+categorical mediator or outcome, for example): they will arrive as
+additions, not as a rename of `g_b`-style dummy names or of the `m:x`
+product name. A test (`test-api-freeze.R`) pins the current names.
+Numerical fixes are not breaking changes.
 
 ## Related
 

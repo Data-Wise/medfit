@@ -30,21 +30,6 @@
 <meta property="og:image" content="https://data-wise.github.io/medfit/logo.png">
 </head>
 <body>
-<p>
-
-
-
-
-
-
-
-
-
-  pkgdown/mathjax-config.html
-
-  
-
-  </p>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -52,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.10.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,6 +93,7 @@
     <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
     <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -183,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-book-2-scale.qmd" class="external-link"><code>vignettes/articles/native-book-2-scale.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-book-2-scale.qmd" class="external-link"><code>vignettes/articles/native-book-2-scale.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -192,7 +178,7 @@
 
 
 
-    <p><a href="native-book-1-mean-structure.html">Chapter 1</a> built the mean structure. This chapter asks what happens when the variables sit far from zero relative to their spread, a common situation (a test score near 500 with a spread of 10, a year near 2000), and shows the change of coordinates the engine uses so that the answer does not depend on where the data sit. The engine is experimental.</p>
+    <p><a href="native-book-1-mean-structure.html">Chapter 1</a> built the mean structure. This chapter asks what happens when the variables sit far from zero relative to their spread, a common situation (a test score near 500 with a spread of 10, a year near 2000), and shows the change of coordinates the engine uses so that the answer does not depend on where the data sit.</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -272,7 +258,7 @@ big               0.01768    107.6877       0.025 493.82590</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>largest_difference_in_the_six_path_and_variance_SEs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">se_big</span> <span class="op">-</span> <span class="va">se_base</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code><span><span class="va">largest_difference_in_the_six_path_and_variance_SEs</span></span>
-<span>                                          <span class="fl">1.181e-14</span> </span></code></pre>
+<span>                                       <span class="fl">1.183775e-14</span> </span></code></pre>
 </div>
 </div>
 <p>The six path and variance standard errors do not move. The last three entries of each row are the intercepts, and two of their standard errors grow, as they should. An intercept is the mean of its variable when its <em>predictors</em> are at zero, so its standard error grows with the distance of the predictors’ means from zero: the intercept of <code>mediator1</code> is an extrapolation to <code>treatment</code> = 0, now 1,000 units from the data, and that of <code>outcome</code> to <code>mediator1</code> = <code>treatment</code> = 0. The intercept of <code>treatment</code> has no predictors, and its standard error does not move. Now the same model in lavaan and OpenMx:</p>
@@ -355,7 +341,7 @@ outcome~1   0 0.9999 1.0000           0    1.0000</code></pre>
 <span>  big_raw_unscaled <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/kappa.html" class="external-link">rcond</a></span><span class="op">(</span><span class="va">info_raw_b</span><span class="op">)</span>, engine_threshold <span class="op">=</span> <span class="fu">medfit</span><span class="fu">:::</span><span class="va">.sem_info_singular_tol</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>         mid_raw          big_raw big_raw_unscaled engine_threshold
-    3.878401e-06     1.930635e-09     1.099791e-16     1.000000e-08 </code></pre>
+    3.947868e-06     2.016914e-09     1.099791e-16     1.000000e-08 </code></pre>
 </div>
 </div>
 <p>At <code>mid</code> scale the raw matrix is poorly conditioned but still above the threshold. At <code>big</code> scale it is below it, and without the Jacobi scaling its reciprocal condition number is at the level of the machine precision (about <span class="math inline">\(10^{-16}\)</span>): the matrix is singular to working precision, which is what lavaan reported above.</p>
@@ -434,7 +420,7 @@ V_\theta = I_\theta^{-1} = T\, I_\phi^{-1}\, T^\top = T\, V_\phi\, T^\top .
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>raw <span class="op">=</span> <span class="fu">rcond_scaled</span><span class="op">(</span><span class="va">info_raw</span><span class="op">)</span>, centered <span class="op">=</span> <span class="fu">rcond_scaled</span><span class="op">(</span><span class="va">info_phi</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>         raw     centered
-3.878401e-06 6.566856e-01 </code></pre>
+3.947868e-06 6.566856e-01 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="va">v_phi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/solve.html" class="external-link">solve</a></span><span class="op">(</span><span class="va">info_phi</span><span class="op">)</span></span>
 <span><span class="va">v_back</span> <span class="op">&lt;-</span> <span class="va">ctr</span><span class="op">$</span><span class="va">t</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">v_phi</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">ctr</span><span class="op">$</span><span class="va">t</span><span class="op">)</span></span>
@@ -445,7 +431,7 @@ V_\theta = I_\theta^{-1} = T\, I_\phi^{-1}\, T^\top = T\, V_\phi\, T^\top .
 <span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>        chain_rule V_equals_T_Vphi_Tt        engine_vcov
-      3.306390e-13       1.363694e-11       2.188549e-19 </code></pre>
+      3.002781e-13       1.363772e-11       3.644666e-35 </code></pre>
 </div>
 </div>
 <p>The centered information is well conditioned, the chain rule holds to rounding, and the covariance the engine reports equals <span class="math inline">\(T V_\phi T^\top\)</span>. At <code>big</code> scale there is no raw inverse to compare with, but the centered route still works. Its path and variance standard errors were already shown in Section 1 to equal those of the original data, and its conditioning is:</p>
@@ -455,7 +441,7 @@ V_\theta = I_\theta^{-1} = T\, I_\phi^{-1}\, T^\top = T\, V_\phi\, T^\top .
 <span>  centered <span class="op">=</span> <span class="fu">rcond_scaled</span><span class="op">(</span><span class="fu">medfit</span><span class="fu">:::</span><span class="fu">.sem_info_expected</span><span class="op">(</span><span class="va">fit_big</span><span class="op">@</span><span class="va">theta</span>, <span class="va">ram_b</span>, <span class="va">smp_b</span>, <span class="va">ctr_b</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>         raw     centered
-1.930635e-09 6.566856e-01 </code></pre>
+2.016914e-09 7.919246e-01 </code></pre>
 </div>
 </div>
 <section class="level3"><h3 id="the-same-comparison-against-lavaan-and-openmx">The same comparison against lavaan and OpenMx<a class="anchor" aria-label="anchor" href="#the-same-comparison-against-lavaan-and-openmx"></a>
@@ -491,9 +477,9 @@ V_\theta = I_\theta^{-1} = T\, I_\phi^{-1}\, T^\top = T\, V_\phi\, T^\top .
 <span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>expected: medfit vs lavaan observed: medfit vs lavaan
-              8.396606e-12               1.293906e-09
+              8.396106e-12               1.860648e-09
 observed: medfit vs OpenMx
-              7.111497e-05 </code></pre>
+              7.111496e-05 </code></pre>
 </div>
 </div>
 <p>Each entry is the largest relative difference over the nine standard errors.</p>
@@ -523,7 +509,7 @@ observed: medfit vs OpenMx
 <pre><code>                     F_covariance_only                           F_with_means
                           3.336570e-04                           3.336570e-04
 largest_difference_in_shared_estimates                 mean_gap_xbar_minus_mu
-                          1.097049e-10                           0.000000e+00 </code></pre>
+                          4.356765e-24                           0.000000e+00 </code></pre>
 </div>
 </div>
 <p>The two discrepancies are the same nonzero number, the shared estimates agree, and the mean gap <span class="math inline">\(\bar x - \mu\)</span> is zero (to the tolerance of the optimizer), on data whose means are 1,000 to 100,000 units from zero.</p>
@@ -545,7 +531,7 @@ largest_difference_in_shared_estimates                 mean_gap_xbar_minus_mu
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>largest_difference_after_mapping_back <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">back</span> <span class="op">-</span> <span class="va">fit_big</span><span class="op">@</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code><span><span class="va">largest_difference_after_mapping_back</span></span>
-<span>                         <span class="fl">2.220446e-16</span> </span></code></pre>
+<span>                         <span class="fl">4.440892e-16</span> </span></code></pre>
 </div>
 </div>
 <p>The intercepts on the centered data are zero, and the mapped-back solution equals <code>fit_big</code>. That comparison only shows that we reproduced the engine’s route, since <code>fit_big</code> itself came out of the shifted path. The independent check is the refused-shift comparison below, which fits the same data without the shift.</p>
@@ -620,8 +606,8 @@ largest_difference_in_shared_estimates                 mean_gap_xbar_minus_mu
 <span><span class="va">refused</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>    shift_allowed_default shift_allowed_with_start largest_estimate_difference
-mid                  TRUE                    FALSE                1.421085e-14
-big                  TRUE                    FALSE                1.455192e-11</code></pre>
+mid                  TRUE                    FALSE                3.552714e-14
+big                  TRUE                    FALSE                2.775558e-16</code></pre>
 </div>
 </div>
 <p>The two routes return the same estimates, so the shift is an optimization and not a requirement. What it buys is a better-behaved problem for the solver. To see that, run SLSQP (the solver, Chapter 3) once on each version of the data from the engine’s default start, and judge each solution with the engine’s acceptance gate. The gate builds the curvature in centered coordinates in both cases, so it can judge the raw-coordinate solution fairly:</p>
@@ -645,9 +631,9 @@ big                  TRUE                    FALSE                1.455192e-11</
 <div class="cell-output cell-output-stdout">
 <pre><code>             nlopt_status iterations accepted newton_decrement
 mid_original            4         64     TRUE          6.9e-11
-mid_centered            4         31     TRUE          1.2e-08
-big_original            4         85     TRUE          3.3e-11
-big_centered            4         34     TRUE          1.2e-08</code></pre>
+mid_centered            4         31     TRUE          3.0e-10
+big_original            4         86     TRUE          1.2e-08
+big_centered            4         35     TRUE          9.2e-09</code></pre>
 </div>
 </div>
 <p>All four runs are accepted. The Newton decrement is the gate’s measure of how far the solution is from a stationary point (the gradient measured in the units of the curvature; Chapter 3 defines it), and it is far below the gate’s threshold of <span class="math inline">\(10^{-3}\)</span> in every run. The status column gives the reason the solver stopped (3: the objective stopped changing; 4: the parameters stopped moving). The centered data need fewer iterations at both scales, although the engine already rescales every parameter by its natural unit before calling the solver (Chapter 3), which removes much of the difference in units.</p>
@@ -773,11 +759,11 @@ mediator1~~mediator1     outcome~~outcome treatment~~treatment
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a> Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
+  <p>Developed by <a href="https://orcid.org/0000-0001-8523-7776" class="external-link">Davood Tofighi</a></p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Version {version}</p>
+  <p>Built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a></p>
 </div>
 
     </footer>
@@ -787,6 +773,5 @@ mediator1~~mediator1     outcome~~outcome treatment~~treatment
 
 
 
-  
-</body>
+  </body>
 </html>

@@ -1,7 +1,5 @@
 # Minimum-of-k Likelihood-Ratio Test for an Indirect Effect (MBCO)
 
-**\[experimental\]**
-
 Tests the null hypothesis that an indirect effect, the product of two or
 more labeled paths (\\a b\\, or a serial \\a d b\\), is zero in a model
 fitted by

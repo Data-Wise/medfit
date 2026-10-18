@@ -5,7 +5,7 @@ engine. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
 collection; the fourth of five [native
 engine](https://data-wise.github.io/medfit/articles/model-native.md)
-pages. The engine is experimental.
+pages.
 
 |  |  |
 |----|----|
@@ -70,7 +70,7 @@ c(chain = unname(nie(xs)), every_path = unname(nie(xs, type = "total")),
 ```
 
          chain every_path      total
-    0.07545038 0.36740437 0.53856775 
+    0.07545039 0.36740438 0.53856776 
 
 With the default `structure = "auto"`, medfit classifies the mediators
 from the model: here it finds the path from `mediator1` to `mediator2`
