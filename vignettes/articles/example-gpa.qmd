@@ -145,8 +145,11 @@ computed independently of `fit_mediation()`.
 checks <- data.frame(check = character(), value = numeric(), reference = numeric(),
                      tolerance = numeric(), pass = logical())
 chk <- function(name, value, reference, tolerance) {
-  checks[nrow(checks) + 1L, ] <<- list(name, value, reference, tolerance,
-                                       abs(value - reference) <= tolerance)
+  env <- parent.frame()
+  tab <- get("checks", envir = env)
+  tab[nrow(tab) + 1L, ] <- list(name, value, reference, tolerance,
+                                abs(value - reference) <= tolerance)
+  assign("checks", tab, envir = env)
   invisible(NULL)
 }
 est <- stats::setNames(tidy(fit, type = "effects")$estimate, tidy(fit, type = "effects")$term)
@@ -289,8 +292,8 @@ rbind(delta = delta, bootstrap = c(boot@ci_lower, boot@ci_upper))
 #| label: bootstrap-checks
 chk("bootstrap CI lower within 0.003 of delta", boot@ci_lower, delta[["conf_low"]], 0.003)
 chk("bootstrap CI upper within 0.003 of delta", boot@ci_upper, delta[["conf_high"]], 0.003)
-chk("bootstrap CI covers the true NIE", as.numeric(boot@ci_lower <= truth[["nie"]] &&
-                                                   truth[["nie"]] <= boot@ci_upper), 1, 0)
+covers <- boot@ci_lower <= truth[["nie"]] && truth[["nie"]] <= boot@ci_upper
+chk("bootstrap CI covers the true NIE", as.numeric(covers), 1, 0)
 ```
 
 At $n=500$ with $a/\mathrm{se}(a)\approx 19$ and $b/\mathrm{se}(b)\approx 8$ both paths are far from
@@ -468,7 +471,9 @@ c(medfit = as.character(utils::packageVersion("medfit")),
   R = paste(R.version$major, R.version$minor, sep = "."),
   lavaan = if (requireNamespace("lavaan", quietly = TRUE)) {
     as.character(utils::packageVersion("lavaan"))
-  } else "not installed")
+  } else {
+    "not installed"
+  })
 ```
 
 Seeds: data `20261017`; bootstrap `123`; Monte Carlo `1` (n = 500) and `2` (n = 100). The
