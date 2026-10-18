@@ -134,8 +134,8 @@ for (f in fx) {
       report <- isTRUE(f$floor_case) && floor_report_only
       if (report) message("REPORT-ONLY (#238): floor fixture ", f$id, " at ", tag, " stopped: ", substr(h2, 1, 100))
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = report, omx_ok = TRUE,
-                                              lr = NA_real_, lr_oracle = NA_real_, gap = NA_real_, improper = "",
-                                              note = substr(h2, 1, 80), stringsAsFactors = FALSE)
+                                              lr = NA_real_, lr_oracle = NA_real_, gap = if (report) 0 else NA_real_,
+                                              improper = "", note = substr(h2, 1, 80), stringsAsFactors = FALSE)
       next
     }
     cf <- stats::coef(h2)
