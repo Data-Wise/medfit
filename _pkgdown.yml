@@ -129,6 +129,8 @@ navbar:
         href: articles/native-book-7-four-way.html
       - text: "lavaan and the native engine"
         href: articles/lavaan-comparison.html
+      - text: "Worked example: study hours and GPA"
+        href: articles/example-gpa.html
     cookbook:
       text: Cookbook
       menu:
@@ -323,6 +325,7 @@ articles:
       - '`articles/native-book-6-product-term`'
       - '`articles/native-book-7-four-way`'
       - '`articles/lavaan-comparison`'
+      - '`articles/example-gpa`'
   - title: "Detailed guides"
     contents:
       - '`articles/introduction`'
