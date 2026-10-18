@@ -470,6 +470,16 @@
       format(signif(max(vapply(attempts[accepted], function(a) a$f, numeric(1))), 6))
     ), call. = FALSE)
   }
+  # One accepted start gives the spread rule nothing to compare, so a fit that found a single optimum (every other
+  # start failed or was rejected) used to be silent. The failing starts are often the sign-flipped ones that would
+  # have found the other branch, so the fit is flagged. A fit certified by the feasible reference is the optimum.
+  if (best_of && !certified && length(accepted) == 1L && length(starts) > 1L) {
+    warning(sprintf(
+      paste0("only %d of %d starts reached an accepted solution; the fit is the one optimum found, and the model may ",
+             "have a better one on another branch (more starts: `n_starts`)"),
+      length(accepted), length(starts)
+    ), call. = FALSE)
+  }
   if (win > 1L && !best_of) {
     used <- if (!is.null(dflt) && win == length(starts)) {
       "the default start"
