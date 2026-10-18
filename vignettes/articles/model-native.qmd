@@ -13,7 +13,7 @@ execute:
 ---
 
 Write the model as syntax and fit it by maximum likelihood with no other package.
-This is the first of four pages on the native engine, which is experimental.
+This is the first of five pages on the native engine.
 Part of the [Models](models.html) collection.
 
 | | |
@@ -23,10 +23,11 @@ Part of the [Models](models.html) collection.
 | **Routes** | `fit_sem(syntax, data)`, or `fit_mediation(model = syntax, engine = "native")` |
 | **Syntax** | `?"medfit-syntax"` lists every statement |
 
-The four pages: this one (paths and defined parameters),
+The five pages: this one (paths and defined parameters),
 [a latent mediator](model-native-latent.html),
 [constraints and the MBCO test](model-native-constraints.html), and
-[several mediators and weights](model-native-multi.html).
+[several mediators and weights](model-native-multi.html), and
+[categorical covariates](model-native-factors.html).
 
 ```{r}
 #| label: setup
@@ -181,7 +182,7 @@ gives the limit and the start of its message.
 | A fixed, shared or constrained intercept | "(rule 9, intercept clause" |
 | `meanstructure = FALSE` | "`meanstructure = FALSE`, but the model has a product term" |
 | A data column `m:x` that is not `x * m` | "is not the product of" |
-| A non-numeric factor | "needs numeric variables" |
+| A product input that is not numeric, factor, character or logical (a date) | "needs numeric variables" |
 | `information = "expected"`, endogenous factor | "is not available for a model with a product of an endogenous variable" |
 | `anova()` or `mbco_sem()`, endogenous factor | "is not available for" ... "a model with a product term" |
 | `extract_mediation()` with another product on the treatment or mediator | "the native extraction does not support the product" |
@@ -214,12 +215,33 @@ the reason.
   does: the structural estimates, their standard errors and the degrees of freedom do
   not change, the parameter count falls, and `logLik()`, AIC and BIC become conditional
   on the fixed variables, so fits with different fixed sets cannot be compared.
+- **AIC and BIC across product and no-product fits are not comparable.** The product column is an
+  extra observed variable in the joint likelihood, so a fit with `x:m` and the same model without it
+  describe different data (on `mediation_demo`, the same outcome gives AIC 3934.7 with the product and 2994.1
+  without). `AIC(fit_a, fit_b)`, `BIC(fit_a, fit_b)`, `anova()` and `mbco_sem()` refuse such a pair, naming the
+  observed variables that differ.
 - **Products** are limited to two observed variables inside the class in the table above; latent
   products, `x:x` and three-way products stop with the messages listed there.
+- **Factor covariates** (a factor, character or logical column on a regression's right side) become
+  0/1 dummies named `g_b`, `g_c` (reference: the first level), as `lm()` builds them. A label on the
+  factor (`b*g`) stops; label one dummy (`b*g_b`). A factor as an outcome, a mediator or a four-way
+  treatment is not supported, and `g:m` expands to one product per dummy (see `?"medfit-syntax"`).
 - `summary()` reports diagnostics, including an improper solution and any active
   bound or constraint; read them before trusting a fit.
+
+## Stability {#stability}
+
+The exported signatures of `fit_sem()` and `mbco_sem()`, the `SEMFit` properties and the model syntax in
+`?"medfit-syntax"` change only through a deprecation. New syntax and new properties can be added: a name,
+a table row or a property that exists today keeps its meaning. This matters for the features listed under
+Limits (a categorical mediator or outcome, for example): they will arrive as additions, not as a rename of
+`g_b`-style dummy names or of the `m:x` product name. A test (`test-api-freeze.R`) pins the current names.
+Numerical fixes are not breaking changes.
 
 ## Related
 
 [Cookbook recipe 11](cookbook.html#a-latent-mediator-native-engine) |
+[Cookbook recipe 19](cookbook.html#observed-intercepts-and-means) |
+[Cookbook recipe 20](cookbook.html#four-way-decomposition-from-a-native-fit) |
+[Native engine book](native-book-1-mean-structure.html) |
 [Methods and Formulas](methods.html) | `?"medfit-syntax"`

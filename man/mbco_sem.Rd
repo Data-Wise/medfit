@@ -46,8 +46,6 @@ that does not converge is an error). It prints with the standard \code{htest}
 layout.
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-
 Tests the null hypothesis that an indirect effect, the product of two or more
 labeled paths (\eqn{a b}{a*b}, or a serial \eqn{a d b}{a*d*b}), is zero in a
 model fitted by \code{\link[=fit_sem]{fit_sem()}}. The product is zero exactly when one factor is,

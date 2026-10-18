@@ -13,7 +13,7 @@ execute:
 ---
 
 Fit a path model from syntax, read it, test it, and turn it into a mediation
-object, with no package besides medfit. The native engine is experimental. For
+object, with no package besides medfit. For
 the full picture see [the native engine guide](native-guide.html).
 
 | | |
@@ -99,11 +99,12 @@ fit.
 
 ## Where next
 
-- [Native engine, step by step](native-tutorial.html): the same path in nine
+- [Native engine, step by step](native-tutorial.html): the same path in ten
   checked steps, with a chain of three paths.
 - [The native engine guide](native-guide.html): syntax, inference, constraints,
   diagnostics and limits in one place.
-- [Cookbook recipes 11 to 18](cookbook.html): a latent mediator, a nonlinear
-  constraint, comparing models, defined parameters, bounds, checks and fixed covariates.
+- [Cookbook recipes 11 to 20](cookbook.html): a latent mediator, a nonlinear
+  constraint, comparing models, defined parameters, bounds, checks, fixed covariates and intercepts.
+- [Native engine book](native-book-1-mean-structure.html): seven chapters on the mean structure, scale, constraints, `fixed_x`, inference, the product term and the four-way decomposition.
 - [lavaan and the native engine](lavaan-comparison.html): what the native engine
   does and does not do compared with lavaan.

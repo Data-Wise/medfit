@@ -35,6 +35,7 @@ open its page. For a one-page lookup of every function see the
 | A latent mediator | [Native: a latent mediator](model-native-latent.html) |
 | Constraints, or a test of the indirect effect | [Native: constraints and MBCO](model-native-constraints.html) |
 | Serial or parallel mediators, or weights, in syntax | [Native: several mediators and weights](model-native-multi.html) |
+| A factor, character or logical covariate in syntax | [Native: categorical covariates](model-native-factors.html) |
 
 ## Capabilities at a glance
 
@@ -42,13 +43,14 @@ open its page. For a one-page lookup of every function see the
 |---|---|---|---|---|
 | Simple | `MediationData` | `glm`, `regmedint`, `extract_mediation()` (`lm`/`glm`, lavaan), native | model, sandwich | [simple](model-simple.html) |
 | Binary or count variables | `MediationData` | `glm` families | model, sandwich | [glm families](model-glm-families.html) |
-| Treatment-by-mediator | `InteractionMediationData` | `glm`, `regmedint`, lavaan | model; closed form (`regmedint`) | [interaction](model-interaction.html) |
+| Treatment-by-mediator | `InteractionMediationData` | `glm`, `regmedint`, lavaan, native (`fit_sem()` with `x:m`) | model; closed form (`regmedint`) | [interaction](model-interaction.html) |
 | Weighted | `MediationData` | `glm`; native `weights` | sandwich (HC3; native HC0-type) | [weights](model-weights.html) |
 | Serial | `SerialMediationData` | `lm`/`glm` with `mediator_models`, lavaan, native via `fit_sem()` | model | [serial](model-serial.html) |
 | Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, native via `fit_sem()` | model | [parallel](model-parallel.html) |
 | Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](model-joint.html) |
 | Cluster-level treatment (2-1-1) | `ClusterMediationData` | `lmer` fits or `engine = "lmer"` | model, Kenward-Roger (`"kr"`) | [cluster](model-cluster.html) |
-| Latent mediator, constraints | `SEMFit`, then extracted | `fit_sem()`, `engine = "native"` (experimental) | model, sandwich | [native](model-native.html), [latent](model-native-latent.html) |
+| Latent mediator, constraints | `SEMFit`, then extracted | `fit_sem()`, `engine = "native"` | model, sandwich | [native](model-native.html), [latent](model-native-latent.html) |
+| Categorical covariates (development version) | `SEMFit`, then extracted | `fit_sem()` with a factor, character or logical column | model, sandwich | [categorical covariates](model-native-factors.html) |
 
 Inference works on every row: delta-method intervals from `tidy()` and
 `confint()`, and the parametric, nonparametric and plugin bootstrap (see

@@ -4,8 +4,6 @@ template:
   bootstrap: 5
   bootswatch: litera
   math-rendering: mathjax
-  includes:
-    in_header: pkgdown/mathjax-config.html
   bslib:
     # A deeper, more "academic" blue for primary actions
     primary: "#0054AD"
@@ -96,6 +94,8 @@ navbar:
         href: articles/model-native-constraints.html
       - text: "Native: several mediators and weights"
         href: articles/model-native-multi.html
+      - text: "Native: categorical covariates"
+        href: articles/model-native-factors.html
     guides:
       text: Guides
       menu:
@@ -123,8 +123,14 @@ navbar:
         href: articles/native-book-4-fixed-x.html
       - text: "Native book 5: inference"
         href: articles/native-book-5-inference.html
+      - text: "Native book 6: the product term"
+        href: articles/native-book-6-product-term.html
+      - text: "Native book 7: the four-way decomposition"
+        href: articles/native-book-7-four-way.html
       - text: "lavaan and the native engine"
         href: articles/lavaan-comparison.html
+      - text: "Worked example: study hours and GPA"
+        href: articles/example-gpa.html
     cookbook:
       text: Cookbook
       menu:
@@ -167,6 +173,12 @@ navbar:
         href: articles/cookbook.html#check-a-native-fit-before-trusting-it
       - text: "18. Fix exogenous covariates (fixed_x)"
         href: articles/cookbook.html#fix-exogenous-covariates-fixed_x
+      - text: "19. Observed intercepts and means"
+        href: articles/cookbook.html#observed-intercepts-and-means
+      - text: "20. Four-way decomposition (native)"
+        href: articles/cookbook.html#four-way-decomposition-from-a-native-fit
+      - text: "21. Categorical covariate (native)"
+        href: articles/cookbook.html#a-categorical-covariate-in-a-native-fit
     articles:
       text: Articles
       menu:
@@ -211,7 +223,7 @@ navbar:
 
 reference:
   - title: "Quick Start"
-    desc: "ADHD-friendly entry points for rapid analysis"
+    desc: "Short entry points for rapid analysis"
     contents:
       - med
       - quick
@@ -255,7 +267,7 @@ reference:
       - bootstrap_mediation
 
   - title: "Methods"
-    desc: "Print and summary methods for medfit classes"
+    desc: "tidy() and glance() for medfit classes; print, summary, anova, confint and logLik methods for SEMFit"
     contents:
       - tidy_s7_object
       - SEMFit-methods
@@ -294,6 +306,7 @@ articles:
       - '`articles/model-native-latent`'
       - '`articles/model-native-constraints`'
       - '`articles/model-native-multi`'
+      - '`articles/model-native-factors`'
   - title: "Guides"
     desc: "Upgrading, errors, intervals and terms"
     contents:
@@ -309,7 +322,10 @@ articles:
       - '`articles/native-book-3-constraints`'
       - '`articles/native-book-4-fixed-x`'
       - '`articles/native-book-5-inference`'
+      - '`articles/native-book-6-product-term`'
+      - '`articles/native-book-7-four-way`'
       - '`articles/lavaan-comparison`'
+      - '`articles/example-gpa`'
   - title: "Detailed guides"
     contents:
       - '`articles/introduction`'
@@ -329,10 +345,9 @@ authors:
 
 footer:
   structure:
-    left: [developed_by, built_with]
-    right: [package_version]
+    left: [developed_by]
+    right: [built_with]
   components:
-    package_version: "Version {version}"
     developed_by: |
       Developed by [Davood Tofighi](https://orcid.org/0000-0001-8523-7776)
     built_with: |

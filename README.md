@@ -22,10 +22,11 @@ model, from one mediator to a latent variable.
 
 | Version | What you get |
 |---|---|
+| **0.11.0** | Categorical (factor, character, logical) covariates in native syntax; population-average four-way standard errors on request; a fix for nonlinear-constrained fits that wandered to negative variances (#213); a start fallback and a single-start warning for the native optimizer; the native engine is no longer marked experimental, and its exported signatures, `SEMFit` properties and model syntax change only through a deprecation |
 | **0.10.0** | The product term `x:m` in native syntax and the four-way decomposition from a native fit (`extract_mediation()` on a `fit_sem()` fit), inside a documented supported class; the model test is `NA` when a product factor is a regression target; a native route in cookbook recipe 7 |
 | **0.9.0** | Observed intercepts and means in the native engine (`y ~ 1`, `meanstructure =`), with centered coordinates for data far from zero; `fixed_x` to fix exogenous moments at the sample values (lavaan's `fixed.x = TRUE`); the tutorial's step 9 and cookbook recipe 18 |
 | **0.8.0** | Nonlinear constraints (`cp == a*b`, `a*b > k`), `mbco_sem(paths = )` for a product of k paths, `anova()`, `tidy()` and `glance()` for `SEMFit`, one lavaan-style naming convention; the lavaan comparison article and cookbook recipes 12 and 13 |
-| **0.7.0** | A native maximum-likelihood SEM engine (experimental): latent mediators, constraints, defined parameters, `fit_sem()`, `mbco_sem()` |
+| **0.7.0** | A native maximum-likelihood SEM engine: latent mediators, constraints, defined parameters, `fit_sem()`, `mbco_sem()` |
 | **0.6.0** | Cluster-randomized designs (2-1-1) with `engine = "lmer"`, Kenward-Roger intervals, cluster bootstrap; the Reference Card and Cookbook |
 | **0.5.0** | Joint mediation (`JointMediationData`), the bundled `mediation_demo` data; two results fixed: serial `te()`/`pm()` sum every path, `confint()` path rows are found by name |
 | **0.4.0** | The `regmedint` engine, the four-way decomposition from `fit_mediation()`, and `m_star` |
@@ -41,13 +42,15 @@ install.packages(
 )
 ```
 
-That gives 0.10.0 as a pre-built binary, with no compiler. From GitHub instead:
-`pak::pak("data-wise/medfit")` (compiles `nloptr` unless `lme4` already brought it in).
+This installs the current r-universe release (0.11.0). Binaries are available
+for supported R/platform combinations; a source installation can require a
+compiler for dependencies such as `nloptr`. From GitHub instead:
+`pak::pak("data-wise/medfit")`.
 
 > **CRAN has 0.3.2, which does not run the examples on this site.** It lacks
 > `mediation_demo`, `fit_sem()`, `mbco_sem()` and the joint and cluster classes.
 > Its two known issues, serial `te()`/`pm()` and `confint()` path rows, are fixed in
-> 0.7.0; see [#83](https://github.com/Data-Wise/medfit/issues/83).
+> 0.5.0; see [#83](https://github.com/Data-Wise/medfit/issues/83).
 
 ## Try it in 60 seconds
 
@@ -191,10 +194,10 @@ for the estimand and the assumptions each effect needs.
 </details>
 
 <details>
-<summary><b>Latent mediator</b> (native engine, experimental)</summary>
+<summary><b>Latent mediator</b> (native engine)</summary>
 
 When the mediator is a construct measured by several indicators, write the model
-as syntax. The native maximum-likelihood engine is experimental and needs no
+as syntax. The native maximum-likelihood engine needs no
 other package:
 
 ```r
@@ -254,7 +257,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 | Get a table | `tidy()`, `glance()`, `confint()`, `coef()`, `vcov()`, `nobs()` |
 | Fit with control | `fit_mediation()` (engines `glm`, `regmedint`, `lmer`, `native`) |
 | Use fitted models | `extract_mediation()` (lm, glm, lmer, lavaan, `SEMFit`) |
-| Write a model as syntax | `fit_sem()`, `mbco_sem()` (experimental) |
+| Write a model as syntax | `fit_sem()`, `mbco_sem()` |
 | Bootstrap | `bootstrap_mediation()` (parametric, nonparametric, plugin) |
 
 Every function is on the [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html).
@@ -280,7 +283,7 @@ See [Ecosystem Coordination](https://github.com/Data-Wise/mediation-planning/blo
 |---|---|
 | Run your first model | [Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) |
 | Find the page for your model | [Models](https://data-wise.github.io/medfit/articles/models.html) |
-| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (eighteen recipes) |
+| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-one recipes) |
 | Look up a function or class | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) |
 | Understand the classes | [Introduction](https://data-wise.github.io/medfit/articles/introduction.html) |
 | Extract from fitted models | [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html) |
@@ -299,10 +302,10 @@ on the `dev` branch; see `NEWS.md` for what each release contains.
 ### Code Quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
-- **Testing**: 3,300+ tests with testthat (>90% coverage, enforced via codecov)
+- **Testing**: 5,700+ testthat expectations in 1,200+ test blocks (>90% coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
-See the [roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md) for the detailed development plan.
+See the [NEWS](https://data-wise.github.io/medfit/news/index.html) for what changed in each release.
 
 ## Contributing
 
@@ -327,7 +330,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.10.0. https://data-wise.github.io/medfit/
+R package version 0.11.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.
@@ -336,7 +339,7 @@ For the entry matching your installed version, run `citation("medfit")`.
 
 - [Package Documentation](https://data-wise.github.io/medfit/)
 - [Development Guide](https://github.com/data-wise/medfit/blob/main/CLAUDE.md)
-- [Roadmap](https://github.com/data-wise/medfit/blob/main/planning/medfit-roadmap.md)
+- [NEWS](https://data-wise.github.io/medfit/news/index.html)
 - [Ecosystem Strategy](https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md)
 
 ## Contact

@@ -13,8 +13,8 @@ execute:
 ---
 
 Serial and parallel mediators, and sampling weights, with the native engine. Part
-of the [Models](models.html) collection; the last of four
-[native engine](model-native.html) pages. The engine is experimental.
+of the [Models](models.html) collection; the fourth of five
+[native engine](model-native.html) pages.
 
 | | |
 |---|---|

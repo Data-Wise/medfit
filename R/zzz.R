@@ -51,6 +51,7 @@
 }
 
 .onLoad <- function(libname, pkgname) {
+  .register_s4_unions()
   # Register S7 classes with S4 system
   # This must happen before methods_register() to avoid
 
@@ -65,8 +66,13 @@
   S7::S4_register(SEMFit)
 
   # Register S7 methods for dispatch
-  # This is required for methods on generics from other packages
-  S7::methods_register()
+  # This is required for methods on generics from other packages. Development S7 (> 0.2.2) replaces
+  # `methods_register()` with `S7_on_load()`; S7 0.2.2 and earlier have only the old function.
+  if ("S7_on_load" %in% getNamespaceExports("S7")) {
+    getExportedValue("S7", "S7_on_load")()
+  } else {
+    S7::methods_register()
+  }
 
   # `show` is an S4 generic; registering an S7 method for it requires the class
   # to be S4-registered first, so it cannot live at source time in classes.R
@@ -135,4 +141,16 @@
   }
 
   # Note: OpenMx integration postponed to future release
+}
+
+# Remove the method registrations and foreign generic aliases when the namespace unloads (S7 > 0.2.2 only).
+.onUnload <- function(libpath) {
+  if ("S7_on_unload" %in% getNamespaceExports("S7")) {
+    getExportedValue("S7", "S7_on_unload")()
+  }
+}
+
+# Build-time hook that records the `method<-()` placeholders (S7 > 0.2.2 only).
+if ("S7_on_build" %in% getNamespaceExports("S7")) {
+  getExportedValue("S7", "S7_on_build")()
 }

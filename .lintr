@@ -9,6 +9,8 @@ exclusions: list(
     "tests/sim/sem-reliability.R" = list(object_usage_linter = Inf, line_length_linter = Inf),
     "tests/sim/sem-se-gate.R" = list(object_usage_linter = Inf, line_length_linter = Inf),
     "tests/sim/sem-constrained-gate.R" = list(object_usage_linter = Inf),
-    "tests/sim/sem-parity-gate.R" = list(object_usage_linter = Inf)
+    "tests/sim/sem-parity-gate.R" = list(object_usage_linter = Inf),
+    "tests/sim/oracle213.R" = list(object_usage_linter = Inf, line_length_linter = Inf, commented_code_linter = Inf,
+                                   object_name_linter = Inf)
   )
 encoding: "UTF-8"

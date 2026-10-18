@@ -1,0 +1,13 @@
+"s7","s7_version","step","ok","detail","mutant","improper","native_ok","omx_ok"
+"release","0.2.2","library",TRUE,"OK","","",TRUE,TRUE
+"release","0.2.2","construct_show",TRUE,"OK","","",TRUE,TRUE
+"release","0.2.2","fit_tidy",TRUE,"OK","","",TRUE,TRUE
+"release","0.2.2","unload",TRUE,"OK","","",TRUE,TRUE
+"release","0.2.2","reload",TRUE,"OK","","",TRUE,TRUE
+"release","0.2.2","fit_after_reload",TRUE,"OK","","",TRUE,TRUE
+"main","0.2.2.9000","library",TRUE,"OK","","",TRUE,TRUE
+"main","0.2.2.9000","construct_show",TRUE,"OK","","",TRUE,TRUE
+"main","0.2.2.9000","fit_tidy",TRUE,"OK","","",TRUE,TRUE
+"main","0.2.2.9000","unload",TRUE,"OK","","",TRUE,TRUE
+"main","0.2.2.9000","reload",TRUE,"OK","","",TRUE,TRUE
+"main","0.2.2.9000","fit_after_reload",TRUE,"OK","","",TRUE,TRUE

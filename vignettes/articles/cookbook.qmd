@@ -12,13 +12,13 @@ execute:
   echo: true
 ---
 
-Eighteen task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Twenty-one task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
-These recipes need medfit 0.8.0 or later (recipe 18 needs 0.9.0, and the native route in recipe 7 needs 0.10.0). CRAN has 0.3.2, which lacks
+These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, and recipe 21 needs the development version, 0.11.0). CRAN has 0.3.2, which lacks
 `mediation_demo` and the native, joint and cluster functions; install from
-GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#installation)).
+GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 
 ```{r}
 #| label: setup
@@ -278,8 +278,7 @@ More: [Model Extraction](extraction.html).
 
 *When:* the mediator is a construct measured by several indicators, and you want
 its indirect effect without first averaging the indicators into a score. The
-mediator `eta` is not a column of the data; the model syntax defines it. The
-native engine is experimental.
+mediator `eta` is not a column of the data; the model syntax defines it.
 
 ```{r}
 #| label: r11-latent-data
@@ -321,8 +320,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")
 
 *When:* you want to fix the direct effect at the indirect effect (`cp == a*b`), or
 test the indirect effect of a three-mediator-step chain, which is a product of
-three paths. Constraints may be nonlinear in the labels. The native engine is
-experimental.
+three paths. Constraints may be nonlinear in the labels.
 
 ```{r}
 #| label: r12-nonlinear
@@ -519,3 +517,157 @@ across several fits stop when the fixed sets differ, as above. Pass a character 
 example `fixed_x = "treatment"`) to fix a subset.
 
 More: [Methods and Formulas](methods.html), [the native engine guide](native-guide.html).
+
+## 19. Observed intercepts and means
+
+*When:* you want the intercepts of a native model, or a test of whether an intercept is
+zero. Writing any intercept (`outcome ~ 1`) turns the mean structure on and frees an
+intercept for every observed variable you did not mention, as lavaan does;
+`meanstructure = TRUE` does the same without writing one. The paths and their standard
+errors do not change.
+
+```{r}
+#| label: r19-free
+paths <- "
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + cp * treatment
+"
+free <- fit_sem(paste0(paths, "outcome ~ 1"), mediation_demo)
+tf <- tidy(free)
+tf[tf$op == "~1", c("term", "estimate", "std_error")]
+```
+
+The outcome and mediator intercepts equal the `lm()` intercepts of the same equations,
+and the exogenous mean is the sample mean of `treatment`.
+`fit_sem(paths, mediation_demo, meanstructure = TRUE)` returns the same fit.
+
+A fixed intercept is a restriction. `outcome ~ 0*1` costs one degree of freedom and
+changes the other estimates, so `anova()` can test it:
+
+```{r}
+#| label: r19-zero
+zero <- fit_sem(paste0(paths, "outcome ~ 0*1"), mediation_demo)
+round(c(free = free@theta[["cp"]], fixed_at_zero = zero@theta[["cp"]]), 3)
+anova(free, zero)
+AIC(free, zero)
+```
+
+The test rejects zero, and the restricted model has the larger AIC. A fit with
+the mean structure off has no intercepts to restrict.
+
+More: [Native engine, intercepts](model-native.html#intercepts).
+
+## 20. Four-way decomposition from a native fit
+
+*When:* the outcome depends on the treatment, the mediator and their product, and you want
+the controlled direct effect, the two interaction terms and the pure indirect effect. Write
+the product as `treatment:mediator1` in the outcome equation, fit with `fit_sem()`, and
+extract. A product turns the mean structure on, so the covariate in the mediator equation
+enters the reference interaction through its sample mean. The fit warns that the global
+test is not valid with a product and recommends the sandwich covariance; the chunk
+silences the warning and asks for the sandwich. A factor covariate (for example a `group` column in
+the mediator equation) is expanded to dummies and enters the same way; a factor treatment or
+mediator is not supported, so recode a two-level factor as 0/1 first.
+
+```{r}
+#| label: r20-fit
+four_way <- "
+  mediator1 ~ treatment + covariate2
+  outcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate2
+"
+fit20 <- suppressWarnings(fit_sem(four_way, mediation_demo, se_type = "sandwich"))
+fw20 <- extract_mediation(fit20, treatment = "treatment", mediator = "mediator1",
+                          decomposition = "four_way")
+tidy(fw20, type = "components", conf_int = TRUE)
+```
+
+The components sum to the natural direct and indirect effects, and `m_star` moves the
+reference level of the mediator (default 0), which shifts weight between the controlled
+direct effect and the reference interaction.
+
+The standard errors treat the covariate mean as fixed, so they are conditional on the
+observed covariates and slightly too small for a population average. To add the variance of
+the estimated covariate mean to INT~ref~, the NDE and the TE, set the option below (the default
+stays conditional, as lavaan's `:=` is); the other components do not change:
+
+```{r}
+#| label: r20-popse
+op <- options(medfit.covariate_mean_variance = TRUE)
+tidy(fw20, type = "components")[, c("term", "std_error")]
+options(op)
+```
+
+On `mediation_demo` the added term is about 0.08% of the INT~ref~ standard error, so the table
+matches the one above to the digits shown; it matters when the interaction and the effect of the covariate
+on the mediator are both large (chapter 7 has a simulated case: 0.0995 becomes 0.1516
+against a bootstrap SD of 0.1568).
+
+The other route is the nonparametric bootstrap, which refits the model on each resample:
+
+```{r}
+#| label: r20-boot
+int_ref_stat <- function(dat) {
+  f <- suppressWarnings(fit_sem(four_way, dat))
+  extract_mediation(f, treatment = "treatment", mediator = "mediator1",
+                    decomposition = "four_way")@int_ref
+}
+boot20 <- bootstrap_mediation(int_ref_stat, method = "nonparametric",
+                              data = mediation_demo, n_boot = 200, seed = 1)
+c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
+```
+
+More: [Native book, the four-way decomposition](native-book-7-four-way.html),
+[Native engine, product term](model-native.html).
+
+## 21. A categorical covariate in a native fit
+
+*When:* a covariate is a factor, character or logical column (a group, a site, a yes/no flag).
+Write the column name where a numeric covariate would go. The engine replaces it with one 0/1 dummy per
+non-reference level, named `<column>_<level>`; the reference is the first factor level (a character column
+sorts in the C locale). The rows of the fit are named `mediator1~group_mid`, so read them like any other
+path. The chunk cuts `covariate1` into three groups to have a factor to use.
+
+```{r}
+#| label: r21-fit
+dat21 <- transform(mediation_demo,
+                   group = cut(covariate1, c(-Inf, -0.5, 0.5, Inf), labels = c("low", "mid", "high")))
+fit21 <- fit_sem("
+  mediator1 ~ a*treatment + group
+  outcome ~ b*mediator1 + cp*treatment + group
+  ind := a*b
+", dat21)
+tidy(fit21)[1:7, ]
+```
+
+The estimates equal a fit with the dummies written by hand (`group_mid`, `group_high`), and `a`, `b` and
+`ind` keep their usual meaning. A label goes on one dummy, never on the factor: `b*group` stops with a
+message that names the dummies. To test one dummy, label it and constrain the label:
+
+```{r}
+#| label: r21-label
+fit21b <- fit_sem("
+  mediator1 ~ a*treatment + group
+  outcome ~ b*mediator1 + cp*treatment + group + z*group_mid
+  z == 0
+", dat21)
+tidy(fit21b)[grepl("group", tidy(fit21b)$term, fixed = TRUE), ]
+```
+
+`fixed_x = "group"` fixes every dummy of the factor at its sample moments, and a dummy name fixes one:
+
+```{r}
+#| label: r21-fixed
+fit21c <- fit_sem("
+  mediator1 ~ a*treatment + group
+  outcome ~ b*mediator1 + cp*treatment + group
+", dat21, fixed_x = "group")
+generics::glance(fit21c)$fixed_x
+```
+
+Limits: a factor as an outcome or a mediator, an ordered factor, and a product of two factors are refused
+with a message that says why; `group:mediator1` expands to one product per dummy. A bootstrap that refits from
+raw data re-expands the factor in each resample, so a level missing from a character column's resample
+changes the reference level.
+
+More: [Native engine, paths and defined parameters](model-native.html), `?"medfit-syntax"`
+(section Factor covariates).

@@ -8,7 +8,7 @@
 
 .sem_fit_syntax <- function(model, data, information = c("observed", "expected"), n_starts = 5L,
                             control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL,
-                            meanstructure = NULL, fixed_x = FALSE) {
+                            meanstructure = NULL, fixed_x = FALSE, factors = NULL) {
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
   information <- match.arg(information)
   se_type <- match.arg(se_type)
@@ -16,11 +16,31 @@
     weights <- .sem_check_weights(weights, nrow(data))
   }
   if (is.null(parsed)) {
-    parsed <- .sem_parse(model)
+    parsed <- tryCatch(.sem_parse(model), error = function(e) {
+      hint <- .sem_factor_label_hint(conditionMessage(e), data)
+      stop(if (is.null(hint)) conditionMessage(e) else hint, call. = FALSE)
+    })
+    # factors become dummies before completion sees the table; branch fits re-enter with `parsed` and the
+    # expanded data, so this runs once
+    expanded <- .sem_expand_factors(parsed$parameters, data, fixed_x, factors)
+    parsed$parameters <- expanded$table
+    data <- expanded$data
+    fixed_x <- expanded$fixed_x
+    factors <- expanded$map
     products <- .sem_zero_product_rows(parsed$constraints)
     if (length(products)) {
-      return(.sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
-                               meanstructure, fixed_x))
+      # one check before the branch grid, which would swallow it into "no branch converged"
+      # a product's inputs are split at the colon: its rows go at materialization, like any other model variable
+      sides <- unlist(strsplit(c(parsed$parameters$lhs, parsed$parameters$rhs), ":", fixed = TRUE))
+      latent <- parsed$parameters$lhs[parsed$parameters$op == "=~"]
+      # a latent is not a column, even when one shares its name
+      vars <- setdiff(intersect(unique(sides), names(data)), latent)
+      rows <- stats::complete.cases(data[, vars, drop = FALSE])
+      .sem_check_dummy_support(factors, data, rows, if (!is.null(weights)) weights[rows])
+      out <- .sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
+                               meanstructure, fixed_x)
+      out$factors <- factors
+      return(out)
     }
   }
   if (any(parsed$parameters$level != 1L)) {
@@ -51,7 +71,9 @@
   x <- data[, ram$obs, drop = FALSE]
   nonnum <- ram$obs[!vapply(x, is.numeric, TRUE)]
   if (length(nonnum)) {
-    stop("model variables must be numeric: ", paste(nonnum, collapse = ", "), call. = FALSE)
+    stop("model variables must be numeric: ", paste(nonnum, collapse = ", "),
+         ". A factor, character or logical column is expanded to dummies only on a regression's right side; ",
+         "as an outcome or mediator, or for any other type (a date), convert it to a numeric column", call. = FALSE)
   }
   # Listwise deletion once, on the model's observed variables only.
   keep <- stats::complete.cases(x)
@@ -63,6 +85,7 @@
     ))
   }
   x <- x[keep, , drop = FALSE]
+  .sem_check_dummy_support(factors, data, keep, weights[keep])
   .sem_check_product_columns(mat$checks, keep)
   weights <- weights[keep]
   smp <- .sem_sample(x, ram, weights)
@@ -120,7 +143,7 @@
       active_constraints = act$text[act$active_row], information = information, ram = ram, table = conv$table,
       par_map = conv$par_map, se_type = se_type, weights = smp$w, n_starts = n_starts, control = control,
       partable = .sem_to_partable(conv$table), data = x, n_obs = smp$n, n_dropped = n_dropped, df = df,
-      eq_rank = eq_rank, branch = character(), fixed_x = fixed_set
+      eq_rank = eq_rank, branch = character(), fixed_x = fixed_set, factors = factors
     )
   )
 }

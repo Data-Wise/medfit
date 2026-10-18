@@ -7,8 +7,6 @@
 #' Fit a Structural Equation Model by Maximum Likelihood
 #'
 #' @description
-#' `r lifecycle::badge("experimental")`
-#'
 #' Fits a model written in lavaan-style syntax to raw data with medfit's native
 #' maximum-likelihood engine, and returns a [SEMFit] object. The engine handles
 #' observed and latent variables, user labels, fixed values, starts and bounds,
@@ -32,7 +30,9 @@
 #' @param n_starts Positive integer or `NULL`: number of optimizer starts
 #'   tried before the fit is declared failed (`NULL` uses 5). Retries use
 #'   perturbed starts drawn under a fixed seed and never change the caller's
-#'   random number stream. With a nonlinear constraint, which can leave several
+#'   random number stream; with 3 or more starts the last attempt is the model's
+#'   own moment-based start, so a start in a bad basin does not end the fit.
+#'   With a nonlinear constraint, which can leave several
 #'   local optima, every start is tried and the best accepted one is kept (a
 #'   warning says when the accepted starts disagree); otherwise the first
 #'   accepted start is used.
@@ -63,8 +63,8 @@
 #'   `fixed.x = TRUE`. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
 #'   not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
 #'   conditional on the fixed variables, and `glance()$fixed_x` lists them. Models whose `fixed_x` sets or data differ
-#'   cannot be compared with [anova()], [mbco_sem()], `AIC()` or `BIC()`. A (co)variance or intercept statement on a
-#'   selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+#'   cannot be compared with [stats::anova()], [mbco_sem()], `AIC()` or `BIC()`. A (co)variance or intercept statement
+#'   on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
 #'   (`fixed_x` column, no standard error) but not in `coef()` or `vcov()`.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
@@ -140,7 +140,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
                         "sign_check", "se_type")],
     internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
-                      "branch", "fixed_x")],
+                      "branch", "fixed_x", "factors")],
     call = call
   )
 }

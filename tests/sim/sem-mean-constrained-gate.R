@@ -20,8 +20,14 @@
 # intercept is constrained), nocenter (neither the centered route nor the centered gate, so shifted data meets the
 # plain-coordinate gate); noshift (the route alone) is survivable by design: the centered gate covers it.
 # Run from the package root:  Rscript tests/sim/sem-mean-constrained-gate.R
+# Results: tests/sim/results/sem-mean-constrained-gate-<date>.csv, one row per fit, with the invariance ratio (<= 1
+# passes) and the lavaan verdict where a comparison was made (a mutant run writes to the temporary directory)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
+if (!requireNamespace("lavaan", quietly = TRUE)) {
+  stop("this gate needs lavaan (Suggests): without it the parity checks would be skipped, not failed",
+       call. = FALSE)
+}
 seeds <- seq_len(as.integer(Sys.getenv("SEEDS", "5")))
 mutant <- Sys.getenv("MUTANT", "")
 if (mutant %in% c("badshift", "noshift", "nocenter")) {
@@ -98,6 +104,8 @@ for (sname in names(structures)) {
 cols <- c("structure", "n", "seed", "shift", "problem", "ok", "feas")
 res <- do.call(rbind, lapply(rows, function(r) data.frame(r[cols])))
 inv <- numeric()
+inv_row <- rep(NA_real_, length(rows)) # per-run invariance ratio (worst of estimate/1e-5 and SE/1e-4)
+lav_row <- rep(NA, length(rows)) # per-run lavaan verdict, NA where no comparison was made
 lav_bad <- 0L
 lav_n <- 0L
 for (i in seq_along(rows)) {
@@ -112,31 +120,32 @@ for (i in seq_along(rows)) {
   sb <- sqrt(diag(base$fit@vcov))[keep]
   se <- max(abs(sqrt(diag(r$fit@vcov))[keep] - sb)) / max(sb)
   inv <- c(inv, max(est / 1e-5, se / 1e-4))
+  inv_row[i] <- max(est / 1e-5, se / 1e-4)
   if (nzchar(Sys.getenv("DEBUG")) && max(est / 1e-5, se / 1e-4) > 1) {
     cat(r$structure, r$n, r$seed, r$problem, "est", est, "se", se, "\n")
   }
 }
-if (requireNamespace("lavaan", quietly = TRUE)) {
-  for (r in rows) {
-    if (!r$ok || r$shift != 0 || r$problem == "zero") next
-    st <- structures[[r$structure]]
-    syn <- paste0(st$syntax, "\n", problems[[r$problem]])
-    d <- NULL
-    set.seed(1000L * r$seed + r$n)
-    d <- st$sim(r$n)
-    ref <- tryCatch(suppressWarnings(lavaan::sem(syn, d, meanstructure = TRUE, fixed.x = FALSE)),
-                    error = function(e) NULL)
-    if (is.null(ref) || !lavaan::lavInspect(ref, "converged")) next
-    lav_n <- lav_n + 1L
-    chi <- unname(lavaan::fitMeasures(ref, "chisq"))
-    nat <- r$fit@f * r$fit@n_obs
-    same <- abs(nat - chi) < 1e-3
-    est_ok <- !same || max(abs(r$fit@theta[keep] - lavaan::coef(ref)[keep]), na.rm = TRUE) < 5e-4
-    if (nat > chi + 1e-4 || !est_ok) {
-      lav_bad <- lav_bad + 1L
-      if (nzchar(Sys.getenv("DEBUG"))) {
-        cat("lavaan", r$structure, r$n, r$seed, r$problem, "native", nat, "lav", chi, "\n")
-      }
+for (ri in seq_along(rows)) {
+  r <- rows[[ri]]
+  if (!r$ok || r$shift != 0 || r$problem == "zero") next
+  st <- structures[[r$structure]]
+  syn <- paste0(st$syntax, "\n", problems[[r$problem]])
+  d <- NULL
+  set.seed(1000L * r$seed + r$n)
+  d <- st$sim(r$n)
+  ref <- tryCatch(suppressWarnings(lavaan::sem(syn, d, meanstructure = TRUE, fixed.x = FALSE)),
+                  error = function(e) NULL)
+  if (is.null(ref) || !lavaan::lavInspect(ref, "converged")) next
+  lav_n <- lav_n + 1L
+  chi <- unname(lavaan::fitMeasures(ref, "chisq"))
+  nat <- r$fit@f * r$fit@n_obs
+  same <- abs(nat - chi) < 1e-3
+  est_ok <- !same || max(abs(r$fit@theta[keep] - lavaan::coef(ref)[keep]), na.rm = TRUE) < 5e-4
+  lav_row[ri] <- !(nat > chi + 1e-4 || !est_ok)
+  if (nat > chi + 1e-4 || !est_ok) {
+    lav_bad <- lav_bad + 1L
+    if (nzchar(Sys.getenv("DEBUG"))) {
+      cat("lavaan", r$structure, r$n, r$seed, r$problem, "native", nat, "lav", chi, "\n")
     }
   }
 }
@@ -144,6 +153,11 @@ if (nzchar(Sys.getenv("DEBUG"))) {
   print(res[!res$ok, ])
   print(round(sort(inv, decreasing = TRUE)[1:5], 2))
 }
+res$invariance <- inv_row
+res$lavaan_ok <- lav_row
+out_dir <- if (nzchar(mutant)) tempdir() else "tests/sim/results"
+dir.create(out_dir, showWarnings = FALSE)
+utils::write.csv(res, file.path(out_dir, sprintf("sem-mean-constrained-gate-%s.csv", Sys.Date())), row.names = FALSE)
 cat(sprintf(paste0("runs: %d; converged %d; feasible <= 1e-6: %d; invariance pairs %d (worst ratio %.3g); ",
                    "lavaan runs %d, bad %d\n"),
             nrow(res), sum(res$ok), sum(res$feas <= 1e-6, na.rm = TRUE), length(inv),

@@ -268,11 +268,13 @@ the members' mediators gives the derivation: member $i$'s own mediator enters
 once in the deviation and once in the mean, with coefficient
 $b_W + (b_B - b_W) / n_j$, and each of the $n_j - 1$ peers' enters only through
 the mean, with coefficient $(b_B - b_W) / n_j$; every mediator moves by $a$.
+
 medfit's tests check the formulas against exact counterfactuals. `decompose()` reports the large-cluster limits
 $a \, b_W$ and $a (b_B - b_W)$, labeled the cluster-average, large-cluster
 approximation. The own estimate is off by $a (b_B - b_W) / H$ with equal cluster
 weights, $H$ the harmonic mean cluster size, and `decompose()` warns when that
 gap exceeds half the own effect's standard error; `summary()` always prints it.
+
 Under the peer-mean model of Talloen et al. (2016, p. 364), whose outcome
 equation has a coefficient $b_p$ on the member's own mediator and $g$ on the
 mean of the other members, a fixed cluster size $N$ gives $b_W = b_p - g / (N - 1)$
@@ -344,14 +346,17 @@ decompose(fit)
 
 With few clusters the model-based standard errors can be too small.
 `extract_mediation()` warns when $J < 25$ with model-based standard errors, and
-whatever the standard error type when $J < 10$. `se_type = "kr"` replaces each
-model's covariance by the Kenward–Roger adjusted one (`pbkrtest::vcovAdj()`,
-REML fits only) and stores a Kenward–Roger denominator degrees of freedom for
-each path; `confint(parm = "paths")` and `tidy(conf_int = TRUE)` then give $t$
-intervals for the paths, while the intervals for the products (NIE, own,
-spillover, TE) stay normal. The Kenward–Roger adjustment changes the standard
-errors very little (ratios of 1.000 to 1.002 at $J = 15$); its value is the
-degrees of freedom. The product intervals are the weak point at small $J$.
+whatever the standard error type when $J < 10$.
+
+`se_type = "kr"` replaces each model's covariance by the Kenward–Roger adjusted
+one (`pbkrtest::vcovAdj()`, REML fits only) and stores a Kenward–Roger
+denominator degrees of freedom for each path; `confint(parm = "paths")` and
+`tidy(conf_int = TRUE)` then give $t$ intervals for the paths, while the
+intervals for the products (NIE, own, spillover, TE) stay normal. The
+Kenward–Roger adjustment changes the standard errors very little (ratios of
+1.000 to 1.002 at $J = 15$); its value is the degrees of freedom. The product
+intervals are the weak point at small $J$.
+
 `bootstrap_mediation(cluster = )` needs no normal approximation for them; no
 few-cluster threshold is established, and the published evidence for resampling
 whole clusters is for treatment varying within clusters with 30 or more
@@ -443,8 +448,11 @@ d_{ij} \lambda_i$ and $\kappa_j = \theta_{3j} + \sum_{i>j} d_{ij} \kappa_i$.
 
 The covariate means $\bar c$ are treated as fixed, so standard errors that
 involve them (the four-way INT<sub>ref</sub> and the joint NDE) are
-conditional on the observed covariates; they slightly understate the
-uncertainty of a population-average effect.
+conditional on the observed covariates; they omit the sampling variance of
+the estimated mean (the derivative of INT<sub>ref</sub> with respect to $\bar c$ is
+$\theta_3\gamma$), so they can understate the uncertainty of a population-average
+effect. `options(medfit.covariate_mean_variance = TRUE)` adds the omitted variance,
+$(\theta_3\gamma)^2 \operatorname{Var}(c)/n$, to INT<sub>ref</sub>, the NDE and the TE.
 
 **Intervals.** `confint()` and `tidy(conf_int = TRUE)` report normal
 intervals, $\hat g \pm z_{1-\alpha/2}\, \widehat{\text{SE}}$. The sampling
@@ -495,11 +503,12 @@ applies. `engine = "regmedint"` delegates to `regmedint::regmedint()`, a
 closed-form regression-based implementation, and maps its point estimates and
 its own delta-method covariance of the effects onto `MediationData` or
 `InteractionMediationData`. The adapter requires a linear mediator model and a
-unit treatment contrast; see `?fit_mediation`. For a non-Gaussian outcome
-model the components are on that model's link scale, as regmedint reports
-them. `engine = "lmer"` fits the two linear mixed models of the cluster design
-above (REML, random cluster intercepts, the mediator and level-1 covariates
-split into within-cluster deviation and cluster mean) and passes them to
+unit treatment contrast; see `?fit_mediation`. For a non-Gaussian outcome model
+the components are on that model's link scale, as regmedint reports them.
+
+`engine = "lmer"` fits the two linear mixed models of the cluster design above
+(REML, random cluster intercepts, the mediator and level-1 covariates split into
+within-cluster deviation and cluster mean) and passes them to
 `extract_mediation()`; it returns a `ClusterMediationData`. `engine = "native"`
 fits model syntax with the engine described in the next section, then extracts
 the mediation structure through the same workers as the lavaan route.
@@ -553,22 +562,29 @@ F_{ML}(\theta) = \log |\Sigma| + \operatorname{tr}\left(S \Sigma^{-1}\right) - \
 + (\bar x - \mu)^\top \Sigma^{-1} (\bar x - \mu) .
 $$
 
-Under normality the information has no cross term between the mean and covariance parts: it is the sum
-$I_{kl} = n\, \partial_k \mu^\top \Sigma^{-1} \partial_l \mu + (n/2)\operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\, \Sigma^{-1} \partial_l \Sigma\right)$,
-and the casewise scores of the sandwich gain the mean part
-$w_i\, \partial_k \mu^\top \Sigma^{-1} (x_i - \mu)$, with $d_i = x_i - \mu(\theta)$ in the covariance part.
-The degrees of freedom count $p(p+1)/2 + p$ moments, so a fixed intercept (`y ~ 0*1`) is a
-restriction that costs one. A fit without any intercept statement is the same model with every observed
-intercept free: its discrepancy, estimates and standard errors are those of the covariance-only fit, and
-`anova()` treats it that way.
+Under normality the information has no cross term between the mean and
+covariance parts: it is the sum $I_{kl} = n\, \partial_k \mu^\top \Sigma^{-1}
+\partial_l \mu + (n/2)\operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\,
+\Sigma^{-1} \partial_l \Sigma\right)$, and the casewise scores of the sandwich
+gain the mean part $w_i\, \partial_k \mu^\top \Sigma^{-1} (x_i - \mu)$, with
+$d_i = x_i - \mu(\theta)$ in the covariance part. The degrees of freedom count
+$p(p+1)/2 + p$ moments, so a fixed intercept (`y ~ 0*1`) is a restriction that
+costs one.
 
-**Conditioning.** The path entries of a variable with a free intercept change that intercept by the
-mean times the path, so in the raw parameters the information is nearly singular when the mean is large
-relative to the standard deviation. The gate, the information and its inverse are computed in centered
-coordinates $\tilde m_v = m_v - (\bar x_v - \sum_c A_{v,c} \bar x_c)$ (an affine map $\theta = T(\phi + c_0)$,
-with the Hessian taken directly in $\phi$), and the covariance is mapped back as $V = T V_\phi T^\top$.
-When no constraint, bound or starting value touches an intercept, the whole fit runs on mean-centered data and
-the solution is mapped back.
+A fit without any intercept statement is the same model with every observed
+intercept free: its discrepancy, estimates and standard errors are those of the
+covariance-only fit, and `anova()` treats it that way.
+
+**Conditioning.** The path entries of a variable with a free intercept change
+that intercept by the mean times the path, so in the raw parameters the
+information is nearly singular when the mean is large relative to the standard
+deviation. The gate, the information and its inverse are computed in centered
+coordinates $\tilde m_v = m_v - (\bar x_v - \sum_c A_{v,c} \bar x_c)$ (an affine
+map $\theta = T(\phi + c_0)$, with the Hessian taken directly in $\phi$), and
+the covariance is mapped back as $V = T V_\phi T^\top$.
+
+When no constraint, bound or starting value touches an intercept, the whole fit
+runs on mean-centered data and the solution is mapped back.
 
 ### Fixed exogenous moments
 
@@ -590,34 +606,52 @@ only when their fixed sets and data agree.
 
 ### Products and observed information
 
-A product term `x:m` is a data-level transformation, not a quantity inside the likelihood. The engine
-builds $p_i = x_i m_i$ for every row kept after listwise deletion, names it $m{:}x$ (the two names sorted in the C locale, so `x:m` and `m:x` are one term),
-and treats it as one more observed exogenous variable: a free variance, free covariances with the other
-exogenous variables, and a free mean. The RAM, the discrepancy and the mean structure are unchanged, which
-is how lavaan reads `x:m`. In a recursive model with no residual covariance between outcomes, with every
-coefficient free and used once, the maximum-likelihood estimate of each equation's coefficients is the
-least-squares estimate of that equation, so the four-way parts ([above](#treatmentmediator-interaction-the-four-way-decomposition)) computed from a
-native fit equal the `lm`/`glm` route; outside that class the equality can fail (a residual covariance gives a generalized least squares estimator,
-a shared or fixed coefficient changes it), which is why a product model outside the class is refused.
+A product term `x:m` is a data-level transformation, not a quantity inside the
+likelihood. The engine builds $p_i = x_i m_i$ for every row kept after listwise
+deletion, names it $m{:}x$ (the two names sorted in the C locale, so `x:m` and
+`m:x` are one term), and treats it as one more observed exogenous variable: a
+free variance, free covariances with the other exogenous variables, and a free
+mean. The RAM, the discrepancy and the mean structure are unchanged, which is
+how lavaan reads `x:m`.
 
-The product is a function of $m$ but the model treats it as exogenous, so a model with $m \sim x$
-and $y \sim x + m + x{:}m$ implies $\operatorname{Cov}(e_m, p) = 0$. In the data
-$\operatorname{Cov}(e_m, p) = E[x e_m^2]$, about $E[x]\sigma_m^2$ when $e_m$ is independent of $x$,
-so the restriction is wrong unless $x$ is centered. The coefficients stay equal to their equation-wise
-least-squares estimates, but the global chi-square is not a chi-square: in a checked example
-($n = 20000$, $x$ normal with mean 2) it was 22113.7 on 1 degree of freedom, and 4.89 with $x$ centered. That is why
-`glance()` reports chi-square, df and p-value as `NA` for a product with an endogenous factor, and why `anova()`
-and `mbco_sem()` refuse.
+In a recursive model with no residual covariance between outcomes, with every
+coefficient free and used once, the maximum-likelihood estimate of each
+equation's coefficients is the least-squares estimate of that equation, so the
+four-way parts
+([above](#treatmentmediator-interaction-the-four-way-decomposition)) computed
+from a native fit equal the `lm`/`glm` route; outside that class the equality
+can fail (a residual covariance gives a generalized least squares estimator, a
+shared or fixed coefficient changes it), which is why a product model outside
+the class is refused.
 
-Expected information is $(n/2)\operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\, \Sigma^{-1} \partial_l \Sigma\right)$
-at the model-implied $\Sigma$, which carries the false restriction above, so the standard errors built from it
-are wrong, and the sandwich built on it is wrong too. Observed information is the numerical Jacobian of the gradient of $F_{ML}$
-at the estimate, and with the sandwich covariance the standard errors do not rest on the implied
-moments of the product; `information = "expected"` is therefore refused for a product with an endogenous factor.
-A product of two exogenous variables implies no such restriction. With the exogenous block free, the ordinary test is calibrated:
-1000 replications at $n = 500$ rejected 0.055 and 0.056 at the nominal 0.05 for normal and centered-exponential factors.
-If the exogenous block is restricted (a variance or covariance fixed, labeled, bounded, or left out), the test is
-unavailable for the same reason, because a skewed or product-valued variable breaks the normal-theory variance of its own moments.
+The product is a function of $m$ but the model treats it as exogenous, so a
+model with $m \sim x$ and $y \sim x + m + x{:}m$ implies
+$\operatorname{Cov}(e_m, p) = 0$. In the data $\operatorname{Cov}(e_m, p) = E[x
+e_m^2]$, about $E[x]\sigma_m^2$ when $e_m$ is independent of $x$, so the
+restriction is wrong unless $x$ is centered.
+
+The coefficients stay equal to their equation-wise least-squares estimates, but
+the global chi-square is not a chi-square: in a checked example ($n = 20000$,
+$x$ normal with mean 2) it was 22113.7 on 1 degree of freedom, and 4.89 with $x$
+centered. That is why `glance()` reports chi-square, df and p-value as `NA` for
+a product with an endogenous factor, and why `anova()` and `mbco_sem()` refuse.
+
+Expected information is $(n/2)\operatorname{tr}\left(\Sigma^{-1} \partial_k
+\Sigma\, \Sigma^{-1} \partial_l \Sigma\right)$ at the model-implied $\Sigma$,
+which carries the false restriction above, so the standard errors built from it
+are wrong, and the sandwich built on it is wrong too. Observed information is
+the numerical Jacobian of the gradient of $F_{ML}$ at the estimate, and with the
+sandwich covariance the standard errors do not rest on the implied moments of
+the product; `information = "expected"` is therefore refused for a product with
+an endogenous factor. A product of two exogenous variables implies no such
+restriction.
+
+With the exogenous block free, the ordinary test is calibrated: 1000
+replications at $n = 500$ rejected 0.055 and 0.056 at the nominal 0.05 for
+normal and centered-exponential factors. If the exogenous block is restricted (a
+variance or covariance fixed, labeled, bounded, or left out), the test is
+unavailable for the same reason, because a skewed or product-valued variable
+breaks the normal-theory variance of its own moments.
 
 ### Standard errors
 
@@ -660,24 +694,28 @@ labels become rows $a^\top\theta + b$, normalized to unit length, with constant
 Jacobians for the optimizer (SLSQP through nloptr). A nonlinear equality
 (`cp == a*b`) is a row whose value is $\text{lhs} - \text{rhs}$ and whose Jacobian
 is a central difference, both recomputed at every point; a nonlinear inequality is
-the same row with the sign chosen so that it reads $c(\theta) \le 0$. A
-nonlinear row can bend away from its tangent plane, so the acceptance test uses
+the same row with the sign chosen so that it reads $c(\theta) \le 0$.
+
+A nonlinear row can bend away from its tangent plane, so the acceptance test uses
 the Hessian of the Lagrangian, $H + \sum_i \lambda_i \nabla^2 c_i$ over the active
 nonlinear rows (the multipliers from $\nabla F + \sum_i \lambda_i \nabla c_i = 0$),
 in the reduced Hessian; the objective's Hessian alone can call a saddle of the
-restricted problem a minimum. A model with a nonlinear constraint can have
-several local optima, so all `n_starts` starts are tried and the best accepted one
-is kept. SLSQP stops along a flat constraint tangent, up to about $3\times10^{-5}$
-from the optimum, so an accepted fit with an active nonlinear row takes full Newton
-steps on the KKT system of the active set (using the same Lagrangian Hessian); the
-polished point replaces the solution only when the acceptance test accepts it again
-and the discrepancy does not rise. A product of labels set to zero ($ab = 0$, $b_1 b_2 b_3 = 0$) is not
-solved this way, because its Jacobian vanishes at the solution: it holds exactly
-when one factor is zero, so the model is refitted once per factor from the default
-start and the smallest discrepancy is kept. At the solution the active constraints
-and active bounds define a
-null-space basis $Z$ of the feasible directions, and the covariance is
-projected,
+restricted problem a minimum.
+
+A model with a nonlinear constraint can have several local optima, so all
+`n_starts` starts are tried and the best accepted one is kept. SLSQP stops along
+a flat constraint tangent, up to about $3\times10^{-5}$ from the optimum, so an
+accepted fit with an active nonlinear row takes full Newton steps on the KKT
+system of the active set (using the same Lagrangian Hessian); the polished point
+replaces the solution only when the acceptance test accepts it again and the
+discrepancy does not rise.
+
+A product of labels set to zero ($ab = 0$, $b_1 b_2 b_3 = 0$) is not solved this
+way, because its Jacobian vanishes at the solution: it holds exactly when one
+factor is zero, so the model is refitted once per factor from the default start
+and the smallest discrepancy is kept. At the solution the active constraints and
+active bounds define a null-space basis $Z$ of the feasible directions, and the
+covariance is projected,
 
 $$
 V = Z \left(Z^\top I Z\right)^{-1} Z^\top ,
@@ -699,12 +737,16 @@ An inequality whose row lies in the span of the equality rows has a constant
 value on the equality set. When that value satisfies it (`a == b` with
 `a - b < 0`, or `a + b == 0.8` with `a + b > 0.8`) the inequality is active at
 every feasible point and would reproduce the same degeneracy, so it is dropped
-from the solver's rows too, and the acceptance gate still checks it. Such a row
+from the solver's rows too, and the acceptance gate still checks it.
+
+Such a row
 is detected when its gradient is within $10^{-12}$ of the span of the
 independent equality rows (rows have unit length), a distance that only rows
 dependent to rounding error meet; a row that is merely close to the span, such as `a - b + 1e-9*cp > 1e-7`
 with `a == b`, stays with the solver, because near-dependence does not show that
-the set is infeasible. An implied inequality that the equality rows violate
+the set is infeasible.
+
+An implied inequality that the equality rows violate
 (`a + b == 0.8` with `a + b < 0.5`) is kept, and the acceptance gate reports the
 violated row. The multiplier sign check skips a fit whose active constraints are
 linearly dependent, which includes a dropped row, since that row has no
@@ -721,9 +763,13 @@ success code, every constraint holds to $10^{-6}$ in the solver's natural
 units, and the Newton decrement $\sqrt{g_r^\top H_r^{-1} g_r}$ on the reduced
 gradient and Hessian of the active-constraint null space is at most
 $10^{-3}$, with a positive definite reduced Hessian. The decrement is scale
-free, so rescaling the data does not change the verdict. The sign of each
+free, so rescaling the data does not change the verdict.
+
+The sign of each
 active inequality's or bound's multiplier is checked: a wrong sign means
-the point may not be a local minimum. A wrong-signed active bound rejects the
+the point may not be a local minimum.
+
+A wrong-signed active bound rejects the
 solution, the same verdict the fit without constraints gives (the gradient at an
 active bound points into the interior), whether or not the model also has
 constraint lines: each bound is judged by its own statistic
@@ -740,7 +786,10 @@ inequality) get a verdict like any others.
 The first start is moment based. If it is not accepted, up to
 `n_starts - 1` retries use perturbed starts drawn under a fixed seed derived
 from the model, restoring the caller's random number state afterward, so a fit
-is reproducible and never changes a simulation around it. When no start is
+is reproducible and never changes a simulation around it. With 3 or more
+starts the last attempt is the model's own moment-based start instead of a
+perturbation, so a supplied start in a bad basin, which makes every perturbation
+bad too, does not end the fit. When no start is
 accepted the error names the best attempt's status and stationarity, and for an
 infeasible constraint set, the violated constraint.
 
@@ -770,20 +819,23 @@ T = \min(D_a, D_b),
 $$
 
 and $T$ is referred to $\chi^2_1$. A product of $k$ paths (a serial indirect
-effect $a\,d\,b = 0$, `mbco_sem(fit, paths = c("a", "d", "b"))`) is the same test
-with $k$ refits, one per path, $T = \min_j D_j$: the product is zero exactly when
-one factor is, so the null is a union of $k$ hypotheses, each tested by a
-$\chi^2_1$ likelihood-ratio statistic, and the minimum is conservative (at most
-the nominal size when one factor is zero, smaller when several are). The nonlinear
-constraint $ab = 0$ is not
-solved: a nonlinear solver can stop at the branch with the larger statistic
-(OpenMx's does on RMediation's `memory_exp`, reporting 221.05 where the
-minimum is 0.083). A fit with sampling weights or one that did not converge is
-refused, since the weighted discrepancy is not a likelihood. If a bound or an
-inequality on the tested path is active at its refit (`a > 0` with the null at
-$a = 0$), the null lies on the boundary of the parameter space, the statistic
-is a mixture of chi-squares, and the function warns that the p-value is not
-valid.
+effect $a\,d\,b = 0$, `mbco_sem(fit, paths = c("a", "d", "b"))`) is the same
+test with $k$ refits, one per path, $T = \min_j D_j$: the product is zero
+exactly when one factor is, so the null is a union of $k$ hypotheses, each
+tested by a $\chi^2_1$ likelihood-ratio statistic, and the minimum is
+conservative (at most the nominal size when one factor is zero, smaller when
+several are).
+
+The nonlinear constraint $ab = 0$ is not solved: a nonlinear solver can stop at
+the branch with the larger statistic (OpenMx's does on RMediation's
+`memory_exp`, reporting 221.05 where the minimum is 0.083). A fit with sampling
+weights or one that did not converge is refused, since the weighted discrepancy
+is not a likelihood.
+
+If a bound or an inequality on the tested path is active at its refit (`a > 0`
+with the null at $a = 0$), the null lies on the boundary of the parameter space,
+the statistic is a mixture of chi-squares, and the function warns that the
+p-value is not valid.
 
 ```{r}
 #| label: native-sem-mbco
@@ -811,16 +863,18 @@ for each of its two refits, so `anova()` reproduces its per-refit statistics
 degrees of freedom, each tested against the row above it.
 
 Two fits are accepted only if they use the same observed variables and the same
-rows, neither has sampling weights, both converged, and the restricted fit
-frees no parameter the other leaves out and has more degrees of freedom. That
+rows, neither has sampling weights, both converged, and the restricted fit frees
+no parameter the other leaves out and has more degrees of freedom. That
 parameter-table inclusion is necessary for nesting and not sufficient: two
 models with different latent structures but the same row labels pass, and
-whether they are nested in substance is the analyst's responsibility. A
-restricted fit with a smaller discrepancy than the model it restricts means one
-of the fits is not at its global optimum, and is an error. As in `mbco_sem()`, a
-bound or an inequality on a tested parameter that is active at the restricted
-fit puts the null on the boundary of the parameter space, so the statistic is a
-mixture of chi-squares and the function warns that the p-value is not valid.
+whether they are nested in substance is the analyst's responsibility.
+
+A restricted fit with a smaller discrepancy than the model it restricts means
+one of the fits is not at its global optimum, and is an error. As in
+`mbco_sem()`, a bound or an inequality on a tested parameter that is active at
+the restricted fit puts the null on the boundary of the parameter space, so the
+statistic is a mixture of chi-squares and the function warns that the p-value is
+not valid.
 
 ```{r}
 #| label: native-sem-anova

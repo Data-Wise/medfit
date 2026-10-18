@@ -12,8 +12,8 @@ execute:
   echo: true
 ---
 
-This is the first of five chapters that open the native engine and show every
-matrix it works with. The engine is experimental. The chapters, in order:
+This is the first of seven chapters that open the native engine and show every
+matrix it works with. The chapters, in order:
 
 1. **The mean structure** (this chapter): the RAM form, the implied means,
    the discrepancy and its gradient, and the moment count.
@@ -25,6 +25,10 @@ matrix it works with. The engine is experimental. The chapters, in order:
    conditional likelihood and the comparison refusals.
 5. [Inference](native-book-5-inference.html): information, the sandwich, MBCO
    and `anova()`.
+6. [The product term](native-book-6-product-term.html): `x:m`, its column,
+   why the paths are least squares, rules 8 and 9 and the model test.
+7. [The four-way decomposition](native-book-7-four-way.html): CDE, INTref,
+   INTmed and PIE derived, with their delta-method standard errors.
 
 Each chapter fits real models to the bundled `mediation_demo` data, prints the
 matrices the engine builds, derives the formulas that produce them, and checks

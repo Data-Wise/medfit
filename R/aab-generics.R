@@ -38,8 +38,8 @@
 #'   individuals is an error (best effort: it compares the data row names the
 #'   fits kept, so it cannot see a mismatch between frames whose row names were
 #'   both reset)
-#' - **SEMFit**: Extract from a model fitted by [fit_sem()] (the experimental
-#'   native maximum-likelihood engine), with the same arguments and structures as
+#' - **SEMFit**: Extract from a model fitted by [fit_sem()] (the native
+#'   maximum-likelihood engine), with the same arguments and structures as
 #'   the lavaan method. A treatment-by-mediator product written `x:m` (or `m:x`)
 #'   in the outcome equation gives the four-way decomposition, stored under the
 #'   canonical name `m:x`; without it `decomposition = "four_way"` is refused
@@ -101,6 +101,20 @@
 #' [JointMediationData] stores the full stacked least-squares covariance, and a
 #' lavaan fit estimates all equations jointly, so for the same data the
 #' intervals can differ between engines.
+#'
+#' The four-way effects that contain a covariate mean (`int_ref`, the NDE and
+#' the total effect) treat that mean as a fixed constant, so their standard
+#' errors and intervals are conditional on the observed covariates. They omit
+#' the sampling variance of the estimated mean, `theta3 * gamma` times the
+#' variance of the covariate mean, so they can understate the uncertainty of a
+#' population-average effect. CDE, `int_med`, PIE and the NIE do not depend on
+#' the mean. For population-average standard errors set
+#' `options(medfit.covariate_mean_variance = TRUE)`: `tidy()` and `confint()` then add the
+#' variance of the estimated covariate mean,
+#' `(theta3 * gamma)^2` times the variance of the covariate mean (case-weighted
+#' when the fit has weights), to `int_ref`, the NDE and the total effect; the
+#' default stays conditional, as lavaan's `:=` and the glm route are. Or
+#' resample rows with [bootstrap_mediation()] (`method = "nonparametric"`).
 #'
 #' ## Coefficient names
 #'

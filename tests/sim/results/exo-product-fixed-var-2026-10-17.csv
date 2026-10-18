@@ -1,0 +1,7 @@
+"xdist","config","path","expect","df","reject05","reject01","mean_chisq","reps","reps_ok","mutant"
+"norm","free","column","calibrated",2,0.055,0.011,2.00178220018839,1000,1000,""
+"norm","fixvar","column","calibrated",4,0.051,0.014,3.95501139433136,1000,1000,""
+"norm","dropcov","column","miscalibrated",7,0.249,0.135,10.8840372414177,1000,1000,""
+"exp","free","column","calibrated",2,0.056,0.01,2.04808022708758,1000,1000,""
+"exp","fixvar","column","miscalibrated",4,0.383,0.22,9.53702845577204,1000,1000,""
+"exp","dropcov","column","miscalibrated",7,0.693,0.567,27.5670837128098,1000,1000,""

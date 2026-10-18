@@ -60,7 +60,7 @@ test_that("every article link on the model pages resolves", {
 
 test_that("every cookbook anchor used by the model pages and the navbar is a real recipe", {
   ids <- cookbook_ids()
-  expect_length(ids, 18L)
+  expect_length(ids, 21L)
   txt <- c(vapply(c("models", page_names()), function(f) {
     read_text(root_path("vignettes", "articles", paste0(f, ".qmd")))
   }, character(1)), read_text(root_path("_pkgdown.yml")))
@@ -94,4 +94,28 @@ test_that("the home page and Getting Started link to real articles and cookbook 
 
   ids <- cookbook_ids()
   expect_identical(setdiff(unique(c(anchors_in(gs), anchors_in(rd))), ids), character())
+})
+
+test_that("the categorical-covariates page runs its chunks and says what it claims", {
+  p <- root_path("vignettes", "articles", "model-native-factors.qmd")
+  testthat::skip_if_not(file.exists(p), "vignettes are not available (installed or built package)")
+  lines <- readLines(p, warn = FALSE)
+  open <- grep("^```\\{r", lines)
+  code <- unlist(lapply(open, function(i) {
+    j <- i + 1L
+    while (!grepl("^```$", lines[j])) j <- j + 1L
+    body <- lines[(i + 1L):(j - 1L)]
+    body[!grepl("^#\\|", body) & !grepl("^library\\(medfit\\)", body)]
+  }))
+  env <- new.env(parent = asNamespace("medfit"))
+  assign("tidy", generics::tidy, env)
+  suppressMessages(eval(parse(text = code), env))
+  # the claims: group became two dummies; the pinned dummy is 0; two rows dropped for the NA factor; the
+  # mbco statistic is finite
+  tt <- generics::tidy(env$fit)
+  expect_true(all(c("mediator1~group_mid", "mediator1~group_high") %in% tt$term))
+  pin <- generics::tidy(env$pinned)
+  expect_false("outcome~group_mid" %in% pin$term)
+  expect_equal(unname(env$fit_na@n_dropped), 2L)
+  expect_true(is.finite(env$fit_na@n_obs) && env$fit_na@n_obs == nrow(env$dat) - 2L)
 })

@@ -1,4 +1,4 @@
-# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): eighteen numbered
+# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twenty-one numbered
 # recipes, every article link resolves, and the cluster recipe simulates the same
 # data as methods.qmd so their numbers agree. Skips when the vignettes are absent
 # (installed or built package).
@@ -14,10 +14,10 @@ article_text <- function(name) {
   paste(readLines(p, warn = FALSE), collapse = "\n")
 }
 
-test_that("the cookbook has eighteen numbered recipes and every article link resolves", {
+test_that("the cookbook has twenty-one numbered recipes and every article link resolves", {
   cb <- article_text("cookbook.qmd")
   heads <- regmatches(cb, gregexpr("(?m)^## [0-9]+\\. ", cb, perl = TRUE))[[1]]
-  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:18, "."))
+  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:21, "."))
   links <- unique(regmatches(cb, gregexpr("\\]\\(([a-z-]+)\\.html\\)", cb))[[1]])
   targets <- paste0(gsub("^\\]\\(|\\.html\\)$", "", links), ".qmd")
   expect_gt(length(targets), 0L)
@@ -150,11 +150,11 @@ test_that("planted defect: the smaller p-value in place of the larger is caught"
   expect_false(grepl("joint = max(p)", sub("joint = max(p)", "joint = min(p)", cb, fixed = TRUE), fixed = TRUE))
 })
 
-test_that("recipes 14-18 run after the setup chunk alone and say what they claim", {
+test_that("recipes 14-21 run after the setup chunk alone and say what they claim", {
   article_text("cookbook.qmd")
   parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
   setup <- unlist(parsed[[1L]])
-  for (k in 14:18) {
+  for (k in 14:21) {
     err <- run_cookbook_recipe(setup, parsed[[k + 1L]])
     expect_null(err, info = sprintf("recipe %d fails on its own: %s", k, err))
   }
@@ -210,4 +210,112 @@ test_that("the native quickstart, tutorial and guide exist, are indexed, and the
     targets <- paste0(gsub("^\\]\\(|\\.html[#)]$", "", links), ".qmd")
     expect_identical(targets[is.na(vapply(targets, article_path, character(1)))], character(), info = a)
   }
+})
+
+# Recipe 19 (observed intercepts and means): the intercepts equal the lm() intercepts of the same equations and the
+# exogenous mean is the sample mean (known answers); the paths do not move; `~0*1` costs exactly one df and
+# anova() rejects it; meanstructure = TRUE equals the free fit. Planted defect: the lm oracle must differ from a
+# fit with the intercept fixed at zero.
+test_that("recipe 19: intercepts match lm(), the zero restriction costs one df and is tested by anova()", {
+  article_text("cookbook.qmd")
+  parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
+  expect_null(run_cookbook_recipe(unlist(parsed[[1L]]), parsed[[20L]]))
+  paths <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment\n"
+  free <- fit_sem(paste0(paths, "outcome ~ 1"), mediation_demo)
+  zero <- fit_sem(paste0(paths, "outcome ~ 0*1"), mediation_demo)
+  th <- coef(free)
+  lm_y <- stats::lm(outcome ~ mediator1 + treatment, mediation_demo)
+  lm_m <- stats::lm(mediator1 ~ treatment, mediation_demo)
+  expect_equal(unname(th["outcome~1"]), unname(stats::coef(lm_y)[1L]), tolerance = 1e-5)
+  expect_equal(unname(th["mediator1~1"]), unname(stats::coef(lm_m)[1L]), tolerance = 1e-5)
+  expect_equal(unname(th["treatment~1"]), mean(mediation_demo$treatment), tolerance = 1e-8)
+  expect_equal(unname(th[c("a", "b", "cp")]), unname(c(stats::coef(lm_m)[2L], stats::coef(lm_y)[2:3])),
+               tolerance = 1e-5)
+  expect_equal(generics::glance(free)$df, 0)
+  expect_equal(generics::glance(zero)$df, 1)
+  tab <- stats::anova(free, zero)
+  expect_equal(tab$`Df diff`[2L], 1)
+  expect_lt(tab$`Pr(>Chisq)`[2L], 0.01)
+  ms <- fit_sem(trimws(paths), mediation_demo, meanstructure = TRUE)
+  expect_equal(coef(ms)[names(coef(free))], coef(free), tolerance = 1e-6)
+  # planted defect: the zero-intercept fit does not reproduce the lm intercept or the free direct effect
+  expect_gt(abs(unname(coef(zero)["cp"]) - unname(stats::coef(lm_y)[3L])), 0.1)
+})
+
+# Recipe 20 (four-way decomposition from a native fit): the four components equal the per-equation OLS hand oracle
+# (helper-four-way-oracle.R) on the same columns renamed, the sandwich SEs equal the stacked-score HC0 oracle, the
+# intervals are estimate +- qnorm(0.975) * SE, and the bootstrap interval brackets the estimate. Planted defect: the
+# oracle at the wrong reference level cannot match.
+test_that("recipe 20: components and sandwich SEs equal the hand OLS oracle, intervals are Wald", {
+  skip_if_not_installed("sandwich")
+  cb <- article_text("cookbook.qmd")
+  parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
+  expect_null(run_cookbook_recipe(unlist(parsed[[1L]]), parsed[[21L]]))
+  expect_true(grepl("conditional on the", cb, fixed = TRUE))
+  expect_true(grepl("method = \"nonparametric\"", cb, fixed = TRUE))
+  d <- mediation_demo
+  names(d)[match(c("treatment", "mediator1", "outcome_int", "covariate2"), names(d))] <- c("x", "m", "y", "c1")
+  fit <- suppressWarnings(fit_sem(
+    "mediator1 ~ treatment + covariate2\noutcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate2",
+    mediation_demo, se_type = "sandwich"
+  ))
+  fw <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1", decomposition = "four_way")
+  tt <- generics::tidy(fw, type = "components", conf_int = TRUE)
+  h <- fwo_hand(d, "c1", vcov_type = "hc0_joint")
+  keys <- c("cde", "int_ref", "int_med", "pie")
+  expect_identical(tt$term, keys)
+  expect_equal(tt$estimate, unname(h$est[keys]), tolerance = 1e-6)
+  expect_equal(tt$std_error, unname(h$se[keys]), tolerance = 1e-5)
+  expect_equal(tt$conf_high - tt$conf_low, 2 * stats::qnorm(0.975) * tt$std_error, tolerance = 1e-8)
+  bad <- fwo_hand(d, "c1", m_star = 0.7, vcov_type = "hc0_joint")
+  expect_gt(max(abs(tt$estimate - unname(bad$est[keys]))), 1e-3)
+})
+
+# Recipe 21 (a categorical covariate in a native fit): the factor fit equals the hand-coded dummy twin, the labeled
+# dummy is pinned at 0 by `z == 0`, `fixed_x = "group"` fixes both dummies, and `b*group` is refused. Planted defect:
+# the twin with the reference level moved cannot match.
+test_that("recipe 21: the factor fit equals the hand-coded dummies, the label route and fixed_x work", {
+  cb <- article_text("cookbook.qmd")
+  parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
+  expect_null(run_cookbook_recipe(unlist(parsed[[1L]]), parsed[[22L]]))
+  expect_true(grepl("b*group", cb, fixed = TRUE))
+  d <- transform(mediation_demo,
+                 group = cut(covariate1, c(-Inf, -0.5, 0.5, Inf), labels = c("low", "mid", "high")))
+  twin <- transform(d, group_mid = as.numeric(group == "mid"), group_high = as.numeric(group == "high"))
+  f <- fit_sem("mediator1 ~ a*treatment + group\noutcome ~ b*mediator1 + cp*treatment + group", d)
+  ft <- fit_sem(paste0("mediator1 ~ a*treatment + group_mid + group_high\n",
+                       "outcome ~ b*mediator1 + cp*treatment + group_mid + group_high"), twin)
+  expect_true(all(is.finite(f@table$est)))
+  expect_equal(unname(f@table$est), unname(ft@table$est), tolerance = 1e-8)
+  wrong <- transform(twin, group_mid = as.numeric(group == "low"))
+  fw <- fit_sem(paste0("mediator1 ~ a*treatment + group_mid + group_high\n",
+                       "outcome ~ b*mediator1 + cp*treatment + group_mid + group_high"), wrong)
+  expect_gt(max(abs(f@table$est - fw@table$est)), 1e-3)
+  fz <- fit_sem(paste0("mediator1 ~ a*treatment + group\n",
+                       "outcome ~ b*mediator1 + cp*treatment + group + z*group_mid\nz == 0"), d)
+  expect_equal(unname(fz@table$est[fz@table$label == "z"]), 0, tolerance = 1e-6)
+  expect_equal(generics::glance(fit_sem("mediator1 ~ treatment + group\noutcome ~ mediator1 + group", d,
+                                        fixed_x = "group"))$fixed_x, "group_mid, group_high")
+  expect_error(fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + b*group", d), "expands to 2 terms")
+})
+
+test_that("tutorial step 10 runs after the earlier setup and the factor is expanded, not carried", {
+  txt <- article_text("native-tutorial.qmd")
+  expect_true(grepl("## Step 10. Add a categorical covariate", txt, fixed = TRUE))
+  lines <- strsplit(txt, "\n", fixed = TRUE)[[1L]]
+  open <- grep("^```\\{r", lines)
+  chunk <- function(label) {
+    i <- open[grepl(paste0("label: ", label), lines[open + 1L], fixed = TRUE)]
+    j <- i + 1L
+    while (!grepl("^```$", lines[j])) j <- j + 1L
+    body <- lines[(i + 1L):(j - 1L)]
+    body[!grepl("^#\\|", body)]
+  }
+  env <- new.env(parent = asNamespace("medfit"))
+  assign("tidy", generics::tidy, env)
+  eval(parse(text = chunk("factor")), env)
+  tt <- generics::tidy(env$fit10)
+  expect_true(all(c("mediator1~group_mid", "mediator1~group_high", "outcome~group_mid") %in% tt$term))
+  expect_false(any(tt$term %in% c("mediator1~group", "outcome~group")))
+  expect_true(all(is.finite(tt$estimate)))
 })

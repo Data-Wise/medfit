@@ -13,8 +13,8 @@ execute:
 ---
 
 Fix, bound or equate parameters, and test the indirect effect with one call.
-Part of the [Models](models.html) collection; the third of four
-[native engine](model-native.html) pages. The engine is experimental.
+Part of the [Models](models.html) collection; the third of five
+[native engine](model-native.html) pages.
 
 | | |
 |---|---|

@@ -1,6 +1,6 @@
 # Todo: `fixed_x` (bundled into 0.9.0)
 
-**Status (2026-10-13):** merged to `dev` as #175 (`1023520`, with the 0.9.0 mean structure, #174 `8681083`); unreleased, DESCRIPTION still 0.8.0. Open below: the F-C doc-currency report, the 0.9.0 release gate R1 and the release decision.
+**Status (2026-10-13):** merged to `dev` as #175 (`1023520`, with the 0.9.0 mean structure, #174 `8681083`); released in 0.9.0 (2026-10-14, release PR #185, tag v0.9.0). Closed; any unchecked items below were not carried into the release.
 
 Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/SPEC-native-fixed-x-2026-10-13.md) | Branch `feature/native-fixed-x` is created only on request. Test-first: write the failing test, then the code. After any edit to `.sem_eval`, `.sem_df`, `logLik` or `.sem_complete`, rerun the frozen gate (`test-sem-frozen-v080.R`).
 
@@ -52,7 +52,7 @@ Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/S
   - Acceptance: `fit_mediation(engine_args = list(fixed_x = ))` reaches the fit; `.sem_fit_branches()` and the `mbco_sem()` refit carry it; `extract_mediation()` unchanged; `tidy()`/`summary()` show fixed rows (flag, est, se NA)
   - Verify: `devtools::test(filter = "sem-fixed-x-plumbing")` (mocked-binding capture of the refit call)
   - Files: `R/fit-glm.R`, `R/sem-fit.R`, `R/sem-mbco.R`, `R/methods-tidy.R`, `tests/testthat/test-sem-fixed-x-plumbing.R`
-  - Open item (found 2026-10-13, not blocking): the `mbco_sem()` refit does not pass `fixed_x` (`R/sem-mbco.R:155-156` passes `meanstructure` only) and the plumbing test's mock sees `fit_sem()`'s own call first (`test-sem-fixed-x-plumbing.R:14-25`), so it cannot catch this. The statistic is unchanged (`test-sem-fixed-x-compare.R:16`).
+  - Open item closed: the `mbco_sem()` refit now passes `fixed_x` (`2d991da`, #178; `R/sem-mbco.R:152-160`).
 - [x] **Checkpoint F-B** (merged with #175; PR body: six planted defects, not five, each exit 1)
   - [x] S1-S10 each covered by a passing test
   - [x] the planted defects each fail the right test
@@ -72,6 +72,6 @@ Plan: [tasks/plan.md](plan.md) | Spec: [SPEC-native-fixed-x](../planning/specs/S
   - [ ] doc-currency report (not recorded in the PR body)
 
 ## 0.9.0 release gates (carried from the archived plan)
-- [ ] **R1** Say whether the 1e-12 frozen tolerance is relative; confirm the fixture on the ubuntu CI BLAS
+- [x] **R1** (done 2026-10-14: `expect_equal(tolerance = )` under testthat 3e is waldo's relative difference, absolute only near zero; the frozen fixture `test-sem-frozen-v080.R` passes on ubuntu release, devel and oldrel in CI on every merge since 0.9.0, so it holds on the CI BLAS) Say whether the 1e-12 frozen tolerance is relative; confirm the fixture on the ubuntu CI BLAS
 - [x] **R2** (done: `.sem_seed()` never hashed `m`, identical to 0.8.0; pinned by a test) `.sem_seed()` must not hash the `m` vector when the mean flag is off; add a frozen retry case
-- [ ] **Release decision** (version bump and tag are release engineering's)
+- [x] **Release decision** (0.9.0 released 2026-10-14, release PR #185, tag v0.9.0)

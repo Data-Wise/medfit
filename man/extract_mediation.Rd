@@ -44,8 +44,8 @@ must be computed on those rows, and a pair of fits that kept different
 individuals is an error (best effort: it compares the data row names the
 fits kept, so it cannot see a mismatch between frames whose row names were
 both reset)
-\item \strong{SEMFit}: Extract from a model fitted by \code{\link[=fit_sem]{fit_sem()}} (the experimental
-native maximum-likelihood engine), with the same arguments and structures as
+\item \strong{SEMFit}: Extract from a model fitted by \code{\link[=fit_sem]{fit_sem()}} (the native
+maximum-likelihood engine), with the same arguments and structures as
 the lavaan method. A treatment-by-mediator product written \code{x:m} (or \code{m:x})
 in the outcome equation gives the four-way decomposition, stored under the
 canonical name \code{m:x}; without it \code{decomposition = "four_way"} is refused
@@ -109,6 +109,20 @@ parallel mediators it leaves out the covariance between their \code{a} paths.
 \link{JointMediationData} stores the full stacked least-squares covariance, and a
 lavaan fit estimates all equations jointly, so for the same data the
 intervals can differ between engines.
+
+The four-way effects that contain a covariate mean (\code{int_ref}, the NDE and
+the total effect) treat that mean as a fixed constant, so their standard
+errors and intervals are conditional on the observed covariates. They omit
+the sampling variance of the estimated mean, \code{theta3 * gamma} times the
+variance of the covariate mean, so they can understate the uncertainty of a
+population-average effect. CDE, \code{int_med}, PIE and the NIE do not depend on
+the mean. For population-average standard errors set
+\code{options(medfit.covariate_mean_variance = TRUE)}: \code{tidy()} and \code{confint()} then add the
+variance of the estimated covariate mean,
+\code{(theta3 * gamma)^2} times the variance of the covariate mean (case-weighted
+when the fit has weights), to \code{int_ref}, the NDE and the total effect; the
+default stays conditional, as lavaan's \verb{:=} and the glm route are. Or
+resample rows with \code{\link[=bootstrap_mediation]{bootstrap_mediation()}} (\code{method = "nonparametric"}).
 }
 
 \subsection{Coefficient names}{

@@ -15,7 +15,7 @@ execute:
 ::: {.callout-note}
 This site documents medfit 0.10.0 or later. CRAN has 0.3.2, which lacks
 `mediation_demo` and the native, joint and cluster functions; install from
-GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#installation)).
+GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 :::
 
 **Four steps.** By the end you will have fitted a mediation model,
@@ -169,7 +169,7 @@ The engine is `"glm"` by default. Others:
 | `"glm"` | the default; continuous, binary or count variables | [Simple](model-simple.html), [glm families](model-glm-families.html) |
 | `"regmedint"` | you want the closed-form regression estimator | [regmedint](model-regmedint.html) |
 | `"lmer"` | the treatment is assigned to whole clusters | [Cluster-randomized trials](model-cluster.html) |
-| `"native"` | a latent mediator, constraints, or a model written as syntax (experimental) | [Native engine](model-native.html) |
+| `"native"` | a latent mediator, constraints, or a model written as syntax | [Native engine](model-native.html) |
 
 ## Where next
 
@@ -183,13 +183,16 @@ Pick the row that matches your data.
 | Two mediators in a chain | [Serial mediation](model-serial.html) |
 | Two mediators side by side | [Parallel mediation](model-parallel.html) |
 | Several mediators with products | [Joint mediation](model-joint.html) |
+| A treatment given to whole clusters | [Cluster-randomized trials](model-cluster.html) |
+| A `lavaan` fit | [lavaan models](model-lavaan.html) |
+| Model syntax, a latent mediator, constraints, intercepts or a product term | [Native engine](model-native.html) |
 | Something else, or not sure | [Models](models.html), the full list |
 | An error or warning | [Troubleshooting](guide-troubleshooting.html) |
 | Which interval to report | [Which interval should I use?](guide-intervals.html) |
 | A term or symbol you do not know | [Glossary and symbols](guide-glossary.html) |
 
 For quick lookups: the [Reference Card](refcard.html) has every function on one
-page, and the [Cookbook](cookbook.html) has eighteen short recipes. To understand
+page, and the [Cookbook](cookbook.html) has twenty-one short recipes. To understand
 the classes, read the [Introduction](introduction.html); for the math behind
 every effect and standard error, [Methods and Formulas](methods.html); for
 extraction from fitted models, [Model Extraction](extraction.html).

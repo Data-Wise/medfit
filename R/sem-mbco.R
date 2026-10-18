@@ -10,8 +10,6 @@
 #' Minimum-of-k Likelihood-Ratio Test for an Indirect Effect (MBCO)
 #'
 #' @description
-#' `r lifecycle::badge("experimental")`
-#'
 #' Tests the null hypothesis that an indirect effect, the product of two or more
 #' labeled paths (\eqn{a b}{a*b}, or a serial \eqn{a d b}{a*d*b}), is zero in a
 #' model fitted by [fit_sem()]. The product is zero exactly when one factor is,
@@ -157,7 +155,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     r <- tryCatch(
       .sem_fit_syntax(paste0(fit@model, "\n", con), fit@data, fit@information, n_starts = n_starts,
                       control = control, meanstructure = if (isTRUE(fit@internals$ram$has_mean)) TRUE,
-                      fixed_x = fixed_x),
+                      fixed_x = fixed_x, factors = fit@internals$factors),
       error = function(e) {
         stop(sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint on that ",
                             "parameter, the null `%s` may lie outside the parameter space."),

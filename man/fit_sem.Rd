@@ -38,7 +38,9 @@ information gives wrong standard errors); use the default with \code{se_type = "
 \item{n_starts}{Positive integer or \code{NULL}: number of optimizer starts
 tried before the fit is declared failed (\code{NULL} uses 5). Retries use
 perturbed starts drawn under a fixed seed and never change the caller's
-random number stream. With a nonlinear constraint, which can leave several
+random number stream; with 3 or more starts the last attempt is the model's
+own moment-based start, so a start in a bad basin does not end the fit.
+With a nonlinear constraint, which can leave several
 local optima, every start is tried and the best accepted one is kept (a
 warning says when the accepted starts disagree); otherwise the first
 accepted start is used.}
@@ -74,8 +76,8 @@ the estimation sample (weighted when \code{weights} are given) and removed from 
 \code{fixed.x = TRUE}. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
 not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
 conditional on the fixed variables, and \code{glance()$fixed_x} lists them. Models whose \code{fixed_x} sets or data differ
-cannot be compared with \code{\link[=anova]{anova()}}, \code{\link[=mbco_sem]{mbco_sem()}}, \code{AIC()} or \code{BIC()}. A (co)variance or intercept statement on a
-selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
+cannot be compared with \code{\link[stats:anova]{stats::anova()}}, \code{\link[=mbco_sem]{mbco_sem()}}, \code{AIC()} or \code{BIC()}. A (co)variance or intercept statement
+on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
 (\code{fixed_x} column, no standard error) but not in \code{coef()} or \code{vcov()}.}
 
 \item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name
@@ -87,8 +89,6 @@ A \link{SEMFit} object. With a product term whose factor is a regression target 
 \code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse; see \link{SEMFit-methods}.
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-
 Fits a model written in lavaan-style syntax to raw data with medfit's native
 maximum-likelihood engine, and returns a \link{SEMFit} object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,

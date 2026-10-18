@@ -2,8 +2,9 @@
 # Fast local gate for an R package: quick tests, then R CMD check on a built tarball.
 #
 # Runs with NOT_CRAN=false, so skip_on_cran() simulation tests are skipped -- the same
-# tier the pull-request CI job runs. GitHub CI stays the authority (full matrix and the
-# slow tests run there on push to main/dev); this catches the cheap failures first.
+# tier the pull-request CI job runs. For work on dev this is the gate: R-CMD-check runs on
+# GitHub only for PRs and pushes to main (or workflow_dispatch); lint, pkgdown and
+# test-coverage still run on dev PRs.
 #
 # The tests already ran above, so R CMD check skips re-running them (--no-tests); it still
 # checks the test dependencies statically. CI runs the installed-package tests.

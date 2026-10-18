@@ -5,8 +5,6 @@
 \alias{medfit_syntax}
 \title{medfit Model Syntax}
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-
 The model syntax read by \code{\link[=fit_sem]{fit_sem()}} and by \code{fit_mediation(engine = "native")}. It is a lavaan-style core plus two extensions, each marked
 "medfit extension" below. One statement per line (or separated by \verb{;}).
 }
@@ -29,7 +27,16 @@ The model syntax read by \code{\link[=fit_sem]{fit_sem()}} and by \code{fit_medi
 Constraints may be nonlinear in the labels (\code{cp == a*b}, \code{a*b == 0.1},
 \code{a*b > 0.1}, \code{ab > 0} with \code{ab := a*b}), solved with the Jacobian recomputed at
 every point; a model with one tries every start and keeps the best accepted
-solution, warning when the starts disagree. A product of labels set to zero
+solution, warning when the starts disagree. For such a model the residual
+variances that appear in a nonlinear row get a lower bound of \code{1e-4} times their
+natural unit (the variable's variance), because a step to a negative variance is
+outside the row's domain; the fit warns when a bound is active, and a residual
+variance below that bound (an R-squared above 0.9999) is not fitted exactly. The
+model without the nonlinear rows is fitted first: its estimate, and copies of it
+with the signs of the regression paths in the rows flipped (a product constraint
+cannot change sign along its surface, so each sign pattern is its own branch),
+are extra starts, and a feasible reference estimate is never replaced by a worse
+accepted fit. Models without a nonlinear row are not affected. A product of labels set to zero
 (\code{a*b == 0}, \code{b1*b2*b3 == 0}) is instead solved exactly: one linear fit per
 factor (\code{a == 0}, \code{b == 0}), keeping the smallest discrepancy. A sum of products
 (\code{a1*b1 + a2*b2 == 0}) has no exact reduction, so it is best-effort: the fit is
@@ -53,6 +60,40 @@ variable is an error.
 A variable cannot appear on both sides of \code{~} or \verb{=~} (\code{y ~ y}), and a path,
 a (co)variance or an intercept takes one row: a repeated \code{y ~ x} is an error,
 not a second row that competes for the label.
+}
+
+\section{Factor covariates}{
+
+A factor, character or logical column named on a regression's right side is replaced by
+one 0/1 dummy per non-reference level, named \verb{<column>_<level>} (\code{g} with levels \code{a}, \code{b},
+\code{c} gives \code{g_b} and \code{g_c}). The reference level is the first factor level; a character
+column sorts in the C locale, so the result does not depend on the session locale. A
+logical column gives one dummy, \verb{<column>_TRUE}. Dummies are built from the full column
+before rows with missing values are dropped, and a missing value in the factor drops the
+row once. \code{tidy()} and the parameter table show the dummies by name, and the fit's data
+holds the dummies, not the factor.\tabular{ll}{
+   Limit \tab Message (starts with, or contains) \cr
+   An ordered factor \tab "is an ordered factor" \cr
+   A factor with one level \tab "has only one level" \cr
+   A level that makes an invalid name \tab "makes the invalid name" \cr
+   A dummy that is already a column \tab "is already a column of \code{data}" \cr
+   A label, fixed value, start or bound on a factor (\code{b*g}) \tab "expands to" \cr
+   A constraint that names the factor (\code{g == 0}) \tab "is a categorical column" \cr
+   A product of two factors \tab "both sides are categorical columns" \cr
+   A dummy with no variation in the rows used \tab "is constant in the rows the fit uses" \cr
+   A factor as the outcome or a mediator \tab "must be numeric" \cr
+   A factor as treatment or mediator in \code{extract_mediation()} \tab "is a factor in the model" \cr
+}
+
+
+A label goes on one dummy: \code{b*g_b} works, \code{b*g} stops, and a constraint names the label
+(\code{b == 0}), never the factor. A bootstrap that refits from raw data re-expands the factor in each
+resample, so a level missing from a character column's resample changes the reference level.
+\code{g:m} expands to \code{g_b:m} and \code{g_c:m}, each a product term under the rules below. \code{fixed_x = "g"} fixes every dummy of
+\code{g}, and a dummy name fixes one. A factor covariate in the mediator equation enters the
+four-way covariate means through its dummies; a factor treatment or mediator is not
+supported (recode a two-level factor as a 0/1 numeric column), and the four-way route
+refuses a \code{g:m} product because its effects differ by level.
 }
 
 \section{Product terms}{
@@ -96,7 +137,7 @@ includes the product columns.\tabular{ll}{
    A fixed, shared or constrained intercept \tab "(rule 9, intercept clause" \cr
    \code{meanstructure = FALSE} with a product \tab "\code{meanstructure = FALSE}, but the model has a product term" \cr
    A column \code{m:x} in \code{data} that is not \code{x * m} \tab "is not the product of" \cr
-   A non-numeric factor \tab "needs numeric variables" \cr
+   A product input that is not numeric, factor, character or logical (a date) \tab "needs numeric variables" \cr
    \code{information = "expected"}, endogenous factor \tab "with a product of an endogenous variable" \cr
    \code{anova()} or \code{mbco_sem()} on such a fit \tab "is not available for ... a model with a product term" \cr
    Another product on the treatment or mediator, in \code{extract_mediation()} \tab "does not support the product" \cr
@@ -116,7 +157,9 @@ regression target (the model treats the product as exogenous although it is a
 function of that variable) or when the exogenous (co)variance block is
 restricted. \code{glance()} then reports chi-square, df and p-value as \code{NA} with a
 note, \code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse, and expected information is refused for
-an endogenous product; \code{logLik()}, AIC and BIC stay defined. A product of
+an endogenous product; \code{logLik()}, AIC and BIC stay defined, but those of a fit with a
+product are not comparable with those of a fit without one, so \code{AIC(fit_a, fit_b)}, \code{BIC()}, \code{anova()} and
+\code{\link[=mbco_sem]{mbco_sem()}} refuse such a pair. A product of
 exogenous variables with the block free keeps the ordinary test.
 }
 

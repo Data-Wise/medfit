@@ -17,7 +17,7 @@ lavaan-style syntax.
 It is not a replacement for lavaan: it covers the path models behind mediation
 analysis and stops there. This page runs both on the same data, then lists what
 each does, with a status for every feature that a test checks against a live
-probe on each build. The native engine is experimental.
+probe on each build.
 
 | | |
 |---|---|

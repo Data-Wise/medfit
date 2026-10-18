@@ -1,0 +1,155 @@
+---
+title: "Native engine: categorical covariates"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Use a factor, character or logical column as a covariate in syntax. Part of the
+[Models](models.html) collection, with the other [native engine](model-native.html)
+pages. This page needs the development version
+(0.11.0).
+
+| | |
+|---|---|
+| **What it does** | replaces a categorical column on a regression's right side with one 0/1 dummy per non-reference level |
+| **Class returned** | `SEMFit` |
+| **Syntax** | `y ~ x + group`, `z*group_mid` (label one dummy), `group:m` (one product per dummy) |
+| **Limit** | a categorical outcome, mediator or treatment is not supported (see Limits) |
+
+The page cuts `covariate1` into three groups to have a factor to use:
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+dat <- transform(mediation_demo,
+                 group = cut(covariate1, c(-Inf, -0.5, 0.5, Inf), labels = c("low", "mid", "high")))
+base <- "
+  mediator1 ~ a * treatment + group
+  outcome ~ b * mediator1 + cp * treatment + group
+"
+```
+
+## Fit and read it
+
+Write `group` where a numeric covariate would go:
+
+```{r}
+#| label: fit
+fit <- fit_sem(paste0(base, "ab := a * b"), dat)
+tidy(fit)[1:7, c("term", "estimate", "std_error")]
+```
+
+`group` became `group_mid` and `group_high`, named `<column>_<level>`. The reference
+level is the first factor level (`low`), so each dummy is read against it. A character
+column is sorted in the C locale, so its reference does not depend on your session. A
+logical column gives one dummy, `<column>_TRUE`. The fit equals one with the dummies
+written by hand, and `a`, `b` and `ab` mean what they always mean.
+
+## Label or constrain one dummy
+
+A label names one coefficient, so it goes on a dummy, never on the factor
+(`b*group` stops with a message that names the dummies). A constraint names a label:
+
+```{r}
+#| label: label
+pinned <- fit_sem("
+  mediator1 ~ a * treatment + group
+  outcome ~ b * mediator1 + cp * treatment + group + z * group_mid
+  z == 0
+", dat)
+tidy(pinned)[grepl("group", tidy(pinned)$term, fixed = TRUE), c("term", "estimate")]
+```
+
+`group_mid` in the outcome equation is pinned at 0 and the other rows are free.
+
+## Missing values
+
+Dummies are built from the full column before rows with missing values are dropped,
+and a missing value in the factor drops the row once:
+
+```{r}
+#| label: missing
+dat_na <- dat
+dat_na$group[c(3, 40)] <- NA
+fit_na <- suppressMessages(fit_sem(paste0(base, "ab := a * b"), dat_na))
+c(rows_used = fit_na@n_obs, rows_dropped = fit_na@n_dropped)
+```
+
+A level that occurs only in dropped rows gives a dummy with no variation, and the fit
+stops with a message that names the dummy.
+
+## Fixed covariates, tests and refits
+
+`fixed_x = "group"` fixes every dummy at its sample moments, and a dummy name fixes
+one. `mbco_sem()` refits through a stored factor map, so the data it needs is already in
+the fit:
+
+```{r}
+#| label: mbco
+mbco_sem(fit, paths = c("a", "b"))
+```
+
+## Products and the four-way decomposition
+
+`group:mediator1` expands to one product per dummy, each a product term under the
+rules in [the native model page](model-native.html). The fit warns that the global
+test is not valid with a product, so the chunk silences it and asks for the sandwich:
+
+```{r}
+#| label: product
+prod <- suppressWarnings(fit_sem("
+  mediator1 ~ a * treatment + group
+  outcome_int ~ b * mediator1 + treatment + group + group:mediator1
+", dat, se_type = "sandwich"))
+tidy(prod)[grepl(":", tidy(prod)$term, fixed = TRUE) & tidy(prod)$op == "~", c("term", "estimate")]
+```
+
+A factor covariate in the mediator equation works with the four-way decomposition,
+entering the covariate means through its dummies:
+
+```{r}
+#| label: fourway
+fw <- suppressWarnings(fit_sem("
+  mediator1 ~ treatment + group
+  outcome_int ~ treatment + mediator1 + treatment:mediator1 + covariate2
+", dat, se_type = "sandwich"))
+tidy(extract_mediation(fw, treatment = "treatment", mediator = "mediator1",
+                       decomposition = "four_way"), type = "components")[, 1:3]
+```
+
+## Limits
+
+- **A categorical outcome, mediator or treatment** is not supported in the native engine: only a covariate on a
+  regression's right side is expanded. The supported routes today:
+  - *A two-level treatment or mediator:* recode it as a 0/1 numeric column.
+  - *A treatment with more than two levels:* compare two levels at a time. Keep the rows of those two levels
+    and code the pair 0/1; each comparison is one ordinary fit. There is no single set of effects for all levels
+    yet.
+  - *A binary or count outcome or mediator:* use [`fit_mediation(engine = "glm")`](model-glm-families.html) with
+    a `binomial` or `poisson` family. Ordinal variables are not supported by any medfit engine.
+
+  These are on the roadmap as separate items, not scheduled.
+- **A label, fixed value, start or bound on the factor** stops (`b*group`); put it on one
+  dummy. A **constraint** names the label, never the factor or a bare dummy.
+- **Ordered factors, a one-level factor, a level that makes an invalid name, and a product
+  of two categorical columns** each stop with a message that says why. The full list of
+  messages is in the [Troubleshooting guide](guide-troubleshooting.html) and in
+  `?"medfit-syntax"`.
+- **A refit from raw data** (a nonparametric bootstrap that calls `fit_sem()` on each
+  resample) rebuilds the factor each time, so a level missing from a character column's
+  resample changes the reference level.
+
+## Related
+
+[Cookbook recipe 21](cookbook.html#a-categorical-covariate-in-a-native-fit) |
+[Native engine: paths and defined parameters](model-native.html) |
+[Troubleshooting](guide-troubleshooting.html) | `?"medfit-syntax"`

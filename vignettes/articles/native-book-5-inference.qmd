@@ -16,7 +16,7 @@ The first four chapters built the estimates. This chapter builds everything that
 the information matrix (expected and observed), standard errors of defined parameters (the delta method), robust standard
 errors for weighted data (the sandwich), the test of an indirect effect (MBCO), and the general likelihood-ratio test
 (`anova()`). Each is derived, computed by hand from the matrices of the earlier chapters, and checked against the
-engine and, where they offer the same quantity, against lavaan or OpenMx. The engine is experimental.
+engine and, where they offer the same quantity, against lavaan or OpenMx.
 
 | | |
 |---|---|
@@ -663,7 +663,7 @@ boundary_warning
 stopifnot(is.character(boundary_warning), grepl("boundary", boundary_warning))
 ```
 
-## What the five chapters built
+## What the first five chapters built
 
 | Chapter | The new object | The check that can fail |
 |---|---|---|
@@ -685,5 +685,6 @@ stopifnot(is.character(boundary_warning), grepl("boundary", boundary_warning))
 
 ## Where next
 
-The [native engine guide](native-guide.html) lists the syntax, the options and the limits in one place, and
+[Chapter 6](native-book-6-product-term.html) adds the product term `x:m`: how the engine builds it, why the paths stay
+least squares, and why the expected information and the model test give way. The [native engine guide](native-guide.html) lists the syntax, the options and the limits in one place, and
 [lavaan and the native engine](lavaan-comparison.html) states what the engine does and does not do compared with lavaan.

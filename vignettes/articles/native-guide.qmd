@@ -16,7 +16,7 @@ The native engine fits models from lavaan-style syntax by maximum likelihood,
 with a covariance structure and, when you write intercepts, observed means. This
 guide covers the whole workflow in one place: syntax, fitting, inference,
 constraints, model comparison, diagnostics and the route to the mediation
-objects. It is experimental. For a first look, read
+objects. For a first look, read
 [the five-minute quickstart](native-quickstart.html).
 
 | | |
@@ -189,6 +189,9 @@ mediator works through the same call.
 - **Products** (`x:m`, which give the four-way decomposition) work for two observed variables inside a
   supported class; the table of limits and messages is on [the native model page](model-native.html#product-terms).
   The model test is `NA` when a product factor is a regression target.
+- **AIC and BIC of a fit with a product are not comparable** with those of a fit without one (the product
+  column enters the likelihood), so `AIC(fit_a, fit_b)` and `BIC()` refuse such a pair; see
+  [the native model page](model-native.html#limits).
 - For latent means, groups, categorical outcomes or fit indices use lavaan; the extraction
   route accepts a `lavaan` fit as well. See
   [lavaan and the native engine](lavaan-comparison.html).
@@ -197,4 +200,5 @@ mediator works through the same call.
 
 [Quickstart](native-quickstart.html) | [Models: native engine](model-native.html) |
 [Constraints and the MBCO test](model-native-constraints.html) |
+[Native engine book](native-book-1-mean-structure.html) |
 [Cookbook](cookbook.html) | [Methods and Formulas](methods.html) | `?"medfit-syntax"`
