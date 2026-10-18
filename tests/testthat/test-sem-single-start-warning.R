@@ -35,7 +35,8 @@ test_that("a single accepted start among several is flagged", {
     }),
     error = function(e) NULL
   ))
-  expect_true(any(grepl("^only 1 of [0-9]+ starts reached an accepted solution", warns)), info = paste(warns, collapse = " | "))
+  expect_true(any(grepl("^only 1 of [0-9]+ starts reached an accepted solution", warns)),
+              info = paste(warns, collapse = " | "))
 })
 
 test_that("an ordinary nonlinear fit does not raise the single-start warning", {
