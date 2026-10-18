@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-CRAN has medfit 0.3.2; this site documents 0.10.0 (GitHub and r-universe).
+CRAN has medfit 0.3.2; this site documents 0.11.0 (GitHub and r-universe).
 This page lists what a 0.3.2 user needs to know before upgrading: numbers that
 change, calls that now stop with an error, and what is new. The full record is
 [NEWS](https://data-wise.github.io/medfit/news/index.html).
@@ -101,7 +101,7 @@ reuses one of medfit's alias names for a different path (0.5.0).
 | 0.8.0 | nonlinear constraints in the native engine ([page](model-native-constraints.html)), `mbco_sem(paths = )` for a product of k paths, `anova()`, `tidy()`/`glance()`/`confint()` for `SEMFit`, [lavaan and the native engine](lavaan-comparison.html), and cookbook recipes 12 and 13 |
 | 0.9.0 | observed intercepts and means in the native engine (`y ~ 1`, `meanstructure =`), `fixed_x` ([page](model-native.html)), cookbook recipe 18 and step 9 of the [native tutorial](native-tutorial.html) |
 | 0.10.0 | the product term `x:m` in native syntax and the four-way decomposition from a native fit (`extract_mediation()` on a `fit_sem()` fit), a supported-class table, and a worked example in the [interaction page](model-interaction.html) |
-| 0.11.0 (development) | categorical covariates in native syntax ([page](model-native-factors.html), [recipe 21](cookbook.html#a-categorical-covariate-in-a-native-fit)); `options(medfit.covariate_mean_variance = TRUE)` for population-average four-way standard errors (default unchanged); `AIC()`/`BIC()` refuse fits over different observed variables |
+| 0.11.0 | categorical covariates in native syntax ([page](model-native-factors.html), [recipe 21](cookbook.html#a-categorical-covariate-in-a-native-fit)); `options(medfit.covariate_mean_variance = TRUE)` for population-average four-way standard errors (default unchanged); `AIC()`/`BIC()` refuse fits over different observed variables; nonlinear-constrained fits no longer wander to negative variances (#213); the native engine is no longer marked experimental (its signatures, `SEMFit` properties and syntax change only through a deprecation) |
 
 ## Dependencies
 

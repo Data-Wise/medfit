@@ -24,7 +24,9 @@ whether probmed adopted `fit_sem()` for P_med MBCO or only evaluated it.
 | Plan updates | merged | #228, #230 |
 | T6d, T6g, T6h | open (T6d watch-only; T6g at the release; T6h the author's `git branch -D`) | below |
 | Checkpoint 2 | **PASSED 2026-10-17 on `dev` `047a90f`** | below |
-| R1 to R3 (pre-tag work from the grill), Checkpoint 3 (R4), release, soak and CRAN | open | step 8c, 8b, 9, 10 |
+| R1 freeze test, R2 gates in CI, R3 S7 weekly watch, R4 Codex review and fixes, single-start warning | merged (#234, #237, #239, #240, #241); issue #238 open (floor fixture on reference BLAS, report-only in CI), not a blocker | step 8c, 8b |
+| Version bump to 0.11.0 (DESCRIPTION, NEWS, README, guide-changes, .STATUS, CLAUDE.md) | this PR | step 9 |
+| Release PR, tag, GitHub release, soak, CRAN | open | step 9, 10 |
 
 **T5b, what happened.** The first full `run-gates.R --sim` on current code was not green: the reliability gate had 4 of
 9600 shipped-configuration fits ending `no start converged` (latent, n = 50, replicate 4, random start, the same dataset
