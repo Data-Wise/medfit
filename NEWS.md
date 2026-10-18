@@ -47,6 +47,13 @@
   `mediation_demo`, the same outcome gave AIC 3934.7 with the product and 2994.1 without). `anova()` and
   `mbco_sem()` already refused such a pair (#206).
 
+* A fit with nonlinear constraints that found exactly one optimum among its starts (every other start failed or was
+  rejected) was returned without a note, although the failed starts are often the sign-flipped ones that would have
+  found another branch. It now warns "only 1 of N starts reached an accepted solution". Found by running the
+  simulation gates on a Linux runner with the reference BLAS, where the `#213` floor fixture at an extreme data scale
+  (R-squared of 1 - 1e-6) kept a wrong-branch optimum silently; that fixture's underlying instability at the floor
+  is tracked separately.
+
 ## Lifecycle
 
 * The native maximum-likelihood engine (`fit_sem()`, `mbco_sem()`, `SEMFit`, `fit_mediation(engine = "native")`) is no
@@ -55,6 +62,10 @@
   this code (`tests/sim/run-gates.R`), lavaan and OpenMx parity hold, and no correctness issue is open. From now on
   the exported signatures, the `SEMFit` properties and the model-syntax grammar in `?medfit-syntax` change only through
   a deprecation; numerical fixes are not breaking changes.
+  New syntax and new properties are added without changing what an existing name means: the planned categorical
+  mediators, outcomes and treatments will arrive as additions (the dummy names such as `g_b` and the product name
+  `m:x` stay), and `tests/testthat/test-api-freeze.R` pins the current names, argument order and grammar so a rename
+  fails the suite.
 
 ## Documentation
 

@@ -1,0 +1,89 @@
+# Weekly S7 watch (0.11.0 plan R3, grill G4). Two checks, both able to open an issue:
+#   cran-version  CRAN's S7 version differs from .github/s7-cran-seen.txt (a new S7 release, e.g. 1.0.0): the plan
+#                 (planning/PLAN-s7-1.0-readiness-2026-10-17.md, S5) is to rerun the full suite and the registry probe
+#                 against it within 3 days, then update the seen file.
+#   lifecycle     the s7-lifecycle gate (install, load, use, unload, reload) against RConsortium/S7@main fails.
+# A red scheduled run is allowed (S7 main may break); the issue is the durable signal. The CRAN issue is opened once per
+# version (open or closed, so closing it without updating the seen file does not reopen one weekly); the gate issue once
+# while one is open. A network failure while installing S7@main also fails the gate and opens that issue: read the run.
+# GitHub disables scheduled workflows after 60 days without repository activity.
+# Inputs for a manual test: seen_override (pretend this is the last seen CRAN version) and force_gate_failure
+# (plant the `nounion` mutant so the lifecycle gate must fail and open its issue).
+on:
+  schedule:
+    - cron: "17 14 * * 1"
+  workflow_dispatch:
+    inputs:
+      seen_override:
+        description: "Pretend this is the last seen CRAN S7 version (tests the issue path)"
+        required: false
+        default: ""
+      force_gate_failure:
+        description: "Run the lifecycle gate with MUTANT=nounion so it fails (tests the issue path)"
+        type: boolean
+        default: false
+
+name: s7-watch
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  cran-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - name: Compare CRAN's S7 version with the last seen one
+        env:
+          SEEN_OVERRIDE: ${{ github.event.inputs.seen_override }}
+        run: |
+          cran=$(Rscript -e 'cat(available.packages(repos = "https://cloud.r-project.org")["S7", "Version"])')
+          seen=$(tr -d '[:space:]' < .github/s7-cran-seen.txt)
+          if [ -n "$SEEN_OVERRIDE" ]; then seen="$SEEN_OVERRIDE"; fi
+          echo "CRAN S7: $cran, last seen: $seen"
+          if [ -z "$cran" ]; then echo "could not read CRAN's S7 version"; exit 1; fi
+          if [ "$cran" = "$seen" ]; then echo "no change"; exit 0; fi
+          title="S7 $cran is on CRAN (last seen $seen): rerun the S7 readiness checks"
+          if [ -n "$(gh issue list --state all --search "S7 $cran is on CRAN in:title" --json number -q '.[].number')" ]; then
+            echo "an issue for S7 $cran already exists (one per version, open or closed)"; exit 0
+          fi
+          gh issue create --title "$title" --body "CRAN's S7 changed from $seen to $cran. Plan: planning/PLAN-s7-1.0-readiness-2026-10-17.md, S5. Rerun the full suite on the released S7 and the registry probe (S3b) within 3 days, decide 0.3.3 versus submitting the current medfit, then set .github/s7-cran-seen.txt to $cran. Opened by the s7-watch workflow."
+
+  lifecycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::remotes
+      - name: s7-lifecycle gate against S7@main
+        id: gate
+        continue-on-error: true
+        env:
+          MUTANT: nounion
+        run: Rscript tests/sim/s7-lifecycle-gate.R
+      - name: Open an issue when the gate failed
+        if: steps.gate.outcome == 'failure'
+        run: |
+          title="S7 main breaks medfit's lifecycle gate"
+          if [ -n "$(gh issue list --state open --search "$title in:title" --json number -q '.[].number')" ]; then
+            echo "an issue is already open"; else
+            gh issue create --title "$title" --body "The weekly s7-watch run failed the s7-lifecycle gate against RConsortium/S7@main (run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID). Triage with planning/PLAN-s7-1.0-readiness-2026-10-17.md (S1, S3b); a failure that CRAN's medfit 0.3.2 shares reopens decision D1. Opened by the s7-watch workflow."
+          fi
+      - name: Fail the run when the gate failed
+        if: steps.gate.outcome == 'failure'
+        run: exit 1
