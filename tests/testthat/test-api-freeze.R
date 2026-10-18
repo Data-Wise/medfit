@@ -34,10 +34,10 @@ test_that("every statement kind of ?medfit-syntax still parses", {
   statements <- c(
     "f =~ y1 + y2 + y3",                       # measurement
     "m ~ a*x + start(0.3)*w",                  # label, starting value
-    "y ~ b*m + 0.5*x + lower(0)*w + x:m",      # label, fixed value, bound, product term
+    "y ~ b*m + 0.5*x + lower(0)*w + upper(1)*z + x:m", # label, fixed value, both bounds, product term
     "m ~~ y", "x ~~ x",                        # covariance, variance
     "y ~ 1",                                   # intercept
-    "a == b", "a < 3",                         # equality, inequality
+    "a == b", "a < 3", "b > 0",                # equality, both inequality spellings
     "ab := a*b"                                # defined parameter
   )
   model <- paste(statements, collapse = "\n")

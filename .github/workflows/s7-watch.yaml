@@ -74,7 +74,7 @@ jobs:
         id: gate
         continue-on-error: true
         env:
-          MUTANT: nounion
+          MUTANT: ${{ github.event.inputs.force_gate_failure == 'true' && 'nounion' || '' }}
         run: Rscript tests/sim/s7-lifecycle-gate.R
       - name: Open an issue when the gate failed
         if: steps.gate.outcome == 'failure'

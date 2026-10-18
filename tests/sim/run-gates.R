@@ -264,14 +264,17 @@ verdict_gate <- function(gate, d, s) {
       # 0.9.0 S5 (Checkpoint B): the rule of tests/sim/sem-mean-constrained-gate.R re-applied to its CSV
       inv <- d$invariance[!is.na(d$invariance)]
       lav <- d$lavaan_ok[!is.na(d$lavaan_ok)]
+      # the script compares every converged unshifted non-zero-problem fit with lavaan (the others stay NA): a run
+      # that skipped some comparisons is not a smaller pass (Codex R4 finding)
+      lav_eligible <- sum(d$ok %in% TRUE & d$shift == 0 & d$problem != "zero")
       rbind(
         rows_chk(d, s),
         chk("converged", all(d$ok %in% TRUE), sprintf("%d of %d fits fail", bool_fail(d$ok), nrow(d))),
         max_chk("feasibility", d$feas[!is.na(d$feas)], 1e-6),
         chk("location invariance", length(inv) > 0 && all(inv <= 1),
             sprintf("%d pairs, worst ratio %s (limit 1)", length(inv), fmt(num_max(inv)))),
-        chk("lavaan parity", length(lav) > 0 && all(lav %in% TRUE),
-            sprintf("%d runs compared, %d bad", length(lav), sum(!(lav %in% TRUE))))
+        chk("lavaan parity", length(lav) > 0 && length(lav) == lav_eligible && all(lav %in% TRUE),
+            sprintf("%d of %d eligible runs compared, %d bad", length(lav), lav_eligible, sum(!(lav %in% TRUE))))
       )
     },
     "nonlinear-parity" = {
@@ -440,6 +443,11 @@ mutate <- function(gate, kind, d) {
     if (gate == "fixed-x") d <- d[!(d$check == "chisq" | d$tag == "lavaan"), , drop = FALSE]
     if (gate == "mean-constrained") d$lavaan_ok <- NA
   }
+  if (kind == "lavaan_partial") {
+    # Codex R4: nearly every lavaan comparison skipped, one left: must not pass
+    keep <- which(!is.na(d$lavaan_ok))[1L]
+    d$lavaan_ok[-keep] <- NA
+  }
   if (kind == "failed") {
     if (gate %in% c("product-null", "product-null-colon", "product-fixed-var", "product-fixed-var-colon",
                     "four-way-kat")) {
@@ -494,6 +502,7 @@ run_mutants <- function() {
     if (s$gate == "stationarity") kinds <- c(kinds, "scale_down", "scale_up")
     # the gates whose scripts need lavaan: a run that skipped its lavaan checks must be rejected (T5e)
     if (s$gate %in% c("factor", "fixed-x", "mean-constrained")) kinds <- c(kinds, "no_lavaan")
+    if (s$gate == "mean-constrained") kinds <- c(kinds, "lavaan_partial")
     for (kind in kinds) {
       v <- verdict_gate(s$gate, mutate(s$gate, kind, ld$data), s)
       rejected <- !all(v$pass)
