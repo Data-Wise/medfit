@@ -9,6 +9,10 @@
   stored factor map, and four-way extraction accepts a factor covariate in the mediator equation. A label or fixed
   value on the factor (`b*g`) stops, as do ordered factors, a product of two factors, and a factor treatment or
   mediator; the numeric-only error now says where factors are accepted. Numeric-only models are unchanged.
+* A worked example article, "Worked example: study hours, engagement and GPA" (`vignettes/articles/example-gpa.qmd`): a simulated
+  mediation analysis with known truth, with the delta-method and Sobel formulas written out and a table of 26 pass/fail
+  checks (against the truth, `lm`, lavaan, the native engine, a bootstrap and a Monte Carlo coverage study). The page
+  stops its own build if a check fails, and `tests/testthat/test-example-gpa.R` runs the same code.
 * Four-way standard errors can be population-average: `options(medfit.covariate_mean_variance = TRUE)` adds the
   sampling variance of the estimated covariate mean, `(theta3 * gamma)^2 * Var(c) / n` (case-weighted when the
   fit has weights), to INTref, the NDE and the TE in `tidy()` and `confint()`. The default is
