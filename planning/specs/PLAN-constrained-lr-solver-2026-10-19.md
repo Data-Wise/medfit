@@ -1,4 +1,4 @@
-<!-- Copied from Data-Wise/mbco-lrt:docs/planning/PLAN-medfit-solver-2026-10-19.md at f8d1f9d (2026-10-19). The authoritative copy is there; edit there first. -->
+<!-- Copied from Data-Wise/mbco-lrt:docs/planning/PLAN-medfit-solver-2026-10-19.md at 85fedb5 (2026-10-19). The authoritative copy is there; edit there first. -->
 
 # Plan: constrained LR fits in medfit's native SEM engine (#213), v2 (2026-10-19)
 
@@ -21,6 +21,16 @@ before it is recorded in D16.
    - AUGLAG stays as the Tier 2 fallback, reported as `local`. The `solver = "auto"` csolnp
      fallback is withdrawn.
    - **Open:** whether `slsqp_legacy` stays, only to reproduce old results.
+
+**Addendum A2 outcome (2026-10-19, `RESULTS-A2.md`; supersedes item 2 above):**
+- **Not start-dependent:** random inner starts gave 0 wrong answers in 10,900.
+- **Grid-dependent:** with one grid point kept, 11 points gave 69 wrong and 21 points gave 23.
+- **Observed models:** use the closed-form profile (PC). It needs no numerical start: 0 wrong, and
+  invariant to 3e-13.
+- **Latent and general models:** standardize the data, use a 41-point φ grid, keep the best 3, then
+  polish warm. Add an 81-point grid-refinement check that downgrades the label to `local` when the two
+  disagree. The check is not yet tested.
+- **Never:** a cold polish, an unstandardized numerical profile, or a single best grid point.
 
 **Changes from v1:**
 - three claims withdrawn (C1 exact feasibility, C3 global φ search, C4 two-chart coverage);

@@ -10,3 +10,4 @@ Supports `../PLAN-constrained-lr-solver-2026-10-19.md` (#213).
 2. `RESULTS.md`: decision. Tier 1 is the default for q ≠ 0.
 3. `ADDENDUM-DESIGN.md`: edge, general and invariance cells.
 4. `RESULTS-A1.md`: the warm-start requirement.
+5. `ADDENDUM-A2-DESIGN.md` and `RESULTS-A2.md`: start versus grid dependence, and the revised recommendation.
