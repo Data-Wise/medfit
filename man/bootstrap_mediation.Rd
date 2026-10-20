@@ -147,6 +147,12 @@ Always set a seed for reproducible results:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{bootstrap_mediation(..., seed = 12345)
 }\if{html}{\out{</div>}}
+
+A fixed seed gives the same resamples for any \code{ncores}, and for sequential runs, because every
+resample is drawn before the work is split across cores. This holds for the nonparametric and
+cluster methods (earlier versions drew inside each worker). The statistic is still computed in the
+workers, so a \code{statistic_fn} that uses random numbers itself is not covered, and floating-point
+results can differ in the last digits when BLAS threads differ.
 }
 }
 \examples{
