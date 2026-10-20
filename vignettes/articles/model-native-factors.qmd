@@ -14,8 +14,8 @@ execute:
 
 Use a factor, character or logical column as a covariate in syntax. Part of the
 [Models](models.html) collection, with the other [native engine](model-native.html)
-pages. This page needs the development version
-(0.11.0).
+pages. This page needs medfit 0.11.0 or later
+(GitHub; CRAN has 0.3.2).
 
 | | |
 |---|---|

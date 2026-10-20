@@ -20,8 +20,9 @@
 #'   in `y ~ 1 + x`) and turns on the mean structure. A product of two observed variables is written
 #'   `x:m` on the right side of a regression (canonical name `m:x`); `?"medfit-syntax"` lists the
 #'   supported class and each limit.
-#' @param data A data frame with the model's observed variables as numeric
-#'   columns. Rows with missing values in those columns are dropped once
+#' @param data A data frame with the model's observed variables. Numeric columns are used as is; a
+#'   factor, character or logical column named on a regression's right side is expanded to 0/1 dummies
+#'   (`?"medfit-syntax"` lists the rules and limits). Rows with missing values in those columns are dropped once
 #'   (listwise deletion) and counted in `n_dropped`.
 #' @param information Character: `"observed"` (default) or `"expected"`
 #'   information for the standard errors. `"expected"` is an error for a model with a product term
