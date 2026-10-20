@@ -215,9 +215,30 @@ test_that("a null written on a defined parameter is compared like any other", {
 
 test_that("planted defect: without the boundary check the on-the-edge null passes silently", {
   on_edge <- boundary_pair("a > 0")
-  silent <- sem_mutate(.sem_anova, ".sem_anova_warn_boundary(restricted, tested, label)", "NULL")
-  expect_no_warning(silent(list(full = on_edge$full, null = on_edge$null)))
-  expect_warning(.sem_anova(list(full = on_edge$full, null = on_edge$null)), "boundary")
+  silent <- sem_mutate(.sem_anova, ".sem_anova_warn_boundary(restricted, tested, label)", "TRUE")
+  expect_no_warning(res_silent <- silent(list(full = on_edge$full, null = on_edge$null)))
+  expect_warning(res <- .sem_anova(list(full = on_edge$full, null = on_edge$null)), "boundary")
+  # the structured flag says what the warning says, and the mutant that skips the check reports a valid p-value
+  expect_false(attr(res, "p_valid")[[2L]])
+  expect_true(attr(res_silent, "p_valid")[[2L]])
+})
+
+test_that("the p_valid attribute marks a boundary null FALSE and keeps the p-value", {
+  on_edge <- boundary_pair("a > 0")
+  expect_warning(res <- anova(on_edge$full, on_edge$null), "boundary")
+  pv <- attr(res, "p_valid")
+  expect_identical(names(pv), rownames(res))
+  expect_true(is.na(pv[[1L]]))
+  expect_false(pv[[2L]])
+  expect_true(is.finite(res[2, "Pr(>Chisq)"]))
+  # an interior null and an unrelated active row are valid
+  interior <- boundary_pair("a < 0.2")
+  expect_true(attr(anova(interior$full, interior$null), "p_valid")[[2L]])
+  other <- boundary_pair("b + cp < 0.5")
+  expect_true(attr(anova(other$full, other$null), "p_valid")[[2L]])
+  # a chain: only the row whose restricted fit sits on the boundary is invalid
+  chain <- anova_fits()
+  expect_true(all(attr(anova(chain$full, chain$b1), "p_valid")[-1L]))
 })
 
 test_that("print uses the anova layout with a heading", {

@@ -54,7 +54,8 @@ S7::method(anova, SEMFit) <- function(object, ...) {
   .sem_anova_same_data(models)
   n <- models[[1L]]@n_obs
   rows <- vector("list", length(models))
-  rows[[1L]] <- list(df = df[[1L]], chisq = n * models[[1L]]@f, chisq_diff = NA_real_, df_diff = NA_real_, p = NA_real_)
+  rows[[1L]] <- list(df = df[[1L]], chisq = n * models[[1L]]@f, chisq_diff = NA_real_, df_diff = NA_real_, p = NA_real_,
+                     p_valid = NA)
   for (i in seq_along(models)[-1L]) {
     full <- models[[i - 1L]]
     restricted <- models[[i]]
@@ -71,10 +72,10 @@ S7::method(anova, SEMFit) <- function(object, ...) {
                    label[2L], label[1L], diff), call. = FALSE)
     }
     diff <- max(diff, 0)
-    .sem_anova_warn_boundary(restricted, tested, label)
+    p_valid <- .sem_anova_warn_boundary(restricted, tested, label)
     ddf <- df[[i]] - df[[i - 1L]]
     rows[[i]] <- list(df = df[[i]], chisq = n * restricted@f, chisq_diff = diff, df_diff = ddf,
-                      p = stats::pchisq(diff, df = ddf, lower.tail = FALSE))
+                      p = stats::pchisq(diff, df = ddf, lower.tail = FALSE), p_valid = p_valid)
   }
   tab <- data.frame(
     Df = vapply(rows, `[[`, numeric(1), "df"), Chisq = vapply(rows, `[[`, numeric(1), "chisq"),
@@ -83,6 +84,7 @@ S7::method(anova, SEMFit) <- function(object, ...) {
   )
   structure(tab, heading = c("Likelihood-ratio (chi-square difference) test for SEMFit models\n",
                              sprintf("n = %d; Chisq is n times the minimized discrepancy\n", n)),
+            p_valid = stats::setNames(vapply(rows, `[[`, logical(1), "p_valid"), names(models)),
             class = c("anova", "data.frame"))
 }
 
@@ -350,6 +352,8 @@ S7::method(anova, SEMFit) <- function(object, ...) {
 # restricted fit (where the null holds) makes the statistic a mixture of chi-squares. Warns as `mbco_sem()` does.
 # Only the restricted fit matters: a bound that binds the less restricted fit leaves a null in the interior of
 # the parameter space alone (`a < 0.2` with the null `a == 0`), and the statistic stays chi-square.
+# Returns whether the chi-square p-value is valid (FALSE when the null is on the boundary), so `anova()` can record
+# it in the `p_valid` attribute; the warning stays.
 .sem_anova_warn_boundary <- function(restricted, tested, label) {
   state <- list(active_bounds = restricted@diagnostics$active_bounds, constraints = restricted@internals$constraints,
                 ram = restricted@internals$ram, theta = restricted@theta)
@@ -359,7 +363,7 @@ S7::method(anova, SEMFit) <- function(object, ...) {
                            "statistic is a mixture of chi-squares, not chi-square(df), and its p-value is not valid."),
                     paste(active, collapse = " and "), label[2L]), call. = FALSE)
   }
-  invisible(NULL)
+  length(active) == 0L
 }
 
 # Model-test validity for a product term (0.10.0 plan U6, amendment section 2a). The global chi-square of a model
