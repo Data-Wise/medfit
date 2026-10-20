@@ -65,6 +65,25 @@ several mediators, fit the syntax with `fit_sem()` (see
 `structure = "parallel"` for side-by-side mediators.
 :::
 
+## The `fit_mediation()` engines compared
+
+The four engines answer different questions and do not return interchangeable numbers. Read the row for your engine
+before you swap one for another.
+
+| | `glm` (default) | `regmedint` | `lmer` | `native` |
+|---|---|---|---|---|
+| Estimation | `stats::glm()` for the mediator and outcome models | closed-form natural effects from the regmedint package | REML mixed models, a random cluster intercept in both | maximum-likelihood SEM from syntax (`model =`) |
+| Outcome and mediator families | any `glm` family | a linear mediator model; the outcome may be logistic | Gaussian only | Gaussian only |
+| Indirect effect | product of path coefficients, on the link scale when the link is not the identity | regmedint's natural indirect effect; equals the path product only for a linear mediator model and a unit treatment contrast (the adapter errors otherwise) | `a * b_between` (own and spillover parts in `decompose()`) | the path product from the fitted syntax |
+| Case `weights` | yes | no | no | yes (weighted maximum likelihood) |
+| `se_type = "sandwich"` | yes, HC3 | no (`"model"` only) | no (`"model"` or `"kr"`) | yes, HC0-type, a little smaller than HC3 in finite samples |
+| Rows with missing values | dropped once, both models share the sample | dropped by the engine | dropped once | listwise, counted in `n_dropped` |
+| Returns | `MediationData` or `InteractionMediationData` | the same two classes | `ClusterMediationData` | `SEMFit`, then `extract_mediation()` |
+
+A weight or an SE type that an engine does not take is an error, not an ignored argument, so a silent change of
+estimand is not possible through `fit_mediation()`. The estimand still differs where the table says so: a logistic
+outcome through `glm` gives a path product on the log-odds scale, while `regmedint` gives a natural effect.
+
 ## What medfit does not run
 
 - Treatment varying within clusters (1-1-1), and non-Gaussian outcomes or
