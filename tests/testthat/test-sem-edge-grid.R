@@ -177,7 +177,7 @@ test_that("edge grid gives an oracle, diagnostic, or clear refusal", {
 })
 
 test_that("planted branch-cap defect turns the grid verdict red", {
-  mutant <- sem_mutate(.sem_fit_branches, "if (nrow(grid) > 64L)", "if (nrow(grid) > 128L)")
+  mutant <- sem_mutate(.sem_fit_branches, "64L", "128L") # a bare constant: covr instrumentation splits the if() text
   case <- edge_grid[[12L]]
   spec <- case$build()
   testthat::local_mocked_bindings(.sem_fit_branches = mutant)
