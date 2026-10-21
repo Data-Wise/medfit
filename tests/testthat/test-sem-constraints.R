@@ -796,7 +796,8 @@ test_that("a bound's multiplier slope that is roundoff in the gradient norm is n
     )
     out$sign_bound
   }
-  # gradient norm 1e4: a slope of 1.8e-12 (the value seen on the reference BLAS) is machine roundoff there (relative 1e-16), a slope of 1 is not
+  # gradient norm 1e4: a slope of 1.8e-12 (the value seen on the reference BLAS) is machine roundoff there
+  # (relative 1e-16), a slope of 1 is not
   expect_length(judge(-1.8e-12, 1e4), 0L)
   expect_identical(judge(-1, 1e4), "Vy")
   # with a small gradient the same absolute slope is real: the cutoff scales with the gradient
