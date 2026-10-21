@@ -26,8 +26,9 @@ in \code{y ~ 1 + x}) and turns on the mean structure. A product of two observed 
 \code{x:m} on the right side of a regression (canonical name \code{m:x}); \code{?"medfit-syntax"} lists the
 supported class and each limit.}
 
-\item{data}{A data frame with the model's observed variables as numeric
-columns. Rows with missing values in those columns are dropped once
+\item{data}{A data frame with the model's observed variables. Numeric columns are used as is; a
+factor, character or logical column named on a regression's right side is expanded to 0/1 dummies
+(\code{?"medfit-syntax"} lists the rules and limits). Rows with missing values in those columns are dropped once
 (listwise deletion) and counted in \code{n_dropped}.}
 
 \item{information}{Character: \code{"observed"} (default) or \code{"expected"}

@@ -54,13 +54,15 @@ imp_count <- function(x) {
 # ---- loading: the newest results file for a prefix; unreadable or stale files are failures ----
 # not_before (a POSIXct, --sim only): a file modified earlier was not written by the run that just ended.
 # The comparison is strict; a filesystem with coarse modification times can only cause a false FAIL.
-load_results <- function(dir, prefix, max_age_days, not_before = NULL) {
-  pat <- sprintf("^%s-([0-9]{4}-[0-9]{2}-[0-9]{2})\\.csv(\\.gz)?$", prefix)
+load_results <- function(dir, prefix, max_age_days, not_before = NULL, undated = FALSE) {
+  pat <- if (undated) sprintf("^%s\\.csv$", prefix) else
+    sprintf("^%s-([0-9]{4}-[0-9]{2}-[0-9]{2})\\.csv(\\.gz)?$", prefix)
   files <- list.files(dir, pattern = pat)
   if (!length(files)) {
-    return(list(ok = FALSE, why = sprintf("no results file matches '%s-<date>.csv' in %s", prefix, dir)))
+    label <- if (undated) paste0(prefix, ".csv") else paste0(prefix, "-<date>.csv")
+    return(list(ok = FALSE, why = sprintf("no results file matches '%s' in %s", label, dir)))
   }
-  dates <- as.Date(sub(pat, "\\1", files))
+  dates <- if (undated) as.Date(file.mtime(file.path(dir, files))) else as.Date(sub(pat, "\\1", files))
   f <- files[which.max(dates)]
   if (!is.null(not_before)) {
     mt <- file.mtime(file.path(dir, f))
@@ -84,7 +86,7 @@ load_results <- function(dir, prefix, max_age_days, not_before = NULL) {
     return(list(ok = FALSE, file = f, why = sprintf("%s is unreadable or empty", f)))
   }
   age <- as.numeric(Sys.Date() - max(dates))
-  if (age > max_age_days) {
+  if (is.na(age) || age > max_age_days) {
     why <- sprintf("%s is stale (%d days old, limit %g)", f, as.integer(age), max_age_days)
     return(list(ok = FALSE, file = f, why = why))
   }
@@ -129,7 +131,9 @@ verdict_gate <- function(gate, d, s) {
     "bootstrap-coverage" = c("sim", "lower", "upper", "hit"),
     "fixed-x" = c("tag", "check", "pass"),
     "mean-constrained" = c("structure", "n", "seed", "shift", "problem", "ok", "feas", "invariance", "lavaan_ok"),
-    factor = c("n", "k", "seed", "miss", "pass", "err", "fxmode", "lavaan", "fitstats")
+    factor = c("n", "k", "seed", "miss", "pass", "err", "fxmode", "lavaan", "fitstats"),
+    "oracle-sweep" = c("seed", "family", "n", "scale", "constraint", "outcome", "max_abs_error",
+                       "feasibility", "f_gap", "warning", "error", "optimum")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -342,6 +346,17 @@ verdict_gate <- function(gate, d, s) {
         )
       )
     },
+    "oracle-sweep" = {
+      # Layer 4: warnings flag uncertainty, and fit errors count as refusals; only unflagged wrong fits fail.
+      errors <- nzchar(ifelse(is.na(d$error), "", as.character(d$error))) & d$outcome != "refused"
+      bad <- !(d$outcome %in% c("correct", "flagged", "refused"))
+      wrong <- sum(d$outcome == "WRONG", na.rm = TRUE)
+      rbind(
+        rows_chk(d, s),
+        chk("outcomes", !any(bad), sprintf("%d WRONG, %d missing or unknown", wrong, sum(bad) - wrong)),
+        chk("non-refusal errors", !any(errors), sprintf("%d errors outside refusals", sum(errors, na.rm = TRUE)))
+      )
+    },
     "nonlinear-profile" = {
       # T3 (#213): every fit reaches the independent oracle's constrained optimum (the gate script applies the
       # per-run rule; the driver re-checks the counts and the largest gap)
@@ -379,7 +394,8 @@ run_verdicts <- function(spec, dir, max_age, runs = NULL, script_of = scripts) {
   for (i in seq_len(nrow(spec))) {
     s <- spec[i, ]
     run <- if (is.null(runs)) NULL else runs[[script_of[[s$gate]]]]
-    ld <- load_results(dir, s$results_prefix, max_age, not_before = run$start)
+    ld <- load_results(dir, s$results_prefix, max_age, not_before = run$start,
+                       undated = s$gate == "oracle-sweep")
     r <- if (!ld$ok) chk("results file", FALSE, ld$why) else verdict_gate(s$gate, ld$data, s)
     if (!is.null(run)) {
       st <- chk(
@@ -433,6 +449,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "bootstrap-coverage") d$hit[1:200] <- FALSE
     if (gate == "mean-constrained") d$invariance[which(!is.na(d$invariance))[1:3]] <- 5
     if (gate == "factor") d$pass[1:3] <- FALSE
+    if (gate == "oracle-sweep") d$outcome[1] <- "WRONG"
   }
   if (kind == "no_lavaan") {
     # T5e: what a run without lavaan used to write: its lavaan-only checks absent or NA, everything else passing
@@ -461,6 +478,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "bootstrap-coverage") d$hit[1] <- NA
     if (gate == "mean-constrained") d$ok[1] <- FALSE
     if (gate == "factor") d$err[1] <- "fit failed"
+    if (gate == "oracle-sweep") d$error[1] <- "fit failed"
   }
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
@@ -469,7 +487,7 @@ mutate <- function(gate, kind, d) {
     # nolint start: object_usage_linter.
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
-      "mean-constrained", "factor", "bootstrap-coverage"
+      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -486,7 +504,7 @@ run_mutants <- function() {
   ok_all <- TRUE
   for (i in seq_len(nrow(spec))) {
     s <- spec[i, ]
-    ld <- load_results(results_dir, s$results_prefix, 1e9)
+    ld <- load_results(results_dir, s$results_prefix, 1e9, undated = s$gate == "oracle-sweep")
     if (!ld$ok) {
       cat(sprintf("%-13s cannot run mutants: %s\n", s$gate, ld$why))
       ok_all <- FALSE
@@ -514,15 +532,21 @@ run_mutants <- function() {
     tmp <- tempfile("gates-")
     dir.create(tmp)
     on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
-    today_file <- file.path(tmp, sprintf("%s-%s.csv", s$results_prefix, Sys.Date()))
+    today_file <- if (s$gate == "oracle-sweep") file.path(tmp, paste0(s$results_prefix, ".csv")) else
+      file.path(tmp, sprintf("%s-%s.csv", s$results_prefix, Sys.Date()))
     writeLines(c("\"a\",\"b\"", "1,2,3,\"unterminated"), today_file)
-    bad <- load_results(tmp, s$results_prefix, max_age)
+    bad <- load_results(tmp, s$results_prefix, max_age, undated = s$gate == "oracle-sweep")
     cat(sprintf("%-13s %-10s mutation %s\n", "", "unreadable", if (!bad$ok) "rejected" else "NOT REJECTED"))
     ok_all <- ok_all && !bad$ok
     old <- Sys.Date() - (max_age + 5)
-    utils::write.csv(ld$data, file.path(tmp, sprintf("%s-%s.csv", s$results_prefix, old)), row.names = FALSE)
-    unlink(today_file)
-    stale <- load_results(tmp, s$results_prefix, max_age)
+    if (s$gate == "oracle-sweep") {
+      utils::write.csv(ld$data, today_file, row.names = FALSE)
+      Sys.setFileTime(today_file, as.POSIXct(old))
+    } else {
+      utils::write.csv(ld$data, file.path(tmp, sprintf("%s-%s.csv", s$results_prefix, old)), row.names = FALSE)
+      unlink(today_file)
+    }
+    stale <- load_results(tmp, s$results_prefix, max_age, undated = s$gate == "oracle-sweep")
     cat(sprintf("%-13s %-10s mutation %s\n", "", "stale", if (!stale$ok) "rejected" else "NOT REJECTED"))
     ok_all <- ok_all && !stale$ok
   }
@@ -651,7 +675,8 @@ scripts <- c(
   "bootstrap-coverage" = "tests/sim/bootstrap-coverage.R",
   "fixed-x" = "tests/sim/sem-fixed-x-gate.R",
   "mean-constrained" = "tests/sim/sem-mean-constrained-gate.R",
-  factor = "tests/sim/sem-factor-gate.R"
+  factor = "tests/sim/sem-factor-gate.R",
+  "oracle-sweep" = "tests/sim/sem-oracle-sweep.R"
 )
 
 # ---- main ----

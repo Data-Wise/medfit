@@ -1,0 +1,43 @@
+Datasets (non-invariance cells): 10900 
+
+Accepted-wrong by method and cell (non-invariance cells)
+     method
+cell   T TW TW11 TW21 TWr NP PC TWs AUG8
+  E1a  0  0   14    3   0  0  0   0    3
+  E1b  0  0   29    4   0  0  0   0    1
+  E1c  0  0    0    0   0  0  0   0    2
+  E3a  0  0    1    1   0  0  0   0    1
+  E3b  0  0    6    3   0  0  0   0    8
+  E6   1  0    0    0   0  0  0   0   20
+  E7   0  0   10   10   0  0  0   0    0
+  G1   0  0    2    1   0  0  0   0    0
+  G3   0  0    3    0   0  0  0   0    4
+  G4   0  0    1    1   0  0  0   0   10
+  G5   0  0    0    0   0  0  0   0    3
+  G6   0  0    3    0   0  0  0   0    2
+
+Summary
+ method     n success wrong unresolved  inv_max inv_gt_1e6 sec_median
+      T 10900 0.99991     1          0       NA         NA      0.033
+     TW 10900 1.00000     0          0 5.87e-06          2      0.031
+   TW11 10900 0.99367    69          0       NA         NA         NA
+   TW21 10900 0.99789    23          0       NA         NA         NA
+    TWr 10900 1.00000     0          0       NA         NA         NA
+     NP 10900 1.00000     0          0 9.25e-01         31      0.026
+     PC 10900 1.00000     0          0 3.13e-13          0         NA
+    TWs 10900 1.00000     0          0 1.94e-11          0         NA
+   AUG8 10900 0.86881    54       1376       NA         NA         NA
+
+Robust (0 wrong, 0 unresolved, invariance within 1e-6 where tested):
+ method robust
+      T  FALSE
+     TW  FALSE
+   TW11  FALSE
+   TW21  FALSE
+    TWr   TRUE
+     NP  FALSE
+     PC   TRUE
+    TWs   TRUE
+   AUG8  FALSE
+
+Oracle misses (some method below the oracle): 0 

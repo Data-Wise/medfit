@@ -143,6 +143,24 @@ are filled in by the engine (Section 3).
 
 ## 2. Building the product column
 
+### Categorical covariates
+
+A factor, character or logical covariate on the right side of a regression is
+expanded before the RAM is built. A factor `g` with levels `a`, `b`, `c` uses
+the first level as reference and yields `g_b` and `g_c`; character levels are
+sorted in the C locale, and a logical column yields `g_TRUE`. A term `g:m`
+expands to a product for each dummy, under the same product rules below.
+`fixed_x = "g"` selects the dummies; a dummy name selects just that one.
+
+The expansion uses the full column before listwise deletion, while a missing
+factor value drops its row from the fit. Ordered factors, a factor outcome or
+mediator, a product of two categorical columns, and a factor treatment or
+mediator for four-way extraction are unsupported. Put a modifier or label on
+a named dummy (`b*g_b`), not on `g`; a constraint names that label. A raw-data
+bootstrap refit can change a character column's reference if a level is
+absent from a resample, so use a factor with explicit levels when that
+reference must stay fixed.
+
 The product is a **data-level** term: the engine computes the column $x_i m_i$ and then fits a model in which that
 column is one more observed variable. The helper is `.sem_materialize_products()`. It reads the completed parameter
 table, and for each distinct product adds the column under the canonical name:

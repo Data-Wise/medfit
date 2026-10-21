@@ -434,6 +434,7 @@
   # already holds at the unconstrained estimate, that estimate is the constrained optimum.
   eps_f <- if (is.null(ref)) 0 else 1e-10 * max(1, abs(ref$f))
   ref_ok <- !is.null(ref) && .sem_ref_feasible(ref$theta, constraints, lb, ub)
+  n_start_attempts <- length(attempts)
   if (ref_ok && (is.na(win) || attempts[[win]]$f > ref$f + eps_f)) {
     g <- .sem_gate(ref$theta, ref$status, ram, smp, lb, ub, constraints)
     if (!g$accepted) {
@@ -459,6 +460,27 @@
   # A fit that reaches a feasible reference estimate is the constrained optimum (the reference is a lower bound), so
   # worse optima on other branches are not worth a note.
   certified <- ref_ok && fit$f <= ref$f + .sem_spread_tol
+  optimum_spread <- NA_real_
+  if (best_of && length(accepted) > 1L) {
+    optimum_spread <- diff(range(vapply(attempts[accepted], function(a) a$f, numeric(1))))
+  }
+  optimum_status <- "unique"
+  if (best_of) {
+    optimum_status <- if (certified) {
+      "certified"
+    } else if (length(accepted) == 1L) {
+      "single"
+    } else if (optimum_spread > .sem_spread_tol) {
+      "disagreed"
+    } else {
+      "agreed"
+    }
+  }
+  optimum <- list(
+    n_starts = if (best_of) length(starts) else sum(!vapply(attempts, is.null, logical(1))),
+    n_accepted = sum(accepted <= n_start_attempts), best_of = best_of, certified = certified,
+    spread = optimum_spread, status = optimum_status
+  )
   spread <- if (best_of && !certified && length(accepted) > 1L) {
     diff(range(vapply(attempts[accepted], function(a) a$f, numeric(1))))
   }
@@ -514,7 +536,8 @@
     decrement = fit$decrement, converged = TRUE, retries = win - 1L,
     active_bounds = ram$par_names[fit$active], improper = improper, attempts = attempts,
     floor_active = floor_active, reference_f = if (is.null(ref)) NA_real_ else ref$f,
-    multipliers = fit$multipliers, sign_check = if (is.null(fit$sign_check)) "ok" else fit$sign_check
+    multipliers = fit$multipliers, sign_check = if (is.null(fit$sign_check)) "ok" else fit$sign_check,
+    optimum = optimum
   )
 }
 

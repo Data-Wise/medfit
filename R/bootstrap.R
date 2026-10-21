@@ -105,6 +105,15 @@
 #' bootstrap_mediation(..., seed = 12345)
 #' ```
 #'
+#' A fixed seed gives the same resamples for any `ncores`, and for sequential runs, because every
+#' resample is drawn before the work is split across cores. This holds for the nonparametric and
+#' cluster methods (earlier versions drew inside each worker). The statistic is still computed in the
+#' workers, so a `statistic_fn` that uses random numbers itself is not covered (in a sequential run its
+#' draws now follow all the resampling draws instead of interleaving with them, so its stream differs
+#' from earlier versions), and floating-point results can differ in the last digits when BLAS threads
+#' differ. The resamples are held in memory before the refits start: `n_boot` integer vectors of length
+#' `n` (about `4 * n * n_boot` bytes; 800 MB for `n = 100000` and `n_boot = 2000`).
+#'
 #' @examples
 #' # Fit mediation model
 #' med_data <- fit_mediation(
@@ -375,11 +384,13 @@ bootstrap_mediation <- function(statistic_fn,
 
   n <- nrow(data)
 
+  # Draw every resample in the parent, in order, before dispatch: a fixed seed then gives the same
+  # resamples for any `ncores` and for sequential runs (workers would each draw from their own stream).
+  draws <- lapply(seq_len(n_boot), function(i) sample.int(n, size = n, replace = TRUE))
+
   # Bootstrap function
   boot_fn <- function(i) {
-    # Resample with replacement
-    boot_indices <- sample.int(n, size = n, replace = TRUE)
-    boot_data <- data[boot_indices, , drop = FALSE]
+    boot_data <- data[draws[[i]], , drop = FALSE]
 
     # Compute statistic
     tryCatch(
@@ -490,8 +501,11 @@ bootstrap_mediation <- function(statistic_fn,
   values <- unique(data[[cluster]])
   J <- length(values)
 
+  # Pre-drawn in the parent so a fixed seed does not depend on `ncores` (see .bootstrap_nonparametric()).
+  draws <- lapply(seq_len(n_boot), function(i) sample(values, J, replace = TRUE))
+
   boot_fn <- function(i) {
-    ids <- sample(values, J, replace = TRUE)
+    ids <- draws[[i]]
     boot_data <- .relabel_clusters(data, cluster, ids)
     flagged <- FALSE
     est <- withCallingHandlers(

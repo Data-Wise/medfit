@@ -2207,7 +2207,10 @@ print_summary_cluster_mediation_data <- function(x, ...) {
 #' @param model Character scalar: the model syntax
 #' @param diagnostics List: optimizer diagnostics (`status`, `decrement`,
 #'   `retries`, `active_bounds`, `active_constraints`, `improper`,
-#'   `sign_check`)
+#'   `sign_check`, and `optimum`: a list with `n_starts`, `n_accepted`,
+#'   `best_of`, `certified`, `spread` (discrepancy range among accepted starts,
+#'   `NA` when fewer than two or not best-of), and `status` (`unique`,
+#'   `certified`, `agreed`, `disagreed`, or `single`))
 #' @param internals List: the internal index objects the engine needs
 #'   (`ram`, `par_map`, `constraints`); not part of the interface
 #' @param call Call object or NULL: the call that produced the fit

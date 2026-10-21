@@ -63,7 +63,12 @@
 #'   inequality on a tested parameter is active at the restricted fit, the null
 #'   lies on the boundary of the parameter space, the statistic is a mixture of
 #'   chi-squares, and the function warns that the p-value is not valid, as
-#'   [mbco_sem()] does. Returns an object of class `"anova"` with columns `Df`,
+#'   [mbco_sem()] does. The p-value is still returned; the logical attribute
+#'   `attr(x, "p_valid")` (named by row, `NA` for the first) is `FALSE` for each
+#'   such row, so code can read the verdict without parsing the warning. It
+#'   belongs to the object `anova()` returns: subsetting it with `[` or binding
+#'   rows drops the attribute. Returns
+#'   an object of class `"anova"` with columns `Df`,
 #'   `Chisq` (n times the discrepancy), `Chisq diff`, `Df diff` and
 #'   `Pr(>Chisq)`. Name rows by naming the arguments after the first.
 #' * `confint()` returns Wald (normal) intervals for the free parameters and
@@ -90,7 +95,7 @@
 #'   for every `SEMFit` and would carry no information.
 #' * `summary()` collects the estimates, standard errors and z statistics, the
 #'   defined parameters, and the diagnostics: rows dropped, information type,
-#'   degrees of freedom, retries, stationarity, active bounds and constraints,
+#'   degrees of freedom, retries, stationarity, optimum status, active bounds and constraints,
 #'   improper-solution flags and the multiplier sign check.
 #'
 #' @return `coef()` a named numeric vector; `vcov()` a matrix; `nobs()` an
@@ -254,6 +259,11 @@ print_summary_semfit <- function(x, ...) {
                 if (x$diagnostics$se_type == "sandwich") "sandwich (robust)" else "model-based"))
   }
   cat(sprintf("Converged: %s\n", ifelse(x$converged, "Yes", "No")))
+  optimum <- x$diagnostics$optimum
+  if (!is.null(optimum) && optimum$status %in% c("disagreed", "single")) {
+    cat(sprintf("Optimum: %s (%d of %d starts accepted)\n", optimum$status,
+                optimum$n_accepted, optimum$n_starts))
+  }
   note <- .sem_fixed_x_note(x$fixed_x)
   if (!is.null(note)) cat(note, "\n", sep = "")
   cat("\nParameters:\n")

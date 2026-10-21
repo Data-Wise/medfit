@@ -20,8 +20,9 @@
 #'   in `y ~ 1 + x`) and turns on the mean structure. A product of two observed variables is written
 #'   `x:m` on the right side of a regression (canonical name `m:x`); `?"medfit-syntax"` lists the
 #'   supported class and each limit.
-#' @param data A data frame with the model's observed variables as numeric
-#'   columns. Rows with missing values in those columns are dropped once
+#' @param data A data frame with the model's observed variables. Numeric columns are used as is; a
+#'   factor, character or logical column named on a regression's right side is expanded to 0/1 dummies
+#'   (`?"medfit-syntax"` lists the rules and limits). Rows with missing values in those columns are dropped once
 #'   (listwise deletion) and counted in `n_dropped`.
 #' @param information Character: `"observed"` (default) or `"expected"`
 #'   information for the standard errors. `"expected"` is an error for a model with a product term
@@ -138,7 +139,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     n_obs = fit$n_obs, n_dropped = fit$n_dropped, df = fit$df, information = fit$information,
     converged = fit$converged, data = fit$data, model = model,
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
-                        "sign_check", "se_type")],
+                        "sign_check", "se_type", "optimum")],
     internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
                       "branch", "fixed_x", "factors")],
     call = call

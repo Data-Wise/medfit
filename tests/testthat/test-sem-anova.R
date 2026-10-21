@@ -142,6 +142,32 @@ test_that("it refuses different data, different variables, equal df, and a model
   expect_error(anova(not_nested, f$full), "not nested")
 })
 
+test_that("a nonzero fixed residual covariance cannot appear or disappear across nested fits", {
+  set.seed(32)
+  d <- data.frame(X = stats::rnorm(400))
+  d$M1 <- 0.5 * d$X + stats::rnorm(400)
+  d$M2 <- 0.4 * d$X + stats::rnorm(400)
+  d$Y <- 0.3 * d$M1 + 0.2 * d$M2 + 0.1 * d$X + stats::rnorm(400)
+  base <- "M1 ~ a1*X\nM2 ~ a2*X\nY ~ b1*M1 + b2*M2 + cp*X"
+  restricted <- "M1 ~ a1*X\nM2 ~ a2*X\nY ~ b1*M1 + 0*M2 + 0*X"
+  full <- fit_sem(base, d)
+  added <- fit_sem(paste0(restricted, "\nM1 ~~ 0.5*M2"), d)
+  expect_gt(added@df, full@df)
+  expect_error(anova(full, added), "not nested.*nonzero fixed parameters.*M1 ~~ M2")
+  # Planted defect: skipping the new guard restores the spurious chi-square p-value.
+  silent <- sem_mutate(.sem_anova_nested,
+                       "changed <- c(missing_fixed(restricted_tab, full_tab), missing_fixed(full_tab, restricted_tab))",
+                       "changed <- character()")
+  unchecked <- sem_mutate(.sem_anova, "tested <- .sem_anova_nested(full, restricted, label)",
+                          "tested <- SILENT(full, restricted, label)")
+  environment(unchecked) <- list2env(list(SILENT = silent), parent = environment(.sem_anova))
+  expect_true(is.finite(unchecked(list(full = full, added = added))[2, "Pr(>Chisq)"]))
+  fixed_full <- fit_sem(paste0(base, "\nM1 ~~ 0.5*M2"), d)
+  omitted <- fit_sem(restricted, d)
+  expect_gt(omitted@df, fixed_full@df)
+  expect_error(anova(fixed_full, omitted), "not nested.*nonzero fixed parameters.*M1 ~~ M2")
+})
+
 test_that("a restricted fit with a smaller discrepancy than the model it restricts is refused", {
   f <- anova_fits()
   worse <- f$b1
@@ -215,9 +241,30 @@ test_that("a null written on a defined parameter is compared like any other", {
 
 test_that("planted defect: without the boundary check the on-the-edge null passes silently", {
   on_edge <- boundary_pair("a > 0")
-  silent <- sem_mutate(.sem_anova, ".sem_anova_warn_boundary(restricted, tested, label)", "NULL")
-  expect_no_warning(silent(list(full = on_edge$full, null = on_edge$null)))
-  expect_warning(.sem_anova(list(full = on_edge$full, null = on_edge$null)), "boundary")
+  silent <- sem_mutate(.sem_anova, ".sem_anova_warn_boundary(restricted, tested, label)", "TRUE")
+  expect_no_warning(res_silent <- silent(list(full = on_edge$full, null = on_edge$null)))
+  expect_warning(res <- .sem_anova(list(full = on_edge$full, null = on_edge$null)), "boundary")
+  # the structured flag says what the warning says, and the mutant that skips the check reports a valid p-value
+  expect_false(attr(res, "p_valid")[[2L]])
+  expect_true(attr(res_silent, "p_valid")[[2L]])
+})
+
+test_that("the p_valid attribute marks a boundary null FALSE and keeps the p-value", {
+  on_edge <- boundary_pair("a > 0")
+  expect_warning(res <- anova(on_edge$full, on_edge$null), "boundary")
+  pv <- attr(res, "p_valid")
+  expect_identical(names(pv), rownames(res))
+  expect_true(is.na(pv[[1L]]))
+  expect_false(pv[[2L]])
+  expect_true(is.finite(res[2, "Pr(>Chisq)"]))
+  # an interior null and an unrelated active row are valid
+  interior <- boundary_pair("a < 0.2")
+  expect_true(attr(anova(interior$full, interior$null), "p_valid")[[2L]])
+  other <- boundary_pair("b + cp < 0.5")
+  expect_true(attr(anova(other$full, other$null), "p_valid")[[2L]])
+  # a chain: only the row whose restricted fit sits on the boundary is invalid
+  chain <- anova_fits()
+  expect_true(all(attr(anova(chain$full, chain$b1), "p_valid")[-1L]))
 })
 
 test_that("print uses the anova layout with a heading", {

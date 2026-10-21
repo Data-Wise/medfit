@@ -20,7 +20,7 @@ Nothing here is a finding about real students.
 
 | | |
 |---|---|
-| **You need** | medfit 0.11.0 (development version) or later; lavaan is used for one cross-check and the page skips that row when it is absent |
+| **You need** | medfit 0.11.0 or later; lavaan is used for one cross-check and the page skips that row when it is absent |
 | **You get** | a fitted `MediationData`, delta-method and bootstrap intervals, a native-engine fit, and a table of pass/fail checks |
 | **Time** | about 10 minutes to read, under a minute to run |
 

@@ -68,7 +68,12 @@ error (one fit is not at its global optimum). When a bound or an
 inequality on a tested parameter is active at the restricted fit, the null
 lies on the boundary of the parameter space, the statistic is a mixture of
 chi-squares, and the function warns that the p-value is not valid, as
-\code{\link[=mbco_sem]{mbco_sem()}} does. Returns an object of class \code{"anova"} with columns \code{Df},
+\code{\link[=mbco_sem]{mbco_sem()}} does. The p-value is still returned; the logical attribute
+\code{attr(x, "p_valid")} (named by row, \code{NA} for the first) is \code{FALSE} for each
+such row, so code can read the verdict without parsing the warning. It
+belongs to the object \code{anova()} returns: subsetting it with \code{[} or binding
+rows drops the attribute. Returns
+an object of class \code{"anova"} with columns \code{Df},
 \code{Chisq} (n times the discrepancy), \verb{Chisq diff}, \verb{Df diff} and
 \verb{Pr(>Chisq)}. Name rows by naming the arguments after the first.
 \item \code{confint()} returns Wald (normal) intervals for the free parameters and
@@ -95,7 +100,7 @@ passed the acceptance gate and errors otherwise, so \verb{@converged} is \code{T
 for every \code{SEMFit} and would carry no information.
 \item \code{summary()} collects the estimates, standard errors and z statistics, the
 defined parameters, and the diagnostics: rows dropped, information type,
-degrees of freedom, retries, stationarity, active bounds and constraints,
+degrees of freedom, retries, stationarity, optimum status, active bounds and constraints,
 improper-solution flags and the multiplier sign check.
 }
 }
