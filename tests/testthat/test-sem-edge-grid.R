@@ -1,7 +1,7 @@
 # Whole-fit edge grid: every accepted estimate has an independent regression or
 # hand oracle; otherwise the fit must explicitly warn or refuse.
 edge_data <- function(n = 120L, seed = 41L) {
-  d <- sem_sim(sem_model_observed(), n, seed)
+  d <- sem_sim(sem_model_observed(), n, seed) # nolint: object_usage_linter.
   d[, c("X", "C", "M", "Y")]
 }
 
@@ -13,7 +13,7 @@ edge_case <- function(name, builder, verdict, oracle, result) {
 
 edge_ols <- function(fit, spec, term = "a", formula = M ~ X + C, rhs = "X", tol = 1e-4) {
   ref <- stats::coef(stats::lm(formula, data = spec$data, weights = spec$args$weights))[[rhs]]
-  expect_equal(unname(coef(fit)[[term]]), unname(ref), tolerance = tol)
+  testthat::expect_equal(unname(coef(fit)[[term]]), unname(ref), tolerance = tol)
 }
 
 edge_grid <- local({
