@@ -51,9 +51,10 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 ### Phase 0: facts first
 
-- [ ] **T0. Spike and go/no-go (XS, read-only, no package code).** Dependencies: none.
-  - [ ] Scratch script prints the OpenMx and lavaan versions installed and, for `a*b == 0` at n = 100 (the issue's cell), the OpenMx LR started at 0, the lavaan statistic with default and zero starts, and `mbco_sem()`; it states whether each failure reproduces.
-  - [ ] Output pasted in the PR body; **decision recorded (P1):** both reproduce = export; one = export for that engine; neither = harness and docs only, no export, and T4/T6 shrink to a docs section.
+- [x] **T0. Spike and go/no-go (XS, read-only, no package code), DONE 2026-10-21: GO.** Results and scripts: `planning/specs/evidence/compare-lr-t0-2026-10-21/RESULTS.md`. Dependencies: none.
+  - [x] Scratch script prints the OpenMx and lavaan versions installed and, for `a*b == 0` at n = 100 (the issue's cell), the OpenMx LR started at 0, the lavaan statistic with default and zero starts, and `mbco_sem()`; it states whether each failure reproduces.
+  - [x] Output recorded; **decision (P1): both reproduce, export** (OpenMx at zero start 59/60 dropped; lavaan default start 20/300 above medfit).
+  - [x] (original text) **decision to record (P1):** both reproduce = export; one = export for that engine; neither = harness and docs only, no export, and T4/T6 shrink to a docs section.
   - Files: none committed.
 
 ### Phase 1: detection core (pure, testable without engines)
@@ -69,12 +70,13 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 - [ ] **T2. lavaan adapter (M).** Dependencies: T1.
   - [ ] `.lr_engine_lavaan()` fits the unrestricted and product-null models from `object@model` plus the data with options mirroring medfit (fixed.x, meanstructure, ML divisor), two runs (default and zero start, P4), returns the T1 shape.
+  - [ ] lavaan zero start: T0 found a start of 0 in the parameter table is ignored (also via `start =`); find a mechanism or document lavaan as default-start only.
   - [ ] Refusal list (P3) with a named reason each: mean structure, weights, `fixed_x`, products, factors, bounds, `start()`/`lower()`/`upper()`.
   - [ ] Tests (`skip_if_not_installed("lavaan")`): finite LR close to medfit on the `mbco_sem` docs model; each refusal errors with its message.
   - Files: `R/compare-lr.R`, `tests/testthat/test-compare-lr-lavaan.R`.
 
 - [ ] **T3. OpenMx adapter (L, riskiest).** Dependencies: T1.
-  - [ ] Promote `sem_openmx()` from `tests/testthat/helper-sem.R` (covariance-only; takes internals `mod`, `smp`); keep a test-side wrapper so existing tests still pass.
+  - [ ] Translate the fit's table to the helper's `mod$a`/`mod$s` row frames for observed models (T0: `sem_openmx()` is not drop-in; it takes a test model, not a `SEMFit`), then promote the helper; keep a test-side wrapper so existing tests still pass.
   - [ ] Constraint as `mxConstraint`; two runs (default and zero start, P4); tight tolerances (optimality/feasibility 1e-12, function precision 1e-15, restored on exit); return the constraint residual and the Jacobian-at-start flag.
   - [ ] Same refusal list (P3).
   - [ ] Tests (`skip_if_not_installed("OpenMx")`): known answer against `mbco_sem()` when both converge; refusals.
@@ -83,7 +85,7 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 ### Checkpoint A (after T1-T3)
 
 - [ ] `devtools::test()` green, lint clean, `noSuggests` path passes (engines guarded)
-- [ ] T0 findings reviewed against the code as built
+- [ ] T0 findings (evidence/compare-lr-t0-2026-10-21/RESULTS.md) reviewed against the code as built
 - [ ] Author review before building the public function
 
 ### Phase 3: the public function and its harness
@@ -123,7 +125,7 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| OpenMx RAM translation is larger than estimated | High | T3 is isolated; reuse `sem_openmx()`; split into "covariance models only" first; Checkpoint A can drop OpenMx to a follow-up and ship lavaan alone |
+| OpenMx RAM translation is larger than estimated (T0: the helper is not drop-in) | High | T3 is isolated; reuse `sem_openmx()`; split into "covariance models only" first; Checkpoint A can drop OpenMx to a follow-up and ship lavaan alone |
 | Known failures no longer reproduce on current versions | Med | T0 tells us first; the live gate reports instead of asserting; unit tests use injected results |
 | New false-accusation path in the warnings | High | evidence-only rules; valid zero-LR and unresolved cases are tests; planted-defect mutant in the gate |
 | medfit reference itself `unresolved` | Med | verdict `unresolved`, no fault assigned (decision 2) |
