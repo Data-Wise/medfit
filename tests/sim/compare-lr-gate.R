@@ -9,13 +9,18 @@
 #   above    a feasible run whose statistic exceeds medfit's by more than 1e-4 * max(1, LR) must raise the
 #            above-maximum warning, and not otherwise
 #   error    compare_lr() must return (a refusal or crash fails the row)
-# `MUTANT=noresidual` plants a detector that ignores the constraint residual; the gate must then exit 1 (it needs a
-# reproduced drop, which OpenMx's zero start gives 59 times in 60 on the recorded versions).
+#   resolved the reference must be accepted and the verdict not "unresolved" (a clean cell must reach a verdict)
+#   oracle   the reference LR must equal an independent closed form (the minimum of the two linear nulls from OLS
+#            residual variances, no medfit fit), and a run whose statistic falls below that minimum is infeasible by
+#            necessity and must be reported as a violated constraint, whatever residual the adapter reports
+# `MUTANT=noresidual` plants a detector that ignores the constraint residual; `MUTANT=zeroresid` an adapter that
+# reports a zero residual; the gate must then exit 1 (each needs a reproduced drop, which OpenMx's zero start gives 59
+# times in 60 on the recorded versions).
 # Run from the package root:  Rscript tests/sim/compare-lr-gate.R   (FAST=1: 4 seeds, nothing written)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
 mutant <- Sys.getenv("MUTANT", "")
-if (!mutant %in% c("", "noresidual")) stop("unknown MUTANT: ", mutant)
+if (!mutant %in% c("", "noresidual", "zeroresid")) stop("unknown MUTANT: ", mutant)
 fast <- nzchar(Sys.getenv("FAST", ""))
 seeds <- seq_len(if (fast) 4L else as.integer(Sys.getenv("SEEDS", "12")))
 if (!requireNamespace("lavaan", quietly = TRUE) || !requireNamespace("OpenMx", quietly = TRUE)) {
@@ -26,10 +31,34 @@ if (mutant == "noresidual") {
   unlockBinding(".lr_constraint_tol", ns)
   assign(".lr_constraint_tol", Inf, envir = ns)
 }
+if (mutant == "zeroresid") {
+  ns <- asNamespace("medfit")
+  orig <- get(".lr_assess", ns)
+  unlockBinding(".lr_assess", ns)
+  assign(".lr_assess", function(reference, engines, ...) {
+    engines <- lapply(engines, function(e) {
+      e$runs <- lapply(e$runs, function(r) {
+        r$residual <- 0
+        r
+      })
+      e
+    })
+    orig(reference, engines, ...)
+  }, envir = ns)
+}
 tol <- 1e-4
 model <- "M ~ a*X\nY ~ b*M + cp*X"
 versions <- c(lavaan = as.character(utils::packageVersion("lavaan")),
               openmx = as.character(utils::packageVersion("OpenMx")))
+
+# Independent reference: LR of a = 0 is n log(Vm0 / Vm.x), of b = 0 is n log(Vy.x / Vy.mx) (centered ML variances).
+oracle_lr <- function(d) {
+  n <- nrow(d)
+  v <- function(r) mean(r^2)
+  lr_a <- n * log(v(d$M - mean(d$M)) / v(stats::resid(stats::lm(M ~ X, d))))
+  lr_b <- n * log(v(stats::resid(stats::lm(Y ~ X, d))) / v(stats::resid(stats::lm(Y ~ M + X, d))))
+  min(lr_a, lr_b)
+}
 
 one <- function(engine, seed) {
   set.seed(seed)
@@ -55,11 +84,16 @@ one <- function(engine, seed) {
   }
   runs <- res$runs
   ref <- res$reference$lr
+  ref_or <- oracle_lr(d)
+  ref_ok <- res$reference$accepted && abs(ref - ref_or) <= 1e-6 * max(1, ref_or)
+  below <- is.finite(runs$lr) & runs$converged & runs$lr < ref_or - tol * max(1, ref_or)
+  below_unflagged <- any(below & runs$status != "constraint_violated")
   violated <- is.finite(runs$residual) & runs$residual > tol
   above <- !violated & is.finite(runs$lr) & runs$converged & runs$lr > ref + tol * max(1, ref)
   warn_drop <- any(seen == "medfit_warning_engine_constraint_dropped")
   warn_above <- any(seen == "medfit_warning_engine_statistic_above_max")
-  mislabel <- res$reference$accepted && (any(violated) != warn_drop || any(above) != warn_above)
+  mislabel <- !ref_ok || identical(res$verdict, "unresolved") || below_unflagged ||
+    any(violated) != warn_drop || any(above) != warn_above
   data.frame(engine = engine, version = versions[[engine]], seed = seed, verdict = res$verdict,
              drop = any(violated), above = any(above), warn_drop = warn_drop, warn_above = warn_above,
              mislabel = mislabel, pass = !mislabel, note = "", stringsAsFactors = FALSE)
