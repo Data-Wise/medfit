@@ -70,6 +70,48 @@ test_that("tolerance scales with max(1, LR): a large LR tolerates a larger absol
   expect_identical(assess(lr_engine(runs = list(lr_run(lr = 100.05))), ref = lr_ref(lr = 100))$verdict, "disagree")
 })
 
+test_that("a missing parameter or a differing unrestricted discrepancy gives unresolved, no fault", {
+  missing_par <- assess(lr_engine("lavaan", list(lr_run(lr = 5)), est = c(a = 0.1, b = 0.2)), ref = lr_ref(lr = 0.5))
+  expect_identical(missing_par$verdict, "unresolved")
+  expect_match(missing_par$reason, "parameter sets differ.*cp")
+  expect_length(missing_par$conditions, 0L)
+  same_est_other_fit <- assess(lr_engine("lavaan", list(lr_run(lr = 5)), fit = 9), ref = lr_ref(lr = 0.5, fit = 3.2))
+  expect_identical(same_est_other_fit$verdict, "unresolved")
+  expect_match(same_est_other_fit$reason, "discrepancy differs")
+  expect_length(same_est_other_fit$conditions, 0L)
+  unavailable <- assess(lr_engine("lavaan", list(lr_run(lr = 5)), fit = NA_real_), ref = lr_ref(lr = 0.5))
+  expect_identical(unavailable$verdict, "unresolved")
+  expect_match(unavailable$reason, "discrepancy unavailable")
+})
+
+test_that("missing constraint evidence is unchecked, never feasible: no agree, no warning", {
+  for (resid in c(NA_real_, NaN, Inf)) {
+    same <- assess(lr_engine(runs = list(lr_run(lr = 0.5, residual = resid))), ref = lr_ref(lr = 0.5))
+    expect_identical(same$runs$status, "unchecked")
+    expect_identical(same$verdict, "unresolved")
+    above <- assess(lr_engine(runs = list(lr_run(lr = 5, residual = resid))), ref = lr_ref(lr = 0.5))
+    expect_identical(above$runs$status, "unchecked")
+    expect_length(above$conditions, 0L)
+  }
+})
+
+test_that("feasibility is judged in the constraint's natural units, so rescaling the data does not flip the verdict", {
+  # the same fitted violation seen in two units: raw |a*b| 1e-3 against natural units 1e-3 (a big violation: 1)
+  # and against 1e3 (negligible: 1e-6); the verdict follows the normalized value
+  big <- assess(lr_engine("openmx", list(lr_run("zero", lr = 0, residual = 1e-3, residual_scale = 1e-3))),
+                ref = lr_ref(lr = 0.8))
+  tiny <- assess(lr_engine("openmx", list(lr_run("zero", lr = 0.8, residual = 1e-3, residual_scale = 1e3))),
+                 ref = lr_ref(lr = 0.8))
+  expect_identical(big$runs$status, "constraint_violated")
+  expect_identical(tiny$runs$status, "agree")
+  # rescaling a mediator by k multiplies the raw product and its natural unit by the same k: same verdict
+  for (k in c(1e-3, 1, 1e3)) {
+    out <- assess(lr_engine("openmx", list(lr_run("zero", lr = 0, residual = 0.027 * k, residual_scale = k))),
+                  ref = lr_ref(lr = 0.8))
+    expect_identical(out$runs$status, "constraint_violated")
+  }
+})
+
 test_that(".lr_signal() raises each condition with its class and the parent class", {
   out <- assess(lr_engine("lavaan", list(lr_run(lr = 0.9))), ref = lr_ref(lr = 0.5))
   expect_warning(medfit:::.lr_signal(out), class = "medfit_warning_engine_statistic_above_max")
