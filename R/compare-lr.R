@@ -128,7 +128,7 @@
   invisible(assessment)
 }
 
-# ---- reference and the lavaan adapter (#249 T2) -----------------------------------------------------------------------
+# ---- reference and the lavaan adapter (#249 T2) --------------------------------------------------------------------
 
 # Why compare_lr() cannot run this fit, or NULL when it can. Only observed-variable covariance models are supported
 # (grill P3): every other construct is refused with its name, never translated silently.
