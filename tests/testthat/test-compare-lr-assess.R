@@ -112,6 +112,22 @@ test_that("feasibility is judged in the constraint's natural units, so rescaling
   }
 })
 
+test_that("one agreeing start beside a failed start is unresolved, never a silent agree", {
+  failed_zero <- lr_run("zero", converged = FALSE, lr = NA_real_)
+  mixed <- assess(lr_engine("lavaan", list(lr_run("default", lr = 0.5), failed_zero)))
+  expect_identical(mixed$runs$status, c("agree", "failed"))
+  expect_identical(mixed$verdict, "unresolved")
+  expect_match(mixed$reason, "lavaan.*zero start.*failed")
+  # an unchecked residual beside an agreeing start is the same
+  unchecked <- assess(lr_engine("openmx", list(lr_run("default"), lr_run("zero", residual = NA_real_))))
+  expect_identical(unchecked$verdict, "unresolved")
+  expect_match(unchecked$reason, "openmx.*zero start.*unchecked")
+  # a real disagreement still wins over a failed run
+  both <- assess(lr_engine("openmx", list(lr_run("default", lr = 0, residual = 0.3), failed_zero)),
+                 ref = lr_ref(lr = 0.8))
+  expect_identical(both$verdict, "disagree")
+})
+
 test_that(".lr_signal() raises each condition with its class and the parent class", {
   out <- assess(lr_engine("lavaan", list(lr_run(lr = 0.9))), ref = lr_ref(lr = 0.5))
   expect_warning(medfit:::.lr_signal(out), class = "medfit_warning_engine_statistic_above_max")
