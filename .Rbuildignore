@@ -34,3 +34,4 @@
 ^tasks$
 ^scripts$
 ^\.codex$
+^book$

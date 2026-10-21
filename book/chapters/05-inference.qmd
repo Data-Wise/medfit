@@ -1,15 +1,5 @@
 ---
-title: "Native engine book, chapter 5: inference"
-format:
-  html:
-    code-tools: false
-    code-copy: false
-    highlight-style: none
-execute:
-  collapse: true
-  comment: "#>"
-  eval: true
-  echo: true
+title: "Inference"
 ---
 
 The first four chapters built the estimates. This chapter builds everything that comes with them: standard errors from
@@ -742,6 +732,6 @@ stopifnot(is.character(boundary_warning), grepl("boundary", boundary_warning))
 
 ## Where next
 
-[Chapter 6](native-book-6-product-term.html) adds the product term `x:m`: how the engine builds it, why the paths stay
-least squares, and why the expected information and the model test give way. The [native engine guide](native-guide.html) lists the syntax, the options and the limits in one place, and
-[lavaan and the native engine](lavaan-comparison.html) states what the engine does and does not do compared with lavaan.
+[Chapter 6](06-product-term.qmd) adds the product term `x:m`: how the engine builds it, why the paths stay
+least squares, and why the expected information and the model test give way. The [native engine guide](https://data-wise.github.io/medfit/articles/native-guide.html) lists the syntax, the options and the limits in one place, and
+[lavaan and the native engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.html) states what the engine does and does not do compared with lavaan.

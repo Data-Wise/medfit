@@ -1,44 +1,44 @@
-# Consistency guard for the native-engine mini-book (vignettes/articles/native-book-1..7):
-# the chapters exist, sit in the articles index and the Guides menu in order, every
-# chapter link resolves, and identities chapters 5, 6 and 7 teach hold.
+# Consistency guard for the native-engine book (book/chapters/01..07): the chapters exist and are listed in book/_quarto.yml in
+# order, every chapter link resolves, the book is off the package website, and identities chapters 5, 6 and 7 teach hold.
 
 root_path <- function(...) testthat::test_path("..", "..", ...)
 
-book_chapters <- function() {
-  d <- root_path("vignettes", "articles")
-  testthat::skip_if_not(dir.exists(d), "vignettes are not available (installed or built package)")
-  sub("\\.qmd$", "", list.files(d, pattern = "^native-book-[0-9]-.*\\.qmd$"))
+book_dir <- function() {
+  d <- root_path("book")
+  testthat::skip_if_not(dir.exists(d), "book/ is not available (installed or built package)")
+  d
 }
+
+book_chapters <- function() list.files(file.path(book_dir(), "chapters"), pattern = "^0[0-9]-.*\\.qmd$")
 
 read_text <- function(p) paste(readLines(p, warn = FALSE), collapse = "\n")
 
-test_that("the seven chapters exist, numbered 1 to 7", {
+test_that("the seven chapters exist, numbered 1 to 7, and are listed in _quarto.yml in order", {
   ch <- book_chapters()
   expect_length(ch, 7L)
-  expect_identical(as.integer(sub("^native-book-([0-9])-.*$", "\\1", ch)), 1:7)
+  expect_identical(as.integer(sub("^0([0-9])-.*$", "\\1", ch)), 1:7)
+  yml <- read_text(file.path(book_dir(), "_quarto.yml"))
+  pos <- vapply(ch, function(g) regexpr(paste0("chapters/", g), yml, fixed = TRUE)[[1]], numeric(1))
+  expect_true(all(pos > 0))
+  expect_false(is.unsorted(pos))
 })
 
-test_that("every chapter is in the articles index and the Guides menu, in order", {
-  ch <- book_chapters()
-  pk <- read_text(root_path("_pkgdown.yml"))
-  for (g in ch) {
-    expect_true(grepl(paste0("articles/", g, "`"), pk, fixed = TRUE), info = paste(g, "index"))
-    expect_true(grepl(paste0("articles/", g, ".html"), pk, fixed = TRUE), info = paste(g, "menu"))
-  }
-  pos_menu <- vapply(ch, function(g) regexpr(paste0("articles/", g, ".html"), pk, fixed = TRUE)[[1]], numeric(1))
-  pos_index <- vapply(ch, function(g) regexpr(paste0("articles/", g, "`"), pk, fixed = TRUE)[[1]], numeric(1))
-  expect_false(is.unsorted(pos_menu))
-  expect_false(is.unsorted(pos_index))
-})
-
-test_that("every article link on the chapters resolves", {
+test_that("every relative chapter link resolves", {
   for (g in book_chapters()) {
-    txt <- read_text(root_path("vignettes", "articles", paste0(g, ".qmd")))
-    links <- unique(regmatches(txt, gregexpr("\\]\\(([a-z0-9-]+)\\.html[#)]", txt))[[1]])
-    targets <- paste0(gsub("^\\]\\(|\\.html[#)]$", "", links), ".qmd")
-    missing <- targets[!file.exists(root_path("vignettes", "articles", targets))]
+    txt <- read_text(file.path(book_dir(), "chapters", g))
+    links <- unique(regmatches(txt, gregexpr("\\]\\((0[0-9]-[a-z0-9-]+\\.qmd)", txt))[[1]])
+    targets <- gsub("^\\]\\(", "", links)
+    missing <- targets[!file.exists(file.path(book_dir(), "chapters", targets))]
     expect_identical(missing, character(), info = g)
   }
+})
+
+test_that("the book is not on the package website", {
+  skip_if_not(file.exists(root_path("_pkgdown.yml")), "_pkgdown.yml is not shipped")
+  expect_false(grepl("native-book", read_text(root_path("_pkgdown.yml")), fixed = TRUE))
+  d <- root_path("vignettes", "articles")
+  skip_if_not(dir.exists(d))
+  expect_length(list.files(d, pattern = "^native-book"), 0L)
 })
 
 test_that("chapter 5: the delta-method standard error and the MBCO/anova statistic agree by hand", {

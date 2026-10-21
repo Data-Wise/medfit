@@ -1,0 +1,34 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "The medfit native engine"
+  subtitle: "Matrices, solver and inference, step by step"
+  author: "medfit development team"
+  chapters:
+    - index.qmd
+    - chapters/01-mean-structure.qmd
+    - chapters/02-scale.qmd
+    - chapters/03-constraints.qmd
+    - chapters/04-fixed-x.qmd
+    - chapters/05-inference.qmd
+    - chapters/06-product-term.qmd
+    - chapters/07-four-way.qmd
+
+format:
+  html:
+    theme: cosmo
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+  pdf:
+    documentclass: scrbook
+    toc: true
+    number-sections: true
+
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true

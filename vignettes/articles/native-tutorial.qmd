@@ -186,6 +186,6 @@ values, products and the four-way decomposition.
   diagnostics and limits in one place.
 - [Cookbook recipes 11 to 21](cookbook.html): a latent mediator, a nonlinear
   constraint, comparing models, defined parameters, bounds, checks, fixed covariates, intercepts, the four-way decomposition and a categorical covariate.
-- [Native engine book](native-book-1-mean-structure.html): seven chapters on the mean structure, scale, constraints, `fixed_x`, inference, the product term and the four-way decomposition.
+- [Native engine book (source in the repository)](https://github.com/Data-Wise/medfit/tree/main/book): seven chapters on the mean structure, scale, constraints, `fixed_x`, inference, the product term and the four-way decomposition.
 - [lavaan and the native engine](lavaan-comparison.html): what the native engine
   does and does not do compared with lavaan.
