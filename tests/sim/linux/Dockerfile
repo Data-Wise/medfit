@@ -17,4 +17,14 @@ RUN Rscript -e 'pkgs <- c("S7", "checkmate", "generics", "lifecycle", "MASS", "n
                 install.packages(pkgs[nzchar(pkgs)], Ncpus = 4); \
                 stopifnot(all(c("S7", "nloptr", "pkgload") %in% rownames(installed.packages())))'
 
+# BLAS=openblas switches to OpenBLAS (what the GitHub `ubuntu-latest` runner has: r-lib/actions/setup-r installs
+# libopenblas0-pthread), BLAS=reference keeps the reference BLAS. Gate results can differ between the two (#238).
+ARG BLAS=reference
+RUN if [ "$BLAS" = "openblas" ]; then \
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends libopenblas0-pthread \
+      && update-alternatives --set libblas.so.3-x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 \
+      && update-alternatives --set liblapack.so.3-x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3 \
+      && rm -rf /var/lib/apt/lists/*; \
+    fi
+
 WORKDIR /w
