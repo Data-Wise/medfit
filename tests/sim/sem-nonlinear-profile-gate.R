@@ -141,12 +141,13 @@ for (f in fx) {
       warned <- any(grepl("solver floor", wmsg, fixed = TRUE))
       at_floor <- "Vy" %in% h2@diagnostics$active_bounds
       ok <- warned && at_floor && is.finite(lr) && request_ok
+      floor_note <- sprintf(
+        "floor contract not met: warned=%s at_floor=%s finite_lr=%s request_ok=%s q_ach=%.8g active=[%s]",
+        warned, at_floor, is.finite(lr), request_ok, q_ach, paste(h2@diagnostics$active_bounds, collapse = ",")
+      )
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = ok, omx_ok = TRUE,
                                               lr = lr, lr_oracle = NA_real_, gap = 0, improper = "",
-                                              note = if (ok) "" else sprintf(
-                                                "floor contract not met: warned=%s at_floor=%s finite_lr=%s request_ok=%s q_ach=%.8g active=[%s]",
-                                                warned, at_floor, is.finite(lr), request_ok, q_ach,
-                                                paste(h2@diagnostics$active_bounds, collapse = ",")),
+                                              note = if (ok) "" else floor_note,
                                               stringsAsFactors = FALSE)
       next
     }
