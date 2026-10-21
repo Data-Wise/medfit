@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.12.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -121,9 +121,20 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.12.0" id="medfit-0120">medfit 0.12.0<a class="anchor" aria-label="anchor" href="#medfit-0120"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-12-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-12-0"></a></h3>
+<ul><li>New <code><a href="../reference/compare_lr.html">compare_lr()</a></code> (<a href="https://github.com/data-wise/medfit/issues/249" class="external-link">#249</a>) runs the product-null likelihood-ratio test (<code>a*b == 0</code>) in lavaan or OpenMx from two starts (lavaan’s default and its <code>"simple"</code> start; for OpenMx medfit’s default start and the same start with the tested paths at 0) and compares it with medfit’s <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> statistic, the best accepted refit of the two linear nulls. It warns only on observed evidence: <code>medfit_warning_engine_constraint_dropped</code> when the engine’s returned fit violates the product constraint (OpenMx at a zero start can drop it), and <code>medfit_warning_engine_statistic_above_max</code> when a feasible run’s statistic exceeds medfit’s (lavaan can stop at the wrong branch). Both inherit from <code>medfit_warning_engine_comparison</code>; a case it cannot judge is <code>"unresolved"</code>, never an accusation. Observed-variable covariance models only. The <code>compare-lr</code> gate in <code>tests/sim</code> checks the labeling live on both engines.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-12-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-12-0"></a></h3>
+<ul><li>The native acceptance gate no longer rejects a correct fit at an active bound because of roundoff (<a href="https://github.com/data-wise/medfit/issues/238" class="external-link">#238</a>). The multiplier slope of a bound is now compared with a floor that scales with the natural-unit gradient norm (<code>1e-10</code> of it, never below <code>1e-12</code>), not with the fixed <code>1e-12</code>. On the reference BLAS (the GitHub Linux runner) the extreme-scale floor fixture of the <a href="https://github.com/data-wise/medfit/issues/213" class="external-link">#213</a> gate (variances from 1e-3 to 1e3) returned a slope of 2e-12 against a gradient of norm 1e4, was rejected, and left a wrong-branch optimum as the only accepted start; the gate now passes 144 of 144 runs on that BLAS, and the CI <code>gates</code> workflow runs it strict.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.11.1" id="medfit-0111">medfit 0.11.1<a class="anchor" aria-label="anchor" href="#medfit-0111"></a></h2>
 <div class="section level3">

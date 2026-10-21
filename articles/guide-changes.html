@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.12.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -164,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -173,7 +173,7 @@
 
 
 
-    <p>CRAN has medfit 0.3.2; this site documents 0.11.1 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
+    <p>CRAN has medfit 0.3.2; this site documents 0.12.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
 <div>
 <blockquote>
 <p><strong>The short version</strong></p>
@@ -492,6 +492,11 @@
 <td>0.11.1</td>
 <td>nonparametric and cluster bootstrap resamples are reproducible across <code>ncores</code> with a fixed seed; <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> records row-wise <code>p_valid</code> and refuses mismatched nonzero fixed parameters; native fits record the best-of-starts verdict in <code>@diagnostics$optimum</code>
 </td>
+</tr>
+<tr class="even">
+<td>0.12.0</td>
+<td>
+<code><a href="../reference/compare_lr.html">compare_lr()</a></code> (<a href="lavaan-comparison.html#checking-a-constrained-lr-against-lavaan-or-openmx">article</a>): the product-null LR in lavaan or OpenMx against <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>, with warnings only on observed evidence</td>
 </tr>
 </tbody>
 </table></section><section class="level2"><h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>

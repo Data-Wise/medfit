@@ -1,5 +1,43 @@
 # Changelog
 
+## medfit 0.12.0
+
+### New features
+
+- New
+  [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+  ([\#249](https://github.com/data-wise/medfit/issues/249)) runs the
+  product-null likelihood-ratio test (`a*b == 0`) in lavaan or OpenMx
+  from two starts (lavaan’s default and its `"simple"` start; for OpenMx
+  medfit’s default start and the same start with the tested paths at 0)
+  and compares it with medfit’s
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  statistic, the best accepted refit of the two linear nulls. It warns
+  only on observed evidence: `medfit_warning_engine_constraint_dropped`
+  when the engine’s returned fit violates the product constraint (OpenMx
+  at a zero start can drop it), and
+  `medfit_warning_engine_statistic_above_max` when a feasible run’s
+  statistic exceeds medfit’s (lavaan can stop at the wrong branch). Both
+  inherit from `medfit_warning_engine_comparison`; a case it cannot
+  judge is `"unresolved"`, never an accusation. Observed-variable
+  covariance models only. The `compare-lr` gate in `tests/sim` checks
+  the labeling live on both engines.
+
+### Bug fixes
+
+- The native acceptance gate no longer rejects a correct fit at an
+  active bound because of roundoff
+  ([\#238](https://github.com/data-wise/medfit/issues/238)). The
+  multiplier slope of a bound is now compared with a floor that scales
+  with the natural-unit gradient norm (`1e-10` of it, never below
+  `1e-12`), not with the fixed `1e-12`. On the reference BLAS (the
+  GitHub Linux runner) the extreme-scale floor fixture of the
+  [\#213](https://github.com/data-wise/medfit/issues/213) gate
+  (variances from 1e-3 to 1e3) returned a slope of 2e-12 against a
+  gradient of norm 1e4, was rejected, and left a wrong-branch optimum as
+  the only accepted start; the gate now passes 144 of 144 runs on that
+  BLAS, and the CI `gates` workflow runs it strict.
+
 ## medfit 0.11.1
 
 ### New features

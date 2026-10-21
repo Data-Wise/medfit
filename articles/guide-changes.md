@@ -1,6 +1,6 @@
 # What changed since CRAN 0.3.2
 
-CRAN has medfit 0.3.2; this site documents 0.11.1 (GitHub and
+CRAN has medfit 0.3.2; this site documents 0.12.0 (GitHub and
 r-universe). This page lists what a 0.3.2 user needs to know before
 upgrading: numbers that change, calls that now stop with an error, and
 what is new. The full record is
@@ -98,6 +98,7 @@ path (0.5.0).
 | 0.10.0 | the product term `x:m` in native syntax and the four-way decomposition from a native fit ([`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) fit), a supported-class table, and a worked example in the [interaction page](https://data-wise.github.io/medfit/articles/model-interaction.md) |
 | 0.11.0 | categorical covariates in native syntax ([page](https://data-wise.github.io/medfit/articles/model-native-factors.md), [recipe 21](https://data-wise.github.io/medfit/articles/cookbook.html#a-categorical-covariate-in-a-native-fit)); `options(medfit.covariate_mean_variance = TRUE)` for population-average four-way standard errors (default unchanged); [`AIC()`](https://rdrr.io/r/stats/AIC.html)/[`BIC()`](https://rdrr.io/r/stats/AIC.html) refuse fits over different observed variables; nonlinear-constrained fits no longer wander to negative variances (#213); the native engine is no longer marked experimental (its signatures, `SEMFit` properties and syntax change only through a deprecation) |
 | 0.11.1 | nonparametric and cluster bootstrap resamples are reproducible across `ncores` with a fixed seed; [`anova()`](https://rdrr.io/r/stats/anova.html) records row-wise `p_valid` and refuses mismatched nonzero fixed parameters; native fits record the best-of-starts verdict in `@diagnostics$optimum` |
+| 0.12.0 | [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md) ([article](https://data-wise.github.io/medfit/articles/lavaan-comparison.html#checking-a-constrained-lr-against-lavaan-or-openmx)): the product-null LR in lavaan or OpenMx against [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md), with warnings only on observed evidence |
 
 ## Dependencies
 

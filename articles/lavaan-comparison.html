@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.12.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -164,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -432,7 +432,43 @@ max_diff_estimate_fixed_x 1.665335e-16</code></pre>
 </div>
 </div>
 <p>They differ in what follows. lavaan reports a chi-square for this model; medfit reports <code>NA</code>, because the product contains a regression target (<code>mediator1</code>) and the model treats it as exogenous, which makes the global test invalid (see <a href="model-native.html#product-terms">the native model page</a>). lavaan stores the product under the spelling you wrote (<code>treatment:mediator1</code>); medfit stores <code>mediator1:treatment</code>, whichever order you write. A model medfit rejects (a residual covariance between outcomes, a shared or fixed coefficient, a constraint on a coefficient, a bound) is still fitted by lavaan.</p>
-</section></section><script id="quarto-html-after-body" type="application/javascript">
+</section></section><section class="level2"><h2 id="checking-a-constrained-lr-against-lavaan-or-openmx">Checking a constrained LR against lavaan or OpenMx<a class="anchor" aria-label="anchor" href="#checking-a-constrained-lr-against-lavaan-or-openmx"></a>
+</h2>
+<p>The test of an indirect effect, <span class="math inline">\(ab = 0\)</span>, can be posed to a general optimizer as the nonlinear constraint <code>a*b == 0</code>. That is the one place where a general optimizer can return a wrong statistic without saying so: OpenMx started at <span class="math inline">\(a = b = 0\)</span> can drop the constraint (its Jacobian is zero there), and lavaan can stop at a branch with a larger statistic than the true minimum. medfit never poses that constraint to its own solver: <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> takes the smaller of the two linear nulls. The decomposition is exact (the product is zero exactly when one factor is); each branch is a numerical refit from several starts, so the reference is the best accepted refit, not a proof of a global minimum. <code><a href="../reference/compare_lr.html">compare_lr()</a></code> runs the nonlinear form in lavaan or OpenMx from two starts and compares it with medfit’s result. lavaan starts from its own default and from its <code>"simple"</code> start (the paths at 0); OpenMx starts from medfit’s default start and from the same start with the tested paths set to 0, the start at which it drops the constraint:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="st">"mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/compare_lr.html">compare_lr</a></span><span class="op">(</span><span class="va">fit</span>, paths <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>, engine <span class="op">=</span> <span class="st">"lavaan"</span><span class="op">)</span></span></code></pre>
+</div>
+<p>A warning is raised only on observed evidence, never because the engine’s LR is zero (a valid fit has LR = 0 when the unrestricted optimum already satisfies the null):</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead><tr class="header">
+<th>Condition</th>
+<th>Warning class</th>
+<th>Evidence</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>The engine’s returned fit violates <span class="math inline">\(ab = 0\)</span>
+</td>
+<td><code>medfit_warning_engine_constraint_dropped</code></td>
+<td>
+<span class="math inline">\(|ab|\)</span> above <code>1e-4</code> in the natural units of the product</td>
+</tr>
+<tr class="even">
+<td>A feasible run’s statistic exceeds medfit’s best accepted refit</td>
+<td><code>medfit_warning_engine_statistic_above_max</code></td>
+<td>difference above <code>1e-4 * max(1, LR)</code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Both inherit from <code>medfit_warning_engine_comparison</code>. The verdict is <code>"unresolved"</code>, and neither side is blamed, when medfit has no accepted reference, the engine’s unrestricted fit differs from medfit’s (parameters, estimates, or the discrepancy), or a run failed or could not be checked. Only observed-variable covariance models are compared; latent variables, products, mean structures, weights, <code>fixed_x</code>, factors, fixed or shared parameters, start and bound modifiers and constraints in the model are refused by name. The live check behind these statements is the <code>compare-lr</code> gate (<code>tests/sim/compare-lr-gate.R</code>), which runs the issue’s cell through both engines and fails only when <code><a href="../reference/compare_lr.html">compare_lr()</a></code> mislabels.</p>
+</section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);

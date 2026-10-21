@@ -1,7 +1,7 @@
 # medfit Reference Card
 
 Quick lookup for users who already know medfit. This card describes
-medfit 0.11.1 (CRAN has 0.3.2; install from GitHub or r-universe, see
+medfit 0.12.0 (CRAN has 0.3.2; install from GitHub or r-universe, see
 the [home page](https://data-wise.github.io/medfit/#install)).
 Explanations are in the
 [articles](https://data-wise.github.io/medfit/articles/getting-started.md);
@@ -75,6 +75,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Intercepts and means on a native fit | `y ~ 1` in the syntax (frees every unwritten observed intercept), or `fit_sem(model, data, meanstructure = TRUE)`; `y ~ 0*1` restricts one |
 | Log likelihood, AIC and BIC of a `SEMFit` | `logLik(fit)`, `AIC(fit1, fit2)`, `BIC(fit1, fit2)`; [`AIC()`](https://rdrr.io/r/stats/AIC.html) of a fit with a product term and one without are not comparable |
 | Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")`; `paths = c("a", "d", "b")` for a serial product |
+| Check the product-null LR against lavaan or OpenMx | `compare_lr(fit, paths = c("a", "b"), engine = "lavaan")`; warns only on observed evidence |
 | Compare nested `SEMFit`s (likelihood-ratio test) | `anova(fit_full, fit_restricted)` |
 | Parameter table, one-row fit summary and intervals for a `SEMFit` | `tidy(fit)`, `glance(fit)`, `confint(fit)` |
 

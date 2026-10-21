@@ -1,0 +1,85 @@
+# Compare medfit's Product-Null LR with OpenMx or lavaan
+
+Runs the likelihood-ratio test of a product null (\\a b = 0\\) in an
+external SEM engine and compares it with medfit's own
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+statistic. A general-purpose optimizer handed the nonlinear constraint
+\\a b = 0\\ can drop it (OpenMx at a zero start) or stop at the wrong
+branch (lavaan), which reports a statistic above the true minimum.
+`compare_lr()` flags exactly those cases and nothing else.
+
+A warning is raised only on observed evidence, never because an LR is
+zero: `medfit_warning_engine_constraint_dropped` when the engine's
+returned fit violates the product constraint, and
+`medfit_warning_engine_statistic_above_max` when the engine's statistic
+exceeds medfit's. Both inherit from `medfit_warning_engine_comparison`.
+If medfit has no accepted reference, the engines' unrestricted fits
+differ from medfit's, or a run fails or cannot be checked, the verdict
+is `"unresolved"` and neither side is blamed.
+
+Only observed-variable covariance models are compared. Latent variables,
+product terms, mean structures, weights, `fixed_x`, factors, fixed or
+shared parameters, start/bound modifiers and constraints in the model
+are refused by name.
+
+## Usage
+
+``` r
+compare_lr(object, paths, engine = c("lavaan", "openmx"), tolerance = 1e-04)
+```
+
+## Arguments
+
+- object:
+
+  A [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)
+  from
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md).
+
+- paths:
+
+  Character vector: the labels of the regression paths whose product is
+  the indirect effect, as in
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md).
+
+- engine:
+
+  `"lavaan"` or `"openmx"`. The package must be installed.
+
+- tolerance:
+
+  Relative tolerance on the LR difference, scaled by `max(1, LR)`.
+  Default `1e-4`; values above `1e-2` are refused, because a loose
+  tolerance would call different statistics equal.
+
+## Value
+
+An object of class `medfit_lr_comparison`: a list with `verdict`
+(`"agree"`, `"disagree"` or `"unresolved"`), `reason`, `reference`
+(medfit's LR and whether it was accepted), `runs` (one row per engine
+start with the LR, convergence, constraint residual and status) and
+`engine`.
+
+## See also
+
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md),
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+
+## Examples
+
+``` r
+# \donttest{
+if (requireNamespace("lavaan", quietly = TRUE)) {
+  fit <- fit_sem(
+    "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment",
+    data = mediation_demo
+  )
+  compare_lr(fit, paths = c("a", "b"), engine = "lavaan")
+}
+#> medfit LR comparison (lavaan, a*b = 0): agree
+#>   medfit reference LR 17.5574 (accepted)
+#>  engine version   start      lr converged     residual status
+#>  lavaan   0.7.3 default 17.5574      TRUE 2.417762e-09  agree
+#>  lavaan   0.7.3    zero 17.5574      TRUE 3.772165e-09  agree
+# }
+```

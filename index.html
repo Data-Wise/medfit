@@ -39,7 +39,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.12.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -186,6 +186,11 @@
 </tr></thead>
 <tbody>
 <tr>
+<td><strong>0.12.0</strong></td>
+<td>
+<code><a href="reference/compare_lr.html">compare_lr()</a></code> runs the product-null LR (<code>a*b == 0</code>) in lavaan or OpenMx and compares it with <code><a href="reference/mbco_sem.html">mbco_sem()</a></code>, warning only on observed evidence (a dropped constraint, a statistic above medfit’s); a fix for the native acceptance gate rejecting a correct fit at a bound on the reference BLAS (#238)</td>
+</tr>
+<tr>
 <td><strong>0.11.1</strong></td>
 <td>Nonparametric and cluster bootstrap resamples no longer depend on <code>ncores</code>; <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> on <code>SEMFit</code> records <code>p_valid</code> and refuses a pair with a nonzero fixed parameter in one fit only; <code>@diagnostics$optimum</code> records the best-of-starts verdict; an engine comparison table on the Models page; the minibook explains the hard concepts from scratch; a robustness suite for the native optimizer (metamorphic, nloptr fault injection, an edge-case grid and a randomized oracle sweep, registered as a gate)</td>
 </tr>
@@ -235,7 +240,7 @@
 <span>  <span class="st">"medfit"</span>,</span>
 <span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://data-wise.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>This installs the current r-universe release (0.11.1). Binaries are available for supported R/platform combinations; a source installation can require a compiler for dependencies such as <code>nloptr</code>. From GitHub instead: <code>pak::pak("data-wise/medfit")</code>.</p>
+<p>This installs the current r-universe release (0.12.0). Binaries are available for supported R/platform combinations; a source installation can require a compiler for dependencies such as <code>nloptr</code>. From GitHub instead: <code>pak::pak("data-wise/medfit")</code>.</p>
 <blockquote>
 <p><strong>CRAN has 0.3.2, which does not run the examples on this site.</strong> It lacks <code>mediation_demo</code>, <code><a href="reference/fit_sem.html">fit_sem()</a></code>, <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> and the joint and cluster classes. Its two known issues, serial <code><a href="reference/te.html">te()</a></code>/<code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> path rows, are fixed in 0.5.0; see <a href="https://github.com/Data-Wise/medfit/issues/83" class="external-link">#83</a>.</p>
 </blockquote>
@@ -701,7 +706,7 @@
 </h2>
 <p>If you use medfit in your research, please cite:</p>
 <pre><code>Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.11.1. https://data-wise.github.io/medfit/</code></pre>
+R package version 0.12.0. https://data-wise.github.io/medfit/</code></pre>
 <p>For the entry matching your installed version, run <code>citation("medfit")</code>.</p>
 </div>
 <div class="section level2">

@@ -70,6 +70,8 @@ Functions for fitting and extracting mediation models
   : Fit a Structural Equation Model by Maximum Likelihood
 - [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
   : Minimum-of-k Likelihood-Ratio Test for an Indirect Effect (MBCO)
+- [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+  : Compare medfit's Product-Null LR with OpenMx or lavaan
 - [`medfit-syntax`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
   [`medfit_syntax`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
   : medfit Model Syntax
