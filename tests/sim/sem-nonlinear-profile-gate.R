@@ -29,16 +29,12 @@
 #   oracle1    the oracle searches only the positive sign branch
 #   oracle0    the q = 0 oracle uses only the a = 0 null
 #   halfq      the fit is asked for q / 2 while the gate checks q (the request check must fail)
-# `MEDFIT_FLOOR_REPORT_ONLY=1` makes the floor fixture report-only (the CI gate sets it; see issue #238).
 # Run from the package root:  Rscript tests/sim/sem-nonlinear-profile-gate.R   (FAST=1 runs 8 fixtures x 3 q's)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/sim/oracle213.R", local = FALSE)
 mutant <- Sys.getenv("MUTANT", "")
 fast <- nzchar(Sys.getenv("FAST", ""))
-# The floor fixture is platform-sensitive on a reference BLAS (issue #238): set MEDFIT_FLOOR_REPORT_ONLY to report a
-# failure of that one fixture without failing the gate. Strict when unset (macOS, OpenBLAS, local release runs).
-floor_report_only <- nzchar(Sys.getenv("MEDFIT_FLOOR_REPORT_ONLY", ""))
 ns <- asNamespace("medfit")
 swap <- function(name, fn, env = ns) {
   if (bindingIsLocked(name, env)) {
@@ -131,10 +127,8 @@ for (f in fx) {
       error = function(e) conditionMessage(e)
     )
     if (is.character(h2)) {
-      report <- isTRUE(f$floor_case) && floor_report_only
-      if (report) message("REPORT-ONLY (#238): floor fixture ", f$id, " at ", tag, " stopped: ", substr(h2, 1, 100))
-      rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = report, omx_ok = TRUE,
-                                              lr = NA_real_, lr_oracle = NA_real_, gap = if (report) 0 else NA_real_,
+      rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = FALSE, omx_ok = TRUE,
+                                              lr = NA_real_, lr_oracle = NA_real_, gap = NA_real_,
                                               improper = "", note = substr(h2, 1, 80), stringsAsFactors = FALSE)
       next
     }
@@ -147,11 +141,6 @@ for (f in fx) {
       warned <- any(grepl("solver floor", wmsg, fixed = TRUE))
       at_floor <- "Vy" %in% h2@diagnostics$active_bounds
       ok <- warned && at_floor && is.finite(lr) && request_ok
-      if (!ok && floor_report_only) {
-        message("REPORT-ONLY (#238): floor fixture ", f$id, " at ", tag, " did not meet the floor contract: ",
-                "warned=", warned, " at_floor=", at_floor, " lr=", format(lr), " request_ok=", request_ok)
-        ok <- TRUE
-      }
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = ok, omx_ok = TRUE,
                                               lr = lr, lr_oracle = NA_real_, gap = 0, improper = "",
                                               note = if (ok) "" else "floor contract not met",

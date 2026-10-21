@@ -337,6 +337,8 @@
 # warn-only check: the fit is never rejected for it (grill-8, D8, D14).
 .sem_constraint_tol <- 1e-6
 .sem_sign_tol <- -1e-3
+# A bound multiplier slope below this fraction of the natural-unit gradient norm is roundoff, not a wrong sign (#238).
+.sem_slope_tol_rel <- 1e-10
 
 # Everything the gate and the covariance need about the active set at `theta`,
 # in the solver's natural units x = theta / u. `z` is an orthonormal basis (in x
@@ -696,7 +698,10 @@
     rows <- n_con + seq_along(bound_names)
     slope <- -as.vector(m[rows, , drop = FALSE] %*% r_span) / len[rows]
     hk <- diag(hx)[bound_idx]
-    wrong <- slope > 1e-12 & (!is.finite(hk) | hk <= 0 | slope / sqrt(pmax(hk, 0)) > .sem_stat_tol)
+    # A slope that is only roundoff in the gradient it cancels against (the gradient norm sets the scale, as the
+    # reference BLAS shows at extreme data scales, #238) is no evidence that the bound points inward.
+    slope_floor <- max(1e-12, .sem_slope_tol_rel * sqrt(sum(gx^2)))
+    wrong <- slope > slope_floor & (!is.finite(hk) | hk <= 0 | slope / sqrt(pmax(hk, 0)) > .sem_stat_tol)
     out$sign_bound <- bound_par[wrong]
   }
   hinv_r <- tryCatch(solve(hx, r_span), error = function(e) NULL)

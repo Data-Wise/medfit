@@ -1,3 +1,14 @@
+# medfit (development version)
+
+## Bug fixes
+
+* The native acceptance gate no longer rejects a correct fit at an active bound because of roundoff (#238). The
+  multiplier slope of a bound is now compared with a floor that scales with the natural-unit gradient norm
+  (`1e-10` of it, never below `1e-12`), not with the fixed `1e-12`. On the reference BLAS (the GitHub Linux runner)
+  the extreme-scale floor fixture of the #213 gate (variances from 1e-3 to 1e3) returned a slope of 2e-12 against a
+  gradient of norm 1e4, was rejected, and left a wrong-branch optimum as the only accepted start; the gate now passes
+  144 of 144 runs on that BLAS, and the CI `gates` workflow runs it strict.
+
 # medfit 0.11.1
 
 ## New features
