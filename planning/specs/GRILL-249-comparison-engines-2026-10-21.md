@@ -32,6 +32,10 @@ branch fit is accepted and the likelihoods are comparable; otherwise the result 
 - [ ] Refcard row, NEWS, `test-dependents-contract.R` and `test-api-freeze.R` updates for the new export
 - [ ] Sync the plan: SLSQP stays selectable (decision 6), D18/D20 move to the solver issue
 
+## Follow-on
+
+The implementation plan is `planning/specs/PLAN-compare-lr-249-2026-10-21.md` (PR #277); its own grill (P1-P5: T0 go/no-go, model precheck, narrow class, two starts, tolerance) refines decisions 2 and 4 above.
+
 ## Open questions
 
 - Function name and exact signature.
