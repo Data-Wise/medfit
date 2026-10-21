@@ -127,3 +127,116 @@
   }
   invisible(assessment)
 }
+
+# ---- reference and the lavaan adapter (#249 T2) -----------------------------------------------------------------------
+
+# Why compare_lr() cannot run this fit, or NULL when it can. Only observed-variable covariance models are supported
+# (grill P3): every other construct is refused with its name, never translated silently.
+.lr_unsupported <- function(object) {
+  tab <- object@table
+  model <- object@model
+  internals <- object@internals
+  if (any(tab$op == "=~")) {
+    return("latent variables")
+  }
+  if (any(grepl(":", c(tab$lhs, tab$rhs), fixed = TRUE))) {
+    return("product terms")
+  }
+  if (isTRUE(internals$ram$has_mean)) {
+    return("a mean structure (intercepts or `meanstructure`)")
+  }
+  if (!is.null(internals$weights)) {
+    return("case weights")
+  }
+  if (length(internals$fixed_x)) {
+    return("`fixed_x`")
+  }
+  if (length(internals$factors)) {
+    return("factor covariates")
+  }
+  if (grepl("\\b(start|lower|upper)\\s*\\(", model)) {
+    return("start, lower or upper modifiers")
+  }
+  if (grepl("==|<|>", model)) {
+    return("constraints in the model (give the unrestricted fit)")
+  }
+  NULL
+}
+
+# Free parameters of a fit table keyed by "lhs op rhs", so medfit's and an engine's parameter sets can be compared.
+.lr_key_est <- function(lhs, op, rhs, est) {
+  stats::setNames(est, paste(lhs, op, rhs))
+}
+
+# medfit's side of the comparison: the product-null LR from `mbco_sem()` (the minimum over the zero-product branches),
+# whether every branch fit was accepted, the unrestricted estimates and discrepancy.
+.lr_reference <- function(object, paths) {
+  tests <- mbco_sem(object, paths = paths)$tests
+  free <- object@table[object@table$free, ]
+  list(
+    lr = min(tests$diff_ll),
+    accepted = all(tests$converged) && all(is.finite(tests$diff_ll)),
+    est = .lr_key_est(free$lhs, free$op, free$rhs, free$est),
+    fit = object@n_obs * object@f
+  )
+}
+
+# The natural unit of the product of the named regression paths: the product of sd(response) / sd(predictor), so a
+# residual |a*b| is judged against how large those paths can plausibly be in the data's units.
+.lr_residual_scale <- function(object, paths) {
+  tab <- object@table
+  unit <- vapply(paths, function(p) {
+    row <- tab[tab$op == "~" & tab$label == p, ][1L, ]
+    stats::sd(object@data[[row$lhs]]) / stats::sd(object@data[[row$rhs]])
+  }, numeric(1))
+  prod(unit)
+}
+
+.lr_lavaan_fit <- function(model, data, start) {
+  fit <- tryCatch(
+    suppressWarnings(lavaan::lavaan(model, data = data, fixed.x = FALSE, meanstructure = FALSE, auto.var = TRUE,
+                                    auto.cov.y = TRUE, start = start)),
+    error = function(e) NULL
+  )
+  if (is.null(fit) || !isTRUE(lavaan::lavInspect(fit, "converged"))) {
+    return(NULL)
+  }
+  fit
+}
+
+# lavaan run on the same model and data, from lavaan's default start and from its "simple" start (the paths at 0, the
+# start at which OpenMx drops a product constraint, grill P4). Returns the engine record `.lr_assess()` takes.
+.lr_engine_lavaan <- function(object, paths) {
+  if (!requireNamespace("lavaan", quietly = TRUE)) {
+    stop("the lavaan package is needed for engine = \"lavaan\"; install it first.", call. = FALSE)
+  }
+  why <- .lr_unsupported(object)
+  if (!is.null(why)) {
+    stop(sprintf("compare_lr() does not support %s; it compares observed-variable covariance models only.", why),
+         call. = FALSE)
+  }
+  model <- object@model
+  data <- object@data
+  null_model <- paste0(model, "\n", paste(paths, collapse = "*"), " == 0")
+  full <- .lr_lavaan_fit(model, data, "default")
+  scale <- .lr_residual_scale(object, paths)
+  chisq <- function(f) if (is.null(f)) NA_real_ else unname(lavaan::fitMeasures(f, "chisq"))
+  run <- function(start) {
+    f <- .lr_lavaan_fit(null_model, data, start)
+    resid <- NA_real_
+    if (!is.null(f)) {
+      pt <- lavaan::parTable(f)
+      resid <- abs(prod(vapply(paths, function(p) pt$est[pt$label == p][1L], numeric(1))))
+    }
+    list(start = if (identical(start, "default")) "default" else "zero", lr = chisq(f) - chisq(full),
+         converged = !is.null(f), residual = resid, residual_scale = scale, jac_zero_at_start = NA)
+  }
+  est <- NULL
+  if (!is.null(full)) {
+    pt <- lavaan::parTable(full)
+    pt <- pt[pt$free > 0L, ]
+    est <- .lr_key_est(pt$lhs, pt$op, pt$rhs, pt$est)
+  }
+  list(engine = "lavaan", version = as.character(utils::packageVersion("lavaan")), est = est, fit = chisq(full),
+       runs = list(run("default"), run("simple")))
+}
