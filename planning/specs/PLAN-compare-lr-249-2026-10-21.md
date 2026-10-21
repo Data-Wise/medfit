@@ -39,6 +39,20 @@ backup per decision 6; D18/D20 are #276).
 
 Consequences for the tasks: T0 becomes a go/no-go gate; T1 adds the `unresolved` path for a failed precheck; T2/T3 add the precheck, the refusal list (P3) and the two-start runs (P4); T3's helper (`sem_openmx()` in `tests/testthat/helper-sem.R`) is covariance-only and takes internals `mod`/`smp`, which is why P3 is narrow; T4's result table has one row per engine and start; the draft tolerance in the signature becomes P5's form.
 
+## Codex review gate (added 2026-10-21, author request)
+
+After **each phase** a Codex adversarial review runs on that phase's PR before the next phase starts:
+`/codex:adversarial-review --background <phase focus>` (review-only; Codex edits nothing). Every finding is triaged in
+the PR as **fix** (done before the next phase), **reject** (with the evidence), or **defer** (an issue filed); the
+outcome is recorded under the phase's checkpoint below. A phase is not closed with an untriaged finding. Focus text per phase:
+
+| Gate | After | Focus |
+|---|---|---|
+| G1 | Phase 1 (T1) | evidence rules and false-accusation paths; is `unresolved` reachable and honest; tolerance scale |
+| G2 | Phase 2 (T2, T3) | model equivalence between medfit and each engine; refusal list completeness; start handling (zero start) |
+| G3 | Phase 3 (T4, T5) | API surface under the freeze; does the live gate protect against upstream drift; mislabel paths in `compare_lr()` |
+| G4 | Phase 4 (T6, T7) | docs claims vs behavior; release readiness; anything the freeze or dependents contract misses |
+
 ## Dependency graph
 
 ```
@@ -59,7 +73,7 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 ### Phase 1: detection core (pure, testable without engines)
 
-- [ ] **T1. `.lr_assess()`, the condition classes, the injected-result harness (S).** Dependencies: T0 (go).
+- [x] **T1. `.lr_assess()`, the condition classes, the injected-result harness (S), implemented in PR #278 (gate G1 pending).** Dependencies: T0 (go).
   - [ ] Inputs: injected reference (accepted or `unresolved` branches) and engine result (unrestricted fit, LR per start, converged, constraint residual, Jacobian-at-start flag, version).
   - [ ] Order of verdicts: model precheck first (P2: unrestricted estimates and discrepancy agree, else `unresolved` naming the parameters), then evidence rules, then the tolerance `|dLR| <= 1e-4 * max(1, LR_medfit)` (P5).
   - [ ] Tests `test-compare-lr-assess.R`: OpenMx constraint-violating fit warns; **valid zero-LR null fit does not warn**; lavaan statistic above an accepted comparable restricted maximum warns; unresolved/rejected medfit branch gives `unresolved`, no warning; failed precheck gives `unresolved`, no warning; disagreement beyond tolerance flagged without fault; **planted defect** (assess keys on LR = 0) fails the valid-zero case.
@@ -82,10 +96,15 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
   - [ ] Tests (`skip_if_not_installed("OpenMx")`): known answer against `mbco_sem()` when both converge; refusals.
   - Files: `R/compare-lr-openmx.R`, `tests/testthat/test-compare-lr-openmx.R`, `tests/testthat/helper-sem.R`. If it grows past L, ship lavaan alone and move OpenMx to a follow-up at Checkpoint A.
 
+### Gate G1 (after T1, before Phase 2)
+
+- [ ] Codex adversarial review run on the T1 PR (#278); findings triaged (fix / reject / defer) and recorded here
+
 ### Checkpoint A (after T1-T3)
 
 - [ ] `devtools::test()` green, lint clean, `noSuggests` path passes (engines guarded)
 - [ ] T0 findings (evidence/compare-lr-t0-2026-10-21/RESULTS.md) reviewed against the code as built
+- [ ] **Gate G2:** Codex adversarial review run on the Phase 2 PR(s); findings triaged and recorded here
 - [ ] Author review before building the public function
 
 ### Phase 3: the public function and its harness
@@ -106,6 +125,7 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 - [ ] Full suite green; macOS and Linux-container gates green; the planted defect is caught
 - [ ] End-to-end transcript of `compare_lr()` on a real model quoted in the PR body (e2e-before-pr rule)
+- [ ] **Gate G3:** Codex adversarial review run on the Phase 3 PR(s); findings triaged and recorded here
 
 ### Phase 4: documentation, freeze, release
 
@@ -119,6 +139,7 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 ### Checkpoint C: complete
 
+- [ ] **Gate G4:** Codex adversarial review run on the Phase 4 PR(s) and the release PR; findings triaged and recorded here
 - [ ] All acceptance criteria met; #249 closed with a comment; #275 ledger merged; this list ticked
 
 ## Risks and mitigations
@@ -126,6 +147,7 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 | Risk | Impact | Mitigation |
 |---|---|---|
 | OpenMx RAM translation is larger than estimated (T0: the helper is not drop-in) | High | T3 is isolated; reuse `sem_openmx()`; split into "covariance models only" first; Checkpoint A can drop OpenMx to a follow-up and ship lavaan alone |
+| A phase closes with an untriaged review finding | Med | the Codex review gates G1-G4: no phase closes with an untriaged finding |
 | Known failures no longer reproduce on current versions | Med | T0 tells us first; the live gate reports instead of asserting; unit tests use injected results |
 | New false-accusation path in the warnings | High | evidence-only rules; valid zero-LR and unresolved cases are tests; planted-defect mutant in the gate |
 | medfit reference itself `unresolved` | Med | verdict `unresolved`, no fault assigned (decision 2) |
