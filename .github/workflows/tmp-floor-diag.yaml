@@ -18,5 +18,11 @@ jobs:
         with:
           dependencies: '"all"'
           extra-packages: any::remotes, any::devtools
-      - name: Profile gate with diagnostics
-        run: Rscript tests/sim/sem-nonlinear-profile-gate.R 2>&1 | tail -60 || true
+      - name: Profile gate, threads and repeats
+        run: |
+          for t in default default 1 1; do
+            if [ "$t" = "1" ]; then export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1; fi
+            echo "=== threads=$t ==="
+            Rscript tests/sim/sem-nonlinear-profile-gate.R 2>&1 | grep -E "^NOTE|NONLINEAR PROFILE" || true
+          done
+          nproc
