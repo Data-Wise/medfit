@@ -1,6 +1,6 @@
 # Live gate for compare_lr() (#249 T5). The issue's cell: X, M independent N(0, 1), Y = 0.3 X + N(0, 1), n = 100 (the
 # joint null a = b = 0), model `M ~ a*X; Y ~ b*M + cp*X`, null `a*b == 0`, through lavaan and OpenMx from their default
-# and zero starts, over SEEDS seeds. The reference is the exact minimum of the two linear nulls (mbco_sem()).
+# and zero starts, over 15 seeds. The reference is the exact minimum of the two linear nulls (mbco_sem()).
 #
 # The gate passes whether or not the upstream bugs still reproduce (they are recorded: engine versions and the
 # `drop` / `above` columns). It fails only when compare_lr() mislabels, per (engine, seed):
@@ -9,7 +9,8 @@
 #   above    a feasible run whose statistic exceeds medfit's by more than 1e-4 * max(1, LR) must raise the
 #            above-maximum warning, and not otherwise
 #   error    compare_lr() must return (a refusal or crash fails the row)
-#   resolved the reference must be accepted and the verdict not "unresolved" (a clean cell must reach a verdict)
+#   resolved the reference must be accepted, and a verdict of "unresolved" is a mislabel only when every run converged
+#            with a finite statistic (a run that failed to converge makes "unresolved" the honest label)
 #   oracle   the reference LR must equal an independent closed form (the minimum of the two linear nulls from OLS
 #            residual variances, no medfit fit), and a run whose statistic falls below that minimum is infeasible by
 #            necessity and must be reported as a violated constraint, whatever residual the adapter reports
@@ -22,7 +23,10 @@ suppressMessages(pkgload::load_all(quiet = TRUE))
 mutant <- Sys.getenv("MUTANT", "")
 if (!mutant %in% c("", "noresidual", "zeroresid")) stop("unknown MUTANT: ", mutant)
 fast <- nzchar(Sys.getenv("FAST", ""))
-seeds <- seq_len(if (fast) 4L else as.integer(Sys.getenv("SEEDS", "12")))
+# 12 plain seeds, plus 15, 37 and 41: seeds on which lavaan's zero start returns a statistic above medfit's (found over
+# seeds 1 to 300 on lavaan 0.7.3), so the above-maximum warning is exercised live for lavaan too.
+seeds <- c(seq_len(12L), 15L, 37L, 41L)
+if (fast) seeds <- seeds[c(1:3, 13L)]
 if (!requireNamespace("lavaan", quietly = TRUE) || !requireNamespace("OpenMx", quietly = TRUE)) {
   stop("the compare-lr gate needs both lavaan and OpenMx")
 }
@@ -78,7 +82,7 @@ one <- function(engine, seed) {
     error = function(e) conditionMessage(e)
   )
   if (is.character(res)) {
-    return(data.frame(engine = engine, version = versions[[engine]], seed = seed, verdict = "error", drop = NA,
+    return(data.frame(engine = engine, version = versions[[engine]], seed = seed, verdict = "error", all_converged = NA, ref_ok = NA, drop = NA,
                       above = NA, warn_drop = NA, warn_above = NA, mislabel = TRUE, pass = FALSE, note = res,
                       stringsAsFactors = FALSE))
   }
@@ -92,10 +96,11 @@ one <- function(engine, seed) {
   above <- !violated & is.finite(runs$lr) & runs$converged & runs$lr > ref + tol * max(1, ref)
   warn_drop <- any(seen == "medfit_warning_engine_constraint_dropped")
   warn_above <- any(seen == "medfit_warning_engine_statistic_above_max")
-  mislabel <- !ref_ok || identical(res$verdict, "unresolved") || below_unflagged ||
+  all_converged <- all(runs$converged & is.finite(runs$lr))
+  mislabel <- !ref_ok || (identical(res$verdict, "unresolved") && all_converged) || below_unflagged ||
     any(violated) != warn_drop || any(above) != warn_above
   data.frame(engine = engine, version = versions[[engine]], seed = seed, verdict = res$verdict,
-             drop = any(violated), above = any(above), warn_drop = warn_drop, warn_above = warn_above,
+             all_converged = all_converged, ref_ok = ref_ok, drop = any(violated), above = any(above), warn_drop = warn_drop, warn_above = warn_above,
              mislabel = mislabel, pass = !mislabel, note = "", stringsAsFactors = FALSE)
 }
 

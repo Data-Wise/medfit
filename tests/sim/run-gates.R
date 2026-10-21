@@ -134,8 +134,8 @@ verdict_gate <- function(gate, d, s) {
     factor = c("n", "k", "seed", "miss", "pass", "err", "fxmode", "lavaan", "fitstats"),
     "oracle-sweep" = c("seed", "family", "n", "scale", "constraint", "outcome", "max_abs_error",
                        "feasibility", "f_gap", "warning", "error", "optimum"),
-    "compare-lr" = c("engine", "version", "seed", "verdict", "drop", "above", "warn_drop", "warn_above", "mislabel",
-                     "pass")
+    "compare-lr" = c("engine", "version", "seed", "verdict", "all_converged", "ref_ok", "drop", "above", "warn_drop",
+                     "warn_above", "mislabel", "pass")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -366,7 +366,10 @@ verdict_gate <- function(gate, d, s) {
         chk("no mislabel", !any(d$mislabel %in% TRUE) && all(d$pass %in% TRUE),
             sprintf("%d of %d rows mislabeled or failed", sum(!(d$pass %in% TRUE)), nrow(d))),
         chk("both engines ran", all(c("lavaan", "openmx") %in% d$engine), paste(unique(d$engine), collapse = ", ")),
-        chk("returned", !any(d$verdict %in% "error"), sprintf("%d rows with an error", sum(d$verdict %in% "error")))
+        chk("returned", !any(d$verdict %in% "error"), sprintf("%d rows with an error", sum(d$verdict %in% "error"))),
+        chk("reference matches the closed form", all(d$ref_ok %in% TRUE), sprintf("%d rows off", sum(!(d$ref_ok %in% TRUE)))),
+        chk("unresolved only after a failed run", !any(d$verdict %in% "unresolved" & d$all_converged %in% TRUE),
+            sprintf("%d unresolved rows with every run converged", sum(d$verdict %in% "unresolved" & d$all_converged %in% TRUE)))
       )
     },
     "nonlinear-profile" = {
@@ -497,6 +500,11 @@ mutate <- function(gate, kind, d) {
     if (gate == "oracle-sweep") d$error[1] <- "fit failed"
     if (gate == "compare-lr") d$verdict[1] <- "error"
   }
+  if (kind == "unresolved_converged" && gate == "compare-lr") {
+    d$verdict[1] <- "unresolved"
+    d$all_converged[1] <- TRUE
+  }
+  if (kind == "ref_off" && gate == "compare-lr") d$ref_ok[1] <- FALSE
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
   if (kind == "missing") {
@@ -538,6 +546,7 @@ run_mutants <- function() {
     # the gates whose scripts need lavaan: a run that skipped its lavaan checks must be rejected (T5e)
     if (s$gate %in% c("factor", "fixed-x", "mean-constrained")) kinds <- c(kinds, "no_lavaan")
     if (s$gate == "mean-constrained") kinds <- c(kinds, "lavaan_partial")
+    if (s$gate == "compare-lr") kinds <- c(kinds, "unresolved_converged", "ref_off")
     for (kind in kinds) {
       v <- verdict_gate(s$gate, mutate(s$gate, kind, ld$data), s)
       rejected <- !all(v$pass)
