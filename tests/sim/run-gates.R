@@ -133,7 +133,9 @@ verdict_gate <- function(gate, d, s) {
     "mean-constrained" = c("structure", "n", "seed", "shift", "problem", "ok", "feas", "invariance", "lavaan_ok"),
     factor = c("n", "k", "seed", "miss", "pass", "err", "fxmode", "lavaan", "fitstats"),
     "oracle-sweep" = c("seed", "family", "n", "scale", "constraint", "outcome", "max_abs_error",
-                       "feasibility", "f_gap", "warning", "error", "optimum")
+                       "feasibility", "f_gap", "warning", "error", "optimum"),
+    "compare-lr" = c("engine", "version", "seed", "verdict", "drop", "above", "warn_drop", "warn_above", "mislabel",
+                     "pass")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -357,6 +359,16 @@ verdict_gate <- function(gate, d, s) {
         chk("non-refusal errors", !any(errors), sprintf("%d errors outside refusals", sum(errors, na.rm = TRUE)))
       )
     },
+    "compare-lr" = {
+      # #249 T5: compare_lr() never mislabels; whether the upstream bugs still reproduce is recorded, not gated
+      rbind(
+        rows_chk(d, s),
+        chk("no mislabel", !any(d$mislabel %in% TRUE) && all(d$pass %in% TRUE),
+            sprintf("%d of %d rows mislabeled or failed", sum(!(d$pass %in% TRUE)), nrow(d))),
+        chk("both engines ran", all(c("lavaan", "openmx") %in% d$engine), paste(unique(d$engine), collapse = ", ")),
+        chk("returned", !any(d$verdict %in% "error"), sprintf("%d rows with an error", sum(d$verdict %in% "error")))
+      )
+    },
     "nonlinear-profile" = {
       # T3 (#213): every fit reaches the independent oracle's constrained optimum (the gate script applies the
       # per-run rule; the driver re-checks the counts and the largest gap)
@@ -450,6 +462,10 @@ mutate <- function(gate, kind, d) {
     if (gate == "mean-constrained") d$invariance[which(!is.na(d$invariance))[1:3]] <- 5
     if (gate == "factor") d$pass[1:3] <- FALSE
     if (gate == "oracle-sweep") d$outcome[1] <- "WRONG"
+    if (gate == "compare-lr") {
+      d$mislabel[1:3] <- TRUE
+      d$pass[1:3] <- FALSE
+    }
   }
   if (kind == "no_lavaan") {
     # T5e: what a run without lavaan used to write: its lavaan-only checks absent or NA, everything else passing
@@ -479,6 +495,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "mean-constrained") d$ok[1] <- FALSE
     if (gate == "factor") d$err[1] <- "fit failed"
     if (gate == "oracle-sweep") d$error[1] <- "fit failed"
+    if (gate == "compare-lr") d$verdict[1] <- "error"
   }
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
@@ -487,7 +504,7 @@ mutate <- function(gate, kind, d) {
     # nolint start: object_usage_linter.
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
-      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep"
+      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -676,7 +693,8 @@ scripts <- c(
   "fixed-x" = "tests/sim/sem-fixed-x-gate.R",
   "mean-constrained" = "tests/sim/sem-mean-constrained-gate.R",
   factor = "tests/sim/sem-factor-gate.R",
-  "oracle-sweep" = "tests/sim/sem-oracle-sweep.R"
+  "oracle-sweep" = "tests/sim/sem-oracle-sweep.R",
+  "compare-lr" = "tests/sim/compare-lr-gate.R"
 )
 
 # ---- main ----
