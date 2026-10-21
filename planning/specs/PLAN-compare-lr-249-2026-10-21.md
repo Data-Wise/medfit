@@ -47,76 +47,77 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
                                                               T3 OpenMx adapter ───┘            └──► T5 live harness gate
 ```
 
-## Tasks
+## Tasks (checkboxes are the task list; tick them in the PR that does the work)
 
 ### Phase 0: facts first
 
-**T0. Spike and go/no-go: reproduce both known failures (XS, read-only, no package code).**
-- Acceptance: a scratch script prints OpenMx and lavaan versions installed and, for `a*b == 0` at n = 100 (the issue's cell), the OpenMx LR started at 0 and the lavaan statistic with default and zero starts versus `mbco_sem()`; it states whether each failure reproduces.
-- Verification: output pasted into the PR body; if neither reproduces, the live harness (T5) reports instead of asserting, as designed.
-- Files: none committed (scratch in the scratchpad). Dependencies: none.
-- Why first: it decides whether `compare_lr()` is exported at all (P1), whether T5 has a live positive control, and which fixtures T1 mirrors.
+- [ ] **T0. Spike and go/no-go (XS, read-only, no package code).** Dependencies: none.
+  - [ ] Scratch script prints the OpenMx and lavaan versions installed and, for `a*b == 0` at n = 100 (the issue's cell), the OpenMx LR started at 0, the lavaan statistic with default and zero starts, and `mbco_sem()`; it states whether each failure reproduces.
+  - [ ] Output pasted in the PR body; **decision recorded (P1):** both reproduce = export; one = export for that engine; neither = harness and docs only, no export, and T4/T6 shrink to a docs section.
+  - Files: none committed.
 
 ### Phase 1: detection core (pure, testable without engines)
 
-**T1. `.lr_assess()` and the condition classes (S).**
-- Acceptance: given an injected reference (accepted or unresolved branches) and an injected engine result (LR, converged, residual, jac_zero_at_start, version), it returns `agree`/`disagree`/`unresolved` and raises the classed warnings only on the evidence rules above.
-- Tests (`test-compare-lr-assess.R`): OpenMx constraint-violating fit warns; **valid zero-LR null fit does not warn**; lavaan statistic above the restricted maximum warns; unresolved/rejected medfit branch gives `unresolved` with no warning; disagreement beyond tolerance flagged without fault; planted defect (assess ignores the residual and keys on LR = 0) fails the valid-zero case.
-- Verification: `devtools::test(filter = "compare-lr-assess")`.
-- Files: `R/compare-lr.R`, `tests/testthat/test-compare-lr-assess.R`, `tests/testthat/helper-compare-lr.R` (injected-result builders = the test harness). Dependencies: T0.
+- [ ] **T1. `.lr_assess()`, the condition classes, the injected-result harness (S).** Dependencies: T0 (go).
+  - [ ] Inputs: injected reference (accepted or `unresolved` branches) and engine result (unrestricted fit, LR per start, converged, constraint residual, Jacobian-at-start flag, version).
+  - [ ] Order of verdicts: model precheck first (P2: unrestricted estimates and discrepancy agree, else `unresolved` naming the parameters), then evidence rules, then the tolerance `|dLR| <= 1e-4 * max(1, LR_medfit)` (P5).
+  - [ ] Tests `test-compare-lr-assess.R`: OpenMx constraint-violating fit warns; **valid zero-LR null fit does not warn**; lavaan statistic above an accepted comparable restricted maximum warns; unresolved/rejected medfit branch gives `unresolved`, no warning; failed precheck gives `unresolved`, no warning; disagreement beyond tolerance flagged without fault; **planted defect** (assess keys on LR = 0) fails the valid-zero case.
+  - [ ] Classes `medfit_warning_engine_constraint_dropped`, `medfit_warning_engine_statistic_above_max`, parent `medfit_warning_engine_comparison`.
+  - Verify: `devtools::test(filter = "compare-lr-assess")`. Files: `R/compare-lr.R`, `tests/testthat/test-compare-lr-assess.R`, `tests/testthat/helper-compare-lr.R`.
 
 ### Phase 2: engine adapters
 
-**T2. lavaan adapter (M).**
-- Acceptance: `.lr_engine_lavaan(object, paths, data)` fits full and product-null models from `object@model` plus the data, returns the T1 result shape (statistic, converged, residual of `a*b`, version); unsupported syntax errors naming the construct.
-- Tests: guarded by `skip_if_not_installed("lavaan")`; the model of `mbco_sem` docs on `mediation_demo` returns finite LR close to medfit's; unsupported-syntax cases error with the expected message.
-- Files: `R/compare-lr.R`, `tests/testthat/test-compare-lr-lavaan.R`. Dependencies: T1.
+- [ ] **T2. lavaan adapter (M).** Dependencies: T1.
+  - [ ] `.lr_engine_lavaan()` fits the unrestricted and product-null models from `object@model` plus the data with options mirroring medfit (fixed.x, meanstructure, ML divisor), two runs (default and zero start, P4), returns the T1 shape.
+  - [ ] Refusal list (P3) with a named reason each: mean structure, weights, `fixed_x`, products, factors, bounds, `start()`/`lower()`/`upper()`.
+  - [ ] Tests (`skip_if_not_installed("lavaan")`): finite LR close to medfit on the `mbco_sem` docs model; each refusal errors with its message.
+  - Files: `R/compare-lr.R`, `tests/testthat/test-compare-lr-lavaan.R`.
 
-**T3. OpenMx adapter (L, riskiest, split if it grows).**
-- Acceptance: RAM table translation from `object@internals`/`@table` to `mxModel` (covariance-structure, `numObs`, `a*b == 0` as `mxConstraint`); returns the T1 shape including the constraint residual and, if available, the Jacobian-at-start flag; unsupported syntax errors.
-- Reuse: the existing `sem_openmx()` helper used by `tests/sim/sem-constrained-gate.R` and `sem-nonlinear-gate.R`; promote it, do not rewrite.
-- Tests: `skip_if_not_installed("OpenMx")`; known-answer on the mediation model against `mbco_sem()` when both converge.
-- Files: `R/compare-lr.R` (or `R/compare-lr-openmx.R`), `tests/testthat/test-compare-lr-openmx.R`. Dependencies: T1.
+- [ ] **T3. OpenMx adapter (L, riskiest).** Dependencies: T1.
+  - [ ] Promote `sem_openmx()` from `tests/testthat/helper-sem.R` (covariance-only; takes internals `mod`, `smp`); keep a test-side wrapper so existing tests still pass.
+  - [ ] Constraint as `mxConstraint`; two runs (default and zero start, P4); tight tolerances (optimality/feasibility 1e-12, function precision 1e-15, restored on exit); return the constraint residual and the Jacobian-at-start flag.
+  - [ ] Same refusal list (P3).
+  - [ ] Tests (`skip_if_not_installed("OpenMx")`): known answer against `mbco_sem()` when both converge; refusals.
+  - Files: `R/compare-lr-openmx.R`, `tests/testthat/test-compare-lr-openmx.R`, `tests/testthat/helper-sem.R`. If it grows past L, ship lavaan alone and move OpenMx to a follow-up at Checkpoint A.
 
 ### Checkpoint A (after T1-T3)
 
-- [ ] `devtools::test()` green, lint clean, `noSuggests` path still passes (engines guarded)
-- [ ] T0 findings reviewed: do the failures reproduce? decide how T5 asserts
-- [ ] Review with the author before building the public function
+- [ ] `devtools::test()` green, lint clean, `noSuggests` path passes (engines guarded)
+- [ ] T0 findings reviewed against the code as built
+- [ ] Author review before building the public function
 
 ### Phase 3: the public function and its harness
 
-**T4. `compare_lr()` assembly and print method (M).**
-- Acceptance: exported, roxygen with `@examples` (`\donttest`, guarded), validates inputs with checkmate, errors clearly when the engine package is absent, calls `mbco_sem()` for the reference, returns the `medfit_lr_comparison` list; `print()` shows reference, per-engine rows, verdict and any warnings.
-- Guard test (decision 6/3): `a*b == 0` is never posed as a constraint in medfit's own path: assert the reference path hands the solver no product-zero nonlinear row (inspect `.sem_constraint_rows()`/`cons` for the null fits).
-- Verification: `devtools::document()`, `devtools::test(filter = "compare-lr")`, `R CMD check` examples.
-- Files: `R/compare-lr.R`, `NAMESPACE`, `man/compare_lr.Rd`, `tests/testthat/test-compare-lr.R`. Dependencies: T2, T3.
+- [ ] **T4. `compare_lr()` assembly and print method (M).** Dependencies: T2, T3 (or T2 alone).
+  - [ ] Exported; roxygen with guarded `\donttest` examples; checkmate validation; clear error when the engine package is absent; reference from `mbco_sem(object, paths = paths)`; result `medfit_lr_comparison` (reference, one row per engine and start, verdict, warnings) with `print()`/`format()`.
+  - [ ] Guard test: `a*b == 0` is never posed as a constraint in medfit's own path (the reference null fits hand the solver no product-zero nonlinear row).
+  - Verify: `devtools::document()`, `devtools::test(filter = "compare-lr")`, examples run. Files: `R/compare-lr.R`, `NAMESPACE`, `man/compare_lr.Rd`, `tests/testthat/test-compare-lr.R`.
 
-**T5. Live harness gate (M).**
-- Acceptance: `tests/sim/compare-lr-gate.R` runs the issue's cell (a*b == 0, n = 100, default and zero starts, several seeds) through `compare_lr()`, records engine versions and, per engine, whether the known failure reproduced; exit 0 whether or not upstream is fixed; exit 1 only when `compare_lr()` mislabels (a warning on a valid fit, or silence on an observed violation). `MUTANT=` switch: `noresidual` (detector keys on LR = 0) must exit 1.
-- Registration (do not skip, see #266): row in `tests/sim/gates.csv`, a rule in `tests/sim/run-gates.R`, and the gate id added to the C2 set in `planning/specs/CRITERIA-native-experimental-exit-2026-10-17.csv` so `test-experimental-criteria.R` stays green.
-- Verification: macOS run; `tests/sim/linux/run.sh tests/sim/compare-lr-gate.R` on the reference BLAS; the gates driver rule self-test (`MUTANT`) passes.
-- Files: `tests/sim/compare-lr-gate.R`, `tests/sim/gates.csv`, `tests/sim/run-gates.R`, the criteria CSV. Dependencies: T4.
+- [ ] **T5. Live harness gate (M).** Dependencies: T4.
+  - [ ] `tests/sim/compare-lr-gate.R`: the issue's cell (a*b == 0, n = 100, default and zero starts, several seeds) through `compare_lr()`; records engine versions and whether each known failure reproduced; exit 0 whether or not upstream is fixed; exit 1 only if `compare_lr()` mislabels (a warning on a valid fit, silence on an observed violation).
+  - [ ] `MUTANT=noresidual` (detector keys on LR = 0) exits 1.
+  - [ ] Registered in three places: `tests/sim/gates.csv`, a rule in `tests/sim/run-gates.R`, and the gate id in the C2 set of `planning/specs/CRITERIA-native-experimental-exit-2026-10-17.csv` (so `test-experimental-criteria.R` stays green; this broke `dev` once, #266).
+  - Verify: macOS run; `tests/sim/linux/run.sh tests/sim/compare-lr-gate.R` on the reference BLAS; the gates driver self-test.
+  - Files: `tests/sim/compare-lr-gate.R`, `tests/sim/gates.csv`, `tests/sim/run-gates.R`, the criteria CSV.
 
 ### Checkpoint B (after T4-T5)
 
-- [ ] Full suite green; both gates (macOS and the Linux container) green; the planted defect is caught
-- [ ] An end-to-end transcript of `compare_lr()` on a real model (quoted in the PR body per the e2e-before-pr rule)
+- [ ] Full suite green; macOS and Linux-container gates green; the planted defect is caught
+- [ ] End-to-end transcript of `compare_lr()` on a real model quoted in the PR body (e2e-before-pr rule)
 
 ### Phase 4: documentation, freeze, release
 
-**T6. Docs and contracts (S).**
-- Acceptance: refcard row and `_pkgdown.yml` reference entry (satisfy `test-refcard-coverage.R`); a section in `lavaan-comparison.qmd` with the two evidence-based warnings; `test-api-freeze.R` pins `compare_lr()` argument order; `test-dependents-contract.R` untouched (no class change); NEWS entry; US English.
-- Verification: `devtools::test(filter = "refcard|api-freeze|guide|model-pages|dependents")`.
-- Files: `vignettes/articles/refcard.qmd`, `lavaan-comparison.qmd`, `_pkgdown.yml`, `NEWS.md`, `tests/testthat/test-api-freeze.R`. Dependencies: T4.
+- [ ] **T6. Docs and contracts (S).** Dependencies: T4.
+  - [ ] Refcard row and `_pkgdown.yml` reference entry (`test-refcard-coverage.R`); section in `lavaan-comparison.qmd` describing the evidence-based warnings, the narrow supported class and the two-start rows; `test-api-freeze.R` pins `compare_lr()` argument order; NEWS entry; US English.
+  - Verify: `devtools::test(filter = "refcard|api-freeze|guide|model-pages|dependents")`.
+  - Files: `vignettes/articles/refcard.qmd`, `lavaan-comparison.qmd`, `_pkgdown.yml`, `NEWS.md`, `tests/testthat/test-api-freeze.R`.
 
-**T7. Release 0.12.0 (S, author-gated).**
-- Acceptance: version, Date, NEWS header, README row, CLAUDE.md status, `.STATUS`; rforge cran-prep (incoming, strict) `ready`; dev gates green; release PR `dev` to `main` merge commit; tag only after `main` CI is green. Run `gh workflow run gates --ref dev` before the release PR.
-- Dependencies: T6, author approval at the release step.
+- [ ] **T7. Release 0.12.0 (S, author-gated).** Dependencies: T6, author approval.
+  - [ ] Version, Date, NEWS header, README row, CLAUDE.md status, `.STATUS`; rforge cran-prep (incoming, strict) `ready`; `gh workflow run gates --ref dev` green; release PR `dev` to `main` (merge commit); tag only after `main` CI is green.
 
 ### Checkpoint C: complete
 
-- [ ] All acceptance criteria met; #249 closed with a comment; #275 ledger merged; the plan task list ticked
+- [ ] All acceptance criteria met; #249 closed with a comment; #275 ledger merged; this list ticked
 
 ## Risks and mitigations
 
@@ -133,6 +134,6 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 ## Open questions for review
 
 1. Confirm the signature and the return as a classed list (not S7).
-2. Ship lavaan and OpenMx together, or lavaan first and OpenMx as a follow-up if T3 grows? (Recommendation: decide at Checkpoint A with T0 facts in hand.)
+2. Ship lavaan and OpenMx together, or lavaan first and OpenMx as a follow-up if T3 grows? (Decide at Checkpoint A with T0 facts in hand.)
 3. ~~Tolerance~~ resolved by P5.
 4. Whether the live gate should block the release or stay informational (draft: informational for upstream behavior, blocking for `compare_lr()` mislabeling).
