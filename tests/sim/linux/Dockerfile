@@ -10,9 +10,9 @@ RUN apt-get update -qq \
  && update-alternatives --set libblas.so.3-x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/blas/libblas.so.3 \
  && update-alternatives --set liblapack.so.3-x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3
 
-# Imports of medfit plus what the gate scripts load; add more with: docker build --build-arg EXTRA_PKGS="a b" ...
+# Imports of medfit plus what the gate scripts load (lavaan and OpenMx: the parity and compare-lr gates); add more with: docker build --build-arg EXTRA_PKGS="a b" ...
 ARG EXTRA_PKGS=""
-RUN Rscript -e 'pkgs <- c("S7", "checkmate", "generics", "lifecycle", "MASS", "nloptr", "rlang", "pkgload", "testthat", \
+RUN Rscript -e 'pkgs <- c("S7", "checkmate", "generics", "lifecycle", "MASS", "nloptr", "rlang", "pkgload", "testthat", "lavaan", "OpenMx", \
                           strsplit(Sys.getenv("EXTRA_PKGS"), " ")[[1]]); \
                 install.packages(pkgs[nzchar(pkgs)], Ncpus = 4); \
                 stopifnot(all(c("S7", "nloptr", "pkgload") %in% rownames(installed.packages())))'

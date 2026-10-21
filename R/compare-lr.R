@@ -249,3 +249,90 @@
   list(engine = "lavaan", version = as.character(utils::packageVersion("lavaan")), est = est, fit = chisq(full),
        runs = list(run("default"), run("simple")))
 }
+
+# ---- the public function (#249 T4) ---------------------------------------------------------------------------------
+
+#' Compare medfit's Product-Null LR with OpenMx or lavaan
+#'
+#' @description
+#' Runs the likelihood-ratio test of a product null (\eqn{a b = 0}{a*b = 0}) in
+#' an external SEM engine and compares it with medfit's own [mbco_sem()]
+#' statistic. A general-purpose optimizer handed the nonlinear constraint
+#' \eqn{a b = 0}{a*b = 0} can drop it (OpenMx at a zero start) or stop at the
+#' wrong branch (lavaan), which reports a statistic above the true minimum.
+#' `compare_lr()` flags exactly those cases and nothing else.
+#'
+#' A warning is raised only on observed evidence, never because an LR is zero:
+#' `medfit_warning_engine_constraint_dropped` when the engine's returned fit
+#' violates the product constraint, and `medfit_warning_engine_statistic_above_max`
+#' when the engine's statistic exceeds medfit's. Both inherit from
+#' `medfit_warning_engine_comparison`. If medfit has no accepted reference, the
+#' engines' unrestricted fits differ from medfit's, or a run fails or cannot be
+#' checked, the verdict is `"unresolved"` and neither side is blamed.
+#'
+#' Only observed-variable covariance models are compared. Latent variables,
+#' product terms, mean structures, weights, `fixed_x`, factors, fixed or shared
+#' parameters, start/bound modifiers and constraints in the model are refused
+#' by name.
+#'
+#' @param object A [SEMFit] from [fit_sem()].
+#' @param paths Character vector: the labels of the regression paths whose
+#'   product is the indirect effect, as in [mbco_sem()].
+#' @param engine `"lavaan"` or `"openmx"`. The package must be installed.
+#' @param tolerance Relative tolerance on the LR difference, scaled by
+#'   `max(1, LR)`. Default `1e-4`; values above `1e-2` are refused, because a
+#'   loose tolerance would call different statistics equal.
+#'
+#' @return An object of class `medfit_lr_comparison`: a list with `verdict`
+#'   (`"agree"`, `"disagree"` or `"unresolved"`), `reason`, `reference` (medfit's
+#'   LR and whether it was accepted), `runs` (one row per engine start with the
+#'   LR, convergence, constraint residual and status) and `engine`.
+#'
+#' @examples
+#' \donttest{
+#' if (requireNamespace("lavaan", quietly = TRUE)) {
+#'   fit <- fit_sem(
+#'     "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment",
+#'     data = mediation_demo
+#'   )
+#'   compare_lr(fit, paths = c("a", "b"), engine = "lavaan")
+#' }
+#' }
+#' @seealso [mbco_sem()], [fit_sem()]
+#' @export
+compare_lr <- function(object, paths, engine = c("lavaan", "openmx"), tolerance = 1e-4) {
+  engine <- match.arg(engine)
+  if (!S7::S7_inherits(object, SEMFit)) {
+    stop("`object` must be a SEMFit from fit_sem().", call. = FALSE)
+  }
+  checkmate::assert_character(paths, min.len = 2L, any.missing = FALSE, unique = TRUE, .var.name = "paths")
+  checkmate::assert_number(tolerance, lower = 0, upper = 1e-2, .var.name = "tolerance")
+  tab <- object@table
+  known <- unique(tab$label[tab$free & tab$op == "~" & !is.na(tab$label) & nzchar(tab$label)])
+  if (!all(paths %in% known)) {
+    stop(sprintf("'%s' is not a labeled free regression path of the fit (labeled regression paths: %s)",
+                 paths[!(paths %in% known)][1L], if (length(known)) paste(known, collapse = ", ") else "none"),
+         call. = FALSE)
+  }
+  rec <- if (engine == "lavaan") .lr_engine_lavaan(object, paths) else .lr_engine_openmx(object, paths)
+  reference <- .lr_reference(object, paths)
+  assessment <- .lr_assess(reference, list(rec), tolerance = tolerance)
+  .lr_signal(assessment)
+  structure(
+    list(verdict = assessment$verdict, reason = assessment$reason,
+         reference = list(lr = reference$lr, accepted = reference$accepted),
+         runs = assessment$runs, engine = engine, paths = paths),
+    class = "medfit_lr_comparison"
+  )
+}
+
+print_lr_comparison <- function(x, ...) {
+  cat(sprintf("medfit LR comparison (%s, %s = 0): %s\n", x$engine, paste(x$paths, collapse = "*"), x$verdict))
+  cat(sprintf("  medfit reference LR %.6g (%s)\n", x$reference$lr,
+              if (x$reference$accepted) "accepted" else "not accepted"))
+  print(x$runs, row.names = FALSE)
+  if (nzchar(x$reason)) {
+    cat("  ", x$reason, "\n", sep = "")
+  }
+  invisible(x)
+}
