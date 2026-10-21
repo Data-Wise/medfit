@@ -115,6 +115,14 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 - [x] **Fix (high):** `tolerance` was unbounded, so a large value turned a real LR difference into `agree`. Now capped at 1e-2, documented and tested.
 - [x] **Fix (medium):** path labels reached the external engine before validation. Now checked against free labeled regression rows before dispatch, for both engines; tests cover unknown and non-regression labels.
 
+### Advisor review before T6 (2026-10-21), done on #280
+
+- [x] CI wiring: `gates.yaml` puts every `gates.csv` gate not named `reliability` in the `rest` shard automatically and installs Suggests (lavaan, OpenMx), so no fourth registration point exists.
+- [x] The gate fails only on mislabels: `unresolved` is allowed after a run that failed to converge (new `all_converged` column; driver mutants `unresolved_converged` and `ref_off`).
+- [x] lavaan exercised live: seeds 15, 37, 41 (lavaan's zero start above medfit, found over seeds 1 to 300) added; 30 rows, macOS and Linux both pass.
+- [x] Transcript of real engines in the #280 body. Full `devtools::test()` on the branch: see Checkpoint B.
+- The task list is this plan's checkboxes (`tasks/` ships in the tarball), so no separate todo file exists.
+
 ### Checkpoint A (after T1-T3)
 
 - [ ] `devtools::test()` green, lint clean, `noSuggests` path passes (engines guarded)
@@ -125,7 +133,7 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 ### Phase 3: the public function and its harness
 
 - [x] **T4. `compare_lr()` assembly and print method (M), PR #280.** Dependencies: T2, T3 (or T2 alone).
-  - [x] Exported; roxygen with guarded `\donttest` examples; checkmate validation; clear error when the engine package is absent; reference from `mbco_sem(object, paths = paths)`; result `medfit_lr_comparison` (reference, one row per engine and start, verdict, warnings) with `print()`/`format()`.
+  - [x] Exported; roxygen with guarded `\donttest` examples; checkmate validation; clear error when the engine package is absent; reference from `mbco_sem(object, paths = paths)`; result `medfit_lr_comparison` (reference, one row per engine and start, verdict, reason) with `print()` (a `format()` method was dropped: not needed).
   - [x] Guard test: `a*b == 0` is never posed as a constraint in medfit's own path (the reference null fits hand the solver no product-zero nonlinear row).
   - Verify: `devtools::document()`, `devtools::test(filter = "compare-lr")`, examples run. Files: `R/compare-lr.R`, `NAMESPACE`, `man/compare_lr.Rd`, `tests/testthat/test-compare-lr.R`.
 
