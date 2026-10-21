@@ -130,7 +130,7 @@ for (f in fx) {
       # a refusal on the floor fixture is a flagged outcome (see below), any other error is a failure
       refused <- isTRUE(f$floor_case) && grepl("no start converged", h2, fixed = TRUE)
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = refused, omx_ok = TRUE,
-                                              lr = NA_real_, lr_oracle = NA_real_, gap = NA_real_,
+                                              lr = NA_real_, lr_oracle = NA_real_, gap = if (refused) 0 else NA_real_,
                                               improper = "", note = substr(h2, 1, 80), stringsAsFactors = FALSE)
       next
     }
