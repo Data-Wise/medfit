@@ -1,15 +1,5 @@
 ---
-title: "Native engine book, chapter 1: the mean structure"
-format:
-  html:
-    code-tools: false
-    code-copy: false
-    highlight-style: none
-execute:
-  collapse: true
-  comment: "#>"
-  eval: true
-  echo: true
+title: "The mean structure"
 ---
 
 This is the first of seven chapters that open the native engine and show every
@@ -17,17 +7,17 @@ matrix it works with. The chapters, in order:
 
 1. **The mean structure** (this chapter): the RAM form, the implied means,
    the discrepancy and its gradient, and the moment count.
-2. [Scale and conditioning](native-book-2-scale.html): why the engine fits in
+2. [Scale and conditioning](02-scale.qmd): why the engine fits in
    centered coordinates and when it may shift the data.
-3. [Constrained estimation](native-book-3-constraints.html): constraint rows,
+3. [Constrained estimation](03-constraints.qmd): constraint rows,
    the solver, the acceptance gate and the Newton polish.
-4. [Fixed exogenous variables](native-book-4-fixed-x.html): `fixed_x`, the
+4. [Fixed exogenous variables](04-fixed-x.qmd): `fixed_x`, the
    conditional likelihood and the comparison refusals.
-5. [Inference](native-book-5-inference.html): information, the sandwich, MBCO
+5. [Inference](05-inference.qmd): information, the sandwich, MBCO
    and `anova()`.
-6. [The product term](native-book-6-product-term.html): `x:m`, its column,
+6. [The product term](06-product-term.qmd): `x:m`, its column,
    why the paths are least squares, rules 8 and 9 and the model test.
-7. [The four-way decomposition](native-book-7-four-way.html): CDE, INTref,
+7. [The four-way decomposition](07-four-way.qmd): CDE, INTref,
    INTmed and PIE derived, with their delta-method standard errors.
 
 Each chapter fits real models to the bundled `mediation_demo` data, prints the
@@ -735,6 +725,6 @@ coordinates when the means are large.
 
 ## Where next
 
-[Chapter 2](native-book-2-scale.html) asks what happens to this machinery when the
+[Chapter 2](02-scale.qmd) asks what happens to this machinery when the
 variables sit far from zero relative to their spread, and shows why the engine
 fits in centered coordinates.

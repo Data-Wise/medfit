@@ -243,5 +243,5 @@ Numerical fixes are not breaking changes.
 [Cookbook recipe 11](cookbook.html#a-latent-mediator-native-engine) |
 [Cookbook recipe 19](cookbook.html#observed-intercepts-and-means) |
 [Cookbook recipe 20](cookbook.html#four-way-decomposition-from-a-native-fit) |
-[Native engine book](native-book-1-mean-structure.html) |
+[Native engine book (source in the repository)](https://github.com/Data-Wise/medfit/tree/main/book) |
 [Methods and Formulas](methods.html) | `?"medfit-syntax"`

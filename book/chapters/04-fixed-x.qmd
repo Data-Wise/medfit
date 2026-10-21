@@ -1,15 +1,5 @@
 ---
-title: "Native engine book, chapter 4: fixed exogenous variables"
-format:
-  html:
-    code-tools: false
-    code-copy: false
-    highlight-style: none
-execute:
-  collapse: true
-  comment: "#>"
-  eval: true
-  echo: true
+title: "Fixed exogenous variables"
 ---
 
 In a mediation model the treatment and the covariates are **exogenous**: nothing in the model
@@ -590,5 +580,5 @@ models, fit them all with the same `fixed_x`.
 
 ## Where next
 
-[Chapter 5](native-book-5-inference.html) opens the information matrix itself: the observed and expected versions, the
+[Chapter 5](05-inference.qmd) opens the information matrix itself: the observed and expected versions, the
 sandwich estimator, and the tests built on the discrepancy, MBCO and `anova()`.

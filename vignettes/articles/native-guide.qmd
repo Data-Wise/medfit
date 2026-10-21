@@ -200,5 +200,5 @@ mediator works through the same call.
 
 [Quickstart](native-quickstart.html) | [Models: native engine](model-native.html) |
 [Constraints and the MBCO test](model-native-constraints.html) |
-[Native engine book](native-book-1-mean-structure.html) |
+[Native engine book (source in the repository)](https://github.com/Data-Wise/medfit/tree/main/book) |
 [Cookbook](cookbook.html) | [Methods and Formulas](methods.html) | `?"medfit-syntax"`

@@ -1,18 +1,8 @@
 ---
-title: "Native engine book, chapter 7: the four-way decomposition"
-format:
-  html:
-    code-tools: false
-    code-copy: false
-    highlight-style: none
-execute:
-  collapse: true
-  comment: "#>"
-  eval: true
-  echo: true
+title: "The four-way decomposition"
 ---
 
-With a treatment-by-mediator product in the outcome equation ([Chapter 6](native-book-6-product-term.html)), the effect
+With a treatment-by-mediator product in the outcome equation ([Chapter 6](06-product-term.qmd)), the effect
 of a binary treatment is no longer one indirect path and one direct path. VanderWeele (2014) splits the total effect
 into four parts: the controlled direct effect, the reference interaction, the mediated interaction and the pure indirect
 effect. This chapter derives the four parts from the two regressions, shows where the mediator's intercept and the
@@ -625,6 +615,6 @@ VanderWeele, T. J. (2014). A unification of mediation and interaction: A 4-way d
 
 ## Where next
 
-The [native engine guide](native-guide.html) lists the syntax, options and limits, the
-[interaction model page](model-interaction.html) shows the four-way decomposition through the `glm` route, and
-[Methods and Formulas](methods.html) collects every formula of the package.
+The [native engine guide](https://data-wise.github.io/medfit/articles/native-guide.html) lists the syntax, options and limits, the
+[interaction model page](https://data-wise.github.io/medfit/articles/model-interaction.html) shows the four-way decomposition through the `glm` route, and
+[Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html) collects every formula of the package.
