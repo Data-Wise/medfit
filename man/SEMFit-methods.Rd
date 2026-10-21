@@ -98,7 +98,7 @@ passed the acceptance gate and errors otherwise, so \verb{@converged} is \code{T
 for every \code{SEMFit} and would carry no information.
 \item \code{summary()} collects the estimates, standard errors and z statistics, the
 defined parameters, and the diagnostics: rows dropped, information type,
-degrees of freedom, retries, stationarity, active bounds and constraints,
+degrees of freedom, retries, stationarity, optimum status, active bounds and constraints,
 improper-solution flags and the multiplier sign check.
 }
 }
