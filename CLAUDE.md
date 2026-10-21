@@ -477,6 +477,7 @@ Location: `~/projects/r-packages/mediation-planning/` (start at `PROJECT-HUB.md`
 ### Change Propagation
 
 When changes affect dependent packages:
+- Run `tests/testthat/test-dependents-contract.R` and update its table when changing class properties or exports.
 1. **Document** - Update NEWS.md with ecosystem notes
 2. **Test** - `revdepcheck::revdep_check()`
 3. **Notify** - Create issue with 2-month notice for breaking changes
