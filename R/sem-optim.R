@@ -434,6 +434,7 @@
   # already holds at the unconstrained estimate, that estimate is the constrained optimum.
   eps_f <- if (is.null(ref)) 0 else 1e-10 * max(1, abs(ref$f))
   ref_ok <- !is.null(ref) && .sem_ref_feasible(ref$theta, constraints, lb, ub)
+  n_start_attempts <- length(attempts)
   if (ref_ok && (is.na(win) || attempts[[win]]$f > ref$f + eps_f)) {
     g <- .sem_gate(ref$theta, ref$status, ram, smp, lb, ub, constraints)
     if (!g$accepted) {
@@ -477,7 +478,7 @@
   }
   optimum <- list(
     n_starts = if (best_of) length(starts) else sum(!vapply(attempts, is.null, logical(1))),
-    n_accepted = length(accepted), best_of = best_of, certified = certified,
+    n_accepted = sum(accepted <= n_start_attempts), best_of = best_of, certified = certified,
     spread = optimum_spread, status = optimum_status
   )
   spread <- if (best_of && !certified && length(accepted) > 1L) {
