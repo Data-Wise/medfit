@@ -47,7 +47,7 @@ if (mutant == "zeroresid") {
       })
       e
     })
-    orig(reference, engines, ...)
+    orig(reference, engines, ...) # nolint: object_usage_linter.
   }, envir = ns)
 }
 tol <- 1e-4
