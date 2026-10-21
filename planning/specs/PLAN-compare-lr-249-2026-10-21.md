@@ -11,7 +11,7 @@ backup per decision 6; D18/D20 are #276).
 
 ## Design decisions made by this plan (to confirm at review)
 
-- **Signature (draft):** `compare_lr(object, paths, engine = c("lavaan", "openmx"), tolerance = 1e-4)`; `object` a `SEMFit`, `paths` as in `mbco_sem()`.
+- **Signature (draft):** `compare_lr(object, paths, engine = c("lavaan", "openmx"), tolerance = 1e-4)` (tolerance scale per P5); `object` a `SEMFit`, `paths` as in `mbco_sem()`.
   The reference is `mbco_sem(object, paths = paths)`; the external engine fits the full model and the product-null (`a*b == 0`, started at its own default
   starts) on the same data and syntax.
 - **Correction to the grill:** Q1's argument "a new argument on an existing function breaks the API freeze" was too strong: `test-api-freeze.R` allows
@@ -27,6 +27,18 @@ backup per decision 6; D18/D20 are #276).
 - **Condition classes:** `medfit_warning_engine_constraint_dropped` (OpenMx evidence) and `medfit_warning_engine_statistic_above_max` (lavaan evidence), both
   inheriting `medfit_warning_engine_comparison`.
 
+## Grill of this plan (2026-10-21), decisions locked
+
+| # | Branch | Decision |
+|---|---|---|
+| P1 | Export vs spike | **T0 gates the export.** Both failures reproduce: export `compare_lr()`. Only one: export for that engine. Neither: tests/sim harness and a docs section only, no new export |
+| P2 | Same model | **Precheck before any LR comparison:** the engine's unrestricted fit must agree with medfit's on estimates and discrepancy (engine options set to mirror medfit: fixed.x, meanstructure, ML divisor); otherwise the verdict is `unresolved`, naming the differing parameters, and no engine is blamed |
+| P3 | Supported class | **Narrow, refuse the rest:** covariance-only observed-variable regression models; no mean structure, weights, `fixed_x`, products, factors or bounds; each refusal names its reason |
+| P4 | Starts | **Two runs per engine, reported as separate rows:** the engine's own default start and a zero start, so the known failure points are exercised (a medfit-default-only start could hide the OpenMx zero-Jacobian failure and give false agreement) |
+| P5 | Tolerance | **|engine LR - medfit LR| <= tol * max(1, medfit LR), tol = 1e-4**, OpenMx converged tightly (optimality/feasibility 1e-12, function precision 1e-15), as the profile gate and `sem_openmx()` do |
+
+Consequences for the tasks: T0 becomes a go/no-go gate; T1 adds the `unresolved` path for a failed precheck; T2/T3 add the precheck, the refusal list (P3) and the two-start runs (P4); T3's helper (`sem_openmx()` in `tests/testthat/helper-sem.R`) is covariance-only and takes internals `mod`/`smp`, which is why P3 is narrow; T4's result table has one row per engine and start; the draft tolerance in the signature becomes P5's form.
+
 ## Dependency graph
 
 ```
@@ -39,11 +51,11 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 ### Phase 0: facts first
 
-**T0. Spike: reproduce both known failures (XS, read-only, no package code).**
+**T0. Spike and go/no-go: reproduce both known failures (XS, read-only, no package code).**
 - Acceptance: a scratch script prints OpenMx and lavaan versions installed and, for `a*b == 0` at n = 100 (the issue's cell), the OpenMx LR started at 0 and the lavaan statistic with default and zero starts versus `mbco_sem()`; it states whether each failure reproduces.
 - Verification: output pasted into the PR body; if neither reproduces, the live harness (T5) reports instead of asserting, as designed.
 - Files: none committed (scratch in the scratchpad). Dependencies: none.
-- Why first: it decides whether T5 has a live positive control and which fixtures T1 mirrors.
+- Why first: it decides whether `compare_lr()` is exported at all (P1), whether T5 has a live positive control, and which fixtures T1 mirrors.
 
 ### Phase 1: detection core (pure, testable without engines)
 
@@ -122,5 +134,5 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 1. Confirm the signature and the return as a classed list (not S7).
 2. Ship lavaan and OpenMx together, or lavaan first and OpenMx as a follow-up if T3 grows? (Recommendation: decide at Checkpoint A with T0 facts in hand.)
-3. Tolerance default for "disagreement" (draft: 1e-4 relative).
+3. ~~Tolerance~~ resolved by P5.
 4. Whether the live gate should block the release or stay informational (draft: informational for upstream behavior, blocking for `compare_lr()` mislabeling).
