@@ -108,8 +108,11 @@
 #' A fixed seed gives the same resamples for any `ncores`, and for sequential runs, because every
 #' resample is drawn before the work is split across cores. This holds for the nonparametric and
 #' cluster methods (earlier versions drew inside each worker). The statistic is still computed in the
-#' workers, so a `statistic_fn` that uses random numbers itself is not covered, and floating-point
-#' results can differ in the last digits when BLAS threads differ.
+#' workers, so a `statistic_fn` that uses random numbers itself is not covered (in a sequential run its
+#' draws now follow all the resampling draws instead of interleaving with them, so its stream differs
+#' from earlier versions), and floating-point results can differ in the last digits when BLAS threads
+#' differ. The resamples are held in memory before the refits start: `n_boot` integer vectors of length
+#' `n` (about `4 * n * n_boot` bytes; 800 MB for `n = 100000` and `n_boot = 2000`).
 #'
 #' @examples
 #' # Fit mediation model

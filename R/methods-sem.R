@@ -65,7 +65,9 @@
 #'   chi-squares, and the function warns that the p-value is not valid, as
 #'   [mbco_sem()] does. The p-value is still returned; the logical attribute
 #'   `attr(x, "p_valid")` (named by row, `NA` for the first) is `FALSE` for each
-#'   such row, so code can read the verdict without parsing the warning. Returns
+#'   such row, so code can read the verdict without parsing the warning. It
+#'   belongs to the object `anova()` returns: subsetting it with `[` or binding
+#'   rows drops the attribute. Returns
 #'   an object of class `"anova"` with columns `Df`,
 #'   `Chisq` (n times the discrepancy), `Chisq diff`, `Df diff` and
 #'   `Pr(>Chisq)`. Name rows by naming the arguments after the first.

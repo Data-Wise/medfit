@@ -27,6 +27,7 @@ test_that("ordinary and feasible-reference fits report their optimum verdict", {
   expect_true(o$certified)
   expect_gte(o$n_starts, 5L)
   expect_gte(o$n_accepted, 1L)
+  expect_lte(o$n_accepted, o$n_starts)  # a reference appended after the starts is not a start
   expect_false(any(grepl("Optimum:", capture.output(summary(certified)), fixed = TRUE)))
 })
 
@@ -39,6 +40,7 @@ test_that("disagreeing starts report the spread and print the verdict", {
   expect_true(o$best_of)
   expect_false(o$certified)
   expect_gte(o$n_accepted, 2L)
+  expect_lte(o$n_accepted, o$n_starts)  # a reference appended after the starts is not a start
   expect_gt(o$spread, .sem_spread_tol)
   expect_true(any(grepl(sprintf("Optimum: disagreed (%d of %d starts accepted)",
                                 o$n_accepted, o$n_starts), capture.output(summary(fit)), fixed = TRUE)))

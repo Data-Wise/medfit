@@ -21,8 +21,9 @@
 * `bootstrap_mediation(method = "nonparametric")`, with or without `cluster =`, now draws every resample in the
   calling process before the refits are spread over cores. A fixed `seed` gives the same resamples and
   `boot_estimates` for any `ncores` and for sequential runs; before, each worker drew from its own random-number
-  stream, so `ncores` changed the result (#247). Sequential runs keep the stream of 0.11.0, so their results do not
-  change. `?bootstrap_mediation` states what the seed does and does not cover (a `statistic_fn` that draws random
+  stream, so `ncores` changed the result (#247). For a `statistic_fn` that uses no random numbers, sequential runs keep the stream of 0.11.0, so their results do not
+  change; one that does use them sees a different stream, because its draws no longer interleave with the
+  resampling. `?bootstrap_mediation` states what the seed does and does not cover (a `statistic_fn` that draws random
   numbers itself, and BLAS thread effects in the last digits).
 
 # medfit 0.11.0
