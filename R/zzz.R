@@ -102,6 +102,7 @@
   # guarantees `print()` reaches `print_mediation_effect` regardless of how
   # the package is loaded (installed or via load_all()).
   registerS3method("print", "mediation_effect", print_mediation_effect)
+  registerS3method("print", "medfit_lr_comparison", print_lr_comparison)
 
   # Same issue for the `summary.*` print methods. `summary()` on the S7 data
   # objects returns a plain S3-classed list (e.g. class "summary_MediationData"),
