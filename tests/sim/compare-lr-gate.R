@@ -28,7 +28,8 @@ if (mutant == "noresidual") {
 }
 tol <- 1e-4
 model <- "M ~ a*X\nY ~ b*M + cp*X"
-versions <- c(lavaan = as.character(utils::packageVersion("lavaan")), openmx = as.character(utils::packageVersion("OpenMx")))
+versions <- c(lavaan = as.character(utils::packageVersion("lavaan")),
+              openmx = as.character(utils::packageVersion("OpenMx")))
 
 one <- function(engine, seed) {
   set.seed(seed)
@@ -72,12 +73,15 @@ for (engine in c("lavaan", "openmx")) {
 }
 res <- do.call(rbind, rows)
 res$mutant <- mutant
-print(res[!res$pass, c("engine", "seed", "verdict", "drop", "above", "warn_drop", "warn_above", "note")], row.names = FALSE)
+shown <- c("engine", "seed", "verdict", "drop", "above", "warn_drop", "warn_above", "note")
+print(res[!res$pass, shown], row.names = FALSE)
 if (!nzchar(mutant) && !fast) {
   dir.create("tests/sim/results", showWarnings = FALSE)
-  utils::write.csv(res, file.path("tests/sim/results", sprintf("compare-lr-gate-%s.csv", Sys.Date())), row.names = FALSE)
+  out <- file.path("tests/sim/results", sprintf("compare-lr-gate-%s.csv", Sys.Date()))
+  utils::write.csv(res, out, row.names = FALSE)
 }
-cat(sprintf("COMPARE-LR GATE: %d of %d rows pass%s; reproduced: lavaan above %d, openmx dropped %d, openmx above %d; %s\n",
+cat(sprintf(paste0("COMPARE-LR GATE: %d of %d rows pass%s; reproduced: lavaan above %d, openmx dropped %d, ",
+                   "openmx above %d; %s\n"),
             sum(res$pass), nrow(res), if (nzchar(mutant)) paste0(" (MUTANT=", mutant, ")") else "",
             sum(res$above[res$engine == "lavaan"], na.rm = TRUE), sum(res$drop[res$engine == "openmx"], na.rm = TRUE),
             sum(res$above[res$engine == "openmx"], na.rm = TRUE),

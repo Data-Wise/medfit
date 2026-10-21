@@ -360,7 +360,7 @@ verdict_gate <- function(gate, d, s) {
       )
     },
     "compare-lr" = {
-      # #249 T5: compare_lr() never mislabels; whether the upstream bugs still reproduce is recorded, not gated
+      # Issue 249 T5: the comparison never mislabels; upstream reproduction is recorded, not gated
       rbind(
         rows_chk(d, s),
         chk("no mislabel", !any(d$mislabel %in% TRUE) && all(d$pass %in% TRUE),
