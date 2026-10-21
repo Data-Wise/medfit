@@ -110,6 +110,11 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
   - **Fix:** fixed coefficients and shared labels changed the model the engines pose. `.lr_unsupported()` now refuses both (fixed rows `free == FALSE`, duplicated non-empty labels among free rows); real-fit tests.
   - **Fix:** an agreeing start could hide a failed start. Any failed, unchecked or unresolved run with no disagreement is now `unresolved`, with a reason naming engine and start; a real disagreement still wins.
 
+### Early review of T4 (Codex, before T5), fixed on #280
+
+- [x] **Fix (high):** `tolerance` was unbounded, so a large value turned a real LR difference into `agree`. Now capped at 1e-2, documented and tested.
+- [x] **Fix (medium):** path labels reached the external engine before validation. Now checked against free labeled regression rows before dispatch, for both engines; tests cover unknown and non-regression labels.
+
 ### Checkpoint A (after T1-T3)
 
 - [ ] `devtools::test()` green, lint clean, `noSuggests` path passes (engines guarded)
