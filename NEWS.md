@@ -1,5 +1,15 @@
 # medfit (development version)
 
+## New features
+
+* New `compare_lr()` (#249) runs the product-null likelihood-ratio test (`a*b == 0`) in lavaan or OpenMx, from the
+  engine's default start and from a zero start, and compares it with medfit's `mbco_sem()` statistic. It warns only on
+  observed evidence: `medfit_warning_engine_constraint_dropped` when the engine's returned fit violates the product
+  constraint (OpenMx at a zero start can drop it), and `medfit_warning_engine_statistic_above_max` when a feasible
+  run's statistic exceeds medfit's (lavaan can stop at the wrong branch). Both inherit from
+  `medfit_warning_engine_comparison`; a case it cannot judge is `"unresolved"`, never an accusation. Observed-variable
+  covariance models only. The `compare-lr` gate in `tests/sim` checks the labeling live on both engines.
+
 ## Bug fixes
 
 * The native acceptance gate no longer rejects a correct fit at an active bound because of roundoff (#238). The

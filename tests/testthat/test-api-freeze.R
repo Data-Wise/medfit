@@ -12,6 +12,7 @@ pin_semfit_properties <- c("theta", "vcov", "table", "defined", "f", "n_obs", "n
 pin_fit_sem_args <- c("model", "data", "information", "n_starts", "control", "weights", "se_type", "meanstructure",
                       "fixed_x", "sampling_weights")
 pin_mbco_sem_args <- c("object", "a", "b", "n_starts", "control", "fit", "paths")
+pin_compare_lr_args <- c("object", "paths", "engine", "tolerance")
 
 test_that("the SEMFit property names are pinned (additions allowed, removals and renames are not)", {
   expect_equal(freeze_missing(pin_semfit_properties, names(SEMFit@properties)), character(0),
@@ -23,6 +24,15 @@ test_that("fit_sem() and mbco_sem() keep their argument names and order (new arg
                info = "fit_sem() arguments moved, were renamed or removed")
   expect_false(freeze_prefix_broken(pin_mbco_sem_args, names(formals(mbco_sem))),
                info = "mbco_sem() arguments moved, were renamed or removed")
+})
+
+test_that("compare_lr() keeps its argument names and order, and its warning classes are pinned", {
+  expect_false(freeze_prefix_broken(pin_compare_lr_args, names(formals(compare_lr))),
+               info = "compare_lr() arguments moved, were renamed or removed")
+  cnd <- .lr_condition("constraint_violated", list(engine = "lavaan", version = "x"),
+                       list(start = "zero", lr = 0, residual = 1, residual_scale = 1, jac_zero_at_start = FALSE),
+                       list(lr = 1))
+  expect_true(all(c("medfit_warning_engine_constraint_dropped", "medfit_warning_engine_comparison") %in% class(cnd)))
 })
 
 test_that("the canonical product name is pinned: x:m and m:x are the one name 'm:x'", {

@@ -128,3 +128,35 @@ the global test invalid (see [the native model page](model-native.html#product-t
 product under the spelling you wrote (`treatment:mediator1`); medfit stores `mediator1:treatment`, whichever
 order you write. A model medfit rejects (a residual covariance between outcomes, a shared or fixed coefficient,
 a constraint on a coefficient, a bound) is still fitted by lavaan.
+
+## Checking a constrained LR against lavaan or OpenMx
+
+The test of an indirect effect, $ab = 0$, can be posed to a general optimizer as the nonlinear constraint
+`a*b == 0`. That is the one place where a general optimizer can return a wrong statistic without saying so: OpenMx
+started at $a = b = 0$ can drop the constraint (its Jacobian is zero there), and lavaan can stop at a branch with a
+larger statistic than the true minimum. medfit never poses that constraint to its own solver: `mbco_sem()` takes
+the smaller of the two linear nulls, each solved exactly. `compare_lr()` runs the nonlinear form in lavaan or OpenMx,
+from the engine's default start and from a zero start, and compares it with medfit's result:
+
+```{r}
+#| label: compare-lr
+#| eval: false
+fit <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment", mediation_demo)
+compare_lr(fit, paths = c("a", "b"), engine = "lavaan")
+```
+
+A warning is raised only on observed evidence, never because the engine's LR is zero (a valid fit has LR = 0 when
+the unrestricted optimum already satisfies the null):
+
+| Condition | Warning class | Evidence |
+|---|---|---|
+| The engine's returned fit violates $ab = 0$ | `medfit_warning_engine_constraint_dropped` | $|ab|$ above `1e-4` in the natural units of the product |
+| A feasible run's statistic exceeds medfit's | `medfit_warning_engine_statistic_above_max` | difference above `1e-4 * max(1, LR)` |
+
+Both inherit from `medfit_warning_engine_comparison`. The verdict is `"unresolved"`, and neither side is blamed, when
+medfit has no accepted reference, the engine's unrestricted fit differs from medfit's (parameters, estimates, or the
+discrepancy), or a run failed or could not be checked. Only observed-variable covariance models are compared; latent
+variables, products, mean structures, weights, `fixed_x`, factors, fixed or shared parameters, start and bound
+modifiers and constraints in the model are refused by name. The live check behind these statements is the
+`compare-lr` gate (`tests/sim/compare-lr-gate.R`), which runs the issue's cell through both engines and fails only
+when `compare_lr()` mislabels.
