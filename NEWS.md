@@ -2,8 +2,10 @@
 
 ## New features
 
-* New `compare_lr()` (#249) runs the product-null likelihood-ratio test (`a*b == 0`) in lavaan or OpenMx, from the
-  engine's default start and from a zero start, and compares it with medfit's `mbco_sem()` statistic. It warns only on
+* New `compare_lr()` (#249) runs the product-null likelihood-ratio test (`a*b == 0`) in lavaan or OpenMx from two
+  starts (lavaan's default and its `"simple"` start; for OpenMx medfit's default start and the same start with the
+  tested paths at 0) and compares it with medfit's `mbco_sem()` statistic, the best accepted refit of the two linear
+  nulls. It warns only on
   observed evidence: `medfit_warning_engine_constraint_dropped` when the engine's returned fit violates the product
   constraint (OpenMx at a zero start can drop it), and `medfit_warning_engine_statistic_above_max` when a feasible
   run's statistic exceeds medfit's (lavaan can stop at the wrong branch). Both inherit from
