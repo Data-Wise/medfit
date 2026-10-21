@@ -60,12 +60,17 @@
   if (!isTRUE(reference$accepted)) {
     reasons <- c("medfit has no accepted comparable result for the null (a branch fit was not accepted)", reasons)
   }
-  verdict <- if (all(runs$status %in% c("unresolved", "failed", "unchecked"))) {
-    "unresolved"
-  } else if (any(runs$status %in% c("constraint_violated", "above_reference", "below_reference"))) {
+  open <- runs$status %in% c("unresolved", "failed", "unchecked")
+  verdict <- if (any(runs$status %in% c("constraint_violated", "above_reference", "below_reference"))) {
     "disagree"
+  } else if (any(open)) {
+    "unresolved"
   } else {
     "agree"
+  }
+  if (identical(verdict, "unresolved") && any(runs$status[open] %in% c("failed", "unchecked"))) {
+    o <- runs[open & runs$status %in% c("failed", "unchecked"), ]
+    reasons <- c(reasons, sprintf("%s %s start %s", o$engine, o$start, o$status))
   }
   list(verdict = verdict, reason = paste(reasons, collapse = "; "), runs = runs, conditions = conditions)
 }
@@ -159,6 +164,10 @@
   }
   if (grepl("==|<|>", model)) {
     return("constraints in the model (give the unrestricted fit)")
+  }
+  lab <- tab$label[tab$free]
+  if (any(!tab$free) || anyDuplicated(lab[nzchar(lab)]) > 0L) {
+    return("fixed or shared parameters (the engines would pose a different model)")
   }
   NULL
 }
