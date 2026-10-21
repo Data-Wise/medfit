@@ -785,3 +785,21 @@ test_that("planted defect: never dropping an implied row brings the 0.7.0 solver
   testthat::local_mocked_bindings(.sem_drop_implied_ineq = function(ineq, eq) ineq)
   expect_equal(solver_ineq_rows(extra), 1L) # the rank-deficient active set the solver failed on (seeds 1, 2, 4, 6, 8)
 })
+
+test_that("a bound's multiplier slope that is roundoff in the gradient norm is not a wrong sign (#238)", {
+  ram <- list(par_names = c("p", "Vy"))
+  judge <- function(g_bound, g_other) {
+    out <- medfit:::.sem_sign_check(
+      list(), ax = matrix(0, 0L, 2L), active_row = logical(0), is_eq = logical(0), text = character(),
+      at_lb = c(FALSE, TRUE), at_ub = c(FALSE, FALSE), ram = ram, hx = diag(c(1, -1)),
+      gx = c(g_other, g_bound)
+    )
+    out$sign_bound
+  }
+  # gradient norm 1e4: a slope of 1.8e-12 (the value seen on the reference BLAS) is machine roundoff there
+  # (relative 1e-16), a slope of 1 is not
+  expect_length(judge(-1.8e-12, 1e4), 0L)
+  expect_identical(judge(-1, 1e4), "Vy")
+  # with a small gradient the same absolute slope is real: the cutoff scales with the gradient
+  expect_identical(judge(-1e-6, 1e-2), "Vy")
+})

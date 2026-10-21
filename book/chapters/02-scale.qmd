@@ -1,18 +1,8 @@
 ---
-title: "Native engine book, chapter 2: scale and conditioning"
-format:
-  html:
-    code-tools: false
-    code-copy: false
-    highlight-style: none
-execute:
-  collapse: true
-  comment: "#>"
-  eval: true
-  echo: true
+title: "Scale and conditioning"
 ---
 
-[Chapter 1](native-book-1-mean-structure.html) built the mean structure. This
+[Chapter 1](01-mean-structure.qmd) built the mean structure. This
 chapter asks what happens when the variables sit far from zero relative to their
 spread, a common situation (a test score near 500 with a spread of 10, a year near
 2000), and shows the change of coordinates the engine uses so that the answer does
@@ -642,5 +632,5 @@ does, not even a standard error. (The standard error of an intercept depends on 
 
 ## Where next
 
-[Chapter 3](native-book-3-constraints.html) adds constraints: how the solver is
+[Chapter 3](03-constraints.qmd) adds constraints: how the solver is
 handed them, how it decides a solution is good, and how the engine polishes it.

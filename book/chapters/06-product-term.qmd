@@ -1,20 +1,10 @@
 ---
-title: "Native engine book, chapter 6: the product term"
-format:
-  html:
-    code-tools: false
-    code-copy: false
-    highlight-style: none
-execute:
-  collapse: true
-  comment: "#>"
-  eval: true
-  echo: true
+title: "The product term"
 ---
 
 Since 0.10.0 the native engine accepts a **product term** on the right side of a regression: `y ~ x + m + x:m`. The
 product is how a treatment-by-mediator interaction enters the model, and it is what the four-way decomposition of
-[Chapter 7](native-book-7-four-way.html) reads. This chapter follows a product through the engine: how the parser
+[Chapter 7](07-four-way.qmd) reads. This chapter follows a product through the engine: how the parser
 reads it, how the engine builds its column, why the likelihood can treat it as an ordinary exogenous variable,
 which models the engine therefore accepts and why each exclusion exists, and what happens to the standard errors and
 the model test. Every claim is checked against least squares, against a hand computation or against a simulation
@@ -1040,5 +1030,5 @@ Satorra, A., & Bentler, P. M. (1990). Model conditions for asymptotic robustness
 
 ## Where next
 
-[Chapter 7](native-book-7-four-way.html) uses the product to split the total effect of a binary treatment into four
+[Chapter 7](07-four-way.qmd) uses the product to split the total effect of a binary treatment into four
 parts, derives each part and its standard error, and checks them against lavaan and a hand computation.

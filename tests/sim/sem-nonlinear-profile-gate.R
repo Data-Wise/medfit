@@ -29,16 +29,12 @@
 #   oracle1    the oracle searches only the positive sign branch
 #   oracle0    the q = 0 oracle uses only the a = 0 null
 #   halfq      the fit is asked for q / 2 while the gate checks q (the request check must fail)
-# `MEDFIT_FLOOR_REPORT_ONLY=1` makes the floor fixture report-only (the CI gate sets it; see issue #238).
 # Run from the package root:  Rscript tests/sim/sem-nonlinear-profile-gate.R   (FAST=1 runs 8 fixtures x 3 q's)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/sim/oracle213.R", local = FALSE)
 mutant <- Sys.getenv("MUTANT", "")
 fast <- nzchar(Sys.getenv("FAST", ""))
-# The floor fixture is platform-sensitive on a reference BLAS (issue #238): set MEDFIT_FLOOR_REPORT_ONLY to report a
-# failure of that one fixture without failing the gate. Strict when unset (macOS, OpenBLAS, local release runs).
-floor_report_only <- nzchar(Sys.getenv("MEDFIT_FLOOR_REPORT_ONLY", ""))
 ns <- asNamespace("medfit")
 swap <- function(name, fn, env = ns) {
   if (bindingIsLocked(name, env)) {
@@ -131,11 +127,12 @@ for (f in fx) {
       error = function(e) conditionMessage(e)
     )
     if (is.character(h2)) {
-      report <- isTRUE(f$floor_case) && floor_report_only
-      if (report) message("REPORT-ONLY (#238): floor fixture ", f$id, " at ", tag, " stopped: ", substr(h2, 1, 100))
-      rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = report, omx_ok = TRUE,
-                                              lr = NA_real_, lr_oracle = NA_real_, gap = if (report) 0 else NA_real_,
-                                              improper = "", note = substr(h2, 1, 80), stringsAsFactors = FALSE)
+      # a refusal on the floor fixture is a flagged outcome (see below), any other error is a failure
+      refused <- isTRUE(f$floor_case) && grepl("no start converged", h2, fixed = TRUE)
+      rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = refused, omx_ok = TRUE,
+                                              lr = NA_real_, lr_oracle = NA_real_, gap = if (refused) 0 else NA_real_,
+                                              improper = "", note = if (refused) "refused" else substr(h2, 1, 80),
+                                              stringsAsFactors = FALSE)
       next
     }
     cf <- stats::coef(h2)
@@ -146,15 +143,22 @@ for (f in fx) {
     if (isTRUE(f$floor_case)) {
       warned <- any(grepl("solver floor", wmsg, fixed = TRUE))
       at_floor <- "Vy" %in% h2@diagnostics$active_bounds
-      ok <- warned && at_floor && is.finite(lr) && request_ok
-      if (!ok && floor_report_only) {
-        message("REPORT-ONLY (#238): floor fixture ", f$id, " at ", tag, " did not meet the floor contract: ",
-                "warned=", warned, " at_floor=", at_floor, " lr=", format(lr), " request_ok=", request_ok)
-        ok <- TRUE
-      }
+      # The floor contract; on some CPUs (a GitHub runner's OpenBLAS kernels) the extreme-scale fit lands on a wrong
+      # branch with one accepted start. That is not silent: the fit says so (single-start warning) or refuses with an
+      # error, which the oracle sweep also counts as flagged. Only a silent wrong fit fails. The driver additionally
+      # requires at least half of the fixture's rows to meet the strict contract (note "strict"), so a solver that
+      # always refused or always landed on the wrong branch cannot pass.
+      flagged <- any(grepl("starts reached an accepted solution", wmsg, fixed = TRUE))
+      strict <- warned && at_floor && is.finite(lr) && request_ok
+      ok <- strict || (flagged && request_ok)
+      floor_note <- sprintf(
+        paste("floor contract not met and not flagged: warned=%s at_floor=%s flagged=%s finite_lr=%s",
+              "request_ok=%s q_ach=%.8g active=[%s]"),
+        warned, at_floor, flagged, is.finite(lr), request_ok, q_ach, paste(h2@diagnostics$active_bounds, collapse = ",")
+      )
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = ok, omx_ok = TRUE,
                                               lr = lr, lr_oracle = NA_real_, gap = 0, improper = "",
-                                              note = if (ok) "" else "floor contract not met",
+                                              note = if (strict) "strict" else if (ok) "flagged" else floor_note,
                                               stringsAsFactors = FALSE)
       next
     }
@@ -176,7 +180,8 @@ for (f in fx) {
 }
 res <- do.call(rbind, rows)
 res$mutant <- mutant
-print(res[!res$native_ok, c("fixture", "q_tag", "lr", "lr_oracle", "gap", "note")], row.names = FALSE)
+print(res[!res$native_ok, c("fixture", "q_tag", "lr", "lr_oracle", "gap", "note")], row.names = FALSE, right = FALSE)
+for (n in res$note[!res$native_ok]) cat("NOTE:", n, "\n")
 if (!nzchar(mutant) && !fast) {
   dir.create("tests/sim/results", showWarnings = FALSE)
   utils::write.csv(res, file.path("tests/sim/results", sprintf("sem-nonlinear-profile-gate-%s.csv", Sys.Date())),

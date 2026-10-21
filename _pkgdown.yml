@@ -113,20 +113,6 @@ navbar:
         href: articles/native-tutorial.html
       - text: "The native engine guide"
         href: articles/native-guide.html
-      - text: "Native book 1: the mean structure"
-        href: articles/native-book-1-mean-structure.html
-      - text: "Native book 2: scale and conditioning"
-        href: articles/native-book-2-scale.html
-      - text: "Native book 3: constraints"
-        href: articles/native-book-3-constraints.html
-      - text: "Native book 4: fixed exogenous moments"
-        href: articles/native-book-4-fixed-x.html
-      - text: "Native book 5: inference"
-        href: articles/native-book-5-inference.html
-      - text: "Native book 6: the product term"
-        href: articles/native-book-6-product-term.html
-      - text: "Native book 7: the four-way decomposition"
-        href: articles/native-book-7-four-way.html
       - text: "lavaan and the native engine"
         href: articles/lavaan-comparison.html
       - text: "Worked example: study hours and GPA"
@@ -200,6 +186,10 @@ navbar:
         href: articles/bootstrap.html
       - text: "Methods and Formulas"
         href: articles/methods.html
+      - text: "Computation algorithms"
+        href: articles/computation-algorithms.html
+      - text: "What's new in 0.11"
+        href: articles/whats-new-0-11.html
     ecosystem:
       text: Ecosystem
       href: https://data-wise.github.io/mediationverse/articles/ecosystem.html
@@ -263,6 +253,7 @@ reference:
       - fit_mediation
       - fit_sem
       - mbco_sem
+      - compare_lr
       - medfit-syntax
       - bootstrap_mediation
 
@@ -317,13 +308,6 @@ articles:
       - '`articles/native-quickstart`'
       - '`articles/native-tutorial`'
       - '`articles/native-guide`'
-      - '`articles/native-book-1-mean-structure`'
-      - '`articles/native-book-2-scale`'
-      - '`articles/native-book-3-constraints`'
-      - '`articles/native-book-4-fixed-x`'
-      - '`articles/native-book-5-inference`'
-      - '`articles/native-book-6-product-term`'
-      - '`articles/native-book-7-four-way`'
       - '`articles/lavaan-comparison`'
       - '`articles/example-gpa`'
   - title: "Detailed guides"
@@ -332,6 +316,8 @@ articles:
       - '`articles/extraction`'
       - '`articles/bootstrap`'
       - '`articles/methods`'
+      - '`articles/computation-algorithms`'
+      - '`articles/whats-new-0-11`'
 
 development:
   mode: auto

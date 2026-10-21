@@ -616,7 +616,7 @@ boot20 <- bootstrap_mediation(int_ref_stat, method = "nonparametric",
 c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
 ```
 
-More: [Native book, the four-way decomposition](native-book-7-four-way.html),
+More: [Native engine book, the four-way chapter](https://github.com/Data-Wise/medfit/tree/main/book/chapters/07-four-way.qmd),
 [Native engine, product term](model-native.html).
 
 ## 21. A categorical covariate in a native fit

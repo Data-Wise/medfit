@@ -125,7 +125,7 @@ verdict_gate <- function(gate, d, s) {
     "product-corr-colon" = c("design", "cvf", "path", "expect", "gap", "gap_column", "err"),
     "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok"),
     "s7-lifecycle" = c("s7", "s7_version", "step", "ok"),
-    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "gap"),
+    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "gap", "note"),
     "nonlinear-parity" = c("problem", "structure", "n", "seed", "native_ok", "improper", "feas", "omx_ok", "f_gap",
                            "est_gap", "ref_gap", "ann", "se_rel", "se_oracle"),
     "bootstrap-coverage" = c("sim", "lower", "upper", "hit"),
@@ -133,7 +133,9 @@ verdict_gate <- function(gate, d, s) {
     "mean-constrained" = c("structure", "n", "seed", "shift", "problem", "ok", "feas", "invariance", "lavaan_ok"),
     factor = c("n", "k", "seed", "miss", "pass", "err", "fxmode", "lavaan", "fitstats"),
     "oracle-sweep" = c("seed", "family", "n", "scale", "constraint", "outcome", "max_abs_error",
-                       "feasibility", "f_gap", "warning", "error", "optimum")
+                       "feasibility", "f_gap", "warning", "error", "optimum"),
+    "compare-lr" = c("engine", "version", "seed", "verdict", "all_converged", "ref_ok", "drop", "above", "warn_drop",
+                     "warn_above", "mislabel", "pass")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -357,13 +359,32 @@ verdict_gate <- function(gate, d, s) {
         chk("non-refusal errors", !any(errors), sprintf("%d errors outside refusals", sum(errors, na.rm = TRUE)))
       )
     },
+    "compare-lr" = {
+      # Issue 249 T5: the comparison never mislabels; upstream reproduction is recorded, not gated
+      rbind(
+        rows_chk(d, s),
+        chk("no mislabel", !any(d$mislabel %in% TRUE) && all(d$pass %in% TRUE),
+            sprintf("%d of %d rows mislabeled or failed", sum(!(d$pass %in% TRUE)), nrow(d))),
+        chk("both engines ran", all(c("lavaan", "openmx") %in% d$engine), paste(unique(d$engine), collapse = ", ")),
+        chk("returned", !any(d$verdict %in% "error"), sprintf("%d rows with an error", sum(d$verdict %in% "error"))),
+        chk("reference matches the closed form", all(d$ref_ok %in% TRUE),
+            sprintf("%d rows off", sum(!(d$ref_ok %in% TRUE)))),
+        chk("unresolved only after a failed run", !any(d$verdict %in% "unresolved" & d$all_converged %in% TRUE),
+            sprintf("%d unresolved rows with every run converged",
+                    sum(d$verdict %in% "unresolved" & d$all_converged %in% TRUE)))
+      )
+    },
     "nonlinear-profile" = {
       # T3 (#213): every fit reaches the independent oracle's constrained optimum (the gate script applies the
       # per-run rule; the driver re-checks the counts and the largest gap)
       rbind(
         rows_chk(d, s), failed_chk(d),
         max_chk("oracle gap", d$gap, s$tol_est),
-        chk("floor cases warn", all(d$native_ok[d$fixture %in% "var-1e6-1e-6"] %in% TRUE), "var-1e6-1e-6 rows")
+        chk("floor cases warn", all(d$native_ok[d$fixture %in% "var-1e6-1e-6"] %in% TRUE), "var-1e6-1e-6 rows"),
+        # a flagged or refused row is allowed on some CPUs, but not for most of the fixture
+        chk("floor strict share", mean(d$note[d$fixture %in% "var-1e6-1e-6"] %in% "strict") >= 0.5,
+            sprintf("%d of %d floor rows meet the strict contract",
+                    sum(d$note[d$fixture %in% "var-1e6-1e-6"] %in% "strict"), sum(d$fixture %in% "var-1e6-1e-6")))
       )
     },
     # product-term and four-way gates: the rules live in tests/sim/product-gate-common.R
@@ -450,6 +471,10 @@ mutate <- function(gate, kind, d) {
     if (gate == "mean-constrained") d$invariance[which(!is.na(d$invariance))[1:3]] <- 5
     if (gate == "factor") d$pass[1:3] <- FALSE
     if (gate == "oracle-sweep") d$outcome[1] <- "WRONG"
+    if (gate == "compare-lr") {
+      d$mislabel[1:3] <- TRUE
+      d$pass[1:3] <- FALSE
+    }
   }
   if (kind == "no_lavaan") {
     # T5e: what a run without lavaan used to write: its lavaan-only checks absent or NA, everything else passing
@@ -479,7 +504,14 @@ mutate <- function(gate, kind, d) {
     if (gate == "mean-constrained") d$ok[1] <- FALSE
     if (gate == "factor") d$err[1] <- "fit failed"
     if (gate == "oracle-sweep") d$error[1] <- "fit failed"
+    if (gate == "compare-lr") d$verdict[1] <- "error"
   }
+  if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
+  if (kind == "unresolved_converged" && gate == "compare-lr") {
+    d$verdict[1] <- "unresolved"
+    d$all_converged[1] <- TRUE
+  }
+  if (kind == "ref_off" && gate == "compare-lr") d$ref_ok[1] <- FALSE
   if (kind == "scale_down" && gate == "stationarity") d$dec <- d$dec * 1e-6
   if (kind == "scale_up" && gate == "stationarity") d$dec <- d$dec * 1e6
   if (kind == "missing") {
@@ -487,7 +519,7 @@ mutate <- function(gate, kind, d) {
     # nolint start: object_usage_linter.
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
-      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep"
+      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -521,6 +553,8 @@ run_mutants <- function() {
     # the gates whose scripts need lavaan: a run that skipped its lavaan checks must be rejected (T5e)
     if (s$gate %in% c("factor", "fixed-x", "mean-constrained")) kinds <- c(kinds, "no_lavaan")
     if (s$gate == "mean-constrained") kinds <- c(kinds, "lavaan_partial")
+    if (s$gate == "compare-lr") kinds <- c(kinds, "unresolved_converged", "ref_off")
+    if (s$gate == "nonlinear-profile") kinds <- c(kinds, "all_flagged")
     for (kind in kinds) {
       v <- verdict_gate(s$gate, mutate(s$gate, kind, ld$data), s)
       rejected <- !all(v$pass)
@@ -676,7 +710,8 @@ scripts <- c(
   "fixed-x" = "tests/sim/sem-fixed-x-gate.R",
   "mean-constrained" = "tests/sim/sem-mean-constrained-gate.R",
   factor = "tests/sim/sem-factor-gate.R",
-  "oracle-sweep" = "tests/sim/sem-oracle-sweep.R"
+  "oracle-sweep" = "tests/sim/sem-oracle-sweep.R",
+  "compare-lr" = "tests/sim/compare-lr-gate.R"
 )
 
 # ---- main ----

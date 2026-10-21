@@ -22,6 +22,7 @@ model, from one mediator to a latent variable.
 
 | Version | What you get |
 |---|---|
+| **0.12.0** | `compare_lr()` runs the product-null LR (`a*b == 0`) in lavaan or OpenMx and compares it with `mbco_sem()`, warning only on observed evidence (a dropped constraint, a statistic above medfit's); a fix for the native acceptance gate rejecting a correct fit at a bound on the reference BLAS (#238) |
 | **0.11.1** | Nonparametric and cluster bootstrap resamples no longer depend on `ncores`; `anova()` on `SEMFit` records `p_valid` and refuses a pair with a nonzero fixed parameter in one fit only; `@diagnostics$optimum` records the best-of-starts verdict; an engine comparison table on the Models page; the minibook explains the hard concepts from scratch; a robustness suite for the native optimizer (metamorphic, nloptr fault injection, an edge-case grid and a randomized oracle sweep, registered as a gate) |
 | **0.11.0** | Categorical (factor, character, logical) covariates in native syntax; population-average four-way standard errors on request; a fix for nonlinear-constrained fits that wandered to negative variances (#213); a start fallback and a single-start warning for the native optimizer; the native engine is no longer marked experimental, and its exported signatures, `SEMFit` properties and model syntax change only through a deprecation |
 | **0.10.0** | The product term `x:m` in native syntax and the four-way decomposition from a native fit (`extract_mediation()` on a `fit_sem()` fit), inside a documented supported class; the model test is `NA` when a product factor is a regression target; a native route in cookbook recipe 7 |
@@ -43,7 +44,7 @@ install.packages(
 )
 ```
 
-This installs the current r-universe release (0.11.1). Binaries are available
+This installs the current r-universe release (0.12.0). Binaries are available
 for supported R/platform combinations; a source installation can require a
 compiler for dependencies such as `nloptr`. From GitHub instead:
 `pak::pak("data-wise/medfit")`.
@@ -331,7 +332,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.11.1. https://data-wise.github.io/medfit/
+R package version 0.12.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.

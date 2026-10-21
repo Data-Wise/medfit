@@ -1,19 +1,9 @@
 ---
-title: "Native engine book, chapter 3: constrained estimation"
-format:
-  html:
-    code-tools: false
-    code-copy: false
-    highlight-style: none
-execute:
-  collapse: true
-  comment: "#>"
-  eval: true
-  echo: true
+title: "Constrained estimation"
 ---
 
-Chapters [1](native-book-1-mean-structure.html) and
-[2](native-book-2-scale.html) minimized the discrepancy over all parameters. This
+Chapters [1](01-mean-structure.qmd) and
+[2](02-scale.qmd) minimized the discrepancy over all parameters. This
 chapter adds constraints such as `a + b == 1.2` or `cp == a*b` and follows one fit
 through every stage the engine runs: turning a constraint into a row, handing the rows
 to the solver, judging the solution with the acceptance gate, polishing it, and
@@ -911,5 +901,5 @@ are compared with lavaan only.
 
 ## Where next
 
-[Chapter 4](native-book-4-fixed-x.html) returns to the unconstrained discrepancy and asks what changes when the moments of the
+[Chapter 4](04-fixed-x.qmd) returns to the unconstrained discrepancy and asks what changes when the moments of the
 exogenous variables are not parameters but data.
