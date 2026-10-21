@@ -98,7 +98,11 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 ### Gate G1 (after T1, before Phase 2)
 
-- [ ] Codex adversarial review run on the T1 PR (#278); findings triaged (fix / reject / defer) and recorded here
+- [x] Codex adversarial review run on the T1 PR (#278), verdict needs-attention, 3 high findings, **all fixed** in #278:
+  - **Fix:** incomplete precheck (compared only shared names, no discrepancy). Now the parameter sets must match exactly, estimates and the unrestricted discrepancy (LR scale) must agree, and anything unavailable is `unresolved`.
+  - **Fix:** missing constraint evidence was treated as feasible. A non-finite residual is now `unchecked`: no agree, no warning.
+  - **Fix:** absolute `|a*b|` tolerance changed verdicts with the data's units. The residual is now divided by the natural unit of the product (`residual_scale`, computed by the adapters from the data as u_a * u_b with u = sd(response)/sd(predictor)); new tests rescale and the verdict holds.
+  - Effect on later tasks: **T2/T3 must supply** the unrestricted discrepancy `fit` on the LR scale, the full parameter set, and `residual_scale`; the injected helper already models all three.
 
 ### Checkpoint A (after T1-T3)
 
