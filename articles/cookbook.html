@@ -85,13 +85,6 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
     <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
@@ -138,6 +131,8 @@
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
+    <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
+    <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
@@ -169,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.1/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -848,7 +843,7 @@ zero  8 3000.936</code></pre>
  0.076915831 -0.003651384  0.160267019 </code></pre>
 </div>
 </div>
-<p>More: <a href="native-book-7-four-way.html">Native book, the four-way decomposition</a>, <a href="model-native.html">Native engine, product term</a>.</p>
+<p>More: <a href="https://github.com/Data-Wise/medfit/tree/main/book/chapters/07-four-way.qmd" class="external-link">Native engine book, the four-way chapter</a>, <a href="model-native.html">Native engine, product term</a>.</p>
 </section><section class="level2"><h2 id="a-categorical-covariate-in-a-native-fit">21. A categorical covariate in a native fit<a class="anchor" aria-label="anchor" href="#a-categorical-covariate-in-a-native-fit"></a>
 </h2>
 <p><em>When:</em> a covariate is a factor, character or logical column (a group, a site, a yes/no flag). Write the column name where a numeric covariate would go. The engine replaces it with one 0/1 dummy per non-reference level, named <code>&lt;column&gt;_&lt;level&gt;</code>; the reference is the first factor level (a character column sorts in the C locale). The rows of the fit are named <code>mediator1~group_mid</code>, so read them like any other path. The chunk cuts <code>covariate1</code> into three groups to have a factor to use.</p>

@@ -85,13 +85,6 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
     <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
@@ -138,6 +131,8 @@
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
+    <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
+    <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
@@ -169,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.1/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -802,8 +797,8 @@ MBCO = 33.353, df = 1, p-value = 7.685e-09</code></pre>
 D = n\,(F_{r} - F_{f}), \qquad \text{df} = \text{df}_r - \text{df}_f,
 \]</span></p>
 <p>with <span class="math inline">\(F\)</span> the minimized discrepancy and <span class="math inline">\(\text{df}\)</span> the model degrees of freedom of each fit, which already count the equality constraints. <span class="math inline">\(D\)</span> is referred to <span class="math inline">\(\chi^2_{\text{df}}\)</span>. <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> differences the same quantity for each of its two refits, so <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> reproduces its per-refit statistics (221.05 and 0.083 on <code>memory_exp</code>). Several fits give one row each, ordered by degrees of freedom, each tested against the row above it.</p>
-<p>Two fits are accepted only if they use the same observed variables and the same rows, neither has sampling weights, both converged, and the restricted fit frees no parameter the other leaves out and has more degrees of freedom. That parameter-table inclusion is necessary for nesting and not sufficient: two models with different latent structures but the same row labels pass, and whether they are nested in substance is the analyst’s responsibility.</p>
-<p>A restricted fit with a smaller discrepancy than the model it restricts means one of the fits is not at its global optimum, and is an error. As in <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>, a bound or an inequality on a tested parameter that is active at the restricted fit puts the null on the boundary of the parameter space, so the statistic is a mixture of chi-squares and the function warns that the p-value is not valid.</p>
+<p>Two fits are accepted only if they use the same observed variables and the same rows, neither has sampling weights, both converged, nonzero fixed parameters agree, and the restricted fit frees no parameter the other leaves out and has more degrees of freedom. That parameter-table inclusion is necessary for nesting and not sufficient: two models with different latent structures but the same row labels pass, and whether they are nested in substance is the analyst’s responsibility.</p>
+<p>A restricted fit with a smaller discrepancy than the model it restricts means one of the fits is not at its global optimum, and is an error. As in <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>, a bound or an inequality on a tested parameter that is active at the restricted fit puts the null on the boundary of the parameter space, so the statistic is a mixture of chi-squares and the function warns that the p-value is not valid. The returned <code>anova</code> object keeps the row-wise verdict in <code>attr(result, "p_valid")</code>: <code>NA</code> for the first row and <code>FALSE</code> for a boundary test. Subsetting or binding rows drops this attribute.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">fit0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">fit</span><span class="op">@</span><span class="va">model</span>, <span class="st">"\nb == 0"</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">mediation_demo</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">fit0</span><span class="op">)</span></span></code></pre>

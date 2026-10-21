@@ -85,13 +85,6 @@
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-1-mean-structure.html">Native book 1: the mean structure</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-2-scale.html">Native book 2: scale and conditioning</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-3-constraints.html">Native book 3: constraints</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-4-fixed-x.html">Native book 4: fixed exogenous moments</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-5-inference.html">Native book 5: inference</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-6-product-term.html">Native book 6: the product term</a></li>
-    <li><a class="dropdown-item" href="../articles/native-book-7-four-way.html">Native book 7: the four-way decomposition</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
     <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
@@ -138,6 +131,8 @@
     <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
     <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
+    <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
+    <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
@@ -169,7 +164,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.1/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -511,7 +506,7 @@ standard errors (observed information) are unaffected.</code></pre>
 <p>The exported signatures of <code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>, the <code>SEMFit</code> properties and the model syntax in <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> change only through a deprecation. New syntax and new properties can be added: a name, a table row or a property that exists today keeps its meaning. This matters for the features listed under Limits (a categorical mediator or outcome, for example): they will arrive as additions, not as a rename of <code>g_b</code>-style dummy names or of the <code>m:x</code> product name. A test (<code>test-api-freeze.R</code>) pins the current names. Numerical fixes are not breaking changes.</p>
 </section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
-<p><a href="cookbook.html#a-latent-mediator-native-engine">Cookbook recipe 11</a> | <a href="cookbook.html#observed-intercepts-and-means">Cookbook recipe 19</a> | <a href="cookbook.html#four-way-decomposition-from-a-native-fit">Cookbook recipe 20</a> | <a href="native-book-1-mean-structure.html">Native engine book</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>
+<p><a href="cookbook.html#a-latent-mediator-native-engine">Cookbook recipe 11</a> | <a href="cookbook.html#observed-intercepts-and-means">Cookbook recipe 19</a> | <a href="cookbook.html#four-way-decomposition-from-a-native-fit">Cookbook recipe 20</a> | <a href="https://github.com/Data-Wise/medfit/tree/main/book" class="external-link">Native engine book (source in the repository)</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

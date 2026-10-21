@@ -1,6 +1,7 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://data-wise.github.io/medfit/404.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/bootstrap.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/computation-algorithms.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/cookbook.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/example-gpa.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/extraction.html</loc></url>
@@ -29,17 +30,11 @@
 <url><loc>https://data-wise.github.io/medfit/articles/model-simple.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/model-weights.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/models.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/articles/native-book-1-mean-structure.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/articles/native-book-2-scale.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/articles/native-book-3-constraints.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/articles/native-book-4-fixed-x.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/articles/native-book-5-inference.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/articles/native-book-6-product-term.html</loc></url>
-<url><loc>https://data-wise.github.io/medfit/articles/native-book-7-four-way.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/native-guide.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/native-quickstart.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/native-tutorial.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/refcard.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/whats-new-0-11.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/authors.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/index.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/news/index.html</loc></url>

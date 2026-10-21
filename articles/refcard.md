@@ -1,9 +1,9 @@
 # medfit Reference Card
 
-Quick lookup for users who already know medfit. Needs medfit 0.10.0 or
-later (CRAN has 0.3.2; install from GitHub or r-universe, see the [home
-page](https://data-wise.github.io/medfit/#install)). Explanations are in
-the
+Quick lookup for users who already know medfit. This card describes
+medfit 0.11.1 (CRAN has 0.3.2; install from GitHub or r-universe, see
+the [home page](https://data-wise.github.io/medfit/#install)).
+Explanations are in the
 [articles](https://data-wise.github.io/medfit/articles/getting-started.md);
 formulas are in [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md); task

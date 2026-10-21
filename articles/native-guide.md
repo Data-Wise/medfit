@@ -312,9 +312,9 @@ a chain gives a `SerialMediationData`, mediators side by side a
 engine](https://data-wise.github.io/medfit/articles/model-native.md) \|
 [Constraints and the MBCO
 test](https://data-wise.github.io/medfit/articles/model-native-constraints.md)
-\| [Native engine
-book](https://data-wise.github.io/medfit/articles/native-book-1-mean-structure.md)
-\| [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md)
-\| [Methods and
+\| [Native engine book (source in the
+repository)](https://github.com/Data-Wise/medfit/tree/main/book) \|
+[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) \|
+[Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md) \|
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)

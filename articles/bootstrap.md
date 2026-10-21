@@ -553,7 +553,10 @@ print(boot_serial)
 
 ## Reproducibility
 
-Set a seed for reproducible results:
+Set a seed for reproducible results. For nonparametric and cluster
+bootstraps, the same seed gives the same resamples with sequential runs
+and any `ncores`. The resulting statistics also agree when
+`statistic_fn` uses no random numbers:
 
 ``` r
 # Same seed = same results

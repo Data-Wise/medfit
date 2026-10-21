@@ -904,8 +904,8 @@ c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
         estimate        lower        upper
      0.076915831 -0.003651384  0.160267019 
 
-More: [Native book, the four-way
-decomposition](https://data-wise.github.io/medfit/articles/native-book-7-four-way.md),
+More: [Native engine book, the four-way
+chapter](https://github.com/Data-Wise/medfit/tree/main/book/chapters/07-four-way.qmd),
 [Native engine, product
 term](https://data-wise.github.io/medfit/articles/model-native.md).
 

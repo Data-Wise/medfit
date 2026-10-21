@@ -289,8 +289,8 @@ decomposition.
   mediator, a nonlinear constraint, comparing models, defined
   parameters, bounds, checks, fixed covariates, intercepts, the four-way
   decomposition and a categorical covariate.
-- [Native engine
-  book](https://data-wise.github.io/medfit/articles/native-book-1-mean-structure.md):
+- [Native engine book (source in the
+  repository)](https://github.com/Data-Wise/medfit/tree/main/book):
   seven chapters on the mean structure, scale, constraints, `fixed_x`,
   inference, the product term and the four-way decomposition.
 - [lavaan and the native

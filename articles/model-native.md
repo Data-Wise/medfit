@@ -371,8 +371,8 @@ Numerical fixes are not breaking changes.
 19](https://data-wise.github.io/medfit/articles/cookbook.html#observed-intercepts-and-means)
 \| [Cookbook recipe
 20](https://data-wise.github.io/medfit/articles/cookbook.html#four-way-decomposition-from-a-native-fit)
-\| [Native engine
-book](https://data-wise.github.io/medfit/articles/native-book-1-mean-structure.md)
-\| [Methods and
+\| [Native engine book (source in the
+repository)](https://github.com/Data-Wise/medfit/tree/main/book) \|
+[Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md) \|
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)

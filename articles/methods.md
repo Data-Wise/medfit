@@ -963,12 +963,12 @@ each, ordered by degrees of freedom, each tested against the row above
 it.
 
 Two fits are accepted only if they use the same observed variables and
-the same rows, neither has sampling weights, both converged, and the
-restricted fit frees no parameter the other leaves out and has more
-degrees of freedom. That parameter-table inclusion is necessary for
-nesting and not sufficient: two models with different latent structures
-but the same row labels pass, and whether they are nested in substance
-is the analyst’s responsibility.
+the same rows, neither has sampling weights, both converged, nonzero
+fixed parameters agree, and the restricted fit frees no parameter the
+other leaves out and has more degrees of freedom. That parameter-table
+inclusion is necessary for nesting and not sufficient: two models with
+different latent structures but the same row labels pass, and whether
+they are nested in substance is the analyst’s responsibility.
 
 A restricted fit with a smaller discrepancy than the model it restricts
 means one of the fits is not at its global optimum, and is an error. As
@@ -977,7 +977,9 @@ in
 a bound or an inequality on a tested parameter that is active at the
 restricted fit puts the null on the boundary of the parameter space, so
 the statistic is a mixture of chi-squares and the function warns that
-the p-value is not valid.
+the p-value is not valid. The returned `anova` object keeps the row-wise
+verdict in `attr(result, "p_valid")`: `NA` for the first row and `FALSE`
+for a boundary test. Subsetting or binding rows drops this attribute.
 
 ``` r
 fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)

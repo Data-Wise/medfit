@@ -1,0 +1,197 @@
+# How medfit computes estimates and uncertainty
+
+This page follows the implementation in `R/effect-se.R`,
+`R/bootstrap.R`, `R/sem-ml.R`, `R/sem-optim.R`, `R/sem-constraints.R`,
+`R/sem-anova.R`, and `R/sem-mbco.R`. The [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.md)
+article defines the mediation effects; here the focus is how the
+computer obtains their estimates.
+
+## Delta-method standard errors
+
+Let \\\hat\theta\\ be a vector of fitted path parameters, \\V\\ its
+estimated covariance matrix, and \\h(\theta)\\ an effect such as the
+simple indirect effect \\h(a,b)=ab\\. The gradient \\g\\ lists how much
+the effect changes for a small change in each parameter. For \\ab\\,
+\\g=(b,a)^\mathsf{T}\\ in \\(a,b)\\ order. A first-order approximation
+gives
+
+\\ \operatorname{SE}\\h(\hat\theta)\\ \approx \sqrt{g^\mathsf{T} V g}.
+\\
+
+`R/effect-se.R` builds named gradients for each mediation data class and
+matches them to named rows of `@vcov`;
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
+[`confint()`](https://rdrr.io/r/stats/confint.html) use the same
+builder. This includes covariance between paths, not just their separate
+variances. For four-way effects, an opt-in adds the sampling variance of
+an estimated covariate mean to INTref, NDE, and TE. A missing covariance
+alias is reported rather than guessed.
+
+``` r
+
+fit_m <- lm(mediator1 ~ treatment + covariate1, mediation_demo)
+fit_y <- lm(outcome ~ treatment + mediator1 + covariate1, mediation_demo)
+mediation <- extract_mediation(fit_m, model_y = fit_y,
+                               treatment = "treatment", mediator = "mediator1")
+generics::tidy(mediation)
+```
+
+## Three bootstrap algorithms
+
+Let \\B\\ be the number of replicates, \\D\\ the observed data, \\T\\ a
+statistic function, \\\hat\theta\\ the fitted parameter vector, and
+\\V\\ its covariance. All three methods return an estimate; the first
+two also return percentile intervals from the replicate statistics.
+`plugin` computes only \\T(\hat\theta)\\.
+
+``` text
+parametric:    draw B vectors theta* from Normal(theta-hat, V)
+               evaluate T(theta*) for each vector
+nonparametric: draw B row-index vectors, each of length n, with replacement
+               for each vector, form D*, refit inside T(D*)
+cluster:       draw B vectors of J cluster IDs, each of length J
+               stack whole selected clusters, assigning a fresh ID per draw
+               refit inside T(D*); discard failed or flagged refits
+```
+
+Here \\n\\ is the row count and \\J\\ is the number of distinct
+clusters. The parametric method assumes an approximately normal
+parameter distribution. The row method refits and therefore can capture
+features the parameter-normal approximation misses. The cluster method
+preserves within-cluster rows and keeps repeated draws separate. The
+resamples and parametric vectors are drawn in the parent process before
+[`parallel::mclapply()`](https://rdrr.io/r/parallel/mclapply.html) on
+Unix; Windows uses a sequential fallback. A fixed `seed` gives the same
+nonparametric resamples for any `ncores` and sequential runs. Randomness
+inside `statistic_fn` and last-digit differences from threaded numerical
+libraries are outside that guarantee. Pre-drawn row indices require
+roughly \\4nB\\ bytes. See `R/bootstrap.R`.
+
+``` r
+
+library(medfit)
+```
+
+
+    Attaching package: 'medfit'
+
+    The following object is masked from 'package:stats':
+
+        decompose
+
+``` r
+
+boot <- bootstrap_mediation(function(d) mean(d$mediator1),
+                            method = "nonparametric", data = mediation_demo,
+                            n_boot = 12, seed = 7)
+c(estimate = boot@estimate, lower = boot@ci_lower, upper = boot@ci_upper)
+```
+
+     estimate     lower     upper
+    0.3843265 0.3386462 0.4693752 
+
+## Native SEM: from a model to a discrepancy
+
+The native engine translates syntax into RAM matrices. Let \\A\\ contain
+directed paths, \\S_R\\ contain model variances and covariances, \\I\\
+be the identity matrix, and \\F\\ select observed variables. The implied
+covariance is
+
+\\ \Sigma(\theta) = F(I-A)^{-1}S_R(I-A)^{-\mathsf T}F^\mathsf T, \\
+
+where \\\theta\\ is the vector of free model parameters. Let \\S\\ be
+the observed covariance computed with divisor \\n\\, and \\p\\ the
+number of observed variables. The engine minimizes the ML discrepancy
+
+\\ Q(\theta)=\log\|\Sigma(\theta)\|+
+\operatorname{tr}\\S\Sigma(\theta)^{-1}\\-\log\|S\|-p. \\
+
+With a mean structure, let \\\bar x\\ be the observed mean, \\m\\ the
+RAM intercepts, and \\\mu(\theta)=F(I-A)^{-1}m\\. The engine adds
+\\(\bar x-\mu)^\mathsf T\Sigma^{-1}(\bar x-\mu)\\ to \\Q\\. It evaluates
+intercepts in mean-centered coordinates for numerical stability, mapping
+the answer back to the model’s parameterization. An unusable implied
+covariance gets a finite penalty, allowing the optimizer to step back.
+For nested models on the same data,
+[`anova()`](https://rdrr.io/r/stats/anova.html) uses \\n(Q\_{\rm
+restricted}-Q\_{\rm full})\\ as its likelihood-ratio statistic; it
+checks nesting and marks boundary p-values in `attr(result, "p_valid")`.
+
+``` r
+
+fit <- fit_sem(paste("mediator1 ~ a*treatment",
+                     "outcome ~ b*mediator1 + cp*treatment", sep = "\n"),
+               mediation_demo)
+c(discrepancy = fit@f, n = fit@n_obs)
+```
+
+## Constraints, acceptance, and starts
+
+For a linear constraint \\c(\theta)=a^\mathsf T\theta+b\\, the code
+scales \\a\\ to unit length. If \\u\\ contains each parameter’s natural
+unit, the solver works in \\x=\theta/u\\ coordinates. SLSQP receives
+analytic objective gradients, constant Jacobians for linear rows, and
+recomputed numerical Jacobians for nonlinear rows. Dependent equality
+rows and inequalities implied by them can be removed from the solver
+input, but the acceptance gate checks **all** original rows.
+
+A solver success code is only the first check. The gate accepts statuses
+1, 3, or 4, checks every constraint’s residual in natural units (at most
+\\10^{-6}\\), and checks the objective on directions that preserve
+active constraints and bounds. Call an orthonormal basis for those
+directions \\Z\\, the gradient in solver units \\g_x\\, and the relevant
+Hessian of the Lagrangian \\H_L\\. The reduced gradient is
+\\g_r=Z^\mathsf T g_x\\ and reduced Hessian is \\H_r=Z^\mathsf T H_L
+Z\\. The Newton decrement \\\sqrt{g_r^\mathsf T H_r^{-1}g_r}\\ must be
+at most \\10^{-3}\\. After dividing each Hessian row and column by the
+square root of its diagonal entry, the smallest eigenvalue must be at
+least \\10^{-4}\\. This catches a stationary but nearly flat or
+wrong-curvature point. The gate checks active-bound multiplier signs and
+rejects a wrong-sign bound; the active-inequality multiplier-sign check
+warns without rejecting. These thresholds and verdicts are in
+`R/sem-optim.R` and `R/sem-constraints.R`.
+
+An accepted nonlinear fit can receive a Newton polish: short steps solve
+the active-set Karush–Kuhn–Tucker equations using \\H_L\\. A polished
+point is kept only if the objective improves and it passes the gate
+again. With nonlinear constraints, the engine tries all starts and keeps
+the accepted point with the smallest discrepancy. A feasible
+unconstrained solution can certify the optimum; otherwise the `optimum`
+diagnostic reports whether starts agreed, disagreed, or only one was
+accepted. A fit with only linear rows stops after the first accepted
+start. More starts improve the search, but agreement among starts alone
+is not a proof of a global optimum.
+
+``` r
+
+model <- paste("mediator1 ~ a*treatment",
+               "outcome ~ b*mediator1 + cp*treatment", "cp == a*b", sep = "\n")
+fit <- fit_sem(model, mediation_demo)
+fit@diagnostics$optimum
+fit@diagnostics$decrement
+```
+
+## A zero product is a union of simpler models
+
+For \\k\\ labeled paths, \\\prod\_{j=1}^k a_j=0\\ means at least one
+path is zero. `R/sem-fit.R` splits explicit zero-product equalities into
+linear branches, fits each from a clean default start, and keeps the
+accepted branch with the lowest discrepancy. It supports at most 64
+branches. This avoids a zero Jacobian where several factors vanish.
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+uses the same logic for an indirect-effect test: fit each single-path
+null, use the smallest likelihood-ratio statistic, and refer it to a
+one-degree-of-freedom chi-square distribution when its regularity
+conditions hold. A null on a boundary can invalidate that reference, so
+inspect its warning.
+
+``` r
+
+base <- paste("mediator1 ~ a*treatment",
+              "outcome ~ b*mediator1 + cp*treatment", sep = "\n")
+full <- fit_sem(base, mediation_demo)
+mbco_sem(full, paths = c("a", "b"))
+null <- fit_sem(paste(base, "a*b == 0", sep = "\n"), mediation_demo)
+null@internals$branch
+```
