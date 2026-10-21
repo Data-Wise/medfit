@@ -9,6 +9,11 @@
 
 ## Bug fixes
 
+* `anova()` on `SEMFit` refuses a pair where a nonzero fixed parameter (for example `M1 ~~ 0.5*M2`) is in one fit and
+  absent from the other. Parameter-table inclusion alone let such a pair through, with a chi-square p-value for two
+  models that are not nested. A parameter fixed at a value in one fit and free in the other is still a valid
+  restriction.
+
 * `bootstrap_mediation(method = "nonparametric")`, with or without `cluster =`, now draws every resample in the
   calling process before the refits are spread over cores. A fixed `seed` gives the same resamples and
   `boot_estimates` for any `ncores` and for sequential runs; before, each worker drew from its own random-number
