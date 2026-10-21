@@ -131,7 +131,8 @@ for (f in fx) {
       refused <- isTRUE(f$floor_case) && grepl("no start converged", h2, fixed = TRUE)
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = refused, omx_ok = TRUE,
                                               lr = NA_real_, lr_oracle = NA_real_, gap = if (refused) 0 else NA_real_,
-                                              improper = "", note = substr(h2, 1, 80), stringsAsFactors = FALSE)
+                                              improper = "", note = if (refused) "refused" else substr(h2, 1, 80),
+                                              stringsAsFactors = FALSE)
       next
     }
     cf <- stats::coef(h2)
@@ -144,9 +145,12 @@ for (f in fx) {
       at_floor <- "Vy" %in% h2@diagnostics$active_bounds
       # The floor contract; on some CPUs (a GitHub runner's OpenBLAS kernels) the extreme-scale fit lands on a wrong
       # branch with one accepted start. That is not silent: the fit says so (single-start warning) or refuses with an
-      # error, which the oracle sweep also counts as flagged. Only a silent wrong fit fails.
+      # error, which the oracle sweep also counts as flagged. Only a silent wrong fit fails. The driver additionally
+      # requires at least half of the fixture's rows to meet the strict contract (note "strict"), so a solver that
+      # always refused or always landed on the wrong branch cannot pass.
       flagged <- any(grepl("starts reached an accepted solution", wmsg, fixed = TRUE))
-      ok <- (warned && at_floor && is.finite(lr) && request_ok) || (flagged && request_ok)
+      strict <- warned && at_floor && is.finite(lr) && request_ok
+      ok <- strict || (flagged && request_ok)
       floor_note <- sprintf(
         paste("floor contract not met and not flagged: warned=%s at_floor=%s flagged=%s finite_lr=%s",
               "request_ok=%s q_ach=%.8g active=[%s]"),
@@ -154,7 +158,7 @@ for (f in fx) {
       )
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = ok, omx_ok = TRUE,
                                               lr = lr, lr_oracle = NA_real_, gap = 0, improper = "",
-                                              note = if (ok) "" else floor_note,
+                                              note = if (strict) "strict" else if (ok) "flagged" else floor_note,
                                               stringsAsFactors = FALSE)
       next
     }

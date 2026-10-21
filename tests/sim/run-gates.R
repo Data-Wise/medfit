@@ -125,7 +125,7 @@ verdict_gate <- function(gate, d, s) {
     "product-corr-colon" = c("design", "cvf", "path", "expect", "gap", "gap_column", "err"),
     "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok"),
     "s7-lifecycle" = c("s7", "s7_version", "step", "ok"),
-    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "gap"),
+    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "gap", "note"),
     "nonlinear-parity" = c("problem", "structure", "n", "seed", "native_ok", "improper", "feas", "omx_ok", "f_gap",
                            "est_gap", "ref_gap", "ann", "se_rel", "se_oracle"),
     "bootstrap-coverage" = c("sim", "lower", "upper", "hit"),
@@ -380,7 +380,11 @@ verdict_gate <- function(gate, d, s) {
       rbind(
         rows_chk(d, s), failed_chk(d),
         max_chk("oracle gap", d$gap, s$tol_est),
-        chk("floor cases warn", all(d$native_ok[d$fixture %in% "var-1e6-1e-6"] %in% TRUE), "var-1e6-1e-6 rows")
+        chk("floor cases warn", all(d$native_ok[d$fixture %in% "var-1e6-1e-6"] %in% TRUE), "var-1e6-1e-6 rows"),
+        # a flagged or refused row is allowed on some CPUs, but not for most of the fixture
+        chk("floor strict share", mean(d$note[d$fixture %in% "var-1e6-1e-6"] %in% "strict") >= 0.5,
+            sprintf("%d of %d floor rows meet the strict contract",
+                    sum(d$note[d$fixture %in% "var-1e6-1e-6"] %in% "strict"), sum(d$fixture %in% "var-1e6-1e-6")))
       )
     },
     # product-term and four-way gates: the rules live in tests/sim/product-gate-common.R
@@ -502,6 +506,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "oracle-sweep") d$error[1] <- "fit failed"
     if (gate == "compare-lr") d$verdict[1] <- "error"
   }
+  if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
   if (kind == "unresolved_converged" && gate == "compare-lr") {
     d$verdict[1] <- "unresolved"
     d$all_converged[1] <- TRUE
@@ -549,6 +554,7 @@ run_mutants <- function() {
     if (s$gate %in% c("factor", "fixed-x", "mean-constrained")) kinds <- c(kinds, "no_lavaan")
     if (s$gate == "mean-constrained") kinds <- c(kinds, "lavaan_partial")
     if (s$gate == "compare-lr") kinds <- c(kinds, "unresolved_converged", "ref_off")
+    if (s$gate == "nonlinear-profile") kinds <- c(kinds, "all_flagged")
     for (kind in kinds) {
       v <- verdict_gate(s$gate, mutate(s$gate, kind, ld$data), s)
       rejected <- !all(v$pass)
