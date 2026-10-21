@@ -162,6 +162,10 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 - [ ] **T7. Release 0.12.0 (S, author-gated).** Dependencies: T6, author approval.
   - [ ] Version, Date, NEWS header, README row, CLAUDE.md status, `.STATUS`; rforge cran-prep (incoming, strict) `ready`; `gh workflow run gates --ref dev` green; release PR `dev` to `main` (merge commit); tag only after `main` CI is green.
 
+### Gate G4 (T6 docs and contracts, run before the release PR)
+
+- [x] Codex review of T6, 2 medium findings, **both fixed** on #280: the article and NEWS now state the actual starts (OpenMx uses medfit's default start and the same start with the tested paths at 0, not its own default), and that the reference is the best accepted refit of the two exact-by-decomposition linear nulls, not a proven global minimum. The G4 pass over the release PR itself is still owed at T7.
+
 ### Checkpoint C: complete
 
 - [ ] **Gate G4:** Codex adversarial review run on the Phase 4 PR(s) and the release PR; findings triaged and recorded here
