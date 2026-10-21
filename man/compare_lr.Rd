@@ -15,7 +15,8 @@ product is the indirect effect, as in \code{\link[=mbco_sem]{mbco_sem()}}.}
 \item{engine}{\code{"lavaan"} or \code{"openmx"}. The package must be installed.}
 
 \item{tolerance}{Relative tolerance on the LR difference, scaled by
-\code{max(1, LR)}. Default \code{1e-4}.}
+\code{max(1, LR)}. Default \code{1e-4}; values above \code{1e-2} are refused, because a
+loose tolerance would call different statistics equal.}
 }
 \value{
 An object of class \code{medfit_lr_comparison}: a list with \code{verdict}

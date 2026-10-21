@@ -8,6 +8,12 @@ test_that("compare_lr() validates its inputs", {
   expect_error(compare_lr(fit, "a"), "paths")
   expect_error(compare_lr(fit, c("a", "b"), engine = "mplus"), "should be one of")
   expect_error(compare_lr(fit, c("a", "b"), tolerance = -1), "tolerance")
+  expect_error(compare_lr(fit, c("a", "b"), tolerance = 1), "tolerance")
+  # unknown and non-regression labels are refused before any engine runs, for both engines
+  for (eng in c("lavaan", "openmx")) {
+    expect_error(compare_lr(fit, c("a", "zz"), engine = eng), "not a labeled free regression path")
+    expect_error(compare_lr(fit, c("a", "mediator1"), engine = eng), "not a labeled free regression path")
+  }
 })
 
 test_that("compare_lr() runs lavaan on a valid fit and returns a classed result", {

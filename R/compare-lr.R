@@ -280,7 +280,8 @@
 #'   product is the indirect effect, as in [mbco_sem()].
 #' @param engine `"lavaan"` or `"openmx"`. The package must be installed.
 #' @param tolerance Relative tolerance on the LR difference, scaled by
-#'   `max(1, LR)`. Default `1e-4`.
+#'   `max(1, LR)`. Default `1e-4`; values above `1e-2` are refused, because a
+#'   loose tolerance would call different statistics equal.
 #'
 #' @return An object of class `medfit_lr_comparison`: a list with `verdict`
 #'   (`"agree"`, `"disagree"` or `"unresolved"`), `reason`, `reference` (medfit's
@@ -305,7 +306,14 @@ compare_lr <- function(object, paths, engine = c("lavaan", "openmx"), tolerance 
     stop("`object` must be a SEMFit from fit_sem().", call. = FALSE)
   }
   checkmate::assert_character(paths, min.len = 2L, any.missing = FALSE, unique = TRUE, .var.name = "paths")
-  checkmate::assert_number(tolerance, lower = 0, finite = TRUE, .var.name = "tolerance")
+  checkmate::assert_number(tolerance, lower = 0, upper = 1e-2, .var.name = "tolerance")
+  tab <- object@table
+  known <- unique(tab$label[tab$free & tab$op == "~" & !is.na(tab$label) & nzchar(tab$label)])
+  if (!all(paths %in% known)) {
+    stop(sprintf("'%s' is not a labeled free regression path of the fit (labeled regression paths: %s)",
+                 paths[!(paths %in% known)][1L], if (length(known)) paste(known, collapse = ", ") else "none"),
+         call. = FALSE)
+  }
   rec <- if (engine == "lavaan") .lr_engine_lavaan(object, paths) else .lr_engine_openmx(object, paths)
   reference <- .lr_reference(object, paths)
   assessment <- .lr_assess(reference, list(rec), tolerance = tolerance)
