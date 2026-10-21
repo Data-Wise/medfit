@@ -37,7 +37,10 @@ fit it returns and \code{glance()} does not report it}
 
 \item{diagnostics}{List: optimizer diagnostics (\code{status}, \code{decrement},
 \code{retries}, \code{active_bounds}, \code{active_constraints}, \code{improper},
-\code{sign_check})}
+\code{sign_check}, and \code{optimum}: a list with \code{n_starts}, \code{n_accepted},
+\code{best_of}, \code{certified}, \code{spread} (discrepancy range among accepted starts,
+\code{NA} when fewer than two or not best-of), and \code{status} (\code{unique},
+\code{certified}, \code{agreed}, \code{disagreed}, or \code{single}))}
 
 \item{internals}{List: the internal index objects the engine needs
 (\code{ram}, \code{par_map}, \code{constraints}); not part of the interface}

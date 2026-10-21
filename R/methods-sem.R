@@ -93,7 +93,7 @@
 #'   for every `SEMFit` and would carry no information.
 #' * `summary()` collects the estimates, standard errors and z statistics, the
 #'   defined parameters, and the diagnostics: rows dropped, information type,
-#'   degrees of freedom, retries, stationarity, active bounds and constraints,
+#'   degrees of freedom, retries, stationarity, optimum status, active bounds and constraints,
 #'   improper-solution flags and the multiplier sign check.
 #'
 #' @return `coef()` a named numeric vector; `vcov()` a matrix; `nobs()` an
@@ -257,6 +257,11 @@ print_summary_semfit <- function(x, ...) {
                 if (x$diagnostics$se_type == "sandwich") "sandwich (robust)" else "model-based"))
   }
   cat(sprintf("Converged: %s\n", ifelse(x$converged, "Yes", "No")))
+  optimum <- x$diagnostics$optimum
+  if (!is.null(optimum) && optimum$status %in% c("disagreed", "single")) {
+    cat(sprintf("Optimum: %s (%d of %d starts accepted)\n", optimum$status,
+                optimum$n_accepted, optimum$n_starts))
+  }
   note <- .sem_fixed_x_note(x$fixed_x)
   if (!is.null(note)) cat(note, "\n", sep = "")
   cat("\nParameters:\n")

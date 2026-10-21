@@ -2,6 +2,10 @@
 
 ## New features
 
+* Native `SEMFit` diagnostics now record the best-of-starts verdict in
+  `@diagnostics$optimum`; `summary()` prints a concise note when starts disagree
+  or only one start is accepted. Existing optimization warnings are unchanged.
+
 * `anova()` on `SEMFit` records whether each chi-square p-value is valid in the logical attribute `p_valid`
   (named by row, `NA` for the first row). It is `FALSE` where the null sits on the boundary of the parameter space,
   the case that already warned. The p-value and the warning are unchanged; code that had to read the warning text
