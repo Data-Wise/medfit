@@ -2,8 +2,7 @@
 # Runs the full --sim set and the driver's own --mutants self-test on Linux for PRs to main and on request.
 # Rollout (G6): NOT a required status check yet. Two consecutive green runs on Linux were recorded before merge
 # (2026-10-17/18, both shards, about 23 minutes each); make `gates (reliability)` and `gates (rest)` required on main
-# when the author decides. The gate tolerances were calibrated on macOS and the runner's reference BLAS differs
-# (issue #238), so one extreme-scale fixture is report-only here (MEDFIT_FLOOR_REPORT_ONLY below).
+# when the author decides. The gate runs strict on the runner's reference BLAS (the #238 floor fixture is fixed).
 on:
   pull_request:
     branches: [main]
@@ -27,9 +26,6 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       NOT_CRAN: "true"
-      # issue #238: one extreme-scale fixture is platform-sensitive on the runner's reference BLAS; report-only here,
-      # strict locally. Remove this line when #238 is fixed.
-      MEDFIT_FLOOR_REPORT_ONLY: "1"
 
     steps:
       - uses: actions/checkout@v7
