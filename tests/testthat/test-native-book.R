@@ -1,5 +1,6 @@
-# Consistency guard for the native-engine book (book/chapters/01..07): the chapters exist and are listed in book/_quarto.yml in
-# order, every chapter link resolves, the book is off the package website, and identities chapters 5, 6 and 7 teach hold.
+# Consistency guard for the native-engine book (book/chapters/01..07): the chapters exist and are listed in
+# book/_quarto.yml in order, every chapter link resolves, the book is off the package website, and the identities
+# chapters 5, 6 and 7 teach hold.
 
 root_path <- function(...) testthat::test_path("..", "..", ...)
 
