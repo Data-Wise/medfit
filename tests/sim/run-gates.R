@@ -367,9 +367,11 @@ verdict_gate <- function(gate, d, s) {
             sprintf("%d of %d rows mislabeled or failed", sum(!(d$pass %in% TRUE)), nrow(d))),
         chk("both engines ran", all(c("lavaan", "openmx") %in% d$engine), paste(unique(d$engine), collapse = ", ")),
         chk("returned", !any(d$verdict %in% "error"), sprintf("%d rows with an error", sum(d$verdict %in% "error"))),
-        chk("reference matches the closed form", all(d$ref_ok %in% TRUE), sprintf("%d rows off", sum(!(d$ref_ok %in% TRUE)))),
+        chk("reference matches the closed form", all(d$ref_ok %in% TRUE),
+            sprintf("%d rows off", sum(!(d$ref_ok %in% TRUE)))),
         chk("unresolved only after a failed run", !any(d$verdict %in% "unresolved" & d$all_converged %in% TRUE),
-            sprintf("%d unresolved rows with every run converged", sum(d$verdict %in% "unresolved" & d$all_converged %in% TRUE)))
+            sprintf("%d unresolved rows with every run converged",
+                    sum(d$verdict %in% "unresolved" & d$all_converged %in% TRUE)))
       )
     },
     "nonlinear-profile" = {

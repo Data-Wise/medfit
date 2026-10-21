@@ -82,7 +82,8 @@ one <- function(engine, seed) {
     error = function(e) conditionMessage(e)
   )
   if (is.character(res)) {
-    return(data.frame(engine = engine, version = versions[[engine]], seed = seed, verdict = "error", all_converged = NA, ref_ok = NA, drop = NA,
+    return(data.frame(engine = engine, version = versions[[engine]], seed = seed, verdict = "error",
+                      all_converged = NA, ref_ok = NA, drop = NA,
                       above = NA, warn_drop = NA, warn_above = NA, mislabel = TRUE, pass = FALSE, note = res,
                       stringsAsFactors = FALSE))
   }
@@ -100,7 +101,8 @@ one <- function(engine, seed) {
   mislabel <- !ref_ok || (identical(res$verdict, "unresolved") && all_converged) || below_unflagged ||
     any(violated) != warn_drop || any(above) != warn_above
   data.frame(engine = engine, version = versions[[engine]], seed = seed, verdict = res$verdict,
-             all_converged = all_converged, ref_ok = ref_ok, drop = any(violated), above = any(above), warn_drop = warn_drop, warn_above = warn_above,
+             all_converged = all_converged, ref_ok = ref_ok, drop = any(violated), above = any(above),
+             warn_drop = warn_drop, warn_above = warn_above,
              mislabel = mislabel, pass = !mislabel, note = "", stringsAsFactors = FALSE)
 }
 
