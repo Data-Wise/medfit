@@ -154,8 +154,8 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 ### Phase 4: documentation, freeze, release
 
-- [ ] **T6. Docs and contracts (S).** Dependencies: T4.
-  - [ ] Refcard row and `_pkgdown.yml` reference entry (`test-refcard-coverage.R`); section in `lavaan-comparison.qmd` describing the evidence-based warnings, the narrow supported class and the two-start rows; `test-api-freeze.R` pins `compare_lr()` argument order; NEWS entry; US English.
+- [x] **T6. Docs and contracts (S), on PR #280.** Dependencies: T4.
+  - [x] Refcard row and `_pkgdown.yml` reference entry (`test-refcard-coverage.R`); section in `lavaan-comparison.qmd` describing the evidence-based warnings, the narrow supported class and the two-start rows; `test-api-freeze.R` pins `compare_lr()` argument order; NEWS entry; US English.
   - Verify: `devtools::test(filter = "refcard|api-freeze|guide|model-pages|dependents")`.
   - Files: `vignettes/articles/refcard.qmd`, `lavaan-comparison.qmd`, `_pkgdown.yml`, `NEWS.md`, `tests/testthat/test-api-freeze.R`.
 
