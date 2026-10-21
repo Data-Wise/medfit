@@ -82,14 +82,14 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 ### Phase 2: engine adapters
 
-- [ ] **T2. lavaan adapter (M).** Dependencies: T1.
+- [x] **T2. lavaan adapter (M), PR #279.** Dependencies: T1.
   - [ ] `.lr_engine_lavaan()` fits the unrestricted and product-null models from `object@model` plus the data with options mirroring medfit (fixed.x, meanstructure, ML divisor), two runs (default and zero start, P4), returns the T1 shape.
   - [ ] lavaan zero start: T0 found a start of 0 in the parameter table is ignored (also via `start =`); find a mechanism or document lavaan as default-start only.
   - [ ] Refusal list (P3) with a named reason each: mean structure, weights, `fixed_x`, products, factors, bounds, `start()`/`lower()`/`upper()`.
   - [ ] Tests (`skip_if_not_installed("lavaan")`): finite LR close to medfit on the `mbco_sem` docs model; each refusal errors with its message.
   - Files: `R/compare-lr.R`, `tests/testthat/test-compare-lr-lavaan.R`.
 
-- [ ] **T3. OpenMx adapter (L, riskiest).** Dependencies: T1.
+- [x] **T3. OpenMx adapter (L, riskiest), PR #280.** Dependencies: T1.
   - [ ] Translate the fit's table to the helper's `mod$a`/`mod$s` row frames for observed models (T0: `sem_openmx()` is not drop-in; it takes a test model, not a `SEMFit`), then promote the helper; keep a test-side wrapper so existing tests still pass.
   - [ ] Constraint as `mxConstraint`; two runs (default and zero start, P4); tight tolerances (optimality/feasibility 1e-12, function precision 1e-15, restored on exit); return the constraint residual and the Jacobian-at-start flag.
   - [ ] Same refusal list (P3).
@@ -104,11 +104,17 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
   - **Fix:** absolute `|a*b|` tolerance changed verdicts with the data's units. The residual is now divided by the natural unit of the product (`residual_scale`, computed by the adapters from the data as u_a * u_b with u = sd(response)/sd(predictor)); new tests rescale and the verdict holds.
   - Effect on later tasks: **T2/T3 must supply** the unrestricted discrepancy `fit` on the LR scale, the full parameter set, and `residual_scale`; the injected helper already models all three.
 
+### Gate G2 (after T2 and T3)
+
+- [x] Codex adversarial review run on T2+T3, 2 findings, both valid, **fixed** on #279 (merged into #280):
+  - **Fix:** fixed coefficients and shared labels changed the model the engines pose. `.lr_unsupported()` now refuses both (fixed rows `free == FALSE`, duplicated non-empty labels among free rows); real-fit tests.
+  - **Fix:** an agreeing start could hide a failed start. Any failed, unchecked or unresolved run with no disagreement is now `unresolved`, with a reason naming engine and start; a real disagreement still wins.
+
 ### Checkpoint A (after T1-T3)
 
 - [ ] `devtools::test()` green, lint clean, `noSuggests` path passes (engines guarded)
 - [ ] T0 findings (evidence/compare-lr-t0-2026-10-21/RESULTS.md) reviewed against the code as built
-- [ ] **Gate G2:** Codex adversarial review run on the Phase 2 PR(s); findings triaged and recorded here
+- [x] **Gate G2:** Codex adversarial review run on the Phase 2 PR(s); findings triaged and recorded here (above)
 - [ ] Author review before building the public function
 
 ### Phase 3: the public function and its harness
