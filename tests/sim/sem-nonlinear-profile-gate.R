@@ -141,6 +141,13 @@ for (f in fx) {
       warned <- any(grepl("solver floor", wmsg, fixed = TRUE))
       at_floor <- "Vy" %in% h2@diagnostics$active_bounds
       ok <- warned && at_floor && is.finite(lr) && request_ok
+      if (!ok) {
+        cat("DIAG fixture", f$id, tag, "\n")
+        print(stats::coef(h2), digits = 12)
+        utils::str(h2@diagnostics, max.level = 2)
+        cat("warnings:", paste(wmsg, collapse = " | "), "\n")
+        cat("DIAG cpu:", tryCatch(system("grep -m1 'model name' /proc/cpuinfo", intern = TRUE), error = function(e) "?"), "\n")
+      }
       floor_note <- sprintf(
         "floor contract not met: warned=%s at_floor=%s finite_lr=%s request_ok=%s q_ach=%.8g active=[%s]",
         warned, at_floor, is.finite(lr), request_ok, q_ach, paste(h2@diagnostics$active_bounds, collapse = ",")
