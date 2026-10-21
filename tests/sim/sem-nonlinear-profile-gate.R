@@ -143,7 +143,10 @@ for (f in fx) {
       ok <- warned && at_floor && is.finite(lr) && request_ok
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = ok, omx_ok = TRUE,
                                               lr = lr, lr_oracle = NA_real_, gap = 0, improper = "",
-                                              note = if (ok) "" else "floor contract not met",
+                                              note = if (ok) "" else sprintf(
+                                                "floor contract not met: warned=%s at_floor=%s finite_lr=%s request_ok=%s q_ach=%.8g active=[%s]",
+                                                warned, at_floor, is.finite(lr), request_ok, q_ach,
+                                                paste(h2@diagnostics$active_bounds, collapse = ",")),
                                               stringsAsFactors = FALSE)
       next
     }
@@ -165,7 +168,8 @@ for (f in fx) {
 }
 res <- do.call(rbind, rows)
 res$mutant <- mutant
-print(res[!res$native_ok, c("fixture", "q_tag", "lr", "lr_oracle", "gap", "note")], row.names = FALSE)
+print(res[!res$native_ok, c("fixture", "q_tag", "lr", "lr_oracle", "gap", "note")], row.names = FALSE, right = FALSE)
+for (n in res$note[!res$native_ok]) cat("NOTE:", n, "\n")
 if (!nzchar(mutant) && !fast) {
   dir.create("tests/sim/results", showWarnings = FALSE)
   utils::write.csv(res, file.path("tests/sim/results", sprintf("sem-nonlinear-profile-gate-%s.csv", Sys.Date())),
