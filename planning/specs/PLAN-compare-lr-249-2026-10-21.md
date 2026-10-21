@@ -124,21 +124,21 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 ### Phase 3: the public function and its harness
 
-- [ ] **T4. `compare_lr()` assembly and print method (M).** Dependencies: T2, T3 (or T2 alone).
-  - [ ] Exported; roxygen with guarded `\donttest` examples; checkmate validation; clear error when the engine package is absent; reference from `mbco_sem(object, paths = paths)`; result `medfit_lr_comparison` (reference, one row per engine and start, verdict, warnings) with `print()`/`format()`.
-  - [ ] Guard test: `a*b == 0` is never posed as a constraint in medfit's own path (the reference null fits hand the solver no product-zero nonlinear row).
+- [x] **T4. `compare_lr()` assembly and print method (M), PR #280.** Dependencies: T2, T3 (or T2 alone).
+  - [x] Exported; roxygen with guarded `\donttest` examples; checkmate validation; clear error when the engine package is absent; reference from `mbco_sem(object, paths = paths)`; result `medfit_lr_comparison` (reference, one row per engine and start, verdict, warnings) with `print()`/`format()`.
+  - [x] Guard test: `a*b == 0` is never posed as a constraint in medfit's own path (the reference null fits hand the solver no product-zero nonlinear row).
   - Verify: `devtools::document()`, `devtools::test(filter = "compare-lr")`, examples run. Files: `R/compare-lr.R`, `NAMESPACE`, `man/compare_lr.Rd`, `tests/testthat/test-compare-lr.R`.
 
-- [ ] **T5. Live harness gate (M).** Dependencies: T4.
-  - [ ] `tests/sim/compare-lr-gate.R`: the issue's cell (a*b == 0, n = 100, default and zero starts, several seeds) through `compare_lr()`; records engine versions and whether each known failure reproduced; exit 0 whether or not upstream is fixed; exit 1 only if `compare_lr()` mislabels (a warning on a valid fit, silence on an observed violation).
-  - [ ] `MUTANT=noresidual` (detector keys on LR = 0) exits 1.
-  - [ ] Registered in three places: `tests/sim/gates.csv`, a rule in `tests/sim/run-gates.R`, and the gate id in the C2 set of `planning/specs/CRITERIA-native-experimental-exit-2026-10-17.csv` (so `test-experimental-criteria.R` stays green; this broke `dev` once, #266).
+- [x] **T5. Live harness gate (M), PR #280 (macOS and Linux reference-BLAS container both 24/24).** Dependencies: T4.
+  - [x] `tests/sim/compare-lr-gate.R`: the issue's cell (a*b == 0, n = 100, default and zero starts, several seeds) through `compare_lr()`; records engine versions and whether each known failure reproduced; exit 0 whether or not upstream is fixed; exit 1 only if `compare_lr()` mislabels (a warning on a valid fit, silence on an observed violation).
+  - [x] `MUTANT=noresidual` (detector keys on LR = 0) exits 1.
+  - [x] Registered in three places: `tests/sim/gates.csv`, a rule in `tests/sim/run-gates.R`, and the gate id in the C2 set of `planning/specs/CRITERIA-native-experimental-exit-2026-10-17.csv` (so `test-experimental-criteria.R` stays green; this broke `dev` once, #266).
   - Verify: macOS run; `tests/sim/linux/run.sh tests/sim/compare-lr-gate.R` on the reference BLAS; the gates driver self-test.
   - Files: `tests/sim/compare-lr-gate.R`, `tests/sim/gates.csv`, `tests/sim/run-gates.R`, the criteria CSV.
 
 ### Checkpoint B (after T4-T5)
 
-- [ ] Full suite green; macOS and Linux-container gates green; the planted defect is caught
+- [x] macOS and Linux-container gates green (24/24 each); the planted defect is caught (`MUTANT=noresidual`); full suite and e2e transcript pending
 - [ ] End-to-end transcript of `compare_lr()` on a real model quoted in the PR body (e2e-before-pr rule)
 - [ ] **Gate G3:** Codex adversarial review run on the Phase 3 PR(s); findings triaged and recorded here
 
