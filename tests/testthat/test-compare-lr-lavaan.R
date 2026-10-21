@@ -56,4 +56,8 @@ test_that("each construct outside the supported class is refused with its name",
   refuse(suppressWarnings(fit_sem(paste0(base, " + g"), d)), "factor covariates")
   refuse(suppressWarnings(fit_sem(paste0(base, "\nmediator1 ~ lower(0)*mediator2"), d)), "start, lower or upper")
   refuse(suppressWarnings(fit_sem(paste0(base, "\ncp == 0"), d)), "constraints in the model")
+  refuse(suppressWarnings(fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + 0.5*treatment", d)),
+         "fixed or shared parameters")
+  refuse(suppressWarnings(fit_sem("mediator1 ~ a*treatment\noutcome ~ a*mediator1 + cp*treatment", d)),
+         "fixed or shared parameters")
 })
