@@ -140,7 +140,9 @@ T1 assess() pure function (injected results, all verdicts)  ──► T2 lavaan 
 
 - [x] macOS and Linux-container gates green (24/24 each); the planted defect is caught (`MUTANT=noresidual`); full suite and e2e transcript pending
 - [ ] End-to-end transcript of `compare_lr()` on a real model quoted in the PR body (e2e-before-pr rule)
-- [ ] **Gate G3:** Codex adversarial review run on the Phase 3 PR(s); findings triaged and recorded here
+- [x] **Gate G3:** Codex adversarial review run on the Phase 3 gate (T5), 2 high findings, **both fixed** on #280:
+  - **Fix:** an unaccepted reference made every row pass. A row now fails unless the reference is accepted and the verdict is not `unresolved`.
+  - **Fix:** the gate used `compare_lr()`'s own output as the oracle. It now computes the reference LR in closed form from OLS residual variances (no medfit fit) and requires any run below that minimum to be reported as a violated constraint, whatever residual the adapter reports; `MUTANT=zeroresid` plants an adapter reporting zero residual and is caught. macOS and Linux both 24/24.
 
 ### Phase 4: documentation, freeze, release
 
