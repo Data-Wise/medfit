@@ -7,6 +7,7 @@ example_gpa_path <- function() {
 }
 
 run_example_gpa <- function(path, mutate = identity) {
+  testthat::skip_if_not_installed("knitr")
   code <- tempfile(fileext = ".R")
   knitr::purl(path, output = code, quiet = TRUE, documentation = 0)
   src <- mutate(readLines(code))
