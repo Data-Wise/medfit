@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,7 +126,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Methods for SEMFit objects</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.0/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
       <div class="d-none name"><code>SEMFit-methods.Rd</code></div>
     </div>
 
@@ -206,7 +206,12 @@ error (one fit is not at its global optimum). When a bound or an
 inequality on a tested parameter is active at the restricted fit, the null
 lies on the boundary of the parameter space, the statistic is a mixture of
 chi-squares, and the function warns that the p-value is not valid, as
-<code><a href="mbco_sem.html">mbco_sem()</a></code> does. Returns an object of class <code>"anova"</code> with columns <code>Df</code>,
+<code><a href="mbco_sem.html">mbco_sem()</a></code> does. The p-value is still returned; the logical attribute
+<code>attr(x, "p_valid")</code> (named by row, <code>NA</code> for the first) is <code>FALSE</code> for each
+such row, so code can read the verdict without parsing the warning. It
+belongs to the object <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> returns: subsetting it with <code>[</code> or binding
+rows drops the attribute. Returns
+an object of class <code>"anova"</code> with columns <code>Df</code>,
 <code>Chisq</code> (n times the discrepancy), <code>Chisq diff</code>, <code>Df diff</code> and
 <code>Pr(&gt;Chisq)</code>. Name rows by naming the arguments after the first.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> returns Wald (normal) intervals for the free parameters and
@@ -233,7 +238,7 @@ passed the acceptance gate and errors otherwise, so <code>@converged</code> is <
 for every <code>SEMFit</code> and would carry no information.</p></li>
 <li><p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> collects the estimates, standard errors and z statistics, the
 defined parameters, and the diagnostics: rows dropped, information type,
-degrees of freedom, retries, stationarity, active bounds and constraints,
+degrees of freedom, retries, stationarity, optimum status, active bounds and constraints,
 improper-solution flags and the multiplier sign check.</p></li>
 </ul></div>
     <div class="section level2">

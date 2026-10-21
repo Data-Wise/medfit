@@ -9,7 +9,7 @@ Carlo study). Nothing here is a finding about real students.
 
 |  |  |
 |----|----|
-| **You need** | medfit 0.11.0 (development version) or later; lavaan is used for one cross-check and the page skips that row when it is absent |
+| **You need** | medfit 0.11.0 or later; lavaan is used for one cross-check and the page skips that row when it is absent |
 | **You get** | a fitted `MediationData`, delta-method and bootstrap intervals, a native-engine fit, and a table of pass/fail checks |
 | **Time** | about 10 minutes to read, under a minute to run |
 
@@ -659,7 +659,7 @@ c(medfit = as.character(utils::packageVersion("medfit")),
 ```
 
       medfit        R   lavaan
-    "0.11.0"  "4.6.1"  "0.7.3" 
+    "0.11.1"  "4.6.1"  "0.7.3" 
 
 Seeds: data `20261017`; bootstrap `123`; Monte Carlo `1` (n = 500) and
 `2` (n = 100). The simulation functions use

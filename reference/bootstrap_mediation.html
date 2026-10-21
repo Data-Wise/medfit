@@ -17,7 +17,7 @@ plugin methods."><meta property="og:image" content="https://data-wise.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,7 +130,7 @@ plugin methods."><meta property="og:image" content="https://data-wise.github.io/
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Perform Bootstrap Inference for Mediation Statistics</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.0/R/bootstrap.R" class="external-link"><code>R/bootstrap.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/bootstrap.R" class="external-link"><code>R/bootstrap.R</code></a></small>
       <div class="d-none name"><code>bootstrap_mediation.Rd</code></div>
     </div>
 
@@ -288,6 +288,14 @@ their messages are suppressed, and their number is added to the warning.
 
 <p>Always set a seed for reproducible results:</p>
 <p></p><div class="sourceCode r"><pre><code><span><span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span><span class="va">...</span>, seed <span class="op">=</span> <span class="fl">12345</span><span class="op">)</span></span></code></pre><p></p></div>
+<p>A fixed seed gives the same resamples for any <code>ncores</code>, and for sequential runs, because every
+resample is drawn before the work is split across cores. This holds for the nonparametric and
+cluster methods (earlier versions drew inside each worker). The statistic is still computed in the
+workers, so a <code>statistic_fn</code> that uses random numbers itself is not covered (in a sequential run its
+draws now follow all the resampling draws instead of interleaving with them, so its stream differs
+from earlier versions), and floating-point results can differ in the last digits when BLAS threads
+differ. The resamples are held in memory before the refits start: <code>n_boot</code> integer vectors of length
+<code>n</code> (about <code>4 * n * n_boot</code> bytes; 800 MB for <code>n = 100000</code> and <code>n_boot = 2000</code>).</p>
 </div>
 
     </div>

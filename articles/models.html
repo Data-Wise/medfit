@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -169,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.0/vignettes/articles/models.qmd" class="external-link"><code>vignettes/articles/models.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/models.qmd" class="external-link"><code>vignettes/articles/models.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -340,7 +340,7 @@
 </td>
 </tr>
 <tr class="even">
-<td>Categorical covariates (development version)</td>
+<td>Categorical covariates (0.11.0)</td>
 <td>
 <code>SEMFit</code>, then extracted</td>
 <td>
@@ -357,6 +357,86 @@
 <p><code>fit_mediation(engine = "native", model = )</code> accepts a single mediator. For several mediators, fit the syntax with <code><a href="../reference/fit_sem.html">fit_sem()</a></code> (see <a href="model-native-multi.html">Native: several mediators and weights</a>) and then call <code>extract_mediation(fit, mediator = c(...), outcome = )</code>, with <code>structure = "parallel"</code> for side-by-side mediators.</p>
 </blockquote>
 </div>
+</section><section class="level2"><h2 id="the-fit_mediation-engines-compared">The <code>fit_mediation()</code> engines compared<a class="anchor" aria-label="anchor" href="#the-fit_mediation-engines-compared"></a>
+</h2>
+<p>The four engines answer different questions and do not return interchangeable numbers. Read the row for your engine before you swap one for another.</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead><tr class="header">
+<th></th>
+<th>
+<code>glm</code> (default)</th>
+<th><code>regmedint</code></th>
+<th><code>lmer</code></th>
+<th><code>native</code></th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Estimation</td>
+<td>
+<code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code> for the mediator and outcome models</td>
+<td>closed-form natural effects from the regmedint package</td>
+<td>REML mixed models, a random cluster intercept in both</td>
+<td>maximum-likelihood SEM from syntax (<code>model =</code>)</td>
+</tr>
+<tr class="even">
+<td>Outcome and mediator families</td>
+<td>any <code>glm</code> family</td>
+<td>a linear mediator model; the outcome may be logistic</td>
+<td>Gaussian only</td>
+<td>Gaussian only</td>
+</tr>
+<tr class="odd">
+<td>Indirect effect</td>
+<td>product of path coefficients, on the link scale when the link is not the identity</td>
+<td>regmedint’s natural indirect effect; equals the path product only for a linear mediator model and a unit treatment contrast (the adapter errors otherwise)</td>
+<td>
+<code>a * b_between</code> (own and spillover parts in <code><a href="../reference/decompose.html">decompose()</a></code>)</td>
+<td>the path product from the fitted syntax</td>
+</tr>
+<tr class="even">
+<td>Case <code>weights</code>
+</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+<td>yes (weighted maximum likelihood)</td>
+</tr>
+<tr class="odd">
+<td><code>se_type = "sandwich"</code></td>
+<td>yes, HC3</td>
+<td>no (<code>"model"</code> only)</td>
+<td>no (<code>"model"</code> or <code>"kr"</code>)</td>
+<td>yes, HC0-type, a little smaller than HC3 in finite samples</td>
+</tr>
+<tr class="even">
+<td>Rows with missing values</td>
+<td>dropped once, both models share the sample</td>
+<td>dropped by the engine</td>
+<td>dropped once</td>
+<td>listwise, counted in <code>n_dropped</code>
+</td>
+</tr>
+<tr class="odd">
+<td>Returns</td>
+<td>
+<code>MediationData</code> or <code>InteractionMediationData</code>
+</td>
+<td>the same two classes</td>
+<td><code>ClusterMediationData</code></td>
+<td>
+<code>SEMFit</code>, then <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>A weight or an SE type that an engine does not take is an error, not an ignored argument, so a silent change of estimand is not possible through <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code>. The estimand still differs where the table says so: a logistic outcome through <code>glm</code> gives a path product on the log-odds scale, while <code>regmedint</code> gives a natural effect.</p>
 </section><section class="level2"><h2 id="what-medfit-does-not-run">What medfit does not run<a class="anchor" aria-label="anchor" href="#what-medfit-does-not-run"></a>
 </h2>
 <ul>

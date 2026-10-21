@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,9 +126,22 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.11.1" id="medfit-0111">medfit 0.11.1<a class="anchor" aria-label="anchor" href="#medfit-0111"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-11-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-11-1"></a></h3>
+<ul><li><p>Native <code>SEMFit</code> diagnostics now record the best-of-starts verdict in <code>@diagnostics$optimum</code>; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> prints a concise note when starts disagree or only one start is accepted. Existing optimization warnings are unchanged.</p></li>
+<li><p><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> on <code>SEMFit</code> records whether each chi-square p-value is valid in the logical attribute <code>p_valid</code> (named by row, <code>NA</code> for the first row). It is <code>FALSE</code> where the null sits on the boundary of the parameter space, the case that already warned. The p-value and the warning are unchanged; code that had to read the warning text can now test <code>attr(x, "p_valid")</code>.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-11-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-11-1"></a></h3>
+<ul><li><p><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> on <code>SEMFit</code> refuses a pair where a nonzero fixed parameter (for example <code>M1 ~~ 0.5*M2</code>) is in one fit and absent from the other. Parameter-table inclusion alone let such a pair through, with a chi-square p-value for two models that are not nested. A parameter fixed at a value in one fit and free in the other is still a valid restriction.</p></li>
+<li><p><code>bootstrap_mediation(method = "nonparametric")</code>, with or without <code>cluster =</code>, now draws every resample in the calling process before the refits are spread over cores. A fixed <code>seed</code> gives the same resamples and <code>boot_estimates</code> for any <code>ncores</code> and for sequential runs; before, each worker drew from its own random-number stream, so <code>ncores</code> changed the result (<a href="https://github.com/data-wise/medfit/issues/247" class="external-link">#247</a>). For a <code>statistic_fn</code> that uses no random numbers, sequential runs keep the stream of 0.11.0, so their results do not change; one that does use them sees a different stream, because its draws no longer interleave with the resampling. <code><a href="../reference/bootstrap_mediation.html">?bootstrap_mediation</a></code> states what the seed does and does not cover (a <code>statistic_fn</code> that draws random numbers itself, and BLAS thread effects in the last digits).</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.11.0" id="medfit-0110">medfit 0.11.0<a class="anchor" aria-label="anchor" href="#medfit-0110"></a></h2>
 <div class="section level3">

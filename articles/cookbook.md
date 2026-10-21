@@ -8,10 +8,9 @@ Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
 These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0,
 recipe 20 and the native route in recipe 7 need 0.10.0, and recipe 21
-needs the development version, 0.11.0). CRAN has 0.3.2, which lacks
-`mediation_demo` and the native, joint and cluster functions; install
-from GitHub or r-universe (see the [home
-page](https://data-wise.github.io/medfit/#install)).
+needs 0.11.0). CRAN has 0.3.2, which lacks `mediation_demo` and the
+native, joint and cluster functions; install from GitHub or r-universe
+(see the [home page](https://data-wise.github.io/medfit/#install)).
 
 ``` r
 library(medfit)
@@ -253,7 +252,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4349603 0.8927176 
+    0.6560315 0.4351678 0.8930074 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).

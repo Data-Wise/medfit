@@ -114,9 +114,15 @@ argument.
   boundary of the parameter space, the statistic is a mixture of
   chi-squares, and the function warns that the p-value is not valid, as
   [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
-  does. Returns an object of class `"anova"` with columns `Df`, `Chisq`
-  (n times the discrepancy), `Chisq diff`, `Df diff` and `Pr(>Chisq)`.
-  Name rows by naming the arguments after the first.
+  does. The p-value is still returned; the logical attribute
+  `attr(x, "p_valid")` (named by row, `NA` for the first) is `FALSE` for
+  each such row, so code can read the verdict without parsing the
+  warning. It belongs to the object
+  [`anova()`](https://rdrr.io/r/stats/anova.html) returns: subsetting it
+  with `[` or binding rows drops the attribute. Returns an object of
+  class `"anova"` with columns `Df`, `Chisq` (n times the discrepancy),
+  `Chisq diff`, `Df diff` and `Pr(>Chisq)`. Name rows by naming the
+  arguments after the first.
 
 - [`confint()`](https://rdrr.io/r/stats/confint.html) returns Wald
   (normal) intervals for the free parameters and the defined parameters,
@@ -154,8 +160,8 @@ argument.
 - [`summary()`](https://rdrr.io/r/base/summary.html) collects the
   estimates, standard errors and z statistics, the defined parameters,
   and the diagnostics: rows dropped, information type, degrees of
-  freedom, retries, stationarity, active bounds and constraints,
-  improper-solution flags and the multiplier sign check.
+  freedom, retries, stationarity, optimum status, active bounds and
+  constraints, improper-solution flags and the multiplier sign check.
 
 ## See also
 

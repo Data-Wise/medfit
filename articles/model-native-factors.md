@@ -4,7 +4,7 @@ Use a factor, character or logical column as a covariate in syntax. Part
 of the [Models](https://data-wise.github.io/medfit/articles/models.md)
 collection, with the other [native
 engine](https://data-wise.github.io/medfit/articles/model-native.md)
-pages. This page needs the development version (0.11.0).
+pages. This page needs medfit 0.11.0 or later (GitHub; CRAN has 0.3.2).
 
 |  |  |
 |----|----|

@@ -8,7 +8,7 @@ guide](https://data-wise.github.io/medfit/articles/native-guide.md).
 
 |  |  |
 |----|----|
-| **You need** | medfit 0.8.0 or later (step 9 needs 0.9.0 or later, and step 10 the development version, 0.11.0); the bundled `mediation_demo` data |
+| **You need** | medfit 0.8.0 or later (step 9 needs 0.9.0 or later, and step 10 needs 0.11.0); the bundled `mediation_demo` data |
 | **You get** | a `SEMFit`, a test of the indirect effect, a constrained comparison, a `MediationData` |
 | **Time** | about 20 minutes |
 
@@ -241,10 +241,10 @@ two fits. `fixed_x` also takes a character vector, such as
 
 ## Step 10. Add a categorical covariate
 
-Needs the development version (0.11.0). A covariate that is a factor,
-character or logical column goes into the syntax by name; the engine
-replaces it with one 0/1 dummy per non-reference level. The bundled data
-has no factor, so the chunk cuts `covariate1` into three groups first:
+Needs medfit 0.11.0 or later. A covariate that is a factor, character or
+logical column goes into the syntax by name; the engine replaces it with
+one 0/1 dummy per non-reference level. The bundled data has no factor,
+so the chunk cuts `covariate1` into three groups first:
 
 ``` r
 dat10 <- transform(mediation_demo,

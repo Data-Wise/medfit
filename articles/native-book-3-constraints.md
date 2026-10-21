@@ -12,7 +12,7 @@ gate, polishing it, and handling rows that repeat each other.
 
 |  |  |
 |----|----|
-| **You need** | Chapters 1 and 2; calculus of several variables (gradient, Hessian, Lagrange multipliers) |
+| **You need** | Chapters 1 and 2; the short primers below introduce the needed calculus and optimization ideas |
 | **You get** | the constraint rows the engine builds, a trace of the solver, the three checks of the acceptance gate with a failing example of each, the Newton polish derived and reproduced by hand, and the redundant-row rules shown on real fits |
 | **Time** | about 50 minutes |
 
@@ -55,6 +55,35 @@ costs one degree of freedom per independent equality.
 
 ## 1. From a constraint line to a row
 
+**First, picture the optimization.** An optimizer tries parameter values
+and seeks the lowest discrepancy \\F\\ (the model’s measure of
+disagreement with the data). In a two-parameter sketch, let
+\\F(a,b)=(a-1)^2+4(b-2)^2\\; \\a\\ and \\b\\ are adjustable numbers. At
+\\(a,b)=(0,0)\\, \\F=17\\. Its **gradient** \\\nabla
+F=(-2(a-1),8(b-2))=(-2,-16)\\ gives the local slope in each direction.
+Its **Hessian** \\H=\operatorname{diag}(2,8)\\ records how those slopes
+change: the \\b\\ direction bends four times as strongly as the \\a\\
+direction. A shallow direction needs more movement to produce the same
+change in \\F\\, and a nearly flat direction makes an optimum harder to
+locate reliably. This sketch is general math; the native engine
+minimizes its own \\F\_{ML}\\, defined in Chapter 1, using gradients and
+curvature checks (`R/sem-optim.R`).
+
+*What to remember:* the gradient points uphill; the Hessian describes
+how the slope bends.
+
+**A constraint narrows the search.** The **feasible set** is every
+parameter choice that obeys the rule. For example, \\c(a,b)=a+b-1\leq0\\
+permits \\(0.2,0.3)\\ because \\c=-0.5\\; this constraint is
+**inactive** there. At \\(0.4,0.6)\\, \\c=0\\, so the rule is
+**active**: a step increasing the sum would leave the feasible set. Here
+\\c\\ is the signed constraint value and zero marks its boundary. medfit
+stores inequalities in this \\c\leq0\\ direction
+(`R/sem-constraints.R`).
+
+*What to remember:* inactive means slack remains; active means the point
+touches the boundary.
+
 A constraint line has two sides, a comparison and labels of free
 parameters. The engine turns each line into the vector \\c(\theta) =
 \text{lhs} - \text{rhs}\\ and a sense: an equality \\c(\theta) = 0\\ or
@@ -62,6 +91,18 @@ an inequality, always stored in the form \\c(\theta) \le 0\\ (a `>`
 constraint is negated).
 
 ### Linear constraints
+
+**Why normalize rows?** A rule such as \\a+b=1\\ describes the same set
+as \\2a+2b=2\\, yet its raw coefficients are twice as large in the
+second writing. Their row lengths are \\\sqrt{1^2+1^2}=\sqrt2\\ and
+\\\sqrt{2^2+2^2}=2\sqrt2\\. Dividing each coefficient and constant by
+its row length gives the same unit-length row in both cases. Here a
+*row* is the list of coefficients multiplying the parameters. This
+general normalization explains the engine’s linear-row representation
+below.
+
+*What to remember:* unit-length rows keep a repeated rule from changing
+scale merely because it was rewritten.
 
 If \\c\\ is linear in the parameters, \\c(\theta) = a^\top\theta + b\\,
 so two kinds of evaluation recover its pieces: \\b = c(0)\\ and, for
@@ -177,7 +218,7 @@ c(value_at_solution = nl$value(theta))
 ```
 
     value_at_solution
-        -2.775558e-17 
+        -5.551115e-17 
 
 The central difference reproduces the analytic gradient to six decimals,
 and the constraint holds at the solution (the value is zero to
@@ -192,6 +233,10 @@ local optimum. The engine therefore fits one linear model per factor
 (`a == 0`, `b == 0`), each from the default start, and keeps the one
 with the smaller discrepancy, a rule Chapter 5 puts to use. The two
 branches here give two different minima:
+
+For several zero-product constraints, it tries each combination of
+factors, up to 64 branches; more than 64 is an error. Each branch starts
+cleanly, so one branch cannot inherit an infeasible point from another.
 
 ``` r
 zp <- fit_sem(paste0(model, "a*b == 0\n"), d)
@@ -233,6 +278,22 @@ data.frame(
     3     cp == a*b 6            1  1
 
 ## 2. The solver
+
+**Why change units?** In the general calculation \\x_k=\theta_k/u_k\\,
+\\\theta_k\\ is parameter \\k\\, \\u_k\>0\\ is its natural unit, and
+\\x_k\\ is its unitless working coordinate. For two parameters
+\\\theta=(0.2,200)\\ with \\u=(1,1000)\\, \\x=(0.2,0.2)\\: a change of
+\\0.1\\ in either \\x\\ coordinate is one tenth of that parameter’s
+natural unit. The rule \\a+b/1000=0.4\\ becomes \\x_1+x_2=0.4\\; its
+normal vector \\(1,1)\\ has length \\\sqrt2\\, so the unit-length row is
+\\(x_1+x_2-0.4)/\sqrt2\\. At \\x=(0.2,0.1)\\ its signed value is
+\\-0.07071068\\. A tolerance on this normalized distance has a common
+meaning across the two coordinates. medfit obtains the \\u_k\\ from
+`.sem_step_floor()` and checks constraint distance in natural units
+(`R/sem-constraints.R`).
+
+*What to remember:* scale parameters first, then compare constraint
+distances on one scale.
 
 The engine minimizes \\F\_{ML}(\theta)\\ subject to the rows with SLSQP,
 the sequential least-squares quadratic programming algorithm of Kraft,
@@ -312,8 +373,8 @@ signif(tr[c(1:6, nrow(tr) - 3:0), ], 3)
      [6,]    0.4240  3.19e-01
      [7,]    0.0105  1.19e-09
      [8,]    0.0105  2.99e-12
-     [9,]    0.0105  6.25e-15
-    [10,]    0.0105  2.78e-17
+     [9,]    0.0105  6.19e-15
+    [10,]    0.0105  0.00e+00
 
 Rows that repeat one another are repeated evaluations at the same point
 (the `nloptr` wrapper evaluates the start once to check the objective’s
@@ -324,6 +385,19 @@ evaluations, and the objective settles at 0.0104708. The run ended with
 NLopt status 3; the engine treats the codes 1 (generic success), 3 (the
 objective stopped changing, `ftol_rel`) and 4 (the parameters stopped
 moving, `xtol_rel`) as successes.
+
+**Local versus global.** A *local* optimum wins against nearby feasible
+points; a *global* optimum wins against every feasible point. In a
+two-parameter general-math sketch, minimize \\F(a,b)=(a-1)^2+(b-2)^2\\
+subject to \\ab=0\\. The branch \\a=0\\ has best point \\(0,2)\\ and
+\\F=1\\; the branch \\b=0\\ has best point \\(1,0)\\ and \\F=4\\. Each
+wins on its own branch, but only \\F=1\\ wins globally. Multiple starts
+can reveal such disagreement; agreement alone cannot prove that an
+unexplored branch is worse. medfit records the comparison in
+`diagnostics$optimum` (`R/sem-optim.R`).
+
+*What to remember:* several agreeing starts provide evidence; only a
+valid lower bound certifies the global minimum.
 
 **Several starts.** A nonlinear constraint can have several local optima
 (`a*b > 0.1` is feasible on two separate regions), so for such a model
@@ -344,24 +418,52 @@ attempts
 ```
 
        start status accepted discrepancy decrement
-    1      1      3     TRUE  0.01047077   6.1e-14
-    2      2      3     TRUE  0.01047077   6.3e-14
-    3      3      3     TRUE  0.01047077   3.4e-14
-    4      4      3     TRUE  0.01047077   3.7e-14
-    5      5      3     TRUE  0.01047077   8.9e-14
-    6      6      3     TRUE  0.01047077   1.1e-14
-    7      7      3     TRUE  0.01047077   1.1e-13
-    8      8      3     TRUE  0.01047077   6.4e-14
-    9      9      3     TRUE  0.01047077   9.1e-16
-    10    10      3     TRUE  0.01047077   6.8e-14
-    11    11      3     TRUE  0.01047077   5.7e-15
-    12    12      3     TRUE  0.01047077   1.0e-13
-    13    13      3     TRUE  0.01047077   4.3e-15
+    1      1      3     TRUE  0.01047077   6.5e-14
+    2      2      3     TRUE  0.01047077   1.1e-13
+    3      3      3     TRUE  0.01047077   3.5e-14
+    4      4      3     TRUE  0.01047077   7.0e-14
+    5      5      3     TRUE  0.01047077   2.4e-14
+    6      6      3     TRUE  0.01047077   1.0e-14
+    7      7      3     TRUE  0.01047077   4.8e-14
+    8      8      3     TRUE  0.01047077   4.3e-15
+    9      9      3     TRUE  0.01047077   8.3e-16
+    10    10      3     TRUE  0.01047077   5.4e-16
+    11    11      3     TRUE  0.01047077   5.5e-15
+    12    12      3     TRUE  0.01047077   7.1e-15
+    13    13      3     TRUE  0.01047077   5.5e-14
 
 All 13 starts are accepted and reach the same discrepancy (the largest
 spread is 8.9e-16), so no warning is raised.
 
+For nonlinear rows, inspect `fit@diagnostics$optimum` as well as the
+acceptance gate. Its `status` is `unique` when the best-of-starts
+comparison does not apply, `certified` when a feasible fit without the
+nonlinear rows supplies the lower bound on discrepancy, `agreed` when
+several accepted starts agree within `1e-6`, `disagreed` when they do
+not, and `single` when only one start is accepted. The record also gives
+`n_starts`, `n_accepted`, `spread`, `best_of` and `certified`. `agreed`
+and `single` do not establish a global optimum; a better basin may
+remain. Increase `n_starts` when that matters, especially after a
+`disagreed` or `single` verdict.
+
+For a nonlinear row, the engine also tries the unconstrained estimate
+and sign-flipped path starts, since a product constraint can separate
+sign branches. Variances named in those rows have a solver floor of
+`1e-4` times their natural unit. An active floor warns that the
+constrained optimum may be improper. These safeguards apply only to
+models with nonlinear rows.
+
 ## 3. The acceptance gate
+
+**Why check beyond the solver’s stop message?** A small change in \\F\\
+can mean either “at the bottom” or “walking along a nearly flat slope.”
+For the earlier \\F(a,b)\\ at \\(0,0)\\, the \\a\\ slope is \\-2\\, so
+increasing \\a\\ lowers \\F\\ despite a smaller slope than the \\b\\
+slope \\-16\\. The gate therefore checks feasibility, curvature, and
+remaining improvement (`R/sem-constraints.R`).
+
+*What to remember:* a stop code records why the algorithm stopped, not
+whether the point is an optimum.
 
 A solver can stop for reasons that have nothing to do with having found
 the optimum. The engine therefore accepts a solution only if it passes
@@ -372,9 +474,70 @@ nearly singular reduced Hessian):
 1.  the solver status is a success code (1, 3 or 4);
 2.  every constraint holds to \\10^{-6}\\ in natural units;
 3.  the **Newton decrement** on the active-constraint null space is at
-    most \\10^{-3}\\, with a positive definite reduced Hessian.
+    most \\10^{-3}\\, with a positive definite reduced Hessian whose
+    smallest Jacobi-scaled eigenvalue is at least \\10^{-4}\\.
+
+For curved rows, the active Jacobian is recomputed at the candidate
+point, not reused from the start. The reduced curvature includes the
+Lagrangian Hessian: the objective Hessian plus multiplier-weighted
+constraint Hessians, whose entries come from central differences of the
+row Jacobians.
 
 Check 3 needs a derivation. We build it in four steps.
+
+**Multipliers before the matrix algebra.** For general math, minimize
+\\F(a)=(a-2)^2\\ under \\c(a)=a-1\leq0\\. At the active point \\a=1\\,
+\\F'(1)=-2\\ and \\c'(1)=1\\. The Lagrangian \\L(a,\lambda)=F(a)+\lambda
+c(a)\\ has slope \\-2+\lambda=0\\, so the multiplier is
+\\\lambda=2\geq0\\. It measures the benefit of loosening this upper
+limit: increasing the limit by a small amount can lower the best \\F\\
+by about twice that amount. For an inactive inequality the multiplier is
+zero; together with feasibility, stationarity, and \\\lambda c=0\\,
+these are the first-order KKT conditions. For a wrong-sign example,
+minimize \\F(a)=a^2\\ at the same boundary \\a=1\\: \\F'(1)=2\\ gives
+\\\lambda=-2\\. Moving *inward* to \\a\<1\\ lowers \\F\\, so this active
+point is not a constrained minimum. With the \\c\leq0\\ convention, a
+negative multiplier does **not** mean that loosening the upper limit
+lowers the optimal \\F\\; it means releasing the claim that this
+boundary must stay active allows an improving feasible move. medfit
+checks inequality signs as a warning, with an active-bound inward-slope
+rejection (`R/sem-constraints.R`).
+
+*What to remember:* for \\c\leq0\\, an active minimum needs a
+nonnegative inequality multiplier.
+
+**Only allowed directions count.** In the two-parameter sketch
+\\F(a,b)=(a-1)^2+4(b-2)^2\\, impose the active equality \\a=0\\. Its
+Jacobian row is \\M=(1,0)\\; \\Mp=0\\ requires a feasible small move
+\\p=(0,t)\\, where \\t\\ is any number. A null-space basis is
+\\Z=(0,1)^\top\\. The objective Hessian is
+\\H=\operatorname{diag}(2,8)\\, so the reduced Hessian is \\H_r=Z^\top
+HZ=8\\: curvature in the forbidden \\a\\ direction does not enter. At
+\\(a,b)=(0,1.9)\\, the reduced gradient is \\g_r=Z^\top\nabla F=-0.8\\.
+The Newton decrement is \\\sqrt{g_r^\top
+H_r^{-1}g_r}=\sqrt{0.8^2/8}=0.2828427\\. This is the dimensionless
+remaining-improvement number the medfit gate compares with \\10^{-3}\\;
+this point fails. For curved rows the gate instead uses the Lagrangian’s
+Hessian, as derived below (`R/sem-constraints.R`).
+
+*What to remember:* project onto feasible directions, then compare the
+decrement with \\10^{-3}\\.
+
+**Why scale the curvature test?** Jacobi scaling divides Hessian entry
+\\H\_{ij}\\ by \\\sqrt{H\_{ii}H\_{jj}}\\, where \\i,j\\ name coordinates
+with positive diagonal curvature. For \\H=\operatorname{diag}(2,200)\\,
+the scaled matrix is the identity and both eigenvalues are 1, although
+the raw curvatures differ by a factor of 100. A near-flat coupled
+example is
+\\H=\left(\begin{smallmatrix}1&0.99999\\0.99999&1\end{smallmatrix}\right)\\:
+its smallest scaled eigenvalue is \\0.00001\\. An eigenvalue measures
+curvature along a special direction; a value near zero means the
+curvature test cannot reliably separate that direction from a flat one.
+medfit rejects a reduced Hessian whose smallest Jacobi-scaled eigenvalue
+is below \\10^{-4}\\ (`R/sem-constraints.R`).
+
+*What to remember:* scaling removes individual coordinate units before
+testing for near-flat curvature.
 
 **Step 1: the stationarity condition.** At a constrained minimum with
 active rows \\M\\ (the Jacobian of the active constraints, one row
@@ -440,7 +603,7 @@ cat("active rows:", act$text[act$active_row], "\n")
 cat("constraint distance (natural units):", signif(act$dist, 3), "\n")
 ```
 
-    constraint distance (natural units): 8.94e-18 
+    constraint distance (natural units): 1.79e-17 
 
 ``` r
 cat("null space basis Z:", nrow(act$z), "x", ncol(act$z), "(6 parameters, 1 active row)\n")
@@ -464,7 +627,7 @@ reduced_gradient <- crossprod(act$z, x_grad)
 cat("size of the reduced gradient:", signif(sqrt(sum(reduced_gradient^2)), 3), "\n")
 ```
 
-    size of the reduced gradient: 9.58e-14 
+    size of the reduced gradient: 1.2e-13 
 
 ``` r
 rbind(objective_hessian_only = eigen(crossprod(act$z, x_hess %*% act$z))$values,
@@ -510,7 +673,7 @@ verdicts
 ```
 
                           accepted decrement
-    optimum                   TRUE  6.28e-14
+    optimum                   TRUE  6.51e-14
     feasible, not optimal    FALSE  3.96e-02
     infeasible               FALSE        NA
     bad solver status        FALSE        NA
@@ -520,12 +683,13 @@ verdicts
     infeasible            constraint 'cp == a*b' is violated by 3.22e-02 in natural units
     bad solver status                              nloptr status -4 is not a success code
 
-(A fourth check is warn-only: the signs of the multipliers of active
-inequalities and bounds are examined, and a wrong sign produces a
-warning, except for an active bound, which rejects the solution.) Each
-failing point is rejected for the right reason. The second one satisfies
-the constraint exactly and is rejected only because its decrement is
-large: that is the stationarity check doing its job.
+(A fourth check examines multiplier signs. For an active inequality, a
+wrong sign warns: dependent active rows can make individual multipliers
+ambiguous. For an active bound, a gradient pointing into the feasible
+interior rejects the point, because moving inward would lower the
+objective.) Each failing point is rejected for the right reason. The
+second one satisfies the constraint exactly and is rejected only because
+its decrement is large: that is the stationarity check doing its job.
 
 Finally the scale-invariance claim. Multiply `outcome` by 1000. The
 model keeps its form, because `cp == a*b` is preserved when \\b\\ and
@@ -630,9 +794,9 @@ newton
       iteration constraint_violation decrement distance_from_exact_optimum
     1         0             1.19e-09  8.80e-06                    8.10e-06
     2         1             3.28e-12  1.07e-10                    1.18e-10
-    3         2             2.78e-17  1.14e-13                    8.32e-14
-    4         3             2.78e-17  8.11e-15                    6.98e-14
-    5         4             2.78e-17  9.06e-16                    8.02e-14
+    3         2             2.78e-17  1.01e-13                    2.15e-13
+    4         3             2.78e-17  9.44e-14                    1.40e-13
+    5         4             5.55e-17  6.98e-15                    4.55e-14
 
 The distance from the optimum falls from 8.1e-06 to 1.2e-10 in one step
 and to rounding error in the next, and the constraint violation and the
@@ -655,11 +819,25 @@ c(polish_vs_my_iteration = max(abs(polished - path[[5]])),
 ```
 
     polish_vs_my_iteration   polish_vs_engine_fit     discrepancy_before
-              0.000000e+00           8.021361e-14           1.047077e-02
+              4.773959e-15           4.074519e-14           1.047077e-02
          discrepancy_after
               1.047077e-02 
 
 ## 5. Redundant rows
+
+**What can a repeated rule do?** In general math, \\a+b=1\\ and
+\\2a+2b=2\\ describe one rule: the second active gradient \\(2,2)\\ is
+twice the first \\(1,1)\\, so their two-row matrix has rank 1. The
+feasible set is well defined, but a solver that treats them as two
+independent directions cannot assign a unique pair of multipliers; its
+constraint step can stall. LICQ is the name for the requirement that
+active gradient rows be linearly independent. Changing the second rule
+to \\2a+2b=3\\ instead makes the set empty. medfit sends an independent
+equality subset to SLSQP and still checks every original row
+(`R/sem-constraints.R`).
+
+*What to remember:* duplicate active rows count once; contradictory rows
+remain a failure.
 
 Constraint sets sometimes repeat themselves, and that is a problem for a
 solver. SLSQP assumes the active constraint gradients are linearly
@@ -761,7 +939,7 @@ violated <- tryCatch(fit_sem(paste0(model, "a + b == 0.8\na + b < 0.5\n"), d), e
 violated
 ```
 
-    [1] "no start converged (5 tried); best attempt: status 5, stationarity NA; nloptr status 5 is not a success code; constraint 'a + b < 0.5' is violated by 1.35e-01 in natural units"
+    [1] "no start converged (5 tried); best attempt: status -4, stationarity NA; nloptr status -4 is not a success code; constraint 'a + b < 0.5' is violated by 1.19e-01 in natural units"
 
 ## 6. The covariance of a constrained fit
 
@@ -790,7 +968,7 @@ c(difference_from_engine = max(abs(v_hand - fit_exp@vcov)), largest_entry = max(
 ```
 
     difference_from_engine          largest_entry
-              1.084202e-19           8.211061e-03 
+              8.673617e-19           8.211061e-03 
 
 ``` r
 cat("rank of V:", qr(fit_exp@vcov, tol = 1e-10)$rank, "of", ram$q, "parameters\n")
@@ -848,9 +1026,9 @@ c(largest_estimate_difference = max(abs(fit@theta - lavaan::coef(lv)[nm])),
 ```
 
     largest_estimate_difference      se_difference_expected
-                   3.583168e-07                2.533682e-08
+                   3.408639e-07                2.410271e-08
          se_difference_observed
-                   5.013028e-08 
+                   4.750614e-08 
 
 ``` r
 suppressMessages(library(OpenMx))
@@ -883,7 +1061,7 @@ c(largest_estimate_difference = max(abs(est_mx[c("a", "b", "cp")] - fit@theta[c(
 ```
 
     largest_estimate_difference
-                   8.959108e-08 
+                   8.959096e-08 
 
 ``` r
 stats::setNames(summary(run_mx)$parameters$Std.Error, summary(run_mx)$parameters$name)[c("a", "b", "cp")]

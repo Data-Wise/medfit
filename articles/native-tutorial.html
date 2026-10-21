@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -169,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.0/vignettes/articles/native-tutorial.qmd" class="external-link"><code>vignettes/articles/native-tutorial.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-tutorial.qmd" class="external-link"><code>vignettes/articles/native-tutorial.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -187,7 +187,7 @@
 <tbody>
 <tr class="odd">
 <td><strong>You need</strong></td>
-<td>medfit 0.8.0 or later (step 9 needs 0.9.0 or later, and step 10 the development version, 0.11.0); the bundled <code>mediation_demo</code> data</td>
+<td>medfit 0.8.0 or later (step 9 needs 0.9.0 or later, and step 10 needs 0.11.0); the bundled <code>mediation_demo</code> data</td>
 </tr>
 <tr class="even">
 <td><strong>You get</strong></td>
@@ -384,7 +384,7 @@ MBCO = 17.557, df = 1, p-value = 2.788e-05</code></pre>
 <p>Check: <code>a</code>, <code>b</code> and <code>cp</code> match Step 6, and <code>df</code> and <code>chisq</code> are the same, but <code>npar</code> is smaller. The log likelihood is conditional on the fixed variables, so it is not comparable with the free fit’s, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> refuses to compare the two fits. <code>fixed_x</code> also takes a character vector, such as <code>fixed_x = "covariate1"</code>, to fix only some of the exogenous variables.</p>
 </section><section class="level2"><h2 id="step-10--add-a-categorical-covariate">Step 10. Add a categorical covariate<a class="anchor" aria-label="anchor" href="#step-10--add-a-categorical-covariate"></a>
 </h2>
-<p>Needs the development version (0.11.0). A covariate that is a factor, character or logical column goes into the syntax by name; the engine replaces it with one 0/1 dummy per non-reference level. The bundled data has no factor, so the chunk cuts <code>covariate1</code> into three groups first:</p>
+<p>Needs medfit 0.11.0 or later. A covariate that is a factor, character or logical column goes into the syntax by name; the engine replaces it with one 0/1 dummy per non-reference level. The bundled data has no factor, so the chunk cuts <code>covariate1</code> into three groups first:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">dat10</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">mediation_demo</span>,</span>
 <span>                   group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cut.html" class="external-link">cut</a></span><span class="op">(</span><span class="va">covariate1</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="cn">Inf</span>, <span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="cn">Inf</span><span class="op">)</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>

@@ -40,7 +40,7 @@ task recipes see the
 | Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](https://data-wise.github.io/medfit/articles/model-joint.md) |
 | Cluster-level treatment (2-1-1) | `ClusterMediationData` | `lmer` fits or `engine = "lmer"` | model, Kenward-Roger (`"kr"`) | [cluster](https://data-wise.github.io/medfit/articles/model-cluster.md) |
 | Latent mediator, constraints | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md), `engine = "native"` | model, sandwich | [native](https://data-wise.github.io/medfit/articles/model-native.md), [latent](https://data-wise.github.io/medfit/articles/model-native-latent.md) |
-| Categorical covariates (development version) | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with a factor, character or logical column | model, sandwich | [categorical covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md) |
+| Categorical covariates (0.11.0) | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with a factor, character or logical column | model, sandwich | [categorical covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md) |
 
 Inference works on every row: delta-method intervals from
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
@@ -58,6 +58,29 @@ Inference](https://data-wise.github.io/medfit/articles/bootstrap.md)).
 > weights](https://data-wise.github.io/medfit/articles/model-native-multi.md))
 > and then call `extract_mediation(fit, mediator = c(...), outcome = )`,
 > with `structure = "parallel"` for side-by-side mediators.
+
+## The `fit_mediation()` engines compared
+
+The four engines answer different questions and do not return
+interchangeable numbers. Read the row for your engine before you swap
+one for another.
+
+|  | `glm` (default) | `regmedint` | `lmer` | `native` |
+|----|----|----|----|----|
+| Estimation | [`stats::glm()`](https://rdrr.io/r/stats/glm.html) for the mediator and outcome models | closed-form natural effects from the regmedint package | REML mixed models, a random cluster intercept in both | maximum-likelihood SEM from syntax (`model =`) |
+| Outcome and mediator families | any `glm` family | a linear mediator model; the outcome may be logistic | Gaussian only | Gaussian only |
+| Indirect effect | product of path coefficients, on the link scale when the link is not the identity | regmedint’s natural indirect effect; equals the path product only for a linear mediator model and a unit treatment contrast (the adapter errors otherwise) | `a * b_between` (own and spillover parts in [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)) | the path product from the fitted syntax |
+| Case `weights` | yes | no | no | yes (weighted maximum likelihood) |
+| `se_type = "sandwich"` | yes, HC3 | no (`"model"` only) | no (`"model"` or `"kr"`) | yes, HC0-type, a little smaller than HC3 in finite samples |
+| Rows with missing values | dropped once, both models share the sample | dropped by the engine | dropped once | listwise, counted in `n_dropped` |
+| Returns | `MediationData` or `InteractionMediationData` | the same two classes | `ClusterMediationData` | `SEMFit`, then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) |
+
+A weight or an SE type that an engine does not take is an error, not an
+ignored argument, so a silent change of estimand is not possible through
+[`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md).
+The estimand still differs where the table says so: a logistic outcome
+through `glm` gives a path product on the log-odds scale, while
+`regmedint` gives a natural effect.
 
 ## What medfit does not run
 

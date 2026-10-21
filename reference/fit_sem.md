@@ -42,9 +42,12 @@ fit_sem(
 
 - data:
 
-  A data frame with the model's observed variables as numeric columns.
-  Rows with missing values in those columns are dropped once (listwise
-  deletion) and counted in `n_dropped`.
+  A data frame with the model's observed variables. Numeric columns are
+  used as is; a factor, character or logical column named on a
+  regression's right side is expanded to 0/1 dummies
+  ([`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+  lists the rules and limits). Rows with missing values in those columns
+  are dropped once (listwise deletion) and counted in `n_dropped`.
 
 - information:
 

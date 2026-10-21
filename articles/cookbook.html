@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -169,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.0/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -179,7 +179,7 @@
 
 
     <p>Twenty-one task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
-<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, and recipe 21 needs the development version, 0.11.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
+<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, and recipe 21 needs 0.11.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stderr">
@@ -371,7 +371,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4349603 0.8927176 </code></pre>
+0.6560315 0.4351678 0.8930074 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>

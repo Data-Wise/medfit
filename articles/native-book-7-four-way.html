@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -169,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.0/vignettes/articles/native-book-7-four-way.qmd" class="external-link"><code>vignettes/articles/native-book-7-four-way.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-book-7-four-way.qmd" class="external-link"><code>vignettes/articles/native-book-7-four-way.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -348,14 +348,14 @@ engine  0.0422575 0.07691583 0.2276355 0.3263118 0.1191733 0.5539473 0.6731206</
 <pre class="r cell-code"><code><span><span class="va">fw1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>, decomposition <span class="op">=</span> <span class="st">"four_way"</span>, m_star <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>m_star_0 <span class="op">=</span> <span class="fu">engine_parts</span><span class="op">(</span><span class="va">fw</span><span class="op">)</span>, m_star_1 <span class="op">=</span> <span class="fu">engine_parts</span><span class="op">(</span><span class="va">fw1</span><span class="op">)</span>, difference <span class="op">=</span> <span class="fu">engine_parts</span><span class="op">(</span><span class="va">fw1</span><span class="op">)</span> <span class="op">-</span> <span class="fu">engine_parts</span><span class="op">(</span><span class="va">fw</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>                 cde     int_ref   int_med       pie           nde       nie
-m_star_0   0.0422575  0.07691583 0.2276355 0.3263118  1.191733e-01 0.5539473
-m_star_1   0.5400182 -0.42084491 0.2276355 0.3263118  1.191733e-01 0.5539473
-difference 0.4977607 -0.49776074 0.0000000 0.0000000 -5.551115e-17 0.0000000
-                      te
-m_star_0    6.731206e-01
-m_star_1    6.731206e-01
-difference -1.110223e-16</code></pre>
+<pre><code>                 cde     int_ref   int_med       pie          nde       nie
+m_star_0   0.0422575  0.07691583 0.2276355 0.3263118 1.191733e-01 0.5539473
+m_star_1   0.5400182 -0.42084491 0.2276355 0.3263118 1.191733e-01 0.5539473
+difference 0.4977607 -0.49776074 0.0000000 0.0000000 4.163336e-17 0.0000000
+                  te
+m_star_0   0.6731206
+m_star_1   0.6731206
+difference 0.0000000</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>theta3 <span class="op">=</span> <span class="va">t3</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">

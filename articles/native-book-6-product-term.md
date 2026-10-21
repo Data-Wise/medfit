@@ -182,6 +182,25 @@ its variance, covariances and mean are filled in by the engine (Section
 
 ## 2. Building the product column
 
+### Categorical covariates
+
+A factor, character or logical covariate on the right side of a
+regression is expanded before the RAM is built. A factor `g` with levels
+`a`, `b`, `c` uses the first level as reference and yields `g_b` and
+`g_c`; character levels are sorted in the C locale, and a logical column
+yields `g_TRUE`. A term `g:m` expands to a product for each dummy, under
+the same product rules below. `fixed_x = "g"` selects the dummies; a
+dummy name selects just that one.
+
+The expansion uses the full column before listwise deletion, while a
+missing factor value drops its row from the fit. Ordered factors, a
+factor outcome or mediator, a product of two categorical columns, and a
+factor treatment or mediator for four-way extraction are unsupported.
+Put a modifier or label on a named dummy (`b*g_b`), not on `g`; a
+constraint names that label. A raw-data bootstrap refit can change a
+character column’s reference if a level is absent from a resample, so
+use a factor with explicit levels when that reference must stay fixed.
+
 The product is a **data-level** term: the engine computes the column
 \\x_i m_i\\ and then fits a model in which that column is one more
 observed variable. The helper is `.sem_materialize_products()`. It reads
@@ -322,7 +341,7 @@ c(estimates = max(abs(fit_free@theta[shared] - fit_fx@theta[shared])),
 ```
 
           estimates standard_errors
-       9.992007e-16    2.769951e-12 
+       6.661338e-16    1.935591e-12 
 
 The nine fixed rows are the three means, three variances and three
 covariances of `treatment`, `covariate1` and the product.
@@ -455,7 +474,7 @@ c(largest_difference = max(abs(sem - ols)))
 ```
 
     largest_difference
-          4.440892e-16 
+          1.554312e-15 
 
 ### What the product changes: the joint model
 

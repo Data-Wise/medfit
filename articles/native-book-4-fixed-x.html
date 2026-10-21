@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -169,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.0/vignettes/articles/native-book-4-fixed-x.qmd" class="external-link"><code>vignettes/articles/native-book-4-fixed-x.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-book-4-fixed-x.qmd" class="external-link"><code>vignettes/articles/native-book-4-fixed-x.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -344,7 +344,7 @@ y \mid x \;\sim\; N\bigl(c + \Gamma x,\; \Psi\bigr), \qquad
 <span>  standard_errors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">free</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">shared</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fx</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">shared</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>      estimates standard_errors
-   4.440892e-16    2.220446e-16 </code></pre>
+   4.440892e-16    2.498002e-16 </code></pre>
 </div>
 </div>
 <p>The estimates and standard errors agree to rounding. Step 3 is the claim that the information has no cross block; look at the free fit’s information between the fixed moments and the structural parameters, in the engine’s raw coordinates, for both kinds of information:</p>
@@ -367,14 +367,14 @@ y \mid x \;\sim\; N\bigl(c + \Gamma x,\; \Psi\bigr), \qquad
 <span><span class="va">cross_table</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>  information cross_block_largest_entry largest_entry_of_the_matrix
-1    expected               7.82067e-14                    3324.189
-2    observed               1.23445e-08                    3324.189
+1    expected              1.011261e-13                    3324.189
+2    observed              9.436680e-09                    3324.189
   orders_of_magnitude_below
-1                      16.6
-2                      11.4</code></pre>
+1                      16.5
+2                      11.5</code></pre>
 </div>
 </div>
-<p>The cross block has 5 <span class="math inline">\(\times\)</span> 9 entries. Its largest entry is 16.6 orders of magnitude below the largest entry of the matrix for the expected information and 11.4 for the observed one (which the engine computes by finite differences of the gradient, so it carries a numerical error that the expected one does not). Both are zero to numerical precision, as Step 3 says.</p>
+<p>The cross block has 5 <span class="math inline">\(\times\)</span> 9 entries. Its largest entry is 16.5 orders of magnitude below the largest entry of the matrix for the expected information and 11.5 for the observed one (which the engine computes by finite differences of the gradient, so it carries a numerical error that the expected one does not). Both are zero to numerical precision, as Step 3 says.</p>
 <section class="level3"><h3 id="fixing-a-subset">Fixing a subset<a class="anchor" aria-label="anchor" href="#fixing-a-subset"></a>
 </h3>
 <p>With <code>fixed_x = "treatment"</code>, only the moments that involve <code>treatment</code> are fixed: its mean, its variance and its covariance with <code>covariate1</code>. The variance and the mean of <code>covariate1</code> stay free. The structural parameters keep their estimates and standard errors; the free moments of <code>covariate1</code> keep their estimates but not their standard errors:</p>
@@ -388,9 +388,9 @@ y \mid x \;\sim\; N\bigl(c + \Gamma x,\; \Psi\bigr), \qquad
 <span>  covariate1_moment_estimates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">subset_fit</span><span class="op">@</span><span class="va">theta</span><span class="op">[</span><span class="va">own_moments</span><span class="op">]</span> <span class="op">-</span> <span class="va">free</span><span class="op">@</span><span class="va">theta</span><span class="op">[</span><span class="va">own_moments</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>       structural_estimates  structural_standard_errors
-               3.330669e-16                2.081668e-16
+               6.661338e-16                2.081668e-16
 covariate1_moment_estimates
-               1.387779e-17 </code></pre>
+               2.220446e-16 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="va">se_change</span><span class="op">[</span><span class="va">own_moments</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">

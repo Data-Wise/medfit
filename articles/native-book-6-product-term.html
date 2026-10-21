@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -169,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.0/vignettes/articles/native-book-6-product-term.qmd" class="external-link"><code>vignettes/articles/native-book-6-product-term.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-book-6-product-term.qmd" class="external-link"><code>vignettes/articles/native-book-6-product-term.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -316,6 +316,10 @@ with spaces:
 <p>A product of a latent variable has no data column (a latent variable is not observed), so the column cannot be built; a latent product needs a different estimator and is not in this version. A three-way product and <code>x:x</code> are not two-way products of distinct variables. A product on a left side or in a covariance statement would be a statement about the product as a variable, and the engine does not let the user write one: its variance, covariances and mean are filled in by the engine (Section 3).</p>
 </section></section><section class="level2"><h2 id="building-the-product-column">2. Building the product column<a class="anchor" aria-label="anchor" href="#building-the-product-column"></a>
 </h2>
+<section class="level3"><h3 id="categorical-covariates">Categorical covariates<a class="anchor" aria-label="anchor" href="#categorical-covariates"></a>
+</h3>
+<p>A factor, character or logical covariate on the right side of a regression is expanded before the RAM is built. A factor <code>g</code> with levels <code>a</code>, <code>b</code>, <code>c</code> uses the first level as reference and yields <code>g_b</code> and <code>g_c</code>; character levels are sorted in the C locale, and a logical column yields <code>g_TRUE</code>. A term <code>g:m</code> expands to a product for each dummy, under the same product rules below. <code>fixed_x = "g"</code> selects the dummies; a dummy name selects just that one.</p>
+<p>The expansion uses the full column before listwise deletion, while a missing factor value drops its row from the fit. Ordered factors, a factor outcome or mediator, a product of two categorical columns, and a factor treatment or mediator for four-way extraction are unsupported. Put a modifier or label on a named dummy (<code>b*g_b</code>), not on <code>g</code>; a constraint names that label. A raw-data bootstrap refit can change a character column’s reference if a level is absent from a resample, so use a factor with explicit levels when that reference must stay fixed.</p>
 <p>The product is a <strong>data-level</strong> term: the engine computes the column <span class="math inline">\(x_i m_i\)</span> and then fits a model in which that column is one more observed variable. The helper is <code>.sem_materialize_products()</code>. It reads the completed parameter table, and for each distinct product adds the column under the canonical name:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">tab</span> <span class="op">&lt;-</span> <span class="fu">medfit</span><span class="fu">:::</span><span class="fu">.sem_complete</span><span class="op">(</span><span class="fu">medfit</span><span class="fu">:::</span><span class="fu">.sem_parse</span><span class="op">(</span><span class="va">product_model</span><span class="op">)</span><span class="op">$</span><span class="va">parameters</span><span class="op">)</span></span>
@@ -330,7 +334,7 @@ with spaces:
 <span>                 <span class="fl">0</span> </span></code></pre>
 </div>
 </div>
-<section class="level3"><h3 id="where-in-the-pipeline-and-why-there">Where in the pipeline, and why there<a class="anchor" aria-label="anchor" href="#where-in-the-pipeline-and-why-there"></a>
+</section><section class="level3"><h3 id="where-in-the-pipeline-and-why-there">Where in the pipeline, and why there<a class="anchor" aria-label="anchor" href="#where-in-the-pipeline-and-why-there"></a>
 </h3>
 <p><code><a href="../reference/fit_sem.html">fit_sem()</a></code> runs these steps in order: parse, complete the table, read the model-test verdict (Section 5), <strong>build the product columns</strong>, assign the <code>fixed_x</code> moments, build the RAM, check that every variable is a column, delete incomplete rows (listwise), <strong>check any product column the user supplied</strong>, and form the sample moments.</p>
 <p>The build comes before the <code>fixed_x</code> step for a concrete reason. <code>.sem_assign_fixed_x()</code> (Chapter 4) computes the fixed moments from the model’s columns, and when one of them is absent it returns the table unchanged, leaving the fit to report the missing column. Without the product column it would leave <strong>every</strong> fixed row of the fit without a value, not only the product’s. Call it both ways:</p>
@@ -416,7 +420,7 @@ product_variance_of_kept_rows
 <span>  standard_errors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_free</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">shared</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_fx</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">shared</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>      estimates standard_errors
-   9.992007e-16    2.769951e-12 </code></pre>
+   6.661338e-16    1.935591e-12 </code></pre>
 </div>
 </div>
 <p>The nine fixed rows are the three means, three variances and three covariances of <code>treatment</code>, <code>covariate1</code> and the product.</p>
@@ -494,7 +498,7 @@ f(z_i, m_i, y_i) = f(z_i;\, \eta)\; f(m_i \mid z_i;\, \psi_m)\; f(y_i \mid z_i, 
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>largest_difference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">sem</span> <span class="op">-</span> <span class="va">ols</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code><span><span class="va">largest_difference</span></span>
-<span>      <span class="fl">4.440892e-16</span> </span></code></pre>
+<span>      <span class="fl">1.554312e-15</span> </span></code></pre>
 </div>
 </div>
 </section><section class="level3"><h3 id="what-the-product-changes-the-joint-model">What the product changes: the joint model<a class="anchor" aria-label="anchor" href="#what-the-product-changes-the-joint-model"></a>

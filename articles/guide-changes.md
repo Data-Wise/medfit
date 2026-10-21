@@ -1,6 +1,6 @@
 # What changed since CRAN 0.3.2
 
-CRAN has medfit 0.3.2; this site documents 0.11.0 (GitHub and
+CRAN has medfit 0.3.2; this site documents 0.11.1 (GitHub and
 r-universe). This page lists what a 0.3.2 user needs to know before
 upgrading: numbers that change, calls that now stop with an error, and
 what is new. The full record is
@@ -71,6 +71,7 @@ Each of these was accepted before and gave a wrong or ignored result.
 | 0.7.0 | a [`glm()`](https://rdrr.io/r/stats/glm.html) argument passed through `...` that partly matches `model`, such as `mod = FALSE` | `is only used with engine = "native"` | drop the argument; [`glm()`](https://rdrr.io/r/stats/glm.html)’s own `model` cannot be passed through [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md) |
 | 0.9.0 | a lavaan four-way fit that has a product of the treatment with a covariate in the mediator or the outcome equation (`m ~ x + xc`) | `does not support a treatment product` | it changed the effects without changing a coefficient the decomposition reads, and 0.8.0 returned a decomposition without a message; remove the product, or fit without the four-way decomposition |
 | 0.11.0 | [`AIC()`](https://rdrr.io/r/stats/AIC.html) or [`BIC()`](https://rdrr.io/r/stats/AIC.html) of several `SEMFit`s over different observed variables, such as a fit with a product term and one without | `different observed variables` | the likelihoods describe different data, so they are not comparable; compare fits over the same variables ([`anova()`](https://rdrr.io/r/stats/anova.html) and [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) refuse the same pair) |
+| 0.11.1 | [`anova()`](https://rdrr.io/r/stats/anova.html) of two `SEMFit`s where a nonzero fixed parameter (for example `M1 ~~ 0.5*M2`) is in one fit and absent from the other | `nonzero fixed parameters differ` | fit the restricted model by fixing or constraining parameters of the larger one, so both fits carry the same fixed values |
 
 Two more stop in situations 0.3.2 could not reach: two `lmer` fits that
 kept different individuals within the same clusters (0.6.0), and a

@@ -132,7 +132,7 @@ c(difference = max(abs(info_expected_by_hand - info_expected)), largest_entry = 
 ```
 
        difference largest_entry
-     3.410605e-13  3.200160e+03 
+     2.842171e-13  3.200160e+03 
 
 ### Observed information
 
@@ -208,7 +208,7 @@ c(largest_entry_of_the_gap = max(abs(gap_engine)), formula_vs_engine = max(abs(g
 ```
 
     largest_entry_of_the_gap        formula_vs_engine
-                2.593267e+02             3.519880e-07 
+                2.593267e+02             2.415070e-07 
 
 Now compare a model that fits exactly with one that fits badly. The
 mediation model is **just identified**: it has as many free parameters
@@ -275,7 +275,7 @@ c(observed_vs_lavaan = max(abs(sqrt(diag(fit_o@vcov)) - sqrt(diag(lavaan::vcov(l
 ```
 
     observed_vs_lavaan expected_vs_lavaan
-          6.913308e-10       3.436773e-10 
+          6.921905e-10       3.436773e-10 
 
 ``` r
 suppressMessages(library(OpenMx))
@@ -332,6 +332,22 @@ The product \\ab\\ is the indirect effect of the treatment on the
 outcome through the mediator, and its standard error is 0.0802.
 
 ## 3. The sandwich: robust standard errors
+
+**First, the idea.** A classical standard error uses the model’s
+predicted curvature to describe how estimates would vary across samples.
+A sandwich standard error also uses the observed variation in individual
+rows’ scores, so a misspecified spread can change the answer. In the
+general one-parameter calculation \\V=A^{-1}BA^{-1}\\, \\A\\ is the
+positive information (the change in total score when the parameter
+moves), \\B\\ is the sum of squared row scores, and \\V\\ is estimated
+variance. If \\A=2\\ and \\B=8\\, the classical \\A^{-1}=0.5\\ while the
+sandwich gives \\(1/2)8(1/2)=2\\. The uncorrected row-score version is
+often called HC0 in a regression equation. The native engine constructs
+its scores and sandwich in `R/sem-sandwich.R`; the model-based
+information is in `R/sem-se.R`.
+
+*What to remember:* the two outer factors describe sensitivity; the
+middle factor records observed score variation.
 
 The inverse information is the right covariance only if the model,
 including the normal distribution, is correct and the data are
@@ -407,7 +423,7 @@ c(scores_by_hand_vs_engine = max(abs(scores - medfit:::.sem_scores(theta_w, ram_
 ```
 
     scores_by_hand_vs_engine       largest_column_sum
-                1.065814e-14             1.594862e-07 
+                8.881784e-15             1.594837e-07 
 
 The second number checks Step 1: the scores sum to zero at the estimate,
 which is the estimating equation.
@@ -427,7 +443,7 @@ c(sandwich_by_hand_vs_engine = max(abs(v_sandwich - fit_w@vcov)), largest_entry 
 ```
 
     sandwich_by_hand_vs_engine              largest_entry
-                  1.734723e-17               2.710643e-02 
+                  3.469447e-17               2.710643e-02 
 
 ``` r
 rd(cbind(sandwich = sqrt(diag(fit_w@vcov)), model_based = sqrt(diag(model_based)))[1:5, ], 4)
@@ -466,12 +482,17 @@ c(covariance_structure = max(abs(sqrt(diag(fit_w@vcov)) - sqrt(diag(lavaan::vcov
 ```
 
     covariance_structure       mean_structure
-            1.860607e-10         5.039283e-11 
+            1.874922e-10         5.800585e-11 
 
 Without weights the sandwich is the Huber-White estimator. For a
 regression equation it equals the heteroskedasticity-consistent
 estimator HC0 (the one with no leverage correction), which gives
 something to check when the `sandwich` package is installed:
+
+This native HC0 choice differs from the `glm` mediation engine’s HC3
+default, which adjusts for leverage. Standard errors from the two
+engines can therefore differ even when their coefficient estimates
+agree.
 
 ``` r
 fit_u <- fit_sem(full, d, se_type = "sandwich")
@@ -640,6 +661,23 @@ data.frame(
 
 ## 5. `anova()`: the general likelihood-ratio test
 
+**What does nested mean?** One model is nested inside another when every
+prediction its parameters can make is also possible in the larger model.
+For a two-parameter general example, the full model freely chooses
+\\(a,b)\\, while the restricted model requires \\a=0\\ and still chooses
+\\b\\: every restricted choice appears in the full model. If \\n=10\\
+observations give minimized discrepancies \\F_f=0.2\\ (full) and
+\\F_r=0.5\\ (restricted), \\D=n(F_r-F_f)=10(0.5-0.2)=3\\; the models
+differ by one free parameter, so the usual interior-null reference is
+chi-square with one degree of freedom, giving \\p=0.08326452\\. Here
+\\n\\ is the sample size, \\D\\ the likelihood-ratio statistic, and
+\\p\\ its upper-tail probability. medfit checks comparable data,
+parameters, fixed values, and constraints before computing
+[`anova()`](https://rdrr.io/r/stats/anova.html) (`R/sem-anova.R`).
+
+*What to remember:* a likelihood-ratio comparison needs the smaller
+model’s possibilities to fit inside the larger one’s.
+
 MBCO is a special case. For two fits to the same data, one a restriction
 of the other, the likelihood-ratio statistic is
 
@@ -687,8 +725,12 @@ model that already has `a == 0`. The engine checks, before it computes
 anything, that the pair can be nested: the same observed variables and
 rows, more degrees of freedom for the restricted model, and no parameter
 freed in the restricted model that the other leaves out (parameter-table
-inclusion). These are necessary conditions, not a proof of nesting.
-Three refusals:
+inclusion). It also checks whether the restricted fit keeps the larger
+model’s fixed values and constraints. A nonzero fixed RAM row present in
+only one fit (for example, `M1 ~~ 0.5*M2`) changes the model even if the
+other fit has fewer free paths, so
+[`anova()`](https://rdrr.io/r/stats/anova.html) refuses the pair. Three
+refusals:
 
 ``` r
 say <- function(expr) {
@@ -716,11 +758,34 @@ cat(sprintf("%s:\n  %s\n", names(msgs), msgs), sep = "\n")
     a single fit:
       anova() for a SEMFit needs at least two fits: the restricted model and the model it is nested in.
 
+**Why does a boundary change the reference distribution?** Under a
+one-sided null, a random estimate may point into the allowed half-line
+or toward the forbidden half. In the simple regular one-parameter case,
+half the null samples yield \\D=0\\ after the bound clips the estimate,
+and half yield the usual one-degree-of-freedom chi-square part. Thus the
+reference is a 50:50 mixture of \\\chi^2_0\\ (a point mass at zero) and
+\\\chi^2_1\\; for \\D\>0\\, \\p\_{\mathrm{mix}}=\tfrac12\Pr(\chi^2_1\geq
+D)\\. For example, \\D=2.705543\\ gives the usual tail \\0.10\\ and
+mixture tail \\0.05\\. This is a general-math one-bound illustration,
+not a substitute for checking the reference law of a more complicated
+SEM test. medfit’s [`anova()`](https://rdrr.io/r/stats/anova.html)
+reports the ordinary chi-square p-value and marks a detected boundary
+comparison `p_valid = FALSE` (`R/sem-anova.R`).
+
+*What to remember:* a one-sided boundary can put half the null mass at
+zero, so the usual chi-square p-value needs scrutiny.
+
 A fit where the data sit on the boundary of the parameter space gets a
 warning instead of an error. If a bound or an inequality on a tested
 parameter is active at the restricted fit (`a > 0` together with the
 null `a = 0`), the null is on the boundary, the statistic is a mixture
 of chi-squares and not \\\chi^2_1\\, and the p-value is not valid:
+
+The returned table retains the displayed p-value and attaches logical
+`attr(result, "p_valid")`, named by row: `NA` for the first row and
+`FALSE` for a boundary comparison. Use that flag rather than the
+displayed p-value for an automated validity decision; the warning
+remains.
 
 ``` r
 bounded <- fit_sem(paste0(full, "a > 0\n"), d)

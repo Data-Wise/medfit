@@ -1,5 +1,47 @@
 # Changelog
 
+## medfit 0.11.1
+
+### New features
+
+- Native `SEMFit` diagnostics now record the best-of-starts verdict in
+  `@diagnostics$optimum`;
+  [`summary()`](https://rdrr.io/r/base/summary.html) prints a concise
+  note when starts disagree or only one start is accepted. Existing
+  optimization warnings are unchanged.
+
+- [`anova()`](https://rdrr.io/r/stats/anova.html) on `SEMFit` records
+  whether each chi-square p-value is valid in the logical attribute
+  `p_valid` (named by row, `NA` for the first row). It is `FALSE` where
+  the null sits on the boundary of the parameter space, the case that
+  already warned. The p-value and the warning are unchanged; code that
+  had to read the warning text can now test `attr(x, "p_valid")`.
+
+### Bug fixes
+
+- [`anova()`](https://rdrr.io/r/stats/anova.html) on `SEMFit` refuses a
+  pair where a nonzero fixed parameter (for example `M1 ~~ 0.5*M2`) is
+  in one fit and absent from the other. Parameter-table inclusion alone
+  let such a pair through, with a chi-square p-value for two models that
+  are not nested. A parameter fixed at a value in one fit and free in
+  the other is still a valid restriction.
+
+- `bootstrap_mediation(method = "nonparametric")`, with or without
+  `cluster =`, now draws every resample in the calling process before
+  the refits are spread over cores. A fixed `seed` gives the same
+  resamples and `boot_estimates` for any `ncores` and for sequential
+  runs; before, each worker drew from its own random-number stream, so
+  `ncores` changed the result
+  ([\#247](https://github.com/data-wise/medfit/issues/247)). For a
+  `statistic_fn` that uses no random numbers, sequential runs keep the
+  stream of 0.11.0, so their results do not change; one that does use
+  them sees a different stream, because its draws no longer interleave
+  with the resampling.
+  [`?bootstrap_mediation`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+  states what the seed does and does not cover (a `statistic_fn` that
+  draws random numbers itself, and BLAS thread effects in the last
+  digits).
+
 ## medfit 0.11.0
 
 ### New features

@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -169,7 +169,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.11.0/vignettes/articles/native-book-3-constraints.qmd" class="external-link"><code>vignettes/articles/native-book-3-constraints.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-book-3-constraints.qmd" class="external-link"><code>vignettes/articles/native-book-3-constraints.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -187,7 +187,7 @@
 <tbody>
 <tr class="odd">
 <td><strong>You need</strong></td>
-<td>Chapters 1 and 2; calculus of several variables (gradient, Hessian, Lagrange multipliers)</td>
+<td>Chapters 1 and 2; the short primers below introduce the needed calculus and optimization ideas</td>
 </tr>
 <tr class="even">
 <td><strong>You get</strong></td>
@@ -232,9 +232,15 @@ Attaching package: 'medfit'</code></pre>
 <p>We use the same three-variable model throughout (no means, so the parameters are three paths and three variances). The unconstrained fit is saturated, with <span class="math inline">\(\text{df} = 0\)</span>. Every constraint below therefore costs one degree of freedom per independent equality.</p>
 <section class="level2"><h2 id="from-a-constraint-line-to-a-row">1. From a constraint line to a row<a class="anchor" aria-label="anchor" href="#from-a-constraint-line-to-a-row"></a>
 </h2>
+<p><strong>First, picture the optimization.</strong> An optimizer tries parameter values and seeks the lowest discrepancy <span class="math inline">\(F\)</span> (the model’s measure of disagreement with the data). In a two-parameter sketch, let <span class="math inline">\(F(a,b)=(a-1)^2+4(b-2)^2\)</span>; <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> are adjustable numbers. At <span class="math inline">\((a,b)=(0,0)\)</span>, <span class="math inline">\(F=17\)</span>. Its <strong>gradient</strong> <span class="math inline">\(\nabla F=(-2(a-1),8(b-2))=(-2,-16)\)</span> gives the local slope in each direction. Its <strong>Hessian</strong> <span class="math inline">\(H=\operatorname{diag}(2,8)\)</span> records how those slopes change: the <span class="math inline">\(b\)</span> direction bends four times as strongly as the <span class="math inline">\(a\)</span> direction. A shallow direction needs more movement to produce the same change in <span class="math inline">\(F\)</span>, and a nearly flat direction makes an optimum harder to locate reliably. This sketch is general math; the native engine minimizes its own <span class="math inline">\(F_{ML}\)</span>, defined in Chapter 1, using gradients and curvature checks (<code>R/sem-optim.R</code>).</p>
+<p><em>What to remember:</em> the gradient points uphill; the Hessian describes how the slope bends.</p>
+<p><strong>A constraint narrows the search.</strong> The <strong>feasible set</strong> is every parameter choice that obeys the rule. For example, <span class="math inline">\(c(a,b)=a+b-1\leq0\)</span> permits <span class="math inline">\((0.2,0.3)\)</span> because <span class="math inline">\(c=-0.5\)</span>; this constraint is <strong>inactive</strong> there. At <span class="math inline">\((0.4,0.6)\)</span>, <span class="math inline">\(c=0\)</span>, so the rule is <strong>active</strong>: a step increasing the sum would leave the feasible set. Here <span class="math inline">\(c\)</span> is the signed constraint value and zero marks its boundary. medfit stores inequalities in this <span class="math inline">\(c\leq0\)</span> direction (<code>R/sem-constraints.R</code>).</p>
+<p><em>What to remember:</em> inactive means slack remains; active means the point touches the boundary.</p>
 <p>A constraint line has two sides, a comparison and labels of free parameters. The engine turns each line into the vector <span class="math inline">\(c(\theta) = \text{lhs} - \text{rhs}\)</span> and a sense: an equality <span class="math inline">\(c(\theta) = 0\)</span> or an inequality, always stored in the form <span class="math inline">\(c(\theta) \le 0\)</span> (a <code>&gt;</code> constraint is negated).</p>
 <section class="level3"><h3 id="linear-constraints">Linear constraints<a class="anchor" aria-label="anchor" href="#linear-constraints"></a>
 </h3>
+<p><strong>Why normalize rows?</strong> A rule such as <span class="math inline">\(a+b=1\)</span> describes the same set as <span class="math inline">\(2a+2b=2\)</span>, yet its raw coefficients are twice as large in the second writing. Their row lengths are <span class="math inline">\(\sqrt{1^2+1^2}=\sqrt2\)</span> and <span class="math inline">\(\sqrt{2^2+2^2}=2\sqrt2\)</span>. Dividing each coefficient and constant by its row length gives the same unit-length row in both cases. Here a <em>row</em> is the list of coefficients multiplying the parameters. This general normalization explains the engine’s linear-row representation below.</p>
+<p><em>What to remember:</em> unit-length rows keep a repeated rule from changing scale merely because it was rewritten.</p>
 <p>If <span class="math inline">\(c\)</span> is linear in the parameters, <span class="math inline">\(c(\theta) = a^\top\theta + b\)</span>, so two kinds of evaluation recover its pieces: <span class="math inline">\(b = c(0)\)</span> and, for each parameter <span class="math inline">\(k\)</span>, <span class="math inline">\(a_k = c(e_k) - c(0)\)</span> with <span class="math inline">\(e_k\)</span> the <span class="math inline">\(k\)</span>th unit vector. The engine does exactly this with its expression evaluator, then divides <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> by the length of <span class="math inline">\(a\)</span>. After that, <span class="math inline">\(a\)</span> has unit length, so the value of the row at <span class="math inline">\(\theta\)</span> is the signed distance from <span class="math inline">\(\theta\)</span> to the constraint’s hyperplane, and the tolerances that act on the rows themselves (the rank of the equality rows, and the test for implied inequalities in Section 5) mean the same thing for every constraint, however it was written. (The acceptance gate of Section 3 measures the distance in natural units instead, rescaling each row again.)</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">lin</span> <span class="op">&lt;-</span> <span class="fu">build</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">model</span>, <span class="st">"a + b == 1.2\ncp &lt; a\n"</span><span class="op">)</span><span class="op">)</span></span>
@@ -308,11 +314,12 @@ analytic           -0.683163 -0.338117  1</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>value_at_solution <span class="op">=</span> <span class="va">nl</span><span class="op">$</span><span class="fu">value</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code><span><span class="va">value_at_solution</span></span>
-<span>    <span class="op">-</span><span class="fl">2.775558e-17</span> </span></code></pre>
+<span>    <span class="op">-</span><span class="fl">5.551115e-17</span> </span></code></pre>
 </div>
 </div>
 <p>The central difference reproduces the analytic gradient to six decimals, and the constraint holds at the solution (the value is zero to rounding).</p>
 <p>A product that is set to zero (<code>a*b == 0</code>) is a special case. The set where it holds is two lines, <span class="math inline">\(a = 0\)</span> or <span class="math inline">\(b = 0\)</span>, that cross at <span class="math inline">\(a = b = 0\)</span>. There the gradient <span class="math inline">\((b, a)\)</span> is zero and the constraint qualification of Section 5 fails. Away from the crossing a local solver follows the branch nearest its start and can stop on the worse one, a local optimum. The engine therefore fits one linear model per factor (<code>a == 0</code>, <code>b == 0</code>), each from the default start, and keeps the one with the smaller discrepancy, a rule Chapter 5 puts to use. The two branches here give two different minima:</p>
+<p>For several zero-product constraints, it tries each combination of factors, up to 64 branches; more than 64 is an error. Each branch starts cleanly, so one branch cannot inherit an infeasible point from another.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">zp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">model</span>, <span class="st">"a*b == 0\n"</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span></span>
 <span><span class="va">branch_f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>`a == 0` <span class="op">=</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">model</span>, <span class="st">"a == 0\n"</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span><span class="op">@</span><span class="va">f</span>,</span>
@@ -348,6 +355,8 @@ analytic           -0.683163 -0.338117  1</code></pre>
 </div>
 </section></section><section class="level2"><h2 id="the-solver">2. The solver<a class="anchor" aria-label="anchor" href="#the-solver"></a>
 </h2>
+<p><strong>Why change units?</strong> In the general calculation <span class="math inline">\(x_k=\theta_k/u_k\)</span>, <span class="math inline">\(\theta_k\)</span> is parameter <span class="math inline">\(k\)</span>, <span class="math inline">\(u_k&gt;0\)</span> is its natural unit, and <span class="math inline">\(x_k\)</span> is its unitless working coordinate. For two parameters <span class="math inline">\(\theta=(0.2,200)\)</span> with <span class="math inline">\(u=(1,1000)\)</span>, <span class="math inline">\(x=(0.2,0.2)\)</span>: a change of <span class="math inline">\(0.1\)</span> in either <span class="math inline">\(x\)</span> coordinate is one tenth of that parameter’s natural unit. The rule <span class="math inline">\(a+b/1000=0.4\)</span> becomes <span class="math inline">\(x_1+x_2=0.4\)</span>; its normal vector <span class="math inline">\((1,1)\)</span> has length <span class="math inline">\(\sqrt2\)</span>, so the unit-length row is <span class="math inline">\((x_1+x_2-0.4)/\sqrt2\)</span>. At <span class="math inline">\(x=(0.2,0.1)\)</span> its signed value is <span class="math inline">\(-0.07071068\)</span>. A tolerance on this normalized distance has a common meaning across the two coordinates. medfit obtains the <span class="math inline">\(u_k\)</span> from <code>.sem_step_floor()</code> and checks constraint distance in natural units (<code>R/sem-constraints.R</code>).</p>
+<p><em>What to remember:</em> scale parameters first, then compare constraint distances on one scale.</p>
 <p>The engine minimizes <span class="math inline">\(F_{ML}(\theta)\)</span> subject to the rows with SLSQP, the sequential least-squares quadratic programming algorithm of Kraft, as implemented in the NLopt library and called through the <code>nloptr</code> package. At each iterate SLSQP forms a quadratic model of the objective (the gradient plus a quasi-Newton approximation of the curvature of the Lagrangian) and linearizes the constraints. It then solves that small quadratic program for a step and chooses a step length by a line search on a merit function that penalizes constraint violation.</p>
 <p>Two engine choices matter to what follows.</p>
 <p><strong>Natural units.</strong> SLSQP works on <span class="math inline">\(x = \theta / u\)</span> with <span class="math inline">\(u_k\)</span> the parameter’s natural unit (<code>.sem_step_floor()</code>): the standard deviation of the target over that of the source for a path, the product of the two standard deviations for a (co)variance. The objective, gradient and constraint rows are mapped into <span class="math inline">\(x\)</span> (a linear row <span class="math inline">\(a^\top\theta + b\)</span> becomes the row <span class="math inline">\((a \odot u)^\top x + b\)</span>), and the solution is mapped back. A step of size 1 then means about the same in every parameter, whatever the units of the data.</p>
@@ -399,11 +408,13 @@ mediator1~~mediator1     outcome~~outcome treatment~~treatment
  [6,]    0.4240  3.19e-01
  [7,]    0.0105  1.19e-09
  [8,]    0.0105  2.99e-12
- [9,]    0.0105  6.25e-15
-[10,]    0.0105  2.78e-17</code></pre>
+ [9,]    0.0105  6.19e-15
+[10,]    0.0105  0.00e+00</code></pre>
 </div>
 </div>
 <p>Rows that repeat one another are repeated evaluations at the same point (the <code>nloptr</code> wrapper evaluates the start once to check the objective’s return type, and the solver evaluates some points twice). The trace starts at a point that violates the constraint (<code>violation</code> is <span class="math inline">\(|cp - ab|\)</span>), the violation falls by many orders of magnitude over the last evaluations, and the objective settles at 0.0104708. The run ended with NLopt status 3; the engine treats the codes 1 (generic success), 3 (the objective stopped changing, <code>ftol_rel</code>) and 4 (the parameters stopped moving, <code>xtol_rel</code>) as successes.</p>
+<p><strong>Local versus global.</strong> A <em>local</em> optimum wins against nearby feasible points; a <em>global</em> optimum wins against every feasible point. In a two-parameter general-math sketch, minimize <span class="math inline">\(F(a,b)=(a-1)^2+(b-2)^2\)</span> subject to <span class="math inline">\(ab=0\)</span>. The branch <span class="math inline">\(a=0\)</span> has best point <span class="math inline">\((0,2)\)</span> and <span class="math inline">\(F=1\)</span>; the branch <span class="math inline">\(b=0\)</span> has best point <span class="math inline">\((1,0)\)</span> and <span class="math inline">\(F=4\)</span>. Each wins on its own branch, but only <span class="math inline">\(F=1\)</span> wins globally. Multiple starts can reveal such disagreement; agreement alone cannot prove that an unexplored branch is worse. medfit records the comparison in <code>diagnostics$optimum</code> (<code>R/sem-optim.R</code>).</p>
+<p><em>What to remember:</em> several agreeing starts provide evidence; only a valid lower bound certifies the global minimum.</p>
 <p><strong>Several starts.</strong> A nonlinear constraint can have several local optima (<code>a*b &gt; 0.1</code> is feasible on two separate regions), so for such a model the engine runs every start (the default one and up to <code>n_starts - 1</code> perturbed ones, drawn under a fixed seed derived from the model) and keeps the accepted solution with the lowest discrepancy, warning if the accepted ones disagree. The attempts of this fit, from the engine’s own optimizer:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">o</span> <span class="op">&lt;-</span> <span class="fu">medfit</span><span class="fu">:::</span><span class="fu">.sem_optimize</span><span class="op">(</span><span class="va">ram</span>, <span class="va">smp</span>, <span class="va">start</span>, constraints <span class="op">=</span> <span class="va">cons</span><span class="op">)</span></span>
@@ -415,31 +426,42 @@ mediator1~~mediator1     outcome~~outcome treatment~~treatment
 <span><span class="va">attempts</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>   start status accepted discrepancy decrement
-1      1      3     TRUE  0.01047077   6.1e-14
-2      2      3     TRUE  0.01047077   6.3e-14
-3      3      3     TRUE  0.01047077   3.4e-14
-4      4      3     TRUE  0.01047077   3.7e-14
-5      5      3     TRUE  0.01047077   8.9e-14
-6      6      3     TRUE  0.01047077   1.1e-14
-7      7      3     TRUE  0.01047077   1.1e-13
-8      8      3     TRUE  0.01047077   6.4e-14
-9      9      3     TRUE  0.01047077   9.1e-16
-10    10      3     TRUE  0.01047077   6.8e-14
-11    11      3     TRUE  0.01047077   5.7e-15
-12    12      3     TRUE  0.01047077   1.0e-13
-13    13      3     TRUE  0.01047077   4.3e-15</code></pre>
+1      1      3     TRUE  0.01047077   6.5e-14
+2      2      3     TRUE  0.01047077   1.1e-13
+3      3      3     TRUE  0.01047077   3.5e-14
+4      4      3     TRUE  0.01047077   7.0e-14
+5      5      3     TRUE  0.01047077   2.4e-14
+6      6      3     TRUE  0.01047077   1.0e-14
+7      7      3     TRUE  0.01047077   4.8e-14
+8      8      3     TRUE  0.01047077   4.3e-15
+9      9      3     TRUE  0.01047077   8.3e-16
+10    10      3     TRUE  0.01047077   5.4e-16
+11    11      3     TRUE  0.01047077   5.5e-15
+12    12      3     TRUE  0.01047077   7.1e-15
+13    13      3     TRUE  0.01047077   5.5e-14</code></pre>
 </div>
 </div>
 <p>All 13 starts are accepted and reach the same discrepancy (the largest spread is 8.9e-16), so no warning is raised.</p>
+<p>For nonlinear rows, inspect <code>fit@diagnostics$optimum</code> as well as the acceptance gate. Its <code>status</code> is <code>unique</code> when the best-of-starts comparison does not apply, <code>certified</code> when a feasible fit without the nonlinear rows supplies the lower bound on discrepancy, <code>agreed</code> when several accepted starts agree within <code>1e-6</code>, <code>disagreed</code> when they do not, and <code>single</code> when only one start is accepted. The record also gives <code>n_starts</code>, <code>n_accepted</code>, <code>spread</code>, <code>best_of</code> and <code>certified</code>. <code>agreed</code> and <code>single</code> do not establish a global optimum; a better basin may remain. Increase <code>n_starts</code> when that matters, especially after a <code>disagreed</code> or <code>single</code> verdict.</p>
+<p>For a nonlinear row, the engine also tries the unconstrained estimate and sign-flipped path starts, since a product constraint can separate sign branches. Variances named in those rows have a solver floor of <code>1e-4</code> times their natural unit. An active floor warns that the constrained optimum may be improper. These safeguards apply only to models with nonlinear rows.</p>
 </section><section class="level2"><h2 id="the-acceptance-gate">3. The acceptance gate<a class="anchor" aria-label="anchor" href="#the-acceptance-gate"></a>
 </h2>
+<p><strong>Why check beyond the solver’s stop message?</strong> A small change in <span class="math inline">\(F\)</span> can mean either “at the bottom” or “walking along a nearly flat slope.” For the earlier <span class="math inline">\(F(a,b)\)</span> at <span class="math inline">\((0,0)\)</span>, the <span class="math inline">\(a\)</span> slope is <span class="math inline">\(-2\)</span>, so increasing <span class="math inline">\(a\)</span> lowers <span class="math inline">\(F\)</span> despite a smaller slope than the <span class="math inline">\(b\)</span> slope <span class="math inline">\(-16\)</span>. The gate therefore checks feasibility, curvature, and remaining improvement (<code>R/sem-constraints.R</code>).</p>
+<p><em>What to remember:</em> a stop code records why the algorithm stopped, not whether the point is an optimum.</p>
 <p>A solver can stop for reasons that have nothing to do with having found the optimum. The engine therefore accepts a solution only if it passes three checks, in this order (besides guards against a non-finite Hessian, an implied covariance that is not positive definite, and a nearly singular reduced Hessian):</p>
 <ol type="1">
 <li>the solver status is a success code (1, 3 or 4);</li>
 <li>every constraint holds to <span class="math inline">\(10^{-6}\)</span> in natural units;</li>
-<li>the <strong>Newton decrement</strong> on the active-constraint null space is at most <span class="math inline">\(10^{-3}\)</span>, with a positive definite reduced Hessian.</li>
+<li>the <strong>Newton decrement</strong> on the active-constraint null space is at most <span class="math inline">\(10^{-3}\)</span>, with a positive definite reduced Hessian whose smallest Jacobi-scaled eigenvalue is at least <span class="math inline">\(10^{-4}\)</span>.</li>
 </ol>
+<p>For curved rows, the active Jacobian is recomputed at the candidate point, not reused from the start. The reduced curvature includes the Lagrangian Hessian: the objective Hessian plus multiplier-weighted constraint Hessians, whose entries come from central differences of the row Jacobians.</p>
 <p>Check 3 needs a derivation. We build it in four steps.</p>
+<p><strong>Multipliers before the matrix algebra.</strong> For general math, minimize <span class="math inline">\(F(a)=(a-2)^2\)</span> under <span class="math inline">\(c(a)=a-1\leq0\)</span>. At the active point <span class="math inline">\(a=1\)</span>, <span class="math inline">\(F'(1)=-2\)</span> and <span class="math inline">\(c'(1)=1\)</span>. The Lagrangian <span class="math inline">\(L(a,\lambda)=F(a)+\lambda c(a)\)</span> has slope <span class="math inline">\(-2+\lambda=0\)</span>, so the multiplier is <span class="math inline">\(\lambda=2\geq0\)</span>. It measures the benefit of loosening this upper limit: increasing the limit by a small amount can lower the best <span class="math inline">\(F\)</span> by about twice that amount. For an inactive inequality the multiplier is zero; together with feasibility, stationarity, and <span class="math inline">\(\lambda c=0\)</span>, these are the first-order KKT conditions. For a wrong-sign example, minimize <span class="math inline">\(F(a)=a^2\)</span> at the same boundary <span class="math inline">\(a=1\)</span>: <span class="math inline">\(F'(1)=2\)</span> gives <span class="math inline">\(\lambda=-2\)</span>. Moving <em>inward</em> to <span class="math inline">\(a&lt;1\)</span> lowers <span class="math inline">\(F\)</span>, so this active point is not a constrained minimum. With the <span class="math inline">\(c\leq0\)</span> convention, a negative multiplier does <strong>not</strong> mean that loosening the upper limit lowers the optimal <span class="math inline">\(F\)</span>; it means releasing the claim that this boundary must stay active allows an improving feasible move. medfit checks inequality signs as a warning, with an active-bound inward-slope rejection (<code>R/sem-constraints.R</code>).</p>
+<p><em>What to remember:</em> for <span class="math inline">\(c\leq0\)</span>, an active minimum needs a nonnegative inequality multiplier.</p>
+<p><strong>Only allowed directions count.</strong> In the two-parameter sketch <span class="math inline">\(F(a,b)=(a-1)^2+4(b-2)^2\)</span>, impose the active equality <span class="math inline">\(a=0\)</span>. Its Jacobian row is <span class="math inline">\(M=(1,0)\)</span>; <span class="math inline">\(Mp=0\)</span> requires a feasible small move <span class="math inline">\(p=(0,t)\)</span>, where <span class="math inline">\(t\)</span> is any number. A null-space basis is <span class="math inline">\(Z=(0,1)^\top\)</span>. The objective Hessian is <span class="math inline">\(H=\operatorname{diag}(2,8)\)</span>, so the reduced Hessian is <span class="math inline">\(H_r=Z^\top HZ=8\)</span>: curvature in the forbidden <span class="math inline">\(a\)</span> direction does not enter. At <span class="math inline">\((a,b)=(0,1.9)\)</span>, the reduced gradient is <span class="math inline">\(g_r=Z^\top\nabla F=-0.8\)</span>. The Newton decrement is <span class="math inline">\(\sqrt{g_r^\top H_r^{-1}g_r}=\sqrt{0.8^2/8}=0.2828427\)</span>. This is the dimensionless remaining-improvement number the medfit gate compares with <span class="math inline">\(10^{-3}\)</span>; this point fails. For curved rows the gate instead uses the Lagrangian’s Hessian, as derived below (<code>R/sem-constraints.R</code>).</p>
+<p><em>What to remember:</em> project onto feasible directions, then compare the decrement with <span class="math inline">\(10^{-3}\)</span>.</p>
+<p><strong>Why scale the curvature test?</strong> Jacobi scaling divides Hessian entry <span class="math inline">\(H_{ij}\)</span> by <span class="math inline">\(\sqrt{H_{ii}H_{jj}}\)</span>, where <span class="math inline">\(i,j\)</span> name coordinates with positive diagonal curvature. For <span class="math inline">\(H=\operatorname{diag}(2,200)\)</span>, the scaled matrix is the identity and both eigenvalues are 1, although the raw curvatures differ by a factor of 100. A near-flat coupled example is <span class="math inline">\(H=\left(\begin{smallmatrix}1&amp;0.99999\\0.99999&amp;1\end{smallmatrix}\right)\)</span>: its smallest scaled eigenvalue is <span class="math inline">\(0.00001\)</span>. An eigenvalue measures curvature along a special direction; a value near zero means the curvature test cannot reliably separate that direction from a flat one. medfit rejects a reduced Hessian whose smallest Jacobi-scaled eigenvalue is below <span class="math inline">\(10^{-4}\)</span> (<code>R/sem-constraints.R</code>).</p>
+<p><em>What to remember:</em> scaling removes individual coordinate units before testing for near-flat curvature.</p>
 <p><strong>Step 1: the stationarity condition.</strong> At a constrained minimum with active rows <span class="math inline">\(M\)</span> (the Jacobian of the active constraints, one row each), the gradient <span class="math inline">\(g\)</span> of the objective is a combination of the constraint gradients: <span class="math inline">\(g + M^\top\lambda = 0\)</span>, the Lagrange condition, with <span class="math inline">\(\lambda\)</span> the <strong>multipliers</strong>. Equivalently, <span class="math inline">\(g\)</span> has no component along any direction <span class="math inline">\(p\)</span> that keeps the constraints, <span class="math inline">\(M p = 0\)</span>.</p>
 <p><strong>Step 2: the null space.</strong> Let <span class="math inline">\(Z\)</span> be a matrix whose orthonormal columns span the null space of <span class="math inline">\(M\)</span>: every feasible direction is <span class="math inline">\(p = Z w\)</span>. The <strong>reduced gradient</strong> is <span class="math inline">\(g_r = Z^\top g\)</span>, which is zero at a constrained stationary point.</p>
 <p><strong>Step 3: the curvature along the constraints.</strong> For a linear constraint the second derivative of the objective along <span class="math inline">\(Z\)</span> is <span class="math inline">\(H_r = Z^\top H Z\)</span> with <span class="math inline">\(H\)</span> the Hessian of the objective. For a curved constraint the constraint itself bends, and the right curvature is that of the <strong>Lagrangian</strong>, <span class="math inline">\(H_L = H + \sum_i \lambda_i \nabla^2 c_i\)</span> over the active nonlinear rows, so <span class="math inline">\(H_r = Z^\top H_L Z\)</span>. (Reason: along a curve <span class="math inline">\(\theta(t)\)</span> that stays on the constraint, the second derivative of the objective is <span class="math inline">\(\dot\theta^\top H \dot\theta + g^\top \ddot\theta\)</span>, and the Lagrange condition <span class="math inline">\(g = -M^\top\lambda\)</span> turns the second term into <span class="math inline">\(-\lambda^\top M \ddot\theta\)</span>, which the curvature of the constraint, <span class="math inline">\(\ddot c = 0 = M\ddot\theta + \dot\theta^\top \nabla^2 c\,\dot\theta\)</span>, converts to <span class="math inline">\(+\lambda\,\dot\theta^\top\nabla^2 c\,\dot\theta\)</span>.)</p>
@@ -458,7 +480,7 @@ mediator1~~mediator1     outcome~~outcome treatment~~treatment
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"constraint distance (natural units):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="va">act</span><span class="op">$</span><span class="va">dist</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>constraint distance (natural units): 8.94e-18 </code></pre>
+<pre><code>constraint distance (natural units): 1.79e-17 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"null space basis Z:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">act</span><span class="op">$</span><span class="va">z</span><span class="op">)</span>, <span class="st">"x"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">act</span><span class="op">$</span><span class="va">z</span><span class="op">)</span>, <span class="st">"(6 parameters, 1 active row)\n"</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
@@ -476,7 +498,7 @@ mediator1~~mediator1     outcome~~outcome treatment~~treatment
 <pre class="r cell-code"><code><span><span class="va">reduced_gradient</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">crossprod</a></span><span class="op">(</span><span class="va">act</span><span class="op">$</span><span class="va">z</span>, <span class="va">x_grad</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"size of the reduced gradient:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">reduced_gradient</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>size of the reduced gradient: 9.58e-14 </code></pre>
+<pre><code>size of the reduced gradient: 1.2e-13 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>objective_hessian_only <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/eigen.html" class="external-link">eigen</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">crossprod</a></span><span class="op">(</span><span class="va">act</span><span class="op">$</span><span class="va">z</span>, <span class="va">x_hess</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">act</span><span class="op">$</span><span class="va">z</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">values</span>,</span>
 <span>      with_lagrangian_term <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/eigen.html" class="external-link">eigen</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">crossprod</a></span><span class="op">(</span><span class="va">act</span><span class="op">$</span><span class="va">z</span>, <span class="va">lagrangian</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">act</span><span class="op">$</span><span class="va">z</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">values</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">rd</span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span></code></pre>
@@ -508,7 +530,7 @@ with_lagrangian_term   3.408 2.360 1.999 1.075    1</code></pre>
 <span><span class="va">verdicts</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>                      accepted decrement
-optimum                   TRUE  6.28e-14
+optimum                   TRUE  6.51e-14
 feasible, not optimal    FALSE  3.96e-02
 infeasible               FALSE        NA
 bad solver status        FALSE        NA
@@ -519,7 +541,7 @@ infeasible            constraint 'cp == a*b' is violated by 3.22e-02 in natural 
 bad solver status                              nloptr status -4 is not a success code</code></pre>
 </div>
 </div>
-<p>(A fourth check is warn-only: the signs of the multipliers of active inequalities and bounds are examined, and a wrong sign produces a warning, except for an active bound, which rejects the solution.) Each failing point is rejected for the right reason. The second one satisfies the constraint exactly and is rejected only because its decrement is large: that is the stationarity check doing its job.</p>
+<p>(A fourth check examines multiplier signs. For an active inequality, a wrong sign warns: dependent active rows can make individual multipliers ambiguous. For an active bound, a gradient pointing into the feasible interior rejects the point, because moving inward would lower the objective.) Each failing point is rejected for the right reason. The second one satisfies the constraint exactly and is rejected only because its decrement is large: that is the stationarity check doing its job.</p>
 <p>Finally the scale-invariance claim. Multiply <code>outcome</code> by 1000. The model keeps its form, because <code>cp == a*b</code> is preserved when <span class="math inline">\(b\)</span> and <span class="math inline">\(cp\)</span> are both multiplied by 1000 (so <span class="math inline">\(cp' = 1000\,cp = a \cdot 1000\,b = a b'\)</span>). Map the feasible but non-optimal point of the last test to the new scale (<span class="math inline">\(b\)</span> and <span class="math inline">\(cp\)</span> times 1000, the residual variance of <code>outcome</code> times <span class="math inline">\(10^6\)</span>), build the new model on the rescaled data, and compare the decrements:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">d_big</span> <span class="op">&lt;-</span> <span class="va">d</span></span>
@@ -588,9 +610,9 @@ bad solver status                              nloptr status -4 is not a success
 <pre><code>  iteration constraint_violation decrement distance_from_exact_optimum
 1         0             1.19e-09  8.80e-06                    8.10e-06
 2         1             3.28e-12  1.07e-10                    1.18e-10
-3         2             2.78e-17  1.14e-13                    8.32e-14
-4         3             2.78e-17  8.11e-15                    6.98e-14
-5         4             2.78e-17  9.06e-16                    8.02e-14</code></pre>
+3         2             2.78e-17  1.01e-13                    2.15e-13
+4         3             2.78e-17  9.44e-14                    1.40e-13
+5         4             5.55e-17  6.98e-15                    4.55e-14</code></pre>
 </div>
 </div>
 <p>The distance from the optimum falls from 8.1e-06 to 1.2e-10 in one step and to rounding error in the next, and the constraint violation and the decrement fall with it: Newton’s method converges quadratically near a solution, so the error is roughly squared at each step until it reaches rounding error. The engine’s own polish, <code>.sem_polish()</code>, adds safeguards (it takes at most 8 steps, keeps a step only while a merit function falls, refuses to move more than <span class="math inline">\(10^{-2}\)</span> natural units, and gives up if the active set changes or the KKT matrix is singular), and its result is accepted only if the gate accepts it again and the discrepancy does not rise by more than <span class="math inline">\(10^{-8}\)</span>. It lands where our bare iteration does:</p>
@@ -602,13 +624,15 @@ bad solver status                              nloptr status -4 is not a success
 <span>  discrepancy_after <span class="op">=</span> <span class="fu">medfit</span><span class="fu">:::</span><span class="fu">.sem_fml</span><span class="op">(</span><span class="va">polished</span>, <span class="va">ram</span>, <span class="va">smp</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>polish_vs_my_iteration   polish_vs_engine_fit     discrepancy_before
-          0.000000e+00           8.021361e-14           1.047077e-02
+          4.773959e-15           4.074519e-14           1.047077e-02
      discrepancy_after
           1.047077e-02 </code></pre>
 </div>
 </div>
 </section><section class="level2"><h2 id="redundant-rows">5. Redundant rows<a class="anchor" aria-label="anchor" href="#redundant-rows"></a>
 </h2>
+<p><strong>What can a repeated rule do?</strong> In general math, <span class="math inline">\(a+b=1\)</span> and <span class="math inline">\(2a+2b=2\)</span> describe one rule: the second active gradient <span class="math inline">\((2,2)\)</span> is twice the first <span class="math inline">\((1,1)\)</span>, so their two-row matrix has rank 1. The feasible set is well defined, but a solver that treats them as two independent directions cannot assign a unique pair of multipliers; its constraint step can stall. LICQ is the name for the requirement that active gradient rows be linearly independent. Changing the second rule to <span class="math inline">\(2a+2b=3\)</span> instead makes the set empty. medfit sends an independent equality subset to SLSQP and still checks every original row (<code>R/sem-constraints.R</code>).</p>
+<p><em>What to remember:</em> duplicate active rows count once; contradictory rows remain a failure.</p>
 <p>Constraint sets sometimes repeat themselves, and that is a problem for a solver. SLSQP assumes the active constraint gradients are linearly independent (the <em>linear independence constraint qualification</em>, LICQ); when two active rows are parallel it can stop with an error although the constraints are consistent. The engine therefore protects the solver in two ways.</p>
 <p><strong>Dependent equalities.</strong> The rows handed to the solver are an independent subset (chosen from a pivoted QR decomposition of the row matrix, which finds which rows add rank), while the acceptance gate still checks every row. So a harmless repeat is dropped, and a contradiction is still caught:</p>
 <div class="cell">
@@ -671,7 +695,7 @@ largest_estimate_difference
 <pre class="r cell-code"><code><span><span class="va">violated</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">model</span>, <span class="st">"a + b == 0.8\na + b &lt; 0.5\n"</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span>, error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">violated</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "no start converged (5 tried); best attempt: status 5, stationarity NA; nloptr status 5 is not a success code; constraint 'a + b &lt; 0.5' is violated by 1.35e-01 in natural units"</code></pre>
+<pre><code>[1] "no start converged (5 tried); best attempt: status -4, stationarity NA; nloptr status -4 is not a success code; constraint 'a + b &lt; 0.5' is violated by 1.19e-01 in natural units"</code></pre>
 </div>
 </div>
 </section><section class="level2"><h2 id="the-covariance-of-a-constrained-fit">6. The covariance of a constrained fit<a class="anchor" aria-label="anchor" href="#the-covariance-of-a-constrained-fit"></a>
@@ -690,7 +714,7 @@ V = Z\,(Z^\top I\, Z)^{-1} Z^\top ,
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>difference_from_engine <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">v_hand</span> <span class="op">-</span> <span class="va">fit_exp</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span>, largest_entry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">v_hand</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>difference_from_engine          largest_entry
-          1.084202e-19           8.211061e-03 </code></pre>
+          8.673617e-19           8.211061e-03 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"rank of V:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/qr.html" class="external-link">qr</a></span><span class="op">(</span><span class="va">fit_exp</span><span class="op">@</span><span class="va">vcov</span>, tol <span class="op">=</span> <span class="fl">1e-10</span><span class="op">)</span><span class="op">$</span><span class="va">rank</span>, <span class="st">"of"</span>, <span class="va">ram</span><span class="op">$</span><span class="va">q</span>, <span class="st">"parameters\n"</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
@@ -733,9 +757,9 @@ df          df 1.000000 1.000000</code></pre>
 <span>  se_difference_observed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">fit_obs</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu">lavaan</span><span class="fu">::</span><span class="fu">vcov</span><span class="op">(</span><span class="va">lv_obs</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">nm</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>largest_estimate_difference      se_difference_expected
-               3.583168e-07                2.533682e-08
+               3.408639e-07                2.410271e-08
      se_difference_observed
-               5.013028e-08 </code></pre>
+               4.750614e-08 </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -766,7 +790,7 @@ df          df 1.000000 1.000000</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>largest_estimate_difference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">est_mx</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span> <span class="op">-</span> <span class="va">fit</span><span class="op">@</span><span class="va">theta</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code><span><span class="va">largest_estimate_difference</span></span>
-<span>               <span class="fl">8.959108e-08</span> </span></code></pre>
+<span>               <span class="fl">8.959096e-08</span> </span></code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">run_mx</span><span class="op">)</span><span class="op">$</span><span class="va">parameters</span><span class="op">$</span><span class="va">Std.Error</span>, <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">run_mx</span><span class="op">)</span><span class="op">$</span><span class="va">parameters</span><span class="op">$</span><span class="va">name</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
