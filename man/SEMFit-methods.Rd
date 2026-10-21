@@ -68,7 +68,10 @@ error (one fit is not at its global optimum). When a bound or an
 inequality on a tested parameter is active at the restricted fit, the null
 lies on the boundary of the parameter space, the statistic is a mixture of
 chi-squares, and the function warns that the p-value is not valid, as
-\code{\link[=mbco_sem]{mbco_sem()}} does. Returns an object of class \code{"anova"} with columns \code{Df},
+\code{\link[=mbco_sem]{mbco_sem()}} does. The p-value is still returned; the logical attribute
+\code{attr(x, "p_valid")} (named by row, \code{NA} for the first) is \code{FALSE} for each
+such row, so code can read the verdict without parsing the warning. Returns
+an object of class \code{"anova"} with columns \code{Df},
 \code{Chisq} (n times the discrepancy), \verb{Chisq diff}, \verb{Df diff} and
 \verb{Pr(>Chisq)}. Name rows by naming the arguments after the first.
 \item \code{confint()} returns Wald (normal) intervals for the free parameters and

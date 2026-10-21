@@ -1,5 +1,12 @@
 # medfit (development version)
 
+## New features
+
+* `anova()` on `SEMFit` records whether each chi-square p-value is valid in the logical attribute `p_valid`
+  (named by row, `NA` for the first row). It is `FALSE` where the null sits on the boundary of the parameter space,
+  the case that already warned. The p-value and the warning are unchanged; code that had to read the warning text
+  can now test `attr(x, "p_valid")`.
+
 ## Bug fixes
 
 * `bootstrap_mediation(method = "nonparametric")`, with or without `cluster =`, now draws every resample in the
