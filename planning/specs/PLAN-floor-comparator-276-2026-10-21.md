@@ -57,6 +57,14 @@ Non-goals (separate slices of #276): Tier 1 charts, AUGLAG fallback, `solver =`,
    green because the gate change has not merged.
 5. **No new warning class, no API change.** Test-only; `NEWS.md` needs no entry; `test-api-freeze.R` is untouched.
 
+## Review protocol
+
+After each phase a Codex adverse review runs before the next phase starts (G1 after Phase 1, G2 after Phase 2, G3 after
+Phase 3). Each review: one `codex-companion.mjs adversarial-review --wait --base origin/dev` call with a focus text
+naming what to attack, findings triaged in the review tables at the end of this plan (accepted, rejected with reason,
+or deferred with an issue), fixes committed before the phase is called done. A "needs-attention" verdict with an
+untriaged finding blocks the next phase. The plan's own two earlier adverse reviews (AR1-AR7) are the precedent.
+
 ## Dependency graph
 
 ```
@@ -96,6 +104,7 @@ T1 floored oracle (oracle213.R)
   Files: `tests/sim/oracle213.R`. Dependencies: T1.
 
 ### Checkpoint: oracle
+- [ ] **Codex adverse review G1** (before Phase 2): `codex-companion.mjs adversarial-review "--wait --base origin/dev <focus: the floored oracle, T2 controls, any assumption about R/sem-optim.R>"` over the Phase 1 diff; triage every finding (accept/reject with reason) in the plan's review table; fixes land before T3 starts.
 - [ ] Oracle self-checks pass, planted defect is caught, old gate results unchanged (`Rscript tests/sim/run-gates.R --sim --only nonlinear-profile` still passes).
 
 ### Phase 2: the gate
@@ -131,6 +140,7 @@ T1 floored oracle (oracle213.R)
   Files: `tests/sim/run-gates.R`, `tests/sim/sem-nonlinear-profile-gate.R`, `tests/sim/results/sem-nonlinear-profile-gate-2026-10-21.csv` (+ dated name if the date moves). Dependencies: T3.
 
 ### Checkpoint: macOS evidence
+- [ ] **Codex adverse review G2** (before Phase 3): same command over the Phase 2 diff (gate rule, driver recomputation, mutants, baseline CSV); focus on silent passes, label/number consistency and mutant coverage; triage in the review table; fixes land before T5 dispatches.
 - [ ] mutants pass, sim passes, lint clean, PR opened to `dev`.
 
 ### Phase 3: runner evidence
@@ -148,6 +158,7 @@ T1 floored oracle (oracle213.R)
   Files: `.STATUS`. Dependencies: T4.
 
 ### Checkpoint: complete
+- [ ] **Codex adverse review G3** (before merge): over the final PR diff plus the T5 run records (counts per dispatch); focus on whether the evidence supports the merge condition; triage in the review table.
 - [ ] PR merged on green; #276 comment states what the comparator established and what it did not (no certification); the solver slice is scoped from the measured `disproved` count.
 
 ## Risks and mitigations
