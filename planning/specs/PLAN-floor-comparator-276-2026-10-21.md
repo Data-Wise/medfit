@@ -141,11 +141,11 @@ T1 floored oracle (oracle213.R)
 
 ### Checkpoint: macOS evidence
 - [x] **Codex adverse review G2** (done 2026-10-21, triage in the G2 table) (before Phase 3): same command over the Phase 2 diff (gate rule, driver recomputation, mutants, baseline CSV); focus on silent passes, label/number consistency and mutant coverage; triage in the review table; fixes land before T5 dispatches.
-- [ ] mutants pass, sim passes, lint clean, PR opened to `dev`.
+- [x] mutants pass, sim passes, lint clean, PR opened to `dev` (#290).
 
 ### Phase 3: runner evidence
 
-- [ ] **T5: validate on the runner and record** (S)
+- [x] **T5: validate on the runner and record** (S) (done 2026-10-21: the first dispatches showed a disproved wrong-branch row on the runner; root cause and fix in #292 (status -4 accepted when the gate's checks pass, plus a restoration polish); after the fix and the rebase of #290, 5 of 5 dispatches passed 144/144 with zero disproved floor rows)
   Description: run `gh workflow run gates.yaml --ref <branch>` on the PR branch (the runner is OpenBLAS, see memory
   `gates-runner-uses-openblas`). Expected outcomes and what each means:
   - all strict and agreeing: record, no further action
@@ -158,8 +158,8 @@ T1 floored oracle (oracle213.R)
   Files: `.STATUS`. Dependencies: T4.
 
 ### Checkpoint: complete
-- [ ] **Codex adverse review G3** (before merge): over the final PR diff plus the T5 run records (counts per dispatch); focus on whether the evidence supports the merge condition; triage in the review table.
-- [ ] PR merged on green; #276 comment states what the comparator established and what it did not (no certification); the solver slice is scoped from the measured `disproved` count.
+- [x] **Codex adverse review G3** (done 2026-10-21: one finding, the critical-row checks used `all()` over a possibly empty set and could pass with `qhat`/`zero` rows missing; fixed in `fade4fa` with a `floor rows complete` check and the `floor_critical_missing` mutant; the five runner passes were judged real evidence) (before merge): over the final PR diff plus the T5 run records (counts per dispatch); focus on whether the evidence supports the merge condition; triage in the review table.
+- [x] PR merged on green (#290 `31e761b`, with the #292 fix `a00b355`); #276 comment states what the comparator established and what it did not (no certification); the solver slice is scoped from the measured `disproved` count.
 
 ## Risks and mitigations
 
@@ -174,7 +174,7 @@ T1 floored oracle (oracle213.R)
 
 ## Open questions
 
-0. `gates.yaml` runs automatically only on PRs to `main` and is not a required check (Codex AR7), so "zero disproved
+0. SETTLED 2026-10-21: `gates (rest)` and `gates (reliability)` are now required on `main` (maintainer's change; `dev` stays advisory, GRILL D2). Original text: `gates.yaml` runs automatically only on PRs to `main` and was not a required check (Codex AR7), so "zero disproved
    rows" is a manual merge condition, not an enforced one. Making `gates (rest)` required for PRs to `dev` is a
    repository setting and the maintainer's call; until then the merge condition is enforced by this plan and by the
    reviewer. Recommendation: decide before the solver slice, not before T1.

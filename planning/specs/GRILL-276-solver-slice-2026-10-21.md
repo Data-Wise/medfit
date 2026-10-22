@@ -14,6 +14,6 @@ Target: next steps for medfit #276 once the floored comparator exists (PR #289 m
 
 ## Open questions
 
-- The 5 gate dispatches on `feature/floor-gate-276` (post-G2 head) decide D1 and D3; record the per-run floor-row counts in `.STATUS` and on #276.
-- The `main` branch-protection change (D2) is the maintainer's to make; not done by this session.
+- RESOLVED 2026-10-21: the runner did show a disproved floor row before the fix. Cause: correct-basin starts ended at NLopt status -4 and were rejected, so a wrong-branch start won. #292 fixed it (accept -4 when the gate's checks pass, plus a restoration polish), and #290 then passed 5 of 5 runner dispatches with zero disproved rows and landed. D1 therefore did not keep #290 draft after the fix; D3's in-package outer certificate was not needed for this failure and #276 is closed (it stays optional hardening; D4/D5 status vocabulary is not built).
+- DONE 2026-10-21 (D2): the maintainer made `gates (rest)` and `gates (reliability)` required on `main`.
 - Syncing the older plan's `slsqp_legacy` text to D18 (permanent backup) is still owed.
