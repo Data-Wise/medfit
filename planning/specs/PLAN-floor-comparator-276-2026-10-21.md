@@ -109,7 +109,7 @@ T1 floored oracle (oracle213.R)
 
 ### Phase 2: the gate
 
-- [ ] **T3: floor-fixture rows compare LR with the floored oracle** (M)
+- [x] **T3: floor-fixture rows compare LR with the floored oracle** (M) (done 2026-10-21 on `feature/floor-gate-276`; macOS: all six floor rows strict, gap 2e-10 against the independent oracle at LR ~ 935; mutants `nofloororacle` and `halffloor` exit 1. Deviation: the floor unit is computed in the gate from the data (divisor-n variance, the solver's rule) and verified by the numeric fitted-`Vy` check, instead of calling `medfit:::.sem_step_floor`; `.sem_var_floor` and `.sem_bound_window` are read from the namespace. `halffloor` (oracle at half the solver floor) replaces the planned `noclip` gate mutant, which would be identical to `nofloororacle` without editing the oracle)
   Description: in the `floor_case` branch compute `floor_unit` and the two floors, call `or213_lr(d, q_ach, vm_min,
   vy_min)`, store it in `lr_oracle`, store `gap`, add `disproved` (logical) to the CSV. Apply decision 3. A refused fit
   keeps gap 0 and `note = "refused"`. Assert the computed floor equals the floor quoted in the "solver floor" warning
@@ -121,7 +121,7 @@ T1 floored oracle (oracle213.R)
   Verification: `Rscript tests/sim/sem-nonlinear-profile-gate.R` (full), `FAST=1` variant.
   Files: `tests/sim/sem-nonlinear-profile-gate.R`. Dependencies: T1, T2.
 
-- [ ] **T4: driver rules, mutants, baseline** (M)
+- [x] **T4: driver rules, mutants, baseline** (M) (done 2026-10-21: driver helpers `floor_numbers_ok`, `floor_disproved`, `floor_labels_ok`; self-test kinds `floor_disproved_silent`, `floor_oracle_missing`, `floor_note_lies` rejected, controls pass)
   Description: `run-gates.R` nonlinear-profile: add `lr_oracle` and `disproved` to the needed columns. The driver
   recomputes the signed difference `lr - lr_oracle` from the CSV numbers itself and asserts that `note`, `disproved`
   and `native_ok` agree with it (Codex AR3: a rule that reads only `note` cannot see a planted disproof), rejects
@@ -140,7 +140,7 @@ T1 floored oracle (oracle213.R)
   Files: `tests/sim/run-gates.R`, `tests/sim/sem-nonlinear-profile-gate.R`, `tests/sim/results/sem-nonlinear-profile-gate-2026-10-21.csv` (+ dated name if the date moves). Dependencies: T3.
 
 ### Checkpoint: macOS evidence
-- [ ] **Codex adverse review G2** (before Phase 3): same command over the Phase 2 diff (gate rule, driver recomputation, mutants, baseline CSV); focus on silent passes, label/number consistency and mutant coverage; triage in the review table; fixes land before T5 dispatches.
+- [x] **Codex adverse review G2** (done 2026-10-21, triage in the G2 table) (before Phase 3): same command over the Phase 2 diff (gate rule, driver recomputation, mutants, baseline CSV); focus on silent passes, label/number consistency and mutant coverage; triage in the review table; fixes land before T5 dispatches.
 - [ ] mutants pass, sim passes, lint clean, PR opened to `dev`.
 
 ### Phase 3: runner evidence
@@ -210,3 +210,12 @@ Codex also found the inner box optimization and the floored `q = 0` variance ref
 | # | Sev | Finding | Disposition |
 |---|-----|---------|-------------|
 | G1.1 | medium | standalone grid checks use order-one variances (|t| up to ~55); the floor fixture has t ~ 1e3 | accepted: `fixture`/`fixscan`/`fixlocal` checks added in `tests/sim/oracle213-floor-check.R` on the gate's `var-1e6-1e-6` data across its six q values (floor 1e-4 x observed variance, Vy lands exactly on 1.07e-4), a second finer and wider t scan (log t in [-20, 20] by 0.005), and 4000 random feasible candidates around the minimum including clipped u and z |
+
+### G2: Phase 2 adverse review (Codex, 2026-10-21, base origin/dev)
+
+| # | Sev | Finding | Disposition |
+|---|-----|---------|-------------|
+| G2.1 | high | up to three floor rows may refuse with no numerical scrutiny while the strict-share rule passes | accepted: the `qhat` and `zero` floor rows must be strict (driver rule "floor critical rows strict"); mutant kind `floor_refuse_critical` (refusals on qhat, zero, -qhat) is rejected. Refusals on the other four q tags stay flagged-and-allowed (the known OpenBLAS behavior), bounded by the 50% strict share |
+| G2.2 | medium | at q = 0 the oracle is evaluated at exactly 0 while the fit may be 1e-5 off | accepted: `q_ach` is recorded; a strict zero row needs `abs(q_ach) <= 1e-7` (macOS: 1.8e-17); driver rule "floor zero residual"; mutant kind `floor_zero_off` rejected |
+
+The five runner dispatches started before this triage ran the pre-G2 gate and were cancelled; T5 re-dispatches on the G2 head.
