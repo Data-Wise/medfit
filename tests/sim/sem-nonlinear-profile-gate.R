@@ -137,7 +137,7 @@ for (f in fx) {
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = refused, omx_ok = TRUE,
                                               lr = NA_real_, lr_oracle = NA_real_, gap = if (refused) 0 else NA_real_,
                                               improper = "", note = if (refused) "refused" else substr(h2, 1, 80),
-                                              disproved = FALSE, stringsAsFactors = FALSE)
+                                              disproved = FALSE, q_ach = NA_real_, stringsAsFactors = FALSE)
       next
     }
     cf <- stats::coef(h2)
@@ -170,8 +170,11 @@ for (f in fx) {
       tol_fl <- (if (tag == "zero") 1e-5 else 1e-6) * max(1, lr_fl)
       disproved <- is.finite(diff) && diff > tol_fl
       oracle_above <- is.finite(diff) && diff < -tol_fl
-      strict <- warned && at_floor && floor_ok && is.finite(lr) && request_ok && !disproved && !oracle_above
-      ok <- strict || (flagged && request_ok && !disproved && !oracle_above)
+      # At q = 0 the oracle is the exact union of the two linear nulls, so the fit must meet the constraint to an
+      # explicit bound (the 1e-5 request tolerance would let the oracle assess another constraint than the fit solved).
+      zero_ok <- tag != "zero" || abs(q_ach) <= 1e-7
+      strict <- warned && at_floor && floor_ok && is.finite(lr) && request_ok && zero_ok && !disproved && !oracle_above
+      ok <- strict || (flagged && request_ok && zero_ok && !disproved && !oracle_above)
       floor_note <- if (disproved) {
         sprintf("disproved: lr=%.8g above the floored oracle %.8g (diff %.3g, tol %.3g)", lr, lr_fl, diff, tol_fl)
       } else if (oracle_above) {
@@ -179,8 +182,8 @@ for (f in fx) {
       } else {
         sprintf(
           paste("floor contract not met and not flagged: warned=%s at_floor=%s floor_ok=%s flagged=%s finite_lr=%s",
-                "request_ok=%s q_ach=%.8g active=[%s]"),
-          warned, at_floor, floor_ok, flagged, is.finite(lr), request_ok, q_ach,
+                "request_ok=%s zero_ok=%s q_ach=%.8g active=[%s]"),
+          warned, at_floor, floor_ok, flagged, is.finite(lr), request_ok, zero_ok, q_ach,
           paste(h2@diagnostics$active_bounds, collapse = ",")
         )
       }
@@ -188,7 +191,7 @@ for (f in fx) {
                                               lr = lr, lr_oracle = lr_fl, gap = abs(diff) / max(1, lr_fl),
                                               improper = "",
                                               note = if (strict) "strict" else if (ok) "flagged" else floor_note,
-                                              disproved = disproved, stringsAsFactors = FALSE)
+                                              disproved = disproved, q_ach = q_ach, stringsAsFactors = FALSE)
       next
     }
     se_ok <- !anyNA(suppressWarnings(sqrt(diag(stats::vcov(h2)))))
@@ -197,7 +200,7 @@ for (f in fx) {
     ok <- se_ok && request_ok && gap <= tol && (tag != "qhat" || abs(lr) <= 1e-6)
     rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = ok, omx_ok = TRUE, lr = lr,
                                             lr_oracle = lr_or, gap = gap, improper = "",
-                                            disproved = FALSE,
+                                            disproved = FALSE, q_ach = q_ach,
                                             note = if (!request_ok) {
                                               "requested q not met"
                                             } else if (!se_ok) {
