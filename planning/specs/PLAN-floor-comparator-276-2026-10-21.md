@@ -1,6 +1,6 @@
 # PLAN: independent floored-profile comparator for the floor fixture (#276, slice 1)
 
-Status: draft for adverse review, 2026-10-21. Branch `docs/plan-floor-comparator-276` (plan only, no code).
+Status: revised after Codex adverse review (4 findings accepted, see end), 2026-10-21. Branch `docs/plan-floor-comparator-276` (plan only, no code).
 Origin: Codex design review of #276 (2026-10-21, findings 2, 4, 6, 7 and the "minimal first slice"); issue #276; plan
 `PLAN-constrained-lr-solver-2026-10-19.md`; closes the evidence gap left by #281/#285.
 
@@ -32,19 +32,24 @@ Non-goals (separate slices of #276): Tier 1 charts, AUGLAG fallback, `solver =`,
 
 1. **Floor enters the oracle as an explicit input, not a medfit call.** `or213_fit(d, q, vm_min = 0, vy_min = 0)`.
    The gate computes the floor value itself from the data (floor = `1e-4 x natural unit`; the natural unit is
-   `.sem_step_floor()`, an internal) via one documented formula, and a cheap self-check asserts it equals the floor in
-   the fit's warning text. The oracle stays free of medfit code. Open question 1 covers where the unit comes from.
+   `.sem_step_floor()`, an internal) from the fixture with the solver's own sample-moment rule (divisor n). The check
+   is numeric, not textual (Codex AR1: the warning prints only the multiplier `1e-04`): a strict row must have the
+   fitted `Vy` equal to the computed floor to 1e-8 relative, and `Vy` must be in `active_bounds`; a floor that is
+   not the fit's floor therefore fails the row instead of agreeing by accident. The oracle stays free of medfit code.
 2. **Inner problem stays convex.** In `or213_profile_t` the unknowns are `u = Vm^-1/2`, `z = Vy^-1/2` (strictly
    convex). A variance floor is a box `u <= 1/sqrt(vm_min)`, `z <= 1/sqrt(vy_min)`. Solve by nesting: `z(u)` clipped at
    `z_max`, then the 1-D convex profile in `u` root-found and clipped at `u_max`. Nested minimization of a jointly
    convex function over a box is exact, so the floored profile in `t` is still a one-dimensional scan per sign branch.
-3. **Pass/fail on the floor fixture becomes a three-way classification**, recorded in the `note` column:
-   `strict` (warned, at floor, finite, q met, and `lr <= lr_floored_oracle + tol`), `flagged` (single-start warning or
-   refusal; if `lr > oracle + tol` it is also marked `disproved`), and failures (silent: no flag and either
-   `lr > oracle + tol` or `lr < oracle - tol`, the latter meaning the oracle is wrong).
-4. **Disproved-and-flagged stays a pass in slice 1**, counted and reported, because the solver fix is a later slice.
-   The driver keeps the existing >= 50% strict share and adds a visible `disproved` count so the debt cannot grow
-   silently. Making `disproved` a hard failure is the exit criterion of the solver slice, not of this one.
+3. **Pass/fail on the floor fixture becomes a classification computed from numbers**, recorded in the `note` column:
+   `strict` (warned, at floor with the numeric floor check above, finite, q met, `|lr - oracle| <= tol`), `flagged`
+   (single-start warning or refusal, and `lr <= oracle + tol`), `disproved` (`lr > oracle + tol`, hard failure whether
+   or not flagged), `oracle_above_fit` (`lr < oracle - tol`, hard failure: the oracle or the floor is wrong). A
+   refusal has no LR and is `flagged` only on the fixture's known refusal message.
+4. **A disproved fit is a hard gate failure, flagged or not** (Codex AR2: letting up to three of six disproved rows
+   pass would ship a known wrong fit green). Consequence: the gate is red on any machine where the solver lands on the
+   wrong branch. So this PR merges only if T5 shows zero disproved rows on the runner; if the runner shows disproved
+   rows, the PR stays open as evidence (draft), the counts go to #276, and the gate change lands together with the
+   solver slice that removes them. The existing >= 50% strict share stays as a second condition.
 5. **No new warning class, no API change.** Test-only; `NEWS.md` needs no entry; `test-api-freeze.R` is untouched.
 
 ## Dependency graph
@@ -70,7 +75,8 @@ T1 floored oracle (oracle213.R)
   - [ ] defaults reproduce every existing oracle value bit-for-bit on the 24 gate fixtures (no behavior change)
   - [ ] with a floor below the unconstrained variances the result equals the unfloored result to 1e-9
   - [ ] `stopifnot` guards that `vy_min` and `vm_min` are non-negative and finite
-  Verification: `Rscript tests/sim/oracle213.R` (self-checks) from the worktree.
+  Verification: `MEDFIT_ROOT=<this worktree> Rscript tests/sim/oracle213.R` (the self-check defaults to the main
+  checkout, Codex AR4; change the default to the script's own repo root) and write any scratch RDS to `tempdir()`.
   Files: `tests/sim/oracle213.R`. Dependencies: none.
 
 - [ ] **T2: oracle self-checks for the floored case** (S)
@@ -100,9 +106,18 @@ T1 floored oracle (oracle213.R)
   Files: `tests/sim/sem-nonlinear-profile-gate.R`. Dependencies: T1, T2.
 
 - [ ] **T4: driver rules, mutants, baseline** (M)
-  Description: `run-gates.R` nonlinear-profile: add `lr_oracle` and `disproved` to the needed columns, rule "floor rows: no silent disproof" (derived from `note`), report the `disproved` count in the gate summary line, add self-test kinds `floor_disproved_silent` (a strict row with `lr` raised above the oracle) and `floor_oracle_missing` (floor rows with `lr_oracle` NA). Add gate mutants `nofloororacle` (oracle called with floors 0: strict rows must then disagree) and `noclip` (T1 clip removed). Regenerate the tracked baseline CSV.
+  Description: `run-gates.R` nonlinear-profile: add `lr_oracle` and `disproved` to the needed columns. The driver
+  recomputes the signed difference `lr - lr_oracle` from the CSV numbers itself and asserts that `note`, `disproved`
+  and `native_ok` agree with it (Codex AR3: a rule that reads only `note` cannot see a planted disproof), rejects
+  missing or non-finite `lr`/`lr_oracle` on every returned floor row, and fails on any `disproved` or
+  `oracle_above_fit` row. Self-test kinds: `floor_disproved_silent` (a strict-labeled row with `lr` raised above the
+  oracle), `floor_oracle_missing` (floor rows with `lr_oracle` NA), `floor_note_lies` (note says strict, numbers
+  disagree). Gate-owned mutants `nofloororacle` (oracle called with floors 0) and `noclip` (T1 clip removed) are
+  environment switches of `sem-nonlinear-profile-gate.R`; `run-gates.R --mutants` only mutates committed CSV data
+  (Codex AR4), so the plan registers and executes them explicitly (see T4 verification). Regenerate the baseline CSV.
   Acceptance:
-  - [ ] `Rscript tests/sim/run-gates.R --mutants` rejects every mutation and passes every control
+  - [ ] `Rscript tests/sim/run-gates.R --mutants` rejects every CSV mutation and passes every control, including the three new kinds
+  - [ ] `MUTANT=nofloororacle Rscript tests/sim/sem-nonlinear-profile-gate.R` and `MUTANT=noclip ...` each exit 1 (run explicitly; recorded in the PR body with exit codes)
   - [ ] `--sim --only nonlinear-profile` passes on macOS; floor rows all `strict` and `gap` within tolerance
   - [ ] baseline CSV committed; `gates.csv` row count unchanged (144)
   Verification: the two commands above; lintr on the three touched files.
@@ -119,7 +134,7 @@ T1 floored oracle (oracle213.R)
   - all strict and agreeing: record, no further action
   - some rows flagged and `disproved`: the comparator has found the wrong-branch fit the old gate could not see; record the count in `.STATUS` and #276; this is the evidence for the solver slice, not a failure of this slice
   - strict rows disagreeing with the oracle: stop, the oracle or the floor derivation is wrong
-  Update `.STATUS` and a comment on #276 with the numbers.
+  Update `.STATUS` and a comment on #276 with the numbers. Per decision 4, zero disproved rows is the merge condition.
   Acceptance: runner result recorded with counts; no row silently disproved.
   Files: `.STATUS`. Dependencies: T4.
 
@@ -130,19 +145,30 @@ T1 floored oracle (oracle213.R)
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Floor unit (`.sem_step_floor`) is internal; the oracle's floor drifts from the fit's | High: false disproofs or false agreement | T3 asserts the floor equals the value in the fit's own warning text; planted mutant `nofloororacle` |
+| Floor unit (`.sem_step_floor`) is internal; the oracle's floor drifts from the fit's | High: false disproofs or false agreement | T3 numeric check: fitted `Vy` equals the computed floor to 1e-8 relative; mutant `nofloororacle` |
 | Profile scan on the floored problem misses a basin (grid of 0.02 in log t) | Medium: the comparator under-reports disproofs | Said plainly: no disproof is not certification; T2 brute-force 2-D grid control; widen the grid for the floor fixture only |
 | Floored oracle has a bug that mirrors medfit's | Medium | Independent derivation, hand case in T2, brute-force grid; no medfit code in the oracle |
-| `disproved` flagged rows pass, so the gate stays soft on the one case that matters | Medium | Count printed in the summary; solver slice makes it a hard failure (decision 4); #276 comment records the number |
+| Disproved rows are hard failures, so the gate is red on a wrong-branch machine | Medium | Intended (decision 4): the PR merges only with zero disproved rows on the runner, otherwise it stays draft evidence for the solver slice |
 | `q = 0` floored branch closed forms wrong when both variances floor | Low | T2 hand case; the exact union is checked against the profile at q -> 0+ |
 | Date-stamped baseline CSV name drifts from `gates.csv` | Low | follow the #285 precedent: regenerate in place, same name unless the date changes in `gates.csv` too |
 
 ## Open questions
 
-1. Where does the natural unit come from in the gate: re-derive it in the test from `.sem_step_floor()`'s documented
-   rule (duplicated logic), or read it through `medfit:::.sem_step_floor` (an internal call, but only the scale, not
-   the result)? Recommendation: call the internal for the scale only and assert against the warning text.
+1. Where does the natural unit come from in the gate: re-derive it in the test from `.sem_step_floor()`'s rule
+   (duplicated logic) or read `medfit:::.sem_step_floor` (scale only)? Recommendation: call the internal for the
+   scale and rely on the numeric check (fitted `Vy` equals the computed floor), which catches a wrong unit either way.
 2. Should a `disproved` flagged row eventually carry a `status` of `unresolved` in the fit result (solver slice), or
    does the single-start warning stay the only signal? Out of scope here; decide in the solver slice.
 3. One floor fixture only (`var-1e6-1e-6`) or add a second, e.g. `Vm` floor binding? Recommendation: one fixture now;
    add a second only if T5 shows the first is solved on every machine.
+
+## Adverse review triage (Codex, 2026-10-21, base origin/dev)
+
+| # | Sev | Finding | Disposition |
+|---|-----|---------|-------------|
+| AR1 | high | warning text does not verify the oracle's floor | accepted: numeric check against fitted `Vy` and `active_bounds` (decision 1, T3) |
+| AR2 | high | disproved-but-flagged rows pass | accepted: hard failure; merge condition is zero disproved on the runner (decision 4, T5) |
+| AR3 | medium | driver trusts `note`/`native_ok` | accepted: driver recomputes the signed difference and cross-checks labels (T4) |
+| AR4 | medium | self-check hits main checkout and `/private/tmp`; `--mutants` does not run gate-owned mutants | accepted: worktree root and `tempdir()`; explicit `MUTANT=` runs (T1, T4) |
+
+Codex also found the inner box optimization and the floored `q = 0` variance refits mathematically sound.
