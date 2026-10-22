@@ -104,7 +104,7 @@ T1 floored oracle (oracle213.R)
   Files: `tests/sim/oracle213.R`. Dependencies: T1.
 
 ### Checkpoint: oracle
-- [ ] **Codex adverse review G1** (before Phase 2): `codex-companion.mjs adversarial-review "--wait --base origin/dev <focus: the floored oracle, T2 controls, any assumption about R/sem-optim.R>"` over the Phase 1 diff; triage every finding (accept/reject with reason) in the plan's review table; fixes land before T3 starts.
+- [x] **Codex adverse review G1** (done 2026-10-21, triage in the G1 table) (before Phase 2): `codex-companion.mjs adversarial-review "--wait --base origin/dev <focus: the floored oracle, T2 controls, any assumption about R/sem-optim.R>"` over the Phase 1 diff; triage every finding (accept/reject with reason) in the plan's review table; fixes land before T3 starts.
 - [ ] Oracle self-checks pass, planted defect is caught, old gate results unchanged (`Rscript tests/sim/run-gates.R --sim --only nonlinear-profile` still passes).
 
 ### Phase 2: the gate
@@ -204,3 +204,9 @@ Codex also found the inner box optimization and the floored `q = 0` variance ref
 | AR5 | high | 1e-8 floor equality is tighter than the solver's active-bound window (1e-6 x unit vs floor 1e-4 x unit) | accepted and verified in `R/sem-optim.R:17`; tolerance is the bound window, plus a separate computed-bound assertion (decision 1) |
 | AR6 | high | removing the clip enlarges the feasible set, so a grid cannot detect it | accepted: feasibility assertion on the returned parameters (T2) |
 | AR7 | medium | one dispatch is not a durable merge gate; gates not required on dev | accepted: >= 5 dispatches with recorded counts (T5); required-check question recorded (open question 0) |
+
+### G1: Phase 1 adverse review (Codex, 2026-10-21, base origin/dev)
+
+| # | Sev | Finding | Disposition |
+|---|-----|---------|-------------|
+| G1.1 | medium | standalone grid checks use order-one variances (|t| up to ~55); the floor fixture has t ~ 1e3 | accepted: `fixture`/`fixscan`/`fixlocal` checks added in `tests/sim/oracle213-floor-check.R` on the gate's `var-1e6-1e-6` data across its six q values (floor 1e-4 x observed variance, Vy lands exactly on 1.07e-4), a second finer and wider t scan (log t in [-20, 20] by 0.005), and 4000 random feasible candidates around the minimum including clipped u and z |

@@ -73,6 +73,60 @@ for (fl in list(c(0, 3 * un[["Vy"]]), c(3 * un[["Vm"]], 0), c(2 * un[["Vm"]], 2 
   chk("gridctl", !(best >= fit$objective + 5 - 1e-6), tag)
 }
 
+# --- fixture: the extreme-scale floor fixture of the gate (var-1e6-1e-6), the regime the comparator will judge --------
+# Vm ~ 1e6, Vy true ~ 1e-6, so t = b * sqrt(Vm / Vy) is about 1e3 (outside the order-one grid above). The floors are
+# 1e-4 x the observed variance (the solver's natural unit for a variance is sd(var)^2 with the divisor-n covariance).
+gen_fix <- function(seed, a, b, sm, sy) {
+  set.seed(seed)
+  n <- 250
+  d <- data.frame(X = stats::rbinom(n, 1, 0.5))
+  d$M <- a * d$X + sm * stats::rnorm(n)
+  d$Y <- 0.3 * d$X + b * d$M + sy * stats::rnorm(n)
+  d
+}
+d <- gen_fix(7, 0, 1e-3, 1e3, 1e-3)
+n <- nrow(d)
+vm_min <- 1e-4 * mean((d$M - mean(d$M))^2)
+vy_min <- 1e-4 * mean((d$Y - mean(d$Y))^2)
+cr <- or213_cross(d)
+qh <- or213_qhat(d)
+set.seed(99)
+for (tg in c("qhat", "qhat-0.1", "qhat+0.05", "qhat+0.2", "-qhat", "zero")) {
+  q <- switch(tg,
+    qhat = qh, `qhat-0.1` = qh - 0.1, `qhat+0.05` = qh + 0.05, `qhat+0.2` = qh + 0.2, `-qhat` = -qh, zero = 0
+  )
+  fit <- or213_fit(d, q, vm_min, vy_min)
+  p <- fit$par
+  feas <- p[["Vm"]] >= vm_min * (1 - 1e-9) && p[["Vy"]] >= vy_min * (1 - 1e-9)
+  chk("fixture", feas && abs(cons(p) - q) < 1e-7 * max(1, abs(q)),
+      sprintf("%s q=%.4g Vy=%.3g (floor %.3g)", tg, q, p[["Vy"]], vy_min))
+  if (q != 0) {
+    # a second, finer and wider scan on the t axis must not find a lower value than the main scan
+    alt <- min(vapply(c(-1, 1), function(sg) {
+      b2 <- or213_branch(sg, q, cr, r_grid = seq(-20, 20, by = 0.005), vm_min = vm_min, vy_min = vy_min)
+      if (length(b2)) b2[[1]]$objective else Inf
+    }, numeric(1)))
+    chk("fixscan", alt >= fit$objective - 1e-7 * max(1, abs(fit$objective)),
+        sprintf("%s alt - main = %.3g", tg, alt - fit$objective))
+    # independent feasible candidates around the returned minimum, including the clip boundaries
+    umax <- 1 / sqrt(vm_min)
+    zmax <- 1 / sqrt(vy_min)
+    t0 <- fit$t
+    u0 <- 1 / sqrt(p[["Vm"]])
+    z0 <- 1 / sqrt(p[["Vy"]])
+    best <- Inf
+    for (i in 1:4000) {
+      t <- t0 * exp(stats::rnorm(1, 0, 0.05))
+      u <- min(u0 * exp(stats::rnorm(1, 0, 0.05)), umax)
+      z <- min(z0 * exp(stats::rnorm(1, 0, 0.05)), zmax)
+      ct <- q * sqrt(2 * (1 + t^2)) / t
+      best <- min(best, or213_Q(cr, ct / u, t * u / z, 1 / u^2, 1 / z^2))
+    }
+    chk("fixlocal", best >= fit$objective - 1e-6 * max(1, abs(fit$objective)),
+        sprintf("%s local min - oracle = %.3g", tg, best - fit$objective))
+  }
+}
+
 # --- equiv: tiny floors change nothing -----------------------------------------------------------------------------
 for (qq in c(q, -q, 0)) {
   chk("equiv", identical(or213_lr(d, qq), or213_lr(d, qq, 0, 0)) &&
