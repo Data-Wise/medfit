@@ -34,7 +34,10 @@ Non-goals (separate slices of #276): Tier 1 charts, AUGLAG fallback, `solver =`,
    The gate computes the floor value itself from the data (floor = `1e-4 x natural unit`; the natural unit is
    `.sem_step_floor()`, an internal) from the fixture with the solver's own sample-moment rule (divisor n). The check
    is numeric, not textual (Codex AR1: the warning prints only the multiplier `1e-04`): a strict row must have the
-   fitted `Vy` equal to the computed floor to 1e-8 relative, and `Vy` must be in `active_bounds`; a floor that is
+   fitted `Vy` within the solver's bound window of the computed floor (`.sem_bound_window` = 1e-6 x natural unit, absolute,
+   `R/sem-optim.R:17`; the floor itself is 1e-4 x unit, so a fit reported at the floor may sit about 1% above it, and
+   1e-8 relative would reject valid fits, Codex AR5), `Vy` must be in `active_bounds`, and a separate assertion
+   checks the computed bound equals the solver's bound (`.sem_var_floor * .sem_step_floor`); a floor that is
    not the fit's floor therefore fails the row instead of agreeing by accident. The oracle stays free of medfit code.
 2. **Inner problem stays convex.** In `or213_profile_t` the unknowns are `u = Vm^-1/2`, `z = Vy^-1/2` (strictly
    convex). A variance floor is a box `u <= 1/sqrt(vm_min)`, `z <= 1/sqrt(vy_min)`. Solve by nesting: `z(u)` clipped at
@@ -85,7 +88,8 @@ T1 floored oracle (oracle213.R)
   Description: extend the self-check block in `oracle213.R`.
   Acceptance:
   - [ ] a hand case with a known binding floor: `q = 0` branch where `Vy = (E - D^2/C)/n < vy_min`, expected value computed by hand in the test
-  - [ ] brute-force check: on a coarse 2-D grid over `(u, z)` plus `t` for the floor fixture's data, no grid point beats the oracle value by more than 1e-6 (planted-defect control: an oracle with the clip removed must lose to the grid)
+  - [ ] brute-force check: on a coarse 2-D grid over `(u, z)` plus `t` for the floor fixture's data, no *floor-feasible* grid point beats the oracle value by more than 1e-6
+  - [ ] planted-defect control, correctly directed (Codex AR6: removing the clip enlarges the feasible set, so the oracle can only go lower and a grid check cannot see it): the oracle returns its parameters, the check asserts `Vy >= vy_min` and `Vm >= vm_min` at the returned point, and the no-clip variant must fail that assertion (it returns `Vy < vy_min`) on the floor fixture
   - [ ] a second hand case with a binding `Vm` floor (the fixture only binds `Vy`), so the oracle's `Vm` clip is exercised and a planted removal of it is caught
   - [ ] unfloored equivalence from T1 repeated here as a check, not only a one-off
   Verification: `Rscript tests/sim/oracle213.R`; the planted-defect control prints a failure when the clip is disabled.
@@ -138,7 +142,9 @@ T1 floored oracle (oracle213.R)
   - some rows flagged and `disproved`: the comparator has found the wrong-branch fit the old gate could not see; record the count in `.STATUS` and #276; this is the evidence for the solver slice, not a failure of this slice
   - strict rows disagreeing with the oracle: stop, the oracle or the floor derivation is wrong
   Update `.STATUS` and a comment on #276 with the numbers. Per decision 4, zero disproved rows is the merge condition.
-  Acceptance: runner result recorded with counts; no row silently disproved.
+  Acceptance: at least 5 gate dispatches on the implementation head, each with its floor-row counts recorded (one run
+  proves little: the wrong-branch landing is CPU-dependent and repeatable only per machine, Codex AR7); no row silently
+  disproved in any of them.
   Files: `.STATUS`. Dependencies: T4.
 
 ### Checkpoint: complete
@@ -157,6 +163,11 @@ T1 floored oracle (oracle213.R)
 
 ## Open questions
 
+0. `gates.yaml` runs automatically only on PRs to `main` and is not a required check (Codex AR7), so "zero disproved
+   rows" is a manual merge condition, not an enforced one. Making `gates (rest)` required for PRs to `dev` is a
+   repository setting and the maintainer's call; until then the merge condition is enforced by this plan and by the
+   reviewer. Recommendation: decide before the solver slice, not before T1.
+
 1. ~~Where does the natural unit come from?~~ Settled: the gate calls `medfit:::.sem_step_floor` for the scale only;
    the numeric check (fitted `Vy` equals the computed floor) catches a wrong unit either way.
 2. Should a `disproved` flagged row eventually carry a `status` of `unresolved` in the fit result (solver slice), or
@@ -174,3 +185,11 @@ T1 floored oracle (oracle213.R)
 | AR4 | medium | self-check hits main checkout and `/private/tmp`; `--mutants` does not run gate-owned mutants | accepted: worktree root and `tempdir()`; explicit `MUTANT=` runs (T1, T4) |
 
 Codex also found the inner box optimization and the floored `q = 0` variance refits mathematically sound.
+
+### Second adverse review (Codex, 2026-10-21, base origin/dev~2)
+
+| # | Sev | Finding | Disposition |
+|---|-----|---------|-------------|
+| AR5 | high | 1e-8 floor equality is tighter than the solver's active-bound window (1e-6 x unit vs floor 1e-4 x unit) | accepted and verified in `R/sem-optim.R:17`; tolerance is the bound window, plus a separate computed-bound assertion (decision 1) |
+| AR6 | high | removing the clip enlarges the feasible set, so a grid cannot detect it | accepted: feasibility assertion on the returned parameters (T2) |
+| AR7 | medium | one dispatch is not a durable merge gate; gates not required on dev | accepted: >= 5 dispatches with recorded counts (T5); required-check question recorded (open question 0) |
