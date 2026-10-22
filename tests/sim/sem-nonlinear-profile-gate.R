@@ -29,6 +29,8 @@
 #   oracle1    the oracle searches only the positive sign branch
 #   oracle0    the q = 0 oracle uses only the a = 0 null
 #   halfq      the fit is asked for q / 2 while the gate checks q (the request check must fail)
+#   nofloororacle  the floor fixture's oracle is called without floors (#276: strict rows must then disagree)
+#   halffloor  the floor fixture's oracle uses half the solver's floor (a wrong floor unit must fail the row)
 # Run from the package root:  Rscript tests/sim/sem-nonlinear-profile-gate.R   (FAST=1 runs 8 fixtures x 3 q's)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
@@ -66,6 +68,9 @@ if (mutant == "noref") {
   mutate_body("or213_fit", "min(a0, b0)", "a0", globalenv())
 } else if (mutant == "halfq") {
   # the defect is applied where the fit is requested (q_fit below); nothing to patch in the package
+  invisible(NULL)
+} else if (mutant %in% c("nofloororacle", "halffloor")) {
+  # the defect is applied where the floor fixture's oracle is called (floor_scale below); nothing to patch
   invisible(NULL)
 } else if (nzchar(mutant)) {
   stop("unknown MUTANT: ", mutant)
@@ -132,7 +137,7 @@ for (f in fx) {
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = refused, omx_ok = TRUE,
                                               lr = NA_real_, lr_oracle = NA_real_, gap = if (refused) 0 else NA_real_,
                                               improper = "", note = if (refused) "refused" else substr(h2, 1, 80),
-                                              stringsAsFactors = FALSE)
+                                              disproved = FALSE, stringsAsFactors = FALSE)
       next
     }
     cf <- stats::coef(h2)
@@ -149,17 +154,41 @@ for (f in fx) {
       # requires at least half of the fixture's rows to meet the strict contract (note "strict"), so a solver that
       # always refused or always landed on the wrong branch cannot pass.
       flagged <- any(grepl("starts reached an accepted solution", wmsg, fixed = TRUE))
-      strict <- warned && at_floor && is.finite(lr) && request_ok
-      ok <- strict || (flagged && request_ok)
-      floor_note <- sprintf(
-        paste("floor contract not met and not flagged: warned=%s at_floor=%s flagged=%s finite_lr=%s",
-              "request_ok=%s q_ach=%.8g active=[%s]"),
-        warned, at_floor, flagged, is.finite(lr), request_ok, q_ach, paste(h2@diagnostics$active_bounds, collapse = ",")
-      )
+      # The independent floored oracle (#276 T3). The floors are the solver's rule (.sem_var_floor x the natural unit of
+      # a variance, sd^2 with the divisor-n covariance), computed from the data here, not read from the fit; the fitted
+      # Vy must sit on the computed floor within the solver's bound window, so a floor that is not the fit's floor fails
+      # the row instead of agreeing by accident. The oracle can only disprove: a fit above the independent floored
+      # optimum (disproved) fails whether or not it was flagged; a fit below it means the oracle is wrong.
+      floor_scale <- if (mutant == "halffloor") 0.5 else if (mutant == "nofloororacle") 0 else 1
+      unit_m <- mean((d$M - mean(d$M))^2)
+      unit_y <- mean((d$Y - mean(d$Y))^2)
+      vm_min <- ns$.sem_var_floor * unit_m
+      vy_min <- ns$.sem_var_floor * unit_y
+      floor_ok <- abs(unname(cf["Vy"]) - vy_min) <= ns$.sem_bound_window * unit_y
+      lr_fl <- or213_lr(d, if (tag == "zero") 0 else q_ach, floor_scale * vm_min, floor_scale * vy_min)
+      diff <- lr - lr_fl
+      tol_fl <- (if (tag == "zero") 1e-5 else 1e-6) * max(1, lr_fl)
+      disproved <- is.finite(diff) && diff > tol_fl
+      oracle_above <- is.finite(diff) && diff < -tol_fl
+      strict <- warned && at_floor && floor_ok && is.finite(lr) && request_ok && !disproved && !oracle_above
+      ok <- strict || (flagged && request_ok && !disproved && !oracle_above)
+      floor_note <- if (disproved) {
+        sprintf("disproved: lr=%.8g above the floored oracle %.8g (diff %.3g, tol %.3g)", lr, lr_fl, diff, tol_fl)
+      } else if (oracle_above) {
+        sprintf("oracle above fit: lr=%.8g below the floored oracle %.8g (diff %.3g)", lr, lr_fl, diff)
+      } else {
+        sprintf(
+          paste("floor contract not met and not flagged: warned=%s at_floor=%s floor_ok=%s flagged=%s finite_lr=%s",
+                "request_ok=%s q_ach=%.8g active=[%s]"),
+          warned, at_floor, floor_ok, flagged, is.finite(lr), request_ok, q_ach,
+          paste(h2@diagnostics$active_bounds, collapse = ",")
+        )
+      }
       rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = ok, omx_ok = TRUE,
-                                              lr = lr, lr_oracle = NA_real_, gap = 0, improper = "",
+                                              lr = lr, lr_oracle = lr_fl, gap = abs(diff) / max(1, lr_fl),
+                                              improper = "",
                                               note = if (strict) "strict" else if (ok) "flagged" else floor_note,
-                                              stringsAsFactors = FALSE)
+                                              disproved = disproved, stringsAsFactors = FALSE)
       next
     }
     se_ok <- !anyNA(suppressWarnings(sqrt(diag(stats::vcov(h2)))))
@@ -168,6 +197,7 @@ for (f in fx) {
     ok <- se_ok && request_ok && gap <= tol && (tag != "qhat" || abs(lr) <= 1e-6)
     rows[[length(rows) + 1L]] <- data.frame(fixture = f$id, q_tag = tag, q = q, native_ok = ok, omx_ok = TRUE, lr = lr,
                                             lr_oracle = lr_or, gap = gap, improper = "",
+                                            disproved = FALSE,
                                             note = if (!request_ok) {
                                               "requested q not met"
                                             } else if (!se_ok) {

@@ -109,7 +109,7 @@ T1 floored oracle (oracle213.R)
 
 ### Phase 2: the gate
 
-- [ ] **T3: floor-fixture rows compare LR with the floored oracle** (M)
+- [x] **T3: floor-fixture rows compare LR with the floored oracle** (M) (done 2026-10-21 on `feature/floor-gate-276`; macOS: all six floor rows strict, gap 2e-10 against the independent oracle at LR ~ 935; mutants `nofloororacle` and `halffloor` exit 1. Deviation: the floor unit is computed in the gate from the data (divisor-n variance, the solver's rule) and verified by the numeric fitted-`Vy` check, instead of calling `medfit:::.sem_step_floor`; `.sem_var_floor` and `.sem_bound_window` are read from the namespace. `halffloor` (oracle at half the solver floor) replaces the planned `noclip` gate mutant, which would be identical to `nofloororacle` without editing the oracle)
   Description: in the `floor_case` branch compute `floor_unit` and the two floors, call `or213_lr(d, q_ach, vm_min,
   vy_min)`, store it in `lr_oracle`, store `gap`, add `disproved` (logical) to the CSV. Apply decision 3. A refused fit
   keeps gap 0 and `note = "refused"`. Assert the computed floor equals the floor quoted in the "solver floor" warning
@@ -121,7 +121,7 @@ T1 floored oracle (oracle213.R)
   Verification: `Rscript tests/sim/sem-nonlinear-profile-gate.R` (full), `FAST=1` variant.
   Files: `tests/sim/sem-nonlinear-profile-gate.R`. Dependencies: T1, T2.
 
-- [ ] **T4: driver rules, mutants, baseline** (M)
+- [x] **T4: driver rules, mutants, baseline** (M) (done 2026-10-21: driver helpers `floor_numbers_ok`, `floor_disproved`, `floor_labels_ok`; self-test kinds `floor_disproved_silent`, `floor_oracle_missing`, `floor_note_lies` rejected, controls pass)
   Description: `run-gates.R` nonlinear-profile: add `lr_oracle` and `disproved` to the needed columns. The driver
   recomputes the signed difference `lr - lr_oracle` from the CSV numbers itself and asserts that `note`, `disproved`
   and `native_ok` agree with it (Codex AR3: a rule that reads only `note` cannot see a planted disproof), rejects
