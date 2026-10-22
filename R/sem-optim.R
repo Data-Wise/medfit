@@ -418,8 +418,10 @@
       res$objective <- .sem_fml(res$solution, ram, smp)
     }
     gate <- .sem_gate(res$solution, res$status, ram, smp, lb, ub, constraints)
-    if (gate$accepted && !is.null(constraints)) {
-      pol <- .sem_polish_accept(res, gate, ram, smp, lb, ub, constraints)
+    # A roundoff-limited stop (-4) can leave the point short of a nonlinear row along a flat direction (#276): it is
+    # polished back onto the row before the gate decides, with the wider reach of a restoration.
+    if (!is.null(constraints) && (gate$accepted || identical(res$status, -4L))) {
+      pol <- .sem_polish_accept(res, gate, ram, smp, lb, ub, constraints, restore = !gate$accepted)
       res <- pol$res
       gate <- pol$gate
     }

@@ -475,7 +475,7 @@
 .sem_polish_maxit <- 8L
 .sem_polish_reach <- 1e-2
 .sem_polish_rcond <- 1e-13
-.sem_polish <- function(theta, ram, smp, lb, ub, cons) {
+.sem_polish <- function(theta, ram, smp, lb, ub, cons, reach = .sem_polish_reach) {
   act0 <- .sem_active_set(theta, ram, smp, lb, ub, cons)
   if (!any(act0$active_row[act0$nl_pos])) {
     return(NULL)
@@ -525,7 +525,7 @@
     th <- cand
     cur <- nxt
   }
-  if (identical(th, theta) || max(abs(th - theta) / cur$u) > .sem_polish_reach) {
+  if (identical(th, theta) || max(abs(th - theta) / cur$u) > reach) {
     return(NULL)
   }
   th
@@ -536,14 +536,20 @@
 # constraint, which lowers the discrepancy by about the multiplier times the violation, so a small rise is
 # the polish removing that).
 .sem_polish_f_slack <- 1e-8
-.sem_polish_accept <- function(res, gate, ram, smp, lb, ub, cons) {
-  pol <- .sem_polish(res$solution, ram, smp, lb, ub, cons)
+# Restoring feasibility from a roundoff-limited stall (status -4) may need a long step along a flat direction and
+# raises the discrepancy by about the multiplier times the violation, so the reach is wider and the rise is not capped;
+# the acceptance gate (feasibility, stationarity, curvature) on the restored point is what decides (#276).
+.sem_restore_reach <- 1
+.sem_polish_accept <- function(res, gate, ram, smp, lb, ub, cons, restore = FALSE) {
+  pol <- .sem_polish(res$solution, ram, smp, lb, ub, cons,
+                     reach = if (restore) .sem_restore_reach else .sem_polish_reach)
   if (is.null(pol)) {
     return(list(res = res, gate = gate))
   }
   r <- .sem_eval(pol, ram, smp, deriv = FALSE)
   g2 <- .sem_gate(pol, res$status, ram, smp, lb, ub, cons)
-  if (is.null(r) || !g2$accepted || r$f > res$objective + .sem_polish_f_slack) {
+  slack <- if (restore) Inf else .sem_polish_f_slack
+  if (is.null(r) || !g2$accepted || r$f > res$objective + slack) {
     return(list(res = res, gate = gate))
   }
   res$solution <- pol

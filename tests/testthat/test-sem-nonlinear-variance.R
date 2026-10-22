@@ -115,7 +115,7 @@ nv_stub_wrong_branch <- function(gate_accepts_ref) {
       list(accepted = is_wrong || gate_accepts_ref, status = status, decrement = 0, min_eig = 1,
            active = rep(FALSE, length(theta)), reason = if (is_wrong || gate_accepts_ref) "" else "stub rejects it")
     },
-    polish = function(res, gate, ram, smp, lb, ub, cons) list(res = res, gate = gate)
+    polish = function(res, gate, ram, smp, lb, ub, cons, restore = FALSE) list(res = res, gate = gate)
   )
 }
 
