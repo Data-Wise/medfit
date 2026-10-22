@@ -92,7 +92,7 @@ T1 floored oracle (oracle213.R)
   checkout, Codex AR4; change the default to the script's own repo root) and write any scratch RDS to `tempdir()`.
   Files: `tests/sim/oracle213.R`. Dependencies: none.
 
-- [ ] **T2: oracle self-checks for the floored case** (S)
+- [x] **T2: oracle self-checks for the floored case** (S) (done 2026-10-21: `tests/sim/oracle213-floor-check.R`, standalone, no medfit code; hand, feasible, control, grid, gridctl, equiv all pass)
   Description: extend the self-check block in `oracle213.R`.
   Acceptance:
   - [ ] a hand case with a known binding floor: `q = 0` branch where `Vy = (E - D^2/C)/n < vy_min`, expected value computed by hand in the test
@@ -100,7 +100,7 @@ T1 floored oracle (oracle213.R)
   - [ ] planted-defect control, correctly directed (Codex AR6: removing the clip enlarges the feasible set, so the oracle can only go lower and a grid check cannot see it): the oracle returns its parameters, the check asserts `Vy >= vy_min` and `Vm >= vm_min` at the returned point, and the no-clip variant must fail that assertion (it returns `Vy < vy_min`) on the floor fixture
   - [ ] a second hand case with a binding `Vm` floor (the fixture only binds `Vy`), so the oracle's `Vm` clip is exercised and a planted removal of it is caught
   - [ ] unfloored equivalence from T1 repeated here as a check, not only a one-off
-  Verification: `Rscript tests/sim/oracle213.R`; the planted-defect control prints a failure when the clip is disabled.
+  Verification: `Rscript tests/sim/oracle213-floor-check.R` (standalone file, exits 1 on any FAIL); the control uses the oracle called without floors.
   Files: `tests/sim/oracle213.R`. Dependencies: T1.
 
 ### Checkpoint: oracle
