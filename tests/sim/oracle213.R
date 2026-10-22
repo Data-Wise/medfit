@@ -41,8 +41,13 @@ or213_unres <- function(cr) {
 }
 
 # Inner problem at fixed t (strictly convex in u = Vm^-1/2, z = Vy^-1/2). Returns the profile value Q(t).
-or213_profile_t <- function(t, q, cr) {
-  stopifnot(t != 0, q != 0)
+# Optional variance floors vm_min, vy_min (0 = none, the default) are the box u <= 1/sqrt(vm_min), z <= 1/sqrt(vy_min).
+# Minimizing a jointly convex function over a box is exact by nesting: the z-minimizer at fixed u is clipped at z_max,
+# and the profile in u (convex) is root-found on the envelope derivative (z held at its clipped value) and clipped at u_max.
+or213_profile_t <- function(t, q, cr, vm_min = 0, vy_min = 0) {
+  stopifnot(t != 0, q != 0, is.finite(vm_min), is.finite(vy_min), vm_min >= 0, vy_min >= 0)
+  u_max <- 1 / sqrt(vm_min)
+  z_max <- 1 / sqrt(vy_min)
   n <- cr$n
   A <- cr$A
   B <- cr$B
@@ -55,14 +60,15 @@ or213_profile_t <- function(t, q, cr) {
   z_of_u <- function(u) {
     r <- t * D * u
     h <- sqrt(r^2 + 4 * E * n)
-    if (r >= 0) (r + h) / (2 * E) else 2 * n / (h - r)
+    min(if (r >= 0) (r + h) / (2 * E) else 2 * n / (h - r), z_max)
   }
   score <- function(u) H * u - ct * B - t * D * z_of_u(u) - n / u
   lo <- hi <- 1
   for (i in 1:2000) if (score(lo) < 0) break else lo <- lo / 2
-  for (i in 1:2000) if (score(hi) > 0) break else hi <- hi * 2
-  stopifnot(score(lo) < 0, score(hi) > 0)
-  u <- stats::uniroot(score, c(lo, hi), tol = 1e-14 * hi, maxiter = 1000)$root
+  for (i in 1:2000) if (score(hi) > 0 || hi >= u_max) break else hi <- hi * 2
+  hi <- min(hi, u_max)
+  stopifnot(score(lo) < 0)
+  u <- if (score(hi) <= 0) hi else stats::uniroot(score, c(lo, hi), tol = 1e-14 * hi, maxiter = 1000)$root
   z <- z_of_u(u)
   value <- -2 * n * (log(u) + log(z)) + H * u^2 - 2 * ct * B * u + E * z^2 - 2 * t * D * u * z + ct^2 * A
   b <- t * u / z
@@ -70,29 +76,50 @@ or213_profile_t <- function(t, q, cr) {
 }
 
 # Every local minimum of the profile on one sign branch (t = sgn * exp(r)), by a grid scan and golden refinement.
-or213_branch <- function(sgn, q, cr, r_grid = seq(-15, 15, by = 0.02)) {
-  f <- function(r) or213_profile_t(sgn * exp(r), q, cr)$objective
+or213_branch <- function(sgn, q, cr, r_grid = seq(-15, 15, by = 0.02), vm_min = 0, vy_min = 0) {
+  f <- function(r) or213_profile_t(sgn * exp(r), q, cr, vm_min, vy_min)$objective
   fv <- vapply(r_grid, f, numeric(1))
   k <- which(diff(sign(diff(fv))) > 0) + 1L # interior grid minima
   if (which.min(fv) %in% c(1L, length(fv))) warning("branch minimum at the edge of the r grid; widen it")
   mins <- lapply(k, function(i) {
     o <- stats::optimize(f, r_grid[c(i - 1L, i + 1L)], tol = 1e-12)
-    p <- or213_profile_t(sgn * exp(o$minimum), q, cr)
+    p <- or213_profile_t(sgn * exp(o$minimum), q, cr, vm_min, vy_min)
     list(objective = p$objective, par = p$par, t = sgn * exp(o$minimum))
   })
   mins[order(vapply(mins, `[[`, 0, "objective"))]
 }
 
-# Constrained minimum over both branches; q == 0 uses the exact union of the two linear nulls.
-or213_fit <- function(d, q) {
+# Constrained minimum over both branches; q == 0 uses the exact union of the two linear nulls. vm_min and vy_min floor
+# the variances (0 = none); the unconstrained minimum or213_unres() is never floored (medfit applies the floor only
+# with a nonlinear row). In a null the remaining variance is the closed form floored at its minimum: the profile in a
+# variance is convex in its inverse, so the floored optimum is max(unconstrained, floor).
+or213_fit <- function(d, q, vm_min = 0, vy_min = 0) {
   cr <- or213_cross(d)
   if (q == 0) {
-    a0 <- with(cr, n * log(K / n) + n + n * log((E - D^2 / C) / n) + n) # a = 0
-    b0 <- with(cr, n * log(C / n) + n + n * log(E / n) + n) # b = 0
-    return(list(objective = min(a0, b0), branch = if (a0 <= b0) "a=0" else "b=0", cr = cr))
+    with(cr, {
+      # n log v + S / v at v = max(S / n, v_min); the unfloored form n log(S / n) + n is kept when the floor is inactive
+      term <- function(S, v_min) if (v_min <= S / n) n * log(S / n) + n else n * log(v_min) + S / v_min
+      v_of <- function(S, v_min) max(S / n, v_min)
+      R <- E - D^2 / C
+      # a = 0: Vm from K; b profiled to D/C leaves the residual R for Vy
+      a0 <- term(K, vm_min) + term(R, vy_min)
+      # b = 0: a profiled to B/A leaves C for Vm; Vy from E
+      b0 <- term(C, vm_min) + term(E, vy_min)
+      list(objective = min(a0, b0), branch = if (a0 <= b0) "a=0" else "b=0", cr = cr,
+           par = if (a0 <= b0) {
+             c(a = 0, b = D / C, Vm = v_of(K, vm_min), Vy = v_of(R, vy_min))
+           } else {
+             c(a = B / A, b = 0, Vm = v_of(C, vm_min), Vy = v_of(E, vy_min))
+           })
+    })
+  } else {
+    or213_fit_q(cr, q, vm_min, vy_min)
   }
-  pos <- or213_branch(1, q, cr)
-  neg <- or213_branch(-1, q, cr)
+}
+
+or213_fit_q <- function(cr, q, vm_min, vy_min) {
+  pos <- or213_branch(1, q, cr, vm_min = vm_min, vy_min = vy_min)
+  neg <- or213_branch(-1, q, cr, vm_min = vm_min, vy_min = vy_min)
   all <- c(pos, neg)
   best <- all[[which.min(vapply(all, `[[`, 0, "objective"))]]
   list(objective = best$objective, par = best$par, t = best$t, cr = cr,
@@ -100,9 +127,9 @@ or213_fit <- function(d, q) {
        n_local = c(pos = length(pos), neg = length(neg)), local = all)
 }
 
-or213_lr <- function(d, q) {
+or213_lr <- function(d, q, vm_min = 0, vy_min = 0) {
   cr <- or213_cross(d)
-  or213_fit(d, q)$objective - or213_unres(cr)$objective
+  or213_fit(d, q, vm_min, vy_min)$objective - or213_unres(cr)$objective
 }
 
 or213_qhat <- function(d) {
@@ -113,7 +140,7 @@ or213_qhat <- function(d) {
 # ---------------------------------------------------------------------------------------------------------------
 # Self-checks against medfit (run with Rscript).
 if (sys.nframe() == 0L) {
-  root <- Sys.getenv("MEDFIT_ROOT", "/Users/davood/projects/r-packages/active/medfit")
+  root <- Sys.getenv("MEDFIT_ROOT", getwd()) # run from the package root (or set MEDFIT_ROOT)
   suppressMessages(devtools::load_all(root, quiet = TRUE))
   src <- readLines(file.path(root, "tests/testthat/test-sem-nonlinear-variance.R"))
   eval(parse(text = src[1:(grep("^test_that", src)[1] - 1)]))
@@ -158,5 +185,5 @@ if (sys.nframe() == 0L) {
   cat(sprintf("\ncases %d; floor fit errors %d; max |LR_floor - LR_oracle| = %.3e; baseline errors %d, baseline > oracle + 1e-4: %d\n",
               nrow(out), sum(is.na(out$lr_floor)), max(abs(out$diff_floor), na.rm = TRUE), sum(is.na(out$lr_base)),
               sum(out$diff_base > 1e-4, na.rm = TRUE)))
-  saveRDS(out, "/private/tmp/claude-501/oracle213_grid.rds")
+  saveRDS(out, file.path(tempdir(), "oracle213_grid.rds"))
 }

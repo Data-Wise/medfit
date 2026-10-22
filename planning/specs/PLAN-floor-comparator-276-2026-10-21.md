@@ -57,6 +57,14 @@ Non-goals (separate slices of #276): Tier 1 charts, AUGLAG fallback, `solver =`,
    green because the gate change has not merged.
 5. **No new warning class, no API change.** Test-only; `NEWS.md` needs no entry; `test-api-freeze.R` is untouched.
 
+## Review protocol
+
+After each phase a Codex adverse review runs before the next phase starts (G1 after Phase 1, G2 after Phase 2, G3 after
+Phase 3). Each review: one `codex-companion.mjs adversarial-review --wait --base origin/dev` call with a focus text
+naming what to attack, findings triaged in the review tables at the end of this plan (accepted, rejected with reason,
+or deferred with an issue), fixes committed before the phase is called done. A "needs-attention" verdict with an
+untriaged finding blocks the next phase. The plan's own two earlier adverse reviews (AR1-AR7) are the precedent.
+
 ## Dependency graph
 
 ```
@@ -71,7 +79,7 @@ T1 floored oracle (oracle213.R)
 
 ### Phase 1: the comparator
 
-- [ ] **T1: floored profile in the independent oracle** (S)
+- [x] **T1: floored profile in the independent oracle** (S) (done 2026-10-21; defaults bit-identical on 5 datasets x 5 q, tiny floor equals unfloored exactly, existing 110-case self-check unchanged)
   Description: add `vm_min`, `vy_min` to `or213_profile_t`, `or213_branch`, `or213_fit`, `or213_lr` with defaults 0
   (unchanged behavior). Implement the box by clipping as in decision 2. `q == 0` keeps the exact union of linear nulls
   but each null is refit with the floor: after `a = 0` or `b = 0` the remaining variances are closed form
@@ -84,7 +92,7 @@ T1 floored oracle (oracle213.R)
   checkout, Codex AR4; change the default to the script's own repo root) and write any scratch RDS to `tempdir()`.
   Files: `tests/sim/oracle213.R`. Dependencies: none.
 
-- [ ] **T2: oracle self-checks for the floored case** (S)
+- [x] **T2: oracle self-checks for the floored case** (S) (done 2026-10-21: `tests/sim/oracle213-floor-check.R`, standalone, no medfit code; hand, feasible, control, grid, gridctl, equiv all pass)
   Description: extend the self-check block in `oracle213.R`.
   Acceptance:
   - [ ] a hand case with a known binding floor: `q = 0` branch where `Vy = (E - D^2/C)/n < vy_min`, expected value computed by hand in the test
@@ -92,10 +100,11 @@ T1 floored oracle (oracle213.R)
   - [ ] planted-defect control, correctly directed (Codex AR6: removing the clip enlarges the feasible set, so the oracle can only go lower and a grid check cannot see it): the oracle returns its parameters, the check asserts `Vy >= vy_min` and `Vm >= vm_min` at the returned point, and the no-clip variant must fail that assertion (it returns `Vy < vy_min`) on the floor fixture
   - [ ] a second hand case with a binding `Vm` floor (the fixture only binds `Vy`), so the oracle's `Vm` clip is exercised and a planted removal of it is caught
   - [ ] unfloored equivalence from T1 repeated here as a check, not only a one-off
-  Verification: `Rscript tests/sim/oracle213.R`; the planted-defect control prints a failure when the clip is disabled.
+  Verification: `Rscript tests/sim/oracle213-floor-check.R` (standalone file, exits 1 on any FAIL); the control uses the oracle called without floors.
   Files: `tests/sim/oracle213.R`. Dependencies: T1.
 
 ### Checkpoint: oracle
+- [x] **Codex adverse review G1** (done 2026-10-21, triage in the G1 table) (before Phase 2): `codex-companion.mjs adversarial-review "--wait --base origin/dev <focus: the floored oracle, T2 controls, any assumption about R/sem-optim.R>"` over the Phase 1 diff; triage every finding (accept/reject with reason) in the plan's review table; fixes land before T3 starts.
 - [ ] Oracle self-checks pass, planted defect is caught, old gate results unchanged (`Rscript tests/sim/run-gates.R --sim --only nonlinear-profile` still passes).
 
 ### Phase 2: the gate
@@ -131,6 +140,7 @@ T1 floored oracle (oracle213.R)
   Files: `tests/sim/run-gates.R`, `tests/sim/sem-nonlinear-profile-gate.R`, `tests/sim/results/sem-nonlinear-profile-gate-2026-10-21.csv` (+ dated name if the date moves). Dependencies: T3.
 
 ### Checkpoint: macOS evidence
+- [ ] **Codex adverse review G2** (before Phase 3): same command over the Phase 2 diff (gate rule, driver recomputation, mutants, baseline CSV); focus on silent passes, label/number consistency and mutant coverage; triage in the review table; fixes land before T5 dispatches.
 - [ ] mutants pass, sim passes, lint clean, PR opened to `dev`.
 
 ### Phase 3: runner evidence
@@ -148,6 +158,7 @@ T1 floored oracle (oracle213.R)
   Files: `.STATUS`. Dependencies: T4.
 
 ### Checkpoint: complete
+- [ ] **Codex adverse review G3** (before merge): over the final PR diff plus the T5 run records (counts per dispatch); focus on whether the evidence supports the merge condition; triage in the review table.
 - [ ] PR merged on green; #276 comment states what the comparator established and what it did not (no certification); the solver slice is scoped from the measured `disproved` count.
 
 ## Risks and mitigations
@@ -193,3 +204,9 @@ Codex also found the inner box optimization and the floored `q = 0` variance ref
 | AR5 | high | 1e-8 floor equality is tighter than the solver's active-bound window (1e-6 x unit vs floor 1e-4 x unit) | accepted and verified in `R/sem-optim.R:17`; tolerance is the bound window, plus a separate computed-bound assertion (decision 1) |
 | AR6 | high | removing the clip enlarges the feasible set, so a grid cannot detect it | accepted: feasibility assertion on the returned parameters (T2) |
 | AR7 | medium | one dispatch is not a durable merge gate; gates not required on dev | accepted: >= 5 dispatches with recorded counts (T5); required-check question recorded (open question 0) |
+
+### G1: Phase 1 adverse review (Codex, 2026-10-21, base origin/dev)
+
+| # | Sev | Finding | Disposition |
+|---|-----|---------|-------------|
+| G1.1 | medium | standalone grid checks use order-one variances (|t| up to ~55); the floor fixture has t ~ 1e3 | accepted: `fixture`/`fixscan`/`fixlocal` checks added in `tests/sim/oracle213-floor-check.R` on the gate's `var-1e6-1e-6` data across its six q values (floor 1e-4 x observed variance, Vy lands exactly on 1.07e-4), a second finer and wider t scan (log t in [-20, 20] by 0.005), and 4000 random feasible candidates around the minimum including clipped u and z |
