@@ -71,7 +71,7 @@ T1 floored oracle (oracle213.R)
 
 ### Phase 1: the comparator
 
-- [ ] **T1: floored profile in the independent oracle** (S)
+- [x] **T1: floored profile in the independent oracle** (S) (done 2026-10-21; defaults bit-identical on 5 datasets x 5 q, tiny floor equals unfloored exactly, existing 110-case self-check unchanged)
   Description: add `vm_min`, `vy_min` to `or213_profile_t`, `or213_branch`, `or213_fit`, `or213_lr` with defaults 0
   (unchanged behavior). Implement the box by clipping as in decision 2. `q == 0` keeps the exact union of linear nulls
   but each null is refit with the floor: after `a = 0` or `b = 0` the remaining variances are closed form
