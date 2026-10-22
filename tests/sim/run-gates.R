@@ -390,6 +390,9 @@ verdict_gate <- function(gate, d, s) {
         chk("floor labels agree", floor_labels_ok(d), "note, disproved and native_ok match lr - lr_oracle"),
         # the cases that carry the contract must return a numerical result: q = q_hat (the MLE) and q = 0 (exact
         # nulls) are strict rows, never refused or merely flagged; the zero row meets its constraint to 1e-7
+        # all() over an empty set is TRUE, so the critical-row checks below would pass if the rows were missing: the
+        # fixture must carry exactly one row for each of its six q values
+        chk("floor rows complete", floor_rows_complete(d), "var-1e6-1e-6 needs exactly one row per q_tag"),
         chk("floor critical rows strict",
             all(d$note[d$fixture %in% "var-1e6-1e-6" & d$q_tag %in% c("qhat", "zero")] %in% "strict"),
             "q_hat and zero floor rows must be strict"),
@@ -409,6 +412,11 @@ verdict_gate <- function(gate, d, s) {
 # Floor-fixture helpers (#276 slice 1): rows of var-1e6-1e-6 that returned a fit (not a refusal) carry lr and lr_oracle.
 floor_returned <- function(d) d$fixture %in% "var-1e6-1e-6" & !(d$note %in% "refused")
 floor_tol <- function(d) ifelse(d$q_tag %in% "zero", 1e-5, 1e-6) * pmax(1, d$lr_oracle)
+floor_tags <- c("qhat", "qhat-0.1", "qhat+0.05", "qhat+0.2", "-qhat", "zero")
+floor_rows_complete <- function(d) {
+  tags <- d$q_tag[d$fixture %in% "var-1e6-1e-6"]
+  length(tags) == length(floor_tags) && setequal(tags, floor_tags)
+}
 floor_numbers_ok <- function(d) {
   r <- floor_returned(d)
   all(is.finite(d$lr[r]) & is.finite(d$lr_oracle[r]))
@@ -563,6 +571,12 @@ mutate <- function(gate, kind, d) {
     d$lr[i] <- NA_real_
     d$lr_oracle[i] <- NA_real_
   }
+  if (kind == "floor_critical_missing" && gate == "nonlinear-profile") {
+    # the q_hat and zero floor rows are replaced by copies of other floor rows: the total stays 144
+    i <- which(d$fixture %in% "var-1e6-1e-6")
+    src <- i[d$q_tag[i] %in% "qhat+0.2"]
+    for (tag in c("qhat", "zero")) d[i[d$q_tag[i] %in% tag], ] <- d[src, ]
+  }
   if (kind == "floor_zero_off" && gate == "nonlinear-profile") {
     d$q_ach[d$fixture %in% "var-1e6-1e-6" & d$q_tag %in% "zero"] <- 1e-4
   }
@@ -615,7 +629,7 @@ run_mutants <- function() {
     if (s$gate == "compare-lr") kinds <- c(kinds, "unresolved_converged", "ref_off")
     if (s$gate == "nonlinear-profile") {
       kinds <- c(kinds, "all_flagged", "floor_disproved_silent", "floor_oracle_missing", "floor_note_lies",
-                 "floor_refuse_critical", "floor_zero_off")
+                 "floor_refuse_critical", "floor_zero_off", "floor_critical_missing")
     }
     for (kind in kinds) {
       v <- verdict_gate(s$gate, mutate(s$gate, kind, ld$data), s)
