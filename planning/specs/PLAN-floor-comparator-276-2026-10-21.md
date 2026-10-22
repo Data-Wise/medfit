@@ -49,7 +49,9 @@ Non-goals (separate slices of #276): Tier 1 charts, AUGLAG fallback, `solver =`,
    pass would ship a known wrong fit green). Consequence: the gate is red on any machine where the solver lands on the
    wrong branch. So this PR merges only if T5 shows zero disproved rows on the runner; if the runner shows disproved
    rows, the PR stays open as evidence (draft), the counts go to #276, and the gate change lands together with the
-   solver slice that removes them. The existing >= 50% strict share stays as a second condition.
+   solver slice that removes them. The existing >= 50% strict share stays as a second, independent condition: it is the only rule that catches a floor
+   fixture whose rows are all refusals or all flagged (no LR to disprove). While this PR is draft evidence, `dev` stays
+   green because the gate change has not merged.
 5. **No new warning class, no API change.** Test-only; `NEWS.md` needs no entry; `test-api-freeze.R` is untouched.
 
 ## Dependency graph
@@ -84,6 +86,7 @@ T1 floored oracle (oracle213.R)
   Acceptance:
   - [ ] a hand case with a known binding floor: `q = 0` branch where `Vy = (E - D^2/C)/n < vy_min`, expected value computed by hand in the test
   - [ ] brute-force check: on a coarse 2-D grid over `(u, z)` plus `t` for the floor fixture's data, no grid point beats the oracle value by more than 1e-6 (planted-defect control: an oracle with the clip removed must lose to the grid)
+  - [ ] a second hand case with a binding `Vm` floor (the fixture only binds `Vy`), so the oracle's `Vm` clip is exercised and a planted removal of it is caught
   - [ ] unfloored equivalence from T1 repeated here as a check, not only a one-off
   Verification: `Rscript tests/sim/oracle213.R`; the planted-defect control prints a failure when the clip is disabled.
   Files: `tests/sim/oracle213.R`. Dependencies: T1.
@@ -154,9 +157,8 @@ T1 floored oracle (oracle213.R)
 
 ## Open questions
 
-1. Where does the natural unit come from in the gate: re-derive it in the test from `.sem_step_floor()`'s rule
-   (duplicated logic) or read `medfit:::.sem_step_floor` (scale only)? Recommendation: call the internal for the
-   scale and rely on the numeric check (fitted `Vy` equals the computed floor), which catches a wrong unit either way.
+1. ~~Where does the natural unit come from?~~ Settled: the gate calls `medfit:::.sem_step_floor` for the scale only;
+   the numeric check (fitted `Vy` equals the computed floor) catches a wrong unit either way.
 2. Should a `disproved` flagged row eventually carry a `status` of `unresolved` in the fit result (solver slice), or
    does the single-start warning stay the only signal? Out of scope here; decide in the solver slice.
 3. One floor fixture only (`var-1e6-1e-6`) or add a second, e.g. `Vm` floor binding? Recommendation: one fixture now;
