@@ -15,7 +15,12 @@
 .sem_stat_tol <- 1e-3
 .sem_singular_tol <- 1e-4
 .sem_bound_window <- 1e-6
-.sem_ok_status <- c(1L, 3L, 4L)
+# NLopt's roundoff-limited stop (-4) is a usable result: the solver ran out of floating-point resolution, not out of
+# iterations. The status is not the certificate; the gate's own feasibility, stationarity and curvature checks are, and
+# a stall still fails them (decrement at least 0.09 against 3e-7 for a converged fit, see the thresholds above). On a
+# runner CPU the extreme-scale floor fixture ends every correct-basin start with -4 (#276), so rejecting the status left
+# only a wrong-branch start to be accepted.
+.sem_ok_status <- c(1L, 3L, 4L, -4L)
 # Accepted starts whose discrepancies differ by more than this reached different optima (the discrepancy is
 # scale free: it does not depend on the units of the data).
 .sem_spread_tol <- 1e-6
@@ -413,8 +418,10 @@
       res$objective <- .sem_fml(res$solution, ram, smp)
     }
     gate <- .sem_gate(res$solution, res$status, ram, smp, lb, ub, constraints)
-    if (gate$accepted && !is.null(constraints)) {
-      pol <- .sem_polish_accept(res, gate, ram, smp, lb, ub, constraints)
+    # A roundoff-limited stop (-4) can leave the point short of a nonlinear row along a flat direction (#276): it is
+    # polished back onto the row before the gate decides, with the wider reach of a restoration.
+    if (!is.null(constraints) && (gate$accepted || identical(res$status, -4L))) {
+      pol <- .sem_polish_accept(res, gate, ram, smp, lb, ub, constraints, restore = !gate$accepted)
       res <- pol$res
       gate <- pol$gate
     }

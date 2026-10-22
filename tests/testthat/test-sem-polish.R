@@ -108,3 +108,38 @@ test_that("a polish that breaks the constraint or is worse is never kept", {
   expect_identical(kept$res$solution, th)
   expect_identical(kept$gate, gate)
 })
+
+test_that("a roundoff-limited stall short of the row is restored onto it with the wider reach (#276)", {
+  fit <- fit_sem(pol_syntax, pol_data())
+  ram <- fit@internals$ram
+  smp <- .sem_sample(fit@data, ram)
+  cons <- .sem_constraint_rows(fit@internals$constraints, ram)
+  lb <- rep(-Inf, ram$q)
+  ub <- rep(Inf, ram$q)
+  star <- unname(fit@theta)
+  ic <- match("cp", gsub(" ", "", ram$par_names, fixed = TRUE))
+  u <- .sem_active_set(star, ram, smp, lb, ub, cons)$u
+  # a stall 0.05 natural units short of the row: further than the ordinary polish may travel (1e-2)
+  stall <- star
+  stall[ic] <- stall[ic] + 0.05 * u[ic]
+  expect_gt(.sem_active_set(stall, ram, smp, lb, ub, cons)$dist[1L], .sem_constraint_tol)
+  expect_null(.sem_polish(stall, ram, smp, lb, ub, cons))
+  back <- .sem_polish(stall, ram, smp, lb, ub, cons, reach = .sem_restore_reach)
+  expect_false(is.null(back))
+  expect_lt(max(abs(back - star)), 1e-6)
+  # through the acceptance step: status -4 and a rejected gate, restored only when asked to
+  res <- list(solution = stall, status = -4L, objective = .sem_eval(stall, ram, smp, deriv = FALSE)$f)
+  gate <- .sem_gate(stall, -4L, ram, smp, lb, ub, cons)
+  expect_false(gate$accepted)
+  kept <- .sem_polish_accept(res, gate, ram, smp, lb, ub, cons)
+  expect_identical(kept$res$solution, stall)
+  restored <- .sem_polish_accept(res, gate, ram, smp, lb, ub, cons, restore = TRUE)
+  expect_true(restored$gate$accepted)
+  expect_lt(max(abs(restored$res$solution - star)), 1e-6)
+  # planted defect: a restoration that breaks the constraint is refused by the gate and the stall stands
+  bent <- star
+  bent[ic] <- bent[ic] + 1e-3
+  testthat::local_mocked_bindings(.sem_polish = function(...) bent)
+  refused <- .sem_polish_accept(res, gate, ram, smp, lb, ub, cons, restore = TRUE)
+  expect_identical(refused$res$solution, stall)
+})

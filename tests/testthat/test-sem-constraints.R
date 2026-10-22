@@ -413,7 +413,7 @@ test_that("stubbed solver results get exact verdicts", {
   th <- .sem_optimize(s$ram, s$smp, s$start, constraints = s$cons)$theta
   inf <- rep(Inf, s$ram$q)
   gate <- function(theta, status = 1L) .sem_gate(theta, status, s$ram, s$smp, -inf, inf, s$cons)
-  for (st in c(1L, 3L, 4L)) expect_true(gate(th, st)$accepted, info = st)
+  for (st in c(1L, 3L, 4L, -4L)) expect_true(gate(th, st)$accepted, info = st)
   five <- gate(th, 5L)
   expect_false(five$accepted)
   expect_match(five$reason, "nloptr status 5 is not a success code")
@@ -428,8 +428,13 @@ test_that("stubbed solver results get exact verdicts", {
   moved <- gate(along)
   expect_false(moved$accepted)
   expect_match(moved$reason, "stationarity")
-  # an infeasible stall (status -4) names the constraint too
-  expect_match(gate(off, -4L)$reason, "status -4 is not a success code; constraint 'a \\+ b == 0.5' is violated")
+  # a roundoff-limited stop (-4) is judged by the same checks as a success code: infeasible and non-stationary
+  # points are still rejected, so the status alone never accepts a stall (#276)
+  expect_match(gate(off, -4L)$reason, "constraint 'a \\+ b == 0.5' is violated by")
+  expect_false(gate(along, -4L)$accepted)
+  expect_match(gate(along, -4L)$reason, "stationarity")
+  # an infeasible result under a failure code names the constraint too
+  expect_match(gate(off, -1L)$reason, "status -1 is not a success code; constraint 'a \\+ b == 0.5' is violated")
 })
 
 test_that("planted defect: dropping the status test admits a status-5 result", {
