@@ -2,7 +2,7 @@
 
 This book opens the native maximum-likelihood engine of the medfit R package
 (`fit_sem()`, `fit_mediation(engine = "native")`, `SEMFit`) and shows every
-matrix it works with. It documents medfit 0.12.0. It is reference material kept
+matrix it works with. It documents medfit 0.13.0. It is reference material kept
 in the package repository (`book/`); it is not part of the package website.
 
 Chapters, in order:
