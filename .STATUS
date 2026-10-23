@@ -1,3 +1,7 @@
+# Local pkgdown 404 repair — 2026-10-22
+# Isolated origin/dev 6a8ac44; full site build PASS, 106 pages / 8268 local refs / 0 errors.
+# Regression, R lint, workflow YAML and docs consistency tests PASS; desktop/mobile 404 inspected.
+# Local only; no push, merge, release, deployment or CRAN submission.
 # Local rlang import fix: based on v0.12.0; Rforge --as-cran check 0/0/0.
 # Structured result complete; inner exit 0; retained log Status: OK.
 # Test runner: PASS 5993, FAIL 0, WARN 1, SKIP 98; no CRAN-readiness claim.
