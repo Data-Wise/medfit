@@ -2,6 +2,17 @@
 
 * Declare the existing `rlang` runtime dependency used by `compare_lr()`,
   resolving the undeclared-import R CMD check warning.
+## Bug fixes
+
+* The native optimizer's acceptance gate no longer rejects a result only because NLopt reported a roundoff-limited
+  stop (status -4). The status is not the certificate: feasibility, stationarity and curvature still decide, and a
+  stalled point still fails them. On some CPUs (the GitHub runner's) the extreme-scale floor fixture of the nonlinear
+  gate ended every correct-basin start with -4, so the only accepted start was a wrong-branch one with a likelihood
+  ratio about 2700 too high and a single-start warning (#276). Constrained fits that previously warned "only 1 of 9
+  starts" on such machines now return the right optimum.
+* A roundoff-limited stop that leaves the point short of a nonlinear row along a flat direction is now restored onto
+  the row by the Newton polish (wider reach than the ordinary polish, no objective-rise limit) before the gate
+  decides; the gate still checks the restored point (#276).
 
 # medfit 0.12.0
 

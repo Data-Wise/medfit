@@ -125,7 +125,8 @@ verdict_gate <- function(gate, d, s) {
     "product-corr-colon" = c("design", "cvf", "path", "expect", "gap", "gap_column", "err"),
     "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok"),
     "s7-lifecycle" = c("s7", "s7_version", "step", "ok"),
-    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "gap", "note"),
+    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "lr_oracle", "gap", "note", "disproved",
+                            "q_ach"),
     "nonlinear-parity" = c("problem", "structure", "n", "seed", "native_ok", "improper", "feas", "omx_ok", "f_gap",
                            "est_gap", "ref_gap", "ann", "se_rel", "se_oracle"),
     "bootstrap-coverage" = c("sim", "lower", "upper", "hit"),
@@ -381,6 +382,22 @@ verdict_gate <- function(gate, d, s) {
         rows_chk(d, s), failed_chk(d),
         max_chk("oracle gap", d$gap, s$tol_est),
         chk("floor cases warn", all(d$native_ok[d$fixture %in% "var-1e6-1e-6"] %in% TRUE), "var-1e6-1e-6 rows"),
+        # #276: the driver recomputes the signed difference from the recorded numbers, so a planted disproof or a
+        # lying label (note, disproved, native_ok) cannot pass. A returned floor row needs finite lr and lr_oracle.
+        chk("floor rows carry numbers", floor_numbers_ok(d), "returned floor rows need finite lr and lr_oracle"),
+        chk("floor no disproof", floor_disproved(d) == 0L,
+            sprintf("%d floor rows with lr above the floored oracle or below it", floor_disproved(d))),
+        chk("floor labels agree", floor_labels_ok(d), "note, disproved and native_ok match lr - lr_oracle"),
+        # the cases that carry the contract must return a numerical result: q = q_hat (the MLE) and q = 0 (exact
+        # nulls) are strict rows, never refused or merely flagged; the zero row meets its constraint to 1e-7
+        # all() over an empty set is TRUE, so the critical-row checks below would pass if the rows were missing: the
+        # fixture must carry exactly one row for each of its six q values
+        chk("floor rows complete", floor_rows_complete(d), "var-1e6-1e-6 needs exactly one row per q_tag"),
+        chk("floor critical rows strict",
+            all(d$note[d$fixture %in% "var-1e6-1e-6" & d$q_tag %in% c("qhat", "zero")] %in% "strict"),
+            "q_hat and zero floor rows must be strict"),
+        chk("floor zero residual", all(abs(d$q_ach[d$fixture %in% "var-1e6-1e-6" & d$q_tag %in% "zero"]) <= 1e-7),
+            "zero floor row meets a * b / sqrt(...) = 0 to 1e-7"),
         # a flagged or refused row is allowed on some CPUs, but not for most of the fixture
         chk("floor strict share", mean(d$note[d$fixture %in% "var-1e6-1e-6"] %in% "strict") >= 0.5,
             sprintf("%d of %d floor rows meet the strict contract",
@@ -389,6 +406,38 @@ verdict_gate <- function(gate, d, s) {
     },
     # product-term and four-way gates: the rules live in tests/sim/product-gate-common.R
     product_gate_rules[[gate]](d, s) # nolint: object_usage_linter.
+  )
+}
+
+# Floor-fixture helpers (#276 slice 1): rows of var-1e6-1e-6 that returned a fit (not a refusal) carry lr and lr_oracle.
+floor_returned <- function(d) d$fixture %in% "var-1e6-1e-6" & !(d$note %in% "refused")
+floor_tol <- function(d) ifelse(d$q_tag %in% "zero", 1e-5, 1e-6) * pmax(1, d$lr_oracle)
+floor_tags <- c("qhat", "qhat-0.1", "qhat+0.05", "qhat+0.2", "-qhat", "zero")
+floor_rows_complete <- function(d) {
+  tags <- d$q_tag[d$fixture %in% "var-1e6-1e-6"]
+  length(tags) == length(floor_tags) && setequal(tags, floor_tags)
+}
+floor_numbers_ok <- function(d) {
+  r <- floor_returned(d)
+  all(is.finite(d$lr[r]) & is.finite(d$lr_oracle[r]))
+}
+floor_diff <- function(d) {
+  r <- floor_returned(d)
+  ifelse(r & is.finite(d$lr) & is.finite(d$lr_oracle), d$lr - d$lr_oracle, NA_real_)
+}
+floor_disproved <- function(d) {
+  df <- floor_diff(d)
+  sum(!is.na(df) & abs(df) > floor_tol(d))
+}
+floor_labels_ok <- function(d) {
+  df <- floor_diff(d)
+  r <- floor_returned(d)
+  off <- !is.na(df) & df > floor_tol(d) # disproved
+  strict <- d$note %in% "strict"
+  all(
+    !(strict & r & (is.na(df) | abs(df) > floor_tol(d))), # strict needs agreement
+    !(r & !is.na(df) & (d$disproved %in% TRUE) != off), # the disproved column is the numeric verdict
+    !(r & !is.na(df) & off & d$native_ok %in% TRUE) # a disproved row cannot pass
   )
 }
 
@@ -507,6 +556,30 @@ mutate <- function(gate, kind, d) {
     if (gate == "compare-lr") d$verdict[1] <- "error"
   }
   if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
+  if (kind == "floor_disproved_silent" && gate == "nonlinear-profile") {
+    # lr raised above the oracle while note, disproved and native_ok still claim a clean strict row
+    d$lr[d$fixture %in% "var-1e6-1e-6"][1] <- d$lr[d$fixture %in% "var-1e6-1e-6"][1] + 5
+  }
+  if (kind == "floor_oracle_missing" && gate == "nonlinear-profile") {
+    d$lr_oracle[d$fixture %in% "var-1e6-1e-6"] <- NA_real_
+  }
+  if (kind == "floor_note_lies" && gate == "nonlinear-profile") d$disproved[d$fixture %in% "var-1e6-1e-6"][1] <- TRUE
+  if (kind == "floor_refuse_critical" && gate == "nonlinear-profile") {
+    # the q_hat and zero floor rows refuse (note refused, no numbers): three refusals still pass the strict share
+    i <- d$fixture %in% "var-1e6-1e-6" & d$q_tag %in% c("qhat", "zero", "-qhat")
+    d$note[i] <- "refused"
+    d$lr[i] <- NA_real_
+    d$lr_oracle[i] <- NA_real_
+  }
+  if (kind == "floor_critical_missing" && gate == "nonlinear-profile") {
+    # the q_hat and zero floor rows are replaced by copies of other floor rows: the total stays 144
+    i <- which(d$fixture %in% "var-1e6-1e-6")
+    src <- i[d$q_tag[i] %in% "qhat+0.2"]
+    for (tag in c("qhat", "zero")) d[i[d$q_tag[i] %in% tag], ] <- d[src, ]
+  }
+  if (kind == "floor_zero_off" && gate == "nonlinear-profile") {
+    d$q_ach[d$fixture %in% "var-1e6-1e-6" & d$q_tag %in% "zero"] <- 1e-4
+  }
   if (kind == "unresolved_converged" && gate == "compare-lr") {
     d$verdict[1] <- "unresolved"
     d$all_converged[1] <- TRUE
@@ -554,7 +627,10 @@ run_mutants <- function() {
     if (s$gate %in% c("factor", "fixed-x", "mean-constrained")) kinds <- c(kinds, "no_lavaan")
     if (s$gate == "mean-constrained") kinds <- c(kinds, "lavaan_partial")
     if (s$gate == "compare-lr") kinds <- c(kinds, "unresolved_converged", "ref_off")
-    if (s$gate == "nonlinear-profile") kinds <- c(kinds, "all_flagged")
+    if (s$gate == "nonlinear-profile") {
+      kinds <- c(kinds, "all_flagged", "floor_disproved_silent", "floor_oracle_missing", "floor_note_lies",
+                 "floor_refuse_critical", "floor_zero_off", "floor_critical_missing")
+    }
     for (kind in kinds) {
       v <- verdict_gate(s$gate, mutate(s$gate, kind, ld$data), s)
       rejected <- !all(v$pass)
