@@ -56,10 +56,8 @@
 #' function: its row has `converged = FALSE`, `f` and `diff_ll` `NA` and the
 #' failure text in `note`, a warning repeats the text, and `statistic` and
 #' `p.value` are `NA` (never the minimum over the refits that worked, which
-#' would hide the failure). The same holds for a fit that dropped a
-#' zero-product branch (`fit@internals$incomplete`): its discrepancy is a
-#' minimum over the surviving branches, so nothing measured against it is
-#' certified. [compare_lr()] reads this as an unresolved reference.
+#' would hide the failure). A zero-product branch that cannot be fitted
+#' stops [fit_sem()] itself (there is no partial fit to test against).
 #'
 #' Inequality constraints in the model matter only when they put the null on
 #' the boundary of the parameter space. If a bound or an inequality that
@@ -186,14 +184,6 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   failed <- vapply(refit, function(r) !is.null(r$failure), TRUE)
   f <- vapply(refit, function(r) if (is.null(r$failure)) r$f else NA_real_, numeric(1))
   note <- vapply(refit, function(r) if (is.null(r$failure)) "" else r$failure, "")
-  # a fit that itself dropped a zero-product branch is a minimum over the surviving branches: nothing measured
-  # against its discrepancy is certified
-  incomplete <- isTRUE(fit@internals$incomplete)
-  if (incomplete) {
-    failed[] <- TRUE
-    note <- paste(note, "the fit dropped a zero-product branch, so its discrepancy is not certified")
-    note <- trimws(note)
-  }
   unresolved <- any(failed)
   if (unresolved) {
     warning(paste0(paste(unique(note[nzchar(note)]), collapse = "\n"),

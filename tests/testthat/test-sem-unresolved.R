@@ -1,6 +1,7 @@
-# Native SEM engine: a refit or a branch that cannot be fitted is an unresolved result, never a silent answer or a hard
-# error (restoration-bound plan T7, G4 and G7). Callers: `.sem_fit_branches()` (a dropped zero-product branch sets
-# `incomplete` in `@internals` and warns), `mbco_sem()` (a failed refit is a row with `converged = FALSE` and the
+# Native SEM engine: a refit that cannot be fitted is an unresolved result, never a silent answer or a hard error
+# (restoration-bound plan T7, G4 and G7), and a zero-product branch that cannot be fitted is an error, never a partial
+# fit that coef(), vcov() or extract_mediation() would consume as certified. Callers: `.sem_fit_branches()` (a dropped
+# branch is a `medfit_error_no_convergence`), `mbco_sem()` (a failed refit is a row with `converged = FALSE` and the
 # statistic is NA, never the minimum over the refits that worked), `compare_lr()` (the reference is not accepted, the
 # verdict is "unresolved"), and `anova()` (unchanged). The failures are planted by replacing `.sem_fit_syntax()` for
 # chosen calls; every other call is the real fit.
@@ -19,17 +20,19 @@ ur_failing <- function(fail, counter = new.env()) {
   }
 }
 
-test_that("a dropped zero-product branch sets `incomplete` and warns, and a complete fit does not", {
+test_that("a dropped zero-product branch is a classed error naming it, and a complete fit is unaffected", {
   full <- fit_sem(paste0(ur_model, "\na*b == 0"), ur_data())
-  expect_false(isTRUE(full@internals$incomplete))
+  expect_true(S7::S7_inherits(full, SEMFit))
+  expect_false("incomplete" %in% names(full@internals))
   # call 1 is the entry; calls 2 and 3 are the two branches (a = 0, b = 0): the first branch fails
   testthat::local_mocked_bindings(.sem_fit_syntax = ur_failing(2L))
-  expect_warning(
-    part <- fit_sem(paste0(ur_model, "\na*b == 0"), ur_data()),
-    "branch.*not certified"
-  )
-  expect_true(S7::S7_inherits(part, SEMFit))
-  expect_true(isTRUE(part@internals$incomplete))
+  err <- tryCatch(fit_sem(paste0(ur_model, "\na*b == 0"), ur_data()), error = identity)
+  expect_s3_class(err, "medfit_error_no_convergence")
+  expect_match(conditionMessage(err), "1 of 2 zero-product branches did not converge")
+  expect_match(conditionMessage(err), "best of the other branches has discrepancy [0-9.]+")
+  expect_match(conditionMessage(err), "a == 0: planted refit failure", fixed = TRUE)
+  # nothing is returned, so no consumer can use a partial fit
+  expect_false(exists("res", inherits = FALSE))
 })
 
 test_that("every branch failing is still an error", {
@@ -79,11 +82,11 @@ test_that("a complete MBCO result carries converged TRUE, empty notes and unreso
   expect_true(is.finite(res$statistic))
 })
 
-test_that("mbco_sem() on a fit that dropped a branch is unresolved", {
-  testthat::local_mocked_bindings(.sem_fit_syntax = ur_failing(2L))
-  part <- suppressWarnings(fit_sem(paste0(ur_model, "\na*b == 0"), ur_data()))
-  testthat::local_mocked_bindings(.sem_fit_syntax = medfit:::.sem_fit_syntax)
-  expect_warning(res <- mbco_sem(part, "a", "b"), "branch")
+test_that("mbco_sem() on a fit with a zero-product constraint reports a failed branch refit as unresolved", {
+  full <- fit_sem(paste0(ur_model, "\na*b == 0"), ur_data())
+  # the refit under the null a == 0 is itself a branch fit when the model already carries a*b == 0
+  testthat::local_mocked_bindings(.sem_fit_syntax = ur_failing(1L))
+  expect_warning(res <- mbco_sem(full, "a", "b"), "failed")
   expect_true(is.na(res$statistic))
   expect_true(isTRUE(res$unresolved))
 })
