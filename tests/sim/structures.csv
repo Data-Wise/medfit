@@ -1,0 +1,14 @@
+structure,kind,gates,doc
+observed,sem_models,parity|se|reliability|oracle-sweep,model-native
+latent,sem_models,parity|se|reliability,model-native-latent
+parallel,sem_models,parity|se,model-native-multi
+serial,sem_models,parity|se,model-native-multi
+linear constraints,syntax,constrained|stationarity,model-native-constraints
+nonlinear constraints,syntax,nonlinear-parity|nonlinear-profile|restoration,model-native-constraints
+zero-product branches,syntax,compare-lr,model-native-constraints
+observed intercepts and means,syntax,mean-constrained,model-native
+fixed_x,syntax,fixed-x,model-native
+product term and four-way,syntax,product-null|product-null-colon|product-fixed-var|product-fixed-var-colon|product-corr|product-corr-colon|four-way-kat,model-native
+factor covariates,syntax,factor,model-native-factors
+bootstrap inference,inference,bootstrap-coverage,model-native
+S7 install lifecycle,infrastructure,s7-lifecycle,model-native
