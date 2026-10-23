@@ -412,7 +412,7 @@ verdict_gate <- function(gate, d, s) {
                 "a duplicated row does not change the allowance", "rank zero fails closed",
                 "a far worse restoration is refused", "boundary: accepted at k = rho / 0.9",
                 "boundary: refused at k = rho / 1.1", "the curvature term decides a case",
-                "kept restorations lie within the cap",
+                "no restoration the old code kept is refused by the cap",
                 "separation: k keeps its margin over the largest legitimate rho",
                 "basin gap: the cap stays below the nearest inferior basin", "restoration attempts observed")
       miss <- setdiff(need, d$check)
@@ -432,6 +432,8 @@ verdict_gate <- function(gate, d, s) {
         chk("far-worse restoration is far above the cap", isTRUE(val(need[5]) > 100),
             sprintf("rise = %s x k * allowance", fmt(val(need[5])))),
         chk("curvature decides", isTRUE(val(need[8]) > lim(need[8])), sprintf("%s", fmt(val(need[8])))),
+        chk("the cap refuses no restoration the old code kept", isTRUE(val(need[9]) == 0),
+            sprintf("%s refused", fmt(val(need[9])))),
         chk("separation re-derived (k over margin)", is.na(sep) || isTRUE(sep <= s$tol_est / s$tol_se),
             sprintf("largest legitimate rho %s, k / margin = %s", fmt(sep), fmt(s$tol_est / s$tol_se))),
         chk("basin gap re-derived", is.na(gap_v) || is.na(gap_l) || isTRUE(gap_v < gap_l),

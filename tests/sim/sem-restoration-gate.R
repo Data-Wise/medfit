@@ -12,8 +12,9 @@
 #              constructed on demand; the real gate is exercised by the legitimate restorations below), the boundary on
 #              either side of rho / k, and the curvature term deciding a case.
 #   observed   every restoration attempt over the profile gate's 24 fixtures x 6 q values (trace of
-#              `.sem_polish_accept`, allowance recomputed through the normal equations): the kept ones lie within the
-#              cap, the largest legitimate rho keeps the margin below k (separation), and the cap stays below the
+#              `.sem_polish_accept`, allowance recomputed through the normal equations): none that the old code would
+#              have kept (the polished point passes the real gate) is refused by the cap, the largest legitimate rho
+#              keeps the margin below k (separation), and the cap stays below the
 #              smallest objective gap to an inferior basin seen on the run (basin gap; a platform that sees none
 #              passes).
 # The margin and k live in tests/sim/gates.csv (row `restoration`: tol_est = k, tol_se = margin). run-gates.R --fast
@@ -26,6 +27,7 @@
 #   nopinv      the rank cutoff of the pseudo-inverse is dropped, so a duplicated row blows the step up
 #   nafailopen  an NA allowance is accepted instead of refusing the restoration
 #   kx100       k is 100 times larger
+#   shrink      the cap is 0.2 of what it should be (a cap that is too tight)
 # Run from the package root:  Rscript tests/sim/sem-restoration-gate.R   (FAST=1 runs 8 fixtures x 3 q's)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
@@ -66,6 +68,9 @@ if (mutant == "infslack") {
   mutate_body(".sem_restore_allowance", "keep <- sv$d > 1e-08 * max(sv$d)", "keep <- sv$d > 0")
 } else if (mutant == "nafailopen") {
   mutate_body(".sem_polish_accept", "if (is.na(allow)) {", "if (FALSE) {")
+} else if (mutant == "shrink") {
+  mutate_body(".sem_polish_accept", "slack <- .sem_restore_k * allow + .sem_polish_f_slack",
+              "slack <- 0.2 * .sem_restore_k * allow + .sem_polish_f_slack")
 } else if (mutant == "kx100") {
   swap(".sem_restore_k", 100 * get(".sem_restore_k", ns))
 } else if (nzchar(mutant)) {
@@ -219,12 +224,17 @@ guard("the curvature term decides a case", "planted", 1.1, function() {
 # ---- observed rows ----
 d <- rst_run_profile(fast)
 k <- k_pkg()
-kept <- d[d$kept %in% TRUE & is.finite(d$rise) & is.finite(d$allow), , drop = FALSE]
-within <- kept$rise <= k * kept$allow + 1e-8
-worst <- if (nrow(kept)) max(kept$rise / pmax(kept$allow, 1e-8)) else NA_real_
-add("kept restorations lie within the cap", "observed", worst, k,
-    all(within), sprintf("%d kept of %d attempts; rise <= k * allow + 1e-8", nrow(kept), nrow(d)))
-big <- kept[kept$rise > 1e-8, , drop = FALSE]
+# The population is what the OLD code would have kept (the polished point passes the real gate), not what the capped
+# code kept: a cap that is too tight refuses restorations #276 needed, and those would drop out of a "kept" count.
+old_kept <- d[d$polished %in% TRUE & d$gate_after %in% TRUE & is.finite(d$rise) & is.finite(d$allow), , drop = FALSE]
+refused <- sum(!(old_kept$kept %in% TRUE))
+over <- sum(old_kept$rise > k * old_kept$allow + 1e-8)
+worst <- if (nrow(old_kept)) max(old_kept$rise / pmax(old_kept$allow, 1e-8)) else NA_real_
+add("no restoration the old code kept is refused by the cap", "observed", refused, 0,
+    refused == 0 && over == 0,
+    sprintf("%d would-have-kept of %d attempts; %d refused, %d above k * allow + 1e-8; worst rise / allow %s",
+            nrow(old_kept), nrow(d), refused, over, format(worst, digits = 4)))
+big <- old_kept[old_kept$rise > 1e-8, , drop = FALSE]
 rho_max <- if (nrow(big)) max(big$rho) else NA_real_
 add("separation: k keeps its margin over the largest legitimate rho", "observed", rho_max, k / margin,
     (is.na(rho_max) || rho_max <= k / margin) && isTRUE(k == k_spec),

@@ -7,7 +7,7 @@
 "boundary: accepted at k = rho / 0.9","planted",0.685002476402328,NA,TRUE,"rho = 0.6850",""
 "boundary: refused at k = rho / 1.1","planted",0.685002476402328,NA,TRUE,"rho = 0.6850",""
 "the curvature term decides a case","planted",1.64229792095895,1.1,TRUE,"allowance over |g' delta| alone at d = 0.3",""
-"kept restorations lie within the cap","observed",0.999778859976295,4,TRUE,"11 kept of 14 attempts; rise <= k * allow + 1e-8",""
+"no restoration the old code kept is refused by the cap","observed",0,0,TRUE,"11 would-have-kept of 14 attempts; 0 refused, 0 above k * allow + 1e-8; worst rise / allow 0.9998",""
 "separation: k keeps its margin over the largest legitimate rho","observed",0.999778859976295,1.33333333333333,TRUE,"6 kept restorations with a rise above 1e-8; package k = 4, gates.csv k = 4, margin 3",""
 "basin gap: the cap stays below the nearest inferior basin","observed",0.0598058144492281,1.44951960430168,TRUE,"2 inferior-basin stalls seen (none is a pass: the platform did not produce one)",""
 "restoration attempts observed","observed",14,NA,TRUE,"openblas BLAS; informational, the planted rows carry the contract",""
