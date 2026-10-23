@@ -1,6 +1,7 @@
 # TEMPORARY (restoration-bound plan T3, G11): runs tests/sim/restoration-instrument.R on the runner and uploads the
 # per-attempt CSV. Fires only on pushes to the feature branch that touch the script or this file. Delete before the PR.
 on:
+  workflow_dispatch:
   push:
     branches: [fix/restoration-bound]
     paths:
