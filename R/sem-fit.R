@@ -218,9 +218,9 @@
 # with the smallest discrepancy wins. A branch that fails the acceptance gate is skipped; when none succeeds
 # the error lists each. Messages and warnings of the losing branches are dropped, those of the winner are
 # passed on. The returned fit keeps the user's constraints; `branch` names the lines the winner used. A skipped
-# branch while another wins leaves a minimum over the surviving branches only, which can look valid: the result
-# then carries `incomplete = TRUE` (kept in `@internals`) and a warning, and `mbco_sem()` and `compare_lr()` read
-# it and report an unresolved result.
+# branch while another wins leaves a minimum over the surviving branches only, which can look valid and need not
+# be the constrained optimum: that is an error too (`medfit_error_no_convergence`), never a fit, and `mbco_sem()`
+# and `compare_lr()` report an unresolved result for it.
 .sem_fit_branches <- function(parsed, products, data, information, n_starts, control, weights, se_type,
                               meanstructure = NULL, fixed_x = FALSE) {
   grid <- do.call(expand.grid, c(lapply(products, `[[`, "factors"), stringsAsFactors = FALSE))
@@ -268,18 +268,21 @@
     .sem_no_convergence(paste0("no branch of the zero-product constraints converged:\n  ",
                                paste(fail, collapse = "\n  ")))
   }
+  skipped <- setdiff(seq_along(fits), ok)
+  if (length(skipped)) {
+    # A minimum over the surviving branches can look valid and need not be the constrained optimum, so no fit is
+    # returned: the best survivor's discrepancy goes in the message for diagnosis only.
+    best <- min(vapply(ok, function(b) fits[[b]]$fit$f, numeric(1)))
+    .sem_no_convergence(sprintf(
+      paste0("%d of %d zero-product branches did not converge, so the constrained optimum is not certified ",
+             "(the best of the other branches has discrepancy %s):\n  %s"),
+      length(skipped), length(fits), format(best, digits = 8), paste(fail[skipped], collapse = "\n  ")))
+  }
   win <- ok[which.min(vapply(ok, function(b) fits[[b]]$fit$f, numeric(1)))]
   for (m in fits[[win]]$held$messages) message(conditionMessage(m))
   for (w in fits[[win]]$held$warnings) warning(conditionMessage(w), call. = FALSE)
   out <- fits[[win]]$fit
   out$constraints <- parsed$constraints
-  skipped <- setdiff(seq_along(fits), ok)
-  out$incomplete <- length(skipped) > 0L
-  if (length(skipped)) {
-    warning(sprintf(paste0("%d of %d zero-product branches did not converge (%s); the fit is the best of the others, ",
-                           "so its discrepancy and any likelihood-ratio statistic built on it are not certified"),
-                    length(skipped), length(fits), paste(fail[skipped], collapse = "; ")), call. = FALSE)
-  }
   out
 }
 

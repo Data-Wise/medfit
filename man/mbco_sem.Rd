@@ -67,10 +67,8 @@ A refit that fails the acceptance gate of the optimizer does not stop the
 function: its row has \code{converged = FALSE}, \code{f} and \code{diff_ll} \code{NA} and the
 failure text in \code{note}, a warning repeats the text, and \code{statistic} and
 \code{p.value} are \code{NA} (never the minimum over the refits that worked, which
-would hide the failure). The same holds for a fit that dropped a
-zero-product branch (\code{fit@internals$incomplete}): its discrepancy is a
-minimum over the surviving branches, so nothing measured against it is
-certified. \code{\link[=compare_lr]{compare_lr()}} reads this as an unresolved reference.
+would hide the failure). A zero-product branch that cannot be fitted
+stops \code{\link[=fit_sem]{fit_sem()}} itself (there is no partial fit to test against).
 
 Inequality constraints in the model matter only when they put the null on
 the boundary of the parameter space. If a bound or an inequality that
