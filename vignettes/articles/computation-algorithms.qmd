@@ -146,7 +146,9 @@ check warns without rejecting. These thresholds and verdicts are in
 
 An accepted nonlinear fit can receive a Newton polish: short steps solve the
 active-set Karush–Kuhn–Tucker equations using $H_L$. A polished point is kept
-only if the objective improves and it passes the gate again. With nonlinear
+only if the objective improves and it passes the gate again; a restoration from
+a roundoff-limited stall is held to a cap on the objective's rise instead (the
+Methods and Formulas article derives it). With nonlinear
 constraints, the engine tries all starts and keeps the accepted point with the
 smallest discrepancy. A feasible unconstrained solution can certify the
 optimum; otherwise the `optimum` diagnostic reports whether starts agreed,

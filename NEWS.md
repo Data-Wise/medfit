@@ -14,8 +14,27 @@
   ratio about 2700 too high and a single-start warning (#276). Constrained fits that previously warned "only 1 of 9
   starts" on such machines now return the right optimum.
 * A roundoff-limited stop that leaves the point short of a nonlinear row along a flat direction is now restored onto
-  the row by the Newton polish (wider reach than the ordinary polish, no objective-rise limit) before the gate
-  decides; the gate still checks the restored point (#276).
+  the row by the Newton polish (wider reach than the ordinary polish) before the gate decides; the gate still checks
+  the restored point (#276).
+* A restoration can no longer raise the discrepancy without limit. It was accepted whenever the gate accepted the
+  restored point, so a feasible, stationary but worse point could stand and inflate a likelihood-ratio statistic. The
+  rise is now capped at 4 times the first-order cost of restoring feasibility,
+  $|g'\delta| + \tfrac12|\delta' H_L \delta|$ with $\delta = -M^{+}c$ the minimum-norm step back onto the active rows
+  (the multipliers times the violation, without computing them; see the Methods and Formulas article). On the
+  fixtures that restore, every legitimate restoration rises by 0.995 to 0.9998 of that cost, so none is refused; a
+  restoration whose cost cannot be computed (no active row, rows of rank zero) is refused. The new `restoration` gate
+  in `tests/sim` checks the cap with planted defects.
+* **Behavior change (correctness fix):** a refit or a zero-product branch that the optimizer cannot fit is now an
+  unresolved result instead of an error or a silent answer. `mbco_sem()` returns a row with `converged = FALSE`, the
+  failure text in a new `note` column and an `NA` statistic and p-value (never the minimum over the refits that
+  worked), with a warning and a new `unresolved` element; this includes a null the constraints rule out (`a > 0.3`
+  with the null `a = 0`), which used to stop. A model or data error in a refit (for example the rule-9 refusal of a
+  label constraint with products) still stops. A fit that dropped a zero-product branch while another won now warns
+  and carries `incomplete` in `@internals`, because its discrepancy is a minimum over the surviving branches only;
+  `mbco_sem()` treats such a fit as unresolved. `compare_lr()` then returns the verdict `"unresolved"` with
+  `reference$accepted = FALSE` and `reference$lr = NA`, not an error. Callers that read `$tests$converged`
+  (`missingmed` does) keep working; code that relied on `mbco_sem()` stopping for a failed refit must check
+  `$unresolved`.
 
 # medfit 0.12.0
 

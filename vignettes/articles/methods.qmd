@@ -710,6 +710,39 @@ system of the active set (using the same Lagrangian Hessian); the polished point
 replaces the solution only when the acceptance test accepts it again and the
 discrepancy does not rise.
 
+A roundoff-limited stop (NLopt status $-4$) can leave the point short of a
+nonlinear row along a flat direction. The same Newton steps then restore it
+onto the row with a wider reach (up to one natural unit), and the acceptance
+test decides on the restored point. The objective may rise on the way, by about
+the multiplier times the violation, so the rise is capped. With $M$ the Jacobian
+of the active rows on the free coordinates and $c$ their values at the stalled
+point $x_s$ (solver natural units), the minimum-norm step back onto the
+linearized rows is $\delta = -M^{+}c$ ($M^{+}$ the pseudo-inverse, singular
+values below $10^{-8}$ of the largest dropped), and the first-order cost of
+restoring feasibility in the quadratic model is
+
+$$
+A = \left|g^\top \delta\right| + \tfrac12\left|\delta^\top H_L\,\delta\right|,
+\qquad F(x_{\text{restored}}) - F(x_s) \;\le\; k\,A + 10^{-8}, \quad k = 4,
+$$
+
+with $g$ the gradient and $H_L$ the Lagrangian Hessian at $x_s$. With
+least-squares multipliers $\lambda = -(M^{+})^\top g$ one has
+$\lambda^\top c = g^\top\delta$, so $A$ is the multipliers times the violation
+without computing them (none exist at a rejected stall). The Newton step solves
+the quadratic problem $\min_d\, g^\top d + \tfrac12 d^\top H_L d$ subject to
+$Md = -c$, and $\delta$ is feasible for it, so a legitimate restoration cannot
+cost more than $A$ to second order; the factor $k$ pays for the cubic terms,
+the curvature of the rows and the later iterations. $A$ does not change when a
+row is rescaled or duplicated, and a coordinate held at a bound is not in $M$.
+When there is nothing to restore onto (no active row), $M$ has rank zero or an
+input is not finite, $A$ is undefined and the restoration is refused. On the
+fixtures that restore, the ratio of the observed rise to $A$ lies between
+$0.995$ and $0.9998$. The cap does not catch a stall that already sits in an
+inferior basin: restoring from there costs only a small, explained rise, and
+that case belongs to the best-of-starts and dominance checks of the Starts
+section.
+
 A product of labels set to zero ($ab = 0$, $b_1 b_2 b_3 = 0$) is not solved this
 way, because its Jacobian vanishes at the solution: it holds exactly when one
 factor is zero, so the model is refitted once per factor from the default start
@@ -836,6 +869,14 @@ If a bound or an inequality on the tested path is active at its refit (`a > 0`
 with the null at $a = 0$), the null lies on the boundary of the parameter space,
 the statistic is a mixture of chi-squares, and the function warns that the
 p-value is not valid.
+
+A refit that the optimizer cannot bring to an accepted solution does not stop
+the function: its row in `$tests` has `converged = FALSE`, `NA` discrepancies
+and the failure text in `note`, a warning repeats the text, and the statistic
+and p-value are `NA`. They are never the minimum over the refits that worked,
+which would hide the failure. The same holds when the fit itself dropped a
+zero-product branch, since its discrepancy is then a minimum over the surviving
+branches only. A model or data error in a refit still stops.
 
 ```{r}
 #| label: native-sem-mbco

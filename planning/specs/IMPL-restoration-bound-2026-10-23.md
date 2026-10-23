@@ -420,3 +420,14 @@ nor that `k = 4` or 10 is safe on other data.
   argument names still work and warn`, a `lifecycle::expect_deprecated` in `test-methods-tidy.R`) also fails on a clean
   `origin/dev` export under the same invocation (6714 passed, 1 failed) and passes when the file is run alone, so it is
   an artifact of that invocation, not of this branch. `lintr::lint_package()` after `load_all()`: 0 lints.
+
+## 9. T8 as built (docs, 2026-10-23)
+
+- `NEWS.md`: stale "no objective-rise limit" wording fixed; bullets for the cap (k = 4, ratio 0.995 to 0.9998, fail
+  closed on NA), and a **Behavior change (correctness fix)** bullet for `mbco_sem()` / `.sem_fit_branches()` /
+  `compare_lr()` unresolved results.
+- `R/compare-lr.R` roxygen (`?compare_lr`): when medfit has no accepted reference; `man/compare_lr.Rd` regenerated.
+- `vignettes/articles/methods.qmd`: restoration-cap derivation after the polish paragraph; MBCO paragraph on
+  unresolved refits. `computation-algorithms.qmd`: polish paragraph points to the cap.
+- `tests/testthat/test-restore-docs.R`: article k equals `.sem_restore_k` (planted k = 40 rejected), gates.csv k, NEWS
+  phrases, help pages (skipped under `load_all()`).
