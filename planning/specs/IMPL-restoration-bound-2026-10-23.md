@@ -92,7 +92,7 @@ Define the ratio `rho = rise / allow` per restoration attempt.
   separate the cases and G8 applies: an incumbent check (restored `f` against the best accepted start or the
   unconstrained fit within a tolerance; no incumbent fails closed).
 - `k` is a constant in `R/sem-constraints.R` (`.sem_restore_k`), mirrored in `gates.csv` (section 3.5). T3 results
-  (section 6) put the decision between 4 and 10; it is open item G12.
+  (section 6) put the decision between 4 and 10. **Decided 2026-10-23 (G12): `k = 4`, margin 3.** The S6 margin of 10 is relaxed to 3 because `rho` is a structural ratio (the rise cannot exceed the quadratic-model value except by cubic terms and extra Newton steps), measured 0.9948 to 0.9998 on two OpenBLAS builds, not a noisy measurement; `k = 4` keeps `k / margin = 1.33`, a 33% allowance above the largest observed `rho`, and 4.2x below the nearest known inferior-basin gap. Recorded in `tests/sim/gates.csv` (`tol_est = 4`, `tol_se = 3`).
 
 ### 1.6 What this bound does and does not catch (state in the PR body)
 
@@ -165,7 +165,7 @@ The ordinary polish path (`restore = FALSE`) is untouched (G6). The `.sem_restor
 
 ### 2.2 Diagnostics channel
 
-`gate$restore` rides in `attempts[[i]] <- gate` (`R/sem-optim.R:~430`).
+~~`gate$restore` rides in `attempts[[i]] <- gate`~~ **Dropped:** no `gate$restore` field was added; the trace hook (below) reads everything from the entry arguments, so the package carries no diagnostics code for it.
 
 **T1 decision (2026-10-23): `attempts` does not reach the returned fit.** `.sem_optim()` returns `attempts` in its
 result list (`R/sem-optim.R:544`), but `.sem_as_semfit()` (`R/fit-sem.R:139-141`) keeps only `status, decrement, retries,
@@ -276,9 +276,9 @@ for T4-T8 (batching per the repo's PR-count convention); T0-T3 may land as a doc
 | T1 | **DONE 2026-10-23** (section 2.2). Decide the diagnostics channel | written note: `attempts` surfaced or not; if not, trace-wrapper design | - |
 | T2 | **DONE 2026-10-23** (commit 7597fb9). Write `tests/sim/restoration-instrument.R` | runs locally on `FAST` fixtures; per-attempt CSV with every column of section 3.1; `NA` on early returns, no error | T1 |
 | T3 | **DONE 2026-10-23** (section 6; `k` decision G12 open). Run T2 on the CI runner and locally; calibrate `k` | report: `rho_legit` max, materiality margin, count of restorations by kind (section 1.6), runner vs local difference; `k` chosen or G8 triggered | T2 |
-| T4 | Implement `.sem_restore_allowance()` and the slack change | unit tests of 3.4 pass; ordinary polish path byte-identical; `gate$restore` diagnostics present | T0, T3 |
-| T5 | Write `sem-restoration-gate.R` with planted rows and mutants | each mutant exits 1, the control exits 0, 1e-6 tolerances only | T4 |
-| T6 | Register the gate (3.5) | `run-gates.R --fast` and `--mutants` green; `gates (rest)` shard time still within budget | T5 |
+| T4 | **DONE 2026-10-23.** Implement `.sem_restore_allowance()` and the slack change | unit tests of 3.4 pass; ordinary polish path byte-identical; `gate$restore` diagnostics present | T0, T3 |
+| T5 | **DONE 2026-10-23.** Write `sem-restoration-gate.R` with planted rows and mutants | each mutant exits 1, the control exits 0, 1e-6 tolerances only | T4 |
+| T6 | **DONE 2026-10-23.** Register the gate (3.5) | `run-gates.R --fast` and `--mutants` green; `gates (rest)` shard time still within budget | T5 |
 | T7 | Callers: `mbco_sem()`, `.lr_reference()`, `.sem_fit_branches()` flag | caller-level tests of 3.4 pass; dependents' `mbco_sem()` usage checked read-only | T4 |
 | T8 | Docs: NEWS, `?mbco_sem`, `?compare_lr`, methods article section | doc-consistency tests pass; `devtools::document()` clean; US spelling | T7 |
 | T9 | Verify: full suite in the worktree, dispatched gates, rerun T2 and diff per-attempt data | counts in the PR body; floor gate 144/144 on the runner; a changed rejection masked by another winning start is visible in the diff | T6, T8 |
@@ -351,3 +351,30 @@ argument written into `gates.csv`).
 **What this does not show.** Only that nothing the unmodified code accepted would be rejected on these 24 fixtures x 6
 `q` values, two OpenBLAS builds and the one fixture that restores. It does not show the hole is unreachable elsewhere,
 nor that `k = 4` or 10 is safe on other data.
+
+---
+
+## 7. T4-T6 as built (2026-10-23)
+
+- **T4.** `.sem_restore_allowance()`, `.sem_restore_k = 4`, and the capped slack in `.sem_polish_accept()`
+  (`R/sem-constraints.R`); an `NA` allowance refuses the restoration. The ordinary polish path is unchanged.
+  `tests/testthat/test-sem-restore-bound.R`: 23 expectations (hand value on one and two rows, scale and duplicate-row
+  invariance, rank zero and no active row give `NA` and a refused restoration, the boundary on either side of `rho / k`,
+  the curvature term, a far-worse restoration refused with the gate mocked). Planted-defect check: with `k = Inf` the
+  far-worse test fails.
+- **T5.** `tests/sim/sem-restoration-gate.R` (12 rows: 8 planted, 4 observed) with the shared observation code in
+  `tests/sim/restoration-common.R` (also used by the instrument). All six mutants exit 1 (`infslack`, `rawdist`,
+  `nocurv`, `nopinv`, `nafailopen`, `kx100`); the control exits 0. Two defects found in the first draft of the gate
+  itself: the planted far-worse size was derived from the package's `k`, so `kx100` scaled the plant up and passed
+  (the circularity G10 warned about; the plant and the `k == gates.csv` check now use the gates.csv value), and
+  evaluating the profile gate in the global environment overwrote the gate's own variables and made it read `MUTANT`
+  (now evaluated in `rst_env` with `MUTANT` and `FAST` set explicitly).
+- **T6.** `gates.csv` row `restoration` (12 rows, `tol_est` 4, `tol_se` 3); `run-gates.R`: column list, verdict rule
+  (re-derives the hand-value tolerances, the far-worse ratio above 100, curvature, separation and basin gap from the
+  recorded numbers), `mutate()` kinds (`tolerance`, `failed`, `missing`), the script map and the `--fast` tie of
+  `tol_est` to `.sem_restore_k`. `run-gates.R --mutants --only restoration`: every mutation rejected, control passes.
+- Local evidence: 947 expectations pass in the related test files (`NOT_CRAN=true`), `lintr::lint_package()` after
+  `load_all()` reports 0 lints. The `--fast` tie check and the CI `gates (rest)` shard were not run locally.
+- Not done: T7 (callers), T8 (docs, NEWS), T9 (full verification, dispatched gates), T10 (Codex diff review). The gate's
+  planted far-worse case mocks the gate (a worse stationary point cannot be built on demand); the real gate is
+  exercised by the legitimate restorations and the boundary rows.

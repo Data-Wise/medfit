@@ -28,7 +28,7 @@ Exposure on real data is unmeasured; no wrong accepted fit has been reproduced y
 | G9 | The `mbco_sem()` error-to-result change ships under the CLAUDE.md correctness-fix exemption: next minor release, NEWS behavior-change note, no deprecation period, after a read-only check of RMediation and probmed usage of `mbco_sem()`. |
 | G10 | The planted test defines "materially worse" as an objective rise of at least `max(1e-3 * abs(f), 1e3 * roundoff)` of the restored fit's discrepancy (set independently of the W1 formula, so a mis-scaled allowance cannot make the plant pass; revisit the constants with the W2 data), and the test asserts separately that the rise exceeds the W1 allowance and exceeds roundoff, so old code passes only through the `Inf` slack and new code fails only through the bound. |
 | G11 | W2 runs on the CI runner (OpenBLAS, where #276 failed) and locally, to see whether restoration data differs by BLAS. **Correction (T3, 2026-10-23): local R links Homebrew OpenBLAS 0.3.34, not reference BLAS**; the two runs are two OpenBLAS builds. A reference-BLAS point needs the #274 container. |
-| G12 | **Open.** `k` for the allowance: 10 (S6 rule as written; margin 1.7x to the nearest known inferior-basin gap) or 4 (margin 4x above the largest legitimate rho, 4.2x to the gap, S6 margin relaxed with the structural argument). See IMPL section 6. |
+| G12 | **Decided 2026-10-23: `k = 4`, S6 margin relaxed from 10 to 3** (recorded in `gates.csv`). Was: `k` for the allowance: 10 (S6 rule as written; margin 1.7x to the nearest known inferior-basin gap) or 4 (margin 4x above the largest legitimate rho, 4.2x to the gap, S6 margin relaxed with the structural argument). See IMPL section 6. |
 
 ## Findings from the plan review, and how the plan answers them
 
