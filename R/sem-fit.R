@@ -273,10 +273,12 @@
     # A minimum over the surviving branches can look valid and need not be the constrained optimum, so no fit is
     # returned: the best survivor's discrepancy goes in the message for diagnosis only.
     best <- min(vapply(ok, function(b) fits[[b]]$fit$f, numeric(1)))
-    .sem_no_convergence(sprintf(
+    msg <- sprintf(
       paste0("%d of %d zero-product branches did not converge, so the constrained optimum is not certified ",
              "(the best of the other branches has discrepancy %s):\n  %s"),
-      length(skipped), length(fits), format(best, digits = 8), paste(fail[skipped], collapse = "\n  ")))
+      length(skipped), length(fits), format(best, digits = 8), paste(fail[skipped], collapse = "\n  ")
+    )
+    .sem_no_convergence(msg)
   }
   win <- ok[which.min(vapply(ok, function(b) fits[[b]]$fit$f, numeric(1)))]
   for (m in fits[[win]]$held$messages) message(conditionMessage(m))
