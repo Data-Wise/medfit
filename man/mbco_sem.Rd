@@ -39,11 +39,11 @@ and \code{b}.}
 \value{
 An object of class \code{c("mbco_sem", "htest")}: \code{statistic} (the
 smallest diffLL), \code{parameter} (\code{df = 1}), \code{p.value}, \code{method},
-\code{data.name}, \code{n_obs}, and \code{tests}, a data frame with one row per refit
-(\code{constraint}, the minimized discrepancy \code{f}, \code{diff_ll} equal to
-\code{n_obs * (f - fit@f)}, and \code{converged}, always \code{TRUE} because a refit
-that does not converge is an error). It prints with the standard \code{htest}
-layout.
+\code{data.name}, \code{n_obs}, \code{unresolved} (\code{TRUE} when any refit failed, see
+Details), and \code{tests}, a data frame with one row per refit (\code{constraint},
+the minimized discrepancy \code{f}, \code{diff_ll} equal to \code{n_obs * (f - fit@f)},
+\code{converged}, and \code{note}, the failure text of a refit that could not be
+fitted, otherwise empty). It prints with the standard \code{htest} layout.
 }
 \description{
 Tests the null hypothesis that an indirect effect, the product of two or more
@@ -61,8 +61,16 @@ larger statistic.
 A fit made with \code{weights} is refused: the weighted discrepancy is
 not a likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are
-measured against. A refit that fails the acceptance gate of the optimizer is
-an error rather than a statistic.
+measured against.
+
+A refit that fails the acceptance gate of the optimizer does not stop the
+function: its row has \code{converged = FALSE}, \code{f} and \code{diff_ll} \code{NA} and the
+failure text in \code{note}, a warning repeats the text, and \code{statistic} and
+\code{p.value} are \code{NA} (never the minimum over the refits that worked, which
+would hide the failure). The same holds for a fit that dropped a
+zero-product branch (\code{fit@internals$incomplete}): its discrepancy is a
+minimum over the surviving branches, so nothing measured against it is
+certified. \code{\link[=compare_lr]{compare_lr()}} reads this as an unresolved reference.
 
 Inequality constraints in the model matter only when they put the null on
 the boundary of the parameter space. If a bound or an inequality that
@@ -71,7 +79,7 @@ involves the tested parameter is active at its refit (\code{a > 0} with the null
 not chi-square(1), and that the p-value is not valid. A bound the null sits
 inside (\code{a < 0.2}), an inactive inequality and one on another parameter are
 not mentioned. A null the constraints rule out (\code{a > 0.3} with the null
-\code{a = 0}) is an error that says so.
+\code{a = 0}) is an unresolved row whose note says so.
 
 Only a product of labeled paths is tested; a sum of products (several
 parallel indirect effects together) is not. If two of the paths are tied by

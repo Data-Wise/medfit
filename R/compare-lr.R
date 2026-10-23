@@ -183,7 +183,7 @@
   tests <- mbco_sem(object, paths = paths)$tests
   free <- object@table[object@table$free, ]
   list(
-    lr = min(tests$diff_ll),
+    lr = if (all(is.finite(tests$diff_ll))) min(tests$diff_ll) else NA_real_,
     accepted = all(tests$converged) && all(is.finite(tests$diff_ll)),
     est = .lr_key_est(free$lhs, free$op, free$rhs, free$est),
     fit = object@n_obs * object@f

@@ -279,7 +279,7 @@ for T4-T8 (batching per the repo's PR-count convention); T0-T3 may land as a doc
 | T4 | **DONE 2026-10-23.** Implement `.sem_restore_allowance()` and the slack change | unit tests of 3.4 pass; ordinary polish path byte-identical; `gate$restore` diagnostics present | T0, T3 |
 | T5 | **DONE 2026-10-23.** Write `sem-restoration-gate.R` with planted rows and mutants | each mutant exits 1, the control exits 0, 1e-6 tolerances only | T4 |
 | T6 | **DONE 2026-10-23.** Register the gate (3.5) | `run-gates.R --fast` and `--mutants` green; `gates (rest)` shard time still within budget | T5 |
-| T7 | Callers: `mbco_sem()`, `.lr_reference()`, `.sem_fit_branches()` flag | caller-level tests of 3.4 pass; dependents' `mbco_sem()` usage checked read-only | T4 |
+| T7 | **DONE 2026-10-23** (section 8). Callers: `mbco_sem()`, `.lr_reference()`, `.sem_fit_branches()` flag | caller-level tests of 3.4 pass; dependents' `mbco_sem()` usage checked read-only | T4 |
 | T8 | Docs: NEWS, `?mbco_sem`, `?compare_lr`, methods article section | doc-consistency tests pass; `devtools::document()` clean; US spelling | T7 |
 | T9 | Verify: full suite in the worktree, dispatched gates, rerun T2 and diff per-attempt data | counts in the PR body; floor gate 144/144 on the runner; a changed rejection masked by another winning start is visible in the diff | T6, T8 |
 | T10 | Codex adversarial review of the diff (`adversarial-review --base dev`) | findings triaged before the PR opens | T9 |
@@ -378,3 +378,45 @@ nor that `k = 4` or 10 is safe on other data.
 - Not done: T7 (callers), T8 (docs, NEWS), T9 (full verification, dispatched gates), T10 (Codex diff review). The gate's
   planted far-worse case mocks the gate (a worse stationary point cannot be built on demand); the real gate is
   exercised by the legitimate restorations and the boundary rows.
+
+---
+
+## 8. T7 as built (2026-10-23)
+
+- **`.sem_fit_branches()`** (`R/sem-fit.R`): a skipped zero-product branch while another wins sets `incomplete = TRUE`
+  in the returned fit (stored in `@internals$incomplete`, added to the list in `.sem_as_semfit()`) and warns
+  ("... branches did not converge (...); ... not certified"). A complete branch fit carries `incomplete = FALSE`; a
+  fit with no branches has no such field (readers use `isTRUE()`). Every branch failing is still the old error.
+- **`mbco_sem()`** (`R/sem-mbco.R`): a refit that cannot be fitted is a row (`converged = FALSE`, `f` and `diff_ll`
+  `NA`, the failure text in a new `note` column), a warning repeats the text, and `statistic` and `p.value` are `NA`
+  (never the minimum over the refits that worked). A new `unresolved` element says so. A fit that itself has
+  `incomplete = TRUE` is unresolved the same way (all rows `converged = FALSE`). A complete result has `converged`
+  TRUE, empty `note` and `unresolved = FALSE`. Behavior change: the refit error of a null the constraints rule out
+  (`a > 0.3` with the null `a = 0`) is now an unresolved row with the same text in `note`; the existing test was
+  updated and the roxygen text and `man/mbco_sem.Rd` regenerated.
+- **Only an optimizer failure is unresolved.** The first version turned every refit error into a row, and four existing
+  tests (`test-sem-factor-product.R`, `-defects.R`, `-refit.R`) failed: they rely on `mbco_sem()` stopping for a
+  model or data error (the rule-9 refusal of a label constraint with products, a missing factor column). So the two
+  optimizer failures ("no start converged", "no branch of the zero-product constraints converged") now raise the
+  classed condition `medfit_error_no_convergence` (`.sem_no_convergence()` in `R/sem-optim.R`), and `mbco_sem()`
+  turns exactly that class into a row; any other refit error keeps its old wrapped message and still stops. A test
+  pins both sides.
+- **`compare_lr()`** (`R/compare-lr.R`): `.lr_reference()` returns `lr = NA` and `accepted = FALSE` when any refit is
+  unresolved, which `.lr_assess()` already turns into verdict `"unresolved"` for every run, blaming neither side. The
+  end-to-end check runs lavaan against a failing medfit refit and gets an `"unresolved"` comparison, not an error.
+- **`anova()`**: unchanged; a test pins its LR to the discrepancy difference.
+- **Tests** (`tests/testthat/test-sem-unresolved.R`, 11 expectations groups): they were written first and failed for
+  the right reasons against the old code (a dropped branch was silent, a failed refit stopped), then pass; the
+  planted-defect case shows the minimum over the survivors would hide the failure.
+- **Dependents (read-only, G9).** Only `missingmed` uses `mbco_sem()` (`R/mbco_sem.R:~430-460`). It already requires
+  `nrow(tab) == 2`, `tab$converged %in% TRUE` and finite `tab$f`, and raises "Unresolved or incomplete a = 0 / b = 0
+  refits" otherwise, and it collects warnings into the error text. The new rows (extra `note` column, extra
+  `unresolved` element, a warning instead of a refit error) keep that path working: it still ends in an error, with the
+  refit's own failure text now among the collected warnings. probmed, RMediation, medrobust, medsim and mediationverse
+  do not mention `mbco_sem` or `compare_lr`. Not run against missingmed's tests (cross-repo).
+- **Other effects.** `planning/specs/CRITERIA-native-experimental-exit-2026-10-17.csv` (row C2) now lists the
+  `restoration` gate, because `test-experimental-criteria.R` requires every native gate in `gates.csv` to be named there.
+  Full unit suite (`NOT_CRAN=true`, `testthat::test_dir`): 6781 passed, 1 failed; the one failure (`the dotted tidy()
+  argument names still work and warn`, a `lifecycle::expect_deprecated` in `test-methods-tidy.R`) also fails on a clean
+  `origin/dev` export under the same invocation (6714 passed, 1 failed) and passes when the file is run alone, so it is
+  an artifact of that invocation, not of this branch. `lintr::lint_package()` after `load_all()`: 0 lints.
