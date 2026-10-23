@@ -141,7 +141,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
                         "sign_check", "se_type", "optimum")],
     internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
-                      "branch", "fixed_x", "factors")],
+                      "branch", "incomplete", "fixed_x", "factors")],
     call = call
   )
 }

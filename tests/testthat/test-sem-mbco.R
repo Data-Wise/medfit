@@ -64,7 +64,7 @@ test_that("the result prints as an htest and carries both refits' discrepancy", 
   out <- paste(utils::capture.output(print(res)), collapse = "\n")
   expect_match(out, "MBCO", fixed = TRUE)
   expect_match(out, "df = 1", fixed = TRUE)
-  expect_named(res$tests, c("constraint", "f", "diff_ll", "converged"))
+  expect_named(res$tests, c("constraint", "f", "diff_ll", "converged", "note"))
   expect_true(all(res$tests$converged))
   expect_identical(res$n_obs, 369L)
 })
@@ -185,9 +185,13 @@ test_that("an inequality that holds the null on the boundary warns; an interior 
   expect_no_warning(mbco_sem(inactive, "a", "b"))
 })
 
-test_that("a null outside the region the model allows errors with a message about the constraint", {
+test_that("a null outside the region the model allows is an unresolved result with a message about the constraint", {
   fit <- fit_sem(paste0(guard_base, "\na > 0.3"), guard_data())
-  expect_error(mbco_sem(fit, "a", "b"), "`a == 0`.*constraint.*parameter space")
+  # a failed refit is a row (restoration-bound T7), no longer an error: the statistic is NA and the note says why
+  expect_warning(res <- mbco_sem(fit, "a", "b"), "`a == 0`.*constraint.*parameter space")
+  expect_true(is.na(res$statistic))
+  expect_false(res$tests$converged[res$tests$constraint == "a == 0"])
+  expect_match(res$tests$note[res$tests$constraint == "a == 0"], "parameter space", fixed = TRUE)
 })
 
 # --- A product of k paths (T17) ---------------------------------------------------------------------------

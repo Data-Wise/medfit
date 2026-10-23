@@ -136,7 +136,8 @@ verdict_gate <- function(gate, d, s) {
     "oracle-sweep" = c("seed", "family", "n", "scale", "constraint", "outcome", "max_abs_error",
                        "feasibility", "f_gap", "warning", "error", "optimum"),
     "compare-lr" = c("engine", "version", "seed", "verdict", "all_converged", "ref_ok", "drop", "above", "warn_drop",
-                     "warn_above", "mislabel", "pass")
+                     "warn_above", "mislabel", "pass"),
+    restoration = c("check", "kind", "value", "limit", "pass", "detail")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -404,6 +405,41 @@ verdict_gate <- function(gate, d, s) {
                     sum(d$note[d$fixture %in% "var-1e6-1e-6"] %in% "strict"), sum(d$fixture %in% "var-1e6-1e-6")))
       )
     },
+    restoration = {
+      # restoration-bound T5/T6 (G12): every check of the script is a row; the numeric verdicts are re-derived from the
+      # recorded numbers, so a row that claims pass over a bad number cannot pass. tol_est is k, tol_se the margin.
+      need <- c("allowance matches the normal-equations value", "scale of a row does not change the allowance",
+                "a duplicated row does not change the allowance", "rank zero fails closed",
+                "a far worse restoration is refused", "boundary: accepted at k = rho / 0.9",
+                "boundary: refused at k = rho / 1.1", "the curvature term decides a case",
+                "no restoration the old code kept is refused by the cap",
+                "separation: k keeps its margin over the largest legitimate rho",
+                "basin gap: the cap stays below the nearest inferior basin", "restoration attempts observed")
+      miss <- setdiff(need, d$check)
+      val <- function(x) d$value[d$check == x][1L]
+      lim <- function(x) d$limit[d$check == x][1L]
+      tol3 <- need[1:3]
+      sep <- val(need[10])
+      gap_v <- val(need[11])
+      gap_l <- lim(need[11])
+      rbind(
+        rows_chk(d, s),
+        chk("checks pass", all(d$pass %in% TRUE), sprintf("%d of %d fail", bool_fail(d$pass), nrow(d))),
+        chk("every check present", !length(miss),
+            if (length(miss)) paste("missing:", paste(miss, collapse = "; ")) else "all 12"),
+        chk("planted tolerances", all(vapply(tol3, function(x) isTRUE(val(x) <= lim(x)), TRUE)),
+            "hand value 1e-8, scale and duplicate-row invariance 1e-6"),
+        chk("far-worse restoration is far above the cap", isTRUE(val(need[5]) > 100),
+            sprintf("rise = %s x k * allowance", fmt(val(need[5])))),
+        chk("curvature decides", isTRUE(val(need[8]) > lim(need[8])), sprintf("%s", fmt(val(need[8])))),
+        chk("the cap refuses no restoration the old code kept", isTRUE(val(need[9]) == 0),
+            sprintf("%s refused", fmt(val(need[9])))),
+        chk("separation re-derived (k over margin)", is.na(sep) || isTRUE(sep <= s$tol_est / s$tol_se),
+            sprintf("largest legitimate rho %s, k / margin = %s", fmt(sep), fmt(s$tol_est / s$tol_se))),
+        chk("basin gap re-derived", is.na(gap_v) || is.na(gap_l) || isTRUE(gap_v < gap_l),
+            sprintf("cap %s, nearest inferior basin %s", fmt(gap_v), fmt(gap_l)))
+      )
+    },
     # product-term and four-way gates: the rules live in tests/sim/product-gate-common.R
     product_gate_rules[[gate]](d, s) # nolint: object_usage_linter.
   )
@@ -524,6 +560,11 @@ mutate <- function(gate, kind, d) {
       d$mislabel[1:3] <- TRUE
       d$pass[1:3] <- FALSE
     }
+    if (gate == "restoration") {
+      # the recorded numbers say fail while the pass column still says TRUE
+      d$value[grepl("^separation", d$check)] <- 100
+      d$value[d$check == "allowance matches the normal-equations value"] <- 1
+    }
   }
   if (kind == "no_lavaan") {
     # T5e: what a run without lavaan used to write: its lavaan-only checks absent or NA, everything else passing
@@ -554,6 +595,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "factor") d$err[1] <- "fit failed"
     if (gate == "oracle-sweep") d$error[1] <- "fit failed"
     if (gate == "compare-lr") d$verdict[1] <- "error"
+    if (gate == "restoration") d$pass[1] <- FALSE
   }
   if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
   if (kind == "floor_disproved_silent" && gate == "nonlinear-profile") {
@@ -592,7 +634,7 @@ mutate <- function(gate, kind, d) {
     # nolint start: object_usage_linter.
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
-      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr"
+      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -740,10 +782,12 @@ run_fast <- function() {
   l_out <- child(paste(
     "suppressMessages(devtools::load_all(quiet = TRUE));",
     "cat('LINTS', length(lintr::lint_package()), '\\n');",
-    "cat('STATTOL', format(.sem_stat_tol, digits = 15), '\\n')"
+    "cat('STATTOL', format(.sem_stat_tol, digits = 15), '\\n');",
+    "cat('RESTOREK', format(.sem_restore_k, digits = 15), '\\n')"
   ))
   ll <- grep("^LINTS", l_out, value = TRUE)
   tt <- grep("^STATTOL", l_out, value = TRUE)
+  rk <- grep("^RESTOREK", l_out, value = TRUE)
   res <- list()
   if (length(tl) == 1L) {
     n <- as.numeric(strsplit(tl, " ")[[1]][-1])
@@ -764,6 +808,13 @@ run_fast <- function() {
   res[[3]] <- chk(
     "gates.csv tol_est (stationarity) equals .sem_stat_tol", length(gtol) == 1L && isTRUE(gtol == ptol),
     sprintf("gates.csv %s, package %s", paste(format(gtol), collapse = ","), format(ptol))
+  )
+  # the restoration gate's k must not drift from the package constant either
+  gk <- spec_all$tol_est[spec_all$gate == "restoration"]
+  pk <- if (length(rk) == 1L) as.numeric(strsplit(rk, " ")[[1]][2]) else NA_real_
+  res[[4]] <- chk(
+    "gates.csv tol_est (restoration) equals .sem_restore_k", length(gk) == 1L && isTRUE(gk == pk),
+    sprintf("gates.csv %s, package %s", paste(format(gk), collapse = ","), format(pk))
   )
   v <- do.call(rbind, res)
   cbind(gate = "fast", file = NA_character_, v, stringsAsFactors = FALSE)
@@ -787,7 +838,8 @@ scripts <- c(
   "mean-constrained" = "tests/sim/sem-mean-constrained-gate.R",
   factor = "tests/sim/sem-factor-gate.R",
   "oracle-sweep" = "tests/sim/sem-oracle-sweep.R",
-  "compare-lr" = "tests/sim/compare-lr-gate.R"
+  "compare-lr" = "tests/sim/compare-lr-gate.R",
+  restoration = "tests/sim/sem-restoration-gate.R"
 )
 
 # ---- main ----

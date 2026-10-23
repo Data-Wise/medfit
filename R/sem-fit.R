@@ -217,7 +217,10 @@
 # branch's or the full model's estimates, so a branch cannot inherit an infeasible point), and the branch
 # with the smallest discrepancy wins. A branch that fails the acceptance gate is skipped; when none succeeds
 # the error lists each. Messages and warnings of the losing branches are dropped, those of the winner are
-# passed on. The returned fit keeps the user's constraints; `branch` names the lines the winner used.
+# passed on. The returned fit keeps the user's constraints; `branch` names the lines the winner used. A skipped
+# branch while another wins leaves a minimum over the surviving branches only, which can look valid: the result
+# then carries `incomplete = TRUE` (kept in `@internals`) and a warning, and `mbco_sem()` and `compare_lr()` read
+# it and report an unresolved result.
 .sem_fit_branches <- function(parsed, products, data, information, n_starts, control, weights, se_type,
                               meanstructure = NULL, fixed_x = FALSE) {
   grid <- do.call(expand.grid, c(lapply(products, `[[`, "factors"), stringsAsFactors = FALSE))
@@ -262,13 +265,21 @@
   }
   ok <- which(!vapply(fits, is.null, TRUE))
   if (!length(ok)) {
-    stop("no branch of the zero-product constraints converged:\n  ", paste(fail, collapse = "\n  "), call. = FALSE)
+    .sem_no_convergence(paste0("no branch of the zero-product constraints converged:\n  ",
+                               paste(fail, collapse = "\n  ")))
   }
   win <- ok[which.min(vapply(ok, function(b) fits[[b]]$fit$f, numeric(1)))]
   for (m in fits[[win]]$held$messages) message(conditionMessage(m))
   for (w in fits[[win]]$held$warnings) warning(conditionMessage(w), call. = FALSE)
   out <- fits[[win]]$fit
   out$constraints <- parsed$constraints
+  skipped <- setdiff(seq_along(fits), ok)
+  out$incomplete <- length(skipped) > 0L
+  if (length(skipped)) {
+    warning(sprintf(paste0("%d of %d zero-product branches did not converge (%s); the fit is the best of the others, ",
+                           "so its discrepancy and any likelihood-ratio statistic built on it are not certified"),
+                    length(skipped), length(fits), paste(fail[skipped], collapse = "; ")), call. = FALSE)
+  }
   out
 }
 

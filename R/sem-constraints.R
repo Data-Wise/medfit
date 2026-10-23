@@ -537,18 +537,72 @@
 # the polish removing that).
 .sem_polish_f_slack <- 1e-8
 # Restoring feasibility from a roundoff-limited stall (status -4) may need a long step along a flat direction and
-# raises the discrepancy by about the multiplier times the violation, so the reach is wider and the rise is not capped;
-# the acceptance gate (feasibility, stationarity, curvature) on the restored point is what decides (#276).
+# raises the discrepancy by about the multiplier times the violation, so the reach is wider (#276). The rise is capped
+# by the first-order cost of the restoration, `.sem_restore_allowance()`, times `.sem_restore_k`: without a cap the
+# acceptance gate (feasibility, stationarity, curvature) alone decided, and a restoration into a feasible, stationary
+# but worse point was accepted.
 .sem_restore_reach <- 1
+# The safety factor on the allowance. Measured: every kept restoration on the #276 fixtures rises by 0.995 to 0.9998
+# of the allowance (two OpenBLAS builds), and the ratio is at most about 1 by construction, so 4 leaves a margin well
+# above the largest legitimate ratio and well below the gap to an inferior basin (>= 0.25 against `4 * allow` <= 0.06).
+# tests/sim/gates.csv (row `restoration`) carries the same number; run-gates.R --fast checks they agree.
+.sem_restore_k <- 4
+# The allowance of a restoration from a stalled point `theta`: the objective's rise along the minimum-norm step
+# `delta = -M^+ c` back onto the linearized active rows, in the quadratic model,
+#   |g' delta| + 0.5 |delta' H_L delta|,
+# with `M` the active rows' Jacobian on the free coordinates and `c` their values, all in the solver's natural units
+# (`.sem_polish()` works there too). With least-squares multipliers `lambda' c = g' delta`, so this is the multipliers
+# times the violation without computing them (none exist at a rejected stall). The step is feasible for the Newton
+# step's own quadratic problem, so a legitimate restoration cannot cost more than this to second order. Rescaling a row
+# rescales `M` and `c` together, a duplicated row leaves the pseudo-inverse step unchanged, and a bound-active
+# coordinate is not in `M`. NA when there is nothing to restore onto (no active row), the rows have rank zero or an
+# input is not finite: the caller then rejects the restoration (it never accepts on NA).
+.sem_restore_allowance <- function(theta, ram, smp, lb, ub, cons) {
+  act <- .sem_active_set(theta, ram, smp, lb, ub, cons)
+  r <- .sem_eval(theta, ram, smp, deriv = TRUE)
+  free <- act$free
+  m <- act$ax[act$active_row, free, drop = FALSE]
+  cval <- act$cval[act$active_row]
+  # unit-length rows before the rank decision: the cutoff below must not depend on one row's scale (a nonlinear row
+  # carries its expression's scale; linear rows are unit length already)
+  len <- sqrt(rowSums(m^2))
+  use <- is.finite(len) & len > 1e-12
+  m <- m[use, , drop = FALSE] / len[use]
+  cval <- cval[use] / len[use]
+  if (is.null(r) || !nrow(m)) {
+    return(NA_real_)
+  }
+  hx <- .sem_hess_f(theta, ram, smp) * outer(act$u, act$u)
+  gx <- r$g * act$u
+  if (!all(is.finite(c(m, cval, hx, gx)))) {
+    return(NA_real_)
+  }
+  sv <- svd(m)
+  keep <- sv$d > 1e-8 * max(sv$d)
+  if (!any(keep)) {
+    return(NA_real_)
+  }
+  delta <- -drop(sv$v[, keep, drop = FALSE] %*% (crossprod(sv$u[, keep, drop = FALSE], cval) / sv$d[keep]))
+  hl <- .sem_lagrangian_hessian(hx, gx, act, cons, theta)[free, free, drop = FALSE]
+  curv <- 0.5 * abs(drop(crossprod(delta, hl %*% delta)))
+  abs(sum(gx[free] * delta)) + curv
+}
 .sem_polish_accept <- function(res, gate, ram, smp, lb, ub, cons, restore = FALSE) {
   pol <- .sem_polish(res$solution, ram, smp, lb, ub, cons,
                      reach = if (restore) .sem_restore_reach else .sem_polish_reach)
   if (is.null(pol)) {
     return(list(res = res, gate = gate))
   }
+  slack <- .sem_polish_f_slack
+  if (restore) {
+    allow <- .sem_restore_allowance(res$solution, ram, smp, lb, ub, cons)
+    if (is.na(allow)) {
+      return(list(res = res, gate = gate))
+    }
+    slack <- .sem_restore_k * allow + .sem_polish_f_slack
+  }
   r <- .sem_eval(pol, ram, smp, deriv = FALSE)
   g2 <- .sem_gate(pol, res$status, ram, smp, lb, ub, cons)
-  slack <- if (restore) Inf else .sem_polish_f_slack
   if (is.null(r) || !g2$accepted || r$f > res$objective + slack) {
     return(list(res = res, gate = gate))
   }

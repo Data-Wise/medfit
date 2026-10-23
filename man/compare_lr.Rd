@@ -21,7 +21,7 @@ loose tolerance would call different statistics equal.}
 \value{
 An object of class \code{medfit_lr_comparison}: a list with \code{verdict}
 (\code{"agree"}, \code{"disagree"} or \code{"unresolved"}), \code{reason}, \code{reference} (medfit's
-LR and whether it was accepted), \code{runs} (one row per engine start with the
+LR, \code{NA} when it has none, and whether it was accepted), \code{runs} (one row per engine start with the
 LR, convergence, constraint residual and status) and \code{engine}.
 }
 \description{
@@ -38,7 +38,11 @@ violates the product constraint, and \code{medfit_warning_engine_statistic_above
 when the engine's statistic exceeds medfit's. Both inherit from
 \code{medfit_warning_engine_comparison}. If medfit has no accepted reference, the
 engines' unrestricted fits differ from medfit's, or a run fails or cannot be
-checked, the verdict is \code{"unresolved"} and neither side is blamed.
+checked, the verdict is \code{"unresolved"} and neither side is blamed. medfit has
+no accepted reference when one of its own refits cannot be fitted (see
+\code{\link[=mbco_sem]{mbco_sem()}}) or when the fit dropped a zero-product branch: the reference
+LR is then \code{NA} and the result is a comparison with that verdict, not an
+error.
 
 Only observed-variable covariance models are compared. Latent variables,
 product terms, mean structures, weights, \code{fixed_x}, factors, fixed or shared
