@@ -7,7 +7,7 @@
 | A. SLSQP as default solver (2026-10-09, D19) | **Accepted, implemented** |
 | B. Replace SLSQP for constrained fits, tiered path (2026-10-19, D16) | **Approved plan, not implemented**; evidence revised 2026-10-20 |
 | C. The engines and when to use each | Description of current behavior |
-| D. A `solver` option; `nlminb` first on branch fits, then unconstrained fits (2026-10-23) | D-1 to D-3, D-6 (structure and Tier 1 method), D-7 to D-10 **decided**; D-4 **proposed**, unmeasured, staged after D-2; D-5 conditional |
+| D. A `solver` option; `nlminb` first on branch fits, then unconstrained fits (2026-10-23) | D-1 to D-3, D-6 (structure and Tier 1 method), D-7 to D-11 **decided**; D-4 **proposed**, unmeasured, staged after D-2; D-5 conditional |
 
 **Author's call needed** on the open questions in section 6. Superseded drafts are in Appendix A.
 
@@ -68,8 +68,9 @@ silent wrong answer, not slowness.
 **Decision of record** (`planning/specs/GRILL-constrained-lr-solver-2026-10-19.md`, copied from
 Data-Wise/mbco-lrt `docs/specs/GRILL-medfit-solver-v2-2026-10-19.md`; plan `docs/planning/PLAN-medfit-solver-2026-10-19.md` §7,
 recorded as D16): a tiered path becomes the default for constrained fits.
-- Tier 0: a product of labels set to zero is split into one fit per factor, and a failed branch makes the result
-  unresolved (not the minimum of the others).
+- Tier 0: a product of labels set to zero is split into one fit per factor, and a failed branch stops the fit with
+  `medfit_error_no_convergence` (PR #303; never a partial fit, never the minimum of the others). `mbco_sem()` and
+  `compare_lr()` turn that failure into an unresolved result.
 - Tier 1: exact substitution charts for parsed multilinear constraints (polynomial whitelist, cap on strata).
 - Fallback: augmented Lagrangian (AUGLAG), with a Rsolnp backup when installed.
 - `solver = "slsqp_legacy"` would reproduce today's results with a deprecation warning for one or two releases
@@ -113,7 +114,8 @@ AUGLAG fallback resolved only 54% in the benchmark (my reading, not stated in th
 | `"native"` (built-in SEM engine; also `fit_sem()`) | all equations jointly by ML with SLSQP | latent mediators, several mediators, constraints, `:=`, the `x:m` product and four-way effects, categorical covariates, MBCO | latent means and latent products; a nonlinear null that must be certified |
 
 `mbco_sem()`, `anova()` and `compare_lr()` work on native fits. A failed refit is an unresolved result, never the
-minimum of the refits that worked (0.13.0).
+minimum of the refits that worked (0.13.0). A zero-product branch that cannot be fitted stops `fit_sem()` itself
+(PR #303), so no partial fit exists for `coef()`, `vcov()`, `anova()` or `extract_mediation()` to consume.
 
 ## 4a. Part D: a `solver` option and class-based defaults (proposed 2026-10-23)
 
@@ -132,6 +134,7 @@ author's stated direction but not accepted into the plan of record; nothing here
 | D-8 | D-4 reliability gate | **Decided** (author, 2026-10-23, after the review) | A paired non-inferiority test on the same datasets, whole-fit outcome: a dataset is a success when `fit_sem()` (with its gate and retry) returns an accepted fit that matches the lavaan or OpenMx reference, and a failure when it is unresolved or an error. **delta is fixed independently of the pilot at 0.01** (one point of success: a failed start is caught by the gate and retried, and the harm that matters, a silent wrong answer, has its own zero-tolerance rule). Per decision cell, the one-sided 95% lower bound of (`nlminb` minus SLSQP) success, from a paired **score interval (Tango's) or an exact conditional test** pre-specified in the design file (both handle zero or few discordant pairs), must be at least -0.01, with **1,000 datasets per cell**; the pilot sets the sample size only. At n = 1,000 the bound passes two equal solvers while discordant pairs stay under about 37 (3.7%); delta = 0.005 would need about 3,200 datasets per cell, so 0.01 is the practical value. Also required: zero silent wrong answers for `nlminb`, median time no worse than SLSQP's, estimates within the existing parity tolerances. Default-start cells (100% for both solvers in every earlier study) cannot fail a comparison, so they are a check that both stay at 100%, not a gate. Replaces "not below SLSQP in any cell" and the first -0.005 proposal. |
 | D-9 | When the gate design is fixed | **Decided** (author, 2026-10-23) | Before the first run: a `tests/sim/gates.csv` row and a short design file (cells, datasets per cell, thresholds, the comparison and the mutants) are committed first, and `run-gates.R` re-derives the verdict from the saved results, as for every other gate. This closes the provenance gap the mbco-lrt report flags (untracked scripts, unresolvable pre-commit hashes): thresholds cannot move after the data. |
 | D-10 | Latent structures in the D-4 gate | **Decided** (author, 2026-10-23) | The existing `sem_models()$latent` plus two new stress structures: a **boundary (Heywood) case**, where a residual variance's optimum sits at its lower bound (exercises the #213 variance floor and the different bound handling of `nlminb`), and a **weak-loading case**, where a flat likelihood makes convergence tests disagree. D-8 applies per structure and per data scale; OpenMx is the reference where lavaan stalls (the harness records that it does at large data units). Not included: several factors, cross-loadings, latent constraints. |
+| D-11 | A partial branch result | **Decided** (author, 2026-10-23, after the Codex review of the branch) | A dropped zero-product branch is a classed error, not a fit carrying an `incomplete` flag: a flag read by two consumers leaves every other consumer free to use an uncertified fit. Rejected: a guard in about 12 consumers (a forgotten guard brings the bug back), a separate unresolved class (breaks the frozen `SEMFit` API), an opt-in `allow_incomplete` fit (deferred until someone needs to inspect a failed branch). PR #303. |
 
 **Conflicts to resolve, not paper over:**
 
@@ -165,11 +168,11 @@ Under D-4 these stay tied to the constrained SLSQP path; none of them applies on
 | unconstrained, latent | `nlminb`, SLSQP | the D-8 rule on latent fixtures (D-10). The harness already has one latent structure (`sem_models()$latent`, a one-factor
 mediator `eta =~ m1 + m2 + m3`, with lavaan as the reference at four data scales) beside the observed, parallel and
 serial structures; it has no boundary (Heywood) or weakly identified latent case |
-| zero-product branch fits (stage 1) | `nlminb` with pinned coordinate, SLSQP with the `a == 0` row | same discrepancy and estimates within parity tolerance on every branch; a failed branch is unresolved, never the minimum of the rest; the D-8 rule on the branch fits |
+| zero-product branch fits (stage 1) | `nlminb` with pinned coordinate, SLSQP with the `a == 0` row | same discrepancy and estimates within parity tolerance on every branch; a failed branch is an error from `fit_sem()` (PR #303) and an unresolved result in `mbco_sem()`/`compare_lr()`, never the minimum of the rest; the D-8 rule on the branch fits |
 | constrained fits, reference (incumbent) step | `nlminb`, SLSQP | the final constrained fit and its gate verdict are unchanged on the constrained gate fixtures when the unconstrained reference step uses `nlminb` |
 | linear constraints | AUGLAG, SLSQP | parity with the constrained gate; unresolved rate at most SLSQP's (0 on the fixtures); runtime reported |
 | nonlinear constraints | AUGLAG, SLSQP, tiered path | accepted-wrong count 0; unresolved reported, not hidden |
-| product null | tiered path (Tier 0) | unchanged: branch fits, unresolved when any branch fails |
+| product null | tiered path (Tier 0) | unchanged: branch fits; any failed branch is an error from `fit_sem()` and unresolved in `mbco_sem()` |
 
 The existing harness `tests/sim/sem-reliability.R` compares only SLSQP and L-BFGS and needs `nlminb` and AUGLAG
 columns; the seam for a second backend is `.sem_nlopt` / `.sem_solve_one`, with an explicit mapping on each side.
@@ -231,7 +234,7 @@ reserve the heavier machinery for the models that need it.
 |---|---|---|---|
 | 0 | no user constraints (bounds allowed) | `stats::nlminb` with the analytic gradient, in natural units | **proposed**; today SLSQP |
 | 1 | linear `==`, `<`, `>` constraints | SLSQP (nloptr) | today's behavior |
-| 2 | product of labels set to zero (`a*b == 0`) | Tier 0: one fit per factor, each a rung 0 or rung 1 fit; a failed branch makes the result unresolved | implemented since 0.8.0 (branches currently run on SLSQP) |
+| 2 | product of labels set to zero (`a*b == 0`) | Tier 0: one fit per factor, each a rung 0 or rung 1 fit; a failed branch stops the fit (error, PR #303), unresolved in `mbco_sem()` | implemented since 0.8.0 (branches currently run on SLSQP); error-on-failed-branch since PR #303 |
 | 3 | other nonlinear constraints | Tier 1 charts, then a constrained solver, as in Part B | planned, not implemented |
 
 The ladder is consistent with Part B: the Tier 0 branch fits in the 2026-10-19 plan are already specified as

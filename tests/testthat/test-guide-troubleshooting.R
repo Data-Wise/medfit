@@ -313,7 +313,7 @@ nt_cases <- function() {
       fit <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\na > 0.3", d)
       mbco_sem(fit, "a", "b")
     }),
-    list("zero-product branches did not converge", "warning", function() {
+    list("zero-product branches did not converge", "error", function() {
       real <- medfit:::.sem_fit_syntax
       n <- 0L
       testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
