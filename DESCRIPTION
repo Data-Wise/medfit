@@ -34,7 +34,8 @@ Imports:
     generics,
     lifecycle,
     MASS,
-    nloptr (>= 1.0.4)
+    nloptr (>= 1.0.4),
+    rlang
 Suggests:
     knitr,
     lavaan (>= 0.6-0),

@@ -1,3 +1,8 @@
+# medfit (development version)
+
+* Declare the existing `rlang` runtime dependency used by `compare_lr()`,
+  resolving the undeclared-import R CMD check warning.
+
 # medfit 0.12.0
 
 ## New features
