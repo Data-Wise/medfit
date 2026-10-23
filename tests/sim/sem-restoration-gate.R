@@ -26,6 +26,8 @@
 #   nocurv      the curvature term is dropped
 #   nopinv      the rank cutoff of the pseudo-inverse is dropped, so a duplicated row blows the step up
 #   nafailopen  an NA allowance is accepted instead of refusing the restoration
+#   nonorm      the active rows are not normalized before the rank decision (one row's scale decides the cutoff)
+#   nodispatch  the optimizer never calls the restoration (the planted rows call the acceptance step directly)
 #   kx100       k is 100 times larger
 #   shrink      the cap is 0.2 of what it should be (a cap that is too tight)
 # Run from the package root:  Rscript tests/sim/sem-restoration-gate.R   (FAST=1 runs 8 fixtures x 3 q's)
@@ -71,6 +73,11 @@ if (mutant == "infslack") {
 } else if (mutant == "shrink") {
   mutate_body(".sem_polish_accept", "slack <- .sem_restore_k * allow + .sem_polish_f_slack",
               "slack <- 0.2 * .sem_restore_k * allow + .sem_polish_f_slack")
+} else if (mutant == "nonorm") {
+  mutate_body(".sem_restore_allowance", "m <- m[use, , drop = FALSE]/len[use]", "m <- m[use, , drop = FALSE]")
+  mutate_body(".sem_restore_allowance", "cval <- cval[use]/len[use]", "cval <- cval[use]")
+} else if (mutant == "nodispatch") {
+  mutate_body(".sem_optimize", "restore = !gate$accepted", "restore = FALSE")
 } else if (mutant == "kx100") {
   swap(".sem_restore_k", 100 * get(".sem_restore_k", ns))
 } else if (nzchar(mutant)) {
@@ -214,6 +221,25 @@ guard("boundary: refused at k = rho / 1.1", "planted", NA_real_, function() {
   list(value = rho05, pass = !isTRUE(out$gate$accepted) && identical(out$res$solution, stall05),
        detail = sprintf("rho = %.4f", rho05))
 })
+guard("one row's scale does not move the allowance", "planted", 1e-6, function() {
+  st <- rb_stall(two, 0.05)
+  base <- rb_allow(two, st)
+  real <- get(".sem_active_set", ns)
+  dev <- 0
+  for (sc in c(1e-9, 1e9)) {
+    scaled <- function(...) {
+      act <- real(...)
+      idx <- which(act$active_row)[2L]
+      act$ax[idx, ] <- act$ax[idx, ] * sc
+      act$cval[idx] <- act$cval[idx] * sc
+      act
+    }
+    swap(".sem_active_set", scaled)
+    v <- tryCatch(rb_allow(two, st), finally = swap(".sem_active_set", real))
+    dev <- max(dev, abs(v - base) / base)
+  }
+  list(value = dev, pass = is.finite(dev) && dev < 1e-6, detail = "relative change, second row scaled by 1e-9 and 1e9")
+})
 guard("the curvature term decides a case", "planted", 1.1, function() {
   st <- rb_stall(one, 0.3)
   h <- rb_hand(one, st)
@@ -254,8 +280,13 @@ cap_max <- if (nrow(big)) k * max(big$allow) else NA_real_
 add("basin gap: the cap stays below the nearest inferior basin", "observed", cap_max, gap_min,
     is.na(cap_max) || is.na(gap_min) || cap_max < gap_min,
     sprintf("%d inferior-basin stalls seen (none is a pass: the platform did not produce one)", length(inferior)))
-add("restoration attempts observed", "observed", nrow(d), NA_real_, TRUE,
-    sprintf("%s BLAS; informational, the planted rows carry the contract", rst_blas()))
+# the production path must be traced: a wiring change that stops `.sem_optimize` calling the restoration leaves the
+# trace empty, and an empty trace must fail, not pass (the planted rows call the acceptance step directly)
+min_attempts <- if (fast) 0L else 8L # the fast subset has no status -4 stall
+add("restoration attempts observed", "observed", nrow(d), min_attempts,
+    nrow(d) >= min_attempts && (fast || (nrow(old_kept) >= 1L && any(old_kept$rise > 1e-8 & old_kept$allow > 0))),
+    sprintf("%s BLAS; %d traced restorations, %d polished and gate-accepted; at least %d needed, one with a rise",
+            rst_blas(), nrow(d), nrow(old_kept), min_attempts))
 
 res <- do.call(rbind, gate_rows$rows)
 res$mutant <- mutant

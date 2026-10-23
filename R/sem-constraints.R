@@ -563,6 +563,12 @@
   free <- act$free
   m <- act$ax[act$active_row, free, drop = FALSE]
   cval <- act$cval[act$active_row]
+  # unit-length rows before the rank decision: the cutoff below must not depend on one row's scale (a nonlinear row
+  # carries its expression's scale; linear rows are unit length already)
+  len <- sqrt(rowSums(m^2))
+  use <- is.finite(len) & len > 1e-12
+  m <- m[use, , drop = FALSE] / len[use]
+  cval <- cval[use] / len[use]
   if (is.null(r) || !nrow(m)) {
     return(NA_real_)
   }

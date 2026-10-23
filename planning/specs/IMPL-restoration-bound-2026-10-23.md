@@ -447,3 +447,16 @@ nor that `k = 4` or 10 is safe on other data.
   difference; the likely cause is the hardware of the runner that picked up the job (floating-point stall points move
   at 1e-9). Not proved. It does not change the conclusion: no restoration the old code kept is refused, on either run.
 - Not covered: reference BLAS (needs the #274 container), other seeds and scales of the floor fixture (T3b).
+
+## 11. T10 results (Codex adversarial review against origin/dev, 2026-10-23)
+
+Verdict needs-attention; two findings, both accepted and fixed.
+
+| Finding | Triage | Fix |
+|---|---|---|
+| [high] The rank cutoff of the pseudo-inverse acted on unnormalized rows, so one row's scale (a nonlinear row carries its expression's scale) could change which directions survive | Real. It could only shrink the allowance (fail closed: a legitimate restoration refused), not widen it, but it broke the stated row-scale invariance | `.sem_restore_allowance()` normalizes the active rows and values to unit length before the SVD; rows of length 1e-12 or less are dropped. Test: one row of the active set rescaled by 1e-9 to 1e9 (4 assertions fail without the fix). A real fit with a 1e-9-scaled row is not testable: the solver cannot fit it (out of scope) |
+| [medium] The gate's "attempts observed" row was unconditionally TRUE, so a wiring change that stops `.sem_optimize` calling the restoration passed | Real | Full mode requires at least 8 traced restorations and one gate-accepted restoration with a rise (14 observed on the macOS run); the fast subset has no status -4 stall and is exempt. New mutants `nodispatch` (restore = FALSE at the call site) and `nonorm`, plus a planted row for one-row scale invariance; `expected_rows` is now 13 |
+
+Evidence: full gate control exits 0; `nonorm` and `nodispatch` exit 1; `run-gates.R --only restoration` 9 of 9,
+`--mutants` every mutation rejected, `--fast` 4 of 4 (3193 `sem-` tests). The review did not claim anything
+about `mbco_sem()`/`compare_lr()` handling.

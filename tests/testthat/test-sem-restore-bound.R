@@ -151,3 +151,27 @@ test_that("a restoration into a worse point is refused although the gate accepts
   ordinary <- .sem_polish_accept(base$res, base$gate, s$ram, s$smp, s$lb, s$ub, s$cons, restore = FALSE)
   expect_identical(ordinary$res$solution, stall)
 })
+
+test_that("the allowance does not depend on the scale of one row among several (rank decision on unit rows)", {
+  # the solver cannot fit a 1e-9-scaled row, so one row of the active set is rescaled (row and value together, as a
+  # rescaled constraint would be) around the real function
+  s <- rb_setup("cp == a*b\na == 0.5")
+  stall <- rb_stall(s, 0.05)
+  base <- rb_allow(s, stall)
+  real <- .sem_active_set
+  scaled_set <- function(row, sc) {
+    function(...) {
+      act <- real(...)
+      idx <- which(act$active_row)[row]
+      act$ax[idx, ] <- act$ax[idx, ] * sc
+      act$cval[idx] <- act$cval[idx] * sc
+      act
+    }
+  }
+  for (row in 1:2) {
+    for (sc in c(1e-9, 1e-4, 1e4, 1e9)) {
+      testthat::local_mocked_bindings(.sem_active_set = scaled_set(row, sc))
+      expect_equal(rb_allow(s, stall), base, tolerance = 1e-6, info = sprintf("row %d scaled by %g", row, sc))
+    }
+  }
+})
