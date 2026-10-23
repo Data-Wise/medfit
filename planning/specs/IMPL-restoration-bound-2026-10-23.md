@@ -460,3 +460,20 @@ Verdict needs-attention; two findings, both accepted and fixed.
 Evidence: full gate control exits 0; `nonorm` and `nodispatch` exit 1; `run-gates.R --only restoration` 9 of 9,
 `--mutants` every mutation rejected, `--fast` 4 of 4 (3193 `sem-` tests). The review did not claim anything
 about `mbco_sem()`/`compare_lr()` handling.
+
+## 12. Follow-up: partial zero-product branch fits (Codex review of the merged branch, 2026-10-23)
+
+A second adversarial review, run on the branch diff after #300 merged, found one high finding the T10 review had not:
+`.sem_fit_branches()` returned the best surviving branch with a warning and an `incomplete` flag in `@internals`, and
+only `mbco_sem()` and `compare_lr()` read the flag. `coef()`, `vcov()`, `anova()`, `logLik()` and
+`extract_mediation()` could therefore consume a fit whose discrepancy is a minimum over the surviving branches only.
+Triage: real; T7 (this plan, section on G4 and G7) had made the two LR consumers safe but left the object usable.
+
+Fix (PR #303, `fix/zero-product-branch-error`, decision D-11 of `ADR-native-solver-and-engines-2026-10-23.md`): a
+dropped branch is a `medfit_error_no_convergence` from `fit_sem()`; the message lists each failed branch and the best
+survivor's discrepancy (diagnosis only); the `incomplete` field is gone. `mbco_sem()` and `compare_lr()` need no
+change, because they already map that failure to an unresolved row or verdict. Rejected: guards in about 12 consumers,
+a separate unresolved class, an opt-in `allow_incomplete` fit. Evidence: 138 filtered tests, 0 failed;
+`test-sem-unresolved.R` 44 passed; the rewritten test plants a branch failure by mocking `.sem_fit_syntax()`.
+Sibling repos (missingmed, probmed, rmediation, medrobust, medsim) do not read `@internals$incomplete` (code search,
+suites not run). Open: the troubleshooting-guide row on #302 still says "warning" until #303 is merged to dev.
