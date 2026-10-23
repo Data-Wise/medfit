@@ -431,3 +431,19 @@ nor that `k = 4` or 10 is safe on other data.
   unresolved refits. `computation-algorithms.qmd`: polish paragraph points to the cap.
 - `tests/testthat/test-restore-docs.R`: article k equals `.sem_restore_k` (planted k = 40 rejected), gates.csv k, NEWS
   phrases, help pages (skipped under `load_all()`).
+
+## 10. T9 results (verification, 2026-10-23, HEAD e68cf07 + this commit)
+
+- **Full suite (local, macOS, `devtools::test()`):** 6789 passed, 0 failed, 0 errors, 2 skipped, 1 warning.
+- **`gates.yaml` dispatched on `fix/restoration-bound` (run 39993779320):** `gates (rest)` success (includes the
+  `restoration` row), `gates (reliability)` success.
+- **Instrument on the capped code (runner, ubuntu OpenBLAS 0.3.26, run 39993768454):** 14 attempts, 12 polished, all
+  12 kept, 0 refused by the cap. Rows with a positive rise have rho = rise/allow in 0.9957 to 0.9996, far below
+  k = 4; the other rows have a negative rise (the restoration improved the objective). Data:
+  `tests/sim/results/restoration-instrument-ci-ubuntu-openblas0.3.26-capped-2026-10-23.csv`.
+- **Versus the pre-cap runner file:** same 14-attempt size and the same family of stalls (8 of 12 polished rises
+  match to 3 digits), but 4 stalls differ at the 1e-3 to 1e-2 level (1.99e-2 and 1.16e-2 here, against 1.49e-2 and
+  8.59e-3 before) and the attempt order shifted. The cap refuses nothing here, so the cap does not explain the
+  difference; the likely cause is the hardware of the runner that picked up the job (floating-point stall points move
+  at 1e-9). Not proved. It does not change the conclusion: no restoration the old code kept is refused, on either run.
+- Not covered: reference BLAS (needs the #274 container), other seeds and scales of the floor fixture (T3b).
