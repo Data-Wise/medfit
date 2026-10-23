@@ -5,7 +5,7 @@
 # verdict is "unresolved"), and `anova()` (unchanged). The failures are planted by replacing `.sem_fit_syntax()` for
 # chosen calls; every other call is the real fit.
 
-ur_data <- function() mediation_demo
+ur_data <- function() medfit::mediation_demo
 ur_model <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
 
 # `.sem_fit_syntax()` with the calls in `fail` (counted from 1 after this is installed) stopped
