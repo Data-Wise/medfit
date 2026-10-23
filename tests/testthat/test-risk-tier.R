@@ -10,6 +10,7 @@ rf <- readLines(file.path(root, "tests", "sim", "risk-files.txt"), warn = FALSE)
 full <- paste0("- [x] ", seq_along(env$risk_items), ". ", env$risk_items, collapse = "\n")
 
 test_that("every risk file exists, so a rename cannot silently switch the tier off", {
+  skip_if_not(file.exists(file.path(root, "R", "sem-ml.R")), "R sources are not shipped with the installed tests")
   expect_true(length(rf) >= 7L)
   for (f in rf) expect_true(file.exists(file.path(root, f)), info = f)
 })

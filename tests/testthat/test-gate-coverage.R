@@ -63,6 +63,7 @@ test_that("planted defect: an empty oracle, an empty mutants list and a stale mu
 })
 
 test_that("the registry names real gates and real model pages, and every gate is covered by a structure", {
+  skip_if_not(dir.exists(file.path(root, "vignettes", "articles")), "vignettes are not shipped here")
   gates <- gc_gates$gate
   listed <- unlist(lapply(gc_struct$gates, gc_tokens))
   expect_setequal(setdiff(listed, gates), character())
@@ -73,6 +74,7 @@ test_that("the registry names real gates and real model pages, and every gate is
 })
 
 test_that("every sem_models() entry and every native model page is in the registry", {
+  skip_if_not(dir.exists(file.path(root, "vignettes", "articles")), "vignettes are not shipped here")
   expect_setequal(setdiff(names(sem_models()), gc_struct$structure[gc_struct$kind == "sem_models"]), character())
   pages <- sub("\\.qmd$", "", list.files(file.path(root, "vignettes", "articles"), pattern = "^model-native.*\\.qmd$"))
   expect_setequal(setdiff(pages, gc_struct$doc), character())
