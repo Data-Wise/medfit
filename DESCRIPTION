@@ -46,7 +46,8 @@ Suggests:
     sandwich,
     testthat (>= 3.0.0),
     tibble,
-    withr
+    withr,
+    yaml
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))
