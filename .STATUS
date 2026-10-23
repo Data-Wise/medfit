@@ -1,3 +1,9 @@
+# Docs-only pkgdown 404 promotion — 2026-10-22
+# Website fix plus approved existing rlang import; dev optimizer changes excluded.
+# Local isolated site build: 106 pages / 8268 references / 0 local errors.
+# Regression/lint/YAML and desktop/mobile 404 inspection passed.
+# Full local gate: 6483 pass / 0 fail / 1 warning / 35 skips; check Status: OK.
+# Promotion/deployment pending CI; no package release or CRAN submission.
 status: active
 priority: P1
 progress: 100

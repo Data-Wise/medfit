@@ -1,3 +1,10 @@
+# medfit (development version)
+
+* Declare the existing `rlang` runtime dependency used by `compare_lr()`.
+
+* Repair pkgdown 2.2.1's invalid `/NA` script URL on generated 404 pages,
+  preserving the inline MathJax configuration.
+
 # medfit 0.12.0
 
 ## New features
