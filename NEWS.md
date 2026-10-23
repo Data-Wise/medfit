@@ -4,6 +4,9 @@
   resolving the undeclared-import R CMD check warning.
 ## Bug fixes
 
+* Repair pkgdown 2.2.1's invalid `/NA` script URL on generated 404 pages,
+  preserving the inline MathJax configuration.
+
 * The native optimizer's acceptance gate no longer rejects a result only because NLopt reported a roundoff-limited
   stop (status -4). The status is not the certificate: feasibility, stationarity and curvature still decide, and a
   stalled point still fails them. On some CPUs (the GitHub runner's) the extreme-scale floor fixture of the nonlinear
