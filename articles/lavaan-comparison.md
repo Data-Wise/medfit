@@ -149,9 +149,9 @@ rbind(
 ```
 
                                       [,1]
-    max_diff_estimate         4.996004e-16
-    max_diff_se               2.155350e-11
-    max_diff_estimate_fixed_x 1.665335e-16
+    max_diff_estimate         2.220446e-16
+    max_diff_se               2.254825e-11
+    max_diff_estimate_fixed_x 2.220446e-16
 
 They differ in what follows. lavaan reports a chi-square for this model;
 medfit reports `NA`, because the product contains a regression target
