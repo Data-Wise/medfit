@@ -1,0 +1,37 @@
+# TEMPORARY (restoration-bound plan T3, G11): runs tests/sim/restoration-instrument.R on the runner and uploads the
+# per-attempt CSV. Fires only on pushes to the feature branch that touch the script or this file. Delete before the PR.
+on:
+  push:
+    branches: [fix/restoration-bound]
+    paths:
+      - tests/sim/restoration-instrument.R
+      - .github/workflows/restoration-instrument.yaml
+
+name: restoration-instrument
+
+permissions: read-all
+
+jobs:
+  instrument:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      NOT_CRAN: "true"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"all"'
+          extra-packages: any::remotes, any::devtools, any::pkgload
+      - name: BLAS in use
+        run: Rscript -e 'print(extSoftVersion()["BLAS"]); print(La_library()); print(sessionInfo()$BLAS)'
+      - name: Instrument the #276 fixtures
+        run: Rscript tests/sim/restoration-instrument.R
+      - uses: actions/upload-artifact@v7
+        with:
+          name: restoration-instrument
+          path: tests/sim/results/restoration-instrument-*.csv
