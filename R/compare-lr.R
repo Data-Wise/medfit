@@ -58,7 +58,7 @@
   }
   runs <- do.call(rbind, rows)
   if (!isTRUE(reference$accepted)) {
-    reasons <- c("medfit has no accepted comparable result for the null (a branch fit was not accepted)", reasons)
+    reasons <- c("medfit has no accepted comparable result for the null (a refit was not accepted)", reasons)
   }
   open <- runs$status %in% c("unresolved", "failed", "unchecked")
   verdict <- if (any(runs$status %in% c("constraint_violated", "above_reference", "below_reference"))) {
@@ -270,7 +270,7 @@
 #' engines' unrestricted fits differ from medfit's, or a run fails or cannot be
 #' checked, the verdict is `"unresolved"` and neither side is blamed. medfit has
 #' no accepted reference when one of its own refits cannot be fitted (see
-#' [mbco_sem()]) or when the fit dropped a zero-product branch: the reference
+#' [mbco_sem()]): the reference
 #' LR is then `NA` and the result is a comparison with that verdict, not an
 #' error.
 #'

@@ -1,4 +1,4 @@
-# medfit (development version)
+# medfit 0.13.0
 
 * Declare the existing `rlang` runtime dependency used by `compare_lr()`,
   resolving the undeclared-import R CMD check warning.
@@ -29,10 +29,12 @@
   failure text in a new `note` column and an `NA` statistic and p-value (never the minimum over the refits that
   worked), with a warning and a new `unresolved` element; this includes a null the constraints rule out (`a > 0.3`
   with the null `a = 0`), which used to stop. A model or data error in a refit (for example the rule-9 refusal of a
-  label constraint with products) still stops. A fit that dropped a zero-product branch while another won now warns
-  and carries `incomplete` in `@internals`, because its discrepancy is a minimum over the surviving branches only;
-  `mbco_sem()` treats such a fit as unresolved. `compare_lr()` then returns the verdict `"unresolved"` with
-  `reference$accepted = FALSE` and `reference$lr = NA`, not an error. Callers that read `$tests$converged`
+  label constraint with products) still stops. A zero-product branch that cannot be fitted while another succeeds now stops
+  `fit_sem()` with a `medfit_error_no_convergence` error (the message lists each failed branch and the best survivor's
+  discrepancy), because the best of the other branches need not be the constrained optimum and a returned fit could be
+  used by `coef()`, `vcov()`, `anova()` or `extract_mediation()` as if it were certified. Inside `mbco_sem()` and
+  `compare_lr()` the failure is an unresolved row or the verdict `"unresolved"` with `reference$accepted = FALSE` and
+  `reference$lr = NA`, not an error. Callers that read `$tests$converged`
   (`missingmed` does) keep working; code that relied on `mbco_sem()` stopping for a failed refit must check
   `$unresolved`.
 

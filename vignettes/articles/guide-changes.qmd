@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-CRAN has medfit 0.3.2; this site documents 0.12.0 (GitHub and r-universe).
+CRAN has medfit 0.3.2; this site documents 0.13.0 (GitHub and r-universe).
 This page lists what a 0.3.2 user needs to know before upgrading: numbers that
 change, calls that now stop with an error, and what is new. The full record is
 [NEWS](https://data-wise.github.io/medfit/news/index.html).
@@ -105,6 +105,7 @@ reuses one of medfit's alias names for a different path (0.5.0).
 | 0.11.0 | categorical covariates in native syntax ([page](model-native-factors.html), [recipe 21](cookbook.html#a-categorical-covariate-in-a-native-fit)); `options(medfit.covariate_mean_variance = TRUE)` for population-average four-way standard errors (default unchanged); `AIC()`/`BIC()` refuse fits over different observed variables; nonlinear-constrained fits no longer wander to negative variances (#213); the native engine is no longer marked experimental (its signatures, `SEMFit` properties and syntax change only through a deprecation) |
 | 0.11.1 | nonparametric and cluster bootstrap resamples are reproducible across `ncores` with a fixed seed; `anova()` records row-wise `p_valid` and refuses mismatched nonzero fixed parameters; native fits record the best-of-starts verdict in `@diagnostics$optimum` |
 | 0.12.0 | `compare_lr()` ([article](lavaan-comparison.html#checking-a-constrained-lr-against-lavaan-or-openmx)): the product-null LR in lavaan or OpenMx against `mbco_sem()`, with warnings only on observed evidence |
+| 0.13.0 | a roundoff-limited restoration's objective rise is capped (a worse point can no longer stand and inflate an LR); a refit or zero-product branch the optimizer cannot fit is an unresolved result in `mbco_sem()`, `.sem_fit_branches()` and `compare_lr()` instead of an error or a silent answer |
 
 ## Dependencies
 

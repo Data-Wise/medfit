@@ -40,7 +40,7 @@ when the engine's statistic exceeds medfit's. Both inherit from
 engines' unrestricted fits differ from medfit's, or a run fails or cannot be
 checked, the verdict is \code{"unresolved"} and neither side is blamed. medfit has
 no accepted reference when one of its own refits cannot be fitted (see
-\code{\link[=mbco_sem]{mbco_sem()}}) or when the fit dropped a zero-product branch: the reference
+\code{\link[=mbco_sem]{mbco_sem()}}): the reference
 LR is then \code{NA} and the result is a comparison with that verdict, not an
 error.
 

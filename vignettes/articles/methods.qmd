@@ -874,9 +874,9 @@ A refit that the optimizer cannot bring to an accepted solution does not stop
 the function: its row in `$tests` has `converged = FALSE`, `NA` discrepancies
 and the failure text in `note`, a warning repeats the text, and the statistic
 and p-value are `NA`. They are never the minimum over the refits that worked,
-which would hide the failure. The same holds when the fit itself dropped a
-zero-product branch, since its discrepancy is then a minimum over the surviving
-branches only. A model or data error in a refit still stops.
+which would hide the failure. A zero-product branch that cannot be fitted stops
+`fit_sem()` itself, because the best of the other branches need not be the
+constrained optimum. A model or data error in a refit still stops.
 
 ```{r}
 #| label: native-sem-mbco
