@@ -1,3 +1,7 @@
+# Local rlang import fix: based on v0.12.0; Rforge --as-cran check 0/0/0.
+# Structured result complete; inner exit 0; retained log Status: OK.
+# Test runner: PASS 5993, FAIL 0, WARN 1, SKIP 98; no CRAN-readiness claim.
+# No submission or release authorized.
 status: active
 priority: P1
 progress: 100
