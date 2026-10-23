@@ -6,7 +6,8 @@
 root <- normalizePath(test_path("..", ".."))
 methods_file <- file.path(root, "vignettes", "articles", "methods.qmd")
 news_file <- file.path(root, "NEWS.md")
-skip_if_not(file.exists(methods_file) && file.exists(news_file), "vignettes and NEWS are not shipped with the installed tests")
+skip_if_not(file.exists(methods_file) && file.exists(news_file),
+        "vignettes and NEWS are not shipped with the installed tests")
 
 states_k <- function(text, k) grepl(sprintf("k = %g([^0-9.]|$)", k), text)
 
