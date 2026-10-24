@@ -137,18 +137,11 @@
 
 # Why compare_lr() cannot run this fit, or NULL when it can. Only observed-variable covariance models are supported
 # (grill P3): every other construct is refused with its name, never translated silently.
-# `engine`: lavaan poses a saturated mean structure and the `fixed_x` set (T4b); the OpenMx adapter does not yet (T4c).
-.lr_unsupported <- function(object, engine = c("openmx", "lavaan")) {
-  engine <- match.arg(engine)
+# Both adapters pose a saturated mean structure and the `fixed_x` set (lavaan T4b, OpenMx T4c).
+.lr_unsupported <- function(object) {
   tab <- object@table
   model <- object@model
   internals <- object@internals
-  if (engine == "openmx" && isTRUE(internals$ram$has_mean)) {
-    return("a mean structure (intercepts or `meanstructure`)")
-  }
-  if (engine == "openmx" && length(internals$fixed_x)) {
-    return("`fixed_x`")
-  }
   if (any(tab$op == "=~")) {
     return("latent variables")
   }
@@ -248,7 +241,7 @@
   if (!requireNamespace("lavaan", quietly = TRUE)) {
     stop("the lavaan package is needed for engine = \"lavaan\"; install it first.", call. = FALSE)
   }
-  why <- .lr_unsupported(object, "lavaan")
+  why <- .lr_unsupported(object)
   if (!is.null(why)) {
     stop(sprintf("compare_lr() does not support %s; it compares observed-variable models only.", why),
          call. = FALSE)
@@ -304,10 +297,11 @@
 #' LR is then `NA` and the result is a comparison with that verdict, not an
 #' error.
 #'
-#' Only observed-variable models are compared. With `engine = "lavaan"`, a
+#' Only observed-variable models are compared. With either engine, a
 #' saturated mean structure (every intercept free) and `fixed_x` (all, a named
 #' subset or a lenient subset) are supported: the fixed exogenous moments are
-#' written to lavaan as fixed rows at their sample values. Latent variables,
+#' written to the engine as fixed parameters at their sample values (in OpenMx,
+#' a fit with a mean structure is run on the raw data the fit used). Latent variables,
 #' product terms, fixed or constrained intercepts, weights, factors, other fixed
 #' or shared parameters, start/bound modifiers and constraints in the model are
 #' refused by name.
