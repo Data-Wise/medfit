@@ -1,7 +1,7 @@
 # SPEC: `fixed_x = TRUE` and `meanstructure = TRUE` as the native engine's defaults
 
-**Date:** 2026-10-24. **Status:** grilled 2026-10-24 (Q1-Q7 answered); decisions in
-`planning/specs/ADR-native-defaults-2026-10-24.md` (E-1 to E-12). **Releases:** 0.14.0 (warn), 0.15.0 (flip).
+**Date:** 2026-10-24. **Status:** approved 2026-10-24: grilled (Q1-Q7), Codex-reviewed, all decisions E-1 to E-15 decided in
+`planning/specs/ADR-native-defaults-2026-10-24.md`. **Releases:** 0.14.0 (warn), 0.15.0 (flip).
 **Inputs:** `BRAINSTORM-fixed-x-default-2026-10-24.md` (decisions D1-D6, author 2026-10-24); the measurement in
 `evidence/native-defaults-2026-10-24/` (this spec, section 4).
 
@@ -214,7 +214,7 @@ gh workflow run revdep-check.yaml --ref <branch>
 | Q6 reliability | blocker for 0.15.0 (E-12) |
 | Q7 R-1 bug | first task inside 0.14.0, not a separate patch (E-8; against the recommendation) |
 
-## 10b. Adversarial review (Codex, 2026-10-24): verdict needs-attention, all three findings accepted
+## 10b. Adversarial review (Codex, 2026-10-24): verdict needs-attention, all three findings accepted; fixes E-13 to E-15 approved by the author 2026-10-24
 
 | Finding | Response |
 |---|---|

@@ -12,9 +12,9 @@ decisions:
   - {id: E-10, title: "Unset is detected with missing(); fit_mediation() forwards only supplied settings", status: decided, date: 2026-10-24}
   - {id: E-11, title: "The fixed_x default fixes product columns too", status: decided, date: 2026-10-24}
   - {id: E-12, title: "Reliability under the new defaults is a 0.15.0 blocker", status: decided, date: 2026-10-24}
-  - {id: E-13, title: "The fixed_x default resolves to an explicit subset (provenance)", status: proposed, date: 2026-10-24}
-  - {id: E-14, title: "Versioned resolution: 0.15.0 ignores the opt-in option", status: proposed, date: 2026-10-24}
-  - {id: E-15, title: "An oracle matrix gates the flip", status: proposed, date: 2026-10-24}
+  - {id: E-13, title: "The fixed_x default resolves to an explicit subset (provenance)", status: decided, date: 2026-10-24}
+  - {id: E-14, title: "Versioned resolution: 0.15.0 ignores the opt-in option", status: decided, date: 2026-10-24}
+  - {id: E-15, title: "An oracle matrix gates the flip", status: decided, date: 2026-10-24}
 ---
 
 # ADR: the native engine's defaults for `fixed_x` and `meanstructure`
@@ -92,21 +92,21 @@ columns included, as `fixed_x = TRUE` does today. Rejected: products free under 
 **E-12. Reliability is a blocker.** 0.15.0 merges only when the reliability gate under the new defaults is
 non-inferior to the last green run (rule of D-8). Rejected: a follow-up run. Author, 2026-10-24 (grill Q6).
 
-**E-13. Provenance: the default resolves to a subset (proposed).** An implicit `fixed_x = TRUE` becomes, inside
+**E-13. Provenance: the default resolves to a subset.** An implicit `fixed_x = TRUE` becomes, inside
 `fit_sem()`, the explicit character vector of observed exogenous columns (products and factors included) minus those
 the model writes a `~~` or `~1` statement on; an empty vector means `FALSE`. That carries E-5's lenience without a
 flag through the internals, and refits see the same subset. Rejected: a default-origin flag passed through
-completion (touches every internal call). Codex review, 2026-10-24.
+completion (touches every internal call). Codex review, 2026-10-24; approved by the author, 2026-10-24.
 
-**E-14. Versioned resolution (proposed).** 0.14.x: unset takes the old value unless `medfit.native_defaults` is set.
+**E-14. Versioned resolution.** 0.14.x: unset takes the old value unless `medfit.native_defaults` is set.
 0.15.0: unset takes the new value unconditionally and the option is ignored with an obsolete note. An explicit
 value is never overwritten. Rejected: the first sketch, which re-derived unset values from the option in both
-releases and so would have undone the flip. Codex review, 2026-10-24.
+releases and so would have undone the flip. Codex review, 2026-10-24; approved by the author, 2026-10-24.
 
-**E-15. An oracle matrix gates the flip (proposed).** The four setting combinations crossed with weights and sandwich
+**E-15. An oracle matrix gates the flip.** The four setting combinations crossed with weights and sandwich
 SEs, fixed and constrained intercepts, a latent mediator, a four-way product, a factor covariate and a named subset,
 against lavaan or a stated oracle, before 0.15.0. Rejected: relying on the existing suites, which pass unchanged in
-the dependents but need not exercise the new defaults. Codex review, 2026-10-24.
+the dependents but need not exercise the new defaults. Codex review, 2026-10-24; approved by the author, 2026-10-24.
 
 ## 3. Consequences
 
