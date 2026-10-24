@@ -1,5 +1,14 @@
 # medfit (development version)
 
+## New features
+
+* `compare_lr()` now accepts native fits with a saturated mean structure (every intercept free) and with `fixed_x`
+  (`TRUE`, a named subset or a lenient subset), in lavaan (#319) and in OpenMx (#321). Both were refused before. The
+  fixed exogenous moments are passed to the engine as fixed parameters at their sample values (N denominator), so
+  the engine fits the same model medfit does; in OpenMx a fit with a mean structure runs on the raw data of exactly
+  the rows the fit used. This lets the comparison run on fits made under the 0.15.0 defaults. OpenMx's default start
+  can occasionally land above medfit's reference; that is reported as the usual statistic-above-max warning (#320).
+
 ## Bug fixes
 
 * A parameter pinned by the active set (an equality such as `b == 0`, or an active bound) in a native fit with a
