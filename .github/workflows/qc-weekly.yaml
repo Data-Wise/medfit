@@ -1,0 +1,161 @@
+# Weekly QC run (QC plan Q-5 and Q-6, planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md).
+# Runs the simulation gates on `dev` (the OpenBLAS runner), records one history row per run on the `qc-results` branch,
+# and opens a GitHub issue, deduplicated, on a failing gate or a changed environment fingerprint (R, BLAS, nloptr,
+# lavaan, OpenMx; the runner image is recorded and never alerts). Metrics are recorded every week; drift bands are set
+# after about 8 rows. Pieces: tests/sim/qc-lib.R, qc-metrics.R, qc-collect.R (tested in test-qc-lib.R).
+#
+# Scheduled workflows run the file on the DEFAULT branch (`main`), so this runs on a schedule only once a release
+# carries it to main; the checkout therefore names its ref explicitly (`dev` unless a manual run says otherwise).
+# GitHub disables scheduled workflows after 60 days without repository activity.
+# A pull request labeled `run-qc` runs the gates on its head and publishes nothing (pulling a run forward, review R-6).
+# Manual inputs: `ref` (what to run), `plant_alert` (adds a planted gate alert so the issue path is exercised on
+# purpose; close the issue it opens). Not yet run end to end on GitHub: the first manual dispatch is the exercise.
+on:
+  schedule:
+    - cron: "41 6 * * 2"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch or SHA to run (default dev)"
+        required: false
+        default: "dev"
+      plant_alert:
+        description: "Add a planted gate alert to test the issue path"
+        type: boolean
+        default: false
+  pull_request:
+    branches: [dev]
+    types: [labeled]
+
+name: qc-weekly
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  gates:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'run-qc'
+    name: qc gates (${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [reliability, rest]
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      NOT_CRAN: "true"
+      QC_REF: ${{ github.event.pull_request.head.sha || inputs.ref || 'dev' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.ref || 'dev' }}
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"all"'
+          extra-packages: any::remotes, any::devtools
+      - name: Run the gates of this shard (--sim)
+        id: gate
+        continue-on-error: true
+        run: |
+          # shellcheck disable=SC2016
+          if [ "${{ matrix.shard }}" = "reliability" ]; then
+            only="reliability"
+          else
+            only=$(Rscript -e 'ids <- read.csv("tests/sim/gates.csv", stringsAsFactors = FALSE)$gate; cat(setdiff(ids, "reliability"), sep = ",")')
+          fi
+          Rscript tests/sim/run-gates.R --sim --only "$only"
+      - name: Record this shard's metrics
+        if: always()
+        run: Rscript tests/sim/qc-metrics.R "${{ matrix.shard }}"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: qc-${{ matrix.shard }}
+          path: |
+            tests/sim/results/qc-metrics-*.csv
+            tests/sim/results/gates-*.log
+            tests/sim/results/gates-summary-*.txt
+          if-no-files-found: warn
+
+  publish:
+    needs: gates
+    if: always() && github.event_name != 'pull_request' && needs.gates.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || 'dev' }}
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: actions/download-artifact@v7
+        with:
+          path: shards
+          pattern: qc-*
+      - name: Fetch the history
+        id: history
+        run: |
+          if git ls-remote --exit-code --heads origin qc-results >/dev/null 2>&1; then
+            git fetch --depth 1 origin qc-results
+            git show FETCH_HEAD:qc-history.csv > prev.csv || rm -f prev.csv
+          fi
+          ls prev.csv 2>/dev/null || echo "no history yet"
+      - name: Merge the shards, append, and compute alerts
+        run: |
+          flag=""
+          if [ "${{ inputs.plant_alert }}" = "true" ]; then flag="--planted"; fi
+          Rscript tests/sim/qc-collect.R shards/qc-rest shards/qc-reliability \
+            --history prev.csv --out qc-history.csv --alerts alerts.txt $flag
+          cat alerts.txt
+      - name: Publish the history to qc-results
+        id: push
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir "$RUNNER_TEMP/qc" && cp qc-history.csv "$RUNNER_TEMP/qc/"
+          if git ls-remote --exit-code --heads origin qc-results >/dev/null 2>&1; then
+            git fetch --depth 1 origin qc-results && git checkout -B qc-results FETCH_HEAD
+          else
+            git checkout --orphan qc-results && git rm -rf . >/dev/null 2>&1 || true
+          fi
+          cp "$RUNNER_TEMP/qc/qc-history.csv" qc-history.csv
+          git add qc-history.csv
+          git commit -m "qc: weekly gate run $(date -u +%F) ($GITHUB_RUN_ID)"
+          git push origin qc-results
+      - name: Open issues for alerts (one per cause, deduplicated)
+        run: |
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gate=$(grep '^gate: ' alerts.txt | sed 's/^gate: //' | paste -sd, -)
+          if [ -n "$gate" ]; then
+            title="QC gate failing on dev: $gate"
+            if [ -n "$(gh issue list --state open --search "QC gate failing on dev in:title" --json number -q '.[].number')" ]; then
+              echo "a QC gate issue is already open"
+            else
+              gh issue create --title "$title" --body "The weekly QC run failed: $gate (run: $run_url). Triage with tests/sim/run-gates.R and the gate's script; history on the qc-results branch. A planted alert (a manual run with plant_alert) opens this issue on purpose: close it. Opened by the qc-weekly workflow."
+            fi
+          fi
+          env_changes=$(grep '^env: ' alerts.txt | sed 's/^env: //' | paste -sd';' -)
+          if [ -n "$env_changes" ]; then
+            key=$(printf '%s' "$env_changes" | cksum | cut -d' ' -f1)
+            title="QC environment changed ($key): $env_changes"
+            if [ -n "$(gh issue list --state all --search "QC environment changed ($key) in:title" --json number -q '.[].number')" ]; then
+              echo "an issue for this environment change already exists"
+            else
+              gh issue create --title "$title" --body "The weekly QC run saw a different environment (run: $run_url): $env_changes. Compare the metrics rows on qc-results before and after; the gates were calibrated on the previous environment. Opened by the qc-weekly workflow."
+            fi
+          fi
+      - name: Report a failed history push
+        if: steps.push.outcome == 'failure'
+        run: echo "::warning::could not push the history to qc-results; the artifacts of this run hold the rows"
+      - name: Fail the run when a gate failed
+        run: |
+          if grep -q '^gate: ' alerts.txt; then exit 1; fi

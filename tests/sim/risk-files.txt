@@ -1,0 +1,7 @@
+R/sem-ml.R
+R/sem-model.R
+R/sem-constraints.R
+R/sem-optim.R
+R/sem-parse.R
+R/sem-fit.R
+tests/sim/gates.csv

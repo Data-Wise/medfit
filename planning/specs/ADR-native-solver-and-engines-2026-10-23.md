@@ -1,3 +1,20 @@
+---
+decisions:
+  - {id: A, title: "SLSQP as the default solver (D19)", status: accepted, date: 2026-10-09}
+  - {id: B, title: "Tiered path for constrained fits (D16; Tier 0 shipped, Tier 1 and the fallback not implemented)", status: approved, date: 2026-10-19}
+  - {id: D-1, title: "Motivation for nlminb is reliability, not speed", status: decided, date: 2026-10-23}
+  - {id: D-2, title: "nlminb starts at the zero-product branch fits", status: decided, date: 2026-10-23}
+  - {id: D-3, title: "A branch reaches nlminb by pinning coordinates", status: decided, date: 2026-10-23}
+  - {id: D-4, title: "Unconstrained default and an option (measurement gate first)", status: proposed, date: 2026-10-23}
+  - {id: D-5, title: "nlminb as a cross-check on branch fits", status: conditional, date: 2026-10-23}
+  - {id: D-6, title: "Constrained default and the order of the tiered path", status: decided, date: 2026-10-23}
+  - {id: D-7, title: "Plain linear constraints stay on SLSQP until AUGLAG is measured", status: decided, date: 2026-10-23}
+  - {id: D-8, title: "D-4 reliability gate is a paired non-inferiority test", status: decided, date: 2026-10-23}
+  - {id: D-9, title: "The gate design is fixed before the first run", status: decided, date: 2026-10-23}
+  - {id: D-10, title: "Latent structures in the D-4 gate", status: decided, date: 2026-10-23}
+  - {id: D-11, title: "A partial branch result is an error (PR #303)", status: decided, date: 2026-10-23}
+---
+
 # ADR: the solver behind the built-in SEM engine, and which engine to use when
 
 **Date:** 2026-10-23. **Status by part:**

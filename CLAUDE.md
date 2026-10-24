@@ -357,6 +357,18 @@ Verify numeric claims against an independent oracle (lavaan `:=`, `lm(Y ~ X + C)
 for the total effect, a hand calculation, or a nonparametric bootstrap) and plant a
 defect the test must catch; the SE tests use this pattern throughout.
 
+### Optimizer quality control (new model classes)
+
+A change that alters the objective, the parameter vector, the constraint set, the bounds or the solver path
+(`tests/sim/risk-files.txt`) is high-risk: its PR body carries the seven-item admission checklist, each item ticked or
+`n/a: <reason>` (the `risk-tier` workflow checks it): independent oracle, reliability cell, planted defect,
+metamorphic invariance, fault injection, registration (`gates.csv` row with `oracle` and `mutants`, a row in
+`tests/sim/structures.csv`), platform run on the OpenBLAS runner. Every new structure needs at least an oracle, a
+reliability cell and a planted defect; `test-gate-coverage.R` fails when a gate row is not real or a structure has no
+gate. The `qc-weekly` workflow records one history row a week on the `qc-results` branch and opens an issue on a
+failing gate or a changed environment. Decisions live in `planning/specs/ADR-*.md`; each carries a `decisions:` list
+in its front matter (`test-adr-front-matter.R`). Plan and ledger: `planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md`.
+
 ### What to Test
 
 1. **S7 validation** - Type checking, validators, edge cases
