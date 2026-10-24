@@ -136,7 +136,8 @@ check("lavaan", "logLik", abs(as.numeric(logLik(base)) - ref) <= 1e-6)
 check("guard", "non-exogenous fixed_x name refused",
       inherits(try(fit_sem(fx_syntax, d0, fixed_x = "outcome", meanstructure = NULL), silent = TRUE), "try-error"))
 check("guard", "AIC across different fixed sets refused",
-      inherits(try(AIC(fit_sem(fx_syntax, d0, fixed_x = FALSE, meanstructure = NULL), base), silent = TRUE), "try-error"))
+      inherits(try(AIC(fit_sem(fx_syntax, d0,
+                               fixed_x = FALSE, meanstructure = NULL), base), silent = TRUE), "try-error"))
 
 # timing table (reported, not gated): p covariates, free parameters and wall time, fixed vs free
 timing <- NULL

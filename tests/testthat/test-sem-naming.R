@@ -22,7 +22,8 @@ test_that("coef() uses lavaan's names on the observed, labeled and latent struct
 })
 
 test_that("tidy(), the accessors and vcov() carry the same names as coef()", {
-  fit <- fit_sem(sem_lavaan_text("latent"), sem_sim(sem_models()$latent, n = 400, seed = 3), fixed_x = FALSE, meanstructure = NULL)
+  fit <- fit_sem(sem_lavaan_text("latent"), sem_sim(sem_models()$latent, n = 400, seed = 3),
+                 fixed_x = FALSE, meanstructure = NULL)
   td <- tidy(fit)
   expect_identical(td$term, names(coef(fit)))
   expect_identical(td$op[td$term == "eta=~m2"], "=~")

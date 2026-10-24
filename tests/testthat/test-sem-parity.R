@@ -87,7 +87,8 @@ test_that("an active lower bound matches OpenMx's lbound and the fixed-at-bound 
   skip_if_not_installed("OpenMx")
   mod <- sem_model_heywood()
   dat <- sem_sim(mod, n = 50, seed = 10)
-  fit <- fit_sem("eta =~ m1 + m2 + m3\neta ~ X\nY ~ eta + X\nm1 ~~ lower(0)*m1", dat, fixed_x = FALSE, meanstructure = NULL)
+  fit <- fit_sem("eta =~ m1 + m2 + m3\neta ~ X\nY ~ eta + X\nm1 ~~ lower(0)*m1", dat,
+                 fixed_x = FALSE, meanstructure = NULL)
   expect_identical(fit@diagnostics$active_bounds, "m1~~m1")
   om <- parity_openmx(
     sem_openmx(mod, .sem_sample(dat, mod$ram), lbound = c(`m1~~m1` = 0)), mod
@@ -130,10 +131,12 @@ test_that("the native estimates on the K10 structures are pinned (no oracle need
 })
 
 test_that("the native estimates on the constrained and bounded cells are pinned", {
-  eq <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == b", sem_sim(sem_model_equal_paths(), n = 200, seed = 5), fixed_x = FALSE, meanstructure = NULL)
+  eq <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == b", sem_sim(sem_model_equal_paths(), n = 200, seed = 5),
+                fixed_x = FALSE, meanstructure = NULL)
   expect_equal(eq@theta, c(a = 0.456148376, b = 0.456148376, cp = 0.102963365, `M~~M` = 0.808260265,
                            `Y~~Y` = 0.692207122, `X~~X` = 0.98415528), tolerance = 1e-6)
-  zero <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == 0", sem_sim(sem_model_zero_path(), n = 200, seed = 5), fixed_x = FALSE, meanstructure = NULL)
+  zero <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == 0", sem_sim(sem_model_zero_path(), n = 200, seed = 5),
+                  fixed_x = FALSE, meanstructure = NULL)
   expect_equal(zero@theta, c(a = 0, b = 0.461302662, cp = 0.125158791, `M~~M` = 0.810816705,
                              `Y~~Y` = 0.692185645, `X~~X` = 0.984155281), tolerance = 1e-6)
   bnd <- fit_sem("eta =~ m1 + m2 + m3\neta ~ X\nY ~ eta + X\nm1 ~~ lower(0)*m1",

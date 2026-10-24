@@ -54,7 +54,8 @@ test_that("the polish lands a nonlinear-equality fit on the exact optimum", {
   th <- stats::setNames(unname(fit@theta), gsub(" ", "", names(fit@theta), fixed = TRUE))
   expect_lt(abs(th[["cp"]] - th[["a"]] * th[["b"]]), 1e-12)
   # without the polish the same fit is 1.8e-5 away: the test can fail
-  off <- testthat::with_mocked_bindings(fit_sem(pol_syntax, d, fixed_x = FALSE, meanstructure = NULL), .sem_polish = function(...) NULL)
+  off <- testthat::with_mocked_bindings(fit_sem(pol_syntax, d, fixed_x = FALSE, meanstructure = NULL),
+                                        .sem_polish = function(...) NULL)
   expect_gt(pol_gap(off, exact), 1e-5)
 })
 

@@ -52,7 +52,8 @@ test_that("intercept and mean SEs match an independent OLS oracle", {
 test_that("meanstructure is tri-state: NULL follows the syntax, TRUE saturates, FALSE refuses an intercept", {
   expect_false(fit_sem(mean_syntax, mediation_demo, fixed_x = FALSE, meanstructure = NULL)@internals$ram$has_mean)
   expect_true(fit_sem(mean_syntax, mediation_demo, meanstructure = TRUE, fixed_x = FALSE)@internals$ram$has_mean)
-  expect_true(fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)@internals$ram$has_mean)
+  expect_true(fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo,
+                      fixed_x = FALSE, meanstructure = NULL)@internals$ram$has_mean)
   expect_error(fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo, meanstructure = FALSE, fixed_x = FALSE),
                "meanstructure = FALSE.*writes an intercept")
   expect_error(fit_sem(mean_syntax, mediation_demo, meanstructure = "yes", fixed_x = FALSE), "meanstructure")

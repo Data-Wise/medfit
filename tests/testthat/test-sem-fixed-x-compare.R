@@ -99,5 +99,6 @@ test_that("AIC and BIC keep working for fits passed by value and for mixed class
   expect_identical(rownames(out), c("model1", "model2"))
   expect_identical(nrow(AIC(a, a)), 2L)
   expect_identical(nrow(AIC(a, stats::lm(outcome ~ treatment, d))), 2L)
-  expect_error(AIC(fit_sem(fx_syntax, d, fixed_x = TRUE, meanstructure = NULL), stats::lm(outcome ~ treatment, d)), "another class")
+  expect_error(AIC(fit_sem(fx_syntax, d,
+                           fixed_x = TRUE, meanstructure = NULL), stats::lm(outcome ~ treatment, d)), "another class")
 })

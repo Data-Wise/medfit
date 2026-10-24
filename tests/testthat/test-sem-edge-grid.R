@@ -137,7 +137,8 @@ edge_grid <- local({
     edge_case("start order and count", function() {
       base(args = list(n_starts = 3L))
     }, "accept", function(fit, spec) {
-      alt <- fit_sem("M ~ start(0.2)*X + C\nY ~ b*M + cp*X + C", spec$data, n_starts = 1L, fixed_x = FALSE, meanstructure = NULL)
+      alt <- fit_sem("M ~ start(0.2)*X + C\nY ~ b*M + cp*X + C", spec$data, n_starts = 1L,
+                     fixed_x = FALSE, meanstructure = NULL)
       expect_equal(unname(coef(fit)), unname(coef(alt)), tolerance = 1e-4)
       edge_ols(fit, spec)
     }, "start-order parity + OLS")

@@ -135,7 +135,8 @@ test_that("a restricted exogenous block is refused too: fixed, labeled, bounded 
   for (nm in names(cases)) {
     model <- paste(pmt_exo, cases[[nm]][1L], sep = "\n")
     expect_warning(
-      fit <- fit_sem(model, pmt_data(), se_type = "sandwich", fixed_x = FALSE, meanstructure = NULL), "model test is not valid.*exogenous \\(co\\)variance",
+      fit <- fit_sem(model, pmt_data(), se_type = "sandwich",
+                     fixed_x = FALSE, meanstructure = NULL), "model test is not valid.*exogenous \\(co\\)variance",
       info = nm
     )
     expect_match(.sem_modeltest_reason(fit), cases[[nm]][2L], info = nm)

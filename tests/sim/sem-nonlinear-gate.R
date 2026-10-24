@@ -192,7 +192,8 @@ one <- function(i) {
   row <- data.frame(g, native_ok = FALSE, improper = NA, feas = NA_real_, active = NA, omx_ok = FALSE,
                     f_gap = NA_real_, same = NA, est_gap = NA_real_, ref_gap = NA_real_,
                     ann = NA_real_, se_rel = NA_real_, se_oracle = FALSE)
-  fit <- tryCatch(suppressWarnings(fit_sem(paste0(st$syntax, "\n", pr$text), d, n_starts = 5L, fixed_x = FALSE, meanstructure = NULL)),
+  fit <- tryCatch(suppressWarnings(fit_sem(paste0(st$syntax, "\n", pr$text), d, n_starts = 5L,
+                                           fixed_x = FALSE, meanstructure = NULL)),
                   error = function(e) NULL)
   if (is.null(fit)) return(row)
   ram <- fit@internals$ram
@@ -295,7 +296,8 @@ boot_ok <- {
   fit <- suppressWarnings(fit_sem(txt, d, fixed_x = FALSE, meanstructure = NULL))
   set.seed(2026)
   boot <- t(vapply(seq_len(150), function(i) {
-    r <- tryCatch(suppressWarnings(fit_sem(txt, d[sample(nrow(d), replace = TRUE), ], n_starts = 3L, fixed_x = FALSE, meanstructure = NULL)),
+    r <- tryCatch(suppressWarnings(fit_sem(txt, d[sample(nrow(d), replace = TRUE), ], n_starts = 3L,
+                                           fixed_x = FALSE, meanstructure = NULL)),
                   error = function(e) NULL)
     if (is.null(r)) rep(NA_real_, 3) else unname(r@theta[c("a", "b", "cp")])
   }, numeric(3)))

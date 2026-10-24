@@ -18,7 +18,8 @@ test_that("a product model with no intercept statement fits the mean structure (
     expect_true(fit@internals$ram$has_mean)
     expect_true(all(c("m~1", "y~1", "x~1", "c~1") %in% names(coef(fit))))
     # an explicit TRUE is the same fit
-    expect_equal(coef(fit_sem(pmn_model, pmn_data(), meanstructure = TRUE, fixed_x = FALSE)), coef(fit), tolerance = 1e-10)
+    explicit <- fit_sem(pmn_model, pmn_data(), meanstructure = TRUE, fixed_x = FALSE)
+    expect_equal(coef(explicit), coef(fit), tolerance = 1e-10)
   })
 })
 

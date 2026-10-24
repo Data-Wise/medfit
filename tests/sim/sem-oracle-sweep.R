@@ -128,7 +128,8 @@ one <- function(i) {
   warnings <- character()
   error <- ""
   fit <- tryCatch(
-    withCallingHandlers(fit_sem(syntax, d, n_starts = if (family == "C") 3L else 2L, fixed_x = FALSE, meanstructure = NULL),
+    withCallingHandlers(fit_sem(syntax, d, n_starts = if (family == "C") 3L else 2L,
+                                fixed_x = FALSE, meanstructure = NULL),
       warning = function(w) {
         warnings <<- c(warnings, conditionMessage(w))
         invokeRestart("muffleWarning")

@@ -73,7 +73,8 @@ test_that("planted defect: an unprojected covariance changes the standard errors
 test_that("a fit with a missing-value drop and an active constraint reports both in the summary", {
   dat <- sem_sim(sem_model_observed(), n = 300, seed = 3)
   dat$M[c(2, 9)] <- NA
-  expect_message(fit <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C\na == b", dat, fixed_x = FALSE, meanstructure = NULL), "2 of 300 rows dropped")
+  expect_message(fit <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C\na == b", dat,
+                                fixed_x = FALSE, meanstructure = NULL), "2 of 300 rows dropped")
   expect_identical(fit@n_dropped, 2L)
   expect_identical(fit@diagnostics$active_constraints, "a == b")
   out <- utils::capture.output(print(summary(fit)))
@@ -179,7 +180,8 @@ test_that("glance() matches lavaan: chi-square, df, p, log likelihood, AIC, BIC 
 })
 
 test_that("glance() has no converged column; a saturated fit has df 0, chi-square 0 and no p-value", {
-  g0 <- generics::glance(fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL))
+  g0 <- generics::glance(fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", mediation_demo,
+                                 fixed_x = FALSE, meanstructure = NULL))
   expect_false("converged" %in% names(g0))
   expect_identical(g0$df, 0)
   expect_equal(g0$chisq, 0)
@@ -189,7 +191,8 @@ test_that("glance() has no converged column; a saturated fit has df 0, chi-squar
 })
 
 test_that("a weighted fit has a weighted discrepancy, not a likelihood: the likelihood columns are NA", {
-  w <- fit_sem(tg_syntax, mediation_demo, weights = rep(1, nrow(mediation_demo)), se_type = "sandwich", fixed_x = FALSE, meanstructure = NULL)
+  w <- fit_sem(tg_syntax, mediation_demo, weights = rep(1, nrow(mediation_demo)), se_type = "sandwich",
+               fixed_x = FALSE, meanstructure = NULL)
   g <- generics::glance(w)
   expect_identical(g$nobs, 400L)
   expect_true(all(is.na(g[c("chisq", "p_value", "logLik", "AIC", "BIC")])))
@@ -207,12 +210,14 @@ test_that("tidy() and confint() of a hand-built SEMFit read the object", {
 })
 
 test_that("edge cases: no defined parameters, a shared label and a latent model", {
-  f0 <- fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  f0 <- fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", mediation_demo,
+                fixed_x = FALSE, meanstructure = NULL)
   expect_identical(nrow(generics::tidy(f0, type = "defined")), 0L)
   expect_identical(nrow(generics::tidy(f0)), length(coef(f0)))
   expect_identical(dim(confint(f0)), c(length(coef(f0)), 2L))
   # one label on two paths is one parameter: one row, and the count and df follow
-  shared <- fit_sem("mediator1 ~ a*treatment + a*covariate1\noutcome ~ mediator1 + treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  shared <- fit_sem("mediator1 ~ a*treatment + a*covariate1\noutcome ~ mediator1 + treatment", mediation_demo,
+                    fixed_x = FALSE, meanstructure = NULL)
   expect_identical(sum(generics::tidy(shared)$term == "a"), 1L)
   expect_identical(generics::glance(shared)$npar, length(coef(shared)))
   expect_equal(generics::glance(shared)$df, shared@df)

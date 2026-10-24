@@ -55,7 +55,8 @@ test_that("an inactive nonlinear inequality leaves the unconstrained fit unchang
 
 test_that("the spread warning fires when the starts reach different optima and not when they agree", {
   d <- ni_data()
-  expect_warning(fit_sem(paste0(ni_base, "\na*b > 0.4"), d, fixed_x = FALSE, meanstructure = NULL), "the starts disagree")
+  expect_warning(fit_sem(paste0(ni_base, "\na*b > 0.4"), d,
+                         fixed_x = FALSE, meanstructure = NULL), "the starts disagree")
   # the equality cp == a*b has one optimum: every start reaches it
   expect_no_warning(fit_sem(paste0(ni_base, "\ncp == a*b"), d, fixed_x = FALSE, meanstructure = NULL))
 })

@@ -83,7 +83,8 @@ for (sname in names(structures)) {
           # a constraint on an intercept keeps the plain coordinates: supported to mean/sd of 1e3, not 1e5
           if (pname == "icpt" && shift > 1000) next
           syn <- paste0(st$syntax, "\n", problems[[pname]])
-          fit <- tryCatch(suppressWarnings(fit_sem(syn, d, fixed_x = FALSE, meanstructure = NULL)), error = function(e) NULL)
+          fit <- tryCatch(suppressWarnings(fit_sem(syn, d,
+                                                   fixed_x = FALSE, meanstructure = NULL)), error = function(e) NULL)
           ok <- !is.null(fit) && isTRUE(fit@converged) && !anyNA(fit@vcov)
           th <- if (ok) fit@theta else NULL
           feas <- NA_real_

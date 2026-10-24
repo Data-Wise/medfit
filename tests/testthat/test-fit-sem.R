@@ -45,7 +45,8 @@ test_that("fit_sem returns a SEMFit with the table, covariance and diagnostics",
   ref <- .sem_fit_syntax("M ~ a*X + C\nY ~ b*M + X + C\nab := a*b", dat)
   expect_identical(fit@theta, ref$theta)
   expect_identical(fit@vcov, ref$vcov)
-  expect_identical(fit_sem("M ~ X\nY ~ M + X", dat, information = "expected", fixed_x = FALSE, meanstructure = NULL)@information, "expected")
+  expect_identical(fit_sem("M ~ X\nY ~ M + X", dat, information = "expected",
+                           fixed_x = FALSE, meanstructure = NULL)@information, "expected")
 })
 
 test_that("fit_sem validates its arguments", {

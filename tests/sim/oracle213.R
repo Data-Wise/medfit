@@ -147,7 +147,8 @@ if (sys.nframe() == 0L) {
   cfit <- function(d, q, floor = TRUE, n_starts = 8) {
     syn <- paste0(nv_model, "\na*b/sqrt(2*(b^2*Vm+Vy)) == ", format(q, digits = 17),
                   if (floor) "\nVm > 0.0001\nVy > 0.0001" else "")
-    tryCatch(suppressWarnings(fit_sem(syn, d, n_starts = n_starts, fixed_x = FALSE, meanstructure = NULL)), error = function(e) NULL)
+    tryCatch(suppressWarnings(fit_sem(syn, d, n_starts = n_starts,
+                                      fixed_x = FALSE, meanstructure = NULL)), error = function(e) NULL)
   }
   # (0) normalization: the oracle's unconstrained Q matches medfit's -2 logLik up to the X and 2*pi constant
   d <- nv_data(101, 2.5, 1.5, 2)
