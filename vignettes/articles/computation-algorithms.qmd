@@ -171,7 +171,9 @@ fit@diagnostics$decrement
 For $k$ labeled paths, $\prod_{j=1}^k a_j=0$ means at least one path is
 zero. `R/sem-fit.R` splits explicit zero-product equalities into linear
 branches, fits each from a clean default start, and keeps the accepted branch
-with the lowest discrepancy. It supports at most 64 branches. This avoids a
+with the lowest discrepancy. It supports at most 64 branches. If a branch
+cannot be fitted, `fit_sem()` stops with an error rather than returning the
+best of the others, which need not be the constrained optimum. This avoids a
 zero Jacobian where several factors vanish. `mbco_sem()` uses the same logic
 for an indirect-effect test: fit each single-path null, use the smallest
 likelihood-ratio statistic, and refer it to a one-degree-of-freedom chi-square
