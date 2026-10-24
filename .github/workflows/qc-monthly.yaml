@@ -37,7 +37,9 @@ jobs:
   gates:
     if: github.event_name != 'pull_request' || github.event.label.name == 'run-qc'
     name: qc gates (${{ matrix.shard }})
-    runs-on: ubuntu-latest
+    # Pinned (same as gates.yaml): ubuntu-latest moved to 26.04 (R 4.6.1) on 2026-10-23 and both shards hit this timeout (reliability
+    # took 24 min on 24.04, over 73 min on 26.04). The gate evidence (OpenBLAS, #238) was recorded on 24.04.
+    runs-on: ubuntu-24.04
     timeout-minutes: 75
     strategy:
       fail-fast: false

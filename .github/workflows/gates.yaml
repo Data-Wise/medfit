@@ -17,7 +17,9 @@ jobs:
     # Two shards run in parallel: the reliability gate (76,800 fits) alone, and every other gate. A gate added to
     # tests/sim/gates.csv lands in "rest" automatically.
     name: gates (${{ matrix.shard }})
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04 (R 4.6.1) on 2026-10-23 and both shards hit this timeout (reliability
+    # took 24 min on 24.04, over 73 min on 26.04). The gate evidence (OpenBLAS, #238) was recorded on 24.04.
+    runs-on: ubuntu-24.04
     timeout-minutes: 75
     strategy:
       fail-fast: false
