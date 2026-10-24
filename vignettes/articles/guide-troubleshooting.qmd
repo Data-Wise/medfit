@@ -144,6 +144,7 @@ reference, its verdict is `"unresolved"` and `reference$lr` is `NA`.
 | You see | Meaning |
 |---|---|
 | `Model-based standard errors are not valid under inverse-probability weighting` | you gave `weights` with `se_type = "model"`. Shown once per session. Add `se_type = "sandwich"` |
+| ``fit_sem(): `fixed_x` is unset`` or ``fit_sem(): `meanstructure` is unset`` | the default of that argument changes in 0.15.0; today's results are unchanged. Shown once per session per argument. Pass the argument explicitly, or set `options(medfit.native_defaults = "0.15")` to use the new defaults now |
 | the estimates use fewer rows than your data has | the model fits drop rows with missing values on their variables. Since 0.8.0 `nobs()` and `n_obs` report the rows used; 0.7.0 and earlier reported every row of `data`, so there, count them with `complete.cases()` |
 
 ## Still stuck?

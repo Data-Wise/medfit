@@ -68,7 +68,9 @@ errors if an intercept is written. With a mean structure every observed variable
 not written has a free one, so a model with only free intercepts has the same estimates and
 standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
 A model with a product term (\code{y ~ x + m + x:m}) always fits the mean structure (it needs the mediator
-intercept for the four-way decomposition), so with a product \code{meanstructure = FALSE} is an error.}
+intercept for the four-way decomposition), so with a product \code{meanstructure = FALSE} is an error.
+Left unset, with no \code{~1} and no product in the model, it warns once per session that the default becomes \code{TRUE}
+in medfit 0.15.0; \code{options(medfit.native_defaults = "0.15")} uses \code{TRUE} now.}
 
 \item{fixed_x}{\code{FALSE} (default), \code{TRUE}, or a character vector of exogenous observed variable names. The
 selected variables (\code{TRUE}: every exogenous observed variable, product columns included) have their mean (with
@@ -79,7 +81,10 @@ not change; the parameter count and the log likelihood do: the log likelihood (a
 conditional on the fixed variables, and \code{glance()$fixed_x} lists them. Models whose \code{fixed_x} sets or data differ
 cannot be compared with \code{\link[stats:anova]{stats::anova()}}, \code{\link[=mbco_sem]{mbco_sem()}}, \code{AIC()} or \code{BIC()}. A (co)variance or intercept statement
 on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
-(\code{fixed_x} column, no standard error) but not in \code{coef()} or \code{vcov()}.}
+(\code{fixed_x} column, no standard error) but not in \code{coef()} or \code{vcov()}.
+Left unset, in a model with an exogenous observed variable, it warns once per session that the default becomes
+\code{TRUE} in medfit 0.15.0; \code{options(medfit.native_defaults = "0.15")} uses \code{TRUE} now, and errors when a \verb{~~} or
+\code{~1} statement names an exogenous variable (pass \code{fixed_x} explicitly there).}
 
 \item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name
 \code{\link[=fit_mediation]{fit_mediation()}} uses; the old name still works with a warning.}

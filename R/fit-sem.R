@@ -57,6 +57,8 @@
 #'   standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
 #'   A model with a product term (`y ~ x + m + x:m`) always fits the mean structure (it needs the mediator
 #'   intercept for the four-way decomposition), so with a product `meanstructure = FALSE` is an error.
+#'   Left unset, with no `~1` and no product in the model, it warns once per session that the default becomes `TRUE`
+#'   in medfit 0.15.0; `options(medfit.native_defaults = "0.15")` uses `TRUE` now.
 #' @param fixed_x `FALSE` (default), `TRUE`, or a character vector of exogenous observed variable names. The
 #'   selected variables (`TRUE`: every exogenous observed variable, product columns included) have their mean (with
 #'   a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
@@ -67,6 +69,9 @@
 #'   cannot be compared with [stats::anova()], [mbco_sem()], `AIC()` or `BIC()`. A (co)variance or intercept statement
 #'   on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
 #'   (`fixed_x` column, no standard error) but not in `coef()` or `vcov()`.
+#'   Left unset, in a model with an exogenous observed variable, it warns once per session that the default becomes
+#'   `TRUE` in medfit 0.15.0; `options(medfit.native_defaults = "0.15")` uses `TRUE` now, and errors when a `~~` or
+#'   `~1` statement names an exogenous variable (pass `fixed_x` explicitly there).
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
@@ -96,6 +101,9 @@
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
                     control = list(), weights = NULL, se_type = c("model", "sandwich"),
                     meanstructure = NULL, fixed_x = FALSE, sampling_weights = lifecycle::deprecated()) {
+  # 0.14.0 (E-14): missing() is only reliable before either argument is reassigned.
+  fx_unset <- missing(fixed_x)
+  ms_unset <- missing(meanstructure)
   if (lifecycle::is_present(sampling_weights)) {
     lifecycle::deprecate_warn("0.8.0", "fit_sem(sampling_weights)", "fit_sem(weights)")
     if (!is.null(weights)) {
@@ -119,6 +127,12 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     .notify_ipw_model_se()
   }
   model <- paste(model, collapse = "\n")
+  .native_defaults_opt_in() # a bad option value errors even when both settings are explicit
+  if (fx_unset || ms_unset) {
+    resolved <- .native_defaults_resolve(model, fixed_x, meanstructure, fx_unset, ms_unset)
+    fixed_x <- resolved$fixed_x
+    meanstructure <- resolved$meanstructure
+  }
   fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
                          control = control, weights = weights, se_type = se_type, meanstructure = meanstructure,
                          fixed_x = fixed_x)
