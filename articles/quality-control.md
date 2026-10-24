@@ -6,7 +6,10 @@ generated from the repository files at site build
 (`tests/sim/gates.csv`, `tests/sim/structures.csv` and the front matter
 of `planning/specs/ADR-*.md`), so they cannot drift from them. Plan and
 ledger:
-`planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md`.
+`planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md`. The
+model syntax for the external oracles (lavaan, OpenMx, and the candidate
+semopy) is on [One model in medfit, lavaan, OpenMx and
+semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
 
 ## Principles
 

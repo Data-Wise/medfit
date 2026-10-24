@@ -149,9 +149,9 @@ rbind(
 ```
 
                                       [,1]
-    max_diff_estimate         2.220446e-16
-    max_diff_se               2.254825e-11
-    max_diff_estimate_fixed_x 2.220446e-16
+    max_diff_estimate         3.330669e-16
+    max_diff_se               2.298255e-11
+    max_diff_estimate_fixed_x 2.775558e-16
 
 They differ in what follows. lavaan reports a chi-square for this model;
 medfit reports `NA`, because the product contains a regression target
@@ -212,3 +212,7 @@ these statements is the `compare-lr` gate
 both engines and fails only when
 [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
 mislabels.
+
+The same simple model written in OpenMx and semopy syntax, next to
+medfit and lavaan, is on [One model in medfit, lavaan, OpenMx and
+semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).

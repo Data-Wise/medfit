@@ -80,6 +80,8 @@ Upgrading, errors, intervals and terms
   guide](https://data-wise.github.io/medfit/articles/native-guide.md):
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
+- [One model in medfit, lavaan, OpenMx and
+  semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md):
 - [Worked example: study hours, engagement and
   GPA](https://data-wise.github.io/medfit/articles/example-gpa.md):
 

@@ -85,6 +85,7 @@
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
     <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
 </li>
@@ -165,7 +166,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.13.0/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -427,9 +428,9 @@ lavaan                 0.04715465</code></pre>
 <span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>                                  [,1]
-max_diff_estimate         2.220446e-16
-max_diff_se               2.254825e-11
-max_diff_estimate_fixed_x 2.220446e-16</code></pre>
+max_diff_estimate         3.330669e-16
+max_diff_se               2.298255e-11
+max_diff_estimate_fixed_x 2.775558e-16</code></pre>
 </div>
 </div>
 <p>They differ in what follows. lavaan reports a chi-square for this model; medfit reports <code>NA</code>, because the product contains a regression target (<code>mediator1</code>) and the model treats it as exogenous, which makes the global test invalid (see <a href="model-native.html#product-terms">the native model page</a>). lavaan stores the product under the spelling you wrote (<code>treatment:mediator1</code>); medfit stores <code>mediator1:treatment</code>, whichever order you write. A model medfit rejects (a residual covariance between outcomes, a shared or fixed coefficient, a constraint on a coefficient, a bound) is still fitted by lavaan.</p>
@@ -469,6 +470,7 @@ max_diff_estimate_fixed_x 2.220446e-16</code></pre>
 </tbody>
 </table>
 <p>Both inherit from <code>medfit_warning_engine_comparison</code>. The verdict is <code>"unresolved"</code>, and neither side is blamed, when medfit has no accepted reference, the engine’s unrestricted fit differs from medfit’s (parameters, estimates, or the discrepancy), or a run failed or could not be checked. Only observed-variable covariance models are compared; latent variables, products, mean structures, weights, <code>fixed_x</code>, factors, fixed or shared parameters, start and bound modifiers and constraints in the model are refused by name. The live check behind these statements is the <code>compare-lr</code> gate (<code>tests/sim/compare-lr-gate.R</code>), which runs the issue’s cell through both engines and fails only when <code><a href="../reference/compare_lr.html">compare_lr()</a></code> mislabels.</p>
+<p>The same simple model written in OpenMx and semopy syntax, next to medfit and lavaan, is on <a href="syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a>.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
