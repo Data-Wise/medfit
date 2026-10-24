@@ -1,6 +1,6 @@
 # What changed since CRAN 0.3.2
 
-CRAN has medfit 0.3.2; this site documents 0.12.0 (GitHub and
+CRAN has medfit 0.3.2; this site documents 0.13.0 (GitHub and
 r-universe). This page lists what a 0.3.2 user needs to know before
 upgrading: numbers that change, calls that now stop with an error, and
 what is new. The full record is
@@ -72,6 +72,7 @@ Each of these was accepted before and gave a wrong or ignored result.
 | 0.9.0 | a lavaan four-way fit that has a product of the treatment with a covariate in the mediator or the outcome equation (`m ~ x + xc`) | `does not support a treatment product` | it changed the effects without changing a coefficient the decomposition reads, and 0.8.0 returned a decomposition without a message; remove the product, or fit without the four-way decomposition |
 | 0.11.0 | [`AIC()`](https://rdrr.io/r/stats/AIC.html) or [`BIC()`](https://rdrr.io/r/stats/AIC.html) of several `SEMFit`s over different observed variables, such as a fit with a product term and one without | `different observed variables` | the likelihoods describe different data, so they are not comparable; compare fits over the same variables ([`anova()`](https://rdrr.io/r/stats/anova.html) and [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) refuse the same pair) |
 | 0.11.1 | [`anova()`](https://rdrr.io/r/stats/anova.html) of two `SEMFit`s where a nonzero fixed parameter (for example `M1 ~~ 0.5*M2`) is in one fit and absent from the other | `nonzero fixed parameters differ` | fit the restricted model by fixing or constraining parameters of the larger one, so both fits carry the same fixed values |
+| 0.13.0 | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) of a model with a zero-product constraint (`a*b == 0`) where one branch cannot be fitted while another succeeds | `zero-product branches did not converge` | 0.12.0 returned the best surviving branch with a warning, and that fit could be used as if it were certified; fit the model without the product constraint, or raise `n_starts` |
 
 Two more stop in situations 0.3.2 could not reach: two `lmer` fits that
 kept different individuals within the same clusters (0.6.0), and a
@@ -99,6 +100,7 @@ path (0.5.0).
 | 0.11.0 | categorical covariates in native syntax ([page](https://data-wise.github.io/medfit/articles/model-native-factors.md), [recipe 21](https://data-wise.github.io/medfit/articles/cookbook.html#a-categorical-covariate-in-a-native-fit)); `options(medfit.covariate_mean_variance = TRUE)` for population-average four-way standard errors (default unchanged); [`AIC()`](https://rdrr.io/r/stats/AIC.html)/[`BIC()`](https://rdrr.io/r/stats/AIC.html) refuse fits over different observed variables; nonlinear-constrained fits no longer wander to negative variances (#213); the native engine is no longer marked experimental (its signatures, `SEMFit` properties and syntax change only through a deprecation) |
 | 0.11.1 | nonparametric and cluster bootstrap resamples are reproducible across `ncores` with a fixed seed; [`anova()`](https://rdrr.io/r/stats/anova.html) records row-wise `p_valid` and refuses mismatched nonzero fixed parameters; native fits record the best-of-starts verdict in `@diagnostics$optimum` |
 | 0.12.0 | [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md) ([article](https://data-wise.github.io/medfit/articles/lavaan-comparison.html#checking-a-constrained-lr-against-lavaan-or-openmx)): the product-null LR in lavaan or OpenMx against [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md), with warnings only on observed evidence |
+| 0.13.0 | a roundoff-limited restoration’s objective rise is capped (a worse point can no longer stand and inflate an LR); a refit the optimizer cannot fit is an unresolved result in [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) and [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md) instead of an error or a silent answer, and a zero-product branch that cannot be fitted stops [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with an error instead of returning a partial fit |
 
 ## Dependencies
 

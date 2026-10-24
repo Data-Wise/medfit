@@ -1,7 +1,7 @@
 # medfit Reference Card
 
 Quick lookup for users who already know medfit. This card describes
-medfit 0.12.0 (CRAN has 0.3.2; install from GitHub or r-universe, see
+medfit 0.13.0 (CRAN has 0.3.2; install from GitHub or r-universe, see
 the [home page](https://data-wise.github.io/medfit/#install)).
 Explanations are in the
 [articles](https://data-wise.github.io/medfit/articles/getting-started.md);

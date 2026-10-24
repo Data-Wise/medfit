@@ -15,7 +15,11 @@ returned fit violates the product constraint, and
 exceeds medfit's. Both inherit from `medfit_warning_engine_comparison`.
 If medfit has no accepted reference, the engines' unrestricted fits
 differ from medfit's, or a run fails or cannot be checked, the verdict
-is `"unresolved"` and neither side is blamed.
+is `"unresolved"` and neither side is blamed. medfit has no accepted
+reference when one of its own refits cannot be fitted (see
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)):
+the reference LR is then `NA` and the result is a comparison with that
+verdict, not an error.
 
 Only observed-variable covariance models are compared. Latent variables,
 product terms, mean structures, weights, `fixed_x`, factors, fixed or
@@ -56,9 +60,9 @@ compare_lr(object, paths, engine = c("lavaan", "openmx"), tolerance = 1e-04)
 
 An object of class `medfit_lr_comparison`: a list with `verdict`
 (`"agree"`, `"disagree"` or `"unresolved"`), `reason`, `reference`
-(medfit's LR and whether it was accepted), `runs` (one row per engine
-start with the LR, convergence, constraint residual and status) and
-`engine`.
+(medfit's LR, `NA` when it has none, and whether it was accepted),
+`runs` (one row per engine start with the LR, convergence, constraint
+residual and status) and `engine`.
 
 ## See also
 
@@ -79,7 +83,7 @@ if (requireNamespace("lavaan", quietly = TRUE)) {
 #> medfit LR comparison (lavaan, a*b = 0): agree
 #>   medfit reference LR 17.5574 (accepted)
 #>  engine version   start      lr converged     residual status
-#>  lavaan   0.7.3 default 17.5574      TRUE 2.428822e-09  agree
-#>  lavaan   0.7.3    zero 17.5574      TRUE 3.773291e-09  agree
+#>  lavaan   0.7.3 default 17.5574      TRUE 2.505538e-09  agree
+#>  lavaan   0.7.3    zero 17.5574      TRUE 3.771936e-09  agree
 # }
 ```

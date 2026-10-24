@@ -69,18 +69,27 @@ mbco_sem(
 
 An object of class `c("mbco_sem", "htest")`: `statistic` (the smallest
 diffLL), `parameter` (`df = 1`), `p.value`, `method`, `data.name`,
-`n_obs`, and `tests`, a data frame with one row per refit (`constraint`,
-the minimized discrepancy `f`, `diff_ll` equal to `n_obs * (f - fit@f)`,
-and `converged`, always `TRUE` because a refit that does not converge is
-an error). It prints with the standard `htest` layout.
+`n_obs`, `unresolved` (`TRUE` when any refit failed, see Details), and
+`tests`, a data frame with one row per refit (`constraint`, the
+minimized discrepancy `f`, `diff_ll` equal to `n_obs * (f - fit@f)`,
+`converged`, and `note`, the failure text of a refit that could not be
+fitted, otherwise empty). It prints with the standard `htest` layout.
 
 ## Details
 
 A fit made with `weights` is refused: the weighted discrepancy is not a
 likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are
-measured against. A refit that fails the acceptance gate of the
-optimizer is an error rather than a statistic.
+measured against.
+
+A refit that fails the acceptance gate of the optimizer does not stop
+the function: its row has `converged = FALSE`, `f` and `diff_ll` `NA`
+and the failure text in `note`, a warning repeats the text, and
+`statistic` and `p.value` are `NA` (never the minimum over the refits
+that worked, which would hide the failure). A zero-product branch that
+cannot be fitted stops
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+itself (there is no partial fit to test against).
 
 Inequality constraints in the model matter only when they put the null
 on the boundary of the parameter space. If a bound or an inequality that
@@ -89,7 +98,8 @@ null `a = 0`), the function warns that the statistic is a mixture of
 chi-squares, not chi-square(1), and that the p-value is not valid. A
 bound the null sits inside (`a < 0.2`), an inactive inequality and one
 on another parameter are not mentioned. A null the constraints rule out
-(`a > 0.3` with the null `a = 0`) is an error that says so.
+(`a > 0.3` with the null `a = 0`) is an unresolved row whose note says
+so.
 
 Only a product of labeled paths is tested; a sum of products (several
 parallel indirect effects together) is not. If two of the paths are tied

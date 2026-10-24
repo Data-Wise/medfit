@@ -97,3 +97,5 @@ Upgrading, errors, intervals and terms
   uncertainty](https://data-wise.github.io/medfit/articles/computation-algorithms.md):
 - [What changed in medfit 0.11.0 and
   0.11.1](https://data-wise.github.io/medfit/articles/whats-new-0-11.md):
+- [Quality control of the
+  optimizer](https://data-wise.github.io/medfit/articles/quality-control.md):

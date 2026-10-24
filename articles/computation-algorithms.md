@@ -155,7 +155,9 @@ warns without rejecting. These thresholds and verdicts are in
 An accepted nonlinear fit can receive a Newton polish: short steps solve
 the active-set Karush–Kuhn–Tucker equations using \\H_L\\. A polished
 point is kept only if the objective improves and it passes the gate
-again. With nonlinear constraints, the engine tries all starts and keeps
+again; a restoration from a roundoff-limited stall is held to a cap on
+the objective’s rise instead (the Methods and Formulas article derives
+it). With nonlinear constraints, the engine tries all starts and keeps
 the accepted point with the smallest discrepancy. A feasible
 unconstrained solution can certify the optimum; otherwise the `optimum`
 diagnostic reports whether starts agreed, disagreed, or only one was
@@ -178,7 +180,11 @@ For \\k\\ labeled paths, \\\prod\_{j=1}^k a_j=0\\ means at least one
 path is zero. `R/sem-fit.R` splits explicit zero-product equalities into
 linear branches, fits each from a clean default start, and keeps the
 accepted branch with the lowest discrepancy. It supports at most 64
-branches. This avoids a zero Jacobian where several factors vanish.
+branches. If a branch cannot be fitted,
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+stops with an error rather than returning the best of the others, which
+need not be the constrained optimum. This avoids a zero Jacobian where
+several factors vanish.
 [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
 uses the same logic for an indirect-effect test: fit each single-path
 null, use the smallest likelihood-ratio statistic, and refer it to a

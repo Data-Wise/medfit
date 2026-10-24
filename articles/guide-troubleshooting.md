@@ -6,7 +6,7 @@ package and checked by a test, so the wording matches what you see.
 
 > **First, check your version**
 >
-> Examples on this site use medfit 0.12.0. If `mediation_demo` or
+> Examples on this site use medfit 0.13.0. If `mediation_demo` or
 > [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 > is “not found”, you have CRAN’s 0.3.2. See [What changed since CRAN
 > 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.md).
@@ -80,6 +80,8 @@ package and checked by a test, so the wording matches what you see.
 | `the starts disagree` (a warning) | a model with a nonlinear inequality such as `a*b > 0.4` has more than one local optimum, and the starts reached different ones | the lowest discrepancy is kept; raise `n_starts` to search further |
 | `is not nested in` | [`anova()`](https://rdrr.io/r/stats/anova.html) got a restricted model that frees a parameter the larger model leaves out, or does not keep one of its constraints | fit the restricted model by constraining or fixing parameters of the larger one |
 | `the null lies on the boundary of the parameter space` (a warning) | [`anova()`](https://rdrr.io/r/stats/anova.html) or [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) tested a null that sits on an active bound or inequality, so the statistic is a mixture of chi-squares | do not read the p-value as chi-square(df); bootstrap, or compare on a model without the bound |
+| `The MBCO statistic is not available (NA)` (a warning) | a refit inside [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) could not be fitted, usually because the null (`a == 0`) lies outside the constraints (`a > 0.3`) | read `$tests`: the failing row has `converged = FALSE` and the reason in `note`; the statistic and p-value are `NA`, never the minimum of the refits that worked; see [an unresolved result](#an-unresolved-mbco-result) |
+| `zero-product branches did not converge` (an error) | a model with `a*b == 0` is fitted as one linear fit per factor, and at least one fit failed, so the best of the others need not be the constrained optimum and no fit is returned; the message lists each failed branch and the best survivor’s discrepancy | fit the model without the product constraint, or raise `n_starts`; [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) reports the same situation in a refit as an unresolved row |
 | `a product ':' needs a variable name on each side` | a space around the colon in a product (`x :m`) | write the product without spaces: `x:m` |
 | `(rule 8: no outcome-derived regressors)` | a product has a factor that is its own outcome or downstream of it (`y ~ x + x:y`) | build the product from variables that are not outcomes of that equation |
 | `cannot have a residual covariance (rule 9)` | a model with a product has `m1 ~~ m2` between outcomes | drop the residual covariance, or fit without the product |
@@ -96,6 +98,26 @@ package and checked by a test, so the wording matches what you see.
 | `both sides are categorical columns` | a product of two categorical columns (`group:site`) | write the dummy products you need, such as `group_mid:site_s` |
 | `is constant in the rows the fit uses` | a dummy has no variation: an unused factor level, or a level only in rows dropped for missing values | [`droplevels()`](https://rdrr.io/r/base/droplevels.html) the column, or check the missing values |
 | `must be numeric: group` | a categorical column is an outcome or a mediator (only a covariate on a right side is expanded), or a column is a date or another type | recode it as a numeric column |
+
+### An unresolved MBCO result
+
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+does not stop when a refit fails. It returns the result with the failure
+recorded, so a table of several tests is not lost to one bad refit:
+
+``` r
+res <- mbco_sem(fit, "a", "b")   # a warning explains the failure
+res$unresolved                   # TRUE
+res$tests                        # converged = FALSE for the failed refit, reason in `note`
+res$statistic                    # NA: the MBCO test was not carried out
+```
+
+Check `res$unresolved` (or `all(res$tests$converged)`) before reading
+`p.value`. A model or data error, such as a missing column or a label
+constraint in a model with a product, still stops with its own message.
+[`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+follows the same rule: when medfit has no accepted reference, its
+verdict is `"unresolved"` and `reference$lr` is `NA`.
 
 ## Messages that are not errors
 

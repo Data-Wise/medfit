@@ -516,8 +516,8 @@ print(boot_serial_param)
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.0371
-      Upper:   0.1248
+      Lower:   0.0379
+      Upper:   0.1249
 
 The lm chain above estimates each equation separately, so its covariance
 matrix sets the covariances between equations to zero (see the Model

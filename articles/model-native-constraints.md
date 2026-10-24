@@ -107,6 +107,17 @@ element. For a chain, name every path:
 single-path tests for \\a \\ d \\ b = 0\\, referred to a chi-square with
 1 degree of freedom.
 
+A refit that cannot be fitted does not stop
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md).
+This happens, for example, when the null `a = 0` contradicts a
+constraint already in the model (`a > 0.3`). The failed refit is a row
+of `tests` with `converged = FALSE` and the reason in `note`, a warning
+repeats it, and the statistic and p-value are `NA` rather than the
+smaller of the refits that worked. Check `res$unresolved` before reading
+the p-value; the [troubleshooting
+guide](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html#an-unresolved-mbco-result)
+shows the result.
+
 ## Nonlinear constraints
 
 A constraint may be nonlinear in the labels. Setting `cp` equal to the

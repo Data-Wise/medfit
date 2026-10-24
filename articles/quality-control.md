@@ -1,0 +1,118 @@
+# Quality control of the optimizer
+
+This page records how the native engine’s optimizer is tested and where
+its technical decisions are written down. The two tables below are
+generated from the repository files at site build
+(`tests/sim/gates.csv`, `tests/sim/structures.csv` and the front matter
+of `planning/specs/ADR-*.md`), so they cannot drift from them. Plan and
+ledger:
+`planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md`.
+
+## Principles
+
+- Every number has an independent oracle (lavaan, OpenMx, OLS, a hand
+  calculation or a known truth).
+- Every gate has a planted defect it must catch, and the driver plants
+  defects in every gate’s results.
+- An unresolved result beats a wrong one: a refit or a branch that
+  cannot be fitted is reported as unresolved or stops the fit; it is
+  never replaced by the best of the others.
+- Evidence is designed before it is run: the gate’s thresholds and
+  design are committed first.
+
+## Gate catalog
+
+| Gate | Checked against | Planted defects | Structures |
+|:---|:---|:---|:---|
+| parity | lavaan and OpenMx (estimates, SEs) | driver | observed; latent; parallel; serial |
+| constrained | OpenMx constrained fit | driver | linear constraints |
+| se | OpenMx and lavaan standard errors | driver | observed; latent; parallel; serial |
+| stationarity | labeled accepted and truncated fits (decrement separation) | driver, driver:scale_down, driver:scale_up | linear constraints |
+| reliability | lavaan fit on the same data | driver | observed; latent |
+| product-null | chi-square null distribution (known answer) | endogenous, wrongdf | product term and four-way |
+| product-null-colon | chi-square null distribution (known answer) | endogenous, wrongdf | product term and four-way |
+| product-fixed-var | chi-square null (calibrated rows) and documented-miscalibrated rows | wrongvar, wrongdf | product term and four-way |
+| product-fixed-var-colon | chi-square null (calibrated rows) and documented-miscalibrated rows | wrongvar, wrongdf | product term and four-way |
+| product-corr | OLS and SUR hand regressions | nocorr, olsdrop | product term and four-way |
+| product-corr-colon | OLS and SUR hand regressions | nocorr, olsdrop | product term and four-way |
+| four-way-kat | hand oracle with known truth, glm and lavaan routes | nocovgrad, unwtd_glm, unwtd_lavaan, oracle, wrongtruth | product term and four-way |
+| s7-lifecycle | fresh-process install against CRAN S7 and S7 main | nounion, noonload | S7 install lifecycle |
+| nonlinear-profile | independent oracle (tests/sim/oracle213.R) | noref, noflips, nofloor, absfloor, oracle1, driver:all_flagged, driver:floor_disproved_silent | nonlinear constraints |
+| nonlinear-parity | OpenMx mxConstraint and an independent SE oracle | linear, larger, estoff, stale, noproj | nonlinear constraints |
+| fixed-x | lavaan fixed.x and the free fit | countrestrict, noshift, droppair, jointlik, acceptbad, aicwarnonly, driver:no_lavaan | fixed_x |
+| mean-constrained | lavaan and the invariance of the shifted fit | badshift, nocenter, driver:no_lavaan, driver:lavaan_partial | observed intercepts and means |
+| factor | hand-coded dummies and lavaan | wrongref, nofix, noncanon, oneprod, afterdelete, nolevelcheck, halffix, driver:no_lavaan | factor covariates |
+| bootstrap-coverage | known truth a\*b = 0.15 (interval coverage) | narrow, wrongtruth | bootstrap inference |
+| oracle-sweep | independent randomized oracle (OLS) | badshift | observed |
+| compare-lr | lavaan and OpenMx likelihood ratios | noresidual, zeroresid, driver:unresolved_converged, driver:ref_off | zero-product branches |
+| restoration | first-order cost bound derived in the Methods article | infslack, rawdist, nocurv, nopinv, nonorm, nodispatch | nonlinear constraints |
+
+A token in *Planted defects* is a `MUTANT=` value of the gate’s script;
+the driver (`tests/sim/run-gates.R --mutants`) also plants tolerance,
+missing, failed, unreadable and stale results in every gate.
+`test-gate-coverage.R` fails when a row has no oracle, names a defect
+its script does not contain, or when a structure has no gate.
+
+## Decision log
+
+| Id | Decision | Status | Date | ADR |
+|:---|:---|:---|:---|:---|
+| A | SLSQP as the default solver (D19) | accepted | 2026-10-09 | ADR-native-solver-and-engines-2026-10-23 |
+| B | Tiered path for constrained fits (D16; Tier 0 shipped, Tier 1 and the fallback not implemented) | approved | 2026-10-19 | ADR-native-solver-and-engines-2026-10-23 |
+| D-1 | Motivation for nlminb is reliability, not speed | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-2 | nlminb starts at the zero-product branch fits | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-3 | A branch reaches nlminb by pinning coordinates | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-4 | Unconstrained default and an option (measurement gate first) | proposed | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-5 | nlminb as a cross-check on branch fits | conditional | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-6 | Constrained default and the order of the tiered path | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-7 | Plain linear constraints stay on SLSQP until AUGLAG is measured | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-8 | D-4 reliability gate is a paired non-inferiority test | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-9 | The gate design is fixed before the first run | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-10 | Latent structures in the D-4 gate | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-11 | A partial branch result is an error (PR \#303) | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+
+Each ADR opens with a YAML `decisions:` list (`id`, `title`, `status`,
+`date`, optional `supersedes`); `test-adr-front-matter.R` checks it. The
+ADR is the source; this table only reads it.
+
+## Adding a model
+
+A change that alters the objective, the parameter vector, the constraint
+set, the bounds or the solver path (the files in
+`tests/sim/risk-files.txt`) is high-risk, and its pull request body
+carries this checklist, each item ticked or `n/a: <reason>` (the
+`risk-tier` workflow checks it). Every new model class needs at least
+items 1 to 3.
+
+| \# | Check | Evidence |
+|----|----|----|
+| 1 | Independent oracle | lavaan, OpenMx, OLS or a hand calculation agrees within a stated tolerance |
+| 2 | Reliability cell | the structure is in the reliability grid (default and random starts, the data scales) |
+| 3 | Planted defect | a mutant the gate must reject |
+| 4 | Metamorphic invariance | rescaling a variable, reordering syntax, or a redundant constraint leaves the answer unchanged |
+| 5 | Fault injection | bad solver statuses and non-finite values are refused or retried, never accepted |
+| 6 | Registration | a `gates.csv` row with `oracle` and `mutants`, and a row in `structures.csv` |
+| 7 | Platform run | the gate passes on the OpenBLAS runner |
+
+## The monthly run
+
+The `qc-monthly` workflow runs the gates on `dev` on the first of each
+month, appends one row to a history on the `qc-results` branch (the
+environment fingerprint, one PASS or FAIL per gate, the largest
+restoration ratio, the reliability match rate, the oracle-sweep
+outcomes), and opens one deduplicated GitHub issue when a gate fails or
+the R version, BLAS library, nloptr, lavaan or OpenMx version changes.
+The runner image is recorded and never alerts. Drift bands are not set
+yet: they need about eight rows (eight months at this cadence; a manual
+run adds one sooner), and a change merged to `dev` can go unseen for up
+to a month unless a run is started by hand or a pull request carries the
+`run-qc` label. The workflow has not run on GitHub at the time of
+writing, so the history does not exist yet.
+
+## Known limits
+
+- No latent-model solver benchmark exists; the solver decisions that
+  depend on one are marked proposed in the decision log.
+- Gates run on the runner’s OpenBLAS; the reference BLAS needs a
+  separate container.
+- Other seeds and scales of the nonlinear floor fixture are not covered.

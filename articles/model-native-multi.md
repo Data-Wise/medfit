@@ -70,7 +70,7 @@ c(chain = unname(nie(xs)), every_path = unname(nie(xs, type = "total")),
 ```
 
          chain every_path      total
-    0.07545039 0.36740438 0.53856776 
+    0.07545038 0.36740437 0.53856775 
 
 With the default `structure = "auto"`, medfit classifies the mediators
 from the model: here it finds the path from `mediator1` to `mediator2`
