@@ -1,0 +1,80 @@
+---
+decisions:
+  - {id: E-1, title: "fixed_x defaults to TRUE: warn in 0.14.0, flip in 0.15.0", status: decided, date: 2026-10-24}
+  - {id: E-2, title: "meanstructure defaults to TRUE on the same schedule as fixed_x", status: proposed, date: 2026-10-24}
+  - {id: E-3, title: "One default for fit_sem() and fit_mediation(engine = 'native')", status: decided, date: 2026-10-24}
+  - {id: E-4, title: "compare_lr() supports fixed_x and a saturated mean structure", status: decided, date: 2026-10-24}
+  - {id: E-5, title: "Only the default is lenient about statements on exogenous variables", status: decided, date: 2026-10-24}
+  - {id: E-6, title: "Dependents get a [BREAKING] notice and pass the settings explicitly", status: decided, date: 2026-10-24}
+  - {id: E-7, title: "Tests and gates that encode the old defaults pin them", status: decided, date: 2026-10-24}
+  - {id: E-8, title: "Fix the pinned-parameter SE under a mean structure before the flip", status: proposed, date: 2026-10-24}
+---
+
+# ADR: the native engine's defaults for `fixed_x` and `meanstructure`
+
+**Date:** 2026-10-24. **Spec:** `planning/specs/SPEC-native-defaults-2026-10-24.md`.
+**Evidence:** `planning/specs/evidence/native-defaults-2026-10-24/`, `BRAINSTORM-fixed-x-default-2026-10-24.md`.
+
+## 1. Context
+
+`fit_sem()` and `fit_mediation(engine = "native")` estimate the exogenous variances and covariances
+(`fixed_x = FALSE`) and fit a mean structure only when the syntax asks for one (`meanstructure = NULL`). lavaan's
+`sem()` and semopy hold exogenous variables at their sample moments; lavaan with `meanstructure = TRUE` estimates
+the intercepts. OpenMx has no such option: an exogenous variance it is not given is a fixed zero, and the fit fails.
+So medfit's defaults are the odd ones out, and every comparison in its docs passes `fixed.x = FALSE` to lavaan.
+
+Neither setting changes a structural estimate, its standard error, chi-square or df. Both change the parameter
+vector, `npar`, AIC and BIC; `fixed_x` also makes the log-likelihood conditional on the fixed block. The 0.11.0 API
+freeze says exported signatures change only through a deprecation.
+
+## 2. Decisions
+
+**E-1. `fixed_x` defaults to TRUE, through a deprecation cycle.** 0.14.0 warns when the caller leaves `fixed_x`
+unset and the model has an observed exogenous variable; 0.15.0 flips. Rejected: flipping in 0.14.0 as a breaking
+change (breaks the freeze promise for no correctness gain); an opt-in option only (leaves medfit unlike lavaan
+forever). Author, 2026-10-24 (brainstorm D1).
+
+**E-2. `meanstructure` defaults to TRUE on the same schedule (proposed).** One message and one flip for both.
+Measured: no dependent changes (six suites, per-test identical), the covariance-part estimates and the
+log-likelihood are unchanged; 60 medfit tests fail, of which 15 are real (E-4, E-8). Rejected so far: a separate
+schedule. Open: grill Q1.
+
+**E-3. One default for both entry points.** `fit_mediation(engine = "native")` resolves through `fit_sem()`. Rejected:
+`fit_sem()` only (one model, two likelihoods). Author, 2026-10-24 (D2).
+
+**E-4. `compare_lr()` accepts `fixed_x` and a saturated mean structure.** It refuses both today
+(`.lr_unsupported()`), so after the flip it would refuse every default fit (14 tests fail under the
+`meanstructure` flip alone). lavaan takes `fixed.x`/`meanstructure`; the OpenMx adapter writes fixed exogenous paths
+and a means path. Rejected: keep refusing. Author, 2026-10-24 (D3); extended to the mean structure here.
+
+**E-5. Only the default is lenient.** When the default (not the user) fixes a variable the model writes a statement
+on, that variable stays free with a note; an explicit `fixed_x = TRUE` still errors. Rejected: error for both (the
+flip would break models that are valid today). Author, 2026-10-24 (D4).
+
+**E-6. Dependents.** A `[BREAKING]` issue with the 2-month notice; RMediation passes the settings explicitly.
+Measured: RMediation's MBCO statistics agree to 1e-12 under the flip, so only the warning reaches it. Author,
+2026-10-24 (D5).
+
+**E-7. Pin the old defaults where a baseline depends on them.** Gates and frozen fixtures pass the old values;
+new tests cover the new defaults. Rejected: re-baseline everything (loses the link to the 0.8.0 and 0.9.0 frozen
+values, which the measurement shows still agree by name to 1e-8). Author, 2026-10-24 (D6).
+
+**E-8. Fix the pinned-parameter SE under a mean structure first (proposed).** With a mean structure, a parameter
+fixed by `b == 0` gets SE 5.6e-18 and a z-statistic; without one it gets 0 and `NA`. It reproduces on today's
+build with an explicit `meanstructure = TRUE`, so it is a bug now and would reach every constrained default fit
+after the flip.
+
+## 3. Consequences
+
+- Default fits match lavaan's default `sem()` in npar, logLik, AIC and BIC; the docs stop passing
+  `fixed.x = FALSE`.
+- Every default fit's parameter vector, names and retry seed change in 0.15.0. Well-identified fits give the same
+  estimates; which random start wins can change, and with it a start-spread warning.
+- Two releases of work: 0.14.0 carries the fixes (E-4, E-8, the refit settings), the warning and the test pinning;
+  0.15.0 carries the flip and the doc rewrite.
+
+## 4. What would change this decision
+
+- A dependent whose results move under the flip (none today).
+- A gate whose acceptance rate drops under the new defaults (not measured yet; a 0.15.0 criterion).
+- lavaan changing its own defaults.
