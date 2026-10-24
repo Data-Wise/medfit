@@ -96,6 +96,9 @@
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
                     control = list(), weights = NULL, se_type = c("model", "sandwich"),
                     meanstructure = NULL, fixed_x = FALSE, sampling_weights = lifecycle::deprecated()) {
+  # 0.14.0 (E-14): missing() is only reliable before either argument is reassigned.
+  fx_unset <- missing(fixed_x)
+  ms_unset <- missing(meanstructure)
   if (lifecycle::is_present(sampling_weights)) {
     lifecycle::deprecate_warn("0.8.0", "fit_sem(sampling_weights)", "fit_sem(weights)")
     if (!is.null(weights)) {
@@ -119,6 +122,12 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     .notify_ipw_model_se()
   }
   model <- paste(model, collapse = "\n")
+  .native_defaults_opt_in() # a bad option value errors even when both settings are explicit
+  if (fx_unset || ms_unset) {
+    resolved <- .native_defaults_resolve(model, fixed_x, meanstructure, fx_unset, ms_unset)
+    fixed_x <- resolved$fixed_x
+    meanstructure <- resolved$meanstructure
+  }
   fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
                          control = control, weights = weights, se_type = se_type, meanstructure = meanstructure,
                          fixed_x = fixed_x)
