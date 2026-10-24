@@ -83,3 +83,27 @@ test_that("planted defect: posing the named subset with lavaan fixed.x = TRUE is
   out <- suppressWarnings(compare_lr(fit, paths = c("a", "b"), engine = "lavaan"))
   expect_false(identical(out$verdict, "agree"))
 })
+
+test_that("independent oracle: lavaan's own fixed.x = TRUE and a hand-written subset model give the same LR", {
+  # Not the package's writer: lavaan's fixed.x = TRUE for the all-fixed cell, and for the named subset a model text
+  # written here with only covariate1's variance and mean fixed at the N-denominator moments (treatment ~~ covariate1
+  # free). The product-null LR is conditional on the exogenous block, so all three must agree.
+  lav_lr <- function(model, data, fixed.x, ms) {
+    one <- function(extra) lavaan::sem(paste0(model, extra), data = data, fixed.x = fixed.x, meanstructure = ms)
+    f1 <- one("")
+    min(vapply(c("\na == 0", "\nb == 0"), function(r) unname(2 * (lavaan::logLik(f1) - lavaan::logLik(one(r)))), 0))
+  }
+  for (ms in list(NULL, TRUE)) {
+    all_fit <- fs_fit(fs_base, TRUE, ms)
+    out <- compare_lr(all_fit, paths = c("a", "b"), engine = "lavaan")
+    expect_equal(out$reference$lr, lav_lr(fs_base, all_fit@data, TRUE, isTRUE(ms)), tolerance = 1e-6)
+    sub_fit <- fs_fit(fs_base, "covariate1", ms)
+    x <- sub_fit@data$covariate1
+    v <- mean((x - mean(x))^2)
+    hand <- paste0(fs_base, sprintf("covariate1 ~~ %.17g*covariate1\ntreatment ~~ covariate1\n", v),
+                   if (isTRUE(ms)) sprintf("covariate1 ~ %.17g*1\n", mean(x)) else "")
+    sub <- compare_lr(sub_fit, paths = c("a", "b"), engine = "lavaan")
+    expect_equal(sub$runs$lr[sub$runs$start == "default"], lav_lr(hand, sub_fit@data, FALSE, isTRUE(ms)),
+                 tolerance = 1e-6)
+  }
+})
