@@ -38,7 +38,8 @@ cannot change sign along its surface, so each sign pattern is its own branch),
 are extra starts, and a feasible reference estimate is never replaced by a worse
 accepted fit. Models without a nonlinear row are not affected. A product of labels set to zero
 (\code{a*b == 0}, \code{b1*b2*b3 == 0}) is instead solved exactly: one linear fit per
-factor (\code{a == 0}, \code{b == 0}), keeping the smallest discrepancy. A sum of products
+factor (\code{a == 0}, \code{b == 0}), keeping the smallest discrepancy; if a branch cannot be fitted, \code{fit_sem()}
+stops with a \code{medfit_error_no_convergence} error instead of returning the best of the others. A sum of products
 (\code{a1*b1 + a2*b2 == 0}) has no exact reduction, so it is best-effort: the fit is
 the best of the starts tried, a disagreement warning means a better optimum may
 exist, and \code{n_starts} raises the number of starts. Labels used in a constraint
