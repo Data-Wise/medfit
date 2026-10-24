@@ -9,7 +9,7 @@ fs_base <- "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + cp*tre
 fs_lenient <- paste0(fs_base, "treatment ~~ treatment\n")
 
 fs_fit <- function(model, fixed_x, meanstructure = NULL) {
-  suppressWarnings(fit_sem(model, mediation_demo, fixed_x = fixed_x, meanstructure = meanstructure))
+  suppressWarnings(fit_sem(model, medfit::mediation_demo, fixed_x = fixed_x, meanstructure = meanstructure))
 }
 
 # lavaan's own LR on the product null, from the same model text the adapter writes: the minimum over the branch fits
