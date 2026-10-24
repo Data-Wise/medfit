@@ -44,10 +44,13 @@ no accepted reference when one of its own refits cannot be fitted (see
 LR is then \code{NA} and the result is a comparison with that verdict, not an
 error.
 
-Only observed-variable covariance models are compared. Latent variables,
-product terms, mean structures, weights, \code{fixed_x}, factors, fixed or shared
-parameters, start/bound modifiers and constraints in the model are refused
-by name.
+Only observed-variable models are compared. With \code{engine = "lavaan"}, a
+saturated mean structure (every intercept free) and \code{fixed_x} (all, a named
+subset or a lenient subset) are supported: the fixed exogenous moments are
+written to lavaan as fixed rows at their sample values. Latent variables,
+product terms, fixed or constrained intercepts, weights, factors, other fixed
+or shared parameters, start/bound modifiers and constraints in the model are
+refused by name.
 }
 \examples{
 \donttest{

@@ -50,9 +50,8 @@ test_that("each construct outside the supported class is refused with its name",
   refuse <- function(fit, what) {
     expect_error(medfit:::.lr_engine_lavaan(fit, c("a", "b")), what, fixed = TRUE)
   }
-  refuse(suppressWarnings(fit_sem(paste0(base, "\nmediator1 ~ 1"), d)), "a mean structure")
+  refuse(suppressWarnings(fit_sem(paste0(base, "\nmediator1 ~ 0*1"), d)), "fixed or constrained intercepts")
   refuse(suppressWarnings(fit_sem(model_txt, d, weights = rep(1, nrow(d)))), "case weights")
-  refuse(suppressWarnings(fit_sem(model_txt, d, fixed_x = TRUE)), "`fixed_x`")
   refuse(suppressWarnings(fit_sem(paste0(base, " + g"), d)), "factor covariates")
   refuse(suppressWarnings(fit_sem(paste0(base, "\nmediator1 ~ lower(0)*mediator2"), d)), "start, lower or upper")
   refuse(suppressWarnings(fit_sem(paste0(base, "\ncp == 0"), d)), "constraints in the model")
