@@ -15,6 +15,9 @@ Chapters, in order:
 6. The product term: `x:m`, rules 8 and 9, the model test.
 7. The four-way decomposition: CDE, INTref, INTmed, PIE.
 
+How the optimizer is tested, and the decisions behind its solver, are on the package website:
+[Quality control of the optimizer](https://data-wise.github.io/medfit/articles/quality-control.html).
+
 ## How to build {.unnumbered}
 
 Install the package from this checkout, then render from the repository root:

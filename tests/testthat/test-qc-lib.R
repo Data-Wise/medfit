@@ -118,6 +118,10 @@ test_that("the quality-control article is in the articles index and menu and sou
   pk <- paste(readLines(file.path(root, "_pkgdown.yml"), warn = FALSE), collapse = "\n")
   expect_true(grepl("articles/quality-control`", pk, fixed = TRUE))
   expect_true(grepl("articles/quality-control.html", pk, fixed = TRUE))
+  # a top-level navbar item of its own
+  expect_true(grepl("left: +\\[[^]]*\\bqc\\b", pk))
+  item <- "    qc:\n      text: Quality control\n      href: articles/quality-control.html"
+  expect_true(grepl(item, pk, fixed = TRUE))
   expect_true(grepl("qc_gate_table", txt, fixed = TRUE))
   expect_true(grepl("qc_decision_table", txt, fixed = TRUE))
   # the admission table in the article lists the same seven checks as the risk-tier rule

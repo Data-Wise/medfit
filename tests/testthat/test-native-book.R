@@ -137,3 +137,15 @@ test_that("chapter 7: the four-way components and their model-based SEs agree wi
   td <- tidy(fw)
   expect_equal(td$std_error[td$term == "int_ref"], sqrt(drop(grad_int_ref %*% v %*% grad_int_ref)), tolerance = 1e-4)
 })
+
+test_that("chapters 3 and 5 state the 0.13.0 behavior (-4, capped restoration, failed branches and refits)", {
+  ch3 <- read_text(file.path(book_dir(), "chapters", "03-constraints.qmd"))
+  ch5 <- read_text(file.path(book_dir(), "chapters", "05-inference.qmd"))
+  expect_match(ch3, "roundoff-limited -4", fixed = TRUE)
+  expect_match(ch3, sprintf("$k = %g$", .sem_restore_k), fixed = TRUE)
+  expect_match(ch3, "medfit_error_no_convergence", fixed = TRUE)
+  expect_false(grepl("best of the other branches is returned", ch3, fixed = TRUE))
+  expect_match(ch5, "unresolved = TRUE", fixed = TRUE)
+  # planted: a chapter stating another k is not accepted as this one
+  expect_false(grepl(sprintf("$k = %g$", .sem_restore_k), sub("$k = 4$", "$k = 40$", ch3, fixed = TRUE), fixed = TRUE))
+})

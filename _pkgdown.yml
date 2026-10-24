@@ -45,7 +45,7 @@ logo:
 
 navbar:
   structure:
-    left:  [home, reference, models, guides, cookbook, articles, ecosystem, status, news]
+    left:  [home, reference, models, guides, cookbook, articles, qc, ecosystem, status, news]
     right: [search, github]
   components:
     home:
@@ -192,6 +192,9 @@ navbar:
         href: articles/whats-new-0-11.html
       - text: "Quality control of the optimizer"
         href: articles/quality-control.html
+    qc:
+      text: Quality control
+      href: articles/quality-control.html
     ecosystem:
       text: Ecosystem
       href: https://data-wise.github.io/mediationverse/articles/ecosystem.html
