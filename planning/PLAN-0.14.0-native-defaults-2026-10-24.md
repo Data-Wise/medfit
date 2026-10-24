@@ -159,15 +159,17 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
 ### Phase 2: resolver, warning, opt-in, oracle matrix
 
 - [ ] **T5a. Warning-ready examples and articles (no behavior change).** Size M.
-  - Lands before T5 and changes no output: 25 articles and 9 R files call `fit_sem()` or the native engine.
+  - Lands before T5 and changes no output: 25 articles and 6 R files call `fit_sem()` or the native engine.
   - Articles: one hidden setup chunk per article that has a native fit, which makes the article quiet once T5
     lands. The chunk calls the public API only (a muffled tiny `fit_sem()` call that consumes the once-per-session
     warning), so the printed results stay on the 0.14 defaults and need no rewrite until 0.15.0. Alternative
     rejected: explicit `fixed_x = FALSE, meanstructure = NULL` in about 227 calls, which 0.15.0 would undo.
-  - Roxygen examples (9 files): explicit settings in the first native call of each example block.
+  - Roxygen examples (6 files: `classes.R`, `compare-lr.R`, `fit-sem.R`, `methods-sem.R`, `sem-mbco.R`,
+    `sem-syntax-help.R`; `aab-generics.R` and `fit-glm.R` mention the native engine in prose only, `sem-anova.R` and
+    `sem-fit.R` have no examples): explicit settings in the first native call of each example block.
   - Acceptance: rendered articles and examples are byte-identical before and after (no behavior change yet);
     `test-docs-warning-ready.R` (new) fails if an article with a native fit lacks the setup chunk.
-  - Files: `vignettes/articles/*.qmd` (25), `R/*.R` roxygen examples (9), `tests/testthat/test-docs-warning-ready.R`.
+  - Files: `vignettes/articles/*.qmd` (25), `R/*.R` roxygen examples (6), `tests/testthat/test-docs-warning-ready.R`.
     Mechanical; over five files by necessity.
 
 - [ ] **T5. Resolver, warning, opt-in and the suite's test helper, in one PR (R-2, R-3, R-11a, E-9, E-14).** Size M.
@@ -192,7 +194,8 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
   - Verify: `devtools::test()`; `scripts/check-local.sh`; pkgdown workflow on the PR.
   - Files: `R/native-defaults.R`, `R/fit-sem.R`, `tests/testthat/test-native-defaults.R`,
     `tests/testthat/helper-native-defaults.R`.
-  - Dependency: T3, T5a.
+  - Dependency: T3, T5a. The once-per-session flag must be set even when the warning is muffled (set it before
+    signaling, not after the handler returns), or T5a's setup chunks consume nothing and every article warns.
 
 - [ ] **T6. `fixed_x` default resolves to a subset, with lenience (R-5, R-11b, E-5, E-11, E-13).** Size M.
   - `.sem_default_fixed_x(parsed, data)`: observed exogenous columns (product and factor columns included) minus
