@@ -1,9 +1,10 @@
-# Weekly QC run (planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md, Q-5 and Q-6): the pieces the
-# scheduled workflow (.github/workflows/qc-weekly.yaml) calls, kept in R so they can be tested
+# Monthly QC run (planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md, Q-5 and Q-6): the pieces the
+# scheduled workflow (.github/workflows/qc-monthly.yaml) calls, kept in R so they can be tested
 # (tests/testthat/test-qc-lib.R).
 # One history row per run: the run's identity, the environment fingerprint, one PASS/FAIL column per gate, and the
 # tracked metrics. Alerts fire on a failing gate and on a changed fingerprint (R, BLAS, nloptr, lavaan, OpenMx); the
-# runner image is recorded and never alerts. Drift bands are not set: they need about 8 weekly rows (Q-5).
+# runner image is recorded and never alerts. Drift bands are not set: they need about 8 rows (Q-5; eight months at
+# the monthly cadence).
 
 qc_alert_keys <- c("r_version", "blas", "nloptr", "lavaan", "openmx")
 
@@ -97,4 +98,32 @@ qc_alerts <- function(new, prev = NULL, planted = FALSE) {
     }
   }
   list(gate_failures = failing, env_changes = changed)
+}
+
+# ---- the QC article (vignettes/articles/quality-control.qmd) renders these at site build, so it cannot drift ----
+
+# gate catalog: one row per gates.csv row, with the structures (structures.csv) that name the gate
+qc_gate_table <- function(gates, structures) {
+  covers <- vapply(gates$gate, function(g) {
+    has <- vapply(structures$gates, function(x) g %in% strsplit(x, "|", fixed = TRUE)[[1L]], TRUE)
+    paste(structures$structure[has], collapse = "; ")
+  }, "")
+  data.frame(Gate = gates$gate, `Checked against` = gates$oracle,
+             `Planted defects` = gsub("|", ", ", gates$mutants, fixed = TRUE), Structures = covers,
+             check.names = FALSE, stringsAsFactors = FALSE, row.names = NULL)
+}
+
+# the decisions of the YAML front matter of each ADR file, one row per decision
+qc_decision_table <- function(adr_files) {
+  rows <- lapply(adr_files, function(f) {
+    lines <- readLines(f, warn = FALSE)
+    end <- which(lines[-1L] == "---")[1L] + 1L
+    if (!identical(lines[1L], "---") || is.na(end)) return(NULL)
+    dec <- yaml::yaml.load(paste(lines[2:(end - 1L)], collapse = "\n"))$decisions
+    do.call(rbind, lapply(dec, function(d) {
+      data.frame(Id = as.character(d$id), Decision = d$title, Status = d$status, Date = as.character(d$date),
+                 ADR = sub("\\.md$", "", basename(f)), stringsAsFactors = FALSE)
+    }))
+  })
+  do.call(rbind, rows)
 }

@@ -190,6 +190,8 @@ navbar:
         href: articles/computation-algorithms.html
       - text: "What's new in 0.11"
         href: articles/whats-new-0-11.html
+      - text: "Quality control of the optimizer"
+        href: articles/quality-control.html
     ecosystem:
       text: Ecosystem
       href: https://data-wise.github.io/mediationverse/articles/ecosystem.html
@@ -318,6 +320,7 @@ articles:
       - '`articles/methods`'
       - '`articles/computation-algorithms`'
       - '`articles/whats-new-0-11`'
+      - '`articles/quality-control`'
 
 development:
   mode: auto
