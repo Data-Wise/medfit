@@ -61,7 +61,7 @@ two differ by design.
 
 OpenMx describes the model as paths in a RAM model. The data are the sample covariance matrix
 with `numObs` set to n, the maximum-likelihood fit medfit uses; `compare_lr()` builds its
-OpenMx models the same way.
+OpenMx models the same way (from the raw data the fit used when the fit has a mean structure).
 
 ```{r}
 #| label: openmx

@@ -25,11 +25,20 @@
 # fixed set was posed at medfit's values) and the warnings match the observed evidence as in the rule above (lavaan's
 # zero start still lands on the wrong branch on some seeds; that is reported, not a failure). `MUTANT=fixedset` plants
 # a translation that writes the fixed moments with the N - 1 denominator; the gate must then exit 1.
+# T4c (R-4) runs the same four cells through OpenMx (60 rows, engine `openmx:<cell>`). The pass rule is the T4b rule
+# (reference equals the closed-form oracle, every run posed, warnings match the evidence) plus the OpenMx statistic
+# itself: a converged run that keeps the constraint must not fall below the oracle (1e-4 relative). Relaxed and
+# disclosed (as #320 for lavaan): the default-start run is NOT required to equal the oracle. On the recorded versions it
+# lands on a feasible point above the reference in 13 of 60 rows (the warning fires, verdict `disagree`), and the zero
+# start drops the constraint in 60 of 60 (warning fires); the count of default runs at the oracle is printed and stored
+# in `default_at_oracle`. `MUTANT=fixedset_openmx` writes the OpenMx fixed moments with N - 1; the gate must
+# then exit 1. (Freeing the fixed set is not a mutant: the product-null LR is conditional on the exogenous block and
+# does not change.)
 # Run from the package root:  Rscript tests/sim/compare-lr-gate.R   (FAST=1: 4 seeds, nothing written)
 
 suppressMessages(pkgload::load_all(quiet = TRUE))
 mutant <- Sys.getenv("MUTANT", "")
-if (!mutant %in% c("", "noresidual", "zeroresid", "fixedset")) stop("unknown MUTANT: ", mutant)
+if (!mutant %in% c("", "noresidual", "zeroresid", "fixedset", "fixedset_openmx")) stop("unknown MUTANT: ", mutant)
 fast <- nzchar(Sys.getenv("FAST", ""))
 # 12 plain seeds, plus 15, 37 and 41: seeds on which lavaan's zero start returns a statistic above medfit's (found over
 # seeds 1 to 300 on lavaan 0.7.3), so the above-maximum warning is exercised live for lavaan too.
@@ -69,6 +78,19 @@ if (mutant == "fixedset") {
     tab$est[fx] <- tab$est[fx] * n / (n - 1)
     object@table <- tab
     orig_model(object) # nolint: object_usage_linter.
+  }, envir = ns)
+}
+if (mutant == "fixedset_openmx") {
+  ns <- asNamespace("medfit")
+  orig_omx <- get(".lr_openmx_model", ns)
+  unlockBinding(".lr_openmx_model", ns)
+  assign(".lr_openmx_model", function(object, ...) {
+    tab <- object@table
+    fx <- !tab$free & tab$op == "~~"
+    n <- nrow(object@data)
+    tab$est[fx] <- tab$est[fx] * n / (n - 1)
+    object@table <- tab
+    orig_omx(object, ...) # nolint: object_usage_linter.
   }, envir = ns)
 }
 tol <- 1e-4
@@ -134,7 +156,7 @@ for (engine in c("lavaan", "openmx")) {
   }
 }
 
-# ---- T4b cells (R-4): fixed_x and a saturated mean structure through lavaan ------------------------------------------
+# ---- T4b/T4c cells (R-4): fixed_x and a saturated mean structure through lavaan and OpenMx ---------------------------
 model_c <- "M ~ a*X + C\nY ~ b*M + cp*X + C"
 oracle_lr_c <- function(d) {
   n <- nrow(d)
@@ -146,7 +168,7 @@ cells <- list(fixed_all = list(fixed_x = TRUE, meanstructure = FALSE),
               fixed_named = list(fixed_x = "C", meanstructure = FALSE),
               means = list(fixed_x = FALSE, meanstructure = TRUE),
               fixed_named_means = list(fixed_x = "C", meanstructure = TRUE))
-one_t4b <- function(cell, seed) {
+one_t4b <- function(cell, seed, engine = "lavaan") {
   set.seed(seed)
   n <- 200
   d <- data.frame(X = rnorm(n), C = rnorm(n))
@@ -157,7 +179,7 @@ one_t4b <- function(cell, seed) {
   seen <- character()
   res <- tryCatch(
     withCallingHandlers(
-      compare_lr(fit, c("a", "b"), engine = "lavaan"),
+      compare_lr(fit, c("a", "b"), engine = engine),
       medfit_warning_engine_comparison = function(w) {
         seen <<- c(seen, class(w)[1L])
         invokeRestart("muffleWarning")
@@ -165,9 +187,10 @@ one_t4b <- function(cell, seed) {
     ),
     error = function(e) conditionMessage(e)
   )
-  base <- data.frame(engine = paste0("lavaan:", cell), version = versions[["lavaan"]], seed = seed,
+  base <- data.frame(engine = paste0(engine, ":", cell), version = versions[[engine]], seed = seed,
                      verdict = "error", all_converged = NA, ref_ok = NA, drop = NA, above = NA, warn_drop = NA,
-                     warn_above = NA, mislabel = TRUE, pass = FALSE, note = "", stringsAsFactors = FALSE)
+                     warn_above = NA, mislabel = TRUE, pass = FALSE, note = "", default_at_oracle = NA,
+                     stringsAsFactors = FALSE)
   if (is.character(res)) {
     base$note <- res
     return(base)
@@ -182,6 +205,15 @@ one_t4b <- function(cell, seed) {
   # posed: every run reached a status (none unresolved), so the unrestricted lavaan fit matched medfit's
   posed <- !any(runs$status %in% c("unresolved", "failed", "unchecked"))
   ok <- ref_ok && posed && any(violated) == base$warn_drop && any(above) == base$warn_above
+  if (engine == "openmx") {
+    # the OpenMx statistic: no feasible converged run below the oracle; the default start reaches it
+    keep <- !violated & is.finite(runs$lr) & runs$converged
+    below <- any(keep & runs$lr < ref_or - tol * max(1, ref_or))
+    dflt <- runs[runs$start == "default", , drop = FALSE]
+    dflt_ok <- nrow(dflt) == 1L && isTRUE(abs(dflt$lr - ref_or) <= tol * max(1, ref_or))
+    ok <- ok && !below
+    base$default_at_oracle <- dflt_ok
+  }
   base$verdict <- res$verdict
   base$all_converged <- all(runs$converged & is.finite(runs$lr))
   base$ref_ok <- ref_ok
@@ -192,11 +224,17 @@ one_t4b <- function(cell, seed) {
   base$note <- if (ok) "" else substr(res$reason, 1L, 200L)
   base
 }
-for (cell in names(cells)) {
-  for (seed in seeds) {
-    rows[[length(rows) + 1L]] <- one_t4b(cell, seed)
+for (engine in c("lavaan", "openmx")) {
+  for (cell in names(cells)) {
+    for (seed in seeds) {
+      rows[[length(rows) + 1L]] <- one_t4b(cell, seed, engine)
+    }
   }
 }
+rows <- lapply(rows, function(r) {
+  if (is.null(r$default_at_oracle)) r$default_at_oracle <- NA
+  r
+})
 res <- do.call(rbind, rows)
 res$mutant <- mutant
 shown <- c("engine", "seed", "verdict", "drop", "above", "warn_drop", "warn_above", "note")
@@ -207,10 +245,12 @@ if (!nzchar(mutant) && !fast) {
   utils::write.csv(res, out, row.names = FALSE)
 }
 cat(sprintf(paste0("COMPARE-LR GATE: %d of %d rows pass%s; reproduced: lavaan above %d, openmx dropped %d, ",
-                   "openmx above %d; T4b cells %d of %d; %s\n"),
+                   "openmx above %d; T4b cells %d of %d; T4c cells %d of %d (default start at the oracle %d); %s\n"),
             sum(res$pass), nrow(res), if (nzchar(mutant)) paste0(" (MUTANT=", mutant, ")") else "",
             sum(res$above[res$engine == "lavaan"], na.rm = TRUE), sum(res$drop[res$engine == "openmx"], na.rm = TRUE),
             sum(res$above[res$engine == "openmx"], na.rm = TRUE),
             sum(res$pass[startsWith(res$engine, "lavaan:")]), sum(startsWith(res$engine, "lavaan:")),
+            sum(res$pass[startsWith(res$engine, "openmx:")]), sum(startsWith(res$engine, "openmx:")),
+            sum(res$default_at_oracle, na.rm = TRUE),
             paste(names(versions), versions, collapse = ", ")))
 quit(status = if (all(res$pass)) 0L else 1L)
