@@ -78,6 +78,14 @@ For a chain, name every path: `mbco_sem(fit, paths = c("a", "d", "b"))` is the
 minimum of the single-path tests for $a \, d \, b = 0$, referred to a
 chi-square with 1 degree of freedom.
 
+A refit that cannot be fitted does not stop `mbco_sem()`. This happens, for example,
+when the null `a = 0` contradicts a constraint already in the model (`a > 0.3`). The failed
+refit is a row of `tests` with `converged = FALSE` and the reason in `note`, a warning repeats
+it, and the statistic and p-value are `NA` rather than the smaller of the refits that worked.
+Check `res$unresolved` before reading the p-value; the
+[troubleshooting guide](guide-troubleshooting.html#an-unresolved-mbco-result) shows the
+result.
+
 ## Nonlinear constraints
 
 A constraint may be nonlinear in the labels. Setting `cp` equal to the indirect
@@ -108,6 +116,11 @@ anova(tied, free)
   warning when the starts disagree. A sum of products such as
   `a1 * b1 + a2 * b2 == 0` is best-effort (no exact reduction exists): treat the
   fit as the best of the starts, and raise `n_starts` when the warning appears.
+- **A zero product that cannot be fitted stops the fit.** `a * b == 0` is solved as one
+  fit per factor; if any branch cannot be fitted, `fit_sem()` stops with an error
+  (`zero-product branches did not converge`) instead of returning the best of the
+  others, which need not be the constrained optimum. `mbco_sem()` reports the same
+  situation in a refit as an unresolved row (see above).
 - **A constraint needs a free parameter** and **labels must be defined** in the
   model.
 - **Equal labels are one parameter.** Giving two paths the same label equates them

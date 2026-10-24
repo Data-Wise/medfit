@@ -40,18 +40,24 @@
 #'
 #' @return An object of class `c("mbco_sem", "htest")`: `statistic` (the
 #'   smallest diffLL), `parameter` (`df = 1`), `p.value`, `method`,
-#'   `data.name`, `n_obs`, and `tests`, a data frame with one row per refit
-#'   (`constraint`, the minimized discrepancy `f`, `diff_ll` equal to
-#'   `n_obs * (f - fit@f)`, and `converged`, always `TRUE` because a refit
-#'   that does not converge is an error). It prints with the standard `htest`
-#'   layout.
+#'   `data.name`, `n_obs`, `unresolved` (`TRUE` when any refit failed, see
+#'   Details), and `tests`, a data frame with one row per refit (`constraint`,
+#'   the minimized discrepancy `f`, `diff_ll` equal to `n_obs * (f - fit@f)`,
+#'   `converged`, and `note`, the failure text of a refit that could not be
+#'   fitted, otherwise empty). It prints with the standard `htest` layout.
 #'
 #' @details
 #' A fit made with `weights` is refused: the weighted discrepancy is
 #' not a likelihood, so its difference is not chi-square. So is a fit that did
 #' not converge, since its discrepancy is the reference both refits are
-#' measured against. A refit that fails the acceptance gate of the optimizer is
-#' an error rather than a statistic.
+#' measured against.
+#'
+#' A refit that fails the acceptance gate of the optimizer does not stop the
+#' function: its row has `converged = FALSE`, `f` and `diff_ll` `NA` and the
+#' failure text in `note`, a warning repeats the text, and `statistic` and
+#' `p.value` are `NA` (never the minimum over the refits that worked, which
+#' would hide the failure). A zero-product branch that cannot be fitted
+#' stops [fit_sem()] itself (there is no partial fit to test against).
 #'
 #' Inequality constraints in the model matter only when they put the null on
 #' the boundary of the parameter space. If a bound or an inequality that
@@ -60,7 +66,7 @@
 #' not chi-square(1), and that the p-value is not valid. A bound the null sits
 #' inside (`a < 0.2`), an inactive inequality and one on another parameter are
 #' not mentioned. A null the constraints rule out (`a > 0.3` with the null
-#' `a = 0`) is an error that says so.
+#' `a = 0`) is an unresolved row whose note says so.
 #'
 #' Only a product of labeled paths is tested; a sum of products (several
 #' parallel indirect effects together) is not. If two of the paths are tied by
@@ -149,6 +155,8 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   constraints <- paste(paths, "== 0")
   # a fit with `fixed_x` is refit with the same fixed set, so the refits keep the fit's likelihood
   fixed_x <- if (length(fit@internals$fixed_x)) fit@internals$fixed_x else FALSE
+  # A refit that cannot be fitted is an unresolved row, not an error: its failure text goes in `note`, and the
+  # statistic is NA (never the minimum over the refits that worked, which would hide the failure).
   refit <- lapply(paths, function(tested) {
     con <- paste(tested, "== 0")
     # `fit@data` holds the rows the fit used, already free of missing values: no second deletion.
@@ -157,29 +165,45 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
                       control = control, meanstructure = if (isTRUE(fit@internals$ram$has_mean)) TRUE,
                       fixed_x = fixed_x, factors = fit@internals$factors),
       error = function(e) {
-        stop(sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint on that ",
-                            "parameter, the null `%s` may lie outside the parameter space."),
-                     con, conditionMessage(e), con), call. = FALSE)
+        msg <- sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint ",
+                              "on that parameter, the null `%s` may lie outside the parameter space."),
+                       con, conditionMessage(e), con)
+        # only an optimizer failure is an unresolved row; a model or data error (a rule-9 refusal, a missing column)
+        # still stops, as it always did
+        if (!inherits(e, "medfit_error_no_convergence")) {
+          stop(msg, call. = FALSE)
+        }
+        list(failure = msg)
       }
     )
-    .mbco_warn_boundary(r, con, tested)
+    if (is.null(r$failure)) {
+      .mbco_warn_boundary(r, con, tested)
+    }
     r
   })
-  f <- vapply(refit, function(r) r$f, numeric(1))
+  failed <- vapply(refit, function(r) !is.null(r$failure), TRUE)
+  f <- vapply(refit, function(r) if (is.null(r$failure)) r$f else NA_real_, numeric(1))
+  note <- vapply(refit, function(r) if (is.null(r$failure)) "" else r$failure, "")
+  unresolved <- any(failed)
+  if (unresolved) {
+    warning(paste0(paste(unique(note[nzchar(note)]), collapse = "\n"),
+                   "\nThe MBCO statistic is not available (NA); `$tests` lists each refit."), call. = FALSE)
+  }
   n <- fit@n_obs
   diff_ll <- n * (f - fit@f)
-  stat <- min(diff_ll)
+  stat <- if (unresolved) NA_real_ else min(diff_ll)
   structure(
     list(
       statistic = c(MBCO = stat),
       parameter = c(df = 1),
-      p.value = stats::pchisq(stat, df = 1, lower.tail = FALSE),
+      p.value = if (unresolved) NA_real_ else stats::pchisq(stat, df = 1, lower.tail = FALSE),
       method = sprintf("Minimum-of-%s likelihood-ratio tests (MBCO) for an indirect effect",
                        if (length(paths) == 2L) "two" else length(paths)),
       data.name = sprintf("%s = 0", paste(paths, collapse = " * ")),
       n_obs = n,
-      tests = data.frame(constraint = constraints, f = f, diff_ll = diff_ll, converged = TRUE,
-                         stringsAsFactors = FALSE)
+      tests = data.frame(constraint = constraints, f = f, diff_ll = diff_ll, converged = !failed, note = note,
+                         stringsAsFactors = FALSE),
+      unresolved = unresolved
     ),
     class = c("mbco_sem", "htest")
   )

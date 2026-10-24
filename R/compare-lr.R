@@ -58,7 +58,7 @@
   }
   runs <- do.call(rbind, rows)
   if (!isTRUE(reference$accepted)) {
-    reasons <- c("medfit has no accepted comparable result for the null (a branch fit was not accepted)", reasons)
+    reasons <- c("medfit has no accepted comparable result for the null (a refit was not accepted)", reasons)
   }
   open <- runs$status %in% c("unresolved", "failed", "unchecked")
   verdict <- if (any(runs$status %in% c("constraint_violated", "above_reference", "below_reference"))) {
@@ -183,7 +183,7 @@
   tests <- mbco_sem(object, paths = paths)$tests
   free <- object@table[object@table$free, ]
   list(
-    lr = min(tests$diff_ll),
+    lr = if (all(is.finite(tests$diff_ll))) min(tests$diff_ll) else NA_real_,
     accepted = all(tests$converged) && all(is.finite(tests$diff_ll)),
     est = .lr_key_est(free$lhs, free$op, free$rhs, free$est),
     fit = object@n_obs * object@f
@@ -268,7 +268,11 @@
 #' when the engine's statistic exceeds medfit's. Both inherit from
 #' `medfit_warning_engine_comparison`. If medfit has no accepted reference, the
 #' engines' unrestricted fits differ from medfit's, or a run fails or cannot be
-#' checked, the verdict is `"unresolved"` and neither side is blamed.
+#' checked, the verdict is `"unresolved"` and neither side is blamed. medfit has
+#' no accepted reference when one of its own refits cannot be fitted (see
+#' [mbco_sem()]): the reference
+#' LR is then `NA` and the result is a comparison with that verdict, not an
+#' error.
 #'
 #' Only observed-variable covariance models are compared. Latent variables,
 #' product terms, mean structures, weights, `fixed_x`, factors, fixed or shared
@@ -285,7 +289,7 @@
 #'
 #' @return An object of class `medfit_lr_comparison`: a list with `verdict`
 #'   (`"agree"`, `"disagree"` or `"unresolved"`), `reason`, `reference` (medfit's
-#'   LR and whether it was accepted), `runs` (one row per engine start with the
+#'   LR, `NA` when it has none, and whether it was accepted), `runs` (one row per engine start with the
 #'   LR, convergence, constraint residual and status) and `engine`.
 #'
 #' @examples

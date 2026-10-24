@@ -550,6 +550,13 @@ c(discrepancy = fit_zero_product@f, smaller_refit = min(refit_a@f, refit_b@f))
 stopifnot(abs(fit_zero_product@f - min(refit_a@f, refit_b@f)) < 1e-10)
 ```
 
+A refit that cannot be fitted does not turn into a smaller statistic. If the optimizer cannot bring one of the
+refits to an accepted solution, `mbco_sem()` keeps going and returns that row with `converged = FALSE`, an `NA`
+discrepancy and the failure text in `note`; the statistic and the p-value are `NA`, with a warning and
+`unresolved = TRUE`. They are never the minimum over the refits that worked, because the failed refit may be
+the one closest to the data, so taking the minimum of the others would hide the failure (0.13.0; see the
+[troubleshooting guide](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html)).
+
 And lavaan and OpenMx give the same two likelihood-ratio statistics:
 
 ```{r}

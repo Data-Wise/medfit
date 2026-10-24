@@ -309,6 +309,20 @@ nt_cases <- function() {
     list("the null lies on the boundary of the parameter space", "warning", function() {
       anova(fit_sem(paste0(nt_bounds, "\na > 0"), d), fit_sem(paste0(nt_bounds, "\na > 0\na == 0"), d))
     }),
+    list("The MBCO statistic is not available (NA)", "warning", function() {
+      fit <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\na > 0.3", d)
+      mbco_sem(fit, "a", "b")
+    }),
+    list("zero-product branches did not converge", "error", function() {
+      real <- medfit:::.sem_fit_syntax
+      n <- 0L
+      testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
+        n <<- n + 1L
+        if (n == 2L) medfit:::.sem_no_convergence("planted branch failure")
+        real(...)
+      })
+      fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\na*b == 0", d)
+    }),
     list("the model test is not valid for this model", "warning",
          function() fit_sem(nt_prod, d, se_type = "sandwich")),
     list("model-based standard errors assume normality, which a product violates", "warning",

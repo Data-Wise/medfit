@@ -13,9 +13,21 @@
 # and at most 1.7e-5 at the degenerate F = 0.680 points; the author chose 1e-4 (260x below the converged
 # minimum but only 5.9x above the degenerate points, short of the 10x rule; S6 recommended 1e-3).
 .sem_stat_tol <- 1e-3
+# The error of a fit the optimizer could not bring to an accepted solution (no start converged, no zero-product branch
+# converged). Classed so that a caller that can report "unresolved" instead (`mbco_sem()`) catches this and nothing
+# else: a model, data or syntax error is not an optimizer failure and still stops.
+.sem_no_convergence <- function(message) {
+  stop(structure(class = c("medfit_error_no_convergence", "error", "condition"),
+                 list(message = message, call = NULL)))
+}
 .sem_singular_tol <- 1e-4
 .sem_bound_window <- 1e-6
-.sem_ok_status <- c(1L, 3L, 4L)
+# NLopt's roundoff-limited stop (-4) is a usable result: the solver ran out of floating-point resolution, not out of
+# iterations. The status is not the certificate; the gate's own feasibility, stationarity and curvature checks are, and
+# a stall still fails them (decrement at least 0.09 against 3e-7 for a converged fit, see the thresholds above). On a
+# runner CPU the extreme-scale floor fixture ends every correct-basin start with -4 (#276), so rejecting the status left
+# only a wrong-branch start to be accepted.
+.sem_ok_status <- c(1L, 3L, 4L, -4L)
 # Accepted starts whose discrepancies differ by more than this reached different optima (the discrepancy is
 # scale free: it does not depend on the units of the data).
 .sem_spread_tol <- 1e-6
@@ -413,8 +425,10 @@
       res$objective <- .sem_fml(res$solution, ram, smp)
     }
     gate <- .sem_gate(res$solution, res$status, ram, smp, lb, ub, constraints)
-    if (gate$accepted && !is.null(constraints)) {
-      pol <- .sem_polish_accept(res, gate, ram, smp, lb, ub, constraints)
+    # A roundoff-limited stop (-4) can leave the point short of a nonlinear row along a flat direction (#276): it is
+    # polished back onto the row before the gate decides, with the wider reach of a restoration.
+    if (!is.null(constraints) && (gate$accepted || identical(res$status, -4L))) {
+      pol <- .sem_polish_accept(res, gate, ram, smp, lb, ub, constraints, restore = !gate$accepted)
       res <- pol$res
       gate <- pol$gate
     }
@@ -451,10 +465,10 @@
   }
   if (is.na(win)) {
     best <- attempts[[which.min(vapply(attempts, function(a) a$f, numeric(1)))]]
-    stop(sprintf(
+    .sem_no_convergence(sprintf(
       "no start converged (%d tried); best attempt: status %s, stationarity %s; %s",
       length(attempts), format(best$status), format(signif(best$decrement, 3)), best$reason
-    ), call. = FALSE)
+    ))
   }
   fit <- attempts[[win]]
   # A fit that reaches a feasible reference estimate is the constrained optimum (the reference is a lower bound), so

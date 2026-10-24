@@ -125,7 +125,8 @@ verdict_gate <- function(gate, d, s) {
     "product-corr-colon" = c("design", "cvf", "path", "expect", "gap", "gap_column", "err"),
     "four-way-kat" = c("scenario", "route", "component", "bias_z", "se_ratio", "reps", "reps_ok"),
     "s7-lifecycle" = c("s7", "s7_version", "step", "ok"),
-    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "gap", "note"),
+    "nonlinear-profile" = c("fixture", "q_tag", "native_ok", "omx_ok", "lr", "lr_oracle", "gap", "note", "disproved",
+                            "q_ach"),
     "nonlinear-parity" = c("problem", "structure", "n", "seed", "native_ok", "improper", "feas", "omx_ok", "f_gap",
                            "est_gap", "ref_gap", "ann", "se_rel", "se_oracle"),
     "bootstrap-coverage" = c("sim", "lower", "upper", "hit"),
@@ -135,7 +136,8 @@ verdict_gate <- function(gate, d, s) {
     "oracle-sweep" = c("seed", "family", "n", "scale", "constraint", "outcome", "max_abs_error",
                        "feasibility", "f_gap", "warning", "error", "optimum"),
     "compare-lr" = c("engine", "version", "seed", "verdict", "all_converged", "ref_ok", "drop", "above", "warn_drop",
-                     "warn_above", "mislabel", "pass")
+                     "warn_above", "mislabel", "pass"),
+    restoration = c("check", "kind", "value", "limit", "pass", "detail")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -381,14 +383,97 @@ verdict_gate <- function(gate, d, s) {
         rows_chk(d, s), failed_chk(d),
         max_chk("oracle gap", d$gap, s$tol_est),
         chk("floor cases warn", all(d$native_ok[d$fixture %in% "var-1e6-1e-6"] %in% TRUE), "var-1e6-1e-6 rows"),
+        # #276: the driver recomputes the signed difference from the recorded numbers, so a planted disproof or a
+        # lying label (note, disproved, native_ok) cannot pass. A returned floor row needs finite lr and lr_oracle.
+        chk("floor rows carry numbers", floor_numbers_ok(d), "returned floor rows need finite lr and lr_oracle"),
+        chk("floor no disproof", floor_disproved(d) == 0L,
+            sprintf("%d floor rows with lr above the floored oracle or below it", floor_disproved(d))),
+        chk("floor labels agree", floor_labels_ok(d), "note, disproved and native_ok match lr - lr_oracle"),
+        # the cases that carry the contract must return a numerical result: q = q_hat (the MLE) and q = 0 (exact
+        # nulls) are strict rows, never refused or merely flagged; the zero row meets its constraint to 1e-7
+        # all() over an empty set is TRUE, so the critical-row checks below would pass if the rows were missing: the
+        # fixture must carry exactly one row for each of its six q values
+        chk("floor rows complete", floor_rows_complete(d), "var-1e6-1e-6 needs exactly one row per q_tag"),
+        chk("floor critical rows strict",
+            all(d$note[d$fixture %in% "var-1e6-1e-6" & d$q_tag %in% c("qhat", "zero")] %in% "strict"),
+            "q_hat and zero floor rows must be strict"),
+        chk("floor zero residual", all(abs(d$q_ach[d$fixture %in% "var-1e6-1e-6" & d$q_tag %in% "zero"]) <= 1e-7),
+            "zero floor row meets a * b / sqrt(...) = 0 to 1e-7"),
         # a flagged or refused row is allowed on some CPUs, but not for most of the fixture
         chk("floor strict share", mean(d$note[d$fixture %in% "var-1e6-1e-6"] %in% "strict") >= 0.5,
             sprintf("%d of %d floor rows meet the strict contract",
                     sum(d$note[d$fixture %in% "var-1e6-1e-6"] %in% "strict"), sum(d$fixture %in% "var-1e6-1e-6")))
       )
     },
+    restoration = {
+      # restoration-bound T5/T6 (G12): every check of the script is a row; the numeric verdicts are re-derived from the
+      # recorded numbers, so a row that claims pass over a bad number cannot pass. tol_est is k, tol_se the margin.
+      need <- c("allowance matches the normal-equations value", "scale of a row does not change the allowance",
+                "a duplicated row does not change the allowance", "rank zero fails closed",
+                "a far worse restoration is refused", "boundary: accepted at k = rho / 0.9",
+                "boundary: refused at k = rho / 1.1", "the curvature term decides a case",
+                "no restoration the old code kept is refused by the cap",
+                "separation: k keeps its margin over the largest legitimate rho",
+                "basin gap: the cap stays below the nearest inferior basin", "restoration attempts observed")
+      miss <- setdiff(need, d$check)
+      val <- function(x) d$value[d$check == x][1L]
+      lim <- function(x) d$limit[d$check == x][1L]
+      tol3 <- need[1:3]
+      sep <- val(need[10])
+      gap_v <- val(need[11])
+      gap_l <- lim(need[11])
+      rbind(
+        rows_chk(d, s),
+        chk("checks pass", all(d$pass %in% TRUE), sprintf("%d of %d fail", bool_fail(d$pass), nrow(d))),
+        chk("every check present", !length(miss),
+            if (length(miss)) paste("missing:", paste(miss, collapse = "; ")) else "all 12"),
+        chk("planted tolerances", all(vapply(tol3, function(x) isTRUE(val(x) <= lim(x)), TRUE)),
+            "hand value 1e-8, scale and duplicate-row invariance 1e-6"),
+        chk("far-worse restoration is far above the cap", isTRUE(val(need[5]) > 100),
+            sprintf("rise = %s x k * allowance", fmt(val(need[5])))),
+        chk("curvature decides", isTRUE(val(need[8]) > lim(need[8])), sprintf("%s", fmt(val(need[8])))),
+        chk("the cap refuses no restoration the old code kept", isTRUE(val(need[9]) == 0),
+            sprintf("%s refused", fmt(val(need[9])))),
+        chk("separation re-derived (k over margin)", is.na(sep) || isTRUE(sep <= s$tol_est / s$tol_se),
+            sprintf("largest legitimate rho %s, k / margin = %s", fmt(sep), fmt(s$tol_est / s$tol_se))),
+        chk("basin gap re-derived", is.na(gap_v) || is.na(gap_l) || isTRUE(gap_v < gap_l),
+            sprintf("cap %s, nearest inferior basin %s", fmt(gap_v), fmt(gap_l)))
+      )
+    },
     # product-term and four-way gates: the rules live in tests/sim/product-gate-common.R
     product_gate_rules[[gate]](d, s) # nolint: object_usage_linter.
+  )
+}
+
+# Floor-fixture helpers (#276 slice 1): rows of var-1e6-1e-6 that returned a fit (not a refusal) carry lr and lr_oracle.
+floor_returned <- function(d) d$fixture %in% "var-1e6-1e-6" & !(d$note %in% "refused")
+floor_tol <- function(d) ifelse(d$q_tag %in% "zero", 1e-5, 1e-6) * pmax(1, d$lr_oracle)
+floor_tags <- c("qhat", "qhat-0.1", "qhat+0.05", "qhat+0.2", "-qhat", "zero")
+floor_rows_complete <- function(d) {
+  tags <- d$q_tag[d$fixture %in% "var-1e6-1e-6"]
+  length(tags) == length(floor_tags) && setequal(tags, floor_tags)
+}
+floor_numbers_ok <- function(d) {
+  r <- floor_returned(d)
+  all(is.finite(d$lr[r]) & is.finite(d$lr_oracle[r]))
+}
+floor_diff <- function(d) {
+  r <- floor_returned(d)
+  ifelse(r & is.finite(d$lr) & is.finite(d$lr_oracle), d$lr - d$lr_oracle, NA_real_)
+}
+floor_disproved <- function(d) {
+  df <- floor_diff(d)
+  sum(!is.na(df) & abs(df) > floor_tol(d))
+}
+floor_labels_ok <- function(d) {
+  df <- floor_diff(d)
+  r <- floor_returned(d)
+  off <- !is.na(df) & df > floor_tol(d) # disproved
+  strict <- d$note %in% "strict"
+  all(
+    !(strict & r & (is.na(df) | abs(df) > floor_tol(d))), # strict needs agreement
+    !(r & !is.na(df) & (d$disproved %in% TRUE) != off), # the disproved column is the numeric verdict
+    !(r & !is.na(df) & off & d$native_ok %in% TRUE) # a disproved row cannot pass
   )
 }
 
@@ -475,6 +560,11 @@ mutate <- function(gate, kind, d) {
       d$mislabel[1:3] <- TRUE
       d$pass[1:3] <- FALSE
     }
+    if (gate == "restoration") {
+      # the recorded numbers say fail while the pass column still says TRUE
+      d$value[grepl("^separation", d$check)] <- 100
+      d$value[d$check == "allowance matches the normal-equations value"] <- 1
+    }
   }
   if (kind == "no_lavaan") {
     # T5e: what a run without lavaan used to write: its lavaan-only checks absent or NA, everything else passing
@@ -505,8 +595,33 @@ mutate <- function(gate, kind, d) {
     if (gate == "factor") d$err[1] <- "fit failed"
     if (gate == "oracle-sweep") d$error[1] <- "fit failed"
     if (gate == "compare-lr") d$verdict[1] <- "error"
+    if (gate == "restoration") d$pass[1] <- FALSE
   }
   if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
+  if (kind == "floor_disproved_silent" && gate == "nonlinear-profile") {
+    # lr raised above the oracle while note, disproved and native_ok still claim a clean strict row
+    d$lr[d$fixture %in% "var-1e6-1e-6"][1] <- d$lr[d$fixture %in% "var-1e6-1e-6"][1] + 5
+  }
+  if (kind == "floor_oracle_missing" && gate == "nonlinear-profile") {
+    d$lr_oracle[d$fixture %in% "var-1e6-1e-6"] <- NA_real_
+  }
+  if (kind == "floor_note_lies" && gate == "nonlinear-profile") d$disproved[d$fixture %in% "var-1e6-1e-6"][1] <- TRUE
+  if (kind == "floor_refuse_critical" && gate == "nonlinear-profile") {
+    # the q_hat and zero floor rows refuse (note refused, no numbers): three refusals still pass the strict share
+    i <- d$fixture %in% "var-1e6-1e-6" & d$q_tag %in% c("qhat", "zero", "-qhat")
+    d$note[i] <- "refused"
+    d$lr[i] <- NA_real_
+    d$lr_oracle[i] <- NA_real_
+  }
+  if (kind == "floor_critical_missing" && gate == "nonlinear-profile") {
+    # the q_hat and zero floor rows are replaced by copies of other floor rows: the total stays 144
+    i <- which(d$fixture %in% "var-1e6-1e-6")
+    src <- i[d$q_tag[i] %in% "qhat+0.2"]
+    for (tag in c("qhat", "zero")) d[i[d$q_tag[i] %in% tag], ] <- d[src, ]
+  }
+  if (kind == "floor_zero_off" && gate == "nonlinear-profile") {
+    d$q_ach[d$fixture %in% "var-1e6-1e-6" & d$q_tag %in% "zero"] <- 1e-4
+  }
   if (kind == "unresolved_converged" && gate == "compare-lr") {
     d$verdict[1] <- "unresolved"
     d$all_converged[1] <- TRUE
@@ -519,7 +634,7 @@ mutate <- function(gate, kind, d) {
     # nolint start: object_usage_linter.
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
-      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr"
+      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -554,7 +669,10 @@ run_mutants <- function() {
     if (s$gate %in% c("factor", "fixed-x", "mean-constrained")) kinds <- c(kinds, "no_lavaan")
     if (s$gate == "mean-constrained") kinds <- c(kinds, "lavaan_partial")
     if (s$gate == "compare-lr") kinds <- c(kinds, "unresolved_converged", "ref_off")
-    if (s$gate == "nonlinear-profile") kinds <- c(kinds, "all_flagged")
+    if (s$gate == "nonlinear-profile") {
+      kinds <- c(kinds, "all_flagged", "floor_disproved_silent", "floor_oracle_missing", "floor_note_lies",
+                 "floor_refuse_critical", "floor_zero_off", "floor_critical_missing")
+    }
     for (kind in kinds) {
       v <- verdict_gate(s$gate, mutate(s$gate, kind, ld$data), s)
       rejected <- !all(v$pass)
@@ -664,10 +782,12 @@ run_fast <- function() {
   l_out <- child(paste(
     "suppressMessages(devtools::load_all(quiet = TRUE));",
     "cat('LINTS', length(lintr::lint_package()), '\\n');",
-    "cat('STATTOL', format(.sem_stat_tol, digits = 15), '\\n')"
+    "cat('STATTOL', format(.sem_stat_tol, digits = 15), '\\n');",
+    "cat('RESTOREK', format(.sem_restore_k, digits = 15), '\\n')"
   ))
   ll <- grep("^LINTS", l_out, value = TRUE)
   tt <- grep("^STATTOL", l_out, value = TRUE)
+  rk <- grep("^RESTOREK", l_out, value = TRUE)
   res <- list()
   if (length(tl) == 1L) {
     n <- as.numeric(strsplit(tl, " ")[[1]][-1])
@@ -688,6 +808,13 @@ run_fast <- function() {
   res[[3]] <- chk(
     "gates.csv tol_est (stationarity) equals .sem_stat_tol", length(gtol) == 1L && isTRUE(gtol == ptol),
     sprintf("gates.csv %s, package %s", paste(format(gtol), collapse = ","), format(ptol))
+  )
+  # the restoration gate's k must not drift from the package constant either
+  gk <- spec_all$tol_est[spec_all$gate == "restoration"]
+  pk <- if (length(rk) == 1L) as.numeric(strsplit(rk, " ")[[1]][2]) else NA_real_
+  res[[4]] <- chk(
+    "gates.csv tol_est (restoration) equals .sem_restore_k", length(gk) == 1L && isTRUE(gk == pk),
+    sprintf("gates.csv %s, package %s", paste(format(gk), collapse = ","), format(pk))
   )
   v <- do.call(rbind, res)
   cbind(gate = "fast", file = NA_character_, v, stringsAsFactors = FALSE)
@@ -711,7 +838,8 @@ scripts <- c(
   "mean-constrained" = "tests/sim/sem-mean-constrained-gate.R",
   factor = "tests/sim/sem-factor-gate.R",
   "oracle-sweep" = "tests/sim/sem-oracle-sweep.R",
-  "compare-lr" = "tests/sim/compare-lr-gate.R"
+  "compare-lr" = "tests/sim/compare-lr-gate.R",
+  restoration = "tests/sim/sem-restoration-gate.R"
 )
 
 # ---- main ----
