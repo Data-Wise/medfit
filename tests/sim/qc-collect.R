@@ -1,4 +1,4 @@
-# Called by the publish job of .github/workflows/qc-weekly.yaml.
+# Called by the publish job of .github/workflows/qc-monthly.yaml.
 #   Rscript tests/sim/qc-collect.R <shard-dir>... --history <csv or none> --out <csv> --alerts <txt> [--planted]
 # Each <shard-dir> holds a `qc-metrics-<shard>.csv` row. Merges them into one row, appends it to the history, writes
 # the new history to --out, and writes one line per alert to --alerts ("gate: <name>" or "env: <key>: <old> -> <new>").

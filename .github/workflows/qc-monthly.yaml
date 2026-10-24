@@ -1,8 +1,8 @@
-# Weekly QC run (QC plan Q-5 and Q-6, planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md).
+# Monthly QC run (QC plan Q-5 and Q-6, cadence changed to monthly by the author on 2026-10-23, planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md).
 # Runs the simulation gates on `dev` (the OpenBLAS runner), records one history row per run on the `qc-results` branch,
 # and opens a GitHub issue, deduplicated, on a failing gate or a changed environment fingerprint (R, BLAS, nloptr,
-# lavaan, OpenMx; the runner image is recorded and never alerts). Metrics are recorded every week; drift bands are set
-# after about 8 rows. Pieces: tests/sim/qc-lib.R, qc-metrics.R, qc-collect.R (tested in test-qc-lib.R).
+# lavaan, OpenMx; the runner image is recorded and never alerts). Metrics are recorded every run; drift bands are set
+# after about 8 rows (about eight months at this cadence; a manual dispatch adds a row sooner). Pieces: tests/sim/qc-lib.R, qc-metrics.R, qc-collect.R (tested in test-qc-lib.R).
 #
 # Scheduled workflows run the file on the DEFAULT branch (`main`), so this runs on a schedule only once a release
 # carries it to main; the checkout therefore names its ref explicitly (`dev` unless a manual run says otherwise).
@@ -12,7 +12,7 @@
 # purpose; close the issue it opens). Not yet run end to end on GitHub: the first manual dispatch is the exercise.
 on:
   schedule:
-    - cron: "41 6 * * 2"
+    - cron: "41 6 1 * *"
   workflow_dispatch:
     inputs:
       ref:
@@ -27,7 +27,7 @@ on:
     branches: [dev]
     types: [labeled]
 
-name: qc-weekly
+name: qc-monthly
 
 permissions:
   contents: write
@@ -129,7 +129,7 @@ jobs:
           fi
           cp "$RUNNER_TEMP/qc/qc-history.csv" qc-history.csv
           git add qc-history.csv
-          git commit -m "qc: weekly gate run $(date -u +%F) ($GITHUB_RUN_ID)"
+          git commit -m "qc: monthly gate run $(date -u +%F) ($GITHUB_RUN_ID)"
           git push origin qc-results
       - name: Open issues for alerts (one per cause, deduplicated)
         run: |
@@ -140,7 +140,7 @@ jobs:
             if [ -n "$(gh issue list --state open --search "QC gate failing on dev in:title" --json number -q '.[].number')" ]; then
               echo "a QC gate issue is already open"
             else
-              gh issue create --title "$title" --body "The weekly QC run failed: $gate (run: $run_url). Triage with tests/sim/run-gates.R and the gate's script; history on the qc-results branch. A planted alert (a manual run with plant_alert) opens this issue on purpose: close it. Opened by the qc-weekly workflow."
+              gh issue create --title "$title" --body "The monthly QC run failed: $gate (run: $run_url). Triage with tests/sim/run-gates.R and the gate's script; history on the qc-results branch. A planted alert (a manual run with plant_alert) opens this issue on purpose: close it. Opened by the qc-monthly workflow."
             fi
           fi
           env_changes=$(grep '^env: ' alerts.txt | sed 's/^env: //' | paste -sd';' -)
@@ -150,7 +150,7 @@ jobs:
             if [ -n "$(gh issue list --state all --search "QC environment changed ($key) in:title" --json number -q '.[].number')" ]; then
               echo "an issue for this environment change already exists"
             else
-              gh issue create --title "$title" --body "The weekly QC run saw a different environment (run: $run_url): $env_changes. Compare the metrics rows on qc-results before and after; the gates were calibrated on the previous environment. Opened by the qc-weekly workflow."
+              gh issue create --title "$title" --body "The monthly QC run saw a different environment (run: $run_url): $env_changes. Compare the metrics rows on qc-results before and after; the gates were calibrated on the previous environment. Opened by the qc-monthly workflow."
             fi
           fi
       - name: Report a failed history push

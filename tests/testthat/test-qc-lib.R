@@ -1,4 +1,4 @@
-# The weekly QC pieces (tests/sim/qc-lib.R, qc-metrics.R, qc-collect.R; plan Q-5): the alert rules and the history
+# The monthly QC pieces (tests/sim/qc-lib.R, qc-metrics.R, qc-collect.R; plan Q-5): the alert rules and the history
 # merge, each with a planted case that must fire and a control that must not.
 
 lib <- test_path("..", "sim", "qc-lib.R")
@@ -83,4 +83,45 @@ test_that("the collect script merges shard files, appends to a history and write
   expect_true("gate: parity" %in% lines)
   expect_true(any(grepl("^env: blas: older-blas -> ", lines)))
   expect_identical(nrow(utils::read.csv(out)), 2L)
+})
+
+test_that("the gate catalog has one row per gate and names the structures that cover each", {
+  g <- utils::read.csv(file.path(root, "tests", "sim", "gates.csv"), stringsAsFactors = FALSE)
+  s <- utils::read.csv(file.path(root, "tests", "sim", "structures.csv"), stringsAsFactors = FALSE)
+  tab <- env$qc_gate_table(g, s)
+  expect_identical(tab$Gate, g$gate)
+  expect_true(all(nzchar(tab$Structures)))
+  expect_false(any(grepl("|", tab$`Planted defects`, fixed = TRUE)))
+  # planted: a gate no structure names has an empty Structures cell
+  expect_identical(env$qc_gate_table(transform(g[1, ], gate = "orphan"), s)$Structures, "")
+})
+
+test_that("the decision table has one row per ADR decision and reads nothing that is not front matter", {
+  skip_if_not_installed("yaml")
+  adrs <- list.files(file.path(root, "planning", "specs"), pattern = "^ADR-.*[.]md$", full.names = TRUE)
+  skip_if(length(adrs) == 0L, "no ADR in this tree")
+  tab <- env$qc_decision_table(adrs)
+  n <- sum(vapply(adrs, function(f) {
+    sum(grepl("^  - \\{id: ", readLines(f, n = 40L, warn = FALSE)))
+  }, 0L))
+  expect_identical(nrow(tab), n)
+  expect_false(anyDuplicated(tab$Id) > 0L)
+  noyaml <- withr::local_tempfile(fileext = ".md")
+  writeLines(c("# not an ADR", "no front matter"), noyaml)
+  expect_null(env$qc_decision_table(noyaml))
+})
+
+test_that("the quality-control article is in the articles index and menu and sources the generators", {
+  art <- file.path(root, "vignettes", "articles", "quality-control.qmd")
+  skip_if_not(file.exists(art), "vignettes are not shipped with the installed tests")
+  txt <- paste(readLines(art, warn = FALSE), collapse = "\n")
+  pk <- paste(readLines(file.path(root, "_pkgdown.yml"), warn = FALSE), collapse = "\n")
+  expect_true(grepl("articles/quality-control`", pk, fixed = TRUE))
+  expect_true(grepl("articles/quality-control.html", pk, fixed = TRUE))
+  expect_true(grepl("qc_gate_table", txt, fixed = TRUE))
+  expect_true(grepl("qc_decision_table", txt, fixed = TRUE))
+  # the admission table in the article lists the same seven checks as the risk-tier rule
+  risk <- new.env(parent = globalenv())
+  sys.source(file.path(root, "tests", "sim", "risk-lib.R"), envir = risk)
+  for (item in risk$risk_items) expect_true(grepl(item, txt, ignore.case = TRUE, fixed = FALSE), info = item)
 })

@@ -365,7 +365,7 @@ A change that alters the objective, the parameter vector, the constraint set, th
 metamorphic invariance, fault injection, registration (`gates.csv` row with `oracle` and `mutants`, a row in
 `tests/sim/structures.csv`), platform run on the OpenBLAS runner. Every new structure needs at least an oracle, a
 reliability cell and a planted defect; `test-gate-coverage.R` fails when a gate row is not real or a structure has no
-gate. The `qc-weekly` workflow records one history row a week on the `qc-results` branch and opens an issue on a
+gate. The `qc-monthly` workflow records one history row a month on the `qc-results` branch and opens an issue on a
 failing gate or a changed environment. Decisions live in `planning/specs/ADR-*.md`; each carries a `decisions:` list
 in its front matter (`test-adr-front-matter.R`). Plan and ledger: `planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md`.
 
