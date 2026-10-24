@@ -151,8 +151,10 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
 - [x] Rerun `evidence/.../arm.R` `ms` arm: the 15 real failures are gone; the remaining failures are expected value
       changes in unpinned tests (each named). medfit tests only (dependents were unaffected before): 0 errors (was
       18), 8 failed expectations (was 93) in 6 tests: recipe 18 npar 14/8 -> 19/10 (2); lavaan-comparison live
-      probes "Estimators other than ML" and "Robust standard errors" change status (2, cause not yet checked; a
-      0.15.0 article note if real); native book ch. 5 expected information has a mean block (1); product-mean
+      probes "Estimators other than ML" and "Robust standard errors" change status (2; a probe artifact, not
+      a capability change: `test-lavaan-comparison.R:81,102` compare whole `coef()`/SE vectors with lavaan run
+      without means, so the native intercepts make the lengths differ; the 0.15.0 flip must pin the probes'
+      `meanstructure` or give lavaan `meanstructure = TRUE`, no article note); native book ch. 5 expected information has a mean block (1); product-mean
       through `fit_mediation()` uses raw data (1); MBCO refit test relies on the default for a no-mean fit (2).
 - [x] Author review before Phase 2. Approved 2026-10-24.
 
