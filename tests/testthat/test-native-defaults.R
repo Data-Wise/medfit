@@ -110,6 +110,13 @@ test_that("option medfit.native_defaults = \"0.15\" resolves unset settings to t
   w <- nd_catch(fit_sem(nd_syntax, nd_data(), fixed_x = FALSE, meanstructure = NULL))
   expect_identical(w$value@internals$fixed_x, character())
   expect_false(w$value@internals$ram$has_mean)
+  # one explicit, one unset: the explicit one is kept, only the unset one resolves (QA planted defect)
+  w <- nd_catch(fit_sem(nd_syntax, nd_data(), meanstructure = FALSE))
+  expect_false(w$value@internals$ram$has_mean)
+  expect_identical(w$value@internals$fixed_x, "treatment")
+  w <- nd_catch(fit_sem(nd_syntax, nd_data(), fixed_x = FALSE))
+  expect_identical(w$value@internals$fixed_x, character())
+  expect_true(w$value@internals$ram$has_mean)
   # no observed exogenous variable: fixed_x resolves to none
   w <- nd_catch(fit_sem("outcome ~~ mediator1", nd_data()))
   expect_identical(w$value@internals$fixed_x, character())
