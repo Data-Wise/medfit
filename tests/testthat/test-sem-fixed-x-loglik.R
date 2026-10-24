@@ -2,7 +2,7 @@
 
 test_that("fixed means follow the same rule and df is unchanged with a mean structure", {
   d <- fx_data()
-  free <- fit_sem(fx_syntax, d, meanstructure = TRUE)
+  free <- fit_sem(fx_syntax, d, meanstructure = TRUE, fixed_x = FALSE)
   fixed <- fit_sem(fx_syntax, d, meanstructure = TRUE, fixed_x = TRUE)
   expect_equal(fixed@df, free@df)
   expect_identical(length(fixed@theta), length(free@theta) - fx_n_removed(fx_exo, mean = TRUE))
@@ -30,7 +30,7 @@ test_that("logLik, AIC and BIC are conditional and equal lavaan's fixed.x = TRUE
 
 test_that("the conditional logLik differs from the joint one by the exogenous block", {
   d <- fx_data()
-  free <- fit_sem(fx_syntax, d, meanstructure = TRUE)
+  free <- fit_sem(fx_syntax, d, meanstructure = TRUE, fixed_x = FALSE)
   fixed <- fit_sem(fx_syntax, d, meanstructure = TRUE, fixed_x = TRUE)
   sx <- stats::cov(d[fx_exo]) * (nrow(d) - 1) / nrow(d)
   llx <- -0.5 * nrow(d) * (log(det(sx)) + length(fx_exo) * (1 + log(2 * pi)))
@@ -40,8 +40,8 @@ test_that("the conditional logLik differs from the joint one by the exogenous bl
 
 test_that("glance and the print note say what is fixed, and only when something is", {
   d <- fx_data()
-  free <- fit_sem(fx_syntax, d)
-  fixed <- fit_sem(fx_syntax, d, fixed_x = c("treatment", "covariate1"))
+  free <- fit_sem(fx_syntax, d, fixed_x = FALSE, meanstructure = NULL)
+  fixed <- fit_sem(fx_syntax, d, fixed_x = c("treatment", "covariate1"), meanstructure = NULL)
   expect_identical(glance(free)$fixed_x, "")
   expect_setequal(strsplit(glance(fixed)$fixed_x, ", ")[[1L]], c("treatment", "covariate1"))
   note <- "logLik is conditional on: "

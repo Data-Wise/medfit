@@ -135,13 +135,13 @@ test_that("a restricted exogenous block is refused too: fixed, labeled, bounded 
   for (nm in names(cases)) {
     model <- paste(pmt_exo, cases[[nm]][1L], sep = "\n")
     expect_warning(
-      fit <- fit_sem(model, pmt_data(), se_type = "sandwich"), "model test is not valid.*exogenous \\(co\\)variance",
+      fit <- fit_sem(model, pmt_data(), se_type = "sandwich", fixed_x = FALSE, meanstructure = NULL), "model test is not valid.*exogenous \\(co\\)variance",
       info = nm
     )
     expect_match(.sem_modeltest_reason(fit), cases[[nm]][2L], info = nm)
     expect_true(is.na(generics::glance(fit)$chisq), info = nm)
     restricted <- suppressWarnings(fit_sem(paste(pmt_exo, "w ~~ 1*w", cases[[nm]][1L], sep = "\n"), pmt_data(),
-                                           se_type = "sandwich"))
+                                           se_type = "sandwich", fixed_x = FALSE, meanstructure = NULL))
     expect_error(anova(fit, restricted), "anova\\(\\) is not available", info = nm)
   }
   # the exogenous product alone is unrestricted, and so is a block the engine completed

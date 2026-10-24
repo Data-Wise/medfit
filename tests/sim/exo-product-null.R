@@ -29,7 +29,7 @@ source("tests/sim/product-gate-common.R", local = TRUE)
 
 null_template <- "m ~ x\ny ~ m + x + w + P"
 
-gate_product_null <- function(fit_fun = fit_sem, path = Sys.getenv("PRODUCT_PATH", "column"),
+gate_product_null <- function(fit_fun = fit_sem_pinned, path = Sys.getenv("PRODUCT_PATH", "column"),
                               reps = as.integer(Sys.getenv("REPS", "1000")), n = 500L,
                               mutant = Sys.getenv("MUTANT", ""),
                               cores = max(1L, parallel::detectCores() - 1L)) {

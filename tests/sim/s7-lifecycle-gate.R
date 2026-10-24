@@ -68,7 +68,7 @@ writeLines(c(
   "}",
   "cat('S7', as.character(packageVersion('S7')), '\\n')",
   "d <- function() transform(medfit::mediation_demo, m = mediator1, x = treatment, y = outcome)",
-  "fit <- function() medfit::fit_sem('m ~ x\\ny ~ m + x', d())",
+  "fit <- function() medfit::fit_sem('m ~ x\\ny ~ m + x', d(), fixed_x = FALSE, meanstructure = NULL)",
   "step('library', suppressMessages(library(medfit)))",
   "step('construct_show', {",
   "  b <- medfit::BootstrapResult(estimate = 0.2, ci_lower = 0.1, ci_upper = 0.3, ci_level = 0.95,",

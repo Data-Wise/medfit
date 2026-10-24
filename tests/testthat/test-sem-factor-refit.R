@@ -91,7 +91,7 @@ test_that("a stored map does not hide a missing dummy column", {
 test_that("planted defect: an MBCO refit that drops the factor map is caught", {
   fx_skip_covr()
   d <- fr2_data()
-  f <- fit_sem(fr2_model, d$factor)
+  f <- fit_sem(fr2_model, d$factor, fixed_x = FALSE, meanstructure = NULL)
   bad <- sem_mutate(mbco_sem, "factors = fit@internals$factors", "factors = NULL")
   expect_error(bad(f, paths = c("a", "b")), "not columns of `data`: g")
 })

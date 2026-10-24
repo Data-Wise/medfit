@@ -25,8 +25,8 @@ test_that("a sum of products set to zero fits and satisfies the constraint", {
 
 test_that("the fixture warns when the starts disagree, and more starts are never worse", {
   d <- sp_data(0.9, 0.9, 0.1, 0.1)
-  expect_warning(fit5 <- fit_sem(sp_syntax, d), "the starts disagree")
-  fit20 <- suppressWarnings(fit_sem(sp_syntax, d, n_starts = 20))
+  expect_warning(fit5 <- fit_sem(sp_syntax, d, fixed_x = FALSE, meanstructure = NULL), "the starts disagree")
+  fit20 <- suppressWarnings(fit_sem(sp_syntax, d, n_starts = 20, fixed_x = FALSE, meanstructure = NULL))
   expect_lte(fit20@f, fit5@f + 1e-9)
 })
 

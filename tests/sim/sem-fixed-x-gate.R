@@ -104,7 +104,7 @@ for (n in c(100L, 400L)) {
       }
     }
     if (n == 400L) {
-      fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE, information = "expected")
+      fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE, information = "expected", meanstructure = NULL)
       ref <- lavaan::sem(fx_syntax, d, fixed.x = TRUE)
       tag <- sprintf("lavaan n=%d seed=%d", n, seed)
       check(tag, "npar", length(fixed@theta) == lavaan::fitMeasures(ref, "npar"))
@@ -134,9 +134,9 @@ for (shift in c(1e2, 1e3, 1e5)) {
 ref <- as.numeric(lavaan::logLik(lavaan::sem(fx_syntax, d0, meanstructure = TRUE, fixed.x = TRUE)))
 check("lavaan", "logLik", abs(as.numeric(logLik(base)) - ref) <= 1e-6)
 check("guard", "non-exogenous fixed_x name refused",
-      inherits(try(fit_sem(fx_syntax, d0, fixed_x = "outcome"), silent = TRUE), "try-error"))
+      inherits(try(fit_sem(fx_syntax, d0, fixed_x = "outcome", meanstructure = NULL), silent = TRUE), "try-error"))
 check("guard", "AIC across different fixed sets refused",
-      inherits(try(AIC(fit_sem(fx_syntax, d0), base), silent = TRUE), "try-error"))
+      inherits(try(AIC(fit_sem(fx_syntax, d0, fixed_x = FALSE, meanstructure = NULL), base), silent = TRUE), "try-error"))
 
 # timing table (reported, not gated): p covariates, free parameters and wall time, fixed vs free
 timing <- NULL
@@ -149,8 +149,8 @@ for (p in c(5L, 15L, 30L)) {
   dd <- data.frame(x = x, m = m, y = 0.4 * m + 0.2 * x + cv[, 2] * 0.2 + stats::rnorm(n), cv)
   syn <- paste0("m ~ a*x + ", paste(colnames(cv), collapse = " + "), "\ny ~ b*m + cp*x + ",
                 paste(colnames(cv), collapse = " + "))
-  t_free <- system.time(f_free <- fit_sem(syn, dd))[["elapsed"]]
-  t_fix <- system.time(f_fix <- fit_sem(syn, dd, fixed_x = TRUE))[["elapsed"]]
+  t_free <- system.time(f_free <- fit_sem(syn, dd, fixed_x = FALSE, meanstructure = NULL))[["elapsed"]]
+  t_fix <- system.time(f_fix <- fit_sem(syn, dd, fixed_x = TRUE, meanstructure = NULL))[["elapsed"]]
   timing <- rbind(timing, data.frame(p = p, free_params = length(f_free@theta), fixed_params = length(f_fix@theta),
                                      secs_free = round(t_free, 2), secs_fixed = round(t_fix, 2),
                                      ratio = round(t_free / t_fix, 1)))

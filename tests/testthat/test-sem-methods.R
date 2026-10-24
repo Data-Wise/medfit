@@ -51,7 +51,7 @@ test_that("logLik equals lavaan's and counts the free means in df", {
   skip_if_not_installed("lavaan")
   dat <- sem_sim(sem_model_observed(), n = 400, seed = 3)
   syntax <- "M ~ X + C\nY ~ M + X + C"
-  fit <- fit_sem(syntax, dat)
+  fit <- fit_sem(syntax, dat, fixed_x = FALSE, meanstructure = NULL)
   lav <- suppressWarnings(lavaan::sem(syntax, dat, fixed.x = FALSE))
   expect_equal(as.numeric(logLik(fit)), as.numeric(lavaan::logLik(lav)), tolerance = 1e-8)
   expect_identical(attr(logLik(fit), "nobs"), 400L)
@@ -61,7 +61,7 @@ test_that("logLik equals lavaan's and counts the free means in df", {
 
 test_that("planted defect: an unprojected covariance changes the standard errors under a constraint", {
   dat <- sem_sim(sem_model_observed(), n = 400, seed = 3)
-  fit <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C\na == b", dat)
+  fit <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C\na == b", dat, fixed_x = FALSE, meanstructure = NULL)
   smp <- .sem_sample(fit@data, fit@internals$ram)
   plain <- solve(.sem_info_observed(fit@theta, fit@internals$ram, smp))
   se_plain <- sqrt(diag(plain))[["a"]]
@@ -73,7 +73,7 @@ test_that("planted defect: an unprojected covariance changes the standard errors
 test_that("a fit with a missing-value drop and an active constraint reports both in the summary", {
   dat <- sem_sim(sem_model_observed(), n = 300, seed = 3)
   dat$M[c(2, 9)] <- NA
-  expect_message(fit <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C\na == b", dat), "2 of 300 rows dropped")
+  expect_message(fit <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C\na == b", dat, fixed_x = FALSE, meanstructure = NULL), "2 of 300 rows dropped")
   expect_identical(fit@n_dropped, 2L)
   expect_identical(fit@diagnostics$active_constraints, "a == b")
   out <- utils::capture.output(print(summary(fit)))
@@ -90,7 +90,7 @@ tg_syntax <- "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + cova
 tg_fit <- local({
   cache <- NULL
   function() {
-    if (is.null(cache)) cache <<- fit_sem(tg_syntax, data = mediation_demo)
+    if (is.null(cache)) cache <<- fit_sem(tg_syntax, data = mediation_demo, fixed_x = FALSE, meanstructure = NULL)
     cache
   }
 })
@@ -152,7 +152,7 @@ test_that("confint() selects by name or position, includes defined parameters, a
 })
 
 test_that("a parameter pinned by a constraint has a point interval and no test", {
-  fit <- fit_sem(paste0(tg_syntax, "\nb == 0"), mediation_demo)
+  fit <- fit_sem(paste0(tg_syntax, "\nb == 0"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   td <- generics::tidy(fit, conf_int = TRUE)
   row <- td[td$term == "b", ]
   expect_equal(row$estimate, 0, tolerance = 1e-8)
@@ -179,7 +179,7 @@ test_that("glance() matches lavaan: chi-square, df, p, log likelihood, AIC, BIC 
 })
 
 test_that("glance() has no converged column; a saturated fit has df 0, chi-square 0 and no p-value", {
-  g0 <- generics::glance(fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", mediation_demo))
+  g0 <- generics::glance(fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL))
   expect_false("converged" %in% names(g0))
   expect_identical(g0$df, 0)
   expect_equal(g0$chisq, 0)
@@ -189,7 +189,7 @@ test_that("glance() has no converged column; a saturated fit has df 0, chi-squar
 })
 
 test_that("a weighted fit has a weighted discrepancy, not a likelihood: the likelihood columns are NA", {
-  w <- fit_sem(tg_syntax, mediation_demo, weights = rep(1, nrow(mediation_demo)), se_type = "sandwich")
+  w <- fit_sem(tg_syntax, mediation_demo, weights = rep(1, nrow(mediation_demo)), se_type = "sandwich", fixed_x = FALSE, meanstructure = NULL)
   g <- generics::glance(w)
   expect_identical(g$nobs, 400L)
   expect_true(all(is.na(g[c("chisq", "p_value", "logLik", "AIC", "BIC")])))
@@ -207,12 +207,12 @@ test_that("tidy() and confint() of a hand-built SEMFit read the object", {
 })
 
 test_that("edge cases: no defined parameters, a shared label and a latent model", {
-  f0 <- fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", mediation_demo)
+  f0 <- fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_identical(nrow(generics::tidy(f0, type = "defined")), 0L)
   expect_identical(nrow(generics::tidy(f0)), length(coef(f0)))
   expect_identical(dim(confint(f0)), c(length(coef(f0)), 2L))
   # one label on two paths is one parameter: one row, and the count and df follow
-  shared <- fit_sem("mediator1 ~ a*treatment + a*covariate1\noutcome ~ mediator1 + treatment", mediation_demo)
+  shared <- fit_sem("mediator1 ~ a*treatment + a*covariate1\noutcome ~ mediator1 + treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_identical(sum(generics::tidy(shared)$term == "a"), 1L)
   expect_identical(generics::glance(shared)$npar, length(coef(shared)))
   expect_equal(generics::glance(shared)$df, shared@df)

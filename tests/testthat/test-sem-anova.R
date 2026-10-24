@@ -19,10 +19,10 @@ anova_fits <- local({
       d <- anova_mem()
       cache <<- list(
         d = d,
-        full = fit_sem(anova_syntax, d),
-        b1 = fit_sem(paste0(anova_syntax, "\nb1 == 0"), d),
-        a1 = fit_sem(paste0(anova_syntax, "\na1 == 0"), d),
-        both = fit_sem(paste0(anova_syntax, "\nb1 == 0\na1 == 0"), d)
+        full = fit_sem(anova_syntax, d, fixed_x = FALSE, meanstructure = NULL),
+        b1 = fit_sem(paste0(anova_syntax, "\nb1 == 0"), d, fixed_x = FALSE, meanstructure = NULL),
+        a1 = fit_sem(paste0(anova_syntax, "\na1 == 0"), d, fixed_x = FALSE, meanstructure = NULL),
+        both = fit_sem(paste0(anova_syntax, "\nb1 == 0\na1 == 0"), d, fixed_x = FALSE, meanstructure = NULL)
       )
     }
     cache
@@ -114,7 +114,7 @@ test_that("it refuses fewer than two fits, a non-SEMFit, weights and a fit that 
   expect_error(anova(f$full), "at least two fits")
   expect_error(anova(f$full, lm(1 ~ 1)), "not a SEMFit")
   weighted <- fit_sem(paste0(anova_syntax, "\nb1 == 0"), f$d, weights = rep(1, nrow(f$d)),
-                      se_type = "sandwich")
+                      se_type = "sandwich", fixed_x = FALSE, meanstructure = NULL)
   expect_error(anova(f$full, weighted), "sampling weights")
   bad <- f$b1
   bad@converged <- FALSE
@@ -125,17 +125,17 @@ test_that("it refuses different data, different variables, equal df, and a model
   f <- anova_fits()
   d2 <- f$d
   d2$recall <- d2$recall + stats::rnorm(nrow(d2), sd = 0.5)
-  other <- fit_sem(paste0(anova_syntax, "\nb1 == 0"), d2)
+  other <- fit_sem(paste0(anova_syntax, "\nb1 == 0"), d2, fixed_x = FALSE, meanstructure = NULL)
   expect_error(anova(f$full, other), "different data")
-  few <- fit_sem(paste0(anova_syntax, "\nb1 == 0"), f$d[-1L, ])
+  few <- fit_sem(paste0(anova_syntax, "\nb1 == 0"), f$d[-1L, ], fixed_x = FALSE, meanstructure = NULL)
   expect_error(anova(f$full, few), "different numbers of rows")
-  fewer_vars <- fit_sem("repetition ~ a1*x\nimagery ~ a2*x", f$d)
+  fewer_vars <- fit_sem("repetition ~ a1*x\nimagery ~ a2*x", f$d, fixed_x = FALSE, meanstructure = NULL)
   expect_error(anova(f$full, fewer_vars), "same observed variables")
   expect_error(anova(f$b1, f$a1), "same degrees of freedom")
   # frees a parameter the full model leaves out (a residual covariance) while dropping two paths: df is larger
   # but the model is not nested in the full one
   not_nested <- fit_sem("repetition ~ a1*x\nrecall ~ b1*repetition + b2*imagery\nimagery ~~ repetition\nimagery ~ 0*x",
-                        f$d)
+                        f$d, fixed_x = FALSE, meanstructure = NULL)
   expect_gt(not_nested@df, f$full@df)
   expect_error(anova(f$full, not_nested), "not nested")
   # the same pair is refused whatever the argument order
@@ -150,8 +150,8 @@ test_that("a nonzero fixed residual covariance cannot appear or disappear across
   d$Y <- 0.3 * d$M1 + 0.2 * d$M2 + 0.1 * d$X + stats::rnorm(400)
   base <- "M1 ~ a1*X\nM2 ~ a2*X\nY ~ b1*M1 + b2*M2 + cp*X"
   restricted <- "M1 ~ a1*X\nM2 ~ a2*X\nY ~ b1*M1 + 0*M2 + 0*X"
-  full <- fit_sem(base, d)
-  added <- fit_sem(paste0(restricted, "\nM1 ~~ 0.5*M2"), d)
+  full <- fit_sem(base, d, fixed_x = FALSE, meanstructure = NULL)
+  added <- fit_sem(paste0(restricted, "\nM1 ~~ 0.5*M2"), d, fixed_x = FALSE, meanstructure = NULL)
   expect_gt(added@df, full@df)
   expect_error(anova(full, added), "not nested.*nonzero fixed parameters.*M1 ~~ M2")
   # Planted defect: skipping the new guard restores the spurious chi-square p-value.
@@ -162,8 +162,8 @@ test_that("a nonzero fixed residual covariance cannot appear or disappear across
                           "tested <- SILENT(full, restricted, label)")
   environment(unchecked) <- list2env(list(SILENT = silent), parent = environment(.sem_anova))
   expect_true(is.finite(unchecked(list(full = full, added = added))[2, "Pr(>Chisq)"]))
-  fixed_full <- fit_sem(paste0(base, "\nM1 ~~ 0.5*M2"), d)
-  omitted <- fit_sem(restricted, d)
+  fixed_full <- fit_sem(paste0(base, "\nM1 ~~ 0.5*M2"), d, fixed_x = FALSE, meanstructure = NULL)
+  omitted <- fit_sem(restricted, d, fixed_x = FALSE, meanstructure = NULL)
   expect_gt(omitted@df, fixed_full@df)
   expect_error(anova(fixed_full, omitted), "not nested.*nonzero fixed parameters.*M1 ~~ M2")
 })
@@ -191,8 +191,8 @@ boundary_base <- "M ~ a*X\nY ~ b*M + cp*X"
 boundary_pair <- function(extra, null = "a == 0") {
   d <- boundary_data()
   list(
-    full = fit_sem(paste0(boundary_base, "\n", extra), d),
-    null = fit_sem(paste0(boundary_base, "\n", extra, "\n", null), d)
+    full = fit_sem(paste0(boundary_base, "\n", extra), d, fixed_x = FALSE, meanstructure = NULL),
+    null = fit_sem(paste0(boundary_base, "\n", extra, "\n", null), d, fixed_x = FALSE, meanstructure = NULL)
   )
 }
 
@@ -217,9 +217,9 @@ test_that("a null on the boundary warns as mbco_sem() does; an interior or unrel
 
 test_that("a null written by fixing the path in the syntax equals the one written as a constraint", {
   d <- boundary_data()
-  full <- fit_sem(boundary_base, d)
-  fixed <- fit_sem("M ~ 0*X\nY ~ b*M + cp*X", d)
-  constrained <- fit_sem(paste0(boundary_base, "\na == 0"), d)
+  full <- fit_sem(boundary_base, d, fixed_x = FALSE, meanstructure = NULL)
+  fixed <- fit_sem("M ~ 0*X\nY ~ b*M + cp*X", d, fixed_x = FALSE, meanstructure = NULL)
+  constrained <- fit_sem(paste0(boundary_base, "\na == 0"), d, fixed_x = FALSE, meanstructure = NULL)
   expect_equal(anova(full, fixed)[2, "Chisq diff"], anova(full, constrained)[2, "Chisq diff"], tolerance = 1e-6)
   expect_equal(anova(full, fixed)[2, "Df diff"], 1)
 })
@@ -227,15 +227,15 @@ test_that("a null written by fixing the path in the syntax equals the one writte
 test_that("a null written on a defined parameter is compared like any other", {
   d <- boundary_data()
   base <- paste0(boundary_base, "\ns := a + b")
-  full <- fit_sem(base, d)
-  via_def <- fit_sem(paste0(base, "\ns == 0.5"), d)
-  via_row <- fit_sem(paste0(boundary_base, "\na + b == 0.5"), d)
+  full <- fit_sem(base, d, fixed_x = FALSE, meanstructure = NULL)
+  via_def <- fit_sem(paste0(base, "\ns == 0.5"), d, fixed_x = FALSE, meanstructure = NULL)
+  via_row <- fit_sem(paste0(boundary_base, "\na + b == 0.5"), d, fixed_x = FALSE, meanstructure = NULL)
   res <- anova(full, via_def)
   expect_equal(res[2, "Df diff"], 1)
-  expect_equal(res[2, "Chisq diff"], anova(fit_sem(boundary_base, d), via_row)[2, "Chisq diff"], tolerance = 1e-6)
+  expect_equal(res[2, "Chisq diff"], anova(fit_sem(boundary_base, d, fixed_x = FALSE, meanstructure = NULL), via_row)[2, "Chisq diff"], tolerance = 1e-6)
   # a bound on a parameter inside the defined sum still marks the null as on the boundary
-  edge_full <- fit_sem(paste0(base, "\na > 0"), d)
-  edge_null <- fit_sem(paste0(base, "\na > 0\ns == 0.5\nb == 0.5"), d)
+  edge_full <- fit_sem(paste0(base, "\na > 0"), d, fixed_x = FALSE, meanstructure = NULL)
+  edge_null <- fit_sem(paste0(base, "\na > 0\ns == 0.5\nb == 0.5"), d, fixed_x = FALSE, meanstructure = NULL)
   expect_warning(anova(edge_full, edge_null), "boundary")
 })
 
@@ -277,7 +277,7 @@ test_that("print uses the anova layout with a heading", {
 
 # Nesting must hold for the constraints and fixed values of the larger model, not only for the free rows.
 nest_model <- function(tail) {
-  fit_sem(paste0("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\n", tail), medfit::mediation_demo)
+  fit_sem(paste0("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\n", tail), medfit::mediation_demo, fixed_x = FALSE, meanstructure = NULL)
 }
 
 test_that("a restricted model that breaks the larger model's equality is not nested in it", {
@@ -296,16 +296,16 @@ test_that("a restricted model that implies the larger model's equality is nested
 })
 
 test_that("a fixed value of the larger model must be kept", {
-  full <- fit_sem("mediator1 ~ a*treatment\noutcome ~ 0.5*mediator1 + treatment", mediation_demo)
-  same <- fit_sem("mediator1 ~ 0*treatment\noutcome ~ 0.5*mediator1 + treatment", mediation_demo)
-  moved <- fit_sem("mediator1 ~ 0*treatment\noutcome ~ 0.4*mediator1 + treatment", mediation_demo)
+  full <- fit_sem("mediator1 ~ a*treatment\noutcome ~ 0.5*mediator1 + treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  same <- fit_sem("mediator1 ~ 0*treatment\noutcome ~ 0.5*mediator1 + treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  moved <- fit_sem("mediator1 ~ 0*treatment\noutcome ~ 0.4*mediator1 + treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_no_error(anova(full, same))
   expect_error(anova(full, moved), "not nested")
 })
 
 test_that("a nonlinear or inequality constraint of the larger model must appear in the restricted one", {
-  full <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\ncp == a*b", mediation_demo)
-  drop <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\ncp == 0\nb == 0", mediation_demo)
+  full <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\ncp == a*b", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  drop <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\ncp == 0\nb == 0", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_error(anova(full, drop), "not nested")
 })
 
@@ -317,7 +317,7 @@ test_that("planted defect: without the constraint check the broken pair returns 
 })
 
 test_that("a bound of the larger model must be kept by the restricted model", {
-  fit_b <- function(m) fit_sem(paste0(m, "\noutcome ~ mediator1 + treatment"), mediation_demo)
+  fit_b <- function(m) fit_sem(paste0(m, "\noutcome ~ mediator1 + treatment"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   bounded <- fit_b("mediator1 ~ lower(0)*treatment")
   expect_error(anova(bounded, fit_b("mediator1 ~ -1*treatment")), "not nested")
   expect_no_error(anova(bounded, fit_b("mediator1 ~ 0*treatment")))
@@ -325,34 +325,34 @@ test_that("a bound of the larger model must be kept by the restricted model", {
 
 test_that("a single-label inequality of the larger model is a bound and must be kept", {
   base <- "mediator1 ~ a1*treatment\noutcome ~ b1*mediator1 + a2*treatment\n"
-  full <- fit_sem(paste0(base, "a1 > 0.1"), mediation_demo)
-  expect_error(anova(full, fit_sem(paste0(base, "a2 == 0"), mediation_demo)), "not nested")
-  expect_no_error(anova(full, fit_sem(paste0(base, "a1 > 0.1\na2 == 0"), mediation_demo)))
+  full <- fit_sem(paste0(base, "a1 > 0.1"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  expect_error(anova(full, fit_sem(paste0(base, "a2 == 0"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)), "not nested")
+  expect_no_error(anova(full, fit_sem(paste0(base, "a1 > 0.1\na2 == 0"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)))
 })
 
 test_that("planted defect: without the bound check the dropped bound returns a p-value", {
   base <- "mediator1 ~ a1*treatment\noutcome ~ b1*mediator1 + a2*treatment\n"
-  full <- fit_sem(paste0(base, "a1 > 0.1"), mediation_demo)
-  rest <- fit_sem(paste0(base, "a2 == 0"), mediation_demo)
+  full <- fit_sem(paste0(base, "a1 > 0.1"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  rest <- fit_sem(paste0(base, "a2 == 0"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   silent <- sem_mutate(.sem_anova_kept, ".sem_anova_bounds_kept(full, restricted), ", "")
   expect_length(silent(full, rest), 0L)
   expect_length(.sem_anova_kept(full, rest), 1L)
 })
 
 test_that("a shared label of the larger model is an equality the restricted model must keep", {
-  full <- fit_sem("mediator1 ~ a*treatment + g*mediator2\noutcome ~ a*mediator1 + cp*treatment", mediation_demo)
-  released <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ b*mediator1 + 0*treatment", mediation_demo)
+  full <- fit_sem("mediator1 ~ a*treatment + g*mediator2\noutcome ~ a*mediator1 + cp*treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  released <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ b*mediator1 + 0*treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_error(anova(full, released), "not nested")
-  kept <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ a*mediator1 + 0*treatment", mediation_demo)
+  kept <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ a*mediator1 + 0*treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_no_error(anova(full, kept))
   # the same tie written as an explicit equality is kept as well
-  tied <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ b*mediator1 + 0*treatment\na == b", mediation_demo)
+  tied <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ b*mediator1 + 0*treatment\na == b", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_no_error(anova(full, tied))
 })
 
 test_that("planted defect: without the tie check the released shared label returns a p-value", {
-  full <- fit_sem("mediator1 ~ a*treatment + g*mediator2\noutcome ~ a*mediator1 + cp*treatment", mediation_demo)
-  released <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ b*mediator1 + 0*treatment", mediation_demo)
+  full <- fit_sem("mediator1 ~ a*treatment + g*mediator2\noutcome ~ a*mediator1 + cp*treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  released <- fit_sem("mediator1 ~ a*treatment + 0*mediator2\noutcome ~ b*mediator1 + 0*treatment", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_gt(length(.sem_anova_kept(full, released)), 0L)
   silent <- sem_mutate(.sem_anova_kept, ", .sem_anova_ties_kept(full, restricted))", ")")
   expect_length(silent(full, released), 0L)
@@ -360,14 +360,14 @@ test_that("planted defect: without the tie check the released shared label retur
 
 test_that("an active nonlinear inequality at the restricted fit warns that the null is on the boundary", {
   base <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\n"
-  full <- fit_sem(paste0(base, "a*b > 0"), mediation_demo)
-  null <- fit_sem(paste0(base, "a*b > 0\nb == 0"), mediation_demo)
+  full <- fit_sem(paste0(base, "a*b > 0"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  null <- fit_sem(paste0(base, "a*b > 0\nb == 0"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_warning(anova(full, null), "a\\*b > 0")
 })
 
 test_that("planted defect: without the nonlinear branch the boundary guard stays silent", {
   base <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\n"
-  null <- fit_sem(paste0(base, "a*b > 0\nb == 0"), mediation_demo)
+  null <- fit_sem(paste0(base, "a*b > 0\nb == 0"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   state <- list(active_bounds = null@diagnostics$active_bounds, constraints = null@internals$constraints,
                 ram = null@internals$ram, theta = null@theta)
   expect_length(.sem_boundary_active(state, "b"), 1L)
@@ -376,7 +376,7 @@ test_that("planted defect: without the nonlinear branch the boundary guard stays
 })
 
 test_that("mbco_sem warns on an active nonlinear inequality too", {
-  fit <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\na*b > 0", mediation_demo)
+  fit <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\na*b > 0", mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   warned <- testthat::capture_warnings(mbco_sem(fit, a = "a", b = "b"))
   expect_true(any(grepl("boundary", warned)))
 })

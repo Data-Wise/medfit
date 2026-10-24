@@ -9,12 +9,12 @@ naming_syntax <- c(
 test_that("coef() uses lavaan's names on the observed, labeled and latent structures", {
   skip_if_not_installed("lavaan")
   for (nm in names(naming_syntax)) {
-    fit <- fit_sem(naming_syntax[[nm]], mediation_demo)
+    fit <- fit_sem(naming_syntax[[nm]], mediation_demo, fixed_x = FALSE, meanstructure = NULL)
     lav <- suppressWarnings(lavaan::sem(naming_syntax[[nm]], mediation_demo, fixed.x = FALSE))
     expect_setequal(names(coef(fit)), names(lavaan::coef(lav)))
   }
   ldat <- sem_sim(sem_models()$latent, n = 400, seed = 3)
-  fit <- fit_sem(sem_lavaan_text("latent"), ldat)
+  fit <- fit_sem(sem_lavaan_text("latent"), ldat, fixed_x = FALSE, meanstructure = NULL)
   lav <- suppressWarnings(lavaan::sem(sem_lavaan_text("latent"), ldat, fixed.x = FALSE))
   expect_setequal(names(coef(fit)), names(lavaan::coef(lav)))
   expect_true(all(c("eta=~m2", "eta=~m3") %in% names(coef(fit))))
@@ -22,7 +22,7 @@ test_that("coef() uses lavaan's names on the observed, labeled and latent struct
 })
 
 test_that("tidy(), the accessors and vcov() carry the same names as coef()", {
-  fit <- fit_sem(sem_lavaan_text("latent"), sem_sim(sem_models()$latent, n = 400, seed = 3))
+  fit <- fit_sem(sem_lavaan_text("latent"), sem_sim(sem_models()$latent, n = 400, seed = 3), fixed_x = FALSE, meanstructure = NULL)
   td <- tidy(fit)
   expect_identical(td$term, names(coef(fit)))
   expect_identical(td$op[td$term == "eta=~m2"], "=~")

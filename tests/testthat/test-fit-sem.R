@@ -27,7 +27,7 @@ expect_same_extraction <- function(nat, lav, info) {
 
 test_that("fit_sem returns a SEMFit with the table, covariance and diagnostics", {
   dat <- sem_sim(sem_model_observed(), n = 400, seed = 5)
-  fit <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C\nab := a*b", dat)
+  fit <- fit_sem("M ~ a*X + C\nY ~ b*M + X + C\nab := a*b", dat, fixed_x = FALSE, meanstructure = NULL)
   expect_s7_class(fit, SEMFit)
   expect_identical(fit@n_obs, 400L)
   expect_identical(fit@n_dropped, 0L)
@@ -45,7 +45,7 @@ test_that("fit_sem returns a SEMFit with the table, covariance and diagnostics",
   ref <- .sem_fit_syntax("M ~ a*X + C\nY ~ b*M + X + C\nab := a*b", dat)
   expect_identical(fit@theta, ref$theta)
   expect_identical(fit@vcov, ref$vcov)
-  expect_identical(fit_sem("M ~ X\nY ~ M + X", dat, information = "expected")@information, "expected")
+  expect_identical(fit_sem("M ~ X\nY ~ M + X", dat, information = "expected", fixed_x = FALSE, meanstructure = NULL)@information, "expected")
 })
 
 test_that("fit_sem validates its arguments", {
@@ -71,7 +71,7 @@ test_that("extraction from a native fit equals the lavaan route for the four str
   mods <- sem_models()
   for (nm in names(ex_syntax)) {
     dat <- sem_sim(mods[[nm]], n = 500, seed = 3)
-    nat_fit <- fit_sem(ex_syntax[[nm]], dat)
+    nat_fit <- fit_sem(ex_syntax[[nm]], dat, fixed_x = FALSE, meanstructure = NULL)
     lav_fit <- ex_lavaan(ex_syntax[[nm]], dat)
     args <- switch(nm,
       observed = list(treatment = "X", mediator = "M"),

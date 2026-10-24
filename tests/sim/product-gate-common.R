@@ -10,6 +10,10 @@
 # writes results under its own prefix; the column-path rows stay as the control (they carry the evidence the colon
 # path cannot reproduce: the `fixvar` configuration and the SUR leak of a free residual covariance).
 
+# The default `fit_fun`: `fit_sem()` with the pre-0.15.0 defaults stated (spec R-8), so the gates' baselines do not
+# move when the defaults change.
+fit_sem_pinned <- function(model, data) fit_sem(model, data, fixed_x = FALSE, meanstructure = NULL)
+
 # Product term as written in a model: the column name, or the `:` spelling of its factors.
 product_term <- function(path, a, b) if (identical(path, "colon")) paste0(a, ":", b) else "p"
 

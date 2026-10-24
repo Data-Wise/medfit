@@ -2,8 +2,8 @@
 
 test_that("fixed_x = FALSE is the default and changes nothing", {
   d <- fx_data()
-  base <- fit_sem(fx_syntax, d)
-  off <- fit_sem(fx_syntax, d, fixed_x = FALSE)
+  base <- fit_sem(fx_syntax, d, fixed_x = FALSE, meanstructure = NULL)
+  off <- fit_sem(fx_syntax, d, fixed_x = FALSE, meanstructure = NULL)
   expect_identical(off@internals$fixed_x, character())
   expect_equal(off@theta, base@theta, tolerance = 0)
   expect_equal(off@f, base@f, tolerance = 0)

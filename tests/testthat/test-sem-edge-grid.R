@@ -50,7 +50,7 @@ edge_grid <- local({
     }, "hand floor 0.001"),
     edge_case("redundant equalities", function() add("a == b\nb == a"), "accept",
               function(fit, spec) {
-                ref <- fit_sem(paste(edge_base, "a == b", sep = "\n"), spec$data)
+                ref <- fit_sem(paste(edge_base, "a == b", sep = "\n"), spec$data, fixed_x = FALSE, meanstructure = NULL)
                 expect_equal(coef(fit), coef(ref), tolerance = 1e-5)
               }, "independent equality fit"),
     edge_case("contradictory equalities", function() add("a == 0\na == 1"), "refuse", NULL,
@@ -137,19 +137,26 @@ edge_grid <- local({
     edge_case("start order and count", function() {
       base(args = list(n_starts = 3L))
     }, "accept", function(fit, spec) {
-      alt <- fit_sem("M ~ start(0.2)*X + C\nY ~ b*M + cp*X + C", spec$data, n_starts = 1L)
+      alt <- fit_sem("M ~ start(0.2)*X + C\nY ~ b*M + cp*X + C", spec$data, n_starts = 1L, fixed_x = FALSE, meanstructure = NULL)
       expect_equal(unname(coef(fit)), unname(coef(alt)), tolerance = 1e-4)
       edge_ols(fit, spec)
     }, "start-order parity + OLS")
   )
 })
 
+# the pre-0.15.0 defaults stated (spec R-8), unless the cell sets its own
+edge_pinned <- function(args) {
+  if (!"fixed_x" %in% names(args)) args["fixed_x"] <- list(FALSE)
+  if (!"meanstructure" %in% names(args)) args["meanstructure"] <- list(NULL)
+  args
+}
+
 test_that("edge grid gives an oracle, diagnostic, or clear refusal", {
   for (case in edge_grid) {
     spec <- case$build()
     warnings <- character()
     result <- tryCatch(withCallingHandlers(
-      if (is.null(spec$runner)) do.call(fit_sem, c(list(model = spec$model, data = spec$data), spec$args))
+      if (is.null(spec$runner)) do.call(fit_sem, edge_pinned(c(list(model = spec$model, data = spec$data), spec$args)))
       else spec$runner(),
       warning = function(w) {
         warnings <<- c(warnings, conditionMessage(w))
@@ -181,6 +188,6 @@ test_that("planted branch-cap defect turns the grid verdict red", {
   case <- edge_grid[[12L]]
   spec <- case$build()
   testthat::local_mocked_bindings(.sem_fit_branches = mutant)
-  bad <- tryCatch(fit_sem(spec$model, spec$data), error = identity)
+  bad <- tryCatch(fit_sem(spec$model, spec$data, fixed_x = FALSE, meanstructure = NULL), error = identity)
   expect_s7_class(bad, SEMFit) # the cap-refusal row would fail against this mutant
 })
