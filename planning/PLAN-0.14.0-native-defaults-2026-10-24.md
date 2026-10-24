@@ -144,11 +144,17 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
 
 ### Checkpoint A (after T1-T4c)
 
-- [ ] Full suite green; counts recorded (`devtools::test()`).
-- [ ] Gates dispatched on the PR, both shards green (`gates (rest)`, `gates (reliability)`).
-- [ ] Rerun `evidence/.../arm.R` `ms` arm: the 15 real failures are gone; the remaining failures are expected value
-      changes in unpinned tests (each named).
-- [ ] Author review before Phase 2.
+- [x] Full suite green; counts recorded (`devtools::test()`). 2026-10-24 on dev 38ba077: 1565 tests, 7104
+      expectations, 0 failed, 0 errors, 2 skipped.
+- [x] Gates dispatched on the PR, both shards green (`gates (rest)`, `gates (reliability)`). Dispatched on dev
+      38ba077 (run 40137907236), both green.
+- [x] Rerun `evidence/.../arm.R` `ms` arm: the 15 real failures are gone; the remaining failures are expected value
+      changes in unpinned tests (each named). medfit tests only (dependents were unaffected before): 0 errors (was
+      18), 8 failed expectations (was 93) in 6 tests: recipe 18 npar 14/8 -> 19/10 (2); lavaan-comparison live
+      probes "Estimators other than ML" and "Robust standard errors" change status (2, cause not yet checked; a
+      0.15.0 article note if real); native book ch. 5 expected information has a mean block (1); product-mean
+      through `fit_mediation()` uses raw data (1); MBCO refit test relies on the default for a no-mean fit (2).
+- [x] Author review before Phase 2. Approved 2026-10-24.
 
 ### Phase 2: resolver, warning, opt-in, oracle matrix
 
