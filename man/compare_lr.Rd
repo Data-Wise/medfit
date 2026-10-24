@@ -58,7 +58,7 @@ refused by name.
 if (requireNamespace("lavaan", quietly = TRUE)) {
   fit <- fit_sem(
     "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment",
-    data = mediation_demo
+    data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
   )
   compare_lr(fit, paths = c("a", "b"), engine = "lavaan")
 }
