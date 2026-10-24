@@ -54,7 +54,8 @@ one <- function(i) {
   d <- sem_sim(mod, g$n, 1000L * g$seed + g$n)
   row <- data.frame(g, native_ok = FALSE, omx_ok = FALSE, improper = NA_character_, active = NA_integer_,
                     est_gap = NA_real_, se_rel = NA_real_, lav_gap = NA_real_)
-  fit <- tryCatch(suppressWarnings(fit_sem(syntax[[g$cell]], d)), error = function(e) NULL)
+  fit <- tryCatch(suppressWarnings(fit_sem(syntax[[g$cell]], d,
+                                           fixed_x = FALSE, meanstructure = NULL)), error = function(e) NULL)
   if (is.null(fit)) return(row)
   row$native_ok <- TRUE
   row$improper <- paste(fit@diagnostics$improper, collapse = "; ")
@@ -128,8 +129,8 @@ fx <- "tests/testthat/fixtures/memory_exp.rds"
 if (file.exists(fx)) {
   d <- readRDS(fx)
   ms <- "repetition ~ a1*x\nimagery ~ a2*x\nrecall ~ cp*x + b1*repetition + b2*imagery"
-  full <- fit_sem(ms, d)
-  stat <- function(con) nrow(d) * (fit_sem(paste0(ms, "\n", con), d)@f - full@f)
+  full <- fit_sem(ms, d, fixed_x = FALSE, meanstructure = NULL)
+  stat <- function(con) nrow(d) * (fit_sem(paste0(ms, "\n", con), d, fixed_x = FALSE, meanstructure = NULL)@f - full@f)
   a1 <- stat("a1 == 0")
   b1 <- stat("b1 == 0")
   cat(sprintf(

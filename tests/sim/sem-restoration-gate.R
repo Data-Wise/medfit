@@ -94,7 +94,7 @@ rb_data <- function(n = 100, seed = 17) {
   data.frame(X = x, M = m, Y = 0.4 * m + 0.2 * x + stats::rnorm(n, sd = 0.7))
 }
 rb_setup <- function(constraint) {
-  fit <- fit_sem(paste0("M ~ a*X\nY ~ b*M + cp*X\n", constraint), rb_data())
+  fit <- fit_sem(paste0("M ~ a*X\nY ~ b*M + cp*X\n", constraint), rb_data(), fixed_x = FALSE, meanstructure = NULL)
   ram <- fit@internals$ram
   nm <- gsub(" ", "", ram$par_names, fixed = TRUE)
   list(ram = ram, smp = ns$.sem_sample(fit@data, ram), cons = ns$.sem_constraint_rows(fit@internals$constraints, ram),

@@ -2,8 +2,8 @@
 
 test_that("estimates, standard errors and df equal the free fit; the fixed moments leave the parameters", {
   d <- fx_data()
-  free <- fit_sem(fx_syntax, d)
-  fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE)
+  free <- fit_sem(fx_syntax, d, fixed_x = FALSE, meanstructure = NULL)
+  fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE, meanstructure = NULL)
   expect_equal(fixed@df, free@df)
   expect_equal(fixed@f, free@f, tolerance = 1e-10)
   sh <- fx_shared(free, fixed)
@@ -19,7 +19,7 @@ test_that("estimates, standard errors and df equal the free fit; the fixed momen
 
 test_that("fixed rows stay in the table at the sample moments with no standard error (S6)", {
   d <- fx_data()
-  fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE)
+  fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE, meanstructure = NULL)
   tab <- fixed@table
   rows <- tab[tab$fixed_x, ]
   expect_identical(nrow(rows), as.integer(fx_n_removed(fx_exo)))
@@ -37,7 +37,7 @@ test_that("fixed rows stay in the table at the sample moments with no standard e
 
 test_that("the frozen 0.9.0 values are untouched when fixed_x is off", {
   # the T1 fixture itself runs in test-sem-frozen-v080.R; this guards the new column and internals only
-  fit <- fit_sem(fx_syntax, fx_data())
+  fit <- fit_sem(fx_syntax, fx_data(), fixed_x = FALSE, meanstructure = NULL)
   expect_true("fixed_x" %in% names(fit@table))
   expect_false(any(fit@table$fixed_x))
 })
@@ -45,7 +45,7 @@ test_that("the frozen 0.9.0 values are untouched when fixed_x is off", {
 test_that("lavaan fixed.x = TRUE agrees: rows, parameter count, df and chi-square", {
   skip_if_not_installed("lavaan")
   d <- fx_data()
-  fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE, information = "expected")
+  fixed <- fit_sem(fx_syntax, d, fixed_x = TRUE, information = "expected", meanstructure = NULL)
   ref <- lavaan::sem(fx_syntax, d, fixed.x = TRUE)
   expect_identical(length(fixed@theta), as.integer(lavaan::fitMeasures(ref, "npar")))
   expect_equal(fixed@df, unname(lavaan::fitMeasures(ref, "df")))
@@ -58,8 +58,8 @@ test_that("lavaan fixed.x = TRUE agrees: rows, parameter count, df and chi-squar
 
 test_that("planted defect: counting the fixed moments as restrictions moves df", {
   fx_skip_covr()
-  fixed <- fit_sem(fx_syntax, fx_data(), fixed_x = TRUE)
-  free <- fit_sem(fx_syntax, fx_data())
+  fixed <- fit_sem(fx_syntax, fx_data(), fixed_x = TRUE, meanstructure = NULL)
+  free <- fit_sem(fx_syntax, fx_data(), fixed_x = FALSE, meanstructure = NULL)
   ram <- fixed@internals$ram
   expect_identical(.sem_df(ram, 0L), free@df)
   # the moment count ignores the fixed block, so df grows by the number fixed

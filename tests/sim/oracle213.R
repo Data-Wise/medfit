@@ -147,11 +147,12 @@ if (sys.nframe() == 0L) {
   cfit <- function(d, q, floor = TRUE, n_starts = 8) {
     syn <- paste0(nv_model, "\na*b/sqrt(2*(b^2*Vm+Vy)) == ", format(q, digits = 17),
                   if (floor) "\nVm > 0.0001\nVy > 0.0001" else "")
-    tryCatch(suppressWarnings(fit_sem(syn, d, n_starts = n_starts)), error = function(e) NULL)
+    tryCatch(suppressWarnings(fit_sem(syn, d, n_starts = n_starts,
+                                      fixed_x = FALSE, meanstructure = NULL)), error = function(e) NULL)
   }
   # (0) normalization: the oracle's unconstrained Q matches medfit's -2 logLik up to the X and 2*pi constant
   d <- nv_data(101, 2.5, 1.5, 2)
-  h1 <- fit_sem(nv_model, d)
+  h1 <- fit_sem(nv_model, d, fixed_x = FALSE, meanstructure = NULL)
   cr <- or213_cross(d)
   const <- with(cr, 3 * n * log(2 * pi) + n * log(A / n) + n)
   cat(sprintf("(0) -2logLik(h1) = %.10f, oracle Q + const = %.10f\n", -2 * as.numeric(logLik(h1)),
@@ -170,7 +171,7 @@ if (sys.nframe() == 0L) {
   cases <- c(list(list(seed = 1, a = 1.5, b = 1, s2 = 1, shift = 0), list(seed = 101, a = 2.5, b = 1.5, s2 = 2, shift = 0)), cases)
   out <- do.call(rbind, lapply(cases, function(cs) {
     d <- nv_data(cs$seed, cs$a, cs$b, cs$s2)
-    h1 <- fit_sem(nv_model, d)
+    h1 <- fit_sem(nv_model, d, fixed_x = FALSE, meanstructure = NULL)
     q <- or213_qhat(d) + cs$shift
     lr_or <- or213_lr(d, q)
     hf <- cfit(d, q, floor = TRUE)

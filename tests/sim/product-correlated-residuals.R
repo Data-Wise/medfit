@@ -80,7 +80,7 @@ corr_gap <- function(fit_fun, path, d, design, cvf, mutant = "") {
   list(gap = max(abs(sem - ols)), gap_truth = max(abs(sem - corr_truth)), err = "")
 }
 
-gate_product_corr <- function(fit_fun = fit_sem, path = Sys.getenv("PRODUCT_PATH", "column"),
+gate_product_corr <- function(fit_fun = fit_sem_pinned, path = Sys.getenv("PRODUCT_PATH", "column"),
                               seeds = as.integer(Sys.getenv("SEEDS", "10")), n = 500L,
                               mutant = Sys.getenv("MUTANT", ""),
                               rho = if (identical(mutant, "nocorr")) 0 else 0.8) {

@@ -1,7 +1,10 @@
 # Edge cases for the observed-variable guard in multi-fit AIC()/BIC() (R/methods-aic.R, `.sem_check_same_observed()`).
 # Oracle: the guard compares each fit's observed variables; fits over the same set compare, any other set is refused.
 
-ic_fit <- function(model, ...) suppressWarnings(fit_sem(model, medfit::mediation_demo, ...))
+# the pre-0.15.0 defaults stated (spec R-8); a test may set its own `fixed_x`
+ic_fit <- function(model, fixed_x = FALSE, meanstructure = NULL) {
+  suppressWarnings(fit_sem(model, medfit::mediation_demo, fixed_x = fixed_x, meanstructure = meanstructure))
+}
 
 ic_base <- "mediator1 ~ treatment + covariate1\noutcome ~ treatment + mediator1"
 

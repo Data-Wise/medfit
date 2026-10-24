@@ -46,7 +46,7 @@ fv_templates <- function(var_fixed = 1) {
 fv_expect <- c("norm.free" = "calibrated", "exp.free" = "calibrated", "norm.fixvar" = "calibrated",
                "exp.fixvar" = "miscalibrated", "norm.dropcov" = "miscalibrated", "exp.dropcov" = "miscalibrated")
 
-gate_product_fixed_var <- function(fit_fun = fit_sem, path = Sys.getenv("PRODUCT_PATH", "column"),
+gate_product_fixed_var <- function(fit_fun = fit_sem_pinned, path = Sys.getenv("PRODUCT_PATH", "column"),
                                    reps = as.integer(Sys.getenv("REPS", "1000")), n = 500L,
                                    mutant = Sys.getenv("MUTANT", ""), cores = max(1L, parallel::detectCores() - 1L)) {
   stopifnot(mutant %in% c("", "wrongvar", "wrongdf"), path %in% c("column", "colon"))
