@@ -103,7 +103,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
   - Files: `tests/sim/*.R` (mechanical), the frozen-fixture test files, `tests/sim/risk-files.txt`,
     `tests/testthat/test-sim-pinned.R`. One PR: the diff is uniform and the gates must see it whole.
 
-- [ ] **T4a. Spike: how `compare_lr()` represents a fixed set (R-4, E-4).** Size S, output is a decision note.
+- [x] **T4a. Spike: how `compare_lr()` represents a fixed set (R-4, E-4).** Size S, output is a decision note.
   - Problem (Codex finding 1, confirmed): removing the `fixed_x` refusal (`R/compare-lr.R:156`) is not enough.
     `.lr_unsupported()` then refuses any table with a non-free row (`R/compare-lr.R:169`), which fixed exogenous
     moments create, and lavaan's `fixed.x` is a logical over all exogenous variables, not a subset.
