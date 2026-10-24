@@ -36,3 +36,12 @@ site:
     - vignettes/articles/guide-troubleshooting.qmd
     - vignettes/articles/guide-intervals.qmd
     - vignettes/articles/guide-glossary.qmd
+    - vignettes/articles/computation-algorithms.qmd
+    - vignettes/articles/example-gpa.qmd
+    - vignettes/articles/lavaan-comparison.qmd
+    - vignettes/articles/model-native-factors.qmd
+    - vignettes/articles/native-guide.qmd
+    - vignettes/articles/native-quickstart.qmd
+    - vignettes/articles/native-tutorial.qmd
+    - vignettes/articles/quality-control.qmd
+    - vignettes/articles/whats-new-0-11.qmd
