@@ -2,6 +2,14 @@
 
 ## New features
 
+* `fit_sem()` and `fit_mediation(engine = "native")` now warn when `fixed_x` or `meanstructure` is left unset and
+  the model is one where its default will matter in 0.15.0 (an observed exogenous variable for `fixed_x`; no `~1`
+  and no product term for `meanstructure`). The warning has class `medfit_warning_default_change`, names the
+  argument, and is shown once per session per argument. Results are unchanged in 0.14.0. Pass the argument
+  explicitly to keep today's results without the warning, or set `options(medfit.native_defaults = "0.15")` to fit
+  with the 0.15.0 defaults now (`fixed_x = TRUE`, `meanstructure = TRUE`); under the option a model with a `~~` or
+  `~1` statement on an exogenous variable is an error asking for `fixed_x` explicitly.
+
 * `compare_lr()` now accepts native fits with a saturated mean structure (every intercept free) and with `fixed_x`
   (`TRUE`, a named subset or a lenient subset), in lavaan (#319) and in OpenMx (#321). Both were refused before. The
   fixed exogenous moments are passed to the engine as fixed parameters at their sample values (N denominator), so

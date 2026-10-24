@@ -250,6 +250,21 @@ test_that("the guide also quotes the cluster and native messages tested elsewher
   }
 })
 
+test_that("the guide quotes the 0.14.0 default-change warnings and both are triggered", {
+  old <- medfit:::.native_defaults_state()
+  medfit:::.native_defaults_reset(shown = FALSE)
+  withr::defer(medfit:::.native_defaults_reset(shown = old))
+  w <- testthat::capture_warnings(
+    fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = mediation_demo)
+  )
+  expect_true(any(grepl("fit_sem(): `fixed_x` is unset", w, fixed = TRUE)))
+  expect_true(any(grepl("fit_sem(): `meanstructure` is unset", w, fixed = TRUE)))
+  skip_if_not(file.exists(guide_path()), "vignettes are not available (installed or built package)")
+  txt <- paste(readLines(guide_path(), warn = FALSE), collapse = "\n")
+  expect_true(grepl("fit_sem(): `fixed_x` is unset", txt, fixed = TRUE))
+  expect_true(grepl("fit_sem(): `meanstructure` is unset", txt, fixed = TRUE))
+})
+
 # ---- native engine: products, anova(), starts and constraints (messages quoted in the guide) ----
 
 nt_syn <- paste0("mediator1 ~ a1*treatment\nmediator2 ~ a2*treatment\n",
