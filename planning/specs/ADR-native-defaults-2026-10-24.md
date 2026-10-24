@@ -1,13 +1,17 @@
 ---
 decisions:
   - {id: E-1, title: "fixed_x defaults to TRUE: warn in 0.14.0, flip in 0.15.0", status: decided, date: 2026-10-24}
-  - {id: E-2, title: "meanstructure defaults to TRUE on the same schedule as fixed_x", status: proposed, date: 2026-10-24}
+  - {id: E-2, title: "meanstructure defaults to TRUE on the same schedule as fixed_x", status: decided, date: 2026-10-24}
   - {id: E-3, title: "One default for fit_sem() and fit_mediation(engine = 'native')", status: decided, date: 2026-10-24}
   - {id: E-4, title: "compare_lr() supports fixed_x and a saturated mean structure", status: decided, date: 2026-10-24}
   - {id: E-5, title: "Only the default is lenient about statements on exogenous variables", status: decided, date: 2026-10-24}
   - {id: E-6, title: "Dependents get a [BREAKING] notice and pass the settings explicitly", status: decided, date: 2026-10-24}
   - {id: E-7, title: "Tests and gates that encode the old defaults pin them", status: decided, date: 2026-10-24}
-  - {id: E-8, title: "Fix the pinned-parameter SE under a mean structure before the flip", status: proposed, date: 2026-10-24}
+  - {id: E-8, title: "Fix the pinned-parameter SE under a mean structure before the flip", status: decided, date: 2026-10-24}
+  - {id: E-9, title: "Opt-in to the new defaults through options(medfit.native_defaults)", status: decided, date: 2026-10-24}
+  - {id: E-10, title: "Unset is detected with missing(); fit_mediation() forwards only supplied settings", status: decided, date: 2026-10-24}
+  - {id: E-11, title: "The fixed_x default fixes product columns too", status: decided, date: 2026-10-24}
+  - {id: E-12, title: "Reliability under the new defaults is a 0.15.0 blocker", status: decided, date: 2026-10-24}
 ---
 
 # ADR: the native engine's defaults for `fixed_x` and `meanstructure`
@@ -34,10 +38,10 @@ unset and the model has an observed exogenous variable; 0.15.0 flips. Rejected: 
 change (breaks the freeze promise for no correctness gain); an opt-in option only (leaves medfit unlike lavaan
 forever). Author, 2026-10-24 (brainstorm D1).
 
-**E-2. `meanstructure` defaults to TRUE on the same schedule (proposed).** One message and one flip for both.
+**E-2. `meanstructure` defaults to TRUE on the same schedule.** One message and one flip for both.
 Measured: no dependent changes (six suites, per-test identical), the covariance-part estimates and the
-log-likelihood are unchanged; 60 medfit tests fail, of which 15 are real (E-4, E-8). Rejected so far: a separate
-schedule. Open: grill Q1.
+log-likelihood are unchanged; 60 medfit tests fail, of which 15 are real (E-4, E-8). Rejected: `meanstructure` first as a 0.14.0 breaking change; dropping
+the `meanstructure` change. Author, 2026-10-24 (grill Q1).
 
 **E-3. One default for both entry points.** `fit_mediation(engine = "native")` resolves through `fit_sem()`. Rejected:
 `fit_sem()` only (one model, two likelihoods). Author, 2026-10-24 (D2).
@@ -59,10 +63,29 @@ Measured: RMediation's MBCO statistics agree to 1e-12 under the flip, so only th
 new tests cover the new defaults. Rejected: re-baseline everything (loses the link to the 0.8.0 and 0.9.0 frozen
 values, which the measurement shows still agree by name to 1e-8). Author, 2026-10-24 (D6).
 
-**E-8. Fix the pinned-parameter SE under a mean structure first (proposed).** With a mean structure, a parameter
+**E-8. Fix the pinned-parameter SE under a mean structure first.** With a mean structure, a parameter
 fixed by `b == 0` gets SE 5.6e-18 and a z-statistic; without one it gets 0 and `NA`. It reproduces on today's
 build with an explicit `meanstructure = TRUE`, so it is a bug now and would reach every constrained default fit
-after the flip.
+after the flip. It is the first task of the 0.14.0 work. Rejected: a separate patch PR now. Author, 2026-10-24
+(grill Q7, against the recommendation).
+
+**E-9. Opt-in through a package option.** `options(medfit.native_defaults = "0.15")` switches both defaults and
+silences the warning during 0.14.x; removed in 0.16.0. Passing the values explicitly also silences it (the warning
+fires only when a setting is unset). Rejected: no switch (dependents cannot run their suites under the future
+defaults). Author, 2026-10-24 (grill Q2).
+
+**E-10. Unset is `missing()`.** `fit_sem()` checks `missing(fixed_x)` and `missing(meanstructure)`, so an explicit
+`meanstructure = NULL` keeps its meaning (follow the syntax); `fit_mediation()` forwards a setting only when the
+caller put it in `engine_args`, the pattern medfit uses for `m_star`. Rejected: a sentinel object in the formals;
+dropping `NULL`'s meaning. Author, 2026-10-24 (grill Q3).
+
+**E-11. Products are fixed too.** The `fixed_x` default fixes every observed exogenous column, `x:m` product
+columns included, as `fixed_x = TRUE` does today. Rejected: products free under the default. Author, 2026-10-24
+(grill Q5). VERIFY in the 0.15.0 PR that lavaan's `fixed.x = TRUE` treats the product column the same way
+(the recommendation assumed it).
+
+**E-12. Reliability is a blocker.** 0.15.0 merges only when the reliability gate under the new defaults is
+non-inferior to the last green run (rule of D-8). Rejected: a follow-up run. Author, 2026-10-24 (grill Q6).
 
 ## 3. Consequences
 

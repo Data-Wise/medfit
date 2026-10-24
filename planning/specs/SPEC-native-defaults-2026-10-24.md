@@ -1,7 +1,7 @@
 # SPEC: `fixed_x = TRUE` and `meanstructure = TRUE` as the native engine's defaults
 
-**Date:** 2026-10-24. **Status:** draft for the grill; decisions recorded in
-`planning/specs/ADR-native-defaults-2026-10-24.md` (E-1 to E-8). **Releases:** 0.14.0 (warn), 0.15.0 (flip).
+**Date:** 2026-10-24. **Status:** grilled 2026-10-24 (Q1-Q7 answered); decisions in
+`planning/specs/ADR-native-defaults-2026-10-24.md` (E-1 to E-12). **Releases:** 0.14.0 (warn), 0.15.0 (flip).
 **Inputs:** `BRAINSTORM-fixed-x-default-2026-10-24.md` (decisions D1-D6, author 2026-10-24); the measurement in
 `evidence/native-defaults-2026-10-24/` (this spec, section 4).
 
@@ -32,9 +32,9 @@ the conditional log-likelihood, AIC, BIC, the names in `coef()`/`vcov()`/`tidy()
 
 | ID | Requirement | Release |
 |---|---|---|
-| R-1 | Fix the mean-structure pinned-parameter bug: under a mean structure a parameter fixed by an equality (`b == 0`) gets SE 5.6e-18 and a z-statistic instead of SE 0 and `NA` (reproduced on today's build with an explicit `meanstructure = TRUE`) | 0.14.0, before anything else |
+| R-1 | First task of 0.14.0 (E-8): fix the mean-structure pinned-parameter bug: under a mean structure a parameter fixed by an equality (`b == 0`) gets SE 5.6e-18 and a z-statistic instead of SE 0 and `NA` (reproduced on today's build with an explicit `meanstructure = TRUE`) | 0.14.0, before anything else |
 | R-2 | `fixed_x` and `meanstructure` defaults become a sentinel resolved inside `fit_sem()`; when the user supplied neither and the model has an observed exogenous variable, warn once per session that the defaults change in 0.15.0, naming what moves (`npar`, logLik, AIC, BIC, coefficient names) | 0.14.0 |
-| R-3 | An opt-in to the new defaults before 0.15.0 (mechanism: grill Q2) | 0.14.0 |
+| R-3 | Opt-in before the flip: `options(medfit.native_defaults = "0.15")` switches both defaults and silences the warning; removed in 0.16.0 (E-9) | 0.14.0 |
 | R-4 | `compare_lr()` accepts `fixed_x` and a saturated mean structure: the lavaan adapter passes `fixed.x`/`meanstructure`, the OpenMx adapter writes fixed exogenous paths (OpenMx has no fixed.x option: an unwritten exogenous variance is a fixed zero and the fit fails) and a means path | 0.14.0 |
 | R-5 | Under the default (not an explicit `fixed_x = TRUE`), a variable the model writes a `~~` or `~1` statement on is left free with a note (D4) | 0.14.0 behind the opt-in; 0.15.0 default |
 | R-6 | Refits pass the parent fit's settings explicitly: `mbco_sem()` passes `meanstructure = if (has_mean) TRUE` and `NULL` otherwise (`R/sem-mbco.R:165`); after the flip `NULL` means TRUE, so a `meanstructure = FALSE` fit would be refit with a mean structure. Pass `FALSE`. missingmed has the same line (`missingmed/R/mbco_sem.R:236`) | 0.14.0 (medfit); missingmed PR before 0.15.0 |
@@ -46,20 +46,22 @@ the conditional log-likelihood, AIC, BIC, the names in `coef()`/`vcov()`/`tidy()
 ## 3. Interface (backend/API)
 
 ```r
-# 0.14.0: sentinels; resolved inside, warning only when the caller left both unset
-fit_sem <- function(model, data, ..., meanstructure = NULL, fixed_x = NULL, ...) {
-  fx_given <- !is.null(fixed_x); ms_given <- !is.null(meanstructure) || .sem_writes_means(model)
-  if (!fx_given) fixed_x <- .medfit_default("fixed_x")          # FALSE in 0.14 unless opted in (R-3)
-  if (!fx_given || !ms_given) .warn_native_defaults_once(fx_given, ms_given, model)
+# 0.14.0: formals keep plain defaults; 'unset' is missing() (E-10)
+fit_sem <- function(model, data, ..., meanstructure = NULL, fixed_x = FALSE, ...) {
+  # missing() is only reliable before the argument is reassigned: read both first
+  fx_unset <- missing(fixed_x); ms_unset <- missing(meanstructure)
+  new <- identical(getOption("medfit.native_defaults"), "0.15")            # E-9 opt-in
+  if (fx_unset) fixed_x <- new                                               # 0.15.0: TRUE
+  if (ms_unset) meanstructure <- if (new) TRUE else NULL                     # 0.15.0: TRUE
+  if (!new && (fx_unset || ms_unset)) .warn_native_defaults_once(fx_unset, ms_unset, model)
   ...
 }
+# fit_mediation(engine = "native") forwards fixed_x / meanstructure only when present in engine_args
 ```
 
-- `meanstructure = NULL` today already means "follow the syntax"; the sentinel needs a separate "unset" signal
-  (missing() or a dedicated default object) so that an explicit `NULL` stays a choice. Grill Q3.
-- `test-api-freeze.R` pins the formals. 0.14.0 changes the `fixed_x` default from `FALSE` to the sentinel: a
-  signature change under the 0.11.0 freeze promise, made through the deprecation path the promise allows; the
-  freeze test is updated in the same PR with that note.
+- An explicit `meanstructure = NULL` keeps "follow the syntax" (E-10).
+- `test-api-freeze.R` pins the formals; 0.14.0 keeps them, 0.15.0 changes the two defaults (`fixed_x = TRUE`,
+  `meanstructure = TRUE`) and updates the freeze test with the deprecation note.
 - Warning class `medfit_warning_default_change` (lifecycle-style frequency: once per session per argument), so
   dependents can silence it by class in tests and CI can grep for it (section 6).
 
@@ -186,7 +188,19 @@ gh workflow run revdep-check.yaml --ref <branch>
    parity structures (1e-6); the gates pass under the new defaults on the 24.04 runner; reliability non-inferior;
    six dependents unchanged per test; every article renders.
 
-## 10. Open questions (grill)
+## 10. Grill answers (author, 2026-10-24)
+
+| Q | Answer |
+|---|---|
+| Q1 schedule | both defaults together: one warning (0.14.0), one flip (0.15.0) (E-2) |
+| Q2 opt-in | `options(medfit.native_defaults = "0.15")` (E-9) |
+| Q3 unset | `missing()`, forward only supplied `engine_args` (E-10) |
+| Q4 exogenous means | confirmed by measurement: with both flipped the simple model has 7 parameters (3 paths, 2 residual variances, 2 intercepts), lavaan's count with `fixed.x = TRUE` and a mean structure |
+| Q5 products | fixed too (E-11); verify lavaan parity in the 0.15.0 PR |
+| Q6 reliability | blocker for 0.15.0 (E-12) |
+| Q7 R-1 bug | first task inside 0.14.0, not a separate patch (E-8; against the recommendation) |
+
+## 10a. Questions as asked
 - Q1 Same schedule for both defaults, or `meanstructure` first? (assumption 1)
 - Q2 The opt-in mechanism: `options(medfit.native_defaults = "0.15")`, a function argument, or none.
 - Q3 How the sentinel tells "unset" from an explicit `meanstructure = NULL`.
