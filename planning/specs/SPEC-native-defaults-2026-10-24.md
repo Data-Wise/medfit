@@ -16,10 +16,14 @@ product term).
 **Who it serves.** A user who moves between lavaan and medfit, and medfit's own comparisons (`compare_lr()`, the
 syntax crosswalk, the lavaan comparison), which today must pass `fixed.x = FALSE` to lavaan to line up.
 
-**What must not change.** Structural estimates, their standard errors, chi-square and df: `fixed_x` leaves them
-unchanged by construction (`?fit_sem`), and a saturated mean structure leaves the covariance part and the
-log-likelihood unchanged (measured: section 4.1). What changes is bookkeeping: the parameter vector, `npar`,
-the conditional log-likelihood, AIC, BIC, the names in `coef()`/`vcov()`/`tidy()`, and the retry seed.
+**What must not change, and what is known about it.** `fixed_x` is documented to leave structural estimates,
+their SEs, chi-square and df unchanged (`?fit_sem`; the `fixed-x` gate checks it on its cells). A saturated mean
+structure (free, unconstrained intercepts) left the covariance part and the log-likelihood unchanged on the one
+model measured (section 4.1) and on the frozen fixtures (4.3). **That is the extent of the evidence.** Weights and
+sandwich SEs, constrained or fixed intercepts, latent models, products, factor expansion and named `fixed_x` subsets
+are not yet covered under the new defaults; R-12 makes that oracle matrix a 0.14.0 requirement before the flip
+(Codex review, 2026-10-24). What changes by design is bookkeeping: the parameter vector, `npar`, the conditional
+log-likelihood, AIC, BIC, the names in `coef()`/`vcov()`/`tidy()`, and the retry seed.
 
 ### Assumptions (correct these in the grill)
 1. Both defaults move together on the same schedule: one deprecation message, one flip. (E-2)
@@ -41,22 +45,30 @@ the conditional log-likelihood, AIC, BIC, the names in `coef()`/`vcov()`/`tidy()
 | R-7 | Flip both defaults in `fit_sem()` and native `fit_mediation()` (D2) | 0.15.0 |
 | R-8 | Tests and gates that encode the old defaults pass them explicitly (D6), so their baselines stay valid; new tests cover the new defaults | 0.14.0 (pin), 0.15.0 (flip) |
 | R-9 | Docs: `?fit_sem`, `?"medfit-syntax"`, lavaan comparison (its `fixed.x = FALSE` note reverses), syntax crosswalk table, cookbook recipes 18 and 19, native tutorial step 9, mini-book chapters that print npar/logLik, `guide-changes`, NEWS behavior-change note | 0.14.0 (announce), 0.15.0 (rewrite) |
+| R-11a | Versioned resolution (E-14): in 0.14.x an unset setting takes the old value unless the opt-in is set; in 0.15.0 an unset setting takes the new value **unconditionally** (the option is ignored with a once-per-session note that it is obsolete, removed in 0.16.0); an explicit `FALSE`/`NULL` is never overwritten in either release. Tests: option absent, set, and stale, in both releases | 0.14.0, 0.15.0 |
+| R-11b | Provenance for the default (E-13): an implicit `fixed_x = TRUE` is resolved in `fit_sem()` to an explicit character subset, the observed exogenous columns (product and factor columns included, E-11) minus those the model writes a `~~` or `~1` statement on, before `.sem_fit_syntax()` runs; an empty subset means `FALSE`. The resolved subset is what refits, `mbco_sem()`, `anova()` and `compare_lr()` see, and `glance()$fixed_x` names it. An explicit `TRUE` keeps today's error | 0.14.0 behind the opt-in |
+| R-12 | Oracle matrix before the flip: the four combinations of the two settings crossed with weights + sandwich SEs, fixed and constrained intercepts, a latent mediator, a product (four-way), a factor covariate, and a named `fixed_x` subset; compare structural estimates, their SEs, chi-square, df, logLik, npar, AIC and BIC with lavaan (`fixed.x`, `meanstructure`, `sampling.weights`, `se = "robust.huber.white"`) or, where lavaan has no equivalent, a stated independent oracle. A cell that disagrees blocks 0.15.0 or is documented as a limit | 0.14.0 |
 | R-10 | Ecosystem: `[BREAKING]` issue with the 2-month notice (D5); RMediation passes the settings explicitly in its examples and tests | 0.14.0 |
 
 ## 3. Interface (backend/API)
 
 ```r
-# 0.14.0: formals keep plain defaults; 'unset' is missing() (E-10)
+# 0.14.0 (E-14): unset takes the old value unless opted in. missing() is only reliable before reassignment.
 fit_sem <- function(model, data, ..., meanstructure = NULL, fixed_x = FALSE, ...) {
-  # missing() is only reliable before the argument is reassigned: read both first
   fx_unset <- missing(fixed_x); ms_unset <- missing(meanstructure)
-  new <- identical(getOption("medfit.native_defaults"), "0.15")            # E-9 opt-in
-  if (fx_unset) fixed_x <- new                                               # 0.15.0: TRUE
-  if (ms_unset) meanstructure <- if (new) TRUE else NULL                     # 0.15.0: TRUE
+  new <- identical(getOption("medfit.native_defaults"), "0.15")
+  if (fx_unset && new) fixed_x <- .sem_default_fixed_x(model, data)   # E-13: a character subset, never bare TRUE
+  if (ms_unset && new) meanstructure <- TRUE
   if (!new && (fx_unset || ms_unset)) .warn_native_defaults_once(fx_unset, ms_unset, model)
   ...
 }
-# fit_mediation(engine = "native") forwards fixed_x / meanstructure only when present in engine_args
+# 0.15.0: formals become meanstructure = TRUE, fixed_x = TRUE; unset is resolved unconditionally
+fit_sem <- function(model, data, ..., meanstructure = TRUE, fixed_x = TRUE, ...) {
+  if (missing(fixed_x)) fixed_x <- .sem_default_fixed_x(model, data)  # explicit TRUE still errors on statements
+  if (!is.null(getOption("medfit.native_defaults"))) .note_option_obsolete_once()
+  ...
+}
+# fit_mediation(engine = "native") forwards fixed_x / meanstructure only when present in engine_args (E-10)
 ```
 
 - An explicit `meanstructure = NULL` keeps "follow the syntax" (E-10).
@@ -164,6 +176,8 @@ gh workflow run revdep-check.yaml --ref <branch>
 | Tier | Tests |
 |---|---|
 | unit | sentinel resolution (unset, explicit FALSE/TRUE, explicit `NULL` for meanstructure); warning once per session and only when unset; opt-in switch; D4 note vs explicit-TRUE error |
+| resolver (R-11a, R-11b) | option absent / set / stale in 0.14 and 0.15 builds; explicit `FALSE` and `NULL` never overwritten; the implicit subset excludes variables with `~~`/`~1` statements and includes product and factor columns; an explicit `TRUE` on such a model errors; the same through `fit_mediation(engine = "native")` |
+| oracle matrix (R-12) | section 2, R-12 |
 | integration | `fit_mediation(engine = "native")` and `fit_sem()` give the same settings; `mbco_sem()`/`anova()` across two default fits and across a default and a `meanstructure = FALSE` fit (R-6); `compare_lr()` with `fixed_x` and means through lavaan and OpenMx |
 | regression (R-1) | pinned parameter under a mean structure: SE exactly 0, statistic and p-value `NA`, point interval; planted defect: the old tolerance-free comparison |
 | invariance | for the parity structures, estimates and SEs of the covariance part are equal under all four combinations of the two settings (to 1e-8); logLik equal under `meanstructure` and shifted by the exogenous block under `fixed_x` |
@@ -199,6 +213,14 @@ gh workflow run revdep-check.yaml --ref <branch>
 | Q5 products | fixed too (E-11); verify lavaan parity in the 0.15.0 PR |
 | Q6 reliability | blocker for 0.15.0 (E-12) |
 | Q7 R-1 bug | first task inside 0.14.0, not a separate patch (E-8; against the recommendation) |
+
+## 10b. Adversarial review (Codex, 2026-10-24): verdict needs-attention, all three findings accepted
+
+| Finding | Response |
+|---|---|
+| [high] the first resolver sketch reassigned unset arguments from the option, so in 0.15.0 an ordinary call without the option would restore the old defaults | R-11a / E-14: versioned resolution; 0.15.0 ignores the option |
+| [high] resolving the default to bare `TRUE` loses whether the user or the default asked for it, so E-5's lenience cannot be implemented | R-11b / E-13: the default resolves to an explicit subset before the fit |
+| [high] invariance and parity claims exceed one saturated unweighted model and unchanged dependent suites | section 1 rewritten as a bounded claim; R-12 oracle matrix required before the flip |
 
 ## 10a. Questions as asked
 - Q1 Same schedule for both defaults, or `meanstructure` first? (assumption 1)
