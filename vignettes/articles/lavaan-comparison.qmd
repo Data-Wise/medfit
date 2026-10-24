@@ -163,3 +163,6 @@ variables, products, mean structures, weights, `fixed_x`, factors, fixed or shar
 modifiers and constraints in the model are refused by name. The live check behind these statements is the
 `compare-lr` gate (`tests/sim/compare-lr-gate.R`), which runs the issue's cell through both engines and fails only
 when `compare_lr()` mislabels.
+
+The same simple model written in OpenMx and semopy syntax, next to medfit and lavaan, is on
+[One model in medfit, lavaan, OpenMx and semopy](syntax-crosswalk.html).
