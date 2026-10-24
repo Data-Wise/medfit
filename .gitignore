@@ -19,3 +19,4 @@ revdep/
 .claude/settings.local.json
 tests/sim/results/gates-summary-*.txt
 tests/sim/results/gates-*.log
+_agents_workspace/

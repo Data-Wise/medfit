@@ -35,3 +35,4 @@
 ^scripts$
 ^\.codex$
 ^book$
+^_agents_workspace$
