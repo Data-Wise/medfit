@@ -165,7 +165,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.13.0/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -427,9 +427,9 @@ lavaan                 0.04715465</code></pre>
 <span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>                                  [,1]
-max_diff_estimate         3.330669e-16
-max_diff_se               2.298255e-11
-max_diff_estimate_fixed_x 2.775558e-16</code></pre>
+max_diff_estimate         2.220446e-16
+max_diff_se               2.254825e-11
+max_diff_estimate_fixed_x 2.220446e-16</code></pre>
 </div>
 </div>
 <p>They differ in what follows. lavaan reports a chi-square for this model; medfit reports <code>NA</code>, because the product contains a regression target (<code>mediator1</code>) and the model treats it as exogenous, which makes the global test invalid (see <a href="model-native.html#product-terms">the native model page</a>). lavaan stores the product under the spelling you wrote (<code>treatment:mediator1</code>); medfit stores <code>mediator1:treatment</code>, whichever order you write. A model medfit rejects (a residual covariance between outcomes, a shared or fixed coefficient, a constraint on a coefficient, a bound) is still fitted by lavaan.</p>
