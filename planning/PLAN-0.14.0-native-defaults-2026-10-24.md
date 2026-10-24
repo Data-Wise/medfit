@@ -48,7 +48,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
 
 ### Phase 1: fixes the flip would expose
 
-- [ ] **T1. Pinned-parameter SE under a mean structure (R-1, E-8).** Size M.
+- [x] **T1. Pinned-parameter SE under a mean structure (R-1, E-8).** Size M. Merged #315.
   - Root cause (confirmed 2026-10-24: the `b` row of `act$z_theta` is exactly 0, `act$free[b]` is TRUE,
     `V[b, b]` = 3.19e-35): `.sem_vcov()` (`R/sem-se.R:46-52`) maps the active-set basis into centered coordinates,
     re-orthonormalizes it (`qr.Q(qr(solve(tmat, z)))`) and maps it back (`z <- tmat %*% zc`). A row of `z` that was
@@ -79,7 +79,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
   - Risk tier: `R/sem-se.R` is in `tests/sim/risk-files.txt` ⇒ the PR carries the seven-item checklist (oracle,
     planted defects and metamorphic cell above; reliability cell and platform run from the gates).
 
-- [ ] **T2. Refits pass their settings explicitly (R-6).** Size S.
+- [x] **T2. Refits pass their settings explicitly (R-6).** Size S. Merged #316.
   - `mbco_sem()` passes `meanstructure = isTRUE(fit@internals$ram$has_mean)` (FALSE, not NULL) and the parent's
     resolved `fixed_x` (`R/sem-mbco.R:165`). Inventory every internal refit first (grep `.sem_fit_syntax(` and
     `fit_sem(` under `R/`: `mbco_sem()`, `compare_lr()`, `anova()` helpers, bootstrap refits, `.sem_fit_branches()`)
@@ -91,7 +91,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
   - Note for later (no change here): missingmed has the same pattern at `missingmed/R/mbco_sem.R:236` (other repo;
     T10 asks first).
 
-- [ ] **T3. Baseline preservation (R-8, E-7).** Size M.
+- [x] **T3. Baseline preservation (R-8, E-7).** Size M. Merged #317.
   - Scope is baselines, not warnings: pass `fixed_x = FALSE` and the current `meanstructure` explicitly in every
     `fit_sem()` call in `tests/sim/` (27 calls, the gates), the frozen-fixture tests (0.8.0, 0.9.0 values), and the
     tests that assert logLik, npar, AIC, BIC or a parameter count. Tests that check only structural results stay
@@ -123,7 +123,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
     stated reason, and the spec's R-4 gets an amendment for the author to approve.
   - Files: scratch script under `tests/sim/scratch/` (not committed) and the note.
 
-- [ ] **T4b. `compare_lr()` lavaan adapter for fixed sets and means.** Size from T4a (expected M).
+- [x] **T4b. `compare_lr()` lavaan adapter for fixed sets and means.** Size from T4a (expected M). Merged #319.
   - Implement T4a's translation and the refined non-free-row rule; pass `meanstructure`.
   - Acceptance cells (each against lavaan's own LR and `fit_sem()`'s deviance difference, to 1e-6): `fixed_x = TRUE`;
     named subset; lenient subset; `meanstructure = TRUE`; both settings; the conditional-likelihood equivalence of
@@ -134,7 +134,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
   - Files: `R/compare-lr.R`, `tests/testthat/test-compare-lr.R`, `tests/sim/compare-lr.R`, `tests/sim/gates.csv`.
   - Dependency: T4a.
 
-- [ ] **T4c. `compare_lr()` OpenMx adapter for fixed sets and means.** Size from T4a (expected M; split fixed paths
+- [x] **T4c. `compare_lr()` OpenMx adapter for fixed sets and means.** Size from T4a (expected M; split fixed paths Merged #321.
   and means into two PRs if it exceeds one session).
   - Acceptance: the T4b cells in OpenMx equal lavaan and `fit_sem()` to 1e-5; anything OpenMx cannot express is
     refused with that reason in the error.
@@ -160,7 +160,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
 
 ### Phase 2: resolver, warning, opt-in, oracle matrix
 
-- [ ] **T5a. Warning-ready examples and articles (no behavior change).** Size M.
+- [x] **T5a. Warning-ready examples and articles (no behavior change).** Size M. Merged #322.
   - Lands before T5 and changes no output: 25 articles and 6 R files call `fit_sem()` or the native engine.
   - Articles: one hidden setup chunk per article that has a native fit, which makes the article quiet once T5
     lands. The chunk calls the public API only (a muffled tiny `fit_sem()` call that consumes the once-per-session
@@ -174,7 +174,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
   - Files: `vignettes/articles/*.qmd` (25), `R/*.R` roxygen examples (6), `tests/testthat/test-docs-warning-ready.R`.
     Mechanical; over five files by necessity.
 
-- [ ] **T5. Resolver, warning, opt-in and the suite's test helper, in one PR (R-2, R-3, R-11a, E-9, E-14).** Size M.
+- [x] **T5. Resolver, warning, opt-in and the suite's test helper, in one PR (R-2, R-3, R-11a, E-9, E-14).** Size M. Merged #323.
   - In `fit_sem()`: capture `fx_unset <- missing(fixed_x)`, `ms_unset <- missing(meanstructure)` first; read
     `getOption("medfit.native_defaults")`; if `"0.15"` resolve unset values to the new defaults (T6 supplies the
     `fixed_x` subset; until T6 lands the opt-in resolves `fixed_x` to `TRUE` only when no statement conflicts, else
