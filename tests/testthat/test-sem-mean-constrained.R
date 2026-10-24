@@ -68,7 +68,7 @@ test_that("the centered route is used only when every intercept is free and abse
 
 test_that("MBCO carries the mean structure into its refits", {
   syn <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
-  flagged <- fit_sem(syn, mediation_demo, meanstructure = TRUE)
+  flagged <- fit_sem(syn, mediation_demo, meanstructure = TRUE, fixed_x = FALSE)
   seen <- NULL
   testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
     seen <<- c(seen, list(list(...)$meanstructure))
@@ -77,7 +77,7 @@ test_that("MBCO carries the mean structure into its refits", {
   try(mbco_sem(flagged, "a", "b"), silent = TRUE)
   expect_true(all(vapply(seen, isTRUE, TRUE)) && length(seen) > 0L)
   seen <- NULL
-  try(mbco_sem(fit_sem(syn, mediation_demo), "a", "b"), silent = TRUE)
+  try(mbco_sem(fit_sem(syn, mediation_demo, fixed_x = FALSE, meanstructure = NULL), "a", "b"), silent = TRUE)
   expect_true(all(vapply(seen, is.null, TRUE)) && length(seen) > 0L)
 })
 
@@ -132,7 +132,7 @@ test_that("the centered route is refused for a fixed nonzero path and for a path
     fixed = list(syn = "y ~ x + 1*w\ny ~ 1\nx ~ 1\nw ~ 1", data = fixed_w)
   )
   for (nm in names(cases)) {
-    fit <- suppressWarnings(fit_sem(cases[[nm]]$syn, cases[[nm]]$data))
+    fit <- suppressWarnings(fit_sem(cases[[nm]]$syn, cases[[nm]]$data, fixed_x = FALSE, meanstructure = NULL))
     ram <- fit@internals$ram
     smp <- .sem_sample(fit@data, ram)
     # stationarity at the returned estimates: the mapped solution must be a minimum of F in the raw coordinates

@@ -5,7 +5,7 @@ meth_syntax <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
 
 test_that("intercept rows appear in coef, vcov, tidy, confint and summary, and carry the right standard errors", {
   d <- medfit::mediation_demo
-  fit <- fit_sem(paste0(meth_syntax, "\noutcome ~ 1"), d)
+  fit <- fit_sem(paste0(meth_syntax, "\noutcome ~ 1"), d, fixed_x = FALSE, meanstructure = NULL)
   ints <- c("outcome~1", "mediator1~1", "treatment~1")
   expect_true(all(ints %in% names(coef(fit))))
   expect_true(all(ints %in% rownames(vcov(fit))))
@@ -25,13 +25,13 @@ test_that("intercept rows appear in coef, vcov, tidy, confint and summary, and c
 
 test_that("glance counts the intercepts as free parameters and logLik agrees", {
   d <- medfit::mediation_demo
-  cov_only <- fit_sem(meth_syntax, d)
-  sat <- fit_sem(paste0(meth_syntax, "\noutcome ~ 1"), d)
+  cov_only <- fit_sem(meth_syntax, d, fixed_x = FALSE, meanstructure = NULL)
+  sat <- fit_sem(paste0(meth_syntax, "\noutcome ~ 1"), d, fixed_x = FALSE, meanstructure = NULL)
   expect_identical(glance(sat)$npar, glance(cov_only)$npar + 3L)
   expect_equal(glance(sat)$chisq, glance(cov_only)$chisq, tolerance = 1e-6)
   expect_equal(glance(sat)$df, glance(cov_only)$df)
   expect_equal(glance(sat)$AIC, glance(cov_only)$AIC, tolerance = 1e-6)
-  fixed <- fit_sem(paste0(meth_syntax, "\noutcome ~ 0*1"), d)
+  fixed <- fit_sem(paste0(meth_syntax, "\noutcome ~ 0*1"), d, fixed_x = FALSE, meanstructure = NULL)
   expect_identical(glance(fixed)$npar, glance(sat)$npar - 1L)
   expect_equal(glance(fixed)$df, 1)
 })
@@ -68,7 +68,7 @@ test_that("OpenMx reaches the same optimum on a constrained-intercept model", {
   y <- 0.3 + 0.4 * m + 0.2 * x + stats::rnorm(n, sd = 0.7)
   d <- data.frame(X = x, M = m, Y = y)
   syn <- "M ~ a*X + i_m*1\nY ~ b*M + cp*X + i_y*1\ni_m == i_y"
-  fit <- fit_sem(syn, d)
+  fit <- fit_sem(syn, d, fixed_x = FALSE, meanstructure = NULL)
   mod <- mxModel(
     "intercepts", type = "RAM", manifestVars = c("X", "M", "Y"), mxData(d, type = "raw"),
     mxPath("X", "M", values = 0.4, labels = "a"), mxPath("M", "Y", values = 0.4, labels = "b"),

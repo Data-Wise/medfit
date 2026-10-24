@@ -144,8 +144,8 @@ one_run <- function(n, k, seed, miss, fxmode) {
   row <- data.frame(n = n, k = k, seed = seed, miss = miss, fxmode = fxmode, twin = NA, names = NA, lavaan = NA,
                     fitstats = NA, moments = NA, refit = NA, err = "", stringsAsFactors = FALSE)
   res <- tryCatch({
-    f <- suppressMessages(fit_sem(mod_f, d$factor, fixed_x = fx_f))
-    ft <- suppressMessages(fit_sem(mod_t, d$twin, fixed_x = fx_t))
+    f <- suppressMessages(fit_sem(mod_f, d$factor, fixed_x = fx_f, meanstructure = NULL))
+    ft <- suppressMessages(fit_sem(mod_t, d$twin, fixed_x = fx_t, meanstructure = NULL))
     keep <- stats::complete.cases(d$twin[, c("y", "m", "x", "g")])
     se_ok <- identical(is.na(f@table$se), is.na(ft@table$se)) && any(!is.na(ft@table$se)) &&
       rel(f@table$se[!is.na(ft@table$se)], ft@table$se[!is.na(ft@table$se)]) <= 1e-6
@@ -224,7 +224,7 @@ lost_run <- function(n, k, seed, kind) {
     want <- "`g_zz`.*no row has this level"
   }
   msg <- tryCatch({
-    suppressMessages(fit_sem(mod, d))
+    suppressMessages(fit_sem(mod, d, fixed_x = FALSE, meanstructure = NULL))
     NA_character_
   }, error = function(e) conditionMessage(e))
   data.frame(n = n, k = k, seed = seed, miss = kind, fxmode = "lost", twin = NA, names = NA, lavaan = NA,
@@ -263,8 +263,8 @@ prod_run <- function(n, k, seed, miss, form) {
                     fitstats = NA, moments = NA, refit = NA, lost = NA, ols = NA, verdict = NA, err = "",
                     stringsAsFactors = FALSE)
   tryCatch({
-    fa <- suppressWarnings(suppressMessages(fit_sem(mod_f, d)))
-    ft <- suppressWarnings(suppressMessages(fit_sem(mod_t, tw)))
+    fa <- suppressWarnings(suppressMessages(fit_sem(mod_f, d, fixed_x = FALSE, meanstructure = NULL)))
+    ft <- suppressWarnings(suppressMessages(fit_sem(mod_t, tw, fixed_x = FALSE, meanstructure = NULL)))
     se_ok <- identical(is.na(fa@table$se), is.na(ft@table$se)) && any(!is.na(ft@table$se)) &&
       rel(fa@table$se[!is.na(ft@table$se)], ft@table$se[!is.na(ft@table$se)]) <= 1e-6
     ll <- abs(as.numeric(logLik(fa)) - as.numeric(logLik(ft))) / max(1, abs(as.numeric(logLik(ft))))

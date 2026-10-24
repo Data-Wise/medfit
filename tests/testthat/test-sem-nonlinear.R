@@ -81,7 +81,7 @@ nl_gap <- function(fit) {
 }
 
 test_that("cp == a*b fits, satisfies the constraint, and reports the equality as active", {
-  fit <- fit_sem(nl_syntax, nl_data())
+  fit <- fit_sem(nl_syntax, nl_data(), fixed_x = FALSE, meanstructure = NULL)
   th <- coef(fit)
   expect_lt(abs(th[["cp"]] - th[["a"]] * th[["b"]]), 1e-6)
   expect_identical(fit@diagnostics$active_constraints, "cp == a*b")
@@ -110,7 +110,7 @@ test_that("the estimates equal OpenMx's constrained optimum to 1e-5", {
   skip_on_cran()
   skip_if_not_installed("OpenMx")
   d <- nl_data()
-  fit <- fit_sem(nl_syntax, d)
+  fit <- fit_sem(nl_syntax, d, fixed_x = FALSE, meanstructure = NULL)
   cv <- stats::cov(d)
   dimnames(cv) <- list(c("X", "M", "Y"), c("X", "M", "Y"))
   old <- vapply(c("Optimality tolerance", "Feasibility tolerance", "Function precision"),

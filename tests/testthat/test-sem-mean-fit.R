@@ -18,9 +18,9 @@ test_that("y ~ 1 + x parses to the same rows as two statements, in either order"
 })
 
 test_that("a saturated mean structure reproduces the covariance-only fit", {
-  cov_only <- fit_sem(mean_syntax, mediation_demo)
-  one <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo)
-  all_on <- fit_sem(mean_syntax, mediation_demo, meanstructure = TRUE)
+  cov_only <- fit_sem(mean_syntax, mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  one <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  all_on <- fit_sem(mean_syntax, mediation_demo, meanstructure = TRUE, fixed_x = FALSE)
   for (fit in list(one, all_on)) {
     expect_identical(length(fit@theta), length(cov_only@theta) + 3L) # three observed variables
     expect_equal(fit@df, cov_only@df)
@@ -33,7 +33,7 @@ test_that("a saturated mean structure reproduces the covariance-only fit", {
 })
 
 test_that("intercept and mean SEs match an independent OLS oracle", {
-  fit <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo)
+  fit <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   est <- fit@theta
   se <- sqrt(diag(fit@vcov))
   n <- nrow(mediation_demo)
@@ -50,12 +50,13 @@ test_that("intercept and mean SEs match an independent OLS oracle", {
 })
 
 test_that("meanstructure is tri-state: NULL follows the syntax, TRUE saturates, FALSE refuses an intercept", {
-  expect_false(fit_sem(mean_syntax, mediation_demo)@internals$ram$has_mean)
-  expect_true(fit_sem(mean_syntax, mediation_demo, meanstructure = TRUE)@internals$ram$has_mean)
-  expect_true(fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo)@internals$ram$has_mean)
-  expect_error(fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo, meanstructure = FALSE),
+  expect_false(fit_sem(mean_syntax, mediation_demo, fixed_x = FALSE, meanstructure = NULL)@internals$ram$has_mean)
+  expect_true(fit_sem(mean_syntax, mediation_demo, meanstructure = TRUE, fixed_x = FALSE)@internals$ram$has_mean)
+  expect_true(fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo,
+                      fixed_x = FALSE, meanstructure = NULL)@internals$ram$has_mean)
+  expect_error(fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo, meanstructure = FALSE, fixed_x = FALSE),
                "meanstructure = FALSE.*writes an intercept")
-  expect_error(fit_sem(mean_syntax, mediation_demo, meanstructure = "yes"), "meanstructure")
+  expect_error(fit_sem(mean_syntax, mediation_demo, meanstructure = "yes", fixed_x = FALSE), "meanstructure")
 })
 
 test_that("the combined intercept form fits like the separate statement", {
@@ -86,10 +87,10 @@ test_that("the lavaan oracle agrees on the saturated mean structure and a restri
   lv <- function(extra) {
     lavaan::sem(paste0(mean_syntax, "\n", extra), mediation_demo, meanstructure = TRUE, fixed.x = FALSE)
   }
-  fit <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo)
+  fit <- fit_sem(paste0(mean_syntax, "\noutcome ~ 1"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   ref <- lv("")
   expect_equal(as.numeric(logLik(fit)), as.numeric(lavaan::logLik(ref)), tolerance = 1e-6)
-  restricted <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo)
+  restricted <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   ref0 <- lv("outcome ~ 0*1")
   expect_equal(restricted@df, unname(lavaan::fitMeasures(ref0, "df")))
   expect_equal(unname(restricted@f * nrow(mediation_demo)), unname(lavaan::fitMeasures(ref0, "chisq")),
@@ -217,8 +218,8 @@ test_that("anova keeps its checks across mean-structure status", {
 })
 
 test_that("planted defect: without the implicit intercepts the tested parameter set misses the restricted intercept", {
-  cov_only <- fit_sem(mean_syntax, mediation_demo)
-  restricted <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo)
+  cov_only <- fit_sem(mean_syntax, mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  restricted <- fit_sem(paste0(mean_syntax, "\noutcome ~ 0*1"), mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_identical(.sem_anova_nested(cov_only, restricted, c("full", "restricted")), "outcome ~1 ")
   broken <- sem_mutate(.sem_anova_table, "isTRUE(ram$has_mean)", "TRUE")
   expect_identical(nrow(broken(cov_only)), nrow(cov_only@table))

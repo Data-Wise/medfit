@@ -15,7 +15,7 @@ ni_data <- function(n = 300, seed = 3, a = 0.5, b = 0.4, cp = 0.2) {
 }
 
 ni_fit <- function(extra, d, ...) {
-  suppressWarnings(fit_sem(paste0(ni_base, "\n", extra), d, ...))
+  suppressWarnings(fit_sem(paste0(ni_base, "\n", extra), d, ..., fixed_x = FALSE, meanstructure = NULL))
 }
 
 # Best objective over the two feasible pieces of `a*b = k`, each a single-valued problem.
@@ -47,17 +47,18 @@ test_that("a*b < k is the same row with the other sign, and a defined name gives
 
 test_that("an inactive nonlinear inequality leaves the unconstrained fit unchanged and silent", {
   d <- ni_data()
-  free <- fit_sem(ni_base, d)
-  fit <- expect_no_warning(fit_sem(paste0(ni_base, "\na*b > 0.01"), d))
+  free <- fit_sem(ni_base, d, fixed_x = FALSE, meanstructure = NULL)
+  fit <- expect_no_warning(fit_sem(paste0(ni_base, "\na*b > 0.01"), d, fixed_x = FALSE, meanstructure = NULL))
   expect_equal(fit@f, free@f, tolerance = 1e-9)
   expect_length(fit@diagnostics$active_constraints, 0L)
 })
 
 test_that("the spread warning fires when the starts reach different optima and not when they agree", {
   d <- ni_data()
-  expect_warning(fit_sem(paste0(ni_base, "\na*b > 0.4"), d), "the starts disagree")
+  expect_warning(fit_sem(paste0(ni_base, "\na*b > 0.4"), d,
+                         fixed_x = FALSE, meanstructure = NULL), "the starts disagree")
   # the equality cp == a*b has one optimum: every start reaches it
-  expect_no_warning(fit_sem(paste0(ni_base, "\ncp == a*b"), d))
+  expect_no_warning(fit_sem(paste0(ni_base, "\ncp == a*b"), d, fixed_x = FALSE, meanstructure = NULL))
 })
 
 test_that("a*b > k reaches the best branch in at least 90% of fits with 5 starts", {

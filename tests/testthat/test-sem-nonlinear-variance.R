@@ -75,7 +75,7 @@ test_that("#213 q = 0: the standardized row reproduces the better of the two nul
 })
 
 test_that("frozen: the unconstrained fit is unchanged", {
-  h1 <- fit_sem(nv_model, nv_data(1, 1.5, 1, 1))
+  h1 <- fit_sem(nv_model, nv_data(1, 1.5, 1, 1), fixed_x = FALSE, meanstructure = NULL)
   expect_equal(
     unname(stats::coef(h1)),
     c(1.6207555059629293, 0.33389304220197757, 1.1022904459970113, 1.0177303562479751, 1.123522944064872,
@@ -86,7 +86,7 @@ test_that("frozen: the unconstrained fit is unchanged", {
 })
 
 test_that("frozen: a linear-constrained fit is unchanged", {
-  h2 <- fit_sem("M ~ a*X\nY ~ cp*X + b*M\na == 0.5", nv_data(1, 1.5, 1, 1))
+  h2 <- fit_sem("M ~ a*X\nY ~ cp*X + b*M\na == 0.5", nv_data(1, 1.5, 1, 1), fixed_x = FALSE, meanstructure = NULL)
   expect_equal(
     unname(stats::coef(h2)),
     c(0.5, 0.33389304371404077, 1.1022904446383688, 1.3317334916166899, 1.1235229427205182, 0.24998399967914409),

@@ -90,7 +90,7 @@ one <- function(engine, seed) {
   n <- 100
   d <- data.frame(X = rnorm(n), M = rnorm(n))
   d$Y <- 0.3 * d$X + rnorm(n)
-  fit <- suppressWarnings(fit_sem(model, d, fixed_x = FALSE, meanstructure = FALSE))
+  fit <- suppressWarnings(fit_sem(model, d, fixed_x = FALSE, meanstructure = NULL))
   seen <- character()
   res <- tryCatch(
     withCallingHandlers(

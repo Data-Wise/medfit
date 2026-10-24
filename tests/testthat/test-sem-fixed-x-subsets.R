@@ -5,9 +5,9 @@ fx_subsets <- list("treatment", "covariate1", "covariate2", c("treatment", "cova
 
 test_that("every subset of the exogenous variables equals the free fit", {
   d <- fx_data()
-  free <- fit_sem(fx_syntax, d)
+  free <- fit_sem(fx_syntax, d, fixed_x = FALSE, meanstructure = NULL)
   for (sel in fx_subsets) {
-    fixed <- fit_sem(fx_syntax, d, fixed_x = sel)
+    fixed <- fit_sem(fx_syntax, d, fixed_x = sel, meanstructure = NULL)
     tag <- paste(sel, collapse = ",")
     expect_equal(fixed@df, free@df, info = tag)
     expect_identical(length(fixed@theta), length(free@theta) - fx_n_removed(sel), info = tag)
@@ -22,8 +22,8 @@ test_that("a pair among the unselected variables stays free even when an explici
   # `covariate1 ~~ covariate2` is not allowed with covariate1 selected (S5), so select treatment only; the
   # explicit statement on covariate1 must not make the engine drop its other free pairs (T-2)
   syn <- paste0(fx_syntax, "\ncovariate1 ~~ v*covariate1")
-  fixed <- fit_sem(syn, d, fixed_x = "treatment")
-  free <- fit_sem(syn, d)
+  fixed <- fit_sem(syn, d, fixed_x = "treatment", meanstructure = NULL)
+  free <- fit_sem(syn, d, fixed_x = FALSE, meanstructure = NULL)
   pair <- fixed@table$op == "~~" & ((fixed@table$lhs == "covariate2" & fixed@table$rhs == "treatment") |
                                       (fixed@table$lhs == "treatment" & fixed@table$rhs == "covariate2"))
   expect_true(any(pair))

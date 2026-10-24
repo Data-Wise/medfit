@@ -15,7 +15,7 @@ for (case in frozen_cases) {
     k <- frozen[[case]]
 
     test_that(paste0("frozen v0.8.0 evaluators are reproduced: ", case), {
-      fit <- fit_sem(k$model, k$data, weights = k$weights, se_type = k$se_type)
+      fit <- fit_sem(k$model, k$data, weights = k$weights, se_type = k$se_type, fixed_x = FALSE, meanstructure = NULL)
       ram <- fit@internals$ram
       smp <- .sem_sample(fit@data, ram, fit@internals$weights)
       th <- k$theta_eval
@@ -26,7 +26,7 @@ for (case in frozen_cases) {
     })
 
     test_that(paste0("frozen v0.8.0 fit is reproduced: ", case), {
-      fit <- fit_sem(k$model, k$data, weights = k$weights, se_type = k$se_type)
+      fit <- fit_sem(k$model, k$data, weights = k$weights, se_type = k$se_type, fixed_x = FALSE, meanstructure = NULL)
       expect_equal(fit@theta, k$theta, tolerance = 1e-6)
       expect_equal(fit@vcov, k$vcov, tolerance = 1e-6)
     })
@@ -35,7 +35,7 @@ for (case in frozen_cases) {
 
 test_that("the mean-structure flag is off in the RAM spec and the sample", {
   k <- frozen$observed
-  fit <- fit_sem(k$model, k$data)
+  fit <- fit_sem(k$model, k$data, fixed_x = FALSE, meanstructure = NULL)
   ram <- fit@internals$ram
   expect_false(ram$has_mean)
   expect_false(.sem_sample(fit@data, ram)$has_mean)
@@ -44,7 +44,7 @@ test_that("the mean-structure flag is off in the RAM spec and the sample", {
 test_that("the retry seed ignores the mean structure, so a covariance-only fit keeps its 0.8.0 starts (R2)", {
   fx_skip_covr()
   syn <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
-  ram <- fit_sem(syn, mediation_demo)@internals$ram
+  ram <- fit_sem(syn, mediation_demo, fixed_x = FALSE, meanstructure = NULL)@internals$ram
   expect_identical(.sem_seed(ram), 1782989507L) # the value 0.8.0 gives for this model
   moved <- ram
   moved$m0[] <- 7

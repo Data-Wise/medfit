@@ -44,7 +44,7 @@ test_that("estimates and standard errors match OpenMx on the four K10 structures
   mods <- sem_models()
   for (nm in names(parity_syntax)) {
     dat <- sem_sim(mods[[nm]], n = 500, seed = 3)
-    fit <- fit_sem(parity_syntax[[nm]], dat)
+    fit <- fit_sem(parity_syntax[[nm]], dat, fixed_x = FALSE, meanstructure = NULL)
     om <- parity_openmx(sem_openmx(mods[[nm]], .sem_sample(dat, mods[[nm]]$ram)), mods[[nm]])
     gap <- parity_gap(fit, om)
     expect_lt(gap$est, 1e-6, label = nm)
@@ -57,7 +57,7 @@ test_that("a == b matches OpenMx with one shared label", {
   skip_if_not_installed("OpenMx")
   mod <- sem_model_equal_paths()
   dat <- sem_sim(mod, n = 200, seed = 5)
-  fit <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == b", dat)
+  fit <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == b", dat, fixed_x = FALSE, meanstructure = NULL)
   om <- parity_openmx(sem_openmx(mod, .sem_sample(dat, mod$ram)), mod)
   map <- c(a = "a", b = "a", cp = "Y~X", `M~~M` = "M~~M", `Y~~Y` = "Y~~Y", `X~~X` = "X~~X")
   gap <- parity_gap(fit, om, map)
@@ -70,7 +70,7 @@ test_that("a == 0 matches the OpenMx model with the path fixed at zero", {
   skip_if_not_installed("OpenMx")
   mod <- sem_model_zero_path()
   dat <- sem_sim(mod, n = 200, seed = 5)
-  fit <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == 0", dat)
+  fit <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == 0", dat, fixed_x = FALSE, meanstructure = NULL)
   om <- parity_openmx(sem_openmx(mod, .sem_sample(dat, mod$ram)), mod)
   map <- c(a = NA, b = "Y~M", cp = "Y~X", `M~~M` = "M~~M", `Y~~Y` = "Y~~Y", `X~~X` = "X~~X")
   free <- setdiff(names(fit@theta), "a")
@@ -87,7 +87,8 @@ test_that("an active lower bound matches OpenMx's lbound and the fixed-at-bound 
   skip_if_not_installed("OpenMx")
   mod <- sem_model_heywood()
   dat <- sem_sim(mod, n = 50, seed = 10)
-  fit <- fit_sem("eta =~ m1 + m2 + m3\neta ~ X\nY ~ eta + X\nm1 ~~ lower(0)*m1", dat)
+  fit <- fit_sem("eta =~ m1 + m2 + m3\neta ~ X\nY ~ eta + X\nm1 ~~ lower(0)*m1", dat,
+                 fixed_x = FALSE, meanstructure = NULL)
   expect_identical(fit@diagnostics$active_bounds, "m1~~m1")
   om <- parity_openmx(
     sem_openmx(mod, .sem_sample(dat, mod$ram), lbound = c(`m1~~m1` = 0)), mod
@@ -124,20 +125,22 @@ pinned <- list(
 test_that("the native estimates on the K10 structures are pinned (no oracle needed)", {
   mods <- sem_models()
   for (nm in names(pinned)) {
-    fit <- fit_sem(parity_syntax[[nm]], sem_sim(mods[[nm]], n = 500, seed = 3))
+    fit <- fit_sem(parity_syntax[[nm]], sem_sim(mods[[nm]], n = 500, seed = 3), fixed_x = FALSE, meanstructure = NULL)
     expect_equal(fit@theta[names(pinned[[nm]])], pinned[[nm]], tolerance = 1e-6, info = nm)
   }
 })
 
 test_that("the native estimates on the constrained and bounded cells are pinned", {
-  eq <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == b", sem_sim(sem_model_equal_paths(), n = 200, seed = 5))
+  eq <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == b", sem_sim(sem_model_equal_paths(), n = 200, seed = 5),
+                fixed_x = FALSE, meanstructure = NULL)
   expect_equal(eq@theta, c(a = 0.456148376, b = 0.456148376, cp = 0.102963365, `M~~M` = 0.808260265,
                            `Y~~Y` = 0.692207122, `X~~X` = 0.98415528), tolerance = 1e-6)
-  zero <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == 0", sem_sim(sem_model_zero_path(), n = 200, seed = 5))
+  zero <- fit_sem("M ~ a*X\nY ~ b*M + cp*X\na == 0", sem_sim(sem_model_zero_path(), n = 200, seed = 5),
+                  fixed_x = FALSE, meanstructure = NULL)
   expect_equal(zero@theta, c(a = 0, b = 0.461302662, cp = 0.125158791, `M~~M` = 0.810816705,
                              `Y~~Y` = 0.692185645, `X~~X` = 0.984155281), tolerance = 1e-6)
   bnd <- fit_sem("eta =~ m1 + m2 + m3\neta ~ X\nY ~ eta + X\nm1 ~~ lower(0)*m1",
-                 sem_sim(sem_model_heywood(), n = 50, seed = 10))
+                 sem_sim(sem_model_heywood(), n = 50, seed = 10), fixed_x = FALSE, meanstructure = NULL)
   expect_equal(bnd@theta, c(`eta=~m2` = 0.746182488, `eta=~m3` = 0.535619673, `eta~X` = 0.549041196,
                             `Y~eta` = 0.36041097, `Y~X` = 0.2013694, `m1~~m1` = 0, `m2~~m2` = 0.120495486,
                             `m3~~m3` = 0.589188838, `Y~~Y` = 0.656149018, `eta~~eta` = 0.886139213,
@@ -205,7 +208,7 @@ test_that("native estimates on memory_exp match OpenMx", {
     theta = c(a1 = 0, a2 = 0, cp = 0, b1 = 0, b2 = 0, `x~~x` = 1, `repetition~~repetition` = 1,
               `imagery~~imagery` = 1, `recall~~recall` = 1)
   )
-  fit <- fit_sem(mem_syntax, d)
+  fit <- fit_sem(mem_syntax, d, fixed_x = FALSE, meanstructure = NULL)
   om <- parity_openmx(sem_openmx(mod, .sem_sample(d, mod$ram)), mod)
   gap <- parity_gap(fit, om)
   expect_lt(gap$est, 1e-6)

@@ -16,7 +16,7 @@ df_base <- "M ~ a*X\nY ~ b*M + cp*X"
 
 # model df, logLik df, AIC and BIC in one list
 df_counts <- function(syntax, data = df_data()) {
-  fit <- fit_sem(syntax, data)
+  fit <- fit_sem(syntax, data, fixed_x = FALSE, meanstructure = NULL)
   ll <- stats::logLik(fit)
   list(df = fit@df, ll_df = attr(ll, "df"), aic = stats::AIC(ll), bic = stats::BIC(ll), ll = as.numeric(ll), fit = fit)
 }
@@ -74,7 +74,7 @@ test_that("a model identified only by an equality fits instead of tripping the d
 
 test_that("a model with too many parameters still errors when no equality rescues it", {
   expect_error(
-    fit_sem(paste0(df_base, "\nM ~~ cov*Y"), df_data()),
+    fit_sem(paste0(df_base, "\nM ~~ cov*Y"), df_data(), fixed_x = FALSE, meanstructure = NULL),
     "more free parameters \\(7\\) than observed moments \\(6\\)"
   )
 })

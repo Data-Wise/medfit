@@ -594,6 +594,26 @@ During `devtools::load_all()`:
 
 ---
 
+## Agent Harness
+
+**Goal:** run plan-task work (a task from `planning/PLAN-*.md`, or a native-engine fix) through one repeatable
+pipeline: implement test-first in a feature worktree, verify against an independent oracle with planted defects, pass
+the risk tier and lint, sync the docs, open the PR to `dev`.
+
+**Entry point (advisory):** for plan-task work, a native-engine fix, or a re-run of one, invoke the
+`medfit-orchestrator` skill first. Questions, explanations, status checks, one-line edits and release work do not go
+through it.
+
+Agents are in `.claude/agents/` (`medfit-implementer`, `medfit-oracle-qa`, `medfit-gates`, `medfit-docs`); skills in
+`.claude/skills/` (`medfit-orchestrator`, `medfit-oracle-check`, `medfit-risk-tier`). Task state lives in the plan
+file; GitHub Issues are only linked from PRs. Agents' reports go to `_agents_workspace/` (git- and Rbuild-ignored).
+
+| Date | Change | Target | Reason |
+|---|---|---|---|
+| 2026-10-24 | Initial harness: 4 agents, 3 skills, tools registry | `.claude/agents/`, `.claude/skills/` | Make the 0.14.0 plan-task pipeline (implement, oracle QA, gates, docs) repeatable |
+
+---
+
 ## Additional Resources
 
 ### Planning Documents

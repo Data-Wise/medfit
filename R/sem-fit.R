@@ -38,7 +38,7 @@
       rows <- stats::complete.cases(data[, vars, drop = FALSE])
       .sem_check_dummy_support(factors, data, rows, if (!is.null(weights)) weights[rows])
       out <- .sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
-                               meanstructure, fixed_x)
+                               meanstructure = meanstructure, fixed_x = fixed_x)
       out$factors <- factors
       return(out)
     }
