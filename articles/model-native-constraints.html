@@ -135,6 +135,7 @@
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../articles/quality-control.html">Quality control</a></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
@@ -304,6 +305,8 @@ tied  1 0.911    0.91097       1     0.3399</code></pre>
 <ul>
 <li>
 <strong>Nonlinear constraints are solved with their Jacobian recomputed at every point.</strong> <code>cp == a * b</code> and <code>a * b &gt; 0.1</code> work; a nonlinear inequality can be feasible on several disjoint pieces (<code>a * b &gt; 0.1</code> holds for two positive or two negative paths), so every start is tried and the best one kept, with a warning when the starts disagree. A sum of products such as <code>a1 * b1 + a2 * b2 == 0</code> is best-effort (no exact reduction exists): treat the fit as the best of the starts, and raise <code>n_starts</code> when the warning appears.</li>
+<li>
+<strong>A zero product that cannot be fitted stops the fit.</strong> <code>a * b == 0</code> is solved as one fit per factor; if any branch cannot be fitted, <code><a href="../reference/fit_sem.html">fit_sem()</a></code> stops with an error (<code>zero-product branches did not converge</code>) instead of returning the best of the others, which need not be the constrained optimum. <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> reports the same situation in a refit as an unresolved row (see above).</li>
 <li>
 <strong>A constraint needs a free parameter</strong> and <strong>labels must be defined</strong> in the model.</li>
 <li>

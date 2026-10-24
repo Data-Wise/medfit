@@ -138,8 +138,8 @@ print(boot_result)
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.2170
-      Upper:   0.4631
+      Lower:   0.2161
+      Upper:   0.4600
 
 ``` r
 summary(boot_result)
@@ -153,12 +153,12 @@ summary(boot_result)
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower: 0.2170026
-      Upper: 0.4630625
+      Lower: 0.2161061
+      Upper: 0.4599624
 
     Bootstrap Distribution Summary:
        Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-     0.1375  0.2852  0.3264  0.3290  0.3675  0.5522 
+     0.1352  0.2856  0.3279  0.3295  0.3705  0.5697 
 
 ### How It Works
 
@@ -428,7 +428,7 @@ The percentile bootstrap CI is computed as:
 c(boot_result@ci_lower, boot_result@ci_upper)
 ```
 
-    [1] 0.2170026 0.4630625
+    [1] 0.2161061 0.4599624
 
 ``` r
 # Change confidence level
@@ -443,7 +443,7 @@ boot_90 <- bootstrap_mediation(
 c(boot_90@ci_lower, boot_90@ci_upper) # Narrower
 ```
 
-    [1] 0.2345624 0.4418077
+    [1] 0.2317774 0.4375249
 
 ### Statistical Significance
 
@@ -516,8 +516,8 @@ print(boot_serial_param)
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.0379
-      Upper:   0.1249
+      Lower:   0.0396
+      Upper:   0.1204
 
 The lm chain above estimates each equation separately, so its covariance
 matrix sets the covariances between equations to zero (see the Model
@@ -638,9 +638,9 @@ rbind(
 ```
 
              [,1]      [,2]
-    1K  0.2170026 0.4630625
-    5K  0.2136351 0.4654500
-    10K 0.2132389 0.4661655
+    1K  0.2161061 0.4599624
+    5K  0.2141504 0.4653122
+    10K 0.2122585 0.4677100
 
 If CIs are similar, n_boot is sufficient.
 
@@ -680,7 +680,7 @@ rbind(delta = ci_delta, bootstrap = ci_boot)
 
                   2.5 %    97.5 %
     delta     0.2063564 0.4591826
-    bootstrap 0.2170026 0.4630625
+    bootstrap 0.2161061 0.4599624
 
 Bootstrap is generally preferred because it: - Doesn’t assume normality
 of indirect effect - Handles skewness correctly - Provides better
@@ -738,7 +738,7 @@ tidy(boot_result)
     # A tibble: 1 × 5
       term     estimate std_error conf_low conf_high
       <chr>       <dbl>     <dbl>    <dbl>     <dbl>
-    1 estimate    0.333    0.0612    0.217     0.463
+    1 estimate    0.333    0.0628    0.216     0.460
 
 ``` r
 # One-row summary
@@ -777,14 +777,14 @@ confint(boot_result)
 ```
 
                  2.5 %    97.5 %
-    estimate 0.2170026 0.4630625
+    estimate 0.2161061 0.4599624
 
 ``` r
 c(lower = boot_result@ci_lower, upper = boot_result@ci_upper)
 ```
 
         lower     upper
-    0.2170026 0.4630625 
+    0.2161061 0.4599624 
 
 ``` r
 # A different level is recomputed from the stored bootstrap draws
@@ -792,7 +792,7 @@ confint(boot_result, level = 0.90)
 ```
 
                    5 %      95 %
-    estimate 0.2345624 0.4418077
+    estimate 0.2317774 0.4375249
 
 ## What the bootstrap covers
 

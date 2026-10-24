@@ -159,6 +159,15 @@ anova(tied, free)
   of products such as `a1 * b1 + a2 * b2 == 0` is best-effort (no exact
   reduction exists): treat the fit as the best of the starts, and raise
   `n_starts` when the warning appears.
+- **A zero product that cannot be fitted stops the fit.** `a * b == 0`
+  is solved as one fit per factor; if any branch cannot be fitted,
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  stops with an error (`zero-product branches did not converge`) instead
+  of returning the best of the others, which need not be the constrained
+  optimum.
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  reports the same situation in a refit as an unresolved row (see
+  above).
 - **A constraint needs a free parameter** and **labels must be defined**
   in the model.
 - **Equal labels are one parameter.** Giving two paths the same label

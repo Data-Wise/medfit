@@ -38,14 +38,18 @@ its own branch), are extra starts, and a feasible reference estimate is
 never replaced by a worse accepted fit. Models without a nonlinear row
 are not affected. A product of labels set to zero (`a*b == 0`,
 `b1*b2*b3 == 0`) is instead solved exactly: one linear fit per factor
-(`a == 0`, `b == 0`), keeping the smallest discrepancy. A sum of
-products (`a1*b1 + a2*b2 == 0`) has no exact reduction, so it is
-best-effort: the fit is the best of the starts tried, a disagreement
-warning means a better optimum may exist, and `n_starts` raises the
-number of starts. Labels used in a constraint or a definition must be
-defined in the model. A constraint with no free parameter is an error.
-Exogenous variables are given free variances and covariances, as lavaan
-does with `fixed.x = FALSE`; `fixed_x = TRUE` (or a vector of names) in
+(`a == 0`, `b == 0`), keeping the smallest discrepancy; if a branch
+cannot be fitted,
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+stops with a `medfit_error_no_convergence` error instead of returning
+the best of the others. A sum of products (`a1*b1 + a2*b2 == 0`) has no
+exact reduction, so it is best-effort: the fit is the best of the starts
+tried, a disagreement warning means a better optimum may exist, and
+`n_starts` raises the number of starts. Labels used in a constraint or a
+definition must be defined in the model. A constraint with no free
+parameter is an error. Exogenous variables are given free variances and
+covariances, as lavaan does with `fixed.x = FALSE`; `fixed_x = TRUE` (or
+a vector of names) in
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 fixes the moments of the selected ones at the sample values instead, as
 `fixed.x = TRUE` does. Unlike lavaan, which keeps an explicit `x ~~ x`

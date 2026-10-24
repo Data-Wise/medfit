@@ -105,6 +105,7 @@
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/quality-control.html">Quality control</a></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
@@ -151,7 +152,8 @@ cannot change sign along its surface, so each sign pattern is its own branch),
 are extra starts, and a feasible reference estimate is never replaced by a worse
 accepted fit. Models without a nonlinear row are not affected. A product of labels set to zero
 (<code>a*b == 0</code>, <code>b1*b2*b3 == 0</code>) is instead solved exactly: one linear fit per
-factor (<code>a == 0</code>, <code>b == 0</code>), keeping the smallest discrepancy. A sum of products
+factor (<code>a == 0</code>, <code>b == 0</code>), keeping the smallest discrepancy; if a branch cannot be fitted, <code><a href="fit_sem.html">fit_sem()</a></code>
+stops with a <code>medfit_error_no_convergence</code> error instead of returning the best of the others. A sum of products
 (<code>a1*b1 + a2*b2 == 0</code>) has no exact reduction, so it is best-effort: the fit is
 the best of the starts tried, a disagreement warning means a better optimum may
 exist, and <code>n_starts</code> raises the number of starts. Labels used in a constraint
