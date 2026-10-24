@@ -179,7 +179,7 @@
 #' # Labeled paths and a defined parameter
 #' fit_sem(
 #'   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\nab := a*b",
-#'   data = mediation_demo
+#'   data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
 #' )@defined
 #'
 #' # Comma shorthand: one left-hand side per name
