@@ -91,3 +91,19 @@ test_that("planted defect: fixing the exogenous paths at N - 1 moments in the Op
   expect_false(identical(out$verdict, "agree"))
   expect_match(out$reason, "unrestricted discrepancy differs", fixed = TRUE)
 })
+
+test_that("with means, OpenMx gets exactly the rows and columns medfit used (listwise deletion, no extra columns)", {
+  dat <- medfit::mediation_demo
+  dat$mediator1[c(3, 10, 40)] <- NA
+  dat$covariate1[7] <- NA
+  dat$extra <- seq_len(nrow(dat))
+  fit <- suppressMessages(suppressWarnings(fit_sem(ofs_base, dat, fixed_x = "covariate1", meanstructure = TRUE)))
+  expect_identical(fit@n_obs, 396L)
+  m <- medfit:::.lr_openmx_model(fit, paste0("p", seq_len(nrow(fit@table))), fit@table$est)
+  expect_identical(nrow(m$data$observed), fit@n_obs)
+  expect_setequal(colnames(m$data$observed), fit@internals$ram$obs)
+  out <- suppressWarnings(compare_lr(fit, paths = c("a", "b"), engine = "openmx"))
+  # independent value: an OpenMx raw-data RAM fit of the a == 0 and b == 0 branches on the complete cases (QA, T4c)
+  expect_equal(out$runs$lr[out$runs$start == "default"], 31.4752703719, tolerance = 1e-5)
+  expect_identical(out$runs$status[out$runs$start == "default"], "agree")
+})
