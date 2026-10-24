@@ -1,3 +1,13 @@
+# medfit (development version)
+
+## Bug fixes
+
+* A parameter pinned by the active set (an equality such as `b == 0`, or an active bound) in a native fit with a
+  mean structure now has a standard error of exactly 0, as it already had without one. The covariance was projected
+  in centered coordinates and mapped back, which left roundoff (about 5.6e-18) on the pinned row, so `tidy()`
+  reported a z-statistic and p-value for a parameter that is not estimated. Free parameters' standard errors are
+  unchanged (R-1 of the native-defaults plan; a prerequisite for the `meanstructure = TRUE` default in 0.15.0).
+
 # medfit 0.13.0
 
 * Declare the existing `rlang` runtime dependency used by `compare_lr()`,

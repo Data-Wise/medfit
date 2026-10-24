@@ -48,8 +48,13 @@
       # an orthonormal basis of the same subspace in the centered coordinates: the basis from the active set is in
       # theta units, where a tangent along a path also moves its intercept by the mean, and that inflates the
       # condition number of Z' I Z by the square of mean/sd
+      pinned_rows <- rowSums(z != 0) == 0
       zc <- qr.Q(qr(solve(tmat, z)))[, seq_len(ncol(z)), drop = FALSE]
       z <- tmat %*% zc
+      # a coordinate the active set pins has an exactly zero row; the round trip leaves roundoff there (a 1e-18 SE
+      # and a z-statistic in `tidy()`), so restore the exact zero. Only structural zeros: a tiny nonzero share of a
+      # free direction is real variance and stays.
+      z[pinned_rows, ] <- 0
     }
     bread <- .sem_invert_info(crossprod(zc, info %*% zc))
     if (is.null(bread)) {
