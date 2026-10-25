@@ -103,7 +103,7 @@
 #' optimum diagnostics), `likelihood` (availability and `f`), `feasibility` (`witness` or `unknown`), `covariance`
 #' (`available`, `unavailable` or `not_retained`), `improper`, the retained `notices` (warnings and messages), the
 #' original `condition` (class, message, call) and the recursive `children`. IDs are deterministic positions within
-#' the call, not certificates of equivalent parameter spaces. No globality is asserted, and a failed branch is
+#' the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a failed branch is
 #' unknown, never certified infeasible.
 #'
 #' A zero-product fit returns only if every required branch resolves. Otherwise it stops with a

@@ -128,7 +128,7 @@ every required restriction was attempted, not that any was globally optimized. \
 optimum diagnostics), \code{likelihood} (availability and \code{f}), \code{feasibility} (\code{witness} or \code{unknown}), \code{covariance}
 (\code{available}, \code{unavailable} or \code{not_retained}), \code{improper}, the retained \code{notices} (warnings and messages), the
 original \code{condition} (class, message, call) and the recursive \code{children}. IDs are deterministic positions within
-the call, not certificates of equivalent parameter spaces. No globality is asserted, and a failed branch is
+the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a failed branch is
 unknown, never certified infeasible.
 
 A zero-product fit returns only if every required branch resolves. Otherwise it stops with a
