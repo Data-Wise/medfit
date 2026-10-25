@@ -566,6 +566,11 @@ tests) the answer is the same either way, as Section 3 proved; the standard erro
 left free next to fixed ones are the exception that section showed. When the question is about information criteria across
 models, fit them all with the same `fixed_x`.
 
+**The default in 0.15.0.** Through 0.14.x the default is `fixed_x = FALSE`, and every fit in this chapter sets
+`fixed_x` explicitly. From 0.15.0 an unset `fixed_x` fixes the observed exogenous variables, except those a `~~` or
+`~1` statement names (a lenient subset; an explicit `TRUE` still refuses such a statement, Section 5). The schedule,
+the opt-in and the evidence are in [Native defaults in 0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html).
+
 ## Check yourself
 
 1. In Section 3 where does the proof use that no statement is made about the fixed variables' moments? (Answer: Step 2
