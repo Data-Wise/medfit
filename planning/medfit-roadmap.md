@@ -3,7 +3,7 @@
 **Package**: medfit - Mediation model fitting and extraction infrastructure
 **Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.10.0 current on `main`/GitHub/r-universe** (2026-10-14, tag `v0.10.0`; GitHub-only, not CRAN-submitted by decision; 0.7.0 shipped the native SEM engine 2026-10-10, 0.8.0 to 0.10.0 added nonlinear constraints, mean structure with `fixed_x`, and the `:` product term with native four-way). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0 (2026-08-23). 0.5.0 added (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Ext D module 1 (2-1-1 cluster mediation: `ClusterMediationData`, `lmer` engine, Kenward-Roger, cluster bootstrap; #90-#92, #95, #100) shipped in **0.6.0** (2026-10-09, GitHub-only); the native SEM engine shipped in **0.7.0** (2026-10-10, GitHub-only; #110-#124). Next = latent means (0.11.0) and the next CRAN release; board in `EXTENSIONS-PLAN-2026-06-03.md`.
 **Timeline**: MVP shipped; extensions A ✅, B ✅, C ✅ (0.4.0), D8(b) ✅ (0.5.0, released 2026-09-25); native SEM ✅ (0.7.0, released 2026-10-10); C.1 blocked (CMAverse); D/E brainstormed
-**Last Updated**: 2026-10-14
+**Last Updated**: 2026-10-24
 
 > **Note:** Phases 7/7b/7c below are the detailed *design reference*. The current,
 > prioritized board lives in `planning/EXTENSIONS-PLAN-2026-06-03.md`.
@@ -1854,7 +1854,16 @@ The original week-by-week plan is complete. Current next actions:
 1. ~~Release 0.6.0 (Ext D module 1)~~ — done 2026-10-09; see `planning/specs/PLAN-multilevel-mediation-2-1-1-2026-10-08.md` and `.STATUS`. Module 2 (1-1-1, random slopes) follows
 2. ~~Release 0.7.0 (native SEM engine)~~ — done 2026-10-10; see `planning/specs/PLAN-medfit-0-7-0-release-2026-10-10.md` and `.STATUS`.
 3. ~~0.8.0 to 0.10.0 (native SEM hardening, nonlinear constraints, mean structure and `fixed_x`, the `:` product term and four-way)~~ — done 2026-10-11 to 2026-10-14; see `.STATUS`.
-3b. **0.11.0 (in progress, 2026-10-17):** factor covariates, S7 compatibility, the #213 fix, the native gates in `tests/sim/run-gates.R`, and dropping the "experimental" label; see `planning/PLAN-0.11.0-scope-2026-10-16.md`. Release, T5e and the T6 hygiene are open.
+3b. ~~**0.11.0 to 0.13.0**~~: released 2026-10-17 to 2026-10-24 (GitHub-only; see `.STATUS`). 0.11.0: factor covariates, S7 compatibility, the #213 fix, the native gates in `tests/sim/run-gates.R`, and dropping the "experimental" label; see `planning/PLAN-0.11.0-scope-2026-10-16.md`. Release, T5e and the T6 hygiene are open.
+3c. **0.14.0 (in progress, 2026-10-24): native defaults, warn half.** `fit_sem()` warns once per session when
+    `fixed_x` or `meanstructure` is unset; `options(medfit.native_defaults = "0.15")` opts in to the new defaults
+    (lenient `fixed_x` subset); pinned-SE fix (R-1); `compare_lr()` accepts `fixed_x` and saturated means in lavaan
+    and OpenMx; the native-defaults oracle matrix gate (557 rows, 0 block). T1 to T9 merged (#315-#328), Checkpoints
+    A and B approved; T10 (ecosystem notice) and Checkpoint C (release) open. Plan:
+    `planning/PLAN-0.14.0-native-defaults-2026-10-24.md`.
+3d. **0.15.0 (at least two months after 0.14.0): the flip.** `fixed_x = TRUE` (lenient subset) and
+    `meanstructure = TRUE` become the defaults; the 21 tests the Checkpoint B opt-in arm names; open decision on
+    AIC/BIC for fits without a mean structure (medfit counts the implicit means, lavaan does not).
 4. **Next CRAN release** — trigger still open (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
 5. **Ext C.1 (CMAverse)** — blocked; see `planning/EXTENSIONS-PLAN-2026-06-03.md`
 6. **Categorical variables (backlog, added 2026-10-17, none scheduled; each needs a named consumer and an independent oracle before it starts):**

@@ -268,7 +268,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
 
 ### Phase 3: announce
 
-- [ ] **T9. Docs and NEWS for the warning release (R-9, announce half).** Size M.
+- [x] **T9. Docs and NEWS for the warning release (R-9, announce half).** Size M. Merged #328; site published from dev (pkgdown run 40156981429).
   - NEWS: R-1 fix (behavior change note), R-4, the warning and the opt-in, the 0.15.0 schedule, R-11's retry-seed
     note. `?fit_sem` and `?"medfit-syntax"`: a "Defaults are changing" section. `guide-changes.qmd` row. The lavaan
     comparison and the syntax crosswalk get a one-line forward note (their rewrite is 0.15.0).
@@ -283,6 +283,11 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
     `test-mbco-semfit*.R`) and the missingmed line 236 note; both are other repos and need the author's explicit
     go-ahead, one action at a time.
   - Acceptance: issue text in `planning/` reviewed; RMediation PR opened only on approval.
+  - Progress 2026-10-24: RMediation PR Data-Wise/rmediation#85 opened on approval (helper `.fit_sem()`, example
+    gated on medfit >= 0.9.0; CI green on medfit 0.7.0/0.8.0/CRAN/absent). missingmed: `R/mbco_sem.R` exists only on
+    its open PR #102, so the two-line fix was posted there as a comment on approval (line 222, and the test at
+    line 360); Checkpoint B showed it is package code, so its users would see the warning. Open: the `[BREAKING]`
+    issue draft.
 
 ### Checkpoint C: release readiness (0.14.0)
 
