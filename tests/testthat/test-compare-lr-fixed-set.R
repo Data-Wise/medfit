@@ -55,8 +55,10 @@ test_that("the fixed set is written as fixed rows at the sample moments, with fi
   expect_true(spec$meanstructure)
   n <- nrow(fit@data)
   v <- stats::var(fit@data$covariate1) * (n - 1) / n
-  expect_match(spec$model, sprintf("covariate1 ~~ %s*covariate1", formatC(v, digits = 17, format = "g")),
-               fixed = TRUE)
+  # Compare the written value numerically: its 17th digit differs across platforms (Windows).
+  written <- regmatches(spec$model, regexpr("covariate1 ~~ [0-9.e+-]+\\*covariate1", spec$model))
+  expect_length(written, 1L)
+  expect_equal(as.numeric(sub("^covariate1 ~~ ([^*]+)\\*.*$", "\\1", written)), v, tolerance = 1e-12)
   expect_match(spec$model, "covariate1 ~ ", fixed = TRUE)
   expect_false(grepl("treatment ~~ [0-9.e+-]+\\*treatment", spec$model))
 })
