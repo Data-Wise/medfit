@@ -100,7 +100,7 @@ A SEMFit S7 object
 # \donttest{
 fit <- fit_sem(
   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
-  data = mediation_demo
+  data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
 )
 fit@table[fit@table$op == "~", c("lhs", "rhs", "est", "se")]
 #>         lhs       rhs        est         se

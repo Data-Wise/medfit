@@ -22,10 +22,14 @@ no accepted reference when one of its own refits cannot be fitted (see
 mbco_sem()): the reference
 LR is then NA and the result is a comparison with that verdict, not an
 error.
-Only observed-variable covariance models are compared. Latent variables,
-product terms, mean structures, weights, fixed_x, factors, fixed or shared
-parameters, start/bound modifiers and constraints in the model are refused
-by name."><meta property="og:description" content="Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
+Only observed-variable models are compared. With either engine, a
+saturated mean structure (every intercept free) and fixed_x (all, a named
+subset or a lenient subset) are supported: the fixed exogenous moments are
+written to the engine as fixed parameters at their sample values (in OpenMx,
+a fit with a mean structure is run on the raw data the fit used). Latent variables,
+product terms, fixed or constrained intercepts, weights, factors, other fixed
+or shared parameters, start/bound modifiers and constraints in the model are
+refused by name."><meta property="og:description" content="Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
 an external SEM engine and compares it with medfit's own mbco_sem()
 statistic. A general-purpose optimizer handed the nonlinear constraint
 \(a b = 0\) can drop it (OpenMx at a zero start) or stop at the
@@ -42,10 +46,14 @@ no accepted reference when one of its own refits cannot be fitted (see
 mbco_sem()): the reference
 LR is then NA and the result is a comparison with that verdict, not an
 error.
-Only observed-variable covariance models are compared. Latent variables,
-product terms, mean structures, weights, fixed_x, factors, fixed or shared
-parameters, start/bound modifiers and constraints in the model are refused
-by name."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
+Only observed-variable models are compared. With either engine, a
+saturated mean structure (every intercept free) and fixed_x (all, a named
+subset or a lenient subset) are supported: the fixed exogenous moments are
+written to the engine as fixed parameters at their sample values (in OpenMx,
+a fit with a mean structure is run on the raw data the fit used). Latent variables,
+product terms, fixed or constrained intercepts, weights, factors, other fixed
+or shared parameters, start/bound modifiers and constraints in the model are
+refused by name."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -186,10 +194,14 @@ no accepted reference when one of its own refits cannot be fitted (see
 <code><a href="mbco_sem.html">mbco_sem()</a></code>): the reference
 LR is then <code>NA</code> and the result is a comparison with that verdict, not an
 error.</p>
-<p>Only observed-variable covariance models are compared. Latent variables,
-product terms, mean structures, weights, <code>fixed_x</code>, factors, fixed or shared
-parameters, start/bound modifiers and constraints in the model are refused
-by name.</p>
+<p>Only observed-variable models are compared. With either engine, a
+saturated mean structure (every intercept free) and <code>fixed_x</code> (all, a named
+subset or a lenient subset) are supported: the fixed exogenous moments are
+written to the engine as fixed parameters at their sample values (in OpenMx,
+a fit with a mean structure is run on the raw data the fit used). Latent variables,
+product terms, fixed or constrained intercepts, weights, factors, other fixed
+or shared parameters, start/bound modifiers and constraints in the model are
+refused by name.</p>
     </div>
 
     <div class="section level2">
@@ -238,7 +250,7 @@ LR, convergence, constraint residual and status) and <code>engine</code>.</p>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"lavaan"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_sem.html">fit_sem</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="st">"mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"</span>,</span></span>
-<span class="r-in"><span>    data <span class="op">=</span> <span class="va">mediation_demo</span></span></span>
+<span class="r-in"><span>    data <span class="op">=</span> <span class="va">mediation_demo</span>, fixed_x <span class="op">=</span> <span class="cn">FALSE</span>, meanstructure <span class="op">=</span> <span class="cn">NULL</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu">compare_lr</span><span class="op">(</span><span class="va">fit</span>, paths <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>, engine <span class="op">=</span> <span class="st">"lavaan"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>

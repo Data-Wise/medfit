@@ -229,20 +229,27 @@ errors if an intercept is written. With a mean structure every observed variable
 not written has a free one, so a model with only free intercepts has the same estimates and
 standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
 A model with a product term (<code>y ~ x + m + x:m</code>) always fits the mean structure (it needs the mediator
-intercept for the four-way decomposition), so with a product <code>meanstructure = FALSE</code> is an error.</p></dd>
+intercept for the four-way decomposition), so with a product <code>meanstructure = FALSE</code> is an error.
+Left unset, with no <code>~1</code> and no product in the model, it warns once per session that the default becomes <code>TRUE</code>
+in medfit 0.15.0; <code>options(medfit.native_defaults = "0.15")</code> uses <code>TRUE</code> now.</p></dd>
 
 
 <dt id="arg-fixed-x">fixed_x<a class="anchor" aria-label="anchor" href="#arg-fixed-x"></a></dt>
 <dd><p><code>FALSE</code> (default), <code>TRUE</code>, or a character vector of exogenous observed variable names. The
 selected variables (<code>TRUE</code>: every exogenous observed variable, product columns included) have their mean (with
-a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
+a mean structure), variance and the exogenous covariances the model contains fixed at the sample moments of
 the estimation sample (weighted when <code>weights</code> are given) and removed from estimation, as lavaan does with
 <code>fixed.x = TRUE</code>. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
 not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
 conditional on the fixed variables, and <code>glance()$fixed_x</code> lists them. Models whose <code>fixed_x</code> sets or data differ
 cannot be compared with <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">stats::anova()</a></code>, <code><a href="mbco_sem.html">mbco_sem()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> or <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code>. A (co)variance or intercept statement
 on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
-(<code>fixed_x</code> column, no standard error) but not in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> or <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>.</p></dd>
+(<code>fixed_x</code> column, no standard error) but not in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> or <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>.
+Left unset, in a model with an exogenous observed variable, it warns once per session that the default becomes
+the exogenous observed variables in medfit 0.15.0; <code>options(medfit.native_defaults = "0.15")</code> uses that now:
+every exogenous observed variable (product and factor-dummy columns included) except those a <code>~~</code> or <code>~1</code>
+statement names, which are left free with a message of class <code>medfit_message_fixed_x_lenient</code> (an explicit
+<code>TRUE</code> errors there instead). <code>glance()$fixed_x</code> names the set the fit used.</p></dd>
 
 
 <dt id="arg-sampling-weights">sampling_weights<a class="anchor" aria-label="anchor" href="#arg-sampling-weights"></a></dt>
@@ -257,6 +264,21 @@ on a selected variable is an error (lavaan would silently keep it free). The fix
 <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="mbco_sem.html">mbco_sem()</a></code> refuse; see <a href="SEMFit-methods.html">SEMFit-methods</a>.</p>
     </div>
     <div class="section level2">
+    <h2 id="defaults-are-changing">Defaults are changing<a class="anchor" aria-label="anchor" href="#defaults-are-changing"></a></h2>
+
+
+<p>In medfit 0.15.0 the defaults become <code>fixed_x</code> = the exogenous observed variables (lavaan's <code>fixed.x = TRUE</code>) and
+<code>meanstructure = TRUE</code>, so a default fit matches a default <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code> fit. 0.14.0 changes no result: it
+warns once per session per argument (class <code>medfit_warning_default_change</code>) when an argument is left unset in a
+model where its default will matter. Under the new defaults the parameter count, <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> and
+the names in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> change; the structural estimates and their standard errors did not
+change on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
+parameter names). To keep today's results and silence the warning, pass both arguments, for example
+<code>fixed_x = FALSE, meanstructure = NULL</code>. To fit with the 0.15.0 defaults now, set
+<code>options(medfit.native_defaults = "0.15")</code>; variables a <code>~~</code> or <code>~1</code> statement names are then left free and named
+in a message of class <code>medfit_message_fixed_x_lenient</code>.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><a href="SEMFit.html">SEMFit</a>, <code><a href="fit_mediation.html">fit_mediation()</a></code></p></div>
     </div>
@@ -266,7 +288,7 @@ on a selected variable is an error (lavaan would silently keep it free). The fix
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">fit_sem</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="st">"mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b"</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span>, fixed_x <span class="op">=</span> <span class="cn">FALSE</span>, meanstructure <span class="op">=</span> <span class="cn">NULL</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">@</span><span class="va">defined</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   name expr       est         se</span>

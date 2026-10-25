@@ -280,13 +280,20 @@
 <td>returns the four-way decomposition when the outcome equation carries the treatment-by-mediator product; refused with a message that says to add <code>x:m</code> when it does not</td>
 </tr>
 <tr class="even">
+<td>0.14.0</td>
+<td>
+<code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native")</code> with <code>fixed_x</code> or <code>meanstructure</code> left unset</td>
+<td>(no warning)</td>
+<td>same results, plus a once-per-session warning of class <code>medfit_warning_default_change</code>: in 0.15.0 the defaults become the exogenous observed variables and <code>TRUE</code>, which moves <code>npar</code>, <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC; pass both arguments to keep today’s results, or set <code>options(medfit.native_defaults = "0.15")</code> to use the new defaults now</td>
+</tr>
+<tr class="odd">
 <td>0.5.0</td>
 <td>
 <code>se_type = "sandwich"</code> with a treatment-by-mediator term</td>
 <td>returned the model-based covariance, with no warning</td>
 <td>applies the sandwich estimator</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>0.5.0</td>
 <td>lavaan fits with custom path labels</td>
 <td>the alias rows of <code>@vcov</code> were all zero, so a parametric bootstrap had a zero-width interval</td>

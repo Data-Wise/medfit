@@ -635,6 +635,16 @@
 </td>
 </tr>
 <tr class="even">
+<td>
+<code>fit_sem(): `fixed_x` is unset</code> or <code>fit_sem(): `meanstructure` is unset</code>
+</td>
+<td>the default of that argument changes in 0.15.0; today’s results are unchanged. Shown once per session per argument. Pass the argument explicitly, or set <code>options(medfit.native_defaults = "0.15")</code> to use the new defaults now</td>
+</tr>
+<tr class="odd">
+<td><code>fit_sem(): the `fixed_x` default leaves</code></td>
+<td>under <code>options(medfit.native_defaults = "0.15")</code> with <code>fixed_x</code> unset, the named variables carry a <code>~~</code> or <code>~1</code> statement, so they stay free and the other exogenous variables are fixed. Shown on each fit. Pass <code>fixed_x</code> explicitly to choose</td>
+</tr>
+<tr class="even">
 <td>the estimates use fewer rows than your data has</td>
 <td>the model fits drop rows with missing values on their variables. Since 0.8.0 <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> and <code>n_obs</code> report the rows used; 0.7.0 and earlier reported every row of <code>data</code>, so there, count them with <code><a href="https://rdrr.io/r/stats/complete.cases.html" class="external-link">complete.cases()</a></code>
 </td>

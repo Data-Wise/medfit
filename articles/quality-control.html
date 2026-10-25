@@ -189,10 +189,10 @@
 <div class="cell-output-display">
 <table class="table caption-top">
 <colgroup>
-<col style="width: 10%">
-<col style="width: 30%">
-<col style="width: 42%">
-<col style="width: 15%">
+<col style="width: 8%">
+<col style="width: 31%">
+<col style="width: 32%">
+<col style="width: 28%">
 </colgroup>
 <thead><tr class="header">
 <th style="text-align: left;">Gate</th>
@@ -324,7 +324,7 @@
 <tr class="odd">
 <td style="text-align: left;">compare-lr</td>
 <td style="text-align: left;">lavaan and OpenMx likelihood ratios</td>
-<td style="text-align: left;">noresidual, zeroresid, driver:unresolved_converged, driver:ref_off</td>
+<td style="text-align: left;">noresidual, zeroresid, fixedset, fixedset_openmx, driver:unresolved_converged, driver:ref_off</td>
 <td style="text-align: left;">zero-product branches</td>
 </tr>
 <tr class="even">
@@ -332,6 +332,12 @@
 <td style="text-align: left;">first-order cost bound derived in the Methods article</td>
 <td style="text-align: left;">infslack, rawdist, nocurv, nopinv, nonorm, nodispatch</td>
 <td style="text-align: left;">nonlinear constraints</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">native-defaults</td>
+<td style="text-align: left;">lavaan fixed.x/meanstructure/sampling.weights and a hand-calculated conditional likelihood</td>
+<td style="text-align: left;">fixedx_logical, product_free, driver</td>
+<td style="text-align: left;">observed intercepts and means; fixed_x; native defaults (fixed_x x meanstructure)</td>
 </tr>
 </tbody>
 </table>
@@ -359,90 +365,195 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">E-1</td>
+<td style="text-align: left;">fixed_x defaults to TRUE: warn in 0.14.0, flip in 0.15.0</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E-2</td>
+<td style="text-align: left;">meanstructure defaults to TRUE on the same schedule as fixed_x</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E-3</td>
+<td style="text-align: left;">One default for fit_sem() and fit_mediation(engine = ‘native’)</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E-4</td>
+<td style="text-align: left;">compare_lr() supports fixed_x and a saturated mean structure</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E-5</td>
+<td style="text-align: left;">Only the default is lenient about statements on exogenous variables</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E-6</td>
+<td style="text-align: left;">Dependents get a [BREAKING] notice and pass the settings explicitly</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E-7</td>
+<td style="text-align: left;">Tests and gates that encode the old defaults pin them</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E-8</td>
+<td style="text-align: left;">Fix the pinned-parameter SE under a mean structure before the flip</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E-9</td>
+<td style="text-align: left;">Opt-in to the new defaults through options(medfit.native_defaults)</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E-10</td>
+<td style="text-align: left;">Unset is detected with missing(); fit_mediation() forwards only supplied settings</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E-11</td>
+<td style="text-align: left;">The fixed_x default fixes product columns too</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E-12</td>
+<td style="text-align: left;">Reliability under the new defaults is a 0.15.0 blocker</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E-13</td>
+<td style="text-align: left;">The fixed_x default resolves to an explicit subset (provenance)</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E-14</td>
+<td style="text-align: left;">Versioned resolution: 0.15.0 ignores the opt-in option</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E-15</td>
+<td style="text-align: left;">An oracle matrix gates the flip</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-24</td>
+<td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">A</td>
 <td style="text-align: left;">SLSQP as the default solver (D19)</td>
 <td style="text-align: left;">accepted</td>
 <td style="text-align: left;">2026-10-09</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">B</td>
 <td style="text-align: left;">Tiered path for constrained fits (D16; Tier 0 shipped, Tier 1 and the fallback not implemented)</td>
 <td style="text-align: left;">approved</td>
 <td style="text-align: left;">2026-10-19</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-1</td>
 <td style="text-align: left;">Motivation for nlminb is reliability, not speed</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-2</td>
 <td style="text-align: left;">nlminb starts at the zero-product branch fits</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-3</td>
 <td style="text-align: left;">A branch reaches nlminb by pinning coordinates</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-4</td>
 <td style="text-align: left;">Unconstrained default and an option (measurement gate first)</td>
 <td style="text-align: left;">proposed</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-5</td>
 <td style="text-align: left;">nlminb as a cross-check on branch fits</td>
 <td style="text-align: left;">conditional</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-6</td>
 <td style="text-align: left;">Constrained default and the order of the tiered path</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-7</td>
 <td style="text-align: left;">Plain linear constraints stay on SLSQP until AUGLAG is measured</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-8</td>
 <td style="text-align: left;">D-4 reliability gate is a paired non-inferiority test</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-9</td>
 <td style="text-align: left;">The gate design is fixed before the first run</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-10</td>
 <td style="text-align: left;">Latent structures in the D-4 gate</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-11</td>
 <td style="text-align: left;">A partial branch result is an error (PR #303)</td>
 <td style="text-align: left;">decided</td>

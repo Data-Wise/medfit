@@ -71,6 +71,12 @@ the native engine estimates their variances and covariances unless
 standard errors, including the delta-method error of `ab`, agree as
 well.
 
+In medfit 0.15.0 the native defaults become `fixed_x` = the exogenous
+observed variables and `meanstructure = TRUE`, so a default fit will
+line up with lavaan’s default
+[`sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) without
+`fixed.x = FALSE`.
+
 ## Where they differ by design
 
 The default information matrix is observed in medfit and expected in
@@ -203,13 +209,17 @@ Both inherit from `medfit_warning_engine_comparison`. The verdict is
 `"unresolved"`, and neither side is blamed, when medfit has no accepted
 reference, the engine’s unrestricted fit differs from medfit’s
 (parameters, estimates, or the discrepancy), or a run failed or could
-not be checked. Only observed-variable covariance models are compared;
-latent variables, products, mean structures, weights, `fixed_x`,
-factors, fixed or shared parameters, start and bound modifiers and
-constraints in the model are refused by name. The live check behind
-these statements is the `compare-lr` gate
-(`tests/sim/compare-lr-gate.R`), which runs the issue’s cell through
-both engines and fails only when
+not be checked. Only observed-variable models are compared. A saturated
+mean structure (every intercept free) and `fixed_x` (all, a named subset
+or a lenient subset) are supported in both engines: the fixed exogenous
+moments are written to the engine as fixed parameters at their sample
+values, and in OpenMx a fit with a mean structure runs on the raw data
+of the rows the fit used. Latent variables, products, fixed or
+constrained intercepts, weights, factors, other fixed or shared
+parameters, start and bound modifiers and constraints in the model are
+refused by name. The live check behind these statements is the
+`compare-lr` gate (`tests/sim/compare-lr-gate.R`), which runs the
+issue’s cell through both engines and fails only when
 [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
 mislabels.
 

@@ -254,7 +254,7 @@ one zero factor it is smaller still.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_sem.html">fit_sem</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="st">"mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment"</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span>, fixed_x <span class="op">=</span> <span class="cn">FALSE</span>, meanstructure <span class="op">=</span> <span class="cn">NULL</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">mbco_sem</span><span class="op">(</span><span class="va">fit</span>, <span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

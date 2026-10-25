@@ -47,8 +47,9 @@ semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
 | factor | hand-coded dummies and lavaan | wrongref, nofix, noncanon, oneprod, afterdelete, nolevelcheck, halffix, driver:no_lavaan | factor covariates |
 | bootstrap-coverage | known truth a\*b = 0.15 (interval coverage) | narrow, wrongtruth | bootstrap inference |
 | oracle-sweep | independent randomized oracle (OLS) | badshift | observed |
-| compare-lr | lavaan and OpenMx likelihood ratios | noresidual, zeroresid, driver:unresolved_converged, driver:ref_off | zero-product branches |
+| compare-lr | lavaan and OpenMx likelihood ratios | noresidual, zeroresid, fixedset, fixedset_openmx, driver:unresolved_converged, driver:ref_off | zero-product branches |
 | restoration | first-order cost bound derived in the Methods article | infslack, rawdist, nocurv, nopinv, nonorm, nodispatch | nonlinear constraints |
+| native-defaults | lavaan fixed.x/meanstructure/sampling.weights and a hand-calculated conditional likelihood | fixedx_logical, product_free, driver | observed intercepts and means; fixed_x; native defaults (fixed_x x meanstructure) |
 
 A token in *Planted defects* is a `MUTANT=` value of the gate’s script;
 the driver (`tests/sim/run-gates.R --mutants`) also plants tolerance,
@@ -60,6 +61,21 @@ its script does not contain, or when a structure has no gate.
 
 | Id | Decision | Status | Date | ADR |
 |:---|:---|:---|:---|:---|
+| E-1 | fixed_x defaults to TRUE: warn in 0.14.0, flip in 0.15.0 | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-2 | meanstructure defaults to TRUE on the same schedule as fixed_x | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-3 | One default for fit_sem() and fit_mediation(engine = ‘native’) | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-4 | compare_lr() supports fixed_x and a saturated mean structure | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-5 | Only the default is lenient about statements on exogenous variables | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-6 | Dependents get a \[BREAKING\] notice and pass the settings explicitly | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-7 | Tests and gates that encode the old defaults pin them | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-8 | Fix the pinned-parameter SE under a mean structure before the flip | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-9 | Opt-in to the new defaults through options(medfit.native_defaults) | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-10 | Unset is detected with missing(); fit_mediation() forwards only supplied settings | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-11 | The fixed_x default fixes product columns too | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-12 | Reliability under the new defaults is a 0.15.0 blocker | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-13 | The fixed_x default resolves to an explicit subset (provenance) | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-14 | Versioned resolution: 0.15.0 ignores the opt-in option | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-15 | An oracle matrix gates the flip | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
 | A | SLSQP as the default solver (D19) | accepted | 2026-10-09 | ADR-native-solver-and-engines-2026-10-23 |
 | B | Tiered path for constrained fits (D16; Tier 0 shipped, Tier 1 and the fallback not implemented) | approved | 2026-10-19 | ADR-native-solver-and-engines-2026-10-23 |
 | D-1 | Motivation for nlminb is reliability, not speed | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |

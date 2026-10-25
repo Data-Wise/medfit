@@ -160,7 +160,9 @@ the best of the starts tried, a disagreement warning means a better optimum may
 exist, and <code>n_starts</code> raises the number of starts. Labels used in a constraint
 or a definition must be defined in the model. A constraint with no free
 parameter is an error. Exogenous variables are given free
-variances and covariances, as lavaan does with <code>fixed.x = FALSE</code>; <code>fixed_x = TRUE</code>
+variances and covariances, as lavaan does with <code>fixed.x = FALSE</code>. An exogenous variable named in any <code>~~</code>
+statement is left out of that pairing: its variance and the covariances the model writes are kept, and its
+covariances with the other exogenous variables are 0 unless written (lavaan does the same). <code>fixed_x = TRUE</code>
 (or a vector of names) in <code><a href="fit_sem.html">fit_sem()</a></code> fixes the moments of the selected ones at the
 sample values instead, as <code>fixed.x = TRUE</code> does. Unlike lavaan, which keeps an
 explicit <code>x ~~ x</code> or <code>x ~ 1</code> free under <code>fixed.x = TRUE</code> and lets the degrees of
@@ -237,6 +239,19 @@ product are not comparable with those of a fit without one, so <code>AIC(fit_a, 
 exogenous variables with the block free keeps the ordinary test.</p>
     </div>
     <div class="section level2">
+    <h2 id="defaults-are-changing">Defaults are changing<a class="anchor" aria-label="anchor" href="#defaults-are-changing"></a></h2>
+
+
+<p>medfit 0.15.0 changes two defaults of <code><a href="fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native")</code>: <code>fixed_x</code> becomes the
+exogenous observed variables (as lavaan's <code>fixed.x = TRUE</code>) and <code>meanstructure</code> becomes <code>TRUE</code>, so every observed
+intercept is free without a <code>~1</code> statement. The parameter count, <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> and the parameter
+names move; the structural estimates and their standard errors did not move on the cases measured. 0.14.0 warns
+once per session (class <code>medfit_warning_default_change</code>); pass <code>fixed_x</code> and <code>meanstructure</code> to silence it, or set
+<code>options(medfit.native_defaults = "0.15")</code> to use the new defaults now. Under that option a variable a <code>~~</code> or <code>~1</code>
+statement names is left free (message class <code>medfit_message_fixed_x_lenient</code>) instead of the error an explicit
+<code>fixed_x = TRUE</code> gives. <code><a href="fit_sem.html">fit_sem()</a></code> has the details.</p>
+    </div>
+    <div class="section level2">
     <h2 id="medfit-extensions">medfit extensions<a class="anchor" aria-label="anchor" href="#medfit-extensions"></a></h2>
 
 
@@ -273,7 +288,7 @@ rejected with the construct named.</p>
 <span class="r-in"><span><span class="co"># Labeled paths and a defined parameter</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="fit_sem.html">fit_sem</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="st">"mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\nab := a*b"</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span></span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span>, fixed_x <span class="op">=</span> <span class="cn">FALSE</span>, meanstructure <span class="op">=</span> <span class="cn">NULL</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">@</span><span class="va">defined</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   name expr       est         se</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1   ab  a*b 0.3253207 0.08016376</span>

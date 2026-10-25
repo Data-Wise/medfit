@@ -174,7 +174,7 @@ argument.
 # \donttest{
 fit <- fit_sem(
   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
-  data = mediation_demo
+  data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
 )
 coef(fit)
 #>                    a                    b    outcome~treatment 
@@ -235,6 +235,8 @@ generics::glance(fit)
 
 # a likelihood-ratio test of b = 0 against the fitted model
 fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)
+#> Warning: fit_sem(): `fixed_x` is unset. Its default changes from FALSE to the model's exogenous observed variables in medfit 0.15.0 (lavaan's fixed.x = TRUE): their variances, covariances and means are fixed at the sample values, which changes logLik, npar, AIC and BIC; structural estimates and SEs are unchanged on the measured cases. To silence this, pass the argument explicitly (the old default keeps today's results), or opt in to the 0.15.0 defaults with options(medfit.native_defaults = "0.15"). Shown once per session.
+#> Warning: fit_sem(): `meanstructure` is unset. Its default changes from NULL (a mean structure only when the model writes `~1`) to TRUE in medfit 0.15.0: intercepts and means become free parameters, which changes logLik, npar, AIC and BIC; structural estimates and SEs are unchanged on the measured cases. To silence this, pass the argument explicitly (the old default keeps today's results), or opt in to the 0.15.0 defaults with options(medfit.native_defaults = "0.15"). Shown once per session.
 anova(fit, fit0)
 #> Likelihood-ratio (chi-square difference) test for SEMFit models
 #> 
