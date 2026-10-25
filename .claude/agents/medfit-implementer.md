@@ -31,6 +31,8 @@ The task block from the plan (acceptance criteria, files, verification), the wor
 Write `_agents_workspace/<task>/implementer.md` in the worktree: files changed, the test command run and its counts
 (`tests N expectations N failed N errors N`), what failed before the fix and why, and open questions. Commit with a
 conventional message ending in the Co-Authored-By line from the session; do not push or open the PR.
+End the report with `Verdict: PASS` (the task's tests were written, ran, and pass, and the work is committed) or
+`Verdict: FAIL` with the reason.
 
 ## Commands
 - Load and test one file: `Rscript -e 'devtools::load_all(quiet=TRUE); testthat::test_file("tests/testthat/<f>.R")'`
