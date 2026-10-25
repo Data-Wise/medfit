@@ -297,10 +297,11 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
 **Hold lifted (author, 2026-10-24):** the missingmed fix is pushed to #102 (not merged); the release goes ahead
 without waiting for that merge, since missingmed users would see one warning per session and no changed result.
 
-- [ ] Version bump, `.STATUS`, README version row, CLAUDE.md status paragraph.
-- [ ] Gates green on the release PR (`dev → main`), including the new oracle-matrix gate; `R-CMD-check` green on `main`.
+- [x] Version bump, `.STATUS`, README version row, CLAUDE.md status paragraph.
+- [x] Gates green on the release PR (`dev → main`), including the new oracle-matrix gate; `R-CMD-check` green on `main`.
 - [ ] Dependents' evidence (`arm.R`) attached to the release PR (spec: each release PR).
-- [ ] GitHub release; site redeploys from `main`.
+- [x] GitHub release; site redeploys from `main`.
+- Released 2026-10-24: v0.14.0 at b7d7566 (#333). Dependents' evidence is the Checkpoint B record above, cited in the PR body.
 
 ## 0.15.0 (not this plan; recorded so nothing is lost)
 
