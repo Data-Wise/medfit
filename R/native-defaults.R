@@ -29,10 +29,10 @@
   TRUE
 }
 
-# Resolve unset `fixed_x` / `meanstructure` for the model syntax. Returns the values to fit with. With
-# the opt-in, unset `meanstructure` becomes TRUE and unset `fixed_x` becomes TRUE (all observed exogenous variables);
-# until the subset default lands (T6), a model with a `~~` or `~1` statement on an exogenous variable errors instead.
-.native_defaults_resolve <- function(model, fixed_x, meanstructure, fx_unset, ms_unset) {
+# Resolve unset `fixed_x` / `meanstructure` for the model syntax and data. Returns the values to fit with. With the
+# opt-in, unset `meanstructure` becomes TRUE and unset `fixed_x` becomes `.sem_default_fixed_x()`'s explicit subset
+# (R-11b, E-13), never a bare TRUE, so refits and comparisons see which variables the default fixed.
+.native_defaults_resolve <- function(model, data, fixed_x, meanstructure, fx_unset, ms_unset) {
   opt_in <- .native_defaults_opt_in()
   keep <- list(fixed_x = fixed_x, meanstructure = meanstructure)
   if (!fx_unset && !ms_unset) {
@@ -48,13 +48,10 @@
   if (opt_in) {
     if (ms_unset) meanstructure <- TRUE
     if (fx_unset) {
-      touch <- (p$op == "~~" & (p$lhs %in% ov_x | p$rhs %in% ov_x)) | (p$op == "~1" & p$lhs %in% ov_x)
-      if (any(touch)) {
-        stop("options(medfit.native_defaults = \"0.15\") fixes every exogenous observed variable, but the model ",
-             "has a statement on one (", trimws(paste(p$lhs[touch][1L], p$op[touch][1L], p$rhs[touch][1L])),
-             "); pass `fixed_x` explicitly (a subset, or FALSE).", call. = FALSE)
+      fixed_x <- tryCatch(.sem_default_fixed_x(p, data), error = function(e) NULL)
+      if (is.null(fixed_x)) {
+        return(keep)
       }
-      fixed_x <- length(ov_x) > 0L
     }
     return(list(fixed_x = fixed_x, meanstructure = meanstructure))
   }
@@ -63,6 +60,33 @@
   warn_ms <- ms_unset && !any(p$op == "~1") && !.sem_has_product(p)
   .warn_native_defaults_once(warn_fx, warn_ms)
   list(fixed_x = fixed_x, meanstructure = meanstructure)
+}
+
+# The 0.15.0 `fixed_x` default (R-5, R-11b, E-5, E-11): the observed exogenous columns after factor expansion and
+# with products (`m:x`, factor dummies), minus those the model writes a `~~` or `~1` statement on (a statement on a
+# factor touches all its dummies). A character subset, or FALSE when none is left. A variable left free because of a
+# statement is named in a classed message (not a warning, so the once-per-session state is not involved), on every
+# fit where it happens. An explicit `fixed_x = TRUE` does not come here and keeps its error.
+.sem_default_fixed_x <- function(parameters, data) {
+  expanded <- .sem_expand_factors(parameters, data, FALSE)
+  p <- expanded$table
+  ov_x <- .sem_roles(p)$ov_x
+  named <- unique(c(p$lhs[p$op == "~~"], p$rhs[p$op == "~~"], p$lhs[p$op == "~1"]))
+  dummies <- unlist(lapply(expanded$map[intersect(names(expanded$map), named)], function(m) m$dummies),
+                    use.names = FALSE)
+  free <- intersect(ov_x, c(named, dummies))
+  if (length(free)) {
+    message(structure(
+      class = c("medfit_message_fixed_x_lenient", "message", "condition"),
+      list(message = paste0(
+        "fit_sem(): the `fixed_x` default leaves ", paste(free, collapse = ", "), " free, because the model writes ",
+        "a `~~` or `~1` statement on ", if (length(free) == 1L) "it" else "them",
+        "; the other exogenous observed variables are fixed. Pass `fixed_x` explicitly to choose.\n"
+      ), call = NULL, variables = free)
+    ))
+  }
+  sel <- setdiff(ov_x, free)
+  if (length(sel)) sel else FALSE
 }
 
 # Once per session per argument. The state is set before the warning is signaled, so a muffled warning (the articles'
