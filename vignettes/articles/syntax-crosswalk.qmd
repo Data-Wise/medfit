@@ -1,0 +1,158 @@
+---
+title: "One model in medfit, lavaan, OpenMx and semopy"
+format:
+  html:
+    code-tools: false
+    code-copy: true
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+```{r}
+#| label: native-defaults-setup
+#| include: false
+# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
+# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
+invisible(withCallingHandlers(
+  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
+  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
+))
+```
+
+medfit's quality control checks the native engine against independent SEM software
+([Quality control of the optimizer](quality-control.html)). This page writes the same simple
+mediation model in each package's own syntax, so the comparisons can be read and rerun. The
+lavaan and OpenMx blocks run when the site is built and stop the build if they drift from
+medfit. The semopy block is Python: its script and its output are saved in the package
+(`tests/sim/oracles/`), and the build checks the saved output against medfit.
+
+The model: `treatment` affects `mediator1` (path `a`), `mediator1` affects `outcome` (path
+`b`), and `treatment` affects `outcome` directly (path `cp`), on the bundled `mediation_demo`
+data (n = 400).
+
+| | medfit | lavaan | OpenMx | semopy 2.3.11 |
+|---|---|---|---|---|
+| Label a path | `mediator1 ~ a*treatment` | `mediator1 ~ a*treatment` | `mxPath(..., labels = "a")` | `mediator1 ~ a*treatment` |
+| Indirect effect | `ab := a*b` | `ab := a*b` | `mxAlgebra(a * b, name = "ab")` | not in the syntax: `:=` is an unknown command; compute `a * b` from the estimates |
+| Exogenous variance | estimated; `fixed_x = TRUE` fixes it | fixed by default; `fixed.x = FALSE` estimates it | estimated when you write its path | not estimated (no row in the output) |
+| Tight convergence | default | default | `mxOption()` tolerances (defaults stop up to about 5.5e-6 away) | `options = {"ftol": 1e-12}` (the default stops about 4e-5 away) |
+
+In medfit 0.15.0 the native defaults become `fixed_x` = the exogenous observed variables and `meanstructure = TRUE`,
+so the exogenous variance row will be fixed by default, as in lavaan.
+
+## medfit
+
+```{r}
+#| label: medfit
+library(medfit)
+library(generics)
+model <- "
+  mediator1 ~ a*treatment
+  outcome ~ b*mediator1 + cp*treatment
+  ab := a*b
+"
+native <- tidy(fit_sem(model, mediation_demo))
+native[, c("term", "estimate", "std_error")]
+```
+
+## lavaan
+
+```{r}
+#| label: lavaan
+library(lavaan)
+lav <- parameterEstimates(sem(model, mediation_demo, fixed.x = FALSE))
+lav[lav$label %in% c("a", "b", "cp", "ab"), c("label", "est", "se")]
+```
+
+The [lavaan comparison](lavaan-comparison.html) covers the rest of the overlap and where the
+two differ by design.
+
+## OpenMx
+
+OpenMx describes the model as paths in a RAM model. The data are the sample covariance matrix
+with `numObs` set to n, the maximum-likelihood fit medfit uses; `compare_lr()` builds its
+OpenMx models the same way (from the raw data the fit used when the fit has a mean structure).
+
+```{r}
+#| label: openmx
+library(OpenMx)
+old <- c(mxOption(NULL, "Optimality tolerance"), mxOption(NULL, "Feasibility tolerance"),
+         mxOption(NULL, "Function precision"))
+mxOption(NULL, "Optimality tolerance", 1e-12)
+mxOption(NULL, "Feasibility tolerance", 1e-12)
+mxOption(NULL, "Function precision", 1e-15)
+vars <- c("treatment", "mediator1", "outcome")
+omx <- mxModel(
+  "simple", type = "RAM", manifestVars = vars,
+  mxPath(from = "treatment", to = "mediator1", labels = "a"),
+  mxPath(from = "mediator1", to = "outcome", labels = "b"),
+  mxPath(from = "treatment", to = "outcome", labels = "cp"),
+  mxPath(from = vars, arrows = 2, values = 1, labels = c("v_x", "v_m", "v_y")),
+  mxAlgebra(a * b, name = "ab"),
+  mxData(observed = cov(mediation_demo[, vars]), type = "cov", numObs = nrow(mediation_demo))
+)
+omx <- mxRun(omx, silent = TRUE)
+omx_est <- summary(omx)$parameters
+omx_est[omx_est$name %in% c("a", "b", "cp"), c("name", "Estimate", "Std.Error")]
+mxEval(ab, omx)
+```
+
+```{r}
+#| label: openmx-check
+#| include: false
+mxOption(NULL, "Optimality tolerance", old[[1]])
+mxOption(NULL, "Feasibility tolerance", old[[2]])
+mxOption(NULL, "Function precision", old[[3]])
+paths <- c("a", "b", "cp")
+nat <- native[match(paths, native$term), ]
+omx_rows <- omx_est[match(paths, omx_est$name), ]
+lav_rows <- lav[match(paths, lav$label), ]
+stopifnot(
+  max(abs(nat$estimate - omx_rows$Estimate)) < 1e-5,
+  max(abs(nat$std_error - omx_rows$Std.Error)) < 1e-5,
+  max(abs(nat$estimate - lav_rows$est)) < 1e-5,
+  abs(native$estimate[native$term == "ab"] - mxEval(ab, omx)[1, 1]) < 1e-5
+)
+```
+
+## semopy (Python)
+
+[semopy](https://pypi.org/project/semopy/) reads lavaan-style syntax. It is not one of
+medfit's quality-control oracles yet; this is the script that would be one, saved as
+`tests/sim/oracles/semopy-simple.py`:
+
+```{r}
+#| label: semopy-script
+#| echo: false
+#| output: asis
+oracles <- file.path(normalizePath(file.path("..", ".."), mustWork = FALSE), "tests", "sim", "oracles")
+cat("```python", readLines(file.path(oracles, "semopy-simple.py")), "```", sep = "\n")
+```
+
+Its output from semopy 2.3.11 (2026-10-24), saved as `tests/sim/oracles/semopy-simple.csv`,
+next to medfit with `fixed_x = TRUE`, which matches semopy's treatment of the exogenous
+variable:
+
+```{r}
+#| label: semopy-output
+semopy <- read.csv(file.path(oracles, "semopy-simple.csv"))
+labels <- c("mediator1~treatment" = "a", "outcome~mediator1" = "b", "outcome~treatment" = "cp")
+key <- paste0(semopy$lhs, semopy$op, semopy$rhs)
+semopy$term <- ifelse(key %in% names(labels), labels[key], key)
+stopifnot(nrow(semopy) == 5)
+fixed <- tidy(fit_sem(model, mediation_demo, fixed_x = TRUE))
+both <- merge(semopy[, c("term", "estimate", "std_error")],
+              fixed[, c("term", "estimate", "std_error")], by = "term",
+              suffixes = c("_semopy", "_medfit"))
+both
+stopifnot(max(abs(both$estimate_semopy - both$estimate_medfit)) < 1e-5,
+          max(abs(both$std_error_semopy - both$std_error_medfit)) < 1e-5)
+```
+
+With semopy's default stopping rule the same script gives `a` = 0.456039 instead of
+0.455996, a gap of about 4e-5, which is why the script sets `ftol`. Comparing software at 1e-6
+means first checking that each one has actually converged.

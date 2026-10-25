@@ -37,7 +37,10 @@ jobs:
   gates:
     if: github.event_name != 'pull_request' || github.event.label.name == 'run-qc'
     name: qc gates (${{ matrix.shard }})
-    runs-on: ubuntu-latest
+    # Pinned to ubuntu-24.04: the full gates job timed out at 75 min on ubuntu-26.04 (PR #307 runs 40053057744 attempts
+    # 1-2, 40053008246, 40051687109) and passed on 24.04 for the same tree (run 40109489583: reliability 22 min, rest
+    # 28 min). A single gate run alone on 26.04 was fast (run 40059864450), so the cause is not yet known.
+    runs-on: ubuntu-24.04
     timeout-minutes: 75
     strategy:
       fail-fast: false

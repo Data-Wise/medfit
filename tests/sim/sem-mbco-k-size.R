@@ -52,7 +52,7 @@ one <- function(i) {
   set.seed(1e5L * rep + 10L * cl$n + match(cl$cell, names(patterns)))
   d <- simulate(patterns[[cl$cell]], cl$n)
   out <- tryCatch({
-    fit <- suppressWarnings(fit_sem(syntax, d))
+    fit <- suppressWarnings(fit_sem(syntax, d, fixed_x = FALSE, meanstructure = NULL))
     r <- suppressWarnings(mbco_sem(fit, paths = paths))
     c(stat = unname(r$statistic), p = r$p.value)
   }, error = function(e) c(stat = NA_real_, p = NA_real_))

@@ -12,6 +12,17 @@ execute:
   echo: true
 ---
 
+```{r}
+#| label: native-defaults-setup
+#| include: false
+# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
+# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
+invisible(withCallingHandlers(
+  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
+  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
+))
+```
+
 medfit's native engine fits covariance-structure models, with observed intercepts and means, from
 lavaan-style syntax.
 It is not a replacement for lavaan: it covers the path models behind mediation
@@ -49,6 +60,9 @@ data.frame(term = rows$term, native = rows$estimate, lavaan = ref$est[i],
 native engine estimates their variances and covariances unless `fixed_x = TRUE`
 (or a vector of names) asks for lavaan's behavior. The standard
 errors, including the delta-method error of `ab`, agree as well.
+
+In medfit 0.15.0 the native defaults become `fixed_x` = the exogenous observed variables and
+`meanstructure = TRUE`, so a default fit will line up with lavaan's default `sem()` without `fixed.x = FALSE`.
 
 ## Where they differ by design
 
@@ -158,8 +172,14 @@ the unrestricted optimum already satisfies the null):
 
 Both inherit from `medfit_warning_engine_comparison`. The verdict is `"unresolved"`, and neither side is blamed, when
 medfit has no accepted reference, the engine's unrestricted fit differs from medfit's (parameters, estimates, or the
-discrepancy), or a run failed or could not be checked. Only observed-variable covariance models are compared; latent
-variables, products, mean structures, weights, `fixed_x`, factors, fixed or shared parameters, start and bound
-modifiers and constraints in the model are refused by name. The live check behind these statements is the
+discrepancy), or a run failed or could not be checked. Only observed-variable models are compared. A saturated mean
+structure (every intercept free) and `fixed_x` (all, a named subset or a lenient subset) are supported in both engines:
+the fixed exogenous moments are written to the engine as fixed parameters at their sample values, and in OpenMx a fit
+with a mean structure runs on the raw data of the rows the fit used. Latent variables, products, fixed or constrained
+intercepts, weights, factors, other fixed or shared parameters, start and bound modifiers and constraints in the model
+are refused by name. The live check behind these statements is the
 `compare-lr` gate (`tests/sim/compare-lr-gate.R`), which runs the issue's cell through both engines and fails only
 when `compare_lr()` mislabels.
+
+The same simple model written in OpenMx and semopy syntax, next to medfit and lavaan, is on
+[One model in medfit, lavaan, OpenMx and semopy](syntax-crosswalk.html).

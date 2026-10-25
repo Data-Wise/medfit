@@ -44,17 +44,21 @@ no accepted reference when one of its own refits cannot be fitted (see
 LR is then \code{NA} and the result is a comparison with that verdict, not an
 error.
 
-Only observed-variable covariance models are compared. Latent variables,
-product terms, mean structures, weights, \code{fixed_x}, factors, fixed or shared
-parameters, start/bound modifiers and constraints in the model are refused
-by name.
+Only observed-variable models are compared. With either engine, a
+saturated mean structure (every intercept free) and \code{fixed_x} (all, a named
+subset or a lenient subset) are supported: the fixed exogenous moments are
+written to the engine as fixed parameters at their sample values (in OpenMx,
+a fit with a mean structure is run on the raw data the fit used). Latent variables,
+product terms, fixed or constrained intercepts, weights, factors, other fixed
+or shared parameters, start/bound modifiers and constraints in the model are
+refused by name.
 }
 \examples{
 \donttest{
 if (requireNamespace("lavaan", quietly = TRUE)) {
   fit <- fit_sem(
     "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment",
-    data = mediation_demo
+    data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
   )
   compare_lr(fit, paths = c("a", "b"), engine = "lavaan")
 }

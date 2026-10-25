@@ -107,6 +107,8 @@ navbar:
         href: articles/guide-intervals.html
       - text: "Glossary and symbols"
         href: articles/guide-glossary.html
+      - text: "Native defaults in 0.15.0"
+        href: articles/native-defaults-0-15.html
       - text: "Native engine in five minutes"
         href: articles/native-quickstart.html
       - text: "Native engine, step by step"
@@ -115,6 +117,8 @@ navbar:
         href: articles/native-guide.html
       - text: "lavaan and the native engine"
         href: articles/lavaan-comparison.html
+      - text: "One model in medfit, lavaan, OpenMx and semopy"
+        href: articles/syntax-crosswalk.html
       - text: "Worked example: study hours and GPA"
         href: articles/example-gpa.html
     cookbook:
@@ -310,10 +314,12 @@ articles:
       - '`articles/guide-troubleshooting`'
       - '`articles/guide-intervals`'
       - '`articles/guide-glossary`'
+      - '`articles/native-defaults-0-15`'
       - '`articles/native-quickstart`'
       - '`articles/native-tutorial`'
       - '`articles/native-guide`'
       - '`articles/lavaan-comparison`'
+      - '`articles/syntax-crosswalk`'
       - '`articles/example-gpa`'
   - title: "Detailed guides"
     contents:

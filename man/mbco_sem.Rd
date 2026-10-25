@@ -90,7 +90,7 @@ one zero factor it is smaller still.
 \donttest{
 fit <- fit_sem(
   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment",
-  data = mediation_demo
+  data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
 )
 mbco_sem(fit, "a", "b")
 

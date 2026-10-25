@@ -54,8 +54,8 @@ test_that("fixed_x names a factor, a mix, a dummy, or TRUE: each equals the twin
 
 test_that("fixing a factor removes parameters: fewer than the free fit, as for hand-coded dummies", {
   d <- fxf_data()
-  free <- fit_sem(fxf_model, d$factor)
-  fixed <- fit_sem(fxf_model, d$factor, fixed_x = "g")
+  free <- fit_sem(fxf_model, d$factor, fixed_x = FALSE, meanstructure = NULL)
+  fixed <- fit_sem(fxf_model, d$factor, fixed_x = "g", meanstructure = NULL)
   expect_lt(length(fixed@theta), length(free@theta))
   expect_equal(fixed@df, free@df)
 })
@@ -152,8 +152,8 @@ test_that("fit statistics equal lavaan on an over-identified model, free and fix
   mod_f <- "m ~ a*x + g\ny ~ b*m + g"
   mod_t <- "m ~ a*x + g_b + g_c\ny ~ b*m + g_b + g_c"
   for (fx in c(FALSE, TRUE)) {
-    f <- fit_sem(mod_f, d$factor, fixed_x = fx)
-    ft <- fit_sem(mod_t, d$twin, fixed_x = fx)
+    f <- fit_sem(mod_f, d$factor, fixed_x = fx, meanstructure = NULL)
+    ft <- fit_sem(mod_t, d$twin, fixed_x = fx, meanstructure = NULL)
     # no mean structure on either side (medfit's has none without a `~1` row), so the parameter counts compare
     l <- lavaan::sem(mod_t, d$twin, meanstructure = FALSE, fixed.x = fx, information = "observed")
     ref <- lavaan::fitMeasures(l, c("npar", "df", "chisq"))

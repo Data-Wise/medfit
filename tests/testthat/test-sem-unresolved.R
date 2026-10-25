@@ -107,7 +107,7 @@ test_that("the compare_lr reference is not accepted and the LR is NA when a refi
 
 test_that("compare_lr() returns an unresolved comparison, not an error, when medfit's refit fails", {
   skip_if_not_installed("lavaan")
-  fit <- suppressWarnings(fit_sem(ur_model, ur_data()))
+  fit <- suppressWarnings(fit_sem(ur_model, ur_data(), fixed_x = FALSE, meanstructure = NULL))
   testthat::local_mocked_bindings(.sem_fit_syntax = ur_failing(1L))
   expect_warning(res <- suppressWarnings(compare_lr(fit, c("a", "b"), engine = "lavaan")), NA)
   expect_s3_class(res, "medfit_lr_comparison")

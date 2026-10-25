@@ -45,7 +45,9 @@ the best of the starts tried, a disagreement warning means a better optimum may
 exist, and \code{n_starts} raises the number of starts. Labels used in a constraint
 or a definition must be defined in the model. A constraint with no free
 parameter is an error. Exogenous variables are given free
-variances and covariances, as lavaan does with \code{fixed.x = FALSE}; \code{fixed_x = TRUE}
+variances and covariances, as lavaan does with \code{fixed.x = FALSE}. An exogenous variable named in any \verb{~~}
+statement is left out of that pairing: its variance and the covariances the model writes are kept, and its
+covariances with the other exogenous variables are 0 unless written (lavaan does the same). \code{fixed_x = TRUE}
 (or a vector of names) in \code{\link[=fit_sem]{fit_sem()}} fixes the moments of the selected ones at the
 sample values instead, as \code{fixed.x = TRUE} does. Unlike lavaan, which keeps an
 explicit \code{x ~~ x} or \code{x ~ 1} free under \code{fixed.x = TRUE} and lets the degrees of
@@ -164,6 +166,18 @@ product are not comparable with those of a fit without one, so \code{AIC(fit_a, 
 exogenous variables with the block free keeps the ordinary test.
 }
 
+\section{Defaults are changing}{
+
+medfit 0.15.0 changes two defaults of \code{\link[=fit_sem]{fit_sem()}} and \code{fit_mediation(engine = "native")}: \code{fixed_x} becomes the
+exogenous observed variables (as lavaan's \code{fixed.x = TRUE}) and \code{meanstructure} becomes \code{TRUE}, so every observed
+intercept is free without a \code{~1} statement. The parameter count, \code{logLik()}, \code{AIC()}, \code{BIC()} and the parameter
+names move; the structural estimates and their standard errors did not move on the cases measured. 0.14.0 warns
+once per session (class \code{medfit_warning_default_change}); pass \code{fixed_x} and \code{meanstructure} to silence it, or set
+\code{options(medfit.native_defaults = "0.15")} to use the new defaults now. Under that option a variable a \verb{~~} or \code{~1}
+statement names is left free (message class \code{medfit_message_fixed_x_lenient}) instead of the error an explicit
+\code{fixed_x = TRUE} gives. \code{\link[=fit_sem]{fit_sem()}} has the details.
+}
+
 \section{medfit extensions}{
 
 \itemize{
@@ -195,7 +209,7 @@ rejected with the construct named.
 # Labeled paths and a defined parameter
 fit_sem(
   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\nab := a*b",
-  data = mediation_demo
+  data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
 )@defined
 
 # Comma shorthand: one left-hand side per name

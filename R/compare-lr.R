@@ -137,6 +137,7 @@
 
 # Why compare_lr() cannot run this fit, or NULL when it can. Only observed-variable covariance models are supported
 # (grill P3): every other construct is refused with its name, never translated silently.
+# Both adapters pose a saturated mean structure and the `fixed_x` set (lavaan T4b, OpenMx T4c).
 .lr_unsupported <- function(object) {
   tab <- object@table
   model <- object@model
@@ -147,14 +148,8 @@
   if (any(grepl(":", c(tab$lhs, tab$rhs), fixed = TRUE))) {
     return("product terms")
   }
-  if (isTRUE(internals$ram$has_mean)) {
-    return("a mean structure (intercepts or `meanstructure`)")
-  }
   if (!is.null(internals$weights)) {
     return("case weights")
-  }
-  if (length(internals$fixed_x)) {
-    return("`fixed_x`")
   }
   if (length(internals$factors)) {
     return("factor covariates")
@@ -165,8 +160,16 @@
   if (grepl("==|<|>", model)) {
     return("constraints in the model (give the unrestricted fit)")
   }
+  # A non-free row is posed only when medfit fixed it through `fixed_x` (an exogenous moment at its sample value,
+  # written to the engine as a fixed row); any other fixed row is the user's and is refused.
+  fixed_set <- if (is.null(tab$fixed_x)) rep(FALSE, nrow(tab)) else tab$fixed_x %in% TRUE
+  user_fixed <- !tab$free & !fixed_set
+  # A mean structure is supported only when saturated: every intercept outside the fixed set is free.
+  if (any(user_fixed & tab$op == "~1")) {
+    return("fixed or constrained intercepts (only a saturated mean structure is compared)")
+  }
   lab <- tab$label[tab$free]
-  if (any(!tab$free) || anyDuplicated(lab[nzchar(lab)]) > 0L) {
+  if (any(user_fixed) || anyDuplicated(lab[nzchar(lab)]) > 0L) {
     return("fixed or shared parameters (the engines would pose a different model)")
   }
   NULL
@@ -201,10 +204,29 @@
   prod(unit)
 }
 
-.lr_lavaan_fit <- function(model, data, start) {
+# The lavaan model for a fit: its syntax plus its `fixed_x` set written as fixed rows at the values medfit fixed (the
+# N-denominator sample moments of the rows the fit used), `x ~~ <s_xy>*y` and, with a mean structure, `x ~ <mean>*1`.
+# lavaan's own fixed.x is all-or-nothing and would also fix a variable the model frees (a lenient subset), so it stays
+# off and the rows carry the set (T4a note, planning/specs/NOTE-compare-lr-fixed-set-2026-10-24.md).
+.lr_lavaan_model <- function(object) {
+  fixed.x <- FALSE
+  tab <- object@table
+  rows <- character()
+  if (!fixed.x && !is.null(tab$fixed_x)) {
+    fx <- tab[tab$fixed_x %in% TRUE, ]
+    fmt <- function(x) formatC(x, digits = 17, format = "g")
+    rows <- ifelse(fx$op == "~1", sprintf("%s ~ %s*1", fx$lhs, fmt(fx$est)),
+                   sprintf("%s ~~ %s*%s", fx$lhs, fmt(fx$est), fx$rhs))
+  }
+  list(model = paste(c(object@model, rows), collapse = "\n"), fixed.x = fixed.x,
+       meanstructure = isTRUE(object@internals$ram$has_mean))
+}
+
+.lr_lavaan_fit <- function(spec, model, data, start) {
   fit <- tryCatch(
-    suppressWarnings(lavaan::lavaan(model, data = data, fixed.x = FALSE, meanstructure = FALSE, auto.var = TRUE,
-                                    auto.cov.y = TRUE, start = start)),
+    suppressWarnings(lavaan::lavaan(model, data = data, fixed.x = spec$fixed.x, meanstructure = spec$meanstructure,
+                                    int.ov.free = spec$meanstructure, auto.var = TRUE, auto.cov.y = TRUE,
+                                    start = start)),
     error = function(e) NULL
   )
   if (is.null(fit) || !isTRUE(lavaan::lavInspect(fit, "converged"))) {
@@ -221,17 +243,18 @@
   }
   why <- .lr_unsupported(object)
   if (!is.null(why)) {
-    stop(sprintf("compare_lr() does not support %s; it compares observed-variable covariance models only.", why),
+    stop(sprintf("compare_lr() does not support %s; it compares observed-variable models only.", why),
          call. = FALSE)
   }
-  model <- object@model
+  spec <- .lr_lavaan_model(object)
+  model <- spec$model
   data <- object@data
   null_model <- paste0(model, "\n", paste(paths, collapse = "*"), " == 0")
-  full <- .lr_lavaan_fit(model, data, "default")
+  full <- .lr_lavaan_fit(spec, model, data, "default")
   scale <- .lr_residual_scale(object, paths)
   chisq <- function(f) if (is.null(f)) NA_real_ else unname(lavaan::fitMeasures(f, "chisq"))
   run <- function(start) {
-    f <- .lr_lavaan_fit(null_model, data, start)
+    f <- .lr_lavaan_fit(spec, null_model, data, start)
     resid <- NA_real_
     if (!is.null(f)) {
       pt <- lavaan::parTable(f)
@@ -274,10 +297,14 @@
 #' LR is then `NA` and the result is a comparison with that verdict, not an
 #' error.
 #'
-#' Only observed-variable covariance models are compared. Latent variables,
-#' product terms, mean structures, weights, `fixed_x`, factors, fixed or shared
-#' parameters, start/bound modifiers and constraints in the model are refused
-#' by name.
+#' Only observed-variable models are compared. With either engine, a
+#' saturated mean structure (every intercept free) and `fixed_x` (all, a named
+#' subset or a lenient subset) are supported: the fixed exogenous moments are
+#' written to the engine as fixed parameters at their sample values (in OpenMx,
+#' a fit with a mean structure is run on the raw data the fit used). Latent variables,
+#' product terms, fixed or constrained intercepts, weights, factors, other fixed
+#' or shared parameters, start/bound modifiers and constraints in the model are
+#' refused by name.
 #'
 #' @param object A [SEMFit] from [fit_sem()].
 #' @param paths Character vector: the labels of the regression paths whose
@@ -297,7 +324,7 @@
 #' if (requireNamespace("lavaan", quietly = TRUE)) {
 #'   fit <- fit_sem(
 #'     "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment",
-#'     data = mediation_demo
+#'     data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
 #'   )
 #'   compare_lr(fit, paths = c("a", "b"), engine = "lavaan")
 #' }

@@ -12,7 +12,18 @@ execute:
   echo: true
 ---
 
-CRAN has medfit 0.3.2; this site documents 0.13.0 (GitHub and r-universe).
+```{r}
+#| label: native-defaults-setup
+#| include: false
+# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
+# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
+invisible(withCallingHandlers(
+  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
+  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
+))
+```
+
+CRAN has medfit 0.3.2; this site documents 0.14.0 (GitHub and r-universe).
 This page lists what a 0.3.2 user needs to know before upgrading: numbers that
 change, calls that now stop with an error, and what is new. The full record is
 [NEWS](https://data-wise.github.io/medfit/news/index.html).
@@ -43,6 +54,7 @@ change, calls that now stop with an error, and what is new. The full record is
 | 0.9.0 | a fixed intercept, `y ~ 0*1`, in the native engine | the row was dropped and the covariance-only fit returned | a restriction ("the mean of `y` is 0"): one degree of freedom, a changed discrepancy, comparable with `anova()`; any `y ~ 1` row turns the mean structure on |
 | 0.9.0 | `logLik()`, `AIC()`, `BIC()` of a native fit with `fixed_x` | (new argument) | conditional on the fixed variables; `anova()`, `mbco_sem()` and multi-fit `AIC()`/`BIC()` stop when fixed sets or data differ; `glance()` gains a `fixed_x` column |
 | 0.10.0 | `extract_mediation(<SEMFit>, decomposition = "four_way")` | refused by name until the `:` operator existed | returns the four-way decomposition when the outcome equation carries the treatment-by-mediator product; refused with a message that says to add `x:m` when it does not |
+| 0.14.0 | `fit_sem()` and `fit_mediation(engine = "native")` with `fixed_x` or `meanstructure` left unset | (no warning) | same results, plus a once-per-session warning of class `medfit_warning_default_change`: in 0.15.0 the defaults become the exogenous observed variables and `TRUE`, which moves `npar`, `logLik()`, AIC and BIC; pass both arguments to keep today's results, or set `options(medfit.native_defaults = "0.15")` to use the new defaults now |
 | 0.5.0 | `se_type = "sandwich"` with a treatment-by-mediator term | returned the model-based covariance, with no warning | applies the sandwich estimator |
 | 0.5.0 | lavaan fits with custom path labels | the alias rows of `@vcov` were all zero, so a parametric bootstrap had a zero-width interval | the alias rows are filled from the labeled parameters |
 
@@ -107,6 +119,7 @@ reuses one of medfit's alias names for a different path (0.5.0).
 | 0.11.1 | nonparametric and cluster bootstrap resamples are reproducible across `ncores` with a fixed seed; `anova()` records row-wise `p_valid` and refuses mismatched nonzero fixed parameters; native fits record the best-of-starts verdict in `@diagnostics$optimum` |
 | 0.12.0 | `compare_lr()` ([article](lavaan-comparison.html#checking-a-constrained-lr-against-lavaan-or-openmx)): the product-null LR in lavaan or OpenMx against `mbco_sem()`, with warnings only on observed evidence |
 | 0.13.0 | a roundoff-limited restoration's objective rise is capped (a worse point can no longer stand and inflate an LR); a refit the optimizer cannot fit is an unresolved result in `mbco_sem()` and `compare_lr()` instead of an error or a silent answer, and a zero-product branch that cannot be fitted stops `fit_sem()` with an error instead of returning a partial fit |
+| 0.14.0 | a native fit that leaves `fixed_x` or `meanstructure` unset warns once per session that both defaults change in 0.15.0 (no result changes); `options(medfit.native_defaults = "0.15")` opts in early ([article](native-defaults-0-15.html)) |
 
 ## Dependencies
 

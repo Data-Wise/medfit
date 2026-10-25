@@ -57,8 +57,8 @@ test_that("the joint-null cell: a violated constraint from the zero start is rep
 
 test_that("the shared refusals apply to the OpenMx adapter", {
   d <- mediation_demo
-  expect_error(medfit:::.lr_engine_openmx(suppressWarnings(fit_sem(model_txt, d, fixed_x = TRUE)), c("a", "b")),
-               "`fixed_x`", fixed = TRUE)
+  weighted <- suppressWarnings(fit_sem(model_txt, d, weights = rep(1, nrow(d))))
+  expect_error(medfit:::.lr_engine_openmx(weighted, c("a", "b")), "case weights", fixed = TRUE)
   expect_error(medfit:::.lr_engine_openmx(suppressWarnings(fit_sem(paste0(model_txt, "\ncp == 0"), d)), c("a", "b")),
                "constraints in the model", fixed = TRUE)
 })

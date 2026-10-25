@@ -116,7 +116,7 @@ rows <- list()
 for (f in fx) {
   d <- f$data
   # the oracle works on columns X, M, Y of the data as they are (a rescaled dataset is just another dataset)
-  h1 <- fit_sem(model, d)
+  h1 <- fit_sem(model, d, fixed_x = FALSE, meanstructure = NULL)
   cr <- or213_cross(d)
   qh <- or213_qhat(d)
   for (tag in q_set) {
@@ -125,7 +125,7 @@ for (f in fx) {
     syn <- paste0(model, "\na*b/sqrt(2*(b^2*Vm+Vy)) == ", format(q_fit, digits = 17))
     wmsg <- character()
     h2 <- tryCatch(
-      withCallingHandlers(fit_sem(syn, d, n_starts = 5), warning = function(w) {
+      withCallingHandlers(fit_sem(syn, d, n_starts = 5, fixed_x = FALSE, meanstructure = NULL), warning = function(w) {
         wmsg <<- c(wmsg, conditionMessage(w))
         invokeRestart("muffleWarning")
       }),

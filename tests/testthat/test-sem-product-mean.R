@@ -14,11 +14,12 @@ pmn_plain <- "m ~ x + c\ny ~ m + x + c"
 
 test_that("a product model with no intercept statement fits the mean structure (fit_sem)", {
   quiet_product_advisories({
-    fit <- fit_sem(pmn_model, pmn_data())
+    fit <- fit_sem(pmn_model, pmn_data(), fixed_x = FALSE, meanstructure = NULL)
     expect_true(fit@internals$ram$has_mean)
     expect_true(all(c("m~1", "y~1", "x~1", "c~1") %in% names(coef(fit))))
     # an explicit TRUE is the same fit
-    expect_equal(coef(fit_sem(pmn_model, pmn_data(), meanstructure = TRUE)), coef(fit), tolerance = 1e-10)
+    explicit <- fit_sem(pmn_model, pmn_data(), meanstructure = TRUE, fixed_x = FALSE)
+    expect_equal(coef(explicit), coef(fit), tolerance = 1e-10)
   })
 })
 
@@ -53,7 +54,7 @@ test_that("the same holds through fit_mediation(engine = 'native', model = )", {
 })
 
 test_that("a no-product model is unchanged: covariance-only by default", {
-  fit <- fit_sem(pmn_plain, pmn_data())
+  fit <- fit_sem(pmn_plain, pmn_data(), fixed_x = FALSE, meanstructure = NULL)
   expect_false(fit@internals$ram$has_mean)
   expect_false(any(grepl("~1", names(coef(fit)), fixed = TRUE)))
 })

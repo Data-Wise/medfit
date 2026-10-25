@@ -7,6 +7,17 @@ execute:
   echo: true
 ---
 
+```{r}
+#| label: native-defaults-setup
+#| include: false
+# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
+# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
+invisible(withCallingHandlers(
+  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
+  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
+))
+```
+
 This page follows the implementation in `R/effect-se.R`, `R/bootstrap.R`,
 `R/sem-ml.R`, `R/sem-optim.R`, `R/sem-constraints.R`, `R/sem-anova.R`, and
 `R/sem-mbco.R`. The [Methods and Formulas](methods.html) article defines the

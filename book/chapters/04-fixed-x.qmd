@@ -2,6 +2,17 @@
 title: "Fixed exogenous variables"
 ---
 
+```{r}
+#| label: native-defaults-setup
+#| include: false
+# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
+# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
+invisible(withCallingHandlers(
+  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
+  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
+))
+```
+
 In a mediation model the treatment and the covariates are **exogenous**: nothing in the model
 explains them. Their means, variances and covariances are parameters of the joint model, and
 they carry no information about the paths. The `fixed_x` argument of `fit_sem()` stops
@@ -565,6 +576,11 @@ likelihood a different package may report. When the question is about the paths 
 tests) the answer is the same either way, as Section 3 proved; the standard errors of exogenous moments
 left free next to fixed ones are the exception that section showed. When the question is about information criteria across
 models, fit them all with the same `fixed_x`.
+
+**The default in 0.15.0.** Through 0.14.x the default is `fixed_x = FALSE`, and every fit in this chapter sets
+`fixed_x` explicitly. From 0.15.0 an unset `fixed_x` fixes the observed exogenous variables, except those a `~~` or
+`~1` statement names (a lenient subset; an explicit `TRUE` still refuses such a statement, Section 5). The schedule,
+the opt-in and the evidence are in [Native defaults in 0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html).
 
 ## Check yourself
 

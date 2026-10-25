@@ -12,6 +12,17 @@ execute:
   echo: true
 ---
 
+```{r}
+#| label: native-defaults-setup
+#| include: false
+# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
+# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
+invisible(withCallingHandlers(
+  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
+  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
+))
+```
+
 Twenty-one task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
@@ -516,6 +527,10 @@ Compare fits only when they fix the same variables. `anova()`, `mbco_sem()` and 
 across several fits stop when the fixed sets differ, as above. Pass a character vector (for
 example `fixed_x = "treatment"`) to fix a subset.
 
+In 0.15.0 the default becomes `fixed_x = TRUE` (0.14.0 warns when it is left unset); pass
+`fixed_x = FALSE` to keep the free exogenous block. See
+[the 0.15.0 defaults](native-defaults-0-15.html).
+
 More: [Methods and Formulas](methods.html), [the native engine guide](native-guide.html).
 
 ## 19. Observed intercepts and means
@@ -554,6 +569,10 @@ AIC(free, zero)
 
 The test rejects zero, and the restricted model has the larger AIC. A fit with
 the mean structure off has no intercepts to restrict.
+
+In 0.15.0 the default becomes `meanstructure = TRUE`, so every native fit has intercepts; pass
+`meanstructure = NULL` to keep today's rule (means only when the model writes `~1` or a
+product). See [the 0.15.0 defaults](native-defaults-0-15.html).
 
 More: [Native engine, intercepts](model-native.html#intercepts).
 

@@ -2224,7 +2224,7 @@ print_summary_cluster_mediation_data <- function(x, ...) {
 #' \donttest{
 #' fit <- fit_sem(
 #'   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
-#'   data = mediation_demo
+#'   data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
 #' )
 #' fit@table[fit@table$op == "~", c("lhs", "rhs", "est", "se")]
 #' fit@defined

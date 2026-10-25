@@ -68,18 +68,25 @@ errors if an intercept is written. With a mean structure every observed variable
 not written has a free one, so a model with only free intercepts has the same estimates and
 standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
 A model with a product term (\code{y ~ x + m + x:m}) always fits the mean structure (it needs the mediator
-intercept for the four-way decomposition), so with a product \code{meanstructure = FALSE} is an error.}
+intercept for the four-way decomposition), so with a product \code{meanstructure = FALSE} is an error.
+Left unset, with no \code{~1} and no product in the model, it warns once per session that the default becomes \code{TRUE}
+in medfit 0.15.0; \code{options(medfit.native_defaults = "0.15")} uses \code{TRUE} now.}
 
 \item{fixed_x}{\code{FALSE} (default), \code{TRUE}, or a character vector of exogenous observed variable names. The
 selected variables (\code{TRUE}: every exogenous observed variable, product columns included) have their mean (with
-a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
+a mean structure), variance and the exogenous covariances the model contains fixed at the sample moments of
 the estimation sample (weighted when \code{weights} are given) and removed from estimation, as lavaan does with
 \code{fixed.x = TRUE}. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
 not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
 conditional on the fixed variables, and \code{glance()$fixed_x} lists them. Models whose \code{fixed_x} sets or data differ
 cannot be compared with \code{\link[stats:anova]{stats::anova()}}, \code{\link[=mbco_sem]{mbco_sem()}}, \code{AIC()} or \code{BIC()}. A (co)variance or intercept statement
 on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
-(\code{fixed_x} column, no standard error) but not in \code{coef()} or \code{vcov()}.}
+(\code{fixed_x} column, no standard error) but not in \code{coef()} or \code{vcov()}.
+Left unset, in a model with an exogenous observed variable, it warns once per session that the default becomes
+the exogenous observed variables in medfit 0.15.0; \code{options(medfit.native_defaults = "0.15")} uses that now:
+every exogenous observed variable (product and factor-dummy columns included) except those a \verb{~~} or \code{~1}
+statement names, which are left free with a message of class \code{medfit_message_fixed_x_lenient} (an explicit
+\code{TRUE} errors there instead). \code{glance()$fixed_x} names the set the fit used.}
 
 \item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name
 \code{\link[=fit_mediation]{fit_mediation()}} uses; the old name still works with a warning.}
@@ -96,11 +103,25 @@ observed and latent variables, user labels, fixed values, starts and bounds,
 equality and inequality constraints (\code{==}, \code{<}, \code{>}, linear or nonlinear), and defined
 parameters (\verb{:=}) with delta-method standard errors.
 }
+\section{Defaults are changing}{
+
+In medfit 0.15.0 the defaults become \code{fixed_x} = the exogenous observed variables (lavaan's \code{fixed.x = TRUE}) and
+\code{meanstructure = TRUE}, so a default fit matches a default \code{lavaan::sem()} fit. 0.14.0 changes no result: it
+warns once per session per argument (class \code{medfit_warning_default_change}) when an argument is left unset in a
+model where its default will matter. Under the new defaults the parameter count, \code{logLik()}, \code{AIC()}, \code{BIC()} and
+the names in \code{coef()}, \code{vcov()} and \code{tidy()} change; the structural estimates and their standard errors did not
+change on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
+parameter names). To keep today's results and silence the warning, pass both arguments, for example
+\verb{fixed_x = FALSE, meanstructure = NULL}. To fit with the 0.15.0 defaults now, set
+\code{options(medfit.native_defaults = "0.15")}; variables a \verb{~~} or \code{~1} statement names are then left free and named
+in a message of class \code{medfit_message_fixed_x_lenient}.
+}
+
 \examples{
 \donttest{
 fit <- fit_sem(
   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment\nab := a*b",
-  data = mediation_demo
+  data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
 )
 fit@defined
 

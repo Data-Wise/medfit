@@ -79,7 +79,7 @@
 #' \donttest{
 #' fit <- fit_sem(
 #'   "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + treatment",
-#'   data = mediation_demo
+#'   data = mediation_demo, fixed_x = FALSE, meanstructure = NULL
 #' )
 #' mbco_sem(fit, "a", "b")
 #'
@@ -155,6 +155,8 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   constraints <- paste(paths, "== 0")
   # a fit with `fixed_x` is refit with the same fixed set, so the refits keep the fit's likelihood
   fixed_x <- if (length(fit@internals$fixed_x)) fit@internals$fixed_x else FALSE
+  # and with its mean setting stated, never left to the syntax or to `.sem_fit_syntax()`'s default (R-6): FALSE for a
+  # fit without a mean structure, so a later change of the default cannot give the refit a different likelihood
   # A refit that cannot be fitted is an unresolved row, not an error: its failure text goes in `note`, and the
   # statistic is NA (never the minimum over the refits that worked, which would hide the failure).
   refit <- lapply(paths, function(tested) {
@@ -162,7 +164,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     # `fit@data` holds the rows the fit used, already free of missing values: no second deletion.
     r <- tryCatch(
       .sem_fit_syntax(paste0(fit@model, "\n", con), fit@data, fit@information, n_starts = n_starts,
-                      control = control, meanstructure = if (isTRUE(fit@internals$ram$has_mean)) TRUE,
+                      control = control, meanstructure = isTRUE(fit@internals$ram$has_mean),
                       fixed_x = fixed_x, factors = fit@internals$factors),
       error = function(e) {
         msg <- sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint ",

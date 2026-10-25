@@ -13,11 +13,11 @@ test_that("fit_mediation(engine = 'native') passes fixed_x through engine_args a
 
 test_that("zero-product branches and the MBCO refit keep fixed_x", {
   d <- fx_data()
-  fit <- fit_sem(paste0(fx_syntax, "\na*b == 0"), d, fixed_x = TRUE)
+  fit <- fit_sem(paste0(fx_syntax, "\na*b == 0"), d, fixed_x = TRUE, meanstructure = NULL)
   expect_setequal(fit@internals$fixed_x, fx_exo)
   # build the fits first: a mock installed earlier would record fit_sem()'s own call and pass vacuously
-  subset_fit <- fit_sem(fx_syntax, d, fixed_x = "covariate1")
-  free_fit <- fit_sem(fx_syntax, d)
+  subset_fit <- fit_sem(fx_syntax, d, fixed_x = "covariate1", meanstructure = NULL)
+  free_fit <- fit_sem(fx_syntax, d, fixed_x = FALSE, meanstructure = NULL)
   seen <- list()
   testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
     seen[[length(seen) + 1L]] <<- list(...)$fixed_x

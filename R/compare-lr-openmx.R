@@ -1,6 +1,7 @@
-# The OpenMx adapter of compare_lr() (#249 T3). Observed-variable covariance models only (see `.lr_unsupported()`): the
-# RAM model is built straight from the fit's table and fitted on the sample covariance matrix with numObs = n, which is
-# the ML likelihood medfit uses.
+# The OpenMx adapter of compare_lr() (#249 T3). Observed-variable models only (see `.lr_unsupported()`): the RAM model
+# is built straight from the fit's table and fitted on the sample covariance matrix with numObs = n, which is the ML
+# likelihood medfit uses. The `fixed_x` rows are fixed paths at the values medfit fixed (T4c); with a mean structure the
+# model has a means path and runs on the raw data the fit used.
 
 # OpenMx accepts tight convergence settings; its defaults stop up to 5.5e-6 from the optimum, which would make a correct
 # fit look like a disagreement. Returns the function that restores the previous options (call it from `on.exit()`).
@@ -17,23 +18,32 @@
   }
 }
 
-# RAM model from the free parameters of a fit table. `labels` are p1..pq in table order (OpenMx labels cannot hold `~`);
-# `start` is the start vector in that order; `constrain` the labels whose product is constrained to 0 (or NULL).
+# RAM model from a fit table. `labels` are p1..pq in table order (OpenMx labels cannot hold `~`); `start` is the start
+# vector in that order; `constrain` the labels whose product is constrained to 0 (or NULL). A non-free row (only the
+# `fixed_x` set passes `.lr_unsupported()`) is a fixed path at the table's estimate, the value medfit fixed.
 .lr_openmx_model <- function(object, labels, start, constrain = NULL) {
   tab <- object@table
   obs <- object@internals$ram$obs
+  free <- tab$free
   paths <- lapply(seq_len(nrow(tab)), function(i) {
     row <- tab[i, ]
+    val <- if (free[[i]]) start[[i]] else row$est
+    lab <- if (free[[i]]) labels[[i]] else NA_character_
     if (row$op == "~") {
-      OpenMx::mxPath(from = row$rhs, to = row$lhs, arrows = 1, free = TRUE, values = start[[i]], labels = labels[[i]])
+      OpenMx::mxPath(from = row$rhs, to = row$lhs, arrows = 1, free = free[[i]], values = val, labels = lab)
+    } else if (row$op == "~1") {
+      OpenMx::mxPath(from = "one", to = row$lhs, arrows = 1, free = free[[i]], values = val, labels = lab)
     } else {
-      OpenMx::mxPath(from = row$lhs, to = if (row$lhs == row$rhs) NA else row$rhs, arrows = 2, free = TRUE,
-                     values = start[[i]], labels = labels[[i]])
+      OpenMx::mxPath(from = row$lhs, to = if (row$lhs == row$rhs) NA else row$rhs, arrows = 2, free = free[[i]],
+                     values = val, labels = lab)
     }
   })
-  cv <- stats::cov(object@data[, obs, drop = FALSE])
-  parts <- c(list("compare_lr", type = "RAM", manifestVars = obs), paths,
-             list(OpenMx::mxData(observed = cv, type = "cov", numObs = object@n_obs)))
+  dat <- if (isTRUE(object@internals$ram$has_mean)) {
+    OpenMx::mxData(observed = object@data[, obs, drop = FALSE], type = "raw")
+  } else {
+    OpenMx::mxData(observed = stats::cov(object@data[, obs, drop = FALSE]), type = "cov", numObs = object@n_obs)
+  }
+  parts <- c(list("compare_lr", type = "RAM", manifestVars = obs), paths, list(dat))
   if (length(constrain)) {
     prod_expr <- parse(text = paste(constrain, collapse = " * "))[[1L]]
     parts <- c(parts, list(do.call(OpenMx::mxAlgebra, list(prod_expr, name = "g")),
@@ -55,7 +65,7 @@
   }
   why <- .lr_unsupported(object)
   if (!is.null(why)) {
-    stop(sprintf("compare_lr() does not support %s; it compares observed-variable covariance models only.", why),
+    stop(sprintf("compare_lr() does not support %s; it compares observed-variable models only.", why),
          call. = FALSE)
   }
   restore <- .lr_openmx_tight()
@@ -65,6 +75,7 @@
   smp <- .sem_sample(object@data[, ram$obs, drop = FALSE], ram)
   labels <- paste0("p", seq_len(nrow(tab)))
   keys <- paste(tab$lhs, tab$op, tab$rhs)
+  free_labels <- labels[tab$free]
   # medfit's own default start, by the name medfit gives each parameter (the label, else `lhs~rhs` / `lhs~~rhs`)
   start_all <- .sem_default_start(ram, smp)
   start_name <- ifelse(nzchar(tab$label), tab$label, paste0(tab$lhs, tab$op, tab$rhs))
@@ -96,7 +107,7 @@
   }
   est <- NULL
   if (.lr_openmx_ok(full)) {
-    est <- stats::setNames(unname(OpenMx::omxGetParameters(full)[labels]), keys)
+    est <- stats::setNames(unname(OpenMx::omxGetParameters(full)[free_labels]), keys[tab$free])
   }
   list(engine = "openmx", version = as.character(utils::packageVersion("OpenMx")), est = est, fit = sat_chisq(full),
        runs = list(run(start_default, "default"), run(zero_start, "zero")))
