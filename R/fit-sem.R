@@ -70,8 +70,10 @@
 #'   on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
 #'   (`fixed_x` column, no standard error) but not in `coef()` or `vcov()`.
 #'   Left unset, in a model with an exogenous observed variable, it warns once per session that the default becomes
-#'   `TRUE` in medfit 0.15.0; `options(medfit.native_defaults = "0.15")` uses `TRUE` now, and errors when a `~~` or
-#'   `~1` statement names an exogenous variable (pass `fixed_x` explicitly there).
+#'   the exogenous observed variables in medfit 0.15.0; `options(medfit.native_defaults = "0.15")` uses that now:
+#'   every exogenous observed variable (product and factor-dummy columns included) except those a `~~` or `~1`
+#'   statement names, which are left free with a message of class `medfit_message_fixed_x_lenient` (an explicit
+#'   `TRUE` errors there instead). `glance()$fixed_x` names the set the fit used.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
@@ -129,7 +131,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   model <- paste(model, collapse = "\n")
   .native_defaults_opt_in() # a bad option value errors even when both settings are explicit
   if (fx_unset || ms_unset) {
-    resolved <- .native_defaults_resolve(model, fixed_x, meanstructure, fx_unset, ms_unset)
+    resolved <- .native_defaults_resolve(model, data, fixed_x, meanstructure, fx_unset, ms_unset)
     fixed_x <- resolved$fixed_x
     meanstructure <- resolved$meanstructure
   }

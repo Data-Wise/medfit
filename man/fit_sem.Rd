@@ -83,8 +83,10 @@ cannot be compared with \code{\link[stats:anova]{stats::anova()}}, \code{\link[=
 on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
 (\code{fixed_x} column, no standard error) but not in \code{coef()} or \code{vcov()}.
 Left unset, in a model with an exogenous observed variable, it warns once per session that the default becomes
-\code{TRUE} in medfit 0.15.0; \code{options(medfit.native_defaults = "0.15")} uses \code{TRUE} now, and errors when a \verb{~~} or
-\code{~1} statement names an exogenous variable (pass \code{fixed_x} explicitly there).}
+the exogenous observed variables in medfit 0.15.0; \code{options(medfit.native_defaults = "0.15")} uses that now:
+every exogenous observed variable (product and factor-dummy columns included) except those a \verb{~~} or \code{~1}
+statement names, which are left free with a message of class \code{medfit_message_fixed_x_lenient} (an explicit
+\code{TRUE} errors there instead). \code{glance()$fixed_x} names the set the fit used.}
 
 \item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name
 \code{\link[=fit_mediation]{fit_mediation()}} uses; the old name still works with a warning.}

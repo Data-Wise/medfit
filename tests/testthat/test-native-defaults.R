@@ -122,16 +122,163 @@ test_that("option medfit.native_defaults = \"0.15\" resolves unset settings to t
   expect_identical(w$value@internals$fixed_x, character())
 })
 
-test_that("the opt-in errors when a statement on an exogenous variable conflicts (T6 not yet landed)", {
+nd_touched <- "mediator1 ~ treatment + covariate1\noutcome ~ mediator1 + treatment\ntreatment ~~ treatment"
+
+# The lenience notes (class medfit_message_fixed_x_lenient) raised by `expr`, with the value.
+nd_notes <- function(expr) {
+  got <- list()
+  value <- withCallingHandlers(expr, medfit_message_fixed_x_lenient = function(m) {
+    got[[length(got) + 1L]] <<- m
+    invokeRestart("muffleMessage")
+  })
+  list(value = value, notes = got)
+}
+
+# Data with a product and a three-level factor (T6, E-11).
+nd_pf_data <- function() {
+  set.seed(61)
+  n <- 300
+  x <- stats::rnorm(n)
+  cv <- stats::rnorm(n)
+  g <- factor(sample(c("a", "b", "c"), n, replace = TRUE))
+  m <- 0.5 * x + cv + stats::rnorm(n)
+  y <- 0.3 * m + 0.2 * x + 0.1 * x * m + stats::rnorm(n)
+  data.frame(x = x, cv = cv, g = g, m = m, y = y)
+}
+
+test_that("the opt-in fixes the exogenous variables without a statement and leaves the rest free with a note (T6)", {
   local_native_defaults_unshown()
   withr::local_options(medfit.native_defaults = "0.15")
+  got <- nd_notes(fit_sem(nd_touched, nd_data()))
+  fit <- got$value
+  expect_identical(fit@internals$fixed_x, "covariate1")
+  expect_identical(glance(fit)$fixed_x, "covariate1")
+  expect_length(got$notes, 1L)
+  expect_identical(got$notes[[1L]]$variables, "treatment")
+  expect_match(conditionMessage(got$notes[[1L]]), "treatment", fixed = TRUE)
+  # the same fit as the explicit subset, which raises no note
+  ref <- nd_notes(fit_sem(nd_touched, nd_data(), fixed_x = "covariate1", meanstructure = TRUE))
+  expect_length(ref$notes, 0L)
+  expect_equal(fit@theta, ref$value@theta, tolerance = 1e-10)
+  expect_equal(as.numeric(logLik(fit)), as.numeric(logLik(ref$value)), tolerance = 1e-10)
+  # a note on every fit, not once per session
+  expect_length(nd_notes(fit_sem(nd_touched, nd_data()))$notes, 1L)
+  # an explicit TRUE keeps today's error
+  expect_error(fit_sem(nd_touched, nd_data(), fixed_x = TRUE), "has a statement on them (treatment ~~ treatment)",
+               fixed = TRUE)
+  # no note when nothing is left free, and the suite state is untouched by a note
+  expect_length(nd_notes(fit_sem(nd_syntax, nd_data()))$notes, 0L)
+  # every exogenous variable touched: the default is FALSE, not an empty subset
+  got <- nd_notes(fit_sem(paste0(nd_syntax, "\ntreatment ~~ treatment"), nd_data()))
+  expect_identical(got$value@internals$fixed_x, character())
+  expect_identical(glance(got$value)$fixed_x, "")
+  expect_length(got$notes, 1L)
+  # a `~1` statement counts too
+  got <- nd_notes(fit_sem(sub("treatment ~~ treatment", "treatment ~ 1", nd_touched, fixed = TRUE), nd_data()))
+  expect_identical(got$value@internals$fixed_x, "covariate1")
+  expect_identical(got$notes[[1L]]$variables, "treatment")
+})
+
+test_that("without the opt-in no note is raised for a statement on an exogenous variable", {
+  local_native_defaults_unshown()
+  got <- nd_notes(suppressWarnings(fit_sem(nd_touched, nd_data())))
+  expect_length(got$notes, 0L)
+  expect_identical(got$value@internals$fixed_x, character())
+})
+
+test_that("the opt-in subset includes product and factor-dummy columns (E-11)", {
+  local_native_defaults_unshown()
+  withr::local_options(medfit.native_defaults = "0.15")
+  d <- nd_pf_data()
+  prod <- "m ~ x + cv\ny ~ m + x + x:m + cv"
+  fit <- suppressWarnings(fit_sem(prod, d))
+  expect_identical(fit@internals$fixed_x, c("x", "cv", "m:x"))
+  ref <- suppressWarnings(fit_sem(prod, d, fixed_x = TRUE, meanstructure = TRUE))
+  expect_identical(fit@internals$fixed_x, ref@internals$fixed_x)
+  fac <- "m ~ x + g\ny ~ m + x + g"
+  fit <- fit_sem(fac, d)
+  expect_identical(fit@internals$fixed_x, c("x", "g_b", "g_c"))
+  expect_identical(glance(fit)$fixed_x, "x, g_b, g_c")
+  # a touched variable leaves the product and the dummies fixed
+  got <- nd_notes(fit_sem(paste0(fac, "\nx ~~ x"), d))
+  expect_identical(got$value@internals$fixed_x, c("g_b", "g_c"))
+  expect_identical(got$notes[[1L]]$variables, "x")
+  got <- nd_notes(suppressWarnings(fit_sem(paste0(prod, "\ncv ~ 1"), d)))
+  expect_identical(got$value@internals$fixed_x, c("x", "m:x"))
+  expect_identical(got$notes[[1L]]$variables, "cv")
+})
+
+test_that("a statement on a factor name gives the fit's own error and no lenient note (QA O1)", {
+  local_native_defaults_unshown()
+  withr::local_options(medfit.native_defaults = "0.15")
+  d <- nd_pf_data()
+  notes <- list()
   expect_error(
-    fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment\ntreatment ~~ treatment", nd_data()),
-    "medfit.native_defaults"
+    withCallingHandlers(fit_sem("m ~ x + g\ny ~ m + x + g\ng ~~ g", d),
+                        medfit_message_fixed_x_lenient = function(m) {
+                          notes[[length(notes) + 1L]] <<- m
+                          invokeRestart("muffleMessage")
+                        }),
+    "model variables must be numeric: g", fixed = TRUE
   )
-  # an explicit fixed_x sidesteps it
-  expect_no_error(fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment\ntreatment ~~ treatment",
-                          nd_data(), fixed_x = FALSE))
+  expect_length(notes, 0L)
+})
+
+test_that("the opt-in keeps meanstructure = TRUE when the fixed_x default cannot be computed (QA O2)", {
+  local_native_defaults_unshown()
+  withr::local_options(medfit.native_defaults = "0.15")
+  local_mocked_bindings(.sem_default_fixed_x = function(parameters, data) stop("expansion failed"))
+  got <- .native_defaults_resolve(nd_syntax, nd_data(), FALSE, NULL, TRUE, TRUE)
+  expect_identical(got$meanstructure, TRUE)
+  expect_identical(got$fixed_x, FALSE)
+})
+
+test_that("refits see the resolved subset (T2 sites)", {
+  local_native_defaults_unshown()
+  withr::local_options(medfit.native_defaults = "0.15")
+  syn <- "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + treatment\ntreatment ~~ treatment"
+  fit <- suppressMessages(fit_sem(syn, nd_data()))
+  ref <- fit_sem(syn, nd_data(), fixed_x = "covariate1", meanstructure = TRUE)
+  got <- nd_notes(mbco_sem(fit, a = "a", b = "b"))
+  expect_length(got$notes, 0L)
+  expect_equal(got$value$statistic, mbco_sem(ref, a = "a", b = "b")$statistic, tolerance = 1e-8)
+  # anova() accepts the explicit-subset fit as having the same fixed set
+  nested <- fit_sem(paste0(syn, "\na == b"), nd_data(), fixed_x = "covariate1", meanstructure = TRUE)
+  expect_no_error(anova(fit, nested))
+})
+
+test_that("the MBCO and zero-product refits of an opt-in fit receive the resolved subset (QA, T6)", {
+  # the MBCO statistic does not depend on fixed_x, so the check above cannot see a refit that drops the subset
+  local_native_defaults_unshown()
+  withr::local_options(medfit.native_defaults = "0.15")
+  syn <- "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + treatment\ntreatment ~~ treatment"
+  branch <- suppressMessages(fit_sem(paste0(syn, "\na*b == 0"), nd_data()))
+  expect_identical(branch@internals$fixed_x, "covariate1")
+  fit <- suppressMessages(fit_sem(syn, nd_data()))
+  seen <- list()
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
+    seen[[length(seen) + 1L]] <<- list(...)$fixed_x
+    stop("stop after capturing")
+  })
+  try(mbco_sem(fit, a = "a", b = "b"), silent = TRUE)
+  expect_true(length(seen) > 0L && all(vapply(seen, identical, TRUE, "covariate1")))
+})
+
+test_that("fit_mediation(engine = \"native\") and fit_sem() give the same fixed set under the opt-in (T7)", {
+  local_native_defaults_unshown()
+  withr::local_options(medfit.native_defaults = "0.15")
+  seen <- NULL
+  orig <- medfit:::.sem_as_semfit
+  local_mocked_bindings(.sem_as_semfit = function(fit, model, call = NULL) {
+    seen <<- fit$fixed_x
+    orig(fit, model, call)
+  })
+  a <- nd_notes(fit_mediation(data = nd_data(), treatment = "treatment", mediator = "mediator1",
+                              engine = "native", model = nd_touched))
+  expect_identical(seen, "covariate1")
+  b <- nd_notes(fit_sem(nd_touched, nd_data()))
+  expect_identical(b$value@internals$fixed_x, seen)
+  expect_identical(a$notes[[1L]]$variables, b$notes[[1L]]$variables)
 })
 
 test_that("any other option value errors", {
