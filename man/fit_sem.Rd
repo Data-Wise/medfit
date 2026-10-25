@@ -74,7 +74,7 @@ in medfit 0.15.0; \code{options(medfit.native_defaults = "0.15")} uses \code{TRU
 
 \item{fixed_x}{\code{FALSE} (default), \code{TRUE}, or a character vector of exogenous observed variable names. The
 selected variables (\code{TRUE}: every exogenous observed variable, product columns included) have their mean (with
-a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
+a mean structure), variance and the exogenous covariances the model contains fixed at the sample moments of
 the estimation sample (weighted when \code{weights} are given) and removed from estimation, as lavaan does with
 \code{fixed.x = TRUE}. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
 not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
@@ -103,6 +103,20 @@ observed and latent variables, user labels, fixed values, starts and bounds,
 equality and inequality constraints (\code{==}, \code{<}, \code{>}, linear or nonlinear), and defined
 parameters (\verb{:=}) with delta-method standard errors.
 }
+\section{Defaults are changing}{
+
+In medfit 0.15.0 the defaults become \code{fixed_x} = the exogenous observed variables (lavaan's \code{fixed.x = TRUE}) and
+\code{meanstructure = TRUE}, so a default fit matches a default \code{lavaan::sem()} fit. 0.14.0 changes no result: it
+warns once per session per argument (class \code{medfit_warning_default_change}) when an argument is left unset in a
+model where its default will matter. Under the new defaults the parameter count, \code{logLik()}, \code{AIC()}, \code{BIC()} and
+the names in \code{coef()}, \code{vcov()} and \code{tidy()} change; the structural estimates and their standard errors did not
+change on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
+parameter names). To keep today's results and silence the warning, pass both arguments, for example
+\verb{fixed_x = FALSE, meanstructure = NULL}. To fit with the 0.15.0 defaults now, set
+\code{options(medfit.native_defaults = "0.15")}; variables a \verb{~~} or \code{~1} statement names are then left free and named
+in a message of class \code{medfit_message_fixed_x_lenient}.
+}
+
 \examples{
 \donttest{
 fit <- fit_sem(

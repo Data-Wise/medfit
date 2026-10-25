@@ -41,6 +41,9 @@ data (n = 400).
 | Exogenous variance | estimated; `fixed_x = TRUE` fixes it | fixed by default; `fixed.x = FALSE` estimates it | estimated when you write its path | not estimated (no row in the output) |
 | Tight convergence | default | default | `mxOption()` tolerances (defaults stop up to about 5.5e-6 away) | `options = {"ftol": 1e-12}` (the default stops about 4e-5 away) |
 
+In medfit 0.15.0 the native defaults become `fixed_x` = the exogenous observed variables and `meanstructure = TRUE`,
+so the exogenous variance row will be fixed by default, as in lavaan.
+
 ## medfit
 
 ```{r}
