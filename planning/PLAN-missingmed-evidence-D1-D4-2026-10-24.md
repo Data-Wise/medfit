@@ -59,7 +59,7 @@ files, so each PR carries the seven-item risk-tier checklist and a `gates.yaml` 
   malformed-ledger refusal, the three mutants). Acceptance: `test-sem-outcomes.R` green on `dev`; stored known
   answers unchanged; #303's tests still pass. Blocked by: P0.
   - **Done on `feature/p1-d1-ledger` (2026-10-25); the PR is not merged yet.** Decisions kept: field `ledger`, new class
-    `medfit_error_ledger` (ADR D-12). Not run yet: the `tests/sim` gates and the OpenBLAS runner.
+    `medfit_error_ledger` (ADR D-12). `sem-fixed-x-gate.R` and `sem-nonlinear-gate.R` (clean and every `MUTANT=`) ran on the macOS reference BLAS and pass. Not run yet: the OpenBLAS runner (`gates.yaml` dispatch).
 - [ ] **P2. D2 literal certificates.** Acceptance: `test-sem-literal-certificates.R` green; no tolerance or solver
   status used as proof (planted mutant fails). Blocked by: P1.
 - [ ] **P3. D3 branch map and raw cap.** Acceptance: `test-sem-branch-map.R` green including the forged-map refusals
