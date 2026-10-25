@@ -59,6 +59,7 @@ only when no docs changed.
 ## Phase 5: integrate
 Enter only when every required stage (implementer, QA, docs when applicable, final gates) has a report that states
 PASS. Any other state stops here and goes to the user.
+A follow-up or CI-fix request never implies authorization to push or open a PR; ask each time.
 Every stage that edits files (implementer, QA tests, gate fixes, docs) ends with a scoped commit on the feature branch.
 Before pushing, `git status --short` must be empty and `git diff --name-only origin/dev...HEAD` must include every
 file the reports cite; otherwise commit or investigate first.
@@ -88,6 +89,6 @@ Agents refer to tools by role; the registry is `references/tools.md`.
 
 ## Test scenarios
 - "Start T4b" → triage in-domain → worktree → implement → QA → gates → docs → final gates → ask → PR.
-- "Lint failed on #317" → follow-up → gates only, in the existing worktree → push.
+- "Lint failed on #317" → follow-up → gates only, in the existing worktree → ask → push.
 - "What does `.sem_vcov()` do?" → answered directly, no agents.
 - "Release 0.14.0" → out of this pipeline → stop and say so.
