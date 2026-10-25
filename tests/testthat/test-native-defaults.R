@@ -222,6 +222,23 @@ test_that("refits see the resolved subset (T2 sites)", {
   expect_no_error(anova(fit, nested))
 })
 
+test_that("the MBCO and zero-product refits of an opt-in fit receive the resolved subset (QA, T6)", {
+  # the MBCO statistic does not depend on fixed_x, so the check above cannot see a refit that drops the subset
+  local_native_defaults_unshown()
+  withr::local_options(medfit.native_defaults = "0.15")
+  syn <- "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + treatment\ntreatment ~~ treatment"
+  branch <- suppressMessages(fit_sem(paste0(syn, "\na*b == 0"), nd_data()))
+  expect_identical(branch@internals$fixed_x, "covariate1")
+  fit <- suppressMessages(fit_sem(syn, nd_data()))
+  seen <- list()
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
+    seen[[length(seen) + 1L]] <<- list(...)$fixed_x
+    stop("stop after capturing")
+  })
+  try(mbco_sem(fit, a = "a", b = "b"), silent = TRUE)
+  expect_true(length(seen) > 0L && all(vapply(seen, identical, TRUE, "covariate1")))
+})
+
 test_that("fit_mediation(engine = \"native\") and fit_sem() give the same fixed set under the opt-in (T7)", {
   local_native_defaults_unshown()
   withr::local_options(medfit.native_defaults = "0.15")
