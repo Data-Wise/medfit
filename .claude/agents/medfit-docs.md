@@ -28,8 +28,9 @@ start without it).
 
 ## Output
 The doc edits in the worktree and `_agents_workspace/<task>/docs.md`: files changed, files checked and already
-current, and the result of `spelling::spell_check_package()` and the docs-consistency tests.
-End the report with `Verdict: PASS` (every affected doc is current and both checks pass) or `Verdict: FAIL` with the
+current, and the result of `spelling::spell_check_package()` and the docs-consistency tests, plus the command and result of
+rendering every changed Quarto article (inspect the output when layout or presentation changed).
+End the report with `Verdict: PASS` (every affected doc is current, both checks pass and every changed article renders) or `Verdict: FAIL` with the
 failing check.
 
 ## Error handling

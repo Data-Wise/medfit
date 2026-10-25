@@ -49,8 +49,9 @@ and docs-consistency tests cover the docs edits; a docs-caused failure goes back
 only when no docs changed.
 
 ## Phase 5: integrate
-Enter only when every required stage (implementer, QA, docs when applicable, final gates) has a report that states
-PASS. Any other state stops here and goes to the user.
+Enter only when every report required for the run type states PASS: implementation runs need implementer, QA, docs
+(when applicable) and final gates; docs-only runs need `docs.md` and final `gates.md`. Any other state stops here and
+goes to the user.
 A follow-up or CI-fix request never implies authorization to push or open a PR; ask each time.
 Every stage that edits files (implementer, QA tests, gate fixes, docs) ends with a scoped commit on the feature branch.
 Before pushing, `git status --short` must be empty and `git diff --name-only origin/dev...HEAD` must include every
