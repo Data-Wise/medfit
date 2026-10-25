@@ -188,7 +188,9 @@ test_that("planted branch-cap defect turns the grid verdict red", {
   mutant <- sem_mutate(.sem_fit_branches, "64L", "128L") # a bare constant: covr instrumentation splits the if() text
   case <- edge_grid[[12L]]
   spec <- case$build()
-  testthat::local_mocked_bindings(.sem_fit_branches = mutant)
+  # the ledger validator also enforces the cap and would refuse this mutant's fit; it is bypassed so the defect is
+  # still measured by the grid row (no assertion below is weakened)
+  testthat::local_mocked_bindings(.sem_fit_branches = mutant, .sem_require_outcome = function(...) invisible(NULL))
   bad <- tryCatch(fit_sem(spec$model, spec$data, fixed_x = FALSE, meanstructure = NULL), error = identity)
   expect_s7_class(bad, SEMFit) # the cap-refusal row would fail against this mutant
 })
