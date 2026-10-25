@@ -291,6 +291,9 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
 
 ### Checkpoint C: release readiness (0.14.0)
 
+**On hold (author, 2026-10-24):** release only after Data-Wise/missingmed#102 merges with `meanstructure = NULL`
+passed at `R/mbco_sem.R:222`; then tick T10 and start this checkpoint.
+
 - [ ] Version bump, `.STATUS`, README version row, CLAUDE.md status paragraph.
 - [ ] Gates green on the release PR (`dev → main`), including the new oracle-matrix gate; `R-CMD-check` green on `main`.
 - [ ] Dependents' evidence (`arm.R`) attached to the release PR (spec: each release PR).
