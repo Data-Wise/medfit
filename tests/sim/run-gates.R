@@ -137,7 +137,8 @@ verdict_gate <- function(gate, d, s) {
                        "feasibility", "f_gap", "warning", "error", "optimum"),
     "compare-lr" = c("engine", "version", "seed", "verdict", "all_converged", "ref_ok", "drop", "above", "warn_drop",
                      "warn_above", "mislabel", "pass"),
-    restoration = c("check", "kind", "value", "limit", "pass", "detail")
+    restoration = c("check", "kind", "value", "limit", "pass", "detail"),
+    "native-defaults" = c("cell", "combo", "quantity", "native", "oracle", "diff", "tol", "status", "reason")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -405,6 +406,33 @@ verdict_gate <- function(gate, d, s) {
                     sum(d$note[d$fixture %in% "var-1e6-1e-6"] %in% "strict"), sum(d$fixture %in% "var-1e6-1e-6")))
       )
     },
+    "native-defaults" = {
+      # 0.14.0 T8a (R-12): every pass/fail row is re-derived from the recorded diff and tolerance, a declared row needs
+      # a reason, every core cell ran under the four combinations and the opt-in, and the opt-in equals the explicit fit
+      need_cells <- c("simple", "weights", "fixed_intercept", "constrained_intercepts", "latent", "subset")
+      combos <- c("fx=FALSE ms=NULL", "fx=FALSE ms=TRUE", "fx=TRUE ms=NULL", "fx=TRUE ms=TRUE", "optin")
+      judged <- d$status %in% c("pass", "fail")
+      ok <- !is.na(d$diff) & !is.na(d$tol) & d$diff <= d$tol
+      lie <- judged & (d$status == "pass") != ok
+      declared <- d$status %in% c("limit", "block")
+      have <- paste(d$cell, d$combo)
+      core <- need_cells[need_cells != "subset"]
+      miss <- setdiff(c(as.vector(outer(core, combos, paste)), paste("subset", c("fx=c ms=NULL", "fx=c ms=TRUE"))),
+                      have)
+      same <- d[d$quantity == "same_as_explicit", , drop = FALSE]
+      rbind(
+        rows_chk(d, s),
+        chk("known status", all(judged | declared), sprintf("%d rows with another status", sum(!(judged | declared)))),
+        chk("no failed comparison", !any(d$status == "fail"), sprintf("%d fail", sum(d$status == "fail"))),
+        chk("status re-derived", !any(lie), sprintf("%d rows whose status disagrees with diff <= tol", sum(lie))),
+        chk("declared rows give a reason", all(nzchar(d$reason[declared]) & !is.na(d$reason[declared])),
+            sprintf("%d limit, %d block", sum(d$status == "limit"), sum(d$status == "block"))),
+        chk("every cell and combination ran", !length(miss),
+            if (length(miss)) paste("missing:", paste(miss, collapse = "; ")) else "all"),
+        chk("opt-in equals the explicit fit", nrow(same) == length(core) && all(same$status == "pass"),
+            sprintf("%d opt-in identity rows", nrow(same)))
+      )
+    },
     restoration = {
       # restoration-bound T5/T6 (G12): every check of the script is a row; the numeric verdicts are re-derived from the
       # recorded numbers, so a row that claims pass over a bad number cannot pass. tol_est is k, tol_se the margin.
@@ -556,6 +584,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "mean-constrained") d$invariance[which(!is.na(d$invariance))[1:3]] <- 5
     if (gate == "factor") d$pass[1:3] <- FALSE
     if (gate == "oracle-sweep") d$outcome[1] <- "WRONG"
+    if (gate == "native-defaults") d$diff[which(d$status == "pass")[1:3]] <- 1 # status still says pass
     if (gate == "compare-lr") {
       d$mislabel[1:3] <- TRUE
       d$pass[1:3] <- FALSE
@@ -595,6 +624,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "factor") d$err[1] <- "fit failed"
     if (gate == "oracle-sweep") d$error[1] <- "fit failed"
     if (gate == "compare-lr") d$verdict[1] <- "error"
+    if (gate == "native-defaults") d$status[1] <- "fail"
     if (gate == "restoration") d$pass[1] <- FALSE
   }
   if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
@@ -634,7 +664,8 @@ mutate <- function(gate, kind, d) {
     # nolint start: object_usage_linter.
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
-      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration"
+      "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration",
+      "native-defaults"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -839,7 +870,8 @@ scripts <- c(
   factor = "tests/sim/sem-factor-gate.R",
   "oracle-sweep" = "tests/sim/sem-oracle-sweep.R",
   "compare-lr" = "tests/sim/compare-lr-gate.R",
-  restoration = "tests/sim/sem-restoration-gate.R"
+  restoration = "tests/sim/sem-restoration-gate.R",
+  "native-defaults" = "tests/sim/native-defaults-oracle.R"
 )
 
 # ---- main ----
