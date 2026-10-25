@@ -77,6 +77,7 @@ test_that("covariance-only AIC exceeds lavaan's by 2k, and agrees under meanstru
   ft <- fit_sem(ndo_model, mediation_demo, fixed_x = FALSE, meanstructure = TRUE)
   lv_cov <- lavaan::sem(ndo_model, mediation_demo, fixed.x = FALSE)
   lv_mean <- lavaan::sem(ndo_model, mediation_demo, fixed.x = FALSE, meanstructure = TRUE)
-  expect_lt(abs(AIC(ff) - lavaan::fitMeasures(lv_cov, "aic")[[1]] - 8), 1e-4)  # k = 4
+  # The gap is 2k with k = 4 implicit means.
+  expect_lt(abs(AIC(ff) - lavaan::fitMeasures(lv_cov, "aic")[[1]] - 8), 1e-4)
   expect_lt(abs(AIC(ft) - lavaan::fitMeasures(lv_mean, "aic")[[1]]), 1e-4)
 })
