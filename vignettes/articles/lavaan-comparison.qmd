@@ -61,6 +61,9 @@ native engine estimates their variances and covariances unless `fixed_x = TRUE`
 (or a vector of names) asks for lavaan's behavior. The standard
 errors, including the delta-method error of `ab`, agree as well.
 
+In medfit 0.15.0 the native defaults become `fixed_x` = the exogenous observed variables and
+`meanstructure = TRUE`, so a default fit will line up with lavaan's default `sem()` without `fixed.x = FALSE`.
+
 ## Where they differ by design
 
 The default information matrix is observed in medfit and expected in lavaan.

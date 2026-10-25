@@ -1,6 +1,12 @@
 # medfit (development version)
 
-## New features
+## Native engine defaults change in 0.15.0
+
+medfit 0.15.0 changes two defaults of `fit_sem()` and `fit_mediation(engine = "native")` so that a default native
+fit matches a default lavaan fit: `fixed_x` becomes the exogenous observed variables (lavaan's `fixed.x = TRUE`) and
+`meanstructure` becomes `TRUE`. 0.14.0 changes no result; it warns and lets you opt in. The schedule: 0.14.0 warns,
+and 0.15.0, at least two months after 0.14.0 (the notice runs on GitHub; both stay GitHub-only releases), flips both
+defaults together. `FALSE` and `NULL` stay valid values in every release.
 
 * `fit_sem()` and `fit_mediation(engine = "native")` now warn when `fixed_x` or `meanstructure` is left unset and
   the model is one where its default will matter in 0.15.0 (an observed exogenous variable for `fixed_x`; no `~1`
@@ -10,7 +16,23 @@
   with the 0.15.0 defaults now (`meanstructure = TRUE`, and `fixed_x` set to every observed exogenous column,
   product and factor-dummy columns included, except those a `~~` or `~1` statement names). Variables left free that
   way are named on each fit in a message of class `medfit_message_fixed_x_lenient` (field `variables`), and
-  `glance()$fixed_x` lists the fixed set. An explicit `fixed_x = TRUE` still errors on such a statement.
+  `glance()$fixed_x` lists the fixed set. An explicit `fixed_x = TRUE` still errors on such a statement. In 0.15.0
+  the option is ignored.
+
+* What moves under the new defaults: the parameter count, `logLik()` (conditional on the fixed variables), `AIC()`,
+  `BIC()`, and the names in `coef()`, `vcov()` and `tidy()` (the exogenous moments leave them; the intercepts join
+  them). Structural estimates and their standard errors did not move on the cases measured (the native-defaults
+  oracle matrix: 557 cells against lavaan or a stated oracle, 503 equal and 54 recorded limits).
+
+* The retry seed of a multi-start fit is derived from the parameter names, so the new parameter vector changes the
+  random starts. A well-identified fit gives the same estimates; which start wins, and whether the start-spread
+  warning appears, can change. The reliability gate is rerun under the new defaults before 0.15.0.
+
+* **Dependents** (packages that call `fit_sem()` or `fit_mediation(engine = "native")`): pass `fixed_x` and
+  `meanstructure` explicitly in package code, examples and tests, so your users see neither the warning nor a change
+  of results in 0.15.0. To silence the warning in a test, catch it by class (`medfit_warning_default_change`).
+
+## New features
 
 * `compare_lr()` now accepts native fits with a saturated mean structure (every intercept free) and with `fixed_x`
   (`TRUE`, a named subset or a lenient subset), in lavaan (#319) and in OpenMx (#321). Both were refused before. The
@@ -21,11 +43,17 @@
 
 ## Bug fixes
 
-* A parameter pinned by the active set (an equality such as `b == 0`, or an active bound) in a native fit with a
-  mean structure now has a standard error of exactly 0, as it already had without one. The covariance was projected
-  in centered coordinates and mapped back, which left roundoff (about 5.6e-18) on the pinned row, so `tidy()`
-  reported a z-statistic and p-value for a parameter that is not estimated. Free parameters' standard errors are
-  unchanged (R-1 of the native-defaults plan; a prerequisite for the `meanstructure = TRUE` default in 0.15.0).
+* **Behavior change.** A parameter pinned by the active set (an equality such as `b == 0`, or an active bound) in a
+  native fit with a mean structure now has a standard error of exactly 0, as it already had without one. The
+  covariance was projected in centered coordinates and mapped back, which left roundoff (about 5.6e-18) on the
+  pinned row, so `tidy()` reported a z-statistic and p-value for a parameter that is not estimated; they are now
+  `NA`. Code that read those rows sees `NA` where it saw a huge z-statistic. Free parameters' standard errors are
+  unchanged. The fix comes first because `meanstructure = TRUE` becomes the default in 0.15.0.
+
+* `?fit_sem` described `fixed_x` as fixing "every covariance with another exogenous variable". An exogenous variable
+  that the model writes a `~~` statement on is not paired with the other exogenous variables (as in lavaan), so
+  those covariances are 0, not fixed at their sample values. The text now says "the exogenous covariances the model
+  contains", and `?"medfit-syntax"` states the pairing rule.
 
 # medfit 0.13.0
 

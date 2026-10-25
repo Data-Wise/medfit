@@ -61,7 +61,7 @@
 #'   in medfit 0.15.0; `options(medfit.native_defaults = "0.15")` uses `TRUE` now.
 #' @param fixed_x `FALSE` (default), `TRUE`, or a character vector of exogenous observed variable names. The
 #'   selected variables (`TRUE`: every exogenous observed variable, product columns included) have their mean (with
-#'   a mean structure), variance and every covariance with another exogenous variable fixed at the sample moments of
+#'   a mean structure), variance and the exogenous covariances the model contains fixed at the sample moments of
 #'   the estimation sample (weighted when `weights` are given) and removed from estimation, as lavaan does with
 #'   `fixed.x = TRUE`. The structural estimates, their standard errors, the degrees of freedom and the chi-square do
 #'   not change; the parameter count and the log likelihood do: the log likelihood (and so AIC and BIC) is
@@ -76,6 +76,18 @@
 #'   `TRUE` errors there instead). `glance()$fixed_x` names the set the fit used.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
+#'
+#' @section Defaults are changing:
+#' In medfit 0.15.0 the defaults become `fixed_x` = the exogenous observed variables (lavaan's `fixed.x = TRUE`) and
+#' `meanstructure = TRUE`, so a default fit matches a default `lavaan::sem()` fit. 0.14.0 changes no result: it
+#' warns once per session per argument (class `medfit_warning_default_change`) when an argument is left unset in a
+#' model where its default will matter. Under the new defaults the parameter count, `logLik()`, `AIC()`, `BIC()` and
+#' the names in `coef()`, `vcov()` and `tidy()` change; the structural estimates and their standard errors did not
+#' change on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
+#' parameter names). To keep today's results and silence the warning, pass both arguments, for example
+#' `fixed_x = FALSE, meanstructure = NULL`. To fit with the 0.15.0 defaults now, set
+#' `options(medfit.native_defaults = "0.15")`; variables a `~~` or `~1` statement names are then left free and named
+#' in a message of class `medfit_message_fixed_x_lenient`.
 #'
 #' @return A [SEMFit] object. With a product term whose factor is a regression target (`x:m` with
 #'   `m` regressed on `x`), `glance()` reports the chi-square, df and p-value as `NA` with a note, and

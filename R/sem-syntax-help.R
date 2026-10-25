@@ -40,7 +40,9 @@
 #' exist, and `n_starts` raises the number of starts. Labels used in a constraint
 #' or a definition must be defined in the model. A constraint with no free
 #' parameter is an error. Exogenous variables are given free
-#' variances and covariances, as lavaan does with `fixed.x = FALSE`; `fixed_x = TRUE`
+#' variances and covariances, as lavaan does with `fixed.x = FALSE`. An exogenous variable named in any `~~`
+#' statement is left out of that pairing: its variance and the covariances the model writes are kept, and its
+#' covariances with the other exogenous variables are 0 unless written (lavaan does the same). `fixed_x = TRUE`
 #' (or a vector of names) in [fit_sem()] fixes the moments of the selected ones at the
 #' sample values instead, as `fixed.x = TRUE` does. Unlike lavaan, which keeps an
 #' explicit `x ~~ x` or `x ~ 1` free under `fixed.x = TRUE` and lets the degrees of
@@ -153,6 +155,16 @@
 #' product are not comparable with those of a fit without one, so `AIC(fit_a, fit_b)`, `BIC()`, `anova()` and
 #' [mbco_sem()] refuse such a pair. A product of
 #' exogenous variables with the block free keeps the ordinary test.
+#'
+#' @section Defaults are changing:
+#' medfit 0.15.0 changes two defaults of [fit_sem()] and `fit_mediation(engine = "native")`: `fixed_x` becomes the
+#' exogenous observed variables (as lavaan's `fixed.x = TRUE`) and `meanstructure` becomes `TRUE`, so every observed
+#' intercept is free without a `~1` statement. The parameter count, `logLik()`, `AIC()`, `BIC()` and the parameter
+#' names move; the structural estimates and their standard errors did not move on the cases measured. 0.14.0 warns
+#' once per session (class `medfit_warning_default_change`); pass `fixed_x` and `meanstructure` to silence it, or set
+#' `options(medfit.native_defaults = "0.15")` to use the new defaults now. Under that option a variable a `~~` or `~1`
+#' statement names is left free (message class `medfit_message_fixed_x_lenient`) instead of the error an explicit
+#' `fixed_x = TRUE` gives. [fit_sem()] has the details.
 #'
 #' @section medfit extensions:
 #' * **Comma shorthand** (medfit extension). A comma-separated left side
