@@ -555,3 +555,33 @@ test_that("a 64-branch ledger stores the sample once and serializes near the siz
   other@diagnostics$ledger$children[[3]]$context$sample_hash <- rlang::hash(big[-1, ])
   expect_error(mbco_sem(other, "a1", "b1"), class = "medfit_error_ledger")
 })
+
+test_that("forged, mismatched or missing sample digests are refused and never resolve to the root sample", {
+  d <- outcome_data()
+  fit <- fit_sem(outcome_union, d, n_starts = 1L)
+  led <- fit@diagnostics$ledger
+  # structure first: two children, both hold only a digest, the root holds the sample
+  expect_identical(vapply(led$children, `[[`, "", "id"), c("fit/branch:1", "fit/branch:2"))
+  expect_true(all(vapply(led$children, function(x) is.null(x$context[["sample"]]), TRUE)))
+  expect_identical(.sem_node_sample(led$children[[1]], led), fit@data)
+  forgeries <- list(
+    wrong_digest = function(l) { l$children[[2]]$context$sample_hash <- "forged"; l },
+    other_sample = function(l) { l$children[[1]]$context$sample_hash <- rlang::hash(d[-1, ]); l },
+    root_sample_removed = function(l) { l$context[["sample"]] <- NULL; l },
+    no_sample_no_hash = function(l) { l$children[[1]]$context$sample_hash <- NULL; l },
+    root_digest_tampered = function(l) { l$context$sample_hash <- "forged"; l },
+    child_other_rows = function(l) { l$children[[1]]$context[["sample"]] <- d[-1, ]; l }
+  )
+  for (nm in names(forgeries)) {
+    altered <- fit
+    altered@diagnostics$ledger <- forgeries[[nm]](led)
+    expect_false(.sem_valid_outcome(altered@diagnostics$ledger), label = nm)
+    expect_error(mbco_sem(altered, "a1", "b1"), class = "medfit_error_ledger")
+  }
+  # the resolver itself never hands back the root sample for a digest that does not match it
+  bad <- led$children[[1]]
+  bad$context$sample_hash <- "forged"
+  expect_null(.sem_node_sample(bad, led))
+  bad$context$sample_hash <- NULL
+  expect_null(.sem_node_sample(bad, led))
+})
