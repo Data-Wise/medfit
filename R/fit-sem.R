@@ -92,6 +92,27 @@
 #' @return A [SEMFit] object. With a product term whose factor is a regression target (`x:m` with
 #'   `m` regressed on `x`), `glance()` reports the chi-square, df and p-value as `NA` with a note, and
 #'   `anova()` and [mbco_sem()] refuse; see [SEMFit-methods].
+#'   `diagnostics$ledger` holds the versioned outcome ledger described below.
+#'
+#' @section Outcome ledger:
+#' `diagnostics$ledger` is a list with `schema_version = 1L`. Each node has `id`, `parent_id`, the exact parsed
+#' `constraints`, and `context` (the estimation `sample`, the model syntax and parameters, the likelihood `domain`,
+#' the settings and `n_obs`). `enumeration` records `state` and the number of required children; `complete` means
+#' every required restriction was attempted, not that any was globally optimized. `outcome` is `resolved` or
+#' `unresolved`. Separate fields record `optimizer` (acceptance state, original status, decrement, retries and
+#' optimum diagnostics), `likelihood` (availability and `f`), `feasibility` (`witness` or `unknown`), `covariance`
+#' (`available`, `unavailable` or `not_retained`), `improper`, the retained `notices` (warnings and messages), the
+#' original `condition` (class, message, call) and the recursive `children`. IDs are deterministic positions within
+#' the call, not certificates of equivalent parameter spaces. No globality is asserted, and a failed branch is
+#' unknown, never certified infeasible.
+#'
+#' A zero-product fit returns only if every required branch resolves. Otherwise it stops with a
+#' `medfit_error_no_convergence` error, never a fit; the error carries the ledger of every required branch as
+#' `$ledger` and, when a branch survived, `$best_survivor` (its `id` and discrepancy `f`, diagnostic only, never a
+#' p-value). The union's own node does not aggregate its children's notices; inspect each child. The notices of a
+#' failed call are appended to the error message. A data or model error keeps its own class and also carries
+#' `$ledger`. A fit made before the ledger existed must be refitted before [mbco_sem()] can use it, which refuses it
+#' with a `medfit_error_ledger` error.
 #'
 #' @examples
 #' \donttest{
@@ -154,6 +175,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
 }
 
 .sem_as_semfit <- function(fit, model, call = NULL) {
+  .sem_require_outcome(fit, model)
   tab <- fit$table
   free <- !is.na(fit$par_map)
   est <- ifelse(free, fit$theta[pmax(fit$par_map, 1L)], tab$fixed)
@@ -167,7 +189,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     n_obs = fit$n_obs, n_dropped = fit$n_dropped, df = fit$df, information = fit$information,
     converged = fit$converged, data = fit$data, model = model,
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
-                        "sign_check", "se_type", "optimum")],
+                        "sign_check", "se_type", "optimum", "ledger")],
     internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
                       "branch", "fixed_x", "factors")],
     call = call

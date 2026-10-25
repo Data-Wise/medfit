@@ -256,9 +256,11 @@ run_all <- function() {
 }
 runs <- switch(mutant,
   linear = testthat::with_mocked_bindings(run_all(), .sem_tree_linear = function(e) TRUE, .package = "medfit"),
+  # the outcome-ledger guard would refuse this mutant's fit before the oracle sees its number; it is bypassed so
+  # that the defect is still measured against OpenMx (the same bypass as test-sem-branches.R)
   larger = testthat::with_mocked_bindings(
     run_all(), .sem_fit_branches = sem_mutate(.sem_fit_branches, "which.min(vapply(ok", "which.max(vapply(ok"),
-    .package = "medfit"
+    .sem_require_outcome = function(...) invisible(NULL), .package = "medfit"
   ),
   stale = testthat::with_mocked_bindings(
     run_all(), .sem_active_set = sem_mutate(.sem_active_set, "nl$jac(theta, u)", "nl$jac(rep(0.1, length(theta)), u)"),

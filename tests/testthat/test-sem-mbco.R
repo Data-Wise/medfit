@@ -241,6 +241,7 @@ test_that("planted defect: the degrees of freedom do not match the chi-square(1)
   testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
     r <- real(...)
     r$f <- f@f + 4 / n
+    r$ledger$likelihood$f <- r$f # the injected refit is coherent evidence: its ledger carries the same discrepancy
     r
   })
   res <- mbco_sem(f, paths = c("a", "d", "b"))

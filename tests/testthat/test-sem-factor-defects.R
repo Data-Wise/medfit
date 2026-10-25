@@ -68,10 +68,10 @@ test_that("planted: a label accepted on a bare factor is caught", {
 test_that("planted: no expansion before completion is caught", {
   fx_skip_covr()
   bad <- sem_mutate(
-    .sem_fit_syntax, ".sem_expand_factors(parsed$parameters, data, fixed_x, factors)",
+    .sem_fit_pipeline, ".sem_expand_factors(parsed$parameters, data, fixed_x, factors)",
     "list(table = parsed$parameters, data = data, fixed_x = fixed_x, map = list())"
   )
-  testthat::local_mocked_bindings(.sem_fit_syntax = bad)
+  testthat::local_mocked_bindings(.sem_fit_pipeline = bad)
   expect_false(fd_equals_twin())
 })
 
@@ -81,7 +81,7 @@ test_that("planted: a refit without the factor map is caught", {
   f <- fit_sem("m ~ a*x + g\ny ~ b*m + g", d)
   r <- mbco_sem(f, paths = c("a", "b"))
   expect_true(is.finite(r$statistic))
-  bad <- sem_mutate(mbco_sem, "factors = fit@internals$factors", "factors = NULL")
+  bad <- sem_mutate(mbco_sem, "factors = fit@internals$factors)", "factors = NULL)")
   testthat::local_mocked_bindings(mbco_sem = bad)
   expect_error(mbco_sem(f, paths = c("a", "b")))
 })

@@ -6,12 +6,48 @@
 # the estimates. It returns a plain list; the exported fit object arrives with
 # `fit_mediation(engine = "native")` (plan N4).
 
+# The fit and its outcome ledger (`R/sem-outcomes.R`). The pipeline runs with its warnings and messages held; a success
+# replays them after the ledger is built, a failure keeps its class and carries them in the ledger and the message.
 .sem_fit_syntax <- function(model, data, information = c("observed", "expected"), n_starts = 5L,
                             control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL,
                             meanstructure = NULL, fixed_x = FALSE, factors = NULL) {
+  context <- .sem_outcome_context(model, parsed, data, information, weights, meanstructure, fixed_x,
+                                  n_starts, control, se_type, factors)
+  captured <- .sem_capture_outcome(.sem_fit_pipeline(model, data, information, n_starts, control, weights,
+                                                     se_type, parsed, meanstructure, fixed_x, factors))
+  out <- captured$value
+  err <- captured$error
+  if (!is.null(err)) {
+    constraints <- if (!is.null(parsed)) {
+      parsed$constraints
+    } else {
+      tryCatch(.sem_parse(model)$constraints, error = function(e) data.frame())
+    }
+    .sem_reraise_outcome(err, context, constraints, captured$notices)
+  }
+  context$sample <- out$data
+  context$n_obs <- out$n_obs
+  context$domain$fixed_x <- out$fixed_x
+  context$domain$weights <- out$weights
+  context$domain$information <- out$information
+  context$domain$meanstructure <- isTRUE(out$ram$has_mean)
+  context$domain$factors <- out$factors
+  context$settings$se_type <- out$se_type
+  if (is.null(out$ledger)) {
+    out$ledger <- .sem_outcome(context, out$constraints, out, notices = captured$notices)
+  } else {
+    out$ledger$context <- context
+  }
+  .sem_require_outcome(out, model)
+  .sem_replay_notices(captured$notices)
+  out
+}
+
+.sem_fit_pipeline <- function(model, data, information, n_starts, control, weights, se_type, parsed,
+                              meanstructure, fixed_x, factors) {
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
-  information <- match.arg(information)
-  se_type <- match.arg(se_type)
+  information <- match.arg(information, c("observed", "expected"))
+  se_type <- match.arg(se_type, c("model", "sandwich"))
   if (!is.null(weights)) {
     weights <- .sem_check_weights(weights, nrow(data))
   }
@@ -38,7 +74,7 @@
       rows <- stats::complete.cases(data[, vars, drop = FALSE])
       .sem_check_dummy_support(factors, data, rows, if (!is.null(weights)) weights[rows])
       out <- .sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
-                               meanstructure = meanstructure, fixed_x = fixed_x)
+                               meanstructure = meanstructure, fixed_x = fixed_x, factors = factors)
       out$factors <- factors
       return(out)
     }
@@ -216,19 +252,27 @@
 # each product to zero, every branch a linear model fitted from the default start (never from another
 # branch's or the full model's estimates, so a branch cannot inherit an infeasible point), and the branch
 # with the smallest discrepancy wins. A branch that fails the acceptance gate is skipped; when none succeeds
-# the error lists each. Messages and warnings of the losing branches are dropped, those of the winner are
-# passed on. The returned fit keeps the user's constraints; `branch` names the lines the winner used. A skipped
+# the error lists each. Every branch's notices and condition are kept in its ledger node; only the winner's notices
+# are passed on. The returned fit keeps the user's constraints; `branch` names the lines the winner used. A skipped
 # branch while another wins leaves a minimum over the surviving branches only, which can look valid and need not
 # be the constrained optimum: that is an error too (`medfit_error_no_convergence`), never a fit, and `mbco_sem()`
-# and `compare_lr()` report an unresolved result for it.
+# and `compare_lr()` report an unresolved result for it. The error carries the ledger of every required branch as
+# `$ledger` (ADR D-12). A failed branch is unknown, never certified infeasible.
 .sem_fit_branches <- function(parsed, products, data, information, n_starts, control, weights, se_type,
-                              meanstructure = NULL, fixed_x = FALSE) {
+                              meanstructure = NULL, fixed_x = FALSE, factors = NULL) {
   grid <- do.call(expand.grid, c(lapply(products, `[[`, "factors"), stringsAsFactors = FALSE))
+  context <- .sem_outcome_context(NULL, parsed, data, information, weights, meanstructure, fixed_x,
+                                  n_starts, control, se_type, factors)
   if (nrow(grid) > 64L) {
-    stop(sprintf("the zero-product constraints give %d branches to fit; at most 64 are supported", nrow(grid)),
-         call. = FALSE)
+    reason <- sprintf("the zero-product constraints give %d branches to fit; at most 64 are supported", nrow(grid))
+    err <- simpleError(reason)
+    err$ledger <- .sem_outcome(context, parsed$constraints, error = err)
+    # nothing was enumerated: the count is the requirement, not a completed enumeration
+    err$ledger$enumeration <- list(state = "not_enumerated", required = nrow(grid))
+    stop(err)
   }
   fits <- vector("list", nrow(grid))
+  outcomes <- vector("list", nrow(grid))
   fail <- character(nrow(grid))
   for (b in seq_len(nrow(grid))) {
     cons <- parsed$constraints
@@ -239,34 +283,37 @@
       cons$lhs[i] <- grid[b, j]
       cons$rhs[i] <- "0"
     }
-    held <- list(messages = list(), warnings = list())
-    res <- tryCatch(
-      withCallingHandlers(
-        .sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
-                        parsed = list(parameters = parsed$parameters, constraints = cons),
-                        meanstructure = meanstructure, fixed_x = fixed_x),
-        message = function(m) {
-          held$messages[[length(held$messages) + 1L]] <<- m
-          invokeRestart("muffleMessage")
-        },
-        warning = function(w) {
-          held$warnings[[length(held$warnings) + 1L]] <<- w
-          invokeRestart("muffleWarning")
-        }
-      ),
-      error = function(e) conditionMessage(e)
-    )
-    if (is.character(res)) {
-      fail[b] <- sprintf("%s: %s", paste(lines, collapse = ", "), res)
+    captured <- .sem_capture_outcome({
+      res <- .sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
+                             parsed = list(parameters = parsed$parameters, constraints = cons),
+                             meanstructure = meanstructure, fixed_x = fixed_x, factors = factors)
+      .sem_require_outcome(res)
+      if (!identical(res$constraints, cons)) {
+        .sem_abort_ledger("branch outcome has mismatched constraints", NULL)
+      }
+      res
+    })
+    res <- captured$value
+    err <- captured$error
+    ledger <- if (is.null(err)) res$ledger else err$ledger
+    if (is.null(ledger)) {
+      ledger <- .sem_outcome(context, cons, error = err, notices = captured$notices)
+    }
+    outcomes[[b]] <- .sem_rebase_outcome(ledger, paste0("fit/branch:", b), "fit")
+    if (!is.null(err)) {
+      fail[b] <- sprintf("%s: %s", paste(lines, collapse = ", "), conditionMessage(err))
     } else {
       res$branch <- lines
-      fits[[b]] <- list(fit = res, held = held)
+      fits[[b]] <- list(fit = res, held = captured$notices)
     }
   }
   ok <- which(!vapply(fits, is.null, TRUE))
+  win <- if (length(ok)) ok[which.min(vapply(ok, function(b) fits[[b]]$fit$f, numeric(1)))] else integer()
+  ledger <- .sem_outcome(context, parsed$constraints, result = if (length(win)) fits[[win]]$fit,
+                         children = outcomes)
   if (!length(ok)) {
-    .sem_no_convergence(paste0("no branch of the zero-product constraints converged:\n  ",
-                               paste(fail, collapse = "\n  ")))
+    .sem_abort_outcome(paste0("no branch of the zero-product constraints converged:\n  ",
+                              paste(fail, collapse = "\n  ")), ledger)
   }
   skipped <- setdiff(seq_along(fits), ok)
   if (length(skipped)) {
@@ -278,13 +325,12 @@
              "(the best of the other branches has discrepancy %s):\n  %s"),
       length(skipped), length(fits), format(best, digits = 8), paste(fail[skipped], collapse = "\n  ")
     )
-    .sem_no_convergence(msg)
+    .sem_abort_outcome(msg, ledger, best_survivor = list(id = outcomes[[win]]$id, f = best))
   }
-  win <- ok[which.min(vapply(ok, function(b) fits[[b]]$fit$f, numeric(1)))]
-  for (m in fits[[win]]$held$messages) message(conditionMessage(m))
-  for (w in fits[[win]]$held$warnings) warning(conditionMessage(w), call. = FALSE)
+  .sem_replay_notices(fits[[win]]$held)
   out <- fits[[win]]$fit
   out$constraints <- parsed$constraints
+  out$ledger <- ledger
   out
 }
 

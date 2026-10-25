@@ -183,13 +183,15 @@
 # medfit's side of the comparison: the product-null LR from `mbco_sem()` (the minimum over the zero-product branches),
 # whether every branch fit was accepted, the unrestricted estimates and discrepancy.
 .lr_reference <- function(object, paths) {
-  tests <- mbco_sem(object, paths = paths)$tests
+  mbco <- mbco_sem(object, paths = paths)
+  tests <- mbco$tests
   free <- object@table[object@table$free, ]
   list(
     lr = if (all(is.finite(tests$diff_ll))) min(tests$diff_ll) else NA_real_,
     accepted = all(tests$converged) && all(is.finite(tests$diff_ll)),
     est = .lr_key_est(free$lhs, free$op, free$rhs, free$est),
-    fit = object@n_obs * object@f
+    fit = object@n_obs * object@f,
+    ledger = mbco$ledger
   )
 }
 

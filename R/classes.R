@@ -2205,8 +2205,8 @@ print_summary_cluster_mediation_data <- function(x, ...) {
 #'   fit it returns and `glance()` does not report it
 #' @param data Data frame: the rows used, on the model's observed variables
 #' @param model Character scalar: the model syntax
-#' @param diagnostics List: optimizer diagnostics (`status`, `decrement`,
-#'   `retries`, `active_bounds`, `active_constraints`, `improper`,
+#' @param diagnostics List: the versioned outcome `ledger` (see [fit_sem()]) and optimizer diagnostics (`status`,
+#'   `decrement`, `retries`, `active_bounds`, `active_constraints`, `improper`,
 #'   `sign_check`, and `optimum`: a list with `n_starts`, `n_accepted`,
 #'   `best_of`, `certified`, `spread` (discrepancy range among accepted starts,
 #'   `NA` when fewer than two or not best-of), and `status` (`unique`,
