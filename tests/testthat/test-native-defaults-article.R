@@ -71,6 +71,34 @@ test_that("the opt-in leaves a variable named in ~~ free with the lenient messag
   expect_identical(glance(fit)$fixed_x, "treatment")
 })
 
+test_that("the dependent-package wrapper silences the warning and keeps the 0.14 results", {
+  local_native_defaults_unshown()
+  wrap <- function(...) {
+    args <- list(...)
+    f <- names(formals(fit_sem))
+    if ("fixed_x" %in% f && !"fixed_x" %in% names(args)) args$fixed_x <- FALSE
+    if ("meanstructure" %in% f && !"meanstructure" %in% names(args)) {
+      args["meanstructure"] <- list(NULL)
+    }
+    do.call(fit_sem, args)
+  }
+  expect_no_warning(fw <- wrap(ndo_model, mediation_demo), class = "medfit_warning_default_change")
+  fe <- fit_sem(ndo_model, mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  expect_identical(coef(fw), coef(fe))
+  expect_identical(as.numeric(logLik(fw)), as.numeric(logLik(fe)))
+})
+
+test_that("the article's pitfall holds: `args$meanstructure <- NULL` drops the element and the default warns", {
+  local_native_defaults_unshown()
+  bad <- function(...) {
+    args <- list(...)
+    args$fixed_x <- FALSE
+    args$meanstructure <- NULL
+    do.call(fit_sem, args)
+  }
+  expect_warning(bad(ndo_model, mediation_demo), class = "medfit_warning_default_change")
+})
+
 test_that("covariance-only AIC exceeds lavaan's by 2k, and agrees under meanstructure = TRUE", {
   testthat::skip_if_not_installed("lavaan")
   ff <- fit_sem(ndo_model, mediation_demo, fixed_x = FALSE, meanstructure = FALSE)

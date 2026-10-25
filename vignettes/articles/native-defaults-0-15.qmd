@@ -62,6 +62,38 @@ withCallingHandlers(
 )
 ```
 
+### A recipe for packages that depend on medfit
+
+A package that must work with medfit releases before and after 0.14.0 cannot pass `meanstructure`
+to a medfit that lacks it. Check the formals first, then pass the arguments the installed medfit
+knows and the caller left unset:
+
+```{r}
+#| label: dependent-wrapper
+#| eval: false
+.fit_sem <- function(...) {
+  args <- list(...)
+  f <- names(formals(medfit::fit_sem))
+  if ("fixed_x" %in% f && !"fixed_x" %in% names(args)) args$fixed_x <- FALSE
+  if ("meanstructure" %in% f && !"meanstructure" %in% names(args)) {
+    args["meanstructure"] <- list(NULL)
+  }
+  do.call(medfit::fit_sem, args)
+}
+```
+
+`args["meanstructure"] <- list(NULL)` stores an explicit `NULL`; `args$meanstructure <- NULL` would
+delete the element and leave the default in force. RMediation's test helper uses this wrapper
+(Data-Wise/rmediation#85).
+
+Two points about muffling:
+
+- The warning is shown once per session per argument, and the flag is set before the warning is
+  raised. A muffled warning therefore uses up that session's one warning, and a later unwrapped fit
+  stays silent. Pass the arguments rather than muffle when the code runs in a user's session.
+- `testthat::expect_no_warning()` fails on the warning; muffle by class, or pass the arguments, in
+  tests that check for clean output.
+
 ## The worked example
 
 One mediator, one covariate, so two exogenous observed variables (`treatment` and `covariate1`)
