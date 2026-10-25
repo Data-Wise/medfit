@@ -407,8 +407,8 @@ verdict_gate <- function(gate, d, s) {
       )
     },
     "native-defaults" = {
-      # 0.14.0 T8a (R-12): every pass/fail row is re-derived from the recorded diff and tolerance, a declared row needs
-      # a reason, every core cell ran under the four combinations and the opt-in, and the opt-in equals the explicit fit
+      # 0.14.0 T8a/T8b (R-12): every pass/fail row is re-derived from the recorded diff and tolerance, a declared row
+      # needs a reason, every cell ran under its combinations and the opt-in, and the opt-in equals the explicit fit
       need_cells <- c("simple", "weights", "fixed_intercept", "constrained_intercepts", "latent", "subset")
       combos <- c("fx=FALSE ms=NULL", "fx=FALSE ms=TRUE", "fx=TRUE ms=NULL", "fx=TRUE ms=TRUE", "optin")
       judged <- d$status %in% c("pass", "fail")
@@ -417,9 +417,16 @@ verdict_gate <- function(gate, d, s) {
       declared <- d$status %in% c("limit", "block")
       have <- paste(d$cell, d$combo)
       core <- need_cells[need_cells != "subset"]
-      miss <- setdiff(c(as.vector(outer(core, combos, paste)), paste("subset", c("fx=c ms=NULL", "fx=c ms=TRUE"))),
+      # T8b cells: product (four-way, plus the named subset that leaves the product free), factor (fixed_x = "g"),
+      # lenient (the opt-in leaves a variable with a statement free); each opt-in also checks the resolved set
+      t8b <- c(paste("product", c(combos, "fx=x,c ms=TRUE")),
+               paste("factor", c(combos, "fx=g ms=NULL", "fx=g ms=TRUE")),
+               paste("lenient", c("fx=FALSE ms=TRUE", "fx=x ms=TRUE", "optin")))
+      miss <- setdiff(c(as.vector(outer(core, combos, paste)), paste("subset", c("fx=c ms=NULL", "fx=c ms=TRUE")), t8b),
                       have)
+      optin_cells <- c(core, "product", "factor", "lenient")
       same <- d[d$quantity == "same_as_explicit", , drop = FALSE]
+      set <- d[d$quantity == "same_as_explicit:fixed_x", , drop = FALSE]
       rbind(
         rows_chk(d, s),
         chk("known status", all(judged | declared), sprintf("%d rows with another status", sum(!(judged | declared)))),
@@ -429,8 +436,10 @@ verdict_gate <- function(gate, d, s) {
             sprintf("%d limit, %d block", sum(d$status == "limit"), sum(d$status == "block"))),
         chk("every cell and combination ran", !length(miss),
             if (length(miss)) paste("missing:", paste(miss, collapse = "; ")) else "all"),
-        chk("opt-in equals the explicit fit", nrow(same) == length(core) && all(same$status == "pass"),
-            sprintf("%d opt-in identity rows", nrow(same)))
+        chk("opt-in equals the explicit fit", nrow(same) == length(optin_cells) && all(same$status == "pass"),
+            sprintf("%d opt-in identity rows", nrow(same))),
+        chk("opt-in resolves the expected subset", nrow(set) == 3L && all(set$status == "pass"),
+            sprintf("%d resolved-set rows (product, factor, lenient)", nrow(set)))
       )
     },
     restoration = {
