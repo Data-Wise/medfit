@@ -1,3 +1,24 @@
+# medfit (development version)
+
+## Outcome ledger for native zero-product fits and MBCO
+
+* Every native fit, zero-product branch and `mbco_sem()` null now keeps a versioned outcome ledger
+  (`fit@diagnostics$ledger`): a stable ID, the exact restriction, the estimation sample and likelihood domain, the
+  optimizer's acceptance state, the discrepancy, whether a feasible point was witnessed, covariance availability,
+  retained warnings and messages, and the original condition. An unresolved branch is unknown, never certified
+  infeasible, and a complete enumeration is not a global-optimum certificate.
+* No result changes. An unresolved required zero-product branch is still the `medfit_error_no_convergence` error
+  and never a fit (#303); the error now carries the ledger of every required branch as `$ledger`, and the best
+  surviving branch's discrepancy as `$best_survivor` (diagnostic only, never a p-value). The notices of a failed
+  branch are appended to the message. `mbco_sem()` keeps its unresolved result (an `NA` statistic, `unresolved`
+  `TRUE`) and carries the ledger as `$ledger`; `compare_lr()`'s `$reference` carries it too.
+* A fit whose ledger is missing, malformed or does not describe the fit is refused by `mbco_sem()` with a
+  `medfit_error_ledger` error (a fit made before this release must be refitted). A zero-product model whose
+  restrictions exceed the 64-branch cap still stops with its plain error; it now carries a ledger whose
+  enumeration state is `not_enumerated`.
+* Internal: fits hold their warnings and messages while running and replay them as condition objects, so their
+  classes now reach the caller.
+
 # medfit 0.14.0
 
 ## Native engine defaults change in 0.15.0
