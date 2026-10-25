@@ -22,6 +22,7 @@ model, from one mediator to a latent variable.
 
 | Version | What you get |
 |---|---|
+| **0.14.0** | Notice for the 0.15.0 native defaults (`fixed_x = TRUE`, `meanstructure = TRUE`): a native fit that leaves either unset warns once per session (no result changes); `options(medfit.native_defaults = "0.15")` opts in early; the [0.15.0 defaults article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html) explains both settings and how dependent packages keep today's results. |
 | **0.13.0** | A roundoff-limited restoration's objective rise is capped, so a worse point can no longer stand and inflate a likelihood-ratio statistic; a refit the optimizer cannot fit is an unresolved result (`mbco_sem()`, `compare_lr()`) instead of an error or a silent answer, and a zero-product branch that cannot be fitted stops `fit_sem()` with an error instead of returning a partial fit. |
 | **0.12.0** | `compare_lr()` runs the product-null LR (`a*b == 0`) in lavaan or OpenMx and compares it with `mbco_sem()`, warning only on observed evidence (a dropped constraint, a statistic above medfit's); a fix for the native acceptance gate rejecting a correct fit at a bound on the reference BLAS (#238) |
 | **0.11.1** | Nonparametric and cluster bootstrap resamples no longer depend on `ncores`; `anova()` on `SEMFit` records `p_valid` and refuses a pair with a nonzero fixed parameter in one fit only; `@diagnostics$optimum` records the best-of-starts verdict; an engine comparison table on the Models page; the minibook explains the hard concepts from scratch; a robustness suite for the native optimizer (metamorphic, nloptr fault injection, an edge-case grid and a randomized oracle sweep, registered as a gate) |
@@ -45,7 +46,7 @@ install.packages(
 )
 ```
 
-This installs the current r-universe release (0.13.0). Binaries are available
+This installs the current r-universe release (0.14.0). Binaries are available
 for supported R/platform combinations; a source installation can require a
 compiler for dependencies such as `nloptr`. From GitHub instead:
 `pak::pak("data-wise/medfit")`.
@@ -333,7 +334,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.13.0. https://data-wise.github.io/medfit/
+R package version 0.14.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.
