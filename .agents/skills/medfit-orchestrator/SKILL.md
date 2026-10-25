@@ -22,8 +22,9 @@ never a PASS.
    up agents for trivia.
 2. Out of domain (another repo, release engineering, CRAN submission): say so and stop. Release work follows the
    user's release process, not this pipeline.
-3. In domain: find the task. Read the active plan named in AGENTS.md ("Active plan") or the newest
-   `planning/PLAN-*.md`; take the task the user named, else the first unchecked task whose dependencies are done.
+3. In domain: find the task. Read the active plan named under "Active plan" in `CLAUDE.md`. If that
+   pointer is missing, stale, completed or names several plans, stop and ask; never pick by modification time.
+   Take the task the user named, else the first unchecked task whose dependencies are done.
    Read the task's acceptance criteria, files and verification. The plan file is the source of task state.
 4. Context check:
    - **initial run**: no worktree for the task → create one (step 1 below).
