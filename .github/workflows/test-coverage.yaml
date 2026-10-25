@@ -3,11 +3,6 @@
 on:
   push:
     branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
-    # Files that cannot change a test result. Not tests/sim/**: test-native-defaults-oracle.R sources it.
-    # Never add path filters to a required check: a skipped required check stays pending.
-    paths-ignore: ['planning/**', '**.md', '.claude/**']
 
 name: test-coverage
 
