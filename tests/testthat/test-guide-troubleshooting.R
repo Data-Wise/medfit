@@ -265,6 +265,18 @@ test_that("the guide quotes the 0.14.0 default-change warnings and both are trig
   expect_true(grepl("fit_sem(): `meanstructure` is unset", txt, fixed = TRUE))
 })
 
+test_that("the guide quotes the lenient fixed_x message and it is triggered under the 0.15 opt-in", {
+  withr::local_options(medfit.native_defaults = "0.15")
+  m <- testthat::capture_messages(
+    fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment\ntreatment ~~ treatment",
+            data = mediation_demo)
+  )
+  expect_true(any(grepl("fit_sem(): the `fixed_x` default leaves", m, fixed = TRUE)))
+  skip_if_not(file.exists(guide_path()), "vignettes are not available (installed or built package)")
+  txt <- paste(readLines(guide_path(), warn = FALSE), collapse = "\n")
+  expect_true(grepl("fit_sem(): the `fixed_x` default leaves", txt, fixed = TRUE))
+})
+
 # ---- native engine: products, anova(), starts and constraints (messages quoted in the guide) ----
 
 nt_syn <- paste0("mediator1 ~ a1*treatment\nmediator2 ~ a2*treatment\n",

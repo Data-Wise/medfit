@@ -7,8 +7,10 @@
   and no product term for `meanstructure`). The warning has class `medfit_warning_default_change`, names the
   argument, and is shown once per session per argument. Results are unchanged in 0.14.0. Pass the argument
   explicitly to keep today's results without the warning, or set `options(medfit.native_defaults = "0.15")` to fit
-  with the 0.15.0 defaults now (`fixed_x = TRUE`, `meanstructure = TRUE`); under the option a model with a `~~` or
-  `~1` statement on an exogenous variable is an error asking for `fixed_x` explicitly.
+  with the 0.15.0 defaults now (`meanstructure = TRUE`, and `fixed_x` set to every observed exogenous column,
+  product and factor-dummy columns included, except those a `~~` or `~1` statement names). Variables left free that
+  way are named on each fit in a message of class `medfit_message_fixed_x_lenient` (field `variables`), and
+  `glance()$fixed_x` lists the fixed set. An explicit `fixed_x = TRUE` still errors on such a statement.
 
 * `compare_lr()` now accepts native fits with a saturated mean structure (every intercept free) and with `fixed_x`
   (`TRUE`, a named subset or a lenient subset), in lavaan (#319) and in OpenMx (#321). Both were refused before. The
