@@ -140,13 +140,13 @@
 }
 
 # The sample of `node` within the ledger rooted at `root`: its own, or the root's when the digests agree; NULL when
-# neither holds (a forged or mismatched digest).
-.sem_node_sample <- function(node, root) {
+# neither holds (a forged or mismatched digest). `root_hash` is the root sample's digest when the caller has it.
+.sem_node_sample <- function(node, root, root_hash = rlang::hash(root$context[["sample"]])) {
   own <- node$context[["sample"]]
   if (!is.null(own)) {
     return(own)
   }
-  if (identical(node$context$sample_hash, rlang::hash(root$context[["sample"]]))) root$context[["sample"]] else NULL
+  if (identical(node$context$sample_hash, root_hash)) root$context[["sample"]] else NULL
 }
 
 # The D-11 error with its ledger. The message is the pre-ledger text; notices are carried in the ledger only.
@@ -190,13 +190,9 @@
             !(is.null(x$context$sample_hash) || identical(x$context$sample_hash, rlang::hash(x$context[["sample"]])))) {
         return(FALSE)
       }
-      root <- list(sample = x$context[["sample"]], hash = rlang::hash(x$context[["sample"]]))
+      root <- list(context = list(sample = x$context[["sample"]]), hash = rlang::hash(x$context[["sample"]]))
     }
-    sample <- if (!is.null(x$context[["sample"]])) {
-      x$context[["sample"]]
-    } else if (identical(x$context$sample_hash, root$hash)) {
-      root$sample
-    }
+    sample <- .sem_node_sample(x, root, root$hash)
     # Reconstruct the required restriction sets, so a dropped child cannot forge completeness.
     products <- .sem_zero_product_rows(x$constraints)
     count <- if (length(products)) prod(vapply(products, function(p) length(p$factors), 0L)) else 0L
@@ -224,12 +220,8 @@
           cons$rhs[products[[j]]$row] <- "0"
         }
         child <- x$children[[i]]
-        child_sample <- if (!is.null(child$context[["sample"]])) {
-          child$context[["sample"]]
-        } else if (identical(child$context$sample_hash, root$hash)) {
-          root$sample
-        }
-        identical(child$constraints, cons) && identical(child_sample, root$sample) &&
+        identical(child$constraints, cons) &&
+          identical(.sem_node_sample(child, root, root$hash), root$context[["sample"]]) &&
           identical(child$context$domain, x$context$domain) &&
           identical(child$context$settings, x$context$settings) &&
           .sem_valid_outcome(child, paste0(id, "/branch:", i), id, root)

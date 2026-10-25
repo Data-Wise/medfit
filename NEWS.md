@@ -16,6 +16,8 @@
   `medfit_error_ledger` error (a fit made before this release must be refitted). A zero-product model whose
   restrictions exceed the 64-branch cap still stops with its plain error; it now carries a ledger whose
   enumeration state is `not_enumerated`.
+* Warnings and messages raised before an error are no longer replayed on the error; they are kept in `$ledger`
+  only.
 * Internal: fits hold their warnings and messages while running and replay them as condition objects, so their
   classes now reach the caller.
 
