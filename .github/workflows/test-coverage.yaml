@@ -5,8 +5,16 @@ on:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
+    # Files that cannot change a test result. Not tests/sim/**: test-native-defaults-oracle.R sources it.
+    # Never add path filters to a required check: a skipped required check stays pending.
+    paths-ignore: ['planning/**', '**.md', '.claude/**']
 
 name: test-coverage
+
+# Cancel a superseded run on the same PR; pushes are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions: read-all
 

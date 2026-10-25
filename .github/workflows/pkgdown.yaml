@@ -8,11 +8,18 @@ on:
     # article example fails here instead of at the next release. PR builds
     # never deploy (see the deploy step's condition).
     branches: [main, master, dev]
+    # Files the site does not render (NEWS.md is rendered, so .md is not ignored here).
+    paths-ignore: ['planning/**', 'tests/**', '.claude/**']
   release:
     types: [published]
   workflow_dispatch:
 
 name: pkgdown
+
+# Cancel a superseded run on the same PR; pushes are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions: read-all
 
