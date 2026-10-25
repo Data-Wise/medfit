@@ -208,6 +208,31 @@ test_that("the opt-in subset includes product and factor-dummy columns (E-11)", 
   expect_identical(got$notes[[1L]]$variables, "cv")
 })
 
+test_that("a statement on a factor name gives the fit's own error and no lenient note (QA O1)", {
+  local_native_defaults_unshown()
+  withr::local_options(medfit.native_defaults = "0.15")
+  d <- nd_pf_data()
+  notes <- list()
+  expect_error(
+    withCallingHandlers(fit_sem("m ~ x + g\ny ~ m + x + g\ng ~~ g", d),
+                        medfit_message_fixed_x_lenient = function(m) {
+                          notes[[length(notes) + 1L]] <<- m
+                          invokeRestart("muffleMessage")
+                        }),
+    "model variables must be numeric: g", fixed = TRUE
+  )
+  expect_length(notes, 0L)
+})
+
+test_that("the opt-in keeps meanstructure = TRUE when the fixed_x default cannot be computed (QA O2)", {
+  local_native_defaults_unshown()
+  withr::local_options(medfit.native_defaults = "0.15")
+  local_mocked_bindings(.sem_default_fixed_x = function(parameters, data) stop("expansion failed"))
+  got <- .native_defaults_resolve(nd_syntax, nd_data(), FALSE, NULL, TRUE, TRUE)
+  expect_identical(got$meanstructure, TRUE)
+  expect_identical(got$fixed_x, FALSE)
+})
+
 test_that("refits see the resolved subset (T2 sites)", {
   local_native_defaults_unshown()
   withr::local_options(medfit.native_defaults = "0.15")

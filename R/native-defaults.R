@@ -48,10 +48,9 @@
   if (opt_in) {
     if (ms_unset) meanstructure <- TRUE
     if (fx_unset) {
-      fixed_x <- tryCatch(.sem_default_fixed_x(p, data), error = function(e) NULL)
-      if (is.null(fixed_x)) {
-        return(keep)
-      }
+      # When factor expansion fails here the fit fails on the same data with the specific message; only fixed_x falls
+      # through to the old value, and the opt-in meanstructure = TRUE is kept (QA O2).
+      fixed_x <- tryCatch(.sem_default_fixed_x(p, data), error = function(e) keep$fixed_x)
     }
     return(list(fixed_x = fixed_x, meanstructure = meanstructure))
   }
@@ -75,7 +74,8 @@
   dummies <- unlist(lapply(expanded$map[intersect(names(expanded$map), named)], function(m) m$dummies),
                     use.names = FALSE)
   free <- intersect(ov_x, c(named, dummies))
-  if (length(free)) {
+  # A statement on a factor's name makes the fit fail ("model variables must be numeric"), so no note for it (QA O1).
+  if (length(free) && !any(names(expanded$map) %in% named)) {
     message(structure(
       class = c("medfit_message_fixed_x_lenient", "message", "condition"),
       list(message = paste0(
