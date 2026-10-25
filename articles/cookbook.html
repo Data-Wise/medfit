@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.13.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,6 +81,7 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">Native defaults in 0.15.0</a></li>
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
@@ -166,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -740,6 +741,7 @@ fixed_x 0.3493645 0.06609875</code></pre>
 </div>
 </div>
 <p>Compare fits only when they fix the same variables. <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>/<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> across several fits stop when the fixed sets differ, as above. Pass a character vector (for example <code>fixed_x = "treatment"</code>) to fix a subset.</p>
+<p>In 0.15.0 the default becomes <code>fixed_x = TRUE</code> (0.14.0 warns when it is left unset); pass <code>fixed_x = FALSE</code> to keep the free exogenous block. See <a href="native-defaults-0-15.html">the 0.15.0 defaults</a>.</p>
 <p>More: <a href="methods.html">Methods and Formulas</a>, <a href="native-guide.html">the native engine guide</a>.</p>
 </section><section class="level2"><h2 id="observed-intercepts-and-means">19. Observed intercepts and means<a class="anchor" aria-label="anchor" href="#observed-intercepts-and-means"></a>
 </h2>
@@ -790,6 +792,7 @@ zero  8 3000.936</code></pre>
 </div>
 </div>
 <p>The test rejects zero, and the restricted model has the larger AIC. A fit with the mean structure off has no intercepts to restrict.</p>
+<p>In 0.15.0 the default becomes <code>meanstructure = TRUE</code>, so every native fit has intercepts; pass <code>meanstructure = NULL</code> to keep today’s rule (means only when the model writes <code>~1</code> or a product). See <a href="native-defaults-0-15.html">the 0.15.0 defaults</a>.</p>
 <p>More: <a href="model-native.html#intercepts">Native engine, intercepts</a>.</p>
 </section><section class="level2"><h2 id="four-way-decomposition-from-a-native-fit">20. Four-way decomposition from a native fit<a class="anchor" aria-label="anchor" href="#four-way-decomposition-from-a-native-fit"></a>
 </h2>

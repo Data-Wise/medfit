@@ -1,6 +1,6 @@
 # Changelog
 
-## medfit (development version)
+## medfit 0.14.0
 
 ### Native engine defaults change in 0.15.0
 

@@ -1,0 +1,349 @@
+# Native defaults in 0.15.0
+
+medfit 0.15.0 changes two defaults of
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+and `fit_mediation(engine = "native")`, so that a default native fit
+matches a default lavaan fit:
+
+| Argument | Default through 0.14.x | Default from 0.15.0 | lavaan equivalent |
+|----|----|----|----|
+| `fixed_x` | `FALSE` (every exogenous moment is a parameter) | the observed exogenous variables | `fixed.x = TRUE` |
+| `meanstructure` | `NULL` (means only when the syntax writes `~1` or a product) | `TRUE` | `meanstructure = TRUE` |
+
+This page explains both changes with the same depth: what each one does
+to the likelihood, why the structural estimates and their standard
+errors stay put, which reported numbers move, and how the change was
+checked. Every formula is in [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.md); the
+derivations are in the native mini-book, chapter 1 (the mean structure)
+and chapter 4 (fixed exogenous variables).
+
+## What changes and when
+
+- **0.14.0** changes no result. A native fit that leaves `fixed_x` or
+  `meanstructure` unset, in a model where that default will matter,
+  warns once per session per argument. The warning has class
+  `medfit_warning_default_change`.
+- **0.15.0**, released at least two months after 0.14.0 (issue \#329
+  carries the notice), flips both defaults together. `FALSE` and `NULL`
+  stay valid values in every release.
+
+Three ways to act on the warning:
+
+1.  **Keep today’s results.** Pass both arguments:
+    `fit_sem(model, data, fixed_x = FALSE, meanstructure = NULL)`. The
+    results are those of 0.14.0, now and after 0.15.0.
+2.  **Opt in early.** Set `options(medfit.native_defaults = "0.15")` and
+    leave the arguments unset; fits use the 0.15.0 defaults without the
+    warning. In 0.15.0 the option is ignored.
+3.  **Package authors.** Pass both arguments in package code, examples
+    and tests, so your users see neither the warning nor a change of
+    results. To silence the warning in a test, catch it by class:
+
+``` r
+withCallingHandlers(
+  fit_sem(model, data),
+  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
+)
+```
+
+### A recipe for packages that depend on medfit
+
+A package that must work with medfit releases before and after 0.14.0
+cannot pass `meanstructure` to a medfit that lacks it. Check the formals
+first, then pass the arguments the installed medfit knows and the caller
+left unset:
+
+``` r
+.fit_sem <- function(...) {
+  args <- list(...)
+  f <- names(formals(medfit::fit_sem))
+  if ("fixed_x" %in% f && !"fixed_x" %in% names(args)) args$fixed_x <- FALSE
+  if ("meanstructure" %in% f && !"meanstructure" %in% names(args)) {
+    args["meanstructure"] <- list(NULL)
+  }
+  do.call(medfit::fit_sem, args)
+}
+```
+
+`args["meanstructure"] <- list(NULL)` stores an explicit `NULL`;
+`args$meanstructure <- NULL` would delete the element and leave the
+default in force. RMediation’s test helper uses this wrapper
+(Data-Wise/rmediation#85).
+
+Two points about muffling:
+
+- The warning is shown once per session per argument, and the flag is
+  set before the warning is raised. A muffled warning therefore uses up
+  that session’s one warning, and a later unwrapped fit stays silent.
+  Pass the arguments rather than muffle when the code runs in a user’s
+  session.
+- [`testthat::expect_no_warning()`](https://testthat.r-lib.org/reference/expect_no_error.html)
+  fails on the warning; muffle by class, or pass the arguments, in tests
+  that check for clean output.
+
+## The worked example
+
+One mediator, one covariate, so two exogenous observed variables
+(`treatment` and `covariate1`) and \\p = 4\\ observed variables in all.
+
+``` r
+library(medfit)
+```
+
+
+    Attaching package: 'medfit'
+
+    The following object is masked from 'package:stats':
+
+        decompose
+
+``` r
+library(generics)
+```
+
+
+    Attaching package: 'generics'
+
+    The following objects are masked from 'package:base':
+
+        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
+        setequal, union
+
+``` r
+model <- "
+  mediator1 ~ a * treatment + covariate1
+  outcome ~ b * mediator1 + cp * treatment + covariate1
+"
+```
+
+Each combination of the two arguments is set explicitly, so no fit
+warns:
+
+``` r
+settings <- expand.grid(fixed_x = c(FALSE, TRUE), meanstructure = c(FALSE, TRUE))
+rows <- lapply(seq_len(nrow(settings)), function(i) {
+  f <- fit_sem(model, mediation_demo,
+               fixed_x = settings$fixed_x[i], meanstructure = settings$meanstructure[i])
+  ll <- logLik(f)
+  se <- sqrt(diag(vcov(f)))
+  data.frame(
+    fixed_x = settings$fixed_x[i], meanstructure = settings$meanstructure[i],
+    npar = length(coef(f)), logLik_df = attr(ll, "df"), logLik = round(as.numeric(ll), 3),
+    AIC = round(AIC(f), 3),
+    a = round(coef(f)[["a"]], 6), b = round(coef(f)[["b"]], 6), cp = round(coef(f)[["cp"]], 6),
+    se_a = round(se[["a"]], 6), se_b = round(se[["b"]], 6), se_cp = round(se[["cp"]], 6)
+  )
+})
+four <- do.call(rbind, rows)
+four
+```
+
+      fixed_x meanstructure npar logLik_df    logLik      AIC        a        b
+    1   FALSE         FALSE   10        14 -2001.826 4031.651 0.581425 0.572944
+    2    TRUE         FALSE    7         9 -1139.928 2297.856 0.581425 0.572944
+    3   FALSE          TRUE   14        14 -2001.826 4031.651 0.581425 0.572944
+    4    TRUE          TRUE    9         9 -1139.928 2297.856 0.581425 0.572944
+           cp     se_a     se_b    se_cp
+    1 0.20426 0.098585 0.053065 0.109082
+    2 0.20426 0.098585 0.053065 0.109082
+    3 0.20426 0.098585 0.053065 0.109082
+    4 0.20426 0.098585 0.053065 0.109082
+
+Read the table by column:
+
+- `a`, `b`, `cp` and their standard errors are identical in all four
+  rows.
+- `fixed_x = TRUE` drops three parameters without a mean structure (the
+  two exogenous variances and their covariance) and five with one (the
+  same three plus the two exogenous means). `logLik` and `AIC` change
+  because the likelihood becomes conditional.
+- `meanstructure = TRUE` adds one intercept for each observed variable
+  whose mean is not fixed: four with `fixed_x = FALSE`, two with
+  `fixed_x = TRUE`. `logLik` and `AIC` do not change in medfit; the last
+  section explains why lavaan’s AIC does.
+
+## `fixed_x`: the conditional likelihood
+
+With `fixed_x`, the means, variances and covariances of the selected
+exogenous variables are no longer parameters. They are held at their
+sample values, with divisor \\n\\ (the maximum-likelihood moments, not
+the \\n - 1\\ ones; the conditional likelihood is in [Methods and
+Formulas, fixed exogenous
+moments](https://data-wise.github.io/medfit/articles/methods.html#fixed-exogenous-moments)).
+The joint density of the observed variables factors into the marginal
+density of the exogenous block and the conditional density of the rest
+given that block; the structural parameters (paths, residual variances,
+the intercepts of endogenous variables) appear only in the conditional
+factor. Maximizing the joint likelihood with the exogenous moments free
+gives those moments their sample values anyway, so fixing them changes
+neither the structural estimates nor their standard errors. What
+changes:
+
+- [`logLik()`](https://rdrr.io/r/stats/logLik.html) is the conditional
+  log likelihood, comparable only across fits with the same fixed set on
+  the same data.
+- The parameter count drops by the number of fixed moments, and
+  [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+  [`BIC()`](https://rdrr.io/r/stats/AIC.html) with it.
+- The fixed moments leave [`coef()`](https://rdrr.io/r/stats/coef.html),
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html) and the free rows of
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html);
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) flags them
+  with `fixed_x = TRUE`.
+- The model chi-square and its degrees of freedom do not change: the
+  fixed moments are removed from both the parameters and the moments
+  being fit.
+
+### The 0.15.0 default is a lenient subset
+
+An explicit `fixed_x = TRUE` errors when the model writes a `~~` or `~1`
+statement on an exogenous variable, because such a statement asks to
+estimate a moment that `fixed_x` would fix. The 0.15.0 default is
+lenient instead: it fixes every observed exogenous column except those a
+`~~` or `~1` statement names, and it says which it left free in a
+message of class `medfit_message_fixed_x_lenient` (field `variables`).
+`glance()$fixed_x` lists the set that was fixed.
+
+``` r
+old <- options(medfit.native_defaults = "0.15")
+lenient <- fit_sem(paste(model, "covariate1 ~~ covariate1", sep = "\n"), mediation_demo)
+```
+
+    fit_sem(): the `fixed_x` default leaves covariate1 free, because the model writes a `~~` or `~1` statement on it; the other exogenous observed variables are fixed. Pass `fixed_x` explicitly to choose.
+
+``` r
+glance(lenient)$fixed_x
+```
+
+    [1] "treatment"
+
+``` r
+options(old)
+```
+
+The **pairing rule** matters here. medfit, like lavaan, adds the
+covariances among exogenous variables automatically, but an exogenous
+variable that the model names in a `~~` statement is not paired with the
+others. In the fit above `covariate1` is named, so the covariance
+between `treatment` and `covariate1` is not in the model: it is 0 unless
+you write it. That is a modeling choice the syntax makes, not a side
+effect of `fixed_x`; the same model in lavaan has the same zero.
+
+Product columns (`x:m`) and the 0/1 columns of a factor covariate are
+observed exogenous columns too, so the default fixes them along with the
+others. lavaan treats them the same way (the oracle matrix below checks
+it).
+
+## `meanstructure = TRUE`: a saturated mean part
+
+With `meanstructure = TRUE` every observed variable gets a free
+intercept (for an exogenous variable, its mean), and the mean part of
+the model is saturated unless the syntax restricts it (`y ~ 0*1`). Today
+the mean structure is already on when the syntax writes a `~1` row or a
+product term; the new default turns it on for every model.
+
+Why nothing structural moves: the maximum-likelihood discrepancy is the
+covariance-only discrepancy plus an additive mean term, a quadratic form
+in \\\bar x - \mu(\theta)\\ (the formula is in [Methods and Formulas,
+mean
+structure](https://data-wise.github.io/medfit/articles/methods.html#mean-structure)).
+When the intercepts are free and not shared, the mean term is minimized
+at zero by \\\hat\mu = \bar x\\ for any covariance parameters, so the
+covariance parameters solve the same problem as without a mean
+structure, and the information has no cross block between the two parts.
+The estimates and standard errors of the paths and variances are
+therefore the same, and the intercepts are the sample means (for an
+endogenous variable, the intercept that reproduces its sample mean).
+
+What moves:
+
+- The parameter vector gains the intercepts:
+  [`coef()`](https://rdrr.io/r/stats/coef.html),
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html) and
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) have new
+  rows.
+- The parameter count rises by the number of free intercepts, so
+  `glance()$npar` changes.
+- [`logLik()`](https://rdrr.io/r/stats/logLik.html) contains the mean
+  term. For a saturated mean part that term is zero at the solution, so
+  the value is the same as the covariance-only fit’s; medfit already
+  counts the implicit means in the covariance-only fit’s
+  [`logLik()`](https://rdrr.io/r/stats/logLik.html) degrees of freedom
+  (next section), so [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+  [`BIC()`](https://rdrr.io/r/stats/AIC.html) are the same in medfit
+  too. In the worked example the `logLik_df` column shows it.
+- Weighted fits:
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) reports
+  `NA` for chi-square, `logLik`, `AIC` and `BIC` of a fit with
+  `weights`, with or without a mean structure, because the weighted
+  discrepancy is not a likelihood.
+
+### AIC and BIC against lavaan
+
+Without a mean structure, medfit’s
+[`logLik()`](https://rdrr.io/r/stats/logLik.html) degrees of freedom
+count the observed means that are not fixed as estimated (they are,
+implicitly, at the sample means), while lavaan’s AIC and BIC count only
+its parameters. For a covariance-only fit with \\k\\ such means,
+medfit’s AIC is larger than lavaan’s by \\2k\\ and its BIC by \\k \log
+n\\; the log likelihoods and the parameter counts agree.
+
+``` r
+lv_cov <- lavaan::sem(model, mediation_demo, fixed.x = FALSE)
+lv_mean <- lavaan::sem(model, mediation_demo, fixed.x = FALSE, meanstructure = TRUE)
+c(lavaan_cov_only = lavaan::fitMeasures(lv_cov, "aic")[[1]],
+  lavaan_means = lavaan::fitMeasures(lv_mean, "aic")[[1]],
+  medfit = four$AIC[four$fixed_x == FALSE & four$meanstructure == FALSE])
+```
+
+    lavaan_cov_only    lavaan_means          medfit
+           4023.651        4031.651        4031.651 
+
+Here \\k = 4\\, so the covariance-only AICs differ by 8. With
+`meanstructure = TRUE`, the 0.15.0 default, the intercepts are ordinary
+parameters on both sides and the two AICs agree.
+
+## Evidence: the oracle matrix
+
+`tests/sim/native-defaults-oracle.R` fits a set of model cells (simple
+mediation, latent mediator, named and lenient subsets, sampling weights,
+a four-way product term, a factor covariate) under every combination of
+the two arguments and the opt-in, and compares structural estimates,
+standard errors, chi-square, df, `logLik`, the parameter count, AIC and
+BIC with lavaan or a stated oracle. It has 557 rows: 503 agree, 54 are
+recorded limits, 0 block. Each limit is a difference of reporting,
+declared with its reason, never a widened tolerance:
+
+- **Weights:**
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) reports
+  `NA` for chi-square, `logLik`, AIC and BIC by design; lavaan reports
+  its weighted-ML values.
+- **Covariance-only AIC and BIC:** the \\2k\\ and \\k \log n\\ gap
+  above, in the simple, latent, subset and factor cells under
+  `meanstructure = NULL`. It disappears under `meanstructure = TRUE`.
+- **Product terms:** a product turns medfit’s mean structure on while
+  lavaan’s default fits no means, so under `meanstructure = NULL` the
+  parameter count, AIC and BIC differ by the free means (`logLik`,
+  estimates and standard errors agree). When a product factor is a
+  regression target, medfit reports chi-square and df as `NA` because
+  the model test is invalid there; lavaan reports numbers for the same
+  model.
+
+No row disagrees on a structural estimate or its standard error. The
+retry seed of a multi-start fit is derived from the parameter names, so
+the larger or smaller parameter vector changes the random starts; a
+well-identified fit gives the same estimates, but which start wins, and
+whether the start-spread warning appears, can change.
+
+## See also
+
+- [What changed since CRAN
+  0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.md)
+  for the release-by-release table.
+- [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.md)
+  for the warning and message texts.
+- [The native engine
+  guide](https://data-wise.github.io/medfit/articles/native-guide.md)
+  and [medfit and
+  lavaan](https://data-wise.github.io/medfit/articles/lavaan-comparison.md).

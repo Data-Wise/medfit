@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.13.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,6 +81,7 @@
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">Native defaults in 0.15.0</a></li>
     <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
@@ -166,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -175,7 +176,7 @@
 
 
 
-    <p>CRAN has medfit 0.3.2; this site documents 0.13.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
+    <p>CRAN has medfit 0.3.2; this site documents 0.14.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
 <div>
 <blockquote>
 <p><strong>The short version</strong></p>
@@ -518,6 +519,10 @@
 <tr class="odd">
 <td>0.13.0</td>
 <td>a roundoff-limited restoration’s objective rise is capped (a worse point can no longer stand and inflate an LR); a refit the optimizer cannot fit is an unresolved result in <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and <code><a href="../reference/compare_lr.html">compare_lr()</a></code> instead of an error or a silent answer, and a zero-product branch that cannot be fitted stops <code><a href="../reference/fit_sem.html">fit_sem()</a></code> with an error instead of returning a partial fit</td>
+</tr>
+<tr class="even">
+<td>0.14.0</td>
+<td>a native fit that leaves <code>fixed_x</code> or <code>meanstructure</code> unset warns once per session that both defaults change in 0.15.0 (no result changes); <code>options(medfit.native_defaults = "0.15")</code> opts in early (<a href="native-defaults-0-15.html">article</a>)</td>
 </tr>
 </tbody>
 </table></section><section class="level2"><h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>

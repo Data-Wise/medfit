@@ -38,7 +38,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.13.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,6 +83,7 @@
     <li><a class="dropdown-item" href="articles/guide-troubleshooting.html">Troubleshooting</a></li>
     <li><a class="dropdown-item" href="articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><a class="dropdown-item" href="articles/native-defaults-0-15.html">Native defaults in 0.15.0</a></li>
     <li><a class="dropdown-item" href="articles/native-quickstart.html">Native engine in five minutes</a></li>
     <li><a class="dropdown-item" href="articles/native-tutorial.html">Native engine, step by step</a></li>
     <li><a class="dropdown-item" href="articles/native-guide.html">The native engine guide</a></li>
@@ -188,6 +189,10 @@
 </tr></thead>
 <tbody>
 <tr>
+<td><strong>0.14.0</strong></td>
+<td>Notice for the 0.15.0 native defaults (<code>fixed_x = TRUE</code>, <code>meanstructure = TRUE</code>): a native fit that leaves either unset warns once per session (no result changes); <code>options(medfit.native_defaults = "0.15")</code> opts in early; the <a href="https://data-wise.github.io/medfit/articles/native-defaults-0-15.html">0.15.0 defaults article</a> explains both settings and how dependent packages keep today’s results.</td>
+</tr>
+<tr>
 <td><strong>0.13.0</strong></td>
 <td>A roundoff-limited restoration’s objective rise is capped, so a worse point can no longer stand and inflate a likelihood-ratio statistic; a refit the optimizer cannot fit is an unresolved result (<code><a href="reference/mbco_sem.html">mbco_sem()</a></code>, <code><a href="reference/compare_lr.html">compare_lr()</a></code>) instead of an error or a silent answer, and a zero-product branch that cannot be fitted stops <code><a href="reference/fit_sem.html">fit_sem()</a></code> with an error instead of returning a partial fit.</td>
 </tr>
@@ -246,7 +251,7 @@
 <span>  <span class="st">"medfit"</span>,</span>
 <span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://data-wise.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>This installs the current r-universe release (0.13.0). Binaries are available for supported R/platform combinations; a source installation can require a compiler for dependencies such as <code>nloptr</code>. From GitHub instead: <code>pak::pak("data-wise/medfit")</code>.</p>
+<p>This installs the current r-universe release (0.14.0). Binaries are available for supported R/platform combinations; a source installation can require a compiler for dependencies such as <code>nloptr</code>. From GitHub instead: <code>pak::pak("data-wise/medfit")</code>.</p>
 <blockquote>
 <p><strong>CRAN has 0.3.2, which does not run the examples on this site.</strong> It lacks <code>mediation_demo</code>, <code><a href="reference/fit_sem.html">fit_sem()</a></code>, <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> and the joint and cluster classes. Its two known issues, serial <code><a href="reference/te.html">te()</a></code>/<code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> path rows, are fixed in 0.5.0; see <a href="https://github.com/Data-Wise/medfit/issues/83" class="external-link">#83</a>.</p>
 </blockquote>
@@ -712,7 +717,7 @@
 </h2>
 <p>If you use medfit in your research, please cite:</p>
 <pre><code>Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.13.0. https://data-wise.github.io/medfit/</code></pre>
+R package version 0.14.0. https://data-wise.github.io/medfit/</code></pre>
 <p>For the entry matching your installed version, run <code>citation("medfit")</code>.</p>
 </div>
 <div class="section level2">

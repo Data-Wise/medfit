@@ -741,6 +741,11 @@ and
 across several fits stop when the fixed sets differ, as above. Pass a
 character vector (for example `fixed_x = "treatment"`) to fix a subset.
 
+In 0.15.0 the default becomes `fixed_x = TRUE` (0.14.0 warns when it is
+left unset); pass `fixed_x = FALSE` to keep the free exogenous block.
+See [the 0.15.0
+defaults](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md).
+
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md), [the
 native engine
@@ -813,6 +818,11 @@ AIC(free, zero)
 
 The test rejects zero, and the restricted model has the larger AIC. A
 fit with the mean structure off has no intercepts to restrict.
+
+In 0.15.0 the default becomes `meanstructure = TRUE`, so every native
+fit has intercepts; pass `meanstructure = NULL` to keep today’s rule
+(means only when the model writes `~1` or a product). See [the 0.15.0
+defaults](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md).
 
 More: [Native engine,
 intercepts](https://data-wise.github.io/medfit/articles/model-native.html#intercepts).

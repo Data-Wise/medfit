@@ -72,6 +72,8 @@ Upgrading, errors, intervals and terms
   use?](https://data-wise.github.io/medfit/articles/guide-intervals.md):
 - [Glossary and
   symbols](https://data-wise.github.io/medfit/articles/guide-glossary.md):
+- [Native defaults in
+  0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md):
 - [Native engine in five
   minutes](https://data-wise.github.io/medfit/articles/native-quickstart.md):
 - [Native engine, step by
