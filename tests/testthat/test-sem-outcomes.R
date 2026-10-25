@@ -82,6 +82,10 @@ test_that("neither partial-failure ordering can return a surviving union fit; th
       expect_length(err$ledger$notices$warnings, 0L)
       expect_length(bad$notices$warnings, 1L)
       expect_true(is.finite(err$best_survivor$f))
+      # the survivor is named by its own node and carries that node's discrepancy
+      survivor <- children[[match(failed, c("a1", "b1")) %% 2L + 1L]]
+      expect_identical(err$best_survivor$id, survivor$id)
+      expect_identical(err$best_survivor$f, survivor$likelihood$f)
       expect_null(err$p.value)
     })
   }
@@ -269,6 +273,8 @@ test_that("public consumers reject dropped acceptance state and nonfinite likeli
     if (what == "sample") altered@diagnostics$ledger$context$sample <- altered@data[-1, ]
     err <- tryCatch(mbco_sem(altered, "a1", "b1"), error = identity)
     expect_s3_class(err, "medfit_error_ledger")
+    # a refusal of evidence is never an optimizer failure, so no caller can mistake it for one
+    expect_false(inherits(err, "medfit_error_no_convergence"))
     expect_identical(err$ledger$schema_version, 1L)
     expect_identical(err$ledger$outcome, "unresolved")
   }
@@ -487,4 +493,12 @@ test_that("compare_lr() carries the ledger of an unresolved reference", {
   expect_identical(ref$ledger$outcome, "unresolved")
   expect_identical(ref$ledger$children[[2]]$outcome, "unresolved")
   expect_identical(ref$ledger$children[[3]]$outcome, "resolved")
+})
+
+test_that("a refused ledger raised inside an MBCO refit keeps its class and is not an unresolved row", {
+  fit <- fit_sem(outcome_model, outcome_data(), n_starts = 1L)
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(...) medfit:::.sem_abort_ledger("planted refusal", NULL))
+  err <- tryCatch(mbco_sem(fit, "a1", "b1"), error = identity)
+  expect_s3_class(err, "medfit_error_ledger")
+  expect_false(inherits(err, "medfit_error_no_convergence"))
 })
