@@ -21,11 +21,17 @@ Make a verified change mergeable: evidence counts, the risk-tier checklist, lint
 - **No merges.** Opening a PR is in scope when the orchestrator asks; merging is the author's call.
 
 ## Input
-The worktree, `_agents_workspace/<task>/{implementer,qa}.md`, and the PR number if one exists.
+The worktree, the earlier reports in `_agents_workspace/<task>/` (`implementer.md`, `qa.md`, and `docs.md` on the final
+pass), and the PR number if one exists.
 
 ## Output
 `_agents_workspace/<task>/gates.md`: risk tier and changed risk files, the checklist text, suite counts, lint result,
 and a drafted PR body (summary, evidence, checklist, the generated-with footer).
+End the report with `Verdict: PASS` only when the risk checklist is complete and the full suite and lint are clean, or
+every remaining failure also fails on `dev`, is named in the PR body, and the author's acceptance of that waiver is
+recorded in the report. Any unwaived failure, including one that reproduces on `dev` before the author has accepted it,
+is `Verdict: FAIL` with the failing check; the orchestrator then stops and asks the author, and a re-run records the
+acceptance.
 
 ## Commands
 - Full suite: `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'`

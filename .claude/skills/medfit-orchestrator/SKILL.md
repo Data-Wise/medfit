@@ -16,8 +16,9 @@ between implementer and QA.
    up agents for trivia.
 2. Out of domain (another repo, release engineering, CRAN submission): say so and stop. Release work follows the
    user's release process, not this pipeline.
-3. In domain: find the task. Read the active plan named in CLAUDE.md ("Active plan") or the newest
-   `planning/PLAN-*.md`; take the task the user named, else the first unchecked task whose dependencies are done.
+3. In domain: find the task. Read the active plan named under "Active plan" in `CLAUDE.md`. If that
+   pointer is missing, stale, completed or names several plans, stop and ask; never pick by modification time.
+   Take the task the user named, else the first unchecked task whose dependencies are done.
    Read the task's acceptance criteria, files and verification. The plan file is the source of task state.
 4. Context check:
    - **initial run**: no worktree for the task → create one (step 1 below).
@@ -41,11 +42,23 @@ between implementer and QA.
 Spawn `medfit-gates` with the worktree and the two reports. It follows `medfit-risk-tier`: risk tier, full suite
 counts, lint, the drafted PR body.
 
-## Phase 4: docs
-If the task changes user-visible behavior, messages or defaults, spawn `medfit-docs`. Docs-only tasks start here.
+## Phase 4: docs, then final gates
+If the task changes user-visible behavior, messages or defaults, spawn `medfit-docs` with the gates report (docs-only
+tasks start here, with no earlier gates report). Then run `medfit-gates` again on the final tree so the suite, lint
+and docs-consistency tests cover the docs edits; a docs-caused failure goes back to `medfit-docs`. Skip this phase
+only when no docs changed.
 
 ## Phase 5: integrate
-1. Push the branch and open the PR to `dev` with the gates' body: `gh pr create --base dev --body-file <file>`.
+Enter only when every report required for the run type states PASS: implementation runs need implementer, QA, docs
+(when applicable) and final gates; docs-only runs need `docs.md` and final `gates.md`. Any other state stops here and
+goes to the user.
+A follow-up or CI-fix request never implies authorization to push or open a PR; ask each time.
+Every stage that edits files (implementer, QA tests, gate fixes, docs) ends with a scoped commit on the feature branch.
+Before pushing, `git status --short` must be empty and `git diff --name-only origin/dev...HEAD` must include every
+file the reports cite; otherwise commit or investigate first.
+1. Ask the user before pushing and before opening the PR; a task request alone does not authorize either. On
+   approval, push the branch and open the PR to `dev` with the gates' body: `gh pr create --base dev --body-file
+   <file>`.
 2. Tick the task in the plan file only when the plan lives on the same branch or after the PR merges; otherwise note
    it in the report.
 3. GitHub Issues: if the task or the PR names an issue, link it in the PR body (`Refs #<n>`); otherwise do not touch
@@ -55,10 +68,13 @@ If the task changes user-visible behavior, messages or defaults, spawn `medfit-d
 ## Data passing
 Files, not messages: `_agents_workspace/<task>/{implementer,qa,gates,docs}.md` in the worktree. Each agent reads the
 earlier reports and writes its own. Nothing in `_agents_workspace/` is committed.
+A report's verdict is its last line, exactly `Verdict: PASS` or `Verdict: FAIL`; a missing, duplicate or
+differently worded verdict line is a failed stage, whatever else the report says.
 
 ## Error handling
-- An agent fails or returns nothing: retry once with the error in the prompt; then continue without that stage and
-  name the omission in the report.
+- An agent fails or returns nothing: retry once with the error in the prompt; if it fails again, stop and report the
+  stage and error to the user. Every stage is required; none is skipped, and Phase 5 is not reached without a PASS
+  report from each.
 - Conflicting results (QA says FAIL, implementer says PASS): keep both, with their sources; QA's evidence decides.
 - A hook blocks a command: do not retry it; hand the command to the user.
 - Never delete data, branches or worktrees without the user's request.
@@ -67,7 +83,7 @@ earlier reports and writes its own. Nothing in `_agents_workspace/` is committed
 Agents refer to tools by role; the registry is `references/tools.md`.
 
 ## Test scenarios
-- "Start T4b" → triage in-domain → worktree → implement → QA → gates → PR.
-- "Lint failed on #317" → follow-up → gates only, in the existing worktree → push.
+- "Start T4b" → triage in-domain → worktree → implement → QA → gates → docs → final gates → ask → PR.
+- "Lint failed on #317" → follow-up → gates only, in the existing worktree → ask → push.
 - "What does `.sem_vcov()` do?" → answered directly, no agents.
 - "Release 0.14.0" → out of this pipeline → stop and say so.
