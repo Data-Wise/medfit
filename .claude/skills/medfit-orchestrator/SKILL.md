@@ -68,6 +68,8 @@ file the reports cite; otherwise commit or investigate first.
 ## Data passing
 Files, not messages: `_agents_workspace/<task>/{implementer,qa,gates,docs}.md` in the worktree. Each agent reads the
 earlier reports and writes its own. Nothing in `_agents_workspace/` is committed.
+A report's verdict is its last line, exactly `Verdict: PASS` or `Verdict: FAIL`; a missing, duplicate or
+differently worded verdict line is a failed stage, whatever else the report says.
 
 ## Error handling
 - An agent fails or returns nothing: retry once with the error in the prompt; if it fails again, stop and report the

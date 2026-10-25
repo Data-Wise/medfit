@@ -14,8 +14,10 @@ between implementer and QA.
 **Launching a stage (Codex).** Codex does not load `.claude/agents/*` or take an agent type. For every stage: read the
 role file in full, paste its complete contract into the spawn prompt, then append the task name, the absolute worktree
 path, the workspace path and the earlier reports. A stage is done only when its report file
-(`_agents_workspace/<task>/<stage>.md`) exists and states PASS or FAIL; a missing or empty report is a failed stage,
-never a PASS.
+(`_agents_workspace/<task>/<stage>.md`) exists and its verdict is `PASS` or `FAIL`; a missing or empty report is a
+failed stage, never a PASS.
+A report's verdict is its last line, exactly `Verdict: PASS` or `Verdict: FAIL`; a missing, duplicate or
+differently worded verdict line is a failed stage, whatever else the report says.
 
 ## Phase 0: intake and triage
 1. A question, a read-only explanation, a status check or a one-line edit: answer it directly and stop. Do not spin
