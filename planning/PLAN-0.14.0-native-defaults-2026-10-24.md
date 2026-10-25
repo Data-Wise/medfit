@@ -199,7 +199,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
   - Dependency: T3, T5a. The once-per-session flag must be set even when the warning is muffled (set it before
     signaling, not after the handler returns), or T5a's setup chunks consume nothing and every article warns.
 
-- [ ] **T6. `fixed_x` default resolves to a subset, with lenience (R-5, R-11b, E-5, E-11, E-13).** Size M.
+- [x] **T6. `fixed_x` default resolves to a subset, with lenience (R-5, R-11b, E-5, E-11, E-13).** Size M. Merged #325.
   - `.sem_default_fixed_x(parsed, data)`: observed exogenous columns (product and factor columns included) minus
     those with a `~~` or `~1` statement; a character vector, empty ⇒ `FALSE`. One classed note naming the variables
     left free. Explicit `fixed_x = TRUE` keeps today's error.
@@ -211,7 +211,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
   - Files: `R/native-defaults.R`, `tests/testthat/test-native-defaults.R`.
   - Dependency: T5, T2.
 
-- [ ] **T7. `fit_mediation(engine = "native")` forwards only supplied settings (E-3, E-10).** Size S.
+- [x] **T7. `fit_mediation(engine = "native")` forwards only supplied settings (E-3, E-10).** Size S. Folded into #325.
   - Forward `fixed_x`/`meanstructure` to `fit_sem()` only when present in `engine_args` (the `m_star` pattern).
   - Acceptance: with no settings it warns once like `fit_sem()` (state reset in the test); with
     `engine_args = list(fixed_x = FALSE)` it does not; both entry points give the same fixed set under the opt-in.
@@ -219,7 +219,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
   - Files: `R/fit-sem.R` (`.fit_mediation_native()`), `tests/testthat/test-fit-sem.R`.
   - Dependency: T5.
 
-- [ ] **T8a. Oracle matrix: harness and core cells (R-12, E-15).** Size M. Back in 0.14.0 as the spec assigns it
+- [x] **T8a. Oracle matrix: harness and core cells (R-12, E-15).** Size M. Back in 0.14.0 as the spec assigns it Merged #324.
   (Codex finding 2).
   - `tests/sim/native-defaults-oracle.R`: the four combinations of (`fixed_x`, `meanstructure`) crossed with the
     cells below, comparing structural estimates, their SEs, chi-square, df, logLik, npar, AIC and BIC with lavaan
@@ -236,7 +236,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
     `tests/testthat/test-native-defaults-oracle.R`.
   - Dependency: T5 (opt-in path), T1 (pinned SEs in the constrained cells).
 
-- [ ] **T8b. Oracle matrix: product, factor and subset cells.** Size M.
+- [x] **T8b. Oracle matrix: product, factor and subset cells.** Size M. Merged #326.
   - Cells: four-way product (`x:m`; E-11's VERIFY of lavaan's product-column treatment is answered here, not in
     0.15.0), factor covariate (`fixed_x = "g"` and the default subset), named `fixed_x` subset, lenient subset.
   - Acceptance: every cell agrees or is recorded `limit` with a reason; the 0.15.0 flip decision reads this CSV.
@@ -245,13 +245,25 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
 
 ### Checkpoint B (after T5a-T8b)
 
-- [ ] Full suite and `scripts/check-local.sh` green; `test-api-freeze.R` unchanged; zero
-      `medfit_warning_default_change` outside expecting tests.
-- [ ] Opt-in arm: `options(medfit.native_defaults = "0.15")` set in a scratch run of the suite; record failures
-      (expected: the unpinned logLik/npar tests only) to size 0.15.0.
-- [ ] Oracle matrix CSV committed with the gate; every `block` row has an owner task for 0.15.0.
-- [ ] Dependents (`arm.R`, three builds: base, 0.14.0, 0.14.0 + opt-in): per-test results identical to the
-      2026-10-24 evidence; list which dependents' suites now show the warning (expected: RMediation only).
+- [x] Full suite and `scripts/check-local.sh` green; `test-api-freeze.R` unchanged; zero
+      `medfit_warning_default_change` outside expecting tests. 2026-10-24 on dev d586dab: 1593 tests, 7359
+      expectations, 0 failed, 0 errors, 2 skipped; check-local PASS (tests 181 s, check 35 s).
+- [x] Opt-in arm: `options(medfit.native_defaults = "0.15")` set in a scratch run of the suite; record failures
+      (expected: the unpinned logLik/npar tests only) to size 0.15.0. 21 tests change (31 failed expectations, 5
+      errors): the T5/T6 warning-contract tests in `test-native-defaults.R` (8, they assume no opt-in), the
+      ms-arm set named at Checkpoint A (recipe 18, lavaan-comparison probes, native book ch. 5, product-mean,
+      refit-settings), recipe 19, `test-guide-changes`, `test-guide-native-limits` (2), `test-guide-troubleshooting`
+      (2) and `test-sem-fixed-x-plumbing`. This is the 0.15.0 work list; the scratch tree is
+      `scratchpad/ckB` (`compare.R`).
+- [x] Oracle matrix CSV committed with the gate; every `block` row has an owner task for 0.15.0. 557 rows, 503
+      pass, 54 limit, 0 block (#324, #326); OpenBLAS runs green.
+- [x] Dependents (`arm.R`, three builds: base, 0.14.0, 0.14.0 + opt-in): per-test results identical to the
+      2026-10-24 evidence; list which dependents' suites now show the warning (expected: RMediation only). Builds:
+      v0.13.0, dev d586dab, dev + opt-in. All six dependents: 0 changed results base vs new and new vs opt-in.
+      The warning shows in **two** dependents, not one: RMediation (`test-mbco-semfit-mutations.R`) and
+      **missingmed**, whose package code calls `medfit::fit_sem(model, d, fixed_x = FALSE)` without
+      `meanstructure` (`R/mbco_sem.R:222`, `:233`), so its users will see it (surfaced as "SEM MBCO warnings:
+      imputation 1: ..."). T10 must cover missingmed too, as a package-code fix, not only a test fix.
 - [ ] Author review before Phase 3.
 
 ### Phase 3: announce
