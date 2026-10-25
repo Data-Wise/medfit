@@ -107,6 +107,8 @@ navbar:
         href: articles/guide-intervals.html
       - text: "Glossary and symbols"
         href: articles/guide-glossary.html
+      - text: "Native defaults in 0.15.0"
+        href: articles/native-defaults-0-15.html
       - text: "Native engine in five minutes"
         href: articles/native-quickstart.html
       - text: "Native engine, step by step"
@@ -312,6 +314,7 @@ articles:
       - '`articles/guide-troubleshooting`'
       - '`articles/guide-intervals`'
       - '`articles/guide-glossary`'
+      - '`articles/native-defaults-0-15`'
       - '`articles/native-quickstart`'
       - '`articles/native-tutorial`'
       - '`articles/native-guide`'

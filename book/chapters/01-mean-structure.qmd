@@ -723,6 +723,11 @@ coordinates when the means are large.
    sample mean sum to zero; for another center the cross term would not vanish and
    the likelihood would not split into a covariance part and a mean part.)
 
+**The default in 0.15.0.** Through 0.14.x a native fit has a mean structure only when the syntax writes a `~1`
+row or a product term. From 0.15.0 `meanstructure = TRUE` is the default, so every fit has the saturated mean part
+of this chapter; Section 4 is why the paths, variances and their standard errors do not change. The schedule and
+what does change (the parameter count, the `tidy()` rows) are in [Native defaults in 0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html).
+
 ## Where next
 
 [Chapter 2](02-scale.qmd) asks what happens to this machinery when the
