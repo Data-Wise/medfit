@@ -264,7 +264,7 @@ the suite (Codex finding 4): that is T5's test helper and T5a's doc settings, wh
       **missingmed**, whose package code calls `medfit::fit_sem(model, d, fixed_x = FALSE)` without
       `meanstructure` (`R/mbco_sem.R:222`, `:233`), so its users will see it (surfaced as "SEM MBCO warnings:
       imputation 1: ..."). T10 must cover missingmed too, as a package-code fix, not only a test fix.
-- [ ] Author review before Phase 3.
+- [x] Author review before Phase 3. Approved 2026-10-24.
 
 ### Phase 3: announce
 
