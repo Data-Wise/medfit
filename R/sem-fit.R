@@ -38,6 +38,7 @@
   } else {
     out$ledger$context <- context
   }
+  out$ledger <- .sem_compact_outcome(out$ledger)
   .sem_require_outcome(out, model)
   .sem_replay_notices(captured$notices)
   out

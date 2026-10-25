@@ -113,32 +113,50 @@
   x
 }
 
-# The text of every warning and message retained in a node and its descendants, without repeats.
-.sem_notice_text <- function(x) {
-  texts <- function(node) {
-    c(
-      vapply(c(node$notices$warnings, node$notices$messages), function(n) n$message, ""),
-      unlist(lapply(node$children, texts), use.names = FALSE)
-    )
+# The estimation sample is stored once, on the root node. A descendant that was fitted on the same rows carries only
+# `context$sample_hash`, and `.sem_node_sample()` resolves it against the root; a node on different rows (a failed
+# branch that never reached listwise deletion) keeps its own copy. The hash is of the whole object, attributes
+# included, so a resolved sample is the very sample that was hashed.
+.sem_compact_outcome <- function(x) {
+  root <- x$context[["sample"]]
+  if (!is.data.frame(root)) {
+    return(x)
   }
-  unique(texts(x))
+  root_hash <- rlang::hash(root)
+  x$context$sample_hash <- root_hash
+  squeeze <- function(node) {
+    own <- node$context[["sample"]]
+    if (is.data.frame(own)) {
+      node$context$sample_hash <- rlang::hash(own)
+      if (identical(node$context$sample_hash, root_hash)) {
+        node$context[["sample"]] <- NULL
+      }
+    }
+    node$children <- lapply(node$children, squeeze)
+    node
+  }
+  x$children <- lapply(x$children, squeeze)
+  x
 }
 
-.sem_with_notice_text <- function(message, ledger) {
-  notices <- .sem_notice_text(ledger)
-  if (length(notices)) paste0(message, "\nRetained notices: ", paste(notices, collapse = "; ")) else message
+# The sample of `node` within the ledger rooted at `root`: its own, or the root's when the digests agree; NULL when
+# neither holds (a forged or mismatched digest).
+.sem_node_sample <- function(node, root) {
+  own <- node$context[["sample"]]
+  if (!is.null(own)) {
+    return(own)
+  }
+  if (identical(node$context$sample_hash, rlang::hash(root$context[["sample"]]))) root$context[["sample"]] else NULL
 }
 
-# The D-11 error with its ledger: `message` is the user-facing text, kept as `base_message` so that an outer call
-# can rebuild the retained-notice suffix without repeating it.
+# The D-11 error with its ledger. The message is the pre-ledger text; notices are carried in the ledger only.
 .sem_abort_outcome <- function(message, ledger, best_survivor = NULL) {
-  .sem_no_convergence(.sem_with_notice_text(message, ledger), ledger = ledger, best_survivor = best_survivor,
-                      base_message = message)
+  .sem_no_convergence(message, ledger = ledger, best_survivor = best_survivor)
 }
 
 # What `.sem_fit_syntax()` does with an error from its pipeline: keep its class (an optimizer failure stays
 # `medfit_error_no_convergence`, a data or model error stays what it was), attach the ledger, and carry the notices
-# raised before it, which were muffled, in the ledger and the message.
+# raised before it, which were muffled, in the ledger (the message keeps its pre-ledger text).
 .sem_reraise_outcome <- function(err, context, constraints, notices) {
   if (inherits(err, "medfit_error_ledger")) {
     stop(err)
@@ -154,20 +172,31 @@
     ledger$notices$warnings <- c(ledger$notices$warnings, held$warnings)
     ledger$notices$messages <- c(ledger$notices$messages, held$messages)
     if (inherits(err, "medfit_error_no_convergence")) {
-      .sem_abort_outcome(err$base_message %||% conditionMessage(err), ledger, err$best_survivor)
+      .sem_abort_outcome(conditionMessage(err), .sem_compact_outcome(ledger), err$best_survivor)
     }
-    err$ledger <- ledger
+    err$ledger <- .sem_compact_outcome(ledger)
     stop(err)
   }
-  ledger <- .sem_outcome(context, constraints, error = err, notices = notices)
-  err$ledger <- ledger
-  err$message <- .sem_with_notice_text(conditionMessage(err), ledger)
+  err$ledger <- .sem_outcome(context, constraints, error = err, notices = notices)
   stop(err)
 }
 
 # Strict structural validation before evidence is used. Missing or legacy evidence is not inferred from `converged`.
-.sem_valid_outcome <- function(x, id = "fit", parent_id = NA_character_) {
+.sem_valid_outcome <- function(x, id = "fit", parent_id = NA_character_, root = NULL) {
   tryCatch({
+    if (is.null(root)) {
+      # the root holds the sample; a digest it carries must be the digest of that sample
+      if (!is.data.frame(x$context[["sample"]]) ||
+            !(is.null(x$context$sample_hash) || identical(x$context$sample_hash, rlang::hash(x$context[["sample"]])))) {
+        return(FALSE)
+      }
+      root <- list(sample = x$context[["sample"]], hash = rlang::hash(x$context[["sample"]]))
+    }
+    sample <- if (!is.null(x$context[["sample"]])) {
+      x$context[["sample"]]
+    } else if (identical(x$context$sample_hash, root$hash)) {
+      root$sample
+    }
     # Reconstruct the required restriction sets, so a dropped child cannot forge completeness.
     products <- .sem_zero_product_rows(x$constraints)
     count <- if (length(products)) prod(vapply(products, function(p) length(p$factors), 0L)) else 0L
@@ -180,8 +209,8 @@
     is.list(x) && identical(x$schema_version, 1L) && identical(x$id, id) &&
       identical(x$parent_id, parent_id) && is.data.frame(x$constraints) &&
       all(c("lhs", "op", "rhs") %in% names(x$constraints)) && is.list(x$context) &&
-      is.data.frame(x$context$sample) && is.list(x$context$model) && is.list(x$context$domain) &&
-      identical(x$context$n_obs, nrow(x$context$sample)) &&
+      is.data.frame(sample) && is.list(x$context$model) && is.list(x$context$domain) &&
+      identical(x$context$n_obs, nrow(sample)) &&
       is.list(x$children) && identical(x$enumeration, list(state = "complete", required = length(x$children))) &&
       identical(x$outcome, "resolved") && identical(x$optimizer$state, "accepted") &&
       length(x$optimizer$status) == 1L && is.finite(x$optimizer$status) &&
@@ -195,10 +224,15 @@
           cons$rhs[products[[j]]$row] <- "0"
         }
         child <- x$children[[i]]
-        identical(child$constraints, cons) && identical(child$context$sample, x$context$sample) &&
+        child_sample <- if (!is.null(child$context[["sample"]])) {
+          child$context[["sample"]]
+        } else if (identical(child$context$sample_hash, root$hash)) {
+          root$sample
+        }
+        identical(child$constraints, cons) && identical(child_sample, root$sample) &&
           identical(child$context$domain, x$context$domain) &&
           identical(child$context$settings, x$context$settings) &&
-          .sem_valid_outcome(child, paste0(id, "/branch:", i), id)
+          .sem_valid_outcome(child, paste0(id, "/branch:", i), id, root)
       }, TRUE)) &&
       (!length(x$children) || identical(x$likelihood$f,
                                         min(vapply(x$children, function(child) child$likelihood$f, 0))))
@@ -217,7 +251,7 @@
 .sem_require_outcome <- function(fit, model = NULL) {
   x <- fit$ledger
   good <- .sem_valid_outcome(x) && identical(x$likelihood$f, fit$f) && isTRUE(fit$converged) &&
-    identical(x$context$sample, fit$data) && identical(x$context$n_obs, fit$n_obs) &&
+    identical(x$context[["sample"]], fit$data) && identical(x$context$n_obs, fit$n_obs) &&
     identical(x$constraints, fit$constraints) &&
     identical(x$optimizer$status, fit$status) &&
     identical(x$context$domain$information, fit$information) &&

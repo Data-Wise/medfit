@@ -240,11 +240,9 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
                improper = fit@diagnostics$improper, optimum = fit@diagnostics$optimum)
   ledger <- .sem_outcome(fit@diagnostics$ledger$context, fit@internals$constraints, result = full, children = outcomes)
   ledger$id <- "mbco"
+  ledger <- .sem_compact_outcome(ledger)
   if (unresolved) {
-    # the notices a failed null retained were muffled with it: they go in the one warning
-    held <- .sem_notice_text(list(children = outcomes[which(failed) + 1L]))
     warning(paste0(paste(unique(note[nzchar(note)]), collapse = "\n"),
-                   if (length(held)) paste0("\nRetained notices: ", paste(held, collapse = "; ")),
                    "\nThe MBCO statistic is not available (NA); `$tests` lists each refit."), call. = FALSE)
   }
   n <- fit@n_obs

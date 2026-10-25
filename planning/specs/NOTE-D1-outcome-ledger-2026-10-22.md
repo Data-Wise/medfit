@@ -405,6 +405,7 @@ differences below are the contract on `dev`.
 | `mbco_sem()` aborts on any unresolved null | Keeps #300's unresolved result (NA statistic, `unresolved` TRUE, one warning); a structural error in a refit still stops |
 | Every pipeline error became the typed unresolved error | The original condition is re-raised with its class and `$ledger` attached (a data or model error is not an optimizer failure) |
 | `.sem_require_outcome()` refusal: `medfit_sem_unresolved` | `medfit_error_ledger`, a class of its own, so `mbco_sem()` cannot downgrade a forged or mismatched refit to an unresolved row |
+| Every node holds a copy of the sample; failure messages gain a `Retained notices:` suffix | The sample is stored once on the root (descendants on the same rows carry `context$sample_hash`, resolved by `.sem_node_sample()`; 64 branches on 40000 rows serialize to 2.0 MB against 1.8 MB of data, not about 65 copies); messages keep their pre-ledger text and the notices live in the ledger only |
 | Refit settings as in 0.12.0 | 0.14.0 kept: refits pass `fixed_x`, `factors` and `meanstructure = isTRUE(has_mean)`; the ledger records them |
 
 Not ported here (P2 to P4): literal certificates, the branch map and raw cap, covariance-stage evidence, and the

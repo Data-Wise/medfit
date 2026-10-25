@@ -110,8 +110,9 @@
 #' `medfit_error_no_convergence` error, never a fit; the error carries the ledger of every required branch as
 #' `$ledger` and, when a branch survived, `$best_survivor` (its `id` and discrepancy `f`, diagnostic only, never a
 #' p-value). The union's own node does not aggregate its children's notices; inspect each child. The notices of a
-#' failed call are appended to the error message. A data or model error keeps its own class and also carries
-#' `$ledger`. A fit made before the ledger existed must be refitted before [mbco_sem()] can use it, which refuses it
+#' failed call are in the ledger only; the error message keeps its text. A data or model error keeps its own class
+#' and also carries `$ledger`. The estimation sample is stored once, on the root node; a descendant fitted on the
+#' same rows carries only `context$sample_hash`. A fit made before the ledger existed must be refitted before [mbco_sem()] can use it, which refuses it
 #' with a `medfit_error_ledger` error.
 #'
 #' @examples

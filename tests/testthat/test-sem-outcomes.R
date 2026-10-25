@@ -29,7 +29,7 @@ test_that("public fits and MBCO retain versioned, correctly attributed ledgers",
   expect_identical(vapply(nodes, `[[`, "", "id"), c("mbco/full", "mbco/null:1", "mbco/null:2"))
   expect_identical(nodes[[2]]$constraints$lhs, "a1")
   expect_identical(nodes[[3]]$constraints$lhs, "b1")
-  expect_identical(nodes[[2]]$context$sample, fit@data)
+  expect_identical(.sem_node_sample(nodes[[2]], res$ledger), fit@data)
   expect_identical(nodes[[2]]$optimizer$state, "accepted")
   expect_identical(nodes[[2]]$feasibility, "witness")
   expect_identical(nodes[[2]]$covariance, "available")
@@ -78,7 +78,7 @@ test_that("neither partial-failure ordering can return a surviving union fit; th
       expect_identical(bad$feasibility, "unknown")
       expect_true("injected_branch_error" %in% bad$condition$class)
       expect_match(bad$notices$warnings[[1]]$message, failed)
-      expect_match(conditionMessage(err), paste("notice", failed))
+      expect_false(grepl("notice", conditionMessage(err))) # the notice is in the ledger, not the message
       expect_length(err$ledger$notices$warnings, 0L)
       expect_length(bad$notices$warnings, 1L)
       expect_true(is.finite(err$best_survivor$f))
@@ -108,7 +108,7 @@ test_that("the ledger on the D-11 error is complete: every required branch, in o
   expect_identical(vapply(led$children, function(x) x$constraints$lhs[1], ""), c("a1", "b1"))
   # every node carries its own context: the estimation sample and likelihood domain it was attempted on
   for (child in led$children) {
-    expect_true(is.data.frame(child$context$sample))
+    expect_true(is.data.frame(.sem_node_sample(child, led)))
     expect_identical(child$context$domain$objective, "normal_ml_discrepancy")
   }
   expect_identical(led$children[[1]]$outcome, "unresolved")
@@ -144,7 +144,7 @@ test_that("MBCO attempts every null, keeps its unresolved result and does not sw
       expect_identical(res$ledger$children[[2]]$constraints$lhs, "a1")
       expect_identical(res$ledger$children[[3]]$constraints$lhs, "b1")
       for (label in if (failed == "both") c("a1", "b1") else failed) {
-        expect_true(any(grepl(paste("refit notice", label), out$warnings)))
+        expect_false(any(grepl(paste("refit notice", label), out$warnings)))
         node <- res$ledger$children[[match(label, c("a1", "b1")) + 1L]]
         expect_identical(node$outcome, "unresolved")
         expect_identical(node$notices$warnings[[1]]$message, paste("refit notice", label))
@@ -270,7 +270,7 @@ test_that("public consumers reject dropped acceptance state and nonfinite likeli
     altered <- fit
     if (what == "status") altered@diagnostics$ledger$optimizer$status <- NULL
     if (what == "likelihood") altered@diagnostics$ledger$likelihood$f <- Inf
-    if (what == "sample") altered@diagnostics$ledger$context$sample <- altered@data[-1, ]
+    if (what == "sample") altered@diagnostics$ledger$context[["sample"]] <- altered@data[-1, ]
     err <- tryCatch(mbco_sem(altered, "a1", "b1"), error = identity)
     expect_s3_class(err, "medfit_error_ledger")
     # a refusal of evidence is never an optimizer failure, so no caller can mistake it for one
@@ -343,7 +343,7 @@ test_that("MBCO keeps boundary notices on a typed refit failure", {
                 vapply(node$notices$warnings, `[[`, "", "message"))
   expect_true("boundary message before typed failure\n" %in%
                 vapply(node$notices$messages, `[[`, "", "message"))
-  expect_true(any(grepl("boundary warning before typed failure", out$warnings)))
+  expect_false(any(grepl("boundary warning before typed failure", out$warnings)))
   expect_true(is.na(res$p.value))
 })
 
@@ -425,13 +425,7 @@ test_that("outer pipeline notices survive a typed nested failure", {
   })
   err <- tryCatch(fit_sem(outcome_model, outcome_data(), n_starts = 1L), error = identity)
   expect_s3_class(err, "medfit_error_no_convergence")
-  header_count <- function(x) sum(gregexpr("Retained notices:", x, fixed = TRUE)[[1]] > 0L)
-  expect_identical(header_count("no header"), 0L)
-  expect_identical(header_count("Retained notices:"), 1L)
-  expect_identical(header_count("Retained notices: Retained notices:"), 2L)
-  expect_identical(header_count(conditionMessage(err)), 1L)
-  expect_match(conditionMessage(err), "outer pipeline warning")
-  expect_match(conditionMessage(err), "outer pipeline message")
+  expect_identical(conditionMessage(err), "nested failure")
   expect_identical(err$ledger$notices$warnings[[2]]$message, "outer pipeline warning")
   expect_identical(err$ledger$notices$messages[[1]]$message, "outer pipeline message\n")
 })
@@ -442,7 +436,7 @@ test_that("sample attributes and valid factor/fixed-x domains survive; altered d
   fit <- fit_sem(outcome_model, d, n_starts = 1L, fixed_x = TRUE)
   res <- mbco_sem(fit, "a1", "b1")
   expect_true(is.finite(unname(res$statistic)))
-  expect_identical(res$ledger$children[[1]]$context$sample, fit@data)
+  expect_identical(.sem_node_sample(res$ledger$children[[1]], res$ledger), fit@data)
   altered <- fit
   altered@diagnostics$ledger$context$domain$information <- "expected"
   expect_error(mbco_sem(altered, "a1", "b1"), class = "medfit_error_ledger")
@@ -501,4 +495,63 @@ test_that("a refused ledger raised inside an MBCO refit keeps its class and is n
   err <- tryCatch(mbco_sem(fit, "a1", "b1"), error = identity)
   expect_s3_class(err, "medfit_error_ledger")
   expect_false(inherits(err, "medfit_error_no_convergence"))
+})
+
+test_that("error messages keep their pre-ledger text when notices preceded the error; notices live in the ledger", {
+  real <- .sem_fit_syntax
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(..., parsed = NULL) {
+    if (!is.null(parsed) && parsed$constraints$lhs[1] == "a1") {
+      warning("notice a1")
+      message("message a1")
+      no_conv("blocked a1")
+    }
+    real(..., parsed = parsed)
+  })
+  err <- tryCatch(fit_sem(outcome_union, outcome_data(), n_starts = 1L), error = identity)
+  expected <- sprintf(
+    paste0("%d of %d zero-product branches did not converge, so the constrained optimum is not certified ",
+           "(the best of the other branches has discrepancy %s):\n  %s"),
+    1L, 2L, format(err$best_survivor$f, digits = 8), "a1 == 0: blocked a1"
+  )
+  expect_identical(conditionMessage(err), expected)
+  bad <- err$ledger$children[[1]]
+  expect_identical(bad$notices$warnings[[1]]$message, "notice a1")
+  expect_identical(bad$notices$messages[[1]]$message, "message a1\n")
+  # an ordinary fit error, with notices raised before it
+  testthat::local_mocked_bindings(.sem_fit_pipeline = function(...) {
+    warning("early warning")
+    message("early message")
+    stop("pipeline blocked", call. = FALSE)
+  })
+  full <- tryCatch(fit_sem(outcome_model, outcome_data(), n_starts = 1L), error = identity)
+  expect_identical(conditionMessage(full), "pipeline blocked")
+  expect_identical(full$ledger$notices$warnings[[1]]$message, "early warning")
+  expect_identical(full$ledger$notices$messages[[1]]$message, "early message\n")
+})
+
+test_that("a 64-branch ledger stores the sample once and serializes near the size of the data", {
+  d <- outcome_data()
+  big <- d[rep(seq_len(nrow(d)), length.out = 40000L), ]
+  syntax <- paste(outcome_model, paste(rep("a1*b1 == 0", 6L), collapse = "\n"), sep = "\n")
+  fit <- fit_sem(syntax, big, n_starts = 1L)
+  led <- fit@diagnostics$ledger
+  data_size <- length(serialize(fit@data, NULL))
+  expect_lt(length(serialize(led, NULL)), 3 * data_size)
+  expect_true(is.data.frame(led$context[["sample"]]))
+  expect_true(all(vapply(led$children, function(x) is.null(x$context[["sample"]]), TRUE)))
+  # every consumer still resolves a child's sample, and the ledger stays valid
+  expect_true(.sem_valid_outcome(led))
+  for (child in led$children) expect_identical(.sem_node_sample(child, led), fit@data)
+  res <- mbco_sem(fit, "a1", "b1")
+  expect_lt(length(serialize(res$ledger, NULL)), 4 * data_size)
+  expect_identical(.sem_node_sample(res$ledger$children[[2]], res$ledger), fit@data)
+  expect_identical(.sem_node_sample(res$ledger$children[[2]]$children[[1]], res$ledger), fit@data)
+  # a child whose digest does not match the root sample is refused
+  forged <- fit
+  forged@diagnostics$ledger$children[[3]]$context$sample_hash <- "forged"
+  expect_false(.sem_valid_outcome(forged@diagnostics$ledger))
+  expect_error(mbco_sem(forged, "a1", "b1"), class = "medfit_error_ledger")
+  other <- fit
+  other@diagnostics$ledger$children[[3]]$context$sample_hash <- rlang::hash(big[-1, ])
+  expect_error(mbco_sem(other, "a1", "b1"), class = "medfit_error_ledger")
 })

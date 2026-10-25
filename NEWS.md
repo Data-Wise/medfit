@@ -10,7 +10,7 @@
 * No result changes. An unresolved required zero-product branch is still the `medfit_error_no_convergence` error
   and never a fit (#303); the error now carries the ledger of every required branch as `$ledger`, and the best
   surviving branch's discrepancy as `$best_survivor` (diagnostic only, never a p-value). The notices of a failed
-  branch are appended to the message. `mbco_sem()` keeps its unresolved result (an `NA` statistic, `unresolved`
+  branch are in the ledger; messages keep their text. The sample is stored once, on the root node. `mbco_sem()` keeps its unresolved result (an `NA` statistic, `unresolved`
   `TRUE`) and carries the ledger as `$ledger`; `compare_lr()`'s `$reference` carries it too.
 * A fit whose ledger is missing, malformed or does not describe the fit is refused by `mbco_sem()` with a
   `medfit_error_ledger` error (a fit made before this release must be refitted). A zero-product model whose
