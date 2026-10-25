@@ -46,13 +46,14 @@ Not one large rebase. Each slice is a feature worktree from `dev`, implemented t
 medfit-orchestrator pipeline (implementer, oracle QA, gates, docs), and its own PR to `dev`. Every slice touches risk
 files, so each PR carries the seven-item risk-tier checklist and a `gates.yaml` dispatch.
 
-- [ ] **P0. Reconcile D1 with #300/#303 (decision, no code).** Read NOTE-D1 and ADR D-11 together; write
+- [x] **P0. Reconcile D1 with #300/#303 (decision, no code).** Read NOTE-D1 and ADR D-11 together; write
   `planning/specs/ADR-...` decision: is the D1 ledger attached to the #303 error (the classed error keeps
   `$ledger`), or does D1 replace #303's message path? Acceptance: an ADR entry with a `decisions:` row; the author
   approves. Blocked by: nothing.
   - **Decided (author, 2026-10-24):** keep #303's classed error (`medfit_error_no_convergence`, no partial fit) and
     attach the D1 ledger to it as `$ledger`. D1 does not replace that path. P0's remaining work is the ADR entry
-    recording this. Start after 0.14.0 ships.
+    recording this. Recorded 2026-10-25 as D-12 in
+    `planning/specs/ADR-native-solver-and-engines-2026-10-23.md`. Next: P1.
 - [ ] **P1. D1 outcome ledger.** Port `sem-outcomes.R` and the ledger fields; adapt to the P0 decision; carry the D1
   controls (both partial-failure orderings, counterfactual LR 1 versus survivor 9, all-success minimum, all-failure,
   malformed-ledger refusal, the three mutants). Acceptance: `test-sem-outcomes.R` green on `dev`; stored known
@@ -67,7 +68,7 @@ files, so each PR carries the seven-item risk-tier checklist and a `gates.yaml` 
   independent review closes it. Blocked by: P1; touches `sem-se.R`, so it reruns the SE oracles.
 
 ### Checkpoint 1 (after P0)
-- [ ] Author approves the reconciliation and picks the target release.
+- [x] Author approves the reconciliation (D-12, 2026-10-24). Target release: open (0.15.0 or a 0.14.x minor).
 
 ### Checkpoint 2 (after P4)
 - [ ] missingmed source-loads `dev` and reruns its consumer suite (816 assertions in its receipts); results
