@@ -25,7 +25,9 @@ structure needs at least items 1, 2 and 3 for real (`test-gate-coverage.R` enfor
 - Full suite with counts:
   `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE)); cat(nrow(r), sum(r$nb), sum(r$failed), sum(r$error), sum(r$skipped))'`
 - Local gate for `dev` work: `scripts/check-local.sh`.
-- A failure blocks only if it fails on the branch and passes on `dev`. Reproduce on `dev` first.
+- A failure blocks only if it fails on the branch and passes on `dev`. Reproduce on `dev` first. A failure that
+  also fails on `dev` is not hidden: name it in the PR body as a pre-existing failure with the `dev` reproduction, and
+  do not call the PR mergeable until the author accepts that waiver or `dev` is green again.
 
 ## 3. Lint
 CI runs `lintr::lint_package()` and fails on new findings; the live one is the 120-column `line_length_linter`.
