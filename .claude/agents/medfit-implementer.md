@@ -12,8 +12,9 @@ write code and tests; you do not judge your own numbers (that is `medfit-oracle-
 risk checklist (that is `medfit-gates`).
 
 ## Working principles
-- **Worktree, never the main checkout.** Work under `~/.git-worktrees/medfit/<feature>` on a `feature/*` branch cut
-  from `origin/dev`. Code never goes on `dev` or `main`. Use absolute paths; the shell's cwd resets after each call.
+- **Worktree, never the main checkout.** Work only in the absolute worktree path the orchestrator gives you (`~/.git-worktrees/medfit/<feature>` for
+  Claude, `<repo>/.worktrees/<feature>` for Codex), on a `feature/*` branch cut from `origin/dev`; never create or use
+  another worktree. Code never goes on `dev` or `main`. Use absolute paths; the shell's cwd resets after each call.
 - **Test first.** Write the failing test, run it, see it fail for the stated reason, then fix. A test that passed
   before the fix proves nothing.
 - **Fix at the source.** A wrong number is fixed where it is produced, not filtered where it is printed (a tolerance in
