@@ -23,7 +23,7 @@ invisible(withCallingHandlers(
 ))
 ```
 
-CRAN has medfit 0.3.2; this site documents 0.13.0 (GitHub and r-universe).
+CRAN has medfit 0.3.2; this site documents 0.14.0 (GitHub and r-universe).
 This page lists what a 0.3.2 user needs to know before upgrading: numbers that
 change, calls that now stop with an error, and what is new. The full record is
 [NEWS](https://data-wise.github.io/medfit/news/index.html).
@@ -119,6 +119,7 @@ reuses one of medfit's alias names for a different path (0.5.0).
 | 0.11.1 | nonparametric and cluster bootstrap resamples are reproducible across `ncores` with a fixed seed; `anova()` records row-wise `p_valid` and refuses mismatched nonzero fixed parameters; native fits record the best-of-starts verdict in `@diagnostics$optimum` |
 | 0.12.0 | `compare_lr()` ([article](lavaan-comparison.html#checking-a-constrained-lr-against-lavaan-or-openmx)): the product-null LR in lavaan or OpenMx against `mbco_sem()`, with warnings only on observed evidence |
 | 0.13.0 | a roundoff-limited restoration's objective rise is capped (a worse point can no longer stand and inflate an LR); a refit the optimizer cannot fit is an unresolved result in `mbco_sem()` and `compare_lr()` instead of an error or a silent answer, and a zero-product branch that cannot be fitted stops `fit_sem()` with an error instead of returning a partial fit |
+| 0.14.0 | a native fit that leaves `fixed_x` or `meanstructure` unset warns once per session that both defaults change in 0.15.0 (no result changes); `options(medfit.native_defaults = "0.15")` opts in early ([article](native-defaults-0-15.html)) |
 
 ## Dependencies
 
