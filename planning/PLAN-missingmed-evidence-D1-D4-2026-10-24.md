@@ -50,6 +50,9 @@ files, so each PR carries the seven-item risk-tier checklist and a `gates.yaml` 
   `planning/specs/ADR-...` decision: is the D1 ledger attached to the #303 error (the classed error keeps
   `$ledger`), or does D1 replace #303's message path? Acceptance: an ADR entry with a `decisions:` row; the author
   approves. Blocked by: nothing.
+  - **Decided (author, 2026-10-24):** keep #303's classed error (`medfit_error_no_convergence`, no partial fit) and
+    attach the D1 ledger to it as `$ledger`. D1 does not replace that path. P0's remaining work is the ADR entry
+    recording this. Start after 0.14.0 ships.
 - [ ] **P1. D1 outcome ledger.** Port `sem-outcomes.R` and the ledger fields; adapt to the P0 decision; carry the D1
   controls (both partial-failure orderings, counterfactual LR 1 versus survivor 9, all-success minimum, all-failure,
   malformed-ledger refusal, the three mutants). Acceptance: `test-sem-outcomes.R` green on `dev`; stored known
