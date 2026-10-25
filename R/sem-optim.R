@@ -15,10 +15,13 @@
 .sem_stat_tol <- 1e-3
 # The error of a fit the optimizer could not bring to an accepted solution (no start converged, no zero-product branch
 # converged). Classed so that a caller that can report "unresolved" instead (`mbco_sem()`) catches this and nothing
-# else: a model, data or syntax error is not an optimizer failure and still stops.
-.sem_no_convergence <- function(message) {
+# else: a model, data or syntax error is not an optimizer failure and still stops. A call with an unresolved required
+# branch also attaches its outcome ledger (`$ledger`, ADR D-12) and the best surviving branch's discrepancy
+# (`$best_survivor`, diagnostic only); `base_message` is `message` before the retained-notice suffix.
+.sem_no_convergence <- function(message, ledger = NULL, best_survivor = NULL, base_message = message) {
   stop(structure(class = c("medfit_error_no_convergence", "error", "condition"),
-                 list(message = message, call = NULL)))
+                 list(message = message, call = NULL, base_message = base_message, ledger = ledger,
+                      best_survivor = best_survivor)))
 }
 .sem_singular_tol <- 1e-4
 .sem_bound_window <- 1e-6
