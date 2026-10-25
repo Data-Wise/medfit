@@ -565,12 +565,30 @@ test_that("forged, mismatched or missing sample digests are refused and never re
   expect_true(all(vapply(led$children, function(x) is.null(x$context[["sample"]]), TRUE)))
   expect_identical(.sem_node_sample(led$children[[1]], led), fit@data)
   forgeries <- list(
-    wrong_digest = function(l) { l$children[[2]]$context$sample_hash <- "forged"; l },
-    other_sample = function(l) { l$children[[1]]$context$sample_hash <- rlang::hash(d[-1, ]); l },
-    root_sample_removed = function(l) { l$context[["sample"]] <- NULL; l },
-    no_sample_no_hash = function(l) { l$children[[1]]$context$sample_hash <- NULL; l },
-    root_digest_tampered = function(l) { l$context$sample_hash <- "forged"; l },
-    child_other_rows = function(l) { l$children[[1]]$context[["sample"]] <- d[-1, ]; l }
+    wrong_digest = function(l) {
+      l$children[[2]]$context$sample_hash <- "forged"
+      l
+    },
+    other_sample = function(l) {
+      l$children[[1]]$context$sample_hash <- rlang::hash(d[-1, ])
+      l
+    },
+    root_sample_removed = function(l) {
+      l$context[["sample"]] <- NULL
+      l
+    },
+    no_sample_no_hash = function(l) {
+      l$children[[1]]$context$sample_hash <- NULL
+      l
+    },
+    root_digest_tampered = function(l) {
+      l$context$sample_hash <- "forged"
+      l
+    },
+    child_other_rows = function(l) {
+      l$children[[1]]$context[["sample"]] <- d[-1, ]
+      l
+    }
   )
   for (nm in names(forgeries)) {
     altered <- fit

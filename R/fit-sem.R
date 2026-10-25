@@ -112,8 +112,8 @@
 #' p-value). The union's own node does not aggregate its children's notices; inspect each child. The notices of a
 #' failed call are in the ledger only; the error message keeps its text. A data or model error keeps its own class
 #' and also carries `$ledger`. The estimation sample is stored once, on the root node; a descendant fitted on the
-#' same rows carries only `context$sample_hash`. A fit made before the ledger existed must be refitted before [mbco_sem()] can use it, which refuses it
-#' with a `medfit_error_ledger` error.
+#' same rows carries only `context$sample_hash`. A fit made before the ledger existed must be refitted before
+#' [mbco_sem()] can use it, which refuses it with a `medfit_error_ledger` error.
 #'
 #' @examples
 #' \donttest{
