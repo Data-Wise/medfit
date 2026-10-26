@@ -70,15 +70,42 @@ test_that("forged failed nulls are refused where the validator claims to check t
   expect_identical(root$children[[2L]]$outcome, "unresolved")
   expect_true(.sem_valid_mbco_outcome(root, paths))
   for (edit in list(
-    function(l) { l$children[[2L]]$id <- "mbco/null:2"; l },
-    function(l) { l$children[[2L]]$parent_id <- "elsewhere"; l },
-    function(l) { l$children[[2L]]$schema_version <- 2L; l },
-    function(l) { l$children[[2L]]$constraints$lhs <- "b"; l },
-    function(l) { l$children[[2L]]$context$sample_hash <- "forged"; l },
-    function(l) { l$children[[2L]]$context$domain$weights <- stats::runif(500); l },
-    function(l) { l$children[[2L]]$context$domain$information <- "expected"; l },
-    function(l) { l$children[[2L]]$context$domain$fixed_x <- "X"; l },
-    function(l) { l$outcome <- "resolved"; l }
+    function(l) {
+      l$children[[2L]]$id <- "mbco/null:2"
+      l
+    },
+    function(l) {
+      l$children[[2L]]$parent_id <- "elsewhere"
+      l
+    },
+    function(l) {
+      l$children[[2L]]$schema_version <- 2L
+      l
+    },
+    function(l) {
+      l$children[[2L]]$constraints$lhs <- "b"
+      l
+    },
+    function(l) {
+      l$children[[2L]]$context$sample_hash <- "forged"
+      l
+    },
+    function(l) {
+      l$children[[2L]]$context$domain$weights <- stats::runif(500)
+      l
+    },
+    function(l) {
+      l$children[[2L]]$context$domain$information <- "expected"
+      l
+    },
+    function(l) {
+      l$children[[2L]]$context$domain$fixed_x <- "X"
+      l
+    },
+    function(l) {
+      l$outcome <- "resolved"
+      l
+    }
   )) {
     expect_false(.sem_valid_mbco_outcome(edit(root), paths))
   }
