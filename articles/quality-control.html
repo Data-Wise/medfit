@@ -573,6 +573,89 @@
 </div>
 </div>
 <p>Each ADR opens with a YAML <code>decisions:</code> list (<code>id</code>, <code>title</code>, <code>status</code>, <code>date</code>, optional <code>supersedes</code>); <code>test-adr-front-matter.R</code> checks it. The ADR is the source; this table only reads it.</p>
+</section><section class="level2"><h2 id="evidence-validators">Evidence validators<a class="anchor" aria-label="anchor" href="#evidence-validators"></a>
+</h2>
+<p>A native fit carries an outcome ledger (<code>fit@diagnostics$ledger</code>, since 0.14.1): the restriction, the sample, the optimizer’s acceptance state, the discrepancy and the notices, one node per zero-product branch. The ledger is evidence, and the code that decides whether evidence is accepted is itself a QC subject: a false acceptance passes a forged or mismatched fit, and a false refusal turns a genuine result into an error. <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> runs the validators twice, on the ledger of the fit it is given and on its own root ledger before it returns. A refusal is the error <code>medfit_error_ledger</code>, a class that is never an optimizer failure and never becomes an unresolved row. The semantics of the ledger are in the <a href="guide-troubleshooting.html">troubleshooting guide</a>; the decisions are ADR D-11 and D-12.</p>
+<p><strong>What the validators accept and refuse.</strong> A node is accepted only when what it must contain can be rebuilt from its own constraints and the call: the child count and branch map, the IDs and parents, the shared sample (by digest), domain and settings, the minimum over the resolved branches, and, for a certified-empty branch, the premises of its certificate. A forged ID, count, state, digest, certificate or dropped child is refused. The MBCO root additionally ties each null to the returned <code>$tests</code> table and to the settings its refit used.</p>
+<p><strong>Genuine shapes must validate.</strong> A validator is also tested the other way: every shape <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> can produce must pass it. The shapes of a null node are:</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead><tr class="header">
+<th>Shape</th>
+<th>Arises when</th>
+<th>Evidence in the suite</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>plain resolved</td>
+<td>an ordinary refit with <code>a == 0</code>
+</td>
+<td><code>test-sem-mbco-root.R</code></td>
+</tr>
+<tr class="even">
+<td>resolved zero-product union</td>
+<td>the null holds a zero-product row and its branches resolve</td>
+<td><code>test-sem-mbco-root-qa.R</code></td>
+</tr>
+<tr class="odd">
+<td>covariance-retained</td>
+<td>the refit’s optimizer accepted and its covariance stage failed (warning, <code>covariance = "failed"</code>)</td>
+<td>
+<code>test-sem-post-fit.R</code>, <code>test-sem-mbco-root.R</code>
+</td>
+</tr>
+<tr class="even">
+<td>covariance-failed branch in a union</td>
+<td>one branch of a union lost its covariance; the node reports the first such branch</td>
+<td>
+<code>test-sem-post-fit.R</code>, <code>test-sem-mbco-root-qa.R</code>
+</td>
+</tr>
+<tr class="odd">
+<td>certified excluded</td>
+<td>the null contradicts the fit’s own literal equalities</td>
+<td><code>test-sem-mbco-root.R</code></td>
+</tr>
+<tr class="even">
+<td>union with an excluded branch</td>
+<td>a certified-empty branch beside a resolved one</td>
+<td><code>test-sem-literal-certificates.R</code></td>
+</tr>
+<tr class="odd">
+<td>all-excluded union</td>
+<td>every branch certified empty: unresolved, no likelihood</td>
+<td>
+<code>test-sem-mbco-root.R</code>, <code>test-sem-literal-certificates.R</code>
+</td>
+</tr>
+<tr class="even">
+<td>failed with the engine’s ledger</td>
+<td>the refit stopped with an error that carries its own ledger</td>
+<td><code>test-sem-mbco-root.R</code></td>
+</tr>
+<tr class="odd">
+<td>failed bare node</td>
+<td>the refit stopped with no ledger, so <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> builds the node: no likelihood, no witness, the condition</td>
+<td><code>test-sem-mbco-root.R</code></td>
+</tr>
+<tr class="even">
+<td>failed union with a failed branch</td>
+<td>a union where at least one branch is unresolved and the others are resolved or excluded</td>
+<td><code>test-sem-mbco-root.R</code></td>
+</tr>
+<tr class="odd">
+<td>latent</td>
+<td>a model with a latent mediator, through the same path</td>
+<td><code>test-sem-mbco.R</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>test-sem-mbco-root-qa.R</code> adds the grid of genuine calls (plain, k paths, inequality, equality, boundary, <code>fixed_x</code> both ways, mean structure, expected information, <code>n_starts</code> and <code>control</code> overrides) and the sandwich fit.</p>
+<p><strong>What is deliberately not decided.</strong> Some forgeries cannot be told from a genuine result without refitting, and the validator does not claim to catch them: a consistent rewrite of the root sample together with every <code>sample_hash</code>, and an altered parameter value inside the parameter table of a null. The free text of the condition of a failed null (message, class and call) is not checked. An all-excluded null is validated against its own certificates only, so a foreign self-consistent all-excluded union is accepted; the statistic is <code>NA</code> either way, so no number changes.</p>
 </section><section class="level2"><h2 id="adding-a-model">Adding a model<a class="anchor" aria-label="anchor" href="#adding-a-model"></a>
 </h2>
 <p>A change that alters the objective, the parameter vector, the constraint set, the bounds or the solver path (the files in <code>tests/sim/risk-files.txt</code>) is high-risk, and its pull request body carries this checklist, each item ticked or <code>n/a: &lt;reason&gt;</code> (the <code>risk-tier</code> workflow checks it). Every new model class needs at least items 1 to 3.</p>
@@ -634,7 +717,15 @@
 <li>No latent-model solver benchmark exists; the solver decisions that depend on one are marked proposed in the decision log.</li>
 <li>Gates run on the runner’s OpenBLAS; the reference BLAS needs a separate container.</li>
 <li>Other seeds and scales of the nonlinear floor fixture are not covered.</li>
-</ul></section><script id="quarto-html-after-body" type="application/javascript">
+<li>The evidence validators are not a gate: <code>R/sem-outcomes.R</code> and <code>R/sem-mbco.R</code> are not in <code>tests/sim/risk-files.txt</code> and no <code>gates.csv</code> row registers them, so their protection is the unit tests and the admission checklist, not the OpenBLAS gate run.</li>
+<li>The validators cannot detect a consistent rewrite of the root sample and its hashes, an altered parameter value inside the parameter table of a null, or a changed condition text of a failed null (see Evidence validators).</li>
+<li>An all-excluded null is validated against its own certificates, not against the fit’s model, so a self-consistent foreign union is accepted (the statistic is <code>NA</code> regardless).</li>
+<li>A complete enumeration of zero-product branches is not a global-optimum certificate, and a ledger records what a fit did, not that its optimum is the global one.</li>
+</ul></section><section class="level2"><h2 id="lessons-from-the-0-14-1-port">Lessons from the 0.14.1 port<a class="anchor" aria-label="anchor" href="#lessons-from-the-0-14-1-port"></a>
+</h2>
+<p>The recurring defect of the ledger port was the false refusal of a genuine result, not the acceptance of a forgery: a sandwich fit refused because its nulls are refit model-based while the root records the sandwich setting, and an all-excluded zero-product null refused as malformed. Each was found by the full suite or an adversarial reviewer and missed by the hand-built grids, which tested the shapes their authors had thought of. The rule that came out of it is the table above: list every shape the engine can produce and require each to validate, then run the whole suite, since the engine reaches shapes no grid enumerates.</p>
+<p>Two process notes. Coverage instrumentation rewrites function bodies, so a mutant that replaces source text in a function cannot find it under <code>covr</code>; those mutants skip under coverage and run in every other check. And the review that found the MBCO root ledger without a validator was an adversarial review, a reader independent of the slice’s own QA, looking for what the author’s tests assume. The record of the release is <code>planning/specs/RESULT-qc-0.14.1-d1-d4-2026-10-25.md</code>.</p>
+</section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
