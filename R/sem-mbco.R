@@ -267,6 +267,9 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   ledger <- .sem_outcome(fit@diagnostics$ledger$context, fit@internals$constraints, result = full, children = outcomes)
   ledger$id <- "mbco"
   ledger <- .sem_compact_outcome(ledger)
+  if (!.sem_valid_mbco_outcome(ledger, paths)) {
+    .sem_abort_ledger("malformed MBCO outcome ledger", ledger)
+  }
   if (unresolved) {
     warning(paste0(paste(unique(note[nzchar(note)]), collapse = "\n"),
                    "\nThe MBCO statistic is not available (NA); `$tests` lists each refit."), call. = FALSE)

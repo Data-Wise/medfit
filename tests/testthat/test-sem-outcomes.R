@@ -407,9 +407,8 @@ test_that("survivor-success, status-drop and label-swap mutants fail intended as
   })
   local({
     swapped <- outcome_mutate(mbco_sem, "tested <- paths[i]", "tested <- rev(paths)[i]")
-    bad <- swapped(full, "a1", "b1")
-    expect_s3_class(bad, "mbco_sem")
-    expect_failure(expect_identical(bad$ledger$children[[2]]$constraints$lhs, "a1"))
+    # the MBCO root rebuilds each null from the tested path, so the mutant is refused before it returns
+    expect_error(swapped(full, "a1", "b1"), class = "medfit_error_ledger")
   })
 })
 
