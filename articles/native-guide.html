@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.0/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -319,7 +319,7 @@ Defined parameters:
  total cp + a * b 0.5374 0.1189
 
 Diagnostics:
-  Optimizer status: 3; stationarity 1.45e-08; retries 0
+  Optimizer status: 4; stationarity 1.43e-08; retries 0
   Active bounds: none
   Active constraints: none
   Improper solution: no
@@ -547,7 +547,10 @@ MBCO = 33.353, df = 1, p-value = 7.685e-09</code></pre>
 </div>
 </div>
 <p>When a model with a nonlinear constraint warns that the starts reached different optima, the constraint has more than one solution (<code>a*b &gt; 0.1</code> holds for two positive or two negative paths). The kept fit is the best, but say so in a report.</p>
-</section><section class="level2"><h2 id="from-a-fit-to-mediation-objects">7. From a fit to mediation objects<a class="anchor" aria-label="anchor" href="#from-a-fit-to-mediation-objects"></a>
+<section class="level3"><h3 id="the-outcome-ledger">The outcome ledger<a class="anchor" aria-label="anchor" href="#the-outcome-ledger"></a>
+</h3>
+<p>Every native fit keeps a versioned record of how it was reached, <code>fit@diagnostics$ledger</code>: one node per fit, zero-product branch and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> null, each with its optimizer state, likelihood, covariance status and notices. A node is <code>resolved</code> (the optimizer accepted it) or <code>unresolved</code>, and <code>unresolved</code> means unknown: only a <code>feasibility</code> of <code>certified_empty</code> is a proof that a branch has no solution, and only a literal contradiction such as <code>a == 0</code> with <code>a == 1</code> earns it. Errors that stop a fit carry the same ledger as <code>$ledger</code>, and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and <code><a href="../reference/compare_lr.html">compare_lr()</a></code> return it with an unresolved result. Read it with <code>str(fit@diagnostics$ledger, max.level = 2)</code>; the cases and what to do are in <a href="guide-troubleshooting.html#errors-that-carry-evidence">Troubleshooting</a>, and the construction is in <a href="computation-algorithms.html#a-zero-product-is-a-union-of-simpler-models">Computation and algorithms</a>.</p>
+</section></section><section class="level2"><h2 id="from-a-fit-to-mediation-objects">7. From a fit to mediation objects<a class="anchor" aria-label="anchor" href="#from-a-fit-to-mediation-objects"></a>
 </h2>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>,</span>

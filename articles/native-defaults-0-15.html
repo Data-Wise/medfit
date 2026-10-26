@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.0/vignettes/articles/native-defaults-0-15.qmd" class="external-link"><code>vignettes/articles/native-defaults-0-15.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-defaults-0-15.qmd" class="external-link"><code>vignettes/articles/native-defaults-0-15.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -245,7 +245,7 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="fu">medfit</span><span class="fu">::</span><span class="va"><a href="../reference/fit_sem.html">fit_sem</a></span>, <span class="va">args</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre>
 </div>
-<p><code>args["meanstructure"] &lt;- list(NULL)</code> stores an explicit <code>NULL</code>; <code>args$meanstructure &lt;- NULL</code> would delete the element and leave the default in force. RMediation’s test helper uses this wrapper (Data-Wise/rmediation#85).</p>
+<p><code>args["meanstructure"] &lt;- list(NULL)</code> stores an explicit <code>NULL</code>; <code>args$meanstructure &lt;- NULL</code> would delete the element and leave the default in force. RMediation’s test helper uses this wrapper (<code>Data-Wise/rmediation#85</code>).</p>
 <p>Two points about muffling:</p>
 <ul>
 <li>The warning is shown once per session per argument, and the flag is set before the warning is raised. A muffled warning therefore uses up that session’s one warning, and a later unwrapped fit stays silent. Pass the arguments rather than muffle when the code runs in a user’s session.</li>

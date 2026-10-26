@@ -106,7 +106,7 @@ summary(fit)
      total cp + a * b 0.5374 0.1189
 
     Diagnostics:
-      Optimizer status: 3; stationarity 1.45e-08; retries 0
+      Optimizer status: 4; stationarity 1.43e-08; retries 0
       Active bounds: none
       Active constraints: none
       Improper solution: no
@@ -263,6 +263,27 @@ When a model with a nonlinear constraint warns that the starts reached
 different optima, the constraint has more than one solution (`a*b > 0.1`
 holds for two positive or two negative paths). The kept fit is the best,
 but say so in a report.
+
+### The outcome ledger
+
+Every native fit keeps a versioned record of how it was reached,
+`fit@diagnostics$ledger`: one node per fit, zero-product branch and
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+null, each with its optimizer state, likelihood, covariance status and
+notices. A node is `resolved` (the optimizer accepted it) or
+`unresolved`, and `unresolved` means unknown: only a `feasibility` of
+`certified_empty` is a proof that a branch has no solution, and only a
+literal contradiction such as `a == 0` with `a == 1` earns it. Errors
+that stop a fit carry the same ledger as `$ledger`, and
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+and
+[`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+return it with an unresolved result. Read it with
+`str(fit@diagnostics$ledger, max.level = 2)`; the cases and what to do
+are in
+[Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html#errors-that-carry-evidence),
+and the construction is in [Computation and
+algorithms](https://data-wise.github.io/medfit/articles/computation-algorithms.html#a-zero-product-is-a-union-of-simpler-models).
 
 ## 7. From a fit to mediation objects
 

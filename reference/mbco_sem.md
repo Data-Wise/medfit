@@ -74,6 +74,28 @@ diffLL), `parameter` (`df = 1`), `p.value`, `method`, `data.name`,
 minimized discrepancy `f`, `diff_ll` equal to `n_obs * (f - fit@f)`,
 `converged`, and `note`, the failure text of a refit that could not be
 fitted, otherwise empty). It prints with the standard `htest` layout.
+`ledger` is the version-1 outcome ledger documented in
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
+with children `mbco/full` and `mbco/null:1`, `mbco/null:2`, ..., in the
+requested path order. A null refit that is itself a zero-product union
+keeps its branch children and notices. A null node's notices also record
+those raised at the MBCO boundary, including the union winner's replay,
+so they can repeat a child's. Every null is attempted even if another
+fails, and an unresolved null leaves the root `unresolved`. A nested
+union branch that is certified empty by a literal zero/nonzero
+contradiction (see the outcome ledger in
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md))
+is retained as `excluded`; a null that is itself infeasible or an
+all-empty union stays an unresolved row, never a finite LR or a
+survivor-only p-value. A null whose optimizer accepted but whose
+covariance stage failed (`medfit_sem_covariance_error` in
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md))
+keeps its likelihood after a check that it is the null asked for (same
+rows, domain and one more restriction): the row stays resolved, the
+statistic and p-value are unchanged, a warning names the failure, and
+the node has `covariance = "failed"` with `post_fit` and the notices. No
+covariance is invented; a fit that carries `post_fit` is refused as
+`object`.
 
 ## Details
 
@@ -81,6 +103,11 @@ A fit made with `weights` is refused: the weighted discrepancy is not a
 likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are
 measured against.
+
+A fit whose ledger is missing, malformed or does not describe the fit,
+and a refit that is not the null asked for, are refused with a
+`medfit_error_ledger` error: the evidence is never inferred from
+`converged`.
 
 A refit that fails the acceptance gate of the optimizer does not stop
 the function: its row has `converged = FALSE`, `f` and `diff_ll` `NA`

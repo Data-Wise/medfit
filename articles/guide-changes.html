@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.0/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -176,7 +176,7 @@
 
 
 
-    <p>CRAN has medfit 0.3.2; this site documents 0.14.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
+    <p>CRAN has medfit 0.3.2; this site documents 0.14.1 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
 <div>
 <blockquote>
 <p><strong>The short version</strong></p>
@@ -432,6 +432,15 @@
 <td>0.12.0 returned the best surviving branch with a warning, and that fit could be used as if it were certified; fit the model without the product constraint, or raise <code>n_starts</code>
 </td>
 </tr>
+<tr class="even">
+<td>0.14.1</td>
+<td>
+<code><a href="../reference/fit_sem.html">fit_sem()</a></code> of a model whose own equalities contradict literally, such as <code>a == 0</code> with <code>a == 1e-9</code>
+</td>
+<td>
+<code>literal zero/nonzero contradiction</code> (class <code>medfit_sem_infeasible</code>)</td>
+<td>it used to stop only after the optimizer failed; the check is now exact, with no tolerance, and runs before the optimizer; remove or correct one equality (see <a href="guide-troubleshooting.html#errors-that-carry-evidence">Troubleshooting</a>)</td>
+</tr>
 </tbody>
 </table>
 <p>Two more stop in situations 0.3.2 could not reach: two <code>lmer</code> fits that kept different individuals within the same clusters (0.6.0), and a lavaan label that reuses one of medfit’s alias names for a different path (0.5.0).</p>
@@ -523,6 +532,10 @@
 <tr class="even">
 <td>0.14.0</td>
 <td>a native fit that leaves <code>fixed_x</code> or <code>meanstructure</code> unset warns once per session that both defaults change in 0.15.0 (no result changes); <code>options(medfit.native_defaults = "0.15")</code> opts in early (<a href="native-defaults-0-15.html">article</a>)</td>
+</tr>
+<tr class="odd">
+<td>0.14.1</td>
+<td>the outcome ledger (<code>fit@diagnostics$ledger</code>, <code>$ledger</code> on the errors): every zero-product branch and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> null keeps its outcome; literal contradictions are certified empty; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is the typed error <code>medfit_sem_covariance_error</code>, which <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> retains for a null (<a href="guide-troubleshooting.html#errors-that-carry-evidence">troubleshooting</a>); <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> validates its own ledger before returning</td>
 </tr>
 </tbody>
 </table></section><section class="level2"><h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>

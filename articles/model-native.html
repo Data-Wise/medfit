@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.0/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -504,7 +504,10 @@ standard errors (observed information) are unaffected.</code></pre>
 <strong>Factor covariates</strong> (a factor, character or logical column on a regression’s right side) become 0/1 dummies named <code>g_b</code>, <code>g_c</code> (reference: the first level), as <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> builds them. A label on the factor (<code>b*g</code>) stops; label one dummy (<code>b*g_b</code>). A factor as an outcome, a mediator or a four-way treatment is not supported, and <code>g:m</code> expands to one product per dummy (see <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>).</li>
 <li>
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports diagnostics, including an improper solution and any active bound or constraint; read them before trusting a fit.</li>
-</ul></section><section class="level2"><h2 id="stability">Stability<a class="anchor" aria-label="anchor" href="#stability"></a>
+</ul></section><section class="level2"><h2 id="outcome-ledger">The outcome ledger<a class="anchor" aria-label="anchor" href="#outcome-ledger"></a>
+</h2>
+<p><code>fit@diagnostics$ledger</code> records how the fit was reached: the optimizer state, likelihood and covariance status of the fit and of each zero-product branch, with the notices raised on the way. An unresolved node is unknown, not infeasible; only a literal contradiction between equalities is certified empty. A fit that cannot be trusted stops with an error that carries the ledger as <code>$ledger</code>: see <a href="guide-troubleshooting.html#errors-that-carry-evidence">errors that carry evidence</a> and <a href="computation-algorithms.html#a-zero-product-is-a-union-of-simpler-models">how the branches are built</a>.</p>
+</section><section class="level2"><h2 id="stability">Stability<a class="anchor" aria-label="anchor" href="#stability"></a>
 </h2>
 <p>The exported signatures of <code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>, the <code>SEMFit</code> properties and the model syntax in <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> change only through a deprecation. New syntax and new properties can be added: a name, a table row or a property that exists today keeps its meaning. This matters for the features listed under Limits (a categorical mediator or outcome, for example): they will arrive as additions, not as a rename of <code>g_b</code>-style dummy names or of the <code>m:x</code> product name. A test (<code>test-api-freeze.R</code>) pins the current names. Numerical fixes are not breaking changes.</p>
 </section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>

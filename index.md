@@ -28,6 +28,7 @@ functions work for every model, from one mediator to a latent variable.
 
 | Version | What you get |
 |----|----|
+| **0.14.1** | The outcome ledger for native fits: every zero-product branch and [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) null keeps its outcome (`fit@diagnostics$ledger`, `$ledger` on the errors); literal `a == 0` / nonzero contradictions are certified empty, not fitted; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is a typed error (`medfit_sem_covariance_error`) that [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) retains for a null. A literal contradiction now stops before the optimizer (see NEWS). |
 | **0.14.0** | Notice for the 0.15.0 native defaults (`fixed_x = TRUE`, `meanstructure = TRUE`): a native fit that leaves either unset warns once per session (no result changes); `options(medfit.native_defaults = "0.15")` opts in early; the [0.15.0 defaults article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html) explains both settings and how dependent packages keep today’s results. |
 | **0.13.0** | A roundoff-limited restoration’s objective rise is capped, so a worse point can no longer stand and inflate a likelihood-ratio statistic; a refit the optimizer cannot fit is an unresolved result ([`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md), [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)) instead of an error or a silent answer, and a zero-product branch that cannot be fitted stops [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with an error instead of returning a partial fit. |
 | **0.12.0** | [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md) runs the product-null LR (`a*b == 0`) in lavaan or OpenMx and compares it with [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md), warning only on observed evidence (a dropped constraint, a statistic above medfit’s); a fix for the native acceptance gate rejecting a correct fit at a bound on the reference BLAS (#238) |
@@ -53,7 +54,7 @@ install.packages(
 )
 ```
 
-This installs the current r-universe release (0.14.0). Binaries are
+This installs the current r-universe release (0.14.1). Binaries are
 available for supported R/platform combinations; a source installation
 can require a compiler for dependencies such as `nloptr`. From GitHub
 instead: `pak::pak("data-wise/medfit")`.
@@ -356,7 +357,7 @@ GPL (\>= 3)
 If you use medfit in your research, please cite:
 
     Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-    R package version 0.14.0. https://data-wise.github.io/medfit/
+    R package version 0.14.1. https://data-wise.github.io/medfit/
 
 For the entry matching your installed version, run `citation("medfit")`.
 

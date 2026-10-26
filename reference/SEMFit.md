@@ -70,7 +70,9 @@ SEMFit(theta, vcov, table, defined, f, n_obs, n_dropped, df, information,
 
 - diagnostics:
 
-  List: optimizer diagnostics (`status`, `decrement`, `retries`,
+  List: the versioned outcome `ledger` (see
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md))
+  and optimizer diagnostics (`status`, `decrement`, `retries`,
   `active_bounds`, `active_constraints`, `improper`, `sign_check`, and
   `optimum`: a list with `n_starts`, `n_accepted`, `best_of`,
   `certified`, `spread` (discrepancy range among accepted starts, `NA`

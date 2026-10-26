@@ -347,6 +347,18 @@ gives the reason.
   diagnostics, including an improper solution and any active bound or
   constraint; read them before trusting a fit.
 
+## The outcome ledger
+
+`fit@diagnostics$ledger` records how the fit was reached: the optimizer
+state, likelihood and covariance status of the fit and of each
+zero-product branch, with the notices raised on the way. An unresolved
+node is unknown, not infeasible; only a literal contradiction between
+equalities is certified empty. A fit that cannot be trusted stops with
+an error that carries the ledger as `$ledger`: see [errors that carry
+evidence](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html#errors-that-carry-evidence)
+and [how the branches are
+built](https://data-wise.github.io/medfit/articles/computation-algorithms.html#a-zero-product-is-a-union-of-simpler-models).
+
 ## Stability
 
 The exported signatures of

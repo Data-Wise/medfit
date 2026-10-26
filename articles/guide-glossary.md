@@ -113,6 +113,7 @@ The own and spillover split is a large-cluster approximation.
 | **canonical name** (`m:x`) | the one name a product is stored under: the two variable names sorted in the C locale, so `x:m` and `m:x` are the same term | [Product terms](https://data-wise.github.io/medfit/articles/model-native.html#product-terms) |
 | **nested comparison** ([`anova()`](https://rdrr.io/r/stats/anova.html)) | the likelihood-ratio test of a restricted fit against a fuller one; it refits nothing and refuses fits that are not nested | [Compare nested fits](https://data-wise.github.io/medfit/articles/model-native-constraints.html#compare-nested-fits) |
 | **conditional log likelihood** | the log likelihood given the fixed variables under `fixed_x`, so [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC of fits with different fixed sets cannot be compared | [Limits](https://data-wise.github.io/medfit/articles/model-native.html#limits) |
+| **outcome ledger** (`fit@diagnostics$ledger`) | the record of how a native fit, each zero-product branch and each [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) null was reached; an unresolved node is unknown, and only a literal contradiction is certified empty | [Errors that carry evidence](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html#errors-that-carry-evidence) |
 
 ## Related
 

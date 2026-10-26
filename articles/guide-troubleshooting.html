@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.0/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -485,72 +485,78 @@
 <td>read the tail; remove or correct the contradicting constraint, or check the scale of the data</td>
 </tr>
 <tr class="even">
+<td><code>literal zero/nonzero contradiction</code></td>
+<td>the model holds an explicit <code>a == 0</code> and an explicit nonzero literal equality on the same label (<code>a == 1</code>, even <code>a == 1e-9</code>); the check is exact, with no tolerance, and the error also carries <code>$ledger</code>
+</td>
+<td>remove or correct one of the two equalities</td>
+</tr>
+<tr class="odd">
 <td>
 <code>the starts disagree</code> (a warning)</td>
 <td>a model with a nonlinear inequality such as <code>a*b &gt; 0.4</code> has more than one local optimum, and the starts reached different ones</td>
 <td>the lowest discrepancy is kept; raise <code>n_starts</code> to search further</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>is not nested in</code></td>
 <td>
 <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> got a restricted model that frees a parameter the larger model leaves out, or does not keep one of its constraints</td>
 <td>fit the restricted model by constraining or fixing parameters of the larger one</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>
 <code>the null lies on the boundary of the parameter space</code> (a warning)</td>
 <td>
 <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> or <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tested a null that sits on an active bound or inequality, so the statistic is a mixture of chi-squares</td>
 <td>do not read the p-value as chi-square(df); bootstrap, or compare on a model without the bound</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>
 <code>The MBCO statistic is not available (NA)</code> (a warning)</td>
 <td>a refit inside <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> could not be fitted, usually because the null (<code>a == 0</code>) lies outside the constraints (<code>a &gt; 0.3</code>)</td>
 <td>read <code>$tests</code>: the failing row has <code>converged = FALSE</code> and the reason in <code>note</code>; the statistic and p-value are <code>NA</code>, never the minimum of the refits that worked; see <a href="#an-unresolved-mbco-result">an unresolved result</a>
 </td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>
 <code>zero-product branches did not converge</code> (an error)</td>
-<td>a model with <code>a*b == 0</code> is fitted as one linear fit per factor, and at least one fit failed, so the best of the others need not be the constrained optimum and no fit is returned; the message lists each failed branch and the best survivor’s discrepancy</td>
+<td>a model with <code>a*b == 0</code> is fitted as one linear fit per factor, and at least one fit failed, so the best of the others need not be the constrained optimum and no fit is returned; the message lists each failed branch and the best survivor’s discrepancy; the error carries <code>$ledger</code> and <code>$best_survivor</code> (see <a href="#errors-that-carry-evidence">errors that carry evidence</a>)</td>
 <td>fit the model without the product constraint, or raise <code>n_starts</code>; <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> reports the same situation in a refit as an unresolved row</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>a product ':' needs a variable name on each side</code></td>
 <td>a space around the colon in a product (<code>x :m</code>)</td>
 <td>write the product without spaces: <code>x:m</code>
 </td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>(rule 8: no outcome-derived regressors)</code></td>
 <td>a product has a factor that is its own outcome or downstream of it (<code>y ~ x + x:y</code>)</td>
 <td>build the product from variables that are not outcomes of that equation</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>cannot have a residual covariance (rule 9)</code></td>
 <td>a model with a product has <code>m1 ~~ m2</code> between outcomes</td>
 <td>drop the residual covariance, or fit without the product</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>has a fixed coefficient (rule 9)</code></td>
 <td>a regression in a model with a product has a fixed value (<code>0.3*x</code>, <code>0*x</code>); the same rule covers bounds, shared labels and loops</td>
 <td>free the coefficient; the full list is in the table in <a href="model-native.html#product-terms">the native model page</a>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>names the coefficient label</code></td>
 <td>
 <code>==</code>, <code>&lt;</code> or <code>&gt;</code> in a model with a product names a coefficient label (<code>a == b</code>)</td>
 <td>constrain a defined parameter (<code>:=</code>) instead, or fit without the product</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>
 <code>the model test is not valid for this model</code> (a warning)</td>
 <td>a product has a factor that is itself an outcome, so the chi-square is not valid</td>
 <td>the test is reported as NA and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse; the coefficients and the sandwich standard errors are unaffected</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>
 <code>model-based standard errors assume normality, which a product violates</code> (a warning)</td>
 <td>a model with a product was fitted without <code>se_type = "sandwich"</code>
@@ -558,52 +564,52 @@
 <td>add <code>se_type = "sandwich"</code>
 </td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>is an ordered factor</code></td>
 <td>a categorical covariate is an ordered factor; polynomial contrasts are not dummies</td>
 <td>recode it with <code>factor(x, ordered = FALSE)</code>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>has only one level</code></td>
 <td>a categorical covariate has a single level, so it carries no information</td>
 <td>drop it from the model</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>makes the invalid name</code></td>
 <td>a level gives a dummy name that is not valid (a space, a leading digit)</td>
 <td>rename the level; the message shows the dummy name</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>is already a column of</code></td>
 <td>
 <code>data</code> already has a column named like a dummy (<code>group_mid</code>)</td>
 <td>rename that column or the level</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>expands to 2 terms</code></td>
 <td>a label, fixed value, start or bound sits on a categorical covariate (<code>b*group</code>)</td>
 <td>put it on one dummy: <code>b*group_mid</code>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>is a categorical column, which a regression expands to dummies</code></td>
 <td>a constraint names the categorical covariate (<code>group == 0</code>)</td>
 <td>label one dummy (<code>z*group_mid</code>) and constrain the label (<code>z == 0</code>)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>both sides are categorical columns</code></td>
 <td>a product of two categorical columns (<code>group:site</code>)</td>
 <td>write the dummy products you need, such as <code>group_mid:site_s</code>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>is constant in the rows the fit uses</code></td>
 <td>a dummy has no variation: an unused factor level, or a level only in rows dropped for missing values</td>
 <td>
 <code><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels()</a></code> the column, or check the missing values</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>must be numeric: group</code></td>
 <td>a categorical column is an outcome or a mediator (only a covariate on a right side is expanded), or a column is a date or another type</td>
 <td>recode it as a numeric column</td>
@@ -618,6 +624,76 @@
 <span><span class="va">res</span><span class="op">$</span><span class="va">tests</span>                        <span class="co"># converged = FALSE for the failed refit, reason in `note`</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">statistic</span>                    <span class="co"># NA: the MBCO test was not carried out</span></span></code></pre>
 <p>Check <code>res$unresolved</code> (or <code>all(res$tests$converged)</code>) before reading <code>p.value</code>. A model or data error, such as a missing column or a label constraint in a model with a product, still stops with its own message. <code><a href="../reference/compare_lr.html">compare_lr()</a></code> follows the same rule: when medfit has no accepted reference, its verdict is <code>"unresolved"</code> and <code>reference$lr</code> is <code>NA</code>.</p>
+</section><section class="level3"><h3 id="errors-that-carry-evidence">Errors that carry evidence<a class="anchor" aria-label="anchor" href="#errors-that-carry-evidence"></a>
+</h3>
+<p>A native fit that cannot be trusted stops with a classed error, never with a fit. Several of these errors carry the outcome ledger as <code>$ledger</code> (what a ledger is: <a href="native-guide.html#the-outcome-ledger">the native guide</a>); read it before you rerun anything. An unresolved branch means unknown, not infeasible: only a literal contradiction is a proof of emptiness.</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead><tr class="header">
+<th>You see</th>
+<th>Cause</th>
+<th>What to do and where to look</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>
+<code>zero-product branches did not converge</code> (class <code>medfit_error_no_convergence</code>)</td>
+<td>a branch of an <code>a*b == 0</code> model failed while another succeeded, so the best survivor need not be the constrained optimum</td>
+<td>fit without the product constraint, or raise <code>n_starts</code>; look at <code>err$ledger</code> (one node per branch), <code>err$best_survivor</code> (<code>id</code> and <code>f</code>, for diagnosis only, never a p-value)</td>
+</tr>
+<tr class="even">
+<td>
+<code>no branch of the zero-product constraints converged</code> (class <code>medfit_error_no_convergence</code>; also <code>medfit_sem_empty_union</code> when every branch is certified empty)</td>
+<td>no branch converged, or every branch holds a literal contradiction such as <code>a == 0</code> with <code>a == 1</code>
+</td>
+<td>remove or correct the contradicting equalities; if no branch is certified empty, check the data scale; look at <code>err$ledger$children</code>: each child has <code>feasibility</code> (<code>certified_empty</code> is a proof) and <code>outcome</code>
+</td>
+</tr>
+<tr class="odd">
+<td>
+<code>literal zero/nonzero contradiction</code> (class <code>medfit_sem_infeasible</code>)</td>
+<td>the model’s own equalities contradict exactly (<code>a == 0</code> with <code>a == 1e-9</code> too); no tolerance</td>
+<td>remove or correct one equality; look at <code>err$ledger$feasibility</code>
+</td>
+</tr>
+<tr class="even">
+<td>
+<code>branches to fit; at most 64 are supported</code> (a plain error)</td>
+<td>the zero-product equalities give more than 64 raw branches, duplicates included, counted before anything is fitted; a count above 2^53 prints as <code>approximately</code> and an overflow as <code>overflow (Inf)</code>
+</td>
+<td>state fewer zero-product equalities, or fit the branches you need one at a time; look at <code>err$ledger$enumeration</code>: <code>state</code> is <code>not_enumerated</code> and <code>required</code> is the raw count; <code>err$ledger$branch_map</code> has <code>raw_count</code> and an unknown unique count</td>
+</tr>
+<tr class="odd">
+<td>the error message of the failing stage, with class <code>medfit_sem_covariance_error</code>
+</td>
+<td>the optimizer accepted the fit and the covariance stage then failed; the likelihood is evidence, but the result is not a fit</td>
+<td>fix the stage the message names, or simplify the model; look at <code>err$ledger</code> (<code>covariance</code> is <code>"failed"</code>, <code>post_fit</code> holds the original condition), <code>err$partial</code> (the accepted fit without <code>vcov</code>)</td>
+</tr>
+<tr class="even">
+<td>
+<code>likelihood retained, covariance unavailable</code> (a warning from <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>)</td>
+<td>a refit null passed the optimizer and failed only in the covariance stage; the MBCO statistic and p-value use its likelihood and are unchanged</td>
+<td>read the warning for the failure; no standard error was invented; look at <code>res$ledger$children</code>: the node of that null has <code>covariance = "failed"</code>
+</td>
+</tr>
+<tr class="odd">
+<td>
+<code>missing, malformed or unresolved SEM outcome ledger</code> (class <code>medfit_error_ledger</code>)</td>
+<td>
+<code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> was given a fit whose ledger is absent, altered, forged or from an earlier release, so its evidence cannot be trusted</td>
+<td>refit with the current medfit and call <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> on the new fit; look at <code>err$ledger$rejected_evidence</code> holds the refused ledger, when the fit had one</td>
+</tr>
+</tbody>
+</table>
+<p><code>medfit_error_ledger</code> is a class of its own: <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and <code><a href="../reference/compare_lr.html">compare_lr()</a></code> report an optimizer failure as an unresolved result, but they refuse bad evidence outright. The covariance error is a sibling of <code>medfit_error_no_convergence</code>, so handlers written for an unresolved refit do not catch it. How the ledger is built is in <a href="computation-algorithms.html#a-zero-product-is-a-union-of-simpler-models">Computation and algorithms</a>.</p>
+<pre class="r"><code><span><span class="va">err</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">)</span>, error <span class="op">=</span> <span class="va">identity</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">err</span><span class="op">)</span>                       <span class="co"># the typed class says which case</span></span>
+<span><span class="va">err</span><span class="op">$</span><span class="va">ledger</span><span class="op">$</span><span class="va">children</span>              <span class="co"># per-branch outcome and feasibility</span></span>
+<span><span class="va">err</span><span class="op">$</span><span class="va">best_survivor</span>                <span class="co"># only for `medfit_error_no_convergence` with a survivor</span></span></code></pre>
 </section></section><section class="level2"><h2 id="messages-that-are-not-errors">Messages that are not errors<a class="anchor" aria-label="anchor" href="#messages-that-are-not-errors"></a>
 </h2>
 <table class="table caption-top">

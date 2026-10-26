@@ -31,7 +31,7 @@ larger statistic."><meta property="og:image" content="https://data-wise.github.i
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -143,7 +143,7 @@ larger statistic."><meta property="og:image" content="https://data-wise.github.i
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Minimum-of-k Likelihood-Ratio Test for an Indirect Effect (MBCO)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.0/R/sem-mbco.R" class="external-link"><code>R/sem-mbco.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/sem-mbco.R" class="external-link"><code>R/sem-mbco.R</code></a></small>
       <div class="d-none name"><code>mbco_sem.Rd</code></div>
     </div>
 
@@ -216,7 +216,19 @@ smallest diffLL), <code>parameter</code> (<code>df = 1</code>), <code>p.value</c
 Details), and <code>tests</code>, a data frame with one row per refit (<code>constraint</code>,
 the minimized discrepancy <code>f</code>, <code>diff_ll</code> equal to <code>n_obs * (f - fit@f)</code>,
 <code>converged</code>, and <code>note</code>, the failure text of a refit that could not be
-fitted, otherwise empty). It prints with the standard <code>htest</code> layout.</p>
+fitted, otherwise empty). It prints with the standard <code>htest</code> layout.
+<code>ledger</code> is the version-1 outcome ledger documented in <code><a href="fit_sem.html">fit_sem()</a></code>, with children <code>mbco/full</code> and
+<code>mbco/null:1</code>, <code>mbco/null:2</code>, ..., in the requested path order. A null refit that is itself a zero-product
+union keeps its branch children and notices. A null node's notices also record those raised at the MBCO
+boundary, including the union winner's replay, so they can repeat a child's. Every null is attempted even if
+another fails, and an unresolved null leaves the root <code>unresolved</code>. A nested union branch that is certified empty
+by a literal zero/nonzero contradiction (see the outcome ledger in <code><a href="fit_sem.html">fit_sem()</a></code>) is retained as <code>excluded</code>; a null
+that is itself infeasible or an all-empty union stays an unresolved row, never a finite LR or a survivor-only
+p-value. A null whose optimizer accepted but whose covariance stage failed (<code>medfit_sem_covariance_error</code> in
+<code><a href="fit_sem.html">fit_sem()</a></code>) keeps its likelihood after a check that it is the null asked for (same rows, domain and one more
+restriction): the row stays resolved, the statistic and p-value are unchanged, a warning names the failure, and the
+node has <code>covariance = "failed"</code> with <code>post_fit</code> and the notices. No covariance is invented; a fit that carries
+<code>post_fit</code> is refused as <code>object</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -224,6 +236,8 @@ fitted, otherwise empty). It prints with the standard <code>htest</code> layout.
 not a likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are
 measured against.</p>
+<p>A fit whose ledger is missing, malformed or does not describe the fit, and a refit that is not the null asked
+for, are refused with a <code>medfit_error_ledger</code> error: the evidence is never inferred from <code>converged</code>.</p>
 <p>A refit that fails the acceptance gate of the optimizer does not stop the
 function: its row has <code>converged = FALSE</code>, <code>f</code> and <code>diff_ll</code> <code>NA</code> and the
 failure text in <code>note</code>, a warning repeats the text, and <code>statistic</code> and

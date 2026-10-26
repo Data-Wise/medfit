@@ -77,11 +77,12 @@ package and checked by a test, so the wording matches what you see.
 | `Must have length 1` | `fit_mediation(engine = "native")` was given several mediators | fit with [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) and call [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md); see [several mediators](https://data-wise.github.io/medfit/articles/model-native-multi.md) |
 | `latent means are planned for a later release` | a latent variable has a free or nonzero mean (`eta ~ 1`, `eta ~ 2*1`) | leave the latent mean at its default of 0 (`eta ~ 0*1` is accepted) |
 | `no start converged` | no start satisfied the gates; the tail of the message says why, such as `is violated by` when two constraints contradict each other | read the tail; remove or correct the contradicting constraint, or check the scale of the data |
+| `literal zero/nonzero contradiction` | the model holds an explicit `a == 0` and an explicit nonzero literal equality on the same label (`a == 1`, even `a == 1e-9`); the check is exact, with no tolerance, and the error also carries `$ledger` | remove or correct one of the two equalities |
 | `the starts disagree` (a warning) | a model with a nonlinear inequality such as `a*b > 0.4` has more than one local optimum, and the starts reached different ones | the lowest discrepancy is kept; raise `n_starts` to search further |
 | `is not nested in` | [`anova()`](https://rdrr.io/r/stats/anova.html) got a restricted model that frees a parameter the larger model leaves out, or does not keep one of its constraints | fit the restricted model by constraining or fixing parameters of the larger one |
 | `the null lies on the boundary of the parameter space` (a warning) | [`anova()`](https://rdrr.io/r/stats/anova.html) or [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) tested a null that sits on an active bound or inequality, so the statistic is a mixture of chi-squares | do not read the p-value as chi-square(df); bootstrap, or compare on a model without the bound |
 | `The MBCO statistic is not available (NA)` (a warning) | a refit inside [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) could not be fitted, usually because the null (`a == 0`) lies outside the constraints (`a > 0.3`) | read `$tests`: the failing row has `converged = FALSE` and the reason in `note`; the statistic and p-value are `NA`, never the minimum of the refits that worked; see [an unresolved result](#an-unresolved-mbco-result) |
-| `zero-product branches did not converge` (an error) | a model with `a*b == 0` is fitted as one linear fit per factor, and at least one fit failed, so the best of the others need not be the constrained optimum and no fit is returned; the message lists each failed branch and the best survivor’s discrepancy | fit the model without the product constraint, or raise `n_starts`; [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) reports the same situation in a refit as an unresolved row |
+| `zero-product branches did not converge` (an error) | a model with `a*b == 0` is fitted as one linear fit per factor, and at least one fit failed, so the best of the others need not be the constrained optimum and no fit is returned; the message lists each failed branch and the best survivor’s discrepancy; the error carries `$ledger` and `$best_survivor` (see [errors that carry evidence](#errors-that-carry-evidence)) | fit the model without the product constraint, or raise `n_starts`; [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) reports the same situation in a refit as an unresolved row |
 | `a product ':' needs a variable name on each side` | a space around the colon in a product (`x :m`) | write the product without spaces: `x:m` |
 | `(rule 8: no outcome-derived regressors)` | a product has a factor that is its own outcome or downstream of it (`y ~ x + x:y`) | build the product from variables that are not outcomes of that equation |
 | `cannot have a residual covariance (rule 9)` | a model with a product has `m1 ~~ m2` between outcomes | drop the residual covariance, or fit without the product |
@@ -118,6 +119,42 @@ constraint in a model with a product, still stops with its own message.
 [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
 follows the same rule: when medfit has no accepted reference, its
 verdict is `"unresolved"` and `reference$lr` is `NA`.
+
+### Errors that carry evidence
+
+A native fit that cannot be trusted stops with a classed error, never
+with a fit. Several of these errors carry the outcome ledger as
+`$ledger` (what a ledger is: [the native
+guide](https://data-wise.github.io/medfit/articles/native-guide.html#the-outcome-ledger));
+read it before you rerun anything. An unresolved branch means unknown,
+not infeasible: only a literal contradiction is a proof of emptiness.
+
+| You see | Cause | What to do and where to look |
+|----|----|----|
+| `zero-product branches did not converge` (class `medfit_error_no_convergence`) | a branch of an `a*b == 0` model failed while another succeeded, so the best survivor need not be the constrained optimum | fit without the product constraint, or raise `n_starts`; look at `err$ledger` (one node per branch), `err$best_survivor` (`id` and `f`, for diagnosis only, never a p-value) |
+| `no branch of the zero-product constraints converged` (class `medfit_error_no_convergence`; also `medfit_sem_empty_union` when every branch is certified empty) | no branch converged, or every branch holds a literal contradiction such as `a == 0` with `a == 1` | remove or correct the contradicting equalities; if no branch is certified empty, check the data scale; look at `err$ledger$children`: each child has `feasibility` (`certified_empty` is a proof) and `outcome` |
+| `literal zero/nonzero contradiction` (class `medfit_sem_infeasible`) | the model’s own equalities contradict exactly (`a == 0` with `a == 1e-9` too); no tolerance | remove or correct one equality; look at `err$ledger$feasibility` |
+| `branches to fit; at most 64 are supported` (a plain error) | the zero-product equalities give more than 64 raw branches, duplicates included, counted before anything is fitted; a count above 2^53 prints as `approximately` and an overflow as `overflow (Inf)` | state fewer zero-product equalities, or fit the branches you need one at a time; look at `err$ledger$enumeration`: `state` is `not_enumerated` and `required` is the raw count; `err$ledger$branch_map` has `raw_count` and an unknown unique count |
+| the error message of the failing stage, with class `medfit_sem_covariance_error` | the optimizer accepted the fit and the covariance stage then failed; the likelihood is evidence, but the result is not a fit | fix the stage the message names, or simplify the model; look at `err$ledger` (`covariance` is `"failed"`, `post_fit` holds the original condition), `err$partial` (the accepted fit without `vcov`) |
+| `likelihood retained, covariance unavailable` (a warning from [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)) | a refit null passed the optimizer and failed only in the covariance stage; the MBCO statistic and p-value use its likelihood and are unchanged | read the warning for the failure; no standard error was invented; look at `res$ledger$children`: the node of that null has `covariance = "failed"` |
+| `missing, malformed or unresolved SEM outcome ledger` (class `medfit_error_ledger`) | [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) was given a fit whose ledger is absent, altered, forged or from an earlier release, so its evidence cannot be trusted | refit with the current medfit and call [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) on the new fit; look at `err$ledger$rejected_evidence` holds the refused ledger, when the fit had one |
+
+`medfit_error_ledger` is a class of its own:
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+and
+[`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+report an optimizer failure as an unresolved result, but they refuse bad
+evidence outright. The covariance error is a sibling of
+`medfit_error_no_convergence`, so handlers written for an unresolved
+refit do not catch it. How the ledger is built is in [Computation and
+algorithms](https://data-wise.github.io/medfit/articles/computation-algorithms.html#a-zero-product-is-a-union-of-simpler-models).
+
+``` r
+err <- tryCatch(fit_sem(model, data), error = identity)
+class(err)                       # the typed class says which case
+err$ledger$children              # per-branch outcome and feasibility
+err$best_survivor                # only for `medfit_error_no_convergence` with a survivor
+```
 
 ## Messages that are not errors
 

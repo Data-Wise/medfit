@@ -21,7 +21,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -133,7 +133,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit a Structural Equation Model by Maximum Likelihood</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.0/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
       <div class="d-none name"><code>fit_sem.Rd</code></div>
     </div>
 
@@ -262,7 +262,8 @@ statement names, which are left free with a message of class <code>medfit_messag
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <a href="SEMFit.html">SEMFit</a> object. With a product term whose factor is a regression target (<code>x:m</code> with
 <code>m</code> regressed on <code>x</code>), <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> reports the chi-square, df and p-value as <code>NA</code> with a note, and
-<code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="mbco_sem.html">mbco_sem()</a></code> refuse; see <a href="SEMFit-methods.html">SEMFit-methods</a>.</p>
+<code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="mbco_sem.html">mbco_sem()</a></code> refuse; see <a href="SEMFit-methods.html">SEMFit-methods</a>.
+<code>diagnostics$ledger</code> holds the versioned outcome ledger described below.</p>
     </div>
     <div class="section level2">
     <h2 id="defaults-are-changing">Defaults are changing<a class="anchor" aria-label="anchor" href="#defaults-are-changing"></a></h2>
@@ -278,6 +279,63 @@ parameter names). To keep today's results and silence the warning, pass both arg
 <code>fixed_x = FALSE, meanstructure = NULL</code>. To fit with the 0.15.0 defaults now, set
 <code>options(medfit.native_defaults = "0.15")</code>; variables a <code>~~</code> or <code>~1</code> statement names are then left free and named
 in a message of class <code>medfit_message_fixed_x_lenient</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="outcome-ledger">Outcome ledger<a class="anchor" aria-label="anchor" href="#outcome-ledger"></a></h2>
+
+
+<p><code>diagnostics$ledger</code> is a list with <code>schema_version = 1L</code>. Each node has <code>id</code>, <code>parent_id</code>, the exact parsed
+<code>constraints</code>, and <code>context</code> (the estimation <code>sample</code>, the model syntax and parameters, the likelihood <code>domain</code>,
+the settings and <code>n_obs</code>). <code>enumeration</code> records <code>state</code> and the number of required children; <code>complete</code> means
+every required restriction was attempted, not that any was globally optimized. <code>outcome</code> is <code>resolved</code> or
+<code>unresolved</code>. Separate fields record <code>optimizer</code> (acceptance state, original status, decrement, retries and
+optimum diagnostics), <code>likelihood</code> (availability and <code>f</code>), <code>feasibility</code> (<code>witness</code> or <code>unknown</code>), <code>covariance</code>
+(<code>available</code>, <code>unavailable</code>, <code>not_retained</code> or <code>failed</code>), <code>improper</code>, the retained <code>notices</code> (warnings and
+messages), the original <code>condition</code> (class, message, call) and the recursive <code>children</code>. IDs are deterministic
+positions within the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a
+failed branch is unknown, never certified infeasible.</p>
+<p>A node whose constraints hold zero-product rows also has <code>branch_map</code>: <code>state</code>, <code>raw_count</code>, the parser
+<code>factor_counts</code>, <code>unique_count</code> and <code>raw_to_canonical</code>, a structural restriction-set ID for each raw row. The IDs
+collapse duplicate or permuted constraint rows, not arbitrary affine equivalence, and every raw row is still fitted
+in its original order (ties go to the first). More than 64 raw combinations, duplicates included, is refused before
+the grid is allocated, even when the unique count would be smaller; that node is <code>not_enumerated</code>, with an unknown
+unique count and no raw mapping, and nothing is fitted or certified. Its message prints the count without scientific
+notation, labels a count above \(2^{53}\) as approximate (a double need not be an exact cardinality there)
+and names an overflow; <code>raw_count</code> is <code>Inf</code> on overflow. If the map cannot be built while an error is recorded, its
+<code>state</code> is <code>unavailable</code> with that condition, and the original error is not replaced. The map is rebuilt from the
+node's constraints during validation, so a forged map is refused.</p>
+<p>The one proof of emptiness is the literal certificate <code>literal_zero_nonzero</code>: an explicit <code>label == 0</code> equality and
+an explicit finite nonzero literal equality on the same parsed label (<code>a == 0</code> with <code>a == 1</code>). Its label, source
+rows and values are kept in <code>certificate</code> and rebuilt from the node's own parsed parameters and constraints before
+any inference uses it. A certified-empty branch is retained with <code>outcome = "excluded"</code>,
+<code>feasibility = "certified_empty"</code> and an unavailable likelihood: it is not fitted and is not a successful fit. No
+tolerance, solver status, numerical rank, bound, general affine contradiction or fixed value in the parameter
+table is a proof, and a literal too small to represent (<code>1e-999</code>) is unknown.</p>
+<p>A zero-product fit returns only if at least one required branch resolves and every other branch resolves or is
+certified empty. A direct fit whose own equalities contradict literally stops with <code>medfit_sem_infeasible</code>, and a
+union whose every branch is certified empty with <code>medfit_sem_empty_union</code>; both are refinements of
+<code>medfit_error_no_convergence</code> and carry the ledger. Otherwise it stops with a
+<code>medfit_error_no_convergence</code> error, never a fit; the error carries the ledger of every required branch as
+<code>$ledger</code> and, when a branch survived, <code>$best_survivor</code> (its <code>id</code> and discrepancy <code>f</code>, diagnostic only, never a
+p-value). The union's own node does not aggregate its children's notices; inspect each child. The notices of a
+failed call are in the ledger only; the error message keeps its text. A data or model error keeps its own class
+and also carries <code>$ledger</code>. The estimation sample is stored once, on the root node; a descendant fitted on the
+same rows carries only <code>context$sample_hash</code>. A fit made before the ledger existed must be refitted before
+<code><a href="mbco_sem.html">mbco_sem()</a></code> can use it, which refuses it with a <code>medfit_error_ledger</code> error.</p>
+<p>When the optimizer accepts a fit and only the covariance stage fails (an error from the covariance, not the
+singular-information NA return, which stays <code>unavailable</code> with its warning), the call stops with
+<code>medfit_sem_covariance_error</code>, never a fit. The class is a sibling of <code>medfit_error_no_convergence</code>: no optimizer
+failed, so the handlers that report an unresolved result for an optimizer failure do not take it. Its fields are
+<code>schema_version = 1L</code>, <code>stage = "covariance"</code>, <code>partial</code> (the accepted optimizer result: <code>f</code>, <code>theta</code>, sample,
+domain, dimensions and settings; no <code>vcov</code> or <code>defined</code>) and <code>ledger</code> (the same node as <code>partial$ledger</code>, with
+<code>covariance = "failed"</code> and <code>post_fit</code>: versioned evidence with the original condition's class, message and call).
+The message is the original one. Resolved here means an accounted-for accepted likelihood, not a successful
+covariance. A union root reports the first failing branch's <code>post_fit</code>, in branch order, even when another branch
+supplies its minimum likelihood, and does not claim the winning branch failed: inspect the branch IDs. A branch that
+did not converge still stops the call with <code>medfit_error_no_convergence</code> first. Definition values and gradients are
+checked before the covariance, and model, data, optimizer, objective and other errors get no covariance certificate.
+The condition is not accepted as an input to <code><a href="mbco_sem.html">mbco_sem()</a></code>, and a fit that carries <code>post_fit</code> is refused with
+<code>medfit_error_ledger</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

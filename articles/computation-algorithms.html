@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.0/vignettes/articles/computation-algorithms.qmd" class="external-link"><code>vignettes/articles/computation-algorithms.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/computation-algorithms.qmd" class="external-link"><code>vignettes/articles/computation-algorithms.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -260,7 +260,7 @@ Q(\theta)=\log|\Sigma(\theta)|+
 </div>
 </section><section class="level2"><h2 id="a-zero-product-is-a-union-of-simpler-models">A zero product is a union of simpler models<a class="anchor" aria-label="anchor" href="#a-zero-product-is-a-union-of-simpler-models"></a>
 </h2>
-<p>For <span class="math inline">\(k\)</span> labeled paths, <span class="math inline">\(\prod_{j=1}^k a_j=0\)</span> means at least one path is zero. <code>R/sem-fit.R</code> splits explicit zero-product equalities into linear branches, fits each from a clean default start, and keeps the accepted branch with the lowest discrepancy. It supports at most 64 branches. If a branch cannot be fitted, <code><a href="../reference/fit_sem.html">fit_sem()</a></code> stops with an error rather than returning the best of the others, which need not be the constrained optimum. This avoids a zero Jacobian where several factors vanish. <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> uses the same logic for an indirect-effect test: fit each single-path null, use the smallest likelihood-ratio statistic, and refer it to a one-degree-of-freedom chi-square distribution when its regularity conditions hold. A null on a boundary can invalidate that reference, so inspect its warning.</p>
+<p>For <span class="math inline">\(k\)</span> labeled paths, <span class="math inline">\(\prod_{j=1}^k a_j=0\)</span> means at least one path is zero. <code>R/sem-fit.R</code> splits explicit zero-product equalities into linear branches, fits each from a clean default start, and keeps the accepted branch with the lowest discrepancy. It supports at most 64 raw combinations of parser-produced factors, duplicates included; the limit is checked with overflow-safe arithmetic before the grid is allocated, and an over-limit model is refused on that count alone, with nothing fitted. A node that holds zero-product rows records <code>branch_map</code> in the ledger: structural restriction-set IDs for the raw rows (duplicate or permuted products collapse), not an affine-equivalence certificate; every raw row still runs in its original order. A branch whose equalities contradict by literal syntax (<code>a == 0</code> with <code>a == 1</code>) is certified empty, kept in the ledger with its proof and an unavailable likelihood, and not fitted; a numerical failure is never such a proof, and an all-empty union stops with <code>medfit_sem_empty_union</code>. If a branch cannot be fitted, <code><a href="../reference/fit_sem.html">fit_sem()</a></code> stops with an error rather than returning the best of the others, which need not be the constrained optimum; the error carries the outcome ledger of every required branch as <code>$ledger</code>, and a fit’s ledger is <code>fit@diagnostics$ledger</code>. If the optimizer accepts a fit and only the covariance stage fails, <code><a href="../reference/fit_sem.html">fit_sem()</a></code> stops with <code>medfit_sem_covariance_error</code>, which carries the accepted likelihood in its ledger and is never a fit; inside <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> such a null keeps its likelihood and a warning. A complete enumeration is not a certificate of a global optimum. This avoids a zero Jacobian where several factors vanish. <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> uses the same logic for an indirect-effect test: fit each single-path null, use the smallest likelihood-ratio statistic, and refer it to a one-degree-of-freedom chi-square distribution when its regularity conditions hold. A null on a boundary can invalidate that reference, so inspect its warning.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">base</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"mediator1 ~ a*treatment"</span>,</span>

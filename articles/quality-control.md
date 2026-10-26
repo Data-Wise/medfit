@@ -89,6 +89,7 @@ its script does not contain, or when a structure has no gate.
 | D-9 | The gate design is fixed before the first run | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
 | D-10 | Latent structures in the D-4 gate | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
 | D-11 | A partial branch result is an error (PR \#303) | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-12 | The D1 outcome ledger rides on the D-11 error as \$ledger | decided | 2026-10-24 | ADR-native-solver-and-engines-2026-10-23 |
 
 Each ADR opens with a YAML `decisions:` list (`id`, `title`, `status`,
 `date`, optional `supersedes`); `test-adr-front-matter.R` checks it. The

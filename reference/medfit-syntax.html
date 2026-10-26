@@ -15,7 +15,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -127,7 +127,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>medfit Model Syntax</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.0/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
       <div class="d-none name"><code>medfit-syntax.Rd</code></div>
     </div>
 
@@ -155,7 +155,8 @@ are extra starts, and a feasible reference estimate is never replaced by a worse
 accepted fit. Models without a nonlinear row are not affected. A product of labels set to zero
 (<code>a*b == 0</code>, <code>b1*b2*b3 == 0</code>) is instead solved exactly: one linear fit per
 factor (<code>a == 0</code>, <code>b == 0</code>), keeping the smallest discrepancy; if a branch cannot be fitted, <code><a href="fit_sem.html">fit_sem()</a></code>
-stops with a <code>medfit_error_no_convergence</code> error instead of returning the best of the others. A sum of products
+stops with a <code>medfit_error_no_convergence</code> error instead of returning the best of the others; the error carries
+the outcome ledger of every branch as <code>$ledger</code> (see <code><a href="fit_sem.html">fit_sem()</a></code>). A sum of products
 (<code>a1*b1 + a2*b2 == 0</code>) has no exact reduction, so it is best-effort: the fit is
 the best of the starts tried, a disagreement warning means a better optimum may
 exist, and <code>n_starts</code> raises the number of starts. Labels used in a constraint
