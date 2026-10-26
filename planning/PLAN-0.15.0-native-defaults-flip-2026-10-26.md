@@ -161,8 +161,9 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
   - Progress (local, final tree `498e647`): oracle matrix 557 rows, 503 pass, 54 limit, 0 block; `MUTANT=fixedx_logical` and `MUTANT=product_free` both exit 1. The OpenBLAS `gates (rest)`/`gates (reliability)` runs are deferred to the release PR (user decision), so those F-6 clauses stay open until then.
 
 ### Checkpoint C: PR to `dev`
-- [ ] All reports `Verdict: PASS`; `git status` clean; `git diff --name-only origin/dev...HEAD` covers every cited file.
-- [ ] Ask the user before pushing and before opening the PR; PR body has counts, planted defects, the seven-item checklist.
+- [x] All reports `Verdict: PASS`; `git status` clean; `git diff --name-only origin/dev...HEAD` covers every cited file.
+- [x] Ask the user before pushing and before opening the PR; PR body has counts, planted defects, the seven-item checklist.
+  - Done: PR #347 (T3-T6) squash-merged to `dev` as `2bb9a9b` on 2026-10-26, head `d1b82cc` (lint, pkgdown, risk-tier green). OpenBLAS gates deferred to the release PR.
 
 ### Phase 4: Release readiness (author's release process, outside the pipeline)
 
