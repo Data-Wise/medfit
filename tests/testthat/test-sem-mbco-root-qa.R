@@ -83,3 +83,18 @@ test_that("forged failed nulls are refused where the validator claims to check t
     expect_false(.sem_valid_mbco_outcome(edit(root), paths))
   }
 })
+
+test_that("with the call's settings and table, a shifted null f or a uniform n_starts rewrite is refused", {
+  res <- mbco_sem(qa_fit(), "a", "b")
+  root <- res$ledger
+  paths <- c("a", "b")
+  st <- list(n_starts = root$children[[2L]]$context$settings$n_starts, control = list(), se_type = "model")
+  tt <- list(f = res$tests$f, converged = res$tests$converged)
+  expect_true(.sem_valid_mbco_outcome(root, paths, st, tt, "model"))
+  shifted <- root
+  shifted$children[[2L]]$likelihood$f <- shifted$children[[2L]]$likelihood$f + 1
+  expect_false(.sem_valid_mbco_outcome(shifted, paths, st, tt, "model"))
+  rewritten <- root
+  for (i in 2:3) rewritten$children[[i]]$context$settings$n_starts <- 99L
+  expect_false(.sem_valid_mbco_outcome(rewritten, paths, st, tt, "model"))
+})
