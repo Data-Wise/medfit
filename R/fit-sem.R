@@ -50,16 +50,16 @@
 #'   lavaan's robust standard errors with `sampling.weights`, and is smaller
 #'   than the HC3 default of the glm route by a factor that shrinks like
 #'   \eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.
-#' @param meanstructure Logical or `NULL`. `NULL` (default) fits a mean structure when the model writes
-#'   an intercept (`y ~ 1`, free or fixed); `TRUE` fits one regardless; `FALSE` fits covariances only and
+#' @param meanstructure Logical or `NULL`. `TRUE` (default) fits a mean structure;
+#'   `NULL` fits one only when the model writes
+#'   an intercept (`y ~ 1`, free or fixed); `FALSE` fits covariances only and
 #'   errors if an intercept is written. With a mean structure every observed variable whose intercept is
 #'   not written has a free one, so a model with only free intercepts has the same estimates and
 #'   standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
 #'   A model with a product term (`y ~ x + m + x:m`) always fits the mean structure (it needs the mediator
 #'   intercept for the four-way decomposition), so with a product `meanstructure = FALSE` is an error.
-#'   Left unset, with no `~1` and no product in the model, it warns once per session that the default becomes `TRUE`
-#'   in medfit 0.15.0; `options(medfit.native_defaults = "0.15")` uses `TRUE` now.
-#' @param fixed_x `FALSE` (default), `TRUE`, or a character vector of exogenous observed variable names. The
+#'   An explicit `NULL` or `FALSE` is kept as given.
+#' @param fixed_x `TRUE` (default), `FALSE`, or a character vector of exogenous observed variable names. The
 #'   selected variables (`TRUE`: every exogenous observed variable, product columns included) have their mean (with
 #'   a mean structure), variance and the exogenous covariances the model contains fixed at the sample moments of
 #'   the estimation sample (weighted when `weights` are given) and removed from estimation, as lavaan does with
@@ -69,25 +69,20 @@
 #'   cannot be compared with [stats::anova()], [mbco_sem()], `AIC()` or `BIC()`. A (co)variance or intercept statement
 #'   on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
 #'   (`fixed_x` column, no standard error) but not in `coef()` or `vcov()`.
-#'   Left unset, in a model with an exogenous observed variable, it warns once per session that the default becomes
-#'   the exogenous observed variables in medfit 0.15.0; `options(medfit.native_defaults = "0.15")` uses that now:
-#'   every exogenous observed variable (product and factor-dummy columns included) except those a `~~` or `~1`
+#'   Left unset it resolves to an explicit subset: every exogenous observed variable
+#'   (product and factor-dummy columns included) except those a `~~` or `~1`
 #'   statement names, which are left free with a message of class `medfit_message_fixed_x_lenient` (an explicit
-#'   `TRUE` errors there instead). `glance()$fixed_x` names the set the fit used.
+#'   `TRUE` errors there instead; an explicit `FALSE` is kept). `glance()$fixed_x` names the set the fit used.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
-#' @section Defaults are changing:
-#' In medfit 0.15.0 the defaults become `fixed_x` = the exogenous observed variables (lavaan's `fixed.x = TRUE`) and
-#' `meanstructure = TRUE`, so a default fit matches a default `lavaan::sem()` fit. 0.14.0 changes no result: it
-#' warns once per session per argument (class `medfit_warning_default_change`) when an argument is left unset in a
-#' model where its default will matter. Under the new defaults the parameter count, `logLik()`, `AIC()`, `BIC()` and
-#' the names in `coef()`, `vcov()` and `tidy()` change; the structural estimates and their standard errors did not
-#' change on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
-#' parameter names). To keep today's results and silence the warning, pass both arguments, for example
-#' `fixed_x = FALSE, meanstructure = NULL`. To fit with the 0.15.0 defaults now, set
-#' `options(medfit.native_defaults = "0.15")`; variables a `~~` or `~1` statement names are then left free and named
-#' in a message of class `medfit_message_fixed_x_lenient`.
+#' @section Defaults changed in 0.15.0:
+#' `fixed_x` is the exogenous observed variables (lavaan's `fixed.x = TRUE`) and `meanstructure = TRUE`, so a default
+#' fit matches a default `lavaan::sem()` fit. Against 0.14.x the parameter count, `logLik()`, `AIC()`, `BIC()` and the
+#' names in `coef()`, `vcov()` and `tidy()` change; the structural estimates and their standard errors did not change
+#' on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
+#' parameter names). To keep the 0.14.x results, pass `fixed_x = FALSE, meanstructure = NULL`.
+#' `options(medfit.native_defaults)` is obsolete and ignored, with one message per session; it is removed in 0.16.0.
 #'
 #' @return A [SEMFit] object. With a product term whose factor is a regression target (`x:m` with
 #'   `m` regressed on `x`), `glance()` reports the chi-square, df and p-value as `NA` with a note, and
@@ -173,8 +168,8 @@
 #' @export
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
                     control = list(), weights = NULL, se_type = c("model", "sandwich"),
-                    meanstructure = NULL, fixed_x = FALSE, sampling_weights = lifecycle::deprecated()) {
-  # 0.14.0 (E-14): missing() is only reliable before either argument is reassigned.
+                    meanstructure = TRUE, fixed_x = TRUE, sampling_weights = lifecycle::deprecated()) {
+  # 0.15.0 (E-14): missing() is only reliable before either argument is reassigned.
   fx_unset <- missing(fixed_x)
   ms_unset <- missing(meanstructure)
   if (lifecycle::is_present(sampling_weights)) {
@@ -200,7 +195,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     .notify_ipw_model_se()
   }
   model <- paste(model, collapse = "\n")
-  .native_defaults_opt_in() # a bad option value errors even when both settings are explicit
+  .native_defaults_obsolete_note()
   if (fx_unset || ms_unset) {
     resolved <- .native_defaults_resolve(model, data, fixed_x, meanstructure, fx_unset, ms_unset)
     fixed_x <- resolved$fixed_x
