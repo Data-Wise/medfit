@@ -58,10 +58,14 @@ files, so each PR carries the seven-item risk-tier checklist and a `gates.yaml` 
   controls (both partial-failure orderings, counterfactual LR 1 versus survivor 9, all-success minimum, all-failure,
   malformed-ledger refusal, the three mutants). Acceptance: `test-sem-outcomes.R` green on `dev`; stored known
   answers unchanged; #303's tests still pass. Blocked by: P0.
-  - **Done on `feature/p1-d1-ledger` (2026-10-25); the PR is not merged yet.** Decisions kept: field `ledger`, new class
+  - **Done on `feature/p1-d1-ledger` (2026-10-25); merged to `dev` as #336.** Decisions kept: field `ledger`, new class
     `medfit_error_ledger` (ADR D-12). `sem-fixed-x-gate.R` and `sem-nonlinear-gate.R` (clean and every `MUTANT=`) ran on the macOS reference BLAS and pass. Not run yet: the OpenBLAS runner (`gates.yaml` dispatch).
-- [ ] **P2. D2 literal certificates.** Acceptance: `test-sem-literal-certificates.R` green; no tolerance or solver
+- [x] **P2. D2 literal certificates.** Acceptance: `test-sem-literal-certificates.R` green; no tolerance or solver
   status used as proof (planted mutant fails). Blocked by: P1.
+  - **Done on `feature/p2-d2-certificates` (2026-10-25); the PR is not merged yet.** Ran: the focused tests, and both sim
+    scripts (`sem-fixed-x-gate.R`, `sem-nonlinear-gate.R`) clean with every `MUTANT=` failing, on the macOS reference BLAS.
+    Not run: the OpenBLAS runner (`gates.yaml` dispatch); the full suite runs in the final gates pass. Behavior change
+    (exact semantics, no tolerance) is in NEWS.
 - [ ] **P3. D3 branch map and raw cap.** Acceptance: `test-sem-branch-map.R` green including the forged-map refusals
   and the 2^53 / overflow message oracles. Blocked by: P1 (P2 and P3 can run in parallel; both touch
   `sem-outcomes.R`, so merge in order P2 then P3).

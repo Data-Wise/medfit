@@ -21,6 +21,22 @@
 * Internal: fits hold their warnings and messages while running and replay them as condition objects, so their
   classes now reach the caller.
 
+## Literal zero/nonzero certificates for native zero-product fits (D2)
+
+* A zero-product branch whose equalities contradict by literal syntax (an explicit `label == 0` with an explicit finite
+  nonzero literal equality on the same label, as `a == 0` with `a == 1`) is certified empty: it is kept in the ledger
+  with the proof and an unavailable likelihood, and is not fitted. A union returns only if at least one branch resolves
+  and every other branch resolves or is certified empty. No tolerance, solver status, bound, affine contradiction or
+  fixed table value is a proof; a failed branch stays unknown and the fit stays the `medfit_error_no_convergence`
+  error.
+* Behavior change: a direct fit whose own equalities contradict literally now stops before the optimizer with
+  `medfit_sem_infeasible`, whose message ("literal zero/nonzero contradiction: constraint ... is violated by ...")
+  keeps the optimizer's wording. The semantics are exact, with no tolerance: any finite nonzero literal contradicts
+  zero, so `a == 0` with `a == 1e-9` (or `1e-12`) now stops with `medfit_sem_infeasible` where `dev` returned a fit,
+  and in a zero-product union `a1 * b1 == 0` with `a1 == 1e-12` now selects the `b1 == 0` branch instead of the
+  `a1 == 0` branch. A union whose branches are all certified empty stops with `medfit_sem_empty_union`. Both are
+  `medfit_error_no_convergence` errors carrying `$ledger`, so `mbco_sem()` and `compare_lr()` report them as unresolved.
+
 # medfit 0.14.0
 
 ## Native engine defaults change in 0.15.0

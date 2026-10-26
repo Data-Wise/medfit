@@ -48,7 +48,10 @@ fitted, otherwise empty). It prints with the standard \code{htest} layout.
 \code{mbco/null:1}, \code{mbco/null:2}, ..., in the requested path order. A null refit that is itself a zero-product
 union keeps its branch children and notices. A null node's notices also record those raised at the MBCO
 boundary, including the union winner's replay, so they can repeat a child's. Every null is attempted even if
-another fails, and an unresolved null leaves the root \code{unresolved}.
+another fails, and an unresolved null leaves the root \code{unresolved}. A nested union branch that is certified empty
+by a literal zero/nonzero contradiction (see the outcome ledger in \code{\link[=fit_sem]{fit_sem()}}) is retained as \code{excluded}; a null
+that is itself infeasible or an all-empty union stays an unresolved row, never a finite LR or a survivor-only
+p-value.
 }
 \description{
 Tests the null hypothesis that an indirect effect, the product of two or more

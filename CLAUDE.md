@@ -83,7 +83,7 @@ R/
 ├── extract-joint.R         # JointMediationData worker, stacked-OLS vcov
 ├── extract-lavaan.R        # lavaan extraction
 ├── extract-lmer.R          # ClusterMediationData from lme4 fits (term detection by value, KR)
-├── sem-*.R                 # native SEM engine internals: parse, expr, model, ml, optim, constraints, se, sandwich, fit, mbco (mbco_sem()), outcomes (the versioned outcome ledger, `fit@diagnostics$ledger`)
+├── sem-*.R                 # native SEM engine internals: parse, expr, model, ml, optim, constraints, se, sandwich, fit, mbco (mbco_sem()), outcomes (the versioned outcome ledger, `fit@diagnostics$ledger`, and the D2 literal zero/nonzero certificates, `.sem_literal_zero_certificate()`)
 ├── fit-sem.R               # fit_sem(), .fit_mediation_native()
 ├── extract-sem.R           # accessor seam (lavaan and native), extract_mediation() for SEMFit
 ├── methods-sem.R           # SEMFit print/summary/coef/vcov/nobs/logLik; sem-syntax-help.R is ?"medfit-syntax"
@@ -621,7 +621,7 @@ file; GitHub Issues are only linked from PRs. Agents' reports go to `_agents_wor
 ### Planning Documents
 
 **Package:** `planning/medfit-roadmap.md`
-**Active plan:** `planning/PLAN-missingmed-evidence-D1-D4-2026-10-24.md` (P0 decided, ADR D-12; P1 built on `feature/p1-d1-ledger`). Earlier: `planning/PLAN-0.14.0-native-defaults-2026-10-24.md` (0.14.0, released). `planning/PLAN-0.11.0-scope-2026-10-16.md` (0.11.0; progress table, grill ledger `planning/specs/GRILL-0.11.0-release-2026-10-17.md`, S7 plan `planning/PLAN-s7-1.0-readiness-2026-10-17.md`). Previous: `planning/specs/PLAN-native-four-way-2026-10-12.md` (0.10.0, closed: U1-U9 merged, released as 0.10.0; the 0.9.0 mean-structure and `fixed_x` plans are closed too, see `planning/specs/`); keep new plans under `planning/` (`^planning$` is Rbuildignored, `tasks/` is not covered by that rule). `tasks/plan.md` and `tasks/todo.md` are the closed `fixed_x` plan (0.9.0).
+**Active plan:** `planning/PLAN-missingmed-evidence-D1-D4-2026-10-24.md` (P0 decided, ADR D-12; P1 merged as #336; P2 built on `feature/p2-d2-certificates`, PR not merged). Earlier: `planning/PLAN-0.14.0-native-defaults-2026-10-24.md` (0.14.0, released). `planning/PLAN-0.11.0-scope-2026-10-16.md` (0.11.0; progress table, grill ledger `planning/specs/GRILL-0.11.0-release-2026-10-17.md`, S7 plan `planning/PLAN-s7-1.0-readiness-2026-10-17.md`). Previous: `planning/specs/PLAN-native-four-way-2026-10-12.md` (0.10.0, closed: U1-U9 merged, released as 0.10.0; the 0.9.0 mean-structure and `fixed_x` plans are closed too, see `planning/specs/`); keep new plans under `planning/` (`^planning$` is Rbuildignored, `tasks/` is not covered by that rule). `tasks/plan.md` and `tasks/todo.md` are the closed `fixed_x` plan (0.9.0).
 **Ecosystem:** `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`
 
 ### Related Packages
