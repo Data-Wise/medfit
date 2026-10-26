@@ -172,24 +172,23 @@ test_that("recipes 14-21 run after the setup chunk alone and say what they claim
   expect_gt(stats::anova(reduced, full)$`Pr(>Chisq)`[2], 0.5)
 })
 
-# Recipe 18 (fixed_x): the structural estimates and SEs equal the free fit's, the parameter count falls from 14 to
-# 8 (the numbers its prose quotes), df and chi-square do not move, glance() lists the fixed names, and comparing
+# Recipe 18 (fixed_x): the structural estimates and SEs equal the free fit's, the parameter count falls from 19 to
+# 10 (the numbers its prose quotes), df and chi-square do not move, glance() lists the fixed names, and comparing
 # fits with different fixed sets errors (a subset of the fixed names counts as a different set).
 test_that("recipe 18: fixed_x leaves the structure alone, drops the parameter count and refuses mixed comparisons", {
   cb <- article_text("cookbook.qmd")
   syntax <- paste("mediator1 ~ a * treatment + covariate1 + covariate2",
                   "outcome ~ b * mediator1 + covariate1 + covariate2",
                   "ab := a * b", sep = "\n")
-  # The recipe's numbers (14 to 8) are the covariance-only counts: pin that likelihood; the 0.15.0 default fixes x and
-  # adds the mean block, so its counts differ (the default is checked below).
-  free <- fit_sem(syntax, mediation_demo, fixed_x = FALSE, meanstructure = NULL)
-  fixed <- fit_sem(syntax, mediation_demo, fixed_x = TRUE, meanstructure = NULL)
+  # The recipe fits the 0.15.0 defaults: the free fit is fixed_x = FALSE (mean structure on), the fixed fit the default.
+  free <- fit_sem(syntax, mediation_demo, fixed_x = FALSE)
+  fixed <- fit_sem(syntax, mediation_demo)
   expect_equal(coef(fixed)[c("a", "b")], coef(free)[c("a", "b")], tolerance = 1e-6)
   se <- function(f) sqrt(diag(vcov(f)))[c("a", "b")]
   expect_equal(se(fixed), se(free), tolerance = 1e-5)
   gf <- generics::glance(free)
   gx <- generics::glance(fixed)
-  expect_identical(c(gf$npar, gx$npar), c(14L, 8L))
+  expect_identical(c(gf$npar, gx$npar), c(19L, 10L))
   expect_true(grepl(sprintf("from %d to %d", gf$npar, gx$npar), cb, fixed = TRUE))
   expect_equal(gx$df, gf$df)
   expect_equal(gx$chisq, gf$chisq, tolerance = 1e-6)
@@ -200,10 +199,10 @@ test_that("recipe 18: fixed_x leaves the structure alone, drops the parameter co
   expect_error(stats::anova(fixed, subset_fit), "different `fixed_x` sets")
   expect_error(stats::AIC(free, fixed), "different `fixed_x` sets")
   # 0.15.0: the default is the fixed fit (explicit exogenous set, mean structure on), so it is refused against the
-  # free fit and its parameter count is the fixed set plus the free intercepts
+  # free fit and has the fixed fit's parameter count
   dflt <- fit_sem(syntax, mediation_demo)
   expect_setequal(strsplit(generics::glance(dflt)$fixed_x, ", ")[[1L]], c("treatment", "covariate1", "covariate2"))
-  expect_equal(generics::glance(dflt)$npar, gx$npar + 2L)
+  expect_equal(generics::glance(dflt)$npar, gx$npar)
   expect_error(stats::AIC(free, dflt), "different `fixed_x` sets")
 })
 

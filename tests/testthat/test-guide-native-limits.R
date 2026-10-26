@@ -19,7 +19,8 @@ limits_fit <- function(model) {
 test_that("AIC/BIC refuse a product fit against a no-product fit; a comparable pair still works", {
   with_x <- limits_fit(limits_syntax(" + treatment:mediator1"))
   without <- limits_fit(limits_syntax())
-  # Same outcome, same data rows: only the product column differs (the docs quote AIC 3934.7 against 2994.1).
+  # Same outcome, same data rows: only the product column differs (the docs quote AIC 2335.6 against 2333.6 on the
+  # default settings; the 0.14.x settings pinned here give other values).
   expect_error(stats::AIC(with_x, without), "different observed variables")
   expect_error(stats::BIC(with_x, without), "treatment:mediator1|mediator1:treatment")
   expect_error(stats::AIC(without, with_x), "different observed variables")

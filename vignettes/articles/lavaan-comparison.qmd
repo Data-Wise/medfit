@@ -12,17 +12,6 @@ execute:
   echo: true
 ---
 
-```{r}
-#| label: native-defaults-setup
-#| include: false
-# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
-# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
-invisible(withCallingHandlers(
-  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
-  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
-))
-```
-
 medfit's native engine fits covariance-structure models, with observed intercepts and means, from
 lavaan-style syntax.
 It is not a replacement for lavaan: it covers the path models behind mediation
@@ -49,20 +38,17 @@ model <- "
   ab := a * b
 "
 native <- tidy(fit_sem(model, mediation_demo))
-ref <- parameterEstimates(sem(model, mediation_demo, fixed.x = FALSE))
+ref <- parameterEstimates(sem(model, mediation_demo))
 rows <- native[native$term %in% c("a", "b", "cp", "ab"), ]
 i <- match(rows$term, ref$label)
 data.frame(term = rows$term, native = rows$estimate, lavaan = ref$est[i],
            se_native = rows$std_error, se_lavaan = ref$se[i])
 ```
 
-`fixed.x = FALSE` matters: lavaan fixes exogenous covariates by default, the
-native engine estimates their variances and covariances unless `fixed_x = TRUE`
-(or a vector of names) asks for lavaan's behavior. The standard
-errors, including the delta-method error of `ab`, agree as well.
-
-In medfit 0.15.0 the native defaults become `fixed_x` = the exogenous observed variables and
-`meanstructure = TRUE`, so a default fit will line up with lavaan's default `sem()` without `fixed.x = FALSE`.
+Both fit with their defaults: lavaan fixes the exogenous covariates, and since medfit 0.15.0 so does
+`fit_sem()` (`fixed_x` is the exogenous observed variables, `meanstructure` is `TRUE`). The standard
+errors, including the delta-method error of `ab`, agree as well. Pass `fixed_x = FALSE` (and `fixed.x = FALSE`
+in lavaan) to estimate the exogenous variances and covariances instead.
 
 ## Where they differ by design
 
@@ -76,7 +62,7 @@ bad <- "mediator1 ~ treatment\nmediator2 ~ treatment\noutcome ~ mediator1 + medi
 rbind(
   native_observed = sqrt(diag(vcov(fit_sem(bad, mediation_demo))))[3],
   native_expected = sqrt(diag(vcov(fit_sem(bad, mediation_demo, information = "expected"))))[3],
-  lavaan = sqrt(diag(vcov(sem(bad, mediation_demo, fixed.x = FALSE))))[3]
+  lavaan = sqrt(diag(vcov(sem(bad, mediation_demo))))[3]
 )
 ```
 
@@ -124,9 +110,9 @@ column is fixed with the other exogenous variables):
 #| label: product-both
 prod_model <- "mediator1 ~ treatment
                outcome_int ~ mediator1 + treatment + treatment:mediator1"
-nat <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich"))
+nat <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich", fixed_x = FALSE))
 lav <- sem(prod_model, mediation_demo, fixed.x = FALSE, se = "robust.huber.white")
-nat_fx <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich", fixed_x = TRUE))
+nat_fx <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich"))
 lav_fx <- sem(prod_model, mediation_demo, fixed.x = TRUE, se = "robust.huber.white")
 paths <- 1:4
 rbind(

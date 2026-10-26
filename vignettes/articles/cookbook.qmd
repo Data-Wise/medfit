@@ -12,17 +12,6 @@ execute:
   echo: true
 ---
 
-```{r}
-#| label: native-defaults-setup
-#| include: false
-# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
-# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
-invisible(withCallingHandlers(
-  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
-  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
-))
-```
-
 Twenty-one task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
@@ -484,10 +473,11 @@ More: [Methods and Formulas](methods.html).
 
 ## 18. Fix exogenous covariates (`fixed_x`)
 
-*When:* a native model with many covariates is slow or has too many parameters, and you
-want the structural results lavaan reports with `fixed.x = TRUE`. `fixed_x = TRUE` fixes
-the means, variances and covariances of the exogenous observed variables at their sample
-values instead of estimating them.
+*When:* a native model with many covariates needs many parameters, or you want to compare with
+lavaan's default `fixed.x = TRUE`. Since 0.15.0 a native fit fixes the means, variances and
+covariances of the exogenous observed variables at their sample values by default (`fixed_x` left unset);
+`fixed_x = FALSE` estimates them instead. Left unset, `fixed_x` resolves to the explicit
+set of exogenous variables, so `glance()$fixed_x` names what was fixed.
 
 ```{r}
 #| label: r18-fit
@@ -496,8 +486,8 @@ syntax <- "
   outcome ~ b * mediator1 + covariate1 + covariate2
   ab := a * b
 "
-free <- fit_sem(syntax, mediation_demo)
-fixed <- fit_sem(syntax, mediation_demo, fixed_x = TRUE)
+fixed <- fit_sem(syntax, mediation_demo)
+free <- fit_sem(syntax, mediation_demo, fixed_x = FALSE)
 rbind(free = coef(free)[c("a", "b")], fixed_x = coef(fixed)[c("a", "b")])
 rbind(free = sqrt(diag(vcov(free)))[c("a", "b")], fixed_x = sqrt(diag(vcov(fixed)))[c("a", "b")])
 rbind(free = free@defined[, c("est", "se")], fixed_x = fixed@defined[, c("est", "se")])
@@ -511,7 +501,7 @@ What changes is how many parameters the optimizer carries:
 cbind(fit = c("free", "fixed_x"), rbind(glance(free), glance(fixed))[, c("npar", "df", "chisq", "fixed_x")])
 ```
 
-The parameter count falls from 14 to 8 while `df` and `chisq` stay put. `glance()$fixed_x`
+The parameter count falls from 19 to 10 (the free fit also estimates the exogenous variances, covariances and means) while `df` and `chisq` stay put. `glance()$fixed_x`
 lists what is fixed (`""` when nothing is). With `fixed_x`, the fixed rows stay in `tidy()` flagged
 `fixed_x = TRUE`, with no standard error, and the log likelihood, `AIC()` and `BIC()` become
 conditional on the fixed variables, so they differ from the free fit's.
@@ -527,19 +517,18 @@ Compare fits only when they fix the same variables. `anova()`, `mbco_sem()` and 
 across several fits stop when the fixed sets differ, as above. Pass a character vector (for
 example `fixed_x = "treatment"`) to fix a subset.
 
-In 0.15.0 the default becomes `fixed_x = TRUE` (0.14.0 warns when it is left unset); pass
-`fixed_x = FALSE` to keep the free exogenous block. See
-[the 0.15.0 defaults](native-defaults-0-15.html).
+Since 0.15.0 the default is to fix the exogenous observed variables; pass `fixed_x = FALSE` to
+keep the free exogenous block. See [the 0.15.0 defaults](native-defaults-0-15.html).
 
 More: [Methods and Formulas](methods.html), [the native engine guide](native-guide.html).
 
 ## 19. Observed intercepts and means
 
 *When:* you want the intercepts of a native model, or a test of whether an intercept is
-zero. Writing any intercept (`outcome ~ 1`) turns the mean structure on and frees an
-intercept for every observed variable you did not mention, as lavaan does;
-`meanstructure = TRUE` does the same without writing one. The paths and their standard
-errors do not change.
+zero. Since 0.15.0 every native fit has a mean structure by default (`meanstructure` left
+unset is `TRUE`): an intercept is free for every observed variable you did not mention, as
+lavaan does with `meanstructure = TRUE`. Writing an intercept (`outcome ~ 1`) is only needed to
+restrict it. The paths and their standard errors do not change.
 
 ```{r}
 #| label: r19-free
@@ -547,14 +536,15 @@ paths <- "
   mediator1 ~ a * treatment
   outcome ~ b * mediator1 + cp * treatment
 "
-free <- fit_sem(paste0(paths, "outcome ~ 1"), mediation_demo)
+free <- fit_sem(paths, mediation_demo)
 tf <- tidy(free)
 tf[tf$op == "~1", c("term", "estimate", "std_error")]
 ```
 
-The outcome and mediator intercepts equal the `lm()` intercepts of the same equations,
-and the exogenous mean is the sample mean of `treatment`.
-`fit_sem(paths, mediation_demo, meanstructure = TRUE)` returns the same fit.
+The outcome and mediator intercepts equal the `lm()` intercepts of the same equations.
+The mean of `treatment` is the sample mean, fixed with the other exogenous moments, so its row has no
+standard error. Writing `outcome ~ 1` in the syntax returns the same fit, because the default already
+estimates that intercept.
 
 A fixed intercept is a restriction. `outcome ~ 0*1` costs one degree of freedom and
 changes the other estimates, so `anova()` can test it:
@@ -570,9 +560,9 @@ AIC(free, zero)
 The test rejects zero, and the restricted model has the larger AIC. A fit with
 the mean structure off has no intercepts to restrict.
 
-In 0.15.0 the default becomes `meanstructure = TRUE`, so every native fit has intercepts; pass
-`meanstructure = NULL` to keep today's rule (means only when the model writes `~1` or a
-product). See [the 0.15.0 defaults](native-defaults-0-15.html).
+Pass `meanstructure = NULL` to fit a mean structure only when the model writes `~1` or a product (the
+0.14.x rule), or `meanstructure = FALSE` for covariances only. See
+[the 0.15.0 defaults](native-defaults-0-15.html).
 
 More: [Native engine, intercepts](model-native.html#intercepts).
 
@@ -581,7 +571,7 @@ More: [Native engine, intercepts](model-native.html#intercepts).
 *When:* the outcome depends on the treatment, the mediator and their product, and you want
 the controlled direct effect, the two interaction terms and the pure indirect effect. Write
 the product as `treatment:mediator1` in the outcome equation, fit with `fit_sem()`, and
-extract. A product turns the mean structure on, so the covariate in the mediator equation
+extract. A product needs the mean structure (on by default; `meanstructure = FALSE` is an error), so the covariate in the mediator equation
 enters the reference interaction through its sample mean. The fit warns that the global
 test is not valid with a product and recommends the sandwich covariance; the chunk
 silences the warning and asks for the sandwich. A factor covariate (for example a `group` column in
