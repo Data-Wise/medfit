@@ -249,3 +249,77 @@ test_that("a forged resolved parent with only excluded children refuses without 
   expect_warning(valid <- .sem_valid_outcome(node), NA)
   expect_false(valid)
 })
+
+# --- oracle QA additions (P2): survivors of planted defects and the compare_lr reference path ---
+
+test_that("an underflowed literal is unknown, never a zero premise", {
+  # `1e-999` parses to 0 in double precision: read as a zero it would contradict `a1 == 1`
+  p <- .sem_parse(paste(d2_model, "a1 == 1e-999\na1 == 1", sep = "\n"))
+  expect_null(.sem_literal_zero_certificate(p$parameters, p$constraints))
+  p <- .sem_parse(paste(d2_model, "a1 == 0e0\na1 == 1", sep = "\n"))
+  expect_identical(.sem_literal_zero_certificate(p$parameters, p$constraints)$label, "a1")
+})
+
+test_that("a failed branch next to a certified one and a fitted one is an error, not the fitted minimum", {
+  real <- .sem_fit_syntax
+  # three branches: a1 == 0 certified empty (a1 == 1), b1 == 0 injected failure, b2 == 0 fits
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(..., parsed = NULL) {
+    if (!is.null(parsed) && parsed$constraints$lhs[1] == "b1") .sem_no_convergence("injected failure")
+    real(..., parsed = parsed)
+  })
+  err <- tryCatch(fit_sem(paste(d2_model, "a1*b1*b2 == 0\na1 == 1", sep = "\n"), d2_data(), n_starts = 1L),
+                  error = identity)
+  expect_s3_class(err, "medfit_error_no_convergence")
+  expect_false(inherits(err, "medfit_sem_empty_union"))
+  expect_match(conditionMessage(err), "1 of 3 zero-product branches did not converge")
+  expect_identical(vapply(err$ledger$children, `[[`, "", "feasibility"), c("certified_empty", "unknown", "witness"))
+  expect_false(is.null(err$best_survivor))
+})
+
+test_that("an excluded node is counted resolved only with a valid proof, and every field of it is checked", {
+  fit <- fit_sem(paste(d2_model, "a1*b1 == 0\na1 == 1", sep = "\n"), d2_data(), n_starts = 1L)
+  node <- fit@diagnostics$ledger
+  good <- node$children[[1]]
+  expect_true(.sem_valid_exclusion(good))
+  ok <- list(converged = TRUE, f = 1, status = 1L)
+  expect_identical(.sem_outcome(node$context, node$constraints, result = ok, children = list(good))$outcome,
+                   "resolved")
+  forged <- good
+  forged$certificate <- NULL
+  expect_identical(.sem_outcome(node$context, node$constraints, result = ok, children = list(forged))$outcome,
+                   "unresolved")
+  tamper <- list(
+    schema_version = function(x) { x$schema_version <- 2L; x },
+    outcome = function(x) { x$outcome <- "resolved"; x },
+    feasibility = function(x) { x$feasibility <- "witness"; x },
+    optimizer = function(x) { x$optimizer$state <- "accepted"; x },
+    likelihood = function(x) { x$likelihood <- list(state = "available", f = 1); x },
+    enumeration = function(x) { x$enumeration <- list(state = "complete", required = 1L); x },
+    children = function(x) { x$children <- list(x); x }
+  )
+  for (field in names(tamper)) {
+    expect_false(.sem_valid_exclusion(tamper[[field]](good)), info = field)
+  }
+})
+
+test_that("compare_lr() treats an all-empty zero-product null as an unresolved reference, with one warning", {
+  skip_if_not_installed("lavaan")
+  empty <- tryCatch(fit_sem(paste(d2_model, "a1*b1 == 0\na1 == 1\nb1 == 1", sep = "\n"), d2_data(), n_starts = 1L),
+                    error = identity)
+  expect_s3_class(empty, "medfit_sem_empty_union")
+  # compare_lr() refuses a constrained fit, so the all-empty null is the typed error a refit raises
+  fit <- suppressWarnings(fit_sem(d2_model, d2_data(), n_starts = 1L, fixed_x = FALSE, meanstructure = NULL))
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(...) stop(empty))
+  seen <- character()
+  res <- withCallingHandlers(compare_lr(fit, c("a1", "b1"), engine = "lavaan"),
+                             warning = function(w) {
+                               seen <<- c(seen, conditionMessage(w))
+                               invokeRestart("muffleWarning")
+                             })
+  expect_s3_class(res, "medfit_lr_comparison")
+  expect_identical(res$verdict, "unresolved")
+  expect_false(res$reference$accepted)
+  expect_true(is.na(res$reference$lr))
+  expect_length(seen, 1L)
+  expect_match(seen, "literal zero/nonzero contradiction", fixed = TRUE)
+})
