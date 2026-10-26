@@ -45,7 +45,7 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
 
 ### Phase 1: Evidence first
 
-- [ ] **T1 (S): Re-measure #320** | agents: gates (dispatch + read), oracle-qa (interpret) | risk: n/a (measurement)
+- [x] **T1 (S): Re-measure #320** (done 2026-10-26: documented limit, not a blocker; result below) | agents: gates (dispatch + read), oracle-qa (interpret) | risk: n/a (measurement)
   - Baselines (pinned, per engine; both are the T4b/T4c runs of 2026-10-24, `tests/sim/results/compare-lr-gate-2026-10-24.csv`,
     macOS, lavaan 0.7.3, OpenMx 2.22.11, n = 200, a = b = 0.4, 15 seeds x 4 cells, PRs #319/#321): **lavaan 18 of 60**
     runs above the reference (#320 body); **OpenMx 13 of 60** (#320 comment; `gates.csv` row `compare-lr`). The two
@@ -59,6 +59,19 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
     comparison is void (environment changed).
   - Verify: `gh workflow run gates.yaml --ref dev`, then read the `compare-lr` shard result.
   - Files: none changed; result appended to #320 and to this plan.
+  - **Result (2026-10-26, local macOS run; the runner run was dropped by the user, OpenBLAS check deferred to the
+    release gates, F-7).** `dev` at `74016e6`; R 4.6.1; BLAS Homebrew OpenBLAS 0.3.34 (the 2026-10-24 baseline's BLAS
+    is not recorded, so a BLAS difference is possible); lavaan 0.7.3; OpenMx 2.22.11; pinned design and seeds
+    (`c(1:12, 15, 37, 41)` x 4 cells). Gate: 150 of 150 rows pass, 0 mislabeled.
+
+    | Run | lavaan above (of 60) | OpenMx above (of 60) |
+    |---|---|---|
+    | Baseline 2026-10-24 (CSV) | 18 | 13 |
+    | Control: `v0.14.0` tree (`b7d7566`) + current gate script | 18 | 13 |
+    | `dev` `74016e6` | 18 | 13 |
+
+    The control reproduces both baselines, so the comparison is valid. Neither count grew and no row is mislabeled:
+    **documented limit**, with the `?compare_lr` note from #320 item 4. Not yet posted to #320 (ask first).
 - [ ] **T2 (S): Verify lavaan `fixed.x = TRUE` product-column handling (E-5)** | agents: oracle-qa | risk: n/a
   - Why estimates are not enough: structural estimates and SEs do not move when `fixed_x` changes (the 557-row
     matrix), so an estimate comparison cannot tell a fixed product column from a free one. The discriminating
@@ -107,13 +120,29 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
 
 ### Phase 3: Docs and conventions
 
-- [ ] **T5 (M): Docs rewrite** | agents: docs -> gates (`final`) | risk: n/a (docs-consistency tests apply)
-  - Acceptance: F-9, F-11. NEWS behavior-change entry (what moves / what does not); AIC/BIC convention documented
-    with the lavaan difference; missing-data note (listwise, no FIML); lavaan-comparison rows reversed; crosswalk;
-    cookbook 18/19; tutorial step 9; mini-book; guide-changes; `?"medfit-syntax"`.
-  - Planted defect: a doc claim contradicting the new default must fail `test-cookbook-consistency.R` or the model-page tests.
-  - Verify: `Rscript -e 'devtools::document(); devtools::test(filter = "refcard|cookbook|model-pages|guide")'`, `lintr`.
-  - Files: `NEWS.md`, `man/`, `vignettes/articles/*.qmd`, `R/sem-syntax-help.R` (split in two if over 5 files).
+- [ ] **T5 (L, split T5a/T5b/T5c): Docs and website update** | agents: docs -> gates (`final`) | risk: n/a (docs-consistency tests apply)
+  - Acceptance: F-9, F-11. Every doc surface states the new defaults and what moves (logLik conditional, npar, AIC/BIC,
+    `coef()` names, retry seed) and what does not (structural estimates, SEs); no page still shows an opt-in
+    `fixed_x = TRUE` / `meanstructure = TRUE` as required, or the 0.14.0 warning.
+  - **T5a, reference and prose:** `NEWS.md` (behavior-change entry; AIC/BIC convention with the lavaan difference;
+    missing-data note: listwise, no FIML); `man/` (`fit_sem`, `fit_mediation`, `compare_lr`, with the #320 limit note);
+    `R/sem-syntax-help.R` (`?"medfit-syntax"`); `vignettes/articles/native-defaults-0-15.qmd` (rewrite from
+    "upcoming" to "shipped"); `guide-changes.qmd`, `guide-troubleshooting.qmd`, `guide-glossary.qmd`.
+  - **T5b, articles and tutorials:** `cookbook.qmd` (recipes 18/19 and any recipe fitting native defaults);
+    `native-tutorial.qmd` (step 9), `native-quickstart.qmd`, `native-guide.qmd`; `model-native*.qmd` (5 pages);
+    `lavaan-comparison.qmd` (reverse the affected rows); `syntax-crosswalk.qmd`; `refcard.qmd`; `methods.qmd`
+    (conditional logLik, parameter count); `whats-new-0-11.qmd` untouched (historical).
+  - **T5c, book, QC and website:** `book/chapters/01..07` plus `book/index.qmd` (defaults, logLik/AIC/BIC chapters);
+    `quality-control.qmd` and a QC record for 0.15.0 (the flip gates, oracle matrix, the #320 documented limit, the
+    OpenBLAS run); `_pkgdown.yml` (reference index, articles menu entries for any new page). Local site check:
+    `pkgdown::build_site()` against a scratch library holding the branch build (medfit installed from the worktree, not
+    the older release); **no deploy**: the pkgdown dispatch and any Netlify action need an explicit request.
+  - Planted defect: a doc claim contradicting the new default must fail `test-cookbook-consistency.R`, the model-page
+    tests or `test-native-book.R`.
+  - Verify: `Rscript -e 'devtools::document(); devtools::test(filter = "refcard|cookbook|model-pages|guide|native-book|lavaan-comparison")'`,
+    `lintr`, `urlchecker::url_check()`, `spelling::spell_check_package()`, then the local `pkgdown::build_site()` with
+    zero errors and no broken article links.
+  - Files: over the 5-file limit by design; one commit per sub-task (T5a, T5b, T5c).
 - [ ] **T6 (M): E-12 reliability gate + oracle matrix on the final tree** | agents: gates, oracle-qa | risk: **high** (evidence)
   - Acceptance: F-6, F-7. Oracle matrix re-run: 0 block rows. `gates (rest)` and `gates (reliability)` green on the
     OpenBLAS runner; reliability acceptance rate non-inferior to the last green run.
