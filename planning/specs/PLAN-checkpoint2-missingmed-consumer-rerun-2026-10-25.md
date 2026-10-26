@@ -59,7 +59,7 @@ in the matrix: missingmed `c2af811`; its current branch is `feature/lavaan-mbco-
   (ubuntu-24.04 completes in about 25 minutes; ubuntu-26.04 timed out at 75 minutes on 2026-10-24, cause unproven).
   Acceptance: `gates (rest)` and `gates (reliability)` succeed, or a failure is judged against `origin/dev` before the
   four slices. Blocked by: A1.
-- [ ] A4. Decide the target release for D1-D4 (0.15.0 or a 0.14.x minor). 0.15.0 is the announced native-defaults flip
+- [x] A4. Target release for D1-D4: a 0.14.x minor (author, 2026-10-25). Considered: 0.15.0 or a 0.14.x minor. 0.15.0 is the announced native-defaults flip
   (#329), at least two months after 0.14.0. Author's call.
 
 ### B. missingmed consumer rerun (needs the author's explicit request; read-only)
@@ -90,4 +90,4 @@ in the matrix: missingmed `c2af811`; its current branch is `feature/lavaan-mbco-
   recommend the matrix's revision first (it is the one whose receipts claim 816), then the branch tip as a second run.
 - B3: how missingmed's tests currently pick up medfit is not confirmed; the grep for a source-load helper found only prose
   in the NOTE files. Confirm by reading missingmed's test helpers before B4.
-- A4: whether D1-D4 ride a 0.14.x minor or wait for 0.15.0.
+- A4: decided 2026-10-25, a 0.14.x minor.

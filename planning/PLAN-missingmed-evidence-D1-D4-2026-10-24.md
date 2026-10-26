@@ -85,7 +85,7 @@ files, so each PR carries the seven-item risk-tier checklist and a `gates.yaml` 
     (`gates.yaml` dispatch) and missingmed's consumer rerun. **Checkpoint 2 remains.**
 
 ### Checkpoint 1 (after P0)
-- [x] Author approves the reconciliation (D-12, 2026-10-24). Target release: open (0.15.0 or a 0.14.x minor).
+- [x] Author approves the reconciliation (D-12, 2026-10-24). Target release: a 0.14.x minor (author, 2026-10-25).
 
 ### Checkpoint 2 (after P4)
 - [ ] missingmed source-loads `dev` and reruns its consumer suite (816 assertions in its receipts); results
