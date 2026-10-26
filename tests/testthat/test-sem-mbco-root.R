@@ -159,7 +159,7 @@ test_that("a failed null must have the exact shape of a failure, and nothing els
   paths <- c("a", "b")
   settings <- list(n_starts = 5L, control = list(), se_type = "model")
   tests <- list(f = res$tests$f, converged = res$tests$converged)
-  check <- function(l) .sem_valid_mbco_outcome(l, paths, settings, tests, failed_se_type = fit@diagnostics$se_type)
+  check <- function(l) .sem_valid_mbco_outcome(l, paths, settings, tests)
   expect_identical(root$children[[2L]]$outcome, "unresolved")
   expect_true(check(root))
   edits <- list(
@@ -202,6 +202,10 @@ test_that("a failed null must have the exact shape of a failure, and nothing els
     },
     se_type = function(n) {
       n$context$settings$se_type <- c("model", "sandwich", "other")
+      n
+    },
+    se_type_other = function(n) {
+      n$context$settings$se_type <- "sandwich"
       n
     },
     id = function(n) {

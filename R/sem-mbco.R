@@ -237,7 +237,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       parsed <- .sem_parse(syntax)
       context <- .sem_outcome_context(syntax, parsed, fit@data, fit@information, NULL,
                                       isTRUE(fit@internals$ram$has_mean), fixed_x,
-                                      n_starts, control, fit@diagnostics$se_type, fit@internals$factors)
+                                      n_starts, control, refit_se_type, fit@internals$factors)
       node <- .sem_outcome(context, parsed$constraints, error = err, notices = captured$notices)
     } else if (is.null(failure)) {
       # the null's own notices include the ones its fit replayed; a retained null's fit replayed none, so its own
@@ -273,7 +273,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   ledger <- .sem_compact_outcome(ledger)
   if (!.sem_valid_mbco_outcome(ledger, paths,
                                settings = list(n_starts = n_starts, control = control, se_type = refit_se_type),
-                               tests = list(f = f, converged = !failed), failed_se_type = fit@diagnostics$se_type)) {
+                               tests = list(f = f, converged = !failed))) {
     .sem_abort_ledger("malformed MBCO outcome ledger", ledger)
   }
   if (unresolved) {

@@ -472,11 +472,10 @@
 # resolved child goes through `.sem_valid_outcome()`; a null that failed is held to the exact shape `mbco_sem()` gives
 # it (no likelihood, no witness, the condition, the null's own syntax); a certified-empty one to its certificate.
 # `settings` is what the refits were called with (`n_starts`, `control`, `se_type`) and `tests` the returned table
-# (`f`, `converged`), so the ledger is tied to the call and to the statistic; `failed_se_type` is the fit's own list
-# of types, which the context of a null that failed before the engine returned carries. Left NULL, the settings are
-# taken from the first null. Not decidable without a refit, so not asserted: a consistent rewrite of the root sample
-# together with every `sample_hash`, and an altered parameter value inside a null's table.
-.sem_valid_mbco_outcome <- function(x, paths, settings = NULL, tests = NULL, failed_se_type = NULL) {
+# (`f`, `converged`), so the ledger is tied to the call and to the statistic. Left NULL, the settings are taken from
+# the first null. Not decidable without a refit, so not asserted: a consistent rewrite of the root sample together
+# with every `sample_hash`, and an altered parameter value inside a null's table.
+.sem_valid_mbco_outcome <- function(x, paths, settings = NULL, tests = NULL) {
   tryCatch({
     sample <- x$context[["sample"]]
     if (!is.data.frame(sample) ||
@@ -494,15 +493,12 @@
            fixed_x = if (is.character(d$fixed_x)) d$fixed_x else character(), factors = d$factors,
            objective = d$objective)
     }
-    se_ok <- function(child, resolved) {
-      mine <- child$context$settings$se_type
-      identical(mine, settings$se_type) || (!resolved && !is.null(failed_se_type) && identical(mine, failed_se_type))
-    }
-    shared <- function(child, resolved) {
+    shared <- function(child) {
       mine <- child$context$settings
       identical(.sem_node_sample(child, root, root$hash), sample) &&
         identical(domain(child$context$domain), domain(x$context$domain)) &&
-        identical(mine[c("n_starts", "control")], settings[c("n_starts", "control")]) && se_ok(child, resolved)
+        identical(mine[c("n_starts", "control")], settings[c("n_starts", "control")]) &&
+        identical(mine$se_type, settings$se_type)
     }
     # a null's parameter table differs from the root's only in the constraint rows it records (`all_constraints`,
     # which includes the null's own)
@@ -606,7 +602,7 @@
       if (tied && !resolved && !excluded && empty_union(child, id)) {
         return(TRUE)
       }
-      ok <- tied && identical(child$constraints, parsed$constraints) && shared(child, resolved)
+      ok <- tied && identical(child$constraints, parsed$constraints) && shared(child)
       ok && (if (excluded) {
         identical(child$id, id) && identical(child$parent_id, "mbco")
       } else if (resolved) {

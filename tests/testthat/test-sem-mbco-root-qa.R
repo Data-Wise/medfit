@@ -117,13 +117,13 @@ test_that("with the call's settings and table, a shifted null f or a uniform n_s
   paths <- c("a", "b")
   st <- list(n_starts = root$children[[2L]]$context$settings$n_starts, control = list(), se_type = "model")
   tt <- list(f = res$tests$f, converged = res$tests$converged)
-  expect_true(.sem_valid_mbco_outcome(root, paths, st, tt, "model"))
+  expect_true(.sem_valid_mbco_outcome(root, paths, st, tt))
   shifted <- root
   shifted$children[[2L]]$likelihood$f <- shifted$children[[2L]]$likelihood$f + 1
-  expect_false(.sem_valid_mbco_outcome(shifted, paths, st, tt, "model"))
+  expect_false(.sem_valid_mbco_outcome(shifted, paths, st, tt))
   rewritten <- root
   for (i in 2:3) rewritten$children[[i]]$context$settings$n_starts <- 99L
-  expect_false(.sem_valid_mbco_outcome(rewritten, paths, st, tt, "model"))
+  expect_false(.sem_valid_mbco_outcome(rewritten, paths, st, tt))
 })
 
 test_that("union-null shapes from the engine are accepted: resolved, excluded and failed-covariance branches", {
@@ -158,13 +158,12 @@ test_that("an empty-union null is tied to the table and holds its branches in or
   paths <- c("a1", "b1")
   st <- list(n_starts = 1L, control = list(), se_type = "model")
   tt <- list(f = res$tests$f, converged = res$tests$converged)
-  expect_true(.sem_valid_mbco_outcome(root, paths, st, tt, fit@diagnostics$se_type))
+  expect_true(.sem_valid_mbco_outcome(root, paths, st, tt))
   # the table says the null converged, or the root is called resolved: the empty node is refused
-  expect_false(.sem_valid_mbco_outcome(root, paths, st, list(f = res$tests$f, converged = c(TRUE, TRUE)),
-                                       fit@diagnostics$se_type))
+  expect_false(.sem_valid_mbco_outcome(root, paths, st, list(f = res$tests$f, converged = c(TRUE, TRUE))))
   resolved <- root
   resolved$outcome <- "resolved"
-  expect_false(.sem_valid_mbco_outcome(resolved, paths, st, tt, fit@diagnostics$se_type))
+  expect_false(.sem_valid_mbco_outcome(resolved, paths, st, tt))
   # branches swapped (ids repaired): each branch must be the one its position names
   swapped <- root
   kids <- swapped$children[[2L]]$children
