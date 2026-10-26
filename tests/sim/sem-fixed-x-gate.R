@@ -42,8 +42,8 @@ if (mutant == "countrestrict") {
   })
 } else if (mutant == "noshift") {
   # the shifted fit keeps a fixed exogenous mean at its raw value although the data is centered
-  swap(".sem_fit_syntax", sem_mutate(get(".sem_fit_syntax", ns), "ram_opt$m0[ram$fixed_x_mean] <- 0",
-                                     "ram_opt$m0[ram$fixed_x_mean] <- ram$m0[ram$fixed_x_mean]"))
+  swap(".sem_fit_pipeline", sem_mutate(get(".sem_fit_pipeline", ns), "ram_opt$m0[ram$fixed_x_mean] <- 0",
+                                       "ram_opt$m0[ram$fixed_x_mean] <- ram$m0[ram$fixed_x_mean]"))
 } else if (mutant == "droppair") {
   swap(".sem_complete", sem_mutate(get(".sem_complete", ns), "if (r$ov_x[i] %in% paired && r$ov_x[j] %in% paired)",
                                    "if (FALSE)"))

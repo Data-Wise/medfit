@@ -95,6 +95,7 @@ statement names, which are left free with a message of class \code{medfit_messag
 A \link{SEMFit} object. With a product term whose factor is a regression target (\code{x:m} with
 \code{m} regressed on \code{x}), \code{glance()} reports the chi-square, df and p-value as \code{NA} with a note, and
 \code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse; see \link{SEMFit-methods}.
+\code{diagnostics$ledger} holds the versioned outcome ledger described below.
 }
 \description{
 Fits a model written in lavaan-style syntax to raw data with medfit's native
@@ -115,6 +116,29 @@ parameter names). To keep today's results and silence the warning, pass both arg
 \verb{fixed_x = FALSE, meanstructure = NULL}. To fit with the 0.15.0 defaults now, set
 \code{options(medfit.native_defaults = "0.15")}; variables a \verb{~~} or \code{~1} statement names are then left free and named
 in a message of class \code{medfit_message_fixed_x_lenient}.
+}
+
+\section{Outcome ledger}{
+
+\code{diagnostics$ledger} is a list with \code{schema_version = 1L}. Each node has \code{id}, \code{parent_id}, the exact parsed
+\code{constraints}, and \code{context} (the estimation \code{sample}, the model syntax and parameters, the likelihood \code{domain},
+the settings and \code{n_obs}). \code{enumeration} records \code{state} and the number of required children; \code{complete} means
+every required restriction was attempted, not that any was globally optimized. \code{outcome} is \code{resolved} or
+\code{unresolved}. Separate fields record \code{optimizer} (acceptance state, original status, decrement, retries and
+optimum diagnostics), \code{likelihood} (availability and \code{f}), \code{feasibility} (\code{witness} or \code{unknown}), \code{covariance}
+(\code{available}, \code{unavailable} or \code{not_retained}), \code{improper}, the retained \code{notices} (warnings and messages), the
+original \code{condition} (class, message, call) and the recursive \code{children}. IDs are deterministic positions within
+the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a failed branch is
+unknown, never certified infeasible.
+
+A zero-product fit returns only if every required branch resolves. Otherwise it stops with a
+\code{medfit_error_no_convergence} error, never a fit; the error carries the ledger of every required branch as
+\verb{$ledger} and, when a branch survived, \verb{$best_survivor} (its \code{id} and discrepancy \code{f}, diagnostic only, never a
+p-value). The union's own node does not aggregate its children's notices; inspect each child. The notices of a
+failed call are in the ledger only; the error message keeps its text. A data or model error keeps its own class
+and also carries \verb{$ledger}. The estimation sample is stored once, on the root node; a descendant fitted on the
+same rows carries only \code{context$sample_hash}. A fit made before the ledger existed must be refitted before
+\code{\link[=mbco_sem]{mbco_sem()}} can use it, which refuses it with a \code{medfit_error_ledger} error.
 }
 
 \examples{

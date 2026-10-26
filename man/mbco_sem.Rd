@@ -44,6 +44,11 @@ Details), and \code{tests}, a data frame with one row per refit (\code{constrain
 the minimized discrepancy \code{f}, \code{diff_ll} equal to \code{n_obs * (f - fit@f)},
 \code{converged}, and \code{note}, the failure text of a refit that could not be
 fitted, otherwise empty). It prints with the standard \code{htest} layout.
+\code{ledger} is the version-1 outcome ledger documented in \code{\link[=fit_sem]{fit_sem()}}, with children \code{mbco/full} and
+\code{mbco/null:1}, \code{mbco/null:2}, ..., in the requested path order. A null refit that is itself a zero-product
+union keeps its branch children and notices. A null node's notices also record those raised at the MBCO
+boundary, including the union winner's replay, so they can repeat a child's. Every null is attempted even if
+another fails, and an unresolved null leaves the root \code{unresolved}.
 }
 \description{
 Tests the null hypothesis that an indirect effect, the product of two or more
@@ -62,6 +67,9 @@ A fit made with \code{weights} is refused: the weighted discrepancy is
 not a likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are
 measured against.
+
+A fit whose ledger is missing, malformed or does not describe the fit, and a refit that is not the null asked
+for, are refused with a \code{medfit_error_ledger} error: the evidence is never inferred from \code{converged}.
 
 A refit that fails the acceptance gate of the optimizer does not stop the
 function: its row has \code{converged = FALSE}, \code{f} and \code{diff_ll} \code{NA} and the

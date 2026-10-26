@@ -127,6 +127,10 @@ test_that("planted defect: taking the larger branch misses the known answer", {
   full <- fit_sem(mem_syn, d)
   larger <- sem_mutate(.sem_fit_branches, "which.min(", "which.max(")
   testthat::local_mocked_bindings(.sem_fit_branches = larger)
+  # the ledger guard refuses the mutant: its discrepancy is not the smallest of its branches
+  expect_error(fit_sem(paste0(mem_syn, "\na1*b1 == 0"), d), class = "medfit_error_ledger")
+  # Bypass the guard only to keep the original numerical control; no assertion below is weakened.
+  testthat::local_mocked_bindings(.sem_require_outcome = function(...) invisible(NULL))
   fit <- fit_sem(paste0(mem_syn, "\na1*b1 == 0"), d)
   expect_gt(abs(nrow(d) * (fit@f - full@f) - 0.083100), 1)
   expect_equal(nrow(d) * (fit@f - full@f), 221.045546, tolerance = 1e-6)

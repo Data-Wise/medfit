@@ -54,10 +54,12 @@ files, so each PR carries the seven-item risk-tier checklist and a `gates.yaml` 
     attach the D1 ledger to it as `$ledger`. D1 does not replace that path. P0's remaining work is the ADR entry
     recording this. Recorded 2026-10-25 as D-12 in
     `planning/specs/ADR-native-solver-and-engines-2026-10-23.md`. Next: P1.
-- [ ] **P1. D1 outcome ledger.** Port `sem-outcomes.R` and the ledger fields; adapt to the P0 decision; carry the D1
+- [x] **P1. D1 outcome ledger.** Port `sem-outcomes.R` and the ledger fields; adapt to the P0 decision; carry the D1
   controls (both partial-failure orderings, counterfactual LR 1 versus survivor 9, all-success minimum, all-failure,
   malformed-ledger refusal, the three mutants). Acceptance: `test-sem-outcomes.R` green on `dev`; stored known
   answers unchanged; #303's tests still pass. Blocked by: P0.
+  - **Done on `feature/p1-d1-ledger` (2026-10-25); the PR is not merged yet.** Decisions kept: field `ledger`, new class
+    `medfit_error_ledger` (ADR D-12). `sem-fixed-x-gate.R` and `sem-nonlinear-gate.R` (clean and every `MUTANT=`) ran on the macOS reference BLAS and pass. Not run yet: the OpenBLAS runner (`gates.yaml` dispatch).
 - [ ] **P2. D2 literal certificates.** Acceptance: `test-sem-literal-certificates.R` green; no tolerance or solver
   status used as proof (planted mutant fails). Blocked by: P1.
 - [ ] **P3. D3 branch map and raw cap.** Acceptance: `test-sem-branch-map.R` green including the forged-map refusals

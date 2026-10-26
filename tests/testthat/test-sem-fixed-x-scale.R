@@ -34,9 +34,9 @@ test_that("planted defect: a fixed mean left at its raw value in the shifted fit
   base <- fit_sem(fx_syntax, fx_data(), meanstructure = TRUE, fixed_x = TRUE)
   far <- fit_sem(fx_syntax, fx_far(1e3), meanstructure = TRUE, fixed_x = TRUE)
   expect_equal(as.numeric(logLik(far)), as.numeric(logLik(base)), tolerance = 1e-6)
-  bad <- sem_mutate(.sem_fit_syntax, "ram_opt$m0[ram$fixed_x_mean] <- 0",
+  bad <- sem_mutate(.sem_fit_pipeline, "ram_opt$m0[ram$fixed_x_mean] <- 0",
                     "ram_opt$m0[ram$fixed_x_mean] <- ram$m0[ram$fixed_x_mean]")
-  testthat::local_mocked_bindings(.sem_fit_syntax = bad)
+  testthat::local_mocked_bindings(.sem_fit_pipeline = bad)
   wrong <- tryCatch(fit_sem(fx_syntax, fx_far(1e3), meanstructure = TRUE, fixed_x = TRUE), error = function(e) NULL)
   expect_true(is.null(wrong) || abs(as.numeric(logLik(wrong)) - as.numeric(logLik(base))) > 1e-3)
 })
