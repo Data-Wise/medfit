@@ -112,7 +112,7 @@
 #' any inference uses it. A certified-empty branch is retained with `outcome = "excluded"`,
 #' `feasibility = "certified_empty"` and an unavailable likelihood: it is not fitted and is not a successful fit. No
 #' tolerance, solver status, numerical rank, bound, general affine contradiction or fixed value in the parameter
-#' table is a proof, and an underflowed literal (`1e-999`) is unknown.
+#' table is a proof, and a literal too small to represent (`1e-999`) is unknown.
 #'
 #' A zero-product fit returns only if at least one required branch resolves and every other branch resolves or is
 #' certified empty. A direct fit whose own equalities contradict literally stops with `medfit_sem_infeasible`, and a

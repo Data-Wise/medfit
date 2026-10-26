@@ -137,7 +137,7 @@ rows and values are kept in \code{certificate} and rebuilt from the node's own p
 any inference uses it. A certified-empty branch is retained with \code{outcome = "excluded"},
 \code{feasibility = "certified_empty"} and an unavailable likelihood: it is not fitted and is not a successful fit. No
 tolerance, solver status, numerical rank, bound, general affine contradiction or fixed value in the parameter
-table is a proof, and an underflowed literal (\code{1e-999}) is unknown.
+table is a proof, and a literal too small to represent (\code{1e-999}) is unknown.
 
 A zero-product fit returns only if at least one required branch resolves and every other branch resolves or is
 certified empty. A direct fit whose own equalities contradict literally stops with \code{medfit_sem_infeasible}, and a
