@@ -66,7 +66,8 @@ test_that("each clause of the retained-null compatibility check refuses a refit 
     # accepted: the refit is the null that was asked for; same statistic, one warning per retained null
     ws <- character()
     ok <- withCallingHandlers(run(identity), warning = function(w) {
-      ws <<- c(ws, conditionMessage(w)); invokeRestart("muffleWarning")
+      ws <<- c(ws, conditionMessage(w))
+      invokeRestart("muffleWarning")
     })
     expect_s3_class(ok, "htest")
     expect_identical(ok$statistic, baseline$statistic)
@@ -75,12 +76,30 @@ test_that("each clause of the retained-null compatibility check refuses a refit 
     expect_identical(sum(grepl("covariance-stage failure", ws)), 2L)
     expect_identical(vapply(ok$ledger$children[-1L], function(x) x$covariance, ""), c("failed", "failed"))
     tweaks <- list(
-      data_values = function(a) { a[[2L]]$recall <- a[[2L]]$recall + 0.5; a },
-      information = function(a) { a[[3L]] <- if (identical(a[[3L]], "expected")) "observed" else "expected"; a },
-      other_restriction = function(a) { a[[1L]] <- sub("a1 == 0", "a2 == 0", a[[1L]], fixed = TRUE); a },
-      two_restrictions = function(a) { a[[1L]] <- paste0(a[[1L]], "\ncp == 0"); a },
-      fixed_x = function(a) { a$fixed_x <- !isTRUE(fixed); a },
-      meanstructure = function(a) { a$meanstructure <- !isTRUE(a$meanstructure); a }
+      data_values = function(a) {
+        a[[2L]]$recall <- a[[2L]]$recall + 0.5
+        a
+      },
+      information = function(a) {
+        a[[3L]] <- if (identical(a[[3L]], "expected")) "observed" else "expected"
+        a
+      },
+      other_restriction = function(a) {
+        a[[1L]] <- sub("a1 == 0", "a2 == 0", a[[1L]], fixed = TRUE)
+        a
+      },
+      two_restrictions = function(a) {
+        a[[1L]] <- paste0(a[[1L]], "\ncp == 0")
+        a
+      },
+      fixed_x = function(a) {
+        a$fixed_x <- !isTRUE(fixed)
+        a
+      },
+      meanstructure = function(a) {
+        a$meanstructure <- !isTRUE(a$meanstructure)
+        a
+      }
     )
     for (nm in names(tweaks)) {
       err <- suppressWarnings(run(tweaks[[nm]]))
@@ -90,21 +109,42 @@ test_that("each clause of the retained-null compatibility check refuses a refit 
   })
 })
 
-test_that("each field of the retained-null check refuses a self-consistent payload that differs from the parent in that field alone", {
+test_that("each field of the retained-null check refuses a self-consistent payload that differs in that field", {
   data <- readRDS(test_path("fixtures", "memory_exp.rds"))
   orig <- .sem_fit_syntax
   # The null's own ledger is edited with the payload, so only the comparison with the parent fit can refuse it.
   for (fixed in list(FALSE, TRUE)) local({
     fit <- fit_sem(qa_model, data, n_starts = 1L, information = "expected", fixed_x = fixed)
     edits <- list(
-      fixed_x = function(p) { p$fixed_x <- if (length(p$fixed_x)) character() else "x"; p$ledger$context$domain$fixed_x <- p$fixed_x; p },
-      meanstructure = function(p) {
-        p$ram$has_mean <- !isTRUE(p$ram$has_mean); p$ledger$context$domain$meanstructure <- p$ram$has_mean; p
+      fixed_x = function(p) {
+        p$fixed_x <- if (length(p$fixed_x)) character() else "x"
+        p$ledger$context$domain$fixed_x <- p$fixed_x
+        p
       },
-      parameters = function(p) { p$ram$q <- p$ram$q + 1L; p },
-      weights = function(p) { p$weights <- rep(1, nrow(p$data)); p$ledger$context$domain$weights <- p$weights; p },
-      factors = function(p) { p$factors <- c(p$factors, "qa_factor"); p$ledger$context$domain$factors <- p$factors; p },
-      information = function(p) { p$information <- "other"; p$ledger$context$domain$information <- "other"; p }
+      meanstructure = function(p) {
+        p$ram$has_mean <- !isTRUE(p$ram$has_mean)
+        p$ledger$context$domain$meanstructure <- p$ram$has_mean
+        p
+      },
+      parameters = function(p) {
+        p$ram$q <- p$ram$q + 1L
+        p
+      },
+      weights = function(p) {
+        p$weights <- rep(1, nrow(p$data))
+        p$ledger$context$domain$weights <- p$weights
+        p
+      },
+      factors = function(p) {
+        p$factors <- c(p$factors, "qa_factor")
+        p$ledger$context$domain$factors <- p$factors
+        p
+      },
+      information = function(p) {
+        p$information <- "other"
+        p$ledger$context$domain$information <- "other"
+        p
+      }
     )
     for (nm in names(edits)) {
       local_mocked_bindings(
