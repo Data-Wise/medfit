@@ -245,18 +245,19 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       node$notices$warnings <- c(node$notices$warnings, lapply(captured$notices$warnings, .sem_condition_record))
       node$notices$messages <- c(node$notices$messages, lapply(captured$notices$messages, .sem_condition_record))
     }
-    outcomes[[i + 1L]] <<- .sem_rebase_outcome(node, paste0("mbco/null:", i), "mbco")
+    rebased <- .sem_rebase_outcome(node, paste0("mbco/null:", i), "mbco")
     if (!is.null(failure)) {
-      return(list(failure = failure))
+      return(list(failure = failure, mbco_node = rebased))
     }
     # the boundary warning is part of the null's evidence: raised here, after the fit's own notices are replayed
     boundary <- .sem_capture_outcome(.mbco_warn_boundary(r, con, tested))
-    outcomes[[i + 1L]]$notices$warnings <<- c(outcomes[[i + 1L]]$notices$warnings,
-                                              lapply(boundary$notices$warnings, .sem_condition_record))
+    rebased$notices$warnings <- c(rebased$notices$warnings, lapply(boundary$notices$warnings, .sem_condition_record))
     .sem_replay_notices(captured$notices)
     .sem_replay_notices(boundary$notices)
+    r$mbco_node <- rebased
     r
   })
+  outcomes <- c(outcomes, lapply(refit, function(r) r$mbco_node))
   failed <- vapply(refit, function(r) !is.null(r$failure), TRUE)
   f <- vapply(refit, function(r) if (is.null(r$failure)) r$f else NA_real_, numeric(1))
   note <- vapply(refit, function(r) if (is.null(r$failure)) "" else r$failure, "")
