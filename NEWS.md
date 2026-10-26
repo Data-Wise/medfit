@@ -1,3 +1,32 @@
+# medfit (development version)
+
+## Native engine defaults flipped (0.15.0)
+
+**Behavior change for `fit_sem()` and `fit_mediation(engine = "native")`.** An unset `fixed_x` now means the exogenous
+observed variables (lavaan's `fixed.x = TRUE`) and an unset `meanstructure` now means `TRUE`, so a default native fit
+matches a default `lavaan::sem()` fit. This is the flip announced in 0.14.0 and in [BREAKING] #329; `FALSE` and `NULL`
+stay valid values, and an explicit argument is always kept as given.
+
+* **What does not move.** The structural estimates and their standard errors. The native-defaults oracle matrix (557
+  rows against lavaan) gives 503 pass, 54 declared limit and 0 block, the same counts as the 0.14.0 baseline; the
+  neutrality check against 0.14.1 (explicit old defaults) differs by 0.
+* **What moves.** The conditional `logLik()` (the fixed exogenous block is no longer in the likelihood), the parameter
+  count `npar`, `AIC()` and `BIC()`, and the names in `coef()`, `vcov()` and `tidy()` (the exogenous variances,
+  covariances and intercepts are fixed rows, and every observed intercept is a free row). Which random start a
+  multi-start fit tries can change, because the retry seed follows the parameter names.
+* An unset `fixed_x` resolves to an explicit character subset of the exogenous observed variables (`glance()$fixed_x`
+  names it). A variable a `~~` or `~1` statement names is left free with a message of class
+  `medfit_message_fixed_x_lenient`; an explicit `fixed_x = TRUE` still errors there.
+* `options(medfit.native_defaults = "0.15")` is obsolete: it is ignored, with one message per session (class
+  `medfit_message_option_obsolete`), and is removed in 0.16.0. The `medfit_warning_default_change` warning no longer
+  fires.
+* To keep the 0.14.x results, pass `fixed_x = FALSE, meanstructure = NULL`.
+* `AIC()` and `BIC()` keep medfit's own parameter count, so under `fixed_x` they differ from lavaan's, which counts
+  the fixed exogenous moments differently; the conditional `logLik()` equals lavaan's. Missing data stays listwise
+  deletion (no FIML).
+* Docs: the defaults section of `?fit_sem` and `?"medfit-syntax"` describe the new defaults. The articles, the book and
+  the cookbook are updated separately.
+
 # medfit 0.14.1
 
 ## Outcome ledger for native zero-product fits and MBCO

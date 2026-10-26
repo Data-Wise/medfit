@@ -167,16 +167,15 @@ product are not comparable with those of a fit without one, so \code{AIC(fit_a, 
 exogenous variables with the block free keeps the ordinary test.
 }
 
-\section{Defaults are changing}{
+\section{Defaults changed in 0.15.0}{
 
-medfit 0.15.0 changes two defaults of \code{\link[=fit_sem]{fit_sem()}} and \code{fit_mediation(engine = "native")}: \code{fixed_x} becomes the
-exogenous observed variables (as lavaan's \code{fixed.x = TRUE}) and \code{meanstructure} becomes \code{TRUE}, so every observed
-intercept is free without a \code{~1} statement. The parameter count, \code{logLik()}, \code{AIC()}, \code{BIC()} and the parameter
-names move; the structural estimates and their standard errors did not move on the cases measured. 0.14.0 warns
-once per session (class \code{medfit_warning_default_change}); pass \code{fixed_x} and \code{meanstructure} to silence it, or set
-\code{options(medfit.native_defaults = "0.15")} to use the new defaults now. Under that option a variable a \verb{~~} or \code{~1}
-statement names is left free (message class \code{medfit_message_fixed_x_lenient}) instead of the error an explicit
-\code{fixed_x = TRUE} gives. \code{\link[=fit_sem]{fit_sem()}} has the details.
+Since medfit 0.15.0 an unset \code{fixed_x} means the exogenous observed variables (as lavaan's \code{fixed.x = TRUE}) and an
+unset \code{meanstructure} means \code{TRUE}, so every observed intercept is free without a \code{~1} statement. Against 0.14.x the
+parameter count, \code{logLik()}, \code{AIC()}, \code{BIC()} and the parameter names move; the structural estimates and their
+standard errors did not move on the cases measured. A variable a \verb{~~} or \code{~1} statement names is left free (message
+class \code{medfit_message_fixed_x_lenient}) instead of the error an explicit \code{fixed_x = TRUE} gives. To keep the 0.14.x
+results, pass \verb{fixed_x = FALSE, meanstructure = NULL}. \code{options(medfit.native_defaults)} is obsolete and ignored,
+with one message per session, and is removed in 0.16.0. \code{\link[=fit_sem]{fit_sem()}} has the details.
 }
 
 \section{medfit extensions}{
