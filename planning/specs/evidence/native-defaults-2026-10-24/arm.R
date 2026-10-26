@@ -12,6 +12,8 @@ run("medfit", sprintf("r <- testthat::test_dir(%s, package='medfit', load_packag
                       deparse(file.path(S, "src_base", "tests", "testthat"))))
 base <- "/Users/davood/projects/r-packages/active"
 for (d in c("rmediation", "probmed", "missingmed", "mediationverse", "medsim", "medrobust")) {
-  run(d, sprintf("r <- testthat::test_local(%s, reporter='silent', stop_on_failure=FALSE, load_package='source')", deparse(file.path(base, d))))
+  # MISSINGMED_DIR: a git worktree of the dependent, so the run never reads or writes the main checkout
+  path <- if (d == "missingmed" && nzchar(Sys.getenv("MISSINGMED_DIR"))) Sys.getenv("MISSINGMED_DIR") else file.path(base, d)
+  run(d, sprintf("r <- testthat::test_local(%s, reporter='silent', stop_on_failure=FALSE, load_package='source')", deparse(path)))
 }
 cat(v, "DONE", format(Sys.time(), "%H:%M:%S"), "\n")

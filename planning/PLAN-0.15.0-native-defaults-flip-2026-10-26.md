@@ -167,10 +167,15 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
 
 ### Phase 4: Release readiness (author's release process, outside the pipeline)
 
-- [ ] **T7 (M): Dependents** | agents: oracle-qa (scratch-lib runs), manual for missingmed | risk: n/a
+- [x] **T7 (M): Dependents** | agents: oracle-qa (scratch-lib runs), manual for missingmed | risk: n/a
   - Acceptance: F-12. `arm.R` scratch-library suites pass for probmed, RMediation, medrobust, medsim, missingmed,
     mediationverse; missingmed#102 merged (currently OPEN).
   - Verify: `Rscript planning/specs/evidence/native-defaults-2026-10-24/arm.R /private/tmp/<dir> <arm>`.
+  - Done 2026-10-26: base (v0.14.1) and new (dev `54435df`) scratch libraries; all six dependents have identical per-test
+    results, 0 failed, 0 errors (counts: `planning/specs/evidence/native-defaults-2026-10-24/t7-dependents-2026-10-26.csv`).
+    missingmed ran from a worktree at the #102 head `4a84e66`; #102 squash-merged to missingmed `dev` as `9f77220`.
+    medfit's own suite under the new build: 42 failed, 5 errors in 13 files, all files rewritten in T3-T5 (v0.14.1
+    tests asserting the old defaults); `MISSINGMED_DIR=<worktree>` in `arm.R` keeps the run off the main checkout.
 - [ ] **T8 (S): Release readiness check** | agents: none (author) | risk: n/a
   - Acceptance: date >= 2026-12-24; F-6, F-7, F-12 evidence attached to the release PR; `dev -> main` PR runs the
     required gate shards; [BREAKING] #329 closed on release. If anything fails: hold the flip, fix first (F-13).
