@@ -21,11 +21,17 @@ stay valid values, and an explicit argument is always kept as given.
   `medfit_message_option_obsolete`), and is removed in 0.16.0. The `medfit_warning_default_change` warning no longer
   fires.
 * To keep the 0.14.x results, pass `fixed_x = FALSE, meanstructure = NULL`.
-* `AIC()` and `BIC()` keep medfit's own parameter count, so under `fixed_x` they differ from lavaan's, which counts
-  the fixed exogenous moments differently; the conditional `logLik()` equals lavaan's. Missing data stays listwise
-  deletion (no FIML).
-* Docs: the defaults section of `?fit_sem` and `?"medfit-syntax"` describe the new defaults. The articles, the book and
-  the cookbook are updated separately.
+* `AIC()` and `BIC()` keep medfit's own parameter count, which includes the observed means that are not fixed whether
+  or not they are in the parameter vector. It equals lavaan's count when lavaan fits the mean structure, so medfit's AIC
+  and BIC equal those of `lavaan::sem(..., meanstructure = TRUE)` under any `fixed_x`; a default `lavaan::sem()` fits
+  no mean structure, and against it medfit's AIC is larger by 2k and its BIC by k log n (k = the observed means not
+  fixed; k = 2 in the worked example of the article). The conditional `logLik()` equals lavaan's.
+* Missing data stays listwise deletion; there is no `missing =` argument and no FIML (a 0.16.0 candidate).
+* `compare_lr()` runs on fits made under the new defaults. Its known limit (#320) is unchanged by the flip: on the pinned
+  design (15 seeds by 4 cells) the lavaan run ended above medfit's reference in 18 of 60 runs and OpenMx in 13 of 60,
+  the same counts as before, with no mislabeled row.
+* Docs: `?fit_sem`, `?fit_mediation`, `?compare_lr`, `?"medfit-syntax"`, the "Native defaults in 0.15.0" article and the
+  guides describe the new defaults. The other articles, the book and the cookbook are updated separately.
 
 # medfit 0.14.1
 

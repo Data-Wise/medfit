@@ -73,7 +73,8 @@
 #' @param engine_args Named list of engine-specific overrides (default:
 #'   `list()`, no overrides). Ignored by `engine = "glm"`. For
 #'   `engine = "native"`, recognized names are `information`, `n_starts`, `meanstructure`, `fixed_x` and
-#'   `control` (passed to [fit_sem()]) and `outcome`, `structure`,
+#'   `control` (passed to [fit_sem()], whose defaults for `fixed_x` and `meanstructure` changed in 0.15.0) and
+#'   `outcome`, `structure`,
 #'   `decomposition`, `interaction`, `a_label`, `b_label` and `cp_label`
 #'   (passed to [extract_mediation()]); any other name is an error. For
 #'   `engine = "lmer"`, recognized names are `random_y` and `random_m`

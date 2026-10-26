@@ -125,3 +125,14 @@ test_that("covariance-only AIC exceeds lavaan's by 2k, and agrees under meanstru
   expect_lt(abs(AIC(ff) - lavaan::fitMeasures(lv_cov, "aic")[[1]] - 8), 1e-4)
   expect_lt(abs(AIC(ft) - lavaan::fitMeasures(lv_mean, "aic")[[1]]), 1e-4)
 })
+
+test_that("the default fit has the 0.15.0 AIC gap against a default lavaan::sem(), none against meanstructure = TRUE", {
+  testthat::skip_if_not_installed("lavaan")
+  local_native_defaults_unshown()
+  fd <- suppressMessages(fit_sem(ndo_model, mediation_demo))
+  lv_def <- lavaan::sem(ndo_model, mediation_demo)
+  lv_mean <- lavaan::sem(ndo_model, mediation_demo, meanstructure = TRUE)
+  expect_lt(abs(AIC(fd) - lavaan::fitMeasures(lv_mean, "aic")[[1]]), 1e-4)
+  expect_lt(abs(AIC(fd) - lavaan::fitMeasures(lv_def, "aic")[[1]] - 4), 1e-4)  # 2k with k = 2 non-fixed means
+  expect_lt(abs(as.numeric(logLik(fd)) - as.numeric(lavaan::logLik(lv_def))), 1e-4)
+})
