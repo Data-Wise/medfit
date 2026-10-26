@@ -12,6 +12,73 @@
 # (#300) and carries the same field. Evidence a consumer cannot trust (missing, malformed, mismatched) is refused
 # with `medfit_error_ledger`, a class of its own so that no caller mistakes it for an optimizer failure.
 
+# Branch map (D3). A zero-product union fits every raw combination of parser-produced factors, duplicates included,
+# in the grid's original order (ties go to the first), so the cap is on the RAW count, never on the number of
+# distinct restriction sets. The count is a product checked for overflow before each step: it is an integer up to
+# `.Machine$integer.max`, a double above it, and `Inf` once a further factor would overflow a double. Above 2^53 a
+# double count need not be an exact cardinality; the refusal message says so.
+.sem_raw_count <- function(counts) {
+  if (any(!is.finite(counts) | counts < 1 | counts != floor(counts))) {
+    stop("factor counts must be finite positive integers")
+  }
+  count <- 1
+  for (n in counts) {
+    if (count > .Machine$double.xmax / n) {
+      return(Inf)
+    }
+    count <- count * n
+  }
+  if (count <= .Machine$integer.max) as.integer(count) else count
+}
+
+# The text of a raw count in a refusal: no scientific notation, "approximately" above 2^53, overflow named.
+.sem_raw_count_text <- function(count) {
+  if (is.infinite(count)) {
+    return("overflow (Inf)")
+  }
+  paste0(if (count > 2^53) "approximately " else "", format(count, scientific = FALSE, trim = TRUE, digits = 22L))
+}
+
+.sem_branch_grid <- function(products) {
+  do.call(expand.grid, c(lapply(products, `[[`, "factors"), stringsAsFactors = FALSE))
+}
+
+# `raw_to_canonical[b]` is a structural ID of raw row `b`: the sorted, distinct parsed constraint rows after the
+# row's factors are set to zero. Duplicate or permuted products collapse; no affine solving or subsumption, so it is
+# not an equivalence certificate. Over the cap nothing is enumerated: the state is `not_enumerated`, the unique
+# count unknown, and there is no raw mapping.
+.sem_branch_map <- function(constraints) {
+  products <- .sem_zero_product_rows(constraints)
+  if (!length(products)) {
+    return(NULL)
+  }
+  counts <- vapply(products, function(p) length(p$factors), 0L)
+  count <- .sem_raw_count(counts)
+  out <- list(state = "not_enumerated", raw_count = count, factor_counts = counts,
+              unique_count = NA_integer_, raw_to_canonical = NULL)
+  if (count > 64L) {
+    return(out)
+  }
+  grid <- .sem_branch_grid(products)
+  # Length-prefixed fields make structural IDs unambiguous without a hash dependency.
+  encode <- function(x) paste0(nchar(x, type = "bytes"), ":", x, collapse = "")
+  ids <- vapply(seq_len(count), function(b) {
+    cons <- constraints
+    for (j in seq_along(products)) {
+      cons$lhs[products[[j]]$row] <- grid[b, j]
+      cons$rhs[products[[j]]$row] <- "0"
+    }
+    rows <- vapply(seq_len(nrow(cons)), function(i) {
+      encode(trimws(unlist(cons[i, c("lhs", "op", "rhs")], use.names = FALSE)))
+    }, "")
+    encode(sort(unique(rows), method = "radix"))
+  }, "")
+  out$state <- "complete"
+  out$unique_count <- length(unique(ids))
+  out$raw_to_canonical <- ids
+  out
+}
+
 .sem_condition_record <- function(e) {
   if (is.null(e)) {
     return(NULL)
@@ -154,6 +221,10 @@
   list(
     schema_version = 1L, id = "fit", parent_id = NA_character_, constraints = constraints,
     context = context, enumeration = list(state = "complete", required = length(children)),
+    # a malformed product row must not mask the error that is being recorded: the map is then `unavailable`
+    branch_map = tryCatch(.sem_branch_map(constraints), error = function(e) {
+      list(state = "unavailable", condition = .sem_condition_record(e))
+    }),
     outcome = if (resolved) "resolved" else "unresolved",
     optimizer = list(
       state = if (accepted) "accepted" else "unresolved", status = result$status,
@@ -282,14 +353,16 @@
     sample <- .sem_node_sample(x, root, root$hash)
     # Reconstruct the required restriction sets, so a dropped child cannot forge completeness.
     products <- .sem_zero_product_rows(x$constraints)
-    count <- if (length(products)) prod(vapply(products, function(p) length(p$factors), 0L)) else 0L
+    count <- if (length(products)) .sem_raw_count(vapply(products, function(p) length(p$factors), 0L)) else 0L
     if (!is.finite(count) || count > 64L || length(x$children) != count) {
       return(FALSE)
     }
     grid <- if (length(products)) {
-      do.call(expand.grid, c(lapply(products, `[[`, "factors"), stringsAsFactors = FALSE))
+      .sem_branch_grid(products)
     }
-    is.list(x) && identical(x$schema_version, 1L) && identical(x$id, id) &&
+    # the map is reconstructed from the node's own constraints, so a forged ID, count or state refuses the node
+    is.list(x) && identical(x$branch_map, .sem_branch_map(x$constraints)) &&
+      identical(x$schema_version, 1L) && identical(x$id, id) &&
       identical(x$parent_id, parent_id) && is.data.frame(x$constraints) &&
       all(c("lhs", "op", "rhs") %in% names(x$constraints)) && is.list(x$context) &&
       is.data.frame(sample) && is.list(x$context$model) && is.list(x$context$domain) &&

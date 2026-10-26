@@ -106,6 +106,17 @@
 #' the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a failed branch is
 #' unknown, never certified infeasible.
 #'
+#' A node whose constraints hold zero-product rows also has `branch_map`: `state`, `raw_count`, the
+#' parser `factor_counts`, `unique_count` and `raw_to_canonical`, a structural restriction-set ID for each raw row. The IDs
+#' collapse duplicate or permuted constraint rows, not arbitrary affine equivalence, and every raw row is still fitted
+#' in its original order (ties go to the first). More than 64 raw combinations, duplicates included, is refused before
+#' the grid is allocated, even when the unique count would be smaller; that node is `not_enumerated`, with an unknown
+#' unique count and no raw mapping, and nothing is fitted or certified. Its message prints the count without scientific
+#' notation, labels a count above \eqn{2^{53}}{2^53} as approximate (a double need not be an exact cardinality there)
+#' and names an overflow; `raw_count` is `Inf` on overflow. If the map cannot be built while an error is recorded, its
+#' `state` is `unavailable` with that condition, and the original error is not replaced. The map is rebuilt from the
+#' node's constraints during validation, so a forged map is refused.
+#'
 #' The one proof of emptiness is the literal certificate `literal_zero_nonzero`: an explicit `label == 0` equality and
 #' an explicit finite nonzero literal equality on the same parsed label (`a == 0` with `a == 1`). Its label, source
 #' rows and values are kept in `certificate` and rebuilt from the node's own parsed parameters and constraints before
