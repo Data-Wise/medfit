@@ -101,7 +101,7 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
 
 ### Phase 2: The flip
 
-- [ ] **T3 (M): Flip the formals and the resolver** | agents: implementer -> oracle-qa -> gates | risk: **high**
+- [x] **T3 (M): Flip the formals and the resolver** | agents: implementer -> oracle-qa -> gates | risk: **high**
   - Status (2026-10-26): implemented on `feature/native-defaults-flip`, PR #347 to `dev` (not merged); tick on merge.
   - Acceptance: F-1 to F-4. Unset `fixed_x`/`meanstructure` resolve to the new values unconditionally (E-14);
     `options(medfit.native_defaults)` ignored with an obsolete note; `medfit_warning_default_change` no longer fires;
@@ -112,7 +112,7 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
     `test-api-freeze.R`.
   - Files: `R/fit-sem.R`, `R/native-defaults.R`, `tests/testthat/test-api-freeze.R`, `test-native-defaults*.R`,
     `tests/sim/risk-files.txt` (if `R/fit-sem.R` absent).
-- [ ] **T4 (M): Rewrite the failing tests from the Checkpoint B list; drop T5a setup chunks** | agents: implementer -> oracle-qa -> gates | risk: **high**
+- [x] **T4 (M): Rewrite the failing tests from the Checkpoint B list; drop T5a setup chunks** | agents: implementer -> oracle-qa -> gates | risk: **high**
   - Status (2026-10-26): 17 failing tests rewritten plus the `compare_lr()` test (`e88e534`, `e47243f`, `2005d90`), in PR #347
     (`lint`, `risk-tier` green; `pkgdown` pending; not merged). The T5a setup-chunk muffles are still open (T5a).
   - Acceptance: F-5. Tests state their settings explicitly where they depend on them; frozen fixtures pinned at 1e-6;
@@ -122,11 +122,11 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
   - Files: the test files named in the 0.14.0 plan Checkpoint B (21 were listed; 17 failed under the flip) (split into two tasks if more than 5 files per commit).
 
 ### Checkpoint B: after T3-T4
-- [ ] Full suite green; `pre-docs` gates PASS; oracle-qa PASS with both planted defects caught; human review.
+- [x] Full suite green; `pre-docs` gates PASS; oracle-qa PASS with both planted defects caught; human review.
 
 ### Phase 3: Docs and conventions
 
-- [ ] **T5 (L, split T5a/T5b/T5c): Docs and website update** | agents: docs -> gates (`final`) | risk: n/a (docs-consistency tests apply)
+- [x] **T5 (L, split T5a/T5b/T5c): Docs and website update** | agents: docs -> gates (`final`) | risk: n/a (docs-consistency tests apply)
   - Acceptance: F-9, F-11. Every doc surface states the new defaults and what moves (logLik conditional, npar, AIC/BIC,
     `coef()` names, retry seed) and what does not (structural estimates, SEs); no page still shows an opt-in
     `fixed_x = TRUE` / `meanstructure = TRUE` as required, or the 0.14.0 warning.
@@ -150,8 +150,8 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
     zero errors and no broken article links.
   - Files: over the 5-file limit by design; one commit per sub-task (T5a, T5b, T5c).
   - Progress (2026-10-26, PR #347): T5a `84e343c`, T5b `795a6a7`, T5c `78c4ea9` committed and pushed; local book render
-    and `pkgdown::build_site()` clean (agent-reported). Open: `final` gates on the full tree; the box stays unticked
-    until they pass. `guide-changes.qmd` "documents 0.14.1" is left for T8.
+    and `pkgdown::build_site()` clean (agent-reported). `final` gates PASS on `4115673` (1697 tests, 0 failed; lint at
+    the 169 baseline; risk checklist complete, item 7 deferred to the release PR). `guide-changes.qmd` "documents 0.14.1" is left for T8.
 - [ ] **T6 (M): E-12 reliability gate + oracle matrix on the final tree** | agents: gates, oracle-qa | risk: **high** (evidence)
   - Acceptance: F-6, F-7. Oracle matrix re-run: 0 block rows. `gates (rest)` and `gates (reliability)` green on the
     OpenBLAS runner; reliability acceptance rate non-inferior to the last green run.
