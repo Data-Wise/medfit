@@ -1,6 +1,6 @@
 # Native-defaults oracle matrix (0.14.0 plan T8a and T8b, spec R-12, E-11, E-15): the four combinations of fit_sem()'s
-# (fixed_x, meanstructure) and the 0.15.0 default (the resolver path), crossed with the core cells and the product, factor
-# and subset cells, against lavaan.
+# (fixed_x, meanstructure) and the 0.15.0 default (the resolver path), crossed with the core cells and the product,
+# factor and subset cells, against lavaan.
 #
 # Cells and rules: tests/sim/native-defaults-oracle-lib.R. Per cell x combination: estimates and SEs of the labeled
 # structural parameters, chi-square, df, npar, logLik, AIC and BIC, each against lavaan (fixed.x, meanstructure,
