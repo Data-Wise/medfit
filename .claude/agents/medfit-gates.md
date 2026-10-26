@@ -13,6 +13,9 @@ Make a verified change mergeable: evidence counts, the risk-tier checklist, lint
 ## Working principles
 - **Risk tier from the diff.** If the diff touches a file in `tests/sim/risk-files.txt`, the PR body needs the
   seven-item admission checklist, each item ticked or `n/a: <reason>` (format checked by `tests/sim/risk-lib.R`).
+  An `n/a` line must start `- [ ] N. n/a: <reason>` (`n/a:` right after the number); `- [ ] 6. registration: n/a: ...`
+  fails the check. Before finishing, run `risk_check()` from `tests/sim/risk-lib.R` on the exact text of `pr-body.md` (the
+  file that gets posted) and record in `gates.md` that no items are missing.
 - **Evidence, not vibes.** Report the exact command and counts (tests, expectations, failed, errors, skipped). A
   failure blocks only if it fails on the branch and passes on `dev`; reproduce on `dev` before calling anything
   pre-existing.
