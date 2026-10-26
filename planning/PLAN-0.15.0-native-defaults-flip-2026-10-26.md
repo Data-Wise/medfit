@@ -152,12 +152,13 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
   - Progress (2026-10-26, PR #347): T5a `84e343c`, T5b `795a6a7`, T5c `78c4ea9` committed and pushed; local book render
     and `pkgdown::build_site()` clean (agent-reported). `final` gates PASS on `4115673` (1697 tests, 0 failed; lint at
     the 169 baseline; risk checklist complete, item 7 deferred to the release PR). `guide-changes.qmd` "documents 0.14.1" is left for T8.
-- [ ] **T6 (M): E-12 reliability gate + oracle matrix on the final tree** | agents: gates, oracle-qa | risk: **high** (evidence)
+- [x] **T6 (M): E-12 reliability gate + oracle matrix on the final tree** | agents: gates, oracle-qa | risk: **high** (evidence)
   - Acceptance: F-6, F-7. Oracle matrix re-run: 0 block rows. `gates (rest)` and `gates (reliability)` green on the
     OpenBLAS runner; reliability acceptance rate non-inferior to the last green run.
   - Planted defect: `MUTANT=` switches in the gate scripts still trip (positive control).
   - Verify: `Rscript tests/sim/native-defaults-oracle.R`, `gh workflow run gates.yaml --ref feature/native-defaults-flip`.
   - Files: `tests/sim/` pins only if a gate needs updating.
+  - Progress (local, final tree `498e647`): oracle matrix 557 rows, 503 pass, 54 limit, 0 block; `MUTANT=fixedx_logical` and `MUTANT=product_free` both exit 1. The OpenBLAS `gates (rest)`/`gates (reliability)` runs are deferred to the release PR (user decision), so those F-6 clauses stay open until then.
 
 ### Checkpoint C: PR to `dev`
 - [ ] All reports `Verdict: PASS`; `git status` clean; `git diff --name-only origin/dev...HEAD` covers every cited file.
