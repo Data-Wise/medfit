@@ -565,6 +565,34 @@
         (is.null(child$condition) || is.list(child$condition)) &&
         is.list(child$notices$warnings) && is.list(child$notices$messages)
     }
+    # the null the engine proved empty: a zero-product union whose every branch is certified empty
+    # (`.sem_valid_exclusion()`),
+    # with no condition and no likelihood. The node describes the constraints it was proved on, which the certificates
+    # check, so neither its restriction nor its context (sample, domain: an empty-union error raised below carries the
+    # context of the call that proved it) is compared with the call's; a certificate proves emptiness, nothing more
+    empty_union <- function(child, id) {
+      kids <- child$children
+      products <- .sem_zero_product_rows(child$constraints)
+      grid <- if (length(products)) .sem_branch_grid(products)
+      length(kids) > 0L && length(products) > 0L && identical(child$outcome, "unresolved") &&
+        identical(child$schema_version, 1L) && identical(child$id, id) && identical(child$parent_id, "mbco") &&
+        identical(child$optimizer$state, "unresolved") &&
+        identical(child$likelihood, list(state = "unavailable", f = NA_real_)) &&
+        identical(child$feasibility, "unknown") && identical(child$covariance, "not_retained") &&
+        is.null(child$condition) && is.null(child$post_fit) && identical(child$context$n_obs, x$context$n_obs) &&
+        identical(child$branch_map, .sem_branch_map(child$constraints)) &&
+        identical(child$enumeration, list(state = "complete", required = length(kids))) &&
+        length(kids) == .sem_raw_count(vapply(products, function(p) length(p$factors), 0L)) &&
+        all(vapply(seq_along(kids), function(j) {
+          cons <- child$constraints
+          for (k in seq_along(products)) {
+            cons$lhs[products[[k]]$row] <- grid[j, k]
+            cons$rhs[products[[k]]$row] <- "0"
+          }
+          identical(kids[[j]]$constraints, cons) && .sem_valid_exclusion(kids[[j]]) &&
+            identical(kids[[j]]$id, paste0(id, "/branch:", j)) && identical(kids[[j]]$parent_id, id)
+        }, TRUE))
+    }
     nulls <- vapply(seq_along(paths), function(i) {
       child <- kids[[i + 1L]]
       syntax <- paste0(x$context$model$syntax, "\n", paths[i], " == 0")
@@ -575,6 +603,9 @@
       # the table agrees with the call: a null that resolved was fitted, one that failed was not
       tied <- is.null(tests) || (identical(isTRUE(tests$converged[i]), resolved) &&
                                    (!resolved || identical(tests$f[i], child$likelihood$f)))
+      if (tied && !resolved && !excluded && empty_union(child, id)) {
+        return(TRUE)
+      }
       ok <- tied && identical(child$constraints, parsed$constraints) && shared(child, resolved)
       ok && (if (excluded) {
         identical(child$id, id) && identical(child$parent_id, "mbco")

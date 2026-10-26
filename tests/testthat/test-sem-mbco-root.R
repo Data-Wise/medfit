@@ -274,3 +274,59 @@ test_that("a failed null that is a zero-product union with a failed branch valid
     expect_false(.sem_valid_mbco_outcome(forged, paths), info = nm)
   }
 })
+
+# --- every way a null node is built: the genuine shape is accepted -------------------------------------------------
+
+test_that("the genuine shapes of a null node are accepted: certified empty, empty union, typed and plain failures", {
+  data <- readRDS(test_path("fixtures", "memory_exp.rds"))
+  paths <- c("a1", "b1")
+  # a null that is directly infeasible (a literal contradiction): an excluded node
+  direct <- suppressMessages(fit_sem(paste(mbco_root_model, "a1 == 1", sep = "\n"), data, n_starts = 1L))
+  res <- suppressWarnings(mbco_sem(direct, "a1", "b1"))
+  expect_identical(res$ledger$children[[2L]]$outcome, "excluded")
+  expect_true(.sem_valid_mbco_outcome(res$ledger, paths))
+  # a union whose every branch is certified empty, from the engine and as the typed error a refit raises
+  model <- paste(mbco_root_model, "a1*b1 == 0\na1 == 1", sep = "\n")
+  union <- suppressMessages(fit_sem(model, data, n_starts = 1L))
+  res <- suppressWarnings(mbco_sem(union, "a1", "b1"))
+  expect_true(.sem_valid_mbco_outcome(res$ledger, paths))
+  empty <- tryCatch(fit_sem(paste(mbco_root_model, "a1*b1 == 0\na1 == 1\nb1 == 1", sep = "\n"), data, n_starts = 1L),
+                    error = identity)
+  expect_s3_class(empty, "medfit_sem_empty_union")
+  fit <- suppressMessages(fit_sem(mbco_root_model, data, n_starts = 1L))
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(...) stop(empty))
+  res <- suppressWarnings(mbco_sem(fit, paths = paths))
+  node <- res$ledger$children[[2L]]
+  expect_null(node$condition)
+  expect_true(all(vapply(node$children, .sem_valid_exclusion, TRUE)))
+  expect_true(.sem_valid_mbco_outcome(res$ledger, paths))
+  # a forged empty union: a certificate that does not hold, a likelihood, a condition, a dropped branch
+  edits <- list(
+    constraint = function(n) {
+      n$children[[1L]]$constraints$rhs[2L] <- "2"
+      n
+    },
+    certificate = function(n) {
+      n$children[[1L]]$certificate <- NULL
+      n
+    },
+    likelihood = function(n) {
+      n$likelihood <- list(state = "available", f = 0)
+      n
+    },
+    condition = function(n) {
+      n$condition <- list(message = "x")
+      n
+    },
+    dropped = function(n) {
+      n$children <- n$children[1L]
+      n
+    },
+    id = function(n) replace(n, "id", "mbco/null:2")
+  )
+  for (nm in names(edits)) {
+    forged <- res$ledger
+    forged$children[[2L]] <- edits[[nm]](node)
+    expect_false(.sem_valid_mbco_outcome(forged, paths), info = nm)
+  }
+})
