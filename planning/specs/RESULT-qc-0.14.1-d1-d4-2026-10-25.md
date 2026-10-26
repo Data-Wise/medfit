@@ -106,8 +106,9 @@ It is the reason the QC article lists every null-node shape `mbco_sem()` can pro
 - Full-size `sem-mbco-k-size` (not run for #342 before the release): the log
   `ksize-full.log` in the session scratchpad is finished. 22 cells (21 null, 1 alternative), 2000 replications each, 0 fit
   failures, largest null rejection rate 0.0550 against the limit 0.0646, power 0.838 at the alternative (floor 0.75),
-  p-values equal `pchisq(statistic, 1)`, the `chi-square(2)` mutant fails oracle and power; six rules PASS, "RULE MET". The log
-  does not record which tree it ran on; confirm before citing it as a #342 result.
+  p-values equal `pchisq(statistic, 1)`, the `chi-square(2)` mutant fails oracle and power; six rules PASS, "RULE MET". The run
+  was made on a `git archive` of `origin/main` at `ba17d8d` (Version 0.14.1, which contains #336-#342); the log itself does not
+  record the tree.
 
 ## Missingmed consumer rerun
 
