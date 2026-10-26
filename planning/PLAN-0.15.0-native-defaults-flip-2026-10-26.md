@@ -176,7 +176,7 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
     missingmed ran from a worktree at the #102 head `4a84e66`; #102 squash-merged to missingmed `dev` as `9f77220`.
     medfit's own suite under the new build: 42 failed, 5 errors in 13 files, all files rewritten in T3-T5 (v0.14.1
     tests asserting the old defaults); `MISSINGMED_DIR=<worktree>` in `arm.R` keeps the run off the main checkout.
-- [ ] **T7b (S): Harden the dependents harness** | agents: implementer | risk: n/a | from the 2026-10-26 Codex review
+- [x] **T7b (S): Harden the dependents harness** | agents: implementer | risk: n/a | from the 2026-10-26 Codex review
   - Why: `arm.R` `run()` ignores the `system2()` status and never removes an old RDS, so a crashed arm could leave a
     stale pass that the summary reads as current. The T7 evidence itself is fresh (every RDS mtime 14:00-14:21 on
     2026-10-26, one run per arm), so the recorded result stands; the harness is the gap.
@@ -185,6 +185,12 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
     Planted defect: a dependent path that fails to load makes the script exit nonzero, and an old RDS planted at the
     target path is not accepted. Files: `arm.R`.
   - Verify: run the planted-defect cases, then rerun all arms; per-test results still identical to base.
+  - Done 2026-10-26: planted defect passed (nonexistent dependent path: stale RDS deleted, status 1, script halted).
+    Full rerun with the hardened harness (medfit `54435df`; dependents rmediation `bdccc29`, probmed `af38d09`,
+    missingmed `4a84e66`, mediationverse `18ca397`, medsim `bb6a309`, medrobust `3497716`): 0 failed, 0 errors in
+    base and new for all six; pass/fail/skip/error identical per test. One `nb` difference (rmediation
+    `test-mbco-semfit-mutations.R`, 6 vs 4) is the two `medfit_warning_default_change` warnings base emits and the flip
+    removes. Record: `planning/specs/evidence/native-defaults-2026-10-24/t7b-rerun-2026-10-26.md`.
 - [ ] **T8 (S): Release readiness check** | agents: none (author) | risk: n/a
   - Acceptance: date >= 2026-12-24; T7b done; F-6, F-7, F-12 evidence attached to the release PR; `dev -> main` PR runs the
     required gate shards (OpenBLAS, both green on the exact release head; attach run URLs and SHA); T7 rerun on the
