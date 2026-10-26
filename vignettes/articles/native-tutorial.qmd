@@ -18,7 +18,7 @@ and [the native engine guide](native-guide.html).
 
 | | |
 |---|---|
-| **You need** | medfit 0.8.0 or later (step 9 needs 0.9.0 or later, and step 10 needs 0.11.0); the bundled `mediation_demo` data |
+| **You need** | medfit 0.8.0 or later (step 9 needs 0.15.0 for the default `fixed_x`; on 0.9.0 to 0.14.x pass `fixed_x = TRUE`; step 10 needs 0.11.0); the bundled `mediation_demo` data |
 | **You get** | a `SEMFit`, a test of the indirect effect, a constrained comparison, a `MediationData` |
 | **Time** | about 20 minutes |
 
