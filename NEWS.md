@@ -37,6 +37,25 @@
   `a1 == 0` branch. A union whose branches are all certified empty stops with `medfit_sem_empty_union`. Both are
   `medfit_error_no_convergence` errors carrying `$ledger`, so `mbco_sem()` and `compare_lr()` report them as unresolved.
 
+## Branch map and raw cap for native zero-product fits (D3)
+
+* A ledger node whose constraints hold zero-product rows now carries `branch_map`: the raw combination count
+  (`raw_count`), the factor counts from the parser (`factor_counts`), a structural restriction-set ID for each raw row
+  (`raw_to_canonical`) and the number of distinct sets (`unique_count`). Duplicate or permuted products (as
+  `a*b == 0` written twice) collapse to the same ID; no affine solving is done, so it is not an equivalence
+  certificate. Execution is unchanged: every raw row is still fitted in the original order and ties go to the first.
+  No result changes.
+* The 64-branch cap counts raw combinations, duplicates included, and is now checked with overflow-safe arithmetic
+  before the branch grid is allocated, so a model with a very large product count is refused with the same error
+  instead of exhausting memory. The refusal message prints the count without scientific notation, marks a count above
+  2^53 as approximate and names an overflow (`overflow (Inf)`); the numeric `raw_count` and `enumeration$required`
+  are `Inf` on overflow. An over-cap model is refused on its raw count alone: no literal certificate is tried and
+  nothing is fitted. Its ledger has `enumeration$state = "not_enumerated"` and a `not_enumerated` map with an unknown
+  unique count and no raw mapping. The message text for counts of 65 to 2^31 is unchanged.
+* The map is rebuilt from each node's own constraints when the ledger is validated, so a forged ID, count or state
+  makes `mbco_sem()` refuse the fit with a `medfit_error_ledger` error. A fit stored by a development build that
+  predates the map (zero-product models only) must be refitted for the same reason.
+
 # medfit 0.14.0
 
 ## Native engine defaults change in 0.15.0

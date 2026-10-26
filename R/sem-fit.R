@@ -271,17 +271,21 @@
 # `$ledger` (ADR D-12). A failed branch is unknown, never certified infeasible.
 .sem_fit_branches <- function(parsed, products, data, information, n_starts, control, weights, se_type,
                               meanstructure = NULL, fixed_x = FALSE, factors = NULL) {
-  grid <- do.call(expand.grid, c(lapply(products, `[[`, "factors"), stringsAsFactors = FALSE))
   context <- .sem_outcome_context(NULL, parsed, data, information, weights, meanstructure, fixed_x,
                                   n_starts, control, se_type, factors)
-  if (nrow(grid) > 64L) {
-    reason <- sprintf("the zero-product constraints give %d branches to fit; at most 64 are supported", nrow(grid))
+  # the cap is on the raw count (duplicates included), checked before the grid is allocated (D3). An over-cap model is
+  # refused on that count alone: no literal certificate is tried, since nothing is enumerated.
+  raw_count <- .sem_raw_count(vapply(products, function(p) length(p$factors), 0L))
+  if (raw_count > 64L) {
+    reason <- sprintf("the zero-product constraints give %s branches to fit; at most 64 are supported",
+                      .sem_raw_count_text(raw_count))
     err <- simpleError(reason)
     err$ledger <- .sem_outcome(context, parsed$constraints, error = err)
     # nothing was enumerated: the count is the requirement, not a completed enumeration
-    err$ledger$enumeration <- list(state = "not_enumerated", required = nrow(grid))
+    err$ledger$enumeration <- list(state = "not_enumerated", required = raw_count)
     stop(err)
   }
+  grid <- .sem_branch_grid(products)
   fits <- vector("list", nrow(grid))
   outcomes <- vector("list", nrow(grid))
   fail <- character(nrow(grid))

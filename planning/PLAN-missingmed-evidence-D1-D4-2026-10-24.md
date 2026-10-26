@@ -66,9 +66,13 @@ files, so each PR carries the seven-item risk-tier checklist and a `gates.yaml` 
     scripts (`sem-fixed-x-gate.R`, `sem-nonlinear-gate.R`) clean with every `MUTANT=` failing, on the macOS reference BLAS.
     Not run: the OpenBLAS runner (`gates.yaml` dispatch); the full suite runs in the final gates pass. Behavior change
     (exact semantics, no tolerance) is in NEWS.
-- [ ] **P3. D3 branch map and raw cap.** Acceptance: `test-sem-branch-map.R` green including the forged-map refusals
+- [x] **P3. D3 branch map and raw cap.** Acceptance: `test-sem-branch-map.R` green including the forged-map refusals
   and the 2^53 / overflow message oracles. Blocked by: P1 (P2 and P3 can run in parallel; both touch
   `sem-outcomes.R`, so merge in order P2 then P3).
+  - **Done on `feature/p3-d3-branch-map` (2026-10-25); the PR is not merged yet.** Over-cap decision: the literal check
+    is not run (NOTE-D3 reconciliation). Final gates pass: full suite 1648 tests, 8059 expectations, 0 failed, 0 errors, 2 skipped; both sim scripts
+    (`sem-fixed-x-gate.R`, `sem-nonlinear-gate.R`) clean with every `MUTANT=` failing, on the macOS reference BLAS. Not run:
+    the OpenBLAS runner (`gates.yaml` dispatch).
 - [ ] **P4. D4 covariance-stage evidence.** NOTE-D4 records D4 as *not independently closed* (the review failed to
   produce a verdict). Acceptance: `test-sem-post-fit.R` green, the nonwinning-child mutants fail, and a fresh
   independent review closes it. Blocked by: P1; touches `sem-se.R`, so it reruns the SE oracles.
