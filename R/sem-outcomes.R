@@ -521,8 +521,8 @@
         identical(node$enumeration, list(state = "complete", required = 0L)) &&
         is.list(node$notices$warnings) && is.list(node$notices$messages) && is.null(node$post_fit)
     }
-    # a null that failed is one of two shapes: the engine stopped (`bare_failure`), or a zero-product union with at least
-    # one branch that failed, whose other branches are resolved or certified empty and whose likelihood is theirs
+    # a null that failed is one of two shapes: the engine stopped (`bare_failure`), or a zero-product union with at
+    # least one branch that failed, whose other branches are resolved or certified empty and whose likelihood is theirs
     failed_null <- function(child, id, syntax, parsed) {
       context_ok <- identical(child$context$model$syntax, syntax) &&
         # NULL when the engine stopped before parsing (the context of the call), else the null's own table
