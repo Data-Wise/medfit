@@ -159,8 +159,8 @@ the time of writing, so the history does not exist yet.
 - The evidence validators are not a gate: `R/sem-outcomes.R` and `R/sem-mbco.R` are not in
   `tests/sim/risk-files.txt` and no `gates.csv` row registers them, so their protection is the unit tests and the
   admission checklist, not the OpenBLAS gate run.
-- The validators cannot detect a consistent rewrite of the root sample and its hashes, an altered parameter value inside a
-  the table of a null, or a changed condition text of a failed null (see Evidence validators).
+- The validators cannot detect a consistent rewrite of the root sample and its hashes, an altered parameter value inside
+  the parameter table of a null, or a changed condition text of a failed null (see Evidence validators).
 - An all-excluded null is validated against its own certificates, not against the fit's model, so a self-consistent foreign
   union is accepted (the statistic is `NA` regardless).
 - A complete enumeration of zero-product branches is not a global-optimum certificate, and a ledger records what a fit
