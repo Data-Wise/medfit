@@ -9,7 +9,7 @@ rs_syntax <- "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + cp*t
 
 # A parent fit without a mean structure: the 0.15.0 default fits one, so these tests ask for the covariance-only
 # likelihood with `meanstructure = NULL` (no `~1` in the syntax), which is what makes FALSE differ from NULL here.
-rs_fit_no_mean <- function() fit_sem(rs_syntax, mediation_demo, meanstructure = NULL, fixed_x = FALSE)
+rs_fit_no_mean <- function() fit_sem(rs_syntax, medfit::mediation_demo, meanstructure = NULL, fixed_x = FALSE)
 
 # The settings `mbco_sem()` hands to each refit. Build the parent fit before the mock is installed: a mock installed
 # earlier would record fit_sem()'s own call and pass vacuously.
