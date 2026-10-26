@@ -126,7 +126,7 @@ test_that("with the call's settings and table, a shifted null f or a uniform n_s
   expect_false(.sem_valid_mbco_outcome(rewritten, paths, st, tt, "model"))
 })
 
-test_that("union-null shapes from the engine are accepted: resolved branches, an excluded branch, a failed-covariance branch", {
+test_that("union-null shapes from the engine are accepted: resolved, excluded and failed-covariance branches", {
   data <- readRDS(test_path("fixtures", "memory_exp.rds"))
   base <- "repetition ~ a1*x\nimagery ~ a2*x\nrecall ~ cp*x + b1*repetition + b2*imagery"
   fit <- function(extra, ...) suppressMessages(fit_sem(paste0(base, extra), data, n_starts = 1L, ...))
