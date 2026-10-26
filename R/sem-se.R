@@ -117,6 +117,7 @@
       dn[[k]] <- x[[k]] - h
       (.sem_expr_value(tree, up, d$rhs[i]) - .sem_expr_value(tree, dn, d$rhs[i])) / (2 * h)
     }, numeric(1))
+    if (is.null(vcov)) next # validation-only pass (values and gradients), not an invented covariance
     v <- vcov[labels, labels, drop = FALSE]
     out$se[i] <- if (anyNA(v)) NA_real_ else sqrt(max(0, as.numeric(crossprod(g, v %*% g))))
   }

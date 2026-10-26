@@ -17,7 +17,8 @@
                                                      se_type, parsed, meanstructure, fixed_x, factors))
   out <- captured$value
   err <- captured$error
-  if (!is.null(err)) {
+  covariance <- !is.null(err) && inherits(err, "medfit_sem_covariance_error")
+  if (!is.null(err) && !covariance) {
     constraints <- if (!is.null(parsed)) {
       parsed$constraints
     } else {
@@ -25,14 +26,11 @@
     }
     .sem_reraise_outcome(err, context, constraints, captured$notices)
   }
-  context$sample <- out$data
-  context$n_obs <- out$n_obs
-  context$domain$fixed_x <- out$fixed_x
-  context$domain$weights <- out$weights
-  context$domain$information <- out$information
-  context$domain$meanstructure <- isTRUE(out$ram$has_mean)
-  context$domain$factors <- out$factors
-  context$settings$se_type <- out$se_type
+  # a covariance-stage failure holds the accepted fit: its ledger is built exactly as a success's, then marked
+  if (covariance) {
+    out <- err$partial
+  }
+  context <- .sem_fit_context(context, out)
   if (is.null(out$ledger)) {
     out$ledger <- .sem_outcome(context, out$constraints, out, notices = captured$notices)
   } else {
@@ -40,7 +38,15 @@
     context$model$parameters <- out$ledger$context$model$parameters
     out$ledger$context <- context
   }
+  if (covariance && is.null(out$ledger$post_fit)) {
+    out$ledger$covariance <- "failed"
+    out$ledger$post_fit <- err$post_fit
+  }
   out$ledger <- .sem_compact_outcome(out$ledger)
+  if (covariance) {
+    # the notices raised before the failure are in the ledger; the error keeps the original message
+    .sem_abort_covariance(out, conditionMessage(err))
+  }
   .sem_require_outcome(out, model)
   .sem_replay_notices(captured$notices)
   out
@@ -177,22 +183,37 @@
     eq_rank <- .sem_eq_rank_at(cons, fit$theta, u0)
     df <- .sem_df(ram, eq_rank)
   }
-  vc <- .sem_vcov(fit$theta, ram, smp, information, cons, lb, ub, se_type)
-  defined <- .sem_defined(parsed$constraints, fit$theta, vc)
+  # Definition values and gradients are checked before the covariance, so an invalid definition is not hidden by a
+  # covariance-stage error; the standard errors follow the covariance.
+  .sem_defined(parsed$constraints, fit$theta, NULL)
+  vc <- tryCatch(.sem_vcov(fit$theta, ram, smp, information, cons, lb, ub, se_type), error = function(e) e)
   act_cons <- if (is.null(cons)) .sem_no_cons(ram$q) else cons
   act <- .sem_active_set(fit$theta, ram, smp, lb, ub, act_cons)
   .sem_product_warn(tab, modeltest, se_type)
 
-  c(
+  out <- c(
     fit,
     list(
-      vcov = vc, defined = defined, constraints = parsed$constraints,
+      constraints = parsed$constraints,
       active_constraints = act$text[act$active_row], information = information, ram = ram, table = conv$table,
       par_map = conv$par_map, se_type = se_type, weights = smp$w, n_starts = n_starts, control = control,
       partable = .sem_to_partable(conv$table), data = x, n_obs = smp$n, n_dropped = n_dropped, df = df,
       eq_rank = eq_rank, branch = character(), fixed_x = fixed_set, factors = factors
     )
   )
+  if (inherits(vc, "error")) {
+    # Only an accepted likelihood is evidence. Anything else keeps the error it was, and the caller's ledger says the
+    # likelihood is unavailable.
+    if (!(isTRUE(fit$converged) && length(fit$f) == 1L && is.finite(fit$f))) {
+      stop(vc)
+    }
+    stop(.sem_covariance_error(conditionMessage(vc), out,
+                               post_fit = list(schema_version = 1L, stage = "covariance",
+                                               condition = .sem_condition_record(vc))))
+  }
+  out$vcov <- vc
+  out$defined <- .sem_defined(parsed$constraints, fit$theta, vc)
+  out
 }
 
 # Fit-time policy for a product term (0.10.0 plan U6, F4). `modeltest` is the verdict of `.sem_product_modeltest()`.
@@ -310,10 +331,12 @@
       next
     }
     captured <- .sem_capture_outcome({
-      res <- .sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
-                             parsed = list(parameters = parsed$parameters, constraints = cons),
-                             meanstructure = meanstructure, fixed_x = fixed_x, factors = factors)
-      .sem_require_outcome(res)
+      # a covariance-stage failure of one branch keeps that branch's likelihood and evidence (D4): the union decides
+      res <- tryCatch(.sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
+                                      parsed = list(parameters = parsed$parameters, constraints = cons),
+                                      meanstructure = meanstructure, fixed_x = fixed_x, factors = factors),
+                      medfit_sem_covariance_error = .sem_retain_covariance)
+      .sem_require_outcome(res, partial = !is.null(res$ledger$post_fit))
       if (!identical(res$constraints, cons)) {
         .sem_abort_ledger("branch outcome has mismatched constraints", NULL)
       }
@@ -322,6 +345,11 @@
     res <- captured$value
     err <- captured$error
     ledger <- if (is.null(err)) res$ledger else err$ledger
+    if (is.null(err) && !is.null(ledger$post_fit)) {
+      # the retention notice was raised after the branch's own ledger was built
+      ledger$notices$warnings <- c(ledger$notices$warnings, lapply(captured$notices$warnings, .sem_condition_record))
+      ledger$notices$messages <- c(ledger$notices$messages, lapply(captured$notices$messages, .sem_condition_record))
+    }
     if (is.null(ledger)) {
       ledger <- .sem_outcome(context, cons, error = err, notices = captured$notices)
     }
@@ -360,10 +388,20 @@
     )
     .sem_abort_outcome(msg, ledger, best_survivor = list(id = outcomes[[win]]$id, f = best))
   }
-  .sem_replay_notices(fits[[win]]$held)
   out <- fits[[win]]$fit
   out$constraints <- parsed$constraints
   out$ledger <- ledger
+  failed <- which(vapply(outcomes, function(x) !is.null(x$post_fit), TRUE))
+  if (length(failed)) {
+    # Every branch has a likelihood and the union is complete, but a covariance stage failed: no fit is returned. The
+    # root reports the first failing branch's evidence, in branch order, even when another branch is the minimum;
+    # the branch IDs say exactly which one failed.
+    out$vcov <- out$defined <- NULL
+    out$ledger$covariance <- "failed"
+    out$ledger$post_fit <- outcomes[[failed[1L]]]$post_fit
+    stop(.sem_covariance_error(outcomes[[failed[1L]]]$post_fit$condition$message, out))
+  }
+  .sem_replay_notices(fits[[win]]$held)
   out
 }
 

@@ -52,7 +52,11 @@
 #'   another fails, and an unresolved null leaves the root `unresolved`. A nested union branch that is certified empty
 #'   by a literal zero/nonzero contradiction (see the outcome ledger in [fit_sem()]) is retained as `excluded`; a null
 #'   that is itself infeasible or an all-empty union stays an unresolved row, never a finite LR or a survivor-only
-#'   p-value.
+#'   p-value. A null whose optimizer accepted but whose covariance stage failed (`medfit_sem_covariance_error` in
+#'   [fit_sem()]) keeps its likelihood after a check that it is the null asked for (same rows, domain and one more
+#'   restriction): the row stays resolved, the statistic and p-value are unchanged, a warning names the failure, and the
+#'   node has `covariance = "failed"` with `post_fit` and the notices. No covariance is invented; a fit that carries
+#'   `post_fit` is refused as `object`.
 #'
 #' @details
 #' A fit made with `weights` is refused: the weighted discrepancy is
@@ -183,11 +187,27 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     con <- paste(tested, "== 0")
     syntax <- paste0(fit@model, "\n", con)
     # `fit@data` holds the rows the fit used, already free of missing values: no second deletion.
-    captured <- .sem_capture_outcome(
-      .sem_fit_syntax(syntax, fit@data, fit@information, n_starts = n_starts,
-                      control = control, meanstructure = isTRUE(fit@internals$ram$has_mean),
-                      fixed_x = fixed_x, factors = fit@internals$factors)
-    )
+    # Only here may a null keep the likelihood of a covariance-stage failure (D4), and only when it is the null that was
+    # asked for: same rows, domain and one more restriction. The covariance and the standard errors are never
+    # fabricated, and the retention is a warning, not an unresolved row: the statistic needs the likelihood only.
+    captured <- .sem_capture_outcome({
+      r <- tryCatch(
+        .sem_fit_syntax(syntax, fit@data, fit@information, n_starts = n_starts,
+                        control = control, meanstructure = isTRUE(fit@internals$ram$has_mean),
+                        fixed_x = fixed_x, factors = fit@internals$factors),
+        medfit_sem_covariance_error = .sem_retain_covariance
+      )
+      if (!is.null(r$ledger$post_fit) &&
+            (!identical(r$data, fit@data) || !identical(r$n_obs, fit@n_obs) ||
+               !identical(r$ram$q, fit@internals$ram$q) || !isTRUE(r$df - fit@df == 1) ||
+               !identical(r$constraints, .sem_parse(syntax)$constraints) ||
+               !identical(isTRUE(r$ram$has_mean), isTRUE(fit@internals$ram$has_mean)) ||
+               !identical(r$fixed_x, fit@internals$fixed_x) || !identical(r$information, fit@information) ||
+               !is.null(r$weights) || !identical(r$factors, fit@internals$factors))) {
+        .sem_abort_ledger("retained covariance-stage null has incompatible sample, domain or dimension", r$ledger)
+      }
+      r
+    })
     r <- captured$value
     err <- captured$error
     failure <- NULL
@@ -206,7 +226,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       failure <- msg
     } else {
       # a refit that is not the null that was asked for is refused, never inferred from `converged`
-      .sem_require_outcome(r, syntax)
+      .sem_require_outcome(r, syntax, partial = !is.null(r$ledger$post_fit))
     }
     node <- if (is.null(failure)) r$ledger else err$ledger
     if (is.null(node)) {
@@ -216,9 +236,11 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
                                       n_starts, control, fit@diagnostics$se_type, fit@internals$factors)
       node <- .sem_outcome(context, parsed$constraints, error = err, notices = captured$notices)
     } else if (is.null(failure)) {
-      # the null's own notices include the ones its fit replayed
-      node$notices <- list(warnings = lapply(captured$notices$warnings, .sem_condition_record),
-                           messages = lapply(captured$notices$messages, .sem_condition_record))
+      # the null's own notices include the ones its fit replayed; a retained null's fit replayed none, so its own
+      # (held in its node) come first and the retention notice after them
+      retained <- if (!is.null(node$post_fit)) node$notices else list()
+      node$notices <- list(warnings = c(retained$warnings, lapply(captured$notices$warnings, .sem_condition_record)),
+                           messages = c(retained$messages, lapply(captured$notices$messages, .sem_condition_record)))
     } else {
       node$notices$warnings <- c(node$notices$warnings, lapply(captured$notices$warnings, .sem_condition_record))
       node$notices$messages <- c(node$notices$messages, lapply(captured$notices$messages, .sem_condition_record))

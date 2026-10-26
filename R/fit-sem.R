@@ -101,10 +101,10 @@
 #' every required restriction was attempted, not that any was globally optimized. `outcome` is `resolved` or
 #' `unresolved`. Separate fields record `optimizer` (acceptance state, original status, decrement, retries and
 #' optimum diagnostics), `likelihood` (availability and `f`), `feasibility` (`witness` or `unknown`), `covariance`
-#' (`available`, `unavailable` or `not_retained`), `improper`, the retained `notices` (warnings and messages), the
-#' original `condition` (class, message, call) and the recursive `children`. IDs are deterministic positions within
-#' the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a failed branch is
-#' unknown, never certified infeasible.
+#' (`available`, `unavailable`, `not_retained` or `failed`), `improper`, the retained `notices` (warnings and
+#' messages), the original `condition` (class, message, call) and the recursive `children`. IDs are deterministic
+#' positions within the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a
+#' failed branch is unknown, never certified infeasible.
 #'
 #' A node whose constraints hold zero-product rows also has `branch_map`: `state`, `raw_count`, the parser
 #' `factor_counts`, `unique_count` and `raw_to_canonical`, a structural restriction-set ID for each raw row. The IDs
@@ -136,6 +136,21 @@
 #' and also carries `$ledger`. The estimation sample is stored once, on the root node; a descendant fitted on the
 #' same rows carries only `context$sample_hash`. A fit made before the ledger existed must be refitted before
 #' [mbco_sem()] can use it, which refuses it with a `medfit_error_ledger` error.
+#'
+#' When the optimizer accepts a fit and only the covariance stage fails (an error from the covariance, not the
+#' singular-information NA return, which stays `unavailable` with its warning), the call stops with
+#' `medfit_sem_covariance_error`, never a fit. The class is a sibling of `medfit_error_no_convergence`: no optimizer
+#' failed, so the handlers that report an unresolved result for an optimizer failure do not take it. Its fields are
+#' `schema_version = 1L`, `stage = "covariance"`, `partial` (the accepted optimizer result: `f`, `theta`, sample,
+#' domain, dimensions and settings; no `vcov` or `defined`) and `ledger` (the same node as `partial$ledger`, with
+#' `covariance = "failed"` and `post_fit`: versioned evidence with the original condition's class, message and call).
+#' The message is the original one. Resolved here means an accounted-for accepted likelihood, not a successful
+#' covariance. A union root reports the first failing branch's `post_fit`, in branch order, even when another branch
+#' supplies its minimum likelihood, and does not claim the winning branch failed: inspect the branch IDs. A branch that
+#' did not converge still stops the call with `medfit_error_no_convergence` first. Definition values and gradients are
+#' checked before the covariance, and model, data, optimizer, objective and other errors get no covariance certificate.
+#' The condition is not accepted as an input to [mbco_sem()], and a fit that carries `post_fit` is refused with
+#' `medfit_error_ledger`.
 #'
 #' @examples
 #' \donttest{
