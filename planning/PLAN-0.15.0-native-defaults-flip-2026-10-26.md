@@ -72,7 +72,7 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
 
     The control reproduces both baselines, so the comparison is valid. Neither count grew and no row is mislabeled:
     **documented limit**, with the `?compare_lr` note from #320 item 4. Not yet posted to #320 (ask first).
-- [ ] **T2 (S): Verify lavaan `fixed.x = TRUE` product-column handling (E-5)** | agents: oracle-qa | risk: n/a
+- [x] **T2 (S): Verify lavaan `fixed.x = TRUE` product-column handling (E-5)** | agents: oracle-qa | risk: n/a
   - Why estimates are not enough: structural estimates and SEs do not move when `fixed_x` changes (the 557-row
     matrix), so an estimate comparison cannot tell a fixed product column from a free one. The discriminating
     quantities are set membership, `npar`, and the conditional logLik.
@@ -92,9 +92,12 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
   - Verify: `Rscript -e 'devtools::load_all(); testthat::test_file("tests/testthat/test-sem-product-extract.R")'` plus
     the oracle script; the report lists, per check, pass/fail on the real fit and on the planted defect.
   - Files: `tests/testthat/test-sem-product-*.R` (read), oracle report only.
+  - **Result (2026-10-26): PASS.** Checks 1-4 pass on the real fit and trip on the planted defect; check 5 passes on both
+    (max gap 3.1e-12). Check 5 needs lavaan `information = "observed"` (default expected differs from medfit's observed;
+    pin it in T3/T4 product-model comparisons). Existing `test-sem-product-extract.R`: 10 tests, 38 expectations.
 
 ### Checkpoint A: after T1-T2
-- [ ] #320 decision recorded; E-5 verified or turned into a T3 requirement; human review before T3.
+- [x] #320 decision recorded; E-5 verified or turned into a T3 requirement; human review before T3.
 
 ### Phase 2: The flip
 
