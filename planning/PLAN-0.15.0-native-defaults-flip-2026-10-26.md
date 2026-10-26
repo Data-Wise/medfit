@@ -23,7 +23,7 @@ Task state lives in this file. Tick a task only when its harness reports all say
 T1 (#320 re-measure) ----+
 T2 (E-5 verify) ---------+--> T3 (flip + resolver) --> T4 (tests) --> T5 (docs) --> T6 (final gates, E-12, oracle)
                                                                                    \
-T7 (dependents: missingmed#102, scratch-lib) -------------------------------------> T8 (release readiness)
+T7 (dependents: missingmed#102, scratch-lib) -> T7b (harden arm.R) ----------------> T8 (release readiness)
 ```
 
 ## Harness (how each task runs)
@@ -169,16 +169,27 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
 
 - [x] **T7 (M): Dependents** | agents: oracle-qa (scratch-lib runs), manual for missingmed | risk: n/a
   - Acceptance: F-12. `arm.R` scratch-library suites pass for probmed, RMediation, medrobust, medsim, missingmed,
-    mediationverse; missingmed#102 merged (currently OPEN).
+    mediationverse; missingmed#102 merged (`9f77220`).
   - Verify: `Rscript planning/specs/evidence/native-defaults-2026-10-24/arm.R /private/tmp/<dir> <arm>`.
   - Done 2026-10-26: base (v0.14.1) and new (dev `54435df`) scratch libraries; all six dependents have identical per-test
     results, 0 failed, 0 errors (counts: `planning/specs/evidence/native-defaults-2026-10-24/t7-dependents-2026-10-26.csv`).
     missingmed ran from a worktree at the #102 head `4a84e66`; #102 squash-merged to missingmed `dev` as `9f77220`.
     medfit's own suite under the new build: 42 failed, 5 errors in 13 files, all files rewritten in T3-T5 (v0.14.1
     tests asserting the old defaults); `MISSINGMED_DIR=<worktree>` in `arm.R` keeps the run off the main checkout.
+- [ ] **T7b (S): Harden the dependents harness** | agents: implementer | risk: n/a | from the 2026-10-26 Codex review
+  - Why: `arm.R` `run()` ignores the `system2()` status and never removes an old RDS, so a crashed arm could leave a
+    stale pass that the summary reads as current. The T7 evidence itself is fresh (every RDS mtime 14:00-14:21 on
+    2026-10-26, one run per arm), so the recorded result stands; the harness is the gap.
+  - Acceptance: `run()` deletes its target RDS first, requires status 0, requires a readable RDS with the seven
+    expected columns, and `stop()`s (nonzero exit) on any failure; the script records the medfit and dependent head SHAs.
+    Planted defect: a dependent path that fails to load makes the script exit nonzero, and an old RDS planted at the
+    target path is not accepted. Files: `arm.R`.
+  - Verify: run the planted-defect cases, then rerun all arms; per-test results still identical to base.
 - [ ] **T8 (S): Release readiness check** | agents: none (author) | risk: n/a
-  - Acceptance: date >= 2026-12-24; F-6, F-7, F-12 evidence attached to the release PR; `dev -> main` PR runs the
-    required gate shards; [BREAKING] #329 closed on release. If anything fails: hold the flip, fix first (F-13).
+  - Acceptance: date >= 2026-12-24; T7b done; F-6, F-7, F-12 evidence attached to the release PR; `dev -> main` PR runs the
+    required gate shards (OpenBLAS, both green on the exact release head; attach run URLs and SHA); T7 rerun on the
+    release head if `R/` changed after `54435df`; [BREAKING] #329 closed on release. If anything fails: hold the flip,
+    fix first (F-13).
 
 ## Not in this plan
 
@@ -195,6 +206,8 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
 | Retry-seed change alters which start wins (R-11) | Med | T6 reliability gate; NEWS note |
 | OpenBLAS vs reference BLAS divergence | Med | gates on the runner; fixtures at 1e-6 |
 | missingmed#102 not merged by release time | Med | T7 blocks T8 |
+| Dependents evidence stale or from an older head | Med | T7b fail-closed harness; rerun on the release head if `R/` changed |
+| OpenBLAS gates first run only at the release PR (flip changes retry seeds) | Med | accepted, F-7 on the exact head; a red gate holds the flip (F-13), so budget a fix cycle before the 2026-12-24 floor |
 | 21-test rewrite exceeds 5 files per commit | Low | split T4 into two commits/tasks |
 
 ## Open questions
