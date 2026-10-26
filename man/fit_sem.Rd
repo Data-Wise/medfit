@@ -131,6 +131,17 @@ original \code{condition} (class, message, call) and the recursive \code{childre
 the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a failed branch is
 unknown, never certified infeasible.
 
+A node whose constraints hold zero-product rows also has \code{branch_map}: \code{state}, \code{raw_count}, the
+parser \code{factor_counts}, \code{unique_count} and \code{raw_to_canonical}, a structural restriction-set ID for each raw row. The IDs
+collapse duplicate or permuted constraint rows, not arbitrary affine equivalence, and every raw row is still fitted
+in its original order (ties go to the first). More than 64 raw combinations, duplicates included, is refused before
+the grid is allocated, even when the unique count would be smaller; that node is \code{not_enumerated}, with an unknown
+unique count and no raw mapping, and nothing is fitted or certified. Its message prints the count without scientific
+notation, labels a count above \eqn{2^{53}}{2^53} as approximate (a double need not be an exact cardinality there)
+and names an overflow; \code{raw_count} is \code{Inf} on overflow. If the map cannot be built while an error is recorded, its
+\code{state} is \code{unavailable} with that condition, and the original error is not replaced. The map is rebuilt from the
+node's constraints during validation, so a forged map is refused.
+
 The one proof of emptiness is the literal certificate \code{literal_zero_nonzero}: an explicit \code{label == 0} equality and
 an explicit finite nonzero literal equality on the same parsed label (\code{a == 0} with \code{a == 1}). Its label, source
 rows and values are kept in \code{certificate} and rebuilt from the node's own parsed parameters and constraints before
