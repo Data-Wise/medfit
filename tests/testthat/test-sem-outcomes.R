@@ -347,6 +347,7 @@ test_that("MBCO keeps boundary notices on a typed refit failure", {
   expect_true(is.na(res$p.value))
 })
 
+# Mutants replace source text in a function body; they run in every check except under covr.
 outcome_mutate <- function(fun, old, new) {
   code <- paste(deparse(body(fun), width.cutoff = 500L), collapse = "\n")
   stopifnot(grepl(old, code, fixed = TRUE))
@@ -355,6 +356,8 @@ outcome_mutate <- function(fun, old, new) {
 }
 
 test_that("removing ID validation lets a duplicate-ID ledger escape its intended assertion", {
+  # covr rewrites function bodies, so the text these mutants replace is not there under coverage
+  testthat::skip_on_covr()
   fit <- fit_sem(outcome_union, outcome_data(), n_starts = 1L)
   node <- fit@diagnostics$ledger
   node$children[[2]]$id <- node$children[[1]]$id
@@ -366,6 +369,8 @@ test_that("removing ID validation lets a duplicate-ID ledger escape its intended
 })
 
 test_that("survivor-success, status-drop and label-swap mutants fail intended assertions", {
+  # covr rewrites function bodies, so the text these mutants replace is not there under coverage
+  testthat::skip_on_covr()
   d <- outcome_data()
   full <- fit_sem(outcome_model, d, n_starts = 1L)
   branch_fun <- .sem_fit_branches
