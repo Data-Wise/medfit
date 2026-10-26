@@ -134,3 +134,18 @@ test_that("treating the retained null as unresolved is caught by the retained-nu
   expect_false(contract[["reference_accepted"]])
   expect_false(contract[["root_resolved"]])
 })
+
+test_that("under the 0.15.0 defaults the lavaan product-null LR above medfit's maximum is flagged (#320 limit)", {
+  data <- readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
+  fit <- suppressMessages(medfit::fit_sem(retained_model, data, n_starts = 1L, information = "expected"))
+  warns <- list()
+  withCallingHandlers(
+    medfit::compare_lr(fit, retained_paths, engine = "lavaan"),
+    warning = function(w) {
+      warns[[length(warns) + 1L]] <<- w
+      invokeRestart("muffleWarning")
+    }
+  )
+  classes <- unique(unlist(lapply(warns, class)))
+  expect_true("medfit_warning_engine_statistic_above_max" %in% classes)
+})
