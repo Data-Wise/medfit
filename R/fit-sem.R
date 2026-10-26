@@ -106,8 +106,8 @@
 #' the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a failed branch is
 #' unknown, never certified infeasible.
 #'
-#' A node whose constraints hold zero-product rows also has `branch_map`: `state`, `raw_count`, the
-#' parser `factor_counts`, `unique_count` and `raw_to_canonical`, a structural restriction-set ID for each raw row. The IDs
+#' A node whose constraints hold zero-product rows also has `branch_map`: `state`, `raw_count`, the parser
+#' `factor_counts`, `unique_count` and `raw_to_canonical`, a structural restriction-set ID for each raw row. The IDs
 #' collapse duplicate or permuted constraint rows, not arbitrary affine equivalence, and every raw row is still fitted
 #' in its original order (ties go to the first). More than 64 raw combinations, duplicates included, is refused before
 #' the grid is allocated, even when the unique count would be smaller; that node is `not_enumerated`, with an unknown
