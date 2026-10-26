@@ -131,7 +131,18 @@ original \code{condition} (class, message, call) and the recursive \code{childre
 the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a failed branch is
 unknown, never certified infeasible.
 
-A zero-product fit returns only if every required branch resolves. Otherwise it stops with a
+The one proof of emptiness is the literal certificate \code{literal_zero_nonzero}: an explicit \code{label == 0} equality and
+an explicit finite nonzero literal equality on the same parsed label (\code{a == 0} with \code{a == 1}). Its label, source
+rows and values are kept in \code{certificate} and rebuilt from the node's own parsed parameters and constraints before
+any inference uses it. A certified-empty branch is retained with \code{outcome = "excluded"},
+\code{feasibility = "certified_empty"} and an unavailable likelihood: it is not fitted and is not a successful fit. No
+tolerance, solver status, numerical rank, bound, general affine contradiction or fixed value in the parameter
+table is a proof, and an underflowed literal (\code{1e-999}) is unknown.
+
+A zero-product fit returns only if at least one required branch resolves and every other branch resolves or is
+certified empty. A direct fit whose own equalities contradict literally stops with \code{medfit_sem_infeasible}, and a
+union whose every branch is certified empty with \code{medfit_sem_empty_union}; both are refinements of
+\code{medfit_error_no_convergence} and carry the ledger. Otherwise it stops with a
 \code{medfit_error_no_convergence} error, never a fit; the error carries the ledger of every required branch as
 \verb{$ledger} and, when a branch survived, \verb{$best_survivor} (its \code{id} and discrepancy \code{f}, diagnostic only, never a
 p-value). The union's own node does not aggregate its children's notices; inspect each child. The notices of a

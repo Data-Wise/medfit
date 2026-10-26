@@ -106,7 +106,18 @@
 #' the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a failed branch is
 #' unknown, never certified infeasible.
 #'
-#' A zero-product fit returns only if every required branch resolves. Otherwise it stops with a
+#' The one proof of emptiness is the literal certificate `literal_zero_nonzero`: an explicit `label == 0` equality and
+#' an explicit finite nonzero literal equality on the same parsed label (`a == 0` with `a == 1`). Its label, source
+#' rows and values are kept in `certificate` and rebuilt from the node's own parsed parameters and constraints before
+#' any inference uses it. A certified-empty branch is retained with `outcome = "excluded"`,
+#' `feasibility = "certified_empty"` and an unavailable likelihood: it is not fitted and is not a successful fit. No
+#' tolerance, solver status, numerical rank, bound, general affine contradiction or fixed value in the parameter
+#' table is a proof, and an underflowed literal (`1e-999`) is unknown.
+#'
+#' A zero-product fit returns only if at least one required branch resolves and every other branch resolves or is
+#' certified empty. A direct fit whose own equalities contradict literally stops with `medfit_sem_infeasible`, and a
+#' union whose every branch is certified empty with `medfit_sem_empty_union`; both are refinements of
+#' `medfit_error_no_convergence` and carry the ledger. Otherwise it stops with a
 #' `medfit_error_no_convergence` error, never a fit; the error carries the ledger of every required branch as
 #' `$ledger` and, when a branch survived, `$best_survivor` (its `id` and discrepancy `f`, diagnostic only, never a
 #' p-value). The union's own node does not aggregate its children's notices; inspect each child. The notices of a

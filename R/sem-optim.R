@@ -18,8 +18,10 @@
 # else: a model, data or syntax error is not an optimizer failure and still stops. A call with an unresolved required
 # branch also attaches its outcome ledger (`$ledger`, ADR D-12) and the best surviving branch's discrepancy
 # (`$best_survivor`, diagnostic only).
-.sem_no_convergence <- function(message, ledger = NULL, best_survivor = NULL) {
-  stop(structure(class = c("medfit_error_no_convergence", "error", "condition"),
+# `subclass` names a typed refinement (`medfit_sem_infeasible`, `medfit_sem_empty_union`, D2); it adds a class in front
+# and never replaces `medfit_error_no_convergence`, so every handler of D-11 still catches it.
+.sem_no_convergence <- function(message, ledger = NULL, best_survivor = NULL, subclass = character()) {
+  stop(structure(class = c(subclass, "medfit_error_no_convergence", "error", "condition"),
                  list(message = message, call = NULL, ledger = ledger, best_survivor = best_survivor)))
 }
 .sem_singular_tol <- 1e-4

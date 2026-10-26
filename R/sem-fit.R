@@ -36,6 +36,8 @@
   if (is.null(out$ledger)) {
     out$ledger <- .sem_outcome(context, out$constraints, out, notices = captured$notices)
   } else {
+    # a union's ledger holds the parsed parameters its certificates are checked against; the entry has none
+    context$model$parameters <- out$ledger$context$model$parameters
     out$ledger$context <- context
   }
   out$ledger <- .sem_compact_outcome(out$ledger)
@@ -82,6 +84,14 @@
   }
   if (any(parsed$parameters$level != 1L)) {
     stop("two-level estimation is not implemented: the model uses `level:` blocks", call. = FALSE)
+  }
+  certificate <- .sem_literal_zero_certificate(parsed$parameters, parsed$constraints)
+  if (!is.null(certificate)) {
+    # a contradiction proved by syntax: nothing to optimize, and no fit exists (D2)
+    context <- .sem_outcome_context(model, parsed, data, information, weights, meanstructure, fixed_x,
+                                    n_starts, control, se_type, factors)
+    .sem_abort_outcome("literal zero/nonzero contradiction",
+                       .sem_excluded_outcome(context, parsed$constraints, certificate))
   }
   tab <- .sem_complete(parsed$parameters, meanstructure, fixed_x)
   .sem_check_scale(tab)
@@ -275,6 +285,7 @@
   fits <- vector("list", nrow(grid))
   outcomes <- vector("list", nrow(grid))
   fail <- character(nrow(grid))
+  excluded <- logical(nrow(grid))
   for (b in seq_len(nrow(grid))) {
     cons <- parsed$constraints
     lines <- character()
@@ -283,6 +294,16 @@
       lines <- c(lines, paste(grid[b, j], "== 0"))
       cons$lhs[i] <- grid[b, j]
       cons$rhs[i] <- "0"
+    }
+    # a branch whose restrictions contradict by literal syntax is certified empty and not optimized (D2); only that
+    # proof excludes a branch, a failure to converge is unknown
+    certificate <- .sem_literal_zero_certificate(parsed$parameters, cons)
+    if (!is.null(certificate)) {
+      excluded[b] <- TRUE
+      fail[b] <- sprintf("%s: %s", paste(lines, collapse = ", "), "literal zero/nonzero contradiction")
+      outcomes[[b]] <- .sem_rebase_outcome(.sem_excluded_outcome(context, cons, certificate),
+                                           paste0("fit/branch:", b), "fit")
+      next
     }
     captured <- .sem_capture_outcome({
       res <- .sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
@@ -310,13 +331,20 @@
   }
   ok <- which(!vapply(fits, is.null, TRUE))
   win <- if (length(ok)) ok[which.min(vapply(ok, function(b) fits[[b]]$fit$f, numeric(1)))] else integer()
+  if (length(win)) {
+    # a certified-empty branch is compared on the winner's sample and domain: same rows, same likelihood
+    context <- fits[[win]]$fit$ledger$context
+    for (b in which(excluded)) {
+      outcomes[[b]]$context <- context
+    }
+  }
   ledger <- .sem_outcome(context, parsed$constraints, result = if (length(win)) fits[[win]]$fit,
                          children = outcomes)
   if (!length(ok)) {
     .sem_abort_outcome(paste0("no branch of the zero-product constraints converged:\n  ",
                               paste(fail, collapse = "\n  ")), ledger)
   }
-  skipped <- setdiff(seq_along(fits), ok)
+  skipped <- setdiff(seq_along(fits), c(ok, which(excluded)))
   if (length(skipped)) {
     # A minimum over the surviving branches can look valid and need not be the constrained optimum, so no fit is
     # returned: the best survivor's discrepancy goes in the message for diagnosis only.

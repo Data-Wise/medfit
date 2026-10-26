@@ -49,7 +49,10 @@
 #'   `mbco/null:1`, `mbco/null:2`, ..., in the requested path order. A null refit that is itself a zero-product
 #'   union keeps its branch children and notices. A null node's notices also record those raised at the MBCO
 #'   boundary, including the union winner's replay, so they can repeat a child's. Every null is attempted even if
-#'   another fails, and an unresolved null leaves the root `unresolved`.
+#'   another fails, and an unresolved null leaves the root `unresolved`. A nested union branch that is certified empty
+#'   by a literal zero/nonzero contradiction (see the outcome ledger in [fit_sem()]) is retained as `excluded`; a null
+#'   that is itself infeasible or an all-empty union stays an unresolved row, never a finite LR or a survivor-only
+#'   p-value.
 #'
 #' @details
 #' A fit made with `weights` is refused: the weighted discrepancy is

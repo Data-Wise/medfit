@@ -19,6 +19,72 @@
   list(class = class(e), message = conditionMessage(e), call = conditionCall(e))
 }
 
+# Literal zero/nonzero certificate (D2). Exact syntax proof only: an explicit `label == 0` equality and an explicit
+# finite nonzero literal equality on the same parsed parameter label. No expression evaluation, tolerance, solver
+# status, bounds or row-space inference is ever the proof, and a fixed value in the parameter table is not a premise
+# (public syntax cannot label a fixed coefficient). An underflowed literal (`1e-999`) is unknown, never a zero.
+# Returns the certificate (method, label, the two source rows with their values) or NULL (unknown, not "feasible").
+.sem_literal_zero_certificate <- function(parameters, constraints) {
+  if (!is.data.frame(parameters) || !all(c("label", "fixed") %in% names(parameters)) ||
+        !is.data.frame(constraints) || !all(c("lhs", "op", "rhs") %in% names(constraints))) {
+    return(NULL)
+  }
+  labels <- unique(parameters$label[nzchar(parameters$label)])
+  rows <- list()
+  literal <- function(text) {
+    text <- trimws(text)
+    if (!grepl("^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([eE][+-]?[0-9]+)?$", text)) {
+      return(NA_real_)
+    }
+    value <- as.numeric(text)
+    # underflow is not a zero-fixing proof
+    if (!is.finite(value) || (value == 0 && grepl("[1-9]", strsplit(text, "[eE]")[[1L]][1L]))) {
+      return(NA_real_)
+    }
+    value
+  }
+  for (i in which(constraints$op == "==")) {
+    for (side in c("lhs", "rhs")) {
+      label <- trimws(constraints[[side]][i])
+      value <- literal(constraints[[if (side == "lhs") "rhs" else "lhs"]][i])
+      if (label %in% labels && !is.na(value)) {
+        rows[[length(rows) + 1L]] <- list(label = label, value = value, source = "constraint", row = i)
+      }
+    }
+  }
+  for (label in labels) {
+    mine <- Filter(function(x) identical(x$label, label), rows)
+    zero <- Filter(function(x) x$value == 0, mine)
+    nonzero <- Filter(function(x) x$value != 0, mine)
+    if (length(zero) && length(nonzero)) {
+      return(list(method = "literal_zero_nonzero", label = label, zero = zero[[1L]], nonzero = nonzero[[1L]]))
+    }
+  }
+  NULL
+}
+
+# A certified-empty node: retained, never optimized (outcome `excluded`, likelihood unavailable). It is not a fit.
+.sem_excluded_outcome <- function(context, constraints, certificate) {
+  node <- .sem_outcome(context, constraints, error = simpleError("literal zero/nonzero contradiction"))
+  node$outcome <- "excluded"
+  node$feasibility <- "certified_empty"
+  node$certificate <- certificate
+  node
+}
+
+# The certificate is reconstructed from the node's own parsed parameters and constraints and must equal the stored
+# one; any field of an excluded node that a real one would not have refuses it.
+.sem_valid_exclusion <- function(x) {
+  tryCatch({
+    proof <- .sem_literal_zero_certificate(x$context$model$parameters, x$constraints)
+    !is.null(proof) && identical(x$certificate, proof) &&
+      identical(x$schema_version, 1L) && identical(x$outcome, "excluded") &&
+      identical(x$feasibility, "certified_empty") && identical(x$optimizer$state, "unresolved") &&
+      identical(x$likelihood, list(state = "unavailable", f = NA_real_)) &&
+      identical(x$enumeration, list(state = "complete", required = 0L)) && length(x$children) == 0L
+  }, error = function(e) FALSE)
+}
+
 # Evaluate `expr`, holding its warnings and messages (muffled) and its error instead of signaling them, so the
 # caller can put them in a ledger node and decide what to replay.
 .sem_capture_outcome <- function(expr) {
@@ -72,7 +138,9 @@
 .sem_outcome <- function(context, constraints, result = NULL, error = NULL, notices = list(), children = list()) {
   accepted <- is.null(error) && isTRUE(result$converged) && length(result$f) == 1L && is.finite(result$f) &&
     length(result$status) == 1L && !is.na(result$status)
-  resolved <- accepted && all(vapply(children, function(x) identical(x$outcome, "resolved"), TRUE))
+  resolved <- accepted && all(vapply(children, function(x) {
+    identical(x$outcome, "resolved") || .sem_valid_exclusion(x)
+  }, TRUE))
   list(
     schema_version = 1L, id = "fit", parent_id = NA_character_, constraints = constraints,
     context = context, enumeration = list(state = "complete", required = length(children)),
@@ -150,8 +218,17 @@
 }
 
 # The D-11 error with its ledger. The message is the pre-ledger text; notices are carried in the ledger only.
+# A node that is itself certified empty (a direct infeasible fit) is `medfit_sem_infeasible`; a union whose every
+# required branch is certified empty is `medfit_sem_empty_union`. Both stay `medfit_error_no_convergence` (D-11).
 .sem_abort_outcome <- function(message, ledger, best_survivor = NULL) {
-  .sem_no_convergence(message, ledger = ledger, best_survivor = best_survivor)
+  kind <- if (identical(ledger$feasibility, "certified_empty")) {
+    "medfit_sem_infeasible"
+  } else if (length(ledger$children) && all(vapply(ledger$children, .sem_valid_exclusion, TRUE))) {
+    "medfit_sem_empty_union"
+  } else {
+    character()
+  }
+  .sem_no_convergence(message, ledger = ledger, best_survivor = best_survivor, subclass = kind)
 }
 
 # What `.sem_fit_syntax()` does with an error from its pipeline: keep its class (an optimizer failure stays
@@ -168,12 +245,12 @@
   if (!is.null(err$ledger)) {
     # a ledger made below (branches, over-cap refusal): this call's context and notices complete it
     ledger <- err$ledger
+    # the parsed parameters are the premises of a literal certificate: the entry's context has none when it was
+    # called with syntax, so keep the table the node below was built from
+    context$model$parameters <- ledger$context$model$parameters
     ledger$context <- context
     ledger$notices$warnings <- c(ledger$notices$warnings, held$warnings)
     ledger$notices$messages <- c(ledger$notices$messages, held$messages)
-    if (inherits(err, "medfit_error_no_convergence")) {
-      .sem_abort_outcome(conditionMessage(err), .sem_compact_outcome(ledger), err$best_survivor)
-    }
     err$ledger <- .sem_compact_outcome(ledger)
     stop(err)
   }
@@ -224,10 +301,19 @@
           identical(.sem_node_sample(child, root, root$hash), root$context[["sample"]]) &&
           identical(child$context$domain, x$context$domain) &&
           identical(child$context$settings, x$context$settings) &&
-          .sem_valid_outcome(child, paste0(id, "/branch:", i), id, root)
+          identical(child$context$model$parameters, x$context$model$parameters) &&
+          (if (.sem_valid_exclusion(child)) {
+            # a certified-empty branch: its proof is checked on its own parsed parameters and constraints
+            identical(child$id, paste0(id, "/branch:", i)) && identical(child$parent_id, id)
+          } else {
+            .sem_valid_outcome(child, paste0(id, "/branch:", i), id, root)
+          })
       }, TRUE)) &&
-      (!length(x$children) || identical(x$likelihood$f,
-                                        min(vapply(x$children, function(child) child$likelihood$f, 0))))
+      (!length(x$children) || {
+        # the minimum is over the resolved branches; at least one must exist (an all-excluded parent is not a fit)
+        resolved <- Filter(function(child) identical(child$outcome, "resolved"), x$children)
+        length(resolved) > 0L && identical(x$likelihood$f, min(vapply(resolved, function(child) child$likelihood$f, 0)))
+      })
   }, error = function(e) FALSE)
 }
 

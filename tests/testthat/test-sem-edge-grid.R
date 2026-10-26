@@ -54,7 +54,7 @@ edge_grid <- local({
                 expect_equal(coef(fit), coef(ref), tolerance = 1e-5)
               }, "independent equality fit"),
     edge_case("contradictory equalities", function() add("a == 0\na == 1"), "refuse", NULL,
-              "constraint.*violated"),
+              "literal zero/nonzero contradiction"),
     edge_case("inequality at optimum", function() {
       d <- edge_data()
       a <- stats::coef(stats::lm(M ~ X + C, d))[["X"]]
