@@ -251,3 +251,47 @@ test_that("over-cap refusal is decided by the raw count alone and never runs the
   expect_length(err$ledger$children, 0L)
   expect_false(inherits(err, "medfit_sem_empty_union"))
 })
+
+test_that("the 2^53 text boundary, the 65 cap boundary and a missing map are pinned (oracle QA)", {
+  # exactness is claimed up to and including 2^53; the first double above it is the first "approximately"
+  expect_identical(.sem_raw_count_text(2^53), "9007199254740992")
+  expect_identical(.sem_raw_count_text(.sem_raw_count(rep(2L, 53L))), "9007199254740992")
+  expect_identical(.sem_raw_count_text(2^53 + 2), "approximately 9007199254740994")
+  expect_identical(.sem_raw_count_text(2^54), "approximately 18014398509481984")
+  expect_identical(.sem_raw_count_text(2^64), "approximately 18446744073709551616")
+  expect_identical(.sem_raw_count_text(2^31), "2147483648")
+  expect_identical(.sem_raw_count_text(Inf), "overflow (Inf)")
+  expect_false(grepl("[0-9]e[+-]?[0-9]", .sem_raw_count_text(.Machine$double.xmax)))
+  # the cap: 65 raw rows are refused (parser products carry at most five labels here, so the grid is posed directly),
+  # (the 64 side is the 2^6 grid above); nothing is fitted for 65
+  parsed <- .sem_parse(d3_model)
+  posed <- function(counts) {
+    lapply(seq_along(counts), function(j) list(row = j, factors = paste0("f", seq_len(counts[j]))))
+  }
+  fits <- 0L
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
+    fits <<- fits + 1L
+    stop("must not fit")
+  })
+  err <- tryCatch(.sem_fit_branches(parsed, posed(c(5L, 13L)), d3_data(), "expected", 1L, list(), NULL, "model"),
+                  error = identity)
+  expect_identical(conditionMessage(err),
+                   "the zero-product constraints give 65 branches to fit; at most 64 are supported")
+  expect_identical(err$ledger$enumeration, list(state = "not_enumerated", required = 65L))
+  expect_identical(fits, 0L)
+})
+
+test_that("a zero-product ledger without its map is refused, by the validator and by mbco_sem()", {
+  # a ledger saved by a dev build between P1 and P3 has no `branch_map`; v0.14.0 has no ledger at all
+  fit <- fit_sem(paste(d3_model, "a1*b1 == 0", sep = "\n"), d3_data(), n_starts = 1L)
+  expect_true(.sem_valid_outcome(fit@diagnostics$ledger))
+  legacy <- fit
+  legacy@diagnostics$ledger["branch_map"] <- list(NULL)
+  expect_false("branch_map" %in% names(legacy@diagnostics$ledger) && !is.null(legacy@diagnostics$ledger$branch_map))
+  expect_false(.sem_valid_outcome(legacy@diagnostics$ledger))
+  expect_error(mbco_sem(legacy, "a2", "cp", n_starts = 1L), class = "medfit_error_ledger")
+  # a node without products needs no map, with or without the slot
+  plain <- fit_sem(d3_model, d3_data(), n_starts = 1L)@diagnostics$ledger
+  plain["branch_map"] <- NULL
+  expect_true(.sem_valid_outcome(plain))
+})
