@@ -466,6 +466,171 @@
   }, error = function(e) FALSE)
 }
 
+# The MBCO root: the full fit plus one null per tested path, in order. `.sem_valid_outcome()` cannot take it (its child
+# count is the zero-product branch count of the node's own constraints), so the required children are rebuilt
+# here: ids, the one restriction each null adds to the root's, and the sample, domain and settings they share. A
+# resolved child goes through `.sem_valid_outcome()`; a null that failed is held to the exact shape `mbco_sem()` gives
+# it (no likelihood, no witness, the condition, the null's own syntax); a certified-empty one to its certificate.
+# `settings` is what the refits were called with (`n_starts`, `control`, `se_type`) and `tests` the returned table
+# (`f`, `converged`), so the ledger is tied to the call and to the statistic. Left NULL, the settings are taken from
+# the first null. Not decidable without a refit, so not asserted: a consistent rewrite of the root sample together
+# with every `sample_hash`, and an altered parameter value inside a null's table.
+.sem_valid_mbco_outcome <- function(x, paths, settings = NULL, tests = NULL) {
+  tryCatch({
+    sample <- x$context[["sample"]]
+    if (!is.data.frame(sample) ||
+          !(is.null(x$context$sample_hash) || identical(x$context$sample_hash, rlang::hash(sample)))) {
+      return(FALSE)
+    }
+    root <- list(context = list(sample = sample), hash = rlang::hash(sample))
+    kids <- x$children
+    full <- kids[[1L]]
+    settings <- settings %||% kids[[2L]]$context$settings
+    # a null that failed before the engine returned has the context `mbco_sem()` builds for it: the same domain, with
+    # `weights` and an unset `fixed_x` spelled out; the domain is compared in that normal form
+    domain <- function(d) {
+      list(information = d$information, weights = d$weights, meanstructure = d$meanstructure,
+           fixed_x = if (is.character(d$fixed_x)) d$fixed_x else character(), factors = d$factors,
+           objective = d$objective)
+    }
+    shared <- function(child) {
+      mine <- child$context$settings
+      identical(.sem_node_sample(child, root, root$hash), sample) &&
+        identical(domain(child$context$domain), domain(x$context$domain)) &&
+        identical(mine[c("n_starts", "control")], settings[c("n_starts", "control")]) &&
+        identical(mine$se_type, settings$se_type)
+    }
+    # a null's parameter table differs from the root's only in the constraint rows it records (`all_constraints`,
+    # which includes the null's own)
+    bare <- function(p) {
+      attr(p, "all_constraints") <- NULL
+      p
+    }
+    # what an engine failure leaves in a node: no likelihood, no witness, the condition, nothing retained
+    bare_failure <- function(node, id, parent) {
+      is.list(node) && identical(node$schema_version, 1L) && identical(node$id, id) &&
+        identical(node$parent_id, parent) && identical(node$outcome, "unresolved") &&
+        identical(node$optimizer$state, "unresolved") &&
+        identical(node$likelihood, list(state = "unavailable", f = NA_real_)) &&
+        identical(node$feasibility, "unknown") && identical(node$covariance, "not_retained") &&
+        is.list(node$condition) && identical(node$children, list()) &&
+        identical(node$enumeration, list(state = "complete", required = 0L)) &&
+        is.list(node$notices$warnings) && is.list(node$notices$messages) && is.null(node$post_fit)
+    }
+    # a null that failed is one of two shapes: the engine stopped (`bare_failure`), or a zero-product union with at
+    # least one branch that failed, whose other branches are resolved or certified empty and whose likelihood is theirs
+    failed_null <- function(child, id, syntax, parsed) {
+      context_ok <- identical(child$context$model$syntax, syntax) &&
+        # NULL when the engine stopped before parsing (the context of the call), else the null's own table
+        (is.null(child$context$model$parameters) || identical(child$context$model$parameters, parsed$parameters)) &&
+        identical(child$context$n_obs, x$context$n_obs) && is.list(child) && identical(child$schema_version, 1L) &&
+        identical(child$id, id) && identical(child$parent_id, "mbco") && identical(child$outcome, "unresolved")
+      if (!context_ok) {
+        return(FALSE)
+      }
+      if (!length(child$children)) {
+        return(bare_failure(child, id, "mbco"))
+      }
+      products <- .sem_zero_product_rows(child$constraints)
+      grid <- if (length(products)) .sem_branch_grid(products)
+      count <- if (length(products)) .sem_raw_count(vapply(products, function(p) length(p$factors), 0L)) else 0L
+      held <- identical(child$optimizer$state, "accepted")
+      branches <- vapply(seq_along(child$children), function(j) {
+        cons <- child$constraints
+        for (k in seq_along(products)) {
+          cons$lhs[products[[k]]$row] <- grid[j, k]
+          cons$rhs[products[[k]]$row] <- "0"
+        }
+        branch <- child$children[[j]]
+        bid <- paste0(id, "/branch:", j)
+        identical(branch$constraints, cons) && identical(.sem_node_sample(branch, root, root$hash), sample) &&
+          if (identical(branch$outcome, "resolved")) {
+            .sem_valid_outcome(branch, bid, id, root)
+          } else {
+            .sem_valid_exclusion(branch) && identical(branch$id, bid) && identical(branch$parent_id, id) ||
+              bare_failure(branch, bid, id)
+          }
+      }, TRUE)
+      statuses <- vapply(child$children, function(b) identical(b$outcome, "resolved"), TRUE)
+      length(child$children) == count && all(branches) && !all(statuses) &&
+        identical(child$branch_map, .sem_branch_map(child$constraints)) &&
+        identical(child$enumeration, list(state = "complete", required = count)) &&
+        identical(held, any(statuses)) &&
+        identical(child$likelihood$state, if (held) "available" else "unavailable") &&
+        identical(child$feasibility, if (held) "witness" else "unknown") &&
+        (is.null(child$condition) || is.list(child$condition)) &&
+        is.list(child$notices$warnings) && is.list(child$notices$messages)
+    }
+    # the null the engine proved empty: a zero-product union whose every branch is certified empty
+    # (each passes `.sem_valid_exclusion()`), with no condition and no likelihood. The node describes the constraints
+    # it was proved on, which the certificates check, so neither its restriction nor its context (sample, domain: an
+    # empty-union error raised below carries the context of the call that proved it) is compared with the call's; a
+    # certificate proves emptiness, nothing more
+    empty_union <- function(child, id) {
+      kids <- child$children
+      products <- .sem_zero_product_rows(child$constraints)
+      grid <- if (length(products)) .sem_branch_grid(products)
+      length(kids) > 0L && length(products) > 0L && identical(child$outcome, "unresolved") &&
+        identical(child$schema_version, 1L) && identical(child$id, id) && identical(child$parent_id, "mbco") &&
+        identical(child$optimizer$state, "unresolved") &&
+        identical(child$likelihood, list(state = "unavailable", f = NA_real_)) &&
+        identical(child$feasibility, "unknown") && identical(child$covariance, "not_retained") &&
+        is.null(child$condition) && is.null(child$post_fit) && identical(child$context$n_obs, x$context$n_obs) &&
+        identical(child$branch_map, .sem_branch_map(child$constraints)) &&
+        identical(child$enumeration, list(state = "complete", required = length(kids))) &&
+        length(kids) == .sem_raw_count(vapply(products, function(p) length(p$factors), 0L)) &&
+        all(vapply(seq_along(kids), function(j) {
+          cons <- child$constraints
+          for (k in seq_along(products)) {
+            cons$lhs[products[[k]]$row] <- grid[j, k]
+            cons$rhs[products[[k]]$row] <- "0"
+          }
+          identical(kids[[j]]$constraints, cons) && .sem_valid_exclusion(kids[[j]]) &&
+            identical(kids[[j]]$id, paste0(id, "/branch:", j)) && identical(kids[[j]]$parent_id, id)
+        }, TRUE))
+    }
+    nulls <- vapply(seq_along(paths), function(i) {
+      child <- kids[[i + 1L]]
+      syntax <- paste0(x$context$model$syntax, "\n", paths[i], " == 0")
+      parsed <- .sem_parse(syntax)
+      id <- paste0("mbco/null:", i)
+      resolved <- identical(child$outcome, "resolved")
+      excluded <- !resolved && .sem_valid_exclusion(child)
+      # the table agrees with the call: a null that resolved was fitted, one that failed was not
+      tied <- is.null(tests) || (identical(isTRUE(tests$converged[i]), resolved) &&
+                                   (!resolved || identical(tests$f[i], child$likelihood$f)))
+      if (tied && !resolved && !excluded && empty_union(child, id)) {
+        return(TRUE)
+      }
+      ok <- tied && identical(child$constraints, parsed$constraints) && shared(child)
+      ok && (if (excluded) {
+        identical(child$id, id) && identical(child$parent_id, "mbco")
+      } else if (resolved) {
+        identical(bare(child$context$model$parameters), bare(x$context$model$parameters)) &&
+          .sem_valid_outcome(child, id, "mbco", root)
+      } else {
+        failed_null(child, id, syntax, parsed)
+      })
+    }, TRUE)
+    all_resolved <- all(vapply(kids, function(child) identical(child$outcome, "resolved"), TRUE))
+    is.list(x) && identical(x$schema_version, 1L) && identical(x$id, "mbco") &&
+      identical(x$parent_id, NA_character_) &&
+      length(kids) == length(paths) + 1L && is.data.frame(x$constraints) &&
+      identical(x$branch_map, .sem_branch_map(x$constraints)) &&
+      identical(x$enumeration, list(state = "complete", required = length(paths) + 1L)) &&
+      identical(full$constraints, x$constraints) && identical(full$context$settings, x$context$settings) &&
+      identical(.sem_node_sample(full, root, root$hash), sample) &&
+      identical(domain(full$context$domain), domain(x$context$domain)) &&
+      identical(full$context$model$parameters, x$context$model$parameters) &&
+      .sem_valid_outcome(full, "mbco/full", "mbco", root) &&
+      all(nulls) &&
+      identical(x$optimizer$state, "accepted") && identical(x$optimizer$status, full$optimizer$status) &&
+      identical(x$likelihood, list(state = "available", f = full$likelihood$f)) &&
+      identical(x$feasibility, "witness") && identical(x$outcome, if (all_resolved) "resolved" else "unresolved") &&
+      is.null(x$condition)
+  }, error = function(e) FALSE)
+}
+
 # The refusal of evidence: a class of its own, never `medfit_error_no_convergence`, so `mbco_sem()` does not turn a
 # forged or mismatched refit into an unresolved row.
 .sem_abort_ledger <- function(reason, ledger) {

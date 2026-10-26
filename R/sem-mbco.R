@@ -181,6 +181,9 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   # fit without a mean structure, so a later change of the default cannot give the refit a different likelihood
   # A refit that cannot be fitted is an unresolved row, not an error: its failure text goes in `note`, and the
   # statistic is NA (never the minimum over the refits that worked, which would hide the failure).
+  # the refits are model-based whatever the fit's own `se_type` (only the likelihood is used); the ledger check below
+  # holds each null to these settings
+  refit_se_type <- "model"
   outcomes <- list(.sem_rebase_outcome(fit@diagnostics$ledger, "mbco/full", "mbco"))
   refit <- lapply(seq_along(paths), function(i) {
     tested <- paths[i]
@@ -193,7 +196,8 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     captured <- .sem_capture_outcome({
       r <- tryCatch(
         .sem_fit_syntax(syntax, fit@data, fit@information, n_starts = n_starts,
-                        control = control, meanstructure = isTRUE(fit@internals$ram$has_mean),
+                        control = control, se_type = refit_se_type,
+                        meanstructure = isTRUE(fit@internals$ram$has_mean),
                         fixed_x = fixed_x, factors = fit@internals$factors),
         medfit_sem_covariance_error = .sem_retain_covariance
       )
@@ -233,7 +237,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       parsed <- .sem_parse(syntax)
       context <- .sem_outcome_context(syntax, parsed, fit@data, fit@information, NULL,
                                       isTRUE(fit@internals$ram$has_mean), fixed_x,
-                                      n_starts, control, fit@diagnostics$se_type, fit@internals$factors)
+                                      n_starts, control, refit_se_type, fit@internals$factors)
       node <- .sem_outcome(context, parsed$constraints, error = err, notices = captured$notices)
     } else if (is.null(failure)) {
       # the null's own notices include the ones its fit replayed; a retained null's fit replayed none, so its own
@@ -267,6 +271,11 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   ledger <- .sem_outcome(fit@diagnostics$ledger$context, fit@internals$constraints, result = full, children = outcomes)
   ledger$id <- "mbco"
   ledger <- .sem_compact_outcome(ledger)
+  if (!.sem_valid_mbco_outcome(ledger, paths,
+                               settings = list(n_starts = n_starts, control = control, se_type = refit_se_type),
+                               tests = list(f = f, converged = !failed))) {
+    .sem_abort_ledger("malformed MBCO outcome ledger", ledger)
+  }
   if (unresolved) {
     warning(paste0(paste(unique(note[nzchar(note)]), collapse = "\n"),
                    "\nThe MBCO statistic is not available (NA); `$tests` lists each refit."), call. = FALSE)

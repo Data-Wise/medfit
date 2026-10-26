@@ -327,8 +327,8 @@ test_that("MBCO keeps boundary notices on a typed refit failure", {
     if (endsWith(model, "a1 == 0")) {
       warning("boundary warning before typed failure")
       message("boundary message before typed failure")
-      node <- r$ledger
-      node$outcome <- "unresolved"
+      # the node a real failure leaves: no likelihood, the condition, the notices raised below
+      node <- .sem_outcome(r$ledger$context, r$ledger$constraints, error = simpleError("typed refit failure"))
       node$notices$warnings <- list(.sem_condition_record(simpleWarning("inner typed notice")))
       .sem_abort_outcome("typed refit failure", node)
     }
@@ -407,9 +407,8 @@ test_that("survivor-success, status-drop and label-swap mutants fail intended as
   })
   local({
     swapped <- outcome_mutate(mbco_sem, "tested <- paths[i]", "tested <- rev(paths)[i]")
-    bad <- swapped(full, "a1", "b1")
-    expect_s3_class(bad, "mbco_sem")
-    expect_failure(expect_identical(bad$ledger$children[[2]]$constraints$lhs, "a1"))
+    # the MBCO root rebuilds each null from the tested path, so the mutant is refused before it returns
+    expect_error(swapped(full, "a1", "b1"), class = "medfit_error_ledger")
   })
 })
 
