@@ -1,4 +1,4 @@
-# medfit (development version)
+# medfit 0.14.1
 
 ## Outcome ledger for native zero-product fits and MBCO
 
@@ -16,6 +16,10 @@
   `medfit_error_ledger` error (a fit made before this release must be refitted). A zero-product model whose
   restrictions exceed the 64-branch cap still stops with its plain error; it now carries a ledger whose
   enumeration state is `not_enumerated`.
+* `mbco_sem()` validates its own root ledger (the full fit and one node per tested null, in order, each tied to the
+  returned `$tests` table and the settings of the refit) before returning, and refuses a malformed one with
+  `medfit_error_ledger`. No result or message changes; a failed null's ledger records `se_type` `"model"`, the setting
+  its refit used.
 * Warnings and messages raised before an error are no longer replayed on the error; they are kept in `$ledger`
   only.
 * Internal: fits hold their warnings and messages while running and replay them as condition objects, so their
