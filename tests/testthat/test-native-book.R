@@ -155,8 +155,8 @@ test_that("the chapters carry no 0.14.0 warning muffle and pin the 0.14.x settin
   for (g in book_chapters()) {
     txt <- read_text(file.path(book_dir(), "chapters", g))
     expect_false(grepl("medfit_warning_default_change|native-defaults-setup", txt), info = g)
-    expect_true(grepl("fit_sem <- function(model, data, ..., fixed_x = FALSE, meanstructure = NULL)", txt, fixed = TRUE),
-                info = g)
+    wrapper <- "fit_sem <- function(model, data, ..., fixed_x = FALSE, meanstructure = NULL)"
+    expect_true(grepl(wrapper, txt, fixed = TRUE), info = g)
   }
   expect_false(grepl("documents medfit 0\\.14", read_text(file.path(book_dir(), "index.qmd"))))
 })
