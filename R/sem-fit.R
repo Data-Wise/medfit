@@ -90,7 +90,7 @@
     # a contradiction proved by syntax: nothing to optimize, and no fit exists (D2)
     context <- .sem_outcome_context(model, parsed, data, information, weights, meanstructure, fixed_x,
                                     n_starts, control, se_type, factors)
-    .sem_abort_outcome("literal zero/nonzero contradiction",
+    .sem_abort_outcome(.sem_certificate_message(parsed$constraints, certificate),
                        .sem_excluded_outcome(context, parsed$constraints, certificate))
   }
   tab <- .sem_complete(parsed$parameters, meanstructure, fixed_x)
@@ -339,7 +339,7 @@
     }
   }
   ledger <- .sem_outcome(context, parsed$constraints, result = if (length(win)) fits[[win]]$fit,
-                         children = outcomes)
+                         children = outcomes, union = TRUE)
   if (!length(ok)) {
     .sem_abort_outcome(paste0("no branch of the zero-product constraints converged:\n  ",
                               paste(fail, collapse = "\n  ")), ledger)

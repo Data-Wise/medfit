@@ -63,6 +63,13 @@
   NULL
 }
 
+# The text of a direct contradiction: the proof's two rows, in the optimizer's old wording ("constraint ... violated").
+.sem_certificate_message <- function(constraints, certificate) {
+  row <- function(r) sprintf("%s %s %s", constraints$lhs[r], constraints$op[r], constraints$rhs[r])
+  sprintf("literal zero/nonzero contradiction: constraint '%s' is violated by the literal equality '%s'",
+          row(certificate$zero$row), row(certificate$nonzero$row))
+}
+
 # A certified-empty node: retained, never optimized (outcome `excluded`, likelihood unavailable). It is not a fit.
 .sem_excluded_outcome <- function(context, constraints, certificate) {
   node <- .sem_outcome(context, constraints, error = simpleError("literal zero/nonzero contradiction"))
@@ -135,11 +142,14 @@
 
 # One node. `result` is the engine's fit list (or the full fit's summary for an MBCO root), `error` the condition
 # that stopped the call, `children` the nodes of the required restrictions.
-.sem_outcome <- function(context, constraints, result = NULL, error = NULL, notices = list(), children = list()) {
+# `union` is TRUE only for a zero-product union (`.sem_fit_branches()`), whose certified-empty branches are accounted
+# for; any other parent (the MBCO root, whose null may be certified empty) stays unresolved next to an unresolved child.
+.sem_outcome <- function(context, constraints, result = NULL, error = NULL, notices = list(), children = list(),
+                         union = FALSE) {
   accepted <- is.null(error) && isTRUE(result$converged) && length(result$f) == 1L && is.finite(result$f) &&
     length(result$status) == 1L && !is.na(result$status)
   resolved <- accepted && all(vapply(children, function(x) {
-    identical(x$outcome, "resolved") || .sem_valid_exclusion(x)
+    identical(x$outcome, "resolved") || (union && .sem_valid_exclusion(x))
   }, TRUE))
   list(
     schema_version = 1L, id = "fit", parent_id = NA_character_, constraints = constraints,

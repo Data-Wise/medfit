@@ -148,3 +148,14 @@ survivor-success mutant of `test-sem-outcomes.R` (removing the `if (length(skipp
 `.sem_valid_outcome()` check that parent and child share `context$model$parameters` now applies to every child.
 Mutants in `test-sem-literal-certificates.R`: unknown-as-empty validator, proof removal, a tolerance for exact zero,
 and a solver failure substituted for the proof; each fails its intended control.
+
+Author decisions after QA (2026-10-25):
+
+- Direct contradiction: the early literal check stays (`medfit_sem_infeasible` before the optimizer), and its message also
+  carries the optimizer's old wording ("literal zero/nonzero contradiction: constraint ... is violated by ..."), so
+  anything matching `constraint.*violated` still works; `test-sem-edge-grid.R` keeps its original expectation.
+- Exact semantics, no tolerance: any finite nonzero literal contradicts zero. `a == 0` with `a == 1e-9` (or `1e-12`) now
+  stops with `medfit_sem_infeasible` where `dev` returned a fit; in a zero-product union `a1 * b1 == 0` with
+  `a1 == 1e-12` now selects the `b1 == 0` branch instead of `a1 == 0`. Recorded in NEWS.
+- Only a zero-product union counts a certified-empty child as resolved (`.sem_outcome(union = TRUE)`, set by
+  `.sem_fit_branches()`); the MBCO root stays `unresolved` when a null is certified empty, as on `dev`.

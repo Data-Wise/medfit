@@ -282,20 +282,33 @@ test_that("an excluded node is counted resolved only with a valid proof, and eve
   good <- node$children[[1]]
   expect_true(.sem_valid_exclusion(good))
   ok <- list(converged = TRUE, f = 1, status = 1L)
+  union_of <- function(child) {
+    .sem_outcome(node$context, node$constraints, result = ok, children = list(child), union = TRUE)$outcome
+  }
+  expect_identical(union_of(good), "resolved")
+  # a parent that is not a zero-product union (the MBCO root) never counts an exclusion as resolved
   expect_identical(.sem_outcome(node$context, node$constraints, result = ok, children = list(good))$outcome,
-                   "resolved")
+                   "unresolved")
   forged <- good
   forged$certificate <- NULL
-  expect_identical(.sem_outcome(node$context, node$constraints, result = ok, children = list(forged))$outcome,
-                   "unresolved")
+  expect_identical(union_of(forged), "unresolved")
+  set <- function(path, value) {
+    function(x) {
+      if (length(path) == 1L) x[[path]] <- value else x[[path[1L]]][[path[2L]]] <- value
+      x
+    }
+  }
   tamper <- list(
-    schema_version = function(x) { x$schema_version <- 2L; x },
-    outcome = function(x) { x$outcome <- "resolved"; x },
-    feasibility = function(x) { x$feasibility <- "witness"; x },
-    optimizer = function(x) { x$optimizer$state <- "accepted"; x },
-    likelihood = function(x) { x$likelihood <- list(state = "available", f = 1); x },
-    enumeration = function(x) { x$enumeration <- list(state = "complete", required = 1L); x },
-    children = function(x) { x$children <- list(x); x }
+    schema_version = set("schema_version", 2L),
+    outcome = set("outcome", "resolved"),
+    feasibility = set("feasibility", "witness"),
+    optimizer = set(c("optimizer", "state"), "accepted"),
+    likelihood = set("likelihood", list(state = "available", f = 1)),
+    enumeration = set("enumeration", list(state = "complete", required = 1L)),
+    children = function(x) {
+      x$children <- list(x)
+      x
+    }
   )
   for (field in names(tamper)) {
     expect_false(.sem_valid_exclusion(tamper[[field]](good)), info = field)
@@ -322,4 +335,27 @@ test_that("compare_lr() treats an all-empty zero-product null as an unresolved r
   expect_true(is.na(res$reference$lr))
   expect_length(seen, 1L)
   expect_match(seen, "literal zero/nonzero contradiction", fixed = TRUE)
+})
+
+test_that("an infeasible (certified-empty) null leaves the MBCO root ledger unresolved", {
+  fit <- fit_sem(paste(d2_model, "a1 == 1", sep = "\n"), d2_data(), n_starts = 1L)
+  res <- suppressWarnings(mbco_sem(fit, "a1", "b1"))
+  expect_true(res$unresolved)
+  expect_true(is.na(res$statistic))
+  expect_identical(res$ledger$children[[2]]$outcome, "excluded")
+  expect_identical(res$ledger$outcome, "unresolved")
+  # the all-empty union null stays an unresolved row with one warning
+  model <- paste(d2_model, "a1*b1 == 0\na1 == 1", sep = "\n")
+  union <- fit_sem(model, d2_data(), n_starts = 1L)
+  expect_warning(res <- mbco_sem(union, "a1", "b1"), "The MBCO statistic is not available")
+  expect_identical(res$ledger$outcome, "unresolved")
+  expect_true(is.na(res$statistic))
+})
+
+test_that("the direct contradiction message keeps the optimizer's wording", {
+  err <- tryCatch(fit_sem(paste(d2_model, "a1 == 1\na1 == 0", sep = "\n"), d2_data(), n_starts = 1L),
+                  error = identity)
+  expect_s3_class(err, "medfit_sem_infeasible")
+  expect_match(conditionMessage(err), "literal zero/nonzero contradiction")
+  expect_match(conditionMessage(err), "constraint.*violated")
 })
