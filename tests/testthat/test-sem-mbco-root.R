@@ -3,7 +3,7 @@
 mbco_root_model <- "repetition ~ a1*x\nimagery ~ a2*x\nrecall ~ cp*x + b1*repetition + b2*imagery"
 
 mbco_root_fit <- function(...) {
-  data <- readRDS(test_path("fixtures", "memory_exp.rds"))
+  data <- readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
   suppressMessages(fit_sem(mbco_root_model, data, n_starts = 1L, ...))
 }
 
