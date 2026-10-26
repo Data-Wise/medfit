@@ -6,12 +6,57 @@
 # the estimates. It returns a plain list; the exported fit object arrives with
 # `fit_mediation(engine = "native")` (plan N4).
 
+# The fit and its outcome ledger (`R/sem-outcomes.R`). The pipeline runs with its warnings and messages held; a success
+# replays them after the ledger is built, a failure keeps its class and carries them in the ledger and the message.
 .sem_fit_syntax <- function(model, data, information = c("observed", "expected"), n_starts = 5L,
                             control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL,
                             meanstructure = NULL, fixed_x = FALSE, factors = NULL) {
+  context <- .sem_outcome_context(model, parsed, data, information, weights, meanstructure, fixed_x,
+                                  n_starts, control, se_type, factors)
+  captured <- .sem_capture_outcome(.sem_fit_pipeline(model, data, information, n_starts, control, weights,
+                                                     se_type, parsed, meanstructure, fixed_x, factors))
+  out <- captured$value
+  err <- captured$error
+  covariance <- !is.null(err) && inherits(err, "medfit_sem_covariance_error")
+  if (!is.null(err) && !covariance) {
+    constraints <- if (!is.null(parsed)) {
+      parsed$constraints
+    } else {
+      tryCatch(.sem_parse(model)$constraints, error = function(e) data.frame())
+    }
+    .sem_reraise_outcome(err, context, constraints, captured$notices)
+  }
+  # a covariance-stage failure holds the accepted fit: its ledger is built exactly as a success's, then marked
+  if (covariance) {
+    out <- err$partial
+  }
+  context <- .sem_fit_context(context, out)
+  if (is.null(out$ledger)) {
+    out$ledger <- .sem_outcome(context, out$constraints, out, notices = captured$notices)
+  } else {
+    # a union's ledger holds the parsed parameters its certificates are checked against; the entry has none
+    context$model$parameters <- out$ledger$context$model$parameters
+    out$ledger$context <- context
+  }
+  if (covariance && is.null(out$ledger$post_fit)) {
+    out$ledger$covariance <- "failed"
+    out$ledger$post_fit <- err$post_fit
+  }
+  out$ledger <- .sem_compact_outcome(out$ledger)
+  if (covariance) {
+    # the notices raised before the failure are in the ledger; the error keeps the original message
+    .sem_abort_covariance(out, conditionMessage(err))
+  }
+  .sem_require_outcome(out, model)
+  .sem_replay_notices(captured$notices)
+  out
+}
+
+.sem_fit_pipeline <- function(model, data, information, n_starts, control, weights, se_type, parsed,
+                              meanstructure, fixed_x, factors) {
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
-  information <- match.arg(information)
-  se_type <- match.arg(se_type)
+  information <- match.arg(information, c("observed", "expected"))
+  se_type <- match.arg(se_type, c("model", "sandwich"))
   if (!is.null(weights)) {
     weights <- .sem_check_weights(weights, nrow(data))
   }
@@ -38,13 +83,21 @@
       rows <- stats::complete.cases(data[, vars, drop = FALSE])
       .sem_check_dummy_support(factors, data, rows, if (!is.null(weights)) weights[rows])
       out <- .sem_fit_branches(parsed, products, data, information, n_starts, control, weights, se_type,
-                               meanstructure = meanstructure, fixed_x = fixed_x)
+                               meanstructure = meanstructure, fixed_x = fixed_x, factors = factors)
       out$factors <- factors
       return(out)
     }
   }
   if (any(parsed$parameters$level != 1L)) {
     stop("two-level estimation is not implemented: the model uses `level:` blocks", call. = FALSE)
+  }
+  certificate <- .sem_literal_zero_certificate(parsed$parameters, parsed$constraints)
+  if (!is.null(certificate)) {
+    # a contradiction proved by syntax: nothing to optimize, and no fit exists (D2)
+    context <- .sem_outcome_context(model, parsed, data, information, weights, meanstructure, fixed_x,
+                                    n_starts, control, se_type, factors)
+    .sem_abort_outcome(.sem_certificate_message(parsed$constraints, certificate),
+                       .sem_excluded_outcome(context, parsed$constraints, certificate))
   }
   tab <- .sem_complete(parsed$parameters, meanstructure, fixed_x)
   .sem_check_scale(tab)
@@ -130,22 +183,37 @@
     eq_rank <- .sem_eq_rank_at(cons, fit$theta, u0)
     df <- .sem_df(ram, eq_rank)
   }
-  vc <- .sem_vcov(fit$theta, ram, smp, information, cons, lb, ub, se_type)
-  defined <- .sem_defined(parsed$constraints, fit$theta, vc)
+  # Definition values and gradients are checked before the covariance, so an invalid definition is not hidden by a
+  # covariance-stage error; the standard errors follow the covariance.
+  .sem_defined(parsed$constraints, fit$theta, NULL)
+  vc <- tryCatch(.sem_vcov(fit$theta, ram, smp, information, cons, lb, ub, se_type), error = function(e) e)
   act_cons <- if (is.null(cons)) .sem_no_cons(ram$q) else cons
   act <- .sem_active_set(fit$theta, ram, smp, lb, ub, act_cons)
   .sem_product_warn(tab, modeltest, se_type)
 
-  c(
+  out <- c(
     fit,
     list(
-      vcov = vc, defined = defined, constraints = parsed$constraints,
+      constraints = parsed$constraints,
       active_constraints = act$text[act$active_row], information = information, ram = ram, table = conv$table,
       par_map = conv$par_map, se_type = se_type, weights = smp$w, n_starts = n_starts, control = control,
       partable = .sem_to_partable(conv$table), data = x, n_obs = smp$n, n_dropped = n_dropped, df = df,
       eq_rank = eq_rank, branch = character(), fixed_x = fixed_set, factors = factors
     )
   )
+  if (inherits(vc, "error")) {
+    # Only an accepted likelihood is evidence. Anything else keeps the error it was, and the caller's ledger says the
+    # likelihood is unavailable.
+    if (!(isTRUE(fit$converged) && length(fit$f) == 1L && is.finite(fit$f))) {
+      stop(vc)
+    }
+    stop(.sem_covariance_error(conditionMessage(vc), out,
+                               post_fit = list(schema_version = 1L, stage = "covariance",
+                                               condition = .sem_condition_record(vc))))
+  }
+  out$vcov <- vc
+  out$defined <- .sem_defined(parsed$constraints, fit$theta, vc)
+  out
 }
 
 # Fit-time policy for a product term (0.10.0 plan U6, F4). `modeltest` is the verdict of `.sem_product_modeltest()`.
@@ -216,20 +284,33 @@
 # each product to zero, every branch a linear model fitted from the default start (never from another
 # branch's or the full model's estimates, so a branch cannot inherit an infeasible point), and the branch
 # with the smallest discrepancy wins. A branch that fails the acceptance gate is skipped; when none succeeds
-# the error lists each. Messages and warnings of the losing branches are dropped, those of the winner are
-# passed on. The returned fit keeps the user's constraints; `branch` names the lines the winner used. A skipped
+# the error lists each. Every branch's notices and condition are kept in its ledger node; only the winner's notices
+# are passed on. The returned fit keeps the user's constraints; `branch` names the lines the winner used. A skipped
 # branch while another wins leaves a minimum over the surviving branches only, which can look valid and need not
 # be the constrained optimum: that is an error too (`medfit_error_no_convergence`), never a fit, and `mbco_sem()`
-# and `compare_lr()` report an unresolved result for it.
+# and `compare_lr()` report an unresolved result for it. The error carries the ledger of every required branch as
+# `$ledger` (ADR D-12). A failed branch is unknown, never certified infeasible.
 .sem_fit_branches <- function(parsed, products, data, information, n_starts, control, weights, se_type,
-                              meanstructure = NULL, fixed_x = FALSE) {
-  grid <- do.call(expand.grid, c(lapply(products, `[[`, "factors"), stringsAsFactors = FALSE))
-  if (nrow(grid) > 64L) {
-    stop(sprintf("the zero-product constraints give %d branches to fit; at most 64 are supported", nrow(grid)),
-         call. = FALSE)
+                              meanstructure = NULL, fixed_x = FALSE, factors = NULL) {
+  context <- .sem_outcome_context(NULL, parsed, data, information, weights, meanstructure, fixed_x,
+                                  n_starts, control, se_type, factors)
+  # the cap is on the raw count (duplicates included), checked before the grid is allocated (D3). An over-cap model is
+  # refused on that count alone: no literal certificate is tried, since nothing is enumerated.
+  raw_count <- .sem_raw_count(vapply(products, function(p) length(p$factors), 0L))
+  if (raw_count > 64L) {
+    reason <- sprintf("the zero-product constraints give %s branches to fit; at most 64 are supported",
+                      .sem_raw_count_text(raw_count))
+    err <- simpleError(reason)
+    err$ledger <- .sem_outcome(context, parsed$constraints, error = err)
+    # nothing was enumerated: the count is the requirement, not a completed enumeration
+    err$ledger$enumeration <- list(state = "not_enumerated", required = raw_count)
+    stop(err)
   }
+  grid <- .sem_branch_grid(products)
   fits <- vector("list", nrow(grid))
+  outcomes <- vector("list", nrow(grid))
   fail <- character(nrow(grid))
+  excluded <- logical(nrow(grid))
   for (b in seq_len(nrow(grid))) {
     cons <- parsed$constraints
     lines <- character()
@@ -239,36 +320,63 @@
       cons$lhs[i] <- grid[b, j]
       cons$rhs[i] <- "0"
     }
-    held <- list(messages = list(), warnings = list())
-    res <- tryCatch(
-      withCallingHandlers(
-        .sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
-                        parsed = list(parameters = parsed$parameters, constraints = cons),
-                        meanstructure = meanstructure, fixed_x = fixed_x),
-        message = function(m) {
-          held$messages[[length(held$messages) + 1L]] <<- m
-          invokeRestart("muffleMessage")
-        },
-        warning = function(w) {
-          held$warnings[[length(held$warnings) + 1L]] <<- w
-          invokeRestart("muffleWarning")
-        }
-      ),
-      error = function(e) conditionMessage(e)
-    )
-    if (is.character(res)) {
-      fail[b] <- sprintf("%s: %s", paste(lines, collapse = ", "), res)
+    # a branch whose restrictions contradict by literal syntax is certified empty and not optimized (D2); only that
+    # proof excludes a branch, a failure to converge is unknown
+    certificate <- .sem_literal_zero_certificate(parsed$parameters, cons)
+    if (!is.null(certificate)) {
+      excluded[b] <- TRUE
+      fail[b] <- sprintf("%s: %s", paste(lines, collapse = ", "), "literal zero/nonzero contradiction")
+      outcomes[[b]] <- .sem_rebase_outcome(.sem_excluded_outcome(context, cons, certificate),
+                                           paste0("fit/branch:", b), "fit")
+      next
+    }
+    captured <- .sem_capture_outcome({
+      # a covariance-stage failure of one branch keeps that branch's likelihood and evidence (D4): the union decides
+      res <- tryCatch(.sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
+                                      parsed = list(parameters = parsed$parameters, constraints = cons),
+                                      meanstructure = meanstructure, fixed_x = fixed_x, factors = factors),
+                      medfit_sem_covariance_error = .sem_retain_covariance)
+      .sem_require_outcome(res, partial = !is.null(res$ledger$post_fit))
+      if (!identical(res$constraints, cons)) {
+        .sem_abort_ledger("branch outcome has mismatched constraints", NULL)
+      }
+      res
+    })
+    res <- captured$value
+    err <- captured$error
+    ledger <- if (is.null(err)) res$ledger else err$ledger
+    if (is.null(err) && !is.null(ledger$post_fit)) {
+      # the retention notice was raised after the branch's own ledger was built
+      ledger$notices$warnings <- c(ledger$notices$warnings, lapply(captured$notices$warnings, .sem_condition_record))
+      ledger$notices$messages <- c(ledger$notices$messages, lapply(captured$notices$messages, .sem_condition_record))
+    }
+    if (is.null(ledger)) {
+      ledger <- .sem_outcome(context, cons, error = err, notices = captured$notices)
+    }
+    outcomes[[b]] <- .sem_rebase_outcome(ledger, paste0("fit/branch:", b), "fit")
+    if (!is.null(err)) {
+      fail[b] <- sprintf("%s: %s", paste(lines, collapse = ", "), conditionMessage(err))
     } else {
       res$branch <- lines
-      fits[[b]] <- list(fit = res, held = held)
+      fits[[b]] <- list(fit = res, held = captured$notices)
     }
   }
   ok <- which(!vapply(fits, is.null, TRUE))
-  if (!length(ok)) {
-    .sem_no_convergence(paste0("no branch of the zero-product constraints converged:\n  ",
-                               paste(fail, collapse = "\n  ")))
+  win <- if (length(ok)) ok[which.min(vapply(ok, function(b) fits[[b]]$fit$f, numeric(1)))] else integer()
+  if (length(win)) {
+    # a certified-empty branch is compared on the winner's sample and domain: same rows, same likelihood
+    context <- fits[[win]]$fit$ledger$context
+    for (b in which(excluded)) {
+      outcomes[[b]]$context <- context
+    }
   }
-  skipped <- setdiff(seq_along(fits), ok)
+  ledger <- .sem_outcome(context, parsed$constraints, result = if (length(win)) fits[[win]]$fit,
+                         children = outcomes, union = TRUE)
+  if (!length(ok)) {
+    .sem_abort_outcome(paste0("no branch of the zero-product constraints converged:\n  ",
+                              paste(fail, collapse = "\n  ")), ledger)
+  }
+  skipped <- setdiff(seq_along(fits), c(ok, which(excluded)))
   if (length(skipped)) {
     # A minimum over the surviving branches can look valid and need not be the constrained optimum, so no fit is
     # returned: the best survivor's discrepancy goes in the message for diagnosis only.
@@ -278,13 +386,22 @@
              "(the best of the other branches has discrepancy %s):\n  %s"),
       length(skipped), length(fits), format(best, digits = 8), paste(fail[skipped], collapse = "\n  ")
     )
-    .sem_no_convergence(msg)
+    .sem_abort_outcome(msg, ledger, best_survivor = list(id = outcomes[[win]]$id, f = best))
   }
-  win <- ok[which.min(vapply(ok, function(b) fits[[b]]$fit$f, numeric(1)))]
-  for (m in fits[[win]]$held$messages) message(conditionMessage(m))
-  for (w in fits[[win]]$held$warnings) warning(conditionMessage(w), call. = FALSE)
   out <- fits[[win]]$fit
   out$constraints <- parsed$constraints
+  out$ledger <- ledger
+  failed <- which(vapply(outcomes, function(x) !is.null(x$post_fit), TRUE))
+  if (length(failed)) {
+    # Every branch has a likelihood and the union is complete, but a covariance stage failed: no fit is returned. The
+    # root reports the first failing branch's evidence, in branch order, even when another branch is the minimum;
+    # the branch IDs say exactly which one failed.
+    out$vcov <- out$defined <- NULL
+    out$ledger$covariance <- "failed"
+    out$ledger$post_fit <- outcomes[[failed[1L]]]$post_fit
+    stop(.sem_covariance_error(outcomes[[failed[1L]]]$post_fit$condition$message, out))
+  }
+  .sem_replay_notices(fits[[win]]$held)
   out
 }
 

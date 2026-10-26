@@ -45,12 +45,27 @@
 #'   the minimized discrepancy `f`, `diff_ll` equal to `n_obs * (f - fit@f)`,
 #'   `converged`, and `note`, the failure text of a refit that could not be
 #'   fitted, otherwise empty). It prints with the standard `htest` layout.
+#'   `ledger` is the version-1 outcome ledger documented in [fit_sem()], with children `mbco/full` and
+#'   `mbco/null:1`, `mbco/null:2`, ..., in the requested path order. A null refit that is itself a zero-product
+#'   union keeps its branch children and notices. A null node's notices also record those raised at the MBCO
+#'   boundary, including the union winner's replay, so they can repeat a child's. Every null is attempted even if
+#'   another fails, and an unresolved null leaves the root `unresolved`. A nested union branch that is certified empty
+#'   by a literal zero/nonzero contradiction (see the outcome ledger in [fit_sem()]) is retained as `excluded`; a null
+#'   that is itself infeasible or an all-empty union stays an unresolved row, never a finite LR or a survivor-only
+#'   p-value. A null whose optimizer accepted but whose covariance stage failed (`medfit_sem_covariance_error` in
+#'   [fit_sem()]) keeps its likelihood after a check that it is the null asked for (same rows, domain and one more
+#'   restriction): the row stays resolved, the statistic and p-value are unchanged, a warning names the failure, and the
+#'   node has `covariance = "failed"` with `post_fit` and the notices. No covariance is invented; a fit that carries
+#'   `post_fit` is refused as `object`.
 #'
 #' @details
 #' A fit made with `weights` is refused: the weighted discrepancy is
 #' not a likelihood, so its difference is not chi-square. So is a fit that did
 #' not converge, since its discrepancy is the reference both refits are
 #' measured against.
+#'
+#' A fit whose ledger is missing, malformed or does not describe the fit, and a refit that is not the null asked
+#' for, are refused with a `medfit_error_ledger` error: the evidence is never inferred from `converged`.
 #'
 #' A refit that fails the acceptance gate of the optimizer does not stop the
 #' function: its row has `converged = FALSE`, `f` and `diff_ll` `NA` and the
@@ -148,6 +163,13 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     stop("the fit did not converge, so the MBCO statistic is not available: its discrepancy is the ",
          "reference both refits are measured against.", call. = FALSE)
   }
+  .sem_require_outcome(list(ledger = fit@diagnostics$ledger, f = fit@f, converged = fit@converged,
+                            data = fit@data, n_obs = fit@n_obs, constraints = fit@internals$constraints,
+                            status = fit@diagnostics$status, information = fit@information,
+                            weights = fit@internals$weights, fixed_x = fit@internals$fixed_x,
+                            factors = fit@internals$factors, ram = fit@internals$ram,
+                            n_starts = fit@internals$n_starts, control = fit@internals$control,
+                            se_type = fit@diagnostics$se_type), fit@model)
   # The refits use the optimizer settings of the fit, so a better optimum in the full fit than in a refit
   # cannot inflate the statistic; an explicit argument overrides them.
   n_starts <- n_starts %||% fit@internals$n_starts %||% 5L
@@ -159,34 +181,101 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   # fit without a mean structure, so a later change of the default cannot give the refit a different likelihood
   # A refit that cannot be fitted is an unresolved row, not an error: its failure text goes in `note`, and the
   # statistic is NA (never the minimum over the refits that worked, which would hide the failure).
-  refit <- lapply(paths, function(tested) {
+  # the refits are model-based whatever the fit's own `se_type` (only the likelihood is used); the ledger check below
+  # holds each null to these settings
+  refit_se_type <- "model"
+  outcomes <- list(.sem_rebase_outcome(fit@diagnostics$ledger, "mbco/full", "mbco"))
+  refit <- lapply(seq_along(paths), function(i) {
+    tested <- paths[i]
     con <- paste(tested, "== 0")
+    syntax <- paste0(fit@model, "\n", con)
     # `fit@data` holds the rows the fit used, already free of missing values: no second deletion.
-    r <- tryCatch(
-      .sem_fit_syntax(paste0(fit@model, "\n", con), fit@data, fit@information, n_starts = n_starts,
-                      control = control, meanstructure = isTRUE(fit@internals$ram$has_mean),
-                      fixed_x = fixed_x, factors = fit@internals$factors),
-      error = function(e) {
-        msg <- sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint ",
-                              "on that parameter, the null `%s` may lie outside the parameter space."),
-                       con, conditionMessage(e), con)
-        # only an optimizer failure is an unresolved row; a model or data error (a rule-9 refusal, a missing column)
-        # still stops, as it always did
-        if (!inherits(e, "medfit_error_no_convergence")) {
-          stop(msg, call. = FALSE)
-        }
-        list(failure = msg)
+    # Only here may a null keep the likelihood of a covariance-stage failure (D4), and only when it is the null that was
+    # asked for: same rows, domain and one more restriction. The covariance and the standard errors are never
+    # fabricated, and the retention is a warning, not an unresolved row: the statistic needs the likelihood only.
+    captured <- .sem_capture_outcome({
+      r <- tryCatch(
+        .sem_fit_syntax(syntax, fit@data, fit@information, n_starts = n_starts,
+                        control = control, se_type = refit_se_type,
+                        meanstructure = isTRUE(fit@internals$ram$has_mean),
+                        fixed_x = fixed_x, factors = fit@internals$factors),
+        medfit_sem_covariance_error = .sem_retain_covariance
+      )
+      if (!is.null(r$ledger$post_fit) &&
+            (!identical(r$data, fit@data) || !identical(r$n_obs, fit@n_obs) ||
+               !identical(r$ram$q, fit@internals$ram$q) || !isTRUE(r$df - fit@df == 1) ||
+               !identical(r$constraints, .sem_parse(syntax)$constraints) ||
+               !identical(isTRUE(r$ram$has_mean), isTRUE(fit@internals$ram$has_mean)) ||
+               !identical(r$fixed_x, fit@internals$fixed_x) || !identical(r$information, fit@information) ||
+               !is.null(r$weights) || !identical(r$factors, fit@internals$factors))) {
+        .sem_abort_ledger("retained covariance-stage null has incompatible sample, domain or dimension", r$ledger)
       }
-    )
-    if (is.null(r$failure)) {
-      .mbco_warn_boundary(r, con, tested)
+      r
+    })
+    r <- captured$value
+    err <- captured$error
+    failure <- NULL
+    if (!is.null(err)) {
+      msg <- sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint ",
+                            "on that parameter, the null `%s` may lie outside the parameter space."),
+                     con, conditionMessage(err), con)
+      # only an optimizer failure is an unresolved row; a model or data error (a rule-9 refusal, a missing column)
+      # still stops, as it always did, and so does a refused ledger, with its class
+      if (inherits(err, "medfit_error_ledger")) {
+        stop(err)
+      }
+      if (!inherits(err, "medfit_error_no_convergence")) {
+        stop(msg, call. = FALSE)
+      }
+      failure <- msg
+    } else {
+      # a refit that is not the null that was asked for is refused, never inferred from `converged`
+      .sem_require_outcome(r, syntax, partial = !is.null(r$ledger$post_fit))
     }
+    node <- if (is.null(failure)) r$ledger else err$ledger
+    if (is.null(node)) {
+      parsed <- .sem_parse(syntax)
+      context <- .sem_outcome_context(syntax, parsed, fit@data, fit@information, NULL,
+                                      isTRUE(fit@internals$ram$has_mean), fixed_x,
+                                      n_starts, control, refit_se_type, fit@internals$factors)
+      node <- .sem_outcome(context, parsed$constraints, error = err, notices = captured$notices)
+    } else if (is.null(failure)) {
+      # the null's own notices include the ones its fit replayed; a retained null's fit replayed none, so its own
+      # (held in its node) come first and the retention notice after them
+      retained <- if (!is.null(node$post_fit)) node$notices else list()
+      node$notices <- list(warnings = c(retained$warnings, lapply(captured$notices$warnings, .sem_condition_record)),
+                           messages = c(retained$messages, lapply(captured$notices$messages, .sem_condition_record)))
+    } else {
+      node$notices$warnings <- c(node$notices$warnings, lapply(captured$notices$warnings, .sem_condition_record))
+      node$notices$messages <- c(node$notices$messages, lapply(captured$notices$messages, .sem_condition_record))
+    }
+    rebased <- .sem_rebase_outcome(node, paste0("mbco/null:", i), "mbco")
+    if (!is.null(failure)) {
+      return(list(failure = failure, mbco_node = rebased))
+    }
+    # the boundary warning is part of the null's evidence: raised here, after the fit's own notices are replayed
+    boundary <- .sem_capture_outcome(.mbco_warn_boundary(r, con, tested))
+    rebased$notices$warnings <- c(rebased$notices$warnings, lapply(boundary$notices$warnings, .sem_condition_record))
+    .sem_replay_notices(captured$notices)
+    .sem_replay_notices(boundary$notices)
+    r$mbco_node <- rebased
     r
   })
+  outcomes <- c(outcomes, lapply(refit, function(r) r$mbco_node))
   failed <- vapply(refit, function(r) !is.null(r$failure), TRUE)
   f <- vapply(refit, function(r) if (is.null(r$failure)) r$f else NA_real_, numeric(1))
   note <- vapply(refit, function(r) if (is.null(r$failure)) "" else r$failure, "")
   unresolved <- any(failed)
+  full <- list(converged = fit@converged, f = fit@f, status = fit@diagnostics$status, vcov = fit@vcov,
+               improper = fit@diagnostics$improper, optimum = fit@diagnostics$optimum)
+  ledger <- .sem_outcome(fit@diagnostics$ledger$context, fit@internals$constraints, result = full, children = outcomes)
+  ledger$id <- "mbco"
+  ledger <- .sem_compact_outcome(ledger)
+  if (!.sem_valid_mbco_outcome(ledger, paths,
+                               settings = list(n_starts = n_starts, control = control, se_type = refit_se_type),
+                               tests = list(f = f, converged = !failed))) {
+    .sem_abort_ledger("malformed MBCO outcome ledger", ledger)
+  }
   if (unresolved) {
     warning(paste0(paste(unique(note[nzchar(note)]), collapse = "\n"),
                    "\nThe MBCO statistic is not available (NA); `$tests` lists each refit."), call. = FALSE)
@@ -205,7 +294,8 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       n_obs = n,
       tests = data.frame(constraint = constraints, f = f, diff_ll = diff_ll, converged = !failed, note = note,
                          stringsAsFactors = FALSE),
-      unresolved = unresolved
+      unresolved = unresolved,
+      ledger = ledger
     ),
     class = c("mbco_sem", "htest")
   )

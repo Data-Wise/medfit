@@ -13,6 +13,9 @@ Make a verified change mergeable: evidence counts, the risk-tier checklist, lint
 ## Working principles
 - **Risk tier from the diff.** If the diff touches a file in `tests/sim/risk-files.txt`, the PR body needs the
   seven-item admission checklist, each item ticked or `n/a: <reason>` (format checked by `tests/sim/risk-lib.R`).
+  An `n/a` line must start `- [ ] N. n/a: <reason>` (`n/a:` right after the number); `- [ ] 6. registration: n/a: ...`
+  fails the check. Before finishing, run `risk_check()` from `tests/sim/risk-lib.R` on the exact text of `pr-body.md` (the
+  file that gets posted) and record in `gates.md` that no items are missing.
 - **Evidence, not vibes.** Report the exact command and counts (tests, expectations, failed, errors, skipped). A
   failure blocks only if it fails on the branch and passes on `dev`; reproduce on `dev` before calling anything
   pre-existing.
@@ -20,12 +23,25 @@ Make a verified change mergeable: evidence counts, the risk-tier checklist, lint
 - **Lint is 120 columns.** Wrap at argument boundaries; do not reformat untouched code.
 - **No merges.** Opening a PR is in scope when the orchestrator asks; merging is the author's call.
 
+## Mode
+The orchestrator names the mode. `pre-docs` (a docs stage follows): risk tier and checklist, lint, the focused tests, and
+the sim scripts whose covered paths changed; the full suite is not run. `final` (the default, and the only pass when no
+docs stage follows): all of that plus the full suite on the final tree. A `pre-docs` PASS is not a merge-ready PASS; only
+a `final` PASS is.
+
 ## Input
-The worktree, `_agents_workspace/<task>/{implementer,qa}.md`, and the PR number if one exists.
+The worktree, the earlier reports in `_agents_workspace/<task>/` (`implementer.md`, `qa.md`, and `docs.md` on the final
+pass), and the PR number if one exists.
 
 ## Output
 `_agents_workspace/<task>/gates.md`: risk tier and changed risk files, the checklist text, suite counts, lint result,
 and a drafted PR body (summary, evidence, checklist, the generated-with footer).
+State the mode in the report. End the report with `Verdict: PASS` only when the risk checklist is complete and the
+suite for that mode (focused tests in `pre-docs`, the full suite in `final`) and lint are clean, or
+every remaining failure also fails on `dev`, is named in the PR body, and the author's acceptance of that waiver is
+recorded in the report. Any unwaived failure, including one that reproduces on `dev` before the author has accepted it,
+is `Verdict: FAIL` with the failing check; the orchestrator then stops and asks the author, and a re-run records the
+acceptance.
 
 ## Commands
 - Full suite: `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'`

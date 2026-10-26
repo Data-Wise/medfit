@@ -132,6 +132,7 @@ is a large-cluster approximation.
 | **canonical name** (`m:x`) | the one name a product is stored under: the two variable names sorted in the C locale, so `x:m` and `m:x` are the same term | [Product terms](model-native.html#product-terms) |
 | **nested comparison** (`anova()`) | the likelihood-ratio test of a restricted fit against a fuller one; it refits nothing and refuses fits that are not nested | [Compare nested fits](model-native-constraints.html#compare-nested-fits) |
 | **conditional log likelihood** | the log likelihood given the fixed variables under `fixed_x`, so `logLik()`, AIC and BIC of fits with different fixed sets cannot be compared | [Limits](model-native.html#limits) |
+| **outcome ledger** (`fit@diagnostics$ledger`) | the record of how a native fit, each zero-product branch and each `mbco_sem()` null was reached; an unresolved node is unknown, and only a literal contradiction is certified empty | [Errors that carry evidence](guide-troubleshooting.html#errors-that-carry-evidence) |
 
 ## Related
 

@@ -84,7 +84,7 @@ knows and the caller left unset:
 
 `args["meanstructure"] <- list(NULL)` stores an explicit `NULL`; `args$meanstructure <- NULL` would
 delete the element and leave the default in force. RMediation's test helper uses this wrapper
-(Data-Wise/rmediation#85).
+(`Data-Wise/rmediation#85`).
 
 Two points about muffling:
 

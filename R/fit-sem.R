@@ -92,6 +92,65 @@
 #' @return A [SEMFit] object. With a product term whose factor is a regression target (`x:m` with
 #'   `m` regressed on `x`), `glance()` reports the chi-square, df and p-value as `NA` with a note, and
 #'   `anova()` and [mbco_sem()] refuse; see [SEMFit-methods].
+#'   `diagnostics$ledger` holds the versioned outcome ledger described below.
+#'
+#' @section Outcome ledger:
+#' `diagnostics$ledger` is a list with `schema_version = 1L`. Each node has `id`, `parent_id`, the exact parsed
+#' `constraints`, and `context` (the estimation `sample`, the model syntax and parameters, the likelihood `domain`,
+#' the settings and `n_obs`). `enumeration` records `state` and the number of required children; `complete` means
+#' every required restriction was attempted, not that any was globally optimized. `outcome` is `resolved` or
+#' `unresolved`. Separate fields record `optimizer` (acceptance state, original status, decrement, retries and
+#' optimum diagnostics), `likelihood` (availability and `f`), `feasibility` (`witness` or `unknown`), `covariance`
+#' (`available`, `unavailable`, `not_retained` or `failed`), `improper`, the retained `notices` (warnings and
+#' messages), the original `condition` (class, message, call) and the recursive `children`. IDs are deterministic
+#' positions within the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a
+#' failed branch is unknown, never certified infeasible.
+#'
+#' A node whose constraints hold zero-product rows also has `branch_map`: `state`, `raw_count`, the parser
+#' `factor_counts`, `unique_count` and `raw_to_canonical`, a structural restriction-set ID for each raw row. The IDs
+#' collapse duplicate or permuted constraint rows, not arbitrary affine equivalence, and every raw row is still fitted
+#' in its original order (ties go to the first). More than 64 raw combinations, duplicates included, is refused before
+#' the grid is allocated, even when the unique count would be smaller; that node is `not_enumerated`, with an unknown
+#' unique count and no raw mapping, and nothing is fitted or certified. Its message prints the count without scientific
+#' notation, labels a count above \eqn{2^{53}}{2^53} as approximate (a double need not be an exact cardinality there)
+#' and names an overflow; `raw_count` is `Inf` on overflow. If the map cannot be built while an error is recorded, its
+#' `state` is `unavailable` with that condition, and the original error is not replaced. The map is rebuilt from the
+#' node's constraints during validation, so a forged map is refused.
+#'
+#' The one proof of emptiness is the literal certificate `literal_zero_nonzero`: an explicit `label == 0` equality and
+#' an explicit finite nonzero literal equality on the same parsed label (`a == 0` with `a == 1`). Its label, source
+#' rows and values are kept in `certificate` and rebuilt from the node's own parsed parameters and constraints before
+#' any inference uses it. A certified-empty branch is retained with `outcome = "excluded"`,
+#' `feasibility = "certified_empty"` and an unavailable likelihood: it is not fitted and is not a successful fit. No
+#' tolerance, solver status, numerical rank, bound, general affine contradiction or fixed value in the parameter
+#' table is a proof, and a literal too small to represent (`1e-999`) is unknown.
+#'
+#' A zero-product fit returns only if at least one required branch resolves and every other branch resolves or is
+#' certified empty. A direct fit whose own equalities contradict literally stops with `medfit_sem_infeasible`, and a
+#' union whose every branch is certified empty with `medfit_sem_empty_union`; both are refinements of
+#' `medfit_error_no_convergence` and carry the ledger. Otherwise it stops with a
+#' `medfit_error_no_convergence` error, never a fit; the error carries the ledger of every required branch as
+#' `$ledger` and, when a branch survived, `$best_survivor` (its `id` and discrepancy `f`, diagnostic only, never a
+#' p-value). The union's own node does not aggregate its children's notices; inspect each child. The notices of a
+#' failed call are in the ledger only; the error message keeps its text. A data or model error keeps its own class
+#' and also carries `$ledger`. The estimation sample is stored once, on the root node; a descendant fitted on the
+#' same rows carries only `context$sample_hash`. A fit made before the ledger existed must be refitted before
+#' [mbco_sem()] can use it, which refuses it with a `medfit_error_ledger` error.
+#'
+#' When the optimizer accepts a fit and only the covariance stage fails (an error from the covariance, not the
+#' singular-information NA return, which stays `unavailable` with its warning), the call stops with
+#' `medfit_sem_covariance_error`, never a fit. The class is a sibling of `medfit_error_no_convergence`: no optimizer
+#' failed, so the handlers that report an unresolved result for an optimizer failure do not take it. Its fields are
+#' `schema_version = 1L`, `stage = "covariance"`, `partial` (the accepted optimizer result: `f`, `theta`, sample,
+#' domain, dimensions and settings; no `vcov` or `defined`) and `ledger` (the same node as `partial$ledger`, with
+#' `covariance = "failed"` and `post_fit`: versioned evidence with the original condition's class, message and call).
+#' The message is the original one. Resolved here means an accounted-for accepted likelihood, not a successful
+#' covariance. A union root reports the first failing branch's `post_fit`, in branch order, even when another branch
+#' supplies its minimum likelihood, and does not claim the winning branch failed: inspect the branch IDs. A branch that
+#' did not converge still stops the call with `medfit_error_no_convergence` first. Definition values and gradients are
+#' checked before the covariance, and model, data, optimizer, objective and other errors get no covariance certificate.
+#' The condition is not accepted as an input to [mbco_sem()], and a fit that carries `post_fit` is refused with
+#' `medfit_error_ledger`.
 #'
 #' @examples
 #' \donttest{
@@ -154,6 +213,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
 }
 
 .sem_as_semfit <- function(fit, model, call = NULL) {
+  .sem_require_outcome(fit, model)
   tab <- fit$table
   free <- !is.na(fit$par_map)
   est <- ifelse(free, fit$theta[pmax(fit$par_map, 1L)], tab$fixed)
@@ -167,7 +227,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     n_obs = fit$n_obs, n_dropped = fit$n_dropped, df = fit$df, information = fit$information,
     converged = fit$converged, data = fit$data, model = model,
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
-                        "sign_check", "se_type", "optimum")],
+                        "sign_check", "se_type", "optimum", "ledger")],
     internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
                       "branch", "fixed_x", "factors")],
     call = call

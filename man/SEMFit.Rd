@@ -35,8 +35,8 @@ fit it returns and \code{glance()} does not report it}
 
 \item{model}{Character scalar: the model syntax}
 
-\item{diagnostics}{List: optimizer diagnostics (\code{status}, \code{decrement},
-\code{retries}, \code{active_bounds}, \code{active_constraints}, \code{improper},
+\item{diagnostics}{List: the versioned outcome \code{ledger} (see \code{\link[=fit_sem]{fit_sem()}}) and optimizer diagnostics (\code{status},
+\code{decrement}, \code{retries}, \code{active_bounds}, \code{active_constraints}, \code{improper},
 \code{sign_check}, and \code{optimum}: a list with \code{n_starts}, \code{n_accepted},
 \code{best_of}, \code{certified}, \code{spread} (discrepancy range among accepted starts,
 \code{NA} when fewer than two or not best-of), and \code{status} (\code{unique},

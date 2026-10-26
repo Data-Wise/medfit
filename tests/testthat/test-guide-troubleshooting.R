@@ -325,6 +325,8 @@ nt_cases <- function() {
          function() fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1\na == 1\na == 2", d)),
     list("is violated by", "error",
          function() fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1\na == 1\na == 2", d)),
+    list("literal zero/nonzero contradiction", "error",
+         function() fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1\na == 0\na == 1", d)),
     list("the starts disagree", "warning",
          function() fit_sem("M ~ a*X\nY ~ b*M + cp*X\na*b > 0.4", nt_nonlinear_data())),
     list("is not nested in", "error", function() {
@@ -421,4 +423,112 @@ test_that("planted: a reworded model-test warning fails the guide's trigger", {
                          "the model test is unavailable: ")
   local_mocked_bindings(.sem_product_warn = reworded)
   expect_false(any(grepl(frag, nt_warnings(fit_sem(nt_prod, d, se_type = "sandwich")), fixed = TRUE)))
+})
+
+# ---- native evidence errors (the "Errors that carry evidence" section of the guide) ----
+
+ev_syn <- "repetition ~ a1*x\nimagery ~ a2*x\nrecall ~ cp*x + b1*repetition + b2*imagery"
+ev_data <- function() readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
+ev_base <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
+
+test_that("a failed zero-product branch is an error carrying $ledger and $best_survivor", {
+  real <- medfit:::.sem_fit_syntax
+  n <- 0L
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(...) {
+    n <<- n + 1L
+    if (n == 2L) medfit:::.sem_no_convergence("planted branch failure")
+    real(...)
+  })
+  err <- tryCatch(fit_sem(paste0(ev_base, "\na*b == 0"), mediation_demo), error = identity)
+  expect_s3_class(err, "medfit_error_no_convergence")
+  expect_match(conditionMessage(err), "zero-product branches did not converge", fixed = TRUE)
+  expect_false(is.null(err$ledger))
+  expect_true(is.finite(err$best_survivor$f))
+  expect_false(is.null(err$best_survivor$id))
+})
+
+test_that("an all-empty union is medfit_sem_empty_union and carries certified-empty children", {
+  err <- tryCatch(suppressWarnings(fit_sem(paste0(ev_base, "\na*b == 0\na == 1\nb == 1"), mediation_demo)),
+                  error = identity)
+  expect_s3_class(err, "medfit_sem_empty_union")
+  expect_s3_class(err, "medfit_error_no_convergence")
+  expect_match(conditionMessage(err), "no branch of the zero-product constraints converged", fixed = TRUE)
+  expect_true(all(vapply(err$ledger$children, function(x) x$feasibility == "certified_empty", TRUE)))
+})
+
+test_that("a direct literal contradiction is medfit_sem_infeasible and carries $ledger", {
+  err <- tryCatch(fit_sem(paste0(ev_base, "\na == 0\na == 1"), mediation_demo), error = identity)
+  expect_s3_class(err, "medfit_sem_infeasible")
+  expect_match(conditionMessage(err), "literal zero/nonzero contradiction", fixed = TRUE)
+  expect_identical(err$ledger$feasibility, "certified_empty")
+})
+
+test_that("the 64-branch cap is a plain error with a not_enumerated ledger, with the 2^53 and overflow text", {
+  cap <- function(n) {
+    tryCatch(suppressWarnings(fit_sem(paste(c(ev_base, rep("a*b == 0", n)), collapse = "\n"), mediation_demo)),
+             error = identity)
+  }
+  err <- cap(7L)
+  expect_false(inherits(err, "medfit_error_no_convergence"))
+  expect_match(conditionMessage(err), "branches to fit; at most 64 are supported", fixed = TRUE)
+  expect_identical(err$ledger$enumeration$state, "not_enumerated")
+  expect_identical(err$ledger$enumeration$required, 128L)
+  expect_identical(err$ledger$branch_map$state, "not_enumerated")
+  expect_match(conditionMessage(cap(54L)), "approximately 18014398509481984", fixed = TRUE)
+  expect_match(conditionMessage(cap(2000L)), "overflow (Inf)", fixed = TRUE)
+})
+
+test_that("a covariance-stage failure is medfit_sem_covariance_error with the accepted likelihood, never a fit", {
+  d <- ev_data()
+  testthat::local_mocked_bindings(.sem_vcov = function(...) stop("injected covariance failure"))
+  err <- tryCatch(suppressMessages(fit_sem(ev_syn, d, n_starts = 1L, information = "expected")), error = identity)
+  expect_s3_class(err, "medfit_sem_covariance_error")
+  expect_false(inherits(err, "medfit_error_no_convergence"))
+  expect_identical(err$ledger$covariance, "failed")
+  expect_match(err$ledger$post_fit$condition$message, "injected covariance failure", fixed = TRUE)
+  expect_null(err$partial$vcov)
+})
+
+test_that("mbco_sem() retains a null whose covariance stage failed and says so", {
+  d <- ev_data()
+  full <- fit_sem(ev_syn, d, n_starts = 1L, information = "expected")
+  vcov <- medfit:::.sem_vcov
+  calls <- 0L
+  testthat::local_mocked_bindings(.sem_vcov = function(...) {
+    calls <<- calls + 1L
+    if (calls == 1L) stop("injected null covariance failure")
+    vcov(...)
+  })
+  w <- nt_warnings(mbco_sem(full, a = "a1", b = "b1"))
+  expect_true(any(grepl("likelihood retained, covariance unavailable", w, fixed = TRUE)))
+})
+
+test_that("a fit with a missing ledger is refused with medfit_error_ledger", {
+  fit <- fit_sem(ev_syn, ev_data(), n_starts = 1L)
+  fit@diagnostics$ledger <- NULL
+  err <- tryCatch(mbco_sem(fit, "a1", "b1"), error = identity)
+  expect_s3_class(err, "medfit_error_ledger")
+  expect_match(conditionMessage(err), "missing, malformed or unresolved SEM outcome ledger", fixed = TRUE)
+  fit@diagnostics$ledger <- list(schema_version = 999L)
+  err <- tryCatch(mbco_sem(fit, "a1", "b1"), error = identity)
+  expect_s3_class(err, "medfit_error_ledger")
+  expect_false(inherits(err, "medfit_error_no_convergence"))
+  expect_match(conditionMessage(err), "missing, malformed or unresolved SEM outcome ledger", fixed = TRUE)
+  expect_identical(err$ledger$rejected_evidence, list(schema_version = 999L))
+})
+
+test_that("the guide quotes every evidence-error class and fragment this block triggers", {
+  skip_if_not(file.exists(guide_path()), "vignettes are not available (installed or built package)")
+  txt <- paste(readLines(guide_path(), warn = FALSE), collapse = " ")
+  quoted <- c(
+    "medfit_error_no_convergence", "medfit_sem_empty_union", "medfit_sem_infeasible",
+    "medfit_sem_covariance_error", "medfit_error_ledger",
+    "zero-product branches did not converge", "no branch of the zero-product constraints converged",
+    "literal zero/nonzero contradiction", "branches to fit; at most 64 are supported",
+    "likelihood retained, covariance unavailable", "missing, malformed or unresolved SEM outcome ledger",
+    "$best_survivor", "not_enumerated", "2^53", "overflow (Inf)", "rejected_evidence"
+  )
+  for (frag in quoted) {
+    expect_true(grepl(frag, txt, fixed = TRUE), info = frag)
+  }
 })

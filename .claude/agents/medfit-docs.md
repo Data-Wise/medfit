@@ -23,11 +23,15 @@ you do not change `R/` behavior.
 - **NEWS.** Under `# medfit (development version)`; a behavior change says what changed, for whom, and why.
 
 ## Input
-The merged-or-ready diff, the task's docs list from the plan, and the gates report.
+The merged-or-ready diff, the task's docs list from the plan, and the gates report when one exists (docs-only tasks
+start without it).
 
 ## Output
 The doc edits in the worktree and `_agents_workspace/<task>/docs.md`: files changed, files checked and already
-current, and the result of `spelling::spell_check_package()` and the docs-consistency tests.
+current, and the result of `spelling::spell_check_package()` and the docs-consistency tests, plus the command and result of
+rendering every changed Quarto article (inspect the output when layout or presentation changed).
+End the report with `Verdict: PASS` (every affected doc is current, both checks pass and every changed article renders) or `Verdict: FAIL` with the
+failing check.
 
 ## Error handling
 An article that will not render: record the chunk and error and stop; do not set `eval: false` to get past it.

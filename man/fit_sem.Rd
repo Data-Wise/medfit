@@ -95,6 +95,7 @@ statement names, which are left free with a message of class \code{medfit_messag
 A \link{SEMFit} object. With a product term whose factor is a regression target (\code{x:m} with
 \code{m} regressed on \code{x}), \code{glance()} reports the chi-square, df and p-value as \code{NA} with a note, and
 \code{anova()} and \code{\link[=mbco_sem]{mbco_sem()}} refuse; see \link{SEMFit-methods}.
+\code{diagnostics$ledger} holds the versioned outcome ledger described below.
 }
 \description{
 Fits a model written in lavaan-style syntax to raw data with medfit's native
@@ -115,6 +116,66 @@ parameter names). To keep today's results and silence the warning, pass both arg
 \verb{fixed_x = FALSE, meanstructure = NULL}. To fit with the 0.15.0 defaults now, set
 \code{options(medfit.native_defaults = "0.15")}; variables a \verb{~~} or \code{~1} statement names are then left free and named
 in a message of class \code{medfit_message_fixed_x_lenient}.
+}
+
+\section{Outcome ledger}{
+
+\code{diagnostics$ledger} is a list with \code{schema_version = 1L}. Each node has \code{id}, \code{parent_id}, the exact parsed
+\code{constraints}, and \code{context} (the estimation \code{sample}, the model syntax and parameters, the likelihood \code{domain},
+the settings and \code{n_obs}). \code{enumeration} records \code{state} and the number of required children; \code{complete} means
+every required restriction was attempted, not that any was globally optimized. \code{outcome} is \code{resolved} or
+\code{unresolved}. Separate fields record \code{optimizer} (acceptance state, original status, decrement, retries and
+optimum diagnostics), \code{likelihood} (availability and \code{f}), \code{feasibility} (\code{witness} or \code{unknown}), \code{covariance}
+(\code{available}, \code{unavailable}, \code{not_retained} or \code{failed}), \code{improper}, the retained \code{notices} (warnings and
+messages), the original \code{condition} (class, message, call) and the recursive \code{children}. IDs are deterministic
+positions within the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a
+failed branch is unknown, never certified infeasible.
+
+A node whose constraints hold zero-product rows also has \code{branch_map}: \code{state}, \code{raw_count}, the parser
+\code{factor_counts}, \code{unique_count} and \code{raw_to_canonical}, a structural restriction-set ID for each raw row. The IDs
+collapse duplicate or permuted constraint rows, not arbitrary affine equivalence, and every raw row is still fitted
+in its original order (ties go to the first). More than 64 raw combinations, duplicates included, is refused before
+the grid is allocated, even when the unique count would be smaller; that node is \code{not_enumerated}, with an unknown
+unique count and no raw mapping, and nothing is fitted or certified. Its message prints the count without scientific
+notation, labels a count above \eqn{2^{53}}{2^53} as approximate (a double need not be an exact cardinality there)
+and names an overflow; \code{raw_count} is \code{Inf} on overflow. If the map cannot be built while an error is recorded, its
+\code{state} is \code{unavailable} with that condition, and the original error is not replaced. The map is rebuilt from the
+node's constraints during validation, so a forged map is refused.
+
+The one proof of emptiness is the literal certificate \code{literal_zero_nonzero}: an explicit \code{label == 0} equality and
+an explicit finite nonzero literal equality on the same parsed label (\code{a == 0} with \code{a == 1}). Its label, source
+rows and values are kept in \code{certificate} and rebuilt from the node's own parsed parameters and constraints before
+any inference uses it. A certified-empty branch is retained with \code{outcome = "excluded"},
+\code{feasibility = "certified_empty"} and an unavailable likelihood: it is not fitted and is not a successful fit. No
+tolerance, solver status, numerical rank, bound, general affine contradiction or fixed value in the parameter
+table is a proof, and a literal too small to represent (\code{1e-999}) is unknown.
+
+A zero-product fit returns only if at least one required branch resolves and every other branch resolves or is
+certified empty. A direct fit whose own equalities contradict literally stops with \code{medfit_sem_infeasible}, and a
+union whose every branch is certified empty with \code{medfit_sem_empty_union}; both are refinements of
+\code{medfit_error_no_convergence} and carry the ledger. Otherwise it stops with a
+\code{medfit_error_no_convergence} error, never a fit; the error carries the ledger of every required branch as
+\verb{$ledger} and, when a branch survived, \verb{$best_survivor} (its \code{id} and discrepancy \code{f}, diagnostic only, never a
+p-value). The union's own node does not aggregate its children's notices; inspect each child. The notices of a
+failed call are in the ledger only; the error message keeps its text. A data or model error keeps its own class
+and also carries \verb{$ledger}. The estimation sample is stored once, on the root node; a descendant fitted on the
+same rows carries only \code{context$sample_hash}. A fit made before the ledger existed must be refitted before
+\code{\link[=mbco_sem]{mbco_sem()}} can use it, which refuses it with a \code{medfit_error_ledger} error.
+
+When the optimizer accepts a fit and only the covariance stage fails (an error from the covariance, not the
+singular-information NA return, which stays \code{unavailable} with its warning), the call stops with
+\code{medfit_sem_covariance_error}, never a fit. The class is a sibling of \code{medfit_error_no_convergence}: no optimizer
+failed, so the handlers that report an unresolved result for an optimizer failure do not take it. Its fields are
+\code{schema_version = 1L}, \code{stage = "covariance"}, \code{partial} (the accepted optimizer result: \code{f}, \code{theta}, sample,
+domain, dimensions and settings; no \code{vcov} or \code{defined}) and \code{ledger} (the same node as \code{partial$ledger}, with
+\code{covariance = "failed"} and \code{post_fit}: versioned evidence with the original condition's class, message and call).
+The message is the original one. Resolved here means an accounted-for accepted likelihood, not a successful
+covariance. A union root reports the first failing branch's \code{post_fit}, in branch order, even when another branch
+supplies its minimum likelihood, and does not claim the winning branch failed: inspect the branch IDs. A branch that
+did not converge still stops the call with \code{medfit_error_no_convergence} first. Definition values and gradients are
+checked before the covariance, and model, data, optimizer, objective and other errors get no covariance certificate.
+The condition is not accepted as an input to \code{\link[=mbco_sem]{mbco_sem()}}, and a fit that carries \code{post_fit} is refused with
+\code{medfit_error_ledger}.
 }
 
 \examples{

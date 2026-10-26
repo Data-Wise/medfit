@@ -169,9 +169,10 @@ test_that("planted defect (a): checking the pre-existing column before deletion 
     d$x[3] <- NA
     d[["m:x"]] <- d$x * d$m
     expect_message(fit_sem(pm_model, d), "dropped") # the real code accepts it
-    bad <- sem_mutate(.sem_fit_syntax, ".sem_check_product_columns(mat$checks, keep)",
+    bad <- sem_mutate(.sem_fit_pipeline, ".sem_check_product_columns(mat$checks, keep)",
                       ".sem_check_product_columns(mat$checks, rep(TRUE, length(keep)))")
-    expect_error(suppressMessages(bad(pm_model, d)), "is not the product")
+    testthat::local_mocked_bindings(.sem_fit_pipeline = bad)
+    expect_error(suppressMessages(.sem_fit_syntax(pm_model, d)), "is not the product")
   })
 })
 
@@ -194,9 +195,10 @@ test_that("planted defect (c): building after the absent-column check leaves eve
     d <- pm_data()
     ok <- fit_sem(pm_model, d, fixed_x = TRUE)
     expect_false(anyNA(ok@table$est[ok@table$fixed_x]))
-    bad <- sem_mutate(.sem_fit_syntax, ".sem_assign_fixed_x(tab, mat$data, weights)",
+    bad <- sem_mutate(.sem_fit_pipeline, ".sem_assign_fixed_x(tab, mat$data, weights)",
                       ".sem_assign_fixed_x(tab, data, weights)")
+    testthat::local_mocked_bindings(.sem_fit_pipeline = bad)
     # the fixed rows stay unassigned, so the model counts their parameters as free and runs out of moments
-    expect_error(bad(pm_model, d, fixed_x = TRUE), "more free parameters")
+    expect_error(.sem_fit_syntax(pm_model, d, fixed_x = TRUE), "more free parameters")
   })
 })

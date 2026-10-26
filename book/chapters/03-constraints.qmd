@@ -192,7 +192,7 @@ model per factor (`a == 0`, `b == 0`), each from the default start, and keeps th
 discrepancy, a rule Chapter 5 puts to use. The two branches here give two different minima:
 
 For several zero-product constraints, it tries each combination of factors,
-up to 64 branches; more than 64 is an error. Each branch starts cleanly, so
+up to 64 branches, counted as raw combinations with duplicates; more than 64 is an error, raised before anything is fitted. Each branch starts cleanly, so
 one branch cannot inherit an infeasible point from another. If any branch cannot be fitted, `fit_sem()`
 stops with an error (`medfit_error_no_convergence`; since 0.13.0). The best of the other branches is not
 returned, because it need not be the constrained optimum and a returned fit could be used by `coef()`,

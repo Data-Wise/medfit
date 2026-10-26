@@ -46,28 +46,46 @@ Not one large rebase. Each slice is a feature worktree from `dev`, implemented t
 medfit-orchestrator pipeline (implementer, oracle QA, gates, docs), and its own PR to `dev`. Every slice touches risk
 files, so each PR carries the seven-item risk-tier checklist and a `gates.yaml` dispatch.
 
-- [ ] **P0. Reconcile D1 with #300/#303 (decision, no code).** Read NOTE-D1 and ADR D-11 together; write
+- [x] **P0. Reconcile D1 with #300/#303 (decision, no code).** Read NOTE-D1 and ADR D-11 together; write
   `planning/specs/ADR-...` decision: is the D1 ledger attached to the #303 error (the classed error keeps
   `$ledger`), or does D1 replace #303's message path? Acceptance: an ADR entry with a `decisions:` row; the author
   approves. Blocked by: nothing.
   - **Decided (author, 2026-10-24):** keep #303's classed error (`medfit_error_no_convergence`, no partial fit) and
     attach the D1 ledger to it as `$ledger`. D1 does not replace that path. P0's remaining work is the ADR entry
-    recording this. Start after 0.14.0 ships.
-- [ ] **P1. D1 outcome ledger.** Port `sem-outcomes.R` and the ledger fields; adapt to the P0 decision; carry the D1
+    recording this. Recorded 2026-10-25 as D-12 in
+    `planning/specs/ADR-native-solver-and-engines-2026-10-23.md`. Next: P1.
+- [x] **P1. D1 outcome ledger.** Port `sem-outcomes.R` and the ledger fields; adapt to the P0 decision; carry the D1
   controls (both partial-failure orderings, counterfactual LR 1 versus survivor 9, all-success minimum, all-failure,
   malformed-ledger refusal, the three mutants). Acceptance: `test-sem-outcomes.R` green on `dev`; stored known
   answers unchanged; #303's tests still pass. Blocked by: P0.
-- [ ] **P2. D2 literal certificates.** Acceptance: `test-sem-literal-certificates.R` green; no tolerance or solver
+  - **Done on `feature/p1-d1-ledger` (2026-10-25); merged to `dev` as #336.** Decisions kept: field `ledger`, new class
+    `medfit_error_ledger` (ADR D-12). `sem-fixed-x-gate.R` and `sem-nonlinear-gate.R` (clean and every `MUTANT=`) ran on the macOS reference BLAS and pass. Not run yet: the OpenBLAS runner (`gates.yaml` dispatch).
+- [x] **P2. D2 literal certificates.** Acceptance: `test-sem-literal-certificates.R` green; no tolerance or solver
   status used as proof (planted mutant fails). Blocked by: P1.
-- [ ] **P3. D3 branch map and raw cap.** Acceptance: `test-sem-branch-map.R` green including the forged-map refusals
+  - **Done on `feature/p2-d2-certificates` (2026-10-25); the PR is not merged yet.** Ran: the focused tests, and both sim
+    scripts (`sem-fixed-x-gate.R`, `sem-nonlinear-gate.R`) clean with every `MUTANT=` failing, on the macOS reference BLAS.
+    Not run: the OpenBLAS runner (`gates.yaml` dispatch); the full suite runs in the final gates pass. Behavior change
+    (exact semantics, no tolerance) is in NEWS.
+- [x] **P3. D3 branch map and raw cap.** Acceptance: `test-sem-branch-map.R` green including the forged-map refusals
   and the 2^53 / overflow message oracles. Blocked by: P1 (P2 and P3 can run in parallel; both touch
   `sem-outcomes.R`, so merge in order P2 then P3).
-- [ ] **P4. D4 covariance-stage evidence.** NOTE-D4 records D4 as *not independently closed* (the review failed to
+  - **Done on `feature/p3-d3-branch-map` (2026-10-25); the PR is not merged yet.** Over-cap decision: the literal check
+    is not run (NOTE-D3 reconciliation). Final gates pass: full suite 1648 tests, 8059 expectations, 0 failed, 0 errors, 2 skipped; both sim scripts
+    (`sem-fixed-x-gate.R`, `sem-nonlinear-gate.R`) clean with every `MUTANT=` failing, on the macOS reference BLAS. Not run:
+    the OpenBLAS runner (`gates.yaml` dispatch).
+- [x] **P4. D4 covariance-stage evidence.** NOTE-D4 records D4 as *not independently closed* (the review failed to
   produce a verdict). Acceptance: `test-sem-post-fit.R` green, the nonwinning-child mutants fail, and a fresh
   independent review closes it. Blocked by: P1; touches `sem-se.R`, so it reruns the SE oracles.
+  - **Built on `feature/p4-d4-covariance` (2026-10-25); the PR is not merged.** `test-sem-post-fit.R` green (12 tests, 212
+    expectations), the attribution and notice mutants fail named tests, the SE oracles are unchanged and green. Typed
+    class `medfit_sem_covariance_error` (sibling of `medfit_error_no_convergence`), MBCO retains the null: both are
+    decisions for the author (NOTE-D4, reconciliation). Final gates pass (macOS reference BLAS): full suite 1664 tests, 8352 expectations, 0 failed,
+    0 errors, 2 skipped; `sem-fixed-x-gate.R`, `sem-nonlinear-gate.R`, `sem-se-gate.R` clean with every `MUTANT=` failing; the
+    oracle QA pass (24 mutants, `test-sem-post-fit-qa.R`) is the independent D4 review. Not done: the OpenBLAS runner
+    (`gates.yaml` dispatch) and missingmed's consumer rerun. **Checkpoint 2 remains.**
 
 ### Checkpoint 1 (after P0)
-- [ ] Author approves the reconciliation and picks the target release.
+- [x] Author approves the reconciliation (D-12, 2026-10-24). Target release: a 0.14.x minor (author, 2026-10-25).
 
 ### Checkpoint 2 (after P4)
 - [ ] missingmed source-loads `dev` and reruns its consumer suite (816 assertions in its receipts); results

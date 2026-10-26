@@ -26,8 +26,10 @@ settings (mean structure, `fixed_x`, weights, `se_type`, constraints, bounds, pr
 | a nonlinear-constraint optimum | OpenMx with tight `mxOption()` tolerances | 1e-5 |
 | an effect SE | delta method by hand, or a nonparametric bootstrap SD | bootstrap: a few percent |
 
-Compare only rows that exist on both sides (`intersect()` of names); intercepts move with the data's means, so a
-mean-shift check compares slopes only. Use `expect_identical(x, 0)` for structural zeros, never a tolerance.
+Before comparing values, assert the expected row-name set and multiplicity on both sides (`expect_setequal()` plus
+a row count): a dropped or duplicated parameter, constraint row or effect is a FAIL, not a smaller comparison. Compare a
+subset only when the task defines it (intercepts move with the data's means, so a mean-shift check compares slopes
+only), and record each excluded row with its reason in the report. Use `expect_identical(x, 0)` for structural zeros, never a tolerance.
 
 ## 3. Plant defects
 For each new test, show it can fail:

@@ -86,11 +86,12 @@ test_that("refit trap: a restricted fit from a clean start gives 0.083100 and ne
   # OpenMx trap (a constraint added to an already-fitted model stops at the infeasible point, diffLL 0) does
   # not arise in the engine; the fixture still pins the value
   seeded <- sem_mutate(
-    .sem_fit_syntax, "start <- .sem_default_start(ram, smp)",
+    .sem_fit_pipeline, "start <- .sem_default_start(ram, smp)",
     "start <- .sem_default_start(ram, smp); start[] <- SEED[ram$par_names]"
   )
-  environment(seeded) <- list2env(list(SEED = f$full@theta), parent = environment(.sem_fit_syntax))
-  r <- seeded(paste0(anova_syntax, "\nb1 == 0"), f$d, n_starts = 1L)
+  environment(seeded) <- list2env(list(SEED = f$full@theta), parent = environment(.sem_fit_pipeline))
+  testthat::local_mocked_bindings(.sem_fit_pipeline = seeded)
+  r <- .sem_fit_syntax(paste0(anova_syntax, "\nb1 == 0"), f$d, n_starts = 1L)
   expect_lt(abs(r$n_obs * (r$f - f$full@f) - 0.083100), 1e-6)
   # planted defect: a restricted fit that never left the full fit's point (diffLL 0) misses the fixture
   stuck <- f$b1

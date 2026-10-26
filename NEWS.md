@@ -1,3 +1,86 @@
+# medfit 0.14.1
+
+## Outcome ledger for native zero-product fits and MBCO
+
+* Every native fit, zero-product branch and `mbco_sem()` null now keeps a versioned outcome ledger
+  (`fit@diagnostics$ledger`): a stable ID, the exact restriction, the estimation sample and likelihood domain, the
+  optimizer's acceptance state, the discrepancy, whether a feasible point was witnessed, covariance availability,
+  retained warnings and messages, and the original condition. An unresolved branch is unknown, never certified
+  infeasible, and a complete enumeration is not a global-optimum certificate.
+* No result changes. An unresolved required zero-product branch is still the `medfit_error_no_convergence` error
+  and never a fit (#303); the error now carries the ledger of every required branch as `$ledger`, and the best
+  surviving branch's discrepancy as `$best_survivor` (diagnostic only, never a p-value). The notices of a failed
+  branch are in the ledger; messages keep their text. The sample is stored once, on the root node. `mbco_sem()` keeps its unresolved result (an `NA` statistic, `unresolved`
+  `TRUE`) and carries the ledger as `$ledger`; `compare_lr()`'s `$reference` carries it too.
+* A fit whose ledger is missing, malformed or does not describe the fit is refused by `mbco_sem()` with a
+  `medfit_error_ledger` error (a fit made before this release must be refitted). A zero-product model whose
+  restrictions exceed the 64-branch cap still stops with its plain error; it now carries a ledger whose
+  enumeration state is `not_enumerated`.
+* `mbco_sem()` validates its own root ledger (the full fit and one node per tested null, in order, each tied to the
+  returned `$tests` table and the settings of the refit) before returning, and refuses a malformed one with
+  `medfit_error_ledger`. No result or message changes; a failed null's ledger records `se_type` `"model"`, the setting
+  its refit used.
+* Warnings and messages raised before an error are no longer replayed on the error; they are kept in `$ledger`
+  only.
+* Internal: fits hold their warnings and messages while running and replay them as condition objects, so their
+  classes now reach the caller.
+
+## Literal zero/nonzero certificates for native zero-product fits (D2)
+
+* A zero-product branch whose equalities contradict by literal syntax (an explicit `label == 0` with an explicit finite
+  nonzero literal equality on the same label, as `a == 0` with `a == 1`) is certified empty: it is kept in the ledger
+  with the proof and an unavailable likelihood, and is not fitted. A union returns only if at least one branch resolves
+  and every other branch resolves or is certified empty. No tolerance, solver status, bound, affine contradiction or
+  fixed table value is a proof; a failed branch stays unknown and the fit stays the `medfit_error_no_convergence`
+  error.
+* Behavior change: a direct fit whose own equalities contradict literally now stops before the optimizer with
+  `medfit_sem_infeasible`, whose message ("literal zero/nonzero contradiction: constraint ... is violated by ...")
+  keeps the optimizer's wording. The semantics are exact, with no tolerance: any finite nonzero literal contradicts
+  zero, so `a == 0` with `a == 1e-9` (or `1e-12`) now stops with `medfit_sem_infeasible` where `dev` returned a fit,
+  and in a zero-product union `a1 * b1 == 0` with `a1 == 1e-12` now selects the `b1 == 0` branch instead of the
+  `a1 == 0` branch. A union whose branches are all certified empty stops with `medfit_sem_empty_union`. Both are
+  `medfit_error_no_convergence` errors carrying `$ledger`, so `mbco_sem()` and `compare_lr()` report them as unresolved.
+
+## Branch map and raw cap for native zero-product fits (D3)
+
+* A ledger node whose constraints hold zero-product rows now carries `branch_map`: the raw combination count
+  (`raw_count`), the factor counts from the parser (`factor_counts`), a structural restriction-set ID for each raw row
+  (`raw_to_canonical`) and the number of distinct sets (`unique_count`). Duplicate or permuted products (as
+  `a*b == 0` written twice) collapse to the same ID; no affine solving is done, so it is not an equivalence
+  certificate. Execution is unchanged: every raw row is still fitted in the original order and ties go to the first.
+  No result changes.
+* The 64-branch cap counts raw combinations, duplicates included, and is now checked with overflow-safe arithmetic
+  before the branch grid is allocated, so a model with a very large product count is refused with the same error
+  instead of exhausting memory. The refusal message prints the count without scientific notation, marks a count above
+  2^53 as approximate and names an overflow (`overflow (Inf)`); the numeric `raw_count` and `enumeration$required`
+  are `Inf` on overflow. An over-cap model is refused on its raw count alone: no literal certificate is tried and
+  nothing is fitted. Its ledger has `enumeration$state = "not_enumerated"` and a `not_enumerated` map with an unknown
+  unique count and no raw mapping. The message text for counts of 65 to 2^31 is unchanged.
+* The map is rebuilt from each node's own constraints when the ledger is validated, so a forged ID, count or state
+  makes `mbco_sem()` refuse the fit with a `medfit_error_ledger` error. A fit stored by a development build that
+  predates the map (zero-product models only) must be refitted for the same reason.
+
+## Covariance-stage evidence for native fits (D4)
+
+* When the optimizer accepts a native fit and the covariance stage then fails, the accepted likelihood and its
+  context are kept as evidence in a typed error, `medfit_sem_covariance_error`, never a returned fit (#303). The
+  class is a sibling of `medfit_error_no_convergence`, not a refinement: no optimizer failed, so the handlers that turn
+  an optimizer failure into an unresolved result do not take it. It carries `$ledger` (the node, with `covariance`
+  `failed` and the original condition in `post_fit`) and `$partial` (the accepted fit without `vcov` or `defined`); its
+  message is the original one. A failure of any other kind (model, data, optimizer, objective, an invalid definition)
+  is unchanged and gets no covariance certificate.
+* A zero-product union with a covariance failure in one branch stops the same way after every branch has a likelihood.
+  The root reports the first failing branch's evidence, in branch order, even when another branch is the minimum; the
+  branch IDs in the ledger say which one failed. A branch that did not converge still stops the call with
+  `medfit_error_no_convergence` first.
+* `mbco_sem()` keeps the likelihood of a refit null whose covariance stage failed, after checking that it is the
+  null that was asked for (same rows, domain, one more restriction). The statistic and p-value are unchanged, a warning names the
+  failure, and the node of that null records `covariance = "failed"` and its notices. No covariance or standard error is
+  invented, and boundary and identification warnings stay. A fit that carries covariance-failure evidence, or a
+  malformed payload, is refused with `medfit_error_ledger`.
+* No result changes. Definition values and gradients are now checked before the covariance, so an invalid definition
+  is reported as before and not hidden by a covariance-stage error.
+
 # medfit 0.14.0
 
 ## Native engine defaults change in 0.15.0
