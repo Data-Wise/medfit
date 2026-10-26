@@ -327,8 +327,8 @@ test_that("MBCO keeps boundary notices on a typed refit failure", {
     if (endsWith(model, "a1 == 0")) {
       warning("boundary warning before typed failure")
       message("boundary message before typed failure")
-      node <- r$ledger
-      node$outcome <- "unresolved"
+      # the node a real failure leaves: no likelihood, the condition, the notices raised below
+      node <- .sem_outcome(r$ledger$context, r$ledger$constraints, error = simpleError("typed refit failure"))
       node$notices$warnings <- list(.sem_condition_record(simpleWarning("inner typed notice")))
       .sem_abort_outcome("typed refit failure", node)
     }

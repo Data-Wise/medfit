@@ -181,6 +181,9 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   # fit without a mean structure, so a later change of the default cannot give the refit a different likelihood
   # A refit that cannot be fitted is an unresolved row, not an error: its failure text goes in `note`, and the
   # statistic is NA (never the minimum over the refits that worked, which would hide the failure).
+  # the refits are model-based whatever the fit's own `se_type` (only the likelihood is used); the ledger check below
+  # holds each null to these settings
+  refit_se_type <- "model"
   outcomes <- list(.sem_rebase_outcome(fit@diagnostics$ledger, "mbco/full", "mbco"))
   refit <- lapply(seq_along(paths), function(i) {
     tested <- paths[i]
@@ -193,7 +196,8 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     captured <- .sem_capture_outcome({
       r <- tryCatch(
         .sem_fit_syntax(syntax, fit@data, fit@information, n_starts = n_starts,
-                        control = control, meanstructure = isTRUE(fit@internals$ram$has_mean),
+                        control = control, se_type = refit_se_type,
+                        meanstructure = isTRUE(fit@internals$ram$has_mean),
                         fixed_x = fixed_x, factors = fit@internals$factors),
         medfit_sem_covariance_error = .sem_retain_covariance
       )
@@ -267,7 +271,9 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   ledger <- .sem_outcome(fit@diagnostics$ledger$context, fit@internals$constraints, result = full, children = outcomes)
   ledger$id <- "mbco"
   ledger <- .sem_compact_outcome(ledger)
-  if (!.sem_valid_mbco_outcome(ledger, paths)) {
+  if (!.sem_valid_mbco_outcome(ledger, paths,
+                               settings = list(n_starts = n_starts, control = control, se_type = refit_se_type),
+                               tests = list(f = f, converged = !failed), failed_se_type = fit@diagnostics$se_type)) {
     .sem_abort_ledger("malformed MBCO outcome ledger", ledger)
   }
   if (unresolved) {

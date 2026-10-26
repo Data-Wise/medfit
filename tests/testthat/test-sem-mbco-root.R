@@ -52,7 +52,7 @@ test_that("a resolved ordinary MBCO root validates, and mutated roots do not", {
 
 test_that("mbco_sem() refuses a root that does not validate, with the ledger error class", {
   fit <- mbco_root_fit()
-  testthat::local_mocked_bindings(.sem_valid_mbco_outcome = function(x, paths) FALSE)
+  testthat::local_mocked_bindings(.sem_valid_mbco_outcome = function(...) FALSE)
   expect_error(mbco_sem(fit, "a2", "cp", n_starts = 1L), "malformed MBCO outcome ledger",
                class = "medfit_error_ledger")
 })
@@ -109,4 +109,168 @@ test_that("explicit n_starts and control overrides on the refits validate", {
   mixed <- res$ledger
   mixed$children[[3L]]$context$settings$n_starts <- 7L
   expect_false(.sem_valid_mbco_outcome(mixed, c("a2", "cp")))
+})
+
+# --- tied to the call, and exact shapes for a failed null ----------------------------------------------------------
+
+mbco_root_guard <- function() {
+  set.seed(11)
+  d <- data.frame(X = stats::rnorm(500))
+  d$M <- 0.5 * d$X + stats::rnorm(500)
+  d$Y <- 0.4 * d$M + 0.2 * d$X + stats::rnorm(500)
+  d
+}
+
+test_that("a sandwich fit's MBCO result validates against the settings the refits used", {
+  res <- suppressWarnings(mbco_sem(mbco_root_fit(se_type = "sandwich"), "a2", "cp", n_starts = 1L))
+  root <- res$ledger
+  expect_identical(root$context$settings$se_type, "sandwich")
+  expect_identical(root$children[[2L]]$context$settings$se_type, "model")
+  settings <- list(n_starts = 1L, control = list(), se_type = "model")
+  expect_true(.sem_valid_mbco_outcome(root, c("a2", "cp"), settings = settings))
+  # held to the call: other settings than the refits used are refused
+  expect_false(.sem_valid_mbco_outcome(root, c("a2", "cp"), settings = replace(settings, "n_starts", 9L)))
+  expect_false(.sem_valid_mbco_outcome(root, c("a2", "cp"), settings = replace(settings, "se_type", "sandwich")))
+})
+
+test_that("the ledger is tied to the returned table", {
+  res <- mbco_sem(mbco_root_fit(), "a2", "cp", n_starts = 1L)
+  root <- res$ledger
+  paths <- c("a2", "cp")
+  tests <- list(f = res$tests$f, converged = res$tests$converged)
+  settings <- list(n_starts = 1L, control = list(), se_type = "model")
+  expect_true(.sem_valid_mbco_outcome(root, paths, settings, tests))
+  expect_false(.sem_valid_mbco_outcome(root, paths, settings, replace(tests, "f", list(tests$f + c(0, 1)))))
+  expect_false(.sem_valid_mbco_outcome(root, paths, settings, replace(tests, "converged", list(c(TRUE, FALSE)))))
+  moved <- root
+  moved$children[[3L]]$likelihood$f <- moved$children[[3L]]$likelihood$f + 1
+  expect_false(.sem_valid_mbco_outcome(moved, paths, settings, tests))
+  # a null relabeled unresolved, with the root following, hides a resolved result from the table
+  hidden <- root
+  hidden$children[[2L]]$outcome <- "unresolved"
+  hidden$outcome <- "unresolved"
+  expect_false(.sem_valid_mbco_outcome(hidden, paths, settings, tests))
+})
+
+test_that("a failed null must have the exact shape of a failure, and nothing else is accepted", {
+  fit <- suppressMessages(fit_sem("M ~ a*X\nY ~ b*M + cp*X\na > 0.3", mbco_root_guard()))
+  res <- suppressWarnings(mbco_sem(fit, "a", "b"))
+  root <- res$ledger
+  paths <- c("a", "b")
+  settings <- list(n_starts = 5L, control = list(), se_type = "model")
+  tests <- list(f = res$tests$f, converged = res$tests$converged)
+  check <- function(l) .sem_valid_mbco_outcome(l, paths, settings, tests, failed_se_type = fit@diagnostics$se_type)
+  expect_identical(root$children[[2L]]$outcome, "unresolved")
+  expect_true(check(root))
+  edits <- list(
+    syntax = function(n) replace(n, "context", list(replace(n$context, "model", list(list(syntax = "other"))))),
+    n_obs = function(n) {
+      n$context$n_obs <- 1L
+      n
+    },
+    likelihood = function(n) {
+      n$likelihood <- list(state = "available", f = 0)
+      n
+    },
+    optimizer = function(n) {
+      n$optimizer$state <- "accepted"
+      n
+    },
+    feasibility = function(n) {
+      n$feasibility <- "witness"
+      n
+    },
+    covariance = function(n) {
+      n$covariance <- "available"
+      n
+    },
+    condition_removed = function(n) {
+      n["condition"] <- list(NULL)
+      n
+    },
+    children_garbage = function(n) {
+      n$children <- list("junk")
+      n
+    },
+    enumeration = function(n) {
+      n$enumeration$required <- 5L
+      n
+    },
+    notices = function(n) {
+      n$notices <- NULL
+      n
+    },
+    se_type = function(n) {
+      n$context$settings$se_type <- c("model", "sandwich", "other")
+      n
+    },
+    id = function(n) {
+      n$id <- "mbco/null:2"
+      n
+    },
+    parent = function(n) {
+      n$parent_id <- "elsewhere"
+      n
+    },
+    domain = function(n) {
+      n$context$domain$information <- "expected"
+      n
+    },
+    parameters = function(n) {
+      n$context$model$parameters <- data.frame(lhs = "a")
+      n
+    }
+  )
+  for (nm in names(edits)) {
+    forged <- root
+    forged$children[[2L]] <- edits[[nm]](root$children[[2L]])
+    expect_false(check(forged), info = nm)
+  }
+  forged <- root
+  forged$branch_map <- list(state = "forged")
+  expect_false(check(forged))
+})
+
+test_that("a failed null that is a zero-product union with a failed branch validates, and forgeries of it do not", {
+  data <- readRDS(test_path("fixtures", "memory_exp.rds"))
+  full <- suppressMessages(fit_sem(paste(mbco_root_model, "a1*b1 == 0", sep = "\n"), data, n_starts = 1L))
+  real <- .sem_fit_syntax
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(..., parsed = NULL) {
+    if (!is.null(parsed) && parsed$constraints$lhs[1] == "a1") stop("nested blocked")
+    real(..., parsed = parsed)
+  })
+  res <- suppressWarnings(mbco_sem(full, "a1", "b1"))
+  root <- res$ledger
+  paths <- c("a1", "b1")
+  expect_length(root$children[[2L]]$children, 2L)
+  expect_true(.sem_valid_mbco_outcome(root, paths))
+  edits <- list(
+    id = function(n) replace(n, "id", "mbco/null:2"),
+    branch_id = function(n) {
+      n$children[[1L]]$id <- "elsewhere"
+      n
+    },
+    branch_constraint = function(n) {
+      n$children[[1L]]$constraints$lhs[1L] <- "b1"
+      n
+    },
+    dropped_branch = function(n) {
+      n$children <- n$children[1L]
+      n
+    },
+    likelihood = function(n) {
+      n$likelihood$state <- "unavailable"
+      n
+    },
+    all_resolved = function(n) {
+      n$children[[1L]]$outcome <- "resolved"
+      n$children[[2L]]$outcome <- "resolved"
+      n
+    }
+  )
+  for (nm in names(edits)) {
+    forged <- root
+    forged$children[[2L]] <- edits[[nm]](root$children[[2L]])
+    expect_false(.sem_valid_mbco_outcome(forged, paths), info = nm)
+  }
 })

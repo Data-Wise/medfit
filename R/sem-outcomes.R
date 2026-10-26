@@ -466,12 +466,17 @@
   }, error = function(e) FALSE)
 }
 
-# The MBCO root: the full fit plus one null per tested path, in order. `.sem_valid_outcome()` cannot take it (its
-# child count is the zero-product branch count of the node's own constraints), so the required children are rebuilt
+# The MBCO root: the full fit plus one null per tested path, in order. `.sem_valid_outcome()` cannot take it (its child
+# count is the zero-product branch count of the node's own constraints), so the required children are rebuilt
 # here: ids, the one restriction each null adds to the root's, and the sample, domain and settings they share. A
-# resolved child goes through `.sem_valid_outcome()`; a null that failed or is certified empty is checked structurally
-# and leaves the root unresolved, as `.sem_outcome()` made it.
-.sem_valid_mbco_outcome <- function(x, paths) {
+# resolved child goes through `.sem_valid_outcome()`; a null that failed is held to the exact shape `mbco_sem()` gives
+# it (no likelihood, no witness, the condition, the null's own syntax); a certified-empty one to its certificate.
+# `settings` is what the refits were called with (`n_starts`, `control`, `se_type`) and `tests` the returned table
+# (`f`, `converged`), so the ledger is tied to the call and to the statistic; `failed_se_type` is the fit's own list
+# of types, which the context of a null that failed before the engine returned carries. Left NULL, the settings are
+# taken from the first null. Not decidable without a refit, so not asserted: a consistent rewrite of the root sample
+# together with every `sample_hash`, and an altered parameter value inside a null's table.
+.sem_valid_mbco_outcome <- function(x, paths, settings = NULL, tests = NULL, failed_se_type = NULL) {
   tryCatch({
     sample <- x$context[["sample"]]
     if (!is.data.frame(sample) ||
@@ -481,6 +486,7 @@
     root <- list(context = list(sample = sample), hash = rlang::hash(sample))
     kids <- x$children
     full <- kids[[1L]]
+    settings <- settings %||% kids[[2L]]$context$settings
     # a null that failed before the engine returned has the context `mbco_sem()` builds for it: the same domain, with
     # `weights` and an unset `fixed_x` spelled out; the domain is compared in that normal form
     domain <- function(d) {
@@ -488,59 +494,107 @@
            fixed_x = if (is.character(d$fixed_x)) d$fixed_x else character(), factors = d$factors,
            objective = d$objective)
     }
-    # the refits take the call's `n_starts` and `control` (the fit's, or the caller's override), the same for every
-    # null; a failed null's `se_type` is the fit's list of available types, which contains the root's
-    settings <- function(child, ref, exact) {
+    se_ok <- function(child, resolved) {
+      mine <- child$context$settings$se_type
+      identical(mine, settings$se_type) || (!resolved && !is.null(failed_se_type) && identical(mine, failed_se_type))
+    }
+    shared <- function(child, resolved) {
       mine <- child$context$settings
-      identical(mine[c("n_starts", "control")], ref$context$settings[c("n_starts", "control")]) &&
-        if (exact) {
-          identical(mine$se_type, x$context$settings$se_type)
-        } else {
-          all(x$context$settings$se_type %in% mine$se_type)
-        }
-    }
-    shared <- function(child, ref = x, exact = TRUE) {
       identical(.sem_node_sample(child, root, root$hash), sample) &&
-        identical(domain(child$context$domain), domain(x$context$domain)) && settings(child, ref, exact)
+        identical(domain(child$context$domain), domain(x$context$domain)) &&
+        identical(mine[c("n_starts", "control")], settings[c("n_starts", "control")]) && se_ok(child, resolved)
     }
-    # a resolved node carries the root's parameter table; a failed or excluded null carries the table it was parsed
-    # with (the premise of its certificate, checked by `.sem_valid_exclusion()`)
-    # a null's table differs from the root's only in the constraint rows it records (`all_constraints`, which
-    # includes the null's own); the full fit's table is the root's
+    # a null's parameter table differs from the root's only in the constraint rows it records (`all_constraints`,
+    # which includes the null's own)
     bare <- function(p) {
       attr(p, "all_constraints") <- NULL
       p
     }
-    same_parameters <- function(child, strict = FALSE) {
-      if (strict) {
-        identical(child$context$model$parameters, x$context$model$parameters)
-      } else {
-        identical(bare(child$context$model$parameters), bare(x$context$model$parameters))
+    # what an engine failure leaves in a node: no likelihood, no witness, the condition, nothing retained
+    bare_failure <- function(node, id, parent) {
+      is.list(node) && identical(node$schema_version, 1L) && identical(node$id, id) &&
+        identical(node$parent_id, parent) && identical(node$outcome, "unresolved") &&
+        identical(node$optimizer$state, "unresolved") &&
+        identical(node$likelihood, list(state = "unavailable", f = NA_real_)) &&
+        identical(node$feasibility, "unknown") && identical(node$covariance, "not_retained") &&
+        is.list(node$condition) && identical(node$children, list()) &&
+        identical(node$enumeration, list(state = "complete", required = 0L)) &&
+        is.list(node$notices$warnings) && is.list(node$notices$messages) && is.null(node$post_fit)
+    }
+    # a null that failed is one of two shapes: the engine stopped (`bare_failure`), or a zero-product union with at least
+    # one branch that failed, whose other branches are resolved or certified empty and whose likelihood is theirs
+    failed_null <- function(child, id, syntax, parsed) {
+      context_ok <- identical(child$context$model$syntax, syntax) &&
+        # NULL when the engine stopped before parsing (the context of the call), else the null's own table
+        (is.null(child$context$model$parameters) || identical(child$context$model$parameters, parsed$parameters)) &&
+        identical(child$context$n_obs, x$context$n_obs) && is.list(child) && identical(child$schema_version, 1L) &&
+        identical(child$id, id) && identical(child$parent_id, "mbco") && identical(child$outcome, "unresolved")
+      if (!context_ok) {
+        return(FALSE)
       }
+      if (!length(child$children)) {
+        return(bare_failure(child, id, "mbco"))
+      }
+      products <- .sem_zero_product_rows(child$constraints)
+      grid <- if (length(products)) .sem_branch_grid(products)
+      count <- if (length(products)) .sem_raw_count(vapply(products, function(p) length(p$factors), 0L)) else 0L
+      held <- identical(child$optimizer$state, "accepted")
+      branches <- vapply(seq_along(child$children), function(j) {
+        cons <- child$constraints
+        for (k in seq_along(products)) {
+          cons$lhs[products[[k]]$row] <- grid[j, k]
+          cons$rhs[products[[k]]$row] <- "0"
+        }
+        branch <- child$children[[j]]
+        bid <- paste0(id, "/branch:", j)
+        identical(branch$constraints, cons) && identical(.sem_node_sample(branch, root, root$hash), sample) &&
+          if (identical(branch$outcome, "resolved")) {
+            .sem_valid_outcome(branch, bid, id, root)
+          } else {
+            .sem_valid_exclusion(branch) && identical(branch$id, bid) && identical(branch$parent_id, id) ||
+              bare_failure(branch, bid, id)
+          }
+      }, TRUE)
+      statuses <- vapply(child$children, function(b) identical(b$outcome, "resolved"), TRUE)
+      length(child$children) == count && all(branches) && !all(statuses) &&
+        identical(child$branch_map, .sem_branch_map(child$constraints)) &&
+        identical(child$enumeration, list(state = "complete", required = count)) &&
+        identical(held, any(statuses)) &&
+        identical(child$likelihood$state, if (held) "available" else "unavailable") &&
+        identical(child$feasibility, if (held) "witness" else "unknown") &&
+        (is.null(child$condition) || is.list(child$condition)) &&
+        is.list(child$notices$warnings) && is.list(child$notices$messages)
     }
     nulls <- vapply(seq_along(paths), function(i) {
       child <- kids[[i + 1L]]
-      expected <- .sem_parse(paste0(x$context$model$syntax, "\n", paths[i], " == 0"))$constraints
+      syntax <- paste0(x$context$model$syntax, "\n", paths[i], " == 0")
+      parsed <- .sem_parse(syntax)
       id <- paste0("mbco/null:", i)
       resolved <- identical(child$outcome, "resolved")
-      same_null <- identical(child$constraints, expected) && shared(child, kids[[2L]], exact = resolved)
-      same_null && (if (.sem_valid_exclusion(child)) {
+      excluded <- !resolved && .sem_valid_exclusion(child)
+      # the table agrees with the call: a null that resolved was fitted, one that failed was not
+      tied <- is.null(tests) || (identical(isTRUE(tests$converged[i]), resolved) &&
+                                   (!resolved || identical(tests$f[i], child$likelihood$f)))
+      ok <- tied && identical(child$constraints, parsed$constraints) && shared(child, resolved)
+      ok && (if (excluded) {
         identical(child$id, id) && identical(child$parent_id, "mbco")
       } else if (resolved) {
-        same_parameters(child) && .sem_valid_outcome(child, id, "mbco", root)
+        identical(bare(child$context$model$parameters), bare(x$context$model$parameters)) &&
+          .sem_valid_outcome(child, id, "mbco", root)
       } else {
-        # a failed null: the evidence is its position, its restriction and that it is unresolved
-        is.list(child) && identical(child$schema_version, 1L) && identical(child$id, id) &&
-          identical(child$parent_id, "mbco") && identical(child$outcome, "unresolved") &&
-          is.list(child$children)
+        failed_null(child, id, syntax, parsed)
       })
     }, TRUE)
     all_resolved <- all(vapply(kids, function(child) identical(child$outcome, "resolved"), TRUE))
-    is.list(x) && identical(x$schema_version, 1L) && identical(x$id, "mbco") && identical(x$parent_id, NA_character_) &&
+    is.list(x) && identical(x$schema_version, 1L) && identical(x$id, "mbco") &&
+      identical(x$parent_id, NA_character_) &&
       length(kids) == length(paths) + 1L && is.data.frame(x$constraints) &&
       identical(x$branch_map, .sem_branch_map(x$constraints)) &&
       identical(x$enumeration, list(state = "complete", required = length(paths) + 1L)) &&
-      identical(full$constraints, x$constraints) && shared(full) && same_parameters(full, strict = TRUE) &&
+      identical(full$constraints, x$constraints) && identical(full$context$settings, x$context$settings) &&
+      identical(.sem_node_sample(full, root, root$hash), sample) &&
+      identical(domain(full$context$domain), domain(x$context$domain)) &&
+      identical(full$context$model$parameters, x$context$model$parameters) &&
       .sem_valid_outcome(full, "mbco/full", "mbco", root) &&
       all(nulls) &&
       identical(x$optimizer$state, "accepted") && identical(x$optimizer$status, full$optimizer$status) &&
