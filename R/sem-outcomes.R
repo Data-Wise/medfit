@@ -567,8 +567,9 @@
     }
     # the null the engine proved empty: a zero-product union whose every branch is certified empty
     # (each passes `.sem_valid_exclusion()`), with no condition and no likelihood. The node describes the constraints
-    # it was proved on, which the certificates check, so neither its restriction nor its context (sample, domain: an empty-union error raised below carries the
-    # context of the call that proved it) is compared with the call's; a certificate proves emptiness, nothing more
+    # it was proved on, which the certificates check, so neither its restriction nor its context (sample, domain: an
+    # empty-union error raised below carries the context of the call that proved it) is compared with the call's; a
+    # certificate proves emptiness, nothing more
     empty_union <- function(child, id) {
       kids <- child$children
       products <- .sem_zero_product_rows(child$constraints)
