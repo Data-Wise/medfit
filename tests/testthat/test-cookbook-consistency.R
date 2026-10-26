@@ -180,8 +180,10 @@ test_that("recipe 18: fixed_x leaves the structure alone, drops the parameter co
   syntax <- paste("mediator1 ~ a * treatment + covariate1 + covariate2",
                   "outcome ~ b * mediator1 + covariate1 + covariate2",
                   "ab := a * b", sep = "\n")
-  free <- fit_sem(syntax, mediation_demo)
-  fixed <- fit_sem(syntax, mediation_demo, fixed_x = TRUE)
+  # The recipe's numbers (14 to 8) are the covariance-only counts: pin that likelihood; the 0.15.0 default fixes x and
+  # adds the mean block, so its counts differ (the default is checked below).
+  free <- fit_sem(syntax, mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  fixed <- fit_sem(syntax, mediation_demo, fixed_x = TRUE, meanstructure = NULL)
   expect_equal(coef(fixed)[c("a", "b")], coef(free)[c("a", "b")], tolerance = 1e-6)
   se <- function(f) sqrt(diag(vcov(f)))[c("a", "b")]
   expect_equal(se(fixed), se(free), tolerance = 1e-5)
@@ -194,9 +196,15 @@ test_that("recipe 18: fixed_x leaves the structure alone, drops the parameter co
   expect_identical(gf$fixed_x, "")
   expect_setequal(strsplit(gx$fixed_x, ", ")[[1L]], c("treatment", "covariate1", "covariate2"))
   expect_error(stats::anova(free, fixed), "different `fixed_x` sets")
-  subset_fit <- fit_sem(syntax, mediation_demo, fixed_x = "treatment")
+  subset_fit <- fit_sem(syntax, mediation_demo, fixed_x = "treatment", meanstructure = NULL)
   expect_error(stats::anova(fixed, subset_fit), "different `fixed_x` sets")
   expect_error(stats::AIC(free, fixed), "different `fixed_x` sets")
+  # 0.15.0: the default is the fixed fit (explicit exogenous set, mean structure on), so it is refused against the
+  # free fit and its parameter count is the fixed set plus the free intercepts
+  dflt <- fit_sem(syntax, mediation_demo)
+  expect_setequal(strsplit(generics::glance(dflt)$fixed_x, ", ")[[1L]], c("treatment", "covariate1", "covariate2"))
+  expect_equal(generics::glance(dflt)$npar, gx$npar + 2L)
+  expect_error(stats::AIC(free, dflt), "different `fixed_x` sets")
 })
 
 test_that("the native quickstart, tutorial and guide exist, are indexed, and their links resolve", {
@@ -221,8 +229,9 @@ test_that("recipe 19: intercepts match lm(), the zero restriction costs one df a
   parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
   expect_null(run_cookbook_recipe(unlist(parsed[[1L]]), parsed[[20L]]))
   paths <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment\n"
-  free <- fit_sem(paste0(paths, "outcome ~ 1"), mediation_demo)
-  zero <- fit_sem(paste0(paths, "outcome ~ 0*1"), mediation_demo)
+  # the intercept oracle needs the exogenous mean free (fixed_x = FALSE): a fixed x has no coef() entry
+  free <- fit_sem(paste0(paths, "outcome ~ 1"), mediation_demo, fixed_x = FALSE)
+  zero <- fit_sem(paste0(paths, "outcome ~ 0*1"), mediation_demo, fixed_x = FALSE)
   th <- coef(free)
   lm_y <- stats::lm(outcome ~ mediator1 + treatment, mediation_demo)
   lm_m <- stats::lm(mediator1 ~ treatment, mediation_demo)
@@ -236,7 +245,7 @@ test_that("recipe 19: intercepts match lm(), the zero restriction costs one df a
   tab <- stats::anova(free, zero)
   expect_equal(tab$`Df diff`[2L], 1)
   expect_lt(tab$`Pr(>Chisq)`[2L], 0.01)
-  ms <- fit_sem(trimws(paths), mediation_demo, meanstructure = TRUE)
+  ms <- fit_sem(trimws(paths), mediation_demo, meanstructure = TRUE, fixed_x = FALSE)
   expect_equal(coef(ms)[names(coef(free))], coef(free), tolerance = 1e-6)
   # planted defect: the zero-intercept fit does not reproduce the lm intercept or the free direct effect
   expect_gt(abs(unname(coef(zero)["cp"]) - unname(stats::coef(lm_y)[3L])), 0.1)

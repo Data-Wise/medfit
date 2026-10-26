@@ -10,7 +10,9 @@ retained_paths <- c("a1", "b1")
 
 retained_fit <- function() {
   data <- readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
-  suppressMessages(medfit::fit_sem(retained_model, data, n_starts = 1L, information = "expected"))
+  # The subject is the retained null, not the defaults: pin the 0.14.x settings (a covariance-only fit, no fixed x).
+  suppressMessages(medfit::fit_sem(retained_model, data, n_starts = 1L, information = "expected",
+                                   fixed_x = FALSE, meanstructure = NULL))
 }
 
 # Run `code` with the first `.sem_vcov` call of each mbco_sem() refit sequence failing (null 1 retains its likelihood).

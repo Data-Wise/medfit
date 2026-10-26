@@ -27,8 +27,18 @@ lc_probes <- function() {
   lab <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"
   over <- "mediator1 ~ treatment\nmediator2 ~ treatment\noutcome ~ mediator1 + mediator2"
   m <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1"
-  lv <- function(text, ...) suppressWarnings(lavaan::sem(text, d, fixed.x = FALSE, ...))
-  close <- function(x, y, tol = 1e-6) isTRUE(all(abs(x - y) < tol))
+  # 0.15.0: native defaults are fixed_x = TRUE with a mean structure, so the reference is lavaan with the same settings.
+  lv <- function(text, ...) suppressWarnings(lavaan::sem(text, d, fixed.x = TRUE, meanstructure = TRUE, ...))
+  # Named vectors are matched by name (the parameter sets must be identical), never recycled by position.
+  close <- function(x, y, tol = 1e-6) {
+    if (!is.null(names(x)) && !is.null(names(y))) {
+      if (!setequal(names(x), names(y))) return(FALSE)
+      y <- y[names(x)]
+    } else if (length(x) != length(y)) {
+      return(FALSE)
+    }
+    isTRUE(all(abs(x - y) < tol))
+  }
   list(
     "Paths, covariances, labels, fixed values, bounds" = function() {
       f <- fit_sem(paste0(lab, "\noutcome ~~ lower(0) * outcome"), d)
@@ -44,12 +54,14 @@ lc_probes <- function() {
       if (lc_err(fit_sem("outcome ~ 1 + treatment", d))) "Unsupported" else "Supported"
     },
     "Fixed exogenous covariates" = function() {
-      native <- fit_sem(lab, d, fixed_x = TRUE)
+      # 0.15.0: the default is the lavaan default (fixed exogenous covariates), probed on a fit with no argument.
+      native <- fit_sem(lab, d)
       ref <- suppressWarnings(lavaan::sem(lab, d, fixed.x = TRUE))
       same <- native@df == lavaan::fitMeasures(ref, "df") &&
         close(native@n_obs * native@f, lavaan::fitMeasures(ref, "chisq"), 1e-5)
       guarded <- lc_err(fit_sem(paste0(lab, "\ntreatment ~~ treatment"), d, fixed_x = TRUE))
-      if (same && guarded && !identical(formals(fit_sem)$fixed_x, TRUE)) "Different by design" else "Supported"
+      default_fixed <- identical(generics::glance(native)$fixed_x, "treatment")
+      if (same && guarded && !default_fixed) "Different by design" else "Supported"
     },
     "Product terms (`x:m`) and four-way effects" = function() {
       pm <- "mediator1 ~ a*treatment\noutcome_int ~ b*mediator1 + treatment + treatment:mediator1"
@@ -57,9 +69,10 @@ lc_probes <- function() {
       ref <- suppressWarnings(lavaan::sem(pm, d, fixed.x = FALSE, se = "robust.huber.white"))
       pn <- sub("treatment:mediator1", "mediator1:treatment", names(lavaan::coef(ref))[1:4], fixed = TRUE)
       same <- identical(names(coef(nat)[1:4]), pn) &&
-        close(coef(nat)[1:4], lavaan::coef(ref)[1:4]) && close(lc_se(nat)[1:4], lc_se(ref)[1:4])
+        close(unname(coef(nat)[1:4]), unname(lavaan::coef(ref)[1:4])) &&
+        close(unname(lc_se(nat)[1:4]), unname(lc_se(ref)[1:4]))
       fx <- suppressWarnings(fit_sem(pm, d, se_type = "sandwich", fixed_x = TRUE))
-      same <- same && close(coef(fx)[1:4], lavaan::coef(ref)[1:4])
+      same <- same && close(unname(coef(fx)[1:4]), unname(lavaan::coef(ref)[1:4]))
       refuses <- function(expr) {
         msg <- tryCatch({
           expr

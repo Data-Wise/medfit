@@ -69,7 +69,8 @@ test_that("chapter 5: the expected information is the trace formula, and the san
     mediator2 ~ treatment
     outcome ~ mediator1 + mediator2
   "
-  fe <- fit_sem(parallel, d, information = "expected")
+  # the hand formulas below are the covariance-only likelihood: pin it (the 0.15.0 defaults fix x and add a mean block)
+  fe <- fit_sem(parallel, d, information = "expected", fixed_x = FALSE, meanstructure = NULL)
   ram <- fe@internals$ram
   smp <- medfit:::.sem_sample(fe@data, ram)
   theta <- fe@theta
@@ -84,7 +85,7 @@ test_that("chapter 5: the expected information is the trace formula, and the san
   set.seed(4)
   w <- rexp(n) + 0.3
   mediation <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"
-  fw <- fit_sem(mediation, d, weights = w, se_type = "sandwich")
+  fw <- fit_sem(mediation, d, weights = w, se_type = "sandwich", fixed_x = FALSE, meanstructure = NULL)
   rw <- fw@internals$ram
   sw <- medfit:::.sem_sample(fw@data, rw, weights = w)
   scores <- medfit:::.sem_scores(fw@theta, rw, sw)

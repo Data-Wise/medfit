@@ -104,9 +104,9 @@ the behavior makes that test fail.
 | Defined parameters | `:=` | `:=` with delta-method errors | Supported |
 | Chi-square and df | yes | `glance()` | Supported |
 | CFI, RMSEA, SRMR | yes | not reported | Unsupported |
-| logLik, AIC, BIC | yes | logLik equal; AIC and BIC count the means | Different by design |
+| logLik, AIC, BIC | yes | equal when both fit the same settings (the 0.15.0 defaults count the intercepts, as `meanstructure = TRUE` does in lavaan) | Supported |
 | Standardized estimates, modification indices, fitted values, residuals | yes | no | Unsupported |
-| Fixed exogenous covariates | `fixed.x = TRUE` is the default | `fixed_x = TRUE` or names, default `FALSE`; product columns are fixed with the rest; a statement on a selected variable is an error | Different by design |
+| Fixed exogenous covariates | `fixed.x = TRUE` is the default | `fixed_x = TRUE` or names, and `TRUE` is the default since 0.15.0; product columns are fixed with the rest; a statement on a selected variable is an error | Supported |
 | Product terms (`x:m`) and four-way effects | `x:m` is an observed exogenous column, kept as written; no mediation effects | `x:m` stored as `m:x`; coefficients and sandwich standard errors equal lavaan's; `extract_mediation()` gives the four-way parts; chi-square, df and p-value are `NA` and `anova()`, `mbco_sem()` refuse when a factor is a regression target; a supported class only | Partial |
 | Nested model comparison | `lavTestLRT()` | `anova()` | Supported |
 | Mediation effects and the MBCO test | no | `extract_mediation()`, `mbco_sem()` | Supported |

@@ -9,7 +9,13 @@ qa_data <- function(n = 500, seed = 11) {
   d
 }
 qa_base <- "M ~ a*X\nY ~ b*M + cp*X"
-qa_fit <- function(syntax = qa_base, ...) suppressMessages(fit_sem(syntax, qa_data(), n_starts = 1L, ...))
+# The forged-domain checks below edit `fixed_x` and `meanstructure` away from the fit's values, so the helper pins the
+# 0.14.x settings (nothing fixed, covariance-only) unless a case passes its own; the unpinned 0.15.0 defaults have a
+# case of their own in the genuine-results test.
+qa_fit <- function(syntax = qa_base, ...) {
+  args <- utils::modifyList(list(fixed_x = FALSE, meanstructure = NULL), list(...))
+  suppressMessages(do.call(fit_sem, c(list(syntax, qa_data(), n_starts = 1L), args)))
+}
 
 test_that("genuine MBCO results are never refused by the root validator", {
   cases <- list(
@@ -18,6 +24,7 @@ test_that("genuine MBCO results are never refused by the root validator", {
     inequality = function() mbco_sem(qa_fit(paste0(qa_base, "\nb + cp < 5")), "a", "b"),
     equality = function() mbco_sem(qa_fit(paste0(qa_base, "\nb == cp")), "a", "b"),
     boundary = function() mbco_sem(qa_fit(paste0(qa_base, "\na > 0")), "a", "b"),
+    defaults = function() mbco_sem(suppressMessages(fit_sem(qa_base, qa_data(), n_starts = 1L)), "a", "b"),
     fixed_x_true = function() mbco_sem(qa_fit(fixed_x = TRUE), "a", "b"),
     fixed_x_false = function() mbco_sem(qa_fit(fixed_x = FALSE), "a", "b"),
     meanstructure = function() mbco_sem(qa_fit(meanstructure = TRUE), "a", "b"),

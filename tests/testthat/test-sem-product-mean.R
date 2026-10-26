@@ -37,7 +37,14 @@ test_that("the same holds through fit_mediation(engine = 'native', model = )", {
     expect_no_error(fit_mediation(data = d, engine = "native", model = pmn_model, treatment = "x", mediator = "m"))
     expect_true(length(seen) > 0L && all(seen == "mean"))
     seen <- character()
+    # 0.15.0: a no-product model also fits the mean structure by default; `meanstructure = NULL` keeps covariance-only
     expect_no_error(fit_mediation(data = d, engine = "native", model = pmn_plain, treatment = "x", mediator = "m"))
+    expect_true(length(seen) > 0L && all(seen == "mean"))
+    seen <- character()
+    expect_no_error(fit_mediation(
+      data = d, engine = "native", model = pmn_plain, treatment = "x", mediator = "m",
+      engine_args = list(meanstructure = NULL)
+    ))
     expect_true(length(seen) > 0L && all(seen == "cov"))
     expect_error(
       fit_mediation(
@@ -53,10 +60,14 @@ test_that("the same holds through fit_mediation(engine = 'native', model = )", {
   })
 })
 
-test_that("a no-product model is unchanged: covariance-only by default", {
+test_that("a no-product model is covariance-only with `meanstructure = NULL` and fits the mean structure by default", {
   fit <- fit_sem(pmn_plain, pmn_data(), fixed_x = FALSE, meanstructure = NULL)
   expect_false(fit@internals$ram$has_mean)
   expect_false(any(grepl("~1", names(coef(fit)), fixed = TRUE)))
+  # 0.15.0 default: meanstructure = TRUE, so the intercepts are free parameters
+  dflt <- fit_sem(pmn_plain, pmn_data(), fixed_x = FALSE)
+  expect_true(dflt@internals$ram$has_mean)
+  expect_true(any(grepl("~1", names(coef(dflt)), fixed = TRUE)))
 })
 
 test_that("meanstructure = FALSE with a product errors, naming the reason", {

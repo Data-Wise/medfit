@@ -7,6 +7,10 @@
 
 rs_syntax <- "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + cp*treatment + covariate1"
 
+# A parent fit without a mean structure: the 0.15.0 default fits one, so these tests ask for the covariance-only
+# likelihood with `meanstructure = NULL` (no `~1` in the syntax), which is what makes FALSE differ from NULL here.
+rs_fit_no_mean <- function() fit_sem(rs_syntax, mediation_demo, meanstructure = NULL, fixed_x = FALSE)
+
 # The settings `mbco_sem()` hands to each refit. Build the parent fit before the mock is installed: a mock installed
 # earlier would record fit_sem()'s own call and pass vacuously.
 rs_mbco_settings <- function(fit, fn = mbco_sem) {
@@ -21,15 +25,16 @@ rs_mbco_settings <- function(fit, fn = mbco_sem) {
 }
 
 test_that("the MBCO refit of a fit without a mean structure passes meanstructure = FALSE, not NULL", {
-  fit <- fit_sem(rs_syntax, mediation_demo)
+  fit <- rs_fit_no_mean()
   expect_false(isTRUE(fit@internals$ram$has_mean))
   seen <- rs_mbco_settings(fit)
   expect_gt(length(seen), 0L)
   expect_true(all(vapply(seen, function(s) identical(s$meanstructure, FALSE), logical(1))))
 })
 
-test_that("the MBCO refit of a fit with a mean structure passes meanstructure = TRUE", {
-  fit <- fit_sem(rs_syntax, mediation_demo, meanstructure = TRUE)
+test_that("the MBCO refit of a default fit (0.15.0: mean structure on) passes meanstructure = TRUE", {
+  fit <- fit_sem(rs_syntax, mediation_demo)
+  expect_true(isTRUE(fit@internals$ram$has_mean))
   seen <- rs_mbco_settings(fit)
   expect_gt(length(seen), 0L)
   expect_true(all(vapply(seen, function(s) identical(s$meanstructure, TRUE), logical(1))))
@@ -46,7 +51,7 @@ test_that("the MBCO refit of a named-subset fit passes the same subset and the m
 test_that("the MBCO statistic is the same whether the no-mean refit is told FALSE or left to the syntax", {
   # known answer: for a no-mean parent, FALSE and NULL describe the same likelihood, so the explicit setting
   # changes no number today; it only stops the refit from following a future default
-  fit <- fit_sem(rs_syntax, mediation_demo)
+  fit <- rs_fit_no_mean()
   explicit <- mbco_sem(fit, "a", "b")
   implicit <- sem_mutate(mbco_sem, "meanstructure = isTRUE(fit@internals$ram$has_mean)",
                          "meanstructure = if (isTRUE(fit@internals$ram$has_mean)) TRUE")(fit, "a", "b")
@@ -55,7 +60,7 @@ test_that("the MBCO statistic is the same whether the no-mean refit is told FALS
 
 test_that("planted defect: an MBCO refit that leaves meanstructure unset is caught", {
   fx_skip_covr()
-  fit <- fit_sem(rs_syntax, mediation_demo)
+  fit <- rs_fit_no_mean()
   bad <- sem_mutate(mbco_sem, "meanstructure = isTRUE(fit@internals$ram$has_mean)",
                     "meanstructure = if (isTRUE(fit@internals$ram$has_mean)) TRUE")
   seen <- rs_mbco_settings(fit, bad)
