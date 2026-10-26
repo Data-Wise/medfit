@@ -197,8 +197,11 @@ with `medfit_sem_empty_union`. If a branch
 cannot be fitted, `fit_sem()` stops with an error rather than returning the
 best of the others, which need not be the constrained optimum; the error
 carries the outcome ledger of every required branch as `$ledger`, and a fit's
-ledger is `fit@diagnostics$ledger`. A complete enumeration is not a certificate
-of a global optimum. This avoids a
+ledger is `fit@diagnostics$ledger`. If the optimizer accepts a fit and only the
+covariance stage fails, `fit_sem()` stops with `medfit_sem_covariance_error`,
+which carries the accepted likelihood in its ledger and is never a fit; inside
+`mbco_sem()` such a null keeps its likelihood and a warning. A complete
+enumeration is not a certificate of a global optimum. This avoids a
 zero Jacobian where several factors vanish. `mbco_sem()` uses the same logic
 for an indirect-effect test: fit each single-path null, use the smallest
 likelihood-ratio statistic, and refer it to a one-degree-of-freedom chi-square

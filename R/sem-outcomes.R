@@ -207,6 +207,61 @@
   )
 }
 
+# The context of a fit that reached the likelihood: the entry's context completed with what the pipeline settled (the
+# rows kept, the resolved domain). Elements that are NULL in the fit are dropped, as they are on every success path.
+.sem_fit_context <- function(context, out) {
+  context$sample <- out$data
+  context$n_obs <- out$n_obs
+  context$domain$fixed_x <- out$fixed_x
+  context$domain$weights <- out$weights
+  context$domain$information <- out$information
+  context$domain$meanstructure <- isTRUE(out$ram$has_mean)
+  context$domain$factors <- out$factors
+  context$settings$se_type <- out$se_type
+  context
+}
+
+# Covariance-stage failure (D4). The optimizer accepted the fit and the covariance stage then failed: the likelihood and
+# its context are evidence, but the result is not a fit. It is a typed ERROR (never a returned SEMFit, #303 and D-11),
+# a sibling of `medfit_error_no_convergence` rather than a refinement: no optimizer failed, and the handlers of D-11
+# (`mbco_sem()`, `compare_lr()`) must not take it for an unresolved refit. `partial` is the accepted fit list without
+# `vcov` and `defined`; `ledger` is the same node as `partial$ledger`, whose `covariance` is `failed` and whose
+# `post_fit` holds the original condition. The message is the original one.
+.sem_covariance_error <- function(message, partial, post_fit = NULL) {
+  structure(class = c("medfit_sem_covariance_error", "error", "condition"),
+            list(message = message, call = NULL, schema_version = 1L, stage = "covariance", partial = partial,
+                 ledger = partial$ledger, post_fit = post_fit))
+}
+
+.sem_abort_covariance <- function(partial, message = NULL) {
+  .sem_require_outcome(partial, partial = TRUE)
+  stop(.sem_covariance_error(message %||% partial$ledger$post_fit$condition$message, partial))
+}
+
+.sem_valid_post_fit <- function(x) {
+  is.list(x) && identical(x$schema_version, 1L) && identical(x$stage, "covariance") &&
+    is.list(x$condition) && "error" %in% x$condition$class &&
+    is.character(x$condition$message) && length(x$condition$message) == 1L && !is.na(x$condition$message)
+}
+
+# Only the internal branch and null callers consume the partial payload, and only after every field is checked; a
+# payload that fails is refused with `medfit_error_ledger`, never retained.
+.sem_retain_covariance <- function(e) {
+  p <- e$partial
+  ok <- inherits(e, "medfit_sem_covariance_error") && identical(e$schema_version, 1L) &&
+    identical(e$stage, "covariance") && is.list(p) && is.list(e$ledger) && identical(e$ledger, p$ledger) &&
+    is.null(p$vcov) && is.null(p$defined) && identical(p$ledger$covariance, "failed") &&
+    .sem_valid_post_fit(p$ledger$post_fit)
+  if (!ok) {
+    .sem_abort_ledger("malformed covariance-stage failure payload", e$ledger)
+  }
+  .sem_require_outcome(p, partial = TRUE)
+  warning(structure(class = c("medfit_sem_covariance_notice", "warning", "condition"),
+                    list(message = paste0("covariance-stage failure: ", conditionMessage(e),
+                                          "; likelihood retained, covariance unavailable"), call = NULL)))
+  p
+}
+
 # One node. `result` is the engine's fit list (or the full fit's summary for an MBCO root), `error` the condition
 # that stopped the call, `children` the nodes of the required restrictions.
 # `union` is TRUE only for a zero-product union (`.sem_fit_branches()`), whose certified-empty branches are accounted
@@ -371,7 +426,18 @@
       identical(x$outcome, "resolved") && identical(x$optimizer$state, "accepted") &&
       length(x$optimizer$status) == 1L && is.finite(x$optimizer$status) &&
       identical(x$likelihood$state, "available") && length(x$likelihood$f) == 1L && is.finite(x$likelihood$f) &&
-      identical(x$feasibility, "witness") && x$covariance %in% c("available", "unavailable", "not_retained") &&
+      identical(x$feasibility, "witness") &&
+      # covariance-stage evidence (D4): `failed` goes with a valid `post_fit` and nothing else does; a union reports the
+      # first failing branch's evidence, so a dropped or reattributed one refuses the node
+      (if (is.null(x$post_fit)) {
+        x$covariance %in% c("available", "unavailable", "not_retained")
+      } else {
+        identical(x$covariance, "failed") && .sem_valid_post_fit(x$post_fit)
+      }) &&
+      (!length(x$children) || {
+        failed <- Filter(function(child) !is.null(child$post_fit), x$children)
+        identical(x$post_fit, if (length(failed)) failed[[1L]]$post_fit)
+      }) &&
       is.list(x$notices$warnings) && is.list(x$notices$messages) && is.null(x$condition) &&
       all(vapply(seq_along(x$children), function(i) {
         cons <- x$constraints
@@ -409,9 +475,12 @@
 
 # `fit` is the engine's fit list (or the fields of a `SEMFit` in that shape). The ledger must be valid and must
 # describe this very fit: the same discrepancy, status, sample, restrictions, domain and settings.
-.sem_require_outcome <- function(fit, model = NULL) {
+# `partial = TRUE` admits the one node with covariance-stage evidence, for the typed failure that carries it; a fit that
+# is returned never does.
+.sem_require_outcome <- function(fit, model = NULL, partial = FALSE) {
   x <- fit$ledger
-  good <- .sem_valid_outcome(x) && identical(x$likelihood$f, fit$f) && isTRUE(fit$converged) &&
+  good <- .sem_valid_outcome(x) && (partial || is.null(x$post_fit)) && identical(x$likelihood$f, fit$f) &&
+    isTRUE(fit$converged) &&
     identical(x$context[["sample"]], fit$data) && identical(x$context$n_obs, fit$n_obs) &&
     identical(x$constraints, fit$constraints) &&
     identical(x$optimizer$status, fit$status) &&

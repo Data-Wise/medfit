@@ -126,10 +126,10 @@ the settings and \code{n_obs}). \code{enumeration} records \code{state} and the 
 every required restriction was attempted, not that any was globally optimized. \code{outcome} is \code{resolved} or
 \code{unresolved}. Separate fields record \code{optimizer} (acceptance state, original status, decrement, retries and
 optimum diagnostics), \code{likelihood} (availability and \code{f}), \code{feasibility} (\code{witness} or \code{unknown}), \code{covariance}
-(\code{available}, \code{unavailable} or \code{not_retained}), \code{improper}, the retained \code{notices} (warnings and messages), the
-original \code{condition} (class, message, call) and the recursive \code{children}. IDs are deterministic positions within
-the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a failed branch is
-unknown, never certified infeasible.
+(\code{available}, \code{unavailable}, \code{not_retained} or \code{failed}), \code{improper}, the retained \code{notices} (warnings and
+messages), the original \code{condition} (class, message, call) and the recursive \code{children}. IDs are deterministic
+positions within the call, not certificates of equivalent parameter spaces. No global optimum is asserted, and a
+failed branch is unknown, never certified infeasible.
 
 A node whose constraints hold zero-product rows also has \code{branch_map}: \code{state}, \code{raw_count}, the parser
 \code{factor_counts}, \code{unique_count} and \code{raw_to_canonical}, a structural restriction-set ID for each raw row. The IDs
@@ -161,6 +161,21 @@ failed call are in the ledger only; the error message keeps its text. A data or 
 and also carries \verb{$ledger}. The estimation sample is stored once, on the root node; a descendant fitted on the
 same rows carries only \code{context$sample_hash}. A fit made before the ledger existed must be refitted before
 \code{\link[=mbco_sem]{mbco_sem()}} can use it, which refuses it with a \code{medfit_error_ledger} error.
+
+When the optimizer accepts a fit and only the covariance stage fails (an error from the covariance, not the
+singular-information NA return, which stays \code{unavailable} with its warning), the call stops with
+\code{medfit_sem_covariance_error}, never a fit. The class is a sibling of \code{medfit_error_no_convergence}: no optimizer
+failed, so the handlers that report an unresolved result for an optimizer failure do not take it. Its fields are
+\code{schema_version = 1L}, \code{stage = "covariance"}, \code{partial} (the accepted optimizer result: \code{f}, \code{theta}, sample,
+domain, dimensions and settings; no \code{vcov} or \code{defined}) and \code{ledger} (the same node as \code{partial$ledger}, with
+\code{covariance = "failed"} and \code{post_fit}: versioned evidence with the original condition's class, message and call).
+The message is the original one. Resolved here means an accounted-for accepted likelihood, not a successful
+covariance. A union root reports the first failing branch's \code{post_fit}, in branch order, even when another branch
+supplies its minimum likelihood, and does not claim the winning branch failed: inspect the branch IDs. A branch that
+did not converge still stops the call with \code{medfit_error_no_convergence} first. Definition values and gradients are
+checked before the covariance, and model, data, optimizer, objective and other errors get no covariance certificate.
+The condition is not accepted as an input to \code{\link[=mbco_sem]{mbco_sem()}}, and a fit that carries \code{post_fit} is refused with
+\code{medfit_error_ledger}.
 }
 
 \examples{

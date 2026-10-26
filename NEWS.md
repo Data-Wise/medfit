@@ -56,6 +56,27 @@
   makes `mbco_sem()` refuse the fit with a `medfit_error_ledger` error. A fit stored by a development build that
   predates the map (zero-product models only) must be refitted for the same reason.
 
+## Covariance-stage evidence for native fits (D4)
+
+* When the optimizer accepts a native fit and the covariance stage then fails, the accepted likelihood and its
+  context are kept as evidence in a typed error, `medfit_sem_covariance_error`, never a returned fit (#303). The
+  class is a sibling of `medfit_error_no_convergence`, not a refinement: no optimizer failed, so the handlers that turn
+  an optimizer failure into an unresolved result do not take it. It carries `$ledger` (the node, with `covariance`
+  `failed` and the original condition in `post_fit`) and `$partial` (the accepted fit without `vcov` or `defined`); its
+  message is the original one. A failure of any other kind (model, data, optimizer, objective, an invalid definition)
+  is unchanged and gets no covariance certificate.
+* A zero-product union with a covariance failure in one branch stops the same way after every branch has a likelihood.
+  The root reports the first failing branch's evidence, in branch order, even when another branch is the minimum; the
+  branch IDs in the ledger say which one failed. A branch that did not converge still stops the call with
+  `medfit_error_no_convergence` first.
+* `mbco_sem()` keeps the likelihood of a refit null whose covariance stage failed, after checking that it is the
+  null that was asked for (same rows, domain, one more restriction). The statistic and p-value are unchanged, a warning names the
+  failure, and the node of that null records `covariance = "failed"` and its notices. No covariance or standard error is
+  invented, and boundary and identification warnings stay. A fit that carries covariance-failure evidence, or a
+  malformed payload, is refused with `medfit_error_ledger`.
+* No result changes. Definition values and gradients are now checked before the covariance, so an invalid definition
+  is reported as before and not hidden by a covariance-stage error.
+
 # medfit 0.14.0
 
 ## Native engine defaults change in 0.15.0

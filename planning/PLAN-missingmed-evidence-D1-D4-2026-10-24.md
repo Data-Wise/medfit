@@ -73,9 +73,16 @@ files, so each PR carries the seven-item risk-tier checklist and a `gates.yaml` 
     is not run (NOTE-D3 reconciliation). Final gates pass: full suite 1648 tests, 8059 expectations, 0 failed, 0 errors, 2 skipped; both sim scripts
     (`sem-fixed-x-gate.R`, `sem-nonlinear-gate.R`) clean with every `MUTANT=` failing, on the macOS reference BLAS. Not run:
     the OpenBLAS runner (`gates.yaml` dispatch).
-- [ ] **P4. D4 covariance-stage evidence.** NOTE-D4 records D4 as *not independently closed* (the review failed to
+- [x] **P4. D4 covariance-stage evidence.** NOTE-D4 records D4 as *not independently closed* (the review failed to
   produce a verdict). Acceptance: `test-sem-post-fit.R` green, the nonwinning-child mutants fail, and a fresh
   independent review closes it. Blocked by: P1; touches `sem-se.R`, so it reruns the SE oracles.
+  - **Built on `feature/p4-d4-covariance` (2026-10-25); the PR is not merged.** `test-sem-post-fit.R` green (12 tests, 212
+    expectations), the attribution and notice mutants fail named tests, the SE oracles are unchanged and green. Typed
+    class `medfit_sem_covariance_error` (sibling of `medfit_error_no_convergence`), MBCO retains the null: both are
+    decisions for the author (NOTE-D4, reconciliation). Final gates pass (macOS reference BLAS): full suite 1664 tests, 8352 expectations, 0 failed,
+    0 errors, 2 skipped; `sem-fixed-x-gate.R`, `sem-nonlinear-gate.R`, `sem-se-gate.R` clean with every `MUTANT=` failing; the
+    oracle QA pass (24 mutants, `test-sem-post-fit-qa.R`) is the independent D4 review. Not done: the OpenBLAS runner
+    (`gates.yaml` dispatch) and missingmed's consumer rerun. **Checkpoint 2 remains.**
 
 ### Checkpoint 1 (after P0)
 - [x] Author approves the reconciliation (D-12, 2026-10-24). Target release: open (0.15.0 or a 0.14.x minor).
