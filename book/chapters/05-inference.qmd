@@ -568,6 +568,117 @@ discrepancy and the failure text in `note`; the statistic and the p-value are `N
 the one closest to the data, so taking the minimum of the others would hide the failure (0.13.0; see the
 [troubleshooting guide](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html)).
 
+**When only the covariance fails.** A refit has two stages: the optimizer, then the covariance. Suppose the optimizer
+accepts the solution and the covariance stage fails. The likelihood is real, because the optimizer accepted it, and
+$D = n(F_r - F)$ needs nothing else. Since 0.14.1 `mbco_sem()` keeps that likelihood. We inject a covariance failure into the
+first null refit (the failure is planted; the model fits cleanly) and compare with the clean run:
+
+```{r}
+#| label: mbco-covariance
+vcov_real <- medfit:::.sem_vcov
+cov_calls <- 0L
+cov_warnings <- character()
+mb_cov <- testthat::with_mocked_bindings(
+  withCallingHandlers(
+    mbco_sem(fit_full, "a", "b"),
+    warning = function(w) {
+      cov_warnings <<- c(cov_warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  ),
+  .sem_vcov = function(...) {
+    cov_calls <<- cov_calls + 1L
+    if (cov_calls == 1L) stop("injected null covariance failure")
+    vcov_real(...)
+  },
+  .package = "medfit"
+)
+cov_warnings
+c(statistic_same = identical(mb_cov$statistic, mb$statistic), table_same = identical(mb_cov$tests, mb$tests))
+null_node <- mb_cov$ledger$children[[2]]
+c(id = null_node$id, covariance = null_node$covariance)
+```
+
+```{r}
+#| label: mbco-covariance-check
+#| include: false
+stopifnot(length(cov_warnings) == 1L,
+          grepl("likelihood retained, covariance unavailable", cov_warnings, fixed = TRUE),
+          identical(mb_cov$statistic, mb$statistic), identical(mb_cov$tests, mb$tests),
+          !isTRUE(mb_cov$unresolved),
+          identical(null_node$covariance, "failed"),
+          grepl("injected null covariance failure", null_node$post_fit$condition$message, fixed = TRUE))
+```
+
+The statistic and the table are identical to the clean run, one warning names the failure, and the ledger node of that null
+records `covariance = "failed"` and the original condition. No covariance or standard error is invented. The engine first
+checks that the retained fit is the null that was asked for (same rows, same domain, one more restriction), so a fit that
+merely failed is not mistaken for one that only lost its covariance.
+
+The same failure in a plain `fit_sem()` call has no such use: a fit without a covariance matrix is not a fit. It is the typed
+error `medfit_sem_covariance_error`, which holds the accepted likelihood in its ledger and the accepted solution in
+`$partial`, and never a `SEMFit`. It is a sibling of `medfit_error_no_convergence`, not a kind of it, because no optimizer
+failed:
+
+```{r}
+#| label: covariance-error
+cov_err <- testthat::with_mocked_bindings(
+  tryCatch(fit_sem(full, d), error = identity),
+  .sem_vcov = function(...) stop("injected covariance failure"),
+  .package = "medfit"
+)
+class(cov_err)[1]
+c(accepted_f = cov_err$partial$f, clean_f = fit_full@f)
+c(has_vcov = !is.null(cov_err$partial$vcov), ledger_covariance = cov_err$ledger$covariance)
+```
+
+```{r}
+#| label: covariance-error-check
+#| include: false
+stopifnot(inherits(cov_err, "medfit_sem_covariance_error"),
+          !inherits(cov_err, "medfit_error_no_convergence"),
+          !S7::S7_inherits(cov_err$partial, SEMFit),
+          is.null(cov_err$partial$vcov),
+          identical(cov_err$partial$f, fit_full@f),
+          identical(cov_err$ledger$covariance, "failed"),
+          grepl("injected covariance failure", conditionMessage(cov_err), fixed = TRUE))
+```
+
+**The ledger is checked on the way in and on the way out.** `mbco_sem()` checks the ledger of the fit it is given against the
+fit's own model, rows and settings, and refuses a fit whose ledger is missing, malformed or does not describe the fit
+(a fit made before 0.14.1 must be refitted). Before it returns, it validates its own root ledger the same way: the full
+fit and one node per tested null, in order, each tied to the `$tests` table and to the settings the refit used. A failure of
+either check is the error `medfit_error_ledger`, which is not an optimizer failure and is never reported as an unresolved
+result:
+
+```{r}
+#| label: mbco-ledger
+vapply(mb$ledger$children, function(x) x$id, "")
+medfit:::.sem_valid_mbco_outcome(mb$ledger, c("a", "b"))
+tampered <- mb$ledger
+tampered$children[[2]]$constraints$rhs <- "1"
+medfit:::.sem_valid_mbco_outcome(tampered, c("a", "b"))
+no_ledger <- fit_full
+no_ledger@diagnostics$ledger <- NULL
+ledger_err <- tryCatch(mbco_sem(no_ledger, "a", "b"), error = identity)
+class(ledger_err)[1]
+conditionMessage(ledger_err)
+```
+
+```{r}
+#| label: mbco-ledger-check
+#| include: false
+stopifnot(identical(vapply(mb$ledger$children, function(x) x$id, ""), c("mbco/full", "mbco/null:1", "mbco/null:2")),
+          isTRUE(medfit:::.sem_valid_mbco_outcome(mb$ledger, c("a", "b"))),
+          !medfit:::.sem_valid_mbco_outcome(tampered, c("a", "b")),
+          inherits(ledger_err, "medfit_error_ledger"), !inherits(ledger_err, "medfit_error_no_convergence"))
+```
+
+The validation decides only what can be decided from the ledger and the fit in hand. It cannot tell a result from a consistent
+rewrite of the sample and its hash, or an altered parameter value, without refitting; the quality-control article lists these
+residuals. A complete enumeration of zero-product branches inside an MBCO null is, as in Chapter 3, not a certificate of a global
+optimum.
+
 And lavaan and OpenMx give the same two likelihood-ratio statistics:
 
 ```{r}

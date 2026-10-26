@@ -197,7 +197,7 @@ one branch cannot inherit an infeasible point from another. If any branch cannot
 stops with an error (`medfit_error_no_convergence`; since 0.13.0). The best of the other branches is not
 returned, because it need not be the constrained optimum and a returned fit could be used by `coef()`,
 `vcov()` or `anova()` as if it were certified. The message lists each failed branch and the best survivor's
-discrepancy, for diagnosis only.
+discrepancy, for diagnosis only; the error also carries the evidence as objects, shown after the next chunk.
 
 ```{r}
 #| label: zero-product
@@ -213,6 +213,138 @@ data.frame(chosen_branch = zp@internals$branch, discrepancy = zp@f)
 #| include: false
 stopifnot(abs(zp@f - min(branch_f)) < 1e-10, abs(diff(branch_f)) > 1e-3)
 ```
+
+#### What each branch leaves behind
+
+Every fit, and every branch inside a zero-product fit, keeps a record of how it ended: the ledger,
+`fit@diagnostics$ledger` (since 0.14.1). A node holds a stable ID, the exact restriction, the estimation sample, the
+optimizer's acceptance state, the discrepancy, whether a feasible point was found, and whatever warnings the fit raised.
+The fit above has one child per branch, both resolved, and the enumeration is complete:
+
+```{r}
+#| label: ledger-branches
+node <- zp@diagnostics$ledger
+data.frame(
+  id = vapply(node$children, function(x) x$id, ""),
+  outcome = vapply(node$children, function(x) x$outcome, ""),
+  feasible_point = vapply(node$children, function(x) x$feasibility, ""),
+  discrepancy = vapply(node$children, function(x) x$likelihood$f, 0)
+)
+node$enumeration
+```
+
+```{r}
+#| label: ledger-branches-check
+#| include: false
+stopifnot(identical(node$outcome, "resolved"),
+          identical(node$enumeration$state, "complete"), node$enumeration$required == 2L,
+          length(node$children) == 2L,
+          all(vapply(node$children, function(x) x$outcome == "resolved", TRUE)),
+          abs(vapply(node$children, function(x) x$likelihood$f, 0)[1:2] - unname(branch_f)) |> max() < 1e-10)
+```
+
+"Complete" says that every branch was visited. It does not say that the winner is the global optimum: each branch is a
+local solve from one start, and the evidence of how well that start explored is `diagnostics$optimum` (above). Neither the
+enumeration state nor the ledger certifies a global minimum.
+
+A branch that fails is the case the ledger is for. We plant one failure, the second solve in the union, so the evidence
+of the error can be read (the failure is injected for the demonstration; the optimizer converges on this model):
+
+```{r}
+#| label: ledger-failed-branch
+real_fit <- medfit:::.sem_fit_syntax
+calls <- 0L
+failed <- testthat::with_mocked_bindings(
+  tryCatch(fit_sem(paste0(model, "a*b == 0\n"), d), error = identity),
+  .sem_fit_syntax = function(...) {
+    calls <<- calls + 1L
+    if (calls == 2L) medfit:::.sem_no_convergence("planted branch failure")
+    real_fit(...)
+  },
+  .package = "medfit"
+)
+class(failed)
+data.frame(
+  id = vapply(failed$ledger$children, function(x) x$id, ""),
+  outcome = vapply(failed$ledger$children, function(x) x$outcome, ""),
+  feasible_point = vapply(failed$ledger$children, function(x) x$feasibility, ""),
+  discrepancy = vapply(failed$ledger$children, function(x) x$likelihood$f, 0)
+)
+failed$best_survivor
+```
+
+```{r}
+#| label: ledger-failed-branch-check
+#| include: false
+stopifnot(inherits(failed, "medfit_error_no_convergence"),
+          identical(failed$ledger$outcome, "unresolved"),
+          identical(failed$ledger$children[[1]]$feasibility, "unknown"),
+          identical(failed$ledger$children[[1]]$likelihood$state, "unavailable"),
+          identical(failed$best_survivor$id, "fit/branch:2"),
+          abs(failed$best_survivor$f - branch_f[["b == 0"]]) < 1e-10)
+```
+
+The failed branch is `unresolved` with a likelihood that is `unavailable`, and its feasible-point field reads `unknown`:
+a solver that did not converge has shown nothing about whether the branch is empty. `$best_survivor` names the
+surviving branch and its discrepancy so the failure can be diagnosed. It is not a result: no p-value, no estimate and no fit
+come from it, because the lower-discrepancy branch may be the one that failed.
+
+**A literal contradiction is the one proof of emptiness.** One thing does show that a branch is empty: two
+constraints that contradict by their written syntax, an explicit `a == 0` and an explicit finite nonzero literal
+equality on the same label, as `a == 1`. The engine reads this from the parsed constraints, with no tolerance and no
+solver involved, and stops before the optimizer runs:
+
+```{r}
+#| label: literal-contradiction
+direct <- tryCatch(fit_sem(paste0(model, "a == 0\na == 1\n"), d), error = identity)
+class(direct)
+conditionMessage(direct)
+direct$ledger$certificate[c("method", "label")]
+tiny <- tryCatch(fit_sem(paste0(model, "a == 0\na == 1e-9\n"), d), error = identity)
+class(tiny)[1]
+```
+
+```{r}
+#| label: literal-contradiction-check
+#| include: false
+stopifnot(inherits(direct, "medfit_sem_infeasible"), inherits(direct, "medfit_error_no_convergence"),
+          grepl("literal zero/nonzero contradiction", conditionMessage(direct), fixed = TRUE),
+          identical(direct$ledger$feasibility, "certified_empty"),
+          identical(direct$ledger$certificate$method, "literal_zero_nonzero"),
+          inherits(tiny, "medfit_sem_infeasible"))
+```
+
+The test is exact: any finite nonzero literal contradicts zero, so `a == 1e-9` is as much a contradiction as `a == 1`.
+Nothing else is a proof: a solver status, a tolerance, an affine relation such as `a + b == 1` with `a == 0`, or a value in
+the parameter table leaves the branch `unknown`, never certified empty.
+
+In a zero-product union a certified-empty branch is kept in the ledger with its proof, marked `excluded`, and not
+fitted. The union still returns a fit if at least one branch resolves and every other branch is resolved or excluded.
+If every branch is excluded, the call stops with `medfit_sem_empty_union`, which is also a
+`medfit_error_no_convergence`:
+
+```{r}
+#| label: literal-union
+mixed <- fit_sem(paste0(model, "a*b == 0\na == 1\n"), d)
+c(chosen = mixed@internals$branch,
+  outcomes = paste(vapply(mixed@diagnostics$ledger$children, function(x) x$outcome, ""), collapse = ", "))
+empty <- tryCatch(fit_sem(paste0(model, "a*b == 0\na == 1\nb == 1\n"), d), error = identity)
+class(empty)[1]
+```
+
+```{r}
+#| label: literal-union-check
+#| include: false
+b0 <- fit_sem(paste0(model, "b == 0\na == 1\n"), d)
+stopifnot(identical(mixed@internals$branch, "b == 0"),
+          identical(vapply(mixed@diagnostics$ledger$children, function(x) x$outcome, ""), c("excluded", "resolved")),
+          abs(mixed@f - b0@f) < 1e-10,
+          inherits(empty, "medfit_sem_empty_union"), inherits(empty, "medfit_error_no_convergence"),
+          all(vapply(empty$ledger$children, function(x) x$feasibility == "certified_empty", TRUE)))
+```
+
+*What to remember:* unresolved means unknown, not infeasible. Only a literal syntax contradiction certifies a branch
+empty, and a complete enumeration is not a global-optimum certificate.
 
 ### Counting what a constraint removes
 
@@ -556,8 +688,8 @@ off_gate <- medfit:::.sem_gate(off, 3L, ram, smp, lb, ub, cons)
 broken <- theta
 broken["cp"] <- broken["cp"] + 0.1
 broken_gate <- medfit:::.sem_gate(broken, 3L, ram, smp, lb, ub, cons)
-# 4. a good point with a failure status from the solver
-status_gate <- medfit:::.sem_gate(theta, -4L, ram, smp, lb, ub, cons)
+# 4. a good point with a failure status from the solver (-1; since 0.13.0 the roundoff stop -4 is not a failure)
+status_gate <- medfit:::.sem_gate(theta, -1L, ram, smp, lb, ub, cons)
 verdicts <- rbind(optimum = show(good), `feasible, not optimal` = show(off_gate), infeasible = show(broken_gate),
                   `bad solver status` = show(status_gate))
 verdicts
