@@ -2,17 +2,6 @@
 title: "The mean structure"
 ---
 
-```{r}
-#| label: native-defaults-setup
-#| include: false
-# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
-# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
-invisible(withCallingHandlers(
-  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
-  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
-))
-```
-
 This is the first of seven chapters that open the native engine and show every
 matrix it works with. The chapters, in order:
 
@@ -44,6 +33,12 @@ the numbers against lavaan and OpenMx. Each chapter runs on its own.
 ```{r}
 #| label: setup
 library(medfit)
+# These chapters teach the joint likelihood and the covariance-first form of the engine, so every fit pins the
+# 0.14.x settings. medfit 0.15.0 itself defaults to fixed_x = the exogenous variables and meanstructure = TRUE; the
+# note at the end of chapter 1 and Section 6 of chapter 4 show what that changes. Pass an explicit value to a call to override the pin.
+fit_sem <- function(model, data, ..., fixed_x = FALSE, meanstructure = NULL) {
+  medfit::fit_sem(model, data, ..., fixed_x = fixed_x, meanstructure = meanstructure)
+}
 f3 <- function(x) formatC(x, format = "f", digits = 3)
 f4 <- function(x) formatC(x, format = "f", digits = 4)
 mx <- function(x, d = 4) round(x, d)
@@ -54,7 +49,9 @@ mx <- function(x, d = 4) round(x, d)
 We use the smallest mediation model: a treatment, one mediator and an outcome.
 Two lines of syntax write the paths, and two more write the intercepts. An
 **intercept statement** (`y ~ 1`) turns on the mean structure: the model then
-describes the means of the observed variables as well as their covariances.
+describes the means of the observed variables as well as their covariances. (Since 0.15.0 the
+mean structure is on by default; this chapter pins the earlier default, where only an intercept statement or a
+product term turns it on, so the step from covariances to means is visible.)
 Every observed intercept the text does not write is added and left free, so one
 intercept line would be enough; the second only makes the model explicit.
 
@@ -734,10 +731,14 @@ coordinates when the means are large.
    sample mean sum to zero; for another center the cross term would not vanish and
    the likelihood would not split into a covariance part and a mean part.)
 
-**The default in 0.15.0.** Through 0.14.x a native fit has a mean structure only when the syntax writes a `~1`
-row or a product term. From 0.15.0 `meanstructure = TRUE` is the default, so every fit has the saturated mean part
-of this chapter; Section 4 is why the paths, variances and their standard errors do not change. The schedule and
-what does change (the parameter count, the `tidy()` rows) are in [Native defaults in 0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html).
+**The default since 0.15.0.** An unset `meanstructure` is `TRUE`, so every native fit has the saturated mean part of
+this chapter, not only a fit whose syntax writes a `~1` row or a product term; an unset `fixed_x` fixes the exogenous
+observed variables (Chapter 4). The setup chunk of each chapter defines a `fit_sem()` wrapper that pins the 0.14.x
+settings (`fixed_x = FALSE, meanstructure = NULL`), so the matrices here are the joint, covariance-first ones. Section 4
+is why the paths, variances and their standard errors do not change under the default. What does change (the
+parameter count, `logLik()`, AIC and BIC, the names in `coef()`) is on the live example in Section 6 of
+[Chapter 4](04-fixed-x.qmd) and in
+[Native defaults in 0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html).
 
 ## Where next
 

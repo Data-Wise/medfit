@@ -2,17 +2,6 @@
 title: "Fixed exogenous variables"
 ---
 
-```{r}
-#| label: native-defaults-setup
-#| include: false
-# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
-# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
-invisible(withCallingHandlers(
-  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
-  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
-))
-```
-
 In a mediation model the treatment and the covariates are **exogenous**: nothing in the model
 explains them. Their means, variances and covariances are parameters of the joint model, and
 they carry no information about the paths. The `fixed_x` argument of `fit_sem()` stops
@@ -32,6 +21,12 @@ chi-square), proves why, and shows which comparisons the engine then refuses.
 #| label: setup
 library(medfit)
 library(generics)
+# These chapters teach the joint likelihood and the covariance-first form of the engine, so every fit pins the
+# 0.14.x settings. medfit 0.15.0 itself defaults to fixed_x = the exogenous variables and meanstructure = TRUE; the
+# note at the end of chapter 1 and Section 6 of chapter 4 show what that changes. Pass an explicit value to a call to override the pin.
+fit_sem <- function(model, data, ..., fixed_x = FALSE, meanstructure = NULL) {
+  medfit::fit_sem(model, data, ..., fixed_x = fixed_x, meanstructure = meanstructure)
+}
 rd <- function(x, d = 4) round(x, d)
 d <- mediation_demo
 n <- nrow(d)
@@ -577,10 +572,50 @@ tests) the answer is the same either way, as Section 3 proved; the standard erro
 left free next to fixed ones are the exception that section showed. When the question is about information criteria across
 models, fit them all with the same `fixed_x`.
 
-**The default in 0.15.0.** Through 0.14.x the default is `fixed_x = FALSE`, and every fit in this chapter sets
-`fixed_x` explicitly. From 0.15.0 an unset `fixed_x` fixes the observed exogenous variables, except those a `~~` or
-`~1` statement names (a lenient subset; an explicit `TRUE` still refuses such a statement, Section 5). The schedule,
-the opt-in and the evidence are in [Native defaults in 0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html).
+**The default since 0.15.0.** An unset `fixed_x` is not `FALSE` any more: it resolves to the exogenous observed
+variables, except those a `~~` or `~1` statement names (a lenient subset with a message; an explicit `TRUE` still refuses
+such a statement, Section 5), and an unset `meanstructure` is `TRUE`. The chapters of this book call the engine through
+the `fit_sem()` wrapper defined in their setup chunk, which pins the 0.14.x settings (`fixed_x = FALSE,
+meanstructure = NULL`) so the matrices they take apart stay the joint, covariance-first ones. Here is the one place
+where the unpinned call is used, to show what the default changes and what it leaves alone:
+
+```{r}
+#| label: default-vs-pinned
+default_fit <- medfit::fit_sem(full, d)                                         # the 0.15.0 defaults
+pinned_fit <- medfit::fit_sem(full, d, fixed_x = FALSE, meanstructure = NULL)   # the 0.14.x behavior
+paths <- c("a", "b", "cp")
+list(
+  fixed_by_default = glance(default_fit)$fixed_x,
+  structural_estimates_differ_by = max(abs(coef(default_fit)[paths] - coef(pinned_fit)[paths])),
+  standard_errors_differ_by = max(abs(sqrt(diag(vcov(default_fit)))[paths] - sqrt(diag(vcov(pinned_fit)))[paths])),
+  logLik = c(default = as.numeric(logLik(default_fit)), pinned = as.numeric(logLik(pinned_fit))),
+  npar = c(default = attr(logLik(default_fit), "df"), pinned = attr(logLik(pinned_fit), "df")),
+  AIC = c(default = AIC(default_fit), pinned = AIC(pinned_fit)),
+  coef_names_default = names(coef(default_fit)),
+  coef_names_pinned = names(coef(pinned_fit))
+)
+```
+
+```{r}
+#| label: default-vs-pinned-check
+#| include: false
+stopifnot(
+  identical(glance(default_fit)$fixed_x, "treatment, covariate1"),
+  max(abs(coef(default_fit)[paths] - coef(pinned_fit)[paths])) < 1e-6,
+  max(abs(sqrt(diag(vcov(default_fit)))[paths] - sqrt(diag(vcov(pinned_fit)))[paths])) < 1e-6,
+  attr(logLik(default_fit), "df") < attr(logLik(pinned_fit), "df"),
+  !any(grepl("treatment~~", names(coef(default_fit)), fixed = TRUE))
+)
+```
+
+What moves: the conditional log likelihood, the parameter count behind AIC and BIC, the names in `coef()` (the fixed
+moments leave them, the intercepts enter), and which random start a multi-start fit tries. What does not move: the
+structural estimates and their standard errors, as Section 3 proved. AIC and BIC from the default fit equal those of
+`lavaan::sem(..., meanstructure = TRUE)` with `fixed.x = TRUE`; against a default `lavaan::sem()`, which has no mean
+structure, medfit's AIC is larger by $2k$ and its BIC by $k \log n$, with $k$ the number of unfixed observed means
+(here two intercepts). The schedule and the evidence are in
+[Native defaults in 0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html);
+`options(medfit.native_defaults)` is obsolete and is removed in 0.16.0.
 
 ## Check yourself
 

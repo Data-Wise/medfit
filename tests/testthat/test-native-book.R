@@ -150,3 +150,13 @@ test_that("chapters 3 and 5 state the 0.13.0 behavior (-4, capped restoration, f
   # planted: a chapter stating another k is not accepted as this one
   expect_false(grepl(sprintf("$k = %g$", .sem_restore_k), sub("$k = 4$", "$k = 40$", ch3, fixed = TRUE), fixed = TRUE))
 })
+
+test_that("the chapters carry no 0.14.0 warning muffle and pin the 0.14.x settings in one visible wrapper", {
+  for (g in book_chapters()) {
+    txt <- read_text(file.path(book_dir(), "chapters", g))
+    expect_false(grepl("medfit_warning_default_change|native-defaults-setup", txt), info = g)
+    expect_true(grepl("fit_sem <- function(model, data, ..., fixed_x = FALSE, meanstructure = NULL)", txt, fixed = TRUE),
+                info = g)
+  }
+  expect_false(grepl("documents medfit 0\\.14", read_text(file.path(book_dir(), "index.qmd"))))
+})
