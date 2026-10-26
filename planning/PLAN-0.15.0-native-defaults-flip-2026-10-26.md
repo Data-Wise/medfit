@@ -71,7 +71,7 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
     | `dev` `74016e6` | 18 | 13 |
 
     The control reproduces both baselines, so the comparison is valid. Neither count grew and no row is mislabeled:
-    **documented limit**, with the `?compare_lr` note from #320 item 4. Not yet posted to #320 (ask first).
+    **documented limit**, with the `?compare_lr` note from #320 item 4. Posted to #320 by the author 2026-10-26 (issuecomment-6429185407).
 - [x] **T2 (S): Verify lavaan `fixed.x = TRUE` product-column handling (E-5)** | agents: oracle-qa | risk: n/a
   - Why estimates are not enough: structural estimates and SEs do not move when `fixed_x` changes (the 557-row
     matrix), so an estimate comparison cannot tell a fixed product column from a free one. The discriminating
