@@ -102,6 +102,7 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
 ### Phase 2: The flip
 
 - [ ] **T3 (M): Flip the formals and the resolver** | agents: implementer -> oracle-qa -> gates | risk: **high**
+  - Status (2026-10-26): implemented on `feature/native-defaults-flip`, PR #347 to `dev` (not merged); tick on merge.
   - Acceptance: F-1 to F-4. Unset `fixed_x`/`meanstructure` resolve to the new values unconditionally (E-14);
     `options(medfit.native_defaults)` ignored with an obsolete note; `medfit_warning_default_change` no longer fires;
     an explicit `FALSE`/`NULL` is preserved; explicit `fixed_x = TRUE` still errors on `~~`/`~1` on exogenous variables.
@@ -111,12 +112,14 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
     `test-api-freeze.R`.
   - Files: `R/fit-sem.R`, `R/native-defaults.R`, `tests/testthat/test-api-freeze.R`, `test-native-defaults*.R`,
     `tests/sim/risk-files.txt` (if `R/fit-sem.R` absent).
-- [ ] **T4 (M): Rewrite the 21 tests from the Checkpoint B list; drop T5a setup chunks** | agents: implementer -> oracle-qa -> gates | risk: **high**
+- [ ] **T4 (M): Rewrite the failing tests from the Checkpoint B list; drop T5a setup chunks** | agents: implementer -> oracle-qa -> gates | risk: **high**
+  - Status (2026-10-26): 17 failing tests rewritten plus the `compare_lr()` test (`e88e534`, `e47243f`, `2005d90`), in PR #347
+    (`lint`, `risk-tier` green; `pkgdown` pending; not merged). The T5a setup-chunk muffles are still open (T5a).
   - Acceptance: F-5. Tests state their settings explicitly where they depend on them; frozen fixtures pinned at 1e-6;
     full suite green with counts reported against the `dev` baseline.
   - Planted defect: a rewritten test must fail when the old default is restored.
   - Verify: `Rscript -e 'devtools::test()'`.
-  - Files: up to the 21 test files named in the 0.14.0 plan Checkpoint B (split into two tasks if more than 5 files per commit).
+  - Files: the test files named in the 0.14.0 plan Checkpoint B (21 were listed; 17 failed under the flip) (split into two tasks if more than 5 files per commit).
 
 ### Checkpoint B: after T3-T4
 - [ ] Full suite green; `pre-docs` gates PASS; oracle-qa PASS with both planted defects caught; human review.
