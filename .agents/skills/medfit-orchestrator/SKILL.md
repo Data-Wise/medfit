@@ -48,15 +48,20 @@ differently worded verdict line is a failed stage, whatever else the report says
 2. Launch `medfit-oracle-qa` with: the worktree, the acceptance criteria,
    `implementer.md`. It follows the `medfit-oracle-check` skill.
 3. QA FAIL → send the failing cell back to the implementer; at most two loops, then stop and report to the user.
+   Send the implementer every QA finding and flag in one message, not one at a time; a re-QA pass checks the changed
+   behavior, numeric neutrality against `origin/dev`, and the planted defects, not the whole checklist again.
 
 ## Phase 3: gates
-Spawn `medfit-gates` with the worktree and the two reports. It follows `medfit-risk-tier`: risk tier, full suite
-counts, lint, the drafted PR body.
+Spawn `medfit-gates` in `pre-docs` mode when a docs stage follows, else in `final` mode (the single pass), with the
+worktree and the reports. It follows `medfit-risk-tier`. `pre-docs`: risk tier and checklist, lint, the focused tests
+(test files the diff changes or that cover the changed `R/` files, plus `test-gate-coverage.R`, `test-adr-front-matter.R`
+and the docs-consistency tests), and the `tests/sim` scripts whose covered paths the diff changes; no full suite. `final`:
+everything in `pre-docs` plus the full suite, and the drafted PR body.
 
 ## Phase 4: docs, then final gates
 If the task changes user-visible behavior, messages or defaults, spawn `medfit-docs` with the gates report (docs-only
-tasks start here, with no earlier gates report). Then run `medfit-gates` again on the final tree so the suite, lint
-and docs-consistency tests cover the docs edits; a docs-caused failure goes back to `medfit-docs`. Skip this phase
+tasks start here, with no earlier gates report). Then run `medfit-gates` in `final` mode on the final tree: the one full-suite run, plus lint and the
+docs-consistency tests over the docs edits; a docs-caused failure goes back to `medfit-docs`. Skip this phase
 only when no docs changed.
 
 ## Phase 5: integrate
