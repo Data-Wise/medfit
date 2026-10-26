@@ -149,6 +149,9 @@ Run through the `medfit-orchestrator` skill; stages are subagents in sequence:
     `lintr`, `urlchecker::url_check()`, `spelling::spell_check_package()`, then the local `pkgdown::build_site()` with
     zero errors and no broken article links.
   - Files: over the 5-file limit by design; one commit per sub-task (T5a, T5b, T5c).
+  - Progress (2026-10-26, PR #347): T5a `84e343c`, T5b `795a6a7`, T5c `78c4ea9` committed and pushed; local book render
+    and `pkgdown::build_site()` clean (agent-reported). Open: `final` gates on the full tree; the box stays unticked
+    until they pass. `guide-changes.qmd` "documents 0.14.1" is left for T8.
 - [ ] **T6 (M): E-12 reliability gate + oracle matrix on the final tree** | agents: gates, oracle-qa | risk: **high** (evidence)
   - Acceptance: F-6, F-7. Oracle matrix re-run: 0 block rows. `gates (rest)` and `gates (reliability)` green on the
     OpenBLAS runner; reliability acceptance rate non-inferior to the last green run.
