@@ -52,6 +52,11 @@ a fit with a mean structure is run on the raw data the fit used). Latent variabl
 product terms, fixed or constrained intercepts, weights, factors, other fixed
 or shared parameters, start/bound modifiers and constraints in the model are
 refused by name.
+
+Known limit (#320): the flip of the \code{fit_sem()} defaults in 0.15.0 does not change what the comparison finds. On the
+pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run ends above medfit's reference in 18 of 60
+runs and the OpenMx run in 13 of 60, the same counts as under the 0.14.x defaults. Each is reported as
+\code{medfit_warning_engine_statistic_above_max}, and no row is mislabeled.
 }
 \examples{
 \donttest{

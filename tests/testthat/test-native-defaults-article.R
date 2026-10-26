@@ -1,7 +1,8 @@
 # Consistency guard for vignettes/articles/native-defaults-0-15.qmd: the page is in the Guides menu and the articles
 # index, its article links resolve, and the numeric claims of its worked example hold (four explicit combinations of
 # fixed_x and meanstructure: identical structural estimates and SEs, the stated npar differences, equal logLik and
-# AIC across meanstructure, the lenient opt-in message and the 2k AIC gap against lavaan).
+# AIC across meanstructure, the unconditional lenient message, the obsolete-option note and the 2k AIC gap against
+# lavaan).
 
 root_path <- function(...) testthat::test_path("..", "..", ...)
 read_text <- function(p) paste(readLines(p, warn = FALSE), collapse = "\n")
@@ -56,9 +57,7 @@ test_that("the four-combination table: same structural results, the stated npar,
   expect_gt(abs(ll[["ff"]] - ll[["tf"]]), 1)  # the conditional likelihood differs
 })
 
-test_that("the opt-in leaves a variable named in ~~ free with the lenient message", {
-  old <- options(medfit.native_defaults = "0.15")
-  on.exit(options(old))
+test_that("the default leaves a variable named in ~~ free with the lenient message (0.15.0: no opt-in)", {
   msg <- NULL
   fit <- withCallingHandlers(
     fit_sem(paste(ndo_model, "covariate1 ~~ covariate1", sep = "\n"), mediation_demo),
@@ -71,7 +70,7 @@ test_that("the opt-in leaves a variable named in ~~ free with the lenient messag
   expect_identical(glance(fit)$fixed_x, "treatment")
 })
 
-test_that("the dependent-package wrapper silences the warning and keeps the 0.14 results", {
+test_that("the dependent-package wrapper pins the 0.14 results under the 0.15.0 defaults", {
   local_native_defaults_unshown()
   wrap <- function(...) {
     args <- list(...)
@@ -82,21 +81,38 @@ test_that("the dependent-package wrapper silences the warning and keeps the 0.14
     }
     do.call(fit_sem, args)
   }
-  expect_no_warning(fw <- wrap(ndo_model, mediation_demo), class = "medfit_warning_default_change")
+  expect_no_warning(fw <- wrap(ndo_model, mediation_demo))
+  expect_false(isTRUE(fw@internals$ram$has_mean))
   fe <- fit_sem(ndo_model, mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   expect_identical(coef(fw), coef(fe))
   expect_identical(as.numeric(logLik(fw)), as.numeric(logLik(fe)))
 })
 
-test_that("the article's pitfall holds: `args$meanstructure <- NULL` drops the element and the default warns", {
-  local_native_defaults_unshown()
+test_that("the article's pitfall holds: `args$meanstructure <- NULL` drops the element and the default applies", {
   bad <- function(...) {
     args <- list(...)
     args$fixed_x <- FALSE
     args$meanstructure <- NULL
     do.call(fit_sem, args)
   }
-  expect_warning(bad(ndo_model, mediation_demo), class = "medfit_warning_default_change")
+  # 0.15.0: no warning, and the mean structure is on, so the wrapper's intended covariance-only fit is silently lost.
+  expect_no_warning(fit <- bad(ndo_model, mediation_demo))
+  expect_true(isTRUE(fit@internals$ram$has_mean))
+  expect_true(any(grepl("~1", names(coef(fit)), fixed = TRUE)))
+  keep <- fit_sem(ndo_model, mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  expect_false(isTRUE(keep@internals$ram$has_mean))
+})
+
+test_that("options(medfit.native_defaults) is obsolete: ignored, with one note per session, and no 0.14.0 warning", {
+  old <- options(medfit.native_defaults = "0.15")
+  on.exit(options(old))
+  local_native_defaults_unshown()
+  m <- testthat::capture_messages(fit <- fit_sem(ndo_model, mediation_demo))
+  expect_true(any(grepl("`options(medfit.native_defaults)` is obsolete and ignored", m, fixed = TRUE)))
+  expect_identical(glance(fit)$fixed_x, "treatment, covariate1")
+  expect_true(isTRUE(fit@internals$ram$has_mean))
+  expect_no_warning(fit_sem(ndo_model, mediation_demo), class = "medfit_warning_default_change")
+  expect_no_message(fit_sem(ndo_model, mediation_demo))
 })
 
 test_that("covariance-only AIC exceeds lavaan's by 2k, and agrees under meanstructure = TRUE", {
@@ -108,4 +124,15 @@ test_that("covariance-only AIC exceeds lavaan's by 2k, and agrees under meanstru
   # The gap is 2k with k = 4 implicit means.
   expect_lt(abs(AIC(ff) - lavaan::fitMeasures(lv_cov, "aic")[[1]] - 8), 1e-4)
   expect_lt(abs(AIC(ft) - lavaan::fitMeasures(lv_mean, "aic")[[1]]), 1e-4)
+})
+
+test_that("the default fit has the 0.15.0 AIC gap against a default lavaan::sem(), none against meanstructure = TRUE", {
+  testthat::skip_if_not_installed("lavaan")
+  local_native_defaults_unshown()
+  fd <- suppressMessages(fit_sem(ndo_model, mediation_demo))
+  lv_def <- lavaan::sem(ndo_model, mediation_demo)
+  lv_mean <- lavaan::sem(ndo_model, mediation_demo, meanstructure = TRUE)
+  expect_lt(abs(AIC(fd) - lavaan::fitMeasures(lv_mean, "aic")[[1]]), 1e-4)
+  expect_lt(abs(AIC(fd) - lavaan::fitMeasures(lv_def, "aic")[[1]] - 4), 1e-4)  # 2k with k = 2 non-fixed means
+  expect_lt(abs(as.numeric(logLik(fd)) - as.numeric(lavaan::logLik(lv_def))), 1e-4)
 })

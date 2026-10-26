@@ -110,8 +110,10 @@ the dependents but need not exercise the new defaults. Codex review, 2026-10-24;
 
 ## 3. Consequences
 
-- Default fits match lavaan's default `sem()` in npar, logLik, AIC and BIC; the docs stop passing
-  `fixed.x = FALSE`.
+- Default fits match lavaan's default `sem()` in the structural estimates, standard errors, df and chi-square, and
+  in the conditional logLik; npar, AIC and BIC match lavaan with `meanstructure = TRUE`, and against a default
+  `lavaan::sem()` medfit's AIC is larger by 2k and its BIC by k log n (k = free observed means). The docs stop
+  passing `fixed.x = FALSE`.
 - Every default fit's parameter vector, names and retry seed change in 0.15.0. Well-identified fits give the same
   estimates; which random start wins can change, and with it a start-spread warning.
 - Two releases of work: 0.14.0 carries the fixes (E-4, E-8, the refit settings), the warning and the test pinning;

@@ -1,63 +1,54 @@
-# 0.14.0 default-change warning and opt-in for fit_sem()'s `fixed_x` and `meanstructure` (spec R-2, R-3, R-11a;
-# plan T5). In 0.14.x an unset setting keeps the old value (`fixed_x = FALSE`, `meanstructure = NULL`) and warns once
-# per session per argument, unless `options(medfit.native_defaults = "0.15")` opts in to the 0.15.0 values. This
-# file and the option are removed in 0.16.0 (E-9).
+# 0.15.0 defaults of fit_sem()'s `fixed_x` and `meanstructure` (spec F-1 to F-4, E-13, E-14). An unset setting resolves
+# to the new value unconditionally; an explicit value is never overwritten. The 0.14.x `options(medfit.native_defaults)`
+# opt-in is ignored with a once-per-session note, and the 0.14.x default-change warning is gone. This file and the note
+# are removed in 0.16.0 (E-9).
 
 .native_defaults_env <- new.env(parent = emptyenv())
-.native_defaults_env$shown <- c(fixed_x = FALSE, meanstructure = FALSE)
+.native_defaults_env$shown <- FALSE
 
-# Which warnings this session has shown, a named logical; `.native_defaults_reset()` sets them (tests).
+# Whether this session has shown the obsolete-option note; `.native_defaults_reset()` sets it (tests).
 .native_defaults_state <- function() {
   .native_defaults_env$shown
 }
 
 .native_defaults_reset <- function(shown = FALSE) {
-  .native_defaults_env$shown <- stats::setNames(rep_len(as.logical(shown), 2L), c("fixed_x", "meanstructure"))
+  .native_defaults_env$shown <- isTRUE(as.logical(shown))
   invisible(NULL)
 }
 
-# TRUE when the opt-in is on, FALSE when the option is unset; any other value is an error.
-.native_defaults_opt_in <- function() {
-  opt <- getOption("medfit.native_defaults")
-  if (is.null(opt)) {
-    return(FALSE)
+# A set `medfit.native_defaults` is ignored (any value), with one classed message per session. The state is set before
+# the message is signaled, so a muffled message or a handler that errors still consumes it.
+.native_defaults_obsolete_note <- function() {
+  if (is.null(getOption("medfit.native_defaults")) || .native_defaults_env$shown) {
+    return(invisible(NULL))
   }
-  if (!identical(opt, "0.15")) {
-    stop("`options(medfit.native_defaults = )` takes \"0.15\" (opt in to the 0.15.0 defaults of fit_sem()'s ",
-         "`fixed_x` and `meanstructure`) or NULL.", call. = FALSE)
-  }
-  TRUE
+  .native_defaults_env$shown <- TRUE
+  message(structure(
+    class = c("medfit_message_option_obsolete", "message", "condition"),
+    list(message = paste0(
+      "`options(medfit.native_defaults)` is obsolete and ignored: since medfit 0.15.0 an unset `fixed_x` and ",
+      "`meanstructure` resolve to the new defaults. Pass them explicitly to choose; the option is removed in 0.16.0. ",
+      "Shown once per session.\n"
+    ), call = NULL)
+  ))
+  invisible(NULL)
 }
 
-# Resolve unset `fixed_x` / `meanstructure` for the model syntax and data. Returns the values to fit with. With the
-# opt-in, unset `meanstructure` becomes TRUE and unset `fixed_x` becomes `.sem_default_fixed_x()`'s explicit subset
-# (R-11b, E-13), never a bare TRUE, so refits and comparisons see which variables the default fixed.
+# Resolve unset `fixed_x` / `meanstructure` for the model syntax and data. Returns the values to fit with. Unset
+# `meanstructure` becomes TRUE and unset `fixed_x` becomes `.sem_default_fixed_x()`'s explicit subset (E-13), never a
+# bare TRUE, so refits and comparisons see which variables the default fixed. An explicit value, including FALSE and
+# NULL, is returned as given (E-14).
 .native_defaults_resolve <- function(model, data, fixed_x, meanstructure, fx_unset, ms_unset) {
-  opt_in <- .native_defaults_opt_in()
-  keep <- list(fixed_x = fixed_x, meanstructure = meanstructure)
-  if (!fx_unset && !ms_unset) {
-    return(keep)
+  if (ms_unset) meanstructure <- TRUE
+  if (fx_unset) {
+    # Syntax the raw table cannot classify, or a factor expansion that fails, is left to the fit, which fails on the
+    # same input with the specific message; only fixed_x falls through to FALSE and meanstructure keeps its value.
+    fixed_x <- tryCatch({
+      p <- .sem_parse(model)$parameters
+      .sem_roles(p) # validates the table before the subset is built
+      .sem_default_fixed_x(p, data)
+    }, error = function(e) FALSE)
   }
-  # Syntax the raw table cannot classify (a constraint naming a factor column before its dummies exist) is left to the
-  # fit, which fails on it with the specific message.
-  p <- tryCatch(.sem_parse(model)$parameters, error = function(e) NULL)
-  ov_x <- if (!is.null(p)) tryCatch(.sem_roles(p)$ov_x, error = function(e) NULL)
-  if (is.null(ov_x)) {
-    return(keep)
-  }
-  if (opt_in) {
-    if (ms_unset) meanstructure <- TRUE
-    if (fx_unset) {
-      # When factor expansion fails here the fit fails on the same data with the specific message; only fixed_x falls
-      # through to the old value, and the opt-in meanstructure = TRUE is kept (QA O2).
-      fixed_x <- tryCatch(.sem_default_fixed_x(p, data), error = function(e) keep$fixed_x)
-    }
-    return(list(fixed_x = fixed_x, meanstructure = meanstructure))
-  }
-  warn_fx <- fx_unset && length(ov_x) > 0L
-  # A written `~1` or a product turns the mean structure on, so the 0.15.0 default changes nothing there.
-  warn_ms <- ms_unset && !any(p$op == "~1") && !.sem_has_product(p)
-  .warn_native_defaults_once(warn_fx, warn_ms)
   list(fixed_x = fixed_x, meanstructure = meanstructure)
 }
 
@@ -87,35 +78,4 @@
   }
   sel <- setdiff(ov_x, free)
   if (length(sel)) sel else FALSE
-}
-
-# Once per session per argument. The state is set before the warning is signaled, so a muffled warning (the articles'
-# setup chunks) or a handler that errors still consumes it.
-.warn_native_defaults_once <- function(fixed_x, meanstructure) {
-  msgs <- c(
-    fixed_x = paste0(
-      "fit_sem(): `fixed_x` is unset. Its default changes from FALSE to the model's exogenous observed variables in ",
-      "medfit 0.15.0 (lavaan's fixed.x = TRUE): their variances, covariances and means are fixed at the sample ",
-      "values, which changes logLik, npar, AIC and BIC; structural estimates and SEs are unchanged on the measured ",
-      "cases."
-    ),
-    meanstructure = paste0(
-      "fit_sem(): `meanstructure` is unset. Its default changes from NULL (a mean structure only when the model ",
-      "writes `~1`) to TRUE in medfit 0.15.0: intercepts and means become free parameters, which changes logLik, ",
-      "npar, AIC and BIC; structural estimates and SEs are unchanged on the measured cases."
-    )
-  )
-  silence <- paste0(
-    " To silence this, pass the argument explicitly (the old default keeps today's results), or opt in to the 0.15.0 ",
-    "defaults with options(medfit.native_defaults = \"0.15\"). Shown once per session."
-  )
-  for (arg in names(msgs)[c(fixed_x, meanstructure)]) {
-    if (.native_defaults_env$shown[[arg]]) next
-    .native_defaults_env$shown[[arg]] <- TRUE
-    warning(structure(
-      class = c("medfit_warning_default_change", "warning", "condition"),
-      list(message = paste0(msgs[[arg]], silence), call = NULL, argument = arg)
-    ))
-  }
-  invisible(NULL)
 }

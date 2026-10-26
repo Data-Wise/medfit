@@ -1,11 +1,16 @@
 # V8: plumbing and visibility (spec S6, S9): fit_mediation, zero-product branches, the MBCO refit.
 
-test_that("fit_mediation(engine = 'native') passes fixed_x through engine_args and keeps the default FALSE", {
+test_that("fit_mediation(engine = 'native') passes fixed_x through engine_args and defaults to the exogenous set", {
   args <- list(model = fx_syntax, data = fx_data(), treatment = "treatment", mediator = "mediator1",
                engine = "native")
-  off <- do.call(fit_mediation, args)
+  # 0.15.0: the default fixes the exogenous observed variables, as an explicit `fixed_x = TRUE` does
+  default <- do.call(fit_mediation, args)
   on <- do.call(fit_mediation, c(args, list(engine_args = list(fixed_x = TRUE))))
+  off <- do.call(fit_mediation, c(args, list(engine_args = list(fixed_x = FALSE))))
   expect_equal(c(on@a_path, on@b_path, on@c_prime), c(off@a_path, off@b_path, off@c_prime), tolerance = 1e-6)
+  expect_equal(c(default@a_path, default@b_path, default@c_prime), c(on@a_path, on@b_path, on@c_prime),
+               tolerance = 1e-10)
+  expect_identical(nrow(default@vcov), nrow(on@vcov))
   expect_lt(nrow(on@vcov), nrow(off@vcov))
   expect_error(do.call(fit_mediation, c(args, list(engine_args = list(fixed_x = "outcome")))),
                "not exogenous observed variables")

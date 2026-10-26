@@ -26,6 +26,15 @@ test_that("fit_sem() and mbco_sem() keep their argument names and order (new arg
                info = "mbco_sem() arguments moved, were renamed or removed")
 })
 
+test_that("fit_sem() pins the 0.15.0 defaults of meanstructure and fixed_x (F-4)", {
+  # The one sanctioned freeze change of 0.15.0 (ADR E-1, E-2, E-14): both unset settings resolve to the new values.
+  expect_identical(formals(fit_sem)$meanstructure, TRUE)
+  expect_identical(formals(fit_sem)$fixed_x, TRUE)
+  # planted defect: the 0.14.x formals must fail the pin
+  expect_false(identical(alist(meanstructure = NULL)$meanstructure, formals(fit_sem)$meanstructure))
+  expect_false(identical(FALSE, formals(fit_sem)$fixed_x))
+})
+
 test_that("compare_lr() keeps its argument names and order, and its warning classes are pinned", {
   expect_false(freeze_prefix_broken(pin_compare_lr_args, names(formals(compare_lr))),
                info = "compare_lr() arguments moved, were renamed or removed")

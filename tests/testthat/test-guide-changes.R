@@ -114,7 +114,8 @@ test_that("tidy() and glance() use snake_case names; no dotted name is left", {
   expect_equal(names(generics::tidy(fit, type = "effects", conf_int = TRUE)),
                c("term", "estimate", "std_error", "conf_low", "conf_high"))
   sem <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment", mediation_demo)
-  expect_equal(names(generics::tidy(sem)), c("term", "op", "estimate", "std_error", "statistic", "p_value"))
+  # 0.15.0: the default fixes the exogenous variables, so the parameter table carries the `fixed_x` column
+  expect_equal(names(generics::tidy(sem)), c("term", "op", "estimate", "std_error", "statistic", "p_value", "fixed_x"))
   expect_true("p_value" %in% names(generics::glance(sem)))
   expect_false(any(grepl(".", c(names(generics::tidy(sem)), names(generics::glance(sem))), fixed = TRUE)))
   expect_s3_class(summary(fit), "summary_MediationData")

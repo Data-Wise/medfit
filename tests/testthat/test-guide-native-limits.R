@@ -10,12 +10,17 @@ limits_syntax <- function(extra = "") {
   paste0("mediator1 ~ treatment + covariate1\noutcome ~ treatment + mediator1", extra, "\n")
 }
 
-limits_fit <- function(model) suppressWarnings(fit_sem(model, medfit::mediation_demo))
+# The subject here is the observed-variable guard and the glossary, not the defaults: pin the 0.14.x settings
+# (nothing fixed, covariance-only unless the model needs means), which also keeps the AIC figures the docs quote.
+limits_fit <- function(model) {
+  suppressWarnings(fit_sem(model, medfit::mediation_demo, fixed_x = FALSE, meanstructure = NULL))
+}
 
 test_that("AIC/BIC refuse a product fit against a no-product fit; a comparable pair still works", {
   with_x <- limits_fit(limits_syntax(" + treatment:mediator1"))
   without <- limits_fit(limits_syntax())
-  # Same outcome, same data rows: only the product column differs (the docs quote AIC 3934.7 against 2994.1).
+  # Same outcome, same data rows: only the product column differs (the docs quote AIC 2335.6 against 2333.6 on the
+  # default settings; the 0.14.x settings pinned here give other values).
   expect_error(stats::AIC(with_x, without), "different observed variables")
   expect_error(stats::BIC(with_x, without), "treatment:mediator1|mediator1:treatment")
   expect_error(stats::AIC(without, with_x), "different observed variables")
@@ -79,11 +84,16 @@ test_that("the glossary's native entries are true", {
   expect_equal(glance(m0)$df, glance(m1)$df + 1)
   # fixed_x leaves the structural estimates unchanged and makes the log likelihood conditional
   free <- limits_fit(limits_syntax())
-  fx <- suppressWarnings(fit_sem(limits_syntax(), d, fixed_x = TRUE))
+  fx <- suppressWarnings(fit_sem(limits_syntax(), d, fixed_x = TRUE, meanstructure = NULL))
   shared <- c("mediator1~treatment", "outcome~mediator1", "outcome~treatment")
   expect_equal(coef(fx)[shared], coef(free)[shared], tolerance = 1e-5)
   expect_false(isTRUE(all.equal(as.numeric(logLik(fx)), as.numeric(logLik(free)))))
   expect_error(stats::AIC(fx, free))
+  # 0.15.0: an unset `fixed_x` is the exogenous set, so a default fit is the conditional one and is refused against
+  # the free fit too
+  dflt <- suppressWarnings(fit_sem(limits_syntax(), d))
+  expect_true(nzchar(glance(dflt)$fixed_x))
+  expect_error(stats::AIC(dflt, free))
 })
 
 heading_ids <- function(path) {

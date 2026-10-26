@@ -10,7 +10,9 @@ retained_paths <- c("a1", "b1")
 
 retained_fit <- function() {
   data <- readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
-  suppressMessages(medfit::fit_sem(retained_model, data, n_starts = 1L, information = "expected"))
+  # The subject is the retained null, not the defaults: pin the 0.14.x settings (a covariance-only fit, no fixed x).
+  suppressMessages(medfit::fit_sem(retained_model, data, n_starts = 1L, information = "expected",
+                                   fixed_x = FALSE, meanstructure = NULL))
 }
 
 # Run `code` with the first `.sem_vcov` call of each mbco_sem() refit sequence failing (null 1 retains its likelihood).
@@ -131,4 +133,19 @@ test_that("treating the retained null as unresolved is caught by the retained-nu
   expect_false(all(contract))
   expect_false(contract[["reference_accepted"]])
   expect_false(contract[["root_resolved"]])
+})
+
+test_that("under the 0.15.0 defaults the lavaan product-null LR above medfit's maximum is flagged (#320 limit)", {
+  data <- readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
+  fit <- suppressMessages(medfit::fit_sem(retained_model, data, n_starts = 1L, information = "expected"))
+  warns <- list()
+  withCallingHandlers(
+    medfit::compare_lr(fit, retained_paths, engine = "lavaan"),
+    warning = function(w) {
+      warns[[length(warns) + 1L]] <<- w
+      invokeRestart("muffleWarning")
+    }
+  )
+  classes <- unique(unlist(lapply(warns, class)))
+  expect_true("medfit_warning_engine_statistic_above_max" %in% classes)
 })

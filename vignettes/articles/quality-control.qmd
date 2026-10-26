@@ -166,6 +166,29 @@ the time of writing, so the history does not exist yet.
 - A complete enumeration of zero-product branches is not a global-optimum certificate, and a ledger records what a fit
   did, not that its optimum is the global one.
 
+## The 0.15.0 defaults flip
+
+0.15.0 changes two defaults of the native engine: an unset `fixed_x` fixes the exogenous observed variables and an unset
+`meanstructure` is `TRUE`. The release is gated on evidence that the change moves only what it should. It moves the
+conditional log likelihood, the parameter count behind AIC and BIC, the names in `coef()`, and the retry seed; structural
+estimates and their standard errors stay where they were.
+
+| Gate | What it shows |
+|---|---|
+| Oracle matrix (`tests/sim/native-defaults-oracle.R`) | 557 rows comparing the default fit with the 0.14.x settings and with lavaan: 503 pass, 54 limit, 0 block |
+| lavaan `fixed.x = TRUE, meanstructure = TRUE` | the default fit has the same row set, parameter count and conditional log likelihood, with coefficients within 1e-15 and standard errors within 2.1e-11 |
+| Planted defects | a resolver that overwrites an explicit `FALSE`, or leaves the old default in `fit_mediation()` only, is caught by the tests; restoring the old default fails nine of the twelve rewritten test files (the other three pin explicit settings) |
+| Full suite | 1694 tests, 8580 expectations, 0 failed (reference BLAS) |
+
+**A documented limit.** `compare_lr()` with lavaan can put the product-null likelihood ratio above the reference (issue
+#320): 18 of 60 runs for lavaan and 13 of 60 for OpenMx, on the pinned design and seeds. The 2026-10-26 re-measure
+reproduced both counts on the `v0.14.0` tree and on `dev`, so the flip does not change them, and the limit is
+documented in `?compare_lr`.
+
+**Not yet run.** The two OpenBLAS gate runs (`gates (rest)` and `gates (reliability)`) run on pull requests to `main`;
+they are deferred to the release pull request, and this page makes no claim about them. The record, with its sources, is
+`planning/specs/RESULT-qc-0.15.0-native-defaults-flip-2026-10-26.md`.
+
 ## Lessons from the 0.14.1 port
 
 The recurring defect of the ledger port was the false refusal of a genuine result, not the acceptance of a forgery: a

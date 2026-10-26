@@ -210,7 +210,9 @@ test_that("the native fixed_x errors the guide quotes are real", {
   expect_error(fit_sem(paste0(syn, "\ntreatment ~~ treatment"), d, fixed_x = TRUE),
                "`fixed_x` fixes the moments of the selected variables, but the model has a statement on them",
                fixed = TRUE)
-  expect_error(AIC(fit_sem(syn, d), fit_sem(syn, d, fixed_x = TRUE)), "have different `fixed_x` sets", fixed = TRUE)
+  # 0.15.0: an unset `fixed_x` is the exogenous set, so the free fit is the explicit `fixed_x = FALSE`
+  expect_error(AIC(fit_sem(syn, d, fixed_x = FALSE), fit_sem(syn, d, fixed_x = TRUE)),
+               "have different `fixed_x` sets", fixed = TRUE)
   skip_if_not(file.exists(guide_path()), "vignettes are not available (installed or built package)")
   txt <- paste(readLines(guide_path(), warn = FALSE), collapse = " ")
   for (frag in c("`fixed_x` names variables that are not exogenous observed variables",
@@ -250,23 +252,27 @@ test_that("the guide also quotes the cluster and native messages tested elsewher
   }
 })
 
-test_that("the guide quotes the 0.14.0 default-change warnings and both are triggered", {
+test_that("the guide quotes the obsolete-option message and it is triggered; the 0.14.0 warnings are gone", {
   old <- medfit:::.native_defaults_state()
   medfit:::.native_defaults_reset(shown = FALSE)
   withr::defer(medfit:::.native_defaults_reset(shown = old))
-  w <- testthat::capture_warnings(
-    fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = mediation_demo)
-  )
-  expect_true(any(grepl("fit_sem(): `fixed_x` is unset", w, fixed = TRUE)))
-  expect_true(any(grepl("fit_sem(): `meanstructure` is unset", w, fixed = TRUE)))
+  syn <- "mediator1 ~ treatment\noutcome ~ mediator1 + treatment"
+  # 0.15.0: no warning for unset arguments, and no message without the option
+  expect_no_warning(fit_sem(syn, data = mediation_demo))
+  expect_no_message(fit_sem(syn, data = mediation_demo))
+  # the obsolete option is ignored with one message per session
+  withr::local_options(medfit.native_defaults = "0.15")
+  m <- testthat::capture_messages(fit_sem(syn, data = mediation_demo))
+  expect_true(any(grepl("`options(medfit.native_defaults)` is obsolete and ignored", m, fixed = TRUE)))
+  expect_length(testthat::capture_messages(fit_sem(syn, data = mediation_demo)), 0L)
   skip_if_not(file.exists(guide_path()), "vignettes are not available (installed or built package)")
   txt <- paste(readLines(guide_path(), warn = FALSE), collapse = "\n")
-  expect_true(grepl("fit_sem(): `fixed_x` is unset", txt, fixed = TRUE))
-  expect_true(grepl("fit_sem(): `meanstructure` is unset", txt, fixed = TRUE))
+  expect_true(grepl("`options(medfit.native_defaults)` is obsolete and ignored", txt, fixed = TRUE))
+  expect_false(grepl("fit_sem(): `fixed_x` is unset", txt, fixed = TRUE))
+  expect_false(grepl("fit_sem(): `meanstructure` is unset", txt, fixed = TRUE))
 })
 
-test_that("the guide quotes the lenient fixed_x message and it is triggered under the 0.15 opt-in", {
-  withr::local_options(medfit.native_defaults = "0.15")
+test_that("the guide quotes the lenient fixed_x message and it is triggered by default", {
   m <- testthat::capture_messages(
     fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment\ntreatment ~~ treatment",
             data = mediation_demo)
