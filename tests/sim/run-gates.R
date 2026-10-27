@@ -408,7 +408,8 @@ verdict_gate <- function(gate, d, s) {
     },
     "native-defaults" = {
       # 0.14.0 T8a/T8b (R-12): every pass/fail row is re-derived from the recorded diff and tolerance, a declared row
-      # needs a reason, every cell ran under its combinations and the unset fit, and the unset fit equals the explicit fit
+      # needs a reason, every cell ran under its combinations and the unset fit, and the unset fit equals
+      # the explicit fit
       need_cells <- c("simple", "weights", "fixed_intercept", "constrained_intercepts", "latent", "subset")
       combos <- c("fx=FALSE ms=NULL", "fx=FALSE ms=TRUE", "fx=TRUE ms=NULL", "fx=TRUE ms=TRUE", "unset")
       judged <- d$status %in% c("pass", "fail")
