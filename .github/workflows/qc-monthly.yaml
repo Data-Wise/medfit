@@ -90,6 +90,10 @@ jobs:
             tests/sim/results/gates-*.log
             tests/sim/results/gates-summary-*.txt
           if-no-files-found: warn
+      - name: Fail PR shard when its gate failed
+        if: always() && github.event_name == 'pull_request'
+        run: |
+          if [ "${{ steps.gate.outcome }}" = failure ]; then exit 1; fi
 
   publish:
     needs: gates
