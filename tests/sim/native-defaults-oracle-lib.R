@@ -4,7 +4,8 @@
 #
 # A cell is a model, a data set and how it is fit; a combination is one setting of (fixed_x, meanstructure). Each core
 # cell runs under the four combinations (fixed_x FALSE/TRUE x meanstructure NULL/TRUE: the old and the 0.15.0 default
-# of each) with both arguments passed, and once with both unset (combo "unset"), which goes through fit_sem()'s resolver. No core model has a
+# of each) with both arguments passed, and once with both unset (combo "unset"), which goes through
+# fit_sem()'s resolver. No core model has a
 # `~~` or `~1` statement on an exogenous variable, so the unset fit resolves to the full subset there, the same fit as
 # (TRUE, TRUE).
 # The `subset` cell passes a named fixed_x ("c") explicitly, under meanstructure NULL and TRUE; its oracle is lavaan
@@ -78,7 +79,8 @@ ndo_cells <- list(
                 extra = list("fx=g ms=NULL" = list(fixed_x = "g", meanstructure = NULL),
                              "fx=g ms=TRUE" = list(fixed_x = "g", meanstructure = TRUE)),
                 unset_set = c("x", "g_b", "g_c")),
-  # lenient subset: a `~~` statement on c leaves it out of the unset fit default, which must equal fixed_x = "x" and say so
+  # lenient subset: a `~~` statement on c leaves it out of the unset fit default, which must equal
+  # fixed_x = "x" and say so
   lenient = list(model = paste0(ndo_base, "\nc ~~ c"), labels = c("a", "b", "cp"),
                  combos = list("fx=FALSE ms=TRUE" = list(fixed_x = FALSE, meanstructure = TRUE),
                                "fx=x ms=TRUE" = list(fixed_x = "x", meanstructure = TRUE)),
