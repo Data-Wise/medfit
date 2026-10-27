@@ -76,9 +76,7 @@ rows <- lapply(seq_len(nrow(grid)), function(i) {
   m <- if (ok_side[1]) med[[i]] else empty
   l <- if (ok_side[2]) lav[[i]] else empty
   if (!sp$ok) {
-    r <- so_compare(m, l, l, tol_est, tol_se)
-    r$status <- "n/a"
-    r$reason <- sp$why
+    r <- so_failed_runner_rows(med[[i]], lav[[i]], sp, tol_est, tol_se)
   } else {
     sr <- sp$rows[sp$rows$id == grid$id[i], , drop = FALSE]
     fit_ok <- nrow(sr) > 0L && all(sr$fit_ok %in% TRUE)

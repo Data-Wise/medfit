@@ -24,7 +24,9 @@ def fit_one(job):
     with open(job["model_file"]) as f:
         model = semopy.Model(f.read())
     data = pd.read_csv(job["data"])
-    model.fit(data, obj="MLW", options={"ftol": 1e-12})
+    result = model.fit(data, obj="MLW", options={"ftol": 1e-12})
+    if not getattr(result, "success", False):
+        raise RuntimeError(f"semopy optimization failed: {getattr(result, 'message', 'no success result')}")
     tab = model.inspect(information="observed")
     rows = []
     for _, r in tab.iterrows():

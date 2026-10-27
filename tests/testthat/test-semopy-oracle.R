@@ -60,6 +60,94 @@ test_that("comparison flags a parameter missing on any side as unmatched", {
   expect_identical(nrow(r2), 4L)
 })
 
+test_that("canonical duplicate parameter names are refused on each side", {
+  ok <- data.frame(name = c("M~X", "Y~~M"), estimate = c(0.5, 0.1), se = c(0.1, 0.1))
+  dup <- rbind(ok, data.frame(name = "M~~Y", estimate = 999, se = 0.1))
+  expect_error(so_compare(dup, ok, ok, 1e-6, 1e-3), "medfit.*duplicate")
+  expect_error(so_compare(ok, dup, ok, 1e-6, 1e-3), "semopy.*duplicate")
+  expect_error(so_compare(ok, ok, dup, 1e-6, 1e-3), "lavaan.*duplicate")
+})
+
+test_that("only a missing uv is optional; runner failures remain errors", {
+  jobs <- data.frame(id = "a", model = "M ~ X", data = "x.csv")
+  missing <- so_run_semopy(jobs, uv = "")
+  expect_true(missing$unavailable)
+  expect_identical(so_runner_status(missing), "n/a")
+  expect_identical(so_runner_status(missing, sides_ok = FALSE), "error")
+  side <- data.frame(name = "M~X", estimate = 0.5, se = 0.1)
+  expect_identical(so_failed_runner_rows(side, side, missing, 1e-6, 1e-3)$status, "n/a")
+  for (failed_side in c("medfit", "lavaan")) {
+    m <- if (failed_side == "medfit") "fit failed" else side
+    l <- if (failed_side == "lavaan") "fit failed" else side
+    rows <- so_failed_runner_rows(m, l, missing, 1e-6, 1e-3)
+    expect_identical(rows$status, "error")
+    expect_match(rows$reason, paste0(failed_side, ": fit failed"))
+  }
+  both <- so_failed_runner_rows("medfit broke", "lavaan broke", missing, 1e-6, 1e-3)
+  expect_identical(both$status, "error")
+  expect_match(both$reason, "medfit: medfit broke")
+  expect_match(both$reason, "lavaan: lavaan broke")
+  fake <- file.path(withr::local_tempdir(), "uv")
+  writeLines(c("#!/bin/sh", "echo cache lock failed >&2", "exit 2"), fake)
+  Sys.chmod(fake, "0755")
+  failed <- so_run_semopy(jobs, uv = fake)
+  expect_false(failed$unavailable)
+  expect_match(failed$why, "cache lock failed")
+  expect_identical(so_runner_status(failed), "error")
+  expect_identical(so_failed_runner_rows(side, side, failed, 1e-6, 1e-3)$status, "error")
+  both <- so_failed_runner_rows("medfit broke", "lavaan broke", failed, 1e-6, 1e-3)
+  expect_identical(both$status, "error")
+  expect_match(both$reason, "cache lock failed")
+  expect_match(both$reason, "medfit: medfit broke")
+  expect_match(both$reason, "lavaan: lavaan broke")
+})
+
+test_that("Python runner rejects unsuccessful optimization", {
+  python <- Sys.which("python3")
+  skip_if(!nzchar(python), "python3 is not installed")
+  test <- test_path("..", "sim", "test-semopy-runner.py")
+  output <- system2(python, shQuote(test), stdout = TRUE, stderr = TRUE)
+  expect_null(attr(output, "status"), info = paste(output, collapse = "\n"))
+})
+
+test_that("an offline uv with no cached semopy reports unavailable", {
+  uv <- so_uv_lookup()
+  skip_if(!nzchar(uv), "uv is not installed")
+  cache <- withr::local_tempdir()
+  withr::local_envvar(UV_CACHE_DIR = cache, UV_OFFLINE = "1")
+  out <- so_run_semopy(data.frame(id = "a", model = "M ~ X", data = "x.csv"), uv = uv)
+  expect_false(out$ok)
+  expect_true(out$unavailable)
+  expect_identical(so_runner_status(out), "n/a")
+})
+
+test_that("preflight distinguishes confirmed absence from unexpected failures", {
+  make_uv <- function(lines) {
+    f <- tempfile("fake-uv-")
+    writeLines(c("#!/bin/sh", lines), f)
+    Sys.chmod(f, "0755")
+    f
+  }
+  absent <- so_preflight(make_uv(c('echo "error: No interpreter found at path /missing" >&2', "exit 2")))
+  expect_false(absent$ok)
+  expect_true(absent$unavailable)
+  ambiguous <- so_preflight(make_uv(c('echo "error: Could not acquire lock" >&2', "exit 2")))
+  expect_false(ambiguous$ok)
+  expect_false(ambiguous$unavailable)
+  ambiguous <- so_preflight(make_uv(c(
+    'echo "error: No solution found when resolving --with dependencies" >&2',
+    'echo "semopy was not found in the cache" >&2', "exit 1"
+  )))
+  expect_false(ambiguous$unavailable)
+  # A runner error after preflight succeeds cannot be reclassified as absence, even if its text resembles uv's.
+  uv <- make_uv(c('if [ "$7" = "-c" ]; then exit 0; fi',
+                  'echo "error: No interpreter found at path /missing" >&2', "exit 2"))
+  failed <- so_run_semopy(data.frame(id = "a", model = "M ~ X", data = "x.csv"), uv = uv)
+  expect_false(failed$ok)
+  expect_false(failed$unavailable)
+  expect_identical(so_runner_status(failed), "error")
+})
+
 test_that("an absent uv gives n/a rows and a skip, unless semopy is required", {
   expect_identical(so_uv(env = ""), so_uv_lookup())
   withr::local_envvar(MEDFIT_UV = file.path(tempdir(), "no-such-uv"))
@@ -138,7 +226,7 @@ test_that("semopy itself runs through uv when available", {
   f <- file.path(withr::local_tempdir(), "d.csv")
   utils::write.csv(d, f, row.names = FALSE)
   out <- so_run_semopy(data.frame(id = "a", model = "M ~ X", data = f), uv = uv)
-  skip_if(!out$ok && grepl("could not start|timed out", out$why), out$why)
+  skip_if(isTRUE(out$unavailable), out$why)
   expect_true(out$ok)
   r <- out$rows[out$rows$op == "~", ]
   expect_equal(r$estimate, unname(stats::coef(stats::lm(M ~ X, d))[2]), tolerance = 1e-6)

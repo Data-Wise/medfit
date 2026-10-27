@@ -64,6 +64,11 @@ so_compare <- function(med, sem, lav, tol_est, tol_se) {
     d$name <- so_key(d$name)
     d
   })
+  for (side in names(sides)) {
+    duplicate <- unique(sides[[side]]$name[duplicated(sides[[side]]$name)])
+    if (length(duplicate)) stop(side, " has duplicate parameter names: ", paste(duplicate, collapse = ", "),
+                                call. = FALSE)
+  }
   keys <- unique(unlist(lapply(sides, `[[`, "name")))
   pick <- function(side, col) sides[[side]][[col]][match(keys, sides[[side]]$name)]
   r <- data.frame(param = keys, est_medfit = pick("medfit", "estimate"), est_semopy = pick("semopy", "estimate"),
@@ -97,6 +102,28 @@ so_script <- function() {
   if (length(hit)) normalizePath(hit[1]) else cands[1]
 }
 
+# Resolve the exact pinned environment before running the script. Only explicit uv diagnostics establish absence;
+# cache locks, network failures, unknown diagnostics and Python import errors remain failures.
+so_preflight <- function(uv, timeout = 900) {
+  log <- tempfile("semopy-preflight-")
+  on.exit(unlink(log), add = TRUE)
+  status <- suppressWarnings(system2(
+    uv, c("run", "--quiet", "--with", so_semopy_pin, "python", "-I", "-c", shQuote("import semopy")),
+    stdout = log, stderr = log, timeout = timeout
+  ))
+  status <- as.integer(status)
+  lines <- if (file.exists(log)) readLines(log, warn = FALSE) else character()
+  if (identical(status, 0L)) return(list(ok = TRUE))
+  missing_python <- identical(status, 2L) && any(grepl("^error: No interpreter found (at path|for)", lines))
+  missing_package <- identical(status, 1L) &&
+    any(grepl("^error: No solution found when resolving", lines)) &&
+    any(grepl("was not found in the cache", lines, fixed = TRUE)) &&
+    any(grepl("Packages were unavailable because the network was disabled", lines, fixed = TRUE))
+  why <- paste(utils::tail(lines, 5L), collapse = " | ")
+  list(ok = FALSE, unavailable = missing_python || missing_package,
+       why = sprintf("semopy preflight exited %s: %s", status, why))
+}
+
 # jobs: data frame id, model (syntax text), data (CSV path). One uv call fits every job. Returns list(ok, why) on a
 # run-level failure, else list(ok = TRUE, rows, versions): rows carry id, fit_ok, error, lval, op, rval, estimate,
 # se, fixed, and one row per failed job (fit_ok FALSE) with the error text.
@@ -104,7 +131,10 @@ so_run_semopy <- function(jobs, uv = so_uv(), timeout = 900, script = so_script(
   checkmate::assert_data_frame(jobs, min.rows = 1L)
   checkmate::assert_names(names(jobs), must.include = c("id", "model", "data"))
   checkmate::assert_string(uv)
-  if (!nzchar(uv)) return(list(ok = FALSE, why = "uv not found (install uv or set MEDFIT_UV): semopy rows are n/a"))
+  if (!nzchar(uv)) return(list(ok = FALSE, unavailable = TRUE,
+                               why = "uv not found (install uv or set MEDFIT_UV): semopy rows are n/a"))
+  preflight <- so_preflight(uv, timeout)
+  if (!preflight$ok) return(preflight)
   dir <- tempfile("semopy-")
   dir.create(dir)
   model_file <- file.path(dir, paste0("model-", seq_len(nrow(jobs)), ".txt"))
@@ -121,14 +151,39 @@ so_run_semopy <- function(jobs, uv = so_uv(), timeout = 900, script = so_script(
   ))
   tail_log <- if (file.exists(log)) paste(utils::tail(readLines(log, warn = FALSE), 5L), collapse = " | ") else ""
   status <- as.integer(status)
-  if (identical(status, 124L)) return(list(ok = FALSE, why = sprintf("semopy runner timed out after %d s", timeout)))
-  if (identical(status, 127L)) return(list(ok = FALSE, why = sprintf("could not start %s: %s", uv, tail_log)))
+  if (identical(status, 124L)) return(list(ok = FALSE, unavailable = FALSE,
+                                           why = sprintf("semopy runner timed out after %d s", timeout)))
+  if (identical(status, 127L)) return(list(ok = FALSE, unavailable = FALSE,
+                                           why = sprintf("could not start %s: %s", uv, tail_log)))
   if (!identical(status, 0L) || !file.exists(out_csv)) {
-    return(list(ok = FALSE, why = sprintf("semopy runner exited %s: %s", status, tail_log)))
+    return(list(ok = FALSE, unavailable = FALSE, why = sprintf("semopy runner exited %s: %s", status, tail_log)))
   }
   rows <- utils::read.csv(out_csv, stringsAsFactors = FALSE, na.strings = c("NA", ""))
   ver <- c("semopy", "python", "numpy", "scipy", "pandas")
   list(ok = TRUE, rows = rows, versions = vapply(ver, function(v) as.character(rows[[v]][1]), ""))
+}
+
+# An absent optional dependency may skip only if the other fits succeeded; unexpected subprocess failures are errors.
+so_runner_status <- function(result, sides_ok = TRUE) {
+  if (isTRUE(result$unavailable) && isTRUE(sides_ok)) "n/a" else "error"
+}
+
+# Keep errors from the other fits even when semopy is unavailable.
+so_failed_runner_rows <- function(med, lav, result, tol_est, tol_se) {
+  sides_ok <- vapply(list(med, lav), is.data.frame, TRUE)
+  empty <- data.frame(name = character(), estimate = numeric(), se = numeric())
+  m <- if (sides_ok[1]) med else empty
+  l <- if (sides_ok[2]) lav else empty
+  if (!nrow(m) && !nrow(l)) {
+    placeholder <- data.frame(name = "<fit failed>", estimate = NA_real_, se = NA_real_)
+    rows <- so_compare(placeholder, placeholder, placeholder, tol_est, tol_se)
+  } else {
+    rows <- so_compare(m, l, l, tol_est, tol_se)
+  }
+  rows$status <- so_runner_status(result, sides_ok = all(sides_ok))
+  errs <- c(medfit = if (!sides_ok[1]) med, lavaan = if (!sides_ok[2]) lav)
+  rows$reason <- paste(c(result$why, if (length(errs)) paste(names(errs), errs, sep = ": ")), collapse = "; ")
+  rows
 }
 
 # ---- registration: monthly-only gates (kept out of the PR gates shards) ----
