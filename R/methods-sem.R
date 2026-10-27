@@ -115,7 +115,8 @@
 #' generics::glance(fit)
 #'
 #' # a likelihood-ratio test of b = 0 against the fitted model
-#' fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)
+#' fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo,
+#'   fixed_x = FALSE, meanstructure = NULL)
 #' anova(fit, fit0)
 #' }
 #'

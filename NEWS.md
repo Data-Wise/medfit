@@ -1,4 +1,4 @@
-# medfit (development version)
+# medfit 0.15.0
 
 ## Native engine defaults flipped (0.15.0)
 
