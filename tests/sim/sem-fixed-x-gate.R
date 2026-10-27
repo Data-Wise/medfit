@@ -87,10 +87,14 @@ for (n in c(100L, 400L)) {
       for (weighted in if (se == "sandwich") c(FALSE, TRUE) else FALSE) {
         args <- list(model = fx_syntax, data = d, se_type = se)
         if (weighted) args$weights <- w
-        free <- suppressWarnings(do.call(fit_sem, c(args, list(fixed_x = FALSE, meanstructure = NULL)))) # unrestricted baseline, pinned since 0.15.0 fixes x by default
+        # unrestricted baseline, pinned since 0.15.0 fixes x by default
+        free <- suppressWarnings(do.call(fit_sem, c(args, list(fixed_x = FALSE, meanstructure = NULL))))
         for (sel in subsets) {
           tag <- sprintf("n=%d seed=%d %s%s {%s}", n, seed, se, if (weighted) " w" else "", paste(sel, collapse = ","))
-          fixed <- tryCatch(suppressWarnings(do.call(fit_sem, c(args, list(fixed_x = sel, meanstructure = NULL)))), error = function(e) NULL)
+          fixed <- tryCatch(
+            suppressWarnings(do.call(fit_sem, c(args, list(fixed_x = sel, meanstructure = NULL)))),
+            error = function(e) NULL
+          )
           check(tag, "fit", !is.null(fixed))
           if (is.null(fixed)) next
           sh <- fx_shared(free, fixed)
