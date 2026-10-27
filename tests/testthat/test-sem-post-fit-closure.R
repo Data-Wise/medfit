@@ -34,8 +34,8 @@ test_that("the root of an all-failing union reports the first failing branch, no
 })
 
 closure_retain_error <- function() {
-  data <- readRDS(test_path("fixtures", "memory_exp.rds"))
-  local_mocked_bindings(.sem_vcov = function(...) stop("closure covariance failure", call. = FALSE))
+  data <- readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
+  testthat::local_mocked_bindings(.sem_vcov = function(...) stop("closure covariance failure", call. = FALSE))
   tryCatch(fit_sem(closure_model, data, n_starts = 1L, information = "expected"), error = identity)
 }
 
