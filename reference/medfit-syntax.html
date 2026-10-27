@@ -105,6 +105,7 @@
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
+    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../articles/quality-control.html">Quality control</a></li>
@@ -127,7 +128,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>medfit Model Syntax</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.15.0/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
       <div class="d-none name"><code>medfit-syntax.Rd</code></div>
     </div>
 
@@ -249,8 +250,8 @@ unset <code>meanstructure</code> means <code>TRUE</code>, so every observed inte
 parameter count, <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> and the parameter names move; the structural estimates and their
 standard errors did not move on the cases measured. A variable a <code>~~</code> or <code>~1</code> statement names is left free (message
 class <code>medfit_message_fixed_x_lenient</code>) instead of the error an explicit <code>fixed_x = TRUE</code> gives. To keep the 0.14.x
-results, pass <code>fixed_x = FALSE, meanstructure = NULL</code>. <code>options(medfit.native_defaults)</code> is obsolete and ignored,
-with one message per session, and is removed in 0.16.0. <code><a href="fit_sem.html">fit_sem()</a></code> has the details.</p>
+results, pass <code>fixed_x = FALSE, meanstructure = NULL</code>. The 0.14.x <code>options(medfit.native_defaults)</code> opt-in no longer
+has any effect. <code><a href="fit_sem.html">fit_sem()</a></code> has the details.</p>
     </div>
     <div class="section level2">
     <h2 id="medfit-extensions">medfit extensions<a class="anchor" aria-label="anchor" href="#medfit-extensions"></a></h2>

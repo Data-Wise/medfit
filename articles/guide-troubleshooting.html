@@ -134,6 +134,7 @@
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
+    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul>
 </li>
@@ -167,7 +168,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.15.0/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -711,15 +712,10 @@
 </td>
 </tr>
 <tr class="even">
-<td><code>`options(medfit.native_defaults)` is obsolete and ignored</code></td>
-<td>
-<code>options(medfit.native_defaults)</code> is set. Since 0.15.0 an unset <code>fixed_x</code> and <code>meanstructure</code> resolve to the new defaults whatever the option says; the option is removed in 0.16.0. Shown once per session. Pass the arguments explicitly to choose</td>
-</tr>
-<tr class="odd">
 <td><code>fit_sem(): the `fixed_x` default leaves</code></td>
 <td>with <code>fixed_x</code> unset, the named variables carry a <code>~~</code> or <code>~1</code> statement, so they stay free and the other exogenous variables are fixed. Shown on each fit. Pass <code>fixed_x</code> explicitly to choose</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>the estimates use fewer rows than your data has</td>
 <td>the model fits drop rows with missing values on their variables. Since 0.8.0 <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> and <code>n_obs</code> report the rows used; 0.7.0 and earlier reported every row of <code>data</code>, so there, count them with <code><a href="https://rdrr.io/r/stats/complete.cases.html" class="external-link">complete.cases()</a></code>
 </td>

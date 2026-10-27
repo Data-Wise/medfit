@@ -169,9 +169,8 @@ Against 0.14.x the parameter count,
 structural estimates and their standard errors did not change on the
 cases measured. Which random start a multi-start fit tries can change
 too (the retry seed follows the parameter names). To keep the 0.14.x
-results, pass `fixed_x = FALSE, meanstructure = NULL`.
-`options(medfit.native_defaults)` is obsolete and ignored, with one
-message per session; it is removed in 0.16.0.
+results, pass `fixed_x = FALSE, meanstructure = NULL`. The 0.14.x
+`options(medfit.native_defaults)` opt-in no longer has any effect.
 
 ## Outcome ledger
 

@@ -134,6 +134,7 @@
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
+    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul>
 </li>
@@ -167,7 +168,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.15.0/vignettes/articles/native-defaults-0-15.qmd" class="external-link"><code>vignettes/articles/native-defaults-0-15.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-defaults-0-15.qmd" class="external-link"><code>vignettes/articles/native-defaults-0-15.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -216,7 +217,7 @@
 <li>
 <strong>0.15.0</strong> flips both defaults together, after the notice in issue #329. The 0.14.0 warning no longer fires. <code>FALSE</code> and <code>NULL</code> stay valid values in every release, and an explicit argument is always kept as given.</li>
 <li>
-<strong>0.16.0</strong> removes <code>options(medfit.native_defaults)</code>. Since 0.15.0 the option is ignored; setting it gives one message per session (class <code>medfit_message_option_obsolete</code>) and changes nothing.</li>
+<strong>0.16.0</strong> removes <code>options(medfit.native_defaults)</code>. Since 0.15.0 the option was ignored (one message per session); the removal makes it silent. Setting it changes nothing.</li>
 </ul>
 <p>Two ways to act:</p>
 <ol type="1">

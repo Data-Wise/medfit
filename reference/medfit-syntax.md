@@ -205,9 +205,8 @@ move; the structural estimates and their standard errors did not move on
 the cases measured. A variable a `~~` or `~1` statement names is left
 free (message class `medfit_message_fixed_x_lenient`) instead of the
 error an explicit `fixed_x = TRUE` gives. To keep the 0.14.x results,
-pass `fixed_x = FALSE, meanstructure = NULL`.
-`options(medfit.native_defaults)` is obsolete and ignored, with one
-message per session, and is removed in 0.16.0.
+pass `fixed_x = FALSE, meanstructure = NULL`. The 0.14.x
+`options(medfit.native_defaults)` opt-in no longer has any effect.
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 has the details.
 

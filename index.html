@@ -136,6 +136,7 @@
     <li><a class="dropdown-item" href="articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="articles/whats-new-0-11.html">What's new in 0.11</a></li>
+    <li><a class="dropdown-item" href="articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul>
 </li>
@@ -189,12 +190,16 @@
 </tr></thead>
 <tbody>
 <tr>
+<td><strong>0.15.0</strong></td>
+<td>The native defaults flip: <code><a href="reference/fit_sem.html">fit_sem()</a></code>/<code>fit_mediation(engine = "native")</code> now fix the exogenous observed variables (<code>fixed_x</code>) and estimate the mean structure (<code>meanstructure = TRUE</code>) when you leave them unset, as lavaan does. Explicit arguments are kept, so <code>fixed_x = FALSE</code> and <code>meanstructure = FALSE</code> restore the old fit; the once-per-session warning is gone and <code>options(medfit.native_defaults)</code> is ignored (removed in 0.16.0). See the <a href="https://data-wise.github.io/medfit/articles/native-defaults-0-15.html">0.15.0 defaults article</a> and NEWS.</td>
+</tr>
+<tr>
 <td><strong>0.14.1</strong></td>
 <td>The outcome ledger for native fits: every zero-product branch and <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> null keeps its outcome (<code>fit@diagnostics$ledger</code>, <code>$ledger</code> on the errors); literal <code>a == 0</code> / nonzero contradictions are certified empty, not fitted; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is a typed error (<code>medfit_sem_covariance_error</code>) that <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> retains for a null. A literal contradiction now stops before the optimizer (see NEWS).</td>
 </tr>
 <tr>
 <td><strong>0.14.0</strong></td>
-<td>Notice for the 0.15.0 native defaults (<code>fixed_x = TRUE</code>, <code>meanstructure = TRUE</code>): a native fit that leaves either unset warns once per session (no result changes); <code>options(medfit.native_defaults = "0.15")</code> opts in early; the <a href="https://data-wise.github.io/medfit/articles/native-defaults-0-15.html">0.15.0 defaults article</a> explains both settings and how dependent packages keep today’s results.</td>
+<td>Notice for the 0.15.0 native defaults (<code>fixed_x = TRUE</code>, <code>meanstructure = TRUE</code>, now in force): a native fit that leaves either unset warns once per session (no result changes); <code>options(medfit.native_defaults = "0.15")</code> opts in early; the <a href="https://data-wise.github.io/medfit/articles/native-defaults-0-15.html">0.15.0 defaults article</a> explains both settings and how dependent packages keep today’s results.</td>
 </tr>
 <tr>
 <td><strong>0.13.0</strong></td>
@@ -255,7 +260,7 @@
 <span>  <span class="st">"medfit"</span>,</span>
 <span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://data-wise.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>This installs the current r-universe release (0.14.1). Binaries are available for supported R/platform combinations; a source installation can require a compiler for dependencies such as <code>nloptr</code>. From GitHub instead: <code>pak::pak("data-wise/medfit")</code>.</p>
+<p>This installs the current r-universe release (0.15.0). Binaries are available for supported R/platform combinations; a source installation can require a compiler for dependencies such as <code>nloptr</code>. From GitHub instead: <code>pak::pak("data-wise/medfit")</code>.</p>
 <blockquote>
 <p><strong>CRAN has 0.3.2, which does not run the examples on this site.</strong> It lacks <code>mediation_demo</code>, <code><a href="reference/fit_sem.html">fit_sem()</a></code>, <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> and the joint and cluster classes. Its two known issues, serial <code><a href="reference/te.html">te()</a></code>/<code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> path rows, are fixed in 0.5.0; see <a href="https://github.com/Data-Wise/medfit/issues/83" class="external-link">#83</a>.</p>
 </blockquote>
@@ -721,7 +726,7 @@
 </h2>
 <p>If you use medfit in your research, please cite:</p>
 <pre><code>Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.14.1. https://data-wise.github.io/medfit/</code></pre>
+R package version 0.15.0. https://data-wise.github.io/medfit/</code></pre>
 <p>For the entry matching your installed version, run <code>citation("medfit")</code>.</p>
 </div>
 <div class="section level2">

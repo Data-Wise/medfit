@@ -30,8 +30,8 @@ and chapter 4 (fixed exogenous variables).
   valid values in every release, and an explicit argument is always kept
   as given.
 - **0.16.0** removes `options(medfit.native_defaults)`. Since 0.15.0 the
-  option is ignored; setting it gives one message per session (class
-  `medfit_message_option_obsolete`) and changes nothing.
+  option was ignored (one message per session); the removal makes it
+  silent. Setting it changes nothing.
 
 Two ways to act:
 

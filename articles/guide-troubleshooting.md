@@ -161,7 +161,6 @@ err$best_survivor                # only for `medfit_error_no_convergence` with a
 | You see | Meaning |
 |----|----|
 | `Model-based standard errors are not valid under inverse-probability weighting` | you gave `weights` with `se_type = "model"`. Shown once per session. Add `se_type = "sandwich"` |
-| `` `options(medfit.native_defaults)` is obsolete and ignored `` | `options(medfit.native_defaults)` is set. Since 0.15.0 an unset `fixed_x` and `meanstructure` resolve to the new defaults whatever the option says; the option is removed in 0.16.0. Shown once per session. Pass the arguments explicitly to choose |
 | `` fit_sem(): the `fixed_x` default leaves `` | with `fixed_x` unset, the named variables carry a `~~` or `~1` statement, so they stay free and the other exogenous variables are fixed. Shown on each fit. Pass `fixed_x` explicitly to choose |
 | the estimates use fewer rows than your data has | the model fits drop rows with missing values on their variables. Since 0.8.0 [`nobs()`](https://rdrr.io/r/stats/nobs.html) and `n_obs` report the rows used; 0.7.0 and earlier reported every row of `data`, so there, count them with [`complete.cases()`](https://rdrr.io/r/stats/complete.cases.html) |
 
