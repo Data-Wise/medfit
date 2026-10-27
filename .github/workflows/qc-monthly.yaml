@@ -49,6 +49,8 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       NOT_CRAN: "true"
+      # the semopy oracle gate (ADR D-13, monthly-only) fails here instead of skipping when uv or semopy is missing
+      MEDFIT_SEMOPY_REQUIRED: "true"
       QC_REF: ${{ github.event.pull_request.head.sha || inputs.ref || 'dev' }}
     steps:
       - uses: actions/checkout@v7
@@ -61,6 +63,9 @@ jobs:
         with:
           dependencies: '"all"'
           extra-packages: any::remotes, any::devtools
+      - name: Install uv for the semopy oracle gate (ADR D-13)
+        if: matrix.shard == 'rest'
+        uses: astral-sh/setup-uv@v6
       - name: Run the gates of this shard (--sim)
         id: gate
         continue-on-error: true
@@ -71,7 +76,8 @@ jobs:
           else
             only=$(Rscript -e 'ids <- read.csv("tests/sim/gates.csv", stringsAsFactors = FALSE)$gate; cat(setdiff(ids, "reliability"), sep = ",")')
           fi
-          Rscript tests/sim/run-gates.R --sim --only "$only"
+          # --monthly: run the monthly-only gates (tests/sim/gates-monthly.txt) that the PR gates shards skip
+          Rscript tests/sim/run-gates.R --sim --only "$only" --monthly
       - name: Record this shard's metrics
         if: always()
         run: Rscript tests/sim/qc-metrics.R "${{ matrix.shard }}"
