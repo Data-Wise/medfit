@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -449,8 +449,7 @@
 <tr class="even">
 <td><code>`fixed_x` fixes the moments of the selected variables, but the model has a statement on them</code></td>
 <td>the model writes <code>x ~~ x</code> or <code>x ~ 1</code> for a selected variable (lavaan would keep it free)</td>
-<td>remove the statement, or leave that variable out of <code>fixed_x</code>
-</td>
+<td>remove the statement, or leave that variable out of <code>fixed_x</code>. An unset <code>fixed_x</code> does this for you and sends a message instead of an error</td>
 </tr>
 <tr class="odd">
 <td>
@@ -712,14 +711,13 @@
 </td>
 </tr>
 <tr class="even">
+<td><code>`options(medfit.native_defaults)` is obsolete and ignored</code></td>
 <td>
-<code>fit_sem(): `fixed_x` is unset</code> or <code>fit_sem(): `meanstructure` is unset</code>
-</td>
-<td>the default of that argument changes in 0.15.0; today’s results are unchanged. Shown once per session per argument. Pass the argument explicitly, or set <code>options(medfit.native_defaults = "0.15")</code> to use the new defaults now</td>
+<code>options(medfit.native_defaults)</code> is set. Since 0.15.0 an unset <code>fixed_x</code> and <code>meanstructure</code> resolve to the new defaults whatever the option says; the option is removed in 0.16.0. Shown once per session. Pass the arguments explicitly to choose</td>
 </tr>
 <tr class="odd">
 <td><code>fit_sem(): the `fixed_x` default leaves</code></td>
-<td>under <code>options(medfit.native_defaults = "0.15")</code> with <code>fixed_x</code> unset, the named variables carry a <code>~~</code> or <code>~1</code> statement, so they stay free and the other exogenous variables are fixed. Shown on each fit. Pass <code>fixed_x</code> explicitly to choose</td>
+<td>with <code>fixed_x</code> unset, the named variables carry a <code>~~</code> or <code>~1</code> statement, so they stay free and the other exogenous variables are fixed. Shown on each fit. Pass <code>fixed_x</code> explicitly to choose</td>
 </tr>
 <tr class="even">
 <td>the estimates use fewer rows than your data has</td>

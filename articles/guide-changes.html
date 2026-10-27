@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -193,12 +193,6 @@
 <section class="level2"><h2 id="numbers-that-change">Numbers that change<a class="anchor" aria-label="anchor" href="#numbers-that-change"></a>
 </h2>
 <table class="table caption-top">
-<colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-</colgroup>
 <thead><tr class="header">
 <th>Version</th>
 <th>What</th>
@@ -288,13 +282,20 @@
 <td>same results, plus a once-per-session warning of class <code>medfit_warning_default_change</code>: in 0.15.0 the defaults become the exogenous observed variables and <code>TRUE</code>, which moves <code>npar</code>, <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC; pass both arguments to keep today’s results, or set <code>options(medfit.native_defaults = "0.15")</code> to use the new defaults now</td>
 </tr>
 <tr class="odd">
+<td>0.15.0</td>
+<td>
+<code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native")</code> with <code>fixed_x</code> or <code>meanstructure</code> left unset</td>
+<td>the 0.14.x defaults, <code>fixed_x = FALSE</code> and <code>meanstructure = NULL</code> (with the 0.14.0 warning)</td>
+<td>the defaults are the exogenous observed variables (as lavaan’s <code>fixed.x = TRUE</code>) and <code>TRUE</code>. Structural estimates and their standard errors do not change. <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> is conditional on the fixed variables, <code>npar</code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> change, and <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> drop the fixed exogenous rows and gain one intercept per observed variable that is not fixed. <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> keep medfit’s own count, which always includes the observed means, so they equal lavaan’s with <code>meanstructure = TRUE</code>, not those of a default <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code>. Which random start a multi-start fit tries can change. Pass <code>fixed_x = FALSE, meanstructure = NULL</code> to keep the 0.14.x results (<a href="native-defaults-0-15.html">article</a>). <code>options(medfit.native_defaults)</code> is ignored (with one message per session) and is removed in 0.16.0; <code>medfit_warning_default_change</code> no longer fires</td>
+</tr>
+<tr class="even">
 <td>0.5.0</td>
 <td>
 <code>se_type = "sandwich"</code> with a treatment-by-mediator term</td>
 <td>returned the model-based covariance, with no warning</td>
 <td>applies the sandwich estimator</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>0.5.0</td>
 <td>lavaan fits with custom path labels</td>
 <td>the alias rows of <code>@vcov</code> were all zero, so a parametric bootstrap had a zero-width interval</td>
@@ -531,11 +532,15 @@
 </tr>
 <tr class="even">
 <td>0.14.0</td>
-<td>a native fit that leaves <code>fixed_x</code> or <code>meanstructure</code> unset warns once per session that both defaults change in 0.15.0 (no result changes); <code>options(medfit.native_defaults = "0.15")</code> opts in early (<a href="native-defaults-0-15.html">article</a>)</td>
+<td>a native fit that leaves <code>fixed_x</code> or <code>meanstructure</code> unset warns once per session that both defaults change in 0.15.0 (no result changes); <code>options(medfit.native_defaults = "0.15")</code> opted in early (ignored from 0.15.0) (<a href="native-defaults-0-15.html">article</a>)</td>
 </tr>
 <tr class="odd">
 <td>0.14.1</td>
 <td>the outcome ledger (<code>fit@diagnostics$ledger</code>, <code>$ledger</code> on the errors): every zero-product branch and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> null keeps its outcome; literal contradictions are certified empty; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is the typed error <code>medfit_sem_covariance_error</code>, which <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> retains for a null (<a href="guide-troubleshooting.html#errors-that-carry-evidence">troubleshooting</a>); <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> validates its own ledger before returning</td>
+</tr>
+<tr class="even">
+<td>0.15.0</td>
+<td>the native defaults flip: a default <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fit fixes the exogenous observed variables and fits a mean structure, as a lavaan <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem()</a></code> fit with <code>fixed.x = TRUE</code> and <code>meanstructure = TRUE</code> does (<a href="native-defaults-0-15.html">article</a>)</td>
 </tr>
 </tbody>
 </table></section><section class="level2"><h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>

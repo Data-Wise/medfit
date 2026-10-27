@@ -192,24 +192,22 @@ of a fit without one, so `AIC(fit_a, fit_b)`,
 refuse such a pair. A product of exogenous variables with the block free
 keeps the ordinary test.
 
-## Defaults are changing
+## Defaults changed in 0.15.0
 
-medfit 0.15.0 changes two defaults of
-[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-and `fit_mediation(engine = "native")`: `fixed_x` becomes the exogenous
-observed variables (as lavaan's `fixed.x = TRUE`) and `meanstructure`
-becomes `TRUE`, so every observed intercept is free without a `~1`
-statement. The parameter count,
+Since medfit 0.15.0 an unset `fixed_x` means the exogenous observed
+variables (as lavaan's `fixed.x = TRUE`) and an unset `meanstructure`
+means `TRUE`, so every observed intercept is free without a `~1`
+statement. Against 0.14.x the parameter count,
 [`logLik()`](https://rdrr.io/r/stats/logLik.html),
 [`AIC()`](https://rdrr.io/r/stats/AIC.html),
 [`BIC()`](https://rdrr.io/r/stats/AIC.html) and the parameter names
 move; the structural estimates and their standard errors did not move on
-the cases measured. 0.14.0 warns once per session (class
-`medfit_warning_default_change`); pass `fixed_x` and `meanstructure` to
-silence it, or set `options(medfit.native_defaults = "0.15")` to use the
-new defaults now. Under that option a variable a `~~` or `~1` statement
-names is left free (message class `medfit_message_fixed_x_lenient`)
-instead of the error an explicit `fixed_x = TRUE` gives.
+the cases measured. A variable a `~~` or `~1` statement names is left
+free (message class `medfit_message_fixed_x_lenient`) instead of the
+error an explicit `fixed_x = TRUE` gives. To keep the 0.14.x results,
+pass `fixed_x = FALSE, meanstructure = NULL`.
+`options(medfit.native_defaults)` is obsolete and ignored, with one
+message per session, and is removed in 0.16.0.
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 has the details.
 
@@ -259,7 +257,7 @@ coef(fit_sem(
   data = mediation_demo
 ))[1:3]
 #> mediator1~treatment mediator2~treatment   outcome~mediator1 
-#>           0.4559961           0.2879984           0.5202186 
+#>           0.4559961           0.2879985           0.5202186 
 
 # An equality constraint, written with the CONSTRAINT() keyword
 coef(fit_sem(

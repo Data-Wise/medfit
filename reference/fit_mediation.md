@@ -132,7 +132,8 @@ fit_mediation(
   by `engine = "glm"`. For `engine = "native"`, recognized names are
   `information`, `n_starts`, `meanstructure`, `fixed_x` and `control`
   (passed to
-  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md))
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
+  whose defaults for `fixed_x` and `meanstructure` changed in 0.15.0)
   and `outcome`, `structure`, `decomposition`, `interaction`, `a_label`,
   `b_label` and `cp_label` (passed to
   [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md));

@@ -133,7 +133,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit a Structural Equation Model by Maximum Likelihood</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
       <div class="d-none name"><code>fit_sem.Rd</code></div>
     </div>
 
@@ -155,8 +155,8 @@ parameters (<code>:=</code>) with delta-method standard errors.</p>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  se_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"sandwich"</span><span class="op">)</span>,</span>
-<span>  meanstructure <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  fixed_x <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  meanstructure <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  fixed_x <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  sampling_weights <span class="op">=</span> <span class="fu">lifecycle</span><span class="fu">::</span><span class="fu"><a href="https://lifecycle.r-lib.org/reference/deprecated.html" class="external-link">deprecated</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -224,19 +224,19 @@ than the HC3 default of the glm route by a factor that shrinks like
 
 
 <dt id="arg-meanstructure">meanstructure<a class="anchor" aria-label="anchor" href="#arg-meanstructure"></a></dt>
-<dd><p>Logical or <code>NULL</code>. <code>NULL</code> (default) fits a mean structure when the model writes
-an intercept (<code>y ~ 1</code>, free or fixed); <code>TRUE</code> fits one regardless; <code>FALSE</code> fits covariances only and
+<dd><p>Logical or <code>NULL</code>. <code>TRUE</code> (default) fits a mean structure;
+<code>NULL</code> fits one only when the model writes
+an intercept (<code>y ~ 1</code>, free or fixed); <code>FALSE</code> fits covariances only and
 errors if an intercept is written. With a mean structure every observed variable whose intercept is
 not written has a free one, so a model with only free intercepts has the same estimates and
 standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
 A model with a product term (<code>y ~ x + m + x:m</code>) always fits the mean structure (it needs the mediator
 intercept for the four-way decomposition), so with a product <code>meanstructure = FALSE</code> is an error.
-Left unset, with no <code>~1</code> and no product in the model, it warns once per session that the default becomes <code>TRUE</code>
-in medfit 0.15.0; <code>options(medfit.native_defaults = "0.15")</code> uses <code>TRUE</code> now.</p></dd>
+An explicit <code>NULL</code> or <code>FALSE</code> is kept as given.</p></dd>
 
 
 <dt id="arg-fixed-x">fixed_x<a class="anchor" aria-label="anchor" href="#arg-fixed-x"></a></dt>
-<dd><p><code>FALSE</code> (default), <code>TRUE</code>, or a character vector of exogenous observed variable names. The
+<dd><p><code>TRUE</code> (default), <code>FALSE</code>, or a character vector of exogenous observed variable names. The
 selected variables (<code>TRUE</code>: every exogenous observed variable, product columns included) have their mean (with
 a mean structure), variance and the exogenous covariances the model contains fixed at the sample moments of
 the estimation sample (weighted when <code>weights</code> are given) and removed from estimation, as lavaan does with
@@ -246,11 +246,10 @@ conditional on the fixed variables, and <code>glance()$fixed_x</code> lists them
 cannot be compared with <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">stats::anova()</a></code>, <code><a href="mbco_sem.html">mbco_sem()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> or <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code>. A (co)variance or intercept statement
 on a selected variable is an error (lavaan would silently keep it free). The fixed rows stay in the parameter table
 (<code>fixed_x</code> column, no standard error) but not in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> or <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>.
-Left unset, in a model with an exogenous observed variable, it warns once per session that the default becomes
-the exogenous observed variables in medfit 0.15.0; <code>options(medfit.native_defaults = "0.15")</code> uses that now:
-every exogenous observed variable (product and factor-dummy columns included) except those a <code>~~</code> or <code>~1</code>
+Left unset it resolves to an explicit subset: every exogenous observed variable
+(product and factor-dummy columns included) except those a <code>~~</code> or <code>~1</code>
 statement names, which are left free with a message of class <code>medfit_message_fixed_x_lenient</code> (an explicit
-<code>TRUE</code> errors there instead). <code>glance()$fixed_x</code> names the set the fit used.</p></dd>
+<code>TRUE</code> errors there instead; an explicit <code>FALSE</code> is kept). <code>glance()$fixed_x</code> names the set the fit used.</p></dd>
 
 
 <dt id="arg-sampling-weights">sampling_weights<a class="anchor" aria-label="anchor" href="#arg-sampling-weights"></a></dt>
@@ -266,19 +265,15 @@ statement names, which are left free with a message of class <code>medfit_messag
 <code>diagnostics$ledger</code> holds the versioned outcome ledger described below.</p>
     </div>
     <div class="section level2">
-    <h2 id="defaults-are-changing">Defaults are changing<a class="anchor" aria-label="anchor" href="#defaults-are-changing"></a></h2>
+    <h2 id="defaults-changed-in-">Defaults changed in 0.15.0<a class="anchor" aria-label="anchor" href="#defaults-changed-in-"></a></h2>
 
 
-<p>In medfit 0.15.0 the defaults become <code>fixed_x</code> = the exogenous observed variables (lavaan's <code>fixed.x = TRUE</code>) and
-<code>meanstructure = TRUE</code>, so a default fit matches a default <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code> fit. 0.14.0 changes no result: it
-warns once per session per argument (class <code>medfit_warning_default_change</code>) when an argument is left unset in a
-model where its default will matter. Under the new defaults the parameter count, <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> and
-the names in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> change; the structural estimates and their standard errors did not
-change on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
-parameter names). To keep today's results and silence the warning, pass both arguments, for example
-<code>fixed_x = FALSE, meanstructure = NULL</code>. To fit with the 0.15.0 defaults now, set
-<code>options(medfit.native_defaults = "0.15")</code>; variables a <code>~~</code> or <code>~1</code> statement names are then left free and named
-in a message of class <code>medfit_message_fixed_x_lenient</code>.</p>
+<p><code>fixed_x</code> is the exogenous observed variables (lavaan's <code>fixed.x = TRUE</code>) and <code>meanstructure = TRUE</code>, so a default
+fit matches a default <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code> fit. Against 0.14.x the parameter count, <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> and the
+names in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> change; the structural estimates and their standard errors did not change
+on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
+parameter names). To keep the 0.14.x results, pass <code>fixed_x = FALSE, meanstructure = NULL</code>.
+<code>options(medfit.native_defaults)</code> is obsolete and ignored, with one message per session; it is removed in 0.16.0.</p>
     </div>
     <div class="section level2">
     <h2 id="outcome-ledger">Outcome ledger<a class="anchor" aria-label="anchor" href="#outcome-ledger"></a></h2>

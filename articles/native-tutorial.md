@@ -8,7 +8,7 @@ guide](https://data-wise.github.io/medfit/articles/native-guide.md).
 
 |  |  |
 |----|----|
-| **You need** | medfit 0.8.0 or later (step 9 needs 0.9.0 or later, and step 10 needs 0.11.0); the bundled `mediation_demo` data |
+| **You need** | medfit 0.8.0 or later (step 9 needs 0.15.0 for the default `fixed_x`; on 0.9.0 to 0.14.x pass `fixed_x = TRUE`; step 10 needs 0.11.0); the bundled `mediation_demo` data |
 | **You get** | a `SEMFit`, a test of the indirect effect, a constrained comparison, a `MediationData` |
 | **Time** | about 20 minutes |
 
@@ -62,10 +62,11 @@ fit
     ==================================
 
       Observations:  400
-      Parameters:    10 free, 0 df
+      Parameters:    9 free, 0 df
       Information:   observed
       Std. errors:   model-based
       Converged:     Yes
+      logLik is conditional on: treatment, covariate1
 
     Defined parameters:
       ab              0.3331  (SE 0.0644)
@@ -80,20 +81,24 @@ Check: `Converged: Yes`, and `ab` appears with a standard error.
 tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
 ```
 
-    # A tibble: 11 × 5
+    # A tibble: 15 × 5
        term                   estimate std_error conf_low conf_high
        <chr>                     <dbl>     <dbl>    <dbl>     <dbl>
-     1 a                        0.581     0.0986  0.388      0.775
-     2 mediator1~covariate1     0.448     0.0483  0.353      0.543
-     3 b                        0.573     0.0531  0.469      0.677
-     4 cp                       0.204     0.109  -0.00954    0.418
-     5 outcome~covariate1       0.356     0.0565  0.245      0.467
-     6 mediator1~~mediator1     0.954     0.0674  0.821      1.09
-     7 outcome~~outcome         1.07      0.0759  0.925      1.22
-     8 treatment~~treatment     0.250     0.0177  0.215      0.285
-     9 treatment~~covariate1   -0.0700    0.0257 -0.120     -0.0195
-    10 covariate1~~covariate1   1.04      0.0735  0.896      1.18
-    11 ab                       0.333     0.0644  0.207      0.459 
+     1 a                        0.581     0.0986  0.388       0.775
+     2 mediator1~covariate1     0.448     0.0483  0.353       0.543
+     3 b                        0.573     0.0531  0.469       0.677
+     4 cp                       0.204     0.109  -0.00954     0.418
+     5 outcome~covariate1       0.356     0.0565  0.245       0.467
+     6 mediator1~~mediator1     0.954     0.0674  0.821       1.09
+     7 outcome~~outcome         1.07      0.0759  0.925       1.22
+     8 mediator1~1              0.0844    0.0696 -0.0521      0.221
+     9 outcome~1                0.197     0.0740  0.0515      0.342
+    10 treatment~~treatment     0.250    NA      NA          NA
+    11 treatment~~covariate1   -0.0700   NA      NA          NA
+    12 covariate1~~covariate1   1.04     NA      NA          NA
+    13 treatment~1              0.502    NA      NA          NA
+    14 covariate1~1             0.0174   NA      NA          NA
+    15 ab                       0.333     0.0644  0.207       0.459
 
 `confint(fit)` gives the same intervals on their own. Parameter names
 follow lavaan: a label if you gave one, otherwise `lhs~rhs`, `X~~X` for
@@ -108,7 +113,7 @@ glance(fit)[, c("npar", "df", "chisq", "p_value", "AIC", "BIC")]
     # A tibble: 1 × 6
        npar    df chisq p_value   AIC   BIC
       <int> <dbl> <dbl>   <dbl> <dbl> <dbl>
-    1    10     0     0      NA 4032. 4088.
+    1     9     0     0      NA 2298. 2334.
 
 A model with no restriction has 0 degrees of freedom, so there is
 nothing to reject yet. Step 6 adds a restriction and a test.
@@ -204,16 +209,17 @@ work as on any other fit.
 
 ## Step 9. Fix exogenous covariates
 
-Needs medfit 0.9.0 or later. With many covariates, most parameters are
-the exogenous variances and covariances (and the means, when the model
-has a mean structure). `fixed_x = TRUE` fixes them at their sample
-values, as lavaan’s `fixed.x = TRUE` does, and leaves the structural
-paths alone. The restricted model of Step 6 shows that the test does not
-move either:
+With many covariates, most parameters are the exogenous variances,
+covariances and means. Since 0.15.0
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+fixes them at their sample values by default, as lavaan’s
+`fixed.x = TRUE` does, and leaves the structural paths alone; every fit
+above already did. `fixed_x = FALSE` estimates them instead. The
+restricted model of Step 6 shows that the test does not move either:
 
 ``` r
-tied_fx <- fit_sem(paste0(syntax, "cp == a * b\n"), mediation_demo, fixed_x = TRUE)
-round(coef(tied_fx)[c("a", "b", "cp")], 3)
+tied_free <- fit_sem(paste0(syntax, "cp == a * b\n"), mediation_demo, fixed_x = FALSE)
+round(coef(tied_free)[c("a", "b", "cp")], 3)
 ```
 
         a     b    cp
@@ -221,20 +227,21 @@ round(coef(tied_fx)[c("a", "b", "cp")], 3)
 
 ``` r
 rbind(
-  free  = glance(tied)[, c("npar", "df", "chisq", "logLik", "fixed_x")],
-  fixed = glance(tied_fx)[, c("npar", "df", "chisq", "logLik", "fixed_x")]
+  fixed = glance(tied)[, c("npar", "df", "chisq", "logLik", "fixed_x")],
+  free  = glance(tied_free)[, c("npar", "df", "chisq", "logLik", "fixed_x")]
 )
 ```
 
     # A tibble: 2 × 5
        npar    df chisq logLik fixed_x
     * <int> <dbl> <dbl>  <dbl> <chr>
-    1     9     1 0.938 -2002. ""
-    2     6     1 0.938 -1140. "treatment, covariate1"
+    1     8     1 0.938 -1140. "treatment, covariate1"
+    2    13     1 0.938 -2002. ""                     
 
 Check: `a`, `b` and `cp` match Step 6, and `df` and `chisq` are the
-same, but `npar` is smaller. The log likelihood is conditional on the
-fixed variables, so it is not comparable with the free fit’s, and
+same, but `npar` is larger for the free fit. The log likelihood of the
+default fit is conditional on the fixed variables, so it is not
+comparable with the free fit’s, and
 [`anova()`](https://rdrr.io/r/stats/anova.html) refuses to compare the
 two fits. `fixed_x` also takes a character vector, such as
 `fixed_x = "covariate1"`, to fix only some of the exogenous variables.

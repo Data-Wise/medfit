@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-native.qmd" class="external-link"><code>vignettes/articles/model-native.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -247,10 +247,11 @@ Attaching package: 'generics'</code></pre>
 ==================================
 
   Observations:  400
-  Parameters:    15 free, 0 df
+  Parameters:    11 free, 0 df
   Information:   observed
   Std. errors:   model-based
   Converged:     Yes
+  logLik is conditional on: treatment, covariate1, covariate2
 
 Defined parameters:
   ab              0.3328  (SE 0.0642)
@@ -301,7 +302,7 @@ Use summary() for the parameter table and diagnostics.</code></pre>
 </div>
 </section><section class="level2"><h2 id="intercepts">Intercepts<a class="anchor" aria-label="anchor" href="#intercepts"></a>
 </h2>
-<p>Writing any intercept (<code>y ~ 1</code>, or <code>1</code> as a term, <code>y ~ 1 + x</code>) turns the mean structure on and frees an intercept for every observed variable you did not mention, as lavaan does. The paths, variances and their standard errors are then the same as without it; the fit also reports the intercepts and the mean of each exogenous variable.</p>
+<p>Since 0.15.0 every native fit has a mean structure by default (<code>meanstructure</code> left unset is <code>TRUE</code>), with a free intercept for every observed variable you did not mention, as lavaan does with <code>meanstructure = TRUE</code>. You write an intercept (<code>y ~ 1</code>, or <code>1</code> as a term, <code>y ~ 1 + x</code>) to restrict it or to give it a label. The paths, variances and their standard errors are the same as without the mean structure; the fit also reports the intercepts and the mean of each exogenous variable (fixed with the other exogenous moments by default, so those rows have no standard error).</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">paths</span> <span class="op">&lt;-</span> <span class="st">"mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"</span></span>
 <span><span class="va">free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">paths</span>, <span class="st">"\noutcome ~ 1"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
@@ -312,7 +313,7 @@ Use summary() for the parameter table and diagnostics.</code></pre>
   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;
 1 outcome~1      0.231    0.0774
 2 mediator1~1    0.155    0.0763
-3 treatment~1    0.502    0.0250</code></pre>
+3 treatment~1    0.502   NA     </code></pre>
 </div>
 </div>
 <p>An intercept you fix or constrain is a restriction, so it can change the other estimates. Fixing the outcome intercept at 0 costs one degree of freedom, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> compares the two fits:</p>
@@ -336,7 +337,7 @@ zero  1 8.8141     8.8141       1   0.002989 **
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 </div>
-<p>Equating two intercepts works the same way (<code>i1 == i2</code> with labels <code>i1</code> and <code>i2</code>). <code>meanstructure = TRUE</code> turns the mean structure on without writing any intercept, and <code>meanstructure = FALSE</code> fits covariances only. A latent variable’s mean is fixed at 0, and a free latent intercept stops with “latent means are planned for a later release”. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> reads the paths exactly as before; add a product term and it returns the four-way decomposition (<a href="#product-terms">below</a>).</p>
+<p>Equating two intercepts works the same way (<code>i1 == i2</code> with labels <code>i1</code> and <code>i2</code>). <code>meanstructure = NULL</code> fits a mean structure only when the model writes an intercept or a product (the 0.14.x rule), and <code>meanstructure = FALSE</code> fits covariances only. A latent variable’s mean is fixed at 0, and a free latent intercept stops with “latent means are planned for a later release”. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> reads the paths exactly as before; add a product term and it returns the four-way decomposition (<a href="#product-terms">below</a>).</p>
 </section><section class="level2"><h2 id="compared-with-the-glm-engine">Compared with the <code>glm</code> engine<a class="anchor" aria-label="anchor" href="#compared-with-the-glm-engine"></a>
 </h2>
 <p>The two engines agree on the estimates and differ slightly in the standard errors, because the native engine uses maximum-likelihood (not least-squares) variances:</p>
@@ -356,7 +357,7 @@ glm    0.06449767 0.1097774 0.1194466</code></pre>
 </div>
 </section><section class="level2"><h2 id="product-terms">Product terms<a class="anchor" aria-label="anchor" href="#product-terms"></a>
 </h2>
-<p><code>x:m</code> (the colon, no spaces) on the right side of a regression is the product of two observed variables, as in lavaan. The engine builds the column <code>x * m</code> from <code>data</code> after listwise deletion and treats it as an observed exogenous variable, so the likelihood, the constraints and the mean structure are the same as for any other regressor. <code>x:m</code> and <code>m:x</code> are one term, stored under the canonical name (the two names sorted in the C locale, <code>m:x</code>), and a label (<code>b*x:m</code>) names the coefficient. A product turns the mean structure on. Writing the treatment-by-mediator product in the outcome equation makes <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> return the four-way decomposition; the <a href="model-interaction.html#the-native-engine">interaction page</a> runs a worked example, including why centering the mediator matters.</p>
+<p><code>x:m</code> (the colon, no spaces) on the right side of a regression is the product of two observed variables, as in lavaan. The engine builds the column <code>x * m</code> from <code>data</code> after listwise deletion and treats it as an observed exogenous variable, so the likelihood, the constraints and the mean structure are the same as for any other regressor. <code>x:m</code> and <code>m:x</code> are one term, stored under the canonical name (the two names sorted in the C locale, <code>m:x</code>), and a label (<code>b*x:m</code>) names the coefficient. A product needs the mean structure, which is on by default. Writing the treatment-by-mediator product in the outcome equation makes <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> return the four-way decomposition; the <a href="model-interaction.html#the-native-engine">interaction page</a> runs a worked example, including why centering the mediator matters.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">four</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
 <span>  <span class="st">"mediator1 ~ treatment</span></span>
@@ -495,9 +496,9 @@ standard errors (observed information) are unaffected.</code></pre>
 <li>
 <strong>A label must be defined</strong> before <code>:=</code> can use it; an unknown label stops with “unknown parameter label”.</li>
 <li>
-<strong>Exogenous variables get free variances and covariances</strong>, as lavaan does with <code>fixed.x = FALSE</code>, so they appear in the parameter table. <code>fixed_x = TRUE</code> (or a vector of names) fixes the selected ones at the sample moments, as <code>fixed.x = TRUE</code> does: the structural estimates, their standard errors and the degrees of freedom do not change, the parameter count falls, and <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC become conditional on the fixed variables, so fits with different fixed sets cannot be compared.</li>
+<strong>Exogenous variables are fixed at their sample moments by default</strong>, as lavaan does with <code>fixed.x = TRUE</code>: the structural estimates, their standard errors and the degrees of freedom do not change, the parameter count is smaller, and <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC are conditional on the fixed variables, so fits with different fixed sets cannot be compared. The fixed rows stay in the parameter table without a standard error. <code>fixed_x = FALSE</code> estimates them (the 0.14.x default), and a vector of names fixes only those. AIC and BIC count the free intercepts and means; they equal a <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code> fit with <code>meanstructure = TRUE</code>, and exceed a default <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code> (no mean structure) by 2 per free intercept in AIC and by log(n) per free intercept in BIC.</li>
 <li>
-<strong>AIC and BIC across product and no-product fits are not comparable.</strong> The product column is an extra observed variable in the joint likelihood, so a fit with <code>x:m</code> and the same model without it describe different data (on <code>mediation_demo</code>, the same outcome gives AIC 3934.7 with the product and 2994.1 without). <code>AIC(fit_a, fit_b)</code>, <code>BIC(fit_a, fit_b)</code>, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse such a pair, naming the observed variables that differ.</li>
+<strong>AIC and BIC across product and no-product fits are not comparable.</strong> The product column is an extra observed variable in the joint likelihood, so a fit with <code>x:m</code> and the same model without it describe different data (on <code>mediation_demo</code>, the same outcome gives AIC 2335.6 with the product and 2333.6 without under the default settings; the gap can look small, but the two likelihoods are over different data). <code>AIC(fit_a, fit_b)</code>, <code>BIC(fit_a, fit_b)</code>, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse such a pair, naming the observed variables that differ.</li>
 <li>
 <strong>Products</strong> are limited to two observed variables inside the class in the table above; latent products, <code>x:x</code> and three-way products stop with the messages listed there.</li>
 <li>

@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/syntax-crosswalk.qmd" class="external-link"><code>vignettes/articles/syntax-crosswalk.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/syntax-crosswalk.qmd" class="external-link"><code>vignettes/articles/syntax-crosswalk.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -210,7 +210,7 @@
 </tr>
 <tr class="odd">
 <td>Exogenous variance</td>
-<td>estimated; <code>fixed_x = TRUE</code> fixes it</td>
+<td>fixed at the sample value by default; <code>fixed_x = FALSE</code> estimates it</td>
 <td>fixed by default; <code>fixed.x = FALSE</code> estimates it</td>
 <td>estimated when you write its path</td>
 <td>not estimated (no row in the output)</td>
@@ -226,7 +226,7 @@
 </tr>
 </tbody>
 </table>
-<p>In medfit 0.15.0 the native defaults become <code>fixed_x</code> = the exogenous observed variables and <code>meanstructure = TRUE</code>, so the exogenous variance row will be fixed by default, as in lavaan.</p>
+<p>Since medfit 0.15.0 the native defaults are <code>fixed_x</code> = the exogenous observed variables and <code>meanstructure = TRUE</code>, so a default <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fixes the exogenous variance, as a default <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code> does. The structural paths and their standard errors are the same either way.</p>
 <section class="level2"><h2 id="medfit">medfit<a class="anchor" aria-label="anchor" href="#medfit"></a>
 </h2>
 <div class="cell">
@@ -257,18 +257,15 @@ Attaching package: 'generics'</code></pre>
 <span><span class="st">  ab := a*b</span></span>
 <span><span class="st">"</span></span>
 <span><span class="va">native</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">mediation_demo</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">native</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<span><span class="va">native</span><span class="op">[</span><span class="va">native</span><span class="op">$</span><span class="va">term</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span>, <span class="st">"ab"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 7 × 3
-  term                 estimate std_error
-  &lt;chr&gt;                   &lt;dbl&gt;     &lt;dbl&gt;
-1 a                      0.456     0.108
-2 b                      0.713     0.0505
-3 cp                     0.0406    0.111
-4 mediator1~~mediator1   1.16      0.0819
-5 outcome~~outcome       1.18      0.0835
-6 treatment~~treatment   0.250     0.0177
-7 ab                     0.325     0.0802</code></pre>
+<pre><code># A tibble: 4 × 3
+  term  estimate std_error
+  &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 a       0.456     0.108
+2 b       0.713     0.0505
+3 cp      0.0406    0.111
+4 ab      0.325     0.0802</code></pre>
 </div>
 </div>
 </section><section class="level2"><h2 id="lavaan">lavaan<a class="anchor" aria-label="anchor" href="#lavaan"></a>
@@ -279,7 +276,7 @@ Attaching package: 'generics'</code></pre>
 <pre><code>This is lavaan 0.7-3
 lavaan is FREE software! Please report any bugs.</code></pre>
 </div>
-<pre class="r cell-code"><code><span><span class="va">lav</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/parameterEstimates.html" class="external-link">parameterEstimates</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">mediation_demo</span>, fixed.x <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<pre class="r cell-code"><code><span><span class="va">lav</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/parameterEstimates.html" class="external-link">parameterEstimates</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">mediation_demo</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">lav</span><span class="op">[</span><span class="va">lav</span><span class="op">$</span><span class="va">label</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span>, <span class="st">"ab"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"label"</span>, <span class="st">"est"</span>, <span class="st">"se"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>  label   est    se
@@ -354,14 +351,14 @@ out = model.inspect()[["lval", "op", "rval", "Estimate", "Std. Err"]]
 out.columns = ["lhs", "op", "rhs", "estimate", "std_error"]
 out.insert(0, "semopy", semopy.__version__)
 out.to_csv(sys.stdout, index=False, float_format="%.12g")</code></pre>
-<p>Its output from semopy 2.3.11 (2026-10-24), saved as <code>tests/sim/oracles/semopy-simple.csv</code>, next to medfit with <code>fixed_x = TRUE</code>, which matches semopy’s treatment of the exogenous variable:</p>
+<p>Its output from semopy 2.3.11 (2026-10-24), saved as <code>tests/sim/oracles/semopy-simple.csv</code>, next to medfit’s default fit, which matches semopy’s treatment of the exogenous variable:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">semopy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">oracles</span>, <span class="st">"semopy-simple.csv"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mediator1~treatment"</span> <span class="op">=</span> <span class="st">"a"</span>, <span class="st">"outcome~mediator1"</span> <span class="op">=</span> <span class="st">"b"</span>, <span class="st">"outcome~treatment"</span> <span class="op">=</span> <span class="st">"cp"</span><span class="op">)</span></span>
 <span><span class="va">key</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">semopy</span><span class="op">$</span><span class="va">lhs</span>, <span class="va">semopy</span><span class="op">$</span><span class="va">op</span>, <span class="va">semopy</span><span class="op">$</span><span class="va">rhs</span><span class="op">)</span></span>
 <span><span class="va">semopy</span><span class="op">$</span><span class="va">term</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">key</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">labels</span><span class="op">)</span>, <span class="va">labels</span><span class="op">[</span><span class="va">key</span><span class="op">]</span>, <span class="va">key</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">semopy</span><span class="op">)</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="va">fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">mediation_demo</span>, fixed_x <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">mediation_demo</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">both</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">semopy</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span>,</span>
 <span>              <span class="va">fixed</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span>, by <span class="op">=</span> <span class="st">"term"</span>,</span>
 <span>              suffixes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"_semopy"</span>, <span class="st">"_medfit"</span><span class="op">)</span><span class="op">)</span></span>

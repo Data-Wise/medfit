@@ -684,6 +684,12 @@ structure, the likelihood counts one saturated mean for each of the
 conditions on different variables for different fixed sets, fits compare
 only when their fixed sets and data agree.
 
+Since 0.15.0 an unset `fixed_x` fixes the exogenous observed variables
+and an unset `meanstructure` fits the mean structure, so the default
+likelihood is \\\log L\_{\mid x_f}\\ with the unfixed observed means
+free; `fixed_x = FALSE` restores the joint likelihood. The AIC and BIC
+count those free means, as lavaan does with `meanstructure = TRUE`.
+
 ### Products and observed information
 
 A product term `x:m` is a data-level transformation, not a quantity

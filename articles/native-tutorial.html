@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/native-tutorial.qmd" class="external-link"><code>vignettes/articles/native-tutorial.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-tutorial.qmd" class="external-link"><code>vignettes/articles/native-tutorial.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -185,7 +185,7 @@
 <tbody>
 <tr class="odd">
 <td><strong>You need</strong></td>
-<td>medfit 0.8.0 or later (step 9 needs 0.9.0 or later, and step 10 needs 0.11.0); the bundled <code>mediation_demo</code> data</td>
+<td>medfit 0.8.0 or later (step 9 needs 0.15.0 for the default <code>fixed_x</code>; on 0.9.0 to 0.14.x pass <code>fixed_x = TRUE</code>; step 10 needs 0.11.0); the bundled <code>mediation_demo</code> data</td>
 </tr>
 <tr class="even">
 <td><strong>You get</strong></td>
@@ -242,10 +242,11 @@ Attaching package: 'generics'</code></pre>
 ==================================
 
   Observations:  400
-  Parameters:    10 free, 0 df
+  Parameters:    9 free, 0 df
   Information:   observed
   Std. errors:   model-based
   Converged:     Yes
+  logLik is conditional on: treatment, covariate1
 
 Defined parameters:
   ab              0.3331  (SE 0.0644)
@@ -259,20 +260,24 @@ Use summary() for the parameter table and diagnostics.</code></pre>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span>, <span class="st">"conf_low"</span>, <span class="st">"conf_high"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 11 × 5
+<pre><code># A tibble: 15 × 5
    term                   estimate std_error conf_low conf_high
    &lt;chr&gt;                     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
- 1 a                        0.581     0.0986  0.388      0.775
- 2 mediator1~covariate1     0.448     0.0483  0.353      0.543
- 3 b                        0.573     0.0531  0.469      0.677
- 4 cp                       0.204     0.109  -0.00954    0.418
- 5 outcome~covariate1       0.356     0.0565  0.245      0.467
- 6 mediator1~~mediator1     0.954     0.0674  0.821      1.09
- 7 outcome~~outcome         1.07      0.0759  0.925      1.22
- 8 treatment~~treatment     0.250     0.0177  0.215      0.285
- 9 treatment~~covariate1   -0.0700    0.0257 -0.120     -0.0195
-10 covariate1~~covariate1   1.04      0.0735  0.896      1.18
-11 ab                       0.333     0.0644  0.207      0.459 </code></pre>
+ 1 a                        0.581     0.0986  0.388       0.775
+ 2 mediator1~covariate1     0.448     0.0483  0.353       0.543
+ 3 b                        0.573     0.0531  0.469       0.677
+ 4 cp                       0.204     0.109  -0.00954     0.418
+ 5 outcome~covariate1       0.356     0.0565  0.245       0.467
+ 6 mediator1~~mediator1     0.954     0.0674  0.821       1.09
+ 7 outcome~~outcome         1.07      0.0759  0.925       1.22
+ 8 mediator1~1              0.0844    0.0696 -0.0521      0.221
+ 9 outcome~1                0.197     0.0740  0.0515      0.342
+10 treatment~~treatment     0.250    NA      NA          NA
+11 treatment~~covariate1   -0.0700   NA      NA          NA
+12 covariate1~~covariate1   1.04     NA      NA          NA
+13 treatment~1              0.502    NA      NA          NA
+14 covariate1~1             0.0174   NA      NA          NA
+15 ab                       0.333     0.0644  0.207       0.459</code></pre>
 </div>
 </div>
 <p><code>confint(fit)</code> gives the same intervals on their own. Parameter names follow lavaan: a label if you gave one, otherwise <code>lhs~rhs</code>, <code>X~~X</code> for a variance and <code>eta=~m2</code> for a loading.</p>
@@ -284,7 +289,7 @@ Use summary() for the parameter table and diagnostics.</code></pre>
 <pre><code># A tibble: 1 × 6
    npar    df chisq p_value   AIC   BIC
   &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1    10     0     0      NA 4032. 4088.</code></pre>
+1     9     0     0      NA 2298. 2334.</code></pre>
 </div>
 </div>
 <p>A model with no restriction has 0 degrees of freedom, so there is nothing to reject yet. Step 6 adds a restriction and a test.</p>
@@ -359,27 +364,27 @@ MBCO = 17.557, df = 1, p-value = 2.788e-05</code></pre>
 <p>From here <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> and <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> work as on any other fit.</p>
 </section><section class="level2"><h2 id="step-9--fix-exogenous-covariates">Step 9. Fix exogenous covariates<a class="anchor" aria-label="anchor" href="#step-9--fix-exogenous-covariates"></a>
 </h2>
-<p>Needs medfit 0.9.0 or later. With many covariates, most parameters are the exogenous variances and covariances (and the means, when the model has a mean structure). <code>fixed_x = TRUE</code> fixes them at their sample values, as lavaan’s <code>fixed.x = TRUE</code> does, and leaves the structural paths alone. The restricted model of Step 6 shows that the test does not move either:</p>
+<p>With many covariates, most parameters are the exogenous variances, covariances and means. Since 0.15.0 <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fixes them at their sample values by default, as lavaan’s <code>fixed.x = TRUE</code> does, and leaves the structural paths alone; every fit above already did. <code>fixed_x = FALSE</code> estimates them instead. The restricted model of Step 6 shows that the test does not move either:</p>
 <div class="cell">
-<pre class="r cell-code"><code><span><span class="va">tied_fx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">syntax</span>, <span class="st">"cp == a * b\n"</span><span class="op">)</span>, <span class="va">mediation_demo</span>, fixed_x <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">tied_fx</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre>
+<pre class="r cell-code"><code><span><span class="va">tied_free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">syntax</span>, <span class="st">"cp == a * b\n"</span><span class="op">)</span>, <span class="va">mediation_demo</span>, fixed_x <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">tied_free</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>    a     b    cp
 0.542 0.550 0.298 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
-<span>  free  <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">tied</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"logLik"</span>, <span class="st">"fixed_x"</span><span class="op">)</span><span class="op">]</span>,</span>
-<span>  fixed <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">tied_fx</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"logLik"</span>, <span class="st">"fixed_x"</span><span class="op">)</span><span class="op">]</span></span>
+<span>  fixed <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">tied</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"logLik"</span>, <span class="st">"fixed_x"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  free  <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">tied_free</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"logLik"</span>, <span class="st">"fixed_x"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 5
    npar    df chisq logLik fixed_x
 * &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;
-1     9     1 0.938 -2002. ""
-2     6     1 0.938 -1140. "treatment, covariate1"</code></pre>
+1     8     1 0.938 -1140. "treatment, covariate1"
+2    13     1 0.938 -2002. ""                     </code></pre>
 </div>
 </div>
-<p>Check: <code>a</code>, <code>b</code> and <code>cp</code> match Step 6, and <code>df</code> and <code>chisq</code> are the same, but <code>npar</code> is smaller. The log likelihood is conditional on the fixed variables, so it is not comparable with the free fit’s, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> refuses to compare the two fits. <code>fixed_x</code> also takes a character vector, such as <code>fixed_x = "covariate1"</code>, to fix only some of the exogenous variables.</p>
+<p>Check: <code>a</code>, <code>b</code> and <code>cp</code> match Step 6, and <code>df</code> and <code>chisq</code> are the same, but <code>npar</code> is larger for the free fit. The log likelihood of the default fit is conditional on the fixed variables, so it is not comparable with the free fit’s, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> refuses to compare the two fits. <code>fixed_x</code> also takes a character vector, such as <code>fixed_x = "covariate1"</code>, to fix only some of the exogenous variables.</p>
 </section><section class="level2"><h2 id="step-10--add-a-categorical-covariate">Step 10. Add a categorical covariate<a class="anchor" aria-label="anchor" href="#step-10--add-a-categorical-covariate"></a>
 </h2>
 <p>Needs medfit 0.11.0 or later. A covariate that is a factor, character or logical column goes into the syntax by name; the engine replaces it with one 0/1 dummy per non-reference level. The bundled data has no factor, so the chunk cuts <code>covariate1</code> into three groups first:</p>

@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/quality-control.qmd" class="external-link"><code>vignettes/articles/quality-control.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/quality-control.qmd" class="external-link"><code>vignettes/articles/quality-control.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -721,7 +721,41 @@
 <li>The validators cannot detect a consistent rewrite of the root sample and its hashes, an altered parameter value inside the parameter table of a null, or a changed condition text of a failed null (see Evidence validators).</li>
 <li>An all-excluded null is validated against its own certificates, not against the fit’s model, so a self-consistent foreign union is accepted (the statistic is <code>NA</code> regardless).</li>
 <li>A complete enumeration of zero-product branches is not a global-optimum certificate, and a ledger records what a fit did, not that its optimum is the global one.</li>
-</ul></section><section class="level2"><h2 id="lessons-from-the-0-14-1-port">Lessons from the 0.14.1 port<a class="anchor" aria-label="anchor" href="#lessons-from-the-0-14-1-port"></a>
+</ul></section><section class="level2"><h2 id="the-0-15-0-defaults-flip">The 0.15.0 defaults flip<a class="anchor" aria-label="anchor" href="#the-0-15-0-defaults-flip"></a>
+</h2>
+<p>0.15.0 changes two defaults of the native engine: an unset <code>fixed_x</code> fixes the exogenous observed variables and an unset <code>meanstructure</code> is <code>TRUE</code>. The release is gated on evidence that the change moves only what it should. It moves the conditional log likelihood, the parameter count behind AIC and BIC, the names in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and the retry seed; structural estimates and their standard errors stay where they were.</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Gate</th>
+<th>What it shows</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Oracle matrix (<code>tests/sim/native-defaults-oracle.R</code>)</td>
+<td>557 rows comparing the default fit with the 0.14.x settings and with lavaan: 503 pass, 54 limit, 0 block</td>
+</tr>
+<tr class="even">
+<td>lavaan <code>fixed.x = TRUE, meanstructure = TRUE</code>
+</td>
+<td>the default fit has the same row set, parameter count and conditional log likelihood, with coefficients within 1e-15 and standard errors within 2.1e-11</td>
+</tr>
+<tr class="odd">
+<td>Planted defects</td>
+<td>a resolver that overwrites an explicit <code>FALSE</code>, or leaves the old default in <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> only, is caught by the tests; restoring the old default fails nine of the twelve rewritten test files (the other three pin explicit settings)</td>
+</tr>
+<tr class="even">
+<td>Full suite</td>
+<td>1694 tests, 8580 expectations, 0 failed (reference BLAS)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>A documented limit.</strong> <code><a href="../reference/compare_lr.html">compare_lr()</a></code> with lavaan can put the product-null likelihood ratio above the reference (issue #320): 18 of 60 runs for lavaan and 13 of 60 for OpenMx, on the pinned design and seeds. The 2026-10-26 re-measure reproduced both counts on the <code>v0.14.0</code> tree and on <code>dev</code>, so the flip does not change them, and the limit is documented in <code><a href="../reference/compare_lr.html">?compare_lr</a></code>.</p>
+<p><strong>Not yet run.</strong> The two OpenBLAS gate runs (<code>gates (rest)</code> and <code>gates (reliability)</code>) run on pull requests to <code>main</code>; they are deferred to the release pull request, and this page makes no claim about them. The record, with its sources, is <code>planning/specs/RESULT-qc-0.15.0-native-defaults-flip-2026-10-26.md</code>.</p>
+</section><section class="level2"><h2 id="lessons-from-the-0-14-1-port">Lessons from the 0.14.1 port<a class="anchor" aria-label="anchor" href="#lessons-from-the-0-14-1-port"></a>
 </h2>
 <p>The recurring defect of the ledger port was the false refusal of a genuine result, not the acceptance of a forgery: a sandwich fit refused because its nulls are refit model-based while the root records the sandwich setting, and an all-excluded zero-product null refused as malformed. Each was found by the full suite or an adversarial reviewer and missed by the hand-built grids, which tested the shapes their authors had thought of. The rule that came out of it is the table above: list every shape the engine can produce and require each to validate, then run the whole suite, since the engine reaches shapes no grid enumerates.</p>
 <p>Two process notes. Coverage instrumentation rewrites function bodies, so a mutant that replaces source text in a function cannot find it under <code>covr</code>; those mutants skip under coverage and run in every other check. And the review that found the MBCO root ledger without a validator was an adversarial review, a reader independent of the slice’s own QA, looking for what the author’s tests assume. The record of the release is <code>planning/specs/RESULT-qc-0.14.1-d1-d4-2026-10-25.md</code>.</p>

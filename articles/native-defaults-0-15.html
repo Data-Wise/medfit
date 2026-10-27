@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/native-defaults-0-15.qmd" class="external-link"><code>vignettes/articles/native-defaults-0-15.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-defaults-0-15.qmd" class="external-link"><code>vignettes/articles/native-defaults-0-15.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -176,7 +176,7 @@
 
 
 
-    <p>medfit 0.15.0 changes two defaults of <code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native")</code>, so that a default native fit matches a default lavaan fit:</p>
+    <p>medfit 0.15.0 changed two defaults of <code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native")</code>, so that a default native fit is posed like a default lavaan fit with <code>fixed.x = TRUE</code> and <code>meanstructure = TRUE</code>:</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 25%">
@@ -208,32 +208,26 @@
 </tbody>
 </table>
 <p>This page explains both changes with the same depth: what each one does to the likelihood, why the structural estimates and their standard errors stay put, which reported numbers move, and how the change was checked. Every formula is in <a href="methods.html">Methods and Formulas</a>; the derivations are in the native mini-book, chapter 1 (the mean structure) and chapter 4 (fixed exogenous variables).</p>
-<section class="level2"><h2 id="what-changes-and-when">What changes and when<a class="anchor" aria-label="anchor" href="#what-changes-and-when"></a>
+<section class="level2"><h2 id="what-changed-and-when">What changed and when<a class="anchor" aria-label="anchor" href="#what-changed-and-when"></a>
 </h2>
 <ul>
 <li>
-<strong>0.14.0</strong> changes no result. A native fit that leaves <code>fixed_x</code> or <code>meanstructure</code> unset, in a model where that default will matter, warns once per session per argument. The warning has class <code>medfit_warning_default_change</code>.</li>
+<strong>0.14.0</strong> changed no result. A native fit that left <code>fixed_x</code> or <code>meanstructure</code> unset, in a model where that default would matter, warned once per session per argument (class <code>medfit_warning_default_change</code>).</li>
 <li>
-<strong>0.15.0</strong>, released at least two months after 0.14.0 (issue #329 carries the notice), flips both defaults together. <code>FALSE</code> and <code>NULL</code> stay valid values in every release.</li>
+<strong>0.15.0</strong> flips both defaults together, after the notice in issue #329. The 0.14.0 warning no longer fires. <code>FALSE</code> and <code>NULL</code> stay valid values in every release, and an explicit argument is always kept as given.</li>
+<li>
+<strong>0.16.0</strong> removes <code>options(medfit.native_defaults)</code>. Since 0.15.0 the option is ignored; setting it gives one message per session (class <code>medfit_message_option_obsolete</code>) and changes nothing.</li>
 </ul>
-<p>Three ways to act on the warning:</p>
+<p>Two ways to act:</p>
 <ol type="1">
 <li>
-<strong>Keep today’s results.</strong> Pass both arguments: <code>fit_sem(model, data, fixed_x = FALSE, meanstructure = NULL)</code>. The results are those of 0.14.0, now and after 0.15.0.</li>
+<strong>Take the new defaults.</strong> Leave both arguments unset. Expect the changes listed below: the conditional <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, the parameter count, AIC and BIC, and the names in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>.</li>
 <li>
-<strong>Opt in early.</strong> Set <code>options(medfit.native_defaults = "0.15")</code> and leave the arguments unset; fits use the 0.15.0 defaults without the warning. In 0.15.0 the option is ignored.</li>
-<li>
-<strong>Package authors.</strong> Pass both arguments in package code, examples and tests, so your users see neither the warning nor a change of results. To silence the warning in a test, catch it by class:</li>
+<strong>Keep the 0.14.x results.</strong> Pass both arguments: <code>fit_sem(model, data, fixed_x = FALSE, meanstructure = NULL)</code>. The results are those of 0.14.x. Package authors who need identical results across releases pass both arguments in code, examples and tests.</li>
 </ol>
-<div class="cell">
-<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">)</span>,</span>
-<span>  medfit_warning_default_change <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">w</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">invokeRestart</a></span><span class="op">(</span><span class="st">"muffleWarning"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre>
-</div>
 <section class="level3"><h3 id="a-recipe-for-packages-that-depend-on-medfit">A recipe for packages that depend on medfit<a class="anchor" aria-label="anchor" href="#a-recipe-for-packages-that-depend-on-medfit"></a>
 </h3>
-<p>A package that must work with medfit releases before and after 0.14.0 cannot pass <code>meanstructure</code> to a medfit that lacks it. Check the formals first, then pass the arguments the installed medfit knows and the caller left unset:</p>
+<p>A package that must give the 0.14.x results with medfit releases before and after 0.14.0 cannot pass <code>meanstructure</code> to a medfit that lacks it. Check the formals first, then pass the arguments the installed medfit knows and the caller left unset:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">.fit_sem</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">args</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
@@ -245,13 +239,8 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="fu">medfit</span><span class="fu">::</span><span class="va"><a href="../reference/fit_sem.html">fit_sem</a></span>, <span class="va">args</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre>
 </div>
-<p><code>args["meanstructure"] &lt;- list(NULL)</code> stores an explicit <code>NULL</code>; <code>args$meanstructure &lt;- NULL</code> would delete the element and leave the default in force. RMediation’s test helper uses this wrapper (<code>Data-Wise/rmediation#85</code>).</p>
-<p>Two points about muffling:</p>
-<ul>
-<li>The warning is shown once per session per argument, and the flag is set before the warning is raised. A muffled warning therefore uses up that session’s one warning, and a later unwrapped fit stays silent. Pass the arguments rather than muffle when the code runs in a user’s session.</li>
-<li>
-<code><a href="https://testthat.r-lib.org/reference/expect_no_error.html" class="external-link">testthat::expect_no_warning()</a></code> fails on the warning; muffle by class, or pass the arguments, in tests that check for clean output.</li>
-</ul></section></section><section class="level2"><h2 id="the-worked-example">The worked example<a class="anchor" aria-label="anchor" href="#the-worked-example"></a>
+<p><code>args["meanstructure"] &lt;- list(NULL)</code> stores an explicit <code>NULL</code>; <code>args$meanstructure &lt;- NULL</code> would delete the element and leave the default in force, which since 0.15.0 means the mean structure is on and the wrapper’s intended covariance-only fit is silently lost. RMediation’s test helper uses this wrapper (<code>Data-Wise/rmediation#85</code>).</p>
+</section></section><section class="level2"><h2 id="the-worked-example">The worked example<a class="anchor" aria-label="anchor" href="#the-worked-example"></a>
 </h2>
 <p>One mediator, one covariate, so two exogenous observed variables (<code>treatment</code> and <code>covariate1</code>) and <span class="math inline">\(p = 4\)</span> observed variables in all.</p>
 <div class="cell">
@@ -281,7 +270,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="st">  outcome ~ b * mediator1 + cp * treatment + covariate1</span></span>
 <span><span class="st">"</span></span></code></pre>
 </div>
-<p>Each combination of the two arguments is set explicitly, so no fit warns:</p>
+<p>Each combination of the two arguments is set explicitly:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>fixed_x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">FALSE</span>, <span class="cn">TRUE</span><span class="op">)</span>, meanstructure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">FALSE</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rows</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">settings</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
@@ -319,7 +308,7 @@ Attaching package: 'generics'</code></pre>
 <li>
 <code>fixed_x = TRUE</code> drops three parameters without a mean structure (the two exogenous variances and their covariance) and five with one (the same three plus the two exogenous means). <code>logLik</code> and <code>AIC</code> change because the likelihood becomes conditional.</li>
 <li>
-<code>meanstructure = TRUE</code> adds one intercept for each observed variable whose mean is not fixed: four with <code>fixed_x = FALSE</code>, two with <code>fixed_x = TRUE</code>. <code>logLik</code> and <code>AIC</code> do not change in medfit; the last section explains why lavaan’s AIC does.</li>
+<code>meanstructure = TRUE</code> adds one intercept for each observed variable whose mean is not fixed: four with <code>fixed_x = FALSE</code>, two with <code>fixed_x = TRUE</code>. <code>logLik</code> and <code>AIC</code> do not change in medfit; the section on AIC and BIC below says where lavaan’s differ.</li>
 </ul></section><section class="level2"><h2 id="fixed_x-the-conditional-likelihood">
 <code>fixed_x</code>: the conditional likelihood<a class="anchor" aria-label="anchor" href="#fixed_x-the-conditional-likelihood"></a>
 </h2>
@@ -335,8 +324,7 @@ Attaching package: 'generics'</code></pre>
 </h3>
 <p>An explicit <code>fixed_x = TRUE</code> errors when the model writes a <code>~~</code> or <code>~1</code> statement on an exogenous variable, because such a statement asks to estimate a moment that <code>fixed_x</code> would fix. The 0.15.0 default is lenient instead: it fixes every observed exogenous column except those a <code>~~</code> or <code>~1</code> statement names, and it says which it left free in a message of class <code>medfit_message_fixed_x_lenient</code> (field <code>variables</code>). <code>glance()$fixed_x</code> lists the set that was fixed.</p>
 <div class="cell">
-<pre class="r cell-code"><code><span><span class="va">old</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>medfit.native_defaults <span class="op">=</span> <span class="st">"0.15"</span><span class="op">)</span></span>
-<span><span class="va">lenient</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">model</span>, <span class="st">"covariate1 ~~ covariate1"</span>, sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span></code></pre>
+<pre class="r cell-code"><code><span><span class="va">lenient</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">model</span>, <span class="st">"covariate1 ~~ covariate1"</span>, sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stderr">
 <pre><code>fit_sem(): the `fixed_x` default leaves covariate1 free, because the model writes a `~~` or `~1` statement on it; the other exogenous observed variables are fixed. Pass `fixed_x` explicitly to choose.</code></pre>
 </div>
@@ -344,14 +332,13 @@ Attaching package: 'generics'</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "treatment"</code></pre>
 </div>
-<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old</span><span class="op">)</span></span></code></pre>
 </div>
 <p>The <strong>pairing rule</strong> matters here. medfit, like lavaan, adds the covariances among exogenous variables automatically, but an exogenous variable that the model names in a <code>~~</code> statement is not paired with the others. In the fit above <code>covariate1</code> is named, so the covariance between <code>treatment</code> and <code>covariate1</code> is not in the model: it is 0 unless you write it. That is a modeling choice the syntax makes, not a side effect of <code>fixed_x</code>; the same model in lavaan has the same zero.</p>
 <p>Product columns (<code>x:m</code>) and the 0/1 columns of a factor covariate are observed exogenous columns too, so the default fixes them along with the others. lavaan treats them the same way (the oracle matrix below checks it).</p>
 </section></section><section class="level2"><h2 id="meanstructure-true-a-saturated-mean-part">
 <code>meanstructure = TRUE</code>: a saturated mean part<a class="anchor" aria-label="anchor" href="#meanstructure-true-a-saturated-mean-part"></a>
 </h2>
-<p>With <code>meanstructure = TRUE</code> every observed variable gets a free intercept (for an exogenous variable, its mean), and the mean part of the model is saturated unless the syntax restricts it (<code>y ~ 0*1</code>). Today the mean structure is already on when the syntax writes a <code>~1</code> row or a product term; the new default turns it on for every model.</p>
+<p>With <code>meanstructure = TRUE</code> every observed variable gets a free intercept (for an exogenous variable, its mean), and the mean part of the model is saturated unless the syntax restricts it (<code>y ~ 0*1</code>). Through 0.14.x the mean structure was on only when the syntax wrote a <code>~1</code> row or a product term; the default now turns it on for every model.</p>
 <p>Why nothing structural moves: the maximum-likelihood discrepancy is the covariance-only discrepancy plus an additive mean term, a quadratic form in <span class="math inline">\(\bar x - \mu(\theta)\)</span> (the formula is in <a href="methods.html#mean-structure">Methods and Formulas, mean structure</a>). When the intercepts are free and not shared, the mean term is minimized at zero by <span class="math inline">\(\hat\mu = \bar x\)</span> for any covariance parameters, so the covariance parameters solve the same problem as without a mean structure, and the information has no cross block between the two parts. The estimates and standard errors of the paths and variances are therefore the same, and the intercepts are the sample means (for an endogenous variable, the intercept that reproduces its sample mean).</p>
 <p>What moves:</p>
 <ul>
@@ -363,31 +350,39 @@ Attaching package: 'generics'</code></pre>
 </ul>
 <section class="level3"><h3 id="aic-and-bic-against-lavaan">AIC and BIC against lavaan<a class="anchor" aria-label="anchor" href="#aic-and-bic-against-lavaan"></a>
 </h3>
-<p>Without a mean structure, medfit’s <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> degrees of freedom count the observed means that are not fixed as estimated (they are, implicitly, at the sample means), while lavaan’s AIC and BIC count only its parameters. For a covariance-only fit with <span class="math inline">\(k\)</span> such means, medfit’s AIC is larger than lavaan’s by <span class="math inline">\(2k\)</span> and its BIC by <span class="math inline">\(k \log n\)</span>; the log likelihoods and the parameter counts agree.</p>
+<p><code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> keep medfit’s own parameter count: the <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> degrees of freedom are the free parameters plus the observed means that are not fixed, whether or not those means are in the parameter vector (without a mean structure they are, implicitly, at the sample means). That count equals lavaan’s <code>npar</code> when lavaan fits the mean structure, so medfit’s AIC and BIC equal lavaan’s with <code>meanstructure = TRUE</code>, under any <code>fixed_x</code>. A default <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code> fits no mean structure and counts only its own parameters, so against that fit medfit’s AIC is larger by <span class="math inline">\(2k\)</span> and its BIC by <span class="math inline">\(k \log n\)</span>, where <span class="math inline">\(k\)</span> is the number of observed means that are not fixed. The log likelihoods agree in both comparisons. The 0.15.0 default fixes the exogenous variables, so in the worked example <span class="math inline">\(k = 2\)</span> (the two endogenous variables), and the gap is 4:</p>
 <div class="cell">
-<pre class="r cell-code"><code><span><span class="va">lv_cov</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">mediation_demo</span>, fixed.x <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">lv_mean</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">mediation_demo</span>, fixed.x <span class="op">=</span> <span class="cn">FALSE</span>, meanstructure <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>lavaan_cov_only <span class="op">=</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/fitMeasures.html" class="external-link">fitMeasures</a></span><span class="op">(</span><span class="va">lv_cov</span>, <span class="st">"aic"</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
-<span>  lavaan_means <span class="op">=</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/fitMeasures.html" class="external-link">fitMeasures</a></span><span class="op">(</span><span class="va">lv_mean</span>, <span class="st">"aic"</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
-<span>  medfit <span class="op">=</span> <span class="va">four</span><span class="op">$</span><span class="va">AIC</span><span class="op">[</span><span class="va">four</span><span class="op">$</span><span class="va">fixed_x</span> <span class="op">==</span> <span class="cn">FALSE</span> <span class="op">&amp;</span> <span class="va">four</span><span class="op">$</span><span class="va">meanstructure</span> <span class="op">==</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span></span></code></pre>
+<pre class="r cell-code"><code><span><span class="va">default_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">lv_default</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">lv_means</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">mediation_demo</span>, meanstructure <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>lavaan_default <span class="op">=</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/fitMeasures.html" class="external-link">fitMeasures</a></span><span class="op">(</span><span class="va">lv_default</span>, <span class="st">"aic"</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  lavaan_means <span class="op">=</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/fitMeasures.html" class="external-link">fitMeasures</a></span><span class="op">(</span><span class="va">lv_means</span>, <span class="st">"aic"</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  medfit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC</a></span><span class="op">(</span><span class="va">default_fit</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>lavaan_cov_only    lavaan_means          medfit
-       4023.651        4031.651        4031.651 </code></pre>
+<pre><code>lavaan_default   lavaan_means         medfit
+      2293.856       2297.856       2297.856 </code></pre>
 </div>
 </div>
-<p>Here <span class="math inline">\(k = 4\)</span>, so the covariance-only AICs differ by 8. With <code>meanstructure = TRUE</code>, the 0.15.0 default, the intercepts are ordinary parameters on both sides and the two AICs agree.</p>
+<p>Compare AIC and BIC across engines only with the same mean structure on both sides; within medfit the count is the same under every setting, so comparisons between medfit fits are unaffected.</p>
+</section><section class="level3"><h3 id="missing-data">Missing data<a class="anchor" aria-label="anchor" href="#missing-data"></a>
+</h3>
+<p>The native engine drops incomplete rows (listwise deletion) before it fits, and <code>fixed_x</code> moments are the sample moments of those rows. There is no <code>missing =</code> argument and no full-information maximum likelihood; lavaan’s <code>missing = "fiml"</code> has no counterpart yet.</p>
 </section></section><section class="level2"><h2 id="evidence-the-oracle-matrix">Evidence: the oracle matrix<a class="anchor" aria-label="anchor" href="#evidence-the-oracle-matrix"></a>
 </h2>
-<p><code>tests/sim/native-defaults-oracle.R</code> fits a set of model cells (simple mediation, latent mediator, named and lenient subsets, sampling weights, a four-way product term, a factor covariate) under every combination of the two arguments and the opt-in, and compares structural estimates, standard errors, chi-square, df, <code>logLik</code>, the parameter count, AIC and BIC with lavaan or a stated oracle. It has 557 rows: 503 agree, 54 are recorded limits, 0 block. Each limit is a difference of reporting, declared with its reason, never a widened tolerance:</p>
+<p><code>tests/sim/native-defaults-oracle.R</code> fits a set of model cells (simple mediation, latent mediator, named and lenient subsets, sampling weights, a four-way product term, a factor covariate) under every combination of the two arguments (and the retired opt-in), and compares structural estimates, standard errors, chi-square, df, <code>logLik</code>, the parameter count, AIC and BIC with lavaan or a stated oracle. It has 557 rows: 503 agree, 54 are recorded limits, 0 block. Each limit is a difference of reporting, declared with its reason, never a widened tolerance:</p>
 <ul>
 <li>
 <strong>Weights:</strong> <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> reports <code>NA</code> for chi-square, <code>logLik</code>, AIC and BIC by design; lavaan reports its weighted-ML values.</li>
 <li>
-<strong>Covariance-only AIC and BIC:</strong> the <span class="math inline">\(2k\)</span> and <span class="math inline">\(k \log n\)</span> gap above, in the simple, latent, subset and factor cells under <code>meanstructure = NULL</code>. It disappears under <code>meanstructure = TRUE</code>.</li>
+<strong>Covariance-only AIC and BIC:</strong> the <span class="math inline">\(2k\)</span> and <span class="math inline">\(k \log n\)</span> gap above, in the simple, latent, subset and factor cells under <code>meanstructure = NULL</code>, where the reference lavaan fit has no mean structure. It disappears when lavaan is fitted with <code>meanstructure = TRUE</code>.</li>
 <li>
 <strong>Product terms:</strong> a product turns medfit’s mean structure on while lavaan’s default fits no means, so under <code>meanstructure = NULL</code> the parameter count, AIC and BIC differ by the free means (<code>logLik</code>, estimates and standard errors agree). When a product factor is a regression target, medfit reports chi-square and df as <code>NA</code> because the model test is invalid there; lavaan reports numbers for the same model.</li>
 </ul>
 <p>No row disagrees on a structural estimate or its standard error. The retry seed of a multi-start fit is derived from the parameter names, so the larger or smaller parameter vector changes the random starts; a well-identified fit gives the same estimates, but which start wins, and whether the start-spread warning appears, can change.</p>
+</section><section class="level2"><h2 id="compare_lr-under-the-new-defaults">
+<code>compare_lr()</code> under the new defaults<a class="anchor" aria-label="anchor" href="#compare_lr-under-the-new-defaults"></a>
+</h2>
+<p><code><a href="../reference/compare_lr.html">compare_lr()</a></code> accepts fits made under the 0.15.0 defaults (a saturated mean structure and <code>fixed_x</code>), in lavaan and in OpenMx. Its known limit does not change with the flip: a general-purpose optimizer handed the product null can stop above medfit’s reference, and <code><a href="../reference/compare_lr.html">compare_lr()</a></code> reports that as a classed warning rather than blaming either side. On the pinned design (15 seeds by 4 cells) lavaan ended above the reference in 18 of 60 runs and OpenMx in 13 of 60, the same counts as under 0.14.x, with no mislabeled row (issue #320).</p>
 </section><section class="level2"><h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a>
 </h2>
 <ul>

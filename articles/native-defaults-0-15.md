@@ -1,9 +1,10 @@
 # Native defaults in 0.15.0
 
-medfit 0.15.0 changes two defaults of
+medfit 0.15.0 changed two defaults of
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-and `fit_mediation(engine = "native")`, so that a default native fit
-matches a default lavaan fit:
+and `fit_mediation(engine = "native")`, so that a default native fit is
+posed like a default lavaan fit with `fixed.x = TRUE` and
+`meanstructure = TRUE`:
 
 | Argument | Default through 0.14.x | Default from 0.15.0 | lavaan equivalent |
 |----|----|----|----|
@@ -18,41 +19,41 @@ Formulas](https://data-wise.github.io/medfit/articles/methods.md); the
 derivations are in the native mini-book, chapter 1 (the mean structure)
 and chapter 4 (fixed exogenous variables).
 
-## What changes and when
+## What changed and when
 
-- **0.14.0** changes no result. A native fit that leaves `fixed_x` or
-  `meanstructure` unset, in a model where that default will matter,
-  warns once per session per argument. The warning has class
-  `medfit_warning_default_change`.
-- **0.15.0**, released at least two months after 0.14.0 (issue \#329
-  carries the notice), flips both defaults together. `FALSE` and `NULL`
-  stay valid values in every release.
+- **0.14.0** changed no result. A native fit that left `fixed_x` or
+  `meanstructure` unset, in a model where that default would matter,
+  warned once per session per argument (class
+  `medfit_warning_default_change`).
+- **0.15.0** flips both defaults together, after the notice in issue
+  \#329. The 0.14.0 warning no longer fires. `FALSE` and `NULL` stay
+  valid values in every release, and an explicit argument is always kept
+  as given.
+- **0.16.0** removes `options(medfit.native_defaults)`. Since 0.15.0 the
+  option is ignored; setting it gives one message per session (class
+  `medfit_message_option_obsolete`) and changes nothing.
 
-Three ways to act on the warning:
+Two ways to act:
 
-1.  **Keep today’s results.** Pass both arguments:
+1.  **Take the new defaults.** Leave both arguments unset. Expect the
+    changes listed below: the conditional
+    [`logLik()`](https://rdrr.io/r/stats/logLik.html), the parameter
+    count, AIC and BIC, and the names in
+    [`coef()`](https://rdrr.io/r/stats/coef.html),
+    [`vcov()`](https://rdrr.io/r/stats/vcov.html) and
+    [`tidy()`](https://generics.r-lib.org/reference/tidy.html).
+2.  **Keep the 0.14.x results.** Pass both arguments:
     `fit_sem(model, data, fixed_x = FALSE, meanstructure = NULL)`. The
-    results are those of 0.14.0, now and after 0.15.0.
-2.  **Opt in early.** Set `options(medfit.native_defaults = "0.15")` and
-    leave the arguments unset; fits use the 0.15.0 defaults without the
-    warning. In 0.15.0 the option is ignored.
-3.  **Package authors.** Pass both arguments in package code, examples
-    and tests, so your users see neither the warning nor a change of
-    results. To silence the warning in a test, catch it by class:
-
-``` r
-withCallingHandlers(
-  fit_sem(model, data),
-  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
-)
-```
+    results are those of 0.14.x. Package authors who need identical
+    results across releases pass both arguments in code, examples and
+    tests.
 
 ### A recipe for packages that depend on medfit
 
-A package that must work with medfit releases before and after 0.14.0
-cannot pass `meanstructure` to a medfit that lacks it. Check the formals
-first, then pass the arguments the installed medfit knows and the caller
-left unset:
+A package that must give the 0.14.x results with medfit releases before
+and after 0.14.0 cannot pass `meanstructure` to a medfit that lacks it.
+Check the formals first, then pass the arguments the installed medfit
+knows and the caller left unset:
 
 ``` r
 .fit_sem <- function(...) {
@@ -68,19 +69,9 @@ left unset:
 
 `args["meanstructure"] <- list(NULL)` stores an explicit `NULL`;
 `args$meanstructure <- NULL` would delete the element and leave the
-default in force. RMediation’s test helper uses this wrapper
-(`Data-Wise/rmediation#85`).
-
-Two points about muffling:
-
-- The warning is shown once per session per argument, and the flag is
-  set before the warning is raised. A muffled warning therefore uses up
-  that session’s one warning, and a later unwrapped fit stays silent.
-  Pass the arguments rather than muffle when the code runs in a user’s
-  session.
-- [`testthat::expect_no_warning()`](https://testthat.r-lib.org/reference/expect_no_error.html)
-  fails on the warning; muffle by class, or pass the arguments, in tests
-  that check for clean output.
+default in force, which since 0.15.0 means the mean structure is on and
+the wrapper’s intended covariance-only fit is silently lost.
+RMediation’s test helper uses this wrapper (`Data-Wise/rmediation#85`).
 
 ## The worked example
 
@@ -117,8 +108,7 @@ model <- "
 "
 ```
 
-Each combination of the two arguments is set explicitly, so no fit
-warns:
+Each combination of the two arguments is set explicitly:
 
 ``` r
 settings <- expand.grid(fixed_x = c(FALSE, TRUE), meanstructure = c(FALSE, TRUE))
@@ -160,8 +150,8 @@ Read the table by column:
   because the likelihood becomes conditional.
 - `meanstructure = TRUE` adds one intercept for each observed variable
   whose mean is not fixed: four with `fixed_x = FALSE`, two with
-  `fixed_x = TRUE`. `logLik` and `AIC` do not change in medfit; the last
-  section explains why lavaan’s AIC does.
+  `fixed_x = TRUE`. `logLik` and `AIC` do not change in medfit; the
+  section on AIC and BIC below says where lavaan’s differ.
 
 ## `fixed_x`: the conditional likelihood
 
@@ -206,7 +196,6 @@ message of class `medfit_message_fixed_x_lenient` (field `variables`).
 `glance()$fixed_x` lists the set that was fixed.
 
 ``` r
-old <- options(medfit.native_defaults = "0.15")
 lenient <- fit_sem(paste(model, "covariate1 ~~ covariate1", sep = "\n"), mediation_demo)
 ```
 
@@ -217,10 +206,6 @@ glance(lenient)$fixed_x
 ```
 
     [1] "treatment"
-
-``` r
-options(old)
-```
 
 The **pairing rule** matters here. medfit, like lavaan, adds the
 covariances among exogenous variables automatically, but an exogenous
@@ -239,9 +224,9 @@ it).
 
 With `meanstructure = TRUE` every observed variable gets a free
 intercept (for an exogenous variable, its mean), and the mean part of
-the model is saturated unless the syntax restricts it (`y ~ 0*1`). Today
-the mean structure is already on when the syntax writes a `~1` row or a
-product term; the new default turns it on for every model.
+the model is saturated unless the syntax restricts it (`y ~ 0*1`).
+Through 0.14.x the mean structure was on only when the syntax wrote a
+`~1` row or a product term; the default now turns it on for every model.
 
 Why nothing structural moves: the maximum-likelihood discrepancy is the
 covariance-only discrepancy plus an additive mean term, a quadratic form
@@ -281,39 +266,56 @@ What moves:
 
 ### AIC and BIC against lavaan
 
-Without a mean structure, medfit’s
-[`logLik()`](https://rdrr.io/r/stats/logLik.html) degrees of freedom
-count the observed means that are not fixed as estimated (they are,
-implicitly, at the sample means), while lavaan’s AIC and BIC count only
-its parameters. For a covariance-only fit with \\k\\ such means,
-medfit’s AIC is larger than lavaan’s by \\2k\\ and its BIC by \\k \log
-n\\; the log likelihoods and the parameter counts agree.
+[`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+[`BIC()`](https://rdrr.io/r/stats/AIC.html) keep medfit’s own parameter
+count: the [`logLik()`](https://rdrr.io/r/stats/logLik.html) degrees of
+freedom are the free parameters plus the observed means that are not
+fixed, whether or not those means are in the parameter vector (without a
+mean structure they are, implicitly, at the sample means). That count
+equals lavaan’s `npar` when lavaan fits the mean structure, so medfit’s
+AIC and BIC equal lavaan’s with `meanstructure = TRUE`, under any
+`fixed_x`. A default
+[`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fits no mean
+structure and counts only its own parameters, so against that fit
+medfit’s AIC is larger by \\2k\\ and its BIC by \\k \log n\\, where
+\\k\\ is the number of observed means that are not fixed. The log
+likelihoods agree in both comparisons. The 0.15.0 default fixes the
+exogenous variables, so in the worked example \\k = 2\\ (the two
+endogenous variables), and the gap is 4:
 
 ``` r
-lv_cov <- lavaan::sem(model, mediation_demo, fixed.x = FALSE)
-lv_mean <- lavaan::sem(model, mediation_demo, fixed.x = FALSE, meanstructure = TRUE)
-c(lavaan_cov_only = lavaan::fitMeasures(lv_cov, "aic")[[1]],
-  lavaan_means = lavaan::fitMeasures(lv_mean, "aic")[[1]],
-  medfit = four$AIC[four$fixed_x == FALSE & four$meanstructure == FALSE])
+default_fit <- fit_sem(model, mediation_demo)
+lv_default <- lavaan::sem(model, mediation_demo)
+lv_means <- lavaan::sem(model, mediation_demo, meanstructure = TRUE)
+c(lavaan_default = lavaan::fitMeasures(lv_default, "aic")[[1]],
+  lavaan_means = lavaan::fitMeasures(lv_means, "aic")[[1]],
+  medfit = AIC(default_fit))
 ```
 
-    lavaan_cov_only    lavaan_means          medfit
-           4023.651        4031.651        4031.651 
+    lavaan_default   lavaan_means         medfit
+          2293.856       2297.856       2297.856 
 
-Here \\k = 4\\, so the covariance-only AICs differ by 8. With
-`meanstructure = TRUE`, the 0.15.0 default, the intercepts are ordinary
-parameters on both sides and the two AICs agree.
+Compare AIC and BIC across engines only with the same mean structure on
+both sides; within medfit the count is the same under every setting, so
+comparisons between medfit fits are unaffected.
+
+### Missing data
+
+The native engine drops incomplete rows (listwise deletion) before it
+fits, and `fixed_x` moments are the sample moments of those rows. There
+is no `missing =` argument and no full-information maximum likelihood;
+lavaan’s `missing = "fiml"` has no counterpart yet.
 
 ## Evidence: the oracle matrix
 
 `tests/sim/native-defaults-oracle.R` fits a set of model cells (simple
 mediation, latent mediator, named and lenient subsets, sampling weights,
 a four-way product term, a factor covariate) under every combination of
-the two arguments and the opt-in, and compares structural estimates,
-standard errors, chi-square, df, `logLik`, the parameter count, AIC and
-BIC with lavaan or a stated oracle. It has 557 rows: 503 agree, 54 are
-recorded limits, 0 block. Each limit is a difference of reporting,
-declared with its reason, never a widened tolerance:
+the two arguments (and the retired opt-in), and compares structural
+estimates, standard errors, chi-square, df, `logLik`, the parameter
+count, AIC and BIC with lavaan or a stated oracle. It has 557 rows: 503
+agree, 54 are recorded limits, 0 block. Each limit is a difference of
+reporting, declared with its reason, never a widened tolerance:
 
 - **Weights:**
   [`glance()`](https://generics.r-lib.org/reference/glance.html) reports
@@ -321,7 +323,9 @@ declared with its reason, never a widened tolerance:
   its weighted-ML values.
 - **Covariance-only AIC and BIC:** the \\2k\\ and \\k \log n\\ gap
   above, in the simple, latent, subset and factor cells under
-  `meanstructure = NULL`. It disappears under `meanstructure = TRUE`.
+  `meanstructure = NULL`, where the reference lavaan fit has no mean
+  structure. It disappears when lavaan is fitted with
+  `meanstructure = TRUE`.
 - **Product terms:** a product turns medfit’s mean structure on while
   lavaan’s default fits no means, so under `meanstructure = NULL` the
   parameter count, AIC and BIC differ by the free means (`logLik`,
@@ -335,6 +339,19 @@ retry seed of a multi-start fit is derived from the parameter names, so
 the larger or smaller parameter vector changes the random starts; a
 well-identified fit gives the same estimates, but which start wins, and
 whether the start-spread warning appears, can change.
+
+## `compare_lr()` under the new defaults
+
+[`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+accepts fits made under the 0.15.0 defaults (a saturated mean structure
+and `fixed_x`), in lavaan and in OpenMx. Its known limit does not change
+with the flip: a general-purpose optimizer handed the product null can
+stop above medfit’s reference, and
+[`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+reports that as a classed warning rather than blaming either side. On
+the pinned design (15 seeds by 4 cells) lavaan ended above the reference
+in 18 of 60 runs and OpenMx in 13 of 60, the same counts as under
+0.14.x, with no mislabeled row (issue \#320).
 
 ## See also
 

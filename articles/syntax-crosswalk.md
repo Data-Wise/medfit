@@ -18,12 +18,15 @@ affects `outcome` (path `b`), and `treatment` affects `outcome` directly
 |----|----|----|----|----|
 | Label a path | `mediator1 ~ a*treatment` | `mediator1 ~ a*treatment` | `mxPath(..., labels = "a")` | `mediator1 ~ a*treatment` |
 | Indirect effect | `ab := a*b` | `ab := a*b` | `mxAlgebra(a * b, name = "ab")` | not in the syntax: `:=` is an unknown command; compute `a * b` from the estimates |
-| Exogenous variance | estimated; `fixed_x = TRUE` fixes it | fixed by default; `fixed.x = FALSE` estimates it | estimated when you write its path | not estimated (no row in the output) |
+| Exogenous variance | fixed at the sample value by default; `fixed_x = FALSE` estimates it | fixed by default; `fixed.x = FALSE` estimates it | estimated when you write its path | not estimated (no row in the output) |
 | Tight convergence | default | default | `mxOption()` tolerances (defaults stop up to about 5.5e-6 away) | `options = {"ftol": 1e-12}` (the default stops about 4e-5 away) |
 
-In medfit 0.15.0 the native defaults become `fixed_x` = the exogenous
-observed variables and `meanstructure = TRUE`, so the exogenous variance
-row will be fixed by default, as in lavaan.
+Since medfit 0.15.0 the native defaults are `fixed_x` = the exogenous
+observed variables and `meanstructure = TRUE`, so a default
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+fixes the exogenous variance, as a default
+[`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) does. The
+structural paths and their standard errors are the same either way.
 
 ## medfit
 
@@ -57,19 +60,16 @@ model <- "
   ab := a*b
 "
 native <- tidy(fit_sem(model, mediation_demo))
-native[, c("term", "estimate", "std_error")]
+native[native$term %in% c("a", "b", "cp", "ab"), c("term", "estimate", "std_error")]
 ```
 
-    # A tibble: 7 × 3
-      term                 estimate std_error
-      <chr>                   <dbl>     <dbl>
-    1 a                      0.456     0.108
-    2 b                      0.713     0.0505
-    3 cp                     0.0406    0.111
-    4 mediator1~~mediator1   1.16      0.0819
-    5 outcome~~outcome       1.18      0.0835
-    6 treatment~~treatment   0.250     0.0177
-    7 ab                     0.325     0.0802
+    # A tibble: 4 × 3
+      term  estimate std_error
+      <chr>    <dbl>     <dbl>
+    1 a       0.456     0.108
+    2 b       0.713     0.0505
+    3 cp      0.0406    0.111
+    4 ab      0.325     0.0802
 
 ## lavaan
 
@@ -81,7 +81,7 @@ library(lavaan)
     lavaan is FREE software! Please report any bugs.
 
 ``` r
-lav <- parameterEstimates(sem(model, mediation_demo, fixed.x = FALSE))
+lav <- parameterEstimates(sem(model, mediation_demo))
 lav[lav$label %in% c("a", "b", "cp", "ab"), c("label", "est", "se")]
 ```
 
@@ -176,9 +176,8 @@ out.to_csv(sys.stdout, index=False, float_format="%.12g")
 ```
 
 Its output from semopy 2.3.11 (2026-10-24), saved as
-`tests/sim/oracles/semopy-simple.csv`, next to medfit with
-`fixed_x = TRUE`, which matches semopy’s treatment of the exogenous
-variable:
+`tests/sim/oracles/semopy-simple.csv`, next to medfit’s default fit,
+which matches semopy’s treatment of the exogenous variable:
 
 ``` r
 semopy <- read.csv(file.path(oracles, "semopy-simple.csv"))
@@ -186,7 +185,7 @@ labels <- c("mediator1~treatment" = "a", "outcome~mediator1" = "b", "outcome~tre
 key <- paste0(semopy$lhs, semopy$op, semopy$rhs)
 semopy$term <- ifelse(key %in% names(labels), labels[key], key)
 stopifnot(nrow(semopy) == 5)
-fixed <- tidy(fit_sem(model, mediation_demo, fixed_x = TRUE))
+fixed <- tidy(fit_sem(model, mediation_demo))
 both <- merge(semopy[, c("term", "estimate", "std_error")],
               fixed[, c("term", "estimate", "std_error")], by = "term",
               suffixes = c("_semopy", "_medfit"))

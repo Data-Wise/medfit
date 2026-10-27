@@ -70,10 +70,10 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | IPW weights | `fit_mediation(weights = , se_type = "sandwich")` |
 | Model syntax and data (observed or latent variables, constraints, `:=`) | `fit_sem(model, data)`, a `SEMFit` |
 | Model syntax, mediator by name | `fit_mediation(engine = "native", model = , treatment = , mediator = )` |
-| Many exogenous covariates on a native fit | `fit_sem(model, data, fixed_x = TRUE)`; `glance(fit)$fixed_x` lists what was fixed |
+| Exogenous covariates on a native fit | fixed at the sample moments by default (`fixed_x` left unset); `fixed_x = FALSE` estimates them, a character vector fixes a subset; `glance(fit)$fixed_x` lists what was fixed |
 | Factor, character or logical covariates on a native fit | Name the column on a regression’s right side: it becomes dummies `g_b`, `g_c` (reference: first level); label one dummy (`b*g_b`), not `g` |
-| Intercepts and means on a native fit | `y ~ 1` in the syntax (frees every unwritten observed intercept), or `fit_sem(model, data, meanstructure = TRUE)`; `y ~ 0*1` restricts one |
-| Log likelihood, AIC and BIC of a `SEMFit` | `logLik(fit)`, `AIC(fit1, fit2)`, `BIC(fit1, fit2)`; [`AIC()`](https://rdrr.io/r/stats/AIC.html) of a fit with a product term and one without are not comparable |
+| Intercepts and means on a native fit | on by default (`meanstructure = TRUE`), with a free intercept for every observed variable you did not write; `y ~ 0*1` restricts one; `meanstructure = NULL` or `FALSE` turns the default off |
+| Log likelihood, AIC and BIC of a `SEMFit` | `logLik(fit)`, `AIC(fit1, fit2)`, `BIC(fit1, fit2)`; [`AIC()`](https://rdrr.io/r/stats/AIC.html) of a fit with a product term and one without are not comparable; the log likelihood is conditional on the fixed exogenous variables, so compare fits only with the same `fixed_x` |
 | Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")`; `paths = c("a", "d", "b")` for a serial product |
 | Check the product-null LR against lavaan or OpenMx | `compare_lr(fit, paths = c("a", "b"), engine = "lavaan")`; warns only on observed evidence |
 | Compare nested `SEMFit`s (likelihood-ratio test) | `anova(fit_full, fit_restricted)` |

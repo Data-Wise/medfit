@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/guide-glossary.qmd" class="external-link"><code>vignettes/articles/guide-glossary.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-glossary.qmd" class="external-link"><code>vignettes/articles/guide-glossary.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -485,7 +485,7 @@
 </tr>
 <tr class="even">
 <td><strong>mean structure</strong></td>
-<td>the observed means modeled together with the covariances: intercepts (<code>y ~ 1</code>) are estimated; any <code>~1</code> statement turns it on and frees every unwritten observed intercept</td>
+<td>the observed means modeled together with the covariances: intercepts (<code>y ~ 1</code>) are estimated; <code>meanstructure = TRUE</code>, the default since 0.15.0, or any <code>~1</code> statement turns it on and frees every unwritten observed intercept; <code>meanstructure = NULL</code> fits it only when the syntax writes an intercept or a product</td>
 <td><a href="model-native.html#intercepts">Intercepts</a></td>
 </tr>
 <tr class="odd">
@@ -495,7 +495,7 @@
 </tr>
 <tr class="even">
 <td><strong><code>fixed_x</code></strong></td>
-<td>fixes the mean, variances and covariances of exogenous observed variables at their sample values, as lavaan’s <code>fixed.x = TRUE</code>; the structural estimates and standard errors do not change</td>
+<td>fixes the mean, variances and covariances of exogenous observed variables at their sample values, as lavaan’s <code>fixed.x = TRUE</code>; the structural estimates and standard errors do not change. Since 0.15.0 it is on by default, for every exogenous observed variable the model does not name in a <code>~~</code> or <code>~1</code> statement</td>
 <td><a href="cookbook.html#fix-exogenous-covariates-fixed_x">Fix exogenous covariates</a></td>
 </tr>
 <tr class="odd">
@@ -530,7 +530,7 @@
 </tr>
 <tr class="even">
 <td><strong>conditional log likelihood</strong></td>
-<td>the log likelihood given the fixed variables under <code>fixed_x</code>, so <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC of fits with different fixed sets cannot be compared</td>
+<td>the log likelihood given the fixed variables under <code>fixed_x</code> (the default since 0.15.0), so <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC and BIC of fits with different fixed sets cannot be compared</td>
 <td><a href="model-native.html#limits">Limits</a></td>
 </tr>
 <tr class="odd">

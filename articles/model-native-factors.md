@@ -89,17 +89,19 @@ pinned <- fit_sem("
 tidy(pinned)[grepl("group", tidy(pinned)$term, fixed = TRUE), c("term", "estimate")]
 ```
 
-    # A tibble: 8 × 2
-      term                   estimate
-      <chr>                     <dbl>
-    1 mediator1~group_mid      0.328
-    2 mediator1~group_high     0.948
-    3 outcome~group_high       0.474
-    4 treatment~~group_mid     0.0329
-    5 treatment~~group_high   -0.0359
-    6 group_mid~~group_mid     0.224
-    7 group_mid~~group_high   -0.118
-    8 group_high~~group_high   0.228 
+    # A tibble: 10 × 2
+       term                   estimate
+       <chr>                     <dbl>
+     1 mediator1~group_mid      0.328
+     2 mediator1~group_high     0.948
+     3 outcome~group_high       0.474
+     4 treatment~~group_mid     0.0329
+     5 treatment~~group_high   -0.0359
+     6 group_mid~~group_mid     0.224
+     7 group_mid~~group_high   -0.118
+     8 group_high~~group_high   0.228
+     9 group_mid~1              0.338
+    10 group_high~1             0.35  
 
 `group_mid` in the outcome equation is pinned at 0 and the other rows
 are free.

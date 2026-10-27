@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/refcard.qmd" class="external-link"><code>vignettes/articles/refcard.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/refcard.qmd" class="external-link"><code>vignettes/articles/refcard.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -294,9 +294,8 @@ Residual SDs:
 <td><code>fit_mediation(engine = "native", model = , treatment = , mediator = )</code></td>
 </tr>
 <tr class="even">
-<td>Many exogenous covariates on a native fit</td>
-<td>
-<code>fit_sem(model, data, fixed_x = TRUE)</code>; <code>glance(fit)$fixed_x</code> lists what was fixed</td>
+<td>Exogenous covariates on a native fit</td>
+<td>fixed at the sample moments by default (<code>fixed_x</code> left unset); <code>fixed_x = FALSE</code> estimates them, a character vector fixes a subset; <code>glance(fit)$fixed_x</code> lists what was fixed</td>
 </tr>
 <tr class="odd">
 <td>Factor, character or logical covariates on a native fit</td>
@@ -305,14 +304,14 @@ Residual SDs:
 </tr>
 <tr class="even">
 <td>Intercepts and means on a native fit</td>
-<td>
-<code>y ~ 1</code> in the syntax (frees every unwritten observed intercept), or <code>fit_sem(model, data, meanstructure = TRUE)</code>; <code>y ~ 0*1</code> restricts one</td>
+<td>on by default (<code>meanstructure = TRUE</code>), with a free intercept for every observed variable you did not write; <code>y ~ 0*1</code> restricts one; <code>meanstructure = NULL</code> or <code>FALSE</code> turns the default off</td>
 </tr>
 <tr class="odd">
 <td>Log likelihood, AIC and BIC of a <code>SEMFit</code>
 </td>
 <td>
-<code>logLik(fit)</code>, <code>AIC(fit1, fit2)</code>, <code>BIC(fit1, fit2)</code>; <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> of a fit with a product term and one without are not comparable</td>
+<code>logLik(fit)</code>, <code>AIC(fit1, fit2)</code>, <code>BIC(fit1, fit2)</code>; <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> of a fit with a product term and one without are not comparable; the log likelihood is conditional on the fixed exogenous variables, so compare fits only with the same <code>fixed_x</code>
+</td>
 </tr>
 <tr class="even">
 <td>Test of the indirect effect on a <code>SEMFit</code> (MBCO)</td>

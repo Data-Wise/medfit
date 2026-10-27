@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -278,7 +278,7 @@ Attaching package: 'generics'</code></pre>
 </tr>
 </tbody>
 </table>
-<p>Exogenous variables get free variances and covariances, as lavaan does with <code>fixed.x = FALSE</code>; <code>fixed_x = TRUE</code> in <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fixes them at the sample moments instead (fewer parameters, the same structural estimates, a conditional log likelihood). Both sides of a constraint and the right side of a definition are arithmetic expressions in the labels (<code>+ - * / ^</code>, parentheses, <code>exp</code>, <code>log</code>, <code>sqrt</code>, <code>abs</code>, <code>min</code>, <code>max</code>, <code>pnorm</code>, <code>qnorm</code>, and a few more).</p>
+<p>Exogenous observed variables are fixed at their sample moments by default, as lavaan does with <code>fixed.x = TRUE</code> (fewer parameters, the same structural estimates, a conditional log likelihood); <code>fixed_x = FALSE</code> in <code><a href="../reference/fit_sem.html">fit_sem()</a></code> gives them free variances and covariances instead. Both sides of a constraint and the right side of a definition are arithmetic expressions in the labels (<code>+ - * / ^</code>, parentheses, <code>exp</code>, <code>log</code>, <code>sqrt</code>, <code>abs</code>, <code>min</code>, <code>max</code>, <code>pnorm</code>, <code>qnorm</code>, and a few more).</p>
 </section><section class="level2"><h2 id="fit-and-read">2. Fit and read<a class="anchor" aria-label="anchor" href="#fit-and-read"></a>
 </h2>
 <div class="cell">
@@ -299,19 +299,24 @@ Degrees of freedom: 0
 Information: observed
 Standard errors: model-based
 Converged: Yes
+logLik is conditional on: treatment, covariate1
 
 Parameters:
-                     name     est     se       z       p
-                        a  0.5814 0.0986  5.8977 &lt; 1e-04
-   mediator1 ~ covariate1  0.4481 0.0483  9.2711 &lt; 1e-04
-                        b  0.5729 0.0531 10.7971 &lt; 1e-04
-                       cp  0.2043 0.1091  1.8725 0.06113
-     outcome ~ covariate1  0.3559 0.0565  6.2949 &lt; 1e-04
-   mediator1 ~~ mediator1  0.9536 0.0674 14.1421 &lt; 1e-04
-       outcome ~~ outcome  1.0740 0.0759 14.1421 &lt; 1e-04
-   treatment ~~ treatment  0.2500 0.0177 14.1421 &lt; 1e-04
-  treatment ~~ covariate1 -0.0700 0.0257 -2.7192 0.00654
- covariate1 ~~ covariate1  1.0398 0.0735 14.1421 &lt; 1e-04
+                     name     est     se       z       p fixed_x
+                        a  0.5814 0.0986  5.8977 &lt; 1e-04   FALSE
+   mediator1 ~ covariate1  0.4481 0.0483  9.2711 &lt; 1e-04   FALSE
+                        b  0.5729 0.0531 10.7971 &lt; 1e-04   FALSE
+                       cp  0.2043 0.1091  1.8725 0.06113   FALSE
+     outcome ~ covariate1  0.3559 0.0565  6.2949 &lt; 1e-04   FALSE
+   mediator1 ~~ mediator1  0.9536 0.0674 14.1421 &lt; 1e-04   FALSE
+       outcome ~~ outcome  1.0740 0.0759 14.1421 &lt; 1e-04   FALSE
+   treatment ~~ treatment  0.2500     NA      NA            TRUE
+  treatment ~~ covariate1 -0.0700     NA      NA            TRUE
+ covariate1 ~~ covariate1  1.0398     NA      NA            TRUE
+             mediator1 ~1  0.0844 0.0696  1.2117 0.22564   FALSE
+             treatment ~1  0.5025     NA      NA            TRUE
+            covariate1 ~1  0.0174     NA      NA            TRUE
+               outcome ~1  0.1967 0.0740  2.6561 0.00791   FALSE
 
 Defined parameters:
   name       expr    est     se
@@ -319,7 +324,7 @@ Defined parameters:
  total cp + a * b 0.5374 0.1189
 
 Diagnostics:
-  Optimizer status: 3; stationarity 1.45e-08; retries 0
+  Optimizer status: 3; stationarity 7.01e-16; retries 0
   Active bounds: none
   Active constraints: none
   Improper solution: no
@@ -368,28 +373,32 @@ Diagnostics:
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span>, <span class="st">"conf_low"</span>, <span class="st">"conf_high"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 12 × 5
+<pre><code># A tibble: 16 × 5
    term                   estimate std_error conf_low conf_high
    &lt;chr&gt;                     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
- 1 a                        0.581     0.0986  0.388      0.775
- 2 mediator1~covariate1     0.448     0.0483  0.353      0.543
- 3 b                        0.573     0.0531  0.469      0.677
- 4 cp                       0.204     0.109  -0.00954    0.418
- 5 outcome~covariate1       0.356     0.0565  0.245      0.467
- 6 mediator1~~mediator1     0.954     0.0674  0.821      1.09
- 7 outcome~~outcome         1.07      0.0759  0.925      1.22
- 8 treatment~~treatment     0.250     0.0177  0.215      0.285
- 9 treatment~~covariate1   -0.0700    0.0257 -0.120     -0.0195
-10 covariate1~~covariate1   1.04      0.0735  0.896      1.18
-11 ab                       0.333     0.0644  0.207      0.459
-12 total                    0.537     0.119   0.304      0.770 </code></pre>
+ 1 a                        0.581     0.0986  0.388       0.775
+ 2 mediator1~covariate1     0.448     0.0483  0.353       0.543
+ 3 b                        0.573     0.0531  0.469       0.677
+ 4 cp                       0.204     0.109  -0.00954     0.418
+ 5 outcome~covariate1       0.356     0.0565  0.245       0.467
+ 6 mediator1~~mediator1     0.954     0.0674  0.821       1.09
+ 7 outcome~~outcome         1.07      0.0759  0.925       1.22
+ 8 mediator1~1              0.0844    0.0696 -0.0521      0.221
+ 9 outcome~1                0.197     0.0740  0.0515      0.342
+10 treatment~~treatment     0.250    NA      NA          NA
+11 treatment~~covariate1   -0.0700   NA      NA          NA
+12 covariate1~~covariate1   1.04     NA      NA          NA
+13 treatment~1              0.502    NA      NA          NA
+14 covariate1~1             0.0174   NA      NA          NA
+15 ab                       0.333     0.0644  0.207       0.459
+16 total                    0.537     0.119   0.304       0.770</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 9
    nobs  npar    df chisq p_value logLik   AIC   BIC fixed_x
   &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;
-1   400    10     0     0      NA -2002. 4032. 4088. ""     </code></pre>
+1   400     9     0     0      NA -1140. 2298. 2334. treatment, covariate1</code></pre>
 </div>
 </div>
 <p>The chi-square is <span class="math inline">\(n\)</span> times the minimized discrepancy and has <code>df</code> degrees of freedom. A saturated model (here <code>df = 0</code>) fits perfectly by construction, so the test only means something when there are restrictions.</p>

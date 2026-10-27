@@ -1,5 +1,77 @@
 # Changelog
 
+## medfit (development version)
+
+### Native engine defaults flipped (0.15.0)
+
+**Behavior change for
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+and `fit_mediation(engine = "native")`.** An unset `fixed_x` now means
+the exogenous observed variables (lavaan’s `fixed.x = TRUE`) and an
+unset `meanstructure` now means `TRUE`, so a default native fit matches
+a default [`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html)
+fit. This is the flip announced in 0.14.0 and in \[BREAKING\]
+[\#329](https://github.com/data-wise/medfit/issues/329); `FALSE` and
+`NULL` stay valid values, and an explicit argument is always kept as
+given.
+
+- **What does not move.** The structural estimates and their standard
+  errors. The native-defaults oracle matrix (557 rows against lavaan)
+  gives 503 pass, 54 declared limit and 0 block, the same counts as the
+  0.14.0 baseline; the neutrality check against 0.14.1 (explicit old
+  defaults) differs by 0.
+- **What moves.** The conditional
+  [`logLik()`](https://rdrr.io/r/stats/logLik.html) (the fixed exogenous
+  block is no longer in the likelihood), the parameter count `npar`,
+  [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+  [`BIC()`](https://rdrr.io/r/stats/AIC.html), and the names in
+  [`coef()`](https://rdrr.io/r/stats/coef.html),
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html) and
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) (the
+  exogenous variances, covariances and intercepts are fixed rows, and
+  every observed intercept is a free row). Which random start a
+  multi-start fit tries can change, because the retry seed follows the
+  parameter names.
+- An unset `fixed_x` resolves to an explicit character subset of the
+  exogenous observed variables (`glance()$fixed_x` names it). A variable
+  a `~~` or `~1` statement names is left free with a message of class
+  `medfit_message_fixed_x_lenient`; an explicit `fixed_x = TRUE` still
+  errors there.
+- `options(medfit.native_defaults = "0.15")` is obsolete: it is ignored,
+  with one message per session (class `medfit_message_option_obsolete`),
+  and is removed in 0.16.0. The `medfit_warning_default_change` warning
+  no longer fires.
+- To keep the 0.14.x results, pass
+  `fixed_x = FALSE, meanstructure = NULL`.
+- [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+  [`BIC()`](https://rdrr.io/r/stats/AIC.html) keep medfit’s own
+  parameter count, which includes the observed means that are not fixed
+  whether or not they are in the parameter vector. It equals lavaan’s
+  count when lavaan fits the mean structure, so medfit’s AIC and BIC
+  equal those of `lavaan::sem(..., meanstructure = TRUE)` under any
+  `fixed_x`; a default
+  [`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fits no
+  mean structure, and against it medfit’s AIC is larger by 2k and its
+  BIC by k log n (k = the observed means not fixed; k = 2 in the worked
+  example of the article). The conditional
+  [`logLik()`](https://rdrr.io/r/stats/logLik.html) equals lavaan’s.
+- Missing data stays listwise deletion; there is no `missing =` argument
+  and no FIML (a 0.16.0 candidate).
+- [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+  runs on fits made under the new defaults. Its known limit
+  ([\#320](https://github.com/data-wise/medfit/issues/320)) is unchanged
+  by the flip: on the pinned design (15 seeds by 4 cells) the lavaan run
+  ended above medfit’s reference in 18 of 60 runs and OpenMx in 13 of
+  60, the same counts as before, with no mislabeled row.
+- Docs:
+  [`?fit_sem`](https://data-wise.github.io/medfit/reference/fit_sem.md),
+  [`?fit_mediation`](https://data-wise.github.io/medfit/reference/fit_mediation.md),
+  [`?compare_lr`](https://data-wise.github.io/medfit/reference/compare_lr.md),
+  [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md),
+  the “Native defaults in 0.15.0” article and the guides describe the
+  new defaults. The other articles, the book and the cookbook are
+  updated separately.
+
 ## medfit 0.14.1
 
 ### Outcome ledger for native zero-product fits and MBCO

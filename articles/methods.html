@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -716,6 +716,7 @@ F_{ML}(\theta) = \log |\Sigma| + \operatorname{tr}\left(S \Sigma^{-1}\right) - \
 \log L_{\mid x_f} = \log L - \left[ -\frac{n}{2} \left( \log |S_{ff}| + k + k \log 2\pi \right) \right] ,
 \]</span></p>
 <p>with <span class="math inline">\(S_{ff}\)</span> the sample covariance (divisor <span class="math inline">\(n\)</span>) of the <span class="math inline">\(k\)</span> fixed variables; this is lavaan’s <code>fixed.x = TRUE</code> value. Without a mean structure, the likelihood counts one saturated mean for each of the <span class="math inline">\(p - k\)</span> variables that are not fixed. Because <span class="math inline">\(\log L_{\mid x_f}\)</span> conditions on different variables for different fixed sets, fits compare only when their fixed sets and data agree.</p>
+<p>Since 0.15.0 an unset <code>fixed_x</code> fixes the exogenous observed variables and an unset <code>meanstructure</code> fits the mean structure, so the default likelihood is <span class="math inline">\(\log L_{\mid x_f}\)</span> with the unfixed observed means free; <code>fixed_x = FALSE</code> restores the joint likelihood. The AIC and BIC count those free means, as lavaan does with <code>meanstructure = TRUE</code>.</p>
 </section><section class="level3"><h3 id="products-and-observed-information">Products and observed information<a class="anchor" aria-label="anchor" href="#products-and-observed-information"></a>
 </h3>
 <p>A product term <code>x:m</code> is a data-level transformation, not a quantity inside the likelihood. The engine builds <span class="math inline">\(p_i = x_i m_i\)</span> for every row kept after listwise deletion, names it <span class="math inline">\(m{:}x\)</span> (the two names sorted in the C locale, so <code>x:m</code> and <code>m:x</code> are one term), and treats it as one more observed exogenous variable: a free variance, free covariances with the other exogenous variables, and a free mean. The RAM, the discrepancy and the mean structure are unchanged, which is how lavaan reads <code>x:m</code>.</p>

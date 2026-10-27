@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -369,7 +369,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4397306 0.8950371 </code></pre>
+0.6560315 0.4383060 0.8918422 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
@@ -521,7 +521,7 @@ MBCO = 46.753, df = 1, p-value = 8.054e-12</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>free <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">free</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span>, tied <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">tied</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"cp"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>             a         b         cp
-free 0.4559961 0.7134287 0.04057666
+free 0.4559961 0.7134287 0.04057665
 tied 0.3381172 0.6831633 0.23098930</code></pre>
 </div>
 </div>
@@ -596,8 +596,8 @@ reduced  1 0.1335    0.13346       1     0.7149</code></pre>
 <pre><code># A tibble: 2 × 4
    npar chisq   AIC   BIC
 * &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1     5 0.133 2992. 3024.
-2     6 0     2994. 3030.</code></pre>
+1     6 0.133 2408. 2432.
+2     7 0     2409. 2437.</code></pre>
 </div>
 </div>
 <p>The restricted model is the one with more degrees of freedom. A small chi-square difference says dropping <code>cp</code> costs little.</p>
@@ -683,15 +683,15 @@ $sign_check
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
 </section><section class="level2"><h2 id="fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (<code>fixed_x</code>)<a class="anchor" aria-label="anchor" href="#fix-exogenous-covariates-fixed_x"></a>
 </h2>
-<p><em>When:</em> a native model with many covariates is slow or has too many parameters, and you want the structural results lavaan reports with <code>fixed.x = TRUE</code>. <code>fixed_x = TRUE</code> fixes the means, variances and covariances of the exogenous observed variables at their sample values instead of estimating them.</p>
+<p><em>When:</em> a native model with many covariates needs many parameters, or you want to compare with lavaan’s default <code>fixed.x = TRUE</code>. Since 0.15.0 a native fit fixes the means, variances and covariances of the exogenous observed variables at their sample values by default (<code>fixed_x</code> left unset); <code>fixed_x = FALSE</code> estimates them instead. Left unset, <code>fixed_x</code> resolves to the explicit set of exogenous variables, so <code>glance()$fixed_x</code> names what was fixed.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">syntax</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
 <span><span class="st">  mediator1 ~ a * treatment + covariate1 + covariate2</span></span>
 <span><span class="st">  outcome ~ b * mediator1 + covariate1 + covariate2</span></span>
 <span><span class="st">  ab := a * b</span></span>
 <span><span class="st">"</span></span>
-<span><span class="va">free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
-<span><span class="va">fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax</span>, <span class="va">mediation_demo</span>, fixed_x <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax</span>, <span class="va">mediation_demo</span>, fixed_x <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>free <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">free</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span><span class="op">]</span>, fixed_x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>                a         b
@@ -701,8 +701,8 @@ fixed_x 0.5826425 0.5996207</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>free <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">free</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span><span class="op">]</span>, fixed_x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>                 a          b
-free    0.09836669 0.05120516
-fixed_x 0.09836669 0.05120516</code></pre>
+free    0.09836668 0.05120516
+fixed_x 0.09836668 0.05120516</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>free <span class="op">=</span> <span class="va">free</span><span class="op">@</span><span class="va">defined</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"est"</span>, <span class="st">"se"</span><span class="op">)</span><span class="op">]</span>, fixed_x <span class="op">=</span> <span class="va">fixed</span><span class="op">@</span><span class="va">defined</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"est"</span>, <span class="st">"se"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
@@ -716,16 +716,16 @@ fixed_x 0.3493645 0.06609875</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>fit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"free"</span>, <span class="st">"fixed_x"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">free</span><span class="op">)</span>, <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"fixed_x"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>      fit npar df    chisq                           fixed_x
-1    free   14  1 3.543201
-2 fixed_x    8  1 3.543201 treatment, covariate1, covariate2</code></pre>
+1    free   19  1 3.543201
+2 fixed_x   10  1 3.543201 treatment, covariate1, covariate2</code></pre>
 </div>
 </div>
-<p>The parameter count falls from 14 to 8 while <code>df</code> and <code>chisq</code> stay put. <code>glance()$fixed_x</code> lists what is fixed (<code>""</code> when nothing is). With <code>fixed_x</code>, the fixed rows stay in <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> flagged <code>fixed_x = TRUE</code>, with no standard error, and the log likelihood, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> become conditional on the fixed variables, so they differ from the free fit’s.</p>
+<p>The parameter count falls from 19 to 10 (the free fit also estimates the exogenous variances, covariances and means) while <code>df</code> and <code>chisq</code> stay put. <code>glance()$fixed_x</code> lists what is fixed (<code>""</code> when nothing is). With <code>fixed_x</code>, the fixed rows stay in <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> flagged <code>fixed_x = TRUE</code>, with no standard error, and the log likelihood, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> become conditional on the fixed variables, so they differ from the free fit’s.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">tf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span></span>
 <span><span class="va">tf</span><span class="op">[</span><span class="va">tf</span><span class="op">$</span><span class="va">fixed_x</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 6 × 3
+<pre><code># A tibble: 9 × 3
   term                   estimate std_error
   &lt;chr&gt;                     &lt;dbl&gt;     &lt;dbl&gt;
 1 treatment~~treatment    0.250          NA
@@ -733,7 +733,10 @@ fixed_x 0.3493645 0.06609875</code></pre>
 3 treatment~~covariate2  -0.00246        NA
 4 covariate1~~covariate1  1.04           NA
 5 covariate1~~covariate2  0.00266        NA
-6 covariate2~~covariate2  0.250          NA</code></pre>
+6 covariate2~~covariate2  0.250          NA
+7 treatment~1             0.502          NA
+8 covariate1~1            0.0174         NA
+9 covariate2~1            0.482          NA</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">free</span>, <span class="va">fixed</span><span class="op">)</span>, error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
@@ -741,29 +744,29 @@ fixed_x 0.3493645 0.06609875</code></pre>
 </div>
 </div>
 <p>Compare fits only when they fix the same variables. <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>/<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> across several fits stop when the fixed sets differ, as above. Pass a character vector (for example <code>fixed_x = "treatment"</code>) to fix a subset.</p>
-<p>In 0.15.0 the default becomes <code>fixed_x = TRUE</code> (0.14.0 warns when it is left unset); pass <code>fixed_x = FALSE</code> to keep the free exogenous block. See <a href="native-defaults-0-15.html">the 0.15.0 defaults</a>.</p>
+<p>Since 0.15.0 the default is to fix the exogenous observed variables; pass <code>fixed_x = FALSE</code> to keep the free exogenous block. See <a href="native-defaults-0-15.html">the 0.15.0 defaults</a>.</p>
 <p>More: <a href="methods.html">Methods and Formulas</a>, <a href="native-guide.html">the native engine guide</a>.</p>
 </section><section class="level2"><h2 id="observed-intercepts-and-means">19. Observed intercepts and means<a class="anchor" aria-label="anchor" href="#observed-intercepts-and-means"></a>
 </h2>
-<p><em>When:</em> you want the intercepts of a native model, or a test of whether an intercept is zero. Writing any intercept (<code>outcome ~ 1</code>) turns the mean structure on and frees an intercept for every observed variable you did not mention, as lavaan does; <code>meanstructure = TRUE</code> does the same without writing one. The paths and their standard errors do not change.</p>
+<p><em>When:</em> you want the intercepts of a native model, or a test of whether an intercept is zero. Since 0.15.0 every native fit has a mean structure by default (<code>meanstructure</code> left unset is <code>TRUE</code>): an intercept is free for every observed variable you did not mention, as lavaan does with <code>meanstructure = TRUE</code>. Writing an intercept (<code>outcome ~ 1</code>) is only needed to restrict it. The paths and their standard errors do not change.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">paths</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
 <span><span class="st">  mediator1 ~ a * treatment</span></span>
 <span><span class="st">  outcome ~ b * mediator1 + cp * treatment</span></span>
 <span><span class="st">"</span></span>
-<span><span class="va">free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">paths</span>, <span class="st">"outcome ~ 1"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">paths</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
 <span><span class="va">tf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">free</span><span class="op">)</span></span>
 <span><span class="va">tf</span><span class="op">[</span><span class="va">tf</span><span class="op">$</span><span class="va">op</span> <span class="op">==</span> <span class="st">"~1"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 3
   term        estimate std_error
   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;
-1 outcome~1      0.231    0.0774
-2 mediator1~1    0.155    0.0763
-3 treatment~1    0.502    0.0250</code></pre>
+1 mediator1~1    0.155    0.0763
+2 outcome~1      0.231    0.0774
+3 treatment~1    0.502   NA     </code></pre>
 </div>
 </div>
-<p>The outcome and mediator intercepts equal the <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> intercepts of the same equations, and the exogenous mean is the sample mean of <code>treatment</code>. <code>fit_sem(paths, mediation_demo, meanstructure = TRUE)</code> returns the same fit.</p>
+<p>The outcome and mediator intercepts equal the <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> intercepts of the same equations. The mean of <code>treatment</code> is the sample mean, fixed with the other exogenous moments, so its row has no standard error. Writing <code>outcome ~ 1</code> in the syntax returns the same fit, because the default already estimates that intercept.</p>
 <p>A fixed intercept is a restriction. <code>outcome ~ 0*1</code> costs one degree of freedom and changes the other estimates, so <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> can test it:</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">zero</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">paths</span>, <span class="st">"outcome ~ 0*1"</span><span class="op">)</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
@@ -787,16 +790,16 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC</a></span><span class="op">(</span><span class="va">free</span>, <span class="va">zero</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>     df      AIC
-free  9 2994.122
-zero  8 3000.936</code></pre>
+free  7 2409.499
+zero  6 2416.313</code></pre>
 </div>
 </div>
 <p>The test rejects zero, and the restricted model has the larger AIC. A fit with the mean structure off has no intercepts to restrict.</p>
-<p>In 0.15.0 the default becomes <code>meanstructure = TRUE</code>, so every native fit has intercepts; pass <code>meanstructure = NULL</code> to keep today’s rule (means only when the model writes <code>~1</code> or a product). See <a href="native-defaults-0-15.html">the 0.15.0 defaults</a>.</p>
+<p>Pass <code>meanstructure = NULL</code> to fit a mean structure only when the model writes <code>~1</code> or a product (the 0.14.x rule), or <code>meanstructure = FALSE</code> for covariances only. See <a href="native-defaults-0-15.html">the 0.15.0 defaults</a>.</p>
 <p>More: <a href="model-native.html#intercepts">Native engine, intercepts</a>.</p>
 </section><section class="level2"><h2 id="four-way-decomposition-from-a-native-fit">20. Four-way decomposition from a native fit<a class="anchor" aria-label="anchor" href="#four-way-decomposition-from-a-native-fit"></a>
 </h2>
-<p><em>When:</em> the outcome depends on the treatment, the mediator and their product, and you want the controlled direct effect, the two interaction terms and the pure indirect effect. Write the product as <code>treatment:mediator1</code> in the outcome equation, fit with <code><a href="../reference/fit_sem.html">fit_sem()</a></code>, and extract. A product turns the mean structure on, so the covariate in the mediator equation enters the reference interaction through its sample mean. The fit warns that the global test is not valid with a product and recommends the sandwich covariance; the chunk silences the warning and asks for the sandwich. A factor covariate (for example a <code>group</code> column in the mediator equation) is expanded to dummies and enters the same way; a factor treatment or mediator is not supported, so recode a two-level factor as 0/1 first.</p>
+<p><em>When:</em> the outcome depends on the treatment, the mediator and their product, and you want the controlled direct effect, the two interaction terms and the pure indirect effect. Write the product as <code>treatment:mediator1</code> in the outcome equation, fit with <code><a href="../reference/fit_sem.html">fit_sem()</a></code>, and extract. A product needs the mean structure (on by default; <code>meanstructure = FALSE</code> is an error), so the covariate in the mediator equation enters the reference interaction through its sample mean. The fit warns that the global test is not valid with a product and recommends the sandwich covariance; the chunk silences the warning and asks for the sandwich. A factor covariate (for example a <code>group</code> column in the mediator equation) is expanded to dummies and enters the same way; a factor treatment or mediator is not supported, so recode a two-level factor as 0/1 first.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">four_way</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
 <span><span class="st">  mediator1 ~ treatment + covariate2</span></span>
@@ -862,16 +865,16 @@ zero  8 3000.936</code></pre>
 <span><span class="st">"</span>, <span class="va">dat21</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit21</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">7</span>, <span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 7 × 6
-  term                 op    estimate std_error statistic  p_value
-  &lt;chr&gt;                &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-1 a                    ~        0.549    0.102       5.40 6.76e- 8
-2 mediator1~group_mid  ~        0.328    0.125       2.63 8.56e- 3
-3 mediator1~group_high ~        0.948    0.124       7.65 1.98e-14
-4 b                    ~        0.618    0.0524     11.8  3.37e-32
-5 cp                   ~        0.128    0.110       1.16 2.47e- 1
-6 outcome~group_mid    ~        0.463    0.132       3.52 4.38e- 4
-7 outcome~group_high   ~        0.729    0.139       5.25 1.53e- 7</code></pre>
+<pre><code># A tibble: 7 × 7
+  term                 op    estimate std_error statistic  p_value fixed_x
+  &lt;chr&gt;                &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt; &lt;lgl&gt;
+1 a                    ~        0.549    0.102       5.40 6.76e- 8 FALSE
+2 mediator1~group_mid  ~        0.328    0.125       2.63 8.56e- 3 FALSE
+3 mediator1~group_high ~        0.948    0.124       7.65 1.98e-14 FALSE
+4 b                    ~        0.618    0.0524     11.8  3.37e-32 FALSE
+5 cp                   ~        0.128    0.110       1.16 2.47e- 1 FALSE
+6 outcome~group_mid    ~        0.463    0.132       3.52 4.38e- 4 FALSE
+7 outcome~group_high   ~        0.729    0.139       5.25 1.53e- 7 FALSE  </code></pre>
 </div>
 </div>
 <p>The estimates equal a fit with the dummies written by hand (<code>group_mid</code>, <code>group_high</code>), and <code>a</code>, <code>b</code> and <code>ind</code> keep their usual meaning. A label goes on one dummy, never on the factor: <code>b*group</code> stops with a message that names the dummies. To test one dummy, label it and constrain the label:</p>
@@ -883,17 +886,19 @@ zero  8 3000.936</code></pre>
 <span><span class="st">"</span>, <span class="va">dat21</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit21b</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit21b</span><span class="op">)</span><span class="op">$</span><span class="va">term</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 8 × 6
-  term                   op    estimate std_error statistic  p_value
-  &lt;chr&gt;                  &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-1 mediator1~group_mid    ~       0.328     0.125       2.63 8.56e- 3
-2 mediator1~group_high   ~       0.948     0.124       7.65 1.98e-14
-3 outcome~group_high     ~       0.474     0.120       3.94 8.11e- 5
-4 treatment~~group_mid   ~~      0.0329    0.0119      2.76 5.83e- 3
-5 treatment~~group_high  ~~     -0.0359    0.0121     -2.98 2.93e- 3
-6 group_mid~~group_mid   ~~      0.224     0.0158     14.1  2.09e-45
-7 group_mid~~group_high  ~~     -0.118     0.0127     -9.28 1.71e-20
-8 group_high~~group_high ~~      0.228     0.0161     14.1  2.09e-45</code></pre>
+<pre><code># A tibble: 10 × 7
+   term                   op    estimate std_error statistic   p_value fixed_x
+   &lt;chr&gt;                  &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;lgl&gt;
+ 1 mediator1~group_mid    ~       0.328      0.125      2.63  8.56e- 3 FALSE
+ 2 mediator1~group_high   ~       0.948      0.124      7.65  1.98e-14 FALSE
+ 3 outcome~group_high     ~       0.474      0.120      3.94  8.11e- 5 FALSE
+ 4 treatment~~group_mid   ~~      0.0329    NA         NA    NA        TRUE
+ 5 treatment~~group_high  ~~     -0.0359    NA         NA    NA        TRUE
+ 6 group_mid~~group_mid   ~~      0.224     NA         NA    NA        TRUE
+ 7 group_mid~~group_high  ~~     -0.118     NA         NA    NA        TRUE
+ 8 group_high~~group_high ~~      0.228     NA         NA    NA        TRUE
+ 9 group_mid~1            ~1      0.338     NA         NA    NA        TRUE
+10 group_high~1           ~1      0.35      NA         NA    NA        TRUE   </code></pre>
 </div>
 </div>
 <p><code>fixed_x = "group"</code> fixes every dummy of the factor at its sample moments, and a dummy name fixes one:</p>

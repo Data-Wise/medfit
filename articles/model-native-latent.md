@@ -78,27 +78,33 @@ summary(fit)
     Information: observed
     Standard errors: model-based
     Converged: Yes
+    logLik is conditional on: X
 
     Parameters:
-           name    est     se       z      p
-      eta =~ m2 0.8299 0.0607 13.6674 <1e-04
-      eta =~ m3 0.7772 0.0570 13.6332 <1e-04
-              a 0.4606 0.0546  8.4336 <1e-04
-              b 0.3659 0.0548  6.6766 <1e-04
-             cp 0.2546 0.0487  5.2291 <1e-04
-       m1 ~~ m1 0.5502 0.0658  8.3637 <1e-04
-       m2 ~~ m2 0.5067 0.0523  9.6837 <1e-04
-       m3 ~~ m3 0.5272 0.0500 10.5339 <1e-04
-         Y ~~ Y 0.6353 0.0472 13.4558 <1e-04
-     eta ~~ eta 0.7955 0.0959  8.2924 <1e-04
-         X ~~ X 0.9356 0.0662 14.1421 <1e-04
+           name     est     se       z      p fixed_x
+      eta =~ m2  0.8299 0.0607 13.6674 <1e-04   FALSE
+      eta =~ m3  0.7772 0.0570 13.6332 <1e-04   FALSE
+              a  0.4606 0.0546  8.4336 <1e-04   FALSE
+              b  0.3659 0.0548  6.6766 <1e-04   FALSE
+             cp  0.2546 0.0487  5.2291 <1e-04   FALSE
+       m1 ~~ m1  0.5502 0.0658  8.3637 <1e-04   FALSE
+       m2 ~~ m2  0.5067 0.0523  9.6837 <1e-04   FALSE
+       m3 ~~ m3  0.5272 0.0500 10.5339 <1e-04   FALSE
+         Y ~~ Y  0.6353 0.0472 13.4558 <1e-04   FALSE
+     eta ~~ eta  0.7955 0.0959  8.2924 <1e-04   FALSE
+         X ~~ X  0.9356     NA      NA           TRUE
+          m1 ~1  0.0556 0.0580  0.9581  0.338   FALSE
+          m2 ~1  0.0550 0.0514  1.0710  0.284   FALSE
+          m3 ~1  0.0248 0.0502  0.4945  0.621   FALSE
+           X ~1 -0.0172     NA      NA           TRUE
+           Y ~1  0.0183 0.0431  0.4249  0.671   FALSE
 
     Defined parameters:
      name  expr    est    se
        ab a * b 0.1685 0.031
 
     Diagnostics:
-      Optimizer status: 3; stationarity 7.32e-09; retries 0
+      Optimizer status: 3; stationarity 6.20e-16; retries 0
       Active bounds: none
       Active constraints: none
       Improper solution: no

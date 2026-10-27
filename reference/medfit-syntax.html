@@ -127,7 +127,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>medfit Model Syntax</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/sem-syntax-help.R" class="external-link"><code>R/sem-syntax-help.R</code></a></small>
       <div class="d-none name"><code>medfit-syntax.Rd</code></div>
     </div>
 
@@ -241,17 +241,16 @@ product are not comparable with those of a fit without one, so <code>AIC(fit_a, 
 exogenous variables with the block free keeps the ordinary test.</p>
     </div>
     <div class="section level2">
-    <h2 id="defaults-are-changing">Defaults are changing<a class="anchor" aria-label="anchor" href="#defaults-are-changing"></a></h2>
+    <h2 id="defaults-changed-in-">Defaults changed in 0.15.0<a class="anchor" aria-label="anchor" href="#defaults-changed-in-"></a></h2>
 
 
-<p>medfit 0.15.0 changes two defaults of <code><a href="fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native")</code>: <code>fixed_x</code> becomes the
-exogenous observed variables (as lavaan's <code>fixed.x = TRUE</code>) and <code>meanstructure</code> becomes <code>TRUE</code>, so every observed
-intercept is free without a <code>~1</code> statement. The parameter count, <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> and the parameter
-names move; the structural estimates and their standard errors did not move on the cases measured. 0.14.0 warns
-once per session (class <code>medfit_warning_default_change</code>); pass <code>fixed_x</code> and <code>meanstructure</code> to silence it, or set
-<code>options(medfit.native_defaults = "0.15")</code> to use the new defaults now. Under that option a variable a <code>~~</code> or <code>~1</code>
-statement names is left free (message class <code>medfit_message_fixed_x_lenient</code>) instead of the error an explicit
-<code>fixed_x = TRUE</code> gives. <code><a href="fit_sem.html">fit_sem()</a></code> has the details.</p>
+<p>Since medfit 0.15.0 an unset <code>fixed_x</code> means the exogenous observed variables (as lavaan's <code>fixed.x = TRUE</code>) and an
+unset <code>meanstructure</code> means <code>TRUE</code>, so every observed intercept is free without a <code>~1</code> statement. Against 0.14.x the
+parameter count, <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> and the parameter names move; the structural estimates and their
+standard errors did not move on the cases measured. A variable a <code>~~</code> or <code>~1</code> statement names is left free (message
+class <code>medfit_message_fixed_x_lenient</code>) instead of the error an explicit <code>fixed_x = TRUE</code> gives. To keep the 0.14.x
+results, pass <code>fixed_x = FALSE, meanstructure = NULL</code>. <code>options(medfit.native_defaults)</code> is obsolete and ignored,
+with one message per session, and is removed in 0.16.0. <code><a href="fit_sem.html">fit_sem()</a></code> has the details.</p>
     </div>
     <div class="section level2">
     <h2 id="medfit-extensions">medfit extensions<a class="anchor" aria-label="anchor" href="#medfit-extensions"></a></h2>
@@ -301,7 +300,7 @@ rejected with the construct named.</p>
 <span class="r-in"><span>  data <span class="op">=</span> <span class="va">mediation_demo</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mediator1~treatment mediator2~treatment   outcome~mediator1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           0.4559961           0.2879984           0.5202186 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           0.4559961           0.2879985           0.5202186 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># An equality constraint, written with the CONSTRAINT() keyword</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="fu"><a href="fit_sem.html">fit_sem</a></span><span class="op">(</span></span></span>

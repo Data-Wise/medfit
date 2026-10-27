@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/vignettes/articles/model-native-factors.qmd" class="external-link"><code>vignettes/articles/model-native-factors.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-native-factors.qmd" class="external-link"><code>vignettes/articles/model-native-factors.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -263,17 +263,19 @@ Attaching package: 'generics'</code></pre>
 <span><span class="st">"</span>, <span class="va">dat</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">pinned</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">pinned</span><span class="op">)</span><span class="op">$</span><span class="va">term</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 8 × 2
-  term                   estimate
-  &lt;chr&gt;                     &lt;dbl&gt;
-1 mediator1~group_mid      0.328
-2 mediator1~group_high     0.948
-3 outcome~group_high       0.474
-4 treatment~~group_mid     0.0329
-5 treatment~~group_high   -0.0359
-6 group_mid~~group_mid     0.224
-7 group_mid~~group_high   -0.118
-8 group_high~~group_high   0.228 </code></pre>
+<pre><code># A tibble: 10 × 2
+   term                   estimate
+   &lt;chr&gt;                     &lt;dbl&gt;
+ 1 mediator1~group_mid      0.328
+ 2 mediator1~group_high     0.948
+ 3 outcome~group_high       0.474
+ 4 treatment~~group_mid     0.0329
+ 5 treatment~~group_high   -0.0359
+ 6 group_mid~~group_mid     0.224
+ 7 group_mid~~group_high   -0.118
+ 8 group_high~~group_high   0.228
+ 9 group_mid~1              0.338
+10 group_high~1             0.35  </code></pre>
 </div>
 </div>
 <p><code>group_mid</code> in the outcome equation is pinned at 0 and the other rows are free.</p>

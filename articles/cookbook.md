@@ -252,7 +252,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4397306 0.8950371 
+    0.6560315 0.4383060 0.8918422 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
@@ -441,7 +441,7 @@ rbind(free = coef(free)[c("a", "b", "cp")], tied = coef(tied)[c("a", "b", "cp")]
 ```
 
                  a         b         cp
-    free 0.4559961 0.7134287 0.04057666
+    free 0.4559961 0.7134287 0.04057665
     tied 0.3381172 0.6831633 0.23098930
 
 The tied fit has one more degree of freedom and its standard errors
@@ -539,8 +539,8 @@ rbind(reduced = glance(reduced)[, c("npar", "chisq", "AIC", "BIC")],
     # A tibble: 2 × 4
        npar chisq   AIC   BIC
     * <int> <dbl> <dbl> <dbl>
-    1     5 0.133 2992. 3024.
-    2     6 0     2994. 3030.
+    1     6 0.133 2408. 2432.
+    2     7 0     2409. 2437.
 
 The restricted model is the one with more degrees of freedom. A small
 chi-square difference says dropping `cp` costs little.
@@ -654,11 +654,13 @@ Formulas](https://data-wise.github.io/medfit/articles/methods.md).
 
 ## 18. Fix exogenous covariates (`fixed_x`)
 
-*When:* a native model with many covariates is slow or has too many
-parameters, and you want the structural results lavaan reports with
-`fixed.x = TRUE`. `fixed_x = TRUE` fixes the means, variances and
-covariances of the exogenous observed variables at their sample values
-instead of estimating them.
+*When:* a native model with many covariates needs many parameters, or
+you want to compare with lavaan’s default `fixed.x = TRUE`. Since 0.15.0
+a native fit fixes the means, variances and covariances of the exogenous
+observed variables at their sample values by default (`fixed_x` left
+unset); `fixed_x = FALSE` estimates them instead. Left unset, `fixed_x`
+resolves to the explicit set of exogenous variables, so
+`glance()$fixed_x` names what was fixed.
 
 ``` r
 syntax <- "
@@ -666,8 +668,8 @@ syntax <- "
   outcome ~ b * mediator1 + covariate1 + covariate2
   ab := a * b
 "
-free <- fit_sem(syntax, mediation_demo)
-fixed <- fit_sem(syntax, mediation_demo, fixed_x = TRUE)
+fixed <- fit_sem(syntax, mediation_demo)
+free <- fit_sem(syntax, mediation_demo, fixed_x = FALSE)
 rbind(free = coef(free)[c("a", "b")], fixed_x = coef(fixed)[c("a", "b")])
 ```
 
@@ -680,8 +682,8 @@ rbind(free = sqrt(diag(vcov(free)))[c("a", "b")], fixed_x = sqrt(diag(vcov(fixed
 ```
 
                      a          b
-    free    0.09836669 0.05120516
-    fixed_x 0.09836669 0.05120516
+    free    0.09836668 0.05120516
+    fixed_x 0.09836668 0.05120516
 
 ``` r
 rbind(free = free@defined[, c("est", "se")], fixed_x = fixed@defined[, c("est", "se")])
@@ -700,11 +702,12 @@ cbind(fit = c("free", "fixed_x"), rbind(glance(free), glance(fixed))[, c("npar",
 ```
 
           fit npar df    chisq                           fixed_x
-    1    free   14  1 3.543201
-    2 fixed_x    8  1 3.543201 treatment, covariate1, covariate2
+    1    free   19  1 3.543201
+    2 fixed_x   10  1 3.543201 treatment, covariate1, covariate2
 
-The parameter count falls from 14 to 8 while `df` and `chisq` stay put.
-`glance()$fixed_x` lists what is fixed (`""` when nothing is). With
+The parameter count falls from 19 to 10 (the free fit also estimates the
+exogenous variances, covariances and means) while `df` and `chisq` stay
+put. `glance()$fixed_x` lists what is fixed (`""` when nothing is). With
 `fixed_x`, the fixed rows stay in
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) flagged
 `fixed_x = TRUE`, with no standard error, and the log likelihood,
@@ -717,7 +720,7 @@ tf <- tidy(fixed)
 tf[tf$fixed_x, c("term", "estimate", "std_error")]
 ```
 
-    # A tibble: 6 × 3
+    # A tibble: 9 × 3
       term                   estimate std_error
       <chr>                     <dbl>     <dbl>
     1 treatment~~treatment    0.250          NA
@@ -726,6 +729,9 @@ tf[tf$fixed_x, c("term", "estimate", "std_error")]
     4 covariate1~~covariate1  1.04           NA
     5 covariate1~~covariate2  0.00266        NA
     6 covariate2~~covariate2  0.250          NA
+    7 treatment~1             0.502          NA
+    8 covariate1~1            0.0174         NA
+    9 covariate2~1            0.482          NA
 
 ``` r
 tryCatch(anova(free, fixed), error = function(e) cat(conditionMessage(e), "\n"))
@@ -741,9 +747,8 @@ and
 across several fits stop when the fixed sets differ, as above. Pass a
 character vector (for example `fixed_x = "treatment"`) to fix a subset.
 
-In 0.15.0 the default becomes `fixed_x = TRUE` (0.14.0 warns when it is
-left unset); pass `fixed_x = FALSE` to keep the free exogenous block.
-See [the 0.15.0
+Since 0.15.0 the default is to fix the exogenous observed variables;
+pass `fixed_x = FALSE` to keep the free exogenous block. See [the 0.15.0
 defaults](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md).
 
 More: [Methods and
@@ -754,17 +759,19 @@ guide](https://data-wise.github.io/medfit/articles/native-guide.md).
 ## 19. Observed intercepts and means
 
 *When:* you want the intercepts of a native model, or a test of whether
-an intercept is zero. Writing any intercept (`outcome ~ 1`) turns the
-mean structure on and frees an intercept for every observed variable you
-did not mention, as lavaan does; `meanstructure = TRUE` does the same
-without writing one. The paths and their standard errors do not change.
+an intercept is zero. Since 0.15.0 every native fit has a mean structure
+by default (`meanstructure` left unset is `TRUE`): an intercept is free
+for every observed variable you did not mention, as lavaan does with
+`meanstructure = TRUE`. Writing an intercept (`outcome ~ 1`) is only
+needed to restrict it. The paths and their standard errors do not
+change.
 
 ``` r
 paths <- "
   mediator1 ~ a * treatment
   outcome ~ b * mediator1 + cp * treatment
 "
-free <- fit_sem(paste0(paths, "outcome ~ 1"), mediation_demo)
+free <- fit_sem(paths, mediation_demo)
 tf <- tidy(free)
 tf[tf$op == "~1", c("term", "estimate", "std_error")]
 ```
@@ -772,15 +779,16 @@ tf[tf$op == "~1", c("term", "estimate", "std_error")]
     # A tibble: 3 × 3
       term        estimate std_error
       <chr>          <dbl>     <dbl>
-    1 outcome~1      0.231    0.0774
-    2 mediator1~1    0.155    0.0763
-    3 treatment~1    0.502    0.0250
+    1 mediator1~1    0.155    0.0763
+    2 outcome~1      0.231    0.0774
+    3 treatment~1    0.502   NA     
 
 The outcome and mediator intercepts equal the
 [`lm()`](https://rdrr.io/r/stats/lm.html) intercepts of the same
-equations, and the exogenous mean is the sample mean of `treatment`.
-`fit_sem(paths, mediation_demo, meanstructure = TRUE)` returns the same
-fit.
+equations. The mean of `treatment` is the sample mean, fixed with the
+other exogenous moments, so its row has no standard error. Writing
+`outcome ~ 1` in the syntax returns the same fit, because the default
+already estimates that intercept.
 
 A fixed intercept is a restriction. `outcome ~ 0*1` costs one degree of
 freedom and changes the other estimates, so
@@ -813,15 +821,15 @@ AIC(free, zero)
 ```
 
          df      AIC
-    free  9 2994.122
-    zero  8 3000.936
+    free  7 2409.499
+    zero  6 2416.313
 
 The test rejects zero, and the restricted model has the larger AIC. A
 fit with the mean structure off has no intercepts to restrict.
 
-In 0.15.0 the default becomes `meanstructure = TRUE`, so every native
-fit has intercepts; pass `meanstructure = NULL` to keep today’s rule
-(means only when the model writes `~1` or a product). See [the 0.15.0
+Pass `meanstructure = NULL` to fit a mean structure only when the model
+writes `~1` or a product (the 0.14.x rule), or `meanstructure = FALSE`
+for covariances only. See [the 0.15.0
 defaults](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md).
 
 More: [Native engine,
@@ -834,14 +842,15 @@ product, and you want the controlled direct effect, the two interaction
 terms and the pure indirect effect. Write the product as
 `treatment:mediator1` in the outcome equation, fit with
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
-and extract. A product turns the mean structure on, so the covariate in
-the mediator equation enters the reference interaction through its
-sample mean. The fit warns that the global test is not valid with a
-product and recommends the sandwich covariance; the chunk silences the
-warning and asks for the sandwich. A factor covariate (for example a
-`group` column in the mediator equation) is expanded to dummies and
-enters the same way; a factor treatment or mediator is not supported, so
-recode a two-level factor as 0/1 first.
+and extract. A product needs the mean structure (on by default;
+`meanstructure = FALSE` is an error), so the covariate in the mediator
+equation enters the reference interaction through its sample mean. The
+fit warns that the global test is not valid with a product and
+recommends the sandwich covariance; the chunk silences the warning and
+asks for the sandwich. A factor covariate (for example a `group` column
+in the mediator equation) is expanded to dummies and enters the same
+way; a factor treatment or mediator is not supported, so recode a
+two-level factor as 0/1 first.
 
 ``` r
 four_way <- "
@@ -940,16 +949,16 @@ fit21 <- fit_sem("
 tidy(fit21)[1:7, ]
 ```
 
-    # A tibble: 7 × 6
-      term                 op    estimate std_error statistic  p_value
-      <chr>                <chr>    <dbl>     <dbl>     <dbl>    <dbl>
-    1 a                    ~        0.549    0.102       5.40 6.76e- 8
-    2 mediator1~group_mid  ~        0.328    0.125       2.63 8.56e- 3
-    3 mediator1~group_high ~        0.948    0.124       7.65 1.98e-14
-    4 b                    ~        0.618    0.0524     11.8  3.37e-32
-    5 cp                   ~        0.128    0.110       1.16 2.47e- 1
-    6 outcome~group_mid    ~        0.463    0.132       3.52 4.38e- 4
-    7 outcome~group_high   ~        0.729    0.139       5.25 1.53e- 7
+    # A tibble: 7 × 7
+      term                 op    estimate std_error statistic  p_value fixed_x
+      <chr>                <chr>    <dbl>     <dbl>     <dbl>    <dbl> <lgl>
+    1 a                    ~        0.549    0.102       5.40 6.76e- 8 FALSE
+    2 mediator1~group_mid  ~        0.328    0.125       2.63 8.56e- 3 FALSE
+    3 mediator1~group_high ~        0.948    0.124       7.65 1.98e-14 FALSE
+    4 b                    ~        0.618    0.0524     11.8  3.37e-32 FALSE
+    5 cp                   ~        0.128    0.110       1.16 2.47e- 1 FALSE
+    6 outcome~group_mid    ~        0.463    0.132       3.52 4.38e- 4 FALSE
+    7 outcome~group_high   ~        0.729    0.139       5.25 1.53e- 7 FALSE  
 
 The estimates equal a fit with the dummies written by hand (`group_mid`,
 `group_high`), and `a`, `b` and `ind` keep their usual meaning. A label
@@ -966,17 +975,19 @@ fit21b <- fit_sem("
 tidy(fit21b)[grepl("group", tidy(fit21b)$term, fixed = TRUE), ]
 ```
 
-    # A tibble: 8 × 6
-      term                   op    estimate std_error statistic  p_value
-      <chr>                  <chr>    <dbl>     <dbl>     <dbl>    <dbl>
-    1 mediator1~group_mid    ~       0.328     0.125       2.63 8.56e- 3
-    2 mediator1~group_high   ~       0.948     0.124       7.65 1.98e-14
-    3 outcome~group_high     ~       0.474     0.120       3.94 8.11e- 5
-    4 treatment~~group_mid   ~~      0.0329    0.0119      2.76 5.83e- 3
-    5 treatment~~group_high  ~~     -0.0359    0.0121     -2.98 2.93e- 3
-    6 group_mid~~group_mid   ~~      0.224     0.0158     14.1  2.09e-45
-    7 group_mid~~group_high  ~~     -0.118     0.0127     -9.28 1.71e-20
-    8 group_high~~group_high ~~      0.228     0.0161     14.1  2.09e-45
+    # A tibble: 10 × 7
+       term                   op    estimate std_error statistic   p_value fixed_x
+       <chr>                  <chr>    <dbl>     <dbl>     <dbl>     <dbl> <lgl>
+     1 mediator1~group_mid    ~       0.328      0.125      2.63  8.56e- 3 FALSE
+     2 mediator1~group_high   ~       0.948      0.124      7.65  1.98e-14 FALSE
+     3 outcome~group_high     ~       0.474      0.120      3.94  8.11e- 5 FALSE
+     4 treatment~~group_mid   ~~      0.0329    NA         NA    NA        TRUE
+     5 treatment~~group_high  ~~     -0.0359    NA         NA    NA        TRUE
+     6 group_mid~~group_mid   ~~      0.224     NA         NA    NA        TRUE
+     7 group_mid~~group_high  ~~     -0.118     NA         NA    NA        TRUE
+     8 group_high~~group_high ~~      0.228     NA         NA    NA        TRUE
+     9 group_mid~1            ~1      0.338     NA         NA    NA        TRUE
+    10 group_high~1           ~1      0.35      NA         NA    NA        TRUE   
 
 `fixed_x = "group"` fixes every dummy of the factor at its sample
 moments, and a dummy name fixes one:

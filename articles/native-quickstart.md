@@ -58,10 +58,11 @@ fit
     ==================================
 
       Observations:  400
-      Parameters:    10 free, 0 df
+      Parameters:    9 free, 0 df
       Information:   observed
       Std. errors:   model-based
       Converged:     Yes
+      logLik is conditional on: treatment, covariate1
 
     Defined parameters:
       ab              0.3331  (SE 0.0644)
@@ -77,20 +78,24 @@ standard error are the first things to read.
 tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
 ```
 
-    # A tibble: 11 × 5
+    # A tibble: 15 × 5
        term                   estimate std_error conf_low conf_high
        <chr>                     <dbl>     <dbl>    <dbl>     <dbl>
-     1 a                        0.581     0.0986  0.388      0.775
-     2 mediator1~covariate1     0.448     0.0483  0.353      0.543
-     3 b                        0.573     0.0531  0.469      0.677
-     4 cp                       0.204     0.109  -0.00954    0.418
-     5 outcome~covariate1       0.356     0.0565  0.245      0.467
-     6 mediator1~~mediator1     0.954     0.0674  0.821      1.09
-     7 outcome~~outcome         1.07      0.0759  0.925      1.22
-     8 treatment~~treatment     0.250     0.0177  0.215      0.285
-     9 treatment~~covariate1   -0.0700    0.0257 -0.120     -0.0195
-    10 covariate1~~covariate1   1.04      0.0735  0.896      1.18
-    11 ab                       0.333     0.0644  0.207      0.459 
+     1 a                        0.581     0.0986  0.388       0.775
+     2 mediator1~covariate1     0.448     0.0483  0.353       0.543
+     3 b                        0.573     0.0531  0.469       0.677
+     4 cp                       0.204     0.109  -0.00954     0.418
+     5 outcome~covariate1       0.356     0.0565  0.245       0.467
+     6 mediator1~~mediator1     0.954     0.0674  0.821       1.09
+     7 outcome~~outcome         1.07      0.0759  0.925       1.22
+     8 mediator1~1              0.0844    0.0696 -0.0521      0.221
+     9 outcome~1                0.197     0.0740  0.0515      0.342
+    10 treatment~~treatment     0.250    NA      NA          NA
+    11 treatment~~covariate1   -0.0700   NA      NA          NA
+    12 covariate1~~covariate1   1.04     NA      NA          NA
+    13 treatment~1              0.502    NA      NA          NA
+    14 covariate1~1             0.0174   NA      NA          NA
+    15 ab                       0.333     0.0644  0.207       0.459
 
 `summary(fit)` adds the optimizer diagnostics (active bounds, improper
 solution); `glance(fit)` gives the chi-square, AIC and BIC.

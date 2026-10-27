@@ -52,7 +52,7 @@ model <- "
   ab := a * b
 "
 native <- tidy(fit_sem(model, mediation_demo))
-ref <- parameterEstimates(sem(model, mediation_demo, fixed.x = FALSE))
+ref <- parameterEstimates(sem(model, mediation_demo))
 rows <- native[native$term %in% c("a", "b", "cp", "ab"), ]
 i <- match(rows$term, ref$label)
 data.frame(term = rows$term, native = rows$estimate, lavaan = ref$est[i],
@@ -62,20 +62,16 @@ data.frame(term = rows$term, native = rows$estimate, lavaan = ref$est[i],
       term     native     lavaan  se_native  se_lavaan
     1    a 0.45599612 0.45599612 0.10763360 0.10763360
     2    b 0.71342873 0.71342873 0.05047202 0.05047202
-    3   cp 0.04057666 0.04057665 0.11106057 0.11106057
+    3   cp 0.04057665 0.04057665 0.11106057 0.11106057
     4   ab 0.32532073 0.32532073 0.08016376 0.08016376
 
-`fixed.x = FALSE` matters: lavaan fixes exogenous covariates by default,
-the native engine estimates their variances and covariances unless
-`fixed_x = TRUE` (or a vector of names) asks for lavaan’s behavior. The
-standard errors, including the delta-method error of `ab`, agree as
-well.
-
-In medfit 0.15.0 the native defaults become `fixed_x` = the exogenous
-observed variables and `meanstructure = TRUE`, so a default fit will
-line up with lavaan’s default
-[`sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) without
-`fixed.x = FALSE`.
+Both fit with their defaults: lavaan fixes the exogenous covariates, and
+since medfit 0.15.0 so does
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+(`fixed_x` is the exogenous observed variables, `meanstructure` is
+`TRUE`). The standard errors, including the delta-method error of `ab`,
+agree as well. Pass `fixed_x = FALSE` (and `fixed.x = FALSE` in lavaan)
+to estimate the exogenous variances and covariances instead.
 
 ## Where they differ by design
 
@@ -88,7 +84,7 @@ bad <- "mediator1 ~ treatment\nmediator2 ~ treatment\noutcome ~ mediator1 + medi
 rbind(
   native_observed = sqrt(diag(vcov(fit_sem(bad, mediation_demo))))[3],
   native_expected = sqrt(diag(vcov(fit_sem(bad, mediation_demo, information = "expected"))))[3],
-  lavaan = sqrt(diag(vcov(sem(bad, mediation_demo, fixed.x = FALSE))))[3]
+  lavaan = sqrt(diag(vcov(sem(bad, mediation_demo))))[3]
 )
 ```
 
@@ -121,9 +117,9 @@ changing the behavior makes that test fail.
 | Defined parameters | `:=` | `:=` with delta-method errors | Supported |
 | Chi-square and df | yes | [`glance()`](https://generics.r-lib.org/reference/glance.html) | Supported |
 | CFI, RMSEA, SRMR | yes | not reported | Unsupported |
-| logLik, AIC, BIC | yes | logLik equal; AIC and BIC count the means | Different by design |
+| logLik, AIC, BIC | yes | equal when both fit the same settings (the 0.15.0 defaults count the intercepts, as `meanstructure = TRUE` does in lavaan) | Supported |
 | Standardized estimates, modification indices, fitted values, residuals | yes | no | Unsupported |
-| Fixed exogenous covariates | `fixed.x = TRUE` is the default | `fixed_x = TRUE` or names, default `FALSE`; product columns are fixed with the rest; a statement on a selected variable is an error | Different by design |
+| Fixed exogenous covariates | `fixed.x = TRUE` is the default | `fixed_x = TRUE` or names, and `TRUE` is the default since 0.15.0; product columns are fixed with the rest; a statement on a selected variable is an error | Supported |
 | Product terms (`x:m`) and four-way effects | `x:m` is an observed exogenous column, kept as written; no mediation effects | `x:m` stored as `m:x`; coefficients and sandwich standard errors equal lavaan’s; [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) gives the four-way parts; chi-square, df and p-value are `NA` and [`anova()`](https://rdrr.io/r/stats/anova.html), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) refuse when a factor is a regression target; a supported class only | Partial |
 | Nested model comparison | [`lavTestLRT()`](https://rdrr.io/pkg/lavaan/man/lavTestLRT.html) | [`anova()`](https://rdrr.io/r/stats/anova.html) | Supported |
 | Mediation effects and the MBCO test | no | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) | Supported |
@@ -142,9 +138,9 @@ is fixed with the other exogenous variables):
 ``` r
 prod_model <- "mediator1 ~ treatment
                outcome_int ~ mediator1 + treatment + treatment:mediator1"
-nat <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich"))
+nat <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich", fixed_x = FALSE))
 lav <- sem(prod_model, mediation_demo, fixed.x = FALSE, se = "robust.huber.white")
-nat_fx <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich", fixed_x = TRUE))
+nat_fx <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich"))
 lav_fx <- sem(prod_model, mediation_demo, fixed.x = TRUE, se = "robust.huber.white")
 paths <- 1:4
 rbind(
@@ -155,9 +151,9 @@ rbind(
 ```
 
                                       [,1]
-    max_diff_estimate         3.330669e-16
-    max_diff_se               2.298255e-11
-    max_diff_estimate_fixed_x 2.775558e-16
+    max_diff_estimate         2.220446e-16
+    max_diff_se               2.254825e-11
+    max_diff_estimate_fixed_x 2.220446e-16
 
 They differ in what follows. lavaan reports a chi-square for this model;
 medfit reports `NA`, because the product contains a regression target

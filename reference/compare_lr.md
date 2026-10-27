@@ -30,6 +30,14 @@ the fit used). Latent variables, product terms, fixed or constrained
 intercepts, weights, factors, other fixed or shared parameters,
 start/bound modifiers and constraints in the model are refused by name.
 
+Known limit (#320): the flip of the
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+defaults in 0.15.0 does not change what the comparison finds. On the
+pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run
+ends above medfit's reference in 18 of 60 runs and the OpenMx run in 13
+of 60, the same counts as under the 0.14.x defaults. Each is reported as
+`medfit_warning_engine_statistic_above_max`, and no row is mislabeled.
+
 ## Usage
 
 ``` r
@@ -87,7 +95,7 @@ if (requireNamespace("lavaan", quietly = TRUE)) {
 #> medfit LR comparison (lavaan, a*b = 0): agree
 #>   medfit reference LR 17.5574 (accepted)
 #>  engine version   start      lr converged     residual status
-#>  lavaan   0.7.3 default 17.5574      TRUE 2.418474e-09  agree
-#>  lavaan   0.7.3    zero 17.5574      TRUE 3.773233e-09  agree
+#>  lavaan   0.7.3 default 17.5574      TRUE 2.505538e-09  agree
+#>  lavaan   0.7.3    zero 17.5574      TRUE 3.771936e-09  agree
 # }
 ```

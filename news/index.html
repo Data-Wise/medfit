@@ -125,9 +125,30 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="medfit-development-version">medfit (development version)<a class="anchor" aria-label="anchor" href="#medfit-development-version"></a></h2>
+<div class="section level3">
+<h3 id="native-engine-defaults-flipped-development-version">Native engine defaults flipped (0.15.0)<a class="anchor" aria-label="anchor" href="#native-engine-defaults-flipped-development-version"></a></h3>
+<p><strong>Behavior change for <code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native")</code>.</strong> An unset <code>fixed_x</code> now means the exogenous observed variables (lavaan’s <code>fixed.x = TRUE</code>) and an unset <code>meanstructure</code> now means <code>TRUE</code>, so a default native fit matches a default <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code> fit. This is the flip announced in 0.14.0 and in [BREAKING] <a href="https://github.com/data-wise/medfit/issues/329" class="external-link">#329</a>; <code>FALSE</code> and <code>NULL</code> stay valid values, and an explicit argument is always kept as given.</p>
+<ul><li>
+<strong>What does not move.</strong> The structural estimates and their standard errors. The native-defaults oracle matrix (557 rows against lavaan) gives 503 pass, 54 declared limit and 0 block, the same counts as the 0.14.0 baseline; the neutrality check against 0.14.1 (explicit old defaults) differs by 0.</li>
+<li>
+<strong>What moves.</strong> The conditional <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> (the fixed exogenous block is no longer in the likelihood), the parameter count <code>npar</code>, <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code>, and the names in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> (the exogenous variances, covariances and intercepts are fixed rows, and every observed intercept is a free row). Which random start a multi-start fit tries can change, because the retry seed follows the parameter names.</li>
+<li>An unset <code>fixed_x</code> resolves to an explicit character subset of the exogenous observed variables (<code>glance()$fixed_x</code> names it). A variable a <code>~~</code> or <code>~1</code> statement names is left free with a message of class <code>medfit_message_fixed_x_lenient</code>; an explicit <code>fixed_x = TRUE</code> still errors there.</li>
+<li>
+<code>options(medfit.native_defaults = "0.15")</code> is obsolete: it is ignored, with one message per session (class <code>medfit_message_option_obsolete</code>), and is removed in 0.16.0. The <code>medfit_warning_default_change</code> warning no longer fires.</li>
+<li>To keep the 0.14.x results, pass <code>fixed_x = FALSE, meanstructure = NULL</code>.</li>
+<li>
+<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> keep medfit’s own parameter count, which includes the observed means that are not fixed whether or not they are in the parameter vector. It equals lavaan’s count when lavaan fits the mean structure, so medfit’s AIC and BIC equal those of <code>lavaan::sem(..., meanstructure = TRUE)</code> under any <code>fixed_x</code>; a default <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code> fits no mean structure, and against it medfit’s AIC is larger by 2k and its BIC by k log n (k = the observed means not fixed; k = 2 in the worked example of the article). The conditional <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> equals lavaan’s.</li>
+<li>Missing data stays listwise deletion; there is no <code>missing =</code> argument and no FIML (a 0.16.0 candidate).</li>
+<li>
+<code><a href="../reference/compare_lr.html">compare_lr()</a></code> runs on fits made under the new defaults. Its known limit (<a href="https://github.com/data-wise/medfit/issues/320" class="external-link">#320</a>) is unchanged by the flip: on the pinned design (15 seeds by 4 cells) the lavaan run ended above medfit’s reference in 18 of 60 runs and OpenMx in 13 of 60, the same counts as before, with no mislabeled row.</li>
+<li>Docs: <code><a href="../reference/fit_sem.html">?fit_sem</a></code>, <code><a href="../reference/fit_mediation.html">?fit_mediation</a></code>, <code><a href="../reference/compare_lr.html">?compare_lr</a></code>, <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>, the “Native defaults in 0.15.0” article and the guides describe the new defaults. The other articles, the book and the cookbook are updated separately.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.14.1" id="medfit-0141">medfit 0.14.1<a class="anchor" aria-label="anchor" href="#medfit-0141"></a></h2>
 <div class="section level3">

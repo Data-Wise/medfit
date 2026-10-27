@@ -129,7 +129,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit Mediation Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
       <div class="d-none name"><code>fit_mediation.Rd</code></div>
     </div>
 
@@ -247,7 +247,8 @@ that shrinks like 1/n.</p></dd>
 <dd><p>Named list of engine-specific overrides (default:
 <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code>, no overrides). Ignored by <code>engine = "glm"</code>. For
 <code>engine = "native"</code>, recognized names are <code>information</code>, <code>n_starts</code>, <code>meanstructure</code>, <code>fixed_x</code> and
-<code>control</code> (passed to <code><a href="fit_sem.html">fit_sem()</a></code>) and <code>outcome</code>, <code>structure</code>,
+<code>control</code> (passed to <code><a href="fit_sem.html">fit_sem()</a></code>, whose defaults for <code>fixed_x</code> and <code>meanstructure</code> changed in 0.15.0) and
+<code>outcome</code>, <code>structure</code>,
 <code>decomposition</code>, <code>interaction</code>, <code>a_label</code>, <code>b_label</code> and <code>cp_label</code>
 (passed to <code><a href="extract_mediation.html">extract_mediation()</a></code>); any other name is an error. For
 <code>engine = "lmer"</code>, recognized names are <code>random_y</code> and <code>random_m</code>

@@ -56,11 +56,12 @@ d <- mediation_demo
 | `a == b`, `cp == a*b`, `a*b > 0.1` | equality or inequality constraint on labels, linear or not |
 | `y1, y2 ~ x` | comma shorthand (a medfit extension; lavaan reads it differently) |
 
-Exogenous variables get free variances and covariances, as lavaan does
-with `fixed.x = FALSE`; `fixed_x = TRUE` in
+Exogenous observed variables are fixed at their sample moments by
+default, as lavaan does with `fixed.x = TRUE` (fewer parameters, the
+same structural estimates, a conditional log likelihood);
+`fixed_x = FALSE` in
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-fixes them at the sample moments instead (fewer parameters, the same
-structural estimates, a conditional log likelihood). Both sides of a
+gives them free variances and covariances instead. Both sides of a
 constraint and the right side of a definition are arithmetic expressions
 in the labels (`+ - * / ^`, parentheses, `exp`, `log`, `sqrt`, `abs`,
 `min`, `max`, `pnorm`, `qnorm`, and a few more).
@@ -86,19 +87,24 @@ summary(fit)
     Information: observed
     Standard errors: model-based
     Converged: Yes
+    logLik is conditional on: treatment, covariate1
 
     Parameters:
-                         name     est     se       z       p
-                            a  0.5814 0.0986  5.8977 < 1e-04
-       mediator1 ~ covariate1  0.4481 0.0483  9.2711 < 1e-04
-                            b  0.5729 0.0531 10.7971 < 1e-04
-                           cp  0.2043 0.1091  1.8725 0.06113
-         outcome ~ covariate1  0.3559 0.0565  6.2949 < 1e-04
-       mediator1 ~~ mediator1  0.9536 0.0674 14.1421 < 1e-04
-           outcome ~~ outcome  1.0740 0.0759 14.1421 < 1e-04
-       treatment ~~ treatment  0.2500 0.0177 14.1421 < 1e-04
-      treatment ~~ covariate1 -0.0700 0.0257 -2.7192 0.00654
-     covariate1 ~~ covariate1  1.0398 0.0735 14.1421 < 1e-04
+                         name     est     se       z       p fixed_x
+                            a  0.5814 0.0986  5.8977 < 1e-04   FALSE
+       mediator1 ~ covariate1  0.4481 0.0483  9.2711 < 1e-04   FALSE
+                            b  0.5729 0.0531 10.7971 < 1e-04   FALSE
+                           cp  0.2043 0.1091  1.8725 0.06113   FALSE
+         outcome ~ covariate1  0.3559 0.0565  6.2949 < 1e-04   FALSE
+       mediator1 ~~ mediator1  0.9536 0.0674 14.1421 < 1e-04   FALSE
+           outcome ~~ outcome  1.0740 0.0759 14.1421 < 1e-04   FALSE
+       treatment ~~ treatment  0.2500     NA      NA            TRUE
+      treatment ~~ covariate1 -0.0700     NA      NA            TRUE
+     covariate1 ~~ covariate1  1.0398     NA      NA            TRUE
+                 mediator1 ~1  0.0844 0.0696  1.2117 0.22564   FALSE
+                 treatment ~1  0.5025     NA      NA            TRUE
+                covariate1 ~1  0.0174     NA      NA            TRUE
+                   outcome ~1  0.1967 0.0740  2.6561 0.00791   FALSE
 
     Defined parameters:
       name       expr    est     se
@@ -106,7 +112,7 @@ summary(fit)
      total cp + a * b 0.5374 0.1189
 
     Diagnostics:
-      Optimizer status: 3; stationarity 1.45e-08; retries 0
+      Optimizer status: 3; stationarity 7.01e-16; retries 0
       Active bounds: none
       Active constraints: none
       Improper solution: no
@@ -124,21 +130,25 @@ summary(fit)
 tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
 ```
 
-    # A tibble: 12 × 5
+    # A tibble: 16 × 5
        term                   estimate std_error conf_low conf_high
        <chr>                     <dbl>     <dbl>    <dbl>     <dbl>
-     1 a                        0.581     0.0986  0.388      0.775
-     2 mediator1~covariate1     0.448     0.0483  0.353      0.543
-     3 b                        0.573     0.0531  0.469      0.677
-     4 cp                       0.204     0.109  -0.00954    0.418
-     5 outcome~covariate1       0.356     0.0565  0.245      0.467
-     6 mediator1~~mediator1     0.954     0.0674  0.821      1.09
-     7 outcome~~outcome         1.07      0.0759  0.925      1.22
-     8 treatment~~treatment     0.250     0.0177  0.215      0.285
-     9 treatment~~covariate1   -0.0700    0.0257 -0.120     -0.0195
-    10 covariate1~~covariate1   1.04      0.0735  0.896      1.18
-    11 ab                       0.333     0.0644  0.207      0.459
-    12 total                    0.537     0.119   0.304      0.770 
+     1 a                        0.581     0.0986  0.388       0.775
+     2 mediator1~covariate1     0.448     0.0483  0.353       0.543
+     3 b                        0.573     0.0531  0.469       0.677
+     4 cp                       0.204     0.109  -0.00954     0.418
+     5 outcome~covariate1       0.356     0.0565  0.245       0.467
+     6 mediator1~~mediator1     0.954     0.0674  0.821       1.09
+     7 outcome~~outcome         1.07      0.0759  0.925       1.22
+     8 mediator1~1              0.0844    0.0696 -0.0521      0.221
+     9 outcome~1                0.197     0.0740  0.0515      0.342
+    10 treatment~~treatment     0.250    NA      NA          NA
+    11 treatment~~covariate1   -0.0700   NA      NA          NA
+    12 covariate1~~covariate1   1.04     NA      NA          NA
+    13 treatment~1              0.502    NA      NA          NA
+    14 covariate1~1             0.0174   NA      NA          NA
+    15 ab                       0.333     0.0644  0.207       0.459
+    16 total                    0.537     0.119   0.304       0.770
 
 ``` r
 glance(fit)
@@ -147,7 +157,7 @@ glance(fit)
     # A tibble: 1 × 9
        nobs  npar    df chisq p_value logLik   AIC   BIC fixed_x
       <int> <int> <dbl> <dbl>   <dbl>  <dbl> <dbl> <dbl> <chr>
-    1   400    10     0     0      NA -2002. 4032. 4088. ""     
+    1   400     9     0     0      NA -1140. 2298. 2334. treatment, covariate1
 
 The chi-square is \\n\\ times the minimized discrepancy and has `df`
 degrees of freedom. A saturated model (here `df = 0`) fits perfectly by

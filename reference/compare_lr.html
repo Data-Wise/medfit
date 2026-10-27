@@ -29,7 +29,11 @@ written to the engine as fixed parameters at their sample values (in OpenMx,
 a fit with a mean structure is run on the raw data the fit used). Latent variables,
 product terms, fixed or constrained intercepts, weights, factors, other fixed
 or shared parameters, start/bound modifiers and constraints in the model are
-refused by name."><meta property="og:description" content="Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
+refused by name.
+Known limit (#320): the flip of the fit_sem() defaults in 0.15.0 does not change what the comparison finds. On the
+pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run ends above medfit's reference in 18 of 60
+runs and the OpenMx run in 13 of 60, the same counts as under the 0.14.x defaults. Each is reported as
+medfit_warning_engine_statistic_above_max, and no row is mislabeled."><meta property="og:description" content="Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
 an external SEM engine and compares it with medfit's own mbco_sem()
 statistic. A general-purpose optimizer handed the nonlinear constraint
 \(a b = 0\) can drop it (OpenMx at a zero start) or stop at the
@@ -53,7 +57,11 @@ written to the engine as fixed parameters at their sample values (in OpenMx,
 a fit with a mean structure is run on the raw data the fit used). Latent variables,
 product terms, fixed or constrained intercepts, weights, factors, other fixed
 or shared parameters, start/bound modifiers and constraints in the model are
-refused by name."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
+refused by name.
+Known limit (#320): the flip of the fit_sem() defaults in 0.15.0 does not change what the comparison finds. On the
+pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run ends above medfit's reference in 18 of 60
+runs and the OpenMx run in 13 of 60, the same counts as under the 0.14.x defaults. Each is reported as
+medfit_warning_engine_statistic_above_max, and no row is mislabeled."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -173,7 +181,7 @@ refused by name."><meta property="og:image" content="https://data-wise.github.io
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compare medfit's Product-Null LR with OpenMx or lavaan</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.14.1/R/compare-lr.R" class="external-link"><code>R/compare-lr.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/compare-lr.R" class="external-link"><code>R/compare-lr.R</code></a></small>
       <div class="d-none name"><code>compare_lr.Rd</code></div>
     </div>
 
@@ -203,6 +211,10 @@ a fit with a mean structure is run on the raw data the fit used). Latent variabl
 product terms, fixed or constrained intercepts, weights, factors, other fixed
 or shared parameters, start/bound modifiers and constraints in the model are
 refused by name.</p>
+<p>Known limit (#320): the flip of the <code><a href="fit_sem.html">fit_sem()</a></code> defaults in 0.15.0 does not change what the comparison finds. On the
+pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run ends above medfit's reference in 18 of 60
+runs and the OpenMx run in 13 of 60, the same counts as under the 0.14.x defaults. Each is reported as
+<code>medfit_warning_engine_statistic_above_max</code>, and no row is mislabeled.</p>
     </div>
 
     <div class="section level2">
@@ -258,8 +270,8 @@ LR, convergence, constraint residual and status) and <code>engine</code>.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> medfit LR comparison (lavaan, a*b = 0): agree</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   medfit reference LR 17.5574 (accepted)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  engine version   start      lr converged     residual status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  lavaan   0.7.3 default 17.5574      TRUE 2.418474e-09  agree</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  lavaan   0.7.3    zero 17.5574      TRUE 3.773233e-09  agree</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  lavaan   0.7.3 default 17.5574      TRUE 2.505538e-09  agree</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  lavaan   0.7.3    zero 17.5574      TRUE 3.771936e-09  agree</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

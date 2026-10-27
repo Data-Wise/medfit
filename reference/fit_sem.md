@@ -19,8 +19,8 @@ fit_sem(
   control = list(),
   weights = NULL,
   se_type = c("model", "sandwich"),
-  meanstructure = NULL,
-  fixed_x = FALSE,
+  meanstructure = TRUE,
+  fixed_x = TRUE,
   sampling_weights = lifecycle::deprecated()
 )
 ```
@@ -93,23 +93,21 @@ fit_sem(
 
 - meanstructure:
 
-  Logical or `NULL`. `NULL` (default) fits a mean structure when the
-  model writes an intercept (`y ~ 1`, free or fixed); `TRUE` fits one
-  regardless; `FALSE` fits covariances only and errors if an intercept
-  is written. With a mean structure every observed variable whose
-  intercept is not written has a free one, so a model with only free
-  intercepts has the same estimates and standard errors as the
-  covariance-only fit. A latent variable's mean is fixed at 0. A model
-  with a product term (`y ~ x + m + x:m`) always fits the mean structure
-  (it needs the mediator intercept for the four-way decomposition), so
-  with a product `meanstructure = FALSE` is an error. Left unset, with
-  no `~1` and no product in the model, it warns once per session that
-  the default becomes `TRUE` in medfit 0.15.0;
-  `options(medfit.native_defaults = "0.15")` uses `TRUE` now.
+  Logical or `NULL`. `TRUE` (default) fits a mean structure; `NULL` fits
+  one only when the model writes an intercept (`y ~ 1`, free or fixed);
+  `FALSE` fits covariances only and errors if an intercept is written.
+  With a mean structure every observed variable whose intercept is not
+  written has a free one, so a model with only free intercepts has the
+  same estimates and standard errors as the covariance-only fit. A
+  latent variable's mean is fixed at 0. A model with a product term
+  (`y ~ x + m + x:m`) always fits the mean structure (it needs the
+  mediator intercept for the four-way decomposition), so with a product
+  `meanstructure = FALSE` is an error. An explicit `NULL` or `FALSE` is
+  kept as given.
 
 - fixed_x:
 
-  `FALSE` (default), `TRUE`, or a character vector of exogenous observed
+  `TRUE` (default), `FALSE`, or a character vector of exogenous observed
   variable names. The selected variables (`TRUE`: every exogenous
   observed variable, product columns included) have their mean (with a
   mean structure), variance and the exogenous covariances the model
@@ -129,14 +127,12 @@ fit_sem(
   silently keep it free). The fixed rows stay in the parameter table
   (`fixed_x` column, no standard error) but not in
   [`coef()`](https://rdrr.io/r/stats/coef.html) or
-  [`vcov()`](https://rdrr.io/r/stats/vcov.html). Left unset, in a model
-  with an exogenous observed variable, it warns once per session that
-  the default becomes the exogenous observed variables in medfit 0.15.0;
-  `options(medfit.native_defaults = "0.15")` uses that now: every
-  exogenous observed variable (product and factor-dummy columns
-  included) except those a `~~` or `~1` statement names, which are left
-  free with a message of class `medfit_message_fixed_x_lenient` (an
-  explicit `TRUE` errors there instead). `glance()$fixed_x` names the
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html). Left unset it resolves
+  to an explicit subset: every exogenous observed variable (product and
+  factor-dummy columns included) except those a `~~` or `~1` statement
+  names, which are left free with a message of class
+  `medfit_message_fixed_x_lenient` (an explicit `TRUE` errors there
+  instead; an explicit `FALSE` is kept). `glance()$fixed_x` names the
   set the fit used.
 
 - sampling_weights:
@@ -158,16 +154,13 @@ refuse; see
 [SEMFit-methods](https://data-wise.github.io/medfit/reference/SEMFit-methods.md).
 `diagnostics$ledger` holds the versioned outcome ledger described below.
 
-## Defaults are changing
+## Defaults changed in 0.15.0
 
-In medfit 0.15.0 the defaults become `fixed_x` = the exogenous observed
-variables (lavaan's `fixed.x = TRUE`) and `meanstructure = TRUE`, so a
-default fit matches a default
-[`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fit. 0.14.0
-changes no result: it warns once per session per argument (class
-`medfit_warning_default_change`) when an argument is left unset in a
-model where its default will matter. Under the new defaults the
-parameter count, [`logLik()`](https://rdrr.io/r/stats/logLik.html),
+`fixed_x` is the exogenous observed variables (lavaan's
+`fixed.x = TRUE`) and `meanstructure = TRUE`, so a default fit matches a
+default [`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fit.
+Against 0.14.x the parameter count,
+[`logLik()`](https://rdrr.io/r/stats/logLik.html),
 [`AIC()`](https://rdrr.io/r/stats/AIC.html),
 [`BIC()`](https://rdrr.io/r/stats/AIC.html) and the names in
 [`coef()`](https://rdrr.io/r/stats/coef.html),
@@ -175,12 +168,10 @@ parameter count, [`logLik()`](https://rdrr.io/r/stats/logLik.html),
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) change; the
 structural estimates and their standard errors did not change on the
 cases measured. Which random start a multi-start fit tries can change
-too (the retry seed follows the parameter names). To keep today's
-results and silence the warning, pass both arguments, for example
-`fixed_x = FALSE, meanstructure = NULL`. To fit with the 0.15.0 defaults
-now, set `options(medfit.native_defaults = "0.15")`; variables a `~~` or
-`~1` statement names are then left free and named in a message of class
-`medfit_message_fixed_x_lenient`.
+too (the retry seed follows the parameter names). To keep the 0.14.x
+results, pass `fixed_x = FALSE, meanstructure = NULL`.
+`options(medfit.native_defaults)` is obsolete and ignored, with one
+message per session; it is removed in 0.16.0.
 
 ## Outcome ledger
 

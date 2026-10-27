@@ -64,10 +64,11 @@ fit
     ==================================
 
       Observations:  400
-      Parameters:    15 free, 0 df
+      Parameters:    11 free, 0 df
       Information:   observed
       Std. errors:   model-based
       Converged:     Yes
+      logLik is conditional on: treatment, covariate1, covariate2
 
     Defined parameters:
       ab              0.3328  (SE 0.0642)
@@ -131,11 +132,15 @@ nie(x2)
 
 ## Intercepts
 
-Writing any intercept (`y ~ 1`, or `1` as a term, `y ~ 1 + x`) turns the
-mean structure on and frees an intercept for every observed variable you
-did not mention, as lavaan does. The paths, variances and their standard
-errors are then the same as without it; the fit also reports the
-intercepts and the mean of each exogenous variable.
+Since 0.15.0 every native fit has a mean structure by default
+(`meanstructure` left unset is `TRUE`), with a free intercept for every
+observed variable you did not mention, as lavaan does with
+`meanstructure = TRUE`. You write an intercept (`y ~ 1`, or `1` as a
+term, `y ~ 1 + x`) to restrict it or to give it a label. The paths,
+variances and their standard errors are the same as without the mean
+structure; the fit also reports the intercepts and the mean of each
+exogenous variable (fixed with the other exogenous moments by default,
+so those rows have no standard error).
 
 ``` r
 paths <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"
@@ -148,7 +153,7 @@ tidy(free)[tidy(free)$op == "~1", c("term", "estimate", "std_error")]
       <chr>          <dbl>     <dbl>
     1 outcome~1      0.231    0.0774
     2 mediator1~1    0.155    0.0763
-    3 treatment~1    0.502    0.0250
+    3 treatment~1    0.502   NA     
 
 An intercept you fix or constrain is a restriction, so it can change the
 other estimates. Fixing the outcome intercept at 0 costs one degree of
@@ -178,10 +183,11 @@ anova(free, zero)
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 Equating two intercepts works the same way (`i1 == i2` with labels `i1`
-and `i2`). `meanstructure = TRUE` turns the mean structure on without
-writing any intercept, and `meanstructure = FALSE` fits covariances
-only. A latent variable’s mean is fixed at 0, and a free latent
-intercept stops with “latent means are planned for a later release”.
+and `i2`). `meanstructure = NULL` fits a mean structure only when the
+model writes an intercept or a product (the 0.14.x rule), and
+`meanstructure = FALSE` fits covariances only. A latent variable’s mean
+is fixed at 0, and a free latent intercept stops with “latent means are
+planned for a later release”.
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
 reads the paths exactly as before; add a product term and it returns the
 four-way decomposition ([below](#product-terms)).
@@ -215,8 +221,8 @@ observed exogenous variable, so the likelihood, the constraints and the
 mean structure are the same as for any other regressor. `x:m` and `m:x`
 are one term, stored under the canonical name (the two names sorted in
 the C locale, `m:x`), and a label (`b*x:m`) names the coefficient. A
-product turns the mean structure on. Writing the treatment-by-mediator
-product in the outcome equation makes
+product needs the mean structure, which is on by default. Writing the
+treatment-by-mediator product in the outcome equation makes
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
 return the four-way decomposition; the [interaction
 page](https://data-wise.github.io/medfit/articles/model-interaction.html#the-native-engine)
@@ -314,22 +320,29 @@ gives the reason.
   no such limit.
 - **A label must be defined** before `:=` can use it; an unknown label
   stops with “unknown parameter label”.
-- **Exogenous variables get free variances and covariances**, as lavaan
-  does with `fixed.x = FALSE`, so they appear in the parameter table.
-  `fixed_x = TRUE` (or a vector of names) fixes the selected ones at the
-  sample moments, as `fixed.x = TRUE` does: the structural estimates,
-  their standard errors and the degrees of freedom do not change, the
-  parameter count falls, and
-  [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC become
+- **Exogenous variables are fixed at their sample moments by default**,
+  as lavaan does with `fixed.x = TRUE`: the structural estimates, their
+  standard errors and the degrees of freedom do not change, the
+  parameter count is smaller, and
+  [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC are
   conditional on the fixed variables, so fits with different fixed sets
-  cannot be compared.
+  cannot be compared. The fixed rows stay in the parameter table without
+  a standard error. `fixed_x = FALSE` estimates them (the 0.14.x
+  default), and a vector of names fixes only those. AIC and BIC count
+  the free intercepts and means; they equal a
+  [`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fit with
+  `meanstructure = TRUE`, and exceed a default
+  [`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) (no mean
+  structure) by 2 per free intercept in AIC and by log(n) per free
+  intercept in BIC.
 - **AIC and BIC across product and no-product fits are not comparable.**
   The product column is an extra observed variable in the joint
   likelihood, so a fit with `x:m` and the same model without it describe
-  different data (on `mediation_demo`, the same outcome gives AIC 3934.7
-  with the product and 2994.1 without). `AIC(fit_a, fit_b)`,
-  `BIC(fit_a, fit_b)`, [`anova()`](https://rdrr.io/r/stats/anova.html)
-  and
+  different data (on `mediation_demo`, the same outcome gives AIC 2335.6
+  with the product and 2333.6 without under the default settings; the
+  gap can look small, but the two likelihoods are over different data).
+  `AIC(fit_a, fit_b)`, `BIC(fit_a, fit_b)`,
+  [`anova()`](https://rdrr.io/r/stats/anova.html) and
   [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
   refuse such a pair, naming the observed variables that differ.
 - **Products** are limited to two observed variables inside the class in
