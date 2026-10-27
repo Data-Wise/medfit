@@ -22,7 +22,9 @@
 #                                                 "exits 0 but bad" mutations per gate plus a control,
 #                                                 the stationarity scale mutants, and stub-script
 #                                                 cases for the --sim path (crash, no write, control)
-# Options: --max-age DAYS (default 14; older results are stale), --dir DIR (results directory).
+# Options: --max-age DAYS (default 14; older results are stale), --dir DIR (results directory), --monthly (also run
+# the gates listed in tests/sim/gates-monthly.txt, which every mode drops otherwise: the qc-monthly workflow passes it,
+# the PR gates shards do not; ADR D-13).
 # Exit status: 0 only when every requested check passes. Summary: tests/sim/results/gates-summary-<date>.txt
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -36,9 +38,16 @@ results_dir <- opt("--dir", "tests/sim/results")
 max_age <- as.numeric(opt("--max-age", "14"))
 only <- if (!is.null(opt("--only"))) strsplit(opt("--only"), ",", fixed = TRUE)[[1]] else NULL
 source("tests/sim/product-gate-common.R") # pass rules of the product-term and four-way gates (one implementation)
+source("tests/sim/semopy-oracle-lib.R") # the semopy gate's verdict and the monthly-only gate list (ADR D-13)
 spec_all <- utils::read.csv("tests/sim/gates.csv", stringsAsFactors = FALSE, na.strings = c("NA", ""))
 spec <- spec_all
 if (!is.null(only)) spec <- spec[spec$gate %in% only, , drop = FALSE]
+monthly <- so_monthly_gates()
+if (!has("--monthly") && any(spec$gate %in% monthly)) {
+  cat(sprintf("monthly-only gates skipped (pass --monthly to run them): %s\n\n",
+              paste(intersect(spec$gate, monthly), collapse = ", ")))
+}
+spec <- so_drop_monthly(spec, monthly, has("--monthly"))
 
 chk <- function(check, ok, detail) {
   data.frame(check = check, pass = isTRUE(ok), detail = detail, stringsAsFactors = FALSE)
@@ -138,7 +147,8 @@ verdict_gate <- function(gate, d, s) {
     "compare-lr" = c("engine", "version", "seed", "verdict", "all_converged", "ref_ok", "drop", "above", "warn_drop",
                      "warn_above", "mislabel", "pass"),
     restoration = c("check", "kind", "value", "limit", "pass", "detail"),
-    "native-defaults" = c("cell", "combo", "quantity", "native", "oracle", "diff", "tol", "status", "reason")
+    "native-defaults" = c("cell", "combo", "quantity", "native", "oracle", "diff", "tol", "status", "reason"),
+    semopy = c("param", "status", "est_gap", "se_rel", "sl_est_gap", "sl_se_rel", "reason")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -443,6 +453,9 @@ verdict_gate <- function(gate, d, s) {
             sprintf("%d resolved-set rows (product, factor, lenient)", nrow(set)))
       )
     },
+    # ADR D-13: semopy counts only where it agrees with lavaan; each status is re-derived from the recorded gaps, and
+    # a pass floor keeps an all-disputed run from passing. Every row n/a (no uv) is a skip, except in qc-monthly.
+    semopy = so_gate_checks(d, s), # nolint: object_usage_linter.
     restoration = {
       # restoration-bound T5/T6 (G12): every check of the script is a row; the numeric verdicts are re-derived from the
       # recorded numbers, so a row that claims pass over a bad number cannot pass. tol_est is k, tol_se the margin.
@@ -595,6 +608,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "factor") d$pass[1:3] <- FALSE
     if (gate == "oracle-sweep") d$outcome[1] <- "WRONG"
     if (gate == "native-defaults") d$diff[which(d$status == "pass")[1:3]] <- 1 # status still says pass
+    if (gate == "semopy") d$est_gap[which(d$status == "pass")[1:3]] <- 1e-3 # status still says pass
     if (gate == "compare-lr") {
       d$mislabel[1:3] <- TRUE
       d$pass[1:3] <- FALSE
@@ -635,6 +649,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "oracle-sweep") d$error[1] <- "fit failed"
     if (gate == "compare-lr") d$verdict[1] <- "error"
     if (gate == "native-defaults") d$status[1] <- "fail"
+    if (gate == "semopy") d$status[1] <- "error"
     if (gate == "restoration") d$pass[1] <- FALSE
   }
   if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
@@ -675,7 +690,7 @@ mutate <- function(gate, kind, d) {
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
       "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration",
-      "native-defaults"
+      "native-defaults", "semopy"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -881,7 +896,8 @@ scripts <- c(
   "oracle-sweep" = "tests/sim/sem-oracle-sweep.R",
   "compare-lr" = "tests/sim/compare-lr-gate.R",
   restoration = "tests/sim/sem-restoration-gate.R",
-  "native-defaults" = "tests/sim/native-defaults-oracle.R"
+  "native-defaults" = "tests/sim/native-defaults-oracle.R",
+  semopy = "tests/sim/semopy-oracle-gate.R"
 )
 
 # ---- main ----

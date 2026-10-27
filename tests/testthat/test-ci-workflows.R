@@ -32,3 +32,32 @@ test_that("planted defect: the checks above reject the two mistakes they guard a
   expect_true(literal(bad))
   expect_false(literal(good))
 })
+
+test_that("monthly QC propagates PR gate failures after uploading artifacts", {
+  f <- wf_path("workflows", "qc-monthly.yaml")
+  skip_if_not(file.exists(f), "no .github directory (installed package)")
+  skip_if_not_installed("yaml")
+  steps <- yaml::read_yaml(f)$jobs$gates$steps
+  names <- vapply(steps, function(x) if (is.null(x$name)) "" else x$name, "")
+  gate <- which(names == "Run the gates of this shard (--sim)")
+  upload <- which(vapply(steps, function(x) {
+    if (is.null(x$uses)) FALSE else startsWith(x$uses, "actions/upload-artifact@")
+  }, TRUE))
+  final <- which(names == "Fail PR shard when its gate failed")
+  expect_length(gate, 1L)
+  expect_length(upload, 1L)
+  expect_length(final, 1L)
+  if (length(final) != 1L) return()
+  expect_true(gate < upload && upload < final)
+  expect_true(isTRUE(steps[[gate]][["continue-on-error"]]))
+  expect_identical(steps[[final]]$`if`, "always() && github.event_name == 'pull_request'")
+  script <- steps[[final]]$run
+  expect_match(script, "steps.gate.outcome", fixed = TRUE)
+  for (outcome in c("success", "failure")) {
+    path <- withr::local_tempfile(fileext = ".sh")
+    writeLines(gsub("${{ steps.gate.outcome }}", outcome, script, fixed = TRUE), path)
+    result <- suppressWarnings(system2("sh", path, stdout = TRUE, stderr = TRUE))
+    status <- attr(result, "status")
+    if (outcome == "success") expect_null(status) else expect_identical(status, 1L)
+  }
+})
