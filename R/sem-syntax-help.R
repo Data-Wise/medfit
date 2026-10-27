@@ -157,15 +157,14 @@
 #' [mbco_sem()] refuse such a pair. A product of
 #' exogenous variables with the block free keeps the ordinary test.
 #'
-#' @section Defaults are changing:
-#' medfit 0.15.0 changes two defaults of [fit_sem()] and `fit_mediation(engine = "native")`: `fixed_x` becomes the
-#' exogenous observed variables (as lavaan's `fixed.x = TRUE`) and `meanstructure` becomes `TRUE`, so every observed
-#' intercept is free without a `~1` statement. The parameter count, `logLik()`, `AIC()`, `BIC()` and the parameter
-#' names move; the structural estimates and their standard errors did not move on the cases measured. 0.14.0 warns
-#' once per session (class `medfit_warning_default_change`); pass `fixed_x` and `meanstructure` to silence it, or set
-#' `options(medfit.native_defaults = "0.15")` to use the new defaults now. Under that option a variable a `~~` or `~1`
-#' statement names is left free (message class `medfit_message_fixed_x_lenient`) instead of the error an explicit
-#' `fixed_x = TRUE` gives. [fit_sem()] has the details.
+#' @section Defaults changed in 0.15.0:
+#' Since medfit 0.15.0 an unset `fixed_x` means the exogenous observed variables (as lavaan's `fixed.x = TRUE`) and an
+#' unset `meanstructure` means `TRUE`, so every observed intercept is free without a `~1` statement. Against 0.14.x the
+#' parameter count, `logLik()`, `AIC()`, `BIC()` and the parameter names move; the structural estimates and their
+#' standard errors did not move on the cases measured. A variable a `~~` or `~1` statement names is left free (message
+#' class `medfit_message_fixed_x_lenient`) instead of the error an explicit `fixed_x = TRUE` gives. To keep the 0.14.x
+#' results, pass `fixed_x = FALSE, meanstructure = NULL`. `options(medfit.native_defaults)` is obsolete and ignored,
+#' with one message per session, and is removed in 0.16.0. [fit_sem()] has the details.
 #'
 #' @section medfit extensions:
 #' * **Comma shorthand** (medfit extension). A comma-separated left side

@@ -12,24 +12,13 @@ execute:
   echo: true
 ---
 
-```{r}
-#| label: native-defaults-setup
-#| include: false
-# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
-# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
-invisible(withCallingHandlers(
-  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
-  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
-))
-```
-
 Ten steps from a model written as syntax to a tested, constrained and extracted
 mediation result. It sits between [the five-minute quickstart](native-quickstart.html)
 and [the native engine guide](native-guide.html).
 
 | | |
 |---|---|
-| **You need** | medfit 0.8.0 or later (step 9 needs 0.9.0 or later, and step 10 needs 0.11.0); the bundled `mediation_demo` data |
+| **You need** | medfit 0.8.0 or later (step 9 needs 0.15.0 for the default `fixed_x`; on 0.9.0 to 0.14.x pass `fixed_x = TRUE`; step 10 needs 0.11.0); the bundled `mediation_demo` data |
 | **You get** | a `SEMFit`, a test of the indirect effect, a constrained comparison, a `MediationData` |
 | **Time** | about 20 minutes |
 
@@ -142,26 +131,26 @@ fit.
 
 ## Step 9. Fix exogenous covariates
 
-Needs medfit 0.9.0 or later. With many covariates, most parameters are the
-exogenous variances and covariances (and the means, when the model has a mean
-structure). `fixed_x = TRUE` fixes them at their sample values, as lavaan's
-`fixed.x = TRUE` does, and leaves the structural paths alone. The restricted
-model of Step 6 shows that the test does not move either:
+With many covariates, most parameters are the exogenous variances, covariances and
+means. Since 0.15.0 `fit_sem()` fixes them at their sample values by default, as
+lavaan's `fixed.x = TRUE` does, and leaves the structural paths alone; every fit above
+already did. `fixed_x = FALSE` estimates them instead. The restricted model of Step 6
+shows that the test does not move either:
 
 ```{r}
 #| label: fixed-x
-tied_fx <- fit_sem(paste0(syntax, "cp == a * b\n"), mediation_demo, fixed_x = TRUE)
-round(coef(tied_fx)[c("a", "b", "cp")], 3)
+tied_free <- fit_sem(paste0(syntax, "cp == a * b\n"), mediation_demo, fixed_x = FALSE)
+round(coef(tied_free)[c("a", "b", "cp")], 3)
 rbind(
-  free  = glance(tied)[, c("npar", "df", "chisq", "logLik", "fixed_x")],
-  fixed = glance(tied_fx)[, c("npar", "df", "chisq", "logLik", "fixed_x")]
+  fixed = glance(tied)[, c("npar", "df", "chisq", "logLik", "fixed_x")],
+  free  = glance(tied_free)[, c("npar", "df", "chisq", "logLik", "fixed_x")]
 )
 ```
 
 Check: `a`, `b` and `cp` match Step 6, and `df` and `chisq` are the same, but
-`npar` is smaller. The log likelihood is conditional on the fixed variables, so
-it is not comparable with the free fit's, and `anova()` refuses to compare the
-two fits. `fixed_x` also takes a character vector, such as
+`npar` is larger for the free fit. The log likelihood of the default fit is conditional
+on the fixed variables, so it is not comparable with the free fit's, and `anova()`
+refuses to compare the two fits. `fixed_x` also takes a character vector, such as
 `fixed_x = "covariate1"`, to fix only some of the exogenous variables.
 
 ## Step 10. Add a categorical covariate

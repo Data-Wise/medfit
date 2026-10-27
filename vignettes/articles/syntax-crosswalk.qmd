@@ -12,17 +12,6 @@ execute:
   echo: true
 ---
 
-```{r}
-#| label: native-defaults-setup
-#| include: false
-# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
-# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
-invisible(withCallingHandlers(
-  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
-  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
-))
-```
-
 medfit's quality control checks the native engine against independent SEM software
 ([Quality control of the optimizer](quality-control.html)). This page writes the same simple
 mediation model in each package's own syntax, so the comparisons can be read and rerun. The
@@ -38,11 +27,12 @@ data (n = 400).
 |---|---|---|---|---|
 | Label a path | `mediator1 ~ a*treatment` | `mediator1 ~ a*treatment` | `mxPath(..., labels = "a")` | `mediator1 ~ a*treatment` |
 | Indirect effect | `ab := a*b` | `ab := a*b` | `mxAlgebra(a * b, name = "ab")` | not in the syntax: `:=` is an unknown command; compute `a * b` from the estimates |
-| Exogenous variance | estimated; `fixed_x = TRUE` fixes it | fixed by default; `fixed.x = FALSE` estimates it | estimated when you write its path | not estimated (no row in the output) |
+| Exogenous variance | fixed at the sample value by default; `fixed_x = FALSE` estimates it | fixed by default; `fixed.x = FALSE` estimates it | estimated when you write its path | not estimated (no row in the output) |
 | Tight convergence | default | default | `mxOption()` tolerances (defaults stop up to about 5.5e-6 away) | `options = {"ftol": 1e-12}` (the default stops about 4e-5 away) |
 
-In medfit 0.15.0 the native defaults become `fixed_x` = the exogenous observed variables and `meanstructure = TRUE`,
-so the exogenous variance row will be fixed by default, as in lavaan.
+Since medfit 0.15.0 the native defaults are `fixed_x` = the exogenous observed variables and `meanstructure = TRUE`,
+so a default `fit_sem()` fixes the exogenous variance, as a default `lavaan::sem()` does. The structural paths and
+their standard errors are the same either way.
 
 ## medfit
 
@@ -56,7 +46,7 @@ model <- "
   ab := a*b
 "
 native <- tidy(fit_sem(model, mediation_demo))
-native[, c("term", "estimate", "std_error")]
+native[native$term %in% c("a", "b", "cp", "ab"), c("term", "estimate", "std_error")]
 ```
 
 ## lavaan
@@ -64,7 +54,7 @@ native[, c("term", "estimate", "std_error")]
 ```{r}
 #| label: lavaan
 library(lavaan)
-lav <- parameterEstimates(sem(model, mediation_demo, fixed.x = FALSE))
+lav <- parameterEstimates(sem(model, mediation_demo))
 lav[lav$label %in% c("a", "b", "cp", "ab"), c("label", "est", "se")]
 ```
 
@@ -134,7 +124,7 @@ cat("```python", readLines(file.path(oracles, "semopy-simple.py")), "```", sep =
 ```
 
 Its output from semopy 2.3.11 (2026-10-24), saved as `tests/sim/oracles/semopy-simple.csv`,
-next to medfit with `fixed_x = TRUE`, which matches semopy's treatment of the exogenous
+next to medfit's default fit, which matches semopy's treatment of the exogenous
 variable:
 
 ```{r}
@@ -144,7 +134,7 @@ labels <- c("mediator1~treatment" = "a", "outcome~mediator1" = "b", "outcome~tre
 key <- paste0(semopy$lhs, semopy$op, semopy$rhs)
 semopy$term <- ifelse(key %in% names(labels), labels[key], key)
 stopifnot(nrow(semopy) == 5)
-fixed <- tidy(fit_sem(model, mediation_demo, fixed_x = TRUE))
+fixed <- tidy(fit_sem(model, mediation_demo))
 both <- merge(semopy[, c("term", "estimate", "std_error")],
               fixed[, c("term", "estimate", "std_error")], by = "term",
               suffixes = c("_semopy", "_medfit"))

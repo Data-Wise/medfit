@@ -2,17 +2,6 @@
 title: "Inference"
 ---
 
-```{r}
-#| label: native-defaults-setup
-#| include: false
-# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
-# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
-invisible(withCallingHandlers(
-  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
-  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
-))
-```
-
 The first four chapters built the estimates. This chapter builds everything that comes with them: standard errors from
 the information matrix (expected and observed), standard errors of defined parameters (the delta method), robust standard
 errors for weighted data (the sandwich), the test of an indirect effect (MBCO), and the general likelihood-ratio test
@@ -29,6 +18,12 @@ engine and, where they offer the same quantity, against lavaan or OpenMx.
 #| label: setup
 library(medfit)
 library(generics)
+# These chapters teach the joint likelihood and the covariance-first form of the engine, so every fit pins the
+# 0.14.x settings. medfit 0.15.0 itself defaults to fixed_x = the exogenous variables and meanstructure = TRUE; the
+# note at the end of chapter 1 and Section 6 of chapter 4 show what that changes. Pass an explicit value to a call to override the pin.
+fit_sem <- function(model, data, ..., fixed_x = FALSE, meanstructure = NULL) {
+  medfit::fit_sem(model, data, ..., fixed_x = fixed_x, meanstructure = meanstructure)
+}
 rd <- function(x, d = 4) round(x, d)
 d <- mediation_demo
 n <- nrow(d)

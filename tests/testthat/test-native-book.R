@@ -69,7 +69,8 @@ test_that("chapter 5: the expected information is the trace formula, and the san
     mediator2 ~ treatment
     outcome ~ mediator1 + mediator2
   "
-  fe <- fit_sem(parallel, d, information = "expected")
+  # the hand formulas below are the covariance-only likelihood: pin it (the 0.15.0 defaults fix x and add a mean block)
+  fe <- fit_sem(parallel, d, information = "expected", fixed_x = FALSE, meanstructure = NULL)
   ram <- fe@internals$ram
   smp <- medfit:::.sem_sample(fe@data, ram)
   theta <- fe@theta
@@ -84,7 +85,7 @@ test_that("chapter 5: the expected information is the trace formula, and the san
   set.seed(4)
   w <- rexp(n) + 0.3
   mediation <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"
-  fw <- fit_sem(mediation, d, weights = w, se_type = "sandwich")
+  fw <- fit_sem(mediation, d, weights = w, se_type = "sandwich", fixed_x = FALSE, meanstructure = NULL)
   rw <- fw@internals$ram
   sw <- medfit:::.sem_sample(fw@data, rw, weights = w)
   scores <- medfit:::.sem_scores(fw@theta, rw, sw)
@@ -148,4 +149,14 @@ test_that("chapters 3 and 5 state the 0.13.0 behavior (-4, capped restoration, f
   expect_match(ch5, "unresolved = TRUE", fixed = TRUE)
   # planted: a chapter stating another k is not accepted as this one
   expect_false(grepl(sprintf("$k = %g$", .sem_restore_k), sub("$k = 4$", "$k = 40$", ch3, fixed = TRUE), fixed = TRUE))
+})
+
+test_that("the chapters carry no 0.14.0 warning muffle and pin the 0.14.x settings in one visible wrapper", {
+  for (g in book_chapters()) {
+    txt <- read_text(file.path(book_dir(), "chapters", g))
+    expect_false(grepl("medfit_warning_default_change|native-defaults-setup", txt), info = g)
+    wrapper <- "fit_sem <- function(model, data, ..., fixed_x = FALSE, meanstructure = NULL)"
+    expect_true(grepl(wrapper, txt, fixed = TRUE), info = g)
+  }
+  expect_false(grepl("documents medfit 0\\.14", read_text(file.path(book_dir(), "index.qmd"))))
 })

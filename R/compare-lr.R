@@ -308,6 +308,11 @@
 #' or shared parameters, start/bound modifiers and constraints in the model are
 #' refused by name.
 #'
+#' Known limit (#320): the flip of the `fit_sem()` defaults in 0.15.0 does not change what the comparison finds. On the
+#' pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run ends above medfit's reference in 18 of 60
+#' runs and the OpenMx run in 13 of 60, the same counts as under the 0.14.x defaults. Each is reported as
+#' `medfit_warning_engine_statistic_above_max`, and no row is mislabeled.
+#'
 #' @param object A [SEMFit] from [fit_sem()].
 #' @param paths Character vector: the labels of the regression paths whose
 #'   product is the indirect effect, as in [mbco_sem()].

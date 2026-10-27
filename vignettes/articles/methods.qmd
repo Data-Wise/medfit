@@ -11,17 +11,6 @@ execute:
   eval: true
 ---
 
-```{r}
-#| label: native-defaults-setup
-#| include: false
-# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.
-# This hidden fit consumes that warning so the results below print on the 0.14 defaults without it.
-invisible(withCallingHandlers(
-  medfit::fit_sem("mediator1 ~ treatment\noutcome ~ mediator1 + treatment", data = medfit::mediation_demo),
-  medfit_warning_default_change = function(w) invokeRestart("muffleWarning")
-))
-```
-
 This article collects, in one place, the estimands medfit computes, the
 formulas behind every effect, and how each standard error and interval is
 obtained. It describes what the code does; the other articles show how to call
@@ -614,6 +603,10 @@ with $S_{ff}$ the sample covariance (divisor $n$) of the $k$ fixed variables; th
 Without a mean structure, the likelihood counts one saturated mean for each of the $p - k$ variables that are not
 fixed. Because $\log L_{\mid x_f}$ conditions on different variables for different fixed sets, fits compare
 only when their fixed sets and data agree.
+
+Since 0.15.0 an unset `fixed_x` fixes the exogenous observed variables and an unset `meanstructure` fits the mean
+structure, so the default likelihood is $\log L_{\mid x_f}$ with the unfixed observed means free; `fixed_x = FALSE`
+restores the joint likelihood. The AIC and BIC count those free means, as lavaan does with `meanstructure = TRUE`.
 
 ### Products and observed information
 

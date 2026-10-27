@@ -2,7 +2,7 @@
 
 This book opens the native maximum-likelihood engine of the medfit R package
 (`fit_sem()`, `fit_mediation(engine = "native")`, `SEMFit`) and shows every
-matrix it works with. It documents medfit 0.14.1. It is reference material kept
+matrix it works with. It documents medfit 0.15.0. It is reference material kept
 in the package repository (`book/`); it is not part of the package website.
 
 Chapters, in order:
@@ -17,6 +17,15 @@ Chapters, in order:
 
 How the optimizer is tested, and the decisions behind its solver, are on the package website:
 [Quality control of the optimizer](https://data-wise.github.io/medfit/articles/quality-control.html).
+
+## Defaults in 0.15.0 {.unnumbered}
+
+Since 0.15.0 an unset `fixed_x` fixes the exogenous observed variables and an unset `meanstructure` is `TRUE`
+(`options(medfit.native_defaults)` is obsolete and is removed in 0.16.0). The structural estimates and their
+standard errors do not change; the conditional log likelihood, the parameter count behind AIC and BIC, the names in
+`coef()` and the retry seed do. To keep the chapters' matrices joint and covariance-first, each chapter defines a
+`fit_sem()` wrapper in its setup chunk that pins `fixed_x = FALSE, meanstructure = NULL`; Chapter 4 shows the unpinned
+default beside the pinned fit.
 
 ## How to build {.unnumbered}
 
