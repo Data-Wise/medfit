@@ -17,7 +17,7 @@ the repository files at site build (`tests/sim/gates.csv`,
 `tests/sim/structures.csv` and the front matter of `planning/specs/ADR-*.md`),
 so they cannot drift from them. Plan and ledger:
 `planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md`.
-The model syntax for the external oracles (lavaan, OpenMx, and the candidate semopy) is on
+The model syntax for the external oracles (lavaan, OpenMx, and semopy) is on
 [One model in medfit, lavaan, OpenMx and semopy](syntax-crosswalk.html).
 
 ```{r}
@@ -137,6 +137,12 @@ needs at least items 1 to 3.
 | 7 | Platform run | the gate passes on the OpenBLAS runner |
 
 ## The monthly run
+
+The monthly-only semopy gate compares estimates and standard errors for observed,
+latent, parallel and serial models. A comparison counts only when semopy also
+agrees with lavaan. The gate uses semopy 2.3.11 and requires `uv` in the monthly
+workflow; outside that workflow an unavailable dependency produces `n/a` rows.
+semopy and medfit both use SLSQP, so lavaan provides a separate solver check.
 
 The `qc-monthly` workflow runs the gates on `dev` on the first of each month, appends one row
 to a history on the `qc-results` branch (the environment fingerprint, one
