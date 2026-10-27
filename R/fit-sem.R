@@ -82,7 +82,7 @@
 #' names in `coef()`, `vcov()` and `tidy()` change; the structural estimates and their standard errors did not change
 #' on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
 #' parameter names). To keep the 0.14.x results, pass `fixed_x = FALSE, meanstructure = NULL`.
-#' `options(medfit.native_defaults)` is obsolete and ignored, with one message per session; it is removed in 0.16.0.
+#' The 0.14.x `options(medfit.native_defaults)` opt-in no longer has any effect.
 #'
 #' @return A [SEMFit] object. With a product term whose factor is a regression target (`x:m` with
 #'   `m` regressed on `x`), `glance()` reports the chi-square, df and p-value as `NA` with a note, and
@@ -195,7 +195,6 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     .notify_ipw_model_se()
   }
   model <- paste(model, collapse = "\n")
-  .native_defaults_obsolete_note()
   if (fx_unset || ms_unset) {
     resolved <- .native_defaults_resolve(model, data, fixed_x, meanstructure, fx_unset, ms_unset)
     fixed_x <- resolved$fixed_x

@@ -21,7 +21,7 @@ How the optimizer is tested, and the decisions behind its solver, are on the pac
 ## Defaults in 0.15.0 {.unnumbered}
 
 Since 0.15.0 an unset `fixed_x` fixes the exogenous observed variables and an unset `meanstructure` is `TRUE`
-(`options(medfit.native_defaults)` is obsolete and is removed in 0.16.0). The structural estimates and their
+(`options(medfit.native_defaults)` was ignored from 0.15.0 and is removed in 0.16.0). The structural estimates and their
 standard errors do not change; the conditional log likelihood, the parameter count behind AIC and BIC, the names in
 `coef()` and the retry seed do. To keep the chapters' matrices joint and covariance-first, each chapter defines a
 `fit_sem()` wrapper in its setup chunk that pins `fixed_x = FALSE, meanstructure = NULL`; Chapter 4 shows the unpinned

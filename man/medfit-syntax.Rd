@@ -174,8 +174,8 @@ unset \code{meanstructure} means \code{TRUE}, so every observed intercept is fre
 parameter count, \code{logLik()}, \code{AIC()}, \code{BIC()} and the parameter names move; the structural estimates and their
 standard errors did not move on the cases measured. A variable a \verb{~~} or \code{~1} statement names is left free (message
 class \code{medfit_message_fixed_x_lenient}) instead of the error an explicit \code{fixed_x = TRUE} gives. To keep the 0.14.x
-results, pass \verb{fixed_x = FALSE, meanstructure = NULL}. \code{options(medfit.native_defaults)} is obsolete and ignored,
-with one message per session, and is removed in 0.16.0. \code{\link[=fit_sem]{fit_sem()}} has the details.
+results, pass \verb{fixed_x = FALSE, meanstructure = NULL}. The 0.14.x \code{options(medfit.native_defaults)} opt-in no longer
+has any effect. \code{\link[=fit_sem]{fit_sem()}} has the details.
 }
 
 \section{medfit extensions}{

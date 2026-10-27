@@ -71,7 +71,6 @@ test_that("the default leaves a variable named in ~~ free with the lenient messa
 })
 
 test_that("the dependent-package wrapper pins the 0.14 results under the 0.15.0 defaults", {
-  local_native_defaults_unshown()
   wrap <- function(...) {
     args <- list(...)
     f <- names(formals(fit_sem))
@@ -103,16 +102,12 @@ test_that("the article's pitfall holds: `args$meanstructure <- NULL` drops the e
   expect_false(isTRUE(keep@internals$ram$has_mean))
 })
 
-test_that("options(medfit.native_defaults) is obsolete: ignored, with one note per session, and no 0.14.0 warning", {
-  old <- options(medfit.native_defaults = "0.15")
-  on.exit(options(old))
-  local_native_defaults_unshown()
-  m <- testthat::capture_messages(fit <- fit_sem(ndo_model, mediation_demo))
-  expect_true(any(grepl("`options(medfit.native_defaults)` is obsolete and ignored", m, fixed = TRUE)))
+test_that("options(medfit.native_defaults) has no effect: no message, no 0.14.0 warning, the 0.15.0 defaults", {
+  withr::local_options(medfit.native_defaults = "0.15")
+  expect_no_message(fit <- fit_sem(ndo_model, mediation_demo))
   expect_identical(glance(fit)$fixed_x, "treatment, covariate1")
   expect_true(isTRUE(fit@internals$ram$has_mean))
   expect_no_warning(fit_sem(ndo_model, mediation_demo), class = "medfit_warning_default_change")
-  expect_no_message(fit_sem(ndo_model, mediation_demo))
 })
 
 test_that("covariance-only AIC exceeds lavaan's by 2k, and agrees under meanstructure = TRUE", {
@@ -128,7 +123,6 @@ test_that("covariance-only AIC exceeds lavaan's by 2k, and agrees under meanstru
 
 test_that("the default fit has the 0.15.0 AIC gap against a default lavaan::sem(), none against meanstructure = TRUE", {
   testthat::skip_if_not_installed("lavaan")
-  local_native_defaults_unshown()
   fd <- suppressMessages(fit_sem(ndo_model, mediation_demo))
   lv_def <- lavaan::sem(ndo_model, mediation_demo)
   lv_mean <- lavaan::sem(ndo_model, mediation_demo, meanstructure = TRUE)
