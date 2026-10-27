@@ -111,9 +111,9 @@ glance(fit)[, c("npar", "df", "chisq", "p_value", "AIC", "BIC")]
 ```
 
     # A tibble: 1 × 6
-       npar    df chisq p_value   AIC   BIC
-      <int> <dbl> <dbl>   <dbl> <dbl> <dbl>
-    1     9     0     0      NA 2298. 2334.
+       npar    df    chisq p_value   AIC   BIC
+      <int> <dbl>    <dbl>   <dbl> <dbl> <dbl>
+    1     9     0 4.59e-30      NA 2298. 2334.
 
 A model with no restriction has 0 degrees of freedom, so there is
 nothing to reject yet. Step 6 adds a restriction and a test.

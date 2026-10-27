@@ -252,7 +252,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4383060 0.8918422 
+    0.6560315 0.4397306 0.8950371 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
@@ -537,10 +537,10 @@ rbind(reduced = glance(reduced)[, c("npar", "chisq", "AIC", "BIC")],
 ```
 
     # A tibble: 2 × 4
-       npar chisq   AIC   BIC
-    * <int> <dbl> <dbl> <dbl>
-    1     6 0.133 2408. 2432.
-    2     7 0     2409. 2437.
+       npar    chisq   AIC   BIC
+    * <int>    <dbl> <dbl> <dbl>
+    1     6 1.33e- 1 2408. 2432.
+    2     7 4.54e-30 2409. 2437.
 
 The restricted model is the one with more degrees of freedom. A small
 chi-square difference says dropping `cp` costs little.

@@ -1,6 +1,6 @@
 # What changed since CRAN 0.3.2
 
-CRAN has medfit 0.3.2; this site documents 0.14.1 (GitHub and
+CRAN has medfit 0.3.2; this site documents 0.15.0 (GitHub and
 r-universe). This page lists what a 0.3.2 user needs to know before
 upgrading: numbers that change, calls that now stop with an error, and
 what is new. The full record is

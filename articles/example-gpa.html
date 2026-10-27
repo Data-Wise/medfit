@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.14.1</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,7 +167,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/example-gpa.qmd" class="external-link"><code>vignettes/articles/example-gpa.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/example-gpa.qmd" class="external-link"><code>vignettes/articles/example-gpa.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -431,9 +431,9 @@ first_gen  -0.13      -0.11 -0.15      0.01      1.00</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">sem</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nobs"</span>, <span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 4
-   nobs  npar    df chisq
-  &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;
-1   500    11     0     0</code></pre>
+   nobs  npar    df    chisq
+  &lt;int&gt; &lt;int&gt; &lt;dbl&gt;    &lt;dbl&gt;
+1   500    11     0 1.18e-28</code></pre>
 </div>
 </div>
 <p>The model is saturated (<code>df = 0</code>), so there is no global chi-square to read: it fits exactly by construction, and the interesting content is the parameters.</p>
@@ -707,7 +707,7 @@ bootstrap 0.02616054 0.04593167</code></pre>
 <span>  <span class="op">}</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>  medfit        R   lavaan
-"0.14.1"  "4.6.1"  "0.7.3" </code></pre>
+"0.15.0"  "4.6.1"  "0.7.3" </code></pre>
 </div>
 </div>
 <p>Seeds: data <code>20261017</code>; bootstrap <code>123</code>; Monte Carlo <code>1</code> (n = 500) and <code>2</code> (n = 100). The simulation functions use <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">stats::rnorm()</a></code> and <code><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">stats::rbinom()</a></code> only, so the numbers are stable across platforms up to the last printed digits.</p>
