@@ -110,7 +110,7 @@ fit matches a default \code{lavaan::sem()} fit. Against 0.14.x the parameter cou
 names in \code{coef()}, \code{vcov()} and \code{tidy()} change; the structural estimates and their standard errors did not change
 on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
 parameter names). To keep the 0.14.x results, pass \verb{fixed_x = FALSE, meanstructure = NULL}.
-\code{options(medfit.native_defaults)} is obsolete and ignored, with one message per session; it is removed in 0.16.0.
+The 0.14.x \code{options(medfit.native_defaults)} opt-in no longer has any effect.
 }
 
 \section{Outcome ledger}{

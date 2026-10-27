@@ -1,3 +1,11 @@
+# medfit (development version)
+
+## Removed
+
+* `options(medfit.native_defaults)` is removed, as announced in 0.15.0. Since 0.15.0 the option had no effect
+  (it only printed one message per session); it now does nothing and prints nothing. The message class
+  `medfit_message_option_obsolete` no longer exists. Pass `fixed_x` and `meanstructure` explicitly to choose.
+
 # medfit 0.15.0
 
 ## Native engine defaults flipped (0.15.0)
@@ -18,7 +26,7 @@ stay valid values, and an explicit argument is always kept as given.
   names it). A variable a `~~` or `~1` statement names is left free with a message of class
   `medfit_message_fixed_x_lenient`; an explicit `fixed_x = TRUE` still errors there.
 * `options(medfit.native_defaults = "0.15")` is obsolete: it is ignored, with one message per session (class
-  `medfit_message_option_obsolete`), and is removed in 0.16.0. The `medfit_warning_default_change` warning no longer
+  `medfit_message_option_obsolete`; removed in the development version). The `medfit_warning_default_change` warning no longer
   fires.
 * To keep the 0.14.x results, pass `fixed_x = FALSE, meanstructure = NULL`.
 * `AIC()` and `BIC()` keep medfit's own parameter count, which includes the observed means that are not fixed whether
