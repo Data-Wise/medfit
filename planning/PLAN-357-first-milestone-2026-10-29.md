@@ -1,10 +1,10 @@
 # Issue #357: first milestone
 
-Status: P2 repairs locally verified, authorized 2026-10-29; external submission on hold. Integration: feature/issue-357-first-milestone -> dev, only after separate push/PR authorization. Source issue: https://github.com/Data-Wise/medfit/issues/357 (reduced milestone revision 2026-10-29T16:23:46Z). Base: 40f82c85fdad0979949bee389afe2c7301660315.
+Status: COMPLETE — merged into dev via PR #361, squash 446cf12db6baca44917b864b951c7deb0da53b37, 2026-10-29. Post-merge coverage PASS (40965650813); merged branch/worktree cleanup verified. Source issue: https://github.com/Data-Wise/medfit/issues/357. Original base: 40f82c85fdad0979949bee389afe2c7301660315.
 
 ## Scope and holds
 
-Implement supported nonzero-product sign-branch fitting, truthful fit-level coverage evidence, existing-reference-only residual diagnostics and independent tests. Defer global certification machinery, strict require API, general shared-factor charts and broad cross-API reporting. No release, deployment, dev-to-main merge, push or PR authorized. Preserve unrelated main-checkout .codex/ files and other worktrees.
+Implement supported nonzero-product sign-branch fitting, truthful fit-level coverage evidence, existing-reference-only residual diagnostics and independent tests. Defer global certification machinery, strict require API, general shared-factor charts and broad cross-API reporting. Push/PR submission and merging PR #361 into dev were separately authorized and completed. Author subsequently authorized post-merge coverage verification, plan/status reconciliation and merged-branch/worktree cleanup. No release, deployment or dev-to-main merge authorized. Preserve unrelated main-checkout .codex/ files and other worktrees.
 
 ## Task M1: implement the reduced contract test-first
 
@@ -115,3 +115,13 @@ Author reaffirmed: do not run expensive CI until the release PR to main. No host
 Tested source/test commit 8c22017. All p2-repair stage reports (implementer, qa, gates) end exactly Verdict: PASS. Final ordinary suite: 1742 tests / 9207 expectations / 9203 passed expectations / 0 failures/errors / 2 skips / 2 warnings. Existing skips: installed-lavaan guard and load_all help. Existing warnings: deliberate cluster-refit failure and sign-branch disagreement. Required check-local quick tier: PASS 8975 / FAIL 0 / WARN 2 / SKIP 37; built-package check Status OK. Loaded package lint: zero findings. Fresh instrumented coverage: 96.07589% overall, sem-nonzero.R 100% measured line/expression coverage with zero uncovered executable rows. Profile gate: 144/144, maximum gap 5.87e-09. Exact draft risk_check: high TRUE, missing integer(0). Prior unchanged parity/restoration/mutants and article-render evidence reused with explicit provenance; no unsupported exhaustive-branch or global-optimum claim.
 
 Both local-review P2 findings are resolved by production guards plus independent regressions and mutants. Existing docs already describe the intended guarantees; scoped audit found no wording gap. Final plan/status reconciliation changes metadata only after the tested commit. No push, PR, hosted CI dispatch, deployment, release or merge. Expensive hosted OpenBLAS/full-platform checks remain deferred until release into main, as reaffirmed by the author. Local task complete; feature worktree retained for review.
+
+## Integration and post-merge completion — 2026-10-29
+
+PR #361 was reviewed at head 2d5d3ba7e294e4a1a9b04a38fd20952cf5ab36e8: no remaining correctness findings; both P2 repairs resolved. Fresh focused regressions: 24 tests / 150 expectations, zero failures/errors/skips. All five current hosted checks passed (lint, risk-tier, pkgdown, Ubuntu test-coverage and Codecov patch). The first risk-tier run used an empty PR body and failed; the subsequent body-edit run passed with the complete admission checklist. Squash merge 446cf12db6baca44917b864b951c7deb0da53b37 is on dev, with the same tracked tree as the reviewed head.
+
+Post-merge dev coverage run [40965650813](https://github.com/Data-Wise/medfit/actions/runs/40965650813) completed successfully at the squash commit: FAIL 0 / WARN 3 / SKIP 138 / PASS 8229. Codecov upload succeeded. Warnings are the deliberate cluster-refit failure, disclosed sign-branch disagreement and unavailable hosted sv_SE.UTF-8 locale. No new failure needed a code fix. These hosted counts differ from the ordinary local suite because of the instrumented hosted environment and its skips.
+
+Ignored independent QA, stage reports and generated evidence were archived and byte-verified: 351 files in `_agents_workspace/issue-357-merged-2026-10-29.zip`, with adjacent `.receipt.json`. Before cleanup, local branch tip equaled the PR head, the worktree was clean and the squash commit was an ancestor of dev. The merged worktree and local feature branch were removed; GitHub automatically removed the remote feature branch, independently confirmed absent. Unrelated worktrees and .codex/ remain untouched. CLAUDE.md now has no active plan.
+
+This reconciliation changes only plan/status metadata after the verified merge. Expensive hosted OpenBLAS and full-platform checks remain deferred to release into main. Global certificates and broad cross-API reporting remain deferred. No release, deployment or dev-to-main merge.
