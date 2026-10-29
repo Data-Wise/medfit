@@ -14,6 +14,8 @@ nl_data <- function() {
 nl_model <- "m ~ a*x\ny ~ b*m + cp*x\na*b == 0.1"
 
 test_that("a single accepted start among several is flagged", {
+  # This unit test isolates local-search warnings; sign coverage is tested separately.
+  local_mocked_bindings(.sem_nonzero_product = function(...) list(supported = FALSE, reason = "test_local"))
   d <- nl_data()
   real_gate <- .sem_gate
   calls <- 0L

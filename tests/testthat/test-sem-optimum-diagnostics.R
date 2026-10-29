@@ -51,6 +51,8 @@ test_that("disagreeing starts report the spread and print the verdict", {
 })
 
 test_that("one accepted start is reported and printed", {
+  # Isolate the legacy local driver: a survivor-only sign search now correctly errors.
+  local_mocked_bindings(.sem_nonzero_product = function(...) list(supported = FALSE, reason = "test_local"))
   d <- optimum_data()
   real_gate <- .sem_gate
   calls <- 0L
