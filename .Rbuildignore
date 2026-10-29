@@ -29,7 +29,7 @@
 ^AGENTS\.md$
 ^ORCHESTRATE-.*\.md$
 ^data-raw$
-^tests/sim$
+^tests/sim/(?!sem-nonlinear-gate\.R$)
 ^\.rforge\.yaml$
 ^tasks$
 ^scripts$
