@@ -310,3 +310,48 @@ test_that("the nonlinear gate Hessian uses the independently parameterized Gauss
   ambient <- wrong(th, ram, smp, solved)
   expect_gt(max(abs(ambient$se / sqrt(diag(v)) - 1)), 1e-3)
 })
+
+# The zero-dimensional tangent has exactly zero covariance. A rank-one information matrix restricted to a tangent
+# of dimension at least two is singular independently of the choice of tangent basis.
+test_that("fully pinned and projected-singular covariance preserve their full matrix contracts", {
+  set.seed(51)
+  x <- stats::rnorm(160)
+  data <- data.frame(X = x, M = 0.4 * x + stats::rnorm(160))
+  fit <- fit_sem("M ~ a*X", data, fixed_x = FALSE, meanstructure = FALSE)
+  theta <- coef(fit)
+  ram <- fit@internals$ram
+  smp <- .sem_sample(data, ram)
+  expected_names <- c("a", "M~~M", "X~~X")
+  expect_identical(names(theta), expected_names)
+  expect_identical(ram$q, length(expected_names))
+  zero <- matrix(0, length(expected_names), length(expected_names), dimnames = list(expected_names, expected_names))
+  for (info in c("observed", "expected")) for (se in c("model", "sandwich")) {
+    out <- .sem_vcov(theta, ram, smp, info, lb = theta, ub = theta, se_type = se)
+    expect_identical(out, zero)
+  }
+
+  # Hold the first coordinate fixed; the rank-one matrix leaves a two-dimensional singular tangent.
+  lb <- rep(-Inf, ram$q)
+  ub <- rep(Inf, ram$q)
+  lb[1] <- ub[1] <- theta[1]
+  act <- .sem_active_set(theta, ram, smp, lb, ub, .sem_no_cons(ram$q))
+  expect_identical(ncol(act$z_theta), 2L)
+  rank_one <- matrix(1, ram$q, ram$q)
+  expect_lt(qr(crossprod(act$z_theta, rank_one %*% act$z_theta))$rank, ncol(act$z_theta))
+  local_mocked_bindings(.sem_info_observed = function(...) rank_one, .sem_info_expected = function(...) rank_one,
+                        .package = "medfit")
+  for (info in c("observed", "expected")) for (se in c("model", "sandwich")) {
+    warnings <- list()
+    out <- withCallingHandlers(.sem_vcov(theta, ram, smp, info, lb = lb, ub = ub, se_type = se),
+                               warning = function(w) {
+                                 warnings[[length(warnings) + 1L]] <<- w
+                                 invokeRestart("muffleWarning")
+                               })
+    expect_length(warnings, 1L)
+    expect_match(conditionMessage(warnings[[1]]), "information matrix is singular", fixed = TRUE)
+    expect_false(inherits(warnings[[1]], "medfit_sem_covariance_diagnostic"))
+    expect_identical(dim(out), c(ram$q, ram$q))
+    expect_identical(dimnames(out), list(expected_names, expected_names))
+    expect_true(all(is.na(out)))
+  }
+})

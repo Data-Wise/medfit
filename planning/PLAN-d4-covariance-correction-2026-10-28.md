@@ -7,7 +7,7 @@ warning/NA branches in `R/sem-se.R`. Assert full parameter names and multiplicit
 semantics, and absence of a typed covariance failure for singular information. Use independent mathematical controls
 and planted defects; do not change production behavior or weaken existing assertions.
 
-- [ ] Edge regression tests and scoped commit.
+- [x] Edge regression tests and scoped commit.
 - [ ] Independent QA and required local gates.
 - [ ] Push the test update to PR #358, rerun hosted coverage, and verify both lines are covered.
 
