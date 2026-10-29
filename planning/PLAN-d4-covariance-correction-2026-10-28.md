@@ -10,19 +10,27 @@ and planted defects; do not change production behavior or weaken existing assert
 - [x] Edge regression tests and scoped commit.
 - [x] Independent QA and planted-defect checks.
 - [x] Required local gates.
-- [ ] Push the test update to PR #358, rerun hosted coverage, and verify both lines are covered.
+- [x] Push the test update to PR #358, rerun hosted coverage, and verify both lines are covered.
 
-The user authorizes updating PR #358 and hosted coverage. Do not merge. Earlier OpenBLAS evidence remains attributed
-to `cf7cfb4`; do not describe it as a run on a later test-only head.
+PR #358 squash-merged into dev as `b9af937a` on 2026-10-28, after the author authorized the merge and all live
+checks passed at head `dc575a11`. Earlier OpenBLAS evidence remains attributed to `cf7cfb4`; it was not rerun
+on the later test-only head. No release or submission is authorized.
 
 Final follow-up local gates on `f4306e6`: 1717 tests, 9043 recorded expectations, 9040 passed, 0 failures/errors,
 2 skips and the known planted cluster warning; loaded lint 0. The same run includes D4 5 tests/170 expectations,
 docs consistency 92/902 (1 skip), and gate coverage/ADR 7/52. Mandatory local built-tarball gate: 8812 passed,
 0 failures, 1 warning, 37 skips; R CMD check Status: OK (tests 136s, check 25s). Independent QA and local
-instrumented coverage verify four hits each on sem-se.R lines 52 and 69. Hosted coverage on the new test-only head
-remains pending. Exact evidence: `_agents_workspace/d4-correction/gates.md`.
+instrumented coverage verify four hits each on sem-se.R lines 52 and 69. Hosted coverage on `dc575a11` passes:
+96.38% overall (8597/8919 lines), 97.82% patch; both target lines are covered, with `R/sem-se.R` at 94.62% (88/93).
+Coverage run: 40820743419. Local hit counts are not hosted hit counts.
+Ignored evidence (300 files) was byte-verified and archived before worktree cleanup at
+`_agents_workspace/d4-covariance-correction-merged-2026-10-28.zip`, with a companion SHA-256 receipt.
 
-Status: locally complete, 2026-10-28. Base: dev 10b93d00. Owner: medfit.
+Status: complete and merged into dev, 2026-10-28. Merge: b9af937a. Owner: medfit.
+
+CI policy: expensive OpenBLAS simulation gates and the full platform matrix remain on dev-to-main release PRs.
+Dev PRs retain fast Ubuntu coverage, lint, risk-tier and pkgdown checks. Existing monthly/manual QC stays available;
+no expensive rerun is needed for this metadata-only closeout.
 
 ## Task: constrained covariance and typed diagnostics
 
@@ -50,7 +58,7 @@ cluster-warning result reproduced on dev; loaded lint 0. Documentation consisten
 Finite-difference limits remain: the extreme-floor independent observed/model and observed/sandwich normalized
 covariance errors are about 1.48e-5 and 1.39e-4; the local tangent approximation is not an unconditional boundary
 sampling law. At the initial local completion stage, coverage and hosted verification had not run. The subsequently authorized
-PR #358 remains open and unmerged: hosted OpenBLAS QC at `cf7cfb4` passes 24 gates/155 checks and measured coverage
-is 96.36% overall, 97.82% patch. Full critical-path coverage is not asserted. The edge follow-up above adds the two
-missed covariance branches; its updated hosted coverage is pending. No merge, release or submission is authorized
-or performed. Local and hosted evidence are in `_agents_workspace/d4-correction/{gates,hosted}.md`.
+PR #358 is merged into dev as `b9af937a`. Hosted OpenBLAS QC at `cf7cfb4` passed 24 gates/155 checks; updated
+coverage at `dc575a11` is 96.38% overall and 97.82% patch, with both edge branches covered. Full critical-path
+coverage is not asserted. The feature worktree's ignored reports and raw evidence are preserved in the verified
+archive named above. No release or submission was performed.

@@ -621,7 +621,7 @@ file; GitHub Issues are only linked from PRs. Agents' reports go to `_agents_wor
 ### Planning Documents
 
 **Package:** `planning/medfit-roadmap.md`
-**Active plan:** `planning/PLAN-d4-covariance-correction-2026-10-28.md` (constrained covariance and D4(b) typed diagnostics). Previous: `planning/PLAN-0.15.0-native-defaults-flip-2026-10-26.md` (released); `planning/PLAN-missingmed-evidence-D1-D4-2026-10-24.md` (P0-P4 merged; Checkpoint 2 recorded in `.STATUS`). Keep plans under `planning/`; `tasks/plan.md` and `tasks/todo.md` are the closed `fixed_x` plan.
+**Active plan:** none. Completed: `planning/PLAN-d4-covariance-correction-2026-10-28.md` (merged into dev via PR #358, `b9af937a`). Previous: `planning/PLAN-0.15.0-native-defaults-flip-2026-10-26.md` (released); `planning/PLAN-missingmed-evidence-D1-D4-2026-10-24.md` (P0-P4 merged; Checkpoint 2 recorded in `.STATUS`). Keep plans under `planning/`; `tasks/plan.md` and `tasks/todo.md` are the closed `fixed_x` plan.
 **Ecosystem:** `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`
 
 ### Related Packages
