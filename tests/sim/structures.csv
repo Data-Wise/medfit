@@ -13,3 +13,4 @@ factor covariates,syntax,factor,model-native-factors
 bootstrap inference,inference,bootstrap-coverage,model-native
 S7 install lifecycle,infrastructure,s7-lifecycle,model-native
 native defaults (fixed_x x meanstructure),syntax,native-defaults,model-native
+nonzero product sign branches,syntax,nonlinear-profile|nonlinear-parity,model-native-constraints

@@ -92,6 +92,17 @@ settings, the minimum over the resolved branches, and, for a certified-empty bra
 forged ID, count, state, digest, certificate or dropped child is refused. The MBCO root additionally ties each null to the
 returned `$tests` table and to the settings its refit used.
 
+**Nonzero-product coverage has a separate validator.** The optional internal
+`search_evidence` record does not alter the version-1 ledger. Its validator
+rebuilds supported-shape classification and sign bounds from the canonical model,
+checks the sample/settings context, exact parameter coordinates, candidate
+objectives, acceptance gates and actual attempt counts, and refuses fabricated
+local coverage or false emptiness. The independent tests use a separately
+parameterized likelihood and covariance calculation, plus forged-record and
+removed-validator defects (`test-sem-nonzero-branches.R`,
+`test-sem-nonzero-evidence.R`). Covered sign domains do not establish global
+optimality; see [Computation and algorithms](computation-algorithms.html#a-nonzero-product-has-two-sign-branches).
+
 **Genuine shapes must validate.** A validator is also tested the other way: every shape `mbco_sem()` can produce must pass it.
 The shapes of a null node are:
 

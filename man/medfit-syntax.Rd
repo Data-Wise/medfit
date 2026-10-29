@@ -36,7 +36,12 @@ model without the nonlinear rows is fitted first: its estimate, and copies of it
 with the signs of the regression paths in the rows flipped (a product constraint
 cannot change sign along its surface, so each sign pattern is its own branch),
 are extra starts, and a feasible reference estimate is never replaced by a worse
-accepted fit. Models without a nonlinear row are not affected. A product of labels set to zero
+accepted fit. Models without a nonlinear row are not affected.
+One nonzero-product equality (\code{a*b == 0.1}, including a finite nonzero constant multiplier and definition aliases)
+has a separate search for each sign of its two distinct free labels. Each required sign branch must be accepted
+or excluded by its bounds; an unresolved branch stops the fit. Multiple product equalities, repeated factors
+and another constraint involving either factor retain local search. The internal coverage record distinguishes
+charted branches from local search, not global from local optima; see \code{\link[=fit_sem]{fit_sem()}}. A product of labels set to zero
 (\code{a*b == 0}, \code{b1*b2*b3 == 0}) is instead solved exactly: one linear fit per
 factor (\code{a == 0}, \code{b == 0}), keeping the smallest discrepancy; if a branch cannot be fitted, \code{fit_sem()}
 stops with a \code{medfit_error_no_convergence} error instead of returning the best of the others; the error carries

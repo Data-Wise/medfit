@@ -72,10 +72,11 @@ test_that("a*b > k reaches the best branch in at least 90% of fits with 5 starts
 
 # Fit internals for a mocked gate: the model of ni_base with cp == a*b-style rows built by hand.
 ni_gate <- function(h, lambda, constraint = "a*b == 1") {
-  fit <- ni_fit(constraint, ni_data())
+  # Build fixture internals without running the optimizer under the planted gate defect.
+  fit <- ni_fit("", ni_data())
   ram <- fit@internals$ram
   smp <- .sem_sample(fit@data, ram)
-  cons <- .sem_constraint_rows(fit@internals$constraints, ram)
+  cons <- .sem_constraint_rows(.sem_parse(paste0(ni_base, "\n", constraint))$constraints, ram)
   nm <- names(coef(fit))
   th <- stats::setNames(rep(1, ram$q), nm)
   th[["cp"]] <- 0.1
