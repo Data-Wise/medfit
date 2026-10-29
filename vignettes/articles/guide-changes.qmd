@@ -113,6 +113,7 @@ reuses one of medfit's alias names for a different path (0.5.0).
 | 0.14.0 | a native fit that leaves `fixed_x` or `meanstructure` unset warns once per session that both defaults change in 0.15.0 (no result changes); `options(medfit.native_defaults = "0.15")` opted in early (ignored from 0.15.0) ([article](native-defaults-0-15.html)) |
 | 0.14.1 | the outcome ledger (`fit@diagnostics$ledger`, `$ledger` on the errors): every zero-product branch and `mbco_sem()` null keeps its outcome; literal contradictions are certified empty; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is the typed error `medfit_sem_covariance_error`, which `mbco_sem()` retains for a null ([troubleshooting](guide-troubleshooting.html#errors-that-carry-evidence)); `mbco_sem()` validates its own ledger before returning |
 | 0.15.0 | the native defaults flip: a default `fit_sem()` fit fixes the exogenous observed variables and fits a mean structure, as a lavaan `sem()` fit with `fixed.x = TRUE` and `meanstructure = TRUE` does ([article](native-defaults-0-15.html)) |
+| Development | corrected observed and sandwich covariance under active nonlinear constraints, with solver variance floors included in the active set; expected Fisher information is unchanged. Only explicit covariance diagnostics retain likelihood evidence; other covariance errors propagate. Active-boundary covariance is a local tangent approximation ([methods](methods.html#constraints)) |
 
 ## Dependencies
 

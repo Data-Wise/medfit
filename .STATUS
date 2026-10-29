@@ -13,6 +13,7 @@
 # Full local gate: 6483 pass / 0 fail / 1 warning / 35 skips; check Status: OK.
 # Promotion/deployment pending CI; no package release or CRAN submission.
 status: active
+d4_covariance_correction: local feature worktree; implementation and independent QA pass. Observed nonlinear-constraint covariance includes Lagrangian curvature, effective solver floors enter the active set, expected Fisher information is unchanged, and only explicit covariance diagnostics retain likelihood evidence. Pre-docs gates pass: 763 tests / 4801 expectations, 84/84 simulation checks, 26 engine and 68 driver mutants caught; MBCO 44000 fits / 0 failures. Documentation tests/spelling and five source-pinned article renders pass; final full-suite/package checks pending. No hosted OpenBLAS run, push, PR, merge, release or submission.
 priority: P1
 progress: 100
 kind: package

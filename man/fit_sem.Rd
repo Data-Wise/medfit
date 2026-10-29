@@ -113,6 +113,15 @@ parameter names). To keep the 0.14.x results, pass \verb{fixed_x = FALSE, meanst
 The 0.14.x \code{options(medfit.native_defaults)} opt-in no longer has any effect.
 }
 
+\section{Constrained standard errors}{
+
+Observed-information covariance includes the curvature of active nonlinear constraints; expected information
+retains its Fisher definition. Sandwich standard errors use the corresponding information as bread.
+Active inequalities, user bounds and solver variance floors give a local tangent covariance, with exactly zero
+variance for a pinned coordinate. This is not the full sampling distribution at a boundary. See the
+Methods and Formulas article, under Constraints, for the covariance formula.
+}
+
 \section{Outcome ledger}{
 
 \code{diagnostics$ledger} is a list with \code{schema_version = 1L}. Each node has \code{id}, \code{parent_id}, the exact parsed
@@ -157,13 +166,16 @@ and also carries \verb{$ledger}. The estimation sample is stored once, on the ro
 same rows carries only \code{context$sample_hash}. A fit made before the ledger existed must be refitted before
 \code{\link[=mbco_sem]{mbco_sem()}} can use it, which refuses it with a \code{medfit_error_ledger} error.
 
-When the optimizer accepts a fit and only the covariance stage fails (an error from the covariance, not the
-singular-information NA return, which stays \code{unavailable} with its warning), the call stops with
+When the optimizer accepts a fit and the covariance stage explicitly diagnoses non-positive-definite information
+or a negative variance, the call stops with
 \code{medfit_sem_covariance_error}, never a fit. The class is a sibling of \code{medfit_error_no_convergence}: no optimizer
 failed, so the handlers that report an unresolved result for an optimizer failure do not take it. Its fields are
 \code{schema_version = 1L}, \code{stage = "covariance"}, \code{partial} (the accepted optimizer result: \code{f}, \code{theta}, sample,
 domain, dimensions and settings; no \code{vcov} or \code{defined}) and \code{ledger} (the same node as \code{partial$ledger}, with
-\code{covariance = "failed"} and \code{post_fit}: versioned evidence with the original condition's class, message and call).
+\code{covariance = "failed"} and \code{post_fit}: versioned evidence with the original condition's class, message, call and
+diagnostic kind, \code{information_not_pd} or \code{negative_variance}). Other covariance errors propagate unchanged,
+without a retained likelihood. Singular information still warns and returns an NA covariance, recorded as
+\code{unavailable} rather than \code{failed}.
 The message is the original one. Resolved here means an accounted-for accepted likelihood, not a successful
 covariance. A union root reports the first failing branch's \code{post_fit}, in branch order, even when another branch
 supplies its minimum likelihood, and does not claim the winning branch failed: inspect the branch IDs. A branch that

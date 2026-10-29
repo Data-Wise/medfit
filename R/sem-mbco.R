@@ -52,11 +52,13 @@
 #'   another fails, and an unresolved null leaves the root `unresolved`. A nested union branch that is certified empty
 #'   by a literal zero/nonzero contradiction (see the outcome ledger in [fit_sem()]) is retained as `excluded`; a null
 #'   that is itself infeasible or an all-empty union stays an unresolved row, never a finite LR or a survivor-only
-#'   p-value. A null whose optimizer accepted but whose covariance stage failed (`medfit_sem_covariance_error` in
+#'   p-value. A null whose optimizer accepted but whose covariance stage explicitly diagnosed non-positive-definite
+#'   information or a negative variance (`medfit_sem_covariance_error` in
 #'   [fit_sem()]) keeps its likelihood after a check that it is the null asked for (same rows, domain and one more
 #'   restriction): the row stays resolved, the statistic and p-value are unchanged, a warning names the failure, and the
 #'   node has `covariance = "failed"` with `post_fit` and the notices. No covariance is invented; a fit that carries
-#'   `post_fit` is refused as `object`.
+#'   `post_fit` is refused as `object`. Other covariance errors propagate unchanged; singular information keeps its
+#'   warning and NA covariance.
 #'
 #' @details
 #' A fit made with `weights` is refused: the weighted discrepancy is
