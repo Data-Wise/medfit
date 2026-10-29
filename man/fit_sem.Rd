@@ -44,7 +44,9 @@ own moment-based start, so a start in a bad basin does not end the fit.
 With a nonlinear constraint, which can leave several
 local optima, every start is tried and the best accepted one is kept (a
 warning says when the accepted starts disagree); otherwise the first
-accepted start is used.}
+accepted start is used. A supported nonzero-product equality searches both sign
+branches independently, with \code{n_starts} starts per nonempty branch; aggregate
+diagnostics report the actual attempts, not the number of branches.}
 
 \item{control}{List: options passed to the optimizer (\code{nloptr}).}
 
@@ -113,6 +115,30 @@ parameter names). To keep the 0.14.x results, pass \verb{fixed_x = FALSE, meanst
 The 0.14.x \code{options(medfit.native_defaults)} opt-in no longer has any effect.
 }
 
+\section{Nonzero-product search coverage}{
+
+One equality \code{c*a*b == q} is supported when the constants and \code{q/c} are finite and nonzero, \code{a} and \code{b}
+are distinct free scalar labels after expanding definitions, and no other constraint row involves either label.
+The engine fits both signs of \code{a} independently with the existing optimizer and acceptance gates, respecting
+user bounds and effective variance floors. It returns the lowest accepted discrepancy only when each required
+sign branch is accepted or excluded by an explicit bounds contradiction. An unresolved branch stops the fit
+with \code{medfit_error_no_convergence}; an all-empty search returns no fit. Zero-product fitting is unchanged.
+Repeated factors, multiple product equalities, coupled rows and other unsupported shapes retain local search.
+
+\code{internals$search_evidence} is a separate versioned internal record, not a change to the outcome-ledger schema.
+Its \code{coverage} is \code{charted} for covered sign branches, \code{local} for unsupported shapes, or \code{unresolved} for an
+incomplete search. It retains restrictions, context, branch states, candidates, objectives, gates and attempts;
+validation checks their attribution to the model and sample. Charted coverage does not prove a global optimum
+within a branch. Existing optimum status meanings are retained, and objects without this optional record remain
+usable. Counts distinguish optimizer starts, accepted starts and synthetic reference attempts.
+
+The stored raw constraint residual is diagnostic only. Its optional standardized value uses the gradient and
+covariance at an already available matching reference fit without the tested restriction, never the projected
+constrained covariance. No additional fit or covariance calculation is requested. The ordinary optimizer reference
+lacks covariance, so the standard error and standardized residual are \code{NA} with reason
+\code{reference_covariance_unavailable}. These diagnostics do not affect acceptance or inference.
+}
+
 \section{Constrained standard errors}{
 
 Observed-information covariance includes the curvature of active nonlinear constraints; expected information
@@ -146,8 +172,9 @@ and names an overflow; \code{raw_count} is \code{Inf} on overflow. If the map ca
 \code{state} is \code{unavailable} with that condition, and the original error is not replaced. The map is rebuilt from the
 node's constraints during validation, so a forged map is refused.
 
-The one proof of emptiness is the literal certificate \code{literal_zero_nonzero}: an explicit \code{label == 0} equality and
-an explicit finite nonzero literal equality on the same parsed label (\code{a == 0} with \code{a == 1}). Its label, source
+The one proof of emptiness in this version-1 ledger is the literal certificate \code{literal_zero_nonzero}: an explicit
+\code{label == 0} equality and an explicit finite nonzero literal equality on the same parsed label (\code{a == 0} with
+\code{a == 1}). Its label, source
 rows and values are kept in \code{certificate} and rebuilt from the node's own parsed parameters and constraints before
 any inference uses it. A certified-empty branch is retained with \code{outcome = "excluded"},
 \code{feasibility = "certified_empty"} and an unavailable likelihood: it is not fitted and is not a successful fit. No

@@ -186,6 +186,7 @@ S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_lint
 }
 
 S7::method(print, SEMFit) <- function(x, ...) {
+  .sem_validate_fit_search(x)
   cat("SEMFit (native maximum likelihood)\n")
   cat("==================================\n\n")
   cat(sprintf("  Observations:  %d", x@n_obs))
@@ -198,6 +199,10 @@ S7::method(print, SEMFit) <- function(x, ...) {
     cat(sprintf("  Std. errors:   %s%s\n", se_label, if (!is.null(x@internals$weights)) ", sampling weights" else ""))
   }
   cat(sprintf("  Converged:     %s\n", ifelse(x@converged, "Yes", "No")))
+  evidence <- x@internals$search_evidence
+  if (!is.null(evidence)) {
+    cat(sprintf("  Search:        %s (branch coverage, not global optimality)\n", evidence$coverage))
+  }
   reason <- .sem_modeltest_reason(x)
   if (!is.null(reason)) cat(sprintf("  Note:          %s\n", .sem_modeltest_note(reason)))
   note <- .sem_fixed_x_note(x@internals$fixed_x)

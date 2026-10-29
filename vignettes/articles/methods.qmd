@@ -706,6 +706,42 @@ Jacobians for the optimizer (SLSQP through nloptr). A nonlinear equality
 is a central difference, both recomputed at every point; a nonlinear inequality is
 the same row with the sign chosen so that it reads $c(\theta) \le 0$.
 
+#### Nonzero-product branches
+
+For one equality $c a b = q$, with finite nonzero constants and finite nonzero
+$q/c$, two distinct free scalar labels after definition expansion, and no other
+constraint row involving either factor, the engine searches $a>0$ and $a<0$
+independently. On either branch $b=q/(ca)$, so its sign is fixed too. Bounds may
+exclude a branch, but numerical failure cannot prove it empty. At least one
+branch must be accepted and every required branch accepted or validly excluded
+before a fit is returned. Multiple product equalities, repeated factors and
+coupled constraints retain local search. Sign coverage is not a proof of a
+global optimum within a branch.
+
+For this supported row, the solver uses the equivalent residual $ab-q/c$ and
+its corresponding Jacobian and Hessian. The original raw residual retained for
+diagnosis is $r=c\hat a\hat b-q$. If a matching reference fit without the tested
+restriction already supplies estimates $\theta_0$ and covariance $V_0$, its
+optional diagnostic scale is
+
+$$
+g_0 = \left.\nabla_\theta(cab-q)\right|_{\theta_0},\qquad
+\operatorname{SE}_{\mathrm{ref}}=\sqrt{g_0^\top V_0g_0},\qquad
+z_{\mathrm{res}}=r/\operatorname{SE}_{\mathrm{ref}}.
+$$
+
+In the factor coordinates, $g_0=(c b_0,c a_0)^\top$, with zeros for other
+parameters. Both gradient and covariance come from that reference, on the same
+rows, weights, coordinates and likelihood settings; the projected constrained
+covariance is not used. No automatic refit or covariance calculation is made.
+The ordinary optimizer reference has no covariance, so these scaled diagnostics
+are `NA` with reason `reference_covariance_unavailable`. They do not affect
+acceptance, selection or inference. The separately versioned internal coverage
+record and unchanged status/count meanings are described in
+[Computation and algorithms](computation-algorithms.html#a-nonzero-product-has-two-sign-branches).
+
+#### Curvature and acceptance
+
 A nonlinear row can bend away from its tangent plane, so the acceptance test uses
 the Hessian of the Lagrangian, $H + \sum_i \lambda_i \nabla^2 c_i$ over the active
 nonlinear rows (the multipliers from $\nabla F + \sum_i \lambda_i \nabla c_i = 0$),

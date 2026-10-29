@@ -109,6 +109,7 @@ exact route:
 | linear equality or bound | `a == b`, `a + b == 1`, `a < 0.3` | constant Jacobian rows; every accepted solution passes a gate on all rows |
 | nonlinear equality | `cp == a*b` | Jacobian recomputed at every point; every start tried, the best accepted one kept; a Newton polish after acceptance |
 | nonlinear inequality | `a*b > 0.1`, `ab > 0` with `ab := a*b` | same, as rows $c(\theta) \le 0$; a warning when the starts disagree |
+| one independent nonzero product | `a*b == 0.1` | both sign domains searched; an unresolved required branch stops the fit; coverage is not global optimality |
 | product set to zero | `a*b == 0`, `b1*b2*b3 == 0` | exact: one linear fit per factor, smallest discrepancy kept |
 | sum of products | `a1*b1 + a2*b2 == 0` | best-effort: the best of the starts; a disagreement warning means a better optimum may exist, so raise `n_starts` |
 
@@ -159,6 +160,9 @@ Read these before trusting a fit; all are in `summary(fit)` and `fit@diagnostics
 b <- fit_sem(paste0(syntax, "outcome ~~ lower(2) * outcome\n"), d)
 b@diagnostics$active_bounds
 ```
+
+For the nonzero-product supported shapes, local-search limits and coverage record, see
+[the constraints page](model-native-constraints.html#nonzero-product-equality).
 
 When a model with a nonlinear constraint warns that the starts reached different
 optima, the constraint has more than one solution (`a*b > 0.1` holds for two

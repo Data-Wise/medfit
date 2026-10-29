@@ -18,6 +18,12 @@
   if (!nrow(cons)) {
     return(NULL)
   }
+  product <- .sem_nonzero_product(constraints, ram)
+  product_row <- if (product$supported) {
+    match(product$row, which(constraints$op %in% c("==", "<", ">")))
+  } else {
+    NA_integer_
+  }
   defs <- .sem_defs(stats::setNames(defs$rhs, defs$lhs))
   rows <- vector("list", nrow(cons))
   nl <- list()
@@ -25,6 +31,11 @@
   for (i in seq_len(nrow(cons))) {
     text <- paste(cons$lhs[i], cons$op[i], cons$rhs[i])
     tree <- .sem_expr_subst(.sem_expr_parse(paste0("(", cons$lhs[i], ") - (", cons$rhs[i], ")")), defs)
+    if (!is.na(product_row) && i == product_row) {
+      # Equivalent units for this supported row: c*a*b-q and a*b-q/c have the same zero set.
+      # Rescale its value and both derivatives together, before the unchanged solver and acceptance gates.
+      tree <- call("-", call("*", as.name(product$labels[1L]), as.name(product$labels[2L])), product$ratio)
+    }
     labels <- all.vars(tree)
     if (!length(labels)) {
       stop("constraint contains no parameters: '", text, "'", call. = FALSE)

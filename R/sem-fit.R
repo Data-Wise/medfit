@@ -52,6 +52,7 @@
     .sem_abort_covariance(out, conditionMessage(err))
   }
   .sem_require_outcome(out, model)
+  .sem_validate_search(out)
   .sem_replay_notices(captured$notices)
   out
 }
@@ -165,6 +166,14 @@
   start[given] <- conv$start[given]
   lb <- ifelse(is.na(conv$lower), -Inf, conv$lower)
   ub <- ifelse(is.na(conv$upper), Inf, conv$upper)
+  product_spec <- .sem_nonzero_product(parsed$constraints, ram)
+  optimize <- if (product_spec$supported) {
+    function(ram, smp, start, lb, ub, n_starts, control, constraints) {
+      .sem_optimize_signs(ram, smp, start, lb, ub, n_starts, control, constraints, product_spec)
+    }
+  } else {
+    .sem_optimize
+  }
   shift <- .sem_shift_ok(ram, smp, parsed$constraints, lb, ub, given)
   if (shift) {
     # Constraints that leave every intercept free act on A and S alone, which a shift of the data by its mean does
@@ -176,11 +185,17 @@
     ram_opt$m0[ram$fixed_x_mean] <- 0
     start <- .sem_default_start(ram_opt, smp_opt)
     start[given] <- conv$start[given]
-    fit <- .sem_optimize(ram_opt, smp_opt, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+    fit <- optimize(ram_opt, smp_opt, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
     ctr <- .sem_center_map(ram, smp)
     fit$theta <- stats::setNames(as.vector(ctr$t %*% (fit$theta + ctr$c0)), ram$par_names)
+    if (!is.null(fit$search_evidence)) {
+      fit$search_evidence$branches <- lapply(fit$search_evidence$branches, function(b) {
+        if (!is.null(b$theta)) b$theta <- stats::setNames(as.vector(ctr$t %*% (b$theta + ctr$c0)), ram$par_names)
+        b
+      })
+    }
   } else {
-    fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+    fit <- optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
   }
   lb <- fit$effective_lower
   fit$effective_lower <- NULL
@@ -207,6 +222,13 @@
       eq_rank = eq_rank, branch = character(), fixed_x = fixed_set, factors = factors
     )
   )
+  if (!is.null(out$search_evidence)) {
+    out$search_evidence$diagnostic <- .sem_reference_residual(out$theta, product_spec)
+    out$search_evidence$context <- .sem_search_context(out)
+  } else if (!is.null(cons$nl) || !is.null(cons$nli)) {
+    out$search_evidence <- list(schema_version = 1L, coverage = "local", reason = product_spec$reason,
+                                context = .sem_search_context(out))
+  }
   if (inherits(vc, "error")) {
     if (!inherits(vc, "medfit_sem_covariance_diagnostic")) {
       stop(structure(class = c("medfit_covariance_untyped", "error", "condition"),
@@ -401,6 +423,8 @@
     .sem_abort_outcome(msg, ledger, best_survivor = list(id = outcomes[[win]]$id, f = best))
   }
   out <- fits[[win]]$fit
+  # A child sidecar describes its reduced constraint set, not the zero-product union.
+  out$search_evidence <- NULL
   out$constraints <- parsed$constraints
   out$ledger <- ledger
   failed <- which(vapply(outcomes, function(x) !is.null(x$post_fit), TRUE))
