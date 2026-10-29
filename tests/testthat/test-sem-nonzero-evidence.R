@@ -56,3 +56,39 @@ test_that("multiple disjoint product equalities use the local fallback including
   cons <- data.frame(lhs = c("p", "p", "c*d"), op = c(":=", "==", "=="), rhs = c("a*b", ".4", ".5"))
   expect_false(.sem_nonzero_product(cons, ram)$supported)
 })
+
+test_that("selected branch coefficients and the reported minimum belong to the same candidate", {
+  out <- .ev_out()
+  expect_true(.sem_validate_search(out))
+  evidence <- out$search_evidence
+  other <- 3L - evidence$selected
+  expect_gt(evidence$branches[[other]]$f, out$f + 0.1)
+  out$search_evidence$selected <- other
+  out$theta <- evidence$branches[[other]]$theta
+  expect_error(.sem_validate_search(out), class = "medfit_error_search_evidence")
+})
+
+test_that("either selected branch is valid when accepted discrepancies tie", {
+  out <- .ev_out()
+  # An even toy objective gives the two genuine feasible sign candidates exactly the same discrepancy.
+  local_mocked_bindings(.sem_fml = function(...) 0.5)
+  out$f <- 0.5
+  for (i in 1:2) {
+    branch <- out$search_evidence$branches[[i]]
+    branch$f <- 0.5
+    for (j in seq_along(branch$attempts)) {
+      if (branch$attempts[[j]]$accepted) branch$attempts[[j]]$f <- 0.5
+    }
+    n <- sum(vapply(branch$attempts, `[[`, TRUE, "accepted"))
+    branch$optimum$spread <- if (n > 1L) 0 else NA_real_
+    branch$optimum$status <- if (branch$optimum$certified) "certified" else if (n > 1L) "agreed" else "single"
+    out$search_evidence$branches[[i]] <- branch
+  }
+  out$optimum$spread <- 0
+  out$optimum$status <- "agreed"
+  for (i in 1:2) {
+    out$search_evidence$selected <- i
+    out$theta <- out$search_evidence$branches[[i]]$theta
+    expect_true(.sem_validate_search(out))
+  }
+})

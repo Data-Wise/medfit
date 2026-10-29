@@ -51,8 +51,9 @@
     out$reason <- "reference_covariance_invalid"
     return(out)
   }
-  if (min(eigen(reference$vcov, symmetric = TRUE, only.values = TRUE)$values) <
-        -1e-10 * max(1, max(abs(reference$vcov)))) {
+  covariance_scale <- max(abs(reference$vcov))
+  if (covariance_scale > 0 &&
+        min(eigen(reference$vcov / covariance_scale, symmetric = TRUE, only.values = TRUE)$values) < -1e-10) {
     out$reason <- "reference_covariance_invalid"
     return(out)
   }
@@ -284,6 +285,7 @@
     stopifnot(length(accepted) > 0L, length(e$selected) == 1L, e$selected %in% accepted,
               identical(e$attempt_counts, counts), identical(names(out$theta), out$ram$par_names),
               identical(out$theta, e$branches[[e$selected]]$theta),
+              identical(out$f, e$branches[[e$selected]]$f),
               identical(out$f, min(vapply(e$branches[accepted], `[[`, 0, "f"))))
     if (!is.null(out$optimum)) {
       spread <- if (length(values) > 1L) diff(range(values)) else NA_real_
