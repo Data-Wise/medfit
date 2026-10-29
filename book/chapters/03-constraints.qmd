@@ -54,7 +54,7 @@ Every constraint below therefore costs one degree of freedom per independent equ
 lowest discrepancy $F$ (the model's measure of disagreement with the data).
 In a two-parameter sketch, let $F(a,b)=(a-1)^2+4(b-2)^2$; $a$ and $b$ are
 adjustable numbers. At $(a,b)=(0,0)$, $F=17$. Its **gradient**
-$\nabla F=(-2(a-1),8(b-2))=(-2,-16)$ gives the local slope in each
+$\nabla F=(2(a-1),8(b-2))=(-2,-16)$ gives the local slope in each
 direction. Its **Hessian** $H=\operatorname{diag}(2,8)$ records how those
 slopes change: the $b$ direction bends four times as strongly as the $a$
 direction. A shallow direction needs more movement to produce the same change
@@ -239,7 +239,7 @@ stopifnot(identical(node$outcome, "resolved"),
 ```
 
 "Complete" says that every branch was visited. It does not say that the winner is the global optimum: each branch is a
-local solve from one start, and the evidence of how well that start explored is `diagnostics$optimum` (above). Neither the
+local solve from one start, and the evidence of how well that start explored is `diagnostics$optimum`, explained in the solver section. Neither the
 enumeration state nor the ledger certifies a global minimum.
 
 A branch that fails is the case the ledger is for. We plant one failure, the second solve in the union, so the evidence
@@ -1115,6 +1115,12 @@ OpenMx's `-2 log L` includes the means, which is why the native fit with a mean 
 comparison. Its standard errors for the three parameters in the `mxConstraint` are printed last; when they
 are `NA` (OpenMx does not always report standard errors under a nonlinear equality), the standard errors
 are compared with lavaan only.
+
+The pieces serve different purposes. Constraint rows describe the allowed parameter values; the solver searches them;
+the gate checks a candidate; and the polish refines an accepted solution. Redundant rows can be removed from the
+solver without disappearing from the gate. The covariance then describes variation along the allowed local directions.
+Keep the branch ledger and the comparison of starts separate: visiting every branch and finding agreement across
+starts are different kinds of evidence, and neither alone certifies a global minimum.
 
 ## Check yourself
 
