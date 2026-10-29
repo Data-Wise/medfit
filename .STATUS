@@ -1,3 +1,8 @@
+# Issue #357 P2 repairs locally verified — 2026-10-29
+# Tested8c22017: selected-branch objective binding and scale-relative reference PSD guard fixed; independent28oraclecells and both mutants PASS. Fullsuite1742tests/9207expectations,0failures/errors,2warnings/2skips. Local built check OK; lint0; coverage96.07589%overall/100%new-module executable lines.
+# Local stages complete; metadata-only reconciliation follows tested tree. No push/PR/hosted CI. Expensive hosted OpenBLAS/full-platform checks deferred until release into main per author.
+# Issue #357 P2 review repairs active — 2026-10-29
+# Author authorized selected-branch objective binding and scale-relative reference-covariance guard fixes, regressions, independent QA and gates. Earlier PASS is historical; repaired tree not yet verified. No push/PR.
 # Issue #357 locally verified — 2026-10-29
 # Tested1572e80; fullsuite1739tests/9185expectations,0failures/errors,2warnings/2skips. check-local built check Status OK; lint clean. Coverage96.07505%overall,sem-nonzero.R100%line/expression. Independent QA/oracles/mutants/docs/numerical gates PASS. Plan/status reconciliation only after tested commit.
 # All local stages complete; feature/issue-357-first-milestone retained for review. No push, PR, hosted checks, release, deployment or merge authorized/performed.

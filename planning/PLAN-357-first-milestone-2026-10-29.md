@@ -1,6 +1,6 @@
 # Issue #357: first milestone
 
-Status: locally verified, awaiting separate external-submission authorization; authorized 2026-10-29. Integration: feature/issue-357-first-milestone -> dev, only after separate push/PR authorization. Source issue: https://github.com/Data-Wise/medfit/issues/357 (reduced milestone revision 2026-10-29T16:23:46Z). Base: 40f82c85fdad0979949bee389afe2c7301660315.
+Status: P2 repairs locally verified, authorized 2026-10-29; external submission on hold. Integration: feature/issue-357-first-milestone -> dev, only after separate push/PR authorization. Source issue: https://github.com/Data-Wise/medfit/issues/357 (reduced milestone revision 2026-10-29T16:23:46Z). Base: 40f82c85fdad0979949bee389afe2c7301660315.
 
 ## Scope and holds
 
@@ -86,3 +86,32 @@ Committed 1572e80, one test-only file, no R behavior changes. Focused 21 tests /
 Final tested source/test/docs commit 1572e80. Full ordinary suite: 1739 tests / 9185 expectations / 9181 passed expectations / 0 failures/errors / 2 skips / 2 warnings. Skips: unavailable-lavaan guard and load_all help; warnings: deliberate cluster-refit failure and sign-branch disagreement. Required check-local quick tier: PASS 8953 / FAIL 0 / WARN 2 / SKIP 37; built-tarball check Status OK, 0 errors/warnings/notes. Loaded package lint clean. Instrumented coverage 96.07505% overall and 100% new sem-nonzero.R executable line/expression coverage; previously uncovered lines 56/57 each hit once, 223/225/227 each twice. This is measured line/expression coverage, not a general mathematical/global-optimality certificate or exhaustive branch-combination claim. Exact final draft risk_check: high TRUE, missing integer(0).
 
 All required current stage reports end PASS: implementer, qa, gates-pre-docs, docs, implementer-coverage, qa-coverage, gates. Initial FAIL reports/logs retained. Local implementation and verification complete; no push, PR, hosted run, release, deployment or merge performed. Expensive hosted OpenBLAS/full platform checks remain reserved for dev-to-main under current policy. Plan/status-only reconciliation follows tested commit; no source/test changes after final gates.
+
+## Authorized P2 review repair — 2026-10-29
+
+User authorized both findings from local-correctness-review.md, regression tests, independent QA and required gates; no push/PR. Reuse this worktree. Prior local PASS remains valid historical evidence, not final acceptance of repaired tree.
+
+- [x] Bind selected branch objective to canonical out$f as well as accepted minimum; reject loser coefficients/winner likelihood while accepting valid ties.
+- [x] Scale-relative reference covariance PSD guard; reject materially indefinite matrices at small/large scales, retain zero/directional-invalid behavior and valid PSD scaling.
+- [x] Independent focused oracle/mutant QA and unchanged-path neutrality (p2-repair/qa.md PASS).
+- [x] Required final gates and scoped documentation audit/update; reconcile and commit status (P2 gates PASS at 8c22017).
+
+Run sequential implementer -> independent QA -> final gates if docs unchanged, else pre-docs -> docs -> final gates. One corrective retry per failed stage; at most two implementer/QA loops. Preserve earlier report files, no test weakening or globality expansion. Parent owns plan/.STATUS; agents preserve their dirty changes.
+
+### P2 implementation handoff
+
+Committed 8c22017: selected-branch objective binding and normalized PSD eigencheck, with red/green regressions. Red: 10 tests / 48 expectations / 5 intended assertion failures. Green: 24 tests / 150 expectations / 0 failures/errors/skips; lint clean. Implementation report p2-repair/implementer.md PASS. Independent QA followed. Docs audit found intended guarantees already documented, so no prose changes were necessary.
+
+### P2 independent QA PASS
+
+At 8c22017, 28 fresh independent cells pass; both old-guard defects are caught. Public printing rejects mismatched selected pairs while ties remain valid. Analytic PD/rank-one SE scaling is verified from 1e-300 to 1e300; zero/null-direction/context/order semantics are retained. Focused tests: 24 tests / 150 expectations / 0 failures/errors/skips. Five unchanged fixtures exactly match the saved pre-repair baseline (prior origin/dev equality provenance retained). No tracked QA edits. Final gates followed with fresh measurements.
+
+### CI cost policy reaffirmed — 2026-10-29
+
+Author reaffirmed: do not run expensive CI until the release PR to main. No hosted OpenBLAS/full-platform dispatch, push or PR in this task. Required local guard verification continues; retain clear separation between locally measured evidence and deferred hosted release checks.
+
+### P2 final gates PASS — 2026-10-29
+
+Tested source/test commit 8c22017. All p2-repair stage reports (implementer, qa, gates) end exactly Verdict: PASS. Final ordinary suite: 1742 tests / 9207 expectations / 9203 passed expectations / 0 failures/errors / 2 skips / 2 warnings. Existing skips: installed-lavaan guard and load_all help. Existing warnings: deliberate cluster-refit failure and sign-branch disagreement. Required check-local quick tier: PASS 8975 / FAIL 0 / WARN 2 / SKIP 37; built-package check Status OK. Loaded package lint: zero findings. Fresh instrumented coverage: 96.07589% overall, sem-nonzero.R 100% measured line/expression coverage with zero uncovered executable rows. Profile gate: 144/144, maximum gap 5.87e-09. Exact draft risk_check: high TRUE, missing integer(0). Prior unchanged parity/restoration/mutants and article-render evidence reused with explicit provenance; no unsupported exhaustive-branch or global-optimum claim.
+
+Both local-review P2 findings are resolved by production guards plus independent regressions and mutants. Existing docs already describe the intended guarantees; scoped audit found no wording gap. Final plan/status reconciliation changes metadata only after the tested commit. No push, PR, hosted CI dispatch, deployment, release or merge. Expensive hosted OpenBLAS/full-platform checks remain deferred until release into main, as reaffirmed by the author. Local task complete; feature worktree retained for review.
