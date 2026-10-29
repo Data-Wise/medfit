@@ -1,5 +1,19 @@
 # D4 covariance correction
 
+## Follow-up: covariance edge coverage (2026-10-28)
+
+Add covr-executed regression tests for the all-parameters-pinned zero covariance and projected-singular-information
+warning/NA branches in `R/sem-se.R`. Assert full parameter names and multiplicity, exact structural zeros, warning
+semantics, and absence of a typed covariance failure for singular information. Use independent mathematical controls
+and planted defects; do not change production behavior or weaken existing assertions.
+
+- [ ] Edge regression tests and scoped commit.
+- [ ] Independent QA and required local gates.
+- [ ] Push the test update to PR #358, rerun hosted coverage, and verify both lines are covered.
+
+The user authorizes updating PR #358 and hosted coverage. Do not merge. Earlier OpenBLAS evidence remains attributed
+to `cf7cfb4`; do not describe it as a run on a later test-only head.
+
 Status: locally complete, 2026-10-28. Base: dev 10b93d00. Owner: medfit.
 
 ## Task: constrained covariance and typed diagnostics
