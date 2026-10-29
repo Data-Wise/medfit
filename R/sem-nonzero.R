@@ -4,6 +4,7 @@
   rows <- which(constraints$op %in% c("==", "<", ">"))
   defs <- constraints[constraints$op == ":=", , drop = FALSE]
   defs <- .sem_defs(stats::setNames(defs$rhs, defs$lhs))
+  products <- list()
   for (i in rows[constraints$op[rows] == "=="]) {
     lhs <- .sem_expr_subst(.sem_expr_parse(constraints$lhs[i]), defs)
     rhs <- .sem_expr_subst(.sem_expr_parse(constraints$rhs[i]), defs)
@@ -24,9 +25,12 @@
       any(all.vars(tree) %in% labels)
     }, TRUE)
     if (any(used_elsewhere)) return(no("coupled_constraint"))
-    return(list(supported = TRUE, reason = "two_sign_branches", row = i, labels = labels,
-                idx = match(labels, ram$par_names), coefficient = coefficient, target = value, ratio = ratio))
+    products[[length(products) + 1L]] <- list(supported = TRUE, reason = "two_sign_branches", row = i,
+                                              labels = labels, idx = match(labels, ram$par_names),
+                                              coefficient = coefficient, target = value, ratio = ratio)
   }
+  if (length(products) > 1L) return(no("multiple_product_equalities"))
+  if (length(products)) return(products[[1L]])
   no("unsupported_constraint_shape")
 }
 
@@ -114,7 +118,12 @@
     fits[[i]] <- fit
     branches[[i]] <- c(record, list(state = "accepted", theta = fit$theta, f = fit$f,
                                     optimum = fit$optimum, notices = captured$notices,
-                                    gate = list(status = fit$status, decrement = fit$decrement)))
+                                    gate = list(accepted = TRUE, status = fit$status, decrement = fit$decrement),
+                                    effective_lower = fit$effective_lower,
+                                    attempts = lapply(seq_along(fit$attempts), function(j) {
+                                      c(fit$attempts[[j]][c("accepted", "status", "decrement", "f")],
+                                        list(source = if (j <= fit$optimum$n_starts) "start" else "reference"))
+                                    })))
   }
   states <- vapply(branches, `[[`, "", "state")
   evidence <- list(schema_version = 1L, spec = spec, original_bounds = list(lower = lb, upper = ub),
@@ -162,10 +171,69 @@
   fit
 }
 
+# Reconstruct the actual user domain from the canonical completed parameter table, not the sidecar.
+.sem_search_domain <- function(out) {
+  names <- out$ram$par_names
+  stopifnot(!anyDuplicated(names), length(names) == out$ram$q,
+            nrow(out$partable) == length(out$par_map))
+  bound <- function(column, default) {
+    values <- vapply(seq_along(names), function(k) {
+      x <- unique(out$partable[[column]][which(out$par_map == k)])
+      x <- x[!is.na(x)]
+      stopifnot(length(x) <= 1L)
+      if (length(x)) x else default
+    }, 0)
+    stats::setNames(values, names)
+  }
+  list(lower = bound("lower", -Inf), upper = bound("upper", Inf))
+}
+
 .sem_search_context <- function(out) {
   rlang::hash(list(data = out$data, weights = out$weights, constraints = out$constraints,
-                   parameters = out$ram, fixed_x = out$fixed_x,
-                   has_mean = out$ram$has_mean, information = out$information, se_type = out$se_type))
+                   parameters = out$ram, domain = .sem_search_domain(out), fixed_x = out$fixed_x,
+                   has_mean = out$ram$has_mean, information = out$information, se_type = out$se_type,
+                   n_starts = out$n_starts, control = out$control))
+}
+
+.sem_search_attempts <- function(branch) {
+  attempts <- branch$attempts
+  stopifnot(is.list(attempts), length(attempts) > 0L, is.list(branch$optimum), is.list(branch$gate))
+  for (a in attempts) {
+    stopifnot(is.logical(a$accepted), length(a$accepted) == 1L, !is.na(a$accepted),
+              length(a$source) == 1L, a$source %in% c("start", "reference"))
+    if (a$accepted) {
+      stopifnot(length(a$f) == 1L, is.finite(a$f), length(a$status) == 1L, a$status %in% .sem_ok_status,
+                length(a$decrement) == 1L, is.finite(a$decrement),
+                a$decrement >= 0, a$decrement <= .sem_stat_tol)
+    }
+  }
+  source <- vapply(attempts, `[[`, "", "source")
+  accepted <- vapply(attempts, `[[`, TRUE, "accepted")
+  counts <- list(n_starts = sum(source == "start"), n_accepted = sum(accepted & source == "start"),
+                 synthetic = sum(source == "reference"))
+  values <- vapply(attempts[accepted], `[[`, 0, "f")
+  stopifnot(length(values) > 0L, counts$n_starts > 0L, counts$synthetic <= 1L,
+            identical(branch$optimum$n_starts, counts$n_starts),
+            identical(branch$optimum$n_accepted, counts$n_accepted), isTRUE(branch$optimum$best_of),
+            is.logical(branch$optimum$certified), length(branch$optimum$certified) == 1L,
+            !is.na(branch$optimum$certified), identical(branch$f, min(values)),
+            isTRUE(branch$gate$accepted))
+  spread <- if (length(values) > 1L) diff(range(values)) else NA_real_
+  status <- if (branch$optimum$certified) {
+    "certified"
+  } else if (length(values) == 1L) {
+    "single"
+  } else if (spread > .sem_spread_tol) {
+    "disagreed"
+  } else {
+    "agreed"
+  }
+  stopifnot(identical(branch$optimum$spread, spread), identical(branch$optimum$status, status),
+            any(vapply(attempts[accepted], function(a) {
+              identical(a$f, branch$f) && identical(a$status, branch$gate$status) &&
+                identical(a$decrement, branch$gate$decrement)
+            }, TRUE)))
+  list(counts = counts, values = values)
 }
 
 .sem_validate_search <- function(out) {
@@ -173,27 +241,58 @@
   if (is.null(e)) return(invisible(TRUE))
   valid <- tryCatch({
     stopifnot(identical(e$schema_version, 1L), identical(e$context, .sem_search_context(out)))
-    if (e$coverage == "local") return(invisible(TRUE))
     spec <- .sem_nonzero_product(out$constraints, out$ram)
-    stopifnot(identical(spec, e$spec), length(e$branches) == 2L, e$coverage == "charted")
+    if (!spec$supported) {
+      stopifnot(identical(e$coverage, "local"), identical(e$reason, spec$reason),
+                is.null(e$branches), is.null(e$spec))
+      return(invisible(TRUE))
+    }
+    domain <- .sem_search_domain(out)
+    stopifnot(identical(e$spec, spec), identical(e$original_bounds, domain),
+              identical(e$reason, spec$reason), length(e$branches) == 2L, identical(e$coverage, "charted"))
+    smp <- .sem_sample(out$data, out$ram, out$weights)
+    cons <- .sem_constraint_rows(out$constraints, out$ram)
+    counts <- list(n_starts = 0L, n_accepted = 0L, synthetic = 0L)
+    values <- numeric()
     for (i in 1:2) {
       branch <- e$branches[[i]]
-      box <- .sem_sign_bounds(spec, e$original_bounds$lower, e$original_bounds$upper, c(1, -1)[i])
+      box <- .sem_sign_bounds(spec, domain$lower, domain$upper, c(1, -1)[i])
       stopifnot(identical(branch$sign, c(1, -1)[i]), identical(branch$signs, box$signs),
                 identical(branch$lower, box$lower), identical(branch$upper, box$upper))
       if (branch$state == "proved_empty") {
         stopifnot(box$empty, identical(branch$reason, "product_bound_contradiction"))
       } else {
-        stopifnot(branch$state == "accepted", !box$empty, is.finite(branch$f),
-                  all(branch$theta[spec$labels] * box$signs > 0),
-                  all(branch$theta >= box$lower), all(branch$theta <= box$upper),
-                  abs(prod(branch$theta[spec$labels]) - spec$ratio) <= 1e-5 * max(1, abs(spec$ratio)))
+        theta <- branch$theta
+        stopifnot(identical(branch$state, "accepted"), !box$empty, is.numeric(theta), is.null(dim(theta)),
+                  identical(names(theta), out$ram$par_names), length(theta) == out$ram$q,
+                  !anyDuplicated(names(theta)), all(is.finite(theta)))
+        floors <- .sem_floor_ids(out$ram, smp, sort(unique(c(cons$nl$idx, cons$nli$idx))), box$upper)
+        lower <- box$lower
+        lower[floors] <- pmax(lower[floors], .sem_var_floor * .sem_step_floor(out$ram, smp)[floors])
+        stopifnot(identical(branch$effective_lower, lower),
+                  all(theta[spec$labels] * box$signs > 0), all(theta >= box$lower), all(theta <= box$upper),
+                  abs(prod(theta[spec$labels]) - spec$ratio) <= 1e-5 * max(1, abs(spec$ratio)))
+        actual <- .sem_fml(theta, out$ram, smp)
+        stopifnot(length(branch$f) == 1L, is.finite(branch$f), is.finite(actual),
+                  abs(actual - branch$f) <= 1e-8 * max(1, abs(actual), abs(branch$f)))
+        attempt <- .sem_search_attempts(branch)
+        counts <- Map(`+`, counts, attempt$counts)
+        values <- c(values, attempt$values)
       }
     }
     accepted <- which(vapply(e$branches, function(b) b$state == "accepted", TRUE))
-    stopifnot(length(accepted) > 0, e$selected %in% accepted,
+    stopifnot(length(accepted) > 0L, length(e$selected) == 1L, e$selected %in% accepted,
+              identical(e$attempt_counts, counts), identical(names(out$theta), out$ram$par_names),
               identical(out$theta, e$branches[[e$selected]]$theta),
               identical(out$f, min(vapply(e$branches[accepted], `[[`, 0, "f"))))
+    if (!is.null(out$optimum)) {
+      spread <- if (length(values) > 1L) diff(range(values)) else NA_real_
+      status <- if (length(values) == 1L) "single" else if (spread > .sem_spread_tol) "disagreed" else "agreed"
+      stopifnot(identical(out$optimum$n_starts, counts$n_starts),
+                identical(out$optimum$n_accepted, counts$n_accepted), isTRUE(out$optimum$best_of),
+                identical(out$optimum$certified, FALSE), identical(out$optimum$spread, spread),
+                identical(out$optimum$status, status))
+    }
     TRUE
   }, error = function(err) FALSE)
   if (!isTRUE(valid)) {
@@ -206,6 +305,6 @@
 .sem_validate_fit_search <- function(fit) {
   if (is.null(fit@internals$search_evidence)) return(invisible(TRUE))
   out <- c(list(theta = fit@theta, f = fit@f, data = fit@data, information = fit@information,
-                se_type = fit@diagnostics$se_type), fit@internals)
+                se_type = fit@diagnostics$se_type, optimum = fit@diagnostics$optimum), fit@internals)
   .sem_validate_search(out)
 }
