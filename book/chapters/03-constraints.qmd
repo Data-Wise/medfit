@@ -939,16 +939,26 @@ stopifnot(grepl("a + b < 0.5", violated, fixed = TRUE))
 
 The standard errors of Chapter 5 come from the information matrix. With active constraints the estimates
 cannot move in the directions that violate them, so the covariance must be zero in those directions. Near
-$\hat\theta$ the feasible points are $\theta = \hat\theta + Z w$ (to first order), with $w$ unconstrained. In
-$w$ the information is $Z^\top I Z$ (chain rule, as in Chapter 2), so $\operatorname{Var}(\hat w) \approx (Z^\top I Z)^{-1}$,
+$\hat\theta$ the feasible points are $\theta = \hat\theta + Z w$ (to first order), with $w$ unconstrained. For expected information, in
+$w$ the Fisher information is $Z^\top I Z$ (chain rule, as in Chapter 2), so $\operatorname{Var}(\hat w) \approx (Z^\top I Z)^{-1}$,
 and mapping back through $\theta = \hat\theta + Z w$ replaces $I^{-1}$ with
 
 $$
 V = Z\,(Z^\top I\, Z)^{-1} Z^\top ,
 $$
 
-with $Z$ the null-space basis in $\theta$ units (`z_theta` from `.sem_active_set()`). Compute it by hand
-from the expected information and compare with the covariance the engine reports for the same setting:
+with $Z$ the null-space basis in $\theta$ units (`z_theta` from `.sem_active_set()`).
+
+For **observed** information, replace $I$ here with the Lagrangian information: the Hessian of the discrepancy
+plus the multiplier-weighted constraint Hessians, converted to log-likelihood units by $n/2$. The second-order
+gate above uses the same curvature. A tangent plane describes feasible movement to first order, but a curved
+constraint also changes the second derivative along that movement. Projecting the ambient observed Hessian
+alone loses that term. The engine computes in scaled coordinates, then maps the information and tangent
+basis back consistently, including the centered-coordinate map for mean structures. **Expected** information
+keeps its Fisher definition; it does not acquire the observed constraint-curvature term. See the
+[canonical constrained covariance formulas](https://data-wise.github.io/medfit/articles/methods.html#constraints).
+
+Compute the expected-information covariance by hand and compare with the covariance the engine reports for the same setting:
 
 ```{r}
 #| label: projected-vcov
@@ -969,11 +979,76 @@ stopifnot(max(abs(v_hand - fit_exp@vcov)) < 1e-10 * max(abs(v_hand)), qr(fit_exp
 
 $V$ has rank 5 and not 6: with one binding equality the six estimates have five degrees of freedom of variation.
 
+
+### Checking observed curvature with a different parameterization
+
+For this recursive Gaussian model, eliminate `cp` by setting it to `a*b` and estimate the three residual
+variances on a log scale. The likelihood then has five unconstrained coordinates. Its ordinary Hessian
+includes the curvature of `cp = a*b` automatically; transforming its inverse back gives an independent
+check of the observed covariance. Centering the data profiles out the unrestricted means for this
+covariance-only fit. The likelihood below is written as three conditional Gaussian densities, without
+using the engine's information or constraint derivatives.
+
+```{r}
+#| label: reparameterized-covariance
+fit_obs <- fit_sem(txt, d, information = "observed")
+centered <- scale(as.matrix(d[, c("treatment", "mediator1", "outcome")]), scale = FALSE)
+x <- centered[, 1]
+m <- centered[, 2]
+y <- centered[, 3]
+variance_names <- c("treatment~~treatment", "mediator1~~mediator1", "outcome~~outcome")
+unpack <- function(p) {
+  ans <- c(a = unname(p[1]), b = unname(p[2]), cp = unname(p[1] * p[2]),
+           stats::setNames(exp(p[3:5]), variance_names))
+  ans[names(fit_obs@theta)]
+}
+nll <- function(p) {
+  v <- exp(p[3:5])
+  nrow(d) / 2 * sum(log(v)) + sum(x^2) / (2 * v[1]) +
+    sum((m - p[1] * x)^2) / (2 * v[2]) +
+    sum((y - p[2] * m - p[1] * p[2] * x)^2) / (2 * v[3])
+}
+p0 <- c(fit_obs@theta[c("a", "b")], log(fit_obs@theta[variance_names]))
+independent <- stats::optim(p0, nll, method = "BFGS", control = list(reltol = 1e-12))
+h <- 1e-5 * pmax(1, abs(independent$par))
+jac <- vapply(seq_along(h), function(k) {
+  step <- rep(0, length(h))
+  step[k] <- h[k]
+  (unpack(independent$par + step) - unpack(independent$par - step)) / (2 * h[k])
+}, numeric(length(fit_obs@theta)))
+v_independent <- jac %*% solve(stats::optimHess(independent$par, nll)) %*% t(jac)
+c(largest_estimate_difference = max(abs(unpack(independent$par) - fit_obs@theta)),
+  relative_covariance_difference = max(abs(v_independent - fit_obs@vcov)) / max(abs(v_independent)))
+```
+
+```{r}
+#| label: reparameterized-covariance-check
+#| include: false
+stopifnot(independent$convergence == 0L,
+          max(abs(unpack(independent$par) - fit_obs@theta)) < 1e-5,
+          max(abs(v_independent - fit_obs@vcov)) / max(abs(v_independent)) < 1e-4)
+```
+
+The same tangent basis includes active inequalities, user bounds and the optimizer's effective variance
+floors. Inactive inequalities impose no restriction. A coordinate pinned by an active row has an exactly
+zero covariance row and column; if every coordinate is pinned, the entire named covariance is zero.
+If information is singular within the remaining tangent space, the engine emits one warning and returns
+a full named `NA` covariance matrix. It does not substitute zero standard errors.
+
+At an inequality or variance boundary this is a **local tangent covariance**, not the unconditional
+sampling distribution: repeated estimates may have a point mass at the boundary. These calculations do
+not establish ordinary Wald or likelihood-ratio calibration there. Explicit non-positive-definite
+information and negative-variance findings produce typed post-fit diagnostics, retaining the accepted
+likelihood for likelihood-ratio inference. An untyped numerical error propagates instead; the singular
+information warning remains a separate warning-and-`NA` case.
+
 ## 7. Cross-checks
 
 lavaan accepts `cp == a*b` in the model text. OpenMx takes it as an algebra and a constraint. Both fit the same
-model, and we compare the chi-square, the degrees of freedom, the estimates and the standard errors, from
-the expected and from the observed information (the engine's and lavaan's must be set to the same one):
+model, and we compare the chi-square, the degrees of freedom, the estimates and the standard errors.
+The expected-information standard errors are checked for agreement. Observed standard errors are printed
+as a comparison of implementations; the directly parameterized likelihood above checks medfit's
+nonlinear observed-curvature convention:
 
 ```{r}
 #| label: lavaan
