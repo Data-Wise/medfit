@@ -21,6 +21,11 @@ test_that("weighted mean-structure covariance matches an independent constrained
   fit <- suppressWarnings(fit_sem(model, data, fixed_x = FALSE, meanstructure = TRUE, weights = w,
                                   se_type = "sandwich"))
   th <- coef(fit)
+  expected_names <- c("a", "b", "cp", "M~~M", "Y~~Y", "X~~X", "M~1", "X~1", "Y~1")
+  expect_setequal(names(th), expected_names)
+  expect_length(th, length(expected_names))
+  expect_identical(names(th), expected_names)
+  expect_identical(dimnames(vcov(fit)), list(expected_names, expected_names))
   p <- c(log(-th[["a"]]), th[["cp"]], log(th[["M~~M"]]), log(th[["Y~~Y"]]), log(th[["X~~X"]]),
          th[["M~1"]], th[["X~1"]], th[["Y~1"]])
   unpack <- function(p) c(a = -exp(p[1]), b = 0.4 / (-exp(p[1])), cp = p[2], exp(p[3:5]), p[6:8])
@@ -30,6 +35,10 @@ test_that("weighted mean-structure covariance matches an independent constrained
            (m - q[7] - q[1] * x)^2 / (2 * q[4]) + log(q[4]) / 2 +
            (y - q[9] - q[2] * m - q[3] * x)^2 / (2 * q[5]) + log(q[5]) / 2)
   }
+  independent <- stats::optim(p + seq(-0.01, 0.01, length.out = length(p)), function(p) sum(case(p)),
+                              method = "BFGS", control = list(reltol = 1e-12, maxit = 2000))
+  expect_identical(independent$convergence, 0L)
+  expect_equal(unname(unpack(independent$par)), unname(th), tolerance = 2e-5)
   j <- .d4_jacobian(unpack, p)
   h <- stats::optimHess(p, function(p) sum(case(p)))
   inv <- solve(h)
@@ -57,6 +66,27 @@ test_that("weighted mean-structure covariance matches an independent constrained
   expected_fit <- suppressWarnings(fit_sem(model, data, fixed_x = FALSE, meanstructure = TRUE, weights = w,
                                            information = "expected"))
   expect_equal(unname(vcov(expected_fit)), unname(j %*% solve(fisher) %*% t(j)), tolerance = 2e-5)
+  expected_sand <- suppressWarnings(fit_sem(model, data, fixed_x = FALSE, meanstructure = TRUE, weights = w,
+                                            information = "expected", se_type = "sandwich"))
+  fisher_inv <- solve(fisher)
+  expect_equal(unname(vcov(expected_sand)),
+               unname(j %*% fisher_inv %*% crossprod(score) %*% fisher_inv %*% t(j)), tolerance = 2e-5)
+  # Equation order is irrelevant; compare every named row after restoring its order.
+  reordered_model <- "Y ~ b*M + cp*X\nM ~ a*X\na < 0\nb < 0\na*b == 0.4"
+  reordered <- suppressWarnings(fit_sem(reordered_model, data, fixed_x = FALSE, meanstructure = TRUE,
+                                        weights = w, se_type = "sandwich"))
+  expect_setequal(names(coef(reordered)), expected_names)
+  expect_length(coef(reordered), length(expected_names))
+  expect_equal(coef(reordered)[expected_names], th, tolerance = 2e-5)
+  expect_equal(vcov(reordered)[expected_names, expected_names], vcov(fit), tolerance = 2e-5)
+  # Substituting observed for expected information must miss the Fisher oracle.
+  local({
+    local_mocked_bindings(.sem_info_expected = .sem_info_observed)
+    wrong <- tryCatch(suppressWarnings(fit_sem(model, data, fixed_x = FALSE, meanstructure = TRUE, weights = w,
+                                               information = "expected")), error = identity)
+    expect_s3_class(wrong, "medfit_sem_covariance_error")
+    expect_identical(wrong$ledger$post_fit$condition$kind, "information_not_pd")
+  })
   # The oracle has a nonzero curvature contribution: removing it must be detected.
   real <- .sem_lagrangian_hessian
   local_mocked_bindings(.sem_lagrangian_hessian = function(hx, ...) {
@@ -86,4 +116,16 @@ test_that("inactive constraints preserve covariance and active inequality matche
   expect_gt(length(boundary@diagnostics$active_constraints), 0L)
   expect_equal(coef(boundary), coef(equality), tolerance = 1e-5)
   expect_equal(vcov(boundary), vcov(equality), tolerance = 1e-5)
+  for (f in list(free, inactive, boundary, equality)) {
+    expect_setequal(names(coef(f)), names(coef(free)))
+    expect_length(coef(f), length(coef(free)))
+    expect_identical(dimnames(vcov(f)), list(names(coef(f)), names(coef(f))))
+  }
+  # Removing the active set from covariance must destroy agreement with the equality tangent.
+  real <- .sem_vcov
+  local_mocked_bindings(.sem_vcov = function(theta, ram, smp, information, cons, lb, ub, se_type) {
+    real(theta, ram, smp, information, NULL, lb, ub, se_type)
+  })
+  wrong <- suppressWarnings(fit_sem(paste(base, "a*b > 0.4", sep = "\n"), data, fixed_x = FALSE))
+  expect_gt(max(abs(vcov(wrong) - vcov(equality))), 1e-4)
 })
