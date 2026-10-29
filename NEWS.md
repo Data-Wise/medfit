@@ -1,5 +1,14 @@
 # medfit (development version)
 
+## Added
+
+* Native fits with one supported nonzero-product equality now fit both sign branches independently before choosing
+  the lowest accepted discrepancy. Bounds can exclude a branch; an unresolved required branch stops the fit.
+  A separate internal `search_evidence` record reports branch coverage and actual attempts, without claiming a
+  global optimum. Repeated factors, multiple product equalities and constraints coupled to either factor retain
+  local search. Residual diagnostics use only an already available matching reference covariance; missing reference
+  covariance is reported as unavailable and triggers no additional fit.
+
 ## Fixed
 
 * Native fits with active nonlinear constraints now use the constraint curvature in observed-information
