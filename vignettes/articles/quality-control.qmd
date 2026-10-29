@@ -99,7 +99,7 @@ The shapes of a null node are:
 |---|---|---|
 | plain resolved | an ordinary refit with `a == 0` | `test-sem-mbco-root.R` |
 | resolved zero-product union | the null holds a zero-product row and its branches resolve | `test-sem-mbco-root-qa.R` |
-| covariance-retained | the refit's optimizer accepted and its covariance stage failed (warning, `covariance = "failed"`) | `test-sem-post-fit.R`, `test-sem-mbco-root.R` |
+| covariance-retained | the refit's optimizer accepted and covariance explicitly diagnosed non-positive-definite information or a negative variance (warning, `covariance = "failed"`); arbitrary covariance errors propagate | `test-sem-post-fit.R`, `test-sem-mbco-root.R`, `test-sem-covariance-diagnostic.R` |
 | covariance-failed branch in a union | one branch of a union lost its covariance; the node reports the first such branch | `test-sem-post-fit.R`, `test-sem-mbco-root-qa.R` |
 | certified excluded | the null contradicts the fit's own literal equalities | `test-sem-mbco-root.R` |
 | union with an excluded branch | a certified-empty branch beside a resolved one | `test-sem-literal-certificates.R` |

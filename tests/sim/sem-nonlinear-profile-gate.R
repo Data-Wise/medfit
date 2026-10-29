@@ -63,7 +63,8 @@ if (mutant == "noref") {
 } else if (mutant == "absfloor") {
   mutate_body(".sem_optimize", ".sem_var_floor * .sem_step_floor(ram, smp)[floored]", "1e-4")
 } else if (mutant == "oracle1") {
-  mutate_body("or213_fit", "neg <- or213_branch(-1, q, cr)", "neg <- list()", globalenv())
+  mutate_body("or213_fit_q", "neg <- or213_branch(-1, q, cr, vm_min = vm_min, vy_min = vy_min)",
+              "neg <- list()", globalenv())
 } else if (mutant == "oracle0") {
   mutate_body("or213_fit", "min(a0, b0)", "a0", globalenv())
 } else if (mutant == "halfq") {

@@ -84,6 +84,13 @@
 #' parameter names). To keep the 0.14.x results, pass `fixed_x = FALSE, meanstructure = NULL`.
 #' The 0.14.x `options(medfit.native_defaults)` opt-in no longer has any effect.
 #'
+#' @section Constrained standard errors:
+#' Observed-information covariance includes the curvature of active nonlinear constraints; expected information
+#' retains its Fisher definition. Sandwich standard errors use the corresponding information as bread.
+#' Active inequalities, user bounds and solver variance floors give a local tangent covariance, with exactly zero
+#' variance for a pinned coordinate. This is not the full sampling distribution at a boundary. See the
+#' Methods and Formulas article, under Constraints, for the covariance formula.
+#'
 #' @return A [SEMFit] object. With a product term whose factor is a regression target (`x:m` with
 #'   `m` regressed on `x`), `glance()` reports the chi-square, df and p-value as `NA` with a note, and
 #'   `anova()` and [mbco_sem()] refuse; see [SEMFit-methods].
@@ -132,13 +139,16 @@
 #' same rows carries only `context$sample_hash`. A fit made before the ledger existed must be refitted before
 #' [mbco_sem()] can use it, which refuses it with a `medfit_error_ledger` error.
 #'
-#' When the optimizer accepts a fit and only the covariance stage fails (an error from the covariance, not the
-#' singular-information NA return, which stays `unavailable` with its warning), the call stops with
+#' When the optimizer accepts a fit and the covariance stage explicitly diagnoses non-positive-definite information
+#' or a negative variance, the call stops with
 #' `medfit_sem_covariance_error`, never a fit. The class is a sibling of `medfit_error_no_convergence`: no optimizer
 #' failed, so the handlers that report an unresolved result for an optimizer failure do not take it. Its fields are
 #' `schema_version = 1L`, `stage = "covariance"`, `partial` (the accepted optimizer result: `f`, `theta`, sample,
 #' domain, dimensions and settings; no `vcov` or `defined`) and `ledger` (the same node as `partial$ledger`, with
-#' `covariance = "failed"` and `post_fit`: versioned evidence with the original condition's class, message and call).
+#' `covariance = "failed"` and `post_fit`: versioned evidence with the original condition's class, message, call and
+#' diagnostic kind, `information_not_pd` or `negative_variance`). Other covariance errors propagate unchanged,
+#' without a retained likelihood. Singular information still warns and returns an NA covariance, recorded as
+#' `unavailable` rather than `failed`.
 #' The message is the original one. Resolved here means an accounted-for accepted likelihood, not a successful
 #' covariance. A union root reports the first failing branch's `post_fit`, in branch order, even when another branch
 #' supplies its minimum likelihood, and does not claim the winning branch failed: inspect the branch IDs. A branch that

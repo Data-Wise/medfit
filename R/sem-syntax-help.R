@@ -38,7 +38,11 @@
 #' the outcome ledger of every branch as `$ledger` (see [fit_sem()]). A sum of products
 #' (`a1*b1 + a2*b2 == 0`) has no exact reduction, so it is best-effort: the fit is
 #' the best of the starts tried, a disagreement warning means a better optimum may
-#' exist, and `n_starts` raises the number of starts. Labels used in a constraint
+#' exist, and `n_starts` raises the number of starts. Constrained standard errors use the active tangent space:
+#' observed information includes nonlinear constraint
+#' curvature, while expected information retains its Fisher definition. Active inequalities and bounds, including
+#' solver variance floors, give a local tangent approximation rather than the full boundary sampling distribution.
+#' See [fit_sem()] and the Methods and Formulas article for details. Labels used in a constraint
 #' or a definition must be defined in the model. A constraint with no free
 #' parameter is an error. Exogenous variables are given free
 #' variances and covariances, as lavaan does with `fixed.x = FALSE`. An exogenous variable named in any `~~`

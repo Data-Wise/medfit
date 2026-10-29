@@ -478,7 +478,9 @@ test_that("the 64-branch cap is a plain error with a not_enumerated ledger, with
 
 test_that("a covariance-stage failure is medfit_sem_covariance_error with the accepted likelihood, never a fit", {
   d <- ev_data()
-  testthat::local_mocked_bindings(.sem_vcov = function(...) stop("injected covariance failure"))
+  testthat::local_mocked_bindings(.sem_vcov = function(...) {
+    stop(.sem_covariance_diagnostic("information_not_pd", "injected covariance failure"))
+  })
   err <- tryCatch(suppressMessages(fit_sem(ev_syn, d, n_starts = 1L, information = "expected")), error = identity)
   expect_s3_class(err, "medfit_sem_covariance_error")
   expect_false(inherits(err, "medfit_error_no_convergence"))
@@ -494,7 +496,7 @@ test_that("mbco_sem() retains a null whose covariance stage failed and says so",
   calls <- 0L
   testthat::local_mocked_bindings(.sem_vcov = function(...) {
     calls <<- calls + 1L
-    if (calls == 1L) stop("injected null covariance failure")
+    if (calls == 1L) stop(.sem_covariance_diagnostic("information_not_pd", "injected null covariance failure"))
     vcov(...)
   })
   w <- nt_warnings(mbco_sem(full, a = "a1", b = "b1"))

@@ -10,13 +10,17 @@
 # replays them after the ledger is built, a failure keeps its class and carries them in the ledger and the message.
 .sem_fit_syntax <- function(model, data, information = c("observed", "expected"), n_starts = 5L,
                             control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL,
-                            meanstructure = NULL, fixed_x = FALSE, factors = NULL) {
+                            meanstructure = NULL, fixed_x = FALSE, factors = NULL, covariance_transport = FALSE) {
   context <- .sem_outcome_context(model, parsed, data, information, weights, meanstructure, fixed_x,
                                   n_starts, control, se_type, factors)
   captured <- .sem_capture_outcome(.sem_fit_pipeline(model, data, information, n_starts, control, weights,
                                                      se_type, parsed, meanstructure, fixed_x, factors))
   out <- captured$value
   err <- captured$error
+  if (inherits(err, "medfit_covariance_untyped")) {
+    if (covariance_transport) stop(err)
+    stop(err$original)
+  }
   covariance <- !is.null(err) && inherits(err, "medfit_sem_covariance_error")
   if (!is.null(err) && !covariance) {
     constraints <- if (!is.null(parsed)) {
@@ -178,6 +182,8 @@
   } else {
     fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
   }
+  lb <- fit$effective_lower
+  fit$effective_lower <- NULL
   if (!is.null(cons$nl)) {
     # a nonlinear equality removes parameters where its gradient is: count them at the solution
     eq_rank <- .sem_eq_rank_at(cons, fit$theta, u0)
@@ -202,6 +208,10 @@
     )
   )
   if (inherits(vc, "error")) {
+    if (!inherits(vc, "medfit_sem_covariance_diagnostic")) {
+      stop(structure(class = c("medfit_covariance_untyped", "error", "condition"),
+                     list(message = conditionMessage(vc), call = NULL, original = vc)))
+    }
     # Only an accepted likelihood is evidence. Anything else keeps the error it was, and the caller's ledger says the
     # likelihood is unavailable.
     if (!(isTRUE(fit$converged) && length(fit$f) == 1L && is.finite(fit$f))) {
@@ -334,7 +344,8 @@
       # a covariance-stage failure of one branch keeps that branch's likelihood and evidence (D4): the union decides
       res <- tryCatch(.sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
                                       parsed = list(parameters = parsed$parameters, constraints = cons),
-                                      meanstructure = meanstructure, fixed_x = fixed_x, factors = factors),
+                                      meanstructure = meanstructure, fixed_x = fixed_x, factors = factors,
+                                      covariance_transport = TRUE),
                       medfit_sem_covariance_error = .sem_retain_covariance)
       .sem_require_outcome(res, partial = !is.null(res$ledger$post_fit))
       if (!identical(res$constraints, cons)) {
@@ -344,6 +355,7 @@
     })
     res <- captured$value
     err <- captured$error
+    if (inherits(err, "medfit_covariance_untyped") || inherits(err, "medfit_error_ledger")) stop(err)
     ledger <- if (is.null(err)) res$ledger else err$ledger
     if (is.null(err) && !is.null(ledger$post_fit)) {
       # the retention notice was raised after the branch's own ledger was built
