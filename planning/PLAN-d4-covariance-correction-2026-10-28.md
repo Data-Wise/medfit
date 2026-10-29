@@ -8,7 +8,8 @@ semantics, and absence of a typed covariance failure for singular information. U
 and planted defects; do not change production behavior or weaken existing assertions.
 
 - [x] Edge regression tests and scoped commit.
-- [ ] Independent QA and required local gates.
+- [x] Independent QA and planted-defect checks.
+- [ ] Required local gates.
 - [ ] Push the test update to PR #358, rerun hosted coverage, and verify both lines are covered.
 
 The user authorizes updating PR #358 and hosted coverage. Do not merge. Earlier OpenBLAS evidence remains attributed
