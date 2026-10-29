@@ -348,6 +348,8 @@ c(by_hand = ll_by_hand, logLik = as.numeric(logLik(fx)))
 stopifnot(abs(ll_by_hand - as.numeric(logLik(fx))) < 1e-6)
 ```
 
+Keep the two counts separate here. The model-test degrees of freedom count restrictions on the observed moments. The `df` attribute of `logLik()` counts fitted parameters for information criteria. Fixing exogenous moments affects these counts differently, as the earlier comparison of moment and parameter counts showed.
+
 **The parameter count.** `logLik()` also carries a `df` attribute, the parameter count behind AIC and BIC. With
 a mean structure the free intercepts are in the parameter vector already. Without one, the likelihood still has
 means: the model's means are saturated, one free mean for each variable that is not fixed (a fixed variable's mean is a

@@ -160,3 +160,22 @@ test_that("the chapters carry no 0.14.0 warning muffle and pin the 0.14.x settin
   }
   expect_false(grepl("documents medfit 0\\.14", read_text(file.path(book_dir(), "index.qmd"))))
 })
+
+
+test_that("the constrained covariance teaching distinguishes curvature and boundary limits", {
+  ch3 <- read_text(file.path(book_dir(), "chapters", "03-constraints.qmd"))
+  ch5 <- read_text(file.path(book_dir(), "chapters", "05-inference.qmd"))
+  expect_match(ch3, "Lagrangian information", fixed = TRUE)
+  expect_match(ch3, "Expected** information\nkeeps its Fisher definition", fixed = TRUE)
+  expect_match(ch3, "reparameterized-covariance-check", fixed = TRUE)
+  expect_match(ch3, "every coordinate is pinned", fixed = TRUE)
+  expect_match(ch3, "full named `NA` covariance matrix", fixed = TRUE)
+  expect_match(ch3, "local tangent covariance", fixed = TRUE)
+  expect_match(ch5, "ambient scores need not sum to zero", fixed = TRUE)
+  expect_match(ch5, "methods.html#constraints", fixed = TRUE)
+  expect_match(ch5, '.sem_covariance_diagnostic("negative_variance"', fixed = TRUE)
+  expect_match(ch5, '.sem_covariance_diagnostic("information_not_pd"', fixed = TRUE)
+  expect_match(ch5, "covariance-raw-error-check", fixed = TRUE)
+  expect_false(grepl('stop("injected covariance failure")', ch5, fixed = TRUE))
+  expect_false(grepl('stop("injected null covariance failure")', ch5, fixed = TRUE))
+})

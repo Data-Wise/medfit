@@ -152,8 +152,9 @@ a gate fails or the R version, BLAS library, nloptr, lavaan or OpenMx version
 changes. The runner image is recorded and never alerts. Drift bands are not set
 yet: they need about eight rows (eight months at this cadence; a manual run adds one sooner), and a
 change merged to `dev` can go unseen for up to a month unless a run is started by hand or a pull request
-carries the `run-qc` label. The workflow has not run on GitHub at
-the time of writing, so the history does not exist yet.
+carries the `run-qc` label. A labeled pull-request run verifies that pull request;
+it does not append a scheduled/manual history row. The exact source and run must
+be checked before reusing either kind of evidence.
 
 ## Known limits
 
@@ -161,7 +162,10 @@ the time of writing, so the history does not exist yet.
   one are marked proposed in the decision log.
 - Gates run on the runner's OpenBLAS; the reference BLAS needs a separate
   container.
-- Other seeds and scales of the nonlinear floor fixture are not covered.
+- The constrained covariance tests include multiple seeds and extreme variance
+  scales, but do not exhaust boundary optima or establish boundary calibration.
+  The extreme-floor observed sandwich oracle reached a normalized discrepancy
+  of 1.39e-4; this is a numerical limit of that fixture, not a general accuracy guarantee.
 - The evidence validators are not a gate: `R/sem-outcomes.R` and `R/sem-mbco.R` are not in
   `tests/sim/risk-files.txt` and no `gates.csv` row registers them, so their protection is the unit tests and the
   admission checklist, not the OpenBLAS gate run.
@@ -191,9 +195,29 @@ estimates and their standard errors stay where they were.
 reproduced both counts on the `v0.14.0` tree and on `dev`, so the flip does not change them, and the limit is
 documented in `?compare_lr`.
 
-**Not yet run.** The two OpenBLAS gate runs (`gates (rest)` and `gates (reliability)`) run on pull requests to `main`;
-they are deferred to the release pull request, and this page makes no claim about them. The record, with its sources, is
+**At that local checkpoint.** The two OpenBLAS gate runs (`gates (rest)` and `gates (reliability)`) run on pull requests to `main`;
+they were deferred to the release pull request. The table above records the local checkpoint, not a later hosted run. The record, with its sources, is
 `planning/specs/RESULT-qc-0.15.0-native-defaults-flip-2026-10-26.md`.
+
+## D4 constrained covariance verification
+
+PR #358 added Lagrangian observed curvature, preserved expected Fisher semantics,
+and projected the corresponding sandwich bread with case-score meat. Independent
+likelihood parameterizations, Fisher and case-score calculations check these choices;
+the regression cases cover weights, means, inactive inequalities, active bounds,
+exact pinned zeros and singular tangent information. See the
+[Methods article](methods.html#constraints) for the formulas and boundary limitations.
+
+| Receipt | Source and scope |
+|---|---|
+| [Hosted OpenBLAS QC](https://github.com/data-wise/medfit/actions/runs/40815969203) | `cf7cfb4`: 24 gates and 155 checks, including 76,800 reliability fits and 350 semopy comparisons; this run predates the later test-only heads |
+| [Hosted coverage](https://github.com/data-wise/medfit/actions/runs/40820743419) | `dc575a11`: 96.38% overall and 97.82% patch coverage; both targeted covariance edge branches were covered |
+
+These receipts identify what ran at each source revision. They do not claim
+100% coverage of critical paths or a later rerun of the OpenBLAS matrix.
+Development pull requests keep fast Ubuntu coverage, lint, risk-tier and pkgdown
+checks. The expensive OpenBLAS runs and full platform matrix are reserved for
+release pull requests from `dev` to `main`; monthly and manual QC remain available.
 
 ## Lessons from the 0.14.1 port
 

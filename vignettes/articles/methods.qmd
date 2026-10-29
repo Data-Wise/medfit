@@ -782,6 +782,13 @@ the centered-coordinate map when a mean structure is fitted.
 A parameter pinned by a constraint or active bound has exactly zero variance,
 and `a == b` returns the standard error of the model with `a` and `b` collapsed
 to one label. An inactive inequality imposes no covariance restriction.
+Pinned coordinates have exact zero rows and columns. If all coordinates are
+pinned, the full named covariance matrix is zero. If the information within a
+nonempty tangent space is singular, the engine emits one warning and returns a
+full named `NA` covariance matrix; this differs from a zero-dimensional tangent
+space and from the typed post-fit diagnostics described in
+[Computation algorithms](computation-algorithms.html#constraints-acceptance-and-starts).
+
 At an active inequality or bound, this covariance is a local tangent
 approximation. It is not the full boundary sampling distribution, which can
 have a point mass, and does not establish ordinary Wald or likelihood-ratio

@@ -292,6 +292,11 @@ After the column is built, the product is an observed variable with no incoming 
 variance, its covariances with the other exogenous variables and (with the mean structure) its mean are free
 parameters, exactly as for `treatment` and `covariate1`:
 
+Here “exogenous” describes the product's place in the RAM: it has no incoming path.
+That does not guarantee that the product column is independent of the errors in the
+other equations. Keep those ideas separate when comparing the model's assumptions
+with the data below.
+
 ```{r}
 #| label: ram
 ram <- fit_free@internals$ram
@@ -425,9 +430,9 @@ later `extract_mediation()` call would mean refitting, so the fit makes it, and 
 cat(say(fit_sem(product_model, d, meanstructure = FALSE)))
 ```
 
-The slopes do not depend on the mean structure (Step 3 holds with or without intercepts in the regressions, because
-the intercept only absorbs the means), so nothing about Section 3's estimates changes. The product's own mean is a
-free parameter, estimated at the sample mean of the column:
+The slopes here agree with a covariance-only fit, which works with centered variables; this is not a regression
+through the origin on the raw data. Step 3 uses free intercepts, which absorb the means, so nothing about
+Section 3's estimates changes. The product's own mean is a free parameter, estimated at the sample mean of the column:
 
 ```{r}
 #| label: product-mean
