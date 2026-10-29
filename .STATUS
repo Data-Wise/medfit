@@ -1,8 +1,9 @@
 # Local R compatibility fixes — 2026-10-29
-# Archive fixture and probmed latent Gaussian plug-in fixes are local; no push or release.
+# Archive fixture and probmed latent Gaussian plug-in fixes are pending integration; no release.
 # Four-version medfit archive test suites: 7618 pass, 126 skip, 0 fail each; R 4.1 has warnings/notes.
 # Report: planning/R-compatibility-results-2026-10-29.md. probmed checkout: .worktrees/probmed-r-compat-fix.
-# R 4.1 S7 namespace failures and stats4 initialization remain ecosystem follow-up items.
+# R 4.1 S7 imports and missingmed offset fixed locally; both affected missingmed suites pass with warnings.
+# missingmed full vignette check: R 4.6.2 OK; R 4.1 tests/vignettes pass, stats4 warning/note remain.
 # Local pkgdown 404 repair — 2026-10-22
 # Isolated origin/dev 6a8ac44; full site build PASS, 106 pages / 8268 local refs / 0 errors.
 # Regression, R lint, workflow YAML and docs consistency tests PASS; desktop/mobile 404 inspected.
