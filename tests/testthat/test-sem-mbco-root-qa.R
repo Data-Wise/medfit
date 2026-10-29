@@ -147,7 +147,7 @@ test_that("union-null shapes from the engine are accepted: resolved, excluded an
   calls <- 0L
   testthat::local_mocked_bindings(.sem_vcov = function(...) {
     calls <<- calls + 1L
-    if (calls == 2L) stop("injected branch covariance failure")
+    if (calls == 2L) stop(.sem_covariance_diagnostic("information_not_pd", "injected branch covariance failure"))
     vcov(...)
   })
   res <- suppressWarnings(mbco_sem(f, "a1", "cp"))

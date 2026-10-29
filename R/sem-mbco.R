@@ -198,7 +198,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
         .sem_fit_syntax(syntax, fit@data, fit@information, n_starts = n_starts,
                         control = control, se_type = refit_se_type,
                         meanstructure = isTRUE(fit@internals$ram$has_mean),
-                        fixed_x = fixed_x, factors = fit@internals$factors),
+                        covariance_transport = TRUE, fixed_x = fixed_x, factors = fit@internals$factors),
         medfit_sem_covariance_error = .sem_retain_covariance
       )
       if (!is.null(r$ledger$post_fit) &&
@@ -215,6 +215,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     r <- captured$value
     err <- captured$error
     failure <- NULL
+    if (inherits(err, "medfit_covariance_untyped")) stop(err$original)
     if (!is.null(err)) {
       msg <- sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint ",
                             "on that parameter, the null `%s` may lie outside the parameter space."),

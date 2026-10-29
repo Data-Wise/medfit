@@ -33,11 +33,19 @@
   }
   tmat <- if (is.null(ctr)) NULL else ctr$t
   act <- .sem_active_set(theta, ram, smp, lb, ub, if (is.null(cons)) .sem_no_cons(ram$q) else cons)
+  if (information == "observed" && any(act$active_row) &&
+        (!is.null(cons$nl) || !is.null(cons$nli))) {
+    gx <- .sem_eval(theta, ram, smp, TRUE)$g * act$u
+    curvature <- .sem_lagrangian_hessian(matrix(0, ram$q, ram$q), gx, act, cons, theta) /
+      outer(act$u, act$u) * smp$n / 2
+    if (!is.null(tmat)) curvature <- crossprod(tmat, curvature %*% tmat)
+    info <- info + curvature
+  }
   pinned <- !all(act$free) || any(act$active_row)
   z <- if (pinned) act$z_theta else NULL
   meat <- if (se_type == "sandwich") crossprod(.sem_scores(theta, ram, smp))
   vc <- if (is.null(z)) {
-    bread <- .sem_invert_info(info)
+    bread <- .sem_checked_invert_info(info)
     if (!is.null(bread) && !is.null(tmat)) bread <- tmat %*% bread %*% t(tmat)
     if (is.null(bread) || is.null(meat)) bread else bread %*% meat %*% bread
   } else if (ncol(z) == 0L) {
@@ -56,7 +64,7 @@
       # free direction is real variance and stays.
       z[pinned_rows, ] <- 0
     }
-    bread <- .sem_invert_info(crossprod(zc, info %*% zc))
+    bread <- .sem_checked_invert_info(crossprod(zc, info %*% zc))
     if (is.null(bread)) {
       NULL
     } else if (is.null(meat)) {
@@ -69,8 +77,27 @@
     warning("information matrix is singular; the model may not be identified", call. = FALSE)
     vc <- matrix(NA_real_, ram$q, ram$q)
   }
+  if (all(is.finite(vc)) && any(diag(vc) < 0)) {
+    stop(.sem_covariance_diagnostic("negative_variance", "covariance has a negative variance"))
+  }
   dimnames(vc) <- list(ram$par_names, ram$par_names)
   (vc + t(vc)) / 2
+}
+
+# Singular information retains its warning and NA covariance; an invertible indefinite matrix is a diagnostic.
+.sem_checked_invert_info <- function(info) {
+  if (!all(is.finite(info))) return(NULL)
+  scale <- abs(diag(info))
+  zero <- scale == 0
+  if (any(zero)) scale[zero] <- apply(abs(info[zero, , drop = FALSE]), 1L, max)
+  if (any(scale == 0)) return(NULL)
+  d <- 1 / sqrt(scale)
+  scaled <- info * outer(d, d)
+  if (rcond(scaled) <= .sem_info_singular_tol) return(NULL)
+  if (any(eigen(scaled, symmetric = TRUE, only.values = TRUE)$values <= 0)) {
+    stop(.sem_covariance_diagnostic("information_not_pd", "information matrix is not positive definite"))
+  }
+  .sem_invert_info(info)
 }
 
 # Inverse of an information matrix, or NULL when it is not finite or singular

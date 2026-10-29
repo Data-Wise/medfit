@@ -16,7 +16,7 @@ test_that("the root of an all-failing union reports the first failing branch, no
     calls <- 0L
     local_mocked_bindings(.sem_vcov = function(...) {
       calls <<- calls + 1L
-      stop(paste0("closure failure in call ", calls), call. = FALSE)
+      stop(.sem_covariance_diagnostic("information_not_pd", paste0("closure failure in call ", calls)))
     })
     err <- tryCatch(suppressWarnings(fit_sem(model, data, n_starts = 1L, information = "expected")), error = identity)
     expect_s3_class(err, "medfit_sem_covariance_error")
@@ -35,7 +35,9 @@ test_that("the root of an all-failing union reports the first failing branch, no
 
 closure_retain_error <- function() {
   data <- readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
-  testthat::local_mocked_bindings(.sem_vcov = function(...) stop("closure covariance failure", call. = FALSE))
+  testthat::local_mocked_bindings(.sem_vcov = function(...) {
+    stop(.sem_covariance_diagnostic("information_not_pd", "closure covariance failure"))
+  })
   tryCatch(fit_sem(closure_model, data, n_starts = 1L, information = "expected"), error = identity)
 }
 
