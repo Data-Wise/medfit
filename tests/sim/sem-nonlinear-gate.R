@@ -124,7 +124,7 @@ omx_constraint <- function(text, par_names) {
 }
 
 # The reparameterized oracle: one parameter is a function of the others; the rest are fitted by BFGS from the
-# native estimate and the covariance is G (G' I G)^-1 G' with G = d theta / d phi (central differences).
+# native estimate and the covariance is G H_phi^-1 G' with H_phi the reparameterized likelihood Hessian.
 reparam <- function(th, ram, smp, solve) {
   nm <- names(th)
   t_i <- match(solve$target, nm)
@@ -153,8 +153,13 @@ reparam <- function(th, ram, smp, solve) {
   )
   th2 <- to_theta(opt$par)
   g <- jac(opt$par)
-  info <- .sem_info_observed(unname(th2), ram, smp)
-  v <- g %*% solve(crossprod(g, info %*% g)) %*% t(g)
+  nll <- function(p) {
+    sigma <- .sem_implied(ram, unname(to_theta(p)))
+    ch <- chol(sigma)
+    smp$n / 2 * (2 * sum(log(diag(ch))) + sum(smp$s * chol2inv(ch)))
+  }
+  hessian <- stats::optimHess(opt$par, nll)
+  v <- g %*% solve(hessian) %*% t(g)
   list(theta = th2, se = stats::setNames(sqrt(diag(v)), nm))
 }
 

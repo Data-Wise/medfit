@@ -182,6 +182,8 @@
   } else {
     fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
   }
+  lb <- fit$effective_lower
+  fit$effective_lower <- NULL
   if (!is.null(cons$nl)) {
     # a nonlinear equality removes parameters where its gradient is: count them at the solution
     eq_rank <- .sem_eq_rank_at(cons, fit$theta, u0)

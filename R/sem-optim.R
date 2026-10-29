@@ -553,7 +553,7 @@
     theta = stats::setNames(fit$theta, ram$par_names), f = fit$f, status = fit$status,
     decrement = fit$decrement, converged = TRUE, retries = win - 1L,
     active_bounds = ram$par_names[fit$active], improper = improper, attempts = attempts,
-    floor_active = floor_active, reference_f = if (is.null(ref)) NA_real_ else ref$f,
+    floor_active = floor_active, effective_lower = lb, reference_f = if (is.null(ref)) NA_real_ else ref$f,
     multipliers = fit$multipliers, sign_check = if (is.null(fit$sign_check)) "ok" else fit$sign_check,
     optimum = optimum
   )

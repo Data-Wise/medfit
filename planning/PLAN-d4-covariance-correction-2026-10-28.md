@@ -15,3 +15,5 @@ Acceptance: independent QA of all changed numerical contracts; targeted tests, n
 - [ ] Implementation and oracle tests.
 - [ ] Independent oracle QA and defect checks.
 - [ ] Required gates and documentation.
+
+Implementation follow-up: propagate effective solver bounds to covariance, cover active floor across information and SE types and branch refits, and repair the reparameterized nonlinear SE gate. Independent QA and required gates remain pending.

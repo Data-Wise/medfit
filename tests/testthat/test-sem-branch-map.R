@@ -65,7 +65,7 @@ test_that("parsed 32/64/128 grids preserve execution, ties and fail before fitti
     testthat::local_mocked_bindings(.sem_fit_syntax = function(..., parsed = NULL) {
       args <- list(...)
       expect_identical(args, list(NULL, data, "expected", 1L, list(), NULL, "model",
-                                  meanstructure = NULL, fixed_x = FALSE, factors = NULL))
+                                  meanstructure = NULL, fixed_x = FALSE, factors = NULL, covariance_transport = TRUE))
       out <- payload
       out$f <- c(4, 1, 1, 2)[state$index]
       state$index <- state$index + 1L

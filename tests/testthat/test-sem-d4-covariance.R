@@ -129,3 +129,48 @@ test_that("inactive constraints preserve covariance and active inequality matche
   wrong <- suppressWarnings(fit_sem(paste(base, "a*b > 0.4", sep = "\n"), data, fixed_x = FALSE))
   expect_gt(max(abs(vcov(wrong) - vcov(equality))), 1e-4)
 })
+
+test_that("an active solver variance floor is pinned in the covariance at extreme scales", {
+  set.seed(7)
+  n <- 250
+  x <- stats::rbinom(n, 1, 0.5)
+  m <- 1e3 * stats::rnorm(n)
+  y <- 0.3 * x + 1e-3 * m + 1e-3 * stats::rnorm(n)
+  data <- data.frame(X = x, M = m, Y = y)
+  ma <- stats::lm(m ~ x)
+  ya <- stats::lm(y ~ x + m)
+  a <- unname(stats::coef(ma)[2])
+  b <- unname(stats::coef(ya)[3])
+  vm <- mean(stats::residuals(ma)^2)
+  vy <- mean(stats::residuals(ya)^2)
+  q <- a * b / sqrt(2 * (b^2 * vm + vy))
+  model <- paste0("M ~ a*X\nY ~ cp*X + b*M\nM ~~ Vm*M\nY ~~ Vy*Y\n",
+                  "a*b/sqrt(2*(b^2*Vm+Vy)) == ", format(q, digits = 17))
+  fit <- suppressWarnings(fit_sem(model, data, fixed_x = FALSE, meanstructure = NULL))
+  expect_true("Vy" %in% fit@diagnostics$active_bounds)
+  expect_true(all(vcov(fit)["Vy", ] == 0))
+  expect_true(all(vcov(fit)[, "Vy"] == 0))
+  for (info in c("observed", "expected")) for (se in c("model", "sandwich")) {
+    other <- suppressWarnings(fit_sem(model, data, fixed_x = FALSE, meanstructure = NULL,
+                                      information = info, se_type = se))
+    expect_true("Vy" %in% other@diagnostics$active_bounds)
+    expect_true(all(vcov(other)["Vy", ] == 0))
+    expect_true(all(vcov(other)[, "Vy"] == 0))
+  }
+  branch_model <- paste0("M ~ a*X\nY ~ cp*X + b*M\nM ~~ Vm*M\nY ~~ Vy*Y\n",
+                         "a*b/sqrt(2*(b^2*Vm+Vy)) == 0\na*b == 0")
+  branch <- suppressWarnings(fit_sem(branch_model, data, fixed_x = FALSE, meanstructure = NULL))
+  expect_identical(branch@diagnostics$ledger$branch_map$raw_count, 2L)
+  expect_true("Vy" %in% branch@diagnostics$active_bounds)
+  expect_true(all(vcov(branch)["Vy", ] == 0))
+  # Dropping the optimizer's floor from the covariance active set revives the diagnosed failure.
+  optimize <- .sem_optimize
+  local_mocked_bindings(.sem_optimize = function(...) {
+    out <- optimize(...)
+    out$effective_lower[] <- -Inf
+    out
+  })
+  mutant <- tryCatch(suppressWarnings(fit_sem(model, data, fixed_x = FALSE, meanstructure = NULL)), error = identity)
+  expect_s3_class(mutant, "medfit_sem_covariance_error")
+  expect_identical(mutant$ledger$post_fit$condition$kind, "information_not_pd")
+})
