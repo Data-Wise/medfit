@@ -135,8 +135,8 @@ not infeasible: only a literal contradiction is a proof of emptiness.
 | `no branch of the zero-product constraints converged` (class `medfit_error_no_convergence`; also `medfit_sem_empty_union` when every branch is certified empty) | no branch converged, or every branch holds a literal contradiction such as `a == 0` with `a == 1` | remove or correct the contradicting equalities; if no branch is certified empty, check the data scale; look at `err$ledger$children`: each child has `feasibility` (`certified_empty` is a proof) and `outcome` |
 | `literal zero/nonzero contradiction` (class `medfit_sem_infeasible`) | the model’s own equalities contradict exactly (`a == 0` with `a == 1e-9` too); no tolerance | remove or correct one equality; look at `err$ledger$feasibility` |
 | `branches to fit; at most 64 are supported` (a plain error) | the zero-product equalities give more than 64 raw branches, duplicates included, counted before anything is fitted; a count above 2^53 prints as `approximately` and an overflow as `overflow (Inf)` | state fewer zero-product equalities, or fit the branches you need one at a time; look at `err$ledger$enumeration`: `state` is `not_enumerated` and `required` is the raw count; `err$ledger$branch_map` has `raw_count` and an unknown unique count |
-| the error message of the failing stage, with class `medfit_sem_covariance_error` | the optimizer accepted the fit and the covariance stage then failed; the likelihood is evidence, but the result is not a fit | fix the stage the message names, or simplify the model; look at `err$ledger` (`covariance` is `"failed"`, `post_fit` holds the original condition), `err$partial` (the accepted fit without `vcov`) |
-| `likelihood retained, covariance unavailable` (a warning from [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)) | a refit null passed the optimizer and failed only in the covariance stage; the MBCO statistic and p-value use its likelihood and are unchanged | read the warning for the failure; no standard error was invented; look at `res$ledger$children`: the node of that null has `covariance = "failed"` |
+| the error message of the failing stage, with class `medfit_sem_covariance_error` | the optimizer accepted the fit, then covariance explicitly diagnosed non-positive-definite information or a negative variance; the likelihood is evidence, but the result is not a fit | inspect the model and data scale; look at `err$ledger` (`covariance` is `"failed"`, `post_fit$condition$kind` is `information_not_pd` or `negative_variance`), `err$partial` (the accepted fit without `vcov`) |
+| `likelihood retained, covariance unavailable` (a warning from [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)) | a refit null passed the optimizer, then covariance raised one of those explicit diagnostics; the MBCO statistic and p-value use its likelihood and are unchanged | read the warning for the diagnostic; no standard error was invented; look at `res$ledger$children`: the node of that null has `covariance = "failed"` |
 | `missing, malformed or unresolved SEM outcome ledger` (class `medfit_error_ledger`) | [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) was given a fit whose ledger is absent, altered, forged or from an earlier release, so its evidence cannot be trusted | refit with the current medfit and call [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) on the new fit; look at `err$ledger$rejected_evidence` holds the refused ledger, when the fit had one |
 
 `medfit_error_ledger` is a class of its own:
@@ -148,6 +148,12 @@ evidence outright. The covariance error is a sibling of
 `medfit_error_no_convergence`, so handlers written for an unresolved
 refit do not catch it. How the ledger is built is in [Computation and
 algorithms](https://data-wise.github.io/medfit/articles/computation-algorithms.html#a-zero-product-is-a-union-of-simpler-models).
+Other covariance errors propagate unchanged and do not retain likelihood
+evidence. Singular information still warns and returns an `NA`
+covariance. For active inequalities and bounds, available standard
+errors describe a local tangent approximation, not the full boundary
+sampling distribution; see [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.html#constraints).
 
 ``` r
 err <- tryCatch(fit_sem(model, data), error = identity)

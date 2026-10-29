@@ -177,7 +177,7 @@
 
 
 
-    <p>This page records how the native engine’s optimizer is tested and where its technical decisions are written down. The two tables below are generated from the repository files at site build (<code>tests/sim/gates.csv</code>, <code>tests/sim/structures.csv</code> and the front matter of <code>planning/specs/ADR-*.md</code>), so they cannot drift from them. Plan and ledger: <code>planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md</code>. The model syntax for the external oracles (lavaan, OpenMx, and the candidate semopy) is on <a href="syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a>.</p>
+    <p>This page records how the native engine’s optimizer is tested and where its technical decisions are written down. The two tables below are generated from the repository files at site build (<code>tests/sim/gates.csv</code>, <code>tests/sim/structures.csv</code> and the front matter of <code>planning/specs/ADR-*.md</code>), so they cannot drift from them. Plan and ledger: <code>planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md</code>. The model syntax for the external oracles (lavaan, OpenMx, and semopy) is on <a href="syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a>.</p>
 <section class="level2"><h2 id="principles">Principles<a class="anchor" aria-label="anchor" href="#principles"></a>
 </h2>
 <ul>
@@ -340,6 +340,12 @@
 <td style="text-align: left;">lavaan fixed.x/meanstructure/sampling.weights and a hand-calculated conditional likelihood</td>
 <td style="text-align: left;">fixedx_logical, product_free, driver</td>
 <td style="text-align: left;">observed intercepts and means; fixed_x; native defaults (fixed_x x meanstructure)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">semopy</td>
+<td style="text-align: left;">semopy 2.3.11 (MLW, ftol 1e-12, observed information), cross-checked against lavaan</td>
+<td style="text-align: left;">medfit_shift, medfit_se, perturb, swapname, driver</td>
+<td style="text-align: left;">observed; latent; parallel; serial</td>
 </tr>
 </tbody>
 </table>
@@ -569,6 +575,13 @@
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
+<tr class="even">
+<td style="text-align: left;">D-13</td>
+<td style="text-align: left;">semopy as a monthly third oracle for estimates and SEs</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-26</td>
+<td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -604,9 +617,9 @@
 </tr>
 <tr class="odd">
 <td>covariance-retained</td>
-<td>the refit’s optimizer accepted and its covariance stage failed (warning, <code>covariance = "failed"</code>)</td>
+<td>the refit’s optimizer accepted and covariance explicitly diagnosed non-positive-definite information or a negative variance (warning, <code>covariance = "failed"</code>); arbitrary covariance errors propagate</td>
 <td>
-<code>test-sem-post-fit.R</code>, <code>test-sem-mbco-root.R</code>
+<code>test-sem-post-fit.R</code>, <code>test-sem-mbco-root.R</code>, <code>test-sem-covariance-diagnostic.R</code>
 </td>
 </tr>
 <tr class="even">
@@ -711,13 +724,14 @@
 </tbody>
 </table></section><section class="level2"><h2 id="the-monthly-run">The monthly run<a class="anchor" aria-label="anchor" href="#the-monthly-run"></a>
 </h2>
-<p>The <code>qc-monthly</code> workflow runs the gates on <code>dev</code> on the first of each month, appends one row to a history on the <code>qc-results</code> branch (the environment fingerprint, one PASS or FAIL per gate, the largest restoration ratio, the reliability match rate, the oracle-sweep outcomes), and opens one deduplicated GitHub issue when a gate fails or the R version, BLAS library, nloptr, lavaan or OpenMx version changes. The runner image is recorded and never alerts. Drift bands are not set yet: they need about eight rows (eight months at this cadence; a manual run adds one sooner), and a change merged to <code>dev</code> can go unseen for up to a month unless a run is started by hand or a pull request carries the <code>run-qc</code> label. The workflow has not run on GitHub at the time of writing, so the history does not exist yet.</p>
+<p>The monthly-only semopy gate compares estimates and standard errors for observed, latent, parallel and serial models. A comparison counts only when semopy also agrees with lavaan. The gate uses semopy 2.3.11 and requires <code>uv</code> in the monthly workflow; outside that workflow an unavailable dependency produces <code>n/a</code> rows. semopy and medfit both use SLSQP, so lavaan provides a separate solver check.</p>
+<p>The <code>qc-monthly</code> workflow runs the gates on <code>dev</code> on the first of each month, appends one row to a history on the <code>qc-results</code> branch (the environment fingerprint, one PASS or FAIL per gate, the largest restoration ratio, the reliability match rate, the oracle-sweep outcomes), and opens one deduplicated GitHub issue when a gate fails or the R version, BLAS library, nloptr, lavaan or OpenMx version changes. The runner image is recorded and never alerts. Drift bands are not set yet: they need about eight rows (eight months at this cadence; a manual run adds one sooner), and a change merged to <code>dev</code> can go unseen for up to a month unless a run is started by hand or a pull request carries the <code>run-qc</code> label. A labeled pull-request run verifies that pull request; it does not append a scheduled/manual history row. The exact source and run must be checked before reusing either kind of evidence.</p>
 </section><section class="level2"><h2 id="known-limits">Known limits<a class="anchor" aria-label="anchor" href="#known-limits"></a>
 </h2>
 <ul>
 <li>No latent-model solver benchmark exists; the solver decisions that depend on one are marked proposed in the decision log.</li>
 <li>Gates run on the runner’s OpenBLAS; the reference BLAS needs a separate container.</li>
-<li>Other seeds and scales of the nonlinear floor fixture are not covered.</li>
+<li>The constrained covariance tests include multiple seeds and extreme variance scales, but do not exhaust boundary optima or establish boundary calibration. The extreme-floor observed sandwich oracle reached a normalized discrepancy of 1.39e-4; this is a numerical limit of that fixture, not a general accuracy guarantee.</li>
 <li>The evidence validators are not a gate: <code>R/sem-outcomes.R</code> and <code>R/sem-mbco.R</code> are not in <code>tests/sim/risk-files.txt</code> and no <code>gates.csv</code> row registers them, so their protection is the unit tests and the admission checklist, not the OpenBLAS gate run.</li>
 <li>The validators cannot detect a consistent rewrite of the root sample and its hashes, an altered parameter value inside the parameter table of a null, or a changed condition text of a failed null (see Evidence validators).</li>
 <li>An all-excluded null is validated against its own certificates, not against the fit’s model, so a self-consistent foreign union is accepted (the statistic is <code>NA</code> regardless).</li>
@@ -755,7 +769,29 @@
 </tbody>
 </table>
 <p><strong>A documented limit.</strong> <code><a href="../reference/compare_lr.html">compare_lr()</a></code> with lavaan can put the product-null likelihood ratio above the reference (issue #320): 18 of 60 runs for lavaan and 13 of 60 for OpenMx, on the pinned design and seeds. The 2026-10-26 re-measure reproduced both counts on the <code>v0.14.0</code> tree and on <code>dev</code>, so the flip does not change them, and the limit is documented in <code><a href="../reference/compare_lr.html">?compare_lr</a></code>.</p>
-<p><strong>Not yet run.</strong> The two OpenBLAS gate runs (<code>gates (rest)</code> and <code>gates (reliability)</code>) run on pull requests to <code>main</code>; they are deferred to the release pull request, and this page makes no claim about them. The record, with its sources, is <code>planning/specs/RESULT-qc-0.15.0-native-defaults-flip-2026-10-26.md</code>.</p>
+<p><strong>At that local checkpoint.</strong> The two OpenBLAS gate runs (<code>gates (rest)</code> and <code>gates (reliability)</code>) run on pull requests to <code>main</code>; they were deferred to the release pull request. The table above records the local checkpoint, not a later hosted run. The record, with its sources, is <code>planning/specs/RESULT-qc-0.15.0-native-defaults-flip-2026-10-26.md</code>.</p>
+</section><section class="level2"><h2 id="d4-constrained-covariance-verification">D4 constrained covariance verification<a class="anchor" aria-label="anchor" href="#d4-constrained-covariance-verification"></a>
+</h2>
+<p>PR #358 added Lagrangian observed curvature, preserved expected Fisher semantics, and projected the corresponding sandwich bread with case-score meat. Independent likelihood parameterizations, Fisher and case-score calculations check these choices; the regression cases cover weights, means, inactive inequalities, active bounds, exact pinned zeros and singular tangent information. See the <a href="methods.html#constraints">Methods article</a> for the formulas and boundary limitations.</p>
+<table class="table caption-top">
+<thead><tr class="header">
+<th>Receipt</th>
+<th>Source and scope</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><a href="https://github.com/data-wise/medfit/actions/runs/40815969203" class="external-link">Hosted OpenBLAS QC</a></td>
+<td>
+<code>cf7cfb4</code>: 24 gates and 155 checks, including 76,800 reliability fits and 350 semopy comparisons; this run predates the later test-only heads</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/data-wise/medfit/actions/runs/40820743419" class="external-link">Hosted coverage</a></td>
+<td>
+<code>dc575a11</code>: 96.38% overall and 97.82% patch coverage; both targeted covariance edge branches were covered</td>
+</tr>
+</tbody>
+</table>
+<p>These receipts identify what ran at each source revision. They do not claim 100% coverage of critical paths or a later rerun of the OpenBLAS matrix. Development pull requests keep fast Ubuntu coverage, lint, risk-tier and pkgdown checks. The expensive OpenBLAS runs and full platform matrix are reserved for release pull requests from <code>dev</code> to <code>main</code>; monthly and manual QC remain available.</p>
 </section><section class="level2"><h2 id="lessons-from-the-0-14-1-port">Lessons from the 0.14.1 port<a class="anchor" aria-label="anchor" href="#lessons-from-the-0-14-1-port"></a>
 </h2>
 <p>The recurring defect of the ledger port was the false refusal of a genuine result, not the acceptance of a forgery: a sandwich fit refused because its nulls are refit model-based while the root records the sandwich setting, and an all-excluded zero-product null refused as malformed. Each was found by the full suite or an adversarial reviewer and missed by the hand-built grids, which tested the shapes their authors had thought of. The rule that came out of it is the table above: list every shape the engine can produce and require each to validate, then run the whole suite, since the engine reaches shapes no grid enumerates.</p>

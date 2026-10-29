@@ -132,6 +132,11 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="medfit-development-version">medfit (development version)<a class="anchor" aria-label="anchor" href="#medfit-development-version"></a></h2>
 <div class="section level3">
+<h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
+<ul><li>Native fits with active nonlinear constraints now use the constraint curvature in observed-information standard errors and in the observed sandwich bread. Expected-information standard errors retain their Fisher information definition. Covariance also uses the optimizer’s effective variance floors, so an active floor is pinned rather than treated as a free direction. Active inequalities and bounds give a local tangent covariance; it does not describe the full boundary sampling distribution.</li>
+<li>Only explicit non-positive-definite information or negative-variance diagnostics retain an accepted likelihood through <code>medfit_sem_covariance_error</code> and an internal <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> null. Other covariance errors propagate unchanged. Singular information continues to warn and return an <code>NA</code> covariance.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="removed-development-version">Removed<a class="anchor" aria-label="anchor" href="#removed-development-version"></a></h3>
 <ul><li>
 <code>options(medfit.native_defaults)</code> is removed, as announced in 0.15.0. Since 0.15.0 the option had no effect (it only printed one message per session); it now does nothing and prints nothing. The message class <code>medfit_message_option_obsolete</code> no longer exists. Pass <code>fixed_x</code> and <code>meanstructure</code> explicitly to choose.</li>

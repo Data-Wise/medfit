@@ -88,14 +88,16 @@ contradiction (see the outcome ledger in
 is retained as `excluded`; a null that is itself infeasible or an
 all-empty union stays an unresolved row, never a finite LR or a
 survivor-only p-value. A null whose optimizer accepted but whose
-covariance stage failed (`medfit_sem_covariance_error` in
+covariance stage explicitly diagnosed non-positive-definite information
+or a negative variance (`medfit_sem_covariance_error` in
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md))
 keeps its likelihood after a check that it is the null asked for (same
 rows, domain and one more restriction): the row stays resolved, the
 statistic and p-value are unchanged, a warning names the failure, and
 the node has `covariance = "failed"` with `post_fit` and the notices. No
 covariance is invented; a fit that carries `post_fit` is refused as
-`object`.
+`object`. Other covariance errors propagate unchanged; singular
+information keeps its warning and NA covariance.
 
 ## Details
 

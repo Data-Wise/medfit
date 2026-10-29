@@ -7,8 +7,8 @@ generated from the repository files at site build
 of `planning/specs/ADR-*.md`), so they cannot drift from them. Plan and
 ledger:
 `planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md`. The
-model syntax for the external oracles (lavaan, OpenMx, and the candidate
-semopy) is on [One model in medfit, lavaan, OpenMx and
+model syntax for the external oracles (lavaan, OpenMx, and semopy) is on
+[One model in medfit, lavaan, OpenMx and
 semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
 
 ## Principles
@@ -50,6 +50,7 @@ semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
 | compare-lr | lavaan and OpenMx likelihood ratios | noresidual, zeroresid, fixedset, fixedset_openmx, driver:unresolved_converged, driver:ref_off | zero-product branches |
 | restoration | first-order cost bound derived in the Methods article | infslack, rawdist, nocurv, nopinv, nonorm, nodispatch | nonlinear constraints |
 | native-defaults | lavaan fixed.x/meanstructure/sampling.weights and a hand-calculated conditional likelihood | fixedx_logical, product_free, driver | observed intercepts and means; fixed_x; native defaults (fixed_x x meanstructure) |
+| semopy | semopy 2.3.11 (MLW, ftol 1e-12, observed information), cross-checked against lavaan | medfit_shift, medfit_se, perturb, swapname, driver | observed; latent; parallel; serial |
 
 A token in *Planted defects* is a `MUTANT=` value of the gate’s script;
 the driver (`tests/sim/run-gates.R --mutants`) also plants tolerance,
@@ -90,6 +91,7 @@ its script does not contain, or when a structure has no gate.
 | D-10 | Latent structures in the D-4 gate | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
 | D-11 | A partial branch result is an error (PR \#303) | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
 | D-12 | The D1 outcome ledger rides on the D-11 error as \$ledger | decided | 2026-10-24 | ADR-native-solver-and-engines-2026-10-23 |
+| D-13 | semopy as a monthly third oracle for estimates and SEs | decided | 2026-10-26 | ADR-native-solver-and-engines-2026-10-23 |
 
 Each ADR opens with a YAML `decisions:` list (`id`, `title`, `status`,
 `date`, optional `supersedes`); `test-adr-front-matter.R` checks it. The
@@ -131,7 +133,7 @@ can produce must pass it. The shapes of a null node are:
 |----|----|----|
 | plain resolved | an ordinary refit with `a == 0` | `test-sem-mbco-root.R` |
 | resolved zero-product union | the null holds a zero-product row and its branches resolve | `test-sem-mbco-root-qa.R` |
-| covariance-retained | the refit’s optimizer accepted and its covariance stage failed (warning, `covariance = "failed"`) | `test-sem-post-fit.R`, `test-sem-mbco-root.R` |
+| covariance-retained | the refit’s optimizer accepted and covariance explicitly diagnosed non-positive-definite information or a negative variance (warning, `covariance = "failed"`); arbitrary covariance errors propagate | `test-sem-post-fit.R`, `test-sem-mbco-root.R`, `test-sem-covariance-diagnostic.R` |
 | covariance-failed branch in a union | one branch of a union lost its covariance; the node reports the first such branch | `test-sem-post-fit.R`, `test-sem-mbco-root-qa.R` |
 | certified excluded | the null contradicts the fit’s own literal equalities | `test-sem-mbco-root.R` |
 | union with an excluded branch | a certified-empty branch beside a resolved one | `test-sem-literal-certificates.R` |
@@ -177,6 +179,13 @@ items 1 to 3.
 
 ## The monthly run
 
+The monthly-only semopy gate compares estimates and standard errors for
+observed, latent, parallel and serial models. A comparison counts only
+when semopy also agrees with lavaan. The gate uses semopy 2.3.11 and
+requires `uv` in the monthly workflow; outside that workflow an
+unavailable dependency produces `n/a` rows. semopy and medfit both use
+SLSQP, so lavaan provides a separate solver check.
+
 The `qc-monthly` workflow runs the gates on `dev` on the first of each
 month, appends one row to a history on the `qc-results` branch (the
 environment fingerprint, one PASS or FAIL per gate, the largest
@@ -187,8 +196,9 @@ The runner image is recorded and never alerts. Drift bands are not set
 yet: they need about eight rows (eight months at this cadence; a manual
 run adds one sooner), and a change merged to `dev` can go unseen for up
 to a month unless a run is started by hand or a pull request carries the
-`run-qc` label. The workflow has not run on GitHub at the time of
-writing, so the history does not exist yet.
+`run-qc` label. A labeled pull-request run verifies that pull request;
+it does not append a scheduled/manual history row. The exact source and
+run must be checked before reusing either kind of evidence.
 
 ## Known limits
 
@@ -196,7 +206,11 @@ writing, so the history does not exist yet.
   depend on one are marked proposed in the decision log.
 - Gates run on the runner’s OpenBLAS; the reference BLAS needs a
   separate container.
-- Other seeds and scales of the nonlinear floor fixture are not covered.
+- The constrained covariance tests include multiple seeds and extreme
+  variance scales, but do not exhaust boundary optima or establish
+  boundary calibration. The extreme-floor observed sandwich oracle
+  reached a normalized discrepancy of 1.39e-4; this is a numerical limit
+  of that fixture, not a general accuracy guarantee.
 - The evidence validators are not a gate: `R/sem-outcomes.R` and
   `R/sem-mbco.R` are not in `tests/sim/risk-files.txt` and no
   `gates.csv` row registers them, so their protection is the unit tests
@@ -238,11 +252,34 @@ reproduced both counts on the `v0.14.0` tree and on `dev`, so the flip
 does not change them, and the limit is documented in
 [`?compare_lr`](https://data-wise.github.io/medfit/reference/compare_lr.md).
 
-**Not yet run.** The two OpenBLAS gate runs (`gates (rest)` and
-`gates (reliability)`) run on pull requests to `main`; they are deferred
-to the release pull request, and this page makes no claim about them.
-The record, with its sources, is
+**At that local checkpoint.** The two OpenBLAS gate runs (`gates (rest)`
+and `gates (reliability)`) run on pull requests to `main`; they were
+deferred to the release pull request. The table above records the local
+checkpoint, not a later hosted run. The record, with its sources, is
 `planning/specs/RESULT-qc-0.15.0-native-defaults-flip-2026-10-26.md`.
+
+## D4 constrained covariance verification
+
+PR \#358 added Lagrangian observed curvature, preserved expected Fisher
+semantics, and projected the corresponding sandwich bread with
+case-score meat. Independent likelihood parameterizations, Fisher and
+case-score calculations check these choices; the regression cases cover
+weights, means, inactive inequalities, active bounds, exact pinned zeros
+and singular tangent information. See the [Methods
+article](https://data-wise.github.io/medfit/articles/methods.html#constraints)
+for the formulas and boundary limitations.
+
+| Receipt | Source and scope |
+|----|----|
+| [Hosted OpenBLAS QC](https://github.com/data-wise/medfit/actions/runs/40815969203) | `cf7cfb4`: 24 gates and 155 checks, including 76,800 reliability fits and 350 semopy comparisons; this run predates the later test-only heads |
+| [Hosted coverage](https://github.com/data-wise/medfit/actions/runs/40820743419) | `dc575a11`: 96.38% overall and 97.82% patch coverage; both targeted covariance edge branches were covered |
+
+These receipts identify what ran at each source revision. They do not
+claim 100% coverage of critical paths or a later rerun of the OpenBLAS
+matrix. Development pull requests keep fast Ubuntu coverage, lint,
+risk-tier and pkgdown checks. The expensive OpenBLAS runs and full
+platform matrix are reserved for release pull requests from `dev` to
+`main`; monthly and manual QC remain available.
 
 ## Lessons from the 0.14.1 port
 

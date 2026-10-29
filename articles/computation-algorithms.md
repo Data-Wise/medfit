@@ -196,15 +196,20 @@ cannot be fitted,
 stops with an error rather than returning the best of the others, which
 need not be the constrained optimum; the error carries the outcome
 ledger of every required branch as `$ledger`, and a fit’s ledger is
-`fit@diagnostics$ledger`. If the optimizer accepts a fit and only the
-covariance stage fails,
+`fit@diagnostics$ledger`. If the optimizer accepts a fit and covariance
+explicitly diagnoses non-positive-definite information or a negative
+variance,
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 stops with `medfit_sem_covariance_error`, which carries the accepted
 likelihood in its ledger and is never a fit; inside
 [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
-such a null keeps its likelihood and a warning. A complete enumeration
-is not a certificate of a global optimum. This avoids a zero Jacobian
-where several factors vanish.
+such a null keeps its likelihood and a warning. Other covariance errors
+propagate unchanged, while singular information retains its warning and
+`NA` covariance. Constrained standard errors use the local tangent
+covariance described in [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.html#constraints).
+A complete enumeration is not a certificate of a global optimum. This
+avoids a zero Jacobian where several factors vanish.
 [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
 uses the same logic for an indirect-effect test: fit each single-path
 null, use the smallest likelihood-ratio statistic, and refer it to a

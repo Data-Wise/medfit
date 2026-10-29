@@ -543,6 +543,10 @@
 <td>0.15.0</td>
 <td>the native defaults flip: a default <code><a href="../reference/fit_sem.html">fit_sem()</a></code> fit fixes the exogenous observed variables and fits a mean structure, as a lavaan <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem()</a></code> fit with <code>fixed.x = TRUE</code> and <code>meanstructure = TRUE</code> does (<a href="native-defaults-0-15.html">article</a>)</td>
 </tr>
+<tr class="odd">
+<td>Development</td>
+<td>corrected observed and sandwich covariance under active nonlinear constraints, with solver variance floors included in the active set; expected Fisher information is unchanged. Only explicit covariance diagnostics retain likelihood evidence; other covariance errors propagate. Active-boundary covariance is a local tangent approximation (<a href="methods.html#constraints">methods</a>)</td>
+</tr>
 </tbody>
 </table></section><section class="level2"><h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>
 </h2>

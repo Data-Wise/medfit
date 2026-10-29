@@ -670,14 +670,14 @@
 <tr class="odd">
 <td>the error message of the failing stage, with class <code>medfit_sem_covariance_error</code>
 </td>
-<td>the optimizer accepted the fit and the covariance stage then failed; the likelihood is evidence, but the result is not a fit</td>
-<td>fix the stage the message names, or simplify the model; look at <code>err$ledger</code> (<code>covariance</code> is <code>"failed"</code>, <code>post_fit</code> holds the original condition), <code>err$partial</code> (the accepted fit without <code>vcov</code>)</td>
+<td>the optimizer accepted the fit, then covariance explicitly diagnosed non-positive-definite information or a negative variance; the likelihood is evidence, but the result is not a fit</td>
+<td>inspect the model and data scale; look at <code>err$ledger</code> (<code>covariance</code> is <code>"failed"</code>, <code>post_fit$condition$kind</code> is <code>information_not_pd</code> or <code>negative_variance</code>), <code>err$partial</code> (the accepted fit without <code>vcov</code>)</td>
 </tr>
 <tr class="even">
 <td>
 <code>likelihood retained, covariance unavailable</code> (a warning from <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>)</td>
-<td>a refit null passed the optimizer and failed only in the covariance stage; the MBCO statistic and p-value use its likelihood and are unchanged</td>
-<td>read the warning for the failure; no standard error was invented; look at <code>res$ledger$children</code>: the node of that null has <code>covariance = "failed"</code>
+<td>a refit null passed the optimizer, then covariance raised one of those explicit diagnostics; the MBCO statistic and p-value use its likelihood and are unchanged</td>
+<td>read the warning for the diagnostic; no standard error was invented; look at <code>res$ledger$children</code>: the node of that null has <code>covariance = "failed"</code>
 </td>
 </tr>
 <tr class="odd">
@@ -689,7 +689,7 @@
 </tr>
 </tbody>
 </table>
-<p><code>medfit_error_ledger</code> is a class of its own: <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and <code><a href="../reference/compare_lr.html">compare_lr()</a></code> report an optimizer failure as an unresolved result, but they refuse bad evidence outright. The covariance error is a sibling of <code>medfit_error_no_convergence</code>, so handlers written for an unresolved refit do not catch it. How the ledger is built is in <a href="computation-algorithms.html#a-zero-product-is-a-union-of-simpler-models">Computation and algorithms</a>.</p>
+<p><code>medfit_error_ledger</code> is a class of its own: <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and <code><a href="../reference/compare_lr.html">compare_lr()</a></code> report an optimizer failure as an unresolved result, but they refuse bad evidence outright. The covariance error is a sibling of <code>medfit_error_no_convergence</code>, so handlers written for an unresolved refit do not catch it. How the ledger is built is in <a href="computation-algorithms.html#a-zero-product-is-a-union-of-simpler-models">Computation and algorithms</a>. Other covariance errors propagate unchanged and do not retain likelihood evidence. Singular information still warns and returns an <code>NA</code> covariance. For active inequalities and bounds, available standard errors describe a local tangent approximation, not the full boundary sampling distribution; see <a href="methods.html#constraints">Methods and Formulas</a>.</p>
 <pre class="r"><code><span><span class="va">err</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">)</span>, error <span class="op">=</span> <span class="va">identity</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">err</span><span class="op">)</span>                       <span class="co"># the typed class says which case</span></span>
 <span><span class="va">err</span><span class="op">$</span><span class="va">ledger</span><span class="op">$</span><span class="va">children</span>              <span class="co"># per-branch outcome and feasibility</span></span>

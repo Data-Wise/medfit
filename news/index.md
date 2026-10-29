@@ -2,6 +2,23 @@
 
 ## medfit (development version)
 
+### Fixed
+
+- Native fits with active nonlinear constraints now use the constraint
+  curvature in observed-information standard errors and in the observed
+  sandwich bread. Expected-information standard errors retain their
+  Fisher information definition. Covariance also uses the optimizer’s
+  effective variance floors, so an active floor is pinned rather than
+  treated as a free direction. Active inequalities and bounds give a
+  local tangent covariance; it does not describe the full boundary
+  sampling distribution.
+- Only explicit non-positive-definite information or negative-variance
+  diagnostics retain an accepted likelihood through
+  `medfit_sem_covariance_error` and an internal
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  null. Other covariance errors propagate unchanged. Singular
+  information continues to warn and return an `NA` covariance.
+
 ### Removed
 
 - `options(medfit.native_defaults)` is removed, as announced in 0.15.0.

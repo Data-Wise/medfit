@@ -225,11 +225,13 @@ boundary, including the union winner's replay, so they can repeat a child's. Eve
 another fails, and an unresolved null leaves the root <code>unresolved</code>. A nested union branch that is certified empty
 by a literal zero/nonzero contradiction (see the outcome ledger in <code><a href="fit_sem.html">fit_sem()</a></code>) is retained as <code>excluded</code>; a null
 that is itself infeasible or an all-empty union stays an unresolved row, never a finite LR or a survivor-only
-p-value. A null whose optimizer accepted but whose covariance stage failed (<code>medfit_sem_covariance_error</code> in
+p-value. A null whose optimizer accepted but whose covariance stage explicitly diagnosed non-positive-definite
+information or a negative variance (<code>medfit_sem_covariance_error</code> in
 <code><a href="fit_sem.html">fit_sem()</a></code>) keeps its likelihood after a check that it is the null asked for (same rows, domain and one more
 restriction): the row stays resolved, the statistic and p-value are unchanged, a warning names the failure, and the
 node has <code>covariance = "failed"</code> with <code>post_fit</code> and the notices. No covariance is invented; a fit that carries
-<code>post_fit</code> is refused as <code>object</code>.</p>
+<code>post_fit</code> is refused as <code>object</code>. Other covariance errors propagate unchanged; singular information keeps its
+warning and NA covariance.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

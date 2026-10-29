@@ -48,14 +48,21 @@ branch as `$ledger` (see
 A sum of products (`a1*b1 + a2*b2 == 0`) has no exact reduction, so it
 is best-effort: the fit is the best of the starts tried, a disagreement
 warning means a better optimum may exist, and `n_starts` raises the
-number of starts. Labels used in a constraint or a definition must be
-defined in the model. A constraint with no free parameter is an error.
-Exogenous variables are given free variances and covariances, as lavaan
-does with `fixed.x = FALSE`. An exogenous variable named in any `~~`
-statement is left out of that pairing: its variance and the covariances
-the model writes are kept, and its covariances with the other exogenous
-variables are 0 unless written (lavaan does the same). `fixed_x = TRUE`
-(or a vector of names) in
+number of starts. Constrained standard errors use the active tangent
+space: observed information includes nonlinear constraint curvature,
+while expected information retains its Fisher definition. Active
+inequalities and bounds, including solver variance floors, give a local
+tangent approximation rather than the full boundary sampling
+distribution. See
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+and the Methods and Formulas article for details. Labels used in a
+constraint or a definition must be defined in the model. A constraint
+with no free parameter is an error. Exogenous variables are given free
+variances and covariances, as lavaan does with `fixed.x = FALSE`. An
+exogenous variable named in any `~~` statement is left out of that
+pairing: its variance and the covariances the model writes are kept, and
+its covariances with the other exogenous variables are 0 unless written
+(lavaan does the same). `fixed_x = TRUE` (or a vector of names) in
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 fixes the moments of the selected ones at the sample values instead, as
 `fixed.x = TRUE` does. Unlike lavaan, which keeps an explicit `x ~~ x`

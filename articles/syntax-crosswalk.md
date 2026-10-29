@@ -147,9 +147,10 @@ mxEval(ab, omx)
 
 ## semopy (Python)
 
-[semopy](https://pypi.org/project/semopy/) reads lavaan-style syntax. It
-is not one of medfit’s quality-control oracles yet; this is the script
-that would be one, saved as `tests/sim/oracles/semopy-simple.py`:
+[semopy](https://pypi.org/project/semopy/) reads lavaan-style syntax.
+medfit’s monthly quality-control gate uses it to compare estimates and
+standard errors. This simple example is saved as
+`tests/sim/oracles/semopy-simple.py`:
 
 ``` python
 # The simple mediation model in semopy, for the syntax crosswalk article (vignettes/articles/syntax-crosswalk.qmd).

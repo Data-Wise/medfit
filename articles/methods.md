@@ -754,8 +754,14 @@ times the central-difference Jacobian of the analytic gradient of
 \\F\_{ML}\\ (step \\\epsilon^{1/3} \max(\|x\|, 1)\\). Expected
 information is \\(n/2)\\ \operatorname{tr}\left(\Sigma^{-1} \partial_k
 \Sigma\\ \Sigma^{-1} \partial_l \Sigma\right)\\. A singular information
-matrix gives an `NA` covariance and one warning. Defined parameters
-(`:=`) get delta-method standard errors, \\\sqrt{g^\top V g}\\, with the
+matrix gives an `NA` covariance and one warning. Finite, invertible
+information that is not positive definite, or a covariance with a
+negative variance, raises an explicit covariance diagnostic rather than
+supplying standard errors. Only these diagnostics retain an accepted
+likelihood as described in the [outcome-ledger
+guide](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html#errors-that-carry-evidence);
+other covariance errors propagate unchanged. Defined parameters (`:=`)
+get delta-method standard errors, \\\sqrt{g^\top V g}\\, with the
 gradient \\g\\ taken by central differences over the labels.
 
 ### Sampling weights and the sandwich
@@ -772,12 +778,13 @@ x_i - \bar{x}\_w . \\
 
 The means are free and do not involve \\\theta\\, so \\A\\ is block
 diagonal and only the \\\theta\\ block of \\B\\ enters. Under
-constraints the same projection applies, \\Z (Z^\top A Z)^{-1} Z^\top B
-Z (Z^\top A Z)^{-1} Z^\top\\. The estimator is invariant to the scale of
-the weights and has no leverage correction (HC0): it equals
-`sandwich::vcovHC(type = "HC0")` for each regression equation and
-lavaan’s robust standard errors with `sampling.weights`, and is narrower
-than the HC3 default of
+constraints, \\A\\ is the observed Lagrangian information or expected
+Fisher information described below, and the same projection applies, \\Z
+(Z^\top A Z)^{-1} Z^\top B Z (Z^\top A Z)^{-1} Z^\top\\. The estimator
+is invariant to the scale of the weights and has no leverage correction
+(HC0): it equals `sandwich::vcovHC(type = "HC0")` for each regression
+equation and lavaan’s robust standard errors with `sampling.weights`,
+and is narrower than the HC3 default of
 `fit_mediation(engine = "glm", se_type = "sandwich")` by a factor that
 shrinks like \\1/n\\. The weighted likelihood is a pseudo likelihood, so
 [`logLik()`](https://rdrr.io/r/stats/logLik.html) is not defined for a
@@ -846,15 +853,41 @@ A product of labels set to zero (\\ab = 0\\, \\b_1 b_2 b_3 = 0\\) is not
 solved this way, because its Jacobian vanishes at the solution: it holds
 exactly when one factor is zero, so the model is refitted once per
 factor from the default start and the smallest discrepancy is kept. At
-the solution the active constraints and active bounds define a
-null-space basis \\Z\\ of the feasible directions, and the covariance is
-projected,
+the solution the active constraints and active bounds, including the
+optimizer’s effective variance floors, define a null-space basis \\Z\\
+of the feasible directions. For observed information, set
 
-\\ V = Z \left(Z^\top I Z\right)^{-1} Z^\top , \\
+\\ A_L = \frac{n}{2}\left(\nabla^2 F\_{ML} + \sum\_{i\\ \mathrm{active}}
+\lambda_i\nabla^2 c_i\right), \qquad \nabla F\_{ML} + \sum\_{i\\
+\mathrm{active}}\lambda_i\nabla c_i = 0. \\
 
-so a parameter pinned by a constraint has zero variance and `a == b`
-returns the standard error of the model with `a` and `b` collapsed to
-one label.
+The covariance is
+
+\\ V = Z \left(Z^\top A_L Z\right)^{-1} Z^\top . \\
+
+This includes nonlinear constraint curvature, as the Hessian of a
+likelihood parameterized directly on the constraint surface does.
+Expected-information covariance uses the expected Fisher information in
+place of \\A_L\\, without the observed constraint-curvature term.
+Sandwich covariance uses the corresponding bread and the casewise-score
+meat above. The calculation and projection respect the
+centered-coordinate map when a mean structure is fitted.
+
+A parameter pinned by a constraint or active bound has exactly zero
+variance, and `a == b` returns the standard error of the model with `a`
+and `b` collapsed to one label. An inactive inequality imposes no
+covariance restriction. Pinned coordinates have exact zero rows and
+columns. If all coordinates are pinned, the full named covariance matrix
+is zero. If the information within a nonempty tangent space is singular,
+the engine emits one warning and returns a full named `NA` covariance
+matrix; this differs from a zero-dimensional tangent space and from the
+typed post-fit diagnostics described in [Computation
+algorithms](https://data-wise.github.io/medfit/articles/computation-algorithms.html#constraints-acceptance-and-starts).
+
+At an active inequality or bound, this covariance is a local tangent
+approximation. It is not the full boundary sampling distribution, which
+can have a point mass, and does not establish ordinary Wald or
+likelihood-ratio calibration there.
 
 Redundant rows are handled in two layers. Equality rows that are
 linearly dependent (a duplicate, `a == b` with `b == a`) are reduced to

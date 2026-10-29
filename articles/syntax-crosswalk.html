@@ -330,7 +330,7 @@ lavaan is FREE software! Please report any bugs.</code></pre>
 </div>
 </section><section class="level2"><h2 id="semopy-python">semopy (Python)<a class="anchor" aria-label="anchor" href="#semopy-python"></a>
 </h2>
-<p><a href="https://pypi.org/project/semopy/" class="external-link">semopy</a> reads lavaan-style syntax. It is not one of medfit’s quality-control oracles yet; this is the script that would be one, saved as <code>tests/sim/oracles/semopy-simple.py</code>:</p>
+<p><a href="https://pypi.org/project/semopy/" class="external-link">semopy</a> reads lavaan-style syntax. medfit’s monthly quality-control gate uses it to compare estimates and standard errors. This simple example is saved as <code>tests/sim/oracles/semopy-simple.py</code>:</p>
 <pre class="python"><code># The simple mediation model in semopy, for the syntax crosswalk article (vignettes/articles/syntax-crosswalk.qmd).
 # Run from the package root:
 #   Rscript -e 'write.csv(medfit::mediation_demo, "mediation_demo.csv", row.names = FALSE)'
