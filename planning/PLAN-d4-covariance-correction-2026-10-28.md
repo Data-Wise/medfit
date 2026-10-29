@@ -1,6 +1,6 @@
 # D4 covariance correction
 
-Status: active, 2026-10-28. Base: dev 10b93d00. Owner: medfit.
+Status: locally complete, 2026-10-28. Base: dev 10b93d00. Owner: medfit.
 
 ## Task: constrained covariance and typed diagnostics
 
@@ -14,11 +14,19 @@ Acceptance: independent QA of all changed numerical contracts; targeted tests, n
 
 - [x] Implementation and oracle tests.
 - [x] Independent oracle QA and defect checks.
-- [ ] Required gates and documentation.
+- [x] Required local gates and documentation.
 
 Implementation follow-up complete: effective solver bounds reach covariance; active floors are covered across information
 and SE types and branch refits; the nonlinear SE gate uses a reparameterized likelihood Hessian. Independent QA and the
 mutation-hook audit pass. Pre-docs gates pass (763 tests, 4801 expectations; 84/84 simulation checks; all 26 engine
-mutants and 68 driver mutations caught). Documentation checks and five source-pinned article renders pass; final
-gates, including the full suite and package check, remain pending. Hosted OpenBLAS verification has not run;
-no push, PR, merge or release is authorized.
+mutants and 68 driver mutations caught). Documentation checks and five source-pinned article renders pass. Final
+full suite on 65f90b33: 1716 tests, 9011 recorded expectations, 9008 passed, 0 failures/errors, 2 skips and 1 planted
+cluster-warning result reproduced on dev; loaded lint 0. Documentation consistency: 92 tests, 902 expectations,
+0 failures/errors, 1 skip. The mandatory local built-tarball gate passes: quick tier 8780 pass, 0 failures, 1 warning,
+37 skips; R CMD check Status: OK. Status/plan-only completion updates are excluded from package builds.
+
+Finite-difference limits remain: the extreme-floor independent observed/model and observed/sandwich normalized
+covariance errors are about 1.48e-5 and 1.39e-4; the local tangent approximation is not an unconditional boundary
+sampling law. Coverage was not remeasured; no claim is made that the overall/critical coverage targets were established
+for this branch. Hosted OpenBLAS/coverage verification has not run. No push, PR, merge, release or submission is
+authorized or performed. Local evidence and exact commands are in _agents_workspace/d4-correction/gates.md.
