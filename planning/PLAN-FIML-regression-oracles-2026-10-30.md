@@ -186,3 +186,49 @@ No failed-check waiver is needed. This completes this bounded milestone locally;
 no integration, push, PR, merge, release or hosted/expensive CI occurred. Metadata
 reconciliation follows the verified tree; detailed receipts and final verdict are
 in `_agents_workspace/fiml-regression-oracles/gates.md`.
+
+## Approved minibook clarification follow-up — 2026-10-30
+
+Applied the approved precise support/inference wording and ignorable-missingness
+condition to book/index.qmd. Default listwise, planned/unreleased 0.16, released
+0.15 exclusion and complete-data chapter boundaries remain explicit. Package
+spelling passes; relevant docs consistency passes 85 tests/849 assertions with
+one documented help skip and no failures/errors/warnings.
+
+The installed default medfit0.7.0 was bypassed with a task-local installation of
+this source, verified version0.15.0 and explicit FIML argument. HTML render then
+failed at index.qmd because Quarto could not open its macOS SassCache database.
+The single retry using QUARTO_USER_CACHE_DIR failed identically; source inspection
+shows this Quarto version does not support that override on macOS. No third
+render attempted; no HTML/PDF build or visual acceptance claimed. Stage stopped
+under the orchestrator retry rule, pending authorized normal-cache access.
+Receipt: _agents_workspace/fiml-regression-oracles/minibook-docs.md. No production
+changes, push, PR, full-suite repeat, release or expensive CI.
+
+### Authorized normal-cache continuation
+
+The user explicitly authorized resuming the stopped render with ordinary cache
+access. Same isolated source package library; HTML book render exit0, expected
+book/_book/index.html plus seven chapter pages. Parent static inspection verified
+all eight page sizes, six distinctive clarified sentences, the FIML section ID,
+three help/guide/method links and owning source anchors. PDF was not rendered.
+
+After the render, fresh focused docs checks passed85 tests/849 assertions with
+0 failures/errors/warnings and one help skip. Package spelling and direct
+book/index.qmd spelling pass (inst/WORDLIST plus package name medfit ignored).
+The browser's local-file security policy blocks visual inspection; user visual
+review is pending, so no full presentation acceptance or commit claimed yet.
+Earlier failed reports/logs remain preserved. No production changes, push, PR or
+expensive CI.
+
+### User visual acceptance and local completion
+
+The user explicitly confirmed, "Opened and visually checked — looks correct".
+Visual acceptance is USER-verified, not agent/browser inspection. This resolves
+the remaining presentation blocker; the complete HTML build, static content and
+link checks, post-render docs checks (85 tests/849 passed assertions, one help
+skip) and package/direct-book spelling all pass. The manuscript source did not
+change after these checks. No PDF build or fresh full numerical suite was needed
+for this prose-only follow-up. The stopped-stage receipts remain archived and
+minibook-docs.md now ends with a unique PASS verdict. Scoped local commit follows;
+no production changes, push, PR, release or expensive CI.
