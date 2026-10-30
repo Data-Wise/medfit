@@ -1,3 +1,8 @@
+# FIML planning reconciled and adversarially reviewed — 2026-10-30
+# See planning/PLAN-FIML-release-and-missing-data-followups-2026-10-30.md and its REVIEW receipt. Planning only: existing release gates vs optional regression/teaching additions explicit; missingmed consumer acceptance and new diagnostics/adoption remain separate.
+# Claude original verdict needs-attention (3 medium/3 low planning concerns); substantive wording corrected locally and limitations dispositioned, not Claude re-reviewed. No numerical tests, benchmarks or production changes; no push or expensive CI.
+# PR #366 merged as c4b76fb5 after all six fast checks passed at 02f908e3; reviewed/merged trees identical. Local dev updated and merged local scope branch/worktree removed; 140 evidence files archived/verified. Post-merge coverage 41106465575 pending as of 2026-10-30 18:29 UTC; authorized monitor owns final verification. Bounded FIML included in planned unreleased 0.16; no release/main merge authorized.
+# Historical checkpoints follow; current scope decision and the reconciliation above supersede their earlier pending/exclusion wording.
 # Coverage PR #365 merged; scope/docs integration authorized — 2026-10-30
 # PR #365 squash 2c4bd65c after all six live fast checks passed. PR #366 is being reconciled onto dev and must pass fresh fast CI before its authorized merge. No release or expensive CI.
 # 0.16 release-wording synchronization verified locally — 2026-10-30
