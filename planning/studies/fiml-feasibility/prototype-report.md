@@ -1,124 +1,100 @@
 # Bounded FIML prototype: local acceptance report
 
 Executed 2026-10-29 on `codex/fiml-feasibility`, separately from 0.16.
-**NO-GO for accepting the prototype or authorizing production integration.**
-The bounded experiment is complete; four regular cells and one related
-metamorphic check remain failures. No production code, package tests, API,
-release configuration, remote branch or hosted CI was changed.
+**PASS for the bounded local numerical prototype.** All four prior optimizer
+failures are resolved. This does not authorize production integration, release
+or inclusion in 0.16. No production code, public API, push or hosted CI changed.
 
 ## Scope and provenance
 
-The [frozen protocol](prototype-protocol.md) was committed as `4055b430`
-before prototype execution, following scope commits `ce9b0566` and `3da8874`.
-Baseline medfit dev is `edcf23d8705165cd2497deda0d4e8410b9754811`.
-The study loads this worktree's package with `pkgload`, reads native RAM
-moments/derivatives and the scaled SLSQP wrapper, and defines only research
-functions in [prototype.R](prototype.R). It neither replaces namespace bindings
-nor returns a production `SEMFit`.
+The [frozen protocol](prototype-protocol.md) was committed as `4055b430`, before
+execution. Baseline medfit dev remains `edcf23d8`. The prior NO-GO result is
+preserved in local commit `c92b6fec`, the
+[historical report](prototype-before-optimizer-repair.md) and
+[baseline rows](optimizer-repair-baseline/rows.csv). Acceptance limits,
+fixture definitions and required optimizer statuses remain unchanged.
 
-The scope is three observed Gaussian variables, random X, free intercepts,
-independent disturbances, unweighted rows, and a free or zero direct path.
-Fixed X, latent variables, nonlinear constraints and downstream inference
-remain excluded. The existing complete-data SEM gate evaluates another
-likelihood and is deliberately not presented as a FIML acceptance gate.
+Only study files and `.STATUS` changed. [prototype.R](prototype.R) reads native
+RAM moments, derivatives and the SLSQP wrapper without replacing namespace
+bindings. The scope remains three observed Gaussian variables, random X,
+free intercepts, independent disturbances, unweighted data, and free or zero
+direct path. Fixed X, latent variables, constraints and downstream integration
+remain excluded. The prototype does not return a production `SEMFit`.
 
-The independent oracle parameterizes marginal means and log residual variances,
-with separate likelihood/optimization and covariance transport. Lavaan uses
-observed-Hessian covariance. The original 30-cell/10-edge reference study was
-rerun unchanged; its two fixed-X edges are reference-only. Installed lavaan
-0.7-3 source provenance remains in [source-manifest.json](source-manifest.json).
+## Repairs and rejected approaches
+
+1. **Shifted prototype fits:** provide nlminb the full score-derived Hessian
+   during its existing, accurately anchored, same-solver refinement. Previously
+   its approximate curvature stopped before original-coordinate stationarity
+   passed. The new refinement retains convergence status 0 and achieves scaled
+   stationarity around 1e-11 to 4.2e-9 across the shifted nlminb attempts.
+   SLSQP remains independently fitted; there is no cross-solver polishing.
+2. **Near-singular independent fits:** the independent marginal-mean/log-variance
+   likelihood now optionally supplies numerical gradients and Hessians to its
+   nlminb polish. It uses neither RAM derivatives nor prototype estimates.
+   The prototype harness enables this option; the original reference study
+   retains its previous default. The oracle solver's relative stopping control
+   changes from 1e-13 to 1e-10 with these derivatives. This is a solver-control
+   change, not a relaxation of the fixed gradient/status/likelihood gates.
+   Both near-singular BFGS and polish statuses are now 0, with independently
+   checked gradients below 3.11e-8.
+3. **Lavaan reference conditioning:** accurate shifted fits exposed a raw-data
+   lavaan intercept discrepancy of 1.069e-5 against the unchanged 1e-5 limit.
+   The 42-cell prototype harness now fits lavaan in data-derived standardized
+   coordinates and independently transports every estimate and full covariance
+   entry back using a numerical Jacobian. It does not use prototype transport.
+   The likelihood includes the exact affine Jacobian offset and is checked
+   against the independent likelihood on original data. The original raw-data
+   30-cell reference harness still runs with its previous settings.
+
+Tightening nlminb stopping tolerances alone failed. Supplying curvature while
+requiring excessively tight solver stopping also produced nonconvergence
+statuses despite tiny gradients; these were rejected. Tightening lavaan's
+relative tolerance alone did not improve the shifted intercept. Tightening its
+parameter tolerance improved accuracy but reported nonconvergence; a trial
+BFGS fit also failed the parameter comparison. Those alternatives were not
+accepted. Probe logs and tables are in `optimizer-repair-probes/`, including
+the intermediate full run with 41/42 acceptance cells.
 
 ## Final local evidence
 
 | Check | Result |
 | --- | --- |
-| Original reference fits and edges | 30/30 and 10/10 PASS |
-| Prototype regular acceptance cells | 38/42 PASS |
-| Prototype edge/metamorphic/mutant checks | 12/13 PASS |
-| Independent gradient/Hessian checks | 120/120 evaluated points PASS |
-| Stable likelihood-difference identities | 120/120 evaluated points PASS |
-| Independent reference optimizer/information gates | 38/40 PASS |
-| Optimizer attempt ledger | All 252 solver/start attempts retained |
+| Prototype regular acceptance cells | 42/42 PASS |
+| Prototype edge/metamorphic/mutant checks | 13/13 PASS |
+| Independent gradient/Hessian checks | 126/126 PASS |
+| Stable likelihood-difference identities | 126/126 PASS |
+| Independent optimizer/information gates | 42/42 PASS |
+| Original raw-data reference fits and edges | 30/30 and 10/10 PASS |
 | Required planted defects | All four detected |
-| R parsing and namespace lint | Both research scripts PASS |
+| R parsing and namespace lint | All three study scripts PASS |
 
-Forty prototype fits are available, each checked at its fit and two fixed
-perturbations. Six derivative points belonging to the two rejected shifted
-fits were not evaluated; **120/120 is not 126/126**. All 42 acceptance cells
-remain in [rows.csv](prototype-results/rows.csv), including failures.
-The harness exits with status 1, correctly signaling NO-GO.
+All 42 fits have checks at their fit and two fixed perturbations. No cell,
+parameter, covariance entry or failed start was removed. Ledgers retain 252
+prototype solver/start attempts, 126 independent reference starts, 12,600 row
+IDs and 1,071 full gradient-coordinate comparisons. Independent attempt
+messages, iterations and statuses are in
+[independent_attempts.csv](prototype-results/independent_attempts.csv).
 
-Across the 40 available fits, worst likelihood difference per retained row is
-4.42e-13; standardized estimate discrepancy 3.58e-7; relative SE discrepancy
-4.17e-5; and full SE-product-normalized covariance discrepancy 8.34e-5.
-The fixed limits are respectively 1e-8, 1e-5, 1e-3 and 1e-3.
-Worst second-resolution SE discrepancy is 3.39e-8 (limit 1e-4).
-These comparisons include both the independent likelihood and lavaan.
+| Worst discrepancy across all 42 cells | Observed | Fixed limit |
+| --- | ---: | ---: |
+| Likelihood per retained row | 2.04e-13 | 1e-8 |
+| Standardized estimate | 1.99e-6 | 1e-5 |
+| Relative SE | 3.21e-5 | 1e-3 |
+| Full SE-product-normalized covariance | 6.42e-5 | 1e-3 |
+| Second-resolution SE stability | 3.39e-8 | 1e-4 |
+| Scaled stationarity | 4.65e-7 | 1e-5 |
+| Independent gradient | 5.13e-9 | 1e-6 |
+| Independent observed Hessian | 4.61e-7 | 1e-4 |
 
-Worst independent gradient discrepancy is 2.79e-10 (limit 1e-6), observed
-Hessian discrepancy 8.82e-7 (limit 1e-4), and casewise/grouped likelihood
-difference per row 1.07e-12 (limit 1e-8). Full named covariance/Hessian entries,
-gradient vectors, original row IDs and all optimizer attempts are retained.
-The minimum Jacobi-scaled observed-Hessian eigenvalue over available fits is
-0.2705, with maximum scaled condition number 7.54. The corresponding moment
-geometry bounds are 0.2524 and 8.18. Both exceed the existing native 1e-4
-minimum-eigenvalue diagnostic threshold. These are fixture diagnostics, not
-proof of global identification.
-
-## Remaining failures
-
-1. **Shifted data, both models.** All three SLSQP attempts pass, but no nlminb
-   attempt meets the frozen original-coordinate scaled stationarity limit
-   1e-5. The best nlminb values are approximately 1.38e-5 (free direct path)
-   and 1.96e-5 (zero direct path), despite convergence status 0 and very close
-   likelihoods. Original structural intercepts couple with slopes under large
-   mean shifts; standardization alone does not ensure this gate passes.
-   The related full affine-shift check fails because the required accepted
-   transformed fit is unavailable. This is not recorded as an invariance PASS.
-2. **Near-singular regular data, both models.** Prototype candidates and all
-   numerical comparisons pass, but the independent oracle's nlminb polish
-   returns status 1. Its BFGS stage returns 0, gradients are below 6.35e-7,
-   and Hessians are positive. The frozen rule requires both optimizer stages
-   to converge, so these cells fail. Close agreement does not override status.
-
-See [attempts.csv](prototype-results/attempts.csv) and
-[independent_gates.csv](prototype-results/independent_gates.csv).
-Follow-up should target these four cells and their solver stopping behavior;
-acceptance limits must not be widened merely to obtain PASS.
-
-## Corrections made during the bounded experiment
-
-Failed evidence is preserved in `prototype-initial-smoke.csv`,
-`prototype-initial-results/`, `prototype-repair1-results/` and
-`prototype-repair2-results/`. Acceptance limits and fixture definitions did not
-change. Final evidence is in `prototype-results/`.
-
-- The first covariance comparison used `stats::vcov` on a namespace-only lavaan
-  object. This dispatch failed; `lavaan::vcov` is the working S4 generic.
-- Raw total-NLL subtraction loses useful digits near a solution. A stable
-  pattern likelihood difference uses a log1p determinant ratio and an exact
-  inverse-difference identity. A same-nlminb restart uses this objective plus
-  a constant 1, preserving its target and derivatives. Both initial/final
-  statuses are retained. All evaluated identities agree with the independent
-  likelihood within 7.48e-12 per row. There is no cross-solver polishing.
-- A numerical observed Hessian alone returned misleading tiny positive
-  curvature in the deliberately nonidentified no-overlap fixture. The study
-  now additionally checks the rank of the observed-pattern mean/covariance
-  Jacobian geometry. This Gram matrix is a local observability diagnostic,
-  **not** an expected-information SE estimator under MAR. The fixture now
-  raises a typed diagnostic instead of an ordinary finite-SE success.
-- Default zero-centered numerical-Hessian steps were dominated by subtraction
-  noise. Larger independent Richardson steps fix regular-data checks; relative
-  variance perturbations keep near-singular probes in the positive domain.
-  Two Richardson resolutions are still compared against the complete analytic
-  score derivative. No derivative tolerance was relaxed.
-
-The four planted defects are listwise fitting, omitted means, inverse-average
-Hessian N scaling, and omitted moment-mapping curvature. Each is rejected by
-its intended independent likelihood or covariance/Hessian check. Empty rows,
-row permutations, all seven nonempty patterns, singleton patterns, identifiable
-no-complete-row data, rescaling, all-missing variables, unsupported settings,
-nonidentification and invalid implied PD have explicit evidence.
+Covariance comparisons include both the independent likelihood and lavaan.
+Full named matrices, gradients, conditioning diagnostics, warnings and row
+ledgers are retained in `prototype-results/`. The four planted defects are
+listwise fitting, omitted means, wrong Hessian N scaling and omitted
+moment-mapping curvature. Each fails its intended independent criterion.
+The shifted and rescaled affine checks both pass. The deliberate no-overlap
+nonidentification fixture still raises a typed diagnostic; positive numerical
+curvature alone is not accepted as identification evidence.
 
 ## Reproduce and interpret
 
@@ -128,14 +104,12 @@ From the isolated study worktree:
 Rscript planning/studies/fiml-feasibility/prototype-acceptance.R
 ```
 
-Final local runtime was approximately 26 seconds. The command intentionally
-returns nonzero while required acceptance cells fail. Session information,
-warnings and an execution log are retained; recursive file hashes are in
-[evidence-manifest.json](evidence-manifest.json).
+The final complete run exits 0 and takes approximately 37 seconds. Session
+information and the execution log are retained. Recursive artifact hashes are
+in [evidence-manifest.json](evidence-manifest.json).
 
-This experiment supports the pattern likelihood, native RAM score and full
-observed-Hessian covariance construction on the evaluated fixtures. It does
-not establish inferential coverage, MAR robustness beyond the stated model,
-global optimality, production compatibility or readiness to add FIML to 0.16.
-No full package suite, production constraint gates, coverage collection or
-expensive CI was run for this study-only change.
+This is a numerical GO for this bounded research prototype only. It does not
+establish inferential coverage, general MAR robustness, global identification
+or optimization, or production readiness. No full package suite, production
+constraint gates, coverage collection or expensive CI was run. Production/API
+integration needs a separate design and authorization; 0.16 remains separate.

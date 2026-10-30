@@ -1,7 +1,7 @@
-# Bounded FIML prototype evaluated locally: NO-GO — 2026-10-29
-# Frozen42cells:38PASS/4FAIL; edges12/13; gradients/Hessians120/120 evaluated points PASS (six not run). Original reference30/30 and10/10PASS.
-# Two shifted fits miss nlminb stationarity; two near-singular reference polishes report status1. All four mutants caught; no acceptance limit relaxed.
-# See planning/studies/fiml-feasibility/prototype-report.md and preserved failed attempts. Study only; no production edits, push, expensive CI, integration or0.16 change.
+# Bounded FIML prototype optimizer repair: local PASS — 2026-10-29
+# Four prior optimizer failures resolved;42/42cells,13/13edges,126/126gradient/Hessian checks and126/126likelihood identitiesPASS. Original raw reference30/30 and10/10PASS; all four mutants caught.
+# Native nlminb refinement receives full Hessian; independent oracle uses its own numerical derivatives; lavaan reference uses affine coordinates with independent full-covariance transport. Fixed acceptance limits/status requirements unchanged.
+# See planning/studies/fiml-feasibility/prototype-report.md; initial NO-GO and rejected solver trials preserved. Study only; no production edits, push, expensive CI, integration or0.16 change.
 # FIML prototype scope revised; authorization pending — 2026-10-29
 # Fixed-X probes are reference-only; proposed native acceptance covers 30 random-X cells/eight in-scope edges and rejects fixed-X inputs. No prototype authorization implied.
 # Three-variable acyclic Gaussian mediation only; random X, free means, independent disturbances, free/zero direct path. Separate from 0.16.

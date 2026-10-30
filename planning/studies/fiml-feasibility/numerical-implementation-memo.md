@@ -326,8 +326,11 @@ coverage. No simulation study or performance benchmark was run.
 
 ## Bounded prototype execution
 
-The separately authorized study-only prototype has now run. Its
-[acceptance report](prototype-report.md) records **NO-GO**: 38/42 regular cells
-and 12/13 edge checks pass. Four optimizer-gated cells remain unresolved;
-passing numerical comparisons do not override their required status and
-stationarity gates. No production integration or 0.16 scope change is implied.
+The separately authorized study-only prototype initially returned NO-GO at
+`c92b6fec`. The authorized optimizer repair now passes all **42/42 regular
+cells, 13/13 edge checks and 126/126 derivative points**, with all four planted
+defects detected. The [acceptance report](prototype-report.md) explains full
+Hessian refinement, the independent oracle's numerical derivatives and
+lavaan's affine-coordinate reference, plus the rejected solver alternatives.
+Acceptance limits and required optimizer statuses remain unchanged. This is
+a local numerical GO only; production integration and 0.16 remain separate.

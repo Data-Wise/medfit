@@ -1,7 +1,7 @@
 "check","pass","evidence"
 "row_order",TRUE,"Reordered fits and row IDs agree"
 "empty_rows",TRUE,"Empty rows excluded by ID with zero likelihood"
-"affine_shifted",FALSE,"Required transformed fit failed"
+"affine_shifted",TRUE,"Known Jacobian offset plus full estimate/covariance transport"
 "affine_rescaled",TRUE,"Known Jacobian offset plus full estimate/covariance transport"
 "mutant_listwise",TRUE,"Listwise-fitted candidate fails common observed-data likelihood"
 "mutant_means",TRUE,"Zero structural intercepts fail the mean-structure likelihood"

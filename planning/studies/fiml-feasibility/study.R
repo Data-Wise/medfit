@@ -80,7 +80,7 @@ initial <- function(dat, direct) {
     log(c(stats::var(cc[, 1]), mean(resid(fm)^2), mean(resid(fy)^2))))
 }
 
-reference <- function(dat, direct) {
+reference <- function(dat, direct, derivative_polish = FALSE) {
   groups <- make_groups(dat)
   n <- sum(rowSums(!is.na(dat)) > 0)
   q0 <- initial(dat, direct)
@@ -95,10 +95,16 @@ reference <- function(dat, direct) {
   runs <- lapply(starts, function(u) {
     b <- stats::optim(u, objective, method = "BFGS",
                       control = list(reltol = 1e-13, maxit = 1500))
+    # Optional prototype oracle refinement: numerical derivatives of this
+    # independent likelihood, never RAM/prototype derivatives or estimates.
     p <- stats::nlminb(b$par, objective,
-                       control = list(rel.tol = 1e-13, x.tol = 1e-12, iter.max = 1500))
+      gradient = if (derivative_polish) function(u) numDeriv::grad(objective, u) else NULL,
+      hessian = if (derivative_polish) function(u) numDeriv::hessian(objective, u) else NULL,
+      control = list(rel.tol = if (derivative_polish) 1e-10 else 1e-13,
+                     x.tol = 1e-12, iter.max = 1500))
     list(q = q0 + qscale * p$par, value = p$objective,
-         bfgs = b$convergence, polish = p$convergence)
+         bfgs = b$convergence, polish = p$convergence,
+         iterations = p$iterations, message = p$message)
   })
   best <- runs[[which.min(vapply(runs, `[[`, numeric(1), "value"))]]
   q <- best$q
@@ -108,10 +114,16 @@ reference <- function(dat, direct) {
   list(q = q, estimates = structural(q, direct), se = sqrt(diag(V)), H = H,
        gradient = max(abs(numDeriv::grad(function(p) nll(p, groups, direct) / n, q))),
        start_spread = diff(range(vapply(runs, `[[`, numeric(1), "value"))),
-       bfgs = best$bfgs, polish = best$polish, n = n, groups = groups)
+       bfgs = best$bfgs, polish = best$polish, n = n, groups = groups,
+       attempts = do.call(rbind, lapply(seq_along(runs), function(i) {
+         x <- runs[[i]]
+         data.frame(start = i, bfgs = x$bfgs, polish = x$polish,
+                    objective = x$value, iterations = x$iterations, message = x$message)
+       })))
 }
 
-lavaan_fit <- function(dat, direct, fixed = FALSE) {
+lavaan_fit <- function(dat, direct, fixed = FALSE,
+                       control = list(rel.tol = 1e-10, iter.max = 10000, eval.max = 20000)) {
   syntax <- paste("M ~ a*X", if (direct) "Y ~ b*M + cp*X" else "Y ~ b*M + 0*X",
                   "M ~ im*1", "Y ~ iy*1", "M ~~ vm*M", "Y ~~ vy*Y", sep = "\n")
   # Explicit free X moments would make X modeled, defeating the fixed-X probe.
@@ -120,7 +132,7 @@ lavaan_fit <- function(dat, direct, fixed = FALSE) {
               fixed.x = fixed, conditional.x = FALSE, meanstructure = TRUE,
               likelihood = "normal", information = "observed",
               observed.information = "hessian", se = "standard", test = "none",
-              control = list(rel.tol = 1e-10, iter.max = 10000, eval.max = 20000))
+              control = control)
 }
 
 generate <- function(seed, mask, direct) {

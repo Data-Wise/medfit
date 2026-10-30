@@ -28,7 +28,7 @@ reference_fit <- function(dat, direct) {
   center <- colMeans(dat, na.rm = TRUE)
   scale <- apply(dat, 2, stats::sd, na.rm = TRUE)
   z <- sweep(sweep(dat, 2, center), 2, scale, `/`)
-  r <- oracle$reference(z, direct)
+  r <- oracle$reference(z, direct, derivative_polish = TRUE)
   raw_parameters <- function(q) {
     qr <- q
     qr[1:3] <- center + scale * q[1:3]
@@ -44,6 +44,38 @@ reference_fit <- function(dat, direct) {
   dimnames(V) <- list(names(estimate), names(estimate))
   list(r = r, z = z, estimate = estimate, covariance = V,
        nll = oracle$nll(r$q, r$groups, direct) + sum(colSums(!is.na(dat)) * log(scale)))
+}
+# Fit lavaan in data-derived affine coordinates, then independently transport
+# its full covariance by a numerical Jacobian; never use prototype transport.
+lavaan_reference <- function(dat, direct) {
+  center <- colMeans(dat, na.rm = TRUE)
+  scale <- apply(dat, 2, stats::sd, na.rm = TRUE)
+  z <- sweep(sweep(dat, 2, center), 2, scale, `/`)
+  fit <- oracle$lavaan_fit(z, direct)
+  Vz <- lavaan::vcov(fit)
+  labels <- rownames(Vz)
+  q <- setNames(as.numeric(lavaan::coef(fit)), labels)
+  raw <- function(t) {
+    names(t) <- labels
+    r <- t
+    r["a"] <- scale[2] / scale[1] * t["a"]
+    r["b"] <- scale[3] / scale[2] * t["b"]
+    if (direct) r["cp"] <- scale[3] / scale[1] * t["cp"]
+    r[c("vx", "vm", "vy")] <- scale^2 * t[c("vx", "vm", "vy")]
+    r["ix"] <- center[1] + scale[1] * t["ix"]
+    r["im"] <- center[2] + scale[2] * t["im"] - r["a"] * center[1]
+    r["iy"] <- center[3] + scale[3] * t["iy"] - r["b"] * center[2] -
+      (if (direct) r["cp"] * center[1] else 0)
+    r
+  }
+  J <- numDeriv::jacobian(raw, q)
+  V <- J %*% Vz %*% t(J)
+  dimnames(V) <- list(labels, labels)
+  tab <- lavaan::parameterEstimates(fit)
+  tab$est[match(labels, tab$label)] <- raw(q)
+  tab$se[match(labels, tab$label)] <- sqrt(diag(V))
+  list(fit = fit, table = tab, covariance = V,
+    loglik = as.numeric(lavaan::logLik(fit)) - sum(colSums(!is.na(dat)) * log(scale)))
 }
 theta_q <- function(theta, direct) {
   cp <- if (direct) theta["cp"] else 0
@@ -96,14 +128,14 @@ for (direct in c(TRUE, FALSE)) {
 stopifnot(length(cases) == 42L)
 rows <- list(); attempts <- list(); matrices <- list(); derivatives <- list()
 coordinates <- list(); ledgers <- list(); fits <- list(); warnings_seen <- list()
-gradients <- list(); independent_gates <- list(); identities <- list(); conditioning <- list()
+gradients <- list(); independent_gates <- list(); identities <- list(); conditioning <- list(); independent_attempts <- list()
 capture <- function(expr, id) withCallingHandlers(expr, warning = function(w) {
   warnings_seen[[length(warnings_seen) + 1L]] <<- data.frame(cell = id, message = conditionMessage(w))
   invokeRestart("muffleWarning")
 })
 write_records <- function() {
   for (name in c("rows", "attempts", "matrices", "derivatives", "coordinates", "ledgers", "warnings_seen",
-                 "gradients", "independent_gates", "identities", "conditioning")) {
+                 "gradients", "independent_gates", "identities", "conditioning", "independent_attempts")) {
     object <- get(name)
     if (length(object)) utils::write.csv(do.call(rbind, object),
       file.path(out_dir, paste0(name, ".csv")), row.names = FALSE)
@@ -126,14 +158,16 @@ for (id in names(cases)) {
         minimum_scaled_eigenvalue = min(spectrum), scaled_condition = max(spectrum) / min(spectrum))
     }
     own <- reference_fit(dat, direct)
-    lv <- capture(oracle$lavaan_fit(dat, direct), id)
-    tab <- lavaan::parameterEstimates(lv)
+    independent_attempts[[id]] <- cbind(cell = id, own$r$attempts)
+    lavaan_ref <- capture(lavaan_reference(dat, direct), id)
+    lv <- lavaan_ref$fit
+    tab <- lavaan_ref$table
     labels <- names(p$estimate)
     tab <- tab[tab$label %in% labels, ]
     stopifnot(nrow(tab) == length(labels), !anyDuplicated(tab$label),
               setequal(tab$label, labels), setequal(names(own$estimate), labels))
     tab <- tab[match(labels, tab$label), ]
-    Vlav <- lavaan::vcov(lv)
+    Vlav <- lavaan_ref$covariance
     stopifnot(setequal(rownames(Vlav), labels), !anyDuplicated(rownames(Vlav)))
     Vlav <- Vlav[labels, labels]
     Vref <- own$covariance[labels, labels]
@@ -144,7 +178,9 @@ for (id in names(cases)) {
     se_error <- max(abs(p$se / sref - 1), abs(p$se / tab$se - 1))
     cv_error <- max(cov_error(p$covariance, Vref, sref), cov_error(p$covariance, Vlav, sref))
     ll_error <- max(abs(p$nll - own$nll),
-                    abs(p$nll + as.numeric(lavaan::logLik(lv)))) / p$prepared$n
+                    abs(p$nll + lavaan_ref$loglik),
+                    abs(oracle$nll(theta_q(setNames(tab$est, labels), direct),
+                                   oracle$make_groups(dat), direct) + lavaan_ref$loglik)) / p$prepared$n
     retained <- which(rowSums(!is.na(dat)) > 0L)
     row_ok <- identical(p$prepared$rows$retained, retained) &&
       identical(p$prepared$rows$empty, which(rowSums(!is.na(dat)) == 0L)) &&

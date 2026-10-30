@@ -186,7 +186,8 @@ prototype_fit <- function(data, direct = TRUE, fixed_x = FALSE,
         # This is not a cross-solver polish or an acceptance-tolerance change.
         anchor <- r$par
         r <- stats::nlminb(anchor, function(theta) 1 + 2 * prototype_difference(theta, anchor, p) / p$n,
-          gradient = obj$g, lower = lower,
+          gradient = obj$g, hessian = function(theta) 2 * prototype_hessian(theta, p) / p$n,
+          lower = lower,
           control = list(rel.tol = 1e-10, x.tol = 1e-12, iter.max = 3000, eval.max = 6000))
         list(theta = r$par, status = r$convergence, ok = r$convergence == 0L,
              first_status = first_status)

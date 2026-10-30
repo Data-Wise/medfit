@@ -81,7 +81,12 @@ to 0.16. Acceptance is pending until every required check has run and passed.
 
 ## Execution result
 
-Executed locally; **NO-GO**, 38/42 regular cells and 12/13 edge checks pass.
-See [prototype-report.md](prototype-report.md) for failed cells, harness method
-corrections and preserved evidence. The frozen scope and limits above remain
-unchanged; execution does not authorize production integration.
+The initial local run at `c92b6fec` was NO-GO (38/42 regular cells and 12/13
+edges). The authorized optimizer repair now passes **42/42 cells, 13/13 edges
+and 126/126 derivative checks**. Full Hessian refinement, independent numerical
+oracle derivatives and affine lavaan reference fitting change numerical
+methods without changing the frozen fixtures or acceptance limits above.
+See [prototype-report.md](prototype-report.md) for methods, failed alternatives
+and evidence. The original raw-data reference study still passes 30/30 cells
+and 10/10 edges with its previous default solver settings. Local PASS does
+not authorize production integration or change the 0.16 scope.

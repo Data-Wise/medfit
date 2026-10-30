@@ -46,7 +46,7 @@ $edge_total
 [1] 10
 
 $seconds
-[1] 5.641978
+[1] 5.621538
 
 PROTOTYPE unrestricted/271/complete
 ACCEPT unrestricted/271/complete TRUE
@@ -115,15 +115,11 @@ ACCEPT unrestricted/new/singletons TRUE
 PROTOTYPE unrestricted/new/all_patterns
 ACCEPT unrestricted/new/all_patterns TRUE
 PROTOTYPE unrestricted/new/shifted
-ACCEPT unrestricted/new/shifted FALSE no accepted candidate for each optimizer
+ACCEPT unrestricted/new/shifted TRUE
 PROTOTYPE unrestricted/new/rescaled
-lavaan NOTE:
-   some model variables are badly scaled; the model was fitted in an
-   internally rescaled metric, and the solution was mapped back to the
-   original metric (see the rescale_data option).
 ACCEPT unrestricted/new/rescaled TRUE
 PROTOTYPE unrestricted/new/near_singular
-ACCEPT unrestricted/new/near_singular FALSE independent optimizer/information gate
+ACCEPT unrestricted/new/near_singular TRUE
 PROTOTYPE cp_zero/new/no_complete
 ACCEPT cp_zero/new/no_complete TRUE
 PROTOTYPE cp_zero/new/singletons
@@ -131,26 +127,22 @@ ACCEPT cp_zero/new/singletons TRUE
 PROTOTYPE cp_zero/new/all_patterns
 ACCEPT cp_zero/new/all_patterns TRUE
 PROTOTYPE cp_zero/new/shifted
-ACCEPT cp_zero/new/shifted FALSE no accepted candidate for each optimizer
+ACCEPT cp_zero/new/shifted TRUE
 PROTOTYPE cp_zero/new/rescaled
-lavaan NOTE:
-   some model variables are badly scaled; the model was fitted in an
-   internally rescaled metric, and the solution was mapped back to the
-   original metric (see the rescale_data option).
 ACCEPT cp_zero/new/rescaled TRUE
 PROTOTYPE cp_zero/new/near_singular
-ACCEPT cp_zero/new/near_singular FALSE independent optimizer/information gate
+ACCEPT cp_zero/new/near_singular TRUE
 $primary_pass
-[1] 38
+[1] 42
 
 $primary_total
 [1] 42
 
 $edge_pass
-[1] 12
+[1] 13
 
 $edge_total
 [1] 13
 
 $seconds
-[1] 25.99666
+[1] 36.8165
