@@ -1,0 +1,12 @@
+"cell","message"
+"unrestricted/271/missing_x_mcar","lavaan->lav_data_full():
+   some cases are empty and will be ignored: 248."
+"unrestricted/613/missing_x_mcar","lavaan->lav_data_full():
+   some cases are empty and will be ignored: 112 152 193 208."
+"unrestricted/997/missing_x_mcar","lavaan->lav_data_full():
+   some cases are empty and will be ignored: 100 202 280."
+"cp_zero/271/missing_x_mcar","lavaan->lav_data_full():
+   some cases are empty and will be ignored: 248."
+"unrestricted/new/rescaled","lavaan->lav_data_full():
+   some observed variances are (at least) a factor 1000 times larger than
+   others; use varTable(fit) to investigate"

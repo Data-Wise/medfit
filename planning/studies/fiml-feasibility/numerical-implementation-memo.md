@@ -323,3 +323,11 @@ Without that argument, only numerical probes run. Results are in
 function bodies/formals, not environments or compiled dependencies. Expected-
 information probes establish implementation agreement, not repeated-sampling
 coverage. No simulation study or performance benchmark was run.
+
+## Bounded prototype execution
+
+The separately authorized study-only prototype has now run. Its
+[acceptance report](prototype-report.md) records **NO-GO**: 38/42 regular cells
+and 12/13 edge checks pass. Four optimizer-gated cells remain unresolved;
+passing numerical comparisons do not override their required status and
+stationarity gates. No production integration or 0.16 scope change is implied.

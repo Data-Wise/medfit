@@ -78,3 +78,10 @@ Freeze these choices before running. Preserve failed attempts, diagnose them
 without widening gates, and distinguish reference-only checks from prototype
 outcomes. A local PASS authorizes neither production integration nor changes
 to 0.16. Acceptance is pending until every required check has run and passed.
+
+## Execution result
+
+Executed locally; **NO-GO**, 38/42 regular cells and 12/13 edge checks pass.
+See [prototype-report.md](prototype-report.md) for failed cells, harness method
+corrections and preserved evidence. The frozen scope and limits above remain
+unchanged; execution does not authorize production integration.
