@@ -79,6 +79,10 @@ no production defect. Existing required numerical gates remain mandatory.
 
 ### A1. Reconcile evidence and close the production-test gap
 
+The [static production-test inventory](AUDIT-FIML-regression-inventory-2026-10-30.md)
+records existing no-complete-row, singleton and no-overlap coverage. Reuse those
+checks; promote only missing numerical evidence. The inventory ran no fits.
+
 Inventory production tests against archived prototype cases before adding tests.
 `tests/sim/sem-fiml-gate.R:64` currently fits two missingness designs with free/zero
 direct paths (four fits); its six checks yield 24 rows. The prototype's 42 fits

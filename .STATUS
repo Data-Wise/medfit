@@ -1,3 +1,5 @@
+# FIML regression inventory completed — 2026-10-30
+# Static audit: planning/AUDIT-FIML-regression-inventory-2026-10-30.md. Existing no-complete-row oracle, singleton handling and actual no-overlap rejection retained; missing independent MAR/combined-pattern/affine/near-singular evidence identified. No production/test edits, numerical runs, push or expensive CI. Implementation awaits separate scope authorization.
 # FIML planning reconciled and adversarially reviewed — 2026-10-30
 # See planning/PLAN-FIML-release-and-missing-data-followups-2026-10-30.md and its REVIEW receipt. Planning only: existing release gates vs optional regression/teaching additions explicit; missingmed consumer acceptance and new diagnostics/adoption remain separate.
 # Claude original verdict needs-attention (3 medium/3 low planning concerns); substantive wording corrected locally and limitations dispositioned, not Claude re-reviewed. No numerical tests, benchmarks or production changes; no push or expensive CI.
