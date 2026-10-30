@@ -1,9 +1,9 @@
-# Local R compatibility fixes — 2026-10-29
-# Archive fixture and probmed latent Gaussian plug-in fixes are pending integration; no release.
-# Four-version medfit archive test suites: 7618 pass, 126 skip, 0 fail each; R 4.1 has warnings/notes.
-# Report: planning/R-compatibility-results-2026-10-29.md. probmed checkout: .worktrees/probmed-r-compat-fix.
-# R 4.1 S7 imports and missingmed offset fixed locally; both affected missingmed suites pass with warnings.
-# missingmed full vignette check: R 4.6.2 OK; R 4.1 tests/vignettes pass, stats4 warning/note remain.
+# R compatibility fixes merged into dev — 2026-10-29
+# medfit #362 (0754d6f), RMediation #87, medrobust #59, missingmed #114 and probmed #66 merged; no release.
+# Medfit PR lint, risk-tier, pkgdown, coverage and Codecov passed. Earlier four-version archive suites passed with R 4.1 warnings/notes.
+# Probmed full R 4.6.2 check OK; prepared R 4.1 has an unresolved stats4 environment warning. See planning/R-compatibility-results-2026-10-29.md.
+# Missingmed post-merge hosted checks failed because medfit 0.3.2 was installed while examples require >= 0.10.0; this also predates #114.
+# Four compatibility checkouts and remote branches removed after verified history/session-data archival; active medfit checkout retains unrelated untracked files.
 # Issue #357 P2 repairs locally verified — 2026-10-29
 # Tested8c22017: selected-branch objective binding and scale-relative reference PSD guard fixed; independent28oraclecells and both mutants PASS. Fullsuite1742tests/9207expectations,0failures/errors,2warnings/2skips. Local built check OK; lint0; coverage96.07589%overall/100%new-module executable lines.
 # Local stages complete; metadata-only reconciliation follows tested tree. No push/PR/hosted CI. Expensive hosted OpenBLAS/full-platform checks deferred until release into main per author.
