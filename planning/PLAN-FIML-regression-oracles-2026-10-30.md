@@ -1,6 +1,6 @@
 # Bounded FIML regression-oracle milestone
 
-Status: T1 implementation PASS; T2 QA stopped FAIL; local gates pending. Date: 2026-10-30.
+Status: T1 repair PASS; T2 re-QA pending after stopped FAIL; local gates pending. Date: 2026-10-30.
 Branch: codex/fiml-regression-oracles. Base: origin/dev c4b76fb5, plus the
 reviewed local planning commits. No push, PR, merge, release or expensive CI.
 
@@ -119,3 +119,22 @@ omits the required expected parameter-set/multiplicity assertions before
 reference subsetting. No numerical acceptance limit or production source changed.
 See `_agents_workspace/fiml-regression-oracles/qa.md` and preserved initial/retry
 logs. T2 is FAIL; repair/re-QA requires the bounded parent handoff before gates.
+
+## Authorized T1 QA-finding repairs — 2026-10-30
+
+Added an independent free-nine/zero-eight public parameter contract. Candidate
+and raw lavaan coefficients and covariance rows/columns must each have exact
+sets, counts and no duplicates before reference indexing or affine transport.
+Fast regressions reject dropped/duplicated/extra coefficients and malformed
+covariance dimensions/names. Evidence schema rejects missing, duplicate or
+extra columns. The exact ten-cell CSV now includes normalized model-covariance
+minimum/maximum eigenvalues: at the reference optimum for accepted cells, and
+explicitly labeled generating parameters for unidentified controls.
+
+First repair run passed: 10 tests/132 successful assertions, 0 failed, 0 errors,
+0 skips, 2 expected empty-row warnings. Fast harness: 5 tests/31 assertions,
+0 failed/errors/warnings/skips; scoped lint clean. Every prior numerical CSV
+field is unchanged. Fixtures, manifest identities, limits and derivative code
+are unchanged, so the earlier twelve-probe calibration was reused. Prior reports
+and receipts remain archived. The QA-owned probe is untouched; independent
+re-QA and local gates remain pending. No production edits or external action.

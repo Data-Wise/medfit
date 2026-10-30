@@ -15,6 +15,7 @@ for (fo_direct in c(TRUE, FALSE)) {
       z <- as.data.frame(sweep(sweep(as.matrix(d), 2, center), 2, scale, `/`))
       q0s <- fo_affine(q0, 1 / scale, -center / scale)
       g0 <- fo_spectrum(fo_geometry(z, q0s))
+      modelcov0 <- fo_spectrum(fo_moments(q0)$sigma)
       fit <- tryCatch(fit_sem(fo_model(fo_direct), d, missing = "fiml", fixed_x = FALSE), error = identity)
       cell <- paste(fo_kind, if (fo_direct) "free" else "zero", sep = "-")
       if (fo_kind == "unidentified") {
@@ -28,7 +29,8 @@ for (fo_direct in c(TRUE, FALSE)) {
         fo_records$rows[[cell]] <- data.frame(
           cell, outcome = fit$reason, coefficient = NA_real_, covariance = NA_real_, nll = NA_real_,
           fixed_nll = abs(actual_fixed - fo_nll(d, q0)),
-          geometry_min = min(g0), geometry_max = max(g0), information_min = NA_real_, information_max = NA_real_
+          geometry_min = min(g0), geometry_max = max(g0), information_min = NA_real_, information_max = NA_real_,
+          modelcov_min = min(modelcov0), modelcov_max = max(modelcov0), modelcov_at = "generating parameters"
         )
       } else {
         expect_false(inherits(fit, "error"), info = if (inherits(fit, "error")) conditionMessage(fit) else cell)
@@ -36,7 +38,8 @@ for (fo_direct in c(TRUE, FALSE)) {
           fo_records$rows[[cell]] <- data.frame(
             cell, outcome = conditionMessage(fit), coefficient = NA_real_, covariance = NA_real_, nll = NA_real_,
             fixed_nll = abs(actual_fixed - fo_nll(d, q0)),
-            geometry_min = min(g0), geometry_max = max(g0), information_min = NA_real_, information_max = NA_real_
+            geometry_min = min(g0), geometry_max = max(g0), information_min = NA_real_, information_max = NA_real_,
+            modelcov_min = min(modelcov0), modelcov_max = max(modelcov0), modelcov_at = "generating parameters"
           )
         } else {
           ref_data <- if (fo_kind == "affine") fo_fixture("mar", fo_direct) else d
@@ -44,6 +47,13 @@ for (fo_direct in c(TRUE, FALSE)) {
                              meanstructure = TRUE, information = "observed", control = list(rel.tol = 1e-10))
           q <- coef(fit)
           V <- vcov(fit)
+          ref_q <- lavaan::coef(ref)
+          ref_v <- lavaan::vcov(ref)
+          expect_no_error(fo_assert_parameters(q, V, fo_direct))
+          expect_no_error(fo_assert_parameters(ref_q, ref_v, fo_direct))
+          # Stop before subsetting or transforming a malformed object.
+          fo_assert_parameters(q, V, fo_direct)
+          fo_assert_parameters(ref_q, ref_v, fo_direct)
           offset <- 0
           if (fo_kind == "affine") {
             transform <- function(x) fo_affine(x, 1 / c(3, .5, 2), -c(2, -3, 4) / c(3, .5, 2))
@@ -52,8 +62,8 @@ for (fo_direct in c(TRUE, FALSE)) {
             q <- transform(q)
             offset <- sum(colSums(!is.na(d)) * log(c(3, .5, 2)))
           }
-          ref_q <- lavaan::coef(ref)[names(q)]
-          ref_v <- lavaan::vcov(ref)[names(q), names(q)]
+          ref_q <- ref_q[names(q)]
+          ref_v <- ref_v[names(q), names(q)]
           coefficient <- max(abs(q - ref_q))
           covariance <- max(abs(V - ref_v) / sqrt(outer(diag(ref_v), diag(ref_v))))
           nll <- abs(fo_nll(d, coef(fit)) + as.numeric(logLik(fit)))
@@ -81,11 +91,13 @@ for (fo_direct in c(TRUE, FALSE)) {
           information <- fo_spectrum(H)
           expect_gt(min(G), 1e-4)
           expect_gt(min(information), 1e-4)
-          if (fo_kind == "near") expect_lt(min(fo_spectrum(fo_moments(ref_q)$sigma)), .01)
+          modelcov <- fo_spectrum(fo_moments(ref_q)$sigma)
+          if (fo_kind == "near") expect_lt(min(modelcov), .01)
           fo_records$rows[[cell]] <- data.frame(
             cell, outcome = "fit", coefficient, covariance, nll,
             fixed_nll = abs(actual_fixed - fo_nll(d, q0)), geometry_min = min(G), geometry_max = max(G),
-            information_min = min(information), information_max = max(information)
+            information_min = min(information), information_max = max(information),
+            modelcov_min = min(modelcov), modelcov_max = max(modelcov), modelcov_at = "reference optimum"
           )
         }
       }

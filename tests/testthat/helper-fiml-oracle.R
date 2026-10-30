@@ -96,8 +96,34 @@ fo_hessian <- function(fun, q, h) {
     H
   }))
 }
+# Public parameter contract is independent of either fitted object or its order.
+fo_parameter_names <- function(direct) {
+  c("a", "b", if (direct) "cp", "X~~X", "M~~M", "Y~~Y", "X~1", "M~1", "Y~1")
+}
+fo_assert_parameters <- function(q, V, direct) {
+  expected <- fo_parameter_names(direct)
+  exact_names <- function(actual) {
+    length(actual) == length(expected) && !anyDuplicated(actual) && setequal(actual, expected)
+  }
+  if (!is.numeric(q) || !is.null(dim(q)) || length(q) != length(expected) || !exact_names(names(q))) {
+    stop("FIML oracle coefficient names/count/multiplicity differ from the declared parameter set")
+  }
+  if (!is.matrix(V) || !is.numeric(V) || !identical(dim(V), rep(length(expected), 2L)) ||
+        !exact_names(rownames(V)) || !exact_names(colnames(V))) {
+    stop("FIML oracle covariance dimensions/names/multiplicity differ from the declared parameter set")
+  }
+  invisible(TRUE)
+}
+fo_record_columns <- function() {
+  c("cell", "outcome", "coefficient", "covariance", "nll", "fixed_nll", "geometry_min", "geometry_max",
+    "information_min", "information_max", "modelcov_min", "modelcov_max", "modelcov_at")
+}
 fo_write_records <- function(records, path) {
   if (!grepl("^/", path)) stop("FIML_ORACLE_RESULTS must be an absolute path")
+  if (!is.data.frame(records) || ncol(records) != length(fo_record_columns()) ||
+        anyDuplicated(names(records)) || !setequal(names(records), fo_record_columns())) {
+    stop("FIML oracle evidence schema must contain every declared field exactly once")
+  }
   utils::write.csv(records, path, row.names = FALSE)
 }
 fo_geometry <- function(d, q) {

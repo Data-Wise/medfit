@@ -12,8 +12,14 @@ test_that("FIML evidence output rejects caller-relative paths and survives CWD c
   on.exit(unlink(path), add = TRUE)
   old <- setwd(tempdir())
   on.exit(setwd(old), add = TRUE)
-  fo_write_records(data.frame(x = 1), path)
-  expect_equal(utils::read.csv(path)$x, 1L)
+  record <- data.frame(
+    cell = "mar-free", outcome = "fit", coefficient = 0, covariance = 0,
+    nll = 0, fixed_nll = 0, geometry_min = 1, geometry_max = 1,
+    information_min = 1, information_max = 1, modelcov_min = 1, modelcov_max = 1,
+    modelcov_at = "reference optimum"
+  )
+  fo_write_records(record, path)
+  expect_equal(utils::read.csv(path)$cell, "mar-free")
 })
 
 test_that("FIML regression limits discriminate planted likelihood and affine defects", {
@@ -35,4 +41,44 @@ test_that("FIML regression limits discriminate planted likelihood and affine def
   geometry <- fo_spectrum(fo_geometry(fo_fixture("unidentified", TRUE), q))
   expect_equal(sum(geometry > 1e-7), 7L)
   expect_lt(sum(geometry > 1e-7), length(q))
+})
+
+test_that("FIML oracle checks exact independent parameter sets before comparisons", {
+  for (direct in c(TRUE, FALSE)) {
+    q <- fo_truth("mar", direct)
+    V <- diag(length(q))
+    dimnames(V) <- list(names(q), names(q))
+    expect_no_error(fo_assert_parameters(q, V, direct))
+    expect_error(fo_assert_parameters(q[-1], V, direct), "coefficient")
+    duplicated <- q
+    names(duplicated)[length(q)] <- "a"
+    expect_error(fo_assert_parameters(duplicated, V, direct), "coefficient")
+    expect_error(fo_assert_parameters(c(q, extra = 0), V, direct), "coefficient")
+    expect_error(fo_assert_parameters(q, V[-1, , drop = FALSE], direct), "covariance")
+    malformed <- V
+    colnames(malformed)[length(q)] <- "a"
+    expect_error(fo_assert_parameters(q, malformed, direct), "covariance")
+    malformed <- V
+    rownames(malformed) <- NULL
+    expect_error(fo_assert_parameters(q, malformed, direct), "covariance")
+    expect_no_error(fo_assert_parameters(rev(q), V, direct))
+  }
+})
+
+test_that("FIML evidence writer requires all declared spectral fields without duplicates", {
+  path <- tempfile(fileext = ".csv")
+  on.exit(unlink(path), add = TRUE)
+  record <- data.frame(
+    cell = "mar-free", outcome = "fit", coefficient = 0, covariance = 0,
+    nll = 0, fixed_nll = 0, geometry_min = 1, geometry_max = 1,
+    information_min = 1, information_max = 1, modelcov_min = 1, modelcov_max = 1,
+    modelcov_at = "reference optimum"
+  )
+  expect_no_error(fo_write_records(record, path))
+  expect_error(fo_write_records(record[, names(record) != "modelcov_min"], path), "schema")
+  duplicated <- record
+  names(duplicated)[ncol(duplicated)] <- "modelcov_min"
+  expect_error(fo_write_records(duplicated, path), "schema")
+  expect_error(fo_write_records(cbind(record, extra = 0), path), "schema")
+  expect_equal(utils::read.csv(path)$modelcov_min, 1)
 })
