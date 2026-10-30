@@ -88,3 +88,6 @@ full covariance and derivative tolerances, no-complete-row initialization and
 exact row accounting. These are new, unexecuted acceptance requirements; prior
 feasibility results do not certify them. Prototype authorization remains pending,
 with no production work or change to 0.16 scope.
+The two fixed-X edge probes remain reference-harness checks only. Native
+acceptance covers the 30 random-X cells and eight in-scope edges; fixed-X
+inputs must be rejected by the proposed prototype.

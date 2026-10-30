@@ -1,4 +1,5 @@
 # FIML prototype scope revised; authorization pending — 2026-10-29
+# Fixed-X probes are reference-only; proposed native acceptance covers 30 random-X cells/eight in-scope edges and rejects fixed-X inputs. No prototype authorization implied.
 # Three-variable acyclic Gaussian mediation only; random X, free means, independent disturbances, free/zero direct path. Separate from 0.16.
 # Prospective full-covariance and scaled derivative criteria now explicit; no-complete-row initialization and exact row accounting required.
 # Prototype gates separated from deferred production/API/downstream integration gates. No prototype or production changes, push or expensive CI authorized/performed by this revision.

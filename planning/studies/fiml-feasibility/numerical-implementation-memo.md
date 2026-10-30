@@ -226,11 +226,17 @@ The following are prospective requirements, not checks already passed by a
 native prototype. Freeze fixtures, coordinate order and scales before running;
 retain failures and do not loosen thresholds after seeing results.
 
-1. **Likelihood and covariance oracle.** Recover all existing 30 primary cells
-   and 10 edges with their original thresholds. Compare all named covariance
-   entries with both the independent total-NLL Hessian reference and lavaan's
-   full observed-Hessian covariance, after coordinate transformation. No
-   survivor-only summaries or diagonal-only covariance comparisons.
+1. **Likelihood and covariance oracle.** Require native-prototype agreement
+   on all existing 30 random-X primary cells, with their original thresholds.
+   Retain all 10 original reference-harness edge checks unchanged, but classify
+   `fixed_x_complete` and `fixed_x_missing_rows` as lavaan/reference-only probes:
+   they establish reference behavior, not native fixed-X support or acceptance.
+   Apply the other eight edge checks to the native prototype using their
+   respective likelihood, diagnostic or mutant criteria. Native fixed-X inputs
+   must still be rejected as out of scope. Compare all named covariance entries
+   on regular in-scope fit fixtures with both the independent total-NLL Hessian
+   reference and lavaan's full observed-Hessian covariance, after coordinate
+   transformation. No survivor-only summaries or diagonal-only comparisons.
 2. **Actual RAM derivatives.** Exercise the reusable RAM mean/covariance
    derivatives through the proposed pattern score at fitted and at least two
    deterministic perturbed points per model/mask. Compare the full model
