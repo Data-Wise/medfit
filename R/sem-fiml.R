@@ -201,84 +201,105 @@
   candidates <- list()
   call_log <- new.env(parent = emptyenv())
   call_log$calls <- list()
-  for (solver in c("slsqp", "nlminb")) {
-    for (i in seq_along(starts)) {
-      first_status <- NA_integer_
-      run_solver <- function(expr, phase) {
-        ans <- tryCatch(expr, error = identity)
-        status <- if (inherits(ans, "error")) NA_integer_ else if (solver == "slsqp") ans$status else ans$convergence
-        call_log$calls[[length(call_log$calls) + 1L]] <- list(
-          solver = solver, start = i, phase = phase,
-          status = status, condition = if (inherits(ans, "error")) ans else NULL
-        )
-        if (inherits(ans, "error")) stop(ans)
-        ans
-      }
-      run <- tryCatch(
-        {
-          if (solver == "slsqp") {
-            r <- run_solver(.sem_solve_one(starts[[i]], ram,
-              list(s = diag(3)), lower, rep(Inf, ram$q),
+  # The post-return evaluation belongs to the solver attempt, too. Preserve the
+  # actual calls and partial attempt if any later operation in that seam throws.
+  tryCatch({
+    for (solver in c("slsqp", "nlminb")) {
+      for (i in seq_along(starts)) {
+        attempt_recorded <- FALSE
+        first_status <- NA_integer_
+        run_solver <- function(expr, phase) {
+          ans <- tryCatch(expr, error = identity)
+          status <- if (inherits(ans, "error")) NA_integer_ else if (solver == "slsqp") ans$status else ans$convergence
+          call_log$calls[[length(call_log$calls) + 1L]] <- list(
+            solver = solver, start = i, phase = phase,
+            status = status, condition = if (inherits(ans, "error")) ans else NULL
+          )
+          if (inherits(ans, "error")) stop(ans)
+          ans
+        }
+        run <- tryCatch(
+          {
+            if (solver == "slsqp") {
+              r <- run_solver(.sem_solve_one(starts[[i]], ram,
+                list(s = diag(3)), lower, rep(Inf, ram$q),
+                list(
+                  algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-12, ftol_rel = 1e-14,
+                  maxeval = 10000L
+                ),
+                obj = obj
+              ), "initial")
               list(
-                algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-12, ftol_rel = 1e-14,
-                maxeval = 10000L
-              ),
-              obj = obj
-            ), "initial")
-            list(
-              theta = r$solution, status = r$status,
-              ok = r$status %in% .sem_ok_status
-            )
-          } else {
-            r <- run_solver(stats::nlminb(starts[[i]], obj$f,
-              gradient = obj$g, lower = lower,
-              control = list(
-                rel.tol = 1e-10, x.tol = 1e-12,
-                iter.max = 3000, eval.max = 6000
+                theta = r$solution, status = r$status,
+                ok = r$status %in% .sem_ok_status
               )
-            ), "initial")
-            first_status <- r$convergence
-            # Restart the SAME optimizer against an accurately anchored objective.
-            # This is not a cross-solver polish or an acceptance-tolerance change.
-            anchor <- r$par
-            r <- run_solver(stats::nlminb(anchor, function(theta) 1 + 2 * .sem_fiml_difference(theta, anchor, p) / p$n,
-                              gradient = obj$g, hessian = function(theta) 2 * .sem_fiml_hessian(theta, p) / p$n,
-                              lower = lower,
-                              control = list(rel.tol = 1e-10, x.tol = 1e-12, iter.max = 3000, eval.max = 6000)
-                            ), "refinement")
-            list(
-              theta = r$par, status = r$convergence, ok = r$convergence == 0L,
-              first_status = first_status
-            )
-          }
-        },
-        error = identity
-      )
-      if (inherits(run, "error")) {
+            } else {
+              r <- run_solver(stats::nlminb(starts[[i]], obj$f,
+                gradient = obj$g, lower = lower,
+                control = list(
+                  rel.tol = 1e-10, x.tol = 1e-12,
+                  iter.max = 3000, eval.max = 6000
+                )
+              ), "initial")
+              first_status <- r$convergence
+              # Restart the SAME optimizer against an accurately anchored objective.
+              # This is not a cross-solver polish or an acceptance-tolerance change.
+              anchor <- r$par
+              objective <- function(theta) 1 + 2 * .sem_fiml_difference(theta, anchor, p) / p$n
+              r <- run_solver(stats::nlminb(anchor, objective,
+                                gradient = obj$g, hessian = function(theta) 2 * .sem_fiml_hessian(theta, p) / p$n,
+                                lower = lower,
+                                control = list(rel.tol = 1e-10, x.tol = 1e-12, iter.max = 3000, eval.max = 6000)
+                              ), "refinement")
+              list(
+                theta = r$par, status = r$convergence, ok = r$convergence == 0L,
+                first_status = first_status
+              )
+            }
+          },
+          error = identity
+        )
+        if (inherits(run, "error")) {
+          attempts[[length(attempts) + 1L]] <- data.frame(
+            solver = solver, start = i,
+            first_status = first_status, status = NA_integer_, accepted = FALSE,
+            nll = NA_real_, stationarity = NA_real_,
+            reason = conditionMessage(run)
+          )
+          attempt_recorded <- TRUE
+          next
+        }
+        e <- .sem_fiml_eval(run$theta, p)
+        stationarity <- if (is.null(e)) {
+          Inf
+        } else {
+          max(abs(p$units * as.vector(solve(t(p$transport), e$gradient / p$n))))
+        }
+        ok <- isTRUE(run$ok) && stationarity <= 1e-5
+        reason <- if (ok) "" else "optimizer status or stationarity"
         attempts[[length(attempts) + 1L]] <- data.frame(
           solver = solver, start = i,
-          first_status = first_status, status = NA_integer_, accepted = FALSE, nll = NA_real_, stationarity = NA_real_,
-          reason = conditionMessage(run)
+          first_status = if (is.null(run$first_status)) NA_integer_ else run$first_status,
+          status = run$status, accepted = ok, nll = if (is.null(e)) NA_real_ else e$value,
+          stationarity = stationarity, reason = reason
         )
-        next
+        attempt_recorded <- TRUE
+        if (ok) candidates[[length(candidates) + 1L]] <- list(theta = run$theta, value = e$value)
       }
-      e <- .sem_fiml_eval(run$theta, p)
-      stationarity <- if (is.null(e)) {
-        Inf
-      } else {
-        max(abs(p$units * as.vector(solve(t(p$transport), e$gradient / p$n))))
-      }
-      ok <- isTRUE(run$ok) && stationarity <= 1e-5
-      reason <- if (ok) "" else "optimizer status or stationarity"
-      attempts[[length(attempts) + 1L]] <- data.frame(
-        solver = solver, start = i,
-        first_status = if (is.null(run$first_status)) NA_integer_ else run$first_status,
-        status = run$status, accepted = ok, nll = if (is.null(e)) NA_real_ else e$value,
-        stationarity = stationarity, reason = reason
-      )
-      if (ok) candidates[[length(candidates) + 1L]] <- list(theta = run$theta, value = e$value)
     }
-  }
+  }, error = function(error) {
+    if (!attempt_recorded) {
+      completed <- Filter(function(call) identical(call$solver, solver) && identical(call$start, i), call_log$calls)
+      status <- if (length(completed)) completed[[length(completed)]]$status else NA_integer_
+      attempts[[length(attempts) + 1L]] <- data.frame(
+        solver = solver, start = i, first_status = first_status, status = status,
+        accepted = FALSE, nll = NA_real_, stationarity = NA_real_, reason = conditionMessage(error)
+      )
+    }
+    error$attempts <- if (length(attempts)) do.call(rbind, attempts) else NULL
+    error$solver_calls <- call_log$calls
+    stop(error)
+  })
   attempts <- do.call(rbind, attempts)
   # Every post-solver rejection retains the completed attempt ledger, including
   # errors raised inside geometry, Hessian differentiation or matrix inversion.

@@ -293,3 +293,65 @@ test_that("post-solver adapter failures retain all completed solver evidence", {
   expect_equal(nrow(err$attempts), 6L)
   expect_length(err$solver_calls, 9L)
 })
+
+test_that("FIML IC comparisons inspect every class before external likelihood calls", {
+  f <- fiml_fit()
+  zero <- fiml_fit(model = "M ~ a*X\nY ~ b*M + 0*X")
+  old <- fit_sem(fiml_model, fiml_data(incomplete = FALSE), fixed_x = FALSE)
+  external <- stats::lm(Y ~ M + X, data = fiml_data(incomplete = FALSE))
+  state <- new.env(parent = emptyenv())
+  state$calls <- 0L
+  spy_loglik <- function(object, ...) {
+    state$calls <- state$calls + 1L
+    structure(-1, class = "logLik", df = 1, nobs = 240L)
+  }
+  rlang::local_bindings(logLik.fiml_external_spy = spy_loglik, .env = globalenv())
+  spy <- structure(list(), class = "fiml_external_spy")
+  changed <- fiml_fit(fiml_data()[seq_len(230L), ])
+  for (fun in list(AIC, BIC)) {
+    expect_error(fun(f, external), "FIML")
+    expect_error(fun(f, spy), "FIML")
+    expect_identical(state$calls, 0L)
+    expect_error(fun(f, old), "FIML")
+    expect_error(fun(f, changed), "identical")
+    expect_true(is.finite(fun(f)))
+    out <- fun(f, zero)
+    expect_equal(out[[2L]], c(fun(f), fun(zero)))
+    expect_true(is.finite(fun(old, external)[[2L]][1L]))
+  }
+})
+
+test_that("post-return solver evaluation faults retain completed calls and failed attempt", {
+  original_eval <- .sem_fiml_eval
+  original_solver <- .sem_solve_one
+  state <- new.env(parent = emptyenv())
+  state$completed <- list()
+  fault <- structure(list(message = "planted post-return fault", call = NULL, marker = "original"),
+                     class = c("fiml_test_postreturn", "error", "condition"))
+  testthat::local_mocked_bindings(
+    .sem_solve_one = function(...) {
+      r <- original_solver(...)
+      state$completed[[length(state$completed) + 1L]] <- r$status
+      r
+    },
+    .sem_fiml_eval = function(theta, p, derivative = TRUE) {
+      if (identical(substitute(theta), quote(run$theta))) stop(fault)
+      original_eval(theta, p, derivative)
+    },
+    .package = "medfit"
+  )
+  err <- tryCatch(fiml_fit(), error = identity)
+  expect_s3_class(err, "medfit_sem_fiml_error")
+  expect_identical(err$stage, "numerical")
+  expect_s3_class(err$parent, "fiml_test_postreturn")
+  expect_identical(err$parent$marker, "original")
+  expect_match(err$reason, "planted post-return fault")
+  expect_length(state$completed, 1L)
+  expect_length(err$solver_calls, length(state$completed))
+  expect_identical(err$solver_calls[[1L]]$status, state$completed[[1L]])
+  expect_identical(err$solver_calls[[1L]]$solver, "slsqp")
+  expect_equal(nrow(err$attempts), 1L)
+  expect_identical(err$attempts$status, state$completed[[1L]])
+  expect_false(err$attempts$accepted)
+  expect_match(err$attempts$reason, "planted post-return fault")
+})
