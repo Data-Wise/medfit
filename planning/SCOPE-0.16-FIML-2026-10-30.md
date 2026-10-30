@@ -1,7 +1,8 @@
 # 0.16 release scope: include bounded FIML
 
 Status: scope decision and release-wording synchronization completed locally on
-2026-10-30; publication and release preparation pending.
+2026-10-30; branch/dev-PR publication authorized after review; release
+preparation pending.
 The user accepted the next step after the recommendation to include bounded FIML
 in 0.16. This supersedes earlier FIML exclusions from 0.16 in historical study,
 implementation and merge records. It does not authorize a release, dev-to-main
@@ -65,9 +66,11 @@ This scope decision does not claim fresh numerical verification.
 ## Immediate next step
 
 Finish fast CI and review for coverage PR #365; merging it needs separate
-permission. Review the local scope/docs change, then authorize its publication
-before preparing a 0.16 release candidate. The scope/docs branch is local and
-unpushed; publication requires per-instance authorization.
+permission. The user authorized review followed by scope/docs branch publication
+and a PR to dev on 2026-10-30. Require passing local pre-PR checks and verify the
+published head. Then check fast hosted CI before preparing a 0.16 release
+candidate. Neither PR publication nor this scope decision authorizes merging
+or releasing; expensive CI remains deferred until release to main.
 
 ## Release-wording synchronization — 2026-10-30
 
