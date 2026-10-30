@@ -2,8 +2,8 @@
 
 **Current state:** the isolated prototype passes locally. The separately authorized
 bounded production integration is implemented at `625e7280`; corrected QA and
-pre-docs gates pass at test head `0f40b73f`. Documentation is verified locally after the authorized resume; final local gates
-remain pending. See the [active plan](../../PLAN-FIML-bounded-integration-2026-10-29.md)
+pre-docs gates pass at test head `0f40b73f`. Documentation and corrective FINAL local gates pass on `32a7b98`: 1,765 tests,
+zero failures/errors, built-package check OK and 96.20767% overall coverage. See the [completed implementation plan](../../PLAN-FIML-bounded-integration-2026-10-29.md)
 and [argument analysis](argument-design-analysis.md).
 Initial numerical implementation: `b4a50f36`; pre-repair reviewed baseline: `c7430172`.
 See the [P2 repair report](p2-repair-report.md) for current evidence and history.
@@ -37,7 +37,7 @@ Separate from 0.16. No push, release or hosted CI was performed. The worktree br
 | P2 review repairs | [Repair report](p2-repair-report.md) | Both findings resolved; 61 assertions PASS |
 | Current local acceptance | [Report](prototype-report.md) | 42/42 fits, 13/13 edges |
 | Bounded integration design | [Design](integration-design.md), [review](integration-design-review.md) | Accessor P2 resolved; static review PASS, design only |
-| Production/API implementation | [Active plan](../../PLAN-FIML-bounded-integration-2026-10-29.md) | Authorized and locally implemented; QA/pre-docs/docs PASS; final gates pending |
+| Production/API implementation | [Implementation plan](../../PLAN-FIML-bounded-integration-2026-10-29.md) | Local implementation, QA, docs and corrective FINAL PASS on 32a7b98 |
 
 Early references to pending prototype authorization describe historical stages.
 The user subsequently authorized the isolated prototype and its optimizer

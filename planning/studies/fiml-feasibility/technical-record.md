@@ -1,10 +1,11 @@
 # Bounded FIML technical record
 
-> Current integration status (2026-10-29): production integration was subsequently
+> Current integration status (2026-10-30): production integration was subsequently
 > authorized under the [bounded plan](../../PLAN-FIML-bounded-integration-2026-10-29.md).
 > Local implementation and corrective independent QA/pre-docs gates pass at `0f40b73f`
 > (numerical source `625e7280`). Documentation is verified locally after the
-> explicitly authorized resume; final gates remain pending. Earlier
+> explicitly authorized resume; corrective FINAL gates PASS on `32a7b98`
+> (1,765 tests; built-package check OK; 96.20767% overall coverage). Earlier
 > prospective wording below records its historical stage, not the current authority.
 > FIML remains separate from 0.16; no push, release or expensive CI is authorized.
 > See the [argument analysis](argument-design-analysis.md) for new/existing settings.
@@ -439,3 +440,31 @@ from zero indirect-effect delta variance. The
 [static review](integration-design-review.md) closes this finding; future
 implementation and runtime API acceptance are still unauthorized/unverified.
 No numerical evidence changed and FIML remains outside 0.16.
+
+## Bounded integration completion — 2026-10-30
+
+The separate authorized production milestone is complete locally; see the
+[completed implementation plan](../../PLAN-FIML-bounded-integration-2026-10-29.md)
+for exact acceptance evidence. Numerical source remains 625e7280. Documentation
+resume 931791a verifies explicit successful render exits and inspected outputs,
+without assigning a cause to the historical unexplained tutorial exit1.
+
+Initial FINAL exposed five maintenance assertions: omitted C2 gate registration,
+a comparison probe inferring capability from a new formal, and an unpinned
+mean-structure fixture. Corrections b2f94833 and 32a7b98 preserve article Partial,
+exercise real listwise/FIML behavior and refusal boundaries, catch two targeted
+probe defects, register the actual gate and pin the intended existing default.
+No production numerical behavior or thresholds changed.
+
+Corrective FINAL on 32a7b98: 1,765 tests/9,604 expectations, zero failures/errors,
+two skips/two documented warnings; local CRAN-tier 9,372 passes and actual built
+check Status OK with zero errors/warnings/notes. Full installed covr measures
+96.20767% overall; all identified critical FIML contract groups execute. Remaining
+defensive/legacy records and a display-only provenance line are disclosed, not
+excluded or claimed as 100% whole-file coverage. Installed-source lint and exact
+high-risk draft validation pass. The 24-row registered gate is byte-identical to
+its prior baseline. Full independent likelihood/covariance/derivative evidence
+remains applicable to unchanged numerical source.
+
+The branch/worktree are retained for local review. This is separate from 0.16;
+no push, PR, integration, release or expensive CI was performed or authorized.

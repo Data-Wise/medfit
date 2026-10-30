@@ -1,6 +1,6 @@
 # Bounded FIML integration: first adopter milestone
 
-Status: ACTIVE — docs resume and subsequent local final gates authorized 2026-10-30. Authorized 2026-10-29: implement the reviewed bounded contract and
+Status: COMPLETE LOCALLY — corrective FINAL gates PASS on 32a7b98, 2026-10-30. Authorized 2026-10-29: implement the reviewed bounded contract and
 run independent QA and local verification. This explicitly authorizes the appended
 fit_sem missing-method option under the API freeze, limited to this contract.
 Worktree: .worktrees/fiml-feasibility; branch codex/fiml-feasibility.
@@ -21,9 +21,9 @@ scripts and frozen evidence are references, not package runtime dependencies.
 - [x] Implement test-first; commit c3247be3; implementer.md PASS.
 - [x] Independent oracle QA and planted defects; qa.md PASS on 625e7280.
 - [x] Pre-docs local gates; gates-pre-docs.md corrective retry PASS on 0f40b73f.
-- [ ] Update affected help/site/technical docs; docs.md PASS.
-- [ ] Final required local gates and full suite; gates.md PASS.
-- [ ] Reconcile plan/status and commit; retain worktree for user review.
+- [x] Update affected help/site/technical docs; docs.md PASS.
+- [x] Final required local gates and full suite; gates.md PASS.
+- [x] Reconcile plan/status and commit; retain worktree for user review.
 
 ### Acceptance
 
@@ -99,7 +99,7 @@ preserved as qa-initial-fail.md. Corrective implementation 625e7280 passes
 post-solver faults retain exact calls/statuses/parent evidence; valid IC controls,
 24 registered gate checks and pre-feature baselines pass. No numerical limits changed.
 
-Remaining stages pending. Record tested source revisions, exact counts, numerical tolerances,
+Intermediate-stage evidence follows. Record tested source revisions, exact counts, numerical tolerances,
 planted defects, lint/check warnings/skips, applicability of unchanged numerical
 gates and any deferred requirements. Implementation readiness is not release
 readiness or permission to submit externally.
@@ -163,3 +163,34 @@ The user approved resuming the stopped documentation stage and subsequent requir
 local final checks. Retain the prior FAIL report/logs, resolve the render exit and
 two remaining scope statements, then require docs PASS before FINAL gates. All
 existing scope and submission/CI holds remain. No new model or inference support.
+
+## Final local completion — 2026-10-30
+
+Documentation resume 931791a clears the render blocker with fresh explicit exits0
+and inspected HTML; no root cause is invented for the historical exit1. Initial
+FINAL failed five assertions in three maintenance groups, preserved in
+gates-final-initial-fail.md. Corrective b2f94833 replaces a missing-formal capability
+shortcut with behavioral retention/likelihood/covariance/refusal probes and
+registers fiml in C2; 32a7b98 explicitly pins meanstructure in the numerical fixture.
+No production numerical behavior, defaults, tolerance or coverage exclusions changed.
+
+The one corrective FINAL retry passes on tested source 32a7b98:
+
+- Ordinary suite: 171 files, 1,765 tests, 9,604 expectations; 9,600 passed,
+  zero failures/errors, two skips and two documented warnings; 212.183 seconds.
+- Local CRAN tier: 9,372 passes, zero failures, 37 skips, two warnings; 147 seconds.
+  Actual built-tarball check: Status OK, zero errors/warnings/notes; 45 seconds.
+- Full installed covr: 96.20767% overall; 8,655 passes, zero failures,
+  126 skips, two warnings; 288.437 seconds. All identified critical FIML
+  validation, extraction, acceptance and early-bootstrap-guard groups execute.
+  Defensive/legacy records and a display-only provenance line remain disclosed;
+  no blanket 100% whole-file/branch claim.
+- Fresh installed unloaded-source lint: zero findings. Exact high-risk draft
+  checklist has no missing items. Registered FIML gate: 24 rows/six driver checks
+  pass, output byte-identical to the prior baseline. Independent QA remains
+  applicable to unchanged numerical source 625e7280.
+
+Closing edits reconcile status, the active pointer and study overlays/manifest only;
+32a7b98 remains the tested runtime/test tree. Retain the branch and worktree for
+user review. Local completion is not release or external-submission readiness:
+FIML stays separate from 0.16, with no push, PR, merge, release or expensive CI.
