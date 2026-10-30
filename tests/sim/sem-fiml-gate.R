@@ -3,9 +3,10 @@
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/testthat/helper-sem.R")
 ns <- asNamespace("medfit")
+mutate <- get("sem_mutate")
 mutant <- Sys.getenv("MUTANT", "")
 swap <- function(name, pattern, replacement) {
-  fn <- sem_mutate(get(name, ns), pattern, replacement)
+  fn <- mutate(get(name, ns), pattern, replacement)
   if (bindingIsLocked(name, ns)) unlockBinding(name, ns)
   assign(name, fn, envir = ns)
 }
