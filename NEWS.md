@@ -2,6 +2,11 @@
 
 ## Added
 
+* Bounded FIML regression tests add observed-X MAR, combined-pattern/empty-row,
+  joint-affine and near-singular fixtures for both direct-path parameterizations.
+  They strengthen exact rank-refusal, parameter-naming and numerical-receipt checks;
+  this adds validation evidence without changing FIML support or acceptance limits.
+
 * Bounded FIML integration, planned for unreleased 0.16, adds exact `missing = "fiml"` opt-in to
   `fit_sem()` and native `fit_mediation()` engine arguments, preserving listwise defaults
   and positional calls. It retains partially observed rows for three-variable Gaussian
@@ -20,8 +25,8 @@
 ## Fixed
 
 * Coverage skips changes limited to named repository metadata and planning Markdown
-  on dev pushes/PRs. Code/test changes and main pushes retain coverage; uncertain
-  scope runs coverage conservatively. Release and OpenBLAS checks are unchanged.
+  on development-branch pushes and pull requests. Code/test changes and main pushes
+  retain coverage; uncertain scope runs coverage conservatively. Release and OpenBLAS checks are unchanged.
 
 * Source archives retain the nonlinear covariance gate used by the package tests.
 

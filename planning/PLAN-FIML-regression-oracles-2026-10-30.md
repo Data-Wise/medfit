@@ -1,6 +1,6 @@
 # Bounded FIML regression-oracle milestone
 
-Status: T1 repair PASS; T2 re-QA pending after stopped FAIL; local gates pending. Date: 2026-10-30.
+Status: T1 repair, T2 re-QA and pre-docs gates PASS; docs PASS; final gates pending. Date: 2026-10-30.
 Branch: codex/fiml-regression-oracles. Base: origin/dev c4b76fb5, plus the
 reviewed local planning commits. No push, PR, merge, release or expensive CI.
 
@@ -42,11 +42,11 @@ Tests do not prove MAR, confidence-interval coverage or global optimality.
 
 ## T2: Independent oracle QA
 
-- [ ] Independently verify likelihood algebra, parameter/covariance transport,
+- [x] Independently verify likelihood algebra, parameter/covariance transport,
   rank/refusal and all-row results; compare numeric neutrality to origin/dev.
-- [ ] Plant discriminating defects and demonstrate detection. Keep independent
+- [x] Plant discriminating defects and demonstrate detection. Keep independent
   oracle construction separate from production helpers being checked.
-- [ ] Record qa.md with exactly one final Verdict: PASS or Verdict: FAIL.
+- [x] Record qa.md with exactly one final Verdict: PASS or Verdict: FAIL.
 
 ## T3: Local verification and records
 
@@ -138,3 +138,21 @@ field is unchanged. Fixtures, manifest identities, limits and derivative code
 are unchanged, so the earlier twelve-probe calibration was reused. Prior reports
 and receipts remain archived. The QA-owned probe is untouched; independent
 re-QA and local gates remain pending. No production edits or external action.
+
+## T2 re-QA and pre-docs reconciliation — 2026-10-30
+
+Independent re-QA at `f23b69d5` passed, superseding the stopped T2 verdict
+above while preserving it and its logs. Fresh parameter/schema defects and all
+ten model-covariance spectra passed; completed earlier numerical probes were
+explicitly reused. Four real production mutations and two validator mutations
+were detected in memory. No production source changed.
+
+Pre-docs gates passed 117 tests/1245 assertions, zero failures/errors/warnings,
+one documented help-availability skip, 24/24 FIML simulation rows and zero lints.
+Exact-source ten-cell implementation evidence was reused (10 tests/132 passed
+assertions, two expected warnings). NEWS and the manifest post-run section now
+record the test-only evidence. Docs checks passed: 85 tests/849 assertions, one
+help-availability skip, no failures/errors/warnings; spelling passed after expanding
+two existing NEWS abbreviations on the one retry. No Quarto article changed, so
+rendering is inapplicable. The final full suite and final T3 completion remain
+pending. No push, PR, merge or hosted CI.
