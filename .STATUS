@@ -1,3 +1,9 @@
+# Coverage scope review and planning reconciliation — 2026-10-30
+# Local review PASS at 23080bcb; four scope/release mutants caught. User authorized branch push; PR/merge not yet authorized. See planning/NOTE-coverage-scope-2026-10-30.md.
+# FIML bounded milestone is complete and merged into dev; planning summaries reconciled. It remains unreleased/excluded from 0.16; broader support and expensive release gates are deferred.
+# Coverage metadata scope verified locally — 2026-10-30
+# Skip R coverage only for .STATUS, CLAUDE.md, AGENTS.md and planning Markdown on dev pushes/PRs. Main pushes, code/tests, unknown paths and uncertain scope retain coverage.
+# Python regression suite 5/5; workflow testthat 31 expectations PASS; actionlint and R lint clean. Release/OpenBLAS workflows unchanged; no push or hosted CI run.
 # Bounded FIML merged and cleanup verified — 2026-10-30
 # PR #364 squash a894e45e after all five live fast checks passed at 7cd8c07e; reviewed and merged trees identical.
 # Post-merge coverage 41093099169 PASS: 8626 passes, 0 failures, 3 known warnings, 138 skips; Codecov processing complete, 96.62% hosted overall / 98.48% patch.

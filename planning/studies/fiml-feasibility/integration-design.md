@@ -1,18 +1,16 @@
 # Bounded FIML integration design
 
-> Current integration status (2026-10-30): production integration was subsequently
-> authorized under the [bounded plan](../../PLAN-FIML-bounded-integration-2026-10-29.md).
-> Local implementation and corrective independent QA/pre-docs gates pass at `0f40b73f`
-> (numerical source `625e7280`). Documentation is verified locally after the
-> explicitly authorized resume; corrective FINAL gates PASS on `32a7b98`
-> (1,765 tests; built-package check OK; 96.20767% overall coverage). Earlier
-> prospective wording below records its historical stage, not the current authority.
-> FIML remains separate from 0.16; no push, release or expensive CI is authorized.
-> See the [argument analysis](argument-design-analysis.md) for new/existing settings.
+> Current integration status (2026-10-30): the bounded contract is implemented
+> and merged into `dev` through PR #364 (`a894e45e`). Independent QA, docs, local
+> final gates and post-merge fast coverage/Codecov passed; branch/worktree cleanup
+> is complete. See the [completed plan](../../PLAN-FIML-bounded-integration-2026-10-29.md).
+> FIML remains unreleased and excluded from 0.16; expensive CI is deferred until
+> release to `main`. The prospective wording below preserves the original design
+> record; it does not override the completed plan or authorize further work.
+> See the [argument analysis](argument-design-analysis.md) for setting decisions.
 
-Date: 2026-10-29. Status: proposed contract for review; design work authorized,
-production implementation not authorized. Separate from 0.16, with no release
-assignment. No production changes, push, or expensive CI.
+Date of original design: 2026-10-29. Status: reviewed bounded contract implemented;
+no release assignment. Broader models and downstream inference remain deferred.
 
 Numerical baseline: `dee83cae`. The bounded prototype passes 42 fits, 13 edges,
 126 derivative points and 126 likelihood identities; its P2 regressions pass
@@ -41,7 +39,9 @@ likelihood provenance must survive to the supported effect calculations.
 
 ## 2. Proposed opt-in API and preserved defaults
 
-**Design examples only: these calls are not supported by the current package.**
+**Original design examples:** the bounded calls below are now implemented on
+`dev`; the package has not been released with FIML. The completed plan records
+acceptance evidence and exact support/refusal boundaries.
 
 ```r
 fit <- fit_sem(

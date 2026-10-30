@@ -61,3 +61,42 @@ test_that("monthly QC propagates PR gate failures after uploading artifacts", {
     if (outcome == "success") expect_null(status) else expect_identical(status, 1L)
   }
 })
+
+test_that("coverage skips only an explicit metadata decision and preserves release triggers", {
+  f <- wf_path("workflows", "test-coverage.yaml")
+  skip_if_not(file.exists(f), "no .github directory (installed package)")
+  skip_if_not_installed("yaml")
+  workflow <- yaml::read_yaml(f)
+  # YAML 1.1 readers can interpret the unquoted GitHub 'on' key as TRUE.
+  triggers <- workflow[[if ("on" %in% names(workflow)) "on" else "TRUE"]]
+  expect_setequal(triggers$push$branches, c("main", "dev"))
+  expect_identical(triggers$pull_request$branches, "dev")
+  expect_null(triggers$push$paths)
+  expect_null(triggers$push$`paths-ignore`)
+  expect_null(triggers$pull_request$paths)
+  expect_null(triggers$pull_request$`paths-ignore`)
+  scope <- workflow$jobs$`coverage-scope`
+  expect_identical(scope$outputs$run_coverage, "${{ steps.scope.outputs.run_coverage }}")
+  expect_identical(scope$steps[[1]]$with$`fetch-depth`, 0L)
+  expect_identical(scope$steps[[2]]$run,
+                   "python3 -m unittest discover -s .github/scripts -p test_coverage_scope.py")
+  expect_identical(scope$steps[[3]]$id, "scope")
+  expect_identical(scope$steps[[3]]$run, "python3 .github/scripts/coverage_scope.py")
+  coverage <- workflow$jobs$`test-coverage`
+  expect_identical(coverage$needs, "coverage-scope")
+  expect_identical(coverage$`if`, paste0(
+    "${{ !cancelled() && (needs.coverage-scope.result != 'success' || ",
+    "needs.coverage-scope.outputs.run_coverage != 'false') }}"
+  ))
+})
+
+test_that("coverage scope regression scenarios pass in a checkout", {
+  scripts <- wf_path("scripts")
+  skip_if_not(file.exists(file.path(scripts, "test_coverage_scope.py")), "no workflow scripts")
+  python <- Sys.which("python3")
+  skip_if_not(nzchar(python), "python3 unavailable")
+  result <- suppressWarnings(system2(python, c(
+    "-m", "unittest", "discover", "-s", shQuote(scripts), "-p", "test_coverage_scope.py"
+  ), stdout = TRUE, stderr = TRUE))
+  expect_null(attr(result, "status"), info = paste(result, collapse = "\n"))
+})

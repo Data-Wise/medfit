@@ -16,7 +16,26 @@ concurrency:
 permissions: read-all
 
 jobs:
+  coverage-scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run_coverage: ${{ steps.scope.outputs.run_coverage }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Verify coverage scope rules
+        run: python3 -m unittest discover -s .github/scripts -p test_coverage_scope.py
+      - name: Decide coverage scope
+        id: scope
+        run: python3 .github/scripts/coverage_scope.py
+
   test-coverage:
+    needs: coverage-scope
+    # Only an explicit metadata-only decision skips coverage; errors run it.
+    # Keep a job result rather than filtering out the entire workflow.
+    if: ${{ !cancelled() && (needs.coverage-scope.result != 'success' || needs.coverage-scope.outputs.run_coverage != 'false') }}
     runs-on: ubuntu-latest
     # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default.
     timeout-minutes: 30
