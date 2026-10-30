@@ -1,6 +1,6 @@
 # Issue #360: active residual-variance boundary regression
 
-Status: ACTIVE, locally authorized 2026-10-29. Base: origin/dev 06a69005abca601fbbb98f7e95387fa11cc1f3c9.
+Status: COMPLETE LOCALLY, verified 2026-10-29; retained for review, not submitted. Base: origin/dev 06a69005abca601fbbb98f7e95387fa11cc1f3c9.
 Source: https://github.com/Data-Wise/medfit/issues/360.
 Worktree: .worktrees/issue-360-boundary-regression; branch feature/issue-360-boundary-regression.
 
@@ -10,10 +10,10 @@ Add a small deterministic regression for a fixed-measurement latent mediation mo
 
 ## Task B1: regression and independent numerical validation
 
-- [ ] Implement deterministic regression and commit; implementer.md PASS.
-- [ ] Independent oracle QA, planted defects and boundary controls; qa.md PASS.
-- [ ] Required final local gates, full suite, lint and package check; gates.md PASS.
-- [ ] Reconcile local plan/status and commit; retain clean feature worktree for review.
+- [x] Implement deterministic regression and commit; implementer.md PASS.
+- [x] Independent oracle QA, planted defects and boundary controls; qa.md PASS.
+- [x] Required final local gates, full suite, lint and package check; gates.md PASS.
+- [x] Reconcile local plan/status and commit; retain clean feature worktree for review.
 
 ### Acceptance criteria
 
@@ -33,3 +33,13 @@ Implementer owns tests/testthat/test-sem-boundary-oracle.R (or one narrowly just
 Follow medfit-orchestrator sequentially: implementer -> independent oracle QA -> gates(final) when docs unchanged; use pre-docs -> docs -> final gates only if a user-visible docs change is needed. Read each role contract in full and include it in the stage prompt. Reports in _agents_workspace/issue-360/{implementer,qa,gates}.md must end exactly Verdict: PASS or Verdict: FAIL. At most one corrective retry per failed stage; preserve first failure evidence. Send QA findings as one batch. Do not weaken assertions or silently waive failures.
 
 Focused test execution and loaded lint are required at implementation. QA uses a mathematically independent oracle, full parameter names/counts, active/inactive boundary controls and planted defects. Final gates run relevant focused/registration/docs-consistency tests, one ordinary full suite on the final tree, loaded package lint and scripts/check-local.sh/built package check. Risk tier comes from the actual diff; test-only changes do not invent a new high-risk numerical implementation. Existing constraint/Jacobian/Hessian, all-row acceptance, zero-product/restart and tests/sim evidence must be assessed for relevance: do not rerun expensive unchanged grids without a changed path or new concern. Verify source-archive inclusion of new helpers/fixtures. Record exact test counts, timing, warnings/skips and independent oracle limits in gate/QA reports. No hosted CI dispatch.
+
+## Local completion evidence
+
+Tested source: 17663eaf (implementation c5cd56bb; QA comment clarification 17663eaf). Implementation, independent oracle QA and final gates reports all PASS in _agents_workspace/issue-360/. Six native fits agree with independently optimized full observed-data likelihood: maximum coordinate error 3.51e-7, loss error 2.66e-13; three reorder checks pass. Candidate and wrong-likelihood mutations produce 22 and 25 failures. New regression: 69 passing expectations, under one second; installed-archive regression also 69/69.
+
+Final ordinary suite: 1743 tests, 9276 expectations, 9272 passed, zero failures/errors, two existing warnings and two skips. Loaded lint: zero findings. Focused/registration/docs checks: 33 tests, 481 expectations, zero failures/errors/warnings, one expected skip. scripts/check-local.sh: 9044 passes, zero failures, two warnings, 37 skips; built package check Status: OK. Self-contained test is byte-identical in built source archive. No production R/ changes or new supported structure; no docs stage or unchanged expensive simulation-grid rerun needed.
+
+Initial full suite had three semopy failures caused by denied uv cache-lock writes; reproduced on exact base dev. Initial report and logs retained. Single corrective retry used writable task-local UV_CACHE_DIR and unchanged source/assertions; focused semopy and full suite passed. No waiver or tolerance relaxation.
+
+This reconciliation changes metadata only after tested source. Feature worktree retained for review. No push, PR, merge, release or deployment performed; expensive hosted CI remains deferred until release into main.

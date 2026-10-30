@@ -1,6 +1,8 @@
-# Issue #360 active — 2026-10-29
-# Author authorized a small fixed-measurement active-boundary regression, independent oracle QA and local gates.
-# Worktree issue-360-boundary-regression from current origin/dev 06a69005. No push/PR/release or expensive hosted CI.
+# Issue #360 locally complete — 2026-10-29
+# Tested17663eaf: self-contained active/interior latent-boundary regression; independent full-likelihood QA PASS, six fit cells; candidate/loss mutants caught.
+# Final suite1743tests/9276expectations,0failures/errors,2existingwarnings/2skips; lint0; installed-archive69/69; check-local built check Status OK.
+# Initial semopy cache-permission failures reproduced on base dev; one environment-only UV_CACHE_DIR retry PASS, evidence retained.
+# Plan complete locally; feature/issue-360-boundary-regression and worktree retained for review. No push/PR/merge/release/deployment; expensive hosted CI deferred until main release.
 # R compatibility fixes merged into dev — 2026-10-29
 # medfit #362 (0754d6f), RMediation #87, medrobust #59, missingmed #114 and probmed #66 merged; no release.
 # Medfit PR lint, risk-tier, pkgdown, coverage and Codecov passed. Earlier four-version archive suites passed with R 4.1 warnings/notes.
