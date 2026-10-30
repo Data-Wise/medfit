@@ -1,6 +1,6 @@
 # Bounded FIML regression-oracle milestone
 
-Status: implementation stage stopped after failed retry; T1 incomplete. Date: 2026-10-30.
+Status: T1 implementation PASS; independent QA and local gates pending. Date: 2026-10-30.
 Branch: codex/fiml-regression-oracles. Base: origin/dev c4b76fb5, plus the
 reviewed local planning commits. No push, PR, merge, release or expensive CI.
 
@@ -19,18 +19,18 @@ scope; never weaken a tolerance or bypass an acceptance gate.
 - [x] Commit a fixture manifest before candidate fits: deterministic input
   identity, roles/model, rows/pattern counts, independent expected rank and
   conditioning, parameter mappings, transformations, refusal reason and limits.
-- [ ] Preserve the pair-only no-complete-row oracle gate and existing singleton,
+- [x] Preserve the pair-only no-complete-row oracle gate and existing singleton,
   route-equivalence, no-RNG, zero-origin and evidence-ledger checks.
-- [ ] Add only missing observed-X MAR, all-seven-patterns plus empty-row,
+- [x] Add only missing observed-X MAR, all-seven-patterns plus empty-row,
   joint-affine and genuinely near-singular estimable fixtures; cover free/zero
   direct paths where parameterization differs.
-- [ ] Strengthen the existing actual no-overlap refusal with independently
+- [x] Strengthen the existing actual no-overlap refusal with independently
   deficient rank, exact numerical stage/reason, and genuine retained attempts.
-- [ ] Compare production and independent row-wise Gaussian likelihoods at
+- [x] Compare production and independent row-wise Gaussian likelihoods at
   declared common parameters and fitted optima. Match lavaan random-X means,
   observed information and full covariance; affine back-transport includes
   intercepts, covariance and likelihood Jacobian.
-- [ ] Preserve limits: absolute coefficient error 1e-5, standardized full
+- [x] Preserve limits: absolute coefficient error 1e-5, standardized full
   covariance error 1e-3, absolute NLL error 1e-7. Report all cases and independent
   normalized information/observable-moment spectra; production gate remains
   1e-4. Do not relax limits after inspecting outcomes.
@@ -80,3 +80,25 @@ numDeriv test dependency is also undeclared. Stop here; repair the evidence path
 and replace derivatives with a base-R independent helper under renewed harness
 repair authorization before another candidate run. Independent QA and gates have
 not started. Detailed logs/report are in the ignored task workspace.
+
+## Authorized harness repair and renewed implementation — 2026-10-30
+
+The earlier FAIL checkpoint remains archived in the task workspace. Under renewed
+user authorization, all direct numDeriv usage was replaced with test-only base-R
+central differences and four Richardson levels. Fixed zero-centered steps .01
+and .005 were calibrated before renewed candidate fits against independently
+transported lavaan observed information: 12 probes across MAR/patterns/near,
+free/zero, maximum relative discrepancy 5.43706e-6. Inputs, manifest identities
+and numerical limits remain unchanged. Affine references share MAR base data.
+
+The renewed first candidate run passed: 10 tests, 116 successful expectations,
+0 failed, 0 errors, 0 skips, 2 expected lavaan empty-row warnings. An absolute
+CSV destination now records all ten cells; relative destinations are explicitly
+rejected. Exact errors and normalized spectral extrema are retained in
+`fixtures/fiml-regression-results-2026-10-30.csv`; calibration receipts are in
+`fixtures/fiml-regression-derivative-calibration-2026-10-30.csv`.
+Fast harness: 3 tests/10 expectations PASS, including four planted-corruption
+checks. Existing pair-only, singleton, route, RNG and provenance tests and the
+bounded simulation gate were preserved unchanged; their reruns remain part of
+local gates. Independent QA, numerical-neutrality review and local gates have
+not started. No production change, push, PR, merge or hosted CI.

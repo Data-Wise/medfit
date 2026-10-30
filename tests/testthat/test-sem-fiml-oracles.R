@@ -5,7 +5,6 @@ for (fo_direct in c(TRUE, FALSE)) {
   for (fo_kind in c("mar", "patterns", "affine", "near", "unidentified")) {
     test_that(paste("FIML independent regression", fo_kind, if (fo_direct) "free" else "zero"), {
       skip_if_not_installed("lavaan")
-      skip_if_not_installed("numDeriv")
       d <- fo_fixture(fo_kind, fo_direct)
       q0 <- fo_truth(fo_kind, fo_direct)
       p <- .sem_fiml_prepare(as.matrix(d), direct = fo_direct)
@@ -26,15 +25,19 @@ for (fo_direct in c(TRUE, FALSE)) {
         expect_equal(nrow(fit$attempts), 6L)
         expect_true(all(is.finite(fit$attempts$status)))
         expect_length(fit$solver_calls, 9L)
-        fo_records$rows[[cell]] <- data.frame(cell, outcome = fit$reason,
-          coefficient = NA_real_, covariance = NA_real_, nll = NA_real_, fixed_nll = abs(actual_fixed - fo_nll(d, q0)),
-          geometry_min = min(g0), geometry_max = max(g0), information_min = NA_real_, information_max = NA_real_)
+        fo_records$rows[[cell]] <- data.frame(
+          cell, outcome = fit$reason, coefficient = NA_real_, covariance = NA_real_, nll = NA_real_,
+          fixed_nll = abs(actual_fixed - fo_nll(d, q0)),
+          geometry_min = min(g0), geometry_max = max(g0), information_min = NA_real_, information_max = NA_real_
+        )
       } else {
         expect_false(inherits(fit, "error"), info = if (inherits(fit, "error")) conditionMessage(fit) else cell)
         if (inherits(fit, "error")) {
-          fo_records$rows[[cell]] <- data.frame(cell, outcome = conditionMessage(fit), coefficient = NA_real_,
-            covariance = NA_real_, nll = NA_real_, fixed_nll = abs(actual_fixed - fo_nll(d, q0)),
-            geometry_min = min(g0), geometry_max = max(g0), information_min = NA_real_, information_max = NA_real_)
+          fo_records$rows[[cell]] <- data.frame(
+            cell, outcome = conditionMessage(fit), coefficient = NA_real_, covariance = NA_real_, nll = NA_real_,
+            fixed_nll = abs(actual_fixed - fo_nll(d, q0)),
+            geometry_min = min(g0), geometry_max = max(g0), information_min = NA_real_, information_max = NA_real_
+          )
         } else {
           ref_data <- if (fo_kind == "affine") fo_fixture("mar", fo_direct) else d
           ref <- lavaan::sem(fo_model(fo_direct), ref_data, missing = "ml", fixed.x = FALSE,
@@ -50,9 +53,9 @@ for (fo_direct in c(TRUE, FALSE)) {
             offset <- sum(colSums(!is.na(d)) * log(c(3, .5, 2)))
           }
           ref_q <- lavaan::coef(ref)[names(q)]
-          ref_V <- lavaan::vcov(ref)[names(q), names(q)]
+          ref_v <- lavaan::vcov(ref)[names(q), names(q)]
           coefficient <- max(abs(q - ref_q))
-          covariance <- max(abs(V - ref_V) / sqrt(outer(diag(ref_V), diag(ref_V))))
+          covariance <- max(abs(V - ref_v) / sqrt(outer(diag(ref_v), diag(ref_v))))
           nll <- abs(fo_nll(d, coef(fit)) + as.numeric(logLik(fit)))
           expect_lt(coefficient, 1e-5)
           expect_lt(covariance, 1e-3)
@@ -72,27 +75,23 @@ for (fo_direct in c(TRUE, FALSE)) {
           rz <- as.data.frame(sweep(sweep(as.matrix(ref_data), 2, ref_center), 2, ref_scale, `/`))
           rqs <- fo_affine(ref_q, 1 / ref_scale, -ref_center / ref_scale)
           G <- fo_spectrum(fo_geometry(rz, rqs))
-          # Absolute intercept steps avoid cancellation near zero; variances use relative positive steps.
-          units <- pmax(abs(rqs), 1)
-          units[c("X~~X", "M~~M", "Y~~Y")] <- rqs[c("X~~X", "M~~M", "Y~~Y")] / 10
-          independent <- function(delta) fo_nll(rz, rqs + units * delta)
-          H <- numDeriv::hessian(independent, rep(0, length(rqs)),
-                                method.args = list(eps = .01, r = 4)) / outer(units, units)
-          H2 <- numDeriv::hessian(independent, rep(0, length(rqs)),
-                                 method.args = list(eps = .005, r = 4)) / outer(units, units)
+          H <- fo_hessian(function(q) fo_nll(rz, q), rqs, .01)
+          H2 <- fo_hessian(function(q) fo_nll(rz, q), rqs, .005)
           expect_lt(max(abs(H - H2) / sqrt(outer(diag(H), diag(H)))), 1e-3)
           information <- fo_spectrum(H)
           expect_gt(min(G), 1e-4)
           expect_gt(min(information), 1e-4)
           if (fo_kind == "near") expect_lt(min(fo_spectrum(fo_moments(ref_q)$sigma)), .01)
-          fo_records$rows[[cell]] <- data.frame(cell, outcome = "fit", coefficient, covariance, nll,
+          fo_records$rows[[cell]] <- data.frame(
+            cell, outcome = "fit", coefficient, covariance, nll,
             fixed_nll = abs(actual_fixed - fo_nll(d, q0)), geometry_min = min(G), geometry_max = max(G),
-            information_min = min(information), information_max = max(information))
+            information_min = min(information), information_max = max(information)
+          )
         }
       }
     })
   }
 }
 if (nzchar(Sys.getenv("FIML_ORACLE_RESULTS"))) {
-  utils::write.csv(do.call(rbind, fo_records$rows), Sys.getenv("FIML_ORACLE_RESULTS"), row.names = FALSE)
+  fo_write_records(do.call(rbind, fo_records$rows), Sys.getenv("FIML_ORACLE_RESULTS"))
 }

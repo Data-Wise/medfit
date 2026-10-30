@@ -21,9 +21,11 @@ fo_fixture <- function(kind, direct) {
   } else if (kind == "unidentified") {
     d[1:150, "Y"] <- NA_real_
     d[151:300, c("X", "M")] <- NA_real_
-  } else stop("unknown fixture")
+  } else {
+    stop("unknown fixture")
+  }
   if (kind == "affine") d <- as.data.frame(sweep(sweep(as.matrix(d), 2, c(3, .5, 2), `*`),
-                                               2, c(2, -3, 4), `+`))
+                                                 2, c(2, -3, 4), `+`))
   d
 }
 fo_affine <- function(q, scale, shift) {
@@ -54,7 +56,50 @@ fo_nll <- function(d, q) {
     .5 * (length(j) * log(2 * pi) + 2 * sum(log(diag(U))) + sum(z^2))
   }, numeric(1)))
 }
-fo_jacobian <- function(fun, q) numDeriv::jacobian(function(x) fun(stats::setNames(x, names(q))), q)
+# Central differences with four Richardson levels; independent of production derivatives.
+fo_richardson <- function(values) {
+  for (order in seq_len(length(values) - 1L)) {
+    values <- lapply(seq_len(length(values) - 1L), function(i) {
+      (4^order * values[[i + 1L]] - values[[i]]) / (4^order - 1)
+    })
+  }
+  values[[1L]]
+}
+fo_jacobian <- function(fun, q) {
+  columns <- lapply(seq_along(q), function(j) {
+    fo_richardson(lapply(.01 / 2^(0:3), function(h) {
+      step <- q * 0
+      step[j] <- h * max(1, abs(q[j]))
+      (fun(q + step) - fun(q - step)) / (2 * step[j])
+    }))
+  })
+  do.call(cbind, columns)
+}
+fo_hessian <- function(fun, q, h) {
+  units <- pmax(abs(q), 1)
+  variances <- intersect(c("X~~X", "M~~M", "Y~~Y"), names(q))
+  units[variances] <- q[variances] / 10
+  f0 <- fun(q)
+  fo_richardson(lapply(h / 2^(0:3), function(delta) {
+    H <- matrix(0, length(q), length(q))
+    for (j in seq_along(q)) {
+      ej <- q * 0
+      ej[j] <- units[j] * delta
+      H[j, j] <- (fun(q + ej) - 2 * f0 + fun(q - ej)) / ej[j]^2
+      if (j > 1L) for (k in seq_len(j - 1L)) {
+        ek <- q * 0
+        ek[k] <- units[k] * delta
+        H[j, k] <- H[k, j] <- (fun(q + ej + ek) - fun(q + ej - ek) -
+                                 fun(q - ej + ek) + fun(q - ej - ek)) / (4 * ej[j] * ek[k])
+      }
+    }
+    H
+  }))
+}
+fo_write_records <- function(records, path) {
+  if (!grepl("^/", path)) stop("FIML_ORACLE_RESULTS must be an absolute path")
+  utils::write.csv(records, path, row.names = FALSE)
+}
 fo_geometry <- function(d, q) {
   moments <- fo_moments(q)
   dm <- fo_jacobian(function(x) fo_moments(x)$mu, q)
@@ -67,7 +112,7 @@ fo_geometry <- function(d, q) {
     W <- solve(moments$sigma[j, j, drop = FALSE])
     D <- ds[as.vector(outer(j, (j - 1L) * 3L, `+`)), , drop = FALSE]
     G <- G + length(ids) * (crossprod(dm[j, , drop = FALSE], W %*% dm[j, , drop = FALSE]) +
-      crossprod(D, kronecker(W, W) %*% D) / 2)
+                              crossprod(D, kronecker(W, W) %*% D) / 2)
   }
   G
 }
