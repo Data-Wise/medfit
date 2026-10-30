@@ -1,6 +1,6 @@
 # Bounded FIML integration: first adopter milestone
 
-Status: ACTIVE. Authorized 2026-10-29: implement the reviewed bounded contract and
+Status: ACTIVE — docs stage stopped; explicit resume needed after failed retry. Authorized 2026-10-29: implement the reviewed bounded contract and
 run independent QA and local verification. This explicitly authorizes the appended
 fit_sem missing-method option under the API freeze, limited to this contract.
 Worktree: .worktrees/fiml-feasibility; branch codex/fiml-feasibility.
@@ -140,3 +140,19 @@ Requested argument brainstorming is recorded in
 [the API analysis](studies/fiml-feasibility/argument-design-analysis.md), committed 86fb36f.
 It explains statistical choices versus initial validated-protocol restrictions;
 it does not authorize extra engines, model structures or optimizer controls.
+
+## Documentation stop — 2026-10-30
+
+Scoped docs commit b37f878 updates help, site sources and study technical records
+without runtime changes. Docs consistency passes 86 tests/620 expectations; spelling,
+roxygen-file lint, markup and whitespace checks pass. All six corrective HTML outputs
+were visually inspected. The native-tutorial corrective process nevertheless exited
+1 without an explained error, so docs.md ends Verdict: FAIL. The initial cache-access
+failure and corrective logs are retained. No third render or final gate was run.
+
+Final inventory also identifies general-listwise claims in native-guide.qmd line201
+and models.qmd line80 that still need bounded-scope qualification. Resume requires
+explicit authorization under the orchestrator failed-stage/retry rule; then repair
+those claims, explain/resolve the render exit, verify docs and run FINAL gates.
+Full suite, package check and overall coverage are pending, not waived. Keep the
+active plan and worktree for review. No external submission or expensive CI.

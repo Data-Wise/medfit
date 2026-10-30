@@ -1,3 +1,5 @@
+# Bounded FIML docs stage stopped after corrective retry — 2026-10-30
+# Docs b37f878: 86 tests/620 expectations, spelling/lint PASS; all 6 HTML outputs inspected, but native-tutorial render exit1 unexplained. Two listwise claims remain. Final gates not started; active plan retained. Separate from 0.16; no push or expensive CI.
 # Bounded FIML pre-docs corrective gates PASS — 2026-10-29
 # Test-only 0f40b73f closes all 8 identified critical rejection groups; independent QA 20/312 and gate retry 113/985 pass. Documentation in progress; final full suite/package check/overall coverage pending. Separate from 0.16; no push or expensive CI.
 # Bounded FIML corrective independent QA PASS — 2026-10-29
