@@ -1,6 +1,6 @@
 # Bounded FIML regression-oracle milestone
 
-Status: T1 repair, T2 re-QA and pre-docs gates PASS; docs PASS; final gates pending. Date: 2026-10-30.
+Status: T1 repair, T2 re-QA, pre-docs, docs and final local gates PASS. Date: 2026-10-30.
 Branch: codex/fiml-regression-oracles. Base: origin/dev c4b76fb5, plus the
 reviewed local planning commits. No push, PR, merge, release or expensive CI.
 
@@ -50,13 +50,13 @@ Tests do not prove MAR, confidence-interval coverage or global optimality.
 
 ## T3: Local verification and records
 
-- [ ] Run required risk/checklist, focused tests/simulation gates, lint and
+- [x] Run required risk/checklist, focused tests/simulation gates, lint and
   documentation-consistency checks, then one full suite on the final tree.
   Required numerical gates remain binding; no hosted or expensive CI.
-- [ ] Update NEWS and technical testing notes to describe the added evidence
+- [x] Update NEWS and technical testing notes to describe the added evidence
   without broadening support. Run docs stage if these changes are made, followed
   by final gates. Reconcile this plan and .STATUS with actual results.
-- [ ] Commit scoped changes and stop locally for review; no external submission.
+- [x] Commit scoped changes and stop locally for review; no external submission.
 
 ## Pipeline and failure handling
 
@@ -156,3 +156,33 @@ help-availability skip, no failures/errors/warnings; spelling passed after expan
 two existing NEWS abbreviations on the one retry. No Quarto article changed, so
 rendering is inapplicable. The final full suite and final T3 completion remain
 pending. No push, PR, merge or hosted CI.
+
+## T3 final local verification — 2026-10-30
+
+Final executable/docs tree `3ece5eb7` passed the full suite on the single allowed
+retry: 1782 tests, 9783 testthat conditions, 9777 passed assertions, zero
+failures/errors, two skips and four warnings. All 35 FIML tests passed 475
+assertions with two intentional empty-row warnings. Docs/registry checks in the
+full suite passed 92 tests/902 assertions with one help-availability skip.
+
+The first full run failed three assertions in the existing semopy live-run test:
+uv could not create its cache-lock tempfile under the filesystem sandbox. The
+same three failures reproduced on dev `3a23cbd7`; focused semopy passed 14 tests/
+73 assertions with normal cache access. The full retry used that access and
+`UV_OFFLINE=true` to use cached dependencies; no source, fixture or tolerance
+changed. Both complete result objects and the diagnostic remain archived.
+
+Fresh package-context lint found zero issues. Source build passed; built-package
+`R CMD check --no-manual --ignore-vignettes --no-tests` finished Status: OK
+(zero errors/warnings/notes), avoiding a duplicate installed-package suite.
+The unchanged bounded FIML simulation gate reuses pre-docs 24/24 passing rows;
+R/ and tests/ sources are identical across the docs commit. Exact local PR draft
+passes risk_check with no missing items and no changed high-risk files.
+
+The remaining two skips are the lavaan-absence branch when lavaan is installed
+and unavailable load_all help pages. Four warnings are the cluster warning-path
+probe, sign-branch disagreement diagnostic, and two intentional empty lavaan rows.
+No failed-check waiver is needed. This completes this bounded milestone locally;
+no integration, push, PR, merge, release or hosted/expensive CI occurred. Metadata
+reconciliation follows the verified tree; detailed receipts and final verdict are
+in `_agents_workspace/fiml-regression-oracles/gates.md`.
