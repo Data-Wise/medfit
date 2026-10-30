@@ -68,3 +68,12 @@ A technical GO supports a small design proposal, not implementation approval.
 Adopter, fixed-X missing-covariate policy, treatment of unsupported settings,
 native derivative/inference integration and public API all need a later scope
 decision. Nothing here blocks or expands 0.16.
+
+## Execution amendments (criteria unchanged)
+
+The initial 25/30 primary and 8/10 edge results are retained as `initial-*`.
+Diagnosed harness repairs: lavaan stopping `rel.tol` changed from 1e-12 to
+1e-10; fixed-X syntax omits explicit free X moments; reference optimization
+uses dimensionless coordinates for rescaled data. No likelihood, parameter or
+SE acceptance threshold changed. Final evidence and limitations are in
+[report.md](report.md); deeper numerical research remains a separate task.

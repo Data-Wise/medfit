@@ -347,3 +347,13 @@ Key pages:
 - Introduction: /articles/introduction.html
 - Model Extraction: /articles/extraction.html
 - Bootstrap Inference: /articles/bootstrap.html
+# Separate local FIML feasibility study — 2026-10-29
+# codex/fiml-feasibility, baseline edcf23d8; adversarial protocol committed before execution.
+# Independent observed-data likelihood/observed-Hessian comparisons: 30/30 cells and 10/10 edges PASS; initial failures preserved and diagnosed without widening criteria.
+# Technical GO for a separate design only; adopter/native integration unverified. See planning/studies/fiml-feasibility/report.md.
+# No production changes, push, expensive CI, release or dev-to-main merge. Separate from 0.16.
+# FIML numerical implementation research locally complete — 2026-10-29
+# Version-pinned lavaan0.7-3: 12 source/installed functions match; six derivative/information probes PASS.
+# Observed Hessian needs model-mapping curvature (0.8–2.0% fitted discrepancy if omitted); expected-information MAR validity is not established by algebra agreement.
+# Memo recommends a separate random-X/means/observed-information design with current optimizer initially; fixed-X, no-complete-row initialization and downstream support need explicit gates.
+# Research only; no production edits, push, expensive CI or 0.16 scope expansion.

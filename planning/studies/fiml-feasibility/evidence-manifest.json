@@ -1,0 +1,23 @@
+{
+  "baseline": "edcf23d8705165cd2497deda0d4e8410b9754811",
+  "protocol_commit": "7ba7e6a7",
+  "files": {
+    "coordinates.csv": "804bd3b9f9c87c671bc6a5206cfc592f6e5e76853457486bce485322d2078c07",
+    "edges.csv": "ce88b2e5fef165ee8281ba3a6df24c0eb92caeb6a7296a20ccddca8f10c61c5f",
+    "initial-edges.csv": "9133f270a7b4b987d6dd3bc43f0816294a31e6579e7802fd5b18550a5cd4aa23",
+    "initial-results.csv": "43a0ad1619fe8a10b59b0bb754a107ffbc3dcbb8242ed1a680eb0dfc01891b08",
+    "initial-warnings.txt": "0455b8a7dd6f637c65a9cdaa3ef55a429f05d6b859db5561da47e4a039d45383",
+    "numerical-implementation-memo.md": "1cd0f0141b837c6693422eff8766159f02fa884595274c2bf0ae8789c4a3782f",
+    "numerical-probes.R": "5cbfb013aecc9dcc34e578b1a39fa2f6dc395a2ad75790ca7f1e5b48f31af800",
+    "numerical-probes.csv": "9958af853412708509d688711a433d49de7d7f852989150084e6109ea1ec8a2c",
+    "protocol.md": "72e36fb6c8ab3b97488246a55855f74f487c32c47b0197e38c722e04d6952c42",
+    "report.md": "384d571f7cc70282b0b6e3555040fec8668e2481212532c15e6ccd0d7dc8de00",
+    "results.csv": "9d44e249119b0c6510dee7cf82a454e1851fd89c9026cb9eecb9e9ab68161f36",
+    "session.txt": "079f8cff8e33213d2243c7ac01d90f68a7aa299e79d71d26a74c8f78406ad2f3",
+    "source-functions.csv": "06bbe68bb884c1895c1643b200970f637a7c24b9c7779c49535f4fab9c660a12",
+    "source-manifest.json": "1651d99aaf14896ff09a1fb360d005c6e75078531676d43a76d66f76b4becb3b",
+    "study.R": "3055d23d0ec22c7f2770ea91cb9ed5204bd571f4e21dba19071cea98ec925600",
+    "summary.txt": "0dc426d9486bafdc9745bda91d98def34b6c1b14f9c4442b4f5944a152f58b3c",
+    "warnings.txt": "a6a68acbdd81cd9c4c57bb89b1f5f8692d159eb64a8957857e61841edb7d5db3"
+  }
+}
