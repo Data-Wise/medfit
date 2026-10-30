@@ -1,8 +1,11 @@
 # 0.16 release scope: include bounded FIML
 
-Status: scope decision and release-wording synchronization completed locally on
-2026-10-30; branch/dev-PR publication authorized after review; release
-preparation pending.
+Status: scope/docs merged into dev through PR #366 (`c4b76fb5`) on 2026-10-30
+after all six fast checks passed on the exact reviewed head. Post-merge dev
+coverage and Codecov patch passed on the merge commit (run `41106465575`),
+verified live at 2026-10-30 18:42 UTC. Release preparation remains. The proposed follow-up order
+and cross-package boundaries are in
+[the reconciled readiness plan](PLAN-FIML-release-and-missing-data-followups-2026-10-30.md).
 The user accepted the next step after the recommendation to include bounded FIML
 in 0.16. This supersedes earlier FIML exclusions from 0.16 in historical study,
 implementation and merge records. It does not authorize a release, dev-to-main
@@ -27,7 +30,7 @@ it adds no new model, inference or optimizer guarantee.
 Existing dev work includes D4 constrained covariance, sign-branch fitting and
 boundary-oracle regressions. Reconcile the final dev diff and NEWS before release;
 this scope note is not a claim that every dev change is automatically approved.
-The coverage-scope maintenance PR #365 is a separate pending change.
+The coverage-scope maintenance PR #365 merged separately as `2c4bd65c`.
 
 ## Deferred
 
@@ -65,12 +68,12 @@ This scope decision does not claim fresh numerical verification.
 
 ## Immediate next step
 
-Finish fast CI and review for coverage PR #365; merging it needs separate
-permission. The user authorized review followed by scope/docs branch publication
-and a PR to dev on 2026-10-30. Require passing local pre-PR checks and verify the
-published head. Then check fast hosted CI before preparing a 0.16 release
-candidate. Neither PR publication nor this scope decision authorizes merging
-or releasing; expensive CI remains deferred until release to main.
+Post-merge verification is complete: PRs #365/#366 are merged with author
+authorization and their dev coverage runs passed. Review and select the bounded
+readiness work in the reconciled plan linked above;
+new diagnostics and missingmed adoption remain separate milestones. Release
+preparation/execution needs its own authorization; expensive CI remains deferred
+until release to main.
 
 ## Release-wording synchronization — 2026-10-30
 
@@ -102,5 +105,14 @@ isolated temporary library installed from this checkout. Logs remain under
 The author authorized merging PRs #365 and #366 when ready. Coverage-scope
 PR #365 merged as `2c4bd65c` after all six reported checks passed. Its planning
 reconciliation is retained here, with the earlier 0.16 exclusion superseded
-by this scope decision. PR #366 requires fresh fast CI on the reconciled head
-before merging. No release, dev-to-main merge or expensive CI is authorized.
+by this scope decision. PR #366 subsequently merged as `c4b76fb5` after all six
+fast checks passed at `02f908e3`; reviewed/merged trees matched. Local dev and
+merged branch/worktree cleanup are complete, with 140 evidence files archived
+and verified. Post-merge dev coverage
+[run 41106465575](https://github.com/Data-Wise/medfit/actions/runs/41106465575)
+completed successfully on `c4b76fb59b1d6248897a706bfd7e065533ba1739`: 8,626
+passes, zero failures, three warnings and 140 skips. The reported
+[Codecov patch status](https://app.codecov.io/gh/Data-Wise/medfit/commit/c4b76fb59b1d6248897a706bfd7e065533ba1739)
+also passed; both results were verified live at 2026-10-30 18:42 UTC. Remote
+feature branches remain retained. Metadata reconciliation is local only; no
+separate push, release, dev-to-main merge or expensive CI is authorized.

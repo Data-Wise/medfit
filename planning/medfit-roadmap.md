@@ -1,5 +1,13 @@
 # medfit Package Development Roadmap
 
+> Current checkpoint (2026-10-30): released 0.15.0 is recorded in `.STATUS`;
+> bounded FIML (#364), coverage scope (#365), and planned-0.16 wording (#366)
+> are merged into dev. FIML is no longer a proposed spike. See
+> [0.16 scope](SCOPE-0.16-FIML-2026-10-30.md) and the
+> [reconciled readiness/follow-up plan](PLAN-FIML-release-and-missing-data-followups-2026-10-30.md).
+> The older version snapshots and phase schedule below are historical design
+> records, not current release status. No release or expensive CI is authorized.
+
 **Package**: medfit - Mediation model fitting and extraction infrastructure
 **Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.14.1 current on `main`/GitHub** (2026-10-26, tag `v0.14.1`; 0.14.0 released 2026-10-24; 0.15.0 (the flip) in progress, see item 3d; v0.10.0 was 2026-10-14; GitHub-only, not CRAN-submitted by decision; 0.7.0 shipped the native SEM engine 2026-10-10, 0.8.0 to 0.10.0 added nonlinear constraints, mean structure with `fixed_x`, and the `:` product term with native four-way). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0 (2026-08-23). 0.5.0 added (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Ext D module 1 (2-1-1 cluster mediation: `ClusterMediationData`, `lmer` engine, Kenward-Roger, cluster bootstrap; #90-#92, #95, #100) shipped in **0.6.0** (2026-10-09, GitHub-only); the native SEM engine shipped in **0.7.0** (2026-10-10, GitHub-only; #110-#124). Next = the 0.15.0 flip (native defaults; plan `PLAN-0.15.0-native-defaults-flip-2026-10-26.md`, PR #347); latent means deferred to 1.0; CRAN deferred (#83); board in `EXTENSIONS-PLAN-2026-06-03.md`.
 **Timeline**: MVP shipped; extensions A ✅, B ✅, C ✅ (0.4.0), D8(b) ✅ (0.5.0, released 2026-09-25); native SEM ✅ (0.7.0, released 2026-10-10); C.1 blocked (CMAverse); D/E brainstormed
@@ -1867,8 +1875,10 @@ The original week-by-week plan is complete. Current next actions:
     13/60 above reference, a documented limit), T2 (E-5 product-column check); T3 and T4 in PR #347 (pending merge).
     Open: T5a-c (docs and website), T6 (gate pins), T7 (dependents), T8 (release). Plan:
     `planning/PLAN-0.15.0-native-defaults-flip-2026-10-26.md`; spec `specs/SPEC-0-15-release-2026-10-26.md`.
-3e. **0.16.0 (candidates):** remove the `options(medfit.native_defaults)` shim; FIML (`missing = "fiml"`) behind a spike
-    against lavaan; CRAN submission of the 0.15.0 line after a soak (#83 still deferred).
+3e. **0.16.0 (planned, unreleased):** bounded FIML (`missing = "fiml"`) is implemented and merged into dev;
+    see `SCOPE-0.16-FIML-2026-10-30.md` for limits and the reconciled readiness plan for proposed test/docs work.
+    The obsolete defaults option is already removed on dev (#351; NEWS). CRAN submission remains deferred;
+    it is not a prerequisite silently inherited from this old candidate list.
 4. **Next CRAN release** — trigger still open (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
 5. **Ext C.1 (CMAverse)** — blocked; see `planning/EXTENSIONS-PLAN-2026-06-03.md`
 6. **Categorical variables (backlog, added 2026-10-17, none scheduled; each needs a named consumer and an independent oracle before it starts):**

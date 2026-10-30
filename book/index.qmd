@@ -29,14 +29,29 @@ default beside the pinned fit.
 
 ## Bounded FIML in planned 0.16 {.unnumbered}
 
-The unreleased 0.16 scope includes explicit `missing = "fiml"` for three-variable
-Gaussian random-X mediation. Listwise deletion remains the default. The bounded
-workflow requires `fixed_x = FALSE`, a mean structure and observed/model SEs;
-bootstrap, profiles and MBCO remain unsupported for FIML objects. These chapters'
-complete-data derivations do not establish FIML results. For the pattern-wise
-likelihood, settings and support limits, see the package website's
-[native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
-and [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html).
+The unreleased 0.16 scope includes bounded FIML for exactly three continuous
+observed variables in Gaussian random-X mediation, X -> M -> Y, with the direct
+X -> Y path free or fixed at zero, free intercepts and independent disturbances.
+It assumes ignorable missingness (for example, MAR with the usual ignorability
+conditions). Listwise deletion remains the default. The bounded workflow requires
+explicit `missing = "fiml"`, `fixed_x = FALSE`, `meanstructure = TRUE`,
+`information = "observed"`, `se_type = "model"`, and no weights.
+
+Supported inference uses the inverse observed information for parameter covariance
+and model-based SEs, with normal intervals for parameters and unstandardized
+path/effect estimates. NIE, NDE and total-effect SEs and normal intervals use the
+full covariance and delta method. At a = b = 0, the NIE point estimate remains
+available but its SE and interval are unavailable. Raw Gaussian log likelihood,
+AIC and BIC are available; these are likelihood summaries rather than model-fit
+tests. No bootstrap, profile likelihood, MBCO, expected-information or sandwich SEs,
+or missing-data chi-square model tests are supplied by this bounded route.
+These numerical checks do not establish MAR, global optimality or
+confidence-interval coverage. These chapters' complete-data derivations do not
+establish FIML results. For the pattern-wise likelihood, settings and support
+limits, see the package website's
+[native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml),
+[Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html#bounded-fiml)
+and detailed [`fit_sem()` help](https://data-wise.github.io/medfit/reference/fit_sem.html).
 Released 0.15.0 does not provide this option.
 
 ## How to build {.unnumbered}
