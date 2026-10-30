@@ -1,9 +1,12 @@
 # Bounded FIML integration: first adopter milestone
 
-Status: COMPLETE LOCALLY — corrective FINAL gates PASS on 32a7b98, 2026-10-30. Authorized 2026-10-29: implement the reviewed bounded contract and
+Status: MERGED INTO DEV via PR #364, squash a894e45e, 2026-10-30.
+Post-merge fast coverage and Codecov PASS. Corrective FINAL local gates passed
+on 32a7b98. Authorized 2026-10-29: implement the reviewed bounded contract and
 run independent QA and local verification. This explicitly authorizes the appended
 fit_sem missing-method option under the API freeze, limited to this contract.
-Worktree: .worktrees/fiml-feasibility; branch codex/fiml-feasibility.
+Former worktree: .worktrees/fiml-feasibility; branch codex/fiml-feasibility.
+Both were removed after verified merged-branch cleanup on 2026-10-30.
 Pre-implementation source: 3023d14c; dev baseline: edcf23d8705165cd2497deda0d4e8410b9754811.
 
 ## Scope and holds
@@ -11,8 +14,11 @@ Pre-implementation source: 3023d14c; dev baseline: edcf23d8705165cd2497deda0d4e8
 Implement [the reviewed integration contract](studies/fiml-feasibility/integration-design.md)
 and its [static review](studies/fiml-feasibility/integration-design-review.md).
 That version remains the detailed acceptance source; this plan tracks execution.
-FIML remains separate from 0.16. No release assignment, push, PR, deployment,
-dev-to-main merge, expensive CI or plugin installation is authorized.
+FIML remains separate from 0.16. Initial local-only authority was subsequently
+extended to draft PR #364, its reviewed dev merge, and post-merge reconciliation
+and cleanup. No release assignment, deployment, dev-to-main merge, expensive CI
+or plugin installation is authorized. A future 0.16 release must explicitly
+exclude FIML: an unfiltered dev-to-main release would include the merged feature.
 Preserve research evidence and unrelated .remember/ files. Existing prototype
 scripts and frozen evidence are references, not package runtime dependencies.
 
@@ -194,3 +200,31 @@ Closing edits reconcile status, the active pointer and study overlays/manifest o
 32a7b98 remains the tested runtime/test tree. Retain the branch and worktree for
 user review. Local completion is not release or external-submission readiness:
 FIML stays separate from 0.16, with no push, PR, merge, release or expensive CI.
+
+## Dev integration and post-merge verification — 2026-10-30
+
+The author authorized review and merge of PR #364. The unchanged reviewed head
+7cd8c07e4e0772f690311f58cfcb8b877e2f1094 passed all five fast checks, including
+the refreshed risk-tier check, before squash merge
+a894e45e078e73aaee639c8ba51738c87b3c41b3.
+The merge and reviewed head have the identical Git tree
+5869620937fb710d08077e8f3edb7627bf550d8c.
+
+[Post-merge coverage run 41093099169](https://github.com/Data-Wise/medfit/actions/runs/41093099169)
+passed: 8,626 passes, zero failures, three known warnings and 138 skips. Warnings
+are the intentional cluster-refit failure, existing sign-branch disagreement and
+unavailable sv_SE.UTF-8 locale. Codecov processing completed successfully on the
+merge commit: 96.62% hosted overall line coverage and 98.48% patch coverage. These
+are distinct from the retained local covr expression coverage of 96.20767%.
+No repair or additional numerical rerun was needed. No expensive CI ran.
+
+Local untracked and ignored evidence is preserved in
+_agents_workspace/fiml-merged-2026-10-30.zip with an adjacent SHA-256 receipt;
+every archive entry is checked against its source before worktree removal. The
+uncommitted draft report is also retained in the main checkout study directory.
+FIML stays excluded from 0.16; no release or dev-to-main merge occurred.
+
+Cleanup verified: the local feature tip equaled the PR head, the squash merge was
+an ancestor of local dev, and all 23,086 archived entries still matched their
+sources immediately before removal. The merged worktree and local/remote feature
+branch were removed; unrelated worktrees and local .codex/ files were preserved.
