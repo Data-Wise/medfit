@@ -348,3 +348,12 @@ evidence remains historical. Four tests/61 assertions and the complete corrected
 [repair report](p2-repair-report.md). This closes those two bounded findings; it
 does not authorize production integration, establish inference coverage, or
 change 0.16.
+
+## Subsequent integration-design authorization
+
+The user subsequently authorized the bounded [integration design](integration-design.md),
+which now defines the first engineering adopter, proposed opt-in contract, default
+preservation and downstream support/refusal rules. This supersedes the earlier
+statement that designing those contracts still awaited authorization; it does
+not authorize production implementation, a release assignment or inclusion in 0.16.
+The design's API examples are prospective and unsupported by current production code.

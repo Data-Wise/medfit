@@ -1,3 +1,6 @@
+# Bounded FIML integration design drafted — 2026-10-29
+# Design-only authorization: internal simple-mediation adopter; explicit opt-in/random-X API proposal; unchanged listwise/default path; downstream support/refusal and provenance rules.
+# See planning/studies/fiml-feasibility/integration-design.md. Proposed contract awaits review; production implementation/API changes remain unauthorized. Separate from 0.16; no production changes, push or expensive CI.
 # FIML P2 review repairs complete locally — 2026-10-29
 # Both findings resolved: all post-solver errors retain six attempt records; near-singular fixtures now match frozen residual SD0.03, with historical SD0.027 evidence preserved.
 # Regression4tests/61assertions PASS; corrected acceptance42/42fits,13/13edges,126/126derivatives and identities; reference30/30fits and10/10edges PASS. Other40 cells exactly unchanged.

@@ -2,7 +2,7 @@
   "baseline": "edcf23d8705165cd2497deda0d4e8410b9754811",
   "protocol_commit": "7ba7e6a7",
   "files": {
-    "README.md": "8078498ef642555cd6feca764a38778bcde9af0e27f28ed3c762e0f4d3b73b74",
+    "README.md": "057d8ca550b10d56207edf3f006ae9b50190c95bbe14d9914d19f95696914b6f",
     "REPORT-fiml-implementation-results-2026-10-29.md": "7d6e141f3999b249f5e6bb9f7980fdfd24f1c85a5fa6779cca7b6d8060e9e072",
     "coordinates.csv": "804bd3b9f9c87c671bc6a5206cfc592f6e5e76853457486bce485322d2078c07",
     "documentation-validation.json": "26dd67f2cf0bee3b877c6c06c2c6eecf0014cebe947c277f3fa4c28d4047e4e1",
@@ -10,7 +10,8 @@
     "initial-edges.csv": "9133f270a7b4b987d6dd3bc43f0816294a31e6579e7802fd5b18550a5cd4aa23",
     "initial-results.csv": "43a0ad1619fe8a10b59b0bb754a107ffbc3dcbb8242ed1a680eb0dfc01891b08",
     "initial-warnings.txt": "0455b8a7dd6f637c65a9cdaa3ef55a429f05d6b859db5561da47e4a039d45383",
-    "numerical-implementation-memo.md": "141ea52022271d16797af39e0fc91d090380741af41938747b4d6ccdf67991ca",
+    "integration-design.md": "b76a3eeeef0882af9003685d7a3891f3f9c10e7ac4635898f4ac6ce4fd335edd",
+    "numerical-implementation-memo.md": "f1a089005753bf7dcb0a981cb76d7b99f35c86a98cd66d4ba2be22921ca92cce",
     "numerical-probes.R": "5cbfb013aecc9dcc34e578b1a39fa2f6dc395a2ad75790ca7f1e5b48f31af800",
     "numerical-probes.csv": "9958af853412708509d688711a433d49de7d7f852989150084e6109ea1ec8a2c",
     "optimizer-repair-baseline/attempts.csv": "f3b2673772bf946802407f84edbd42591ba7622e338358a56bc73e241dd2a0da",
@@ -130,7 +131,7 @@
     "source-manifest.json": "1651d99aaf14896ff09a1fb360d005c6e75078531676d43a76d66f76b4becb3b",
     "study.R": "623a671dc34e81413c6f6f908f5dd0b4f210c1d323114a53dfa07db9cb2ee3e5",
     "summary.txt": "0dc426d9486bafdc9745bda91d98def34b6c1b14f9c4442b4f5944a152f58b3c",
-    "technical-record.md": "9772eb22e2f96fe2e3beaebc03d6f4bcc1f77aeb34b33bd5609a39cbfb8965b1",
+    "technical-record.md": "658da76fe7c7d69f433b15856c861afa91461cc08b744115b8d4cee7783df355",
     "test-prototype-regressions.R": "6749c5dac28d4b0f14c33e3106fc73afb81a95c0d43e730dec345f4b1c2ec8e0",
     "warnings.txt": "a6a68acbdd81cd9c4c57bb89b1f5f8692d159eb64a8957857e61841edb7d5db3"
   },

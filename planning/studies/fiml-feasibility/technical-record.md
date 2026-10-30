@@ -406,3 +406,15 @@ and126/126 likelihood identities. The original reference harness passes30/30
 fits and10/10 edges. Six study scripts parse and pass namespace lint. See the
 [P2 repair report](p2-repair-report.md) and [validation receipt](p2-repair-validation.json).
 No production code, 0.16 scope, push or expensive CI is involved.
+
+## Bounded integration design authorized, implementation deferred
+
+After the P2 repair review, the user authorized defining the adopter, opt-in API,
+preserved defaults and downstream rules. The [integration design](integration-design.md)
+proposes medfit's native simple-mediation workflow as the first engineering
+adopter, an appended explicit missing-data option, mandatory random X, and a
+bounded support/refusal matrix. It identifies the finite-discrepancy ledger and
+extraction-provenance seams that must change under a future implementation plan.
+The design is proposed for review, not an implemented API or a verified external
+adopter commitment. Production implementation remains unauthorized and separate
+from 0.16; no numerical evidence or historical acceptance criterion changed.
