@@ -355,3 +355,154 @@ test_that("post-return solver evaluation faults retain completed calls and faile
   expect_false(err$attempts$accepted)
   expect_match(err$attempts$reason, "planted post-return fault")
 })
+
+test_that("FIML rejects insufficient marginals and invalid completed role topology before solving", {
+  testthat::local_mocked_bindings(.sem_fiml_fit = function(...) stop("solver must not run"), .package = "medfit")
+  d <- fiml_data()
+  d$X[-1L] <- NA_real_
+  err <- tryCatch(fiml_fit(d), error = identity)
+  expect_s3_class(err, "medfit_sem_fiml_error")
+  expect_identical(err$stage, "input")
+  expect_match(err$reason, "insufficient observations")
+  expect_null(err$attempts)
+  expect_null(err$solver_calls)
+  err <- tryCatch(fiml_fit(model = "M ~ X\nY ~ X"), error = identity)
+  expect_s3_class(err, "medfit_sem_fiml_error")
+  expect_identical(err$stage, "input")
+  expect_match(err$reason, "exactly three observed variables")
+  expect_null(err$attempts)
+})
+
+test_that("actual solver exceptions retain failed rows and continue the remaining real attempts", {
+  original_solver <- .sem_solve_one
+  original_nlminb <- stats::nlminb
+  state <- new.env(parent = emptyenv())
+  state$slsqp <- state$nlminb <- 0L
+  sl_fault <- structure(list(message = "planted SLSQP exception", call = NULL),
+                        class = c("fiml_solver_fault", "error", "condition"))
+  nl_fault <- structure(list(message = "planted nlminb refinement exception", call = NULL),
+                        class = c("fiml_solver_fault", "error", "condition"))
+  testthat::local_mocked_bindings(.sem_solve_one = function(...) {
+    state$slsqp <- state$slsqp + 1L
+    if (state$slsqp == 1L) stop(sl_fault)
+    original_solver(...)
+  }, .package = "medfit")
+  testthat::local_mocked_bindings(nlminb = function(...) {
+    state$nlminb <- state$nlminb + 1L
+    if (state$nlminb == 2L) stop(nl_fault)
+    original_nlminb(...)
+  }, .package = "stats")
+  f <- fiml_fit()
+  a <- f@diagnostics$attempts
+  calls <- f@diagnostics$solver_calls
+  expect_equal(nrow(a), 6L)
+  expect_length(calls, 9L)
+  expect_identical(state$slsqp, 3L)
+  expect_identical(state$nlminb, 6L)
+  failed <- a[!a$accepted, ]
+  expect_equal(nrow(failed), 2L)
+  expect_true(all(is.na(failed$status) & is.na(failed$nll) & is.na(failed$stationarity)))
+  expect_true(is.na(failed$first_status[1L]))
+  expect_identical(failed$first_status[2L], 0L)
+  expect_identical(failed$reason, c(conditionMessage(sl_fault), conditionMessage(nl_fault)))
+  expect_identical(calls[[1L]]$condition, sl_fault)
+  expect_identical(calls[[5L]]$condition, nl_fault)
+  expect_identical(calls[[5L]]$phase, "refinement")
+  expect_true(all(c("slsqp", "nlminb") %in% a$solver[a$accepted]))
+  expect_true(is.finite(as.numeric(logLik(f))))
+})
+
+test_that("an unavailable returned evaluation is refused while other genuine candidates remain usable", {
+  original <- .sem_fiml_eval
+  state <- new.env(parent = emptyenv())
+  state$returned <- 0L
+  testthat::local_mocked_bindings(.sem_fiml_eval = function(theta, p, derivative = TRUE) {
+    if (identical(substitute(theta), quote(run$theta))) {
+      state$returned <- state$returned + 1L
+      if (state$returned == 1L) return(NULL)
+    }
+    original(theta, p, derivative)
+  }, .package = "medfit")
+  f <- fiml_fit()
+  a <- f@diagnostics$attempts
+  expect_identical(state$returned, 6L)
+  expect_false(a$accepted[1L])
+  expect_true(is.na(a$nll[1L]))
+  expect_identical(a$stationarity[1L], Inf)
+  expect_match(a$reason[1L], "stationarity")
+  expect_true(all(a$accepted[-1L]))
+  expect_length(f@diagnostics$solver_calls, 9L)
+  expect_true(is.finite(as.numeric(logLik(f))))
+})
+
+test_that("FIML requires accepted raw statuses from both optimizers", {
+  original <- .sem_solve_one
+  testthat::local_mocked_bindings(.sem_solve_one = function(...) {
+    r <- original(...)
+    r$status <- -1L
+    r
+  }, .package = "medfit")
+  err <- tryCatch(fiml_fit(), error = identity)
+  expect_s3_class(err, "medfit_sem_fiml_error")
+  expect_match(err$reason, "no accepted candidate for each optimizer")
+  expect_equal(nrow(err$attempts), 6L)
+  expect_length(err$solver_calls, 9L)
+  a <- err$attempts
+  expect_true(all(a$status[a$solver == "slsqp"] == -1L))
+  expect_true(all(!a$accepted[a$solver == "slsqp"]))
+  expect_true(all(a$accepted[a$solver == "nlminb"]))
+  expect_true(all(vapply(err$solver_calls[1:3], function(x) x$status == -1L, logical(1))))
+})
+
+test_that("FIML refuses disagreeing accepted likelihoods and retains the full evidence", {
+  original <- .sem_fiml_eval
+  state <- new.env(parent = emptyenv())
+  state$returned <- 0L
+  testthat::local_mocked_bindings(.sem_fiml_eval = function(theta, p, derivative = TRUE) {
+    e <- original(theta, p, derivative)
+    if (identical(substitute(theta), quote(run$theta))) {
+      state$returned <- state$returned + 1L
+      if (state$returned == 1L) e$value <- e$value + .01 * p$n
+    }
+    e
+  }, .package = "medfit")
+  err <- tryCatch(fiml_fit(), error = identity)
+  expect_s3_class(err, "medfit_sem_fiml_error")
+  expect_match(err$reason, "likelihoods disagree")
+  expect_equal(nrow(err$attempts), 6L)
+  expect_length(err$solver_calls, 9L)
+  expect_true(all(err$attempts$accepted))
+  expect_gt(diff(range(err$attempts$nll)) / 240L, .009)
+})
+
+test_that("FIML refuses invalid observed information after all actual solver calls", {
+  original_geometry <- .sem_fiml_geometry
+  original_hessian <- .sem_fiml_hessian
+  for (kind in c("nonfinite", "nonpositive", "ill_conditioned")) {
+    state <- new.env(parent = emptyenv())
+    state$final <- FALSE
+    testthat::local_mocked_bindings(
+      .sem_fiml_geometry = function(...) {
+        out <- original_geometry(...)
+        state$final <- TRUE
+        out
+      },
+      .sem_fiml_hessian = function(theta, p) {
+        if (!state$final) return(original_hessian(theta, p))
+        H <- diag(length(theta))
+        if (kind == "nonfinite") H[1L, 1L] <- NA_real_
+        if (kind == "nonpositive") H[1L, 1L] <- 0
+        if (kind == "ill_conditioned") H[1L, 2L] <- H[2L, 1L] <- 1 - 1e-12
+        H
+      }, .package = "medfit"
+    )
+    err <- tryCatch(fiml_fit(), error = identity)
+    expect_s3_class(err, "medfit_sem_fiml_error")
+    expect_match(err$reason, "ill-conditioned observed information")
+    expect_equal(nrow(err$attempts), 6L)
+    expect_length(err$solver_calls, 9L)
+    expect_true(all(err$attempts$accepted))
+    expect_true(all(is.finite(err$attempts$status)))
+    expect_s3_class(err$parent, "medfit_sem_fiml_error")
+  }
+})
