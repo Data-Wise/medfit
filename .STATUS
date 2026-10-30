@@ -1,3 +1,7 @@
+# Bounded FIML corrective independent QA PASS — 2026-10-29
+# Source 625e7280: both boundary P2s resolved; 14 tests/246 expectations and 24 registered gate checks pass independently. Local gates/docs/final full suite pending; separate from 0.16, no push or expensive CI.
+# Bounded FIML initial QA: two P2s under corrective pass — 2026-10-29
+# Numerical public-route/oracle checks pass; fix mixed-class AIC/BIC refusal and post-solver evidence retention before re-QA/gates. Initial source c3247be3; plan remains active.
 # Bounded FIML integration authorized locally — 2026-10-29
 # Active plan: planning/PLAN-FIML-bounded-integration-2026-10-29.md. Implementation -> independent QA -> local gates -> docs -> final gates. Separate from 0.16; no push, PR, release or expensive CI.
 # Bounded FIML design accessor P2 resolved — 2026-10-29

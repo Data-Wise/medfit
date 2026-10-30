@@ -18,8 +18,8 @@ scripts and frozen evidence are references, not package runtime dependencies.
 
 ## Task F1: bounded production integration and acceptance
 
-- [ ] Implement test-first; commit; implementer.md PASS.
-- [ ] Independent oracle QA and planted defects; qa.md PASS.
+- [x] Implement test-first; commit c3247be3; implementer.md PASS.
+- [x] Independent oracle QA and planted defects; qa.md PASS on 625e7280.
 - [ ] Pre-docs local gates; gates-pre-docs.md PASS.
 - [ ] Update affected help/site/technical docs; docs.md PASS.
 - [ ] Final required local gates and full suite; gates.md PASS.
@@ -89,7 +89,31 @@ full suite once on the completed tree, not once per stage. No PR is created.
 
 ## Evidence and decisions
 
-Pending. Record tested source revisions, exact counts, numerical tolerances,
+Initial implementation c3247be3: focused 12 tests/217 expectations, registry 5/42,
+prototype 42 fits/13 edges/126 points and P2 4 tests/61 expectations pass.
+Independent QA: eight public numerical cells plus score/Hessian/affine transport
+pass; first QA FAIL on two boundary P2s: mixed-class IC comparison and lost
+completed evidence after a solver-return evaluation exception. Initial report
+preserved as qa-initial-fail.md. Corrective implementation 625e7280 passes
+14 tests/246 expectations; independent focused re-QA PASS. Original and later
+post-solver faults retain exact calls/statuses/parent evidence; valid IC controls,
+24 registered gate checks and pre-feature baselines pass. No numerical limits changed.
+
+Remaining stages pending. Record tested source revisions, exact counts, numerical tolerances,
 planted defects, lint/check warnings/skips, applicability of unchanged numerical
 gates and any deferred requirements. Implementation readiness is not release
 readiness or permission to submit externally.
+
+## Implementation contract interpretations
+
+- Topology determines extracted roles even when original labels collide with
+  a/b/c_prime aliases. SEMFit keeps original named theta/full covariance. Extracted
+  canonical aliases take their role meanings; validated fit_context retains the
+  original source theta/covariance and explicit role mapping. A single extracted
+  name cannot denote two coordinates. Central effect gradients remain authoritative.
+- Generic malformed-argument type validation precedes the FIML adapter and may
+  produce ordinary checkmate/base errors. Structured FIML stage/reason/parent and
+  completed-evidence guarantees cover adapter/topology/numerical failures.
+- Package-owned AIC/BIC dispatch checks the entire comparison list for FIML
+  compatibility before external likelihood calls. Calls dispatched first through
+  another model class remain outside this guard; no global interception is claimed.
