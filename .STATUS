@@ -1,3 +1,5 @@
+# Bounded FIML docs/local verification resume authorized — 2026-10-30
+# Resolve the native-tutorial render exit and two remaining scope claims; then docs PASS -> final local suite/package/coverage checks. Separate from 0.16; no push or expensive CI.
 # Bounded FIML docs stage stopped after corrective retry — 2026-10-30
 # Docs b37f878: 86 tests/620 expectations, spelling/lint PASS; all 6 HTML outputs inspected, but native-tutorial render exit1 unexplained. Two listwise claims remain. Final gates not started; active plan retained. Separate from 0.16; no push or expensive CI.
 # Bounded FIML pre-docs corrective gates PASS — 2026-10-29

@@ -1,6 +1,6 @@
 # Bounded FIML integration: first adopter milestone
 
-Status: ACTIVE — docs stage stopped; explicit resume needed after failed retry. Authorized 2026-10-29: implement the reviewed bounded contract and
+Status: ACTIVE — docs resume and subsequent local final gates authorized 2026-10-30. Authorized 2026-10-29: implement the reviewed bounded contract and
 run independent QA and local verification. This explicitly authorizes the appended
 fit_sem missing-method option under the API freeze, limited to this contract.
 Worktree: .worktrees/fiml-feasibility; branch codex/fiml-feasibility.
@@ -156,3 +156,10 @@ explicit authorization under the orchestrator failed-stage/retry rule; then repa
 those claims, explain/resolve the render exit, verify docs and run FINAL gates.
 Full suite, package check and overall coverage are pending, not waived. Keep the
 active plan and worktree for review. No external submission or expensive CI.
+
+## Authorized resume — 2026-10-30
+
+The user approved resuming the stopped documentation stage and subsequent required
+local final checks. Retain the prior FAIL report/logs, resolve the render exit and
+two remaining scope statements, then require docs PASS before FINAL gates. All
+existing scope and submission/CI holds remain. No new model or inference support.
