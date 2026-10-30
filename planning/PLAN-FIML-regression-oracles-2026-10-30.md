@@ -1,6 +1,6 @@
 # Bounded FIML regression-oracle milestone
 
-Status: T1 implementation PASS; independent QA and local gates pending. Date: 2026-10-30.
+Status: T1 implementation PASS; T2 QA stopped FAIL; local gates pending. Date: 2026-10-30.
 Branch: codex/fiml-regression-oracles. Base: origin/dev c4b76fb5, plus the
 reviewed local planning commits. No push, PR, merge, release or expensive CI.
 
@@ -102,3 +102,20 @@ checks. Existing pair-only, singleton, route, RNG and provenance tests and the
 bounded simulation gate were preserved unchanged; their reruns remain part of
 local gates. Independent QA, numerical-neutrality review and local gates have
 not started. No production change, push, PR, merge or hosted CI.
+
+## T2 independent QA stopped — 2026-10-30
+
+Ten fresh common-parameter likelihood/rank/input-identity probes passed. Three
+fresh accepted public fits (MAR/free, affine/zero, near/free) agreed with lavaan;
+the unidentified/zero control gave its exact numerical refusal and retained
+attempts. Production constant and intercept-transport mutants were detected;
+covariance transport corruption failed at the adapter, and rank-guard bypass
+returned a fit that violates the existing exact-refusal assertion.
+
+The QA driver failed twice on its own assumptions: unnamed affine coefficient
+order, then expecting the rank-bypass mutant to give another error rather than
+accept a fit. Execution stopped after that retry. The regression comparison also
+omits the required expected parameter-set/multiplicity assertions before
+reference subsetting. No numerical acceptance limit or production source changed.
+See `_agents_workspace/fiml-regression-oracles/qa.md` and preserved initial/retry
+logs. T2 is FAIL; repair/re-QA requires the bounded parent handoff before gates.
