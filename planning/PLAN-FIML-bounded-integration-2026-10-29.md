@@ -20,7 +20,7 @@ scripts and frozen evidence are references, not package runtime dependencies.
 
 - [x] Implement test-first; commit c3247be3; implementer.md PASS.
 - [x] Independent oracle QA and planted defects; qa.md PASS on 625e7280.
-- [ ] Pre-docs local gates; gates-pre-docs.md PASS.
+- [x] Pre-docs local gates; gates-pre-docs.md corrective retry PASS on 0f40b73f.
 - [ ] Update affected help/site/technical docs; docs.md PASS.
 - [ ] Final required local gates and full suite; gates.md PASS.
 - [ ] Reconcile plan/status and commit; retain worktree for user review.
@@ -117,3 +117,26 @@ readiness or permission to submit externally.
 - Package-owned AIC/BIC dispatch checks the entire comparison list for FIML
   compatibility before external likelihood calls. Calls dispatched first through
   another model class remain outside this guard; no global interception is claimed.
+
+## Critical rejection coverage correction
+
+Initial pre-docs gates found regression-coverage gaps, not formula mismatches.
+The report is retained as gates-pre-docs-initial-fail.md. Lint-only helper fix
+af0fef2 and test-only correction 0f40b73f preserve production numerical source 625e7280.
+Independent QA passes 20 tests/312 expectations and all eight identified critical
+rejection groups; three acceptance/agreement/curvature guard mutants fail their
+intended assertions. Combined fault controls retain honest calls/attempts and
+agree with full named lavaan coefficients/covariance.
+
+The one corrective pre-docs retry passes 113 tests/985 expectations, installed
+instrumented 20/312, unloaded installed-source lint and risk_check. Focused new
+file records: 205/212 (kernel), 127/128 (adapter), with all identified critical
+anchors executed. Defensive remainder is explicitly disclosed, not excluded;
+these numbers do not establish 100% whole-file or overall package coverage.
+Final gates must measure overall coverage after docs and run the full local suite
+and package check. No expensive hosted/platform CI was dispatched.
+
+Requested argument brainstorming is recorded in
+[the API analysis](studies/fiml-feasibility/argument-design-analysis.md), committed 86fb36f.
+It explains statistical choices versus initial validated-protocol restrictions;
+it does not authorize extra engines, model structures or optimizer controls.
