@@ -1,3 +1,30 @@
+# Local R compatibility fixes — 2026-10-29
+# Archive fixture and probmed latent Gaussian plug-in fixes are pending integration; no release.
+# Four-version medfit archive test suites: 7618 pass, 126 skip, 0 fail each; R 4.1 has warnings/notes.
+# Report: planning/R-compatibility-results-2026-10-29.md. probmed checkout: .worktrees/probmed-r-compat-fix.
+# R 4.1 S7 imports and missingmed offset fixed locally; both affected missingmed suites pass with warnings.
+# missingmed full vignette check: R 4.6.2 OK; R 4.1 tests/vignettes pass, stats4 warning/note remain.
+# Issue #357 P2 repairs locally verified — 2026-10-29
+# Tested8c22017: selected-branch objective binding and scale-relative reference PSD guard fixed; independent28oraclecells and both mutants PASS. Fullsuite1742tests/9207expectations,0failures/errors,2warnings/2skips. Local built check OK; lint0; coverage96.07589%overall/100%new-module executable lines.
+# Local stages complete; metadata-only reconciliation follows tested tree. No push/PR/hosted CI. Expensive hosted OpenBLAS/full-platform checks deferred until release into main per author.
+# Issue #357 P2 review repairs active — 2026-10-29
+# Author authorized selected-branch objective binding and scale-relative reference-covariance guard fixes, regressions, independent QA and gates. Earlier PASS is historical; repaired tree not yet verified. No push/PR.
+# Issue #357 locally verified — 2026-10-29
+# Tested1572e80; fullsuite1739tests/9185expectations,0failures/errors,2warnings/2skips. check-local built check Status OK; lint clean. Coverage96.07505%overall,sem-nonzero.R100%line/expression. Independent QA/oracles/mutants/docs/numerical gates PASS. Plan/status reconciliation only after tested commit.
+# All local stages complete; feature/issue-357-first-milestone retained for review. No push, PR, hosted checks, release, deployment or merge authorized/performed.
+# Issue #357 final gates — critical coverage repair — 2026-10-29
+# Full suite 1737 tests, zero failures/errors; local built check OK; overall coverage96.02%, new module98.11%. Five uncovered validation lines need targeted tests; repair/independent QA/corrective gate retry pending. No push/PR.
+# Issue #357 independent QA PASS — 2026-10-29
+# f6a6e86; 48 oracle cells, 68 focused tests/926 expectations pass. Five unchanged paths exactly match origin/dev. Pre-docs gates running; docs/final gates pending. No push/PR.
+# Issue #357 independent QA loop 1 FAIL — 2026-10-29
+# 40 independent numerical cells pass; eight evidence/classification probes fail. Batched regression repair in progress; gates/docs pending. No push/PR.
+# Issue #357 implementation repair PASS — 2026-10-29
+# adc6c70; native subset 916 tests/5610 expectations, 0 failures/errors/skips, one disclosed disagreement warning; final status edge 1 test/5 expectations PASS. Independent QA in progress; gates/docs pending. No push/PR.
+# Issue #357 repair/resume — 2026-10-29
+# Author authorized coefficient-scale and Hessian-fixture fixes, then independent QA and required gates. In progress; initial failed-run evidence preserved. No push or PR.
+# Issue #357 first milestone — 2026-10-29
+# STOPPED after implementation verification and corrective retry: 914 tests / 5583 expectations, 2 failures, 3 errors; coefficient scaling and Hessian fixtures unresolved. One brace lint remains.
+# Plan committed 00c560c; implementation dirty/uncommitted. QA/gates/docs not run. See planning/PLAN-357-first-milestone-2026-10-29.md and _agents_workspace/issue-357/implementer.md. No push/PR/release authorized.
 # Issue #357 first milestone merged and cleaned up — 2026-10-29
 # PR #361 squash-merged into dev as 446cf12d after all five current PR checks passed at 2d5d3ba7.
 # Post-merge dev coverage 40965650813: PASS 8229 / FAIL 0 / WARN 3 / SKIP 138; Codecov upload succeeded.

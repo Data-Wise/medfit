@@ -11,6 +11,8 @@
 
 ## Fixed
 
+* Source archives retain the nonlinear covariance gate used by the package tests.
+
 * Native fits with active nonlinear constraints now use the constraint curvature in observed-information
   standard errors and in the observed sandwich bread. Expected-information standard errors retain their Fisher
   information definition. Covariance also uses the optimizer's effective variance floors, so an active floor is

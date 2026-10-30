@@ -47,7 +47,9 @@ test_that("every fit_sem() call in tests/sim states fixed_x and meanstructure", 
 })
 
 test_that("the product gates' default fit_fun is the pinned one", {
-  for (f in c("exo-product-null.R", "exo-product-fixed-var.R", "product-correlated-residuals.R")) {
+  gates <- c("exo-product-null.R", "exo-product-fixed-var.R", "product-correlated-residuals.R")
+  skip_if_not(any(file.exists(file.path(sim, gates))), "product gates are not shipped with the installed tests")
+  for (f in gates) {
     src <- paste(readLines(file.path(sim, f), warn = FALSE), collapse = "\n")
     expect_match(src, "fit_fun = fit_sem_pinned", fixed = TRUE, info = f)
     expect_no_match(src, "fit_fun = fit_sem,", fixed = TRUE, info = f)
