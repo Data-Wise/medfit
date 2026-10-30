@@ -20,11 +20,12 @@ Pre-implementation source: 3023d14c; dev baseline: edcf23d8705165cd2497deda0d4e8
 Implement [the reviewed integration contract](studies/fiml-feasibility/integration-design.md)
 and its [static review](studies/fiml-feasibility/integration-design-review.md).
 That version remains the detailed acceptance source; this plan tracks execution.
-FIML remains separate from 0.16. Initial local-only authority was subsequently
+The original milestone was separate from 0.16; the release-scope update above
+now assigns the bounded implementation to planned, unreleased 0.16. Initial
+local-only authority was subsequently
 extended to draft PR #364, its reviewed dev merge, and post-merge reconciliation
-and cleanup. No release assignment, deployment, dev-to-main merge, expensive CI
-or plugin installation is authorized. A future 0.16 release must explicitly
-exclude FIML: an unfiltered dev-to-main release would include the merged feature.
+and cleanup. No release, deployment, dev-to-main merge, expensive CI or plugin installation
+is authorized. Release preparation must retain the bounded support limits.
 Preserve research evidence and unrelated .remember/ files. Existing prototype
 scripts and frozen evidence are references, not package runtime dependencies.
 
@@ -234,3 +235,24 @@ Cleanup verified: the local feature tip equaled the PR head, the squash merge wa
 an ancestor of local dev, and all 23,086 archived entries still matched their
 sources immediately before removal. The merged worktree and local/remote feature
 branch were removed; unrelated worktrees and local .codex/ files were preserved.
+
+
+## Completion boundary and next milestones — 2026-10-30
+
+The bounded FIML milestone is done: implementation, independent QA, regression
+repairs, documentation, local final gates, dev merge, post-merge fast coverage and
+verified branch/worktree cleanup are complete. No additional production fix is
+identified by this reconciliation. This is completion within the accepted scope,
+not a global optimizer, general FIML or inferential coverage guarantee.
+
+Supported scope remains three continuous observed variables, Gaussian random-X
+mediation, free means, a free or exactly zero direct path, explicit opt-in and
+observed/model SEs, with the documented likelihood/effect accessors and guards.
+Broader models, fixed-X, weights, expected/sandwich SEs, bootstrap, profiles,
+MBCO and broader downstream APIs remain separate, unauthorized milestones.
+
+Release work remains: choose a future FIML version, review its release scope,
+and run the expensive release/platform/OpenBLAS checks when release to main is
+separately authorized. FIML stays excluded from 0.16; do not promote dev wholesale
+for that release. The immediate maintenance follow-up is the separately reviewed
+[coverage scope change](NOTE-coverage-scope-2026-10-30.md), not more FIML code.

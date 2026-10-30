@@ -96,3 +96,11 @@ articles/native-guide and articles/native-defaults-0-15. The first evaluated
 article render loaded an older shared medfit; final article renders use an
 isolated temporary library installed from this checkout. Logs remain under
 /private/tmp/medfit-016-*. No website deployment, version bump or release occurred.
+
+## Authorized dev integration — 2026-10-30
+
+The author authorized merging PRs #365 and #366 when ready. Coverage-scope
+PR #365 merged as `2c4bd65c` after all six reported checks passed. Its planning
+reconciliation is retained here, with the earlier 0.16 exclusion superseded
+by this scope decision. PR #366 requires fresh fast CI on the reconciled head
+before merging. No release, dev-to-main merge or expensive CI is authorized.

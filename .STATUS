@@ -1,3 +1,5 @@
+# Coverage PR #365 merged; scope/docs integration authorized — 2026-10-30
+# PR #365 squash 2c4bd65c after all six live fast checks passed. PR #366 is being reconciled onto dev and must pass fresh fast CI before its authorized merge. No release or expensive CI.
 # 0.16 release-wording synchronization verified locally — 2026-10-30
 # README/NEWS/roxygen/Rd/three website articles and minibook preface mark bounded FIML as planned for unreleased 0.16; support limits preserved. Seven focused docs/FIML suites pass; runtime expressions/code blocks unchanged.
 # Seven HTML outputs inspected for current wording; current isolated-package lint clean. Initial cache/old-installed-package render issues resolved; logs under /private/tmp/medfit-016-*. Scope/docs branch publication and dev PR authorized after review; no merge, deployment or expensive CI.
@@ -5,6 +7,12 @@
 # Include the completed bounded FIML milestone in planned 0.16. This supersedes historical exclusion notes below; no support expansion or release authorization.
 # See planning/SCOPE-0.16-FIML-2026-10-30.md for model limits, completed evidence and remaining release gates. Release wording sync is locally complete.
 # Scope/docs publication is authorized after review; expensive CI remains deferred until release to main. No merge, tag or release.
+# Coverage scope review and planning reconciliation — 2026-10-30
+# Local review PASS at 23080bcb; four scope/release mutants caught. PR #365 subsequently passed hosted checks and merged with author authorization. See planning/NOTE-coverage-scope-2026-10-30.md.
+# FIML bounded milestone is complete and merged into dev; planning summaries reconciled. It is included in planned, unreleased 0.16; broader support and expensive release gates are deferred.
+# Coverage metadata scope verified locally — 2026-10-30
+# Skip R coverage only for .STATUS, CLAUDE.md, AGENTS.md and planning Markdown on dev pushes/PRs. Main pushes, code/tests, unknown paths and uncertain scope retain coverage.
+# Python regression suite 5/5; workflow testthat 31 expectations PASS; actionlint and R lint clean. Release/OpenBLAS workflows unchanged; no push or hosted CI run.
 # Bounded FIML merged and cleanup verified — 2026-10-30
 # PR #364 squash a894e45e after all five live fast checks passed at 7cd8c07e; reviewed and merged trees identical.
 # Post-merge coverage 41093099169 PASS: 8626 passes, 0 failures, 3 known warnings, 138 skips; Codecov processing complete, 96.62% hosted overall / 98.48% patch.

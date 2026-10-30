@@ -19,6 +19,10 @@
 
 ## Fixed
 
+* Coverage skips changes limited to named repository metadata and planning Markdown
+  on dev pushes/PRs. Code/test changes and main pushes retain coverage; uncertain
+  scope runs coverage conservatively. Release and OpenBLAS checks are unchanged.
+
 * Source archives retain the nonlinear covariance gate used by the package tests.
 
 * Native fits with active nonlinear constraints now use the constraint curvature in observed-information
