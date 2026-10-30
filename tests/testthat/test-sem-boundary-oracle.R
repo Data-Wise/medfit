@@ -1,7 +1,7 @@
 # Fixed measurement errors make the GLS indicator score sufficient for the
 # structural likelihood. The remaining indicator contrasts have a known,
-# parameter-independent density. This finite reference search certifies only
-# these fixtures, not global convergence for arbitrary latent models.
+# parameter-independent density. This finite reference search checks only these
+# fixtures; it does not prove global convergence for arbitrary latent models.
 boundary_model <- "
   xi =~ 1*x1 + 0.8*x2 + 1.2*x3
   x1 ~~ 0.4*x1
