@@ -1,3 +1,6 @@
+# Issue #360 active — 2026-10-29
+# Author authorized a small fixed-measurement active-boundary regression, independent oracle QA and local gates.
+# Worktree issue-360-boundary-regression from current origin/dev 06a69005. No push/PR/release or expensive hosted CI.
 # R compatibility fixes merged into dev — 2026-10-29
 # medfit #362 (0754d6f), RMediation #87, medrobust #59, missingmed #114 and probmed #66 merged; no release.
 # Medfit PR lint, risk-tier, pkgdown, coverage and Codecov passed. Earlier four-version archive suites passed with R 4.1 warnings/notes.
