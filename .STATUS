@@ -1,3 +1,5 @@
+# FIML documentation consolidated — 2026-10-29
+# Study README and technical-record.md now index all plans, formulas, scope decisions, fixes, rejected alternatives, evidence and deferred integration. Numerical PASS remains b4a50f36; docs-only consolidation.
 # Bounded FIML prototype optimizer repair: local PASS — 2026-10-29
 # Four prior optimizer failures resolved;42/42cells,13/13edges,126/126gradient/Hessian checks and126/126likelihood identitiesPASS. Original raw reference30/30 and10/10PASS; all four mutants caught.
 # Native nlminb refinement receives full Hessian; independent oracle uses its own numerical derivatives; lavaan reference uses affine coordinates with independent full-covariance transport. Fixed acceptance limits/status requirements unchanged.

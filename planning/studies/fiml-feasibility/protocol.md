@@ -1,5 +1,10 @@
 # Bounded FIML feasibility protocol and adversarial review
 
+Study navigation and current state: [README](README.md); equations, decisions
+and complete fix history: [technical record](technical-record.md).
+This feasibility protocol is historical; later prototype authorization and
+execution supersede its pending-authorization statements, not its frozen tests.
+
 Date: 2026-10-29. Separate from 0.16; local research only. No production
 implementation, API change, external submission or expensive CI is authorized.
 Baseline: dev edcf23d8705165cd2497deda0d4e8410b9754811.

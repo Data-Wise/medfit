@@ -1,5 +1,8 @@
 # FIML feasibility: adversarial review and local evidence
 
+Study navigation and current state: [README](README.md); equations, decisions
+and complete fix history: [technical record](technical-record.md).
+
 2026-10-29. Technical GO for a separate, bounded design study; no production
 implementation or expansion of 0.16 is approved by these results.
 

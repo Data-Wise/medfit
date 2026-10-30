@@ -1,5 +1,8 @@
 # Bounded FIML prototype execution protocol
 
+Study navigation and current state: [README](README.md); equations, decisions
+and complete fix history: [technical record](technical-record.md).
+
 Authorized 2026-10-29, separately from 0.16. Baseline medfit dev edcf23d8;
 scope/criteria commit 3da8874. Local research only; no production changes,
 push, public API, expensive CI, release or integration.

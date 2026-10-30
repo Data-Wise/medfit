@@ -1,5 +1,8 @@
 # FIML numerical implementation: research and design options
 
+Study navigation and current state: [README](README.md); equations, decisions
+and complete fix history: [technical record](technical-record.md).
+
 2026-10-29. Separate from 0.16. Research artifacts only; no production changes,
 external submissions or expensive CI. This memo supplements the bounded
 [feasibility report](report.md), rather than granting implementation approval.

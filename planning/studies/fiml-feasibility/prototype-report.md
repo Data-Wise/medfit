@@ -1,5 +1,8 @@
 # Bounded FIML prototype: local acceptance report
 
+Study navigation and current state: [README](README.md); equations, decisions
+and complete fix history: [technical record](technical-record.md).
+
 Executed 2026-10-29 on `codex/fiml-feasibility`, separately from 0.16.
 **PASS for the bounded local numerical prototype.** All four prior optimizer
 failures are resolved. This does not authorize production integration, release
