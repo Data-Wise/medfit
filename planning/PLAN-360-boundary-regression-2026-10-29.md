@@ -1,12 +1,12 @@
 # Issue #360: active residual-variance boundary regression
 
-Status: COMPLETE LOCALLY, verified 2026-10-29; retained for review, not submitted. Base: origin/dev 06a69005abca601fbbb98f7e95387fa11cc1f3c9.
+Status: COMPLETE LOCALLY, verified 2026-10-29; PR #363 submitted to dev; namespace lint repair awaiting hosted CI. Base: origin/dev 06a69005abca601fbbb98f7e95387fa11cc1f3c9.
 Source: https://github.com/Data-Wise/medfit/issues/360.
 Worktree: .worktrees/issue-360-boundary-regression; branch feature/issue-360-boundary-regression.
 
 ## Scope and holds
 
-Add a small deterministic regression for a fixed-measurement latent mediation model with an active lower(0) outcome residual-variance bound. Compare fit_sem() with a separately parameterized reduced Gaussian likelihood. No optimizer or public API changes are planned. Finite numerical reference searches support these fixtures only and must not be described as global-convergence proofs. Expensive hosted OpenBLAS/full-platform CI is deferred until release into main. No push, PR, merge, deployment, release or dev-to-main integration authorized.
+Add a small deterministic regression for a fixed-measurement latent mediation model with an active lower(0) outcome residual-variance bound. Compare fit_sem() with a separately parameterized reduced Gaussian likelihood. No optimizer or public API changes are planned. Finite numerical reference searches support these fixtures only and must not be described as global-convergence proofs. Expensive hosted OpenBLAS/full-platform CI is deferred until release into main. Author subsequently authorized push and PR #363 to dev, followed by its namespace lint repair. No merge, deployment, release or dev-to-main integration authorized.
 
 ## Task B1: regression and independent numerical validation
 
@@ -43,3 +43,7 @@ Final ordinary suite: 1743 tests, 9276 expectations, 9272 passed, zero failures/
 Initial full suite had three semopy failures caused by denied uv cache-lock writes; reproduced on exact base dev. Initial report and logs retained. Single corrective retry used writable task-local UV_CACHE_DIR and unchanged source/assertions; focused semopy and full suite passed. No waiver or tolerance relaxation.
 
 This reconciliation changes metadata only after tested source. Feature worktree retained for review. No push, PR, merge, release or deployment performed; expensive hosted CI remains deferred until release into main.
+
+## PR #363 follow-up
+
+Author authorized branch push and PR creation, then repair of the hosted lint blocker. Unloaded lintr::lint_package() detects the unqualified expect_true() inside boundary_reference(), which the earlier loaded lint run missed. Qualify only that helper call with testthat::. The 69-expectation regression and six independent full-likelihood fits pass unchanged; the wrong-measurement-variance mutant still produces 25 failures. Unloaded package lint against the locally installed 0.15.0 source archive reports zero findings; standalone file lint also reports zero. CI installs the current package before linting; the default local library instead produced 193 unrelated package-symbol diagnostics. No R/ changes were made to suppress them. Prior full-suite and archive results apply to the earlier source; this namespace-only follow-up uses focused regression, independent QA and hosted fast CI without rerunning unchanged expensive grids. Hosted results on the repaired head remain pending; no merge authorized.

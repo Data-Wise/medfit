@@ -1,3 +1,7 @@
+# Issue #360 PR #363 lint repair — 2026-10-29
+# Author authorized push/PR and the namespace repair. Qualify oracle-helper assertion for unloaded CI lint; numerical assertions unchanged.
+# Unloaded installed-package lint0; focused69/69 and six independent full-likelihood fit comparisons PASS; wrong-likelihood mutant still caught. Fast hosted CI pending on repaired head.
+# Earlier loaded-only lint missed this warning; prior full-suite/archive evidence remains historical. No merge/release; expensive CI deferred until main release.
 # Issue #360 locally complete — 2026-10-29
 # Tested17663eaf: self-contained active/interior latent-boundary regression; independent full-likelihood QA PASS, six fit cells; candidate/loss mutants caught.
 # Final suite1743tests/9276expectations,0failures/errors,2existingwarnings/2skips; lint0; installed-archive69/69; check-local built check Status OK.

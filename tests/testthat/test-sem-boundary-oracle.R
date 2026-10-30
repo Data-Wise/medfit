@@ -86,7 +86,7 @@ boundary_reference <- function(unrestricted, sample_cov) {
     polish <- stats::optim(nm$par, objective, method = "BFGS", control = list(maxit = 1000, reltol = 1e-14))
     list(theta = unpack(polish$par), value = polish$value, convergence = polish$convergence)
   })
-  expect_true(all(vapply(solutions, function(x) x$convergence == 0L, logical(1))))
+  testthat::expect_true(all(vapply(solutions, function(x) x$convergence == 0L, logical(1))))
   values <- vapply(solutions, function(x) x$value, numeric(1))
   list(theta = solutions[[which.min(values)]]$theta, spread = diff(range(values)))
 }
