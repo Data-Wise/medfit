@@ -16,6 +16,14 @@
   if (length(models) < 2L) {
     return(invisible(TRUE))
   }
+  fiml <- vapply(models, .sem_fiml_is, logical(1))
+  if (any(fiml)) {
+    if (!all(fiml)) stop("FIML and listwise likelihood contexts cannot be compared", call. = FALSE)
+    lapply(models, .sem_fiml_require)
+    if (!all(vapply(models[-1L], function(x) identical(x@data, models[[1L]]@data), logical(1)))) {
+      stop("FIML likelihood comparisons require identical model variables and retained rows", call. = FALSE)
+    }
+  }
   sets <- lapply(models, .sem_fixed_signature)
   if (!all(vapply(sets[-1L], identical, logical(1), sets[[1L]]))) {
     desc <- vapply(sets, function(s) if (length(s)) paste(s, collapse = ", ") else "none", character(1))
@@ -71,6 +79,10 @@
   if (anyNA(nm) || anyDuplicated(nm)) nm <- paste0("model", seq_along(models))
   names(models) <- nm
   sem <- vapply(models, function(m) S7::S7_inherits(m, SEMFit), logical(1))
+  if (any(vapply(models[sem], .sem_fiml_is, logical(1))) && !all(sem)) {
+    stop("FIML likelihood comparisons require supported SEMFit contexts; cannot compare another class: ",
+         paste(names(models)[!sem], collapse = ", "), call. = FALSE)
+  }
   if (any(vapply(models[sem], function(m) length(.sem_fixed_signature(m)) > 0L, logical(1))) && !all(sem)) {
     stop("a SEMFit with `fixed_x` has a conditional likelihood and cannot be compared with a model of another class: ",
          paste(names(models)[!sem], collapse = ", "), call. = FALSE)

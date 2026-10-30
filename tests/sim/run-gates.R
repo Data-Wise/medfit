@@ -146,6 +146,7 @@ verdict_gate <- function(gate, d, s) {
                        "feasibility", "f_gap", "warning", "error", "optimum"),
     "compare-lr" = c("engine", "version", "seed", "verdict", "all_converged", "ref_ok", "drop", "above", "warn_drop",
                      "warn_above", "mislabel", "pass"),
+    fiml = c("cell", "check", "value", "limit", "pass"),
     restoration = c("check", "kind", "value", "limit", "pass", "detail"),
     "native-defaults" = c("cell", "combo", "quantity", "native", "oracle", "diff", "tol", "status", "reason"),
     semopy = c("param", "status", "est_gap", "se_rel", "sl_est_gap", "sl_se_rel", "reason")
@@ -456,6 +457,21 @@ verdict_gate <- function(gate, d, s) {
     # ADR D-13: semopy counts only where it agrees with lavaan; each status is re-derived from the recorded gaps, and
     # a pass floor keeps an all-disputed run from passing. Every row n/a (no uv) is a skip, except in qc-monthly.
     semopy = so_gate_checks(d, s), # nolint: object_usage_linter.
+    fiml = {
+      checks <- c("estimates", "covariance", "likelihood", "retained", "provenance", "guard")
+      cells <- c("271-free", "271-zero", "613-free", "613-zero")
+      expected <- as.vector(outer(cells, checks, paste, sep = ":"))
+      keys <- paste(d$cell, d$check, sep = ":")
+      limits <- c(estimates = 1e-5, covariance = 1e-3, likelihood = 1e-7, retained = 0, provenance = 0, guard = 0)
+      rbind(
+        rows_chk(d, s),
+        chk("complete cells", identical(sort(keys), sort(expected)), "four cells x six checks, no duplicates"),
+        chk("numerical checks", all(is.finite(d$value) & d$value >= 0 & d$value <= d$limit),
+            "every recorded discrepancy satisfies its frozen limit"),
+        chk("frozen limits", all(d$limit == limits[d$check]), "limits cannot be widened in results"),
+        chk("successful checks", all(d$pass %in% TRUE), "no failed or missing checks")
+      )
+    },
     restoration = {
       # restoration-bound T5/T6 (G12): every check of the script is a row; the numeric verdicts are re-derived from the
       # recorded numbers, so a row that claims pass over a bad number cannot pass. tol_est is k, tol_se the margin.
@@ -613,6 +629,7 @@ mutate <- function(gate, kind, d) {
       d$mislabel[1:3] <- TRUE
       d$pass[1:3] <- FALSE
     }
+    if (gate == "fiml") d$value[1L] <- 1
     if (gate == "restoration") {
       # the recorded numbers say fail while the pass column still says TRUE
       d$value[grepl("^separation", d$check)] <- 100
@@ -650,7 +667,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "compare-lr") d$verdict[1] <- "error"
     if (gate == "native-defaults") d$status[1] <- "fail"
     if (gate == "semopy") d$status[1] <- "error"
-    if (gate == "restoration") d$pass[1] <- FALSE
+    if (gate %in% c("restoration", "fiml")) d$pass[1] <- FALSE
   }
   if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
   if (kind == "floor_disproved_silent" && gate == "nonlinear-profile") {
@@ -690,7 +707,7 @@ mutate <- function(gate, kind, d) {
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
       "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration",
-      "native-defaults", "semopy"
+      "native-defaults", "semopy", "fiml"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -895,6 +912,7 @@ scripts <- c(
   factor = "tests/sim/sem-factor-gate.R",
   "oracle-sweep" = "tests/sim/sem-oracle-sweep.R",
   "compare-lr" = "tests/sim/compare-lr-gate.R",
+  fiml = "tests/sim/sem-fiml-gate.R",
   restoration = "tests/sim/sem-restoration-gate.R",
   "native-defaults" = "tests/sim/native-defaults-oracle.R",
   semopy = "tests/sim/semopy-oracle-gate.R"

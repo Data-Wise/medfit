@@ -1,0 +1,7 @@
+"cell","solver","start","first_status","status","accepted","nll","stationarity","reason"
+"nonidentification","slsqp",1,NA,3,TRUE,619.821996980347,4.34839245123776e-09,""
+"nonidentification","slsqp",2,NA,3,TRUE,619.821996980347,8.84437578852278e-10,""
+"nonidentification","slsqp",3,NA,3,TRUE,619.821996980347,4.6276393272926e-09,""
+"nonidentification","nlminb",1,0,1,FALSE,619.821996980347,1.27407730309134e-16,"optimizer status or stationarity"
+"nonidentification","nlminb",2,0,0,TRUE,619.821996980347,7.4204515637356e-12,""
+"nonidentification","nlminb",3,0,0,TRUE,619.821996980347,3.50221902935477e-11,""

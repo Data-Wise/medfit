@@ -23,11 +23,14 @@
 #' @param data A data frame with the model's observed variables. Numeric columns are used as is; a
 #'   factor, character or logical column named on a regression's right side is expanded to 0/1 dummies
 #'   (`?"medfit-syntax"` lists the rules and limits). Rows with missing values in those columns are dropped once
-#'   (listwise deletion) and counted in `n_dropped`.
+#'   (listwise deletion) and counted in `n_dropped` under the default `missing = "listwise"`.
+#'   Bounded `missing = "fiml"` accepts numeric model columns only, retains rows with any
+#'   observed model variable, and drops only all-empty model rows; extra columns do not select rows.
 #' @param information Character: `"observed"` (default) or `"expected"`
 #'   information for the standard errors. `"expected"` is an error for a model with a product term
 #'   that has an endogenous factor (the product is a function of another variable, so the expected
 #'   information gives wrong standard errors); use the default with `se_type = "sandwich"`.
+#'   Bounded FIML supports only `"observed"`.
 #' @param n_starts Positive integer or `NULL`: number of optimizer starts
 #'   tried before the fit is declared failed (`NULL` uses 5). Retries use
 #'   perturbed starts drawn under a fixed seed and never change the caller's
@@ -38,13 +41,15 @@
 #'   warning says when the accepted starts disagree); otherwise the first
 #'   accepted start is used. A supported nonzero-product equality searches both sign
 #'   branches independently, with `n_starts` starts per nonempty branch; aggregate
-#'   diagnostics report the actual attempts, not the number of branches.
-#' @param control List: options passed to the optimizer (`nloptr`).
+#'   diagnostics report the actual attempts, not the number of branches. For FIML,
+#'   only `NULL` or `3` is supported: three starts per solver, with refinements counted separately.
+#' @param control List: options passed to the optimizer (`nloptr`). FIML requires
+#'   the empty list under its initial validated numerical protocol.
 #' @param weights Optional numeric vector of non-negative case weights,
 #'   one per row of `data` (`NULL`, the default, fits unweighted). The fit is
 #'   weighted maximum likelihood on the weighted mean and covariance; the scale
 #'   of the weights does not matter. Rows dropped for missing values drop their
-#'   weights with them. Use with `se_type = "sandwich"`.
+#'   weights with them. Use with `se_type = "sandwich"`. FIML rejects every non-NULL weight vector.
 #' @param se_type Character: `"model"` (default) takes the covariance of the
 #'   estimates from the inverse information; `"sandwich"` uses the robust
 #'   sandwich covariance \eqn{A^{-1} B A^{-1}}{A^-1 B A^-1} with casewise scores
@@ -60,7 +65,7 @@
 #'   standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
 #'   A model with a product term (`y ~ x + m + x:m`) always fits the mean structure (it needs the mediator
 #'   intercept for the four-way decomposition), so with a product `meanstructure = FALSE` is an error.
-#'   An explicit `NULL` or `FALSE` is kept as given.
+#'   An explicit `NULL` or `FALSE` is kept as given for listwise fits. FIML requires `TRUE`.
 #' @param fixed_x `TRUE` (default), `FALSE`, or a character vector of exogenous observed variable names. The
 #'   selected variables (`TRUE`: every exogenous observed variable, product columns included) have their mean (with
 #'   a mean structure), variance and the exogenous covariances the model contains fixed at the sample moments of
@@ -75,6 +80,9 @@
 #'   (product and factor-dummy columns included) except those a `~~` or `~1`
 #'   statement names, which are left free with a message of class `medfit_message_fixed_x_lenient` (an explicit
 #'   `TRUE` errors there instead; an explicit `FALSE` is kept). `glance()$fixed_x` names the set the fit used.
+#' @param missing Exact missing-data method: `listwise` (default) or bounded Gaussian
+#'   `fiml` (no abbreviations). FIML requires explicit `fixed_x = FALSE`; see
+#'   the Bounded FIML section. The argument is appended to preserve existing positional calls.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
@@ -85,6 +93,53 @@
 #' on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
 #' parameter names). To keep the 0.14.x results, pass `fixed_x = FALSE, meanstructure = NULL`.
 #' The 0.14.x `options(medfit.native_defaults)` opt-in no longer has any effect.
+#'
+#' @section Bounded FIML (unreleased):
+#' Explicit `missing = "fiml"` fits a joint Gaussian random-X model under ignorable
+#' missingness (for example, MAR with the usual ignorability conditions). It evaluates
+#' observed components, without imputing values. It supports exactly three numeric
+#' continuous observed variables in X -> M -> Y, with the X -> Y path free or fixed
+#' exactly at zero, independent disturbances and free intercepts. Names and labels
+#' are arbitrary. Extra predictors, latent variables, products, factors, correlated
+#' disturbances, parameter ties, bounds, general constraints, defined parameters and
+#' syntax-supplied starts are not supported. Input checks and local numerical gates
+#' do not establish global identification, a global optimum or inference coverage.
+#'
+#' Supply `fixed_x = FALSE` explicitly; omission, `TRUE` and named subsets are errors.
+#' Require `meanstructure = TRUE`, `information = "observed"`, `se_type = "model"`,
+#' no weights, empty `control`, and `n_starts = NULL` or `3`. These numerical-control
+#' restrictions reproduce the initial validated protocol. Missing values never
+#' select FIML automatically, and a failed fit never falls back to listwise deletion.
+#' Native [fit_mediation()] forwards these settings through `engine_args`; its
+#' `se_type = "model"` remains a top-level argument.
+#'
+#' `nobs()` counts rows with any observed model variable; `n_dropped` counts only
+#' all-empty rows. Singleton patterns and data with no complete rows are supported
+#' when the local identification and information checks pass. Original positional
+#' row IDs and pattern counts are retained. `logLik()` includes the full Gaussian
+#' constants, with its `df` attribute equal to the free-parameter count (8 or 9).
+#' AIC and BIC use that likelihood and retained row count. The discrepancy `f` and
+#' model-test `df` are `NA`: no saturated missing-data reference model is fitted.
+#'
+#' Supported operations include SEMFit coefficient/covariance and likelihood
+#' summaries, parameter tidy/normal confidence intervals, and extraction followed by
+#' `paths()`, `nie()`, `nde()`, `te()`, `coef()`, `vcov()`, print/summary, tidy and
+#' normal path/effect confidence intervals. Extracted aliases follow topology;
+#' source labels/full covariance remain in the validated durable fit context.
+#' At a = b = 0, the NIE point value remains available but its inferential fields
+#' are unavailable; a known fixed direct path is a different case.
+#'
+#' SEMFit `glance()` reports likelihood/IC fields with unavailable model-test fields;
+#' extracted-object `glance()`, `quick()`, `pm()`, bootstrap, profiles, MBCO and fit
+#' tests are deferred and refuse FIML objects. Object-aware package guards precede
+#' package-controlled refits/RNG/workers; opaque user callbacks and external-first
+#' dispatch remain outside that guarantee. Adapter/topology/numerical failures retain
+#' stage, reason, original parent and completed attempts; basic argument-type errors
+#' can occur earlier. A dedicated `fiml-1` ledger binds likelihood, rows, settings
+#' and attempts; the version-1 ledger below continues to describe listwise fits.
+#' See the Methods and Formulas article, Bounded FIML, for the likelihood and
+#' the native engine guide for the supported workflow. This milestone is separate
+#' from 0.16; released 0.15.0 does not provide this option.
 #'
 #' @section Nonzero-product search coverage:
 #' One equality `c*a*b == q` is supported when the constants and `q/c` are finite and nonzero, `a` and `b`
@@ -203,10 +258,17 @@
 #' @export
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
                     control = list(), weights = NULL, se_type = c("model", "sandwich"),
-                    meanstructure = TRUE, fixed_x = TRUE, sampling_weights = lifecycle::deprecated()) {
+                    meanstructure = TRUE, fixed_x = TRUE, sampling_weights = lifecycle::deprecated(),
+                    missing = c("listwise", "fiml")) {
   # 0.15.0 (E-14): missing() is only reliable before either argument is reassigned.
-  fx_unset <- missing(fixed_x)
-  ms_unset <- missing(meanstructure)
+  fx_unset <- base::missing(fixed_x)
+  missing_unset <- base::missing(missing)
+  if (missing_unset) missing <- "listwise"
+  if (!is.character(missing) || length(missing) != 1L || is.na(missing) ||
+        !missing %in% c("listwise", "fiml")) {
+    stop("`missing` must be exactly 'listwise' or 'fiml'", call. = FALSE)
+  }
+  ms_unset <- base::missing(meanstructure)
   if (lifecycle::is_present(sampling_weights)) {
     lifecycle::deprecate_warn("0.8.0", "fit_sem(sampling_weights)", "fit_sem(weights)")
     if (!is.null(weights)) {
@@ -226,6 +288,10 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     .var.name = "fixed_x"
   )
   se_type <- match.arg(se_type)
+  if (missing == "fiml") {
+    return(.sem_fiml_syntax(paste(model, collapse = "\n"), data, information, n_starts,
+                            control, weights, se_type, meanstructure, fixed_x, fx_unset, match.call()))
+  }
   if (!is.null(weights) && se_type == "model") {
     .notify_ipw_model_se()
   }
@@ -296,7 +362,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   if (length(dots)) {
     stop("unused arguments for engine = \"native\": ", paste(names(dots), collapse = ", "), call. = FALSE)
   }
-  fit_args <- c("information", "n_starts", "control", "meanstructure", "fixed_x")
+  fit_args <- c("information", "n_starts", "control", "meanstructure", "fixed_x", "missing")
   extract_args <- c("outcome", "structure", "decomposition", "interaction", "a_label", "b_label", "cp_label")
   unknown <- setdiff(names(engine_args), c(fit_args, extract_args))
   if (length(unknown)) {

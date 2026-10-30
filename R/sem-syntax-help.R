@@ -5,6 +5,14 @@
 #' "native")`. It is a lavaan-style core plus two extensions, each marked
 #' "medfit extension" below. One statement per line (or separated by `;`).
 #'
+#' @section Missing-data scope:
+#' The general syntax below describes the default listwise path. The separate
+#' unreleased `fit_sem(missing = "fiml", fixed_x = FALSE)` option accepts only
+#' three numeric observed variables in simple mediation with a free or exactly
+#' zero direct path and free intercepts. General constraints, definitions, starts,
+#' bounds, latent variables, products and factors are not supported for FIML.
+#' See [fit_sem()] for all settings and downstream limits.
+#'
 #' @section Core statements:
 #' | Statement | Meaning |
 #' |:--|:--|

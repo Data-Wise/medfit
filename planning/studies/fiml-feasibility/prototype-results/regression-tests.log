@@ -1,0 +1,13 @@
+prototype-regressions: .............................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+                                                                    test nb
+1                    rank-deficient fits retain all solver/start records 18
+2                      likelihood-spread diagnostics retain all attempts 10
+3           information diagnostics and Hessian errors preserve attempts 27
+4 near-singular fixtures match the independently generated SD 0.03 model  6
+  failed error passed
+1      0 FALSE     18
+2      0 FALSE     10
+3      0 FALSE     27
+4      0 FALSE      6

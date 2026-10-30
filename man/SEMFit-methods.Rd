@@ -24,8 +24,9 @@ spaces (\code{"M~X"}, \code{"X~~X"}, \code{"eta=~m2"}). \code{vcov()}, \code{tid
 accessors \code{extract_mediation()} reads use the same names.
 \item \code{vcov()} returns their covariance, projected onto the active constraints
 and bounds; rows for a pinned parameter are zero.
-\item \code{nobs()} returns the number of rows used after listwise deletion.
-\item \code{logLik()} returns the log likelihood with the means free; its \code{df}
+\item \code{nobs()} returns rows used after listwise deletion by default; for bounded
+FIML it counts rows with any observed model variable.
+\item For listwise fits, \code{logLik()} returns the log likelihood with the means free; its \code{df}
 attribute counts the free parameters plus one mean per observed variable
 that is not fixed. With \code{fixed_x} it is conditional on the fixed variables
 (lavaan's value), so \code{AIC()} and \code{BIC()} of fits with different fixed sets
@@ -34,6 +35,14 @@ or data stop instead of ranking them; the same holds for \code{anova()} and
 parameters in \code{tidy()} (\code{fixed_x} column \code{TRUE}, no standard error) and in
 \code{summary()}; \code{coef()} and \code{vcov()} leave them out. \code{print()} and \code{summary()}
 say what the log likelihood is conditional on.
+\item \strong{Bounded FIML.} Raw total Gaussian \code{logLik()} includes constants; its \code{df}
+attribute counts the eight or nine free parameters. AIC/BIC use retained N.
+\code{f} and model-test \code{df} are unavailable: no saturated missing-data reference
+fit is performed. SEMFit \code{glance()} retains likelihood/IC fields with unavailable
+model tests and a reason. Extracted-object \code{glance()} is instead deferred.
+Normal parameter intervals, extraction and unstandardized path/effect
+summaries are supported; bootstrap, profiles, MBCO and fit tests refuse.
+See \code{\link[=fit_sem]{fit_sem()}} for settings, provenance and dispatch boundaries.
 \item \strong{Model test with a product term.} The global chi-square is not valid when
 a factor of a product term (\code{x:m}) is itself a regression target, because
 the model then treats the product as exogenous although it is a function of

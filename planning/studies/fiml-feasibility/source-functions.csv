@@ -1,0 +1,13 @@
+"function_name","source_file","installed_match"
+"lav_data_mi_patterns","lav_data_patterns.R",TRUE
+"lav_model_est","lav_model_estimate.R",TRUE
+"lav_model_hessian","lav_model_hessian.R",TRUE
+"lav_model_info_observed","lav_model_information.R",TRUE
+"lav_model_vcov","lav_model_vcov.R",TRUE
+"lav_mvn_mi_pattern_inv","lav_mvnorm_kernels.R",TRUE
+"lav_mvn_mi_loglik_samp","lav_mvnorm_missing.R",TRUE
+"lav_mvn_mi_dlogl_dmu_samp","lav_mvnorm_missing.R",TRUE
+"lav_mvn_mi_dlogl_dsigma_samp","lav_mvnorm_missing.R",TRUE
+"lav_mvn_mi_info_expected","lav_mvnorm_missing.R",TRUE
+"lav_model_objective_fiml","lav_objective.R",TRUE
+"lav_samp_mi_patterns","lav_samplestats.R",TRUE

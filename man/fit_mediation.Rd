@@ -86,11 +86,14 @@ that shrinks like 1/n.}
 
 \item{engine_args}{Named list of engine-specific overrides (default:
 \code{list()}, no overrides). Ignored by \code{engine = "glm"}. For
-\code{engine = "native"}, recognized names are \code{information}, \code{n_starts}, \code{meanstructure}, \code{fixed_x} and
+\code{engine = "native"}, recognized names are \code{information}, \code{n_starts}, \code{meanstructure}, \code{fixed_x}, \code{missing} and
 \code{control} (passed to \code{\link[=fit_sem]{fit_sem()}}, whose defaults for \code{fixed_x} and \code{meanstructure} changed in 0.15.0) and
 \code{outcome}, \code{structure},
 \code{decomposition}, \code{interaction}, \code{a_label}, \code{b_label} and \code{cp_label}
-(passed to \code{\link[=extract_mediation]{extract_mediation()}}); any other name is an error. For
+(passed to \code{\link[=extract_mediation]{extract_mediation()}}); any other name is an error. Bounded FIML
+requires \code{engine_args = list(missing = "fiml", fixed_x = FALSE)} and the
+settings/limits in \code{\link[=fit_sem]{fit_sem()}}; \code{se_type = "model"} stays at the top level.
+Listwise defaults and the other engines' missing-data behavior are unchanged. For
 \code{engine = "lmer"}, recognized names are \code{random_y} and \code{random_m}
 (one-sided formulas of level-1 terms that get correlated random slopes;
 \code{~ M} in \code{random_y} is applied to the within-cluster mediator term) and

@@ -15,6 +15,7 @@ S7::method(anova, SEMFit) <- function(object, ...) {
   dots <- list(...)
   exprs <- c(list(substitute(object)), as.list(substitute(list(...)))[-1L])
   models <- c(list(object), dots)
+  for (m in models) .sem_fiml_refuse(m, "anova()")
   nm <- names(models)
   if (is.null(nm)) {
     nm <- rep("", length(models))
@@ -450,7 +451,10 @@ S7::method(anova, SEMFit) <- function(object, ...) {
   paste(c(mt$endogenous, mt$restricted), collapse = "; ")
 }
 
-.sem_modeltest_reason <- function(fit) .sem_modeltest_text(fit@internals$ram$modeltest)
+.sem_modeltest_reason <- function(fit) {
+  if (.sem_fiml_is(fit)) return(.sem_fiml_modeltest_note())
+  .sem_modeltest_text(fit@internals$ram$modeltest)
+}
 
 # Chi-square (n times the minimized discrepancy) of a fit: the internal accessor that bypasses the model-test NA
 # policy. `glance()` calls it once its own checks (sampling weights, invalid model test) have passed; the gates in

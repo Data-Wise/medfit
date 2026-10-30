@@ -22,6 +22,56 @@ lc_rows <- function(txt) {
 lc_err <- function(expr) inherits(try(expr, silent = TRUE), "try-error")
 lc_se <- function(x) sqrt(diag(if (inherits(x, "lavaan")) lavaan::vcov(x) else vcov(x)))
 
+# Partial means that the default still deletes incomplete model rows, while the
+# opt-in fits the bounded random-X model and refuses unsupported settings/scope.
+# Injecting a fitter lets regressions exercise real fits with one contract removed.
+lc_missing_evidence <- function(fitter = fit_sem) {
+  dn <- medfit::mediation_demo
+  vars <- c("treatment", "mediator1", "outcome")
+  dn$outcome[1:5] <- NA_real_
+  dn[6L, vars] <- NA_real_
+  dn$irrelevant <- NA_real_
+  model <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
+  run <- function(...) tryCatch(suppressMessages(fitter(...)), error = function(e) NULL)
+  default <- run(model, dn)
+  listwise <- run(model, dn, missing = "listwise")
+  fiml <- run(model, dn, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE)
+  rows <- function(f, retained, dropped) {
+    !is.null(f) && nobs(f) == retained && f@n_dropped == dropped
+  }
+  same_default <- !is.null(default) && !is.null(listwise) &&
+    isTRUE(all.equal(coef(default), coef(listwise))) &&
+    isTRUE(all.equal(vcov(default), vcov(listwise)))
+  full_covariance <- !is.null(fiml) && identical(dim(vcov(fiml)), rep(length(coef(fiml)), 2L)) &&
+    identical(rownames(vcov(fiml)), names(coef(fiml))) && all(is.finite(vcov(fiml)))
+  refuses <- function(...) {
+    msg <- tryCatch({
+      suppressMessages(fitter(...))
+      ""
+    }, error = conditionMessage)
+    grepl("FIML", msg, fixed = TRUE)
+  }
+  c(
+    default_rows = rows(default, nrow(dn) - 6L, 6L),
+    listwise_rows = rows(listwise, nrow(dn) - 6L, 6L),
+    same_default = same_default,
+    fiml_rows = rows(fiml, nrow(dn) - 1L, 1L),
+    raw_likelihood = !is.null(fiml) && is.finite(as.numeric(logLik(fiml))) &&
+      identical(fiml@internals$likelihood$method, "fiml"),
+    full_covariance = full_covariance,
+    refuses_expected = refuses(
+      model, dn, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE, information = "expected"
+    ),
+    refuses_extra_predictor = refuses(
+      paste0(model, "\nmediator1 ~ mediator2"), dn, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE
+    )
+  )
+}
+
+lc_missing_status <- function(evidence) {
+  if (all(evidence)) "Partial" else "Unsupported"
+}
+
 lc_probes <- function() {
   d <- medfit::mediation_demo
   lab <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"
@@ -94,12 +144,7 @@ lc_probes <- function() {
       ml <- close(coef(fit_sem(m, d)), lavaan::coef(lv(m, estimator = "ML")))
       if (ml && !"estimator" %in% names(formals(fit_sem))) "Partial" else "Supported"
     },
-    "Missing data" = function() {
-      dn <- d
-      dn$outcome[1:5] <- NA
-      f <- suppressMessages(fit_sem(m, dn))
-      if (f@n_dropped == 5L && !"missing" %in% names(formals(fit_sem))) "Partial" else "Supported"
-    },
+    "Missing data" = function() lc_missing_status(lc_missing_evidence()),
     "Categorical outcomes" = function() {
       dc <- d
       dc$outcome <- cut(dc$outcome, 3, ordered_result = TRUE)
@@ -205,4 +250,37 @@ test_that("the categorical outcomes row points to lavaan (WLSMV)", {
   row <- rows[rows$feature == "Categorical outcomes", ]
   expect_match(row$native, "lavaan (WLSMV)", fixed = TRUE)
   expect_identical(row$status, "Unsupported")
+})
+
+test_that("the missing-data row checks retained rows, likelihood, covariance and bounded scope", {
+  evidence <- lc_missing_evidence()
+  expect_true(all(evidence[c("default_rows", "listwise_rows", "same_default", "fiml_rows")]))
+  expect_true(evidence[["raw_likelihood"]])
+  expect_true(evidence[["full_covariance"]])
+  expect_true(evidence[["refuses_expected"]])
+  expect_true(evidence[["refuses_extra_predictor"]])
+  expect_identical(lc_missing_status(evidence), "Partial")
+})
+
+test_that("missing-data evidence catches removed FIML and a relaxed information guard", {
+  no_fiml <- function(..., missing = "listwise") {
+    if (identical(missing, "fiml")) stop("deliberately removed FIML support")
+    fit_sem(..., missing = missing)
+  }
+  removed <- lc_missing_evidence(no_fiml)
+  expect_true(removed[["same_default"]])
+  expect_false(removed[["fiml_rows"]])
+  expect_false(removed[["raw_likelihood"]])
+  expect_identical(lc_missing_status(removed), "Unsupported")
+
+  relaxed <- function(..., information = "observed") {
+    # Deliberately accept expected information by silently using the observed path.
+    fit_sem(..., information = if (identical(information, "expected")) "observed" else information)
+  }
+  broadened <- lc_missing_evidence(relaxed)
+  expect_true(broadened[["fiml_rows"]])
+  expect_true(broadened[["raw_likelihood"]])
+  expect_false(broadened[["refuses_expected"]])
+  expect_true(broadened[["refuses_extra_predictor"]])
+  expect_identical(lc_missing_status(broadened), "Unsupported")
 })

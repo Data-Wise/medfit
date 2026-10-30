@@ -244,6 +244,7 @@ quick <- function(x, digits = 3, ...) {
 #' Internal quick implementation for MediationData
 #' @noRd
 .quick_mediation_data <- function(x, digits = 3, ...) {
+  .sem_fiml_refuse(x, "quick()")
   # Extract effects
   indirect <- as.numeric(nie(x))
   direct <- as.numeric(nde(x))

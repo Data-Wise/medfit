@@ -204,6 +204,8 @@ bootstrap_mediation <- function(statistic_fn,
                                 seed = NULL,
                                 cluster = NULL,
                                 ...) {
+  .sem_fiml_refuse(mediation_data, "bootstrap_mediation()")
+  .sem_fiml_refuse(data, "bootstrap_mediation()")
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
   checkmate::assert_function(statistic_fn, .var.name = "statistic_fn")
   method <- match.arg(method)

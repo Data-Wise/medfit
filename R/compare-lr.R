@@ -339,6 +339,7 @@
 #' @seealso [mbco_sem()], [fit_sem()]
 #' @export
 compare_lr <- function(object, paths, engine = c("lavaan", "openmx"), tolerance = 1e-4) {
+  .sem_fiml_refuse(object, "compare_lr()")
   engine <- match.arg(engine)
   if (!S7::S7_inherits(object, SEMFit)) {
     stop("`object` must be a SEMFit from fit_sem().", call. = FALSE)

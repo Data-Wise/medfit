@@ -198,7 +198,9 @@ mediator works through the same call.
 
 - **Observed means only.** Intercepts (`y ~ 1`, `y ~ 1 + x`) are estimated for observed variables;
   a free latent mean or intercept stops with "latent means are planned for a later release".
-- **One group**, listwise deletion for missing data, **numeric variables only**.
+- **One group**; listwise deletion is the missing-data default. The separate
+  unreleased [bounded FIML opt-in](#bounded-fiml) retains partially observed rows
+  only for its three-variable random-X model.
 - **ML only**, plus the HC0 sandwich; no robust chi-square, no fit indices beyond
   the chi-square, AIC and BIC.
 - **Products** (`x:m`, which give the four-way decomposition) work for two observed variables inside a
@@ -217,3 +219,85 @@ mediator works through the same call.
 [Constraints and the MBCO test](model-native-constraints.html) |
 [Native engine book (source in the repository)](https://github.com/Data-Wise/medfit/tree/main/book) |
 [Cookbook](cookbook.html) | [Methods and Formulas](methods.html) | `?"medfit-syntax"`
+
+
+## Bounded FIML (unreleased) {#bounded-fiml}
+
+This separate development milestone is not assigned to 0.16 and is unavailable
+in released 0.15.0. Ordinary calls still delete incomplete model rows listwise.
+The explicit opt-in below fits exactly three numeric continuous observed
+variables: X to M to Y with a free or exactly zero direct path, independent
+Gaussian disturbances and free intercepts. It assumes ignorable missingness
+under that joint model; FIML does not impute the missing values.
+
+```{r}
+#| label: bounded-fiml-workflow
+fiml_data <- mediation_demo[c("treatment", "mediator1", "outcome")]
+fiml_data$mediator1[seq(1, nrow(fiml_data), by = 7)] <- NA_real_
+fiml_syntax <- "mediator1 ~ a*treatment
+outcome ~ b*mediator1 + cp*treatment"
+fiml_fit <- medfit::fit_sem(
+  fiml_syntax, fiml_data, missing = "fiml", fixed_x = FALSE,
+  meanstructure = TRUE, information = "observed", se_type = "model"
+)
+c(retained_rows = nobs(fiml_fit), logLik = as.numeric(logLik(fiml_fit)))
+fiml_effects <- extract_mediation(fiml_fit, treatment = "treatment", mediator = "mediator1")
+nie(fiml_effects)
+nde(fiml_effects)
+te(fiml_effects)
+tidy(fiml_effects, type = "effects")
+```
+
+The wrapper route is `fit_mediation(model = fiml_syntax, data = fiml_data,
+treatment = "treatment", mediator = "mediator1", engine = "native",
+se_type = "model", engine_args = list(missing = "fiml", fixed_x = FALSE,
+meanstructure = TRUE, information = "observed"))`. There is no new top-level
+`missing` argument on `fit_mediation()`; `med()` remains a formula-building fitter.
+The missing-method strings must match exactly. A failed FIML fit never falls
+back to listwise deletion or another engine, even on complete data.
+
+| Setting | Bounded FIML requirement |
+| --- | --- |
+| `fixed_x` | Explicit `FALSE`; omission, `TRUE` and named subsets refuse |
+| `meanstructure` | `TRUE`; `NULL` and `FALSE` refuse |
+| `information`, `se_type` | `"observed"`, `"model"` |
+| Weights | No non-NULL vector, including unit weights or the deprecated alias |
+| `n_starts`, `control` | `NULL` or 3; empty control; no syntax-supplied starts |
+| Topology | Three variables only; free or exactly zero direct path; no `:=`, constraints, ties, bounds, extra predictors, latent variables, factors or products |
+
+The start/control restrictions preserve the initial validated protocol, rather
+than expressing mathematical limits of FIML. Three starts run for each solver;
+six attempt groups normally involve nine actual calls with nlminb refinements.
+Failures and completed calls are retained separately. Numerical acceptance
+requires both solvers, stationarity, agreeing likelihoods, local rank and valid
+observed information; it does not certify a global optimum or inference coverage.
+
+Rows with any observed model variable are retained, including singleton patterns;
+only all-empty model rows are dropped. Extra columns do not select rows. No
+complete-case initialization is used: data with no complete rows can fit when
+local identification checks pass. `nobs()` counts retained rows, not observed
+cells. Original positional row IDs and pattern/count evidence are retained.
+
+`coef()`, full `vcov()`, `nobs()`, raw `logLik()`, AIC/BIC, print/summary,
+parameter tidy and normal confidence intervals work on the SEMFit. Its
+`glance()` reports likelihood/IC fields, with model-test fields unavailable and
+an explicit reason. The discrepancy `f` and model-test `df` are `NA`; the separate
+free-parameter count is eight or nine. There is no saturated missing-data fit.
+See [Methods and Formulas](methods.html#bounded-fiml) for the likelihood.
+
+Extraction preserves validated FIML context through copying and serialization.
+Original SEMFit labels/full covariance stay unchanged; extracted a/b/c_prime
+and m_/y_ aliases follow topology, with original coordinates retained in context.
+Supported extracted operations are `paths()`, `nie()`, `nde()`, `te()`, `coef()`
+(paths/effects/all), full `vcov()`, print/summary, tidy and normal path/effect
+confidence intervals. At a = b = 0 the NIE point value is retained but its
+inferential fields are unavailable. A fixed direct path of zero instead has
+known zero covariance; other valid effect inference remains available.
+
+Extracted-object `glance()`, `quick()`, `pm()`, bootstrap/boot intervals, profiles,
+MBCO, fit tests, fit indices and prediction/residual APIs are deferred and refuse
+FIML objects. Package object-aware guards act before package-controlled refits,
+RNG or worker launch; opaque user callbacks are outside this guarantee. AIC/BIC
+comparisons dispatched with SEMFit first require compatible FIML contexts and
+refuse external/mixed objects before external likelihood calls. Calls dispatched
+first through another class are outside medfit's guard.

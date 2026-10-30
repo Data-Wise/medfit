@@ -125,6 +125,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   if (!S7::S7_inherits(object, SEMFit)) {
     stop("`object` must be a SEMFit from fit_sem().", call. = FALSE)
   }
+  .sem_fiml_refuse(object, "mbco_sem()")
   fit <- object
   .sem_check_modeltest(list(fit), "mbco_sem()")
   two_form <- is.null(paths) && !missing(b)

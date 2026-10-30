@@ -1,3 +1,38 @@
+# Bounded FIML local milestone COMPLETE — 2026-10-30
+# FINAL PASS on 32a7b98: 1765 tests/9604 expectations, zero failures/errors; built-package check OK (0 errors/warnings/notes); overall coverage 96.20767%; installed lint clean. Warnings/skips and defensive coverage gaps recorded in completed plan. Docs/independent QA PASS. Worktree retained for review; separate from 0.16, no push or expensive CI.
+# Bounded FIML docs/local verification resume authorized — 2026-10-30
+# Resolve the native-tutorial render exit and two remaining scope claims; then docs PASS -> final local suite/package/coverage checks. Separate from 0.16; no push or expensive CI.
+# Bounded FIML docs stage stopped after corrective retry — 2026-10-30
+# Docs b37f878: 86 tests/620 expectations, spelling/lint PASS; all 6 HTML outputs inspected, but native-tutorial render exit1 unexplained. Two listwise claims remain. Final gates not started; active plan retained. Separate from 0.16; no push or expensive CI.
+# Bounded FIML pre-docs corrective gates PASS — 2026-10-29
+# Test-only 0f40b73f closes all 8 identified critical rejection groups; independent QA 20/312 and gate retry 113/985 pass. Documentation in progress; final full suite/package check/overall coverage pending. Separate from 0.16; no push or expensive CI.
+# Bounded FIML corrective independent QA PASS — 2026-10-29
+# Source 625e7280: both boundary P2s resolved; 14 tests/246 expectations and 24 registered gate checks pass independently. Local gates/docs/final full suite pending; separate from 0.16, no push or expensive CI.
+# Bounded FIML initial QA: two P2s under corrective pass — 2026-10-29
+# Numerical public-route/oracle checks pass; fix mixed-class AIC/BIC refusal and post-solver evidence retention before re-QA/gates. Initial source c3247be3; plan remains active.
+# Bounded FIML integration authorized locally — 2026-10-29
+# Active plan: planning/PLAN-FIML-bounded-integration-2026-10-29.md. Implementation -> independent QA -> local gates -> docs -> final gates. Separate from 0.16; no push, PR, release or expensive CI.
+# Bounded FIML design accessor P2 resolved — 2026-10-29
+# Corrected med() getter mistake to actual paths/nie/nde/te/coef/vcov routes; prospective acceptance now tests extracted summaries, tidy/normal intervals and deferred convenience/refit guards.
+# Revised static design review PASS; no production implementation or API runtime validation claimed. Separate from 0.16; no production changes, push or expensive CI. See planning/studies/fiml-feasibility/integration-design-review.md.
+# Bounded FIML integration design drafted — 2026-10-29
+# Design-only authorization: internal simple-mediation adopter; explicit opt-in/random-X API proposal; unchanged listwise/default path; downstream support/refusal and provenance rules.
+# See planning/studies/fiml-feasibility/integration-design.md. Proposed contract awaits review; production implementation/API changes remain unauthorized. Separate from 0.16; no production changes, push or expensive CI.
+# FIML P2 review repairs complete locally — 2026-10-29
+# Both findings resolved: all post-solver errors retain six attempt records; near-singular fixtures now match frozen residual SD0.03, with historical SD0.027 evidence preserved.
+# Regression4tests/61assertions PASS; corrected acceptance42/42fits,13/13edges,126/126derivatives and identities; reference30/30fits and10/10edges PASS. Other40 cells exactly unchanged.
+# Study-only technical docs/report refreshed; no production changes, push, expensive CI or0.16 scope change. See planning/studies/fiml-feasibility/p2-repair-report.md.
+# FIML documentation consolidated — 2026-10-29
+# Study README and technical-record.md now index all plans, formulas, scope decisions, fixes, rejected alternatives, evidence and deferred integration. Numerical PASS remains b4a50f36; docs-only consolidation.
+# Bounded FIML prototype optimizer repair: local PASS — 2026-10-29
+# Four prior optimizer failures resolved;42/42cells,13/13edges,126/126gradient/Hessian checks and126/126likelihood identitiesPASS. Original raw reference30/30 and10/10PASS; all four mutants caught.
+# Native nlminb refinement receives full Hessian; independent oracle uses its own numerical derivatives; lavaan reference uses affine coordinates with independent full-covariance transport. Fixed acceptance limits/status requirements unchanged.
+# See planning/studies/fiml-feasibility/prototype-report.md; initial NO-GO and rejected solver trials preserved. Study only; no production edits, push, expensive CI, integration or0.16 change.
+# FIML prototype scope revised; authorization pending — 2026-10-29
+# Fixed-X probes are reference-only; proposed native acceptance covers 30 random-X cells/eight in-scope edges and rejects fixed-X inputs. No prototype authorization implied.
+# Three-variable acyclic Gaussian mediation only; random X, free means, independent disturbances, free/zero direct path. Separate from 0.16.
+# Prospective full-covariance and scaled derivative criteria now explicit; no-complete-row initialization and exact row accounting required.
+# Prototype gates separated from deferred production/API/downstream integration gates. No prototype or production changes, push or expensive CI authorized/performed by this revision.
 # Issue #360 PR #363 lint repair — 2026-10-29
 # Author authorized push/PR and the namespace repair. Qualify oracle-helper assertion for unloaded CI lint; numerical assertions unchanged.
 # Unloaded installed-package lint0; focused69/69 and six independent full-likelihood fit comparisons PASS; wrong-likelihood mutant still caught. Fast hosted CI pending on repaired head.
@@ -347,3 +382,13 @@ Key pages:
 - Introduction: /articles/introduction.html
 - Model Extraction: /articles/extraction.html
 - Bootstrap Inference: /articles/bootstrap.html
+# Separate local FIML feasibility study — 2026-10-29
+# codex/fiml-feasibility, baseline edcf23d8; adversarial protocol committed before execution.
+# Independent observed-data likelihood/observed-Hessian comparisons: 30/30 cells and 10/10 edges PASS; initial failures preserved and diagnosed without widening criteria.
+# Technical GO for a separate design only; adopter/native integration unverified. See planning/studies/fiml-feasibility/report.md.
+# No production changes, push, expensive CI, release or dev-to-main merge. Separate from 0.16.
+# FIML numerical implementation research locally complete — 2026-10-29
+# Version-pinned lavaan0.7-3: 12 source/installed functions match; six derivative/information probes PASS.
+# Observed Hessian needs model-mapping curvature (0.8–2.0% fitted discrepancy if omitted); expected-information MAR validity is not established by algebra agreement.
+# Memo recommends a separate random-X/means/observed-information design with current optimizer initially; fixed-X, no-complete-row initialization and downstream support need explicit gates.
+# Research only; no production edits, push, expensive CI or 0.16 scope expansion.

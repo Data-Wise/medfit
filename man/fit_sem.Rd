@@ -14,7 +14,8 @@ fit_sem(
   se_type = c("model", "sandwich"),
   meanstructure = TRUE,
   fixed_x = TRUE,
-  sampling_weights = lifecycle::deprecated()
+  sampling_weights = lifecycle::deprecated(),
+  missing = c("listwise", "fiml")
 )
 }
 \arguments{
@@ -29,12 +30,15 @@ supported class and each limit.}
 \item{data}{A data frame with the model's observed variables. Numeric columns are used as is; a
 factor, character or logical column named on a regression's right side is expanded to 0/1 dummies
 (\code{?"medfit-syntax"} lists the rules and limits). Rows with missing values in those columns are dropped once
-(listwise deletion) and counted in \code{n_dropped}.}
+(listwise deletion) and counted in \code{n_dropped} under the default \code{missing = "listwise"}.
+Bounded \code{missing = "fiml"} accepts numeric model columns only, retains rows with any
+observed model variable, and drops only all-empty model rows; extra columns do not select rows.}
 
 \item{information}{Character: \code{"observed"} (default) or \code{"expected"}
 information for the standard errors. \code{"expected"} is an error for a model with a product term
 that has an endogenous factor (the product is a function of another variable, so the expected
-information gives wrong standard errors); use the default with \code{se_type = "sandwich"}.}
+information gives wrong standard errors); use the default with \code{se_type = "sandwich"}.
+Bounded FIML supports only \code{"observed"}.}
 
 \item{n_starts}{Positive integer or \code{NULL}: number of optimizer starts
 tried before the fit is declared failed (\code{NULL} uses 5). Retries use
@@ -46,15 +50,17 @@ local optima, every start is tried and the best accepted one is kept (a
 warning says when the accepted starts disagree); otherwise the first
 accepted start is used. A supported nonzero-product equality searches both sign
 branches independently, with \code{n_starts} starts per nonempty branch; aggregate
-diagnostics report the actual attempts, not the number of branches.}
+diagnostics report the actual attempts, not the number of branches. For FIML,
+only \code{NULL} or \code{3} is supported: three starts per solver, with refinements counted separately.}
 
-\item{control}{List: options passed to the optimizer (\code{nloptr}).}
+\item{control}{List: options passed to the optimizer (\code{nloptr}). FIML requires
+the empty list under its initial validated numerical protocol.}
 
 \item{weights}{Optional numeric vector of non-negative case weights,
 one per row of \code{data} (\code{NULL}, the default, fits unweighted). The fit is
 weighted maximum likelihood on the weighted mean and covariance; the scale
 of the weights does not matter. Rows dropped for missing values drop their
-weights with them. Use with \code{se_type = "sandwich"}.}
+weights with them. Use with \code{se_type = "sandwich"}. FIML rejects every non-NULL weight vector.}
 
 \item{se_type}{Character: \code{"model"} (default) takes the covariance of the
 estimates from the inverse information; \code{"sandwich"} uses the robust
@@ -72,7 +78,7 @@ not written has a free one, so a model with only free intercepts has the same es
 standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
 A model with a product term (\code{y ~ x + m + x:m}) always fits the mean structure (it needs the mediator
 intercept for the four-way decomposition), so with a product \code{meanstructure = FALSE} is an error.
-An explicit \code{NULL} or \code{FALSE} is kept as given.}
+An explicit \code{NULL} or \code{FALSE} is kept as given for listwise fits. FIML requires \code{TRUE}.}
 
 \item{fixed_x}{\code{TRUE} (default), \code{FALSE}, or a character vector of exogenous observed variable names. The
 selected variables (\code{TRUE}: every exogenous observed variable, product columns included) have their mean (with
@@ -91,6 +97,10 @@ statement names, which are left free with a message of class \code{medfit_messag
 
 \item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name
 \code{\link[=fit_mediation]{fit_mediation()}} uses; the old name still works with a warning.}
+
+\item{missing}{Exact missing-data method: \code{listwise} (default) or bounded Gaussian
+\code{fiml} (no abbreviations). FIML requires explicit \code{fixed_x = FALSE}; see
+the Bounded FIML section. The argument is appended to preserve existing positional calls.}
 }
 \value{
 A \link{SEMFit} object. With a product term whose factor is a regression target (\code{x:m} with
@@ -113,6 +123,55 @@ names in \code{coef()}, \code{vcov()} and \code{tidy()} change; the structural e
 on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
 parameter names). To keep the 0.14.x results, pass \verb{fixed_x = FALSE, meanstructure = NULL}.
 The 0.14.x \code{options(medfit.native_defaults)} opt-in no longer has any effect.
+}
+
+\section{Bounded FIML (unreleased)}{
+
+Explicit \code{missing = "fiml"} fits a joint Gaussian random-X model under ignorable
+missingness (for example, MAR with the usual ignorability conditions). It evaluates
+observed components, without imputing values. It supports exactly three numeric
+continuous observed variables in X -> M -> Y, with the X -> Y path free or fixed
+exactly at zero, independent disturbances and free intercepts. Names and labels
+are arbitrary. Extra predictors, latent variables, products, factors, correlated
+disturbances, parameter ties, bounds, general constraints, defined parameters and
+syntax-supplied starts are not supported. Input checks and local numerical gates
+do not establish global identification, a global optimum or inference coverage.
+
+Supply \code{fixed_x = FALSE} explicitly; omission, \code{TRUE} and named subsets are errors.
+Require \code{meanstructure = TRUE}, \code{information = "observed"}, \code{se_type = "model"},
+no weights, empty \code{control}, and \code{n_starts = NULL} or \code{3}. These numerical-control
+restrictions reproduce the initial validated protocol. Missing values never
+select FIML automatically, and a failed fit never falls back to listwise deletion.
+Native \code{\link[=fit_mediation]{fit_mediation()}} forwards these settings through \code{engine_args}; its
+\code{se_type = "model"} remains a top-level argument.
+
+\code{nobs()} counts rows with any observed model variable; \code{n_dropped} counts only
+all-empty rows. Singleton patterns and data with no complete rows are supported
+when the local identification and information checks pass. Original positional
+row IDs and pattern counts are retained. \code{logLik()} includes the full Gaussian
+constants, with its \code{df} attribute equal to the free-parameter count (8 or 9).
+AIC and BIC use that likelihood and retained row count. The discrepancy \code{f} and
+model-test \code{df} are \code{NA}: no saturated missing-data reference model is fitted.
+
+Supported operations include SEMFit coefficient/covariance and likelihood
+summaries, parameter tidy/normal confidence intervals, and extraction followed by
+\code{paths()}, \code{nie()}, \code{nde()}, \code{te()}, \code{coef()}, \code{vcov()}, print/summary, tidy and
+normal path/effect confidence intervals. Extracted aliases follow topology;
+source labels/full covariance remain in the validated durable fit context.
+At a = b = 0, the NIE point value remains available but its inferential fields
+are unavailable; a known fixed direct path is a different case.
+
+SEMFit \code{glance()} reports likelihood/IC fields with unavailable model-test fields;
+extracted-object \code{glance()}, \code{quick()}, \code{pm()}, bootstrap, profiles, MBCO and fit
+tests are deferred and refuse FIML objects. Object-aware package guards precede
+package-controlled refits/RNG/workers; opaque user callbacks and external-first
+dispatch remain outside that guarantee. Adapter/topology/numerical failures retain
+stage, reason, original parent and completed attempts; basic argument-type errors
+can occur earlier. A dedicated \code{fiml-1} ledger binds likelihood, rows, settings
+and attempts; the version-1 ledger below continues to describe listwise fits.
+See the Methods and Formulas article, Bounded FIML, for the likelihood and
+the native engine guide for the supported workflow. This milestone is separate
+from 0.16; released 0.15.0 does not provide this option.
 }
 
 \section{Nonzero-product search coverage}{
