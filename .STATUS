@@ -1,3 +1,6 @@
+# Bounded FIML prototype authorized locally — 2026-10-29
+# Frozen fixtures/criteria in planning/studies/fiml-feasibility/prototype-protocol.md; implementation and acceptance pending.
+# Study-only files; no production edits, push, expensive CI, integration or 0.16 scope change.
 # FIML prototype scope revised; authorization pending — 2026-10-29
 # Fixed-X probes are reference-only; proposed native acceptance covers 30 random-X cells/eight in-scope edges and rejects fixed-X inputs. No prototype authorization implied.
 # Three-variable acyclic Gaussian mediation only; random X, free means, independent disturbances, free/zero direct path. Separate from 0.16.
