@@ -75,6 +75,8 @@
 #'   (product and factor-dummy columns included) except those a `~~` or `~1`
 #'   statement names, which are left free with a message of class `medfit_message_fixed_x_lenient` (an explicit
 #'   `TRUE` errors there instead; an explicit `FALSE` is kept). `glance()$fixed_x` names the set the fit used.
+#' @param missing Exact missing-data method: `listwise` (default) or bounded Gaussian
+#'   `fiml`. FIML requires explicit `fixed_x = FALSE`; see Details.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
@@ -203,10 +205,17 @@
 #' @export
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
                     control = list(), weights = NULL, se_type = c("model", "sandwich"),
-                    meanstructure = TRUE, fixed_x = TRUE, sampling_weights = lifecycle::deprecated()) {
+                    meanstructure = TRUE, fixed_x = TRUE, sampling_weights = lifecycle::deprecated(),
+                    missing = c("listwise", "fiml")) {
   # 0.15.0 (E-14): missing() is only reliable before either argument is reassigned.
-  fx_unset <- missing(fixed_x)
-  ms_unset <- missing(meanstructure)
+  fx_unset <- base::missing(fixed_x)
+  missing_unset <- base::missing(missing)
+  if (missing_unset) missing <- "listwise"
+  if (!is.character(missing) || length(missing) != 1L || is.na(missing) ||
+        !missing %in% c("listwise", "fiml")) {
+    stop("`missing` must be exactly 'listwise' or 'fiml'", call. = FALSE)
+  }
+  ms_unset <- base::missing(meanstructure)
   if (lifecycle::is_present(sampling_weights)) {
     lifecycle::deprecate_warn("0.8.0", "fit_sem(sampling_weights)", "fit_sem(weights)")
     if (!is.null(weights)) {
@@ -226,6 +235,10 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     .var.name = "fixed_x"
   )
   se_type <- match.arg(se_type)
+  if (missing == "fiml") {
+    return(.sem_fiml_syntax(paste(model, collapse = "\n"), data, information, n_starts,
+                            control, weights, se_type, meanstructure, fixed_x, fx_unset, match.call()))
+  }
   if (!is.null(weights) && se_type == "model") {
     .notify_ipw_model_se()
   }
@@ -296,7 +309,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   if (length(dots)) {
     stop("unused arguments for engine = \"native\": ", paste(names(dots), collapse = ", "), call. = FALSE)
   }
-  fit_args <- c("information", "n_starts", "control", "meanstructure", "fixed_x")
+  fit_args <- c("information", "n_starts", "control", "meanstructure", "fixed_x", "missing")
   extract_args <- c("outcome", "structure", "decomposition", "interaction", "a_label", "b_label", "cp_label")
   unknown <- setdiff(names(engine_args), c(fit_args, extract_args))
   if (length(unknown)) {

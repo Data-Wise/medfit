@@ -343,6 +343,7 @@ S7::method(te, MediationData) <- function(x, ...) {
 #' @describeIn pm Method for MediationData
 #' @noRd
 S7::method(pm, MediationData) <- function(x, ...) {
+  .sem_fiml_refuse(x, "pm()")
   indirect <- x@a_path * x@b_path
   total <- indirect + x@c_prime
 

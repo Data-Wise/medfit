@@ -125,14 +125,17 @@
 NULL
 
 S7::method(coef, SEMFit) <- function(object, ...) {
+  if (.sem_fiml_is(object)) .sem_fiml_require(object)
   object@theta
 }
 
 S7::method(vcov, SEMFit) <- function(object, ...) {
+  if (.sem_fiml_is(object)) .sem_fiml_require(object)
   object@vcov
 }
 
 S7::method(nobs, SEMFit) <- function(object, ...) {
+  if (.sem_fiml_is(object)) .sem_fiml_require(object)
   object@n_obs
 }
 
@@ -140,6 +143,11 @@ S7::method(nobs, SEMFit) <- function(object, ...) {
 # A covariance-only fit leaves the means saturated, so its parameter count adds the p means; a mean-structure
 # fit already has its free intercepts in `theta`, and fixed ones are not parameters.
 S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_linter.
+  if (.sem_fiml_is(object)) {
+    .sem_fiml_require(object)
+    l <- object@internals$likelihood
+    return(structure(-l$nll, df = l$k, nobs = l$n_obs, class = "logLik"))
+  }
   if (!is.null(object@internals$weights)) {
     stop("logLik() is not defined for a fit with sampling weights: the weighted likelihood is a pseudo likelihood",
          call. = FALSE)
@@ -188,6 +196,10 @@ S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_lint
 S7::method(print, SEMFit) <- function(x, ...) {
   .sem_validate_fit_search(x)
   cat("SEMFit (native maximum likelihood)\n")
+  if (.sem_fiml_is(x)) {
+    .sem_fiml_require(x)
+    cat("  FIML, random X; retained partial rows (only all-empty rows dropped)\n")
+  }
   cat("==================================\n\n")
   cat(sprintf("  Observations:  %d", x@n_obs))
   if (x@n_dropped > 0L) cat(sprintf(" (%d dropped for missing values)", x@n_dropped))
@@ -223,6 +235,7 @@ S7::method(print, SEMFit) <- function(x, ...) {
 }
 
 S7::method(summary, SEMFit) <- function(object, ...) {
+  if (.sem_fiml_is(object)) .sem_fiml_require(object)
   fx <- .sem_fixed_rows(object@table)
   tab <- object@table[object@table$free | fx, , drop = FALSE]
   coefs <- data.frame(
@@ -232,7 +245,7 @@ S7::method(summary, SEMFit) <- function(object, ...) {
   coefs$p <- 2 * stats::pnorm(-abs(coefs$z))
   if (any(fx)) coefs$fixed_x <- tab$fixed_x %in% TRUE
   reason <- .sem_modeltest_reason(object)
-  structure(
+  out <- structure(
     list(
       fixed_x = object@internals$fixed_x, coefficients = coefs, defined = object@defined, n_obs = object@n_obs,
       n_dropped = object@n_dropped, model_test_note = if (!is.null(reason)) .sem_modeltest_note(reason),
@@ -242,6 +255,8 @@ S7::method(summary, SEMFit) <- function(object, ...) {
     ),
     class = "summary_SEMFit"
   )
+  if (.sem_fiml_is(object)) out$likelihood <- object@internals$likelihood
+  out
 }
 
 #' Print Summary for SEMFit
@@ -253,9 +268,14 @@ S7::method(summary, SEMFit) <- function(object, ...) {
 #' @noRd
 print_summary_semfit <- function(x, ...) {
   cat("Summary of SEMFit\n")
+  fiml <- identical(x$likelihood$method, "fiml")
+  if (fiml) cat("FIML, random X; retained partial rows\n")
   cat("=================\n\n")
   cat(sprintf("Observations: %d", x$n_obs))
-  if (x$n_dropped > 0L) cat(sprintf(" (%d dropped for missing values, listwise deletion)", x$n_dropped))
+  if (x$n_dropped > 0L) {
+    cat(sprintf(if (fiml) " (%d all-empty rows dropped)" else
+                  " (%d dropped for missing values, listwise deletion)", x$n_dropped))
+  }
   cat("\n")
   cat(sprintf("Degrees of freedom: %s\n", format(x$df)))
   if (!is.null(x$model_test_note)) cat("Note: ", x$model_test_note, "\n", sep = "")
@@ -317,6 +337,13 @@ print_summary_semfit <- function(x, ...) {
 }
 
 S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) {
+  if (.sem_fiml_is(object)) {
+    .sem_fiml_require(object)
+    args <- list(...)
+    if (!is.null(args$method) && !identical(args$method, "normal")) {
+      .sem_fiml_refuse(object, "non-normal confidence intervals")
+    }
+  }
   checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
   v <- .sem_est_se(object)
   pick <- names(v$est)
@@ -359,6 +386,7 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
 # p-value, and with `conf_int` the Wald interval, the same numbers `confint()` returns. `term` is the name `coef()`
 # uses; `op` is the operator of the parameter's row in the parameter table (`:=` for a defined parameter).
 .tidy_semfit <- function(x, type = c("all", "parameters", "defined"), conf_int = FALSE, conf_level = 0.95, ...) {
+  if (.sem_fiml_is(x)) .sem_fiml_require(x)
   type <- match.arg(type)
   checkmate::assert_flag(conf_int, .var.name = "conf_int")
   checkmate::assert_number(conf_level, lower = 0, upper = 1, .var.name = "conf_level")
@@ -427,6 +455,7 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
 
 # The note `glance()` carries as attribute "note" and `summary()` prints when the model test is unavailable.
 .sem_modeltest_note <- function(reason) {
+  if (identical(reason, .sem_fiml_modeltest_note())) return(reason)
   paste0("model test not valid with a product of an endogenous variable or a restricted exogenous block (", reason,
          ")")
 }

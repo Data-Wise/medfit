@@ -210,6 +210,7 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
                                                method = c("normal", "boot"), ...) {
   method <- match.arg(method)
 
+  if (.sem_fiml_is(object) && method == "boot") .sem_fiml_refuse(object, "bootstrap CI")
   if (method == "boot") {
     stop("Bootstrap CI requires bootstrap_mediation(). Use method = 'normal' ",
          "for quick CI or call bootstrap_mediation() directly.", call. = FALSE)
@@ -228,10 +229,15 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
     names(se) <- names(coefs)
   } else if (identical(parm, "effects")) {
     coefs <- coef(object, type = "effects")      # nie, nde, te
-    warning("Normal approximation for NIE may be inaccurate. ",
-            "Consider bootstrap_mediation() for robust inference.", call. = FALSE)
+    if (.sem_fiml_is(object)) {
+      warning("Normal approximation for NIE may be inaccurate; FIML bootstrap is unavailable.", call. = FALSE)
+    } else {
+      warning("Normal approximation for NIE may be inaccurate. ",
+              "Consider bootstrap_mediation() for robust inference.", call. = FALSE)
+    }
     # Delta method over the full vcov, including Cov(a, b) and Cov(ab, c')
     se <- .effect_se(object, c("nie", "nde", "te"))
+    if (.sem_fiml_origin(object)) se["nie"] <- NA_real_
   } else {
     stop("parm must be 'paths' or 'effects'", call. = FALSE)
   }
@@ -250,6 +256,9 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
     paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
   )
 
+  if (.sem_fiml_origin(object) && identical(parm, "effects")) {
+    attr(ci_mat, "note") <- "NIE inference unavailable: zero delta gradient"
+  }
   ci_mat
 }
 

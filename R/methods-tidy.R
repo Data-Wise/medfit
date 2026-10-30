@@ -231,6 +231,7 @@ glance_s7_object <- function(x, ...) {
 #'
 #' @noRd
 .glance_mediation_data <- function(x, ...) {
+  .sem_fiml_refuse(x, "glance() on extracted data")
   result <- data.frame(
     nie = as.numeric(nie(x)),
     nde = as.numeric(nde(x)),
@@ -332,6 +333,7 @@ glance_s7_object <- function(x, ...) {
   # match() gives NA (not an error) for a path name missing from @vcov
   path_se <- sqrt(diag(vc)[match(path_alias, rownames(vc))])
   effect_se <- if (length(effect_vec)) .effect_se_or_na(x, names(effect_vec)) else NULL
+  if (.sem_fiml_origin(x) && "nie" %in% names(effect_se)) effect_se["nie"] <- NA_real_
 
   result <- data.frame(
     term = c(names(path_vec), names(effect_vec)),
@@ -356,6 +358,10 @@ glance_s7_object <- function(x, ...) {
     result <- tibble::as_tibble(result)
   }
 
+  if (.sem_fiml_is(x)) {
+    attr(result, "fit_context") <- x@fit_context
+    if (.sem_fiml_origin(x)) attr(result, "note") <- "NIE inference unavailable: zero delta gradient"
+  }
   result
 }
 
