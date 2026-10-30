@@ -71,7 +71,7 @@ for (seed in c(271L, 613L)) {
   for (direct in c(TRUE, FALSE)) {
     cell <- paste(seed, if (direct) "free" else "zero", sep = "-")
     model <- paste0("M ~ a*X\nY ~ b*M + ", if (direct) "cp" else "0", "*X")
-    f <- fit_sem(model, d, fixed_x = FALSE, missing = "fiml")
+    f <- fit_sem(model, d, fixed_x = FALSE, meanstructure = TRUE, missing = "fiml")
     l <- lavaan::sem(model, d,
       missing = "ml", fixed.x = FALSE, meanstructure = TRUE,
       information = "observed", control = list(rel.tol = 1e-10)
