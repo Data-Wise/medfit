@@ -111,6 +111,11 @@ have `n_obs` rows and may contain NA. Preserve original positional row IDs,
 retained/empty sets, pattern membership, counts, and complete-row count in a
 FIML record. Do not identify rows by potentially duplicated row names.
 
+The likelihood assumes ignorable missingness under the stated Gaussian model
+(e.g., MAR with the usual ignorability conditions). The finite MCAR/MAR fixtures
+do not establish arbitrary-mechanism robustness or repeated-sampling coverage;
+see the [technical record](technical-record.md#missingness-patterns-and-the-full-likelihood).
+
 ## 4. Likelihood, results and error contracts
 
 Return the existing `SEMFit` interface, with ordered/named coefficients and full
@@ -162,14 +167,34 @@ support. Only operations listed as supported may consume a FIML fit normally.
 | `coef`, `vcov`, `nobs` | Support existing shapes/names; full covariance | Independent likelihood and lavaan, including missing X and no complete rows |
 | `logLik` | Support -raw NLL, `df = k`, `nobs = retained N` | Full constants and affine offset; never reconstruct via `.sem_sample()` |
 | AIC/BIC | Support -2 logLik + 2k / log(N)k | Compare to lavaan using identical random-X model/rows; no claim that unlike contexts are comparable |
-| print, summary, parameter tidy/Wald `confint` | Support coefficients/SEs, visibly identify FIML/random X and row counts | No complete-data discrepancy or chi-square leakage; unavailable model-test fields explicitly NA with reason |
-| glance/model-fit summaries | Keep established columns; FIML logLik/AIC/BIC allowed, chi-square/df/p-value NA | FIML-specific reason, not the existing product-model reason; no hidden saturated refit |
+| SEMFit print, summary, parameter tidy/Wald `confint` | Support coefficients/SEs, visibly identify FIML/random X and row counts | No complete-data discrepancy or chi-square leakage; unavailable model-test fields explicitly NA with reason |
+| SEMFit glance/model-fit summaries | Keep established columns; FIML logLik/AIC/BIC allowed, chi-square/df/p-value NA | FIML-specific reason, not the existing product-model reason; no hidden saturated refit |
 | `extract_mediation`, native `fit_mediation` wrapper | Support simple unstandardized two-way mediation only | a, b, cp aliases and every covariance alias agree with direct mapping; fixed cp has zero variance/covariance |
-| `paths`, `med`, `te` on extracted simple data | Support path/indirect/direct/total point values and existing delta covariance | Independently map ab, cp, cp+ab and gradients; preserve cov(a,b) and all cross terms |
-| Effect confidence intervals | Only regular Wald/delta cases after testing | No CI/precision claim from zero delta variance at a=b=0; retain point value and mark interval unavailable with reason |
+| `paths`, `nie`, `nde`, `te`, extracted-object `coef`/`vcov` | Support path values, NIE = ab, NDE = cp, TE = cp+ab; `coef(type = "paths"/"effects"/"all")` keeps current names/shapes and `vcov()` keeps the full alias covariance | Independently map values and delta gradients; getters return estimates, not covariance; preserve cov(a,b) and all cross terms |
+| Extracted-object print/summary and tidy | Support existing simple-mediation paths/effects output, with FIML/random-X identification; tidy supports `type = "all"/"paths"/"effects"` | Preserve estimate/SE names and FIML context in the summary; tidy and normal CI must share the central effect-gradient builder |
+| Extracted-object normal confidence intervals | Support `confint(parm = "paths"/"effects", method = "normal")` and tidy normal intervals on regular cases | Retain the NIE approximation warning but do not recommend deferred bootstrap; at a=b=0 retain point values and mark NIE inferential fields unavailable with reason |
+| `med`, `quick` and extracted-object glance | Defer FIML support; no new fitting entry point | `med()` builds formulas and refits; it is not an effect getter. `quick()` and extracted glance call deferred `pm()`; explicitly refuse tagged FIML objects |
 | Standardized effects, ratios/`pm`, other decompositions | Defer; reject FIML-specific requests | No pairwise/listwise moment substitution; no silent generic fallback |
 | Bootstrap/plugin simulation and external consumers | Defer package-owned FIML routes; reject before RNG or worker launch | Test both original fit and extracted-object entry points; arbitrary user code/external packages are not controlled |
 | Profiles, MBCO, `anova`, `compare_lr`, fit indices and prediction/residual APIs | Defer; reject FIML-specific requests before refits/statistics | Negative tests include complete-data FIML objects and mixed FIML/listwise objects |
+
+The supported effect getters are `nie(x)`, `nde(x)` and `te(x)`, not `med(x)`.
+`med()` remains the existing data/formula-building convenience fitter; its current
+native-formula rejection remains in force for attempted FIML use. Do not teach
+it as an accessor or expand it into a third FIML fitting route. `quick()` must
+explicitly refuse a tagged FIML object rather than reaching deferred `pm()`.
+`confint(method = "boot")` remains a refusal, without recommending a resampling
+route unavailable for FIML. At the NIE origin, tidy SE/test/p-value/interval
+fields and the NIE normal interval are unavailable with a reason; the algebraic
+zero delta variance may be retained as diagnostic evidence, not regular inference.
+Ordinary listwise messages remain unchanged. Known fixed cp = 0 is distinct from a vanishing indirect-effect delta gradient:
+its zero covariance reflects a fixed parameter, not evidence of a precise NIE.
+
+Before-RNG refusal is required when a tagged FIML object reaches an object-aware
+package entry point. The generic nonparametric bootstrap accepts raw data and
+an arbitrary callback; hidden FIML refits inside that callback cannot be detected
+in advance. Such user callbacks remain outside this guarantee; there is no
+requirement to inspect closures or prohibit general raw-data resampling.
 
 Extraction must preserve a durable FIML discriminator and capability/row context.
 The current `MediationData` has no such property: setting `source_package` to a
@@ -200,12 +225,30 @@ Before a future implementation is accepted:
 4. Verify old calls, positional calls, explicit listwise, stored old objects and
    both fixed-X defaults against a pre-feature baseline. Compare values, shapes,
    notices, statuses/counts and context; FIML failure must never alter that path.
-5. Independently test the extraction-to-effect adopter slice, provenance through
-   serialization/copy, fixed cp aliases, off-diagonal covariance, and indirect-
-   effect origin behavior. Returning an untagged object is a failed acceptance.
-6. For every deferred package-owned operation, test an explicit refusal before
-   refitting, RNG changes or worker launch. Include extracted objects, complete-
-   data FIML, and mixed-method comparisons; listwise behavior must still pass.
+5. After **both** fitting entry routes, call the actual public accessors:
+   `paths(x)`, `nie(x)`, `nde(x)`, `te(x)`, `coef(x, type = "paths")`,
+   `coef(x, type = "effects")`, `coef(x, type = "all")` and `vcov(x)`.
+   Independently check a, b, cp, ab and cp+ab, including all names/aliases and
+   fixed cp = 0. Over coordinates (a,b,cp), independently check gradients
+   (b,a,0), (0,0,1), (b,a,1) and their g'Vg against tidy SEs and normal CIs;
+   implementation uses the existing central effect-gradient builder, not a copy.
+   Exercise extracted print/summary, tidy types all/paths/effects (including
+   `conf_int = TRUE`) and `confint(parm = "paths"/"effects", method = "normal")`.
+   Require matching SEs/intervals, retained provenance through serialization/copy,
+   FIML-specific notices without bootstrap advice, and unavailable NIE inferential
+   fields/interval at a=b=0 rather than an artificial precision claim. Other valid effects may
+   remain available; fixed cp = 0 must not be confused with the NIE-origin case.
+   Returning an untagged object is a failed acceptance.
+6. For every deferred object-aware package operation, test an explicit refusal
+   before refitting, RNG changes or worker launch. Include extracted objects,
+   complete-data FIML and mixed-method comparisons. Assert `quick(x)`, `pm(x)`,
+   extracted-object `glance(x)` and bootstrap/boot-CI routes refuse tagged FIML
+   input; SEMFit glance must still return its explicitly supported fields.
+   Attempted FIML use of
+   `med()` must retain the current native-formula rejection, not refit or masquerade
+   as `nie(x)`. Do not infer support by substituting `med()` for an effect getter.
+   Opaque raw-data callbacks are excluded from the early-refusal guarantee.
+   Existing listwise behavior must still pass unchanged.
 7. Plant wrong-N covariance, complete-case retention, dropped covariance terms,
    lost extraction provenance and missing-method guard defects; each must fail
    its corresponding test. Check direct NLL rather than inventing discrepancy.
@@ -252,6 +295,10 @@ These are inspected local sources, not evidence that the proposal is implemented
   summary/model-test and glance behavior.
 - [extraction seam](../../../R/extract-sem.R) and [shared extractor](../../../R/extract-lavaan.R):
   path aliases, covariance mapping and the returned mediation object.
+- [effect getters](../../../R/generics-effects.R), [coefficient/CI methods](../../../R/methods-base.R),
+  [central gradients](../../../R/effect-se.R), [tidy/glance](../../../R/methods-tidy.R)
+  and [convenience fitters](../../../R/med.R): actual extracted-object public methods
+  and deferred convenience operations.
 - [outcome ledgers](../../../R/sem-outcomes.R): finite-discrepancy acceptance and
   context binding; [anova](../../../R/sem-anova.R), [MBCO](../../../R/sem-mbco.R),
   [reference comparisons](../../../R/compare-lr.R) and [bootstrap](../../../R/bootstrap.R):
@@ -259,3 +306,12 @@ These are inspected local sources, not evidence that the proposal is implemented
 - [prototype protocol](prototype-protocol.md), [technical record](technical-record.md),
   [numerical memo](numerical-implementation-memo.md) and [repair receipt](p2-repair-validation.json):
   demonstrated numerical scope and limits.
+
+## 9. Accessor-contract review resolution
+
+The initial static review of `9e6d95d9` identified one P2: `med()` was incorrectly
+listed as an effect accessor. This revision names the actual NIE/NDE/TE and
+coefficient/covariance accessors, bounds extracted summaries/normal intervals,
+and tests deferred convenience routes explicitly. The
+[revised design review](integration-design-review.md) records closure and limits.
+No production API or numerical code changed; implementation remains unauthorized.

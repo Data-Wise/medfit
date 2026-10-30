@@ -1,3 +1,6 @@
+# Bounded FIML design accessor P2 resolved — 2026-10-29
+# Corrected med() getter mistake to actual paths/nie/nde/te/coef/vcov routes; prospective acceptance now tests extracted summaries, tidy/normal intervals and deferred convenience/refit guards.
+# Revised static design review PASS; no production implementation or API runtime validation claimed. Separate from 0.16; no production changes, push or expensive CI. See planning/studies/fiml-feasibility/integration-design-review.md.
 # Bounded FIML integration design drafted — 2026-10-29
 # Design-only authorization: internal simple-mediation adopter; explicit opt-in/random-X API proposal; unchanged listwise/default path; downstream support/refusal and provenance rules.
 # See planning/studies/fiml-feasibility/integration-design.md. Proposed contract awaits review; production implementation/API changes remain unauthorized. Separate from 0.16; no production changes, push or expensive CI.

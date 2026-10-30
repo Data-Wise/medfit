@@ -418,3 +418,15 @@ extraction-provenance seams that must change under a future implementation plan.
 The design is proposed for review, not an implemented API or a verified external
 adopter commitment. Production implementation remains unauthorized and separate
 from 0.16; no numerical evidence or historical acceptance criterion changed.
+
+## Integration accessor-contract correction and static review
+
+The design review found one P2: `med()` is the formula-building convenience
+fitter, not an effect accessor. The revised [design](integration-design.md)
+uses `paths`, `nie`, `nde`, `te`, `coef` and `vcov` on extracted FIML data,
+with concrete tidy/normal-CI acceptance and explicit deferred-route refusals.
+It retains the central effect-gradient builder and distinguishes fixed cp = 0
+from zero indirect-effect delta variance. The
+[static review](integration-design-review.md) closes this finding; future
+implementation and runtime API acceptance are still unauthorized/unverified.
+No numerical evidence changed and FIML remains outside 0.16.

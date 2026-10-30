@@ -1,6 +1,6 @@
 # Bounded FIML study and prototype
 
-**Current state:** local numerical PASS; both P2 findings repaired. Bounded integration design drafted for review; production implementation is not authorized.
+**Current state:** local numerical PASS; both P2 findings repaired. Bounded integration design revised and statically reviewed; production implementation is not authorized.
 Initial numerical implementation: `b4a50f36`; pre-repair reviewed baseline: `c7430172`.
 See the [P2 repair report](p2-repair-report.md) for current evidence and history.
 Separate from 0.16. No production integration, push, release or hosted CI was
@@ -33,7 +33,7 @@ performed. The worktree branch is `codex/fiml-feasibility`; baseline dev is
 | Optimizer and reference repairs | [Technical record](technical-record.md) | Complete at `b4a50f36` |
 | P2 review repairs | [Repair report](p2-repair-report.md) | Both findings resolved; 61 assertions PASS |
 | Current local acceptance | [Report](prototype-report.md) | 42/42 fits, 13/13 edges |
-| Bounded integration design | [Design](integration-design.md) | Drafted; design authorized only |
+| Bounded integration design | [Design](integration-design.md), [review](integration-design-review.md) | Accessor P2 resolved; static review PASS, design only |
 | Production/API implementation | [Design acceptance](integration-design.md#prospective-implementation-acceptance) | Not authorized |
 
 Early references to pending prototype authorization describe historical stages.
