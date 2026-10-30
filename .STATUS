@@ -1,3 +1,5 @@
+# FIML regression implementation stopped after failed retry — 2026-10-30
+# Active plan: planning/PLAN-FIML-regression-oracles-2026-10-30.md. Pre-fit manifest 1893403; retry: 10 cells,116 successful assertions,2 expected lavaan warnings; final relative-path CSV write errored. Independent derivatives also require undeclared numDeriv; repair with base-R helper before resuming. T1 incomplete, no QA/gates run; await harness-repair authorization. No production edits, push or expensive CI.
 # FIML regression inventory completed — 2026-10-30
 # Static audit: planning/AUDIT-FIML-regression-inventory-2026-10-30.md. Existing no-complete-row oracle, singleton handling and actual no-overlap rejection retained; missing independent MAR/combined-pattern/affine/near-singular evidence identified. No production/test edits, numerical runs, push or expensive CI. Implementation awaits separate scope authorization.
 # FIML planning reconciled and adversarially reviewed — 2026-10-30

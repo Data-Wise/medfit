@@ -72,3 +72,16 @@ fo_geometry <- function(d, q) {
   G
 }
 fo_spectrum <- function(H) eigen(H / sqrt(outer(diag(H), diag(H))), symmetric = TRUE)$values
+fo_truth <- function(kind, direct) {
+  q <- c(a = .5, b = .6, cp = .25, `X~~X` = 1.21, `M~~M` = .64,
+         `Y~~Y` = if (kind == "near") .0009 else .81, `X~1` = .8, `M~1` = -.4, `Y~1` = .7)
+  if (!direct) q <- q[names(q) != "cp"]
+  if (kind == "affine") q <- fo_affine(q, c(3, .5, 2), c(2, -3, 4))
+  q
+}
+fo_internal <- function(q, p) {
+  standardized <- fo_affine(q, 1 / p$scale, -p$center / p$scale)
+  mapping <- c(a = "a", b = "b", cp = "cp", vx = "X~~X", vm = "M~~M", vy = "Y~~Y",
+               ix = "X~1", im = "M~1", iy = "Y~1")
+  stats::setNames(standardized[mapping[p$ram$par_names]], p$ram$par_names)
+}
