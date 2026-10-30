@@ -93,3 +93,18 @@ See [prototype-report.md](prototype-report.md) for methods, failed alternatives
 and evidence. The original raw-data reference study still passes 30/30 cells
 and 10/10 edges with its previous default solver settings. Local PASS does
 not authorize production integration or change the 0.16 scope.
+
+## Authorized post-review corrections
+
+The review at `c7430172` found two implementation/evidence gaps. The near-singular
+fixture had multiplied residuals of generating SD 0.9 by 0.03, yielding SD 0.027.
+The correction divides by 0.9 first, restoring the predeclared SD 0.03 without
+changing seeds, masks or acceptance limits. Earlier SD-0.027 results remain
+archived as historical evidence.
+
+Every error after all solver attempts now carries the completed attempt table.
+The no-overlap edge requires and exports all six solver/start records. Four
+standalone regression tests (61 assertions) cover both corrections; they first
+failed on the original behavior. Full local acceptance passes with corrected
+data. See the [repair report](p2-repair-report.md). This is still research only,
+separate from 0.16 and production integration.

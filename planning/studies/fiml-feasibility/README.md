@@ -1,6 +1,8 @@
 # Bounded FIML study and prototype
 
-**Current state:** local numerical PASS, implemented and tested at `b4a50f36`.
+**Current state:** local numerical PASS; both P2 review findings repaired and regression-tested.
+Initial numerical implementation: `b4a50f36`; pre-repair reviewed baseline: `c7430172`.
+See the [P2 repair report](p2-repair-report.md) for current evidence and history.
 Separate from 0.16. No production integration, push, release or hosted CI was
 performed. The worktree branch is `codex/fiml-feasibility`; baseline dev is
 `edcf23d8705165cd2497deda0d4e8410b9754811`.
@@ -29,6 +31,7 @@ performed. The worktree branch is `codex/fiml-feasibility`; baseline dev is
 | Frozen execution design | [Prototype protocol](prototype-protocol.md) | Complete |
 | Initial acceptance | [Historical report](prototype-before-optimizer-repair.md) | NO-GO at `c92b6fec` |
 | Optimizer and reference repairs | [Technical record](technical-record.md) | Complete at `b4a50f36` |
+| P2 review repairs | [Repair report](p2-repair-report.md) | Both findings resolved; 61 assertions PASS |
 | Current local acceptance | [Report](prototype-report.md) | 42/42 fits, 13/13 edges |
 | Production/API integration | [Deferred requirements](numerical-implementation-memo.md#integration-acceptance-deferred-to-a-separate-authorization) | Not authorized |
 
@@ -44,6 +47,10 @@ change 0.16. A technical GO also does not establish adopter commitment.
 | [study.R](study.R) | Independent likelihood, original feasibility harness |
 | [numerical-probes.R](numerical-probes.R) | Derivative/information/source probes |
 | [prototype.R](prototype.R) | Study-only native RAM FIML implementation |
+| [prototype-fixtures.R](prototype-fixtures.R) | Correct SD-0.03 near-singular fixture |
+| [test-prototype-regressions.R](test-prototype-regressions.R) | Four tests / 61 assertions for P2 repairs |
+| [P2 validation receipt](p2-repair-validation.json) | Current local acceptance and repair checks |
+| [Diagnostic attempts](prototype-results/diagnostic_attempts.csv) | Six no-overlap solver/start records |
 | [prototype-acceptance.R](prototype-acceptance.R) | Complete local acceptance runner |
 | [rows.csv](prototype-results/rows.csv) | All 42 regular cells |
 | [edges.csv](prototype-results/edges.csv) | All 13 edge and mutant checks |
@@ -72,8 +79,13 @@ From the study worktree root, with the already installed research dependencies:
 Rscript planning/studies/fiml-feasibility/prototype-acceptance.R
 ```
 
-The final verified run exited 0 in approximately 37 seconds. It includes the
+The current acceptance run exits 0; see the [repair report](p2-repair-report.md) for timing and validation.
+The previous numerical run took approximately 37 seconds. It includes the
 original raw-data 30-fit/10-edge reference study. It rewrites the study output
 files, so preserve the current receipt before a future rerun. See the
 [technical record](technical-record.md#reproduction-and-evidence-integrity) for
 commands, dependencies, checks and the distinction from deferred hosted gates.
+
+The [historical P2 baseline](p2-review-baseline/README.md) preserves the review,
+failing regression evidence and earlier acceptance rows. Its near-singular data
+actually used SD 0.027; current data implement the frozen SD 0.03 specification.

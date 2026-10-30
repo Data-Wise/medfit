@@ -10,5 +10,5 @@
 "fixed_X_rejected",TRUE,"Reference-only setting rejected"
 "unsupported_rejected",TRUE,"Weights and invalid model selector rejected"
 "invalid_PD",TRUE,"Existing correlation-scale PD floor rejects unusable covariance"
-"nonidentification",TRUE,"No ordinary finite-SE success without joint coverage"
+"nonidentification",TRUE,"No finite-SE success; all six solver/start records retained on the diagnostic"
 "mutant_mapping_curvature",TRUE,"Dropping moment-mapping curvature violates full observed Hessian criterion"

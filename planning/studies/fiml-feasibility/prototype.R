@@ -211,33 +211,40 @@ prototype_fit <- function(data, direct = TRUE, fixed_x = FALSE,
     if (ok) candidates[[length(candidates) + 1L]] <- list(theta = run$theta, value = e$value)
   }
   attempts <- do.call(rbind, attempts)
-  if (!all(c("slsqp", "nlminb") %in% attempts$solver[attempts$accepted])) {
-    error <- structure(list(message = "no accepted candidate for each optimizer", call = NULL,
-                            attempts = attempts), class = c("fiml_prototype_diagnostic", "error", "condition"))
+  # Every post-solver rejection retains the completed attempt ledger, including
+  # errors raised inside geometry, Hessian differentiation or matrix inversion.
+  tryCatch({
+    if (!all(c("slsqp", "nlminb") %in% attempts$solver[attempts$accepted])) {
+      error <- structure(list(message = "no accepted candidate for each optimizer", call = NULL,
+                              attempts = attempts), class = c("fiml_prototype_diagnostic", "error", "condition"))
+      stop(error)
+    }
+    spread <- diff(range(attempts$nll[attempts$accepted])) / p$n
+    if (spread > 1e-8) prototype_diagnostic("accepted optimizer likelihoods disagree")
+    best <- candidates[[which.min(vapply(candidates, `[[`, numeric(1), "value"))]]
+    theta <- setNames(best$theta, ram$par_names)
+    # Observable-moment geometry diagnoses local rank; this is NOT an
+    # expected-information SE calculation or a global identification claim.
+    geometry <- prototype_geometry(theta, p)
+    if (any(diag(geometry) <= 0) ||
+        min(eigen(geometry / sqrt(outer(diag(geometry), diag(geometry))),
+                  symmetric = TRUE)$values) < prototype_native(".sem_singular_tol")) {
+      prototype_diagnostic("observed-pattern moment Jacobian is rank deficient")
+    }
+    H <- prototype_hessian(theta, p)
+    scaled <- H / sqrt(outer(diag(H), diag(H)))
+    if (any(!is.finite(scaled)) || any(diag(H) <= 0) ||
+        min(eigen(scaled, symmetric = TRUE)$values) < prototype_native(".sem_singular_tol")) {
+      prototype_diagnostic("unidentified or ill-conditioned observed information")
+    }
+    V <- p$transport %*% solve(H) %*% t(p$transport)
+    estimate <- p$offset + as.vector(p$transport %*% theta)
+    names(estimate) <- ram$par_names
+    list(kind = "study_only_fiml", estimate = estimate, covariance = V,
+         se = setNames(sqrt(diag(V)), ram$par_names), theta = theta, H = H,
+         nll = best$value + p$jacobian, attempts = attempts, spread = spread, prepared = p)
+  }, error = function(error) {
+    error$attempts <- attempts
     stop(error)
-  }
-  spread <- diff(range(attempts$nll[attempts$accepted])) / p$n
-  if (spread > 1e-8) prototype_diagnostic("accepted optimizer likelihoods disagree")
-  best <- candidates[[which.min(vapply(candidates, `[[`, numeric(1), "value"))]]
-  theta <- setNames(best$theta, ram$par_names)
-  # Observable-moment geometry diagnoses local rank; this is NOT an
-  # expected-information SE calculation or a global identification claim.
-  geometry <- prototype_geometry(theta, p)
-  if (any(diag(geometry) <= 0) ||
-      min(eigen(geometry / sqrt(outer(diag(geometry), diag(geometry))),
-                symmetric = TRUE)$values) < prototype_native(".sem_singular_tol")) {
-    prototype_diagnostic("observed-pattern moment Jacobian is rank deficient")
-  }
-  H <- prototype_hessian(theta, p)
-  scaled <- H / sqrt(outer(diag(H), diag(H)))
-  if (any(!is.finite(scaled)) || any(diag(H) <= 0) ||
-      min(eigen(scaled, symmetric = TRUE)$values) < prototype_native(".sem_singular_tol")) {
-    prototype_diagnostic("unidentified or ill-conditioned observed information")
-  }
-  V <- p$transport %*% solve(H) %*% t(p$transport)
-  estimate <- p$offset + as.vector(p$transport %*% theta)
-  names(estimate) <- ram$par_names
-  list(kind = "study_only_fiml", estimate = estimate, covariance = V,
-       se = setNames(sqrt(diag(V)), ram$par_names), theta = theta, H = H,
-       nll = best$value + p$jacobian, attempts = attempts, spread = spread, prepared = p)
+  })
 }

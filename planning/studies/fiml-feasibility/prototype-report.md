@@ -5,7 +5,8 @@ and complete fix history: [technical record](technical-record.md).
 
 Executed 2026-10-29 on `codex/fiml-feasibility`, separately from 0.16.
 **PASS for the bounded local numerical prototype.** All four prior optimizer
-failures are resolved. This does not authorize production integration, release
+failures and both subsequent P2 review findings are resolved locally. The current
+run uses the corrected SD-0.03 fixture; earlier SD-0.027 evidence remains historical. This does not authorize production integration, release
 or inclusion in 0.16. No production code, public API, push or hosted CI changed.
 
 ## Scope and provenance
@@ -15,7 +16,10 @@ execution. Baseline medfit dev remains `edcf23d8`. The prior NO-GO result is
 preserved in local commit `c92b6fec`, the
 [historical report](prototype-before-optimizer-repair.md) and
 [baseline rows](optimizer-repair-baseline/rows.csv). Acceptance limits,
-fixture definitions and required optimizer statuses remain unchanged.
+required optimizer statuses and all acceptance thresholds remain unchanged.
+The near-singular construction is corrected to the original intended SD 0.03;
+its earlier SD 0.027 data are not treated as identical. See the
+[P2 repair report](p2-repair-report.md) and [historical baseline](p2-review-baseline/README.md).
 
 Only study files and `.STATUS` changed. [prototype.R](prototype.R) reads native
 RAM moments, derivatives and the SLSQP wrapper without replacing namespace
@@ -70,7 +74,9 @@ the intermediate full run with 41/42 acceptance cells.
 | Independent optimizer/information gates | 42/42 PASS |
 | Original raw-data reference fits and edges | 30/30 and 10/10 PASS |
 | Required planted defects | All four detected |
-| R parsing and namespace lint | All three study scripts PASS |
+| P2 regression tests | 4 tests / 61 assertions PASS |
+| R parsing and namespace lint | All six study scripts PASS |
+| No-overlap diagnostic ledger | All six solver/start records retained and exported |
 
 All 42 fits have checks at their fit and two fixed perturbations. No cell,
 parameter, covariance entry or failed start was removed. Ledgers retain 252
@@ -85,10 +91,10 @@ messages, iterations and statuses are in
 | Standardized estimate | 1.99e-6 | 1e-5 |
 | Relative SE | 3.21e-5 | 1e-3 |
 | Full SE-product-normalized covariance | 6.42e-5 | 1e-3 |
-| Second-resolution SE stability | 3.39e-8 | 1e-4 |
-| Scaled stationarity | 4.65e-7 | 1e-5 |
+| Second-resolution SE stability | 1.87e-8 | 1e-4 |
+| Scaled stationarity | 6.57e-6 | 1e-5 |
 | Independent gradient | 5.13e-9 | 1e-6 |
-| Independent observed Hessian | 4.61e-7 | 1e-4 |
+| Independent observed Hessian | 1.29e-6 | 1e-4 |
 
 Covariance comparisons include both the independent likelihood and lavaan.
 Full named matrices, gradients, conditioning diagnostics, warnings and row
@@ -107,7 +113,9 @@ From the isolated study worktree:
 Rscript planning/studies/fiml-feasibility/prototype-acceptance.R
 ```
 
-The final complete run exits 0 and takes approximately 37 seconds. Session
+The current complete run exits 0; timing and P2 validation are in the
+[repair report](p2-repair-report.md). The earlier optimizer-repair run took
+approximately 37 seconds. Session
 information and the execution log are retained. Recursive artifact hashes are
 in [evidence-manifest.json](evidence-manifest.json).
 

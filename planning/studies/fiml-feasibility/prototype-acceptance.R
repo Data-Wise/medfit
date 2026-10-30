@@ -4,6 +4,7 @@ out_dir <- file.path(base_dir, "prototype-results")
 dir.create(out_dir, showWarnings = FALSE)
 pkgload::load_all(".", quiet = TRUE, export_all = FALSE)
 source(file.path(base_dir, "prototype.R"))
+source(file.path(base_dir, "prototype-fixtures.R"))
 started <- Sys.time()
 
 # Reproduce the complete original reference harness into its own output directory.
@@ -118,11 +119,7 @@ for (direct in c(TRUE, FALSE)) {
     list(data = sweep(dat, 2, c(100, -200, 300), `+`), direct = direct)
   cases[[paste0(prefix, "/new/rescaled")]] <-
     list(data = sweep(dat, 2, c(100, .01, 3), `*`), direct = direct)
-  dat <- oracle$generate(271L, "complete", direct)
-  cp <- if (direct) .25 else 0
-  noise <- dat[, 3] - .7 - .6 * dat[, 2] - cp * dat[, 1]
-  dat[, 3] <- .7 + .6 * dat[, 2] + cp * dat[, 1] + .03 * noise
-  dat[is.na(oracle$generate(271L, "nonmonotone_mcar", direct))] <- NA
+  dat <- prototype_near_singular(oracle$generate, direct)
   cases[[paste0(prefix, "/new/near_singular")]] <- list(data = dat, direct = direct)
 }
 stopifnot(length(cases) == 42L)
@@ -334,7 +331,18 @@ if (!is.null(p)) {
   edge("invalid_PD", is.null(prototype_eval(bad_theta, p$prepared)), "Existing correlation-scale PD floor rejects unusable covariance")
   no_overlap <- oracle$generate(271L, "complete", TRUE)
   no_overlap[1:150, 3] <- NA; no_overlap[151:300, 1:2] <- NA
-  edge("nonidentification", diagnostic(prototype_fit(no_overlap)), "No ordinary finite-SE success without joint coverage")
+  no_overlap_error <- tryCatch(prototype_fit(no_overlap), error = identity)
+  no_overlap_attempts <- no_overlap_error$attempts
+  ledger_ok <- is.data.frame(no_overlap_attempts) && nrow(no_overlap_attempts) == 6L &&
+    !anyDuplicated(paste(no_overlap_attempts$solver, no_overlap_attempts$start)) &&
+    setequal(paste(no_overlap_attempts$solver, no_overlap_attempts$start),
+             paste(rep(c("slsqp", "nlminb"), each = 3), rep(1:3, 2)))
+  if (is.data.frame(no_overlap_attempts)) {
+    utils::write.csv(cbind(cell = "nonidentification", no_overlap_attempts),
+                    file.path(out_dir, "diagnostic_attempts.csv"), row.names = FALSE)
+  }
+  edge("nonidentification", inherits(no_overlap_error, "fiml_prototype_diagnostic") && ledger_ok,
+       "No finite-SE success; all six solver/start records retained on the diagnostic")
 }
 cp0 <- fits[["cp_zero/271/nonmonotone_mcar"]]
 if (!is.null(cp0)) {

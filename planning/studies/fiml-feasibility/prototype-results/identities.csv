@@ -105,8 +105,8 @@
 "unrestricted/new/rescaled","perturbed1",5.35867646552409e-16,TRUE
 "unrestricted/new/rescaled","perturbed2",1.48029736616688e-17,TRUE
 "unrestricted/new/near_singular","fit",0,TRUE
-"unrestricted/new/near_singular","perturbed1",3.4352372798215e-13,TRUE
-"unrestricted/new/near_singular","perturbed2",7.47453062407052e-12,TRUE
+"unrestricted/new/near_singular","perturbed1",3.62850490394824e-14,TRUE
+"unrestricted/new/near_singular","perturbed2",1.28845082751165e-12,TRUE
 "cp_zero/new/no_complete","fit",0,TRUE
 "cp_zero/new/no_complete","perturbed1",1.86517468137026e-16,TRUE
 "cp_zero/new/no_complete","perturbed2",1.92438657601694e-17,TRUE
@@ -123,5 +123,5 @@
 "cp_zero/new/rescaled","perturbed1",5.07741996595238e-16,TRUE
 "cp_zero/new/rescaled","perturbed2",1.4122036873232e-15,TRUE
 "cp_zero/new/near_singular","fit",0,TRUE
-"cp_zero/new/near_singular","perturbed1",3.93166980453922e-14,TRUE
-"cp_zero/new/near_singular","perturbed2",1.83073704344376e-12,TRUE
+"cp_zero/new/near_singular","perturbed1",1.48503431773861e-14,TRUE
+"cp_zero/new/near_singular","perturbed2",2.80238054983783e-13,TRUE

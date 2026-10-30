@@ -1,7 +1,8 @@
 # Bounded FIML technical record
 
 Date: 2026-10-29. Scope: the isolated research study and prototype only.
-Numerical implementation verified at `b4a50f36`; local PASS. This document
+Initial numerical implementation verified at `b4a50f36`; current P2 repairs and
+local PASS are documented in the [repair report](p2-repair-report.md). This document
 records the plans, equations, decisions, fixes and evidence. It adds no public
 API, production feature, release requirement or authorization to 0.16.
 
@@ -75,8 +76,11 @@ The returned study-only list has `kind="study_only_fiml"`, `estimate`,
 `covariance`, named `se`, standardized `theta`, total observed `H`, raw `nll`,
 `attempts`, accepted objective `spread` and `prepared` cache/transport/row
 metadata. It is not a public S7 class. Failures use
-`fiml_prototype_diagnostic`; missing accepted solver coverage also carries the
-attempt ledger. No public downstream API consumes the result.
+`fiml_prototype_diagnostic`. All errors after solver attempts complete retain the
+attempt ledger, including spread/rank/information diagnostics and errors inside
+Hessian evaluation or covariance inversion. Existing error classes/messages are
+preserved. Input rejection before solving has no completed solver ledger.
+No public downstream API consumes the result.
 
 ## Missingness patterns and the full likelihood
 
@@ -267,8 +271,12 @@ masks. Each has n=300 before empty-row exclusion.
 The 12 additional cells apply both models to six predeclared fixtures:
 no complete rows with all three pair patterns; singleton patterns; all seven
 nonempty patterns; shifts (100,-200,300); scales (100,0.01,3); and Y residual
-SD 0.03 with seeded nonmonotone missingness. Construction is fixed in the
-[prototype protocol](prototype-protocol.md).
+SD 0.03 with seeded nonmonotone missingness. The current construction uses
+`(.03 / .9) * noise` because the base generator uses residual SD 0.9. An
+independent seeded reconstruction using `rnorm(sd = .03)` tests both model
+variants. Earlier results accidentally used SD 0.027; that history is preserved
+in the [P2 baseline](p2-review-baseline/README.md), not silently rewritten. The
+current construction matches the frozen [prototype protocol](prototype-protocol.md).
 
 Acceptance limits are unchanged: likelihood/row 1e-8; standardized estimates
 1e-5; relative SEs and SE-product-normalized full covariance 1e-3; gradient
@@ -372,6 +380,29 @@ records final counts and the four baseline-fail/current-pass regressions.
 R parsing and namespace lint pass for all three numerical scripts. Markdown
 lint, relative-link checks, hash verification, diff whitespace checks and a
 scoped secret-pattern scan validate the documentation/evidence change.
-Numerical acceptance was not rerun for this documentation-only consolidation.
+The original documentation-only consolidation did not rerun numerical acceptance;
+the subsequent P2 repair did, as recorded below.
 No production package suite, coverage collection, expensive CI, push, release
 or dev-to-main merge is implied or performed.
+
+## P2 review repairs and regression evidence
+
+The authorized follow-up resolved the two findings at reviewed baseline
+`c7430172`. A single post-solver condition handler attaches all six solver/start
+records to any later error without changing its class or message. The acceptance
+harness requires these records on the no-overlap diagnostic and saves them in
+[diagnostic_attempts.csv](prototype-results/diagnostic_attempts.csv).
+
+The near-singular fixture now implements the intended SD 0.03 rather than the
+previous unintended SD 0.027. This changes only the two near-singular data cells;
+thresholds, seeds, missingness masks and the remaining 40 fixtures are unchanged.
+Four standalone regression tests pass 61 assertions. They cover real rank
+failure for both models, forced spread/information rejection, typed and ordinary
+Hessian errors, and independent fixture reconstruction. New tests first failed
+on the original behavior; the failing log remains in the historical baseline.
+
+Current acceptance still passes 42/42 fits,13/13 edges,126/126 derivative points
+and126/126 likelihood identities. The original reference harness passes30/30
+fits and10/10 edges. Six study scripts parse and pass namespace lint. See the
+[P2 repair report](p2-repair-report.md) and [validation receipt](p2-repair-validation.json).
+No production code, 0.16 scope, push or expensive CI is involved.

@@ -337,3 +337,14 @@ Hessian refinement, the independent oracle's numerical derivatives and
 lavaan's affine-coordinate reference, plus the rejected solver alternatives.
 Acceptance limits and required optimizer statuses remain unchanged. This is
 a local numerical GO only; production integration and 0.16 remain separate.
+
+## Post-review evidence corrections
+
+Both P2 review findings are now repaired locally: post-solver errors retain the
+full six-record attempt table, and the near-singular generator matches the
+frozen residual SD 0.03 (earlier data inadvertently used 0.027). The prior
+evidence remains historical. Four tests/61 assertions and the complete corrected
+42-cell acceptance run pass without widening limits. See the
+[repair report](p2-repair-report.md). This closes those two bounded findings; it
+does not authorize production integration, establish inference coverage, or
+change 0.16.

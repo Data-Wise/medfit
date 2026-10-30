@@ -69,8 +69,8 @@
 "unrestricted/new/shifted","moment_geometry",0.382964985918587,4.30910781604661
 "unrestricted/new/rescaled","observed_hessian",0.394327670995382,4.36019689153155
 "unrestricted/new/rescaled","moment_geometry",0.382964985793444,4.3091078157465
-"unrestricted/new/near_singular","observed_hessian",0.448228282724707,3.47496259243827
-"unrestricted/new/near_singular","moment_geometry",0.462469528984962,3.32492129981597
+"unrestricted/new/near_singular","observed_hessian",0.448249725527997,3.4747828975721
+"unrestricted/new/near_singular","moment_geometry",0.462506664225698,3.32464689563926
 "cp_zero/new/no_complete","observed_hessian",0.629100614767525,2.29968124870695
 "cp_zero/new/no_complete","moment_geometry",0.635786317842237,2.34749784754535
 "cp_zero/new/singletons","observed_hessian",0.991255929950645,1.01617805412642
@@ -81,5 +81,5 @@
 "cp_zero/new/shifted","moment_geometry",0.779630367927574,1.59171359265897
 "cp_zero/new/rescaled","observed_hessian",0.712991212996285,1.86255430219573
 "cp_zero/new/rescaled","moment_geometry",0.779630368165512,1.59171359242489
-"cp_zero/new/near_singular","observed_hessian",0.951550684227424,1.10325076237164
-"cp_zero/new/near_singular","moment_geometry",0.98006155767106,1.04077728617283
+"cp_zero/new/near_singular","observed_hessian",0.951173424543741,1.10437299369092
+"cp_zero/new/near_singular","moment_geometry",0.979214155153161,1.04255664798486
