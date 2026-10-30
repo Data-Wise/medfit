@@ -198,7 +198,9 @@ mediator works through the same call.
 
 - **Observed means only.** Intercepts (`y ~ 1`, `y ~ 1 + x`) are estimated for observed variables;
   a free latent mean or intercept stops with "latent means are planned for a later release".
-- **One group**, listwise deletion for missing data, **numeric variables only**.
+- **One group**; listwise deletion is the missing-data default. The separate
+  unreleased [bounded FIML opt-in](#bounded-fiml) retains partially observed rows
+  only for its three-variable random-X model.
 - **ML only**, plus the HC0 sandwich; no robust chi-square, no fit indices beyond
   the chi-square, AIC and BIC.
 - **Products** (`x:m`, which give the four-way decomposition) work for two observed variables inside a
