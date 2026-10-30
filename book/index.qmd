@@ -27,6 +27,18 @@ standard errors do not change; the conditional log likelihood, the parameter cou
 `fit_sem()` wrapper in its setup chunk that pins `fixed_x = FALSE, meanstructure = NULL`; Chapter 4 shows the unpinned
 default beside the pinned fit.
 
+## Bounded FIML in planned 0.16 {.unnumbered}
+
+The unreleased 0.16 scope includes explicit `missing = "fiml"` for three-variable
+Gaussian random-X mediation. Listwise deletion remains the default. The bounded
+workflow requires `fixed_x = FALSE`, a mean structure and observed/model SEs;
+bootstrap, profiles and MBCO remain unsupported for FIML objects. These chapters'
+complete-data derivations do not establish FIML results. For the pattern-wise
+likelihood, settings and support limits, see the package website's
+[native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+and [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html).
+Released 0.15.0 does not provide this option.
+
 ## How to build {.unnumbered}
 
 Install the package from this checkout, then render from the repository root:

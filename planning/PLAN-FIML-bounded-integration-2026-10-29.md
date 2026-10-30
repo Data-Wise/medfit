@@ -1,5 +1,11 @@
 # Bounded FIML integration: first adopter milestone
 
+> Release-scope update (2026-10-30): bounded FIML is complete and merged into dev
+> through PR #364. It is now included in planned, unreleased 0.16; this supersedes
+> earlier 0.16 exclusions in the dated record below. Model/support limits are
+> unchanged. No release or expensive CI is authorized. See the
+> [current scope decision](SCOPE-0.16-FIML-2026-10-30.md).
+
 Status: MERGED INTO DEV via PR #364, squash a894e45e, 2026-10-30.
 Post-merge fast coverage and Codecov PASS. Corrective FINAL local gates passed
 on 32a7b98. Authorized 2026-10-29: implement the reviewed bounded contract and
@@ -14,11 +20,12 @@ Pre-implementation source: 3023d14c; dev baseline: edcf23d8705165cd2497deda0d4e8
 Implement [the reviewed integration contract](studies/fiml-feasibility/integration-design.md)
 and its [static review](studies/fiml-feasibility/integration-design-review.md).
 That version remains the detailed acceptance source; this plan tracks execution.
-FIML remains separate from 0.16. Initial local-only authority was subsequently
+The original milestone was separate from 0.16; the release-scope update above
+now assigns the bounded implementation to planned, unreleased 0.16. Initial
+local-only authority was subsequently
 extended to draft PR #364, its reviewed dev merge, and post-merge reconciliation
-and cleanup. No release assignment, deployment, dev-to-main merge, expensive CI
-or plugin installation is authorized. A future 0.16 release must explicitly
-exclude FIML: an unfiltered dev-to-main release would include the merged feature.
+and cleanup. No release, deployment, dev-to-main merge, expensive CI or plugin installation
+is authorized. Release preparation must retain the bounded support limits.
 Preserve research evidence and unrelated .remember/ files. Existing prototype
 scripts and frozen evidence are references, not package runtime dependencies.
 

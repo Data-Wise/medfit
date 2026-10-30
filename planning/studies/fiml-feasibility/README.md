@@ -1,5 +1,11 @@
 # Bounded FIML study and prototype
 
+> Release-scope update (2026-10-30): bounded FIML is complete and merged into dev
+> through PR #364. It is now included in planned, unreleased 0.16; this supersedes
+> earlier 0.16 exclusions in the dated record below. Model/support limits are
+> unchanged. No release or expensive CI is authorized. See the
+> [current scope decision](../../SCOPE-0.16-FIML-2026-10-30.md).
+
 **Current state (2026-10-30):** the bounded production milestone is complete
 and merged into `dev` through PR #364 (`a894e45e`). Independent QA, documentation,
 corrective local gates and post-merge fast coverage/Codecov passed. The merged
@@ -7,8 +13,8 @@ feature branch/worktree was removed after verified evidence archival. See the
 [completed implementation plan](../../PLAN-FIML-bounded-integration-2026-10-29.md)
 for exact evidence and the remaining support boundary.
 
-FIML is **not released and remains excluded from 0.16**. A future 0.16 release
-must explicitly exclude it; promoting all of `dev` would include it. Expensive
+FIML is **not released and is included in planned 0.16** under the scope
+decision linked above. The bounded support limits remain unchanged. Expensive
 CI remains deferred until release to `main`. Broader FIML models, fixed-X,
 weights, expected/sandwich SEs, bootstrap, profiles and MBCO require separate
 milestones and validation. No new FIML production work is implied by completion.

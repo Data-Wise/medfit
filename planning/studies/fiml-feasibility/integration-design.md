@@ -1,16 +1,22 @@
 # Bounded FIML integration design
 
+> Release-scope update (2026-10-30): bounded FIML is complete and merged into dev
+> through PR #364. It is now included in planned, unreleased 0.16; this supersedes
+> earlier 0.16 exclusions in the dated record below. Model/support limits are
+> unchanged. No release or expensive CI is authorized. See the
+> [current scope decision](../../SCOPE-0.16-FIML-2026-10-30.md).
+
 > Current integration status (2026-10-30): the bounded contract is implemented
 > and merged into `dev` through PR #364 (`a894e45e`). Independent QA, docs, local
 > final gates and post-merge fast coverage/Codecov passed; branch/worktree cleanup
 > is complete. See the [completed plan](../../PLAN-FIML-bounded-integration-2026-10-29.md).
-> FIML remains unreleased and excluded from 0.16; expensive CI is deferred until
+> FIML is included in planned, unreleased 0.16; expensive CI is deferred until
 > release to `main`. The prospective wording below preserves the original design
 > record; it does not override the completed plan or authorize further work.
 > See the [argument analysis](argument-design-analysis.md) for setting decisions.
 
 Date of original design: 2026-10-29. Status: reviewed bounded contract implemented;
-no release assignment. Broader models and downstream inference remain deferred.
+planned for unreleased 0.16 within the bounded scope above. Broader models and downstream inference remain deferred.
 
 Numerical baseline: `dee83cae`. The bounded prototype passes 42 fits, 13 edges,
 126 derivative points and 126 likelihood identities; its P2 regressions pass

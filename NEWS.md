@@ -2,13 +2,13 @@
 
 ## Added
 
-* Unreleased, separately scoped FIML integration adds exact `missing = "fiml"` opt-in to
+* Bounded FIML integration, planned for unreleased 0.16, adds exact `missing = "fiml"` opt-in to
   `fit_sem()` and native `fit_mediation()` engine arguments, preserving listwise defaults
   and positional calls. It retains partially observed rows for three-variable Gaussian
   random-X mediation with a free or zero direct path. Explicit `fixed_x = FALSE`, a mean
   structure, observed/model SEs, no weights and the validated fixed-start protocol are
   required. Likelihood/IC summaries and unstandardized extracted effects are supported;
-  model tests, bootstrap, profiles and MBCO remain unavailable. This is separate from 0.16.
+  model tests, bootstrap, profiles and MBCO remain unavailable. This bounded feature is included in planned 0.16.
 
 * Native fits with one supported nonzero-product equality now fit both sign branches independently before choosing
   the lowest accepted discrepancy. Bounds can exclude a branch; an unresolved required branch stops the fit.
@@ -69,7 +69,7 @@ stay valid values, and an explicit argument is always kept as given.
   no mean structure, and against it medfit's AIC is larger by 2k and its BIC by k log n (k = the observed means not
   fixed; k = 2 in the worked example of the article). The conditional `logLik()` equals lavaan's.
 * In 0.15.0 missing data stays listwise deletion, with no `missing =` argument or FIML.
-  The later bounded opt-in development milestone is separate from 0.16.
+  The later bounded opt-in FIML feature is planned for unreleased 0.16.
 * `compare_lr()` runs on fits made under the new defaults. Its known limit (#320) is unchanged by the flip: on the pinned
   design (15 seeds by 4 cells) the lavaan run ended above medfit's reference in 18 of 60 runs and OpenMx in 13 of 60,
   the same counts as before, with no mislabeled row.

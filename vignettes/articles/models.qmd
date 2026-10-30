@@ -83,8 +83,8 @@ before you swap one for another.
 The native column describes the default listwise path. The separate unreleased
 [bounded FIML workflow](native-guide.html#bounded-fiml) is limited to three
 numeric continuous observed variables, explicit random X and observed/model SEs;
-weights, bootstrap and fit tests are deferred for those objects. It is not
-assigned to 0.16 or available in released 0.15.0.
+weights, bootstrap and fit tests are deferred for those objects. Bounded FIML is
+planned for unreleased 0.16 and is unavailable in released 0.15.0.
 
 A weight or an SE type that an engine does not take is an error, not an ignored argument, so a silent change of
 estimand is not possible through `fit_mediation()`. The estimand still differs where the table says so: a logistic
