@@ -1,5 +1,11 @@
 # Bounded FIML integration design
 
+> Release-scope update (2026-10-30): bounded FIML is complete and merged into dev
+> through PR #364. It is now included in planned, unreleased 0.16; this supersedes
+> earlier 0.16 exclusions in the dated record below. Model/support limits are
+> unchanged. No release or expensive CI is authorized. See the
+> [current scope decision](../../SCOPE-0.16-FIML-2026-10-30.md).
+
 > Current integration status (2026-10-30): production integration was subsequently
 > authorized under the [bounded plan](../../PLAN-FIML-bounded-integration-2026-10-29.md).
 > Local implementation and corrective independent QA/pre-docs gates pass at `0f40b73f`

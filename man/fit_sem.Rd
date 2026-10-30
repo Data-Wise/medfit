@@ -170,8 +170,8 @@ stage, reason, original parent and completed attempts; basic argument-type error
 can occur earlier. A dedicated \code{fiml-1} ledger binds likelihood, rows, settings
 and attempts; the version-1 ledger below continues to describe listwise fits.
 See the Methods and Formulas article, Bounded FIML, for the likelihood and
-the native engine guide for the supported workflow. This milestone is separate
-from 0.16; released 0.15.0 does not provide this option.
+the native engine guide for the supported workflow. Bounded FIML is planned
+for unreleased 0.16; released 0.15.0 does not provide this option.
 }
 
 \section{Nonzero-product search coverage}{

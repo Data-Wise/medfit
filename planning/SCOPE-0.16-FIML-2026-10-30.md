@@ -1,6 +1,7 @@
 # 0.16 release scope: include bounded FIML
 
-Status: scope decision recorded locally on 2026-10-30; release preparation pending.
+Status: scope decision and release-wording synchronization completed locally on
+2026-10-30; publication and release preparation pending.
 The user accepted the next step after the recommendation to include bounded FIML
 in 0.16. This supersedes earlier FIML exclusions from 0.16 in historical study,
 implementation and merge records. It does not authorize a release, dev-to-main
@@ -47,11 +48,6 @@ This scope decision does not claim fresh numerical verification.
 ## Remaining acceptance before a separately authorized release
 
 - Reconcile the full 0.16 change list and open issues against dev and NEWS.
-- Update current release wording in README, NEWS, roxygen/Rd and the website
-  articles from "separate/not assigned to 0.16" to "planned for unreleased
-  0.16". Check the study index, design and completed implementation summaries;
-  preserve dated historical evidence while marking the old exclusion superseded.
-  Search the minibook and all help/site sources for conflicting scope claims.
 - Preserve the explicit model/support limits, opt-in defaults and refusal rules
   in examples and release notes; render and inspect affected website/book pages.
 - Make the version/date and associated references consistent only during
@@ -69,6 +65,31 @@ This scope decision does not claim fresh numerical verification.
 ## Immediate next step
 
 Finish fast CI and review for coverage PR #365; merging it needs separate
-permission. Then synchronize the release wording listed above in a bounded docs
-change before preparing a 0.16 release candidate. The present scope decision is
-local and unpushed; publication requires per-instance authorization.
+permission. Review the local scope/docs change, then authorize its publication
+before preparing a 0.16 release candidate. The scope/docs branch is local and
+unpushed; publication requires per-instance authorization.
+
+## Release-wording synchronization — 2026-10-30
+
+README, NEWS, fit_sem roxygen/generated Rd and the models/native-guide/0.15
+article now say "planned for unreleased 0.16" while retaining the released-0.15.0
+absence and every support limit. The minibook preface distinguishes the bounded
+FIML addition from the chapters' complete-data derivations. Current study/plan
+headers supersede historical exclusions without rewriting dated evidence.
+
+Focused documentation and FIML suites pass across seven files. R expressions in
+fit-sem.R are identical before/after; loaded-package lint and whitespace checks
+pass. The isolated current installation also passes lint. An initial standalone
+lint/render used the older shared installation and produced context/dispatch
+errors; using the isolated current package resolved them. No runtime statement
+changed. Rd was generated with installed
+roxygen 8.1.1 without changing the project's version pin.
+
+Local HTML inspection covers homepage, NEWS, fit_sem help, three affected
+articles and the minibook preface. Initial builds hit unwritable macOS caches;
+the retry uses a session R cache and normal access to Quarto's cache. The first
+article helper call used bare names; correct pkgdown IDs are articles/models,
+articles/native-guide and articles/native-defaults-0-15. The first evaluated
+article render loaded an older shared medfit; final article renders use an
+isolated temporary library installed from this checkout. Logs remain under
+/private/tmp/medfit-016-*. No website deployment, version bump or release occurred.

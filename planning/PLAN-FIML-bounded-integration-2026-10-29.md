@@ -1,5 +1,11 @@
 # Bounded FIML integration: first adopter milestone
 
+> Release-scope update (2026-10-30): bounded FIML is complete and merged into dev
+> through PR #364. It is now included in planned, unreleased 0.16; this supersedes
+> earlier 0.16 exclusions in the dated record below. Model/support limits are
+> unchanged. No release or expensive CI is authorized. See the
+> [current scope decision](SCOPE-0.16-FIML-2026-10-30.md).
+
 Status: MERGED INTO DEV via PR #364, squash a894e45e, 2026-10-30.
 Post-merge fast coverage and Codecov PASS. Corrective FINAL local gates passed
 on 32a7b98. Authorized 2026-10-29: implement the reviewed bounded contract and

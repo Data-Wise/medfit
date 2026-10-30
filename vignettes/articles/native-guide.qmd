@@ -223,7 +223,7 @@ mediator works through the same call.
 
 ## Bounded FIML (unreleased) {#bounded-fiml}
 
-This separate development milestone is not assigned to 0.16 and is unavailable
+Bounded FIML is planned for unreleased 0.16 and is unavailable
 in released 0.15.0. Ordinary calls still delete incomplete model rows listwise.
 The explicit opt-in below fits exactly three numeric continuous observed
 variables: X to M to Y with a free or exactly zero direct path, independent

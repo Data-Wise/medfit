@@ -217,7 +217,8 @@ In released 0.15.0, the native engine drops incomplete rows (listwise deletion),
 and `fixed_x` moments are the sample moments of those rows; that release has no
 `missing =` argument. The separate unreleased bounded FIML milestone preserves
 this default but permits explicit random-X simple mediation. See the
-[native guide](native-guide.html#bounded-fiml); it is not assigned to 0.16.
+[native guide](native-guide.html#bounded-fiml); bounded FIML is planned for
+unreleased 0.16.
 
 ## Evidence: the oracle matrix
 
