@@ -2,8 +2,8 @@
 
 Status: scope/docs merged into dev through PR #366 (`c4b76fb5`) on 2026-10-30
 after all six fast checks passed on the exact reviewed head. Post-merge dev
-coverage was pending as of 2026-10-30 18:29 UTC (run `41106465575`); consult the
-run for later state and record its final result. Release preparation remains. The proposed follow-up order
+coverage and Codecov patch passed on the merge commit (run `41106465575`),
+verified live at 2026-10-30 18:42 UTC. Release preparation remains. The proposed follow-up order
 and cross-package boundaries are in
 [the reconciled readiness plan](PLAN-FIML-release-and-missing-data-followups-2026-10-30.md).
 The user accepted the next step after the recommendation to include bounded FIML
@@ -68,9 +68,9 @@ This scope decision does not claim fresh numerical verification.
 
 ## Immediate next step
 
-Finish post-merge coverage verification for #366 (run `41106465575`) and record
-its actual result. PRs #365/#366 are already merged with author authorization.
-Then review the bounded readiness work in the reconciled plan linked above;
+Post-merge verification is complete: PRs #365/#366 are merged with author
+authorization and their dev coverage runs passed. Review and select the bounded
+readiness work in the reconciled plan linked above;
 new diagnostics and missingmed adoption remain separate milestones. Release
 preparation/execution needs its own authorization; expensive CI remains deferred
 until release to main.
@@ -108,6 +108,11 @@ reconciliation is retained here, with the earlier 0.16 exclusion superseded
 by this scope decision. PR #366 subsequently merged as `c4b76fb5` after all six
 fast checks passed at `02f908e3`; reviewed/merged trees matched. Local dev and
 merged branch/worktree cleanup are complete, with 140 evidence files archived
-and verified. Post-merge coverage remains pending. No release, dev-to-main merge
-or expensive CI is authorized. This pending observation was checked at
-2026-10-30 18:29 UTC; it is not an assertion that the run remains pending later.
+and verified. Post-merge dev coverage
+[run 41106465575](https://github.com/Data-Wise/medfit/actions/runs/41106465575)
+completed successfully on `c4b76fb59b1d6248897a706bfd7e065533ba1739`: 8,626
+passes, zero failures, three warnings and 140 skips. The reported
+[Codecov patch status](https://app.codecov.io/gh/Data-Wise/medfit/commit/c4b76fb59b1d6248897a706bfd7e065533ba1739)
+also passed; both results were verified live at 2026-10-30 18:42 UTC. Remote
+feature branches remain retained. Metadata reconciliation is local only; no
+separate push, release, dev-to-main merge or expensive CI is authorized.

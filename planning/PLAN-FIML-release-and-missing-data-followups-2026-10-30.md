@@ -18,11 +18,13 @@ It does not replace either package's detailed acceptance contracts.
   archived and verified. Local-only receipt:
   `_agents_workspace/0.16-fiml-scope-merged-2026-10-30.receipt.json`;
   archive SHA-256 `92bf4c8cf4af3b7961afe208353b21b47154d5a8559e7cda612a18a4e17eabf9`.
-- Post-#366 dev coverage run `41106465575` was in progress when this plan was
-  drafted (last checked 2026-10-30 18:29 UTC). Pending is not passing; consult
-  [the actual run](https://github.com/Data-Wise/medfit/actions/runs/41106465575)
-  for later state. Its final result must be recorded by the existing
-  authorized monitor, not by a new implementation task here.
+- Post-#366 dev coverage
+  [run `41106465575`](https://github.com/Data-Wise/medfit/actions/runs/41106465575)
+  completed successfully at merge commit `c4b76fb5`: 8,626 passes, zero failures,
+  three warnings and 140 skips. The reported Codecov patch status also passed.
+  Both results were verified live at 2026-10-30 18:42 UTC by the authorized
+  monitor. Local branch/worktree cleanup is complete; remote feature branches
+  remain retained. Metadata reconciliation is local only, without a push.
 - Bounded FIML is included in **planned, unreleased 0.16**. No release, main
   merge, deployment, submission, push, or expensive CI is authorized here.
 - missingmed local source: `feature/lavaan-mbco-medfit`, version 0.10.0.9000,
