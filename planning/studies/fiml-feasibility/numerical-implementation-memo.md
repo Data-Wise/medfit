@@ -6,12 +6,20 @@ external submissions or expensive CI. This memo supplements the bounded
 
 ## Recommendation and evidence boundary
 
-Proceed to a narrow native-kernel design, retaining medfit's existing optimizer
-and acceptance infrastructure initially. Start with single-group observed
-continuous Gaussian models, explicit random X, free means and observed-Hessian
-model SEs. Preserve listwise deletion as the default. Require an explicit
-future FIML request and an explicit random-X choice; do not silently change
-medfit's current fixed-X default. Fixed-X FIML needs its own design and oracle.
+Propose a standalone kernel prototype for exactly three observed variables:
+`M = im + a*X + eM`, `Y = iy + b*M + cp*X + eY`, with Gaussian random X,
+mutually independent Gaussian disturbances, positive variances, free means,
+one group and unweighted rows. Cover only free `cp` or `cp` fixed to zero.
+No extra predictors, residual correlations, feedback paths, interactions,
+factors, parameter ties or other restrictions are included. Target standard
+observed-Hessian model SEs. Retain medfit's current SLSQP machinery initially
+and compare with an independent optimizer; do not assume either solver wins.
+
+The prototype stays outside production and exposes no new package API or
+public fit class. Future integration must preserve listwise deletion and the
+fixed-X default, requiring explicit FIML and random-X choices. Fixed-X FIML
+needs its own design and oracle. This revision authorizes neither a prototype
+nor integration; each remains a separate decision, outside 0.16.
 
 The local study passes 30/30 fit cells and 10/10 edges. This follow-up adds
 six algebra probes and verifies that 12 inspected functions in the downloaded
@@ -212,30 +220,88 @@ conditional-density tests; preserve the present default until then.
    route while native design proceeds; verify support for each desired
    downstream operation separately.
 
-The next separately authorized milestone should produce a design/prototype
-outside production, with the following go/no-go gates:
+### Prototype acceptance: local numerical evidence only
 
-1. Recover all existing 30-cell likelihood, estimate, row-count and observed-SE
-   agreements without changing thresholds; require named covariance entries,
-   not only SE diagonals.
-2. Validate actual RAM analytic gradients at multiple nonoptimum points and
-   full observed Hessians at two resolutions, including overidentified models
-   that catch omitted mapping curvature and wrong N/2 scaling.
-3. Add identifiable no-complete-row data, singleton/high-pattern-count masks,
-   large shifts/rescalings, near-singular implied blocks and constructive
-   nonidentification. A valid initializer must not require complete cases.
-4. Preserve original/retained/empty row ledgers and comparable likelihood
-   domains. Audit resampling, logLik/AIC/BIC, profile and MBCO callers before
-   allowing FIML objects into them; gate unsupported operations explicitly.
-5. Keep weights, robust SEs, latent/categorical models, nonlinear constraints
-   and broad fixed-X behavior unsupported until their independent gates exist.
-   Do not treat a kernel test as downstream support.
+The following are prospective requirements, not checks already passed by a
+native prototype. Freeze fixtures, coordinate order and scales before running;
+retain failures and do not loosen thresholds after seeing results.
 
-NO-GO for integration if any unexplained mismatch remains, if valid patterns
-are rejected solely because their sample covariance is singular, if no-complete-
-row initialization fails, or if existing listwise/default behavior changes.
-Technical design work can proceed now; product scope/adopter and production
-implementation still need separate decisions. Nothing here blocks 0.16.
+1. **Likelihood and covariance oracle.** Recover all existing 30 primary cells
+   and 10 edges with their original thresholds. Compare all named covariance
+   entries with both the independent total-NLL Hessian reference and lavaan's
+   full observed-Hessian covariance, after coordinate transformation. No
+   survivor-only summaries or diagonal-only covariance comparisons.
+2. **Actual RAM derivatives.** Exercise the reusable RAM mean/covariance
+   derivatives through the proposed pattern score at fitted and at least two
+   deterministic perturbed points per model/mask. Compare the full model
+   Hessian at two resolutions and catch omitted mapping curvature and wrong
+   N/2 scaling. Retain the listwise and omitted-means mutants too.
+3. **Small but discriminating new fixtures.** Add identifiable data with no
+   complete rows (all three pairwise observed patterns); singleton patterns;
+   all seven nonempty patterns possible for three variables; large shifts and
+   rescalings; near-singular model-implied blocks; and the existing constructive
+   nonidentification case. A valid initializer must not require complete cases.
+   Classify regular versus diagnostic fixtures in advance. Singular pattern
+   sample covariances alone must not reject a regular model likelihood.
+4. **Optimization and failure behavior.** Use at least three deterministic
+   starts and an independent optimizer on each regular fit fixture. Require
+   convergence, stationarity, positive-definite observed information and
+   agreement of accepted likelihoods. Diagnose undefined likelihoods or
+   unidentified information explicitly; do not turn a diagnostic fixture into
+   an ordinary finite-SE success. This is finite-fixture evidence, not a global
+   optimization or general identification certificate.
+5. **Rows and containment.** Account exactly for original, retained and empty
+   row IDs, preserving a common likelihood domain across comparisons. Reject
+   inputs outside the stated topology/settings. Return a study-only record;
+   do not route it into public resampling, profiles, MBCO or fit-index APIs.
+
+For regular fixtures, use these predeclared numerical limits. Existing primary
+cell criteria remain in force in addition to the new scaled checks.
+
+| Check | Maximum error |
+| --- | ---: |
+| Total log likelihood / retained row | 1e-8 |
+| Standardized estimate difference | 1e-5 |
+| Relative SE difference | 1e-3 |
+| Every normalized covariance difference | 1e-3 |
+| Scaled analytic/numeric gradient discrepancy | 1e-6 |
+| Scaled stationarity norm | 1e-5 |
+| Scaled Hessian discrepancy, including second resolution | 1e-4 |
+| Relative SE change at second Hessian resolution | 1e-4 |
+| Accepted multistart/optimizer NLL spread / row | 1e-8 |
+
+For covariance, compute
+`max_ij |Vtest_ij - Vref_ij| / (SEref_i * SEref_j)`, using the independent
+reference SEs for both comparisons. Require the same named coordinates, finite
+entries and strictly positive reference SEs for these regular fixtures. This
+handles zero reference covariances without division by a near-zero covariance.
+
+For derivatives, let U be diagonal parameter-unit scales from original-data
+marginal SDs: intercept SDs, outcome/predictor SD ratios for paths and squared
+SDs for variances. Freeze U per fixture; transform it consistently in rescaling
+tests. Use `g = U * grad(L/n)` and `Hscaled = U * H_L * U` (matrix products).
+Gradient and Hessian comparison errors are the maximum absolute difference
+divided by `max(1, max(abs(reference)))`; stationarity is `max(abs(g))`.
+Require both reference and candidate scaled symmetric information to be
+positive definite on regular fixtures. Report conditioning; do not use this
+check as proof of identification. Declare all tested shifts/scales before
+execution and retain their exact transformation identities.
+
+### Integration acceptance: deferred to a separate authorization
+
+Only after prototype acceptance, decide whether the user need warrants a
+production feature. Then specify the public missing-data option, preserve
+existing listwise/fixed-X defaults and statuses, and audit all downstream
+consumers: row/context ledgers, resampling, logLik/AIC/BIC, profiles and MBCO.
+Support each operation with independent tests or reject it explicitly; a broad
+downstream compatibility audit is not a prerequisite for the isolated prototype.
+
+Weights, robust or expected-information SEs, latent/categorical models,
+nonlinear constraints and fixed-X missing-data policies remain deferred.
+Unexplained numerical misses, failed no-complete-row initialization or leakage
+into public APIs are NO-GO for prototype acceptance. Passing the prototype is
+not integration authorization. No part of either milestone expands or blocks
+0.16; no production implementation is authorized by this memo revision.
 
 ## Reproduction
 

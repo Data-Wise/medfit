@@ -1,3 +1,7 @@
+# FIML prototype scope revised; authorization pending — 2026-10-29
+# Three-variable acyclic Gaussian mediation only; random X, free means, independent disturbances, free/zero direct path. Separate from 0.16.
+# Prospective full-covariance and scaled derivative criteria now explicit; no-complete-row initialization and exact row accounting required.
+# Prototype gates separated from deferred production/API/downstream integration gates. No prototype or production changes, push or expensive CI authorized/performed by this revision.
 # Issue #360 PR #363 lint repair — 2026-10-29
 # Author authorized push/PR and the namespace repair. Qualify oracle-helper assertion for unloaded CI lint; numerical assertions unchanged.
 # Unloaded installed-package lint0; focused69/69 and six independent full-likelihood fit comparisons PASS; wrong-likelihood mutant still caught. Fast hosted CI pending on repaired head.

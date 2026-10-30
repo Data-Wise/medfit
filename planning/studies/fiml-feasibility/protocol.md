@@ -77,3 +77,14 @@ Diagnosed harness repairs: lavaan stopping `rel.tol` changed from 1e-12 to
 uses dimensionless coordinates for rescaled data. No likelihood, parameter or
 SE acceptance threshold changed. Final evidence and limitations are in
 [report.md](report.md); deeper numerical research remains a separate task.
+
+## Prospective prototype scope revision
+
+The [numerical implementation memo](numerical-implementation-memo.md) now
+separates prototype from integration gates. Its first proposed prototype is
+limited to three-variable acyclic Gaussian mediation with free means, random
+X, independent disturbances and either free or zero direct path. It predeclares
+full covariance and derivative tolerances, no-complete-row initialization and
+exact row accounting. These are new, unexecuted acceptance requirements; prior
+feasibility results do not certify them. Prototype authorization remains pending,
+with no production work or change to 0.16 scope.
