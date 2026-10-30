@@ -18,12 +18,13 @@ constraints and bounds; \code{NA} when the model is not identified)}
 
 \item{defined}{Data frame of \verb{:=} parameters: \code{name}, \code{expr}, \code{est}, \code{se}}
 
-\item{f}{Numeric scalar: minimized maximum-likelihood discrepancy}
+\item{f}{Numeric scalar: minimized maximum-likelihood discrepancy; \code{NA} for bounded FIML}
 
 \item{n_obs, n_dropped}{Integer scalars: rows used and rows dropped for
-missing values (listwise deletion)}
+missing values (listwise deletion by default; only all-empty model rows for FIML)}
 
-\item{df}{Numeric scalar: degrees of freedom}
+\item{df}{Numeric scalar: model-test degrees of freedom; \code{NA} for bounded FIML,
+which stores the free-parameter count separately in \code{internals$likelihood$k}}
 
 \item{information}{Character scalar: \code{"observed"} or \code{"expected"}}
 

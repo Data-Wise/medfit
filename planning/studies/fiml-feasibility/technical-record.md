@@ -1,5 +1,13 @@
 # Bounded FIML technical record
 
+> Current integration status (2026-10-29): production integration was subsequently
+> authorized under the [bounded plan](../../PLAN-FIML-bounded-integration-2026-10-29.md).
+> Local implementation and corrective independent QA/pre-docs gates pass at `0f40b73f`
+> (numerical source `625e7280`). Documentation/final gates remain pending. Earlier
+> prospective wording below records its historical stage, not the current authority.
+> FIML remains separate from 0.16; no push, release or expensive CI is authorized.
+> See the [argument analysis](argument-design-analysis.md) for new/existing settings.
+
 Date: 2026-10-29. Scope: the isolated research study and prototype only.
 Initial numerical implementation verified at `b4a50f36`; current P2 repairs and
 local PASS are documented in the [repair report](p2-repair-report.md). This document

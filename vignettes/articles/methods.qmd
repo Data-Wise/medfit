@@ -517,8 +517,50 @@ the mediation structure through the same workers as the lavaan route.
 
 `fit_sem()` and `fit_mediation(engine = "native")` fit a model written in
 medfit model syntax (`?"medfit-syntax"`) by maximum likelihood to raw data.
-Rows with missing values in the model variables are dropped once (listwise
-deletion) and counted.
+By default, rows with missing values in the model variables are dropped once
+(listwise deletion) and counted. The separate unreleased bounded FIML opt-in
+uses the observed components instead; the complete-data formulas below describe
+the listwise path unless stated otherwise.
+
+### Bounded FIML {#bounded-fiml}
+
+The separate unreleased `missing = "fiml"` milestone supports only Gaussian
+random-X simple mediation with three numeric observed variables, independent
+disturbances, free intercepts and a free or exactly zero direct path. It assumes
+ignorable missingness under that model; choosing FIML does not validate MAR or
+protect against nonignorable missingness. See the
+[native guide](native-guide.html#bounded-fiml) for settings and API limits.
+
+For retained row $i$, let $O_i$ select its observed components, with implied mean
+$\mu_{O_i}(\theta)$ and covariance $\Sigma_{O_i O_i}(\theta)$. The minimized total
+negative log likelihood includes the full Gaussian constants:
+
+$$
+-\ell(\theta) = \frac{1}{2}\sum_{i:|O_i|>0}
+\left[|O_i|\log(2\pi) + \log|\Sigma_{O_i O_i}(\theta)| +
+(y_{i,O_i}-\mu_{O_i})^\top\Sigma_{O_i O_i}^{-1}(y_{i,O_i}-\mu_{O_i})\right].
+$$
+
+Rows are grouped by observation pattern; Cholesky solves use the implied
+principal covariance, not an inverse of each pattern's sample covariance.
+Singleton patterns therefore need no invertible sample covariance. Only rows
+with no observed model variable are dropped. No complete-case initialization is
+required, although missingness patterns can still leave a model unidentified.
+`nobs()` is the retained row count, including singleton and incomplete rows.
+
+The full observed Hessian of this total objective gives the model covariance.
+Standardized internal coordinates are transported back with the full affine
+Jacobian, including mean/intercept terms. Both SLSQP and nlminb must supply
+accepted stationary candidates with agreeing likelihoods; local rank and
+positive, adequately conditioned information are also required. These checks
+are local numerical evidence, not global optimization or sampling-coverage proofs.
+
+`logLik()` returns the raw total likelihood. Its `df` attribute is the free
+parameter count (nine, or eight with the direct path fixed at zero); AIC and BIC
+use that count and retained N. The complete-data discrepancy and model-test df
+are unavailable. No missing-data saturated reference fit, chi-square or fit
+indices are synthesized. At the NIE origin, a zero first derivative does not
+supply regular normal inference; NIE inferential fields are unavailable.
 
 ### Model form
 

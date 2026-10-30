@@ -1,10 +1,13 @@
 # Bounded FIML study and prototype
 
-**Current state:** local numerical PASS; both P2 findings repaired. Bounded integration design revised and statically reviewed; production implementation is not authorized.
+**Current state:** the isolated prototype passes locally. The separately authorized
+bounded production integration is implemented at `625e7280`; corrected QA and
+pre-docs gates pass at test head `0f40b73f`. Documentation and final local gates
+remain pending. See the [active plan](../../PLAN-FIML-bounded-integration-2026-10-29.md)
+and [argument analysis](argument-design-analysis.md).
 Initial numerical implementation: `b4a50f36`; pre-repair reviewed baseline: `c7430172`.
 See the [P2 repair report](p2-repair-report.md) for current evidence and history.
-Separate from 0.16. No production integration, push, release or hosted CI was
-performed. The worktree branch is `codex/fiml-feasibility`; baseline dev is
+Separate from 0.16. No push, release or hosted CI was performed. The worktree branch is `codex/fiml-feasibility`; baseline dev is
 `edcf23d8705165cd2497deda0d4e8410b9754811`.
 
 ## Read in this order
@@ -34,12 +37,12 @@ performed. The worktree branch is `codex/fiml-feasibility`; baseline dev is
 | P2 review repairs | [Repair report](p2-repair-report.md) | Both findings resolved; 61 assertions PASS |
 | Current local acceptance | [Report](prototype-report.md) | 42/42 fits, 13/13 edges |
 | Bounded integration design | [Design](integration-design.md), [review](integration-design-review.md) | Accessor P2 resolved; static review PASS, design only |
-| Production/API implementation | [Design acceptance](integration-design.md#prospective-implementation-acceptance) | Not authorized |
+| Production/API implementation | [Active plan](../../PLAN-FIML-bounded-integration-2026-10-29.md) | Authorized and locally implemented; QA/pre-docs PASS; docs/final gates pending |
 
 Early references to pending prototype authorization describe historical stages.
 The user subsequently authorized the isolated prototype and its optimizer
-repairs. That authorization did not extend to production implementation or
-change 0.16. A technical GO also does not establish external adopter commitment. The new
+repairs. A later, separate authorization activated bounded production implementation;
+neither authorization assigns it to 0.16. A technical GO also does not establish external adopter commitment. The new
 [design](integration-design.md) names medfit's own simple-mediation workflow as the
 first engineering adopter; it does not claim an external package has committed.
 

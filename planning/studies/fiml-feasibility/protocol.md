@@ -1,5 +1,13 @@
 # Bounded FIML feasibility protocol and adversarial review
 
+> Current integration status (2026-10-29): production integration was subsequently
+> authorized under the [bounded plan](../../PLAN-FIML-bounded-integration-2026-10-29.md).
+> Local implementation and corrective independent QA/pre-docs gates pass at `0f40b73f`
+> (numerical source `625e7280`). Documentation/final gates remain pending. Earlier
+> prospective wording below records its historical stage, not the current authority.
+> FIML remains separate from 0.16; no push, release or expensive CI is authorized.
+> See the [argument analysis](argument-design-analysis.md) for new/existing settings.
+
 Study navigation and current state: [README](README.md); equations, decisions
 and complete fix history: [technical record](technical-record.md).
 This feasibility protocol is historical; later prototype authorization and

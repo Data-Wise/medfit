@@ -19,8 +19,9 @@
 #'   accessors `extract_mediation()` reads use the same names.
 #' * `vcov()` returns their covariance, projected onto the active constraints
 #'   and bounds; rows for a pinned parameter are zero.
-#' * `nobs()` returns the number of rows used after listwise deletion.
-#' * `logLik()` returns the log likelihood with the means free; its `df`
+#' * `nobs()` returns rows used after listwise deletion by default; for bounded
+#'   FIML it counts rows with any observed model variable.
+#' * For listwise fits, `logLik()` returns the log likelihood with the means free; its `df`
 #'   attribute counts the free parameters plus one mean per observed variable
 #'   that is not fixed. With `fixed_x` it is conditional on the fixed variables
 #'   (lavaan's value), so `AIC()` and `BIC()` of fits with different fixed sets
@@ -29,6 +30,14 @@
 #'   parameters in `tidy()` (`fixed_x` column `TRUE`, no standard error) and in
 #'   `summary()`; `coef()` and `vcov()` leave them out. `print()` and `summary()`
 #'   say what the log likelihood is conditional on.
+#' * **Bounded FIML.** Raw total Gaussian `logLik()` includes constants; its `df`
+#'   attribute counts the eight or nine free parameters. AIC/BIC use retained N.
+#'   `f` and model-test `df` are unavailable: no saturated missing-data reference
+#'   fit is performed. SEMFit `glance()` retains likelihood/IC fields with unavailable
+#'   model tests and a reason. Extracted-object `glance()` is instead deferred.
+#'   Normal parameter intervals, extraction and unstandardized path/effect
+#'   summaries are supported; bootstrap, profiles, MBCO and fit tests refuse.
+#'   See [fit_sem()] for settings, provenance and dispatch boundaries.
 #' * **Model test with a product term.** The global chi-square is not valid when
 #'   a factor of a product term (`x:m`) is itself a regression target, because
 #'   the model then treats the product as exogenous although it is a function of

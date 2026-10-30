@@ -18,6 +18,15 @@ model, from one mediator to a latent variable.
 > **In one line:** `med()` runs a mediation analysis, `quick()` prints it, and
 > `nie()`, `nde()`, `te()`, `pm()` and `tidy()` read it.
 
+## Unreleased bounded FIML milestone
+
+Local development adds explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
+three-variable Gaussian random-X mediation, preserving listwise defaults. It is
+separate from 0.16 and unavailable in released 0.15.0. Observed/model SEs and
+unstandardized effects are supported; fit tests, bootstrap and MBCO are deferred.
+See the [native guide](vignettes/articles/native-guide.qmd#bounded-fiml)
+for settings and limits. Website publication remains a separate step.
+
 ## What's new
 
 | Version | What you get |

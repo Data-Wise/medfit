@@ -2199,10 +2199,11 @@ print_summary_cluster_mediation_data <- function(x, ...) {
 #' @param table Data frame: one row per parameter-table row with `lhs`, `op`,
 #'   `rhs`, `label`, `free`, `est` and `se`
 #' @param defined Data frame of `:=` parameters: `name`, `expr`, `est`, `se`
-#' @param f Numeric scalar: minimized maximum-likelihood discrepancy
+#' @param f Numeric scalar: minimized maximum-likelihood discrepancy; `NA` for bounded FIML
 #' @param n_obs,n_dropped Integer scalars: rows used and rows dropped for
-#'   missing values (listwise deletion)
-#' @param df Numeric scalar: degrees of freedom
+#'   missing values (listwise deletion by default; only all-empty model rows for FIML)
+#' @param df Numeric scalar: model-test degrees of freedom; `NA` for bounded FIML,
+#'   which stores the free-parameter count separately in `internals$likelihood$k`
 #' @param information Character scalar: `"observed"` or `"expected"`
 #' @param converged Logical scalar: the acceptance gate passed. `fit_sem()` returns a
 #'   fit only for an accepted solution (otherwise it errors), so this is `TRUE` for every
