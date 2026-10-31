@@ -6,6 +6,24 @@ test_that("FIML derivative oracle preserves polynomial curvature and names", {
                matrix(c(2, 3, 3, 0), 2), tolerance = 1e-7)
 })
 
+test_that("FIML evidence paths recognize Unix, drive-rooted and UNC absolute forms", {
+  expect_true(fo_is_absolute_path("/tmp/results.csv", windows = FALSE))
+  expect_false(fo_is_absolute_path("C:/Temp/results.csv", windows = FALSE))
+  expect_false(fo_is_absolute_path("/Temp/results.csv", windows = TRUE))
+  for (path in c("C:/Temp/results.csv", "d:\\Temp\\results.csv",
+                 "\\\\server\\share\\results.csv", "//server/share/results.csv")) {
+    expect_true(fo_is_absolute_path(path, windows = TRUE), info = path)
+  }
+  for (path in c("relative.csv", "../results.csv", "C:results.csv",
+                 "\\Temp\\results.csv", "~\\results.csv", "", NA_character_)) {
+    for (windows in c(FALSE, TRUE)) {
+      expect_false(fo_is_absolute_path(path, windows = windows), info = path)
+    }
+  }
+  expect_false(fo_is_absolute_path(NULL))
+  expect_false(fo_is_absolute_path(c("/tmp/one.csv", "/tmp/two.csv")))
+})
+
 test_that("FIML evidence output rejects caller-relative paths and survives CWD changes", {
   expect_error(fo_write_records(data.frame(x = 1), "relative.csv"), "absolute")
   path <- tempfile(fileext = ".csv")

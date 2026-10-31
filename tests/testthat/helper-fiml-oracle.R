@@ -118,8 +118,14 @@ fo_record_columns <- function() {
   c("cell", "outcome", "coefficient", "covariance", "nll", "fixed_nll", "geometry_min", "geometry_max",
     "information_min", "information_max", "modelcov_min", "modelcov_max", "modelcov_at")
 }
+fo_is_absolute_path <- function(path, windows = identical(.Platform$OS.type, "windows")) {
+  if (!is.character(path) || length(path) != 1L || is.na(path)) return(FALSE)
+  if (!windows) return(startsWith(path, "/"))
+  slashes <- gsub("\\", "/", path, fixed = TRUE)
+  grepl("^[A-Za-z]:/", slashes) || grepl("^//[^/]+/[^/]+", slashes)
+}
 fo_write_records <- function(records, path) {
-  if (!grepl("^/", path)) stop("FIML_ORACLE_RESULTS must be an absolute path")
+  if (!fo_is_absolute_path(path)) stop("FIML_ORACLE_RESULTS must be an absolute path")
   if (!is.data.frame(records) || ncol(records) != length(fo_record_columns()) ||
         anyDuplicated(names(records)) || !setequal(names(records), fo_record_columns())) {
     stop("FIML oracle evidence schema must contain every declared field exactly once")

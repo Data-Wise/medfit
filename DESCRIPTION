@@ -40,6 +40,7 @@ Suggests:
     knitr,
     lavaan (>= 0.6-0),
     lme4,
+    numDeriv,
     OpenMx,
     pbkrtest,
     regmedint,
