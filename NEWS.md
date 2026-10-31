@@ -29,6 +29,10 @@
 
 ## Fixed
 
+* Generic help and the README now distinguish bounded FIML normal summaries
+  from deferred bootstrap, proportion-mediated and comparison operations, including
+  the different `glance()` support on source fits and extracted objects.
+
 * The native guide's bounded FIML example now uses continuous Gaussian random-X
   data instead of the bundled demo's binary treatment. Both supported entry
   points are executed, with a regression guard against reintroducing binary X.

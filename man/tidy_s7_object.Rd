@@ -52,6 +52,16 @@ covariances between equations, and the effect standard errors inherit that.
 The proportion mediated (reported by \code{glance()}) has no standard error: it
 is a ratio whose delta-method standard error is unstable when the total
 effect is near zero, so bootstrap it instead.
+\subsection{Bounded FIML}{
+
+For data extracted from a bounded FIML fit, \code{tidy()}, coefficients, covariance
+and normal path/effect intervals are supported, but \code{glance()}, \code{pm()} and
+bootstrap intervals refuse. The bootstrap recommendations above apply only
+to other supported objects. \code{glance()} on the source \link{SEMFit} instead retains
+likelihood and information-criterion fields, with model tests unavailable.
+See \code{\link[=fit_sem]{fit_sem()}} for the bounded model, assumptions and inference limits.
+}
+
 \subsection{Base methods}{
 \itemize{
 \item \code{coef(object, type = "paths")}: the path coefficients; \code{type = "effects"}

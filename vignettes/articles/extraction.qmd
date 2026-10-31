@@ -20,7 +20,7 @@ The `extract_mediation()` function provides a standardized interface for extract
 - **lmer** mixed models (cluster-level treatment, 2-1-1) - implemented
 - **`fit_sem()`** native SEM fits - implemented
 
-Extraction returns the S7 class that matches the structure: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, or `ClusterMediationData`. All share one interface (`nie()`, `confint()`, `tidy()`, `bootstrap_mediation()`, ...) across modeling frameworks.
+Extraction returns the S7 class that matches the structure: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, or `ClusterMediationData`. The shared interface includes `nie()`, `confint()` and `tidy()`, with operation-specific support limits. Data extracted from the unreleased [bounded FIML workflow](native-guide.html#bounded-fiml) support unstandardized effects and normal intervals, but refuse `bootstrap_mediation()`, `pm()`, `quick()` and extracted-object `glance()`. Use `fit_sem()` or the native `fit_mediation()` model-syntax route for that workflow; `med()` remains a formula-building fitter.
 
 **Note:** For quick analysis, consider using `med()` instead - it handles fitting and extraction in one step. Use `extract_mediation()` when you need more control or already have fitted models.
 

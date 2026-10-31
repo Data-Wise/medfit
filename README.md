@@ -23,7 +23,12 @@ model, from one mediator to a latent variable.
 The development version adds explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
 three-variable Gaussian random-X mediation, preserving listwise defaults. It is
 planned for unreleased 0.16 and unavailable in released 0.15.0. Observed/model SEs and
-unstandardized effects are supported; fit tests, bootstrap and MBCO are deferred.
+unstandardized effects and normal intervals are supported. The model requires
+continuous X, M and Y, a free or exactly zero direct path, independent Gaussian
+disturbances, free intercepts and ignorable missingness under that joint model.
+Native `fit_mediation()` uses `engine_args` for the same opt-in. Extracted FIML
+objects refuse `quick()`, `pm()` and `glance()`; fit tests, bootstrap, profiles and
+MBCO are deferred. `glance()` on the source SEMFit retains likelihood/IC fields.
 See the [native guide](vignettes/articles/native-guide.qmd#bounded-fiml)
 for settings and limits. Website publication remains a separate step.
 

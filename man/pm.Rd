@@ -37,7 +37,8 @@ opposite signs)
 }
 
 The ratio has no delta-method standard error in medfit; bootstrap it with
-\code{\link[=bootstrap_mediation]{bootstrap_mediation()}}.
+\code{\link[=bootstrap_mediation]{bootstrap_mediation()}} for supported objects. \code{pm()} and bootstrap inference
+refuse data extracted from bounded FIML fits; see \code{\link[=fit_sem]{fit_sem()}}.
 }
 \examples{
 med_data <- fit_mediation(

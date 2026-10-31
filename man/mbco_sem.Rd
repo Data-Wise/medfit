@@ -72,6 +72,9 @@ is never solved, because a nonlinear solver can stop at the branch with the
 larger statistic.
 }
 \details{
+Bounded FIML fits are refused before any constrained refit; their model tests
+and MBCO inference are not supported. See \code{\link[=fit_sem]{fit_sem()}} for the bounded limits.
+
 A fit made with \code{weights} is refused: the weighted discrepancy is
 not a likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are
