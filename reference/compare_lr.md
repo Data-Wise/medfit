@@ -99,7 +99,7 @@ if (requireNamespace("lavaan", quietly = TRUE)) {
 #> medfit LR comparison (lavaan, a*b = 0): agree
 #>   medfit reference LR 17.5574 (accepted)
 #>  engine version   start      lr converged     residual status
-#>  lavaan   0.7.3 default 17.5574      TRUE 2.505538e-09  agree
-#>  lavaan   0.7.3    zero 17.5574      TRUE 3.771936e-09  agree
+#>  lavaan   0.7.3 default 17.5574      TRUE 2.418474e-09  agree
+#>  lavaan   0.7.3    zero 17.5574      TRUE 3.773233e-09  agree
 # }
 ```

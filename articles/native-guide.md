@@ -112,7 +112,7 @@ summary(fit)
      total cp + a * b 0.5374 0.1189
 
     Diagnostics:
-      Optimizer status: 3; stationarity 7.01e-16; retries 0
+      Optimizer status: 3; stationarity 6.40e-16; retries 0
       Active bounds: none
       Active constraints: none
       Improper solution: no
@@ -155,9 +155,9 @@ glance(fit)
 ```
 
     # A tibble: 1 × 9
-       nobs  npar    df chisq p_value logLik   AIC   BIC fixed_x
-      <int> <int> <dbl> <dbl>   <dbl>  <dbl> <dbl> <dbl> <chr>
-    1   400     9     0     0      NA -1140. 2298. 2334. treatment, covariate1
+       nobs  npar    df    chisq p_value logLik   AIC   BIC fixed_x
+      <int> <int> <dbl>    <dbl>   <dbl>  <dbl> <dbl> <dbl> <chr>
+    1   400     9     0 4.59e-30      NA -1140. 2298. 2334. treatment, covariate1
 
 The chi-square is \\n\\ times the minimized discrepancy and has `df`
 degrees of freedom. A saturated model (here `df = 0`) fits perfectly by

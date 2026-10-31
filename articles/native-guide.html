@@ -168,7 +168,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.16.0/vignettes/articles/native-guide.qmd" class="external-link"><code>vignettes/articles/native-guide.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -325,7 +325,7 @@ Defined parameters:
  total cp + a * b 0.5374 0.1189
 
 Diagnostics:
-  Optimizer status: 3; stationarity 7.01e-16; retries 0
+  Optimizer status: 3; stationarity 6.40e-16; retries 0
   Active bounds: none
   Active constraints: none
   Improper solution: no
@@ -397,9 +397,9 @@ Diagnostics:
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 9
-   nobs  npar    df chisq p_value logLik   AIC   BIC fixed_x
-  &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;
-1   400     9     0     0      NA -1140. 2298. 2334. treatment, covariate1</code></pre>
+   nobs  npar    df    chisq p_value logLik   AIC   BIC fixed_x
+  &lt;int&gt; &lt;int&gt; &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;
+1   400     9     0 4.59e-30      NA -1140. 2298. 2334. treatment, covariate1</code></pre>
 </div>
 </div>
 <p>The chi-square is <span class="math inline">\(n\)</span> times the minimized discrepancy and has <code>df</code> degrees of freedom. A saturated model (here <code>df = 0</code>) fits perfectly by construction, so the test only means something when there are restrictions.</p>

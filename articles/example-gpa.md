@@ -311,9 +311,9 @@ glance(sem)[, c("nobs", "npar", "df", "chisq")]
 ```
 
     # A tibble: 1 × 4
-       nobs  npar    df chisq
-      <int> <int> <dbl> <dbl>
-    1   500    11     0     0
+       nobs  npar    df    chisq
+      <int> <int> <dbl>    <dbl>
+    1   500    11     0 1.18e-28
 
 The model is saturated (`df = 0`), so there is no global chi-square to
 read: it fits exactly by construction, and the interesting content is
