@@ -1,10 +1,12 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+# Development coverage runs locally; hosted coverage protects integration into main.
+# Main PRs and pushes retain unconditional coverage through coverage_scope.py.
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
   pull_request:
-    branches: [dev]
+    branches: [main]
 
 name: test-coverage
 

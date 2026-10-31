@@ -29,9 +29,10 @@
 
 ## Fixed
 
-* Coverage skips changes limited to named repository metadata and planning Markdown
-  on development-branch pushes and pull requests. Code/test changes and main pushes
-  retain coverage; uncertain scope runs coverage conservatively. Release and OpenBLAS checks are unchanged.
+* Hosted coverage runs only on pull requests to `main` and pushes to `main`,
+  including metadata-only release changes. Development-branch pushes and pull
+  requests use local validation instead. Other fast hosted checks remain enabled;
+  expensive platform and OpenBLAS checks remain deferred until release to main.
 
 * Source archives retain the nonlinear covariance gate used by the package tests.
 

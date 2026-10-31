@@ -17,7 +17,13 @@ def requires_coverage(paths):
 
 
 def decide(event_name, ref, event):
-    if ref == "refs/heads/main":
+    if ref == "refs/heads/main" or (
+        event_name == "pull_request"
+        and isinstance(event, dict)
+        and isinstance(event.get("pull_request"), dict)
+        and isinstance(event["pull_request"].get("base"), dict)
+        and event["pull_request"]["base"].get("ref") == "main"
+    ):
         return True
     try:
         if event_name == "pull_request":
