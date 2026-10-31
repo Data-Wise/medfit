@@ -1,6 +1,6 @@
 # FIML roadmap planning evidence
 
-Status: assembled locally on `codex/roadmap-reconciliation`, 2026-10-31 MDT.
+Status: original packet merged via PR #377; FI-B0 reconciliation remains local, 2026-10-31 MDT.
 This is a planning packet, not an active implementation or an admission receipt.
 
 ## Current authority and reading order
@@ -8,7 +8,9 @@ This is a planning packet, not an active implementation or an admission receipt.
 1. [Roadmap current board](../../medfit-roadmap.md#current-board): priorities,
    11-variant scope, owners, delivery states and deferred capabilities.
 2. [Paired plan](../../PLAN-FIML-inference-and-observed-models-2026-10-31.md):
-   Q12/Q13 decisions, sampling/inference contracts and unresolved FI-B0 gates.
+   Q12/Q13 decisions, current bounded FI-B0 handoff and deferred admission gates.
+   The [short checklist](../../DECISION-FI-B0-existing-model-inference-2026-10-31.md)
+   supplies the reviewed implementation contract and numerical/resource defaults.
 3. [Gate report](report.md): previously computed design probabilities and review
    history. Historical unapproved-target wording is superseded by Q12/Q13.
 
@@ -28,19 +30,27 @@ is `cc3fd887245fa01026439d4c103fc2be020d1a01`. No runtime source was changed.
   design worktree. Raw reviews, script and CSVs are copied byte for byte.
 - `preassembly-revised-documents.sha256`: original absolute-path receipt, preserved
   as historical provenance. It is not a current portable verification command.
-- `revised-documents.sha256`: current repository-relative packet checksums. From
-  the repository root, verify with
-  `shasum -a 256 -c planning/studies/fiml-inference-gates/revised-documents.sha256`.
-  The receipt excludes itself to avoid a circular hash dependency.
+- `revised-documents.sha256`: preserved historical checksums of the PR #377
+  packet, verified against every pre-reconciliation file in `ff200ee9`. Verify
+  this historical receipt in that snapshot, not against subsequently updated
+  roadmap/plan/index files. Raw reviews, script, CSVs and this receipt are unchanged.
+- `fi-b0-reconciliation.sha256`: current local checklist, roadmap, plan, status,
+  CLAUDE and index checksums. From the repository root, verify with
+  `shasum -a 256 -c planning/studies/fiml-inference-gates/fi-b0-reconciliation.sha256`.
+  Each receipt excludes itself to avoid circular hash dependencies.
 
 ## Publication boundary
 
 This packet proposes future work; it does not expand released FIML support.
 Existing-model row-bootstrap and parameter-draw inference come first, followed
-by each approved observed-Gaussian variant. FI-B0 exact API, missingness argument,
-manifest, resource/pilot agreement and focused-review closure remain pending.
+by each approved observed-Gaussian variant. The short FI-B0 contract is reviewed
+locally with no blocking design findings; runtime validation has not occurred.
+Bounded implementation needs separate authorization and owner assignment. Large
+simulations/timing pilot and statistical resource agreement remain deferred;
+Q10-Q13 statistical admission requirements remain unresolved for release.
 No dates or versions are assigned. Hosted coverage remains main PRs/main pushes
 only, expensive CI release-only, and the CRAN hold remains.
 
-Local assembly/review is authorized. Push, PR, publication, implementation,
+Local reconciliation/review is authorized; PR #377 publication is historical.
+This follow-up has no authorization for push, PR, publication, implementation,
 new calculations and experiments are not authorized by this packet.

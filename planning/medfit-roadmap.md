@@ -1862,7 +1862,7 @@ Integration is successful when:
 The 0.16 release/test/docs milestones are complete. Do not reopen them from
 historical checklists. Current dispositions:
 
-1. **Planning reconciliation complete locally (2026-10-31):** one current board and
+1. **Roadmap reconciliation merged via PR #377 (2026-10-31):** one current board and
    [clause-level issue dispositions](ISSUE-369-reconciliation-2026-10-31.md).
    Existing issue #369 tracks administrative follow-through; #249 retains
    unresolved solver/standardization/source-sync clauses, while #320 remains a
@@ -1880,17 +1880,18 @@ historical checklists. Current dispositions:
    first admit inference for the existing simple FIML model, then admit each of
    the 11 approved variants through its own complete, preregistered stage. No
    pooling away failed cells or treating unadmitted variants as supported.
-   Exact APIs, a feasible frozen per-stage study/resource manifest, timing
-   protocol and focused-review closure remain FI-B0 gates. The
-   M=500 screening proposal has inadequate many-cell pass probability; no
-   simulation, implementation or release clearance follows from agreed scope.
-   The paired plan and [evidence index](studies/fiml-inference-gates/README.md)
-   are assembled on this planning branch. Its repository-relative
-   `revised-documents.sha256` receipt pins this publication packet; the original
-   preassembly receipt is preserved. `cc3fd887` is the parent, not this snapshot.
-   Reconciliation is a local documentation result, not implementation approval,
-   integration, issue closure or publication. No more experiments are planned
-   within this roadmap task.
+   The [FI-B0 checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md)
+   now fixes the API/failure/test contract and three bounded numerical/resource
+   defaults. Local read-only review found no blocking design findings; no runtime
+   checks were run. Bounded implementation still needs separate authorization
+   and assigned owners. The large simulation grid, timing pilot and statistical
+   resource agreement are deferred; Q10-Q13 statistical admission requirements
+   remain unresolved for release, rather than triggering another roadmap study.
+   PR #377 merged the prior planning packet as `da0d9edc`; `ff200ee9` reconciled
+   its status. This FI-B0 follow-up remains local and unpublished.
+   The [evidence index](studies/fiml-inference-gates/README.md) distinguishes
+   the preserved historical packet hashes from current reconciliation hashes.
+   No experiments or implementation are authorized within this roadmap task.
    **Activation requires both revised documents on one reviewed execution base
    or an explicitly agreed pinned snapshot.**
    The separate eight-cell
@@ -1930,8 +1931,8 @@ Unresolved choices stay explicit; no study or implementation starts implicitly.
 
 | Order | Milestone and scope | Accountable owner | Completion criterion | Current state |
 |---|---|---|---|---|
-| 1 | FI-B0: existing-model inference contract and verification scope | Maintainer decides; planning agent drafts | Concise contract, feasible stage budget and focused-review closure accepted; existing defaults preserved | Next; decisions recorded, detailed packet pending |
-| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | Implementation owner; independent oracle QA; docs owner | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | Planned; blocked on FI-B0 and implementation authorization |
+| 1 | FI-B0: existing-model inference contract and verification scope | Maintainer decides; planning agent drafts | Reviewed bounded API/failure/test contract and local verification limits; existing defaults preserved; statistical admission tracked separately | Checklist reviewed locally; ready for separate implementation authorization, not activated |
+| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | Implementation owner; independent oracle QA; docs owner | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | Planned; bounded implementation needs authorization/owner assignment; statistical admission deferred |
 | 3 | FI-G0 / FI-G1: generic preparation, then one/two continuous covariates | Implementation owner; independent oracle QA | Old-model behavior preserved; each covariate variant independently admitted with extraction and both interval methods | Planned after existing-model inference |
 | 4 | FI-G2: two parallel mediators, 0-2 covariates, independent/correlated mediator residuals | Implementation owner; independent oracle QA | Each of six variants independently admitted; full effect covariance and both interval methods verified | Planned after covariate stage |
 | 5 | FI-G3: two serial mediators, 0-2 covariates, independent disturbances and declared shortcuts | Implementation owner; independent oracle QA | Each of three variants independently admitted; every-path totals and both interval methods verified | Planned after parallel stage |
@@ -1943,11 +1944,12 @@ two covariate + six parallel + three serial variants, in addition to inference
 for the already released simple model. A separate complete admission decision
 is required for each stage; one passing stage does not admit the rest.
 
-**Remaining before execution:** FI-B0's exact contract, stage-specific
-verification/resource agreement, focused-review closure and explicit
-implementation authorization. **Publication preparation:** the paired planning
-documents and evidence are assembled locally; publication still requires separate
-authorization and integration through the reviewed Git path.
+**Remaining before execution:** explicit bounded implementation/local-verification
+authorization and owner assignment. The reviewed checklist supplies current
+numerical defaults and resource limits; actual runtime/numerical evidence is
+pending. Statistical simulation/admission remains a separate deferred decision.
+**Publication:** PR #377 is merged; this FI-B0 follow-up is local only and still
+needs separate publication authorization. No implementation follows from review.
 Version assignment follows accepted capability and a separate release decision;
 no feature date, push, release or dev-to-main merge is authorized here. The
 efficiency baseline stays separate; robust SEs, likelihood-based inference and
