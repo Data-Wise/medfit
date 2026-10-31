@@ -1,8 +1,8 @@
 structure,kind,gates,doc
-observed,sem_models,parity|se|reliability|oracle-sweep,model-native
-latent,sem_models,parity|se|reliability,model-native-latent
-parallel,sem_models,parity|se,model-native-multi
-serial,sem_models,parity|se,model-native-multi
+observed,sem_models,parity|se|reliability|oracle-sweep|semopy,model-native
+latent,sem_models,parity|se|reliability|semopy,model-native-latent
+parallel,sem_models,parity|se|semopy,model-native-multi
+serial,sem_models,parity|se|semopy,model-native-multi
 linear constraints,syntax,constrained|stationarity,model-native-constraints
 nonlinear constraints,syntax,nonlinear-parity|nonlinear-profile|restoration,model-native-constraints
 zero-product branches,syntax,compare-lr,model-native-constraints
@@ -13,3 +13,5 @@ factor covariates,syntax,factor,model-native-factors
 bootstrap inference,inference,bootstrap-coverage,model-native
 S7 install lifecycle,infrastructure,s7-lifecycle,model-native
 native defaults (fixed_x x meanstructure),syntax,native-defaults,model-native
+nonzero product sign branches,syntax,nonlinear-profile|nonlinear-parity,model-native-constraints
+bounded random-X FIML,syntax,fiml,model-native

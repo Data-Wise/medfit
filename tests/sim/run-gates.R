@@ -22,7 +22,9 @@
 #                                                 "exits 0 but bad" mutations per gate plus a control,
 #                                                 the stationarity scale mutants, and stub-script
 #                                                 cases for the --sim path (crash, no write, control)
-# Options: --max-age DAYS (default 14; older results are stale), --dir DIR (results directory).
+# Options: --max-age DAYS (default 14; older results are stale), --dir DIR (results directory), --monthly (also run
+# the gates listed in tests/sim/gates-monthly.txt, which every mode drops otherwise: the qc-monthly workflow passes it,
+# the PR gates shards do not; ADR D-13).
 # Exit status: 0 only when every requested check passes. Summary: tests/sim/results/gates-summary-<date>.txt
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -36,9 +38,16 @@ results_dir <- opt("--dir", "tests/sim/results")
 max_age <- as.numeric(opt("--max-age", "14"))
 only <- if (!is.null(opt("--only"))) strsplit(opt("--only"), ",", fixed = TRUE)[[1]] else NULL
 source("tests/sim/product-gate-common.R") # pass rules of the product-term and four-way gates (one implementation)
+source("tests/sim/semopy-oracle-lib.R") # the semopy gate's verdict and the monthly-only gate list (ADR D-13)
 spec_all <- utils::read.csv("tests/sim/gates.csv", stringsAsFactors = FALSE, na.strings = c("NA", ""))
 spec <- spec_all
 if (!is.null(only)) spec <- spec[spec$gate %in% only, , drop = FALSE]
+monthly <- so_monthly_gates()
+if (!has("--monthly") && any(spec$gate %in% monthly)) {
+  cat(sprintf("monthly-only gates skipped (pass --monthly to run them): %s\n\n",
+              paste(intersect(spec$gate, monthly), collapse = ", ")))
+}
+spec <- so_drop_monthly(spec, monthly, has("--monthly"))
 
 chk <- function(check, ok, detail) {
   data.frame(check = check, pass = isTRUE(ok), detail = detail, stringsAsFactors = FALSE)
@@ -137,8 +146,10 @@ verdict_gate <- function(gate, d, s) {
                        "feasibility", "f_gap", "warning", "error", "optimum"),
     "compare-lr" = c("engine", "version", "seed", "verdict", "all_converged", "ref_ok", "drop", "above", "warn_drop",
                      "warn_above", "mislabel", "pass"),
+    fiml = c("cell", "check", "value", "limit", "pass"),
     restoration = c("check", "kind", "value", "limit", "pass", "detail"),
-    "native-defaults" = c("cell", "combo", "quantity", "native", "oracle", "diff", "tol", "status", "reason")
+    "native-defaults" = c("cell", "combo", "quantity", "native", "oracle", "diff", "tol", "status", "reason"),
+    semopy = c("param", "status", "est_gap", "se_rel", "sl_est_gap", "sl_se_rel", "reason")
   )
   if (is.null(needs[[gate]])) {
     return(chk("known gate", FALSE, paste("no verdict function for gate", gate)))
@@ -408,9 +419,10 @@ verdict_gate <- function(gate, d, s) {
     },
     "native-defaults" = {
       # 0.14.0 T8a/T8b (R-12): every pass/fail row is re-derived from the recorded diff and tolerance, a declared row
-      # needs a reason, every cell ran under its combinations and the opt-in, and the opt-in equals the explicit fit
+      # needs a reason, every cell ran under its combinations and the unset fit, and the unset fit equals
+      # the explicit fit
       need_cells <- c("simple", "weights", "fixed_intercept", "constrained_intercepts", "latent", "subset")
-      combos <- c("fx=FALSE ms=NULL", "fx=FALSE ms=TRUE", "fx=TRUE ms=NULL", "fx=TRUE ms=TRUE", "optin")
+      combos <- c("fx=FALSE ms=NULL", "fx=FALSE ms=TRUE", "fx=TRUE ms=NULL", "fx=TRUE ms=TRUE", "unset")
       judged <- d$status %in% c("pass", "fail")
       ok <- !is.na(d$diff) & !is.na(d$tol) & d$diff <= d$tol
       lie <- judged & (d$status == "pass") != ok
@@ -418,13 +430,13 @@ verdict_gate <- function(gate, d, s) {
       have <- paste(d$cell, d$combo)
       core <- need_cells[need_cells != "subset"]
       # T8b cells: product (four-way, plus the named subset that leaves the product free), factor (fixed_x = "g"),
-      # lenient (the opt-in leaves a variable with a statement free); each opt-in also checks the resolved set
+      # lenient (the unset fit leaves a variable with a statement free); each unset also checks the resolved set
       t8b <- c(paste("product", c(combos, "fx=x,c ms=TRUE")),
                paste("factor", c(combos, "fx=g ms=NULL", "fx=g ms=TRUE")),
-               paste("lenient", c("fx=FALSE ms=TRUE", "fx=x ms=TRUE", "optin")))
+               paste("lenient", c("fx=FALSE ms=TRUE", "fx=x ms=TRUE", "unset")))
       miss <- setdiff(c(as.vector(outer(core, combos, paste)), paste("subset", c("fx=c ms=NULL", "fx=c ms=TRUE")), t8b),
                       have)
-      optin_cells <- c(core, "product", "factor", "lenient")
+      unset_cells <- c(core, "product", "factor", "lenient")
       same <- d[d$quantity == "same_as_explicit", , drop = FALSE]
       set <- d[d$quantity == "same_as_explicit:fixed_x", , drop = FALSE]
       rbind(
@@ -436,10 +448,28 @@ verdict_gate <- function(gate, d, s) {
             sprintf("%d limit, %d block", sum(d$status == "limit"), sum(d$status == "block"))),
         chk("every cell and combination ran", !length(miss),
             if (length(miss)) paste("missing:", paste(miss, collapse = "; ")) else "all"),
-        chk("opt-in equals the explicit fit", nrow(same) == length(optin_cells) && all(same$status == "pass"),
-            sprintf("%d opt-in identity rows", nrow(same))),
-        chk("opt-in resolves the expected subset", nrow(set) == 3L && all(set$status == "pass"),
+        chk("unset equals the explicit fit", nrow(same) == length(unset_cells) && all(same$status == "pass"),
+            sprintf("%d unset identity rows", nrow(same))),
+        chk("unset resolves the expected subset", nrow(set) == 3L && all(set$status == "pass"),
             sprintf("%d resolved-set rows (product, factor, lenient)", nrow(set)))
+      )
+    },
+    # ADR D-13: semopy counts only where it agrees with lavaan; each status is re-derived from the recorded gaps, and
+    # a pass floor keeps an all-disputed run from passing. Every row n/a (no uv) is a skip, except in qc-monthly.
+    semopy = so_gate_checks(d, s), # nolint: object_usage_linter.
+    fiml = {
+      checks <- c("estimates", "covariance", "likelihood", "retained", "provenance", "guard")
+      cells <- c("271-free", "271-zero", "613-free", "613-zero")
+      expected <- as.vector(outer(cells, checks, paste, sep = ":"))
+      keys <- paste(d$cell, d$check, sep = ":")
+      limits <- c(estimates = 1e-5, covariance = 1e-3, likelihood = 1e-7, retained = 0, provenance = 0, guard = 0)
+      rbind(
+        rows_chk(d, s),
+        chk("complete cells", identical(sort(keys), sort(expected)), "four cells x six checks, no duplicates"),
+        chk("numerical checks", all(is.finite(d$value) & d$value >= 0 & d$value <= d$limit),
+            "every recorded discrepancy satisfies its frozen limit"),
+        chk("frozen limits", all(d$limit == limits[d$check]), "limits cannot be widened in results"),
+        chk("successful checks", all(d$pass %in% TRUE), "no failed or missing checks")
       )
     },
     restoration = {
@@ -594,10 +624,12 @@ mutate <- function(gate, kind, d) {
     if (gate == "factor") d$pass[1:3] <- FALSE
     if (gate == "oracle-sweep") d$outcome[1] <- "WRONG"
     if (gate == "native-defaults") d$diff[which(d$status == "pass")[1:3]] <- 1 # status still says pass
+    if (gate == "semopy") d$est_gap[which(d$status == "pass")[1:3]] <- 1e-3 # status still says pass
     if (gate == "compare-lr") {
       d$mislabel[1:3] <- TRUE
       d$pass[1:3] <- FALSE
     }
+    if (gate == "fiml") d$value[1L] <- 1
     if (gate == "restoration") {
       # the recorded numbers say fail while the pass column still says TRUE
       d$value[grepl("^separation", d$check)] <- 100
@@ -634,7 +666,8 @@ mutate <- function(gate, kind, d) {
     if (gate == "oracle-sweep") d$error[1] <- "fit failed"
     if (gate == "compare-lr") d$verdict[1] <- "error"
     if (gate == "native-defaults") d$status[1] <- "fail"
-    if (gate == "restoration") d$pass[1] <- FALSE
+    if (gate == "semopy") d$status[1] <- "error"
+    if (gate %in% c("restoration", "fiml")) d$pass[1] <- FALSE
   }
   if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
   if (kind == "floor_disproved_silent" && gate == "nonlinear-profile") {
@@ -674,7 +707,7 @@ mutate <- function(gate, kind, d) {
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
       "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration",
-      "native-defaults"
+      "native-defaults", "semopy", "fiml"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -879,8 +912,10 @@ scripts <- c(
   factor = "tests/sim/sem-factor-gate.R",
   "oracle-sweep" = "tests/sim/sem-oracle-sweep.R",
   "compare-lr" = "tests/sim/compare-lr-gate.R",
+  fiml = "tests/sim/sem-fiml-gate.R",
   restoration = "tests/sim/sem-restoration-gate.R",
-  "native-defaults" = "tests/sim/native-defaults-oracle.R"
+  "native-defaults" = "tests/sim/native-defaults-oracle.R",
+  semopy = "tests/sim/semopy-oracle-gate.R"
 )
 
 # ---- main ----

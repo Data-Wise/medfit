@@ -100,6 +100,8 @@ The pieces are:
 - $F$, the **selection matrix** ($p \times n_v$, with $p$ the number of observed
   variables). Each row has one 1 and picks one observed variable out of $v$.
 
+Keep the intercept vector distinct from the implied mean. An intercept belongs to a variable's own equation; its marginal mean also includes what reaches it through the paths from other variables. They coincide for the exogenous treatment, but need not coincide for the mediator or outcome. The next section computes that propagation explicitly.
+
 We read the real matrices of our fit. The helper `.sem_ram_mats()` builds $A$ and
 $S_{\text{ram}}$ from the parameter vector (it puts each free parameter where the
 specification says), and `.sem_ram_m()` builds $m$:
@@ -387,6 +389,8 @@ stopifnot(abs(ll_rows - ll_formula) < 1e-6, abs(ll_rows - as.numeric(logLik(fit0
 The optimizer needs $\partial F_{ML} / \partial \theta_k$. The engine supplies it
 analytically. This section derives it in four steps, and then checks each factor
 against finite differences.
+
+A gradient records how the discrepancy changes when each free parameter moves while the others are held fixed. Here a path can change both the implied covariance and the implied mean, so its derivative must account for both routes. The derivation first separates those routes, then traces them back to the model parameters.
 
 **Step 1: the matrix calculus.** For a symmetric positive definite $\Sigma$,
 $\partial \log|\Sigma| = \operatorname{tr}(\Sigma^{-1} \partial\Sigma)$ and
@@ -718,6 +722,8 @@ The hand-built information matches the engine's. Its inverse estimates the covar
 matrix of the estimates; the engine's default uses the observed information instead
 (Chapter 5 compares the two), and Chapter 2 shows why the inverse needs a change of
 coordinates when the means are large.
+
+**What to carry forward.** The RAM matrices describe the structural equations; propagating them gives the model's means and covariance. The discrepancy measures their joint mismatch with the sample moments. Its gradient tells the optimizer how that mismatch changes, while information describes the curvature used for uncertainty calculations. Keeping those roles separate makes the coordinate changes and constraints in the coming chapters easier to follow.
 
 ## Check yourself
 

@@ -16,6 +16,13 @@ medfit gives several intervals. This page says which to reach for, shows them
 side by side on one dataset, and states what each one assumes. It makes no
 coverage claim beyond what the package's tests show.
 
+The table below describes objects with the indicated inference methods. The
+[bounded FIML workflow](native-guide.html#bounded-fiml) currently
+supports normal path/effect intervals only; bootstrap intervals, profiles,
+MBCO and fit tests refuse those objects. Its local numerical checks do not
+establish interval coverage. See the native guide for its model and missingness
+assumptions.
+
 ## Pick by situation
 
 | Your situation | Use | Why |

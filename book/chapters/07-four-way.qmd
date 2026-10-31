@@ -53,6 +53,10 @@ The fit warns twice (Chapter 6: the model test is not valid with an endogenous f
 `quiet()` hides the warnings here. Model-based standard errors are used first because they have the simplest hand
 oracle; Section 5 does the sandwich.
 
+The numerical checks below verify the formulas and their implementation. They do not
+test the causal assumptions that connect fitted regressions to potential outcomes.
+Keep that distinction in view when reading the definitions and derivation.
+
 ## 1. The four components
 
 ### Definitions
@@ -365,7 +369,7 @@ is $\theta_3\gamma$ for INT<sub>ref</sub>, and so also for the NDE and the TE; t
 $\bar c$. Under the model the coefficient estimates are conditionally unbiased given the covariates, so they are
 uncorrelated with $\bar c$, and the omitted variance simply adds:
 $\operatorname{Var}_{\text{population}} \approx \operatorname{Var}_{\text{conditional}} + (\theta_3\gamma)^2 \operatorname{Var}(c)/n$. The
-engine does not include the second term. How much it matters depends on $\theta_3\gamma$:
+engine does not include the second term by default. How much it matters depends on $\theta_3\gamma$:
 
 ```{r}
 #| label: conditional-se
@@ -396,14 +400,14 @@ with `bootstrap_mediation(method = "nonparametric")`, with a statistic that refi
 which estimates $\bar c$ again in every draw. On simulated data with a strong covariate effect on the mediator
 (conditional SE 0.0995 for INT<sub>ref</sub>) the option gives 0.1516 against a bootstrap SD of 0.1568.
 
-The hand computation and the engine agree. The third row is the **planted defect**: the same delta method with the
-covariate term dropped. It changes the INT<sub>ref</sub>, NDE and TE standard errors and leaves the others alone, which
+The hand computation and the engine agree in `se_compare`. Its `without_covariate_term` row is the **planted defect**:
+the same delta method with the covariate term dropped. It changes the INT<sub>ref</sub>, NDE and TE standard errors and leaves the others alone, which
 is what the gradient table predicts. Here it makes them **larger**: the dropped terms are $\theta_3^2 \bar c^2
 \operatorname{Var}(\hat\gamma) + 2\theta_3^2 \bar c \operatorname{Cov}(\hat\beta_0, \hat\gamma)$, and with the strong
 negative correlation printed above their sum is negative. With other data the sum is positive and the defect makes the
 standard error too small, so its direction cannot be trusted either way. This was a real bug: before 0.9.0 (PR #168) the four-way extraction of a
 lavaan fit, which the native engine shares, left the mediator-covariate coefficients out of the covariance it passed
-to the delta method, so its INT<sub>ref</sub>, NDE and TE standard errors were those of the third row above. The
+to the delta method, so its INT<sub>ref</sub>, NDE and TE standard errors matched that defective row. The
 [known-answer gate](#cross-checks) now catches the defect if it returns.
 
 ### Cross-checks

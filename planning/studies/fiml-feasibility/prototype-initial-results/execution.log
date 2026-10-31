@@ -1,0 +1,156 @@
+Loading required namespace: numDeriv
+unrestricted/271/complete PASS= TRUE ll= 1.89e-14 par= 8.95e-08 se= 7.1e-08
+unrestricted/271/monotone_mcar PASS= TRUE ll= 9.09e-15 par= 8.06e-08 se= 1.23e-07
+unrestricted/271/nonmonotone_mcar PASS= TRUE ll= 9.85e-15 par= 8.48e-08 se= 2.09e-07
+unrestricted/271/mar_observed_x PASS= TRUE ll= 4.17e-15 par= 9.08e-08 se= 8.83e-07
+unrestricted/271/missing_x_mcar PASS= TRUE ll= 5.32e-15 par= 8.1e-08 se= 3.65e-06
+unrestricted/613/complete PASS= TRUE ll= 1.36e-14 par= 1.45e-07 se= 2.17e-07
+unrestricted/613/monotone_mcar PASS= TRUE ll= 1.21e-14 par= 1.63e-07 se= 2.46e-07
+unrestricted/613/nonmonotone_mcar PASS= TRUE ll= 1.1e-14 par= 1.11e-07 se= 1.47e-07
+unrestricted/613/mar_observed_x PASS= TRUE ll= 4.93e-15 par= 8.59e-08 se= 1.68e-07
+unrestricted/613/missing_x_mcar PASS= TRUE ll= 3.84e-15 par= 6.85e-08 se= 9.98e-08
+unrestricted/997/complete PASS= TRUE ll= 1.89e-14 par= 1.51e-07 se= 2.5e-07
+unrestricted/997/monotone_mcar PASS= TRUE ll= 9.47e-15 par= 1.42e-07 se= 2.21e-07
+unrestricted/997/nonmonotone_mcar PASS= TRUE ll= 2.27e-15 par= 8.42e-08 se= 7.8e-08
+unrestricted/997/mar_observed_x PASS= TRUE ll= 6.06e-15 par= 6.6e-08 se= 1.67e-07
+unrestricted/997/missing_x_mcar PASS= TRUE ll= 9.19e-15 par= 8.58e-08 se= 8.99e-08
+cp_zero/271/complete PASS= TRUE ll= 1.44e-14 par= 7.78e-08 se= 1.61e-07
+cp_zero/271/monotone_mcar PASS= TRUE ll= 1.52e-14 par= 1.46e-07 se= 1.61e-07
+cp_zero/271/nonmonotone_mcar PASS= TRUE ll= 4.55e-15 par= 8.12e-08 se= 1.51e-07
+cp_zero/271/mar_observed_x PASS= TRUE ll= 9.85e-15 par= 1.12e-07 se= 1.77e-07
+cp_zero/271/missing_x_mcar PASS= TRUE ll= 4.56e-15 par= 9.44e-08 se= 4.21e-07
+cp_zero/613/complete PASS= TRUE ll= 1.14e-14 par= 8.15e-08 se= 1.58e-07
+cp_zero/613/monotone_mcar PASS= TRUE ll= 1.14e-14 par= 9.24e-08 se= 1.93e-07
+cp_zero/613/nonmonotone_mcar PASS= TRUE ll= 5.68e-15 par= 7.33e-08 se= 1.55e-07
+cp_zero/613/mar_observed_x PASS= TRUE ll= 6.82e-15 par= 8.03e-08 se= 9.05e-08
+cp_zero/613/missing_x_mcar PASS= TRUE ll= 4.61e-15 par= 1.8e-07 se= 4.26e-07
+cp_zero/997/complete PASS= TRUE ll= 2.12e-14 par= 1.65e-07 se= 2.5e-07
+cp_zero/997/monotone_mcar PASS= TRUE ll= 4.55e-15 par= 1.63e-07 se= 1.74e-07
+cp_zero/997/nonmonotone_mcar PASS= TRUE ll= 2.2e-14 par= 2.54e-07 se= 2.18e-07
+cp_zero/997/mar_observed_x PASS= TRUE ll= 1.89e-15 par= 1.6e-07 se= 3.99e-07
+cp_zero/997/missing_x_mcar PASS= TRUE ll= 1.03e-14 par= 1.99e-07 se= 1.84e-07
+     name idx nobs    type exo user      mean      var nlev lnam
+1***    M   2    0 numeric   0    0       NaN       NA    0
+2       Y   3  236 numeric   0    0 0.9912965 1.100633    0
+3       X   1  300 numeric   0    0 0.7983875 1.261532    0
+$primary_pass
+[1] 30
+
+$primary_total
+[1] 30
+
+$edge_pass
+[1] 10
+
+$edge_total
+[1] 10
+
+$seconds
+[1] 5.616607
+
+PROTOTYPE unrestricted/271/complete
+ACCEPT unrestricted/271/complete FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/271/monotone_mcar
+ACCEPT unrestricted/271/monotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/271/nonmonotone_mcar
+ACCEPT unrestricted/271/nonmonotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/271/mar_observed_x
+ACCEPT unrestricted/271/mar_observed_x FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/271/missing_x_mcar
+ACCEPT unrestricted/271/missing_x_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/613/complete
+ACCEPT unrestricted/613/complete FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/613/monotone_mcar
+ACCEPT unrestricted/613/monotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/613/nonmonotone_mcar
+ACCEPT unrestricted/613/nonmonotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/613/mar_observed_x
+ACCEPT unrestricted/613/mar_observed_x FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/613/missing_x_mcar
+ACCEPT unrestricted/613/missing_x_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/997/complete
+ACCEPT unrestricted/997/complete FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/997/monotone_mcar
+ACCEPT unrestricted/997/monotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/997/nonmonotone_mcar
+ACCEPT unrestricted/997/nonmonotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/997/mar_observed_x
+ACCEPT unrestricted/997/mar_observed_x FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/997/missing_x_mcar
+ACCEPT unrestricted/997/missing_x_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/271/complete
+ACCEPT cp_zero/271/complete FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/271/monotone_mcar
+ACCEPT cp_zero/271/monotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/271/nonmonotone_mcar
+ACCEPT cp_zero/271/nonmonotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/271/mar_observed_x
+ACCEPT cp_zero/271/mar_observed_x FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/271/missing_x_mcar
+ACCEPT cp_zero/271/missing_x_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/613/complete
+ACCEPT cp_zero/613/complete FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/613/monotone_mcar
+ACCEPT cp_zero/613/monotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/613/nonmonotone_mcar
+ACCEPT cp_zero/613/nonmonotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/613/mar_observed_x
+ACCEPT cp_zero/613/mar_observed_x FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/613/missing_x_mcar
+ACCEPT cp_zero/613/missing_x_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/997/complete
+ACCEPT cp_zero/997/complete FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/997/monotone_mcar
+ACCEPT cp_zero/997/monotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/997/nonmonotone_mcar
+ACCEPT cp_zero/997/nonmonotone_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/997/mar_observed_x
+ACCEPT cp_zero/997/mar_observed_x FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/997/missing_x_mcar
+ACCEPT cp_zero/997/missing_x_mcar FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/new/no_complete
+ACCEPT unrestricted/new/no_complete FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/new/singletons
+ACCEPT unrestricted/new/singletons FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/new/all_patterns
+ACCEPT unrestricted/new/all_patterns FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/new/shifted
+ACCEPT unrestricted/new/shifted FALSE no accepted candidate for each optimizer
+PROTOTYPE unrestricted/new/rescaled
+lavaan NOTE:
+   some model variables are badly scaled; the model was fitted in an
+   internally rescaled metric, and the solution was mapped back to the
+   original metric (see the rescale_data option).
+ACCEPT unrestricted/new/rescaled FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE unrestricted/new/near_singular
+ACCEPT unrestricted/new/near_singular FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/new/no_complete
+ACCEPT cp_zero/new/no_complete FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/new/singletons
+ACCEPT cp_zero/new/singletons FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/new/all_patterns
+ACCEPT cp_zero/new/all_patterns FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/new/shifted
+ACCEPT cp_zero/new/shifted FALSE no accepted candidate for each optimizer
+PROTOTYPE cp_zero/new/rescaled
+lavaan NOTE:
+   some model variables are badly scaled; the model was fitted in an
+   internally rescaled metric, and the solution was mapped back to the
+   original metric (see the rescale_data option).
+ACCEPT cp_zero/new/rescaled FALSE no applicable method for 'vcov' applied to an object of class "lavaan"
+PROTOTYPE cp_zero/new/near_singular
+ACCEPT cp_zero/new/near_singular FALSE no accepted candidate for each optimizer
+$primary_pass
+[1] 0
+
+$primary_total
+[1] 42
+
+$edge_pass
+[1] 11
+
+$edge_total
+[1] 13
+
+$seconds
+[1] 12.79943

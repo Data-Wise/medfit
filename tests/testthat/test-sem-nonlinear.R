@@ -34,7 +34,7 @@ nl_annihilation <- function(v, th) {
 }
 
 # The reparameterized oracle: cp is replaced by a*b, the remaining parameters are fitted by optim, and the
-# covariance is G (G' I G)^-1 G' with G = d theta / d phi.
+# covariance is G H_phi^-1 G' with G = d theta / d phi and H_phi the reparameterized likelihood Hessian.
 nl_reparam <- function(fit) {
   ram <- fit@internals$ram
   smp <- .sem_sample(fit@data, ram)
@@ -67,8 +67,9 @@ nl_reparam <- function(fit) {
   )
   th <- to_theta(opt$par)
   g <- jac(opt$par)
-  info <- .sem_info_observed(th, ram, smp)
-  v <- g %*% solve(crossprod(g, info %*% g)) %*% t(g)
+  hessian <- stats::optimHess(opt$par, function(p) obj(p)$f,
+                              function(p) as.vector(crossprod(jac(p), obj(p)$g))) * fit@n_obs / 2
+  v <- g %*% solve(hessian) %*% t(g)
   list(theta = stats::setNames(th, nm), se = stats::setNames(sqrt(diag(v)), nm))
 }
 

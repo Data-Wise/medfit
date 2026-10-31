@@ -150,8 +150,9 @@ only if the objective improves and it passes the gate again; a restoration from
 a roundoff-limited stall is held to a cap on the objective's rise instead (the
 Methods and Formulas article derives it). With nonlinear
 constraints, the engine tries all starts and keeps the accepted point with the
-smallest discrepancy. A feasible unconstrained solution can certify the
-optimum; otherwise the `optimum` diagnostic reports whether starts agreed,
+smallest discrepancy. The existing `optimum$certified` flag records that a feasible
+reference solution was retained; it is not a new proof that the reference is globally optimal.
+Otherwise the `optimum` diagnostic reports whether starts agreed,
 disagreed, or only one was accepted. A fit with only linear rows stops after
 the first accepted start. More starts improve the search, but agreement among
 starts alone is not a proof of a global optimum.
@@ -165,6 +166,39 @@ fit <- fit_sem(model, mediation_demo)
 fit@diagnostics$optimum
 fit@diagnostics$decrement
 ```
+
+## A nonzero product has two sign branches
+
+For one supported nonzero-product equality, `R/sem-nonzero.R` fits the positive
+and negative sign domains independently using the same SLSQP, KKT polishing and
+all-row acceptance checks. Each nonempty branch gets `n_starts` starts. User
+bounds and effective variance floors remain in force. A bounds contradiction
+can exclude a branch; a failed solve leaves it unresolved. The fit is returned
+only when all required branches are accepted or excluded and at least one is
+accepted, then the lowest accepted discrepancy is kept.
+
+This covers one constant-scaled product of two distinct free labels, including
+definition aliases, with no additional constraint row involving either factor.
+Repeated factors, multiple product equalities, coupled constraints and other
+unsupported shapes retain the existing local search. The supported row's value,
+Jacobian and Hessian are normalized together to remove the constant multiplier;
+the original constraint text is retained. The algebra and residual diagnostic
+are in [Methods and Formulas](methods.html#nonzero-product-branches).
+
+The optional internal `search_evidence` record is separate from the version-1
+outcome ledger. `charted` means both required sign domains were searched or
+validly excluded, not that either was globally optimized. `local` records an
+unsupported shape; `unresolved` means coverage is incomplete. The record retains
+branch restrictions, acceptance gates, candidates, objectives and actual attempt
+counts, and validates them against the model, bounds and sample. Existing optimum
+statuses keep their meanings; starts, accepted starts and synthetic reference
+attempts are counted separately. Old objects without the record remain usable.
+
+Residual standardization uses only an already available matching reference
+covariance. The ordinary optimizer reference has none, so the stored SE and
+standardized residual are unavailable with reason
+`reference_covariance_unavailable`. Printing does not trigger a reference refit
+or covariance calculation. These diagnostics do not change selection or inference.
 
 ## A zero product is a union of simpler models
 
@@ -186,10 +220,14 @@ with `medfit_sem_empty_union`. If a branch
 cannot be fitted, `fit_sem()` stops with an error rather than returning the
 best of the others, which need not be the constrained optimum; the error
 carries the outcome ledger of every required branch as `$ledger`, and a fit's
-ledger is `fit@diagnostics$ledger`. If the optimizer accepts a fit and only the
-covariance stage fails, `fit_sem()` stops with `medfit_sem_covariance_error`,
+ledger is `fit@diagnostics$ledger`. If the optimizer accepts a fit and covariance
+explicitly diagnoses non-positive-definite information or a negative variance,
+`fit_sem()` stops with `medfit_sem_covariance_error`,
 which carries the accepted likelihood in its ledger and is never a fit; inside
-`mbco_sem()` such a null keeps its likelihood and a warning. A complete
+`mbco_sem()` such a null keeps its likelihood and a warning. Other covariance
+errors propagate unchanged, while singular information retains its warning and
+`NA` covariance. Constrained standard errors use the local tangent covariance
+described in [Methods and Formulas](methods.html#constraints). A complete
 enumeration is not a certificate of a global optimum. This avoids a
 zero Jacobian where several factors vanish. `mbco_sem()` uses the same logic
 for an indirect-effect test: fit each single-path null, use the smallest

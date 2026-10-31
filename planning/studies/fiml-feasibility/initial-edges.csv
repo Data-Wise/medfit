@@ -1,0 +1,12 @@
+"check","pass","evidence"
+"row_order",TRUE,"Reverse row order; independent likelihood unchanged"
+"empty_rows",TRUE,"Five all-missing rows add zero information; lavaan nobs 300"
+"shift_rescale_identity",FALSE,"Known data Jacobian offset; independently refitted transformed data"
+"fixed_x_complete",TRUE,"Complete X: random/fixed-X structural estimates and observed SEs agree"
+"fixed_x_missing_rows",FALSE,"fixed-X retained 299 expected 246"
+"all_missing_variable",TRUE,"lavaan->lav_data_full():
+   some variables have no values (only missings) or no variance"
+"no_overlap_unidentified",TRUE,"Distinct structural paths yield identical observed-data likelihood"
+"mutant_listwise_caught",TRUE,"Silently deleting incomplete rows violates total-likelihood criterion"
+"mutant_omitted_means_caught",TRUE,"Omitted means violate total-likelihood criterion"
+"mutant_average_hessian_caught",TRUE,"Inverse average Hessian inflates every SE by sqrt(n)"

@@ -22,6 +22,9 @@ Print a one-line summary of mediation results, perfect for quick checks
 or a compact report line.
 }
 \details{
+\code{quick()} refuses data extracted from bounded FIML fits. Use \code{print()},
+\code{summary()} or \code{tidy()} for those objects; see \code{\link[=fit_sem]{fit_sem()}} for their limits.
+
 Prints a compact one-line summary showing:
 \itemize{
 \item NIE (Natural Indirect Effect) with CI if available

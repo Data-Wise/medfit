@@ -200,3 +200,7 @@ Sobel
 varepsilon
 semopy
 semopy's
+IC
+ignorable
+nlminb
+nonignorable

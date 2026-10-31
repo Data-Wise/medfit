@@ -82,6 +82,11 @@ mediation statistics. Supports parametric, nonparametric, and
 plugin methods.
 }
 \details{
+Bounded FIML objects supplied as \code{mediation_data} or \code{data} are refused,
+including \code{method = "plugin"}; this entry point does not provide FIML
+bootstrap inference. Object-aware guards run before package-controlled RNG,
+workers or refits. Opaque user callbacks and external-first dispatch are
+outside that guarantee. See \code{\link[=fit_sem]{fit_sem()}} for supported normal intervals.
 \subsection{Bootstrap Methods}{
 
 \strong{Parametric Bootstrap} (\code{method = "parametric"}):

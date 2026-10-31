@@ -1,3 +1,64 @@
+# medfit 0.16.0
+
+## Added
+
+* A focused minibook unit teaches bounded FIML with a partial-row likelihood
+  calculation, missingness-pattern counts, explicit fitting/extraction settings,
+  supported inference and refusals, and an executed exercise answer. It supplements
+  the seven complete-data chapters without expanding FIML support.
+
+* Bounded FIML regression tests add observed-X MAR, combined-pattern/empty-row,
+  joint-affine and near-singular fixtures for both direct-path parameterizations.
+  They strengthen exact rank-refusal, parameter-naming and numerical-receipt checks;
+  this adds validation evidence without changing FIML support or acceptance limits.
+
+* Bounded FIML integration adds exact `missing = "fiml"` opt-in to
+  `fit_sem()` and native `fit_mediation()` engine arguments, preserving listwise defaults
+  and positional calls. It retains partially observed rows for three-variable Gaussian
+  random-X mediation with a free or zero direct path. Explicit `fixed_x = FALSE`, a mean
+  structure, observed/model SEs, no weights and the validated fixed-start protocol are
+  required. Likelihood/IC summaries and unstandardized extracted effects are supported;
+  model tests, bootstrap, profiles and MBCO remain unavailable.
+
+* Native fits with one supported nonzero-product equality now fit both sign branches independently before choosing
+  the lowest accepted discrepancy. Bounds can exclude a branch; an unresolved required branch stops the fit.
+  A separate internal `search_evidence` record reports branch coverage and actual attempts, without claiming a
+  global optimum. Repeated factors, multiple product equalities and constraints coupled to either factor retain
+  local search. Residual diagnostics use only an already available matching reference covariance; missing reference
+  covariance is reported as unavailable and triggers no additional fit.
+
+## Fixed
+
+* Generic help and the README now distinguish bounded FIML normal summaries
+  from deferred bootstrap, proportion-mediated and comparison operations, including
+  the different `glance()` support on source fits and extracted objects.
+
+* The native guide's bounded FIML example now uses continuous Gaussian random-X
+  data instead of the bundled demo's binary treatment. Both supported entry
+  points are executed, with a regression guard against reintroducing binary X.
+
+* Hosted coverage runs only on pull requests to `main` and pushes to `main`,
+  including metadata-only release changes. Development-branch pushes and pull
+  requests use local validation instead. Other fast hosted checks remain enabled;
+  expensive platform and OpenBLAS checks remain deferred until release to main.
+
+* Source archives retain the nonlinear covariance gate used by the package tests.
+
+* Native fits with active nonlinear constraints now use the constraint curvature in observed-information
+  standard errors and in the observed sandwich bread. Expected-information standard errors retain their Fisher
+  information definition. Covariance also uses the optimizer's effective variance floors, so an active floor is
+  pinned rather than treated as a free direction. Active inequalities and bounds give a local tangent covariance;
+  it does not describe the full boundary sampling distribution.
+* Only explicit non-positive-definite information or negative-variance diagnostics retain an accepted likelihood
+  through `medfit_sem_covariance_error` and an internal `mbco_sem()` null. Other covariance errors propagate
+  unchanged. Singular information continues to warn and return an `NA` covariance.
+
+## Removed
+
+* `options(medfit.native_defaults)` is removed, as announced in 0.15.0. Since 0.15.0 the option had no effect
+  (it only printed one message per session); it now does nothing and prints nothing. The message class
+  `medfit_message_option_obsolete` no longer exists. Pass `fixed_x` and `meanstructure` explicitly to choose.
+
 # medfit 0.15.0
 
 ## Native engine defaults flipped (0.15.0)
@@ -18,7 +79,7 @@ stay valid values, and an explicit argument is always kept as given.
   names it). A variable a `~~` or `~1` statement names is left free with a message of class
   `medfit_message_fixed_x_lenient`; an explicit `fixed_x = TRUE` still errors there.
 * `options(medfit.native_defaults = "0.15")` is obsolete: it is ignored, with one message per session (class
-  `medfit_message_option_obsolete`), and is removed in 0.16.0. The `medfit_warning_default_change` warning no longer
+  `medfit_message_option_obsolete`; removed in the development version). The `medfit_warning_default_change` warning no longer
   fires.
 * To keep the 0.14.x results, pass `fixed_x = FALSE, meanstructure = NULL`.
 * `AIC()` and `BIC()` keep medfit's own parameter count, which includes the observed means that are not fixed whether
@@ -26,7 +87,8 @@ stay valid values, and an explicit argument is always kept as given.
   and BIC equal those of `lavaan::sem(..., meanstructure = TRUE)` under any `fixed_x`; a default `lavaan::sem()` fits
   no mean structure, and against it medfit's AIC is larger by 2k and its BIC by k log n (k = the observed means not
   fixed; k = 2 in the worked example of the article). The conditional `logLik()` equals lavaan's.
-* Missing data stays listwise deletion; there is no `missing =` argument and no FIML (a 0.16.0 candidate).
+* In 0.15.0 missing data stays listwise deletion, with no `missing =` argument or FIML.
+  The later bounded opt-in FIML feature is planned for unreleased 0.16.
 * `compare_lr()` runs on fits made under the new defaults. Its known limit (#320) is unchanged by the flip: on the pinned
   design (15 seeds by 4 cells) the lavaan run ended above medfit's reference in 18 of 60 runs and OpenMx in 13 of 60,
   the same counts as before, with no mislabeled row.

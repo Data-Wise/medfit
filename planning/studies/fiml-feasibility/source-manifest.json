@@ -1,0 +1,23 @@
+{
+  "version": "0.7-3",
+  "retrieved": "2026-10-29",
+  "archive_url": "https://cran.r-project.org/src/contrib/lavaan_0.7-3.tar.gz",
+  "archive_sha256": "c1e9ecbd01dde0ada6bda11f0f9e84babfefebf06d1ab5887b4bd8d24ebb6787",
+  "files": {
+    "R/lav_data_patterns.R": "84327ca8656093341dae133cf6f2950478411447b5493e8e05f00004b584cb1f",
+    "R/lav_data.R": "15196a5a79fb2abe8fbeaa8f14af808b14ee2a8d907462684590ef0bc066cb6e",
+    "R/lav_model_estimate.R": "00bde8fe4e913e0bad12db38002f2af00c0559507d42c012174f9030f2818e16",
+    "R/lav_model_gradient.R": "718083905a5e795cf81d0f9f2dbd260a56123d70d05dd7b3fb4604605006cd28",
+    "R/lav_model_hessian.R": "3bcbd785ff22c322f491b48a9825ec1279f1fc0321eef16a99d11551c9dd1904",
+    "R/lav_model_h1_information.R": "dbba4b8db5028a95b977ac54fb981a7462ff8efecbde6e254d64ac60fa8016bc",
+    "R/lav_model_information.R": "21dba3e11a6b8bb8e88ceb2f5ac043aabbff4c6fef65ddc3bcf84f47e2db9cde",
+    "R/lav_model_objective.R": "9cd3e656d756fd3a42538c54d59c25d91ba49fcc9463f2688ff15686fb7a28fe",
+    "R/lav_model_vcov.R": "b7d48a73c5ae53196ec0035bb1147dc47437ce194c83ccb295e20e131451444d",
+    "R/lav_mvnorm_kernels.R": "5fb698d6b4e820d25decaefa1941fc2d17fe887840a5784aa9ccf4f78d1b9d9d",
+    "R/lav_mvnorm_missing.R": "96716f105cb60680efa62d0dc9cac56eb41c9e5dca47331b6963ffeca0f932ad",
+    "R/lav_mvnorm_missing_h1.R": "73a20b057b2c056f0477e76dd9cf87b8d9621dd98ed50b0554bef01d3da2a77b",
+    "R/lav_objective.R": "7f2f6ba0e0eaa7155da243e9a00949fcd78012d98a53c991929ba51311c41600",
+    "R/lav_options.R": "fa39eece4b690c2840b7ce4be0c55f520b75d88b6ae9cace85e7e945b34cfb2f",
+    "R/lav_samplestats.R": "56f889d1cf2f78c7ae3bb48147bf62d106ba55c626420b7449f2e75cdc931fee"
+  }
+}

@@ -194,6 +194,8 @@ navbar:
         href: articles/computation-algorithms.html
       - text: "What's new in 0.11"
         href: articles/whats-new-0-11.html
+      - text: "What's new in 0.15: native defaults"
+        href: articles/native-defaults-0-15.html
       - text: "Quality control of the optimizer"
         href: articles/quality-control.html
     qc:

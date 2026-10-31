@@ -1,0 +1,14 @@
+$primary_pass
+[1] 38
+
+$primary_total
+[1] 42
+
+$edge_pass
+[1] 12
+
+$edge_total
+[1] 13
+
+$seconds
+[1] 25.99666

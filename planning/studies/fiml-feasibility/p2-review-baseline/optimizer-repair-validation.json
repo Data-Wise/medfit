@@ -1,0 +1,20 @@
+{
+  "verdict": "PASS",
+  "previous_commit": "c92b6fec",
+  "repaired_regressions": [
+    "unrestricted/new/shifted",
+    "unrestricted/new/near_singular",
+    "cp_zero/new/shifted",
+    "cp_zero/new/near_singular"
+  ],
+  "fit_cells": 42,
+  "edge_checks": 13,
+  "derivative_points": 126,
+  "likelihood_identities": 126,
+  "prototype_attempts": 252,
+  "independent_attempts": 126,
+  "row_ledger": 12600,
+  "mutants_caught": 4,
+  "production_changed": false,
+  "acceptance_limits_changed": false
+}

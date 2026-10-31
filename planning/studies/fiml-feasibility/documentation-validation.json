@@ -1,0 +1,17 @@
+{
+  "type": "documentation-only",
+  "numerical_commit": "b4a50f36",
+  "documents": [
+    "README.md",
+    "technical-record.md",
+    "protocol.md",
+    "report.md",
+    "numerical-implementation-memo.md",
+    "prototype-protocol.md",
+    "prototype-report.md"
+  ],
+  "relative_links_checked": 78,
+  "unchanged_code_and_data_hashes": 101,
+  "markdownlint": "PASS",
+  "numerical_tests_rerun": false
+}

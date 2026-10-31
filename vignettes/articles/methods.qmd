@@ -517,8 +517,50 @@ the mediation structure through the same workers as the lavaan route.
 
 `fit_sem()` and `fit_mediation(engine = "native")` fit a model written in
 medfit model syntax (`?"medfit-syntax"`) by maximum likelihood to raw data.
-Rows with missing values in the model variables are dropped once (listwise
-deletion) and counted.
+By default, rows with missing values in the model variables are dropped once
+(listwise deletion) and counted. The separate bounded FIML opt-in
+uses the observed components instead; the complete-data formulas below describe
+the listwise path unless stated otherwise.
+
+### Bounded FIML {#bounded-fiml}
+
+The separate `missing = "fiml"` route supports only Gaussian
+random-X simple mediation with three continuous numeric observed variables,
+independent disturbances, free intercepts and a free or exactly zero direct path. It assumes
+ignorable missingness under that model; choosing FIML does not validate MAR or
+protect against nonignorable missingness. See the
+[native guide](native-guide.html#bounded-fiml) for settings and API limits.
+
+For retained row $i$, let $O_i$ select its observed components, with implied mean
+$\mu_{O_i}(\theta)$ and covariance $\Sigma_{O_i O_i}(\theta)$. The minimized total
+negative log likelihood includes the full Gaussian constants:
+
+$$
+-\ell(\theta) = \frac{1}{2}\sum_{i:|O_i|>0}
+\left[|O_i|\log(2\pi) + \log|\Sigma_{O_i O_i}(\theta)| +
+(y_{i,O_i}-\mu_{O_i})^\top\Sigma_{O_i O_i}^{-1}(y_{i,O_i}-\mu_{O_i})\right].
+$$
+
+Rows are grouped by observation pattern; Cholesky solves use the implied
+principal covariance, not an inverse of each pattern's sample covariance.
+Singleton patterns therefore need no invertible sample covariance. Only rows
+with no observed model variable are dropped. No complete-case initialization is
+required, although missingness patterns can still leave a model unidentified.
+`nobs()` is the retained row count, including singleton and incomplete rows.
+
+The full observed Hessian of this total objective gives the model covariance.
+Standardized internal coordinates are transported back with the full affine
+Jacobian, including mean/intercept terms. Both SLSQP and nlminb must supply
+accepted stationary candidates with agreeing likelihoods; local rank and
+positive, adequately conditioned information are also required. These checks
+are local numerical evidence, not global optimization or sampling-coverage proofs.
+
+`logLik()` returns the raw total likelihood. Its `df` attribute is the free
+parameter count (nine, or eight with the direct path fixed at zero); AIC and BIC
+use that count and retained N. The complete-data discrepancy and model-test df
+are unavailable. No missing-data saturated reference fit, chi-square or fit
+indices are synthesized. At the NIE origin, a zero first derivative does not
+supply regular normal inference; NIE inferential fields are unavailable.
 
 ### Model form
 
@@ -664,7 +706,12 @@ information for the log likelihood. The default, observed information, is
 $(n/2)$ times the central-difference Jacobian of the analytic gradient of
 $F_{ML}$ (step $\epsilon^{1/3} \max(|x|, 1)$). Expected information is
 $(n/2)\, \operatorname{tr}\left(\Sigma^{-1} \partial_k \Sigma\, \Sigma^{-1} \partial_l \Sigma\right)$.
-A singular information matrix gives an `NA` covariance and one warning. Defined
+A singular information matrix gives an `NA` covariance and one warning. Finite,
+invertible information that is not positive definite, or a covariance with a negative
+variance, raises an explicit covariance diagnostic rather than supplying standard errors.
+Only these diagnostics retain an accepted likelihood as described in the
+[outcome-ledger guide](guide-troubleshooting.html#errors-that-carry-evidence);
+other covariance errors propagate unchanged. Defined
 parameters (`:=`) get delta-method standard errors, $\sqrt{g^\top V g}$, with
 the gradient $g$ taken by central differences over the labels.
 
@@ -682,7 +729,8 @@ s_{i,k} = w_i \, \frac{1}{2} \operatorname{tr}\left(\Sigma^{-1} (d_i d_i^\top - 
 $$
 
 The means are free and do not involve $\theta$, so $A$ is block diagonal and only
-the $\theta$ block of $B$ enters. Under constraints the same projection applies,
+the $\theta$ block of $B$ enters. Under constraints, $A$ is the observed Lagrangian
+information or expected Fisher information described below, and the same projection applies,
 $Z (Z^\top A Z)^{-1} Z^\top B Z (Z^\top A Z)^{-1} Z^\top$. The estimator is
 invariant to the scale of the weights and has no leverage correction (HC0): it
 equals `sandwich::vcovHC(type = "HC0")` for each regression equation and
@@ -699,6 +747,42 @@ Jacobians for the optimizer (SLSQP through nloptr). A nonlinear equality
 (`cp == a*b`) is a row whose value is $\text{lhs} - \text{rhs}$ and whose Jacobian
 is a central difference, both recomputed at every point; a nonlinear inequality is
 the same row with the sign chosen so that it reads $c(\theta) \le 0$.
+
+#### Nonzero-product branches
+
+For one equality $c a b = q$, with finite nonzero constants and finite nonzero
+$q/c$, two distinct free scalar labels after definition expansion, and no other
+constraint row involving either factor, the engine searches $a>0$ and $a<0$
+independently. On either branch $b=q/(ca)$, so its sign is fixed too. Bounds may
+exclude a branch, but numerical failure cannot prove it empty. At least one
+branch must be accepted and every required branch accepted or validly excluded
+before a fit is returned. Multiple product equalities, repeated factors and
+coupled constraints retain local search. Sign coverage is not a proof of a
+global optimum within a branch.
+
+For this supported row, the solver uses the equivalent residual $ab-q/c$ and
+its corresponding Jacobian and Hessian. The original raw residual retained for
+diagnosis is $r=c\hat a\hat b-q$. If a matching reference fit without the tested
+restriction already supplies estimates $\theta_0$ and covariance $V_0$, its
+optional diagnostic scale is
+
+$$
+g_0 = \left.\nabla_\theta(cab-q)\right|_{\theta_0},\qquad
+\operatorname{SE}_{\mathrm{ref}}=\sqrt{g_0^\top V_0g_0},\qquad
+z_{\mathrm{res}}=r/\operatorname{SE}_{\mathrm{ref}}.
+$$
+
+In the factor coordinates, $g_0=(c b_0,c a_0)^\top$, with zeros for other
+parameters. Both gradient and covariance come from that reference, on the same
+rows, weights, coordinates and likelihood settings; the projected constrained
+covariance is not used. No automatic refit or covariance calculation is made.
+The ordinary optimizer reference has no covariance, so these scaled diagnostics
+are `NA` with reason `reference_covariance_unavailable`. They do not affect
+acceptance, selection or inference. The separately versioned internal coverage
+record and unchanged status/count meanings are described in
+[Computation and algorithms](computation-algorithms.html#a-nonzero-product-has-two-sign-branches).
+
+#### Curvature and acceptance
 
 A nonlinear row can bend away from its tangent plane, so the acceptance test uses
 the Hessian of the Lagrangian, $H + \sum_i \lambda_i \nabla^2 c_i$ over the active
@@ -751,15 +835,42 @@ A product of labels set to zero ($ab = 0$, $b_1 b_2 b_3 = 0$) is not solved this
 way, because its Jacobian vanishes at the solution: it holds exactly when one
 factor is zero, so the model is refitted once per factor from the default start
 and the smallest discrepancy is kept. At the solution the active constraints and
-active bounds define a null-space basis $Z$ of the feasible directions, and the
-covariance is projected,
+active bounds, including the optimizer's effective variance floors, define a
+null-space basis $Z$ of the feasible directions. For observed information, set
 
 $$
-V = Z \left(Z^\top I Z\right)^{-1} Z^\top ,
+A_L = \frac{n}{2}\left(\nabla^2 F_{ML} +
+\sum_{i\ \mathrm{active}} \lambda_i\nabla^2 c_i\right),
+\qquad \nabla F_{ML} + \sum_{i\ \mathrm{active}}\lambda_i\nabla c_i = 0.
 $$
 
-so a parameter pinned by a constraint has zero variance and `a == b` returns
-the standard error of the model with `a` and `b` collapsed to one label.
+The covariance is
+
+$$
+V = Z \left(Z^\top A_L Z\right)^{-1} Z^\top .
+$$
+
+This includes nonlinear constraint curvature, as the Hessian of a likelihood
+parameterized directly on the constraint surface does. Expected-information
+covariance uses the expected Fisher information in place of $A_L$, without the
+observed constraint-curvature term. Sandwich covariance uses the corresponding
+bread and the casewise-score meat above. The calculation and projection respect
+the centered-coordinate map when a mean structure is fitted.
+
+A parameter pinned by a constraint or active bound has exactly zero variance,
+and `a == b` returns the standard error of the model with `a` and `b` collapsed
+to one label. An inactive inequality imposes no covariance restriction.
+Pinned coordinates have exact zero rows and columns. If all coordinates are
+pinned, the full named covariance matrix is zero. If the information within a
+nonempty tangent space is singular, the engine emits one warning and returns a
+full named `NA` covariance matrix; this differs from a zero-dimensional tangent
+space and from the typed post-fit diagnostics described in
+[Computation algorithms](computation-algorithms.html#constraints-acceptance-and-starts).
+
+At an active inequality or bound, this covariance is a local tangent
+approximation. It is not the full boundary sampling distribution, which can
+have a point mass, and does not establish ordinary Wald or likelihood-ratio
+calibration there.
 
 Redundant rows are handled in two layers. Equality rows that are linearly
 dependent (a duplicate, `a == b` with `b == a`) are reduced to an independent

@@ -45,6 +45,8 @@ parallel <- "
 
 ## 1. The covariance of the estimates
 
+Start with an identified, regular interior fit and independent rows. The inverse-information argument below describes that setting. For a constrained fit, uncertainty is restricted to feasible tangent directions, and observed information must also account for constraint curvature, as derived in the preceding chapter. Being able to compute the likelihood's Hessian does not by itself make its inverse a valid covariance estimate under model misspecification.
+
 Maximum likelihood theory says that, in large samples, $\hat\theta$ is approximately normal around the truth with
 covariance $I(\theta)^{-1}$, where $I$ is the **information matrix** of the log likelihood $\ell$. Every standard
 error below is a square root of a diagonal entry of an estimate of that inverse. The engine's discrepancy $F_{ML}$
@@ -310,6 +312,8 @@ stopifnot(abs(sqrt(drop(t(g) %*% v_ab %*% g)) - fit@defined$se) < 1e-6)
 The product $ab$ is the indirect effect of the treatment on the outcome through the mediator, and its
 standard error is `r rd(fit@defined$se, 4)`.
 
+The delta method keeps only the local linear change in the defined parameter. If that linear change vanishes, a small first-order standard error is not evidence that the parameter is known precisely. The indirect-effect null can have exactly this difficulty when both path coefficients are zero; the MBCO section returns to it by testing the separate null branches.
+
 ## 3. The sandwich: robust standard errors
 
 **First, the idea.** A classical standard error uses the model's predicted
@@ -327,7 +331,9 @@ equation. The native engine constructs its scores and sandwich in
 *What to remember:* the two outer factors describe sensitivity; the middle factor records observed score variation.
 
 The inverse information is the right covariance only if the model, including the normal distribution, is correct and
-the data are unweighted. The **sandwich** estimator drops that assumption. We derive it in three steps.
+the data are unweighted. The **sandwich** estimator uses the row scores to estimate score variation.
+The derivation below describes an unconstrained interior fit, with independent rows. It does not remove
+the need for an identified, regular model or establish boundary calibration. We derive it in three steps.
 
 **Step 1: the estimating equation.** Let $s_i(\theta)$ be the **score** of row $i$: the gradient of its (weighted)
 log density. The estimate solves $\sum_i s_i(\hat\theta) = 0$.
@@ -346,6 +352,16 @@ V_{\text{sandwich}} = A^{-1} B\, A^{-1}.
 $$
 
 When the model is correct and the weights are absent, $B$ converges to $A$ and the sandwich reduces to $A^{-1}$.
+
+For a constrained fit, the ambient scores need not sum to zero: their sum is balanced by constraint
+multipliers. Project the scores into the feasible tangent space and use the corresponding constrained
+bread. With `information = "observed"`, that bread uses the Lagrangian curvature explained in
+[Chapter 3](03-constraints.qmd#the-covariance-of-a-constrained-fit); with `information = "expected"`,
+it uses expected Fisher information. The meat still comes from the casewise scores, including normalized
+weights and mean derivatives when present. The [Methods article](https://data-wise.github.io/medfit/articles/methods.html#constraints)
+gives the canonical covariance formulas. Active bounds and inequalities retain the local tangent
+interpretation from Chapter 3; a sandwich does not turn it into a full boundary sampling distribution.
+
 
 ### The scores
 
@@ -563,10 +579,14 @@ discrepancy and the failure text in `note`; the statistic and the p-value are `N
 the one closest to the data, so taking the minimum of the others would hide the failure (0.13.0; see the
 [troubleshooting guide](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html)).
 
-**When only the covariance fails.** A refit has two stages: the optimizer, then the covariance. Suppose the optimizer
-accepts the solution and the covariance stage fails. The likelihood is real, because the optimizer accepted it, and
-$D = n(F_r - F)$ needs nothing else. Since 0.14.1 `mbco_sem()` keeps that likelihood. We inject a covariance failure into the
-first null refit (the failure is planted; the model fits cleanly) and compare with the clean run:
+The following examples inspect a ledger: the fit's structured record of the data, model, settings, optimization outcome, and post-fit status. It lets the inference code check which fitted problem a retained likelihood belongs to. The record supports those checks; it does not replace fitting the requested model or prove a global optimum.
+
+**When a covariance diagnostic preserves the likelihood.** A refit has two stages: the optimizer, then the covariance.
+If the optimizer accepts the solution and the covariance stage explicitly diagnoses non-positive-definite information
+or a negative variance, the accepted likelihood remains available: $D = n(F_r - F)$ needs no standard errors.
+`mbco_sem()` retains that likelihood for these typed findings. Arbitrary errors do not establish the same diagnosis
+and propagate unchanged. We plant a typed negative-variance finding in the first null refit (the model actually fits
+cleanly) and compare with the clean run. The internal constructor makes the condition's kind explicit:
 
 ```{r}
 #| label: mbco-covariance
@@ -583,7 +603,9 @@ mb_cov <- testthat::with_mocked_bindings(
   ),
   .sem_vcov = function(...) {
     cov_calls <<- cov_calls + 1L
-    if (cov_calls == 1L) stop("injected null covariance failure")
+    if (cov_calls == 1L) {
+      stop(medfit:::.sem_covariance_diagnostic("negative_variance", "injected null covariance failure"))
+    }
     vcov_real(...)
   },
   .package = "medfit"
@@ -610,16 +632,18 @@ records `covariance = "failed"` and the original condition. No covariance or sta
 checks that the retained fit is the null that was asked for (same rows, same domain, one more restriction), so a fit that
 merely failed is not mistaken for one that only lost its covariance.
 
-The same failure in a plain `fit_sem()` call has no such use: a fit without a covariance matrix is not a fit. It is the typed
-error `medfit_sem_covariance_error`, which holds the accepted likelihood in its ledger and the accepted solution in
-`$partial`, and never a `SEMFit`. It is a sibling of `medfit_error_no_convergence`, not a kind of it, because no optimizer
-failed:
+In a plain `fit_sem()` call, the same explicit diagnostic becomes a typed `medfit_sem_covariance_error`,
+which holds the accepted likelihood in its ledger and the accepted solution in `$partial`, and never returns a `SEMFit`.
+It is a sibling of `medfit_error_no_convergence`, not a kind of it, because no optimizer failed.
+Singular information is a separate case: it retains its warning and full `NA` covariance instead of becoming this error:
 
 ```{r}
 #| label: covariance-error
 cov_err <- testthat::with_mocked_bindings(
   tryCatch(fit_sem(full, d), error = identity),
-  .sem_vcov = function(...) stop("injected covariance failure"),
+  .sem_vcov = function(...) {
+    stop(medfit:::.sem_covariance_diagnostic("information_not_pd", "injected covariance failure"))
+  },
   .package = "medfit"
 )
 class(cov_err)[1]
@@ -637,6 +661,29 @@ stopifnot(inherits(cov_err, "medfit_sem_covariance_error"),
           identical(cov_err$partial$f, fit_full@f),
           identical(cov_err$ledger$covariance, "failed"),
           grepl("injected covariance failure", conditionMessage(cov_err), fixed = TRUE))
+```
+
+**An untyped error is not retained evidence.** To see the distinction, inject an ordinary error into the same
+covariance stage. Both `fit_sem()` and the MBCO null refit return that exact condition to the caller; neither
+converts it into a covariance diagnostic or a retained likelihood. We catch it here so the demonstration can continue:
+
+```{r}
+#| label: covariance-raw-error
+unexpected <- simpleError("injected raw numerical error")
+raw_errors <- testthat::with_mocked_bindings(
+  list(fit = tryCatch(fit_sem(full, d), error = identity),
+       mbco = tryCatch(mbco_sem(fit_full, "a", "b"), error = identity)),
+  .sem_vcov = function(...) stop(unexpected),
+  .package = "medfit"
+)
+vapply(raw_errors, identical, logical(1), unexpected)
+```
+
+```{r}
+#| label: covariance-raw-error-check
+#| include: false
+stopifnot(all(vapply(raw_errors, identical, logical(1), unexpected)),
+          all(vapply(raw_errors, function(e) is.null(e$partial) && is.null(e$ledger), logical(1))))
 ```
 
 **The ledger is checked on the way in and on the way out.** `mbco_sem()` checks the ledger of the fit it is given against the

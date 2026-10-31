@@ -22,7 +22,7 @@ probe on each build.
 | | |
 |---|---|
 | **Use medfit native when** | you want the indirect effect, `mbco_sem()`, or a nonlinear constraint such as `cp == a*b` on a path model |
-| **Use lavaan when** | you need latent means, groups, categorical outcomes, other estimators, FIML, or fit indices |
+| **Use lavaan when** | you need latent means, groups, categorical outcomes, other estimators, broader FIML models, or fit indices |
 | **Both** | read the same `~`, `=~`, `~~`, `:=` and constraint syntax, and agree to about 1e-6 where both apply |
 
 ## The same model in both
@@ -81,7 +81,7 @@ the behavior makes that test fail.
 | Means and intercepts | yes | observed intercepts and means (`y ~ 1`, `y ~ 1 + x`); latent means are planned | Supported |
 | Multiple groups | yes | no | Unsupported |
 | Estimators other than ML | yes | ML, plus the HC0 sandwich | Partial |
-| Missing data | FIML | listwise deletion | Partial |
+| Missing data | FIML | listwise by default; separate bounded random-X FIML opt-in | Partial |
 | Categorical outcomes | WLSMV and others | numeric variables only; use lavaan (WLSMV) | Unsupported |
 | Information matrix | expected | observed by default | Different by design |
 | Robust standard errors | yes | `se_type = "sandwich"` equals lavaan's huber.white | Supported |

@@ -5,7 +5,9 @@ test_that("public covariance failure exposes accepted evidence, never a SEMFit",
   data$unused <- NA_real_
   data$recall[1L] <- NA_real_
   baseline <- suppressMessages(fit_sem(post_fit_model, data, n_starts = 1L, information = "expected"))
-  local_mocked_bindings(.sem_vcov = function(...) stop("injected covariance failure"))
+  local_mocked_bindings(.sem_vcov = function(...) {
+    stop(.sem_covariance_diagnostic("information_not_pd", "injected covariance failure"))
+  })
   err <- tryCatch(suppressMessages(fit_sem(post_fit_model, data, n_starts = 1L,
                                            information = "expected")), error = identity)
   expect_s3_class(err, "medfit_sem_covariance_error")
@@ -39,7 +41,7 @@ test_that("either internal null may retain covariance-only evidence with its fai
     calls <- 0L
     local_mocked_bindings(.sem_vcov = function(...) {
       calls <<- calls + 1L
-      if (calls == target) stop("injected null covariance failure")
+      if (calls == target) stop(.sem_covariance_diagnostic("information_not_pd", "injected null covariance failure"))
       vcov(...)
     })
     expect_warning(out <- mbco_sem(full, a = "a1", b = "b1"), "covariance.*likelihood retained")
@@ -79,7 +81,7 @@ test_that("nonfinite or unaccepted optimization cannot retain a likelihood", {
       x <- optimize(...)
       x[[field]] <- if (field == "f") Inf else FALSE
       x
-    }, .sem_vcov = function(...) stop("covariance must not run"))
+    }, .sem_vcov = function(...) stop(.sem_covariance_diagnostic("information_not_pd", "covariance must not run")))
     err <- tryCatch(fit_sem(post_fit_model, data, n_starts = 1L), error = identity)
     expect_s3_class(err, "error")
     expect_false(inherits(err, "medfit_sem_covariance_error"))
@@ -97,7 +99,7 @@ test_that("singular-information NA return and warnings are not cleared by finite
   expect_true(is.finite(full@f))
   local_mocked_bindings(.sem_vcov = function(...) {
     warning("information matrix is singular; the model may not be identified")
-    stop("injected covariance failure after identification warning")
+    stop(.sem_covariance_diagnostic("information_not_pd", "injected covariance failure after identification warning"))
   })
   out <- suppressWarnings(mbco_sem(full, a = "a1", b = "b1"))
   for (node in out$ledger$children[-1L]) {
@@ -118,7 +120,7 @@ test_that("nested covariance failures retain every branch without a public succe
     calls <- 0L
     local_mocked_bindings(.sem_vcov = function(...) {
       calls <<- calls + 1L
-      if (calls == target) stop("injected nested covariance failure")
+      if (calls == target) stop(.sem_covariance_diagnostic("information_not_pd", "injected nested covariance failure"))
       vcov(...)
     })
     err <- tryCatch(suppressWarnings(fit_sem(model, data, n_starts = 1L,
@@ -157,7 +159,7 @@ test_that("nonwinning covariance failure keeps its own public child attribution"
       calls$n <- calls$n + 1L
       if (calls$n == loser) {
         warning("injected losing-child identification concern", call. = FALSE)
-        stop("injected losing-child covariance failure", call. = FALSE)
+        stop(.sem_covariance_diagnostic("information_not_pd", "injected losing-child covariance failure"))
       }
       vcov(...)
     })
@@ -205,7 +207,7 @@ test_that("either nested null retains a losing-child notice without changing LR 
         calls$n <- calls$n + 1L
         if (calls$n == 2L * (target - 1L) + loser) {
           warning("injected losing-null-child identification concern", call. = FALSE)
-          stop("injected losing-null-child covariance failure", call. = FALSE)
+          stop(.sem_covariance_diagnostic("information_not_pd", "injected losing-null-child covariance failure"))
         }
         vcov(...)
       })
@@ -241,7 +243,9 @@ test_that("malformed covariance payloads and incompatible null dimensions refuse
   data <- readRDS(test_path("fixtures", "memory_exp.rds"))
   full <- fit_sem(post_fit_model, data, n_starts = 1L)
   err <- local({
-    local_mocked_bindings(.sem_vcov = function(...) stop("injected covariance failure"))
+    local_mocked_bindings(.sem_vcov = function(...) {
+      stop(.sem_covariance_diagnostic("information_not_pd", "injected covariance failure"))
+    })
     tryCatch(fit_sem(post_fit_model, data, n_starts = 1L), error = identity)
   })
   for (field in c("schema_version", "stage", "partial", "ledger")) {
@@ -259,8 +263,9 @@ test_that("malformed covariance payloads and incompatible null dimensions refuse
       stop(e)
     })
   }
-  local_mocked_bindings(.sem_vcov = function(...) stop("injected covariance failure"),
-                        .sem_fit_syntax = changed_dimension)
+  local_mocked_bindings(.sem_vcov = function(...) {
+    stop(.sem_covariance_diagnostic("information_not_pd", "injected covariance failure"))
+  }, .sem_fit_syntax = changed_dimension)
   expect_error(suppressWarnings(mbco_sem(full, a = "a1", b = "b1")), "incompatible.*dimension",
                class = "medfit_error_ledger")
 })
@@ -276,7 +281,9 @@ test_that("a returned fit can never carry covariance-failure evidence (D-11: no 
   )
   expect_error(mbco_sem(forged, a = "a1", b = "b1"), class = "medfit_error_ledger")
   err <- local({
-    local_mocked_bindings(.sem_vcov = function(...) stop("injected covariance failure"))
+    local_mocked_bindings(.sem_vcov = function(...) {
+      stop(.sem_covariance_diagnostic("information_not_pd", "injected covariance failure"))
+    })
     tryCatch(fit_sem(post_fit_model, data, n_starts = 1L), error = identity)
   })
   expect_error(.sem_require_outcome(err$partial), class = "medfit_error_ledger")
@@ -290,7 +297,7 @@ test_that("root attribution and failure evidence cannot be forged on a union led
   calls <- 0L
   local_mocked_bindings(.sem_vcov = function(...) {
     calls <<- calls + 1L
-    if (calls == 2L) stop("injected second-branch covariance failure")
+    if (calls == 2L) stop(.sem_covariance_diagnostic("information_not_pd", "injected second-branch covariance failure"))
     vcov(...)
   })
   err <- tryCatch(suppressWarnings(fit_sem(model, data, n_starts = 1L)), error = identity)
@@ -326,7 +333,7 @@ test_that("a covariance failure does not outrank a branch that did not converge 
       if (fits == 1L) .sem_no_convergence("injected branch failure")
       optimize(...)
     },
-    .sem_vcov = function(...) stop("injected covariance failure")
+    .sem_vcov = function(...) stop(.sem_covariance_diagnostic("information_not_pd", "injected covariance failure"))
   )
   err <- tryCatch(suppressWarnings(fit_sem(model, data, n_starts = 1L)), error = identity)
   expect_s3_class(err, "medfit_error_no_convergence")

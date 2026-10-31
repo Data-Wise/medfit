@@ -1,0 +1,39 @@
+{
+  "verdict": "PASS",
+  "reviewed_baseline_commit": "c7430172",
+  "scope": "isolated research prototype; separate from0.16",
+  "resolved_findings": [
+    "post-solver attempt-ledger retention",
+    "near-singular fixture SD0.027 corrected to SD0.03"
+  ],
+  "fit_cells": 42,
+  "edge_checks": 13,
+  "derivative_points": 126,
+  "likelihood_identities": 126,
+  "independent_gates": 42,
+  "reference_cells": 30,
+  "reference_edges": 10,
+  "regression_tests": 4,
+  "regression_assertions": 61,
+  "pre_fix_regression_failures": 9,
+  "diagnostic_attempt_records": 6,
+  "changed_numerical_cells": [
+    "unrestricted/new/near_singular",
+    "cp_zero/new/near_singular"
+  ],
+  "other_40_cells_exactly_unchanged": true,
+  "production_changed": false,
+  "acceptance_limits_changed": false,
+  "hosted_ci_run": false,
+  "pushed": false,
+  "worst_errors": {
+    "likelihood_per_row": 2.03120483395954e-13,
+    "parameter": 1.98264234126828e-06,
+    "se": 3.20852424435802e-05,
+    "covariance": 6.41715143500446e-05,
+    "se_stability": 1.8630401221742e-08,
+    "stationarity": 6.56296153263754e-06,
+    "gradient": 5.12105645689335e-09,
+    "hessian": 1.28466856130559e-06
+  }
+}

@@ -1,0 +1,7 @@
+"solver","start","status","accepted","nll","stationarity","reason"
+"slsqp",1,3,TRUE,999.80579124299,2.10349407375193e-09,""
+"slsqp",2,3,TRUE,999.805791242992,9.41612162019823e-08,""
+"slsqp",3,3,TRUE,999.80579124299,5.20828434436016e-09,""
+"nlminb",1,1,FALSE,999.805791248666,4.30837429499398e-06,"optimizer status or stationarity"
+"nlminb",2,1,FALSE,999.80579127688,1.80119397915487e-05,"optimizer status or stationarity"
+"nlminb",3,1,FALSE,999.805791244382,2.51867213337013e-06,"optimizer status or stationarity"

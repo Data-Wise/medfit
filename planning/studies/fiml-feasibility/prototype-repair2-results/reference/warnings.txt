@@ -1,0 +1,11 @@
+lavaan->lav_data_full():
+   some cases are empty and will be ignored: 248.
+lavaan->lav_data_full():
+   some cases are empty and will be ignored: 112 152 193 208.
+lavaan->lav_data_full():
+   some cases are empty and will be ignored: 100 202 280.
+lavaan->lav_data_full():
+   some cases are empty and will be ignored: 301 302 303 304 305.
+lavaan->lav_data_full():
+   54 cases were deleted due to missing values in exogenous variable(s),
+   while fixed_x = TRUE.

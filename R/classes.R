@@ -648,6 +648,7 @@ S7::S4_register(BootstrapResult)
 #' @noRd
 S7::method(print, MediationData) <- function(x, ...) {
   cat("MediationData object\n")
+  if (.sem_fiml_is(x)) cat("FIML, random X; retained partial rows\n")
   cat("====================\n\n")
 
   cat("Path coefficients:\n")
@@ -716,7 +717,7 @@ S7::method(print, BootstrapResult) <- function(x, ...) {
 #' @param ... Additional arguments (ignored)
 #' @noRd
 S7::method(summary, MediationData) <- function(object, ...) {
-  structure(
+  out <- structure(
     list(
       paths = c(
         a = object@a_path,
@@ -739,6 +740,8 @@ S7::method(summary, MediationData) <- function(object, ...) {
     ),
     class = "summary_MediationData"
   )
+  if (.sem_fiml_is(object)) out$fit_context <- object@fit_context
+  out
 }
 
 
@@ -751,6 +754,7 @@ S7::method(summary, MediationData) <- function(object, ...) {
 #' @noRd
 print_summary_mediation_data <- function(x, ...) {
   cat("Summary of MediationData\n")
+  if (identical(x$fit_context$method, "fiml")) cat("FIML, random X; retained partial rows\n")
   cat("========================\n\n")
 
   cat("Path Coefficients:\n")
@@ -2195,10 +2199,11 @@ print_summary_cluster_mediation_data <- function(x, ...) {
 #' @param table Data frame: one row per parameter-table row with `lhs`, `op`,
 #'   `rhs`, `label`, `free`, `est` and `se`
 #' @param defined Data frame of `:=` parameters: `name`, `expr`, `est`, `se`
-#' @param f Numeric scalar: minimized maximum-likelihood discrepancy
+#' @param f Numeric scalar: minimized maximum-likelihood discrepancy; `NA` for bounded FIML
 #' @param n_obs,n_dropped Integer scalars: rows used and rows dropped for
-#'   missing values (listwise deletion)
-#' @param df Numeric scalar: degrees of freedom
+#'   missing values (listwise deletion by default; only all-empty model rows for FIML)
+#' @param df Numeric scalar: model-test degrees of freedom; `NA` for bounded FIML,
+#'   which stores the free-parameter count separately in `internals$likelihood$k`
 #' @param information Character scalar: `"observed"` or `"expected"`
 #' @param converged Logical scalar: the acceptance gate passed. `fit_sem()` returns a
 #'   fit only for an accepted solution (otherwise it errors), so this is `TRUE` for every
@@ -2278,6 +2283,26 @@ SEMFit <- S7::new_class(
     }
     if (!all(c("name", "expr", "est", "se") %in% names(self@defined))) {
       return("defined must have columns name, expr, est and se")
+    }
+    NULL
+  }
+)
+
+
+# Internal subclass: downstream methods must retain the likelihood provenance.
+FIMLMediationData <- S7::new_class(
+  "FIMLMediationData", parent = MediationData, package = "medfit",
+  properties = list(fit_context = S7::class_list),
+  validator = function(self) {
+    ctx <- self@fit_context
+    source_hash <- rlang::hash(list(ctx$source_theta, ctx$source_vcov, ctx$source_roles))
+    parameter_hash <- rlang::hash(list(self@estimates, self@vcov, self@a_path, self@b_path, self@c_prime))
+    if (!identical(ctx$source_hash, source_hash) ||
+          !identical(ctx$method, "fiml") || !identical(ctx$x_policy, "random") ||
+          !identical(ctx$n_obs, self@n_obs) || !identical(self@source_package, "medfit") ||
+          !identical(unname(ctx$variables), c(self@treatment, self@mediator, self@outcome)) ||
+          !identical(ctx$data_hash, rlang::hash(self@data)) || !identical(ctx$parameter_hash, parameter_hash)) {
+      return("FIML fit_context must match the retained rows and extracted parameters")
     }
     NULL
   }

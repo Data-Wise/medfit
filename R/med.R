@@ -186,6 +186,9 @@ med <- function(data,
 #' @return Invisibly returns x
 #'
 #' @details
+#' `quick()` refuses data extracted from bounded FIML fits. Use `print()`,
+#' `summary()` or `tidy()` for those objects; see [fit_sem()] for their limits.
+#'
 #' Prints a compact one-line summary showing:
 #' - NIE (Natural Indirect Effect) with CI if available
 #' - NDE (Natural Direct Effect)
@@ -244,6 +247,7 @@ quick <- function(x, digits = 3, ...) {
 #' Internal quick implementation for MediationData
 #' @noRd
 .quick_mediation_data <- function(x, digits = 3, ...) {
+  .sem_fiml_refuse(x, "quick()")
   # Extract effects
   indirect <- as.numeric(nie(x))
   direct <- as.numeric(nde(x))

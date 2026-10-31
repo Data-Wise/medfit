@@ -52,6 +52,12 @@
 #'   - Method used
 #'
 #' @details
+#' Bounded FIML objects supplied as `mediation_data` or `data` are refused,
+#' including `method = "plugin"`; this entry point does not provide FIML
+#' bootstrap inference. Object-aware guards run before package-controlled RNG,
+#' workers or refits. Opaque user callbacks and external-first dispatch are
+#' outside that guarantee. See [fit_sem()] for supported normal intervals.
+#'
 #' ## Bootstrap Methods
 #'
 #' **Parametric Bootstrap** (`method = "parametric"`):
@@ -204,6 +210,8 @@ bootstrap_mediation <- function(statistic_fn,
                                 seed = NULL,
                                 cluster = NULL,
                                 ...) {
+  .sem_fiml_refuse(mediation_data, "bootstrap_mediation()")
+  .sem_fiml_refuse(data, "bootstrap_mediation()")
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
   checkmate::assert_function(statistic_fn, .var.name = "statistic_fn")
   method <- match.arg(method)

@@ -1,38 +1,5 @@
 # 0.15.0 defaults of fit_sem()'s `fixed_x` and `meanstructure` (spec F-1 to F-4, E-13, E-14). An unset setting resolves
-# to the new value unconditionally; an explicit value is never overwritten. The 0.14.x `options(medfit.native_defaults)`
-# opt-in is ignored with a once-per-session note, and the 0.14.x default-change warning is gone. This file and the note
-# are removed in 0.16.0 (E-9).
-
-.native_defaults_env <- new.env(parent = emptyenv())
-.native_defaults_env$shown <- FALSE
-
-# Whether this session has shown the obsolete-option note; `.native_defaults_reset()` sets it (tests).
-.native_defaults_state <- function() {
-  .native_defaults_env$shown
-}
-
-.native_defaults_reset <- function(shown = FALSE) {
-  .native_defaults_env$shown <- isTRUE(as.logical(shown))
-  invisible(NULL)
-}
-
-# A set `medfit.native_defaults` is ignored (any value), with one classed message per session. The state is set before
-# the message is signaled, so a muffled message or a handler that errors still consumes it.
-.native_defaults_obsolete_note <- function() {
-  if (is.null(getOption("medfit.native_defaults")) || .native_defaults_env$shown) {
-    return(invisible(NULL))
-  }
-  .native_defaults_env$shown <- TRUE
-  message(structure(
-    class = c("medfit_message_option_obsolete", "message", "condition"),
-    list(message = paste0(
-      "`options(medfit.native_defaults)` is obsolete and ignored: since medfit 0.15.0 an unset `fixed_x` and ",
-      "`meanstructure` resolve to the new defaults. Pass them explicitly to choose; the option is removed in 0.16.0. ",
-      "Shown once per session.\n"
-    ), call = NULL)
-  ))
-  invisible(NULL)
-}
+# to the new value unconditionally; an explicit value is never overwritten.
 
 # Resolve unset `fixed_x` / `meanstructure` for the model syntax and data. Returns the values to fit with. Unset
 # `meanstructure` becomes TRUE and unset `fixed_x` becomes `.sem_default_fixed_x()`'s explicit subset (E-13), never a

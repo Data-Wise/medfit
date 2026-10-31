@@ -252,22 +252,14 @@ test_that("the guide also quotes the cluster and native messages tested elsewher
   }
 })
 
-test_that("the guide quotes the obsolete-option message and it is triggered; the 0.14.0 warnings are gone", {
-  old <- medfit:::.native_defaults_state()
-  medfit:::.native_defaults_reset(shown = FALSE)
-  withr::defer(medfit:::.native_defaults_reset(shown = old))
+test_that("the 0.14.0 warnings and no option message", {
   syn <- "mediator1 ~ treatment\noutcome ~ mediator1 + treatment"
-  # 0.15.0: no warning for unset arguments, and no message without the option
   expect_no_warning(fit_sem(syn, data = mediation_demo))
   expect_no_message(fit_sem(syn, data = mediation_demo))
-  # the obsolete option is ignored with one message per session
   withr::local_options(medfit.native_defaults = "0.15")
-  m <- testthat::capture_messages(fit_sem(syn, data = mediation_demo))
-  expect_true(any(grepl("`options(medfit.native_defaults)` is obsolete and ignored", m, fixed = TRUE)))
-  expect_length(testthat::capture_messages(fit_sem(syn, data = mediation_demo)), 0L)
+  expect_no_message(fit_sem(syn, data = mediation_demo))
   skip_if_not(file.exists(guide_path()), "vignettes are not available (installed or built package)")
   txt <- paste(readLines(guide_path(), warn = FALSE), collapse = "\n")
-  expect_true(grepl("`options(medfit.native_defaults)` is obsolete and ignored", txt, fixed = TRUE))
   expect_false(grepl("fit_sem(): `fixed_x` is unset", txt, fixed = TRUE))
   expect_false(grepl("fit_sem(): `meanstructure` is unset", txt, fixed = TRUE))
 })
@@ -486,7 +478,9 @@ test_that("the 64-branch cap is a plain error with a not_enumerated ledger, with
 
 test_that("a covariance-stage failure is medfit_sem_covariance_error with the accepted likelihood, never a fit", {
   d <- ev_data()
-  testthat::local_mocked_bindings(.sem_vcov = function(...) stop("injected covariance failure"))
+  testthat::local_mocked_bindings(.sem_vcov = function(...) {
+    stop(.sem_covariance_diagnostic("information_not_pd", "injected covariance failure"))
+  })
   err <- tryCatch(suppressMessages(fit_sem(ev_syn, d, n_starts = 1L, information = "expected")), error = identity)
   expect_s3_class(err, "medfit_sem_covariance_error")
   expect_false(inherits(err, "medfit_error_no_convergence"))
@@ -502,7 +496,7 @@ test_that("mbco_sem() retains a null whose covariance stage failed and says so",
   calls <- 0L
   testthat::local_mocked_bindings(.sem_vcov = function(...) {
     calls <<- calls + 1L
-    if (calls == 1L) stop("injected null covariance failure")
+    if (calls == 1L) stop(.sem_covariance_diagnostic("information_not_pd", "injected null covariance failure"))
     vcov(...)
   })
   w <- nt_warnings(mbco_sem(full, a = "a1", b = "b1"))

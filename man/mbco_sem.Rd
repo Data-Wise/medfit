@@ -51,11 +51,13 @@ boundary, including the union winner's replay, so they can repeat a child's. Eve
 another fails, and an unresolved null leaves the root \code{unresolved}. A nested union branch that is certified empty
 by a literal zero/nonzero contradiction (see the outcome ledger in \code{\link[=fit_sem]{fit_sem()}}) is retained as \code{excluded}; a null
 that is itself infeasible or an all-empty union stays an unresolved row, never a finite LR or a survivor-only
-p-value. A null whose optimizer accepted but whose covariance stage failed (\code{medfit_sem_covariance_error} in
+p-value. A null whose optimizer accepted but whose covariance stage explicitly diagnosed non-positive-definite
+information or a negative variance (\code{medfit_sem_covariance_error} in
 \code{\link[=fit_sem]{fit_sem()}}) keeps its likelihood after a check that it is the null asked for (same rows, domain and one more
 restriction): the row stays resolved, the statistic and p-value are unchanged, a warning names the failure, and the
 node has \code{covariance = "failed"} with \code{post_fit} and the notices. No covariance is invented; a fit that carries
-\code{post_fit} is refused as \code{object}.
+\code{post_fit} is refused as \code{object}. Other covariance errors propagate unchanged; singular information keeps its
+warning and NA covariance.
 }
 \description{
 Tests the null hypothesis that an indirect effect, the product of two or more
@@ -70,6 +72,9 @@ is never solved, because a nonlinear solver can stop at the branch with the
 larger statistic.
 }
 \details{
+Bounded FIML fits are refused before any constrained refit; their model tests
+and MBCO inference are not supported. See \code{\link[=fit_sem]{fit_sem()}} for the bounded limits.
+
 A fit made with \code{weights} is refused: the weighted discrepancy is
 not a likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are

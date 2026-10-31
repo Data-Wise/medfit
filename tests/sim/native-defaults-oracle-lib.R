@@ -4,17 +4,18 @@
 #
 # A cell is a model, a data set and how it is fit; a combination is one setting of (fixed_x, meanstructure). Each core
 # cell runs under the four combinations (fixed_x FALSE/TRUE x meanstructure NULL/TRUE: the old and the 0.15.0 default
-# of each) with both arguments passed, and once with both unset under options(medfit.native_defaults = "0.15") (combo
-# "optin"), which goes through fit_sem()'s resolver. No core model has a `~~` or `~1` statement on an exogenous
-# variable, so the opt-in resolves to the full subset there, the same fit as (TRUE, TRUE).
+# of each) with both arguments passed, and once with both unset (combo "unset"), which goes through
+# fit_sem()'s resolver. No core model has a
+# `~~` or `~1` statement on an exogenous variable, so the unset fit resolves to the full subset there, the same fit as
+# (TRUE, TRUE).
 # The `subset` cell passes a named fixed_x ("c") explicitly, under meanstructure NULL and TRUE; its oracle is lavaan
 # with fixed.x = FALSE and the subset's moments written as fixed values (divisor N), built here from the data, not
 # from medfit's own translation.
 # T8b adds three cells (data from ndo_data_b(), which keeps the T8a columns): `product` (four-way x:m; lavaan gets the
 # product as a data column xm, plus a named subset "x", "c" that leaves the product free), `factor` (g with three
 # levels; lavaan gets hand dummies g_b, g_c; fixed_x = "g" as a named subset) and `lenient` (a `c ~~ c` statement, so
-# the opt-in default leaves c free with a classed message and must equal fixed_x = "x"). Under the opt-in these models
-# resolve to a named subset (T6); the opt-in rows also check that set (glance()$fixed_x) and the lenient message.
+# the unset fit default leaves c free with a classed message and must equal fixed_x = "x"). With both unset these models
+# resolve to a named subset (T6); the unset fit rows also check that set (glance()$fixed_x) and the lenient message.
 #
 # One row per cell x combination x quantity. Status: pass or fail from the stated tolerance (fixed before the first
 # run, never widened), or limit / block from the declared table `ndo_declared` with its reason (a declared row keeps
@@ -70,19 +71,20 @@ ndo_cells <- list(
   product = list(model = paste0(ndo_base, " + t3*x:m"), lavaan_model = paste0(ndo_base, " + t3*xm"),
                  labels = c("a", "b", "cp", "t3"), exo = c("x", "c", "xm"), lav_names = c("m:x" = "xm"),
                  extra = list("fx=x,c ms=TRUE" = list(fixed_x = c("x", "c"), meanstructure = TRUE)),
-                 optin_set = c("x", "c", "m:x"), quiet = TRUE),
+                 unset_set = c("x", "c", "m:x"), quiet = TRUE),
   # factor covariate g (dummies g_b, g_c in medfit; built by hand for lavaan)
   factor = list(model = "mg ~ a*x + g\nyg ~ b*mg + cp*x + g",
                 lavaan_model = "mg ~ a*x + g_b + g_c\nyg ~ b*mg + cp*x + g_b + g_c",
                 labels = c("a", "b", "cp"), exo = c("x", "g_b", "g_c"), lav_names = list(g = c("g_b", "g_c")),
                 extra = list("fx=g ms=NULL" = list(fixed_x = "g", meanstructure = NULL),
                              "fx=g ms=TRUE" = list(fixed_x = "g", meanstructure = TRUE)),
-                optin_set = c("x", "g_b", "g_c")),
-  # lenient subset: a `~~` statement on c leaves it out of the opt-in default, which must equal fixed_x = "x" and say so
+                unset_set = c("x", "g_b", "g_c")),
+  # lenient subset: a `~~` statement on c leaves it out of the unset fit default, which must equal
+  # fixed_x = "x" and say so
   lenient = list(model = paste0(ndo_base, "\nc ~~ c"), labels = c("a", "b", "cp"),
                  combos = list("fx=FALSE ms=TRUE" = list(fixed_x = FALSE, meanstructure = TRUE),
                                "fx=x ms=TRUE" = list(fixed_x = "x", meanstructure = TRUE)),
-                 optin_equals = "fx=x ms=TRUE", optin_set = "x", lenient = TRUE,
+                 unset_equals = "fx=x ms=TRUE", unset_set = "x", lenient = TRUE,
                  # matching translation: lavaan's own fixed.x = TRUE, which keeps c free because of its statement. The
                  # `c ~~ c` statement also drops the x ~~ c covariance in both programs (already with fixed_x = FALSE),
                  # so the moment-writing translation (which fixes cov(x, c) at its sample value) is not the same model.
@@ -155,7 +157,7 @@ ndo_declared <- rbind(
   )
 )
 
-# combinations a cell runs under (the opt-in is run separately)
+# combinations a cell runs under (the unset fit is run separately)
 ndo_cell_combos <- function(cell) {
   spec <- ndo_cells[[cell]]
   if (!is.null(spec$subset)) {
@@ -163,9 +165,9 @@ ndo_cell_combos <- function(cell) {
   }
   c(if (is.null(spec$combos)) ndo_combos else spec$combos, spec$extra)
 }
-ndo_has_optin <- function(cell) is.null(ndo_cells[[cell]]$subset)
-ndo_optin_equals <- function(cell) {
-  e <- ndo_cells[[cell]]$optin_equals
+ndo_has_unset <- function(cell) is.null(ndo_cells[[cell]]$subset)
+ndo_unset_equals <- function(cell) {
+  e <- ndo_cells[[cell]]$unset_equals
   if (is.null(e)) "fx=TRUE ms=TRUE" else e
 }
 # medfit name -> lavaan column names (a factor maps to its dummies, the product to xm)
@@ -181,9 +183,7 @@ ndo_fit_native <- function(cell, combo, d = ndo_data_b()) {
     args$weights <- d$w
     args$se_type <- "sandwich"
   }
-  if (identical(combo, "optin")) {
-    old <- options(medfit.native_defaults = "0.15")
-    on.exit(options(old), add = TRUE)
+  if (identical(combo, "unset")) {
     return(if (isTRUE(spec$quiet)) suppressWarnings(do.call(fit_sem, args)) else do.call(fit_sem, args))
   }
   s <- ndo_cell_combos(cell)[[combo]]
@@ -195,7 +195,7 @@ ndo_fit_native <- function(cell, combo, d = ndo_data_b()) {
 # lavaan oracle; a subset is written as fixed values (divisor N) with fixed.x = FALSE
 ndo_fit_lavaan <- function(cell, combo, d = ndo_data_b()) {
   spec <- ndo_cells[[cell]]
-  if (identical(combo, "optin")) combo <- ndo_optin_equals(cell)
+  if (identical(combo, "unset")) combo <- ndo_unset_equals(cell)
   s <- ndo_cell_combos(cell)[[combo]]
   model <- if (is.null(spec$lavaan_model)) spec$model else spec$lavaan_model
   fixed_x <- if (is.character(s$fixed_x)) ndo_lav_names(cell, s$fixed_x) else s$fixed_x
@@ -301,17 +301,17 @@ ndo_cell_rows <- function(cell, combo, d = ndo_data_b()) {
   nv <- ndo_native_values(fit, labels)
   ov <- ndo_lavaan_values(ndo_fit_lavaan(cell, combo, d), labels)
   out <- do.call(rbind, lapply(names(nv), function(q) ndo_rows(cell, combo, q, nv[[q]], ov[[q]])))
-  if (identical(combo, "optin")) {
+  if (identical(combo, "unset")) {
     # the resolver must give exactly the explicit fit it stands for ((TRUE, TRUE), or the named subset it resolves to)
-    ex <- ndo_fit_native(cell, ndo_optin_equals(cell), d)
+    ex <- ndo_fit_native(cell, ndo_unset_equals(cell), d)
     same <- length(fit@theta) == length(ex@theta) && setequal(names(fit@theta), names(ex@theta))
     gap <- if (same) max(abs(fit@theta - ex@theta[names(fit@theta)])) else Inf
     out <- rbind(out, ndo_rows(cell, combo, "same_as_explicit", gap, 0))
-    # T6: the opt-in resolves to a named subset (glance()$fixed_x), which must be the expected set, and the lenient
+    # T6: the unset fit resolves to a named subset (glance()$fixed_x), which must be the expected set, and the lenient
     # message is emitted exactly when a statement leaves a variable out
-    if (!is.null(spec$optin_set)) {
+    if (!is.null(spec$unset_set)) {
       got <- strsplit(glance(fit)$fixed_x, ", ", fixed = TRUE)[[1L]]
-      miss <- as.numeric(!setequal(got, spec$optin_set))
+      miss <- as.numeric(!setequal(got, spec$unset_set))
       out <- rbind(out, ndo_rows(cell, combo, "same_as_explicit:fixed_x", miss, 0))
     }
     out <- rbind(out, ndo_rows(cell, combo, "same_as_explicit:lenient_message", lenient,
@@ -324,7 +324,7 @@ ndo_run <- function(cells = names(ndo_cells), d = ndo_data_b()) {
   rows <- list()
   for (cell in cells) {
     combos <- names(ndo_cell_combos(cell))
-    if (ndo_has_optin(cell)) combos <- c(combos, "optin")
+    if (ndo_has_unset(cell)) combos <- c(combos, "unset")
     for (combo in combos) rows[[length(rows) + 1L]] <- ndo_cell_rows(cell, combo, d)
   }
   do.call(rbind, rows)

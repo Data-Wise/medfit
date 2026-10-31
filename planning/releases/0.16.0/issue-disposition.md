@@ -1,0 +1,10 @@
+# Release issue disposition — 2026-10-30 MDT
+
+This is a source/evidence classification, not a bulk issue closure. Release still requires fresh candidate gates.
+
+- **#357:** first milestone integrated in PR #361 (merge 446cf12d), including the two reviewed P2 repairs, required-branch coverage evidence and existing-reference-only diagnostics. The plan's integration section records exact-head hosted evidence. Global certificates, general charts and broad reporting stay deferred. No new certification claim is made in 0.16 notes.
+- **#360:** reduced boundary regression integrated through PR #363. `tests/testthat/test-sem-boundary-oracle.R` and `planning/PLAN-360-boundary-regression-2026-10-29.md` retain the independent full-likelihood oracle, mutation evidence and repaired namespace guard. It supports the tested designs, not general global convergence.
+- **#249 / #369:** comparison engines and classed warning behavior are already implemented (`R/compare-lr.R`); the merged comparison plan explicitly assigns D18/D20 to separate #276. The old issue checkboxes are stale, not additional 0.16 scope. The recorded D18 permanent-backup decision does not mean AUGLAG/default replacement exists: `R/sem-optim.R` still uses SLSQP for constrained fits. Do not announce a solver replacement or blanket “always on” standardization. Original global-solver proposals remain outside this bounded release; closed #276 is not evidence they were implemented.
+- **#320:** flagged lavaan product-null discrepancies remain an external-engine diagnostic limitation, with medfit independently matching the reference in the issue's fixture. Both-start comparison evidence and classed warnings are preserved. Existing comparison-gate acceptance limits remain mandatory on the candidate; no waiver of a new numerical failure.
+
+Issue-body snapshots are saved in the ignored release workspace. No issues were edited or closed by this classification. Remaining feature proposals require their own design/authorization after release.

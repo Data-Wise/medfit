@@ -83,7 +83,9 @@
   if (is.null(e)) {
     return(NULL)
   }
-  list(class = class(e), message = conditionMessage(e), call = conditionCall(e))
+  record <- list(class = class(e), message = conditionMessage(e), call = conditionCall(e))
+  if (inherits(e, "medfit_sem_covariance_diagnostic")) record$kind <- e$kind
+  record
 }
 
 # Literal zero/nonzero certificate (D2). Exact syntax proof only: an explicit `label == 0` equality and an explicit
@@ -227,6 +229,14 @@
 # (`mbco_sem()`, `compare_lr()`) must not take it for an unresolved refit. `partial` is the accepted fit list without
 # `vcov` and `defined`; `ledger` is the same node as `partial$ledger`, whose `covariance` is `failed` and whose
 # `post_fit` holds the original condition. The message is the original one.
+.sem_covariance_diagnostic <- function(kind, message) {
+  if (length(kind) != 1L || is.na(kind) || !kind %in% c("information_not_pd", "negative_variance")) {
+    stop("invalid covariance diagnostic kind", call. = FALSE)
+  }
+  structure(class = c("medfit_sem_covariance_diagnostic", "error", "condition"),
+            list(message = message, call = NULL, kind = kind))
+}
+
 .sem_covariance_error <- function(message, partial, post_fit = NULL) {
   structure(class = c("medfit_sem_covariance_error", "error", "condition"),
             list(message = message, call = NULL, schema_version = 1L, stage = "covariance", partial = partial,
@@ -240,7 +250,9 @@
 
 .sem_valid_post_fit <- function(x) {
   is.list(x) && identical(x$schema_version, 1L) && identical(x$stage, "covariance") &&
-    is.list(x$condition) && "error" %in% x$condition$class &&
+    is.list(x$condition) && "medfit_sem_covariance_diagnostic" %in% x$condition$class &&
+    "error" %in% x$condition$class && length(x$condition$kind) == 1L &&
+    x$condition$kind %in% c("information_not_pd", "negative_variance") &&
     is.character(x$condition$message) && length(x$condition$message) == 1L && !is.na(x$condition$message)
 }
 

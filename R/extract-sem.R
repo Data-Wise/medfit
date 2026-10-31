@@ -149,6 +149,7 @@
 # class lives in this package).
 S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, ...) {
   args <- list(...)
+  if (.sem_fiml_is(object)) return(.sem_fiml_extract(object, treatment, mediator, args))
   # a factor was expanded to dummies, so the effects have no single column to read (D9)
   as_factor <- intersect(c(treatment, mediator), names(object@internals$factors))
   if (length(as_factor)) {

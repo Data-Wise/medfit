@@ -52,13 +52,18 @@
 #'   another fails, and an unresolved null leaves the root `unresolved`. A nested union branch that is certified empty
 #'   by a literal zero/nonzero contradiction (see the outcome ledger in [fit_sem()]) is retained as `excluded`; a null
 #'   that is itself infeasible or an all-empty union stays an unresolved row, never a finite LR or a survivor-only
-#'   p-value. A null whose optimizer accepted but whose covariance stage failed (`medfit_sem_covariance_error` in
+#'   p-value. A null whose optimizer accepted but whose covariance stage explicitly diagnosed non-positive-definite
+#'   information or a negative variance (`medfit_sem_covariance_error` in
 #'   [fit_sem()]) keeps its likelihood after a check that it is the null asked for (same rows, domain and one more
 #'   restriction): the row stays resolved, the statistic and p-value are unchanged, a warning names the failure, and the
 #'   node has `covariance = "failed"` with `post_fit` and the notices. No covariance is invented; a fit that carries
-#'   `post_fit` is refused as `object`.
+#'   `post_fit` is refused as `object`. Other covariance errors propagate unchanged; singular information keeps its
+#'   warning and NA covariance.
 #'
 #' @details
+#' Bounded FIML fits are refused before any constrained refit; their model tests
+#' and MBCO inference are not supported. See [fit_sem()] for the bounded limits.
+#'
 #' A fit made with `weights` is refused: the weighted discrepancy is
 #' not a likelihood, so its difference is not chi-square. So is a fit that did
 #' not converge, since its discrepancy is the reference both refits are
@@ -123,6 +128,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   if (!S7::S7_inherits(object, SEMFit)) {
     stop("`object` must be a SEMFit from fit_sem().", call. = FALSE)
   }
+  .sem_fiml_refuse(object, "mbco_sem()")
   fit <- object
   .sem_check_modeltest(list(fit), "mbco_sem()")
   two_form <- is.null(paths) && !missing(b)
@@ -198,7 +204,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
         .sem_fit_syntax(syntax, fit@data, fit@information, n_starts = n_starts,
                         control = control, se_type = refit_se_type,
                         meanstructure = isTRUE(fit@internals$ram$has_mean),
-                        fixed_x = fixed_x, factors = fit@internals$factors),
+                        covariance_transport = TRUE, fixed_x = fixed_x, factors = fit@internals$factors),
         medfit_sem_covariance_error = .sem_retain_covariance
       )
       if (!is.null(r$ledger$post_fit) &&
@@ -215,6 +221,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     r <- captured$value
     err <- captured$error
     failure <- NULL
+    if (inherits(err, "medfit_covariance_untyped")) stop(err$original)
     if (!is.null(err)) {
       msg <- sprintf(paste0("the refit with `%s` failed (%s). If the model has an inequality constraint ",
                             "on that parameter, the null `%s` may lie outside the parameter space."),

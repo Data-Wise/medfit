@@ -348,6 +348,8 @@ c(by_hand = ll_by_hand, logLik = as.numeric(logLik(fx)))
 stopifnot(abs(ll_by_hand - as.numeric(logLik(fx))) < 1e-6)
 ```
 
+Keep the two counts separate here. The model-test degrees of freedom count restrictions on the observed moments. The `df` attribute of `logLik()` counts fitted parameters for information criteria. Fixing exogenous moments affects these counts differently, as the earlier comparison of moment and parameter counts showed.
+
 **The parameter count.** `logLik()` also carries a `df` attribute, the parameter count behind AIC and BIC. With
 a mean structure the free intercepts are in the parameter vector already. Without one, the likelihood still has
 means: the model's means are saturated, one free mean for each variable that is not fixed (a fixed variable's mean is a
@@ -615,7 +617,7 @@ structural estimates and their standard errors, as Section 3 proved. AIC and BIC
 structure, medfit's AIC is larger by $2k$ and its BIC by $k \log n$, with $k$ the number of unfixed observed means
 (here two intercepts). The schedule and the evidence are in
 [Native defaults in 0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html);
-`options(medfit.native_defaults)` is obsolete and is removed in 0.16.0.
+`options(medfit.native_defaults)` was removed in 0.16.0 (ignored since 0.15.0).
 
 ## Check yourself
 

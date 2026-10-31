@@ -1,0 +1,10 @@
+lavaan->lav_data_full():
+   some cases are empty and will be ignored: 248.
+lavaan->lav_data_full():
+   some cases are empty and will be ignored: 112 152 193 208.
+lavaan->lav_data_full():
+   some cases are empty and will be ignored: 100 202 280.
+lavaan->lav_step11_estoptim():
+   the optimizer warns that a solution has NOT been found!
+lavaan->lav_data_full():
+   some cases are empty and will be ignored: 301 302 303 304 305.

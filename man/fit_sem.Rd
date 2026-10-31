@@ -14,7 +14,8 @@ fit_sem(
   se_type = c("model", "sandwich"),
   meanstructure = TRUE,
   fixed_x = TRUE,
-  sampling_weights = lifecycle::deprecated()
+  sampling_weights = lifecycle::deprecated(),
+  missing = c("listwise", "fiml")
 )
 }
 \arguments{
@@ -29,12 +30,15 @@ supported class and each limit.}
 \item{data}{A data frame with the model's observed variables. Numeric columns are used as is; a
 factor, character or logical column named on a regression's right side is expanded to 0/1 dummies
 (\code{?"medfit-syntax"} lists the rules and limits). Rows with missing values in those columns are dropped once
-(listwise deletion) and counted in \code{n_dropped}.}
+(listwise deletion) and counted in \code{n_dropped} under the default \code{missing = "listwise"}.
+Bounded \code{missing = "fiml"} accepts numeric model columns only, retains rows with any
+observed model variable, and drops only all-empty model rows; extra columns do not select rows.}
 
 \item{information}{Character: \code{"observed"} (default) or \code{"expected"}
 information for the standard errors. \code{"expected"} is an error for a model with a product term
 that has an endogenous factor (the product is a function of another variable, so the expected
-information gives wrong standard errors); use the default with \code{se_type = "sandwich"}.}
+information gives wrong standard errors); use the default with \code{se_type = "sandwich"}.
+Bounded FIML supports only \code{"observed"}.}
 
 \item{n_starts}{Positive integer or \code{NULL}: number of optimizer starts
 tried before the fit is declared failed (\code{NULL} uses 5). Retries use
@@ -44,15 +48,19 @@ own moment-based start, so a start in a bad basin does not end the fit.
 With a nonlinear constraint, which can leave several
 local optima, every start is tried and the best accepted one is kept (a
 warning says when the accepted starts disagree); otherwise the first
-accepted start is used.}
+accepted start is used. A supported nonzero-product equality searches both sign
+branches independently, with \code{n_starts} starts per nonempty branch; aggregate
+diagnostics report the actual attempts, not the number of branches. For FIML,
+only \code{NULL} or \code{3} is supported: three starts per solver, with refinements counted separately.}
 
-\item{control}{List: options passed to the optimizer (\code{nloptr}).}
+\item{control}{List: options passed to the optimizer (\code{nloptr}). FIML requires
+the empty list under its initial validated numerical protocol.}
 
 \item{weights}{Optional numeric vector of non-negative case weights,
 one per row of \code{data} (\code{NULL}, the default, fits unweighted). The fit is
 weighted maximum likelihood on the weighted mean and covariance; the scale
 of the weights does not matter. Rows dropped for missing values drop their
-weights with them. Use with \code{se_type = "sandwich"}.}
+weights with them. Use with \code{se_type = "sandwich"}. FIML rejects every non-NULL weight vector.}
 
 \item{se_type}{Character: \code{"model"} (default) takes the covariance of the
 estimates from the inverse information; \code{"sandwich"} uses the robust
@@ -70,7 +78,7 @@ not written has a free one, so a model with only free intercepts has the same es
 standard errors as the covariance-only fit. A latent variable's mean is fixed at 0.
 A model with a product term (\code{y ~ x + m + x:m}) always fits the mean structure (it needs the mediator
 intercept for the four-way decomposition), so with a product \code{meanstructure = FALSE} is an error.
-An explicit \code{NULL} or \code{FALSE} is kept as given.}
+An explicit \code{NULL} or \code{FALSE} is kept as given for listwise fits. FIML requires \code{TRUE}.}
 
 \item{fixed_x}{\code{TRUE} (default), \code{FALSE}, or a character vector of exogenous observed variable names. The
 selected variables (\code{TRUE}: every exogenous observed variable, product columns included) have their mean (with
@@ -89,6 +97,10 @@ statement names, which are left free with a message of class \code{medfit_messag
 
 \item{sampling_weights}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{weights}, the name
 \code{\link[=fit_mediation]{fit_mediation()}} uses; the old name still works with a warning.}
+
+\item{missing}{Exact missing-data method: \code{listwise} (default) or bounded Gaussian
+\code{fiml} (no abbreviations). FIML requires explicit \code{fixed_x = FALSE}; see
+the Bounded FIML section. The argument is appended to preserve existing positional calls.}
 }
 \value{
 A \link{SEMFit} object. With a product term whose factor is a regression target (\code{x:m} with
@@ -110,7 +122,89 @@ fit matches a default \code{lavaan::sem()} fit. Against 0.14.x the parameter cou
 names in \code{coef()}, \code{vcov()} and \code{tidy()} change; the structural estimates and their standard errors did not change
 on the cases measured. Which random start a multi-start fit tries can change too (the retry seed follows the
 parameter names). To keep the 0.14.x results, pass \verb{fixed_x = FALSE, meanstructure = NULL}.
-\code{options(medfit.native_defaults)} is obsolete and ignored, with one message per session; it is removed in 0.16.0.
+The 0.14.x \code{options(medfit.native_defaults)} opt-in no longer has any effect.
+}
+
+\section{Bounded FIML}{
+
+Explicit \code{missing = "fiml"} fits a joint Gaussian random-X model under ignorable
+missingness (for example, MAR with the usual ignorability conditions). It evaluates
+observed components, without imputing values. It supports exactly three numeric
+continuous observed variables in X -> M -> Y, with the X -> Y path free or fixed
+exactly at zero, independent disturbances and free intercepts. Names and labels
+are arbitrary. Extra predictors, latent variables, products, factors, correlated
+disturbances, parameter ties, bounds, general constraints, defined parameters and
+syntax-supplied starts are not supported. Input checks and local numerical gates
+do not establish global identification, a global optimum or inference coverage.
+
+Supply \code{fixed_x = FALSE} explicitly; omission, \code{TRUE} and named subsets are errors.
+Require \code{meanstructure = TRUE}, \code{information = "observed"}, \code{se_type = "model"},
+no weights, empty \code{control}, and \code{n_starts = NULL} or \code{3}. These numerical-control
+restrictions reproduce the initial validated protocol. Missing values never
+select FIML automatically, and a failed fit never falls back to listwise deletion.
+Native \code{\link[=fit_mediation]{fit_mediation()}} forwards these settings through \code{engine_args}; its
+\code{se_type = "model"} remains a top-level argument.
+
+\code{nobs()} counts rows with any observed model variable; \code{n_dropped} counts only
+all-empty rows. Singleton patterns and data with no complete rows are supported
+when the local identification and information checks pass. Original positional
+row IDs and pattern counts are retained. \code{logLik()} includes the full Gaussian
+constants, with its \code{df} attribute equal to the free-parameter count (8 or 9).
+AIC and BIC use that likelihood and retained row count. The discrepancy \code{f} and
+model-test \code{df} are \code{NA}: no saturated missing-data reference model is fitted.
+
+Supported operations include SEMFit coefficient/covariance and likelihood
+summaries, parameter tidy/normal confidence intervals, and extraction followed by
+\code{paths()}, \code{nie()}, \code{nde()}, \code{te()}, \code{coef()}, \code{vcov()}, print/summary, tidy and
+normal path/effect confidence intervals. Extracted aliases follow topology;
+source labels/full covariance remain in the validated durable fit context.
+At a = b = 0, the NIE point value remains available but its inferential fields
+are unavailable; a known fixed direct path is a different case.
+
+SEMFit \code{glance()} reports likelihood/IC fields with unavailable model-test fields;
+extracted-object \code{glance()}, \code{quick()}, \code{pm()}, bootstrap, profiles, MBCO and fit
+tests are deferred and refuse FIML objects. Object-aware package guards precede
+package-controlled refits/RNG/workers; opaque user callbacks and external-first
+dispatch remain outside that guarantee. Adapter/topology/numerical failures retain
+stage, reason, original parent and completed attempts; basic argument-type errors
+can occur earlier. A dedicated \code{fiml-1} ledger binds likelihood, rows, settings
+and attempts; the version-1 ledger below continues to describe listwise fits.
+See the Methods and Formulas article, Bounded FIML, for the likelihood and
+the native engine guide for the supported workflow. Bounded FIML was introduced
+in 0.16.0; released 0.15.0 does not provide this option.
+}
+
+\section{Nonzero-product search coverage}{
+
+One equality \code{c*a*b == q} is supported when the constants and \code{q/c} are finite and nonzero, \code{a} and \code{b}
+are distinct free scalar labels after expanding definitions, and no other constraint row involves either label.
+The engine fits both signs of \code{a} independently with the existing optimizer and acceptance gates, respecting
+user bounds and effective variance floors. It returns the lowest accepted discrepancy only when each required
+sign branch is accepted or excluded by an explicit bounds contradiction. An unresolved branch stops the fit
+with \code{medfit_error_no_convergence}; an all-empty search returns no fit. Zero-product fitting is unchanged.
+Repeated factors, multiple product equalities, coupled rows and other unsupported shapes retain local search.
+
+\code{internals$search_evidence} is a separate versioned internal record, not a change to the outcome-ledger schema.
+Its \code{coverage} is \code{charted} for covered sign branches, \code{local} for unsupported shapes, or \code{unresolved} for an
+incomplete search. It retains restrictions, context, branch states, candidates, objectives, gates and attempts;
+validation checks their attribution to the model and sample. Charted coverage does not prove a global optimum
+within a branch. Existing optimum status meanings are retained, and objects without this optional record remain
+usable. Counts distinguish optimizer starts, accepted starts and synthetic reference attempts.
+
+The stored raw constraint residual is diagnostic only. Its optional standardized value uses the gradient and
+covariance at an already available matching reference fit without the tested restriction, never the projected
+constrained covariance. No additional fit or covariance calculation is requested. The ordinary optimizer reference
+lacks covariance, so the standard error and standardized residual are \code{NA} with reason
+\code{reference_covariance_unavailable}. These diagnostics do not affect acceptance or inference.
+}
+
+\section{Constrained standard errors}{
+
+Observed-information covariance includes the curvature of active nonlinear constraints; expected information
+retains its Fisher definition. Sandwich standard errors use the corresponding information as bread.
+Active inequalities, user bounds and solver variance floors give a local tangent covariance, with exactly zero
+variance for a pinned coordinate. This is not the full sampling distribution at a boundary. See the
+Methods and Formulas article, under Constraints, for the covariance formula.
 }
 
 \section{Outcome ledger}{
@@ -137,8 +231,9 @@ and names an overflow; \code{raw_count} is \code{Inf} on overflow. If the map ca
 \code{state} is \code{unavailable} with that condition, and the original error is not replaced. The map is rebuilt from the
 node's constraints during validation, so a forged map is refused.
 
-The one proof of emptiness is the literal certificate \code{literal_zero_nonzero}: an explicit \code{label == 0} equality and
-an explicit finite nonzero literal equality on the same parsed label (\code{a == 0} with \code{a == 1}). Its label, source
+The one proof of emptiness in this version-1 ledger is the literal certificate \code{literal_zero_nonzero}: an explicit
+\code{label == 0} equality and an explicit finite nonzero literal equality on the same parsed label (\code{a == 0} with
+\code{a == 1}). Its label, source
 rows and values are kept in \code{certificate} and rebuilt from the node's own parsed parameters and constraints before
 any inference uses it. A certified-empty branch is retained with \code{outcome = "excluded"},
 \code{feasibility = "certified_empty"} and an unavailable likelihood: it is not fitted and is not a successful fit. No
@@ -157,13 +252,16 @@ and also carries \verb{$ledger}. The estimation sample is stored once, on the ro
 same rows carries only \code{context$sample_hash}. A fit made before the ledger existed must be refitted before
 \code{\link[=mbco_sem]{mbco_sem()}} can use it, which refuses it with a \code{medfit_error_ledger} error.
 
-When the optimizer accepts a fit and only the covariance stage fails (an error from the covariance, not the
-singular-information NA return, which stays \code{unavailable} with its warning), the call stops with
+When the optimizer accepts a fit and the covariance stage explicitly diagnoses non-positive-definite information
+or a negative variance, the call stops with
 \code{medfit_sem_covariance_error}, never a fit. The class is a sibling of \code{medfit_error_no_convergence}: no optimizer
 failed, so the handlers that report an unresolved result for an optimizer failure do not take it. Its fields are
 \code{schema_version = 1L}, \code{stage = "covariance"}, \code{partial} (the accepted optimizer result: \code{f}, \code{theta}, sample,
 domain, dimensions and settings; no \code{vcov} or \code{defined}) and \code{ledger} (the same node as \code{partial$ledger}, with
-\code{covariance = "failed"} and \code{post_fit}: versioned evidence with the original condition's class, message and call).
+\code{covariance = "failed"} and \code{post_fit}: versioned evidence with the original condition's class, message, call and
+diagnostic kind, \code{information_not_pd} or \code{negative_variance}). Other covariance errors propagate unchanged,
+without a retained likelihood. Singular information still warns and returns an NA covariance, recorded as
+\code{unavailable} rather than \code{failed}.
 The message is the original one. Resolved here means an accounted-for accepted likelihood, not a successful
 covariance. A union root reports the first failing branch's \code{post_fit}, in branch order, even when another branch
 supplies its minimum likelihood, and does not claim the winning branch failed: inspect the branch IDs. A branch that

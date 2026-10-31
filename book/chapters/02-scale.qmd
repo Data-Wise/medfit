@@ -277,6 +277,10 @@ The intercepts of `mediator1` and `outcome` in $\phi$ are zero to 8 decimals (th
 it is zero because the free mean of an exogenous variable is its sample mean).
 This is no accident, and Section 5 explains it.
 
+An affine map is a linear transformation followed by a fixed shift. Here the sample means are
+held fixed when differentiating the map, so its derivative is constant. That is why the
+next calculation has no second-derivative term from the map itself.
+
 ## 4. Information and covariance in the new coordinates
 
 Because $\theta = T(\phi + c_0)$ is affine, the gradient and Hessian of the
@@ -602,6 +606,11 @@ and it is far below the gate's threshold of $10^{-3}$ in every run. The status c
 the solver stopped (3: the objective stopped changing; 4: the parameters stopped moving). The centered
 data need fewer iterations at both scales, although the engine already rescales every parameter by its
 natural unit before calling the solver (Chapter 3), which removes much of the difference in units.
+
+*What to remember:* changing parameter coordinates lets the engine compute the information
+in a better-conditioned form and then map the covariance back. Fitting shifted data is a
+further shortcut: it also needs the intercept freedom established above. Refusing that
+shortcut does not by itself mean the fit has failed.
 
 ## Check yourself
 

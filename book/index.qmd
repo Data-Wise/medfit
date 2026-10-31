@@ -2,7 +2,7 @@
 
 This book opens the native maximum-likelihood engine of the medfit R package
 (`fit_sem()`, `fit_mediation(engine = "native")`, `SEMFit`) and shows every
-matrix it works with. It documents medfit 0.15.0. It is reference material kept
+matrix it works with. It documents medfit 0.16.0. It is reference material kept
 in the package repository (`book/`); it is not part of the package website.
 
 Chapters, in order:
@@ -21,11 +21,41 @@ How the optimizer is tested, and the decisions behind its solver, are on the pac
 ## Defaults in 0.15.0 {.unnumbered}
 
 Since 0.15.0 an unset `fixed_x` fixes the exogenous observed variables and an unset `meanstructure` is `TRUE`
-(`options(medfit.native_defaults)` is obsolete and is removed in 0.16.0). The structural estimates and their
+(`options(medfit.native_defaults)` was ignored from 0.15.0 and is removed in 0.16.0). The structural estimates and their
 standard errors do not change; the conditional log likelihood, the parameter count behind AIC and BIC, the names in
 `coef()` and the retry seed do. To keep the chapters' matrices joint and covariance-first, each chapter defines a
 `fit_sem()` wrapper in its setup chunk that pins `fixed_x = FALSE, meanstructure = NULL`; Chapter 4 shows the unpinned
 default beside the pinned fit.
+
+## Bounded FIML in 0.16.0 {.unnumbered}
+
+medfit 0.16.0 includes bounded FIML for exactly three continuous
+observed variables in Gaussian random-X mediation, X -> M -> Y, with the direct
+X -> Y path free or fixed at zero, free intercepts and independent disturbances.
+It assumes ignorable missingness (for example, MAR with the usual ignorability
+conditions). Listwise deletion remains the default. The bounded workflow requires
+explicit `missing = "fiml"`, `fixed_x = FALSE`, `meanstructure = TRUE`,
+`information = "observed"`, `se_type = "model"`, and no weights.
+
+Supported inference uses the inverse observed information for parameter covariance
+and model-based SEs, with normal intervals for parameters and unstandardized
+path/effect estimates. NIE, NDE and total-effect SEs and normal intervals use the
+full covariance and delta method. At a = b = 0, the NIE point estimate remains
+available but its SE and interval are unavailable. Raw Gaussian log likelihood,
+AIC and BIC are available; these are likelihood summaries rather than model-fit
+tests. No bootstrap, profile likelihood, MBCO, expected-information or sandwich SEs,
+or missing-data chi-square model tests are supplied by this bounded route.
+These numerical checks do not establish MAR, global optimality or
+confidence-interval coverage. These chapters' complete-data derivations do not
+establish FIML results. For the pattern-wise likelihood, settings and support
+limits, see the package website's
+[native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml),
+[Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html#bounded-fiml)
+and detailed [`fit_sem()` help](https://data-wise.github.io/medfit/reference/fit_sem.html).
+Released 0.15.0 does not provide this option.
+
+For a partial-row likelihood calculation, executable fit and checked exercise,
+continue to [Bounded FIML: learning from partially observed rows](chapters/08-fiml.qmd).
 
 ## How to build {.unnumbered}
 

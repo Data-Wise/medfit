@@ -25,6 +25,9 @@ LR, \code{NA} when it has none, and whether it was accepted), \code{runs} (one r
 LR, convergence, constraint residual and status) and \code{engine}.
 }
 \description{
+Bounded FIML fits are refused before an external-engine comparison or refit;
+this function does not extend their supported inference. See \code{\link[=fit_sem]{fit_sem()}}.
+
 Runs the likelihood-ratio test of a product null (\eqn{a b = 0}{a*b = 0}) in
 an external SEM engine and compares it with medfit's own \code{\link[=mbco_sem]{mbco_sem()}}
 statistic. A general-purpose optimizer handed the nonlinear constraint

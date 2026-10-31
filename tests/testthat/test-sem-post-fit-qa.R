@@ -14,7 +14,7 @@ test_that("a union whose branches all fail reports the first failing branch in b
     calls <- 0L
     local_mocked_bindings(.sem_vcov = function(...) {
       calls <<- calls + 1L
-      stop(paste0("qa failure in call ", calls), call. = FALSE)
+      stop(.sem_covariance_diagnostic("information_not_pd", paste0("qa failure in call ", calls)))
     })
     err <- tryCatch(suppressWarnings(fit_sem(model, data, n_starts = 1L, information = "expected")), error = identity)
     expect_s3_class(err, "medfit_sem_covariance_error")
@@ -39,9 +39,9 @@ test_that("a message raised before a branch's covariance failure survives into i
     if (calls == 1L) {
       message("qa branch message")
       warning("qa branch warning", call. = FALSE)
-      stop("qa branch failure", call. = FALSE)
+      stop(.sem_covariance_diagnostic("information_not_pd", "qa branch failure"))
     }
-    stop("qa second failure", call. = FALSE)
+    stop(.sem_covariance_diagnostic("information_not_pd", "qa second failure"))
   })
   err <- tryCatch(suppressMessages(suppressWarnings(fit_sem(model, data, n_starts = 1L))), error = identity)
   expect_s3_class(err, "medfit_sem_covariance_error")
@@ -59,7 +59,7 @@ test_that("each clause of the retained-null compatibility check refuses a refit 
     run <- function(tweak) {
       local_mocked_bindings(
         .sem_fit_syntax = function(...) do.call(orig, tweak(list(...))),
-        .sem_vcov = function(...) stop("qa covariance failure", call. = FALSE)
+        .sem_vcov = function(...) stop(.sem_covariance_diagnostic("information_not_pd", "qa covariance failure"))
       )
       tryCatch(mbco_sem(fit, a = "a1", b = "b1"), error = identity)
     }
@@ -155,7 +155,7 @@ test_that("each field of the retained-null check refuses a self-consistent paylo
             stop(e)
           })
         },
-        .sem_vcov = function(...) stop("qa covariance failure", call. = FALSE)
+        .sem_vcov = function(...) stop(.sem_covariance_diagnostic("information_not_pd", "qa covariance failure"))
       )
       err <- tryCatch(suppressWarnings(mbco_sem(fit, a = "a1", b = "b1")), error = identity)
       expect_s3_class(err, "medfit_error_ledger")

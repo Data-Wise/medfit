@@ -1,0 +1,3 @@
+# Gates that run only in the qc-monthly workflow (run-gates.R --monthly), never in the PR gates shards.
+# One gates.csv id per line. run-gates.R drops these from every mode unless --monthly is passed.
+semopy

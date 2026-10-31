@@ -89,7 +89,7 @@ test_that("a retained covariance-failed null validates", {
   calls <- 0L
   testthat::local_mocked_bindings(.sem_vcov = function(...) {
     calls <<- calls + 1L
-    if (calls == 1L) stop("injected null covariance failure")
+    if (calls == 1L) stop(.sem_covariance_diagnostic("information_not_pd", "injected null covariance failure"))
     vcov(...)
   })
   expect_warning(res <- mbco_sem(fit, "a1", "b1"), "likelihood retained")

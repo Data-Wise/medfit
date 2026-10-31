@@ -10,13 +10,17 @@
 # replays them after the ledger is built, a failure keeps its class and carries them in the ledger and the message.
 .sem_fit_syntax <- function(model, data, information = c("observed", "expected"), n_starts = 5L,
                             control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL,
-                            meanstructure = NULL, fixed_x = FALSE, factors = NULL) {
+                            meanstructure = NULL, fixed_x = FALSE, factors = NULL, covariance_transport = FALSE) {
   context <- .sem_outcome_context(model, parsed, data, information, weights, meanstructure, fixed_x,
                                   n_starts, control, se_type, factors)
   captured <- .sem_capture_outcome(.sem_fit_pipeline(model, data, information, n_starts, control, weights,
                                                      se_type, parsed, meanstructure, fixed_x, factors))
   out <- captured$value
   err <- captured$error
+  if (inherits(err, "medfit_covariance_untyped")) {
+    if (covariance_transport) stop(err)
+    stop(err$original)
+  }
   covariance <- !is.null(err) && inherits(err, "medfit_sem_covariance_error")
   if (!is.null(err) && !covariance) {
     constraints <- if (!is.null(parsed)) {
@@ -48,6 +52,7 @@
     .sem_abort_covariance(out, conditionMessage(err))
   }
   .sem_require_outcome(out, model)
+  .sem_validate_search(out)
   .sem_replay_notices(captured$notices)
   out
 }
@@ -161,6 +166,14 @@
   start[given] <- conv$start[given]
   lb <- ifelse(is.na(conv$lower), -Inf, conv$lower)
   ub <- ifelse(is.na(conv$upper), Inf, conv$upper)
+  product_spec <- .sem_nonzero_product(parsed$constraints, ram)
+  optimize <- if (product_spec$supported) {
+    function(ram, smp, start, lb, ub, n_starts, control, constraints) {
+      .sem_optimize_signs(ram, smp, start, lb, ub, n_starts, control, constraints, product_spec)
+    }
+  } else {
+    .sem_optimize
+  }
   shift <- .sem_shift_ok(ram, smp, parsed$constraints, lb, ub, given)
   if (shift) {
     # Constraints that leave every intercept free act on A and S alone, which a shift of the data by its mean does
@@ -172,12 +185,20 @@
     ram_opt$m0[ram$fixed_x_mean] <- 0
     start <- .sem_default_start(ram_opt, smp_opt)
     start[given] <- conv$start[given]
-    fit <- .sem_optimize(ram_opt, smp_opt, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+    fit <- optimize(ram_opt, smp_opt, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
     ctr <- .sem_center_map(ram, smp)
     fit$theta <- stats::setNames(as.vector(ctr$t %*% (fit$theta + ctr$c0)), ram$par_names)
+    if (!is.null(fit$search_evidence)) {
+      fit$search_evidence$branches <- lapply(fit$search_evidence$branches, function(b) {
+        if (!is.null(b$theta)) b$theta <- stats::setNames(as.vector(ctr$t %*% (b$theta + ctr$c0)), ram$par_names)
+        b
+      })
+    }
   } else {
-    fit <- .sem_optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
+    fit <- optimize(ram, smp, start, lb, ub, n_starts = n_starts, control = control, constraints = cons)
   }
+  lb <- fit$effective_lower
+  fit$effective_lower <- NULL
   if (!is.null(cons$nl)) {
     # a nonlinear equality removes parameters where its gradient is: count them at the solution
     eq_rank <- .sem_eq_rank_at(cons, fit$theta, u0)
@@ -201,7 +222,18 @@
       eq_rank = eq_rank, branch = character(), fixed_x = fixed_set, factors = factors
     )
   )
+  if (!is.null(out$search_evidence)) {
+    out$search_evidence$diagnostic <- .sem_reference_residual(out$theta, product_spec)
+    out$search_evidence$context <- .sem_search_context(out)
+  } else if (!is.null(cons$nl) || !is.null(cons$nli)) {
+    out$search_evidence <- list(schema_version = 1L, coverage = "local", reason = product_spec$reason,
+                                context = .sem_search_context(out))
+  }
   if (inherits(vc, "error")) {
+    if (!inherits(vc, "medfit_sem_covariance_diagnostic")) {
+      stop(structure(class = c("medfit_covariance_untyped", "error", "condition"),
+                     list(message = conditionMessage(vc), call = NULL, original = vc)))
+    }
     # Only an accepted likelihood is evidence. Anything else keeps the error it was, and the caller's ledger says the
     # likelihood is unavailable.
     if (!(isTRUE(fit$converged) && length(fit$f) == 1L && is.finite(fit$f))) {
@@ -334,7 +366,8 @@
       # a covariance-stage failure of one branch keeps that branch's likelihood and evidence (D4): the union decides
       res <- tryCatch(.sem_fit_syntax(NULL, data, information, n_starts, control, weights, se_type,
                                       parsed = list(parameters = parsed$parameters, constraints = cons),
-                                      meanstructure = meanstructure, fixed_x = fixed_x, factors = factors),
+                                      meanstructure = meanstructure, fixed_x = fixed_x, factors = factors,
+                                      covariance_transport = TRUE),
                       medfit_sem_covariance_error = .sem_retain_covariance)
       .sem_require_outcome(res, partial = !is.null(res$ledger$post_fit))
       if (!identical(res$constraints, cons)) {
@@ -344,6 +377,7 @@
     })
     res <- captured$value
     err <- captured$error
+    if (inherits(err, "medfit_covariance_untyped") || inherits(err, "medfit_error_ledger")) stop(err)
     ledger <- if (is.null(err)) res$ledger else err$ledger
     if (is.null(err) && !is.null(ledger$post_fit)) {
       # the retention notice was raised after the branch's own ledger was built
@@ -389,6 +423,8 @@
     .sem_abort_outcome(msg, ledger, best_survivor = list(id = outcomes[[win]]$id, f = best))
   }
   out <- fits[[win]]$fit
+  # A child sidecar describes its reduced constraint set, not the zero-product union.
+  out$search_evidence <- NULL
   out$constraints <- parsed$constraints
   out$ledger <- ledger
   failed <- which(vapply(outcomes, function(x) !is.null(x$post_fit), TRUE))
