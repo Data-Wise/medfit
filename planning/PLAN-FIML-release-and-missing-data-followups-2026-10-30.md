@@ -141,6 +141,22 @@ confidence-interval coverage. Any unexplained discrepancy blocks the milestone.
 
 ### A2. Website, help and one minibook unit
 
+The focused minibook unit is implemented locally under
+[its authorized plan](PLAN-FIML-minibook-unit-2026-10-30.md): Chapter 8, navigation
+and preface link. The full nine-page HTML book rendered successfully; the user
+visually accepted it. Independent likelihood review, executed examples and docs
+checks passed. Final local gates passed: 1,783 tests, 9,785 passed assertions,
+zero failures/errors, four warnings and two skips; lint clean and built-package
+check `Status: OK`. The single corrective retry repaired book-test contracts,
+not production code. No publication is authorized.
+
+A separate pre-existing currency issue was found while reviewing the new unit:
+`vignettes/articles/native-guide.qmd` uses binary `mediation_demo$treatment` in its
+FIML example while describing continuous Gaussian random-X support. The new unit
+uses an independently checked continuous Gaussian fixture; the existing guide
+example remains unchanged and needs a separately scoped documentation correction.
+Do not treat the new unit as completion of the full website/help audit below.
+
 Check both entry points, exact opt-in/defaults, random-X assumptions, row nobs,
 means, observed SEs, supported extraction and unsupported inference in help,
 README, website and examples. Explain that an all-empty model row contributes no
