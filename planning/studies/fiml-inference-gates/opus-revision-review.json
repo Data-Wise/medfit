@@ -1,0 +1,168 @@
+{
+  "ok": true,
+  "operation": "review",
+  "review_kind": "adversarial",
+  "subject_kind": "changes",
+  "subject_label": "working tree (staged, unstaged, and untracked)",
+  "subject_fingerprint": "e2f6afa37b8dc33ab39f596f165fc5b00a46e7fad06ed8d5592f018cbb916bc6",
+  "usage_summary": "Usage: tokens=196075 output=10764 turns=11 duration_ms=107431 api_ms=106715 cost_usd=0.642076",
+  "total_tokens": 196075,
+  "total_cost_usd": 0.642076,
+  "cumulative_chain_cost_usd": 0.642076,
+  "parent_job_id": null,
+  "num_turns": 11,
+  "duration_ms": 107431,
+  "duration_api_ms": 106715,
+  "task_profile": null,
+  "review_profile": "standard",
+  "requested_model": "opus",
+  "effective_models": [
+    "claude-opus-5-5"
+  ],
+  "effort": "medium",
+  "budget": {
+    "max_turns": 10,
+    "finalize_at_turn": 8,
+    "soft_budget_usd": 3,
+    "max_budget_usd": 3,
+    "timeout_ms": 300000
+  },
+  "evidence_lease": null,
+  "evidence_lease_exhausted": false,
+  "cost_budget_exhausted": false,
+  "turn_limit_reached": false,
+  "structured_output": {
+    "verdict": "needs-attention",
+    "summary": "Mostly yes. The revised plan, gate report and roadmap Current board hold together as planning documents that leave FI-B0 openly unresolved. All of the original statistical concerns are either fixed or recorded as explicit blockers.\n\nWhat I verified by reading the code, without running it:\n- gate-probabilities.R: the Clopper-Pearson critical counts are inverted correctly, and the shared-numerator multinomial joint gate is set up correctly.\n- I recomputed by hand: .646571^6≈.0731, union bound at K=66 ≈.884, and q≈5.13e-5 at B=999.\n- The plan quotes .703875 (needing 473/500) and .646571 at a=.98,c=.95 exactly.\n\nChecklist items that are in place:\n- The Q10 floors and the M=500/B=999 proposal are kept as screening choices and labelled underpowered. They are not loosened anywhere.\n- The ≥90% per-cell and ≥80% whole-manifest power targets are clearly marked as proposals that are not yet approved (plan 270-273, section 9 442-444, report 77-80).\n- FI-B0 is marked blocked and not active (plan 3-4, 451-453).\n- Cells and regimes are frozen before the pilot. Pilot seeds are disjoint from the main study's. Cells may not be removed or relabelled based on results.\n- Single-path axis nulls are gated as regular.\n- Type-7 quantiles apply to both interval methods.\n- The retained-row missingness argument and an all-empty MCAR cell are an explicit FI-B0 deliverable.\n- The 11 model variants are unchanged.\n- Task IDs are namespaced, and the merged-dev/merged-main/released/reverted states each require evidence.\n- The roadmap's historical footer is marked superseded, and the Current board owns priorities.\n\nOne material gap remains: the pinned/common-base prerequisite. The only roadmap revision the plan names is cc3fd887, which it calls the 'reviewed roadmap commit'. A read-only `git grep` shows the revised roadmap text (FI-TRACK, 'decision power', 'pinned snapshot') does not exist at cc3fd887. The revised roadmap is therefore uncommitted work in the sibling worktree. Anyone who uses the one named commit as the pin would get a roadmap without the FI-B0/FI-TRACK board. The uncommitted text is also at risk of being lost.\n\nThere are two smaller FI-B0 contract issues, listed below. None of the findings asks for APIs to be implemented or studies to be run now.",
+    "findings": [
+      {
+        "severity": "medium",
+        "title": "The only named roadmap pin (cc3fd887) does not contain the revised roadmap; the revised text is uncommitted",
+        "body": "Plan lines 8-9 call `cc3fd887` the 'reviewed roadmap commit'. Lines 352-354 say the revised roadmap lives in the sibling worktree, is 'derived from `cc3fd887`', and that its content hash will be recorded later, in the activation receipt. A read-only `git grep` for 'decision power', 'pinned snapshot' and 'FI-TRACK' in planning/medfit-roadmap.md at cc3fd887 finds nothing. Those strings do appear in /Users/davood/projects/r-packages/active/medfit/.worktrees/roadmap-reconciliation/planning/medfit-roadmap.md:1876-1882 and :1902. So the revised Current board this review covers exists only as uncommitted changes, and the one SHA the plan cites points to older content. Real failure case: a later agent or human treats cc3fd887 as the agreed snapshot. They pin a roadmap with no FI-B0 gates and no FI-TRACK contract, which is exactly the version skew the pinned/common-base prerequisite is meant to stop. Uncommitted worktree text can also be lost or silently changed before anyone records the hash. Inferred: I did not inspect the sibling worktree's git status directly. The conclusion rests on what the commit lacks plus the plan's own wording.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 8,
+        "line_end": 9,
+        "confidence": 0.72,
+        "recommendation": "Reword line 9 so cc3fd887 is described as the parent of the revised roadmap, not the reviewed or authoritative version. Also state explicitly that no pin exists yet. Once the user authorises a commit, commit the revised roadmap locally, or record its content hash now, and cite that commit or hash at lines 352-354 and in roadmap 1879-1882."
+      },
+      {
+        "severity": "low",
+        "title": "FI-B0 acceptance row leaves out the blockers the narrative assigns to FI-B0",
+        "body": "Section 5 (lines 265-279, 291-295) and section 9 (lines 442-444, 449-451) make FI-B0 responsible for four things: an agreed decision-power and reference-performance rule, a timing-pilot protocol, the ignorable-missingness/parameter-distinctness argument, and a non-negligible all-empty MCAR cell. The task-index acceptance row at line 307 lists only API/metadata, failure and sampling-frame policy, and 'statistical manifest/budget frozen'. The planned FI-TRACK checker validates claimed completion states against the acceptance criteria and gate results (lines 356-359). FI-B0 could therefore be marked locally verified with a frozen manifest while the power targets are still unapproved. That would undo the explicit blocker.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 307,
+        "line_end": 307,
+        "confidence": 0.6,
+        "recommendation": "Add four items to the FI-B0 acceptance cell: the user-agreed power targets and reference performance, an approved timing-pilot protocol, the missingness argument, and the all-empty cell definition. Each should be a named, separately checkable item."
+      },
+      {
+        "severity": "low",
+        "title": "Proposed power targets use a reference performance at exactly nominal coverage, the most favourable assumption",
+        "body": "The proposal at plan lines 270-272 (and report lines 77-80) computes the ≥90% per-cell and ≥80% manifest power at coverage exactly .95 and availability .98. Percentile intervals for indirect effects often cover a little below nominal at moderate n, for example .93-.94. That is still well above the .925 floor, yet per-cell pass probability at M=500-1000 drops sharply there. Agreeing to these targets as written would overstate the chance that an acceptable method is admitted. A sharply lower pass rate in the confirmatory study would then look like a surprise and push toward unplanned amendments after results are seen. This is a gap in the decision design, not an implementation demand. It belongs in the still-open FI-B0 decision.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 268,
+        "line_end": 274,
+        "confidence": 0.5,
+        "recommendation": "As part of the FI-B0 decision record, require pass probabilities at a declared minimum acceptable performance (for example coverage .94, availability .97) alongside the nominal reference. Alternatively, record explicitly that only nominal performance is targeted. gate-probabilities.R can already evaluate these grid points."
+      }
+    ],
+    "next_steps": [
+      "Commit or hash the revised roadmap and correct the cc3fd887 wording before treating the two documents as one coherent pinned set.",
+      "Extend the FI-B0 acceptance row in the task index so the unapproved power targets and the missingness/pilot deliverables are checkable blockers.",
+      "Agree the reference performance scenario(s) as part of the open FI-B0 power decision. Do not run any simulation."
+    ],
+    "coverage": {
+      "files_examined": [
+        "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md (lines 1-130, 225-466)",
+        "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/studies/fiml-inference-gates/report.md (full)",
+        "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/studies/fiml-inference-gates/gate-probabilities.R (full)",
+        "/Users/davood/projects/r-packages/active/medfit/.worktrees/roadmap-reconciliation/planning/medfit-roadmap.md (Current board 1858-1912, historical snapshot/footer 1962-2001, header grep)",
+        "git grep on cc3fd887:planning/medfit-roadmap.md (read-only)"
+      ],
+      "files_skipped": [
+        "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md lines 131-224 (sections 4 and 5-numerical; outside requested focus)",
+        "Generated CSVs and opus-*-original.json provenance files (not requested; script not executed)",
+        "Root working-tree untracked files (.codex/agents/*.toml, .codex/guard-session-counts, planning/studies/fiml-feasibility/REPORT-fiml-draft-pr-364-2026-10-30.md): user directed review to absolute worktree targets, not the root diff adapter",
+        "Remainder of medfit-roadmap.md outside the Current board and historical footer"
+      ],
+      "areas": [
+        "Exact Clopper-Pearson gate math and joint multinomial power",
+        "Q10 floor/M proposal preservation and power-target approval status",
+        "Pre-pilot freezing, disjoint seeds, outcome-based deletion",
+        "Regular axis-null gating, type-7 in both interval methods, retained-row missingness",
+        "11-variant scope invariance",
+        "Namespaced IDs, delivery states, historical footer, current priorities",
+        "Pinned/common-base prerequisite and version skew"
+      ]
+    },
+    "uncertainty": "low",
+    "budget_exhausted": false,
+    "cost_budget_exhausted": false,
+    "turn_limit_reached": false,
+    "evidence_lease_exhausted": false,
+    "recommended_followup": {
+      "profile": "quick",
+      "focus": [
+        "Confirm the sibling roadmap-reconciliation worktree's git status and pin the revised roadmap by commit or content hash",
+        "Re-check plan line 9 and lines 350-354 against the pin after the fix",
+        "Re-check that the FI-B0 acceptance row matches the section 5 and section 9 blockers"
+      ],
+      "reason": "The statistical concerns are resolved or explicitly blocked. What remains is pin/version-skew bookkeeping plus a small change to the acceptance contract, which a short targeted re-check can verify."
+    }
+  },
+  "session_id": "e8244f23-97bf-469d-948a-84b9818c5867",
+  "resume_hint": "claude --resume e8244f23-97bf-469d-948a-84b9818c5867",
+  "disclosure": null,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 49961,
+    "cache_read_input_tokens": 135340,
+    "output_tokens": 10764,
+    "output_tokens_details": {
+      "thinking_tokens": 5404
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 49961,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 5255,
+        "cache_read_input_tokens": 46174,
+        "cache_creation_input_tokens": 3787,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3787
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-opus-5-5": {
+      "inputTokens": 10,
+      "outputTokens": 10764,
+      "cacheReadInputTokens": 135340,
+      "cacheCreationInputTokens": 49961,
+      "webSearchRequests": 0,
+      "costUSD": 0.642076,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 5404,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 49961,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  }
+}
