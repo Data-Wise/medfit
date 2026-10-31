@@ -168,7 +168,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/native-tutorial.qmd" class="external-link"><code>vignettes/articles/native-tutorial.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/native-tutorial.qmd" class="external-link"><code>vignettes/articles/native-tutorial.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -289,9 +289,9 @@ Use summary() for the parameter table and diagnostics.</code></pre>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"p_value"</span>, <span class="st">"AIC"</span>, <span class="st">"BIC"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 6
-   npar    df    chisq p_value   AIC   BIC
-  &lt;int&gt; &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1     9     0 4.59e-30      NA 2298. 2334.</code></pre>
+   npar    df chisq p_value   AIC   BIC
+  &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1     9     0     0      NA 2298. 2334.</code></pre>
 </div>
 </div>
 <p>A model with no restriction has 0 degrees of freedom, so there is nothing to reject yet. Step 6 adds a restriction and a test.</p>

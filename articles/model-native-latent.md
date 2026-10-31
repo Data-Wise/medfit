@@ -104,7 +104,7 @@ summary(fit)
        ab a * b 0.1685 0.031
 
     Diagnostics:
-      Optimizer status: 3; stationarity 8.85e-16; retries 0
+      Optimizer status: 3; stationarity 6.20e-16; retries 0
       Active bounds: none
       Active constraints: none
       Improper solution: no

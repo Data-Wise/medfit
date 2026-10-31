@@ -168,7 +168,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/bootstrap.qmd" class="external-link"><code>vignettes/articles/bootstrap.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/bootstrap.qmd" class="external-link"><code>vignettes/articles/bootstrap.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -298,8 +298,8 @@ Estimate:   0.3328
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower:   0.2161
-  Upper:   0.4600</code></pre>
+  Lower:   0.2170
+  Upper:   0.4631</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
@@ -311,12 +311,12 @@ Estimate:  0.3327695
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower: 0.2161061
-  Upper: 0.4599624
+  Lower: 0.2170026
+  Upper: 0.4630625
 
 Bootstrap Distribution Summary:
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
- 0.1352  0.2856  0.3279  0.3295  0.3705  0.5697 </code></pre>
+ 0.1375  0.2852  0.3264  0.3290  0.3675  0.5522 </code></pre>
 </div>
 </div>
 <section class="level3"><h3 id="how-it-works">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
@@ -584,7 +584,7 @@ Estimate:   0.3328
 <pre class="r cell-code"><code><span><span class="co"># 95% CI</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.2161061 0.4599624</code></pre>
+<pre><code>[1] 0.2170026 0.4630625</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># Change confidence level</span></span>
 <span><span class="va">boot_90</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
@@ -597,7 +597,7 @@ Estimate:   0.3328
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">boot_90</span><span class="op">@</span><span class="va">ci_lower</span>, <span class="va">boot_90</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span> <span class="co"># Narrower</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.2317774 0.4375249</code></pre>
+<pre><code>[1] 0.2345624 0.4418077</code></pre>
 </div>
 </div>
 </section><section class="level3"><h3 id="statistical-significance">Statistical Significance<a class="anchor" aria-label="anchor" href="#statistical-significance"></a>
@@ -658,8 +658,8 @@ Estimate:   0.0755
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower:   0.0396
-  Upper:   0.1204</code></pre>
+  Lower:   0.0379
+  Upper:   0.1249</code></pre>
 </div>
 </div>
 <p>The lm chain above estimates each equation separately, so its covariance matrix sets the covariances between equations to zero (see the Model Extraction article). To avoid that assumption, bootstrap nonparametrically by resampling the data and refitting all three models:</p>
@@ -772,9 +772,9 @@ N bootstrap samples: 1000
 <span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>         [,1]      [,2]
-1K  0.2161061 0.4599624
-5K  0.2141504 0.4653122
-10K 0.2122585 0.4677100</code></pre>
+1K  0.2170026 0.4630625
+5K  0.2136351 0.4654500
+10K 0.2132389 0.4661655</code></pre>
 </div>
 </div>
 <p>If CIs are similar, n_boot is sufficient.</p>
@@ -807,7 +807,7 @@ bootstrap_mediation() for robust inference.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>              2.5 %    97.5 %
 delta     0.2063564 0.4591826
-bootstrap 0.2161061 0.4599624</code></pre>
+bootstrap 0.2170026 0.4630625</code></pre>
 </div>
 </div>
 <p>Bootstrap is generally preferred because it: - Doesn’t assume normality of indirect effect - Handles skewness correctly - Provides better coverage</p>
@@ -857,7 +857,7 @@ Attaching package: 'generics'</code></pre>
 <pre><code># A tibble: 1 × 5
   term     estimate std_error conf_low conf_high
   &lt;chr&gt;       &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
-1 estimate    0.333    0.0628    0.216     0.460</code></pre>
+1 estimate    0.333    0.0612    0.217     0.463</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># One-row summary</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre>
@@ -887,18 +887,18 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">boot_result</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>             2.5 %    97.5 %
-estimate 0.2161061 0.4599624</code></pre>
+estimate 0.2170026 0.4630625</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_result</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>    lower     upper
-0.2161061 0.4599624 </code></pre>
+0.2170026 0.4630625 </code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="co"># A different level is recomputed from the stored bootstrap draws</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">boot_result</span>, level <span class="op">=</span> <span class="fl">0.90</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>               5 %      95 %
-estimate 0.2317774 0.4375249</code></pre>
+estimate 0.2345624 0.4418077</code></pre>
 </div>
 </div>
 </section></section><section class="level2"><h2 id="what-the-bootstrap-covers">What the bootstrap covers<a class="anchor" aria-label="anchor" href="#what-the-bootstrap-covers"></a>
