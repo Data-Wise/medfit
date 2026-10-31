@@ -62,14 +62,14 @@ test_that("monthly QC propagates PR gate failures after uploading artifacts", {
   }
 })
 
-test_that("coverage skips only an explicit metadata decision and preserves release triggers", {
+test_that("coverage avoids duplicate dev pushes and preserves PR and release safeguards", {
   f <- wf_path("workflows", "test-coverage.yaml")
   skip_if_not(file.exists(f), "no .github directory (installed package)")
   skip_if_not_installed("yaml")
   workflow <- yaml::read_yaml(f)
   # YAML 1.1 readers can interpret the unquoted GitHub 'on' key as TRUE.
   triggers <- workflow[[if ("on" %in% names(workflow)) "on" else "TRUE"]]
-  expect_setequal(triggers$push$branches, c("main", "dev"))
+  expect_identical(triggers$push$branches, "main")
   expect_identical(triggers$pull_request$branches, "dev")
   expect_null(triggers$push$paths)
   expect_null(triggers$push$`paths-ignore`)

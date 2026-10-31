@@ -334,6 +334,11 @@ usethis::use_article("article-name")  # Not included in R CMD check
 
 - **Target**: >90% overall, 100% critical paths
 - **Critical**: S7 classes, extraction, bootstrap
+- **Hosted triggers**: code/test changes on PRs to `dev`; all pushes to `main`.
+  Explicit metadata-only PRs skip coverage. Pushes/merges to `dev` do not repeat
+  the PR coverage run. Main coverage remains unconditional, including release merges.
+- **Release-only cost**: keep the platform matrix and OpenBLAS gates deferred
+  until release to `main`; this policy does not disable fast PR checks.
 
 ### Organization
 

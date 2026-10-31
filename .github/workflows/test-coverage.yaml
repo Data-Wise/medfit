@@ -1,8 +1,10 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+# Check code/test changes on dev PRs once; avoid repeating coverage after merging to dev.
+# Main pushes retain unconditional coverage through coverage_scope.py.
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
   pull_request:
     branches: [dev]
 
