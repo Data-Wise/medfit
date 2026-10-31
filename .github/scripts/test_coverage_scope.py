@@ -28,6 +28,13 @@ class CoverageScopeTests(unittest.TestCase):
                                 ("workflow_dispatch", "refs/heads/dev")):
             self.assertTrue(coverage_scope.decide(event_name, ref, {}))
 
+    def test_main_pr_metadata_always_runs(self):
+        event = {"pull_request": {"base": {"ref": "main", "sha": "a" * 40},
+                                   "head": {"sha": "b" * 40}}}
+        with patch("coverage_scope.subprocess.run") as diff:
+            self.assertTrue(coverage_scope.decide("pull_request", "refs/pull/1/merge", event))
+            diff.assert_not_called()
+
     def test_missing_zero_or_invalid_revisions_run(self):
         for before in (None, "0" * 40, "not-a-sha", "--help"):
             self.assertTrue(coverage_scope.decide("push", "refs/heads/dev",

@@ -334,9 +334,10 @@ usethis::use_article("article-name")  # Not included in R CMD check
 
 - **Target**: >90% overall, 100% critical paths
 - **Critical**: S7 classes, extraction, bootstrap
-- **Hosted triggers**: code/test changes on PRs to `dev`; all pushes to `main`.
-  Explicit metadata-only PRs skip coverage. Pushes/merges to `dev` do not repeat
-  the PR coverage run. Main coverage remains unconditional, including release merges.
+- **Hosted coverage**: PRs to `main` and pushes to `main`, unconditionally,
+  including metadata-only release merges. No coverage on dev PRs or dev pushes.
+  Run development checks locally using Rforge; retain independent numerical oracles.
+  This coverage policy does not change other fast hosted checks.
 - **Release-only cost**: keep the platform matrix and OpenBLAS gates deferred
   until release to `main`; this policy does not disable fast PR checks.
 
