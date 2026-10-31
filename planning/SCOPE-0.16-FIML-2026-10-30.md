@@ -77,7 +77,9 @@ A2's focused FIML teaching unit merged via PR #368 (`e2f028f9`) under
 user visual checks passed; final local gates passed (1,783 tests; zero failures/
 errors; clean lint; built check `Status: OK`). Six exact-head fast checks passed
 before merge; branch/worktree cleanup and archived evidence are verified.
-Next verify post-merge dev coverage run `41155534928` (currently pending).
+Duplicate post-merge dev coverage run `41155534928` completed cancelled at user
+request. Reviewed PR coverage and Codecov passed. Development checks run locally;
+main-only hosted coverage policy is implemented locally, awaiting publication.
 The recorded pre-existing native-guide example issue and wider website/help
 audit remain open; the focused teaching unit does not complete them.
 New diagnostics and missingmed adoption remain separate milestones. Release

@@ -4,7 +4,8 @@ Status: T1-T4 PASS; merged into dev through PR #368 as `e2f028f9` on
 2026-10-30 at 19:28 MDT after all six exact-head fast checks passed.
 Reviewed head: `619a42a5`. Former branch: `codex/fiml-minibook-unit`.
 Local and remote feature branch/worktree cleanup verified. Post-merge coverage
-run `41155534928` is in progress; no final post-merge result claimed.
+run `41155534928` completed cancelled at user request under the local-first
+development policy. Reviewed PR coverage and Codecov passed; no post-merge pass claimed.
 Docs only; no release, dev-to-main merge or expensive CI.
 
 ## Task and acceptance
@@ -107,6 +108,6 @@ with its receipt JSON; archive SHA-256
 `ad3e455387339770c37fa93fdad7f1394ac10613e5977cc61f48d9b9dd34490c`.
 Merged worktree and local branch removed; remote feature branch absence verified
 against origin and stale tracking ref removed. Other worktrees and unrelated
-untracked files preserved. Post-merge dev coverage run `41155534928` is pending;
-coverage-scope passed. Status reconciliation is local only, awaiting separate
+untracked files preserved. Duplicate dev coverage run `41155534928` completed
+cancelled at user request; reviewed PR coverage and Codecov had passed. Status reconciliation is local only, awaiting separate
 push authorization. No release, main merge, deployment or expensive CI.

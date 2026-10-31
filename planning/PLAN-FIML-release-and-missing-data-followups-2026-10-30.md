@@ -150,7 +150,8 @@ zero failures/errors, four warnings and two skips; lint clean and built-package
 check `Status: OK`. The single corrective retry repaired book-test contracts,
 not production code. All six exact-head fast checks passed before the authorized
 merge. Branch/worktree cleanup and the 805-file evidence archive are verified;
-post-merge coverage run `41155534928` remains pending. Website deployment and
+duplicate post-merge coverage run `41155534928` completed cancelled at user
+request under the local-first policy; reviewed PR coverage and Codecov passed. Website deployment and
 release remain separately authorized actions.
 
 A separate pre-existing currency issue was found while reviewing the new unit:
