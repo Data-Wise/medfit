@@ -1,12 +1,19 @@
 # FIML release readiness and missing-data follow-ups
 
-Date: 2026-10-30. Status: planning and review only; implementation is not authorized
-by this document. This reconciles the completed FIML milestone, the 0.16 scope
-decision, the release audit, missing-data research, and the missingmed inventory.
+Date: 2026-10-30. Status: A1 completed through separately authorized PR #367;
+remaining milestones are planning and review only. This document does not
+authorize further implementation. This reconciles the completed FIML milestone,
+the 0.16 scope decision, the release audit, missing-data research, and the missingmed inventory.
 It does not replace either package's detailed acceptance contracts.
 
 ## Current state and authority
 
+- Regression-oracle milestone A1 and bounded minibook preface clarification:
+  merged via PR #367 (`fb879fac`) after six fast checks passed on exact head
+  `9ea8b45a`. Post-merge coverage and Codecov patch passed on `fb879fac`
+  (run `41147354533`; 8,789 passes, zero failures, five expected warnings,
+  140 skips). Merged local branch and worktree removed; 200 evidence files archived and hash-verified. This does not
+  complete A2's proposed full teaching unit or expand model/inference support.
 - medfit bounded FIML: merged through PR #364 (`a894e45e`). Independent QA and
   historical local/hosted verification are recorded in
   [the completed implementation plan](PLAN-FIML-bounded-integration-2026-10-29.md).
@@ -78,6 +85,9 @@ that experiment's acceptance, not automatically the release when it has exposed
 no production defect. Existing required numerical gates remain mandatory.
 
 ### A1. Reconcile evidence and close the production-test gap
+
+Completed through [the regression-oracle milestone](PLAN-FIML-regression-oracles-2026-10-30.md)
+and PR #367. The contract below remains the historical acceptance record.
 
 The [static production-test inventory](AUDIT-FIML-regression-inventory-2026-10-30.md)
 records existing no-complete-row, singleton and no-overlap coverage. Reuse those

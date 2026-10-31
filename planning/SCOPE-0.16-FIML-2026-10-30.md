@@ -68,12 +68,14 @@ This scope decision does not claim fresh numerical verification.
 
 ## Immediate next step
 
-Post-merge verification is complete: PRs #365/#366 are merged with author
-authorization and their dev coverage runs passed. Review and select the bounded
-readiness work in the reconciled plan linked above;
-new diagnostics and missingmed adoption remain separate milestones. Release
-preparation/execution needs its own authorization; expensive CI remains deferred
-until release to main.
+PRs #365/#366 and the regression-oracle/minibook clarification PR #367 are merged
+with author authorization. Post-#367 dev coverage and Codecov patch passed
+(run `41147354533` at `fb879fac`; 8,789 passes, zero failures, five expected
+warnings and 140 skips). Local merged branch/worktree cleanup is complete.
+Review A2's proposed full teaching unit and remaining readiness
+work in the reconciled plan; new diagnostics and missingmed adoption remain
+separate milestones. Release preparation/execution needs its own authorization;
+expensive CI remains deferred until release to main.
 
 ## Release-wording synchronization — 2026-10-30
 

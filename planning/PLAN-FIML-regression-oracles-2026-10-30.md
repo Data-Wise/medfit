@@ -1,8 +1,15 @@
 # Bounded FIML regression-oracle milestone
 
-Status: T1 repair, T2 re-QA, pre-docs, docs and final local gates PASS. Date: 2026-10-30.
-Branch: codex/fiml-regression-oracles. Base: origin/dev c4b76fb5, plus the
-reviewed local planning commits. No push, PR, merge, release or expensive CI.
+Status: completed and squash-merged into dev via PR #367 (`fb879fac`) on
+2026-10-30 after all six fast checks passed on reviewed head `9ea8b45a`.
+Post-merge coverage and Codecov patch PASS (run `41147354533` at `fb879fac`):
+8,789 passes, zero failures, five expected warnings and 140 skips.
+Merged branch/worktree cleanup is complete; local evidence is archived and verified.
+No release, dev-to-main merge or expensive CI. Earlier local-only restrictions
+below describe historical checkpoints and were superseded by explicit publication
+and merge authorizations.
+Original branch: codex/fiml-regression-oracles. Base: origin/dev c4b76fb5, plus
+the reviewed local planning commits.
 
 ## Scope and authority
 
@@ -232,3 +239,32 @@ change after these checks. No PDF build or fresh full numerical suite was needed
 for this prose-only follow-up. The stopped-stage receipts remain archived and
 minibook-docs.md now ends with a unique PASS verdict. Scoped local commit follows;
 no production changes, push, PR, release or expensive CI.
+
+## Merge, post-merge coverage and cleanup — 2026-10-30
+
+PR [#367](https://github.com/Data-Wise/medfit/pull/367) squash-merged as
+`fb879fac3df309a8fc3ec8a7794595ca838fc16b` after six live checks passed at
+`9ea8b45aa4a470f469fafb79e0ec0c1edc5788a6`. Reviewed and merged trees match.
+Post-merge [coverage run 41147354533](https://github.com/Data-Wise/medfit/actions/runs/41147354533)
+and reported Codecov patch passed on that merge commit. Hosted results:
+8,789 passes, zero failures, five warnings and 140 skips. Warnings are the
+intentional cluster refit failure, sign-branch disagreement, unavailable Swedish
+locale, and two expected lavaan empty-row notices in the new oracle fixtures.
+No new failure was found; no production repair was needed.
+
+Local dev was aligned with the merge after verifying that its three original
+planning patches were copied identically into the PR; their original history is
+preserved on `codex/local-planning-pre-367`. The exact reviewed head is retained
+in `refs/archive/pr-367-head`. Before removing the merged local branch/worktree,
+200 ignored evidence files were archived and individually SHA-256 verified:
+`_agents_workspace/fiml-regression-oracles-merged-2026-10-30.zip`, with adjacent
+receipt; archive SHA-256
+`fdbc8fdf820b44b7c7ff004b980ed21abcddb905583b5c96f6bc0268741565b6`.
+Exact PR head and merge ancestry were verified before cleanup. The remote branch
+is also absent. All six unrelated untracked files retain their original hashes;
+other worktrees remain untouched. Final hosted and cleanup receipts are under
+`_agents_workspace/pr-367-post-merge/` in the primary checkout.
+
+This reconciliation is local only. A separate metadata push needs authorization.
+No release, dev-to-main merge, new support or expensive CI was performed. The
+preface clarification does not complete the proposed full FIML teaching unit.
