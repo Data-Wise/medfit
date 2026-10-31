@@ -1,7 +1,7 @@
 # Bounded FIML minibook unit
 
-Status: T1-T3 documentation, independent content review, full HTML render and
-USER-verified visual acceptance PASS; T4 final local gates pending. Authorized 2026-10-30. Base: dev `bc6fbf60`.
+Status: T1-T4 PASS locally, including independent content/test-contract review,
+full HTML render, USER-verified visual acceptance and final local gates. Authorized 2026-10-30. Base: dev `bc6fbf60`.
 Branch: `codex/fiml-minibook-unit`. Docs only; no production edits, push, PR,
 release, dev-to-main merge or expensive CI.
 
@@ -21,7 +21,7 @@ release, dev-to-main merge or expensive CI.
   including math, tables, code/results, exercise/solution and surrounding text. An
   exit-1 render is not a pass. Track new files before building. Use Quarto's normal
   cache with authorized access; do not repeat ineffective cache overrides.
-- [ ] T4: Run docs consistency, package/book spelling, relevant FIML checks and final
+- [x] T4: Run docs consistency, package/book spelling, relevant FIML checks and final
   local gates (including the orchestrator-required full suite and lint), save exact
   counts/exit codes. No expensive hosted/platform/OpenBLAS CI. Reconcile status and
   commit locally; no publication. Each failed stage has at most one corrective retry,
@@ -69,3 +69,24 @@ User explicitly visually accepted final Chapter 8 at 18:31 MDT; this is USER-ver
 not agent visual inspection (browser file policy blocked the latter). Source and
 output hashes, commands, initial findings and final reports remain in
 `_agents_workspace/fiml-minibook-unit/`. Final local gates are still required.
+
+## Final local gate receipt — 2026-10-30
+
+Reviewed final test source e1897d66, with unchanged rendered chapter source babb4cc0.
+Initial full suite found three stale book-guard assertions: seven-chapter inventory
+and applying the original covariance-only wrapper to the new FIML chapter. The
+scoped test repair preserves the old seven wrappers and adds an explicit parsed
+FIML-call/settings guard; independent review rejected six planted call defects.
+Initial failure evidence is archived; one corrective full-suite retry exits 0:
+1,783 tests, 9,791 total assertions, 9,785 passed, zero failures/errors, four
+documented warnings and two skips. Focused gate/docs/FIML checks: 124 tests,
+1,372 passed assertions, zero failures/errors, two expected warnings and one skip;
+repaired native-book checks: 11 tests/66 passes, zero failures/errors/warnings/skips.
+Final package lint: zero findings. Fresh source build succeeds and built-package
+check (--no-tests; suite run separately) reports Status: OK. The build receipt
+writer initially used a nonexistent directory; the build itself succeeded and its
+already-built archive was checked without rebuilding. Risk intersection is empty;
+all seven checklist items parse with no missing items. Full receipts and local PR
+draft remain in _agents_workspace/fiml-minibook-unit/. No production changes,
+push, PR, release, dev-to-main merge or expensive CI. The separate older native-guide
+binary-X example remains follow-up work; this unit does not complete a whole-site audit.
