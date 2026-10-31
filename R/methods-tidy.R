@@ -54,6 +54,15 @@
 #' is a ratio whose delta-method standard error is unstable when the total
 #' effect is near zero, so bootstrap it instead.
 #'
+#' ## Bounded FIML
+#'
+#' For data extracted from a bounded FIML fit, `tidy()`, coefficients, covariance
+#' and normal path/effect intervals are supported, but `glance()`, `pm()` and
+#' bootstrap intervals refuse. The bootstrap recommendations above apply only
+#' to other supported objects. `glance()` on the source [SEMFit] instead retains
+#' likelihood and information-criterion fields, with model tests unavailable.
+#' See [fit_sem()] for the bounded model, assumptions and inference limits.
+#'
 #' ## Base methods
 #'
 #' - `coef(object, type = "paths")`: the path coefficients; `type = "effects"`

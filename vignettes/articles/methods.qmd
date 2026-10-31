@@ -525,8 +525,8 @@ the listwise path unless stated otherwise.
 ### Bounded FIML {#bounded-fiml}
 
 The separate unreleased `missing = "fiml"` milestone supports only Gaussian
-random-X simple mediation with three numeric observed variables, independent
-disturbances, free intercepts and a free or exactly zero direct path. It assumes
+random-X simple mediation with three continuous numeric observed variables,
+independent disturbances, free intercepts and a free or exactly zero direct path. It assumes
 ignorable missingness under that model; choosing FIML does not validate MAR or
 protect against nonignorable missingness. See the
 [native guide](native-guide.html#bounded-fiml) for settings and API limits.

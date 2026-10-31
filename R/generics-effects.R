@@ -181,7 +181,8 @@ te <- S7::new_generic("te", "x")
 #' }
 #'
 #' The ratio has no delta-method standard error in medfit; bootstrap it with
-#' [bootstrap_mediation()].
+#' [bootstrap_mediation()] for supported objects. `pm()` and bootstrap inference
+#' refuse data extracted from bounded FIML fits; see [fit_sem()].
 #'
 #' @examples
 #' med_data <- fit_mediation(

@@ -52,6 +52,12 @@
 #'   - Method used
 #'
 #' @details
+#' Bounded FIML objects supplied as `mediation_data` or `data` are refused,
+#' including `method = "plugin"`; this entry point does not provide FIML
+#' bootstrap inference. Object-aware guards run before package-controlled RNG,
+#' workers or refits. Opaque user callbacks and external-first dispatch are
+#' outside that guarantee. See [fit_sem()] for supported normal intervals.
+#'
 #' ## Bootstrap Methods
 #'
 #' **Parametric Bootstrap** (`method = "parametric"`):
