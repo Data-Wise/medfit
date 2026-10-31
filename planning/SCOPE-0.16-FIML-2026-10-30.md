@@ -84,8 +84,13 @@ after lint, pkgdown and risk-tier passed on reviewed head `6c1da57e`. Hosted
 coverage remains unconditional on main PRs/main pushes; no dev merge coverage
 is expected. Its merged branch/worktree are removed; all 58 evidence files
 are archived and individually verified. Status reconciliation remains local.
-The recorded pre-existing native-guide example issue and wider website/help
-audit remain open; the focused teaching unit does not complete them.
+The recorded native-guide binary-X example gap is closed by PR #371, merged
+as `04b7ac8c`: continuous Gaussian random-X fixture, executed direct/wrapper
+examples, regression guard and local docs/render/user-visual gates all pass.
+All three exact-head fast checks passed before merge; branch/worktree cleanup
+and the 423-file hash-verified archive are complete. The wider website/help audit
+remains open; neither the focused teaching unit nor this fixture correction
+completes that audit. Reconciliation of these planning records remains local.
 New diagnostics and missingmed adoption remain separate milestones. Release
 preparation/execution needs its own authorization;
 expensive CI remains deferred until release to main.

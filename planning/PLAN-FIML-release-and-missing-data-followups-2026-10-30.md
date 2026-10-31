@@ -154,12 +154,17 @@ duplicate post-merge coverage run `41155534928` completed cancelled at user
 request under the local-first policy; reviewed PR coverage and Codecov passed. Website deployment and
 release remain separately authorized actions.
 
-A separate pre-existing currency issue was found while reviewing the new unit:
-`vignettes/articles/native-guide.qmd` uses binary `mediation_demo$treatment` in its
-FIML example while describing continuous Gaussian random-X support. The new unit
-uses an independently checked continuous Gaussian fixture; the existing guide
-example remains unchanged and needs a separately scoped documentation correction.
-Do not treat the new unit as completion of the full website/help audit below.
+The separately scoped native-guide fixture correction merged through PR #371
+as `04b7ac8c` on 2026-10-30. Its FIML example now uses continuous Gaussian
+random-X data, preserving ignorable-missingness conditions and bounded support;
+both entry points execute and agree. The article-code guard rejects binary X.
+Docs consistency, spelling, rendered/user-visual checks and final local gates pass
+(1,785 tests, 9,796 successful assertions, zero failures/errors, four warnings,
+two skips; lint clean; built check OK). Exact-head lint/pkgdown/risk-tier passed
+before merge. Merged branch/worktree cleanup and the 423-file hash-verified
+archive are complete. See `PLAN-FIML-native-guide-fixture-2026-10-30.md`.
+This closes the binary-X example gap; the wider website/help audit below remains
+open. No manual deployment, release or support expansion is implied.
 
 Check both entry points, exact opt-in/defaults, random-X assumptions, row nobs,
 means, observed SEs, supported extraction and unsupported inference in help,
