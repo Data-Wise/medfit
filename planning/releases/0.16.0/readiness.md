@@ -1,46 +1,31 @@
-# medfit 0.16.0 GitHub release preparation
+# medfit 0.16.0 GitHub release readiness
 
-Status: materials prepared locally; NOT a cleared or version-stamped release candidate.
-As of 2026-10-30 MDT. No push, PR, release, main merge, deployment or expensive CI.
+Status: authorized release preparation; not cleared for publication. Snapshot: 2026-10-30 MDT.
 
-## Pinned state
+The user authorized “do next and release to github.” The active plan is planning/PLAN-0.16.0-GitHub-release-2026-10-30.md. This supersedes the packet's earlier preparation-only authorization boundary. CRAN remains out of scope. Coverage remains main PRs/main pushes only; full release CI is required on the main-targeting candidate.
 
-- Latest published GitHub release: v0.15.0, published 2026-10-27 UTC. Its commit and origin/main are e068d7506c6263dcda7f5485c09f892249165fbf.
-- Live origin/dev: efbba6651c74a52f85cdb0276d59b0d038ebf819; 38 commits ahead of main.
-- Completed unpublished docs audit: codex/fiml-docs-audit, c8027dbd, with tested docs d29421a5fee8dad2eea17bdadadb00488b7a020f. This preparation branch starts at that audit tip; it does not imply dev integration.
-- DESCRIPTION remains Version 0.15.0 / Date 2026-10-25. No v0.16.0 remote tag exists; no 0.16 release PR is open. The only open PR at inspection is unrelated Dependabot #346.
-- Main-to-preparation diff has 279 paths; most added lines are archived planning CSV evidence. .Rbuildignore excludes planning/book/workspace artifacts; retain source-tarball verification on the actual candidate. A large evidence diff is not a claim of 279 production changes.
+## Source and scope
 
-## Completed preparation
+- Published baseline: v0.15.0 / main e068d7506c6263dcda7f5485c09f892249165fbf.
+- Preparation starts at docs-audit head c8027dbd0f630a848a4a8f814b46fd659ffa7e16; PR #372 targets dev. It merged as d5785171215fcf2d04e5219286de9d05e6c5b6bf after all three exact-head fast checks passed; merged/reviewed trees match.
+- Candidate DESCRIPTION is stamped 0.16.0 / 2026-10-30. NEWS and current help, articles and minibook references are promoted; historical version references stay historical.
+- Bounded FIML, D4 covariance correction, sign-branch fitting and regression evidence are included. Broader FIML models, fixed-X, weights, expected/robust SEs, FIML bootstrap/profile/MBCO, new diagnostics APIs and missingmed adoption remain separate milestones.
+- Open #320 concerns flagged external-engine discrepancies; the actual candidate must satisfy existing accepted gate limits. An open issue alone neither establishes a new defect nor waives a failing gate. Classify residual #369/#249/#357/#360 clauses against their merged evidence before final publication.
 
-- [x] Release notes draft reflects NEWS and current bounded support, covariance/sign-branch changes and obsolete-option removal.
-- [x] Bounded FIML documentation audit complete locally: all 37 public articles inventoried; confirmed gaps repaired in README, six help topics and three articles.
-- [x] Ten final HTML artifacts rendered and content/local-link inspected. No browser-visual or deployed-site claim.
-- [x] Tested docs source: one full local suite 1,785 tests / 9,796 successful assertions, zero failures/errors, four expected warnings and two explained skips; lint zero; fresh build/built check Status: OK. This is pre-release evidence, not a pass for a later version-stamped candidate.
-- [x] Hosted coverage policy verified unchanged: main PRs/main pushes only. Existing expensive workflow configurations inspected, not triggered.
+## Evidence and remaining gates
 
-## Remaining sequence, with owners and authorization boundaries
+The pre-candidate docs audit passed 1,785 tests / 9,796 assertions, lint and built-package check. Its ten HTML artifacts were content/link inspected; this is not a visual or live-site review, nor a fresh candidate pass. Candidate receipts are saved separately under _agents_workspace/release-0.16/.
 
-1. **Owner: user/reviewer.** Review and separately authorize publication/integration of the completed docs audit. No push/PR/merge is authorized by this packet. Avoid auditing the same content again without new evidence.
-2. **Owner: maintainer.** Reconcile issue #369 with #249/#357/#360 and their merged evidence; classify remaining clauses rather than blindly closing entire issues. #320 records correctly flagged external lavaan comparison disagreements; assess the actual candidate against existing accepted comparison limits. Do not infer a new medfit numerical defect or automatic release blocker solely from an open issue.
-3. **Owner: release preparer, after docs inclusion is settled.** Freeze the full dev scope/NEWS. Stamp DESCRIPTION 0.16.0 and actual release-preparation date, promote NEWS development heading, update current release-facing wording/version references and regenerate affected help. Preserve historical 0.15 documentation and study evidence. Sweep old version references and check all current references individually. No date guessed now.
-4. **Owner: local verifier.** On that exact version-stamped candidate, run required local suite, numerical gates where applicable, lint, source/built checks, full affected docs/book builds, URL/spelling and dependent-compatibility checks required by the release contract. Investigate warnings/skips. Reuse valid immutable receipts where allowed; do not relabel this audit's counts as the candidate's fresh results. Fresh coverage must meet the required overall/critical-path policy; old patch percentages do not prove it.
-5. **Owner: user, separately.** Authorize publishing the candidate and opening dev-to-main release PR. That is the boundary for the required expensive platform/R-CMD-check (including noSuggests), OpenBLAS simulation shards, and coverage/Codecov on the actual candidate. Do not dispatch them during current preparation. Review live head and all required checks; no bypass.
-6. **Owner: user/maintainer, separately.** Authorize merge-commit dev into main after live readiness. Verify main CI and exact merged tree before authorizing tag v0.16.0 / GitHub release. GitHub notes are local draft, not a published draft release.
-7. **Owner: maintainer.** Check tagged archive/install and expected automatic main-push pkgdown deployment; verify live site/version after deployment. No manual deployment now. Back-merge main to dev and reconcile release/status after success, preserving other worktrees.
+1. Integrate PR #372 after live exact-head fast checks.
+2. Verify this version-stamped source: full local suite, lint, build/built check, affected site and book render/content inspection, spelling/URLs, and pinned dependent-package comparison against v0.15.0. Record actual counts and explain warnings/skips. New unexplained failures stop release.
+3. Review and publish candidate PR to dev; squash after fast checks. Open dev-to-main release PR and require full platform/noSuggests, both simulation shards, coverage/Codecov and all applicable fast checks on its exact head. No bypass.
+4. Merge dev into main with a merge commit only after readiness; verify main CI and tree before tag v0.16.0 / GitHub publication using reviewed notes.
+5. Verify tagged archive/install and automatic website deployment; then reconcile/back-merge and clean only verified release branches, preserving unrelated changes and worktrees.
 
-## No silent scope expansion
+## Stop and rollback
 
-Broader FIML topologies, fixed-X FIML, weights, expected/robust SEs, FIML bootstrap/profile/MBCO, new diagnostics APIs and missingmed adoption remain separate milestones. No new feature is added to 0.16 merely by this checklist. CRAN submission holds remain; cran-comments.md is historical, not a fresh current submission receipt. GitHub-only preparation does not authorize CRAN submission.
+An unexplained numeric/default/capability/dependent regression or missing gate stops publication. After a failed stage and one corrective retry, stop for direction. Before publication preserve the existing tag/main release. Never move a published tag or force main; a later defect needs a reviewed correction or explicitly authorized revert. Completion requires main CI, tagged install and live documentation verification.
 
-## Workflow/source anchors
+## Local candidate gate receipt
 
-- .github/workflows/R-CMD-check.yaml: main PR/push full matrix plus noSuggests.
-- .github/workflows/gates.yaml: main PR/dispatch, reliability/rest shards on ubuntu-24.04.
-- .github/workflows/test-coverage.yaml: unconditional main PR/main push coverage.
-- .github/workflows/pkgdown.yaml: main-push deployment; PR builds do not deploy. Do not manually dispatch it as part of preparation.
-- planning/SCOPE-0.16-FIML-2026-10-30.md and PLAN-FIML-release-and-missing-data-followups-2026-10-30.md own bounded scope and acceptance boundaries.
-
-## Rollback / stop conditions
-
-Any unexplained candidate likelihood/covariance regression, capability/default change, dependent failure or missing release gate stops publication. Before publication leave v0.15.0/main unchanged. After publication a newly discovered numerical defect requires a maintainer-reviewed corrective release or explicitly authorized revert; never move a published tag or force main. A release is not complete until main CI, tagged install and live docs are verified.
+1,785 tests / 9,796 assertions, zero failures/errors, four explained warnings and two skips; lint zero, spelling/47 URLs clean; full site/book exit0; 20 HTML content/link inspections (not browser-visual). Corrected homepage guide link; finaldocs33tests/285assertions PASS. Rebuilt source Status:OK. Five actual dependent suites pass both pinned versions (1,782tests/7,216assertions each, no new failures); medrobust has no medfit dependency at its pinned source and its extra unrelated suite was stopped, not counted. Detailed hashes/warnings/scope receipt saved in ignored workspace. Hosted release clearance pending.

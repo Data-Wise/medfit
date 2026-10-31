@@ -1,4 +1,4 @@
-# medfit (development version)
+# medfit 0.16.0
 
 ## Added
 
@@ -12,13 +12,13 @@
   They strengthen exact rank-refusal, parameter-naming and numerical-receipt checks;
   this adds validation evidence without changing FIML support or acceptance limits.
 
-* Bounded FIML integration, planned for unreleased 0.16, adds exact `missing = "fiml"` opt-in to
+* Bounded FIML integration adds exact `missing = "fiml"` opt-in to
   `fit_sem()` and native `fit_mediation()` engine arguments, preserving listwise defaults
   and positional calls. It retains partially observed rows for three-variable Gaussian
   random-X mediation with a free or zero direct path. Explicit `fixed_x = FALSE`, a mean
   structure, observed/model SEs, no weights and the validated fixed-start protocol are
   required. Likelihood/IC summaries and unstandardized extracted effects are supported;
-  model tests, bootstrap, profiles and MBCO remain unavailable. This bounded feature is included in planned 0.16.
+  model tests, bootstrap, profiles and MBCO remain unavailable.
 
 * Native fits with one supported nonzero-product equality now fit both sign branches independently before choosing
   the lowest accepted discrepancy. Bounds can exclude a branch; an unresolved required branch stops the fit.

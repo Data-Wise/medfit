@@ -17,7 +17,7 @@ side by side on one dataset, and states what each one assumes. It makes no
 coverage claim beyond what the package's tests show.
 
 The table below describes objects with the indicated inference methods. The
-unreleased [bounded FIML workflow](native-guide.html#bounded-fiml) currently
+[bounded FIML workflow](native-guide.html#bounded-fiml) currently
 supports normal path/effect intervals only; bootstrap intervals, profiles,
 MBCO and fit tests refuse those objects. Its local numerical checks do not
 establish interval coverage. See the native guide for its model and missingness

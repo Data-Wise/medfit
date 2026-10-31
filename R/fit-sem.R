@@ -94,7 +94,7 @@
 #' parameter names). To keep the 0.14.x results, pass `fixed_x = FALSE, meanstructure = NULL`.
 #' The 0.14.x `options(medfit.native_defaults)` opt-in no longer has any effect.
 #'
-#' @section Bounded FIML (unreleased):
+#' @section Bounded FIML:
 #' Explicit `missing = "fiml"` fits a joint Gaussian random-X model under ignorable
 #' missingness (for example, MAR with the usual ignorability conditions). It evaluates
 #' observed components, without imputing values. It supports exactly three numeric
@@ -138,8 +138,8 @@
 #' can occur earlier. A dedicated `fiml-1` ledger binds likelihood, rows, settings
 #' and attempts; the version-1 ledger below continues to describe listwise fits.
 #' See the Methods and Formulas article, Bounded FIML, for the likelihood and
-#' the native engine guide for the supported workflow. Bounded FIML is planned
-#' for unreleased 0.16; released 0.15.0 does not provide this option.
+#' the native engine guide for the supported workflow. Bounded FIML was introduced
+#' in 0.16.0; released 0.15.0 does not provide this option.
 #'
 #' @section Nonzero-product search coverage:
 #' One equality `c*a*b == q` is supported when the constants and `q/c` are finite and nonzero, `a` and `b`

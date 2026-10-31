@@ -518,13 +518,13 @@ the mediation structure through the same workers as the lavaan route.
 `fit_sem()` and `fit_mediation(engine = "native")` fit a model written in
 medfit model syntax (`?"medfit-syntax"`) by maximum likelihood to raw data.
 By default, rows with missing values in the model variables are dropped once
-(listwise deletion) and counted. The separate unreleased bounded FIML opt-in
+(listwise deletion) and counted. The separate bounded FIML opt-in
 uses the observed components instead; the complete-data formulas below describe
 the listwise path unless stated otherwise.
 
 ### Bounded FIML {#bounded-fiml}
 
-The separate unreleased `missing = "fiml"` milestone supports only Gaussian
+The separate `missing = "fiml"` route supports only Gaussian
 random-X simple mediation with three continuous numeric observed variables,
 independent disturbances, free intercepts and a free or exactly zero direct path. It assumes
 ignorable missingness under that model; choosing FIML does not validate MAR or

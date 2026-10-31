@@ -9,11 +9,11 @@ software does not fill its cell with a predicted value.
 
 | | |
 |---|---|
-| **You need** | The normal likelihood and the distinction between a structural intercept and a marginal mean from Chapter 1; an installation built from this development checkout |
+| **You need** | The normal likelihood and the distinction between a structural intercept and a marginal mean from Chapter 1; medfit 0.16.0 or later |
 | **You get** | A hand calculation for a partial row, readable missingness counts, a bounded FIML fit and extracted effects, and the limits of the resulting inference |
 | **Time** | About 25 minutes |
 
-This is the bounded FIML addition planned for unreleased 0.16. Released 0.15.0
+This is the bounded FIML addition introduced in 0.16.0. Released 0.15.0
 does not supply it. The examples use exactly three continuous observed variables,
 Gaussian random-X mediation, free intercepts and independent disturbances. The
 direct X-to-Y path may be free or fixed at zero. More general models are outside
