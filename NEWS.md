@@ -29,6 +29,10 @@
 
 ## Fixed
 
+* The native guide's bounded FIML example now uses continuous Gaussian random-X
+  data instead of the bundled demo's binary treatment. Both supported entry
+  points are executed, with a regression guard against reintroducing binary X.
+
 * Hosted coverage runs only on pull requests to `main` and pushes to `main`,
   including metadata-only release changes. Development-branch pushes and pull
   requests use local validation instead. Other fast hosted checks remain enabled;

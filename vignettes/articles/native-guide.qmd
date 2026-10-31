@@ -230,10 +230,26 @@ variables: X to M to Y with a free or exactly zero direct path, independent
 Gaussian disturbances and free intercepts. It assumes ignorable missingness
 under that joint model; FIML does not impute the missing values.
 
+Generate continuous Gaussian X, M and Y with independent disturbances for this
+example; the bundled demo's binary treatment does not match this joint model.
+The fixed missing-value pattern is for illustration, not evidence that
+missingness in an applied study is ignorable. `with_seed()` preserves the
+caller's random-number state.
+
+```{r}
+#| label: bounded-fiml-data
+fiml_data <- withr::with_seed(271L, {
+  n <- 400L
+  treatment <- .8 + stats::rnorm(n, sd = 1.1)
+  mediator1 <- -.4 + .5 * treatment + stats::rnorm(n, sd = .8)
+  outcome <- .7 + .6 * mediator1 + .25 * treatment + stats::rnorm(n, sd = .9)
+  data.frame(treatment = treatment, mediator1 = mediator1, outcome = outcome)
+})
+fiml_data$mediator1[seq(1, nrow(fiml_data), by = 7)] <- NA_real_
+```
+
 ```{r}
 #| label: bounded-fiml-workflow
-fiml_data <- mediation_demo[c("treatment", "mediator1", "outcome")]
-fiml_data$mediator1[seq(1, nrow(fiml_data), by = 7)] <- NA_real_
 fiml_syntax <- "mediator1 ~ a*treatment
 outcome ~ b*mediator1 + cp*treatment"
 fiml_fit <- medfit::fit_sem(
@@ -248,11 +264,22 @@ te(fiml_effects)
 tidy(fiml_effects, type = "effects")
 ```
 
-The wrapper route is `fit_mediation(model = fiml_syntax, data = fiml_data,
-treatment = "treatment", mediator = "mediator1", engine = "native",
-se_type = "model", engine_args = list(missing = "fiml", fixed_x = FALSE,
-meanstructure = TRUE, information = "observed"))`. There is no new top-level
-`missing` argument on `fit_mediation()`; `med()` remains a formula-building fitter.
+The wrapper route returns the extracted mediation object directly:
+
+```{r}
+#| label: bounded-fiml-wrapper
+fiml_wrapped <- medfit::fit_mediation(
+  model = fiml_syntax, data = fiml_data,
+  treatment = "treatment", mediator = "mediator1", engine = "native",
+  se_type = "model", engine_args = list(
+    missing = "fiml", fixed_x = FALSE, meanstructure = TRUE, information = "observed"
+  )
+)
+tidy(fiml_wrapped, type = "effects")
+```
+
+There is no new top-level `missing` argument on `fit_mediation()`;
+`med()` remains a formula-building fitter.
 The missing-method strings must match exactly. A failed FIML fit never falls
 back to listwise deletion or another engine, even on complete data.
 
