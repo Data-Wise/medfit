@@ -1,0 +1,205 @@
+{
+  "ok": true,
+  "operation": "review",
+  "review_kind": "adversarial",
+  "subject_kind": "changes",
+  "subject_label": "working tree (staged, unstaged, and untracked)",
+  "subject_fingerprint": "e2f6afa37b8dc33ab39f596f165fc5b00a46e7fad06ed8d5592f018cbb916bc6",
+  "usage_summary": "Usage: tokens=138314 output=10989 turns=9 duration_ms=99323 api_ms=98881 cost_usd=0.6437542",
+  "total_tokens": 138314,
+  "total_cost_usd": 0.6437542,
+  "cumulative_chain_cost_usd": 0.6437542,
+  "parent_job_id": null,
+  "num_turns": 9,
+  "duration_ms": 99323,
+  "duration_api_ms": 98881,
+  "task_profile": null,
+  "review_profile": "standard",
+  "requested_model": "opus",
+  "effective_models": [
+    "claude-opus-5-5"
+  ],
+  "effort": "medium",
+  "budget": {
+    "max_turns": 10,
+    "finalize_at_turn": 8,
+    "soft_budget_usd": 3,
+    "max_budget_usd": 3,
+    "timeout_ms": 300000
+  },
+  "evidence_lease": null,
+  "evidence_lease_exhausted": false,
+  "cost_budget_exhausted": false,
+  "turn_limit_reached": false,
+  "structured_output": {
+    "verdict": "needs-attention",
+    "summary": "Roadmap readiness: NOT ready to publish together with the new FIML inference/observed-model plan without a planned reconciliation pass. On its own, the roadmap at cc3fd887 is mostly consistent with the bounded 0.16.0 release. Its header (lines 3-11) and Current board (1860-1881) correctly say 0.16.0 is released, future versions are unassigned, CRAN is held, hosted coverage runs only on main and no implementation is authorized. The plan matches it on version neutrality (plan:36-39), the hosted-CI policy (plan:280-281) and the 64-fit baseline (plan:27-29 vs roadmap:1872-1873). Some differences are legitimate later additions, because the roadmap predates the agreed plan and the plan explicitly keeps itself separate from cc3fd887 (plan:7-8, 305-306). Others are real contradictions that must be fixed before either document is published as current. (1) The Current board still lists bootstrap and broader FIML as deferred and names the efficiency baseline as the recommended next scope, while the plan makes bootstrap inference and observed-model expansion the agreed next scope. (2) The plan's ledger IDs B1/B2 (and its D Docs milestone) collide with the roadmap's existing categorical backlog IDs B1-B3, the baseline's section \"D\" and Ext D. That breaks the 'unique task IDs / reject roadmap contradictions' rule the plan's own checker relies on. (3) The roadmap's closing Status/Current/Future/Last Updated block still describes v0.5.0 and says 'Next Review: after 0.8.0', which contradicts its own 2026-10-31 reconciliation stamp. (4) The ledger state model leaves 'merged' undefined (dev vs main), has no reverted, withdrawn or failed states, and does not tie each state to the gates it requires. Smaller internal points in the plan: it says registry topologies are fixed, yet it also allows structural or shortcut zeros. Its performance stop rule does not say how it interacts with the inference-study affordability pilot. I did not recheck the statistical formulas.",
+    "findings": [
+      {
+        "severity": "high",
+        "title": "Current board still defers bootstrap and broader FIML and names the efficiency baseline as next, contradicting the agreed plan",
+        "body": "Roadmap Current board item 4 (/Users/davood/projects/r-packages/active/medfit/.worktrees/roadmap-reconciliation/planning/medfit-roadmap.md:1878-1881) lists 'fixed-X/weighted or broader FIML, robust/expected SEs, bootstrap/profile/MBCO, new model classes' as 'Deferred, unassigned'. Item 2 (1870-1873) names the eight-cell efficiency baseline as the 'Recommended next technical scope'. The agreed plan (/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md:14-31) says the user settled on finishing FIML inference first, starting with bootstrap intervals (B0->B1->B2), and then broadening FIML to covariates/parallel/serial (G0-G3). It also treats the baseline as a separate item (plan:27-29). The roadmap commit predates the plan, so this is expected drift, not an authoring error. However, the board says it 'owns medfit priorities' (roadmap:8). If either document is published or activated without reconciliation, readers get two conflicting answers to 'what is next' and 'is bootstrap/broader FIML deferred'. Robust SEs, profile/MBCO, fixed-X/weighted FIML and CRAN can stay deferred because the plan also excludes them (plan:35-36, 164-166).",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/roadmap-reconciliation/planning/medfit-roadmap.md",
+        "line_start": 1870,
+        "line_end": 1881,
+        "confidence": 0.85,
+        "recommendation": "When the plan is integrated, edit the Current board. Move row-bootstrap and parameter-draw inference and G0-G3 observed-family admission out of 'Deferred' into a planned, unscheduled design item that links to the plan. State that the efficiency baseline is separate and say how it is ordered relative to B0. Keep robust/expected SEs, profile/MBCO, fixed-X/weighted FIML, latent/categorical/multilevel and CRAN deferred. Leave every version unassigned."
+      },
+      {
+        "severity": "medium",
+        "title": "Plan ledger IDs B1/B2 and 'D' collide with existing roadmap IDs (categorical backlog B1-B3, baseline section D, Ext D)",
+        "body": "The plan keys its evidence ledger to 'stable B0/B1/B2/G0/G1/G2/G3 IDs' (plan:289-290). Its checker must 'require unique task IDs' and 'Reject contradictions between the ledger and affected roadmap/scope rows' (plan:308-311). The roadmap already uses B1, B2 and B3 for the categorical-variables backlog (roadmap:1911-1913: B1 = treatment with k>2 levels, B2 = categorical mediator, B3 = binary/ordinal). Its board item 2 links the baseline as section 'D' of the followups plan (roadmap:1871), and the roadmap uses 'Ext D' throughout. The plan also names a 'D Docs' milestone (plan:272). After integration, 'B1' would mean both 'row bootstrap intervals' and 'categorical treatment'. A roadmap-vs-ledger checker would then either flag false contradictions or, worse, match the wrong rows and accept a stale claim. Checkpoint B, Checkpoint G, D Docs, Final local gate and the tracking/checker task itself also have no namespaced ledger IDs.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 289,
+        "line_end": 294,
+        "confidence": 0.8,
+        "recommendation": "Before activation, namespace the plan's IDs, for example FI-B0..FI-B2, FI-G0..FI-G3, FI-CKB, FI-CKG, FI-DOCS, FI-FINAL, FI-TRACK. Alternatively, rename the roadmap categorical backlog to CAT-1..CAT-3. Add a checker fixture that fails on duplicate IDs across roadmap and plan scopes."
+      },
+      {
+        "severity": "medium",
+        "title": "Roadmap's closing Status/Current/Future block is stale and contradicts its own 2026-10-31 reconciliation",
+        "body": "The header says the file was reconciled on 2026-10-31 and that 0.16.0 is released (roadmap:3-7, 16). The closing block still says 'v0.5.0 on main/GitHub/r-universe' as Current (1956-1958) and lists 'Next CRAN release ... trigger open' as Future Development (1961). It ends with 'Next Review: After the 0.8.0 release' and 'Last Updated: 2026-10-10' (1966-1967). The 'Historical status snapshot' line (14) also still says 'Next = the 0.15.0 flip'. The line is labelled historical, but the footer's 'Current' and 'Future Development' headings are not. Historical item 3b (1892) is struck through as released but still says 'Release, T5e and the T6 hygiene are open'. The plan's tracking gate tells authors to read and reconcile `planning/medfit-roadmap.md` at task start (plan:301-304), and its checker rejects 'release claims without a verified release receipt' (plan:311-312). A reader or checker that parses the closing 'Current' section would get the wrong released state.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/roadmap-reconciliation/planning/medfit-roadmap.md",
+        "line_start": 1936,
+        "line_end": 1967,
+        "confidence": 0.85,
+        "recommendation": "Retitle the closing block 'Historical status (as of 2026-10-10)' or replace it with a pointer to the Current board. Remove or annotate the 'Next Review: after 0.8.0' line. Mark the open-items note in 3b as historical or resolved. Keep the 'Current' heading only in the Current board."
+      },
+      {
+        "severity": "medium",
+        "title": "Evidence-ledger state model leaves 'merged' undefined, has no revert/withdraw/failed states and does not map states to required gates",
+        "body": "The plan's states are 'planned, in progress, blocked, locally verified, merged, released' (plan:295). The repo merges work to dev and then promotes dev to main for releases (the roadmap's own history distinguishes 'merged to dev' from shipped, e.g. roadmap:1949-1950). 'merged' does not say which branch. Work merged to dev but not on main or tagged could be presented as available support, the same risk the plan guards against for 'locally verified' (plan:297-298). The model also has no state for a merged slice that is later reverted, a released claim that is withdrawn, or a check that has failed but is not blocked. Failed or inconclusive checks must 'stay visible' (plan:296-297), but they have no state, which encourages them to be folded into 'in progress'. Independent review is a 'separately recorded requirement' (plan:296), but nothing says which states require it. The checker requires 'required gate results for every claimed completion state' (plan:309-310), but the mapping from each state to its gates is never written down, so the rule cannot be checked as written. The fixture list (plan:321-323) does not test merged-but-unreleased claims, reverts, or a missing independent review.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 295,
+        "line_end": 313,
+        "confidence": 0.7,
+        "recommendation": "Split 'merged' into merged-dev and merged-main, or record the target branch and SHA. Add failed/inconclusive and reverted/withdrawn states. Publish a table mapping each state to its gates: for example, locally verified needs the local suite; merged-dev also needs independent QA and review; released also needs a release receipt and tag. Add checker fixtures for each new transition."
+      },
+      {
+        "severity": "low",
+        "title": "Registry fixes full topologies, but the common domain and G3 text still allow structural/shortcut zeros",
+        "body": "The 11-variant registry fixes full path sets. Parallel models include every X->M and M->Y path, serial models include X->M1, X->M2, M1->M2, M1->Y and M2->Y, and only the direct X->Y path may be fixed at zero (plan:154-158). Elsewhere the plan says 'Structural zero paths are allowed' (plan:137-138), G3 mentions 'Explicit path topology including permitted shortcuts' (plan:147), and 'Missing shortcut edges are structural zeros' (plan:157-158). It also says 'Fewer-path topologies need named checks before public support claims' (plan:159). A reader can take this to mean omitted serial shortcuts are admitted in the initial scope, but they are not in the 11-variant registry or the 132-cell manifest (plan:338-339). G1 likewise says 'Freeze which structural regressions include each covariate' (plan:145), although line 154 already freezes it ('Every included covariate predicts every endogenous variable'). These are wording ambiguities, not contradictions of the agreed decision. They still matter because a support-matrix checker (plan:311) needs one authoritative admitted set.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 135,
+        "line_end": 160,
+        "confidence": 0.65,
+        "recommendation": "State explicitly that the only admitted zero in the initial registry is the direct X->Y path. Label other structural or shortcut zeros as future named variants outside the 11. Reword G1 acceptance as 'verify the frozen all-covariates-predict-all-endogenous rule'."
+      },
+      {
+        "severity": "low",
+        "title": "Performance stop rule and inference-study affordability gate have no stated interaction; the roadmap lacks the stop rule",
+        "body": "The plan says that if the 64-fit baseline finds no bottleneck, optimization stops and is reassessed, and that this budget does not cover inference validation (plan:27-29). The same plan proposes about 499,500 bootstrap refits per row-bootstrap cell and a separately authorized timing pilot (plan:383-390, 343-344). The roadmap board reproduces the 64-fit baseline but not the evidence-first stop rule (roadmap:1870-1873), and it still defers 'caching/parallel optimization' (1879-1880). Neither document says what happens if the baseline finds no bottleneck but the timing pilot shows the study is unaffordable. Does optimization reopen, or does the study shrink or defer, as plan:389-390 permits? (Inferred.) Without that order, an author could cite the baseline's 'stop' to block necessary throughput work, or cite study cost to bypass the stop rule.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 26,
+        "line_end": 29,
+        "confidence": 0.55,
+        "recommendation": "In B0 and in the reconciled roadmap item 2, state the order: the baseline governs only its own 64 fits, and the B0 timing pilot independently decides whether optimization scope reopens or the study is revised or deferred. Copy the evidence-first stop rule into the roadmap board."
+      },
+      {
+        "severity": "low",
+        "title": "Plan says to read the 'current' roadmap but keeps cc3fd887 unintegrated, so tasks may reconcile against a stale roadmap",
+        "body": "The plan's base is dev f1aaf332 (plan:5). Each task must read and reconcile 'the current `planning/medfit-roadmap.md`' (plan:301-304), yet the reconciled roadmap cc3fd887 must stay separate until explicitly integrated (plan:305-306). Until then, a task started from dev reads the pre-reconciliation roadmap. That roadmap lacks the 0.16 Current board, so ledger-vs-roadmap checks would run against stale rows (inferred from the branch layout: codex/roadmap-reconciliation cc3fd887 sits ahead of dev f1aaf332).",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 301,
+        "line_end": 306,
+        "confidence": 0.5,
+        "recommendation": "Make integrating cc3fd887 (with the fixes above) a precondition for activating B0, or pin the roadmap revision the ledger reconciles against."
+      }
+    ],
+    "next_steps": [
+      "Integrate cc3fd887 with a planned reconciliation pass. Update Current board items 2 and 4 to reflect agreed FIML inference and G0-G3 admission scope as planned and unscheduled. Keep versions unassigned.",
+      "Namespace the plan's ledger IDs, or the roadmap's categorical B1-B3, before the ledger or checker exists.",
+      "Retitle or replace the stale closing Status block in the roadmap.",
+      "Define the ledger state-to-gate table, split 'merged' by branch, and add failed and reverted states plus matching fixtures.",
+      "Clarify the admitted topology set (direct-path zero only) and the order between the baseline stop rule and the B0 timing pilot."
+    ],
+    "coverage": {
+      "files_examined": [
+        "/Users/davood/projects/r-packages/active/medfit/.worktrees/roadmap-reconciliation/planning/medfit-roadmap.md (full, lines 1-1968)",
+        "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md (sections 1, 4, 6, 7, 9: lines 1-40, 132-168, 259-345, 364-412; heading index only for the rest)"
+      ],
+      "files_skipped": [
+        "Plan sections 2, 3, 5, 8 (out of scope per user; numerical formulas not re-reviewed)",
+        "/Users/davood/projects/r-packages/active/medfit/.worktrees/roadmap-reconciliation/planning/ISSUE-369-reconciliation-2026-10-31.md (not needed)",
+        "/Users/davood/projects/r-packages/active/medfit/.worktrees/roadmap-reconciliation/planning/PLAN-FIML-release-and-missing-data-followups-2026-10-30.md (not needed)",
+        "SCOPE-0.16-FIML-2026-10-30.md and PLAN-0.16.0-GitHub-release-2026-10-30.md (not needed)",
+        "Root working-tree changes: .codex/agents/*.toml, .codex/guard-session-counts, planning/studies/fiml-feasibility/REPORT-fiml-draft-pr-364-2026-10-30.md (explicitly out of target)"
+      ],
+      "areas": [
+        "Released 0.16 bounded scope vs new inference/model scope",
+        "Current-board priority and deferral dispositions",
+        "Version/date promises",
+        "Evidence-first performance stop rule",
+        "11-variant registry consistency (count verified as 2+6+3; manifest 11x3x2x2=132)",
+        "Evidence-ledger task identity and state semantics",
+        "Stale historical/current status blocks"
+      ]
+    },
+    "uncertainty": "medium",
+    "budget_exhausted": false,
+    "cost_budget_exhausted": false,
+    "turn_limit_reached": false,
+    "evidence_lease_exhausted": false,
+    "recommended_followup": {
+      "profile": "quick",
+      "focus": [
+        "Re-review the Current board diff after integrating the plan",
+        "Ledger ID namespace and state-gate table once drafted"
+      ],
+      "reason": "The findings are documentation and planning consistency issues with clear fixes. A quick re-review after the reconciliation edits is enough; no deep statistical review is needed for this scope."
+    }
+  },
+  "session_id": "3837653e-4d6a-4c5b-add7-bfbd7317c8de",
+  "resume_hint": "claude --resume 3837653e-4d6a-4c5b-add7-bfbd7317c8de",
+  "disclosure": null,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 51088,
+    "cache_read_input_tokens": 76231,
+    "output_tokens": 10989,
+    "output_tokens_details": {
+      "thinking_tokens": 3524
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 51088,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 9888,
+        "cache_read_input_tokens": 44501,
+        "cache_creation_input_tokens": 18065,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 18065
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-opus-5-5": {
+      "inputTokens": 6,
+      "outputTokens": 10989,
+      "cacheReadInputTokens": 76231,
+      "cacheCreationInputTokens": 51088,
+      "webSearchRequests": 0,
+      "costUSD": 0.6437542,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3524,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  }
+}

@@ -1862,23 +1862,96 @@ Integration is successful when:
 The 0.16 release/test/docs milestones are complete. Do not reopen them from
 historical checklists. Current dispositions:
 
-1. **Planning reconciliation (this milestone):** one current board and
+1. **Planning reconciliation complete locally (2026-10-31):** one current board and
    [clause-level issue dispositions](ISSUE-369-reconciliation-2026-10-31.md).
    Existing issue #369 tracks administrative follow-through; #249 retains
    unresolved solver/standardization/source-sync clauses, while #320 remains a
    known external-engine limitation. No new implementation is authorized.
-2. **Recommended next technical scope, not scheduled:** the existing eight-cell
-   [FIML efficiency baseline](PLAN-FIML-release-and-missing-data-followups-2026-10-30.md#d-computational-efficiency-baseline-measurement-before-optimization).
-   Freeze free/zero-direct-path allocation within eight cells: 32 fits per
-   implementation, 64 total with lavaan. No new optimizer or speed guarantee.
+2. **Next agreed design, unscheduled and not implemented:**
+   **FIML inference and observed-model expansion**
+   ([paired plan](PLAN-FIML-inference-and-observed-models-2026-10-31.md)):
+   FI-B0 contract -> FI-B1 incomplete-row bootstrap -> FI-B2 joint Gaussian
+   parameter draws -> FI-G0 generic kernel -> FI-G1 covariates -> FI-G2 parallel
+   -> FI-G3 serial. The 11-variant registry includes correlated parallel residuals
+   and covariate combinations; every variant needs separate admission evidence.
+   **Q12 recorded:** target >=90% per-cell and >=80% complete-stage admission
+   power at true coverage .95 / interval availability .98, with lower-performance
+   sensitivity reporting; rejection floors are unchanged. **Q13 recorded:**
+   first admit inference for the existing simple FIML model, then admit each of
+   the 11 approved variants through its own complete, preregistered stage. No
+   pooling away failed cells or treating unadmitted variants as supported.
+   Exact APIs, a feasible frozen per-stage study/resource manifest, timing
+   protocol and focused-review closure remain FI-B0 gates. The
+   M=500 screening proposal has inadequate many-cell pass probability; no
+   simulation, implementation or release clearance follows from agreed scope.
+   The paired plan and [evidence index](studies/fiml-inference-gates/README.md)
+   are assembled on this planning branch. Its repository-relative
+   `revised-documents.sha256` receipt pins this publication packet; the original
+   preassembly receipt is preserved. `cc3fd887` is the parent, not this snapshot.
+   Reconciliation is a local documentation result, not implementation approval,
+   integration, issue closure or publication. No more experiments are planned
+   within this roadmap task.
+   **Activation requires both revised documents on one reviewed execution base
+   or an explicitly agreed pinned snapshot.**
+   The separate eight-cell
+   [FIML efficiency baseline](PLAN-FIML-release-and-missing-data-followups-2026-10-30.md#d-computational-efficiency-baseline-measurement-before-optimization)
+   retains 32 fits per implementation, 64 total with lavaan. No meaningful
+   repeated-workflow bottleneck means stop optimization and reassess; no release
+   just for a benchmark. It is not a prerequisite for inference design and does
+   not cover inference validation. An unaffordable inference pilot requires an
+   explicit rebudget/defer decision or a separately authorized measured
+   optimization task; it does not silently reopen performance work.
+
 3. **Separate ownership:** missingmed reconciles its existing consumer checkpoint
    against the released tag before a thin FIML adapter is considered. Raw-data
    diagnostics are an independent additive scope; MI/IPW/sensitivity views follow
    separately. medfit success does not close missingmed acceptance gates.
-4. **Deferred, unassigned:** fixed-X/weighted or broader FIML, robust/expected SEs,
-   bootstrap/profile/MBCO, new model classes, caching/parallel optimization and
-   CRAN submission each require their own scope and authorization. Existing
-   complete-data capabilities do not imply FIML support.
+4. **Deferred, unassigned:** fixed-X/weighted FIML, robust/expected SEs,
+   profile/MBCO, latent/categorical/multilevel/interaction FIML, correlated serial
+   disturbances, unbounded graphs, caching/parallel optimization and CRAN each
+   require their own scope and authorization. Row bootstrap, parameter draws
+   and the 11 observed-Gaussian variants are now planned design above, not
+   deferred and not shipped. Existing complete-data support implies no FIML support.
+5. **Progress contract (FI-TRACK, planned only):** use namespaced task IDs,
+   per-model/method evidence and separate check outcomes from delivery states.
+   Distinguish locally verified, merged-dev, merged-main, released and
+   reverted/withdrawn; each completion state requires its named gate/review and
+   source/merge/release receipt. Reconcile this board, the active plan, `.STATUS`
+   and support claims at checkpoints. No percentage or optimizer success proves
+   admission; no new hosted job or automatic issue/publication action is implied.
+
+### Ordered delivery roadmap (future work; not implementation authorization)
+
+Roadmap reconciliation is complete locally. The next bounded deliverable is
+**FI-B0: one concise implementation-decision packet**, not another research
+campaign. It names the backward-compatible inference entry point, the first
+admission stage, its independent checks and an affordable verification budget.
+Unresolved choices stay explicit; no study or implementation starts implicitly.
+
+| Order | Milestone and scope | Accountable owner | Completion criterion | Current state |
+|---|---|---|---|---|
+| 1 | FI-B0: existing-model inference contract and verification scope | Maintainer decides; planning agent drafts | Concise contract, feasible stage budget and focused-review closure accepted; existing defaults preserved | Next; decisions recorded, detailed packet pending |
+| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | Implementation owner; independent oracle QA; docs owner | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | Planned; blocked on FI-B0 and implementation authorization |
+| 3 | FI-G0 / FI-G1: generic preparation, then one/two continuous covariates | Implementation owner; independent oracle QA | Old-model behavior preserved; each covariate variant independently admitted with extraction and both interval methods | Planned after existing-model inference |
+| 4 | FI-G2: two parallel mediators, 0-2 covariates, independent/correlated mediator residuals | Implementation owner; independent oracle QA | Each of six variants independently admitted; full effect covariance and both interval methods verified | Planned after covariate stage |
+| 5 | FI-G3: two serial mediators, 0-2 covariates, independent disturbances and declared shortcuts | Implementation owner; independent oracle QA | Each of three variants independently admitted; every-path totals and both interval methods verified | Planned after parallel stage |
+| Each stage | FI-TRACK / FI-DOCS / review checkpoint | Stage owner; docs owner; independent reviewer | Evidence, roadmap/status and support matrix agree; help/site/minibook match admitted scope | Required within the stage, not a new audit campaign |
+
+Stage owners must be assigned before activation; roles above are responsibilities,
+not claims that agents are running. The approved 11-variant expansion remains
+two covariate + six parallel + three serial variants, in addition to inference
+for the already released simple model. A separate complete admission decision
+is required for each stage; one passing stage does not admit the rest.
+
+**Remaining before execution:** FI-B0's exact contract, stage-specific
+verification/resource agreement, focused-review closure and explicit
+implementation authorization. **Publication preparation:** the paired planning
+documents and evidence are assembled locally; publication still requires separate
+authorization and integration through the reviewed Git path.
+Version assignment follows accepted capability and a separate release decision;
+no feature date, push, release or dev-to-main merge is authorized here. The
+efficiency baseline stays separate; robust SEs, likelihood-based inference and
+the other deferred scopes above are not prerequisites for this roadmap closeout.
 
 ### Historical release sequence and backlog
 
@@ -1889,7 +1962,7 @@ history; old dates or incomplete task references are not the current queue:
 1. ~~Release 0.6.0 (Ext D module 1)~~ — done 2026-10-09; see `planning/specs/PLAN-multilevel-mediation-2-1-1-2026-10-08.md` and `.STATUS`. Module 2 (1-1-1, random slopes) follows
 2. ~~Release 0.7.0 (native SEM engine)~~ — done 2026-10-10; see `planning/specs/PLAN-medfit-0-7-0-release-2026-10-10.md` and `.STATUS`.
 3. ~~0.8.0 to 0.10.0 (native SEM hardening, nonlinear constraints, mean structure and `fixed_x`, the `:` product term and four-way)~~ — done 2026-10-11 to 2026-10-14; see `.STATUS`.
-3b. ~~**0.11.0 to 0.13.0**~~: released 2026-10-17 to 2026-10-24 (GitHub-only; see `.STATUS`). 0.11.0: factor covariates, S7 compatibility, the #213 fix, the native gates in `tests/sim/run-gates.R`, and dropping the "experimental" label; see `planning/PLAN-0.11.0-scope-2026-10-16.md`. Release, T5e and the T6 hygiene are open.
+3b. ~~**0.11.0 to 0.13.0**~~: released 2026-10-17 to 2026-10-24 (GitHub-only; see `.STATUS`). 0.11.0: factor covariates, S7 compatibility, the #213 fix, the native gates in `tests/sim/run-gates.R`, and dropping the "experimental" label; see `planning/PLAN-0.11.0-scope-2026-10-16.md`. The old note that release/T5e/T6 were open is historical; consult the completed release plan for their final dispositions.
 3c. ~~**0.14.0 (released 2026-10-24; 0.14.1 on 2026-10-26): native defaults, warn half.**~~ `fit_sem()` warns once per session when
     `fixed_x` or `meanstructure` is unset; `options(medfit.native_defaults = "0.15")` opts in to the new defaults
     (lenient `fixed_x` subset); pinned-SE fix (R-1); `compare_lr()` accepts `fixed_x` and saturated means in lavaan
@@ -1902,7 +1975,7 @@ history; old dates or incomplete task references are not the current queue:
     corrections and public docs/Chapter 8 shipped. The obsolete defaults option
     was removed. See `PLAN-0.16.0-GitHub-release-2026-10-30.md` for final evidence;
     `SCOPE-0.16-FIML-2026-10-30.md` retains its bounded inclusion contract.
-4. **Next CRAN release** — trigger still open (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
+4. **Historical CRAN trigger** — the old 0.5.0 trigger is superseded by the current explicit CRAN hold; no submission is authorized.
 5. **Ext C.1 (CMAverse)** — blocked; see `planning/EXTENSIONS-PLAN-2026-06-03.md`
 6. **Categorical variables (backlog, added 2026-10-17, none scheduled; each needs a named consumer and an independent oracle before it starts):**
 
@@ -1935,7 +2008,12 @@ history; old dates or incomplete task references are not the current queue:
 
 ---
 
-**Status**: ✅ ALL MVP PHASES COMPLETE + Extensions A, B, C COMPLETE (v0.4.0) + D8(b) (v0.5.0, GitHub + r-universe) → v0.3.2 on CRAN
+## Historical status snapshot (2026-10-10; superseded)
+
+This retained snapshot is not the current queue or a live deployment receipt.
+Use the [Current board](#current-board) for priorities and release dispositions.
+
+**Historical status**: ✅ ALL MVP PHASES COMPLETE + Extensions A, B, C COMPLETE (v0.4.0) + D8(b) (v0.5.0, GitHub + r-universe) → v0.3.2 on CRAN
 
 **Completed**:
 - ✅ Phase 1: Package Setup (CI/CD, documentation, Dependabot)
@@ -1953,15 +2031,16 @@ history; old dates or incomplete task references are not the current queue:
 - ✅ D8(b): `JointMediationData` + `joint_effects()` (#76/#77, 0.5.0)
 - ✅ Post-0.4.0 (0.5.0, released 2026-09-25): `mediation_demo` (#62-#67), effect SEs for all classes (#69-#75), Methods and Formulas article (#79), four-way factor covariates (#78), joint SEs with `data =` (#80), serial total effect (#81, behavior change), `confint()` path alias lookup (#82, behavior change); articles evaluate at site build
 
-**Current**:
+**Historical availability (2026-10-10)**:
 - 🚀 v0.3.2 live on CRAN (known bugs in pinned #83); v0.5.0 on `main`/GitHub/r-universe
 - 🎨 pkgdown site deployed at https://data-wise.github.io/medfit/ (0.5.0, including the Methods and Formulas article)
 
-**Future Development**:
+**Historical future-development notes**:
 - Next CRAN release (carries 0.5.0's fixes) — trigger open
 - Ext C.1: CMAverse adapter — blocked (not on CRAN; simulation-based effects have no slot)
 - Ext D module 2 (1-1-1, random slopes, sigma_ab) / Ext E (longitudinal) — brainstormed, not spec'd; Ext D module 1 is built (see Next Actions)
 - Phase 7b design (estimation-engine UI) has no standalone increment; `decompose()` shipped, no `Decomposition` class
 
-**Next Review**: After the 0.8.0 release
-**Last Updated**: 2026-10-10
+**Historical review trigger**: after 0.8.0 (obsolete)
+**Snapshot date**: 2026-10-10
+**Current-board reconciliation**: 2026-10-31 MDT; inference design remains blocked before implementation.
