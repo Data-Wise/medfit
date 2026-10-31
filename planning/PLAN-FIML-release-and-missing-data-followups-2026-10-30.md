@@ -141,14 +141,17 @@ confidence-interval coverage. Any unexplained discrepancy blocks the milestone.
 
 ### A2. Website, help and one minibook unit
 
-The focused minibook unit is implemented locally under
+The focused minibook unit is merged into dev via PR #368 (`e2f028f9`) under
 [its authorized plan](PLAN-FIML-minibook-unit-2026-10-30.md): Chapter 8, navigation
 and preface link. The full nine-page HTML book rendered successfully; the user
 visually accepted it. Independent likelihood review, executed examples and docs
 checks passed. Final local gates passed: 1,783 tests, 9,785 passed assertions,
 zero failures/errors, four warnings and two skips; lint clean and built-package
 check `Status: OK`. The single corrective retry repaired book-test contracts,
-not production code. No publication is authorized.
+not production code. All six exact-head fast checks passed before the authorized
+merge. Branch/worktree cleanup and the 805-file evidence archive are verified;
+post-merge coverage run `41155534928` remains pending. Website deployment and
+release remain separately authorized actions.
 
 A separate pre-existing currency issue was found while reviewing the new unit:
 `vignettes/articles/native-guide.qmd` uses binary `mediation_demo$treatment` in its

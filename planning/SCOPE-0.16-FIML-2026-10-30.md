@@ -72,12 +72,14 @@ PRs #365/#366 and the regression-oracle/minibook clarification PR #367 are merge
 with author authorization. Post-#367 dev coverage and Codecov patch passed
 (run `41147354533` at `fb879fac`; 8,789 passes, zero failures, five expected
 warnings and 140 skips). Local merged branch/worktree cleanup is complete.
-A2's focused FIML teaching unit is drafted and verified locally under
-`planning/PLAN-FIML-minibook-unit-2026-10-30.md`; its nine-page HTML book has
-user-verified visual acceptance. Final local gates passed (1,783 tests; zero
-failures/errors; lint clean; built-package check `Status: OK`); no publication
-is authorized. Review the local unit and the recorded pre-existing native-guide
-example issue before treating the wider website/help audit as complete.
+A2's focused FIML teaching unit merged via PR #368 (`e2f028f9`) under
+`planning/PLAN-FIML-minibook-unit-2026-10-30.md`. Local numerical/docs/render and
+user visual checks passed; final local gates passed (1,783 tests; zero failures/
+errors; clean lint; built check `Status: OK`). Six exact-head fast checks passed
+before merge; branch/worktree cleanup and archived evidence are verified.
+Next verify post-merge dev coverage run `41155534928` (currently pending).
+The recorded pre-existing native-guide example issue and wider website/help
+audit remain open; the focused teaching unit does not complete them.
 New diagnostics and missingmed adoption remain separate milestones. Release
 preparation/execution needs its own authorization;
 expensive CI remains deferred until release to main.

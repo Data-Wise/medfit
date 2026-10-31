@@ -1,9 +1,11 @@
 # Bounded FIML minibook unit
 
-Status: T1-T4 PASS locally, including independent content/test-contract review,
-full HTML render, USER-verified visual acceptance and final local gates. Authorized 2026-10-30. Base: dev `bc6fbf60`.
-Branch: `codex/fiml-minibook-unit`. Docs only; no production edits, push, PR,
-release, dev-to-main merge or expensive CI.
+Status: T1-T4 PASS; merged into dev through PR #368 as `e2f028f9` on
+2026-10-30 at 19:28 MDT after all six exact-head fast checks passed.
+Reviewed head: `619a42a5`. Former branch: `codex/fiml-minibook-unit`.
+Local and remote feature branch/worktree cleanup verified. Post-merge coverage
+run `41155534928` is in progress; no final post-merge result claimed.
+Docs only; no release, dev-to-main merge or expensive CI.
 
 ## Task and acceptance
 
@@ -90,3 +92,21 @@ all seven checklist items parse with no missing items. Full receipts and local P
 draft remain in _agents_workspace/fiml-minibook-unit/. No production changes,
 push, PR, release, dev-to-main merge or expensive CI. The separate older native-guide
 binary-X example remains follow-up work; this unit does not complete a whole-site audit.
+
+## Authorized merge and cleanup receipt — 2026-10-30
+
+PR #368 was squash-merged after rechecking all six live fast results on exact
+head `619a42a5f5da4b9837e765350c04ac4d121bd007`: lint, pkgdown, risk-tier,
+coverage-scope, test-coverage and Codecov patch all SUCCESS. Squash commit
+`e2f028f9a318ac6c4db4e97f2b38860256f1b306` has the identical reviewed tree.
+Local dev fast-forwarded; exact feature tip and merge ancestry verified before
+cleanup. Reviewed head retained at `refs/archive/pr-368-head`. The 805 ignored
+evidence files, including final HTML and gate reports, were archived and each
+SHA-256 verified at `_agents_workspace/fiml-minibook-unit-merged-2026-10-30.zip`
+with its receipt JSON; archive SHA-256
+`ad3e455387339770c37fa93fdad7f1394ac10613e5977cc61f48d9b9dd34490c`.
+Merged worktree and local branch removed; remote feature branch absence verified
+against origin and stale tracking ref removed. Other worktrees and unrelated
+untracked files preserved. Post-merge dev coverage run `41155534928` is pending;
+coverage-scope passed. Status reconciliation is local only, awaiting separate
+push authorization. No release, main merge, deployment or expensive CI.
