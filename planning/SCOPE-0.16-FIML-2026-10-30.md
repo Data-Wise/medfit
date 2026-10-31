@@ -88,9 +88,14 @@ The recorded native-guide binary-X example gap is closed by PR #371, merged
 as `04b7ac8c`: continuous Gaussian random-X fixture, executed direct/wrapper
 examples, regression guard and local docs/render/user-visual gates all pass.
 All three exact-head fast checks passed before merge; branch/worktree cleanup
-and the 423-file hash-verified archive are complete. The wider website/help audit
-remains open; neither the focused teaching unit nor this fixture correction
-completes that audit. Reconciliation of these planning records remains local.
+and the 423-file hash-verified archive are complete. The wider bounded-FIML
+website/help source audit is now complete locally on codex/fiml-docs-audit
+(tested docs d29421a5); see `AUDIT-FIML-public-docs-2026-10-30.md`. Confirmed
+README/help/article gaps are repaired; ten affected HTML artifacts rendered
+and content/local-link inspected. Final local suite/lint/built check pass. This
+new audit branch is not pushed or published; no live-site or browser-visual
+review is claimed. Publication review and actual release-candidate acceptance
+remain separate; do not repeat the completed audit without new evidence.
 New diagnostics and missingmed adoption remain separate milestones. Release
 preparation/execution needs its own authorization;
 expensive CI remains deferred until release to main.

@@ -163,8 +163,15 @@ Docs consistency, spelling, rendered/user-visual checks and final local gates pa
 two skips; lint clean; built check OK). Exact-head lint/pkgdown/risk-tier passed
 before merge. Merged branch/worktree cleanup and the 423-file hash-verified
 archive are complete. See `PLAN-FIML-native-guide-fixture-2026-10-30.md`.
-This closes the binary-X example gap; the wider website/help audit below remains
-open. No manual deployment, release or support expansion is implied.
+This closes the binary-X example gap. The wider bounded-FIML public-documentation
+audit is now complete locally under `PLAN-FIML-docs-audit-2026-10-30.md` and
+`AUDIT-FIML-public-docs-2026-10-30.md`: README, generic-help and three article
+exceptions repaired; ten HTML artifacts rendered/content-link inspected; docs
+and final local gates PASS on d29421a5 (1,785 tests/9,796 successful assertions,
+zero failures/errors, lint clean, built check OK). This audit branch is not
+pushed or published. No browser-visual/live-site inspection, manual deployment,
+release or support expansion is implied. The acceptance text below is retained
+as the completed audit contract, not a request to repeat the audit.
 
 Check both entry points, exact opt-in/defaults, random-X assumptions, row nobs,
 means, observed SEs, supported extraction and unsupported inference in help,
