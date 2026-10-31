@@ -2,6 +2,11 @@
 
 ## Added
 
+* A focused minibook unit teaches bounded FIML with a partial-row likelihood
+  calculation, missingness-pattern counts, explicit fitting/extraction settings,
+  supported inference and refusals, and an executed exercise answer. It supplements
+  the seven complete-data chapters without expanding FIML support.
+
 * Bounded FIML regression tests add observed-X MAR, combined-pattern/empty-row,
   joint-affine and near-singular fixtures for both direct-path parameterizations.
   They strengthen exact rank-refusal, parameter-naming and numerical-receipt checks;

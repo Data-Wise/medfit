@@ -54,6 +54,9 @@ limits, see the package website's
 and detailed [`fit_sem()` help](https://data-wise.github.io/medfit/reference/fit_sem.html).
 Released 0.15.0 does not provide this option.
 
+For a partial-row likelihood calculation, executable fit and checked exercise,
+continue to [Bounded FIML: learning from partially observed rows](chapters/08-fiml.qmd).
+
 ## How to build {.unnumbered}
 
 Install the package from this checkout, then render from the repository root:

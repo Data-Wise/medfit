@@ -1,0 +1,298 @@
+---
+title: "Bounded FIML: learning from partially observed rows"
+---
+
+The earlier chapters use complete model rows. This unit shows what changes when
+one row has a treatment and outcome but no mediator: its observed values still
+contribute to a joint likelihood. The missing mediator is integrated out; the
+software does not fill its cell with a predicted value.
+
+| | |
+|---|---|
+| **You need** | The normal likelihood and the distinction between a structural intercept and a marginal mean from Chapter 1; an installation built from this development checkout |
+| **You get** | A hand calculation for a partial row, readable missingness counts, a bounded FIML fit and extracted effects, and the limits of the resulting inference |
+| **Time** | About 25 minutes |
+
+This is the bounded FIML addition planned for unreleased 0.16. Released 0.15.0
+does not supply it. The examples use exactly three continuous observed variables,
+Gaussian random-X mediation, free intercepts and independent disturbances. The
+direct X-to-Y path may be free or fixed at zero. More general models are outside
+this route. Read the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+for the full setting restrictions and
+[Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html#bounded-fiml)
+for the general likelihood and information definitions.
+
+```{r}
+#| label: fiml-setup
+library(medfit)
+```
+
+::: {.callout-tip}
+If you remember one thing: use the likelihood for the variables a row actually
+observes. Keeping that row does not create an observation of its missing mediator.
+:::
+
+## 1. One partial row, calculated before fitting
+
+**Payoff (about 5 minutes):** see which numbers enter the likelihood when a
+mediator is missing. These small rows illustrate a calculation; they are not a
+dataset on which we claim the mediation model can be estimated.
+
+Take the variable order X, M, Y, marginal means all zero, marginal variances all
+one, and correlations 0.5 for X with M, 0.4 for X with Y, and 0.6 for M with Y.
+These are marginal means and covariances, not the structural residual variances.
+The specified covariance is positive definite, as the check below verifies.
+
+```{r}
+#| label: fiml-hand-data
+mu <- c(X = 0, M = 0, Y = 0)
+Sigma <- matrix(
+  c(1, .5, .4, .5, 1, .6, .4, .6, 1), 3,
+  dimnames = list(names(mu), names(mu))
+)
+stopifnot(min(eigen(Sigma, symmetric = TRUE)$values) > 0)
+toy <- data.frame(X = c(1, NA, NA), M = c(NA, -.5, NA), Y = c(0, NA, NA))
+toy
+```
+
+Row 1 observes X = 1 and Y = 0. Select only X and Y from the mean and covariance:
+no value is substituted for M. Their covariance determinant is 0.84; their
+quadratic distance is 1/0.84. Including the two Gaussian constants gives this
+negative log likelihood contribution:
+
+```{r}
+#| label: fiml-hand-partial
+observed <- c("X", "Y")
+S_xy <- Sigma[observed, observed, drop = FALSE]
+r_xy <- c(X = 1, Y = 0) - mu[observed]
+quad_xy <- drop(crossprod(r_xy, solve(S_xy, r_xy)))
+partial_nll <- (2 * log(2 * pi) + log(det(S_xy)) + quad_xy) / 2
+stopifnot(abs(det(S_xy) - .84) < 1e-12, abs(quad_xy - 1 / .84) < 1e-12)
+round(c(determinant = det(S_xy), quadratic = quad_xy, nll = partial_nll), 6)
+```
+
+Row 2 has only M = -0.5. Its one-dimensional normal contribution is calculated
+below. Row 3 observes none of the model variables and contributes zero to the
+observed-data log likelihood. The model cannot learn a value for that row from
+these data alone.
+
+```{r}
+#| label: fiml-hand-singleton
+singleton_nll <- (log(2 * pi) + (-.5)^2) / 2
+empty_nll <- 0
+round(c(partial = partial_nll, singleton = singleton_nll,
+        empty = empty_nll, total = partial_nll + singleton_nll), 6)
+```
+
+The determinant and distance use the **implied** covariance for the observed
+variables. They do not require a covariance estimated from the rows in one
+pattern. In particular, a singleton observation pattern does not require an
+invertible sample covariance. Production code groups rows by pattern and uses
+Cholesky solves; the explicit `solve()` above makes this tiny hand calculation
+readable. Both evaluate the same observed Gaussian contribution.
+
+**Try before continuing:** if Y in row 1 also becomes missing, is that row now
+empty? Which mean and variance remain relevant? Keep your answer for Section 5.
+
+## 2. Read the patterns without diagnosing the missingness mechanism
+
+**Payoff (about 4 minutes):** distinguish a retained row from a complete row and
+see what overlap counts can, and cannot, tell you.
+
+We now generate continuous Gaussian data from the supported mediation model,
+with independent positive-variance Gaussian disturbances and a fixed missingness
+mask. The seed helper restores the session's random-number state afterward.
+This is a reproducible teaching example, not evidence that missingness in a real
+study is ignorable. The unused column deliberately has missing values; only X,
+M and Y decide retention for this model.
+
+```{r}
+#| label: fiml-pattern-data
+d <- withr::with_seed(271L, {
+  n <- 400L
+  X <- .8 + stats::rnorm(n, sd = 1.1)
+  M <- -.4 + .5 * X + stats::rnorm(n, sd = .8)
+  Y <- .7 + .6 * M + .25 * X + stats::rnorm(n, sd = .9)
+  data.frame(X = X, M = M, Y = Y)
+})
+d$M[seq(1, nrow(d), by = 7)] <- NA_real_
+d$Y[seq(2, nrow(d), by = 11)] <- NA_real_
+d$X[seq(3, nrow(d), by = 13)] <- NA_real_
+d <- rbind(d, c(X = NA_real_, M = NA_real_, Y = NA_real_))
+d$unused <- NA_real_
+model_columns <- c("X", "M", "Y")
+is_observed <- !is.na(d[model_columns])
+observed_per_row <- rowSums(is_observed)
+row_counts <- c(
+  original = nrow(d), complete = sum(observed_per_row == 3),
+  partial = sum(observed_per_row > 0 & observed_per_row < 3),
+  empty = sum(observed_per_row == 0), retained = sum(observed_per_row > 0)
+)
+row_counts
+```
+
+These are direct summaries of the supplied data, not a new exported diagnostic
+API. A pattern of `101` means X and Y observed, M missing, in that declared
+variable order. The pattern table includes the empty pattern; fitting drops it.
+The pairwise table counts rows observing both variables, with observed counts
+on its diagonal. All counts use the original supplied rows.
+
+```{r}
+#| label: fiml-pattern-counts
+pattern <- apply(is_observed, 1, function(z) paste0(as.integer(z), collapse = ""))
+as.data.frame(table(pattern), responseName = "rows")
+crossprod(is_observed * 1L)
+stopifnot(row_counts[["original"]] == sum(table(pattern)),
+          row_counts[["retained"]] == row_counts[["complete"]] + row_counts[["partial"]])
+```
+
+Overlap helps reveal which associations have direct empirical support. It does
+not prove local identification, numerical stability, MAR or causal identification.
+Even data with no complete rows can sometimes support this bounded model, but
+patterns that provide too little information are refused by the numerical
+checks. No universal percentage or pair-count threshold is supplied here.
+
+The likelihood analysis assumes **ignorable missingness**: for example, MAR,
+with distinct parameters for the missingness mechanism and the Gaussian data
+model, together with the model's regularity and identification conditions. MAR
+allows observation probabilities to depend on observed data, but not further on
+unobserved values after conditioning on those observed data. Choosing FIML,
+reading a pattern table or obtaining a successful fit does not validate that
+assumption. Nonignorable missingness requires additional modeling or sensitivity
+analysis outside this bounded route. Interpreting paths as causal effects also
+requires the relevant causal assumptions; a missing-data likelihood supplies
+none of them by itself.
+
+## 3. Fit explicitly, then extract what is supported
+
+**Payoff (about 6 minutes):** make the missing-data choice visible in an executable
+call and check its retained row count.
+
+Listwise deletion remains the default. This unit calls the exported function
+with explicit settings rather than using the earlier chapters' wrapper that
+pins a covariance-only model.
+
+```{r}
+#| label: fiml-fit
+syntax <- "M ~ a*X
+Y ~ b*M + cp*X"
+fit <- medfit::fit_sem(
+  syntax, d, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE,
+  information = "observed", se_type = "model"
+)
+stopifnot(nobs(fit) == unname(row_counts[["retained"]]))
+c(retained_rows = nobs(fit), free_parameters = attr(logLik(fit), "df"),
+  log_likelihood = as.numeric(logLik(fit)), AIC = AIC(fit), BIC = BIC(fit))
+round(coef(fit), 4)
+```
+
+`nobs()` counts retained rows, not observed cells or complete cases. The raw log
+likelihood includes the Gaussian constants used in Section 1. The `df` attribute
+of `logLik()` counts free parameters: nine here, eight with an exactly zero
+direct path. It is not a missing-data model-test degrees of freedom. AIC and BIC
+are likelihood summaries; they do not supply a chi-square goodness-of-fit test.
+Do not compare likelihoods or information criteria from differently retained
+data as if they were fitted to the same observed sample.
+
+```{r}
+#| label: fiml-extract
+mediation <- medfit::extract_mediation(fit, treatment = "X", mediator = "M")
+round(c(NIE = as.numeric(nie(mediation)), NDE = as.numeric(nde(mediation)),
+        total = as.numeric(te(mediation))), 4)
+generics::tidy(mediation, type = "effects", conf_int = TRUE)
+```
+
+These are unstandardized effects: the indirect effect uses a times b, the direct
+effect uses cp, and their sum is the total effect. Their standard errors and
+normal intervals use the delta method and the full observed-information
+covariance, including covariance between paths. They are model-based large-sample
+approximations, not bootstrap intervals or a demonstrated coverage guarantee.
+At a = b = 0 the indirect point estimate remains available, while its standard
+error and interval are unavailable because the first-order derivative vanishes.
+
+The second supported entry point routes the same settings through `engine_args`.
+There is no top-level `missing` argument on `fit_mediation()`.
+
+```{r}
+#| label: fiml-wrapper
+wrapped <- medfit::fit_mediation(
+  model = syntax, data = d, treatment = "X", mediator = "M", engine = "native",
+  se_type = "model", engine_args = list(
+    missing = "fiml", fixed_x = FALSE, meanstructure = TRUE, information = "observed"
+  )
+)
+stopifnot(isTRUE(all.equal(as.numeric(nie(wrapped)), as.numeric(nie(mediation)), tolerance = 1e-10)))
+round(as.numeric(nie(wrapped)), 4)
+```
+
+## 4. Learn the boundary of this feature
+
+**Payoff (about 3 minutes):** recognize a deliberate refusal rather than silently
+substituting another analysis.
+
+The supported route requires three numeric continuous observed variables,
+random X (`fixed_x = FALSE`), a mean structure, observed information, model-based
+standard errors and no weights. The free or exactly zero direct path is the only
+allowed topology variation. Latent variables, extra predictors, factors,
+products, constraints, ties and user-supplied bounds are outside this route.
+The validated start/control settings also apply; see the native guide.
+
+Expected-information and sandwich standard errors, bootstrap intervals, profiles,
+MBCO, missing-data chi-square tests and broad model extensions are not supported.
+For example, the next call refuses expected information before running a fit.
+The displayed message is captured so the chapter remains executable; the check
+also ensures that a future silent success would stop this example.
+
+```{r}
+#| label: fiml-refusal
+refusal <- tryCatch(
+  medfit::fit_sem(syntax, d, missing = "fiml", fixed_x = FALSE,
+                  meanstructure = TRUE, information = "expected", se_type = "model"),
+  error = identity
+)
+stopifnot(inherits(refusal, "error"), grepl("FIML", conditionMessage(refusal), fixed = TRUE))
+conditionMessage(refusal)
+```
+
+An unsuccessful FIML request does not fall back to listwise deletion or another
+engine. Numerical acceptance checks stationarity, agreement of solver likelihoods,
+local rank and observed information. It does not establish a global optimum or
+validate the missingness mechanism. Keep the support limits beside results when
+reporting this bounded feature.
+
+## 5. Exercise and checked answer
+
+**Try first (about 3 minutes):** in the three-row hand example, change row 1's Y
+from 0 to missing, leaving X = 1. Work out (a) the retained and empty row counts,
+(b) which distribution supplies row 1's contribution, and (c) the new total
+negative log likelihood. Does the observed value in an unused extra column make
+the third row contribute? Explain why the fitting example's `nobs()` does not
+count cells.
+
+### Checked answer
+
+There are still two retained rows and one empty model row. Row 1 now uses only
+the marginal X distribution, a standard normal at X = 1. Row 2 is unchanged.
+An extra column is outside the model, so observing it does not rescue row 3.
+The calculation below checks those claims and the new total directly. The full
+normal constants must remain: the first contribution has changed dimension.
+
+```{r}
+#| label: fiml-exercise-answer
+answer_data <- toy
+answer_data$Y[1] <- NA_real_
+answer_data$unused <- 10
+answer_observed <- rowSums(!is.na(answer_data[c("X", "M", "Y")]))
+x_only_nll <- (log(2 * pi) + 1^2) / 2
+answer_total <- x_only_nll + singleton_nll
+stopifnot(sum(answer_observed > 0) == 2, sum(answer_observed == 0) == 1,
+          abs(answer_total - (log(2 * pi) + .625)) < 1e-12)
+round(c(x_only = x_only_nll, singleton = singleton_nll, total = answer_total), 6)
+```
+
+You can now select a row's observed distribution, read the missingness counts,
+fit and extract the bounded model, and recognize unsupported inference. The
+complete-data derivations in Chapters 1 to 7 remain useful background; they do
+not by themselves derive or validate FIML results. The
+[canonical likelihood and information description](https://data-wise.github.io/medfit/articles/methods.html#bounded-fiml)
+is the reference for extending this calculation.

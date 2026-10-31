@@ -1,4 +1,4 @@
-# Consistency guard for the native-engine book (book/chapters/01..07): the chapters exist and are listed in
+# Consistency guard for the native-engine book (book/chapters/01..08): the chapters exist and are listed in
 # book/_quarto.yml in order, every chapter link resolves, the book is off the package website, and the identities
 # chapters 5, 6 and 7 teach hold.
 
@@ -14,10 +14,10 @@ book_chapters <- function() list.files(file.path(book_dir(), "chapters"), patter
 
 read_text <- function(p) paste(readLines(p, warn = FALSE), collapse = "\n")
 
-test_that("the seven chapters exist, numbered 1 to 7, and are listed in _quarto.yml in order", {
+test_that("the eight chapters exist, numbered 1 to 8, and are listed in _quarto.yml in order", {
   ch <- book_chapters()
-  expect_length(ch, 7L)
-  expect_identical(as.integer(sub("^0([0-9])-.*$", "\\1", ch)), 1:7)
+  expect_length(ch, 8L)
+  expect_identical(as.integer(sub("^0([0-9])-.*$", "\\1", ch)), 1:8)
   yml <- read_text(file.path(book_dir(), "_quarto.yml"))
   pos <- vapply(ch, function(g) regexpr(paste0("chapters/", g), yml, fixed = TRUE)[[1]], numeric(1))
   expect_true(all(pos > 0))
@@ -151,14 +151,38 @@ test_that("chapters 3 and 5 state the 0.13.0 behavior (-4, capped restoration, f
   expect_false(grepl(sprintf("$k = %g$", .sem_restore_k), sub("$k = 4$", "$k = 40$", ch3, fixed = TRUE), fixed = TRUE))
 })
 
-test_that("the chapters carry no 0.14.0 warning muffle and pin the 0.14.x settings in one visible wrapper", {
+test_that("all chapters avoid old warning muffles and complete-data chapters retain their visible wrapper", {
   for (g in book_chapters()) {
     txt <- read_text(file.path(book_dir(), "chapters", g))
     expect_false(grepl("medfit_warning_default_change|native-defaults-setup", txt), info = g)
-    wrapper <- "fit_sem <- function(model, data, ..., fixed_x = FALSE, meanstructure = NULL)"
-    expect_true(grepl(wrapper, txt, fixed = TRUE), info = g)
+    if (grepl("^0[1-7]-", g)) {
+      wrapper <- "fit_sem <- function(model, data, ..., fixed_x = FALSE, meanstructure = NULL)"
+      expect_true(grepl(wrapper, txt, fixed = TRUE), info = g)
+    }
   }
   expect_false(grepl("documents medfit 0\\.14", read_text(file.path(book_dir(), "index.qmd"))))
+})
+
+test_that("chapter 8 uses explicit bounded FIML settings and is linked from the preface", {
+  ch8 <- read_text(file.path(book_dir(), "chapters", "08-fiml.qmd"))
+  expect_false(grepl("fit_sem\\s*<-\\s*function", ch8))
+  blocks <- regmatches(ch8, gregexpr("(?s)```\\{r\\}\n.*?\n```", ch8, perl = TRUE))[[1]]
+  code <- gsub("^```\\{r\\}\n|\n```$", "", blocks, perl = TRUE)
+  expressions <- as.list(parse(text = paste(code, collapse = "\n")))
+  fitted <- Filter(function(x) {
+    is.call(x) && identical(x[[1]], quote(`<-`)) && identical(x[[2]], quote(fit))
+  }, expressions)
+  expect_length(fitted, 1L)
+  if (length(fitted) == 1L) {
+    args <- as.list(fitted[[1]][[3]])
+    expect_identical(args[[1]], quote(medfit::fit_sem))
+    expected <- list(missing = "fiml", fixed_x = FALSE, meanstructure = TRUE,
+                     information = "observed", se_type = "model")
+    expect_identical(args[names(expected)], expected)
+  }
+  expect_match(read_text(file.path(book_dir(), "index.qmd")),
+               "[Bounded FIML: learning from partially observed rows](chapters/08-fiml.qmd)", fixed = TRUE)
+  expect_match(read_text(file.path(book_dir(), "_quarto.yml")), "    - chapters/08-fiml.qmd", fixed = TRUE)
 })
 
 
