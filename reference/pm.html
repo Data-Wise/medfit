@@ -15,7 +15,7 @@ through the mediator(s))."><meta property="og:image" content="https://data-wise.
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -172,7 +172,8 @@ total effect from <code><a href="te.html">te()</a></code>.</p>
 opposite signs)</p></li>
 <li><p>Negative: Inconsistent mediation</p></li>
 </ul><p>The ratio has no delta-method standard error in medfit; bootstrap it with
-<code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code>.</p>
+<code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code> for supported objects. <code>pm()</code> and bootstrap inference
+refuse data extracted from bounded FIML fits; see <code><a href="fit_sem.html">fit_sem()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

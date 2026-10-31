@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -190,7 +190,7 @@
 <li>
 <strong><code><a href="../reference/fit_sem.html">fit_sem()</a></code></strong> native SEM fits - implemented</li>
 </ul>
-<p>Extraction returns the S7 class that matches the structure: <code>MediationData</code>, <code>InteractionMediationData</code>, <code>SerialMediationData</code>, <code>ParallelMediationData</code>, <code>JointMediationData</code>, or <code>ClusterMediationData</code>. All share one interface (<code><a href="../reference/nie.html">nie()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code>, …) across modeling frameworks.</p>
+<p>Extraction returns the S7 class that matches the structure: <code>MediationData</code>, <code>InteractionMediationData</code>, <code>SerialMediationData</code>, <code>ParallelMediationData</code>, <code>JointMediationData</code>, or <code>ClusterMediationData</code>. The shared interface includes <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, with operation-specific support limits. Data extracted from the <a href="native-guide.html#bounded-fiml">bounded FIML workflow</a> support unstandardized effects and normal intervals, but refuse <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code>, <code><a href="../reference/pm.html">pm()</a></code>, <code><a href="../reference/quick.html">quick()</a></code> and extracted-object <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>. Use <code><a href="../reference/fit_sem.html">fit_sem()</a></code> or the native <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> model-syntax route for that workflow; <code><a href="../reference/med.html">med()</a></code> remains a formula-building fitter.</p>
 <p><strong>Note:</strong> For quick analysis, consider using <code><a href="../reference/med.html">med()</a></code> instead - it handles fitting and extraction in one step. Use <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> when you need more control or already have fitted models.</p>
 <section class="level3"><h3 id="which-section-do-i-need">Which section do I need?<a class="anchor" aria-label="anchor" href="#which-section-do-i-need"></a>
 </h3>

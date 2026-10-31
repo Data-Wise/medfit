@@ -120,6 +120,14 @@ object containing:
 
 ## Details
 
+Bounded FIML objects supplied as `mediation_data` or `data` are refused,
+including `method = "plugin"`; this entry point does not provide FIML
+bootstrap inference. Object-aware guards run before package-controlled
+RNG, workers or refits. Opaque user callbacks and external-first
+dispatch are outside that guarantee. See
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+for supported normal intervals.
+
 ### Bootstrap Methods
 
 **Parametric Bootstrap** (`method = "parametric"`):

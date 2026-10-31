@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -419,8 +419,7 @@
 <td>dropped once, both models share the sample</td>
 <td>dropped by the engine</td>
 <td>dropped once</td>
-<td>listwise, counted in <code>n_dropped</code>
-</td>
+<td>listwise by default; the separate bounded FIML opt-in drops only all-empty model rows</td>
 </tr>
 <tr class="odd">
 <td>Returns</td>
@@ -435,6 +434,7 @@
 </tr>
 </tbody>
 </table>
+<p>The native column describes the default listwise path. The separate <a href="native-guide.html#bounded-fiml">bounded FIML workflow</a> is limited to three numeric continuous observed variables, explicit random X and observed/model SEs; weights, bootstrap and fit tests are deferred for those objects. Bounded FIML is available from 0.16.0 and is unavailable in released 0.15.0.</p>
 <p>A weight or an SE type that an engine does not take is an error, not an ignored argument, so a silent change of estimand is not possible through <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code>. The estimand still differs where the table says so: a logistic outcome through <code>glm</code> gives a path product on the log-odds scale, while <code>regmedint</code> gives a natural effect.</p>
 </section><section class="level2"><h2 id="what-medfit-does-not-run">What medfit does not run<a class="anchor" aria-label="anchor" href="#what-medfit-does-not-run"></a>
 </h2>

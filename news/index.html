@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,14 +130,25 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="medfit-development-version">medfit (development version)<a class="anchor" aria-label="anchor" href="#medfit-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.16.0" id="medfit-0160">medfit 0.16.0<a class="anchor" aria-label="anchor" href="#medfit-0160"></a></h2>
 <div class="section level3">
-<h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
-<ul><li>Native fits with active nonlinear constraints now use the constraint curvature in observed-information standard errors and in the observed sandwich bread. Expected-information standard errors retain their Fisher information definition. Covariance also uses the optimizer’s effective variance floors, so an active floor is pinned rather than treated as a free direction. Active inequalities and bounds give a local tangent covariance; it does not describe the full boundary sampling distribution.</li>
-<li>Only explicit non-positive-definite information or negative-variance diagnostics retain an accepted likelihood through <code>medfit_sem_covariance_error</code> and an internal <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> null. Other covariance errors propagate unchanged. Singular information continues to warn and return an <code>NA</code> covariance.</li>
+<h3 id="added-0-16-0">Added<a class="anchor" aria-label="anchor" href="#added-0-16-0"></a></h3>
+<ul><li><p>A focused minibook unit teaches bounded FIML with a partial-row likelihood calculation, missingness-pattern counts, explicit fitting/extraction settings, supported inference and refusals, and an executed exercise answer. It supplements the seven complete-data chapters without expanding FIML support.</p></li>
+<li><p>Bounded FIML regression tests add observed-X MAR, combined-pattern/empty-row, joint-affine and near-singular fixtures for both direct-path parameterizations. They strengthen exact rank-refusal, parameter-naming and numerical-receipt checks; this adds validation evidence without changing FIML support or acceptance limits.</p></li>
+<li><p>Bounded FIML integration adds exact <code>missing = "fiml"</code> opt-in to <code><a href="../reference/fit_sem.html">fit_sem()</a></code> and native <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> engine arguments, preserving listwise defaults and positional calls. It retains partially observed rows for three-variable Gaussian random-X mediation with a free or zero direct path. Explicit <code>fixed_x = FALSE</code>, a mean structure, observed/model SEs, no weights and the validated fixed-start protocol are required. Likelihood/IC summaries and unstandardized extracted effects are supported; model tests, bootstrap, profiles and MBCO remain unavailable.</p></li>
+<li><p>Native fits with one supported nonzero-product equality now fit both sign branches independently before choosing the lowest accepted discrepancy. Bounds can exclude a branch; an unresolved required branch stops the fit. A separate internal <code>search_evidence</code> record reports branch coverage and actual attempts, without claiming a global optimum. Repeated factors, multiple product equalities and constraints coupled to either factor retain local search. Residual diagnostics use only an already available matching reference covariance; missing reference covariance is reported as unavailable and triggers no additional fit.</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="removed-development-version">Removed<a class="anchor" aria-label="anchor" href="#removed-development-version"></a></h3>
+<h3 id="fixed-0-16-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-16-0"></a></h3>
+<ul><li><p>Generic help and the README now distinguish bounded FIML normal summaries from deferred bootstrap, proportion-mediated and comparison operations, including the different <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> support on source fits and extracted objects.</p></li>
+<li><p>The native guide’s bounded FIML example now uses continuous Gaussian random-X data instead of the bundled demo’s binary treatment. Both supported entry points are executed, with a regression guard against reintroducing binary X.</p></li>
+<li><p>Hosted coverage runs only on pull requests to <code>main</code> and pushes to <code>main</code>, including metadata-only release changes. Development-branch pushes and pull requests use local validation instead. Other fast hosted checks remain enabled; expensive platform and OpenBLAS checks remain deferred until release to main.</p></li>
+<li><p>Source archives retain the nonlinear covariance gate used by the package tests.</p></li>
+<li><p>Native fits with active nonlinear constraints now use the constraint curvature in observed-information standard errors and in the observed sandwich bread. Expected-information standard errors retain their Fisher information definition. Covariance also uses the optimizer’s effective variance floors, so an active floor is pinned rather than treated as a free direction. Active inequalities and bounds give a local tangent covariance; it does not describe the full boundary sampling distribution.</p></li>
+<li><p>Only explicit non-positive-definite information or negative-variance diagnostics retain an accepted likelihood through <code>medfit_sem_covariance_error</code> and an internal <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> null. Other covariance errors propagate unchanged. Singular information continues to warn and return an <code>NA</code> covariance.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="removed-0-16-0">Removed<a class="anchor" aria-label="anchor" href="#removed-0-16-0"></a></h3>
 <ul><li>
 <code>options(medfit.native_defaults)</code> is removed, as announced in 0.15.0. Since 0.15.0 the option had no effect (it only printed one message per session); it now does nothing and prints nothing. The message class <code>medfit_message_option_obsolete</code> no longer exists. Pass <code>fixed_x</code> and <code>meanstructure</code> explicitly to choose.</li>
 </ul></div>
@@ -157,7 +168,7 @@
 <li>To keep the 0.14.x results, pass <code>fixed_x = FALSE, meanstructure = NULL</code>.</li>
 <li>
 <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> keep medfit’s own parameter count, which includes the observed means that are not fixed whether or not they are in the parameter vector. It equals lavaan’s count when lavaan fits the mean structure, so medfit’s AIC and BIC equal those of <code>lavaan::sem(..., meanstructure = TRUE)</code> under any <code>fixed_x</code>; a default <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code> fits no mean structure, and against it medfit’s AIC is larger by 2k and its BIC by k log n (k = the observed means not fixed; k = 2 in the worked example of the article). The conditional <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> equals lavaan’s.</li>
-<li>Missing data stays listwise deletion; there is no <code>missing =</code> argument and no FIML (a 0.16.0 candidate).</li>
+<li>In 0.15.0 missing data stays listwise deletion, with no <code>missing =</code> argument or FIML. The later bounded opt-in FIML feature is planned for unreleased 0.16.</li>
 <li>
 <code><a href="../reference/compare_lr.html">compare_lr()</a></code> runs on fits made under the new defaults. Its known limit (<a href="https://github.com/data-wise/medfit/issues/320" class="external-link">#320</a>) is unchanged by the flip: on the pinned design (15 seeds by 4 cells) the lavaan run ended above medfit’s reference in 18 of 60 runs and OpenMx in 13 of 60, the same counts as before, with no mislabeled row.</li>
 <li>Docs: <code><a href="../reference/fit_sem.html">?fit_sem</a></code>, <code><a href="../reference/fit_mediation.html">?fit_mediation</a></code>, <code><a href="../reference/compare_lr.html">?compare_lr</a></code>, <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>, the “Native defaults in 0.15.0” article and the guides describe the new defaults. The other articles, the book and the cookbook are updated separately.</li>

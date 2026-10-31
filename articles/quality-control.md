@@ -40,8 +40,8 @@ semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
 | product-corr-colon | OLS and SUR hand regressions | nocorr, olsdrop | product term and four-way |
 | four-way-kat | hand oracle with known truth, glm and lavaan routes | nocovgrad, unwtd_glm, unwtd_lavaan, oracle, wrongtruth | product term and four-way |
 | s7-lifecycle | fresh-process install against CRAN S7 and S7 main | nounion, noonload | S7 install lifecycle |
-| nonlinear-profile | independent oracle (tests/sim/oracle213.R) | noref, noflips, nofloor, absfloor, oracle1, driver:all_flagged, driver:floor_disproved_silent | nonlinear constraints |
-| nonlinear-parity | OpenMx mxConstraint and an independent SE oracle | linear, larger, estoff, stale, noproj | nonlinear constraints |
+| nonlinear-profile | independent oracle (tests/sim/oracle213.R) | noref, noflips, nofloor, absfloor, oracle1, driver:all_flagged, driver:floor_disproved_silent | nonlinear constraints; nonzero product sign branches |
+| nonlinear-parity | OpenMx mxConstraint and an independent SE oracle | linear, larger, estoff, stale, noproj | nonlinear constraints; nonzero product sign branches |
 | fixed-x | lavaan fixed.x and the free fit | countrestrict, noshift, droppair, jointlik, acceptbad, aicwarnonly, driver:no_lavaan | fixed_x |
 | mean-constrained | lavaan and the invariance of the shifted fit | badshift, nocenter, driver:no_lavaan, driver:lavaan_partial | observed intercepts and means |
 | factor | hand-coded dummies and lavaan | wrongref, nofix, noncanon, oneprod, afterdelete, nolevelcheck, halffix, driver:no_lavaan | factor covariates |
@@ -51,6 +51,7 @@ semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
 | restoration | first-order cost bound derived in the Methods article | infslack, rawdist, nocurv, nopinv, nonorm, nodispatch | nonlinear constraints |
 | native-defaults | lavaan fixed.x/meanstructure/sampling.weights and a hand-calculated conditional likelihood | fixedx_logical, product_free, driver | observed intercepts and means; fixed_x; native defaults (fixed_x x meanstructure) |
 | semopy | semopy 2.3.11 (MLW, ftol 1e-12, observed information), cross-checked against lavaan | medfit_shift, medfit_se, perturb, swapname, driver | observed; latent; parallel; serial |
+| fiml | lavaan observed information and independent row-wise Gaussian likelihood | wrong_n, complete_case, dropped_cov, lost_provenance, missing_guard, driver | bounded random-X FIML |
 
 A token in *Planted defects* is a `MUTANT=` value of the gate’s script;
 the driver (`tests/sim/run-gates.R --mutants`) also plants tolerance,
@@ -123,6 +124,19 @@ branches, and, for a certified-empty branch, the premises of its
 certificate. A forged ID, count, state, digest, certificate or dropped
 child is refused. The MBCO root additionally ties each null to the
 returned `$tests` table and to the settings its refit used.
+
+**Nonzero-product coverage has a separate validator.** The optional
+internal `search_evidence` record does not alter the version-1 ledger.
+Its validator rebuilds supported-shape classification and sign bounds
+from the canonical model, checks the sample/settings context, exact
+parameter coordinates, candidate objectives, acceptance gates and actual
+attempt counts, and refuses fabricated local coverage or false
+emptiness. The independent tests use a separately parameterized
+likelihood and covariance calculation, plus forged-record and
+removed-validator defects (`test-sem-nonzero-branches.R`,
+`test-sem-nonzero-evidence.R`). Covered sign domains do not establish
+global optimality; see [Computation and
+algorithms](https://data-wise.github.io/medfit/articles/computation-algorithms.html#a-nonzero-product-has-two-sign-branches).
 
 **Genuine shapes must validate.** A validator is also tested the other
 way: every shape

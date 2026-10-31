@@ -591,8 +591,58 @@ mediation structure through the same workers as the lavaan route.
 and `fit_mediation(engine = "native")` fit a model written in medfit
 model syntax
 ([`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md))
-by maximum likelihood to raw data. Rows with missing values in the model
-variables are dropped once (listwise deletion) and counted.
+by maximum likelihood to raw data. By default, rows with missing values
+in the model variables are dropped once (listwise deletion) and counted.
+The separate bounded FIML opt-in uses the observed components instead;
+the complete-data formulas below describe the listwise path unless
+stated otherwise.
+
+### Bounded FIML
+
+The separate `missing = "fiml"` route supports only Gaussian random-X
+simple mediation with three continuous numeric observed variables,
+independent disturbances, free intercepts and a free or exactly zero
+direct path. It assumes ignorable missingness under that model; choosing
+FIML does not validate MAR or protect against nonignorable missingness.
+See the [native
+guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+for settings and API limits.
+
+For retained row \\i\\, let \\O_i\\ select its observed components, with
+implied mean \\\mu\_{O_i}(\theta)\\ and covariance \\\Sigma\_{O_i
+O_i}(\theta)\\. The minimized total negative log likelihood includes the
+full Gaussian constants:
+
+\\ -\ell(\theta) = \frac{1}{2}\sum\_{i:\|O_i\|\>0}
+\left\[\|O_i\|\log(2\pi) + \log\|\Sigma\_{O_i O_i}(\theta)\| +
+(y\_{i,O_i}-\mu\_{O_i})^\top\Sigma\_{O_i
+O_i}^{-1}(y\_{i,O_i}-\mu\_{O_i})\right\]. \\
+
+Rows are grouped by observation pattern; Cholesky solves use the implied
+principal covariance, not an inverse of each pattern’s sample
+covariance. Singleton patterns therefore need no invertible sample
+covariance. Only rows with no observed model variable are dropped. No
+complete-case initialization is required, although missingness patterns
+can still leave a model unidentified.
+[`nobs()`](https://rdrr.io/r/stats/nobs.html) is the retained row count,
+including singleton and incomplete rows.
+
+The full observed Hessian of this total objective gives the model
+covariance. Standardized internal coordinates are transported back with
+the full affine Jacobian, including mean/intercept terms. Both SLSQP and
+nlminb must supply accepted stationary candidates with agreeing
+likelihoods; local rank and positive, adequately conditioned information
+are also required. These checks are local numerical evidence, not global
+optimization or sampling-coverage proofs.
+
+[`logLik()`](https://rdrr.io/r/stats/logLik.html) returns the raw total
+likelihood. Its `df` attribute is the free parameter count (nine, or
+eight with the direct path fixed at zero); AIC and BIC use that count
+and retained N. The complete-data discrepancy and model-test df are
+unavailable. No missing-data saturated reference fit, chi-square or fit
+indices are synthesized. At the NIE origin, a zero first derivative does
+not supply regular normal inference; NIE inferential fields are
+unavailable.
 
 ### Model form
 
@@ -799,6 +849,43 @@ Jacobians for the optimizer (SLSQP through nloptr). A nonlinear equality
 whose Jacobian is a central difference, both recomputed at every point;
 a nonlinear inequality is the same row with the sign chosen so that it
 reads \\c(\theta) \le 0\\.
+
+#### Nonzero-product branches
+
+For one equality \\c a b = q\\, with finite nonzero constants and finite
+nonzero \\q/c\\, two distinct free scalar labels after definition
+expansion, and no other constraint row involving either factor, the
+engine searches \\a\>0\\ and \\a\<0\\ independently. On either branch
+\\b=q/(ca)\\, so its sign is fixed too. Bounds may exclude a branch, but
+numerical failure cannot prove it empty. At least one branch must be
+accepted and every required branch accepted or validly excluded before a
+fit is returned. Multiple product equalities, repeated factors and
+coupled constraints retain local search. Sign coverage is not a proof of
+a global optimum within a branch.
+
+For this supported row, the solver uses the equivalent residual
+\\ab-q/c\\ and its corresponding Jacobian and Hessian. The original raw
+residual retained for diagnosis is \\r=c\hat a\hat b-q\\. If a matching
+reference fit without the tested restriction already supplies estimates
+\\\theta_0\\ and covariance \\V_0\\, its optional diagnostic scale is
+
+\\ g_0 = \left.\nabla\_\theta(cab-q)\right\|\_{\theta_0},\qquad
+\operatorname{SE}\_{\mathrm{ref}}=\sqrt{g_0^\top V_0g_0},\qquad
+z\_{\mathrm{res}}=r/\operatorname{SE}\_{\mathrm{ref}}. \\
+
+In the factor coordinates, \\g_0=(c b_0,c a_0)^\top\\, with zeros for
+other parameters. Both gradient and covariance come from that reference,
+on the same rows, weights, coordinates and likelihood settings; the
+projected constrained covariance is not used. No automatic refit or
+covariance calculation is made. The ordinary optimizer reference has no
+covariance, so these scaled diagnostics are `NA` with reason
+`reference_covariance_unavailable`. They do not affect acceptance,
+selection or inference. The separately versioned internal coverage
+record and unchanged status/count meanings are described in [Computation
+and
+algorithms](https://data-wise.github.io/medfit/articles/computation-algorithms.html#a-nonzero-product-has-two-sign-branches).
+
+#### Curvature and acceptance
 
 A nonlinear row can bend away from its tangent plane, so the acceptance
 test uses the Hessian of the Lagrangian, \\H + \sum_i \lambda_i \nabla^2

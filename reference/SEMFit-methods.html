@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -162,8 +162,9 @@ spaces (<code>"M~X"</code>, <code>"X~~X"</code>, <code>"eta=~m2"</code>). <code>
 accessors <code><a href="extract_mediation.html">extract_mediation()</a></code> reads use the same names.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> returns their covariance, projected onto the active constraints
 and bounds; rows for a pinned parameter are zero.</p></li>
-<li><p><code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> returns the number of rows used after listwise deletion.</p></li>
-<li><p><code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> returns the log likelihood with the means free; its <code>df</code>
+<li><p><code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> returns rows used after listwise deletion by default; for bounded
+FIML it counts rows with any observed model variable.</p></li>
+<li><p>For listwise fits, <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> returns the log likelihood with the means free; its <code>df</code>
 attribute counts the free parameters plus one mean per observed variable
 that is not fixed. With <code>fixed_x</code> it is conditional on the fixed variables
 (lavaan's value), so <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> of fits with different fixed sets
@@ -172,6 +173,14 @@ or data stop instead of ranking them; the same holds for <code><a href="https://
 parameters in <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> (<code>fixed_x</code> column <code>TRUE</code>, no standard error) and in
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>; <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> and <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> leave them out. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
 say what the log likelihood is conditional on.</p></li>
+<li><p><strong>Bounded FIML.</strong> Raw total Gaussian <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> includes constants; its <code>df</code>
+attribute counts the eight or nine free parameters. AIC/BIC use retained N.
+<code>f</code> and model-test <code>df</code> are unavailable: no saturated missing-data reference
+fit is performed. SEMFit <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> retains likelihood/IC fields with unavailable
+model tests and a reason. Extracted-object <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> is instead deferred.
+Normal parameter intervals, extraction and unstandardized path/effect
+summaries are supported; bootstrap, profiles, MBCO and fit tests refuse.
+See <code><a href="fit_sem.html">fit_sem()</a></code> for settings, provenance and dispatch boundaries.</p></li>
 <li><p><strong>Model test with a product term.</strong> The global chi-square is not valid when
 a factor of a product term (<code>x:m</code>) is itself a regression target, because
 the model then treats the product as exogenous although it is a function of

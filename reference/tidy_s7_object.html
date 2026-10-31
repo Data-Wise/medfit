@@ -21,7 +21,7 @@ mediation class; see Details."><meta property="og:image" content="https://data-w
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -196,6 +196,18 @@ covariances between equations, and the effect standard errors inherit that.
 The proportion mediated (reported by <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>) has no standard error: it
 is a ratio whose delta-method standard error is unstable when the total
 effect is near zero, so bootstrap it instead.</p><div class="section">
+<h3 id="bounded-fiml">Bounded FIML<a class="anchor" aria-label="anchor" href="#bounded-fiml"></a></h3>
+
+
+<p>For data extracted from a bounded FIML fit, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, coefficients, covariance
+and normal path/effect intervals are supported, but <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>, <code><a href="pm.html">pm()</a></code> and
+bootstrap intervals refuse. The bootstrap recommendations above apply only
+to other supported objects. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> on the source <a href="SEMFit.html">SEMFit</a> instead retains
+likelihood and information-criterion fields, with model tests unavailable.
+See <code><a href="fit_sem.html">fit_sem()</a></code> for the bounded model, assumptions and inference limits.</p>
+</div>
+
+<div class="section">
 <h3 id="base-methods">Base methods<a class="anchor" aria-label="anchor" href="#base-methods"></a></h3>
 
 <ul><li><p><code>coef(object, type = "paths")</code>: the path coefficients; <code>type = "effects"</code>

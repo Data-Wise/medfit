@@ -131,6 +131,27 @@ round(coef(tied)[c("a", "b", "cp")], 4)
          a      b     cp
     0.5443 0.5481 0.2984 
 
+## Nonzero-product equality
+
+A single equality such as `a*b == 0.1` now searches both sign branches
+independently, using the existing optimizer and acceptance gates. The
+factors must be distinct free labels, possibly reached through
+definitions, with no other constraint involving either factor. A finite
+nonzero constant multiplier is supported too. Bounds may rule out a
+branch; if a required branch remains unresolved, the call stops rather
+than returning the best survivor. More than one product equality, a
+repeated factor or a coupled constraint retains local search.
+
+The internal `fit@internals$search_evidence` records branch coverage
+separately from the outcome ledger. `charted` means the required sign
+domains were covered, not that a global optimum was proved. Existing
+optimum statuses retain their meanings, while actual start counts can
+increase because each nonempty branch gets its own starts. See [the
+algorithm
+description](https://data-wise.github.io/medfit/articles/computation-algorithms.html#a-nonzero-product-has-two-sign-branches)
+for coverage limitations and the existing-reference-only residual
+diagnostic.
+
 ## Compare nested fits
 
 [`anova()`](https://rdrr.io/r/stats/anova.html) is the likelihood-ratio

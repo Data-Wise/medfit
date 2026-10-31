@@ -31,7 +31,7 @@ larger statistic."><meta property="og:image" content="https://data-wise.github.i
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -235,7 +235,9 @@ warning and NA covariance.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>A fit made with <code>weights</code> is refused: the weighted discrepancy is
+    <p>Bounded FIML fits are refused before any constrained refit; their model tests
+and MBCO inference are not supported. See <code><a href="fit_sem.html">fit_sem()</a></code> for the bounded limits.</p>
+<p>A fit made with <code>weights</code> is refused: the weighted discrepancy is
 not a likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are
 measured against.</p>

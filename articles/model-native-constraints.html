@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -288,6 +288,10 @@ MBCO = 33.63, df = 1, p-value = 6.666e-09</code></pre>
 0.5443 0.5481 0.2984 </code></pre>
 </div>
 </div>
+</section><section class="level2"><h2 id="nonzero-product-equality">Nonzero-product equality<a class="anchor" aria-label="anchor" href="#nonzero-product-equality"></a>
+</h2>
+<p>A single equality such as <code>a*b == 0.1</code> now searches both sign branches independently, using the existing optimizer and acceptance gates. The factors must be distinct free labels, possibly reached through definitions, with no other constraint involving either factor. A finite nonzero constant multiplier is supported too. Bounds may rule out a branch; if a required branch remains unresolved, the call stops rather than returning the best survivor. More than one product equality, a repeated factor or a coupled constraint retains local search.</p>
+<p>The internal <code>fit@internals$search_evidence</code> records branch coverage separately from the outcome ledger. <code>charted</code> means the required sign domains were covered, not that a global optimum was proved. Existing optimum statuses retain their meanings, while actual start counts can increase because each nonempty branch gets its own starts. See <a href="computation-algorithms.html#a-nonzero-product-has-two-sign-branches">the algorithm description</a> for coverage limitations and the existing-reference-only residual diagnostic.</p>
 </section><section class="level2"><h2 id="compare-nested-fits">Compare nested fits<a class="anchor" aria-label="anchor" href="#compare-nested-fits"></a>
 </h2>
 <p><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> is the likelihood-ratio test for two nested <code>SEMFit</code>s and refits nothing; you vouch that the restriction is nested in substance.</p>

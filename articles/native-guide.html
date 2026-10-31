@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -451,13 +451,18 @@ weighted_robust 0.10207525           0.04774111 0.06498487</code></pre>
 <td>same, as rows <span class="math inline">\(c(\theta) \le 0\)</span>; a warning when the starts disagree</td>
 </tr>
 <tr class="even">
+<td>one independent nonzero product</td>
+<td><code>a*b == 0.1</code></td>
+<td>both sign domains searched; an unresolved required branch stops the fit; coverage is not global optimality</td>
+</tr>
+<tr class="odd">
 <td>product set to zero</td>
 <td>
 <code>a*b == 0</code>, <code>b1*b2*b3 == 0</code>
 </td>
 <td>exact: one linear fit per factor, smallest discrepancy kept</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>sum of products</td>
 <td><code>a1*b1 + a2*b2 == 0</code></td>
 <td>best-effort: the best of the starts; a disagreement warning means a better optimum may exist, so raise <code>n_starts</code>
@@ -556,6 +561,7 @@ MBCO = 33.353, df = 1, p-value = 7.685e-09</code></pre>
 <pre><code>[1] "outcome~~outcome"</code></pre>
 </div>
 </div>
+<p>For the nonzero-product supported shapes, local-search limits and coverage record, see <a href="model-native-constraints.html#nonzero-product-equality">the constraints page</a>.</p>
 <p>When a model with a nonlinear constraint warns that the starts reached different optima, the constraint has more than one solution (<code>a*b &gt; 0.1</code> holds for two positive or two negative paths). The kept fit is the best, but say so in a report.</p>
 <section class="level3"><h3 id="the-outcome-ledger">The outcome ledger<a class="anchor" aria-label="anchor" href="#the-outcome-ledger"></a>
 </h3>
@@ -577,7 +583,7 @@ MBCO = 33.353, df = 1, p-value = 7.685e-09</code></pre>
 <li>
 <strong>Observed means only.</strong> Intercepts (<code>y ~ 1</code>, <code>y ~ 1 + x</code>) are estimated for observed variables; a free latent mean or intercept stops with “latent means are planned for a later release”.</li>
 <li>
-<strong>One group</strong>, listwise deletion for missing data, <strong>numeric variables only</strong>.</li>
+<strong>One group</strong>; listwise deletion is the missing-data default. The separate <a href="#bounded-fiml">bounded FIML opt-in</a> retains partially observed rows only for its three-variable random-X model.</li>
 <li>
 <strong>ML only</strong>, plus the HC0 sandwich; no robust chi-square, no fit indices beyond the chi-square, AIC and BIC.</li>
 <li>
@@ -588,6 +594,124 @@ MBCO = 33.353, df = 1, p-value = 7.685e-09</code></pre>
 </ul></section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
 <p><a href="native-quickstart.html">Quickstart</a> | <a href="model-native.html">Models: native engine</a> | <a href="model-native-constraints.html">Constraints and the MBCO test</a> | <a href="https://github.com/Data-Wise/medfit/tree/main/book" class="external-link">Native engine book (source in the repository)</a> | <a href="cookbook.html">Cookbook</a> | <a href="methods.html">Methods and Formulas</a> | <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code></p>
+</section><section class="level2"><h2 id="bounded-fiml">Bounded FIML (0.16.0)<a class="anchor" aria-label="anchor" href="#bounded-fiml"></a>
+</h2>
+<p>Bounded FIML was introduced in 0.16.0 and is unavailable in released 0.15.0. Ordinary calls still delete incomplete model rows listwise. The explicit opt-in below fits exactly three numeric continuous observed variables: X to M to Y with a free or exactly zero direct path, independent Gaussian disturbances and free intercepts. It assumes ignorable missingness under that joint model; FIML does not impute the missing values.</p>
+<p>Generate continuous Gaussian X, M and Y with independent disturbances for this example; the bundled demo’s binary treatment does not match this joint model. The fixed missing-value pattern is for illustration, not evidence that missingness in an applied study is ignorable. <code>with_seed()</code> preserves the caller’s random-number state.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">fiml_data</span> <span class="op">&lt;-</span> <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">with_seed</a></span><span class="op">(</span><span class="fl">271L</span>, <span class="op">{</span></span>
+<span>  <span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">400L</span></span>
+<span>  <span class="va">treatment</span> <span class="op">&lt;-</span> <span class="fl">.8</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">1.1</span><span class="op">)</span></span>
+<span>  <span class="va">mediator1</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fl">.4</span> <span class="op">+</span> <span class="fl">.5</span> <span class="op">*</span> <span class="va">treatment</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.8</span><span class="op">)</span></span>
+<span>  <span class="va">outcome</span> <span class="op">&lt;-</span> <span class="fl">.7</span> <span class="op">+</span> <span class="fl">.6</span> <span class="op">*</span> <span class="va">mediator1</span> <span class="op">+</span> <span class="fl">.25</span> <span class="op">*</span> <span class="va">treatment</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.9</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>treatment <span class="op">=</span> <span class="va">treatment</span>, mediator1 <span class="op">=</span> <span class="va">mediator1</span>, outcome <span class="op">=</span> <span class="va">outcome</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">fiml_data</span><span class="op">$</span><span class="va">mediator1</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">fiml_data</span><span class="op">)</span>, by <span class="op">=</span> <span class="fl">7</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA_real_</span></span></code></pre>
+</div>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">fiml_syntax</span> <span class="op">&lt;-</span> <span class="st">"mediator1 ~ a*treatment</span></span>
+<span><span class="st">outcome ~ b*mediator1 + cp*treatment"</span></span>
+<span><span class="va">fiml_fit</span> <span class="op">&lt;-</span> <span class="fu">medfit</span><span class="fu">::</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
+<span>  <span class="va">fiml_syntax</span>, <span class="va">fiml_data</span>, missing <span class="op">=</span> <span class="st">"fiml"</span>, fixed_x <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  meanstructure <span class="op">=</span> <span class="cn">TRUE</span>, information <span class="op">=</span> <span class="st">"observed"</span>, se_type <span class="op">=</span> <span class="st">"model"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>retained_rows <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs</a></span><span class="op">(</span><span class="va">fiml_fit</span><span class="op">)</span>, logLik <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik</a></span><span class="op">(</span><span class="va">fiml_fit</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>retained_rows        logLik
+      400.000     -1544.246 </code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="va">fiml_effects</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fiml_fit</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">fiml_effects</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Indirect Effect (NIE): 0.2795</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/nde.html">nde</a></span><span class="op">(</span><span class="va">fiml_effects</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Direct Effect (NDE): 0.2474</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/te.html">te</a></span><span class="op">(</span><span class="va">fiml_effects</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total Effect (TE): 0.5269</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fiml_effects</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  term  estimate std_error
+  &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 nie      0.279    0.0365
+2 nde      0.247    0.0508
+3 te       0.527    0.0457</code></pre>
+</div>
+</div>
+<p>The wrapper route returns the extracted mediation object directly:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">fiml_wrapped</span> <span class="op">&lt;-</span> <span class="fu">medfit</span><span class="fu">::</span><span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span></span>
+<span>  model <span class="op">=</span> <span class="va">fiml_syntax</span>, data <span class="op">=</span> <span class="va">fiml_data</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>, engine <span class="op">=</span> <span class="st">"native"</span>,</span>
+<span>  se_type <span class="op">=</span> <span class="st">"model"</span>, engine_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    missing <span class="op">=</span> <span class="st">"fiml"</span>, fixed_x <span class="op">=</span> <span class="cn">FALSE</span>, meanstructure <span class="op">=</span> <span class="cn">TRUE</span>, information <span class="op">=</span> <span class="st">"observed"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fiml_wrapped</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  term  estimate std_error
+  &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 nie      0.279    0.0365
+2 nde      0.247    0.0508
+3 te       0.527    0.0457</code></pre>
+</div>
+</div>
+<p>There is no new top-level <code>missing</code> argument on <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code>; <code><a href="../reference/med.html">med()</a></code> remains a formula-building fitter. The missing-method strings must match exactly. A failed FIML fit never falls back to listwise deletion or another engine, even on complete data.</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Setting</th>
+<th>Bounded FIML requirement</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>fixed_x</code></td>
+<td>Explicit <code>FALSE</code>; omission, <code>TRUE</code> and named subsets refuse</td>
+</tr>
+<tr class="even">
+<td><code>meanstructure</code></td>
+<td>
+<code>TRUE</code>; <code>NULL</code> and <code>FALSE</code> refuse</td>
+</tr>
+<tr class="odd">
+<td>
+<code>information</code>, <code>se_type</code>
+</td>
+<td>
+<code>"observed"</code>, <code>"model"</code>
+</td>
+</tr>
+<tr class="even">
+<td>Weights</td>
+<td>No non-NULL vector, including unit weights or the deprecated alias</td>
+</tr>
+<tr class="odd">
+<td>
+<code>n_starts</code>, <code>control</code>
+</td>
+<td>
+<code>NULL</code> or 3; empty control; no syntax-supplied starts</td>
+</tr>
+<tr class="even">
+<td>Topology</td>
+<td>Three variables only; free or exactly zero direct path; no <code>:=</code>, constraints, ties, bounds, extra predictors, latent variables, factors or products</td>
+</tr>
+</tbody>
+</table>
+<p>The start/control restrictions preserve the initial validated protocol, rather than expressing mathematical limits of FIML. Three starts run for each solver; six attempt groups normally involve nine actual calls with nlminb refinements. Failures and completed calls are retained separately. Numerical acceptance requires both solvers, stationarity, agreeing likelihoods, local rank and valid observed information; it does not certify a global optimum or inference coverage.</p>
+<p>Rows with any observed model variable are retained, including singleton patterns; only all-empty model rows are dropped. Extra columns do not select rows. No complete-case initialization is used: data with no complete rows can fit when local identification checks pass. <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> counts retained rows, not observed cells. Original positional row IDs and pattern/count evidence are retained.</p>
+<p><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, full <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code>, raw <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>, AIC/BIC, print/summary, parameter tidy and normal confidence intervals work on the SEMFit. Its <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> reports likelihood/IC fields, with model-test fields unavailable and an explicit reason. The discrepancy <code>f</code> and model-test <code>df</code> are <code>NA</code>; the separate free-parameter count is eight or nine. There is no saturated missing-data fit. See <a href="methods.html#bounded-fiml">Methods and Formulas</a> for the likelihood.</p>
+<p>Extraction preserves validated FIML context through copying and serialization. Original SEMFit labels/full covariance stay unchanged; extracted a/b/c_prime and m_/y_ aliases follow topology, with original coordinates retained in context. Supported extracted operations are <code><a href="../reference/paths.html">paths()</a></code>, <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/te.html">te()</a></code>, <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> (paths/effects/all), full <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, print/summary, tidy and normal path/effect confidence intervals. At a = b = 0 the NIE point value is retained but its inferential fields are unavailable. A fixed direct path of zero instead has known zero covariance; other valid effect inference remains available.</p>
+<p>Extracted-object <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>, <code><a href="../reference/quick.html">quick()</a></code>, <code><a href="../reference/pm.html">pm()</a></code>, bootstrap/boot intervals, profiles, MBCO, fit tests, fit indices and prediction/residual APIs are deferred and refuse FIML objects. Package object-aware guards act before package-controlled refits, RNG or worker launch; opaque user callbacks are outside this guarantee. AIC/BIC comparisons dispatched with SEMFit first require compatible FIML contexts and refuse external/mixed objects before external likelihood calls. Calls dispatched first through another class are outside medfit’s guard.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

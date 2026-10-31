@@ -130,22 +130,27 @@ fit_mediation(
   Named list of engine-specific overrides (default:
   [`list()`](https://rdrr.io/r/base/list.html), no overrides). Ignored
   by `engine = "glm"`. For `engine = "native"`, recognized names are
-  `information`, `n_starts`, `meanstructure`, `fixed_x` and `control`
-  (passed to
+  `information`, `n_starts`, `meanstructure`, `fixed_x`, `missing` and
+  `control` (passed to
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
   whose defaults for `fixed_x` and `meanstructure` changed in 0.15.0)
   and `outcome`, `structure`, `decomposition`, `interaction`, `a_label`,
   `b_label` and `cp_label` (passed to
   [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md));
-  any other name is an error. For `engine = "lmer"`, recognized names
-  are `random_y` and `random_m` (one-sided formulas of level-1 terms
-  that get correlated random slopes; `~ M` in `random_y` is applied to
-  the within-cluster mediator term) and `REML` (default `TRUE`); any
-  other name is an error. For `engine = "regmedint"`, recognized names
-  are `interaction`, `cvar`, `mreg`, `yreg`, `a0`, `a1`, and `c_cond`;
-  each replaces the value the adapter would otherwise derive from the
-  formulas, families, and data. The reference mediator level is set with
-  `m_star`, not here.
+  any other name is an error. Bounded FIML requires
+  `engine_args = list(missing = "fiml", fixed_x = FALSE)` and the
+  settings/limits in
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md);
+  `se_type = "model"` stays at the top level. Listwise defaults and the
+  other engines' missing-data behavior are unchanged. For
+  `engine = "lmer"`, recognized names are `random_y` and `random_m`
+  (one-sided formulas of level-1 terms that get correlated random
+  slopes; `~ M` in `random_y` is applied to the within-cluster mediator
+  term) and `REML` (default `TRUE`); any other name is an error. For
+  `engine = "regmedint"`, recognized names are `interaction`, `cvar`,
+  `mreg`, `yreg`, `a0`, `a1`, and `c_cond`; each replaces the value the
+  adapter would otherwise derive from the formulas, families, and data.
+  The reference mediator level is set with `m_star`, not here.
 
 - m_star:
 

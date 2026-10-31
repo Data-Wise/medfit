@@ -52,7 +52,10 @@ The proportion mediated can be:
 
 The ratio has no delta-method standard error in medfit; bootstrap it
 with
-[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md).
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+for supported objects. `pm()` and bootstrap inference refuse data
+extracted from bounded FIML fits; see
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md).
 
 ## See also
 

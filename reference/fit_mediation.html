@@ -17,7 +17,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -247,11 +247,14 @@ that shrinks like 1/n.</p></dd>
 <dt id="arg-engine-args">engine_args<a class="anchor" aria-label="anchor" href="#arg-engine-args"></a></dt>
 <dd><p>Named list of engine-specific overrides (default:
 <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code>, no overrides). Ignored by <code>engine = "glm"</code>. For
-<code>engine = "native"</code>, recognized names are <code>information</code>, <code>n_starts</code>, <code>meanstructure</code>, <code>fixed_x</code> and
+<code>engine = "native"</code>, recognized names are <code>information</code>, <code>n_starts</code>, <code>meanstructure</code>, <code>fixed_x</code>, <code>missing</code> and
 <code>control</code> (passed to <code><a href="fit_sem.html">fit_sem()</a></code>, whose defaults for <code>fixed_x</code> and <code>meanstructure</code> changed in 0.15.0) and
 <code>outcome</code>, <code>structure</code>,
 <code>decomposition</code>, <code>interaction</code>, <code>a_label</code>, <code>b_label</code> and <code>cp_label</code>
-(passed to <code><a href="extract_mediation.html">extract_mediation()</a></code>); any other name is an error. For
+(passed to <code><a href="extract_mediation.html">extract_mediation()</a></code>); any other name is an error. Bounded FIML
+requires <code>engine_args = list(missing = "fiml", fixed_x = FALSE)</code> and the
+settings/limits in <code><a href="fit_sem.html">fit_sem()</a></code>; <code>se_type = "model"</code> stays at the top level.
+Listwise defaults and the other engines' missing-data behavior are unchanged. For
 <code>engine = "lmer"</code>, recognized names are <code>random_y</code> and <code>random_m</code>
 (one-sided formulas of level-1 terms that get correlated random slopes;
 <code>~ M</code> in <code>random_y</code> is applied to the within-cluster mediator term) and

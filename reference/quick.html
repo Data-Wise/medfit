@@ -15,7 +15,7 @@ or a compact report line."><meta property="og:image" content="https://data-wise.
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -165,7 +165,9 @@ or a compact report line.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Prints a compact one-line summary showing:</p><ul><li><p>NIE (Natural Indirect Effect) with CI if available</p></li>
+    <p><code>quick()</code> refuses data extracted from bounded FIML fits. Use <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>,
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> or <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> for those objects; see <code><a href="fit_sem.html">fit_sem()</a></code> for their limits.</p>
+<p>Prints a compact one-line summary showing:</p><ul><li><p>NIE (Natural Indirect Effect) with CI if available</p></li>
 <li><p>NDE (Natural Direct Effect)</p></li>
 <li><p>Proportion Mediated (PM)</p></li>
 </ul><p>If bootstrap results are available (from <code>med(..., boot = TRUE)</code>),

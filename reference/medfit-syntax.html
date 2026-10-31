@@ -15,7 +15,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -139,6 +139,17 @@
 
 
     <div class="section level2">
+    <h2 id="missing-data-scope">Missing-data scope<a class="anchor" aria-label="anchor" href="#missing-data-scope"></a></h2>
+
+
+<p>The general syntax below describes the default listwise path. The separate
+bounded <code>fit_sem(missing = "fiml", fixed_x = FALSE)</code> option accepts only
+three numeric observed variables in simple mediation with a free or exactly
+zero direct path and free intercepts. General constraints, definitions, starts,
+bounds, latent variables, products and factors are not supported for FIML.
+See <code><a href="fit_sem.html">fit_sem()</a></code> for all settings and downstream limits.</p>
+    </div>
+    <div class="section level2">
     <h2 id="core-statements">Core statements<a class="anchor" aria-label="anchor" href="#core-statements"></a></h2>
 
 <table class="table table"><tr><td>Statement</td><td>Meaning</td></tr><tr><td><code>y ~ x1 + x2</code></td><td>regression of <code>y</code> on <code>x1</code> and <code>x2</code></td></tr><tr><td><code>f =~ y1 + y2 + y3</code></td><td>latent variable <code>f</code> measured by the indicators</td></tr><tr><td><code>y1 ~~ y2</code></td><td>covariance; <code>y1 ~~ y1</code> a variance</td></tr><tr><td><code>y ~ x + m + x:m</code></td><td>product term: the observed variable <code>x * m</code> as a regressor (see Product terms)</td></tr><tr><td><code>y ~ a*x</code></td><td>label the path <code>a</code>; equal labels are one parameter</td></tr><tr><td><code>y ~ 0.5*x</code></td><td>fix the path at 0.5</td></tr><tr><td><code>y ~ start(0.3)*x</code>, <code>lower(0)*</code>, <code>upper(1)*</code></td><td>starting value, lower and upper bound</td></tr><tr><td><code>a == b</code>, <code>a + b == 1</code>, <code>cp == a*b</code></td><td>equality constraint on labels; may be nonlinear</td></tr><tr><td><code>a &lt; b</code>, <code>a &gt; 0</code></td><td>inequality constraint; <code>label &lt; number</code> is a bound</td></tr><tr><td><code>ab := a*b</code></td><td>defined parameter, with a delta-method standard error</td></tr></table><p>Constraints may be nonlinear in the labels (<code>cp == a*b</code>, <code>a*b == 0.1</code>,
@@ -153,7 +164,12 @@ model without the nonlinear rows is fitted first: its estimate, and copies of it
 with the signs of the regression paths in the rows flipped (a product constraint
 cannot change sign along its surface, so each sign pattern is its own branch),
 are extra starts, and a feasible reference estimate is never replaced by a worse
-accepted fit. Models without a nonlinear row are not affected. A product of labels set to zero
+accepted fit. Models without a nonlinear row are not affected.
+One nonzero-product equality (<code>a*b == 0.1</code>, including a finite nonzero constant multiplier and definition aliases)
+has a separate search for each sign of its two distinct free labels. Each required sign branch must be accepted
+or excluded by its bounds; an unresolved branch stops the fit. Multiple product equalities, repeated factors
+and another constraint involving either factor retain local search. The internal coverage record distinguishes
+charted branches from local search, not global from local optima; see <code><a href="fit_sem.html">fit_sem()</a></code>. A product of labels set to zero
 (<code>a*b == 0</code>, <code>b1*b2*b3 == 0</code>) is instead solved exactly: one linear fit per
 factor (<code>a == 0</code>, <code>b == 0</code>), keeping the smallest discrepancy; if a branch cannot be fitted, <code><a href="fit_sem.html">fit_sem()</a></code>
 stops with a <code>medfit_error_no_convergence</code> error instead of returning the best of the others; the error carries

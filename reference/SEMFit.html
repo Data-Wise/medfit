@@ -19,7 +19,7 @@ errors, and the diagnostics of the optimizer."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -172,16 +172,17 @@ constraints and bounds; <code>NA</code> when the model is not identified)</p></d
 
 
 <dt id="arg-f">f<a class="anchor" aria-label="anchor" href="#arg-f"></a></dt>
-<dd><p>Numeric scalar: minimized maximum-likelihood discrepancy</p></dd>
+<dd><p>Numeric scalar: minimized maximum-likelihood discrepancy; <code>NA</code> for bounded FIML</p></dd>
 
 
 <dt id="arg-n-obs-n-dropped">n_obs, n_dropped<a class="anchor" aria-label="anchor" href="#arg-n-obs-n-dropped"></a></dt>
 <dd><p>Integer scalars: rows used and rows dropped for
-missing values (listwise deletion)</p></dd>
+missing values (listwise deletion by default; only all-empty model rows for FIML)</p></dd>
 
 
 <dt id="arg-df">df<a class="anchor" aria-label="anchor" href="#arg-df"></a></dt>
-<dd><p>Numeric scalar: degrees of freedom</p></dd>
+<dd><p>Numeric scalar: model-test degrees of freedom; <code>NA</code> for bounded FIML,
+which stores the free-parameter count separately in <code>internals$likelihood$k</code></p></dd>
 
 
 <dt id="arg-information">information<a class="anchor" aria-label="anchor" href="#arg-information"></a></dt>

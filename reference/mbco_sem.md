@@ -101,6 +101,11 @@ information keeps its warning and NA covariance.
 
 ## Details
 
+Bounded FIML fits are refused before any constrained refit; their model
+tests and MBCO inference are not supported. See
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+for the bounded limits.
+
 A fit made with `weights` is refused: the weighted discrepancy is not a
 likelihood, so its difference is not chi-square. So is a fit that did
 not converge, since its discrepancy is the reference both refits are

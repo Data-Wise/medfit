@@ -14,14 +14,14 @@ Source:
 [`inst/CITATION`](https://github.com/data-wise/medfit/blob/dev/inst/CITATION)
 
 Tofighi D (2026). *medfit: Infrastructure for Mediation Model Fitting
-and Extraction*. R package version 0.15.0,
+and Extraction*. R package version 0.16.0,
 <https://data-wise.github.io/medfit/>.
 
     @Manual{,
       title = {{medfit}: Infrastructure for Mediation Model Fitting and Extraction},
       author = {Davood Tofighi},
       year = {2026},
-      note = {R package version 0.15.0},
+      note = {R package version 0.16.0},
       url = {https://data-wise.github.io/medfit/},
     }
 

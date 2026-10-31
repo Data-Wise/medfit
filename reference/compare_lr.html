@@ -5,7 +5,9 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Compare medfit's Product-Null LR with OpenMx or lavaan — compare_lr"><meta name="description" content="Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Compare medfit's Product-Null LR with OpenMx or lavaan — compare_lr"><meta name="description" content="Bounded FIML fits are refused before an external-engine comparison or refit;
+this function does not extend their supported inference. See fit_sem().
+Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
 an external SEM engine and compares it with medfit's own mbco_sem()
 statistic. A general-purpose optimizer handed the nonlinear constraint
 \(a b = 0\) can drop it (OpenMx at a zero start) or stop at the
@@ -33,7 +35,9 @@ refused by name.
 Known limit (#320): the flip of the fit_sem() defaults in 0.15.0 does not change what the comparison finds. On the
 pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run ends above medfit's reference in 18 of 60
 runs and the OpenMx run in 13 of 60, the same counts as under the 0.14.x defaults. Each is reported as
-medfit_warning_engine_statistic_above_max, and no row is mislabeled."><meta property="og:description" content="Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
+medfit_warning_engine_statistic_above_max, and no row is mislabeled."><meta property="og:description" content="Bounded FIML fits are refused before an external-engine comparison or refit;
+this function does not extend their supported inference. See fit_sem().
+Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
 an external SEM engine and compares it with medfit's own mbco_sem()
 statistic. A general-purpose optimizer handed the nonlinear constraint
 \(a b = 0\) can drop it (OpenMx at a zero start) or stop at the
@@ -69,7 +73,7 @@ medfit_warning_engine_statistic_above_max, and no row is mislabeled."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -187,7 +191,9 @@ medfit_warning_engine_statistic_above_max, and no row is mislabeled."><meta prop
     </div>
 
     <div class="ref-description section level2">
-    <p>Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
+    <p>Bounded FIML fits are refused before an external-engine comparison or refit;
+this function does not extend their supported inference. See <code><a href="fit_sem.html">fit_sem()</a></code>.</p>
+<p>Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
 an external SEM engine and compares it with medfit's own <code><a href="mbco_sem.html">mbco_sem()</a></code>
 statistic. A general-purpose optimizer handed the nonlinear constraint
 \(a b = 0\) can drop it (OpenMx at a zero start) or stop at the

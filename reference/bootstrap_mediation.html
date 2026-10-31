@@ -17,7 +17,7 @@ plugin methods."><meta property="og:image" content="https://data-wise.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -236,8 +236,11 @@ their messages are suppressed, and their number is added to the warning.
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-
-<div class="section">
+    <p>Bounded FIML objects supplied as <code>mediation_data</code> or <code>data</code> are refused,
+including <code>method = "plugin"</code>; this entry point does not provide FIML
+bootstrap inference. Object-aware guards run before package-controlled RNG,
+workers or refits. Opaque user callbacks and external-first dispatch are
+outside that guarantee. See <code><a href="fit_sem.html">fit_sem()</a></code> for supported normal intervals.</p><div class="section">
 <h3 id="bootstrap-methods">Bootstrap Methods<a class="anchor" aria-label="anchor" href="#bootstrap-methods"></a></h3>
 
 

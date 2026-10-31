@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -285,13 +285,13 @@
 <td style="text-align: left;">nonlinear-profile</td>
 <td style="text-align: left;">independent oracle (tests/sim/oracle213.R)</td>
 <td style="text-align: left;">noref, noflips, nofloor, absfloor, oracle1, driver:all_flagged, driver:floor_disproved_silent</td>
-<td style="text-align: left;">nonlinear constraints</td>
+<td style="text-align: left;">nonlinear constraints; nonzero product sign branches</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">nonlinear-parity</td>
 <td style="text-align: left;">OpenMx mxConstraint and an independent SE oracle</td>
 <td style="text-align: left;">linear, larger, estoff, stale, noproj</td>
-<td style="text-align: left;">nonlinear constraints</td>
+<td style="text-align: left;">nonlinear constraints; nonzero product sign branches</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">fixed-x</td>
@@ -346,6 +346,12 @@
 <td style="text-align: left;">semopy 2.3.11 (MLW, ftol 1e-12, observed information), cross-checked against lavaan</td>
 <td style="text-align: left;">medfit_shift, medfit_se, perturb, swapname, driver</td>
 <td style="text-align: left;">observed; latent; parallel; serial</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">fiml</td>
+<td style="text-align: left;">lavaan observed information and independent row-wise Gaussian likelihood</td>
+<td style="text-align: left;">wrong_n, complete_case, dropped_cov, lost_provenance, missing_guard, driver</td>
+<td style="text-align: left;">bounded random-X FIML</td>
 </tr>
 </tbody>
 </table>
@@ -591,6 +597,7 @@
 </h2>
 <p>A native fit carries an outcome ledger (<code>fit@diagnostics$ledger</code>, since 0.14.1): the restriction, the sample, the optimizer’s acceptance state, the discrepancy and the notices, one node per zero-product branch. The ledger is evidence, and the code that decides whether evidence is accepted is itself a QC subject: a false acceptance passes a forged or mismatched fit, and a false refusal turns a genuine result into an error. <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> runs the validators twice, on the ledger of the fit it is given and on its own root ledger before it returns. A refusal is the error <code>medfit_error_ledger</code>, a class that is never an optimizer failure and never becomes an unresolved row. The semantics of the ledger are in the <a href="guide-troubleshooting.html">troubleshooting guide</a>; the decisions are ADR D-11 and D-12.</p>
 <p><strong>What the validators accept and refuse.</strong> A node is accepted only when what it must contain can be rebuilt from its own constraints and the call: the child count and branch map, the IDs and parents, the shared sample (by digest), domain and settings, the minimum over the resolved branches, and, for a certified-empty branch, the premises of its certificate. A forged ID, count, state, digest, certificate or dropped child is refused. The MBCO root additionally ties each null to the returned <code>$tests</code> table and to the settings its refit used.</p>
+<p><strong>Nonzero-product coverage has a separate validator.</strong> The optional internal <code>search_evidence</code> record does not alter the version-1 ledger. Its validator rebuilds supported-shape classification and sign bounds from the canonical model, checks the sample/settings context, exact parameter coordinates, candidate objectives, acceptance gates and actual attempt counts, and refuses fabricated local coverage or false emptiness. The independent tests use a separately parameterized likelihood and covariance calculation, plus forged-record and removed-validator defects (<code>test-sem-nonzero-branches.R</code>, <code>test-sem-nonzero-evidence.R</code>). Covered sign domains do not establish global optimality; see <a href="computation-algorithms.html#a-nonzero-product-has-two-sign-branches">Computation and algorithms</a>.</p>
 <p><strong>Genuine shapes must validate.</strong> A validator is also tested the other way: every shape <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> can produce must pass it. The shapes of a null node are:</p>
 <table class="table caption-top">
 <colgroup>

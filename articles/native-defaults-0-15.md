@@ -301,10 +301,13 @@ comparisons between medfit fits are unaffected.
 
 ### Missing data
 
-The native engine drops incomplete rows (listwise deletion) before it
-fits, and `fixed_x` moments are the sample moments of those rows. There
-is no `missing =` argument and no full-information maximum likelihood;
-lavaan’s `missing = "fiml"` has no counterpart yet.
+In released 0.15.0, the native engine drops incomplete rows (listwise
+deletion), and `fixed_x` moments are the sample moments of those rows;
+that release has no `missing =` argument. The separate bounded FIML
+milestone preserves this default but permits explicit random-X simple
+mediation. See the [native
+guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml);
+bounded FIML is available from 0.16.0.
 
 ## Evidence: the oracle matrix
 

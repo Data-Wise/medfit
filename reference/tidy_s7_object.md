@@ -76,6 +76,22 @@ inherit that. The proportion mediated (reported by
 standard error: it is a ratio whose delta-method standard error is
 unstable when the total effect is near zero, so bootstrap it instead.
 
+### Bounded FIML
+
+For data extracted from a bounded FIML fit,
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html),
+coefficients, covariance and normal path/effect intervals are supported,
+but [`glance()`](https://generics.r-lib.org/reference/glance.html),
+[`pm()`](https://data-wise.github.io/medfit/reference/pm.md) and
+bootstrap intervals refuse. The bootstrap recommendations above apply
+only to other supported objects.
+[`glance()`](https://generics.r-lib.org/reference/glance.html) on the
+source [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)
+instead retains likelihood and information-criterion fields, with model
+tests unavailable. See
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+for the bounded model, assumptions and inference limits.
+
 ### Base methods
 
 - `coef(object, type = "paths")`: the path coefficients;

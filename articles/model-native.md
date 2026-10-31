@@ -44,6 +44,11 @@ library(generics)
         as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
         setequal, union
 
+These examples use the default listwise path. For the separate
+unreleased three-variable FIML opt-in and its narrower support, see the
+[native
+guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml).
+
 ## Fit it
 
 Label a path with `name * variable`; `:=` defines a new quantity from

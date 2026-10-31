@@ -36,6 +36,14 @@ Invisibly returns x
 
 ## Details
 
+`quick()` refuses data extracted from bounded FIML fits. Use
+[`print()`](https://rdrr.io/r/base/print.html),
+[`summary()`](https://rdrr.io/r/base/summary.html) or
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) for those
+objects; see
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+for their limits.
+
 Prints a compact one-line summary showing:
 
 - NIE (Natural Indirect Effect) with CI if available

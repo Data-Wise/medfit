@@ -72,8 +72,16 @@ one for another.
 | Indirect effect | product of path coefficients, on the link scale when the link is not the identity | regmedint’s natural indirect effect; equals the path product only for a linear mediator model and a unit treatment contrast (the adapter errors otherwise) | `a * b_between` (own and spillover parts in [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)) | the path product from the fitted syntax |
 | Case `weights` | yes | no | no | yes (weighted maximum likelihood) |
 | `se_type = "sandwich"` | yes, HC3 | no (`"model"` only) | no (`"model"` or `"kr"`) | yes, HC0-type, a little smaller than HC3 in finite samples |
-| Rows with missing values | dropped once, both models share the sample | dropped by the engine | dropped once | listwise, counted in `n_dropped` |
+| Rows with missing values | dropped once, both models share the sample | dropped by the engine | dropped once | listwise by default; the separate bounded FIML opt-in drops only all-empty model rows |
 | Returns | `MediationData` or `InteractionMediationData` | the same two classes | `ClusterMediationData` | `SEMFit`, then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) |
+
+The native column describes the default listwise path. The separate
+[bounded FIML
+workflow](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+is limited to three numeric continuous observed variables, explicit
+random X and observed/model SEs; weights, bootstrap and fit tests are
+deferred for those objects. Bounded FIML is available from 0.16.0 and is
+unavailable in released 0.15.0.
 
 A weight or an SE type that an engine does not take is an error, not an
 ignored argument, so a silent change of estimand is not possible through

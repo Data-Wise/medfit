@@ -36,16 +36,19 @@ SEMFit(theta, vcov, table, defined, f, n_obs, n_dropped, df, information,
 
 - f:
 
-  Numeric scalar: minimized maximum-likelihood discrepancy
+  Numeric scalar: minimized maximum-likelihood discrepancy; `NA` for
+  bounded FIML
 
 - n_obs, n_dropped:
 
   Integer scalars: rows used and rows dropped for missing values
-  (listwise deletion)
+  (listwise deletion by default; only all-empty model rows for FIML)
 
 - df:
 
-  Numeric scalar: degrees of freedom
+  Numeric scalar: model-test degrees of freedom; `NA` for bounded FIML,
+  which stores the free-parameter count separately in
+  `internals$likelihood$k`
 
 - information:
 

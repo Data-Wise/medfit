@@ -38,7 +38,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -177,6 +177,11 @@
 <p><strong>In one line:</strong> <code><a href="reference/med.html">med()</a></code> runs a mediation analysis, <code><a href="reference/quick.html">quick()</a></code> prints it, and <code><a href="reference/nie.html">nie()</a></code>, <code><a href="reference/nde.html">nde()</a></code>, <code><a href="reference/te.html">te()</a></code>, <code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> read it.</p>
 </blockquote>
 <div class="section level2">
+<h2 id="bounded-fiml-in-0160">Bounded FIML in 0.16.0<a class="anchor" aria-label="anchor" href="#bounded-fiml-in-0160"></a>
+</h2>
+<p>medfit 0.16.0 adds explicit <code>fit_sem(missing = "fiml", fixed_x = FALSE)</code> for three-variable Gaussian random-X mediation, preserving listwise defaults. It is unavailable in 0.15.0 and earlier. Observed/model SEs and unstandardized effects and normal intervals are supported. The model requires continuous X, M and Y, a free or exactly zero direct path, independent Gaussian disturbances, free intercepts and ignorable missingness under that joint model. Native <code><a href="reference/fit_mediation.html">fit_mediation()</a></code> uses <code>engine_args</code> for the same opt-in. Extracted FIML objects refuse <code><a href="reference/quick.html">quick()</a></code>, <code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>; fit tests, bootstrap, profiles and MBCO are deferred. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> on the source SEMFit retains likelihood/IC fields. See the <a href="https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml">native guide</a> for settings and limits. Website publication remains a separate step.</p>
+</div>
+<div class="section level2">
 <h2 id="whats-new">What’s new<a class="anchor" aria-label="anchor" href="#whats-new"></a>
 </h2>
 <table class="table">
@@ -190,8 +195,8 @@
 </tr></thead>
 <tbody>
 <tr>
-<td><strong>Development</strong></td>
-<td>Corrected observed-information and sandwich standard errors under active nonlinear constraints, including solver variance floors; expected information retains its Fisher definition. Active-boundary covariance is a local tangent approximation. Only explicit covariance diagnostics retain an accepted likelihood; other errors propagate. See <a href="https://data-wise.github.io/medfit/articles/methods.html#constraints">Methods and Formulas</a> and NEWS.</td>
+<td><strong>0.16.0</strong></td>
+<td>A supported single nonzero-product equality now searches both sign branches independently, with explicit coverage evidence rather than a global-optimum claim. Corrected observed-information and sandwich standard errors under active nonlinear constraints, including solver variance floors; expected information retains its Fisher definition. Active-boundary covariance is a local tangent approximation. Only explicit covariance diagnostics retain an accepted likelihood; other errors propagate. See <a href="https://data-wise.github.io/medfit/articles/methods.html#constraints">Methods and Formulas</a> and NEWS.</td>
 </tr>
 <tr>
 <td><strong>0.15.0</strong></td>
@@ -264,7 +269,7 @@
 <span>  <span class="st">"medfit"</span>,</span>
 <span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://data-wise.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>This installs the current r-universe release (0.15.0). Binaries are available for supported R/platform combinations; a source installation can require a compiler for dependencies such as <code>nloptr</code>. From GitHub instead: <code>pak::pak("data-wise/medfit")</code>.</p>
+<p>This installs the version currently built by r-universe; check <code>packageVersion("medfit")</code> after installation. Binaries are available for supported R/platform combinations; a source installation can require a compiler for dependencies such as <code>nloptr</code>. From GitHub instead: <code>pak::pak("data-wise/medfit")</code>.</p>
 <blockquote>
 <p><strong>CRAN has 0.3.2, which does not run the examples on this site.</strong> It lacks <code>mediation_demo</code>, <code><a href="reference/fit_sem.html">fit_sem()</a></code>, <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> and the joint and cluster classes. Its two known issues, serial <code><a href="reference/te.html">te()</a></code>/<code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> path rows, are fixed in 0.5.0; see <a href="https://github.com/Data-Wise/medfit/issues/83" class="external-link">#83</a>.</p>
 </blockquote>
@@ -730,7 +735,7 @@
 </h2>
 <p>If you use medfit in your research, please cite:</p>
 <pre><code>Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.15.0. https://data-wise.github.io/medfit/</code></pre>
+R package version 0.16.0. https://data-wise.github.io/medfit/</code></pre>
 <p>For the entry matching your installed version, run <code>citation("medfit")</code>.</p>
 </div>
 <div class="section level2">

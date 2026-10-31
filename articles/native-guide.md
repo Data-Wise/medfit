@@ -190,6 +190,7 @@ cheapest exact route:
 | linear equality or bound | `a == b`, `a + b == 1`, `a < 0.3` | constant Jacobian rows; every accepted solution passes a gate on all rows |
 | nonlinear equality | `cp == a*b` | Jacobian recomputed at every point; every start tried, the best accepted one kept; a Newton polish after acceptance |
 | nonlinear inequality | `a*b > 0.1`, `ab > 0` with `ab := a*b` | same, as rows \\c(\theta) \le 0\\; a warning when the starts disagree |
+| one independent nonzero product | `a*b == 0.1` | both sign domains searched; an unresolved required branch stops the fit; coverage is not global optimality |
 | product set to zero | `a*b == 0`, `b1*b2*b3 == 0` | exact: one linear fit per factor, smallest discrepancy kept |
 | sum of products | `a1*b1 + a2*b2 == 0` | best-effort: the best of the starts; a disagreement warning means a better optimum may exist, so raise `n_starts` |
 
@@ -269,6 +270,10 @@ b@diagnostics$active_bounds
 
     [1] "outcome~~outcome"
 
+For the nonzero-product supported shapes, local-search limits and
+coverage record, see [the constraints
+page](https://data-wise.github.io/medfit/articles/model-native-constraints.html#nonzero-product-equality).
+
 When a model with a nonlinear constraint warns that the starts reached
 different optima, the constraint has more than one solution (`a*b > 0.1`
 holds for two positive or two negative paths). The kept fit is the best,
@@ -317,8 +322,9 @@ a chain gives a `SerialMediationData`, mediators side by side a
 - **Observed means only.** Intercepts (`y ~ 1`, `y ~ 1 + x`) are
   estimated for observed variables; a free latent mean or intercept
   stops with “latent means are planned for a later release”.
-- **One group**, listwise deletion for missing data, **numeric variables
-  only**.
+- **One group**; listwise deletion is the missing-data default. The
+  separate [bounded FIML opt-in](#bounded-fiml) retains partially
+  observed rows only for its three-variable random-X model.
 - **ML only**, plus the HC0 sandwich; no robust chi-square, no fit
   indices beyond the chi-square, AIC and BIC.
 - **Products** (`x:m`, which give the four-way decomposition) work for
@@ -349,3 +355,167 @@ repository)](https://github.com/Data-Wise/medfit/tree/main/book) \|
 [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md) \|
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+
+## Bounded FIML (0.16.0)
+
+Bounded FIML was introduced in 0.16.0 and is unavailable in released
+0.15.0. Ordinary calls still delete incomplete model rows listwise. The
+explicit opt-in below fits exactly three numeric continuous observed
+variables: X to M to Y with a free or exactly zero direct path,
+independent Gaussian disturbances and free intercepts. It assumes
+ignorable missingness under that joint model; FIML does not impute the
+missing values.
+
+Generate continuous Gaussian X, M and Y with independent disturbances
+for this example; the bundled demo’s binary treatment does not match
+this joint model. The fixed missing-value pattern is for illustration,
+not evidence that missingness in an applied study is ignorable.
+`with_seed()` preserves the caller’s random-number state.
+
+``` r
+fiml_data <- withr::with_seed(271L, {
+  n <- 400L
+  treatment <- .8 + stats::rnorm(n, sd = 1.1)
+  mediator1 <- -.4 + .5 * treatment + stats::rnorm(n, sd = .8)
+  outcome <- .7 + .6 * mediator1 + .25 * treatment + stats::rnorm(n, sd = .9)
+  data.frame(treatment = treatment, mediator1 = mediator1, outcome = outcome)
+})
+fiml_data$mediator1[seq(1, nrow(fiml_data), by = 7)] <- NA_real_
+```
+
+``` r
+fiml_syntax <- "mediator1 ~ a*treatment
+outcome ~ b*mediator1 + cp*treatment"
+fiml_fit <- medfit::fit_sem(
+  fiml_syntax, fiml_data, missing = "fiml", fixed_x = FALSE,
+  meanstructure = TRUE, information = "observed", se_type = "model"
+)
+c(retained_rows = nobs(fiml_fit), logLik = as.numeric(logLik(fiml_fit)))
+```
+
+    retained_rows        logLik
+          400.000     -1544.246 
+
+``` r
+fiml_effects <- extract_mediation(fiml_fit, treatment = "treatment", mediator = "mediator1")
+nie(fiml_effects)
+```
+
+    Natural Indirect Effect (NIE): 0.2795
+
+``` r
+nde(fiml_effects)
+```
+
+    Natural Direct Effect (NDE): 0.2474
+
+``` r
+te(fiml_effects)
+```
+
+    Total Effect (TE): 0.5269
+
+``` r
+tidy(fiml_effects, type = "effects")
+```
+
+    # A tibble: 3 × 3
+      term  estimate std_error
+      <chr>    <dbl>     <dbl>
+    1 nie      0.279    0.0365
+    2 nde      0.247    0.0508
+    3 te       0.527    0.0457
+
+The wrapper route returns the extracted mediation object directly:
+
+``` r
+fiml_wrapped <- medfit::fit_mediation(
+  model = fiml_syntax, data = fiml_data,
+  treatment = "treatment", mediator = "mediator1", engine = "native",
+  se_type = "model", engine_args = list(
+    missing = "fiml", fixed_x = FALSE, meanstructure = TRUE, information = "observed"
+  )
+)
+tidy(fiml_wrapped, type = "effects")
+```
+
+    # A tibble: 3 × 3
+      term  estimate std_error
+      <chr>    <dbl>     <dbl>
+    1 nie      0.279    0.0365
+    2 nde      0.247    0.0508
+    3 te       0.527    0.0457
+
+There is no new top-level `missing` argument on
+[`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md);
+[`med()`](https://data-wise.github.io/medfit/reference/med.md) remains a
+formula-building fitter. The missing-method strings must match exactly.
+A failed FIML fit never falls back to listwise deletion or another
+engine, even on complete data.
+
+| Setting | Bounded FIML requirement |
+|----|----|
+| `fixed_x` | Explicit `FALSE`; omission, `TRUE` and named subsets refuse |
+| `meanstructure` | `TRUE`; `NULL` and `FALSE` refuse |
+| `information`, `se_type` | `"observed"`, `"model"` |
+| Weights | No non-NULL vector, including unit weights or the deprecated alias |
+| `n_starts`, `control` | `NULL` or 3; empty control; no syntax-supplied starts |
+| Topology | Three variables only; free or exactly zero direct path; no `:=`, constraints, ties, bounds, extra predictors, latent variables, factors or products |
+
+The start/control restrictions preserve the initial validated protocol,
+rather than expressing mathematical limits of FIML. Three starts run for
+each solver; six attempt groups normally involve nine actual calls with
+nlminb refinements. Failures and completed calls are retained
+separately. Numerical acceptance requires both solvers, stationarity,
+agreeing likelihoods, local rank and valid observed information; it does
+not certify a global optimum or inference coverage.
+
+Rows with any observed model variable are retained, including singleton
+patterns; only all-empty model rows are dropped. Extra columns do not
+select rows. No complete-case initialization is used: data with no
+complete rows can fit when local identification checks pass.
+[`nobs()`](https://rdrr.io/r/stats/nobs.html) counts retained rows, not
+observed cells. Original positional row IDs and pattern/count evidence
+are retained.
+
+[`coef()`](https://rdrr.io/r/stats/coef.html), full
+[`vcov()`](https://rdrr.io/r/stats/vcov.html),
+[`nobs()`](https://rdrr.io/r/stats/nobs.html), raw
+[`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC/BIC,
+print/summary, parameter tidy and normal confidence intervals work on
+the SEMFit. Its
+[`glance()`](https://generics.r-lib.org/reference/glance.html) reports
+likelihood/IC fields, with model-test fields unavailable and an explicit
+reason. The discrepancy `f` and model-test `df` are `NA`; the separate
+free-parameter count is eight or nine. There is no saturated
+missing-data fit. See [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.html#bounded-fiml)
+for the likelihood.
+
+Extraction preserves validated FIML context through copying and
+serialization. Original SEMFit labels/full covariance stay unchanged;
+extracted a/b/c_prime and m\_/y\_ aliases follow topology, with original
+coordinates retained in context. Supported extracted operations are
+[`paths()`](https://data-wise.github.io/medfit/reference/paths.md),
+[`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+[`nde()`](https://data-wise.github.io/medfit/reference/nde.md),
+[`te()`](https://data-wise.github.io/medfit/reference/te.md),
+[`coef()`](https://rdrr.io/r/stats/coef.html) (paths/effects/all), full
+[`vcov()`](https://rdrr.io/r/stats/vcov.html), print/summary, tidy and
+normal path/effect confidence intervals. At a = b = 0 the NIE point
+value is retained but its inferential fields are unavailable. A fixed
+direct path of zero instead has known zero covariance; other valid
+effect inference remains available.
+
+Extracted-object
+[`glance()`](https://generics.r-lib.org/reference/glance.html),
+[`quick()`](https://data-wise.github.io/medfit/reference/quick.md),
+[`pm()`](https://data-wise.github.io/medfit/reference/pm.md),
+bootstrap/boot intervals, profiles, MBCO, fit tests, fit indices and
+prediction/residual APIs are deferred and refuse FIML objects. Package
+object-aware guards act before package-controlled refits, RNG or worker
+launch; opaque user callbacks are outside this guarantee. AIC/BIC
+comparisons dispatched with SEMFit first require compatible FIML
+contexts and refuse external/mixed objects before external likelihood
+calls. Calls dispatched first through another class are outside medfit’s
+guard.

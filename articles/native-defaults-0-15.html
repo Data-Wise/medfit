@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.15.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -367,7 +367,7 @@ Attaching package: 'generics'</code></pre>
 <p>Compare AIC and BIC across engines only with the same mean structure on both sides; within medfit the count is the same under every setting, so comparisons between medfit fits are unaffected.</p>
 </section><section class="level3"><h3 id="missing-data">Missing data<a class="anchor" aria-label="anchor" href="#missing-data"></a>
 </h3>
-<p>The native engine drops incomplete rows (listwise deletion) before it fits, and <code>fixed_x</code> moments are the sample moments of those rows. There is no <code>missing =</code> argument and no full-information maximum likelihood; lavaan’s <code>missing = "fiml"</code> has no counterpart yet.</p>
+<p>In released 0.15.0, the native engine drops incomplete rows (listwise deletion), and <code>fixed_x</code> moments are the sample moments of those rows; that release has no <code>missing =</code> argument. The separate bounded FIML milestone preserves this default but permits explicit random-X simple mediation. See the <a href="native-guide.html#bounded-fiml">native guide</a>; bounded FIML is available from 0.16.0.</p>
 </section></section><section class="level2"><h2 id="evidence-the-oracle-matrix">Evidence: the oracle matrix<a class="anchor" aria-label="anchor" href="#evidence-the-oracle-matrix"></a>
 </h2>
 <p><code>tests/sim/native-defaults-oracle.R</code> fits a set of model cells (simple mediation, latent mediator, named and lenient subsets, sampling weights, a four-way product term, a factor covariate) under every combination of the two arguments (and the retired opt-in), and compares structural estimates, standard errors, chi-square, df, <code>logLik</code>, the parameter count, AIC and BIC with lavaan or a stated oracle. It has 557 rows: 503 agree, 54 are recorded limits, 0 block. Each limit is a difference of reporting, declared with its reason, never a widened tolerance:</p>

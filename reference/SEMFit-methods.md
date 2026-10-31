@@ -42,14 +42,15 @@ argument.
   covariance, projected onto the active constraints and bounds; rows for
   a pinned parameter are zero.
 
-- [`nobs()`](https://rdrr.io/r/stats/nobs.html) returns the number of
-  rows used after listwise deletion.
+- [`nobs()`](https://rdrr.io/r/stats/nobs.html) returns rows used after
+  listwise deletion by default; for bounded FIML it counts rows with any
+  observed model variable.
 
-- [`logLik()`](https://rdrr.io/r/stats/logLik.html) returns the log
-  likelihood with the means free; its `df` attribute counts the free
-  parameters plus one mean per observed variable that is not fixed. With
-  `fixed_x` it is conditional on the fixed variables (lavaan's value),
-  so [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+- For listwise fits, [`logLik()`](https://rdrr.io/r/stats/logLik.html)
+  returns the log likelihood with the means free; its `df` attribute
+  counts the free parameters plus one mean per observed variable that is
+  not fixed. With `fixed_x` it is conditional on the fixed variables
+  (lavaan's value), so [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
   [`BIC()`](https://rdrr.io/r/stats/AIC.html) of fits with different
   fixed sets or data stop instead of ranking them; the same holds for
   [`anova()`](https://rdrr.io/r/stats/anova.html) and
@@ -63,6 +64,21 @@ argument.
   [`print()`](https://rdrr.io/r/base/print.html) and
   [`summary()`](https://rdrr.io/r/base/summary.html) say what the log
   likelihood is conditional on.
+
+- **Bounded FIML.** Raw total Gaussian
+  [`logLik()`](https://rdrr.io/r/stats/logLik.html) includes constants;
+  its `df` attribute counts the eight or nine free parameters. AIC/BIC
+  use retained N. `f` and model-test `df` are unavailable: no saturated
+  missing-data reference fit is performed. SEMFit
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) retains
+  likelihood/IC fields with unavailable model tests and a reason.
+  Extracted-object
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) is
+  instead deferred. Normal parameter intervals, extraction and
+  unstandardized path/effect summaries are supported; bootstrap,
+  profiles, MBCO and fit tests refuse. See
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  for settings, provenance and dispatch boundaries.
 
 - **Model test with a product term.** The global chi-square is not valid
   when a factor of a product term (`x:m`) is itself a regression target,
