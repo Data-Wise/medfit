@@ -18,25 +18,25 @@ model, from one mediator to a latent variable.
 > **In one line:** `med()` runs a mediation analysis, `quick()` prints it, and
 > `nie()`, `nde()`, `te()`, `pm()` and `tidy()` read it.
 
-## Unreleased bounded FIML milestone
+## Bounded FIML in 0.16.0
 
-The development version adds explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
+medfit 0.16.0 adds explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
 three-variable Gaussian random-X mediation, preserving listwise defaults. It is
-planned for unreleased 0.16 and unavailable in released 0.15.0. Observed/model SEs and
+unavailable in 0.15.0 and earlier. Observed/model SEs and
 unstandardized effects and normal intervals are supported. The model requires
 continuous X, M and Y, a free or exactly zero direct path, independent Gaussian
 disturbances, free intercepts and ignorable missingness under that joint model.
 Native `fit_mediation()` uses `engine_args` for the same opt-in. Extracted FIML
 objects refuse `quick()`, `pm()` and `glance()`; fit tests, bootstrap, profiles and
 MBCO are deferred. `glance()` on the source SEMFit retains likelihood/IC fields.
-See the [native guide](vignettes/articles/native-guide.qmd#bounded-fiml)
+See the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
 for settings and limits. Website publication remains a separate step.
 
 ## What's new
 
 | Version | What you get |
 |---|---|
-| **Development** | A supported single nonzero-product equality now searches both sign branches independently, with explicit coverage evidence rather than a global-optimum claim. Corrected observed-information and sandwich standard errors under active nonlinear constraints, including solver variance floors; expected information retains its Fisher definition. Active-boundary covariance is a local tangent approximation. Only explicit covariance diagnostics retain an accepted likelihood; other errors propagate. See [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html#constraints) and NEWS. |
+| **0.16.0** | A supported single nonzero-product equality now searches both sign branches independently, with explicit coverage evidence rather than a global-optimum claim. Corrected observed-information and sandwich standard errors under active nonlinear constraints, including solver variance floors; expected information retains its Fisher definition. Active-boundary covariance is a local tangent approximation. Only explicit covariance diagnostics retain an accepted likelihood; other errors propagate. See [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html#constraints) and NEWS. |
 | **0.15.0** | The native defaults flip: `fit_sem()`/`fit_mediation(engine = "native")` now fix the exogenous observed variables (`fixed_x`) and estimate the mean structure (`meanstructure = TRUE`) when you leave them unset, as lavaan does. Explicit arguments are kept, so `fixed_x = FALSE` and `meanstructure = FALSE` restore the old fit; the once-per-session warning is gone and `options(medfit.native_defaults)` is ignored (removed in 0.16.0). See the [0.15.0 defaults article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html) and NEWS. |
 | **0.14.1** | The outcome ledger for native fits: every zero-product branch and `mbco_sem()` null keeps its outcome (`fit@diagnostics$ledger`, `$ledger` on the errors); literal `a == 0` / nonzero contradictions are certified empty, not fitted; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is a typed error (`medfit_sem_covariance_error`) that `mbco_sem()` retains for a null. A literal contradiction now stops before the optimizer (see NEWS). |
 | **0.14.0** | Notice for the 0.15.0 native defaults (`fixed_x = TRUE`, `meanstructure = TRUE`, now in force): a native fit that leaves either unset warns once per session (no result changes); `options(medfit.native_defaults = "0.15")` opts in early; the [0.15.0 defaults article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html) explains both settings and how dependent packages keep today's results. |
@@ -63,7 +63,8 @@ install.packages(
 )
 ```
 
-This installs the current r-universe release (0.15.0). Binaries are available
+This installs the version currently built by r-universe; check `packageVersion("medfit")`
+after installation. Binaries are available
 for supported R/platform combinations; a source installation can require a
 compiler for dependencies such as `nloptr`. From GitHub instead:
 `pak::pak("data-wise/medfit")`.
@@ -351,7 +352,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.15.0. https://data-wise.github.io/medfit/
+R package version 0.16.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.

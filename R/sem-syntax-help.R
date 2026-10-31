@@ -7,7 +7,7 @@
 #'
 #' @section Missing-data scope:
 #' The general syntax below describes the default listwise path. The separate
-#' unreleased `fit_sem(missing = "fiml", fixed_x = FALSE)` option accepts only
+#' bounded `fit_sem(missing = "fiml", fixed_x = FALSE)` option accepts only
 #' three numeric observed variables in simple mediation with a free or exactly
 #' zero direct path and free intercepts. General constraints, definitions, starts,
 #' bounds, latent variables, products and factors are not supported for FIML.

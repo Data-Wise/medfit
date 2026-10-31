@@ -2,7 +2,7 @@
 
 This book opens the native maximum-likelihood engine of the medfit R package
 (`fit_sem()`, `fit_mediation(engine = "native")`, `SEMFit`) and shows every
-matrix it works with. It documents medfit 0.15.0. It is reference material kept
+matrix it works with. It documents medfit 0.16.0. It is reference material kept
 in the package repository (`book/`); it is not part of the package website.
 
 Chapters, in order:
@@ -27,9 +27,9 @@ standard errors do not change; the conditional log likelihood, the parameter cou
 `fit_sem()` wrapper in its setup chunk that pins `fixed_x = FALSE, meanstructure = NULL`; Chapter 4 shows the unpinned
 default beside the pinned fit.
 
-## Bounded FIML in planned 0.16 {.unnumbered}
+## Bounded FIML in 0.16.0 {.unnumbered}
 
-The unreleased 0.16 scope includes bounded FIML for exactly three continuous
+medfit 0.16.0 includes bounded FIML for exactly three continuous
 observed variables in Gaussian random-X mediation, X -> M -> Y, with the direct
 X -> Y path free or fixed at zero, free intercepts and independent disturbances.
 It assumes ignorable missingness (for example, MAR with the usual ignorability

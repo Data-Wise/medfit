@@ -199,7 +199,7 @@ mediator works through the same call.
 - **Observed means only.** Intercepts (`y ~ 1`, `y ~ 1 + x`) are estimated for observed variables;
   a free latent mean or intercept stops with "latent means are planned for a later release".
 - **One group**; listwise deletion is the missing-data default. The separate
-  unreleased [bounded FIML opt-in](#bounded-fiml) retains partially observed rows
+  [bounded FIML opt-in](#bounded-fiml) retains partially observed rows
   only for its three-variable random-X model.
 - **ML only**, plus the HC0 sandwich; no robust chi-square, no fit indices beyond
   the chi-square, AIC and BIC.
@@ -221,9 +221,9 @@ mediator works through the same call.
 [Cookbook](cookbook.html) | [Methods and Formulas](methods.html) | `?"medfit-syntax"`
 
 
-## Bounded FIML (unreleased) {#bounded-fiml}
+## Bounded FIML (0.16.0) {#bounded-fiml}
 
-Bounded FIML is planned for unreleased 0.16 and is unavailable
+Bounded FIML was introduced in 0.16.0 and is unavailable
 in released 0.15.0. Ordinary calls still delete incomplete model rows listwise.
 The explicit opt-in below fits exactly three numeric continuous observed
 variables: X to M to Y with a free or exactly zero direct path, independent
