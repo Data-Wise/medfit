@@ -1,5 +1,10 @@
 # FIML readiness plan: grill and Claude adversarial review
 
+Status note (2026-10-31): historical review; its A1/A2/A3 recommendations
+subsequently completed and shipped in 0.16.0. Current priorities are in
+[the roadmap current board](medfit-roadmap.md#current-board). This annotation
+does not reclassify Claude's original verdict or imply a fresh external review.
+
 Date: 2026-10-30. Scope: planning only; no production changes, numerical test
 runs, benchmarks, pushes or expensive CI. Target:
 [reconciled plan](PLAN-FIML-release-and-missing-data-followups-2026-10-30.md),
@@ -114,7 +119,7 @@ listed above. No automatic Claude retry, model chain or budget expansion occurre
 - Full original structured result/usage retained locally at
   `_agents_workspace/fiml-readiness-claude-adversarial-2026-10-30.json`.
 
-## Recommended next scope decision
+## Historical recommended scope decision (completed)
 
 Start a bounded medfit production-test coverage inventory and FIML teaching
 unit proposal. Authorize only uncovered regression cases and exact teaching
