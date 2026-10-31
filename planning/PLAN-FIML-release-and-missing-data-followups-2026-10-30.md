@@ -187,6 +187,11 @@ do not substitute old counts or optimizer success for gates. Existing overall
 and critical-path coverage requirements still apply; do not claim the historical
 98.48% patch result establishes 100% critical-path coverage.
 
+CI policy: PR #370 merged as `c42e306e`; hosted coverage runs only on main
+PRs and main pushes, including metadata-only changes. Development coverage and
+verification run locally with Rforge and independent numerical oracles; the
+remaining fast hosted checks are retained. No dev post-merge coverage is expected.
+
 Only during authorized release-to-main preparation run required OpenBLAS/full
 platform checks. Verify exact release head/live CI before a main merge and main
 CI before tagging. GitHub release and CRAN submission are distinct; current

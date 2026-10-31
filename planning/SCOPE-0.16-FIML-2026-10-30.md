@@ -79,7 +79,11 @@ errors; clean lint; built check `Status: OK`). Six exact-head fast checks passed
 before merge; branch/worktree cleanup and archived evidence are verified.
 Duplicate post-merge dev coverage run `41155534928` completed cancelled at user
 request. Reviewed PR coverage and Codecov passed. Development checks run locally;
-main-only hosted coverage policy is implemented locally, awaiting publication.
+PR #370 merged the main-only hosted coverage policy into dev as `c42e306e`
+after lint, pkgdown and risk-tier passed on reviewed head `6c1da57e`. Hosted
+coverage remains unconditional on main PRs/main pushes; no dev merge coverage
+is expected. Its merged branch/worktree are removed; all 58 evidence files
+are archived and individually verified. Status reconciliation remains local.
 The recorded pre-existing native-guide example issue and wider website/help
 audit remain open; the focused teaching unit does not complete them.
 New diagnostics and missingmed adoption remain separate milestones. Release

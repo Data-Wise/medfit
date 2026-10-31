@@ -334,6 +334,8 @@ usethis::use_article("article-name")  # Not included in R CMD check
 
 - **Target**: >90% overall, 100% critical paths
 - **Critical**: S7 classes, extraction, bootstrap
+- **Policy integration**: PR #370 merged into `dev` as `c42e306e`; exact-head
+  lint, pkgdown and risk-tier passed; merged feature branch/worktree cleaned up.
 - **Hosted coverage**: PRs to `main` and pushes to `main`, unconditionally,
   including metadata-only release merges. No coverage on dev PRs or dev pushes.
   Run development checks locally using Rforge; retain independent numerical oracles.
