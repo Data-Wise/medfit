@@ -1,6 +1,6 @@
 # Bounded FIML documentation audit
 
-Status: complete locally; not pushed or published.
+Status: complete; integrated via PR #372 as d5785171 and published with v0.16.0.
 Base: efbba665; branch codex/fiml-docs-audit.
 
 ## Scope and acceptance
@@ -13,7 +13,7 @@ Audit README, exported help/roxygen, website articles, cookbook, and minibook ag
 
 Docs report: _agents_workspace/fiml-docs-audit/docs.md. Final report: _agents_workspace/fiml-docs-audit/gates.md. Each ends with exactly one Verdict: PASS or Verdict: FAIL line. Failed stage may receive one corrective retry; then stop and request continuation.
 
-No push, PR, deployment, release, main merge, workflow changes or expensive CI. Coverage remains hosted only for main PRs/main pushes. Preserve unrelated changes. Broad FIML features and missingmed adoption remain deferred.
+Original task boundary (superseded by subsequent release authorization): no push, PR, deployment, release, main merge, workflow changes or expensive CI. Coverage remains hosted only for main PRs/main pushes. Preserve unrelated changes. Broad FIML features and missingmed adoption remain deferred.
 
 ## Completion receipt
 
@@ -24,3 +24,7 @@ Focused docs/FIML verification: 130 tests/1,195 successful assertions (two expec
 Final gates PASS on d29421a5: one full suite, 1,785 tests/9,796 successful assertions (9,802 total expectations), zero failures/errors, four expected warnings and two explained skips; lint zero; fresh source build and built package check Status: OK. Runtime AST unchanged across all six edited R files; risk low, no missing checklist items. Reports and source/artifact identities preserved in _agents_workspace/fiml-docs-audit/. Only planning/status metadata changes follow this tested source; no repeated suite is needed for them.
 
 The wider bounded-FIML public-documentation audit is complete locally. Review/publication, final release-candidate acceptance and broader FIML/missingmed milestones remain separate. No push, PR, release, deployment, main merge or expensive CI; hosted coverage remains main PRs/main pushes only.
+
+## Publication and cleanup — 2026-10-31 UTC
+
+PR #372 passed its three exact-head fast checks; squash merge d5785171 matches reviewed c8027dbd tree. The audit is included in published v0.16.0 and the live website. Its merged branch/worktree were removed after exact-tip/ancestry checks; 514 evidence files were archived and hash-verified in `_agents_workspace/fiml-docs-audit-merged-2026-10-31.zip`. See the completed GitHub-release plan for final release/deployment evidence. Earlier local-only statements are historical snapshots.
