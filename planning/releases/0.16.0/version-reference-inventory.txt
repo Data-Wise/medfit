@@ -1,0 +1,104 @@
+DESCRIPTION:4:Version: 0.15.0
+NEWS.md:15:* Bounded FIML integration, planned for unreleased 0.16, adds exact `missing = "fiml"` opt-in to
+NEWS.md:21:  model tests, bootstrap, profiles and MBCO remain unavailable. This bounded feature is included in planned 0.16.
+NEWS.md:58:* `options(medfit.native_defaults)` is removed, as announced in 0.15.0. Since 0.15.0 the option had no effect
+NEWS.md:62:# medfit 0.15.0
+NEWS.md:64:## Native engine defaults flipped (0.15.0)
+NEWS.md:90:* In 0.15.0 missing data stays listwise deletion, with no `missing =` argument or FIML.
+NEWS.md:91:  The later bounded opt-in FIML feature is planned for unreleased 0.16.
+NEWS.md:95:* Docs: `?fit_sem`, `?fit_mediation`, `?compare_lr`, `?"medfit-syntax"`, the "Native defaults in 0.15.0" article and the
+NEWS.md:183:## Native engine defaults change in 0.15.0
+NEWS.md:185:medfit 0.15.0 changes two defaults of `fit_sem()` and `fit_mediation(engine = "native")` so that a default native
+NEWS.md:188:and 0.15.0, at least two months after 0.14.0 (the notice runs on GitHub; both stay GitHub-only releases), flips both
+NEWS.md:192:  the model is one where its default will matter in 0.15.0 (an observed exogenous variable for `fixed_x`; no `~1`
+NEWS.md:196:  with the 0.15.0 defaults now (`meanstructure = TRUE`, and `fixed_x` set to every observed exogenous column,
+NEWS.md:199:  `glance()$fixed_x` lists the fixed set. An explicit `fixed_x = TRUE` still errors on such a statement. In 0.15.0
+NEWS.md:209:  warning appears, can change. The reliability gate is rerun under the new defaults before 0.15.0.
+NEWS.md:213:  of results in 0.15.0. To silence the warning in a test, catch it by class (`medfit_warning_default_change`).
+NEWS.md:221:  the rows the fit used. This lets the comparison run on fits made under the 0.15.0 defaults. OpenMx's default start
+NEWS.md:231:  unchanged. The fix comes first because `meanstructure = TRUE` becomes the default in 0.15.0.
+R/compare-lr.R:314:#' Known limit (#320): the flip of the `fit_sem()` defaults in 0.15.0 does not change what the comparison finds. On the
+R/fit-glm.R:76:#'   `control` (passed to [fit_sem()], whose defaults for `fixed_x` and `meanstructure` changed in 0.15.0) and
+R/fit-sem.R:89:#' @section Defaults changed in 0.15.0:
+R/fit-sem.R:142:#' for unreleased 0.16; released 0.15.0 does not provide this option.
+R/fit-sem.R:263:  # 0.15.0 (E-14): missing() is only reliable before either argument is reassigned.
+R/native-defaults.R:1:# 0.15.0 defaults of fit_sem()'s `fixed_x` and `meanstructure` (spec F-1 to F-4, E-13, E-14). An unset setting resolves
+R/native-defaults.R:22:# The 0.15.0 `fixed_x` default (R-5, R-11b, E-5, E-11): the observed exogenous columns after factor expansion and
+R/sem-syntax-help.R:177:#' @section Defaults changed in 0.15.0:
+R/sem-syntax-help.R:178:#' Since medfit 0.15.0 an unset `fixed_x` means the exogenous observed variables (as lavaan's `fixed.x = TRUE`) and an
+README.md:25:planned for unreleased 0.16 and unavailable in released 0.15.0. Observed/model SEs and
+README.md:40:| **0.15.0** | The native defaults flip: `fit_sem()`/`fit_mediation(engine = "native")` now fix the exogenous observed variables (`fixed_x`) and estimate the mean structure (`meanstructure = TRUE`) when you leave them unset, as lavaan does. Explicit arguments are kept, so `fixed_x = FALSE` and `meanstructure = FALSE` restore the old fit; the once-per-session warning is gone and `options(medfit.native_defaults)` is ignored (removed in 0.16.0). See the [0.15.0 defaults article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html) and NEWS. |
+README.md:42:| **0.14.0** | Notice for the 0.15.0 native defaults (`fixed_x = TRUE`, `meanstructure = TRUE`, now in force): a native fit that leaves either unset warns once per session (no result changes); `options(medfit.native_defaults = "0.15")` opts in early; the [0.15.0 defaults article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html) explains both settings and how dependent packages keep today's results. |
+README.md:66:This installs the current r-universe release (0.15.0). Binaries are available
+README.md:354:R package version 0.15.0. https://data-wise.github.io/medfit/
+_pkgdown.yml:110:      - text: "Native defaults in 0.15.0"
+book/chapters/01-mean-structure.qmd:29:| **You need** | medfit 0.9.0 or later (the setup chunk pins the 0.14.x defaults, so the chapter runs the same on 0.14.x and 0.15.0); matrix algebra and the normal likelihood at the level of a first course in multivariate statistics |
+book/chapters/01-mean-structure.qmd:37:# 0.14.x settings. medfit 0.15.0 itself defaults to fixed_x = the exogenous variables and meanstructure = TRUE; the
+book/chapters/01-mean-structure.qmd:52:describes the means of the observed variables as well as their covariances. (Since 0.15.0 the
+book/chapters/01-mean-structure.qmd:740:**The default since 0.15.0.** An unset `meanstructure` is `TRUE`, so every native fit has the saturated mean part of
+book/chapters/01-mean-structure.qmd:747:[Native defaults in 0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html).
+book/chapters/02-scale.qmd:21:# 0.14.x settings. medfit 0.15.0 itself defaults to fixed_x = the exogenous variables and meanstructure = TRUE; the
+book/chapters/03-constraints.qmd:22:# 0.14.x settings. medfit 0.15.0 itself defaults to fixed_x = the exogenous variables and meanstructure = TRUE; the
+book/chapters/04-fixed-x.qmd:25:# 0.14.x settings. medfit 0.15.0 itself defaults to fixed_x = the exogenous variables and meanstructure = TRUE; the
+book/chapters/04-fixed-x.qmd:577:**The default since 0.15.0.** An unset `fixed_x` is not `FALSE` any more: it resolves to the exogenous observed
+book/chapters/04-fixed-x.qmd:586:default_fit <- medfit::fit_sem(full, d)                                         # the 0.15.0 defaults
+book/chapters/04-fixed-x.qmd:619:[Native defaults in 0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html);
+book/chapters/04-fixed-x.qmd:620:`options(medfit.native_defaults)` was removed in 0.16.0 (ignored since 0.15.0).
+book/chapters/05-inference.qmd:22:# 0.14.x settings. medfit 0.15.0 itself defaults to fixed_x = the exogenous variables and meanstructure = TRUE; the
+book/chapters/06-product-term.qmd:24:# 0.14.x settings. medfit 0.15.0 itself defaults to fixed_x = the exogenous variables and meanstructure = TRUE; the
+book/chapters/07-four-way.qmd:25:# 0.14.x settings. medfit 0.15.0 itself defaults to fixed_x = the exogenous variables and meanstructure = TRUE; the
+book/chapters/08-fiml.qmd:16:This is the bounded FIML addition planned for unreleased 0.16. Released 0.15.0
+book/index.qmd:5:matrix it works with. It documents medfit 0.15.0. It is reference material kept
+book/index.qmd:21:## Defaults in 0.15.0 {.unnumbered}
+book/index.qmd:23:Since 0.15.0 an unset `fixed_x` fixes the exogenous observed variables and an unset `meanstructure` is `TRUE`
+book/index.qmd:24:(`options(medfit.native_defaults)` was ignored from 0.15.0 and is removed in 0.16.0). The structural estimates and their
+book/index.qmd:30:## Bounded FIML in planned 0.16 {.unnumbered}
+book/index.qmd:32:The unreleased 0.16 scope includes bounded FIML for exactly three continuous
+book/index.qmd:55:Released 0.15.0 does not provide this option.
+man/compare_lr.Rd:59:Known limit (#320): the flip of the \code{fit_sem()} defaults in 0.15.0 does not change what the comparison finds. On the
+man/fit_mediation.Rd:90:\code{control} (passed to \code{\link[=fit_sem]{fit_sem()}}, whose defaults for \code{fixed_x} and \code{meanstructure} changed in 0.15.0) and
+man/fit_sem.Rd:118:\section{Defaults changed in 0.15.0}{
+man/fit_sem.Rd:174:for unreleased 0.16; released 0.15.0 does not provide this option.
+man/medfit-syntax.Rd:189:\section{Defaults changed in 0.15.0}{
+man/medfit-syntax.Rd:191:Since medfit 0.15.0 an unset \code{fixed_x} means the exogenous observed variables (as lavaan's \code{fixed.x = TRUE}) and an
+vignettes/articles/cookbook.qmd:477:lavaan's default `fixed.x = TRUE`. Since 0.15.0 a native fit fixes the means, variances and
+vignettes/articles/cookbook.qmd:520:Since 0.15.0 the default is to fix the exogenous observed variables; pass `fixed_x = FALSE` to
+vignettes/articles/cookbook.qmd:521:keep the free exogenous block. See [the 0.15.0 defaults](native-defaults-0-15.html).
+vignettes/articles/cookbook.qmd:528:zero. Since 0.15.0 every native fit has a mean structure by default (`meanstructure` left
+vignettes/articles/cookbook.qmd:565:[the 0.15.0 defaults](native-defaults-0-15.html).
+vignettes/articles/getting-started.qmd:16:This site documents medfit 0.15.0. CRAN has 0.3.2, which lacks
+vignettes/articles/guide-changes.qmd:15:CRAN has medfit 0.3.2; this site documents 0.15.0 (GitHub and r-universe).
+vignettes/articles/guide-changes.qmd:46:| 0.14.0 | `fit_sem()` and `fit_mediation(engine = "native")` with `fixed_x` or `meanstructure` left unset | (no warning) | same results, plus a once-per-session warning of class `medfit_warning_default_change`: in 0.15.0 the defaults become the exogenous observed variables and `TRUE`, which moves `npar`, `logLik()`, AIC and BIC; pass both arguments to keep today's results, or set `options(medfit.native_defaults = "0.15")` to use the new defaults now |
+vignettes/articles/guide-changes.qmd:47:| 0.15.0 | `fit_sem()` and `fit_mediation(engine = "native")` with `fixed_x` or `meanstructure` left unset | the 0.14.x defaults, `fixed_x = FALSE` and `meanstructure = NULL` (with the 0.14.0 warning) | the defaults are the exogenous observed variables (as lavaan's `fixed.x = TRUE`) and `TRUE`. Structural estimates and their standard errors do not change. `logLik()` is conditional on the fixed variables, `npar`, `AIC()` and `BIC()` change, and `coef()`, `vcov()` and `tidy()` drop the fixed exogenous rows and gain one intercept per observed variable that is not fixed. `AIC()` and `BIC()` keep medfit's own count, which always includes the observed means, so they equal lavaan's with `meanstructure = TRUE`, not those of a default `lavaan::sem()`. Which random start a multi-start fit tries can change. Pass `fixed_x = FALSE, meanstructure = NULL` to keep the 0.14.x results ([article](native-defaults-0-15.html)). `options(medfit.native_defaults)` is ignored (with one message per session) and is removed in 0.16.0; `medfit_warning_default_change` no longer fires |
+vignettes/articles/guide-changes.qmd:113:| 0.14.0 | a native fit that leaves `fixed_x` or `meanstructure` unset warns once per session that both defaults change in 0.15.0 (no result changes); `options(medfit.native_defaults = "0.15")` opted in early (ignored from 0.15.0) ([article](native-defaults-0-15.html)) |
+vignettes/articles/guide-changes.qmd:115:| 0.15.0 | the native defaults flip: a default `fit_sem()` fit fixes the exogenous observed variables and fits a mean structure, as a lavaan `sem()` fit with `fixed.x = TRUE` and `meanstructure = TRUE` does ([article](native-defaults-0-15.html)) |
+vignettes/articles/guide-glossary.qmd:115:| **mean structure** | the observed means modeled together with the covariances: intercepts (`y ~ 1`) are estimated; `meanstructure = TRUE`, the default since 0.15.0, or any `~1` statement turns it on and frees every unwritten observed intercept; `meanstructure = NULL` fits it only when the syntax writes an intercept or a product | [Intercepts](model-native.html#intercepts) |
+vignettes/articles/guide-glossary.qmd:117:| **`fixed_x`** | fixes the mean, variances and covariances of exogenous observed variables at their sample values, as lavaan's `fixed.x = TRUE`; the structural estimates and standard errors do not change. Since 0.15.0 it is on by default, for every exogenous observed variable the model does not name in a `~~` or `~1` statement | [Fix exogenous covariates](cookbook.html#fix-exogenous-covariates-fixed_x) |
+vignettes/articles/guide-glossary.qmd:123:| **conditional log likelihood** | the log likelihood given the fixed variables under `fixed_x` (the default since 0.15.0), so `logLik()`, AIC and BIC of fits with different fixed sets cannot be compared | [Limits](model-native.html#limits) |
+vignettes/articles/lavaan-comparison.qmd:48:Both fit with their defaults: lavaan fixes the exogenous covariates, and since medfit 0.15.0 so does
+vignettes/articles/lavaan-comparison.qmd:93:| logLik, AIC, BIC | yes | equal when both fit the same settings (the 0.15.0 defaults count the intercepts, as `meanstructure = TRUE` does in lavaan) | Supported |
+vignettes/articles/lavaan-comparison.qmd:95:| Fixed exogenous covariates | `fixed.x = TRUE` is the default | `fixed_x = TRUE` or names, and `TRUE` is the default since 0.15.0; product columns are fixed with the rest; a statement on a selected variable is an error | Supported |
+vignettes/articles/methods.qmd:649:Since 0.15.0 an unset `fixed_x` fixes the exogenous observed variables and an unset `meanstructure` fits the mean
+vignettes/articles/model-native.qmd:93:Since 0.15.0 every native fit has a mean structure by default (`meanstructure` left unset is `TRUE`), with a
+vignettes/articles/models.qmd:87:planned for unreleased 0.16 and is unavailable in released 0.15.0.
+vignettes/articles/native-defaults-0-15.qmd:2:title: "Native defaults in 0.15.0"
+vignettes/articles/native-defaults-0-15.qmd:15:medfit 0.15.0 changed two defaults of `fit_sem()` and `fit_mediation(engine = "native")`, so that a
+vignettes/articles/native-defaults-0-15.qmd:18:| Argument | Default through 0.14.x | Default from 0.15.0 | lavaan equivalent |
+vignettes/articles/native-defaults-0-15.qmd:32:- **0.15.0** flips both defaults together, after the notice in issue #329. The 0.14.0 warning no longer fires.
+vignettes/articles/native-defaults-0-15.qmd:34:- **0.16.0** removes `options(medfit.native_defaults)`. Since 0.15.0 the option was ignored (one message per
+vignettes/articles/native-defaults-0-15.qmd:66:delete the element and leave the default in force, which since 0.15.0 means the mean structure is on
+vignettes/articles/native-defaults-0-15.qmd:137:### The 0.15.0 default is a lenient subset
+vignettes/articles/native-defaults-0-15.qmd:140:variable, because such a statement asks to estimate a moment that `fixed_x` would fix. The 0.15.0
+vignettes/articles/native-defaults-0-15.qmd:197:comparisons. The 0.15.0 default fixes the exogenous variables, so in the worked example $k = 2$ (the two
+vignettes/articles/native-defaults-0-15.qmd:216:In released 0.15.0, the native engine drops incomplete rows (listwise deletion),
+vignettes/articles/native-defaults-0-15.qmd:221:unreleased 0.16.
+vignettes/articles/native-defaults-0-15.qmd:249:`compare_lr()` accepts fits made under the 0.15.0 defaults (a saturated mean structure and `fixed_x`), in
+vignettes/articles/native-guide.qmd:226:Bounded FIML is planned for unreleased 0.16 and is unavailable
+vignettes/articles/native-guide.qmd:227:in released 0.15.0. Ordinary calls still delete incomplete model rows listwise.
+vignettes/articles/native-tutorial.qmd:21:| **You need** | medfit 0.8.0 or later (step 9 needs 0.15.0 for the default `fixed_x`; on 0.9.0 to 0.14.x pass `fixed_x = TRUE`; step 10 needs 0.11.0); the bundled `mediation_demo` data |
+vignettes/articles/native-tutorial.qmd:139:means. Since 0.15.0 `fit_sem()` fixes them at their sample values by default, as
+vignettes/articles/quality-control.qmd:190:## The 0.15.0 defaults flip
+vignettes/articles/quality-control.qmd:192:0.15.0 changes two defaults of the native engine: an unset `fixed_x` fixes the exogenous observed variables and an unset
+vignettes/articles/quality-control.qmd:211:`planning/specs/RESULT-qc-0.15.0-native-defaults-flip-2026-10-26.md`.
+vignettes/articles/syntax-crosswalk.qmd:33:Since medfit 0.15.0 the native defaults are `fixed_x` = the exogenous observed variables and `meanstructure = TRUE`,
+vignettes/articles/whats-new-0-11.qmd:13:# medfit 0.14.0 warns once per session that fit_sem()'s fixed_x and meanstructure defaults change in 0.15.0.

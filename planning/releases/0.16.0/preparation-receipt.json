@@ -1,0 +1,17 @@
+{
+  "prepared_from": "c8027dbd",
+  "tested_docs": "d29421a5fee8dad2eea17bdadadb00488b7a020f",
+  "origin_dev": "efbba6651c74a52f85cdb0276d59b0d038ebf819",
+  "origin_main_and_v0150": "e068d7506c6263dcda7f5485c09f892249165fbf",
+  "proposed_tag": "v0.16.0",
+  "release_candidate_stamped": false,
+  "expensive_ci_run": false,
+  "published": false,
+  "full_suite_runs_reused_as_preparation_evidence": 1,
+  "version_reference_inventory_lines": 104,
+  "packet_sha256": {
+    "release-notes.md": "453f6f28c635941194b3e0ea3fafdf6f2c57ac4d5b23a2ac883a97cf5594c823",
+    "readiness.md": "c2bc3b33f28397f6f855b9fb07ccec77bcfdee6cd5d314e4833cb7fea45b9d93",
+    "version-reference-inventory.txt": "0427563144c49ea0f41d965af0b243f2aac396469df89f0149f802778f33b445"
+  }
+}
