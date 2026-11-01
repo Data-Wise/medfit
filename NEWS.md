@@ -1,3 +1,15 @@
+# medfit (development version)
+
+## Added
+
+* `bootstrap_mediation(source_fit = ..., effect = ...)` adds bounded FIML
+  retained-row and Gaussian parameter-draw percentile intervals for scalar
+  unstandardized NIE, NDE and total effects. The original accepted simple-model
+  fit supplies the records and settings. Failed or interrupted runs retain every
+  requested ID and withhold all intervals and distribution SD, preventing survivor
+  summaries. These development methods have numerical verification; statistical
+  admission and interval-coverage calibration remain deferred.
+
 # medfit 0.16.0
 
 ## Added

@@ -562,6 +562,58 @@ are unavailable. No missing-data saturated reference fit, chi-square or fit
 indices are synthesized. At the NIE origin, a zero first derivative does not
 supply regular normal inference; NIE inferential fields are unavailable.
 
+#### Development source-fit intervals {#fiml-source-intervals}
+
+The explicit `bootstrap_mediation(source_fit = ..., effect = ..., method = ...)`
+route uses only an accepted bounded FIML source fit. It evaluates scalar,
+unstandardized NIE, NDE or total effect with the direct path free or fixed at zero.
+The point estimate is the original fitted effect. Both methods use type-7 empirical
+quantiles at the requested equal-tail probabilities.
+
+For `method = "nonparametric"`, draw N entire retained records with replacement,
+preserving each record's observed mask and multiplicity. Every replicate rebuilds
+its means, scales and patterns and refits the identical model with the source's
+accepted numerical protocol. It never substitutes complete cases or replacement
+successes for unresolved replicates.
+
+For `method = "parametric"`, let $\hat\theta$ contain each canonical free parameter
+once in original coordinates and let $V$ be its full matched observed/model
+covariance. Draw $\theta^* = \hat\theta + A z$, with $z \sim N(0,I)$ and $AA^\top=V$,
+then evaluate the effect without refitting. Fixed zeros are excluded from the draw
+and remain exact; extracted aliases are not additional parameters. This is a
+**Gaussian parameter-draw percentile interval**, not a synthetic-data bootstrap.
+Negative nuisance-variance coordinates are not screened or truncated before the
+polynomial effect is evaluated.
+
+The factor is the symmetric correlation-root convention: with marginal scale
+matrix $D$, set $C=D^{-1}VD^{-1}$ and $A=DC^{1/2}$. Names must match the canonical
+parameter set exactly, all entries must be finite and marginal variances positive.
+Let $q$ be the number of free parameters and $\epsilon$ machine precision.
+Symmetry error must be at most $100\epsilon q\max(1,\max_{j,k}|C_{j,k}|)$ before
+symmetrization. Eigenvalues below
+$-100\epsilon q\max(1,\max_j|\lambda_j|)$ are refused; remaining negative
+eigenvalues are clipped to zero. Thus only roundoff errors are repaired, while
+material asymmetry or indefiniteness is refused. The diagnostics retain scales,
+eigenvalues, tolerance and any repair.
+
+Both methods target the distribution **conditional on retained nonempty records**.
+Their intended assumptions include IID jointly Gaussian records, ignorable MAR,
+distinct missingness and model parameters, positivity and identified information.
+The retention normalization must be independent of model parameters; independently
+empty MCAR records suffice. Dropping arbitrary value-dependent all-empty records
+or using these intervals under MNAR is outside this contract. A successful fit or
+these numerical examples do not verify those assumptions.
+
+Any required invalid, failed or nonfinite replicate withholds the whole interval.
+Interruption returns incomplete metadata, retains completed work and marks the
+current unavailable and later unattempted IDs. The length-`n_boot` distribution
+retains `NA` for unresolved IDs; no print, summary, tidy or changed-level `confint()`
+accessor produces a survivor interval or survivor SD. An all-success distribution
+SD is descriptive, not a robust SE. Versioned `@inference` metadata records every
+requested ID, its rows or draw ID, reasons, source/RNG provenance and collected,
+retained and unresolved counts. These methods are development additions after
+0.16.0. Statistical admission and interval-coverage calibration remain deferred.
+
 ### Model form
 
 The model is written in RAM form. With $A$ the matrix of

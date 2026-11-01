@@ -520,18 +520,24 @@ S7::S4_register(SerialMediationData)
 #' @param method Character scalar: bootstrap method
 #'   ("parametric", "nonparametric", or "plugin")
 #' @param call Call object or NULL: original function call
+#' @param inference Optional list, empty by default for legacy results. Bounded FIML
+#'   source intervals use schema `fiml-bootstrap-1` for method/target, source and RNG
+#'   provenance, retained/collected counts and every requested replicate outcome.
 #'
 #' @return A BootstrapResult S7 object
 #' @usage
 #' BootstrapResult(estimate, ci_lower, ci_upper, ci_level, boot_estimates,
-#'   n_boot, method, call)
+#'   n_boot, method, call, inference = list())
 #'
 #' @details
 #' This class standardizes bootstrap inference results across different
 #' bootstrap methods (parametric, nonparametric, plugin).
 #'
 #' The class includes validation to ensure consistency between
-#' method type and required fields.
+#' method type and required fields. See [bootstrap_mediation()] for the bounded
+#' FIML source route. Its failed or incomplete results retain length-`n_boot`
+#' distributions with unresolved `NA` values and withhold intervals through every
+#' accessor. The optional metadata does not change legacy tidy/glance columns.
 #'
 #' @examples
 #' \donttest{
@@ -569,7 +575,8 @@ BootstrapResult <- S7::new_class(
     method = S7::class_character,
 
     # Metadata
-    call = S7::class_call | NULL
+    call = S7::class_call | NULL,
+    inference = S7::class_list
   ),
 
   validator = function(self) {
@@ -694,14 +701,19 @@ S7::method(print, BootstrapResult) <- function(x, ...) {
   cat("======================\n\n")
 
   cat(sprintf("Method:   %s\n", x@method))
+  if (length(x@inference)) {
+    cat(x@inference$method_label, "\n")
+    cat("Inference status:", x@inference$status, "\n")
+  }
   cat(sprintf("Estimate: %8.4f\n", x@estimate))
 
   if (x@method != "plugin") {
+    ci <- .bootstrap_fiml_interval(x)
     cat(sprintf("N bootstrap samples: %d\n", x@n_boot))
     cat("\n")
     cat(sprintf("%g%% Confidence Interval:\n", x@ci_level * 100))
-    cat(sprintf("  Lower: %8.4f\n", x@ci_lower))
-    cat(sprintf("  Upper: %8.4f\n", x@ci_upper))
+    cat(sprintf("  Lower: %8.4f\n", ci[1]))
+    cat(sprintf("  Upper: %8.4f\n", ci[2]))
   } else {
     cat("\n")
     cat("(No confidence interval for plugin method)\n")
@@ -800,12 +812,10 @@ S7::method(summary, BootstrapResult) <- function(object, ...) {
     estimate = object@estimate,
     n_boot = object@n_boot
   )
+  if (length(object@inference)) boot_summary$inference <- object@inference
 
   if (object@method != "plugin") {
-    boot_summary$ci <- c(
-      lower = object@ci_lower,
-      upper = object@ci_upper
-    )
+    boot_summary$ci <- stats::setNames(.bootstrap_fiml_interval(object), c("lower", "upper"))
     boot_summary$ci_level <- object@ci_level
 
     # Add bootstrap distribution summary statistics
@@ -828,6 +838,10 @@ print_summary_bootstrap_result <- function(x, ...) {
   cat("==========================\n\n")
 
   cat("Method:   ", x$method, "\n")
+  if (length(x$inference)) {
+    cat(x$inference$method_label, "\n")
+    cat("Inference status:", x$inference$status, "\n")
+  }
   cat("Estimate: ", x$estimate, "\n")
 
   if (x$method != "plugin") {

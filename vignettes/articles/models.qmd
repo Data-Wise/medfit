@@ -83,7 +83,9 @@ before you swap one for another.
 The native column describes the default listwise path. The separate
 [bounded FIML workflow](native-guide.html#bounded-fiml) is limited to three
 numeric continuous observed variables, explicit random X and observed/model SEs;
-weights, bootstrap and fit tests are deferred for those objects. Bounded FIML is
+weights and fit tests remain unavailable. Development source-fit retained-row and
+Gaussian parameter-draw intervals are available for scalar unstandardized effects;
+statistical admission remains deferred. Bounded FIML is
 available from 0.16.0 and is unavailable in released 0.15.0.
 
 A weight or an SE type that an engine does not take is an error, not an ignored argument, so a silent change of

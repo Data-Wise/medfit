@@ -69,7 +69,10 @@ test_that("both FIML routes preserve aliases, covariance and provenance", {
     se <- sqrt(diag(G %*% vcov(f)[c("a", "b", "cp"), c("a", "b", "cp")] %*% t(G)))
     t <- generics::tidy(m, type = "effects", conf_int = TRUE)
     expect_equal(t$std_error, unname(se), tolerance = 1e-12)
-    expect_warning(ci <- confint(m, parm = "effects"), "Normal approximation")
+    expect_warning(
+      ci <- confint(m, parm = "effects"),
+      "Normal approximation for NIE may be inaccurate.*extracted FIML data.*source_fit.*original fit"
+    )
     expect_equal(unname(ci[, 1L]), t$conf_low, tolerance = 1e-12)
     expect_equal(unname(ci[, 2L]), t$conf_high, tolerance = 1e-12)
     for (type in c("all", "paths", "effects")) {

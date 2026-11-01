@@ -27,8 +27,11 @@ unstandardized effects and normal intervals are supported. The model requires
 continuous X, M and Y, a free or exactly zero direct path, independent Gaussian
 disturbances, free intercepts and ignorable missingness under that joint model.
 Native `fit_mediation()` uses `engine_args` for the same opt-in. Extracted FIML
-objects refuse `quick()`, `pm()` and `glance()`; fit tests, bootstrap, profiles and
-MBCO are deferred. `glance()` on the source SEMFit retains likelihood/IC fields.
+objects refuse `quick()`, `pm()` and `glance()`; fit tests, profiles and MBCO
+remain unavailable. Development source-fit retained-row and Gaussian parameter-draw
+intervals now use explicit `bootstrap_mediation(source_fit = ..., effect = ...,
+method = ...)` calls. Any unresolved replicate withholds the entire interval.
+Statistical admission and coverage calibration remain deferred. `glance()` on the source SEMFit retains likelihood/IC fields.
 See the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
 for settings and limits. Website publication remains a separate step.
 

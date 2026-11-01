@@ -321,7 +321,18 @@ confidence intervals. At a = b = 0 the NIE point value is retained but its
 inferential fields are unavailable. A fixed direct path of zero instead has
 known zero covariance; other valid effect inference remains available.
 
-Extracted-object `glance()`, `quick()`, `pm()`, bootstrap/boot intervals, profiles,
+Development `bootstrap_mediation(source_fit = fiml_fit, effect = "nie",
+method = "nonparametric")` uses the original accepted source fit for a retained-row
+FIML percentile interval. Explicit `method = "parametric"` instead gives a joint
+Gaussian parameter-draw percentile interval with no refits. Both use the original
+point estimate and type-7 quantiles; any required failed or interrupted replicate
+withholds all intervals and distribution SD while preserving the full requested
+ledger. Statistical admission and coverage calibration remain deferred. These
+methods were added after 0.16.0; see [`bootstrap_mediation()`](../reference/bootstrap_mediation.html)
+and [Methods and Formulas](methods.html#fiml-source-intervals) for assumptions,
+conditional retention target and covariance handling.
+
+Extracted-object `glance()`, `quick()`, `pm()`, extracted-object boot intervals, profiles,
 MBCO, fit tests, fit indices and prediction/residual APIs are deferred and refuse
 FIML objects. Package object-aware guards act before package-controlled refits,
 RNG or worker launch; opaque user callbacks are outside this guarantee. AIC/BIC

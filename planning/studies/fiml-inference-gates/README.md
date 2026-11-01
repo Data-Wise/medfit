@@ -1,3 +1,15 @@
+> **Current checkpoint (2026-11-01):** Local FI-B1/FI-B2 implementation, independent QA, docs and final gates PASS. Renewed suite: 1802 tests, 8983 passing expectations, zero failures/errors; coverage 96.31213% overall and 158/158 changed critical expressions; source supplement 497 tests, one skip; lint clean and package check OK. Statistical admission remains deferred. Implementation is local; integration requires separate authorization. Earlier failure, worker-limit and preregistration deviations are historical and retained below.
+> Earlier status statements below are historical where inconsistent with this checkpoint.
+
+> Execution update (2026-11-01 MST): planning PR #378 merged at `5e845007`.
+> Bounded local implementation/verification is now separately authorized; see the
+> [active plan](../../PLAN-FIML-bounded-inference-implementation-2026-11-01.md).
+> Implementation: `medfit-implementer`; independent QA: `medfit-oracle-qa`.
+> Bounded implementation/numerical QA/docs are committed locally; final gates are FAIL after the prescribed
+> test-helper retry. The active plan records the two remaining assertions, exhausted allowance and deviations.
+> Statistical admission and studies remain deferred; historical authorization statements below
+> do not override this checkpoint. No implementation push/PR/merge/release is authorized.
+
 # FIML roadmap planning evidence
 
 Status: original packet merged via PR #377; reviewed FI-B0 integration authorized, 2026-10-31 MDT.

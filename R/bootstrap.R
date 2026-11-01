@@ -15,6 +15,7 @@
 #'   - For parametric bootstrap: receives named parameter vector, returns scalar
 #'   - For nonparametric bootstrap: receives data frame, returns scalar
 #'   - For plugin: receives named parameter vector, returns scalar
+#'   Omit this argument when supplying `source_fit`.
 #' @param method Character string: bootstrap method. Options:
 #'   - `"parametric"`: Sample from multivariate normal (fast, assumes normality)
 #'   - `"nonparametric"`: Resample data and refit (robust, slower)
@@ -42,7 +43,12 @@
 #' @param ncores Integer: number of cores for parallel processing.
 #'   If NULL, uses `parallel::detectCores() - 1`
 #' @param seed Integer: random seed for reproducibility (optional but recommended)
-#' @param ... Additional arguments (reserved for future use)
+#' @param ... Additional arguments (reserved for future use); must be empty with `source_fit`.
+#' @param source_fit Optional accepted bounded FIML [SEMFit], supplied by name.
+#'   Its original incomplete retained records, model and settings are authoritative.
+#'   Omit `statistic_fn`, `mediation_data`, `data` and `cluster` with this route.
+#' @param effect Scalar unstandardized effect, exactly `"nie"`, `"nde"` or `"te"`,
+#'   required with `source_fit` and unavailable without it. Supplied by name.
 #'
 #' @return A [BootstrapResult] object containing:
 #'   - Point estimate
@@ -52,11 +58,44 @@
 #'   - Method used
 #'
 #' @details
-#' Bounded FIML objects supplied as `mediation_data` or `data` are refused,
-#' including `method = "plugin"`; this entry point does not provide FIML
-#' bootstrap inference. Object-aware guards run before package-controlled RNG,
-#' workers or refits. Opaque user callbacks and external-first dispatch are
-#' outside that guarantee. See [fit_sem()] for supported normal intervals.
+#' ## Bounded FIML source intervals (development)
+#'
+#' Supply `source_fit` and `effect` by name and choose `method` explicitly. Only
+#' accepted three-variable Gaussian random-X simple mediation fits from [fit_sem()]
+#' are supported, with the direct path free or fixed exactly at zero. This route
+#' does not support callbacks, plugin estimates, clusters or additional arguments.
+#' Bounded FIML objects supplied as `mediation_data` or `data` remain refused.
+#' Object-aware guards run before package-controlled RNG, workers or refits; opaque
+#' user callbacks and external-first dispatch are outside that guarantee.
+#'
+#' `method = "nonparametric"` gives a retained-row FIML percentile interval:
+#' resample entire nonempty records at fixed retained N, preserving missingness and
+#' duplicate rows, and refit the identical model with the accepted source protocol.
+#' `method = "parametric"` gives a Gaussian parameter-draw percentile interval,
+#' not a synthetic-data bootstrap: jointly draw the canonical free parameters using
+#' the full observed/model covariance in original coordinates, without refitting.
+#' The symmetric correlation-root factor permits only roundoff repairs; materially
+#' asymmetric or indefinite covariance is refused. Fixed zeros stay exact. Negative
+#' nuisance-variance draws are not filtered or truncated before evaluating the effect.
+#'
+#' Both routes retain the original fitted effect as the point estimate and use
+#' type-7 empirical quantiles. Every requested replicate is recorded in `@inference`
+#' (schema `fiml-bootstrap-1`), including indices or draw IDs, reasons, source/RNG
+#' provenance and retained/collected counts. Any failed, invalid or nonfinite required
+#' replicate withholds the entire interval. Interruption returns an incomplete
+#' length-`n_boot` result with interrupted/unattempted IDs and `NA` unresolved values.
+#' Print, summary, tidy and changed-level `confint()` cannot report a survivor interval;
+#' tidy distribution SD is also unavailable for withheld results. An all-success SD
+#' is descriptive, not a robust standard error.
+#'
+#' The target is conditional on retained nonempty records. Assumptions include IID
+#' jointly Gaussian data, ignorable MAR with distinct missingness/model parameters,
+#' positivity and identified information. Retention normalization must be independent
+#' of model parameters; independently empty MCAR records suffice. Arbitrary
+#' value-dependent empty-row deletion and MNAR are not covered. Numerical verification
+#' does not establish interval coverage; statistical admission remains deferred.
+#' See the Methods and Formulas article, Bounded FIML, for the mathematical definition.
+#' These source intervals are development functionality added after 0.16.0.
 #'
 #' ## Bootstrap Methods
 #'
@@ -209,7 +248,16 @@ bootstrap_mediation <- function(statistic_fn,
                                 ncores = NULL,
                                 seed = NULL,
                                 cluster = NULL,
-                                ...) {
+                                ...,
+                                source_fit = NULL,
+                                effect = NULL) {
+  if (!is.null(source_fit)) {
+    if (!missing(statistic_fn)) stop("statistic_fn must be omitted with source_fit", call. = FALSE)
+    return(.bootstrap_fiml(source_fit, effect, method, missing(method), mediation_data, data,
+                           n_boot, ci_level, parallel, ncores, seed, cluster,
+                           length(substitute(list(...))) - 1L, match.call()))
+  }
+  if (!is.null(effect)) stop("effect requires source_fit", call. = FALSE)
   .sem_fiml_refuse(mediation_data, "bootstrap_mediation()")
   .sem_fiml_refuse(data, "bootstrap_mediation()")
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---

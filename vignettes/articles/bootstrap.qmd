@@ -21,6 +21,14 @@ Bootstrap inference provides confidence intervals for indirect effects without a
 
 All methods return a `BootstrapResult` object with consistent structure.
 
+For bounded FIML, the development source-fit route requires explicit named
+`source_fit` and `effect`, and explicit `method`. It provides retained-row FIML
+or joint Gaussian parameter-draw percentile intervals; the callback and extracted-data
+routes remain unavailable. This is narrower than the examples below. Any required
+failed or interrupted replicate withholds the whole interval, and statistical
+admission remains deferred. See the [native guide](native-guide.html#bounded-fiml)
+and [Methods and Formulas](methods.html#fiml-source-intervals).
+
 ## Example Data
 
 The examples use the bundled, simulated `mediation_demo` data (see
@@ -170,7 +178,7 @@ boot_np <- bootstrap_mediation(
   ci_level = 0.95,
   seed = 123,
   parallel = TRUE,
-  ncores = 4
+  ncores = 2L
 )
 
 print(boot_np)
@@ -210,8 +218,8 @@ Speed up with parallel processing:
 
 ```{r}
 #| label: parallel
-# Detect available cores
-ncores <- parallel::detectCores() - 1
+# Use two workers for this reproducible example
+ncores <- 2L
 
 # Run in parallel
 boot_np_par <- bootstrap_mediation(

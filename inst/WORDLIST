@@ -204,3 +204,8 @@ IC
 ignorable
 nlminb
 nonignorable
+MCAR
+MNAR
+positivity
+symmetrization
+unattempted

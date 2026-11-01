@@ -225,6 +225,55 @@ stopifnot(isTRUE(all.equal(as.numeric(nie(wrapped)), as.numeric(nie(mediation)),
 round(as.numeric(nie(wrapped)), 4)
 ```
 
+### Development intervals from the original fit
+
+This subsection requires the development source-fit interval addition after
+0.16.0. It illustrates execution, not statistical admission or calibrated coverage.
+The original accepted `fit`, including its incomplete retained records and settings,
+is the source. An extracted mediation object alone does not supply this route.
+
+```{r}
+#| label: fiml-source-intervals
+row_interval <- medfit::bootstrap_mediation(
+  source_fit = fit, effect = "nie", method = "nonparametric", n_boot = 2L, seed = 911L
+)
+draw_interval <- medfit::bootstrap_mediation(
+  source_fit = fit, effect = "nie", method = "parametric", n_boot = 8L, seed = 123L
+)
+stopifnot(row_interval@n_boot == 2L, draw_interval@n_boot == 8L,
+          identical(row_interval@estimate, as.numeric(nie(mediation))),
+          identical(draw_interval@estimate, as.numeric(nie(mediation))))
+print(row_interval)
+print(draw_interval)
+row_interval@inference[c("status", "requested", "successful", "failed")]
+row_interval@inference$frame[c("collected_n", "retained_n", "dropped_n")]
+```
+
+Two row resamples and eight parameter draws make this short example executable;
+they are deliberately insufficient for a reported interval. The first method
+resamples whole retained records, including missingness masks and duplicates,
+and refits the same model. The second draws canonical free parameters jointly
+using their full observed covariance and performs no refits. Fixed direct-path
+zeros stay exact. Its label is a Gaussian parameter-draw percentile interval,
+not a synthetic-data bootstrap. Both retain the original point estimate and use
+type-7 empirical quantiles; see the
+[canonical interval definition](https://data-wise.github.io/medfit/articles/methods.html#fiml-source-intervals).
+
+Any required failed, invalid or nonfinite replicate withholds the entire interval
+and distribution SD. An interrupted run preserves completed work, records
+interrupted and unattempted IDs, and returns an incomplete length-B result with
+`NA` unresolved estimates. Changing the confidence level or using print, summary,
+tidy or `confint()` cannot recover a survivor interval. Inspect `@inference` for
+every requested outcome; do not replace failed replicates until an interval appears.
+
+The target is conditional on retained nonempty records. The intended setting is
+IID jointly Gaussian data with ignorable MAR, distinct missingness/model parameters,
+positivity and identified information. Retention normalization must not depend on
+model parameters; independently empty MCAR records suffice. Arbitrary
+value-dependent empty-row deletion and MNAR are outside this contract. The fixed
+teaching mask above demonstrates computation without validating those assumptions.
+Statistical admission and coverage calibration remain deferred.
+
 ## 4. Learn the boundary of this feature
 
 **Payoff (about 3 minutes):** recognize a deliberate refusal rather than silently
@@ -237,7 +286,7 @@ allowed topology variation. Latent variables, extra predictors, factors,
 products, constraints, ties and user-supplied bounds are outside this route.
 The validated start/control settings also apply; see the native guide.
 
-Expected-information and sandwich standard errors, bootstrap intervals, profiles,
+Expected-information and sandwich standard errors, extracted-object bootstrap, profiles,
 MBCO, missing-data chi-square tests and broad model extensions are not supported.
 For example, the next call refuses expected information before running a fit.
 The displayed message is captured so the chapter remains executable; the check
