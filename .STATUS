@@ -1,6 +1,8 @@
 # FIML expansion planning checkpoint — 2026-11-01 MST
 
-# PR #379 merged bounded simple-model inference to dev at 0bd99134 after local numerical QA and verification. Next-release planning targets covariates, parallel and serial models in planning/PLAN-FIML-next-release-model-expansion-2026-11-01.md; FI-G0 contract review precedes implementation. Stage-0 guard and variant-specific study-source provenance are proposed in planning/PLAN-FIML-stage0-release-guard-2026-11-01.md. Statistical admission gates, timing pilot, studies, expansion implementation and release remain deferred. These planning changes are local and unpublished; no studies or gates ran.
+# PR #379 merged bounded simple-model inference to dev at 0bd99134 after local numerical QA and verification. Next-release planning targets covariates, parallel and serial models in planning/PLAN-FIML-next-release-model-expansion-2026-11-01.md; FI-G0 contract review precedes implementation. Stage-0 guard and variant-specific study-source provenance are proposed in planning/PLAN-FIML-stage0-release-guard-2026-11-01.md. Statistical admission gates, timing pilot, studies, expansion implementation and release remain deferred. No admission studies or admission gates ran.
+
+# Earlier checkpoints below are historical where superseded by this entry.
 
 # Bounded inference local verification PASS — 2026-11-01 MST
 # Local FI-B1/FI-B2 implementation, independent QA, docs and final gates PASS. Renewed suite: 1802 tests, 8983 passing expectations, zero failures/errors; coverage 96.31213% overall and 158/158 changed critical expressions; source supplement 497 tests, one skip; lint clean and package check OK. Statistical admission remains deferred. Implementation is local; integration requires separate authorization. Earlier failure, worker-limit and preregistration deviations are historical and retained below.
