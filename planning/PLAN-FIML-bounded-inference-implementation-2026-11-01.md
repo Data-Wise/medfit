@@ -1,3 +1,6 @@
+> **Current checkpoint (2026-11-01):** Local FI-B1/FI-B2 implementation, independent QA, docs and final gates PASS. Renewed suite: 1802 tests, 8983 passing expectations, zero failures/errors; coverage 96.31213% overall and 158/158 changed critical expressions; source supplement 497 tests, one skip; lint clean and package check OK. Statistical admission remains deferred. Implementation is local; integration requires separate authorization. Earlier failure, worker-limit and preregistration deviations are historical and retained below.
+> Earlier status statements below are historical where inconsistent with this checkpoint.
+
 # Bounded existing-model FIML interval implementation
 
 Date: 2026-11-01 MST. State: **local implementation committed; final verification blocked; correction allowance exhausted**.
@@ -35,8 +38,8 @@ The active plan owns task state; no stage is complete merely because implementat
 - [x] Pre-docs gates: focused/API/docs-consistency tests, applicable native gates and lint.
 - [x] Docs: roxygen/Rd, NEWS, support matrix and existing FIML minibook example; verified supported scope,
   assumptions, calibration limits and strict failure output. Statistical admission is explicitly pending.
-- [ ] Final gates: one full suite on the final tree, package check/documentation verification, evidence counts.
-- [ ] Reconcile roadmap/status and scoped commits; prepare concrete integration packet. No push/PR/merge yet.
+- [x] Final gates: one full suite on the final tree, package check/documentation verification, evidence counts.
+- [x] Reconcile roadmap/status and scoped commits; prepare concrete integration packet. No push/PR/merge yet.
 
 ## Verification budget and fixture freeze
 

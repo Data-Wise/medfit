@@ -1,3 +1,6 @@
+> **Current checkpoint (2026-11-01):** Local FI-B1/FI-B2 implementation, independent QA, docs and final gates PASS. Renewed suite: 1802 tests, 8983 passing expectations, zero failures/errors; coverage 96.31213% overall and 158/158 changed critical expressions; source supplement 497 tests, one skip; lint clean and package check OK. Statistical admission remains deferred. Implementation is local; integration requires separate authorization. Earlier failure, worker-limit and preregistration deviations are historical and retained below.
+> Earlier status statements below are historical where inconsistent with this checkpoint.
+
 # FI-B0: short implementation checklist
 
 Date: 2026-10-31 MDT. Updated 2026-11-01 MST: **reviewed contract merged via #378; bounded implementation and numerical QA complete locally; final gates blocked by test-helper assertions**.
