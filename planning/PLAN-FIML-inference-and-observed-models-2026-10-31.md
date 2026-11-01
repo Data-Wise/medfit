@@ -27,8 +27,10 @@ in force for statistical admission; they do not require running a study to finis
 this roadmap or review the bounded implementation. FI-B0's historical study
 blockers below remain release/admission blockers, not permission to start studies
 or an additional prerequisite to separately authorizing bounded implementation.
+The maintainer authorized push, PR and merge-on-green of this planning follow-up
+on 2026-10-31 MDT; implementation and experiments remain unauthorized.
 Next: explicit implementation/local-verification authorization and stage-owner
-assignment. Active plan stays none. No implementation, experiment, push or release.
+assignment. Active plan stays none. No implementation, experiment or release is authorized.
 Older hashes, review payloads and planning-base descriptions below are historical.
 
 ## 1. Decisions and release boundaries

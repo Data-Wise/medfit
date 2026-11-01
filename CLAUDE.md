@@ -632,15 +632,16 @@ file; GitHub Issues are only linked from PRs. Agents' reports go to `_agents_wor
 
 **Package:** `planning/medfit-roadmap.md`
 **FIML next-step handoff (2026-10-31):** roadmap planning merged via PR #377.
-Current local contract: `planning/DECISION-FI-B0-existing-model-inference-2026-10-31.md`
-on `codex/fiml-b0-decision-packet`; reviewed with no blocking design findings.
+Current reviewed contract: `planning/DECISION-FI-B0-existing-model-inference-2026-10-31.md`
+reviewed on `codex/fiml-b0-decision-packet` with no blocking design findings.
 Ready for separate bounded implementation/local-verification authorization and
 owner assignment; no implementation is authorized. Fixed defaults: symmetric
 correlation-root covariance factor with roundoff-only checks, optimum total-NLL
 tolerance 1e-5, cumulative verification cap four wall/eight CPU hours/two workers
 (focused oracle sub-cap 90 wall minutes/two CPU hours). Large simulation/timing
 pilot deferred; statistical admission remains unresolved under Q10-Q13. All 11
-future model variants preserved. No push, release or experiments authorized;
+future model variants preserved. Planning push/PR/merge-on-green authorized
+2026-10-31 MDT; implementation, release and experiments remain unauthorized;
 coverage main-only, expensive CI release-only. Keep Active plan none until
 implementation is explicitly authorized. Historical completed-plan entries follow.
 

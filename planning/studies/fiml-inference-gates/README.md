@@ -1,6 +1,6 @@
 # FIML roadmap planning evidence
 
-Status: original packet merged via PR #377; FI-B0 reconciliation remains local, 2026-10-31 MDT.
+Status: original packet merged via PR #377; reviewed FI-B0 integration authorized, 2026-10-31 MDT.
 This is a planning packet, not an active implementation or an admission receipt.
 
 ## Current authority and reading order
@@ -52,5 +52,6 @@ No dates or versions are assigned. Hosted coverage remains main PRs/main pushes
 only, expensive CI release-only, and the CRAN hold remains.
 
 Local reconciliation/review is authorized; PR #377 publication is historical.
-This follow-up has no authorization for push, PR, publication, implementation,
-new calculations and experiments are not authorized by this packet.
+The maintainer authorized this follow-up for push, PR and merge into dev after
+review and passing checks on 2026-10-31 MDT. Implementation, release, new
+statistical calculations and experiments remain unauthorized.

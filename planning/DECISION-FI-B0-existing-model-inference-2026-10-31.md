@@ -30,6 +30,11 @@ is deferred, not a prerequisite for drafting or reviewing this checklist.
   metadata. Preserve legacy constructors and tidy/glance columns. Record target,
   source provenance, method label, requested/successful/failed counts, seed,
   sampling frame, and the complete replicate ledger. Never mutate the source.
+  Use an optional versioned `inference` list, empty for legacy objects; record
+  retained/collected counts, RNG settings, quantile type and refit protocol.
+  Retain row indices or normal-draw IDs, acceptance/condition reasons and
+  unattempted IDs after interruption. Withheld results have NA distribution SD
+  in `tidy()`; all-success SD remains descriptive, not a robust standard error.
 
 Design examples only; not currently supported calls:
 
@@ -63,6 +68,12 @@ bootstrap_mediation(method = "parametric", source_fit = fit,
   The sampling target conditions on nonempty retention and excludes empty-count
   uncertainty. Include an all-empty MCAR fixture; do not generalize to MNAR.
   Joint-null/local-to-null NIE behavior remains a stated calibration limitation.
+  Ignoring retention requires a model-parameter-independent normalization. A
+  sufficient bounded case is all-empty MCAR selection independent of complete
+  records, followed by the declared complete/MCAR/observed-X MAR mechanism
+  among retained records. This argument does not cover arbitrary value-dependent
+  all-empty deletion. Preserve positivity and identified observed information;
+  verify collected/retained counts in the non-negligible all-empty MCAR fixture.
 
 ### Fixed covariance factor (bounded default)
 

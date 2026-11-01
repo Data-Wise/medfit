@@ -1888,7 +1888,8 @@ historical checklists. Current dispositions:
    resource agreement are deferred; Q10-Q13 statistical admission requirements
    remain unresolved for release, rather than triggering another roadmap study.
    PR #377 merged the prior planning packet as `da0d9edc`; `ff200ee9` reconciled
-   its status. This FI-B0 follow-up remains local and unpublished.
+   its status. This FI-B0 follow-up is authorized for reviewed integration into
+   dev after required checks pass; integration is not implementation approval.
    The [evidence index](studies/fiml-inference-gates/README.md) distinguishes
    the preserved historical packet hashes from current reconciliation hashes.
    No experiments or implementation are authorized within this roadmap task.
@@ -1923,11 +1924,13 @@ historical checklists. Current dispositions:
 
 ### Ordered delivery roadmap (future work; not implementation authorization)
 
-Roadmap reconciliation is complete locally. The next bounded deliverable is
-**FI-B0: one concise implementation-decision packet**, not another research
-campaign. It names the backward-compatible inference entry point, the first
-admission stage, its independent checks and an affordable verification budget.
-Unresolved choices stay explicit; no study or implementation starts implicitly.
+Roadmap reconciliation merged through PR #377. The
+[FI-B0 implementation checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md)
+is drafted and reviewed; this follow-up integrates that contract with the roadmap.
+It names the backward-compatible inference entry point, independent checks and
+bounded verification limits. Affordability remains untested. Next is a separate
+implementation/local-verification decision and owner assignment; statistical
+admission remains deferred. No study or implementation starts implicitly.
 
 | Order | Milestone and scope | Accountable owner | Completion criterion | Current state |
 |---|---|---|---|---|
@@ -1948,10 +1951,11 @@ is required for each stage; one passing stage does not admit the rest.
 authorization and owner assignment. The reviewed checklist supplies current
 numerical defaults and resource limits; actual runtime/numerical evidence is
 pending. Statistical simulation/admission remains a separate deferred decision.
-**Publication:** PR #377 is merged; this FI-B0 follow-up is local only and still
-needs separate publication authorization. No implementation follows from review.
+**Publication:** PR #377 is merged; the maintainer authorized this FI-B0
+follow-up for push, PR and merge into dev after review and passing required
+checks on 2026-10-31 MDT. No implementation or release follows from integration.
 Version assignment follows accepted capability and a separate release decision;
-no feature date, push, release or dev-to-main merge is authorized here. The
+no feature date, release or dev-to-main merge is authorized here. The
 efficiency baseline stays separate; robust SEs, likelihood-based inference and
 the other deferred scopes above are not prerequisites for this roadmap closeout.
 
