@@ -5,7 +5,7 @@
 \title{BootstrapResult S7 Class}
 \usage{
 BootstrapResult(estimate, ci_lower, ci_upper, ci_level, boot_estimates,
-  n_boot, method, call)
+  n_boot, method, call, inference = list())
 }
 \arguments{
 \item{estimate}{Numeric scalar: point estimate of the statistic}
@@ -24,6 +24,10 @@ BootstrapResult(estimate, ci_lower, ci_upper, ci_level, boot_estimates,
 ("parametric", "nonparametric", or "plugin")}
 
 \item{call}{Call object or NULL: original function call}
+
+\item{inference}{Optional list, empty by default for legacy results. Bounded FIML
+source intervals use schema \code{fiml-bootstrap-1} for method/target, source and RNG
+provenance, retained/collected counts and every requested replicate outcome.}
 }
 \value{
 A BootstrapResult S7 object
@@ -37,7 +41,10 @@ This class standardizes bootstrap inference results across different
 bootstrap methods (parametric, nonparametric, plugin).
 
 The class includes validation to ensure consistency between
-method type and required fields.
+method type and required fields. See \code{\link[=bootstrap_mediation]{bootstrap_mediation()}} for the bounded
+FIML source route. Its failed or incomplete results retain length-\code{n_boot}
+distributions with unresolved \code{NA} values and withhold intervals through every
+accessor. The optional metadata does not change legacy tidy/glance columns.
 }
 \examples{
 \donttest{

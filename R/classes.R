@@ -520,18 +520,24 @@ S7::S4_register(SerialMediationData)
 #' @param method Character scalar: bootstrap method
 #'   ("parametric", "nonparametric", or "plugin")
 #' @param call Call object or NULL: original function call
+#' @param inference Optional list, empty by default for legacy results. Bounded FIML
+#'   source intervals use schema `fiml-bootstrap-1` for method/target, source and RNG
+#'   provenance, retained/collected counts and every requested replicate outcome.
 #'
 #' @return A BootstrapResult S7 object
 #' @usage
 #' BootstrapResult(estimate, ci_lower, ci_upper, ci_level, boot_estimates,
-#'   n_boot, method, call)
+#'   n_boot, method, call, inference = list())
 #'
 #' @details
 #' This class standardizes bootstrap inference results across different
 #' bootstrap methods (parametric, nonparametric, plugin).
 #'
 #' The class includes validation to ensure consistency between
-#' method type and required fields.
+#' method type and required fields. See [bootstrap_mediation()] for the bounded
+#' FIML source route. Its failed or incomplete results retain length-`n_boot`
+#' distributions with unresolved `NA` values and withhold intervals through every
+#' accessor. The optional metadata does not change legacy tidy/glance columns.
 #'
 #' @examples
 #' \donttest{
