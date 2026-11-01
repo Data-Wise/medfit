@@ -1866,8 +1866,8 @@ historical checklists. Current dispositions:
    [clause-level issue dispositions](ISSUE-369-reconciliation-2026-10-31.md).
    Existing issue #369 tracks administrative follow-through; #249 retains
    unresolved solver/standardization/source-sync clauses, while #320 remains a
-   known external-engine limitation. No new implementation is authorized.
-2. **Next agreed design, unscheduled and not implemented:**
+   known external-engine limitation. Bounded FI-B1/FI-B2 implementation is authorized below; other implementation is not authorized.
+2. **Active bounded implementation, unscheduled for release:**
    **FIML inference and observed-model expansion**
    ([paired plan](PLAN-FIML-inference-and-observed-models-2026-10-31.md)):
    FI-B0 contract -> FI-B1 incomplete-row bootstrap -> FI-B2 joint Gaussian
@@ -1883,16 +1883,17 @@ historical checklists. Current dispositions:
    The [FI-B0 checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md)
    now fixes the API/failure/test contract and three bounded numerical/resource
    defaults. Local read-only review found no blocking design findings; no runtime
-   checks were run. Bounded implementation still needs separate authorization
-   and assigned owners. The large simulation grid, timing pilot and statistical
+   checks were run. The maintainer authorized bounded implementation on 2026-11-01 MST:
+   `medfit-implementer` owns code/tests and `medfit-oracle-qa` owns independent QA. The large simulation grid, timing pilot and statistical
    resource agreement are deferred; Q10-Q13 statistical admission requirements
    remain unresolved for release, rather than triggering another roadmap study.
    PR #377 merged the prior planning packet as `da0d9edc`; `ff200ee9` reconciled
-   its status. This FI-B0 follow-up is authorized for reviewed integration into
-   dev after required checks pass; integration is not implementation approval.
+   its status. PR #378 merged the reviewed FI-B0 follow-up into dev as
+   `5e845007`; bounded implementation now follows a separate explicit authorization.
    The [evidence index](studies/fiml-inference-gates/README.md) distinguishes
    the preserved historical packet hashes from current reconciliation hashes.
-   No experiments or implementation are authorized within this roadmap task.
+   The [active execution plan](PLAN-FIML-bounded-inference-implementation-2026-11-01.md)
+   owns bounded local task state; statistical studies and release remain unauthorized.
    **Activation requires both revised documents on one reviewed execution base
    or an explicitly agreed pinned snapshot.**
    The separate eight-cell
@@ -1922,20 +1923,20 @@ historical checklists. Current dispositions:
    and support claims at checkpoints. No percentage or optimizer success proves
    admission; no new hosted job or automatic issue/publication action is implied.
 
-### Ordered delivery roadmap (future work; not implementation authorization)
+### Ordered delivery roadmap (bounded implementation active; later stages deferred)
 
 Roadmap reconciliation merged through PR #377. The
 [FI-B0 implementation checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md)
-is drafted and reviewed; this follow-up integrates that contract with the roadmap.
+was reviewed and integrated into dev through PR #378.
 It names the backward-compatible inference entry point, independent checks and
-bounded verification limits. Affordability remains untested. Next is a separate
-implementation/local-verification decision and owner assignment; statistical
-admission remains deferred. No study or implementation starts implicitly.
+bounded verification limits. Affordability remains untested. The maintainer has now authorized bounded local implementation/verification
+and assigned the implementation and independent QA roles; statistical admission
+remains deferred. Execution follows the active plan, without a statistical study.
 
 | Order | Milestone and scope | Accountable owner | Completion criterion | Current state |
 |---|---|---|---|---|
-| 1 | FI-B0: existing-model inference contract and verification scope | Maintainer decides; planning agent drafts | Reviewed bounded API/failure/test contract and local verification limits; existing defaults preserved; statistical admission tracked separately | Checklist reviewed locally; ready for separate implementation authorization, not activated |
-| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | Implementation owner; independent oracle QA; docs owner | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | Planned; bounded implementation needs authorization/owner assignment; statistical admission deferred |
+| 1 | FI-B0: existing-model inference contract and verification scope | Maintainer decides; planning agent drafts | Reviewed bounded API/failure/test contract and local verification limits; existing defaults preserved; statistical admission tracked separately | Reviewed contract merged via #378; bounded execution authorized 2026-11-01 |
+| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | `medfit-implementer`; `medfit-oracle-qa`; `medfit-docs` | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | Active bounded local implementation; statistical admission deferred |
 | 3 | FI-G0 / FI-G1: generic preparation, then one/two continuous covariates | Implementation owner; independent oracle QA | Old-model behavior preserved; each covariate variant independently admitted with extraction and both interval methods | Planned after existing-model inference |
 | 4 | FI-G2: two parallel mediators, 0-2 covariates, independent/correlated mediator residuals | Implementation owner; independent oracle QA | Each of six variants independently admitted; full effect covariance and both interval methods verified | Planned after covariate stage |
 | 5 | FI-G3: two serial mediators, 0-2 covariates, independent disturbances and declared shortcuts | Implementation owner; independent oracle QA | Each of three variants independently admitted; every-path totals and both interval methods verified | Planned after parallel stage |
@@ -1947,13 +1948,12 @@ two covariate + six parallel + three serial variants, in addition to inference
 for the already released simple model. A separate complete admission decision
 is required for each stage; one passing stage does not admit the rest.
 
-**Remaining before execution:** explicit bounded implementation/local-verification
-authorization and owner assignment. The reviewed checklist supplies current
-numerical defaults and resource limits; actual runtime/numerical evidence is
-pending. Statistical simulation/admission remains a separate deferred decision.
-**Publication:** PR #377 is merged; the maintainer authorized this FI-B0
-follow-up for push, PR and merge into dev after review and passing required
-checks on 2026-10-31 MDT. No implementation or release follows from integration.
+**Execution:** bounded FI-B1/FI-B2 implementation and local verification authorized on
+2026-11-01 MST. Code/tests: `medfit-implementer`; independent QA: `medfit-oracle-qa`.
+The active plan records gates, docs ownership and cumulative resource limits.
+Numerical defaults and resource ceilings remain unvalidated until the planned checks run.
+**Publication:** planning PR #378 is merged into dev at `5e845007`. Implementation
+push/PR/merge requires separate authorization; statistical simulation/admission and release remain deferred.
 Version assignment follows accepted capability and a separate release decision;
 no feature date, release or dev-to-main merge is authorized here. The
 efficiency baseline stays separate; robust SEs, likelihood-based inference and

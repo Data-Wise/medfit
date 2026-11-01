@@ -1,7 +1,8 @@
 # FI-B0: short implementation checklist
 
-Date: 2026-10-31 MDT. Status: **condensed proposal; implementation not authorized**.
-Replaces the longer decision packet from commit `270584ec`. No experiments or push.
+Date: 2026-10-31 MDT. Updated 2026-11-01 MST: **reviewed contract merged via #378; bounded local implementation authorized**.
+The active [execution plan](PLAN-FIML-bounded-inference-implementation-2026-11-01.md) owns task state.
+Replaces the longer decision packet from commit `270584ec`. No statistical experiments or implementation push.
 
 ## Scope and roadmap
 
@@ -121,8 +122,8 @@ These are declared numerical defaults, not experimentally validated thresholds.
 
 ## 4. Budget and deferred work
 
-**Now:** planning and static document checks only. No execution authorized.
-For a later explicitly authorized implementation milestone, fix the local
+**Now:** bounded local implementation and verification explicitly authorized 2026-11-01 MST.
+For this authorized implementation milestone, fix the local
 verification ceiling at **four elapsed hours, eight aggregate CPU hours, and
 at most two concurrent workers**, including oracle checks and required local
 package/docs gates. Stop at whichever time cap is reached first; retain partial
@@ -138,8 +139,8 @@ actual work; do not weaken it to meet budget. Predeclare small failure/draw
 fixtures separately before execution; existing package tests also remain inside
 the overall time/worker cap. Neither matrix nor cap permits a timing pilot or
 simulation study. These ceilings are bounded defaults, not a claim that the work
-has been timed or will finish within them. Implementation and running the gates
-still need separate authorization.
+has been timed or will finish within them. Implementation and these local gates are authorized; statistical studies and
+external integration still require separate authorization.
 
 **Deferred:** the candidate 40-million-fit simulation grid, its timing pilot,
 exact statistical manifest and full resource allocation. Preserve Q10 rejection
@@ -150,9 +151,9 @@ Deferring that study does not satisfy or remove the roadmap's statistical
 admission requirement: wider calibration claims and release admission need a
 separately agreed evidence plan. Do not start a study to finish this roadmap.
 
-**Next decision:** accept this API/failure/test checklist, then separately grant
-implementation authorization. FI-B0 is not implementation approval. Keep the
-implementation plan inactive and retain all 11 future model variants unchanged.
+**Current decision:** the maintainer separately authorized bounded implementation/local verification
+on 2026-11-01 MST; this contract alone did not authorize it. The execution plan is active,
+statistical admission remains deferred, and all eleven future model variants remain unchanged.
 
 Source anchors: [API](../R/bootstrap.R), [result class](../R/classes.R),
 [base accessors](../R/methods-base.R), [tidy/glance](../R/methods-tidy.R),

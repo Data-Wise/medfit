@@ -1,37 +1,13 @@
 # FIML inference and observed-model expansion: agreed scope and staged plan
 
-Date: 2026-10-31 MDT. Status: **roadmap merged; bounded implementation
-checklist reviewed locally; implementation remains inactive and unauthorized**.
-PR #377 merged the roadmap planning packet into dev as `da0d9edc`; status
-reconciliation followed at `ff200ee9`. Current local planning branch:
-`codex/fiml-b0-decision-packet`. Released support and production code are unchanged.
-
-## Current FI-B0 handoff (supersedes older planning/execution status below)
-
-The [short checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md)
-is the current bounded implementation contract. Read-only review found no
-blocking design findings; this is design review, not numerical validation or
-release admission. Preserve the source-fit API, strict failure/accessor policy,
-independent oracles and all 11 later model variants.
-
-Three defaults are fixed in that checklist: symmetric correlation-root parameter
-factor with roundoff-only tolerance; total optimum-NLL absolute tolerance 1e-5
-(separate from the same-parameter 1e-7 identity); cumulative local verification
-cap four elapsed/eight aggregate CPU hours/two workers, with a 90-minute/two-CPU-hour
-focused oracle sub-cap. These are untested planning limits, not affordability
-or numerical pass evidence.
-
-The large simulation grid, timing pilot and statistical resource manifest are
-deferred. Q10 rejection floors and Q12-Q13 power/staged admission decisions remain
-in force for statistical admission; they do not require running a study to finish
-this roadmap or review the bounded implementation. FI-B0's historical study
-blockers below remain release/admission blockers, not permission to start studies
-or an additional prerequisite to separately authorizing bounded implementation.
-The maintainer authorized push, PR and merge-on-green of this planning follow-up
-on 2026-10-31 MDT; implementation and experiments remain unauthorized.
-Next: explicit implementation/local-verification authorization and stage-owner
-assignment. Active plan stays none. No implementation, experiment or release is authorized.
-Older hashes, review payloads and planning-base descriptions below are historical.
+Current checkpoint: 2026-11-01 MST. Planning PR #378 merged into dev at `5e845007`.
+The maintainer has now authorized bounded FI-B1/FI-B2 local implementation and verification.
+Code/tests owner: `medfit-implementer`; independent QA owner: `medfit-oracle-qa`.
+The [active execution plan](PLAN-FIML-bounded-inference-implementation-2026-11-01.md) owns task state.
+The [reviewed checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md) remains the bounded contract.
+Statistical admission, simulation/timing pilots, expanded models and release remain deferred.
+Implementation push/PR/merge requires separate authorization. Older execution-status wording below is historical;
+it does not override this checkpoint, the active plan, or preserved Q10-Q13 statistical admission gates.
 
 ## 1. Decisions and release boundaries
 
