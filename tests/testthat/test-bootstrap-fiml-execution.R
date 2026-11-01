@@ -48,3 +48,15 @@ test_that("uninterrupted sequential and parallel execution preserve exact values
   parallel <- .bootstrap_fiml_execute(5L, execution_value, execution_record, TRUE, 2L)
   expect_identical(parallel, sequential)
 })
+
+test_that("default parallel core selection honors the detected spare-core count", {
+  skip_on_os("windows")
+  observed <- integer()
+  testthat::local_mocked_bindings(detectCores = function(...) 3L, mclapply = function(X, FUN, mc.cores, ...) {
+    observed <<- c(observed, mc.cores)
+    lapply(X, FUN)
+  }, .package = "parallel")
+  out <- .bootstrap_fiml_execute(5L, execution_value, execution_record, TRUE, NULL)
+  expect_identical(observed, rep(2L, 3L))
+  expect_identical(vapply(out, `[[`, numeric(1), "value"), as.numeric(1:5))
+})

@@ -21,3 +21,32 @@ fb_fixture <- function(kind, direct) {
 }
 
 fb_model <- function(direct) paste0("M ~ a*X\nY ~ b*M + ", if (direct) "cp" else "0", "*X")
+
+# Compare constructor definitions and metadata, not R's private closure serialization header flags.
+fb_constructor_state <- function(x) {
+  if (is.null(x)) return(NULL)
+  # Map attribute values directly: recursively describing the named container itself would never terminate.
+  attrs <- lapply(attributes(x), fb_constructor_state)
+  if (is.function(x)) {
+    return(list(type = typeof(x), formals = fb_constructor_state(formals(x)),
+                body = fb_constructor_state(body(x)), environment = environment(x),
+                attributes = attrs))
+  }
+  if (is.environment(x)) return(list(type = "environment", address = rlang::obj_address(x), attributes = attrs))
+  if (is.call(x) || is.expression(x) || is.list(x) || is.pairlist(x)) {
+    return(list(type = typeof(x), values = lapply(as.list(x), fb_constructor_state), attributes = attrs))
+  }
+  if (is.symbol(x)) return(list(type = "symbol", value = as.character(x), attributes = attrs))
+  attributes(x) <- NULL
+  list(type = typeof(x), value = serialize(x, NULL), attributes = attrs)
+}
+
+fb_snapshot <- function(fit) {
+  attrs <- attributes(fit)
+  constructor <- attrs$S7_class
+  attrs$S7_class <- NULL
+  list(properties = lapply(S7::props(fit), serialize, connection = NULL),
+       attributes = lapply(attrs, serialize, connection = NULL),
+       constructor_address = rlang::obj_address(constructor),
+       constructor = fb_constructor_state(constructor))
+}
