@@ -2,6 +2,8 @@
 > Bounded local implementation/verification is now separately authorized; see the
 > [active plan](../../PLAN-FIML-bounded-inference-implementation-2026-11-01.md).
 > Implementation: `medfit-implementer`; independent QA: `medfit-oracle-qa`.
+> Bounded implementation/numerical QA/docs are committed locally; final gates are FAIL after the prescribed
+> test-helper retry. The active plan records the two remaining assertions, exhausted allowance and deviations.
 > Statistical admission and studies remain deferred; historical authorization statements below
 > do not override this checkpoint. No implementation push/PR/merge/release is authorized.
 

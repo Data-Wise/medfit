@@ -1923,7 +1923,7 @@ historical checklists. Current dispositions:
    and support claims at checkpoints. No percentage or optimizer success proves
    admission; no new hosted job or automatic issue/publication action is implied.
 
-### Ordered delivery roadmap (bounded implementation active; later stages deferred)
+### Ordered delivery roadmap (bounded implementation local; final verification blocked)
 
 Roadmap reconciliation merged through PR #377. The
 [FI-B0 implementation checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md)
@@ -1931,12 +1931,14 @@ was reviewed and integrated into dev through PR #378.
 It names the backward-compatible inference entry point, independent checks and
 bounded verification limits. Affordability remains untested. The maintainer has now authorized bounded local implementation/verification
 and assigned the implementation and independent QA roles; statistical admission
-remains deferred. Execution follows the active plan, without a statistical study.
+remains deferred. Implementation, independent numerical QA and docs are committed locally.
+Final verification is blocked by two instrumented immutability-test assertions after the prescribed retry;
+the active plan records the bounded continuation proposal and preserved deviations. No statistical study ran.
 
 | Order | Milestone and scope | Accountable owner | Completion criterion | Current state |
 |---|---|---|---|---|
 | 1 | FI-B0: existing-model inference contract and verification scope | Maintainer decides; planning agent drafts | Reviewed bounded API/failure/test contract and local verification limits; existing defaults preserved; statistical admission tracked separately | Reviewed contract merged via #378; bounded execution authorized 2026-11-01 |
-| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | `medfit-implementer`; `medfit-oracle-qa`; `medfit-docs` | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | Active bounded local implementation; statistical admission deferred |
+| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | `medfit-implementer`; `medfit-oracle-qa`; `medfit-docs`; `medfit-gates` | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | Implemented locally; numerical QA/docs PASS; final verification blocked; statistical admission deferred |
 | 3 | FI-G0 / FI-G1: generic preparation, then one/two continuous covariates | Implementation owner; independent oracle QA | Old-model behavior preserved; each covariate variant independently admitted with extraction and both interval methods | Planned after existing-model inference |
 | 4 | FI-G2: two parallel mediators, 0-2 covariates, independent/correlated mediator residuals | Implementation owner; independent oracle QA | Each of six variants independently admitted; full effect covariance and both interval methods verified | Planned after covariate stage |
 | 5 | FI-G3: two serial mediators, 0-2 covariates, independent disturbances and declared shortcuts | Implementation owner; independent oracle QA | Each of three variants independently admitted; every-path totals and both interval methods verified | Planned after parallel stage |
@@ -1951,7 +1953,10 @@ is required for each stage; one passing stage does not admit the rest.
 **Execution:** bounded FI-B1/FI-B2 implementation and local verification authorized on
 2026-11-01 MST. Code/tests: `medfit-implementer`; independent QA: `medfit-oracle-qa`.
 The active plan records gates, docs ownership and cumulative resource limits.
-Numerical defaults and resource ceilings remain unvalidated until the planned checks run.
+The frozen numerical checks pass all 78 paired native/lavaan comparisons (156 public fits).
+They establish fixture-level agreement, not coverage calibration or general affordability.
+Final gates remain FAIL; the test-helper correction allowance is exhausted. See the active plan for
+two initial four-worker render attempts and a diagnostic preregistration deviation; full compliance is not claimed.
 **Publication:** planning PR #378 is merged into dev at `5e845007`. Implementation
 push/PR/merge requires separate authorization; statistical simulation/admission and release remain deferred.
 Version assignment follows accepted capability and a separate release decision;

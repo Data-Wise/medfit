@@ -4,6 +4,9 @@ Current checkpoint: 2026-11-01 MST. Planning PR #378 merged into dev at `5e84500
 The maintainer has now authorized bounded FI-B1/FI-B2 local implementation and verification.
 Code/tests owner: `medfit-implementer`; independent QA owner: `medfit-oracle-qa`.
 The [active execution plan](PLAN-FIML-bounded-inference-implementation-2026-11-01.md) owns task state.
+Implementation, independent numerical QA and docs are committed locally. Final verification is blocked by
+two instrumented immutability-test assertions; the prescribed correction/retry allowance is exhausted.
+The active plan records the bounded continuation proposal and deviations; no merge-ready claim is made.
 The [reviewed checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md) remains the bounded contract.
 Statistical admission, simulation/timing pilots, expanded models and release remain deferred.
 Implementation push/PR/merge requires separate authorization. Older execution-status wording below is historical;

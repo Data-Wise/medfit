@@ -1,6 +1,6 @@
 # Bounded existing-model FIML interval implementation
 
-Date: 2026-11-01 MST. State: **active; local implementation and verification authorized**.
+Date: 2026-11-01 MST. State: **local implementation committed; final verification blocked; correction allowance exhausted**.
 Execution base: dev `5e845007`, planning PR #378 merged. Branch: `feature/fiml-bounded-inference`.
 The maintainer explicitly authorized status repair, implementation/QA owner assignment and bounded implementation.
 This authorization does not extend the earlier planning-only push/PR/merge permission to implementation.
@@ -29,11 +29,11 @@ The active plan owns task state; no stage is complete merely because implementat
   accepted refits, complete requested replicate ledger, no survivor intervals through any accessor.
 - [x] FI-B2: joint canonical original-coordinate Gaussian parameter draws with the reviewed symmetric
   correlation-root convention, exact fixed zeros and zero extra refits; accurate method labels.
-- [ ] Independent QA: six complete/MCAR/observed-X MAR source cells crossed with free/zero direct path,
+- [x] Independent QA: six complete/MCAR/observed-X MAR source cells crossed with free/zero direct path,
   twelve paired resamples per cell (156 native/lavaan source-plus-resample invocations), rowwise
   likelihood/score/Hessian/covariance checks, manual effects/type-7 quantiles, mutants and invariance.
-- [ ] Pre-docs gates: focused/API/docs-consistency tests, applicable native gates and lint.
-- [ ] Docs: roxygen/Rd, NEWS, support matrix and existing FIML minibook example; verified supported scope,
+- [x] Pre-docs gates: focused/API/docs-consistency tests, applicable native gates and lint.
+- [x] Docs: roxygen/Rd, NEWS, support matrix and existing FIML minibook example; verified supported scope,
   assumptions, calibration limits and strict failure output. Statistical admission is explicitly pending.
 - [ ] Final gates: one full suite on the final tree, package check/documentation verification, evidence counts.
 - [ ] Reconcile roadmap/status and scoped commits; prepare concrete integration packet. No push/PR/merge yet.
@@ -61,4 +61,44 @@ Numerical tests establish fixture-level implementation correctness; they do not 
 Delivery states remain separate: local implementation, QA, merged-dev, merged-main, released.
 All eleven future model variants and the separate efficiency baseline remain unchanged.
 
-Implementation checkpoint: `e82d1a3`; focused 9 tests/82 assertions and legacy 26 tests/61 assertions pass, changed-file lint zero. Independent oracle QA is next; statistical admission remains deferred.
+Implementation checkpoint: `e82d1a3`, interruption correction `123994c`, message-only correction `cb3de1c`.
+Independent QA (`13f8c17`) passes all 78 paired native/lavaan comparisons (156 public fit calls),
+independent likelihood/score/Hessian/covariance checks, joint draws, mutants and interruption/accessor contracts.
+Pre-docs gates pass 251 tests/1210 expectations, lint zero and 24/24 existing FIML gate rows.
+Docs (`4ac4585`) pass 88 tests/667 expectations, spelling/lint and seven executed HTML renders/content inspections.
+Final gates failed; the implementation is not merge-ready. Statistical admission remains deferred.
+
+Verification deviation: two initial bootstrap-article render attempts executed an existing four-worker example,
+exceeding the two-worker limit. Their complete commands consumed 1.760/8.525 wall and 2.633/11.990 CPU seconds;
+the four-worker subchunk duration is unavailable. No compliant-full-run claim is made. All 82 rendered chunks were
+then audited, both parallel examples set explicitly to two workers, numerical threads pinned to one, and the seven
+renders passed. The failed attempts remain in the cumulative ledger; no budget reset or statistical study occurred.
+
+## Current blocker and bounded continuation proposal
+
+The first instrumented installed suite ran 1793 tests: 8930 passed expectations, two failed,
+zero errors, four warnings and 129 skips (mostly unavailable source artifacts or explicit coverage guards).
+Both failures compare source-object serialization. Every source property is unchanged; the changed bytes are
+in the instrumented S7 constructor descriptor. Overall coverage recovered from the retained trace is 96.15308%.
+No numerical assertion failed. Source-only checks, final lint and tarball check remain pending.
+
+The second correction added automatic failure-path tests and a stronger semantic source snapshot. Its last
+focused instrumented run passes 135/137 expectations and covers 134/134 expressions in `R/bootstrap-fiml.R`
+plus both changed summary-print expressions. Two snapshot assertions still serialize private closure flags
+nested in validator body/source-reference metadata. Twenty mutation controls and four saved-source invariance
+assertions pass, but that does not turn the instrumented failure into PASS. The prescribed agent retry failed;
+the correction allowance is exhausted at 12/12 actual native fixture calls, zero lavaan or matrix reruns.
+The three test/helper drafts and their new work declaration remain uncommitted; no production behavior changed.
+See `_agents_workspace/fiml-bounded-inference/{implementer,gates}.md` for exact commands and failure paths.
+
+One final-gate diagnostic source fit was message-declared before execution but committed in its receipt only
+afterward; this preregistration deviation is recorded in `fixtures/FI-B-final-gates-diagnostic-2026-11-01.md`.
+The correction work declaration was written before its attempts and remains outside the index with the draft.
+No claim of complete preregistration or worker-limit compliance is made.
+
+Maintainer decision required before more implementation/verification: permit one narrow helper correction
+that compares validator code/source references structurally rather than serializing runtime closure flags,
+retaining all property, attribute, constructor-identity and planted-mutation checks; allow at most four extra
+existing-fixture native calls for one focused instrumented proof, then independent saved-artifact QA and a
+renewed final suite/package gates if that proof passes. Keep the original cumulative time caps, two workers,
+frozen matrix and all numerical tolerances. No statistical admission, study or external integration is proposed.
