@@ -1,18 +1,37 @@
 # FIML inference and observed-model expansion: agreed scope and staged plan
 
-Date: 2026-10-31 MDT. Status: **roadmap scope and Q12-Q13 recorded;
-reconciliation complete locally; implementation plan remains inactive**.
-Base: dev `f1aaf332`; released 0.16.0/main `c37c7ee8`.
-Current task: assemble and review the reconciled planning packet only.
-No further experiments, production implementation, model fits, simulations,
-push or PR. Earlier exact gate calculations are retained as historical evidence.
-No runtime code, released support claim, optimizer default or release assignment
-changes. Roadmap commit `cc3fd887` is the parent of the revised local roadmap,
-not its content pin or authority. The paired plan, roadmap and evidence are now
-assembled on `codex/roadmap-reconciliation`; the original design worktree is
-preserved. Publication and implementation remain separately authorized actions.
-Tasks and checkpoints are indexed here under the repository's `planning/`
-convention; do not overwrite the closed `tasks/` fixed-X plan.
+Date: 2026-10-31 MDT. Status: **roadmap merged; bounded implementation
+checklist reviewed locally; implementation remains inactive and unauthorized**.
+PR #377 merged the roadmap planning packet into dev as `da0d9edc`; status
+reconciliation followed at `ff200ee9`. Current local planning branch:
+`codex/fiml-b0-decision-packet`. Released support and production code are unchanged.
+
+## Current FI-B0 handoff (supersedes older planning/execution status below)
+
+The [short checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md)
+is the current bounded implementation contract. Read-only review found no
+blocking design findings; this is design review, not numerical validation or
+release admission. Preserve the source-fit API, strict failure/accessor policy,
+independent oracles and all 11 later model variants.
+
+Three defaults are fixed in that checklist: symmetric correlation-root parameter
+factor with roundoff-only tolerance; total optimum-NLL absolute tolerance 1e-5
+(separate from the same-parameter 1e-7 identity); cumulative local verification
+cap four elapsed/eight aggregate CPU hours/two workers, with a 90-minute/two-CPU-hour
+focused oracle sub-cap. These are untested planning limits, not affordability
+or numerical pass evidence.
+
+The large simulation grid, timing pilot and statistical resource manifest are
+deferred. Q10 rejection floors and Q12-Q13 power/staged admission decisions remain
+in force for statistical admission; they do not require running a study to finish
+this roadmap or review the bounded implementation. FI-B0's historical study
+blockers below remain release/admission blockers, not permission to start studies
+or an additional prerequisite to separately authorizing bounded implementation.
+The maintainer authorized push, PR and merge-on-green of this planning follow-up
+on 2026-10-31 MDT; implementation and experiments remain unauthorized.
+Next: explicit implementation/local-verification authorization and stage-owner
+assignment. Active plan stays none. No implementation, experiment or release is authorized.
+Older hashes, review payloads and planning-base descriptions below are historical.
 
 ## 1. Decisions and release boundaries
 
@@ -323,7 +342,7 @@ success and must not be recommended as a remedy. No simulation is authorized.
 | Task | Acceptance (all required) | Verification | Depends on / likely files |
 |---|---|---|---|
 | FI-TRACK Tracking contract | Namespaced task IDs, pinned roadmap revision, explicit state/gate mapping and negative fixtures specified | Planning consistency check and independent review | Prerequisite to activation; no checker implementation authorized now |
-| FI-B0 Contract | B0-API: exact API/labels/result metadata; B0-POLICY: failure/sampling contract; B0-POWER: user-agreed power targets/reference scenarios/decision rule; B0-PILOT: approved frozen-cell/disjoint-seed timing protocol and resource cap; B0-MISSING: ignorable-missingness/parameter-distinctness argument; B0-EMPTY: all-empty MCAR cell; B0-MANIFEST: statistical design and budget frozen. Every item required; any unapproved item blocks completion | Read-only API/adversarial design review; old/new call examples | User decisions; bootstrap.R, classes.R, methods-base.R (design only now) |
+| FI-B0 Contract | Reviewed short checklist fixes API, sampling/failure/accessor policy, factor/tolerances and bounded local verification ceiling. Statistical manifest/pilot/resource agreement deferred to admission; Q10-Q13 preserved | Read-only design review: no blocking findings; runtime validation pending | Ready for separate bounded implementation authorization and owner assignment; statistical admission unresolved |
 | FI-B1 Row intervals | Same-model incomplete-row refits; complete failure ledger and chosen no-survivor rule; percentile/point-estimate oracle | Paired index manifest, mask/failure/RNG mutants, unchanged API tests | FI-B0; bootstrap.R and focused new tests, split metadata changes into a small preceding task if needed |
 | FI-B2 Parameter intervals | Joint canonical MVN with full covariance; no refits; accurate method labels and fixed-zero handling | Independent factors/normal variates/quantiles; diagonal/alias mutants | FI-B0; bootstrap.R and focused tests; metadata shared with FI-B1 |
 | FI-CKB | Independent numerical QA and preset statistical acceptance or explicitly unresolved status; complete-data neutrality | Separate QA role, admission checklist, relevant local suite | FI-B1/FI-B2; no broader model activation |
