@@ -2,6 +2,7 @@
 devtools::load_all(quiet = TRUE)
 source("tests/testthat/helper-fiml-bootstrap.R")
 source("tests/testthat/helper-fiml-oracle.R")
+fo_helpers <- mget(c("fo_assert_parameters", "fo_affine", "fo_nll"), inherits = FALSE)
 stopifnot(requireNamespace("lavaan", quietly = TRUE))
 workspace <- "_agents_workspace/fiml-bounded-inference"
 records <- list()
@@ -26,18 +27,18 @@ compare <- function(fit, ref, d, direct, cell, replicate) {
   V <- vcov(fit)
   r <- lavaan::coef(ref)
   W <- lavaan::vcov(ref)
-  fo_assert_parameters(q, V, direct)
-  fo_assert_parameters(r, W, direct)
+  fo_helpers$fo_assert_parameters(q, V, direct)
+  fo_helpers$fo_assert_parameters(r, W, direct)
   r <- r[names(q)]
   W <- W[names(q), names(q)]
   scales <- apply(d, 2, stats::sd, na.rm = TRUE)
   center <- colMeans(d, na.rm = TRUE)
-  row$coefficient <- max(abs(fo_affine(q, 1 / scales, -center / scales) -
-                               fo_affine(r, 1 / scales, -center / scales)))
+  row$coefficient <- max(abs(fo_helpers$fo_affine(q, 1 / scales, -center / scales) -
+                               fo_helpers$fo_affine(r, 1 / scales, -center / scales)))
   row$covariance <- max(abs(V - W) / sqrt(outer(diag(W), diag(W))))
-  row$identity_nll <- abs(fo_nll(d, q) + as.numeric(logLik(fit)))
+  row$identity_nll <- abs(fo_helpers$fo_nll(d, q) + as.numeric(logLik(fit)))
   row$optimum_nll <- abs(as.numeric(logLik(fit)) - as.numeric(lavaan::logLik(ref)))
-  row$reference_identity <- abs(fo_nll(d, r) + as.numeric(lavaan::logLik(ref)))
+  row$reference_identity <- abs(fo_helpers$fo_nll(d, r) + as.numeric(lavaan::logLik(ref)))
   row$pass <- row$coefficient < 1e-5 && row$covariance < 1e-3 &&
     row$identity_nll < 1e-7 && row$optimum_nll <= 1e-5 && row$reference_identity < 1e-7
   row

@@ -1,10 +1,13 @@
 source(testthat::test_path("helper-fiml-bootstrap.R"), local = TRUE)
+fb_helpers <- mget(c("fb_model", "fb_fixture"), inherits = FALSE)
 fb_fits <- new.env(parent = emptyenv())
 fb_fit <- function(direct = TRUE) {
   key <- if (direct) "free" else "zero"
   if (!exists(key, fb_fits, inherits = FALSE)) {
-    fb_fits[[key]] <- fit_sem(fb_model(direct), fb_fixture(if (direct) "mar" else "mcar", direct),
-                              missing = "fiml", fixed_x = FALSE)
+    fb_fits[[key]] <- fit_sem(
+      fb_helpers$fb_model(direct), fb_helpers$fb_fixture(if (direct) "mar" else "mcar", direct),
+      missing = "fiml", fixed_x = FALSE
+    )
   }
   fb_fits[[key]]
 }
