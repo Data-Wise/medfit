@@ -1,12 +1,12 @@
-> **Current checkpoint (2026-11-01):** Local FI-B1/FI-B2 implementation, independent QA, docs and final gates PASS. Renewed suite: 1802 tests, 8983 passing expectations, zero failures/errors; coverage 96.31213% overall and 158/158 changed critical expressions; source supplement 497 tests, one skip; lint clean and package check OK. Statistical admission remains deferred. Implementation is local; integration requires separate authorization. Earlier failure, worker-limit and preregistration deviations are historical and retained below.
+> **Current checkpoint (2026-11-01):** FI-B1/FI-B2 merged to dev in PR #379 at `0bd99134` after local QA and verification. The renewed suite had 1802 tests and 8983 passing expectations; coverage was 96.31213% overall and 158/158 changed critical expressions. Statistical admission remains deferred. Earlier failures and verification deviations are retained below as historical evidence.
 > Earlier status statements below are historical where inconsistent with this checkpoint.
 
 # Bounded existing-model FIML interval implementation
 
-Date: 2026-11-01 MST. State: **local implementation committed; final verification blocked; correction allowance exhausted**.
+Date: 2026-11-01 MST. State: **implementation merged to dev; statistical admission deferred**.
 Execution base: dev `5e845007`, planning PR #378 merged. Branch: `feature/fiml-bounded-inference`.
 The maintainer explicitly authorized status repair, implementation/QA owner assignment and bounded implementation.
-This authorization does not extend the earlier planning-only push/PR/merge permission to implementation.
+The maintainer subsequently authorized integration through PR #379.
 Statistical admission, simulations, timing pilots, model expansion, release and CRAN remain deferred.
 
 ## Owners and current authority

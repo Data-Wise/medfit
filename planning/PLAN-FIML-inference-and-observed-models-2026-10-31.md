@@ -1,18 +1,15 @@
-> **Current checkpoint (2026-11-01):** Local FI-B1/FI-B2 implementation, independent QA, docs and final gates PASS. Renewed suite: 1802 tests, 8983 passing expectations, zero failures/errors; coverage 96.31213% overall and 158/158 changed critical expressions; source supplement 497 tests, one skip; lint clean and package check OK. Statistical admission remains deferred. Implementation is local; integration requires separate authorization. Earlier failure, worker-limit and preregistration deviations are historical and retained below.
+> **Current checkpoint (2026-11-01):** FI-B1/FI-B2 merged to dev through PR #379 at `0bd99134`, after local numerical QA and verification. Statistical admission, pilots, studies and release remain deferred. The [next-release expansion plan](PLAN-FIML-next-release-model-expansion-2026-11-01.md) organizes covariate, parallel and serial work; its implementation remains unauthorized. Earlier local-only and blocked-status statements are historical.
 > Earlier status statements below are historical where inconsistent with this checkpoint.
 
 # FIML inference and observed-model expansion: agreed scope and staged plan
 
-Current checkpoint: 2026-11-01 MST. Planning PR #378 merged into dev at `5e845007`.
-The maintainer has now authorized bounded FI-B1/FI-B2 local implementation and verification.
-Code/tests owner: `medfit-implementer`; independent QA owner: `medfit-oracle-qa`.
-The [active execution plan](PLAN-FIML-bounded-inference-implementation-2026-11-01.md) owns task state.
-Implementation, independent numerical QA and docs are committed locally. Final verification is blocked by
-two instrumented immutability-test assertions; the prescribed correction/retry allowance is exhausted.
-The active plan records the bounded continuation proposal and deviations; no merge-ready claim is made.
+Current checkpoint: 2026-11-01 MST. Planning PR #378 and implementation PR #379 merged into dev;
+the latter is `0bd99134`. Code/tests owner: `medfit-implementer`; independent QA owner: `medfit-oracle-qa`.
+The [bounded execution plan](PLAN-FIML-bounded-inference-implementation-2026-11-01.md) preserves
+local verification history, including earlier failures and deviations.
 The [reviewed checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md) remains the bounded contract.
 Statistical admission, simulation/timing pilots, expanded models and release remain deferred.
-Implementation push/PR/merge requires separate authorization. Older execution-status wording below is historical;
+Older execution-status wording below is historical;
 it does not override this checkpoint, the active plan, or preserved Q10-Q13 statistical admission gates.
 
 ## 1. Decisions and release boundaries
@@ -37,7 +34,11 @@ Settled by the user:
 - Q13: admission proceeds through separately preregistered complete stages:
   existing simple-model inference first, then each of the 11 variants. Preserve
   all variants in the roadmap; no pooling away failing cells or shipping an
-  unadmitted variant.
+  unadmitted variant. Successful existing-model inference admission precedes
+  expanded-model inference admission and release; a deferred, inconclusive or
+  failed first stage withholds those inference claims and requires a separately
+  decided compliant release scope. The 11 variant stages each cover both free
+  and exactly-zero direct-path policies as separate prespecified cells.
 - Performance priorities concern repeated fitting workflows. The separate
   eight-cell baseline remains 64 fits total; no bottleneck means stop optimization
   and reassess. That budget does not cover this future inference validation.
