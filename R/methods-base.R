@@ -797,7 +797,9 @@ S7::method(confint, BootstrapResult) <- function(object,
   }
   alpha <- 1 - level
 
-  if (identical(object@method, "plugin") || length(object@boot_estimates) == 0) {
+  if (.bootstrap_fiml_withheld(object)) {
+    ci <- c(NA_real_, NA_real_)
+  } else if (identical(object@method, "plugin") || length(object@boot_estimates) == 0) {
     warning("A plugin BootstrapResult has no bootstrap distribution; ",
             "the confidence interval is NA.", call. = FALSE)
     ci <- c(NA_real_, NA_real_)

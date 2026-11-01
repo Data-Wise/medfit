@@ -596,12 +596,13 @@ glance_s7_object <- function(x, ...) {
 #'
 #' @noRd
 .tidy_bootstrap_result <- function(x, ...) {
+  ci <- .bootstrap_fiml_interval(x)
   result <- data.frame(
     term = "estimate",
     estimate = x@estimate,
-    std_error = if (x@method != "plugin") stats::sd(x@boot_estimates) else NA_real_,
-    conf_low = x@ci_lower,
-    conf_high = x@ci_upper,
+    std_error = if (x@method != "plugin" && !.bootstrap_fiml_withheld(x)) stats::sd(x@boot_estimates) else NA_real_,
+    conf_low = ci[1],
+    conf_high = ci[2],
     stringsAsFactors = FALSE
   )
 

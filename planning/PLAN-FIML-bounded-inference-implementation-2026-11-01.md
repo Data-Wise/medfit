@@ -40,6 +40,9 @@ The active plan owns task state; no stage is complete merely because implementat
 
 ## Verification budget and fixture freeze
 
+The pre-execution [implementation fixture freeze](fixtures/FI-B-implementation-freeze-2026-11-01.md)
+records all six deterministic sources and the separately bounded implementation unit work.
+
 Cumulative local verification ceiling: four elapsed hours, eight aggregate CPU hours, at most two workers.
 The focused six-cell matrix is limited to 90 elapsed minutes and two aggregate CPU hours within that ceiling.
 Count test/oracle/package/docs verification attempts cumulatively; stop at the first exhausted ceiling,

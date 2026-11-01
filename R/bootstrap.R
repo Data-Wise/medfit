@@ -209,7 +209,16 @@ bootstrap_mediation <- function(statistic_fn,
                                 ncores = NULL,
                                 seed = NULL,
                                 cluster = NULL,
-                                ...) {
+                                ...,
+                                source_fit = NULL,
+                                effect = NULL) {
+  if (!is.null(source_fit)) {
+    if (!missing(statistic_fn)) stop("statistic_fn must be omitted with source_fit", call. = FALSE)
+    return(.bootstrap_fiml(source_fit, effect, method, missing(method), mediation_data, data,
+                           n_boot, ci_level, parallel, ncores, seed, cluster,
+                           length(substitute(list(...))) - 1L, match.call()))
+  }
+  if (!is.null(effect)) stop("effect requires source_fit", call. = FALSE)
   .sem_fiml_refuse(mediation_data, "bootstrap_mediation()")
   .sem_fiml_refuse(data, "bootstrap_mediation()")
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
