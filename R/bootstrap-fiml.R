@@ -54,6 +54,41 @@
           control = source@internals$control, se_type = "model")
 }
 
+.bootstrap_fiml_execute <- function(B, run, record, parallel, ncores) {
+  results <- lapply(seq_len(B), function(i) {
+    list(value = NA_real_, record = record(i, "unattempted", "not attempted after interruption"))
+  })
+  cores <- if (parallel && .Platform$OS.type == "unix") {
+    if (is.null(ncores)) max(1L, parallel::detectCores() - 1L) else ncores
+  } else {
+    1L
+  }
+  cores <- min(B, cores)
+  active <- integer()
+  # Batches preserve completed work when the parent or one child is interrupted.
+  tryCatch({
+    for (first in seq.int(1L, B, by = cores)) {
+      active <- seq.int(first, min(B, first + cores - 1L))
+      batch <- if (parallel && .Platform$OS.type == "unix") {
+        parallel::mclapply(active, run, mc.cores = cores, mc.set.seed = FALSE)
+      } else {
+        lapply(active, run)
+      }
+      results[active] <- batch
+      active <- integer()
+      interrupted <- vapply(batch, function(x) {
+        is.list(x) && identical(x$record$status, "interrupted")
+      }, logical(1))
+      if (any(interrupted)) break
+    }
+  }, interrupt = function(e) {
+    for (i in active) {
+      results[[i]] <<- list(value = NA_real_, record = record(i, "interrupted", conditionMessage(e)))
+    }
+  })
+  results
+}
+
 .bootstrap_fiml <- function(source, effect, method, method_missing, mediation_data, data,
                             n_boot, ci_level, parallel, ncores, seed, cluster, dots_n, call) {
   if (!S7::S7_inherits(source, SEMFit) || !.sem_fiml_is(source)) {
@@ -103,11 +138,14 @@
   } else {
     NULL
   }
+  make_record <- function(i, status, reason = NULL) {
+    list(id = i, status = status, reason = reason,
+         rows = if (is.null(indices)) NULL else indices[[i]],
+         normal_draw_id = if (is.null(draws)) NULL else i)
+  }
   run <- function(i) {
     notices <- character()
-    record <- list(id = i, status = "unattempted", reason = NULL,
-                   rows = if (is.null(indices)) NULL else indices[[i]],
-                   normal_draw_id = if (is.null(draws)) NULL else i)
+    record <- make_record(i, "unattempted")
     value <- tryCatch(withCallingHandlers({
       if (method == "nonparametric") {
         refit <- .bootstrap_fiml_refit(source, indices[[i]])
@@ -128,17 +166,17 @@
       record$condition_class <<- class(e)
       record$attempts <<- e$attempts
       NA_real_
+    }, interrupt = function(e) {
+      record$status <<- "interrupted"
+      record$reason <<- conditionMessage(e)
+      record$condition_class <<- class(e)
+      NA_real_
     })
     if (is.finite(value)) record$status <- "accepted"
     record$warnings <- notices
     list(value = value, record = record)
   }
-  results <- if (parallel && .Platform$OS.type == "unix") {
-    cores <- if (is.null(ncores)) max(1L, parallel::detectCores() - 1L) else ncores
-    parallel::mclapply(seq_len(B), run, mc.cores = cores, mc.set.seed = FALSE)
-  } else {
-    lapply(seq_len(B), run)
-  }
+  results <- .bootstrap_fiml_execute(B, run, make_record, parallel, ncores)
   # Keep every requested ID. A failed worker is an unresolved replicate, never a survivor replacement.
   for (i in seq_len(B)) {
     if (!is.list(results[[i]]) || is.null(results[[i]]$value)) {
@@ -151,12 +189,15 @@
     }
   }
   values <- vapply(results, `[[`, numeric(1), "value")
+  statuses <- vapply(results, function(x) x$record$status, character(1))
+  incomplete <- any(statuses %in% c("interrupted", "unattempted"))
   success <- sum(is.finite(values))
   complete <- success == B
   ci <- if (complete) stats::quantile(values, c((1 - ci_level) / 2, (1 + ci_level) / 2),
                                       names = FALSE, type = 7) else c(NA_real_, NA_real_)
   inference <- list(
-    schema = "fiml-bootstrap-1", status = if (complete) "complete" else "withheld",
+    schema = "fiml-bootstrap-1",
+    status = if (incomplete) "incomplete" else if (complete) "complete" else "withheld",
     method_label = if (method == "parametric") "Gaussian parameter-draw percentile interval" else
       "Retained-row FIML percentile interval", effect = effect,
     target = "conditional on retained nonempty records", source_binding = source@diagnostics$ledger$binding,
@@ -167,7 +208,8 @@
     ),
     refit_protocol = protocol, covariance_factor = factor, quantile_type = 7L,
     seed = seed, rng_kind = rng_kind, rng_start = rng_start, requested = B, successful = success,
-    failed = B - success, replicates = lapply(results, `[[`, "record")
+    failed = B - success, interrupted = sum(statuses == "interrupted"),
+    unattempted = sum(statuses == "unattempted"), replicates = lapply(results, `[[`, "record")
   )
   BootstrapResult(estimate = estimate, ci_lower = ci[1], ci_upper = ci[2], ci_level = ci_level,
                   boot_estimates = values, n_boot = B, method = method, call = call, inference = inference)
