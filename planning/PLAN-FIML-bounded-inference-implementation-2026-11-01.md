@@ -23,11 +23,11 @@ The active plan owns task state; no stage is complete merely because implementat
 
 ## Task FI-B-IMPL: both bounded interval methods
 
-- [ ] Implement test-first, preserving legacy positional/callback contracts, optional versioned metadata,
+- [x] Implement test-first, preserving legacy positional/callback contracts, optional versioned metadata,
   source immutability, early guards and supported data/extraction behavior.
-- [ ] FI-B1: explicit source-fit route for retained incomplete-row percentile intervals, identical-model
+- [x] FI-B1: explicit source-fit route for retained incomplete-row percentile intervals, identical-model
   accepted refits, complete requested replicate ledger, no survivor intervals through any accessor.
-- [ ] FI-B2: joint canonical original-coordinate Gaussian parameter draws with the reviewed symmetric
+- [x] FI-B2: joint canonical original-coordinate Gaussian parameter draws with the reviewed symmetric
   correlation-root convention, exact fixed zeros and zero extra refits; accurate method labels.
 - [ ] Independent QA: six complete/MCAR/observed-X MAR source cells crossed with free/zero direct path,
   twelve paired resamples per cell (156 native/lavaan source-plus-resample invocations), rowwise
@@ -60,3 +60,5 @@ Every required stage writes a nonempty report with exactly one last-line `Verdic
 Numerical tests establish fixture-level implementation correctness; they do not establish interval coverage.
 Delivery states remain separate: local implementation, QA, merged-dev, merged-main, released.
 All eleven future model variants and the separate efficiency baseline remain unchanged.
+
+Implementation checkpoint: `e82d1a3`; focused 9 tests/82 assertions and legacy 26 tests/61 assertions pass, changed-file lint zero. Independent oracle QA is next; statistical admission remains deferred.

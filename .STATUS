@@ -1,3 +1,5 @@
+# Bounded inference implementation checkpoint — 2026-11-01 MST
+# Local implementation e82d1a3: FI-B1 rows/FI-B2 canonical parameter draws and strict all-accessor failure withholding. Focused9tests/82assertions,legacy26tests/61assertions PASS; lint0. Independent QA next; docs/full gates/coverage pending. No statistical admission/studies or implementation push/PR/merge/release.
 # Bounded FI-B1/FI-B2 implementation activated — 2026-11-01 MST
 # Planning #378 merged at5e845007; roadmap delivery state corrected. Maintainer authorized bounded local implementation/verification; code/tests owner medfit-implementer, independent QA owner medfit-oracle-qa, coordinator Codex. Active plan planning/PLAN-FIML-bounded-inference-implementation-2026-11-01.md; four-wall/eight-CPU-hour cumulative verification cap, two workers, focused-matrix90wallminutes/twoCPUhours. Statistical admission/studies/timing pilots/model expansion/release/CRAN remain deferred. Implementation push/PR/merge not yet authorized.
 # FI-B0 roadmap integration review complete — 2026-10-31 MDT
