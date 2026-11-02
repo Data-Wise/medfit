@@ -65,7 +65,7 @@ jobs:
           extra-packages: any::remotes, any::devtools
       - name: Install uv for the semopy oracle gate (ADR D-13)
         if: matrix.shard == 'rest'
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
       - name: Run the gates of this shard (--sim)
         id: gate
         continue-on-error: true
