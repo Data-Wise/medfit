@@ -29,6 +29,14 @@ Findings that change this plan; each is folded into the sections named.
 | R4 | **Guard tests arrive too late.** Refusal of every unadmitted topology and direct-path policy is verified "before release". G1 code lands on `dev` earlier, and `.sem_fiml_model()`/`.sem_fiml_extract()` guards are the only barrier. | Medium | A per-topology, per-policy refusal test at every public entry point (fit, extract, both source-fit methods) is a merge condition for each G1-G3 slice into `dev`, not only a release condition. |
 | R5 | **Stale ownership text.** `CLAUDE.md` names `PLAN-0.16.0-GitHub-release` as the active plan though it is complete; `.STATUS` headers stop at 2026-10-30. | Low | Reconcile at the next checkpoint (FI-TRACK); not part of this change. |
 
+**Grill decisions, 2026-11-07** (`GRILL-next-release-FIML-2026-11-07.md`): the goal
+stays finishing FIML across the model set. Recorded intent, each still needing its own
+activation: timing pilot and stage-0 preregistration draft first, with FI-G0 to FI-G3
+built on a branch kept off `dev`; one pre-registered remediation round if stage 0 fails;
+a hard compute and wall-clock cap set from the pilot with a mandatory decision on
+overrun; the pilot runs locally under `medfit-implementer` and `medfit-oracle-qa`.
+The default release content below governs what ships until a variant is admitted.
+
 **Default release content (applies unless the maintainer decides otherwise):**
 the next release ships no expanded FIML variant and no source-fit inference.
 Stage-0 inference ships only if admitted and in scope; otherwise it is withheld
