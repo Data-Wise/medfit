@@ -14,6 +14,6 @@ Planning decisions only; nothing here authorizes a study, pilot or release by it
 
 ## Open Questions
 
-- Wall-clock limit for the pilot and the later per-stage/total caps (set after the pilot).
+- Later per-stage and total study caps (set after the pilot). **Pilot limit set 2026-11-07: 2 h total wall-clock, 15 min per cell; a cell over 15 min is stopped and logged as a cost finding. Local, no authorization to start yet.**
 - Exact remediation method for G3 (declare before any stage-0 outcome exists).
 - Named worktree and base commit for the FI-G0..G3 branch.

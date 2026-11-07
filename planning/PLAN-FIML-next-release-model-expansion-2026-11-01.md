@@ -34,7 +34,8 @@ stays finishing FIML across the model set. Recorded intent, each still needing i
 activation: timing pilot and stage-0 preregistration draft first, with FI-G0 to FI-G3
 built on a branch kept off `dev`; one pre-registered remediation round if stage 0 fails;
 a hard compute and wall-clock cap set from the pilot with a mandatory decision on
-overrun; the pilot runs locally under `medfit-implementer` and `medfit-oracle-qa`.
+overrun; the pilot runs locally under `medfit-implementer` and `medfit-oracle-qa` with a limit of
+2 h total wall-clock and 15 min per cell (set 2026-11-07; start still needs activation).
 The default release content below governs what ships until a variant is admitted.
 
 **Default release content (applies unless the maintainer decides otherwise):**
