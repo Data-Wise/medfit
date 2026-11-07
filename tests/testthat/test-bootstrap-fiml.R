@@ -1,3 +1,4 @@
+testthat::local_mocked_bindings(.fiml_source_inference_admitted = function() TRUE)
 source(testthat::test_path("helper-fiml-bootstrap.R"), local = TRUE)
 fb_helpers <- mget(c("fb_model", "fb_fixture"), inherits = FALSE)
 fb_fits <- new.env(parent = emptyenv())

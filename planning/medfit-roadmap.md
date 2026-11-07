@@ -1,5 +1,12 @@
 > **Current checkpoint (2026-11-01):** FI-B1/FI-B2 merged into dev through PR #379 at `0bd99134`; local numerical QA and verification passed before integration. Statistical admission is deferred. Next-release planning targets covariate, parallel and serial FIML; implementation activation, admission gates, pilots, studies and release remain deferred. Earlier local-only and blocked-status statements below are historical.
 > Earlier status statements below are historical where inconsistent with this checkpoint.
+>
+> **Adversarial review (2026-11-07):** `dev` (`ecbfb19f`) exposes the unadmitted
+> `bootstrap_mediation(source_fit=)` route with no guard while `DESCRIPTION` still
+> reads `0.16.0`, the released version. Maintainer chose a guard on dev
+> (2026-11-07); implemented on a feature branch, unmerged, full suite pending. Default next-release content is no
+> expanded FIML and no source-fit inference unless admitted. See the
+> [review table](PLAN-FIML-next-release-model-expansion-2026-11-01.md#adversarial-review-2026-11-07-static-no-runtime-checks-no-study-run).
 
 # medfit Package Development Roadmap
 
@@ -1894,11 +1901,14 @@ historical checklists. Current dispositions:
    defaults. Local read-only review found no blocking design findings; no runtime
    checks were run. The maintainer authorized bounded implementation on 2026-11-01 MST:
    `medfit-implementer` owns code/tests and `medfit-oracle-qa` owns independent QA. The large simulation grid, timing pilot and statistical
-   resource agreement are deferred; Q10-Q13 statistical admission requirements
-   remain unresolved for release, rather than triggering another roadmap study.
+   resource agreement are deferred. Q12 and Q13 are recorded (above); the stage-0
+   admission study itself is unauthorized, unscheduled and unbudgeted, so
+   admission for release stays unresolved.
    PR #377 merged the prior planning packet as `da0d9edc`; `ff200ee9` reconciled
    its status. PR #378 merged the reviewed FI-B0 follow-up into dev as
-   `5e845007`; bounded implementation now follows a separate explicit authorization.
+   `5e845007`; bounded FI-B1/FI-B2 implementation then merged as #379
+   (`0bd99134`). Expansion (FI-G0 onward) remains unauthorized, and FI-G0 must
+   not merge to dev before the stage-0 decision (plan finding R2).
    The [evidence index](studies/fiml-inference-gates/README.md) distinguishes
    the preserved historical packet hashes from current reconciliation hashes.
    The [bounded execution plan](PLAN-FIML-bounded-inference-implementation-2026-11-01.md)
@@ -1943,8 +1953,8 @@ untested; no admission study ran.
 | Order | Milestone and scope | Accountable owner | Completion criterion | Current state |
 |---|---|---|---|---|
 | 1 | FI-B0: existing-model inference contract and verification scope | Maintainer decides; planning agent drafts | Reviewed bounded API/failure/test contract and local verification limits; existing defaults preserved; statistical admission tracked separately | Reviewed contract merged via #378; bounded execution authorized 2026-11-01 |
-| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | `medfit-implementer`; `medfit-oracle-qa`; `medfit-docs`; `medfit-gates` | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | Merged to dev in #379; local numerical QA and verification passed; statistical admission deferred |
-| 3 | FI-G0 / FI-G1: generic preparation, then one/two continuous covariates | Implementation owner; independent oracle QA | Old-model behavior preserved; each covariate variant independently admitted with extraction and both interval methods | Planned after existing-model inference |
+| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | `medfit-implementer`; `medfit-oracle-qa`; `medfit-docs`; `medfit-gates` | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | **Delivery state: merged-dev, not admitted, not released; criterion not yet met.** Local numerical QA and verification passed in #379. Public route unguarded on dev until the R1 guard branch merges (decided 2026-11-07) |
+| 3 | FI-G0 / FI-G1: generic preparation, then one/two continuous covariates | Implementation owner; independent oracle QA | Old-model behavior preserved; each covariate variant independently admitted with extraction and both interval methods; refusal tests for unadmitted topologies pass before each slice merges to dev | Planned after existing-model inference; G0 kernel changes stay off dev until the stage-0 decision |
 | 4 | FI-G2: two parallel mediators, 0-2 covariates, independent/correlated mediator residuals | Implementation owner; independent oracle QA | Each of six variants independently admitted; full effect covariance and both interval methods verified | Planned after covariate stage |
 | 5 | FI-G3: two serial mediators, 0-2 covariates, independent disturbances and declared shortcuts | Implementation owner; independent oracle QA | Each of three variants independently admitted; every-path totals and both interval methods verified | Planned after parallel stage |
 | Each stage | FI-TRACK / FI-DOCS / review checkpoint | Stage owner; docs owner; independent reviewer | Evidence, roadmap/status and support matrix agree; help/site/minibook match admitted scope | Required within the stage, not a new audit campaign |
