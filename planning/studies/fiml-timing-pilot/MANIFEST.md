@@ -11,7 +11,7 @@ Maintainer limits (2026-11-07): 2 h total wall-clock, 15 min per cell, local mac
   n in {200, 500}; paths (a,b) = (.4,.4); missingness in {MCAR, observed-X MAR, all-empty MCAR}
   as defined in `../fiml-admission-design/README.md`; direct path in {free c=.2, fixed 0}
   = 12 cells. Collection cap for all-empty MCAR: 10 x n collected records, hit = logged failure.
-- **Work per cell:** D = 3 datasets (disjoint pilot seeds 9100001+, never reusable for the
+- **Work per cell:** D = 3 datasets (disjoint pilot seeds 9100000 + 100*cell + dataset, never reusable for the
   confirmatory ledger). Per dataset: one FIML fit; one `method = "nonparametric"` call,
   `effect = "nie"`, `n_boot = B` with B = 999 row refits; one `method = "parametric"` call,
   `effect = "nie"`, `n_boot = 20000` draws. Timed separately, sequential, `parallel = FALSE`.
