@@ -58,7 +58,13 @@
 #'   - Method used
 #'
 #' @details
-#' ## Bounded FIML source intervals (development)
+#' ## Bounded FIML source intervals (unavailable pending admission)
+#'
+#' **Unavailable.** While statistical admission is undecided, every non-`NULL`
+#' `source_fit` is refused before any other check, random draw, refit or worker,
+#' with a classed error (`medfit_error_fiml_inference_unavailable`). No option or
+#' environment variable enables it. The text below records the implemented design
+#' and is not a statement that the intervals are supported.
 #'
 #' Supply `source_fit` and `effect` by name and choose `method` explicitly. Only
 #' accepted three-variable Gaussian random-X simple mediation fits from [fit_sem()]
@@ -95,7 +101,7 @@
 #' value-dependent empty-row deletion and MNAR are not covered. Numerical verification
 #' does not establish interval coverage; statistical admission remains deferred.
 #' See the Methods and Formulas article, Bounded FIML, for the mathematical definition.
-#' These source intervals are development functionality added after 0.16.0.
+#' These source intervals are development code added after 0.16.0 and are withheld.
 #'
 #' ## Bootstrap Methods
 #'
@@ -252,6 +258,7 @@ bootstrap_mediation <- function(statistic_fn,
                                 source_fit = NULL,
                                 effect = NULL) {
   if (!is.null(source_fit)) {
+    .fiml_source_inference_guard()
     if (!missing(statistic_fn)) stop("statistic_fn must be omitted with source_fit", call. = FALSE)
     return(.bootstrap_fiml(source_fit, effect, method, missing(method), mediation_data, data,
                            n_boot, ci_level, parallel, ncores, seed, cluster,

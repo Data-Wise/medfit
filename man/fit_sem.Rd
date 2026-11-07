@@ -163,9 +163,9 @@ are unavailable; a known fixed direct path is a different case.
 
 SEMFit \code{glance()} reports likelihood/IC fields with unavailable model-test fields;
 extracted-object \code{glance()}, \code{quick()}, \code{pm()}, extracted-object bootstrap, profiles,
-MBCO and fit tests remain unavailable. Development \code{\link[=bootstrap_mediation]{bootstrap_mediation()}} source
-intervals accept the original validated SEMFit via named \code{source_fit} and \code{effect};
-statistical admission remains deferred. Object-aware package guards precede
+MBCO and fit tests remain unavailable. The \code{\link[=bootstrap_mediation]{bootstrap_mediation()}} \code{source_fit}
+intervals are implemented but withheld (refused with a classed error) until
+statistical admission is decided. Object-aware package guards precede
 package-controlled refits/RNG/workers; opaque user callbacks and external-first
 dispatch remain outside that guarantee. Adapter/topology/numerical failures retain
 stage, reason, original parent and completed attempts; basic argument-type errors

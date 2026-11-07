@@ -231,8 +231,7 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
     coefs <- coef(object, type = "effects")      # nie, nde, te
     if (.sem_fiml_is(object)) {
       warning("Normal approximation for NIE may be inaccurate. ",
-              "Bootstrap intervals for extracted FIML data are unavailable; ",
-              "use bootstrap_mediation(source_fit = ...) with the original fit.", call. = FALSE)
+              "Bootstrap intervals for FIML fits are unavailable pending statistical admission.", call. = FALSE)
     } else {
       warning("Normal approximation for NIE may be inaccurate. ",
               "Consider bootstrap_mediation() for robust inference.", call. = FALSE)
