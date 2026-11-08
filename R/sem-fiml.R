@@ -141,7 +141,7 @@
 }
 .sem_fiml_hessian <- function(theta, p, multiplier = 1) {
   h <- multiplier * .Machine$double.eps^(1 / 3) * pmax(abs(theta), 1)
-  v <- match(c("vx", "vm", "vy"), p$ram$par_names)
+  v <- .sem_fiml_variance_index(p$layout, p$ram$par_names)
   h[v] <- pmin(h[v], theta[v] / 10)
   central <- function(step) {
     H <- vapply(seq_along(theta), function(k) {
@@ -204,18 +204,28 @@
   }
   G
 }
+# Positions of the variance parameters, the only parameters with a positive lower bound and a capped Hessian step.
+.sem_fiml_variance_index <- function(layout, par_names) match(layout$variances$par, par_names)
+# Three fixed starts: zeros with unit variances, then two deterministic perturbations of it.
+.sem_fiml_starts <- function(layout, par_names) {
+  initial <- stats::setNames(rep(0, length(par_names)), par_names)
+  initial[layout$variances$par] <- 1
+  list(
+    initial, initial + .12 * sin(seq_along(initial)),
+    initial - .15 * cos(seq_along(initial))
+  )
+}
+.sem_fiml_lower <- function(layout, par_names) {
+  lower <- rep(-Inf, length(par_names))
+  lower[.sem_fiml_variance_index(layout, par_names)] <- 1e-10
+  lower
+}
 .sem_fiml_fit <- function(data, direct = TRUE, fixed_x = FALSE,
                           row_id = seq_len(nrow(data)), ...) {
   p <- .sem_fiml_prepare(data, direct, fixed_x, row_id, ...)
   ram <- p$ram
-  initial <- stats::setNames(rep(0, ram$q), ram$par_names)
-  initial[c("vx", "vm", "vy")] <- 1
-  starts <- list(
-    initial, initial + .12 * sin(seq_along(initial)),
-    initial - .15 * cos(seq_along(initial))
-  )
-  lower <- rep(-Inf, ram$q)
-  lower[match(c("vx", "vm", "vy"), ram$par_names)] <- 1e-10
+  starts <- .sem_fiml_starts(p$layout, ram$par_names)
+  lower <- .sem_fiml_lower(p$layout, ram$par_names)
   last <- NULL
   cached <- NULL
   evaluate <- function(theta) {
@@ -257,7 +267,7 @@
           {
             if (solver == "slsqp") {
               r <- run_solver(.sem_solve_one(starts[[i]], ram,
-                list(s = diag(3)), lower, rep(Inf, ram$q),
+                list(s = diag(length(p$layout$vars))), lower, rep(Inf, ram$q),
                 list(
                   algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-12, ftol_rel = 1e-14,
                   maxeval = 10000L
