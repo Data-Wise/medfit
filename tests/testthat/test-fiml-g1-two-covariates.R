@@ -1,7 +1,8 @@
 # FI-G1, slice 2: bounded Gaussian FIML with TWO observed covariates Z1, Z2 (random X; X, Z1, Z2, M, Y jointly
 # Gaussian), the model M ~ X + Z1 + Z2, Y ~ M + X + Z1 + Z2 (direct path free, or one Y path fixed at
-# zero). Oracles, each independent of the production kernel: matched lavaan raw-data FIML, a from-scratch rowwise Gaussian likelihood, and
-# closed-form complete-data OLS. Slice-1 helpers (g1_*) live in test-fiml-g1-covariate.R and are not reused.
+# zero). Oracles, each independent of the production kernel: matched lavaan raw-data FIML, a from-scratch rowwise
+# Gaussian likelihood, and closed-form complete-data OLS. Slice-1 helpers (g1_*) live in test-fiml-g1-covariate.R and
+# are not reused.
 
 g2_vars <- c("X", "Z1", "Z2", "M", "Y")
 g2_data <- function(kind = "mar", n = 450L, direct = TRUE, seed = 5113L) {
