@@ -60,14 +60,19 @@
   }
   list(units = units, offset = offset, transport = transport)
 }
+# The bounded public entry: only the X -> M -> Y tables (direct path free or fixed at zero) are ever passed on.
 .sem_fiml_prepare <- function(data, direct = TRUE, fixed_x = FALSE,
                               row_id = seq_len(nrow(data)), ...) {
   if (length(list(...)) || !identical(fixed_x, FALSE) ||
         !is.logical(direct) || length(direct) != 1L || is.na(direct)) {
     .sem_fiml_diagnostic("unsupported FIML setting")
   }
-  if (!is.matrix(data) || !is.numeric(data) || ncol(data) != 3L ||
-        !identical(colnames(data), c("X", "M", "Y")) ||
+  .sem_fiml_prepare_core(data, .sem_fiml_tables(direct), row_id, direct)
+}
+# Dimension-generic preparation: the observed variables, parameters and transport come from `tables`.
+.sem_fiml_prepare_core <- function(data, tables, row_id = seq_len(nrow(data)), direct = NA) {
+  if (!is.matrix(data) || !is.numeric(data) || ncol(data) != length(tables$vars) ||
+        !identical(colnames(data), tables$vars) ||
         any(!is.finite(data) & !is.na(data)) || length(row_id) != nrow(data) ||
         anyNA(row_id) || anyDuplicated(row_id)) {
     .sem_fiml_diagnostic("invalid FIML input")
@@ -88,7 +93,6 @@
       covariance = crossprod(centered) / length(ids)
     )
   })
-  tables <- .sem_fiml_tables(direct)
   ram <- .sem_ram(tables$vars, tables$vars, tables$a, tables$s, tables$m)
   layout <- .sem_fiml_layout(tables)
   names0 <- ram$par_names
@@ -222,7 +226,10 @@
 }
 .sem_fiml_fit <- function(data, direct = TRUE, fixed_x = FALSE,
                           row_id = seq_len(nrow(data)), ...) {
-  p <- .sem_fiml_prepare(data, direct, fixed_x, row_id, ...)
+  .sem_fiml_solve(.sem_fiml_prepare(data, direct, fixed_x, row_id, ...))
+}
+# Dimension-generic solve, acceptance gates, transport of the estimate and covariance for a prepared object.
+.sem_fiml_solve <- function(p) {
   ram <- p$ram
   starts <- .sem_fiml_starts(p$layout, ram$par_names)
   lower <- .sem_fiml_lower(p$layout, ram$par_names)

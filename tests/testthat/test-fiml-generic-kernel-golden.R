@@ -47,7 +47,8 @@ for (direct in c(TRUE, FALSE)) {
         expect_identical(a$nobs, b$nobs)
         expect_identical(a$n_dropped, b$n_dropped)
         expect_identical(a$ledger, b$ledger)
-        expect_identical(a$table[c("lhs", "op", "rhs", "label", "free")], b$table[c("lhs", "op", "rhs", "label", "free")])
+        key <- c("lhs", "op", "rhs", "label", "free")
+        expect_identical(a$table[key], b$table[key])
         expect_equal(a$table$est, b$table$est, tolerance = 1e-6)
         expect_equal(a$table$se, b$table$se, tolerance = 1e-6)
         expect_identical(a$likelihood[c("method", "x_policy", "n_obs", "k", "rows", "selected", "variables")],

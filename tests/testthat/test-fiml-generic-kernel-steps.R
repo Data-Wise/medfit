@@ -37,10 +37,10 @@ test_that("the Hessian caps every variance step, and planted start/bound/cap def
   expect_false(identical(l1(p$layout, nm), .sem_fiml_lower(p$layout, nm)))
   # A wrong unit matrix for the solver changes (or breaks) the fit.
   good <- .sem_fiml_fit(d, direct = TRUE)
-  f1 <- sem_mutate(.sem_fiml_fit, "diag(length(p$layout$vars))", "diag(2)")
+  f1 <- sem_mutate(.sem_fiml_solve, "diag(length(p$layout$vars))", "diag(2)")
   # The wrong-sized matrix leaves the solution unchanged but is signaled by the step-floor code with warnings.
   warned <- FALSE
-  bad <- withCallingHandlers(tryCatch(f1(d, direct = TRUE), error = identity),
+  bad <- withCallingHandlers(tryCatch(f1(p), error = identity),
                              warning = function(w) {
                                warned <<- TRUE
                                invokeRestart("muffleWarning")

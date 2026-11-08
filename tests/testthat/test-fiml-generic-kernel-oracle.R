@@ -1,75 +1,8 @@
 # FI-G0b: independent reference oracles for the observed-data FIML kernel (spec:
 # planning/specs/SPEC-fiml-generic-kernel-2026-11-08.md). Every reference below is a from-scratch calculation
-# (explicit matrices, rowwise loops, closed-form recursive-regression inversion). The production kernel appears only
-# as the code under test. Tests are written against the existing X -> M -> Y kernel; the reference itself is
-# dimension-generic (a path matrix B, disturbance variances psi, intercepts nu).
-
-# ---- reference calculations (no production helpers) ----------------------------------------------------------------
-
-# Implied moments of a recursive model: mu = (I - B)^-1 nu, Sigma = (I - B)^-1 Psi (I - B)^-T.
-gk_implied <- function(B, psi, nu) {
-  A <- solve(diag(nrow(B)) - B)
-  list(mu = drop(A %*% nu), sigma = A %*% diag(psi, length(psi)) %*% t(A))
-}
-# The three-variable adapter: theta is named a, b, [cp,] vx, vm, vy, ix, im, iy; variable order X, M, Y.
-gk_theta_moments <- function(theta) {
-  B <- matrix(0, 3, 3)
-  B[2, 1] <- theta[["a"]]
-  B[3, 2] <- theta[["b"]]
-  if ("cp" %in% names(theta)) B[3, 1] <- theta[["cp"]]
-  gk_implied(B, theta[c("vx", "vm", "vy")], theta[c("ix", "im", "iy")])
-}
-# Rowwise Gaussian NLL over observed subvectors; all-empty rows contribute exactly zero.
-gk_row_nll <- function(d, mom) {
-  sum(vapply(seq_len(nrow(d)), function(i) {
-    j <- which(!is.na(d[i, ]))
-    if (!length(j)) return(0)
-    r <- as.numeric(d[i, j]) - mom$mu[j]
-    S <- mom$sigma[j, j, drop = FALSE]
-    .5 * (length(j) * log(2 * pi) + as.numeric(determinant(S, logarithm = TRUE)$modulus) +
-            drop(t(r) %*% solve(S, r)))
-  }, numeric(1)))
-}
-gk_center <- function(d) colMeans(d, na.rm = TRUE)
-gk_scale <- function(d) apply(d, 2, stats::sd, na.rm = TRUE)
-gk_standardize <- function(d) sweep(sweep(d, 2, gk_center(d)), 2, gk_scale(d), `/`)
-# Standardized-coordinate NLL and the original-scale NLL it implies (moments mapped by mu = c + D mu_s).
-gk_nll_std <- function(d, theta) gk_row_nll(gk_standardize(d), gk_theta_moments(theta))
-gk_nll_original <- function(d, theta) {
-  m <- gk_theta_moments(theta)
-  s <- gk_scale(d)
-  gk_row_nll(d, list(mu = gk_center(d) + s * m$mu, sigma = diag(s) %*% m$sigma %*% diag(s)))
-}
-# Recover structural parameters from moments by recursive regressions (inverse of gk_implied for X -> M -> Y).
-gk_recover <- function(mom, direct) {
-  S <- mom$sigma
-  mu <- mom$mu
-  a <- S[2, 1] / S[1, 1]
-  if (direct) {
-    coef <- solve(S[c(2, 1), c(2, 1)], S[c(2, 1), 3])
-    b <- coef[[1]]
-    cp <- coef[[2]]
-    vy <- S[3, 3] - sum(coef * S[c(2, 1), 3])
-  } else {
-    b <- S[2, 3] / S[2, 2]
-    cp <- 0
-    vy <- S[3, 3] - b * S[2, 3]
-  }
-  q <- c(a = a, b = b, cp = cp, vx = S[1, 1], vm = S[2, 2] - a * S[2, 1], vy = vy,
-         ix = mu[[1]], im = mu[[2]] - a * mu[[1]], iy = mu[[3]] - b * mu[[2]] - cp * mu[[1]])
-  if (!direct) q <- q[names(q) != "cp"]
-  q
-}
-# Central differences with Richardson extrapolation, independent of production derivatives.
-gk_gradient <- function(f, theta) {
-  vapply(seq_along(theta), function(k) {
-    fo_richardson(lapply(.02 / 2^(0:3), function(h) {
-      e <- theta * 0
-      e[k] <- h
-      (f(theta + e) - f(theta - e)) / (2 * h)
-    }))
-  }, numeric(1))
-}
+# (explicit matrices, rowwise loops, closed-form recursive-regression inversion; see helper-fiml-generic.R). The
+# production kernel appears only as the code under test. Tests are written against the existing X -> M -> Y kernel;
+# the reference itself is dimension-generic (a path matrix B, disturbance variances psi, intercepts nu).
 
 # Discrepancy summaries, each returning Inf when the code under test errors (a mutation that crashes is caught).
 gk_safe <- function(expr) tryCatch(suppressWarnings(expr), error = function(e) Inf)
@@ -344,12 +277,13 @@ test_that("the oracles catch planted defects in the kernel (positive controls in
   expect_lt(gk_transport_gap(d, TRUE), 1e-9)
   expect_identical(gk_n_gap(d, TRUE), 0L)
   # D1: ML divisor replaced by n - 1 in the pattern covariance.
-  m1 <- sem_mutate(.sem_fiml_prepare, "crossprod(centered)/length(ids)", "crossprod(centered)/(length(ids) - 1)")
-  expect_gt(gk_group_gap(d, TRUE, prepare = m1), tol)
-  expect_gt(gk_value_gap(d, TRUE, theta, prepare = m1), tol)
+  m1 <- sem_mutate(.sem_fiml_prepare_core, "crossprod(centered)/length(ids)", "crossprod(centered)/(length(ids) - 1)")
+  with_core <- function(mutant, expr) testthat::with_mocked_bindings(expr, .sem_fiml_prepare_core = mutant)
+  expect_gt(with_core(m1, gk_group_gap(d, TRUE)), tol)
+  expect_gt(with_core(m1, gk_value_gap(d, TRUE, theta)), tol)
   # D2: log-Jacobian counted over all rows instead of each column's observed entries.
-  m2 <- sem_mutate(.sem_fiml_prepare, "sum(colSums(!is.na(data)) * log(scale))", "sum(nrow(data) * log(scale))")
-  expect_gt(gk_value_gap(d, TRUE, theta, prepare = m2), tol)
+  m2 <- sem_mutate(.sem_fiml_prepare_core, "sum(colSums(!is.na(data)) * log(scale))", "sum(nrow(data) * log(scale))")
+  expect_gt(with_core(m2, gk_value_gap(d, TRUE, theta)), tol)
   # D3: sign of the intercept transport term for the mediator equation.
   # The transport is built by .sem_fiml_transport() (G0c), so mutants are mocked in under prepare. Each variant
   # below is also checked for the no-direct policy where the pattern applies.
@@ -369,8 +303,8 @@ test_that("the oracles catch planted defects in the kernel (positive controls in
     }
   }
   # D4: empty rows counted in n.
-  m4 <- sem_mutate(.sem_fiml_prepare, "n = sum(retained)", "n = length(retained)")
-  expect_gt(gk_n_gap(d, TRUE, prepare = m4), 0)
+  m4 <- sem_mutate(.sem_fiml_prepare_core, "n = sum(retained)", "n = length(retained)")
+  expect_gt(with_core(m4, gk_n_gap(d, TRUE)), 0)
   # D5: every group evaluated on all columns instead of its observed subvector.
   m5 <- sem_mutate(.sem_fiml_eval, "j <- g$cols", "j <- seq_len(ncol(sigma))")
   expect_gt(gk_value_gap(d, TRUE, theta, eval = m5), tol)
