@@ -209,10 +209,11 @@ interval must be enumerated from the pinned source and frozen before the analysi
 **Checker** (`check-complete.R <outdir> 60 2500`): reads every `cell*_*.csv`, reports missing, duplicated and
 unexpected keys, requires exactly one `medfit_commit` and one `fingerprint_sha256` across all rows, prints the
 method-by-status table, and exits nonzero unless COMPLETE. It distinguishes an incomplete ledger from a complete
-one that contains documented failures. It does **not** yet check seeds against the formula, `retained == n`,
-truth values, nonfinite or nonzero values in purported successes, count consistency (`requested`, `successful`,
-`failed`), or that `unattempted_budget` rows are absent; these are reviewer items (R8) and freeze
-prerequisites (P8). An incomplete run supports diagnosis only and cannot receive an admission decision.
+one that contains documented failures. It also checks seeds against the formula, `retained == n` and `collected >= retained`, truth values against the cell, finite and
+ordered intervals for non-error rows, `requested == successful + failed + interrupted + unattempted`, exact zero for
+fixed-direct NDE successes (a 1e-17 value fails), and that no `unattempted_budget` rows remain. Its self-test
+(`test-check-complete.R`) plants 12 defects, all caught. The exact status strings that count as returned are still to be
+enumerated from the pinned source (P7); until then "returned" means any status outside the four harness failure statuses. An incomplete run supports diagnosis only and cannot receive an admission decision.
 
 ## 7. Collection cap, failure and denominator policy
 
