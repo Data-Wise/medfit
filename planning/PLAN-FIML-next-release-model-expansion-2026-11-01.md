@@ -70,6 +70,10 @@ Everything else in the preregistration is decided (OPEN-2, 4 to 9 closed; OPEN-7
 
 Branch `feature/fiml-g1-covariates` (worktree `~/.git-worktrees/medfit/feature-fiml-g1-covariates`), commit `e0374d92` on the FI-G0 tip, locally verified only (not pushed, no PR). Model `M ~ X + Z`, `Y ~ M + X + Z`, free X-Z covariance; vs lavaan raw FIML, an independent rowwise likelihood and closed-form complete-data checks; 4 planted defects caught; 20 unadmitted models refused. I reran: g1 13 tests/210, golden 17/738, sem-fiml 20/312, guard 4/11, all 0 failures. Not run: full suite, R CMD check, OpenMx, admission checklist, docs/NEWS (still say three variables). Maintainer decisions pending: both Y paths required; either exogenous variable may be treatment; covariate source-fit gets its own refusal.
 
+## FI-G1 independent QA, 2026-11-08
+
+QA (`medfit-oracle-qa`, own code, report in the session scratchpad `qa-g1/REPORT.md`) on branch `feature/fiml-g1-covariates` @ `7f61b813` (rebased on `origin/dev`, backup branch `backup/fiml-g1-pre-rebase`): PASS in all six areas. 90 lavaan cells (coef 4.8e-6, SE 1.4e-6, logLik 1e-9), 12 OpenMx cells, independent EM/Hessian check, delta-method SEs for every treatment, 49 of 49 unadmitted topologies refused (R4 evidence, guard on and open), edge cases, and 3-variable results `identical()` to `origin/dev` in 24 cells. 4 of 5 planted defects caught; the fifth is refused by another layer. Full suite on the rebased branch: 1932 tests, 11530 expectations, 0 failures. Not covered: `R CMD check`, OpenBLAS runner, admission checklist, statistical coverage. Not pushed, no PR.
+
 ## Critical path and open decisions (2026-11-08)
 
 Status: Hopper environment install running (46 packages at last check; the first attempt
