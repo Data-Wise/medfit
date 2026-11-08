@@ -29,7 +29,7 @@ library(generics)
 ```
 
 These examples use the default listwise path. For the separate unreleased
-three-variable FIML opt-in and its narrower support, see the
+bounded FIML opt-in and its narrower support, see the
 [native guide](native-guide.html#bounded-fiml).
 
 ## Step 1. Write the model

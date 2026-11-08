@@ -2,6 +2,22 @@
 
 ## Added
 
+* Bounded Gaussian random-X FIML (`fit_sem(missing = "fiml", fixed_x = FALSE)`
+  and `extract_mediation()`) now also fits one covariate `Z` or two covariates
+  `Z1`, `Z2` besides X, M and Y: `M ~ X + covariates`, `Y ~ M + X + covariates`,
+  a free joint covariance among the exogenous variables (write every pair or
+  none; a partial set is refused), independent disturbances, any variable
+  incomplete, and a free or exactly zero direct path. Both outcome paths are
+  required. With no fixed outcome path any exogenous variable may be the
+  treatment in `extract_mediation()`; with exactly one fixed at zero, that variable
+  is. Three or more covariates, a covariate on one equation only, residual
+  covariances, constraints, interactions, parallel and serial models stay refused.
+  The fits are implemented and numerically verified against lavaan and an
+  independent likelihood; they are not calibrated for coverage or statistically
+  admitted, and neither are their normal intervals. `bootstrap_mediation(source_fit = )`
+  stays withheld for every FIML fit, and covariate fits are also refused with
+  `medfit_error_fiml_covariate_source_fit`. Fits with three variables are unchanged.
+
 * Bounded FIML retained-row and Gaussian parameter-draw intervals for the simple
   model are implemented behind `bootstrap_mediation(source_fit = ..., effect = ...)`
   but **withheld**: every non-`NULL` `source_fit` is refused with the classed error
