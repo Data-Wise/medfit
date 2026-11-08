@@ -40,6 +40,8 @@ Pilot result (2026-11-07, `studies/fiml-timing-pilot/REPORT.md`): a 999-refit ca
 114 s. The maintainer set the stage-0 cap at 25 core-days with a smaller design (G6); at B=999 that
 buys about 315 datasets per cell, per-decision power about 0.44, below the Q12 target, so the
 design must be reworked (B, cell count) and independently reviewed before preregistration.
+Superseded the same day (G7): stage 0 runs on UNM CARC Hopper with the full preregistered design and a
+250 core-day cap; pinned Hopper environment and the maintainer's approval of job scripts come first.
 The default release content below governs what ships until a variant is admitted.
 
 **Default release content (applies unless the maintainer decides otherwise):**
