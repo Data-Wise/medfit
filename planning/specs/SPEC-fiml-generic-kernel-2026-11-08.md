@@ -238,3 +238,27 @@ observed numeric variables, two exogenous (X and the covariate Z), one mediator 
   disturbances, ties, bounds, constraints, defined parameters, fixed nonzero or fixed covariate paths). The stage-0
   guard is unchanged; with it mocked open, a covariate fit is additionally refused by `.bootstrap_fiml()`
   (`medfit_error_fiml_covariate_source_fit`), so no source-fit interval exists for the variant.
+
+# 8. FI-G1 slice 2: two observed covariates (2026-11-08)
+
+Public variant added, on the same entry points as section 7: five observed numeric variables, three exogenous (X, Z1,
+Z2), one mediator M, one outcome Y; regressions `M ~ X + Z1 + Z2` and `Y ~ M + X + Z1 + Z2`.
+
+- One covariate-count generalization: `.sem_fiml_tables_cov(k, direct)` (k = 1 or 2; `.sem_fiml_tables_cov1()` is
+  `k = 1` and unchanged) and `.sem_fiml_model_cov()`. Kernel variable order X, Z1, Z2, M, Y.
+- Parameters (20, or 19 without a direct path): `a gm1 gm2 b [cp] gy1 gy2 vx vz1 vz2 vm vy cxz1 cxz2 cz1z2 ix iz1 iz2 im iy`.
+  Covariances are free for every exogenous pair, in either written order. The automatic completion adds all three
+  pairs only when none is written; a partial explicit set leaves the unwritten pairs at zero in the completed table,
+  which is an orthogonality restriction, so it is refused (the model is not silently completed).
+- Treatment rule (extends section 7 to three exogenous variables): every exogenous variable must have a written Y path.
+  Zero fixed Y paths: the first exogenous variable by appearance is `X`, the other two are the covariates `Z1`, `Z2` in
+  order of appearance, and extraction may name any of the three as the treatment (the kernel is symmetric; the other two
+  are then the covariates). Exactly one Y path fixed at zero: that variable is the treatment `X` and the only valid
+  extraction treatment, the other two are the covariates. Two or more fixed Y paths, any nonzero fixed value, an omitted
+  Y path and any fixed covariate path to M are refused.
+- Extraction as in section 7: `a`, `b`, `c_prime` of the chosen treatment, the full fitted covariance in `@vcov`,
+  `fit_context$covariate` the two remaining exogenous variables (data names).
+- Still refused at prepare, fit, extract and both `source_fit` methods: three or more covariates, a covariate on one
+  equation only, covariate as mediator, fixed-zero or fixed covariate paths, covariate residual covariances and every
+  topology listed in section 7. The stage-0 guard is unchanged; a covariate fit (one or two) is additionally refused by
+  `.bootstrap_fiml()` (`medfit_error_fiml_covariate_source_fit`).
