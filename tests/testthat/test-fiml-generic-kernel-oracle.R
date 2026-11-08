@@ -351,8 +351,23 @@ test_that("the oracles catch planted defects in the kernel (positive controls in
   m2 <- sem_mutate(.sem_fiml_prepare, "sum(colSums(!is.na(data)) * log(scale))", "sum(nrow(data) * log(scale))")
   expect_gt(gk_value_gap(d, TRUE, theta, prepare = m2), tol)
   # D3: sign of the intercept transport term for the mediator equation.
-  m3 <- sem_mutate(.sem_fiml_prepare, "-center[1] * units[\"a\"]", "center[1] * units[\"a\"]")
-  expect_gt(gk_transport_gap(d, TRUE, prepare = m3), tol)
+  # The transport is built by .sem_fiml_transport() (G0c), so mutants are mocked in under prepare. Each variant
+  # below is also checked for the no-direct policy where the pattern applies.
+  transport_mutants <- list(
+    D3 = c("-center[path$predictor] * units[path$par]", "center[path$predictor] * units[path$par]"),
+    D3b = c("units[a$par] <- scale[a$response]/scale[a$predictor]",
+            "units[a$par] <- scale[a$predictor]/scale[a$response]"),
+    D3c = c("units[i$par] <- scale[i$var]", "units[i$par] <- 1"),
+    D3d = c("units[v$par] <- scale[v$var]^2", "units[v$par] <- scale[v$var]"),
+    D3e = c("offset[i$par] <- center[i$var]", "offset[i$par] <- 0")
+  )
+  for (nm in names(transport_mutants)) {
+    mutant <- sem_mutate(.sem_fiml_transport, transport_mutants[[nm]][1L], transport_mutants[[nm]][2L])
+    for (direct in c(TRUE, FALSE)) {
+      gap <- testthat::with_mocked_bindings(gk_transport_gap(d, direct), .sem_fiml_transport = mutant)
+      expect_gt(gap, tol, label = paste(nm, direct))
+    }
+  }
   # D4: empty rows counted in n.
   m4 <- sem_mutate(.sem_fiml_prepare, "n = sum(retained)", "n = length(retained)")
   expect_gt(gk_n_gap(d, TRUE, prepare = m4), 0)

@@ -5,7 +5,7 @@
     class = c("medfit_sem_fiml_error", "error", "condition")
   ))
 }
-.sem_fiml_ram <- function(direct) {
+.sem_fiml_tables <- function(direct) {
   a <- data.frame(
     row = c("M", "Y", "Y"), col = c("X", "M", "X"),
     label = c("a", "b", "cp"), value = c(NA, NA, if (direct) NA else 0)
@@ -15,7 +15,50 @@
     label = c("vx", "vm", "vy"), value = NA_real_
   )
   m <- data.frame(row = c("X", "M", "Y"), label = c("ix", "im", "iy"), value = NA_real_)
-  .sem_ram(c("X", "M", "Y"), c("X", "M", "Y"), a, s, m)
+  list(vars = c("X", "M", "Y"), a = a, s = s, m = m)
+}
+.sem_fiml_ram <- function(direct) {
+  t <- .sem_fiml_tables(direct)
+  .sem_ram(t$vars, t$vars, t$a, t$s, t$m)
+}
+# Parameter layout read off the RAM tables: which free parameter is a path (response, predictor), a variance or
+# an intercept. Free entries must carry unique non-empty labels, which are then the parameter names.
+.sem_fiml_layout <- function(tables) {
+  free <- function(x) x[is.na(x$value), , drop = FALSE]
+  a <- free(tables$a)
+  s <- free(tables$s)
+  m <- free(tables$m)
+  stopifnot(all(nzchar(c(a$label, s$label, m$label))), !anyDuplicated(c(a$label, s$label, m$label)),
+            all(s$row == s$col))
+  list(
+    vars = tables$vars,
+    paths = data.frame(par = a$label, response = a$row, predictor = a$col),
+    variances = data.frame(par = s$label, var = s$row),
+    intercepts = data.frame(par = m$label, var = m$row)
+  )
+}
+# Linear affine transport from standardized structural coordinates: original = offset + transport %*% theta.
+# A path scales by scale_response / scale_predictor, a variance by scale^2, an intercept by scale; an intercept
+# also absorbs -center_predictor times the scaled path of every free path into its response.
+.sem_fiml_transport <- function(layout, par_names, center, scale) {
+  offset <- stats::setNames(rep(0, length(par_names)), par_names)
+  units <- stats::setNames(rep(1, length(par_names)), par_names)
+  i <- layout$intercepts
+  v <- layout$variances
+  a <- layout$paths
+  offset[i$par] <- center[i$var]
+  units[i$par] <- scale[i$var]
+  units[v$par] <- scale[v$var]^2
+  units[a$par] <- scale[a$response] / scale[a$predictor]
+  transport <- diag(unname(units))
+  dimnames(transport) <- list(par_names, par_names)
+  for (k in seq_len(nrow(layout$paths))) {
+    path <- layout$paths[k, ]
+    r <- match(path$response, layout$intercepts$var)
+    if (is.na(r)) next
+    transport[layout$intercepts$par[r], path$par] <- -center[path$predictor] * units[path$par]
+  }
+  list(units = units, offset = offset, transport = transport)
 }
 .sem_fiml_prepare <- function(data, direct = TRUE, fixed_x = FALSE,
                               row_id = seq_len(nrow(data)), ...) {
@@ -45,25 +88,17 @@
       covariance = crossprod(centered) / length(ids)
     )
   })
-  ram <- .sem_fiml_ram(direct)
+  tables <- .sem_fiml_tables(direct)
+  ram <- .sem_ram(tables$vars, tables$vars, tables$a, tables$s, tables$m)
+  layout <- .sem_fiml_layout(tables)
   names0 <- ram$par_names
-  # Linear affine transport from standardized structural coordinates.
-  offset <- stats::setNames(rep(0, ram$q), names0)
-  offset[c("ix", "im", "iy")] <- center
-  units <- stats::setNames(rep(1, ram$q), names0)
-  units[c("ix", "im", "iy")] <- scale
-  units[c("vx", "vm", "vy")] <- scale^2
-  units["a"] <- scale[2] / scale[1]
-  units["b"] <- scale[3] / scale[2]
-  if (direct) units["cp"] <- scale[3] / scale[1]
-  transport <- diag(unname(units))
-  dimnames(transport) <- list(names0, names0)
-  transport["im", "a"] <- -center[1] * units["a"]
-  transport["iy", "b"] <- -center[2] * units["b"]
-  if (direct) transport["iy", "cp"] <- -center[1] * units["cp"]
+  tr <- .sem_fiml_transport(layout, names0, center, scale)
+  units <- tr$units
+  offset <- tr$offset
+  transport <- tr$transport
   retained <- rowSums(!is.na(data)) > 0L
   list(
-    ram = ram, groups = groups, standardized = z, direct = direct,
+    ram = ram, layout = layout, groups = groups, standardized = z, direct = direct,
     n = sum(retained), center = center, scale = scale, units = units,
     transport = transport, offset = offset,
     jacobian = sum(colSums(!is.na(data)) * log(scale)),
