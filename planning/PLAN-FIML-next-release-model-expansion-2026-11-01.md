@@ -61,10 +61,14 @@ the stage-0 study with a budget, or accept this default.
 Stage-0 work is parked while FI-G1 starts. Open items, in order:
 1. Maintainer reads and accepts OPEN-10 (retained-row estimand, .10 empty probability, 228/72/60 classification).
 2. Hopper timing chunk (4 h debug partition): must project at most 200 core-days, confirm the 2026-11-01 snapshot, rerun parity at B = 40. Needs approval.
-3. PR #382 merges (maintainer said not yet); the study then pins the post-guard `dev` commit and rebuilds the fingerprint.
+3. ~~PR #382 merges~~ done (`ba50f998`, 2026-11-08); the study pins the post-guard `dev` commit (at or after `ba50f998`, plus the final harness) and rebuilds the fingerprint.
 4. Enumerate returned-interval status strings from the pinned source (P7); independent review of the whole draft (P3); freeze.
 5. Submit the 6,000-task array only with the maintainer's approval of the exact job file.
 Everything else in the preregistration is decided (OPEN-2, 4 to 9 closed; OPEN-7 QA-passed and accepted).
+
+## FI-G1 slice 1 (one covariate), 2026-11-08
+
+Branch `feature/fiml-g1-covariates` (worktree `~/.git-worktrees/medfit/feature-fiml-g1-covariates`), commit `e0374d92` on the FI-G0 tip, locally verified only (not pushed, no PR). Model `M ~ X + Z`, `Y ~ M + X + Z`, free X-Z covariance; vs lavaan raw FIML, an independent rowwise likelihood and closed-form complete-data checks; 4 planted defects caught; 20 unadmitted models refused. I reran: g1 13 tests/210, golden 17/738, sem-fiml 20/312, guard 4/11, all 0 failures. Not run: full suite, R CMD check, OpenMx, admission checklist, docs/NEWS (still say three variables). Maintainer decisions pending: both Y paths required; either exogenous variable may be treatment; covariate source-fit gets its own refusal.
 
 ## Critical path and open decisions (2026-11-08)
 
