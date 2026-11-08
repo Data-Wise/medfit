@@ -155,7 +155,18 @@ an unconditional complete-stage power guarantee and not independent QA sign-off.
 independence across methods, quantities or cells; the per-decision calculation assumes independent datasets and
 common category probabilities within a cell, which are assumptions to justify. The reference values
 (a = .98, c = .95) are design assumptions, not observed performance. Increasing B may lower availability under
-the strict all-refit rule. Q12 is not yet satisfied for the exact frozen stage (**[OPEN-7]**).
+the strict all-refit rule. Independent QA (2026-11-08, `medfit-oracle-qa`, own code, report `_agents_workspace/qa-open7-power.md`) reproduced the
+numbers (critical counts 2,394 and 2,275 checked against Clopper-Pearson; per-decision power .999766; union bound
+.946622) and found the union bound valid under any dependence but near-tight (independence gives .948, so no extra power
+can be argued from dependence). Q12 is met for the exact frozen stage as a conditional lower bound, only if the
+maintainer accepts: A1 a >= .98 and c >= .95 hold for every decision (at c = .94 per-decision power is .897, below
+target; at a = .97 the stage bound is 0); A2 datasets iid within a cell, no refit-failure dependence; A3 completeness,
+record validity and exact-zero NDE each have probability 1 (the exact-zero NDE check over about 75,000 rows is the
+largest unquantified term: a 1e-17 value fails the stage); A4 the review decision is outside the probability; A5
+B = 999 with the all-refit rule keeps availability at or above .98. The 60 structural-zero decisions are NDE in the 30
+fixed-direct cells x 2 methods. R4 must keep the explicit availability critical-count check (2,394): the power table
+alone does not detect a wrong count. R8 / `check-complete.R` should add a planted nonzero-NDE (1e-17) test.
+Maintainer acceptance of A1-A5 is **[OPEN-7, pending]**.
 
 ## 5. Stage decision rule
 
