@@ -91,6 +91,10 @@ no pooling; see the preregistration draft section 10). FI-G0a/b are done on the 
 `worktree-agent-a4f9ed5f1273b3b20` (spec plus oracle tests, 7/7 planted defects caught, no `R/` change).
 Cap decided (G10, G11): 250 core-days per study (main and remediation separately), 7 days wall-clock
 from the first task starting, queue wait excluded.
+FI-G0 questions decided (G13 to G16): G0c/G0d may edit `R/sem-fiml.R` on a branch only, no merge to `dev`
+before the stage-0 decision and parity proof; base is the guard-branch tip, rebased onto `dev` after the guard
+merges; `NaN` stays missing (change decided separately); the two entry points are the two methods of
+`bootstrap_mediation(source_fit=)`.
 Open decisions for the maintainer: the all-empty-cell collection cap and the failure/denominator policy;
 the FI-G0 branch base commit (currently the guard branch tip, an assumption); whether the guard
 branch is pushed and merged to `dev` (it is local only).
