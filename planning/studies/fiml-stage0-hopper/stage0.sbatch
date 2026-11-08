@@ -14,7 +14,7 @@
 set -euo pipefail
 ROOT=/carc/scratch/users/$USER/medfit-stage0
 module purge
-module load r/4.4.0-fyqw gcc/8.5.0-lpgx cmake/3.27.9-fab7
+module load r/4.4.0-fyqw gcc/8.5.0-lpgx
 export R_LIBS_USER="$ROOT/Rlib" OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 STAGE0_FINGERPRINT="$ROOT/env-fingerprint.txt"
 sha256sum -c "$STAGE0_FINGERPRINT.sha256" >/dev/null
 FPC=$(awk '/^medfit_commit/{print $2}' "$STAGE0_FINGERPRINT")
