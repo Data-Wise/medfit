@@ -428,6 +428,7 @@ S7::method(confint, ParallelMediationData) <- function(object,
                                                        method = c("normal", "boot"),
                                                        ...) {
   method <- match.arg(method)
+  if (.sem_fiml_is(object) && identical(method, "boot")) .sem_fiml_refuse(object, "bootstrap CI")
   if (identical(method, "boot")) {
     stop("Bootstrap CIs are computed via bootstrap_mediation(); ",
          "call it directly with the desired statistic.", call. = FALSE)

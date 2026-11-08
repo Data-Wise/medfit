@@ -405,6 +405,7 @@ glance_s7_object <- function(x, ...) {
 #' @return A one-row tibble: nie, nde, te, pm, n_mediators, nobs, converged
 #' @noRd
 .glance_parallel_mediation_data <- function(x, ...) {
+  .sem_fiml_refuse(x, "glance() on extracted data")
   result <- data.frame(
     nie = as.numeric(nie(x)),
     nde = as.numeric(nde(x)),

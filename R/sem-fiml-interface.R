@@ -3,7 +3,7 @@
   if (S7::S7_inherits(x, SEMFit)) {
     identical(x@internals$likelihood$method, "fiml") || identical(x@diagnostics$ledger$schema, "fiml-1")
   } else {
-    S7::S7_inherits(x, FIMLMediationData)
+    S7::S7_inherits(x, FIMLMediationData) || S7::S7_inherits(x, FIMLParallelMediationData)
   }
 }
 
@@ -27,6 +27,9 @@
   x <- roles$ov_x
   if (length(x) %in% 2:3 && length(roles$obs) == length(x) + 2L && !any(grepl(":", roles$obs, fixed = TRUE))) {
     return(.sem_fiml_model_cov(parsed, tab, roles, reg))
+  }
+  if (length(x) == 1L && length(roles$obs) == 4L && !any(grepl(":", roles$obs, fixed = TRUE))) {
+    return(.sem_fiml_model_par(parsed, tab, roles, reg))
   }
   y <- setdiff(unique(reg$lhs), reg$rhs)
   m <- setdiff(unique(reg$lhs), y)
@@ -121,6 +124,59 @@
   )
 }
 
+# Two parallel mediators (FI-G2): M1 ~ X, M2 ~ X and Y ~ M1 + M2 [+ X], independent disturbances. The independence of
+# the two mediator disturbances must be WRITTEN as `M1 ~~ 0*M2` (either order): an omitted statement is ambiguous with
+# lavaan's default of a free residual covariance among such variables, so it is refused, as is a free or nonzero one.
+# The direct path may be free, fixed at exactly zero, or omitted. Mediators are `M1`, `M2` in order of appearance.
+.sem_fiml_model_par <- function(parsed, tab, roles, reg) {
+  x <- roles$ov_x
+  y <- setdiff(unique(reg$lhs), reg$rhs)
+  m <- setdiff(unique(reg$lhs), y)
+  if (length(y) != 1L || length(m) != 2L || !setequal(roles$obs, c(x, m, y))) {
+    .sem_fiml_diagnostic("unsupported FIML topology: parallel mediation needs M1 ~ X, M2 ~ X and Y ~ M1 + M2")
+  }
+  keys <- paste(tab$lhs, tab$op, tab$rhs)
+  is_cov <- tab$op == "~~" & tab$lhs %in% m & tab$rhs %in% m & tab$lhs != tab$rhs
+  covariance <- paste(m[1L], "~~", m[2L])
+  keys[is_cov] <- covariance
+  required <- c(paste(m, "~", x), paste(y, "~", m), covariance)
+  cp <- paste(y, "~", x)
+  obs <- c(x, m, y)
+  allowed <- c(required, cp, paste(obs, "~~", obs), paste(obs, "~1", ""))
+  if (anyDuplicated(keys) || any(!keys %in% allowed)) {
+    .sem_fiml_diagnostic("unsupported FIML topology or correlated disturbances")
+  }
+  if (!covariance %in% keys) {
+    .sem_fiml_diagnostic("FIML parallel mediation needs the independent mediator disturbances written as M1 ~~ 0*M2")
+  }
+  if (!all(setdiff(required, covariance) %in% keys)) {
+    .sem_fiml_diagnostic("unsupported FIML topology: parallel mediation needs M1 ~ X, M2 ~ X and Y ~ M1 + M2")
+  }
+  is_cp <- keys == cp
+  if (any(is_cov & is.na(tab$fixed))) {
+    .sem_fiml_diagnostic("a free mediator residual covariance is not supported in this FIML variant")
+  }
+  if (any(!is.na(tab$fixed) & !((is_cp | is_cov) & tab$fixed == 0 & !is.na(tab$fixed)))) {
+    .sem_fiml_diagnostic("only the direct path and the mediator residual covariance may be fixed, exactly at zero")
+  }
+  direct <- any(is_cp & is.na(tab$fixed))
+  conv <- .sem_to_ram(tab)
+  if (conv$ram$q != if (direct) 13L else 12L) {
+    .sem_fiml_diagnostic("FIML does not support parameter ties")
+  }
+  canonical <- c(
+    paste(m, "~", x), paste(y, "~", m), if (direct) cp, paste(obs, "~~", obs), paste(obs, "~1", "")
+  )
+  tables <- .sem_fiml_tables_med(2L, direct)
+  labels <- c(tables$a$label[is.na(tables$a$value)], tables$s$label, tables$m$label)
+  stopifnot(length(labels) == length(canonical))
+  map <- stats::setNames(conv$ram$par_names[conv$par_map[match(canonical, keys)]], labels)
+  list(
+    parsed = parsed, conv = conv, vars = stats::setNames(c(x, m, y), tables$vars), direct = direct, map = map,
+    mediators = stats::setNames(m, c("M1", "M2"))
+  )
+}
+
 .sem_fiml_binding <- function(object) {
   list(
     model = object@model, data = object@data, theta = object@theta, vcov = object@vcov,
@@ -183,7 +239,12 @@
       }
       z <- as.matrix(d)
       colnames(z) <- names(model_vars)
-      if (is.null(spec$covariate)) {
+      if (!is.null(spec$mediators)) {
+        tables <- .sem_fiml_tables_med(length(spec$mediators), spec$direct)
+        prepared <- .sem_fiml_prepare_core(z, tables, direct = spec$direct)
+        stage <- "numerical"
+        candidate <- .sem_fiml_solve(prepared)
+      } else if (is.null(spec$covariate)) {
         .sem_fiml_prepare(z, direct = spec$direct)
         stage <- "numerical"
         candidate <- .sem_fiml_fit(z, direct = spec$direct)
@@ -214,6 +275,7 @@
         jacobian = p$jacobian, variables = spec$vars
       )
       if (!is.null(spec$covariate)) likelihood$covariate <- unname(spec$covariate)
+      if (!is.null(spec$mediators)) likelihood$mediators <- unname(spec$mediators)
       out <- SEMFit(
         theta = theta, vcov = V,
         table = tab[, c("lhs", "op", "rhs", "label", "free", "est", "se", "fixed_x")],
@@ -260,6 +322,9 @@
 
 .sem_fiml_extract <- function(object, treatment, mediator, args) {
   .sem_fiml_require(object)
+  if (!is.null(object@internals$likelihood$mediators)) {
+    return(.sem_fiml_extract_parallel(object, treatment, mediator, args))
+  }
   v <- object@internals$likelihood$variables
   covariate <- object@internals$likelihood$covariate
   spec <- .sem_fiml_model(object@model)
@@ -335,6 +400,66 @@
   ctx$data_hash <- rlang::hash(out@data)
   ctx$parameter_hash <- rlang::hash(list(estimates, V, out@a_path, out@b_path, out@c_prime))
   do.call(FIMLMediationData, c(props, list(fit_context = ctx)))
+}
+
+# Parallel mediation: both mediators are named; a_j and b_j follow the requested order. The extracted covariance is the
+# fitted observed-information covariance, so the sum of the two products keeps every cross-path term (Cov(a1, a2),
+# Cov(b1, b2), Cov(a_i, b_j)), unlike the separate-regression lm/glm route.
+.sem_fiml_extract_parallel <- function(object, treatment, mediator, args) {
+  ctx0 <- object@internals$likelihood
+  v <- ctx0$variables
+  spec <- .sem_fiml_model(object@model)
+  meds <- spec$mediators
+  allowed <- c("outcome", "standardized", "structure", "decomposition")
+  if (length(setdiff(names(args), allowed)) || !identical(treatment, unname(v["X"])) ||
+        !is.character(mediator) || length(mediator) != length(meds) || !setequal(mediator, meds) ||
+        (!is.null(args$outcome) && !identical(args$outcome, unname(v["Y"]))) ||
+        (!is.null(args$standardized) && !identical(args$standardized, FALSE)) ||
+        (!is.null(args$structure) && !args$structure %in% c("auto", "parallel")) ||
+        (!is.null(args$decomposition) && !args$decomposition %in% c("auto", "two_way"))) {
+    stop("FIML extraction supports only the fitted unstandardized two-way parallel mediation naming both mediators",
+         call. = FALSE)
+  }
+  map <- spec$map
+  i <- match(mediator, meds)
+  k <- length(i)
+  a_aliases <- map[paste0("a", i)]
+  b_aliases <- map[paste0("b", i)]
+  roles <- c(
+    stats::setNames(unname(a_aliases), paste0("a", seq_len(k))),
+    stats::setNames(unname(b_aliases), paste0("b", seq_len(k))),
+    c_prime = if (spec$direct) unname(map["cp"]) else NA_character_
+  )
+  idx <- stats::setNames(seq_along(object@theta), names(object@theta))
+  idx[names(roles)] <- match(roles, names(object@theta))
+  estimates <- object@theta[idx]
+  estimates[is.na(idx)] <- 0
+  names(estimates) <- names(idx)
+  V <- matrix(0, length(idx), length(idx), dimnames = list(names(idx), names(idx)))
+  present <- !is.na(idx)
+  V[present, present] <- object@vcov[idx[present], idx[present], drop = FALSE]
+  tb <- object@table
+  sigma <- function(label) sqrt(unname(object@theta[map[[label]]]))
+  ctx <- ctx0
+  ctx$mediators <- mediator
+  ctx$source_theta <- object@theta
+  ctx$source_vcov <- object@vcov
+  ctx$source_roles <- roles
+  ctx$source_hash <- rlang::hash(list(ctx$source_theta, ctx$source_vcov, ctx$source_roles))
+  out <- list(
+    a_paths = unname(estimates[paste0("a", seq_len(k))]), b_paths = unname(estimates[paste0("b", seq_len(k))]),
+    c_prime = unname(estimates[["c_prime"]])
+  )
+  ctx$data_hash <- rlang::hash(object@data)
+  ctx$parameter_hash <- rlang::hash(list(estimates, V, out$a_paths, out$b_paths, out$c_prime))
+  FIMLParallelMediationData(
+    a_paths = out$a_paths, b_paths = out$b_paths, c_prime = out$c_prime, estimates = estimates, vcov = V,
+    sigma_mediators = unname(vapply(paste0("vm", i), sigma, numeric(1))), sigma_y = sigma("vy"),
+    treatment = treatment, mediators = mediator, outcome = unname(v["Y"]),
+    mediator_predictors = lapply(mediator, function(m) tb$rhs[tb$lhs == m & tb$op == "~"]),
+    outcome_predictors = tb$rhs[tb$lhs == v[["Y"]] & tb$op == "~"], data = object@data,
+    n_obs = object@n_obs, converged = TRUE, source_package = "medfit", fit_context = ctx
+  )
 }
 
 .sem_fiml_origin <- function(x) {

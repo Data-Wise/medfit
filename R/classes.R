@@ -1240,6 +1240,7 @@ S7::method(print, ParallelMediationData) <- function(x, ...) {
   k <- length(x@mediators)
   indirect <- sum(x@a_paths * x@b_paths)
   cat("<ParallelMediationData>\n")
+  if (.sem_fiml_is(x)) cat("  FIML, random X; retained partial rows\n")
   cat(sprintf("  %s -> {%s} -> %s  (%d parallel mediators)\n",
               x@treatment, paste(x@mediators, collapse = ", "), x@outcome, k))
   for (j in seq_len(k)) {
@@ -2315,6 +2316,29 @@ FIMLMediationData <- S7::new_class(
           !identical(ctx$method, "fiml") || !identical(ctx$x_policy, "random") ||
           !identical(ctx$n_obs, self@n_obs) || !identical(self@source_package, "medfit") ||
           !identical(unname(ctx$variables), c(self@treatment, self@mediator, self@outcome)) ||
+          !identical(ctx$data_hash, rlang::hash(self@data)) || !identical(ctx$parameter_hash, parameter_hash)) {
+      return("FIML fit_context must match the retained rows and extracted parameters")
+    }
+    NULL
+  }
+)
+
+# Internal subclass for two parallel mediators: the ordinary parallel effects, plus the likelihood provenance.
+FIMLParallelMediationData <- S7::new_class(
+  "FIMLParallelMediationData", parent = ParallelMediationData, package = "medfit",
+  properties = list(fit_context = S7::class_list),
+  validator = function(self) {
+    ctx <- self@fit_context
+    vars <- unname(ctx$variables)
+    source_hash <- rlang::hash(list(ctx$source_theta, ctx$source_vcov, ctx$source_roles))
+    parameter_hash <- rlang::hash(list(
+      self@estimates, self@vcov, self@a_paths, self@b_paths, self@c_prime
+    ))
+    if (!identical(ctx$source_hash, source_hash) ||
+          !identical(ctx$method, "fiml") || !identical(ctx$x_policy, "random") ||
+          !identical(ctx$n_obs, self@n_obs) || !identical(self@source_package, "medfit") ||
+          length(vars) != 4L || !identical(vars[c(1L, 4L)], c(self@treatment, self@outcome)) ||
+          !setequal(vars[2:3], self@mediators) || !identical(ctx$mediators, self@mediators) ||
           !identical(ctx$data_hash, rlang::hash(self@data)) || !identical(ctx$parameter_hash, parameter_hash)) {
       return("FIML fit_context must match the retained rows and extracted parameters")
     }
