@@ -43,7 +43,7 @@ design must be reworked (B, cell count) and independently reviewed before prereg
 Superseded the same day (G7): stage 0 runs on UNM CARC Hopper with the full preregistered design and a
 250 core-day cap; pinned Hopper environment and the maintainer's approval of job scripts come first.
 G8 shares refits across NIE/NDE/TE with a study-only patch kept out of `R/` (about 208 core-days;
-local parity 8/8, planted defect caught); it still needs a parity re-run in the pinned Hopper
+local parity 12/12 (originally 8/8), planted defect caught); it still needs a parity re-run in the pinned Hopper
 environment and a preregistration that names it. The pilot's cells 11-12 were untimed and one call
 was sleep-contaminated (85 valid units).
 The default release content below governs what ships until a variant is admitted.
@@ -72,7 +72,14 @@ Critical path to the stage-0 study, in order (each step needs its own approval w
    as a job needs your approval.
 3. Time one real chunk on the 4-hour debug partition and check `MaxArraySize` (QA items 3d/3e);
    re-estimate the 187 to 208 core-day cost against the 250 cap. Needs your approval.
-4. Preregistration draft -> independent review -> freeze. Blocked on the open decisions below.
+4. Preregistration draft -> independent review -> freeze. The unfrozen draft exists
+   (`studies/fiml-stage0-hopper/PREREG-DRAFT.md`, merged 2026-11-08) with ten open decisions
+   (OPEN-1 to OPEN-10: remediation method and trigger; per-study versus total core-day cap and a
+   wall-clock cap; collection cap and cap-hit counting; `unattempted_budget` rows; action at cap
+   breach; final M; complete-stage power argument; pinned study commit; R module and parity scope;
+   retained-row/MAR and regularity classification), a 15-item reviewer checklist and 11 freeze
+   prerequisites. Known gap: `check-complete.R` does not check seeds, `retained == n`, truth values,
+   nonfinite or nonzero NDE successes, count consistency or `unattempted_budget` rows.
 5. Submit the full 6,000-task array, only after step 4 and your approval of the exact job file.
 6. Run `check-complete.R`; analyze gates; decide stage-0 admission (separate decision).
 
