@@ -25,8 +25,8 @@
   roles <- .sem_roles(tab)
   reg <- tab[tab$op == "~", , drop = FALSE]
   x <- roles$ov_x
-  if (length(roles$obs) == 4L && length(x) == 2L && !any(grepl(":", roles$obs, fixed = TRUE))) {
-    return(.sem_fiml_model_cov1(parsed, tab, roles, reg))
+  if (length(x) %in% 2:3 && length(roles$obs) == length(x) + 2L && !any(grepl(":", roles$obs, fixed = TRUE))) {
+    return(.sem_fiml_model_cov(parsed, tab, roles, reg))
   }
   y <- setdiff(unique(reg$lhs), reg$rhs)
   m <- setdiff(unique(reg$lhs), y)
@@ -59,16 +59,19 @@
   list(parsed = parsed, conv = conv, vars = c(X = x, M = m, Y = y), direct = direct, map = map)
 }
 
-# One covariate (FI-G1): M ~ X + Z and Y ~ M + X + Z with free X-Z covariance and independent disturbances. The
-# covariate paths are complete (free); the only fixed value is one exact zero on an exogenous variable's Y path, and
-# that variable is then the treatment (`X`), the other the covariate (`Z`). With every Y path free the first exogenous
-# variable is `X`; extraction may name either as the treatment. Everything else is refused.
-.sem_fiml_model_cov1 <- function(parsed, tab, roles, reg) {
+# One or two covariates (FI-G1): M ~ X + Z... and Y ~ M + X + Z... with free covariances among all exogenous variables
+# and independent disturbances. The covariate paths are complete (free); the only fixed value is one exact zero on an
+# exogenous variable's Y path, and that variable is then the treatment (`X`), the others the covariates (`Z`, or `Z1`,
+# `Z2` in order of appearance). With every Y path free the first exogenous variable is `X`; extraction may name any of
+# them as the treatment. Everything else (three or more covariates, an omitted Y path, covariates on M only, fixed
+# covariate paths, covariate residual covariances) is refused.
+.sem_fiml_model_cov <- function(parsed, tab, roles, reg) {
   e <- roles$ov_x
+  k <- length(e) - 1L
   y <- setdiff(unique(reg$lhs), reg$rhs)
   m <- setdiff(unique(reg$lhs), y)
   if (length(y) != 1L || length(m) != 1L || !setequal(roles$obs, c(e, m, y))) {
-    .sem_fiml_diagnostic("unsupported FIML topology: one covariate needs M ~ X + Z and Y ~ M + X + Z")
+    .sem_fiml_diagnostic("unsupported FIML topology: covariates need M ~ X + Z and Y ~ M + X + Z")
   }
   keys <- paste(tab$lhs, tab$op, tab$rhs)
   y_keys <- paste(y, "~", e)
@@ -77,15 +80,21 @@
     .sem_fiml_diagnostic("only one direct path may be fixed, exactly at zero, in FIML")
   }
   # Every Y path must be written: an omitted path is ambiguous with a covariate that acts on M only, so it is refused.
-  # The treatment `x` is the variable whose Y path is fixed at zero; with both paths free it is the first.
+  # The treatment `x` is the variable whose Y path is fixed at zero; with all paths free it is the first.
   if (any(!y_keys %in% keys)) {
     .sem_fiml_diagnostic("FIML with a covariate needs a Y path from each exogenous variable (free, or one fixed at 0)")
   }
   direct <- !length(fixed)
   x <- if (direct) e[1L] else e[match(keys[fixed], y_keys)]
   z <- setdiff(e, x)
-  covariance <- paste(x, "~~", z)
-  keys[tab$op == "~~" & tab$lhs %in% e & tab$rhs %in% e & tab$lhs != tab$rhs] <- covariance
+  nm <- .sem_fiml_cov_names(k)
+  ex <- c(x, z)
+  # exogenous covariances in either written order are the one canonical pair
+  pair <- tab$op == "~~" & tab$lhs %in% ex & tab$rhs %in% ex & tab$lhs != tab$rhs
+  lo <- pmin(match(tab$lhs, ex), match(tab$rhs, ex))
+  hi <- pmax(match(tab$lhs, ex), match(tab$rhs, ex))
+  keys[pair] <- paste(ex[lo[pair]], "~~", ex[hi[pair]])
+  covariance <- paste(ex[utils::combn(k + 1L, 2L)[1L, ]], "~~", ex[utils::combn(k + 1L, 2L)[2L, ]])
   required <- c(paste(m, "~", x), paste(m, "~", z), paste(y, "~", m), paste(y, "~", z), covariance)
   cp <- paste(y, "~", x)
   obs <- c(x, z, m, y)
@@ -94,13 +103,22 @@
     .sem_fiml_diagnostic("unsupported FIML topology or correlated disturbances")
   }
   conv <- .sem_to_ram(tab)
-  if (conv$ram$q != if (direct) 14L else 13L) .sem_fiml_diagnostic("FIML does not support parameter ties")
+  q_expected <- (k + 1L) + (k + 2L) + (k + 3L) + choose(k + 1L, 2L) + (k + 3L) - !direct
+  if (conv$ram$q != q_expected) .sem_fiml_diagnostic("FIML does not support parameter ties")
   canonical <- c(
-    required[1:3], if (direct) cp, required[4L], paste(obs, "~~", obs), covariance, paste(obs, "~1", "")
+    paste(m, "~", x), paste(m, "~", z), paste(y, "~", m), if (direct) cp, paste(y, "~", z),
+    paste(obs, "~~", obs), covariance, paste(obs, "~1", "")
   )
-  labels <- c("a", "gm", "b", if (direct) "cp", "gy", "vx", "vz", "vm", "vy", "cxz", "ix", "iz", "im", "iy")
+  tables <- .sem_fiml_tables_cov(k, direct)
+  labels <- c(
+    "a", paste0("gm", nm$sfx), "b", if (direct) "cp", paste0("gy", nm$sfx), tables$s$label, tables$m$label
+  )
+  stopifnot(length(labels) == length(canonical))
   map <- stats::setNames(conv$ram$par_names[conv$par_map[match(canonical, keys)]], labels)
-  list(parsed = parsed, conv = conv, vars = c(X = x, M = m, Y = y), direct = direct, map = map, covariate = z)
+  list(
+    parsed = parsed, conv = conv, vars = c(X = x, M = m, Y = y), direct = direct, map = map,
+    covariate = stats::setNames(z, nm$z)
+  )
 }
 
 .sem_fiml_binding <- function(object) {
@@ -156,7 +174,7 @@
       model_vars <- if (is.null(spec$covariate)) {
         spec$vars
       } else {
-        c(spec$vars["X"], Z = spec$covariate, spec$vars[c("M", "Y")])
+        c(spec$vars["X"], spec$covariate, spec$vars[c("M", "Y")])
       }
       if (!all(model_vars %in% names(data))) .sem_fiml_diagnostic("FIML model variables are absent from data")
       d <- data[, model_vars, drop = FALSE]
@@ -170,7 +188,8 @@
         stage <- "numerical"
         candidate <- .sem_fiml_fit(z, direct = spec$direct)
       } else {
-        prepared <- .sem_fiml_prepare_core(z, .sem_fiml_tables_cov1(spec$direct), direct = spec$direct)
+        tables <- .sem_fiml_tables_cov(length(spec$covariate), spec$direct)
+        prepared <- .sem_fiml_prepare_core(z, tables, direct = spec$direct)
         stage <- "numerical"
         candidate <- .sem_fiml_solve(prepared)
       }
@@ -194,7 +213,7 @@
         n_obs = as.integer(p$n), k = length(theta), rows = row_context, selected = selected,
         jacobian = p$jacobian, variables = spec$vars
       )
-      if (!is.null(spec$covariate)) likelihood$covariate <- spec$covariate
+      if (!is.null(spec$covariate)) likelihood$covariate <- unname(spec$covariate)
       out <- SEMFit(
         theta = theta, vcov = V,
         table = tab[, c("lhs", "op", "rhs", "label", "free", "est", "se", "fixed_x")],
@@ -245,10 +264,11 @@
   covariate <- object@internals$likelihood$covariate
   spec <- .sem_fiml_model(object@model)
   allowed <- c("outcome", "a_label", "b_label", "cp_label", "standardized", "structure", "decomposition")
-  # With one covariate either exogenous variable may be the treatment, except that a fixed-zero direct path belongs to
-  # the treatment `X` (the covariate's outcome path must be complete).
+  # With covariates any exogenous variable may be the treatment, except that a fixed-zero direct path belongs to the
+  # treatment `X` (a covariate's outcome path must be complete).
   treatment_ok <- identical(treatment, unname(v["X"])) ||
-    (!is.null(covariate) && spec$direct && identical(treatment, covariate))
+    (!is.null(covariate) && spec$direct && is.character(treatment) && length(treatment) == 1L &&
+       treatment %in% covariate)
   if (length(setdiff(names(args), allowed)) || !treatment_ok ||
         !identical(mediator, unname(v["M"])) ||
         (!is.null(args$outcome) && !identical(args$outcome, unname(v["Y"]))) ||
@@ -279,9 +299,11 @@
     c(list(acc, treatment = treatment, mediator = mediator), args)
   )
   map <- spec$map
-  as_covariate <- !is.null(covariate) && identical(treatment, covariate)
+  as_covariate <- !is.null(covariate) && !identical(treatment, unname(v["X"]))
+  sfx <- if (!is.null(covariate)) .sem_fiml_cov_names(length(covariate))$sfx
+  i <- match(treatment, covariate)
   roles <- if (as_covariate) {
-    c(a = unname(map["gm"]), b = unname(map["b"]), c_prime = unname(map["gy"]))
+    c(a = unname(map[paste0("gm", sfx[i])]), b = unname(map["b"]), c_prime = unname(map[paste0("gy", sfx[i])]))
   } else {
     c(a = unname(map["a"]), b = unname(map["b"]), c_prime = unname(map["cp"]))
   }
@@ -304,7 +326,7 @@
   ctx <- object@internals$likelihood
   if (as_covariate) {
     ctx$variables["X"] <- treatment
-    ctx$covariate <- unname(v["X"])
+    ctx$covariate <- replace(covariate, i, unname(v["X"]))
   }
   ctx$source_theta <- object@theta
   ctx$source_vcov <- object@vcov

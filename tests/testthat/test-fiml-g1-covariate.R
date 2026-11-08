@@ -252,7 +252,7 @@ g1_unadmitted <- c(
   both_outcome_paths_omitted = "M ~ X + Z\nY ~ M",
   covariate_only_on_mediator = "M ~ X + Z\nY ~ M + X",
   covariate_only_on_outcome = "M ~ X\nY ~ M + X + Z",
-  two_covariates = "M ~ X + Z + W\nY ~ M + X + Z + W",
+  three_covariates = "M ~ X + Z + W + V\nY ~ M + X + Z + W + V",
   covariate_zero_on_outcome_and_x_zero = "M ~ X + Z\nY ~ M + 0*X + 0*Z",
   fixed_nonzero_x_path = "M ~ X + Z\nY ~ M + 0.5*X + Z",
   fixed_zero_mediator_covariate_path = "M ~ X + 0*Z\nY ~ M + X + Z",
@@ -274,6 +274,7 @@ g1_refusal_data <- function() {
   d <- g1_data()
   set.seed(11L)
   d$W <- stats::rnorm(nrow(d))
+  d$V <- stats::rnorm(nrow(d))
   d$M2 <- .3 * d$X + stats::rnorm(nrow(d))
   d
 }
