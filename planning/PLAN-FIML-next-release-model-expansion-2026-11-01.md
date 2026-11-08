@@ -197,15 +197,22 @@ required verification; the maintainer owns scope, authorization and admission.
 
 ### 2. FI-G1: covariates
 
-- [ ] **Implementer:** First add one-covariate fitting and extraction, then the
+- [x] **Implementer:** First add one-covariate fitting and extraction, then the
   two-covariate variant, with joint random-X covariance and complete
   covariate-to-endogenous paths. Keep support guards explicit.
-- [ ] **Independent QA:** Compare raw-data FIML against matched lavaan and the
+  *(2026-11-08: both variants implemented and locally verified on branch
+  `feature/fiml-g1-covariates`, commits `e0374d92` to `75e19f21`; not pushed, not merged.
+  Spec sections 7 and 8 of `specs/SPEC-fiml-generic-kernel-2026-11-08.md`; source-fit intervals
+  stay withheld and covariate fits have their own refusal.)*
+- [ ] **Independent QA:** *(Implementer tests already compare lavaan, a rowwise
+  likelihood and OLS and plant defects; the independent QA pass and OpenMx checks are
+  not yet recorded. Both inference methods stay unavailable by the stage-0 guard.)* Compare raw-data FIML against matched lavaan and the
   independent likelihood oracle, with OpenMx supporting checks; test incomplete
   covariates, fixed-zero direct paths, mixed explicit/automatic covariances,
   unidentified masks and complete-data neutrality. Independently verify
   effect/covariance extraction and both inference methods per variant.
-- **Merge condition (R4, applies to FI-G1 to FI-G3):** before a slice merges to
+- **Merge condition (R4, applies to FI-G1 to FI-G3; not yet met for G1, the
+  refusal evidence needs independent QA before merge):** before a slice merges to
   `dev`, independent tests show every still-unadmitted topology and direct-path
   policy is refused at fit, extract and both source-fit entry points.
 - **Acceptance/verification:** Each of two named variants satisfies its own

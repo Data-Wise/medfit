@@ -1892,6 +1892,11 @@ historical checklists. Current dispositions:
    pooling away failed cells or treating unadmitted variants as supported.
    The [expansion plan](PLAN-FIML-next-release-model-expansion-2026-11-01.md)
    breaks FI-G0 into bounded steps before covariates, parallel and serial models.
+   **FI-G1 status (2026-11-08):** one- and two-covariate bounded FIML fitting and
+   extraction are implemented and numerically verified locally on
+   `feature/fiml-g1-covariates` (unpushed, unmerged); independent QA, the R4
+   refusal evidence and statistical admission are pending, and source-fit
+   intervals stay withheld.
    The [stage-0 guard design](PLAN-FIML-stage0-release-guard-2026-11-01.md)
    addresses a candidate if simple-model inference remains unadmitted; the
    [admission plan](PLAN-FIML-statistical-admission-2026-11-01.md) retains the
