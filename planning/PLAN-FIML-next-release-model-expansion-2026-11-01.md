@@ -89,6 +89,8 @@ FI-G0 (generic kernel) proceeds in parallel but stays off `dev` until the stage-
 (finding R2). Remediation if stage 0 fails is decided (G9: rerun only inconclusive failed cells on fresh seeds, one round,
 no pooling; see the preregistration draft section 10). FI-G0a/b are done on the unmerged branch
 `worktree-agent-a4f9ed5f1273b3b20` (spec plus oracle tests, 7/7 planted defects caught, no `R/` change).
+Cap decided (G10, G11): 250 core-days per study (main and remediation separately), 7 days wall-clock
+from the first task starting, queue wait excluded.
 Open decisions for the maintainer: the all-empty-cell collection cap and the failure/denominator policy;
 the FI-G0 branch base commit (currently the guard branch tip, an assumption); whether the guard
 branch is pushed and merged to `dev` (it is local only).
