@@ -29,13 +29,14 @@ gen <- function(seed) {
     d
   }
   if (cl$miss != "empty") return(list(data = as.data.frame(mask(draw(cl$n))), collected = cl$n))
-  kept <- NULL; coll <- 0L                       # collection cap 10 n is UNRESOLVED in the design (README)
-  while (NROW(kept) < cl$n && coll < 10L * cl$n) {
+  kept <- NULL; coll <- 0L   # collection cap: 2 n (decided 2026-11-08; hit probability ~1e-91, so a hit means a generator defect)
+  CAP <- as.integer(ceiling(as.numeric(Sys.getenv("STAGE0_CAP_MULT", "2")) * cl$n))   # env override for tests only
+  while (NROW(kept) < cl$n && coll < CAP) {
     d <- mask(draw(1L)); coll <- coll + 1L
     if (runif(1) < .1) d[] <- NA
     if (!all(is.na(d))) kept <- rbind(kept, d)
   }
-  if (NROW(kept) < cl$n) stop("collection cap reached")
+  if (NROW(kept) < cl$n) stop("collection cap reached (defect: probability ~1e-91 by design)")
   list(data = as.data.frame(kept), collected = coll)
 }
 mod <- paste0("M ~ a*X\nY ~ b*M + ", if (cl$direct) "cp" else "0", "*X")

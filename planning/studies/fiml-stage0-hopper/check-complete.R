@@ -10,5 +10,7 @@ missing <- setdiff(ek, key); dup <- key[duplicated(key)]; extra <- setdiff(key, 
 cat(sprintf("files %d, rows %d, expected %d\nmissing %d, duplicated %d, unexpected %d\n", length(fs), nrow(L), nrow(exp), length(missing), length(dup), length(extra)))
 cat("provenance: commits", paste(unique(L$medfit_commit), collapse = ","), "| fingerprints", paste(unique(L$fingerprint_sha256), collapse = ","), "\n")
 print(table(L$method, L$status, useNA = "ifany"))
-ok <- length(missing) + length(dup) + length(extra) == 0L && length(unique(L$medfit_commit)) == 1L && length(unique(L$fingerprint_sha256)) == 1L
+cap_hits <- sum(grepl("collection cap reached", L$reason), na.rm = TRUE)
+cat("collection-cap hits (each is a generator DEFECT, not a statistical outcome):", cap_hits, "\n")
+ok <- cap_hits == 0L && length(missing) + length(dup) + length(extra) == 0L && length(unique(L$medfit_commit)) == 1L && length(unique(L$fingerprint_sha256)) == 1L
 cat(if (ok) "COMPLETE\n" else "INCOMPLETE OR INCONSISTENT\n"); quit(status = if (ok) 0L else 1L)
