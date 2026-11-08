@@ -1,3 +1,7 @@
+# FIML next-release checkpoint — 2026-11-07/08 MST
+
+# Adversarial review R1-R5 and grill G1-G8 recorded in planning/PLAN-FIML-next-release-model-expansion-2026-11-01.md and planning/GRILL-next-release-FIML-2026-11-07.md. Stage-0 release guard (bootstrap_mediation(source_fit=) refused, class medfit_error_fiml_inference_unavailable; c7cd5853 and later) is on claude/restore-b0bd19 only: not merged to dev, not pushed. Timing pilot: ~114 s per 999-refit call, 85 valid units (one sleep-contaminated call excluded), cells 11-12 untimed (planning/studies/fiml-timing-pilot/REPORT.md). Stage 0 moves to UNM Hopper: full design, 250 core-day cap, study-only shared-refit patch (~208 core-days); draft harness in planning/studies/fiml-stage0-hopper/ has had independent QA, env setup in progress, nothing submitted, preregistration not frozen. No admission study has run; no release.
+
 # FIML expansion planning checkpoint — 2026-11-01 MST
 
 # PR #379 merged bounded simple-model inference to dev at 0bd99134 after local numerical QA and verification. Next-release planning targets covariates, parallel and serial models in planning/PLAN-FIML-next-release-model-expansion-2026-11-01.md; FI-G0 contract review precedes implementation. Stage-0 guard and variant-specific study-source provenance are proposed in planning/PLAN-FIML-stage0-release-guard-2026-11-01.md. Statistical admission gates, timing pilot, studies, expansion implementation and release remain deferred. No admission studies or admission gates ran.

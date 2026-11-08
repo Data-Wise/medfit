@@ -42,6 +42,10 @@ buys about 315 datasets per cell, per-decision power about 0.44, below the Q12 t
 design must be reworked (B, cell count) and independently reviewed before preregistration.
 Superseded the same day (G7): stage 0 runs on UNM CARC Hopper with the full preregistered design and a
 250 core-day cap; pinned Hopper environment and the maintainer's approval of job scripts come first.
+G8 shares refits across NIE/NDE/TE with a study-only patch kept out of `R/` (about 208 core-days;
+local parity 8/8, planted defect caught); it still needs a parity re-run in the pinned Hopper
+environment and a preregistration that names it. The pilot's cells 11-12 were untimed and one call
+was sleep-contaminated (85 valid units).
 The default release content below governs what ships until a variant is admitted.
 
 **Default release content (applies unless the maintainer decides otherwise):**

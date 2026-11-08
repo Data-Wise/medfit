@@ -4,10 +4,20 @@
 > **Adversarial review (2026-11-07):** `dev` (`ecbfb19f`) exposes the unadmitted
 > `bootstrap_mediation(source_fit=)` route with no guard while `DESCRIPTION` still
 > reads `0.16.0`, the released version. Maintainer chose a guard on dev
-> (2026-11-07); implemented on a feature branch, unmerged, full suite pending. Stage-0 timing pilot done (~114 s per 999-refit call); stage-0 will run on UNM Hopper with the full
-> design and a 250 core-day cap (a 25 core-day local cap was considered and withdrawn); nothing submitted. Default next-release content is no
-> expanded FIML and no source-fit inference unless admitted. See the
+> (2026-11-07); the stage-0 release guard (`bootstrap_mediation(source_fit=)` refused with
+> class `medfit_error_fiml_inference_unavailable`, commit `c7cd5853` and later) is on the
+> `claude/restore-b0bd19` branch only: not merged to `dev`, not pushed; full-suite result on
+> that branch unverified here. Review findings R1-R5 and grill decisions G1-G8
+> ([ledger](GRILL-next-release-FIML-2026-11-07.md)) are recorded in the
 > [review table](PLAN-FIML-next-release-model-expansion-2026-11-01.md#adversarial-review-2026-11-07-static-no-runtime-checks-no-study-run).
+> Timing pilot ([report](studies/fiml-timing-pilot/REPORT.md)): about 114 s per 999-refit call,
+> 85 valid units (one call contaminated by laptop sleep and excluded), cells 11-12 untimed.
+> Stage 0 is planned for UNM Hopper with the full design (60 cells, M=2,500, B=999), a 250
+> core-day cap and a study-only shared-refit patch (about 208 core-days); the draft harness in
+> [`studies/fiml-stage0-hopper/`](studies/fiml-stage0-hopper/README.md) has had independent QA,
+> environment setup is in progress, nothing is submitted and the preregistration is not frozen
+> (a 25 core-day local cap was considered and withdrawn). Default next-release content is no
+> expanded FIML and no source-fit inference unless admitted.
 
 # medfit Package Development Roadmap
 
@@ -1902,9 +1912,9 @@ historical checklists. Current dispositions:
    defaults. Local read-only review found no blocking design findings; no runtime
    checks were run. The maintainer authorized bounded implementation on 2026-11-01 MST:
    `medfit-implementer` owns code/tests and `medfit-oracle-qa` owns independent QA. The large simulation grid, timing pilot and statistical
-   resource agreement are deferred. Q12 and Q13 are recorded (above); the stage-0
-   admission study itself is unauthorized, unscheduled and unbudgeted, so
-   admission for release stays unresolved.
+   resource agreement were deferred on 2026-11-01; the 2026-11-07 timing pilot has since run
+   (see the banner). Q12 and Q13 are recorded (above); the stage-0 admission study
+   has not run and nothing is submitted, so admission for release stays unresolved.
    PR #377 merged the prior planning packet as `da0d9edc`; `ff200ee9` reconciled
    its status. PR #378 merged the reviewed FI-B0 follow-up into dev as
    `5e845007`; bounded FI-B1/FI-B2 implementation then merged as #379

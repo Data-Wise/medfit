@@ -14,6 +14,7 @@ current board of `medfit-roadmap.md`; ecosystem-wide planning is in the hub,
 | `EXTENSIONS-PLAN-2026-06-03.md` | Extension board (A-E, D8) and what is next |
 | `medfit-roadmap.md` | Current board and historical phase checklists |
 | `PLAN-FIML-next-release-model-expansion-2026-11-01.md` | Planned covariate, parallel and serial expansion and ordered implementation |
+| `GRILL-next-release-FIML-2026-11-07.md` | Grill decisions G1-G8 for the next-release FIML plan (pilot, Hopper stage 0, cost cap) |
 | `PLAN-FIML-stage0-release-guard-2026-11-01.md` | Proposed release guard and study-source provenance |
 | `PLAN-FIML-statistical-admission-2026-11-01.md` | Deferred admission decisions, gates and study planning |
 | `IDEAS.md` | Idea backlog, with shipped ideas marked |
