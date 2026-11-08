@@ -193,3 +193,21 @@ Generalization steps (each its own commit, golden test green after each, planted
 
 The public adapter (`.sem_fiml_model()` and the topology refusals) is verified, not generalized: no new topology or
 direct-path policy is activated.
+
+# 6. G0c/G0d status (2026-11-08)
+
+Done, golden snapshot green after each step (transport bit-identical to the baseline):
+
+- T: `.sem_fiml_tables()`, `.sem_fiml_layout()`, `.sem_fiml_transport()` replace the literal transport.
+- S: `.sem_fiml_variance_index()`, `.sem_fiml_starts()`, `.sem_fiml_lower()` and the solver unit matrix come from the
+  layout.
+- E: `.sem_fiml_prepare_core(data, tables)` and `.sem_fiml_solve(p)` are dimension-generic; `.sem_fiml_prepare()` and
+  `.sem_fiml_fit()` remain the only callers and pass only the X -> M -> Y tables. Evaluation, difference, geometry and
+  Hessian were already free of three-variable literals. A four-variable chain with a direct path, run through the
+  internals only (`test-fiml-generic-kernel-fourvar.R`), matches the rowwise reference, the independent geometry and
+  Hessian, and lavaan (estimates 1e-5, logLik 1e-6, covariance 1e-3).
+- G0d: refusals unchanged at prepare, fit (13 topology and policy cases), extract and both `source_fit` methods; no
+  public entry builds other tables.
+
+Not changed: `.sem_fiml_model()` (adapter, topology refusals), `R/sem-fiml-interface.R`, the stage-0 guard.
+Merge remains blocked on the stage-0 decision and the pinned old-model parity proof.
