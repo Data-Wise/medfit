@@ -56,6 +56,16 @@ variants ship only individually, after their own admission and a release-scope
 decision. If the maintainer wants a dated release, they must either authorize
 the stage-0 study with a budget, or accept this default.
 
+## Hopper stage-0 queue (parked 2026-11-08 at the maintainer's request)
+
+Stage-0 work is parked while FI-G1 starts. Open items, in order:
+1. Maintainer reads and accepts OPEN-10 (retained-row estimand, .10 empty probability, 228/72/60 classification).
+2. Hopper timing chunk (4 h debug partition): must project at most 200 core-days, confirm the 2026-11-01 snapshot, rerun parity at B = 40. Needs approval.
+3. PR #382 merges (maintainer said not yet); the study then pins the post-guard `dev` commit and rebuilds the fingerprint.
+4. Enumerate returned-interval status strings from the pinned source (P7); independent review of the whole draft (P3); freeze.
+5. Submit the 6,000-task array only with the maintainer's approval of the exact job file.
+Everything else in the preregistration is decided (OPEN-2, 4 to 9 closed; OPEN-7 QA-passed and accepted).
+
 ## Critical path and open decisions (2026-11-08)
 
 Status: Hopper environment install running (46 packages at last check; the first attempt
