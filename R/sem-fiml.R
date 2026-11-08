@@ -17,28 +17,46 @@
   m <- data.frame(row = c("X", "M", "Y"), label = c("ix", "im", "iy"), value = NA_real_)
   list(vars = c("X", "M", "Y"), a = a, s = s, m = m)
 }
+# One observed covariate Z (FI-G1): X and Z are jointly Gaussian exogenous variables (free covariance); M ~ X + Z and
+# Y ~ M + X + Z, with the X -> Y path free or fixed exactly at zero. Variable order X, Z, M, Y.
+.sem_fiml_tables_cov1 <- function(direct) {
+  a <- data.frame(
+    row = c("M", "M", "Y", "Y", "Y"), col = c("X", "Z", "M", "X", "Z"),
+    label = c("a", "gm", "b", "cp", "gy"), value = c(NA, NA, NA, if (direct) NA else 0, NA)
+  )
+  vars <- c("X", "Z", "M", "Y")
+  s <- data.frame(
+    row = c(vars, "X"), col = c(vars, "Z"),
+    label = c("vx", "vz", "vm", "vy", "cxz"), value = NA_real_
+  )
+  m <- data.frame(row = vars, label = c("ix", "iz", "im", "iy"), value = NA_real_)
+  list(vars = vars, a = a, s = s, m = m)
+}
 .sem_fiml_ram <- function(direct) {
   t <- .sem_fiml_tables(direct)
   .sem_ram(t$vars, t$vars, t$a, t$s, t$m)
 }
 # Parameter layout read off the RAM tables: which free parameter is a path (response, predictor), a variance or
-# an intercept. Free entries must carry unique non-empty labels, which are then the parameter names.
+# an intercept; a free off-diagonal (co)variance is a covariance. Free entries must carry unique non-empty labels,
+# which are then the parameter names.
 .sem_fiml_layout <- function(tables) {
   free <- function(x) x[is.na(x$value), , drop = FALSE]
   a <- free(tables$a)
   s <- free(tables$s)
   m <- free(tables$m)
-  stopifnot(all(nzchar(c(a$label, s$label, m$label))), !anyDuplicated(c(a$label, s$label, m$label)),
-            all(s$row == s$col))
+  stopifnot(all(nzchar(c(a$label, s$label, m$label))), !anyDuplicated(c(a$label, s$label, m$label)))
+  diagonal <- s$row == s$col
   list(
     vars = tables$vars,
     paths = data.frame(par = a$label, response = a$row, predictor = a$col),
-    variances = data.frame(par = s$label, var = s$row),
+    variances = data.frame(par = s$label[diagonal], var = s$row[diagonal]),
+    covariances = data.frame(par = s$label[!diagonal], row = s$row[!diagonal], col = s$col[!diagonal]),
     intercepts = data.frame(par = m$label, var = m$row)
   )
 }
 # Linear affine transport from standardized structural coordinates: original = offset + transport %*% theta.
-# A path scales by scale_response / scale_predictor, a variance by scale^2, an intercept by scale; an intercept
+# A path scales by scale_response / scale_predictor, a variance by scale^2, a covariance by the product of the two
+# scales, an intercept by scale; an intercept
 # also absorbs -center_predictor times the scaled path of every free path into its response.
 .sem_fiml_transport <- function(layout, par_names, center, scale) {
   offset <- stats::setNames(rep(0, length(par_names)), par_names)
@@ -46,9 +64,11 @@
   i <- layout$intercepts
   v <- layout$variances
   a <- layout$paths
+  cv <- layout$covariances
   offset[i$par] <- center[i$var]
   units[i$par] <- scale[i$var]
   units[v$par] <- scale[v$var]^2
+  units[cv$par] <- scale[cv$row] * scale[cv$col]
   units[a$par] <- scale[a$response] / scale[a$predictor]
   transport <- diag(unname(units))
   dimnames(transport) <- list(par_names, par_names)

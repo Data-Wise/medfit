@@ -211,3 +211,30 @@ Done, golden snapshot green after each step (transport bit-identical to the base
 
 Not changed: `.sem_fiml_model()` (adapter, topology refusals), `R/sem-fiml-interface.R`, the stage-0 guard.
 Merge remains blocked on the stage-0 decision and the pinned old-model parity proof.
+
+# 7. FI-G1 slice 1: one observed covariate (2026-11-08)
+
+Public variant added: `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)` and `extract_mediation()` for exactly four
+observed numeric variables, two exogenous (X and the covariate Z), one mediator M, one outcome Y:
+
+- Regressions `M ~ X + Z` and `Y ~ M + X + Z`. The covariate paths (`M ~ Z`, `Y ~ Z`) and `M ~ X`, `Y ~ M` are free.
+- Joint random-X covariance: `X ~~ Z` is a free parameter (added automatically; written explicitly in either order it
+  is the same parameter; fixed, duplicated or omitted-by-constraint it is refused). Independent disturbances.
+- Direct-path policy: both Y paths (`Y ~ X`, `Y ~ Z`) must be written. Both free, or exactly one fixed at zero
+  (`0*X`). An omitted Y path is refused: it is ambiguous with a covariate acting on M only, which is not a complete
+  covariate. The variable whose Y path is fixed is the treatment `X` of the fit, the other the covariate `Z`. With both
+  Y paths free, the first exogenous variable by appearance is `X`, and extraction may name either as the treatment
+  (the kernel is symmetric).
+- Incomplete data: any of X, Z, M, Y may be incomplete (all non-empty observed patterns), exactly the existing
+  three-variable contract (all-empty rows dropped; unidentified masks fail the rank gate at stage `numerical`).
+- Parameters (14, or 13 without a direct path): `a gm b [cp] gy vx vz vm vy cxz ix iz im iy`. Kernel: the generic
+  `.sem_fiml_prepare_core()`/`.sem_fiml_solve()` with `.sem_fiml_tables_cov1()`; the layout gained a `covariances`
+  element (empty for the three-variable tables), transported with unit `scale_row * scale_col`.
+- Extraction: `FIMLMediationData` with `a`, `b`, `c_prime` of the chosen treatment and the full fitted covariance in
+  `@vcov`; `fit_context$covariate` records Z. Standardized, structure, decomposition, interaction and any other
+  argument stay refused as before.
+- Still refused at prepare, fit, extract and both `source_fit` methods: every other topology and direct-path policy
+  (two covariates, a covariate on only one equation, covariate as mediator, parallel, serial, interaction, correlated
+  disturbances, ties, bounds, constraints, defined parameters, fixed nonzero or fixed covariate paths). The stage-0
+  guard is unchanged; with it mocked open, a covariate fit is additionally refused by `.bootstrap_fiml()`
+  (`medfit_error_fiml_covariate_source_fit`), so no source-fit interval exists for the variant.
