@@ -66,8 +66,10 @@ FI-TRACK reconciliation, merged here at `f85ecee4`). Nothing is submitted to Hop
 or merge.
 
 Critical path to the stage-0 study, in order (each step needs its own approval where marked):
-1. Finish the Hopper environment; confirm the fingerprint file and that `S7`, `nloptr` and the
-   rest are installed. Needs no new approval.
+1. Hopper environment: DONE 2026-11-08 (R 4.4.0 module, dated 2026-11-01 package snapshot, `pkgload`
+   replacing `devtools` because `ragg` cannot build there, fingerprint pinned to `34a3e9cc`). Load test on
+   Hopper passed: medfit 0.16.0 loads from the pinned source, a fit takes 0.6 s, the guard refuses. The
+   fingerprint must be rebuilt at the final study commit at freeze (it pins one commit).
 2. Re-run `parity-check.R` inside the pinned Hopper environment (QA gating item). Submitting it
    as a job needs your approval.
 3. Time one real chunk on the 4-hour debug partition and check `MaxArraySize` (QA items 3d/3e);

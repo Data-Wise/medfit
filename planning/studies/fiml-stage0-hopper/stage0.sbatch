@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/bash -l
+# (login shell: a plain batch shell has no `module` command, as the 2026-11-08 Hopper load test showed)
 # DRAFT, NOT SUBMITTED. Submission needs the maintainer's approval of this exact file.
 # 60 cells x 100 chunks of 25 datasets = 6000 tasks, one core each. Refits are shared across NIE/NDE/TE by the
 # study-only patch (shared-refits.R, parity-check.R): ~114 s refit set + 3 draw calls (~11 s) ~ 2 min per dataset,
